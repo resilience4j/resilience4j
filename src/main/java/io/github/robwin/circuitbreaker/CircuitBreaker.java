@@ -112,4 +112,60 @@ public interface CircuitBreaker {
             }
         }
     }
+
+    public static class Supplier<T> implements java.util.function.Supplier<T> {
+        private final java.util.function.Supplier<T> supplier;
+        private final CircuitBreaker circuitBreaker;
+
+        public static <T> Supplier<T> of(java.util.function.Supplier<T> supplier, CircuitBreaker circuitBreaker){
+            return new Supplier<>(supplier, circuitBreaker);
+        }
+
+        private Supplier(java.util.function.Supplier<T> supplier, CircuitBreaker circuitBreaker){
+            this.supplier = supplier;
+            this.circuitBreaker = circuitBreaker;
+        }
+
+        public T get() throws CircuitBreakerOpenException {
+            if(!circuitBreaker.isClosed()) {
+                throw new CircuitBreakerOpenException(String.format("CircuitBreaker '%s' is open", circuitBreaker.getName()));
+            }
+            circuitBreaker.isClosed();
+            try{
+                T returnValue = supplier.get();
+                circuitBreaker.recordSuccess();
+                return returnValue;
+            } catch (Throwable throwable){
+                circuitBreaker.recordFailure();
+                throw throwable;
+            }
+        }
+    }
+
+    public static class Runnable implements java.lang.Runnable{
+        private final java.lang.Runnable runnable;
+        private final CircuitBreaker circuitBreaker;
+
+        public static CheckedRunnable of(java.lang.Runnable runnable, CircuitBreaker circuitBreaker){
+            return new CheckedRunnable(runnable, circuitBreaker);
+        }
+
+        private Runnable(java.lang.Runnable runnable, CircuitBreaker circuitBreaker){
+            this.runnable = runnable;
+            this.circuitBreaker = circuitBreaker;
+        }
+
+        public void run() throws CircuitBreakerOpenException {
+            if(!circuitBreaker.isClosed()) {
+                throw new CircuitBreakerOpenException(String.format("CircuitBreaker '%s' is open", circuitBreaker.getName()));
+            }
+            try{
+                runnable.run();
+                circuitBreaker.recordSuccess();
+            } catch (Throwable throwable){
+                circuitBreaker.recordFailure();
+                throw throwable;
+            }
+        }
+    }
 }
