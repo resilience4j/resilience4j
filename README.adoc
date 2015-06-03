@@ -15,7 +15,7 @@ The state changes from CLOSED to OPEN after a configurable number of attempts ha
 === Usage with functional programming
 
 You must wrap your `Supplier` or `Runnable` function with `CircuitBreaker.CheckedSupplier.of()` or `CircuitBreaker.CheckedRunnable.of()`. You can invoke the returned function with `Try.of()` or `Try.run()` from https://github.com/javaslang/javaslang[javaslang].
-The `map` function is only invoked, if the CircuitBreaker is CLOSED or HALF_CLOSED. The call to `Try.of` returns a `SUCCESS` in that case.
+The `map` function is only invoked, if the CircuitBreaker is CLOSED or HALF_CLOSED. The call to `Try.of` returns a `Success` Monad in that case.
 
 [source,java]
 ----
@@ -37,7 +37,7 @@ assertThat(result.get()).isEqualTo("Hello world");
 
 === Usage guide with OPEN CircuitBreaker
 
-The `map` function is not invoked, because the CircuitBreaker is OPEN. The call to `Try.of` returns a `FAILURE`.
+The `map` function is not invoked, because the CircuitBreaker is OPEN. The call to `Try.of` returns a `Failure` Monad.
 
 [source,java]
 ----
@@ -72,7 +72,7 @@ assertThat(result.failed().get()).isInstanceOf(CircuitBreakerOpenException.class
 
 === Usage guide with Recovery
 
-If you want to recover from an exception.
+If you want to recover from an exception, you can chain the method `Try.recover()`. The recovery method is only invoked, if `Try.of()` returns a `Failure` Monad.
 
 [source,java]
 ----
