@@ -20,8 +20,8 @@ The state of the CircuitBreaker changes from `CLOSED` to `OPEN` after a configur
 CircuitBreakerRegistry circuitBreakerRegistry = new InMemoryCircuitBreakerRegistry();
 
 // Configure CircuitBreaker
-// First parameter configures the maximum number of failures allowed
-// Second parameter configures the wait interval [ms] and specifies how long the CircuitBreaker should stay OPEN
+// Configure the maximum number of allowed failures
+// Configures the wait interval [ms] which specifies how long the CircuitBreaker should stay OPEN
 CircuitBreakerConfig circuitBreakerConfig = new CircuitBreakerConfig.Builder()
     .maxFailures(1).waitInterval(1000).build();
 
@@ -65,8 +65,8 @@ The `map` function is not invoked, because the CircuitBreaker is OPEN. The call 
 CircuitBreakerRegistry circuitBreakerRegistry = new InMemoryCircuitBreakerRegistry();
 
 // Configure CircuitBreaker
-// First parameter configures the maximum number of failures allowed
-// Second parameter configures the wait interval [ms] and specifies how long the CircuitBreaker should stay OPEN
+// Configure the maximum number of allowed failures
+// Configures the wait interval [ms] which specifies how long the CircuitBreaker should stay OPEN
 CircuitBreakerConfig circuitBreakerConfig = new CircuitBreakerConfig.Builder()
     .maxFailures(1).waitInterval(1000).build();
 
