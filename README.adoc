@@ -14,6 +14,7 @@ The state changes from CLOSED to OPEN after a configurable number of attempts ha
 
 === Usage with functional programming
 
+You must wrap your `Supplier` or `Runnable` function with `CircuitBreaker.CheckedSupplier.of()` or `CircuitBreaker.CheckedRunnable.of()`. You can invoke the returned `Supplier` or `Runnable` with `Try.of()` or `Try.run()`.
 The `map` function is only invoked, if the CircuitBreaker is CLOSED or HALF_CLOSED. The call to `Try.of` returns a `SUCCESS` in that case.
 
 [source,java]
