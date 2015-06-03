@@ -3,7 +3,11 @@
 :version: 0.1.0
 :hardbreaks:
 
-The project requires at least JDK 8.
+This is a CircuitBreaker implementation which works for synchronously and asynchronously calls. The project requires at least JDK 8.
+This CircuitBreaker is implemented via a (timed) state machine. The CircuitBreaker does not know anything about the backend's state by itself, but uses only the information provided by calls to {#recordSuccess()} and
+{#recordFailure()}.
+The state changes from CLOSED to OPEN after a configurable number of attempts have failed consecutively. Then, all access to the backend is blocked for a configurable time interval. After that, the CircuitBreaker is HALF_CLOSED tentatively, to see if the backend is still dead or has become available again.
+On success or failure, the state changes back to CLOSED or OPEN, respectively.
 
 == Usage guide
 
