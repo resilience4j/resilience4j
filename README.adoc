@@ -12,7 +12,23 @@ The state changes from CLOSED to OPEN after a configurable number of attempts ha
 
 == Usage guide
 
-=== Usage with functional programming
+=== CircuitBreaker configuration example
+
+[source,java]
+----
+// Create a InMemoryCircuitBreakerRegistry
+CircuitBreakerRegistry circuitBreakerRegistry = new InMemoryCircuitBreakerRegistry();
+
+// Configure CircuitBreaker
+// First parameter configures the maximum number of failures allowed
+// Second parameter configures the wait interval [ms] and specifies how long the CircuitBreaker should stay OPEN
+CircuitBreakerConfig circuitBreakerConfig = new CircuitBreakerConfig(1, 1000);
+
+// Get a CircuitBreaker from the CircuitBreakerRegistry
+CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("uniqueName", circuitBreakerConfig);
+----
+
+=== Functional programming style
 
 You must wrap your `Supplier` or `Runnable` function with `CircuitBreaker.CheckedSupplier.of()` or `CircuitBreaker.CheckedRunnable.of()`. You can invoke the returned function with `Try.of()` or `Try.run()` from https://github.com/javaslang/javaslang[javaslang].
 The `map` function is only invoked, if the CircuitBreaker is CLOSED or HALF_CLOSED. The call to `Try.of` returns a `Success` Monad, if the function itself does not throw an exception.
@@ -23,7 +39,7 @@ The `map` function is only invoked, if the CircuitBreaker is CLOSED or HALF_CLOS
 // Create a InMemoryCircuitBreakerRegistry
 CircuitBreakerRegistry circuitBreakerRegistry = new InMemoryCircuitBreakerRegistry();
 
-// Get a CircuitBreaker from the CircuitBreakerRegistry
+// Get a CircuitBreaker from the CircuitBreakerRegistry with default configuration
 CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("uniqueName");
 
 //When
@@ -35,7 +51,7 @@ assertThat(result.isSuccess()).isTrue();
 assertThat(result.get()).isEqualTo("Hello world");
 ----
 
-=== Usage guide with OPEN CircuitBreaker
+=== Example with OPEN CircuitBreaker
 
 The `map` function is not invoked, because the CircuitBreaker is OPEN. The call to `Try.of` returns a `Failure` Monad.
 
@@ -70,7 +86,7 @@ assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.OPEN); // C
 assertThat(result.failed().get()).isInstanceOf(CircuitBreakerOpenException.class); // Exception was CircuitBreakerOpenException
 ----
 
-=== Usage guide with Recovery
+=== Example of Recovery
 
 If you want to recover from an exception, you can chain the method `Try.recover()`. The recovery method is only invoked, if `Try.of()` returns a `Failure` Monad.
 
@@ -92,7 +108,7 @@ assertThat(result.isSuccess()).isTrue();
 assertThat(result.get()).isEqualTo("Hello Recovery");
 ----
 
-=== Usage guide with CompletableFuture
+=== Example with CompletableFuture
 
 [source,java]
 ----
