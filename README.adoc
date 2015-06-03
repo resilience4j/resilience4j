@@ -3,9 +3,10 @@
 :version: 0.1.0
 :hardbreaks:
 
-This is a CircuitBreaker implementation which works for synchronously and asynchronously calls. The project requires at least JDK 8.
-This CircuitBreaker is implemented via a (timed) state machine. The CircuitBreaker does not know anything about the backend's state by itself, but uses only the information provided by calls to `CircuitBreaker::recordSuccess()` and
-`CircuitBreaker::recordFailure()`.
+This project a CircuitBreaker implementation which works for synchronously and asynchronously calls. The projects tries to simplify the usage of the CircuitBreaker pattern in a functional programming style.
+
+The project requires at least JDK 8.
+This CircuitBreaker is implemented via a (timed) state machine. The CircuitBreaker does not know anything about the backend's state by itself, but uses only the information provided by calls to `CircuitBreaker::recordSuccess()` and `CircuitBreaker::recordFailure()`.
 The state changes from CLOSED to OPEN after a configurable number of attempts have failed consecutively. Then, all access to the backend is blocked for a configurable time interval. After that, the CircuitBreaker is HALF_CLOSED tentatively, to see if the backend is still dead or has become available again.
 On success or failure, the state changes back to CLOSED or OPEN, respectively.
 
@@ -33,7 +34,8 @@ assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.OPEN); // C
 
 // When
 // Wrap a standard Java8 Supplier with a CircuitBreaker
-CircuitBreaker.CheckedSupplier<String> checkedSupplier = CircuitBreaker.CheckedSupplier.of(() -> "Hello world", circuitBreaker);
+CircuitBreaker.CheckedSupplier<String> checkedSupplier =
+    CircuitBreaker.CheckedSupplier.of(() -> "Hello world", circuitBreaker);
 Try<String> result = Try.of(checkedSupplier);
 
 // Then
