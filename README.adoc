@@ -28,7 +28,8 @@ CircuitBreakerConfig circuitBreakerConfig = new CircuitBreakerConfig.Builder()
 // Get a CircuitBreaker from the CircuitBreakerRegistry with custom configuration
 CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("uniqueName", circuitBreakerConfig);
 
-// Get a CircuitBreaker from the CircuitBreakerRegistry with default configuration (maxFailures = 3, waitInterval = 60[s])
+// Get a CircuitBreaker from the CircuitBreakerRegistry with default configuration
+// (maxFailures = 3, waitInterval = 60[s])
 CircuitBreaker circuitBreaker2 = circuitBreakerRegistry.circuitBreaker("otherName");
 ----
 
@@ -64,7 +65,7 @@ The `map` function is not invoked, because the CircuitBreaker is OPEN. The call 
 // Create a InMemoryCircuitBreakerRegistry
 CircuitBreakerRegistry circuitBreakerRegistry = new InMemoryCircuitBreakerRegistry();
 
-// Configure CircuitBreaker
+// Create a CircuitBreakerConfig to configure a CircuitBreaker
 // Configure the maximum number of allowed failures
 // Configures the wait interval [ms] which specifies how long the CircuitBreaker should stay OPEN
 CircuitBreakerConfig circuitBreakerConfig = new CircuitBreakerConfig.Builder()
