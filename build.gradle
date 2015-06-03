@@ -8,6 +8,7 @@ repositories {
 }
 
 dependencies {
+    compile "com.javaslang:javaslang:1.2.2"
     testCompile "junit:junit:4.11"
     testCompile "org.assertj:assertj-core:3.0.0"
 }

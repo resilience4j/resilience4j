@@ -1,5 +1,7 @@
 package io.github.robwin.circuitbreaker;
 
+import javaslang.control.Try;
+
 /**
  * CircuitBreaker API.
  *
@@ -55,20 +57,20 @@ public interface CircuitBreaker {
         HALF_CLOSED
     }
 
-    public static class Supplier<T> implements java.util.function.Supplier<T> {
+    public static class CheckedSupplier<T> implements Try.CheckedSupplier<T> {
         private final java.util.function.Supplier<T> supplier;
         private final CircuitBreaker circuitBreaker;
 
-        public static <T> Supplier<T> of(java.util.function.Supplier<T> supplier, CircuitBreaker circuitBreaker){
-            return new Supplier<>(supplier, circuitBreaker);
+        public static <T> CheckedSupplier<T> of(java.util.function.Supplier<T> supplier, CircuitBreaker circuitBreaker){
+            return new CheckedSupplier<>(supplier, circuitBreaker);
         }
 
-        private Supplier(java.util.function.Supplier<T> supplier, CircuitBreaker circuitBreaker){
+        private CheckedSupplier(java.util.function.Supplier<T> supplier, CircuitBreaker circuitBreaker){
             this.supplier = supplier;
             this.circuitBreaker = circuitBreaker;
         }
 
-        public T get(){
+        public T get() throws CircuitBreakerOpenException {
             if(!circuitBreaker.isClosed()) {
                 throw new CircuitBreakerOpenException(String.format("CircuitBreaker '%s' is open", circuitBreaker.getName()));
             }
@@ -84,20 +86,20 @@ public interface CircuitBreaker {
         }
     }
 
-    public static class Runnable implements java.lang.Runnable{
+    public static class CheckedRunnable implements Try.CheckedRunnable{
         private final java.lang.Runnable runnable;
         private final CircuitBreaker circuitBreaker;
 
-        public static Runnable of(java.lang.Runnable runnable, CircuitBreaker circuitBreaker){
-            return new Runnable(runnable, circuitBreaker);
+        public static CheckedRunnable of(java.lang.Runnable runnable, CircuitBreaker circuitBreaker){
+            return new CheckedRunnable(runnable, circuitBreaker);
         }
 
-        private Runnable(java.lang.Runnable runnable, CircuitBreaker circuitBreaker){
+        private CheckedRunnable(java.lang.Runnable runnable, CircuitBreaker circuitBreaker){
             this.runnable = runnable;
             this.circuitBreaker = circuitBreaker;
         }
 
-        public void run(){
+        public void run() throws CircuitBreakerOpenException {
             if(!circuitBreaker.isClosed()) {
                 throw new CircuitBreakerOpenException(String.format("CircuitBreaker '%s' is open", circuitBreaker.getName()));
             }

@@ -1,5 +1,6 @@
 package io.github.robwin.circuitbreaker;
 
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -31,7 +32,7 @@ public class InMemoryCircuitBreakerRegistry implements CircuitBreakerRegistry {
      * @param defaultCircuitBreakerConfig The BackendMonitor service properties.
      */
     public InMemoryCircuitBreakerRegistry(CircuitBreakerConfig defaultCircuitBreakerConfig) {
-        this.defaultCircuitBreakerConfig = defaultCircuitBreakerConfig;
+        this.defaultCircuitBreakerConfig = Objects.requireNonNull(defaultCircuitBreakerConfig, "CircuitBreakerConfig must not be null");
         this.monitors = new ConcurrentHashMap<>();
     }
 
@@ -39,8 +40,8 @@ public class InMemoryCircuitBreakerRegistry implements CircuitBreakerRegistry {
      * {@inheritDoc}
      */
     @Override
-    public CircuitBreaker circuitBreaker(String backend) {
-        return monitors.computeIfAbsent(backend, (k) -> new DefaultCircuitBreaker(backend,
+    public CircuitBreaker circuitBreaker(String name) {
+        return monitors.computeIfAbsent(Objects.requireNonNull(name, "Name must not be null"), (k) -> new DefaultCircuitBreaker(name,
                 defaultCircuitBreakerConfig));
     }
 
@@ -48,8 +49,8 @@ public class InMemoryCircuitBreakerRegistry implements CircuitBreakerRegistry {
      * {@inheritDoc}
      */
     @Override
-    public CircuitBreaker circuitBreaker(String backend, CircuitBreakerConfig customCircuitBreakerConfig) {
-        return monitors.computeIfAbsent(backend, (k) -> new DefaultCircuitBreaker(backend,
+    public CircuitBreaker circuitBreaker(String name, CircuitBreakerConfig customCircuitBreakerConfig) {
+        return monitors.computeIfAbsent(Objects.requireNonNull(name, "Name must not be null"), (k) -> new DefaultCircuitBreaker(name,
                 customCircuitBreakerConfig));
     }
 
