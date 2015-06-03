@@ -33,7 +33,7 @@ public class FunctionalTest {
 
     @Before
     public void setUp(){
-        circuitBreakerRegistry = new InMemoryCircuitBreakerRegistry(new CircuitBreakerConfig(1, 1000));
+        circuitBreakerRegistry = new InMemoryCircuitBreakerRegistry(new CircuitBreakerConfig.Builder().maxFailures(1).waitInterval(1000).build());
     }
 
     @Test
@@ -135,7 +135,7 @@ public class FunctionalTest {
 
         // First parameter is maximum number of failures allowed
         // Second parameter is the wait interval [ms] and specifies how long the CircuitBreaker should stay OPEN
-        CircuitBreakerConfig circuitBreakerConfig = new CircuitBreakerConfig(1, 1000);
+        CircuitBreakerConfig circuitBreakerConfig = new CircuitBreakerConfig.Builder().maxFailures(1).waitInterval(1000).build();
 
         CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("uniqueName", circuitBreakerConfig);
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED); // CircuitBreaker is initially CLOSED

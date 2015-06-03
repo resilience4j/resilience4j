@@ -30,7 +30,7 @@ public class CircuitBreakerTest {
 
     @Before
     public void setUp(){
-        circuitBreaker = new DefaultCircuitBreaker("testName",  new CircuitBreakerConfig(2, 1000));
+        circuitBreaker = new DefaultCircuitBreaker("testName", new CircuitBreakerConfig.Builder().maxFailures(2).waitInterval(1000).build());
     }
 
     @Test

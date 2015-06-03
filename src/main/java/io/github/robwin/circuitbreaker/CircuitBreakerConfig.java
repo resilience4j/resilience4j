@@ -19,14 +19,11 @@
 package io.github.robwin.circuitbreaker;
 
 public class CircuitBreakerConfig {
-    private int maxFailures = 3;
+    private int maxFailures;
 
-    private int waitInterval = 60000;
+    private int waitInterval;
 
-    public CircuitBreakerConfig(){
-    }
-
-    public CircuitBreakerConfig(int maxFailures, int waitInterval){
+    private CircuitBreakerConfig(int maxFailures, int waitInterval){
         this.maxFailures = maxFailures;
         this.waitInterval = waitInterval;
     }
@@ -37,5 +34,24 @@ public class CircuitBreakerConfig {
 
     public Integer getWaitInterval() {
         return waitInterval;
+    }
+
+    public static class Builder {
+        private int maxFailures = 3;
+        private int waitInterval = 60000;
+
+        public Builder maxFailures(int maxFailures) {
+            this.maxFailures = maxFailures;
+            return this;
+        }
+
+        public Builder waitInterval(int waitInterval) {
+            this.waitInterval = waitInterval;
+            return this;
+        }
+
+        public CircuitBreakerConfig build() {
+            return new CircuitBreakerConfig(maxFailures, waitInterval);
+        }
     }
 }

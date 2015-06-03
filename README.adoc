@@ -22,7 +22,7 @@ CircuitBreakerRegistry circuitBreakerRegistry = new InMemoryCircuitBreakerRegist
 // Configure CircuitBreaker
 // First parameter configures the maximum number of failures allowed
 // Second parameter configures the wait interval [ms] and specifies how long the CircuitBreaker should stay OPEN
-CircuitBreakerConfig circuitBreakerConfig = new CircuitBreakerConfig(1, 1000);
+CircuitBreakerConfig circuitBreakerConfig = new CircuitBreakerConfig.Builder().maxFailures(1).waitInterval(1000).build();
 
 // Get a CircuitBreaker from the CircuitBreakerRegistry with custom configuration
 CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("uniqueName", circuitBreakerConfig);
@@ -66,7 +66,7 @@ CircuitBreakerRegistry circuitBreakerRegistry = new InMemoryCircuitBreakerRegist
 // Configure CircuitBreaker
 // First parameter configures the maximum number of failures allowed
 // Second parameter configures the wait interval [ms] and specifies how long the CircuitBreaker should stay OPEN
-CircuitBreakerConfig circuitBreakerConfig = new CircuitBreakerConfig(1, 1000);
+CircuitBreakerConfig circuitBreakerConfig = new CircuitBreakerConfig.Builder().maxFailures(1).waitInterval(1000).build();
 
 // Get a CircuitBreaker from the CircuitBreakerRegistry
 CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("uniqueName", circuitBreakerConfig);
