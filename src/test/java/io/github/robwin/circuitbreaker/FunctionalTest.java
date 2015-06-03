@@ -22,6 +22,9 @@ import javaslang.control.Try;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class FunctionalTest {
@@ -152,5 +155,29 @@ public class FunctionalTest {
         assertThat(result.failed().get()).isInstanceOf(CircuitBreakerOpenException.class); // Exception was CircuitBreakerOpenException
     }
 
+    @Test
+    public void shouldReturnWithRecoveryAsync() throws ExecutionException, InterruptedException {
+        // Given
+        CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("testName");
+        assertThat(circuitBreaker.isClosed()).isTrue();
+        circuitBreaker.recordFailure();
+        assertThat(circuitBreaker.isClosed()).isTrue();
+        circuitBreaker.recordFailure();
+        assertThat(circuitBreaker.isClosed()).isFalse();
+
+        //When
+        CircuitBreaker.CheckedSupplier<String> checkedSupplier = CircuitBreaker.CheckedSupplier.of(() -> {
+            Thread.sleep(4000);
+            throw new RuntimeException("BAM!");
+        }, circuitBreaker);
+        CompletableFuture<Try<String>> future = CompletableFuture.supplyAsync(() -> Try.of(checkedSupplier)
+                .recover((throwable) -> "Hello Recovery"));
+
+        //Then
+        Try<String> result = future.get();
+        assertThat(result.isSuccess()).isTrue();
+        assertThat(circuitBreaker.isClosed()).isFalse();
+        assertThat(result.get()).isEqualTo("Hello Recovery");
+    }
 
 }
