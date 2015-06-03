@@ -38,6 +38,28 @@ assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.OPEN); // C
 assertThat(result.failed().get()).isInstanceOf(CircuitBreakerOpenException.class); // Exception was CircuitBreakerOpenException
 ----
 
+== Usage guide with Recovery
+
+If you want to recover from an exception.
+
+[source,java]
+----
+//Given
+CircuitBreakerRegistry circuitBreakerRegistry = new InMemoryCircuitBreakerRegistry();
+CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("uniqueName");
+
+//When
+CircuitBreaker.CheckedSupplier<String> checkedSupplier = CircuitBreaker.CheckedSupplier.of(() -> {
+    throw new RuntimeException("BAM!");
+}, circuitBreaker);
+Try<String> result = Try.of(checkedSupplier)
+        .recover((throwable) -> "Hello Recovery");
+
+//Then
+assertThat(result.isSuccess()).isTrue();
+assertThat(result.get()).isEqualTo("Hello Recovery");
+----
+
 == License
 
 Copyright 2015 Robert Winkler

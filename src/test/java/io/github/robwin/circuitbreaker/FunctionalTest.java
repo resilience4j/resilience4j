@@ -72,6 +72,30 @@ public class FunctionalTest {
     }
 
     @Test
+    public void shouldReturnWitRecovery() {
+        // Given
+        CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("testName");
+        assertThat(circuitBreaker.isClosed()).isTrue();
+        circuitBreaker.recordFailure();
+        assertThat(circuitBreaker.isClosed()).isTrue();
+        circuitBreaker.recordFailure();
+        assertThat(circuitBreaker.isClosed()).isFalse();
+
+        //When
+        CircuitBreaker.CheckedSupplier<String> checkedSupplier = CircuitBreaker.CheckedSupplier.of(() -> {
+            throw new RuntimeException("BAM!");
+        }, circuitBreaker);
+        Try<String> result = Try.of(checkedSupplier)
+                .recover((throwable) -> "Hello Recovery");
+
+        //Then
+        assertThat(result.isSuccess()).isTrue();
+        assertThat(circuitBreaker.isClosed()).isFalse();
+        assertThat(result.get()).isEqualTo("Hello Recovery");
+
+    }
+
+    @Test
     public void testReadmeExample() {
         //Given
         CircuitBreakerRegistry circuitBreakerRegistry = new InMemoryCircuitBreakerRegistry();
@@ -97,4 +121,6 @@ public class FunctionalTest {
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.OPEN); // CircuitBreaker is OPEN, because maxFailures > 1
         assertThat(result.failed().get()).isInstanceOf(CircuitBreakerOpenException.class); // Exception was CircuitBreakerOpenException
     }
+
+
 }
