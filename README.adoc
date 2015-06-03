@@ -13,8 +13,8 @@ The project requires at least JDK 8.
 CircuitBreakerRegistry circuitBreakerRegistry = new InMemoryCircuitBreakerRegistry();
 
 // Configure CircuitBreaker
-// First parameter is maximum number of failures allowed
-// Second parameter is the wait interval [ms] and specifies how long the CircuitBreaker should stay OPEN
+// First parameter configures the maximum number of failures allowed
+// Second parameter configures the wait interval [ms] and specifies how long the CircuitBreaker should stay OPEN
 CircuitBreakerConfig circuitBreakerConfig = new CircuitBreakerConfig(1, 1000);
 
 // Get a CircuitBreaker from the CircuitBreakerRegistry
