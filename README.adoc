@@ -24,8 +24,11 @@ CircuitBreakerRegistry circuitBreakerRegistry = new InMemoryCircuitBreakerRegist
 // Second parameter configures the wait interval [ms] and specifies how long the CircuitBreaker should stay OPEN
 CircuitBreakerConfig circuitBreakerConfig = new CircuitBreakerConfig(1, 1000);
 
-// Get a CircuitBreaker from the CircuitBreakerRegistry
+// Get a CircuitBreaker from the CircuitBreakerRegistry with custom configuration
 CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("uniqueName", circuitBreakerConfig);
+
+// Get a CircuitBreaker from the CircuitBreakerRegistry with default configuration (maxFailures = 3, waitInterval = 60[s])
+CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("otherName", circuitBreakerConfig);
 ----
 
 === Functional programming style
