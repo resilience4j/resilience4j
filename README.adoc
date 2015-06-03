@@ -16,7 +16,7 @@ The state of the CircuitBreaker changes from `CLOSED` to `OPEN` after a configur
 
 [source,java]
 ----
-// Create a InMemoryCircuitBreakerRegistry
+// Create a InMemoryCircuitBreakerRegistry which stores all CircuitBreaker
 CircuitBreakerRegistry circuitBreakerRegistry = new InMemoryCircuitBreakerRegistry();
 
 // Configure CircuitBreaker
@@ -28,7 +28,7 @@ CircuitBreakerConfig circuitBreakerConfig = new CircuitBreakerConfig(1, 1000);
 CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("uniqueName", circuitBreakerConfig);
 
 // Get a CircuitBreaker from the CircuitBreakerRegistry with default configuration (maxFailures = 3, waitInterval = 60[s])
-CircuitBreaker circuitBreaker2 = circuitBreakerRegistry.circuitBreaker("otherName", circuitBreakerConfig);
+CircuitBreaker circuitBreaker2 = circuitBreakerRegistry.circuitBreaker("otherName");
 ----
 
 === Functional programming style
