@@ -14,7 +14,7 @@ The state changes from CLOSED to OPEN after a configurable number of attempts ha
 
 === Usage with functional programming
 
-The `map` function is only invoked, if the CircuitBreaker is CLOSED or HALF_CLOSED. The call to `Try.of` returns a `SUCCESS`.
+The `map` function is only invoked, if the CircuitBreaker is CLOSED or HALF_CLOSED. The call to `Try.of` returns a `SUCCESS` in that case.
 
 [source,java]
 ----
@@ -22,13 +22,8 @@ The `map` function is only invoked, if the CircuitBreaker is CLOSED or HALF_CLOS
 // Create a InMemoryCircuitBreakerRegistry
 CircuitBreakerRegistry circuitBreakerRegistry = new InMemoryCircuitBreakerRegistry();
 
-// Configure CircuitBreaker
-// First parameter configures the maximum number of failures allowed
-// Second parameter configures the wait interval [ms] and specifies how long the CircuitBreaker should stay OPEN
-CircuitBreakerConfig circuitBreakerConfig = new CircuitBreakerConfig(1, 1000);
-
 // Get a CircuitBreaker from the CircuitBreakerRegistry
-CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("uniqueName", circuitBreakerConfig);
+CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("uniqueName");
 
 //When
 Try<String> result = Try.of(CircuitBreaker.CheckedSupplier.of(() -> "Hello", circuitBreaker))
