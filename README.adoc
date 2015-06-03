@@ -36,7 +36,7 @@ CircuitBreaker circuitBreaker2 = circuitBreakerRegistry.circuitBreaker("otherNam
 === Functional programming style
 
 You must wrap your `Supplier` or `Runnable` function with `CircuitBreaker.CheckedSupplier.of()` or `CircuitBreaker.CheckedRunnable.of()`. You can invoke the returned function with `Try.of()` or `Try.run()` from https://github.com/javaslang/javaslang[javaslang].
-The `map` function is only invoked, if the CircuitBreaker is CLOSED or HALF_CLOSED. The call to `Try.of` returns a `Success` Monad, if the function itself does not throw an exception.
+The `map` function is only invoked, if the CircuitBreaker is CLOSED or HALF_CLOSED. `Try.of()` returns a `Success` Monad, if the invocation of the function was successful. If the function itself throws an exception, a `Failure` Monad is returned and the `map` function is not invoked.
 
 [source,java]
 ----
@@ -58,7 +58,7 @@ assertThat(result.get()).isEqualTo("Hello world");
 
 === Example with OPEN CircuitBreaker
 
-The `map` function is not invoked, because the CircuitBreaker is OPEN. The call to `Try.of` returns a `Failure` Monad.
+In this test case the `map` function is not invoked, because the CircuitBreaker is OPEN. The call to `Try.of` returns a `Failure` Monad and `map` function is not invoked.
 
 [source,java]
 ----
