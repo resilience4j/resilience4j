@@ -92,12 +92,24 @@ public class FunctionalTest {
         assertThat(result.isSuccess()).isTrue();
         assertThat(circuitBreaker.isClosed()).isFalse();
         assertThat(result.get()).isEqualTo("Hello Recovery");
+    }
 
+    @Test
+    public void shouldInvokeMap() {
+        // Given
+        CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("testName");
+        //When
+        Try<String> result = Try.of(CircuitBreaker.CheckedSupplier.of(() -> "Hello", circuitBreaker))
+                .map(value -> value + " world");
+
+        //Then
+        assertThat(result.isSuccess()).isTrue();
+        assertThat(result.get()).isEqualTo("Hello world");
     }
 
     @Test
     public void testReadmeExample() {
-        //Given
+        // Given
         CircuitBreakerRegistry circuitBreakerRegistry = new InMemoryCircuitBreakerRegistry();
 
         // First parameter is maximum number of failures allowed
@@ -111,12 +123,12 @@ public class FunctionalTest {
         circuitBreaker.recordFailure();
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.OPEN); // CircuitBreaker is OPEN, because maxFailures > 1
 
-        //When
+        // When
         // Wrap a standard Java8 Supplier with a CircuitBreaker
-        CircuitBreaker.CheckedSupplier<String> checkedSupplier = CircuitBreaker.CheckedSupplier.of(() -> "Hello world", circuitBreaker);
-        Try<String> result = Try.of(checkedSupplier);
+        Try<String> result = Try.of(CircuitBreaker.CheckedSupplier.of(() -> "Hello", circuitBreaker))
+                .map(value -> value + " world");
 
-        //Then
+        // Then
         assertThat(result.isFailure()).isTrue(); // Call fails, because CircuitBreaker is OPEN
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.OPEN); // CircuitBreaker is OPEN, because maxFailures > 1
         assertThat(result.failed().get()).isInstanceOf(CircuitBreakerOpenException.class); // Exception was CircuitBreakerOpenException

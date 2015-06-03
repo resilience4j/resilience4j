@@ -5,14 +5,45 @@
 
 image:https://travis-ci.org/RobWin/circuitbreaker-java8.svg?branch=master["Build Status", link="https://travis-ci.org/RobWin/circuitbreaker-java8"] image:https://coveralls.io/repos/RobWin/circuitbreaker-java8/badge.svg["Coverage Status", link="https://coveralls.io/r/RobWin/circuitbreaker-java8"] image:http://img.shields.io/badge/license-ASF2-blue.svg["Apache License 2", link="http://www.apache.org/licenses/LICENSE-2.0.txt"]
 
-This project a CircuitBreaker implementation which works for synchronously and asynchronously calls. The projects tries to simplify the usage of the CircuitBreaker pattern in a functional programming style.
+This project a implementation of the CircuitBreaker pattern which works with synchronously and asynchronously calls. The projects tries to simplify the usage of the CircuitBreaker pattern in a functional programming style.
+The project should be combined with a functional library for Java 8 like https://github.com/javaslang/javaslang[javaslang]. The project requires at least JDK 8.
 
-The project requires at least JDK 8.
 This CircuitBreaker is implemented via a (timed) state machine. The CircuitBreaker does not know anything about the backend's state by itself, but uses only the information provided by calls to `CircuitBreaker::recordSuccess()` and `CircuitBreaker::recordFailure()`.
 The state changes from CLOSED to OPEN after a configurable number of attempts have failed consecutively. Then, all access to the backend is blocked for a configurable time interval. After that, the CircuitBreaker is HALF_CLOSED tentatively, to see if the backend is still dead or has become available again.
 On success or failure, the state changes back to CLOSED or OPEN, respectively.
 
 == Usage guide
+
+=== Usage with functional programming
+
+The `map` function is only invoked, if the CircuitBreaker is CLOSED or HALF_CLOSED. The call to `Try.of` returns a `SUCCESS`.
+
+[source,java]
+----
+// Given
+// Create a InMemoryCircuitBreakerRegistry
+CircuitBreakerRegistry circuitBreakerRegistry = new InMemoryCircuitBreakerRegistry();
+
+// Configure CircuitBreaker
+// First parameter configures the maximum number of failures allowed
+// Second parameter configures the wait interval [ms] and specifies how long the CircuitBreaker should stay OPEN
+CircuitBreakerConfig circuitBreakerConfig = new CircuitBreakerConfig(1, 1000);
+
+// Get a CircuitBreaker from the CircuitBreakerRegistry
+CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("uniqueName", circuitBreakerConfig);
+
+//When
+Try<String> result = Try.of(CircuitBreaker.CheckedSupplier.of(() -> "Hello", circuitBreaker))
+        .map(value -> value + " world");
+
+//Then
+assertThat(result.isSuccess()).isTrue();
+assertThat(result.get()).isEqualTo("Hello world");
+
+
+=== Usage guide with OPEN CircuitBreaker
+
+The `map` function is not invoked, because the CircuitBreaker is OPEN. The call to `Try.of` returns a `FAILURE`.
 
 [source,java]
 ----
@@ -36,9 +67,8 @@ assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.OPEN); // C
 
 // When
 // Wrap a standard Java8 Supplier with a CircuitBreaker
-CircuitBreaker.CheckedSupplier<String> checkedSupplier =
-    CircuitBreaker.CheckedSupplier.of(() -> "Hello world", circuitBreaker);
-Try<String> result = Try.of(checkedSupplier);
+Try<String> result = Try.of(CircuitBreaker.CheckedSupplier.of(() -> "Hello", circuitBreaker))
+        .map(value -> value + " world");
 
 // Then
 assertThat(result.isFailure()).isTrue(); // Call fails, because CircuitBreaker is OPEN
@@ -46,7 +76,7 @@ assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.OPEN); // C
 assertThat(result.failed().get()).isInstanceOf(CircuitBreakerOpenException.class); // Exception was CircuitBreakerOpenException
 ----
 
-== Usage guide with Recovery
+=== Usage guide with Recovery
 
 If you want to recover from an exception.
 
