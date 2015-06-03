@@ -1,0 +1,13 @@
+apply plugin: 'java'
+
+sourceCompatibility = 1.8
+version = '0.1.0'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    testCompile "junit:junit:4.11"
+    testCompile "org.assertj:assertj-core:3.0.0"
+}

@@ -1,0 +1,7 @@
+language: java
+jdk:
+  - oraclejdk7
+before_install:
+ - chmod +x gradlew
+after_success:
+- ./gradlew jacocoTestReport coveralls
