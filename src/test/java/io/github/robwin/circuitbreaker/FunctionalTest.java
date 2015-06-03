@@ -159,15 +159,10 @@ public class FunctionalTest {
     public void shouldReturnWithRecoveryAsync() throws ExecutionException, InterruptedException {
         // Given
         CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("testName");
-        assertThat(circuitBreaker.isClosed()).isTrue();
-        circuitBreaker.recordFailure();
-        assertThat(circuitBreaker.isClosed()).isTrue();
-        circuitBreaker.recordFailure();
-        assertThat(circuitBreaker.isClosed()).isFalse();
 
         //When
         CircuitBreaker.CheckedSupplier<String> checkedSupplier = CircuitBreaker.CheckedSupplier.of(() -> {
-            Thread.sleep(4000);
+            Thread.sleep(1000);
             throw new RuntimeException("BAM!");
         }, circuitBreaker);
         CompletableFuture<Try<String>> future = CompletableFuture.supplyAsync(() -> Try.of(checkedSupplier)
@@ -176,7 +171,7 @@ public class FunctionalTest {
         //Then
         Try<String> result = future.get();
         assertThat(result.isSuccess()).isTrue();
-        assertThat(circuitBreaker.isClosed()).isFalse();
+        assertThat(circuitBreaker.isClosed()).isTrue();
         assertThat(result.get()).isEqualTo("Hello Recovery");
     }
 

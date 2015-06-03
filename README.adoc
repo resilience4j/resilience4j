@@ -92,6 +92,28 @@ assertThat(result.isSuccess()).isTrue();
 assertThat(result.get()).isEqualTo("Hello Recovery");
 ----
 
+=== Usage guide with CompletableFuture
+
+[source,java]
+----
+// Given
+CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("testName");
+
+//When
+CircuitBreaker.CheckedSupplier<String> checkedSupplier = CircuitBreaker.CheckedSupplier.of(() -> {
+    Thread.sleep(1000);
+    throw new RuntimeException("BAM!");
+}, circuitBreaker);
+CompletableFuture<Try<String>> future = CompletableFuture.supplyAsync(() -> Try.of(checkedSupplier)
+        .recover((throwable) -> "Hello Recovery"));
+
+//Then
+Try<String> result = future.get();
+assertThat(result.isSuccess()).isTrue();
+assertThat(circuitBreaker.isClosed()).isTrue();
+assertThat(result.get()).isEqualTo("Hello Recovery");
+----
+
 == License
 
 Copyright 2015 Robert Winkler
