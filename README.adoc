@@ -23,6 +23,8 @@ repositories {
     jcenter()
 }
 
+compile "io.github.robwin:circuitbreaker-java8:{version}"
+----
 
 ==== Maven
 [source,xml]
@@ -44,9 +46,6 @@ repositories {
     <artifactId>circuitbreaker-java8</artifactId>
     <version>{version}</version>
 </dependency>
-----
-
-compile "io.github.robwin:circuitbreaker-java8:{version}"
 ----
 
 === CircuitBreaker configuration example
