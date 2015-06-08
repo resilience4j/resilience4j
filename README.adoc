@@ -32,7 +32,7 @@ compile "io.github.robwin:circuitbreaker-java8:{version}"
 [source,java]
 ----
 // Create a InMemoryCircuitBreakerRegistry with global default settings
-// (maxFailures = 3, waitInterval = 60[s])
+// (maxFailures = 3, waitInterval = 60[s], ignoredExceptions = empty)
 CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
 
 // Configure a CircuitBreaker
