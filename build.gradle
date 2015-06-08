@@ -14,7 +14,7 @@ apply plugin: 'maven-publish'
 apply plugin: 'jacoco'
 apply plugin: 'com.github.kt3k.coveralls'
 apply plugin: 'com.jfrog.bintray'
-//apply from: 'gradle/publishing.gradle'
+apply from: 'gradle/publishing.gradle'
 
 sourceCompatibility = 1.8
 version = '0.1.0'

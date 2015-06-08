@@ -24,7 +24,6 @@ import java.util.concurrent.ConcurrentMap;
 
 /**
  * Backend circuitBreaker manager.
- * <p/>
  * Constructs backend monitors according to configuration values.
  */
 public class InMemoryCircuitBreakerRegistry implements CircuitBreakerRegistry {

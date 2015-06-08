@@ -21,7 +21,6 @@ package io.github.robwin.circuitbreaker;
 
 /**
  * Backend circuitBreaker manager.
- * <p/>
  * Manages backend circuitBreaker objects for the respective backends.
  */
 public interface CircuitBreakerRegistry {

@@ -23,11 +23,9 @@ import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * CircuitBreaker state machine.
- * <p/>
  * This CircuitBreaker is implemented via a (timed) state machine. It does not have a way to know anything about the
  * backend's state by itself, but uses only the information provided by calls to {@link #recordSuccess()} and
  * {@link #recordFailure()}.
- * <p/>
  * The state changes from CLOSED to OPEN after {@link #maxFailures} attempts have failed consecutively. Then, all access to
  * the backend is blocked for the time interval given by {@link #waitInterval}. After that, the backend is unblocked
  * tentatively, to see if it is still dead or has become available again (state: HALF_CLOSED). On success or failure, the
