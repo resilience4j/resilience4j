@@ -117,19 +117,24 @@ public class FunctionalTest {
     public void shouldInvokeMap() {
         // Given
         CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("testName");
-        //When
-        Try<String> result = Try.of(CircuitBreaker.decorateCheckedSupplier(() -> "Hello", circuitBreaker))
-                .map(value -> value + " world");
+        // When
+        Try.CheckedSupplier<String> decoratedSupplier = CircuitBreaker
+                .decorateCheckedSupplier(() -> "This can be any method which returns: 'Hello", circuitBreaker);
 
-        //Then
+        // You can chain other functions with map and flatMap. The Try Monad returns a Success<String>, if the all
+        // functions run successfully.
+        Try<String> result = Try.of(decoratedSupplier)
+                        .map(value -> value + " world'");
+
+        // Then
         assertThat(result.isSuccess()).isTrue();
-        assertThat(result.get()).isEqualTo("Hello world");
+        assertThat(result.get()).isEqualTo("This can be any method which returns: 'Hello world'");
     }
 
     @Test
     public void testReadmeExample() {
         // Given
-        CircuitBreakerRegistry circuitBreakerRegistry = new InMemoryCircuitBreakerRegistry();
+        CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
 
         // First parameter is maximum number of failures allowed
         // Second parameter is the wait interval [ms] and specifies how long the CircuitBreaker should stay OPEN
@@ -143,14 +148,12 @@ public class FunctionalTest {
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.OPEN); // CircuitBreaker is OPEN, because maxFailures > 1
 
         // When
-        // Wrap a standard Java8 Supplier with a CircuitBreaker
         Try<String> result = Try.of(CircuitBreaker.decorateCheckedSupplier(() -> "Hello", circuitBreaker))
                 .map(value -> value + " world");
 
         // Then
         assertThat(result.isFailure()).isTrue(); // Call fails, because CircuitBreaker is OPEN
-        assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.OPEN); // CircuitBreaker is OPEN, because maxFailures > 1
-        assertThat(result.failed().get()).isInstanceOf(CircuitBreakerOpenException.class); // Exception was CircuitBreakerOpenException
+        assertThat(result.failed().get()).isInstanceOf(CircuitBreakerOpenException.class); // Exception is CircuitBreakerOpenException
     }
 
     @Test

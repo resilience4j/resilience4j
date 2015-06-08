@@ -24,23 +24,23 @@ import java.util.concurrent.ConcurrentMap;
 
 /**
  * Backend circuitBreaker manager.
- * Constructs backend monitors according to configuration values.
+ * Constructs backend circuitBreakers according to configuration values.
  */
 final class InMemoryCircuitBreakerRegistry implements CircuitBreakerRegistry {
 
     private final CircuitBreakerConfig defaultCircuitBreakerConfig;
 
     /**
-     * The monitors, indexed by name of the backend.
+     * The circuitBreakers, indexed by name of the backend.
      */
-    private final ConcurrentMap<String, CircuitBreaker> monitors;
+    private final ConcurrentMap<String, CircuitBreaker> circuitBreakers;
 
     /**
      * The constructor with default circuitBreaker properties.
      */
     public InMemoryCircuitBreakerRegistry() {
         this.defaultCircuitBreakerConfig = new CircuitBreakerConfig.Builder().build();
-        this.monitors = new ConcurrentHashMap<>();
+        this.circuitBreakers = new ConcurrentHashMap<>();
     }
 
     /**
@@ -50,7 +50,7 @@ final class InMemoryCircuitBreakerRegistry implements CircuitBreakerRegistry {
      */
     public InMemoryCircuitBreakerRegistry(CircuitBreakerConfig defaultCircuitBreakerConfig) {
         this.defaultCircuitBreakerConfig = Objects.requireNonNull(defaultCircuitBreakerConfig, "CircuitBreakerConfig must not be null");
-        this.monitors = new ConcurrentHashMap<>();
+        this.circuitBreakers = new ConcurrentHashMap<>();
     }
 
     /**
@@ -58,7 +58,7 @@ final class InMemoryCircuitBreakerRegistry implements CircuitBreakerRegistry {
      */
     @Override
     public CircuitBreaker circuitBreaker(String name) {
-        return monitors.computeIfAbsent(Objects.requireNonNull(name, "Name must not be null"), (k) -> new CircuitBreakerStateMachine(name,
+        return circuitBreakers.computeIfAbsent(Objects.requireNonNull(name, "Name must not be null"), (k) -> new CircuitBreakerStateMachine(name,
                 defaultCircuitBreakerConfig));
     }
 
@@ -67,14 +67,14 @@ final class InMemoryCircuitBreakerRegistry implements CircuitBreakerRegistry {
      */
     @Override
     public CircuitBreaker circuitBreaker(String name, CircuitBreakerConfig customCircuitBreakerConfig) {
-        return monitors.computeIfAbsent(Objects.requireNonNull(name, "Name must not be null"), (k) -> new CircuitBreakerStateMachine(name,
+        return circuitBreakers.computeIfAbsent(Objects.requireNonNull(name, "Name must not be null"), (k) -> new CircuitBreakerStateMachine(name,
                 customCircuitBreakerConfig));
     }
 
     /**
-     * Resets the circuitBreaker states.
+     * Reset the circuitBreaker states.
      */
     public void resetMonitorStates() {
-        monitors.values().forEach(CircuitBreaker::recordSuccess);
+        circuitBreakers.values().forEach(CircuitBreaker::recordSuccess);
     }
 }
