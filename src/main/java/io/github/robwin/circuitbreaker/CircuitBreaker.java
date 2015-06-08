@@ -55,11 +55,15 @@ public interface CircuitBreaker {
 
     /**
      * Get the name of the CircuitBreaker
+     *
+     * @return the name of the CircuitBreaker
      */
     String getName();
 
     /**
      * Get the state of the CircuitBreaker
+     *
+     * @return the state of the CircuitBreaker
      */
     State getState();
 

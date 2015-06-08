@@ -78,6 +78,8 @@ abstract class CircuitBreakerState {
 
     /**
      * Get the state of the CircuitBreaker
+     *
+     * @return the state of the CircuitBreaker
      */
     abstract CircuitBreaker.State getState();
 }

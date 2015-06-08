@@ -38,8 +38,9 @@ CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefault
 // Configure a CircuitBreaker
 // You can configure the maximum number of allowed failures and
 // the wait interval [ms] which specifies how long the CircuitBreaker should stay OPEN
+// You can add exceptions to the ignore list so that the CircuitBreaker is not triggered
 CircuitBreakerConfig circuitBreakerConfig = new CircuitBreakerConfig.Builder()
-    .maxFailures(1).waitInterval(1000).build();
+    .maxFailures(1).waitInterval(1000).ignoredException(BusinessException.class).build();
 
 // Get a CircuitBreaker from the CircuitBreakerRegistry with custom configuration
 CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("uniqueName", circuitBreakerConfig);
