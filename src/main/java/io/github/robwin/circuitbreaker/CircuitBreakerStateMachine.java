@@ -26,10 +26,9 @@ import java.util.concurrent.atomic.AtomicReference;
  * This CircuitBreaker is implemented via a (timed) finite state machine. It does not have a way to know anything about the
  * backend's state by itself, but uses only the information provided by calls to {@link #recordSuccess()} and
  * {@link #recordFailure()}.
- * The state changes from CLOSED to OPEN after {@link #maxFailures} attempts have failed consecutively. Then, all access to
- * the backend is blocked for the time interval given by {@link #waitInterval}. After that, the backend is unblocked
- * tentatively, to see if it is still dead or has become available again (state: HALF_CLOSED). On success or failure, the
- * state changes back to CLOSED or OPEN, respectively.
+ * The state of the CircuitBreaker changes from `CLOSED` to `OPEN` if a (configurable) number of call attempts have failed consecutively.
+ * Then, all access to the backend is blocked for a (configurable) time interval. After that, the CircuitBreaker state changes to `HALF_CLOSED` tentatively, to see if the backend is still dead or has become available again.
+ * On success or failure, the state changes back to `CLOSED` or `OPEN`, respectively.
  */
 final class CircuitBreakerStateMachine implements CircuitBreaker {
 
@@ -51,10 +50,6 @@ final class CircuitBreakerStateMachine implements CircuitBreaker {
 
     CircuitBreakerConfig getCircuitBreakerConfig(){
         return this.circuitBreakerConfig;
-    }
-
-    void setStateReference(CircuitBreakerState newState){
-        stateReference.set(newState);
     }
 
     /**
