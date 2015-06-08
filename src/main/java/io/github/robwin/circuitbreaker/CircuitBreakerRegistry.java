@@ -45,4 +45,8 @@ public interface CircuitBreakerRegistry {
     static CircuitBreakerRegistry of(CircuitBreakerConfig defaultCircuitBreakerConfig){
         return new InMemoryCircuitBreakerRegistry(defaultCircuitBreakerConfig);
     }
+
+    static CircuitBreakerRegistry ofDefaults(){
+        return new InMemoryCircuitBreakerRegistry();
+    }
 }

@@ -24,6 +24,7 @@ import org.junit.Test;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import java.util.function.Supplier;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -33,28 +34,28 @@ public class FunctionalTest {
 
     @Before
     public void setUp(){
-        circuitBreakerRegistry = new InMemoryCircuitBreakerRegistry(new CircuitBreakerConfig.Builder().maxFailures(1).waitInterval(1000).build());
+        circuitBreakerRegistry = CircuitBreakerRegistry.of(new CircuitBreakerConfig.Builder().maxFailures(1).waitInterval(1000).build());
     }
 
     @Test
     public void shouldReturnFailureWithCircuitBreakerOpenException() {
         // Given
         CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("testName");
-        assertThat(circuitBreaker.isClosed()).isTrue();
+        assertThat(circuitBreaker.isCallPermitted()).isTrue();
         circuitBreaker.recordFailure();
-        assertThat(circuitBreaker.isClosed()).isTrue();
+        assertThat(circuitBreaker.isCallPermitted()).isTrue();
         circuitBreaker.recordFailure();
-        assertThat(circuitBreaker.isClosed()).isFalse();
+        assertThat(circuitBreaker.isCallPermitted()).isFalse();
 
         //When
-        CircuitBreaker.CheckedSupplier<String> checkedSupplier = CircuitBreaker.CheckedSupplier.of(() -> {
+        Try.CheckedRunnable checkedRunnable = CircuitBreaker.decorateCheckedRunnable(() -> {
             throw new RuntimeException("BAM!");
         }, circuitBreaker);
-        Try<String> result = Try.of(checkedSupplier);
+        Try result = Try.run(checkedRunnable);
 
         //Then
         assertThat(result.isFailure()).isTrue();
-        assertThat(circuitBreaker.isClosed()).isFalse();
+        assertThat(circuitBreaker.isCallPermitted()).isFalse();
         assertThat(result.failed().get()).isInstanceOf(CircuitBreakerOpenException.class);
     }
 
@@ -62,18 +63,17 @@ public class FunctionalTest {
     public void shouldReturnFailureWithRuntimeException() {
         // Given
         CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("testName");
-        assertThat(circuitBreaker.isClosed()).isTrue();
+        assertThat(circuitBreaker.isCallPermitted()).isTrue();
 
         //When
-        CircuitBreaker.CheckedSupplier<String> checkedSupplier = CircuitBreaker.CheckedSupplier.of(() -> {
+        Try.CheckedRunnable checkedRunnable = CircuitBreaker.decorateCheckedRunnable(() -> {
             throw new RuntimeException("BAM!");
         }, circuitBreaker);
-
-        Try<String> result = Try.of(checkedSupplier);
+        Try result = Try.run(checkedRunnable);
 
         //Then
         assertThat(result.isFailure()).isTrue();
-        assertThat(circuitBreaker.isClosed()).isTrue();
+        assertThat(circuitBreaker.isCallPermitted()).isTrue();
         assertThat(result.failed().get()).isInstanceOf(RuntimeException.class);
     }
 
@@ -81,29 +81,27 @@ public class FunctionalTest {
     public void shouldReturnSuccess() {
         // Given
         CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("testName");
-        assertThat(circuitBreaker.isClosed()).isTrue();
+        assertThat(circuitBreaker.isCallPermitted()).isTrue();
 
         //When
-        CircuitBreaker.CheckedSupplier<String> checkedSupplier = CircuitBreaker.CheckedSupplier.of(() -> "Hello world", circuitBreaker);
-        Try<String> result = Try.of(checkedSupplier);
+        Supplier<String> checkedSupplier = CircuitBreaker.decorateSupplier(() -> "Hello world", circuitBreaker);
 
         //Then
-        assertThat(result.isSuccess()).isTrue();
-        assertThat(result.get()).isEqualTo("Hello world");
+        assertThat(checkedSupplier.get()).isEqualTo("Hello world");
     }
 
     @Test
     public void shouldReturnWitRecovery() {
         // Given
         CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("testName");
-        assertThat(circuitBreaker.isClosed()).isTrue();
+        assertThat(circuitBreaker.isCallPermitted()).isTrue();
         circuitBreaker.recordFailure();
-        assertThat(circuitBreaker.isClosed()).isTrue();
+        assertThat(circuitBreaker.isCallPermitted()).isTrue();
         circuitBreaker.recordFailure();
-        assertThat(circuitBreaker.isClosed()).isFalse();
+        assertThat(circuitBreaker.isCallPermitted()).isFalse();
 
         //When
-        CircuitBreaker.CheckedSupplier<String> checkedSupplier = CircuitBreaker.CheckedSupplier.of(() -> {
+        Try.CheckedSupplier<String> checkedSupplier = CircuitBreaker.decorateCheckedSupplier(() -> {
             throw new RuntimeException("BAM!");
         }, circuitBreaker);
         Try<String> result = Try.of(checkedSupplier)
@@ -111,7 +109,7 @@ public class FunctionalTest {
 
         //Then
         assertThat(result.isSuccess()).isTrue();
-        assertThat(circuitBreaker.isClosed()).isFalse();
+        assertThat(circuitBreaker.isCallPermitted()).isFalse();
         assertThat(result.get()).isEqualTo("Hello Recovery");
     }
 
@@ -120,7 +118,7 @@ public class FunctionalTest {
         // Given
         CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("testName");
         //When
-        Try<String> result = Try.of(CircuitBreaker.CheckedSupplier.of(() -> "Hello", circuitBreaker))
+        Try<String> result = Try.of(CircuitBreaker.decorateCheckedSupplier(() -> "Hello", circuitBreaker))
                 .map(value -> value + " world");
 
         //Then
@@ -146,7 +144,7 @@ public class FunctionalTest {
 
         // When
         // Wrap a standard Java8 Supplier with a CircuitBreaker
-        Try<String> result = Try.of(CircuitBreaker.CheckedSupplier.of(() -> "Hello", circuitBreaker))
+        Try<String> result = Try.of(CircuitBreaker.decorateCheckedSupplier(() -> "Hello", circuitBreaker))
                 .map(value -> value + " world");
 
         // Then
@@ -161,7 +159,7 @@ public class FunctionalTest {
         CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("testName");
 
         //When
-        CircuitBreaker.CheckedSupplier<String> checkedSupplier = CircuitBreaker.CheckedSupplier.of(() -> {
+        Try.CheckedSupplier<String> checkedSupplier = CircuitBreaker.decorateCheckedSupplier(() -> {
             Thread.sleep(1000);
             throw new RuntimeException("BAM!");
         }, circuitBreaker);
@@ -171,7 +169,7 @@ public class FunctionalTest {
         //Then
         Try<String> result = future.get();
         assertThat(result.isSuccess()).isTrue();
-        assertThat(circuitBreaker.isClosed()).isTrue();
+        assertThat(circuitBreaker.isCallPermitted()).isTrue();
         assertThat(result.get()).isEqualTo("Hello Recovery");
     }
 

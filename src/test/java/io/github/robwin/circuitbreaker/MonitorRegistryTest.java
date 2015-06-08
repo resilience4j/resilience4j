@@ -30,7 +30,7 @@ public class MonitorRegistryTest {
 
     @Before
     public void setUp(){
-        circuitBreakerRegistry = new InMemoryCircuitBreakerRegistry();
+        circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
     }
 
     @Test

@@ -26,7 +26,7 @@ import java.util.concurrent.ConcurrentMap;
  * Backend circuitBreaker manager.
  * Constructs backend monitors according to configuration values.
  */
-public class InMemoryCircuitBreakerRegistry implements CircuitBreakerRegistry {
+final class InMemoryCircuitBreakerRegistry implements CircuitBreakerRegistry {
 
     private final CircuitBreakerConfig defaultCircuitBreakerConfig;
 
@@ -58,7 +58,7 @@ public class InMemoryCircuitBreakerRegistry implements CircuitBreakerRegistry {
      */
     @Override
     public CircuitBreaker circuitBreaker(String name) {
-        return monitors.computeIfAbsent(Objects.requireNonNull(name, "Name must not be null"), (k) -> new DefaultCircuitBreaker(name,
+        return monitors.computeIfAbsent(Objects.requireNonNull(name, "Name must not be null"), (k) -> new CircuitBreakerStateMachine(name,
                 defaultCircuitBreakerConfig));
     }
 
@@ -67,7 +67,7 @@ public class InMemoryCircuitBreakerRegistry implements CircuitBreakerRegistry {
      */
     @Override
     public CircuitBreaker circuitBreaker(String name, CircuitBreakerConfig customCircuitBreakerConfig) {
-        return monitors.computeIfAbsent(Objects.requireNonNull(name, "Name must not be null"), (k) -> new DefaultCircuitBreaker(name,
+        return monitors.computeIfAbsent(Objects.requireNonNull(name, "Name must not be null"), (k) -> new CircuitBreakerStateMachine(name,
                 customCircuitBreakerConfig));
     }
 
