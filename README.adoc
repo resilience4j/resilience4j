@@ -12,6 +12,44 @@ The state of the CircuitBreaker changes from `CLOSED` to `OPEN` if a (configurab
 
 == Usage guide
 
+=== Adding circuitbreaker-java8 to your project
+The project is published in JCenter and Maven Central.
+
+==== Maven
+
+[source,xml]
+[subs="attributes"]
+----
+<repositories>
+    <repository>
+        <snapshots>
+            <enabled>false</enabled>
+        </snapshots>
+        <id>central</id>
+        <name>bintray</name>
+        <url>http://jcenter.bintray.com</url>
+    </repository>
+</repositories>
+
+<dependency>
+    <groupId>io.github.robwin</groupId>
+    <artifactId>circuitbreaker-java8</artifactId>
+    <version>{version}</version>
+</dependency>
+----
+
+==== Gradle
+
+[source,groovy]
+[subs="attributes"]
+----
+repositories {
+    jcenter()
+}
+
+compile "io.github.robwin:circuitbreaker-java8:{version}"
+----
+
 === CircuitBreaker configuration example
 
 [source,java]
