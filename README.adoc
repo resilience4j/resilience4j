@@ -6,7 +6,7 @@
 image:https://travis-ci.org/RobWin/circuitbreaker-java8.svg?branch=master["Build Status", link="https://travis-ci.org/RobWin/circuitbreaker-java8"] image:https://coveralls.io/repos/RobWin/circuitbreaker-java8/badge.svg["Coverage Status", link="https://coveralls.io/r/RobWin/circuitbreaker-java8"] image:https://api.bintray.com/packages/robwin/maven/circuitbreaker-java8/images/download.svg[link="https://bintray.com/robwin/maven/circuitbreaker-java8/_latestVersion"] image:http://img.shields.io/badge/license-ASF2-blue.svg["Apache License 2", link="http://www.apache.org/licenses/LICENSE-2.0.txt"]
 
 This project is an implementation of the http://martinfowler.com/bliki/CircuitBreaker.html[CircuitBreaker pattern] for Java 8 and functional programming.
-The project provides several higher-order functions to decorate any `Supplier` or `Runnable` function with a Circuit Breaker. You can use the returned, decorated function synchronously or asynchronously. The project should be combined with a functional library for Java 8 like https://github.com/javaslang/javaslang[javaslang]. The project requires at least JDK 8.
+The project provides several higher-order functions to decorate any `Supplier/Runnable` or `CheckedSupplier/CheckedRunnable` function with a Circuit Breaker. You can use the returned, decorated function synchronously or asynchronously. The project should be combined with a functional library for Java 8 like https://github.com/javaslang/javaslang[javaslang]. The project requires at least JDK 8.
 
 The CircuitBreaker is implemented via a finite state machine and has three states: `CLOSED`, `OPEN` and `HALF_OPEN`. The CircuitBreaker does not know anything about the backend's state by itself, but uses only the information provided by calls to `CircuitBreaker::recordSuccess()` and `CircuitBreaker::recordFailure()`.
 The state of the CircuitBreaker changes from `CLOSED` to `OPEN` if a (configurable) number of call attempts have failed consecutively. Then, all access to the backend is blocked for a (configurable) time interval. After that, the CircuitBreaker state changes to `HALF_CLOSED` tentatively, to see if the backend is still dead or has become available again. On success or failure, the state changes back to `CLOSED` or `OPEN`, respectively.
@@ -51,7 +51,7 @@ CircuitBreaker circuitBreaker2 = circuitBreakerRegistry.circuitBreaker("otherNam
 
 === Functional programming style
 
-You can decorate any `Supplier` or `Runnable` function with `CircuitBreaker.decorateCheckedSupplier()` or `CircuitBreaker.decorateCheckedRunnable()`. You can invoke the returned function with `Try.of()` or `Try.run()` from https://github.com/javaslang/javaslang[javaslang].
+You can decorate any `Supplier/Runnable` or `CheckedSupplier/CheckedRunnable` function with `CircuitBreaker.decorateCheckedSupplier()` or `CircuitBreaker.decorateCheckedRunnable()`. You can invoke the returned function with `Try.of()` or `Try.run()` from https://github.com/javaslang/javaslang[javaslang].
 The `map` function is only invoked, if the CircuitBreaker is CLOSED or HALF_CLOSED. `Try.of()` returns a `Success<String>` Monad, if the invocation of the function was successful. If the function itself throws an exception, a `Failure<Throwable>` Monad is returned and the `map` function is not invoked.
 
 [source,java]
