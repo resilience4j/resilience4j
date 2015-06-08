@@ -53,7 +53,7 @@ CircuitBreaker circuitBreaker2 = circuitBreakerRegistry.circuitBreaker("otherNam
 === Functional programming style
 
 You can decorate any `Supplier/Runnable` or `CheckedSupplier/CheckedRunnable` function with `CircuitBreaker.decorateCheckedSupplier()` or `CircuitBreaker.decorateCheckedRunnable()`. You can invoke the returned function with `Try.of()` or `Try.run()` from https://github.com/javaslang/javaslang[javaslang].
-`map` is only invoked, if the CircuitBreaker is CLOSED or HALF_CLOSED. `Try.of()` returns a `Success<String>` Monad, if the invocation of the function was successful. If the function itself throws an exception, a `Failure<Throwable>` Monad is returned and `map` is not invoked.
+You can chain further functions with `map`, `flatMap`, `filter`, `recover` or `andThen`. The chained functions are only invoked, if the CircuitBreaker is CLOSED or HALF_CLOSED. `Try.of()` returns a `Success<String>` Monad, if the invocation of the function was successful. If the function itself throws an exception, a `Failure<Throwable>` Monad is returned and `map` is not invoked.
 
 [source,java]
 ----
