@@ -16,8 +16,10 @@ apply plugin: 'com.github.kt3k.coveralls'
 apply plugin: 'com.jfrog.bintray'
 apply from: 'gradle/publishing.gradle'
 
+group = 'io.github.robwin'
 sourceCompatibility = 1.8
 version = '0.1.0'
+description = 'A CircuitBreaker pattern implementation for Java 8 and functional programming-'
 
 repositories {
     mavenCentral()

@@ -3,7 +3,7 @@
 :version: 0.1.0
 :hardbreaks:
 
-image:https://travis-ci.org/RobWin/circuitbreaker-java8.svg?branch=master["Build Status", link="https://travis-ci.org/RobWin/circuitbreaker-java8"] image:https://coveralls.io/repos/RobWin/circuitbreaker-java8/badge.svg["Coverage Status", link="https://coveralls.io/r/RobWin/circuitbreaker-java8"] image:http://img.shields.io/badge/license-ASF2-blue.svg["Apache License 2", link="http://www.apache.org/licenses/LICENSE-2.0.txt"]
+image:https://travis-ci.org/RobWin/circuitbreaker-java8.svg?branch=master["Build Status", link="https://travis-ci.org/RobWin/circuitbreaker-java8"] image:https://coveralls.io/repos/RobWin/circuitbreaker-java8/badge.svg["Coverage Status", link="https://coveralls.io/r/RobWin/circuitbreaker-java8"] image:https://api.bintray.com/packages/robwin/maven/circuitbreaker-java8/images/download.svg[link="https://bintray.com/robwin/maven/circuitbreaker-java8/_latestVersion"] image:http://img.shields.io/badge/license-ASF2-blue.svg["Apache License 2", link="http://www.apache.org/licenses/LICENSE-2.0.txt"]
 
 This project is an implementation of the http://martinfowler.com/bliki/CircuitBreaker.html[CircuitBreaker pattern] for Java 8 and functional programming. You can decorate any `Supplier` or `Runnable` function with a Circuit Breaker and use the function synchronously or asynchronously. The project should be combined with a functional library for Java 8 like https://github.com/javaslang/javaslang[javaslang]. The project requires at least JDK 8.
 
