@@ -115,10 +115,10 @@ CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefault
 CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("uniqueName");
 
 //When
- Try.CheckedSupplier<String> checkedSupplier = CircuitBreaker.decorateCheckedSupplier(() -> {
-            Thread.sleep(1000);
-            throw new RuntimeException("BAM!");
-        }, circuitBreaker);
+Try.CheckedSupplier<String> checkedSupplier = CircuitBreaker.decorateCheckedSupplier(() -> {
+        Thread.sleep(1000);
+        throw new RuntimeException("BAM!");
+    }, circuitBreaker);
 Try<String> result = Try.of(checkedSupplier)
         .recover((throwable) -> "Hello Recovery");
 
