@@ -105,7 +105,7 @@ assertThat(result.failed().get()).isInstanceOf(CircuitBreakerOpenException.class
 
 === Example of Recovery
 
-If you want to recover from an exception, you can chain the method `Try.recover()`. The recovery method is only invoked, if `Try.of()` returns a `Failure<Throwable>` Monad.
+If you want to recover from any exception, you can chain the method `Try.recover()`. The recovery method is only invoked, if `Try.of()` returns a `Failure<Throwable>` Monad.
 
 [source,java]
 ----
