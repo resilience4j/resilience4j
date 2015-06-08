@@ -66,8 +66,11 @@ final class CircuitBreakerStateMachine implements CircuitBreaker {
      * Records a failure.
      */
     @Override
-    public void recordFailure() {
-        stateReference.get().recordFailure();
+    public void recordFailure(Throwable throwable) {
+        if(circuitBreakerConfig.getIgnoredExceptions().stream()
+                .noneMatch(ignoredException -> ignoredException.isInstance(throwable))){
+            stateReference.get().recordFailure();
+        }
     }
 
     /**

@@ -43,13 +43,13 @@ public class CircuitBreakerTest {
     public void testCircuitBreaker() throws InterruptedException {
         assertThat(circuitBreaker.isCallPermitted()).isEqualTo(true);
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
-        circuitBreaker.recordFailure();  // failure 1
+        circuitBreaker.recordFailure(new RuntimeException());  // failure 1
         assertThat(circuitBreaker.isCallPermitted()).isEqualTo(true);
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
-        circuitBreaker.recordFailure();  // failure 2
+        circuitBreaker.recordFailure(new RuntimeException());  // failure 2
         assertThat(circuitBreaker.isCallPermitted()).isEqualTo(true);
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
-        circuitBreaker.recordFailure();  // failure 3
+        circuitBreaker.recordFailure(new RuntimeException());  // failure 3
         assertThat(circuitBreaker.isCallPermitted()).isEqualTo(false);  // open after third failure
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.OPEN);
         sleep(500);
@@ -58,7 +58,7 @@ public class CircuitBreakerTest {
         sleep(800);
         assertThat(circuitBreaker.isCallPermitted()).isEqualTo(true); // half-closed after more than 1 second
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.HALF_CLOSED);
-        circuitBreaker.recordFailure(); // but backend still unavailable
+        circuitBreaker.recordFailure(new RuntimeException()); // but backend still unavailable
         assertThat(circuitBreaker.isCallPermitted()).isEqualTo(false); // back to open
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.OPEN);
         sleep(1300);
@@ -67,7 +67,7 @@ public class CircuitBreakerTest {
         circuitBreaker.recordSuccess();
         assertThat(circuitBreaker.isCallPermitted()).isEqualTo(true);
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED); // closed again and failure count is reset
-        circuitBreaker.recordFailure();
+        circuitBreaker.recordFailure(new RuntimeException());
         assertThat(circuitBreaker.isCallPermitted()).isEqualTo(true);
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);  // closed because failure count was reset
     }

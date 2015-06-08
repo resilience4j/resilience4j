@@ -22,8 +22,6 @@ import javaslang.control.Try;
 
 import java.util.function.Supplier;
 
-import static io.github.robwin.circuitbreaker.CircuitBreakerUtils.checkIfCallIsPermitted;
-
 /**
  * CircuitBreaker API.
  *
@@ -43,12 +41,14 @@ public interface CircuitBreaker {
 
     /**
      * Records a backend failure.
-     * This must be called if a call to this backend fails
+     * This must be called if a call to a backend fails
+     *
+     * @param throwable The throwable which must be recorded
      */
-    void recordFailure();
+    void recordFailure(Throwable throwable);
 
      /**
-      * Records success of a call to this backend.
+      * Records success of a call to a backend.
       * This must be called after a successful call.
       */
     void recordSuccess();
@@ -81,12 +81,12 @@ public interface CircuitBreaker {
     static <T> Try.CheckedSupplier<T> decorateCheckedSupplier(Try.CheckedSupplier<T> supplier, CircuitBreaker circuitBreaker){
         return () -> {
             try {
-                checkIfCallIsPermitted(circuitBreaker);
+                CircuitBreakerUtils.isCallPermitted(circuitBreaker);
                 T returnValue = supplier.get();
                 circuitBreaker.recordSuccess();
                 return returnValue;
             } catch (Throwable throwable) {
-                circuitBreaker.recordFailure();
+                circuitBreaker.recordFailure(throwable);
                 throw throwable;
             }
         };
@@ -95,11 +95,11 @@ public interface CircuitBreaker {
     static Try.CheckedRunnable decorateCheckedRunnable(Try.CheckedRunnable runnable, CircuitBreaker circuitBreaker){
         return () -> {
             try{
-                checkIfCallIsPermitted(circuitBreaker);
+                CircuitBreakerUtils.isCallPermitted(circuitBreaker);
                 runnable.run();
                 circuitBreaker.recordSuccess();
             } catch (Throwable throwable){
-                circuitBreaker.recordFailure();
+                circuitBreaker.recordFailure(throwable);
                 throw throwable;
             }
         };
@@ -108,12 +108,12 @@ public interface CircuitBreaker {
     static <T> Supplier<T> decorateSupplier(Supplier<T> supplier, CircuitBreaker circuitBreaker){
         return () -> {
             try {
-                checkIfCallIsPermitted(circuitBreaker);
+                CircuitBreakerUtils.isCallPermitted(circuitBreaker);
                 T returnValue = supplier.get();
                 circuitBreaker.recordSuccess();
                 return returnValue;
             } catch (Throwable throwable) {
-                circuitBreaker.recordFailure();
+                circuitBreaker.recordFailure(throwable);
                 throw throwable;
             }
         };
@@ -122,11 +122,11 @@ public interface CircuitBreaker {
     static Runnable decorateRunnable(Runnable runnable, CircuitBreaker circuitBreaker){
         return () -> {
             try{
-                checkIfCallIsPermitted(circuitBreaker);
+                CircuitBreakerUtils.isCallPermitted(circuitBreaker);
                 runnable.run();
                 circuitBreaker.recordSuccess();
             } catch (Throwable throwable){
-                circuitBreaker.recordFailure();
+                circuitBreaker.recordFailure(throwable);
                 throw throwable;
             }
         };

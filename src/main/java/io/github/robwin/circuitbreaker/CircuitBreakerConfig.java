@@ -18,14 +18,21 @@
  */
 package io.github.robwin.circuitbreaker;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class CircuitBreakerConfig {
+    // The maximum number of allowed failures
     private int maxFailures;
-
+    // The wait interval which specifies how long the CircuitBreaker should stay OPEN
     private int waitInterval;
+    // Exceptions which do not count as failures and thus not trigger the circuit breaker.
+    private List<Class<? extends Throwable>> ignoredExceptions;
 
-    private CircuitBreakerConfig(int maxFailures, int waitInterval){
+    private CircuitBreakerConfig(int maxFailures, int waitInterval, List<Class<? extends Throwable>> ignoredExceptions){
         this.maxFailures = maxFailures;
         this.waitInterval = waitInterval;
+        this.ignoredExceptions = ignoredExceptions;
     }
 
     public Integer getMaxFailures() {
@@ -36,9 +43,14 @@ public class CircuitBreakerConfig {
         return waitInterval;
     }
 
+    public List<Class<? extends Throwable>> getIgnoredExceptions() {
+        return ignoredExceptions;
+    }
+
     public static class Builder {
         private int maxFailures = 3;
         private int waitInterval = 60000;
+        private List<Class<? extends Throwable>> ignoredExceptions = new ArrayList<>();
 
         public Builder maxFailures(int maxFailures) {
             this.maxFailures = maxFailures;
@@ -50,8 +62,18 @@ public class CircuitBreakerConfig {
             return this;
         }
 
+        public Builder ignoredException(Class<? extends Throwable> ignoredException) {
+            ignoredExceptions.add(ignoredException);
+            return this;
+        }
+
+        public Builder ignoredExceptions(List<Class<? extends Throwable>> ignoredExceptions) {
+            this.ignoredExceptions = ignoredExceptions;
+            return this;
+        }
+
         public CircuitBreakerConfig build() {
-            return new CircuitBreakerConfig(maxFailures, waitInterval);
+            return new CircuitBreakerConfig(maxFailures, waitInterval, ignoredExceptions);
         }
     }
 }

@@ -58,7 +58,7 @@ abstract class CircuitBreakerState {
     }
 
     /**
-     * Requests permission to call this circuitBreaker's backend.
+     * Requests permission to call a circuitBreaker's backend.
      *
      * @return boolean whether a call should be permitted
      */
@@ -66,7 +66,7 @@ abstract class CircuitBreakerState {
 
     /**
      * Records a backend failure.
-     * This must be called if a call to this backend fails
+     * This must be called if a call to a backend fails
      */
     abstract void recordFailure();
 

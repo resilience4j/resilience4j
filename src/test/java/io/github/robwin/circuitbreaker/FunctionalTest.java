@@ -22,6 +22,8 @@ import javaslang.control.Try;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.io.IOException;
+import java.net.SocketTimeoutException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Supplier;
@@ -34,7 +36,10 @@ public class FunctionalTest {
 
     @Before
     public void setUp(){
-        circuitBreakerRegistry = CircuitBreakerRegistry.of(new CircuitBreakerConfig.Builder().maxFailures(1).waitInterval(1000).build());
+        circuitBreakerRegistry = CircuitBreakerRegistry.of(new CircuitBreakerConfig.Builder()
+                .maxFailures(1)
+                .waitInterval(1000)
+                .build());
     }
 
     @Test
@@ -42,9 +47,9 @@ public class FunctionalTest {
         // Given
         CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("testName");
         assertThat(circuitBreaker.isCallPermitted()).isTrue();
-        circuitBreaker.recordFailure();
+        circuitBreaker.recordFailure(new RuntimeException());
         assertThat(circuitBreaker.isCallPermitted()).isTrue();
-        circuitBreaker.recordFailure();
+        circuitBreaker.recordFailure(new RuntimeException());
         assertThat(circuitBreaker.isCallPermitted()).isFalse();
 
         //When
@@ -78,6 +83,33 @@ public class FunctionalTest {
     }
 
     @Test
+    public void shouldNotTriggerCircuitBreakerOpenException() {
+        // Given
+        CircuitBreakerConfig circuitBreakerConfig = new CircuitBreakerConfig.Builder()
+                .maxFailures(1)
+                .waitInterval(1000)
+                .ignoredException(IOException.class)
+                .build();
+        CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("testName", circuitBreakerConfig);
+
+        circuitBreaker.recordFailure(new RuntimeException());
+        // CircuitBreaker is still CLOSED, because 1 failure is allowed
+        assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
+
+        //When
+        Try.CheckedRunnable checkedRunnable = CircuitBreaker.decorateCheckedRunnable(() -> {
+            throw new SocketTimeoutException("BAM!");
+        }, circuitBreaker);
+        Try result = Try.run(checkedRunnable);
+
+        //Then
+        assertThat(result.isFailure()).isTrue();
+        // CircuitBreaker is still CLOSED, because SocketTimeoutException is ignored
+        assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
+        assertThat(result.failed().get()).isInstanceOf(IOException.class);
+    }
+
+    @Test
     public void shouldReturnSuccess() {
         // Given
         CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("testName");
@@ -95,9 +127,9 @@ public class FunctionalTest {
         // Given
         CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("testName");
         assertThat(circuitBreaker.isCallPermitted()).isTrue();
-        circuitBreaker.recordFailure();
+        circuitBreaker.recordFailure(new RuntimeException());
         assertThat(circuitBreaker.isCallPermitted()).isTrue();
-        circuitBreaker.recordFailure();
+        circuitBreaker.recordFailure(new RuntimeException());
         assertThat(circuitBreaker.isCallPermitted()).isFalse();
 
         //When
@@ -142,9 +174,9 @@ public class FunctionalTest {
 
         CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("uniqueName", circuitBreakerConfig);
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED); // CircuitBreaker is initially CLOSED
-        circuitBreaker.recordFailure();
+        circuitBreaker.recordFailure(new RuntimeException());
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED); // CircuitBreaker is still CLOSED, because 1 failure is allowed
-        circuitBreaker.recordFailure();
+        circuitBreaker.recordFailure(new RuntimeException());
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.OPEN); // CircuitBreaker is OPEN, because maxFailures > 1
 
         // When

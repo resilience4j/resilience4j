@@ -1,0 +1,7 @@
+= Release Notes
+
+== Version 0.1.0
+* Initial version
+
+== Version 0.1.1
+* Added the functionality to add exceptions with are ignored by the CircuitBreaker
