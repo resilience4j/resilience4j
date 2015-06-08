@@ -39,7 +39,6 @@ The project is published in JCenter and Maven Central.
 ----
 
 ==== Gradle
-
 [source,groovy]
 [subs="attributes"]
 ----
