@@ -137,7 +137,7 @@ public interface CircuitBreaker {
         };
     }
 
-    static <T, R> Function<T, R> decoratFunction(Function<T, R> function, CircuitBreaker circuitBreaker){
+    static <T, R> Function<T, R> decorateFunction(Function<T, R> function, CircuitBreaker circuitBreaker){
         return (T t) -> {
             try{
                 CircuitBreakerUtils.isCallPermitted(circuitBreaker);
@@ -151,7 +151,7 @@ public interface CircuitBreaker {
         };
     }
 
-    static <T, R> Try.CheckedFunction<T, R> decoratCheckedFunction(Try.CheckedFunction<T, R> function, CircuitBreaker circuitBreaker){
+    static <T, R> Try.CheckedFunction<T, R> decorateCheckedFunction(Try.CheckedFunction<T, R> function, CircuitBreaker circuitBreaker){
         return (T t) -> {
             try{
                 CircuitBreakerUtils.isCallPermitted(circuitBreaker);

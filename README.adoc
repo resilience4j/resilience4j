@@ -1,6 +1,6 @@
 = CircuitBreaker for Java8
 :author: Robert Winkler
-:version: 0.1.1
+:version: 0.1.2
 :hardbreaks:
 
 image:https://travis-ci.org/RobWin/circuitbreaker-java8.svg?branch=master["Build Status", link="https://travis-ci.org/RobWin/circuitbreaker-java8"] image:https://coveralls.io/repos/RobWin/circuitbreaker-java8/badge.svg["Coverage Status", link="https://coveralls.io/r/RobWin/circuitbreaker-java8"] image:https://api.bintray.com/packages/robwin/maven/circuitbreaker-java8/images/download.svg[link="https://bintray.com/robwin/maven/circuitbreaker-java8/_latestVersion"] image:http://img.shields.io/badge/license-ASF2-blue.svg["Apache License 2", link="http://www.apache.org/licenses/LICENSE-2.0.txt"]
@@ -177,6 +177,42 @@ CompletableFuture<String> future = CompletableFuture.supplyAsync(decoratedSuppli
 
 //Then
 assertThat(future.get()).isEqualTo("This can be any method which returns: 'Hello world'");
+----
+
+=== Example with Dropwizard Metrics
+
+You can use https://dropwizard.github.io/metrics/[Dropwizard Metrics] to get metrics for you function executions. A histogram allows you to measure min, mean, max, standard deviation and quantiles like the median or 95th percentile of function executions. A meter measures the rate of your function executions.
+The project provides several higher-order functions to decorate any `Supplier/Runnable/Function` or `CheckedSupplier/CheckedRunnable/CheckedFunction` with metrics.
+
+[source,java]
+----
+// Given
+CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
+CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("uniqueName");
+MetricRegistry metricRegistry = new MetricRegistry();
+Timer timer = metricRegistry.timer(name("test"));
+
+// When I create a long running supplier
+Try.CheckedSupplier<String> supplier = () -> {
+    Thread.sleep(2000);
+    return "Hello world";
+};
+
+// And measure the time with Metrics
+Try.CheckedSupplier<String> timedSupplier = Metrics.timedCheckedSupplier(supplier, timer);
+
+// And decorate it with a CircuitBreaker
+Try.CheckedSupplier<String> circuitBreakerAndTimedSupplier = CircuitBreaker
+        .decorateCheckedSupplier(timedSupplier, circuitBreaker);
+
+String value = circuitBreakerAndTimedSupplier.get();
+
+// Then the counter of metrics should be one and the
+assertThat(timer.getCount()).isEqualTo(1);
+// and the mean time should be greater than 2
+assertThat(timer.getSnapshot().getMean()).isGreaterThan(2);
+
+assertThat(value).isEqualTo("Hello world");
 ----
 
 == License

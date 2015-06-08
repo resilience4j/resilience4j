@@ -194,7 +194,7 @@ public class FunctionalTest {
         CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("testName");
 
         // When
-       Supplier<String> decoratedSupplier = CircuitBreaker
+        Supplier<String> decoratedSupplier = CircuitBreaker
                 .decorateSupplier(() -> "This can be any method which returns: 'Hello", circuitBreaker);
 
         CompletableFuture<String> future = CompletableFuture.supplyAsync(decoratedSupplier)

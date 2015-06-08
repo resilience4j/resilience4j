@@ -18,7 +18,7 @@ apply from: 'gradle/publishing.gradle'
 
 group = 'io.github.robwin'
 sourceCompatibility = 1.8
-version = '0.1.1'
+version = '0.1.2'
 description = 'A CircuitBreaker pattern implementation for Java 8 and functional programming-'
 
 repositories {
@@ -27,8 +27,10 @@ repositories {
 
 dependencies {
     compile "com.javaslang:javaslang:1.2.2"
+    compile "io.dropwizard.metrics:metrics-core:3.1.2"
     testCompile "junit:junit:4.11"
     testCompile "org.assertj:assertj-core:3.0.0"
+    testCompile "ch.qos.logback:logback-classic:0.9.26"
 }
 
 task sourcesJar(type: Jar, dependsOn: classes) {
