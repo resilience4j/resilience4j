@@ -161,19 +161,15 @@ public class FunctionalTest {
         // Given
         CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("testName");
 
-        //When
-        Try.CheckedSupplier<String> checkedSupplier = CircuitBreaker.decorateCheckedSupplier(() -> {
-            Thread.sleep(1000);
-            throw new RuntimeException("BAM!");
-        }, circuitBreaker);
-        CompletableFuture<Try<String>> future = CompletableFuture.supplyAsync(() -> Try.of(checkedSupplier)
-                .recover((throwable) -> "Hello Recovery"));
+        // When
+       Supplier<String> decoratedSupplier = CircuitBreaker
+                .decorateSupplier(() -> "This can be any method which returns: 'Hello", circuitBreaker);
+
+        CompletableFuture<String> future = CompletableFuture.supplyAsync(decoratedSupplier)
+                .thenApply(value -> value + " world'");
 
         //Then
-        Try<String> result = future.get();
-        assertThat(result.isSuccess()).isTrue();
-        assertThat(circuitBreaker.isCallPermitted()).isTrue();
-        assertThat(result.get()).isEqualTo("Hello Recovery");
+        assertThat(future.get()).isEqualTo("This can be any method which returns: 'Hello world'");
     }
 
 }

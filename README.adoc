@@ -133,20 +133,18 @@ You can also invoke a decorated function asynchronously.
 [source,java]
 ----
 // Given
+CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
 CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("testName");
 
-//When
-CircuitBreaker.CheckedSupplier<String> checkedSupplier = CircuitBreaker.CheckedSupplier.of(() -> {
-    Thread.sleep(1000);
-    throw new RuntimeException("BAM!");
-}, circuitBreaker);
-CompletableFuture<Try<String>> future = CompletableFuture.supplyAsync(() -> Try.of(checkedSupplier)
-        .recover((throwable) -> "Hello Recovery"));
+// When
+Supplier<String> decoratedSupplier = CircuitBreaker
+        .decorateSupplier(() -> "This can be any method which returns: 'Hello", circuitBreaker);
+
+CompletableFuture<String> future = CompletableFuture.supplyAsync(decoratedSupplier)
+        .thenApply(value -> value + " world'");
 
 //Then
-Try<String> result = future.get();
-assertThat(result.isSuccess()).isTrue();
-assertThat(result.get()).isEqualTo("Hello Recovery");
+assertThat(future.get()).isEqualTo("This can be any method which returns: 'Hello world'");
 ----
 
 == License
