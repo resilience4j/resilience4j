@@ -20,6 +20,7 @@ package io.github.robwin.circuitbreaker;
 
 import javaslang.control.Try;
 
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 /**
@@ -129,6 +130,34 @@ public interface CircuitBreaker {
                 CircuitBreakerUtils.isCallPermitted(circuitBreaker);
                 runnable.run();
                 circuitBreaker.recordSuccess();
+            } catch (Throwable throwable){
+                circuitBreaker.recordFailure(throwable);
+                throw throwable;
+            }
+        };
+    }
+
+    static <T, R> Function<T, R> decoratFunction(Function<T, R> function, CircuitBreaker circuitBreaker){
+        return (T t) -> {
+            try{
+                CircuitBreakerUtils.isCallPermitted(circuitBreaker);
+                R returnValue = function.apply(t);
+                circuitBreaker.recordSuccess();
+                return returnValue;
+            } catch (Throwable throwable){
+                circuitBreaker.recordFailure(throwable);
+                throw throwable;
+            }
+        };
+    }
+
+    static <T, R> Try.CheckedFunction<T, R> decoratCheckedFunction(Try.CheckedFunction<T, R> function, CircuitBreaker circuitBreaker){
+        return (T t) -> {
+            try{
+                CircuitBreakerUtils.isCallPermitted(circuitBreaker);
+                R returnValue = function.apply(t);
+                circuitBreaker.recordSuccess();
+                return returnValue;
             } catch (Throwable throwable){
                 circuitBreaker.recordFailure(throwable);
                 throw throwable;
