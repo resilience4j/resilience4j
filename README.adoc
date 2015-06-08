@@ -35,7 +35,7 @@ compile "io.github.robwin:circuitbreaker-java8:{version}"
 // (maxFailures = 3, waitInterval = 60[s], ignoredExceptions = empty)
 CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
 
-// Configure a CircuitBreaker
+// Create a custom configuration for a CircuitBreaker
 // You can configure the maximum number of allowed failures and
 // the wait interval [ms] which specifies how long the CircuitBreaker should stay OPEN
 // You can add exceptions to the ignore list so that the CircuitBreaker is not triggered
@@ -46,7 +46,7 @@ CircuitBreakerConfig circuitBreakerConfig = new CircuitBreakerConfig.Builder()
 CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("uniqueName", circuitBreakerConfig);
 
 // Get a CircuitBreaker from the CircuitBreakerRegistry with global default settings
-// (maxFailures = 3, waitInterval = 60[s])
+// (maxFailures = 3, waitInterval = 60[s], ignoredExceptions = empty)
 CircuitBreaker circuitBreaker2 = circuitBreakerRegistry.circuitBreaker("otherName");
 ----
 
