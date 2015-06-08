@@ -182,7 +182,7 @@ assertThat(future.get()).isEqualTo("This can be any method which returns: 'Hello
 === Example with Dropwizard Metrics
 
 You can use https://dropwizard.github.io/metrics/[Dropwizard Metrics] to get execution metrics for your functions. A histogram allows you to measure min, mean, max, standard deviation and quantiles like the median or 95th percentile of the function execution time. A meter measures the rate of the function executions.
-The project provides several higher-order functions to decorate any `Supplier/Runnable/Function` or `CheckedSupplier/CheckedRunnable/CheckedFunction` with metrics.
+The project provides several higher-order functions to decorate any `Supplier / Runnable / Function` or `CheckedSupplier / CheckedRunnable / CheckedFunction` with metrics.
 
 [source,java]
 ----
@@ -192,7 +192,7 @@ CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("uniqueNam
 MetricRegistry metricRegistry = new MetricRegistry();
 Timer timer = metricRegistry.timer(name("test"));
 
-// When I create a long running supplier
+// When I create a long running supplier which takes 2 seconds
 Try.CheckedSupplier<String> supplier = () -> {
     Thread.sleep(2000);
     return "Hello world";
@@ -209,7 +209,7 @@ String value = circuitBreakerAndTimedSupplier.get();
 
 // Then the counter of metrics should be one and the
 assertThat(timer.getCount()).isEqualTo(1);
-// and the mean time should be greater than 2
+// and the mean time should be greater than 2[s]
 assertThat(timer.getSnapshot().getMean()).isGreaterThan(2);
 
 assertThat(value).isEqualTo("Hello world");
