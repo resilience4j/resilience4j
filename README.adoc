@@ -224,7 +224,7 @@ assertThat(result.failed().get()).isInstanceOf(IOException.class);
 
 === Example with CompletableFuture
 
-You can also invoke a decorated function asynchronously.
+You can also invoke a decorated function asynchronously and chain further functions.
 
 [source,java]
 ----
