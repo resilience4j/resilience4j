@@ -283,6 +283,29 @@ assertThat(value).isEqualTo("Hello world");
 
 You could monitor and report the state of your CircuitBreakers and runtime metrics by using Metrics https://dropwizard.github.io/metrics/3.1.0/getting-started/#health-checks[Health Checks] and https://dropwizard.github.io/metrics/3.1.0/getting-started/#reporting-via-http[Reporting via JMX or HTTP].
 
+
+For example:
+
+[source,java]
+----
+public class DatabaseHealthCheck extends HealthCheck {
+    private final Database database;
+
+    public DatabaseHealthCheck(Database database) {
+        this.database = database;
+    }
+
+    @Override
+    public HealthCheck.Result check() throws Exception {
+        if (database.isConnected()) {
+            return HealthCheck.Result.healthy();
+        } else {
+            return HealthCheck.Result.unhealthy("Cannot connect to " + database.getUrl());
+        }
+    }
+}
+----
+
 == License
 
 Copyright 2015 Robert Winkler
