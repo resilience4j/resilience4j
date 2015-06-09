@@ -47,6 +47,10 @@ public class CircuitBreakerConfig {
         return ignoredExceptions;
     }
 
+    public static CircuitBreakerConfig.Builder custom(){
+        return new Builder();
+    }
+
     public static class Builder {
         private int maxFailures = 3;
         private int waitInterval = 60000;

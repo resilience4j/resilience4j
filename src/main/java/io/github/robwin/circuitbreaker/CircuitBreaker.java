@@ -85,8 +85,8 @@ public interface CircuitBreaker {
 
     static <T> Try.CheckedSupplier<T> decorateCheckedSupplier(Try.CheckedSupplier<T> supplier, CircuitBreaker circuitBreaker){
         return () -> {
+            CircuitBreakerUtils.isCallPermitted(circuitBreaker);
             try {
-                CircuitBreakerUtils.isCallPermitted(circuitBreaker);
                 T returnValue = supplier.get();
                 circuitBreaker.recordSuccess();
                 return returnValue;
@@ -99,8 +99,8 @@ public interface CircuitBreaker {
 
     static Try.CheckedRunnable decorateCheckedRunnable(Try.CheckedRunnable runnable, CircuitBreaker circuitBreaker){
         return () -> {
+            CircuitBreakerUtils.isCallPermitted(circuitBreaker);
             try{
-                CircuitBreakerUtils.isCallPermitted(circuitBreaker);
                 runnable.run();
                 circuitBreaker.recordSuccess();
             } catch (Throwable throwable){
@@ -112,8 +112,8 @@ public interface CircuitBreaker {
 
     static <T> Supplier<T> decorateSupplier(Supplier<T> supplier, CircuitBreaker circuitBreaker){
         return () -> {
+            CircuitBreakerUtils.isCallPermitted(circuitBreaker);
             try {
-                CircuitBreakerUtils.isCallPermitted(circuitBreaker);
                 T returnValue = supplier.get();
                 circuitBreaker.recordSuccess();
                 return returnValue;
@@ -126,8 +126,8 @@ public interface CircuitBreaker {
 
     static Runnable decorateRunnable(Runnable runnable, CircuitBreaker circuitBreaker){
         return () -> {
+            CircuitBreakerUtils.isCallPermitted(circuitBreaker);
             try{
-                CircuitBreakerUtils.isCallPermitted(circuitBreaker);
                 runnable.run();
                 circuitBreaker.recordSuccess();
             } catch (Throwable throwable){
@@ -139,8 +139,8 @@ public interface CircuitBreaker {
 
     static <T, R> Function<T, R> decorateFunction(Function<T, R> function, CircuitBreaker circuitBreaker){
         return (T t) -> {
+            CircuitBreakerUtils.isCallPermitted(circuitBreaker);
             try{
-                CircuitBreakerUtils.isCallPermitted(circuitBreaker);
                 R returnValue = function.apply(t);
                 circuitBreaker.recordSuccess();
                 return returnValue;
@@ -153,8 +153,8 @@ public interface CircuitBreaker {
 
     static <T, R> Try.CheckedFunction<T, R> decorateCheckedFunction(Try.CheckedFunction<T, R> function, CircuitBreaker circuitBreaker){
         return (T t) -> {
+            CircuitBreakerUtils.isCallPermitted(circuitBreaker);
             try{
-                CircuitBreakerUtils.isCallPermitted(circuitBreaker);
                 R returnValue = function.apply(t);
                 circuitBreaker.recordSuccess();
                 return returnValue;

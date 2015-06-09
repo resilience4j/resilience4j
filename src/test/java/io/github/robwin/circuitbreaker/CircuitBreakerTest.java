@@ -30,7 +30,7 @@ public class CircuitBreakerTest {
 
     @Before
     public void setUp(){
-        circuitBreaker = new CircuitBreakerStateMachine("testName", new CircuitBreakerConfig.Builder()
+        circuitBreaker = new CircuitBreakerStateMachine("testName", CircuitBreakerConfig.custom()
                 .maxFailures(2).waitInterval(1000).build());
     }
 
