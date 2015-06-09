@@ -49,31 +49,40 @@ compile "io.github.robwin:circuitbreaker-java8:{version}"
 
 === CircuitBreaker configuration example
 
+This library comes with an `InMemoryCircuitBreakerRegistry` based on a `ConcurrentMap` which provides thread safety and atomicity guarantees. You must use the CircuitBreakerRegistry to manage (create and retrieve) your CircuitBreakers. You can create a `InMemoryCircuitBreakerRegistry` with a default global `CircuitBreakerConfig` for all of your CircuitBreakers.
+
 [source,java]
 ----
-// Create a InMemoryCircuitBreakerRegistry with global default settings
+// Create a InMemoryCircuitBreakerRegistry with a default global configuration
 // (maxFailures = 3, waitInterval = 60[s], ignoredExceptions = empty)
 CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
-
-// Create a custom configuration for a CircuitBreaker
-// You can configure the maximum number of allowed failures and
-// the wait interval [ms] which specifies how long the CircuitBreaker should stay OPEN
-// You can add exceptions to the ignore list so that the CircuitBreaker is not triggered
-CircuitBreakerConfig circuitBreakerConfig = new CircuitBreakerConfig.Builder()
-    .maxFailures(1).waitInterval(1000).ignoredException(BusinessException.class).build();
-
-// Get a CircuitBreaker from the CircuitBreakerRegistry with custom configuration
-CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("uniqueName", circuitBreakerConfig);
-
-// Get a CircuitBreaker from the CircuitBreakerRegistry with global default settings
-// (maxFailures = 3, waitInterval = 60[s], ignoredExceptions = empty)
-CircuitBreaker circuitBreaker2 = circuitBreakerRegistry.circuitBreaker("otherName");
 ----
 
-=== Functional programming style
+As an alternative you can provide your own custom global `CircuitBreakerConfig`. In order to create a custom global CircuitBreakerConfig or a CircuitBreakerConfig for a specific CircuitBreaker, you can use the CircuitBreakerConfig builder. You can configure the maximum number of allowed failures and the wait interval [ms], which specifies how long the CircuitBreaker should stay in state `OPEN`. Furthermore, you can add exceptions to the ignore list which must not trigger the CircuitBreaker.
 
-You can decorate any `Supplier / Runnable / Function` or `CheckedSupplier / CheckedRunnable / CheckedFunction` function with `CircuitBreaker.decorateCheckedSupplier()`, `CircuitBreaker.decorateCheckedRunnable()` or `CircuitBreaker.decorateCheckedFunction()`. You can invoke the returned function with `Try.of()` or `Try.run()` from https://github.com/javaslang/javaslang[javaslang].
-You can chain further functions with `map`, `flatMap`, `filter`, `recover` or `andThen`. The chained functions are only invoked, if the CircuitBreaker is CLOSED or HALF_CLOSED. `Try.of()` returns a `Success<String>` Monad, if the invocation of the function was successful. If the function itself throws an exception, a `Failure<Throwable>` Monad is returned and `map` is not invoked.
+[source,java]
+----
+// Create a custom configuration for a CircuitBreaker
+CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom()
+    .maxFailures(1)
+    .waitInterval(1000)
+    .ignoredException(BusinessException.class)
+    .ignoredException(AnotherBusinessException.class)
+    .build();
+    
+// Create a InMemoryCircuitBreakerRegistry with a custom global configuration
+CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.of(circuitBreakerConfig);
+
+// Get a CircuitBreaker from the CircuitBreakerRegistry with the global default configuration
+CircuitBreaker circuitBreaker2 = circuitBreakerRegistry.circuitBreaker("otherName");
+
+// Get a CircuitBreaker from the CircuitBreakerRegistry with a custom configuration
+CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("uniqueName", circuitBreakerConfig);
+----
+
+=== Functional programming example
+
+You can decorate any `Supplier / Runnable / Function` or `CheckedSupplier / CheckedRunnable / CheckedFunction` function with `CircuitBreaker.decorateCheckedSupplier()`, `CircuitBreaker.decorateCheckedRunnable()` or `CircuitBreaker.decorateCheckedFunction()`. You can invoke the returned function with `Try.of()` or `Try.run()` from https://github.com/javaslang/javaslang[javaslang]. This allows to chain further functions with `map`, `flatMap`, `filter`, `recover` or `andThen`. The chained functions are only invoked, if the CircuitBreaker is CLOSED or HALF_CLOSED. `Try.of()` returns a `Success<String>` Monad, if the invocation of the function was successful. If the function itself throws an exception, a `Failure<Throwable>` Monad is returned and `map` is not invoked.
 
 [source,java]
 ----
@@ -95,36 +104,43 @@ assertThat(result.isSuccess()).isTrue();
 assertThat(result.get()).isEqualTo("This can be any method which returns: 'Hello world'");
 ----
 
-=== Example with OPEN CircuitBreaker
+=== OPEN CircuitBreaker example
 
-In this test case `map` is not invoked, because the CircuitBreaker is OPEN. The call to `Try.of` returns a `Failure<Throwable>` Monad instead.
+In this test case `map` is not invoked, because the CircuitBreaker is OPEN. The call to `Try.of` returns a `Failure<Throwable>` Monad so that the chained function is not invoked.
 
 [source,java]
 ----
 // Given
 CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
+// Create a custom configration so that only 1 failure is allowed and the wait interval is 1[s]
 CircuitBreakerConfig circuitBreakerConfig = new CircuitBreakerConfig.Builder()
     .maxFailures(1)
     .waitInterval(1000)
     .build();
 CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("uniqueName", circuitBreakerConfig);
 
-assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED); // CircuitBreaker is initially CLOSED
-circuitBreaker.recordFailure();
-assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED); // CircuitBreaker is still CLOSED, because 1 failure is allowed
-circuitBreaker.recordFailure();
-assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.OPEN); // CircuitBreaker is OPEN, because maxFailures > 1
+// CircuitBreaker is initially CLOSED
+assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED); 
+// Simulate a failure attempt
+circuitBreaker.recordFailure(new RuntimeException());
+// CircuitBreaker is still CLOSED, because 1 failure is allowed
+assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED); 
+// Simulate a failure attempt
+circuitBreaker.recordFailure(new RuntimeException());
+// CircuitBreaker is OPEN, because maxFailures > 1
+assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.OPEN); 
 
-// When
+// When I decorate my function and invoke the decorated function
 Try<String> result = Try.of(CircuitBreaker.decorateCheckedSupplier(() -> "Hello", circuitBreaker))
         .map(value -> value + " world");
 
-// Then
-assertThat(result.isFailure()).isTrue(); // Call fails, because CircuitBreaker is OPEN
-assertThat(result.failed().get()).isInstanceOf(CircuitBreakerOpenException.class); // Exception is CircuitBreakerOpenException
+// Then the call fails, because CircuitBreaker is OPEN
+assertThat(result.isFailure()).isTrue();
+// and the exception is a CircuitBreakerOpenException
+assertThat(result.failed().get()).isInstanceOf(CircuitBreakerOpenException.class); 
 ----
 
-=== Example of Recovery
+=== Recovery example
 
 If you want to recover from any exception, you can chain the method `Try.recover()`. The recovery method is only invoked, if `Try.of()` returns a `Failure<Throwable>` Monad.
 
@@ -134,7 +150,7 @@ If you want to recover from any exception, you can chain the method `Try.recover
 CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
 CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("uniqueName");
 
-//When
+// When I decorate my function and invoke the decorated function
 Try.CheckedSupplier<String> checkedSupplier = CircuitBreaker.decorateCheckedSupplier(() -> {
         Thread.sleep(1000);
         throw new RuntimeException("BAM!");
@@ -142,18 +158,19 @@ Try.CheckedSupplier<String> checkedSupplier = CircuitBreaker.decorateCheckedSupp
 Try<String> result = Try.of(checkedSupplier)
         .recover((throwable) -> "Hello Recovery");
 
-//Then
+//Then the function should be a success, because the exception could be recovered
 assertThat(result.isSuccess()).isTrue();
+// and the result must match the result of the recovery function.
 assertThat(result.get()).isEqualTo("Hello Recovery");
 ----
 
 === Example of how to ignore exceptions
 
-The following test cases shows how to add exceptions to the ignore list so that the CircuitBreaker is not triggered.
+The following test cases shows how to add exceptions to the ignore list which must not trigger the CircuitBreaker.
 
 [source,java]
 ----
-// Given
+// Given I add the IOException to the ignore list
 CircuitBreakerConfig circuitBreakerConfig = new CircuitBreakerConfig.Builder()
         .maxFailures(1)
         .waitInterval(1000)
@@ -161,6 +178,7 @@ CircuitBreakerConfig circuitBreakerConfig = new CircuitBreakerConfig.Builder()
         .build();
 CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("testName", circuitBreakerConfig);
 
+// Simulate a failure attempt
 circuitBreaker.recordFailure(new RuntimeException());
 // CircuitBreaker is still CLOSED, because 1 failure is allowed
 assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
@@ -171,10 +189,11 @@ Try.CheckedRunnable checkedRunnable = CircuitBreaker.decorateCheckedRunnable(() 
 }, circuitBreaker);
 Try result = Try.run(checkedRunnable);
 
-//Then the SocketTimeoutException should not trigger the CircuitBreaker, but should be rethrown instead.
+//Then the SocketTimeoutException did not trigger the CircuitBreaker, but is rethrown instead.
 assertThat(result.isFailure()).isTrue();
-// CircuitBreaker is still CLOSED, because SocketTimeoutException was ignored
+// and the CircuitBreaker is still CLOSED, because SocketTimeoutException was ignored
 assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
+// and the returned exception is of type IOException
 assertThat(result.failed().get()).isInstanceOf(IOException.class);
 ----
 
@@ -201,8 +220,8 @@ assertThat(future.get()).isEqualTo("This can be any method which returns: 'Hello
 
 === Example with Dropwizard Metrics
 
-You can use https://dropwizard.github.io/metrics/[Dropwizard Metrics] to get execution metrics for your functions. A histogram allows you to measure min, mean, max, standard deviation and quantiles like the median or 95th percentile of the function execution time. A meter measures the rate of the function executions.
-The project provides several higher-order functions to decorate any `Supplier / Runnable / Function` or `CheckedSupplier / CheckedRunnable / CheckedFunction` with metrics. 
+You can use https://dropwizard.github.io/metrics/[Dropwizard Metrics] to get runtime metrics of your functions. The project provides several higher-order functions to decorate any `Supplier / Runnable / Function` or `CheckedSupplier / CheckedRunnable / CheckedFunction`. The decorator creates a histogram and a meter for your function.  A histogram measures min, mean, max, standard deviation and quantiles like the median or 95th percentile of the execution time. A meter measures the rate of executions.
+
 
 [source,java]
 ----
@@ -218,16 +237,16 @@ Try.CheckedSupplier<String> supplier = () -> {
     return "Hello world";
 };
 
-// And measure the time with Metrics
+// and decorate the supplier with a Metrics timer
 Try.CheckedSupplier<String> timedSupplier = Metrics.timedCheckedSupplier(supplier, timer);
 
-// And decorate it with a CircuitBreaker
+// and decorate the supplier with a CircuitBreaker
 Try.CheckedSupplier<String> circuitBreakerAndTimedSupplier = CircuitBreaker
         .decorateCheckedSupplier(timedSupplier, circuitBreaker);
 
 String value = circuitBreakerAndTimedSupplier.get();
 
-// Then the counter of metrics should be one and the
+// Then the Metrics execution counter should be 1
 assertThat(timer.getCount()).isEqualTo(1);
 // and the mean time should be greater than 2[s]
 assertThat(timer.getSnapshot().getMean()).isGreaterThan(2);
