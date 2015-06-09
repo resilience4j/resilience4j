@@ -82,7 +82,8 @@ CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("uniqueNam
 
 === Functional programming example
 
-You can decorate any `Supplier / Runnable / Function` or `CheckedSupplier / CheckedRunnable / CheckedFunction` function with `CircuitBreaker.decorateCheckedSupplier()`, `CircuitBreaker.decorateCheckedRunnable()` or `CircuitBreaker.decorateCheckedFunction()`. You can invoke the returned function with `Try.of()` or `Try.run()` from https://github.com/javaslang/javaslang[javaslang]. This allows to chain further functions with `map`, `flatMap`, `filter`, `recover` or `andThen`. The chained functions are only invoked, if the CircuitBreaker is CLOSED or HALF_CLOSED. `Try.of()` returns a `Success<String>` Monad, if the invocation of the function was successful. If the function itself throws an exception, a `Failure<Throwable>` Monad is returned and `map` is not invoked.
+You can decorate any `Supplier / Runnable / Function` or `CheckedSupplier / CheckedRunnable / CheckedFunction` function with `CircuitBreaker.decorateCheckedSupplier()`, `CircuitBreaker.decorateCheckedRunnable()` or `CircuitBreaker.decorateCheckedFunction()`. You can invoke the returned function with `Try.of()` or `Try.run()` from https://github.com/javaslang/javaslang[javaslang]. This allows to chain further functions with `map`, `flatMap`, `filter`, `recover` or `andThen`. The chained functions are only invoked, if the CircuitBreaker is CLOSED or HALF_CLOSED. 
+In the following example, `Try.of()` returns a `Success<String>` Monad, if the invocation of the function was successful. If the function itself throws an exception, a `Failure<Throwable>` Monad is returned and `map` is not invoked.
 
 [source,java]
 ----
