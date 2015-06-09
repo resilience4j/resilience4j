@@ -105,6 +105,25 @@ assertThat(result.isSuccess()).isTrue();
 assertThat(result.get()).isEqualTo("This can be any method which returns: 'Hello world'");
 ----
 
+You could also chain functions which are decorated by different CircuitBreakers.
+
+[source,java]
+----
+// When
+Try.CheckedSupplier<String> decoratedSupplier = CircuitBreaker
+        .decorateCheckedSupplier(() -> "Hello", circuitBreaker);
+
+Try.CheckedFunction<String, String> decoratedFunction = CircuitBreaker
+        .decorateCheckedFunction((input) -> input + " world", anotherCircuitBreaker);
+
+// You can chain other functions with `map`.
+Try<String> result = Try.of(decoratedSupplier)
+        .map(decoratedFunction);
+
+// Then
+assertThat(result.get()).isEqualTo("Hello world");
+----
+
 === OPEN CircuitBreaker example
 
 In this test case `map` is not invoked, because the CircuitBreaker is OPEN. The call to `Try.of` returns a `Failure<Throwable>` Monad so that the chained function is not invoked.
