@@ -18,7 +18,7 @@ apply from: 'gradle/publishing.gradle'
 
 group = 'io.github.robwin'
 sourceCompatibility = 1.8
-version = '0.1.3'
+version = '0.1.4'
 description = 'A CircuitBreaker pattern implementation for Java 8 and functional programming-'
 
 repositories {
@@ -32,6 +32,8 @@ dependencies {
     testCompile "org.assertj:assertj-core:3.0.0"
     testCompile "ch.qos.logback:logback-classic:0.9.26"
     testCompile "io.dropwizard.metrics:metrics-healthchecks:3.1.2"
+    testCompile "org.mockito:mockito-all:1.10.19"
+
 }
 
 task sourcesJar(type: Jar, dependsOn: classes) {

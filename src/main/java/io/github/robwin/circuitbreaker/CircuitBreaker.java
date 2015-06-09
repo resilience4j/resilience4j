@@ -44,9 +44,9 @@ public interface CircuitBreaker {
      * Records a backend failure.
      * This must be called if a call to a backend fails
      *
-     * @param throwable The throwable which must be recorded
+     * @param exception The exception which must be recorded
      */
-    void recordFailure(Throwable throwable);
+    void recordFailure(Exception exception);
 
      /**
       * Records success of a call to a backend.
@@ -90,9 +90,9 @@ public interface CircuitBreaker {
                 T returnValue = supplier.get();
                 circuitBreaker.recordSuccess();
                 return returnValue;
-            } catch (Throwable throwable) {
-                circuitBreaker.recordFailure(throwable);
-                throw throwable;
+            } catch (Exception exception) {
+                circuitBreaker.recordFailure(exception);
+                throw exception;
             }
         };
     }
@@ -103,9 +103,9 @@ public interface CircuitBreaker {
             try{
                 runnable.run();
                 circuitBreaker.recordSuccess();
-            } catch (Throwable throwable){
-                circuitBreaker.recordFailure(throwable);
-                throw throwable;
+            } catch (Exception exception){
+                circuitBreaker.recordFailure(exception);
+                throw exception;
             }
         };
     }
@@ -117,9 +117,9 @@ public interface CircuitBreaker {
                 T returnValue = supplier.get();
                 circuitBreaker.recordSuccess();
                 return returnValue;
-            } catch (Throwable throwable) {
-                circuitBreaker.recordFailure(throwable);
-                throw throwable;
+            } catch (Exception exception) {
+                circuitBreaker.recordFailure(exception);
+                throw exception;
             }
         };
     }
@@ -130,9 +130,9 @@ public interface CircuitBreaker {
             try{
                 runnable.run();
                 circuitBreaker.recordSuccess();
-            } catch (Throwable throwable){
-                circuitBreaker.recordFailure(throwable);
-                throw throwable;
+            } catch (Exception exception){
+                circuitBreaker.recordFailure(exception);
+                throw exception;
             }
         };
     }
@@ -144,9 +144,9 @@ public interface CircuitBreaker {
                 R returnValue = function.apply(t);
                 circuitBreaker.recordSuccess();
                 return returnValue;
-            } catch (Throwable throwable){
-                circuitBreaker.recordFailure(throwable);
-                throw throwable;
+            } catch (Exception exception){
+                circuitBreaker.recordFailure(exception);
+                throw exception;
             }
         };
     }
@@ -158,9 +158,9 @@ public interface CircuitBreaker {
                 R returnValue = function.apply(t);
                 circuitBreaker.recordSuccess();
                 return returnValue;
-            } catch (Throwable throwable){
-                circuitBreaker.recordFailure(throwable);
-                throw throwable;
+            } catch (Exception exception){
+                circuitBreaker.recordFailure(exception);
+                throw exception;
             }
         };
     }

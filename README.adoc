@@ -1,12 +1,12 @@
 = CircuitBreaker for Java8
 :author: Robert Winkler
-:version: 0.1.3
+:version: 0.1.4
 :hardbreaks:
 
 image:https://travis-ci.org/RobWin/circuitbreaker-java8.svg?branch=master["Build Status", link="https://travis-ci.org/RobWin/circuitbreaker-java8"] image:https://coveralls.io/repos/RobWin/circuitbreaker-java8/badge.svg["Coverage Status", link="https://coveralls.io/r/RobWin/circuitbreaker-java8"] image:https://api.bintray.com/packages/robwin/maven/circuitbreaker-java8/images/download.svg[link="https://bintray.com/robwin/maven/circuitbreaker-java8/_latestVersion"] image:http://img.shields.io/badge/license-ASF2-blue.svg["Apache License 2", link="http://www.apache.org/licenses/LICENSE-2.0.txt"]
 
 This library is an easy-to-use implementation of the http://martinfowler.com/bliki/CircuitBreaker.html[CircuitBreaker pattern] optimized for Java 8 and functional programming in a multithreaded environment.
-The library provides several higher-order functions to decorate any `Supplier / Runnable / Function` or `CheckedSupplier / CheckedRunnable / CheckedFunction` with a Circuit Breaker. In the following I call the higher-order functions `decorators`. The decorators return an enhanced version of your function. Furthermore, the library provides decorators to measure runtime metrics of your functions by using https://dropwizard.github.io/metrics/[Dropwizard Metrics]. You can stack more than one decorator on any given function. That means, you can combine a Metrics decorator with a CircuitBreaker decorator. Any decorated function can be invoked synchronously or asynchronously.
+The library provides several higher-order functions to decorate any `Supplier / Runnable / Function` or `CheckedSupplier / CheckedRunnable / CheckedFunction` with a Circuit Breaker. In the following I call the higher-order functions `decorators`. The decorators return an enhanced version of your function. Furthermore, the library provides decorators to measure runtime metrics of your functions by using https://dropwizard.github.io/metrics/[Dropwizard Metrics] and decorators to retry a failed function. You can stack more than one decorator on any given function. That means, you can combine a Metrics decorator with a CircuitBreaker decorator. Any decorated function can be invoked synchronously or asynchronously.
 The project should be combined with a functional library for Java 8 like https://github.com/javaslang/javaslang[javaslang]. The project requires at least JDK 8.
 
 The CircuitBreaker is implemented via a finite state machine with three states: `CLOSED`, `OPEN` and `HALF_OPEN`. The CircuitBreaker does not know anything about the backend's state by itself, but uses the information provided by the decorators via `CircuitBreaker::recordSuccess()` and `CircuitBreaker::recordFailure(throwable)`. The decorators are pure functions. The result of a decorator depends solely on the input parameters. See example: 
@@ -20,16 +20,16 @@ static <T> Supplier<T> decorateSupplier(Supplier<T> supplier, CircuitBreaker cir
             T returnValue = supplier.get();
             circuitBreaker.recordSuccess();
             return returnValue;
-        } catch (Throwable throwable) {
-            circuitBreaker.recordFailure(throwable);
-            throw throwable;
+        } catch (Exception exception) {
+            circuitBreaker.recordFailure(exception);
+            throw exception;
         }
     };
 }
 ----
 
 The state of the CircuitBreaker changes from `CLOSED` to `OPEN` if a (configurable) number of call attempts have failed consecutively. Then, all access to the backend is blocked for a (configurable) time interval. `CircuitBreaker::isCallPermitted()` throws a `CircuitBreakerOpenException`, if the CircuitBreaker is `OPEN`.
-After the time interval has elapsed, the CircuitBreaker state changes to `HALF_CLOSED` and allows calls to see if the backend is still unavailable or has become available again. On success or failure, the state changes back to `CLOSED` or `OPEN`, respectively. `CircuitBreaker::recordFailure(throwable)` also checks if the type of exception should increase the number of failure attempts.
+After the time interval has elapsed, the CircuitBreaker state changes to `HALF_CLOSED` and allows calls to see if the backend is still unavailable or has become available again. On success or failure, the state changes back to `CLOSED` or `OPEN`, respectively. `CircuitBreaker::recordFailure(exception)` also checks if the type of exception should increase the number of failure attempts.
 
 == Usage guide
 
@@ -189,7 +189,7 @@ assertThat(result.isSuccess()).isTrue();
 assertThat(result.get()).isEqualTo("Hello Recovery");
 ----
 
-=== Example of how to ignore exceptions
+=== Ignore exceptions example
 
 The following test cases shows how to add exceptions to the ignore list which must not trigger the CircuitBreaker.
 
@@ -222,7 +222,39 @@ assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
 assertThat(result.failed().get()).isInstanceOf(IOException.class);
 ----
 
-=== Example with CompletableFuture
+=== Retry example
+
+You can also retry a failed function.
+
+[source,java]
+----
+// Given I have a HelloWorldService which throws an exception
+HelloWorldService  helloWorldService = mock(HelloWorldService.class);
+given(helloWorldService.sayHelloWorld()).willThrow(new WebServiceException("BAM!"));
+
+// Create a Retry with default configuration
+// (maxAttempts = 3, waitInterval = 500[ms], ignoredExceptions = empty)
+Retry retryContext = Retry.ofDefaults();
+// Decorate the invocation of the HelloWorldService
+Try.CheckedSupplier<String> retryableSupplier = Retry.retryableCheckedSupplier(helloWorldService::sayHelloWorld, retryContext);
+
+// When I invoke the function
+Try<String> result = Try.of(retryableSupplier).recover((throwable) -> "Hello world from recovery function");
+
+// Then the helloWorldService should be invoked 3 times
+BDDMockito.then(helloWorldService).should(times(3)).sayHelloWorld();
+// and the exception should be handled by the recovery function
+assertThat(result.get()).isEqualTo("Hello world from recovery function");
+----
+
+As an alternative you can create a custom `RetryContext`. In order to create a custom RetryContext, you can use the RetryContext builder. You can configure the maximum number of retry attempts and the wait interval [ms] between successive attempts. Furthermore, you can add exceptions to the ignore list which must not trigger a retry.
+
+[source,java]
+----
+Retry retryContext = Retry.custom().maxAttempts(2).ignoredException(WebServiceException.class).build();
+----
+
+=== CompletableFuture example
 
 You can also invoke a decorated function asynchronously and chain further functions.
 

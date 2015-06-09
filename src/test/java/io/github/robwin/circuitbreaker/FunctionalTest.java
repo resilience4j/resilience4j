@@ -226,8 +226,6 @@ public class FunctionalTest {
         // Then
         assertThat(result.isSuccess()).isTrue();
         assertThat(result.get()).isEqualTo("Hello world");
-
-
     }
 
 }

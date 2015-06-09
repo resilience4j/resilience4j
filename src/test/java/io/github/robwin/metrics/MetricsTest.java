@@ -1,8 +1,9 @@
-package io.github.robwin.circuitbreaker;
+package io.github.robwin.metrics;
 
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Timer;
-import io.github.robwin.metrics.Metrics;
+import io.github.robwin.circuitbreaker.CircuitBreaker;
+import io.github.robwin.circuitbreaker.CircuitBreakerRegistry;
 import javaslang.control.Try;
 import org.junit.Test;
 

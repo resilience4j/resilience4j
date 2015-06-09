@@ -11,3 +11,6 @@
 
 == Version 0.1.3
 * Added a static factory method for the CircuitBreakerConfig builder
+
+== Version 0.1.4
+* Added the feature to retry a failed function
