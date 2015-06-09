@@ -6,10 +6,30 @@
 image:https://travis-ci.org/RobWin/circuitbreaker-java8.svg?branch=master["Build Status", link="https://travis-ci.org/RobWin/circuitbreaker-java8"] image:https://coveralls.io/repos/RobWin/circuitbreaker-java8/badge.svg["Coverage Status", link="https://coveralls.io/r/RobWin/circuitbreaker-java8"] image:https://api.bintray.com/packages/robwin/maven/circuitbreaker-java8/images/download.svg[link="https://bintray.com/robwin/maven/circuitbreaker-java8/_latestVersion"] image:http://img.shields.io/badge/license-ASF2-blue.svg["Apache License 2", link="http://www.apache.org/licenses/LICENSE-2.0.txt"]
 
 This library is an implementation of the http://martinfowler.com/bliki/CircuitBreaker.html[CircuitBreaker pattern] optimized for Java 8 and functional programming in a multithreaded environment.
-The library provides several higher-order functions to decorate any `Supplier / Runnable / Function` or `CheckedSupplier / CheckedRunnable / CheckedFunction` with a Circuit Breaker and to measure execution metrics. You can run the returned, decorated function synchronously or asynchronously. The project should be combined with a functional library for Java 8 like https://github.com/javaslang/javaslang[javaslang]. The project requires at least JDK 8.
+The library provides several higher-order functions to decorate any `Supplier / Runnable / Function` or `CheckedSupplier / CheckedRunnable / CheckedFunction` with a Circuit Breaker. In the following I call the higher-order functions `decorators`. The decorators return an enhanced version of your function. Furthermore, the library provides decorators to measure runtime metrics of your functions by using https://dropwizard.github.io/metrics/[Dropwizard Metrics]. You can stack more than one decorator on any given function. That means, you can combine a Metrics decorator with a CircuitBreaker decorator. Any decorated function can be invoked synchronously or asynchronously.
+The project should be combined with a functional library for Java 8 like https://github.com/javaslang/javaslang[javaslang]. The project requires at least JDK 8.
 
-The CircuitBreaker is implemented via a finite state machine and has three states: `CLOSED`, `OPEN` and `HALF_OPEN`. The CircuitBreaker does not know anything about the backend's state by itself, but uses only the information provided by calls to `CircuitBreaker::recordSuccess()` and `CircuitBreaker::recordFailure()`.
-The state of the CircuitBreaker changes from `CLOSED` to `OPEN` if a (configurable) number of call attempts have failed consecutively. Then, all access to the backend is blocked for a (configurable) time interval. After that, the CircuitBreaker state changes to `HALF_CLOSED` tentatively, to see if the backend is still dead or has become available again. On success or failure, the state changes back to `CLOSED` or `OPEN`, respectively.
+The CircuitBreaker is implemented via a finite state machine with three states: `CLOSED`, `OPEN` and `HALF_OPEN`. The CircuitBreaker does not know anything about the backend's state by itself, but uses the information provided by the decorators via `CircuitBreaker::recordSuccess()` and `CircuitBreaker::recordFailure(throwable)`. The decorators are pure functions. The result of a decorator depends solely on the input parameters. See example: 
+
+[source,java]
+----
+static <T> Supplier<T> decorateSupplier(Supplier<T> supplier, CircuitBreaker circuitBreaker){
+    return () -> {
+        circuitBreaker.isCallPermitted();
+        try {
+            T returnValue = supplier.get();
+            circuitBreaker.recordSuccess();
+            return returnValue;
+        } catch (Throwable throwable) {
+            circuitBreaker.recordFailure(throwable);
+            throw throwable;
+        }
+    };
+}
+----
+
+The state of the CircuitBreaker changes from `CLOSED` to `OPEN` if a (configurable) number of call attempts have failed consecutively. Then, all access to the backend is blocked for a (configurable) time interval. `CircuitBreaker::isCallPermitted()` throws a `CircuitBreakerOpenException`, if the CircuitBreaker is `OPEN`.
+After the time interval has elapsed, the CircuitBreaker state changes to `HALF_CLOSED` and allows calls to see if the backend is still unavailable or has become available again. On success or failure, the state changes back to `CLOSED` or `OPEN`, respectively. `CircuitBreaker::recordFailure(throwable)` also checks if the type of exception should increase the number of failure attempts.
 
 == Usage guide
 
@@ -29,31 +49,40 @@ compile "io.github.robwin:circuitbreaker-java8:{version}"
 
 === CircuitBreaker configuration example
 
+This library comes with an `InMemoryCircuitBreakerRegistry` based on a `ConcurrentMap` which provides thread safety and atomicity guarantees. You must use the CircuitBreakerRegistry to manage (create and retrieve) your CircuitBreakers. You can create a `InMemoryCircuitBreakerRegistry` with a default global `CircuitBreakerConfig` for all of your CircuitBreakers.
+
 [source,java]
 ----
-// Create a InMemoryCircuitBreakerRegistry with global default settings
+// Create a InMemoryCircuitBreakerRegistry with a default global configuration
 // (maxFailures = 3, waitInterval = 60[s], ignoredExceptions = empty)
 CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
-
-// Create a custom configuration for a CircuitBreaker
-// You can configure the maximum number of allowed failures and
-// the wait interval [ms] which specifies how long the CircuitBreaker should stay OPEN
-// You can add exceptions to the ignore list so that the CircuitBreaker is not triggered
-CircuitBreakerConfig circuitBreakerConfig = new CircuitBreakerConfig.Builder()
-    .maxFailures(1).waitInterval(1000).ignoredException(BusinessException.class).build();
-
-// Get a CircuitBreaker from the CircuitBreakerRegistry with custom configuration
-CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("uniqueName", circuitBreakerConfig);
-
-// Get a CircuitBreaker from the CircuitBreakerRegistry with global default settings
-// (maxFailures = 3, waitInterval = 60[s], ignoredExceptions = empty)
-CircuitBreaker circuitBreaker2 = circuitBreakerRegistry.circuitBreaker("otherName");
 ----
 
-=== Functional programming style
+As an alternative you can provide your own custom global `CircuitBreakerConfig`. In order to create a custom global CircuitBreakerConfig or a CircuitBreakerConfig for a specific CircuitBreaker, you can use the CircuitBreakerConfig builder. You can configure the maximum number of allowed failures and the wait interval [ms], which specifies how long the CircuitBreaker should stay in state `OPEN`. Furthermore, you can add exceptions to the ignore list which must not trigger the CircuitBreaker.
 
-You can decorate any `Supplier / Runnable / Function` or `CheckedSupplier / CheckedRunnable / CheckedFunction` function with `CircuitBreaker.decorateCheckedSupplier()`, `CircuitBreaker.decorateCheckedRunnable()` or `CircuitBreaker.decorateCheckedFunction()`. You can invoke the returned function with `Try.of()` or `Try.run()` from https://github.com/javaslang/javaslang[javaslang].
-You can chain further functions with `map`, `flatMap`, `filter`, `recover` or `andThen`. The chained functions are only invoked, if the CircuitBreaker is CLOSED or HALF_CLOSED. `Try.of()` returns a `Success<String>` Monad, if the invocation of the function was successful. If the function itself throws an exception, a `Failure<Throwable>` Monad is returned and `map` is not invoked.
+[source,java]
+----
+// Create a custom configuration for a CircuitBreaker
+CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom()
+    .maxFailures(1)
+    .waitInterval(1000)
+    .ignoredException(BusinessException.class)
+    .ignoredException(AnotherBusinessException.class)
+    .build();
+    
+// Create a InMemoryCircuitBreakerRegistry with a custom global configuration
+CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.of(circuitBreakerConfig);
+
+// Get a CircuitBreaker from the CircuitBreakerRegistry with the global default configuration
+CircuitBreaker circuitBreaker2 = circuitBreakerRegistry.circuitBreaker("otherName");
+
+// Get a CircuitBreaker from the CircuitBreakerRegistry with a custom configuration
+CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("uniqueName", circuitBreakerConfig);
+----
+
+=== Functional programming example
+
+You can decorate any `Supplier / Runnable / Function` or `CheckedSupplier / CheckedRunnable / CheckedFunction` function with `CircuitBreaker.decorateCheckedSupplier()`, `CircuitBreaker.decorateCheckedRunnable()` or `CircuitBreaker.decorateCheckedFunction()`. You can invoke the returned function with `Try.of()` or `Try.run()` from https://github.com/javaslang/javaslang[javaslang]. This allows to chain further functions with `map`, `flatMap`, `filter`, `recover` or `andThen`. The chained functions are only invoked, if the CircuitBreaker is CLOSED or HALF_CLOSED. `Try.of()` returns a `Success<String>` Monad, if the invocation of the function was successful. If the function itself throws an exception, a `Failure<Throwable>` Monad is returned and `map` is not invoked.
 
 [source,java]
 ----
@@ -75,36 +104,43 @@ assertThat(result.isSuccess()).isTrue();
 assertThat(result.get()).isEqualTo("This can be any method which returns: 'Hello world'");
 ----
 
-=== Example with OPEN CircuitBreaker
+=== OPEN CircuitBreaker example
 
-In this test case `map` is not invoked, because the CircuitBreaker is OPEN. The call to `Try.of` returns a `Failure<Throwable>` Monad instead.
+In this test case `map` is not invoked, because the CircuitBreaker is OPEN. The call to `Try.of` returns a `Failure<Throwable>` Monad so that the chained function is not invoked.
 
 [source,java]
 ----
 // Given
 CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
+// Create a custom configration so that only 1 failure is allowed and the wait interval is 1[s]
 CircuitBreakerConfig circuitBreakerConfig = new CircuitBreakerConfig.Builder()
     .maxFailures(1)
     .waitInterval(1000)
     .build();
 CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("uniqueName", circuitBreakerConfig);
 
-assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED); // CircuitBreaker is initially CLOSED
-circuitBreaker.recordFailure();
-assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED); // CircuitBreaker is still CLOSED, because 1 failure is allowed
-circuitBreaker.recordFailure();
-assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.OPEN); // CircuitBreaker is OPEN, because maxFailures > 1
+// CircuitBreaker is initially CLOSED
+assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED); 
+// Simulate a failure attempt
+circuitBreaker.recordFailure(new RuntimeException());
+// CircuitBreaker is still CLOSED, because 1 failure is allowed
+assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED); 
+// Simulate a failure attempt
+circuitBreaker.recordFailure(new RuntimeException());
+// CircuitBreaker is OPEN, because maxFailures > 1
+assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.OPEN); 
 
-// When
+// When I decorate my function and invoke the decorated function
 Try<String> result = Try.of(CircuitBreaker.decorateCheckedSupplier(() -> "Hello", circuitBreaker))
         .map(value -> value + " world");
 
-// Then
-assertThat(result.isFailure()).isTrue(); // Call fails, because CircuitBreaker is OPEN
-assertThat(result.failed().get()).isInstanceOf(CircuitBreakerOpenException.class); // Exception is CircuitBreakerOpenException
+// Then the call fails, because CircuitBreaker is OPEN
+assertThat(result.isFailure()).isTrue();
+// and the exception is a CircuitBreakerOpenException
+assertThat(result.failed().get()).isInstanceOf(CircuitBreakerOpenException.class); 
 ----
 
-=== Example of Recovery
+=== Recovery example
 
 If you want to recover from any exception, you can chain the method `Try.recover()`. The recovery method is only invoked, if `Try.of()` returns a `Failure<Throwable>` Monad.
 
@@ -114,7 +150,7 @@ If you want to recover from any exception, you can chain the method `Try.recover
 CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
 CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("uniqueName");
 
-//When
+// When I decorate my function and invoke the decorated function
 Try.CheckedSupplier<String> checkedSupplier = CircuitBreaker.decorateCheckedSupplier(() -> {
         Thread.sleep(1000);
         throw new RuntimeException("BAM!");
@@ -122,18 +158,19 @@ Try.CheckedSupplier<String> checkedSupplier = CircuitBreaker.decorateCheckedSupp
 Try<String> result = Try.of(checkedSupplier)
         .recover((throwable) -> "Hello Recovery");
 
-//Then
+//Then the function should be a success, because the exception could be recovered
 assertThat(result.isSuccess()).isTrue();
+// and the result must match the result of the recovery function.
 assertThat(result.get()).isEqualTo("Hello Recovery");
 ----
 
 === Example of how to ignore exceptions
 
-The following test cases shows how to add exceptions to the ignore list so that the CircuitBreaker is not triggered.
+The following test cases shows how to add exceptions to the ignore list which must not trigger the CircuitBreaker.
 
 [source,java]
 ----
-// Given
+// Given I add the IOException to the ignore list
 CircuitBreakerConfig circuitBreakerConfig = new CircuitBreakerConfig.Builder()
         .maxFailures(1)
         .waitInterval(1000)
@@ -141,6 +178,7 @@ CircuitBreakerConfig circuitBreakerConfig = new CircuitBreakerConfig.Builder()
         .build();
 CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("testName", circuitBreakerConfig);
 
+// Simulate a failure attempt
 circuitBreaker.recordFailure(new RuntimeException());
 // CircuitBreaker is still CLOSED, because 1 failure is allowed
 assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
@@ -151,10 +189,11 @@ Try.CheckedRunnable checkedRunnable = CircuitBreaker.decorateCheckedRunnable(() 
 }, circuitBreaker);
 Try result = Try.run(checkedRunnable);
 
-//Then the SocketTimeoutException should not trigger the CircuitBreaker, but should be rethrown instead.
+//Then the SocketTimeoutException did not trigger the CircuitBreaker, but is rethrown instead.
 assertThat(result.isFailure()).isTrue();
-// CircuitBreaker is still CLOSED, because SocketTimeoutException was ignored
+// and the CircuitBreaker is still CLOSED, because SocketTimeoutException was ignored
 assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
+// and the returned exception is of type IOException
 assertThat(result.failed().get()).isInstanceOf(IOException.class);
 ----
 
@@ -181,8 +220,8 @@ assertThat(future.get()).isEqualTo("This can be any method which returns: 'Hello
 
 === Example with Dropwizard Metrics
 
-You can use https://dropwizard.github.io/metrics/[Dropwizard Metrics] to get execution metrics for your functions. A histogram allows you to measure min, mean, max, standard deviation and quantiles like the median or 95th percentile of the function execution time. A meter measures the rate of the function executions.
-The project provides several higher-order functions to decorate any `Supplier / Runnable / Function` or `CheckedSupplier / CheckedRunnable / CheckedFunction` with metrics.
+You can use https://dropwizard.github.io/metrics/[Dropwizard Metrics] to get runtime metrics of your functions. The project provides several higher-order functions to decorate any `Supplier / Runnable / Function` or `CheckedSupplier / CheckedRunnable / CheckedFunction`. The decorator creates a histogram and a meter for your function.  A histogram measures min, mean, max, standard deviation and quantiles like the median or 95th percentile of the execution time. A meter measures the rate of executions.
+
 
 [source,java]
 ----
@@ -198,16 +237,16 @@ Try.CheckedSupplier<String> supplier = () -> {
     return "Hello world";
 };
 
-// And measure the time with Metrics
+// and decorate the supplier with a Metrics timer
 Try.CheckedSupplier<String> timedSupplier = Metrics.timedCheckedSupplier(supplier, timer);
 
-// And decorate it with a CircuitBreaker
+// and decorate the supplier with a CircuitBreaker
 Try.CheckedSupplier<String> circuitBreakerAndTimedSupplier = CircuitBreaker
         .decorateCheckedSupplier(timedSupplier, circuitBreaker);
 
 String value = circuitBreakerAndTimedSupplier.get();
 
-// Then the counter of metrics should be one and the
+// Then the Metrics execution counter should be 1
 assertThat(timer.getCount()).isEqualTo(1);
 // and the mean time should be greater than 2[s]
 assertThat(timer.getSnapshot().getMean()).isGreaterThan(2);
