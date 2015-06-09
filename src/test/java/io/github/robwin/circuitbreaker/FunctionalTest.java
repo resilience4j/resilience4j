@@ -204,4 +204,30 @@ public class FunctionalTest {
         assertThat(future.get()).isEqualTo("This can be any method which returns: 'Hello world'");
     }
 
+
+    @Test
+    public void shouldChainDecoratedFunctions() throws ExecutionException, InterruptedException {
+        // Given
+        CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("testName");
+        CircuitBreaker anotherCircuitBreaker = circuitBreakerRegistry.circuitBreaker("anotherTestName");
+
+        // When
+        Try.CheckedSupplier<String> decoratedSupplier = CircuitBreaker
+                .decorateCheckedSupplier(() -> "Hello", circuitBreaker);
+
+        Try.CheckedFunction<String, String> decoratedFunction = CircuitBreaker
+                .decorateCheckedFunction((input) -> input + " world", anotherCircuitBreaker);
+
+        // You can chain other functions with map and flatMap. The Try Monad returns a Success<String>, if the all
+        // functions run successfully.
+        Try<String> result = Try.of(decoratedSupplier)
+                .map(decoratedFunction);
+
+        // Then
+        assertThat(result.isSuccess()).isTrue();
+        assertThat(result.get()).isEqualTo("Hello world");
+
+
+    }
+
 }
