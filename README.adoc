@@ -109,14 +109,19 @@ You could also chain functions which are decorated by different CircuitBreakers.
 
 [source,java]
 ----
-// When
+//Given
+CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
+CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("testName");
+CircuitBreaker anotherCircuitBreaker = circuitBreakerRegistry.circuitBreaker("anotherTestName");
+
+// When I create a Supplier and a Function which are decorated by different CircuitBreakers
 Try.CheckedSupplier<String> decoratedSupplier = CircuitBreaker
         .decorateCheckedSupplier(() -> "Hello", circuitBreaker);
 
 Try.CheckedFunction<String, String> decoratedFunction = CircuitBreaker
         .decorateCheckedFunction((input) -> input + " world", anotherCircuitBreaker);
 
-// You can chain other functions with `map`.
+// and I chain a function with `map`.
 Try<String> result = Try.of(decoratedSupplier)
         .map(decoratedFunction);
 
