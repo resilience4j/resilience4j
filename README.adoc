@@ -58,7 +58,7 @@ This library comes with an `InMemoryCircuitBreakerRegistry` based on a `Concurre
 CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
 ----
 
-As an alternative you can provide your own custom global `CircuitBreakerConfig`. In order to create a custom global CircuitBreakerConfig or a CircuitBreakerConfig for a specific CircuitBreaker, you can use the CircuitBreakerConfig builder. You can configure the maximum number of allowed failures and the wait interval [ms], which specifies how long the CircuitBreaker should stay in state `OPEN`. Furthermore, you can add exceptions to the ignore list which must not trigger the CircuitBreaker.
+As an alternative you can provide your own custom global `CircuitBreakerConfig`. In order to create a custom global CircuitBreakerConfig or a CircuitBreakerConfig for a specific CircuitBreaker, you can use the CircuitBreakerConfig builder. You can configure the maximum number of allowed failures and the wait interval [ms], which specifies how long the CircuitBreaker should stay in `OPEN` state. Furthermore, you can add exceptions, which must not trigger the CircuitBreaker, to an ignore list.
 
 [source,java]
 ----
@@ -105,7 +105,7 @@ assertThat(result.isSuccess()).isTrue();
 assertThat(result.get()).isEqualTo("This can be any method which returns: 'Hello world'");
 ----
 
-You could also chain functions which are decorated by different CircuitBreakers.
+You could also chain up functions which are decorated by different CircuitBreakers.
 
 [source,java]
 ----
