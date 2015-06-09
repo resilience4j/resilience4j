@@ -279,6 +279,10 @@ assertThat(timer.getSnapshot().getMean()).isGreaterThan(2);
 assertThat(value).isEqualTo("Hello world");
 ----
 
+== Monitoring & Reporting
+
+You could monitor and report the state of your CircuitBreakers and runtime metrics by using Metrics https://dropwizard.github.io/metrics/3.1.0/getting-started/#health-checks[Health Checks] and https://dropwizard.github.io/metrics/3.1.0/getting-started/#reporting-via-http[Reporting via JMX or HTTP].
+
 == License
 
 Copyright 2015 Robert Winkler
