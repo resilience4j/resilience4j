@@ -25,6 +25,7 @@ import io.github.robwin.circuitbreaker.CircuitBreakerRegistry;
 import io.github.robwin.retry.HelloWorldService;
 import io.github.robwin.retry.Retry;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockito.BDDMockito;
 import org.slf4j.Logger;
@@ -47,16 +48,19 @@ public class ReactiveStreamsTest {
     private CircuitBreakerRegistry circuitBreakerRegistry;
     private HelloWorldService helloWorldService;
 
+    @BeforeClass
+    public static void initialize() {
+        Environment.initialize();
+    }
+
     @Before
     public void setUp(){
-        Environment.initialize();
         helloWorldService = mock(HelloWorldService.class);
         circuitBreakerRegistry = CircuitBreakerRegistry.of(new CircuitBreakerConfig.Builder()
                 .maxFailures(1)
                 .waitInterval(1000)
                 .build());
     }
-
 
     @Test
     public void shouldReturnSuccessfullyAfterSecondAttempt() {
