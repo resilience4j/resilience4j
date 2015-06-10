@@ -225,7 +225,7 @@ assertThat(result.failed().get()).isInstanceOf(IOException.class);
 
 === Retry example
 
-You can also retry a failed function.
+You can also retry a failed function and recover the exception, if the maximum retry count was reached.
 
 [source,java]
 ----
