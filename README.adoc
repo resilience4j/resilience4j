@@ -369,6 +369,8 @@ First, create a new HealthCheckRegistry instance:
 HealthCheckRegistry healthCheckRegistry = new HealthCheckRegistry();
 ----
 
+Then create a HealthCheck implementation for your CircuitBreaker.
+
 [source,java]
 ----
 public class CircuitBreakerHealthCheck extends HealthCheck {
@@ -404,8 +406,18 @@ To report runtime metrics via JMX:
 [source,java]
 ----
 MetricRegistry metricRegistry = new MetricRegistry();
-final JmxReporter reporter = JmxReporter.forRegistry(metricRegistry).build();
-reporter.start();
+JmxReporter reporter = JmxReporter.forRegistry(metricRegistry).build();
+reporter.start(1, TimeUnit.MINUTES);
+----
+
+To report runtime metrics to Graphite:
+
+[source,java]
+----
+Graphite graphite = new Graphite(new InetSocketAddress("graphite.example.com", 2003));
+GraphiteReporter reporter = GraphiteReporter.forRegistry(metricRegistry)
+                                                  .build(graphite);
+reporter.start(1, TimeUnit.MINUTES);
 ----
 
 == License
