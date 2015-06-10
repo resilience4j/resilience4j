@@ -298,7 +298,7 @@ circuitBreaker.recordFailure(new RuntimeException());
 assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.OPEN); 
 
 // Decorate the supplier of the HelloWorldService with CircuitBreaker functionality
-Supplier<String> supplier = CircuitBreaker.decorateSupplier(helloWorldService::returnHelloWorld, circuitBreaker);
+Supplier<String> supplier = CircuitBreaker.decorateSupplier(() -> "Hello world", circuitBreaker);
 
 //When I consume from a reactive stream it should forward the CircuitBreakerOpenException.
 Streams.generate(supplier::get)
