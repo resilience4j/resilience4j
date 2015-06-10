@@ -61,8 +61,8 @@ public class CircuitBreakerConfig {
         private List<Class<? extends Throwable>> ignoredExceptions = new ArrayList<>();
 
         public Builder maxFailures(int maxFailures) {
-            if (maxFailures < 0) {
-                throw new IllegalArgumentException("maxFailures must be greater than or equal to 0");
+            if (maxFailures < 1) {
+                throw new IllegalArgumentException("maxFailures must be greater than or equal to 1");
             }
             this.maxFailures = maxFailures;
             return this;

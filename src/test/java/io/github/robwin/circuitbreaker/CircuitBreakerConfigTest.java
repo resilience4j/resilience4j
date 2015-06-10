@@ -16,11 +16,19 @@
  *
  *
  */
-package io.github.robwin.retry;
+package io.github.robwin.circuitbreaker;
 
-public interface HelloWorldService {
+import org.junit.Test;
 
-    String returnHelloWorld();
+public class CircuitBreakerConfigTest {
 
-    void sayHelloWorld();
+    @Test(expected = IllegalArgumentException.class)
+    public void zeroMaxFailuresShouldFail() {
+        CircuitBreakerConfig.custom().maxFailures(0).build();
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void zeroWaitIntervalShouldFail() {
+        CircuitBreakerConfig.custom().waitInterval(0).build();
+    }
 }

@@ -24,7 +24,7 @@ import org.junit.Test;
 import static java.lang.Thread.sleep;
 import static org.assertj.core.api.BDDAssertions.assertThat;
 
-public class CircuitBreakerTest {
+public class CircuitBreakerStateMachineTest {
 
     private CircuitBreaker circuitBreaker;
 
