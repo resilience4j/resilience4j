@@ -270,7 +270,7 @@ assertThat(result.get()).isEqualTo("Hello world from recovery function");
 
 === CompletableFuture example
 
-You can also invoke a decorated function asynchronously and chain further functions.
+You can also invoke a decorated function asynchronously by using a `CompletableFuture` using a and chain further functions.
 
 [source,java]
 ----
