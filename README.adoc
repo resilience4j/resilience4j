@@ -286,7 +286,7 @@ You can also invoke a decorated function with a Reactive Streams implementation 
 [source,java]
 ----
  // Given
- CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
+CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
 CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("testName");
 // CircuitBreaker is initially CLOSED
 circuitBreaker.recordFailure(new RuntimeException());
