@@ -30,7 +30,7 @@ import java.util.function.Supplier;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class FunctionalTest {
+public class CircuitBreakerTest {
 
     private CircuitBreakerRegistry circuitBreakerRegistry;
 
