@@ -291,7 +291,7 @@ assertThat(future.get()).isEqualTo("This can be any method which returns: 'Hello
 
 === Reactive Streams example
 
-You can also invoke a decorated function by using a Reactive Streams implementation like https://github.com/ReactiveX/RxJava[RxJava] or https://github.com/reactor/reactor/[Project Reactor].
+You can also invoke a decorated function asynchronously by using a Reactive Streams implementation like https://github.com/ReactiveX/RxJava[RxJava] or https://github.com/reactor/reactor/[Project Reactor].
 
 [source,java]
 ----
