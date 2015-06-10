@@ -50,7 +50,7 @@ compile "io.github.robwin:circuitbreaker-java8:{version}"
 
 === CircuitBreaker configuration example
 
-This library comes with an `InMemoryCircuitBreakerRegistry` based on a `ConcurrentMap` which provides thread safety and atomicity guarantees. You must use the CircuitBreakerRegistry to manage (create and retrieve) your CircuitBreakers. You can create a `InMemoryCircuitBreakerRegistry` with a default global `CircuitBreakerConfig` for all of your CircuitBreakers.
+This library comes with an `InMemoryCircuitBreakerRegistry` based on a `ConcurrentMap` which provides thread safety and atomicity guarantees. You must use the CircuitBreakerRegistry to manage (create and retrieve) your CircuitBreakers. You can create a `InMemoryCircuitBreakerRegistry` with a default global `CircuitBreakerConfig` for all of your CircuitBreakers as follows.
 
 [source,java]
 ----
@@ -225,7 +225,27 @@ assertThat(result.failed().get()).isInstanceOf(IOException.class);
 
 === Retry example
 
-You can also retry a failed function and recover the exception, if the maximum retry count was reached.
+You can also retry a failed function and recover from the exception, if the maximum retry count was reached. You can create a `Retry` context using a default configuration as follows.
+
+[source,java]
+----
+// Create a Retry context with a default global configuration
+// (maxAttempts = 3, waitInterval = 500[ms], ignoredExceptions = empty)
+Retry retryContext = Retry.ofDefaults();
+----
+
+In order to create a custom `Retry` context, you can use the Retry context builder. You can configure the maximum number of retry attempts and the wait interval [ms] between successive attempts. Furthermore, you can add exceptions to the ignore list which must not trigger a retry.
+
+[source,java]
+----
+Retry retryContext = Retry.custom()
+    .maxAttempts(2)
+    .waitInterval(1000)
+    .ignoredException(WebServiceException.class)
+    .build();
+----
+
+You can decorate any `Supplier / Runnable / Function` or `CheckedSupplier / CheckedRunnable / CheckedFunction` function with `Retry.retryableCheckedSupplier()`, `Retry.retryableCheckedRunnable()` or `Retry.retryableCheckedFunction()`.
 
 [source,java]
 ----
@@ -246,16 +266,6 @@ Try<String> result = Try.of(retryableSupplier).recover((throwable) -> "Hello wor
 BDDMockito.then(helloWorldService).should(times(3)).sayHelloWorld();
 // and the exception should be handled by the recovery function
 assertThat(result.get()).isEqualTo("Hello world from recovery function");
-----
-
-As an alternative you can create a custom `RetryContext`. In order to create a custom RetryContext, you can use the RetryContext builder. You can configure the maximum number of retry attempts and the wait interval [ms] between successive attempts. Furthermore, you can add exceptions to the ignore list which must not trigger a retry.
-
-[source,java]
-----
-Retry retryContext = Retry.custom()
-    .maxAttempts(2)
-    .ignoredException(WebServiceException.class)
-    .build();
 ----
 
 === CompletableFuture example
