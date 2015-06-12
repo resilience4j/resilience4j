@@ -13,7 +13,8 @@ The following is as a short appetizer. For more details, please look at the http
 [source,java]
 ----
 // You can create a CircuitBreaker, RetryContext and Timer with default configurations.
-CircuitBreaker circuitBreaker = CircuitBreakerRegistry.ofDefaults().circuitBreaker("uniqueName");
+CircuitBreaker circuitBreaker = CircuitBreakerRegistry.ofDefaults()
+        .circuitBreaker("uniqueName");
 Retry retryContext retryContext = Retry.ofDefaults();
 Timer timer = new MetricRegistry().timer(name("test"));
 
