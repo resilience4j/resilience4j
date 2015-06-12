@@ -14,3 +14,7 @@
 
 == Version 0.1.4
 * Added the feature to retry a failed function
+
+== Version 0.1.5
+* Added builders to simplify chaining of decorators
+
