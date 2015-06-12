@@ -18,7 +18,7 @@ CircuitBreaker circuitBreaker = CircuitBreakerRegistry.ofDefaults()
 Retry retryContext = Retry.ofDefaults();
 Timer timer = new MetricRegistry().timer(name("test"));
 
-// You can decorate any method of any class with these decorators.
+// You can decorate any method of any class.
 Supplier<String> supplier = () -> "Here you could call a remote API";
 Supplier<String> decoratedSupplier = FailSafe.ofSupplier(supplier)
         .withCircuitBreaker(circuitBreaker)
