@@ -1,4 +1,4 @@
-= CircuitBreaker for Java8
+= Fault tolerance library designed for Java8
 :author: Robert Winkler
 :version: 0.1.5
 :hardbreaks:
