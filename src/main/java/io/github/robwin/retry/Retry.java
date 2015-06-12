@@ -31,11 +31,11 @@ public interface Retry {
      */
     void handleRuntimeException(RuntimeException runtimeException);
 
-    public static RetryContext.Builder custom(){
+    static RetryContext.Builder custom(){
         return new RetryContext.Builder();
     }
 
-    public static Retry ofDefaults(){
+    static Retry ofDefaults(){
         return Retry.custom().build();
     }
 

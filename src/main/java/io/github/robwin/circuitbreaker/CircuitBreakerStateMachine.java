@@ -70,6 +70,8 @@ final class CircuitBreakerStateMachine implements CircuitBreaker {
         if(circuitBreakerConfig.getIgnoredExceptions().stream()
                 .noneMatch(ignoredException -> ignoredException.isInstance(exception))){
             stateReference.get().recordFailure();
+        }else{
+            stateReference.get().recordSuccess();
         }
     }
 
