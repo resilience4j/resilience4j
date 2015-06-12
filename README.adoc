@@ -26,7 +26,7 @@ Supplier<String> decoratedSupplier = FailSafe.ofSupplier(supplier)
         .decorate();
         
 // You can chain further functions and recover from exceptions
-String result = Try.of(checkedSupplier)
+String result = Try.of(decoratedSupplier)
         .map(value -> value + " world'");
         .recover(exception -> "Hello Recovery")
         .get();
