@@ -7,8 +7,30 @@ image:https://travis-ci.org/RobWin/circuitbreaker-java8.svg?branch=master["Build
 image:https://badges.gitter.im/Join%20Chat.svg[link="https://gitter.im/RobWin/circuitbreaker-java8?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge"]
 
 This library is a lightweight, easy-to-use implementation of the http://martinfowler.com/bliki/CircuitBreaker.html[CircuitBreaker pattern] optimized for Java 8 and functional programming in a multithreaded environment.
-The library provides several higher-order functions to decorate any `Supplier / Runnable / Function` or `CheckedSupplier / CheckedRunnable / CheckedFunction` with a Circuit Breaker. In the following I call the higher-order functions `decorators`. The decorators return an enhanced version of your function. Furthermore, the library provides decorators to measure runtime metrics of your functions by using https://dropwizard.github.io/metrics/[Dropwizard Metrics] and decorators to retry failed functions. You can stack more than one decorator on any given function. That means, you can combine a Metrics decorator with a CircuitBreaker decorator. Any decorated function can be invoked synchronously or asynchronously.
-The project should be combined with a functional library for Java 8 like https://github.com/javaslang/javaslang[javaslang]. The project requires at least JDK 8.
+The library provides several higher-order functions to decorate any `Supplier / Runnable / Function` or `CheckedSupplier / CheckedRunnable / CheckedFunction` with a Circuit Breaker. In the following I call the higher-order functions `decorators`. The decorators return an enhanced version of your function. Furthermore, the library provides decorators to measure runtime metrics of your functions by using https://dropwizard.github.io/metrics/[Dropwizard Metrics] and decorators to retry failed functions. You can stack more than one decorator on any given function. That means, you can combine a Metrics decorator with a CircuitBreaker decorator. You can use builders to stack the decorators. Any decorated function can be invoked synchronously or asynchronously. The project should be combined with a functional library for Java 8 like https://github.com/javaslang/javaslang[javaslang]. The project requires at least JDK 8.
+The following is as a short appetizer. For more details, please look at the https://github.com/RobWin/circuitbreaker-java8#usage-guide[usage guide].
+
+[source,java]
+----
+// You can create a CircuitBreaker, RetryContext and Timer with default configurations.
+CircuitBreaker circuitBreaker = CircuitBreakerRegistry.ofDefaults().circuitBreaker("uniqueName");
+Retry retryContext retryContext = Retry.ofDefaults();
+Timer timer = new MetricRegistry().timer(name("test"));
+
+// You can decorate any method of any class with these decorators.
+Supplier<String> supplier = () -> "Here you could call a remote API";
+Supplier<String> decoratedSupplier = FailSafe.ofSupplier(supplier)
+        .withCircuitBreaker(circuitBreaker)
+        .withRetry(retryContext)
+        .withMetrics(timer)
+        .decorate();
+        
+// You can chain further functions and recover from exceptions
+String result = Try.of(checkedSupplier)
+        .map(value -> value + " world'");
+        .recover(exception -> "Hello Recovery")
+        .get();
+----
 
 The CircuitBreaker is implemented via a finite state machine with three states: `CLOSED`, `OPEN` and `HALF_OPEN`. The CircuitBreaker does not know anything about the backend's state by itself, but uses the information provided by the decorators via `CircuitBreaker::recordSuccess()` and `CircuitBreaker::recordFailure(throwable)`. The decorators are pure functions. The result of a decorator depends solely on the input parameters. See example: 
 
