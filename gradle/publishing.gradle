@@ -6,7 +6,7 @@ ext {
     buildTime = new SimpleDateFormat('HH:mm:ss.SSSZ').format(buildTimeAndDate)
 }
 
-def projectArtifactId = 'circuitbreaker-java8'
+def projectArtifactId = 'javaslang-circuitbreaker'
 
 jar {
     manifest {
@@ -37,10 +37,10 @@ bintray {
     publications = ['mavenJava']
     pkg {
         repo = 'maven'
-        name = 'circuitbreaker-java8'
-        websiteUrl = 'https://github.com/RobWin/circuitbreaker-java8'
-        issueTrackerUrl = 'https://github.com/RobWin/circuitbreaker-java8/issues'
-        vcsUrl = 'https://github.com/RobWin/circuitbreaker-java8.git'
+        name = 'javaslang-circuitbreaker'
+        websiteUrl = 'https://github.com/RobWin/javaslang-circuitbreaker'
+        issueTrackerUrl = 'https://github.com/RobWin/javaslang-circuitbreaker/issues'
+        vcsUrl = 'https://github.com/RobWin/javaslang-circuitbreaker.git'
         desc = 'A CircuitBreaker pattern implementation for Java8 and functional programming.'
         licenses = ['Apache-2.0']
         version {
@@ -74,17 +74,17 @@ publishing {
                     it.scope*.value = 'compile'
                 }
 
-                root.appendNode('name', 'circuitbreaker-java8')
+                root.appendNode('name', 'javaslang-circuitbreaker')
                 root.appendNode('packaging', 'jar')
-                root.appendNode('url', 'https://github.com/RobWin/circuitbreaker-java8')
+                root.appendNode('url', 'https://github.com/RobWin/javaslang-circuitbreaker')
                 root.appendNode('description', 'A CircuitBreaker pattern implementation for Java8 and functional programming .')
 
                 def license = root.appendNode('licenses').appendNode('license')
                 license.appendNode('name', 'Apache-2.0')
-                license.appendNode('url', 'https://github.com/RobWin/circuitbreaker-java8/blob/master/LICENSE.txt')
+                license.appendNode('url', 'https://github.com/RobWin/javaslang-circuitbreaker/blob/master/LICENSE.txt')
                 license.appendNode('distribution', 'repo')
 
-                root.appendNode('scm').appendNode('url', 'https://github.com/RobWin/circuitbreaker-java8.git')
+                root.appendNode('scm').appendNode('url', 'https://github.com/RobWin/javaslang-circuitbreaker.git')
 
                 def developers = root.appendNode('developers')
                 devs.each {

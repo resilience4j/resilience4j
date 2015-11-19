@@ -1,2 +1,1 @@
-rootProject.name = 'circuitbreaker-java8'
-
+rootProject.name = 'javaslang-circuitbreaker'

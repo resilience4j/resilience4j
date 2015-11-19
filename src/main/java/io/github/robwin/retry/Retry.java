@@ -26,6 +26,7 @@ public interface Retry {
      * Handles a checked exception
      *
      * @param exception the exception to handle
+     * @throws Throwable the exception
      */
     void handleException(Exception exception) throws Throwable;
 
