@@ -44,7 +44,7 @@ public class FailSafeTest {
     @Test
     public void shouldCreateAFailSafeFunction() {
         Function<String, String> function = (name) -> "Hello World " + name;
-        Function<String, String> decoratedFunction = FailSafe.ofFuction(function)
+        Function<String, String> decoratedFunction = FailSafe.ofFunction(function)
                 .withCircuitBreaker(circuitBreaker)
                 .withRetry(retryContext)
                 .withMetrics(timer)

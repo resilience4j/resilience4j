@@ -15,7 +15,7 @@ public interface FailSafe{
         return new FailSafeSupplier<>(supplier);
     }
 
-    static <T, R> FailSafeFunction<T, R> ofFuction(Function<T, R> function){
+    static <T, R> FailSafeFunction<T, R> ofFunction(Function<T, R> function){
         return new FailSafeFunction<>(function);
     }
 

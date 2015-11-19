@@ -23,9 +23,9 @@ import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * CircuitBreaker finite state machine.
- * This CircuitBreaker is implemented via a (timed) finite state machine. It does not have a way to know anything about the
+ * This CircuitBreaker is implemented via a finite state machine. It does not have a way to know anything about the
  * backend's state by itself, but uses only the information provided by calls to {@link #recordSuccess()} and
- * {@link #recordFailure(java.lang.Exception)}.
+ * {@link #recordFailure(java.lang.Throwable)}.
  * The state of the CircuitBreaker changes from `CLOSED` to `OPEN` if a (configurable) number of call attempts have failed consecutively.
  * Then, all access to the backend is blocked for a (configurable) time interval. After that, the CircuitBreaker state changes to `HALF_CLOSED` tentatively, to see if the backend is still dead or has become available again.
  * On success or failure, the state changes back to `CLOSED` or `OPEN`, respectively.
@@ -66,12 +66,10 @@ final class CircuitBreakerStateMachine implements CircuitBreaker {
      * Records a failure.
      */
     @Override
-    public void recordFailure(Exception exception) {
+    public void recordFailure(Throwable throwable) {
         if(circuitBreakerConfig.getIgnoredExceptions().stream()
-                .noneMatch(ignoredException -> ignoredException.isInstance(exception))){
+                .noneMatch(ignoredException -> ignoredException.isInstance(throwable))){
             stateReference.get().recordFailure();
-        }else{
-            stateReference.get().recordSuccess();
         }
     }
 
@@ -107,7 +105,7 @@ final class CircuitBreakerStateMachine implements CircuitBreaker {
         return String.format("CircuitBreaker '%s'", this.name);
     }
 
-    void transitionToInitialClosedState() {
+    void resetState() {
         stateReference.set(new ClosedState(this));
     }
 

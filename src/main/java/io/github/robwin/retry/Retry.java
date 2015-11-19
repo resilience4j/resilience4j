@@ -11,6 +11,7 @@ public interface Retry {
      * Checks if the call should be retried
      *
      * @return the maximum number of attempts
+     * @throws Exception the original exception if the maximum retry attempts are exceeded
      */
     boolean isRetryAllowedAfterException() throws Exception;
 
@@ -23,11 +24,15 @@ public interface Retry {
 
     /**
      * Handles a checked exception
+     *
+     * @param exception the exception to handle
      */
     void handleException(Exception exception) throws Throwable;
 
     /**
      * Handles a runtime exception
+     *
+     * @param runtimeException the exception to handle
      */
     void handleRuntimeException(RuntimeException runtimeException);
 

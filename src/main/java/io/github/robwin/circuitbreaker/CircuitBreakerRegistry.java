@@ -20,8 +20,7 @@ package io.github.robwin.circuitbreaker;
 
 
 /**
- * Backend circuitBreaker manager.
- * Manages backend circuitBreaker objects for the respective backends.
+ * Manages all circuitBreaker instances.
  */
 public interface CircuitBreakerRegistry {
 
@@ -31,7 +30,7 @@ public interface CircuitBreakerRegistry {
      * @param name the name of the CircuitBreaker
      * @return The {@link CircuitBreaker}
      */
-    public CircuitBreaker circuitBreaker(String name);
+    CircuitBreaker circuitBreaker(String name);
 
     /**
      * Returns the managed {@link CircuitBreaker} or creates a new one with a custom configuration.
@@ -40,7 +39,7 @@ public interface CircuitBreakerRegistry {
      * @param circuitBreakerConfig  the CircuitBreaker configuration
      * @return The {@link CircuitBreaker}
      */
-    public CircuitBreaker circuitBreaker(String name, CircuitBreakerConfig circuitBreakerConfig);
+    CircuitBreaker circuitBreaker(String name, CircuitBreakerConfig circuitBreakerConfig);
 
     static CircuitBreakerRegistry of(CircuitBreakerConfig defaultCircuitBreakerConfig){
         return new InMemoryCircuitBreakerRegistry(defaultCircuitBreakerConfig);

@@ -51,6 +51,11 @@ public class CircuitBreakerConfig {
         return ignoredExceptions;
     }
 
+    /**
+     * Returns a builder to create a custom CircuitBreakerConfig.
+     *
+     * @return A {@link CircuitBreakerConfig.Builder}
+     */
     public static CircuitBreakerConfig.Builder custom(){
         return new Builder();
     }

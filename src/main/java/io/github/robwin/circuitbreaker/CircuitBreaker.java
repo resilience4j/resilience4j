@@ -38,15 +38,15 @@ public interface CircuitBreaker {
      *
      * @return boolean whether a call should be permitted
      */
-    abstract boolean isCallPermitted();
+    boolean isCallPermitted();
 
     /**
      * Records a backend failure.
      * This must be called if a call to a backend fails
      *
-     * @param exception The exception which must be recorded
+     * @param throwable The throwable which must be recorded
      */
-    void recordFailure(Exception exception);
+    void recordFailure(Throwable throwable);
 
      /**
       * Records success of a call to a backend.
@@ -78,8 +78,8 @@ public interface CircuitBreaker {
         /** An OPEN breaker has tripped and will not allow requests
          through. */
         OPEN,
-        /** A HALF_CLOSED breaker has completed its cooldown
-         period and will allow one request */
+        /** A HALF_CLOSED breaker has completed its wait interval
+         and will allow requests */
         HALF_CLOSED
     }
 
@@ -90,9 +90,9 @@ public interface CircuitBreaker {
                 T returnValue = supplier.get();
                 circuitBreaker.recordSuccess();
                 return returnValue;
-            } catch (Exception exception) {
-                circuitBreaker.recordFailure(exception);
-                throw exception;
+            } catch (Throwable throwable) {
+                circuitBreaker.recordFailure(throwable);
+                throw throwable;
             }
         };
     }
@@ -103,9 +103,9 @@ public interface CircuitBreaker {
             try{
                 runnable.run();
                 circuitBreaker.recordSuccess();
-            } catch (Exception exception){
-                circuitBreaker.recordFailure(exception);
-                throw exception;
+            } catch (Throwable throwable){
+                circuitBreaker.recordFailure(throwable);
+                throw throwable;
             }
         };
     }
@@ -117,9 +117,9 @@ public interface CircuitBreaker {
                 T returnValue = supplier.get();
                 circuitBreaker.recordSuccess();
                 return returnValue;
-            } catch (Exception exception) {
-                circuitBreaker.recordFailure(exception);
-                throw exception;
+            } catch (Throwable throwable) {
+                circuitBreaker.recordFailure(throwable);
+                throw throwable;
             }
         };
     }
@@ -130,9 +130,9 @@ public interface CircuitBreaker {
             try{
                 runnable.run();
                 circuitBreaker.recordSuccess();
-            } catch (Exception exception){
-                circuitBreaker.recordFailure(exception);
-                throw exception;
+            } catch (Throwable throwable){
+                circuitBreaker.recordFailure(throwable);
+                throw throwable;
             }
         };
     }
@@ -144,9 +144,9 @@ public interface CircuitBreaker {
                 R returnValue = function.apply(t);
                 circuitBreaker.recordSuccess();
                 return returnValue;
-            } catch (Exception exception){
-                circuitBreaker.recordFailure(exception);
-                throw exception;
+            } catch (Throwable throwable){
+                circuitBreaker.recordFailure(throwable);
+                throw throwable;
             }
         };
     }
@@ -158,9 +158,9 @@ public interface CircuitBreaker {
                 R returnValue = function.apply(t);
                 circuitBreaker.recordSuccess();
                 return returnValue;
-            } catch (Exception exception){
-                circuitBreaker.recordFailure(exception);
-                throw exception;
+            } catch (Throwable throwable){
+                circuitBreaker.recordFailure(throwable);
+                throw throwable;
             }
         };
     }

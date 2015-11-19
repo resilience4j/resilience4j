@@ -137,7 +137,7 @@ public class CircuitBreakerTest {
             throw new RuntimeException("BAM!");
         }, circuitBreaker);
         Try<String> result = Try.of(checkedSupplier)
-                .recover((throwable) -> "Hello Recovery");
+                .recover(throwable -> "Hello Recovery");
 
         //Then
         assertThat(result.isSuccess()).isTrue();
