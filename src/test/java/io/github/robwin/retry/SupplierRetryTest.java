@@ -40,6 +40,24 @@ public class SupplierRetryTest {
     }
 
     @Test
+    public void shouldNotRetry() {
+        // Given the HelloWorldService returns Hello world
+        given(helloWorldService.returnHelloWorld()).willReturn("Hello world");
+        // Create a Retry with default configuration
+        Retry retryContext = Retry.ofDefaults();
+        // Decorate the invocation of the HelloWorldService
+        Try.CheckedSupplier<String> retryableSupplier = Retry.retryableCheckedSupplier(helloWorldService::returnHelloWorld, retryContext);
+
+        // When
+        Try<String> result = Try.of(retryableSupplier);
+        // Then the helloWorldService should be invoked 1 time
+        BDDMockito.then(helloWorldService).should(times(1)).returnHelloWorld();
+        // and the result should be a success
+        assertThat(result.isSuccess()).isTrue();
+        assertThat(result.get()).isEqualTo("Hello world");
+    }
+
+    @Test
     public void shouldReturnSuccessfullyAfterSecondAttempt() {
         // Given the HelloWorldService throws an exception
         given(helloWorldService.returnHelloWorld()).willThrow(new WebServiceException("BAM!")).willReturn("Hello world");

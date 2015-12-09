@@ -39,6 +39,22 @@ public class RunnableRetryTest {
         helloWorldService = mock(HelloWorldService.class);
     }
 
+
+    @Test
+    public void shouldNotRetry() {
+        // Create a Retry with default configuration
+        Retry retryContext = Retry.ofDefaults();
+        // Decorate the invocation of the HelloWorldService
+        Try.CheckedRunnable retryableRunnable = Retry.retryableCheckedRunnable(helloWorldService::sayHelloWorld, retryContext);
+
+        // When
+        Try<Void> result = Try.run(retryableRunnable);
+        // Then the helloWorldService should be invoked 1 time
+        BDDMockito.then(helloWorldService).should(times(1)).sayHelloWorld();
+        // and the result should be a success
+        assertThat(result.isSuccess()).isTrue();
+    }
+
     @Test
     public void shouldReturnAfterThreeAttempts() {
         // Given the HelloWorldService throws an exception

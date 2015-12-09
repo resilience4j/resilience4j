@@ -37,10 +37,20 @@ public interface Retry {
      */
     void handleRuntimeException(RuntimeException runtimeException);
 
+    /**
+     * Creates a RetryContext.Builder to configure a custom Retry.
+     *
+     * @return a RetryContext.Builder
+     */
     static RetryContext.Builder custom(){
         return new RetryContext.Builder();
     }
 
+    /**
+     * Creates a Retry with default configuration.
+     *
+     * @return a Retry with default configuration
+     */
     static Retry ofDefaults(){
         return Retry.custom().build();
     }
@@ -57,10 +67,11 @@ public interface Retry {
         };
     }
 
-    static <T> Try.CheckedRunnable retryableCheckedRunnable(Try.CheckedRunnable runnable, Retry retryContext){
+    static Try.CheckedRunnable retryableCheckedRunnable(Try.CheckedRunnable runnable, Retry retryContext){
         return () -> {
             do try {
                 runnable.run();
+                break;
             } catch (Exception exception) {
                 retryContext.handleException(exception);
             } while (retryContext.isRetryAllowedAfterException());
@@ -91,10 +102,11 @@ public interface Retry {
         };
     }
 
-    static <T> Runnable retryableRunnable(Runnable runnable, Retry retryContext){
+    static Runnable retryableRunnable(Runnable runnable, Retry retryContext){
         return () -> {
             do try {
                 runnable.run();
+                break;
             } catch (RuntimeException runtimeException) {
                 retryContext.handleRuntimeException(runtimeException);
             } while (retryContext.isRetryAllowedAfterRuntimeException());
