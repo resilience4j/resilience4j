@@ -23,17 +23,20 @@ description = 'A CircuitBreaker pattern implementation for Java 8 and functional
 
 repositories {
     mavenCentral()
+    maven {
+        url "https://oss.sonatype.org/content/repositories/snapshots"
+    }
 }
 
 dependencies {
-    compile "com.javaslang:javaslang:1.2.2"
+    compile "com.javaslang:javaslang:2.0.0-RC2"
     compile "io.dropwizard.metrics:metrics-core:3.1.2"
     testCompile "junit:junit:4.11"
     testCompile "org.assertj:assertj-core:3.0.0"
     testCompile "ch.qos.logback:logback-classic:0.9.26"
     testCompile "io.dropwizard.metrics:metrics-healthchecks:3.1.2"
     testCompile "org.mockito:mockito-all:1.10.19"
-    testCompile "io.projectreactor:reactor-stream:2.0.3.RELEASE"
+    testCompile "io.projectreactor:reactor-stream:2.0.7.RELEASE"
 }
 
 task sourcesJar(type: Jar, dependsOn: classes) {
