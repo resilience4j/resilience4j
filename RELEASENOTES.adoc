@@ -21,3 +21,7 @@
 == Version 0.1.6
 * Renamed project to javaslang-circuitbreaker
 
+== Version 0.2.0
+* Fixed Issue #2
+* Updated javaslang to v2.0.0-RC2
+

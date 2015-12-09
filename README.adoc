@@ -1,6 +1,6 @@
 = Fault tolerance library designed for Java8
 :author: Robert Winkler
-:version: 0.1.6
+:version: 0.1.7
 :hardbreaks:
 
 image:https://travis-ci.org/RobWin/javaslang-circuitbreaker.svg?branch=master["Build Status", link="https://travis-ci.org/RobWin/javaslang-circuitbreaker"] image:https://coveralls.io/repos/RobWin/javaslang-circuitbreaker/badge.svg["Coverage Status", link="https://coveralls.io/r/RobWin/javaslang-circuitbreaker"] image:https://api.bintray.com/packages/robwin/maven/javaslang-circuitbreaker/images/download.svg[link="https://bintray.com/robwin/maven/javaslang-circuitbreaker/_latestVersion"] image:http://img.shields.io/badge/license-ASF2-blue.svg["Apache License 2", link="http://www.apache.org/licenses/LICENSE-2.0.txt"]
