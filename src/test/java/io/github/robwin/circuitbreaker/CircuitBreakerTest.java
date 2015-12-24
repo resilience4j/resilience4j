@@ -36,7 +36,7 @@ public class CircuitBreakerTest {
 
     @Before
     public void setUp(){
-        circuitBreakerRegistry = CircuitBreakerRegistry.of(new CircuitBreakerConfig.Builder()
+        circuitBreakerRegistry = CircuitBreakerRegistry.of(CircuitBreakerConfig.custom()
                 .maxFailures(1)
                 .waitInterval(1000)
                 .build());

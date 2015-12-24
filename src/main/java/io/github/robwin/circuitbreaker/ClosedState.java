@@ -55,7 +55,7 @@ final public class ClosedState extends CircuitBreakerState {
      */
     @Override
     public void recordSuccess() {
-        stateMachine.resetState();
+        stateMachine.resetState(this);
     }
 
     /**

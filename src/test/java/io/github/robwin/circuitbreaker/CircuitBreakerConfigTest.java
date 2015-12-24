@@ -18,9 +18,16 @@
  */
 package io.github.robwin.circuitbreaker;
 
+import javaslang.control.Match;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import static org.assertj.core.api.BDDAssertions.then;
 
 public class CircuitBreakerConfigTest {
+
+    private static Logger LOG = LoggerFactory.getLogger(CircuitBreakerConfigTest.class);
 
     @Test(expected = IllegalArgumentException.class)
     public void zeroMaxFailuresShouldFail() {
@@ -30,5 +37,35 @@ public class CircuitBreakerConfigTest {
     @Test(expected = IllegalArgumentException.class)
     public void zeroWaitIntervalShouldFail() {
         CircuitBreakerConfig.custom().waitInterval(0).build();
+    }
+
+    @Test()
+    public void shouldSetMaxFailures() {
+        CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom().maxFailures(5).build();
+        then(circuitBreakerConfig.getMaxFailures()).isEqualTo(5);
+    }
+
+    @Test()
+    public void shouldSetWaitInterval() {
+        CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom().waitInterval(1000).build();
+        then(circuitBreakerConfig.getWaitInterval()).isEqualTo(1000);
+    }
+
+    @Test
+    public void shouldAddACircuitBreakerEventListener() {
+        CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom()
+                .onCircuitBreakerEvent((CircuitBreakerEvent circuitBreakerEvent)
+                        -> Match.of(circuitBreakerEvent)
+                        .whenType(CircuitBreakerStateChangeEvent.class)
+                        .then((event) -> event.getNewState().toString()))
+                .build();
+        then(circuitBreakerConfig.getCircuitBreakerEventListener().isPresent()).isTrue();
+    }
+
+    @Test
+    public void circuitBreakerEventListenerShouldBeEmpty() {
+        CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom()
+                .build();
+        then(circuitBreakerConfig.getCircuitBreakerEventListener().isPresent()).isFalse();
     }
 }

@@ -24,7 +24,7 @@ import org.junit.Test;
 import static org.assertj.core.api.BDDAssertions.assertThat;
 
 
-public class MonitorRegistryTest {
+public class CircuitBreakerRegistryTest {
 
     private CircuitBreakerRegistry circuitBreakerRegistry;
 

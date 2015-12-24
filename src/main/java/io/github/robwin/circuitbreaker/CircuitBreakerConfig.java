@@ -20,6 +20,8 @@ package io.github.robwin.circuitbreaker;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+
 
 public class CircuitBreakerConfig {
 
@@ -30,13 +32,19 @@ public class CircuitBreakerConfig {
     private final int maxFailures;
     // The wait interval which specifies how long the CircuitBreaker should stay OPEN
     private final int waitInterval;
+    // The CircuitBreakerEventListener which should handle CircuitBreaker events.
+    private Optional<CircuitBreakerEventListener> circuitBreakerEventListener;
     // Exceptions which do not count as failures and thus not trigger the circuit breaker.
     private final List<Class<? extends Throwable>> ignoredExceptions;
 
-    private CircuitBreakerConfig(int maxFailures, int waitInterval, List<Class<? extends Throwable>> ignoredExceptions){
+    private CircuitBreakerConfig(int maxFailures,
+                                 int waitInterval,
+                                 List<Class<? extends Throwable>> ignoredExceptions,
+                                 Optional<CircuitBreakerEventListener> circuitBreakerEventListener){
         this.maxFailures = maxFailures;
         this.waitInterval = waitInterval;
         this.ignoredExceptions = ignoredExceptions;
+        this.circuitBreakerEventListener = circuitBreakerEventListener;
     }
 
     public Integer getMaxFailures() {
@@ -51,6 +59,10 @@ public class CircuitBreakerConfig {
         return ignoredExceptions;
     }
 
+    public Optional<CircuitBreakerEventListener> getCircuitBreakerEventListener() {
+        return circuitBreakerEventListener;
+    }
+
     /**
      * Returns a builder to create a custom CircuitBreakerConfig.
      *
@@ -63,8 +75,15 @@ public class CircuitBreakerConfig {
     public static class Builder {
         private int maxFailures = DEFAULT_MAX_FAILURES;
         private int waitInterval = DEFAULT_WAIT_INTERVAL;
+        private Optional<CircuitBreakerEventListener> circuitBreakerEventListener = Optional.empty();
         private List<Class<? extends Throwable>> ignoredExceptions = new ArrayList<>();
 
+        /**
+         * Configures the maximum number of allowed failures.
+         *
+         * @param maxFailures the maximum number of allowed failures
+         * @return the CircuitBreakerConfig.Builder
+         */
         public Builder maxFailures(int maxFailures) {
             if (maxFailures < 1) {
                 throw new IllegalArgumentException("maxFailures must be greater than or equal to 1");
@@ -73,6 +92,12 @@ public class CircuitBreakerConfig {
             return this;
         }
 
+        /**
+         * Configures the wait interval in milliseconds which specifies how long the CircuitBreaker should stay OPEN
+         *
+         * @param waitInterval the wait interval in milliseconds which specifies how long the CircuitBreaker should stay OPEN
+         * @return the CircuitBreakerConfig.Builder
+         */
         public Builder waitInterval(int waitInterval) {
             if (waitInterval < 100) {
                 throw new IllegalArgumentException("waitInterval must be at least 100[ms]");
@@ -81,6 +106,12 @@ public class CircuitBreakerConfig {
             return this;
         }
 
+        /**
+         * Configures an Exception which does not count as a failure and thus does not trigger the circuit breaker.
+         *
+         * @param ignoredException an Exception which should not count as a failure
+         * @return the CircuitBreakerConfig.Builder
+         */
         public Builder ignoredException(Class<? extends Throwable> ignoredException) {
             if (ignoredException == null) {
                 throw new IllegalArgumentException("ignoredException must not be null");
@@ -89,6 +120,12 @@ public class CircuitBreakerConfig {
             return this;
         }
 
+        /**
+         * Configures Exceptions which do not count as failures and thus does not trigger the circuit breaker.
+         *
+         * @param ignoredExceptions Exceptions which should not count as failures
+         * @return the CircuitBreakerConfig.Builder
+         */
         public Builder ignoredExceptions(List<Class<? extends Throwable>> ignoredExceptions) {
             if (ignoredExceptions == null) {
                 throw new IllegalArgumentException("ignoredExceptions must not be null");
@@ -97,8 +134,29 @@ public class CircuitBreakerConfig {
             return this;
         }
 
-        public CircuitBreakerConfig build() {
-            return new CircuitBreakerConfig(maxFailures, waitInterval, ignoredExceptions);
+        /**
+         *  Configures the CircuitBreakerEventListener which should handle CircuitBreaker events.
+         *
+         * @param circuitBreakerEventListener the CircuitBreakerEventListener which should handle CircuitBreaker events.
+         * @return the CircuitBreakerConfig.Builder
+         */
+        public Builder onCircuitBreakerEvent(CircuitBreakerEventListener circuitBreakerEventListener) {
+            if (circuitBreakerEventListener == null) {
+                throw new IllegalArgumentException("circuitBreakerEventListener must not be null");
+            }
+            this.circuitBreakerEventListener = Optional.of(circuitBreakerEventListener);
+            return this;
         }
+
+        /**
+         * Builds a CircuitBreakerConfig
+         *
+         * @return the CircuitBreakerConfig
+         */
+        public CircuitBreakerConfig build() {
+            return new CircuitBreakerConfig(maxFailures, waitInterval, ignoredExceptions, circuitBreakerEventListener);
+        }
+
+
     }
 }
