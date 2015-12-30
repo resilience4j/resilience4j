@@ -16,8 +16,10 @@
  *
  *
  */
-package io.github.robwin.circuitbreaker;
+package io.github.robwin.circuitbreaker.internal;
 
+import io.github.robwin.circuitbreaker.CircuitBreaker;
+import io.github.robwin.circuitbreaker.CircuitBreakerConfig;
 import org.junit.Before;
 import org.junit.Test;
 

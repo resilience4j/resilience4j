@@ -16,8 +16,12 @@
  *
  *
  */
-package io.github.robwin.circuitbreaker;
+package io.github.robwin.circuitbreaker.internal;
 
+
+import io.github.robwin.circuitbreaker.CircuitBreaker;
+import io.github.robwin.circuitbreaker.CircuitBreakerConfig;
+import io.github.robwin.circuitbreaker.CircuitBreakerStateTransitionEvent;
 
 import java.util.concurrent.atomic.AtomicReference;
 

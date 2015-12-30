@@ -16,7 +16,9 @@
  *
  *
  */
-package io.github.robwin.circuitbreaker;
+package io.github.robwin.circuitbreaker.internal;
+
+import io.github.robwin.circuitbreaker.CircuitBreaker;
 
 final public class ClosedState extends CircuitBreakerState {
 

@@ -19,6 +19,8 @@
 package io.github.robwin.circuitbreaker;
 
 
+import io.github.robwin.circuitbreaker.internal.InMemoryCircuitBreakerRegistry;
+
 /**
  * Manages all circuitBreaker instances.
  */

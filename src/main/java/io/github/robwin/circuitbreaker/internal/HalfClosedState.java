@@ -16,11 +16,13 @@
  *
  *
  */
-package io.github.robwin.circuitbreaker;
+package io.github.robwin.circuitbreaker.internal;
 
-final public class OpenState extends CircuitBreakerState {
+import io.github.robwin.circuitbreaker.CircuitBreaker;
 
-    OpenState(CircuitBreakerStateMachine stateMachine, CircuitBreakerState currentState) {
+final public class HalfClosedState extends CircuitBreakerState {
+
+    HalfClosedState(CircuitBreakerStateMachine stateMachine, CircuitBreakerState currentState) {
         super(stateMachine, currentState);
     }
 
@@ -31,11 +33,7 @@ final public class OpenState extends CircuitBreakerState {
      */
     @Override
     public boolean isCallPermitted() {
-        if (System.currentTimeMillis() >= retryAfter.get()) {
-            stateMachine.transitionToHalfClosedState(this, CircuitBreaker.StateTransition.OPEN_TO_HALF_CLOSED);
-            return true;
-        }
-        return false;
+        return true;
     }
 
     /**
@@ -45,6 +43,8 @@ final public class OpenState extends CircuitBreakerState {
     @Override
     public void recordFailure() {
         numOfFailures.incrementAndGet();
+        retryAfter.set(System.currentTimeMillis() + this.waitInterval);
+        stateMachine.transitionToOpenState(this, CircuitBreaker.StateTransition.HALF_CLOSED_TO_OPEN);
     }
 
     /**
@@ -53,7 +53,7 @@ final public class OpenState extends CircuitBreakerState {
      */
     @Override
     public void recordSuccess() {
-        stateMachine.transitionToClosedState(CircuitBreaker.StateTransition.OPEN_TO_CLOSED);
+        stateMachine.transitionToClosedState(CircuitBreaker.StateTransition.HALF_CLOSED_TO_CLOSED);
     }
 
     /**
@@ -61,6 +61,6 @@ final public class OpenState extends CircuitBreakerState {
      */
     @Override
     public CircuitBreaker.State getState() {
-        return CircuitBreaker.State.OPEN;
+        return CircuitBreaker.State.HALF_CLOSED;
     }
 }

@@ -16,7 +16,11 @@
  *
  *
  */
-package io.github.robwin.circuitbreaker;
+package io.github.robwin.circuitbreaker.internal;
+
+import io.github.robwin.circuitbreaker.CircuitBreaker;
+import io.github.robwin.circuitbreaker.CircuitBreakerConfig;
+import io.github.robwin.circuitbreaker.CircuitBreakerRegistry;
 
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
@@ -26,7 +30,7 @@ import java.util.concurrent.ConcurrentMap;
  * Backend circuitBreaker manager.
  * Constructs backend circuitBreakers according to configuration values.
  */
-final class InMemoryCircuitBreakerRegistry implements CircuitBreakerRegistry {
+public final class InMemoryCircuitBreakerRegistry implements CircuitBreakerRegistry {
 
     private final CircuitBreakerConfig defaultCircuitBreakerConfig;
 
