@@ -25,7 +25,7 @@ package io.github.robwin.circuitbreaker;
 public interface CircuitBreakerRegistry {
 
     /**
-     * Returns the managed {@link CircuitBreaker} or creates a new one with the default configuration.
+     * Returns a managed {@link CircuitBreaker} or creates a new one with the default configuration.
      *
      * @param name the name of the CircuitBreaker
      * @return The {@link CircuitBreaker}
@@ -33,7 +33,7 @@ public interface CircuitBreakerRegistry {
     CircuitBreaker circuitBreaker(String name);
 
     /**
-     * Returns the managed {@link CircuitBreaker} or creates a new one with a custom configuration.
+     * Returns a managed {@link CircuitBreaker} or creates a new one with a custom configuration.
      *
      * @param name      the name of the CircuitBreaker
      * @param circuitBreakerConfig  the CircuitBreaker configuration

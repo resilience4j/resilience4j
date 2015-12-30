@@ -105,24 +105,18 @@ final class CircuitBreakerStateMachine implements CircuitBreaker {
         return String.format("CircuitBreaker '%s'", this.name);
     }
 
-    void resetState(CircuitBreakerState currentState) {
+    void resetState(StateTransition stateTransition) {
         stateReference.set(new ClosedState(this));
-        circuitBreakerConfig.getCircuitBreakerEventListener()
-                .ifPresent(listener ->
-                        listener.onCircuitBreakerEvent(new CircuitBreakerStateChangeEvent(currentState.getState(), State.CLOSED)));
+        circuitBreakerConfig.getCircuitBreakerEventListener().onCircuitBreakerEvent(new CircuitBreakerStateTransitionEvent(getName(), stateTransition));
     }
 
-    void transitionToOpenState(CircuitBreakerState currentState) {
+    void transitionToOpenState(CircuitBreakerState currentState, StateTransition stateTransition) {
         stateReference.set(new OpenState(this, currentState));
-        circuitBreakerConfig.getCircuitBreakerEventListener()
-                .ifPresent(listener ->
-                        listener.onCircuitBreakerEvent(new CircuitBreakerStateChangeEvent(currentState.getState(), State.OPEN)));
+        circuitBreakerConfig.getCircuitBreakerEventListener().onCircuitBreakerEvent(new CircuitBreakerStateTransitionEvent(getName(), stateTransition));
     }
 
-    void transitionToHalfClosedState(CircuitBreakerState currentState) {
+    void transitionToHalfClosedState(CircuitBreakerState currentState, StateTransition stateTransition) {
         stateReference.set(new HalfClosedState(this, currentState));
-        circuitBreakerConfig.getCircuitBreakerEventListener()
-                .ifPresent(listener ->
-                        listener.onCircuitBreakerEvent(new CircuitBreakerStateChangeEvent(currentState.getState(), State.HALF_CLOSED)));
+        circuitBreakerConfig.getCircuitBreakerEventListener().onCircuitBreakerEvent(new CircuitBreakerStateTransitionEvent(getName(), stateTransition));
     }
 }

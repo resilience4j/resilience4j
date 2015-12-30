@@ -18,20 +18,16 @@
  */
 package io.github.robwin.circuitbreaker;
 
-public class CircuitBreakerStateChangeEvent implements CircuitBreakerEvent{
 
-    private CircuitBreaker.State previousState, newState;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-    public CircuitBreakerStateChangeEvent(CircuitBreaker.State previousState, CircuitBreaker.State newState) {
-        this.previousState = previousState;
-        this.newState = newState;
-    }
+public class DefaultCircuitBreakerEventListener implements CircuitBreakerEventListener {
 
-    public CircuitBreaker.State getPreviousState() {
-        return previousState;
-    }
+    private static final Logger LOG = LoggerFactory.getLogger(DefaultCircuitBreakerEventListener.class);
 
-    public CircuitBreaker.State getNewState() {
-        return newState;
+    @Override
+    public void onCircuitBreakerEvent(CircuitBreakerEvent circuitBreakerEvent) {
+        LOG.info(circuitBreakerEvent.toString());
     }
 }

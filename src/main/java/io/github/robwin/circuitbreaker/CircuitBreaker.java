@@ -83,6 +83,36 @@ public interface CircuitBreaker {
         HALF_CLOSED
     }
 
+    enum StateTransition {
+        CLOSED_TO_OPEN(State.CLOSED, State.OPEN),
+        HALF_CLOSED_TO_CLOSED(State.HALF_CLOSED, State.CLOSED),
+        HALF_CLOSED_TO_OPEN(State.HALF_CLOSED, State.OPEN),
+        OPEN_TO_CLOSED(State.OPEN, State.CLOSED),
+        OPEN_TO_HALF_CLOSED(State.OPEN, State.HALF_CLOSED),
+        CLOSED_TO_CLOSED(State.CLOSED, State.CLOSED);
+
+        State fromState;
+        State toState;
+
+        StateTransition(State fromState, State toState) {
+            this.fromState = fromState;
+            this.toState = toState;
+        }
+
+        public State getFromState() {
+            return fromState;
+        }
+
+        public State getToState() {
+            return toState;
+        }
+
+        @Override
+        public String toString(){
+            return String.format("State transition from %s to %s", fromState, toState);
+        }
+    }
+
     static <T> Try.CheckedSupplier<T> decorateCheckedSupplier(Try.CheckedSupplier<T> supplier, CircuitBreaker circuitBreaker){
         return () -> {
             CircuitBreakerUtils.isCallPermitted(circuitBreaker);

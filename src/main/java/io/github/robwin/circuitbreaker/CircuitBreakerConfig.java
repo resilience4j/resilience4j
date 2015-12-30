@@ -20,7 +20,6 @@ package io.github.robwin.circuitbreaker;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 
 public class CircuitBreakerConfig {
@@ -33,14 +32,14 @@ public class CircuitBreakerConfig {
     // The wait interval which specifies how long the CircuitBreaker should stay OPEN
     private final int waitInterval;
     // The CircuitBreakerEventListener which should handle CircuitBreaker events.
-    private Optional<CircuitBreakerEventListener> circuitBreakerEventListener;
+    private CircuitBreakerEventListener circuitBreakerEventListener;
     // Exceptions which do not count as failures and thus not trigger the circuit breaker.
     private final List<Class<? extends Throwable>> ignoredExceptions;
 
     private CircuitBreakerConfig(int maxFailures,
                                  int waitInterval,
                                  List<Class<? extends Throwable>> ignoredExceptions,
-                                 Optional<CircuitBreakerEventListener> circuitBreakerEventListener){
+                                 CircuitBreakerEventListener circuitBreakerEventListener){
         this.maxFailures = maxFailures;
         this.waitInterval = waitInterval;
         this.ignoredExceptions = ignoredExceptions;
@@ -59,7 +58,7 @@ public class CircuitBreakerConfig {
         return ignoredExceptions;
     }
 
-    public Optional<CircuitBreakerEventListener> getCircuitBreakerEventListener() {
+    public CircuitBreakerEventListener getCircuitBreakerEventListener() {
         return circuitBreakerEventListener;
     }
 
@@ -75,7 +74,7 @@ public class CircuitBreakerConfig {
     public static class Builder {
         private int maxFailures = DEFAULT_MAX_FAILURES;
         private int waitInterval = DEFAULT_WAIT_INTERVAL;
-        private Optional<CircuitBreakerEventListener> circuitBreakerEventListener = Optional.empty();
+        private CircuitBreakerEventListener circuitBreakerEventListener = new DefaultCircuitBreakerEventListener();
         private List<Class<? extends Throwable>> ignoredExceptions = new ArrayList<>();
 
         /**
@@ -144,7 +143,7 @@ public class CircuitBreakerConfig {
             if (circuitBreakerEventListener == null) {
                 throw new IllegalArgumentException("circuitBreakerEventListener must not be null");
             }
-            this.circuitBreakerEventListener = Optional.of(circuitBreakerEventListener);
+            this.circuitBreakerEventListener = circuitBreakerEventListener;
             return this;
         }
 

@@ -32,7 +32,7 @@ final public class OpenState extends CircuitBreakerState {
     @Override
     public boolean isCallPermitted() {
         if (System.currentTimeMillis() >= retryAfter.get()) {
-            stateMachine.transitionToHalfClosedState(this);
+            stateMachine.transitionToHalfClosedState(this, CircuitBreaker.StateTransition.OPEN_TO_HALF_CLOSED);
             return true;
         }
         return false;
@@ -53,7 +53,7 @@ final public class OpenState extends CircuitBreakerState {
      */
     @Override
     public void recordSuccess() {
-        stateMachine.resetState(this);
+        stateMachine.resetState(CircuitBreaker.StateTransition.OPEN_TO_CLOSED);
     }
 
     /**

@@ -19,4 +19,5 @@
 package io.github.robwin.circuitbreaker;
 
 public interface CircuitBreakerEvent {
+    String getCircuitBreakerName();
 }

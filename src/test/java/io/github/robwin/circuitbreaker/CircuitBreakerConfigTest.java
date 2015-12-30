@@ -18,7 +18,6 @@
  */
 package io.github.robwin.circuitbreaker;
 
-import javaslang.control.Match;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -54,18 +53,15 @@ public class CircuitBreakerConfigTest {
     @Test
     public void shouldAddACircuitBreakerEventListener() {
         CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom()
-                .onCircuitBreakerEvent((CircuitBreakerEvent circuitBreakerEvent)
-                        -> Match.of(circuitBreakerEvent)
-                        .whenType(CircuitBreakerStateChangeEvent.class)
-                        .then((event) -> event.getNewState().toString()))
+                .onCircuitBreakerEvent((event) -> LOG.info(event.toString()))
                 .build();
-        then(circuitBreakerConfig.getCircuitBreakerEventListener().isPresent()).isTrue();
+        then(circuitBreakerConfig.getCircuitBreakerEventListener()).isNotNull();
     }
 
     @Test
-    public void circuitBreakerEventListenerShouldBeEmpty() {
+    public void shouldUseTheDefaultEventListener() {
         CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom()
                 .build();
-        then(circuitBreakerConfig.getCircuitBreakerEventListener().isPresent()).isFalse();
+        then(circuitBreakerConfig.getCircuitBreakerEventListener()).isNotNull();
     }
 }

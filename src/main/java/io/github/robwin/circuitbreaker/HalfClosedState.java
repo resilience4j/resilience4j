@@ -42,7 +42,7 @@ final public class HalfClosedState extends CircuitBreakerState {
     public void recordFailure() {
         numOfFailures.incrementAndGet();
         retryAfter.set(System.currentTimeMillis() + this.waitInterval);
-        stateMachine.transitionToOpenState(this);
+        stateMachine.transitionToOpenState(this, CircuitBreaker.StateTransition.HALF_CLOSED_TO_OPEN);
     }
 
     /**
@@ -51,7 +51,7 @@ final public class HalfClosedState extends CircuitBreakerState {
      */
     @Override
     public void recordSuccess() {
-        stateMachine.resetState(this);
+        stateMachine.resetState(CircuitBreaker.StateTransition.HALF_CLOSED_TO_CLOSED);
     }
 
     /**

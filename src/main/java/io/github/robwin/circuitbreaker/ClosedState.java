@@ -45,7 +45,7 @@ final public class ClosedState extends CircuitBreakerState {
         if (currentNumOfFailures > this.maxFailures) {
             // Too many failures, set new retryAfter to current time + wait interval
             retryAfter.set(System.currentTimeMillis() + this.waitInterval);
-            stateMachine.transitionToOpenState(this);
+            stateMachine.transitionToOpenState(this, CircuitBreaker.StateTransition.CLOSED_TO_OPEN);
         }
     }
 
@@ -55,7 +55,7 @@ final public class ClosedState extends CircuitBreakerState {
      */
     @Override
     public void recordSuccess() {
-        stateMachine.resetState(this);
+        stateMachine.resetState(CircuitBreaker.StateTransition.CLOSED_TO_CLOSED);
     }
 
     /**
