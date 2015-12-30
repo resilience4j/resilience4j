@@ -18,6 +18,8 @@
  */
 package io.github.robwin.circuitbreaker;
 
+import io.github.robwin.circuitbreaker.internal.DefaultCircuitBreakerEventListener;
+
 import java.util.ArrayList;
 import java.util.List;
 

@@ -19,7 +19,7 @@
 package io.github.robwin.circuitbreaker;
 
 @FunctionalInterface
-public interface CircuitBreakerEventListener {
+public interface CircuitBreakerEventListener{
 
     void onCircuitBreakerEvent(CircuitBreakerEvent circuitBreakerEvent);
 }

@@ -16,9 +16,11 @@
  *
  *
  */
-package io.github.robwin.circuitbreaker;
+package io.github.robwin.circuitbreaker.internal;
 
 
+import io.github.robwin.circuitbreaker.CircuitBreakerEvent;
+import io.github.robwin.circuitbreaker.CircuitBreakerEventListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

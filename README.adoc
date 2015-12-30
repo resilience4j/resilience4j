@@ -245,6 +245,17 @@ assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
 assertThat(result.failed().get()).isInstanceOf(IOException.class);
 ----
 
+=== Add custom event listener
+The default event listener just logs the state transitions events. If you want to add your custom state transition listener,
+you have to implement the functional interface `CircuitBreakerEventListener` which has a method `onCircuitBreakerEvent(CircuitBreakerEvent circuitBreakerEvent)`. Currently there is only the event `CircuitBreakerStateTransitionEvent`.
+
+[source,java]
+----
+CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom()
+                .onCircuitBreakerEvent((event) -> LOG.info(event.toString()))
+                .build();
+----
+
 === Retry example
 
 You can also retry a failed function and recover from the exception, if the maximum retry count was reached. You can create a `Retry` context using a default configuration as follows.

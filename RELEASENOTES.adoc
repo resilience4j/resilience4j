@@ -24,4 +24,5 @@
 == Version 0.2.0
 * Fixed Issue #2
 * Updated javaslang to v2.0.0-RC2
+* Issue #3 Added a listener mechanism for state transitions
 
