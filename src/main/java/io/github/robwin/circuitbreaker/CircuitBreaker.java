@@ -88,8 +88,7 @@ public interface CircuitBreaker {
         HALF_CLOSED_TO_CLOSED(State.HALF_CLOSED, State.CLOSED),
         HALF_CLOSED_TO_OPEN(State.HALF_CLOSED, State.OPEN),
         OPEN_TO_CLOSED(State.OPEN, State.CLOSED),
-        OPEN_TO_HALF_CLOSED(State.OPEN, State.HALF_CLOSED),
-        CLOSED_TO_CLOSED(State.CLOSED, State.CLOSED);
+        OPEN_TO_HALF_CLOSED(State.OPEN, State.HALF_CLOSED);
 
         State fromState;
         State toState;

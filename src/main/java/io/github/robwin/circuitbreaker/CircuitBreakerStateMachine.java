@@ -105,7 +105,11 @@ final class CircuitBreakerStateMachine implements CircuitBreaker {
         return String.format("CircuitBreaker '%s'", this.name);
     }
 
-    void resetState(StateTransition stateTransition) {
+    void resetState() {
+        stateReference.set(new ClosedState(this));
+    }
+
+    void transitionToClosedState(StateTransition stateTransition) {
         stateReference.set(new ClosedState(this));
         circuitBreakerConfig.getCircuitBreakerEventListener().onCircuitBreakerEvent(new CircuitBreakerStateTransitionEvent(getName(), stateTransition));
     }

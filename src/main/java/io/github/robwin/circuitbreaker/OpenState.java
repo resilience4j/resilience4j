@@ -53,7 +53,7 @@ final public class OpenState extends CircuitBreakerState {
      */
     @Override
     public void recordSuccess() {
-        stateMachine.resetState(CircuitBreaker.StateTransition.OPEN_TO_CLOSED);
+        stateMachine.transitionToClosedState(CircuitBreaker.StateTransition.OPEN_TO_CLOSED);
     }
 
     /**

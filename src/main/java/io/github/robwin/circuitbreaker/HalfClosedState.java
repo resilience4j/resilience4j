@@ -51,7 +51,7 @@ final public class HalfClosedState extends CircuitBreakerState {
      */
     @Override
     public void recordSuccess() {
-        stateMachine.resetState(CircuitBreaker.StateTransition.HALF_CLOSED_TO_CLOSED);
+        stateMachine.transitionToClosedState(CircuitBreaker.StateTransition.HALF_CLOSED_TO_CLOSED);
     }
 
     /**
