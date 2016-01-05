@@ -26,8 +26,7 @@ import io.github.robwin.circuitbreaker.CircuitBreakerStateTransitionEvent;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
- * CircuitBreaker finite state machine.
- * This CircuitBreaker is implemented via a finite state machine. It does not have a way to know anything about the
+ * A CircuitBreaker finite state machine. The CircuitBreaker does not have a way to know anything about the
  * backend's state by itself, but uses only the information provided by calls to {@link #recordSuccess()} and
  * {@link #recordFailure(java.lang.Throwable)}.
  * The state of the CircuitBreaker changes from `CLOSED` to `OPEN` if a (configurable) number of call attempts have failed consecutively.
