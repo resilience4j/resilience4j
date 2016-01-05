@@ -22,7 +22,7 @@ package io.github.robwin.circuitbreaker;
 import io.github.robwin.circuitbreaker.internal.InMemoryCircuitBreakerRegistry;
 
 /**
- * Manages all circuitBreaker instances.
+ * Manages all CircuitBreaker instances.
  */
 public interface CircuitBreakerRegistry {
 
@@ -43,10 +43,21 @@ public interface CircuitBreakerRegistry {
      */
     CircuitBreaker circuitBreaker(String name, CircuitBreakerConfig circuitBreakerConfig);
 
-    static CircuitBreakerRegistry of(CircuitBreakerConfig defaultCircuitBreakerConfig){
-        return new InMemoryCircuitBreakerRegistry(defaultCircuitBreakerConfig);
+    /**
+     * Creates a CircuitBreakerRegistry with a custom CircuitBreakerConfig.
+     *
+     * @param circuitBreakerConfig a custom CircuitBreakerConfig
+     * @return a CircuitBreakerRegistry with a custom CircuitBreakerConfig.
+     */
+    static CircuitBreakerRegistry of(CircuitBreakerConfig circuitBreakerConfig){
+        return new InMemoryCircuitBreakerRegistry(circuitBreakerConfig);
     }
 
+    /**
+     * Creates a CircuitBreakerRegistry with default CircuitBreakerConfig.
+     *
+     * @return a CircuitBreakerRegistry with default CircuitBreakerConfig.
+     */
     static CircuitBreakerRegistry ofDefaults(){
         return new InMemoryCircuitBreakerRegistry();
     }
