@@ -54,6 +54,8 @@ static <T> Supplier<T> decorateSupplier(Supplier<T> supplier, CircuitBreaker cir
 The state of the CircuitBreaker changes from `CLOSED` to `OPEN` if a (configurable) number of call attempts have failed consecutively. Then, all access to the backend is blocked for a (configurable) time interval. `CircuitBreaker::isCallPermitted()` throws a `CircuitBreakerOpenException`, if the CircuitBreaker is `OPEN`.
 After the time interval has elapsed, the CircuitBreaker state changes to `HALF_CLOSED` and allows calls to see if the backend is still unavailable or has become available again. On success or failure, the state changes back to `CLOSED` or `OPEN`, respectively. `CircuitBreaker::recordFailure(exception)` also checks if the type of exception should increase the number of failure attempts.
 
+image::images/state_machine.jpg[]
+
 == Usage guide
 
 === Adding javaslang-circuitbreaker to your project
