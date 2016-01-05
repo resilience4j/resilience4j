@@ -19,7 +19,7 @@
 package io.github.robwin.circuitbreaker;
 
 /**
- * Basic trouble that indicates that the backend (email core, address book, calendar) failed to perform its operation.
+ * Exception that indicates that the CircuitBreaker is OPEN.
  */
 public class CircuitBreakerOpenException extends RuntimeException {
 
