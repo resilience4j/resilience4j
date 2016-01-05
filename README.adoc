@@ -161,7 +161,7 @@ In this test case `map` is not invoked, because the CircuitBreaker is OPEN. The 
 // Given
 CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
 // Create a custom configration so that only 1 failure is allowed and the wait interval is 1[s]
-CircuitBreakerConfig circuitBreakerConfig = new CircuitBreakerConfig.Builder()
+CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom()
     .maxFailures(1)
     .waitInterval(1000)
     .build();
