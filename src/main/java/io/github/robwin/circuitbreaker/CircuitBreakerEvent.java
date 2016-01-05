@@ -18,6 +18,15 @@
  */
 package io.github.robwin.circuitbreaker;
 
+/**
+ * An event which is created by a CircuitBreaker.
+ */
 public interface CircuitBreakerEvent {
+
+    /**
+     * Returns the name of the CircuitBreaker which has created the event.
+     *
+     * @return the name of the CircuitBreaker which has created the event.
+     */
     String getCircuitBreakerName();
 }

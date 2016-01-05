@@ -19,7 +19,15 @@
 package io.github.robwin.circuitbreaker;
 
 @FunctionalInterface
+/**
+ * A listener to handle CircuitBreaker events.
+ */
 public interface CircuitBreakerEventListener{
 
+    /**
+     * This method is invoked when a CircuitBreaker creates an event.
+     *
+     * @param circuitBreakerEvent the CircuitBreakerEvent
+     */
     void onCircuitBreakerEvent(CircuitBreakerEvent circuitBreakerEvent);
 }

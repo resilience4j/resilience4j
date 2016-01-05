@@ -18,6 +18,9 @@
  */
 package io.github.robwin.circuitbreaker;
 
+/**
+ * A CircuitBreakerEvent which informs about a state transition.
+ */
 public class CircuitBreakerStateTransitionEvent implements CircuitBreakerEvent{
 
     private String circuitBreakerName;

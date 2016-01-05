@@ -24,8 +24,6 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 /**
- * CircuitBreaker API.
- *
  * A CircuitBreaker manages the state of a backend system. It is notified on the result of all
  * attempts to communicate with the backend, via the {@link #recordSuccess} and {@link #recordFailure} methods.
  * Before communicating with the backend, the respective connector must obtain the permission to do so via the method
@@ -83,6 +81,9 @@ public interface CircuitBreaker {
         HALF_CLOSED
     }
 
+    /**
+     * State transitions of the CircuitBreaker state machine.
+     */
     enum StateTransition {
         CLOSED_TO_OPEN(State.CLOSED, State.OPEN),
         HALF_CLOSED_TO_CLOSED(State.HALF_CLOSED, State.CLOSED),
