@@ -55,6 +55,14 @@ public interface Retry {
         return Retry.custom().build();
     }
 
+
+    /**
+     * Creates a retryable supplier.
+     *
+     * @param supplier the original function
+     * @param retryContext the retry context
+     * @return a retryable function
+     */
     static <T> Try.CheckedSupplier<T> retryableCheckedSupplier(Try.CheckedSupplier<T> supplier, Retry retryContext){
         return () -> {
             do try {
@@ -67,6 +75,13 @@ public interface Retry {
         };
     }
 
+    /**
+     * Creates a retryable runnable.
+     *
+     * @param runnable the original runnable
+     * @param retryContext the retry context
+     * @return a retryable runnable
+     */
     static Try.CheckedRunnable retryableCheckedRunnable(Try.CheckedRunnable runnable, Retry retryContext){
         return () -> {
             do try {
@@ -78,6 +93,13 @@ public interface Retry {
         };
     }
 
+    /**
+     * Creates a retryable function.
+     *
+     * @param function the original function
+     * @param retryContext the retry context
+     * @return a retryable function
+     */
     static <T, R> Try.CheckedFunction<T, R> retryableCheckedFunction(Try.CheckedFunction<T, R> function, Retry retryContext){
         return (T t) -> {
             do try {
@@ -90,6 +112,13 @@ public interface Retry {
         };
     }
 
+    /**
+     * Creates a retryable supplier.
+     *
+     * @param supplier the original function
+     * @param retryContext the retry context
+     * @return a retryable function
+     */
     static <T> Supplier<T> retryableSupplier(Supplier<T> supplier, Retry retryContext){
         return () -> {
             do try {
@@ -102,6 +131,13 @@ public interface Retry {
         };
     }
 
+    /**
+     * Creates a retryable runnable.
+     *
+     * @param runnable the original runnable
+     * @param retryContext the retry context
+     * @return a retryable runnable
+     */
     static Runnable retryableRunnable(Runnable runnable, Retry retryContext){
         return () -> {
             do try {
@@ -113,6 +149,13 @@ public interface Retry {
         };
     }
 
+    /**
+     * Creates a retryable function.
+     *
+     * @param function the original function
+     * @param retryContext the retry context
+     * @return a retryable function
+     */
     static <T, R> Function<T, R> retryableFunction(Function<T, R> function, Retry retryContext){
         return (T t) -> {
             do try {
