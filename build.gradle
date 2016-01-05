@@ -22,7 +22,7 @@ apply plugin: 'me.champeau.gradle.jmh'
 apply plugin: 'com.github.johnrengelman.shadow'
 
 group = 'io.github.robwin'
-version = '0.2.0'
+version = '0.1.7'
 description = 'A CircuitBreaker pattern implementation for Java 8 and functional programming.'
 
 tasks.withType(JavaCompile) {
@@ -51,7 +51,7 @@ jmh {
 }
 
 dependencies {
-    compile "com.javaslang:javaslang:2.0.0-RC2"
+    compile "com.javaslang:javaslang:1.2.2"
     compile "io.dropwizard.metrics:metrics-core:3.1.2"
     testCompile "junit:junit:4.11"
     testCompile "org.assertj:assertj-core:3.0.0"

@@ -248,8 +248,13 @@ assertThat(result.failed().get()).isInstanceOf(IOException.class);
 ----
 
 === Add a custom event listener
-The default event listener just logs state transitions events. If you want to use a custom state transition listener,
-you have to implement the functional interface `CircuitBreakerEventListener` which has a method `onCircuitBreakerEvent(CircuitBreakerEvent circuitBreakerEvent)`. Currently there is only the event `CircuitBreakerStateTransitionEvent`.
+The default event listener logs state transitions with INFO level.
+
+----
+INFO  i.g.r.c.i.DefaultCircuitBreakerEventListener - CircuitBreaker 'testName' changes state from CLOSED to OPEN
+----
+
+If you want to use a custom state transition listener, you have to implement the functional interface `CircuitBreakerEventListener` which has a method `onCircuitBreakerEvent(CircuitBreakerEvent circuitBreakerEvent)`. Currently there is only the event `CircuitBreakerStateTransitionEvent`.
 
 [source,java]
 ----

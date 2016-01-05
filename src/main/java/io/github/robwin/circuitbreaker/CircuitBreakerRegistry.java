@@ -27,7 +27,7 @@ import io.github.robwin.circuitbreaker.internal.InMemoryCircuitBreakerRegistry;
 public interface CircuitBreakerRegistry {
 
     /**
-     * Returns a managed {@link CircuitBreaker} or creates a new one with the default configuration.
+     * Returns a managed {@link CircuitBreaker} or creates a new one with the default CircuitBreaker configuration.
      *
      * @param name the name of the CircuitBreaker
      * @return The {@link CircuitBreaker}
@@ -35,28 +35,28 @@ public interface CircuitBreakerRegistry {
     CircuitBreaker circuitBreaker(String name);
 
     /**
-     * Returns a managed {@link CircuitBreaker} or creates a new one with a custom configuration.
+     * Returns a managed {@link CircuitBreaker} or creates a new one with a custom CircuitBreaker configuration.
      *
      * @param name      the name of the CircuitBreaker
-     * @param circuitBreakerConfig  the CircuitBreaker configuration
+     * @param circuitBreakerConfig  the custom CircuitBreaker configuration
      * @return The {@link CircuitBreaker}
      */
     CircuitBreaker circuitBreaker(String name, CircuitBreakerConfig circuitBreakerConfig);
 
     /**
-     * Creates a CircuitBreakerRegistry with a custom CircuitBreakerConfig.
+     * Creates a CircuitBreakerRegistry with a custom CircuitBreaker configuration.
      *
-     * @param circuitBreakerConfig a custom CircuitBreakerConfig
-     * @return a CircuitBreakerRegistry with a custom CircuitBreakerConfig.
+     * @param circuitBreakerConfig a custom CircuitBreaker configuration
+     * @return a CircuitBreakerRegistry with a custom CircuitBreaker configuration.
      */
     static CircuitBreakerRegistry of(CircuitBreakerConfig circuitBreakerConfig){
         return new InMemoryCircuitBreakerRegistry(circuitBreakerConfig);
     }
 
     /**
-     * Creates a CircuitBreakerRegistry with default CircuitBreakerConfig.
+     * Creates a CircuitBreakerRegistry with a default CircuitBreaker configuration.
      *
-     * @return a CircuitBreakerRegistry with default CircuitBreakerConfig.
+     * @return a CircuitBreakerRegistry with a default CircuitBreaker configuration.
      */
     static CircuitBreakerRegistry ofDefaults(){
         return new InMemoryCircuitBreakerRegistry();

@@ -221,7 +221,7 @@ public class CircuitBreakerTest {
         // You can chain other functions with map and flatMap. The Try Monad returns a Success<String>, if the all
         // functions run successfully.
         Try<String> result = Try.of(decoratedSupplier)
-                .mapTry(decoratedFunction::apply);
+                .map(decoratedFunction::apply);
 
         // Then
         assertThat(result.isSuccess()).isTrue();
