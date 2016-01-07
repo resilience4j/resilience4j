@@ -2,7 +2,7 @@
 
 === Create a CircuitBreaker
 
-This library comes with an `InMemoryCircuitBreakerRegistry` based on a `ConcurrentMap` which provides thread safety and atomicity guarantees. You must use the CircuitBreakerRegistry to manage (create and retrieve) your CircuitBreakers. You can create a `InMemoryCircuitBreakerRegistry` with a default global `CircuitBreakerConfig` for all of your CircuitBreakers as follows.
+This library comes with an in-memory `CircuitBreakerRegistry` based on a `ConcurrentHashMap` which provides thread safety and atomicity guarantees. You must use the CircuitBreakerRegistry to manage (create and retrieve) your CircuitBreakers. You can create a CircuitBreakerRegistry with a default global `CircuitBreakerConfig` for all of your CircuitBreakers as follows.
 
 [source,java]
 ----
@@ -131,6 +131,7 @@ Try.CheckedSupplier<String> checkedSupplier = CircuitBreaker.decorateCheckedSupp
         Thread.sleep(1000);
         throw new RuntimeException("BAM!");
     }, circuitBreaker);
+
 Try<String> result = Try.of(checkedSupplier)
         .recover((throwable) -> "Hello Recovery");
 
@@ -140,7 +141,7 @@ assertThat(result.isSuccess()).isTrue();
 assertThat(result.get()).isEqualTo("Hello Recovery");
 ----
 
-=== Customize exception handler
+=== Customize the exception handler
 The default exception handler counts all type of exceptions as failures and triggers the CircuitBreaker. If you want to use a custom exception handler, you have to implement the functional interface `Predicate` which has a method `test`. The Predicate must return true if the exception should count as a failure, otherwise it must return false.
 The following example shows how to ignore an `IOException`, but all other exception types still count as failures.
 
@@ -149,7 +150,7 @@ The following example shows how to ignore an `IOException`, but all other except
 include::../../test/java/io/github/robwin/circuitbreaker/CircuitBreakerTest.java[tags=shouldNotTriggerCircuitBreakerOpenException]
 ----
 
-=== Customize event listener
+=== Customize the event listener
 The default event listener logs state transitions with INFO level.
 
 ----
@@ -212,7 +213,7 @@ BDDMockito.then(helloWorldService).should(times(3)).sayHelloWorld();
 assertThat(result.get()).isEqualTo("Hello world from recovery function");
 ----
 
-=== CompletableFuture example
+=== Use a CompletableFuture
 
 You can also invoke a decorated function asynchronously by using a `CompletableFuture` and chain further functions.
 
@@ -233,7 +234,7 @@ CompletableFuture<String> future = CompletableFuture.supplyAsync(decoratedSuppli
 assertThat(future.get()).isEqualTo("This can be any method which returns: 'Hello world'");
 ----
 
-=== Reactive Streams example
+=== Use Reactive Streams
 
 You can also invoke a decorated function asynchronously by using a Reactive Streams implementation like https://github.com/ReactiveX/RxJava[RxJava] or https://github.com/reactor/reactor/[Project Reactor].
 
