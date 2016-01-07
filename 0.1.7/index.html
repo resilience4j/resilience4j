@@ -618,7 +618,7 @@ CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefault
 </div>
 </div>
 <div class="paragraph">
-<p>As an alternative you can provide your own custom global <code>CircuitBreakerConfig</code>. In order to create a custom global CircuitBreakerConfig or a CircuitBreakerConfig for a specific CircuitBreaker, you can use the CircuitBreakerConfig builder. You can configure the maximum number of allowed failures and the wait interval [ms], which specifies how long the CircuitBreaker should stay in state <code>OPEN</code>. Furthermore, you can add exceptions to the ignore list which must not trigger the CircuitBreaker.</p>
+<p>As an alternative you can provide your own custom global <code>CircuitBreakerConfig</code>. In order to create a custom global CircuitBreakerConfig or a CircuitBreakerConfig for a specific CircuitBreaker, you can use the CircuitBreakerConfig builder. You can configure the maximum number of allowed failures and the wait interval [ms], which specifies how long the CircuitBreaker should stay in state <code>OPEN</code>.</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -626,8 +626,6 @@ CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefault
 CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom()
     .maxFailures(<span class="integer">1</span>)
     .waitInterval(<span class="integer">1000</span>)
-    .ignoredException(BusinessException.class)
-    .ignoredException(AnotherBusinessException.class)
     .build();
 
 <span class="comment">// Create a InMemoryCircuitBreakerRegistry with a custom global configuration</span>
