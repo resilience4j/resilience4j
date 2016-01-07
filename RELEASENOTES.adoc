@@ -27,4 +27,5 @@
 
 == Version 0.2.0
 * Removed Dropwizard Metrics, because its a too heavy dependency for such a lightweight library.
+* Changed the way exceptions can be handled. You have to provide a Predicate now instead of a list of exceptions to ignore.
 
