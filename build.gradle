@@ -8,6 +8,8 @@ buildscript {
         classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.2'
         classpath 'me.champeau.gradle:jmh-gradle-plugin:0.2.0'
         classpath 'com.github.jengelman.gradle.plugins:shadow:1.2.0'
+        classpath "org.asciidoctor:asciidoctor-gradle-plugin:1.5.3"
+        classpath "org.ajoberstar:gradle-git:1.3.2"
     }
 }
 
@@ -20,6 +22,8 @@ apply plugin: 'com.jfrog.bintray'
 apply from: 'gradle/publishing.gradle'
 apply plugin: 'me.champeau.gradle.jmh'
 apply plugin: 'com.github.johnrengelman.shadow'
+apply plugin: 'org.asciidoctor.convert'
+apply plugin: 'org.ajoberstar.github-pages'
 
 group = 'io.github.robwin'
 version = '0.1.7'
@@ -90,4 +94,33 @@ tasks.coveralls {
 
 task wrapper(type: Wrapper) {
     gradleVersion = '2.10'
+}
+
+asciidoctor {
+    sources {
+        include 'index.adoc'
+    }
+    backends = ['html5']
+    resources {
+        from(sourceDir) {
+            include 'images/**'
+        }
+    }
+}
+
+asciidoctor.dependsOn test
+publishGhPages.dependsOn asciidoctor
+
+githubPages {
+    repoUri = 'https://github.com/javaslang/javaslang-circuitbreaker.git'
+
+    credentials {
+        username = project.githubUser
+        password = project.githubPassword
+    }
+
+    pages {
+        from file(asciidoctor.outputDir.path + '/html5')
+        into project.version
+    }
 }
