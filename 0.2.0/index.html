@@ -538,7 +538,6 @@ table.CodeRay td.code>pre{padding:0}
 <li><a href="#_retry_a_failed_function">3.7. Retry a failed function</a></li>
 <li><a href="#_completablefuture_example">3.8. CompletableFuture example</a></li>
 <li><a href="#_reactive_streams_example">3.9. Reactive Streams example</a></li>
-<li><a href="#_example_with_dropwizard_metrics">3.10. Example with Dropwizard Metrics</a></li>
 </ul>
 </li>
 <li><a href="#_monitoring_reporting">4. Monitoring &amp; Reporting</a></li>
@@ -917,43 +916,6 @@ Streams.generate(supplier::get)
             LOG.info(<span class="string"><span class="delimiter">&quot;</span><span class="content">Exception handled: </span><span class="delimiter">&quot;</span></span> + exception.toString());
             assertThat(exception).isInstanceOf(CircuitBreakerOpenException.class);
         });</code></pre>
-</div>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_example_with_dropwizard_metrics">3.10. Example with Dropwizard Metrics</h3>
-<div class="paragraph">
-<p>You can use <a href="https://dropwizard.github.io/metrics/">Dropwizard Metrics</a> to get runtime metrics of your functions. The project provides several higher-order functions to decorate any <code>Supplier / Runnable / Function</code> or <code>CheckedSupplier / CheckedRunnable / CheckedFunction</code>. The decorator creates a histogram and a meter for your function.  A histogram measures min, mean, max, standard deviation and quantiles like the median or 95th percentile of the execution time. A meter measures the rate of executions.</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="CodeRay highlight"><code data-lang="java"><span class="comment">// Given</span>
-CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
-CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker(<span class="string"><span class="delimiter">&quot;</span><span class="content">uniqueName</span><span class="delimiter">&quot;</span></span>);
-MetricRegistry metricRegistry = <span class="keyword">new</span> MetricRegistry();
-<span class="predefined-type">Timer</span> timer = metricRegistry.timer(name(<span class="string"><span class="delimiter">&quot;</span><span class="content">test</span><span class="delimiter">&quot;</span></span>));
-
-<span class="comment">// When I create a long running supplier which takes 2 seconds</span>
-Try.CheckedSupplier&lt;<span class="predefined-type">String</span>&gt; supplier = () -&gt; {
-    <span class="predefined-type">Thread</span>.sleep(<span class="integer">2000</span>);
-    <span class="keyword">return</span> <span class="string"><span class="delimiter">&quot;</span><span class="content">Hello world</span><span class="delimiter">&quot;</span></span>;
-};
-
-<span class="comment">// and decorate the supplier with a Metrics timer</span>
-Try.CheckedSupplier&lt;<span class="predefined-type">String</span>&gt; timedSupplier = Metrics.timedCheckedSupplier(supplier, timer);
-
-<span class="comment">// and decorate the supplier with a CircuitBreaker</span>
-Try.CheckedSupplier&lt;<span class="predefined-type">String</span>&gt; circuitBreakerAndTimedSupplier = CircuitBreaker
-        .decorateCheckedSupplier(timedSupplier, circuitBreaker);
-
-<span class="predefined-type">String</span> value = circuitBreakerAndTimedSupplier.get();
-
-<span class="comment">// Then the Metrics execution counter should be 1</span>
-assertThat(timer.getCount()).isEqualTo(<span class="integer">1</span>);
-<span class="comment">// and the mean time should be greater than 2[s]</span>
-assertThat(timer.getSnapshot().getMean()).isGreaterThan(<span class="integer">2</span>);
-
-assertThat(value).isEqualTo(<span class="string"><span class="delimiter">&quot;</span><span class="content">Hello world</span><span class="delimiter">&quot;</span></span>);</code></pre>
 </div>
 </div>
 </div>
