@@ -515,7 +515,7 @@ table.CodeRay td.code>pre{padding:0}
 <h1>Javaslang-Circuitbreaker User Guide</h1>
 <div class="details">
 <span id="author" class="author">Robert Winkler</span><br>
-<span id="revnumber">version 0.1.7,</span>
+<span id="revnumber">version 0.2.0,</span>
 <span id="revdate">2016-01-07</span>
 </div>
 <div id="toc" class="toc2">
@@ -529,8 +529,8 @@ table.CodeRay td.code>pre{padding:0}
 </li>
 <li><a href="#_usage_guide">3. Usage Guide</a>
 <ul class="sectlevel2">
-<li><a href="#_configure_the_circuitbreaker">3.1. Configure the CircuitBreaker</a></li>
-<li><a href="#_functional_programming_example">3.2. Functional programming example</a></li>
+<li><a href="#_create_a_circuitbreaker">3.1. Create a CircuitBreaker</a></li>
+<li><a href="#_use_a_circuitbreaker">3.2. Use a CircuitBreaker</a></li>
 <li><a href="#_open_circuitbreaker_example">3.3. OPEN CircuitBreaker example</a></li>
 <li><a href="#_recover_from_an_exception">3.4. Recover from an exception</a></li>
 <li><a href="#_customize_exception_handler">3.5. Customize exception handler</a></li>
@@ -596,7 +596,7 @@ After the time interval has elapsed, the CircuitBreaker state changes to <code>H
     jcenter()
 }
 
-compile "io.github.robwin:javaslang-circuitbreaker:0.1.7"</code></pre>
+compile "io.github.robwin:javaslang-circuitbreaker:0.2.0"</code></pre>
 </div>
 </div>
 </div>
@@ -606,7 +606,7 @@ compile "io.github.robwin:javaslang-circuitbreaker:0.1.7"</code></pre>
 <h2 id="_usage_guide">3. Usage Guide</h2>
 <div class="sectionbody">
 <div class="sect2">
-<h3 id="_configure_the_circuitbreaker">3.1. Configure the CircuitBreaker</h3>
+<h3 id="_create_a_circuitbreaker">3.1. Create a CircuitBreaker</h3>
 <div class="paragraph">
 <p>This library comes with an <code>InMemoryCircuitBreakerRegistry</code> based on a <code>ConcurrentMap</code> which provides thread safety and atomicity guarantees. You must use the CircuitBreakerRegistry to manage (create and retrieve) your CircuitBreakers. You can create a <code>InMemoryCircuitBreakerRegistry</code> with a default global <code>CircuitBreakerConfig</code> for all of your CircuitBreakers as follows.</p>
 </div>
@@ -640,7 +640,7 @@ CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker(<span clas
 </div>
 </div>
 <div class="sect2">
-<h3 id="_functional_programming_example">3.2. Functional programming example</h3>
+<h3 id="_use_a_circuitbreaker">3.2. Use a CircuitBreaker</h3>
 <div class="paragraph">
 <p>You can decorate any <code>Supplier / Runnable / Function</code> or <code>CheckedSupplier / CheckedRunnable / CheckedFunction</code> function with <code>CircuitBreaker.decorateCheckedSupplier()</code>, <code>CircuitBreaker.decorateCheckedRunnable()</code> or <code>CircuitBreaker.decorateCheckedFunction()</code>. You can invoke the returned function with <code>Try.of()</code> or <code>Try.run()</code> from <a href="https://github.com/javaslang/javaslang">javaslang</a>. This allows to chain further functions with <code>map</code>, <code>flatMap</code>, <code>filter</code>, <code>recover</code> or <code>andThen</code>. The chained functions are only invoked, if the CircuitBreaker is CLOSED or HALF_CLOSED.<br>
 In the following example, <code>Try.of()</code> returns a <code>Success&lt;String&gt;</code> Monad, if the invocation of the function is successful. If the function throws an exception, a <code>Failure&lt;Throwable&gt;</code> Monad is returned and <code>map</code> is not invoked.</p>
@@ -694,7 +694,7 @@ assertThat(result.get()).isEqualTo(<span class="string"><span class="delimiter">
 <div class="sect2">
 <h3 id="_open_circuitbreaker_example">3.3. OPEN CircuitBreaker example</h3>
 <div class="paragraph">
-<p>In this test case <code>map</code> is not invoked, because the CircuitBreaker is OPEN. The call to <code>Try.of</code> returns a <code>Failure&lt;Throwable&gt;</code> Monad so that the chained function is not invoked.</p>
+<p>In this example <code>map</code> is not invoked, because the CircuitBreaker is OPEN. The call to <code>Try.of</code> returns a <code>Failure&lt;Throwable&gt;</code> Monad so that the chained function is not invoked.</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -1053,7 +1053,7 @@ reporter.start(<span class="integer">1</span>, <span class="predefined-type">Tim
 </div>
 <div id="footer">
 <div id="footer-text">
-Version 0.1.7<br>
+Version 0.2.0<br>
 Last updated 2016-01-07 13:11:57 MEZ
 </div>
 </div>
