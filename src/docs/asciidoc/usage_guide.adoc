@@ -1,6 +1,6 @@
 == Usage Guide
 
-=== Configure the CircuitBreaker
+=== Create a CircuitBreaker
 
 This library comes with an `InMemoryCircuitBreakerRegistry` based on a `ConcurrentMap` which provides thread safety and atomicity guarantees. You must use the CircuitBreakerRegistry to manage (create and retrieve) your CircuitBreakers. You can create a `InMemoryCircuitBreakerRegistry` with a default global `CircuitBreakerConfig` for all of your CircuitBreakers as follows.
 
@@ -31,7 +31,7 @@ CircuitBreaker circuitBreaker2 = circuitBreakerRegistry.circuitBreaker("otherNam
 CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("uniqueName", circuitBreakerConfig);
 ----
 
-=== Functional programming example
+=== Use a CircuitBreaker
 
 You can decorate any `Supplier / Runnable / Function` or `CheckedSupplier / CheckedRunnable / CheckedFunction` function with `CircuitBreaker.decorateCheckedSupplier()`, `CircuitBreaker.decorateCheckedRunnable()` or `CircuitBreaker.decorateCheckedFunction()`. You can invoke the returned function with `Try.of()` or `Try.run()` from https://github.com/javaslang/javaslang[javaslang]. This allows to chain further functions with `map`, `flatMap`, `filter`, `recover` or `andThen`. The chained functions are only invoked, if the CircuitBreaker is CLOSED or HALF_CLOSED.
 In the following example, `Try.of()` returns a `Success<String>` Monad, if the invocation of the function is successful. If the function throws an exception, a `Failure<Throwable>` Monad is returned and `map` is not invoked.
@@ -82,7 +82,7 @@ assertThat(result.get()).isEqualTo("Hello world");
 
 === OPEN CircuitBreaker example
 
-In this test case `map` is not invoked, because the CircuitBreaker is OPEN. The call to `Try.of` returns a `Failure<Throwable>` Monad so that the chained function is not invoked.
+In this example `map` is not invoked, because the CircuitBreaker is OPEN. The call to `Try.of` returns a `Failure<Throwable>` Monad so that the chained function is not invoked.
 
 [source,java]
 ----
