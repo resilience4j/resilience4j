@@ -31,7 +31,7 @@ image::images/state_machine.jpg[]
 
 == Usage guide
 
-See http://javaslang.github.io/javaslang-circuitbreaker/0.1.7/[User Guide].
+See http://javaslang.github.io/javaslang-circuitbreaker/0.2.0/[User Guide].
 
 == License
 
