@@ -11,7 +11,7 @@ This library comes with an `InMemoryCircuitBreakerRegistry` based on a `Concurre
 CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
 ----
 
-As an alternative you can provide your own custom global `CircuitBreakerConfig`. In order to create a custom global CircuitBreakerConfig or a CircuitBreakerConfig for a specific CircuitBreaker, you can use the CircuitBreakerConfig builder. You can configure the maximum number of allowed failures and the wait interval [ms], which specifies how long the CircuitBreaker should stay in state `OPEN`. Furthermore, you can add exceptions to the ignore list which must not trigger the CircuitBreaker.
+As an alternative you can provide your own custom global `CircuitBreakerConfig`. In order to create a custom global CircuitBreakerConfig or a CircuitBreakerConfig for a specific CircuitBreaker, you can use the CircuitBreakerConfig builder. You can configure the maximum number of allowed failures and the wait interval [ms], which specifies how long the CircuitBreaker should stay in state `OPEN`.
 
 [source,java]
 ----
@@ -19,8 +19,6 @@ As an alternative you can provide your own custom global `CircuitBreakerConfig`.
 CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom()
     .maxFailures(1)
     .waitInterval(1000)
-    .ignoredException(BusinessException.class)
-    .ignoredException(AnotherBusinessException.class)
     .build();
 
 // Create a InMemoryCircuitBreakerRegistry with a custom global configuration
