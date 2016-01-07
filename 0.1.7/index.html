@@ -529,13 +529,13 @@ table.CodeRay td.code>pre{padding:0}
 </li>
 <li><a href="#_usage_guide">3. Usage Guide</a>
 <ul class="sectlevel2">
-<li><a href="#_circuitbreaker_configuration_example">3.1. CircuitBreaker configuration example</a></li>
+<li><a href="#_configure_the_circuitbreaker">3.1. Configure the CircuitBreaker</a></li>
 <li><a href="#_functional_programming_example">3.2. Functional programming example</a></li>
 <li><a href="#_open_circuitbreaker_example">3.3. OPEN CircuitBreaker example</a></li>
-<li><a href="#_recovery_example">3.4. Recovery example</a></li>
-<li><a href="#_ignore_exceptions_example">3.5. Ignore exceptions example</a></li>
-<li><a href="#_add_a_custom_event_listener">3.6. Add a custom event listener</a></li>
-<li><a href="#_retry_example">3.7. Retry example</a></li>
+<li><a href="#_recover_from_an_exception">3.4. Recover from an exception</a></li>
+<li><a href="#_customize_exception_handler">3.5. Customize exception handler</a></li>
+<li><a href="#_customize_event_listener">3.6. Customize event listener</a></li>
+<li><a href="#_retry_a_failed_function">3.7. Retry a failed function</a></li>
 <li><a href="#_completablefuture_example">3.8. CompletableFuture example</a></li>
 <li><a href="#_reactive_streams_example">3.9. Reactive Streams example</a></li>
 <li><a href="#_example_with_dropwizard_metrics">3.10. Example with Dropwizard Metrics</a></li>
@@ -551,34 +551,8 @@ table.CodeRay td.code>pre{padding:0}
 <h2 id="_introduction">1. Introduction</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>This library is a lightweight, easy-to-use fault tolerance library inspired by <a href="https://github.com/Netflix/Hystrix">Netflix Hystrix</a>, but designed solely for Java 8 and functional programming in a multithreaded environment. The library provides several higher-order functions to decorate any <code>Supplier / Runnable / Function</code> or <code>CheckedSupplier / CheckedRunnable / CheckedFunction</code> with a <a href="http://martinfowler.com/bliki/CircuitBreaker.html">Circuit Breaker</a>. In the following I call the higher-order functions decorators. The decorators return an enhanced version of your function. Furthermore, the library provides decorators to measure runtime metrics of your functions by using <a href="https://dropwizard.github.io/metrics/">Dropwizard Metrics</a> and decorators to retry failed functions. You can stack more than one decorator on any given function. That means, you can combine a Retry decorator with a CircuitBreaker decorator. Any decorated function can be invoked synchronously or asynchronously. The project uses a functional library for Java 8 called <a href="https://github.com/javaslang/javaslang">javaslang</a>.<br>
-The following is a short appetizer. For more sophisticated examples of using the library, please have a look at the <a href="https://github.com/RobWin/circuitbreaker-java8#usage-guide">usage guides</a>.</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="CodeRay highlight"><code data-lang="java"><span class="comment">// You can create a CircuitBreaker, RetryContext and Timer with default configurations.</span>
-CircuitBreaker circuitBreaker = CircuitBreakerRegistry.ofDefaults()
-        .circuitBreaker(<span class="string"><span class="delimiter">&quot;</span><span class="content">uniqueName</span><span class="delimiter">&quot;</span></span>);
-Retry retryContext = Retry.ofDefaults();
-<span class="predefined-type">Timer</span> timer = <span class="keyword">new</span> MetricRegistry().timer(name(<span class="string"><span class="delimiter">&quot;</span><span class="content">test</span><span class="delimiter">&quot;</span></span>));
-
-<span class="comment">// You can decorate any method of any class.</span>
-Supplier&lt;<span class="predefined-type">String</span>&gt; supplier = () -&gt; <span class="string"><span class="delimiter">&quot;</span><span class="content">Here you could call a remote API</span><span class="delimiter">&quot;</span></span>;
-Supplier&lt;<span class="predefined-type">String</span>&gt; decoratedSupplier = FailSafe.ofSupplier(supplier)
-        .withCircuitBreaker(circuitBreaker)
-        .withRetry(retryContext)
-        .withMetrics(timer)
-        .decorate();
-
-<span class="comment">// You can chain further functions and recover from exceptions</span>
-<span class="predefined-type">String</span> result = Try.of(decoratedSupplier)
-        .map(value -&gt; value + <span class="string"><span class="delimiter">&quot;</span><span class="content">Hello World</span><span class="delimiter">&quot;</span></span>)
-        .recover(exception -&gt; <span class="string"><span class="delimiter">&quot;</span><span class="content">Hello Recovery</span><span class="delimiter">&quot;</span></span>)
-        .get();</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>The CircuitBreaker is implemented via a finite state machine with three states: <code>CLOSED</code>, <code>OPEN</code> and <code>HALF_OPEN</code>. The CircuitBreaker does not know anything about the backend&#8217;s state by itself, but uses the information provided by the decorators via <code>CircuitBreaker::recordSuccess()</code> and <code>CircuitBreaker::recordFailure(throwable)</code>. The decorators are pure functions. The result of a decorator depends solely on the input parameters. See example:</p>
+<p>This library is a lightweight, easy-to-use fault tolerance library inspired by <a href="https://github.com/Netflix/Hystrix">Netflix Hystrix</a>, but designed solely for Java 8 and functional programming. The library provides several higher-order functions to decorate any <code>Supplier / Runnable / Function</code> or <code>CheckedSupplier / CheckedRunnable / CheckedFunction</code> with a <a href="http://martinfowler.com/bliki/CircuitBreaker.html">Circuit Breaker</a>. In the following I call the higher-order functions decorators. The decorators return an enhanced version of your function. Furthermore, the library provides decorators to measure runtime metrics of your functions by using <a href="https://dropwizard.github.io/metrics/">Dropwizard Metrics</a> and decorators to retry failed functions. You can stack more than one decorator on any given function. That means, you can combine a Retry decorator with a CircuitBreaker decorator. Any decorated function can be invoked synchronously or asynchronously. The project uses a functional library for Java 8 called <a href="https://github.com/javaslang/javaslang">javaslang</a>.<br>
+The CircuitBreaker is implemented via a finite state machine with three states: <code>CLOSED</code>, <code>OPEN</code> and <code>HALF_OPEN</code>. The CircuitBreaker does not know anything about the backend&#8217;s state by itself, but uses the information provided by the decorators via <code>CircuitBreaker::recordSuccess()</code> and <code>CircuitBreaker::recordFailure(throwable)</code>. The decorators are pure functions. The result of a decorator depends solely on the input parameters. See example:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -632,7 +606,7 @@ compile "io.github.robwin:javaslang-circuitbreaker:0.1.7"</code></pre>
 <h2 id="_usage_guide">3. Usage Guide</h2>
 <div class="sectionbody">
 <div class="sect2">
-<h3 id="_circuitbreaker_configuration_example">3.1. CircuitBreaker configuration example</h3>
+<h3 id="_configure_the_circuitbreaker">3.1. Configure the CircuitBreaker</h3>
 <div class="paragraph">
 <p>This library comes with an <code>InMemoryCircuitBreakerRegistry</code> based on a <code>ConcurrentMap</code> which provides thread safety and atomicity guarantees. You must use the CircuitBreakerRegistry to manage (create and retrieve) your CircuitBreakers. You can create a <code>InMemoryCircuitBreakerRegistry</code> with a default global <code>CircuitBreakerConfig</code> for all of your CircuitBreakers as follows.</p>
 </div>
@@ -758,7 +732,7 @@ assertThat(result.failed().get()).isInstanceOf(CircuitBreakerOpenException.class
 </div>
 </div>
 <div class="sect2">
-<h3 id="_recovery_example">3.4. Recovery example</h3>
+<h3 id="_recover_from_an_exception">3.4. Recover from an exception</h3>
 <div class="paragraph">
 <p>If you want to recover from any exception, you can chain the method <code>Try.recover()</code>. The recovery method is only invoked, if <code>Try.of()</code> returns a <code>Failure&lt;Throwable&gt;</code> Monad.</p>
 </div>
@@ -784,42 +758,43 @@ assertThat(result.get()).isEqualTo(<span class="string"><span class="delimiter">
 </div>
 </div>
 <div class="sect2">
-<h3 id="_ignore_exceptions_example">3.5. Ignore exceptions example</h3>
+<h3 id="_customize_exception_handler">3.5. Customize exception handler</h3>
 <div class="paragraph">
-<p>The following test cases shows how to add exceptions to the ignore list which must not trigger the CircuitBreaker.</p>
+<p>The default exception handler counts all type of exceptions as failures and triggers the CircuitBreaker. If you want to use a custom exception handler, you have to implement the functional interface <code>Predicate</code> which has a method <code>test</code>. The Predicate must return true if the exception should count as a failure, otherwise it must return false.<br>
+The following example shows how to ignore an <code>IOException</code>, but all other exception types still count as failures.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="CodeRay highlight"><code data-lang="java"><span class="comment">// Given I add the IOException to the ignore list</span>
-CircuitBreakerConfig circuitBreakerConfig = <span class="keyword">new</span> CircuitBreakerConfig.Builder()
+<pre class="CodeRay highlight"><code data-lang="java"><span class="comment">// Given</span>
+CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom()
         .maxFailures(<span class="integer">1</span>)
         .waitInterval(<span class="integer">1000</span>)
-        .ignoredException(<span class="exception">IOException</span>.class)
+        .onException(throwable -&gt; Match.of(throwable)
+                .whenType(<span class="exception">IOException</span>.class).then(<span class="predefined-constant">false</span>)
+                .otherwise(<span class="predefined-constant">true</span>).get())
         .build();
 CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker(<span class="string"><span class="delimiter">&quot;</span><span class="content">testName</span><span class="delimiter">&quot;</span></span>, circuitBreakerConfig);
 
-<span class="comment">// Simulate a failure attempt</span>
 circuitBreaker.recordFailure(<span class="keyword">new</span> <span class="exception">RuntimeException</span>());
 <span class="comment">// CircuitBreaker is still CLOSED, because 1 failure is allowed</span>
 assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
 
-<span class="comment">//When the functions throws a subclass of IOException</span>
+<span class="comment">//When</span>
 Try.CheckedRunnable checkedRunnable = CircuitBreaker.decorateCheckedRunnable(() -&gt; {
     <span class="keyword">throw</span> <span class="keyword">new</span> <span class="exception">SocketTimeoutException</span>(<span class="string"><span class="delimiter">&quot;</span><span class="content">BAM!</span><span class="delimiter">&quot;</span></span>);
 }, circuitBreaker);
 Try result = Try.run(checkedRunnable);
 
-<span class="comment">//Then the SocketTimeoutException did not trigger the CircuitBreaker, but is rethrown instead.</span>
+<span class="comment">//Then</span>
 assertThat(result.isFailure()).isTrue();
-<span class="comment">// and the CircuitBreaker is still CLOSED, because SocketTimeoutException was ignored</span>
+<span class="comment">// CircuitBreaker is still CLOSED, because SocketTimeoutException is ignored</span>
 assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
-<span class="comment">// and the returned exception is of type IOException</span>
 assertThat(result.failed().get()).isInstanceOf(<span class="exception">IOException</span>.class);</code></pre>
 </div>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_add_a_custom_event_listener">3.6. Add a custom event listener</h3>
+<h3 id="_customize_event_listener">3.6. Customize event listener</h3>
 <div class="paragraph">
 <p>The default event listener logs state transitions with INFO level.</p>
 </div>
@@ -840,7 +815,7 @@ assertThat(result.failed().get()).isInstanceOf(<span class="exception">IOExcepti
 </div>
 </div>
 <div class="sect2">
-<h3 id="_retry_example">3.7. Retry example</h3>
+<h3 id="_retry_a_failed_function">3.7. Retry a failed function</h3>
 <div class="paragraph">
 <p>You can also retry a failed function and recover from the exception, if the maximum retry count was reached. You can create a <code>Retry</code> context using a default configuration as follows.</p>
 </div>
@@ -859,7 +834,9 @@ Retry retryContext = Retry.ofDefaults();</code></pre>
 <pre class="CodeRay highlight"><code data-lang="java">Retry retryContext = Retry.custom()
     .maxAttempts(<span class="integer">2</span>)
     .waitInterval(<span class="integer">1000</span>)
-    .ignoredException(WebServiceException.class)
+    .onException(throwable -&gt; Match.of(throwable)
+        .whenType(WebServiceException.class).then(<span class="predefined-constant">false</span>)
+        .otherwise(<span class="predefined-constant">true</span>).get())
     .build();</code></pre>
 </div>
 </div>
