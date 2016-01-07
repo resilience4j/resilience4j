@@ -21,9 +21,11 @@ package io.github.robwin.circuitbreaker.internal;
 
 import io.github.robwin.circuitbreaker.CircuitBreaker;
 import io.github.robwin.circuitbreaker.CircuitBreakerConfig;
+import io.github.robwin.circuitbreaker.CircuitBreakerEventListener;
 import io.github.robwin.circuitbreaker.CircuitBreakerStateTransitionEvent;
 
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Predicate;
 
 /**
  * A CircuitBreaker finite state machine. The CircuitBreaker does not have a way to know anything about the
@@ -38,6 +40,8 @@ final class CircuitBreakerStateMachine implements CircuitBreaker {
     private final String name;
     private AtomicReference<CircuitBreakerState> stateReference;
     private final CircuitBreakerConfig circuitBreakerConfig;
+    private Predicate<Throwable> exceptionPredicate;
+    private CircuitBreakerEventListener circuitBreakerEventListener;
 
     /**
      * Creates a circuitBreaker.
@@ -49,6 +53,8 @@ final class CircuitBreakerStateMachine implements CircuitBreaker {
         this.name = name;
         this.circuitBreakerConfig = circuitBreakerConfig;
         this.stateReference = new AtomicReference<>(new ClosedState(this));
+        this.exceptionPredicate = circuitBreakerConfig.getExceptionPredicate();
+        this.circuitBreakerEventListener = circuitBreakerConfig.getCircuitBreakerEventListener();
     }
 
     CircuitBreakerConfig getCircuitBreakerConfig(){
@@ -70,8 +76,7 @@ final class CircuitBreakerStateMachine implements CircuitBreaker {
      */
     @Override
     public void recordFailure(Throwable throwable) {
-        if(circuitBreakerConfig.getIgnoredExceptions().stream()
-                .noneMatch(ignoredException -> ignoredException.isInstance(throwable))){
+        if(exceptionPredicate.test(throwable)){
             stateReference.get().recordFailure();
         }
     }
@@ -114,16 +119,16 @@ final class CircuitBreakerStateMachine implements CircuitBreaker {
 
     void transitionToClosedState(StateTransition stateTransition) {
         stateReference.set(new ClosedState(this));
-        circuitBreakerConfig.getCircuitBreakerEventListener().onCircuitBreakerEvent(new CircuitBreakerStateTransitionEvent(getName(), stateTransition));
+        circuitBreakerEventListener.onCircuitBreakerEvent(new CircuitBreakerStateTransitionEvent(getName(), stateTransition));
     }
 
     void transitionToOpenState(CircuitBreakerState currentState, StateTransition stateTransition) {
         stateReference.set(new OpenState(this, currentState));
-        circuitBreakerConfig.getCircuitBreakerEventListener().onCircuitBreakerEvent(new CircuitBreakerStateTransitionEvent(getName(), stateTransition));
+        circuitBreakerEventListener.onCircuitBreakerEvent(new CircuitBreakerStateTransitionEvent(getName(), stateTransition));
     }
 
     void transitionToHalfClosedState(CircuitBreakerState currentState, StateTransition stateTransition) {
         stateReference.set(new HalfClosedState(this, currentState));
-        circuitBreakerConfig.getCircuitBreakerEventListener().onCircuitBreakerEvent(new CircuitBreakerStateTransitionEvent(getName(), stateTransition));
+        circuitBreakerEventListener.onCircuitBreakerEvent(new CircuitBreakerStateTransitionEvent(getName(), stateTransition));
     }
 }

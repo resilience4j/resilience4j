@@ -1,6 +1,6 @@
 == Usage Guide
 
-=== CircuitBreaker configuration example
+=== Configure the CircuitBreaker
 
 This library comes with an `InMemoryCircuitBreakerRegistry` based on a `ConcurrentMap` which provides thread safety and atomicity guarantees. You must use the CircuitBreakerRegistry to manage (create and retrieve) your CircuitBreakers. You can create a `InMemoryCircuitBreakerRegistry` with a default global `CircuitBreakerConfig` for all of your CircuitBreakers as follows.
 
@@ -118,7 +118,7 @@ assertThat(result.isFailure()).isTrue();
 assertThat(result.failed().get()).isInstanceOf(CircuitBreakerOpenException.class);
 ----
 
-=== Recovery example
+=== Recover from an exception
 
 If you want to recover from any exception, you can chain the method `Try.recover()`. The recovery method is only invoked, if `Try.of()` returns a `Failure<Throwable>` Monad.
 
@@ -142,40 +142,16 @@ assertThat(result.isSuccess()).isTrue();
 assertThat(result.get()).isEqualTo("Hello Recovery");
 ----
 
-=== Ignore exceptions example
+=== Customize exception handler
+The default exception handler counts all type of exceptions as failures and triggers the CircuitBreaker. If you want to use a custom exception handler, you have to implement the functional interface `Predicate` which has a method `test`. The Predicate must return true if the exception should count as a failure, otherwise it must return false.
+The following example shows how to ignore an `IOException`, but all other exception types still count as failures.
 
-The following test cases shows how to add exceptions to the ignore list which must not trigger the CircuitBreaker.
-
-[source,java]
+[source,java,indent=0]
 ----
-// Given I add the IOException to the ignore list
-CircuitBreakerConfig circuitBreakerConfig = new CircuitBreakerConfig.Builder()
-        .maxFailures(1)
-        .waitInterval(1000)
-        .ignoredException(IOException.class)
-        .build();
-CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("testName", circuitBreakerConfig);
-
-// Simulate a failure attempt
-circuitBreaker.recordFailure(new RuntimeException());
-// CircuitBreaker is still CLOSED, because 1 failure is allowed
-assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
-
-//When the functions throws a subclass of IOException
-Try.CheckedRunnable checkedRunnable = CircuitBreaker.decorateCheckedRunnable(() -> {
-    throw new SocketTimeoutException("BAM!");
-}, circuitBreaker);
-Try result = Try.run(checkedRunnable);
-
-//Then the SocketTimeoutException did not trigger the CircuitBreaker, but is rethrown instead.
-assertThat(result.isFailure()).isTrue();
-// and the CircuitBreaker is still CLOSED, because SocketTimeoutException was ignored
-assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
-// and the returned exception is of type IOException
-assertThat(result.failed().get()).isInstanceOf(IOException.class);
+include::../../test/java/io/github/robwin/circuitbreaker/CircuitBreakerTest.java[tags=shouldNotTriggerCircuitBreakerOpenException]
 ----
 
-=== Add a custom event listener
+=== Customize event listener
 The default event listener logs state transitions with INFO level.
 
 ----
@@ -191,7 +167,7 @@ CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom()
     .build();
 ----
 
-=== Retry example
+=== Retry a failed function
 
 You can also retry a failed function and recover from the exception, if the maximum retry count was reached. You can create a `Retry` context using a default configuration as follows.
 
@@ -209,7 +185,9 @@ In order to create a custom `Retry` context, you can use the Retry context build
 Retry retryContext = Retry.custom()
     .maxAttempts(2)
     .waitInterval(1000)
-    .ignoredException(WebServiceException.class)
+    .onException(throwable -> Match.of(throwable)
+        .whenType(WebServiceException.class).then(false)
+        .otherwise(true).get())
     .build();
 ----
 

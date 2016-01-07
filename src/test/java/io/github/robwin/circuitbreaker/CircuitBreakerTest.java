@@ -18,6 +18,7 @@
  */
 package io.github.robwin.circuitbreaker;
 
+import javaslang.control.Match;
 import javaslang.control.Try;
 import org.junit.Before;
 import org.junit.Test;
@@ -84,11 +85,14 @@ public class CircuitBreakerTest {
 
     @Test
     public void shouldNotTriggerCircuitBreakerOpenException() {
+        // tag::shouldNotTriggerCircuitBreakerOpenException[]
         // Given
-        CircuitBreakerConfig circuitBreakerConfig = new CircuitBreakerConfig.Builder()
+        CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom()
                 .maxFailures(1)
                 .waitInterval(1000)
-                .ignoredException(IOException.class)
+                .onException(throwable -> Match.of(throwable)
+                        .whenType(IOException.class).then(false)
+                        .otherwise(true).get())
                 .build();
         CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("testName", circuitBreakerConfig);
 
@@ -107,6 +111,7 @@ public class CircuitBreakerTest {
         // CircuitBreaker is still CLOSED, because SocketTimeoutException is ignored
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
         assertThat(result.failed().get()).isInstanceOf(IOException.class);
+        // end::shouldNotTriggerCircuitBreakerOpenException[]
     }
 
     @Test
@@ -221,7 +226,7 @@ public class CircuitBreakerTest {
         // You can chain other functions with map and flatMap. The Try Monad returns a Success<String>, if the all
         // functions run successfully.
         Try<String> result = Try.of(decoratedSupplier)
-                .map(decoratedFunction::apply);
+                .mapTry(decoratedFunction::apply);
 
         // Then
         assertThat(result.isSuccess()).isTrue();

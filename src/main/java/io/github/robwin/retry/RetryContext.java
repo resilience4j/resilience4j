@@ -1,9 +1,8 @@
 package io.github.robwin.retry;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Predicate;
 
 public class RetryContext implements Retry {
 
@@ -14,25 +13,19 @@ public class RetryContext implements Retry {
     private AtomicReference<Exception> lastException;
     private AtomicReference<RuntimeException> lastRuntimeException;
 
-
     // The maximum number of attempts
     private final int maxAttempts;
     // The wait interval between successive attempts
     private final int waitInterval;
-    // Exceptions which should not trigger a retry
-    private final List<Class<? extends Throwable>> ignoredExceptions;
+    private Predicate<Throwable> exceptionPredicate;
 
-    private RetryContext(int maxAttempts, int waitInterval, List<Class<? extends Throwable>> ignoredExceptions){
+    private RetryContext(int maxAttempts, int waitInterval, Predicate<Throwable> exceptionPredicate){
         this.maxAttempts = maxAttempts;
         this.waitInterval = waitInterval;
-        this.ignoredExceptions = ignoredExceptions;
+        this.exceptionPredicate = exceptionPredicate;
         this.numOfAttempts = new AtomicInteger(0);
         this.lastException = new AtomicReference<>();
         this.lastRuntimeException = new AtomicReference<>();
-    }
-
-    public Integer getMaxAttempts() {
-        return maxAttempts;
     }
 
     @Override
@@ -66,11 +59,9 @@ public class RetryContext implements Retry {
         }
     }
 
-
     @Override
     public void handleException(Exception exception) throws Throwable{
-        if(ignoredExceptions.stream()
-                .noneMatch(ignoredException -> ignoredException.isInstance(exception))){
+        if(exceptionPredicate.test(exception)){
             lastException.set(exception);
         }else{
             throw exception;
@@ -79,22 +70,18 @@ public class RetryContext implements Retry {
 
     @Override
     public void handleRuntimeException(RuntimeException runtimeException){
-        if(ignoredExceptions.stream()
-                .noneMatch(ignoredException -> ignoredException.isInstance(runtimeException))){
+        if(exceptionPredicate.test(runtimeException)){
             lastRuntimeException.set(runtimeException);
         }else{
             throw runtimeException;
         }
     }
 
-    public List<Class<? extends Throwable>> getIgnoredExceptions() {
-        return ignoredExceptions;
-    }
-
     public static class Builder {
         private int maxAttempts = DEFAULT_MAX_ATTEMPTS;
         private int waitInterval = DEFAULT_WAIT_INTERVAL;
-        private List<Class<? extends Throwable>> ignoredExceptions = new ArrayList<>();
+        // The default exception predicate retries all exceptions.
+        private Predicate<Throwable> exceptionPredicate = (exception) -> true;
 
         public Builder maxAttempts(int maxAttempts) {
             if (maxAttempts < 1) {
@@ -112,24 +99,20 @@ public class RetryContext implements Retry {
             return this;
         }
 
-        public Builder ignoredException(Class<? extends Throwable> ignoredException) {
-            if (ignoredException == null) {
-                throw new IllegalArgumentException("ignoredException must not be null");
-            }
-            ignoredExceptions.add(ignoredException);
-            return this;
-        }
-
-        public Builder ignoredExceptions(List<Class<? extends Throwable>> ignoredExceptions) {
-            if (ignoredExceptions == null) {
-                throw new IllegalArgumentException("ignoredExceptions must not be null");
-            }
-            this.ignoredExceptions = ignoredExceptions;
+        /**
+         *  Configures a Predicate which evaluates if an exception should be retried.
+         *  The Predicate must return true if the exception should count be retried, otherwise it must return false.
+         *
+         * @param predicate the Predicate which evaluates if an exception should be retried or not.
+         * @return the CircuitBreakerConfig.Builder
+         */
+        public Builder onException(Predicate<Throwable> predicate) {
+            this.exceptionPredicate = predicate;
             return this;
         }
 
         public Retry build() {
-            return new RetryContext(maxAttempts, waitInterval, ignoredExceptions);
+            return new RetryContext(maxAttempts, waitInterval, exceptionPredicate);
         }
     }
 }

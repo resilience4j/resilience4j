@@ -18,6 +18,7 @@
  */
 package io.github.robwin.retry;
 
+import javaslang.control.Match;
 import javaslang.control.Try;
 import org.junit.Before;
 import org.junit.Test;
@@ -103,7 +104,11 @@ public class RunnableRetryTest {
         willThrow(new WebServiceException("BAM!")).given(helloWorldService).sayHelloWorld();
 
         // Create a Retry with default configuration
-        Retry retryContext = Retry.custom().ignoredException(WebServiceException.class).build();
+        Retry retryContext = Retry.custom()
+                .onException(throwable -> Match.of(throwable)
+                        .whenType(WebServiceException.class).then(false)
+                        .otherwise(true).get())
+                .build();
         // Decorate the invocation of the HelloWorldService
         Try.CheckedRunnable retryableRunnable = Retry.retryableCheckedRunnable(helloWorldService::sayHelloWorld, retryContext);
 

@@ -54,8 +54,9 @@ jmh {
 }
 
 dependencies {
-    compile "com.javaslang:javaslang:1.2.2"
-    compile "io.dropwizard.metrics:metrics-core:3.1.2"
+    compile "com.javaslang:javaslang:2.0.0-RC2"
+    compile "org.slf4j:slf4j-api:1.7.13"
+    testCompile "io.dropwizard.metrics:metrics-core:3.1.2"
     testCompile "junit:junit:4.11"
     testCompile "org.assertj:assertj-core:3.0.0"
     testCompile "ch.qos.logback:logback-classic:0.9.26"

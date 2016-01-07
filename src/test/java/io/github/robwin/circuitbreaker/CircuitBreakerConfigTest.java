@@ -22,9 +22,6 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.xml.ws.WebServiceException;
-import java.io.IOException;
-
 import static org.assertj.core.api.BDDAssertions.then;
 
 public class CircuitBreakerConfigTest {
@@ -53,17 +50,22 @@ public class CircuitBreakerConfigTest {
         then(circuitBreakerConfig.getWaitInterval()).isEqualTo(1000);
     }
 
-    @Test()
-    public void shouldAddIgnoredExceptions() {
+    @Test
+    public void shouldUseTheDefaultExceptionPredicate() {
         CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom()
-                .ignoredException(IOException.class)
-                .ignoredException(WebServiceException.class)
                 .build();
-        then(circuitBreakerConfig.getIgnoredExceptions()).hasSize(2);
+        then(circuitBreakerConfig.getExceptionPredicate()).isNotNull();
+    }
+
+    @Test()
+    public void shouldUseCustomExceptionPredicate() {
+        CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom()
+                .onException((Throwable throwable) -> true).build();
+        then(circuitBreakerConfig.getExceptionPredicate()).isNotNull();
     }
 
     @Test
-    public void shouldAddACircuitBreakerEventListener() {
+    public void shouldUseCustomCircuitBreakerEventListener() {
         CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom()
                 .onCircuitBreakerEvent((event) -> LOG.info(event.toString()))
                 .build();

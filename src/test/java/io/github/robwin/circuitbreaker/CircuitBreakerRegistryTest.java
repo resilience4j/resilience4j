@@ -51,7 +51,6 @@ public class CircuitBreakerRegistryTest {
     public void shouldBeNotTheSameCircuitBreaker() {
         CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("testName");
         CircuitBreaker circuitBreaker2 = circuitBreakerRegistry.circuitBreaker("otherTestName");
-
         assertThat(circuitBreaker).isNotSameAs(circuitBreaker2);
     }
 }

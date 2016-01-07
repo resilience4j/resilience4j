@@ -20,8 +20,7 @@ package io.github.robwin.circuitbreaker;
 
 import io.github.robwin.circuitbreaker.internal.DefaultCircuitBreakerEventListener;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.function.Predicate;
 
 
 public class CircuitBreakerConfig {
@@ -29,22 +28,18 @@ public class CircuitBreakerConfig {
     private static final int DEFAULT_MAX_FAILURES = 3;
     private static final int DEFAULT_WAIT_INTERVAL = 60000;
 
-    // The maximum number of allowed failures
     private final int maxFailures;
-    // The wait interval which specifies how long the CircuitBreaker should stay OPEN
     private final int waitInterval;
-    // The CircuitBreakerEventListener which should handle CircuitBreaker events.
     private CircuitBreakerEventListener circuitBreakerEventListener;
-    // Exceptions which do not count as failures and thus not trigger the circuit breaker.
-    private final List<Class<? extends Throwable>> ignoredExceptions;
+    private Predicate<Throwable> exceptionPredicate;
 
     private CircuitBreakerConfig(int maxFailures,
                                  int waitInterval,
-                                 List<Class<? extends Throwable>> ignoredExceptions,
+                                 Predicate<Throwable> exceptionPredicate,
                                  CircuitBreakerEventListener circuitBreakerEventListener){
         this.maxFailures = maxFailures;
         this.waitInterval = waitInterval;
-        this.ignoredExceptions = ignoredExceptions;
+        this.exceptionPredicate = exceptionPredicate;
         this.circuitBreakerEventListener = circuitBreakerEventListener;
     }
 
@@ -56,12 +51,13 @@ public class CircuitBreakerConfig {
         return waitInterval;
     }
 
-    public List<Class<? extends Throwable>> getIgnoredExceptions() {
-        return ignoredExceptions;
-    }
 
     public CircuitBreakerEventListener getCircuitBreakerEventListener() {
         return circuitBreakerEventListener;
+    }
+
+    public Predicate<Throwable> getExceptionPredicate() {
+        return exceptionPredicate;
     }
 
     /**
@@ -77,7 +73,8 @@ public class CircuitBreakerConfig {
         private int maxFailures = DEFAULT_MAX_FAILURES;
         private int waitInterval = DEFAULT_WAIT_INTERVAL;
         private CircuitBreakerEventListener circuitBreakerEventListener = new DefaultCircuitBreakerEventListener();
-        private List<Class<? extends Throwable>> ignoredExceptions = new ArrayList<>();
+        // The default exception predicate counts all exceptions as failures.
+        private Predicate<Throwable> exceptionPredicate = (exception) -> true;
 
         /**
          * Configures the maximum number of allowed failures.
@@ -108,34 +105,6 @@ public class CircuitBreakerConfig {
         }
 
         /**
-         * Configures an Exception which does not count as a failure and thus does not trigger the circuit breaker.
-         *
-         * @param ignoredException an Exception which should not count as a failure
-         * @return the CircuitBreakerConfig.Builder
-         */
-        public Builder ignoredException(Class<? extends Throwable> ignoredException) {
-            if (ignoredException == null) {
-                throw new IllegalArgumentException("ignoredException must not be null");
-            }
-            ignoredExceptions.add(ignoredException);
-            return this;
-        }
-
-        /**
-         * Configures Exceptions which do not count as failures and thus does not trigger the circuit breaker.
-         *
-         * @param ignoredExceptions Exceptions which should not count as failures
-         * @return the CircuitBreakerConfig.Builder
-         */
-        public Builder ignoredExceptions(List<Class<? extends Throwable>> ignoredExceptions) {
-            if (ignoredExceptions == null) {
-                throw new IllegalArgumentException("ignoredExceptions must not be null");
-            }
-            this.ignoredExceptions = ignoredExceptions;
-            return this;
-        }
-
-        /**
          *  Configures the CircuitBreakerEventListener which should handle CircuitBreaker events.
          *
          * @param circuitBreakerEventListener the CircuitBreakerEventListener which should handle CircuitBreaker events.
@@ -150,14 +119,24 @@ public class CircuitBreakerConfig {
         }
 
         /**
+         *  Configures a Predicate which evaluates if an exception should count as a failure and thus trigger the circuit breaker.
+         *  The Predicate must return true if the exception should count as a failure, otherwise it must return false.
+         *
+         * @param predicate the Predicate which evaluates if an exception should count as a failure and thus trigger the circuit breaker.
+         * @return the CircuitBreakerConfig.Builder
+         */
+        public Builder onException(Predicate<Throwable> predicate) {
+            this.exceptionPredicate = predicate;
+            return this;
+        }
+
+        /**
          * Builds a CircuitBreakerConfig
          *
          * @return the CircuitBreakerConfig
          */
         public CircuitBreakerConfig build() {
-            return new CircuitBreakerConfig(maxFailures, waitInterval, ignoredExceptions, circuitBreakerEventListener);
+            return new CircuitBreakerConfig(maxFailures, waitInterval, exceptionPredicate, circuitBreakerEventListener);
         }
-
-
     }
 }
