@@ -26,7 +26,6 @@ apply plugin: 'org.asciidoctor.convert'
 apply plugin: 'org.ajoberstar.github-pages'
 
 group = 'io.github.robwin'
-version = '0.1.7'
 description = 'A CircuitBreaker pattern implementation for Java 8 and functional programming.'
 
 tasks.withType(JavaCompile) {
