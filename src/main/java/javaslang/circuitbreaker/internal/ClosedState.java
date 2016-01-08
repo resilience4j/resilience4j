@@ -20,10 +20,12 @@ package javaslang.circuitbreaker.internal;
 
 import javaslang.circuitbreaker.CircuitBreaker;
 
+import java.time.Instant;
+
 final public class ClosedState extends CircuitBreakerState {
 
     ClosedState(CircuitBreakerStateMachine stateMachine) {
-        super(stateMachine, 0);
+        super(stateMachine);
     }
 
     /**
@@ -46,7 +48,7 @@ final public class ClosedState extends CircuitBreakerState {
         numOfFailures.increment();
         if (numOfFailures.sum() > stateMachine.getMaxFailures()) {
             // Too many failures, set new retryAfter to current time + wait duration
-            retryAfter.set(System.currentTimeMillis() + stateMachine.getWaitDuration());
+            retryAfter.set(Instant.now().plus(stateMachine.getWaitDuration()));
             stateMachine.transitionToOpenState(this, CircuitBreaker.StateTransition.CLOSED_TO_OPEN);
         }
     }

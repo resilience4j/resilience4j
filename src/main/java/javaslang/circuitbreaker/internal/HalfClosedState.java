@@ -20,6 +20,8 @@ package javaslang.circuitbreaker.internal;
 
 import javaslang.circuitbreaker.CircuitBreaker;
 
+import java.time.Instant;
+
 final public class HalfClosedState extends CircuitBreakerState {
 
     HalfClosedState(CircuitBreakerStateMachine stateMachine, CircuitBreakerState currentState) {
@@ -44,7 +46,7 @@ final public class HalfClosedState extends CircuitBreakerState {
     public void recordFailure() {
         // Thread-safe
         numOfFailures.increment();
-        retryAfter.set(System.currentTimeMillis() + stateMachine.getWaitDuration());
+        retryAfter.set(Instant.now().plus(stateMachine.getWaitDuration()));
         stateMachine.transitionToOpenState(this, CircuitBreaker.StateTransition.HALF_CLOSED_TO_OPEN);
     }
 

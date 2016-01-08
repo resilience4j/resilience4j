@@ -18,14 +18,12 @@
  */
 package javaslang.circuitbreaker;
 
-import javaslang.circuitbreaker.CircuitBreaker;
-import javaslang.circuitbreaker.CircuitBreakerConfig;
-import javaslang.circuitbreaker.CircuitBreakerOpenException;
-import javaslang.circuitbreaker.CircuitBreakerRegistry;
 import javaslang.control.Match;
 import javaslang.control.Try;
 import org.junit.Before;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.SocketTimeoutException;
@@ -37,6 +35,8 @@ import java.util.function.Supplier;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class CircuitBreakerTest {
+
+    private static final Logger LOG = LoggerFactory.getLogger(CircuitBreakerTest.class);
 
     private CircuitBreakerRegistry circuitBreakerRegistry;
 

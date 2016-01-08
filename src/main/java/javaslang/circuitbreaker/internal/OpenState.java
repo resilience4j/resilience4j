@@ -20,6 +20,8 @@ package javaslang.circuitbreaker.internal;
 
 import javaslang.circuitbreaker.CircuitBreaker;
 
+import java.time.Instant;
+
 final public class OpenState extends CircuitBreakerState {
 
     OpenState(CircuitBreakerStateMachine stateMachine, CircuitBreakerState currentState) {
@@ -34,7 +36,7 @@ final public class OpenState extends CircuitBreakerState {
     @Override
     public boolean isCallPermitted() {
         // Thread-safe
-        if (System.currentTimeMillis() >= retryAfter.get()) {
+        if (Instant.now().isAfter(retryAfter.get())) {
             stateMachine.transitionToHalfClosedState(this, CircuitBreaker.StateTransition.OPEN_TO_HALF_CLOSED);
             return true;
         }

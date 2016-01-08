@@ -24,6 +24,7 @@ import javaslang.circuitbreaker.CircuitBreakerStateTransitionEvent;
 import javaslang.circuitbreaker.CircuitBreaker;
 import javaslang.circuitbreaker.CircuitBreakerEventListener;
 
+import java.time.Duration;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Predicate;
 
@@ -42,7 +43,7 @@ final class CircuitBreakerStateMachine implements CircuitBreaker {
     private Predicate<Throwable> exceptionPredicate;
     private CircuitBreakerEventListener circuitBreakerEventListener;
     private int maxFailures;
-    private long waitDuration;
+    private Duration waitDuration;
 
     /**
      * Creates a circuitBreaker.
@@ -56,7 +57,7 @@ final class CircuitBreakerStateMachine implements CircuitBreaker {
         this.exceptionPredicate = circuitBreakerConfig.getExceptionPredicate();
         this.circuitBreakerEventListener = circuitBreakerConfig.getCircuitBreakerEventListener();
         this.maxFailures = circuitBreakerConfig.getMaxFailures();
-        this.waitDuration = circuitBreakerConfig.getWaitDuration().getSeconds() * 1000;
+        this.waitDuration = circuitBreakerConfig.getWaitDuration();
     }
 
     /**
@@ -107,7 +108,7 @@ final class CircuitBreakerStateMachine implements CircuitBreaker {
         return maxFailures;
     }
 
-    public long getWaitDuration() {
+    public Duration getWaitDuration() {
         return waitDuration;
     }
 
