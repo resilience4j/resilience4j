@@ -33,13 +33,13 @@ abstract class CircuitBreakerState {
     protected final LongAdder numOfFailures;
     protected final AtomicReference<Instant> retryAfter;
 
-    public CircuitBreakerState(CircuitBreakerStateMachine stateMachine) {
+    CircuitBreakerState(CircuitBreakerStateMachine stateMachine) {
         this.stateMachine = stateMachine;
         this.numOfFailures = new LongAdder();
         this.retryAfter = new AtomicReference<>(Instant.now());
     }
 
-    public CircuitBreakerState(CircuitBreakerStateMachine stateMachine, CircuitBreakerState currentState) {
+    CircuitBreakerState(CircuitBreakerStateMachine stateMachine, CircuitBreakerState currentState) {
         this.stateMachine = stateMachine;
         this.numOfFailures = currentState.getNumOfFailures();
         this.retryAfter = currentState.getRetryAfter();

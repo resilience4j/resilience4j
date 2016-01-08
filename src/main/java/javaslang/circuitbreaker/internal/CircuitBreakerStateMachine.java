@@ -51,7 +51,7 @@ final class CircuitBreakerStateMachine implements CircuitBreaker {
      * @param name      the name of the CircuitBreaker
      * @param circuitBreakerConfig The CircuitBreaker configuration.
      */
-    public CircuitBreakerStateMachine(String name, CircuitBreakerConfig circuitBreakerConfig) {
+    CircuitBreakerStateMachine(String name, CircuitBreakerConfig circuitBreakerConfig) {
         this.name = name;
         this.stateReference = new AtomicReference<>(new ClosedState(this));
         this.exceptionPredicate = circuitBreakerConfig.getExceptionPredicate();
