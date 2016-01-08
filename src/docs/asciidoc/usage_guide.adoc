@@ -7,18 +7,18 @@ This library comes with an in-memory `CircuitBreakerRegistry` based on a `Concur
 [source,java]
 ----
 // Create a InMemoryCircuitBreakerRegistry with a default global configuration
-// (maxFailures = 3, waitInterval = 60[s], ignoredExceptions = empty)
+// (maxFailures = 3, waitDuration = 60[s])
 CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
 ----
 
-As an alternative you can provide your own custom global `CircuitBreakerConfig`. In order to create a custom global CircuitBreakerConfig or a CircuitBreakerConfig for a specific CircuitBreaker, you can use the CircuitBreakerConfig builder. You can configure the maximum number of allowed failures and the wait interval [ms], which specifies how long the CircuitBreaker should stay in state `OPEN`.
+As an alternative you can provide your own custom global `CircuitBreakerConfig`. In order to create a custom global CircuitBreakerConfig or a CircuitBreakerConfig for a specific CircuitBreaker, you can use the CircuitBreakerConfig builder. You can configure the maximum number of allowed failures and the wait duration, which specifies how long the CircuitBreaker should stay in state `OPEN`.
 
 [source,java]
 ----
 // Create a custom configuration for a CircuitBreaker
 CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom()
     .maxFailures(1)
-    .waitInterval(1000)
+    .waitDuration(Duration.ofSeconds(1))
     .build();
 
 // Create a InMemoryCircuitBreakerRegistry with a custom global configuration
@@ -91,7 +91,7 @@ CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefault
 // Create a custom configration so that only 1 failure is allowed and the wait interval is 1[s]
 CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom()
     .maxFailures(1)
-    .waitInterval(1000)
+    .waitDuration(Duration.ofSeconds(1))
     .build();
 CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("uniqueName", circuitBreakerConfig);
 
@@ -173,7 +173,7 @@ You can also retry a failed function and recover from the exception, if the maxi
 [source,java]
 ----
 // Create a Retry context with a default global configuration
-// (maxAttempts = 3, waitInterval = 500[ms], ignoredExceptions = empty)
+// (maxAttempts = 3, waitDuration = 500[ms])
 Retry retryContext = Retry.ofDefaults();
 ----
 
@@ -183,7 +183,7 @@ In order to create a custom `Retry` context, you can use the Retry context build
 ----
 Retry retryContext = Retry.custom()
     .maxAttempts(2)
-    .waitInterval(1000)
+    .waitDuration(Duration.ofMillis(100))
     .onException(throwable -> Match.of(throwable)
         .whenType(WebServiceException.class).then(false)
         .otherwise(true).get())
@@ -199,10 +199,10 @@ HelloWorldService  helloWorldService = mock(HelloWorldService.class);
 given(helloWorldService.sayHelloWorld()).willThrow(new WebServiceException("BAM!"));
 
 // Create a Retry with default configuration
-// (maxAttempts = 3, waitInterval = 500[ms], ignoredExceptions = empty)
+// (maxAttempts = 3, waitDuration = 500[ms], ignoredExceptions = empty)
 Retry retryContext = Retry.ofDefaults();
 // Decorate the invocation of the HelloWorldService
-Try.CheckedSupplier<String> retryableSupplier = Retry.retryableCheckedSupplier(helloWorldService::sayHelloWorld, retryContext);
+Try.CheckedSupplier<String> retryableSupplier = Retry.decorateCheckedSupplier(helloWorldService::sayHelloWorld, retryContext);
 
 // When I invoke the function
 Try<String> result = Try.of(retryableSupplier).recover((throwable) -> "Hello world from recovery function");
