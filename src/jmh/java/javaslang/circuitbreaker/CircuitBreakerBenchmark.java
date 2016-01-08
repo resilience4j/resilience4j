@@ -18,14 +18,12 @@
  */
 package javaslang.circuitbreaker;
 
-import javaslang.circuitbreaker.CircuitBreaker;
-import javaslang.circuitbreaker.CircuitBreakerConfig;
-import javaslang.circuitbreaker.CircuitBreakerRegistry;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.Scope;
 import org.openjdk.jmh.annotations.Setup;
 import org.openjdk.jmh.annotations.State;
 
+import java.time.Duration;
 import java.util.function.Supplier;
 
 @State(Scope.Benchmark)
@@ -38,7 +36,7 @@ public class CircuitBreakerBenchmark {
     public void setUp() {
         CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.of(CircuitBreakerConfig.custom()
                 .maxFailures(1)
-                .waitDuration(1000)
+                .waitDuration(Duration.ofSeconds(1))
                 .build());
         circuitBreaker = circuitBreakerRegistry.circuitBreaker("testCircuitBreaker");
 

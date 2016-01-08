@@ -23,11 +23,11 @@ import javaslang.circuitbreaker.CircuitBreaker;
 final public class ClosedState extends CircuitBreakerState {
 
     ClosedState(CircuitBreakerStateMachine stateMachine) {
-        super(stateMachine, 0, 0);
+        super(stateMachine, 0);
     }
 
     /**
-     * Requests permission to call this circuitBreaker's backend.
+     * Requests permission to call this circuitBreaker's backend. The closed state always returns true.
      *
      * @return boolean whether a call should be permitted
      */
@@ -43,8 +43,8 @@ final public class ClosedState extends CircuitBreakerState {
     @Override
     public void recordFailure() {
         // if CLOSED, increase number of failures
-        int currentNumOfFailures = numOfFailures.incrementAndGet();
-        if (currentNumOfFailures > stateMachine.getMaxFailures()) {
+        numOfFailures.increment();
+        if (numOfFailures.sum() > stateMachine.getMaxFailures()) {
             // Too many failures, set new retryAfter to current time + wait duration
             retryAfter.set(System.currentTimeMillis() + stateMachine.getWaitDuration());
             stateMachine.transitionToOpenState(this, CircuitBreaker.StateTransition.CLOSED_TO_OPEN);
@@ -57,6 +57,7 @@ final public class ClosedState extends CircuitBreakerState {
      */
     @Override
     public void recordSuccess() {
+        // Thread-safe
         stateMachine.resetState();
     }
 

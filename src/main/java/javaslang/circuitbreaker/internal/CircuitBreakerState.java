@@ -20,8 +20,8 @@ package javaslang.circuitbreaker.internal;
 
 import javaslang.circuitbreaker.CircuitBreaker;
 
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.LongAdder;
 
 /**
  * States of the CircuitBreaker state machine.
@@ -29,12 +29,12 @@ import java.util.concurrent.atomic.AtomicLong;
 abstract class CircuitBreakerState {
 
     protected CircuitBreakerStateMachine stateMachine;
-    protected final AtomicInteger numOfFailures;
+    protected final LongAdder numOfFailures;
     protected final AtomicLong retryAfter;
 
-    public CircuitBreakerState(CircuitBreakerStateMachine stateMachine, int numOfFailures, long retryAfter) {
+    public CircuitBreakerState(CircuitBreakerStateMachine stateMachine, long retryAfter) {
         this.stateMachine = stateMachine;
-        this.numOfFailures = new AtomicInteger(numOfFailures);
+        this.numOfFailures = new LongAdder();
         this.retryAfter = new AtomicLong(retryAfter);
     }
 
@@ -44,7 +44,7 @@ abstract class CircuitBreakerState {
         this.retryAfter = currentState.getRetryAfter();
     }
 
-    private AtomicInteger getNumOfFailures(){
+    private LongAdder getNumOfFailures(){
         return numOfFailures;
     }
 

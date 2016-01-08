@@ -42,7 +42,8 @@ final public class HalfClosedState extends CircuitBreakerState {
      */
     @Override
     public void recordFailure() {
-        numOfFailures.incrementAndGet();
+        // Thread-safe
+        numOfFailures.increment();
         retryAfter.set(System.currentTimeMillis() + stateMachine.getWaitDuration());
         stateMachine.transitionToOpenState(this, CircuitBreaker.StateTransition.HALF_CLOSED_TO_OPEN);
     }
@@ -53,6 +54,7 @@ final public class HalfClosedState extends CircuitBreakerState {
      */
     @Override
     public void recordSuccess() {
+        // Thread-safe
         stateMachine.transitionToClosedState(CircuitBreaker.StateTransition.HALF_CLOSED_TO_CLOSED);
     }
 
