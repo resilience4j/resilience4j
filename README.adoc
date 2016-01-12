@@ -45,7 +45,7 @@ After the time duration has elapsed, the CircuitBreaker state changes to `HALF_C
 
 == Usage guide
 
-See http://javaslang.github.io/javaslang-circuitbreaker/0.2.0/[User Guide].
+See http://javaslang.github.io/javaslang-circuitbreaker/0.3.0/[User Guide].
 
 == License
 
