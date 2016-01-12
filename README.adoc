@@ -40,7 +40,7 @@ image::src/docs/asciidoc/images/ring_buffer.jpg[Ring Bit Buffer]
 The Ring Bit Buffer must be full, before the failure rate can be calculated.
 For example, if the size of the Ring Buffer is 10, then at least 10 calls must evaluated, before the failure rate can be calculated. If only 9 calls have been evaluated the CircuitBreaker will not trip open even if all 9 calls have failed.
 
-After the time duration has elapsed, the CircuitBreaker state changes from `OPEN` to `HALF_CLOSED` and allows calls to see if the backend is still unavailable or has become available again. The CircuitBreaker uses another (configurable) Ring Bit Buffer to evaluate the failure rate in the `HALF_CLOSED` state. If the failure rate is above the configured threshold, the state changes back to `OPEN`. If the failure rate is below the threshold, the state changes back to `CLOSED`.
+After the time duration has elapsed, the CircuitBreaker state changes from `OPEN` to `HALF_CLOSED` and allows calls to see if the backend is still unavailable or has become available again. The CircuitBreaker uses another (configurable) Ring Bit Buffer to evaluate the failure rate in the `HALF_CLOSED` state. If the failure rate is above the configured threshold, the state changes back to `OPEN`. If the failure rate is below or equal to the threshold, the state changes back to `CLOSED`.
 `CircuitBreaker::recordFailure(exception)` checks if the exception should be recorded as a failure or should be ignored. You can configure a custom `Predicate` which decides whether an exception should be recorded as a failure. The default Predicate records all exceptions as a failure.
 
 
