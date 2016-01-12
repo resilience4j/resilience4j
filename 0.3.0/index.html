@@ -515,33 +515,32 @@ table.CodeRay td.code>pre{padding:0}
 <h1>Javaslang-Circuitbreaker User Guide</h1>
 <div class="details">
 <span id="author" class="author">Robert Winkler</span><br>
-<span id="revnumber">version 0.2.0,</span>
-<span id="revdate">2016-01-07</span>
+<span id="revnumber">version 0.3.0,</span>
+<span id="revdate">2016-01-12</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">Table of Contents</div>
 <ul class="sectlevel1">
-<li><a href="#_introduction">1. Introduction</a></li>
-<li><a href="#_getting_started">2. Getting started</a>
+<li><a href="#_introduction">1. Introduction</a>
 <ul class="sectlevel2">
-<li><a href="#_gradle">2.1. Gradle</a></li>
+<li><a href="#_gradle">1.1. Gradle</a></li>
 </ul>
 </li>
-<li><a href="#_usage_guide">3. Usage Guide</a>
+<li><a href="#_usage_guide">2. Usage Guide</a>
 <ul class="sectlevel2">
-<li><a href="#_create_a_circuitbreaker">3.1. Create a CircuitBreaker</a></li>
-<li><a href="#_use_a_circuitbreaker">3.2. Use a CircuitBreaker</a></li>
-<li><a href="#_open_circuitbreaker_example">3.3. OPEN CircuitBreaker example</a></li>
-<li><a href="#_recover_from_an_exception">3.4. Recover from an exception</a></li>
-<li><a href="#_customize_exception_handler">3.5. Customize exception handler</a></li>
-<li><a href="#_customize_event_listener">3.6. Customize event listener</a></li>
-<li><a href="#_retry_a_failed_function">3.7. Retry a failed function</a></li>
-<li><a href="#_completablefuture_example">3.8. CompletableFuture example</a></li>
-<li><a href="#_reactive_streams_example">3.9. Reactive Streams example</a></li>
+<li><a href="#_create_a_circuitbreaker">2.1. Create a CircuitBreaker</a></li>
+<li><a href="#_use_a_circuitbreaker">2.2. Use a CircuitBreaker</a></li>
+<li><a href="#_open_circuitbreaker_example">2.3. OPEN CircuitBreaker example</a></li>
+<li><a href="#_recover_from_an_exception">2.4. Recover from an exception</a></li>
+<li><a href="#_customize_the_exception_handler">2.5. Customize the exception handler</a></li>
+<li><a href="#_customize_the_event_listener">2.6. Customize the event listener</a></li>
+<li><a href="#_retry_a_failed_function">2.7. Retry a failed function</a></li>
+<li><a href="#_use_a_completablefuture">2.8. Use a CompletableFuture</a></li>
+<li><a href="#_use_reactive_streams">2.9. Use Reactive Streams</a></li>
 </ul>
 </li>
-<li><a href="#_monitoring_reporting">4. Monitoring &amp; Reporting</a></li>
-<li><a href="#_license">5. License</a></li>
+<li><a href="#_monitoring_reporting">3. Monitoring &amp; Reporting</a></li>
+<li><a href="#_license">4. License</a></li>
 </ul>
 </div>
 </div>
@@ -550,8 +549,18 @@ table.CodeRay td.code>pre{padding:0}
 <h2 id="_introduction">1. Introduction</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>This library is a lightweight, easy-to-use fault tolerance library inspired by <a href="https://github.com/Netflix/Hystrix">Netflix Hystrix</a>, but designed solely for Java 8 and functional programming. The library provides several higher-order functions to decorate any <code>Supplier / Runnable / Function</code> or <code>CheckedSupplier / CheckedRunnable / CheckedFunction</code> with a <a href="http://martinfowler.com/bliki/CircuitBreaker.html">Circuit Breaker</a>. In the following I call the higher-order functions decorators. The decorators return an enhanced version of your function. Furthermore, the library provides a decorator to retry failed functions. You can stack more than one decorator on any given function. That means, you can combine a Retry decorator with a CircuitBreaker decorator. Any decorated function can be invoked synchronously or asynchronously. The project uses a functional library for Java 8 called <a href="https://github.com/javaslang/javaslang">javaslang</a>.<br>
-The CircuitBreaker is implemented via a finite state machine with three states: <code>CLOSED</code>, <code>OPEN</code> and <code>HALF_OPEN</code>. The CircuitBreaker does not know anything about the backend&#8217;s state by itself, but uses the information provided by the decorators via <code>CircuitBreaker::recordSuccess()</code> and <code>CircuitBreaker::recordFailure(throwable)</code>. The decorators are pure functions. The result of a decorator depends solely on the input parameters. See example:</p>
+<p>This library is a lightweight, easy-to-use fault tolerance library inspired by <a href="https://github.com/Netflix/Hystrix">Netflix Hystrix</a>, but designed solely for Java 8 and functional programming. The library provides several higher-order functions to decorate any <code>Supplier / Runnable / Function</code> or <code>CheckedSupplier / CheckedRunnable / CheckedFunction</code> with a <a href="http://martinfowler.com/bliki/CircuitBreaker.html">Circuit Breaker</a>. In the following I call the higher-order functions decorators. The decorators return an enhanced version of your function. Furthermore, the library provides a decorator to retry failed functions. You can stack more than one decorator on any given function. That means, you can combine a Retry decorator with a CircuitBreaker decorator. Any decorated function can be invoked synchronously or asynchronously. The project uses a functional library for Java 8 called <a href="https://github.com/javaslang/javaslang">Javaslang</a>.</p>
+</div>
+<div class="paragraph">
+<p>The CircuitBreaker is implemented via a finite state machine with three states: <code>CLOSED</code>, <code>OPEN</code> and <code>HALF_OPEN</code>.</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="images/state_machine.jpg" alt="state machine">
+</div>
+</div>
+<div class="paragraph">
+<p>The CircuitBreaker does not know anything about the backend&#8217;s state by itself, but uses the information provided by the decorators via <code>CircuitBreaker::recordSuccess()</code> and <code>CircuitBreaker::recordFailure(throwable)</code>. See example:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -571,63 +580,92 @@ The CircuitBreaker is implemented via a finite state machine with three states: 
 </div>
 </div>
 <div class="paragraph">
-<p>The state of the CircuitBreaker changes from <code>CLOSED</code> to <code>OPEN</code> if a (configurable) number of call attempts have failed consecutively. Then, all access to the backend is blocked for a (configurable) time interval. <code>CircuitBreaker::isCallPermitted()</code> throws a <code>CircuitBreakerOpenException</code>, if the CircuitBreaker is <code>OPEN</code>.<br>
-After the time interval has elapsed, the CircuitBreaker state changes to <code>HALF_CLOSED</code> and allows calls to see if the backend is still unavailable or has become available again. On success or failure, the state changes back to <code>CLOSED</code> or <code>OPEN</code>, respectively. <code>CircuitBreaker::recordFailure(exception)</code> also checks if the type of exception should increase the number of failure attempts.</p>
+<p>The state of the CircuitBreaker changes from <code>CLOSED</code> to <code>OPEN</code> when the failure rate is above a (configurable) threshold.<br>
+Then, all access to the backend is blocked for a (configurable) time duration. <code>CircuitBreaker::isCallPermitted()</code> throws a <code>CircuitBreakerOpenException</code>, if the CircuitBreaker is <code>OPEN</code>.</p>
+</div>
+<div class="paragraph">
+<p>The CircuitBreaker stores the success / failure status of the calls in a Ring Bit Buffer. A successful call is a <code>0</code> bit and a failed call is a <code>1</code> bit. The Ring Bit Buffer has a (configurable) fixed-size. The Ring Bit Buffer uses internally a <a href="https://docs.oracle.com/javase/8/docs/api/java/util/BitSet.html">BitSet</a> to store the bits which is saving memory compared to a boolean array.</p>
 </div>
 <div class="imageblock">
 <div class="content">
-<img src="images/state_machine.jpg" alt="state machine">
+<img src="images/ring_buffer.jpg" alt="Ring Bit Buffer">
 </div>
 </div>
+<div class="paragraph">
+<p>The Ring Bit Buffer must be full, before the failure rate can be calculated.<br>
+For example, if the size of the Ring Buffer is 100, then at least 100 calls must be evaluated, before the failure rate can be calculated. If only 99 calls have been evaluated the CircuitBreaker will not trip open even if all 99 calls have failed.</p>
 </div>
+<div class="paragraph">
+<p>After the time duration has elapsed, the CircuitBreaker state changes to <code>HALF_CLOSED</code> and allows calls to see if the backend is still unavailable or has become available again. The CircuitBreaker uses a new Ring Bit Buffer to evaluate the failure rate in the <code>HALF_CLOSED</code> state. If the failure rate is above the threshold, the state changes back to <code>OPEN</code>. If the failure rate is below the threshold, the state changes back to <code>CLOSED</code>.<br>
+<code>CircuitBreaker::recordFailure(exception)</code> also checks if the type of exception should be recored as a failure and increase the failure rate. You can configure the types of exceptions which should be recored as a failure. By default all types of exceptions are recored as failures.<br>
+== Getting started</p>
 </div>
-<div class="sect1">
-<h2 id="_getting_started">2. Getting started</h2>
-<div class="sectionbody">
 <div class="paragraph">
 <p>The projects requires JDK 8. The project is published in JCenter and Maven Central.</p>
 </div>
 <div class="sect2">
-<h3 id="_gradle">2.1. Gradle</h3>
+<h3 id="_gradle">1.1. Gradle</h3>
 <div class="listingblock">
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="groovy">repositories {
     jcenter()
 }
 
-compile "io.github.robwin:javaslang-circuitbreaker:0.2.0"</code></pre>
+compile "io.github.robwin:javaslang-circuitbreaker:0.3.0"</code></pre>
 </div>
 </div>
 </div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_usage_guide">3. Usage Guide</h2>
+<h2 id="_usage_guide">2. Usage Guide</h2>
 <div class="sectionbody">
 <div class="sect2">
-<h3 id="_create_a_circuitbreaker">3.1. Create a CircuitBreaker</h3>
+<h3 id="_create_a_circuitbreaker">2.1. Create a CircuitBreaker</h3>
 <div class="paragraph">
-<p>This library comes with an <code>InMemoryCircuitBreakerRegistry</code> based on a <code>ConcurrentMap</code> which provides thread safety and atomicity guarantees. You must use the CircuitBreakerRegistry to manage (create and retrieve) your CircuitBreakers. You can create a <code>InMemoryCircuitBreakerRegistry</code> with a default global <code>CircuitBreakerConfig</code> for all of your CircuitBreakers as follows.</p>
+<p>This library comes with an in-memory <code>CircuitBreakerRegistry</code> based on a <code>ConcurrentHashMap</code> which provides thread safety and atomicity guarantees. You must use the CircuitBreakerRegistry to manage (create and retrieve) your CircuitBreakers. You can create a CircuitBreakerRegistry with a default global <code>CircuitBreakerConfig</code> for all of your CircuitBreakers as follows.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="CodeRay highlight"><code data-lang="java"><span class="comment">// Create a InMemoryCircuitBreakerRegistry with a default global configuration</span>
-<span class="comment">// (maxFailures = 3, waitInterval = 60[s], ignoredExceptions = empty)</span>
-CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();</code></pre>
+<pre class="CodeRay highlight"><code data-lang="java">CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();</code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>As an alternative you can provide your own custom global <code>CircuitBreakerConfig</code>. In order to create a custom global CircuitBreakerConfig or a CircuitBreakerConfig for a specific CircuitBreaker, you can use the CircuitBreakerConfig builder. You can configure the maximum number of allowed failures and the wait interval [ms], which specifies how long the CircuitBreaker should stay in state <code>OPEN</code>.</p>
+<p>As an alternative you can provide your own custom global <code>CircuitBreakerConfig</code>. In order to create a custom global CircuitBreakerConfig or a CircuitBreakerConfig for a specific CircuitBreaker, you can use the CircuitBreakerConfig builder. You can configure:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>the failure rate threshold in percentage above which the CircuitBreaker should trip open and start short-circuiting calls</p>
+</li>
+<li>
+<p>the wait duration which specifies how long the CircuitBreaker should stay open, before it switches to half closed</p>
+</li>
+<li>
+<p>the size of the ring buffer when the CircuitBreaker is half open</p>
+</li>
+<li>
+<p>the size of the ring buffer when the CircuitBreaker is closed</p>
+</li>
+<li>
+<p>a custom CircuitBreakerEventListener which handles CircuitBreaker events</p>
+</li>
+<li>
+<p>a custom Predicate which evaluates if an exception should be recorded as a failure and thus increase the failure rate</p>
+</li>
+</ul>
 </div>
 <div class="listingblock">
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="java"><span class="comment">// Create a custom configuration for a CircuitBreaker</span>
 CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom()
-    .maxFailures(<span class="integer">1</span>)
-    .waitInterval(<span class="integer">1000</span>)
+    .failureRateThreshold(<span class="integer">50</span>)
+    .waitDurationInOpenState(<span class="predefined-type">Duration</span>.ofMillis(<span class="integer">1000</span>))
+    .ringBufferSizeInHalfOpenState(<span class="integer">2</span>)
+    .ringBufferSizeInClosedState(<span class="integer">2</span>)
     .build();
 
-<span class="comment">// Create a InMemoryCircuitBreakerRegistry with a custom global configuration</span>
+<span class="comment">// Create a CircuitBreakerRegistry with a custom global configuration</span>
 CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.of(circuitBreakerConfig);
 
 <span class="comment">// Get a CircuitBreaker from the CircuitBreakerRegistry with the global default configuration</span>
@@ -639,37 +677,37 @@ CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker(<span clas
 </div>
 </div>
 <div class="sect2">
-<h3 id="_use_a_circuitbreaker">3.2. Use a CircuitBreaker</h3>
+<h3 id="_use_a_circuitbreaker">2.2. Use a CircuitBreaker</h3>
 <div class="paragraph">
-<p>You can decorate any <code>Supplier / Runnable / Function</code> or <code>CheckedSupplier / CheckedRunnable / CheckedFunction</code> function with <code>CircuitBreaker.decorateCheckedSupplier()</code>, <code>CircuitBreaker.decorateCheckedRunnable()</code> or <code>CircuitBreaker.decorateCheckedFunction()</code>. You can invoke the returned function with <code>Try.of()</code> or <code>Try.run()</code> from <a href="https://github.com/javaslang/javaslang">javaslang</a>. This allows to chain further functions with <code>map</code>, <code>flatMap</code>, <code>filter</code>, <code>recover</code> or <code>andThen</code>. The chained functions are only invoked, if the CircuitBreaker is CLOSED or HALF_CLOSED.<br>
-In the following example, <code>Try.of()</code> returns a <code>Success&lt;String&gt;</code> Monad, if the invocation of the function is successful. If the function throws an exception, a <code>Failure&lt;Throwable&gt;</code> Monad is returned and <code>map</code> is not invoked.</p>
+<p>You can decorate any <code>Supplier / Runnable / Function</code> or <code>CheckedSupplier / CheckedRunnable / CheckedFunction</code> function with <code>CircuitBreaker.decorateCheckedSupplier()</code>, <code>CircuitBreaker.decorateCheckedRunnable()</code> or <code>CircuitBreaker.decorateCheckedFunction()</code>.<br>
+You can invoke the decorated function with <code>Try.of(&#8230;&#8203;)</code> or <code>Try.run(&#8230;&#8203;)</code> from <a href="https://github.com/javaslang/javaslang">Javaslang</a>. This allows to chain further functions with <code>map</code>, <code>flatMap</code>, <code>filter</code>, <code>recover</code> or <code>andThen</code>. The chained functions are only invoked, if the CircuitBreaker is CLOSED or HALF_CLOSED.<br>
+In the following example, <code>Try.of(&#8230;&#8203;)</code> returns a <code>Success&lt;String&gt;</code> Monad, if the invocation of the function is successful. If the function throws an exception, a <code>Failure&lt;Throwable&gt;</code> Monad is returned and <code>map</code> is not invoked.</p>
 </div>
 <div class="listingblock">
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="java"><span class="comment">// Given</span>
 CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
-CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker(<span class="string"><span class="delimiter">&quot;</span><span class="content">uniqueName</span><span class="delimiter">&quot;</span></span>);
+CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker(<span class="string"><span class="delimiter">&quot;</span><span class="content">testName</span><span class="delimiter">&quot;</span></span>);
 
-<span class="comment">// When</span>
+<span class="comment">// When I decorate my function</span>
 Try.CheckedSupplier&lt;<span class="predefined-type">String</span>&gt; decoratedSupplier = CircuitBreaker
         .decorateCheckedSupplier(() -&gt; <span class="string"><span class="delimiter">&quot;</span><span class="content">This can be any method which returns: 'Hello</span><span class="delimiter">&quot;</span></span>, circuitBreaker);
 
-<span class="comment">// You can chain other functions with `map` and `flatMap`.</span>
-<span class="comment">// The `Try` Monad returns a `Success&lt;String&gt;`, if all functions run successfully.</span>
+<span class="comment">// and chain an other function with map</span>
 Try&lt;<span class="predefined-type">String</span>&gt; result = Try.of(decoratedSupplier)
                 .map(value -&gt; value + <span class="string"><span class="delimiter">&quot;</span><span class="content"> world'</span><span class="delimiter">&quot;</span></span>);
 
-<span class="comment">// Then</span>
+<span class="comment">// Then the Try Monad returns a Success&lt;String&gt;, if all functions ran successfully.</span>
 assertThat(result.isSuccess()).isTrue();
 assertThat(result.get()).isEqualTo(<span class="string"><span class="delimiter">&quot;</span><span class="content">This can be any method which returns: 'Hello world'</span><span class="delimiter">&quot;</span></span>);</code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>You could also chain up functions which are decorated by different CircuitBreakers.</p>
+<p>You can also chain up functions which are decorated by different CircuitBreakers.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="CodeRay highlight"><code data-lang="java"><span class="comment">//Given</span>
+<pre class="CodeRay highlight"><code data-lang="java"><span class="comment">// Given</span>
 CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
 CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker(<span class="string"><span class="delimiter">&quot;</span><span class="content">testName</span><span class="delimiter">&quot;</span></span>);
 CircuitBreaker anotherCircuitBreaker = circuitBreakerRegistry.circuitBreaker(<span class="string"><span class="delimiter">&quot;</span><span class="content">anotherTestName</span><span class="delimiter">&quot;</span></span>);
@@ -681,40 +719,39 @@ Try.CheckedSupplier&lt;<span class="predefined-type">String</span>&gt; decorated
 Try.CheckedFunction&lt;<span class="predefined-type">String</span>, <span class="predefined-type">String</span>&gt; decoratedFunction = CircuitBreaker
         .decorateCheckedFunction((input) -&gt; input + <span class="string"><span class="delimiter">&quot;</span><span class="content"> world</span><span class="delimiter">&quot;</span></span>, anotherCircuitBreaker);
 
-<span class="comment">// and I chain a function with `map`.</span>
+<span class="comment">// and I chain a function with map</span>
 Try&lt;<span class="predefined-type">String</span>&gt; result = Try.of(decoratedSupplier)
-        .map(decoratedFunction);
+        .mapTry(decoratedFunction::apply);
 
 <span class="comment">// Then</span>
+assertThat(result.isSuccess()).isTrue();
 assertThat(result.get()).isEqualTo(<span class="string"><span class="delimiter">&quot;</span><span class="content">Hello world</span><span class="delimiter">&quot;</span></span>);</code></pre>
 </div>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_open_circuitbreaker_example">3.3. OPEN CircuitBreaker example</h3>
+<h3 id="_open_circuitbreaker_example">2.3. OPEN CircuitBreaker example</h3>
 <div class="paragraph">
 <p>In this example <code>map</code> is not invoked, because the CircuitBreaker is OPEN. The call to <code>Try.of</code> returns a <code>Failure&lt;Throwable&gt;</code> Monad so that the chained function is not invoked.</p>
 </div>
 <div class="listingblock">
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="java"><span class="comment">// Given</span>
-CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
-<span class="comment">// Create a custom configration so that only 1 failure is allowed and the wait interval is 1[s]</span>
 CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom()
-    .maxFailures(<span class="integer">1</span>)
-    .waitInterval(<span class="integer">1000</span>)
-    .build();
-CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker(<span class="string"><span class="delimiter">&quot;</span><span class="content">uniqueName</span><span class="delimiter">&quot;</span></span>, circuitBreakerConfig);
+        .ringBufferSizeInClosedState(<span class="integer">2</span>)
+        .waitDurationInOpenState(<span class="predefined-type">Duration</span>.ofMillis(<span class="integer">1000</span>))
+        .build();
+CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.of(circuitBreakerConfig);
 
-<span class="comment">// CircuitBreaker is initially CLOSED</span>
-assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
+CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker(<span class="string"><span class="delimiter">&quot;</span><span class="content">uniqueName</span><span class="delimiter">&quot;</span></span>);
+
 <span class="comment">// Simulate a failure attempt</span>
 circuitBreaker.recordFailure(<span class="keyword">new</span> <span class="exception">RuntimeException</span>());
 <span class="comment">// CircuitBreaker is still CLOSED, because 1 failure is allowed</span>
 assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
 <span class="comment">// Simulate a failure attempt</span>
 circuitBreaker.recordFailure(<span class="keyword">new</span> <span class="exception">RuntimeException</span>());
-<span class="comment">// CircuitBreaker is OPEN, because maxFailures &gt; 1</span>
+<span class="comment">// CircuitBreaker is OPEN, because the failure rate is above 50%</span>
 assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.OPEN);
 
 <span class="comment">// When I decorate my function and invoke the decorated function</span>
@@ -723,31 +760,30 @@ Try&lt;<span class="predefined-type">String</span>&gt; result = Try.of(CircuitBr
 
 <span class="comment">// Then the call fails, because CircuitBreaker is OPEN</span>
 assertThat(result.isFailure()).isTrue();
-<span class="comment">// and the exception is a CircuitBreakerOpenException</span>
+<span class="comment">// Exception is CircuitBreakerOpenException</span>
 assertThat(result.failed().get()).isInstanceOf(CircuitBreakerOpenException.class);</code></pre>
 </div>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_recover_from_an_exception">3.4. Recover from an exception</h3>
+<h3 id="_recover_from_an_exception">2.4. Recover from an exception</h3>
 <div class="paragraph">
 <p>If you want to recover from any exception, you can chain the method <code>Try.recover()</code>. The recovery method is only invoked, if <code>Try.of()</code> returns a <code>Failure&lt;Throwable&gt;</code> Monad.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="CodeRay highlight"><code data-lang="java"><span class="comment">//Given</span>
+<pre class="CodeRay highlight"><code data-lang="java"><span class="comment">// Given</span>
 CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
-CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker(<span class="string"><span class="delimiter">&quot;</span><span class="content">uniqueName</span><span class="delimiter">&quot;</span></span>);
+CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker(<span class="string"><span class="delimiter">&quot;</span><span class="content">testName</span><span class="delimiter">&quot;</span></span>);
 
 <span class="comment">// When I decorate my function and invoke the decorated function</span>
 Try.CheckedSupplier&lt;<span class="predefined-type">String</span>&gt; checkedSupplier = CircuitBreaker.decorateCheckedSupplier(() -&gt; {
-        <span class="predefined-type">Thread</span>.sleep(<span class="integer">1000</span>);
-        <span class="keyword">throw</span> <span class="keyword">new</span> <span class="exception">RuntimeException</span>(<span class="string"><span class="delimiter">&quot;</span><span class="content">BAM!</span><span class="delimiter">&quot;</span></span>);
-    }, circuitBreaker);
+    <span class="keyword">throw</span> <span class="keyword">new</span> <span class="exception">RuntimeException</span>(<span class="string"><span class="delimiter">&quot;</span><span class="content">BAM!</span><span class="delimiter">&quot;</span></span>);
+}, circuitBreaker);
 Try&lt;<span class="predefined-type">String</span>&gt; result = Try.of(checkedSupplier)
-        .recover((throwable) -&gt; <span class="string"><span class="delimiter">&quot;</span><span class="content">Hello Recovery</span><span class="delimiter">&quot;</span></span>);
+        .recover(throwable -&gt; <span class="string"><span class="delimiter">&quot;</span><span class="content">Hello Recovery</span><span class="delimiter">&quot;</span></span>);
 
-<span class="comment">//Then the function should be a success, because the exception could be recovered</span>
+<span class="comment">// Then the function should be a success, because the exception could be recovered</span>
 assertThat(result.isSuccess()).isTrue();
 <span class="comment">// and the result must match the result of the recovery function.</span>
 assertThat(result.get()).isEqualTo(<span class="string"><span class="delimiter">&quot;</span><span class="content">Hello Recovery</span><span class="delimiter">&quot;</span></span>);</code></pre>
@@ -755,7 +791,7 @@ assertThat(result.get()).isEqualTo(<span class="string"><span class="delimiter">
 </div>
 </div>
 <div class="sect2">
-<h3 id="_customize_exception_handler">3.5. Customize exception handler</h3>
+<h3 id="_customize_the_exception_handler">2.5. Customize the exception handler</h3>
 <div class="paragraph">
 <p>The default exception handler counts all type of exceptions as failures and triggers the CircuitBreaker. If you want to use a custom exception handler, you have to implement the functional interface <code>Predicate</code> which has a method <code>test</code>. The Predicate must return true if the exception should count as a failure, otherwise it must return false.<br>
 The following example shows how to ignore an <code>IOException</code>, but all other exception types still count as failures.</p>
@@ -764,14 +800,17 @@ The following example shows how to ignore an <code>IOException</code>, but all o
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="java"><span class="comment">// Given</span>
 CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom()
-        .maxFailures(<span class="integer">1</span>)
-        .waitInterval(<span class="integer">1000</span>)
-        .onException(throwable -&gt; Match.of(throwable)
+        .ringBufferSizeInClosedState(<span class="integer">2</span>)
+        .ringBufferSizeInHalfOpenState(<span class="integer">2</span>)
+        .waitDurationInOpenState(<span class="predefined-type">Duration</span>.ofMillis(<span class="integer">1000</span>))
+        .recordFailure(throwable -&gt; Match.of(throwable)
                 .whenType(<span class="exception">IOException</span>.class).then(<span class="predefined-constant">false</span>)
                 .otherwise(<span class="predefined-constant">true</span>).get())
         .build();
-CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker(<span class="string"><span class="delimiter">&quot;</span><span class="content">testName</span><span class="delimiter">&quot;</span></span>, circuitBreakerConfig);
+CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.of(circuitBreakerConfig);
+CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker(<span class="string"><span class="delimiter">&quot;</span><span class="content">testName</span><span class="delimiter">&quot;</span></span>);
 
+<span class="comment">// Simulate a failure attempt</span>
 circuitBreaker.recordFailure(<span class="keyword">new</span> <span class="exception">RuntimeException</span>());
 <span class="comment">// CircuitBreaker is still CLOSED, because 1 failure is allowed</span>
 assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
@@ -784,14 +823,14 @@ Try result = Try.run(checkedRunnable);
 
 <span class="comment">//Then</span>
 assertThat(result.isFailure()).isTrue();
-<span class="comment">// CircuitBreaker is still CLOSED, because SocketTimeoutException is ignored</span>
+<span class="comment">// CircuitBreaker is still CLOSED, because SocketTimeoutException has not been recorded as a failure</span>
 assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
 assertThat(result.failed().get()).isInstanceOf(<span class="exception">IOException</span>.class);</code></pre>
 </div>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_customize_event_listener">3.6. Customize event listener</h3>
+<h3 id="_customize_the_event_listener">2.6. Customize the event listener</h3>
 <div class="paragraph">
 <p>The default event listener logs state transitions with INFO level.</p>
 </div>
@@ -812,33 +851,33 @@ assertThat(result.failed().get()).isInstanceOf(<span class="exception">IOExcepti
 </div>
 </div>
 <div class="sect2">
-<h3 id="_retry_a_failed_function">3.7. Retry a failed function</h3>
+<h3 id="_retry_a_failed_function">2.7. Retry a failed function</h3>
 <div class="paragraph">
 <p>You can also retry a failed function and recover from the exception, if the maximum retry count was reached. You can create a <code>Retry</code> context using a default configuration as follows.</p>
 </div>
 <div class="listingblock">
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="java"><span class="comment">// Create a Retry context with a default global configuration</span>
-<span class="comment">// (maxAttempts = 3, waitInterval = 500[ms], ignoredExceptions = empty)</span>
+<span class="comment">// (maxAttempts = 3, waitDurationInOpenState = 500[ms])</span>
 Retry retryContext = Retry.ofDefaults();</code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>In order to create a custom <code>Retry</code> context, you can use the Retry context builder. You can configure the maximum number of retry attempts and the wait interval [ms] between successive attempts. Furthermore, you can add exceptions to the ignore list which must not trigger a retry.</p>
+<p>In order to create a custom <code>Retry</code> context, you can use the Retry context builder. You can configure the maximum number of retry attempts and the wait duration between successive attempts. Furthermore, you can configure a custom Predicate which evaluates if an exception should trigger a retry.</p>
 </div>
 <div class="listingblock">
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="java">Retry retryContext = Retry.custom()
     .maxAttempts(<span class="integer">2</span>)
-    .waitInterval(<span class="integer">1000</span>)
-    .onException(throwable -&gt; Match.of(throwable)
+    .waitDurationInOpenState(<span class="predefined-type">Duration</span>.ofMillis(<span class="integer">100</span>))
+    .retryOnException(throwable -&gt; Match.of(throwable)
         .whenType(WebServiceException.class).then(<span class="predefined-constant">false</span>)
         .otherwise(<span class="predefined-constant">true</span>).get())
     .build();</code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>You can decorate any <code>Supplier / Runnable / Function</code> or <code>CheckedSupplier / CheckedRunnable / CheckedFunction</code> function with <code>Retry.retryableCheckedSupplier()</code>, <code>Retry.retryableCheckedRunnable()</code> or <code>Retry.retryableCheckedFunction()</code>.</p>
+<p>You can decorate any <code>Supplier / Runnable / Function</code> or <code>CheckedSupplier / CheckedRunnable / CheckedFunction</code> function with <code>Retry.decorateCheckedSupplier()</code>, <code>Retry.decorateCheckedRunnable()</code> or <code>Retry.decorateCheckedFunction()</code>.</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -847,10 +886,9 @@ HelloWorldService  helloWorldService = mock(HelloWorldService.class);
 given(helloWorldService.sayHelloWorld()).willThrow(<span class="keyword">new</span> WebServiceException(<span class="string"><span class="delimiter">&quot;</span><span class="content">BAM!</span><span class="delimiter">&quot;</span></span>));
 
 <span class="comment">// Create a Retry with default configuration</span>
-<span class="comment">// (maxAttempts = 3, waitInterval = 500[ms], ignoredExceptions = empty)</span>
 Retry retryContext = Retry.ofDefaults();
 <span class="comment">// Decorate the invocation of the HelloWorldService</span>
-Try.CheckedSupplier&lt;<span class="predefined-type">String</span>&gt; retryableSupplier = Retry.retryableCheckedSupplier(helloWorldService::sayHelloWorld, retryContext);
+Try.CheckedSupplier&lt;<span class="predefined-type">String</span>&gt; retryableSupplier = Retry.decorateCheckedSupplier(helloWorldService::sayHelloWorld, retryContext);
 
 <span class="comment">// When I invoke the function</span>
 Try&lt;<span class="predefined-type">String</span>&gt; result = Try.of(retryableSupplier).recover((throwable) -&gt; <span class="string"><span class="delimiter">&quot;</span><span class="content">Hello world from recovery function</span><span class="delimiter">&quot;</span></span>);
@@ -863,7 +901,7 @@ assertThat(result.get()).isEqualTo(<span class="string"><span class="delimiter">
 </div>
 </div>
 <div class="sect2">
-<h3 id="_completablefuture_example">3.8. CompletableFuture example</h3>
+<h3 id="_use_a_completablefuture">2.8. Use a CompletableFuture</h3>
 <div class="paragraph">
 <p>You can also invoke a decorated function asynchronously by using a <code>CompletableFuture</code> and chain further functions.</p>
 </div>
@@ -872,6 +910,7 @@ assertThat(result.get()).isEqualTo(<span class="string"><span class="delimiter">
 <pre class="CodeRay highlight"><code data-lang="java"><span class="comment">// Given</span>
 CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
 CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker(<span class="string"><span class="delimiter">&quot;</span><span class="content">testName</span><span class="delimiter">&quot;</span></span>);
+assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
 
 <span class="comment">// When</span>
 Supplier&lt;<span class="predefined-type">String</span>&gt; decoratedSupplier = CircuitBreaker
@@ -886,7 +925,7 @@ assertThat(future.get()).isEqualTo(<span class="string"><span class="delimiter">
 </div>
 </div>
 <div class="sect2">
-<h3 id="_reactive_streams_example">3.9. Reactive Streams example</h3>
+<h3 id="_use_reactive_streams">2.9. Use Reactive Streams</h3>
 <div class="paragraph">
 <p>You can also invoke a decorated function asynchronously by using a Reactive Streams implementation like <a href="https://github.com/ReactiveX/RxJava">RxJava</a> or <a href="https://github.com/reactor/reactor/">Project Reactor</a>.</p>
 </div>
@@ -922,7 +961,7 @@ Streams.generate(supplier::get)
 </div>
 </div>
 <div class="sect1">
-<h2 id="_monitoring_reporting">4. Monitoring &amp; Reporting</h2>
+<h2 id="_monitoring_reporting">3. Monitoring &amp; Reporting</h2>
 <div class="sectionbody">
 <div class="paragraph">
 <p>You could monitor and report the state of your CircuitBreakers and runtime metrics by using Metrics <a href="https://dropwizard.github.io/metrics/3.1.0/getting-started/#health-checks">Health Checks</a> and <a href="https://dropwizard.github.io/metrics/3.1.0/getting-started/#reporting-via-http">Reporting via JMX or HTTP</a>.</p>
@@ -994,7 +1033,7 @@ reporter.start(<span class="integer">1</span>, <span class="predefined-type">Tim
 </div>
 </div>
 <div class="sect1">
-<h2 id="_license">5. License</h2>
+<h2 id="_license">4. License</h2>
 <div class="sectionbody">
 <div class="paragraph">
 <p>Copyright 2015 Robert Winkler</p>
@@ -1015,7 +1054,7 @@ reporter.start(<span class="integer">1</span>, <span class="predefined-type">Tim
 </div>
 <div id="footer">
 <div id="footer-text">
-Version 0.2.0<br>
+Version 0.3.0<br>
 Last updated 2016-01-07 13:11:57 MEZ
 </div>
 </div>
