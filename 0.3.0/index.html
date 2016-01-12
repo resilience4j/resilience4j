@@ -521,26 +521,27 @@ table.CodeRay td.code>pre{padding:0}
 <div id="toc" class="toc2">
 <div id="toctitle">Table of Contents</div>
 <ul class="sectlevel1">
-<li><a href="#_introduction">1. Introduction</a>
+<li><a href="#_introduction">1. Introduction</a></li>
+<li><a href="#_getting_started">2. Getting started</a>
 <ul class="sectlevel2">
-<li><a href="#_gradle">1.1. Gradle</a></li>
+<li><a href="#_gradle">2.1. Gradle</a></li>
 </ul>
 </li>
-<li><a href="#_usage_guide">2. Usage Guide</a>
+<li><a href="#_usage_guide">3. Usage Guide</a>
 <ul class="sectlevel2">
-<li><a href="#_create_a_circuitbreaker">2.1. Create a CircuitBreaker</a></li>
-<li><a href="#_use_a_circuitbreaker">2.2. Use a CircuitBreaker</a></li>
-<li><a href="#_open_circuitbreaker_example">2.3. OPEN CircuitBreaker example</a></li>
-<li><a href="#_recover_from_an_exception">2.4. Recover from an exception</a></li>
-<li><a href="#_customize_the_exception_handler">2.5. Customize the exception handler</a></li>
-<li><a href="#_customize_the_event_listener">2.6. Customize the event listener</a></li>
-<li><a href="#_retry_a_failed_function">2.7. Retry a failed function</a></li>
-<li><a href="#_use_a_completablefuture">2.8. Use a CompletableFuture</a></li>
-<li><a href="#_use_reactive_streams">2.9. Use Reactive Streams</a></li>
+<li><a href="#_create_a_circuitbreaker">3.1. Create a CircuitBreaker</a></li>
+<li><a href="#_use_a_circuitbreaker">3.2. Use a CircuitBreaker</a></li>
+<li><a href="#_open_circuitbreaker_example">3.3. OPEN CircuitBreaker example</a></li>
+<li><a href="#_recover_from_an_exception">3.4. Recover from an exception</a></li>
+<li><a href="#_customize_the_exception_handler">3.5. Customize the exception handler</a></li>
+<li><a href="#_customize_the_event_listener">3.6. Customize the event listener</a></li>
+<li><a href="#_retry_a_failed_function">3.7. Retry a failed function</a></li>
+<li><a href="#_use_a_completablefuture">3.8. Use a CompletableFuture</a></li>
+<li><a href="#_use_reactive_streams">3.9. Use Reactive Streams</a></li>
 </ul>
 </li>
-<li><a href="#_monitoring_reporting">3. Monitoring &amp; Reporting</a></li>
-<li><a href="#_license">4. License</a></li>
+<li><a href="#_monitoring_reporting">4. Monitoring &amp; Reporting</a></li>
+<li><a href="#_license">5. License</a></li>
 </ul>
 </div>
 </div>
@@ -597,14 +598,18 @@ For example, if the size of the Ring Buffer is 100, then at least 100 calls must
 </div>
 <div class="paragraph">
 <p>After the time duration has elapsed, the CircuitBreaker state changes to <code>HALF_CLOSED</code> and allows calls to see if the backend is still unavailable or has become available again. The CircuitBreaker uses a new Ring Bit Buffer to evaluate the failure rate in the <code>HALF_CLOSED</code> state. If the failure rate is above the threshold, the state changes back to <code>OPEN</code>. If the failure rate is below the threshold, the state changes back to <code>CLOSED</code>.<br>
-<code>CircuitBreaker::recordFailure(exception)</code> also checks if the exception should be recorded as a failure and increase the failure rate. You can configure the exceptions which should be recorded as a failure. By default all types of exceptions are recorded as failures.<br>
-== Getting started</p>
+<code>CircuitBreaker::recordFailure(exception)</code> also checks if the exception should be recorded as a failure and increase the failure rate. You can configure the exceptions which should be recorded as a failure. By default all types of exceptions are recorded as failures.</p>
 </div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_getting_started">2. Getting started</h2>
+<div class="sectionbody">
 <div class="paragraph">
 <p>The projects requires JDK 8. The project is published in JCenter and Maven Central.</p>
 </div>
 <div class="sect2">
-<h3 id="_gradle">1.1. Gradle</h3>
+<h3 id="_gradle">2.1. Gradle</h3>
 <div class="listingblock">
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="groovy">repositories {
@@ -618,10 +623,10 @@ compile "io.github.robwin:javaslang-circuitbreaker:0.3.0"</code></pre>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_usage_guide">2. Usage Guide</h2>
+<h2 id="_usage_guide">3. Usage Guide</h2>
 <div class="sectionbody">
 <div class="sect2">
-<h3 id="_create_a_circuitbreaker">2.1. Create a CircuitBreaker</h3>
+<h3 id="_create_a_circuitbreaker">3.1. Create a CircuitBreaker</h3>
 <div class="paragraph">
 <p>This library comes with an in-memory <code>CircuitBreakerRegistry</code> based on a <code>ConcurrentHashMap</code> which provides thread safety and atomicity guarantees. You must use the CircuitBreakerRegistry to manage (create and retrieve) your CircuitBreakers. You can create a CircuitBreakerRegistry with a default global <code>CircuitBreakerConfig</code> for all of your CircuitBreakers as follows.</p>
 </div>
@@ -677,7 +682,7 @@ CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker(<span clas
 </div>
 </div>
 <div class="sect2">
-<h3 id="_use_a_circuitbreaker">2.2. Use a CircuitBreaker</h3>
+<h3 id="_use_a_circuitbreaker">3.2. Use a CircuitBreaker</h3>
 <div class="paragraph">
 <p>You can decorate any <code>Supplier / Runnable / Function</code> or <code>CheckedSupplier / CheckedRunnable / CheckedFunction</code> function with <code>CircuitBreaker.decorateCheckedSupplier()</code>, <code>CircuitBreaker.decorateCheckedRunnable()</code> or <code>CircuitBreaker.decorateCheckedFunction()</code>.<br>
 You can invoke the decorated function with <code>Try.of(&#8230;&#8203;)</code> or <code>Try.run(&#8230;&#8203;)</code> from <a href="https://github.com/javaslang/javaslang">Javaslang</a>. This allows to chain further functions with <code>map</code>, <code>flatMap</code>, <code>filter</code>, <code>recover</code> or <code>andThen</code>. The chained functions are only invoked, if the CircuitBreaker is CLOSED or HALF_CLOSED.<br>
@@ -730,7 +735,7 @@ assertThat(result.get()).isEqualTo(<span class="string"><span class="delimiter">
 </div>
 </div>
 <div class="sect2">
-<h3 id="_open_circuitbreaker_example">2.3. OPEN CircuitBreaker example</h3>
+<h3 id="_open_circuitbreaker_example">3.3. OPEN CircuitBreaker example</h3>
 <div class="paragraph">
 <p>In this example <code>map</code> is not invoked, because the CircuitBreaker is OPEN. The call to <code>Try.of</code> returns a <code>Failure&lt;Throwable&gt;</code> Monad so that the chained function is not invoked.</p>
 </div>
@@ -766,7 +771,7 @@ assertThat(result.failed().get()).isInstanceOf(CircuitBreakerOpenException.class
 </div>
 </div>
 <div class="sect2">
-<h3 id="_recover_from_an_exception">2.4. Recover from an exception</h3>
+<h3 id="_recover_from_an_exception">3.4. Recover from an exception</h3>
 <div class="paragraph">
 <p>If you want to recover from any exception, you can chain the method <code>Try.recover()</code>. The recovery method is only invoked, if <code>Try.of()</code> returns a <code>Failure&lt;Throwable&gt;</code> Monad.</p>
 </div>
@@ -791,7 +796,7 @@ assertThat(result.get()).isEqualTo(<span class="string"><span class="delimiter">
 </div>
 </div>
 <div class="sect2">
-<h3 id="_customize_the_exception_handler">2.5. Customize the exception handler</h3>
+<h3 id="_customize_the_exception_handler">3.5. Customize the exception handler</h3>
 <div class="paragraph">
 <p>The default exception handler counts all type of exceptions as failures and triggers the CircuitBreaker. If you want to use a custom exception handler, you have to implement the functional interface <code>Predicate</code> which has a method <code>test</code>. The Predicate must return true if the exception should count as a failure, otherwise it must return false.<br>
 The following example shows how to ignore an <code>IOException</code>, but all other exception types still count as failures.</p>
@@ -830,7 +835,7 @@ assertThat(result.failed().get()).isInstanceOf(<span class="exception">IOExcepti
 </div>
 </div>
 <div class="sect2">
-<h3 id="_customize_the_event_listener">2.6. Customize the event listener</h3>
+<h3 id="_customize_the_event_listener">3.6. Customize the event listener</h3>
 <div class="paragraph">
 <p>The default event listener logs state transitions with INFO level.</p>
 </div>
@@ -851,7 +856,7 @@ assertThat(result.failed().get()).isInstanceOf(<span class="exception">IOExcepti
 </div>
 </div>
 <div class="sect2">
-<h3 id="_retry_a_failed_function">2.7. Retry a failed function</h3>
+<h3 id="_retry_a_failed_function">3.7. Retry a failed function</h3>
 <div class="paragraph">
 <p>You can also retry a failed function and recover from the exception, if the maximum retry count was reached. You can create a <code>Retry</code> context using a default configuration as follows.</p>
 </div>
@@ -901,7 +906,7 @@ assertThat(result.get()).isEqualTo(<span class="string"><span class="delimiter">
 </div>
 </div>
 <div class="sect2">
-<h3 id="_use_a_completablefuture">2.8. Use a CompletableFuture</h3>
+<h3 id="_use_a_completablefuture">3.8. Use a CompletableFuture</h3>
 <div class="paragraph">
 <p>You can also invoke a decorated function asynchronously by using a <code>CompletableFuture</code> and chain further functions.</p>
 </div>
@@ -925,7 +930,7 @@ assertThat(future.get()).isEqualTo(<span class="string"><span class="delimiter">
 </div>
 </div>
 <div class="sect2">
-<h3 id="_use_reactive_streams">2.9. Use Reactive Streams</h3>
+<h3 id="_use_reactive_streams">3.9. Use Reactive Streams</h3>
 <div class="paragraph">
 <p>You can also invoke a decorated function asynchronously by using a Reactive Streams implementation like <a href="https://github.com/ReactiveX/RxJava">RxJava</a> or <a href="https://github.com/reactor/reactor/">Project Reactor</a>.</p>
 </div>
@@ -961,7 +966,7 @@ Streams.generate(supplier::get)
 </div>
 </div>
 <div class="sect1">
-<h2 id="_monitoring_reporting">3. Monitoring &amp; Reporting</h2>
+<h2 id="_monitoring_reporting">4. Monitoring &amp; Reporting</h2>
 <div class="sectionbody">
 <div class="paragraph">
 <p>You could monitor and report the state of your CircuitBreakers and runtime metrics by using Metrics <a href="https://dropwizard.github.io/metrics/3.1.0/getting-started/#health-checks">Health Checks</a> and <a href="https://dropwizard.github.io/metrics/3.1.0/getting-started/#reporting-via-http">Reporting via JMX or HTTP</a>.</p>
@@ -1033,7 +1038,7 @@ reporter.start(<span class="integer">1</span>, <span class="predefined-type">Tim
 </div>
 </div>
 <div class="sect1">
-<h2 id="_license">4. License</h2>
+<h2 id="_license">5. License</h2>
 <div class="sectionbody">
 <div class="paragraph">
 <p>Copyright 2015 Robert Winkler</p>
