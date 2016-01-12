@@ -597,7 +597,7 @@ For example, if the size of the Ring Buffer is 100, then at least 100 calls must
 </div>
 <div class="paragraph">
 <p>After the time duration has elapsed, the CircuitBreaker state changes to <code>HALF_CLOSED</code> and allows calls to see if the backend is still unavailable or has become available again. The CircuitBreaker uses a new Ring Bit Buffer to evaluate the failure rate in the <code>HALF_CLOSED</code> state. If the failure rate is above the threshold, the state changes back to <code>OPEN</code>. If the failure rate is below the threshold, the state changes back to <code>CLOSED</code>.<br>
-<code>CircuitBreaker::recordFailure(exception)</code> also checks if the type of exception should be recored as a failure and increase the failure rate. You can configure the types of exceptions which should be recored as a failure. By default all types of exceptions are recored as failures.<br>
+<code>CircuitBreaker::recordFailure(exception)</code> also checks if the exception should be recorded as a failure and increase the failure rate. You can configure the exceptions which should be recorded as a failure. By default all types of exceptions are recorded as failures.<br>
 == Getting started</p>
 </div>
 <div class="paragraph">
