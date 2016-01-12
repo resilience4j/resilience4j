@@ -33,14 +33,14 @@ static <T> Supplier<T> decorateSupplier(Supplier<T> supplier, CircuitBreaker cir
 The state of the CircuitBreaker changes from `CLOSED` to `OPEN` when the failure rate is above a (configurable) threshold.
 Then, all access to the backend is blocked for a (configurable) time duration. `CircuitBreaker::isCallPermitted()` throws a `CircuitBreakerOpenException`, if the CircuitBreaker is `OPEN`.
 
-The CircuitBreaker stores the success / failure status of the calls in a Ring Bit Buffer. A successful call is stored as a `0` bit and a failed call is stored as a `1` bit. The Ring Bit Buffer has a (configurable) fixed-size. The Ring Bit Buffer uses internally a https://docs.oracle.com/javase/8/docs/api/java/util/BitSet.html[BitSet] to store the bits which is saving memory compared to a boolean array. The BitSet uses a long[] array to store the bits. That means the BitSet only needs an array of 16 long (64-bit) values to store the status of 1024 calls.
+The CircuitBreaker stores the success / failure statuses of the calls in a Ring Bit Buffer. A successful call is stored as a `0` bit and a failed call is stored as a `1` bit. The Ring Bit Buffer has a (configurable) fixed-size. The Ring Bit Buffer uses internally a https://docs.oracle.com/javase/8/docs/api/java/util/BitSet.html[BitSet] to store the bits which is saving memory compared to a boolean array. The BitSet uses a long[] array to store the bits. That means the BitSet only needs an array of 16 long (64-bit) values to store the status of 1024 calls.
 
 image::src/docs/asciidoc/images/ring_buffer.jpg[Ring Bit Buffer]
 
 The Ring Bit Buffer must be full, before the failure rate can be calculated.
-For example, if the size of the Ring Buffer is 10, then at least 10 calls must be evaluated, before the failure rate can be calculated. If only 9 calls have been evaluated the CircuitBreaker will not trip open even if all 9 calls have failed.
+For example, if the size of the Ring Buffer is 10, then at least 10 calls must evaluated, before the failure rate can be calculated. If only 9 calls have been evaluated the CircuitBreaker will not trip open even if all 9 calls have failed.
 
-After the time duration has elapsed, the CircuitBreaker state changes to `HALF_CLOSED` and allows calls to see if the backend is still unavailable or has become available again. The CircuitBreaker uses another (configurable) Ring Bit Buffer to evaluate the failure rate in the `HALF_CLOSED` state. If the failure rate is above the threshold, the state changes back to `OPEN`. If the failure rate is below the threshold, the state changes back to `CLOSED`.
+After the time duration has elapsed, the CircuitBreaker state changes `OPEN` to `HALF_CLOSED` and allows calls to see if the backend is still unavailable or has become available again. The CircuitBreaker uses another (configurable) Ring Bit Buffer to evaluate the failure rate in the `HALF_CLOSED` state. If the failure rate is above the threshold, the state changes back to `OPEN`. If the failure rate is below the threshold, the state changes back to `CLOSED`.
 `CircuitBreaker::recordFailure(exception)` also checks if the exception should be recorded as a failure and increase the failure rate. You can configure the exceptions which should be recorded as a failure. By default all types of exceptions are recorded as failures.
 
 
