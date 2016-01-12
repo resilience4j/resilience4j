@@ -32,31 +32,67 @@ public class CircuitBreakerConfigTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void zeroMaxFailuresShouldFail() {
-        CircuitBreakerConfig.custom().maxFailures(0).build();
+        CircuitBreakerConfig.custom().failureRateThreshold(0).build();
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void zeroWaitIntervalShouldFail() {
-        CircuitBreakerConfig.custom().waitDuration(Duration.ofMillis(0)).build();
+        CircuitBreakerConfig.custom().waitDurationInOpenState(Duration.ofMillis(0)).build();
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void ringBufferSizeInHalfOpenStateBelowOneShouldFail() {
+        CircuitBreakerConfig.custom().ringBufferSizeInHalfOpenState(0).build();
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void ringBufferSizeInClosedStateBelowOneThenShouldFail() {
+        CircuitBreakerConfig.custom().ringBufferSizeInClosedState(0).build();
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void failureRateThresholdShouldFail() {
+        CircuitBreakerConfig.custom().failureRateThreshold(0).build();
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void failureRateThresholdAboveHundredShouldFail() {
+        CircuitBreakerConfig.custom().failureRateThreshold(101).build();
     }
 
     @Test()
-    public void shouldSetMaxFailures() {
-        CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom().maxFailures(5).build();
-        then(circuitBreakerConfig.getMaxFailures()).isEqualTo(5);
+    public void shouldSetDefaultSettings() {
+        CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.ofDefaults();
+        then(circuitBreakerConfig.getFailureRateThreshold()).isEqualTo(50);
+        then(circuitBreakerConfig.getRingBufferSizeInHalfOpenState()).isEqualTo(10);
+        then(circuitBreakerConfig.getRingBufferSizeInClosedState()).isEqualTo(100);
+        then(circuitBreakerConfig.getWaitDurationInOpenState().getSeconds()).isEqualTo(60);
+        then(circuitBreakerConfig.getCircuitBreakerEventListener()).isNotNull();
+        then(circuitBreakerConfig.getExceptionPredicate()).isNotNull();
+    }
+
+    @Test()
+    public void shouldSetFailureRateThreshold() {
+        CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom().failureRateThreshold(25).build();
+        then(circuitBreakerConfig.getFailureRateThreshold()).isEqualTo(25);
+    }
+
+    @Test()
+    public void shouldSetRingBufferSizeInClosedState() {
+        CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom().ringBufferSizeInClosedState(1000).build();
+        then(circuitBreakerConfig.getRingBufferSizeInClosedState()).isEqualTo(1000);
+    }
+
+    @Test()
+    public void shouldSetRingBufferSizeInHalfOpenState() {
+        CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom().ringBufferSizeInHalfOpenState(100).build();
+        then(circuitBreakerConfig.getRingBufferSizeInHalfOpenState()).isEqualTo(100);
     }
 
     @Test()
     public void shouldSetWaitInterval() {
-        CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom().waitDuration(Duration.ofSeconds(1)).build();
-        then(circuitBreakerConfig.getWaitDuration().getSeconds() * 1000).isEqualTo(1000);
-    }
-
-    @Test
-    public void shouldUseTheDefaultExceptionPredicate() {
-        CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom()
-                .build();
-        then(circuitBreakerConfig.getExceptionPredicate()).isNotNull();
+        CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom().waitDurationInOpenState(Duration.ofSeconds(1)).build();
+        then(circuitBreakerConfig.getWaitDurationInOpenState().getSeconds()).isEqualTo(1);
     }
 
     @Test()
@@ -70,13 +106,6 @@ public class CircuitBreakerConfigTest {
     public void shouldUseCustomCircuitBreakerEventListener() {
         CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom()
                 .onCircuitBreakerEvent((event) -> LOG.info(event.toString()))
-                .build();
-        then(circuitBreakerConfig.getCircuitBreakerEventListener()).isNotNull();
-    }
-
-    @Test
-    public void shouldUseTheDefaultEventListener() {
-        CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom()
                 .build();
         then(circuitBreakerConfig.getCircuitBreakerEventListener()).isNotNull();
     }

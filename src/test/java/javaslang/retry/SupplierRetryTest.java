@@ -125,7 +125,7 @@ public class SupplierRetryTest {
 
         // Create a Retry with default configuration
         Retry retryContext = Retry.custom()
-                .onException(throwable -> Match.of(throwable)
+                .retryOnException(throwable -> Match.of(throwable)
                         .whenType(WebServiceException.class).then(false)
                         .otherwise(true).get())
                 .build();

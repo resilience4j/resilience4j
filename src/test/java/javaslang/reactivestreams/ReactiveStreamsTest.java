@@ -58,8 +58,10 @@ public class ReactiveStreamsTest {
     public void setUp(){
         helloWorldService = mock(HelloWorldService.class);
         circuitBreakerRegistry = CircuitBreakerRegistry.of(new CircuitBreakerConfig.Builder()
-                .maxFailures(1)
-                .waitDuration(Duration.ofMillis(1000))
+                .failureRateThreshold(50)
+                .ringBufferSizeInClosedState(2)
+                .ringBufferSizeInHalfOpenState(2)
+                .waitDurationInOpenState(Duration.ofMillis(1000))
                 .build());
     }
 
@@ -89,11 +91,14 @@ public class ReactiveStreamsTest {
     public void shouldReturnFailureWithCircuitBreakerOpenException() {
         // Given
         CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("testName");
-        assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED); // CircuitBreaker is initially CLOSED
+        // CircuitBreaker is initially CLOSED
+        assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
         circuitBreaker.recordFailure(new RuntimeException());
-        assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED); // CircuitBreaker is still CLOSED, because 1 failure is allowed
+        // CircuitBreaker is still CLOSED, because at least two calls must be evaluated
+        assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
         circuitBreaker.recordFailure(new RuntimeException());
-        assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.OPEN); // CircuitBreaker is OPEN, because maxFailures > 1
+        // CircuitBreaker is OPEN, because failure rate is above 50%
+        assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.OPEN);
 
         // Decorate the supplier of the HelloWorldService with CircuitBreaker functionality
         Supplier<String> supplier = CircuitBreaker.decorateSupplier(helloWorldService::returnHelloWorld, circuitBreaker);

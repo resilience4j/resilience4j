@@ -94,7 +94,7 @@ public class RetryContext implements Retry {
 
         public Builder waitDuration(Duration waitDuration) {
             if (waitDuration.getSeconds() < 0.01) {
-                throw new IllegalArgumentException("waitDuration must be at least than 10[ms]");
+                throw new IllegalArgumentException("waitDurationInOpenState must be at least than 10[ms]");
             }
             this.waitDuration = waitDuration;
             return this;
@@ -107,7 +107,7 @@ public class RetryContext implements Retry {
          * @param predicate the Predicate which evaluates if an exception should be retried or not.
          * @return the CircuitBreakerConfig.Builder
          */
-        public Builder onException(Predicate<Throwable> predicate) {
+        public Builder retryOnException(Predicate<Throwable> predicate) {
             this.exceptionPredicate = predicate;
             return this;
         }

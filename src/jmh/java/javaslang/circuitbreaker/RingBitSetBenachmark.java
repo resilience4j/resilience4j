@@ -18,40 +18,32 @@
  */
 package javaslang.circuitbreaker;
 
+import javaslang.circuitbreaker.internal.RingBitSet;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.Scope;
 import org.openjdk.jmh.annotations.Setup;
 import org.openjdk.jmh.annotations.State;
 
-import java.time.Duration;
-import java.util.function.Supplier;
+import java.util.stream.IntStream;
 
 @State(Scope.Benchmark)
-public class CircuitBreakerBenchmark {
+public class RingBitSetBenachmark {
 
-    private CircuitBreaker circuitBreaker;
-    private Supplier<String> supplier;
+    RingBitSet ringBitSet;
 
     @Setup
     public void setUp() {
-        CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.of(CircuitBreakerConfig.custom()
-                .failureRateThreshold(1)
-                .waitDurationInOpenState(Duration.ofSeconds(1))
-                .build());
-        circuitBreaker = circuitBreakerRegistry.circuitBreaker("testCircuitBreaker");
-
-        supplier = CircuitBreaker.decorateSupplier(() -> {
-            try {
-                Thread.sleep(100);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-            return "Hello Benchmark";
-        }, circuitBreaker);
+        ringBitSet = new RingBitSet(1000);
     }
 
     @Benchmark
-    public void invokeSupplier(){
-        supplier.get();
+    public void setBits(){
+        IntStream.range(1, 10009).parallel().forEach((i) -> {
+            if (i % 2 == 0) {
+                ringBitSet.setNextBit(true);
+            } else {
+                ringBitSet.setNextBit(false);
+            }
+        });
     }
 }

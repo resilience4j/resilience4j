@@ -18,7 +18,6 @@
  */
 package javaslang.retry;
 
-import javaslang.retry.Retry;
 import org.junit.Test;
 
 import java.time.Duration;

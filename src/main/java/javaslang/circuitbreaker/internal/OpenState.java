@@ -19,55 +19,58 @@
 package javaslang.circuitbreaker.internal;
 
 import javaslang.circuitbreaker.CircuitBreaker;
+import javaslang.circuitbreaker.CircuitBreakerOpenException;
 
 import java.time.Instant;
 
-final public class OpenState extends CircuitBreakerState {
+final class OpenState extends CircuitBreakerState {
 
-    OpenState(CircuitBreakerStateMachine stateMachine, CircuitBreakerState currentState) {
-        super(stateMachine, currentState);
+    private final Instant retryAfterWaitDuration;
+
+    OpenState(CircuitBreakerStateMachine stateMachine) {
+        super(stateMachine);
+        this.retryAfterWaitDuration = Instant.now().plus(stateMachine.getCircuitBreakerConfig().getWaitDurationInOpenState());
     }
 
     /**
-     * Requests permission to call this circuitBreaker's backend.
+     * Returns false, if the wait duration has not elapsed.
+     * Returns true, if the wait duration has elapsed and transitions the state machine to HALF_CLOSED state.
      *
-     * @return boolean whether a call should be permitted
+     * @return false, if the wait duration has not elapsed. true, if the wait duration has elapsed.
      */
     @Override
-    public boolean isCallPermitted() {
+    boolean isCallPermitted() {
         // Thread-safe
-        if (Instant.now().isAfter(retryAfter.get())) {
-            stateMachine.transitionToHalfClosedState(this, CircuitBreaker.StateTransition.OPEN_TO_HALF_CLOSED);
+        if (Instant.now().isAfter(retryAfterWaitDuration)) {
+            stateMachine.transitionToHalfClosedState(CircuitBreaker.StateTransition.OPEN_TO_HALF_CLOSED);
             return true;
         }
         return false;
     }
 
     /**
-     * Records a backend failure.
-     * This must be called if a call to this backend fails
+     * Should never be called, because isCallPermitted returns false.
      */
     @Override
-    public void recordFailure() {
-        // Thread-safe
-        numOfFailures.increment();
+    void recordFailure() {
+        // Should never be called, because isCallPermitted returns false
+        throw new CircuitBreakerOpenException(String.format("CircuitBreaker '%s' is open", stateMachine.getName()));
     }
 
     /**
-     * Records success of a call to this backend.
-     * This must be called after a successful call.
+     * Should never be called, because isCallPermitted returns false.
      */
     @Override
-    public void recordSuccess() {
-        // Thread-safe
-        stateMachine.transitionToClosedState(CircuitBreaker.StateTransition.OPEN_TO_CLOSED);
+    void recordSuccess() {
+        // Should never be called, because isCallPermitted returns false
+        throw new CircuitBreakerOpenException(String.format("CircuitBreaker '%s' is open", stateMachine.getName()));
     }
 
     /**
      * Get the state of the CircuitBreaker
      */
     @Override
-    public CircuitBreaker.State getState() {
+    CircuitBreaker.State getState() {
         return CircuitBreaker.State.OPEN;
     }
 }

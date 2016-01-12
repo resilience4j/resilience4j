@@ -43,7 +43,7 @@ public final class InMemoryCircuitBreakerRegistry implements CircuitBreakerRegis
      * The constructor with default circuitBreaker properties.
      */
     public InMemoryCircuitBreakerRegistry() {
-        this.defaultCircuitBreakerConfig = new CircuitBreakerConfig.Builder().build();
+        this.defaultCircuitBreakerConfig = CircuitBreakerConfig.ofDefaults();
         this.circuitBreakers = new ConcurrentHashMap<>();
     }
 

@@ -39,30 +39,30 @@ public interface CircuitBreaker {
     boolean isCallPermitted();
 
     /**
-     * Records a backend failure.
-     * This must be called if a call to a backend fails
+     * Records a failed call.
+     * This method must be invoked after a failed call.
      *
      * @param throwable The throwable which must be recorded
      */
     void recordFailure(Throwable throwable);
 
      /**
-      * Records success of a call to a backend.
-      * This must be called after a successful call.
+      * Records a successful call.
+      * This method must be invoked after a successful call.
       */
     void recordSuccess();
 
     /**
-     * Get the name of the CircuitBreaker
+     * Get the name of this CircuitBreaker
      *
-     * @return the name of the CircuitBreaker
+     * @return the name of this CircuitBreaker
      */
     String getName();
 
     /**
-     * Get the state of the CircuitBreaker
+     * Get the state of this CircuitBreaker
      *
-     * @return the state of the CircuitBreaker
+     * @return the state of this CircuitBreaker
      */
     State getState();
 
@@ -88,7 +88,6 @@ public interface CircuitBreaker {
         CLOSED_TO_OPEN(State.CLOSED, State.OPEN),
         HALF_CLOSED_TO_CLOSED(State.HALF_CLOSED, State.CLOSED),
         HALF_CLOSED_TO_OPEN(State.HALF_CLOSED, State.OPEN),
-        OPEN_TO_CLOSED(State.OPEN, State.CLOSED),
         OPEN_TO_HALF_CLOSED(State.OPEN, State.HALF_CLOSED);
 
         State fromState;

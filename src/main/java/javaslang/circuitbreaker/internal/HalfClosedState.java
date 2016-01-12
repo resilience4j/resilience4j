@@ -20,51 +20,61 @@ package javaslang.circuitbreaker.internal;
 
 import javaslang.circuitbreaker.CircuitBreaker;
 
-import java.time.Instant;
+final class HalfClosedState extends CircuitBreakerState {
 
-final public class HalfClosedState extends CircuitBreakerState {
+    private CircuitBreakerMetrics circuitBreakerMetrics;
+    private final float failureRateThreshold;
 
-    HalfClosedState(CircuitBreakerStateMachine stateMachine, CircuitBreakerState currentState) {
-        super(stateMachine, currentState);
+    HalfClosedState(CircuitBreakerStateMachine stateMachine) {
+        super(stateMachine);
+        this.circuitBreakerMetrics = new CircuitBreakerMetrics(stateMachine.getCircuitBreakerConfig().getRingBufferSizeInHalfOpenState());
+        this.failureRateThreshold = stateMachine.getCircuitBreakerConfig().getFailureRateThreshold();
     }
 
     /**
-     * Requests permission to call this circuitBreaker's backend.
+     * Returns always true, because the CircuitBreaker is half closed.
      *
-     * @return boolean whether a call should be permitted
+     * @return always true, because the CircuitBreaker is half closed.
      */
     @Override
-    public boolean isCallPermitted() {
+    boolean isCallPermitted() {
         return true;
     }
 
-    /**
-     * Records a backend failure.
-     * This must be called if a call to this backend fails
-     */
     @Override
-    public void recordFailure() {
+    void recordFailure() {
         // Thread-safe
-        numOfFailures.increment();
-        retryAfter.set(Instant.now().plus(stateMachine.getWaitDuration()));
-        stateMachine.transitionToOpenState(this, CircuitBreaker.StateTransition.HALF_CLOSED_TO_OPEN);
+        checkFailureRate(circuitBreakerMetrics.recordFailure());
+    }
+
+    @Override
+    void recordSuccess() {
+        // Thread-safe
+        checkFailureRate(circuitBreakerMetrics.recordSuccess());
     }
 
     /**
-     * Records success of a call to this backend.
-     * This must be called after a successful call.
+     * Checks if the current failure rate is above or below the threshold.
+     * If the failure rate is above the threshold, transition the state machine to OPEN state.
+     * If the failure rate is below the threshold, transition the state machine to CLOSED state.
+     *
+     * @param currentFailureRate the current failure rate
      */
-    @Override
-    public void recordSuccess() {
-        // Thread-safe
-        stateMachine.transitionToClosedState(CircuitBreaker.StateTransition.HALF_CLOSED_TO_CLOSED);
+    private void checkFailureRate(float currentFailureRate) {
+        if(currentFailureRate != -1){
+            if(currentFailureRate > failureRateThreshold) {
+                stateMachine.transitionToOpenState(CircuitBreaker.StateTransition.HALF_CLOSED_TO_OPEN);
+            }else{
+                stateMachine.transitionToClosedState(CircuitBreaker.StateTransition.HALF_CLOSED_TO_CLOSED);
+            }
+        }
     }
 
     /**
      * Get the state of the CircuitBreaker
      */
     @Override
-    public CircuitBreaker.State getState() {
+    CircuitBreaker.State getState() {
         return CircuitBreaker.State.HALF_CLOSED;
     }
 }

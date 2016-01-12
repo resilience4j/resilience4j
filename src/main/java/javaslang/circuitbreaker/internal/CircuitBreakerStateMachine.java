@@ -19,14 +19,11 @@
 package javaslang.circuitbreaker.internal;
 
 
+import javaslang.circuitbreaker.CircuitBreaker;
 import javaslang.circuitbreaker.CircuitBreakerConfig;
 import javaslang.circuitbreaker.CircuitBreakerStateTransitionEvent;
-import javaslang.circuitbreaker.CircuitBreaker;
-import javaslang.circuitbreaker.CircuitBreakerEventListener;
 
-import java.time.Duration;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Predicate;
 
 /**
  * A CircuitBreaker finite state machine. The CircuitBreaker does not have a way to know anything about the
@@ -39,11 +36,8 @@ import java.util.function.Predicate;
 final class CircuitBreakerStateMachine implements CircuitBreaker {
 
     private final String name;
-    private AtomicReference<CircuitBreakerState> stateReference;
-    private Predicate<Throwable> exceptionPredicate;
-    private CircuitBreakerEventListener circuitBreakerEventListener;
-    private int maxFailures;
-    private Duration waitDuration;
+    private final AtomicReference<CircuitBreakerState> stateReference;
+    private final CircuitBreakerConfig circuitBreakerConfig;
 
     /**
      * Creates a circuitBreaker.
@@ -53,11 +47,8 @@ final class CircuitBreakerStateMachine implements CircuitBreaker {
      */
     CircuitBreakerStateMachine(String name, CircuitBreakerConfig circuitBreakerConfig) {
         this.name = name;
+        this.circuitBreakerConfig = circuitBreakerConfig;
         this.stateReference = new AtomicReference<>(new ClosedState(this));
-        this.exceptionPredicate = circuitBreakerConfig.getExceptionPredicate();
-        this.circuitBreakerEventListener = circuitBreakerConfig.getCircuitBreakerEventListener();
-        this.maxFailures = circuitBreakerConfig.getMaxFailures();
-        this.waitDuration = circuitBreakerConfig.getWaitDuration();
     }
 
     /**
@@ -71,25 +62,27 @@ final class CircuitBreakerStateMachine implements CircuitBreaker {
     }
 
     /**
-     * Records a failure.
+     * Records a failed call.
      */
     @Override
     public void recordFailure(Throwable throwable) {
-        if(exceptionPredicate.test(throwable)){
+        if(circuitBreakerConfig.getExceptionPredicate().test(throwable)){
             stateReference.get().recordFailure();
         }
     }
 
     /**
-     * Records a success.
+     * Records a successful call.
      */
     @Override
     public void recordSuccess() {
-        this.stateReference.get().recordSuccess();
+        stateReference.get().recordSuccess();
     }
 
     /**
-     * Get the state of the CircuitBreaker
+     * Get the state of this CircuitBreaker.
+     *
+     * @return the the state of this CircuitBreaker
      */
     @Override
     public State getState() {
@@ -97,19 +90,22 @@ final class CircuitBreakerStateMachine implements CircuitBreaker {
     }
 
     /**
-     * Get the name of the CircuitBreaker
+     * Get the name of this CircuitBreaker.
+     *
+     * @return the the name of this CircuitBreaker
      */
     @Override
     public String getName() {
         return this.name;
     }
 
-    public int getMaxFailures() {
-        return maxFailures;
-    }
-
-    public Duration getWaitDuration() {
-        return waitDuration;
+    /**
+     * Get the config of this CircuitBreaker.
+     *
+     * @return the config of this CircuitBreaker
+     */
+    public CircuitBreakerConfig getCircuitBreakerConfig() {
+        return circuitBreakerConfig;
     }
 
     /**
@@ -120,22 +116,18 @@ final class CircuitBreakerStateMachine implements CircuitBreaker {
         return String.format("CircuitBreaker '%s'", this.name);
     }
 
-    void resetState() {
-        stateReference.set(new ClosedState(this));
-    }
-
     void transitionToClosedState(StateTransition stateTransition) {
         stateReference.set(new ClosedState(this));
-        circuitBreakerEventListener.onCircuitBreakerEvent(new CircuitBreakerStateTransitionEvent(getName(), stateTransition));
+        circuitBreakerConfig.getCircuitBreakerEventListener().onCircuitBreakerEvent(new CircuitBreakerStateTransitionEvent(getName(), stateTransition));
     }
 
-    void transitionToOpenState(CircuitBreakerState currentState, StateTransition stateTransition) {
-        stateReference.set(new OpenState(this, currentState));
-        circuitBreakerEventListener.onCircuitBreakerEvent(new CircuitBreakerStateTransitionEvent(getName(), stateTransition));
+    void transitionToOpenState(StateTransition stateTransition) {
+        stateReference.set(new OpenState(this));
+        circuitBreakerConfig.getCircuitBreakerEventListener().onCircuitBreakerEvent(new CircuitBreakerStateTransitionEvent(getName(), stateTransition));
     }
 
-    void transitionToHalfClosedState(CircuitBreakerState currentState, StateTransition stateTransition) {
-        stateReference.set(new HalfClosedState(this, currentState));
-        circuitBreakerEventListener.onCircuitBreakerEvent(new CircuitBreakerStateTransitionEvent(getName(), stateTransition));
+    void transitionToHalfClosedState(StateTransition stateTransition) {;
+        stateReference.set(new HalfClosedState(this));
+        circuitBreakerConfig.getCircuitBreakerEventListener().onCircuitBreakerEvent(new CircuitBreakerStateTransitionEvent(getName(), stateTransition));
     }
 }

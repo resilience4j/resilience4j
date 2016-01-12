@@ -18,8 +18,6 @@
  */
 package javaslang.circuitbreaker;
 
-import javaslang.circuitbreaker.CircuitBreaker;
-import javaslang.circuitbreaker.CircuitBreakerRegistry;
 import org.junit.Before;
 import org.junit.Test;
 

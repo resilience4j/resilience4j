@@ -20,62 +20,23 @@ package javaslang.circuitbreaker.internal;
 
 import javaslang.circuitbreaker.CircuitBreaker;
 
-import java.time.Instant;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.concurrent.atomic.LongAdder;
-
 /**
- * States of the CircuitBreaker state machine.
+ * Abstract state of the CircuitBreaker state machine.
  */
-abstract class CircuitBreakerState {
+abstract class CircuitBreakerState{
 
     protected CircuitBreakerStateMachine stateMachine;
-    protected final LongAdder numOfFailures;
-    protected final AtomicReference<Instant> retryAfter;
 
     CircuitBreakerState(CircuitBreakerStateMachine stateMachine) {
         this.stateMachine = stateMachine;
-        this.numOfFailures = new LongAdder();
-        this.retryAfter = new AtomicReference<>(Instant.now());
     }
 
-    CircuitBreakerState(CircuitBreakerStateMachine stateMachine, CircuitBreakerState currentState) {
-        this.stateMachine = stateMachine;
-        this.numOfFailures = currentState.getNumOfFailures();
-        this.retryAfter = currentState.getRetryAfter();
-    }
-
-    private LongAdder getNumOfFailures(){
-        return numOfFailures;
-    }
-
-    private AtomicReference<Instant> getRetryAfter(){
-        return retryAfter;
-    }
-
-    /**
-     * Requests permission to call a circuitBreaker's backend.
-     *
-     * @return boolean whether a call should be permitted
-     */
     abstract boolean isCallPermitted();
 
-    /**
-     * Records a backend failure.
-     * This must be called if a call to a backend fails
-     */
     abstract void recordFailure();
 
-    /**
-     * Records success of a call to this backend.
-     * This must be called after a successful call.
-     */
     abstract void recordSuccess();
 
-    /**
-     * Get the state of the CircuitBreaker
-     *
-     * @return the state of the CircuitBreaker
-     */
     abstract CircuitBreaker.State getState();
+
 }

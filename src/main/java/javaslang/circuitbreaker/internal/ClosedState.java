@@ -20,54 +20,55 @@ package javaslang.circuitbreaker.internal;
 
 import javaslang.circuitbreaker.CircuitBreaker;
 
-import java.time.Instant;
+final class ClosedState extends CircuitBreakerState {
 
-final public class ClosedState extends CircuitBreakerState {
+    private final CircuitBreakerMetrics circuitBreakerMetrics;
+    private final float failureRateThreshold;
 
     ClosedState(CircuitBreakerStateMachine stateMachine) {
         super(stateMachine);
+        this.circuitBreakerMetrics = new CircuitBreakerMetrics(stateMachine.getCircuitBreakerConfig().getRingBufferSizeInClosedState());
+        this.failureRateThreshold = stateMachine.getCircuitBreakerConfig().getFailureRateThreshold();
     }
 
     /**
-     * Requests permission to call this circuitBreaker's backend. The closed state always returns true.
+     * Returns always true, because the CircuitBreaker is closed.
      *
-     * @return boolean whether a call should be permitted
+     * @return always true, because the CircuitBreaker is closed.
      */
     @Override
-    public boolean isCallPermitted() {
+    boolean isCallPermitted() {
         return true;
     }
 
-    /**
-     * Records a backend failure.
-     * This must be called if a call to this backend fails
-     */
     @Override
-    public void recordFailure() {
-        // if CLOSED, increase number of failures
-        numOfFailures.increment();
-        if (numOfFailures.sum() > stateMachine.getMaxFailures()) {
-            // Too many failures, set new retryAfter to current time + wait duration
-            retryAfter.set(Instant.now().plus(stateMachine.getWaitDuration()));
-            stateMachine.transitionToOpenState(this, CircuitBreaker.StateTransition.CLOSED_TO_OPEN);
-        }
+    void recordFailure() {
+        checkFailureRate(circuitBreakerMetrics.recordFailure());
+    }
+
+    @Override
+    void recordSuccess() {
+        checkFailureRate(circuitBreakerMetrics.recordSuccess());
     }
 
     /**
-     * Records success of a call to this backend.
-     * This must be called after a successful call.
+     * Checks if the current failure rate is above the threshold.
+     * If the failure rate is above the threshold, transitions the state machine to OPEN state.
+     *
+     * @param currentFailureRate the current failure rate
      */
-    @Override
-    public void recordSuccess() {
-        // Thread-safe
-        stateMachine.resetState();
+    private void checkFailureRate(float currentFailureRate) {
+        if (currentFailureRate > failureRateThreshold) {
+            // Transition the state machine to OPEN state, because the failure rate is above the threshold
+            stateMachine.transitionToOpenState(CircuitBreaker.StateTransition.CLOSED_TO_OPEN);
+        }
     }
 
     /**
      * Get the state of the CircuitBreaker
      */
     @Override
-    public CircuitBreaker.State getState() {
+    CircuitBreaker.State getState() {
         return CircuitBreaker.State.CLOSED;
     }
 }

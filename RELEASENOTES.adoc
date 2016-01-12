@@ -3,29 +3,32 @@
 == Version 0.1.0
 * Initial version
 
-== Version 0.1.1
+=== Version 0.1.1
 * Added the functionality to add exceptions with are ignored by the CircuitBreaker
 
-== Version 0.1.2
+=== Version 0.1.2
 * Added the feature to get Metrics for function executions
 
-== Version 0.1.3
+=== Version 0.1.3
 * Added a static factory method for the CircuitBreakerConfig builder
 
-== Version 0.1.4
+=== Version 0.1.4
 * Added the feature to retry a failed function
 
-== Version 0.1.5
+=== Version 0.1.5
 * Added builders to simplify chaining of decorators
 
-== Version 0.1.6
+=== Version 0.1.6
 * Renamed project to javaslang-circuitbreaker
 
-== Version 0.1.7
+=== Version 0.1.7
 * Fixed Issue #2
 * Issue #3 Added a listener mechanism for state transitions
 
 == Version 0.2.0
 * Removed Dropwizard Metrics, because its a too heavy dependency for such a lightweight library.
 * Changed the way exceptions can be handled. You have to provide a Predicate now instead of a list of exceptions to ignore.
+
+== Version 0.3.0
+* The CircuitBreaker is based on a Ring Bit Buffer and a failure rate now.
 
