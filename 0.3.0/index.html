@@ -516,7 +516,7 @@ table.CodeRay td.code>pre{padding:0}
 <div class="details">
 <span id="author" class="author">Robert Winkler</span><br>
 <span id="revnumber">version 0.3.0,</span>
-<span id="revdate">2016-01-12</span>
+<span id="revdate">2016-01-13</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">Table of Contents</div>
@@ -550,7 +550,8 @@ table.CodeRay td.code>pre{padding:0}
 <h2 id="_introduction">1. Introduction</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>This library is a lightweight, easy-to-use fault tolerance library inspired by <a href="https://github.com/Netflix/Hystrix">Netflix Hystrix</a>, but designed solely for Java 8 and functional programming. The library provides several higher-order functions to decorate any <code>Supplier / Runnable / Function</code> or <code>CheckedSupplier / CheckedRunnable / CheckedFunction</code> with a <a href="http://martinfowler.com/bliki/CircuitBreaker.html">Circuit Breaker</a>. In the following I call the higher-order functions decorators. The decorators return an enhanced version of your function. Furthermore, the library provides a decorator to retry failed functions. You can stack more than one decorator on any given function. That means, you can combine a Retry decorator with a CircuitBreaker decorator. Any decorated function can be invoked synchronously or asynchronously. The project uses a functional library for Java 8 called <a href="https://github.com/javaslang/javaslang">Javaslang</a>.</p>
+<p>This library is a lightweight, easy-to-use fault tolerance library inspired by <a href="https://github.com/Netflix/Hystrix">Netflix Hystrix</a>, but designed solely for Java 8 and functional programming. Lightweight, because the library only uses SLF4J and a functional library for Java 8 called <a href="https://github.com/javaslang/javaslang">Javaslang</a>. Javaslang itself has no external library dependencies.<br>
+The library provides several higher-order functions to decorate any function with a <a href="http://martinfowler.com/bliki/CircuitBreaker.html">Circuit Breaker</a>. In the following I call the higher-order functions decorators. The decorators return an enhanced version of your function. Furthermore, the library provides a decorator to retry failed functions. You can stack more than one decorator on any given function. That means, you can combine a Retry decorator with a CircuitBreaker decorator. Any decorated function can be invoked synchronously or asynchronously.</p>
 </div>
 <div class="paragraph">
 <p>The CircuitBreaker is implemented via a finite state machine with three states: <code>CLOSED</code>, <code>OPEN</code> and <code>HALF_OPEN</code>.</p>
@@ -585,7 +586,7 @@ table.CodeRay td.code>pre{padding:0}
 Then, all access to the backend is blocked for a (configurable) time duration. <code>CircuitBreaker::isCallPermitted()</code> throws a <code>CircuitBreakerOpenException</code>, if the CircuitBreaker is <code>OPEN</code>.</p>
 </div>
 <div class="paragraph">
-<p>The CircuitBreaker stores the success / failure status of the calls in a Ring Bit Buffer. A successful call is a <code>0</code> bit and a failed call is a <code>1</code> bit. The Ring Bit Buffer has a (configurable) fixed-size. The Ring Bit Buffer uses internally a <a href="https://docs.oracle.com/javase/8/docs/api/java/util/BitSet.html">BitSet</a> to store the bits which is saving memory compared to a boolean array.</p>
+<p>The CircuitBreaker uses a Ring Bit Buffer in the <code>CLOSED</code> state to store the success or failure statuses of the calls. A successful call is stored as a <code>0</code> bit and a failed call is stored as a <code>1</code> bit. The Ring Bit Buffer has a (configurable) fixed-size. The Ring Bit Buffer uses internally a <a href="https://docs.oracle.com/javase/8/docs/api/java/util/BitSet.html">BitSet</a> to store the bits which is saving memory compared to a boolean array. The BitSet uses a long[] array to store the bits. That means the BitSet only needs an array of 16 long (64-bit) values to store the status of 1024 calls.</p>
 </div>
 <div class="imageblock">
 <div class="content">
@@ -594,11 +595,11 @@ Then, all access to the backend is blocked for a (configurable) time duration. <
 </div>
 <div class="paragraph">
 <p>The Ring Bit Buffer must be full, before the failure rate can be calculated.<br>
-For example, if the size of the Ring Buffer is 100, then at least 100 calls must be evaluated, before the failure rate can be calculated. If only 99 calls have been evaluated the CircuitBreaker will not trip open even if all 99 calls have failed.</p>
+For example, if the size of the Ring Buffer is 10, then at least 10 calls must evaluated, before the failure rate can be calculated. If only 9 calls have been evaluated the CircuitBreaker will not trip open even if all 9 calls have failed.</p>
 </div>
 <div class="paragraph">
-<p>After the time duration has elapsed, the CircuitBreaker state changes to <code>HALF_CLOSED</code> and allows calls to see if the backend is still unavailable or has become available again. The CircuitBreaker uses a new Ring Bit Buffer to evaluate the failure rate in the <code>HALF_CLOSED</code> state. If the failure rate is above the threshold, the state changes back to <code>OPEN</code>. If the failure rate is below the threshold, the state changes back to <code>CLOSED</code>.<br>
-<code>CircuitBreaker::recordFailure(exception)</code> also checks if the exception should be recorded as a failure and increase the failure rate. You can configure the exceptions which should be recorded as a failure. By default all types of exceptions are recorded as failures.</p>
+<p>After the time duration has elapsed, the CircuitBreaker state changes from <code>OPEN</code> to <code>HALF_CLOSED</code> and allows calls to see if the backend is still unavailable or has become available again. The CircuitBreaker uses another (configurable) Ring Bit Buffer to evaluate the failure rate in the <code>HALF_CLOSED</code> state. If the failure rate is above the configured threshold, the state changes back to <code>OPEN</code>. If the failure rate is below or equal to the threshold, the state changes back to <code>CLOSED</code>.<br>
+<code>CircuitBreaker::recordFailure(exception)</code> checks if the exception should be recorded as a failure or should be ignored. You can configure a custom <code>Predicate</code> which decides whether an exception should be recorded as a failure. The default Predicate records all exceptions as a failure.</p>
 </div>
 </div>
 </div>
