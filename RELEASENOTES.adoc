@@ -32,3 +32,6 @@
 == Version 0.3.0
 * The CircuitBreaker is based on a Ring Bit Buffer and a failure rate now.
 
+=== Version 0.3.1
+* Changed the visibility of CircuitBreakerUtils.isCallPermitted to public.
+
