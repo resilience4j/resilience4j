@@ -46,7 +46,7 @@ After the time duration has elapsed, the CircuitBreaker state changes from `OPEN
 
 == Usage guide
 
-See http://javaslang.github.io/javaslang-circuitbreaker/0.3.1/[User Guide].
+See http://javaslang.github.io/javaslang-circuitbreaker/0.3.2/[User Guide].
 
 == License
 

@@ -25,6 +25,7 @@ import javaslang.circuitbreaker.CircuitBreakerRegistry;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.function.Supplier;
 
 /**
  * Backend circuitBreaker manager.
@@ -73,6 +74,12 @@ public final class InMemoryCircuitBreakerRegistry implements CircuitBreakerRegis
     public CircuitBreaker circuitBreaker(String name, CircuitBreakerConfig customCircuitBreakerConfig) {
         return circuitBreakers.computeIfAbsent(Objects.requireNonNull(name, "Name must not be null"), (k) -> new CircuitBreakerStateMachine(name,
                 customCircuitBreakerConfig));
+    }
+
+    @Override
+    public CircuitBreaker circuitBreaker(String name, Supplier<CircuitBreakerConfig> circuitBreakerConfigSupplier) {
+        return circuitBreakers.computeIfAbsent(Objects.requireNonNull(name, "Name must not be null"), (k) -> new CircuitBreakerStateMachine(name,
+                circuitBreakerConfigSupplier.get()));
     }
 
     /**

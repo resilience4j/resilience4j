@@ -21,6 +21,8 @@ package javaslang.circuitbreaker;
 
 import javaslang.circuitbreaker.internal.InMemoryCircuitBreakerRegistry;
 
+import java.util.function.Supplier;
+
 /**
  * Manages all CircuitBreaker instances.
  */
@@ -38,10 +40,19 @@ public interface CircuitBreakerRegistry {
      * Returns a managed {@link CircuitBreaker} or creates a new one with a custom CircuitBreaker configuration.
      *
      * @param name      the name of the CircuitBreaker
-     * @param circuitBreakerConfig  the custom CircuitBreaker configuration
+     * @param circuitBreakerConfig  a custom CircuitBreaker configuration
      * @return The {@link CircuitBreaker}
      */
     CircuitBreaker circuitBreaker(String name, CircuitBreakerConfig circuitBreakerConfig);
+
+    /**
+     * Returns a managed {@link CircuitBreaker} or creates a new one with a custom CircuitBreaker configuration.
+     *
+     * @param name      the name of the CircuitBreaker
+     * @param circuitBreakerConfigSupplier a supplier of a custom CircuitBreaker configuration
+     * @return The {@link CircuitBreaker}
+     */
+    CircuitBreaker circuitBreaker(String name, Supplier<CircuitBreakerConfig> circuitBreakerConfigSupplier);
 
     /**
      * Creates a CircuitBreakerRegistry with a custom CircuitBreaker configuration.

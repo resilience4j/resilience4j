@@ -35,3 +35,5 @@
 === Version 0.3.1
 * Changed the visibility of CircuitBreakerUtils.isCallPermitted to public.
 
+=== Version 0.3.2
+* CircuitBreakerRegistry has a new method which takes a Supplier of a CircuitBreakerConfig so that the CircuitBreakerConfig is only created when needed.
