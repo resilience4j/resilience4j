@@ -39,7 +39,7 @@ public class CircuitBreakerTest {
         // Create a custom configuration for a CircuitBreaker
         CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom()
                 .ringBufferSizeInClosedState(2)
-                .ringBufferSizeInHalfOpenState(2)
+                .ringBufferSizeInHalfClosedState(2)
                 .failureRateThreshold(50)
                 .waitDurationInOpenState(Duration.ofMillis(1000))
                 .build();
@@ -87,7 +87,7 @@ public class CircuitBreakerTest {
         // Given
         CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom()
                 .ringBufferSizeInClosedState(2)
-                .ringBufferSizeInHalfOpenState(2)
+                .ringBufferSizeInHalfClosedState(2)
                 .waitDurationInOpenState(Duration.ofMillis(1000))
                 .recordFailure(throwable -> Match.of(throwable)
                         .whenType(IOException.class).then(false)

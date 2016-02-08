@@ -24,7 +24,7 @@ As an alternative you can provide your own custom global `CircuitBreakerConfig`.
 CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom()
     .failureRateThreshold(50)
     .waitDurationInOpenState(Duration.ofMillis(1000))
-    .ringBufferSizeInHalfOpenState(2)
+    .ringBufferSizeInHalfClosedState(2)
     .ringBufferSizeInClosedState(2)
     .build();
 

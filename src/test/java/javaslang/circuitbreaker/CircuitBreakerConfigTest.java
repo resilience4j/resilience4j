@@ -41,8 +41,8 @@ public class CircuitBreakerConfigTest {
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void ringBufferSizeInHalfOpenStateBelowOneShouldFail() {
-        CircuitBreakerConfig.custom().ringBufferSizeInHalfOpenState(0).build();
+    public void ringBufferSizeInHalfClosedStateBelowOneShouldFail() {
+        CircuitBreakerConfig.custom().ringBufferSizeInHalfClosedState(0).build();
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -64,7 +64,7 @@ public class CircuitBreakerConfigTest {
     public void shouldSetDefaultSettings() {
         CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.ofDefaults();
         then(circuitBreakerConfig.getFailureRateThreshold()).isEqualTo(50);
-        then(circuitBreakerConfig.getRingBufferSizeInHalfOpenState()).isEqualTo(10);
+        then(circuitBreakerConfig.getRingBufferSizeInHalfClosedState()).isEqualTo(10);
         then(circuitBreakerConfig.getRingBufferSizeInClosedState()).isEqualTo(100);
         then(circuitBreakerConfig.getWaitDurationInOpenState().getSeconds()).isEqualTo(60);
         then(circuitBreakerConfig.getCircuitBreakerEventListener()).isNotNull();
@@ -85,8 +85,8 @@ public class CircuitBreakerConfigTest {
 
     @Test()
     public void shouldSetRingBufferSizeInHalfOpenState() {
-        CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom().ringBufferSizeInHalfOpenState(100).build();
-        then(circuitBreakerConfig.getRingBufferSizeInHalfOpenState()).isEqualTo(100);
+        CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom().ringBufferSizeInHalfClosedState(100).build();
+        then(circuitBreakerConfig.getRingBufferSizeInHalfClosedState()).isEqualTo(100);
     }
 
     @Test()

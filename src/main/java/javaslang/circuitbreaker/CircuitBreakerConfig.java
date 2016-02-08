@@ -28,11 +28,11 @@ public class CircuitBreakerConfig {
 
     private static final int DEFAULT_MAX_FAILURE_THRESHOLD = 50; // Percentage
     private static final int DEFAULT_WAIT_DURATION_IN_OPEN_STATE = 60; // Seconds
-    private static final int DEFAULT_RING_BUFFER_SIZE_IN_HALF_OPEN_STATE = 10;
+    private static final int DEFAULT_RING_BUFFER_SIZE_IN_HALF_CLOSED_STATE = 10;
     private static final int DEFAULT_RING_BUFFER_SIZE_IN_CLOSED_STATE = 100;
 
     private final float failureRateThreshold;
-    private int ringBufferSizeInHalfOpenState;
+    private int ringBufferSizeInHalfClosedState;
     private int ringBufferSizeInClosedState;
     private final Duration waitDurationInOpenState;
     private final CircuitBreakerEventListener circuitBreakerEventListener;
@@ -40,13 +40,13 @@ public class CircuitBreakerConfig {
 
     private CircuitBreakerConfig(float failureRateThreshold,
                                  Duration waitDurationInOpenState,
-                                 int ringBufferSizeInHalfOpenState,
+                                 int ringBufferSizeInHalfClosedState,
                                  int ringBufferSizeInClosedState,
                                  Predicate<Throwable> exceptionPredicate,
                                  CircuitBreakerEventListener circuitBreakerEventListener){
         this.failureRateThreshold = failureRateThreshold;
         this.waitDurationInOpenState = waitDurationInOpenState;
-        this.ringBufferSizeInHalfOpenState = ringBufferSizeInHalfOpenState;
+        this.ringBufferSizeInHalfClosedState = ringBufferSizeInHalfClosedState;
         this.ringBufferSizeInClosedState = ringBufferSizeInClosedState;
         this.exceptionPredicate = exceptionPredicate;
         this.circuitBreakerEventListener = circuitBreakerEventListener;
@@ -61,8 +61,8 @@ public class CircuitBreakerConfig {
         return waitDurationInOpenState;
     }
 
-    public int getRingBufferSizeInHalfOpenState() {
-        return ringBufferSizeInHalfOpenState;
+    public int getRingBufferSizeInHalfClosedState() {
+        return ringBufferSizeInHalfClosedState;
     }
 
     public int getRingBufferSizeInClosedState() {
@@ -98,7 +98,7 @@ public class CircuitBreakerConfig {
 
     public static class Builder {
         private int failureRateThreshold = DEFAULT_MAX_FAILURE_THRESHOLD;
-        private int ringBufferSizeInHalfOpenState = DEFAULT_RING_BUFFER_SIZE_IN_HALF_OPEN_STATE;
+        private int ringBufferSizeInHalfClosedState = DEFAULT_RING_BUFFER_SIZE_IN_HALF_CLOSED_STATE;
         private int ringBufferSizeInClosedState = DEFAULT_RING_BUFFER_SIZE_IN_CLOSED_STATE;
         private Duration waitDurationInOpenState = Duration.ofSeconds(DEFAULT_WAIT_DURATION_IN_OPEN_STATE);
         private CircuitBreakerEventListener circuitBreakerEventListener = new DefaultCircuitBreakerEventListener();
@@ -137,20 +137,20 @@ public class CircuitBreakerConfig {
         }
 
         /**
-         * Configures the size of the ring buffer when the CircuitBreaker is half open. The CircuitBreaker stores the success/failure success / failure status of the latest calls in a ring buffer.
+         * Configures the size of the ring buffer when the CircuitBreaker is half closed. The CircuitBreaker stores the success/failure success / failure status of the latest calls in a ring buffer.
          * For example, if {@code ringBufferSizeInClosedState} is 10, then at least 10 calls must be evaluated, before the failure rate can be calculated.
          * If only 9 calls have been evaluated the CircuitBreaker will not trip back to closed or open even if all 9 calls have failed.
          *
          * The size must be greater than 0. Default size is 10.
          *
-         * @param ringBufferSizeInHalfOpenState the size of the ring buffer when the CircuitBreaker is is half open
+         * @param ringBufferSizeInHalfClosedState the size of the ring buffer when the CircuitBreaker is is half closed
          * @return the CircuitBreakerConfig.Builder
          */
-        public Builder ringBufferSizeInHalfOpenState(int ringBufferSizeInHalfOpenState) {
-            if (ringBufferSizeInHalfOpenState < 1 ) {
-                throw new IllegalArgumentException("ringBufferSizeInHalfOpenState must be greater than 0");
+        public Builder ringBufferSizeInHalfClosedState(int ringBufferSizeInHalfClosedState) {
+            if (ringBufferSizeInHalfClosedState < 1) {
+                throw new IllegalArgumentException("ringBufferSizeInHalfClosedState must be greater than 0");
             }
-            this.ringBufferSizeInHalfOpenState = ringBufferSizeInHalfOpenState;
+            this.ringBufferSizeInHalfClosedState = ringBufferSizeInHalfClosedState;
             return this;
         }
 
@@ -207,7 +207,7 @@ public class CircuitBreakerConfig {
             return new CircuitBreakerConfig(
                     failureRateThreshold,
                     waitDurationInOpenState,
-                    ringBufferSizeInHalfOpenState,
+                    ringBufferSizeInHalfClosedState,
                     ringBufferSizeInClosedState,
                     exceptionPredicate,
                     circuitBreakerEventListener);
