@@ -39,8 +39,7 @@ import java.util.function.Supplier;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.*;
 
 public class ReactiveStreamsTest {
 
@@ -60,7 +59,7 @@ public class ReactiveStreamsTest {
         circuitBreakerRegistry = CircuitBreakerRegistry.of(new CircuitBreakerConfig.Builder()
                 .failureRateThreshold(50)
                 .ringBufferSizeInClosedState(2)
-                .ringBufferSizeInHalfOpenState(2)
+                .ringBufferSizeInHalfClosedState(2)
                 .waitDurationInOpenState(Duration.ofMillis(1000))
                 .build());
     }

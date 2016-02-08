@@ -37,7 +37,7 @@ public class CircuitBreakerStateMachineTest {
         circuitBreaker = new CircuitBreakerStateMachine("testName", CircuitBreakerConfig.custom()
                 .failureRateThreshold(50)
                 .ringBufferSizeInClosedState(5)
-                .ringBufferSizeInHalfOpenState(2)
+                .ringBufferSizeInHalfClosedState(2)
                 .waitDurationInOpenState(Duration.ofSeconds(1))
                 .build());
     }

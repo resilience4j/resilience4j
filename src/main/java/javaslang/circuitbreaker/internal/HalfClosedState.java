@@ -27,7 +27,7 @@ final class HalfClosedState extends CircuitBreakerState {
 
     HalfClosedState(CircuitBreakerStateMachine stateMachine) {
         super(stateMachine);
-        this.circuitBreakerMetrics = new CircuitBreakerMetrics(stateMachine.getCircuitBreakerConfig().getRingBufferSizeInHalfOpenState());
+        this.circuitBreakerMetrics = new CircuitBreakerMetrics(stateMachine.getCircuitBreakerConfig().getRingBufferSizeInHalfClosedState());
         this.failureRateThreshold = stateMachine.getCircuitBreakerConfig().getFailureRateThreshold();
     }
 
