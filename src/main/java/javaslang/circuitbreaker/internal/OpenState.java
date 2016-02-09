@@ -34,7 +34,7 @@ final class OpenState extends CircuitBreakerState {
 
     /**
      * Returns false, if the wait duration has not elapsed.
-     * Returns true, if the wait duration has elapsed and transitions the state machine to HALF_CLOSED state.
+     * Returns true, if the wait duration has elapsed and transitions the state machine to HALF_OPEN state.
      *
      * @return false, if the wait duration has not elapsed. true, if the wait duration has elapsed.
      */
@@ -42,7 +42,7 @@ final class OpenState extends CircuitBreakerState {
     boolean isCallPermitted() {
         // Thread-safe
         if (Instant.now().isAfter(retryAfterWaitDuration)) {
-            stateMachine.transitionToHalfClosedState(CircuitBreaker.StateTransition.OPEN_TO_HALF_CLOSED);
+            stateMachine.transitionToHalfClosedState(CircuitBreaker.StateTransition.OPEN_TO_HALF_OPEN);
             return true;
         }
         return false;

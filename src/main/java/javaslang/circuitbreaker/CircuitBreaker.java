@@ -67,6 +67,13 @@ public interface CircuitBreaker {
     State getState();
 
     /**
+     * Get the config of this CircuitBreaker.
+     *
+     * @return the config of this CircuitBreaker
+     */
+    CircuitBreakerConfig getCircuitBreakerConfig();
+
+    /**
      * States of the CircuitBreaker state machine.
      */
     enum State {
@@ -76,9 +83,9 @@ public interface CircuitBreaker {
         /** An OPEN breaker has tripped and will not allow requests
          through. */
         OPEN,
-        /** A HALF_CLOSED breaker has completed its wait interval
+        /** A HALF_OPEN breaker has completed its wait interval
          and will allow requests */
-        HALF_CLOSED
+        HALF_OPEN
     }
 
     /**
@@ -86,9 +93,9 @@ public interface CircuitBreaker {
      */
     enum StateTransition {
         CLOSED_TO_OPEN(State.CLOSED, State.OPEN),
-        HALF_CLOSED_TO_CLOSED(State.HALF_CLOSED, State.CLOSED),
-        HALF_CLOSED_TO_OPEN(State.HALF_CLOSED, State.OPEN),
-        OPEN_TO_HALF_CLOSED(State.OPEN, State.HALF_CLOSED);
+        HALF_OPEN_TO_CLOSED(State.HALF_OPEN, State.CLOSED),
+        HALF_OPEN_TO_OPEN(State.HALF_OPEN, State.OPEN),
+        OPEN_TO_HALF_OPEN(State.OPEN, State.HALF_OPEN);
 
         State fromState;
         State toState;

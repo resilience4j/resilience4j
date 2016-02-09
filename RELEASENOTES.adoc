@@ -37,3 +37,7 @@
 
 === Version 0.3.2
 * CircuitBreakerRegistry has a new method which takes a Supplier of a CircuitBreakerConfig so that the CircuitBreakerConfig is only created when needed.
+
+=== Version 0.3.3
+* CircuitBreaker has a new method `getCircuitBreakerConfig` which allows to retrieve the CircuitBreakerConfig of the CircuitBreaker.
+* Renamed the state HALF_CLOSED to HALF_OPEN to match the pattern description of Martin Fowler.

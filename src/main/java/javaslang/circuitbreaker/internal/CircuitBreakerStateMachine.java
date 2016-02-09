@@ -99,6 +99,7 @@ final class CircuitBreakerStateMachine implements CircuitBreaker {
      *
      * @return the config of this CircuitBreaker
      */
+    @Override
     public CircuitBreakerConfig getCircuitBreakerConfig() {
         return circuitBreakerConfig;
     }
@@ -122,7 +123,7 @@ final class CircuitBreakerStateMachine implements CircuitBreaker {
     }
 
     void transitionToHalfClosedState(StateTransition stateTransition) {;
-        stateReference.set(new HalfClosedState(this));
+        stateReference.set(new HalfOpenState(this));
         circuitBreakerConfig.getCircuitBreakerEventListener().onCircuitBreakerEvent(new CircuitBreakerStateTransitionEvent(getName(), stateTransition));
     }
 }

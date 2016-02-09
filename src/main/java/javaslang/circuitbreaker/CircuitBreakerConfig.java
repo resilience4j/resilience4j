@@ -122,7 +122,7 @@ public class CircuitBreakerConfig {
         }
 
         /**
-         * Configures the wait duration which specifies how long the CircuitBreaker should stay open, before it switches to half closed.
+         * Configures the wait duration which specifies how long the CircuitBreaker should stay open, before it switches to half open.
          * Default value is 60 seconds.
          *
          * @param waitDurationInOpenState the wait duration which specifies how long the CircuitBreaker should stay open

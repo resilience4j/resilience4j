@@ -29,7 +29,7 @@ apply plugin: 'org.ajoberstar.github-pages'
 
 group = 'io.github.robwin'
 description = 'A CircuitBreaker pattern implementation for Java 8 and functional programming.'
-version = '0.3.2'
+version = '0.3.3'
 
 tasks.withType(JavaCompile) {
     sourceCompatibility = "1.8"
@@ -57,7 +57,7 @@ jmh {
 }
 
 dependencies {
-    compile "com.javaslang:javaslang:2.0.0-RC2"
+    compile "com.javaslang:javaslang:2.0.0-RC4"
     compile "org.slf4j:slf4j-api:1.7.13"
     testCompile "io.dropwizard.metrics:metrics-core:3.1.2"
     testCompile "junit:junit:4.11"

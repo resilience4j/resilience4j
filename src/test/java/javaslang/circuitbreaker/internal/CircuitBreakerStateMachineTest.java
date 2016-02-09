@@ -88,15 +88,15 @@ public class CircuitBreakerStateMachineTest {
 
         sleep(800);
 
-        // The CircuitBreaker switches to half closed, because the wait duration of 1 second is elapsed
+        // The CircuitBreaker switches to half open, because the wait duration of 1 second is elapsed
         assertThat(circuitBreaker.isCallPermitted()).isEqualTo(true);
-        assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.HALF_CLOSED);
+        assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.HALF_OPEN);
 
         // A ring buffer with size 2 is used in half open state
         // Call 1 is a failure
         circuitBreaker.recordFailure(new RuntimeException());
         assertThat(circuitBreaker.isCallPermitted()).isEqualTo(true);
-        assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.HALF_CLOSED);
+        assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.HALF_OPEN);
 
         // Call 2 is a failure
         circuitBreaker.recordFailure(new RuntimeException());
@@ -107,14 +107,14 @@ public class CircuitBreakerStateMachineTest {
 
         sleep(1300);
 
-        // The CircuitBreaker switches to half closed, because the wait duration of 1 second is elapsed
+        // The CircuitBreaker switches to half open, because the wait duration of 1 second is elapsed
         assertThat(circuitBreaker.isCallPermitted()).isEqualTo(true);
-        assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.HALF_CLOSED);
+        assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.HALF_OPEN);
 
         // Call 1 is a failure
         circuitBreaker.recordFailure(new RuntimeException());
         assertThat(circuitBreaker.isCallPermitted()).isEqualTo(true);
-        assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.HALF_CLOSED);
+        assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.HALF_OPEN);
 
         // Call 2 is a success
         circuitBreaker.recordSuccess();

@@ -20,21 +20,21 @@ package javaslang.circuitbreaker.internal;
 
 import javaslang.circuitbreaker.CircuitBreaker;
 
-final class HalfClosedState extends CircuitBreakerState {
+final class HalfOpenState extends CircuitBreakerState {
 
     private CircuitBreakerMetrics circuitBreakerMetrics;
     private final float failureRateThreshold;
 
-    HalfClosedState(CircuitBreakerStateMachine stateMachine) {
+    HalfOpenState(CircuitBreakerStateMachine stateMachine) {
         super(stateMachine);
         this.circuitBreakerMetrics = new CircuitBreakerMetrics(stateMachine.getCircuitBreakerConfig().getRingBufferSizeInHalfOpenState());
         this.failureRateThreshold = stateMachine.getCircuitBreakerConfig().getFailureRateThreshold();
     }
 
     /**
-     * Returns always true, because the CircuitBreaker is half closed.
+     * Returns always true, because the CircuitBreaker is half open.
      *
-     * @return always true, because the CircuitBreaker is half closed.
+     * @return always true, because the CircuitBreaker is half open.
      */
     @Override
     boolean isCallPermitted() {
@@ -63,9 +63,9 @@ final class HalfClosedState extends CircuitBreakerState {
     private void checkFailureRate(float currentFailureRate) {
         if(currentFailureRate != -1){
             if(currentFailureRate > failureRateThreshold) {
-                stateMachine.transitionToOpenState(CircuitBreaker.StateTransition.HALF_CLOSED_TO_OPEN);
+                stateMachine.transitionToOpenState(CircuitBreaker.StateTransition.HALF_OPEN_TO_OPEN);
             }else{
-                stateMachine.transitionToClosedState(CircuitBreaker.StateTransition.HALF_CLOSED_TO_CLOSED);
+                stateMachine.transitionToClosedState(CircuitBreaker.StateTransition.HALF_OPEN_TO_CLOSED);
             }
         }
     }
@@ -75,6 +75,6 @@ final class HalfClosedState extends CircuitBreakerState {
      */
     @Override
     CircuitBreaker.State getState() {
-        return CircuitBreaker.State.HALF_CLOSED;
+        return CircuitBreaker.State.HALF_OPEN;
     }
 }

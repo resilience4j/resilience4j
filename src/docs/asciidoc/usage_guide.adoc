@@ -12,7 +12,7 @@ CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefault
 As an alternative you can provide your own custom global `CircuitBreakerConfig`. In order to create a custom global CircuitBreakerConfig or a CircuitBreakerConfig for a specific CircuitBreaker, you can use the CircuitBreakerConfig builder. You can configure:
 
 * the failure rate threshold in percentage above which the CircuitBreaker should trip open and start short-circuiting calls
-* the wait duration which specifies how long the CircuitBreaker should stay open, before it switches to half closed
+* the wait duration which specifies how long the CircuitBreaker should stay open, before it switches to half open
 * the size of the ring buffer when the CircuitBreaker is half open
 * the size of the ring buffer when the CircuitBreaker is closed
 * a custom CircuitBreakerEventListener which handles CircuitBreaker events
@@ -41,7 +41,7 @@ CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("uniqueNam
 === Use a CircuitBreaker
 
 You can decorate any `Supplier / Runnable / Function` or `CheckedSupplier / CheckedRunnable / CheckedFunction` function with `CircuitBreaker.decorateCheckedSupplier()`, `CircuitBreaker.decorateCheckedRunnable()` or `CircuitBreaker.decorateCheckedFunction()`.
-You can invoke the decorated function with `Try.of(...)` or `Try.run(...)` from https://github.com/javaslang/javaslang[Javaslang]. This allows to chain further functions with `map`, `flatMap`, `filter`, `recover` or `andThen`. The chained functions are only invoked, if the CircuitBreaker is CLOSED or HALF_CLOSED.
+You can invoke the decorated function with `Try.of(...)` or `Try.run(...)` from https://github.com/javaslang/javaslang[Javaslang]. This allows to chain further functions with `map`, `flatMap`, `filter`, `recover` or `andThen`. The chained functions are only invoked, if the CircuitBreaker is CLOSED or HALF_OPEN.
 In the following example, `Try.of(...)` returns a `Success<String>` Monad, if the invocation of the function is successful. If the function throws an exception, a `Failure<Throwable>` Monad is returned and `map` is not invoked.
 
 [source,java,indent=0]
