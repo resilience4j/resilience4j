@@ -515,8 +515,8 @@ table.CodeRay td.code>pre{padding:0}
 <h1>Javaslang-Circuitbreaker User Guide</h1>
 <div class="details">
 <span id="author" class="author">Robert Winkler</span><br>
-<span id="revnumber">version 0.3.2,</span>
-<span id="revdate">2016-02-04</span>
+<span id="revnumber">version 0.3.3,</span>
+<span id="revdate">2016-02-09</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">Table of Contents</div>
@@ -598,7 +598,7 @@ Then, all access to the backend is blocked for a (configurable) time duration. <
 For example, if the size of the Ring Buffer is 10, then at least 10 calls must evaluated, before the failure rate can be calculated. If only 9 calls have been evaluated the CircuitBreaker will not trip open even if all 9 calls have failed.</p>
 </div>
 <div class="paragraph">
-<p>After the time duration has elapsed, the CircuitBreaker state changes from <code>OPEN</code> to <code>HALF_CLOSED</code> and allows calls to see if the backend is still unavailable or has become available again. The CircuitBreaker uses another (configurable) Ring Bit Buffer to evaluate the failure rate in the <code>HALF_CLOSED</code> state. If the failure rate is above the configured threshold, the state changes back to <code>OPEN</code>. If the failure rate is below or equal to the threshold, the state changes back to <code>CLOSED</code>.<br>
+<p>After the time duration has elapsed, the CircuitBreaker state changes from <code>OPEN</code> to <code>HALF_OPEN</code> and allows calls to see if the backend is still unavailable or has become available again. The CircuitBreaker uses another (configurable) Ring Bit Buffer to evaluate the failure rate in the <code>HALF_OPEN</code> state. If the failure rate is above the configured threshold, the state changes back to <code>OPEN</code>. If the failure rate is below or equal to the threshold, the state changes back to <code>CLOSED</code>.<br>
 <code>CircuitBreaker::recordFailure(exception)</code> checks if the exception should be recorded as a failure or should be ignored. You can configure a custom <code>Predicate</code> which decides whether an exception should be recorded as a failure. The default Predicate records all exceptions as a failure.</p>
 </div>
 </div>
@@ -617,7 +617,7 @@ For example, if the size of the Ring Buffer is 10, then at least 10 calls must e
     jcenter()
 }
 
-compile "io.github.robwin:javaslang-circuitbreaker:0.3.2"</code></pre>
+compile "io.github.robwin:javaslang-circuitbreaker:0.3.3"</code></pre>
 </div>
 </div>
 </div>
@@ -645,7 +645,7 @@ compile "io.github.robwin:javaslang-circuitbreaker:0.3.2"</code></pre>
 <p>the failure rate threshold in percentage above which the CircuitBreaker should trip open and start short-circuiting calls</p>
 </li>
 <li>
-<p>the wait duration which specifies how long the CircuitBreaker should stay open, before it switches to half closed</p>
+<p>the wait duration which specifies how long the CircuitBreaker should stay open, before it switches to half open</p>
 </li>
 <li>
 <p>the size of the ring buffer when the CircuitBreaker is half open</p>
@@ -686,7 +686,7 @@ CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker(<span clas
 <h3 id="_use_a_circuitbreaker">3.2. Use a CircuitBreaker</h3>
 <div class="paragraph">
 <p>You can decorate any <code>Supplier / Runnable / Function</code> or <code>CheckedSupplier / CheckedRunnable / CheckedFunction</code> function with <code>CircuitBreaker.decorateCheckedSupplier()</code>, <code>CircuitBreaker.decorateCheckedRunnable()</code> or <code>CircuitBreaker.decorateCheckedFunction()</code>.<br>
-You can invoke the decorated function with <code>Try.of(&#8230;&#8203;)</code> or <code>Try.run(&#8230;&#8203;)</code> from <a href="https://github.com/javaslang/javaslang">Javaslang</a>. This allows to chain further functions with <code>map</code>, <code>flatMap</code>, <code>filter</code>, <code>recover</code> or <code>andThen</code>. The chained functions are only invoked, if the CircuitBreaker is CLOSED or HALF_CLOSED.<br>
+You can invoke the decorated function with <code>Try.of(&#8230;&#8203;)</code> or <code>Try.run(&#8230;&#8203;)</code> from <a href="https://github.com/javaslang/javaslang">Javaslang</a>. This allows to chain further functions with <code>map</code>, <code>flatMap</code>, <code>filter</code>, <code>recover</code> or <code>andThen</code>. The chained functions are only invoked, if the CircuitBreaker is CLOSED or HALF_OPEN.<br>
 In the following example, <code>Try.of(&#8230;&#8203;)</code> returns a <code>Success&lt;String&gt;</code> Monad, if the invocation of the function is successful. If the function throws an exception, a <code>Failure&lt;Throwable&gt;</code> Monad is returned and <code>map</code> is not invoked.</p>
 </div>
 <div class="listingblock">
@@ -999,7 +999,7 @@ First, create a new HealthCheckRegistry instance:</p>
         CircuitBreaker.State state = circuitBreakerRegistry.circuitBreaker(<span class="string"><span class="delimiter">&quot;</span><span class="content">circuitBreakerName</span><span class="delimiter">&quot;</span></span>).getState();
         <span class="keyword">switch</span>(state){
             <span class="keyword">case</span> CLOSED: <span class="keyword">return</span> HealthCheck.Result.healthy();
-            <span class="keyword">case</span> HALF_CLOSED: <span class="keyword">return</span> HealthCheck.Result.healthy();
+            <span class="keyword">case</span> HALF_OPEN: <span class="keyword">return</span> HealthCheck.Result.healthy();
             <span class="keyword">default</span>: <span class="keyword">return</span> HealthCheck.Result.unhealthy(<span class="predefined-type">String</span>.format(<span class="string"><span class="delimiter">&quot;</span><span class="content">CircuitBreaker '%s' is OPEN.</span><span class="delimiter">&quot;</span></span>, <span class="string"><span class="delimiter">&quot;</span><span class="content">testName</span><span class="delimiter">&quot;</span></span>));
         }
     }
@@ -1060,8 +1060,8 @@ reporter.start(<span class="integer">1</span>, <span class="predefined-type">Tim
 </div>
 <div id="footer">
 <div id="footer-text">
-Version 0.3.2<br>
-Last updated 2016-01-07 13:11:57 MEZ
+Version 0.3.3<br>
+Last updated 2016-02-09 10:20:24 MEZ
 </div>
 </div>
 </body>
