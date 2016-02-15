@@ -21,7 +21,11 @@ package javaslang.circuitbreaker;
 import javaslang.circuitbreaker.internal.RingBitSet;
 import org.openjdk.jmh.annotations.*;
 
+import java.util.concurrent.TimeUnit;
+
 @State(Scope.Benchmark)
+@OutputTimeUnit(TimeUnit.MILLISECONDS)
+@BenchmarkMode(Mode.Throughput)
 public class RingBitSetBenachmark {
 
     private RingBitSet ringBitSet;

@@ -21,9 +21,12 @@ package javaslang.circuitbreaker;
 import org.openjdk.jmh.annotations.*;
 
 import java.time.Duration;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
 @State(Scope.Benchmark)
+@OutputTimeUnit(TimeUnit.MILLISECONDS)
+@BenchmarkMode(Mode.Throughput)
 public class CircuitBreakerBenchmark {
 
     private CircuitBreaker circuitBreaker;
