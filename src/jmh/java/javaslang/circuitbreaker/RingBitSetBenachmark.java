@@ -19,17 +19,15 @@
 package javaslang.circuitbreaker;
 
 import javaslang.circuitbreaker.internal.RingBitSet;
-import org.openjdk.jmh.annotations.Benchmark;
-import org.openjdk.jmh.annotations.Scope;
-import org.openjdk.jmh.annotations.Setup;
-import org.openjdk.jmh.annotations.State;
-
-import java.util.stream.IntStream;
+import org.openjdk.jmh.annotations.*;
 
 @State(Scope.Benchmark)
 public class RingBitSetBenachmark {
 
-    RingBitSet ringBitSet;
+    private RingBitSet ringBitSet;
+    private static final int ITERATION_COUNT = 10;
+    private static final int WARMUP_COUNT = 10;
+    private static final int THREAD_COUNT = 10;
 
     @Setup
     public void setUp() {
@@ -37,13 +35,11 @@ public class RingBitSetBenachmark {
     }
 
     @Benchmark
+    @Threads(value = THREAD_COUNT)
+    @Warmup(iterations = WARMUP_COUNT)
+    @Measurement(iterations = ITERATION_COUNT)
     public void setBits(){
-        IntStream.range(1, 10009).parallel().forEach((i) -> {
-            if (i % 2 == 0) {
-                ringBitSet.setNextBit(true);
-            } else {
-                ringBitSet.setNextBit(false);
-            }
-        });
+        ringBitSet.setNextBit(true);
+        ringBitSet.setNextBit(false);
     }
 }

@@ -18,10 +18,7 @@
  */
 package javaslang.circuitbreaker;
 
-import org.openjdk.jmh.annotations.Benchmark;
-import org.openjdk.jmh.annotations.Scope;
-import org.openjdk.jmh.annotations.Setup;
-import org.openjdk.jmh.annotations.State;
+import org.openjdk.jmh.annotations.*;
 
 import java.time.Duration;
 import java.util.function.Supplier;
@@ -31,6 +28,9 @@ public class CircuitBreakerBenchmark {
 
     private CircuitBreaker circuitBreaker;
     private Supplier<String> supplier;
+    private static final int ITERATION_COUNT = 10;
+    private static final int WARMUP_COUNT = 10;
+    private static final int THREAD_COUNT = 10;
 
     @Setup
     public void setUp() {
@@ -51,7 +51,10 @@ public class CircuitBreakerBenchmark {
     }
 
     @Benchmark
-    public void invokeSupplier(){
-        supplier.get();
+    @Threads(value = THREAD_COUNT)
+    @Warmup(iterations = WARMUP_COUNT)
+    @Measurement(iterations = ITERATION_COUNT)
+    public String invokeSupplier(){
+        return supplier.get();
     }
 }
