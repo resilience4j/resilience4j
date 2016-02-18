@@ -18,7 +18,10 @@
  */
 package javaslang.circuitbreaker.internal;
 
-class CircuitBreakerMetrics {
+
+import javaslang.circuitbreaker.CircuitBreaker;
+
+class CircuitBreakerMetrics implements CircuitBreaker.Metrics {
 
     private final RingBitSet ringBitSet;
 
@@ -52,16 +55,12 @@ class CircuitBreakerMetrics {
         return getFailureRate();
     }
 
-    /**
-     * Returns the failure rate in percentage. If the number of measured calls is below the minimum number of measured calls,
-     * it returns -1.
-     *
-     * @return the failure rate in percentage
-     */
+
+    @Override
     public synchronized float getFailureRate(){
-        int numOfMeasuredCalls = getCurrentNumberOfBufferedCalls();
+        int numOfMeasuredCalls = getNumberOfBufferedCalls();
         if(numOfMeasuredCalls == maxNumberOfBufferedCalls){
-            return getCurrentNumberOfFailedCalls() * 100.0f / numOfMeasuredCalls;
+            return getNumberOfFailedCalls() * 100.0f / numOfMeasuredCalls;
         }else{
             return -1f;
         }
@@ -76,21 +75,13 @@ class CircuitBreakerMetrics {
         return maxNumberOfBufferedCalls;
     }
 
-    /**
-     * Returns the current number of buffered calls.
-     *
-     * @return he current number of buffered calls
-     */
-    public synchronized int getCurrentNumberOfBufferedCalls() {
+    @Override
+    public synchronized int getNumberOfBufferedCalls() {
         return this.ringBitSet.length();
     }
 
-    /**
-     * Returns the current number of failed calls.
-     *
-     * @return the current number of failed calls.
-     */
-    public synchronized int getCurrentNumberOfFailedCalls() {
+    @Override
+    public synchronized int getNumberOfFailedCalls() {
         return this.ringBitSet.cardinality();
     }
 }

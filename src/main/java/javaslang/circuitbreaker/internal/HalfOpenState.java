@@ -63,7 +63,7 @@ final class HalfOpenState extends CircuitBreakerState {
     private void checkFailureRate(float currentFailureRate) {
         if(currentFailureRate != -1){
             if(currentFailureRate > failureRateThreshold) {
-                stateMachine.transitionToOpenState(CircuitBreaker.StateTransition.HALF_OPEN_TO_OPEN);
+                stateMachine.transitionToOpenState(CircuitBreaker.StateTransition.HALF_OPEN_TO_OPEN, circuitBreakerMetrics);
             }else{
                 stateMachine.transitionToClosedState(CircuitBreaker.StateTransition.HALF_OPEN_TO_CLOSED);
             }
@@ -76,5 +76,10 @@ final class HalfOpenState extends CircuitBreakerState {
     @Override
     CircuitBreaker.State getState() {
         return CircuitBreaker.State.HALF_OPEN;
+    }
+
+    @Override
+    CircuitBreaker.Metrics getMetrics() {
+        return circuitBreakerMetrics;
     }
 }

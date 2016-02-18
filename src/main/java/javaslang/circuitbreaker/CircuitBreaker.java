@@ -67,11 +67,18 @@ public interface CircuitBreaker {
     State getState();
 
     /**
-     * Get the config of this CircuitBreaker.
+     * Get the CircuitBreakerConfig of this CircuitBreaker.
      *
-     * @return the config of this CircuitBreaker
+     * @return the CircuitBreakerConfig of this CircuitBreaker
      */
     CircuitBreakerConfig getCircuitBreakerConfig();
+
+    /**
+     * Get the Metrics of this CircuitBreaker.
+     *
+     * @return the Metrics of this CircuitBreaker
+     */
+    Metrics getMetrics();
 
     /**
      * States of the CircuitBreaker state machine.
@@ -117,6 +124,31 @@ public interface CircuitBreaker {
         public String toString(){
             return String.format("State transition from %s to %s", fromState, toState);
         }
+    }
+
+    interface Metrics {
+
+        /**
+         * Returns the failure rate in percentage. If the number of measured calls is below the minimum number of measured calls,
+         * it returns -1.
+         *
+         * @return the failure rate in percentage
+         */
+        float getFailureRate();
+
+        /**
+         * Returns the current number of buffered calls.
+         *
+         * @return he current number of buffered calls
+         */
+        int getNumberOfBufferedCalls();
+
+        /**
+         * Returns the current number of failed calls.
+         *
+         * @return the current number of failed calls.
+         */
+        int getNumberOfFailedCalls();
     }
 
     /**

@@ -53,32 +53,50 @@ public class CircuitBreakerStateMachineTest {
         // Initially the CircuitBreaker is closed
         assertThat(circuitBreaker.isCallPermitted()).isEqualTo(true);
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
+        assertThat(circuitBreaker.getMetrics().getFailureRate()).isEqualTo(-1f);
+        assertThat(circuitBreaker.getMetrics().getNumberOfBufferedCalls()).isEqualTo(0);
+        assertThat(circuitBreaker.getMetrics().getNumberOfFailedCalls()).isEqualTo(0);
 
         // Call 1 is a failure
         circuitBreaker.recordFailure(new RuntimeException());
         assertThat(circuitBreaker.isCallPermitted()).isEqualTo(true);
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
+        assertThat(circuitBreaker.getMetrics().getNumberOfBufferedCalls()).isEqualTo(1);
+        assertThat(circuitBreaker.getMetrics().getNumberOfFailedCalls()).isEqualTo(1);
+        assertThat(circuitBreaker.getMetrics().getFailureRate()).isEqualTo(-1f);
 
         // Call 2 is a failure
         circuitBreaker.recordFailure(new RuntimeException());
         assertThat(circuitBreaker.isCallPermitted()).isEqualTo(true);
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
+        assertThat(circuitBreaker.getMetrics().getNumberOfBufferedCalls()).isEqualTo(2);
+        assertThat(circuitBreaker.getMetrics().getNumberOfFailedCalls()).isEqualTo(2);
+        assertThat(circuitBreaker.getMetrics().getFailureRate()).isEqualTo(-1f);
 
         // Call 3 is a failure
         circuitBreaker.recordFailure(new RuntimeException());
         assertThat(circuitBreaker.isCallPermitted()).isEqualTo(true);
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
+        assertThat(circuitBreaker.getMetrics().getNumberOfBufferedCalls()).isEqualTo(3);
+        assertThat(circuitBreaker.getMetrics().getNumberOfFailedCalls()).isEqualTo(3);
+        assertThat(circuitBreaker.getMetrics().getFailureRate()).isEqualTo(-1f);
 
         // Call 4 is a success
         circuitBreaker.recordSuccess();
         assertThat(circuitBreaker.isCallPermitted()).isEqualTo(true);
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
+        assertThat(circuitBreaker.getMetrics().getNumberOfBufferedCalls()).isEqualTo(4);
+        assertThat(circuitBreaker.getMetrics().getNumberOfFailedCalls()).isEqualTo(3);
+        assertThat(circuitBreaker.getMetrics().getFailureRate()).isEqualTo(-1f);
 
         // Call 5 is a success
         circuitBreaker.recordSuccess();
         // The ring buffer is filled and the failure rate is above 50%
         assertThat(circuitBreaker.isCallPermitted()).isEqualTo(false);
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.OPEN);
+        assertThat(circuitBreaker.getMetrics().getNumberOfBufferedCalls()).isEqualTo(5);
+        assertThat(circuitBreaker.getMetrics().getNumberOfFailedCalls()).isEqualTo(3);
+        assertThat(circuitBreaker.getMetrics().getFailureRate()).isEqualTo(60.0f);
 
         sleep(500);
 
@@ -97,6 +115,9 @@ public class CircuitBreakerStateMachineTest {
         circuitBreaker.recordFailure(new RuntimeException());
         assertThat(circuitBreaker.isCallPermitted()).isEqualTo(true);
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.HALF_OPEN);
+        assertThat(circuitBreaker.getMetrics().getNumberOfBufferedCalls()).isEqualTo(1);
+        assertThat(circuitBreaker.getMetrics().getNumberOfFailedCalls()).isEqualTo(1);
+        assertThat(circuitBreaker.getMetrics().getFailureRate()).isEqualTo(-1f);
 
         // Call 2 is a failure
         circuitBreaker.recordFailure(new RuntimeException());
@@ -104,6 +125,9 @@ public class CircuitBreakerStateMachineTest {
         // The state machine transitions back to OPEN state
         assertThat(circuitBreaker.isCallPermitted()).isEqualTo(false);
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.OPEN);
+        assertThat(circuitBreaker.getMetrics().getNumberOfBufferedCalls()).isEqualTo(2);
+        assertThat(circuitBreaker.getMetrics().getNumberOfFailedCalls()).isEqualTo(2);
+        assertThat(circuitBreaker.getMetrics().getFailureRate()).isEqualTo(100f);
 
         sleep(1300);
 
@@ -115,6 +139,9 @@ public class CircuitBreakerStateMachineTest {
         circuitBreaker.recordFailure(new RuntimeException());
         assertThat(circuitBreaker.isCallPermitted()).isEqualTo(true);
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.HALF_OPEN);
+        assertThat(circuitBreaker.getMetrics().getNumberOfBufferedCalls()).isEqualTo(1);
+        assertThat(circuitBreaker.getMetrics().getNumberOfFailedCalls()).isEqualTo(1);
+        assertThat(circuitBreaker.getMetrics().getFailureRate()).isEqualTo(-1f);
 
         // Call 2 is a success
         circuitBreaker.recordSuccess();
@@ -122,5 +149,8 @@ public class CircuitBreakerStateMachineTest {
         // The state machine transitions back to CLOSED state
         assertThat(circuitBreaker.isCallPermitted()).isEqualTo(true);
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
+        assertThat(circuitBreaker.getMetrics().getNumberOfBufferedCalls()).isEqualTo(0);
+        assertThat(circuitBreaker.getMetrics().getNumberOfFailedCalls()).isEqualTo(0);
+        assertThat(circuitBreaker.getMetrics().getFailureRate()).isEqualTo(-1f);
     }
 }

@@ -26,10 +26,12 @@ import java.time.Instant;
 final class OpenState extends CircuitBreakerState {
 
     private final Instant retryAfterWaitDuration;
+    private final CircuitBreakerMetrics circuitBreakerMetrics;
 
-    OpenState(CircuitBreakerStateMachine stateMachine) {
+    OpenState(CircuitBreakerStateMachine stateMachine, CircuitBreakerMetrics circuitBreakerMetrics) {
         super(stateMachine);
         this.retryAfterWaitDuration = Instant.now().plus(stateMachine.getCircuitBreakerConfig().getWaitDurationInOpenState());
+        this.circuitBreakerMetrics = circuitBreakerMetrics;
     }
 
     /**
@@ -72,5 +74,10 @@ final class OpenState extends CircuitBreakerState {
     @Override
     CircuitBreaker.State getState() {
         return CircuitBreaker.State.OPEN;
+    }
+
+    @Override
+    CircuitBreaker.Metrics getMetrics() {
+        return circuitBreakerMetrics;
     }
 }

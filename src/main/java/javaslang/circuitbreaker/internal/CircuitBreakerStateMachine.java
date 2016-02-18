@@ -104,6 +104,11 @@ final class CircuitBreakerStateMachine implements CircuitBreaker {
         return circuitBreakerConfig;
     }
 
+    @Override
+    public Metrics getMetrics() {
+        return this.stateReference.get().getMetrics();
+    }
+
     /**
      * {@inheritDoc}
      */
@@ -112,17 +117,17 @@ final class CircuitBreakerStateMachine implements CircuitBreaker {
         return String.format("CircuitBreaker '%s'", this.name);
     }
 
-    void transitionToClosedState(StateTransition stateTransition) {
+    protected void transitionToClosedState(StateTransition stateTransition) {
         stateReference.set(new ClosedState(this));
         circuitBreakerConfig.getCircuitBreakerEventListener().onCircuitBreakerEvent(new CircuitBreakerStateTransitionEvent(getName(), stateTransition));
     }
 
-    void transitionToOpenState(StateTransition stateTransition) {
-        stateReference.set(new OpenState(this));
+    protected void transitionToOpenState(StateTransition stateTransition, CircuitBreakerMetrics circuitBreakerMetrics) {
+        stateReference.set(new OpenState(this, circuitBreakerMetrics));
         circuitBreakerConfig.getCircuitBreakerEventListener().onCircuitBreakerEvent(new CircuitBreakerStateTransitionEvent(getName(), stateTransition));
     }
 
-    void transitionToHalfClosedState(StateTransition stateTransition) {;
+    protected void transitionToHalfClosedState(StateTransition stateTransition) {;
         stateReference.set(new HalfOpenState(this));
         circuitBreakerConfig.getCircuitBreakerEventListener().onCircuitBreakerEvent(new CircuitBreakerStateTransitionEvent(getName(), stateTransition));
     }
