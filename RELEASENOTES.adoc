@@ -41,3 +41,6 @@
 === Version 0.3.3
 * CircuitBreaker has a new method `getCircuitBreakerConfig` which allows to retrieve the CircuitBreakerConfig of the CircuitBreaker.
 * Renamed the state HALF_CLOSED to HALF_OPEN to match the pattern description of Martin Fowler.
+
+=== Version 0.3.4
+* Added a Metrics interface to the CircuitBreaker which allows to retrieve current statistics like failureRate and number of buffer calls.
