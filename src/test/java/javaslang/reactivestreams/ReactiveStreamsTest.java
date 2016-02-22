@@ -25,13 +25,14 @@ import javaslang.circuitbreaker.CircuitBreakerRegistry;
 import javaslang.retry.HelloWorldService;
 import javaslang.retry.Retry;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockito.BDDMockito;
+import org.reactivestreams.Publisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import reactor.Environment;
-import reactor.rx.Streams;
+import reactor.core.publisher.Mono;
+import reactor.core.test.TestSubscriber;
+import reactor.rx.Stream;
 
 import javax.xml.ws.WebServiceException;
 import java.time.Duration;
@@ -48,11 +49,6 @@ public class ReactiveStreamsTest {
 
     private CircuitBreakerRegistry circuitBreakerRegistry;
     private HelloWorldService helloWorldService;
-
-    @BeforeClass
-    public static void initialize() {
-        Environment.initialize();
-    }
 
     @Before
     public void setUp(){
@@ -75,13 +71,15 @@ public class ReactiveStreamsTest {
         // Decorate the supplier of the HelloWorldService with Retry functionality
         Supplier<String> retryableSupplier = Retry.decorateSupplier(helloWorldService::returnHelloWorld, retryContext);
 
+        TestSubscriber<String> testSubscriber = new TestSubscriber<>();
+
         // When
-        Streams.generate(retryableSupplier::get)
-                .map(value -> value + " from reactive streams")
-                .consume(value -> {
-                    LOG.info(value);
-                    assertThat(value).isEqualTo("Hello world from reactive streams");
-                });
+        Publisher<String> monoPublisher = Mono.fromCallable(retryableSupplier::get)
+                .map(value -> value + " from reactive streams");
+
+        testSubscriber.bindTo(monoPublisher)
+                .assertComplete()
+                .assertValues("Hello world from reactive streams");
 
         // Then the helloWorldService should be invoked 2 times
         BDDMockito.then(helloWorldService).should(times(2)).returnHelloWorld();
@@ -103,15 +101,30 @@ public class ReactiveStreamsTest {
         // Decorate the supplier of the HelloWorldService with CircuitBreaker functionality
         Supplier<String> supplier = CircuitBreaker.decorateSupplier(helloWorldService::returnHelloWorld, circuitBreaker);
 
+        TestSubscriber<String> testSubscriber = new TestSubscriber<>();
+
         //When
-        Streams.generate(supplier::get)
-                .map(value -> value + " from reactive streams")
-                .consume(value -> {
-                    LOG.info(value);
-                }, exception -> {
-                    LOG.info("Exception handled: " + exception.toString());
-                    assertThat(exception).isInstanceOf(CircuitBreakerOpenException.class);
-                });
+        Publisher<String> monoPublisher = Mono.fromCallable(supplier::get)
+                .map(value -> value + " from reactive streams");
+
+        //Then
+        testSubscriber.bindTo(monoPublisher)
+                .assertError(CircuitBreakerOpenException.class);
     }
 
+    @Test
+    public void testStreamCircuitBreaker() {
+        // Given the HelloWorldService throws an exception
+        given(helloWorldService.returnHelloWorld()).willReturn("Hello world");
+        // Given
+        TestSubscriber<String> testSubscriber = new TestSubscriber<>();
+        CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("testName");
+
+        Publisher<String> monoPublisher = Mono.fromCallable(helloWorldService::returnHelloWorld);
+
+        Stream.from(monoPublisher).as(s -> new StreamCircuitBreaker<>(s, circuitBreaker))
+            .subscribe(testSubscriber);
+
+        testSubscriber.assertValueCount(1).assertValues("Hello world");
+    }
 }
