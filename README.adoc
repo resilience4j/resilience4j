@@ -49,6 +49,11 @@ After the time duration has elapsed, the CircuitBreaker state changes from `OPEN
 
 See http://javaslang.github.io/javaslang-circuitbreaker/0.3.4/[User Guide].
 
+== Companies which use the CircuitBreaker
+
+* Deutsche Telekom
+* AOL
+
 == License
 
 Copyright 2015 Robert Winkler
