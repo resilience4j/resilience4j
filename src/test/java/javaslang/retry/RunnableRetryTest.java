@@ -18,7 +18,6 @@
  */
 package javaslang.retry;
 
-import javaslang.control.Match;
 import javaslang.control.Try;
 import org.junit.Before;
 import org.junit.Test;
@@ -26,6 +25,8 @@ import org.mockito.BDDMockito;
 
 import javax.xml.ws.WebServiceException;
 
+import static javaslang.API.*;
+import static javaslang.Predicates.instanceOf;
 import static org.assertj.core.api.BDDAssertions.assertThat;
 import static org.mockito.BDDMockito.willThrow;
 import static org.mockito.Mockito.mock;
@@ -105,9 +106,9 @@ public class RunnableRetryTest {
 
         // Create a Retry with default configuration
         Retry retryContext = Retry.custom()
-                .retryOnException(throwable -> Match.of(throwable)
-                        .whenType(WebServiceException.class).then(false)
-                        .otherwise(true).get())
+                .retryOnException(throwable -> Match(throwable).of(
+                        Case(instanceOf(WebServiceException.class), false),
+                        Case($(), true)))
                 .build();
         // Decorate the invocation of the HelloWorldService
         Try.CheckedRunnable retryableRunnable = Retry.decorateCheckedRunnable(helloWorldService::sayHelloWorld, retryContext);

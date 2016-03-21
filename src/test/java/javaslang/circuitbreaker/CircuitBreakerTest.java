@@ -18,10 +18,11 @@
  */
 package javaslang.circuitbreaker;
 
-import javaslang.control.Match;
+import javaslang.API;
 import javaslang.control.Try;
 import org.junit.Test;
 
+import javax.xml.ws.WebServiceException;
 import java.io.IOException;
 import java.net.SocketTimeoutException;
 import java.time.Duration;
@@ -29,6 +30,9 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Supplier;
 
+import static javaslang.API.$;
+import static javaslang.API.Case;
+import static javaslang.Predicates.instanceOf;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class CircuitBreakerTest {
@@ -89,9 +93,9 @@ public class CircuitBreakerTest {
                 .ringBufferSizeInClosedState(2)
                 .ringBufferSizeInHalfOpenState(2)
                 .waitDurationInOpenState(Duration.ofMillis(1000))
-                .recordFailure(throwable -> Match.of(throwable)
-                        .whenType(IOException.class).then(false)
-                        .otherwise(true).get())
+                .recordFailure(throwable -> API.Match(throwable).of(
+                        Case(instanceOf(WebServiceException.class), true),
+                        Case($(), false)))
                 .build();
         CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.of(circuitBreakerConfig);
         CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("testName");
