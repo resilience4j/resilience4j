@@ -44,3 +44,6 @@
 
 === Version 0.3.4
 * Added a Metrics interface to the CircuitBreaker which allows to retrieve current statistics like failureRate and number of buffer calls.
+
+== Version 0.40
+* Updated javaslang from 2.0.0-RC4 to 2.0.1
