@@ -20,17 +20,13 @@ package javaslang.circuitbreaker.internal;
 
 import javaslang.circuitbreaker.CircuitBreaker;
 import javaslang.circuitbreaker.CircuitBreakerConfig;
-import javaslang.circuitbreaker.CircuitBreakerRegistry;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.time.Duration;
-import java.util.concurrent.TimeUnit;
 
 import static java.lang.Thread.sleep;
 import static org.assertj.core.api.BDDAssertions.assertThat;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 
 public class CircuitBreakerStateMachineTest {
 
@@ -162,23 +158,5 @@ public class CircuitBreakerStateMachineTest {
         assertThat(circuitBreaker.getMetrics().getNumberOfBufferedCalls()).isEqualTo(0);
         assertThat(circuitBreaker.getMetrics().getNumberOfFailedCalls()).isEqualTo(0);
         assertThat(circuitBreaker.getMetrics().getFailureRate()).isEqualTo(-1f);
-    }
-
-    @Test
-    public void testCircuitBreakerBehaviour() throws InterruptedException {
-        CircuitBreakerRegistry registry = CircuitBreakerRegistry.ofDefaults();
-        int times = 3;
-        int waitSeconds = 2;
-        CircuitBreakerConfig config = CircuitBreakerConfig.custom().ringBufferSizeInHalfOpenState(times)
-                .failureRateThreshold(100).ringBufferSizeInClosedState(times)
-                .waitDurationInOpenState(Duration.ofSeconds(waitSeconds)).build();
-        CircuitBreaker circuitBreaker = registry.circuitBreaker("something", config);
-        for (int i = 0; i < times; i++) {
-            assertTrue("Circuit-breaker call should be permitted", circuitBreaker.isCallPermitted());
-            circuitBreaker.recordFailure(new RuntimeException("Fail! " + i));
-        }
-        assertFalse("Circuit-breaker call should not be permitted", circuitBreaker.isCallPermitted());
-        Thread.sleep(TimeUnit.SECONDS.toMillis(waitSeconds));
-        assertTrue("Circuit-breaker call should be permitted", circuitBreaker.isCallPermitted());
     }
 }
