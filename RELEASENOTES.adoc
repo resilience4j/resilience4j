@@ -45,5 +45,9 @@
 === Version 0.3.4
 * Added a Metrics interface to the CircuitBreaker which allows to retrieve current statistics like failureRate and number of buffer calls.
 
-== Version 0.40
+== Version 0.4.0
 * Updated javaslang from 2.0.0-RC4 to 2.0.1
+
+== Version 0.5.0
+* Updated javaslang from 2.0.1 to 2.0.2
+* Fixed issue #6: The CB changes to OPEN state when the failure rate is above (>) the threshold, but it should be above or equal (>=).

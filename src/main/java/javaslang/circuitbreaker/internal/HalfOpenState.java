@@ -62,7 +62,7 @@ final class HalfOpenState extends CircuitBreakerState {
      */
     private void checkFailureRate(float currentFailureRate) {
         if(currentFailureRate != -1){
-            if(currentFailureRate > failureRateThreshold) {
+            if(currentFailureRate >= failureRateThreshold) {
                 stateMachine.transitionToOpenState(CircuitBreaker.StateTransition.HALF_OPEN_TO_OPEN, circuitBreakerMetrics);
             }else{
                 stateMachine.transitionToClosedState(CircuitBreaker.StateTransition.HALF_OPEN_TO_CLOSED);

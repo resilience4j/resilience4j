@@ -20,13 +20,17 @@ package javaslang.circuitbreaker.internal;
 
 import javaslang.circuitbreaker.CircuitBreaker;
 import javaslang.circuitbreaker.CircuitBreakerConfig;
+import javaslang.circuitbreaker.CircuitBreakerRegistry;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.time.Duration;
+import java.util.concurrent.TimeUnit;
 
 import static java.lang.Thread.sleep;
 import static org.assertj.core.api.BDDAssertions.assertThat;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 public class CircuitBreakerStateMachineTest {
 
@@ -37,7 +41,7 @@ public class CircuitBreakerStateMachineTest {
         circuitBreaker = new CircuitBreakerStateMachine("testName", CircuitBreakerConfig.custom()
                 .failureRateThreshold(50)
                 .ringBufferSizeInClosedState(5)
-                .ringBufferSizeInHalfOpenState(2)
+                .ringBufferSizeInHalfOpenState(3)
                 .waitDurationInOpenState(Duration.ofSeconds(1))
                 .build());
     }
@@ -121,13 +125,16 @@ public class CircuitBreakerStateMachineTest {
 
         // Call 2 is a failure
         circuitBreaker.recordFailure(new RuntimeException());
+        // Call 3 is a success
+        circuitBreaker.recordSuccess();
+
         // The ring buffer is filled and the failure rate is above 50%
         // The state machine transitions back to OPEN state
         assertThat(circuitBreaker.isCallPermitted()).isEqualTo(false);
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.OPEN);
-        assertThat(circuitBreaker.getMetrics().getNumberOfBufferedCalls()).isEqualTo(2);
+        assertThat(circuitBreaker.getMetrics().getNumberOfBufferedCalls()).isEqualTo(3);
         assertThat(circuitBreaker.getMetrics().getNumberOfFailedCalls()).isEqualTo(2);
-        assertThat(circuitBreaker.getMetrics().getFailureRate()).isEqualTo(100f);
+        assertThat(circuitBreaker.getMetrics().getFailureRate()).isGreaterThan(50f);
 
         sleep(1300);
 
@@ -145,12 +152,33 @@ public class CircuitBreakerStateMachineTest {
 
         // Call 2 is a success
         circuitBreaker.recordSuccess();
-        // The ring buffer is filled and the failure rate is equal to 50%
+        // Call 3 is a success
+        circuitBreaker.recordSuccess();
+
+        // The ring buffer is filled and the failure rate is below 50%
         // The state machine transitions back to CLOSED state
         assertThat(circuitBreaker.isCallPermitted()).isEqualTo(true);
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
         assertThat(circuitBreaker.getMetrics().getNumberOfBufferedCalls()).isEqualTo(0);
         assertThat(circuitBreaker.getMetrics().getNumberOfFailedCalls()).isEqualTo(0);
         assertThat(circuitBreaker.getMetrics().getFailureRate()).isEqualTo(-1f);
+    }
+
+    @Test
+    public void testCircuitBreakerBehaviour() throws InterruptedException {
+        CircuitBreakerRegistry registry = CircuitBreakerRegistry.ofDefaults();
+        int times = 3;
+        int waitSeconds = 2;
+        CircuitBreakerConfig config = CircuitBreakerConfig.custom().ringBufferSizeInHalfOpenState(times)
+                .failureRateThreshold(100).ringBufferSizeInClosedState(times)
+                .waitDurationInOpenState(Duration.ofSeconds(waitSeconds)).build();
+        CircuitBreaker circuitBreaker = registry.circuitBreaker("something", config);
+        for (int i = 0; i < times; i++) {
+            assertTrue("Circuit-breaker call should be permitted", circuitBreaker.isCallPermitted());
+            circuitBreaker.recordFailure(new RuntimeException("Fail! " + i));
+        }
+        assertFalse("Circuit-breaker call should not be permitted", circuitBreaker.isCallPermitted());
+        Thread.sleep(TimeUnit.SECONDS.toMillis(waitSeconds));
+        assertTrue("Circuit-breaker call should be permitted", circuitBreaker.isCallPermitted());
     }
 }
