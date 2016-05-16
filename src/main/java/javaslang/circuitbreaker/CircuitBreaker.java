@@ -20,6 +20,7 @@ package javaslang.circuitbreaker;
 
 import javaslang.control.Try;
 
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -206,6 +207,26 @@ public interface CircuitBreaker {
                 T returnValue = supplier.get();
                 circuitBreaker.recordSuccess();
                 return returnValue;
+            } catch (Throwable throwable) {
+                circuitBreaker.recordFailure(throwable);
+                throw throwable;
+            }
+        };
+    }
+
+    /**
+     * Creates a consumer which is secured by a CircuitBreaker.
+     *
+     * @param consumer the original consumer
+     * @param circuitBreaker the CircuitBreaker
+     * @return a consumer which is secured by a CircuitBreaker.
+     */
+    static <T> Consumer<T> decorateConsumer(Consumer<T> consumer, CircuitBreaker circuitBreaker){
+        return (t) -> {
+            CircuitBreakerUtils.isCallPermitted(circuitBreaker);
+            try {
+                consumer.accept(t);
+                circuitBreaker.recordSuccess();
             } catch (Throwable throwable) {
                 circuitBreaker.recordFailure(throwable);
                 throw throwable;
