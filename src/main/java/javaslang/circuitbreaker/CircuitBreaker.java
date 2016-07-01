@@ -20,6 +20,7 @@ package javaslang.circuitbreaker;
 
 import javaslang.control.Try;
 
+import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -295,4 +296,30 @@ public interface CircuitBreaker {
             }
         };
     }
+
+    static <T, R> Function<T, CompletableFuture<R>> decorateCompletableFuture(Function<T, CompletableFuture<R>> function, CircuitBreaker circuitBreaker) {
+        return (T t) -> {
+            if (!circuitBreaker.isCallPermitted()) {
+                CompletableFuture<R> failed = new CompletableFuture<>();
+                failed.completeExceptionally(new RuntimeException("Circuit breaker " + circuitBreaker.getName() + " is in state " + circuitBreaker.getState()));
+                return failed;
+            }
+
+            try {
+                return function.apply(t).whenComplete((r, throwable) -> {
+                    if (throwable != null) {
+                        circuitBreaker.recordFailure(throwable);
+                    } else {
+                        circuitBreaker.recordSuccess();
+                    }
+                });
+            } catch (Exception e) {
+                circuitBreaker.recordFailure(e); // Should this be treated as a failure?
+                CompletableFuture<R> failed = new CompletableFuture<>();
+                failed.completeExceptionally(new RuntimeException("Function threw an exception, rather than returning a CompletableFuture", e));
+                return failed;
+            }
+        };
+    }
+
 }
