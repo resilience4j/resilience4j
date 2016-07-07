@@ -93,8 +93,8 @@ public class RetryContext implements Retry {
         }
 
         public Builder waitDuration(Duration waitDuration) {
-            if (waitDuration.getSeconds() < 0.01) {
-                throw new IllegalArgumentException("waitDurationInOpenState must be at least than 10[ms]");
+            if (waitDuration.toMillis() < 10) {
+                throw new IllegalArgumentException("waitDurationInOpenState must be at least 10ms");
             }
             this.waitDuration = waitDuration;
             return this;
