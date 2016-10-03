@@ -60,7 +60,7 @@ jmh {
 }
 
 dependencies {
-    compile "io.javaslang:javaslang:2.0.3"
+    compile "io.javaslang:javaslang:2.0.4"
     compile "org.slf4j:slf4j-api:1.7.13"
     testCompile "io.dropwizard.metrics:metrics-core:3.1.2"
     testCompile "junit:junit:4.11"
