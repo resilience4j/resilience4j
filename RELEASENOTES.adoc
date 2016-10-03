@@ -51,3 +51,6 @@
 == Version 0.5.0
 * Updated javaslang from 2.0.1 to 2.0.2
 * Fixed issue #6: The CB changes to OPEN state when the failure rate is above (>) the threshold, but it should be above or equal (>=).
+
+== Version 0.6.0
+* Updated javaslang from 2.0.2 to 2.0.4
