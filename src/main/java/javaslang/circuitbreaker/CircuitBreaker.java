@@ -157,9 +157,34 @@ public interface CircuitBreaker {
      *
      * @param supplier the original supplier
      * @param circuitBreaker the CircuitBreaker
+     *
      * @return a supplier which is secured by a CircuitBreaker.
      */
+    @Deprecated
     static <T> Try.CheckedSupplier<T> decorateCheckedSupplier(Try.CheckedSupplier<T> supplier, CircuitBreaker circuitBreaker){
+        return () -> {
+            CircuitBreakerUtils.isCallPermitted(circuitBreaker);
+            try {
+                T returnValue = supplier.get();
+                circuitBreaker.recordSuccess();
+                return returnValue;
+            } catch (Throwable throwable) {
+                circuitBreaker.recordFailure(throwable);
+                throw throwable;
+            }
+        };
+    }
+
+
+    /**
+     * Creates a supplier which is secured by a CircuitBreaker.
+     *
+     * @param circuitBreaker the CircuitBreaker
+     * @param supplier the original supplier
+     *
+     * @return a supplier which is secured by a CircuitBreaker.
+     */
+    static <T> Try.CheckedSupplier<T> decorateCheckedSupplier(CircuitBreaker circuitBreaker, Try.CheckedSupplier<T> supplier){
         return () -> {
             CircuitBreakerUtils.isCallPermitted(circuitBreaker);
             try {
@@ -178,9 +203,32 @@ public interface CircuitBreaker {
      *
      * @param runnable the original runnable
      * @param circuitBreaker the CircuitBreaker
+     *
      * @return a runnable which is secured by a CircuitBreaker.
      */
+    @Deprecated
     static Try.CheckedRunnable decorateCheckedRunnable(Try.CheckedRunnable runnable, CircuitBreaker circuitBreaker){
+        return () -> {
+            CircuitBreakerUtils.isCallPermitted(circuitBreaker);
+            try{
+                runnable.run();
+                circuitBreaker.recordSuccess();
+            } catch (Throwable throwable){
+                circuitBreaker.recordFailure(throwable);
+                throw throwable;
+            }
+        };
+    }
+
+    /**
+     * Creates a runnable which is secured by a CircuitBreaker.
+     *
+     * @param circuitBreaker the CircuitBreaker
+     * @param runnable the original runnable
+
+     * @return a runnable which is secured by a CircuitBreaker.
+     */
+    static Try.CheckedRunnable decorateCheckedRunnable(CircuitBreaker circuitBreaker, Try.CheckedRunnable runnable){
         return () -> {
             CircuitBreakerUtils.isCallPermitted(circuitBreaker);
             try{
@@ -198,9 +246,33 @@ public interface CircuitBreaker {
      *
      * @param supplier the original supplier
      * @param circuitBreaker the CircuitBreaker
+     *
      * @return a supplier which is secured by a CircuitBreaker.
      */
+    @Deprecated
     static <T> Supplier<T> decorateSupplier(Supplier<T> supplier, CircuitBreaker circuitBreaker){
+        return () -> {
+            CircuitBreakerUtils.isCallPermitted(circuitBreaker);
+            try {
+                T returnValue = supplier.get();
+                circuitBreaker.recordSuccess();
+                return returnValue;
+            } catch (Throwable throwable) {
+                circuitBreaker.recordFailure(throwable);
+                throw throwable;
+            }
+        };
+    }
+
+    /**
+     * Creates a supplier which is secured by a CircuitBreaker.
+     *
+     * @param circuitBreaker the CircuitBreaker
+     * @param supplier the original supplier
+     *
+     * @return a supplier which is secured by a CircuitBreaker.
+     */
+    static <T> Supplier<T> decorateSupplier(CircuitBreaker circuitBreaker, Supplier<T> supplier){
         return () -> {
             CircuitBreakerUtils.isCallPermitted(circuitBreaker);
             try {
@@ -219,9 +291,32 @@ public interface CircuitBreaker {
      *
      * @param consumer the original consumer
      * @param circuitBreaker the CircuitBreaker
+     *
      * @return a consumer which is secured by a CircuitBreaker.
      */
+    @Deprecated
     static <T> Consumer<T> decorateConsumer(Consumer<T> consumer, CircuitBreaker circuitBreaker){
+        return (t) -> {
+            CircuitBreakerUtils.isCallPermitted(circuitBreaker);
+            try {
+                consumer.accept(t);
+                circuitBreaker.recordSuccess();
+            } catch (Throwable throwable) {
+                circuitBreaker.recordFailure(throwable);
+                throw throwable;
+            }
+        };
+    }
+
+    /**
+     * Creates a consumer which is secured by a CircuitBreaker.
+
+     * @param circuitBreaker the CircuitBreaker
+     * @param consumer the original consumer
+     *
+     * @return a consumer which is secured by a CircuitBreaker.
+     */
+    static <T> Consumer<T> decorateConsumer(CircuitBreaker circuitBreaker, Consumer<T> consumer){
         return (t) -> {
             CircuitBreakerUtils.isCallPermitted(circuitBreaker);
             try {
@@ -239,9 +334,32 @@ public interface CircuitBreaker {
      *
      * @param runnable the original runnable
      * @param circuitBreaker the CircuitBreaker
+     *
      * @return a runnable which is secured by a CircuitBreaker.
      */
+    @Deprecated
     static Runnable decorateRunnable(Runnable runnable, CircuitBreaker circuitBreaker){
+        return () -> {
+            CircuitBreakerUtils.isCallPermitted(circuitBreaker);
+            try{
+                runnable.run();
+                circuitBreaker.recordSuccess();
+            } catch (Throwable throwable){
+                circuitBreaker.recordFailure(throwable);
+                throw throwable;
+            }
+        };
+    }
+
+    /**
+     * Creates a runnable which is secured by a CircuitBreaker.
+     *
+     * @param circuitBreaker the CircuitBreaker
+     * @param runnable the original runnable
+     *
+     * @return a runnable which is secured by a CircuitBreaker.
+     */
+    static Runnable decorateRunnable(CircuitBreaker circuitBreaker, Runnable runnable){
         return () -> {
             CircuitBreakerUtils.isCallPermitted(circuitBreaker);
             try{
@@ -259,9 +377,33 @@ public interface CircuitBreaker {
      *
      * @param function the original function
      * @param circuitBreaker the CircuitBreaker
+     *
      * @return a function which is secured by a CircuitBreaker.
      */
+    @Deprecated
     static <T, R> Function<T, R> decorateFunction(Function<T, R> function, CircuitBreaker circuitBreaker){
+        return (T t) -> {
+            CircuitBreakerUtils.isCallPermitted(circuitBreaker);
+            try{
+                R returnValue = function.apply(t);
+                circuitBreaker.recordSuccess();
+                return returnValue;
+            } catch (Throwable throwable){
+                circuitBreaker.recordFailure(throwable);
+                throw throwable;
+            }
+        };
+    }
+
+    /**
+     * Creates a function which is secured by a CircuitBreaker.
+
+     * @param circuitBreaker the CircuitBreaker
+     * @param function the original function
+     *
+     * @return a function which is secured by a CircuitBreaker.
+     */
+    static <T, R> Function<T, R> decorateFunction(CircuitBreaker circuitBreaker, Function<T, R> function){
         return (T t) -> {
             CircuitBreakerUtils.isCallPermitted(circuitBreaker);
             try{
@@ -280,9 +422,33 @@ public interface CircuitBreaker {
      *
      * @param function the original function
      * @param circuitBreaker the CircuitBreaker
+     *
      * @return a function which is secured by a CircuitBreaker.
      */
+    @Deprecated
     static <T, R> Try.CheckedFunction<T, R> decorateCheckedFunction(Try.CheckedFunction<T, R> function, CircuitBreaker circuitBreaker){
+        return (T t) -> {
+            CircuitBreakerUtils.isCallPermitted(circuitBreaker);
+            try{
+                R returnValue = function.apply(t);
+                circuitBreaker.recordSuccess();
+                return returnValue;
+            } catch (Throwable throwable){
+                circuitBreaker.recordFailure(throwable);
+                throw throwable;
+            }
+        };
+    }
+
+    /**
+     * Creates a function which is secured by a CircuitBreaker.
+     *
+     * @param circuitBreaker the CircuitBreaker
+     * @param function the original function
+     *
+     * @return a function which is secured by a CircuitBreaker.
+     */
+    static <T, R> Try.CheckedFunction<T, R> decorateCheckedFunction(CircuitBreaker circuitBreaker, Try.CheckedFunction<T, R> function){
         return (T t) -> {
             CircuitBreakerUtils.isCallPermitted(circuitBreaker);
             try{

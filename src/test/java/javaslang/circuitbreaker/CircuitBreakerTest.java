@@ -57,9 +57,9 @@ public class CircuitBreakerTest {
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.OPEN);
 
         //When
-        Try.CheckedRunnable checkedRunnable = CircuitBreaker.decorateCheckedRunnable(() -> {
+        Try.CheckedRunnable checkedRunnable = CircuitBreaker.decorateCheckedRunnable(circuitBreaker, () -> {
             throw new RuntimeException("BAM!");
-        }, circuitBreaker);
+        });
         Try result = Try.run(checkedRunnable);
 
         //Then
@@ -75,9 +75,9 @@ public class CircuitBreakerTest {
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
 
         //When
-        Try.CheckedRunnable checkedRunnable = CircuitBreaker.decorateCheckedRunnable(() -> {
+        Try.CheckedRunnable checkedRunnable = CircuitBreaker.decorateCheckedRunnable(circuitBreaker, () -> {
             throw new RuntimeException("BAM!");
-        }, circuitBreaker);
+        });
         Try result = Try.run(checkedRunnable);
 
         //Then
@@ -106,9 +106,9 @@ public class CircuitBreakerTest {
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
 
         //When
-        Try.CheckedRunnable checkedRunnable = CircuitBreaker.decorateCheckedRunnable(() -> {
+        Try.CheckedRunnable checkedRunnable = CircuitBreaker.decorateCheckedRunnable(circuitBreaker, () -> {
             throw new SocketTimeoutException("BAM!");
-        }, circuitBreaker);
+        });
         Try result = Try.run(checkedRunnable);
 
         //Then
@@ -127,7 +127,7 @@ public class CircuitBreakerTest {
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
 
         //When
-        Supplier<String> checkedSupplier = CircuitBreaker.decorateSupplier(() -> "Hello world", circuitBreaker);
+        Supplier<String> checkedSupplier = CircuitBreaker.decorateSupplier(circuitBreaker, () -> "Hello world");
 
         //Then
         assertThat(checkedSupplier.get()).isEqualTo("Hello world");
@@ -141,9 +141,9 @@ public class CircuitBreakerTest {
         CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("testName");
 
         // When I decorate my function and invoke the decorated function
-        Try.CheckedSupplier<String> checkedSupplier = CircuitBreaker.decorateCheckedSupplier(() -> {
+        Try.CheckedSupplier<String> checkedSupplier = CircuitBreaker.decorateCheckedSupplier(circuitBreaker, () -> {
             throw new RuntimeException("BAM!");
-        }, circuitBreaker);
+        });
         Try<String> result = Try.of(checkedSupplier)
                 .recover(throwable -> "Hello Recovery");
 
@@ -163,7 +163,7 @@ public class CircuitBreakerTest {
 
         // When I decorate my function
         Try.CheckedSupplier<String> decoratedSupplier = CircuitBreaker
-                .decorateCheckedSupplier(() -> "This can be any method which returns: 'Hello", circuitBreaker);
+                .decorateCheckedSupplier(circuitBreaker, () -> "This can be any method which returns: 'Hello");
 
         // and chain an other function with map
         Try<String> result = Try.of(decoratedSupplier)
@@ -197,7 +197,7 @@ public class CircuitBreakerTest {
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.OPEN);
 
         // When I decorate my function and invoke the decorated function
-        Try<String> result = Try.of(CircuitBreaker.decorateCheckedSupplier(() -> "Hello", circuitBreaker))
+        Try<String> result = Try.of(CircuitBreaker.decorateCheckedSupplier(circuitBreaker, () -> "Hello"))
                 .map(value -> value + " world");
 
         // Then the call fails, because CircuitBreaker is OPEN
@@ -217,7 +217,7 @@ public class CircuitBreakerTest {
 
         // When
         Supplier<String> decoratedSupplier = CircuitBreaker
-                .decorateSupplier(() -> "This can be any method which returns: 'Hello", circuitBreaker);
+                .decorateSupplier(circuitBreaker, () -> "This can be any method which returns: 'Hello");
 
         CompletableFuture<String> future = CompletableFuture.supplyAsync(decoratedSupplier)
                 .thenApply(value -> value + " world'");
@@ -238,10 +238,10 @@ public class CircuitBreakerTest {
 
         // When I create a Supplier and a Function which are decorated by different CircuitBreakers
         Try.CheckedSupplier<String> decoratedSupplier = CircuitBreaker
-                .decorateCheckedSupplier(() -> "Hello", circuitBreaker);
+                .decorateCheckedSupplier(circuitBreaker, () -> "Hello");
 
         Try.CheckedFunction<String, String> decoratedFunction = CircuitBreaker
-                .decorateCheckedFunction((input) -> input + " world", anotherCircuitBreaker);
+                .decorateCheckedFunction(anotherCircuitBreaker, (input) -> input + " world");
 
         // and I chain a function with map
         Try<String> result = Try.of(decoratedSupplier)
