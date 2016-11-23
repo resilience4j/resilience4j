@@ -20,18 +20,36 @@ package javaslang.circuitbreaker.internal;
 
 
 import javaslang.circuitbreaker.CircuitBreaker;
+import javaslang.circuitbreaker.CircuitBreakerConfig;
+import javaslang.collection.List;
 
 class CircuitBreakerMetrics implements CircuitBreaker.Metrics {
 
     private final RingBitSet ringBitSet;
+    private final CircularFifoBuffer<Throwable> exceptionRingBuffer;
 
     /**
      * Maximum number of buffered calls
      */
     private int maxNumberOfBufferedCalls;
 
+    private int maxNumberOfBufferedExceptions;
+
     CircuitBreakerMetrics(int ringBufferSize) {
         this.ringBitSet = new RingBitSet(ringBufferSize);
+        this.maxNumberOfBufferedExceptions = CircuitBreakerConfig.DEFAULT_EXCEPTION_RING_BUFFER_SIZE;
+        this.exceptionRingBuffer = new CircularFifoBuffer<>(this.maxNumberOfBufferedExceptions);
+        this.maxNumberOfBufferedCalls = ringBufferSize;
+    }
+
+    CircuitBreakerMetrics(int ringBufferSize, int exceptionRingBufferSize) {
+        this.ringBitSet = new RingBitSet(ringBufferSize);
+        this.maxNumberOfBufferedExceptions = exceptionRingBufferSize;
+        if(maxNumberOfBufferedExceptions > 0) {
+            this.exceptionRingBuffer = new CircularFifoBuffer<>(maxNumberOfBufferedExceptions);
+        }else{
+            this.exceptionRingBuffer = new CircularFifoBuffer<>(1);
+        }
         this.maxNumberOfBufferedCalls = ringBufferSize;
     }
 
@@ -40,8 +58,11 @@ class CircuitBreakerMetrics implements CircuitBreaker.Metrics {
      *
      * @return the current failure rate  in percentage.
      */
-    public synchronized float recordFailure(){
+    public synchronized float recordFailure(Throwable throwable){
         ringBitSet.setNextBit(true);
+        if(maxNumberOfBufferedExceptions > 0) {
+            exceptionRingBuffer.add(throwable);
+        }
         return getFailureRate();
     }
 
@@ -75,6 +96,15 @@ class CircuitBreakerMetrics implements CircuitBreaker.Metrics {
         return maxNumberOfBufferedCalls;
     }
 
+    /**
+     * Returns the maximum number of buffered exceptions.
+     *
+     * @return the maximum number of buffered exceptions
+     */
+    public long getMaxNumberOfBufferedExceptions() {
+        return maxNumberOfBufferedExceptions;
+    }
+
     @Override
     public synchronized int getNumberOfBufferedCalls() {
         return this.ringBitSet.length();
@@ -83,5 +113,10 @@ class CircuitBreakerMetrics implements CircuitBreaker.Metrics {
     @Override
     public synchronized int getNumberOfFailedCalls() {
         return this.ringBitSet.cardinality();
+    }
+
+    @Override
+    public List<Throwable> getBufferedExceptions() {
+        return exceptionRingBuffer.toList();
     }
 }

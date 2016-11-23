@@ -19,6 +19,7 @@
 package javaslang.circuitbreaker.internal;
 
 import javaslang.circuitbreaker.CircuitBreaker;
+import javaslang.circuitbreaker.CircuitBreakerConfig;
 
 final class ClosedState extends CircuitBreakerState {
 
@@ -27,7 +28,10 @@ final class ClosedState extends CircuitBreakerState {
 
     ClosedState(CircuitBreakerStateMachine stateMachine) {
         super(stateMachine);
-        this.circuitBreakerMetrics = new CircuitBreakerMetrics(stateMachine.getCircuitBreakerConfig().getRingBufferSizeInClosedState());
+        CircuitBreakerConfig circuitBreakerConfig = stateMachine.getCircuitBreakerConfig();
+        this.circuitBreakerMetrics = new CircuitBreakerMetrics(
+                circuitBreakerConfig.getRingBufferSizeInClosedState(),
+                circuitBreakerConfig.getExceptionRingBufferSize());
         this.failureRateThreshold = stateMachine.getCircuitBreakerConfig().getFailureRateThreshold();
     }
 
@@ -42,8 +46,8 @@ final class ClosedState extends CircuitBreakerState {
     }
 
     @Override
-    void recordFailure() {
-        checkFailureRate(circuitBreakerMetrics.recordFailure());
+    void recordFailure(Throwable throwable) {
+        checkFailureRate(circuitBreakerMetrics.recordFailure(throwable));
     }
 
     @Override

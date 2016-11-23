@@ -33,7 +33,7 @@ abstract class CircuitBreakerState{
 
     abstract boolean isCallPermitted();
 
-    abstract void recordFailure();
+    abstract void recordFailure(Throwable throwable);
 
     abstract void recordSuccess();
 
