@@ -63,12 +63,14 @@ public class CircuitBreakerConfigTest {
     @Test()
     public void shouldSetDefaultSettings() {
         CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.ofDefaults();
-        then(circuitBreakerConfig.getFailureRateThreshold()).isEqualTo(50);
-        then(circuitBreakerConfig.getRingBufferSizeInHalfOpenState()).isEqualTo(10);
-        then(circuitBreakerConfig.getRingBufferSizeInClosedState()).isEqualTo(100);
-        then(circuitBreakerConfig.getWaitDurationInOpenState().getSeconds()).isEqualTo(60);
+        then(circuitBreakerConfig.getFailureRateThreshold()).isEqualTo(CircuitBreakerConfig.DEFAULT_MAX_FAILURE_THRESHOLD);
+        then(circuitBreakerConfig.getRingBufferSizeInHalfOpenState()).isEqualTo(CircuitBreakerConfig.DEFAULT_RING_BUFFER_SIZE_IN_HALF_OPEN_STATE);
+        then(circuitBreakerConfig.getRingBufferSizeInClosedState()).isEqualTo(CircuitBreakerConfig.DEFAULT_RING_BUFFER_SIZE_IN_CLOSED_STATE);
+        then(circuitBreakerConfig.getWaitDurationInOpenState().getSeconds()).isEqualTo(CircuitBreakerConfig.DEFAULT_WAIT_DURATION_IN_OPEN_STATE);
+        then(circuitBreakerConfig.getExceptionRingBufferSize()).isEqualTo(CircuitBreakerConfig.DEFAULT_EXCEPTION_RING_BUFFER_SIZE);
         then(circuitBreakerConfig.getCircuitBreakerEventListener()).isNotNull();
         then(circuitBreakerConfig.getExceptionPredicate()).isNotNull();
+        then(circuitBreakerConfig.getExceptionRingBufferSize()).isNotNull();
     }
 
     @Test()
@@ -93,6 +95,12 @@ public class CircuitBreakerConfigTest {
     public void shouldSetWaitInterval() {
         CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom().waitDurationInOpenState(Duration.ofSeconds(1)).build();
         then(circuitBreakerConfig.getWaitDurationInOpenState().getSeconds()).isEqualTo(1);
+    }
+
+    @Test()
+    public void shouldSetExceptionRingBufferSize() {
+        CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom().exceptionRingBufferSize(5).build();
+        then(circuitBreakerConfig.getExceptionRingBufferSize()).isEqualTo(5);
     }
 
     @Test()

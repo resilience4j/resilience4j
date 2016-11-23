@@ -18,6 +18,7 @@
  */
 package javaslang.circuitbreaker;
 
+import javaslang.collection.List;
 import javaslang.control.Try;
 
 import java.util.function.Consumer;
@@ -150,6 +151,14 @@ public interface CircuitBreaker {
          * @return the current number of failed calls.
          */
         int getNumberOfFailedCalls();
+
+
+        /**
+         * Returns the latest exceptions which have been recorded as a failure and thus increased the failure rate.
+         *
+         * @return the latest exceptions which have been recorded  as a failure and thus increased the failure rate.
+         */
+        List<Throwable> getBufferedExceptions();
     }
 
     /**
@@ -162,17 +171,7 @@ public interface CircuitBreaker {
      */
     @Deprecated
     static <T> Try.CheckedSupplier<T> decorateCheckedSupplier(Try.CheckedSupplier<T> supplier, CircuitBreaker circuitBreaker){
-        return () -> {
-            CircuitBreakerUtils.isCallPermitted(circuitBreaker);
-            try {
-                T returnValue = supplier.get();
-                circuitBreaker.recordSuccess();
-                return returnValue;
-            } catch (Throwable throwable) {
-                circuitBreaker.recordFailure(throwable);
-                throw throwable;
-            }
-        };
+        return decorateCheckedSupplier(circuitBreaker, supplier);
     }
 
 
@@ -208,16 +207,7 @@ public interface CircuitBreaker {
      */
     @Deprecated
     static Try.CheckedRunnable decorateCheckedRunnable(Try.CheckedRunnable runnable, CircuitBreaker circuitBreaker){
-        return () -> {
-            CircuitBreakerUtils.isCallPermitted(circuitBreaker);
-            try{
-                runnable.run();
-                circuitBreaker.recordSuccess();
-            } catch (Throwable throwable){
-                circuitBreaker.recordFailure(throwable);
-                throw throwable;
-            }
-        };
+        return decorateCheckedRunnable(circuitBreaker, runnable);
     }
 
     /**
@@ -251,17 +241,7 @@ public interface CircuitBreaker {
      */
     @Deprecated
     static <T> Supplier<T> decorateSupplier(Supplier<T> supplier, CircuitBreaker circuitBreaker){
-        return () -> {
-            CircuitBreakerUtils.isCallPermitted(circuitBreaker);
-            try {
-                T returnValue = supplier.get();
-                circuitBreaker.recordSuccess();
-                return returnValue;
-            } catch (Throwable throwable) {
-                circuitBreaker.recordFailure(throwable);
-                throw throwable;
-            }
-        };
+        return decorateSupplier(circuitBreaker, supplier);
     }
 
     /**
@@ -296,16 +276,7 @@ public interface CircuitBreaker {
      */
     @Deprecated
     static <T> Consumer<T> decorateConsumer(Consumer<T> consumer, CircuitBreaker circuitBreaker){
-        return (t) -> {
-            CircuitBreakerUtils.isCallPermitted(circuitBreaker);
-            try {
-                consumer.accept(t);
-                circuitBreaker.recordSuccess();
-            } catch (Throwable throwable) {
-                circuitBreaker.recordFailure(throwable);
-                throw throwable;
-            }
-        };
+        return decorateConsumer(circuitBreaker, consumer);
     }
 
     /**
@@ -339,16 +310,7 @@ public interface CircuitBreaker {
      */
     @Deprecated
     static Runnable decorateRunnable(Runnable runnable, CircuitBreaker circuitBreaker){
-        return () -> {
-            CircuitBreakerUtils.isCallPermitted(circuitBreaker);
-            try{
-                runnable.run();
-                circuitBreaker.recordSuccess();
-            } catch (Throwable throwable){
-                circuitBreaker.recordFailure(throwable);
-                throw throwable;
-            }
-        };
+        return decorateRunnable(circuitBreaker, runnable);
     }
 
     /**
@@ -382,17 +344,7 @@ public interface CircuitBreaker {
      */
     @Deprecated
     static <T, R> Function<T, R> decorateFunction(Function<T, R> function, CircuitBreaker circuitBreaker){
-        return (T t) -> {
-            CircuitBreakerUtils.isCallPermitted(circuitBreaker);
-            try{
-                R returnValue = function.apply(t);
-                circuitBreaker.recordSuccess();
-                return returnValue;
-            } catch (Throwable throwable){
-                circuitBreaker.recordFailure(throwable);
-                throw throwable;
-            }
-        };
+        return decorateFunction(circuitBreaker, function);
     }
 
     /**
@@ -427,17 +379,7 @@ public interface CircuitBreaker {
      */
     @Deprecated
     static <T, R> Try.CheckedFunction<T, R> decorateCheckedFunction(Try.CheckedFunction<T, R> function, CircuitBreaker circuitBreaker){
-        return (T t) -> {
-            CircuitBreakerUtils.isCallPermitted(circuitBreaker);
-            try{
-                R returnValue = function.apply(t);
-                circuitBreaker.recordSuccess();
-                return returnValue;
-            } catch (Throwable throwable){
-                circuitBreaker.recordFailure(throwable);
-                throw throwable;
-            }
-        };
+        return decorateCheckedFunction(circuitBreaker, function);
     }
 
     /**

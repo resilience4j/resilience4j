@@ -68,7 +68,7 @@ public class ReactiveStreamsTest {
         // Create a Retry with default configuration
         Retry retryContext = Retry.ofDefaults();
         // Decorate the supplier of the HelloWorldService with Retry functionality
-        Supplier<String> retryableSupplier = Retry.decorateSupplier(helloWorldService::returnHelloWorld, retryContext);
+        Supplier<String> retryableSupplier = Retry.decorateSupplier(retryContext, helloWorldService::returnHelloWorld);
 
         TestSubscriber<String> testSubscriber = new TestSubscriber<>();
 
@@ -98,7 +98,7 @@ public class ReactiveStreamsTest {
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.OPEN);
 
         // Decorate the supplier of the HelloWorldService with CircuitBreaker functionality
-        Supplier<String> supplier = CircuitBreaker.decorateSupplier(helloWorldService::returnHelloWorld, circuitBreaker);
+        Supplier<String> supplier = CircuitBreaker.decorateSupplier(circuitBreaker, helloWorldService::returnHelloWorld);
 
         TestSubscriber<String> testSubscriber = new TestSubscriber<>();
 

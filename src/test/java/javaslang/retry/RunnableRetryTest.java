@@ -47,7 +47,7 @@ public class RunnableRetryTest {
         // Create a Retry with default configuration
         Retry retryContext = Retry.ofDefaults();
         // Decorate the invocation of the HelloWorldService
-        Try.CheckedRunnable retryableRunnable = Retry.decorateCheckedRunnable(helloWorldService::sayHelloWorld, retryContext);
+        Try.CheckedRunnable retryableRunnable = Retry.decorateCheckedRunnable(retryContext, helloWorldService::sayHelloWorld);
 
         // When
         Try<Void> result = Try.run(retryableRunnable);
@@ -65,7 +65,7 @@ public class RunnableRetryTest {
         // Create a Retry with default configuration
         Retry retryContext = Retry.ofDefaults();
         // Decorate the invocation of the HelloWorldService
-        Try.CheckedRunnable retryableRunnable = Retry.decorateCheckedRunnable(helloWorldService::sayHelloWorld, retryContext);
+        Try.CheckedRunnable retryableRunnable = Retry.decorateCheckedRunnable(retryContext, helloWorldService::sayHelloWorld);
 
         // When
         Try<Void> result = Try.run(retryableRunnable);
@@ -86,7 +86,7 @@ public class RunnableRetryTest {
         // Create a Retry with default configuration
         Retry retryContext = Retry.custom().maxAttempts(1).build();
         // Decorate the invocation of the HelloWorldService
-        Try.CheckedRunnable retryableRunnable = Retry.decorateCheckedRunnable(helloWorldService::sayHelloWorld, retryContext);
+        Try.CheckedRunnable retryableRunnable = Retry.decorateCheckedRunnable(retryContext, helloWorldService::sayHelloWorld);
 
         // When
         Try<Void> result = Try.run(retryableRunnable);
@@ -111,7 +111,7 @@ public class RunnableRetryTest {
                         Case($(), true)))
                 .build();
         // Decorate the invocation of the HelloWorldService
-        Try.CheckedRunnable retryableRunnable = Retry.decorateCheckedRunnable(helloWorldService::sayHelloWorld, retryContext);
+        Try.CheckedRunnable retryableRunnable = Retry.decorateCheckedRunnable(retryContext, helloWorldService::sayHelloWorld);
 
         // When
         Try<Void> result = Try.run(retryableRunnable);

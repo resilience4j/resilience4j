@@ -50,7 +50,7 @@ public class SupplierRetryTest {
         // Create a Retry with default configuration
         Retry retryContext = Retry.ofDefaults();
         // Decorate the invocation of the HelloWorldService
-        Try.CheckedSupplier<String> retryableSupplier = Retry.decorateCheckedSupplier(helloWorldService::returnHelloWorld, retryContext);
+        Try.CheckedSupplier<String> retryableSupplier = Retry.decorateCheckedSupplier(retryContext, helloWorldService::returnHelloWorld);
 
         // When
         Try<String> result = Try.of(retryableSupplier);
@@ -69,7 +69,7 @@ public class SupplierRetryTest {
         // Create a Retry with default configuration
         Retry retryContext = Retry.ofDefaults();
         // Decorate the invocation of the HelloWorldService
-        Try.CheckedSupplier<String> retryableSupplier = Retry.decorateCheckedSupplier(helloWorldService::returnHelloWorld, retryContext);
+        Try.CheckedSupplier<String> retryableSupplier = Retry.decorateCheckedSupplier(retryContext, helloWorldService::returnHelloWorld);
 
         // When
         Try<String> result = Try.of(retryableSupplier);
@@ -87,7 +87,7 @@ public class SupplierRetryTest {
         // Create a Retry with default configuration
         Retry retryContext = Retry.ofDefaults();
         // Decorate the invocation of the HelloWorldService
-        Try.CheckedSupplier<String> retryableSupplier = Retry.decorateCheckedSupplier(helloWorldService::returnHelloWorld, retryContext);
+        Try.CheckedSupplier<String> retryableSupplier = Retry.decorateCheckedSupplier(retryContext, helloWorldService::returnHelloWorld);
 
         // When
         Try<String> result = Try.of(retryableSupplier);
@@ -108,7 +108,7 @@ public class SupplierRetryTest {
         // Create a Retry with default configuration
         Retry retryContext = Retry.custom().maxAttempts(1).build();
         // Decorate the invocation of the HelloWorldService
-        Try.CheckedSupplier<String> retryableSupplier = Retry.decorateCheckedSupplier(helloWorldService::returnHelloWorld, retryContext);
+        Try.CheckedSupplier<String> retryableSupplier = Retry.decorateCheckedSupplier(retryContext, helloWorldService::returnHelloWorld);
 
         // When
         Try<String> result = Try.of(retryableSupplier);
@@ -133,7 +133,7 @@ public class SupplierRetryTest {
                         Case($(), true)))
                 .build();
         // Decorate the invocation of the HelloWorldService
-        Try.CheckedSupplier<String> retryableSupplier = Retry.decorateCheckedSupplier(helloWorldService::returnHelloWorld, retryContext);
+        Try.CheckedSupplier<String> retryableSupplier = Retry.decorateCheckedSupplier(retryContext, helloWorldService::returnHelloWorld);
 
         // When
         Try<String> result = Try.of(retryableSupplier);
@@ -154,7 +154,7 @@ public class SupplierRetryTest {
         // Create a Retry with default configuration
         Retry retryContext = Retry.ofDefaults();
         // Decorate the invocation of the HelloWorldService
-        Try.CheckedSupplier<String> retryableSupplier = Retry.decorateCheckedSupplier(helloWorldService::returnHelloWorld, retryContext);
+        Try.CheckedSupplier<String> retryableSupplier = Retry.decorateCheckedSupplier(retryContext, helloWorldService::returnHelloWorld);
 
         // When
         Try<String> result = Try.of(retryableSupplier).recover((throwable) -> "Hello world from recovery function");
