@@ -21,6 +21,8 @@ package javaslang.circuitbreaker;
 import javaslang.API;
 import javaslang.control.Try;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.xml.ws.WebServiceException;
 import java.io.IOException;
@@ -36,6 +38,8 @@ import static javaslang.Predicates.instanceOf;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class CircuitBreakerTest {
+
+    private static final Logger LOG = LoggerFactory.getLogger(CircuitBreakerTest.class);
 
     @Test
     public void shouldReturnFailureWithCircuitBreakerOpenException() {
@@ -72,6 +76,7 @@ public class CircuitBreakerTest {
         // Given
         CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
         CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("testName");
+        circuitBreaker.observeCircuitBreakerEvents().subscribe((event) -> LOG.info(event.toString()));
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
 
         //When

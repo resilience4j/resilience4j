@@ -34,19 +34,17 @@ public class CircuitBreakerConfig {
 
     private final float failureRateThreshold;
     private final int ringBufferSizeInHalfOpenState;
-    private final int exceptionRingBufferSize;
     private final int ringBufferSizeInClosedState;
     private final Duration waitDurationInOpenState;
     private final CircuitBreakerEventListener circuitBreakerEventListener;
-    private final Predicate<Throwable> exceptionPredicate;
+    private final Predicate<Throwable> recordFailurePredicate;
 
     private CircuitBreakerConfig(Context context){
         this.failureRateThreshold = context.failureRateThreshold;
         this.waitDurationInOpenState = context.waitDurationInOpenState;
         this.ringBufferSizeInHalfOpenState = context.ringBufferSizeInHalfOpenState;
         this.ringBufferSizeInClosedState = context.ringBufferSizeInClosedState;
-        this.exceptionRingBufferSize = context.exceptionRingBufferSize;
-        this.exceptionPredicate = context.exceptionPredicate;
+        this.recordFailurePredicate = context.recordFailurePredicate;
         this.circuitBreakerEventListener = context.circuitBreakerEventListener;
 
     }
@@ -71,12 +69,8 @@ public class CircuitBreakerConfig {
         return circuitBreakerEventListener;
     }
 
-    public Predicate<Throwable> getExceptionPredicate() {
-        return exceptionPredicate;
-    }
-
-    public int getExceptionRingBufferSize() {
-        return exceptionRingBufferSize;
+    public Predicate<Throwable> getRecordFailurePredicate() {
+        return recordFailurePredicate;
     }
 
     /**
@@ -169,27 +163,14 @@ public class CircuitBreakerConfig {
         }
 
         /**
-         * Configures the size of the ring buffer which buffers the latest exceptions which are recorded as a failure and thus increase the failure rate.
+         * Deprecated: Better handle events by subscribing to the reactive events stream of a CircuitBreaker instance.
          *
-         * Default size is 10. A size of 0 disables buffering.
-         *
-         * @param exceptionRingBufferSize the size of the exception ring buffer.
-         * @return the CircuitBreakerConfig.Builder
-         */
-        public Builder exceptionRingBufferSize(int exceptionRingBufferSize) {
-            if (exceptionRingBufferSize < 0) {
-                throw new IllegalArgumentException("exceptionRingBufferSize must be greater than or equal to 0");
-            }
-            context.exceptionRingBufferSize = exceptionRingBufferSize;
-            return this;
-        }
-
-        /**
-         *  Configures the CircuitBreakerEventListener which should handle CircuitBreaker events.
+         * Configures the CircuitBreakerEventListener which should handle CircuitBreaker events.
          *
          * @param circuitBreakerEventListener the CircuitBreakerEventListener which should handle CircuitBreaker events
          * @return the CircuitBreakerConfig.Builder
          */
+        @Deprecated
         public Builder onCircuitBreakerEvent(CircuitBreakerEventListener circuitBreakerEventListener) {
             if (circuitBreakerEventListener == null) {
                 throw new IllegalArgumentException("circuitBreakerEventListener must not be null");
@@ -199,14 +180,14 @@ public class CircuitBreakerConfig {
         }
 
         /**
-         *  Configures a Predicate which evaluates if an exception should be recorded as a failure and thus increase the failure rate.
-         *  The Predicate must return true if the exception should count as a failure, otherwise it must return false.
+         * Configures a Predicate which evaluates if an exception should be recorded as a failure and thus increase the failure rate.
+         * The Predicate must return true if the exception should count as a failure, otherwise it must return false.
          *
          * @param predicate the Predicate which evaluates if an exception should be recorded as a failure and thus trigger the CircuitBreaker
          * @return the CircuitBreakerConfig.Builder
          */
         public Builder recordFailure(Predicate<Throwable> predicate) {
-            context.exceptionPredicate = predicate;
+            context.recordFailurePredicate = predicate;
             return this;
         }
 
@@ -224,10 +205,9 @@ public class CircuitBreakerConfig {
         float failureRateThreshold = DEFAULT_MAX_FAILURE_THRESHOLD;
         int ringBufferSizeInHalfOpenState = DEFAULT_RING_BUFFER_SIZE_IN_HALF_OPEN_STATE;
         int ringBufferSizeInClosedState = DEFAULT_RING_BUFFER_SIZE_IN_CLOSED_STATE;
-        int exceptionRingBufferSize = DEFAULT_EXCEPTION_RING_BUFFER_SIZE;
         Duration waitDurationInOpenState = Duration.ofSeconds(DEFAULT_WAIT_DURATION_IN_OPEN_STATE);
         CircuitBreakerEventListener circuitBreakerEventListener = new DefaultCircuitBreakerEventListener();
         // The default exception predicate counts all exceptions as failures.
-        Predicate<Throwable> exceptionPredicate = (exception) -> true;
+        Predicate<Throwable> recordFailurePredicate = (exception) -> true;
     }
 }

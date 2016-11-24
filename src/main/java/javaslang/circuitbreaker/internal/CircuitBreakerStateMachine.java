@@ -19,20 +19,25 @@
 package javaslang.circuitbreaker.internal;
 
 
-import javaslang.circuitbreaker.CircuitBreaker;
-import javaslang.circuitbreaker.CircuitBreakerConfig;
-import javaslang.circuitbreaker.CircuitBreakerStateTransitionEvent;
+import io.reactivex.Observable;
+import io.reactivex.subjects.PublishSubject;
+import javaslang.circuitbreaker.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * A CircuitBreaker finite state machine.
  */
-final class CircuitBreakerStateMachine implements CircuitBreaker {
+final class CircuitBreakerStateMachine implements CircuitBreaker{
+
+    private static final Logger LOG = LoggerFactory.getLogger(CircuitBreakerStateMachine.class);
 
     private final String name;
     private final AtomicReference<CircuitBreakerState> stateReference;
     private final CircuitBreakerConfig circuitBreakerConfig;
+    private final PublishSubject<CircuitBreakerEvent> eventPublisher;
 
     /**
      * Creates a circuitBreaker.
@@ -44,6 +49,7 @@ final class CircuitBreakerStateMachine implements CircuitBreaker {
         this.name = name;
         this.circuitBreakerConfig = circuitBreakerConfig;
         this.stateReference = new AtomicReference<>(new ClosedState(this));
+        this.eventPublisher = PublishSubject.create();
     }
 
     /**
@@ -60,8 +66,10 @@ final class CircuitBreakerStateMachine implements CircuitBreaker {
      * Records a failed call.
      */
     @Override
-    public void recordFailure(Throwable throwable) {
-        if(circuitBreakerConfig.getExceptionPredicate().test(throwable)){
+    public synchronized void recordFailure(Throwable throwable) {
+        if(circuitBreakerConfig.getRecordFailurePredicate().test(throwable)){
+            eventPublisher.onNext(new CircuitBreakerRecordedFailureEvent(getName(), throwable));
+            //circuitBreakerConfig.getCircuitBreakerEventListener().onCircuitBreakerEvent(new CircuitBreakerRecordedFailureEvent(getName(), throwable));
             stateReference.get().recordFailure(throwable);
         }
     }
@@ -117,18 +125,29 @@ final class CircuitBreakerStateMachine implements CircuitBreaker {
         return String.format("CircuitBreaker '%s'", this.name);
     }
 
-    protected void transitionToClosedState(StateTransition stateTransition) {
+    void transitionToClosedState(StateTransition stateTransition) {
         stateReference.set(new ClosedState(this));
-        circuitBreakerConfig.getCircuitBreakerEventListener().onCircuitBreakerEvent(new CircuitBreakerStateTransitionEvent(getName(), stateTransition));
+        publishStateTransitionEvent(stateTransition);
+        //circuitBreakerConfig.getCircuitBreakerEventListener().onCircuitBreakerEvent(new CircuitBreakerStateTransitionEvent(getName(), stateTransition));
     }
 
-    protected void transitionToOpenState(StateTransition stateTransition, CircuitBreakerMetrics circuitBreakerMetrics) {
+    void transitionToOpenState(StateTransition stateTransition, CircuitBreakerMetrics circuitBreakerMetrics) {
         stateReference.set(new OpenState(this, circuitBreakerMetrics));
-        circuitBreakerConfig.getCircuitBreakerEventListener().onCircuitBreakerEvent(new CircuitBreakerStateTransitionEvent(getName(), stateTransition));
+        publishStateTransitionEvent(stateTransition);
+        //circuitBreakerConfig.getCircuitBreakerEventListener().onCircuitBreakerEvent(new CircuitBreakerStateTransitionEvent(getName(), stateTransition));
     }
 
-    protected void transitionToHalfClosedState(StateTransition stateTransition) {;
+    void transitionToHalfClosedState(StateTransition stateTransition) {
         stateReference.set(new HalfOpenState(this));
-        circuitBreakerConfig.getCircuitBreakerEventListener().onCircuitBreakerEvent(new CircuitBreakerStateTransitionEvent(getName(), stateTransition));
+        publishStateTransitionEvent(stateTransition);
+        //circuitBreakerConfig.getCircuitBreakerEventListener().onCircuitBreakerEvent(new CircuitBreakerStateTransitionEvent(getName(), stateTransition));
+    }
+
+    private void publishStateTransitionEvent(StateTransition stateTransition){
+        eventPublisher.onNext(new CircuitBreakerStateTransitionEvent(getName(), stateTransition));
+    }
+
+    public Observable<CircuitBreakerEvent> observeCircuitBreakerEvents(){
+        return eventPublisher;
     }
 }

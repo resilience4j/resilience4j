@@ -30,8 +30,7 @@ final class HalfOpenState extends CircuitBreakerState {
         super(stateMachine);
         CircuitBreakerConfig circuitBreakerConfig = stateMachine.getCircuitBreakerConfig();
         this.circuitBreakerMetrics = new CircuitBreakerMetrics(
-                circuitBreakerConfig.getRingBufferSizeInHalfOpenState(),
-                circuitBreakerConfig.getExceptionRingBufferSize());
+                circuitBreakerConfig.getRingBufferSizeInHalfOpenState());
         this.failureRateThreshold = stateMachine.getCircuitBreakerConfig().getFailureRateThreshold();
     }
 

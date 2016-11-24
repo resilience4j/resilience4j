@@ -18,7 +18,7 @@
  */
 package javaslang.circuitbreaker;
 
-import javaslang.collection.List;
+import io.reactivex.Observable;
 import javaslang.control.Try;
 
 import java.util.function.Consumer;
@@ -81,6 +81,14 @@ public interface CircuitBreaker {
      * @return the Metrics of this CircuitBreaker
      */
     Metrics getMetrics();
+
+
+    /**
+     * Get an Observable of CircuitBreakerEvents which can be subscribed
+     *
+     * @return an Observable of CircuitBreakerEvents which can be subscribed
+     */
+    Observable<CircuitBreakerEvent> observeCircuitBreakerEvents();
 
     /**
      * States of the CircuitBreaker state machine.
@@ -151,14 +159,6 @@ public interface CircuitBreaker {
          * @return the current number of failed calls.
          */
         int getNumberOfFailedCalls();
-
-
-        /**
-         * Returns the latest exceptions which have been recorded as a failure and thus increased the failure rate.
-         *
-         * @return the latest exceptions which have been recorded  as a failure and thus increased the failure rate.
-         */
-        List<Throwable> getBufferedExceptions();
     }
 
     /**
