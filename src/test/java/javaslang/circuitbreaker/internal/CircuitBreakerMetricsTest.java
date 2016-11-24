@@ -35,7 +35,6 @@ public class CircuitBreakerMetricsTest {
     public void testDefaultCircuitBreakerMetrics(){
         CircuitBreakerMetrics circuitBreakerMetrics = new CircuitBreakerMetrics(10);
         assertThat(circuitBreakerMetrics.getMaxNumberOfBufferedCalls()).isEqualTo(10);
-        assertThat(circuitBreakerMetrics.getMaxNumberOfBufferedExceptions()).isEqualTo(10);
 
         circuitBreakerMetrics.recordSuccess();
         circuitBreakerMetrics.recordSuccess();
@@ -44,7 +43,6 @@ public class CircuitBreakerMetricsTest {
 
         assertThat(circuitBreakerMetrics.getNumberOfBufferedCalls()).isEqualTo(4);
         assertThat(circuitBreakerMetrics.getNumberOfFailedCalls()).isEqualTo(2);
-        assertThat(circuitBreakerMetrics.getBufferedExceptions()).hasSize(2);
 
         // The failure rate must be -1, because the number of measured calls is below the buffer size of 10
         assertThat(circuitBreakerMetrics.getFailureRate()).isEqualTo(-1);
@@ -62,46 +60,6 @@ public class CircuitBreakerMetricsTest {
         // The failure rate must be 60%, because the number of measured calls is above the minimum number of measured calls.
         assertThat(circuitBreakerMetrics.getNumberOfBufferedCalls()).isEqualTo(10);
         assertThat(circuitBreakerMetrics.getNumberOfFailedCalls()).isEqualTo(6);
-        assertThat(circuitBreakerMetrics.getBufferedExceptions()).hasSize(6);
         assertThat(circuitBreakerMetrics.getFailureRate()).isEqualTo(60);
-
-        circuitBreakerMetrics.getBufferedExceptions().forEach(e -> LOG.info(e.toString()));
-
-    }
-
-    @Test
-    public void testCustomizedCircuitBreakerMetrics(){
-        CircuitBreakerMetrics circuitBreakerMetrics = new CircuitBreakerMetrics(10, 0);
-        assertThat(circuitBreakerMetrics.getMaxNumberOfBufferedCalls()).isEqualTo(10);
-        assertThat(circuitBreakerMetrics.getMaxNumberOfBufferedExceptions()).isEqualTo(0);
-
-        circuitBreakerMetrics.recordSuccess();
-        circuitBreakerMetrics.recordSuccess();
-        circuitBreakerMetrics.recordFailure(new IOException("Bla bla"));
-        circuitBreakerMetrics.recordFailure(new IOException("Bla bla"));
-
-        assertThat(circuitBreakerMetrics.getNumberOfBufferedCalls()).isEqualTo(4);
-        assertThat(circuitBreakerMetrics.getNumberOfFailedCalls()).isEqualTo(2);
-        assertThat(circuitBreakerMetrics.getBufferedExceptions()).hasSize(0);
-
-        // The failure rate must be -1, because the number of measured calls is below the buffer size of 10
-        assertThat(circuitBreakerMetrics.getFailureRate()).isEqualTo(-1);
-
-        circuitBreakerMetrics.recordFailure(new IOException("Bla bla"));
-        circuitBreakerMetrics.recordFailure(new IOException("Bla bla"));
-        circuitBreakerMetrics.recordFailure(new IOException("Bla bla"));
-        circuitBreakerMetrics.recordFailure(new IOException("Bla bla"));
-        circuitBreakerMetrics.recordSuccess();
-        circuitBreakerMetrics.recordSuccess();
-        circuitBreakerMetrics.recordSuccess();
-        circuitBreakerMetrics.recordSuccess();
-
-        // 12 calls have been recorded, but only 10 are stored in the RingBitSet. 4 successes and 6 failures.
-        // The failure rate must be 60%, because the number of measured calls is above the minimum number of measured calls.
-        assertThat(circuitBreakerMetrics.getNumberOfBufferedCalls()).isEqualTo(10);
-        assertThat(circuitBreakerMetrics.getNumberOfFailedCalls()).isEqualTo(6);
-        assertThat(circuitBreakerMetrics.getBufferedExceptions()).hasSize(0);
-        assertThat(circuitBreakerMetrics.getFailureRate()).isEqualTo(60);
-
     }
 }

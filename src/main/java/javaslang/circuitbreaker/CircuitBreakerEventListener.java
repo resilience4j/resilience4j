@@ -18,10 +18,10 @@
  */
 package javaslang.circuitbreaker;
 
-@FunctionalInterface
 /**
  * A listener to handle CircuitBreaker events.
- */
+ **/
+@FunctionalInterface
 public interface CircuitBreakerEventListener{
 
     /**

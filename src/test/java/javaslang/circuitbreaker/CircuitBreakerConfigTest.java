@@ -67,10 +67,8 @@ public class CircuitBreakerConfigTest {
         then(circuitBreakerConfig.getRingBufferSizeInHalfOpenState()).isEqualTo(CircuitBreakerConfig.DEFAULT_RING_BUFFER_SIZE_IN_HALF_OPEN_STATE);
         then(circuitBreakerConfig.getRingBufferSizeInClosedState()).isEqualTo(CircuitBreakerConfig.DEFAULT_RING_BUFFER_SIZE_IN_CLOSED_STATE);
         then(circuitBreakerConfig.getWaitDurationInOpenState().getSeconds()).isEqualTo(CircuitBreakerConfig.DEFAULT_WAIT_DURATION_IN_OPEN_STATE);
-        then(circuitBreakerConfig.getExceptionRingBufferSize()).isEqualTo(CircuitBreakerConfig.DEFAULT_EXCEPTION_RING_BUFFER_SIZE);
         then(circuitBreakerConfig.getCircuitBreakerEventListener()).isNotNull();
-        then(circuitBreakerConfig.getExceptionPredicate()).isNotNull();
-        then(circuitBreakerConfig.getExceptionRingBufferSize()).isNotNull();
+        then(circuitBreakerConfig.getRecordFailurePredicate()).isNotNull();
     }
 
     @Test()
@@ -98,16 +96,10 @@ public class CircuitBreakerConfigTest {
     }
 
     @Test()
-    public void shouldSetExceptionRingBufferSize() {
-        CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom().exceptionRingBufferSize(5).build();
-        then(circuitBreakerConfig.getExceptionRingBufferSize()).isEqualTo(5);
-    }
-
-    @Test()
     public void shouldUseCustomExceptionPredicate() {
         CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom()
                 .recordFailure((Throwable throwable) -> true).build();
-        then(circuitBreakerConfig.getExceptionPredicate()).isNotNull();
+        then(circuitBreakerConfig.getRecordFailurePredicate()).isNotNull();
     }
 
     @Test

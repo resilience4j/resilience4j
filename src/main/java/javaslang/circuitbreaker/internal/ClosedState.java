@@ -30,8 +30,7 @@ final class ClosedState extends CircuitBreakerState {
         super(stateMachine);
         CircuitBreakerConfig circuitBreakerConfig = stateMachine.getCircuitBreakerConfig();
         this.circuitBreakerMetrics = new CircuitBreakerMetrics(
-                circuitBreakerConfig.getRingBufferSizeInClosedState(),
-                circuitBreakerConfig.getExceptionRingBufferSize());
+                circuitBreakerConfig.getRingBufferSizeInClosedState());
         this.failureRateThreshold = stateMachine.getCircuitBreakerConfig().getFailureRateThreshold();
     }
 
