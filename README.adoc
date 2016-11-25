@@ -8,20 +8,23 @@ This library is a lightweight, easy-to-use fault tolerance library inspired by h
 
 To highlight a few differences to Netflix Hystrix:
 
-Executable logic can be passed as simple functions, lambda expressions or method references. In Hystrix, executable logic needs to be wrapped inside a HystrixCommand`.
-
-This library provides higher-order functions to decorate any function, lambda expression or method reference with a http://martinfowler.com/bliki/CircuitBreaker.html[Circuit Breaker]. In the following I call the higher-order functions decorators. The decorators return an enhanced version of your function. Furthermore, the library provides a decorator to retry failed functions. You can stack more than one decorator on any given function. That means, you can combine a Retry decorator with a CircuitBreaker decorator. Any decorated function can be invoked synchronously or asynchronously.
+In Hystrix, executable logic needs to be wrapped inside a HystrixCommand. This library provides higher-order functions to decorate any function, lambda expression or method reference with a http://martinfowler.com/bliki/CircuitBreaker.html[Circuit Breaker]. In the following I call the higher-order functions decorators. The decorators return an enhanced version of your function. Furthermore, the library provides a decorator to retry failed functions. You can stack more than one decorator on any given function. That means, you can combine a Retry decorator with a CircuitBreaker decorator. Any decorated function can be invoked synchronously or asynchronously.
 
 Example:
 
 [source,java]
 ----
+// Create a CircuitBreaker and a Retry context
 CircuitBreaker circuitBreaker = CircuitBreakerRegistry.ofDefaults()
         .circuitBreaker("backendName");
 Retry retryContext = Retry.ofDefaults();
 
+// Decorate your call to HelloWorldSerivce.returnHelloWorld()
 Try.CheckedSupplier<String> supplier = Retry.decorateCheckedSupplier(retryContext,
-        CircuitBreaker.decorateCheckedSupplier(circuitBreaker, helloWorldService::returnHelloWorld));
+        CircuitBreaker.decorateCheckedSupplier(circuitBreaker,
+            helloWorldService::returnHelloWorld));
+
+// Invoke the decorated function and recover from any exception
 Try<String> result = Try.of(supplier)
     .recover(throwable -> "Hello from Recovery");
 ----
