@@ -1,7 +1,27 @@
 == Introduction
 
-This library is a lightweight, easy-to-use fault tolerance library inspired by https://github.com/Netflix/Hystrix[Netflix Hystrix], but designed solely for Java 8 and functional programming. Lightweight, because the library only uses SLF4J and a functional library for Java 8 called https://github.com/javaslang/javaslang[Javaslang]. Javaslang itself has no external library dependencies.
-The library provides several higher-order functions to decorate any function with a http://martinfowler.com/bliki/CircuitBreaker.html[Circuit Breaker]. In the following I call the higher-order functions decorators. The decorators return an enhanced version of your function. Furthermore, the library provides a decorator to retry failed functions. You can stack more than one decorator on any given function. That means, you can combine a Retry decorator with a CircuitBreaker decorator. Any decorated function can be invoked synchronously or asynchronously.
+This library is a lightweight, easy-to-use fault tolerance library inspired by https://github.com/Netflix/Hystrix[Netflix Hystrix], but designed solely for Java 8 and functional programming. Lightweight, because the library only uses https://github.com/javaslang/javaslang[Javaslang], https://github.com/ReactiveX/RxJava[RxJava] and SLF4J-API. These libraries do no have any other external library dependencies.
+
+To highlight a few differences to Netflix Hystrix:
+
+Executable logic can be passed as simple functions, lambda expressions or method references. In Hystrix, executable logic needs to be wrapped inside a HystrixCommand`.
+
+This library provides higher-order functions to decorate any function, lambda expression or method reference with a http://martinfowler.com/bliki/CircuitBreaker.html[Circuit Breaker]. In the following I call the higher-order functions decorators. The decorators return an enhanced version of your function. Furthermore, the library provides a decorator to retry failed functions. You can stack more than one decorator on any given function. That means, you can combine a Retry decorator with a CircuitBreaker decorator. Any decorated function can be invoked synchronously or asynchronously.
+
+Example:
+
+[source,java]
+----
+CircuitBreaker circuitBreaker = CircuitBreakerRegistry.ofDefaults()
+        .circuitBreaker("backendName");
+Retry retryContext = Retry.ofDefaults();
+
+Try.CheckedSupplier<String> supplier = Retry.decorateCheckedSupplier(retryContext,
+        CircuitBreaker.decorateCheckedSupplier(circuitBreaker, helloWorldService::returnHelloWorld));
+Try<String> result = Try.of(supplier)
+    .recover(throwable -> "Hello from Recovery");
+----
+
 
 The CircuitBreaker is implemented via a finite state machine with three states: `CLOSED`, `OPEN` and `HALF_OPEN`.
 

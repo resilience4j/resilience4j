@@ -55,28 +55,28 @@ public interface CircuitBreaker {
     void recordSuccess();
 
     /**
-     * Get the name of this CircuitBreaker
+     * Returns the name of this CircuitBreaker
      *
      * @return the name of this CircuitBreaker
      */
     String getName();
 
     /**
-     * Get the state of this CircuitBreaker
+     * Returns the state of this CircuitBreaker
      *
      * @return the state of this CircuitBreaker
      */
     State getState();
 
     /**
-     * Get the CircuitBreakerConfig of this CircuitBreaker.
+     * Returns the CircuitBreakerConfig of this CircuitBreaker.
      *
      * @return the CircuitBreakerConfig of this CircuitBreaker
      */
     CircuitBreakerConfig getCircuitBreakerConfig();
 
     /**
-     * Get the Metrics of this CircuitBreaker.
+     * Returns the Metrics of this CircuitBreaker.
      *
      * @return the Metrics of this CircuitBreaker
      */
@@ -84,7 +84,7 @@ public interface CircuitBreaker {
 
 
     /**
-     * Get an Observable of CircuitBreakerEvents which can be subscribed
+     * Returns an Observable of CircuitBreakerEvents which can be subscribed
      *
      * @return an Observable of CircuitBreakerEvents which can be subscribed
      */

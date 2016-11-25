@@ -22,8 +22,6 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class CircuitBreakerMetricsTest {
@@ -38,8 +36,8 @@ public class CircuitBreakerMetricsTest {
 
         circuitBreakerMetrics.recordSuccess();
         circuitBreakerMetrics.recordSuccess();
-        circuitBreakerMetrics.recordFailure(new IOException("Bla bla"));
-        circuitBreakerMetrics.recordFailure(new IOException("Bla bla"));
+        circuitBreakerMetrics.recordFailure();
+        circuitBreakerMetrics.recordFailure();
 
         assertThat(circuitBreakerMetrics.getNumberOfBufferedCalls()).isEqualTo(4);
         assertThat(circuitBreakerMetrics.getNumberOfFailedCalls()).isEqualTo(2);
@@ -47,10 +45,10 @@ public class CircuitBreakerMetricsTest {
         // The failure rate must be -1, because the number of measured calls is below the buffer size of 10
         assertThat(circuitBreakerMetrics.getFailureRate()).isEqualTo(-1);
 
-        circuitBreakerMetrics.recordFailure(new IOException("Bla bla"));
-        circuitBreakerMetrics.recordFailure(new IOException("Bla bla"));
-        circuitBreakerMetrics.recordFailure(new IOException("Bla bla"));
-        circuitBreakerMetrics.recordFailure(new IOException("Bla bla"));
+        circuitBreakerMetrics.recordFailure();
+        circuitBreakerMetrics.recordFailure();
+        circuitBreakerMetrics.recordFailure();
+        circuitBreakerMetrics.recordFailure();
         circuitBreakerMetrics.recordSuccess();
         circuitBreakerMetrics.recordSuccess();
         circuitBreakerMetrics.recordSuccess();

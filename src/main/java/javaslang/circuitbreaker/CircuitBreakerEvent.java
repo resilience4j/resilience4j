@@ -26,7 +26,24 @@ public interface CircuitBreakerEvent {
     /**
      * Returns the name of the CircuitBreaker which has created the event.
      *
-     * @return the name of the CircuitBreaker which has created the event.
+     * @return the name of the CircuitBreaker which has created the event
      */
     String getCircuitBreakerName();
+
+    /**
+     * Returns the type of the CircuitBreaker event.
+     *
+     * @return tthe type of the CircuitBreaker event
+     */
+    Type getEventType();
+
+    /**
+     * Event types which are created by a CircuitBreaker.
+     */
+    enum Type {
+        /** A CircuitBreakerEvent which informs that a failure has been recorded */
+        RECORDED_FAILURE,
+        /** A CircuitBreakerEvent which informs that a failure has been recorded */
+        STATE_TRANSITION
+    }
 }

@@ -18,8 +18,6 @@
  */
 package javaslang.circuitbreaker;
 
-import javaslang.circuitbreaker.internal.DefaultCircuitBreakerEventListener;
-
 import java.time.Duration;
 import java.util.function.Predicate;
 
@@ -30,13 +28,11 @@ public class CircuitBreakerConfig {
     public static final int DEFAULT_WAIT_DURATION_IN_OPEN_STATE = 60; // Seconds
     public static final int DEFAULT_RING_BUFFER_SIZE_IN_HALF_OPEN_STATE = 10;
     public static final int DEFAULT_RING_BUFFER_SIZE_IN_CLOSED_STATE = 100;
-    public static final int DEFAULT_EXCEPTION_RING_BUFFER_SIZE = 10;
 
     private final float failureRateThreshold;
     private final int ringBufferSizeInHalfOpenState;
     private final int ringBufferSizeInClosedState;
     private final Duration waitDurationInOpenState;
-    private final CircuitBreakerEventListener circuitBreakerEventListener;
     private final Predicate<Throwable> recordFailurePredicate;
 
     private CircuitBreakerConfig(Context context){
@@ -45,7 +41,6 @@ public class CircuitBreakerConfig {
         this.ringBufferSizeInHalfOpenState = context.ringBufferSizeInHalfOpenState;
         this.ringBufferSizeInClosedState = context.ringBufferSizeInClosedState;
         this.recordFailurePredicate = context.recordFailurePredicate;
-        this.circuitBreakerEventListener = context.circuitBreakerEventListener;
 
     }
 
@@ -63,10 +58,6 @@ public class CircuitBreakerConfig {
 
     public int getRingBufferSizeInClosedState() {
         return ringBufferSizeInClosedState;
-    }
-
-    public CircuitBreakerEventListener getCircuitBreakerEventListener() {
-        return circuitBreakerEventListener;
     }
 
     public Predicate<Throwable> getRecordFailurePredicate() {
@@ -163,23 +154,6 @@ public class CircuitBreakerConfig {
         }
 
         /**
-         * Deprecated: Better handle events by subscribing to the reactive events stream of a CircuitBreaker instance.
-         *
-         * Configures the CircuitBreakerEventListener which should handle CircuitBreaker events.
-         *
-         * @param circuitBreakerEventListener the CircuitBreakerEventListener which should handle CircuitBreaker events
-         * @return the CircuitBreakerConfig.Builder
-         */
-        @Deprecated
-        public Builder onCircuitBreakerEvent(CircuitBreakerEventListener circuitBreakerEventListener) {
-            if (circuitBreakerEventListener == null) {
-                throw new IllegalArgumentException("circuitBreakerEventListener must not be null");
-            }
-            context.circuitBreakerEventListener = circuitBreakerEventListener;
-            return this;
-        }
-
-        /**
          * Configures a Predicate which evaluates if an exception should be recorded as a failure and thus increase the failure rate.
          * The Predicate must return true if the exception should count as a failure, otherwise it must return false.
          *
@@ -206,7 +180,6 @@ public class CircuitBreakerConfig {
         int ringBufferSizeInHalfOpenState = DEFAULT_RING_BUFFER_SIZE_IN_HALF_OPEN_STATE;
         int ringBufferSizeInClosedState = DEFAULT_RING_BUFFER_SIZE_IN_CLOSED_STATE;
         Duration waitDurationInOpenState = Duration.ofSeconds(DEFAULT_WAIT_DURATION_IN_OPEN_STATE);
-        CircuitBreakerEventListener circuitBreakerEventListener = new DefaultCircuitBreakerEventListener();
         // The default exception predicate counts all exceptions as failures.
         Predicate<Throwable> recordFailurePredicate = (exception) -> true;
     }

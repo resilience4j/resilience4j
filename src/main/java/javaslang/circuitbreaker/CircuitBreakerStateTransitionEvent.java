@@ -41,6 +41,11 @@ public class CircuitBreakerStateTransitionEvent implements CircuitBreakerEvent{
     }
 
     @Override
+    public Type getEventType() {
+        return Type.STATE_TRANSITION;
+    }
+
+    @Override
     public String toString(){
         return String.format("CircuitBreaker '%s' changes state from %s to %s", getCircuitBreakerName(), getStateTransition().getFromState(), getStateTransition().getToState());
 

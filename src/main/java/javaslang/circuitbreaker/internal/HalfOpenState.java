@@ -47,7 +47,7 @@ final class HalfOpenState extends CircuitBreakerState {
     @Override
     void recordFailure(Throwable throwable) {
         // Thread-safe
-        checkFailureRate(circuitBreakerMetrics.recordFailure(throwable));
+        checkFailureRate(circuitBreakerMetrics.recordFailure());
     }
 
     @Override

@@ -4,13 +4,32 @@
 
 image:https://travis-ci.org/javaslang/javaslang-circuitbreaker.svg?branch=master["Build Status", link="https://travis-ci.org/javaslang/javaslang-circuitbreaker"] image:https://coveralls.io/repos/javaslang/javaslang-circuitbreaker/badge.svg["Coverage Status", link="https://coveralls.io/r/javaslang/javaslang-circuitbreaker"] image:https://api.bintray.com/packages/robwin/maven/javaslang-circuitbreaker/images/download.svg[link="https://bintray.com/robwin/maven/javaslang-circuitbreaker/_latestVersion"] image:http://img.shields.io/badge/license-ASF2-blue.svg["Apache License 2", link="http://www.apache.org/licenses/LICENSE-2.0.txt"]
 
-This library is a lightweight, easy-to-use fault tolerance library inspired by https://github.com/Netflix/Hystrix[Netflix Hystrix], but designed solely for Java 8 and functional programming. Lightweight, because the library only uses SLF4J and a functional library for Java 8 called https://github.com/javaslang/javaslang[Javaslang]. Javaslang itself has no external library dependencies. 
-The library provides several higher-order functions to decorate any function with a http://martinfowler.com/bliki/CircuitBreaker.html[Circuit Breaker]. The basic idea behind a CircuitBreaker is simple. You decorate a protected function (e.g. a remote call to a backend system) in a CircuitBreaker, which monitors for failures. Once the failures reach a certain failure threshold, the CircuitBreaker trips, and all further calls return with an exception, without the protected call being made at all. After a certain time duration, the CircuitBreaker allows calls again to see if the backend system is still unreliable or has become available again. 
-In the following I call the higher-order functions decorators. The decorators return an enhanced version of your function. Furthermore, the library provides a decorator to retry failed functions. You can stack more than one decorator on any given function. That means, you can combine a Retry decorator with a CircuitBreaker decorator. Any decorated function can be invoked synchronously or asynchronously.
+This library is a lightweight, easy-to-use fault tolerance library inspired by https://github.com/Netflix/Hystrix[Netflix Hystrix], but designed solely for Java 8 and functional programming. Lightweight, because the library only uses https://github.com/javaslang/javaslang[Javaslang], https://github.com/ReactiveX/RxJava[RxJava] and SLF4J-API. These libraries do no have any other external library dependencies.
+
+To highlight a few differences to Netflix Hystrix:
+
+Executable logic can be passed as simple functions, lambda expressions or method references. In Hystrix, executable logic needs to be wrapped inside a HystrixCommand`.
+
+This library provides higher-order functions to decorate any function, lambda expression or method reference with a http://martinfowler.com/bliki/CircuitBreaker.html[Circuit Breaker]. In the following I call the higher-order functions decorators. The decorators return an enhanced version of your function. Furthermore, the library provides a decorator to retry failed functions. You can stack more than one decorator on any given function. That means, you can combine a Retry decorator with a CircuitBreaker decorator. Any decorated function can be invoked synchronously or asynchronously.
+
+Example:
+
+[source,java]
+----
+CircuitBreaker circuitBreaker = CircuitBreakerRegistry.ofDefaults()
+        .circuitBreaker("backendName");
+Retry retryContext = Retry.ofDefaults();
+
+Try.CheckedSupplier<String> supplier = Retry.decorateCheckedSupplier(retryContext,
+        CircuitBreaker.decorateCheckedSupplier(circuitBreaker, helloWorldService::returnHelloWorld));
+Try<String> result = Try.of(supplier)
+    .recover(throwable -> "Hello from Recovery");
+----
+
 
 The CircuitBreaker is implemented via a finite state machine with three states: `CLOSED`, `OPEN` and `HALF_OPEN`.
 
-image::src/docs/asciidoc/images/state_machine.jpg[]
+image::images/state_machine.jpg[]
 
 The CircuitBreaker does not know anything about the backend's state by itself, but uses the information provided by the decorators via `CircuitBreaker::recordSuccess()` and `CircuitBreaker::recordFailure(throwable)`. See example:
 
@@ -36,14 +55,13 @@ Then, all access to the backend is blocked for a (configurable) time duration. `
 
 The CircuitBreaker uses a Ring Bit Buffer in the `CLOSED` state to store the success or failure statuses of the calls. A successful call is stored as a `0` bit and a failed call is stored as a `1` bit. The Ring Bit Buffer has a (configurable) fixed-size. The Ring Bit Buffer uses internally a https://docs.oracle.com/javase/8/docs/api/java/util/BitSet.html[BitSet] to store the bits which is saving memory compared to a boolean array. The BitSet uses a long[] array to store the bits. That means the BitSet only needs an array of 16 long (64-bit) values to store the status of 1024 calls.
 
-image::src/docs/asciidoc/images/ring_buffer.jpg[Ring Bit Buffer]
+image::images/ring_buffer.jpg[Ring Bit Buffer]
 
 The Ring Bit Buffer must be full, before the failure rate can be calculated.
 For example, if the size of the Ring Buffer is 10, then at least 10 calls must evaluated, before the failure rate can be calculated. If only 9 calls have been evaluated the CircuitBreaker will not trip open even if all 9 calls have failed.
 
 After the time duration has elapsed, the CircuitBreaker state changes from `OPEN` to `HALF_OPEN` and allows calls to see if the backend is still unavailable or has become available again. The CircuitBreaker uses another (configurable) Ring Bit Buffer to evaluate the failure rate in the `HALF_OPEN` state. If the failure rate is above the configured threshold, the state changes back to `OPEN`. If the failure rate is below or equal to the threshold, the state changes back to `CLOSED`.
 `CircuitBreaker::recordFailure(exception)` checks if the exception should be recorded as a failure or should be ignored. You can configure a custom `Predicate` which decides whether an exception should be recorded as a failure. The default Predicate records all exceptions as a failure.
-
 
 == Usage guide
 
