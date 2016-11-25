@@ -76,7 +76,6 @@ public class CircuitBreakerTest {
         // Given
         CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
         CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("testName");
-        circuitBreaker.observeCircuitBreakerEvents().subscribe((event) -> LOG.info(event.toString()));
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
 
         //When

@@ -67,7 +67,6 @@ public class CircuitBreakerConfigTest {
         then(circuitBreakerConfig.getRingBufferSizeInHalfOpenState()).isEqualTo(CircuitBreakerConfig.DEFAULT_RING_BUFFER_SIZE_IN_HALF_OPEN_STATE);
         then(circuitBreakerConfig.getRingBufferSizeInClosedState()).isEqualTo(CircuitBreakerConfig.DEFAULT_RING_BUFFER_SIZE_IN_CLOSED_STATE);
         then(circuitBreakerConfig.getWaitDurationInOpenState().getSeconds()).isEqualTo(CircuitBreakerConfig.DEFAULT_WAIT_DURATION_IN_OPEN_STATE);
-        then(circuitBreakerConfig.getCircuitBreakerEventListener()).isNotNull();
         then(circuitBreakerConfig.getRecordFailurePredicate()).isNotNull();
     }
 
@@ -100,13 +99,5 @@ public class CircuitBreakerConfigTest {
         CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom()
                 .recordFailure((Throwable throwable) -> true).build();
         then(circuitBreakerConfig.getRecordFailurePredicate()).isNotNull();
-    }
-
-    @Test
-    public void shouldUseCustomCircuitBreakerEventListener() {
-        CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom()
-                .onCircuitBreakerEvent((event) -> LOG.info(event.toString()))
-                .build();
-        then(circuitBreakerConfig.getCircuitBreakerEventListener()).isNotNull();
     }
 }

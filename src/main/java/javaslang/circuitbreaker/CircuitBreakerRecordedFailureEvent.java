@@ -19,7 +19,7 @@
 package javaslang.circuitbreaker;
 
 /**
- * A CircuitBreakerEvent which informs about a state transition.
+ * A CircuitBreakerEvent which informs that a failure has been recorded
  */
 public class CircuitBreakerRecordedFailureEvent implements CircuitBreakerEvent{
 
@@ -34,6 +34,11 @@ public class CircuitBreakerRecordedFailureEvent implements CircuitBreakerEvent{
     @Override
     public String getCircuitBreakerName() {
         return circuitBreakerName;
+    }
+
+    @Override
+    public Type getEventType() {
+        return Type.RECORDED_FAILURE;
     }
 
     @Override

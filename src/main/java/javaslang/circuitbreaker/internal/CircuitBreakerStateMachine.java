@@ -68,8 +68,10 @@ final class CircuitBreakerStateMachine implements CircuitBreaker{
     @Override
     public synchronized void recordFailure(Throwable throwable) {
         if(circuitBreakerConfig.getRecordFailurePredicate().test(throwable)){
+            if(LOG.isDebugEnabled()){
+                LOG.debug(String.format("CircuitBreaker '%s' recorded a failure:", name), throwable);
+            }
             eventPublisher.onNext(new CircuitBreakerRecordedFailureEvent(getName(), throwable));
-            //circuitBreakerConfig.getCircuitBreakerEventListener().onCircuitBreakerEvent(new CircuitBreakerRecordedFailureEvent(getName(), throwable));
             stateReference.get().recordFailure(throwable);
         }
     }
@@ -128,22 +130,22 @@ final class CircuitBreakerStateMachine implements CircuitBreaker{
     void transitionToClosedState(StateTransition stateTransition) {
         stateReference.set(new ClosedState(this));
         publishStateTransitionEvent(stateTransition);
-        //circuitBreakerConfig.getCircuitBreakerEventListener().onCircuitBreakerEvent(new CircuitBreakerStateTransitionEvent(getName(), stateTransition));
     }
 
     void transitionToOpenState(StateTransition stateTransition, CircuitBreakerMetrics circuitBreakerMetrics) {
         stateReference.set(new OpenState(this, circuitBreakerMetrics));
         publishStateTransitionEvent(stateTransition);
-        //circuitBreakerConfig.getCircuitBreakerEventListener().onCircuitBreakerEvent(new CircuitBreakerStateTransitionEvent(getName(), stateTransition));
     }
 
     void transitionToHalfClosedState(StateTransition stateTransition) {
         stateReference.set(new HalfOpenState(this));
         publishStateTransitionEvent(stateTransition);
-        //circuitBreakerConfig.getCircuitBreakerEventListener().onCircuitBreakerEvent(new CircuitBreakerStateTransitionEvent(getName(), stateTransition));
     }
 
     private void publishStateTransitionEvent(StateTransition stateTransition){
+        if(LOG.isDebugEnabled()){
+            LOG.debug(String.format("CircuitBreaker '%s' changes state from %s to %s", name, stateTransition.getFromState(), stateTransition.getToState()));
+        }
         eventPublisher.onNext(new CircuitBreakerStateTransitionEvent(getName(), stateTransition));
     }
 

@@ -42,7 +42,7 @@ class CircuitBreakerMetrics implements CircuitBreaker.Metrics {
      *
      * @return the current failure rate  in percentage.
      */
-    public synchronized float recordFailure(Throwable throwable){
+    public synchronized float recordFailure(){
         ringBitSet.setNextBit(true);
         return getFailureRate();
     }

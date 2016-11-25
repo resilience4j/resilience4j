@@ -83,20 +83,18 @@ The following example shows how to ignore an `IOException`, but all other except
 include::../../test/java/javaslang/circuitbreaker/CircuitBreakerTest.java[tags=shouldNotRecordIOExceptionAsAFailure]
 ----
 
-=== Customize the event listener
-The default event listener logs state transitions with INFO level.
-
-----
-INFO  i.g.r.c.i.DefaultCircuitBreakerEventListener - CircuitBreaker 'testName' changes state from CLOSED to OPEN
-----
-
-If you want to use a custom event listener, you have to implement the functional interface `CircuitBreakerEventListener` which has a method `onCircuitBreakerEvent(CircuitBreakerEvent circuitBreakerEvent)`. The only event which currently exists is `CircuitBreakerStateTransitionEvent`.
+=== Observe the event stream
+A CircuitBreaker publishes a stream of CircuitBreakerEvents to any Observer/Consumer who subscribes. This library uses RxJava to to provide this functionality.
+If you want to consume events, you have to subscribe to the event stream. This library provides a consumer `CircuitBreakerEventConsumer` which can be used to store events in a circular buffer with a fixed capacity.
+You can use RxJava to filter certain events.
 
 [source,java]
 ----
-CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom()
-    .onCircuitBreakerEvent((event) -> LOG.info(event.toString()))
-    .build();
+CircuitBreakerEventConsumer ringBuffer = new CircuitBreakerEventConsumer(10);
+CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("testName");
+circuitBreaker.observeCircuitBreakerEvents()
+                .filter(event -> event.getEventType() == Type.RECORDED_FAILURE)
+                .subscribe(ringBuffer);
 ----
 
 === Retry a failed function
