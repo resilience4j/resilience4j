@@ -66,6 +66,19 @@ For example, if the size of the Ring Buffer is 10, then at least 10 calls must e
 After the time duration has elapsed, the CircuitBreaker state changes from `OPEN` to `HALF_OPEN` and allows calls to see if the backend is still unavailable or has become available again. The CircuitBreaker uses another (configurable) Ring Bit Buffer to evaluate the failure rate in the `HALF_OPEN` state. If the failure rate is above the configured threshold, the state changes back to `OPEN`. If the failure rate is below or equal to the threshold, the state changes back to `CLOSED`.
 `CircuitBreaker::recordFailure(exception)` checks if the exception should be recorded as a failure or should be ignored. You can configure a custom `Predicate` which decides whether an exception should be recorded as a failure. The default Predicate records all exceptions as a failure.
 
+A CircuitBreaker publishes a stream of CircuitBreakerEvents to any Observer/Consumer who subscribes. This library uses RxJava to to provide this functionality.
+If you want to consume events, you have to subscribe to the event stream. This library provides a consumer `CircuitBreakerEventConsumer` which can be used to store events in a circular buffer with a fixed capacity.
+You can use RxJava to filter certain events.
+
+[source,java]
+----
+CircuitBreakerEventConsumer ringBuffer = new CircuitBreakerEventConsumer(10);
+CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("testName");
+circuitBreaker.observeCircuitBreakerEvents()
+                .filter(event -> event.getEventType() == Type.RECORDED_FAILURE)
+                .subscribe(ringBuffer);
+----
+
 == Usage guide
 
 See http://javaslang.github.io/javaslang-circuitbreaker/0.5.0/[User Guide].
