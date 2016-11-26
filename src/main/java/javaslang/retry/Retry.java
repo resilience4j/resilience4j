@@ -8,19 +8,20 @@ import java.util.function.Supplier;
 public interface Retry {
 
     /**
-     * Checks if the call should be retried
+     * Checks if the call should be retried after an Exception:
+     * If yes, waits the configured time
+     * If no, throw the last exception
      *
-     * @return the maximum number of attempts
      * @throws Exception the original exception if the maximum retry attempts are exceeded
      */
-    boolean isRetryAllowedAfterException() throws Exception;
+    void throwOrSleepAfterException() throws Exception;
 
     /**
-     * Checks if the call should be retried
-     *
-     * @return the maximum number of attempts
+     * Checks if the call should be retried after a RuntimeException:
+     * If yes, waits the configured time
+     * If no, throw the last exception
      */
-    boolean isRetryAllowedAfterRuntimeException();
+    void throwOrSleepAfterRuntimeException();
 
     /**
      * Handles a checked exception
@@ -82,9 +83,8 @@ public interface Retry {
                 return supplier.get();
             } catch (Exception exception) {
                 retryContext.handleException(exception);
-            } while (retryContext.isRetryAllowedAfterException());
-            // Should never reach this code
-            return null;
+                retryContext.throwOrSleepAfterException();
+            } while (true);
         };
     }
 
@@ -116,7 +116,8 @@ public interface Retry {
                 break;
             } catch (Exception exception) {
                 retryContext.handleException(exception);
-            } while (retryContext.isRetryAllowedAfterException());
+                retryContext.throwOrSleepAfterException();
+            } while (true);
         };
     }
 
@@ -146,9 +147,8 @@ public interface Retry {
                 return function.apply(t);
             } catch (Exception exception) {
                 retryContext.handleException(exception);
-            } while (retryContext.isRetryAllowedAfterException());
-            // Should never reach this code
-            return null;
+                retryContext.throwOrSleepAfterException();
+            } while (true);
         };
     }
 
@@ -178,9 +178,8 @@ public interface Retry {
                 return supplier.get();
             } catch (RuntimeException runtimeException) {
                 retryContext.handleRuntimeException(runtimeException);
-            } while (retryContext.isRetryAllowedAfterRuntimeException());
-            // Should never reach this code
-            return null;
+                retryContext.throwOrSleepAfterRuntimeException();
+            } while (true);
         };
     }
 
@@ -211,7 +210,8 @@ public interface Retry {
                 break;
             } catch (RuntimeException runtimeException) {
                 retryContext.handleRuntimeException(runtimeException);
-            } while (retryContext.isRetryAllowedAfterRuntimeException());
+                retryContext.throwOrSleepAfterRuntimeException();
+            } while (true);
         };
     }
 
@@ -242,9 +242,8 @@ public interface Retry {
                 return function.apply(t);
             } catch (RuntimeException runtimeException) {
                 retryContext.handleRuntimeException(runtimeException);
-            } while (retryContext.isRetryAllowedAfterRuntimeException());
-            // Should never reach this code
-            return null;
+                retryContext.throwOrSleepAfterRuntimeException();
+            } while (true);
         };
     }
 

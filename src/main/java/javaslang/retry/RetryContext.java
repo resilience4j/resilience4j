@@ -30,7 +30,7 @@ public class RetryContext implements Retry {
     }
 
     @Override
-    public boolean isRetryAllowedAfterException() throws Exception {
+    public void throwOrSleepAfterException() throws Exception {
         int currentNumOfAttempts = numOfAttempts.incrementAndGet();
         if(currentNumOfAttempts == maxAttempts){
             throw lastException.get();
@@ -41,11 +41,10 @@ public class RetryContext implements Retry {
             } catch (InterruptedException e) {
                 throw lastException.get();
             }
-            return true;
         }
     }
     @Override
-    public boolean isRetryAllowedAfterRuntimeException(){
+    public void throwOrSleepAfterRuntimeException(){
         int currentNumOfAttempts = numOfAttempts.incrementAndGet();
         if(currentNumOfAttempts == maxAttempts){
             throw lastRuntimeException.get();
@@ -56,7 +55,6 @@ public class RetryContext implements Retry {
             } catch (InterruptedException e) {
                 throw lastRuntimeException.get();
             }
-            return true;
         }
     }
 
