@@ -22,7 +22,7 @@ public class RetryContext implements Retry {
 
     private RetryContext(int maxAttempts, Duration waitDuration, Predicate<Throwable> exceptionPredicate){
         this.maxAttempts = maxAttempts;
-        this.waitDuration = waitDuration.getSeconds() * 1000;
+        this.waitDuration = waitDuration.toMillis();
         this.exceptionPredicate = exceptionPredicate;
         this.numOfAttempts = new AtomicInteger(0);
         this.lastException = new AtomicReference<>();
