@@ -35,12 +35,13 @@ import static org.mockito.Mockito.times;
 public class RunnableRetryTest {
 
     private HelloWorldService helloWorldService;
+    private long sleptTime = 0L;
 
     @Before
     public void setUp(){
         helloWorldService = mock(HelloWorldService.class);
+        RetryContext.sleepFunction = sleep -> sleptTime += sleep;
     }
-
 
     @Test
     public void shouldNotRetry() {
@@ -55,6 +56,7 @@ public class RunnableRetryTest {
         BDDMockito.then(helloWorldService).should(times(1)).sayHelloWorld();
         // and the result should be a success
         assertThat(result.isSuccess()).isTrue();
+        assertThat(sleptTime).isEqualTo(0);
     }
 
     @Test
@@ -76,6 +78,7 @@ public class RunnableRetryTest {
         assertThat(result.isFailure()).isTrue();
         // and the returned exception should be of type RuntimeException
         assertThat(result.failed().get()).isInstanceOf(WebServiceException.class);
+        assertThat(sleptTime).isEqualTo(RetryContext.DEFAULT_WAIT_DURATION*2);
     }
 
     @Test
@@ -97,6 +100,7 @@ public class RunnableRetryTest {
         assertThat(result.isFailure()).isTrue();
         // and the returned exception should be of type RuntimeException
         assertThat(result.failed().get()).isInstanceOf(WebServiceException.class);
+        assertThat(sleptTime).isEqualTo(0);
     }
 
     @Test
@@ -122,5 +126,6 @@ public class RunnableRetryTest {
         assertThat(result.isFailure()).isTrue();
         // and the returned exception should be of type RuntimeException
         assertThat(result.failed().get()).isInstanceOf(WebServiceException.class);
+        assertThat(sleptTime).isEqualTo(0);
     }
 }

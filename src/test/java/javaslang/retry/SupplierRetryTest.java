@@ -37,10 +37,12 @@ import static org.mockito.Mockito.times;
 public class SupplierRetryTest {
 
     private HelloWorldService helloWorldService;
+    private long sleptTime = 0L;
 
     @Before
     public void setUp(){
         helloWorldService = mock(HelloWorldService.class);
+        RetryContext.sleepFunction = sleep -> sleptTime += sleep;
     }
 
     @Test
@@ -59,6 +61,7 @@ public class SupplierRetryTest {
         // and the result should be a success
         assertThat(result.isSuccess()).isTrue();
         assertThat(result.get()).isEqualTo("Hello world");
+        assertThat(sleptTime).isEqualTo(0);
     }
 
     @Test
@@ -77,6 +80,7 @@ public class SupplierRetryTest {
         // Then the helloWorldService should be invoked 2 times
         BDDMockito.then(helloWorldService).should(times(2)).returnHelloWorld();
         assertThat(result.get()).isEqualTo("Hello world");
+        assertThat(sleptTime).isEqualTo(RetryContext.DEFAULT_WAIT_DURATION);
     }
 
     @Test
@@ -98,6 +102,7 @@ public class SupplierRetryTest {
         assertThat(result.isFailure()).isTrue();
         // and the returned exception should be of type RuntimeException
         assertThat(result.failed().get()).isInstanceOf(WebServiceException.class);
+        assertThat(sleptTime).isEqualTo(RetryContext.DEFAULT_WAIT_DURATION*2);
     }
 
     @Test
@@ -119,6 +124,7 @@ public class SupplierRetryTest {
         assertThat(result.isFailure()).isTrue();
         // and the returned exception should be of type RuntimeException
         assertThat(result.failed().get()).isInstanceOf(WebServiceException.class);
+        assertThat(sleptTime).isEqualTo(0);
     }
 
     @Test
@@ -144,6 +150,7 @@ public class SupplierRetryTest {
         assertThat(result.isFailure()).isTrue();
         // and the returned exception should be of type RuntimeException
         assertThat(result.failed().get()).isInstanceOf(WebServiceException.class);
+        assertThat(sleptTime).isEqualTo(0);
     }
 
     @Test
@@ -164,6 +171,7 @@ public class SupplierRetryTest {
 
         // and the returned exception should be of type RuntimeException
         assertThat(result.get()).isEqualTo("Hello world from recovery function");
+        assertThat(sleptTime).isEqualTo(RetryContext.DEFAULT_WAIT_DURATION*2);
     }
 
 }
