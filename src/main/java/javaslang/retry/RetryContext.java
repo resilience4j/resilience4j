@@ -6,6 +6,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Predicate;
 import java.util.function.Function;
 import javaslang.control.Try;
+import javaslang.collection.Stream;
 
 public class RetryContext implements Retry {
 
@@ -21,12 +22,16 @@ public class RetryContext implements Retry {
     // The maximum number of attempts
     private final int maxAttempts;
     // The wait interval between successive attempts
-    private final long waitDuration;
+    private final Duration waitDuration;
+    private final Function<Duration, Duration> backoffFunction;
     private Predicate<Throwable> exceptionPredicate;
 
-    private RetryContext(int maxAttempts, Duration waitDuration, Predicate<Throwable> exceptionPredicate){
+    private RetryContext(int maxAttempts, Duration waitDuration,
+                         Function<Duration, Duration> backoffFunction,
+                         Predicate<Throwable> exceptionPredicate){
         this.maxAttempts = maxAttempts;
-        this.waitDuration = waitDuration.toMillis();
+        this.waitDuration = waitDuration;
+        this.backoffFunction = backoffFunction;
         this.exceptionPredicate = exceptionPredicate;
         this.numOfAttempts = new AtomicInteger(0);
         this.lastException = new AtomicReference<>();
@@ -39,9 +44,7 @@ public class RetryContext implements Retry {
         if(currentNumOfAttempts == maxAttempts){
             throw lastException.get();
         }else{
-            // wait interval until the next attempt should start
-            Try.run(() -> sleepFunction.accept(waitDuration))
-                .getOrElseThrow(ex -> lastRuntimeException.get());
+            waitIntervalAfterFailure();
         }
     }
     @Override
@@ -50,10 +53,17 @@ public class RetryContext implements Retry {
         if(currentNumOfAttempts == maxAttempts){
             throw lastRuntimeException.get();
         }else{
-            // wait interval until the next attempt should start
-            Try.run(() -> sleepFunction.accept(waitDuration))
-                .getOrElseThrow(ex -> lastRuntimeException.get());
+            waitIntervalAfterFailure();
         }
+    }
+
+    private void waitIntervalAfterFailure() {
+        // wait interval until the next attempt should start
+        long interval = Stream.iterate(waitDuration, backoffFunction)
+            .get(numOfAttempts.get()-1)
+            .toMillis();
+        Try.run(() -> sleepFunction.accept(interval))
+            .getOrElseThrow(ex -> lastRuntimeException.get());
     }
 
     @Override
@@ -77,6 +87,7 @@ public class RetryContext implements Retry {
     public static class Builder {
         private int maxAttempts = DEFAULT_MAX_ATTEMPTS;
         private Duration waitDuration = Duration.ofMillis(DEFAULT_WAIT_DURATION);
+        private Function<Duration, Duration> backoffFunction = Function.identity();
         // The default exception predicate retries all exceptions.
         private Predicate<Throwable> exceptionPredicate = (exception) -> true;
 
@@ -97,6 +108,18 @@ public class RetryContext implements Retry {
         }
 
         /**
+         * Set a function to modify the waiting interval
+         * after a failure. By default the interval stays
+         * the same.
+         *
+         * @param f Function to modify the interval after a failure
+         */
+        public Builder backoffFunction(Function<Duration, Duration> f) {
+            this.backoffFunction = f;
+            return this;
+        }
+
+        /**
          *  Configures a Predicate which evaluates if an exception should be retried.
          *  The Predicate must return true if the exception should count be retried, otherwise it must return false.
          *
@@ -109,7 +132,8 @@ public class RetryContext implements Retry {
         }
 
         public Retry build() {
-            return new RetryContext(maxAttempts, waitDuration, exceptionPredicate);
+            return new RetryContext(maxAttempts, waitDuration,
+                                    backoffFunction, exceptionPredicate);
         }
     }
 }

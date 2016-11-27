@@ -174,4 +174,23 @@ public class SupplierRetryTest {
         assertThat(sleptTime).isEqualTo(RetryContext.DEFAULT_WAIT_DURATION*2);
     }
 
+    @Test
+    public void shouldTakeIntoAccountBackoffFunction() {
+        // Given the HelloWorldService throws an exception
+        given(helloWorldService.returnHelloWorld()).willThrow(new WebServiceException("BAM!"));
+
+        // Create a Retry with a backoff function doubling the interval
+        Retry retryContext = Retry.custom().backoffFunction(x -> x.multipliedBy(2)).build();
+        // Decorate the invocation of the HelloWorldService
+        Try.CheckedSupplier<String> retryableSupplier = Retry.decorateCheckedSupplier(retryContext, helloWorldService::returnHelloWorld);
+
+        // When
+        Try<String> result = Try.of(retryableSupplier);
+
+        // Then the slept time should be according to the backoff function
+        BDDMockito.then(helloWorldService).should(times(3)).returnHelloWorld();
+        assertThat(sleptTime).isEqualTo(
+            RetryContext.DEFAULT_WAIT_DURATION +
+            RetryContext.DEFAULT_WAIT_DURATION*2);
+    }
 }

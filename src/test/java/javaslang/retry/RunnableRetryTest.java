@@ -128,4 +128,24 @@ public class RunnableRetryTest {
         assertThat(result.failed().get()).isInstanceOf(WebServiceException.class);
         assertThat(sleptTime).isEqualTo(0);
     }
+
+    @Test
+    public void shouldTakeIntoAccountBackoffFunction() {
+        // Given the HelloWorldService throws an exception
+        willThrow(new WebServiceException("BAM!")).given(helloWorldService).sayHelloWorld();
+
+        // Create a Retry with a backoff function squaring the interval
+        Retry retryContext = Retry.custom().backoffFunction(x -> x.multipliedBy(x.toMillis())).build();
+        // Decorate the invocation of the HelloWorldService
+        Try.CheckedRunnable retryableRunnable = Retry.decorateCheckedRunnable(retryContext, helloWorldService::sayHelloWorld);
+
+        // When
+        Try<Void> result = Try.run(retryableRunnable);
+
+        // Then the slept time should be according to the backoff function
+        BDDMockito.then(helloWorldService).should(times(3)).sayHelloWorld();
+        assertThat(sleptTime).isEqualTo(
+            RetryContext.DEFAULT_WAIT_DURATION +
+            RetryContext.DEFAULT_WAIT_DURATION*RetryContext.DEFAULT_WAIT_DURATION);
+    }
 }
