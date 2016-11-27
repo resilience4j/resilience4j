@@ -4,15 +4,19 @@ import java.time.Duration;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Predicate;
+import java.util.function.Function;
+import javaslang.control.Try;
 
 public class RetryContext implements Retry {
 
     private static final int DEFAULT_MAX_ATTEMPTS = 3;
-    private static final long DEFAULT_WAIT_DURATION = 500;
+    /*package*/ static final long DEFAULT_WAIT_DURATION = 500;
 
     private final AtomicInteger numOfAttempts;
     private AtomicReference<Exception> lastException;
     private AtomicReference<RuntimeException> lastRuntimeException;
+
+    /*package*/ static Try.CheckedConsumer<Long> sleepFunction = Thread::sleep;
 
     // The maximum number of attempts
     private final int maxAttempts;
@@ -36,11 +40,8 @@ public class RetryContext implements Retry {
             throw lastException.get();
         }else{
             // wait interval until the next attempt should start
-            try {
-                Thread.sleep(waitDuration);
-            } catch (InterruptedException e) {
-                throw lastException.get();
-            }
+            Try.run(() -> sleepFunction.accept(waitDuration))
+                .getOrElseThrow(ex -> lastRuntimeException.get());
         }
     }
     @Override
@@ -50,11 +51,8 @@ public class RetryContext implements Retry {
             throw lastRuntimeException.get();
         }else{
             // wait interval until the next attempt should start
-            try {
-                Thread.sleep(waitDuration);
-            } catch (InterruptedException e) {
-                throw lastRuntimeException.get();
-            }
+            Try.run(() -> sleepFunction.accept(waitDuration))
+                .getOrElseThrow(ex -> lastRuntimeException.get());
         }
     }
 
