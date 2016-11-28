@@ -19,7 +19,6 @@
 package javaslang.circuitbreaker.consumer;
 
 import javaslang.circuitbreaker.CircuitBreaker;
-import javaslang.circuitbreaker.CircuitBreakerRegistry;
 import javaslang.control.Try;
 import javaslang.retry.Retry;
 import org.junit.Test;
@@ -32,8 +31,7 @@ public class CircuitBreakerEventConsumerTest {
     @Test
     public void shouldBufferEvents() {
         // Given
-        CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
-        CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("testName");
+        CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testName");
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
 
         CircuitBreakerEventConsumer ringBuffer = new CircuitBreakerEventConsumer(2);
@@ -64,8 +62,7 @@ public class CircuitBreakerEventConsumerTest {
     @Test
     public void shouldNotBufferEvents() {
         // Given
-        CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
-        CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("testName");
+        CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testName");
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
 
         CircuitBreakerEventConsumer ringBuffer = new CircuitBreakerEventConsumer(2);

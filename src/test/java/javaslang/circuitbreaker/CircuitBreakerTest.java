@@ -53,8 +53,7 @@ public class CircuitBreakerTest {
                 .build();
 
         // Create a CircuitBreakerRegistry with a custom global configuration
-        CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.of(circuitBreakerConfig);
-        CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("testName");
+        CircuitBreaker circuitBreaker = CircuitBreaker.of("testName", circuitBreakerConfig);
 
         circuitBreaker.recordFailure(new RuntimeException());
         circuitBreaker.recordFailure(new RuntimeException());
@@ -74,8 +73,7 @@ public class CircuitBreakerTest {
     @Test
     public void shouldReturnFailureWithRuntimeException() {
         // Given
-        CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
-        CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("testName");
+        CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testName");
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
 
         //When
@@ -101,8 +99,7 @@ public class CircuitBreakerTest {
                         Case(instanceOf(WebServiceException.class), true),
                         Case($(), false)))
                 .build();
-        CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.of(circuitBreakerConfig);
-        CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("testName");
+        CircuitBreaker circuitBreaker = CircuitBreaker.of("testName", circuitBreakerConfig);
 
         // Simulate a failure attempt
         circuitBreaker.recordFailure(new RuntimeException());
@@ -141,8 +138,7 @@ public class CircuitBreakerTest {
     public void shouldInvokeRecoverFunction() {
         // tag::shouldInvokeRecoverFunction[]
         // Given
-        CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
-        CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("testName");
+        CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testName");
 
         // When I decorate my function and invoke the decorated function
         Try.CheckedSupplier<String> checkedSupplier = CircuitBreaker.decorateCheckedSupplier(circuitBreaker, () -> {
@@ -162,8 +158,7 @@ public class CircuitBreakerTest {
     public void shouldInvokeMap() {
         // tag::shouldInvokeMap[]
         // Given
-        CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
-        CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("testName");
+        CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testName");
 
         // When I decorate my function
         Try.CheckedSupplier<String> decoratedSupplier = CircuitBreaker
@@ -187,9 +182,7 @@ public class CircuitBreakerTest {
                 .ringBufferSizeInClosedState(2)
                 .waitDurationInOpenState(Duration.ofMillis(1000))
                 .build();
-        CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.of(circuitBreakerConfig);
-
-        CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("uniqueName");
+        CircuitBreaker circuitBreaker = CircuitBreaker.of("testName", circuitBreakerConfig);
 
         // Simulate a failure attempt
         circuitBreaker.recordFailure(new RuntimeException());
@@ -236,9 +229,8 @@ public class CircuitBreakerTest {
     public void shouldChainDecoratedFunctions() throws ExecutionException, InterruptedException {
         // tag::shouldChainDecoratedFunctions[]
         // Given
-        CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
-        CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("testName");
-        CircuitBreaker anotherCircuitBreaker = circuitBreakerRegistry.circuitBreaker("anotherTestName");
+        CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testName");
+        CircuitBreaker anotherCircuitBreaker = CircuitBreaker.ofDefaults("anotherTestName");
 
         // When I create a Supplier and a Function which are decorated by different CircuitBreakers
         Try.CheckedSupplier<String> decoratedSupplier = CircuitBreaker

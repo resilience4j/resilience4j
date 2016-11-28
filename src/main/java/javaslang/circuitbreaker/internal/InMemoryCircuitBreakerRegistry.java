@@ -63,7 +63,7 @@ public final class InMemoryCircuitBreakerRegistry implements CircuitBreakerRegis
      */
     @Override
     public CircuitBreaker circuitBreaker(String name) {
-        return circuitBreakers.computeIfAbsent(Objects.requireNonNull(name, "Name must not be null"), (k) -> new CircuitBreakerStateMachine(name,
+        return circuitBreakers.computeIfAbsent(Objects.requireNonNull(name, "Name must not be null"), (k) -> CircuitBreaker.of(name,
                 defaultCircuitBreakerConfig));
     }
 
@@ -72,13 +72,13 @@ public final class InMemoryCircuitBreakerRegistry implements CircuitBreakerRegis
      */
     @Override
     public CircuitBreaker circuitBreaker(String name, CircuitBreakerConfig customCircuitBreakerConfig) {
-        return circuitBreakers.computeIfAbsent(Objects.requireNonNull(name, "Name must not be null"), (k) -> new CircuitBreakerStateMachine(name,
+        return circuitBreakers.computeIfAbsent(Objects.requireNonNull(name, "Name must not be null"), (k) -> CircuitBreaker.of(name,
                 customCircuitBreakerConfig));
     }
 
     @Override
     public CircuitBreaker circuitBreaker(String name, Supplier<CircuitBreakerConfig> circuitBreakerConfigSupplier) {
-        return circuitBreakers.computeIfAbsent(Objects.requireNonNull(name, "Name must not be null"), (k) -> new CircuitBreakerStateMachine(name,
+        return circuitBreakers.computeIfAbsent(Objects.requireNonNull(name, "Name must not be null"), (k) -> CircuitBreaker.of(name,
                 circuitBreakerConfigSupplier.get()));
     }
 

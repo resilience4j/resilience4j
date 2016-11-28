@@ -2,7 +2,7 @@
 
 === Create a CircuitBreaker
 
-This library comes with an in-memory `CircuitBreakerRegistry` based on a `ConcurrentHashMap` which provides thread safety and atomicity guarantees. You must use the CircuitBreakerRegistry to manage (create and retrieve) your CircuitBreakers. You can create a CircuitBreakerRegistry with a default global `CircuitBreakerConfig` for all of your CircuitBreakers as follows.
+This library comes with an in-memory `CircuitBreakerRegistry` based on a `ConcurrentHashMap` which provides thread safety and atomicity guarantees. You can use the CircuitBreakerRegistry to manage (create and retrieve) CircuitBreaker instances. You can create a CircuitBreakerRegistry with a default global `CircuitBreakerConfig` for all of your CircuitBreaker instances as follows.
 
 [source,java,indent=0]
 ----
@@ -36,6 +36,15 @@ CircuitBreaker circuitBreaker2 = circuitBreakerRegistry.circuitBreaker("otherNam
 
 // Get a CircuitBreaker from the CircuitBreakerRegistry with a custom configuration
 CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("uniqueName", circuitBreakerConfig);
+----
+
+If you don't want to use the CircuitBreakerRegistry to manage CircuitBreaker instances, you can also create instances directly:
+
+[source,java,indent=0]
+----
+CircuitBreaker defauktCircuitBreaker = CircuitBreaker.ofDefaults("testName");
+
+CircuitBreaker customCircuitBreaker = CircuitBreaker.of("testName", circuitBreakerConfig);
 ----
 
 === Use a CircuitBreaker
@@ -91,7 +100,7 @@ You can use RxJava to filter certain events.
 [source,java]
 ----
 CircuitBreakerEventConsumer ringBuffer = new CircuitBreakerEventConsumer(10);
-CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("testName");
+CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testName");
 circuitBreaker.observeCircuitBreakerEvents()
                 .filter(event -> event.getEventType() == Type.RECORDED_FAILURE)
                 .subscribe(ringBuffer);
@@ -159,8 +168,7 @@ You can also invoke a decorated function asynchronously by using a Reactive Stre
 [source,java]
 ----
  // Given
-CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
-CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("testName");
+ CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testName");
 // CircuitBreaker is initially CLOSED
 circuitBreaker.recordFailure(new RuntimeException());
 assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
