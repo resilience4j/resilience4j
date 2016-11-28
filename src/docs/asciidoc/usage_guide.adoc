@@ -161,33 +161,13 @@ You can also invoke a decorated function asynchronously by using a `CompletableF
 include::../../test/java/javaslang/circuitbreaker/CircuitBreakerTest.java[tags=shouldInvokeAsyncApply]
 ----
 
-=== Use Reactive Streams
+=== Use RxJava
 
-You can also invoke a decorated function asynchronously by using a Reactive Streams implementation like https://github.com/ReactiveX/RxJava[RxJava] or https://github.com/reactor/reactor/[Project Reactor].
+You can protect any RxJava Observable or Flowable by using the custom CircuitBreakerOperator.
 
 [source,java]
 ----
- // Given
- CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testName");
-// CircuitBreaker is initially CLOSED
-circuitBreaker.recordFailure(new RuntimeException());
-assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
-// CircuitBreaker is still CLOSED, because 1 failure is allowed
-assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
-circuitBreaker.recordFailure(new RuntimeException());
-// CircuitBreaker is OPEN, because maxFailures > 1
-assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.OPEN);
-
-// Decorate the supplier of the HelloWorldService with CircuitBreaker functionality
-Supplier<String> supplier = CircuitBreaker.decorateSupplier(() -> "Hello world", circuitBreaker);
-
-//When I consume from a reactive stream it should forward the CircuitBreakerOpenException.
-Streams.generate(supplier::get)
-        .map(value -> value + " from reactive streams")
-        .consume(value -> {
-            LOG.info(value);
-        }, exception -> {
-            LOG.info("Exception handled: " + exception.toString());
-            assertThat(exception).isInstanceOf(CircuitBreakerOpenException.class);
-        });
+CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testName");
+Observable.fromArray("Event 1", "Event 2")
+                .lift(new CircuitBreakerOperator<>(circuitBreaker))
 ----
