@@ -11,8 +11,7 @@ Example:
 [source,java]
 ----
 // Create a CircuitBreaker and a Retry context
-CircuitBreaker circuitBreaker = CircuitBreakerRegistry.ofDefaults()
-        .circuitBreaker("backendName");
+CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("backendName");
 Retry retryContext = Retry.ofDefaults();
 
 // Decorate your call to HelloWorldSerivce.returnHelloWorld()

@@ -24,7 +24,7 @@ import javaslang.circuitbreaker.internal.InMemoryCircuitBreakerRegistry;
 import java.util.function.Supplier;
 
 /**
- * Manages all CircuitBreaker instances.
+ * A factory to create CircuitBreaker instances which stores all CircuitBreaker instances in a registry.
  */
 public interface CircuitBreakerRegistry {
 

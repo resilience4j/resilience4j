@@ -19,6 +19,7 @@
 package javaslang.circuitbreaker;
 
 import io.reactivex.Observable;
+import javaslang.circuitbreaker.internal.CircuitBreakerStateMachine;
 import javaslang.control.Try;
 
 import java.util.function.Consumer;
@@ -402,5 +403,40 @@ public interface CircuitBreaker {
                 throw throwable;
             }
         };
+    }
+
+    /**
+     * Creates a CircuitBreaker with a default CircuitBreaker configuration.
+     *
+     * @param name the name of the CircuitBreaker
+     *
+     * @return a CircuitBreaker with a default CircuitBreaker configuration.
+     */
+    static CircuitBreaker ofDefaults(String name){
+        return new CircuitBreakerStateMachine(name);
+    }
+
+    /**
+     * Creates a CircuitBreaker with a custom CircuitBreaker configuration.
+     *
+     * @param name the name of the CircuitBreaker
+     * @param circuitBreakerConfig a custom CircuitBreaker configuration
+     *
+     * @return a CircuitBreaker with a default CircuitBreaker configuration.
+     */
+    static CircuitBreaker of(String name, CircuitBreakerConfig circuitBreakerConfig){
+        return new CircuitBreakerStateMachine(name, circuitBreakerConfig);
+    }
+
+    /**
+     * Creates a CircuitBreaker with a custom CircuitBreaker configuration.
+     *
+     * @param name      the name of the CircuitBreaker
+     * @param circuitBreakerConfigSupplier a supplier of a custom CircuitBreaker configuration
+     *
+     * @return a CircuitBreaker with a default CircuitBreaker configuration.
+     */
+    static CircuitBreaker of(String name, Supplier<CircuitBreakerConfig> circuitBreakerConfigSupplier){
+        return new CircuitBreakerStateMachine(name, circuitBreakerConfigSupplier);
     }
 }

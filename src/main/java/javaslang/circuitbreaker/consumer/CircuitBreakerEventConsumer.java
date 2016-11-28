@@ -26,7 +26,7 @@ import javaslang.collection.List;
 
 
 /**
- * A reactive streams consumer which stores CircuitBreakerEvents in a circular buffer with a fixed capacity.
+ * A RxJava consumer which stores CircuitBreakerEvents in a circular buffer with a fixed capacity.
  */
 public class CircuitBreakerEventConsumer implements Consumer<CircuitBreakerEvent>{
 

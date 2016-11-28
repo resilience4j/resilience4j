@@ -1,17 +1,18 @@
 package javaslang.retry;
 
+import javaslang.collection.Stream;
+import javaslang.control.Try;
+
 import java.time.Duration;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Predicate;
 import java.util.function.Function;
-import javaslang.control.Try;
-import javaslang.collection.Stream;
+import java.util.function.Predicate;
 
 public class RetryContext implements Retry {
 
-    private static final int DEFAULT_MAX_ATTEMPTS = 3;
-    /*package*/ static final long DEFAULT_WAIT_DURATION = 500;
+    public static final int DEFAULT_MAX_ATTEMPTS = 3;
+    public static final long DEFAULT_WAIT_DURATION = 500;
 
     private final AtomicInteger numOfAttempts;
     private AtomicReference<Exception> lastException;

@@ -26,11 +26,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Supplier;
 
 /**
  * A CircuitBreaker finite state machine.
  */
-final class CircuitBreakerStateMachine implements CircuitBreaker{
+public final class CircuitBreakerStateMachine implements CircuitBreaker{
 
     private static final Logger LOG = LoggerFactory.getLogger(CircuitBreakerStateMachine.class);
 
@@ -40,14 +41,39 @@ final class CircuitBreakerStateMachine implements CircuitBreaker{
     private final PublishSubject<CircuitBreakerEvent> eventPublisher;
 
     /**
+     * Creates a circuitBreaker with default config.
+     *
+     * @param name      the name of the CircuitBreaker
+     */
+    public CircuitBreakerStateMachine(String name) {
+        this.name = name;
+        this.circuitBreakerConfig = CircuitBreakerConfig.ofDefaults();
+        this.stateReference = new AtomicReference<>(new ClosedState(this));
+        this.eventPublisher = PublishSubject.create();
+    }
+
+    /**
      * Creates a circuitBreaker.
      *
      * @param name      the name of the CircuitBreaker
      * @param circuitBreakerConfig The CircuitBreaker configuration.
      */
-    CircuitBreakerStateMachine(String name, CircuitBreakerConfig circuitBreakerConfig) {
+    public CircuitBreakerStateMachine(String name, CircuitBreakerConfig circuitBreakerConfig) {
         this.name = name;
         this.circuitBreakerConfig = circuitBreakerConfig;
+        this.stateReference = new AtomicReference<>(new ClosedState(this));
+        this.eventPublisher = PublishSubject.create();
+    }
+
+    /**
+     * Creates a circuitBreaker.
+     *
+     * @param name      the name of the CircuitBreaker
+     * @param circuitBreakerConfig The CircuitBreaker configuration supplier.
+     */
+    public CircuitBreakerStateMachine(String name, Supplier<CircuitBreakerConfig> circuitBreakerConfig) {
+        this.name = name;
+        this.circuitBreakerConfig = circuitBreakerConfig.get();
         this.stateReference = new AtomicReference<>(new ClosedState(this));
         this.eventPublisher = PublishSubject.create();
     }
