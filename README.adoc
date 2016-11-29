@@ -2,7 +2,7 @@
 :author: Robert Winkler
 :hardbreaks:
 
-image:https://travis-ci.org/javaslang/javaslang-circuitbreaker.svg?branch=master["Build Status", link="https://travis-ci.org/javaslang/javaslang-circuitbreaker"] image:https://coveralls.io/repos/javaslang/javaslang-circuitbreaker/badge.svg["Coverage Status", link="https://coveralls.io/r/javaslang/javaslang-circuitbreaker"] image:https://api.bintray.com/packages/robwin/maven/javaslang-circuitbreaker/images/download.svg[link="https://bintray.com/robwin/maven/javaslang-circuitbreaker/_latestVersion"] image:http://img.shields.io/badge/license-ASF2-blue.svg["Apache License 2", link="http://www.apache.org/licenses/LICENSE-2.0.txt"]
+image:https://travis-ci.org/RobWin/javaslang-circuitbreaker.svg?branch=master["Build Status", link="https://travis-ci.org/RobWin/javaslang-circuitbreaker"] image:https://coveralls.io/repos/RobWin/javaslang-circuitbreaker/badge.svg["Coverage Status", link="https://coveralls.io/r/RobWin/javaslang-circuitbreaker"] image:https://api.bintray.com/packages/robwin/maven/javaslang-circuitbreaker/images/download.svg[link="https://bintray.com/robwin/maven/javaslang-circuitbreaker/_latestVersion"] image:http://img.shields.io/badge/license-ASF2-blue.svg["Apache License 2", link="http://www.apache.org/licenses/LICENSE-2.0.txt"]
 
 This library is a lightweight, easy-to-use fault tolerance library inspired by https://github.com/Netflix/Hystrix[Netflix Hystrix], but designed solely for Java 8 and functional programming. Lightweight, because the library only uses https://github.com/javaslang/javaslang[Javaslang], https://github.com/ReactiveX/RxJava[RxJava] and SLF4J-API, which do no have any other external library dependencies.
 
