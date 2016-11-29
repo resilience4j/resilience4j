@@ -31,15 +31,17 @@ public class CircuitBreakerEventConsumerTest {
     @Test
     public void shouldBufferEvents() {
         // Given
+
+        // tag::shouldBufferEvents[]
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testName");
-        assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
-
         CircuitBreakerEventConsumer ringBuffer = new CircuitBreakerEventConsumer(2);
-        assertThat(ringBuffer.getBufferedCircuitBreakerEvents()).isEmpty();
-
         circuitBreaker.getEventStream()
                 .filter(event -> event.getEventType() == Type.ERROR)
                 .subscribe(ringBuffer);
+        // end::shouldBufferEvents[]
+
+        assertThat(ringBuffer.getBufferedCircuitBreakerEvents()).isEmpty();
+        assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
 
         Try.CheckedRunnable runnable = () -> { throw new RuntimeException("BAM!");};
 
