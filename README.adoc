@@ -53,6 +53,21 @@ circuitBreaker.getEventStream()
         .subscribe(ringBuffer);
 ----
 
+== Monitor CircuitBreaker metrics
+
+The CircuitBreaker provides an interface to monitor the current metrics.
+
+[source,java]
+----
+CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
+// Returns the failure rate in percentage.
+float failureRate = metrics.getFailureRate();
+// Returns the current number of buffered calls.
+int bufferedCalls = metrics.getNumberOfBufferedCalls();
+// Returns the current number of failed calls.
+int failedCalls = metrics.getNumberOfFailedCalls();
+----
+
 == Usage Guide
 
 For more details see http://robwin.github.io/javaslang-circuitbreaker/0.7.0/[User Guide].
