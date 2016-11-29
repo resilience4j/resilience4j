@@ -13,7 +13,7 @@ In the following I call the higher-order functions decorators. The decorators re
 
 == Examples
 
-The following example shows how to decorate a method call with a CircuitBreaker and automatically retry the call when an exception occurs.
+The following example shows how to decorate a method reference with a CircuitBreaker and automatically retry the call when an exception occurs.
 
 [source,java]
 ----
@@ -21,10 +21,10 @@ The following example shows how to decorate a method call with a CircuitBreaker 
 CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("backendName");
 Retry retryContext = Retry.ofDefaults();`
 
-// Decorate your call to HelloWorldSerivce.returnHelloWorld()
+// Decorate your call to BackendService.doSomething()
 Try.CheckedSupplier<String> supplier = Retry.decorateCheckedSupplier(retryContext,
         CircuitBreaker.decorateCheckedSupplier(circuitBreaker,
-            helloWorldService::returnHelloWorld));
+            backendService::doSomething));
 
 // Invoke the decorated function and recover from any exception
 Try<String> result = Try.of(supplier)
