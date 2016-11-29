@@ -8,15 +8,16 @@ This library is a lightweight, easy-to-use fault tolerance library inspired by h
 
 To highlight a few differences to Netflix Hystrix:
 
-In Hystrix, executable logic needs to be wrapped inside a HystrixCommand. This library provides higher-order functions to decorate any function, lambda expression or method reference with a http://martinfowler.com/bliki/CircuitBreaker.html[Circuit Breaker]. In the following I call the higher-order functions decorators. The decorators return an enhanced version of your function. Furthermore, the library provides a decorator to retry failed functions. You can stack more than one decorator on any given function. That means, you can combine a Retry decorator with a CircuitBreaker decorator. Any decorated function can be invoked synchronously or asynchronously.
+In Hystrix, executable logic needs to be wrapped inside a HystrixCommand. This library provides higher-order functions to decorate any function, lambda expression or method reference with a http://martinfowler.com/bliki/CircuitBreaker.html[Circuit Breaker]. The library also provides a custom RxJava operator to decorate any `Observable` or `Flowable`.
+In the following I call the higher-order functions decorators. The decorators return an enhanced version of your function. Furthermore, the library provides a decorator to retry failed functions. You can stack more than one decorator on any given function. That means, you can combine a Retry decorator with a CircuitBreaker decorator. Any decorated function can be invoked synchronously or asynchronously.
 
-Example:
+The following example shows how to decorate a method call with a CircuitBreaker and automatically retry the call when an exception occurs.
 
 [source,java]
 ----
 // Create a CircuitBreaker and a Retry context
 CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("backendName");
-Retry retryContext = Retry.ofDefaults();
+Retry retryContext = Retry.ofDefaults();`
 
 // Decorate your call to HelloWorldSerivce.returnHelloWorld()
 Try.CheckedSupplier<String> supplier = Retry.decorateCheckedSupplier(retryContext,
@@ -28,6 +29,14 @@ Try<String> result = Try.of(supplier)
     .recover(throwable -> "Hello from Recovery");
 ----
 
+The following example shows how to decorate an Observable by using the custom RxJava operator.
+
+[source,java]
+----
+CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testName");
+Observable.fromCallable(helloWorldService::sayHelloWorld)
+    .lift(CircuitBreakerOperator.of(circuitBreaker))
+----
 
 The CircuitBreaker is implemented via a finite state machine with three states: `CLOSED`, `OPEN` and `HALF_OPEN`.
 
@@ -75,6 +84,7 @@ circuitBreaker.getEventStream()
         .filter(event -> event.getEventType() == Type.ERROR)
         .subscribe(ringBuffer);
 ----
+
 == Usage guide
 
 See http://robwin.github.io/javaslang-circuitbreaker/0.7.0/[User Guide].
