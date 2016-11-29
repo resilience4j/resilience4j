@@ -1,4 +1,4 @@
-= Fault tolerance library designed for Java8
+= Fault tolerance library designed for functional programming
 :author: Robert Winkler
 :hardbreaks:
 
