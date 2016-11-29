@@ -36,7 +36,7 @@ The following example shows how to decorate an Observable by using the custom Rx
 [source,java]
 ----
 CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testName");
-Observable.fromCallable(helloWorldService::sayHelloWorld)
+Observable.fromCallable(backendService::doSomething)
     .lift(CircuitBreakerOperator.of(circuitBreaker))
 ----
 
