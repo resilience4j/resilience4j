@@ -93,7 +93,7 @@ include::../../test/java/javaslang/circuitbreaker/CircuitBreakerTest.java[tags=s
 ----
 
 === Observe the event stream
-A CircuitBreaker publishes a stream of CircuitBreakerEvents. This library uses RxJava to to provide this functionality.
+A CircuitBreaker publishes a stream of CircuitBreakerEvents. An event can be a state transition or a recorded error. This library uses RxJava to to provide this functionality.
 If you want to consume events, you have to subscribe to the event stream. This library provides a consumer `CircuitBreakerEventConsumer` which can be used to store events in a circular buffer with a fixed capacity.
 You can use RxJava to filter the events.
 
