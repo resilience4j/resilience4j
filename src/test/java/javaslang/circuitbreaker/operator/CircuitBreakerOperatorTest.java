@@ -41,7 +41,7 @@ public class CircuitBreakerOperatorTest {
 
         //When
         Observable.fromArray("Event 1", "Event 2")
-            .lift(new CircuitBreakerOperator<>(circuitBreaker))
+            .lift(CircuitBreakerOperator.of(circuitBreaker))
             .test()
                 .assertValueCount(2)
                 .assertValues("Event 1", "Event 2")
@@ -62,7 +62,7 @@ public class CircuitBreakerOperatorTest {
 
         //When
         Flowable.fromArray("Event 1", "Event 2")
-                .lift(new CircuitBreakerOperator<>(circuitBreaker))
+                .lift(CircuitBreakerOperator.of(circuitBreaker))
                 .test()
                 .assertValueCount(2)
                 .assertValues("Event 1", "Event 2")
@@ -83,7 +83,7 @@ public class CircuitBreakerOperatorTest {
 
         //When
         Observable.fromCallable(() -> {throw new IOException("BAM!");})
-            .lift(new CircuitBreakerOperator<>(circuitBreaker))
+            .lift(CircuitBreakerOperator.of(circuitBreaker))
             .test()
                 .assertError(IOException.class)
                 .assertNotComplete()
@@ -104,7 +104,7 @@ public class CircuitBreakerOperatorTest {
 
         //When
         Flowable.fromCallable(() -> {throw new IOException("BAM!");})
-                .lift(new CircuitBreakerOperator<>(circuitBreaker))
+                .lift(CircuitBreakerOperator.of(circuitBreaker))
                 .test()
                 .assertError(IOException.class)
                 .assertNotComplete()
@@ -135,7 +135,7 @@ public class CircuitBreakerOperatorTest {
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.OPEN);
 
         Observable.fromArray("Event 1", "Event 2")
-                .lift(new CircuitBreakerOperator<>(circuitBreaker))
+                .lift(CircuitBreakerOperator.of(circuitBreaker))
                 .test()
                 .assertError(CircuitBreakerOpenException.class)
                 .assertNotComplete()
@@ -165,7 +165,7 @@ public class CircuitBreakerOperatorTest {
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.OPEN);
 
         Flowable.fromArray("Event 1", "Event 2")
-                .lift(new CircuitBreakerOperator<>(circuitBreaker))
+                .lift(CircuitBreakerOperator.of(circuitBreaker))
                 .test()
                 .assertError(CircuitBreakerOpenException.class)
                 .assertNotComplete()
@@ -193,7 +193,7 @@ public class CircuitBreakerOperatorTest {
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
 
         Observable.fromCallable(() -> {throw new IOException("BAM!");})
-                .lift(new CircuitBreakerOperator<>(circuitBreaker))
+                .lift(CircuitBreakerOperator.of(circuitBreaker))
                 .test()
                 .assertError(IOException.class)
                 .assertNotComplete()

@@ -39,8 +39,19 @@ public class CircuitBreakerOperator<T> implements ObservableOperator<T, T>, Flow
 
     private final CircuitBreaker circuitBreaker;
 
-    public CircuitBreakerOperator(CircuitBreaker circuitBreaker){
+    private CircuitBreakerOperator(CircuitBreaker circuitBreaker){
         this.circuitBreaker = circuitBreaker;
+    }
+
+    /**
+     * Creates a CircuitBreakerOperator.
+     *
+     * @param circuitBreaker the CircuitBreaker
+     *
+     * @return a CircuitBreakerOperator
+     */
+    public static <T> CircuitBreakerOperator<T> of(CircuitBreaker circuitBreaker){
+        return new CircuitBreakerOperator<>(circuitBreaker);
     }
 
     @Override
