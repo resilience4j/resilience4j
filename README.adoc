@@ -42,7 +42,7 @@ The CircuitBreaker is implemented via a finite state machine with three states: 
 
 image::src/docs/asciidoc/images/state_machine.jpg[]
 
-The CircuitBreaker does not know anything about the backend's state by itself, but uses the information provided by the decorators via `CircuitBreaker::recordSuccess()` and `CircuitBreaker::recordFailure(throwable)`. See example:
+The CircuitBreaker does not know anything about the backend's state by itself, but uses the information provided by the decorators via `CircuitBreaker::onSuccess()` and `CircuitBreaker::onError(throwable)`. See example:
 
 [source,java]
 ----
@@ -51,10 +51,10 @@ static <T> Supplier<T> decorateSupplier(Supplier<T> supplier, CircuitBreaker cir
         circuitBreaker.isCallPermitted();
         try {
             T returnValue = supplier.get();
-            circuitBreaker.recordSuccess();
+            circuitBreaker.onSuccess();
             return returnValue;
         } catch (Exception exception) {
-            circuitBreaker.recordFailure(exception);
+            circuitBreaker.onFailure(exception);
             throw exception;
         }
     };
