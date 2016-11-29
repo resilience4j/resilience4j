@@ -515,7 +515,7 @@ table.CodeRay td.code>pre{padding:0}
 <h1>Javaslang-Circuitbreaker User Guide</h1>
 <div class="details">
 <span id="author" class="author">Robert Winkler</span><br>
-<span id="revnumber">version 0.7.0-SNAPSHOT,</span>
+<span id="revnumber">version 0.7.0,</span>
 <span id="revdate">2016-11-29</span>
 </div>
 <div id="toc" class="toc2">
@@ -664,7 +664,7 @@ circuitBreaker.getEventStream()
     jcenter()
 }
 
-compile "io.github.robwin:javaslang-circuitbreaker:0.7.0-SNAPSHOT"</code></pre>
+compile "io.github.robwin:javaslang-circuitbreaker:0.7.0"</code></pre>
 </div>
 </div>
 </div>
@@ -748,20 +748,7 @@ In the following example, <code>Try.of(&#8230;&#8203;)</code> returns a <code>Su
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="CodeRay highlight"><code data-lang="java"><span class="comment">// Given</span>
-CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults(<span class="string"><span class="delimiter">&quot;</span><span class="content">testName</span><span class="delimiter">&quot;</span></span>);
-
-<span class="comment">// When I decorate my function</span>
-Try.CheckedSupplier&lt;<span class="predefined-type">String</span>&gt; decoratedSupplier = CircuitBreaker
-        .decorateCheckedSupplier(circuitBreaker, () -&gt; <span class="string"><span class="delimiter">&quot;</span><span class="content">This can be any method which returns: 'Hello</span><span class="delimiter">&quot;</span></span>);
-
-<span class="comment">// and chain an other function with map</span>
-Try&lt;<span class="predefined-type">String</span>&gt; result = Try.of(decoratedSupplier)
-                .map(value -&gt; value + <span class="string"><span class="delimiter">&quot;</span><span class="content"> world'</span><span class="delimiter">&quot;</span></span>);
-
-<span class="comment">// Then the Try Monad returns a Success&lt;String&gt;, if all functions ran successfully.</span>
-assertThat(result.isSuccess()).isTrue();
-assertThat(result.get()).isEqualTo(<span class="string"><span class="delimiter">&quot;</span><span class="content">This can be any method which returns: 'Hello world'</span><span class="delimiter">&quot;</span></span>);</code></pre>
+<pre class="CodeRay highlight"><code data-lang="java">Unresolved directive in usage_guide.adoc - include::../../test/java/javaslang/circuitbreaker/CircuitBreakerTest.java[tags=shouldInvokeMap]</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -769,24 +756,7 @@ assertThat(result.get()).isEqualTo(<span class="string"><span class="delimiter">
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="CodeRay highlight"><code data-lang="java"><span class="comment">// Given</span>
-CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults(<span class="string"><span class="delimiter">&quot;</span><span class="content">testName</span><span class="delimiter">&quot;</span></span>);
-CircuitBreaker anotherCircuitBreaker = CircuitBreaker.ofDefaults(<span class="string"><span class="delimiter">&quot;</span><span class="content">anotherTestName</span><span class="delimiter">&quot;</span></span>);
-
-<span class="comment">// When I create a Supplier and a Function which are decorated by different CircuitBreakers</span>
-Try.CheckedSupplier&lt;<span class="predefined-type">String</span>&gt; decoratedSupplier = CircuitBreaker
-        .decorateCheckedSupplier(circuitBreaker, () -&gt; <span class="string"><span class="delimiter">&quot;</span><span class="content">Hello</span><span class="delimiter">&quot;</span></span>);
-
-Try.CheckedFunction&lt;<span class="predefined-type">String</span>, <span class="predefined-type">String</span>&gt; decoratedFunction = CircuitBreaker
-        .decorateCheckedFunction(anotherCircuitBreaker, (input) -&gt; input + <span class="string"><span class="delimiter">&quot;</span><span class="content"> world</span><span class="delimiter">&quot;</span></span>);
-
-<span class="comment">// and I chain a function with map</span>
-Try&lt;<span class="predefined-type">String</span>&gt; result = Try.of(decoratedSupplier)
-        .mapTry(decoratedFunction::apply);
-
-<span class="comment">// Then</span>
-assertThat(result.isSuccess()).isTrue();
-assertThat(result.get()).isEqualTo(<span class="string"><span class="delimiter">&quot;</span><span class="content">Hello world</span><span class="delimiter">&quot;</span></span>);</code></pre>
+<pre class="CodeRay highlight"><code data-lang="java">Unresolved directive in usage_guide.adoc - include::../../test/java/javaslang/circuitbreaker/CircuitBreakerTest.java[tags=shouldChainDecoratedFunctions]</code></pre>
 </div>
 </div>
 </div>
@@ -797,30 +767,7 @@ assertThat(result.get()).isEqualTo(<span class="string"><span class="delimiter">
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="CodeRay highlight"><code data-lang="java"><span class="comment">// Given</span>
-CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom()
-        .ringBufferSizeInClosedState(<span class="integer">2</span>)
-        .waitDurationInOpenState(<span class="predefined-type">Duration</span>.ofMillis(<span class="integer">1000</span>))
-        .build();
-CircuitBreaker circuitBreaker = CircuitBreaker.of(<span class="string"><span class="delimiter">&quot;</span><span class="content">testName</span><span class="delimiter">&quot;</span></span>, circuitBreakerConfig);
-
-<span class="comment">// Simulate a failure attempt</span>
-circuitBreaker.onError(<span class="keyword">new</span> <span class="exception">RuntimeException</span>());
-<span class="comment">// CircuitBreaker is still CLOSED, because 1 failure is allowed</span>
-assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
-<span class="comment">// Simulate a failure attempt</span>
-circuitBreaker.onError(<span class="keyword">new</span> <span class="exception">RuntimeException</span>());
-<span class="comment">// CircuitBreaker is OPEN, because the failure rate is above 50%</span>
-assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.OPEN);
-
-<span class="comment">// When I decorate my function and invoke the decorated function</span>
-Try&lt;<span class="predefined-type">String</span>&gt; result = Try.of(CircuitBreaker.decorateCheckedSupplier(circuitBreaker, () -&gt; <span class="string"><span class="delimiter">&quot;</span><span class="content">Hello</span><span class="delimiter">&quot;</span></span>))
-        .map(value -&gt; value + <span class="string"><span class="delimiter">&quot;</span><span class="content"> world</span><span class="delimiter">&quot;</span></span>);
-
-<span class="comment">// Then the call fails, because CircuitBreaker is OPEN</span>
-assertThat(result.isFailure()).isTrue();
-<span class="comment">// Exception is CircuitBreakerOpenException</span>
-assertThat(result.failed().get()).isInstanceOf(CircuitBreakerOpenException.class);</code></pre>
+<pre class="CodeRay highlight"><code data-lang="java">Unresolved directive in usage_guide.adoc - include::../../test/java/javaslang/circuitbreaker/CircuitBreakerTest.java[tags=shouldThrowCircuitBreakerOpenException]</code></pre>
 </div>
 </div>
 </div>
@@ -831,20 +778,7 @@ assertThat(result.failed().get()).isInstanceOf(CircuitBreakerOpenException.class
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="CodeRay highlight"><code data-lang="java"><span class="comment">// Given</span>
-CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults(<span class="string"><span class="delimiter">&quot;</span><span class="content">testName</span><span class="delimiter">&quot;</span></span>);
-
-<span class="comment">// When I decorate my function and invoke the decorated function</span>
-Try.CheckedSupplier&lt;<span class="predefined-type">String</span>&gt; checkedSupplier = CircuitBreaker.decorateCheckedSupplier(circuitBreaker, () -&gt; {
-    <span class="keyword">throw</span> <span class="keyword">new</span> <span class="exception">RuntimeException</span>(<span class="string"><span class="delimiter">&quot;</span><span class="content">BAM!</span><span class="delimiter">&quot;</span></span>);
-});
-Try&lt;<span class="predefined-type">String</span>&gt; result = Try.of(checkedSupplier)
-        .recover(throwable -&gt; <span class="string"><span class="delimiter">&quot;</span><span class="content">Hello Recovery</span><span class="delimiter">&quot;</span></span>);
-
-<span class="comment">// Then the function should be a success, because the exception could be recovered</span>
-assertThat(result.isSuccess()).isTrue();
-<span class="comment">// and the result must match the result of the recovery function.</span>
-assertThat(result.get()).isEqualTo(<span class="string"><span class="delimiter">&quot;</span><span class="content">Hello Recovery</span><span class="delimiter">&quot;</span></span>);</code></pre>
+<pre class="CodeRay highlight"><code data-lang="java">Unresolved directive in usage_guide.adoc - include::../../test/java/javaslang/circuitbreaker/CircuitBreakerTest.java[tags=shouldInvokeRecoverFunction]</code></pre>
 </div>
 </div>
 </div>
@@ -856,33 +790,7 @@ The following example shows how to ignore an <code>IOException</code>, but all o
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="CodeRay highlight"><code data-lang="java"><span class="comment">// Given</span>
-CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom()
-        .ringBufferSizeInClosedState(<span class="integer">2</span>)
-        .ringBufferSizeInHalfOpenState(<span class="integer">2</span>)
-        .waitDurationInOpenState(<span class="predefined-type">Duration</span>.ofMillis(<span class="integer">1000</span>))
-        .recordFailure(throwable -&gt; API.Match(throwable).of(
-                Case(instanceOf(WebServiceException.class), <span class="predefined-constant">true</span>),
-                Case(<span class="error">$</span>(), <span class="predefined-constant">false</span>)))
-        .build();
-CircuitBreaker circuitBreaker = CircuitBreaker.of(<span class="string"><span class="delimiter">&quot;</span><span class="content">testName</span><span class="delimiter">&quot;</span></span>, circuitBreakerConfig);
-
-<span class="comment">// Simulate a failure attempt</span>
-circuitBreaker.onError(<span class="keyword">new</span> <span class="exception">RuntimeException</span>());
-<span class="comment">// CircuitBreaker is still CLOSED, because 1 failure is allowed</span>
-assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
-
-<span class="comment">//When</span>
-Try.CheckedRunnable checkedRunnable = CircuitBreaker.decorateCheckedRunnable(circuitBreaker, () -&gt; {
-    <span class="keyword">throw</span> <span class="keyword">new</span> <span class="exception">SocketTimeoutException</span>(<span class="string"><span class="delimiter">&quot;</span><span class="content">BAM!</span><span class="delimiter">&quot;</span></span>);
-});
-Try result = Try.run(checkedRunnable);
-
-<span class="comment">//Then</span>
-assertThat(result.isFailure()).isTrue();
-<span class="comment">// CircuitBreaker is still CLOSED, because SocketTimeoutException has not been recorded as a failure</span>
-assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
-assertThat(result.failed().get()).isInstanceOf(<span class="exception">IOException</span>.class);</code></pre>
+<pre class="CodeRay highlight"><code data-lang="java">Unresolved directive in usage_guide.adoc - include::../../test/java/javaslang/circuitbreaker/CircuitBreakerTest.java[tags=shouldNotRecordIOExceptionAsAFailure]</code></pre>
 </div>
 </div>
 </div>
@@ -895,11 +803,7 @@ You can use RxJava to filter the events.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="CodeRay highlight"><code data-lang="java">CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults(<span class="string"><span class="delimiter">&quot;</span><span class="content">testName</span><span class="delimiter">&quot;</span></span>);
-CircuitBreakerEventConsumer ringBuffer = <span class="keyword">new</span> CircuitBreakerEventConsumer(<span class="integer">2</span>);
-circuitBreaker.getEventStream()
-        .filter(event -&gt; event.getEventType() == <span class="predefined-type">Type</span>.ERROR)
-        .subscribe(ringBuffer);</code></pre>
+<pre class="CodeRay highlight"><code data-lang="java">Unresolved directive in usage_guide.adoc - include::../../test/java/javaslang/circuitbreaker/consumer/CircuitBreakerEventConsumerTest.java[tags=shouldBufferEvents]</code></pre>
 </div>
 </div>
 </div>
@@ -960,20 +864,7 @@ assertThat(result.get()).isEqualTo(<span class="string"><span class="delimiter">
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="CodeRay highlight"><code data-lang="java"><span class="comment">// Given</span>
-CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
-CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker(<span class="string"><span class="delimiter">&quot;</span><span class="content">testName</span><span class="delimiter">&quot;</span></span>);
-assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
-
-<span class="comment">// When</span>
-Supplier&lt;<span class="predefined-type">String</span>&gt; decoratedSupplier = CircuitBreaker
-        .decorateSupplier(circuitBreaker, () -&gt; <span class="string"><span class="delimiter">&quot;</span><span class="content">This can be any method which returns: 'Hello</span><span class="delimiter">&quot;</span></span>);
-
-CompletableFuture&lt;<span class="predefined-type">String</span>&gt; future = CompletableFuture.supplyAsync(decoratedSupplier)
-        .thenApply(value -&gt; value + <span class="string"><span class="delimiter">&quot;</span><span class="content"> world'</span><span class="delimiter">&quot;</span></span>);
-
-<span class="comment">//Then</span>
-assertThat(future.get()).isEqualTo(<span class="string"><span class="delimiter">&quot;</span><span class="content">This can be any method which returns: 'Hello world'</span><span class="delimiter">&quot;</span></span>);</code></pre>
+<pre class="CodeRay highlight"><code data-lang="java">Unresolved directive in usage_guide.adoc - include::../../test/java/javaslang/circuitbreaker/CircuitBreakerTest.java[tags=shouldInvokeAsyncApply]</code></pre>
 </div>
 </div>
 </div>
@@ -1086,7 +977,7 @@ reporter.start(<span class="integer">1</span>, <span class="predefined-type">Tim
 </div>
 <div id="footer">
 <div id="footer-text">
-Version 0.7.0-SNAPSHOT<br>
+Version 0.7.0<br>
 Last updated 2016-10-04 08:28:41 +02:00
 </div>
 </div>
