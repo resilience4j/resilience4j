@@ -77,7 +77,7 @@ circuitBreaker.getEventStream()
 ----
 == Usage guide
 
-See http://javaslang.github.io/javaslang-circuitbreaker/0.5.0/[User Guide].
+See http://javaslang.github.io/javaslang-circuitbreaker/0.7.0/[User Guide].
 
 == Companies who use javaslang-circuitbreaker
 
