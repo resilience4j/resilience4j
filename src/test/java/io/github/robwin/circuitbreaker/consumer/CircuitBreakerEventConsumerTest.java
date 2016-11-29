@@ -19,16 +19,19 @@
 package io.github.robwin.circuitbreaker.consumer;
 
 import io.github.robwin.circuitbreaker.CircuitBreaker;
-import io.github.robwin.circuitbreaker.consumer.CircuitBreakerEventConsumer;
-import javaslang.control.Try;
+import io.github.robwin.circuitbreaker.event.CircuitBreakerEvent;
 import io.github.robwin.retry.Retry;
+import javaslang.control.Try;
 import org.assertj.core.api.Assertions;
 import org.junit.Test;
-import io.github.robwin.circuitbreaker.event.CircuitBreakerEvent;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class CircuitBreakerEventConsumerTest {
+
+    private static final Logger LOG = LoggerFactory.getLogger(CircuitBreakerEventConsumerTest.class);
 
     @Test
     public void shouldBufferEvents() {
@@ -61,6 +64,7 @@ public class CircuitBreakerEventConsumerTest {
 
         //Should only store 2 events, because capacity is 2
         Assertions.assertThat(ringBuffer.getBufferedCircuitBreakerEvents()).hasSize(2);
+        //ringBuffer.getBufferedCircuitBreakerEvents().forEach(event -> LOG.info(event.toString()));
     }
 
     @Test

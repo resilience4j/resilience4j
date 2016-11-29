@@ -21,19 +21,13 @@ package io.github.robwin.circuitbreaker.event;
 /**
  * A CircuitBreakerEvent which informs that an error has been recorded
  */
-public class CircuitBreakerOnErrorEvent implements CircuitBreakerEvent{
+public class CircuitBreakerOnErrorEvent extends AbstractCircuitBreakerEvent{
 
-    private final String circuitBreakerName;
     private final Throwable throwable;
 
     public CircuitBreakerOnErrorEvent(String circuitBreakerName, Throwable throwable) {
-        this.circuitBreakerName = circuitBreakerName;
+        super(circuitBreakerName);
         this.throwable = throwable;
-    }
-
-    @Override
-    public String getCircuitBreakerName() {
-        return circuitBreakerName;
     }
 
     @Override
@@ -43,6 +37,6 @@ public class CircuitBreakerOnErrorEvent implements CircuitBreakerEvent{
 
     @Override
     public String toString(){
-        return String.format("CircuitBreaker '%s' recorded an error: '%s'", getCircuitBreakerName(), throwable.toString());
+        return String.format("%s: CircuitBreaker '%s' recorded an error: '%s'", getCreationTime(), getCircuitBreakerName(), throwable.toString());
     }
 }

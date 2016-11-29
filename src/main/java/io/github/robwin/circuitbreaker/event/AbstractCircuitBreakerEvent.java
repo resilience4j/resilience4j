@@ -18,22 +18,25 @@
  */
 package io.github.robwin.circuitbreaker.event;
 
-/**
- * A CircuitBreakerEvent which informs that a success has been recorded
- */
-public class CircuitBreakerOnSuccessEvent  extends AbstractCircuitBreakerEvent{
+import java.time.ZonedDateTime;
 
-    public CircuitBreakerOnSuccessEvent(String circuitBreakerName) {
-        super(circuitBreakerName);
+abstract class AbstractCircuitBreakerEvent implements CircuitBreakerEvent {
+
+    private final String circuitBreakerName;
+    private final ZonedDateTime creationTime;
+
+    public AbstractCircuitBreakerEvent(String circuitBreakerName) {
+        this.circuitBreakerName = circuitBreakerName;
+        this.creationTime = ZonedDateTime.now();
     }
 
     @Override
-    public Type getEventType() {
-        return Type.SUCCESS;
+    public String getCircuitBreakerName() {
+        return circuitBreakerName;
     }
 
     @Override
-    public String toString(){
-        return String.format("%s: CircuitBreaker '%s' recorded a successful call", getCreationTime(), getCircuitBreakerName());
+    public ZonedDateTime getCreationTime() {
+        return creationTime;
     }
 }

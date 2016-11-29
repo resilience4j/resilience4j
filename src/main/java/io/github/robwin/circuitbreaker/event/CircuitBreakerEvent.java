@@ -18,6 +18,8 @@
  */
 package io.github.robwin.circuitbreaker.event;
 
+import java.time.ZonedDateTime;
+
 /**
  * An event which is created by a CircuitBreaker.
  */
@@ -33,9 +35,16 @@ public interface CircuitBreakerEvent {
     /**
      * Returns the type of the CircuitBreaker event.
      *
-     * @return tthe type of the CircuitBreaker event
+     * @return the type of the CircuitBreaker event
      */
     Type getEventType();
+
+    /**
+     * Returns the creation time of CircuitBreaker event.
+     *
+     * @return the creation time of CircuitBreaker event
+     */
+    ZonedDateTime getCreationTime();
 
     /**
      * Event types which are created by a CircuitBreaker.

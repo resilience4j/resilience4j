@@ -23,23 +23,17 @@ import io.github.robwin.circuitbreaker.CircuitBreaker;
 /**
  * A CircuitBreakerEvent which informs about a state transition.
  */
-public class CircuitBreakerOnStateTransitionEvent implements CircuitBreakerEvent{
+public class CircuitBreakerOnStateTransitionEvent extends AbstractCircuitBreakerEvent{
 
-    private String circuitBreakerName;
     private CircuitBreaker.StateTransition stateTransition;
 
     public CircuitBreakerOnStateTransitionEvent(String circuitBreakerName, CircuitBreaker.StateTransition stateTransition) {
-        this.circuitBreakerName = circuitBreakerName;
+        super(circuitBreakerName);
         this.stateTransition = stateTransition;
     }
 
     public CircuitBreaker.StateTransition getStateTransition() {
         return stateTransition;
-    }
-
-    @Override
-    public String getCircuitBreakerName() {
-        return circuitBreakerName;
     }
 
     @Override
@@ -49,7 +43,7 @@ public class CircuitBreakerOnStateTransitionEvent implements CircuitBreakerEvent
 
     @Override
     public String toString(){
-        return String.format("CircuitBreaker '%s' changed state from %s to %s", getCircuitBreakerName(), getStateTransition().getFromState(), getStateTransition().getToState());
+        return String.format("%s: CircuitBreaker '%s' changed state from %s to %s", getCreationTime(), getCircuitBreakerName(), getStateTransition().getFromState(), getStateTransition().getToState());
 
     }
 }
