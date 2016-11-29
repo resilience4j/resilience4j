@@ -38,9 +38,9 @@ bintray {
     pkg {
         repo = 'maven'
         name = 'javaslang-circuitbreaker'
-        websiteUrl = 'https://github.com/javaslang/javaslang-circuitbreaker'
-        issueTrackerUrl = 'https://github.com/javaslang/javaslang-circuitbreaker/issues'
-        vcsUrl = 'https://github.com/javaslang/javaslang-circuitbreaker.git'
+        websiteUrl = 'https://github.com/RobWin/javaslang-circuitbreaker'
+        issueTrackerUrl = 'https://github.com/RobWin/javaslang-circuitbreaker/issues'
+        vcsUrl = 'https://github.com/RobWin/javaslang-circuitbreaker.git'
         desc = 'A CircuitBreaker pattern implementation for Java8 and functional programming.'
         licenses = ['Apache-2.0']
         version {
@@ -76,15 +76,15 @@ publishing {
 
                 root.appendNode('name', 'javaslang-circuitbreaker')
                 root.appendNode('packaging', 'jar')
-                root.appendNode('url', 'https://github.com/javaslang/javaslang-circuitbreaker')
+                root.appendNode('url', 'https://github.com/RobWin/javaslang-circuitbreaker')
                 root.appendNode('description', 'A CircuitBreaker pattern implementation for Java8 and functional programming .')
 
                 def license = root.appendNode('licenses').appendNode('license')
                 license.appendNode('name', 'Apache-2.0')
-                license.appendNode('url', 'https://github.com/javaslang/javaslang-circuitbreaker/blob/master/LICENSE.txt')
+                license.appendNode('url', 'https://github.com/RobWin/javaslang-circuitbreaker/blob/master/LICENSE.txt')
                 license.appendNode('distribution', 'repo')
 
-                root.appendNode('scm').appendNode('url', 'https://github.com/javaslang/javaslang-circuitbreaker.git')
+                root.appendNode('scm').appendNode('url', 'https://github.com/RobWin/javaslang-circuitbreaker.git')
 
                 def developers = root.appendNode('developers')
                 devs.each {
