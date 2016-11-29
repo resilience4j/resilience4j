@@ -16,23 +16,17 @@
  *
  *
  */
-package javaslang.circuitbreaker;
+package javaslang.circuitbreaker.event;
 
 /**
- * A CircuitBreakerEvent which informs about a state transition.
+ * A CircuitBreakerEvent which informs that a success has been recorded
  */
-public class CircuitBreakerStateTransitionEvent implements CircuitBreakerEvent{
+public class CircuitBreakerOnSuccessEvent implements CircuitBreakerEvent{
 
-    private String circuitBreakerName;
-    private CircuitBreaker.StateTransition stateTransition;
+    private final String circuitBreakerName;
 
-    public CircuitBreakerStateTransitionEvent(String circuitBreakerName, CircuitBreaker.StateTransition stateTransition) {
+    public CircuitBreakerOnSuccessEvent(String circuitBreakerName) {
         this.circuitBreakerName = circuitBreakerName;
-        this.stateTransition = stateTransition;
-    }
-
-    public CircuitBreaker.StateTransition getStateTransition() {
-        return stateTransition;
     }
 
     @Override
@@ -42,12 +36,11 @@ public class CircuitBreakerStateTransitionEvent implements CircuitBreakerEvent{
 
     @Override
     public Type getEventType() {
-        return Type.STATE_TRANSITION;
+        return Type.SUCCESS;
     }
 
     @Override
     public String toString(){
-        return String.format("CircuitBreaker '%s' changes state from %s to %s", getCircuitBreakerName(), getStateTransition().getFromState(), getStateTransition().getToState());
-
+        return String.format("CircuitBreaker '%s' recorded a successful call", getCircuitBreakerName());
     }
 }

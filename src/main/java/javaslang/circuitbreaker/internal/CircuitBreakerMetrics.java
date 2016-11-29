@@ -30,8 +30,6 @@ class CircuitBreakerMetrics implements CircuitBreaker.Metrics {
      */
     private int maxNumberOfBufferedCalls;
 
-    private int maxNumberOfBufferedExceptions;
-
     CircuitBreakerMetrics(int ringBufferSize) {
         this.ringBitSet = new RingBitSet(ringBufferSize);
         this.maxNumberOfBufferedCalls = ringBufferSize;
@@ -42,7 +40,7 @@ class CircuitBreakerMetrics implements CircuitBreaker.Metrics {
      *
      * @return the current failure rate  in percentage.
      */
-    public synchronized float recordFailure(){
+    synchronized float onError(){
         ringBitSet.setNextBit(true);
         return getFailureRate();
     }
@@ -52,7 +50,7 @@ class CircuitBreakerMetrics implements CircuitBreaker.Metrics {
      *
      * @return the current failure rate in percentage.
      */
-    public synchronized float recordSuccess(){
+    synchronized float onSuccess(){
         ringBitSet.setNextBit(false);
         return getFailureRate();
     }

@@ -55,8 +55,8 @@ public class CircuitBreakerTest {
         // Create a CircuitBreakerRegistry with a custom global configuration
         CircuitBreaker circuitBreaker = CircuitBreaker.of("testName", circuitBreakerConfig);
 
-        circuitBreaker.recordFailure(new RuntimeException());
-        circuitBreaker.recordFailure(new RuntimeException());
+        circuitBreaker.onError(new RuntimeException());
+        circuitBreaker.onError(new RuntimeException());
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.OPEN);
 
         //When
@@ -102,7 +102,7 @@ public class CircuitBreakerTest {
         CircuitBreaker circuitBreaker = CircuitBreaker.of("testName", circuitBreakerConfig);
 
         // Simulate a failure attempt
-        circuitBreaker.recordFailure(new RuntimeException());
+        circuitBreaker.onError(new RuntimeException());
         // CircuitBreaker is still CLOSED, because 1 failure is allowed
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
 
@@ -185,11 +185,11 @@ public class CircuitBreakerTest {
         CircuitBreaker circuitBreaker = CircuitBreaker.of("testName", circuitBreakerConfig);
 
         // Simulate a failure attempt
-        circuitBreaker.recordFailure(new RuntimeException());
+        circuitBreaker.onError(new RuntimeException());
         // CircuitBreaker is still CLOSED, because 1 failure is allowed
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
         // Simulate a failure attempt
-        circuitBreaker.recordFailure(new RuntimeException());
+        circuitBreaker.onError(new RuntimeException());
         // CircuitBreaker is OPEN, because the failure rate is above 50%
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.OPEN);
 

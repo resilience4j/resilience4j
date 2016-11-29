@@ -45,13 +45,13 @@ final class ClosedState extends CircuitBreakerState {
     }
 
     @Override
-    void recordFailure(Throwable throwable) {
-        checkFailureRate(circuitBreakerMetrics.recordFailure());
+    synchronized void onError(Throwable throwable) {
+        checkFailureRate(circuitBreakerMetrics.onError());
     }
 
     @Override
-    void recordSuccess() {
-        checkFailureRate(circuitBreakerMetrics.recordSuccess());
+    synchronized void onSuccess() {
+        checkFailureRate(circuitBreakerMetrics.onSuccess());
     }
 
     /**

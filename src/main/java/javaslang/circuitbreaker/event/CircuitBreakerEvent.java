@@ -16,7 +16,7 @@
  *
  *
  */
-package javaslang.circuitbreaker;
+package javaslang.circuitbreaker.event;
 
 /**
  * An event which is created by a CircuitBreaker.
@@ -41,9 +41,11 @@ public interface CircuitBreakerEvent {
      * Event types which are created by a CircuitBreaker.
      */
     enum Type {
-        /** A CircuitBreakerEvent which informs that a failure has been recorded */
-        RECORDED_FAILURE,
-        /** A CircuitBreakerEvent which informs that a failure has been recorded */
+        /** A CircuitBreakerEvent which informs that an error has been recorded */
+        ERROR,
+        /** A CircuitBreakerEvent which informs that a success has been recorded */
+        SUCCESS,
+        /** A CircuitBreakerEvent which informs the state of the CircuitBreaker has been changed */
         STATE_TRANSITION
     }
 }
