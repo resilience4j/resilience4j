@@ -23,7 +23,7 @@ import javaslang.control.Try;
 import javaslang.retry.Retry;
 import org.junit.Test;
 
-import static javaslang.circuitbreaker.CircuitBreakerEvent.Type;
+import static javaslang.circuitbreaker.event.CircuitBreakerEvent.Type;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class CircuitBreakerEventConsumerTest {
@@ -37,8 +37,8 @@ public class CircuitBreakerEventConsumerTest {
         CircuitBreakerEventConsumer ringBuffer = new CircuitBreakerEventConsumer(2);
         assertThat(ringBuffer.getBufferedCircuitBreakerEvents()).isEmpty();
 
-        circuitBreaker.observeCircuitBreakerEvents()
-                .filter(event -> event.getEventType() == Type.RECORDED_FAILURE)
+        circuitBreaker.getEventStream()
+                .filter(event -> event.getEventType() == Type.ERROR)
                 .subscribe(ringBuffer);
 
         Try.CheckedRunnable runnable = () -> { throw new RuntimeException("BAM!");};
@@ -79,8 +79,8 @@ public class CircuitBreakerEventConsumerTest {
         Try<Void> result = Try.run(runnable);
 
         //Subscription is too late
-        circuitBreaker.observeCircuitBreakerEvents()
-                .filter(event -> event.getEventType() == Type.RECORDED_FAILURE)
+        circuitBreaker.getEventStream()
+                .filter(event -> event.getEventType() == Type.ERROR)
                 .subscribe(ringBuffer);
 
         //Then

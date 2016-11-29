@@ -54,7 +54,7 @@ final class OpenState extends CircuitBreakerState {
      * Should never be called, because isCallPermitted returns false.
      */
     @Override
-    void recordFailure(Throwable throwable) {
+    synchronized void onError(Throwable throwable) {
         // Should never be called, because isCallPermitted returns false
         throw new CircuitBreakerOpenException(String.format("CircuitBreaker '%s' is open", stateMachine.getName()));
     }
@@ -63,7 +63,7 @@ final class OpenState extends CircuitBreakerState {
      * Should never be called, because isCallPermitted returns false.
      */
     @Override
-    void recordSuccess() {
+    synchronized void onSuccess() {
         // Should never be called, because isCallPermitted returns false
         throw new CircuitBreakerOpenException(String.format("CircuitBreaker '%s' is open", stateMachine.getName()));
     }

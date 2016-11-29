@@ -19,7 +19,9 @@
 package javaslang.circuitbreaker;
 
 import io.reactivex.Observable;
+import javaslang.circuitbreaker.event.CircuitBreakerEvent;
 import javaslang.circuitbreaker.internal.CircuitBreakerStateMachine;
+import javaslang.circuitbreaker.utils.CircuitBreakerUtils;
 import javaslang.control.Try;
 
 import java.util.function.Consumer;
@@ -28,7 +30,7 @@ import java.util.function.Supplier;
 
 /**
  * A CircuitBreaker manages the state of a backend system. It is notified on the result of all
- * attempts to communicate with the backend, via the {@link #recordSuccess} and {@link #recordFailure} methods.
+ * attempts to communicate with the backend, via the {@link #onSuccess} and {@link #onError} methods.
  * Before communicating with the backend, the respective connector must obtain the permission to do so via the method
  * {@link #isCallPermitted()}.
  */
@@ -43,17 +45,17 @@ public interface CircuitBreaker {
 
     /**
      * Records a failed call.
-     * This method must be invoked after a failed call.
+     * This method must be invoked when a call failed.
      *
      * @param throwable The throwable which must be recorded
      */
-    void recordFailure(Throwable throwable);
+    void onError(Throwable throwable);
 
      /**
       * Records a successful call.
-      * This method must be invoked after a successful call.
+      * This method must be invoked when a call is successfully.
       */
-    void recordSuccess();
+    void onSuccess();
 
     /**
      * Returns the name of this CircuitBreaker
@@ -83,13 +85,12 @@ public interface CircuitBreaker {
      */
     Metrics getMetrics();
 
-
     /**
-     * Returns an Observable of CircuitBreakerEvents which can be subscribed
+     * Returns a reactive stream of CircuitBreakerEvents.
      *
-     * @return an Observable of CircuitBreakerEvents which can be subscribed
+     * @return a reactive stream of CircuitBreakerEvents
      */
-    Observable<CircuitBreakerEvent> observeCircuitBreakerEvents();
+    Observable<CircuitBreakerEvent> getEventStream();
 
     /**
      * States of the CircuitBreaker state machine.
@@ -189,10 +190,10 @@ public interface CircuitBreaker {
             CircuitBreakerUtils.isCallPermitted(circuitBreaker);
             try {
                 T returnValue = supplier.get();
-                circuitBreaker.recordSuccess();
+                circuitBreaker.onSuccess();
                 return returnValue;
             } catch (Throwable throwable) {
-                circuitBreaker.recordFailure(throwable);
+                circuitBreaker.onError(throwable);
                 throw throwable;
             }
         };
@@ -224,9 +225,9 @@ public interface CircuitBreaker {
             CircuitBreakerUtils.isCallPermitted(circuitBreaker);
             try{
                 runnable.run();
-                circuitBreaker.recordSuccess();
+                circuitBreaker.onSuccess();
             } catch (Throwable throwable){
-                circuitBreaker.recordFailure(throwable);
+                circuitBreaker.onError(throwable);
                 throw throwable;
             }
         };
@@ -258,10 +259,10 @@ public interface CircuitBreaker {
             CircuitBreakerUtils.isCallPermitted(circuitBreaker);
             try {
                 T returnValue = supplier.get();
-                circuitBreaker.recordSuccess();
+                circuitBreaker.onSuccess();
                 return returnValue;
             } catch (Throwable throwable) {
-                circuitBreaker.recordFailure(throwable);
+                circuitBreaker.onError(throwable);
                 throw throwable;
             }
         };
@@ -293,9 +294,9 @@ public interface CircuitBreaker {
             CircuitBreakerUtils.isCallPermitted(circuitBreaker);
             try {
                 consumer.accept(t);
-                circuitBreaker.recordSuccess();
+                circuitBreaker.onSuccess();
             } catch (Throwable throwable) {
-                circuitBreaker.recordFailure(throwable);
+                circuitBreaker.onError(throwable);
                 throw throwable;
             }
         };
@@ -327,9 +328,9 @@ public interface CircuitBreaker {
             CircuitBreakerUtils.isCallPermitted(circuitBreaker);
             try{
                 runnable.run();
-                circuitBreaker.recordSuccess();
+                circuitBreaker.onSuccess();
             } catch (Throwable throwable){
-                circuitBreaker.recordFailure(throwable);
+                circuitBreaker.onError(throwable);
                 throw throwable;
             }
         };
@@ -361,10 +362,10 @@ public interface CircuitBreaker {
             CircuitBreakerUtils.isCallPermitted(circuitBreaker);
             try{
                 R returnValue = function.apply(t);
-                circuitBreaker.recordSuccess();
+                circuitBreaker.onSuccess();
                 return returnValue;
             } catch (Throwable throwable){
-                circuitBreaker.recordFailure(throwable);
+                circuitBreaker.onError(throwable);
                 throw throwable;
             }
         };
@@ -396,10 +397,10 @@ public interface CircuitBreaker {
             CircuitBreakerUtils.isCallPermitted(circuitBreaker);
             try{
                 R returnValue = function.apply(t);
-                circuitBreaker.recordSuccess();
+                circuitBreaker.onSuccess();
                 return returnValue;
             } catch (Throwable throwable){
-                circuitBreaker.recordFailure(throwable);
+                circuitBreaker.onError(throwable);
                 throw throwable;
             }
         };

@@ -33,9 +33,9 @@ abstract class CircuitBreakerState{
 
     abstract boolean isCallPermitted();
 
-    abstract void recordFailure(Throwable throwable);
+    abstract void onError(Throwable throwable);
 
-    abstract void recordSuccess();
+    abstract void onSuccess();
 
     abstract CircuitBreaker.State getState();
 

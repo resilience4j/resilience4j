@@ -16,7 +16,10 @@
  *
  *
  */
-package javaslang.circuitbreaker;
+package javaslang.circuitbreaker.utils;
+
+import javaslang.circuitbreaker.CircuitBreaker;
+import javaslang.circuitbreaker.CircuitBreakerOpenException;
 
 public final class CircuitBreakerUtils {
 

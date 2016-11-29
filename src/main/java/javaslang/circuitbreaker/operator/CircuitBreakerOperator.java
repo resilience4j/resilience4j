@@ -106,7 +106,7 @@ public class CircuitBreakerOperator<T> implements ObservableOperator<T, T>, Flow
                 LOG.info("onError", e);
             }
             if(!cancelled) {
-                circuitBreaker.recordFailure(e);
+                circuitBreaker.onError(e);
                 childSubscriber.onError(e);
             }
         }
@@ -117,7 +117,7 @@ public class CircuitBreakerOperator<T> implements ObservableOperator<T, T>, Flow
                 LOG.info("onComplete");
             }
             if(!cancelled) {
-                circuitBreaker.recordSuccess();
+                circuitBreaker.onSuccess();
                 childSubscriber.onComplete();
             }
         }
@@ -176,7 +176,7 @@ public class CircuitBreakerOperator<T> implements ObservableOperator<T, T>, Flow
                 LOG.info("onError", e);
             }
             if(!isDisposed()) {
-                circuitBreaker.recordFailure(e);
+                circuitBreaker.onError(e);
                 childObserver.onError(e);
             }
         }
@@ -187,7 +187,7 @@ public class CircuitBreakerOperator<T> implements ObservableOperator<T, T>, Flow
                 LOG.info("onComplete");
             }
             if(!isDisposed()) {
-                circuitBreaker.recordSuccess();
+                circuitBreaker.onSuccess();
                 childObserver.onComplete();
             }
         }

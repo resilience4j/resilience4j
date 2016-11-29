@@ -20,7 +20,7 @@ package javaslang.circuitbreaker.consumer;
 
 
 import io.reactivex.functions.Consumer;
-import javaslang.circuitbreaker.CircuitBreakerEvent;
+import javaslang.circuitbreaker.event.CircuitBreakerEvent;
 import javaslang.circuitbreaker.internal.CircularFifoBuffer;
 import javaslang.collection.List;
 

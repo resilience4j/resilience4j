@@ -86,6 +86,6 @@ public final class InMemoryCircuitBreakerRegistry implements CircuitBreakerRegis
      * Reset the circuitBreaker states.
      */
     public void resetMonitorStates() {
-        circuitBreakers.values().forEach(CircuitBreaker::recordSuccess);
+        circuitBreakers.values().forEach(CircuitBreaker::onSuccess);
     }
 }

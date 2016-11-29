@@ -16,19 +16,25 @@
  *
  *
  */
-package javaslang.circuitbreaker;
+package javaslang.circuitbreaker.event;
+
+import javaslang.circuitbreaker.CircuitBreaker;
 
 /**
- * A CircuitBreakerEvent which informs that a failure has been recorded
+ * A CircuitBreakerEvent which informs about a state transition.
  */
-public class CircuitBreakerRecordedFailureEvent implements CircuitBreakerEvent{
+public class CircuitBreakerOnStateTransitionEvent implements CircuitBreakerEvent{
 
-    private final String circuitBreakerName;
-    private final Throwable throwable;
+    private String circuitBreakerName;
+    private CircuitBreaker.StateTransition stateTransition;
 
-    public CircuitBreakerRecordedFailureEvent(String circuitBreakerName, Throwable throwable) {
+    public CircuitBreakerOnStateTransitionEvent(String circuitBreakerName, CircuitBreaker.StateTransition stateTransition) {
         this.circuitBreakerName = circuitBreakerName;
-        this.throwable = throwable;
+        this.stateTransition = stateTransition;
+    }
+
+    public CircuitBreaker.StateTransition getStateTransition() {
+        return stateTransition;
     }
 
     @Override
@@ -38,11 +44,12 @@ public class CircuitBreakerRecordedFailureEvent implements CircuitBreakerEvent{
 
     @Override
     public Type getEventType() {
-        return Type.RECORDED_FAILURE;
+        return Type.STATE_TRANSITION;
     }
 
     @Override
     public String toString(){
-        return String.format("CircuitBreaker '%s' recorded: '%s'", getCircuitBreakerName(), throwable.toString());
+        return String.format("CircuitBreaker '%s' changed state from %s to %s", getCircuitBreakerName(), getStateTransition().getFromState(), getStateTransition().getToState());
+
     }
 }

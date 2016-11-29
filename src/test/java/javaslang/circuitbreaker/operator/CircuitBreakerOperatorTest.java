@@ -129,8 +129,8 @@ public class CircuitBreakerOperatorTest {
 
         // Create a CircuitBreakerRegistry with a custom global configuration
         CircuitBreaker circuitBreaker = CircuitBreaker.of("testName", circuitBreakerConfig);
-        circuitBreaker.recordFailure(new RuntimeException("Bla"));
-        circuitBreaker.recordFailure(new RuntimeException("Bla"));
+        circuitBreaker.onError(new RuntimeException("Bla"));
+        circuitBreaker.onError(new RuntimeException("Bla"));
 
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.OPEN);
 
@@ -159,8 +159,8 @@ public class CircuitBreakerOperatorTest {
 
         // Create a CircuitBreakerRegistry with a custom global configuration
         CircuitBreaker circuitBreaker = CircuitBreaker.of("testName", circuitBreakerConfig);
-        circuitBreaker.recordFailure(new RuntimeException("Bla"));
-        circuitBreaker.recordFailure(new RuntimeException("Bla"));
+        circuitBreaker.onError(new RuntimeException("Bla"));
+        circuitBreaker.onError(new RuntimeException("Bla"));
 
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.OPEN);
 
@@ -188,7 +188,7 @@ public class CircuitBreakerOperatorTest {
 
         // Create a CircuitBreakerRegistry with a custom global configuration
         CircuitBreaker circuitBreaker = CircuitBreaker.of("testName", circuitBreakerConfig);
-        circuitBreaker.recordFailure(new RuntimeException("Bla"));
+        circuitBreaker.onError(new RuntimeException("Bla"));
 
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
 
