@@ -21,11 +21,11 @@ package io.github.robwin.circuitbreaker.event;
 /**
  * A CircuitBreakerEvent which informs that an error has been ignored
  */
-public class CircuitBreakerOnErrorIgnoredEvent extends AbstractCircuitBreakerEvent{
+public class CircuitBreakerOnIgnoredErrorEvent extends AbstractCircuitBreakerEvent{
 
     private final Throwable throwable;
 
-    public CircuitBreakerOnErrorIgnoredEvent(String circuitBreakerName, Throwable throwable) {
+    public CircuitBreakerOnIgnoredErrorEvent(String circuitBreakerName, Throwable throwable) {
         super(circuitBreakerName);
         this.throwable = throwable;
     }
