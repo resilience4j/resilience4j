@@ -515,8 +515,8 @@ table.CodeRay td.code>pre{padding:0}
 <h1>Javaslang-Circuitbreaker User Guide</h1>
 <div class="details">
 <span id="author" class="author">Robert Winkler</span><br>
-<span id="revnumber">version 0.7.0,</span>
-<span id="revdate">2016-11-29</span>
+<span id="revnumber">version 0.7.1,</span>
+<span id="revdate">2016-11-30</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">Table of Contents</div>
@@ -534,14 +534,18 @@ table.CodeRay td.code>pre{padding:0}
 <li><a href="#_open_circuitbreaker_example">3.3. OPEN CircuitBreaker example</a></li>
 <li><a href="#_recover_from_an_exception">3.4. Recover from an exception</a></li>
 <li><a href="#_customize_the_exception_handler">3.5. Customize the exception handler</a></li>
-<li><a href="#_observe_the_event_stream">3.6. Observe the event stream</a></li>
-<li><a href="#_retry_a_failed_function">3.7. Retry a failed function</a></li>
-<li><a href="#_use_a_completablefuture">3.8. Use a CompletableFuture</a></li>
-<li><a href="#_use_rxjava">3.9. Use RxJava</a></li>
+<li><a href="#_subscribe_to_the_circuitbreakerevent_stream">3.6. Subscribe to the CircuitBreakerEvent stream</a></li>
 </ul>
 </li>
-<li><a href="#_monitoring_reporting">4. Monitoring &amp; Reporting</a></li>
-<li><a href="#_license">5. License</a></li>
+<li><a href="#_monitor_circuitbreaker_metrics">4. Monitor CircuitBreaker metrics</a>
+<ul class="sectlevel2">
+<li><a href="#_retry_a_failed_function">4.1. Retry a failed function</a></li>
+<li><a href="#_use_a_completablefuture">4.2. Use a CompletableFuture</a></li>
+<li><a href="#_use_rxjava">4.3. Use RxJava</a></li>
+</ul>
+</li>
+<li><a href="#_monitoring_reporting">5. Monitoring &amp; Reporting</a></li>
+<li><a href="#_license">6. License</a></li>
 </ul>
 </div>
 </div>
@@ -634,10 +638,10 @@ For example, if the size of the Ring Buffer is 10, then at least 10 calls must e
 </div>
 <div class="paragraph">
 <p>After the time duration has elapsed, the CircuitBreaker state changes from <code>OPEN</code> to <code>HALF_OPEN</code> and allows calls to see if the backend is still unavailable or has become available again. The CircuitBreaker uses another (configurable) Ring Bit Buffer to evaluate the failure rate in the <code>HALF_OPEN</code> state. If the failure rate is above the configured threshold, the state changes back to <code>OPEN</code>. If the failure rate is below or equal to the threshold, the state changes back to <code>CLOSED</code>.<br>
-<code>CircuitBreaker::recordFailure(exception)</code> checks if the exception should be recorded as a failure or should be ignored. You can configure a custom <code>Predicate</code> which decides whether an exception should be recorded as a failure. The default Predicate records all exceptions as a failure.</p>
+<code>CircuitBreaker::onError(exception)</code> checks if the exception should be recorded as a failure or should be ignored. You can configure a custom <code>Predicate</code> which decides whether an exception should be recorded as a failure. The default Predicate records all exceptions as a failure.</p>
 </div>
 <div class="paragraph">
-<p>The CircuitBreaker publishes a stream of CircuitBreakerEvents to any Observer/Consumer who subscribes. This library uses RxJava to to provide this functionality. If you want to consume events, you have to subscribe to the event stream. This library provides a consumer <code>CircuitBreakerEventConsumer</code> which can be used to store events in a circular buffer with a fixed capacity. You can use RxJava to filter certain events.</p>
+<p>The CircuitBreaker publishes a stream of CircuitBreakerEvents to any Subscriber/Consumer who subscribes. An event can be a state transition or a recorded error. This library uses RxJava to to provide this functionality. If you want to consume events, you have to subscribe to the event stream. This library provides a consumer <code>CircuitBreakerEventConsumer</code> which can be used to store events in a circular buffer with a fixed capacity. You can use RxJava to filter certain events.</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -664,7 +668,7 @@ circuitBreaker.getEventStream()
     jcenter()
 }
 
-compile "io.github.robwin:javaslang-circuitbreaker:0.7.0"</code></pre>
+compile "io.github.robwin:javaslang-circuitbreaker:0.7.1"</code></pre>
 </div>
 </div>
 </div>
@@ -795,9 +799,9 @@ The following example shows how to ignore an <code>IOException</code>, but all o
 </div>
 </div>
 <div class="sect2">
-<h3 id="_observe_the_event_stream">3.6. Observe the event stream</h3>
+<h3 id="_subscribe_to_the_circuitbreakerevent_stream">3.6. Subscribe to the CircuitBreakerEvent stream</h3>
 <div class="paragraph">
-<p>A CircuitBreaker publishes a stream of CircuitBreakerEvents. This library uses RxJava to to provide this functionality.<br>
+<p>A CircuitBreaker publishes a stream of CircuitBreakerEvents. An event can be a state transition or a recorded error. This library uses RxJava to to provide this functionality.<br>
 If you want to consume events, you have to subscribe to the event stream. This library provides a consumer <code>CircuitBreakerEventConsumer</code> which can be used to store events in a circular buffer with a fixed capacity.<br>
 You can use RxJava to filter the events.</p>
 </div>
@@ -807,8 +811,27 @@ You can use RxJava to filter the events.</p>
 </div>
 </div>
 </div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_monitor_circuitbreaker_metrics">4. Monitor CircuitBreaker metrics</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The CircuitBreaker provides an interface to monitor the current metrics.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="java">CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
+<span class="comment">// Returns the failure rate in percentage.</span>
+<span class="type">float</span> failureRate = metrics.getFailureRate();
+<span class="comment">// Returns the current number of buffered calls.</span>
+<span class="type">int</span> bufferedCalls = metrics.getNumberOfBufferedCalls();
+<span class="comment">// Returns the current number of failed calls.</span>
+<span class="type">int</span> failedCalls = metrics.getNumberOfFailedCalls();</code></pre>
+</div>
+</div>
 <div class="sect2">
-<h3 id="_retry_a_failed_function">3.7. Retry a failed function</h3>
+<h3 id="_retry_a_failed_function">4.1. Retry a failed function</h3>
 <div class="paragraph">
 <p>You can also retry a failed function and recover from the exception, if the maximum retry count was reached. You can create a <code>Retry</code> context using a default configuration as follows.</p>
 </div>
@@ -858,7 +881,7 @@ assertThat(result.get()).isEqualTo(<span class="string"><span class="delimiter">
 </div>
 </div>
 <div class="sect2">
-<h3 id="_use_a_completablefuture">3.8. Use a CompletableFuture</h3>
+<h3 id="_use_a_completablefuture">4.2. Use a CompletableFuture</h3>
 <div class="paragraph">
 <p>You can also invoke a decorated function asynchronously by using a <code>CompletableFuture</code> and chain further functions.</p>
 </div>
@@ -869,7 +892,7 @@ assertThat(result.get()).isEqualTo(<span class="string"><span class="delimiter">
 </div>
 </div>
 <div class="sect2">
-<h3 id="_use_rxjava">3.9. Use RxJava</h3>
+<h3 id="_use_rxjava">4.3. Use RxJava</h3>
 <div class="paragraph">
 <p>You can protect any RxJava Observable or Flowable by using the custom CircuitBreakerOperator.</p>
 </div>
@@ -884,7 +907,7 @@ assertThat(result.get()).isEqualTo(<span class="string"><span class="delimiter">
 </div>
 </div>
 <div class="sect1">
-<h2 id="_monitoring_reporting">4. Monitoring &amp; Reporting</h2>
+<h2 id="_monitoring_reporting">5. Monitoring &amp; Reporting</h2>
 <div class="sectionbody">
 <div class="paragraph">
 <p>You could monitor and report the state of your CircuitBreakers and runtime metrics by using Metrics <a href="https://dropwizard.github.io/metrics/3.1.0/getting-started/#health-checks">Health Checks</a> and <a href="https://dropwizard.github.io/metrics/3.1.0/getting-started/#reporting-via-http">Reporting via JMX or HTTP</a>.</p>
@@ -956,7 +979,7 @@ reporter.start(<span class="integer">1</span>, <span class="predefined-type">Tim
 </div>
 </div>
 <div class="sect1">
-<h2 id="_license">5. License</h2>
+<h2 id="_license">6. License</h2>
 <div class="sectionbody">
 <div class="paragraph">
 <p>Copyright 2015 Robert Winkler</p>
@@ -977,7 +1000,7 @@ reporter.start(<span class="integer">1</span>, <span class="predefined-type">Tim
 </div>
 <div id="footer">
 <div id="footer-text">
-Version 0.7.0<br>
+Version 0.7.1<br>
 Last updated 2016-10-04 08:28:41 +02:00
 </div>
 </div>
