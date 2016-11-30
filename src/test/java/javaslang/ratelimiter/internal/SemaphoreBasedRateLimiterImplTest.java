@@ -62,7 +62,7 @@ public class SemaphoreBasedRateLimiterImplTest {
     public void rateLimiterCreationWithProvidedScheduler() throws Exception {
         ScheduledExecutorService scheduledExecutorService = mock(ScheduledExecutorService.class);
         RateLimiterConfig configSpy = spy(config);
-        SemaphoreBasedRateLimiterImpl limit = new SemaphoreBasedRateLimiterImpl("test", configSpy, scheduledExecutorService);
+        SemaphoreBasedRateLimiter limit = new SemaphoreBasedRateLimiter("test", configSpy, scheduledExecutorService);
 
         ArgumentCaptor<Runnable> refreshLimitRunnableCaptor = ArgumentCaptor.forClass(Runnable.class);
         verify(scheduledExecutorService)
@@ -93,7 +93,7 @@ public class SemaphoreBasedRateLimiterImplTest {
 
     @Test
     public void rateLimiterCreationWithDefaultScheduler() throws Exception {
-        SemaphoreBasedRateLimiterImpl limit = new SemaphoreBasedRateLimiterImpl("test", config);
+        SemaphoreBasedRateLimiter limit = new SemaphoreBasedRateLimiter("test", config);
         awaitImpatiently().atMost(FIVE_HUNDRED_MILLISECONDS)
             .until(() -> limit.getPermission(ZERO), equalTo(false));
         awaitImpatiently().atMost(110, TimeUnit.MILLISECONDS)
@@ -104,10 +104,10 @@ public class SemaphoreBasedRateLimiterImplTest {
     public void getPermissionAndMetrics() throws Exception {
         ScheduledExecutorService scheduledExecutorService = mock(ScheduledExecutorService.class);
         RateLimiterConfig configSpy = spy(config);
-        SemaphoreBasedRateLimiterImpl limit = new SemaphoreBasedRateLimiterImpl("test", configSpy, scheduledExecutorService);
-        SemaphoreBasedRateLimiterImpl.SemaphoreBasedRateLimiterMetrics detailedMetrics = limit.getDetailedMetrics();
+        SemaphoreBasedRateLimiter limit = new SemaphoreBasedRateLimiter("test", configSpy, scheduledExecutorService);
+        SemaphoreBasedRateLimiter.SemaphoreBasedRateLimiterMetrics detailedMetrics = limit.getDetailedMetrics();
 
-        SynchronousQueue synchronousQueue = new SynchronousQueue();
+        SynchronousQueue<Object> synchronousQueue = new SynchronousQueue<>();
         Thread thread = new Thread(() -> {
             run(() -> {
                 for (int i = 0; i < LIMIT; i++) {
@@ -151,7 +151,7 @@ public class SemaphoreBasedRateLimiterImplTest {
     public void getPermissionInterruption() throws Exception {
         ScheduledExecutorService scheduledExecutorService = mock(ScheduledExecutorService.class);
         RateLimiterConfig configSpy = spy(config);
-        SemaphoreBasedRateLimiterImpl limit = new SemaphoreBasedRateLimiterImpl("test", configSpy, scheduledExecutorService);
+        SemaphoreBasedRateLimiter limit = new SemaphoreBasedRateLimiter("test", configSpy, scheduledExecutorService);
         limit.getPermission(ZERO);
         limit.getPermission(ZERO);
 
@@ -177,14 +177,14 @@ public class SemaphoreBasedRateLimiterImplTest {
     @Test
     public void getName() throws Exception {
         ScheduledExecutorService scheduler = mock(ScheduledExecutorService.class);
-        SemaphoreBasedRateLimiterImpl limit = new SemaphoreBasedRateLimiterImpl("test", config, scheduler);
+        SemaphoreBasedRateLimiter limit = new SemaphoreBasedRateLimiter("test", config, scheduler);
         then(limit.getName()).isEqualTo("test");
     }
 
     @Test
     public void getMetrics() throws Exception {
         ScheduledExecutorService scheduler = mock(ScheduledExecutorService.class);
-        SemaphoreBasedRateLimiterImpl limit = new SemaphoreBasedRateLimiterImpl("test", config, scheduler);
+        SemaphoreBasedRateLimiter limit = new SemaphoreBasedRateLimiter("test", config, scheduler);
         RateLimiter.Metrics metrics = limit.getMetrics();
         then(metrics.getNumberOfWaitingThreads()).isEqualTo(0);
     }
@@ -192,15 +192,15 @@ public class SemaphoreBasedRateLimiterImplTest {
     @Test
     public void getRateLimiterConfig() throws Exception {
         ScheduledExecutorService scheduler = mock(ScheduledExecutorService.class);
-        SemaphoreBasedRateLimiterImpl limit = new SemaphoreBasedRateLimiterImpl("test", config, scheduler);
+        SemaphoreBasedRateLimiter limit = new SemaphoreBasedRateLimiter("test", config, scheduler);
         then(limit.getRateLimiterConfig()).isEqualTo(config);
     }
 
     @Test
     public void getDetailedMetrics() throws Exception {
         ScheduledExecutorService scheduler = mock(ScheduledExecutorService.class);
-        SemaphoreBasedRateLimiterImpl limit = new SemaphoreBasedRateLimiterImpl("test", config, scheduler);
-        SemaphoreBasedRateLimiterImpl.SemaphoreBasedRateLimiterMetrics metrics = limit.getDetailedMetrics();
+        SemaphoreBasedRateLimiter limit = new SemaphoreBasedRateLimiter("test", config, scheduler);
+        SemaphoreBasedRateLimiter.SemaphoreBasedRateLimiterMetrics metrics = limit.getDetailedMetrics();
         then(metrics.getNumberOfWaitingThreads()).isEqualTo(0);
         then(metrics.getAvailablePermits()).isEqualTo(2);
     }
@@ -209,13 +209,13 @@ public class SemaphoreBasedRateLimiterImplTest {
     public void constructionWithNullName() throws Exception {
         exception.expect(NullPointerException.class);
         exception.expectMessage(NAME_MUST_NOT_BE_NULL);
-        new SemaphoreBasedRateLimiterImpl(null, config, null);
+        new SemaphoreBasedRateLimiter(null, config, null);
     }
 
     @Test
     public void constructionWithNullConfig() throws Exception {
         exception.expect(NullPointerException.class);
         exception.expectMessage(CONFIG_MUST_NOT_BE_NULL);
-        new SemaphoreBasedRateLimiterImpl("test", null, null);
+        new SemaphoreBasedRateLimiter("test", null, null);
     }
 }

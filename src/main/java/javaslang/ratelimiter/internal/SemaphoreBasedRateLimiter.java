@@ -18,7 +18,7 @@ import java.util.concurrent.TimeUnit;
  * and scheduler that will refresh permissions
  * after each {@link RateLimiterConfig#limitRefreshPeriod}.
  */
-public class SemaphoreBasedRateLimiterImpl implements RateLimiter {
+public class SemaphoreBasedRateLimiter implements RateLimiter {
 
     private static final String NAME_MUST_NOT_BE_NULL = "Name must not be null";
     private static final String CONFIG_MUST_NOT_BE_NULL = "RateLimiterConfig must not be null";
@@ -35,7 +35,7 @@ public class SemaphoreBasedRateLimiterImpl implements RateLimiter {
      * @param name              the name of the RateLimiter
      * @param rateLimiterConfig The RateLimiter configuration.
      */
-    public SemaphoreBasedRateLimiterImpl(final String name, final RateLimiterConfig rateLimiterConfig) {
+    public SemaphoreBasedRateLimiter(final String name, final RateLimiterConfig rateLimiterConfig) {
         this(name, rateLimiterConfig, null);
     }
 
@@ -46,8 +46,8 @@ public class SemaphoreBasedRateLimiterImpl implements RateLimiter {
      * @param rateLimiterConfig The RateLimiter configuration.
      * @param scheduler         executor that will refresh permissions
      */
-    public SemaphoreBasedRateLimiterImpl(String name, RateLimiterConfig rateLimiterConfig,
-                                         ScheduledExecutorService scheduler) {
+    public SemaphoreBasedRateLimiter(String name, RateLimiterConfig rateLimiterConfig,
+                                     ScheduledExecutorService scheduler) {
         this.name = requireNonNull(name, NAME_MUST_NOT_BE_NULL);
         this.rateLimiterConfig = requireNonNull(rateLimiterConfig, CONFIG_MUST_NOT_BE_NULL);
 
