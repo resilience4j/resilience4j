@@ -70,7 +70,7 @@ int failedCalls = metrics.getNumberOfFailedCalls();
 
 == Usage Guide
 
-For more details see http://robwin.github.io/javaslang-circuitbreaker/0.7.0/[User Guide].
+For more details see http://robwin.github.io/javaslang-circuitbreaker/0.7.1/[User Guide].
 
 == Implementation details
 
