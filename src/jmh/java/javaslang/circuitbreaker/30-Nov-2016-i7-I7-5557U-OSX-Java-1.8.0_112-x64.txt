@@ -1,0 +1,41 @@
+Benchmark                                                                         Mode     Cnt     Score    Error   Units
+
+RateLimiterBenchmark.atomicPermission                                            thrpt      10     7.274 ±  0.132  ops/us
+RateLimiterBenchmark.semaphoreBasedPermission                                    thrpt      10    17.335 ±  3.441  ops/us
+RateLimiterBenchmark.timeBasedPermission                                         thrpt      10     3.522 ±  0.495  ops/us
+
+RateLimiterBenchmark.atomicPermission                                             avgt      10     0.294 ±  0.038   us/op
+RateLimiterBenchmark.semaphoreBasedPermission                                     avgt      10     0.120 ±  0.018   us/op
+RateLimiterBenchmark.timeBasedPermission                                          avgt      10     0.562 ±  0.045   us/op
+
+RateLimiterBenchmark.atomicPermission                                           sample  535765     1.480 ±  0.036   us/op
+RateLimiterBenchmark.atomicPermission:atomicPermission·p0.00                    sample             0.040            us/op
+RateLimiterBenchmark.atomicPermission:atomicPermission·p0.50                    sample             0.383            us/op
+RateLimiterBenchmark.atomicPermission:atomicPermission·p0.90                    sample             4.288            us/op
+RateLimiterBenchmark.atomicPermission:atomicPermission·p0.95                    sample             7.368            us/op
+RateLimiterBenchmark.atomicPermission:atomicPermission·p0.99                    sample            14.080            us/op
+RateLimiterBenchmark.atomicPermission:atomicPermission·p0.999                   sample            18.048            us/op
+RateLimiterBenchmark.atomicPermission:atomicPermission·p0.9999                  sample            58.449            us/op
+RateLimiterBenchmark.atomicPermission:atomicPermission·p1.00                    sample          1654.784            us/op
+RateLimiterBenchmark.semaphoreBasedPermission                                   sample  635614     0.166 ±  0.010   us/op
+RateLimiterBenchmark.semaphoreBasedPermission:semaphoreBasedPermission·p0.00    sample             0.001            us/op
+RateLimiterBenchmark.semaphoreBasedPermission:semaphoreBasedPermission·p0.50    sample             0.135            us/op
+RateLimiterBenchmark.semaphoreBasedPermission:semaphoreBasedPermission·p0.90    sample             0.219            us/op
+RateLimiterBenchmark.semaphoreBasedPermission:semaphoreBasedPermission·p0.95    sample             0.236            us/op
+RateLimiterBenchmark.semaphoreBasedPermission:semaphoreBasedPermission·p0.99    sample             0.333            us/op
+RateLimiterBenchmark.semaphoreBasedPermission:semaphoreBasedPermission·p0.999   sample             2.468            us/op
+RateLimiterBenchmark.semaphoreBasedPermission:semaphoreBasedPermission·p0.9999  sample            15.519            us/op
+RateLimiterBenchmark.semaphoreBasedPermission:semaphoreBasedPermission·p1.00    sample          1372.160            us/op
+RateLimiterBenchmark.timeBasedPermission                                        sample  553560     0.800 ±  0.053   us/op
+RateLimiterBenchmark.timeBasedPermission:timeBasedPermission·p0.00              sample             0.054            us/op
+RateLimiterBenchmark.timeBasedPermission:timeBasedPermission·p0.50              sample             0.550            us/op
+RateLimiterBenchmark.timeBasedPermission:timeBasedPermission·p0.90              sample             0.749            us/op
+RateLimiterBenchmark.timeBasedPermission:timeBasedPermission·p0.95              sample             0.826            us/op
+RateLimiterBenchmark.timeBasedPermission:timeBasedPermission·p0.99              sample             8.256            us/op
+RateLimiterBenchmark.timeBasedPermission:timeBasedPermission·p0.999             sample            33.920            us/op
+RateLimiterBenchmark.timeBasedPermission:timeBasedPermission·p0.9999            sample           160.221            us/op
+RateLimiterBenchmark.timeBasedPermission:timeBasedPermission·p1.00              sample          5742.592            us/op
+
+RateLimiterBenchmark.atomicPermission                                               ss      10    17.140 ±  5.640   us/op
+RateLimiterBenchmark.semaphoreBasedPermission                                       ss      10     9.724 ±  4.602   us/op
+RateLimiterBenchmark.timeBasedPermission                                            ss      10    26.875 ± 10.869   us/op

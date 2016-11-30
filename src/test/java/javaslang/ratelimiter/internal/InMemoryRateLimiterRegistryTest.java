@@ -18,6 +18,7 @@ import java.time.Duration;
 import java.util.function.Supplier;
 
 
+@SuppressWarnings("unchecked")
 public class InMemoryRateLimiterRegistryTest {
 
     private static final int LIMIT = 50;
