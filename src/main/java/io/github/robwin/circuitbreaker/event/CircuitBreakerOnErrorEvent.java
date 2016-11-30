@@ -30,6 +30,10 @@ public class CircuitBreakerOnErrorEvent extends AbstractCircuitBreakerEvent{
         this.throwable = throwable;
     }
 
+    public Throwable getThrowable() {
+        return throwable;
+    }
+
     @Override
     public Type getEventType() {
         return Type.ERROR;

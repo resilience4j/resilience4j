@@ -19,9 +19,9 @@
 package io.github.robwin.circuitbreaker;
 
 import io.github.robwin.circuitbreaker.event.CircuitBreakerEvent;
-import io.github.robwin.circuitbreaker.utils.CircuitBreakerUtils;
-import io.reactivex.Observable;
 import io.github.robwin.circuitbreaker.internal.CircuitBreakerStateMachine;
+import io.github.robwin.circuitbreaker.utils.CircuitBreakerUtils;
+import io.reactivex.Flowable;
 import javaslang.control.Try;
 
 import java.util.function.Consumer;
@@ -90,7 +90,7 @@ public interface CircuitBreaker {
      *
      * @return a reactive stream of CircuitBreakerEvents
      */
-    Observable<CircuitBreakerEvent> getEventStream();
+    Flowable<CircuitBreakerEvent> getEventStream();
 
     /**
      * States of the CircuitBreaker state machine.

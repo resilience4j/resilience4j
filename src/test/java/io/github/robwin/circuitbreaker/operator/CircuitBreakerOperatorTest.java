@@ -18,7 +18,6 @@
  */
 package io.github.robwin.circuitbreaker.operator;
 
-import io.github.robwin.circuitbreaker.operator.CircuitBreakerOperator;
 import io.reactivex.Flowable;
 import io.reactivex.Observable;
 import io.github.robwin.circuitbreaker.CircuitBreaker;

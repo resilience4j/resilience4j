@@ -25,7 +25,7 @@ abstract class AbstractCircuitBreakerEvent implements CircuitBreakerEvent {
     private final String circuitBreakerName;
     private final ZonedDateTime creationTime;
 
-    public AbstractCircuitBreakerEvent(String circuitBreakerName) {
+    AbstractCircuitBreakerEvent(String circuitBreakerName) {
         this.circuitBreakerName = circuitBreakerName;
         this.creationTime = ZonedDateTime.now();
     }

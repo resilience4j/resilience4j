@@ -25,8 +25,8 @@ import io.github.robwin.circuitbreaker.event.CircuitBreakerEvent;
 import io.github.robwin.circuitbreaker.event.CircuitBreakerOnErrorEvent;
 import io.github.robwin.circuitbreaker.event.CircuitBreakerOnStateTransitionEvent;
 import io.github.robwin.circuitbreaker.event.CircuitBreakerOnSuccessEvent;
-import io.reactivex.Observable;
-import io.reactivex.subjects.PublishSubject;
+import io.reactivex.Flowable;
+import io.reactivex.processors.PublishProcessor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,19 +43,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
     private final String name;
     private final AtomicReference<CircuitBreakerState> stateReference;
     private final CircuitBreakerConfig circuitBreakerConfig;
-    private final PublishSubject<CircuitBreakerEvent> eventPublisher;
-
-    /**
-     * Creates a circuitBreaker with default config.
-     *
-     * @param name      the name of the CircuitBreaker
-     */
-    public CircuitBreakerStateMachine(String name) {
-        this.name = name;
-        this.circuitBreakerConfig = CircuitBreakerConfig.ofDefaults();
-        this.stateReference = new AtomicReference<>(new ClosedState(this));
-        this.eventPublisher = PublishSubject.create();
-    }
+    private final PublishProcessor<CircuitBreakerEvent> eventPublisher;
 
     /**
      * Creates a circuitBreaker.
@@ -67,7 +55,16 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
         this.name = name;
         this.circuitBreakerConfig = circuitBreakerConfig;
         this.stateReference = new AtomicReference<>(new ClosedState(this));
-        this.eventPublisher = PublishSubject.create();
+        this.eventPublisher = PublishProcessor.create();
+    }
+
+    /**
+     * Creates a circuitBreaker with default config.
+     *
+     * @param name      the name of the CircuitBreaker
+     */
+    public CircuitBreakerStateMachine(String name) {
+        this(name, CircuitBreakerConfig.ofDefaults());
     }
 
     /**
@@ -77,10 +74,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
      * @param circuitBreakerConfig The CircuitBreaker configuration supplier.
      */
     public CircuitBreakerStateMachine(String name, Supplier<CircuitBreakerConfig> circuitBreakerConfig) {
-        this.name = name;
-        this.circuitBreakerConfig = circuitBreakerConfig.get();
-        this.stateReference = new AtomicReference<>(new ClosedState(this));
-        this.eventPublisher = PublishSubject.create();
+        this(name, circuitBreakerConfig.get());
     }
 
     /**
@@ -182,12 +176,12 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
     }
 
     private void publishCircuitBreakerEvent(CircuitBreakerEvent event) {
-        if(eventPublisher.hasObservers()) {
+        if(eventPublisher.hasSubscribers()) {
             eventPublisher.onNext(event);
         }
     }
 
-    public Observable<CircuitBreakerEvent> getEventStream(){
+    public Flowable<CircuitBreakerEvent> getEventStream(){
         return eventPublisher;
     }
 }

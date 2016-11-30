@@ -61,3 +61,8 @@
 * Issue #10: Reorder arguments in decorator methods
 * PR #19: Add a backoff function feature, to modify the waiting interval between failures
 * Renamed root package from javaslang to io.github.robwin, because the project had to leave the Javaslang GitHub organisation
+
+== Version 0.7.1
+* Changed Event stream return type from Observable to Flowable
+* Events contain a create time
+* Added getThrowable method to CircuitBreakerOnErrorEvent which was missing
