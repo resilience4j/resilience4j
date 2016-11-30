@@ -161,6 +161,22 @@ public interface CircuitBreaker {
          * @return the current number of failed calls.
          */
         int getNumberOfFailedCalls();
+
+
+        /**
+         * Returns the maximum number of buffered calls.
+         *
+         * @return the maximum number of buffered calls
+         */
+        int getMaxNumberOfBufferedCalls();
+
+
+        /**
+         * Returns the maximum number of successful calls.
+         *
+         * @return the maximum number of successful calls
+         */
+        int getNumberOfSuccessfulCalls();
     }
 
     /**

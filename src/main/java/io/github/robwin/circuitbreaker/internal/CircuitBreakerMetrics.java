@@ -66,13 +66,14 @@ class CircuitBreakerMetrics implements CircuitBreaker.Metrics {
         }
     }
 
-    /**
-     * Returns the maximum number of buffered calls.
-     *
-     * @return the maximum number of buffered calls
-     */
-    public long getMaxNumberOfBufferedCalls() {
+    @Override
+    public int getMaxNumberOfBufferedCalls() {
         return maxNumberOfBufferedCalls;
+    }
+
+    @Override
+    public synchronized int getNumberOfSuccessfulCalls() {
+        return getNumberOfBufferedCalls() - getNumberOfFailedCalls();
     }
 
     @Override

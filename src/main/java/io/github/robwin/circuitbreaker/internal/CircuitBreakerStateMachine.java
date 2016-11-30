@@ -21,10 +21,7 @@ package io.github.robwin.circuitbreaker.internal;
 
 import io.github.robwin.circuitbreaker.CircuitBreaker;
 import io.github.robwin.circuitbreaker.CircuitBreakerConfig;
-import io.github.robwin.circuitbreaker.event.CircuitBreakerEvent;
-import io.github.robwin.circuitbreaker.event.CircuitBreakerOnErrorEvent;
-import io.github.robwin.circuitbreaker.event.CircuitBreakerOnStateTransitionEvent;
-import io.github.robwin.circuitbreaker.event.CircuitBreakerOnSuccessEvent;
+import io.github.robwin.circuitbreaker.event.*;
 import io.reactivex.Flowable;
 import io.reactivex.processors.PublishProcessor;
 import org.slf4j.Logger;
@@ -99,6 +96,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
             publishCircuitBreakerEvent(new CircuitBreakerOnErrorEvent(getName(), throwable));
             stateReference.get().onError(throwable);
         }
+        publishCircuitBreakerEvent(new CircuitBreakerOnErrorIgnoredEvent(getName(), throwable));
     }
 
     /**

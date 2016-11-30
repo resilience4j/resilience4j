@@ -66,3 +66,5 @@
 * Changed Event stream return type from Observable to Flowable
 * Events contain a create time
 * Added getThrowable method to CircuitBreakerOnErrorEvent which was missing
+* Added CircuitBreakerOnErrorIgnoredEvent to signal exceptions which have been ignored because of a custom predicate
+* Added getMaxNumberOfBufferedCalls and getNumberOfSuccessfulCalls methods to Metrics interface

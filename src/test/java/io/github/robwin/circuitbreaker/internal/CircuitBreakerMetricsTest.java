@@ -41,6 +41,7 @@ public class CircuitBreakerMetricsTest {
 
         assertThat(circuitBreakerMetrics.getNumberOfBufferedCalls()).isEqualTo(4);
         assertThat(circuitBreakerMetrics.getNumberOfFailedCalls()).isEqualTo(2);
+        assertThat(circuitBreakerMetrics.getNumberOfSuccessfulCalls()).isEqualTo(2);
 
         // The failure rate must be -1, because the number of measured calls is below the buffer size of 10
         assertThat(circuitBreakerMetrics.getFailureRate()).isEqualTo(-1);
@@ -58,6 +59,7 @@ public class CircuitBreakerMetricsTest {
         // The failure rate must be 60%, because the number of measured calls is above the minimum number of measured calls.
         assertThat(circuitBreakerMetrics.getNumberOfBufferedCalls()).isEqualTo(10);
         assertThat(circuitBreakerMetrics.getNumberOfFailedCalls()).isEqualTo(6);
+        assertThat(circuitBreakerMetrics.getNumberOfSuccessfulCalls()).isEqualTo(4);
         assertThat(circuitBreakerMetrics.getFailureRate()).isEqualTo(60);
     }
 }
