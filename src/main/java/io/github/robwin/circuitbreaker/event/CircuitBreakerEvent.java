@@ -52,6 +52,8 @@ public interface CircuitBreakerEvent {
     enum Type {
         /** A CircuitBreakerEvent which informs that an error has been recorded */
         ERROR,
+        /** A CircuitBreakerEvent which informs that an error has been ignored */
+        IGNORED_ERROR,
         /** A CircuitBreakerEvent which informs that a success has been recorded */
         SUCCESS,
         /** A CircuitBreakerEvent which informs the state of the CircuitBreaker has been changed */

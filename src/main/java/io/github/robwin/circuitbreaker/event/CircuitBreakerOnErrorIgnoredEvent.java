@@ -36,7 +36,7 @@ public class CircuitBreakerOnErrorIgnoredEvent extends AbstractCircuitBreakerEve
 
     @Override
     public Type getEventType() {
-        return Type.ERROR;
+        return Type.IGNORED_ERROR;
     }
 
     @Override
