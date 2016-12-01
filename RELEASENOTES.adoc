@@ -68,3 +68,6 @@
 * Added getThrowable method to CircuitBreakerOnErrorEvent which was missing
 * Added CircuitBreakerOnIgnoredErrorEvent to signal exceptions which have been ignored because of a custom predicate
 * Added getMaxNumberOfBufferedCalls and getNumberOfSuccessfulCalls methods to Metrics interface
+
+== Version 0.7.2
+* Added the SingleOperator interface to CircuitBreakerOperator.

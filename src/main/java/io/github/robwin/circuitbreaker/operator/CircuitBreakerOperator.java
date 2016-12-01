@@ -19,9 +19,7 @@
 package io.github.robwin.circuitbreaker.operator;
 
 
-import io.reactivex.FlowableOperator;
-import io.reactivex.ObservableOperator;
-import io.reactivex.Observer;
+import io.reactivex.*;
 import io.reactivex.disposables.Disposable;
 import io.github.robwin.circuitbreaker.CircuitBreaker;
 import io.github.robwin.circuitbreaker.CircuitBreakerOpenException;
@@ -33,7 +31,7 @@ import org.slf4j.LoggerFactory;
 /**
  * A RxJava operator which protects an Observable or Flowable by a CircuitBreaker
  */
-public class CircuitBreakerOperator<T> implements ObservableOperator<T, T>, FlowableOperator<T, T> {
+public class CircuitBreakerOperator<T> implements ObservableOperator<T, T>, FlowableOperator<T, T>, SingleOperator<T, T> {
 
     private static final Logger LOG = LoggerFactory.getLogger(CircuitBreakerOperator.class);
 
@@ -64,13 +62,18 @@ public class CircuitBreakerOperator<T> implements ObservableOperator<T, T>, Flow
         return new CircuitBreakerObserver(childObserver);
     }
 
+    @Override
+    public SingleObserver<? super T> apply(SingleObserver<? super T> childObserver) throws Exception {
+        return new CircuitBreakerSingleObserver(childObserver);
+    }
+
     private final class CircuitBreakerSubscriber implements Subscriber<T>, Subscription{
 
         private final Subscriber<? super T> childSubscriber;
         private Subscription subscription;
         private volatile boolean cancelled;
 
-        public CircuitBreakerSubscriber(Subscriber<? super T> childSubscriber){
+        CircuitBreakerSubscriber(Subscriber<? super T> childSubscriber){
             this.childSubscriber = childSubscriber;
         }
 
@@ -140,7 +143,7 @@ public class CircuitBreakerOperator<T> implements ObservableOperator<T, T>, Flow
         private Disposable disposable;
         private volatile boolean cancelled;
 
-        public CircuitBreakerObserver(Observer<? super T> childObserver){
+        CircuitBreakerObserver(Observer<? super T> childObserver){
             this.childObserver = childObserver;
         }
 
@@ -189,6 +192,67 @@ public class CircuitBreakerOperator<T> implements ObservableOperator<T, T>, Flow
             if(!isDisposed()) {
                 circuitBreaker.onSuccess();
                 childObserver.onComplete();
+            }
+        }
+
+        @Override
+        public void dispose() {
+            cancelled = true;
+            disposable.dispose();
+        }
+
+        @Override
+        public boolean isDisposed() {
+            return cancelled;
+        }
+    }
+
+    private class CircuitBreakerSingleObserver implements SingleObserver<T>, Disposable {
+
+        private final SingleObserver<? super T> childObserver;
+        private Disposable disposable;
+        private volatile boolean cancelled;
+
+
+        CircuitBreakerSingleObserver(SingleObserver<? super T> childObserver) {
+            this.childObserver = childObserver;
+        }
+
+        @Override
+        public void onSubscribe(Disposable disposable) {
+            this.disposable = disposable;
+            if(LOG.isDebugEnabled()){
+                LOG.info("onSubscribe");
+            }
+            if(circuitBreaker.isCallPermitted()){
+                childObserver.onSubscribe(this);
+            }else{
+                disposable.dispose();
+                childObserver.onSubscribe(this);
+                childObserver.onError(new CircuitBreakerOpenException(
+                        String.format("CircuitBreaker '%s' is open", circuitBreaker.getName())));
+            }
+        }
+
+        @Override
+        public void onError(Throwable e) {
+            if(LOG.isDebugEnabled()){
+                LOG.info("onError", e);
+            }
+            if(!isDisposed()) {
+                circuitBreaker.onError(e);
+                childObserver.onError(e);
+            }
+        }
+
+        @Override
+        public void onSuccess(T value) {
+            if(LOG.isDebugEnabled()){
+                LOG.info("onComplete");
+            }
+            if(!isDisposed()) {
+                circuitBreaker.onSuccess();
+                childObserver.onSuccess(value);
             }
         }
 

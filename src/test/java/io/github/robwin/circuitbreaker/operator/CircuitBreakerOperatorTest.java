@@ -23,6 +23,7 @@ import io.reactivex.Observable;
 import io.github.robwin.circuitbreaker.CircuitBreaker;
 import io.github.robwin.circuitbreaker.CircuitBreakerConfig;
 import io.github.robwin.circuitbreaker.CircuitBreakerOpenException;
+import io.reactivex.Single;
 import org.assertj.core.api.Assertions;
 import org.junit.Test;
 
@@ -32,6 +33,46 @@ import java.time.Duration;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class CircuitBreakerOperatorTest {
+
+    @Test
+    public void shouldReturnOnCompleteUsingSingle() {
+        //Given
+        CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testName");
+        assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
+
+        Single.just(1)
+            .lift(CircuitBreakerOperator.of(circuitBreaker))
+                .test()
+                .assertValueCount(1)
+                .assertValues(1)
+                .assertComplete();
+
+        //Then
+        CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
+
+        Assertions.assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
+        Assertions.assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(0);
+    }
+
+    @Test
+    public void shouldReturnOnErrorUsingUsingSingle() {
+        //Given
+        CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testName");
+        assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
+
+        Single.fromCallable(() -> {throw new IOException("BAM!");})
+                .lift(CircuitBreakerOperator.of(circuitBreaker))
+                .test()
+                .assertError(IOException.class)
+                .assertNotComplete()
+                .assertSubscribed();
+
+        //Then
+        CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
+
+        Assertions.assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
+        Assertions.assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(1);
+    }
 
     @Test
     public void shouldReturnOnCompleteUsingObservable() {
