@@ -14,7 +14,8 @@ However, features such as Request Caching, Request Collapsing and Bulk Heading a
 
 == Examples
 
-The following example shows how to decorate a method reference with a CircuitBreaker and automatically retry the call when an exception occurs.
+The following example shows how to decorate a method reference with a CircuitBreaker and automatically retry the call 3 times when an exception occurs.
+The example uses Javaslang's Try Monad to recover from an exception, when even all retries have failed.
 
 [source,java]
 ----

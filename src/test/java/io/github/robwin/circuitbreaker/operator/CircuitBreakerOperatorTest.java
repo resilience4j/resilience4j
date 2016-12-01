@@ -61,7 +61,7 @@ public class CircuitBreakerOperatorTest {
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
 
         Single.fromCallable(() -> {throw new IOException("BAM!");})
-                .lift(CircuitBreakerOperator.of(circuitBreaker))
+            .lift(CircuitBreakerOperator.of(circuitBreaker))
                 .test()
                 .assertError(IOException.class)
                 .assertNotComplete()
