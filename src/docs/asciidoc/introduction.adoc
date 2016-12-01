@@ -1,6 +1,6 @@
 == Introduction
 
-This library is a lightweight, easy-to-use fault tolerance library inspired by https://github.com/Netflix/Hystrix[Netflix Hystrix], but designed for Java 8 and functional programming. Lightweight, because the library only uses https://github.com/javaslang/javaslang[Javaslang], https://github.com/ReactiveX/RxJava[RxJava] and SLF4J-API, which do no have any other external library dependencies. Netfix, in contrast, has a compile dependency to https://github.com/Netflix/archaius[Archaius] which has many more external library dependencies such as Guava and Apache Commons Configuration.
+This library is a lightweight, easy-to-use fault tolerance library inspired by https://github.com/Netflix/Hystrix[Netflix Hystrix], but designed for Java 8 and functional programming. Lightweight, because the library only uses https://github.com/javaslang/javaslang[Javaslang], https://github.com/ReactiveX/RxJava[RxJava] and SLF4J-API, which do no have any other external library dependencies. Netflix Hystrix, in contrast, has a compile dependency to https://github.com/Netflix/archaius[Archaius] which has many more external library dependencies such as Guava and Apache Commons Configuration.
 
 To highlight a few differences to Netflix Hystrix:
 
