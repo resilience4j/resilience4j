@@ -10,7 +10,7 @@ To highlight a few differences to Netflix Hystrix:
 
 In Hystrix calls to external systems have to be wrapped in a HystrixCommand. This library, in contrast, provides higher-order functions to decorate any function, lambda expression or method reference with a http://martinfowler.com/bliki/CircuitBreaker.html[Circuit Breaker]. Furthermore, the library provides a custom RxJava operator to decorate any `Observable` or `Flowable` with a Circuit Breaker.
 In the following I call the higher-order functions decorators. The decorators return an enhanced version of your function. Furthermore, the library provides a decorator to retry failed functions. You can stack more than one decorator on any given function. That means, you can combine a Retry decorator with a CircuitBreaker decorator. Any decorated function can be executed synchronously or asynchronously by using a CompletableFuture or RxJava.
-However, features such as Request Caching, Request Collapsing and Bulk Heading are not in the scope of this library. But Request Caching can be easily implemented by a custom higher-order function and JCache.
+However, features such as Request Caching, Request Collapsing, Response Time Metrics and Bulk Heading are not in the scope of this library. But Request Caching can be easily implemented by a custom higher-order function and JCache. And Response Time Metrics using http://metrics.dropwizard.io/[Dropwizard Metrics].
 
 == Examples
 
