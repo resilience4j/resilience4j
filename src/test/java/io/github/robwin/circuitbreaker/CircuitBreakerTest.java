@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright 2015 Robert Winkler
+ *  Copyright 2016 Robert Winkler
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -18,9 +18,12 @@
  */
 package io.github.robwin.circuitbreaker;
 
+import io.github.robwin.test.HelloWorldService;
 import javaslang.API;
 import javaslang.control.Try;
+import org.junit.Before;
 import org.junit.Test;
+import org.mockito.BDDMockito;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,18 +31,426 @@ import javax.xml.ws.WebServiceException;
 import java.io.IOException;
 import java.net.SocketTimeoutException;
 import java.time.Duration;
+import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 import static javaslang.API.$;
 import static javaslang.API.Case;
 import static javaslang.Predicates.instanceOf;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 
 public class CircuitBreakerTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(CircuitBreakerTest.class);
+
+    private HelloWorldService helloWorldService;
+
+    @Before
+    public void setUp(){
+        helloWorldService = mock(HelloWorldService.class);
+    }
+
+    @Test
+    public void shouldDecorateSupplierAndReturnWithSuccess() {
+        // Given
+        CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testName");
+        CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
+        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(0);
+        // Given the HelloWorldService returns Hello world
+        given(helloWorldService.returnHelloWorld()).willReturn("Hello world");
+
+        //When
+        Supplier<String> supplier = CircuitBreaker.decorateSupplier(circuitBreaker, helloWorldService::returnHelloWorld);
+
+        //Then
+        assertThat(supplier.get()).isEqualTo("Hello world");
+        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
+        assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(0);
+        assertThat(metrics.getNumberOfSuccessfulCalls()).isEqualTo(1);
+        // Then the helloWorldService should be invoked 1 time
+        BDDMockito.then(helloWorldService).should(times(1)).returnHelloWorld();
+    }
+
+
+    @Test
+    public void shouldDecorateSupplierAndReturnWithException() {
+        // Given
+        CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testName");
+        CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
+        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(0);
+        // Given the HelloWorldService throws an exception
+        given(helloWorldService.returnHelloWorld()).willThrow(new RuntimeException("BAM!"));
+
+        //When
+        Supplier<String> supplier = CircuitBreaker.decorateSupplier(circuitBreaker, helloWorldService::returnHelloWorld);
+
+        //Then
+        Try<String> result = Try.of(supplier::get);
+        assertThat(result.isFailure()).isTrue();
+        assertThat(result.failed().get()).isInstanceOf(RuntimeException.class);
+        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
+        assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(1);
+        assertThat(metrics.getNumberOfSuccessfulCalls()).isEqualTo(0);
+        // Then the helloWorldService should be invoked 1 time
+        BDDMockito.then(helloWorldService).should(times(1)).returnHelloWorld();
+    }
+
+    @Test
+    public void shouldDecorateCheckedSupplierAndReturnWithSuccess() throws Throwable {
+        // Given
+        CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
+        CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("testName");
+        CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
+        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(0);
+        // Given the HelloWorldService returns Hello world
+        given(helloWorldService.returnHelloWorldWithException()).willReturn("Hello world");
+
+        //When
+        Try.CheckedSupplier<String> checkedSupplier = CircuitBreaker.decorateCheckedSupplier(circuitBreaker, helloWorldService::returnHelloWorldWithException);
+
+        //Then
+        assertThat(checkedSupplier.get()).isEqualTo("Hello world");
+        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
+        assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(0);
+        assertThat(metrics.getNumberOfSuccessfulCalls()).isEqualTo(1);
+        // Then the helloWorldService should be invoked 1 time
+        BDDMockito.then(helloWorldService).should(times(1)).returnHelloWorldWithException();
+    }
+
+
+    @Test
+    public void shouldDecorateCheckedSupplierAndReturnWithException() throws Throwable {
+        // Given
+        CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
+        CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("testName");
+        CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
+        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(0);
+        // Given the HelloWorldService throws an exception
+        given(helloWorldService.returnHelloWorldWithException()).willThrow(new RuntimeException("BAM!"));
+
+        //When
+        Try.CheckedSupplier<String> checkedSupplier = CircuitBreaker.decorateCheckedSupplier(circuitBreaker, helloWorldService::returnHelloWorldWithException);
+
+        //Then
+        Try<String> result = Try.of(checkedSupplier);
+        assertThat(result.isFailure()).isTrue();
+        assertThat(result.failed().get()).isInstanceOf(RuntimeException.class);
+        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
+        assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(1);
+        assertThat(metrics.getNumberOfSuccessfulCalls()).isEqualTo(0);
+        // Then the helloWorldService should be invoked 1 time
+        BDDMockito.then(helloWorldService).should(times(1)).returnHelloWorldWithException();
+    }
+
+    @Test
+    public void shouldDecorateCallableAndReturnWithSuccess() throws Throwable {
+        // Given
+        CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
+        CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("testName");
+        CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
+        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(0);
+        // Given the HelloWorldService returns Hello world
+        given(helloWorldService.returnHelloWorldWithException()).willReturn("Hello world");
+
+        //When
+        Callable<String> callable = CircuitBreaker.decorateCallable(circuitBreaker, helloWorldService::returnHelloWorldWithException);
+
+        //Then
+        assertThat(callable.call()).isEqualTo("Hello world");
+        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
+        assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(0);
+        assertThat(metrics.getNumberOfSuccessfulCalls()).isEqualTo(1);
+        // Then the helloWorldService should be invoked 1 time
+        BDDMockito.then(helloWorldService).should(times(1)).returnHelloWorldWithException();
+    }
+
+    @Test
+    public void shouldDecorateCallableAndReturnWithException() throws Throwable {
+        // Given
+        CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
+        CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("testName");
+        CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
+        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(0);
+        // Given the HelloWorldService throws an exception
+        given(helloWorldService.returnHelloWorldWithException()).willThrow(new RuntimeException("BAM!"));
+
+        //When
+        Callable<String> callable = CircuitBreaker.decorateCallable(circuitBreaker, helloWorldService::returnHelloWorldWithException);
+
+        //Then
+        Try<String> result = Try.of(callable::call);
+        assertThat(result.isFailure()).isTrue();
+        assertThat(result.failed().get()).isInstanceOf(RuntimeException.class);
+        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
+        assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(1);
+        assertThat(metrics.getNumberOfSuccessfulCalls()).isEqualTo(0);
+        // Then the helloWorldService should be invoked 1 time
+        BDDMockito.then(helloWorldService).should(times(1)).returnHelloWorldWithException();
+    }
+
+    @Test
+    public void shouldDecorateCheckedRunnableAndReturnWithSuccess() throws Throwable {
+        // Given
+        CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
+        CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("testName");
+        CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
+        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(0);
+
+        //When
+        Try.CheckedRunnable checkedRunnable = CircuitBreaker.decorateCheckedRunnable(circuitBreaker, helloWorldService::sayHelloWorldWithException);
+
+        //Then
+        checkedRunnable.run();
+        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
+        assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(0);
+        assertThat(metrics.getNumberOfSuccessfulCalls()).isEqualTo(1);
+        // Then the helloWorldService should be invoked 1 time
+        BDDMockito.then(helloWorldService).should(times(1)).sayHelloWorldWithException();
+    }
+
+    @Test
+    public void shouldDecorateCheckedRunnableAndReturnWithException() throws Throwable {
+        // Given
+        CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
+        CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("testName");
+        CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
+        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(0);
+
+        //When
+        Try.CheckedRunnable checkedRunnable = CircuitBreaker.decorateCheckedRunnable(circuitBreaker, () -> {
+            throw new RuntimeException("BAM!");
+        });
+
+        //Then
+        Try<Void> result = Try.run(checkedRunnable);
+        assertThat(result.isFailure()).isTrue();
+        assertThat(result.failed().get()).isInstanceOf(RuntimeException.class);
+        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
+        assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(1);
+        assertThat(metrics.getNumberOfSuccessfulCalls()).isEqualTo(0);
+    }
+
+    @Test
+    public void shouldDecorateRunnableAndReturnWithSuccess() throws Throwable {
+        // Given
+        CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
+        CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("testName");
+        CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
+        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(0);
+
+        //When
+        Runnable runnable = CircuitBreaker.decorateRunnable(circuitBreaker, helloWorldService::sayHelloWorld);
+
+        //Then
+        runnable.run();
+        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
+        assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(0);
+        assertThat(metrics.getNumberOfSuccessfulCalls()).isEqualTo(1);
+        // Then the helloWorldService should be invoked 1 time
+        BDDMockito.then(helloWorldService).should(times(1)).sayHelloWorld();
+    }
+
+    @Test
+    public void shouldDecorateRunnableAndReturnWithException() throws Throwable {
+        // Given
+        CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
+        CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("testName");
+        CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
+        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(0);
+
+        //When
+        Runnable runnable = CircuitBreaker.decorateRunnable(circuitBreaker, () -> {
+            throw new RuntimeException("BAM!");
+        });
+
+        //Then
+        Try<Void> result = Try.run(runnable::run);
+        assertThat(result.isFailure()).isTrue();
+        assertThat(result.failed().get()).isInstanceOf(RuntimeException.class);
+        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
+        assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(1);
+        assertThat(metrics.getNumberOfSuccessfulCalls()).isEqualTo(0);
+    }
+
+    @Test
+    public void shouldDecorateConsumerAndReturnWithSuccess() throws Throwable {
+        // Given
+        CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
+        CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("testName");
+        CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
+        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(0);
+
+        //When
+        Consumer<String> consumer = CircuitBreaker.decorateConsumer(circuitBreaker, helloWorldService::sayHelloWorldWithName);
+
+        //Then
+        consumer.accept("Tom");
+        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
+        assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(0);
+        assertThat(metrics.getNumberOfSuccessfulCalls()).isEqualTo(1);
+        // Then the helloWorldService should be invoked 1 time
+        BDDMockito.then(helloWorldService).should(times(1)).sayHelloWorldWithName("Tom");
+    }
+
+    @Test
+    public void shouldDecorateConsumerAndReturnWithException() throws Throwable {
+        // Given
+        CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
+        CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("testName");
+        CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
+        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(0);
+
+        //When
+        Consumer<String> consumer = CircuitBreaker.decorateConsumer(circuitBreaker, (value) -> {
+            throw new RuntimeException("BAM!");
+        });
+
+        //Then
+        Try<Void> result = Try.run(() -> consumer.accept("Tom"));
+        assertThat(result.isFailure()).isTrue();
+        assertThat(result.failed().get()).isInstanceOf(RuntimeException.class);
+        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
+        assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(1);
+        assertThat(metrics.getNumberOfSuccessfulCalls()).isEqualTo(0);
+    }
+
+    @Test
+    public void shouldDecorateCheckedConsumerAndReturnWithSuccess() throws Throwable {
+        // Given
+        CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
+        CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("testName");
+        CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
+        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(0);
+
+        //When
+        Try.CheckedConsumer<String> checkedConsumer = CircuitBreaker.decorateCheckedConsumer(circuitBreaker, helloWorldService::sayHelloWorldWithNameWithException);
+
+        //Then
+        checkedConsumer.accept("Tom");
+        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
+        assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(0);
+        assertThat(metrics.getNumberOfSuccessfulCalls()).isEqualTo(1);
+        // Then the helloWorldService should be invoked 1 time
+        BDDMockito.then(helloWorldService).should(times(1)).sayHelloWorldWithNameWithException("Tom");
+    }
+
+    @Test
+    public void shouldDecorateCheckedConsumerAndReturnWithException() throws Throwable {
+        // Given
+        CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
+        CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("testName");
+        CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
+        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(0);
+
+        //When
+        Try.CheckedConsumer<String> checkedConsumer = CircuitBreaker.decorateCheckedConsumer(circuitBreaker, (value) -> {
+            throw new RuntimeException("BAM!");
+        });
+
+        //Then
+        Try<Void> result = Try.run(() -> checkedConsumer.accept("Tom"));
+        assertThat(result.isFailure()).isTrue();
+        assertThat(result.failed().get()).isInstanceOf(RuntimeException.class);
+        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
+        assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(1);
+        assertThat(metrics.getNumberOfSuccessfulCalls()).isEqualTo(0);
+    }
+
+    @Test
+    public void shouldDecorateFunctionAndReturnWithSuccess() throws Throwable {
+        // Given
+        CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
+        CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("testName");
+        CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
+        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(0);
+        // Given the HelloWorldService returns Hello world
+        given(helloWorldService.returnHelloWorldWithName("Tom")).willReturn("Hello world Tom");
+
+        //When
+        Function<String, String> function = CircuitBreaker.decorateFunction(circuitBreaker, helloWorldService::returnHelloWorldWithName);
+
+        //Then
+        assertThat(function.apply("Tom")).isEqualTo("Hello world Tom");
+        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
+        assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(0);
+        assertThat(metrics.getNumberOfSuccessfulCalls()).isEqualTo(1);
+        // Then the helloWorldService should be invoked 1 time
+        BDDMockito.then(helloWorldService).should(times(1)).returnHelloWorldWithName("Tom");
+    }
+
+    @Test
+    public void shouldDecorateFunctionAndReturnWithException() throws Throwable {
+        // Given
+        CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
+        CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("testName");
+        CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
+        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(0);
+        // Given the HelloWorldService throws an exception
+        given(helloWorldService.returnHelloWorldWithName("Tom")).willThrow(new RuntimeException("BAM!"));
+
+        //When
+        Function<String, String> function = CircuitBreaker.decorateFunction(circuitBreaker, helloWorldService::returnHelloWorldWithName);
+
+        //Then
+        Try<String> result = Try.of(() -> function.apply("Tom"));
+        assertThat(result.isFailure()).isTrue();
+        assertThat(result.failed().get()).isInstanceOf(RuntimeException.class);
+        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
+        assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(1);
+        assertThat(metrics.getNumberOfSuccessfulCalls()).isEqualTo(0);
+    }
+
+    @Test
+    public void shouldDecorateCheckedFunctionAndReturnWithSuccess() throws Throwable {
+        // Given
+        CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
+        CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("testName");
+        CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
+        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(0);
+        // Given the HelloWorldService returns Hello world
+        given(helloWorldService.returnHelloWorldWithNameWithException("Tom")).willReturn("Hello world Tom");
+
+        //When
+        Try.CheckedFunction<String, String> function = CircuitBreaker.decorateCheckedFunction(circuitBreaker, helloWorldService::returnHelloWorldWithNameWithException);
+
+        //Then
+        assertThat(function.apply("Tom")).isEqualTo("Hello world Tom");
+        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
+        assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(0);
+        assertThat(metrics.getNumberOfSuccessfulCalls()).isEqualTo(1);
+        // Then the helloWorldService should be invoked 1 time
+        BDDMockito.then(helloWorldService).should(times(1)).returnHelloWorldWithNameWithException("Tom");
+    }
+
+
+    @Test
+    public void shouldDecorateCheckedFunctionAndReturnWithException() throws Throwable {
+        // Given
+        CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
+        CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("testName");
+        CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
+        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(0);
+        // Given the HelloWorldService throws an exception
+        given(helloWorldService.returnHelloWorldWithNameWithException("Tom")).willThrow(new RuntimeException("BAM!"));
+
+        //When
+        Try.CheckedFunction<String, String> function  = CircuitBreaker.decorateCheckedFunction(circuitBreaker, helloWorldService::returnHelloWorldWithNameWithException);
+
+        //Then
+        Try<String> result = Try.of(() -> function.apply("Tom"));
+        assertThat(result.isFailure()).isTrue();
+        assertThat(result.failed().get()).isInstanceOf(RuntimeException.class);
+        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
+        assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(1);
+        assertThat(metrics.getNumberOfSuccessfulCalls()).isEqualTo(0);
+    }
 
     @Test
     public void shouldReturnFailureWithCircuitBreakerOpenException() {
@@ -58,6 +469,9 @@ public class CircuitBreakerTest {
         circuitBreaker.onError(new RuntimeException());
         circuitBreaker.onError(new RuntimeException());
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.OPEN);
+        CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
+        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(2);
+        assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(2);
 
         //When
         Try.CheckedRunnable checkedRunnable = CircuitBreaker.decorateCheckedRunnable(circuitBreaker, () -> {
@@ -75,6 +489,9 @@ public class CircuitBreakerTest {
         // Given
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testName");
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
+        CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
+        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(0);
+        assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(0);
 
         //When
         Try.CheckedRunnable checkedRunnable = CircuitBreaker.decorateCheckedRunnable(circuitBreaker, () -> {
@@ -85,6 +502,8 @@ public class CircuitBreakerTest {
         //Then
         assertThat(result.isFailure()).isTrue();
         assertThat(result.failed().get()).isInstanceOf(RuntimeException.class);
+        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
+        assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(1);
     }
 
     @Test
@@ -102,7 +521,7 @@ public class CircuitBreakerTest {
         CircuitBreaker circuitBreaker = CircuitBreaker.of("testName", circuitBreakerConfig);
 
         // Simulate a failure attempt
-        circuitBreaker.onError(new RuntimeException());
+        circuitBreaker.onError(new WebServiceException());
         // CircuitBreaker is still CLOSED, because 1 failure is allowed
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
 
@@ -118,20 +537,10 @@ public class CircuitBreakerTest {
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
         assertThat(result.failed().get()).isInstanceOf(IOException.class);
         // end::shouldNotRecordIOExceptionAsAFailure[]
-    }
 
-    @Test
-    public void shouldReturnSuccess() {
-        // Given
-        CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
-        CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("testName");
-        assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
-
-        //When
-        Supplier<String> checkedSupplier = CircuitBreaker.decorateSupplier(circuitBreaker, () -> "Hello world");
-
-        //Then
-        assertThat(checkedSupplier.get()).isEqualTo("Hello world");
+        CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
+        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
+        assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(1);
     }
 
     @Test
@@ -202,6 +611,10 @@ public class CircuitBreakerTest {
         // Exception is CircuitBreakerOpenException
         assertThat(result.failed().get()).isInstanceOf(CircuitBreakerOpenException.class);
         // end::shouldThrowCircuitBreakerOpenException[]
+
+        CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
+        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(2);
+        assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(2);
     }
 
     @Test
@@ -222,6 +635,10 @@ public class CircuitBreakerTest {
         //Then
         assertThat(future.get()).isEqualTo("This can be any method which returns: 'Hello world'");
         // end::shouldInvokeAsyncApply[]
+
+        CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
+        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
+        assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(0);
     }
 
 
@@ -247,6 +664,15 @@ public class CircuitBreakerTest {
         assertThat(result.isSuccess()).isTrue();
         assertThat(result.get()).isEqualTo("Hello world");
         // end::shouldChainDecoratedFunctions[]
+
+        CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
+        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
+        assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(0);
+
+
+        metrics = anotherCircuitBreaker.getMetrics();
+        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
+        assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(0);
     }
 
 }

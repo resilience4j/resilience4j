@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright 2015 Robert Winkler
+ *  Copyright 2016 Robert Winkler
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -16,11 +16,25 @@
  *
  *
  */
-package io.github.robwin.retry;
+package io.github.robwin.test;
+
+import java.io.IOException;
 
 public interface HelloWorldService {
 
     String returnHelloWorld();
 
+    String returnHelloWorldWithException() throws IOException;
+
+    String returnHelloWorldWithName(String name);
+
+    String returnHelloWorldWithNameWithException(String name) throws IOException;
+
     void sayHelloWorld();
+
+    void sayHelloWorldWithException() throws IOException;
+
+    void sayHelloWorldWithName(String name);
+
+    void sayHelloWorldWithNameWithException(String name) throws IOException;
 }
