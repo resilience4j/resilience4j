@@ -264,7 +264,7 @@ public class AtomicRateLimiter implements RateLimiter {
     /**
      * Created only for test purposes. Simply calls {@link System#nanoTime()}
      */
-    private long currentNanoTime() {
+    public long currentNanoTime() {
         return nanoTime();
     }
 }
