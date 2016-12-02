@@ -19,12 +19,11 @@ import org.openjdk.jmh.infra.Blackhole;
 
 import java.time.Duration;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.LockSupport;
 import java.util.function.Supplier;
 
 @State(Scope.Benchmark)
 @OutputTimeUnit(TimeUnit.MICROSECONDS)
-@BenchmarkMode(Mode.Throughput)
+@BenchmarkMode(Mode.AverageTime)
 public class RateLimiterBenchmark {
 
     public static final int FORK_COUNT = 2;
@@ -64,10 +63,9 @@ public class RateLimiterBenchmark {
     @Warmup(iterations = WARMUP_COUNT)
     @Fork(value = FORK_COUNT)
     @Measurement(iterations = ITERATION_COUNT)
-    public void mutex(Blackhole bh) {
-        synchronized (mutex) {
-            state = atomicRateLimiter.calculateNextState(Duration.ZERO.toNanos(), state);
-        }
+    public void calculateNextState(Blackhole bh) {
+        AtomicRateLimiter.State next = atomicRateLimiter.calculateNextState(Duration.ZERO.toNanos(), this.state);
+        bh.consume(next);
     }
 
     @Benchmark
@@ -75,10 +73,9 @@ public class RateLimiterBenchmark {
     @Warmup(iterations = WARMUP_COUNT)
     @Fork(value = FORK_COUNT)
     @Measurement(iterations = ITERATION_COUNT)
-    public void atomic(Blackhole bh) {
-        atomicRateLimiter.state.updateAndGet(state -> {
-            return atomicRateLimiter.calculateNextState(Duration.ZERO.toNanos(), state);
-        });
+    public void nanosToWaitForPermission(Blackhole bh) {
+        long next = atomicRateLimiter.nanosToWaitForPermission(1, 315L, 31L);
+        bh.consume(next);
     }
 
     @Benchmark
@@ -86,25 +83,9 @@ public class RateLimiterBenchmark {
     @Warmup(iterations = WARMUP_COUNT)
     @Fork(value = FORK_COUNT)
     @Measurement(iterations = ITERATION_COUNT)
-    public void atomicBackOf(Blackhole bh) {
-        AtomicRateLimiter.State prev;
-        AtomicRateLimiter.State next;
-        do {
-            prev = atomicRateLimiter.state.get();
-            next = atomicRateLimiter.calculateNextState(Duration.ZERO.toNanos(), prev);
-        } while (!compareAndSet(prev, next));
-    }
-
-    /*
-    https://arxiv.org/abs/1305.5800  https://dzone.com/articles/wanna-get-faster-wait-bit
-     */
-    public boolean compareAndSet(final AtomicRateLimiter.State current, final AtomicRateLimiter.State next) {
-        if (atomicRateLimiter.state.compareAndSet(current, next)) {
-            return true;
-        } else {
-            LockSupport.parkNanos(1);
-            return false;
-        }
+    public void reservePermissions(Blackhole bh) {
+        AtomicRateLimiter.State next = atomicRateLimiter.reservePermissions(0L, 31L, 1, 0L);
+        bh.consume(next);
     }
 
     @Benchmark
@@ -112,16 +93,74 @@ public class RateLimiterBenchmark {
     @Warmup(iterations = WARMUP_COUNT)
     @Fork(value = FORK_COUNT)
     @Measurement(iterations = ITERATION_COUNT)
-    public String semaphoreBasedPermission() {
-        return semaphoreGuardedSupplier.get();
+    public void currentNanoTime(Blackhole bh) {
+        long next = atomicRateLimiter.currentNanoTime();
+        bh.consume(next);
     }
 
-    @Benchmark
-    @Threads(value = THREAD_COUNT)
-    @Warmup(iterations = WARMUP_COUNT)
-    @Fork(value = FORK_COUNT)
-    @Measurement(iterations = ITERATION_COUNT)
-    public String atomicPermission() {
-        return atomicGuardedSupplier.get();
-    }
+//    @Benchmark
+//    @Threads(value = THREAD_COUNT)
+//    @Warmup(iterations = WARMUP_COUNT)
+//    @Fork(value = FORK_COUNT)
+//    @Measurement(iterations = ITERATION_COUNT)
+//    public void mutex(Blackhole bh) {
+//        synchronized (mutex) {
+//            state = atomicRateLimiter.calculateNextState(Duration.ZERO.toNanos(), state);
+//        }
+//    }
+//
+//    @Benchmark
+//    @Threads(value = THREAD_COUNT)
+//    @Warmup(iterations = WARMUP_COUNT)
+//    @Fork(value = FORK_COUNT)
+//    @Measurement(iterations = ITERATION_COUNT)
+//    public void atomic(Blackhole bh) {
+//        atomicRateLimiter.state.updateAndGet(state -> {
+//            return atomicRateLimiter.calculateNextState(Duration.ZERO.toNanos(), state);
+//        });
+//    }
+//
+//    @Benchmark
+//    @Threads(value = THREAD_COUNT)
+//    @Warmup(iterations = WARMUP_COUNT)
+//    @Fork(value = FORK_COUNT)
+//    @Measurement(iterations = ITERATION_COUNT)
+//    public void atomicBackOf(Blackhole bh) {
+//        AtomicRateLimiter.State prev;
+//        AtomicRateLimiter.State next;
+//        do {
+//            prev = atomicRateLimiter.state.get();
+//            next = atomicRateLimiter.calculateNextState(Duration.ZERO.toNanos(), prev);
+//        } while (!compareAndSet(prev, next));
+//    }
+//
+//    /*
+//    https://arxiv.org/abs/1305.5800  https://dzone.com/articles/wanna-get-faster-wait-bit
+//     */
+//    public boolean compareAndSet(final AtomicRateLimiter.State current, final AtomicRateLimiter.State next) {
+//        if (atomicRateLimiter.state.compareAndSet(current, next)) {
+//            return true;
+//        } else {
+//            LockSupport.parkNanos(1);
+//            return false;
+//        }
+//    }
+//
+//    @Benchmark
+//    @Threads(value = THREAD_COUNT)
+//    @Warmup(iterations = WARMUP_COUNT)
+//    @Fork(value = FORK_COUNT)
+//    @Measurement(iterations = ITERATION_COUNT)
+//    public String semaphoreBasedPermission() {
+//        return semaphoreGuardedSupplier.get();
+//    }
+//
+//    @Benchmark
+//    @Threads(value = THREAD_COUNT)
+//    @Warmup(iterations = WARMUP_COUNT)
+//    @Fork(value = FORK_COUNT)
+//    @Measurement(iterations = ITERATION_COUNT)
+//    public String atomicPermission() {
+//        return atomicGuardedSupplier.get();
+//    }
 }
