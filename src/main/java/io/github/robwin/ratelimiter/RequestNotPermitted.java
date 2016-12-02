@@ -1,4 +1,4 @@
-package javaslang.ratelimiter;
+package io.github.robwin.ratelimiter;
 
 /**
  * Exception that indicates that current thread was not able to acquire permission

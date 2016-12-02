@@ -1,11 +1,11 @@
-package javaslang.ratelimiter.internal;
+package io.github.robwin.ratelimiter.internal;
 
 import static java.util.Objects.requireNonNull;
 import static java.util.concurrent.Executors.newSingleThreadScheduledExecutor;
 
 import javaslang.control.Option;
-import javaslang.ratelimiter.RateLimiter;
-import javaslang.ratelimiter.RateLimiterConfig;
+import io.github.robwin.ratelimiter.RateLimiter;
+import io.github.robwin.ratelimiter.RateLimiterConfig;
 
 import java.time.Duration;
 import java.util.concurrent.ScheduledExecutorService;

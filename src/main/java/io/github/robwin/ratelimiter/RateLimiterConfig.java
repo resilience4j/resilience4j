@@ -1,4 +1,4 @@
-package javaslang.ratelimiter;
+package io.github.robwin.ratelimiter;
 
 import static java.util.Objects.requireNonNull;
 

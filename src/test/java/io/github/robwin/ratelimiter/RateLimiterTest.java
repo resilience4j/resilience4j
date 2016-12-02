@@ -1,4 +1,4 @@
-package javaslang.ratelimiter;
+package io.github.robwin.ratelimiter;
 
 import static org.assertj.core.api.BDDAssertions.then;
 import static org.mockito.Matchers.any;

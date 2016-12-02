@@ -1,4 +1,4 @@
-package javaslang.ratelimiter.internal;
+package io.github.robwin.ratelimiter.internal;
 
 import static com.jayway.awaitility.Awaitility.await;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
@@ -7,7 +7,7 @@ import static org.assertj.core.api.BDDAssertions.then;
 import static org.hamcrest.CoreMatchers.equalTo;
 
 import com.jayway.awaitility.core.ConditionFactory;
-import javaslang.ratelimiter.RateLimiterConfig;
+import io.github.robwin.ratelimiter.RateLimiterConfig;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;

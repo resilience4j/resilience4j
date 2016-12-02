@@ -1,4 +1,4 @@
-package javaslang.ratelimiter.internal;
+package io.github.robwin.ratelimiter.internal;
 
 import static com.jayway.awaitility.Awaitility.await;
 import static com.jayway.awaitility.Duration.FIVE_HUNDRED_MILLISECONDS;
@@ -16,8 +16,8 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 import com.jayway.awaitility.core.ConditionFactory;
-import javaslang.ratelimiter.RateLimiter;
-import javaslang.ratelimiter.RateLimiterConfig;
+import io.github.robwin.ratelimiter.RateLimiter;
+import io.github.robwin.ratelimiter.RateLimiterConfig;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;

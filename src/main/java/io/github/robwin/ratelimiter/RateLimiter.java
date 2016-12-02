@@ -1,4 +1,4 @@
-package javaslang.ratelimiter;
+package io.github.robwin.ratelimiter;
 
 import javaslang.control.Try;
 

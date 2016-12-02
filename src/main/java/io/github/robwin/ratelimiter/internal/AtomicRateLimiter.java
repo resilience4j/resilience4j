@@ -1,12 +1,12 @@
-package javaslang.ratelimiter.internal;
+package io.github.robwin.ratelimiter.internal;
 
 import static java.lang.Long.min;
 import static java.lang.System.nanoTime;
 import static java.lang.Thread.currentThread;
 import static java.util.concurrent.locks.LockSupport.parkNanos;
 
-import javaslang.ratelimiter.RateLimiter;
-import javaslang.ratelimiter.RateLimiterConfig;
+import io.github.robwin.ratelimiter.RateLimiter;
+import io.github.robwin.ratelimiter.RateLimiterConfig;
 
 import java.time.Duration;
 import java.util.concurrent.atomic.AtomicInteger;

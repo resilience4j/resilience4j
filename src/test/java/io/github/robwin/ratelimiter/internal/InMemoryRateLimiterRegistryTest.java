@@ -1,4 +1,4 @@
-package javaslang.ratelimiter.internal;
+package io.github.robwin.ratelimiter.internal;
 
 import static org.assertj.core.api.BDDAssertions.then;
 import static org.mockito.Mockito.mock;
@@ -6,9 +6,9 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import javaslang.ratelimiter.RateLimiter;
-import javaslang.ratelimiter.RateLimiterConfig;
-import javaslang.ratelimiter.RateLimiterRegistry;
+import io.github.robwin.ratelimiter.RateLimiter;
+import io.github.robwin.ratelimiter.RateLimiterConfig;
+import io.github.robwin.ratelimiter.RateLimiterRegistry;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;

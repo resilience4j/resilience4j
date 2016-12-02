@@ -1,10 +1,10 @@
-package javaslang.ratelimiter.internal;
+package io.github.robwin.ratelimiter.internal;
 
 import static java.util.Objects.requireNonNull;
 
-import javaslang.ratelimiter.RateLimiter;
-import javaslang.ratelimiter.RateLimiterConfig;
-import javaslang.ratelimiter.RateLimiterRegistry;
+import io.github.robwin.ratelimiter.RateLimiter;
+import io.github.robwin.ratelimiter.RateLimiterConfig;
+import io.github.robwin.ratelimiter.RateLimiterRegistry;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;

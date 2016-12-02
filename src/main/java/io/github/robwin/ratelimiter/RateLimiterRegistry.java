@@ -1,6 +1,6 @@
-package javaslang.ratelimiter;
+package io.github.robwin.ratelimiter;
 
-import javaslang.ratelimiter.internal.InMemoryRateLimiterRegistry;
+import io.github.robwin.ratelimiter.internal.InMemoryRateLimiterRegistry;
 
 import java.util.function.Supplier;
 

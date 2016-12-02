@@ -18,16 +18,7 @@
  */
 package io.github.robwin.circuitbreaker;
 
-import org.openjdk.jmh.annotations.Benchmark;
-import org.openjdk.jmh.annotations.BenchmarkMode;
-import org.openjdk.jmh.annotations.Measurement;
-import org.openjdk.jmh.annotations.Mode;
-import org.openjdk.jmh.annotations.OutputTimeUnit;
-import org.openjdk.jmh.annotations.Scope;
-import org.openjdk.jmh.annotations.Setup;
-import org.openjdk.jmh.annotations.State;
-import org.openjdk.jmh.annotations.Threads;
-import org.openjdk.jmh.annotations.Warmup;
+import org.openjdk.jmh.annotations.*;
 
 import java.time.Duration;
 import java.util.concurrent.TimeUnit;
@@ -38,11 +29,11 @@ import java.util.function.Supplier;
 @BenchmarkMode(Mode.Throughput)
 public class CircuitBreakerBenchmark {
 
+    private CircuitBreaker circuitBreaker;
+    private Supplier<String> supplier;
     private static final int ITERATION_COUNT = 10;
     private static final int WARMUP_COUNT = 10;
     private static final int THREAD_COUNT = 10;
-    private CircuitBreaker circuitBreaker;
-    private Supplier<String> supplier;
 
     @Setup
     public void setUp() {
