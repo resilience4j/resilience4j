@@ -7,8 +7,7 @@ import java.time.Duration;
 public class RateLimiterConfig {
     private static final String TIMEOUT_DURATION_MUST_NOT_BE_NULL = "TimeoutDuration must not be null";
     private static final String LIMIT_REFRESH_PERIOD_MUST_NOT_BE_NULL = "LimitRefreshPeriod must not be null";
-
-    private static final Duration ACCEPTABLE_REFRESH_PERIOD = Duration.ofNanos(1L); // TODO: use jmh to find real one
+    private static final Duration ACCEPTABLE_REFRESH_PERIOD = Duration.ofNanos(1L);
 
     private final Duration timeoutDuration;
     private final Duration limitRefreshPeriod;
