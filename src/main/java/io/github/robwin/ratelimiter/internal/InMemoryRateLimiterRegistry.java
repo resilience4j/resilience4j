@@ -66,7 +66,7 @@ public class InMemoryRateLimiterRegistry implements RateLimiterRegistry {
         requireNonNull(rateLimiterConfig, CONFIG_MUST_NOT_BE_NULL);
         return rateLimiters.computeIfAbsent(
             name,
-            limitName -> new SemaphoreBasedRateLimiter(name, rateLimiterConfig)
+            limitName -> new AtomicRateLimiter(name, rateLimiterConfig)
         );
     }
 
@@ -82,7 +82,7 @@ public class InMemoryRateLimiterRegistry implements RateLimiterRegistry {
             limitName -> {
                 RateLimiterConfig rateLimiterConfig = rateLimiterConfigSupplier.get();
                 requireNonNull(rateLimiterConfig, CONFIG_MUST_NOT_BE_NULL);
-                return new SemaphoreBasedRateLimiter(limitName, rateLimiterConfig);
+                return new AtomicRateLimiter(limitName, rateLimiterConfig);
             }
         );
     }

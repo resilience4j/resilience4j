@@ -18,6 +18,7 @@
  */
 package io.github.robwin.ratelimiter;
 
+import io.github.robwin.ratelimiter.internal.AtomicRateLimiter;
 import javaslang.control.Try;
 
 import java.time.Duration;
@@ -30,6 +31,28 @@ import java.util.function.Supplier;
  * until a permit is available, and then takes it. Once acquired, permits need not be released.
  */
 public interface RateLimiter {
+
+    /**
+     * Returns a managed {@link RateLimiter} or creates a new one with a custom RateLimiter configuration.
+     *
+     * @param name              the name of the RateLimiter
+     * @param rateLimiterConfig a custom RateLimiter configuration
+     * @return The {@link RateLimiter}
+     */
+    static RateLimiter of(String name, RateLimiterConfig rateLimiterConfig) {
+        return new AtomicRateLimiter(name, rateLimiterConfig);
+    }
+
+    /**
+     * Returns a managed {@link RateLimiterConfig} or creates a new one with a custom RateLimiterConfig configuration.
+     *
+     * @param name                      the name of the RateLimiterConfig
+     * @param rateLimiterConfigSupplier a supplier of a custom RateLimiterConfig configuration
+     * @return The {@link RateLimiterConfig}
+     */
+    static RateLimiter of(String name, Supplier<RateLimiterConfig> rateLimiterConfigSupplier) {
+        return new AtomicRateLimiter(name, rateLimiterConfigSupplier.get());
+    }
 
     /**
      * Creates a supplier which is restricted by a RateLimiter.
@@ -199,9 +222,19 @@ public interface RateLimiter {
         /**
          * Returns an estimate of the number of threads waiting for permission
          * in this JVM process.
+         * <p>This method is typically used for debugging and testing purposes.
          *
          * @return estimate of the number of threads waiting for permission.
          */
         int getNumberOfWaitingThreads();
+
+        /**
+         * Estimates count of available permissions.
+         * Can be negative if some permissions where reserved.
+         * <p>This method is typically used for debugging and testing purposes.
+         *
+         * @return estimated count of permissions
+         */
+        int getAvailablePermissions();
     }
 }

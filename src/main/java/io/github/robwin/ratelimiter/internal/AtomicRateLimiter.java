@@ -253,7 +253,16 @@ public class AtomicRateLimiter implements RateLimiter {
      * {@inheritDoc}
      */
     @Override
-    public AtomicRateLimiterMetrics getMetrics() {
+    public Metrics getMetrics() {
+        return new AtomicRateLimiterMetrics();
+    }
+
+    /**
+     * Get the enhanced Metrics with some implementation specific details.
+     *
+     * @return the detailed metrics
+     */
+    public AtomicRateLimiterMetrics getDetailedMetrics() {
         return new AtomicRateLimiterMetrics();
     }
 
@@ -296,12 +305,20 @@ public class AtomicRateLimiter implements RateLimiter {
 
         /**
          * {@inheritDoc}
-         *
-         * @return
          */
         @Override
         public int getNumberOfWaitingThreads() {
             return waitingThreads.get();
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public int getAvailablePermissions() {
+            State currentState = state.get();
+            State estimatedState = calculateNextState(-1, currentState);
+            return estimatedState.activePermissions;
         }
 
         /**
@@ -311,18 +328,6 @@ public class AtomicRateLimiter implements RateLimiter {
             State currentState = state.get();
             State estimatedState = calculateNextState(-1, currentState);
             return estimatedState.nanosToWait;
-        }
-
-        /**
-         * Estimates count of permissions available permissions.
-         * Can be negative if some permissions where reserved.
-         *
-         * @return estimated count of permissions
-         */
-        public long getAvailablePermissions() {
-            State currentState = state.get();
-            State estimatedState = calculateNextState(-1, currentState);
-            return estimatedState.activePermissions;
         }
 
     }

@@ -21,9 +21,9 @@ package io.github.robwin.ratelimiter.internal;
 import static java.util.Objects.requireNonNull;
 import static java.util.concurrent.Executors.newSingleThreadScheduledExecutor;
 
-import javaslang.control.Option;
 import io.github.robwin.ratelimiter.RateLimiter;
 import io.github.robwin.ratelimiter.RateLimiterConfig;
+import javaslang.control.Option;
 
 import java.time.Duration;
 import java.util.concurrent.ScheduledExecutorService;
@@ -137,30 +137,17 @@ public class SemaphoreBasedRateLimiter implements RateLimiter {
     }
 
     /**
-     * Get the enhanced Metrics with some implementation specific details.
-     *
-     * @return the detailed metrics
-     */
-    public SemaphoreBasedRateLimiterMetrics getDetailedMetrics() {
-        return this.metrics;
-    }
-
-    /**
-     * Enhanced {@link Metrics} with some implementation specific details
+     * {@inheritDoc}
      */
     public final class SemaphoreBasedRateLimiterMetrics implements Metrics {
         private SemaphoreBasedRateLimiterMetrics() {
         }
 
         /**
-         * Returns the current number of permits available in this request limit
-         * until the next refresh.
-         * <p>
-         * <p>This method is typically used for debugging and testing purposes.
-         *
-         * @return the number of permits available in this rate limiter until the next refresh.
+         * {@inheritDoc}
          */
-        public int getAvailablePermits() {
+        @Override
+        public int getAvailablePermissions() {
             return semaphore.availablePermits();
         }
 

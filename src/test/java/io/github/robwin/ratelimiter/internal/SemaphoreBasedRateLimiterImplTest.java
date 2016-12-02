@@ -123,7 +123,7 @@ public class SemaphoreBasedRateLimiterImplTest {
         ScheduledExecutorService scheduledExecutorService = mock(ScheduledExecutorService.class);
         RateLimiterConfig configSpy = spy(config);
         SemaphoreBasedRateLimiter limit = new SemaphoreBasedRateLimiter("test", configSpy, scheduledExecutorService);
-        SemaphoreBasedRateLimiter.SemaphoreBasedRateLimiterMetrics detailedMetrics = limit.getDetailedMetrics();
+        RateLimiter.Metrics detailedMetrics = limit.getMetrics();
 
         SynchronousQueue<Object> synchronousQueue = new SynchronousQueue<>();
         Thread thread = new Thread(() -> {
@@ -150,19 +150,19 @@ public class SemaphoreBasedRateLimiterImplTest {
 
         System.out.println("MASTER -> CHECK IF SLAVE IS WAITING FOR PERMISSION");
         awaitImpatiently()
-            .atMost(100, TimeUnit.MILLISECONDS).until(detailedMetrics::getAvailablePermits, equalTo(0));
+            .atMost(100, TimeUnit.MILLISECONDS).until(detailedMetrics::getAvailablePermissions, equalTo(0));
         System.out.println("MASTER -> SLAVE CONSUMED ALL PERMISSIONS");
         awaitImpatiently()
             .atMost(2, TimeUnit.SECONDS).until(thread::getState, equalTo(TIMED_WAITING));
-        then(detailedMetrics.getAvailablePermits()).isEqualTo(0);
+        then(detailedMetrics.getAvailablePermissions()).isEqualTo(0);
         System.out.println("MASTER -> SLAVE WAS WAITING");
 
         limit.refreshLimit();
         awaitImpatiently()
-            .atMost(100, TimeUnit.MILLISECONDS).until(detailedMetrics::getAvailablePermits, equalTo(1));
+            .atMost(100, TimeUnit.MILLISECONDS).until(detailedMetrics::getAvailablePermissions, equalTo(1));
         awaitImpatiently()
             .atMost(2, TimeUnit.SECONDS).until(thread::getState, equalTo(TERMINATED));
-        then(detailedMetrics.getAvailablePermits()).isEqualTo(1);
+        then(detailedMetrics.getAvailablePermissions()).isEqualTo(1);
     }
 
     @Test
@@ -218,9 +218,9 @@ public class SemaphoreBasedRateLimiterImplTest {
     public void getDetailedMetrics() throws Exception {
         ScheduledExecutorService scheduler = mock(ScheduledExecutorService.class);
         SemaphoreBasedRateLimiter limit = new SemaphoreBasedRateLimiter("test", config, scheduler);
-        SemaphoreBasedRateLimiter.SemaphoreBasedRateLimiterMetrics metrics = limit.getDetailedMetrics();
+        RateLimiter.Metrics metrics = limit.getMetrics();
         then(metrics.getNumberOfWaitingThreads()).isEqualTo(0);
-        then(metrics.getAvailablePermits()).isEqualTo(2);
+        then(metrics.getAvailablePermissions()).isEqualTo(2);
     }
 
     @Test
