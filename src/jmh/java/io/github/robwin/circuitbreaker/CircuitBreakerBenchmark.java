@@ -18,40 +18,55 @@
  */
 package io.github.robwin.circuitbreaker;
 
-//@State(Scope.Benchmark)
-//@OutputTimeUnit(TimeUnit.MILLISECONDS)
-//@BenchmarkMode(Mode.Throughput)
-//public class CircuitBreakerBenchmark {
-//
-//    private CircuitBreaker circuitBreaker;
-//    private Supplier<String> supplier;
-//    private static final int ITERATION_COUNT = 10;
-//    private static final int WARMUP_COUNT = 10;
-//    private static final int THREAD_COUNT = 10;
-//
-//    @Setup
-//    public void setUp() {
-//        CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.of(CircuitBreakerConfig.custom()
-//                .failureRateThreshold(1)
-//                .waitDurationInOpenState(Duration.ofSeconds(1))
-//                .build());
-//        circuitBreaker = circuitBreakerRegistry.circuitBreaker("testCircuitBreaker");
-//
-//        supplier = CircuitBreaker.decorateSupplier(() -> {
-//            try {
-//                Thread.sleep(100);
-//            } catch (InterruptedException e) {
-//                e.printStackTrace();
-//            }
-//            return "Hello Benchmark";
-//        }, circuitBreaker);
-//    }
-//
-//    @Benchmark
-//    @Threads(value = THREAD_COUNT)
-//    @Warmup(iterations = WARMUP_COUNT)
-//    @Measurement(iterations = ITERATION_COUNT)
-//    public String invokeSupplier(){
-//        return supplier.get();
-//    }
-//}
+import org.openjdk.jmh.annotations.Benchmark;
+import org.openjdk.jmh.annotations.BenchmarkMode;
+import org.openjdk.jmh.annotations.Measurement;
+import org.openjdk.jmh.annotations.Mode;
+import org.openjdk.jmh.annotations.OutputTimeUnit;
+import org.openjdk.jmh.annotations.Scope;
+import org.openjdk.jmh.annotations.Setup;
+import org.openjdk.jmh.annotations.State;
+import org.openjdk.jmh.annotations.Threads;
+import org.openjdk.jmh.annotations.Warmup;
+
+import java.time.Duration;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
+
+@State(Scope.Benchmark)
+@OutputTimeUnit(TimeUnit.MILLISECONDS)
+@BenchmarkMode(Mode.Throughput)
+public class CircuitBreakerBenchmark {
+
+    private static final int ITERATION_COUNT = 10;
+    private static final int WARMUP_COUNT = 10;
+    private static final int THREAD_COUNT = 10;
+    private CircuitBreaker circuitBreaker;
+    private Supplier<String> supplier;
+
+    @Setup
+    public void setUp() {
+        CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.of(CircuitBreakerConfig.custom()
+            .failureRateThreshold(1)
+            .waitDurationInOpenState(Duration.ofSeconds(1))
+            .build());
+        circuitBreaker = circuitBreakerRegistry.circuitBreaker("testCircuitBreaker");
+
+        supplier = CircuitBreaker.decorateSupplier(() -> {
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            return "Hello Benchmark";
+        }, circuitBreaker);
+    }
+
+    @Benchmark
+    @Threads(value = THREAD_COUNT)
+    @Warmup(iterations = WARMUP_COUNT)
+    @Measurement(iterations = ITERATION_COUNT)
+    public String invokeSupplier() {
+        return supplier.get();
+    }
+}

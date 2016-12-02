@@ -11,6 +11,7 @@ import javaslang.ratelimiter.RateLimiterConfig;
 import java.time.Duration;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.UnaryOperator;
 
 /**
  * {@link AtomicRateLimiter} splits all nanoseconds from the start of epoch into cycles.
@@ -31,7 +32,7 @@ public class AtomicRateLimiter implements RateLimiter {
     private final long cyclePeriodInNanos;
     private final int permissionsPerCycle;
     private final AtomicInteger waitingThreads;
-    public final AtomicReference<State> state;
+    private final AtomicReference<State> state;
 
 
     public AtomicRateLimiter(String name, RateLimiterConfig rateLimiterConfig) {
@@ -51,10 +52,55 @@ public class AtomicRateLimiter implements RateLimiter {
     @Override
     public boolean getPermission(final Duration timeoutDuration) {
         long timeoutInNanos = timeoutDuration.toNanos();
-        State modifiedState = state.updateAndGet(
-            activeState -> calculateNextState(timeoutInNanos, activeState)
-        );
+        State modifiedState = updateStateWithBackOff(timeoutInNanos);
         return waitForPermissionIfNecessary(timeoutInNanos, modifiedState.nanosToWait);
+    }
+
+    /**
+     * Atomically updates the current {@link State} with the results of
+     * applying the {@link AtomicRateLimiter#calculateNextState}, returning the updated {@link State}.
+     * It differs from {@link AtomicReference#updateAndGet(UnaryOperator)} by constant back off.
+     * It means that after one try to {@link AtomicReference#compareAndSet(Object, Object)}
+     * this method will wait for a while before try one more time.
+     * This technique was originally described in this
+     * <a href="https://arxiv.org/abs/1305.5800"> paper</a>
+     * and showed great results with {@link AtomicRateLimiter} in benchmark tests.
+     *
+     * @param timeoutInNanos a side-effect-free function
+     * @return the updated value
+     */
+    private State updateStateWithBackOff(final long timeoutInNanos) {
+        AtomicRateLimiter.State prev;
+        AtomicRateLimiter.State next;
+        do {
+            prev = state.get();
+            next = calculateNextState(timeoutInNanos, prev);
+        } while (!compareAndSet(prev, next));
+        return next;
+    }
+
+    /**
+     * Atomically sets the value to the given updated value
+     * if the current value {@code ==} the expected value.
+     * It differs from {@link AtomicReference#updateAndGet(UnaryOperator)} by constant back off.
+     * It means that after one try to {@link AtomicReference#compareAndSet(Object, Object)}
+     * this method will wait for a while before try one more time.
+     * This technique was originally described in this
+     * <a href="https://arxiv.org/abs/1305.5800"> paper</a>
+     * and showed great results with {@link AtomicRateLimiter} in benchmark tests.
+     *
+     * @param current the expected value
+     * @param next    the new value
+     * @return {@code true} if successful. False return indicates that
+     * the actual value was not equal to the expected value.
+     */
+    private boolean compareAndSet(final State current, final State next) {
+        if (state.compareAndSet(current, next)) {
+            return true;
+        } else {
+            parkNanos(1); // back-off
+            return false;
+        }
     }
 
     /**
@@ -66,7 +112,7 @@ public class AtomicRateLimiter implements RateLimiter {
      * @param activeState    current state of {@link AtomicRateLimiter}
      * @return next {@link State}
      */
-    public State calculateNextState(final long timeoutInNanos, final State activeState) {
+    private State calculateNextState(final long timeoutInNanos, final State activeState) {
         long currentNanos = currentNanoTime();
         long currentCycle = currentNanos / cyclePeriodInNanos;
 
@@ -93,7 +139,7 @@ public class AtomicRateLimiter implements RateLimiter {
      * @param currentCycle         current {@link AtomicRateLimiter} cycle
      * @return nanoseconds to wait for the next permission
      */
-    public long nanosToWaitForPermission(final int availablePermissions, final long currentNanos, final long currentCycle) {
+    private long nanosToWaitForPermission(final int availablePermissions, final long currentNanos, final long currentCycle) {
         if (availablePermissions > 0) {
             return 0L;
         } else {
@@ -114,7 +160,7 @@ public class AtomicRateLimiter implements RateLimiter {
      * @param nanosToWait    nanoseconds to wait for the next permission
      * @return new {@link State} with possibly reserved permissions and time to wait
      */
-    public State reservePermissions(final long timeoutInNanos, final long cycle, final int permissions, final long nanosToWait) {
+    private State reservePermissions(final long timeoutInNanos, final long cycle, final int permissions, final long nanosToWait) {
         boolean canAcquireInTime = timeoutInNanos >= nanosToWait;
         int permissionsWithReservation = permissions;
         if (canAcquireInTime) {
@@ -130,7 +176,7 @@ public class AtomicRateLimiter implements RateLimiter {
      * @param nanosToWait    nanoseconds caller need to wait
      * @return true if caller was able to wait for nanosToWait without {@link Thread#interrupt} and not exceed timeout
      */
-    public boolean waitForPermissionIfNecessary(final long timeoutInNanos, final long nanosToWait) {
+    private boolean waitForPermissionIfNecessary(final long timeoutInNanos, final long nanosToWait) {
         boolean canAcquireImmediately = nanosToWait <= 0;
         boolean canAcquireInTime = timeoutInNanos >= nanosToWait;
 
@@ -153,7 +199,7 @@ public class AtomicRateLimiter implements RateLimiter {
      * @param nanosToWait nanoseconds caller need to wait
      * @return true if caller was not {@link Thread#interrupted} while waiting
      */
-    public boolean waitForPermission(final long nanosToWait) {
+    private boolean waitForPermission(final long nanosToWait) {
         waitingThreads.incrementAndGet();
         long deadline = currentNanoTime() + nanosToWait;
         boolean wasInterrupted = false;
@@ -207,13 +253,14 @@ public class AtomicRateLimiter implements RateLimiter {
      * the last {@link AtomicRateLimiter#getPermission(Duration)} call.</li>
      * </ul>
      */
-    public static class State {
+    private static class State {
 
         private final long activeCycle;
+
         private final int activePermissions;
         private final long nanosToWait;
 
-        public State(final long activeCycle, final int activePermissions, final long nanosToWait) {
+        private State(final long activeCycle, final int activePermissions, final long nanosToWait) {
             this.activeCycle = activeCycle;
             this.activePermissions = activePermissions;
             this.nanosToWait = nanosToWait;
@@ -259,12 +306,13 @@ public class AtomicRateLimiter implements RateLimiter {
             State estimatedState = calculateNextState(-1, currentState);
             return estimatedState.activePermissions;
         }
+
     }
 
     /**
      * Created only for test purposes. Simply calls {@link System#nanoTime()}
      */
-    public long currentNanoTime() {
+    private long currentNanoTime() {
         return nanoTime();
     }
 }
