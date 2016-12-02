@@ -67,6 +67,9 @@ dependencies {
     testCompile "ch.qos.logback:logback-classic:0.9.26"
     testCompile "io.dropwizard.metrics:metrics-healthchecks:3.1.2"
     testCompile "org.mockito:mockito-core:1.10.19"
+    testCompile "org.powermock:powermock:1.6.6"
+    testCompile "org.powermock:powermock-api-mockito:1.6.6"
+    testCompile "org.powermock:powermock-module-junit4:1.6.6"
     testCompile "io.projectreactor:reactor-core:2.5.0.M2"
     testCompile "com.jayway.awaitility:awaitility:1.7.0"
 

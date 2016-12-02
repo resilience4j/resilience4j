@@ -4,7 +4,6 @@ import javaslang.ratelimiter.RateLimiter;
 import javaslang.ratelimiter.RateLimiterConfig;
 import javaslang.ratelimiter.internal.AtomicRateLimiter;
 import javaslang.ratelimiter.internal.SemaphoreBasedRateLimiter;
-import javaslang.ratelimiter.internal.TimeBasedRateLimiter;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.BenchmarkMode;
 import org.openjdk.jmh.annotations.Fork;
@@ -33,11 +32,9 @@ public class RateLimiterBenchmark {
     private static final int THREAD_COUNT = 2;
 
     private RateLimiter semaphoreBasedRateLimiter;
-    private RateLimiter timeBasedRateLimiter;
     private RateLimiter atomicRateLimiter;
 
     private Supplier<String> semaphoreGuardedSupplier;
-    private Supplier<String> timeGuardedSupplier;
     private Supplier<String> atomicGuardedSupplier;
 
     @Setup
@@ -48,7 +45,6 @@ public class RateLimiterBenchmark {
             .timeoutDuration(Duration.ofSeconds(5))
             .build();
         semaphoreBasedRateLimiter = new SemaphoreBasedRateLimiter("semaphoreBased", rateLimiterConfig);
-        timeBasedRateLimiter = new TimeBasedRateLimiter("timeBased", rateLimiterConfig);
         atomicRateLimiter = new AtomicRateLimiter("atomicBased", rateLimiterConfig);
 
         Supplier<String> stringSupplier = () -> {
@@ -56,7 +52,6 @@ public class RateLimiterBenchmark {
             return "Hello Benchmark";
         };
         semaphoreGuardedSupplier = RateLimiter.decorateSupplier(semaphoreBasedRateLimiter, stringSupplier);
-        timeGuardedSupplier = RateLimiter.decorateSupplier(timeBasedRateLimiter, stringSupplier);
         atomicGuardedSupplier = RateLimiter.decorateSupplier(atomicRateLimiter, stringSupplier);
     }
 
@@ -67,15 +62,6 @@ public class RateLimiterBenchmark {
     @Measurement(iterations = ITERATION_COUNT)
     public String semaphoreBasedPermission() {
         return semaphoreGuardedSupplier.get();
-    }
-
-    @Benchmark
-    @Threads(value = THREAD_COUNT)
-    @Warmup(iterations = WARMUP_COUNT)
-    @Fork(value = FORK_COUNT)
-    @Measurement(iterations = ITERATION_COUNT)
-    public String timeBasedPermission() {
-        return timeGuardedSupplier.get();
     }
 
     @Benchmark

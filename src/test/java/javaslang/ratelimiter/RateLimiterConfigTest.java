@@ -76,7 +76,7 @@ public class RateLimiterConfigTest {
         exception.expectMessage("RefreshPeriod is too short");
         RateLimiterConfig.builder()
             .timeoutDuration(TIMEOUT)
-            .limitRefreshPeriod(Duration.ofNanos(499L))
+            .limitRefreshPeriod(Duration.ZERO)
             .limitForPeriod(LIMIT)
             .build();
     }

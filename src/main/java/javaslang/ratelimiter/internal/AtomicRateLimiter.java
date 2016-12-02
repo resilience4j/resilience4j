@@ -42,9 +42,7 @@ public class AtomicRateLimiter implements RateLimiter {
         permissionsPerCycle = rateLimiterConfig.getLimitForPeriod();
 
         waitingThreads = new AtomicInteger(0);
-        long activeCycle = nanoTime() / cyclePeriodInNanos;
-        int activePermissions = permissionsPerCycle;
-        state = new AtomicReference<>(new State(activeCycle, activePermissions, 0));
+        state = new AtomicReference<>(new State(0, 0, 0));
     }
 
     /**
@@ -69,7 +67,7 @@ public class AtomicRateLimiter implements RateLimiter {
      * @return next {@link State}
      */
     private State calculateNextState(final long timeoutInNanos, final State activeState) {
-        long currentNanos = nanoTime();
+        long currentNanos = currentNanoTime();
         long currentCycle = currentNanos / cyclePeriodInNanos;
 
         long nextCycle = activeState.activeCycle;
@@ -84,6 +82,7 @@ public class AtomicRateLimiter implements RateLimiter {
         State nextState = reservePermissions(timeoutInNanos, nextCycle, nextPermissions, nextNanosToWait);
         return nextState;
     }
+
 
     /**
      * Calculates time to wait for next permission as
@@ -147,19 +146,27 @@ public class AtomicRateLimiter implements RateLimiter {
 
     /**
      * Parks {@link Thread} for nanosToWait.
+     * <p>If the current thread is {@linkplain Thread#interrupted}
+     * while waiting for a permit then it won't throw {@linkplain InterruptedException},
+     * but its interrupt status will be set.
      *
      * @param nanosToWait nanoseconds caller need to wait
      * @return true if caller was not {@link Thread#interrupted} while waiting
      */
     private boolean waitForPermission(final long nanosToWait) {
         waitingThreads.incrementAndGet();
-        long deadline = nanoTime() + nanosToWait;
-        while (nanoTime() < deadline || currentThread().isInterrupted()) {
-            long sleepBlockDuration = deadline - nanoTime();
+        long deadline = currentNanoTime() + nanosToWait;
+        boolean wasInterrupted = false;
+        while (currentNanoTime() < deadline && !wasInterrupted) {
+            long sleepBlockDuration = deadline - currentNanoTime();
             parkNanos(sleepBlockDuration);
+            wasInterrupted = Thread.interrupted();
         }
         waitingThreads.decrementAndGet();
-        return !currentThread().isInterrupted();
+        if (wasInterrupted) {
+            currentThread().interrupt();
+        }
+        return !wasInterrupted;
     }
 
     /**
@@ -182,7 +189,7 @@ public class AtomicRateLimiter implements RateLimiter {
      * {@inheritDoc}
      */
     @Override
-    public Metrics getMetrics() {
+    public AtomicRateLimiterMetrics getMetrics() {
         return new AtomicRateLimiterMetrics();
     }
 
@@ -201,6 +208,7 @@ public class AtomicRateLimiter implements RateLimiter {
      * </ul>
      */
     private static class State {
+
         private final long activeCycle;
         private final int activePermissions;
         private final long nanosToWait;
@@ -210,12 +218,14 @@ public class AtomicRateLimiter implements RateLimiter {
             this.activePermissions = activePermissions;
             this.nanosToWait = nanosToWait;
         }
+
     }
 
     /**
      * Enhanced {@link Metrics} with some implementation specific details
      */
     public final class AtomicRateLimiterMetrics implements Metrics {
+
         private AtomicRateLimiterMetrics() {
         }
 
@@ -228,5 +238,33 @@ public class AtomicRateLimiter implements RateLimiter {
         public int getNumberOfWaitingThreads() {
             return waitingThreads.get();
         }
+
+        /**
+         * @return estimated time duration in nanos to wait for the next permission
+         */
+        public long getNanosToWait() {
+            State currentState = state.get();
+            State estimatedState = calculateNextState(-1, currentState);
+            return estimatedState.nanosToWait;
+        }
+
+        /**
+         * Estimates count of permissions available permissions.
+         * Can be negative if some permissions where reserved.
+         *
+         * @return estimated count of permissions
+         */
+        public long getAvailablePermissions() {
+            State currentState = state.get();
+            State estimatedState = calculateNextState(-1, currentState);
+            return estimatedState.activePermissions;
+        }
+    }
+
+    /**
+     * Created only for test purposes. Simply calls {@link System#nanoTime()}
+     */
+    private long currentNanoTime() {
+        return nanoTime();
     }
 }

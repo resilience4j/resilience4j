@@ -17,8 +17,6 @@ import org.junit.rules.ExpectedException;
 import java.time.Duration;
 import java.util.function.Supplier;
 
-
-@SuppressWarnings("unchecked")
 public class InMemoryRateLimiterRegistryTest {
 
     private static final int LIMIT = 50;
@@ -51,6 +49,7 @@ public class InMemoryRateLimiterRegistryTest {
     }
 
     @Test
+    @SuppressWarnings("unchecked")
     public void rateLimiterPositiveWithSupplier() throws Exception {
         RateLimiterRegistry registry = new InMemoryRateLimiterRegistry(config);
         Supplier<RateLimiterConfig> rateLimiterConfigSupplier = mock(Supplier.class);
