@@ -1,0 +1,6 @@
+Benchmark                                       Mode  Cnt   Score   Error   Units
+RateLimiterBenchmark.atomic                    thrpt   10   8.016 ± 0.327  ops/us
+RateLimiterBenchmark.atomicBackOf              thrpt   10  14.104 ± 0.097  ops/us
+RateLimiterBenchmark.atomicPermission          thrpt   10   7.429 ± 0.299  ops/us
+RateLimiterBenchmark.mutex                     thrpt   10   7.520 ± 0.304  ops/us
+RateLimiterBenchmark.semaphoreBasedPermission  thrpt   10  17.923 ± 6.043  ops/us
