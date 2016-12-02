@@ -1,5 +1,0 @@
-Benchmark                                      Mode  Cnt  Score    Error  Units
-RateLimiterBenchmark.calculateNextState        avgt   10  0.101 ±  0.008  us/op
-RateLimiterBenchmark.currentNanoTime           avgt   10  0.077 ±  0.001  us/op
-RateLimiterBenchmark.nanosToWaitForPermission  avgt   10  0.003 ±  0.001  us/op
-RateLimiterBenchmark.reservePermissions        avgt   10  0.007 ±  0.001  us/op

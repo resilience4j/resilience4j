@@ -18,27 +18,41 @@
  */
 package javaslang.circuitbreaker;
 
-//@State(Scope.Benchmark)
-//@OutputTimeUnit(TimeUnit.MILLISECONDS)
-//@BenchmarkMode(Mode.Throughput)
-//public class RingBitSetBenachmark {
-//
-//    private RingBitSet ringBitSet;
-//    private static final int ITERATION_COUNT = 10;
-//    private static final int WARMUP_COUNT = 10;
-//    private static final int THREAD_COUNT = 10;
-//
-//    @Setup
-//    public void setUp() {
-//        ringBitSet = new RingBitSet(1000);
-//    }
-//
-//    @Benchmark
-//    @Threads(value = THREAD_COUNT)
-//    @Warmup(iterations = WARMUP_COUNT)
-//    @Measurement(iterations = ITERATION_COUNT)
-//    public void setBits(){
-//        ringBitSet.setNextBit(true);
-//        ringBitSet.setNextBit(false);
-//    }
-//}
+import javaslang.circuitbreaker.internal.RingBitSet;
+import org.openjdk.jmh.annotations.Benchmark;
+import org.openjdk.jmh.annotations.BenchmarkMode;
+import org.openjdk.jmh.annotations.Measurement;
+import org.openjdk.jmh.annotations.Mode;
+import org.openjdk.jmh.annotations.OutputTimeUnit;
+import org.openjdk.jmh.annotations.Scope;
+import org.openjdk.jmh.annotations.Setup;
+import org.openjdk.jmh.annotations.State;
+import org.openjdk.jmh.annotations.Threads;
+import org.openjdk.jmh.annotations.Warmup;
+
+import java.util.concurrent.TimeUnit;
+
+@State(Scope.Benchmark)
+@OutputTimeUnit(TimeUnit.MILLISECONDS)
+@BenchmarkMode(Mode.Throughput)
+public class RingBitSetBenachmark {
+
+    private static final int ITERATION_COUNT = 10;
+    private static final int WARMUP_COUNT = 10;
+    private static final int THREAD_COUNT = 10;
+    private RingBitSet ringBitSet;
+
+    @Setup
+    public void setUp() {
+        ringBitSet = new RingBitSet(1000);
+    }
+
+    @Benchmark
+    @Threads(value = THREAD_COUNT)
+    @Warmup(iterations = WARMUP_COUNT)
+    @Measurement(iterations = ITERATION_COUNT)
+    public void setBits() {
+        ringBitSet.setNextBit(true);
+        ringBitSet.setNextBit(false);
+    }
+}
