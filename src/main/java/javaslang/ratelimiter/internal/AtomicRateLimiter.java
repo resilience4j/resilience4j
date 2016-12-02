@@ -31,7 +31,7 @@ public class AtomicRateLimiter implements RateLimiter {
     private final long cyclePeriodInNanos;
     private final int permissionsPerCycle;
     private final AtomicInteger waitingThreads;
-    private final AtomicReference<State> state;
+    public final AtomicReference<State> state;
 
 
     public AtomicRateLimiter(String name, RateLimiterConfig rateLimiterConfig) {
@@ -66,7 +66,7 @@ public class AtomicRateLimiter implements RateLimiter {
      * @param activeState    current state of {@link AtomicRateLimiter}
      * @return next {@link State}
      */
-    private State calculateNextState(final long timeoutInNanos, final State activeState) {
+    public State calculateNextState(final long timeoutInNanos, final State activeState) {
         long currentNanos = currentNanoTime();
         long currentCycle = currentNanos / cyclePeriodInNanos;
 
@@ -93,7 +93,7 @@ public class AtomicRateLimiter implements RateLimiter {
      * @param currentCycle         current {@link AtomicRateLimiter} cycle
      * @return nanoseconds to wait for the next permission
      */
-    private long nanosToWaitForPermission(final int availablePermissions, final long currentNanos, final long currentCycle) {
+    public long nanosToWaitForPermission(final int availablePermissions, final long currentNanos, final long currentCycle) {
         if (availablePermissions > 0) {
             return 0L;
         } else {
@@ -114,7 +114,7 @@ public class AtomicRateLimiter implements RateLimiter {
      * @param nanosToWait    nanoseconds to wait for the next permission
      * @return new {@link State} with possibly reserved permissions and time to wait
      */
-    private State reservePermissions(final long timeoutInNanos, final long cycle, final int permissions, final long nanosToWait) {
+    public State reservePermissions(final long timeoutInNanos, final long cycle, final int permissions, final long nanosToWait) {
         boolean canAcquireInTime = timeoutInNanos >= nanosToWait;
         int permissionsWithReservation = permissions;
         if (canAcquireInTime) {
@@ -130,7 +130,7 @@ public class AtomicRateLimiter implements RateLimiter {
      * @param nanosToWait    nanoseconds caller need to wait
      * @return true if caller was able to wait for nanosToWait without {@link Thread#interrupt} and not exceed timeout
      */
-    private boolean waitForPermissionIfNecessary(final long timeoutInNanos, final long nanosToWait) {
+    public boolean waitForPermissionIfNecessary(final long timeoutInNanos, final long nanosToWait) {
         boolean canAcquireImmediately = nanosToWait <= 0;
         boolean canAcquireInTime = timeoutInNanos >= nanosToWait;
 
@@ -153,7 +153,7 @@ public class AtomicRateLimiter implements RateLimiter {
      * @param nanosToWait nanoseconds caller need to wait
      * @return true if caller was not {@link Thread#interrupted} while waiting
      */
-    private boolean waitForPermission(final long nanosToWait) {
+    public boolean waitForPermission(final long nanosToWait) {
         waitingThreads.incrementAndGet();
         long deadline = currentNanoTime() + nanosToWait;
         boolean wasInterrupted = false;
@@ -207,7 +207,7 @@ public class AtomicRateLimiter implements RateLimiter {
      * the last {@link AtomicRateLimiter#getPermission(Duration)} call.</li>
      * </ul>
      */
-    private static class State {
+    public static class State {
 
         private final long activeCycle;
         private final int activePermissions;
