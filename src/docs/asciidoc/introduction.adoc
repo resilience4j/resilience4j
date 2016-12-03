@@ -110,7 +110,7 @@ By contract on start of each cycle `RateLimiter` should set `activePermissions` 
 For the `RateLimiter` callers it is really looks so, but for example `AtomicRateLimiter` implementation has
 some optimisations under the hood that will skip this refresh if `RateLimiter` is not used actively.
 
-image::images/rate_limiter.svg[Rate Limiter]
+image::images/rate_limiter.png[Rate Limiter]
 
 The default implementation of `RateLimiter` is `AtomicRateLimiter` it manages state via `AtomicReference`.
 `AtomicRateLimiter.State` is completely immutable and has the folowing fields:
