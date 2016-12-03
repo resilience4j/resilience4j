@@ -26,14 +26,15 @@ import java.util.function.Supplier;
 
 @State(Scope.Benchmark)
 @OutputTimeUnit(TimeUnit.MILLISECONDS)
-@BenchmarkMode(Mode.Throughput)
+@BenchmarkMode(Mode.All)
 public class CircuitBreakerBenchmark {
 
     private CircuitBreaker circuitBreaker;
     private Supplier<String> supplier;
-    private static final int ITERATION_COUNT = 10;
-    private static final int WARMUP_COUNT = 10;
+    private static final int ITERATION_COUNT = 2;
+    private static final int WARMUP_COUNT = 2;
     private static final int THREAD_COUNT = 10;
+    public static final int FORK_COUNT = 1;
 
     @Setup
     public void setUp() {
@@ -54,6 +55,7 @@ public class CircuitBreakerBenchmark {
     }
 
     @Benchmark
+    @Fork(value = FORK_COUNT)
     @Threads(value = THREAD_COUNT)
     @Warmup(iterations = WARMUP_COUNT)
     @Measurement(iterations = ITERATION_COUNT)

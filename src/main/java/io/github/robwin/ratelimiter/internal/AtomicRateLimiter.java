@@ -273,7 +273,7 @@ public class AtomicRateLimiter implements RateLimiter {
      * by the last {@link AtomicRateLimiter#getPermission(Duration)} call.</li>
      * <p>
      * <li>activePermissions - count of available permissions after
-     * last the last {@link AtomicRateLimiter#getPermission(Duration)} call.
+     * the last {@link AtomicRateLimiter#getPermission(Duration)} call.
      * Can be negative if some permissions where reserved.</li>
      * <p>
      * <li>nanosToWait - count of nanoseconds to wait for permission for
@@ -283,7 +283,6 @@ public class AtomicRateLimiter implements RateLimiter {
     private static class State {
 
         private final long activeCycle;
-
         private final int activePermissions;
         private final long nanosToWait;
 

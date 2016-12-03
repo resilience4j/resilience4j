@@ -102,7 +102,11 @@ RateLimiter limit;
 RateLimiter.Metrics metrics = limit.getMetrics();
 int numberOfThreadsWaitingForPermission = metrics.getNumberOfWaitingThreads();
 // Estimates count of available permissions. Can be negative if some permissions where reserved.
-int availablePermissions = detailedMetrics.getAvailablePermissions();
+int availablePermissions = metrics.getAvailablePermissions();
+
+AtomicRateLimiter atomicLimiter;
+// Estimated time duration in nanos to wait for the next permission
+long nanosToWaitForPermission = atomicLimiter.getNanosToWait();
 ----
 
 == Usage Guide
@@ -148,7 +152,26 @@ After the time duration has elapsed, the CircuitBreaker state changes from `OPEN
 `CircuitBreaker::onError(exception)` checks if the exception should be recorded as a failure or should be ignored. You can configure a custom `Predicate` which decides whether an exception should be recorded as a failure. The default Predicate records all exceptions as a failure.
 
 == RateLimiter implementation details
-TODO
+Conceptually `RateLimiter` splits all nanoseconds from the start of epoch into cycles.
+Each cycle has duration configured by `RateLimiterConfig.limitRefreshPeriod`.
+By contract on start of each cycle `RateLimiter` should set `activePermissions` to `RateLimiterConfig.limitForPeriod`.
+For the `RateLimiter` callers it is really looks so, but for example `AtomicRateLimiter` implementation has
+some optimisations under the hood that will skip this refresh if `RateLimiter` is not used actively.
+
+image::src/docs/asciidoc/images/rate_limiter.svg[Rate Limiter]
+
+The default implementation of `RateLimiter` is `AtomicRateLimiter` it manages state via `AtomicReference`.
+`AtomicRateLimiter.State` is completely immutable and has the folowing fields:
+
+* `activeCycle` - cycle number that was used by the last call.
+* `activePermissions` - count of available permissions after the last call.
+Can be negative if some permissions where reserved.
+* `nanosToWait` - count of nanoseconds to wait for permission for the last call.
+
+`AtomicRateLimiter` is also very fast on i7-5557U processor and with x64 Java-1.8.0_112
+it takes only `143±1 [ns]` to acquire permission.
+So you can easily restrict not ony network calls but your local in-memory operations too.
+
 
 == Companies who use javaslang-circuitbreaker
 

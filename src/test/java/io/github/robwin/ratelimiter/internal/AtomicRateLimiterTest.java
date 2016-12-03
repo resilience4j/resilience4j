@@ -117,7 +117,7 @@ public class AtomicRateLimiterTest {
 
         setTimeOnNanos(CYCLE_IN_NANOS * 2 + 10);
         awaitImpatiently()
-            .atMost(CYCLE_IN_NANOS, NANOSECONDS)
+            .atMost(CYCLE_IN_NANOS + POLL_INTERVAL_IN_NANOS, NANOSECONDS)
             .until(reservedPermission::get, equalTo(true));
 
         then(metrics.getAvailablePermissions()).isEqualTo(0);
