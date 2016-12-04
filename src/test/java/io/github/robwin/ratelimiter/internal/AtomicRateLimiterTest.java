@@ -45,6 +45,7 @@ public class AtomicRateLimiterTest {
     public static final String LIMITER_NAME = "test";
     public static final long CYCLE_IN_NANOS = 500_000_000L;
     public static final long POLL_INTERVAL_IN_NANOS = 2_000_000L;
+    public static final int TIMEOUT = 100;
     private RateLimiterConfig rateLimiterConfig;
     private AtomicRateLimiter rateLimiter;
     private AtomicRateLimiter.AtomicRateLimiterMetrics metrics;
@@ -109,7 +110,7 @@ public class AtomicRateLimiterTest {
         caller.setDaemon(true);
         caller.start();
         awaitImpatiently()
-            .atMost(10, MILLISECONDS)
+            .atMost(TIMEOUT, MILLISECONDS)
             .until(caller::getState, equalTo(Thread.State.TIMED_WAITING));
         then(metrics.getAvailablePermissions()).isEqualTo(-1);
         then(metrics.getNanosToWait()).isEqualTo(CYCLE_IN_NANOS + CYCLE_IN_NANOS);
@@ -140,7 +141,7 @@ public class AtomicRateLimiterTest {
         firstCaller.setDaemon(true);
         firstCaller.start();
         awaitImpatiently()
-            .atMost(50, MILLISECONDS)
+            .atMost(TIMEOUT, MILLISECONDS)
             .until(firstCaller::getState, equalTo(Thread.State.TIMED_WAITING));
         then(metrics.getAvailablePermissions()).isEqualTo(-1);
         then(metrics.getNanosToWait()).isEqualTo(CYCLE_IN_NANOS * 2);
@@ -153,7 +154,7 @@ public class AtomicRateLimiterTest {
         secondCaller.setDaemon(true);
         secondCaller.start();
         awaitImpatiently()
-            .atMost(50, MILLISECONDS)
+            .atMost(TIMEOUT, MILLISECONDS)
             .until(secondCaller::getState, equalTo(Thread.State.TIMED_WAITING));
         then(metrics.getAvailablePermissions()).isEqualTo(-2);
         then(metrics.getNanosToWait()).isEqualTo(CYCLE_IN_NANOS * 3);
@@ -187,7 +188,7 @@ public class AtomicRateLimiterTest {
         caller.start();
 
         awaitImpatiently()
-            .atMost(100, MILLISECONDS)
+            .atMost(TIMEOUT, MILLISECONDS)
             .until(caller::getState, equalTo(Thread.State.TIMED_WAITING));
         then(metrics.getAvailablePermissions()).isEqualTo(0);
         then(metrics.getNanosToWait()).isEqualTo(CYCLE_IN_NANOS);
@@ -223,7 +224,7 @@ public class AtomicRateLimiterTest {
         caller.start();
 
         awaitImpatiently()
-            .atMost(100, MILLISECONDS)
+            .atMost(TIMEOUT, MILLISECONDS)
             .until(caller::getState, equalTo(Thread.State.TIMED_WAITING));
         then(metrics.getAvailablePermissions()).isEqualTo(0);
         then(metrics.getNanosToWait()).isEqualTo(CYCLE_IN_NANOS);
