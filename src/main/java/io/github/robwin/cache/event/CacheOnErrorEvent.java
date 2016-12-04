@@ -16,28 +16,26 @@
  *
  *
  */
-package io.github.robwin.circuitbreaker.internal;
-
-import io.github.robwin.circuitbreaker.CircuitBreaker;
+package io.github.robwin.cache.event;
 
 /**
- * Abstract state of the CircuitBreaker state machine.
+ * A CacheEvent which informs about an exception
  */
-abstract class CircuitBreakerState{
+public class CacheOnErrorEvent extends AbstractCacheEvent {
 
-    protected CircuitBreakerStateMachine stateMachine;
+    private final Throwable exception;
 
-    CircuitBreakerState(CircuitBreakerStateMachine stateMachine) {
-        this.stateMachine = stateMachine;
+    public CacheOnErrorEvent(String cacheName, Throwable exception) {
+        super(cacheName);
+        this.exception = exception;
     }
 
-    abstract boolean isCallPermitted();
+    @Override
+    public Type getEventType() {
+        return Type.ERROR;
+    }
 
-    abstract void onError(Throwable throwable);
-
-    abstract void onSuccess();
-
-    abstract CircuitBreaker.State getState();
-
-    abstract CircuitBreaker.Metrics getMetrics();
+    public Throwable getException() {
+        return exception;
+    }
 }

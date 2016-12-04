@@ -60,8 +60,9 @@ jmh {
 dependencies {
     compile "io.javaslang:javaslang:2.0.4"
     // compile 'org.reactivestreams:reactive-streams:1.0.0'
-    compile 'io.reactivex.rxjava2:rxjava:2.0.1'
+    compile "io.reactivex.rxjava2:rxjava:2.0.1"
     compile "org.slf4j:slf4j-api:1.7.13"
+    compile "javax.cache:cache-api:1.0.0"
 
     testCompile "io.dropwizard.metrics:metrics-core:3.1.2"
     testCompile "junit:junit:4.11"

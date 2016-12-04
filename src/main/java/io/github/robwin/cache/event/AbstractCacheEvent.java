@@ -16,28 +16,27 @@
  *
  *
  */
-package io.github.robwin.circuitbreaker.internal;
+package io.github.robwin.cache.event;
 
-import io.github.robwin.circuitbreaker.CircuitBreaker;
+import java.time.ZonedDateTime;
 
-/**
- * Abstract state of the CircuitBreaker state machine.
- */
-abstract class CircuitBreakerState{
+abstract class AbstractCacheEvent implements CacheEvent {
 
-    protected CircuitBreakerStateMachine stateMachine;
+    private final String cacheName;
+    private final ZonedDateTime creationTime;
 
-    CircuitBreakerState(CircuitBreakerStateMachine stateMachine) {
-        this.stateMachine = stateMachine;
+    AbstractCacheEvent(String cacheName) {
+        this.cacheName = cacheName;
+        this.creationTime = ZonedDateTime.now();
     }
 
-    abstract boolean isCallPermitted();
+    @Override
+    public String getCacheName() {
+        return cacheName;
+    }
 
-    abstract void onError(Throwable throwable);
-
-    abstract void onSuccess();
-
-    abstract CircuitBreaker.State getState();
-
-    abstract CircuitBreaker.Metrics getMetrics();
+    @Override
+    public ZonedDateTime getCreationTime() {
+        return creationTime;
+    }
 }
