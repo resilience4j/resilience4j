@@ -29,39 +29,31 @@ public class CircuitBreakerConfig {
     public static final int DEFAULT_RING_BUFFER_SIZE_IN_HALF_OPEN_STATE = 10;
     public static final int DEFAULT_RING_BUFFER_SIZE_IN_CLOSED_STATE = 100;
 
-    private final float failureRateThreshold;
-    private final int ringBufferSizeInHalfOpenState;
-    private final int ringBufferSizeInClosedState;
-    private final Duration waitDurationInOpenState;
-    private final Predicate<Throwable> recordFailurePredicate;
+    private final Context context;
 
     private CircuitBreakerConfig(Context context){
-        this.failureRateThreshold = context.failureRateThreshold;
-        this.waitDurationInOpenState = context.waitDurationInOpenState;
-        this.ringBufferSizeInHalfOpenState = context.ringBufferSizeInHalfOpenState;
-        this.ringBufferSizeInClosedState = context.ringBufferSizeInClosedState;
-        this.recordFailurePredicate = context.recordFailurePredicate;
+        this.context = context;
 
     }
 
     public float getFailureRateThreshold() {
-        return failureRateThreshold;
+        return context.failureRateThreshold;
     }
 
     public Duration getWaitDurationInOpenState() {
-        return waitDurationInOpenState;
+        return context.waitDurationInOpenState;
     }
 
     public int getRingBufferSizeInHalfOpenState() {
-        return ringBufferSizeInHalfOpenState;
+        return context.ringBufferSizeInHalfOpenState;
     }
 
     public int getRingBufferSizeInClosedState() {
-        return ringBufferSizeInClosedState;
+        return context.ringBufferSizeInClosedState;
     }
 
     public Predicate<Throwable> getRecordFailurePredicate() {
-        return recordFailurePredicate;
+        return context.recordFailurePredicate;
     }
 
     /**
