@@ -23,64 +23,82 @@ import io.github.robwin.cache.event.CacheOnErrorEvent;
 import io.github.robwin.cache.event.CacheOnHitEvent;
 import io.github.robwin.cache.event.CacheOnMissEvent;
 import io.reactivex.Flowable;
+import io.reactivex.processors.FlowableProcessor;
 import io.reactivex.processors.PublishProcessor;
 import javaslang.control.Option;
+import javaslang.control.Try;
+
+import java.util.function.Supplier;
 
 class CacheContext<K, V>  implements Cache<K,V> {
 
     private final javax.cache.Cache<K, V> cache;
-    private final PublishProcessor<CacheEvent> eventPublisher;
+    private final FlowableProcessor<CacheEvent> eventPublisher;
 
     CacheContext(javax.cache.Cache<K, V> cache) {
         this.cache = cache;
-        this.eventPublisher = PublishProcessor.create();
+        PublishProcessor<CacheEvent> publisher = PublishProcessor.create();
+        this.eventPublisher = publisher.toSerialized();
     }
 
     @Override
-    public boolean containsKey(K cacheKey) {
+    public String getName() {
+        return cache.getName();
+    }
+
+    @Override
+    public V computeIfAbsent(K cacheKey, Try.CheckedSupplier<V> supplier) {
+        return getValueFromCache(cacheKey)
+                .getOrElse(() -> computeAndPut(cacheKey, supplier));
+    }
+
+    private V computeAndPut(K cacheKey, Try.CheckedSupplier<V> supplier) {
+        return Try.of(supplier)
+                .andThen(value -> putValueIntoCache(cacheKey, value))
+            .get();
+    }
+
+    private synchronized Option<V> getValueFromCache(K cacheKey){
         try {
-            boolean cacheContainsKey = cache.containsKey(cacheKey);
-            if(cacheContainsKey){
+            if (cache.containsKey(cacheKey)) {
                 onCacheHit(cacheKey);
-            }else{
+                return Option.of(cache.get(cacheKey));
+            } else {
                 onCacheMiss(cacheKey);
+                return Option.none();
             }
-            return cacheContainsKey;
-        } catch (Exception exception){
-            onError(exception);
-            return false;
-        }
-    }
-
-    @Override
-    public void put(K cacheKey, V value) {
-        try {
-            cache.put(cacheKey, value);
-        } catch (Exception exception){
-            onError(exception);
-        }
-    }
-
-    @Override
-    public Option<V> get(K cacheKey) {
-        try {
-            return Option.of(cache.get(cacheKey));
-        } catch (Exception exception){
+        }catch (Exception exception){
             onError(exception);
             return Option.none();
         }
     }
 
+    private void putValueIntoCache(K cacheKey, V value) {
+        try {
+            if(value != null) {
+                cache.put(cacheKey, value);
+            }
+        } catch (Exception exception){
+            onError(exception);
+        }
+    }
+
     private void onError(Exception exception) {
-        eventPublisher.onNext(new CacheOnErrorEvent(cache.getName(), exception));
+        publishCacheEvent(() -> new CacheOnErrorEvent(cache.getName(), exception));
     }
 
     private void onCacheMiss(K cacheKey) {
-        eventPublisher.onNext(new CacheOnMissEvent<>(cache.getName(), cacheKey));
+        publishCacheEvent(() -> new CacheOnMissEvent<>(cache.getName(), cacheKey));
     }
 
     private void onCacheHit(K cacheKey) {
-        eventPublisher.onNext(new CacheOnHitEvent<>(cache.getName(), cacheKey));
+        publishCacheEvent(() -> new CacheOnHitEvent<>(cache.getName(), cacheKey));
+    }
+
+    private void publishCacheEvent(Supplier<CacheEvent> event) {
+        if(eventPublisher.hasSubscribers()) {
+            eventPublisher.onNext(event.get());
+        }
     }
 
     @Override
