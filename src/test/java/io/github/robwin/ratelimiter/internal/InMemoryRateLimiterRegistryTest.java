@@ -48,7 +48,7 @@ public class InMemoryRateLimiterRegistryTest {
 
     @Before
     public void init() {
-        config = RateLimiterConfig.builder()
+        config = RateLimiterConfig.custom()
             .timeoutDuration(TIMEOUT)
             .limitRefreshPeriod(REFRESH_PERIOD)
             .limitForPeriod(LIMIT)

@@ -18,46 +18,60 @@
  */
 package io.github.robwin.ratelimiter;
 
-import static java.util.Objects.requireNonNull;
-
 import java.time.Duration;
+
+import static java.util.Objects.requireNonNull;
 
 public class RateLimiterConfig {
     private static final String TIMEOUT_DURATION_MUST_NOT_BE_NULL = "TimeoutDuration must not be null";
     private static final String LIMIT_REFRESH_PERIOD_MUST_NOT_BE_NULL = "LimitRefreshPeriod must not be null";
     private static final Duration ACCEPTABLE_REFRESH_PERIOD = Duration.ofNanos(1L);
 
-    private final Duration timeoutDuration;
-    private final Duration limitRefreshPeriod;
-    private final int limitForPeriod;
+    private final Context context;
 
-    private RateLimiterConfig(final Duration timeoutDuration, final Duration limitRefreshPeriod, final int limitForPeriod) {
-        this.timeoutDuration = checkTimeoutDuration(timeoutDuration);
-        this.limitRefreshPeriod = checkLimitRefreshPeriod(limitRefreshPeriod);
-        this.limitForPeriod = checkLimitForPeriod(limitForPeriod);
+    private RateLimiterConfig(Context context) {
+        this.context = context;
     }
 
-    public static Builder builder() {
+    /**
+     * Returns a builder to create a custom RateLimiterConfig.
+     *
+     * @return a {@link RateLimiterConfig.Builder}
+     */
+    public static Builder custom() {
         return new Builder();
     }
 
+    /**
+     * Creates a default RateLimiter configuration.
+     *
+     * @return a default RateLimiter configuration.
+     */
+    public static RateLimiterConfig ofDefaults(){
+        return new Builder().build();
+    }
+
     public Duration getTimeoutDuration() {
-        return timeoutDuration;
+        return context.timeoutDuration;
     }
 
     public Duration getLimitRefreshPeriod() {
-        return limitRefreshPeriod;
+        return context.limitRefreshPeriod;
     }
 
     public int getLimitForPeriod() {
-        return limitForPeriod;
+        return context.limitForPeriod;
+    }
+
+    private static class Context {
+        Duration timeoutDuration =  Duration.ofSeconds(5);
+        Duration limitRefreshPeriod = Duration.ofNanos(500);
+        int limitForPeriod = 50;
     }
 
     public static class Builder {
 
-        private Duration timeoutDuration;
-        private Duration limitRefreshPeriod;
-        private int limitForPeriod;
+        private Context context = new Context();
 
         /**
          * Builds a RateLimiterConfig
@@ -66,46 +80,47 @@ public class RateLimiterConfig {
          */
         public RateLimiterConfig build() {
             return new RateLimiterConfig(
-                timeoutDuration,
-                limitRefreshPeriod,
-                limitForPeriod
+                context
             );
         }
 
         /**
          * Configures the default wait for permission duration.
+         * Default value is 5 seconds.
          *
          * @param timeoutDuration the default wait for permission duration
          * @return the RateLimiterConfig.Builder
          */
         public Builder timeoutDuration(final Duration timeoutDuration) {
-            this.timeoutDuration = checkTimeoutDuration(timeoutDuration);
+            context.timeoutDuration = checkTimeoutDuration(timeoutDuration);
             return this;
         }
 
         /**
          * Configures the period of limit refresh.
          * After each period rate limiter sets its permissions
-         * count to {@link RateLimiterConfig#limitForPeriod} value.
+         * count to {@link RateLimiterConfig.Context#limitForPeriod} value.
+         * Default value is 500 nanoseconds.
          *
          * @param limitRefreshPeriod the period of limit refresh
          * @return the RateLimiterConfig.Builder
          */
         public Builder limitRefreshPeriod(final Duration limitRefreshPeriod) {
-            this.limitRefreshPeriod = checkLimitRefreshPeriod(limitRefreshPeriod);
+            context.limitRefreshPeriod = checkLimitRefreshPeriod(limitRefreshPeriod);
             return this;
         }
 
         /**
          * Configures the permissions limit for refresh period.
          * Count of permissions available during one rate limiter period
-         * specified by {@link RateLimiterConfig#limitRefreshPeriod} value.
+         * specified by {@link RateLimiterConfig.Context#limitRefreshPeriod} value.
+         * Default value is 50.
          *
          * @param limitForPeriod the permissions limit for refresh period
          * @return the RateLimiterConfig.Builder
          */
         public Builder limitForPeriod(final int limitForPeriod) {
-            this.limitForPeriod = checkLimitForPeriod(limitForPeriod);
+            context.limitForPeriod = checkLimitForPeriod(limitForPeriod);
             return this;
         }
 

@@ -55,7 +55,7 @@ public class RateLimiterBenchmark {
 
     @Setup
     public void setUp() {
-        RateLimiterConfig rateLimiterConfig = RateLimiterConfig.builder()
+        RateLimiterConfig rateLimiterConfig = RateLimiterConfig.custom()
             .limitForPeriod(Integer.MAX_VALUE)
             .limitRefreshPeriod(Duration.ofNanos(10))
             .timeoutDuration(Duration.ofSeconds(5))
