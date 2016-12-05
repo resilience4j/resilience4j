@@ -63,6 +63,23 @@ Try.run(restrictedCall)
     .onFailure((RequestNotPermitted throwable) -> LOG.info("Wait before call it again :)"));
 ----
 
+
+The following example shows how to decorate a method reference and retrieve cached results using JCache.
+If the cache contains a value, the value is returned from the cache, otherwise the method reference is called in order to retrieve a value and put it into the cache.
+If the cache retrieval from a distributed cache fails, the exception is taken care of and the method reference is called.
+
+[source,java]
+----
+// Create a CacheContext by wrapping a JCache instance.
+Cache<String, String> cacheContext = Cache.of(Caching.getCache("cacheName", String.class, String.class));
+
+// Decorate your call to BackendService.doSomething()
+Try.CheckedFunction<String, String> cachedFunction = Cache
+    .decorateCheckedSupplier(cacheContext, backendService::doSomething);
+String value = cachedFunction.apply("cacheKey");
+----
+
+
 == Consume published CircuitBreakerEvents
 
 The CircuitBreaker publishes a stream of CircuitBreakerEvents to any Observer/Consumer who subscribes. An event can be a state transition or a recorded error. This library uses RxJava to to provide this functionality. If you want to consume events, you have to subscribe to the event stream. This library provides a consumer `CircuitBreakerEventConsumer` which can be used to store events in a circular buffer with a fixed capacity. You can use RxJava to filter certain events.
