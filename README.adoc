@@ -42,12 +42,12 @@ Observable.fromCallable(backendService::doSomething)
     .lift(CircuitBreakerOperator.of(circuitBreaker))
 ----
 
-The following example shows how restrict the calling rate of some method to be not higher than 1 req/sec.
+The following example shows how to restrict the calling rate of some method to be not higher than 1 req/sec.
 
 [source,java]
 ----
 // Create a RateLimiter
-RateLimiterConfig config = RateLimiterConfig.builder()
+RateLimiterConfig config = RateLimiterConfig.custom()
     .timeoutDuration(Duration.ofMillis(100))
     .limitRefreshPeriod(Duration.ofSeconds(1))
     .limitForPeriod(1)
@@ -94,7 +94,7 @@ int failedCalls = metrics.getNumberOfFailedCalls();
 
 == Monitor RateLimiter metrics
 
-The RateLimiter provides simple an interface to monitor the current limiter.
+The RateLimiter provides an interface to monitor the current limiter.
 Also AtomicRateLimiter has some enhanced Metrics with some implementation specific details.
 
 [source,java]
