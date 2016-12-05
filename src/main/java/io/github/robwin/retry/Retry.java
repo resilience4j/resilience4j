@@ -74,19 +74,6 @@ public interface Retry {
         return Retry.custom().build();
     }
 
-
-    /**
-     * Creates a retryable supplier.
-     *
-     * @param supplier the original function
-     * @param retryContext the retry context
-     * @return a retryable function
-     */
-    @Deprecated
-    static <T> Try.CheckedSupplier<T> decorateCheckedSupplier(Try.CheckedSupplier<T> supplier, Retry retryContext){
-        return decorateCheckedSupplier(retryContext, supplier);
-    }
-
     /**
      * Creates a retryable supplier.
      *
@@ -104,19 +91,6 @@ public interface Retry {
                 retryContext.throwOrSleepAfterException();
             } while (true);
         };
-    }
-
-    /**
-     * Creates a retryable runnable.
-     *
-     * @param runnable the original runnable
-     * @param retryContext the retry context
-     *
-     * @return a retryable runnable
-     */
-    @Deprecated
-    static Try.CheckedRunnable decorateCheckedRunnable(Try.CheckedRunnable runnable, Retry retryContext){
-        return decorateCheckedRunnable(retryContext, runnable);
     }
 
     /**
@@ -142,18 +116,6 @@ public interface Retry {
     /**
      * Creates a retryable function.
      *
-     * @param function the original function
-     * @param retryContext the retry context
-     * @return a retryable function
-     */
-    @Deprecated
-    static <T, R> Try.CheckedFunction<T, R> decorateCheckedFunction(Try.CheckedFunction<T, R> function, Retry retryContext){
-        return decorateCheckedFunction(retryContext, function);
-    }
-
-    /**
-     * Creates a retryable function.
-     *
      * @param retryContext the retry context
      * @param function the original function
      *
@@ -168,18 +130,6 @@ public interface Retry {
                 retryContext.throwOrSleepAfterException();
             } while (true);
         };
-    }
-
-    /**
-     * Creates a retryable supplier.
-     *
-     * @param supplier the original function
-     * @param retryContext the retry context
-     * @return a retryable function
-     */
-    @Deprecated
-    static <T> Supplier<T> decorateSupplier(Supplier<T> supplier, Retry retryContext){
-        return decorateSupplier(retryContext, supplier);
     }
 
     /**
@@ -204,18 +154,6 @@ public interface Retry {
     /**
      * Creates a retryable runnable.
      *
-     * @param runnable the original runnable
-     * @param retryContext the retry context
-     * @return a retryable runnable
-     */
-    @Deprecated
-    static Runnable decorateRunnable(Runnable runnable, Retry retryContext){
-        return decorateRunnable(retryContext, runnable);
-    }
-
-    /**
-     * Creates a retryable runnable.
-     *
      * @param retryContext the retry context
      * @param runnable the original runnable
      *
@@ -231,19 +169,6 @@ public interface Retry {
                 retryContext.throwOrSleepAfterRuntimeException();
             } while (true);
         };
-    }
-
-    /**
-     * Creates a retryable function.
-     *
-     * @param function the original function
-     * @param retryContext the retry context
-     *
-     * @return a retryable function
-     */
-    @Deprecated
-    static <T, R> Function<T, R> decorateFunction(Function<T, R> function, Retry retryContext){
-        return decorateFunction(retryContext, function);
     }
 
     /**
