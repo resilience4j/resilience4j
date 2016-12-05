@@ -28,6 +28,7 @@ import io.reactivex.processors.PublishProcessor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.Duration;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 
@@ -86,27 +87,22 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
         return stateReference.get().isCallPermitted();
     }
 
-    /**
-     * Records a failed call.
-     */
     @Override
-    public void onError(Throwable throwable) {
+    public void onError(Duration duration, Throwable throwable) {
         if(circuitBreakerConfig.getRecordFailurePredicate().test(throwable)){
             if(LOG.isDebugEnabled()){
                 LOG.debug(String.format("CircuitBreaker '%s' recorded a failure:", name), throwable);
             }
-            publishCircuitBreakerEvent(() -> new CircuitBreakerOnErrorEvent(getName(), throwable));
+            publishCircuitBreakerEvent(() -> new CircuitBreakerOnErrorEvent(getName(), duration, throwable));
             stateReference.get().onError(throwable);
         }
-        publishCircuitBreakerEvent(() -> new CircuitBreakerOnIgnoredErrorEvent(getName(), throwable));
+        publishCircuitBreakerEvent(() -> new CircuitBreakerOnIgnoredErrorEvent(getName(), duration, throwable));
     }
 
-    /**
-     * Records a successful call.
-     */
+
     @Override
-    public void onSuccess() {
-        publishCircuitBreakerEvent(() -> new CircuitBreakerOnSuccessEvent(getName()));
+    public void onSuccess(Duration duration) {
+        publishCircuitBreakerEvent(() -> new CircuitBreakerOnSuccessEvent(getName(), duration));
         stateReference.get().onSuccess();
     }
 

@@ -19,10 +19,11 @@
 package io.github.robwin.circuitbreaker.operator;
 
 
-import io.reactivex.*;
-import io.reactivex.disposables.Disposable;
 import io.github.robwin.circuitbreaker.CircuitBreaker;
 import io.github.robwin.circuitbreaker.CircuitBreakerOpenException;
+import io.github.robwin.metrics.StopWatch;
+import io.reactivex.*;
+import io.reactivex.disposables.Disposable;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
 import org.slf4j.Logger;
@@ -72,6 +73,7 @@ public class CircuitBreakerOperator<T> implements ObservableOperator<T, T>, Flow
         private final Subscriber<? super T> childSubscriber;
         private Subscription subscription;
         private volatile boolean cancelled;
+        private StopWatch stopWatch;
 
         CircuitBreakerSubscriber(Subscriber<? super T> childSubscriber){
             this.childSubscriber = childSubscriber;
@@ -84,7 +86,8 @@ public class CircuitBreakerOperator<T> implements ObservableOperator<T, T>, Flow
                 LOG.info("onSubscribe");
             }
             if(circuitBreaker.isCallPermitted()){
-                childSubscriber.onSubscribe(subscription);
+                stopWatch = StopWatch.start(circuitBreaker.getName());
+                childSubscriber.onSubscribe(this);
             }else{
                 subscription.cancel();
                 childSubscriber.onSubscribe(this);
@@ -109,8 +112,9 @@ public class CircuitBreakerOperator<T> implements ObservableOperator<T, T>, Flow
                 LOG.info("onError", e);
             }
             if(!cancelled) {
-                circuitBreaker.onError(e);
+                circuitBreaker.onError(stopWatch.stop().getElapsedDuration(), e);
                 childSubscriber.onError(e);
+
             }
         }
 
@@ -120,7 +124,7 @@ public class CircuitBreakerOperator<T> implements ObservableOperator<T, T>, Flow
                 LOG.info("onComplete");
             }
             if(!cancelled) {
-                circuitBreaker.onSuccess();
+                circuitBreaker.onSuccess(stopWatch.stop().getElapsedDuration());
                 childSubscriber.onComplete();
             }
         }
@@ -132,8 +136,10 @@ public class CircuitBreakerOperator<T> implements ObservableOperator<T, T>, Flow
 
         @Override
         public void cancel() {
-            cancelled = true;
-            subscription.cancel();
+            if(!cancelled) {
+                cancelled = true;
+                subscription.cancel();
+            }
         }
     }
 
@@ -142,6 +148,7 @@ public class CircuitBreakerOperator<T> implements ObservableOperator<T, T>, Flow
         private final Observer<? super T> childObserver;
         private Disposable disposable;
         private volatile boolean cancelled;
+        private StopWatch stopWatch;
 
         CircuitBreakerObserver(Observer<? super T> childObserver){
             this.childObserver = childObserver;
@@ -154,6 +161,7 @@ public class CircuitBreakerOperator<T> implements ObservableOperator<T, T>, Flow
                 LOG.info("onSubscribe");
             }
             if(circuitBreaker.isCallPermitted()){
+                stopWatch = StopWatch.start(circuitBreaker.getName());
                 childObserver.onSubscribe(this);
             }else{
                 disposable.dispose();
@@ -179,7 +187,7 @@ public class CircuitBreakerOperator<T> implements ObservableOperator<T, T>, Flow
                 LOG.info("onError", e);
             }
             if(!isDisposed()) {
-                circuitBreaker.onError(e);
+                circuitBreaker.onError(stopWatch.stop().getElapsedDuration(), e);
                 childObserver.onError(e);
             }
         }
@@ -190,15 +198,17 @@ public class CircuitBreakerOperator<T> implements ObservableOperator<T, T>, Flow
                 LOG.info("onComplete");
             }
             if(!isDisposed()) {
-                circuitBreaker.onSuccess();
+                circuitBreaker.onSuccess(stopWatch.stop().getElapsedDuration());
                 childObserver.onComplete();
             }
         }
 
         @Override
         public void dispose() {
-            cancelled = true;
-            disposable.dispose();
+            if(!cancelled) {
+                cancelled = true;
+                disposable.dispose();
+            }
         }
 
         @Override
@@ -212,6 +222,7 @@ public class CircuitBreakerOperator<T> implements ObservableOperator<T, T>, Flow
         private final SingleObserver<? super T> childObserver;
         private Disposable disposable;
         private volatile boolean cancelled;
+        private StopWatch stopWatch;
 
 
         CircuitBreakerSingleObserver(SingleObserver<? super T> childObserver) {
@@ -225,6 +236,7 @@ public class CircuitBreakerOperator<T> implements ObservableOperator<T, T>, Flow
                 LOG.info("onSubscribe");
             }
             if(circuitBreaker.isCallPermitted()){
+                stopWatch = StopWatch.start(circuitBreaker.getName());
                 childObserver.onSubscribe(this);
             }else{
                 disposable.dispose();
@@ -240,7 +252,7 @@ public class CircuitBreakerOperator<T> implements ObservableOperator<T, T>, Flow
                 LOG.info("onError", e);
             }
             if(!isDisposed()) {
-                circuitBreaker.onError(e);
+                circuitBreaker.onError(stopWatch.stop().getElapsedDuration(), e);
                 childObserver.onError(e);
             }
         }
@@ -251,15 +263,17 @@ public class CircuitBreakerOperator<T> implements ObservableOperator<T, T>, Flow
                 LOG.info("onComplete");
             }
             if(!isDisposed()) {
-                circuitBreaker.onSuccess();
+                circuitBreaker.onSuccess(stopWatch.stop().getElapsedDuration());
                 childObserver.onSuccess(value);
             }
         }
 
         @Override
         public void dispose() {
-            cancelled = true;
-            disposable.dispose();
+            if(!cancelled) {
+                cancelled = true;
+                disposable.dispose();
+            }
         }
 
         @Override

@@ -81,11 +81,4 @@ public final class InMemoryCircuitBreakerRegistry implements CircuitBreakerRegis
         return circuitBreakers.computeIfAbsent(Objects.requireNonNull(name, "Name must not be null"), (k) -> CircuitBreaker.of(name,
                 circuitBreakerConfigSupplier.get()));
     }
-
-    /**
-     * Reset the circuitBreaker states.
-     */
-    public void resetMonitorStates() {
-        circuitBreakers.values().forEach(CircuitBreaker::onSuccess);
-    }
 }

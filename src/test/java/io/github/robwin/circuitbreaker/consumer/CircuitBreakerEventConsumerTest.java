@@ -20,6 +20,7 @@ package io.github.robwin.circuitbreaker.consumer;
 
 import io.github.robwin.circuitbreaker.CircuitBreaker;
 import io.github.robwin.circuitbreaker.event.CircuitBreakerEvent;
+import io.github.robwin.circuitbreaker.event.CircuitBreakerOnErrorEvent;
 import io.github.robwin.retry.Retry;
 import javaslang.control.Try;
 import org.assertj.core.api.Assertions;
@@ -39,9 +40,10 @@ public class CircuitBreakerEventConsumerTest {
 
         // tag::shouldBufferEvents[]
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testName");
-        CircuitBreakerEventConsumer ringBuffer = new CircuitBreakerEventConsumer(2);
+        CircuitBreakerEventConsumer<CircuitBreakerOnErrorEvent> ringBuffer = new CircuitBreakerEventConsumer<>(2);
         circuitBreaker.getEventStream()
                 .filter(event -> event.getEventType() == CircuitBreakerEvent.Type.ERROR)
+                .cast(CircuitBreakerOnErrorEvent.class)
                 .subscribe(ringBuffer);
         // end::shouldBufferEvents[]
 
@@ -64,7 +66,7 @@ public class CircuitBreakerEventConsumerTest {
 
         //Should only store 2 events, because capacity is 2
         Assertions.assertThat(ringBuffer.getBufferedCircuitBreakerEvents()).hasSize(2);
-        //ringBuffer.getBufferedCircuitBreakerEvents().forEach(event -> LOG.info(event.toString()));
+        ringBuffer.getBufferedCircuitBreakerEvents().forEach(event -> LOG.info(event.toString()));
     }
 
     @Test
@@ -73,7 +75,7 @@ public class CircuitBreakerEventConsumerTest {
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testName");
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
 
-        CircuitBreakerEventConsumer ringBuffer = new CircuitBreakerEventConsumer(2);
+        CircuitBreakerEventConsumer<CircuitBreakerOnErrorEvent> ringBuffer = new CircuitBreakerEventConsumer<>(2);
         Assertions.assertThat(ringBuffer.getBufferedCircuitBreakerEvents()).isEmpty();
 
         Try.CheckedRunnable runnable = () -> { throw new RuntimeException("BAM!");};
@@ -89,6 +91,7 @@ public class CircuitBreakerEventConsumerTest {
         //Subscription is too late
         circuitBreaker.getEventStream()
                 .filter(event -> event.getEventType() == CircuitBreakerEvent.Type.ERROR)
+                .cast(CircuitBreakerOnErrorEvent.class)
                 .subscribe(ringBuffer);
 
         //Then

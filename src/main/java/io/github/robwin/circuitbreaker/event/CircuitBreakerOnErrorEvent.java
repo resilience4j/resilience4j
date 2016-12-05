@@ -18,20 +18,28 @@
  */
 package io.github.robwin.circuitbreaker.event;
 
+import java.time.Duration;
+
 /**
  * A CircuitBreakerEvent which informs that an error has been recorded
  */
 public class CircuitBreakerOnErrorEvent extends AbstractCircuitBreakerEvent{
 
     private final Throwable throwable;
+    private final Duration elapsedDuration;
 
-    public CircuitBreakerOnErrorEvent(String circuitBreakerName, Throwable throwable) {
+    public CircuitBreakerOnErrorEvent(String circuitBreakerName, Duration elapsedDuration, Throwable throwable) {
         super(circuitBreakerName);
         this.throwable = throwable;
+        this.elapsedDuration = elapsedDuration;
     }
 
     public Throwable getThrowable() {
         return throwable;
+    }
+
+    public Duration getElapsedDuration() {
+        return elapsedDuration;
     }
 
     @Override
@@ -41,6 +49,12 @@ public class CircuitBreakerOnErrorEvent extends AbstractCircuitBreakerEvent{
 
     @Override
     public String toString(){
-        return String.format("%s: CircuitBreaker '%s' recorded an error: '%s'", getCreationTime(), getCircuitBreakerName(), throwable.toString());
+        return String.format("%s: CircuitBreaker '%s' recorded an error: '%s'. Elapsed time: %s ms",
+                getCreationTime(),
+                getCircuitBreakerName(),
+                throwable.toString(),
+                elapsedDuration.toMillis());
     }
+
+
 }

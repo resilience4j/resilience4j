@@ -8,9 +8,9 @@ import javaslang.collection.List;
 /**
  * A RxJava consumer which stores CircuitBreakerEvents in a circular buffer with a fixed capacity.
  */
-public class CacheEventConsumer implements Consumer<CacheEvent> {
+public class CacheEventConsumer<T extends  CacheEvent> implements Consumer<T> {
 
-    private CircularFifoBuffer<CacheEvent> eventCircularFifoBuffer;
+    private CircularFifoBuffer<T> eventCircularFifoBuffer;
 
     /**
      * Creates an {@code CacheEventConsumer} with the given (fixed)
@@ -24,7 +24,7 @@ public class CacheEventConsumer implements Consumer<CacheEvent> {
     }
 
     @Override
-    public void accept(CacheEvent cacheEvent) throws Exception {
+    public void accept(T cacheEvent) throws Exception {
         eventCircularFifoBuffer.add(cacheEvent);
     }
 
@@ -33,7 +33,7 @@ public class CacheEventConsumer implements Consumer<CacheEvent> {
      *
      * @return a list containing all of the buffered events.
      */
-    public List<CacheEvent> getBufferedCacheEvents(){
+    public List<T> getBufferedCacheEvents(){
         return eventCircularFifoBuffer.toList();
     }
 }

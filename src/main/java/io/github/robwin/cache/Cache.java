@@ -34,7 +34,6 @@ interface Cache<K, V>  {
      */
     String getName();
 
-
     /**
      * If the key is not already associated with a cached value, attempts to compute its value using the
      * given supplier and puts it into the cache. Otherwise it returns the cached value.
@@ -44,7 +43,6 @@ interface Cache<K, V>  {
      * @param supplier value to be associated with the specified key
      */
     V computeIfAbsent(K key, Try.CheckedSupplier<V> supplier);
-
 
     /**
      * Returns a reactive stream of CacheEvents.
@@ -62,7 +60,6 @@ interface Cache<K, V>  {
         Objects.requireNonNull(cache, "Cache must not be null");
         return new CacheContext<>(cache);
     }
-
 
     /**
      * Creates a functions which returns a value from a cache, if it exists.

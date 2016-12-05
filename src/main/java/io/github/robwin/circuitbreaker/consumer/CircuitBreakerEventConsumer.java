@@ -28,9 +28,9 @@ import javaslang.collection.List;
 /**
  * A RxJava consumer which stores CircuitBreakerEvents in a circular buffer with a fixed capacity.
  */
-public class CircuitBreakerEventConsumer implements Consumer<CircuitBreakerEvent>{
+public class CircuitBreakerEventConsumer<T extends CircuitBreakerEvent> implements Consumer<T>{
 
-    private CircularFifoBuffer<CircuitBreakerEvent> eventCircularFifoBuffer;
+    private CircularFifoBuffer<T> eventCircularFifoBuffer;
 
     /**
      * Creates an {@code CircuitBreakerEventConsumer} with the given (fixed)
@@ -44,7 +44,7 @@ public class CircuitBreakerEventConsumer implements Consumer<CircuitBreakerEvent
     }
 
     @Override
-    public void accept(CircuitBreakerEvent circuitBreakerEvent) throws Exception {
+    public void accept(T circuitBreakerEvent) throws Exception {
         eventCircularFifoBuffer.add(circuitBreakerEvent);
     }
 
@@ -53,7 +53,7 @@ public class CircuitBreakerEventConsumer implements Consumer<CircuitBreakerEvent
      *
      * @return a list containing all of the buffered events.
      */
-    public List<CircuitBreakerEvent> getBufferedCircuitBreakerEvents(){
+    public List<T> getBufferedCircuitBreakerEvents(){
         return eventCircularFifoBuffer.toList();
     }
 }

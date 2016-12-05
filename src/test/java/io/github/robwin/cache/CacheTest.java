@@ -19,6 +19,7 @@
 package io.github.robwin.cache;
 
 import io.github.robwin.cache.consumer.CacheEventConsumer;
+import io.github.robwin.cache.event.CacheEvent;
 import io.github.robwin.cache.event.CacheOnErrorEvent;
 import io.github.robwin.cache.event.CacheOnHitEvent;
 import io.github.robwin.cache.event.CacheOnMissEvent;
@@ -67,7 +68,7 @@ public class CacheTest {
         given(cache.containsKey("testKey")).willReturn(false);
 
         Cache<String, String> cacheContext = Cache.of(cache);
-        CacheEventConsumer cacheEventConsumer = new CacheEventConsumer(10);
+        CacheEventConsumer<CacheEvent> cacheEventConsumer = new CacheEventConsumer<>(10);
         cacheContext.getEventStream()
                 .subscribe(cacheEventConsumer);
 
@@ -88,7 +89,7 @@ public class CacheTest {
         given(cache.get("testKey")).willReturn("Hello from cache");
 
         Cache<String, String> cacheContext = Cache.of(cache);
-        CacheEventConsumer cacheEventConsumer = new CacheEventConsumer(10);
+        CacheEventConsumer<CacheEvent> cacheEventConsumer = new CacheEventConsumer<>(10);
         cacheContext.getEventStream()
                 .subscribe(cacheEventConsumer);
 
@@ -106,7 +107,7 @@ public class CacheTest {
         given(cache.containsKey("testKey")).willThrow(new RuntimeException("Cache is not available"));
 
         Cache<String, String> cacheContext = Cache.of(cache);
-        CacheEventConsumer cacheEventConsumer = new CacheEventConsumer(10);
+        CacheEventConsumer<CacheEvent> cacheEventConsumer = new CacheEventConsumer<>(10);
         cacheContext.getEventStream()
                 .subscribe(cacheEventConsumer);
 

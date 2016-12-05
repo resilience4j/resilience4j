@@ -16,36 +16,40 @@
  *
  *
  */
-package io.github.robwin.circuitbreaker.event;
+package io.github.robwin.metrics;
 
 import java.time.Duration;
 
-/**
- * A CircuitBreakerEvent which informs that a success has been recorded
- */
-public class CircuitBreakerOnSuccessEvent  extends AbstractCircuitBreakerEvent{
+public class StopWatch {
 
-    private final Duration elapsedDuration;
+    private final String id;
+    private long startTime;
+    private long elapsedTime;
 
-    public CircuitBreakerOnSuccessEvent(String circuitBreakerName, Duration elapsedDuration) {
-        super(circuitBreakerName);
-        this.elapsedDuration = elapsedDuration;
+    private StopWatch(String id){
+        this.id = id;
+        this.startTime = System.nanoTime();
+    }
+
+    public static StopWatch start(String id) {
+        return new StopWatch(id);
+    }
+
+    public StopWatch stop() {
+        this.elapsedTime = System.nanoTime() - startTime;
+        return this;
     }
 
     public Duration getElapsedDuration() {
-        return elapsedDuration;
+        return Duration.ofNanos(elapsedTime);
     }
 
-    @Override
-    public Type getEventType() {
-        return Type.SUCCESS;
+    public String getId() {
+        return id;
     }
 
     @Override
     public String toString(){
-        return String.format("%s: CircuitBreaker '%s' recorded a successful call. Elapsed time: %s ms",
-                getCreationTime(),
-                getCircuitBreakerName(),
-                elapsedDuration.toMillis());
+        return String.format("Watch: '%s' Elapsed duration [ms]: '%s'", id, getElapsedDuration().toMillis());
     }
 }

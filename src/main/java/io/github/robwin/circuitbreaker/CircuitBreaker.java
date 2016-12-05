@@ -21,9 +21,11 @@ package io.github.robwin.circuitbreaker;
 import io.github.robwin.circuitbreaker.event.CircuitBreakerEvent;
 import io.github.robwin.circuitbreaker.internal.CircuitBreakerStateMachine;
 import io.github.robwin.circuitbreaker.utils.CircuitBreakerUtils;
+import io.github.robwin.metrics.StopWatch;
 import io.reactivex.Flowable;
 import javaslang.control.Try;
 
+import java.time.Duration;
 import java.util.concurrent.Callable;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -48,15 +50,18 @@ public interface CircuitBreaker {
      * Records a failed call.
      * This method must be invoked when a call failed.
      *
+     * @param duration The elapsed time duration of the call
      * @param throwable The throwable which must be recorded
      */
-    void onError(Throwable throwable);
+    void onError(Duration duration, Throwable throwable);
 
      /**
       * Records a successful call.
+      *
+      * @param duration The elapsed time duration of the call
       * This method must be invoked when a call is successfully.
       */
-    void onSuccess();
+    void onSuccess(Duration duration);
 
     /**
      * Returns the name of this CircuitBreaker
@@ -191,12 +196,13 @@ public interface CircuitBreaker {
     static <T> Try.CheckedSupplier<T> decorateCheckedSupplier(CircuitBreaker circuitBreaker, Try.CheckedSupplier<T> supplier){
         return () -> {
             CircuitBreakerUtils.isCallPermitted(circuitBreaker);
+            StopWatch stopWatch = StopWatch.start(circuitBreaker.getName());
             try {
                 T returnValue = supplier.get();
-                circuitBreaker.onSuccess();
+                circuitBreaker.onSuccess(stopWatch.stop().getElapsedDuration());
                 return returnValue;
             } catch (Throwable throwable) {
-                circuitBreaker.onError(throwable);
+                circuitBreaker.onError(stopWatch.stop().getElapsedDuration(), throwable);
                 throw throwable;
             }
         };
@@ -213,11 +219,12 @@ public interface CircuitBreaker {
     static Try.CheckedRunnable decorateCheckedRunnable(CircuitBreaker circuitBreaker, Try.CheckedRunnable runnable){
         return () -> {
             CircuitBreakerUtils.isCallPermitted(circuitBreaker);
+            StopWatch stopWatch = StopWatch.start(circuitBreaker.getName());
             try{
                 runnable.run();
-                circuitBreaker.onSuccess();
+                circuitBreaker.onSuccess(stopWatch.stop().getElapsedDuration());
             } catch (Throwable throwable){
-                circuitBreaker.onError(throwable);
+                circuitBreaker.onError(stopWatch.stop().getElapsedDuration(), throwable);
                 throw throwable;
             }
         };
@@ -234,12 +241,13 @@ public interface CircuitBreaker {
     static <T> Callable<T> decorateCallable(CircuitBreaker circuitBreaker, Callable<T> callable){
         return () -> {
             CircuitBreakerUtils.isCallPermitted(circuitBreaker);
+            StopWatch stopWatch = StopWatch.start(circuitBreaker.getName());
             try {
                 T returnValue = callable.call();
-                circuitBreaker.onSuccess();
+                circuitBreaker.onSuccess(stopWatch.stop().getElapsedDuration());
                 return returnValue;
             } catch (Throwable throwable) {
-                circuitBreaker.onError(throwable);
+                circuitBreaker.onError(stopWatch.stop().getElapsedDuration(), throwable);
                 throw throwable;
             }
         };
@@ -256,12 +264,13 @@ public interface CircuitBreaker {
     static <T> Supplier<T> decorateSupplier(CircuitBreaker circuitBreaker, Supplier<T> supplier){
         return () -> {
             CircuitBreakerUtils.isCallPermitted(circuitBreaker);
+            StopWatch stopWatch = StopWatch.start(circuitBreaker.getName());
             try {
                 T returnValue = supplier.get();
-                circuitBreaker.onSuccess();
+                circuitBreaker.onSuccess(stopWatch.stop().getElapsedDuration());
                 return returnValue;
             } catch (Throwable throwable) {
-                circuitBreaker.onError(throwable);
+                circuitBreaker.onError(stopWatch.stop().getElapsedDuration(), throwable);
                 throw throwable;
             }
         };
@@ -278,11 +287,12 @@ public interface CircuitBreaker {
     static <T> Consumer<T> decorateConsumer(CircuitBreaker circuitBreaker, Consumer<T> consumer){
         return (t) -> {
             CircuitBreakerUtils.isCallPermitted(circuitBreaker);
+            StopWatch stopWatch = StopWatch.start(circuitBreaker.getName());
             try {
                 consumer.accept(t);
-                circuitBreaker.onSuccess();
+                circuitBreaker.onSuccess(stopWatch.stop().getElapsedDuration());
             } catch (Throwable throwable) {
-                circuitBreaker.onError(throwable);
+                circuitBreaker.onError(stopWatch.stop().getElapsedDuration(), throwable);
                 throw throwable;
             }
         };
@@ -299,11 +309,12 @@ public interface CircuitBreaker {
     static <T> Try.CheckedConsumer<T> decorateCheckedConsumer(CircuitBreaker circuitBreaker, Try.CheckedConsumer<T> consumer){
         return (t) -> {
             CircuitBreakerUtils.isCallPermitted(circuitBreaker);
+            StopWatch stopWatch = StopWatch.start(circuitBreaker.getName());
             try {
                 consumer.accept(t);
-                circuitBreaker.onSuccess();
+                circuitBreaker.onSuccess(stopWatch.stop().getElapsedDuration());
             } catch (Throwable throwable) {
-                circuitBreaker.onError(throwable);
+                circuitBreaker.onError(stopWatch.stop().getElapsedDuration(), throwable);
                 throw throwable;
             }
         };
@@ -320,11 +331,12 @@ public interface CircuitBreaker {
     static Runnable decorateRunnable(CircuitBreaker circuitBreaker, Runnable runnable){
         return () -> {
             CircuitBreakerUtils.isCallPermitted(circuitBreaker);
+            StopWatch stopWatch = StopWatch.start(circuitBreaker.getName());
             try{
                 runnable.run();
-                circuitBreaker.onSuccess();
+                circuitBreaker.onSuccess(stopWatch.stop().getElapsedDuration());
             } catch (Throwable throwable){
-                circuitBreaker.onError(throwable);
+                circuitBreaker.onError(stopWatch.stop().getElapsedDuration(), throwable);
                 throw throwable;
             }
         };
@@ -341,12 +353,13 @@ public interface CircuitBreaker {
     static <T, R> Function<T, R> decorateFunction(CircuitBreaker circuitBreaker, Function<T, R> function){
         return (T t) -> {
             CircuitBreakerUtils.isCallPermitted(circuitBreaker);
+            StopWatch stopWatch = StopWatch.start(circuitBreaker.getName());
             try{
                 R returnValue = function.apply(t);
-                circuitBreaker.onSuccess();
+                circuitBreaker.onSuccess(stopWatch.stop().getElapsedDuration());
                 return returnValue;
             } catch (Throwable throwable){
-                circuitBreaker.onError(throwable);
+                circuitBreaker.onError(stopWatch.stop().getElapsedDuration(), throwable);
                 throw throwable;
             }
         };
@@ -363,12 +376,13 @@ public interface CircuitBreaker {
     static <T, R> Try.CheckedFunction<T, R> decorateCheckedFunction(CircuitBreaker circuitBreaker, Try.CheckedFunction<T, R> function){
         return (T t) -> {
             CircuitBreakerUtils.isCallPermitted(circuitBreaker);
+            StopWatch stopWatch = StopWatch.start(circuitBreaker.getName());
             try{
                 R returnValue = function.apply(t);
-                circuitBreaker.onSuccess();
+                circuitBreaker.onSuccess(stopWatch.stop().getElapsedDuration());
                 return returnValue;
             } catch (Throwable throwable){
-                circuitBreaker.onError(throwable);
+                circuitBreaker.onError(stopWatch.stop().getElapsedDuration(), throwable);
                 throw throwable;
             }
         };

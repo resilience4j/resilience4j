@@ -466,8 +466,8 @@ public class CircuitBreakerTest {
         // Create a CircuitBreakerRegistry with a custom global configuration
         CircuitBreaker circuitBreaker = CircuitBreaker.of("testName", circuitBreakerConfig);
 
-        circuitBreaker.onError(new RuntimeException());
-        circuitBreaker.onError(new RuntimeException());
+        circuitBreaker.onError(Duration.ZERO, new RuntimeException());
+        circuitBreaker.onError(Duration.ZERO, new RuntimeException());
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.OPEN);
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(2);
@@ -521,7 +521,7 @@ public class CircuitBreakerTest {
         CircuitBreaker circuitBreaker = CircuitBreaker.of("testName", circuitBreakerConfig);
 
         // Simulate a failure attempt
-        circuitBreaker.onError(new WebServiceException());
+        circuitBreaker.onError(Duration.ZERO, new WebServiceException());
         // CircuitBreaker is still CLOSED, because 1 failure is allowed
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
 
@@ -594,11 +594,11 @@ public class CircuitBreakerTest {
         CircuitBreaker circuitBreaker = CircuitBreaker.of("testName", circuitBreakerConfig);
 
         // Simulate a failure attempt
-        circuitBreaker.onError(new RuntimeException());
+        circuitBreaker.onError(Duration.ZERO, new RuntimeException());
         // CircuitBreaker is still CLOSED, because 1 failure is allowed
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
         // Simulate a failure attempt
-        circuitBreaker.onError(new RuntimeException());
+        circuitBreaker.onError(Duration.ZERO, new RuntimeException());
         // CircuitBreaker is OPEN, because the failure rate is above 50%
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.OPEN);
 

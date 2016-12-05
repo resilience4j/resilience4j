@@ -70,9 +70,10 @@ The CircuitBreaker publishes a stream of CircuitBreakerEvents to any Observer/Co
 [source,java]
 ----
 CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testName");
-CircuitBreakerEventConsumer ringBuffer = new CircuitBreakerEventConsumer(10);
+CircuitBreakerEventConsumer<CircuitBreakerOnErrorEvent> ringBuffer = new CircuitBreakerEventConsumer<>(10);
 circuitBreaker.getEventStream()
         .filter(event -> event.getEventType() == Type.ERROR)
+        .cast(CircuitBreakerOnErrorEvent.class)
         .subscribe(ringBuffer);
 ----
 

@@ -43,7 +43,11 @@ public class CircuitBreakerOnStateTransitionEvent extends AbstractCircuitBreaker
 
     @Override
     public String toString(){
-        return String.format("%s: CircuitBreaker '%s' changed state from %s to %s", getCreationTime(), getCircuitBreakerName(), getStateTransition().getFromState(), getStateTransition().getToState());
+        return String.format("%s: CircuitBreaker '%s' changed state from %s to %s",
+                getCreationTime(),
+                getCircuitBreakerName(),
+                getStateTransition().getFromState(),
+                getStateTransition().getToState());
 
     }
 }
