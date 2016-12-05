@@ -168,7 +168,7 @@ public interface RateLimiter {
     /**
      * Will wait for permission within default timeout duration.
      *
-     * @param rateLimiter the RateLimiter to get permission from
+     * @param rateLimiter the RateLimiter to getValueFromCache permission from
      * @throws RequestNotPermitted if waiting time elapsed before a permit was acquired.
      * @throws IllegalStateException if thread was interrupted during permission wait
      */

@@ -45,13 +45,11 @@ public class RetryContext implements Retry {
     private final Function<Duration, Duration> backoffFunction;
     private Predicate<Throwable> exceptionPredicate;
 
-    private RetryContext(int maxAttempts, Duration waitDuration,
-                         Function<Duration, Duration> backoffFunction,
-                         Predicate<Throwable> exceptionPredicate){
-        this.maxAttempts = maxAttempts;
-        this.waitDuration = waitDuration;
-        this.backoffFunction = backoffFunction;
-        this.exceptionPredicate = exceptionPredicate;
+    private RetryContext(Context context){
+        this.maxAttempts = context.maxAttempts;
+        this.waitDuration = context.waitDuration;
+        this.backoffFunction = context.backoffFunction;
+        this.exceptionPredicate = context.exceptionPredicate;
         this.numOfAttempts = new AtomicInteger(0);
         this.lastException = new AtomicReference<>();
         this.lastRuntimeException = new AtomicReference<>();
@@ -103,18 +101,23 @@ public class RetryContext implements Retry {
         }
     }
 
-    public static class Builder {
+    private static class Context {
         private int maxAttempts = DEFAULT_MAX_ATTEMPTS;
         private Duration waitDuration = Duration.ofMillis(DEFAULT_WAIT_DURATION);
         private Function<Duration, Duration> backoffFunction = Function.identity();
         // The default exception predicate retries all exceptions.
         private Predicate<Throwable> exceptionPredicate = (exception) -> true;
 
+    }
+
+    public static class Builder {
+        private Context context = new Context();
+
         public Builder maxAttempts(int maxAttempts) {
             if (maxAttempts < 1) {
                 throw new IllegalArgumentException("maxAttempts must be greater than or equal to 1");
             }
-            this.maxAttempts = maxAttempts;
+            context.maxAttempts = maxAttempts;
             return this;
         }
 
@@ -122,7 +125,7 @@ public class RetryContext implements Retry {
             if (waitDuration.toMillis() < 10) {
                 throw new IllegalArgumentException("waitDurationInOpenState must be at least 10ms");
             }
-            this.waitDuration = waitDuration;
+            context.waitDuration = waitDuration;
             return this;
         }
 
@@ -134,7 +137,7 @@ public class RetryContext implements Retry {
          * @param f Function to modify the interval after a failure
          */
         public Builder backoffFunction(Function<Duration, Duration> f) {
-            this.backoffFunction = f;
+            context.backoffFunction = f;
             return this;
         }
 
@@ -146,13 +149,12 @@ public class RetryContext implements Retry {
          * @return the CircuitBreakerConfig.Builder
          */
         public Builder retryOnException(Predicate<Throwable> predicate) {
-            this.exceptionPredicate = predicate;
+            context.exceptionPredicate = predicate;
             return this;
         }
 
         public Retry build() {
-            return new RetryContext(maxAttempts, waitDuration,
-                                    backoffFunction, exceptionPredicate);
+            return new RetryContext(context);
         }
     }
 }

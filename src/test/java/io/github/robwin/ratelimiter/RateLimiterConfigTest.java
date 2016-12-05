@@ -18,13 +18,13 @@
  */
 package io.github.robwin.ratelimiter;
 
-import static org.assertj.core.api.BDDAssertions.then;
-
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
 import java.time.Duration;
+
+import static org.assertj.core.api.BDDAssertions.then;
 
 
 public class RateLimiterConfigTest {
@@ -41,7 +41,7 @@ public class RateLimiterConfigTest {
 
     @Test
     public void builderPositive() throws Exception {
-        RateLimiterConfig config = RateLimiterConfig.builder()
+        RateLimiterConfig config = RateLimiterConfig.custom()
             .timeoutDuration(TIMEOUT)
             .limitRefreshPeriod(REFRESH_PERIOD)
             .limitForPeriod(LIMIT)
@@ -56,43 +56,23 @@ public class RateLimiterConfigTest {
     public void builderTimeoutIsNull() throws Exception {
         exception.expect(NullPointerException.class);
         exception.expectMessage(TIMEOUT_DURATION_MUST_NOT_BE_NULL);
-        RateLimiterConfig.builder()
+        RateLimiterConfig.custom()
             .timeoutDuration(null);
-    }
-
-    @Test
-    public void builderTimeoutEmpty() throws Exception {
-        exception.expect(NullPointerException.class);
-        exception.expectMessage(TIMEOUT_DURATION_MUST_NOT_BE_NULL);
-        RateLimiterConfig.builder()
-            .limitRefreshPeriod(REFRESH_PERIOD)
-            .limitForPeriod(LIMIT)
-            .build();
     }
 
     @Test
     public void builderRefreshPeriodIsNull() throws Exception {
         exception.expect(NullPointerException.class);
         exception.expectMessage(REFRESH_PERIOD_MUST_NOT_BE_NULL);
-        RateLimiterConfig.builder()
+        RateLimiterConfig.custom()
             .limitRefreshPeriod(null);
-    }
-
-    @Test
-    public void builderRefreshPeriodEmpty() throws Exception {
-        exception.expect(NullPointerException.class);
-        exception.expectMessage(REFRESH_PERIOD_MUST_NOT_BE_NULL);
-        RateLimiterConfig.builder()
-            .timeoutDuration(TIMEOUT)
-            .limitForPeriod(LIMIT)
-            .build();
     }
 
     @Test
     public void builderRefreshPeriodTooShort() throws Exception {
         exception.expect(IllegalArgumentException.class);
         exception.expectMessage("RefreshPeriod is too short");
-        RateLimiterConfig.builder()
+        RateLimiterConfig.custom()
             .timeoutDuration(TIMEOUT)
             .limitRefreshPeriod(Duration.ZERO)
             .limitForPeriod(LIMIT)
@@ -103,7 +83,7 @@ public class RateLimiterConfigTest {
     public void builderLimitIsLessThanOne() throws Exception {
         exception.expect(IllegalArgumentException.class);
         exception.expectMessage("LimitForPeriod should be greater than 0");
-        RateLimiterConfig.builder()
+        RateLimiterConfig.custom()
             .limitForPeriod(0);
     }
 }

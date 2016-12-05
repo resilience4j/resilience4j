@@ -18,21 +18,6 @@
  */
 package io.github.robwin.ratelimiter.internal;
 
-import static com.jayway.awaitility.Awaitility.await;
-import static com.jayway.awaitility.Duration.FIVE_HUNDRED_MILLISECONDS;
-import static java.lang.Thread.State.RUNNABLE;
-import static java.lang.Thread.State.TERMINATED;
-import static java.lang.Thread.State.TIMED_WAITING;
-import static java.time.Duration.ZERO;
-import static javaslang.control.Try.run;
-import static org.assertj.core.api.BDDAssertions.then;
-import static org.hamcrest.CoreMatchers.equalTo;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-
 import com.jayway.awaitility.core.ConditionFactory;
 import io.github.robwin.ratelimiter.RateLimiter;
 import io.github.robwin.ratelimiter.RateLimiterConfig;
@@ -47,6 +32,16 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
+
+import static com.jayway.awaitility.Awaitility.await;
+import static com.jayway.awaitility.Duration.FIVE_HUNDRED_MILLISECONDS;
+import static java.lang.Thread.State.*;
+import static java.time.Duration.ZERO;
+import static javaslang.control.Try.run;
+import static org.assertj.core.api.BDDAssertions.then;
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.*;
 
 
 public class SemaphoreBasedRateLimiterImplTest {
@@ -69,7 +64,7 @@ public class SemaphoreBasedRateLimiterImplTest {
 
     @Before
     public void init() {
-        config = RateLimiterConfig.builder()
+        config = RateLimiterConfig.custom()
             .timeoutDuration(TIMEOUT)
             .limitRefreshPeriod(REFRESH_PERIOD)
             .limitForPeriod(LIMIT)
