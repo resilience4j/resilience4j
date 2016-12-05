@@ -1,5 +1,5 @@
 = Fault tolerance library designed for functional programming
-:author: Robert Winkler
+:author: Robert Winkler and Bohdan Storozhuk
 :hardbreaks:
 
 image:https://travis-ci.org/RobWin/javaslang-circuitbreaker.svg?branch=master["Build Status", link="https://travis-ci.org/RobWin/javaslang-circuitbreaker"] image:https://coveralls.io/repos/RobWin/javaslang-circuitbreaker/badge.svg["Coverage Status", link="https://coveralls.io/r/RobWin/javaslang-circuitbreaker"] image:https://api.bintray.com/packages/robwin/maven/javaslang-circuitbreaker/images/download.svg[link="https://bintray.com/robwin/maven/javaslang-circuitbreaker/_latestVersion"] image:http://img.shields.io/badge/license-ASF2-blue.svg["Apache License 2", link="http://www.apache.org/licenses/LICENSE-2.0.txt"]
@@ -9,8 +9,8 @@ This library is a lightweight, easy-to-use fault tolerance library inspired by h
 To highlight a few differences to Netflix Hystrix:
 
 In Hystrix calls to external systems have to be wrapped in a HystrixCommand. This library, in contrast, provides higher-order functions to decorate any function, lambda expression or method reference with a http://martinfowler.com/bliki/CircuitBreaker.html[Circuit Breaker]. Furthermore, the library provides a custom RxJava operator to decorate any `Observable` or `Flowable` with a Circuit Breaker.
-In the following I call the higher-order functions decorators. The decorators return an enhanced version of your function. Furthermore, the library provides a decorator to retry failed functions. You can stack more than one decorator on any given function. That means, you can combine a Retry decorator with a CircuitBreaker decorator. Any decorated function can be executed synchronously or asynchronously by using a CompletableFuture or RxJava.
-However, features such as Request Caching, Request Collapsing, Response Time Metrics and Bulk Heading are not in the scope of this library. But Request Caching can be easily implemented by a custom higher-order function and JCache. And Response Time Metrics using http://metrics.dropwizard.io/[Dropwizard Metrics].
+In the following I call the higher-order functions decorators. The decorators return an enhanced version of your function. Furthermore, the library provides few additional decorators to retry failed functions, limit call frequency or cache function results. You can stack more than one decorator on any given function. That means, you can combine a RateLimiter and Retry decorator with a CircuitBreaker decorator. Any decorated function can be executed synchronously or asynchronously by using a CompletableFuture or RxJava.
+However, features such as Request Collapsing and Bulk Heading are not in the scope of this library. 
 
 == Examples
 
@@ -42,6 +42,27 @@ Observable.fromCallable(backendService::doSomething)
     .lift(CircuitBreakerOperator.of(circuitBreaker))
 ----
 
+The following example shows how restrict the calling rate of some method to be not higher than 1 req/sec.
+
+[source,java]
+----
+// Create a RateLimiter
+RateLimiterConfig config = RateLimiterConfig.builder()
+    .timeoutDuration(Duration.ofMillis(100))
+    .limitRefreshPeriod(Duration.ofSeconds(1))
+    .limitForPeriod(1)
+    .build();
+RateLimiter rateLimiter = RateLimiter.of("backendName", config);
+
+// Decorate your call to BackendService.doSomething()
+Try.CheckedRunnable restrictedCall = RateLimiter
+    .decorateCheckedRunnable(rateLimiter, backendService::doSomething);
+
+Try.run(restrictedCall)
+    .andThenTry(restrictedCall)
+    .onFailure((RequestNotPermitted throwable) -> LOG.info("Wait before call it again :)"));
+----
+
 == Consume published CircuitBreakerEvents
 
 The CircuitBreaker publishes a stream of CircuitBreakerEvents to any Observer/Consumer who subscribes. An event can be a state transition or a recorded error. This library uses RxJava to to provide this functionality. If you want to consume events, you have to subscribe to the event stream. This library provides a consumer `CircuitBreakerEventConsumer` which can be used to store events in a circular buffer with a fixed capacity. You can use RxJava to filter certain events.
@@ -70,11 +91,29 @@ int bufferedCalls = metrics.getNumberOfBufferedCalls();
 int failedCalls = metrics.getNumberOfFailedCalls();
 ----
 
+== Monitor RateLimiter metrics
+
+The RateLimiter provides simple an interface to monitor the current limiter.
+Also AtomicRateLimiter has some enhanced Metrics with some implementation specific details.
+
+[source,java]
+----
+RateLimiter limit;
+RateLimiter.Metrics metrics = limit.getMetrics();
+int numberOfThreadsWaitingForPermission = metrics.getNumberOfWaitingThreads();
+// Estimates count of available permissions. Can be negative if some permissions where reserved.
+int availablePermissions = metrics.getAvailablePermissions();
+
+AtomicRateLimiter atomicLimiter;
+// Estimated time duration in nanos to wait for the next permission
+long nanosToWaitForPermission = atomicLimiter.getNanosToWait();
+----
+
 == Usage Guide
 
 For more details see http://robwin.github.io/javaslang-circuitbreaker/0.7.1/[User Guide].
 
-== Implementation details
+== CircuitBreaker implementation details
 
 The CircuitBreaker is implemented via a finite state machine with three states: `CLOSED`, `OPEN` and `HALF_OPEN`.
 
@@ -111,6 +150,28 @@ For example, if the size of the Ring Buffer is 10, then at least 10 calls must e
 
 After the time duration has elapsed, the CircuitBreaker state changes from `OPEN` to `HALF_OPEN` and allows calls to see if the backend is still unavailable or has become available again. The CircuitBreaker uses another (configurable) Ring Bit Buffer to evaluate the failure rate in the `HALF_OPEN` state. If the failure rate is above the configured threshold, the state changes back to `OPEN`. If the failure rate is below or equal to the threshold, the state changes back to `CLOSED`.
 `CircuitBreaker::onError(exception)` checks if the exception should be recorded as a failure or should be ignored. You can configure a custom `Predicate` which decides whether an exception should be recorded as a failure. The default Predicate records all exceptions as a failure.
+
+== RateLimiter implementation details
+Conceptually `RateLimiter` splits all nanoseconds from the start of epoch into cycles.
+Each cycle has duration configured by `RateLimiterConfig.limitRefreshPeriod`.
+By contract on start of each cycle `RateLimiter` should set `activePermissions` to `RateLimiterConfig.limitForPeriod`.
+For the `RateLimiter` callers it is really looks so, but for example `AtomicRateLimiter` implementation has
+some optimisations under the hood that will skip this refresh if `RateLimiter` is not used actively.
+
+image::src/docs/asciidoc/images/rate_limiter.png[Rate Limiter]
+
+The default implementation of `RateLimiter` is `AtomicRateLimiter` it manages state via `AtomicReference`.
+`AtomicRateLimiter.State` is completely immutable and has the folowing fields:
+
+* `activeCycle` - cycle number that was used by the last call.
+* `activePermissions` - count of available permissions after the last call.
+Can be negative if some permissions where reserved.
+* `nanosToWait` - count of nanoseconds to wait for permission for the last call.
+
+`AtomicRateLimiter` is also very fast on i7-5557U processor and with x64 Java-1.8.0_112
+it takes only `143±1 [ns]` to acquire permission.
+So you can easily restrict not ony network calls but your local in-memory operations too.
+
 
 == Companies who use javaslang-circuitbreaker
 
