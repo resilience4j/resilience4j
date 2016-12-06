@@ -94,7 +94,7 @@ Try.CheckedFunction<String, String> cachedFunction = Decorators
     .ofCheckedSupplier(() -> backendService.doSomething())
     .withCache(cacheContext)
     .decorate();
-String value = Try.of(() -> cachedFunction.apply("testKey")).get();
+String value = Try.of(() -> cachedFunction.apply("cacheKey")).get();
 ----
 
 == Consume published CircuitBreakerEvents
