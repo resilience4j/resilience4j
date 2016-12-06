@@ -5,8 +5,13 @@ This library is a lightweight, easy-to-use fault tolerance library inspired by h
 To highlight a few differences to Netflix Hystrix:
 
 In Hystrix calls to external systems have to be wrapped in a HystrixCommand. This library, in contrast, provides higher-order functions to decorate any function, lambda expression or method reference with a http://martinfowler.com/bliki/CircuitBreaker.html[Circuit Breaker]. Furthermore, the library provides a custom RxJava operator to decorate any `Observable` or `Flowable` with a Circuit Breaker.
-In the following I call the higher-order functions decorators. The decorators return an enhanced version of your function. Furthermore, the library provides few additional decorators to retry failed functions and limit call frequency. You can stack more than one decorator on any given function. That means, you can combine a Retry decorator with a CircuitBreaker decorator. Any decorated function can be invoked synchronously or asynchronously by using a CompletableFuture or RxJava.
-However, features such as Request Caching, Request Collapsing and Bulk Heading are not in the scope of this library.
+In the following I call the higher-order functions decorators. The decorators return an enhanced version of your function. Furthermore, the library provides few additional decorators to retry failed functions, limit call frequency or cache function results. You can stack more than one decorator on any given function. That means, you can combine a RateLimiter and Retry decorator with a CircuitBreaker decorator. Any decorated function can be executed synchronously or asynchronously by using a CompletableFuture or RxJava.
+However, features such as Request Collapsing and Bulk Heading are not in the scope of this library.
+
+== Examples
+
+The following example shows how to decorate a lambda expression (CheckedSupplier) with a CircuitBreaker and automatically retry the call 3 times when an exception occurs.
+The example uses Javaslang's Try Monad to recover from an exception, when even all retries have failed.
 
 [source,java]
 ----
@@ -14,10 +19,11 @@ However, features such as Request Caching, Request Collapsing and Bulk Heading a
 CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("backendName");
 Retry retryContext = Retry.ofDefaults();`
 
-// Decorate your call to HelloWorldSerivce.returnHelloWorld()
-Try.CheckedSupplier<String> supplier = Retry.decorateCheckedSupplier(retryContext,
-        CircuitBreaker.decorateCheckedSupplier(circuitBreaker,
-            helloWorldService::returnHelloWorld));
+// Decorate your call to BackendService.doSomething()
+Try.CheckedSupplier<String> decoratedSupplier = Decorators.ofCheckedSupplier(() -> backendService.doSomething())
+        .withCircuitBreaker(circuitBreaker)
+        .withRetry(Retry.ofDefaults())
+        .decorate();
 
 // Invoke the decorated function and recover from any exception
 Try<String> result = Try.of(supplier)
@@ -29,29 +35,99 @@ The following example shows how to decorate an Observable by using the custom Rx
 [source,java]
 ----
 CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testName");
-Observable.fromCallable(helloWorldService::sayHelloWorld)
+Observable.fromCallable(backendService::doSomething)
     .lift(CircuitBreakerOperator.of(circuitBreaker))
 ----
 
-The following example shows how restrict the calling rate of some method to be not higher than 1 req/sec.
+The following example shows how to restrict the calling rate of some method to be not higher than 1 req/sec.
 
 [source,java]
 ----
-// Create a RateLimiter
-RateLimiterConfig config = RateLimiterConfig.builder()
+// Create a custom RateLimiter configuration
+RateLimiterConfig config = RateLimiterConfig.custom()
     .timeoutDuration(Duration.ofMillis(100))
     .limitRefreshPeriod(Duration.ofSeconds(1))
     .limitForPeriod(1)
     .build();
+// Create a RateLimiter
 RateLimiter rateLimiter = RateLimiter.of("backendName", config);
 
 // Decorate your call to BackendService.doSomething()
-Try.CheckedRunnable restrictedCall = RateLimiter
-    .decorateCheckedRunnable(rateLimiter, backendService::doSomething);
+Try.CheckedSupplier<String> restrictedSupplier = Decorators.ofCheckedSupplier(() -> backendService.doSomething())
+        .withRateLimiter(rateLimiter)
+        .decorate();
 
-Try.run(restrictedCall)
-    .andThenTry(restrictedCall)
-    .onFailure((RequestNotPermitted throwable) -> LOG.info("Wait before call it again :)"));
+// First call is successful
+Try<String> firstTry = Try.of(restrictedSupplier);
+assertThat(firstTry.isSuccess()).isTrue();
+
+// Second call fails, because the call was not permitted
+Try<String> secondTry = Try.of(restrictedSupplier);
+assertThat(secondTry.isFailure()).isTrue();
+assertThat(secondTry.getCause()).isInstanceOf(RequestNotPermitted.class);
+----
+
+The following example shows how to decorate a method reference and retrieve cached results using JCache.
+If the cache contains a value, the value is returned from the cache, otherwise the method reference is called in order to retrieve a value and put it into the cache.
+If the cache retrieval from a distributed cache fails, the exception is taken care of and the method reference is called.
+
+[source,java]
+----
+// Create a CacheContext by wrapping a JCache instance.
+Cache<String, String> cacheContext = Cache.of(Caching.getCache("cacheName", String.class, String.class));
+
+// Decorate your call to BackendService.doSomething()
+Try.CheckedFunction<String, String> cachedFunction = Decorators.ofCheckedSupplier(() -> backendService.doSomething())
+    .withCache(cacheContext)
+    .decorate();
+String value = Try.of(() -> cachedFunction.apply("testKey")).get();
+----´
+
+== Consume published CircuitBreakerEvents
+
+The CircuitBreaker publishes a stream of CircuitBreakerEvents to any Observer/Consumer who subscribes. An event can be a state transition or a recorded error. This library uses RxJava to to provide this functionality. If you want to consume events, you have to subscribe to the event stream. This library provides a consumer `CircuitBreakerEventConsumer` which can be used to store events in a circular buffer with a fixed capacity. You can use RxJava to filter certain events.
+
+[source,java]
+----
+CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testName");
+CircuitBreakerEventConsumer<CircuitBreakerOnErrorEvent> ringBuffer = new CircuitBreakerEventConsumer<>(10);
+circuitBreaker.getEventStream()
+        .filter(event -> event.getEventType() == Type.ERROR)
+        .cast(CircuitBreakerOnErrorEvent.class)
+        .subscribe(ringBuffer);
+----
+
+== Monitor CircuitBreaker metrics
+
+The CircuitBreaker provides an interface to monitor the current metrics.
+
+[source,java]
+----
+CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
+// Returns the failure rate in percentage.
+float failureRate = metrics.getFailureRate();
+// Returns the current number of buffered calls.
+int bufferedCalls = metrics.getNumberOfBufferedCalls();
+// Returns the current number of failed calls.
+int failedCalls = metrics.getNumberOfFailedCalls();
+----
+
+== Monitor RateLimiter metrics
+
+The RateLimiter provides an interface to monitor the current limiter.
+Also AtomicRateLimiter has some enhanced Metrics with some implementation specific details.
+
+[source,java]
+----
+RateLimiter limit;
+RateLimiter.Metrics metrics = limit.getMetrics();
+int numberOfThreadsWaitingForPermission = metrics.getNumberOfWaitingThreads();
+// Estimates count of available permissions. Can be negative if some permissions where reserved.
+int availablePermissions = metrics.getAvailablePermissions();
+
+AtomicRateLimiter atomicLimiter;
+// Estimated time duration in nanos to wait for the next permission
+long nanosToWaitForPermission = atomicLimiter.getNanosToWait();
 ----
 
 === CircuitBreaker implementation details

@@ -19,7 +19,7 @@
 package io.github.robwin.circuitbreaker;
 
 /**
- * Exception that indicates that the CircuitBreaker is OPEN.
+ * A {@link CircuitBreakerOpenException} signals that the CircuitBreaker is OPEN.
  */
 public class CircuitBreakerOpenException extends RuntimeException {
 

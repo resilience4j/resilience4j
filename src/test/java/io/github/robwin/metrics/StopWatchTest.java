@@ -33,7 +33,7 @@ public class StopWatchTest {
     public void testStopWatch() throws InterruptedException {
         StopWatch watch = StopWatch.start("id");
         Thread.sleep(100);
-        Duration duration = watch.stop().getElapsedDuration();
+        Duration duration = watch.stop().getProcessingDuration();
         LOG.info(watch.toString());
         Assertions.assertThat(duration.toMillis()).isGreaterThanOrEqualTo(100).isLessThan(110);
     }

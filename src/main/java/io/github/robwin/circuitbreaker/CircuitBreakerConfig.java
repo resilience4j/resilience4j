@@ -22,6 +22,9 @@ import java.time.Duration;
 import java.util.function.Predicate;
 
 
+/**
+ * A {@link CircuitBreakerConfig} configures a {@link CircuitBreaker}
+ */
 public class CircuitBreakerConfig {
 
     public static final int DEFAULT_MAX_FAILURE_THRESHOLD = 50; // Percentage

@@ -32,10 +32,17 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 /**
- * A CircuitBreaker manages the state of a backend system. It is notified on the result of all
- * attempts to communicate with the backend, via the {@link #onSuccess} and {@link #onError} methods.
- * Before communicating with the backend, the respective connector must obtain the permission to do so via the method
- * {@link #isCallPermitted()}.
+ * A {@link CircuitBreaker} manages the state of a backend system.
+ * The CircuitBreaker is implemented via a finite state machine with three states: CLOSED, OPEN and HALF_OPEN.
+ * The CircuitBreaker does not know anything about the backend’s state by itself, but uses the information provided by the decorators via
+ * {@link CircuitBreaker#onSuccess} and {@link CircuitBreaker#onError} events.
+ * Before communicating with the backend, the the permission to do so must be obtained via the method {@link CircuitBreaker#isCallPermitted()}.
+ *
+ * The state of the CircuitBreaker changes from CLOSED to OPEN when the failure rate is above a (configurable) threshold.
+ * Then, all access to the backend is blocked for a (configurable) time duration. {@link CircuitBreaker#isCallPermitted} throws a {@link CircuitBreakerOpenException}, if the CircuitBreaker is OPEN.
+ *
+ * After the time duration has elapsed, the CircuitBreaker state changes from OPEN to HALF_OPEN and allows calls to see if the backend is still unavailable or has become available again.
+ * If the failure rate is above the configured threshold, the state changes back to OPEN. If the failure rate is below or equal to the threshold, the state changes back to CLOSED.
  */
 public interface CircuitBreaker {
 
@@ -199,10 +206,10 @@ public interface CircuitBreaker {
             StopWatch stopWatch = StopWatch.start(circuitBreaker.getName());
             try {
                 T returnValue = supplier.get();
-                circuitBreaker.onSuccess(stopWatch.stop().getElapsedDuration());
+                circuitBreaker.onSuccess(stopWatch.stop().getProcessingDuration());
                 return returnValue;
             } catch (Throwable throwable) {
-                circuitBreaker.onError(stopWatch.stop().getElapsedDuration(), throwable);
+                circuitBreaker.onError(stopWatch.stop().getProcessingDuration(), throwable);
                 throw throwable;
             }
         };
@@ -222,9 +229,9 @@ public interface CircuitBreaker {
             StopWatch stopWatch = StopWatch.start(circuitBreaker.getName());
             try{
                 runnable.run();
-                circuitBreaker.onSuccess(stopWatch.stop().getElapsedDuration());
+                circuitBreaker.onSuccess(stopWatch.stop().getProcessingDuration());
             } catch (Throwable throwable){
-                circuitBreaker.onError(stopWatch.stop().getElapsedDuration(), throwable);
+                circuitBreaker.onError(stopWatch.stop().getProcessingDuration(), throwable);
                 throw throwable;
             }
         };
@@ -244,10 +251,10 @@ public interface CircuitBreaker {
             StopWatch stopWatch = StopWatch.start(circuitBreaker.getName());
             try {
                 T returnValue = callable.call();
-                circuitBreaker.onSuccess(stopWatch.stop().getElapsedDuration());
+                circuitBreaker.onSuccess(stopWatch.stop().getProcessingDuration());
                 return returnValue;
             } catch (Throwable throwable) {
-                circuitBreaker.onError(stopWatch.stop().getElapsedDuration(), throwable);
+                circuitBreaker.onError(stopWatch.stop().getProcessingDuration(), throwable);
                 throw throwable;
             }
         };
@@ -267,10 +274,10 @@ public interface CircuitBreaker {
             StopWatch stopWatch = StopWatch.start(circuitBreaker.getName());
             try {
                 T returnValue = supplier.get();
-                circuitBreaker.onSuccess(stopWatch.stop().getElapsedDuration());
+                circuitBreaker.onSuccess(stopWatch.stop().getProcessingDuration());
                 return returnValue;
             } catch (Throwable throwable) {
-                circuitBreaker.onError(stopWatch.stop().getElapsedDuration(), throwable);
+                circuitBreaker.onError(stopWatch.stop().getProcessingDuration(), throwable);
                 throw throwable;
             }
         };
@@ -290,9 +297,9 @@ public interface CircuitBreaker {
             StopWatch stopWatch = StopWatch.start(circuitBreaker.getName());
             try {
                 consumer.accept(t);
-                circuitBreaker.onSuccess(stopWatch.stop().getElapsedDuration());
+                circuitBreaker.onSuccess(stopWatch.stop().getProcessingDuration());
             } catch (Throwable throwable) {
-                circuitBreaker.onError(stopWatch.stop().getElapsedDuration(), throwable);
+                circuitBreaker.onError(stopWatch.stop().getProcessingDuration(), throwable);
                 throw throwable;
             }
         };
@@ -312,9 +319,9 @@ public interface CircuitBreaker {
             StopWatch stopWatch = StopWatch.start(circuitBreaker.getName());
             try {
                 consumer.accept(t);
-                circuitBreaker.onSuccess(stopWatch.stop().getElapsedDuration());
+                circuitBreaker.onSuccess(stopWatch.stop().getProcessingDuration());
             } catch (Throwable throwable) {
-                circuitBreaker.onError(stopWatch.stop().getElapsedDuration(), throwable);
+                circuitBreaker.onError(stopWatch.stop().getProcessingDuration(), throwable);
                 throw throwable;
             }
         };
@@ -334,9 +341,9 @@ public interface CircuitBreaker {
             StopWatch stopWatch = StopWatch.start(circuitBreaker.getName());
             try{
                 runnable.run();
-                circuitBreaker.onSuccess(stopWatch.stop().getElapsedDuration());
+                circuitBreaker.onSuccess(stopWatch.stop().getProcessingDuration());
             } catch (Throwable throwable){
-                circuitBreaker.onError(stopWatch.stop().getElapsedDuration(), throwable);
+                circuitBreaker.onError(stopWatch.stop().getProcessingDuration(), throwable);
                 throw throwable;
             }
         };
@@ -356,10 +363,10 @@ public interface CircuitBreaker {
             StopWatch stopWatch = StopWatch.start(circuitBreaker.getName());
             try{
                 R returnValue = function.apply(t);
-                circuitBreaker.onSuccess(stopWatch.stop().getElapsedDuration());
+                circuitBreaker.onSuccess(stopWatch.stop().getProcessingDuration());
                 return returnValue;
             } catch (Throwable throwable){
-                circuitBreaker.onError(stopWatch.stop().getElapsedDuration(), throwable);
+                circuitBreaker.onError(stopWatch.stop().getProcessingDuration(), throwable);
                 throw throwable;
             }
         };
@@ -379,10 +386,10 @@ public interface CircuitBreaker {
             StopWatch stopWatch = StopWatch.start(circuitBreaker.getName());
             try{
                 R returnValue = function.apply(t);
-                circuitBreaker.onSuccess(stopWatch.stop().getElapsedDuration());
+                circuitBreaker.onSuccess(stopWatch.stop().getProcessingDuration());
                 return returnValue;
             } catch (Throwable throwable){
-                circuitBreaker.onError(stopWatch.stop().getElapsedDuration(), throwable);
+                circuitBreaker.onError(stopWatch.stop().getProcessingDuration(), throwable);
                 throw throwable;
             }
         };

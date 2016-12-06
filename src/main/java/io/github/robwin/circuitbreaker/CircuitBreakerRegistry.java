@@ -24,7 +24,7 @@ import io.github.robwin.circuitbreaker.internal.InMemoryCircuitBreakerRegistry;
 import java.util.function.Supplier;
 
 /**
- * A factory to create CircuitBreaker instances which stores all CircuitBreaker instances in a registry.
+ * The {@link CircuitBreakerRegistry} is a factory to create CircuitBreaker instances which stores all CircuitBreaker instances in a registry.
  */
 public interface CircuitBreakerRegistry {
 

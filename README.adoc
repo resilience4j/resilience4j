@@ -14,7 +14,7 @@ However, features such as Request Collapsing and Bulk Heading are not in the sco
 
 == Examples
 
-The following example shows how to decorate a method reference with a CircuitBreaker and automatically retry the call 3 times when an exception occurs.
+The following example shows how to decorate a lambda expression (CheckedSupplier) with a CircuitBreaker and automatically retry the call 3 times when an exception occurs.
 The example uses Javaslang's Try Monad to recover from an exception, when even all retries have failed.
 
 [source,java]
@@ -24,9 +24,10 @@ CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("backendName");
 Retry retryContext = Retry.ofDefaults();`
 
 // Decorate your call to BackendService.doSomething()
-Try.CheckedSupplier<String> supplier = Retry.decorateCheckedSupplier(retryContext,
-        CircuitBreaker.decorateCheckedSupplier(circuitBreaker,
-            backendService::doSomething));
+Try.CheckedSupplier<String> decoratedSupplier = Decorators.ofCheckedSupplier(() -> backendService.doSomething())
+        .withCircuitBreaker(circuitBreaker)
+        .withRetry(Retry.ofDefaults())
+        .decorate();
 
 // Invoke the decorated function and recover from any exception
 Try<String> result = Try.of(supplier)
@@ -46,23 +47,29 @@ The following example shows how to restrict the calling rate of some method to b
 
 [source,java]
 ----
-// Create a RateLimiter
+// Create a custom RateLimiter configuration
 RateLimiterConfig config = RateLimiterConfig.custom()
     .timeoutDuration(Duration.ofMillis(100))
     .limitRefreshPeriod(Duration.ofSeconds(1))
     .limitForPeriod(1)
     .build();
+// Create a RateLimiter
 RateLimiter rateLimiter = RateLimiter.of("backendName", config);
 
 // Decorate your call to BackendService.doSomething()
-Try.CheckedRunnable restrictedCall = RateLimiter
-    .decorateCheckedRunnable(rateLimiter, backendService::doSomething);
+Try.CheckedSupplier<String> restrictedSupplier = Decorators.ofCheckedSupplier(() -> backendService.doSomething())
+        .withRateLimiter(rateLimiter)
+        .decorate();
 
-Try.run(restrictedCall)
-    .andThenTry(restrictedCall)
-    .onFailure((RequestNotPermitted throwable) -> LOG.info("Wait before call it again :)"));
+// First call is successful
+Try<String> firstTry = Try.of(restrictedSupplier);
+assertThat(firstTry.isSuccess()).isTrue();
+
+// Second call fails, because the call was not permitted
+Try<String> secondTry = Try.of(restrictedSupplier);
+assertThat(secondTry.isFailure()).isTrue();
+assertThat(secondTry.getCause()).isInstanceOf(RequestNotPermitted.class);
 ----
-
 
 The following example shows how to decorate a method reference and retrieve cached results using JCache.
 If the cache contains a value, the value is returned from the cache, otherwise the method reference is called in order to retrieve a value and put it into the cache.
@@ -74,11 +81,11 @@ If the cache retrieval from a distributed cache fails, the exception is taken ca
 Cache<String, String> cacheContext = Cache.of(Caching.getCache("cacheName", String.class, String.class));
 
 // Decorate your call to BackendService.doSomething()
-Try.CheckedFunction<String, String> cachedFunction = Cache
-    .decorateCheckedSupplier(cacheContext, backendService::doSomething);
-String value = cachedFunction.apply("cacheKey");
-----
-
+Try.CheckedFunction<String, String> cachedFunction = Decorators.ofCheckedSupplier(() -> backendService.doSomething())
+    .withCache(cacheContext)
+    .decorate();
+String value = Try.of(() -> cachedFunction.apply("testKey")).get();
+----´
 
 == Consume published CircuitBreakerEvents
 

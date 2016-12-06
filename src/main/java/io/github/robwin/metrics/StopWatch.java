@@ -20,6 +20,9 @@ package io.github.robwin.metrics;
 
 import java.time.Duration;
 
+/**
+ * A simple {@link StopWatch} to measure the processing duration of a call.
+ */
 public class StopWatch {
 
     private final String id;
@@ -40,7 +43,7 @@ public class StopWatch {
         return this;
     }
 
-    public Duration getElapsedDuration() {
+    public Duration getProcessingDuration() {
         return Duration.ofNanos(elapsedTime);
     }
 
@@ -50,6 +53,6 @@ public class StopWatch {
 
     @Override
     public String toString(){
-        return String.format("Watch: '%s' Elapsed duration [ms]: '%s'", id, getElapsedDuration().toMillis());
+        return String.format("Watch: '%s' Elapsed duration [ms]: '%s'", id, getProcessingDuration().toMillis());
     }
 }
