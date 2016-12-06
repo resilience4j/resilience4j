@@ -88,7 +88,7 @@ Try.CheckedFunction<String, String> cachedFunction = Decorators
     .withCache(cacheContext)
     .decorate();
 String value = Try.of(() -> cachedFunction.apply("testKey")).get();
-----´
+----
 
 == Consume published CircuitBreakerEvents
 
