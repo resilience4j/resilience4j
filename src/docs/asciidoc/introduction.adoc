@@ -19,12 +19,12 @@ The example uses Javaslang's Try Monad to recover from an exception, when even a
 ----
 // Create a CircuitBreaker and a Retry context
 CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("backendName");
-Retry retryContext = Retry.ofDefaults();`
+Retry retryContext = Retry.ofDefaults();
 
 // Decorate your call to BackendService.doSomething()
 Try.CheckedSupplier<String> decoratedSupplier = Decorators.ofCheckedSupplier(() -> backendService.doSomething())
         .withCircuitBreaker(circuitBreaker)
-        .withRetry(Retry.ofDefaults())
+        .withRetry(retryContext)
         .decorate();
 
 // Invoke the decorated function and recover from any exception
