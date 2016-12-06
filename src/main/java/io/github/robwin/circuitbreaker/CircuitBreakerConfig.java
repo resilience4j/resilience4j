@@ -32,31 +32,34 @@ public class CircuitBreakerConfig {
     public static final int DEFAULT_RING_BUFFER_SIZE_IN_HALF_OPEN_STATE = 10;
     public static final int DEFAULT_RING_BUFFER_SIZE_IN_CLOSED_STATE = 100;
 
-    private final Context context;
+    private float failureRateThreshold = DEFAULT_MAX_FAILURE_THRESHOLD;
+    private int ringBufferSizeInHalfOpenState = DEFAULT_RING_BUFFER_SIZE_IN_HALF_OPEN_STATE;
+    private int ringBufferSizeInClosedState = DEFAULT_RING_BUFFER_SIZE_IN_CLOSED_STATE;
+    private Duration waitDurationInOpenState = Duration.ofSeconds(DEFAULT_WAIT_DURATION_IN_OPEN_STATE);
+    // The default exception predicate counts all exceptions as failures.
+    private Predicate<Throwable> recordFailurePredicate = (exception) -> true;
 
-    private CircuitBreakerConfig(Context context){
-        this.context = context;
-
+    private CircuitBreakerConfig(){
     }
 
     public float getFailureRateThreshold() {
-        return context.failureRateThreshold;
+        return failureRateThreshold;
     }
 
     public Duration getWaitDurationInOpenState() {
-        return context.waitDurationInOpenState;
+        return waitDurationInOpenState;
     }
 
     public int getRingBufferSizeInHalfOpenState() {
-        return context.ringBufferSizeInHalfOpenState;
+        return ringBufferSizeInHalfOpenState;
     }
 
     public int getRingBufferSizeInClosedState() {
-        return context.ringBufferSizeInClosedState;
+        return ringBufferSizeInClosedState;
     }
 
     public Predicate<Throwable> getRecordFailurePredicate() {
-        return context.recordFailurePredicate;
+        return recordFailurePredicate;
     }
 
     /**
@@ -79,7 +82,7 @@ public class CircuitBreakerConfig {
 
     public static class Builder {
 
-        private Context context = new Context();
+        private CircuitBreakerConfig config = new CircuitBreakerConfig();
 
         /**
          * Configures the failure rate threshold in percentage above which the CircuitBreaker should trip open and start short-circuiting calls.
@@ -93,7 +96,7 @@ public class CircuitBreakerConfig {
             if (failureRateThreshold < 1 || failureRateThreshold > 100) {
                 throw new IllegalArgumentException("failureRateThreshold must be between 1 and 100");
             }
-            context.failureRateThreshold = failureRateThreshold;
+            config.failureRateThreshold = failureRateThreshold;
             return this;
         }
 
@@ -108,7 +111,7 @@ public class CircuitBreakerConfig {
             if (waitDurationInOpenState.getSeconds() < 1) {
                 throw new IllegalArgumentException("waitDurationInOpenState must be at least 1000[ms]");
             }
-            context.waitDurationInOpenState = waitDurationInOpenState;
+            config.waitDurationInOpenState = waitDurationInOpenState;
             return this;
         }
 
@@ -126,7 +129,7 @@ public class CircuitBreakerConfig {
             if (ringBufferSizeInHalfOpenState < 1 ) {
                 throw new IllegalArgumentException("ringBufferSizeInHalfOpenState must be greater than 0");
             }
-            context.ringBufferSizeInHalfOpenState = ringBufferSizeInHalfOpenState;
+            config.ringBufferSizeInHalfOpenState = ringBufferSizeInHalfOpenState;
             return this;
         }
 
@@ -144,7 +147,7 @@ public class CircuitBreakerConfig {
             if (ringBufferSizeInClosedState < 1) {
                 throw new IllegalArgumentException("ringBufferSizeInClosedState must be greater than 0");
             }
-            context.ringBufferSizeInClosedState = ringBufferSizeInClosedState;
+            config.ringBufferSizeInClosedState = ringBufferSizeInClosedState;
             return this;
         }
 
@@ -156,7 +159,7 @@ public class CircuitBreakerConfig {
          * @return the CircuitBreakerConfig.Builder
          */
         public Builder recordFailure(Predicate<Throwable> predicate) {
-            context.recordFailurePredicate = predicate;
+            config.recordFailurePredicate = predicate;
             return this;
         }
 
@@ -166,16 +169,7 @@ public class CircuitBreakerConfig {
          * @return the CircuitBreakerConfig
          */
         public CircuitBreakerConfig build() {
-            return new CircuitBreakerConfig(context);
+            return config;
         }
-    }
-
-    private static class Context {
-        float failureRateThreshold = DEFAULT_MAX_FAILURE_THRESHOLD;
-        int ringBufferSizeInHalfOpenState = DEFAULT_RING_BUFFER_SIZE_IN_HALF_OPEN_STATE;
-        int ringBufferSizeInClosedState = DEFAULT_RING_BUFFER_SIZE_IN_CLOSED_STATE;
-        Duration waitDurationInOpenState = Duration.ofSeconds(DEFAULT_WAIT_DURATION_IN_OPEN_STATE);
-        // The default exception predicate counts all exceptions as failures.
-        Predicate<Throwable> recordFailurePredicate = (exception) -> true;
     }
 }

@@ -63,7 +63,7 @@ public class AtomicRateLimiterTest {
 
     @Before
     public void setup() {
-        rateLimiterConfig = RateLimiterConfig.builder()
+        rateLimiterConfig = RateLimiterConfig.custom()
             .limitForPeriod(1)
             .limitRefreshPeriod(Duration.ofNanos(CYCLE_IN_NANOS))
             .timeoutDuration(Duration.ZERO)

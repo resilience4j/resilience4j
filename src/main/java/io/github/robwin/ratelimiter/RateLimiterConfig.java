@@ -18,27 +18,38 @@
  */
 package io.github.robwin.ratelimiter;
 
-import static java.util.Objects.requireNonNull;
-
 import java.time.Duration;
+
+import static java.util.Objects.requireNonNull;
 
 public class RateLimiterConfig {
     private static final String TIMEOUT_DURATION_MUST_NOT_BE_NULL = "TimeoutDuration must not be null";
     private static final String LIMIT_REFRESH_PERIOD_MUST_NOT_BE_NULL = "LimitRefreshPeriod must not be null";
     private static final Duration ACCEPTABLE_REFRESH_PERIOD = Duration.ofNanos(1L);
 
-    private final Duration timeoutDuration;
-    private final Duration limitRefreshPeriod;
-    private final int limitForPeriod;
+    private Duration timeoutDuration =  Duration.ofSeconds(5);
+    private Duration limitRefreshPeriod = Duration.ofNanos(500);
+    private int limitForPeriod = 50;
 
-    private RateLimiterConfig(final Duration timeoutDuration, final Duration limitRefreshPeriod, final int limitForPeriod) {
-        this.timeoutDuration = checkTimeoutDuration(timeoutDuration);
-        this.limitRefreshPeriod = checkLimitRefreshPeriod(limitRefreshPeriod);
-        this.limitForPeriod = checkLimitForPeriod(limitForPeriod);
+    private RateLimiterConfig() {
     }
 
-    public static Builder builder() {
+    /**
+     * Returns a builder to create a custom RateLimiterConfig.
+     *
+     * @return a {@link RateLimiterConfig.Builder}
+     */
+    public static Builder custom() {
         return new Builder();
+    }
+
+    /**
+     * Creates a default RateLimiter configuration.
+     *
+     * @return a default RateLimiter configuration.
+     */
+    public static RateLimiterConfig ofDefaults(){
+        return new Builder().build();
     }
 
     public Duration getTimeoutDuration() {
@@ -55,9 +66,7 @@ public class RateLimiterConfig {
 
     public static class Builder {
 
-        private Duration timeoutDuration;
-        private Duration limitRefreshPeriod;
-        private int limitForPeriod;
+        private RateLimiterConfig config = new RateLimiterConfig();
 
         /**
          * Builds a RateLimiterConfig
@@ -65,21 +74,18 @@ public class RateLimiterConfig {
          * @return the RateLimiterConfig
          */
         public RateLimiterConfig build() {
-            return new RateLimiterConfig(
-                timeoutDuration,
-                limitRefreshPeriod,
-                limitForPeriod
-            );
+            return config;
         }
 
         /**
          * Configures the default wait for permission duration.
+         * Default value is 5 seconds.
          *
          * @param timeoutDuration the default wait for permission duration
          * @return the RateLimiterConfig.Builder
          */
         public Builder timeoutDuration(final Duration timeoutDuration) {
-            this.timeoutDuration = checkTimeoutDuration(timeoutDuration);
+            config.timeoutDuration = checkTimeoutDuration(timeoutDuration);
             return this;
         }
 
@@ -87,12 +93,13 @@ public class RateLimiterConfig {
          * Configures the period of limit refresh.
          * After each period rate limiter sets its permissions
          * count to {@link RateLimiterConfig#limitForPeriod} value.
+         * Default value is 500 nanoseconds.
          *
          * @param limitRefreshPeriod the period of limit refresh
          * @return the RateLimiterConfig.Builder
          */
         public Builder limitRefreshPeriod(final Duration limitRefreshPeriod) {
-            this.limitRefreshPeriod = checkLimitRefreshPeriod(limitRefreshPeriod);
+            config.limitRefreshPeriod = checkLimitRefreshPeriod(limitRefreshPeriod);
             return this;
         }
 
@@ -100,12 +107,13 @@ public class RateLimiterConfig {
          * Configures the permissions limit for refresh period.
          * Count of permissions available during one rate limiter period
          * specified by {@link RateLimiterConfig#limitRefreshPeriod} value.
+         * Default value is 50.
          *
          * @param limitForPeriod the permissions limit for refresh period
          * @return the RateLimiterConfig.Builder
          */
         public Builder limitForPeriod(final int limitForPeriod) {
-            this.limitForPeriod = checkLimitForPeriod(limitForPeriod);
+            config.limitForPeriod = checkLimitForPeriod(limitForPeriod);
             return this;
         }
 

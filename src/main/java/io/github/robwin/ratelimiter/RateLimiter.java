@@ -62,12 +62,10 @@ public interface RateLimiter {
      * @return a supplier which is restricted by a RateLimiter.
      */
     static <T> Try.CheckedSupplier<T> decorateCheckedSupplier(RateLimiter rateLimiter, Try.CheckedSupplier<T> supplier) {
-        Try.CheckedSupplier<T> decoratedSupplier = () -> {
+        return () -> {
             waitForPermission(rateLimiter);
-            T result = supplier.get();
-            return result;
+            return supplier.get();
         };
-        return decoratedSupplier;
     }
 
     /**
@@ -79,11 +77,10 @@ public interface RateLimiter {
      */
     static Try.CheckedRunnable decorateCheckedRunnable(RateLimiter rateLimiter, Try.CheckedRunnable runnable) {
 
-        Try.CheckedRunnable decoratedRunnable = () -> {
+        return () -> {
             waitForPermission(rateLimiter);
             runnable.run();
         };
-        return decoratedRunnable;
     }
 
     /**
@@ -94,12 +91,10 @@ public interface RateLimiter {
      * @return a function which is restricted by a RateLimiter.
      */
     static <T, R> Try.CheckedFunction<T, R> decorateCheckedFunction(RateLimiter rateLimiter, Try.CheckedFunction<T, R> function) {
-        Try.CheckedFunction<T, R> decoratedFunction = (T t) -> {
+        return (T t) -> {
             waitForPermission(rateLimiter);
-            R result = function.apply(t);
-            return result;
+            return function.apply(t);
         };
-        return decoratedFunction;
     }
 
     /**
@@ -110,12 +105,10 @@ public interface RateLimiter {
      * @return a supplier which is restricted by a RateLimiter.
      */
     static <T> Supplier<T> decorateSupplier(RateLimiter rateLimiter, Supplier<T> supplier) {
-        Supplier<T> decoratedSupplier = () -> {
+        return () -> {
             waitForPermission(rateLimiter);
-            T result = supplier.get();
-            return result;
+            return supplier.get();
         };
-        return decoratedSupplier;
     }
 
     /**
@@ -126,11 +119,10 @@ public interface RateLimiter {
      * @return a consumer which is restricted by a RateLimiter.
      */
     static <T> Consumer<T> decorateConsumer(RateLimiter rateLimiter, Consumer<T> consumer) {
-        Consumer<T> decoratedConsumer = (T t) -> {
+        return (T t) -> {
             waitForPermission(rateLimiter);
             consumer.accept(t);
         };
-        return decoratedConsumer;
     }
 
     /**
@@ -141,11 +133,10 @@ public interface RateLimiter {
      * @return a runnable which is restricted by a RateLimiter.
      */
     static Runnable decorateRunnable(RateLimiter rateLimiter, Runnable runnable) {
-        Runnable decoratedRunnable = () -> {
+        return () -> {
             waitForPermission(rateLimiter);
             runnable.run();
         };
-        return decoratedRunnable;
     }
 
     /**
@@ -156,12 +147,10 @@ public interface RateLimiter {
      * @return a function which is restricted by a RateLimiter.
      */
     static <T, R> Function<T, R> decorateFunction(RateLimiter rateLimiter, Function<T, R> function) {
-        Function<T, R> decoratedFunction = (T t) -> {
+        return (T t) -> {
             waitForPermission(rateLimiter);
-            R result = function.apply(t);
-            return result;
+            return function.apply(t);
         };
-        return decoratedFunction;
     }
 
 
