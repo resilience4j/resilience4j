@@ -93,15 +93,6 @@ public class RetryContext implements Retry {
         }
     }
 
-    private static class Context {
-        private int maxAttempts = DEFAULT_MAX_ATTEMPTS;
-        private Duration waitDuration = Duration.ofMillis(DEFAULT_WAIT_DURATION);
-        private Function<Duration, Duration> backoffFunction = Function.identity();
-        // The default exception predicate retries all exceptions.
-        private Predicate<Throwable> exceptionPredicate = (exception) -> true;
-
-    }
-
     public static class Builder {
         private RetryContext retryContext = new RetryContext();
 
