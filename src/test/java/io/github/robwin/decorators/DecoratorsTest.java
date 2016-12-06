@@ -99,7 +99,7 @@ public class DecoratorsTest {
         given(helloWorldService.returnHelloWorld()).willReturn("Hello world");
 
         // Create a custom RateLimiter configuration
-        RateLimiterConfig config = RateLimiterConfig.builder()
+        RateLimiterConfig config = RateLimiterConfig.custom()
                 .timeoutDuration(Duration.ofMillis(100))
                 .limitRefreshPeriod(Duration.ofSeconds(1))
                 .limitForPeriod(1)
