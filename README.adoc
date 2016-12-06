@@ -9,7 +9,7 @@ This library is a lightweight, easy-to-use fault tolerance library inspired by h
 To highlight a few differences to Netflix Hystrix:
 
 In Hystrix calls to external systems have to be wrapped in a HystrixCommand. This library, in contrast, provides higher-order functions to decorate any function, lambda expression or method reference with a http://martinfowler.com/bliki/CircuitBreaker.html[Circuit Breaker]. Furthermore, the library provides a custom RxJava operator to decorate any `Observable` or `Flowable` with a Circuit Breaker.
-In the following I call the higher-order functions decorators. The decorators return an enhanced version of your function. Furthermore, the library provides few additional decorators to retry failed functions, limit call frequency or cache function results. You can stack more than one decorator on any given function. That means, you can combine a RateLimiter and Retry decorator with a CircuitBreaker decorator. Any decorated function can be executed synchronously or asynchronously by using a CompletableFuture or RxJava.
+In the following I call the higher-order functions decorators. The decorators return an enhanced version of your function. Furthermore, the library provides few additional decorators to retry failed functions, limit call frequency or cache function results. You can stack more than one decorator on any given function. That means, you can combine a RateLimiter and Retry decorator with a CircuitBreaker decorator. The library provides a `Decorators` builder to simplify stacking decorators. Any decorated function can be executed synchronously or asynchronously by using a CompletableFuture or RxJava.
 However, features such as Request Collapsing and Bulk Heading are not in the scope of this library. 
 
 == Examples
@@ -24,10 +24,11 @@ CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("backendName");
 Retry retryContext = Retry.ofDefaults();`
 
 // Decorate your call to BackendService.doSomething()
-Try.CheckedSupplier<String> decoratedSupplier = Decorators.ofCheckedSupplier(() -> backendService.doSomething())
-        .withCircuitBreaker(circuitBreaker)
-        .withRetry(Retry.ofDefaults())
-        .decorate();
+Try.CheckedSupplier<String> decoratedSupplier = Decorators
+    .ofCheckedSupplier(() -> backendService.doSomething())
+    .withCircuitBreaker(circuitBreaker)
+    .withRetry(Retry.ofDefaults())
+    .decorate();
 
 // Invoke the decorated function and recover from any exception
 Try<String> result = Try.of(supplier)
@@ -57,9 +58,10 @@ RateLimiterConfig config = RateLimiterConfig.custom()
 RateLimiter rateLimiter = RateLimiter.of("backendName", config);
 
 // Decorate your call to BackendService.doSomething()
-Try.CheckedSupplier<String> restrictedSupplier = Decorators.ofCheckedSupplier(() -> backendService.doSomething())
-        .withRateLimiter(rateLimiter)
-        .decorate();
+Try.CheckedSupplier<String> restrictedSupplier = Decorators
+    .ofCheckedSupplier(() -> backendService.doSomething())
+    .withRateLimiter(rateLimiter)
+    .decorate();
 
 // First call is successful
 Try<String> firstTry = Try.of(restrictedSupplier);
@@ -81,7 +83,8 @@ If the cache retrieval from a distributed cache fails, the exception is taken ca
 Cache<String, String> cacheContext = Cache.of(Caching.getCache("cacheName", String.class, String.class));
 
 // Decorate your call to BackendService.doSomething()
-Try.CheckedFunction<String, String> cachedFunction = Decorators.ofCheckedSupplier(() -> backendService.doSomething())
+Try.CheckedFunction<String, String> cachedFunction = Decorators
+    .ofCheckedSupplier(() -> backendService.doSomething())
     .withCache(cacheContext)
     .decorate();
 String value = Try.of(() -> cachedFunction.apply("testKey")).get();
