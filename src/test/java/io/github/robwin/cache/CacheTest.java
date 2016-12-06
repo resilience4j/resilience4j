@@ -18,11 +18,11 @@
  */
 package io.github.robwin.cache;
 
-import io.github.robwin.cache.consumer.CacheEventConsumer;
 import io.github.robwin.cache.event.CacheEvent;
 import io.github.robwin.cache.event.CacheOnErrorEvent;
 import io.github.robwin.cache.event.CacheOnHitEvent;
 import io.github.robwin.cache.event.CacheOnMissEvent;
+import io.github.robwin.consumer.CircularEventConsumer;
 import javaslang.control.Try;
 import org.junit.Before;
 import org.junit.Test;
@@ -68,7 +68,7 @@ public class CacheTest {
         given(cache.containsKey("testKey")).willReturn(false);
 
         Cache<String, String> cacheContext = Cache.of(cache);
-        CacheEventConsumer<CacheEvent> cacheEventConsumer = new CacheEventConsumer<>(10);
+        CircularEventConsumer<CacheEvent> cacheEventConsumer = new CircularEventConsumer<>(10);
         cacheContext.getEventStream()
                 .subscribe(cacheEventConsumer);
 
@@ -77,8 +77,8 @@ public class CacheTest {
         assertThat(value).isEqualTo("Hello world");
 
 
-        assertThat(cacheEventConsumer.getBufferedCacheEvents()).hasSize(1);
-        assertThat(cacheEventConsumer.getBufferedCacheEvents().get(0)).isInstanceOf(CacheOnMissEvent.class);
+        assertThat(cacheEventConsumer.getBufferedEvents()).hasSize(1);
+        assertThat(cacheEventConsumer.getBufferedEvents().get(0)).isInstanceOf(CacheOnMissEvent.class);
     }
 
     @Test
@@ -89,7 +89,7 @@ public class CacheTest {
         given(cache.get("testKey")).willReturn("Hello from cache");
 
         Cache<String, String> cacheContext = Cache.of(cache);
-        CacheEventConsumer<CacheEvent> cacheEventConsumer = new CacheEventConsumer<>(10);
+        CircularEventConsumer<CacheEvent> cacheEventConsumer = new CircularEventConsumer<>(10);
         cacheContext.getEventStream()
                 .subscribe(cacheEventConsumer);
 
@@ -97,8 +97,8 @@ public class CacheTest {
         String value = cachedFunction.apply("testKey");
         assertThat(value).isEqualTo("Hello from cache");
 
-        assertThat(cacheEventConsumer.getBufferedCacheEvents()).hasSize(1);
-        assertThat(cacheEventConsumer.getBufferedCacheEvents().get(0)).isInstanceOf(CacheOnHitEvent.class);
+        assertThat(cacheEventConsumer.getBufferedEvents()).hasSize(1);
+        assertThat(cacheEventConsumer.getBufferedEvents().get(0)).isInstanceOf(CacheOnHitEvent.class);
     }
 
     @Test
@@ -107,7 +107,7 @@ public class CacheTest {
         given(cache.containsKey("cacheKey")).willThrow(new RuntimeException("Cache is not available"));
 
         Cache<String, String> cacheContext = Cache.of(cache);
-        CacheEventConsumer<CacheEvent> cacheEventConsumer = new CacheEventConsumer<>(10);
+        CircularEventConsumer<CacheEvent> cacheEventConsumer = new CircularEventConsumer<>(10);
         cacheContext.getEventStream()
                 .subscribe(cacheEventConsumer);
 
@@ -115,8 +115,8 @@ public class CacheTest {
         String value = cachedFunction.apply("cacheKey");
         assertThat(value).isEqualTo("Hello world");
 
-        assertThat(cacheEventConsumer.getBufferedCacheEvents()).hasSize(1);
-        assertThat(cacheEventConsumer.getBufferedCacheEvents().get(0)).isInstanceOf(CacheOnErrorEvent.class);
+        assertThat(cacheEventConsumer.getBufferedEvents()).hasSize(1);
+        assertThat(cacheEventConsumer.getBufferedEvents().get(0)).isInstanceOf(CacheOnErrorEvent.class);
 
 
     }

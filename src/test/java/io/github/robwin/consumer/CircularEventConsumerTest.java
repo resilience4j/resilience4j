@@ -16,7 +16,7 @@
  *
  *
  */
-package io.github.robwin.circuitbreaker.consumer;
+package io.github.robwin.consumer;
 
 import io.github.robwin.circuitbreaker.CircuitBreaker;
 import io.github.robwin.circuitbreaker.event.CircuitBreakerEvent;
@@ -30,9 +30,9 @@ import org.slf4j.LoggerFactory;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class CircuitBreakerEventConsumerTest {
+public class CircularEventConsumerTest {
 
-    private static final Logger LOG = LoggerFactory.getLogger(CircuitBreakerEventConsumerTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(CircularEventConsumerTest.class);
 
     @Test
     public void shouldBufferEvents() {
@@ -40,14 +40,14 @@ public class CircuitBreakerEventConsumerTest {
 
         // tag::shouldBufferEvents[]
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testName");
-        CircuitBreakerEventConsumer<CircuitBreakerOnErrorEvent> ringBuffer = new CircuitBreakerEventConsumer<>(2);
+        CircularEventConsumer<CircuitBreakerOnErrorEvent> ringBuffer = new CircularEventConsumer<>(2);
         circuitBreaker.getEventStream()
                 .filter(event -> event.getEventType() == CircuitBreakerEvent.Type.ERROR)
                 .cast(CircuitBreakerOnErrorEvent.class)
                 .subscribe(ringBuffer);
         // end::shouldBufferEvents[]
 
-        Assertions.assertThat(ringBuffer.getBufferedCircuitBreakerEvents()).isEmpty();
+        Assertions.assertThat(ringBuffer.getBufferedEvents()).isEmpty();
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
 
         Try.CheckedRunnable runnable = () -> { throw new RuntimeException("BAM!");};
@@ -65,8 +65,8 @@ public class CircuitBreakerEventConsumerTest {
         assertThat(result.failed().get()).isInstanceOf(RuntimeException.class);
 
         //Should only store 2 events, because capacity is 2
-        Assertions.assertThat(ringBuffer.getBufferedCircuitBreakerEvents()).hasSize(2);
-        ringBuffer.getBufferedCircuitBreakerEvents().forEach(event -> LOG.info(event.toString()));
+        Assertions.assertThat(ringBuffer.getBufferedEvents()).hasSize(2);
+        //ringBuffer.getBufferedEvents().forEach(event -> LOG.info(event.toString()));
     }
 
     @Test
@@ -75,8 +75,8 @@ public class CircuitBreakerEventConsumerTest {
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testName");
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
 
-        CircuitBreakerEventConsumer<CircuitBreakerOnErrorEvent> ringBuffer = new CircuitBreakerEventConsumer<>(2);
-        Assertions.assertThat(ringBuffer.getBufferedCircuitBreakerEvents()).isEmpty();
+        CircularEventConsumer<CircuitBreakerOnErrorEvent> ringBuffer = new CircularEventConsumer<>(2);
+        Assertions.assertThat(ringBuffer.getBufferedEvents()).isEmpty();
 
         Try.CheckedRunnable runnable = () -> { throw new RuntimeException("BAM!");};
 
@@ -99,6 +99,6 @@ public class CircuitBreakerEventConsumerTest {
         assertThat(result.failed().get()).isInstanceOf(RuntimeException.class);
 
         //Should store 0 events, because Subscription was too late
-        Assertions.assertThat(ringBuffer.getBufferedCircuitBreakerEvents()).hasSize(0);
+        Assertions.assertThat(ringBuffer.getBufferedEvents()).hasSize(0);
     }
 }

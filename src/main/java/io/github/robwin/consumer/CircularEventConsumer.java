@@ -16,19 +16,16 @@
  *
  *
  */
-package io.github.robwin.circuitbreaker.consumer;
+package io.github.robwin.consumer;
 
-
-import io.github.robwin.circuitbreaker.event.CircuitBreakerEvent;
 import io.github.robwin.circuitbreaker.internal.CircularFifoBuffer;
 import io.reactivex.functions.Consumer;
 import javaslang.collection.List;
 
-
 /**
  * A RxJava consumer which stores CircuitBreakerEvents in a circular buffer with a fixed capacity.
  */
-public class CircuitBreakerEventConsumer<T extends CircuitBreakerEvent> implements Consumer<T>{
+public class CircularEventConsumer<T> implements Consumer<T>{
 
     private CircularFifoBuffer<T> eventCircularFifoBuffer;
 
@@ -39,13 +36,13 @@ public class CircuitBreakerEventConsumer<T extends CircuitBreakerEvent> implemen
      * @param capacity the capacity of this CircuitBreakerEventConsumer
      * @throws IllegalArgumentException if {@code capacity < 1}
      */
-    public CircuitBreakerEventConsumer(int capacity) {
+    public CircularEventConsumer(int capacity) {
         this.eventCircularFifoBuffer = new CircularFifoBuffer<>(capacity);
     }
 
     @Override
-    public void accept(T circuitBreakerEvent) throws Exception {
-        eventCircularFifoBuffer.add(circuitBreakerEvent);
+    public void accept(T event) throws Exception {
+        eventCircularFifoBuffer.add(event);
     }
 
     /**
@@ -53,7 +50,7 @@ public class CircuitBreakerEventConsumer<T extends CircuitBreakerEvent> implemen
      *
      * @return a list containing all of the buffered events.
      */
-    public List<T> getBufferedCircuitBreakerEvents(){
+    public List<T> getBufferedEvents(){
         return eventCircularFifoBuffer.toList();
     }
 }
