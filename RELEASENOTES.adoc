@@ -62,12 +62,16 @@
 * PR #19: Add a backoff function feature, to modify the waiting interval between failures
 * Renamed root package from javaslang to io.github.robwin, because the project had to leave the Javaslang GitHub organisation
 
-== Version 0.7.1
+=== Version 0.7.1
 * Changed Event stream return type from Observable to Flowable
 * Events contain a create time
 * Added getThrowable method to CircuitBreakerOnErrorEvent which was missing
 * Added CircuitBreakerOnIgnoredErrorEvent to signal exceptions which have been ignored because of a custom predicate
 * Added getMaxNumberOfBufferedCalls and getNumberOfSuccessfulCalls methods to Metrics interface
 
-== Version 0.7.2
-* Added the SingleOperator interface to CircuitBreakerOperator.
+== Version 0.8.0
+* Added the SingleOperator interface to CircuitBreakerOperator
+* Added a new RateLimiter decorator
+* Added a new Cache decorator
+* Removed CacheEventConsumer and CircuitBreakerEventConsumer and created a generic CircularEventConsumer
+* Added a StopWatch which is used to measure the elapsed time of decorated calls. CircuitBreakerEvents also contain the elapsed duration of a call now.
