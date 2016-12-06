@@ -10,6 +10,8 @@ However, features such as Request Collapsing and Bulk Heading are not in the sco
 
 == Examples
 
+=== CircuitBreaker and Retry
+
 The following example shows how to decorate a lambda expression (CheckedSupplier) with a CircuitBreaker and automatically retry the call 3 times when an exception occurs.
 The example uses Javaslang's Try Monad to recover from an exception, when even all retries have failed.
 
@@ -29,6 +31,8 @@ Try.CheckedSupplier<String> decoratedSupplier = Decorators.ofCheckedSupplier(() 
 Try<String> result = Try.of(supplier)
     .recover(throwable -> "Hello from Recovery");
 ----
+
+=== RateLimiter
 
 The following example shows how to decorate an Observable by using the custom RxJava operator.
 
@@ -66,6 +70,8 @@ Try<String> secondTry = Try.of(restrictedSupplier);
 assertThat(secondTry.isFailure()).isTrue();
 assertThat(secondTry.getCause()).isInstanceOf(RequestNotPermitted.class);
 ----
+
+=== Cache
 
 The following example shows how to decorate a method reference and retrieve cached results using JCache.
 If the cache contains a value, the value is returned from the cache, otherwise the method reference is called in order to retrieve a value and put it into the cache.
