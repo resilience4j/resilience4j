@@ -86,7 +86,8 @@ If the cache retrieval from a distributed cache fails, the exception is taken ca
 [source,java]
 ----
 // Create a CacheContext by wrapping a JCache instance.
-Cache<String, String> cacheContext = Cache.of(Caching.getCache("cacheName", String.class, String.class));
+javax.cache.Cache<String, String> cacheInstance = Caching.getCache("cacheName", String.class, String.class);
+Cache<String, String> cacheContext = Cache.of(cacheInstance);
 
 // Decorate your call to BackendService.doSomething()
 Try.CheckedFunction<String, String> cachedFunction = Decorators
