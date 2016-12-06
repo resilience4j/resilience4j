@@ -104,7 +104,7 @@ public class CacheTest {
     @Test
     public void shouldInvokeDecoratedCallableBecauseOfException() throws Throwable {
         // Given the cache contains the key
-        given(cache.containsKey("testKey")).willThrow(new RuntimeException("Cache is not available"));
+        given(cache.containsKey("cacheKey")).willThrow(new RuntimeException("Cache is not available"));
 
         Cache<String, String> cacheContext = Cache.of(cache);
         CacheEventConsumer<CacheEvent> cacheEventConsumer = new CacheEventConsumer<>(10);
@@ -112,7 +112,7 @@ public class CacheTest {
                 .subscribe(cacheEventConsumer);
 
         Try.CheckedFunction<String, String> cachedFunction = Cache.decorateCheckedSupplier(cacheContext, () -> "Hello world");
-        String value = cachedFunction.apply("testKey");
+        String value = cachedFunction.apply("cacheKey");
         assertThat(value).isEqualTo("Hello world");
 
         assertThat(cacheEventConsumer.getBufferedCacheEvents()).hasSize(1);
