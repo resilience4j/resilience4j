@@ -24,32 +24,32 @@ import java.time.Duration;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class RetryBuilderTest {
+public class RetryConfigBuilderTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void zeroMaxAttemptsShouldFail() {
-        Retry.custom().maxAttempts(0).build();
+        RetryConfig.custom().maxAttempts(0).build();
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void zeroWaitIntervalShouldFail() {
-        Retry.custom().waitDuration(Duration.ofMillis(0)).build();
+        RetryConfig.custom().waitDuration(Duration.ofMillis(0)).build();
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void WaitIntervalUnderTenMillisShouldFail() {
-        Retry.custom().waitDuration(Duration.ofMillis(5)).build();
+        RetryConfig.custom().waitDuration(Duration.ofMillis(5)).build();
     }
 
     @Test
     public void waitIntervalOfTenMillisShouldSucceed() {
-        Retry retryCtx = Retry.custom().waitDuration(Duration.ofMillis(10)).build();
-        assertThat(retryCtx).isNotNull();
+        RetryConfig config = RetryConfig.custom().waitDuration(Duration.ofMillis(10)).build();
+        assertThat(config).isNotNull();
     }
 
     @Test
     public void waitIntervalOverTenMillisShouldSucceed() {
-        Retry retryCtx = Retry.custom().waitDuration(Duration.ofSeconds(10)).build();
-        assertThat(retryCtx).isNotNull();
+        RetryConfig config = RetryConfig.custom().waitDuration(Duration.ofSeconds(10)).build();
+        assertThat(config).isNotNull();
     }
 }

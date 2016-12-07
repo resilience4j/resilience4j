@@ -54,7 +54,8 @@ public interface Cache<K, V>  {
     /**
      * Creates a Retry with default configuration.
      *
-     * @return a Retry with default configuration
+     * @param cache the wrapped JCache instance
+     * @return a Cache
      */
     static <K,V> Cache<K,V> of(javax.cache.Cache<K, V> cache){
         Objects.requireNonNull(cache, "Cache must not be null");

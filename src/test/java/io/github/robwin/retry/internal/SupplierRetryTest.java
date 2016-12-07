@@ -16,8 +16,10 @@
  *
  *
  */
-package io.github.robwin.retry;
+package io.github.robwin.retry.internal;
 
+import io.github.robwin.retry.Retry;
+import io.github.robwin.retry.RetryConfig;
 import io.github.robwin.test.HelloWorldService;
 import javaslang.control.Try;
 import org.junit.Before;
@@ -25,10 +27,9 @@ import org.junit.Test;
 import org.mockito.BDDMockito;
 
 import javax.xml.ws.WebServiceException;
+import java.util.function.Supplier;
 
-import static javaslang.API.$;
-import static javaslang.API.Case;
-import static javaslang.API.Match;
+import static javaslang.API.*;
 import static javaslang.Predicates.instanceOf;
 import static org.assertj.core.api.BDDAssertions.assertThat;
 import static org.mockito.BDDMockito.given;
@@ -51,18 +52,34 @@ public class SupplierRetryTest {
         // Given the HelloWorldService returns Hello world
         given(helloWorldService.returnHelloWorld()).willReturn("Hello world");
         // Create a Retry with default configuration
-        Retry retryContext = Retry.ofDefaults();
+        Retry retryContext = Retry.ofDefaults("id");
         // Decorate the invocation of the HelloWorldService
-        Try.CheckedSupplier<String> retryableSupplier = Retry.decorateCheckedSupplier(retryContext, helloWorldService::returnHelloWorld);
+        Supplier<String> supplier = Retry.decorateSupplier(retryContext, helloWorldService::returnHelloWorld);
 
         // When
-        Try<String> result = Try.of(retryableSupplier);
+        String result = supplier.get();
         // Then the helloWorldService should be invoked 1 time
         BDDMockito.then(helloWorldService).should(times(1)).returnHelloWorld();
-        // and the result should be a success
-        assertThat(result.isSuccess()).isTrue();
-        assertThat(result.get()).isEqualTo("Hello world");
         assertThat(sleptTime).isEqualTo(0);
+    }
+
+    @Test
+    public void testDecorateSupplier() {
+        // Given the HelloWorldService throws an exception
+        given(helloWorldService.returnHelloWorld()).willThrow(new WebServiceException("BAM!")).willReturn("Hello world");
+
+        // Create a Retry with default configuration
+        Retry retryContext = Retry.ofDefaults("id");
+        // Decorate the invocation of the HelloWorldService
+        Supplier<String> supplier = Retry.decorateSupplier(retryContext, helloWorldService::returnHelloWorld);
+
+        // When
+        String result = supplier.get();
+
+        // Then the helloWorldService should be invoked 2 times
+        BDDMockito.then(helloWorldService).should(times(2)).returnHelloWorld();
+        assertThat(result).isEqualTo("Hello world");
+        assertThat(sleptTime).isEqualTo(RetryConfig.DEFAULT_WAIT_DURATION);
     }
 
     @Test
@@ -71,7 +88,7 @@ public class SupplierRetryTest {
         given(helloWorldService.returnHelloWorld()).willThrow(new WebServiceException("BAM!")).willReturn("Hello world");
 
         // Create a Retry with default configuration
-        Retry retryContext = Retry.ofDefaults();
+        Retry retryContext = Retry.ofDefaults("id");
         // Decorate the invocation of the HelloWorldService
         Try.CheckedSupplier<String> retryableSupplier = Retry.decorateCheckedSupplier(retryContext, helloWorldService::returnHelloWorld);
 
@@ -81,7 +98,7 @@ public class SupplierRetryTest {
         // Then the helloWorldService should be invoked 2 times
         BDDMockito.then(helloWorldService).should(times(2)).returnHelloWorld();
         assertThat(result.get()).isEqualTo("Hello world");
-        assertThat(sleptTime).isEqualTo(RetryContext.DEFAULT_WAIT_DURATION);
+        assertThat(sleptTime).isEqualTo(RetryConfig.DEFAULT_WAIT_DURATION);
     }
 
     @Test
@@ -90,7 +107,7 @@ public class SupplierRetryTest {
         given(helloWorldService.returnHelloWorld()).willThrow(new WebServiceException("BAM!"));
 
         // Create a Retry with default configuration
-        Retry retryContext = Retry.ofDefaults();
+        Retry retryContext = Retry.ofDefaults("id");
         // Decorate the invocation of the HelloWorldService
         Try.CheckedSupplier<String> retryableSupplier = Retry.decorateCheckedSupplier(retryContext, helloWorldService::returnHelloWorld);
 
@@ -103,7 +120,7 @@ public class SupplierRetryTest {
         assertThat(result.isFailure()).isTrue();
         // and the returned exception should be of type RuntimeException
         assertThat(result.failed().get()).isInstanceOf(WebServiceException.class);
-        assertThat(sleptTime).isEqualTo(RetryContext.DEFAULT_WAIT_DURATION*2);
+        assertThat(sleptTime).isEqualTo(RetryConfig.DEFAULT_WAIT_DURATION*2);
     }
 
     @Test
@@ -111,8 +128,9 @@ public class SupplierRetryTest {
         // Given the HelloWorldService throws an exception
         given(helloWorldService.returnHelloWorld()).willThrow(new WebServiceException("BAM!"));
 
-        // Create a Retry with default configuration
-        Retry retryContext = Retry.custom().maxAttempts(1).build();
+        // Create a Retry with custom configuration
+        RetryConfig config = RetryConfig.custom().maxAttempts(1).build();
+        Retry retryContext = Retry.of("id", config);
         // Decorate the invocation of the HelloWorldService
         Try.CheckedSupplier<String> retryableSupplier = Retry.decorateCheckedSupplier(retryContext, helloWorldService::returnHelloWorld);
 
@@ -134,11 +152,12 @@ public class SupplierRetryTest {
         given(helloWorldService.returnHelloWorld()).willThrow(new WebServiceException("BAM!"));
 
         // Create a Retry with default configuration
-        Retry retryContext = Retry.custom()
+        RetryConfig config = RetryConfig.custom()
                 .retryOnException(throwable -> Match(throwable).of(
                         Case(instanceOf(WebServiceException.class), false),
                         Case($(), true)))
                 .build();
+        Retry retryContext = Retry.of("id", config);
         // Decorate the invocation of the HelloWorldService
         Try.CheckedSupplier<String> retryableSupplier = Retry.decorateCheckedSupplier(retryContext, helloWorldService::returnHelloWorld);
 
@@ -160,7 +179,7 @@ public class SupplierRetryTest {
         given(helloWorldService.returnHelloWorld()).willThrow(new WebServiceException("BAM!"));
 
         // Create a Retry with default configuration
-        Retry retryContext = Retry.ofDefaults();
+        Retry retryContext = Retry.ofDefaults("id");
         // Decorate the invocation of the HelloWorldService
         Try.CheckedSupplier<String> retryableSupplier = Retry.decorateCheckedSupplier(retryContext, helloWorldService::returnHelloWorld);
 
@@ -172,7 +191,7 @@ public class SupplierRetryTest {
 
         // and the returned exception should be of type RuntimeException
         assertThat(result.get()).isEqualTo("Hello world from recovery function");
-        assertThat(sleptTime).isEqualTo(RetryContext.DEFAULT_WAIT_DURATION*2);
+        assertThat(sleptTime).isEqualTo(RetryConfig.DEFAULT_WAIT_DURATION*2);
     }
 
     @Test
@@ -181,7 +200,8 @@ public class SupplierRetryTest {
         given(helloWorldService.returnHelloWorld()).willThrow(new WebServiceException("BAM!"));
 
         // Create a Retry with a backoff function doubling the interval
-        Retry retryContext = Retry.custom().backoffFunction(x -> x.multipliedBy(2)).build();
+        RetryConfig config = RetryConfig.custom().backoffFunction(x -> x.multipliedBy(2)).build();
+        Retry retryContext = Retry.of("id", config);
         // Decorate the invocation of the HelloWorldService
         Try.CheckedSupplier<String> retryableSupplier = Retry.decorateCheckedSupplier(retryContext, helloWorldService::returnHelloWorld);
 
@@ -191,7 +211,7 @@ public class SupplierRetryTest {
         // Then the slept time should be according to the backoff function
         BDDMockito.then(helloWorldService).should(times(3)).returnHelloWorld();
         assertThat(sleptTime).isEqualTo(
-            RetryContext.DEFAULT_WAIT_DURATION +
-            RetryContext.DEFAULT_WAIT_DURATION*2);
+                RetryConfig.DEFAULT_WAIT_DURATION +
+                    RetryConfig.DEFAULT_WAIT_DURATION*2);
     }
 }

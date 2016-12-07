@@ -18,6 +18,9 @@
  */
 package io.github.robwin.retry;
 
+import io.github.robwin.retry.event.RetryEvent;
+import io.github.robwin.retry.internal.RetryContext;
+import io.reactivex.Flowable;
 import javaslang.control.Try;
 
 import java.util.function.Function;
@@ -26,20 +29,16 @@ import java.util.function.Supplier;
 public interface Retry {
 
     /**
-     * Checks if the call should be retried after an Exception:
-     * If yes, waits the configured time
-     * If no, throw the last exception
+     * Returns the ID of this Retry.
      *
-     * @throws Exception the original exception if the maximum retry attempts are exceeded
+     * @return the ID of this Retry
      */
-    void throwOrSleepAfterException() throws Exception;
+    String getId();
 
     /**
-     * Checks if the call should be retried after a RuntimeException:
-     * If yes, waits the configured time
-     * If no, throw the last exception
+     *  Records a successful call.
      */
-    void throwOrSleepAfterRuntimeException();
+    void onSuccess();
 
     /**
      * Handles a checked exception
@@ -47,31 +46,54 @@ public interface Retry {
      * @param exception the exception to handle
      * @throws Throwable the exception
      */
-    void handleException(Exception exception) throws Throwable;
+    void onError(Exception exception) throws Throwable;
 
     /**
      * Handles a runtime exception
      *
      * @param runtimeException the exception to handle
      */
-    void handleRuntimeException(RuntimeException runtimeException);
+    void onRuntimeError(RuntimeException runtimeException);
 
     /**
-     * Creates a RetryContext.Builder to configure a custom Retry.
+     * Returns a reactive stream of RetryEvents.
      *
-     * @return a RetryContext.Builder
+     * @return a reactive stream of RetryEvents
      */
-    static RetryContext.Builder custom(){
-        return new RetryContext.Builder();
+    Flowable<RetryEvent> getEventStream();
+
+    /**
+     * Creates a Retry with a custom Retry configuration.
+     *
+     * @param id the ID of the Retry
+     * @param retryConfig a custom Retry configuration
+     *
+     * @return a Retry with a custom Retry configuration.
+     */
+    static RetryContext of(String id, RetryConfig retryConfig){
+        return new RetryContext(id, retryConfig);
+    }
+
+    /**
+     * Creates a Retry with a custom Retry configuration.
+     *
+     * @param id the ID of the Retry
+     * @param retryConfigSupplier a supplier of a custom Retry configuration
+     *
+     * @return a Retry with a custom Retry configuration.
+     */
+    static RetryContext of(String id, Supplier<RetryConfig> retryConfigSupplier){
+        return new RetryContext(id, retryConfigSupplier.get());
     }
 
     /**
      * Creates a Retry with default configuration.
      *
+     * @param id the ID of the Retry
      * @return a Retry with default configuration
      */
-    static Retry ofDefaults(){
-        return Retry.custom().build();
+    static Retry ofDefaults(String id){
+        return new RetryContext(id, RetryConfig.ofDefaults());
     }
 
     /**
@@ -85,10 +107,11 @@ public interface Retry {
     static <T> Try.CheckedSupplier<T> decorateCheckedSupplier(Retry retryContext, Try.CheckedSupplier<T> supplier){
         return () -> {
             do try {
-                return supplier.get();
+                T result = supplier.get();
+                retryContext.onSuccess();
+                return result;
             } catch (Exception exception) {
-                retryContext.handleException(exception);
-                retryContext.throwOrSleepAfterException();
+                retryContext.onError(exception);
             } while (true);
         };
     }
@@ -105,10 +128,10 @@ public interface Retry {
         return () -> {
             do try {
                 runnable.run();
+                retryContext.onSuccess();
                 break;
             } catch (Exception exception) {
-                retryContext.handleException(exception);
-                retryContext.throwOrSleepAfterException();
+                retryContext.onError(exception);
             } while (true);
         };
     }
@@ -124,10 +147,11 @@ public interface Retry {
     static <T, R> Try.CheckedFunction<T, R> decorateCheckedFunction(Retry retryContext, Try.CheckedFunction<T, R> function){
         return (T t) -> {
             do try {
-                return function.apply(t);
+                R result = function.apply(t);
+                retryContext.onSuccess();
+                return result;
             } catch (Exception exception) {
-                retryContext.handleException(exception);
-                retryContext.throwOrSleepAfterException();
+                retryContext.onError(exception);
             } while (true);
         };
     }
@@ -143,10 +167,11 @@ public interface Retry {
     static <T> Supplier<T> decorateSupplier(Retry retryContext, Supplier<T> supplier){
         return () -> {
             do try {
-                return supplier.get();
+                T result = supplier.get();
+                retryContext.onSuccess();
+                return result;
             } catch (RuntimeException runtimeException) {
-                retryContext.handleRuntimeException(runtimeException);
-                retryContext.throwOrSleepAfterRuntimeException();
+                retryContext.onRuntimeError(runtimeException);
             } while (true);
         };
     }
@@ -163,10 +188,10 @@ public interface Retry {
         return () -> {
             do try {
                 runnable.run();
+                retryContext.onSuccess();
                 break;
             } catch (RuntimeException runtimeException) {
-                retryContext.handleRuntimeException(runtimeException);
-                retryContext.throwOrSleepAfterRuntimeException();
+                retryContext.onRuntimeError(runtimeException);
             } while (true);
         };
     }
@@ -182,10 +207,11 @@ public interface Retry {
     static <T, R> Function<T, R> decorateFunction(Retry retryContext, Function<T, R> function){
         return (T t) -> {
             do try {
-                return function.apply(t);
+                R result = function.apply(t);
+                retryContext.onSuccess();
+                return result;
             } catch (RuntimeException runtimeException) {
-                retryContext.handleRuntimeException(runtimeException);
-                retryContext.throwOrSleepAfterRuntimeException();
+                retryContext.onRuntimeError(runtimeException);
             } while (true);
         };
     }

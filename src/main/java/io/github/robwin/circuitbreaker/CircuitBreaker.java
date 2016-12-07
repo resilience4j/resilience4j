@@ -71,14 +71,14 @@ public interface CircuitBreaker {
     void onSuccess(Duration duration);
 
     /**
-     * Returns the name of this CircuitBreaker
+     * Returns the name of this CircuitBreaker.
      *
      * @return the name of this CircuitBreaker
      */
     String getName();
 
     /**
-     * Returns the state of this CircuitBreaker
+     * Returns the state of this CircuitBreaker.
      *
      * @return the state of this CircuitBreaker
      */
@@ -412,7 +412,7 @@ public interface CircuitBreaker {
      * @param name the name of the CircuitBreaker
      * @param circuitBreakerConfig a custom CircuitBreaker configuration
      *
-     * @return a CircuitBreaker with a default CircuitBreaker configuration.
+     * @return a CircuitBreaker with a custom CircuitBreaker configuration.
      */
     static CircuitBreaker of(String name, CircuitBreakerConfig circuitBreakerConfig){
         return new CircuitBreakerStateMachine(name, circuitBreakerConfig);
@@ -424,7 +424,7 @@ public interface CircuitBreaker {
      * @param name      the name of the CircuitBreaker
      * @param circuitBreakerConfigSupplier a supplier of a custom CircuitBreaker configuration
      *
-     * @return a CircuitBreaker with a default CircuitBreaker configuration.
+     * @return a CircuitBreaker with a custom CircuitBreaker configuration.
      */
     static CircuitBreaker of(String name, Supplier<CircuitBreakerConfig> circuitBreakerConfigSupplier){
         return new CircuitBreakerStateMachine(name, circuitBreakerConfigSupplier);

@@ -61,7 +61,7 @@ public class DecoratorsTest {
 
         Supplier<String> decoratedSupplier = Decorators.ofSupplier(() -> helloWorldService.returnHelloWorld())
                 .withCircuitBreaker(circuitBreaker)
-                .withRetry(Retry.ofDefaults())
+                .withRetry(Retry.ofDefaults("id"))
                 .withRateLimiter(RateLimiter.ofDefaults("testName"))
                 .decorate();
 
@@ -83,7 +83,7 @@ public class DecoratorsTest {
 
         Try.CheckedSupplier<String> decoratedSupplier = Decorators.ofCheckedSupplier(() -> helloWorldService.returnHelloWorldWithException())
                 .withCircuitBreaker(circuitBreaker)
-                .withRetry(Retry.ofDefaults())
+                .withRetry(Retry.ofDefaults("id"))
                 .withRateLimiter(RateLimiter.ofDefaults("testName"))
                 .decorate();
 
@@ -103,7 +103,7 @@ public class DecoratorsTest {
 
         Runnable decoratedRunnable = Decorators.ofRunnable(() -> helloWorldService.sayHelloWorld())
                 .withCircuitBreaker(circuitBreaker)
-                .withRetry(Retry.ofDefaults())
+                .withRetry(Retry.ofDefaults("id"))
                 .withRateLimiter(RateLimiter.ofDefaults("testName"))
                 .decorate();
 
@@ -123,7 +123,7 @@ public class DecoratorsTest {
 
         Try.CheckedRunnable decoratedRunnable = Decorators.ofCheckedRunnable(() -> helloWorldService.sayHelloWorldWithException())
                 .withCircuitBreaker(circuitBreaker)
-                .withRetry(Retry.ofDefaults())
+                .withRetry(Retry.ofDefaults("id"))
                 .withRateLimiter(RateLimiter.ofDefaults("testName"))
                 .decorate();
 
@@ -144,7 +144,7 @@ public class DecoratorsTest {
 
         Function<String, String> decoratedFunction = Decorators.ofFunction(helloWorldService::returnHelloWorldWithName)
                 .withCircuitBreaker(circuitBreaker)
-                .withRetry(Retry.ofDefaults())
+                .withRetry(Retry.ofDefaults("id"))
                 .withRateLimiter(RateLimiter.ofDefaults("testName"))
                 .decorate();
 
@@ -164,7 +164,7 @@ public class DecoratorsTest {
 
         Try.CheckedFunction<String, String> decoratedFunction = Decorators.ofCheckedFunction(helloWorldService::returnHelloWorldWithNameWithException)
                 .withCircuitBreaker(circuitBreaker)
-                .withRetry(Retry.ofDefaults())
+                .withRetry(Retry.ofDefaults("id"))
                 .withRateLimiter(RateLimiter.ofDefaults("testName"))
                 .decorate();
 
@@ -184,7 +184,7 @@ public class DecoratorsTest {
 
         Supplier<String> decoratedSupplier = Decorators.ofSupplier(() -> helloWorldService.returnHelloWorld())
                 .withCircuitBreaker(circuitBreaker)
-                .withRetry(Retry.ofDefaults())
+                .withRetry(Retry.ofDefaults("id"))
                 .decorate();
 
         Try.of(decoratedSupplier::get);

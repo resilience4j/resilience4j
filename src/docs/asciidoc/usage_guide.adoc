@@ -125,14 +125,18 @@ You can also retry a failed function and recover from the exception, if the maxi
 ----
 // Create a Retry context with a default global configuration
 // (maxAttempts = 3, waitDurationInOpenState = 500[ms])
-Retry retryContext = Retry.ofDefaults();
+RetryConfig config = RetryConfig.custom()
+    .maxAttempts(3)
+    .waitDuration(Duration.ofMillis(500))
+    .build();
+Retry retryContext = Retry.of("id", config);
 ----
 
 In order to create a custom `Retry` context, you can use the Retry context builder. You can configure the maximum number of retry attempts and the wait duration between successive attempts. Furthermore, you can configure a custom Predicate which evaluates if an exception should trigger a retry.
 
 [source,java]
 ----
-Retry retryContext = Retry.custom()
+RetryConfig config = RetryConfig.custom()
     .maxAttempts(2)
     .waitDurationInOpenState(Duration.ofMillis(100))
     .retryOnException(throwable -> Match.of(throwable)
@@ -150,9 +154,9 @@ HelloWorldService  helloWorldService = mock(HelloWorldService.class);
 given(helloWorldService.sayHelloWorld()).willThrow(new WebServiceException("BAM!"));
 
 // Create a Retry with default configuration
-Retry retryContext = Retry.ofDefaults();
+Retry retryContext = Retry.ofDefaults("id");
 // Decorate the invocation of the HelloWorldService
-Try.CheckedSupplier<String> retryableSupplier = Retry.decorateCheckedSupplier(helloWorldService::sayHelloWorld, retryContext);
+Try.CheckedSupplier<String> retryableSupplier = Retry.decorateCheckedSupplier(retryContext, helloWorldService::sayHelloWorld);
 
 // When I invoke the function
 Try<String> result = Try.of(retryableSupplier).recover((throwable) -> "Hello world from recovery function");
