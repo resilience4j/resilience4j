@@ -18,7 +18,6 @@
  */
 package io.github.robwin.retry;
 
-import io.github.robwin.retry.Retry;
 import org.junit.Test;
 
 import java.time.Duration;

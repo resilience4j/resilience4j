@@ -16,14 +16,19 @@ However, features such as Request Collapsing and Bulk Heading are not in the sco
 
 === CircuitBreaker and Retry
 
-The following example shows how to decorate a lambda expression (CheckedSupplier) with a CircuitBreaker and automatically retry the call 3 times when an exception occurs.
+The following example shows how to decorate a lambda expression (CheckedSupplier) with a CircuitBreaker and how to retry the call at most 3 times when an exception occurs.
+You can configure the wait interval between retries and also configure a custom backoff algorithm.
 The example uses Javaslang's Try Monad to recover from an exception, when even all retries have failed.
 
 [source,java]
 ----
-// Create a CircuitBreaker and a Retry context
+// Create a CircuitBreaker with a default configuration
 CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("backendName");
-Retry retryContext = Retry.ofDefaults();
+// Create a Retry with a most 3 retries and a fixed time interval between retries
+Retry retryContext = Retry.custom()
+    .maxAttempts(3)
+    .waitDuration(Duration.ofMillis(100))
+    .build();
 
 // Decorate your call to BackendService.doSomething()
 Try.CheckedSupplier<String> decoratedSupplier = Decorators
