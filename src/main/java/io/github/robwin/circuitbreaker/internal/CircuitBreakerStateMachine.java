@@ -95,8 +95,9 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
             }
             publishCircuitBreakerEvent(() -> new CircuitBreakerOnErrorEvent(getName(), duration, throwable));
             stateReference.get().onError(throwable);
+        }else{
+            publishCircuitBreakerEvent(() -> new CircuitBreakerOnIgnoredErrorEvent(getName(), duration, throwable));
         }
-        publishCircuitBreakerEvent(() -> new CircuitBreakerOnIgnoredErrorEvent(getName(), duration, throwable));
     }
 
 

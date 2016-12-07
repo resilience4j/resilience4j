@@ -229,8 +229,8 @@ So you can easily restrict not only network calls but your local in-memory opera
 
 == Companies who use javaslang-circuitbreaker
 
-* Deutsche Telekom
-* AOL
+* Deutsche Telekom (In an application with over 400 million request per day)
+* AOL (In an application with low latency requirements)
 
 == License
 

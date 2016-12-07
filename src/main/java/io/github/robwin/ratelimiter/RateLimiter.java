@@ -55,7 +55,7 @@ public interface RateLimiter {
     }
 
     /**
-     * Creates a RateLimiter with a a default RateLimiterConfig configuration.
+     * Creates a RateLimiter with a default RateLimiterConfig configuration.
      *
      * @param name                      the name of the RateLimiter
      * @return The {@link RateLimiter}

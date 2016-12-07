@@ -19,15 +19,22 @@
 package io.github.robwin.consumer;
 
 import io.github.robwin.circuitbreaker.CircuitBreaker;
+import io.github.robwin.circuitbreaker.CircuitBreakerConfig;
 import io.github.robwin.circuitbreaker.event.CircuitBreakerEvent;
 import io.github.robwin.circuitbreaker.event.CircuitBreakerOnErrorEvent;
-import io.github.robwin.retry.Retry;
-import javaslang.control.Try;
-import org.assertj.core.api.Assertions;
+import javaslang.API;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.xml.ws.WebServiceException;
+import java.io.IOException;
+import java.time.Duration;
+
+import static io.github.robwin.circuitbreaker.event.CircuitBreakerEvent.Type;
+import static javaslang.API.$;
+import static javaslang.API.Case;
+import static javaslang.Predicates.instanceOf;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class CircularEventConsumerTest {
@@ -35,37 +42,67 @@ public class CircularEventConsumerTest {
     private static final Logger LOG = LoggerFactory.getLogger(CircularEventConsumerTest.class);
 
     @Test
-    public void shouldBufferEvents() {
+    public void shouldBufferErrorEvents() {
         // Given
 
         // tag::shouldBufferEvents[]
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testName");
         CircularEventConsumer<CircuitBreakerOnErrorEvent> ringBuffer = new CircularEventConsumer<>(2);
         circuitBreaker.getEventStream()
-                .filter(event -> event.getEventType() == CircuitBreakerEvent.Type.ERROR)
+                .filter(event -> event.getEventType() == Type.ERROR)
                 .cast(CircuitBreakerOnErrorEvent.class)
                 .subscribe(ringBuffer);
         // end::shouldBufferEvents[]
 
-        Assertions.assertThat(ringBuffer.getBufferedEvents()).isEmpty();
-        assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
-
-        Try.CheckedRunnable runnable = () -> { throw new RuntimeException("BAM!");};
-
-        // Create a Retry with 3 retries
-        Retry retryContext = Retry.ofDefaults();
+        assertThat(ringBuffer.getBufferedEvents()).isEmpty();
 
         //When
-        runnable = CircuitBreaker.decorateCheckedRunnable(circuitBreaker, runnable);
-        runnable = Retry.decorateCheckedRunnable(retryContext, runnable);
-        Try<Void> result = Try.run(runnable);
+        circuitBreaker.onError(Duration.ZERO, new RuntimeException("Bla"));
+        circuitBreaker.onError(Duration.ZERO, new RuntimeException("Bla"));
+        circuitBreaker.onError(Duration.ZERO, new RuntimeException("Bla"));
 
         //Then
-        assertThat(result.isFailure()).isTrue();
-        assertThat(result.failed().get()).isInstanceOf(RuntimeException.class);
+        CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
+        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(3);
+        assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(3);
 
         //Should only store 2 events, because capacity is 2
-        Assertions.assertThat(ringBuffer.getBufferedEvents()).hasSize(2);
+        assertThat(ringBuffer.getBufferedEvents()).hasSize(2);
+        //ringBuffer.getBufferedEvents().forEach(event -> LOG.info(event.toString()));
+    }
+
+    @Test
+    public void shouldBufferAllEvents() {
+        // Given
+        CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom()
+                .ringBufferSizeInClosedState(3)
+                .recordFailure(throwable -> API.Match(throwable).of(
+                        Case(instanceOf(WebServiceException.class), true),
+                        Case($(), false)))
+                .build();
+        CircuitBreaker circuitBreaker = CircuitBreaker.of("testName", circuitBreakerConfig);
+        CircularEventConsumer<CircuitBreakerEvent> ringBuffer = new CircularEventConsumer<>(10);
+        circuitBreaker.getEventStream()
+                .subscribe(ringBuffer);
+
+        assertThat(ringBuffer.getBufferedEvents()).isEmpty();
+
+        //When
+        circuitBreaker.onSuccess(Duration.ZERO);
+        circuitBreaker.onError(Duration.ZERO, new WebServiceException("Bla"));
+        circuitBreaker.onError(Duration.ZERO, new IOException("Bla"));
+        circuitBreaker.onError(Duration.ZERO, new WebServiceException("Bla"));
+
+
+        //Then
+        CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
+        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(3);
+        assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(2);
+
+        //Should store 3 events, because circuit emits 2 error events and one state transition event
+        assertThat(ringBuffer.getBufferedEvents()).hasSize(5);
+        assertThat(ringBuffer.getBufferedEvents()).extracting("eventType")
+                .containsExactly(Type.SUCCESS, Type.ERROR, Type.IGNORED_ERROR, Type.ERROR, Type.STATE_TRANSITION);
         //ringBuffer.getBufferedEvents().forEach(event -> LOG.info(event.toString()));
     }
 
@@ -73,32 +110,26 @@ public class CircularEventConsumerTest {
     public void shouldNotBufferEvents() {
         // Given
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testName");
-        assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
 
         CircularEventConsumer<CircuitBreakerOnErrorEvent> ringBuffer = new CircularEventConsumer<>(2);
-        Assertions.assertThat(ringBuffer.getBufferedEvents()).isEmpty();
+        assertThat(ringBuffer.getBufferedEvents()).isEmpty();
 
-        Try.CheckedRunnable runnable = () -> { throw new RuntimeException("BAM!");};
-
-        // Create a Retry with 3 retries
-        Retry retryContext = Retry.ofDefaults();
-
-        //When
-        runnable = CircuitBreaker.decorateCheckedRunnable(circuitBreaker, runnable);
-        runnable = Retry.decorateCheckedRunnable(retryContext, runnable);
-        Try<Void> result = Try.run(runnable);
+        circuitBreaker.onError(Duration.ZERO, new RuntimeException("Bla"));
+        circuitBreaker.onError(Duration.ZERO, new RuntimeException("Bla"));
+        circuitBreaker.onError(Duration.ZERO, new RuntimeException("Bla"));
 
         //Subscription is too late
         circuitBreaker.getEventStream()
-                .filter(event -> event.getEventType() == CircuitBreakerEvent.Type.ERROR)
+                .filter(event -> event.getEventType() == Type.ERROR)
                 .cast(CircuitBreakerOnErrorEvent.class)
                 .subscribe(ringBuffer);
 
         //Then
-        assertThat(result.isFailure()).isTrue();
-        assertThat(result.failed().get()).isInstanceOf(RuntimeException.class);
+        CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
+        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(3);
+        assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(3);
 
         //Should store 0 events, because Subscription was too late
-        Assertions.assertThat(ringBuffer.getBufferedEvents()).hasSize(0);
+        assertThat(ringBuffer.getBufferedEvents()).hasSize(0);
     }
 }
