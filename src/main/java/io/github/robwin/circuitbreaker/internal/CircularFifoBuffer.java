@@ -86,15 +86,14 @@ public class CircularFifoBuffer<T> {
      * Overwrites the oldest element when full.
      */
     public void add(T element) {
-        if(!fifoQueue.offer(element)){
-            final ReentrantLock lock = this.lock;
-            lock.lock();
-            try {
+        this.lock.lock();
+        try {
+            if(!fifoQueue.offer(element)) {
                 fifoQueue.remove();
                 fifoQueue.add(element);
-            } finally {
-                lock.unlock();
             }
+        } finally {
+            this.lock.unlock();
         }
     }
 }

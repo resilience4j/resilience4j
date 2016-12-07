@@ -1,0 +1,10 @@
+Benchmark                                                                  Mode  Cnt   Score    Error  Units
+CircularBufferBenchmark.circularBuffer                                     avgt   20   4.838 ±  0.330  us/op
+CircularBufferBenchmark.circularBuffer:circularBufferReaderEvents          avgt   20  13.226 ±  1.072  us/op
+CircularBufferBenchmark.circularBuffer:circularBufferReaderMonitoring      avgt   20   0.112 ±  0.012  us/op
+CircularBufferBenchmark.circularBuffer:circularBufferWriter                avgt   20   3.007 ±  0.797  us/op
+
+CircularBufferBenchmark.concurrentBuffer                                   avgt   20   6.631 ±  3.725  us/op
+CircularBufferBenchmark.concurrentBuffer:concurrentBufferReaderEvents      avgt   20  26.299 ± 14.902  us/op
+CircularBufferBenchmark.concurrentBuffer:concurrentBufferReaderMonitoring  avgt   20   0.007 ±  0.001  us/op
+CircularBufferBenchmark.concurrentBuffer:concurrentBufferWriter            avgt   20   0.108 ±  0.009  us/op
