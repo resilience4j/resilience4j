@@ -5,7 +5,7 @@ This library is a lightweight, easy-to-use fault tolerance library inspired by h
 To highlight a few differences to Netflix Hystrix:
 
 In Hystrix calls to external systems have to be wrapped in a HystrixCommand. This library, in contrast, provides higher-order functions to decorate any function, lambda expression or method reference with a http://martinfowler.com/bliki/CircuitBreaker.html[Circuit Breaker]. Furthermore, the library provides a custom operator to decorate any RxJava `Observable` or `Flowable` with a Circuit Breaker.
-In the following I call the higher-order functions decorators. The decorators return an enhanced version of your function. Furthermore, the library provides decorators to retry failed functions, limit call frequency or cache function results. You can stack more than one decorator on any given function. That means, you can combine a RateLimiter and Retry decorator with a CircuitBreaker decorator. Any decorated function can be executed synchronously or asynchronously by using a CompletableFuture or RxJava.
+In the following I call higher-order functions decorators. The decorators return an enhanced version of your function. Furthermore, the library provides decorators to retry failed functions, limit call frequency or cache function results. You can stack more than one decorator on any given function. That means, you can combine a RateLimiter and Retry decorator with a CircuitBreaker decorator. Any decorated function can be executed synchronously or asynchronously by using a CompletableFuture or RxJava.
 However, features such as Request Collapsing and Bulk Heading are not in the scope of this library.
 
 == Examples
@@ -20,7 +20,7 @@ The example uses Javaslang's Try Monad to recover from an exception, when even a
 ----
 // Create a CircuitBreaker with a default configuration
 CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("backendName");
-// Create a Retry with a most 3 retries and a fixed time interval between retries
+// Create a Retry with at most 3 retries and a fixed time interval between retries
 // and only retry on IOExceptions
 Retry retryContext = Retry.custom()
     .maxAttempts(3)
@@ -105,7 +105,7 @@ String value = Try.of(() -> cachedFunction.apply("cacheKey")).get();
 
 == Consume emitted CircuitBreakerEvents
 
-The CircuitBreaker emits a stream of CircuitBreakerEvents to any Observer/Consumer who subscribes. An event can be a state transition or a recorded error. This library uses RxJava to to provide this functionality. If you want to consume events, you have to subscribe to the event stream. This library provides a `CircularEventConsumer` which can be used to store events in a circular buffer with a fixed capacity. You can use RxJava to filter certain events.
+The CircuitBreaker emits a stream of CircuitBreakerEvents to any Observer/Consumer who subscribes. An event can be a state transition, a successful call, a recorded error or an ignored error. All events contains additional information like event creation time and processing duration of the call. If you want to consume events, you have to subscribe to the event stream. You can use the `CircularEventConsumer` to store events in a circular buffer with a fixed capacity. You can use RxJava to filter certain events.
 
 [source,java]
 ----
@@ -121,7 +121,7 @@ List<CircuitBreakerOnErrorEvent> bufferedEvents = circularEventConsumer.getBuffe
 
 == Consume emitted CacheEvents
 
-The CacheContext emits a stream of CacheEvents to any Observer/Consumer who subscribes. An event can be a cache hit, a cache miss or an error. This library provides a `CircularEventConsumer` which can be used to store events in a circular buffer with a fixed capacity.
+The CacheContext emits a stream of CacheEvents to any Observer/Consumer who subscribes. An event can be a cache hit, a cache miss or an error. You can use the `CircularEventConsumer` to store events in a circular buffer with a fixed capacity.
 
 [source,java]
 ----
