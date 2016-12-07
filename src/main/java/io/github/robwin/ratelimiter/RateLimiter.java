@@ -33,7 +33,7 @@ import java.util.function.Supplier;
 public interface RateLimiter {
 
     /**
-     * Returns a managed {@link RateLimiter} or creates a new one with a custom RateLimiter configuration.
+     * Creates a RateLimiter with a custom RateLimiter configuration.
      *
      * @param name              the name of the RateLimiter
      * @param rateLimiterConfig a custom RateLimiter configuration
@@ -44,14 +44,24 @@ public interface RateLimiter {
     }
 
     /**
-     * Returns a managed {@link RateLimiterConfig} or creates a new one with a custom RateLimiterConfig configuration.
+     * Creates a RateLimiter with a custom RateLimiterConfig configuration.
      *
-     * @param name                      the name of the RateLimiterConfig
+     * @param name                      the name of the RateLimiter
      * @param rateLimiterConfigSupplier a supplier of a custom RateLimiterConfig configuration
-     * @return The {@link RateLimiterConfig}
+     * @return The {@link RateLimiter}
      */
     static RateLimiter of(String name, Supplier<RateLimiterConfig> rateLimiterConfigSupplier) {
         return new AtomicRateLimiter(name, rateLimiterConfigSupplier.get());
+    }
+
+    /**
+     * Creates a RateLimiter with a a default RateLimiterConfig configuration.
+     *
+     * @param name                      the name of the RateLimiter
+     * @return The {@link RateLimiter}
+     */
+    static RateLimiter ofDefaults(String name) {
+        return new AtomicRateLimiter(name, RateLimiterConfig.ofDefaults());
     }
 
     /**
