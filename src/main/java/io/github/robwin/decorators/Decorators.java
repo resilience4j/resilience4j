@@ -26,16 +26,16 @@ public interface Decorators{
         return new DecorateRunnable(runnable);
     }
 
-    static <T> Decorators.DecorateCheckedSupplier<T> ofCheckedSupplier(Try.CheckedSupplier<T> supplier){
-        return new Decorators.DecorateCheckedSupplier<>(supplier);
+    static <T> DecorateCheckedSupplier<T> ofCheckedSupplier(Try.CheckedSupplier<T> supplier){
+        return new DecorateCheckedSupplier<>(supplier);
     }
 
-    static <T, R> Decorators.DecorateCheckedFunction<T, R> ofCheckedFunction(Try.CheckedFunction<T, R> function){
-        return new Decorators.DecorateCheckedFunction<>(function);
+    static <T, R> DecorateCheckedFunction<T, R> ofCheckedFunction(Try.CheckedFunction<T, R> function){
+        return new DecorateCheckedFunction<>(function);
     }
 
-    static Decorators.DecorateCheckedRunnable ofCheckedRunnable(Try.CheckedRunnable supplier){
-        return new Decorators.DecorateCheckedRunnable(supplier);
+    static DecorateCheckedRunnable ofCheckedRunnable(Try.CheckedRunnable supplier){
+        return new DecorateCheckedRunnable(supplier);
     }
 
     class DecorateSupplier<T>{

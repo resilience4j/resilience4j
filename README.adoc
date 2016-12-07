@@ -112,7 +112,7 @@ circuitBreaker.getEventStream()
     .cast(CircuitBreakerOnErrorEvent.class)
     .subscribe(circularEventConsumer);
 
-List<CircuitBreakerOnErrorEvent> bufferedEvents = circularEventConsumer.getBufferedEvents()
+List<CircuitBreakerOnErrorEvent> bufferedEvents = circularEventConsumer.getBufferedEvents();
 ----
 
 == Consume emitted CacheEvents
@@ -128,7 +128,7 @@ cacheContext.getEventStream()
     .cast(CacheOnMissEvent.class)
     .subscribe(circularEventConsumer);
 
-List<CacheOnMissEvent> bufferedEvents = circularEventConsumer.getBufferedEvents()
+List<CacheOnMissEvent> bufferedEvents = circularEventConsumer.getBufferedEvents();
 ----
 
 == Monitor CircuitBreaker metrics

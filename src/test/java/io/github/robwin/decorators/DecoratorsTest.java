@@ -32,7 +32,9 @@ import org.mockito.BDDMockito;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.time.Duration;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -52,7 +54,7 @@ public class DecoratorsTest {
     }
 
     @Test
-    public void testDecoratorBuilder(){
+    public void testDecorateSupplier(){
         // Given the HelloWorldService returns Hello world
         given(helloWorldService.returnHelloWorld()).willReturn("Hello world");
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("helloBackend");
@@ -60,6 +62,7 @@ public class DecoratorsTest {
         Supplier<String> decoratedSupplier = Decorators.ofSupplier(() -> helloWorldService.returnHelloWorld())
                 .withCircuitBreaker(circuitBreaker)
                 .withRetry(Retry.ofDefaults())
+                .withRateLimiter(RateLimiter.ofDefaults("testName"))
                 .decorate();
 
         String result = decoratedSupplier.get();
@@ -70,7 +73,107 @@ public class DecoratorsTest {
         assertThat(metrics.getNumberOfSuccessfulCalls()).isEqualTo(1);
         // Then the helloWorldService should be invoked 1 time
         BDDMockito.then(helloWorldService).should(times(1)).returnHelloWorld();
+    }
 
+    @Test
+    public void testDecorateCheckedSupplier() throws IOException {
+        // Given the HelloWorldService returns Hello world
+        given(helloWorldService.returnHelloWorldWithException()).willReturn("Hello world");
+        CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("helloBackend");
+
+        Try.CheckedSupplier<String> decoratedSupplier = Decorators.ofCheckedSupplier(() -> helloWorldService.returnHelloWorldWithException())
+                .withCircuitBreaker(circuitBreaker)
+                .withRetry(Retry.ofDefaults())
+                .withRateLimiter(RateLimiter.ofDefaults("testName"))
+                .decorate();
+
+        String result = Try.of(decoratedSupplier).get();
+        assertThat(result).isEqualTo("Hello world");
+
+        CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
+        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
+        assertThat(metrics.getNumberOfSuccessfulCalls()).isEqualTo(1);
+        // Then the helloWorldService should be invoked 1 time
+        BDDMockito.then(helloWorldService).should(times(1)).returnHelloWorldWithException();
+    }
+
+    @Test
+    public void testDecorateRunnable(){
+        CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("helloBackend");
+
+        Runnable decoratedRunnable = Decorators.ofRunnable(() -> helloWorldService.sayHelloWorld())
+                .withCircuitBreaker(circuitBreaker)
+                .withRetry(Retry.ofDefaults())
+                .withRateLimiter(RateLimiter.ofDefaults("testName"))
+                .decorate();
+
+        decoratedRunnable.run();
+
+        CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
+        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
+        assertThat(metrics.getNumberOfSuccessfulCalls()).isEqualTo(1);
+        // Then the helloWorldService should be invoked 1 time
+        BDDMockito.then(helloWorldService).should(times(1)).sayHelloWorld();
+    }
+
+
+    @Test
+    public void testDecorateCheckedRunnable() throws IOException {
+        CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("helloBackend");
+
+        Try.CheckedRunnable decoratedRunnable = Decorators.ofCheckedRunnable(() -> helloWorldService.sayHelloWorldWithException())
+                .withCircuitBreaker(circuitBreaker)
+                .withRetry(Retry.ofDefaults())
+                .withRateLimiter(RateLimiter.ofDefaults("testName"))
+                .decorate();
+
+        Try.run(decoratedRunnable);
+
+        CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
+        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
+        assertThat(metrics.getNumberOfSuccessfulCalls()).isEqualTo(1);
+        // Then the helloWorldService should be invoked 1 time
+        BDDMockito.then(helloWorldService).should(times(1)).sayHelloWorldWithException();
+    }
+
+    @Test
+    public void testDecorateFunction(){
+        // Given the HelloWorldService returns Hello world
+        given(helloWorldService.returnHelloWorldWithName("Name")).willReturn("Hello world Name");
+        CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("helloBackend");
+
+        Function<String, String> decoratedFunction = Decorators.ofFunction(helloWorldService::returnHelloWorldWithName)
+                .withCircuitBreaker(circuitBreaker)
+                .withRetry(Retry.ofDefaults())
+                .withRateLimiter(RateLimiter.ofDefaults("testName"))
+                .decorate();
+
+        String result = decoratedFunction.apply("Name");
+        assertThat(result).isEqualTo("Hello world Name");
+
+        CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
+        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
+        assertThat(metrics.getNumberOfSuccessfulCalls()).isEqualTo(1);
+    }
+
+    @Test
+    public void testDecorateCheckedFunction() throws IOException {
+        // Given the HelloWorldService returns Hello world
+        given(helloWorldService.returnHelloWorldWithNameWithException("Name")).willReturn("Hello world Name");
+        CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("helloBackend");
+
+        Try.CheckedFunction<String, String> decoratedFunction = Decorators.ofCheckedFunction(helloWorldService::returnHelloWorldWithNameWithException)
+                .withCircuitBreaker(circuitBreaker)
+                .withRetry(Retry.ofDefaults())
+                .withRateLimiter(RateLimiter.ofDefaults("testName"))
+                .decorate();
+
+        String result = Try.of(() -> decoratedFunction.apply("Name")).get();
+        assertThat(result).isEqualTo("Hello world Name");
+
+        CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
+        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
+        assertThat(metrics.getNumberOfSuccessfulCalls()).isEqualTo(1);
     }
 
     @Test
@@ -123,7 +226,7 @@ public class DecoratorsTest {
     }
 
     @Test
-    public void testDecoratorBuilderWitCache(){
+    public void testDecorateCheckedSupplierWithCache(){
         javax.cache.Cache<String, String> cache = mock(javax.cache.Cache.class);
         // Given the cache contains the key
         given(cache.containsKey("testKey")).willReturn(true);
@@ -134,6 +237,22 @@ public class DecoratorsTest {
             .withCache(Cache.of(cache))
             .decorate();
         String value = Try.of(() -> cachedFunction.apply("testKey")).get();
+        assertThat(value).isEqualTo("Hello from cache");
+    }
+
+
+    @Test
+    public void testDecorateSupplierWithCache(){
+        javax.cache.Cache<String, String> cache = mock(javax.cache.Cache.class);
+        // Given the cache contains the key
+        given(cache.containsKey("testKey")).willReturn(true);
+        // Return the value from cache
+        given(cache.get("testKey")).willReturn("Hello from cache");
+
+        Function<String, String> cachedFunction = Decorators.ofSupplier(() -> "Hello world")
+                .withCache(Cache.of(cache))
+                .decorate();
+        String value = cachedFunction.apply("testKey");
         assertThat(value).isEqualTo("Hello from cache");
     }
 
