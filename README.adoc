@@ -25,9 +25,13 @@ The example uses Javaslang's Try Monad to recover from an exception, when even a
 // Create a CircuitBreaker with a default configuration
 CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("backendName");
 // Create a Retry with a most 3 retries and a fixed time interval between retries
+// and only retry on IOExceptions
 Retry retryContext = Retry.custom()
     .maxAttempts(3)
     .waitDuration(Duration.ofMillis(100))
+    .retryOnException(throwable -> Match(throwable).of(
+                        Case(instanceOf(IOException.class), true),
+                        Case($(), false)))
     .build();
 
 // Decorate your call to BackendService.doSomething()
