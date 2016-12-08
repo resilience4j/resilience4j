@@ -18,7 +18,12 @@
  */
 package io.github.robwin.ratelimiter;
 
+import static com.jayway.awaitility.Awaitility.await;
+import static javaslang.API.Case;
+import static javaslang.API.Match;
+import static javaslang.Predicates.instanceOf;
 import static org.assertj.core.api.BDDAssertions.then;
+import static org.hamcrest.CoreMatchers.equalTo;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -31,6 +36,9 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.time.Duration;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.locks.LockSupport;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -214,5 +222,40 @@ public class RateLimiterTest {
         RateLimiter.waitForPermission(limit);
         verify(limit, times(1))
             .getPermission(config.getTimeoutDuration());
+    }
+
+    @Test
+    public void waitForPermissionWithInterruption() throws Exception {
+        when(limit.getPermission(config.getTimeoutDuration()))
+            .then(invocation -> {
+                LockSupport.parkNanos(5_000_000_000L);
+                return null;
+            });
+        AtomicBoolean wasInterrupted = new AtomicBoolean(true);
+        Thread thread = new Thread(() -> {
+            wasInterrupted.set(false);
+            Throwable cause = Try.run(() -> RateLimiter.waitForPermission(limit))
+                .getCause();
+            Boolean interrupted = Match(cause).of(
+                Case(instanceOf(IllegalStateException.class), true)
+            );
+            wasInterrupted.set(interrupted);
+        });
+        thread.setDaemon(true);
+        thread.start();
+
+        await()
+            .atMost(5, TimeUnit.SECONDS)
+            .until(wasInterrupted::get, equalTo(false));
+        thread.interrupt();
+        await()
+            .atMost(5, TimeUnit.SECONDS)
+            .until(wasInterrupted::get, equalTo(true));
+    }
+
+    @Test
+    public void construction() throws Exception {
+        RateLimiter rateLimiter = RateLimiter.of("test", () -> config);
+        then(rateLimiter).isNotNull();
     }
 }
