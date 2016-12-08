@@ -54,7 +54,6 @@ repositories {
 
 jmh {
     jmhVersion = '1.17'
-    include=''
 }
 
 dependencies {
@@ -76,6 +75,7 @@ dependencies {
     testCompile "com.jayway.awaitility:awaitility:1.7.0"
 
     jmh "ch.qos.logback:logback-classic:0.9.26"
+    jmh "org.openjdk.jmh:jmh-generator-annprocess:1.12"
 }
 
 task sourcesJar(type: Jar, dependsOn: classes) {

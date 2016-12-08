@@ -20,38 +20,24 @@ package io.github.robwin.circuitbreaker;
 
 import org.openjdk.jmh.annotations.*;
 
-import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
 @State(Scope.Benchmark)
 @OutputTimeUnit(TimeUnit.MILLISECONDS)
-@BenchmarkMode(Mode.All)
+@BenchmarkMode(Mode.Throughput)
 public class CircuitBreakerBenchmark {
 
-    private CircuitBreaker circuitBreaker;
     private Supplier<String> supplier;
-    private static final int ITERATION_COUNT = 2;
-    private static final int WARMUP_COUNT = 2;
+    private static final int ITERATION_COUNT = 10;
+    private static final int WARMUP_COUNT = 10;
     private static final int THREAD_COUNT = 10;
-    public static final int FORK_COUNT = 1;
+    private static final int FORK_COUNT = 1;
 
     @Setup
     public void setUp() {
-        CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.of(CircuitBreakerConfig.custom()
-            .failureRateThreshold(1)
-            .waitDurationInOpenState(Duration.ofSeconds(1))
-            .build());
-        circuitBreaker = circuitBreakerRegistry.circuitBreaker("testCircuitBreaker");
-
-        supplier = CircuitBreaker.decorateSupplier(() -> {
-            try {
-                Thread.sleep(100);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-            return "Hello Benchmark";
-        }, circuitBreaker);
+        CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testCircuitBreaker");
+        supplier = CircuitBreaker.decorateSupplier(circuitBreaker, () -> "Hello Benchmark");
     }
 
     @Benchmark

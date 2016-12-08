@@ -25,14 +25,14 @@ import java.util.concurrent.TimeUnit;
 
 @State(Scope.Benchmark)
 @OutputTimeUnit(TimeUnit.MILLISECONDS)
-@BenchmarkMode(Mode.All)
-public class RingBitSetBenachmark {
+@BenchmarkMode(Mode.Throughput)
+public class RingBitSetBenchmark {
 
     private RingBitSet ringBitSet;
-    private static final int ITERATION_COUNT = 2;
-    private static final int WARMUP_COUNT = 2;
+    private static final int ITERATION_COUNT = 10;
+    private static final int WARMUP_COUNT = 10;
     private static final int THREAD_COUNT = 10;
-    public static final int FORK_COUNT = 1;
+    private static final int FORK_COUNT = 1;
 
     @Setup
     public void setUp() {
@@ -41,11 +41,22 @@ public class RingBitSetBenachmark {
 
     @Benchmark
     @Fork(value = FORK_COUNT)
-    @Threads(value = THREAD_COUNT)
+    @Group("ringBitSet")
+    @GroupThreads(THREAD_COUNT)
     @Warmup(iterations = WARMUP_COUNT)
     @Measurement(iterations = ITERATION_COUNT)
     public void setBits(){
         ringBitSet.setNextBit(true);
         ringBitSet.setNextBit(false);
+    }
+
+    @Benchmark
+    @Fork(value = FORK_COUNT)
+    @Group("ringBitSet")
+    @GroupThreads(THREAD_COUNT)
+    @Warmup(iterations = WARMUP_COUNT)
+    @Measurement(iterations = ITERATION_COUNT)
+    public int cardinality(){
+        return ringBitSet.cardinality();
     }
 }
