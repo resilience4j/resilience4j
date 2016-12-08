@@ -14,6 +14,16 @@ However, features such as Request Collapsing and Bulk Heading are not in the sco
 
 == Examples
 
+* <<circuitbreaker>>
+* <<ratelimiter>>
+* <<cache>>
+* <<circuitbreaker_events>>
+* <<cache_events>>
+* <<retry_events>>
+* <<circuitbreaker_monitoring>>
+* <<ratelimiter_monitoring>>
+
+[[circuitbreaker]]
 === CircuitBreaker, Retry and Fallback
 
 The following example shows how to decorate a lambda expression (CheckedSupplier) with a CircuitBreaker and how to retry the call at most 3 times when an exception occurs.
@@ -58,6 +68,7 @@ Observable.fromCallable(backendService::doSomething)
     .lift(CircuitBreakerOperator.of(circuitBreaker))
 ----
 
+[[ratelimiter]]
 === RateLimiter
 
 The following example shows how to restrict the calling rate of some method to be not higher than 1 req/sec.
@@ -89,6 +100,7 @@ assertThat(secondTry.isFailure()).isTrue();
 assertThat(secondTry.getCause()).isInstanceOf(RequestNotPermitted.class);
 ----
 
+[[cache]]
 === Cache
 
 The following example shows how to decorate a lambda expression with a Cache abstraction. The cache abstraction puts the result of the lambda expression in a cache instance (JCache) and
@@ -109,6 +121,7 @@ Try.CheckedFunction<String, String> cachedFunction = Decorators
 String value = Try.of(() -> cachedFunction.apply("cacheKey")).get();
 ----
 
+[[circuitbreaker_events]]
 == Consume emitted CircuitBreakerEvents
 
 The CircuitBreaker emits a stream of CircuitBreakerEvents to any Observer/Consumer who subscribes. An event can be a state transition, a successful call, a recorded error or an ignored error. All events contains additional information like event creation time and processing duration of the call. If you want to consume events, you have to subscribe to the event stream. You can use the `CircularEventConsumer` to store events in a circular buffer with a fixed capacity. You can use RxJava to filter certain events.
@@ -126,6 +139,7 @@ circuitBreaker.getEventStream()
 List<CircuitBreakerOnErrorEvent> bufferedEvents = circularEventConsumer.getBufferedEvents();
 ----
 
+[[cache_events]]
 == Consume emitted CacheEvents
 
 The CacheContext emits a stream of CacheEvents to any Observer/Consumer who subscribes. An event can be a cache hit, a cache miss or an error. You can use the `CircularEventConsumer` to store events in a circular buffer with a fixed capacity.
@@ -142,6 +156,7 @@ cacheContext.getEventStream()
 List<CacheOnMissEvent> bufferedEvents = circularEventConsumer.getBufferedEvents();
 ----
 
+[[retry_events]]
 == Consume emitted RetryEvents
 
 The RetryContext emits a stream of RetryEvents to any Observer/Consumer who subscribes. An event can be a failure which signals that even all retries have failed or success if a retry was successful. You can use the `CircularEventConsumer` to store events in a circular buffer with a fixed capacity.
@@ -156,6 +171,7 @@ retryContext.getEventStream()
 List<RetryEvent> bufferedEvents = circularEventConsumer.getBufferedEvents();
 ----
 
+[[circuitbreaker_monitoring]]
 == Monitor CircuitBreaker metrics
 
 The CircuitBreaker provides an interface to monitor the current metrics.
@@ -171,6 +187,7 @@ int bufferedCalls = metrics.getNumberOfBufferedCalls();
 int failedCalls = metrics.getNumberOfFailedCalls();
 ----
 
+[[ratelimiter_monitoring]]
 == Monitor RateLimiter metrics
 
 The RateLimiter provides an interface to monitor the current limiter. The AtomicRateLimiter has some enhanced Metrics with some implementation specific details.
