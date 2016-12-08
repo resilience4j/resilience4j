@@ -249,4 +249,9 @@ public class AtomicRateLimiterTest {
     public void configPropagation() {
         then(rateLimiter.getRateLimiterConfig()).isEqualTo(rateLimiterConfig);
     }
+
+    @Test
+    public void metrics() {
+        then(rateLimiter.getMetrics().getNumberOfWaitingThreads()).isEqualTo(0);
+    }
 }
