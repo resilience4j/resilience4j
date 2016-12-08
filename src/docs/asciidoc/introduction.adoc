@@ -10,11 +10,11 @@ However, features such as Request Collapsing and Bulk Heading are not in the sco
 
 == Examples
 
-=== CircuitBreaker and Retry
+=== CircuitBreaker, Retry and Fallback
 
 The following example shows how to decorate a lambda expression (CheckedSupplier) with a CircuitBreaker and how to retry the call at most 3 times when an exception occurs.
 You can configure the wait interval between retries and also configure a custom backoff algorithm.
-The example uses Javaslang's Try Monad to recover from an exception, when even all retries have failed.
+The example uses Javaslang's Try Monad to recover from an exception and invoke another lambda expression as a fallback, when even all retries have failed.
 
 [source,java]
 ----
