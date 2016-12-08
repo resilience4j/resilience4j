@@ -29,6 +29,8 @@ import org.reactivestreams.Subscription;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+
 /**
  * A RxJava operator which protects an Observable or Flowable by a CircuitBreaker
  */
@@ -72,7 +74,7 @@ public class CircuitBreakerOperator<T> implements ObservableOperator<T, T>, Flow
 
         private final Subscriber<? super T> childSubscriber;
         private Subscription subscription;
-        private volatile boolean cancelled;
+        private AtomicBoolean cancelled = new AtomicBoolean(false);
         private StopWatch stopWatch;
 
         CircuitBreakerSubscriber(Subscriber<? super T> childSubscriber){
@@ -101,7 +103,7 @@ public class CircuitBreakerOperator<T> implements ObservableOperator<T, T>, Flow
             if(LOG.isDebugEnabled()){
                 LOG.info("onNext: {}", event);
             }
-            if(!cancelled) {
+            if(!isCancelled()) {
                 childSubscriber.onNext(event);
             }
         }
@@ -111,7 +113,7 @@ public class CircuitBreakerOperator<T> implements ObservableOperator<T, T>, Flow
             if(LOG.isDebugEnabled()){
                 LOG.info("onError", e);
             }
-            if(!cancelled) {
+            if(!isCancelled()) {
                 circuitBreaker.onError(stopWatch.stop().getProcessingDuration(), e);
                 childSubscriber.onError(e);
 
@@ -123,7 +125,7 @@ public class CircuitBreakerOperator<T> implements ObservableOperator<T, T>, Flow
             if(LOG.isDebugEnabled()){
                 LOG.info("onComplete");
             }
-            if(!cancelled) {
+            if(!isCancelled()) {
                 circuitBreaker.onSuccess(stopWatch.stop().getProcessingDuration());
                 childSubscriber.onComplete();
             }
@@ -136,10 +138,14 @@ public class CircuitBreakerOperator<T> implements ObservableOperator<T, T>, Flow
 
         @Override
         public void cancel() {
-            if(!cancelled) {
-                cancelled = true;
+            if(!cancelled.get()) {
+                cancelled.set(true);
                 subscription.cancel();
             }
+        }
+
+        public boolean isCancelled() {
+            return cancelled.get();
         }
     }
 
@@ -147,7 +153,7 @@ public class CircuitBreakerOperator<T> implements ObservableOperator<T, T>, Flow
 
         private final Observer<? super T> childObserver;
         private Disposable disposable;
-        private volatile boolean cancelled;
+        private AtomicBoolean cancelled = new AtomicBoolean(false);
         private StopWatch stopWatch;
 
         CircuitBreakerObserver(Observer<? super T> childObserver){
@@ -205,15 +211,15 @@ public class CircuitBreakerOperator<T> implements ObservableOperator<T, T>, Flow
 
         @Override
         public void dispose() {
-            if(!cancelled) {
-                cancelled = true;
+            if(!cancelled.get()) {
+                cancelled.set(true);
                 disposable.dispose();
             }
         }
 
         @Override
         public boolean isDisposed() {
-            return cancelled;
+            return cancelled.get();
         }
     }
 
@@ -221,7 +227,7 @@ public class CircuitBreakerOperator<T> implements ObservableOperator<T, T>, Flow
 
         private final SingleObserver<? super T> childObserver;
         private Disposable disposable;
-        private volatile boolean cancelled;
+        private AtomicBoolean cancelled = new AtomicBoolean(false);
         private StopWatch stopWatch;
 
 
@@ -270,15 +276,15 @@ public class CircuitBreakerOperator<T> implements ObservableOperator<T, T>, Flow
 
         @Override
         public void dispose() {
-            if(!cancelled) {
-                cancelled = true;
+            if(!cancelled.get()) {
+                cancelled.set(true);
                 disposable.dispose();
             }
         }
 
         @Override
         public boolean isDisposed() {
-            return cancelled;
+            return cancelled.get();
         }
     }
 }
