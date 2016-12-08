@@ -12,6 +12,10 @@ In Hystrix calls to external systems have to be wrapped in a HystrixCommand. Thi
 In the following I call higher-order functions decorators. The decorators return an enhanced version of your function. Furthermore, the library provides decorators to retry failed functions, limit call frequency or cache function results. You can stack more than one decorator on any given function. That means, you can combine a RateLimiter and Retry decorator with a CircuitBreaker decorator. The library provides a `Decorators` builder to simplify stacking decorators. Any decorated function can be executed synchronously or asynchronously by using a CompletableFuture or RxJava.
 However, features such as Request Collapsing and Bulk Heading are not in the scope of this library. 
 
+== Usage Guide
+
+For more details see http://robwin.github.io/javaslang-circuitbreaker/0.7.1/[User Guide].
+
 == Examples
 
 * <<circuitbreaker>>
@@ -204,10 +208,6 @@ AtomicRateLimiter atomicLimiter;
 // Estimated time duration in nanos to wait for the next permission
 long nanosToWaitForPermission = atomicLimiter.getNanosToWait();
 ----
-
-== Usage Guide
-
-For more details see http://robwin.github.io/javaslang-circuitbreaker/0.7.1/[User Guide].
 
 == CircuitBreaker implementation details
 
