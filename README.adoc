@@ -14,7 +14,7 @@ However, features such as Request Collapsing and Bulk Heading are not in the sco
 
 == Setup and Usage Guide
 
-Setup and usage is described in our http://robwin.github.io/javaslang-circuitbreaker/0.7.1/[User Guide].
+Setup and usage is described in our http://robwin.github.io/javaslang-circuitbreaker/[User Guide].
 
 == Examples
 

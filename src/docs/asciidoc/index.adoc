@@ -1,11 +1,7 @@
 = Javaslang-Circuitbreaker User Guide
 Robert Winkler
-:toc: left
-:toclevels: 3
 :source-highlighter: coderay
-:numbered:
-:hardbreaks:
-:revnumber: {project-version}
+:revnumber: {release-version}
 :revdate: {localdate}
 :icons: font
 :pagenums:
