@@ -53,6 +53,7 @@ repositories {
 }
 
 jmh {
+    duplicateClassesStrategy = 'warn'
     jmhVersion = '1.17'
     include=''
 }
@@ -74,6 +75,7 @@ dependencies {
     testCompile "org.powermock:powermock-api-mockito:1.6.6"
     testCompile "org.powermock:powermock-module-junit4:1.6.6"
     testCompile "com.jayway.awaitility:awaitility:1.7.0"
+    testCompile "org.mapdb:thread-weaver:3.0.mapdb"
 
     jmh "ch.qos.logback:logback-classic:0.9.26"
 }

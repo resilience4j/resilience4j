@@ -18,7 +18,8 @@
  */
 package io.github.robwin.consumer;
 
-import io.github.robwin.circuitbreaker.internal.CircularFifoBuffer;
+import io.github.robwin.circularbuffer.CircularFifoBuffer;
+import io.github.robwin.circularbuffer.ConcurrentCircularFifoBuffer;
 import io.reactivex.functions.Consumer;
 import javaslang.collection.List;
 
@@ -37,7 +38,7 @@ public class CircularEventConsumer<T> implements Consumer<T>{
      * @throws IllegalArgumentException if {@code capacity < 1}
      */
     public CircularEventConsumer(int capacity) {
-        this.eventCircularFifoBuffer = new CircularFifoBuffer<>(capacity);
+        this.eventCircularFifoBuffer = new ConcurrentCircularFifoBuffer<>(capacity);
     }
 
     @Override

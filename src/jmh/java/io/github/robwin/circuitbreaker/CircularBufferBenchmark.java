@@ -1,9 +1,27 @@
+/*
+ *
+ *  Copyright 2016 Robert Winkler and Bohdan Storozhuk
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *         http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
+ *
+ */
 package io.github.robwin.circuitbreaker;
 
-import io.github.robwin.circuitbreaker.internal.CircularFifoBuffer;
-import io.github.robwin.circuitbreaker.internal.CircularFifoBufferTest;
-import io.github.robwin.circuitbreaker.internal.ConcurrentCircularBuffer;
+import io.github.robwin.circularbuffer.CircularFifoBuffer;
+import io.github.robwin.circularbuffer.ConcurrentCircularFifoBuffer;
 import javaslang.collection.List;
+import javaslang.control.Option;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.BenchmarkMode;
 import org.openjdk.jmh.annotations.Fork;
@@ -18,32 +36,26 @@ import org.openjdk.jmh.annotations.State;
 import org.openjdk.jmh.annotations.Warmup;
 import org.openjdk.jmh.infra.Blackhole;
 
-import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 
 /**
  * @author bstorozhuk
  */
 @State(Scope.Benchmark)
-@OutputTimeUnit(TimeUnit.MICROSECONDS)
+@OutputTimeUnit(TimeUnit.NANOSECONDS)
 @BenchmarkMode(Mode.AverageTime)
 public class CircularBufferBenchmark {
     public static final int FORK_COUNT = 2;
     private static final int WARMUP_COUNT = 10;
     private static final int ITERATION_COUNT = 10;
-    private static final int THREAD_COUNT = 2;
-    private static final int CAPACITY = 100;
+    private static final int CAPACITY = 10;
     private CircularFifoBuffer<Object> circularFifoBuffer;
-    private ConcurrentCircularBuffer<Object> concurrentCircularBuffer;
     private Object event;
-    private Object[] buffer;
 
     @Setup
     public void setUp() {
         event = new Object();
-        circularFifoBuffer = new CircularFifoBuffer<>(CAPACITY);
-        concurrentCircularBuffer = new ConcurrentCircularBuffer<>(CAPACITY);
-        buffer = new Object[CAPACITY];
+        circularFifoBuffer = new ConcurrentCircularFifoBuffer<>(CAPACITY);
     }
 
     @Benchmark
@@ -51,8 +63,8 @@ public class CircularBufferBenchmark {
     @Fork(value = FORK_COUNT)
     @Measurement(iterations = ITERATION_COUNT)
     @Group("circularBuffer")
-    @GroupThreads(THREAD_COUNT)
-    public void circularBufferWriter() {
+    @GroupThreads(1)
+    public void circularBufferAddEvent() {
         circularFifoBuffer.add(event);
     }
 
@@ -62,7 +74,18 @@ public class CircularBufferBenchmark {
     @Measurement(iterations = ITERATION_COUNT)
     @Group("circularBuffer")
     @GroupThreads(1)
-    public void circularBufferReaderMonitoring(Blackhole bh) {
+    public void circularBufferToList(Blackhole bh) {
+        List<Object> events = circularFifoBuffer.toList();
+        bh.consume(events);
+    }
+
+    @Benchmark
+    @Warmup(iterations = WARMUP_COUNT)
+    @Fork(value = FORK_COUNT)
+    @Measurement(iterations = ITERATION_COUNT)
+    @Group("circularBuffer")
+    @GroupThreads(1)
+    public void circularBufferSize(Blackhole bh) {
         int size = circularFifoBuffer.size();
         bh.consume(size);
     }
@@ -73,41 +96,8 @@ public class CircularBufferBenchmark {
     @Measurement(iterations = ITERATION_COUNT)
     @Group("circularBuffer")
     @GroupThreads(1)
-    public void circularBufferReaderEvents(Blackhole bh) {
-        List<Object> events = circularFifoBuffer.toList();
-        bh.consume(events);
-    }
-
-    @Benchmark
-    @Warmup(iterations = WARMUP_COUNT)
-    @Fork(value = FORK_COUNT)
-    @Measurement(iterations = ITERATION_COUNT)
-    @Group("concurrentBuffer")
-    @GroupThreads(THREAD_COUNT)
-    public void concurrentBufferWriter() {
-        concurrentCircularBuffer.add(event);
-    }
-
-    @Benchmark
-    @Warmup(iterations = WARMUP_COUNT)
-    @Fork(value = FORK_COUNT)
-    @Measurement(iterations = ITERATION_COUNT)
-    @Group("concurrentBuffer")
-    @GroupThreads(1)
-    public void concurrentBufferReaderMonitoring(Blackhole bh) {
-        int size = concurrentCircularBuffer.size();
-        bh.consume(size);
-    }
-
-    @Benchmark
-    @Warmup(iterations = WARMUP_COUNT)
-    @Fork(value = FORK_COUNT)
-    @Measurement(iterations = ITERATION_COUNT)
-    @Group("concurrentBuffer")
-    @GroupThreads(1)
-    public void concurrentBufferReaderEvents(Blackhole bh) {
-        Object[] eventsArray = concurrentCircularBuffer.toArray(buffer);
-        List<Object> events = List.ofAll(Arrays.asList(eventsArray));
-        bh.consume(events);
+    public void circularBufferTakeEvent(Blackhole bh) {
+        Option<Object> event = circularFifoBuffer.take();
+        bh.consume(event);
     }
 }

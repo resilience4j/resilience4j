@@ -1,4 +1,22 @@
-package io.github.robwin.circuitbreaker.internal;
+/*
+ *
+ *  Copyright 2016 Robert Winkler and Bohdan Storozhuk
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *         http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
+ *
+ */
+package io.github.robwin.circularbuffer;
 
 import static java.lang.reflect.Array.newInstance;
 import static java.util.Objects.requireNonNull;
@@ -13,30 +31,28 @@ import java.util.function.Supplier;
 /**
  *
  * The purpose of this queue is to store the N most recently inserted elements.
- * If the {@link ConcurrentCircularBuffer} is already full {@code ConcurrentCircularBuffer.size() == capacity},
+ * If the {@link ConcurrentEvictingQueue} is already full {@code ConcurrentEvictingQueue.size() == capacity},
  * the oldest element (the head) will be evicted, and then the new element added at the tail.
  *
  * In order to achieve thread-safety it utilizes capability-based locking features of {@link StampedLock}.
  * All spins optimistic/pessimistic reads and writes are encapsulated in flowing methods:
  *
  * <ul>
- * <li> {@link ConcurrentCircularBuffer#readConcurrently(Supplier)}</li>
- * <li> {@link ConcurrentCircularBuffer#readConcurrentlyWithoutSpin(Supplier)}</li>
- * <li> {@link ConcurrentCircularBuffer#writeConcurrently(Supplier)}</li>
+ * <li> {@link ConcurrentEvictingQueue#readConcurrently(Supplier)}</li>
+ * <li> {@link ConcurrentEvictingQueue#readConcurrentlyWithoutSpin(Supplier)}</li>
+ * <li> {@link ConcurrentEvictingQueue#writeConcurrently(Supplier)}</li>
  * </ul>
  *
  * All other logic just relies on this utility methods.
  *
- * Also please take into account that {@link ConcurrentCircularBuffer#size}
- * and {@link ConcurrentCircularBuffer#modificationsCount} are {@code volatile} fields,
+ * Also please take into account that {@link ConcurrentEvictingQueue#size}
+ * and {@link ConcurrentEvictingQueue#modificationsCount} are {@code volatile} fields,
  * so we can read them and compare against them without any additional synchronizations.
  *
  * This class IS thread-safe, and does NOT accept null elements.
  *
- * @author bstorozhuk
  */
-@SuppressWarnings("Duplicates")
-public class ConcurrentCircularBuffer<E> extends AbstractQueue<E> {
+public class ConcurrentEvictingQueue<E> extends AbstractQueue<E> {
 
     private static final String ILLEGAL_CAPACITY = "Capacity must be bigger than 0";
     private static final String ILLEGAL_ELEMENT = "Element must not be null";
@@ -51,7 +67,7 @@ public class ConcurrentCircularBuffer<E> extends AbstractQueue<E> {
     private int headIndex;
     private int tailIndex;
 
-    public ConcurrentCircularBuffer(int capacity) {
+    public ConcurrentEvictingQueue(int capacity) {
         if (capacity <= 0) {
             throw new IllegalArgumentException(ILLEGAL_CAPACITY);
         }
@@ -64,16 +80,38 @@ public class ConcurrentCircularBuffer<E> extends AbstractQueue<E> {
         stampedLock = new StampedLock();
     }
 
+    /**
+     * Returns an iterator over the elements in this queue in proper sequence.
+     * The elements will be returned in order from first (head) to last (tail).
+     * <p>
+     * This iterator implementation NOT allow removes and co-modifications.
+     *
+     * @return an iterator over the elements in this queue in proper sequence
+     */
     @Override
     public Iterator<E> iterator() {
         return readConcurrently(() -> new Iter(headIndex, modificationsCount));
     }
 
+    /**
+     * Returns the number of elements in this queue.
+     *
+     * @return the number of elements in this queue
+     */
     @Override
     public int size() {
         return size;
     }
 
+    /**
+     * Inserts the specified element at the tail of this queue if it is
+     * possible to do so immediately or if capacity limit is exited
+     * the oldest element (the head) will be evicted, and then the new element added at the tail.
+     * This method is generally preferable to method {@link #add},
+     * which can fail to insert an element only by throwing an exception.
+     *
+     * @throws NullPointerException if the specified element is null
+     */
     @Override
     public boolean offer(final E e) {
         requireNonNull(e, ILLEGAL_ELEMENT);
@@ -99,6 +137,9 @@ public class ConcurrentCircularBuffer<E> extends AbstractQueue<E> {
         return writeConcurrently(offerElement);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     @SuppressWarnings("unchecked")
     public E poll() {
@@ -118,6 +159,9 @@ public class ConcurrentCircularBuffer<E> extends AbstractQueue<E> {
         return writeConcurrently(pollElement);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     @SuppressWarnings("unchecked")
     public E peek() {
@@ -129,6 +173,10 @@ public class ConcurrentCircularBuffer<E> extends AbstractQueue<E> {
         });
     }
 
+    /**
+     * Atomically removes all of the elements from this queue.
+     * The queue will be empty after this call returns.
+     */
     @Override
     public void clear() {
         Supplier<Object> clearStrategy = () -> {
@@ -145,6 +193,19 @@ public class ConcurrentCircularBuffer<E> extends AbstractQueue<E> {
         writeConcurrently(clearStrategy);
     }
 
+    /**
+     * Returns an array containing all of the elements in this queue, in
+     * proper sequence.
+     * <p>
+     * <p>The returned array will be "safe" in that no references to it are
+     * maintained by this queue.  (In other words, this method must allocate
+     * a new array).  The caller is free to modify the returned array.
+     * <p>
+     * <p>This method acts as bridge between array-based and collection-based
+     * APIs.
+     *
+     * @return an array containing all of the elements in this queue
+     */
     @Override
     public Object[] toArray() {
         if (size == 0) {
@@ -155,6 +216,30 @@ public class ConcurrentCircularBuffer<E> extends AbstractQueue<E> {
         return destination;
     }
 
+    /**
+     * Returns an array containing all of the elements in this queue, in
+     * proper sequence; the runtime type of the returned array is that of
+     * the specified array.  If the queue fits in the specified array, it
+     * is returned therein.  Otherwise, a new array is allocated with the
+     * runtime type of the specified array and the size of this queue.
+     *
+     * <p>Like the {@link #toArray()} method, this method acts as bridge between
+     * array-based and collection-based APIs.  Further, this method allows
+     * precise control over the runtime type of the output array, and may,
+     * under certain circumstances, be used to save allocation costs.
+
+     * Note that {@code toArray(new Object[0])} is identical in function to
+     * {@code toArray()}.
+     *
+     * @param destination the array into which the elements of the queue are to
+     *          be stored, if it is big enough; otherwise, a new array of the
+     *          same runtime type is allocated for this purpose
+     * @return an array containing all of the elements in this queue
+     * @throws ArrayStoreException if the runtime type of the specified array
+     *         is not a supertype of the runtime type of every element in
+     *         this queue
+     * @throws NullPointerException if the specified array is null
+     */
     @Override
     @SuppressWarnings({"unchecked"})
     public <T> T[] toArray(final T[] destination) {

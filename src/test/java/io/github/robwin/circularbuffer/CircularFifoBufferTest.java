@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright 2016 Robert Winkler
+ *  Copyright 2016 Robert Winkler and Bohdan Storozhuk
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -16,27 +16,23 @@
  *
  *
  */
-package io.github.robwin.circuitbreaker.internal;
+package io.github.robwin.circularbuffer;
 
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 import javaslang.collection.List;
 import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.UnknownHostException;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 public class CircularFifoBufferTest {
-
-    private static final Logger LOG = LoggerFactory.getLogger(CircularFifoBufferTest.class);
 
     @Test
     public void testCircularFifoBuffer(){
-        CircularFifoBuffer<Exception> exceptionBuffer = new CircularFifoBuffer<>(4);
-        // The initial index is -1
+        CircularFifoBuffer<Exception> exceptionBuffer = new ConcurrentCircularFifoBuffer<>(4);
+
         assertThat(exceptionBuffer.size()).isEqualTo(0);
         assertThat(exceptionBuffer.isEmpty()).isTrue();
         assertThat(exceptionBuffer.isFull()).isFalse();
@@ -70,12 +66,10 @@ public class CircularFifoBufferTest {
         exceptionBuffer.add(new IOException("bla bla"));
         assertThat(exceptionBuffer.size()).isEqualTo(4);
 
-        bufferedExceptions = exceptionBuffer.toList();
-        assertThat(bufferedExceptions.get(0)).isInstanceOf(UnknownHostException.class);
-        assertThat(bufferedExceptions.get(1)).isInstanceOf(IOException.class);
-        assertThat(bufferedExceptions.get(2)).isInstanceOf(IOException.class);
-        assertThat(bufferedExceptions.get(3)).isInstanceOf(IOException.class);
-
-        //bufferedExceptions.forEach(e -> LOG.info(e.toString()));
+        assertThat(exceptionBuffer.take().get()).isInstanceOf(UnknownHostException.class);
+        assertThat(exceptionBuffer.take().get()).isInstanceOf(IOException.class);
+        assertThat(exceptionBuffer.take().get()).isInstanceOf(IOException.class);
+        assertThat(exceptionBuffer.take().get()).isInstanceOf(IOException.class);
+        assertThat(exceptionBuffer.take().isEmpty()).isTrue();
     }
 }
