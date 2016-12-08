@@ -22,7 +22,7 @@ import io.github.robwin.retry.Retry;
 import io.github.robwin.retry.RetryConfig;
 import io.github.robwin.retry.event.RetryEvent;
 import io.github.robwin.retry.event.RetryOnErrorEvent;
-import io.github.robwin.retry.event.RetryOnSuccess;
+import io.github.robwin.retry.event.RetryOnSuccessEvent;
 import io.reactivex.Flowable;
 import io.reactivex.processors.FlowableProcessor;
 import io.reactivex.processors.PublishProcessor;
@@ -58,7 +58,8 @@ public class RetryContext implements Retry {
         this.waitDuration = config.getWaitDuration();
         this.backoffFunction = config.getBackoffFunction();
         this.exceptionPredicate = config.getExceptionPredicate();
-        this.eventPublisher = PublishProcessor.create();
+        PublishProcessor<RetryEvent> publisher = PublishProcessor.create();
+        this.eventPublisher = publisher.toSerialized();
     }
 
     @Override
@@ -71,7 +72,7 @@ public class RetryContext implements Retry {
         int currentNumOfAttempts = numOfAttempts.get();
         if(currentNumOfAttempts > 0){
             Throwable throwable = Option.of(lastException.get()).getOrElse(lastRuntimeException.get());
-            publishRetryEvent(() -> new RetryOnSuccess(getId(), currentNumOfAttempts, throwable));
+            publishRetryEvent(() -> new RetryOnSuccessEvent(getId(), currentNumOfAttempts, throwable));
         }
     }
 

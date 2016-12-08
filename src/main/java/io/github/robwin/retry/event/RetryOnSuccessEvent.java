@@ -21,9 +21,9 @@ package io.github.robwin.retry.event;
 /**
  * A RetryEvent which informs that a call has been retried and a retry was successful
  */
-public class RetryOnSuccess extends AbstractRetryEvent {
+public class RetryOnSuccessEvent extends AbstractRetryEvent {
 
-    public RetryOnSuccess(String id, int currentNumOfAttempts, Throwable lastThrowable) {
+    public RetryOnSuccessEvent(String id, int currentNumOfAttempts, Throwable lastThrowable) {
         super(id, currentNumOfAttempts, lastThrowable);
     }
 
