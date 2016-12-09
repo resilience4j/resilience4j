@@ -7,7 +7,8 @@ buildscript {
         }
     }
     dependencies {
-        classpath 'org.kt3k.gradle.plugin:coveralls-gradle-plugin:2.0.1'
+        classpath 'net.saliman:gradle-cobertura-plugin:2.3.2'
+        classpath 'org.kt3k.gradle.plugin:coveralls-gradle-plugin:2.7.1'
         classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.2'
         classpath 'me.champeau.gradle:jmh-gradle-plugin:0.3.1'
         classpath 'com.github.jengelman.gradle.plugins:shadow:1.2.0'
@@ -20,7 +21,7 @@ buildscript {
 apply plugin: 'idea'
 apply plugin: 'java'
 apply plugin: 'maven-publish'
-apply plugin: 'jacoco'
+apply plugin: 'net.saliman.cobertura'
 apply plugin: 'com.github.kt3k.coveralls'
 apply plugin: 'com.jfrog.bintray'
 apply plugin: "com.jfrog.artifactory"
@@ -81,6 +82,12 @@ dependencies {
     jmh "org.openjdk.jmh:jmh-generator-annprocess:1.12"
 }
 
+test {
+    exclude 'io/github/robwin/circularbuffer/concurrent/'
+}
+
+task allTests(type: Test) {}
+
 task sourcesJar(type: Jar, dependsOn: classes) {
     classifier = 'sources'
     from sourceSets.main.allSource
@@ -96,11 +103,8 @@ artifacts {
     archives javadocJar
 }
 
-jacocoTestReport {
-    reports {
-        xml.enabled = true // coveralls plugin depends on xml format report
-        html.enabled = true
-    }
+cobertura {
+    coverageFormats = ['html', 'xml']
 //    afterEvaluate {
 //        classDirectories = files(classDirectories.files.collect {
 //            fileTree(dir: it,

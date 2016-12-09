@@ -16,8 +16,9 @@
  *
  *
  */
-package io.github.robwin.circularbuffer;
+package io.github.robwin.circularbuffer.concurrent;
 
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.testing.threadtester.AnnotatedTestRunner;
@@ -25,12 +26,14 @@ import com.google.testing.threadtester.ThreadedAfter;
 import com.google.testing.threadtester.ThreadedBefore;
 import com.google.testing.threadtester.ThreadedMain;
 import com.google.testing.threadtester.ThreadedSecondary;
+import io.github.robwin.circularbuffer.ConcurrentEvictingQueue;
 import org.junit.Test;
 
-public class ConcurrentEvictingQueueReadWriteTest {
+public class ConcurrentEvictingQueueDoubleReadTest {
 
     ConcurrentEvictingQueue<Integer> queue;
-    private Object[] array;
+    private Integer first;
+    private Integer second;
 
     @Test
     public void concurrentEvictingQueueDoubleWriteTest() {
@@ -42,27 +45,20 @@ public class ConcurrentEvictingQueueReadWriteTest {
     public void setup() {
         queue = new ConcurrentEvictingQueue<>(2);
         queue.offer(1);
-        queue.offer(2);
     }
 
     @ThreadedMain
     public void firstActor() {
-         queue.poll();
+        first = queue.poll();
     }
 
     @ThreadedSecondary
     public void secondActor() {
-        array = queue.toArray();
+        second = queue.poll();
     }
 
     @ThreadedAfter
     public void arbiter() {
-        assertThat(array.length).isBetween(1, 2);
-        if (array.length == 2) {
-            assertThat(array).containsExactly(1, 2);
-        }
-        if (array.length == 1) {
-            assertThat(array[0]).isEqualTo(2);
-        }
+        assertThat(asList(first, second)).containsOnly(1, null);
     }
 }
