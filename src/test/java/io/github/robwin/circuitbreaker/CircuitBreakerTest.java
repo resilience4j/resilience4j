@@ -621,8 +621,7 @@ public class CircuitBreakerTest {
     public void shouldInvokeAsyncApply() throws ExecutionException, InterruptedException {
         // tag::shouldInvokeAsyncApply[]
         // Given
-        CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
-        CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("testName");
+        CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("backendName");
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
 
         // When
