@@ -11,3 +11,5 @@ To highlight a few differences to Netflix Hystrix:
 
 In the following I call higher-order functions decorators. Furthermore, the library provides decorators to retry failed functions, limit call frequency or cache function results. You can stack more than one decorator on any given function. That means, you can combine a RateLimiter and Retry decorator with a CircuitBreaker decorator. The library provides a `Decorators` builder to simplify stacking decorators. Any decorated function can be executed synchronously or asynchronously by using a CompletableFuture or RxJava.
 However, features such as Request Collapsing and Bulk Heading are not in the scope of this library.
+
+
