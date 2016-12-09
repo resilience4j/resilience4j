@@ -34,9 +34,11 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.time.Duration;
+import java.util.concurrent.locks.LockSupport;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+import static java.time.LocalDateTime.now;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
@@ -45,6 +47,7 @@ import static org.mockito.Mockito.times;
 public class DecoratorsTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(DecoratorsTest.class);
+    private static final long NANOS_IN_SECOND = 1_000_000_000L;
 
     private HelloWorldService helloWorldService;
 
@@ -203,18 +206,19 @@ public class DecoratorsTest {
 
         // Create a custom RateLimiter configuration
         RateLimiterConfig config = RateLimiterConfig.custom()
-                .timeoutDuration(Duration.ofMillis(100))
-                .limitRefreshPeriod(Duration.ofSeconds(1))
-                .limitForPeriod(1)
-                .build();
+            .timeoutDuration(Duration.ofMillis(100))
+            .limitRefreshPeriod(Duration.ofSeconds(1))
+            .limitForPeriod(1)
+            .build();
 
         // Create a RateLimiter
         RateLimiter rateLimiter = RateLimiter.of("backendName", config);
 
         Try.CheckedSupplier<String> restrictedSupplier = Decorators.ofCheckedSupplier(() -> helloWorldService.returnHelloWorld())
-                .withRateLimiter(rateLimiter)
-                .decorate();
+            .withRateLimiter(rateLimiter)
+            .decorate();
 
+        alignTime();
         Try<String> firstTry = Try.of(restrictedSupplier);
         assertThat(firstTry.isSuccess()).isTrue();
         Try<String> secondTry = Try.of(restrictedSupplier);
@@ -223,6 +227,12 @@ public class DecoratorsTest {
 
         // Then the helloWorldService should be invoked 1 time
         BDDMockito.then(helloWorldService).should(times(1)).returnHelloWorld();
+    }
+
+    private void alignTime() {
+        long nanosToSleep = (NANOS_IN_SECOND - now().getNano());
+        // Wait to the start of next second
+        LockSupport.parkNanos(nanosToSleep);
     }
 
     @Test
