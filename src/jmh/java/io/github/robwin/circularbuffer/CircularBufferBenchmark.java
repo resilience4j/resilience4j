@@ -16,10 +16,9 @@
  *
  *
  */
-package io.github.robwin.circuitbreaker;
+package io.github.robwin.circularbuffer;
 
-import io.github.robwin.circularbuffer.CircularFifoBuffer;
-import io.github.robwin.circularbuffer.ConcurrentCircularFifoBuffer;
+
 import javaslang.collection.List;
 import javaslang.control.Option;
 import org.openjdk.jmh.annotations.Benchmark;

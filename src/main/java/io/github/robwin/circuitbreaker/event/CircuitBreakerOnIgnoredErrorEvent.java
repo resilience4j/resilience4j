@@ -23,7 +23,7 @@ import java.time.Duration;
 /**
  * A CircuitBreakerEvent which informs that an error has been ignored
  */
-public class CircuitBreakerOnIgnoredErrorEvent extends AbstractCircuitBreakerEvent{
+public class CircuitBreakerOnIgnoredErrorEvent extends AbstractCircuitBreakerEvent {
 
     private final Throwable throwable;
     private final Duration elapsedDuration;
@@ -48,11 +48,11 @@ public class CircuitBreakerOnIgnoredErrorEvent extends AbstractCircuitBreakerEve
     }
 
     @Override
-    public String toString(){
+    public String toString() {
         return String.format("%s: CircuitBreaker '%s' has ignored an error: '%s'. Elapsed time: %s ms",
-                getCreationTime(),
-                getCircuitBreakerName(),
-                throwable.toString(),
-                elapsedDuration.toMillis());
+            getCreationTime(),
+            getCircuitBreakerName(),
+            getThrowable().toString(),
+            getElapsedDuration().toMillis());
     }
 }

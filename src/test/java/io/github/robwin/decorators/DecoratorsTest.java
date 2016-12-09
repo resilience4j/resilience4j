@@ -18,6 +18,11 @@
  */
 package io.github.robwin.decorators;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+
 import io.github.robwin.cache.Cache;
 import io.github.robwin.circuitbreaker.CircuitBreaker;
 import io.github.robwin.ratelimiter.RateLimiter;
@@ -34,39 +39,31 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.time.Duration;
-import java.util.concurrent.locks.LockSupport;
 import java.util.function.Function;
 import java.util.function.Supplier;
-
-import static java.time.LocalDateTime.now;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
 
 public class DecoratorsTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(DecoratorsTest.class);
-    private static final long NANOS_IN_SECOND = 1_000_000_000L;
-
+    public boolean state = false;
     private HelloWorldService helloWorldService;
 
     @Before
-    public void setUp(){
+    public void setUp() {
         helloWorldService = mock(HelloWorldService.class);
     }
 
     @Test
-    public void testDecorateSupplier(){
+    public void testDecorateSupplier() {
         // Given the HelloWorldService returns Hello world
         given(helloWorldService.returnHelloWorld()).willReturn("Hello world");
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("helloBackend");
 
         Supplier<String> decoratedSupplier = Decorators.ofSupplier(() -> helloWorldService.returnHelloWorld())
-                .withCircuitBreaker(circuitBreaker)
-                .withRetry(Retry.ofDefaults("id"))
-                .withRateLimiter(RateLimiter.ofDefaults("testName"))
-                .decorate();
+            .withCircuitBreaker(circuitBreaker)
+            .withRetry(Retry.ofDefaults("id"))
+            .withRateLimiter(RateLimiter.ofDefaults("testName"))
+            .decorate();
 
         String result = decoratedSupplier.get();
         assertThat(result).isEqualTo("Hello world");
@@ -85,10 +82,10 @@ public class DecoratorsTest {
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("helloBackend");
 
         Try.CheckedSupplier<String> decoratedSupplier = Decorators.ofCheckedSupplier(() -> helloWorldService.returnHelloWorldWithException())
-                .withCircuitBreaker(circuitBreaker)
-                .withRetry(Retry.ofDefaults("id"))
-                .withRateLimiter(RateLimiter.ofDefaults("testName"))
-                .decorate();
+            .withCircuitBreaker(circuitBreaker)
+            .withRetry(Retry.ofDefaults("id"))
+            .withRateLimiter(RateLimiter.ofDefaults("testName"))
+            .decorate();
 
         String result = Try.of(decoratedSupplier).get();
         assertThat(result).isEqualTo("Hello world");
@@ -101,14 +98,14 @@ public class DecoratorsTest {
     }
 
     @Test
-    public void testDecorateRunnable(){
+    public void testDecorateRunnable() {
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("helloBackend");
 
         Runnable decoratedRunnable = Decorators.ofRunnable(() -> helloWorldService.sayHelloWorld())
-                .withCircuitBreaker(circuitBreaker)
-                .withRetry(Retry.ofDefaults("id"))
-                .withRateLimiter(RateLimiter.ofDefaults("testName"))
-                .decorate();
+            .withCircuitBreaker(circuitBreaker)
+            .withRetry(Retry.ofDefaults("id"))
+            .withRateLimiter(RateLimiter.ofDefaults("testName"))
+            .decorate();
 
         decoratedRunnable.run();
 
@@ -125,10 +122,10 @@ public class DecoratorsTest {
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("helloBackend");
 
         Try.CheckedRunnable decoratedRunnable = Decorators.ofCheckedRunnable(() -> helloWorldService.sayHelloWorldWithException())
-                .withCircuitBreaker(circuitBreaker)
-                .withRetry(Retry.ofDefaults("id"))
-                .withRateLimiter(RateLimiter.ofDefaults("testName"))
-                .decorate();
+            .withCircuitBreaker(circuitBreaker)
+            .withRetry(Retry.ofDefaults("id"))
+            .withRateLimiter(RateLimiter.ofDefaults("testName"))
+            .decorate();
 
         Try.run(decoratedRunnable);
 
@@ -140,16 +137,16 @@ public class DecoratorsTest {
     }
 
     @Test
-    public void testDecorateFunction(){
+    public void testDecorateFunction() {
         // Given the HelloWorldService returns Hello world
         given(helloWorldService.returnHelloWorldWithName("Name")).willReturn("Hello world Name");
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("helloBackend");
 
         Function<String, String> decoratedFunction = Decorators.ofFunction(helloWorldService::returnHelloWorldWithName)
-                .withCircuitBreaker(circuitBreaker)
-                .withRetry(Retry.ofDefaults("id"))
-                .withRateLimiter(RateLimiter.ofDefaults("testName"))
-                .decorate();
+            .withCircuitBreaker(circuitBreaker)
+            .withRetry(Retry.ofDefaults("id"))
+            .withRateLimiter(RateLimiter.ofDefaults("testName"))
+            .decorate();
 
         String result = decoratedFunction.apply("Name");
         assertThat(result).isEqualTo("Hello world Name");
@@ -166,10 +163,10 @@ public class DecoratorsTest {
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("helloBackend");
 
         Try.CheckedFunction<String, String> decoratedFunction = Decorators.ofCheckedFunction(helloWorldService::returnHelloWorldWithNameWithException)
-                .withCircuitBreaker(circuitBreaker)
-                .withRetry(Retry.ofDefaults("id"))
-                .withRateLimiter(RateLimiter.ofDefaults("testName"))
-                .decorate();
+            .withCircuitBreaker(circuitBreaker)
+            .withRetry(Retry.ofDefaults("id"))
+            .withRateLimiter(RateLimiter.ofDefaults("testName"))
+            .decorate();
 
         String result = Try.of(() -> decoratedFunction.apply("Name")).get();
         assertThat(result).isEqualTo("Hello world Name");
@@ -180,15 +177,16 @@ public class DecoratorsTest {
     }
 
     @Test
-    public void testDecoratorBuilderWithRetry(){
+    public void testDecoratorBuilderWithRetry() {
         // Given the HelloWorldService returns Hello world
-        given(helloWorldService.returnHelloWorld()).willThrow(new RuntimeException("BAM!"));;
+        given(helloWorldService.returnHelloWorld()).willThrow(new RuntimeException("BAM!"));
+        ;
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("helloBackend");
 
         Supplier<String> decoratedSupplier = Decorators.ofSupplier(() -> helloWorldService.returnHelloWorld())
-                .withCircuitBreaker(circuitBreaker)
-                .withRetry(Retry.ofDefaults("id"))
-                .decorate();
+            .withCircuitBreaker(circuitBreaker)
+            .withRetry(Retry.ofDefaults("id"))
+            .decorate();
 
         Try.of(decoratedSupplier::get);
 
@@ -230,13 +228,15 @@ public class DecoratorsTest {
     }
 
     private void alignTime() {
-        long nanosToSleep = (NANOS_IN_SECOND - now().getNano());
-        // Wait to the start of next second
-        LockSupport.parkNanos(nanosToSleep);
+        // Wait to the start of the next second in spin loop
+        while (System.nanoTime() % 1_000_000_000L > 10_000L) {
+            state = !state;
+        }
+        System.out.println(state);
     }
 
     @Test
-    public void testDecorateCheckedSupplierWithCache(){
+    public void testDecorateCheckedSupplierWithCache() {
         javax.cache.Cache<String, String> cache = mock(javax.cache.Cache.class);
         // Given the cache contains the key
         given(cache.containsKey("testKey")).willReturn(true);
@@ -252,7 +252,7 @@ public class DecoratorsTest {
 
 
     @Test
-    public void testDecorateSupplierWithCache(){
+    public void testDecorateSupplierWithCache() {
         javax.cache.Cache<String, String> cache = mock(javax.cache.Cache.class);
         // Given the cache contains the key
         given(cache.containsKey("testKey")).willReturn(true);
@@ -260,8 +260,8 @@ public class DecoratorsTest {
         given(cache.get("testKey")).willReturn("Hello from cache");
 
         Function<String, String> cachedFunction = Decorators.ofSupplier(() -> "Hello world")
-                .withCache(Cache.of(cache))
-                .decorate();
+            .withCache(Cache.of(cache))
+            .decorate();
         String value = cachedFunction.apply("testKey");
         assertThat(value).isEqualTo("Hello from cache");
     }

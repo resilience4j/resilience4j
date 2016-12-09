@@ -249,6 +249,7 @@ public class AtomicRateLimiterTest {
         then(detailedMetrics.getNumberOfWaitingThreads()).isEqualTo(0);
         then(detailedMetrics.getAvailablePermissions()).isEqualTo(1);
         then(detailedMetrics.getNanosToWait()).isEqualTo(0);
+        then(detailedMetrics.getCycle()).isGreaterThan(0);
     }
 
     @Test
