@@ -122,7 +122,7 @@ The advantage of an event stream is that you can use RxJava's `observeOn` operat
 
 [source,java]
 ----
-CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testName");
+CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("backendName");
 CircularEventConsumer<CircuitBreakerOnErrorEvent> circularEventConsumer = new CircularEventConsumer<>(10);
 circuitBreaker.getEventStream()
     .filter(event -> event.getEventType() == Type.ERROR)
