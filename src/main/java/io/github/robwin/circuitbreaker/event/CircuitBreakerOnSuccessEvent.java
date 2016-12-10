@@ -23,7 +23,7 @@ import java.time.Duration;
 /**
  * A CircuitBreakerEvent which informs that a success has been recorded
  */
-public class CircuitBreakerOnSuccessEvent  extends AbstractCircuitBreakerEvent{
+public class CircuitBreakerOnSuccessEvent extends AbstractCircuitBreakerEvent {
 
     private final Duration elapsedDuration;
 
@@ -42,10 +42,10 @@ public class CircuitBreakerOnSuccessEvent  extends AbstractCircuitBreakerEvent{
     }
 
     @Override
-    public String toString(){
+    public String toString() {
         return String.format("%s: CircuitBreaker '%s' recorded a successful call. Elapsed time: %s ms",
-                getCreationTime(),
-                getCircuitBreakerName(),
-                elapsedDuration.toMillis());
+            getCreationTime(),
+            getCircuitBreakerName(),
+            getElapsedDuration().toMillis());
     }
 }

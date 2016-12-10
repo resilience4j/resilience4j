@@ -329,6 +329,14 @@ public class AtomicRateLimiter implements RateLimiter {
             return estimatedState.nanosToWait;
         }
 
+        /**
+         * @return estimated current cycle
+         */
+        public long getCycle() {
+            State currentState = state.get();
+            State estimatedState = calculateNextState(-1, currentState);
+            return estimatedState.activeCycle;
+        }
     }
 
     /**
