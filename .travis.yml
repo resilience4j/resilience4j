@@ -1,11 +1,25 @@
 language: java
 jdk:
 - oraclejdk8
+
 before_install:
 - chmod +x gradlew
+
+script:
+- ./gradlew clean check allTests -x test
+
 after_success:
-- ./gradlew jacocoTestReport coveralls
+- ./gradlew coberturaReport coveralls
 - ./gradlew artifactoryPublish -PbintrayUsername="${BINTRAY_USER}" -PbintrayApiKey="${BINTRAY_KEY}"
+
+before_cache:
+  - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
+  - rm -fr $HOME/.gradle/caches/*/plugin-resolution/
+cache:
+  directories:
+    - $HOME/.gradle/caches/
+    - $HOME/.gradle/wrapper/
+
 notifications:
   webhooks:
     urls:
@@ -13,6 +27,7 @@ notifications:
     on_success: change
     on_failure: always
     on_start: false
+
 env:
   global:
   - secure: OpcatJV2E2u1Li7KXacvTq6O+c/2TZor7dHl2dlo/8jDgGOZFK4rsZlTVWWqcwP1lOr5s5yOsysrJZ+3ZzFFpJ4VsTKyNQZEwzl7si40l4I29NU9fiySFSGOCYqIclXHh2lJgLhXPZonzr5KQVcEcRSNQHLDO22BVf8uUX8WOqM/ZMZyjQkYzgBfhaHoXnlRxuGoWWEolyBdKHf4Cr480u3Ep//7eZwKK/JpkM8DTu63TnjDh/Tpao95LQNY8RaRn7NAom6A0IlGR9gDLPnCNlziUPxHAL2KbUL4ePWICg/wYTiTvnh1D0gNGGHSC/jRfYE8BzBrXEwD9JUGkT+yMhUaWj+5/hxQbBivtGGuTrzMoJchiaBGjK2r17Xao4nkQF2MjsSJIzh5uE/td88tSrAVM1W0Ee7TlbtArR0knbvzZt4YyZjv26m0dEHmDx9Q+g1cjWKsCiPXlSvc8jOOoNlaq0dk8/bRu6D7yaHsxGhAokxcf/qzTF8zPp3ODrY5M6f5l4LFN8j7STFXt4GeR/B6W6uPL0JrPQhq5I54SJPGIv7amYv/QnmTMxLg1rCRA/Rnngz9IPKNzFcpNVVPL95v/W76xlk6UvCvm1aFBQd7KQ2qgGMZgSlxv5FX77Tzf3C97VNVm6JbBfkJEpIWiR1CUJAjWR6u2avS3jPShTk=

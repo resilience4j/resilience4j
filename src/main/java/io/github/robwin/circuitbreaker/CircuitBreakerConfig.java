@@ -37,7 +37,7 @@ public class CircuitBreakerConfig {
     private int ringBufferSizeInClosedState = DEFAULT_RING_BUFFER_SIZE_IN_CLOSED_STATE;
     private Duration waitDurationInOpenState = Duration.ofSeconds(DEFAULT_WAIT_DURATION_IN_OPEN_STATE);
     // The default exception predicate counts all exceptions as failures.
-    private Predicate<Throwable> recordFailurePredicate = (exception) -> true;
+    private Predicate<? super Throwable> recordFailurePredicate = (exception) -> true;
 
     private CircuitBreakerConfig(){
     }
@@ -58,7 +58,7 @@ public class CircuitBreakerConfig {
         return ringBufferSizeInClosedState;
     }
 
-    public Predicate<Throwable> getRecordFailurePredicate() {
+    public Predicate<? super Throwable> getRecordFailurePredicate() {
         return recordFailurePredicate;
     }
 
@@ -158,7 +158,7 @@ public class CircuitBreakerConfig {
          * @param predicate the Predicate which evaluates if an exception should be recorded as a failure and thus trigger the CircuitBreaker
          * @return the CircuitBreakerConfig.Builder
          */
-        public Builder recordFailure(Predicate<Throwable> predicate) {
+        public Builder recordFailure(Predicate<? super Throwable> predicate) {
             config.recordFailurePredicate = predicate;
             return this;
         }
