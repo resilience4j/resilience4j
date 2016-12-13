@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright 2016 Robert Winkler
+ *  Copyright 2016 Robert Winkler and Bohdan Storozhuk
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -19,24 +19,38 @@
 package io.github.robwin.circuitbreaker;
 
 import io.github.robwin.circuitbreaker.internal.RingBitSet;
-import org.openjdk.jmh.annotations.*;
+import org.openjdk.jmh.annotations.Benchmark;
+import org.openjdk.jmh.annotations.BenchmarkMode;
+import org.openjdk.jmh.annotations.Fork;
+import org.openjdk.jmh.annotations.Group;
+import org.openjdk.jmh.annotations.GroupThreads;
+import org.openjdk.jmh.annotations.Measurement;
+import org.openjdk.jmh.annotations.Mode;
+import org.openjdk.jmh.annotations.OutputTimeUnit;
+import org.openjdk.jmh.annotations.Scope;
+import org.openjdk.jmh.annotations.Setup;
+import org.openjdk.jmh.annotations.State;
+import org.openjdk.jmh.annotations.Warmup;
+import org.openjdk.jmh.infra.Blackhole;
 
 import java.util.concurrent.TimeUnit;
 
 @State(Scope.Benchmark)
-@OutputTimeUnit(TimeUnit.MILLISECONDS)
-@BenchmarkMode(Mode.Throughput)
+@OutputTimeUnit(TimeUnit.MICROSECONDS)
+@BenchmarkMode(Mode.All)
 public class RingBitSetBenchmark {
 
-    private RingBitSet ringBitSet;
+    private static final int CAPACITY = 1000;
     private static final int ITERATION_COUNT = 10;
     private static final int WARMUP_COUNT = 10;
-    private static final int THREAD_COUNT = 10;
-    private static final int FORK_COUNT = 1;
+    private static final int THREAD_COUNT = 2;
+    private static final int FORK_COUNT = 2;
+
+    private RingBitSet ringBitSet;
 
     @Setup
     public void setUp() {
-        ringBitSet = new RingBitSet(1000);
+        ringBitSet = new RingBitSet(CAPACITY);
     }
 
     @Benchmark
@@ -45,18 +59,21 @@ public class RingBitSetBenchmark {
     @GroupThreads(THREAD_COUNT)
     @Warmup(iterations = WARMUP_COUNT)
     @Measurement(iterations = ITERATION_COUNT)
-    public void setBits(){
-        ringBitSet.setNextBit(true);
-        ringBitSet.setNextBit(false);
+    public void concurrentSetBits(Blackhole bh) {
+        int firstCardinality = ringBitSet.setNextBit(true);
+        bh.consume(firstCardinality);
+        int secondCardinality = ringBitSet.setNextBit(false);
+        bh.consume(secondCardinality);
     }
 
     @Benchmark
     @Fork(value = FORK_COUNT)
     @Group("ringBitSet")
-    @GroupThreads(THREAD_COUNT)
+    @GroupThreads(1)
     @Warmup(iterations = WARMUP_COUNT)
     @Measurement(iterations = ITERATION_COUNT)
-    public int cardinality(){
-        return ringBitSet.cardinality();
+    public void concurrentCardinality(Blackhole bh) {
+        int cardinality = ringBitSet.cardinality();
+        bh.consume(cardinality);
     }
 }
