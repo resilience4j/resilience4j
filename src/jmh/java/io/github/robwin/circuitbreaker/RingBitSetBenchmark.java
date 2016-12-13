@@ -18,7 +18,6 @@
  */
 package io.github.robwin.circuitbreaker;
 
-import io.github.robwin.circuitbreaker.internal.ConcurrentRingBitSet;
 import io.github.robwin.circuitbreaker.internal.RingBitSet;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.BenchmarkMode;
@@ -48,62 +47,33 @@ public class RingBitSetBenchmark {
     private static final int FORK_COUNT = 2;
 
     private RingBitSet ringBitSet;
-    private ConcurrentRingBitSet concurrentRingBitSet;
 
     @Setup
     public void setUp() {
         ringBitSet = new RingBitSet(CAPACITY);
-        concurrentRingBitSet = new ConcurrentRingBitSet(CAPACITY);
     }
 
     @Benchmark
     @Fork(value = FORK_COUNT)
     @Group("ringBitSet")
-    @GroupThreads(THREAD_COUNT)
-    @Warmup(iterations = WARMUP_COUNT)
-    @Measurement(iterations = ITERATION_COUNT)
-    public void setBits(Blackhole bh) {
-        ringBitSet.setNextBit(true);
-        int firstCardinality = ringBitSet.cardinality();
-        bh.consume(firstCardinality);
-        ringBitSet.setNextBit(false);
-        int secondCardinality = ringBitSet.cardinality();
-        bh.consume(secondCardinality);
-    }
-
-    @Benchmark
-    @Fork(value = FORK_COUNT)
-    @Group("ringBitSet")
-    @GroupThreads(1)
-    @Warmup(iterations = WARMUP_COUNT)
-    @Measurement(iterations = ITERATION_COUNT)
-    public void cardinality(Blackhole bh) {
-        int cardinality = ringBitSet.cardinality();
-        bh.consume(cardinality);
-    }
-
-
-    @Benchmark
-    @Fork(value = FORK_COUNT)
-    @Group("concurrentRingBitSet")
     @GroupThreads(THREAD_COUNT)
     @Warmup(iterations = WARMUP_COUNT)
     @Measurement(iterations = ITERATION_COUNT)
     public void concurrentSetBits(Blackhole bh) {
-        int firstCardinality = concurrentRingBitSet.setNextBit(true);
+        int firstCardinality = ringBitSet.setNextBit(true);
         bh.consume(firstCardinality);
-        int secondCardinality = concurrentRingBitSet.setNextBit(false);
+        int secondCardinality = ringBitSet.setNextBit(false);
         bh.consume(secondCardinality);
     }
 
     @Benchmark
     @Fork(value = FORK_COUNT)
-    @Group("concurrentRingBitSet")
+    @Group("ringBitSet")
     @GroupThreads(1)
     @Warmup(iterations = WARMUP_COUNT)
     @Measurement(iterations = ITERATION_COUNT)
     public void concurrentCardinality(Blackhole bh) {
-        int cardinality = concurrentRingBitSet.cardinality();
+        int cardinality = ringBitSet.cardinality();
         bh.consume(cardinality);
     }
 }

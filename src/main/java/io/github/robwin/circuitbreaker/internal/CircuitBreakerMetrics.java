@@ -24,11 +24,11 @@ import io.github.robwin.circuitbreaker.CircuitBreaker;
 class CircuitBreakerMetrics implements CircuitBreaker.Metrics {
 
     private final int ringBufferSize;
-    private final ConcurrentRingBitSet ringBitSet;
+    private final RingBitSet ringBitSet;
 
     CircuitBreakerMetrics(int ringBufferSize) {
         this.ringBufferSize = ringBufferSize;
-        this.ringBitSet = new ConcurrentRingBitSet(this.ringBufferSize);
+        this.ringBitSet = new RingBitSet(this.ringBufferSize);
     }
 
     /**

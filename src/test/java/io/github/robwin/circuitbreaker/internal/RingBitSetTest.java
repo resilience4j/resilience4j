@@ -34,7 +34,7 @@ public class RingBitSetTest {
 
     @Test
     public void testRingBitSet() {
-        ConcurrentRingBitSet ringBitSet = new ConcurrentRingBitSet(4);
+        RingBitSet ringBitSet = new RingBitSet(4);
         // The initial index is -1
         assertThat(ringBitSet.getIndex()).isEqualTo(-1);
         assertThat(ringBitSet.setNextBit(true)).isEqualTo(1);
@@ -70,7 +70,7 @@ public class RingBitSetTest {
     @Test
     public void testRingBitSetParallel() {
         System.setProperty("java.util.concurrent.ForkJoinPool.common.parallelism", "20");
-        ConcurrentRingBitSet ringBitSet = new ConcurrentRingBitSet(1000);
+        RingBitSet ringBitSet = new RingBitSet(1000);
         IntStream.range(0, 1000).parallel().forEach((i) -> {
             if (i < 500) {
                 ringBitSet.setNextBit(true);
@@ -90,7 +90,7 @@ public class RingBitSetTest {
 
     @Test
     public void testRingBitSetWithSlightlyLessCapacity() {
-        ConcurrentRingBitSet ringBitSet = new ConcurrentRingBitSet(100);
+        RingBitSet ringBitSet = new RingBitSet(100);
         long expectedCardinality = Stream.generate(ThreadLocalRandom.current()::nextBoolean)
             .limit(1000)
             .peek(ringBitSet::setNextBit)
