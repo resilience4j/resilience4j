@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright 2016 Robert Winkler
+ *  Copyright 2016 Robert Winkler and Bohdan Storozhuk
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -23,16 +23,12 @@ import io.github.robwin.circuitbreaker.CircuitBreaker;
 
 class CircuitBreakerMetrics implements CircuitBreaker.Metrics {
 
-    private final RingBitSet ringBitSet;
-
-    /**
-     * Maximum number of buffered calls
-     */
-    private int maxNumberOfBufferedCalls;
+    private final int ringBufferSize;
+    private final ConcurrentRingBitSet ringBitSet;
 
     CircuitBreakerMetrics(int ringBufferSize) {
-        this.ringBitSet = new RingBitSet(ringBufferSize);
-        this.maxNumberOfBufferedCalls = ringBufferSize;
+        this.ringBufferSize = ringBufferSize;
+        this.ringBitSet = new ConcurrentRingBitSet(this.ringBufferSize);
     }
 
     /**
@@ -40,9 +36,9 @@ class CircuitBreakerMetrics implements CircuitBreaker.Metrics {
      *
      * @return the current failure rate  in percentage.
      */
-    synchronized float onError(){
-        ringBitSet.setNextBit(true);
-        return getFailureRate();
+    float onError() {
+        int currentNumberOfFailedCalls = ringBitSet.setNextBit(true);
+        return getFailureRate(currentNumberOfFailedCalls);
     }
 
     /**
@@ -50,39 +46,56 @@ class CircuitBreakerMetrics implements CircuitBreaker.Metrics {
      *
      * @return the current failure rate in percentage.
      */
-    synchronized float onSuccess(){
-        ringBitSet.setNextBit(false);
-        return getFailureRate();
+    float onSuccess() {
+        int currentNumberOfFailedCalls = ringBitSet.setNextBit(false);
+        return getFailureRate(currentNumberOfFailedCalls);
     }
 
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
-    public synchronized float getFailureRate(){
-        int numOfMeasuredCalls = getNumberOfBufferedCalls();
-        if(numOfMeasuredCalls == maxNumberOfBufferedCalls){
-            return getNumberOfFailedCalls() * 100.0f / numOfMeasuredCalls;
-        }else{
-            return -1f;
-        }
+    public float getFailureRate() {
+        return getFailureRate(getNumberOfFailedCalls());
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public int getMaxNumberOfBufferedCalls() {
-        return maxNumberOfBufferedCalls;
+        return ringBufferSize;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
-    public synchronized int getNumberOfSuccessfulCalls() {
+    public int getNumberOfSuccessfulCalls() {
         return getNumberOfBufferedCalls() - getNumberOfFailedCalls();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
-    public synchronized int getNumberOfBufferedCalls() {
+    public int getNumberOfBufferedCalls() {
         return this.ringBitSet.length();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
-    public synchronized int getNumberOfFailedCalls() {
+    public int getNumberOfFailedCalls() {
         return this.ringBitSet.cardinality();
+    }
+
+    private float getFailureRate(int numberOfFailedCalls) {
+        if (getNumberOfBufferedCalls() < ringBufferSize) {
+            return -1.0f;
+        }
+        return numberOfFailedCalls * 100.0f / ringBufferSize;
     }
 }

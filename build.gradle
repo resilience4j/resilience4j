@@ -105,12 +105,6 @@ artifacts {
 
 cobertura {
     coverageFormats = ['html', 'xml']
-//    afterEvaluate {
-//        classDirectories = files(classDirectories.files.collect {
-//            fileTree(dir: it,
-//                    exclude: ['**/**Benchmark**'])
-//        })
-//    }
 }
 
 tasks.coveralls {

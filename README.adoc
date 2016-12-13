@@ -240,7 +240,7 @@ static <T> Supplier<T> decorateSupplier(Supplier<T> supplier, CircuitBreaker cir
 The state of the CircuitBreaker changes from `CLOSED` to `OPEN` when the failure rate is above a (configurable) threshold.
 Then, all access to the backend is blocked for a (configurable) time duration. `CircuitBreaker::isCallPermitted()` throws a `CircuitBreakerOpenException`, if the CircuitBreaker is `OPEN`.
 
-The CircuitBreaker uses a Ring Bit Buffer in the `CLOSED` state to store the success or failure statuses of the calls. A successful call is stored as a `0` bit and a failed call is stored as a `1` bit. The Ring Bit Buffer has a (configurable) fixed-size. The Ring Bit Buffer uses internally a https://docs.oracle.com/javase/8/docs/api/java/util/BitSet.html[BitSet] to store the bits which is saving memory compared to a boolean array. The BitSet uses a long[] array to store the bits. That means the BitSet only needs an array of 16 long (64-bit) values to store the status of 1024 calls.
+The CircuitBreaker uses a Ring Bit Buffer in the `CLOSED` state to store the success or failure statuses of the calls. A successful call is stored as a `0` bit and a failed call is stored as a `1` bit. The Ring Bit Buffer has a (configurable) fixed-size. The Ring Bit Buffer uses internally a https://docs.oracle.com/javase/8/docs/api/java/util/BitSet.html[BitSet] like data structure to store the bits which is saving memory compared to a boolean array. The BitSet uses a long[] array to store the bits. That means the BitSet only needs an array of 16 long (64-bit) values to store the status of 1024 calls.
 
 image::src/docs/asciidoc/images/ring_buffer.jpg[Ring Bit Buffer]
 
@@ -279,7 +279,7 @@ So you can easily restrict not only network calls but your local in-memory opera
 
 == License
 
-Copyright 2016 Robert Winkler
+Copyright 2016 Robert Winkler and Bohdan Storozhuk
 
 Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at
 

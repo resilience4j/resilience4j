@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright 2016 Robert Winkler
+ *  Copyright 2016 Robert Winkler and Bohdan Storozhuk
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -18,37 +18,43 @@
  */
 package io.github.robwin.circuitbreaker.internal;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.IntStream;
-
-import static org.assertj.core.api.Assertions.assertThat;
+import java.util.stream.Stream;
 
 public class RingBitSetTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(RingBitSetTest.class);
 
     @Test
-    public void testRingBitSet(){
-        RingBitSet ringBitSet = new RingBitSet(4);
+    public void testRingBitSet() {
+        ConcurrentRingBitSet ringBitSet = new ConcurrentRingBitSet(4);
         // The initial index is -1
         assertThat(ringBitSet.getIndex()).isEqualTo(-1);
-        ringBitSet.setNextBit(true);
+        assertThat(ringBitSet.setNextBit(true)).isEqualTo(1);
+
         assertThat(ringBitSet.getIndex()).isEqualTo(0);
-        ringBitSet.setNextBit(false);
+        assertThat(ringBitSet.setNextBit(false)).isEqualTo(1);
+
         assertThat(ringBitSet.getIndex()).isEqualTo(1);
-        ringBitSet.setNextBit(true);
+        assertThat(ringBitSet.setNextBit(true)).isEqualTo(2);
+
         assertThat(ringBitSet.getIndex()).isEqualTo(2);
-        ringBitSet.setNextBit(true);
+        assertThat(ringBitSet.setNextBit(true)).isEqualTo(3);
+
         assertThat(ringBitSet.getIndex()).isEqualTo(3);
 
 
-        ringBitSet.setNextBit(false);
+        assertThat(ringBitSet.setNextBit(false)).isEqualTo(2);
         // The index has reached the maximum size and is set back to 0
         assertThat(ringBitSet.getIndex()).isEqualTo(0);
-        ringBitSet.setNextBit(false);
+        assertThat(ringBitSet.setNextBit(false)).isEqualTo(2);
         assertThat(ringBitSet.getIndex()).isEqualTo(1);
 
         // The cardinality must be 2 because the first true was overwritten by the 5th setNextBit()
@@ -62,13 +68,13 @@ public class RingBitSetTest {
     }
 
     @Test
-    public void testRingBitSetParallel(){
+    public void testRingBitSetParallel() {
         System.setProperty("java.util.concurrent.ForkJoinPool.common.parallelism", "20");
-        RingBitSet ringBitSet = new RingBitSet(1000);
-                IntStream.range(0, 1000).parallel().forEach((i) -> {
-            if(i < 500){
+        ConcurrentRingBitSet ringBitSet = new ConcurrentRingBitSet(1000);
+        IntStream.range(0, 1000).parallel().forEach((i) -> {
+            if (i < 500) {
                 ringBitSet.setNextBit(true);
-            }else{
+            } else {
                 ringBitSet.setNextBit(false);
             }
         });
@@ -82,4 +88,18 @@ public class RingBitSetTest {
         assertThat(ringBitSet.length()).isEqualTo(1000);
     }
 
+    @Test
+    public void testRingBitSetWithSlightlyLessCapacity() {
+        ConcurrentRingBitSet ringBitSet = new ConcurrentRingBitSet(100);
+        long expectedCardinality = Stream.generate(ThreadLocalRandom.current()::nextBoolean)
+            .limit(1000)
+            .peek(ringBitSet::setNextBit)
+            .skip(900)
+            .mapToInt(b -> b ? 1 : 0)
+            .sum();
+
+        assertThat(ringBitSet.cardinality()).isEqualTo((int) expectedCardinality);
+        assertThat(ringBitSet.size()).isEqualTo(128);
+        assertThat(ringBitSet.length()).isEqualTo(100);
+    }
 }
