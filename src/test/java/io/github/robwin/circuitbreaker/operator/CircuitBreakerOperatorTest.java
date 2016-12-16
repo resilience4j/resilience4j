@@ -18,13 +18,12 @@
  */
 package io.github.robwin.circuitbreaker.operator;
 
-import io.reactivex.Flowable;
-import io.reactivex.Observable;
 import io.github.robwin.circuitbreaker.CircuitBreaker;
 import io.github.robwin.circuitbreaker.CircuitBreakerConfig;
 import io.github.robwin.circuitbreaker.CircuitBreakerOpenException;
+import io.reactivex.Flowable;
+import io.reactivex.Observable;
 import io.reactivex.Single;
-import org.assertj.core.api.Assertions;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -50,8 +49,8 @@ public class CircuitBreakerOperatorTest {
         //Then
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
 
-        Assertions.assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
-        Assertions.assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(0);
+        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
+        assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(0);
     }
 
     @Test
@@ -70,8 +69,8 @@ public class CircuitBreakerOperatorTest {
         //Then
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
 
-        Assertions.assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
-        Assertions.assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(1);
+        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
+        assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(1);
     }
 
     @Test
@@ -91,8 +90,8 @@ public class CircuitBreakerOperatorTest {
         //Then
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
 
-        Assertions.assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
-        Assertions.assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(0);
+        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
+        assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(0);
     }
 
     @Test
@@ -112,8 +111,8 @@ public class CircuitBreakerOperatorTest {
         //Then
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
 
-        Assertions.assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
-        Assertions.assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(0);
+        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
+        assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(0);
     }
 
     @Test
@@ -133,8 +132,8 @@ public class CircuitBreakerOperatorTest {
         //Then
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
 
-        Assertions.assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
-        Assertions.assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(1);
+        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
+        assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(1);
     }
 
     @Test
@@ -154,8 +153,8 @@ public class CircuitBreakerOperatorTest {
         //Then
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
 
-        Assertions.assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
-        Assertions.assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(1);
+        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
+        assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(1);
     }
 
     @Test
@@ -184,8 +183,8 @@ public class CircuitBreakerOperatorTest {
 
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
 
-        Assertions.assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(2);
-        Assertions.assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(2);
+        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(2);
+        assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(2);
     }
 
     @Test
@@ -214,8 +213,8 @@ public class CircuitBreakerOperatorTest {
 
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
 
-        Assertions.assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(2);
-        Assertions.assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(2);
+        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(2);
+        assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(2);
     }
     @Test
     public void shouldReturnOnErrorAndWithIOExceptionUsingObservable() {
@@ -244,7 +243,7 @@ public class CircuitBreakerOperatorTest {
 
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
 
-        Assertions.assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(2);
-        Assertions.assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(2);
+        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(2);
+        assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(2);
     }
 }
