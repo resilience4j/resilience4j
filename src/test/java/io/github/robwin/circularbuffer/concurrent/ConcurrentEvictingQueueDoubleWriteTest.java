@@ -18,16 +18,12 @@
  */
 package io.github.robwin.circularbuffer.concurrent;
 
-import static java.util.Arrays.asList;
-import static org.assertj.core.api.Assertions.assertThat;
-
-import com.google.testing.threadtester.AnnotatedTestRunner;
-import com.google.testing.threadtester.ThreadedAfter;
-import com.google.testing.threadtester.ThreadedBefore;
-import com.google.testing.threadtester.ThreadedMain;
-import com.google.testing.threadtester.ThreadedSecondary;
+import com.google.testing.threadtester.*;
 import io.github.robwin.circularbuffer.ConcurrentEvictingQueue;
 import org.junit.Test;
+
+import static java.util.Arrays.asList;
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class ConcurrentEvictingQueueDoubleWriteTest {
 
@@ -40,7 +36,7 @@ public class ConcurrentEvictingQueueDoubleWriteTest {
     }
 
     @ThreadedBefore
-    public void setup() {
+    public void setUp() {
         queue = new ConcurrentEvictingQueue<>(3);
     }
 
