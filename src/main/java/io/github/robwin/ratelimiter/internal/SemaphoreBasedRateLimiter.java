@@ -23,6 +23,12 @@ import static java.util.concurrent.Executors.newSingleThreadScheduledExecutor;
 
 import io.github.robwin.ratelimiter.RateLimiter;
 import io.github.robwin.ratelimiter.RateLimiterConfig;
+import io.github.robwin.ratelimiter.event.RateLimiterEvent;
+import io.github.robwin.ratelimiter.event.RateLimiterOnFailureEvent;
+import io.github.robwin.ratelimiter.event.RateLimiterOnSuccessEvent;
+import io.reactivex.Flowable;
+import io.reactivex.processors.FlowableProcessor;
+import io.reactivex.processors.PublishProcessor;
 import javaslang.control.Option;
 
 import java.time.Duration;
@@ -46,6 +52,7 @@ public class SemaphoreBasedRateLimiter implements RateLimiter {
     private final ScheduledExecutorService scheduler;
     private final Semaphore semaphore;
     private final SemaphoreBasedRateLimiterMetrics metrics;
+    private final FlowableProcessor<RateLimiterEvent> eventPublisher;
 
     /**
      * Creates a RateLimiter.
@@ -72,6 +79,9 @@ public class SemaphoreBasedRateLimiter implements RateLimiter {
         this.scheduler = Option.of(scheduler).getOrElse(this::configureScheduler);
         this.semaphore = new Semaphore(this.rateLimiterConfig.getLimitForPeriod(), true);
         this.metrics = this.new SemaphoreBasedRateLimiterMetrics();
+
+        PublishProcessor<RateLimiterEvent> publisher = PublishProcessor.create();
+        this.eventPublisher = publisher.toSerialized();
 
         scheduleLimitRefresh();
     }
@@ -105,9 +115,11 @@ public class SemaphoreBasedRateLimiter implements RateLimiter {
     public boolean getPermission(final Duration timeoutDuration) {
         try {
             boolean success = semaphore.tryAcquire(timeoutDuration.toNanos(), TimeUnit.NANOSECONDS);
+            publishRateLimiterEvent(success);
             return success;
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
+            publishRateLimiterEvent(false);
             return false;
         }
     }
@@ -126,6 +138,14 @@ public class SemaphoreBasedRateLimiter implements RateLimiter {
     @Override
     public Metrics getMetrics() {
         return this.metrics;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Flowable<RateLimiterEvent> getEventStream() {
+        return eventPublisher;
     }
 
     /**
@@ -158,5 +178,16 @@ public class SemaphoreBasedRateLimiter implements RateLimiter {
         public int getNumberOfWaitingThreads() {
             return semaphore.getQueueLength();
         }
+    }
+
+    private void publishRateLimiterEvent(boolean permissionAcquired) {
+        if (!eventPublisher.hasSubscribers()) {
+            return;
+        }
+        if (permissionAcquired) {
+            eventPublisher.onNext(new RateLimiterOnSuccessEvent(name));
+            return;
+        }
+        eventPublisher.onNext(new RateLimiterOnFailureEvent(name));
     }
 }

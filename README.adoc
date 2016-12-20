@@ -25,6 +25,7 @@ Setup and usage is described in our http://robwin.github.io/javaslang-circuitbre
 * <<ratelimiter>>
 * <<cache>>
 * <<circuitbreaker_events>>
+* <<ratelimiter_events>>
 * <<cache_events>>
 * <<retry_events>>
 * <<circuitbreaker_monitoring>>
@@ -144,6 +145,29 @@ circuitBreaker.getEventStream()
     .subscribe(circularEventConsumer);
 
 List<CircuitBreakerOnErrorEvent> bufferedEvents = circularEventConsumer.getBufferedEvents();
+----
+
+[[ratelimiter_events]]
+== Consume emitted RateLimiterEvents
+
+The RateLimiter emits a stream of RateLimiterEvents to any Observer/Consumer who subscribes.
+An event can be a successful permission acquire or acquire failure.
+All events contains additional information like event creation time and rate limiter name.
+If you want to consume events, you have to subscribe to the event stream.
+You can use the `CircularEventConsumer` to store events in a circular buffer with a fixed capacity.
+You can use RxJava to filter certain events.
+The advantage of an event stream is that you can use RxJava's `observeOn`
+operator to specify a different Scheduler that the RateLimiter will use to send notifications to its observers/consumers.
+
+[source,java]
+----
+RateLimiter rateLimiter = RateLimiter.ofDefaults("backendName");
+CircularEventConsumer<RateLimiterEvent> circularEventConsumer = new CircularEventConsumer<>(5);
+rateLimiter.getEventStream()
+    .filter(event -> event.getEventType() == FAILED_ACQUIRE)
+    .subscribe(circularEventConsumer);
+
+List<RateLimiterEvent> bufferedEvents = circularEventConsumer.getBufferedEvents();
 ----
 
 [[cache_events]]

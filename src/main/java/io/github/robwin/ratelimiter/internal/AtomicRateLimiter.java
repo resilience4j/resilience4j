@@ -25,6 +25,12 @@ import static java.util.concurrent.locks.LockSupport.parkNanos;
 
 import io.github.robwin.ratelimiter.RateLimiter;
 import io.github.robwin.ratelimiter.RateLimiterConfig;
+import io.github.robwin.ratelimiter.event.RateLimiterEvent;
+import io.github.robwin.ratelimiter.event.RateLimiterOnFailureEvent;
+import io.github.robwin.ratelimiter.event.RateLimiterOnSuccessEvent;
+import io.reactivex.Flowable;
+import io.reactivex.processors.FlowableProcessor;
+import io.reactivex.processors.PublishProcessor;
 
 import java.time.Duration;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -51,6 +57,7 @@ public class AtomicRateLimiter implements RateLimiter {
     private final int permissionsPerCycle;
     private final AtomicInteger waitingThreads;
     private final AtomicReference<State> state;
+    private final FlowableProcessor<RateLimiterEvent> eventPublisher;
 
 
     public AtomicRateLimiter(String name, RateLimiterConfig rateLimiterConfig) {
@@ -62,6 +69,9 @@ public class AtomicRateLimiter implements RateLimiter {
 
         waitingThreads = new AtomicInteger(0);
         state = new AtomicReference<>(new State(0, 0, 0));
+
+        PublishProcessor<RateLimiterEvent> publisher = PublishProcessor.create();
+        this.eventPublisher = publisher.toSerialized();
     }
 
     /**
@@ -71,7 +81,9 @@ public class AtomicRateLimiter implements RateLimiter {
     public boolean getPermission(final Duration timeoutDuration) {
         long timeoutInNanos = timeoutDuration.toNanos();
         State modifiedState = updateStateWithBackOff(timeoutInNanos);
-        return waitForPermissionIfNecessary(timeoutInNanos, modifiedState.nanosToWait);
+        boolean result = waitForPermissionIfNecessary(timeoutInNanos, modifiedState.nanosToWait);
+        publishRateLimiterEvent(result);
+        return result;
     }
 
     /**
@@ -115,10 +127,9 @@ public class AtomicRateLimiter implements RateLimiter {
     private boolean compareAndSet(final State current, final State next) {
         if (state.compareAndSet(current, next)) {
             return true;
-        } else {
-            parkNanos(1); // back-off
-            return false;
         }
+        parkNanos(1); // back-off
+        return false;
     }
 
     /**
@@ -160,12 +171,11 @@ public class AtomicRateLimiter implements RateLimiter {
     private long nanosToWaitForPermission(final int availablePermissions, final long currentNanos, final long currentCycle) {
         if (availablePermissions > 0) {
             return 0L;
-        } else {
-            long nextCycleTimeInNanos = (currentCycle + 1) * cyclePeriodInNanos;
-            long nanosToNextCycle = nextCycleTimeInNanos - currentNanos;
-            int fullCyclesToWait = (-availablePermissions) / permissionsPerCycle;
-            return (fullCyclesToWait * cyclePeriodInNanos) + nanosToNextCycle;
         }
+        long nextCycleTimeInNanos = (currentCycle + 1) * cyclePeriodInNanos;
+        long nanosToNextCycle = nextCycleTimeInNanos - currentNanos;
+        int fullCyclesToWait = (-availablePermissions) / permissionsPerCycle;
+        return (fullCyclesToWait * cyclePeriodInNanos) + nanosToNextCycle;
     }
 
     /**
@@ -258,12 +268,38 @@ public class AtomicRateLimiter implements RateLimiter {
     }
 
     /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Flowable<RateLimiterEvent> getEventStream() {
+        return eventPublisher;
+    }
+
+    /**
      * Get the enhanced Metrics with some implementation specific details.
      *
      * @return the detailed metrics
      */
     public AtomicRateLimiterMetrics getDetailedMetrics() {
         return new AtomicRateLimiterMetrics();
+    }
+
+    /**
+     * Created only for test purposes. Simply calls {@link System#nanoTime()}
+     */
+    private long currentNanoTime() {
+        return nanoTime();
+    }
+
+    private void publishRateLimiterEvent(boolean permissionAcquired) {
+        if (!eventPublisher.hasSubscribers()) {
+            return;
+        }
+        if (permissionAcquired) {
+            eventPublisher.onNext(new RateLimiterOnSuccessEvent(name));
+            return;
+        }
+        eventPublisher.onNext(new RateLimiterOnFailureEvent(name));
     }
 
     /**
@@ -337,12 +373,5 @@ public class AtomicRateLimiter implements RateLimiter {
             State estimatedState = calculateNextState(-1, currentState);
             return estimatedState.activeCycle;
         }
-    }
-
-    /**
-     * Created only for test purposes. Simply calls {@link System#nanoTime()}
-     */
-    private long currentNanoTime() {
-        return nanoTime();
     }
 }

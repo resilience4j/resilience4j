@@ -18,7 +18,9 @@
  */
 package io.github.robwin.ratelimiter;
 
+import io.github.robwin.ratelimiter.event.RateLimiterEvent;
 import io.github.robwin.ratelimiter.internal.AtomicRateLimiter;
+import io.reactivex.Flowable;
 import javaslang.control.Try;
 
 import java.time.Duration;
@@ -216,6 +218,13 @@ public interface RateLimiter {
      * @return the Metrics of this RateLimiter
      */
     Metrics getMetrics();
+
+    /**
+     * Returns a reactive stream of RateLimiter.
+     *
+     * @return a reactive stream of RateLimiter
+     */
+    Flowable<RateLimiterEvent> getEventStream();
 
     interface Metrics {
         /**

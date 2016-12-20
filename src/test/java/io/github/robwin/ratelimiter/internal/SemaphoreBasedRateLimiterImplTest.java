@@ -28,6 +28,8 @@ import org.junit.rules.ExpectedException;
 import org.mockito.ArgumentCaptor;
 
 import java.time.Duration;
+import java.util.ArrayList;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.TimeUnit;
@@ -115,42 +117,35 @@ public class SemaphoreBasedRateLimiterImplTest {
 
     @Test
     public void getPermissionAndMetrics() throws Exception {
+
         ScheduledExecutorService scheduledExecutorService = mock(ScheduledExecutorService.class);
         RateLimiterConfig configSpy = spy(config);
         SemaphoreBasedRateLimiter limit = new SemaphoreBasedRateLimiter("test", configSpy, scheduledExecutorService);
         RateLimiter.Metrics detailedMetrics = limit.getMetrics();
+        CompletableFuture<ArrayList<String>> events = subscribeOnAllEventsDescriptions(limit, LIMIT + 1);
 
         SynchronousQueue<Object> synchronousQueue = new SynchronousQueue<>();
         Thread thread = new Thread(() -> {
             run(() -> {
                 for (int i = 0; i < LIMIT; i++) {
-                    System.out.println("SLAVE -> WAITING FOR MASTER");
                     synchronousQueue.put(O);
-                    System.out.println("SLAVE -> HAVE COMMAND FROM MASTER");
                     limit.getPermission(TIMEOUT);
-                    System.out.println("SLAVE -> ACQUIRED PERMISSION");
                 }
-                System.out.println("SLAVE -> LAST PERMISSION ACQUIRE");
                 limit.getPermission(TIMEOUT);
-                System.out.println("SLAVE -> I'M DONE");
             });
         });
         thread.setDaemon(true);
         thread.start();
 
         for (int i = 0; i < LIMIT; i++) {
-            System.out.println("MASTER -> TAKE PERMISSION");
             synchronousQueue.take();
         }
 
-        System.out.println("MASTER -> CHECK IF SLAVE IS WAITING FOR PERMISSION");
         awaitImpatiently()
             .atMost(100, TimeUnit.MILLISECONDS).until(detailedMetrics::getAvailablePermissions, equalTo(0));
-        System.out.println("MASTER -> SLAVE CONSUMED ALL PERMISSIONS");
         awaitImpatiently()
             .atMost(2, TimeUnit.SECONDS).until(thread::getState, equalTo(TIMED_WAITING));
         then(detailedMetrics.getAvailablePermissions()).isEqualTo(0);
-        System.out.println("MASTER -> SLAVE WAS WAITING");
 
         limit.refreshLimit();
         awaitImpatiently()
@@ -158,6 +153,11 @@ public class SemaphoreBasedRateLimiterImplTest {
         awaitImpatiently()
             .atMost(2, TimeUnit.SECONDS).until(thread::getState, equalTo(TERMINATED));
         then(detailedMetrics.getAvailablePermissions()).isEqualTo(1);
+
+        ArrayList<String> eventStrings = events.get();
+        eventStrings.forEach(eventString -> {
+            then(eventString).contains("type=SUCCESSFUL_ACQUIRE");
+        });
     }
 
     @Test
@@ -165,6 +165,7 @@ public class SemaphoreBasedRateLimiterImplTest {
         ScheduledExecutorService scheduledExecutorService = mock(ScheduledExecutorService.class);
         RateLimiterConfig configSpy = spy(config);
         SemaphoreBasedRateLimiter limit = new SemaphoreBasedRateLimiter("test", configSpy, scheduledExecutorService);
+        CompletableFuture<ArrayList<String>> events = subscribeOnAllEventsDescriptions(limit, LIMIT + 1);
         limit.getPermission(ZERO);
         limit.getPermission(ZERO);
 
@@ -185,6 +186,11 @@ public class SemaphoreBasedRateLimiterImplTest {
         awaitImpatiently()
             .atMost(2, TimeUnit.SECONDS).until(thread::getState, equalTo(RUNNABLE));
         then(thread.isInterrupted()).isTrue();
+
+        ArrayList<String> eventStrings = events.get();
+        then(eventStrings.get(0)).contains("type=SUCCESSFUL_ACQUIRE");
+        then(eventStrings.get(1)).contains("type=SUCCESSFUL_ACQUIRE");
+        then(eventStrings.get(2)).contains("type=FAILED_ACQUIRE");
     }
 
     @Test
@@ -230,5 +236,15 @@ public class SemaphoreBasedRateLimiterImplTest {
         exception.expect(NullPointerException.class);
         exception.expectMessage(CONFIG_MUST_NOT_BE_NULL);
         new SemaphoreBasedRateLimiter("test", null, null);
+    }
+
+    private CompletableFuture<ArrayList<String>> subscribeOnAllEventsDescriptions(final SemaphoreBasedRateLimiter limiter, final int capacity) {
+        CompletableFuture<ArrayList<String>> future = new CompletableFuture<>();
+        limiter.getEventStream()
+            .take(capacity)
+            .map(Object::toString)
+            .collectInto(new ArrayList<String>(capacity), ArrayList::add)
+            .subscribe(future::complete);
+        return future;
     }
 }

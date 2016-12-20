@@ -37,6 +37,7 @@ public class CacheTest {
 
     private javax.cache.Cache<String, String> cache;
 
+    @SuppressWarnings("unchecked")
     @Before
     public void setUp(){
         cache = mock(javax.cache.Cache.class);
