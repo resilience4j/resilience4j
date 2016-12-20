@@ -24,8 +24,6 @@ import io.github.robwin.circuitbreaker.event.CircuitBreakerEvent;
 import io.github.robwin.circuitbreaker.event.CircuitBreakerOnErrorEvent;
 import javaslang.API;
 import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.xml.ws.WebServiceException;
 import java.io.IOException;
@@ -38,8 +36,6 @@ import static javaslang.Predicates.instanceOf;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class CircularEventConsumerTest {
-
-    private static final Logger LOG = LoggerFactory.getLogger(CircularEventConsumerTest.class);
 
     @Test
     public void shouldBufferErrorEvents() {

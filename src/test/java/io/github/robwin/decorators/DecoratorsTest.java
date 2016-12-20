@@ -34,8 +34,6 @@ import javaslang.control.Try;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.BDDMockito;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.time.Duration;
@@ -43,8 +41,6 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 public class DecoratorsTest {
-
-    private static final Logger LOG = LoggerFactory.getLogger(DecoratorsTest.class);
     public boolean state = false;
     private HelloWorldService helloWorldService;
 

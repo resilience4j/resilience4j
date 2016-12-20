@@ -19,16 +19,12 @@
 package io.github.robwin.circuitbreaker;
 
 import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
 
 import static org.assertj.core.api.BDDAssertions.then;
 
 public class CircuitBreakerConfigTest {
-
-    private static Logger LOG = LoggerFactory.getLogger(CircuitBreakerConfigTest.class);
 
     @Test(expected = IllegalArgumentException.class)
     public void zeroMaxFailuresShouldFail() {

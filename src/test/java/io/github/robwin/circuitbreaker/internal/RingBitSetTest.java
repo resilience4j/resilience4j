@@ -21,16 +21,12 @@ package io.github.robwin.circuitbreaker.internal;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 public class RingBitSetTest {
-
-    private static final Logger LOG = LoggerFactory.getLogger(RingBitSetTest.class);
 
     @Test
     public void testRingBitSet() {

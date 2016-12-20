@@ -24,8 +24,6 @@ import javaslang.control.Try;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.BDDMockito;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.xml.ws.WebServiceException;
 import java.io.IOException;
@@ -47,8 +45,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 
 public class CircuitBreakerTest {
-
-    private static final Logger LOG = LoggerFactory.getLogger(CircuitBreakerTest.class);
 
     private HelloWorldService helloWorldService;
 
