@@ -235,6 +235,7 @@ public class DecoratorsTest {
         System.out.println(state);
     }
 
+    @SuppressWarnings("unchecked")
     @Test
     public void testDecorateCheckedSupplierWithCache() {
         javax.cache.Cache<String, String> cache = mock(javax.cache.Cache.class);
@@ -251,6 +252,7 @@ public class DecoratorsTest {
     }
 
 
+    @SuppressWarnings("unchecked")
     @Test
     public void testDecorateSupplierWithCache() {
         javax.cache.Cache<String, String> cache = mock(javax.cache.Cache.class);

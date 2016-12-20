@@ -42,7 +42,7 @@ import java.util.function.Supplier;
 @BenchmarkMode(Mode.All)
 public class RateLimiterBenchmark {
 
-    public static final int FORK_COUNT = 2;
+    private static final int FORK_COUNT = 2;
     private static final int WARMUP_COUNT = 10;
     private static final int ITERATION_COUNT = 10;
     private static final int THREAD_COUNT = 2;

@@ -26,6 +26,8 @@ import static org.hamcrest.CoreMatchers.equalTo;
 import com.jayway.awaitility.core.ConditionFactory;
 import io.github.robwin.ratelimiter.RateLimiter;
 import io.github.robwin.ratelimiter.RateLimiterConfig;
+import io.github.robwin.ratelimiter.event.RateLimiterEvent;
+import io.reactivex.Flowable;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -34,6 +36,8 @@ import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
 import java.time.Duration;
+import java.util.ArrayList;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
@@ -48,6 +52,7 @@ public class AtomicRateLimiterTest {
     private RateLimiterConfig rateLimiterConfig;
     private AtomicRateLimiter rateLimiter;
     private AtomicRateLimiter.AtomicRateLimiterMetrics metrics;
+    private Flowable<RateLimiterEvent> eventStream;
 
     private static ConditionFactory awaitImpatiently() {
         return await()
@@ -70,10 +75,13 @@ public class AtomicRateLimiterTest {
         AtomicRateLimiter testLimiter = new AtomicRateLimiter(LIMITER_NAME, rateLimiterConfig);
         rateLimiter = PowerMockito.spy(testLimiter);
         metrics = rateLimiter.getDetailedMetrics();
+        eventStream = rateLimiter.getEventStream();
     }
 
     @Test
-    public void acquireAndRefresh() throws Exception {
+    public void acquireAndRefreshWithEventPublishing() throws Exception {
+        CompletableFuture<ArrayList<String>> events = subscribeOnAllEventsDescriptions(4);
+
         setTimeOnNanos(CYCLE_IN_NANOS);
         boolean permission = rateLimiter.getPermission(Duration.ZERO);
         then(permission).isTrue();
@@ -93,6 +101,12 @@ public class AtomicRateLimiterTest {
         then(fourthPermission).isFalse();
         then(metrics.getAvailablePermissions()).isEqualTo(0);
         then(metrics.getNanosToWait()).isEqualTo(CYCLE_IN_NANOS);
+
+        ArrayList<String> eventStrings = events.get();
+        then(eventStrings.get(0)).contains("type=SUCCESSFUL_ACQUIRE");
+        then(eventStrings.get(1)).contains("type=FAILED_ACQUIRE");
+        then(eventStrings.get(2)).contains("type=SUCCESSFUL_ACQUIRE");
+        then(eventStrings.get(3)).contains("type=FAILED_ACQUIRE");
     }
 
     @Test
@@ -265,5 +279,16 @@ public class AtomicRateLimiterTest {
     @Test
     public void metrics() {
         then(rateLimiter.getMetrics().getNumberOfWaitingThreads()).isEqualTo(0);
+    }
+
+
+    private CompletableFuture<ArrayList<String>> subscribeOnAllEventsDescriptions(final int capacity) {
+        CompletableFuture<ArrayList<String>> future = new CompletableFuture<>();
+        eventStream
+            .take(capacity)
+            .map(Object::toString)
+            .collectInto(new ArrayList<String>(capacity), ArrayList::add)
+            .subscribe(future::complete);
+        return future;
     }
 }

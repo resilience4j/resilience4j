@@ -19,6 +19,7 @@
 package io.github.robwin.ratelimiter;
 
 import static com.jayway.awaitility.Awaitility.await;
+import static io.github.robwin.ratelimiter.event.RateLimiterEvent.Type.FAILED_ACQUIRE;
 import static javaslang.API.Case;
 import static javaslang.API.Match;
 import static javaslang.Predicates.instanceOf;
@@ -31,6 +32,9 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.github.robwin.consumer.CircularEventConsumer;
+import io.github.robwin.ratelimiter.event.RateLimiterEvent;
+import javaslang.collection.List;
 import javaslang.control.Try;
 import org.junit.Before;
 import org.junit.Test;
@@ -41,6 +45,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.LockSupport;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 
@@ -257,5 +262,16 @@ public class RateLimiterTest {
     public void construction() throws Exception {
         RateLimiter rateLimiter = RateLimiter.of("test", () -> config);
         then(rateLimiter).isNotNull();
+    }
+
+    @Test
+    public void eventsConsumingTest() {
+        RateLimiter rateLimiter = RateLimiter.ofDefaults("backendName");
+        CircularEventConsumer<RateLimiterEvent> circularEventConsumer = new CircularEventConsumer<>(10);
+        rateLimiter.getEventStream()
+            .filter(event -> event.getEventType() == FAILED_ACQUIRE)
+            .subscribe(circularEventConsumer);
+
+        List<RateLimiterEvent> bufferedEvents = circularEventConsumer.getBufferedEvents();
     }
 }
