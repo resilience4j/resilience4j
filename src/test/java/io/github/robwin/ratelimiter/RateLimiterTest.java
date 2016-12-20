@@ -45,7 +45,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.LockSupport;
 import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 
@@ -262,16 +261,5 @@ public class RateLimiterTest {
     public void construction() throws Exception {
         RateLimiter rateLimiter = RateLimiter.of("test", () -> config);
         then(rateLimiter).isNotNull();
-    }
-
-    @Test
-    public void eventsConsumingTest() {
-        RateLimiter rateLimiter = RateLimiter.ofDefaults("backendName");
-        CircularEventConsumer<RateLimiterEvent> circularEventConsumer = new CircularEventConsumer<>(10);
-        rateLimiter.getEventStream()
-            .filter(event -> event.getEventType() == FAILED_ACQUIRE)
-            .subscribe(circularEventConsumer);
-
-        List<RateLimiterEvent> bufferedEvents = circularEventConsumer.getBufferedEvents();
     }
 }
