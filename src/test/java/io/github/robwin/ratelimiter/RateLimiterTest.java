@@ -19,7 +19,6 @@
 package io.github.robwin.ratelimiter;
 
 import static com.jayway.awaitility.Awaitility.await;
-import static io.github.robwin.ratelimiter.event.RateLimiterEvent.Type.FAILED_ACQUIRE;
 import static javaslang.API.Case;
 import static javaslang.API.Match;
 import static javaslang.Predicates.instanceOf;
@@ -32,9 +31,6 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import io.github.robwin.consumer.CircularEventConsumer;
-import io.github.robwin.ratelimiter.event.RateLimiterEvent;
-import javaslang.collection.List;
 import javaslang.control.Try;
 import org.junit.Before;
 import org.junit.Test;
