@@ -37,7 +37,7 @@ import java.util.concurrent.TimeUnit;
 
 @State(Scope.Benchmark)
 @OutputTimeUnit(TimeUnit.MICROSECONDS)
-@BenchmarkMode(Mode.All)
+@BenchmarkMode(Mode.Throughput)
 public class RingBitSetBenchmark {
 
     private static final int CAPACITY = 1000;
