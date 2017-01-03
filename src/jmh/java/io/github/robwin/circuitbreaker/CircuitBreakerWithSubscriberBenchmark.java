@@ -33,11 +33,10 @@ public class CircuitBreakerWithSubscriberBenchmark {
     private static final int WARMUP_COUNT = 10;
     private static final int THREAD_COUNT = 10;
     private static final int FORK_COUNT = 1;
-    private CircuitBreaker circuitBreaker;
 
     @Setup
     public void setUp() {
-        circuitBreaker = CircuitBreaker.ofDefaults("testCircuitBreaker");
+        CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testCircuitBreaker");
         circuitBreaker.getEventStream().subscribe();
         supplier = CircuitBreaker.decorateSupplier(circuitBreaker, () -> "Hello Benchmark");
     }
