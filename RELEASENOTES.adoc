@@ -75,3 +75,5 @@
 * Added a new Cache decorator
 * Removed CacheEventConsumer and CircuitBreakerEventConsumer and created a generic CircularEventConsumer
 * Added a StopWatch which is used to measure the elapsed time of decorated calls. CircuitBreakerEvents also contain the elapsed duration of a call now.
+* Updated javaslang from 2.0.4 to 2.0.5
+* Updated rxjava from 2.0.1 to 2.0.3
