@@ -19,7 +19,7 @@
 package io.github.robwin.circuitbreaker;
 
 import io.github.robwin.circuitbreaker.event.CircuitBreakerEvent;
-import io.github.robwin.circuitbreaker.internal.CircuitBreakerStateMachine;
+import io.github.robwin.circuitbreaker.internal.*;
 import io.github.robwin.circuitbreaker.utils.CircuitBreakerUtils;
 import io.github.robwin.metrics.StopWatch;
 import io.reactivex.Flowable;
@@ -69,6 +69,28 @@ public interface CircuitBreaker {
       * This method must be invoked when a call is successfully.
       */
     void onSuccess(Duration duration);
+
+
+    /**
+     * Transitions the state machine to CLOSED state.
+     *
+     * Should only be used, when you want to force a state transition. State transition are normally done internally.
+     */
+    void transitionToClosedState();
+
+    /**
+     * Transitions the state machine to OPEN state.
+     *
+     * Should only be used, when you want to force a state transition. State transition are normally done internally.
+     */
+    void transitionToOpenState();
+
+    /**
+     * Transitions the state machine to HALF_COSED state.
+     *
+     * Should only be used, when you want to force a state transition. State transition are normally done internally.
+     */
+    void transitionToHalfClosedState();
 
     /**
      * Returns the name of this CircuitBreaker.
@@ -127,7 +149,8 @@ public interface CircuitBreaker {
         CLOSED_TO_OPEN(State.CLOSED, State.OPEN),
         HALF_OPEN_TO_CLOSED(State.HALF_OPEN, State.CLOSED),
         HALF_OPEN_TO_OPEN(State.HALF_OPEN, State.OPEN),
-        OPEN_TO_HALF_OPEN(State.OPEN, State.HALF_OPEN);
+        OPEN_TO_HALF_OPEN(State.OPEN, State.HALF_OPEN),
+        FORCED_OPEN_TO_CLOSED(State.OPEN, State.CLOSED);
 
         State fromState;
         State toState;
@@ -143,6 +166,37 @@ public interface CircuitBreaker {
 
         public State getToState() {
             return toState;
+        }
+
+        public static StateTransition transitionToClosedState(State fromState){
+            switch (fromState) {
+                case HALF_OPEN:
+                    return HALF_OPEN_TO_CLOSED;
+                case OPEN:
+                    return FORCED_OPEN_TO_CLOSED;
+                default:
+                    throw new IllegalStateException("Illegal state transition");
+            }
+        }
+
+        public static StateTransition transitionToOpenState(State fromState){
+            switch (fromState) {
+                case HALF_OPEN:
+                    return HALF_OPEN_TO_OPEN;
+                case CLOSED:
+                    return CLOSED_TO_OPEN;
+                default:
+                    throw new IllegalStateException("Illegal state transition");
+            }
+        }
+
+        public static StateTransition transitionToHalfOpenState(State fromState){
+            switch (fromState) {
+                case OPEN:
+                    return OPEN_TO_HALF_OPEN;
+                default:
+                    throw new IllegalStateException("Illegal state transition");
+            }
         }
 
         @Override

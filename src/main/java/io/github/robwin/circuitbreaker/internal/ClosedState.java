@@ -63,7 +63,7 @@ final class ClosedState extends CircuitBreakerState {
     private void checkFailureRate(float currentFailureRate) {
         if (currentFailureRate >= failureRateThreshold) {
             // Transition the state machine to OPEN state, because the failure rate is above the threshold
-            stateMachine.transitionToOpenState(CircuitBreaker.StateTransition.CLOSED_TO_OPEN, circuitBreakerMetrics);
+            stateMachine.transitionToOpenState(circuitBreakerMetrics);
         }
     }
 

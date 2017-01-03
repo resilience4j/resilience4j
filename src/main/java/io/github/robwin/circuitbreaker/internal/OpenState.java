@@ -19,6 +19,7 @@
 package io.github.robwin.circuitbreaker.internal;
 
 import io.github.robwin.circuitbreaker.CircuitBreaker;
+import io.github.robwin.circuitbreaker.CircuitBreakerConfig;
 import io.github.robwin.circuitbreaker.CircuitBreakerOpenException;
 
 import java.time.Instant;
@@ -34,6 +35,14 @@ final class OpenState extends CircuitBreakerState {
         this.circuitBreakerMetrics = circuitBreakerMetrics;
     }
 
+    OpenState(CircuitBreakerStateMachine stateMachine) {
+        super(stateMachine);
+        CircuitBreakerConfig circuitBreakerConfig = stateMachine.getCircuitBreakerConfig();
+        this.retryAfterWaitDuration = Instant.now().plus(circuitBreakerConfig.getWaitDurationInOpenState());
+        this.circuitBreakerMetrics = new CircuitBreakerMetrics(
+                circuitBreakerConfig.getRingBufferSizeInClosedState());
+    }
+
     /**
      * Returns false, if the wait duration has not elapsed.
      * Returns true, if the wait duration has elapsed and transitions the state machine to HALF_OPEN state.
@@ -44,7 +53,7 @@ final class OpenState extends CircuitBreakerState {
     boolean isCallPermitted() {
         // Thread-safe
         if (Instant.now().isAfter(retryAfterWaitDuration)) {
-            stateMachine.transitionToHalfClosedState(CircuitBreaker.StateTransition.OPEN_TO_HALF_OPEN);
+            stateMachine.transitionToHalfClosedState();
             return true;
         }
         return false;

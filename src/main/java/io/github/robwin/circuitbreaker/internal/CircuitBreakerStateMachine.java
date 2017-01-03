@@ -150,19 +150,27 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
         return String.format("CircuitBreaker '%s'", this.name);
     }
 
-    void transitionToClosedState(StateTransition stateTransition) {
-        stateReference.set(new ClosedState(this));
-        publishStateTransitionEvent(stateTransition);
+    @Override
+    public void transitionToClosedState() {
+        CircuitBreakerState previousState = stateReference.getAndSet(new ClosedState(this));
+        publishStateTransitionEvent(StateTransition.transitionToClosedState(previousState.getState()));
     }
 
-    void transitionToOpenState(StateTransition stateTransition, CircuitBreakerMetrics circuitBreakerMetrics) {
-        stateReference.set(new OpenState(this, circuitBreakerMetrics));
-        publishStateTransitionEvent(stateTransition);
+    @Override
+    public void transitionToOpenState() {
+        CircuitBreakerState previousState = stateReference.getAndSet(new OpenState(this));
+        publishStateTransitionEvent(StateTransition.transitionToOpenState(previousState.getState()));
     }
 
-    void transitionToHalfClosedState(StateTransition stateTransition) {
-        stateReference.set(new HalfOpenState(this));
-        publishStateTransitionEvent(stateTransition);
+    void transitionToOpenState(CircuitBreakerMetrics metrics) {
+        CircuitBreakerState previousState = stateReference.getAndSet(new OpenState(this, metrics));
+        publishStateTransitionEvent(StateTransition.transitionToOpenState(previousState.getState()));
+    }
+
+    @Override
+    public void transitionToHalfClosedState() {
+        CircuitBreakerState previousState = stateReference.getAndSet(new HalfOpenState(this));
+        publishStateTransitionEvent(StateTransition.transitionToHalfOpenState(previousState.getState()));
     }
 
     private void publishStateTransitionEvent(StateTransition stateTransition){
