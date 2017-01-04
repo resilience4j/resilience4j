@@ -18,26 +18,50 @@
  */
 package io.github.robwin.circuitbreaker;
 
-import org.openjdk.jmh.annotations.*;
+import org.openjdk.jmh.annotations.Benchmark;
+import org.openjdk.jmh.annotations.BenchmarkMode;
+import org.openjdk.jmh.annotations.Fork;
+import org.openjdk.jmh.annotations.Measurement;
+import org.openjdk.jmh.annotations.Mode;
+import org.openjdk.jmh.annotations.OutputTimeUnit;
+import org.openjdk.jmh.annotations.Scope;
+import org.openjdk.jmh.annotations.Setup;
+import org.openjdk.jmh.annotations.State;
+import org.openjdk.jmh.annotations.Threads;
+import org.openjdk.jmh.annotations.Warmup;
+import org.openjdk.jmh.infra.Blackhole;
 
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
 @State(Scope.Benchmark)
-@OutputTimeUnit(TimeUnit.MILLISECONDS)
+@OutputTimeUnit(TimeUnit.MICROSECONDS)
 @BenchmarkMode(Mode.Throughput)
 public class CircuitBreakerBenchmark {
 
-    private Supplier<String> supplier;
     private static final int ITERATION_COUNT = 10;
     private static final int WARMUP_COUNT = 10;
-    private static final int THREAD_COUNT = 10;
-    private static final int FORK_COUNT = 1;
+    private static final int THREAD_COUNT = 2;
+    private static final int FORK_COUNT = 2;
+
+    private Supplier<String> protectedSupplier;
+    private Supplier<String> protectedSupplierWithSb;
+    private Supplier<String> stringSupplier;
 
     @Setup
     public void setUp() {
+        stringSupplier = () -> {
+            Blackhole.consumeCPU(100);
+            return "Hello Benchmark";
+        };
+
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testCircuitBreaker");
-        supplier = CircuitBreaker.decorateSupplier(circuitBreaker, () -> "Hello Benchmark");
+        protectedSupplier = CircuitBreaker.decorateSupplier(circuitBreaker, stringSupplier);
+
+        CircuitBreaker circuitBreakerWithSubscriber = CircuitBreaker.ofDefaults("testCircuitBreakerWithSb");
+        circuitBreakerWithSubscriber.getEventStream().subscribe();
+        protectedSupplierWithSb = CircuitBreaker.decorateSupplier(circuitBreakerWithSubscriber, stringSupplier);
     }
 
     @Benchmark
@@ -45,7 +69,25 @@ public class CircuitBreakerBenchmark {
     @Threads(value = THREAD_COUNT)
     @Warmup(iterations = WARMUP_COUNT)
     @Measurement(iterations = ITERATION_COUNT)
-    public String invokeSupplier() {
-        return supplier.get();
+    public String directSupplier() {
+        return stringSupplier.get();
+    }
+
+    @Benchmark
+    @Fork(value = FORK_COUNT)
+    @Threads(value = THREAD_COUNT)
+    @Warmup(iterations = WARMUP_COUNT)
+    @Measurement(iterations = ITERATION_COUNT)
+    public String protectedSupplier() {
+        return protectedSupplier.get();
+    }
+
+    @Benchmark
+    @Fork(value = FORK_COUNT)
+    @Threads(value = THREAD_COUNT)
+    @Warmup(iterations = WARMUP_COUNT)
+    @Measurement(iterations = ITERATION_COUNT)
+    public String protectedSupplierWithSubscriber() {
+        return protectedSupplierWithSb.get();
     }
 }

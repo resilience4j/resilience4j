@@ -19,6 +19,10 @@
 package io.github.robwin.circuitbreaker.internal;
 
 
+import static io.github.robwin.circuitbreaker.CircuitBreaker.State.CLOSED;
+import static io.github.robwin.circuitbreaker.CircuitBreaker.State.HALF_OPEN;
+import static io.github.robwin.circuitbreaker.CircuitBreaker.State.OPEN;
+
 import io.github.robwin.circuitbreaker.CircuitBreaker;
 import io.github.robwin.circuitbreaker.CircuitBreakerConfig;
 import io.github.robwin.circuitbreaker.event.*;
@@ -152,24 +156,42 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
 
     @Override
     public void transitionToClosedState() {
-        CircuitBreakerState previousState = stateReference.getAndSet(new ClosedState(this));
-        publishStateTransitionEvent(StateTransition.transitionToClosedState(previousState.getState()));
+        CircuitBreakerState previousState = stateReference.getAndUpdate(currentState -> {
+            if (currentState.getState() == CLOSED) {
+                return currentState;
+            }
+            return new ClosedState(this);
+        });
+        if (previousState.getState() != CLOSED) {
+            publishStateTransitionEvent(StateTransition.transitionToClosedState(previousState.getState()));
+        }
+
     }
 
     @Override
     public void transitionToOpenState() {
-        CircuitBreakerState previousState;
-        synchronized (this) {
-            previousState = stateReference.get();
-            stateReference.set(new OpenState(this, previousState.getMetrics()));
+        CircuitBreakerState previousState = stateReference.getAndUpdate(currentState -> {
+            if (currentState.getState() == OPEN) {
+                return currentState;
+            }
+            return new OpenState(this, currentState.getMetrics());
+        });
+        if (previousState.getState() != OPEN) {
+            publishStateTransitionEvent(StateTransition.transitionToOpenState(previousState.getState()));
         }
-        publishStateTransitionEvent(StateTransition.transitionToOpenState(previousState.getState()));
     }
 
     @Override
     public void transitionToHalfClosedState() {
-        CircuitBreakerState previousState = stateReference.getAndSet(new HalfOpenState(this));
-        publishStateTransitionEvent(StateTransition.transitionToHalfOpenState(previousState.getState()));
+        CircuitBreakerState previousState = stateReference.getAndUpdate(currentState -> {
+            if (currentState.getState() == HALF_OPEN) {
+                return currentState;
+            }
+            return new HalfOpenState(this);
+        });
+        if (previousState.getState() != HALF_OPEN) {
+            publishStateTransitionEvent(StateTransition.transitionToHalfOpenState(previousState.getState()));
+        }
     }
 
     private void publishStateTransitionEvent(StateTransition stateTransition){
