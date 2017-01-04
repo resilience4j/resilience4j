@@ -84,6 +84,7 @@ dependencies {
 
 test {
     exclude 'io/github/robwin/circularbuffer/concurrent/'
+    exclude 'io/github/robwin/circuitbreaker/concurrent/'
 }
 
 task allTests(type: Test) {}
