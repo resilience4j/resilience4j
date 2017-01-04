@@ -19,8 +19,6 @@
 package io.github.robwin.circuitbreaker.internal;
 
 import io.github.robwin.circuitbreaker.CircuitBreaker;
-import io.github.robwin.circuitbreaker.CircuitBreakerConfig;
-import io.github.robwin.circuitbreaker.CircuitBreakerOpenException;
 
 import java.time.Instant;
 
@@ -33,14 +31,6 @@ final class OpenState extends CircuitBreakerState {
         super(stateMachine);
         this.retryAfterWaitDuration = Instant.now().plus(stateMachine.getCircuitBreakerConfig().getWaitDurationInOpenState());
         this.circuitBreakerMetrics = circuitBreakerMetrics;
-    }
-
-    OpenState(CircuitBreakerStateMachine stateMachine) {
-        super(stateMachine);
-        CircuitBreakerConfig circuitBreakerConfig = stateMachine.getCircuitBreakerConfig();
-        this.retryAfterWaitDuration = Instant.now().plus(circuitBreakerConfig.getWaitDurationInOpenState());
-        this.circuitBreakerMetrics = new CircuitBreakerMetrics(
-                circuitBreakerConfig.getRingBufferSizeInClosedState());
     }
 
     /**
@@ -63,18 +53,20 @@ final class OpenState extends CircuitBreakerState {
      * Should never be called, because isCallPermitted returns false.
      */
     @Override
-    synchronized void onError(Throwable throwable) {
-        // Should never be called, because isCallPermitted returns false
-        throw new CircuitBreakerOpenException(String.format("CircuitBreaker '%s' is open", stateMachine.getName()));
+    void onError(Throwable throwable) {
+        // Could be called when Thread 1 invokes isCallPermitted when the state is CLOSED, but in the meantime another
+        // Thread 2 calls onError and the state changes from CLOSED to OPEN before Thread 1 calls onError
+        // Do nothing, because the original Exception should be thrown.
     }
 
     /**
      * Should never be called, because isCallPermitted returns false.
      */
     @Override
-    synchronized void onSuccess() {
-        // Should never be called, because isCallPermitted returns false
-        throw new CircuitBreakerOpenException(String.format("CircuitBreaker '%s' is open", stateMachine.getName()));
+    void onSuccess() {
+        // Could be called when Thread 1 invokes isCallPermitted when the state is CLOSED, but in the meantime another
+        // Thread 2 calls onError and the state changes from CLOSED to OPEN before Thread 1 calls onSuccess
+        // Do nothing, because the call was successful.
     }
 
     /**
@@ -86,7 +78,7 @@ final class OpenState extends CircuitBreakerState {
     }
 
     @Override
-    CircuitBreaker.Metrics getMetrics() {
+    CircuitBreakerMetrics getMetrics() {
         return circuitBreakerMetrics;
     }
 }

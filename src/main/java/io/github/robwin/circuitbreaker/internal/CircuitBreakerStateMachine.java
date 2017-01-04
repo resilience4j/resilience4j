@@ -158,12 +158,11 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
 
     @Override
     public void transitionToOpenState() {
-        CircuitBreakerState previousState = stateReference.getAndSet(new OpenState(this));
-        publishStateTransitionEvent(StateTransition.transitionToOpenState(previousState.getState()));
-    }
-
-    void transitionToOpenState(CircuitBreakerMetrics metrics) {
-        CircuitBreakerState previousState = stateReference.getAndSet(new OpenState(this, metrics));
+        CircuitBreakerState previousState;
+        synchronized (this) {
+            previousState = stateReference.get();
+            stateReference.set(new OpenState(this, previousState.getMetrics()));
+        }
         publishStateTransitionEvent(StateTransition.transitionToOpenState(previousState.getState()));
     }
 

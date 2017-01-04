@@ -39,5 +39,5 @@ abstract class CircuitBreakerState{
 
     abstract CircuitBreaker.State getState();
 
-    abstract CircuitBreaker.Metrics getMetrics();
+    abstract CircuitBreakerMetrics getMetrics();
 }

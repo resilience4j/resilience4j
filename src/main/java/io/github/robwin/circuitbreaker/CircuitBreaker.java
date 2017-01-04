@@ -175,7 +175,7 @@ public interface CircuitBreaker {
                 case OPEN:
                     return FORCED_OPEN_TO_CLOSED;
                 default:
-                    throw new IllegalStateException("Illegal state transition");
+                    throw new IllegalStateException(String.format("Illegal state transition from %s to %s", fromState.toString(), State.CLOSED.toString()));
             }
         }
 
@@ -186,7 +186,7 @@ public interface CircuitBreaker {
                 case CLOSED:
                     return CLOSED_TO_OPEN;
                 default:
-                    throw new IllegalStateException("Illegal state transition");
+                    throw new IllegalStateException(String.format("Illegal state transition from %s to %s", fromState.toString(), State.OPEN.toString()));
             }
         }
 
@@ -195,7 +195,7 @@ public interface CircuitBreaker {
                 case OPEN:
                     return OPEN_TO_HALF_OPEN;
                 default:
-                    throw new IllegalStateException("Illegal state transition");
+                    throw new IllegalStateException(String.format("Illegal state transition from %s to %s", fromState.toString(), State.HALF_OPEN.toString()));
             }
         }
 

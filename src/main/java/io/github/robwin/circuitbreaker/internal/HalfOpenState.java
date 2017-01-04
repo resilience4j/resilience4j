@@ -45,12 +45,14 @@ final class HalfOpenState extends CircuitBreakerState {
     }
 
     @Override
-    synchronized void onError(Throwable throwable) {
+    void onError(Throwable throwable) {
+        // CircuitBreakerMetrics is thread-safe
         checkFailureRate(circuitBreakerMetrics.onError());
     }
 
     @Override
-    synchronized void onSuccess() {
+    void onSuccess() {
+        // CircuitBreakerMetrics is thread-safe
         checkFailureRate(circuitBreakerMetrics.onSuccess());
     }
 
@@ -64,7 +66,7 @@ final class HalfOpenState extends CircuitBreakerState {
     private void checkFailureRate(float currentFailureRate) {
         if(currentFailureRate != -1){
             if(currentFailureRate >= failureRateThreshold) {
-                stateMachine.transitionToOpenState(circuitBreakerMetrics);
+                stateMachine.transitionToOpenState();
             }else{
                 stateMachine.transitionToClosedState();
             }
@@ -80,7 +82,7 @@ final class HalfOpenState extends CircuitBreakerState {
     }
 
     @Override
-    CircuitBreaker.Metrics getMetrics() {
+    CircuitBreakerMetrics getMetrics() {
         return circuitBreakerMetrics;
     }
 }
