@@ -43,7 +43,7 @@ final class OpenState extends CircuitBreakerState {
     boolean isCallPermitted() {
         // Thread-safe
         if (Instant.now().isAfter(retryAfterWaitDuration)) {
-            stateMachine.transitionToHalfClosedState();
+            stateMachine.transitionToHalfOpenState();
             return true;
         }
         return false;

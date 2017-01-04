@@ -19,10 +19,6 @@
 package io.github.robwin.circuitbreaker.internal;
 
 
-import static io.github.robwin.circuitbreaker.CircuitBreaker.State.CLOSED;
-import static io.github.robwin.circuitbreaker.CircuitBreaker.State.HALF_OPEN;
-import static io.github.robwin.circuitbreaker.CircuitBreaker.State.OPEN;
-
 import io.github.robwin.circuitbreaker.CircuitBreaker;
 import io.github.robwin.circuitbreaker.CircuitBreakerConfig;
 import io.github.robwin.circuitbreaker.event.*;
@@ -35,6 +31,8 @@ import org.slf4j.LoggerFactory;
 import java.time.Duration;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
+
+import static io.github.robwin.circuitbreaker.CircuitBreaker.State.*;
 
 /**
  * A CircuitBreaker finite state machine.
@@ -182,7 +180,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
     }
 
     @Override
-    public void transitionToHalfClosedState() {
+    public void transitionToHalfOpenState() {
         CircuitBreakerState previousState = stateReference.getAndUpdate(currentState -> {
             if (currentState.getState() == HALF_OPEN) {
                 return currentState;

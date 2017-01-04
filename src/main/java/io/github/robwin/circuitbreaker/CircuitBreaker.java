@@ -86,11 +86,11 @@ public interface CircuitBreaker {
     void transitionToOpenState();
 
     /**
-     * Transitions the state machine to HALF_COSED state.
+     * Transitions the state machine to HALF_OPEN state.
      *
      * Should only be used, when you want to force a state transition. State transition are normally done internally.
      */
-    void transitionToHalfClosedState();
+    void transitionToHalfOpenState();
 
     /**
      * Returns the name of this CircuitBreaker.
