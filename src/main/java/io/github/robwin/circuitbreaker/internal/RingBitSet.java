@@ -48,6 +48,17 @@ public class RingBitSet {
         bitSet = new BitSetMod(bitSetSize);
     }
 
+    public RingBitSet(int bitSetSize, RingBitSet sourceSet) {
+        this(bitSetSize);
+
+        int targetLength = Integer.min(bitSetSize, sourceSet.length);
+        int sourceIndex = sourceSet.index;
+        for (int i = 0; i < targetLength; i++) {
+            this.setNextBit(sourceSet.bitSet.get(sourceIndex));
+            sourceIndex = (sourceIndex + 1) % sourceSet.size;
+        }
+    }
+
     /**
      * Sets the bit at the next index to the specified value.
      *
@@ -92,6 +103,19 @@ public class RingBitSet {
      */
     public int length() {
         return length;
+    }
+
+    /**
+     * Prints the current state of internal bit set.
+     * @return string representation on internal bit set.
+     */
+    @Override
+    public String toString() {
+        StringBuilder result = new StringBuilder();
+        for (int i = 0; i < size; i++) {
+            result.append(bitSet.get(i) ? '1' : '0');
+        }
+        return result.toString();
     }
 
     /**
