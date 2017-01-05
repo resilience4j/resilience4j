@@ -134,7 +134,7 @@ public class RingBitSetTest {
         RingBitSet setCopy = new RingBitSet(4, sourceSet);
 
         assertThat(setCopy.getIndex()).isEqualTo(3);
-        assertThat(setCopy.toString()).isEqualTo("0110");
+        assertThat(setCopy.toString()).isEqualTo("0011");
 
         assertThat(setCopy.cardinality()).isEqualTo(2);
 
@@ -185,9 +185,9 @@ public class RingBitSetTest {
         RingBitSet setCopy = new RingBitSet(4, sourceSet);
 
         assertThat(setCopy.getIndex()).isEqualTo(3);
-        assertThat(setCopy.toString()).isEqualTo("1110");
+        assertThat(setCopy.toString()).isEqualTo("1001");
 
-        assertThat(setCopy.cardinality()).isEqualTo(3);
+        assertThat(setCopy.cardinality()).isEqualTo(2);
 
         // The size is 64-bit, because the bits are stored in an array of one long value
         assertThat(setCopy.size()).isEqualTo(64);
