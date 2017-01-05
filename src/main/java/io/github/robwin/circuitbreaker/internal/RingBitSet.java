@@ -53,9 +53,12 @@ public class RingBitSet {
 
         int targetLength = Integer.min(bitSetSize, sourceSet.length);
         int sourceIndex = sourceSet.index;
+        int forwardIndex = sourceSet.size - sourceIndex;
         for (int i = 0; i < targetLength; i++) {
             this.setNextBit(sourceSet.bitSet.get(sourceIndex));
-            sourceIndex = (sourceIndex + 1) % sourceSet.size;
+            // looping sourceIndex backwards without conditional statements
+            forwardIndex = (forwardIndex + 1) % sourceSet.size;
+            sourceIndex = (sourceSet.size - forwardIndex) % sourceSet.size;
         }
     }
 
