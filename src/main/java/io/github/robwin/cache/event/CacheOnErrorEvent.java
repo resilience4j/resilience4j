@@ -23,11 +23,11 @@ package io.github.robwin.cache.event;
  */
 public class CacheOnErrorEvent extends AbstractCacheEvent {
 
-    private final Throwable exception;
+    private final Throwable throwable;
 
-    public CacheOnErrorEvent(String cacheName, Throwable exception) {
+    public CacheOnErrorEvent(String cacheName, Throwable throwable) {
         super(cacheName);
-        this.exception = exception;
+        this.throwable = throwable;
     }
 
     @Override
@@ -35,7 +35,7 @@ public class CacheOnErrorEvent extends AbstractCacheEvent {
         return Type.ERROR;
     }
 
-    public Throwable getException() {
-        return exception;
+    public Throwable getThrowable() {
+        return throwable;
     }
 }
