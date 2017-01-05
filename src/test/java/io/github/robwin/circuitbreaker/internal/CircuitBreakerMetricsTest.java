@@ -33,10 +33,13 @@ public class CircuitBreakerMetricsTest {
         circuitBreakerMetrics.onSuccess();
         circuitBreakerMetrics.onError();
         circuitBreakerMetrics.onError();
+        circuitBreakerMetrics.onCallNotPermitted();
+        circuitBreakerMetrics.onCallNotPermitted();
 
         assertThat(circuitBreakerMetrics.getNumberOfBufferedCalls()).isEqualTo(4);
         assertThat(circuitBreakerMetrics.getNumberOfFailedCalls()).isEqualTo(2);
         assertThat(circuitBreakerMetrics.getNumberOfSuccessfulCalls()).isEqualTo(2);
+        assertThat(circuitBreakerMetrics.getNumberOfNotPermittedCalls()).isEqualTo(2);
 
         // The failure rate must be -1, because the number of measured calls is below the buffer size of 10
         assertThat(circuitBreakerMetrics.getFailureRate()).isEqualTo(-1);

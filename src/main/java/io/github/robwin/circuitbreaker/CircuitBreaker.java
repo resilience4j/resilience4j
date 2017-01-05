@@ -225,10 +225,18 @@ public interface CircuitBreaker {
         /**
          * Returns the current number of failed calls.
          *
-         * @return the current number of failed calls.
+         * @return the current number of failed calls
          */
         int getNumberOfFailedCalls();
 
+        /**
+         * Returns the current number of denied calls.
+         * The number of denied calls is always 0, when the CircuitBreaker state is CLOSED or HALF_OPEN.
+         * The number of denied calls is only increased when the CircuitBreaker state is OPEN.
+         *
+         * @return the current number of denied calls
+         */
+        long getNumberOfNotPermittedCalls();
 
         /**
          * Returns the maximum number of buffered calls.
@@ -236,7 +244,6 @@ public interface CircuitBreaker {
          * @return the maximum number of buffered calls
          */
         int getMaxNumberOfBufferedCalls();
-
 
         /**
          * Returns the maximum number of successful calls.

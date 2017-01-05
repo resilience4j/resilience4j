@@ -46,27 +46,30 @@ final class OpenState extends CircuitBreakerState {
             stateMachine.transitionToHalfOpenState();
             return true;
         }
+        circuitBreakerMetrics.onCallNotPermitted();
         return false;
     }
 
     /**
-     * Should never be called, because isCallPermitted returns false.
+     * Should never be called when isCallPermitted returns false.
      */
     @Override
     void onError(Throwable throwable) {
         // Could be called when Thread 1 invokes isCallPermitted when the state is CLOSED, but in the meantime another
-        // Thread 2 calls onError and the state changes from CLOSED to OPEN before Thread 1 calls onError
-        // Do nothing, because the original Exception should be thrown.
+        // Thread 2 calls onError and the state changes from CLOSED to OPEN before Thread 1 calls onError.
+        // But the onError event should still be recorded, even if it happened after the state transition.
+        circuitBreakerMetrics.onError();
     }
 
     /**
-     * Should never be called, because isCallPermitted returns false.
+     * Should never be called when isCallPermitted returns false.
      */
     @Override
     void onSuccess() {
         // Could be called when Thread 1 invokes isCallPermitted when the state is CLOSED, but in the meantime another
-        // Thread 2 calls onError and the state changes from CLOSED to OPEN before Thread 1 calls onSuccess
-        // Do nothing, because the call was successful.
+        // Thread 2 calls onError and the state changes from CLOSED to OPEN before Thread 1 calls onSuccess.
+        // But the onSuccess event should still be recorded, even if it happened after the state transition.
+        circuitBreakerMetrics.onSuccess();
     }
 
     /**

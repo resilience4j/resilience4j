@@ -86,7 +86,11 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
      */
     @Override
     public boolean isCallPermitted() {
-        return stateReference.get().isCallPermitted();
+        boolean callPermitted = stateReference.get().isCallPermitted();
+        if(!callPermitted){
+            publishCircuitBreakerEvent(() -> new CircuitBreakerOnCallNotPermittedEvent(getName()));
+        }
+        return callPermitted;
     }
 
     @Override

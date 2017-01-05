@@ -21,14 +21,18 @@ package io.github.robwin.circuitbreaker.internal;
 
 import io.github.robwin.circuitbreaker.CircuitBreaker;
 
+import java.util.concurrent.atomic.LongAdder;
+
 class CircuitBreakerMetrics implements CircuitBreaker.Metrics {
 
     private final int ringBufferSize;
     private final RingBitSet ringBitSet;
+    private final LongAdder numberOfNotPermittedCalls;
 
     CircuitBreakerMetrics(int ringBufferSize) {
         this.ringBufferSize = ringBufferSize;
         this.ringBitSet = new RingBitSet(this.ringBufferSize);
+        this.numberOfNotPermittedCalls = new LongAdder();
     }
 
     /**
@@ -51,6 +55,12 @@ class CircuitBreakerMetrics implements CircuitBreaker.Metrics {
         return getFailureRate(currentNumberOfFailedCalls);
     }
 
+    /**
+     * Records a call which was not permitted, because the CircuitBreaker state is OPEN.
+     */
+    void onCallNotPermitted() {
+        numberOfNotPermittedCalls.increment();
+    }
 
     /**
      * {@inheritDoc}
@@ -82,6 +92,14 @@ class CircuitBreakerMetrics implements CircuitBreaker.Metrics {
     @Override
     public int getNumberOfBufferedCalls() {
         return this.ringBitSet.length();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public long getNumberOfNotPermittedCalls() {
+        return this.numberOfNotPermittedCalls.sum();
     }
 
     /**

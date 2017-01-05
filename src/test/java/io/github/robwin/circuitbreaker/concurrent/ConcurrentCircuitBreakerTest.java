@@ -54,15 +54,15 @@ public class ConcurrentCircuitBreakerTest {
 
         circuitBreaker = (CircuitBreakerStateMachine) of("testName", circuitBreakerConfig);
         errorEventSubscriber = circuitBreaker.getEventStream()
-                .filter(event -> event.getEventType() == Type.ERROR)
-                .map(CircuitBreakerEvent::getEventType)
-                .test();
+            .filter(event -> event.getEventType() == Type.ERROR)
+            .map(CircuitBreakerEvent::getEventType)
+            .test();
 
         stateTransitionSubsriber = circuitBreaker.getEventStream()
-                .filter(event -> event.getEventType() == Type.STATE_TRANSITION)
-                .cast(CircuitBreakerOnStateTransitionEvent.class)
-                .map(CircuitBreakerOnStateTransitionEvent::getStateTransition)
-                .test();
+            .filter(event -> event.getEventType() == Type.STATE_TRANSITION)
+            .cast(CircuitBreakerOnStateTransitionEvent.class)
+            .map(CircuitBreakerOnStateTransitionEvent::getStateTransition)
+            .test();
     }
 
     @ThreadedMain
@@ -84,7 +84,6 @@ public class ConcurrentCircuitBreakerTest {
             .assertValues(Type.ERROR, Type.ERROR);
         stateTransitionSubsriber
                 .assertValue(StateTransition.CLOSED_TO_OPEN);
-
 
     }
 }
