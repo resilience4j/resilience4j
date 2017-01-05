@@ -51,7 +51,7 @@ public class CacheEventTest {
                 "testKey");
         assertThat(cacheOnMissEvent.getCacheName()).isEqualTo("test");
         assertThat(cacheOnMissEvent.getCacheKey()).isEqualTo("testKey");
-        assertThat(cacheOnMissEvent.getEventType()).isEqualTo(Type.CACHE_HIT);
+        assertThat(cacheOnMissEvent.getEventType()).isEqualTo(Type.CACHE_MISS);
     }
 
 }
