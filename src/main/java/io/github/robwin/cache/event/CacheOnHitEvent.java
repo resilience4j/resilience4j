@@ -38,4 +38,12 @@ public class CacheOnHitEvent<K> extends AbstractCacheEvent {
     public K getCacheKey() {
         return cacheKey;
     }
+
+    @Override
+    public String toString() {
+        return String.format("%s: Cache '%s' recorded a cache hit on cache key '%s'.",
+                getCreationTime(),
+                getCacheName(),
+                getCacheKey().toString());
+    }
 }

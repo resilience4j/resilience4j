@@ -49,7 +49,7 @@ public class CircuitBreakerOnIgnoredErrorEvent extends AbstractCircuitBreakerEve
 
     @Override
     public String toString() {
-        return String.format("%s: CircuitBreaker '%s' has ignored an error: '%s'. Elapsed time: %s ms",
+        return String.format("%s: CircuitBreaker '%s' recorded an error which has been ignored: '%s'. Elapsed time: %s ms",
             getCreationTime(),
             getCircuitBreakerName(),
             getThrowable().toString(),

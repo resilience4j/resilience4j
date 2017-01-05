@@ -31,4 +31,13 @@ public class RetryOnSuccessEvent extends AbstractRetryEvent {
     public Type getEventType() {
         return Type.SUCCESS;
     }
+
+    @Override
+    public String toString() {
+        return String.format("%s: Retry '%s' recorded a successful retry attempt. Number of retry attempts: '%d', Last exception was: '%s'.",
+                getCreationTime(),
+                getId(),
+                getNumberOfAttempts(),
+                getLastThrowable().toString());
+    }
 }

@@ -37,6 +37,7 @@ public class CircuitBreakerEventTest {
         assertThat(circuitBreakerEvent.getElapsedDuration().getSeconds()).isEqualTo(1);
         assertThat(circuitBreakerEvent.getThrowable()).isInstanceOf(IOException.class);
         assertThat(circuitBreakerEvent.getEventType()).isEqualTo(Type.ERROR);
+        assertThat(circuitBreakerEvent.toString()).contains("CircuitBreaker 'test' recorded an error: 'java.io.IOException'.");
     }
 
     @Test
@@ -48,6 +49,7 @@ public class CircuitBreakerEventTest {
         assertThat(circuitBreakerEvent.getElapsedDuration().getSeconds()).isEqualTo(1);
         assertThat(circuitBreakerEvent.getThrowable()).isInstanceOf(IOException.class);
         assertThat(circuitBreakerEvent.getEventType()).isEqualTo(Type.IGNORED_ERROR);
+        assertThat(circuitBreakerEvent.toString()).contains("CircuitBreaker 'test' recorded an error which has been ignored: 'java.io.IOException'.");
     }
 
     @Test
@@ -58,6 +60,7 @@ public class CircuitBreakerEventTest {
         assertThat(circuitBreakerEvent.getCircuitBreakerName()).isEqualTo("test");
         assertThat(circuitBreakerEvent.getStateTransition()).isEqualTo(StateTransition.CLOSED_TO_OPEN);
         assertThat(circuitBreakerEvent.getEventType()).isEqualTo(Type.STATE_TRANSITION);
+        assertThat(circuitBreakerEvent.toString()).contains("CircuitBreaker 'test' changed state from CLOSED to OPEN");
     }
 
     @Test
@@ -67,6 +70,7 @@ public class CircuitBreakerEventTest {
         assertThat(circuitBreakerEvent.getCircuitBreakerName()).isEqualTo("test");
         assertThat(circuitBreakerEvent.getElapsedDuration().getSeconds()).isEqualTo(1);
         assertThat(circuitBreakerEvent.getEventType()).isEqualTo(Type.SUCCESS);
+        assertThat(circuitBreakerEvent.toString()).contains("CircuitBreaker 'test' recorded a successful call.");
     }
 
     @Test
@@ -75,6 +79,7 @@ public class CircuitBreakerEventTest {
 
         assertThat(circuitBreakerEvent.getCircuitBreakerName()).isEqualTo("test");
         assertThat(circuitBreakerEvent.getEventType()).isEqualTo(Type.NOT_PERMITTED);
+        assertThat(circuitBreakerEvent.toString()).contains("CircuitBreaker 'test' recorded a call which was not permitted.");
     }
 
 }
