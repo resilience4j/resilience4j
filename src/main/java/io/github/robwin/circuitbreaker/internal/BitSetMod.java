@@ -65,4 +65,18 @@ class BitSetMod {
     int size() {
         return size;
     }
+
+    /**
+     * Gets the bit at the specified index.
+     *
+     * @param bitIndex a bit index
+     * @return state of bitIndex that can be {@code true} or {@code false}
+     * @throws IndexOutOfBoundsException if the specified index is negative
+     */
+    boolean get(int bitIndex) {
+        int wordIndex = wordIndex(bitIndex);
+        long bitMask = 1L << bitIndex;
+        boolean bitValue = (words[wordIndex] & bitMask) != 0;
+        return bitValue;
+    }
 }

@@ -46,7 +46,6 @@ public class RingBitSetTest {
 
         assertThat(ringBitSet.getIndex()).isEqualTo(3);
 
-
         assertThat(ringBitSet.setNextBit(false)).isEqualTo(2);
         // The index has reached the maximum size and is set back to 0
         assertThat(ringBitSet.getIndex()).isEqualTo(0);
@@ -97,5 +96,145 @@ public class RingBitSetTest {
         assertThat(ringBitSet.cardinality()).isEqualTo((int) expectedCardinality);
         assertThat(ringBitSet.size()).isEqualTo(128);
         assertThat(ringBitSet.length()).isEqualTo(100);
+    }
+
+    @Test
+    public void testRingBitSetCopyFromTheSameSize() {
+        RingBitSet sourceSet = new RingBitSet(4);
+        // The initial index is -1
+        assertThat(sourceSet.getIndex()).isEqualTo(-1);
+        assertThat(sourceSet.toString()).isEqualTo("0000");
+
+        assertThat(sourceSet.setNextBit(true)).isEqualTo(1);
+        assertThat(sourceSet.toString()).isEqualTo("1000");
+
+        assertThat(sourceSet.getIndex()).isEqualTo(0);
+        assertThat(sourceSet.setNextBit(false)).isEqualTo(1);
+        assertThat(sourceSet.toString()).isEqualTo("1000");
+
+        assertThat(sourceSet.getIndex()).isEqualTo(1);
+        assertThat(sourceSet.setNextBit(true)).isEqualTo(2);
+        assertThat(sourceSet.toString()).isEqualTo("1010");
+
+        assertThat(sourceSet.getIndex()).isEqualTo(2);
+        assertThat(sourceSet.setNextBit(true)).isEqualTo(3);
+        assertThat(sourceSet.toString()).isEqualTo("1011");
+
+        assertThat(sourceSet.getIndex()).isEqualTo(3);
+        assertThat(sourceSet.setNextBit(false)).isEqualTo(2);
+        assertThat(sourceSet.toString()).isEqualTo("0011");
+
+        // The index has reached the maximum size and is set back to 0
+        assertThat(sourceSet.getIndex()).isEqualTo(0);
+        assertThat(sourceSet.setNextBit(false)).isEqualTo(2);
+        assertThat(sourceSet.toString()).isEqualTo("0011");
+
+        assertThat(sourceSet.getIndex()).isEqualTo(1);
+
+        RingBitSet setCopy = new RingBitSet(4, sourceSet);
+
+        assertThat(setCopy.getIndex()).isEqualTo(3);
+        assertThat(setCopy.toString()).isEqualTo("0110");
+
+        assertThat(setCopy.cardinality()).isEqualTo(2);
+
+        // The size is 64-bit, because the bits are stored in an array of one long value
+        assertThat(setCopy.size()).isEqualTo(64);
+
+        // The length must be 4, because the ring bit set contains 4 entries
+        assertThat(setCopy.length()).isEqualTo(4);
+    }
+
+    @Test
+    public void testRingBitSetCopyFromTheLongerSet() {
+        RingBitSet sourceSet = new RingBitSet(5);
+        // The initial index is -1
+        assertThat(sourceSet.getIndex()).isEqualTo(-1);
+        assertThat(sourceSet.toString()).isEqualTo("00000");
+
+        assertThat(sourceSet.setNextBit(true)).isEqualTo(1);
+        assertThat(sourceSet.toString()).isEqualTo("10000");
+
+        assertThat(sourceSet.getIndex()).isEqualTo(0);
+        assertThat(sourceSet.setNextBit(false)).isEqualTo(1);
+        assertThat(sourceSet.toString()).isEqualTo("10000");
+
+        assertThat(sourceSet.getIndex()).isEqualTo(1);
+        assertThat(sourceSet.setNextBit(true)).isEqualTo(2);
+        assertThat(sourceSet.toString()).isEqualTo("10100");
+
+        assertThat(sourceSet.getIndex()).isEqualTo(2);
+        assertThat(sourceSet.setNextBit(true)).isEqualTo(3);
+        assertThat(sourceSet.toString()).isEqualTo("10110");
+
+        assertThat(sourceSet.getIndex()).isEqualTo(3);
+        assertThat(sourceSet.setNextBit(false)).isEqualTo(3);
+        assertThat(sourceSet.toString()).isEqualTo("10110");
+
+        assertThat(sourceSet.getIndex()).isEqualTo(4);
+        assertThat(sourceSet.setNextBit(false)).isEqualTo(2);
+        assertThat(sourceSet.toString()).isEqualTo("00110");
+
+        // The index has reached the maximum size and is set back to 0
+        assertThat(sourceSet.getIndex()).isEqualTo(0);
+        assertThat(sourceSet.setNextBit(true)).isEqualTo(3);
+        assertThat(sourceSet.toString()).isEqualTo("01110");
+
+        assertThat(sourceSet.getIndex()).isEqualTo(1);
+
+        RingBitSet setCopy = new RingBitSet(4, sourceSet);
+
+        assertThat(setCopy.getIndex()).isEqualTo(3);
+        assertThat(setCopy.toString()).isEqualTo("1110");
+
+        assertThat(setCopy.cardinality()).isEqualTo(3);
+
+        // The size is 64-bit, because the bits are stored in an array of one long value
+        assertThat(setCopy.size()).isEqualTo(64);
+
+        // The length must be 4, because the ring bit set contains 4 entries
+        assertThat(setCopy.length()).isEqualTo(4);
+    }
+
+    @Test
+    public void testRingBitSetCopyFromTheShorterSet() {
+        RingBitSet sourceSet = new RingBitSet(3);
+        // The initial index is -1
+        assertThat(sourceSet.getIndex()).isEqualTo(-1);
+        assertThat(sourceSet.toString()).isEqualTo("000");
+
+        assertThat(sourceSet.setNextBit(true)).isEqualTo(1);
+        assertThat(sourceSet.toString()).isEqualTo("100");
+
+        assertThat(sourceSet.getIndex()).isEqualTo(0);
+        assertThat(sourceSet.setNextBit(false)).isEqualTo(1);
+        assertThat(sourceSet.toString()).isEqualTo("100");
+
+        assertThat(sourceSet.getIndex()).isEqualTo(1);
+        assertThat(sourceSet.setNextBit(true)).isEqualTo(2);
+        assertThat(sourceSet.toString()).isEqualTo("101");
+
+        assertThat(sourceSet.getIndex()).isEqualTo(2);
+        assertThat(sourceSet.setNextBit(true)).isEqualTo(2);
+        assertThat(sourceSet.toString()).isEqualTo("101");
+
+        assertThat(sourceSet.getIndex()).isEqualTo(0);
+        assertThat(sourceSet.setNextBit(false)).isEqualTo(2);
+        assertThat(sourceSet.toString()).isEqualTo("101");
+
+        assertThat(sourceSet.getIndex()).isEqualTo(1);
+
+        RingBitSet setCopy = new RingBitSet(4, sourceSet);
+
+        assertThat(setCopy.getIndex()).isEqualTo(2);
+        assertThat(setCopy.toString()).isEqualTo("0110");
+
+        assertThat(setCopy.cardinality()).isEqualTo(2);
+
+        // The size is 64-bit, because the bits are stored in an array of one long value
+        assertThat(setCopy.size()).isEqualTo(64);
+
+        // The length must be 3, because the ring bit set contains only 3 entries after copying
+        assertThat(setCopy.length()).isEqualTo(3);
     }
 }
