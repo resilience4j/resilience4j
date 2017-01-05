@@ -72,9 +72,10 @@
 == Version 0.8.0
 * Added the SingleOperator interface to CircuitBreakerOperator
 * Added a new RateLimiter decorator
-* Added a new Cache decorator
+* Added a new Cache decoratorq
 * Removed CacheEventConsumer and CircuitBreakerEventConsumer and created a generic CircularEventConsumer
 * Added a StopWatch which is used to measure the elapsed time of decorated calls. CircuitBreakerEvents also contain the elapsed duration of a call now.
 * Updated javaslang from 2.0.4 to 2.0.5
 * Updated rxjava from 2.0.1 to 2.0.3
 * Issue #33: Added the ability to 'force' state transitions manually
+* Issue #38: A CircuitBreaker records not permitted calls when the state is OPEN and emits a event for each attempt. The metric "numberOfNotPermittedCalls" can be access via CircuitBreaker.Metrics
