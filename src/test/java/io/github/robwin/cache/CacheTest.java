@@ -46,7 +46,7 @@ public class CacheTest {
     @Test
     public void shouldInvokeDecoratedCheckedSupplier() throws Throwable {
         // Given the cache does not contain the key
-        given(cache.containsKey("testKey")).willReturn(false);
+        given(cache.get("testKey")).willReturn(null);
 
         Try.CheckedFunction<String, String> cachedFunction = Cache.decorateCheckedSupplier(Cache.of(cache), () -> "Hello world");
         String value = cachedFunction.apply("testKey");
@@ -56,7 +56,7 @@ public class CacheTest {
     @Test
     public void shouldInvokeDecoratedSupplier() throws Throwable {
         // Given the cache does not contain the key
-        given(cache.containsKey("testKey")).willReturn(false);
+        given(cache.get("testKey")).willReturn(null);
 
         Function<String, String> cachedFunction = Cache.decorateSupplier(Cache.of(cache), () -> "Hello world");
         String value = cachedFunction.apply("testKey");
@@ -66,7 +66,7 @@ public class CacheTest {
     @Test
     public void shouldInvokeDecoratedCallable() throws Throwable {
         // Given the cache does not contain the key
-        given(cache.containsKey("testKey")).willReturn(false);
+        given(cache.get("testKey")).willReturn(null);
 
         Cache<String, String> cacheContext = Cache.of(cache);
         CircularEventConsumer<CacheEvent> cacheEventConsumer = new CircularEventConsumer<>(10);
@@ -84,8 +84,6 @@ public class CacheTest {
 
     @Test
     public void shouldReturnCachedValue() throws Throwable {
-        // Given the cache contains the key
-        given(cache.containsKey("testKey")).willReturn(true);
         // Return the value from cache
         given(cache.get("testKey")).willReturn("Hello from cache");
 
@@ -105,7 +103,7 @@ public class CacheTest {
     @Test
     public void shouldInvokeDecoratedCallableBecauseOfException() throws Throwable {
         // Given the cache contains the key
-        given(cache.containsKey("cacheKey")).willThrow(new RuntimeException("Cache is not available"));
+        given(cache.get("testKey")).willThrow(new RuntimeException("Cache is not available"));
 
         Cache<String, String> cacheContext = Cache.of(cache);
         CircularEventConsumer<CacheEvent> cacheEventConsumer = new CircularEventConsumer<>(10);
@@ -113,7 +111,7 @@ public class CacheTest {
                 .subscribe(cacheEventConsumer);
 
         Try.CheckedFunction<String, String> cachedFunction = Cache.decorateCheckedSupplier(cacheContext, () -> "Hello world");
-        String value = cachedFunction.apply("cacheKey");
+        String value = cachedFunction.apply("testKey");
         assertThat(value).isEqualTo("Hello world");
 
         assertThat(cacheEventConsumer.getBufferedEvents()).hasSize(1);

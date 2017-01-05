@@ -16,8 +16,9 @@
  *
  *
  */
-package io.github.robwin.cache;
+package io.github.robwin.cache.internal;
 
+import io.github.robwin.cache.Cache;
 import io.github.robwin.cache.event.CacheEvent;
 import io.github.robwin.cache.event.CacheOnErrorEvent;
 import io.github.robwin.cache.event.CacheOnHitEvent;
@@ -27,15 +28,19 @@ import io.reactivex.processors.FlowableProcessor;
 import io.reactivex.processors.PublishProcessor;
 import javaslang.control.Option;
 import javaslang.control.Try;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.function.Supplier;
 
-class CacheContext<K, V>  implements Cache<K,V> {
+public class CacheContext<K, V>  implements Cache<K,V> {
+
+    private static final Logger LOG = LoggerFactory.getLogger(CacheContext.class);
 
     private final javax.cache.Cache<K, V> cache;
     private final FlowableProcessor<CacheEvent> eventPublisher;
 
-    CacheContext(javax.cache.Cache<K, V> cache) {
+    public CacheContext(javax.cache.Cache<K, V> cache) {
         this.cache = cache;
         PublishProcessor<CacheEvent> publisher = PublishProcessor.create();
         this.eventPublisher = publisher.toSerialized();
@@ -58,16 +63,18 @@ class CacheContext<K, V>  implements Cache<K,V> {
             .get();
     }
 
-    private synchronized Option<V> getValueFromCache(K cacheKey){
+    private Option<V> getValueFromCache(K cacheKey){
         try {
-            if (cache.containsKey(cacheKey)) {
+            V result = cache.get(cacheKey);
+            if (result != null) {
                 onCacheHit(cacheKey);
-                return Option.of(cache.get(cacheKey));
+                return Option.of(result);
             } else {
                 onCacheMiss(cacheKey);
                 return Option.none();
             }
         }catch (Exception exception){
+            LOG.warn(String.format("Failed to get a value from Cache %s", getName()), exception);
             onError(exception);
             return Option.none();
         }
@@ -79,12 +86,13 @@ class CacheContext<K, V>  implements Cache<K,V> {
                 cache.put(cacheKey, value);
             }
         } catch (Exception exception){
+            LOG.warn(String.format("Failed to put a value into Cache %s", getName()), exception);
             onError(exception);
         }
     }
 
-    private void onError(Exception exception) {
-        publishCacheEvent(() -> new CacheOnErrorEvent(cache.getName(), exception));
+    private void onError(Throwable throwable) {
+        publishCacheEvent(() -> new CacheOnErrorEvent(cache.getName(), throwable));
     }
 
     private void onCacheMiss(K cacheKey) {

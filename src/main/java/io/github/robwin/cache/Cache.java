@@ -19,6 +19,7 @@
 package io.github.robwin.cache;
 
 import io.github.robwin.cache.event.CacheEvent;
+import io.github.robwin.cache.internal.CacheContext;
 import io.reactivex.Flowable;
 import javaslang.control.Try;
 
