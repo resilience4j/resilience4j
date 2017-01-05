@@ -230,11 +230,12 @@ public interface CircuitBreaker {
         int getNumberOfFailedCalls();
 
         /**
-         * Returns the current number of denied calls.
+         * Returns the current number of not permitted calls, when the state is OPEN.
+         *
          * The number of denied calls is always 0, when the CircuitBreaker state is CLOSED or HALF_OPEN.
          * The number of denied calls is only increased when the CircuitBreaker state is OPEN.
          *
-         * @return the current number of denied calls
+         * @return the current number of not permitted calls
          */
         long getNumberOfNotPermittedCalls();
 
