@@ -515,8 +515,8 @@ table.CodeRay td.code>pre{padding:0}
 <h1>Javaslang-Circuitbreaker User Guide</h1>
 <div class="details">
 <span id="author" class="author">Robert Winkler</span><br>
-<span id="revnumber">version 0.7.1,</span>
-<span id="revdate">2016-12-09</span>
+<span id="revnumber">version 0.8.0,</span>
+<span id="revdate">2017-01-06</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">Table of Contents</div>
@@ -546,26 +546,30 @@ table.CodeRay td.code>pre{padding:0}
 <ul class="sectlevel3">
 <li><a href="#_create_a_ratelimiter">3.2.1. Create a RateLimiter</a></li>
 <li><a href="#_use_a_ratelimiter">3.2.2. Use a RateLimiter</a></li>
-<li><a href="#_monitor_ratelimiter_metrics">3.2.3. Monitor RateLimiter metrics</a></li>
 </ul>
 </li>
-<li><a href="#_cache">3.3. Cache</a>
+</ul>
+</li>
+<li><a href="#_consume_emitted_ratelimiterevents">4. Consume emitted RateLimiterEvents</a>
 <ul class="sectlevel3">
-<li><a href="#_cache_function_results">3.3.1. Cache function results</a></li>
-<li><a href="#_consume_emitted_cacheevents">3.3.2. Consume emitted CacheEvents</a></li>
-</ul>
-</li>
-<li><a href="#_retry">3.4. Retry</a>
+<li><a href="#_monitor_ratelimiter_metrics">4.1. Monitor RateLimiter metrics</a></li>
+<li><a href="#_cache">4.2. Cache</a>
 <ul class="sectlevel3">
-<li><a href="#_retry_a_failed_function">3.4.1. Retry a failed function</a></li>
-<li><a href="#_consume_emitted_retryevents">3.4.2. Consume emitted RetryEvents</a></li>
+<li><a href="#_cache_function_results">4.2.1. Cache function results</a></li>
+<li><a href="#_consume_emitted_cacheevents">4.2.2. Consume emitted CacheEvents</a></li>
+</ul>
+</li>
+<li><a href="#_retry">4.3. Retry</a>
+<ul class="sectlevel3">
+<li><a href="#_retry_a_failed_function">4.3.1. Retry a failed function</a></li>
+<li><a href="#_consume_emitted_retryevents">4.3.2. Consume emitted RetryEvents</a></li>
 </ul>
 </li>
 </ul>
 </li>
-<li><a href="#_circuitbreaker_implementation_details">4. CircuitBreaker implementation details</a></li>
-<li><a href="#_ratelimiter_implementation_details">5. RateLimiter implementation details</a></li>
-<li><a href="#_license">6. License</a></li>
+<li><a href="#_circuitbreaker_implementation_details">5. CircuitBreaker implementation details</a></li>
+<li><a href="#_ratelimiter_implementation_details">6. RateLimiter implementation details</a></li>
+<li><a href="#_license">7. License</a></li>
 </ul>
 </div>
 </div>
@@ -582,22 +586,24 @@ table.CodeRay td.code>pre{padding:0}
 <div class="ulist">
 <ul>
 <li>
-<p>In Hystrix calls to external systems have to be wrapped in a HystrixCommand. This library, in contrast, provides higher-order functions to decorate any functional interface, lambda expression or method reference with a <a href="http://martinfowler.com/bliki/CircuitBreaker.html">Circuit Breaker</a>.</p>
+<p>In Hystrix calls to external systems have to be wrapped in a HystrixCommand. This library, in contrast, provides higher-order functions (decorators) to enhance any functional interface, lambda expression or method reference with a <a href="http://martinfowler.com/bliki/CircuitBreaker.html">Circuit Breaker</a>. Furthermore, the library provides decorators to retry failed calls, limit call frequency or cache call results. You can stack more than one decorator on any functional interface, lambda expression or method reference. That means, you can combine a RateLimiter and Retry decorator with a CircuitBreaker decorator. This library provides a <code>Decorators</code> builder to simplify stacking decorators. The advantage is that you have the choice to select the decorator you need and nothing else. Any decorated function can be executed synchronously or asynchronously by using a CompletableFuture or RxJava.</p>
 </li>
 <li>
 <p>Hystrix, by default, stores execution results in 10 1-second window buckets. If a 1-second window bucket is passed, a new bucket is created and the oldest is dropped. This library stores execution results in Ring Bit Buffer without a statistical rolling time window. A successful call is stored as a 0 bit and a failed call is stored as a 1 bit. The Ring Bit Buffer has a configurable fixed-size and stores the bits in a long[] array which is saving memory compared to a boolean array. That means the Ring Bit Buffer only needs an array of 16 long (64-bit) values to store the status of 1024 calls. The advantage is that this CircuitBreaker works out-of-the-box for low and high frequency backend systems, because execution results are not dropped when a time window is passed.</p>
 </li>
 <li>
-<p>Hystrix only performs a single execution when in half-open state to determine whether to close a circuit. This library allows to perform a configurable number of executions and compares the result against a configurable threshold to determine whether to close a circuit.</p>
+<p>Hystrix only performs a single execution when in half-open state to determine whether to close a CircuitBreaker. This library allows to perform a configurable number of executions and compares the result against a configurable threshold to determine whether to close a CircuitBreaker.</p>
 </li>
 <li>
-<p>This library provides a custom operator to decorate any RxJava <code>Observable</code> or <code>Flowable</code> with a Circuit Breaker.</p>
+<p>This library provides a custom RxJava operator to decorate any <code>Observable</code> or <code>Flowable</code> with a Circuit Breaker.</p>
+</li>
+<li>
+<p>Hystrix and this library emit a stream of events which are useful to system operators to monitor metrics about execution outcomes and latency.</p>
+</li>
+<li>
+<p>Hystrix features such as Request Collapsing and Bulk Heading are not in the scope of this library.</p>
 </li>
 </ul>
-</div>
-<div class="paragraph">
-<p>In the following I call higher-order functions decorators. Furthermore, the library provides decorators to retry failed functions, limit call frequency or cache function results. You can stack more than one decorator on any given function. That means, you can combine a RateLimiter and Retry decorator with a CircuitBreaker decorator. The library provides a <code>Decorators</code> builder to simplify stacking decorators. Any decorated function can be executed synchronously or asynchronously by using a CompletableFuture or RxJava.<br>
-However, features such as Request Collapsing and Bulk Heading are not in the scope of this library.</p>
 </div>
 </div>
 </div>
@@ -615,7 +621,7 @@ However, features such as Request Collapsing and Bulk Heading are not in the sco
     jcenter()
 }
 
-compile "io.github.robwin:javaslang-circuitbreaker:0.7.1"</code></pre>
+compile "io.github.robwin:javaslang-circuitbreaker:0.8.0"</code></pre>
 </div>
 </div>
 </div>
@@ -971,8 +977,35 @@ Try.run(restrictedCall)
 </div>
 </div>
 </div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_consume_emitted_ratelimiterevents"><a class="anchor" href="#_consume_emitted_ratelimiterevents"></a>4. Consume emitted RateLimiterEvents</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The RateLimiter emits a stream of RateLimiterEvents to any Observer/Consumer who subscribes.<br>
+An event can be a successful permission acquire or acquire failure.<br>
+All events contains additional information like event creation time and rate limiter name.<br>
+If you want to consume events, you have to subscribe to the event stream.<br>
+You can use the <code>CircularEventConsumer</code> to store events in a circular buffer with a fixed capacity.<br>
+You can use RxJava to filter certain events.<br>
+The advantage of an event stream is that you can use RxJava&#8217;s <code>observeOn</code><br>
+operator to specify a different Scheduler that the RateLimiter will use to send notifications to its observers/consumers.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="java">RateLimiter rateLimiter = RateLimiter.ofDefaults(<span class="string"><span class="delimiter">&quot;</span><span class="content">backendName</span><span class="delimiter">&quot;</span></span>);
+CircularEventConsumer&lt;RateLimiterEvent&gt; circularEventConsumer = <span class="keyword">new</span> CircularEventConsumer&lt;&gt;(<span class="integer">5</span>);
+rateLimiter.getEventStream()
+    .filter(event -&gt; event.getEventType() == FAILED_ACQUIRE)
+    .subscribe(circularEventConsumer);
+
+<span class="predefined-type">List</span>&lt;RateLimiterEvent&gt; bufferedEvents = circularEventConsumer.getBufferedEvents();</code></pre>
+</div>
+</div>
 <div class="sect3">
-<h4 id="_monitor_ratelimiter_metrics"><a class="anchor" href="#_monitor_ratelimiter_metrics"></a>3.2.3. Monitor RateLimiter metrics</h4>
+<h4 id="_monitor_ratelimiter_metrics"><a class="anchor" href="#_monitor_ratelimiter_metrics"></a>4.1. Monitor RateLimiter metrics</h4>
 <div class="paragraph">
 <p>The RateLimiter provides simple an interface to monitor the current limiter.<br>
 Also AtomicRateLimiter has some enhanced Metrics with some implementation specific details.</p>
@@ -991,11 +1024,10 @@ AtomicRateLimiter atomicLimiter;
 </div>
 </div>
 </div>
-</div>
 <div class="sect2">
-<h3 id="_cache"><a class="anchor" href="#_cache"></a>3.3. Cache</h3>
+<h3 id="_cache"><a class="anchor" href="#_cache"></a>4.2. Cache</h3>
 <div class="sect3">
-<h4 id="_cache_function_results"><a class="anchor" href="#_cache_function_results"></a>3.3.1. Cache function results</h4>
+<h4 id="_cache_function_results"><a class="anchor" href="#_cache_function_results"></a>4.2.1. Cache function results</h4>
 <div class="paragraph">
 <p>The following example shows how to decorate a lambda expression with a Cache abstraction. The cache abstraction puts the result of the lambda expression in a cache instance (JCache) and<br>
 tries to retrieve a previous cached result from the cache before it invokes the lambda expression.<br>
@@ -1016,7 +1048,7 @@ Try.CheckedFunction&lt;<span class="predefined-type">String</span>, <span class=
 </div>
 </div>
 <div class="sect3">
-<h4 id="_consume_emitted_cacheevents"><a class="anchor" href="#_consume_emitted_cacheevents"></a>3.3.2. Consume emitted CacheEvents</h4>
+<h4 id="_consume_emitted_cacheevents"><a class="anchor" href="#_consume_emitted_cacheevents"></a>4.2.2. Consume emitted CacheEvents</h4>
 <div class="paragraph">
 <p>The CacheContext emits a stream of CacheEvents to any Observer/Consumer who subscribes. An event can be a cache hit, a cache miss or an error. You can use the <code>CircularEventConsumer</code> to store events in a circular buffer with a fixed capacity.</p>
 </div>
@@ -1035,9 +1067,9 @@ cacheContext.getEventStream()
 </div>
 </div>
 <div class="sect2">
-<h3 id="_retry"><a class="anchor" href="#_retry"></a>3.4. Retry</h3>
+<h3 id="_retry"><a class="anchor" href="#_retry"></a>4.3. Retry</h3>
 <div class="sect3">
-<h4 id="_retry_a_failed_function"><a class="anchor" href="#_retry_a_failed_function"></a>3.4.1. Retry a failed function</h4>
+<h4 id="_retry_a_failed_function"><a class="anchor" href="#_retry_a_failed_function"></a>4.3.1. Retry a failed function</h4>
 <div class="paragraph">
 <p>You can also retry a failed function and recover from the exception, if the maximum retry count was reached. You can create a <code>Retry</code> context using a default configuration as follows.</p>
 </div>
@@ -1091,7 +1123,7 @@ assertThat(result.get()).isEqualTo(<span class="string"><span class="delimiter">
 </div>
 </div>
 <div class="sect3">
-<h4 id="_consume_emitted_retryevents"><a class="anchor" href="#_consume_emitted_retryevents"></a>3.4.2. Consume emitted RetryEvents</h4>
+<h4 id="_consume_emitted_retryevents"><a class="anchor" href="#_consume_emitted_retryevents"></a>4.3.2. Consume emitted RetryEvents</h4>
 <div class="paragraph">
 <p>The RetryContext emits a stream of RetryEvents to any Observer/Consumer who subscribes. An event can be a failure which signals that even all retries have failed or success if a retry was successful. You can use the <code>CircularEventConsumer</code> to store events in a circular buffer with a fixed capacity.</p>
 </div>
@@ -1110,7 +1142,7 @@ retryContext.getEventStream()
 </div>
 </div>
 <div class="sect1">
-<h2 id="_circuitbreaker_implementation_details"><a class="anchor" href="#_circuitbreaker_implementation_details"></a>4. CircuitBreaker implementation details</h2>
+<h2 id="_circuitbreaker_implementation_details"><a class="anchor" href="#_circuitbreaker_implementation_details"></a>5. CircuitBreaker implementation details</h2>
 <div class="sectionbody">
 <div class="paragraph">
 <p>The CircuitBreaker is implemented via a finite state machine with three states: <code>CLOSED</code>, <code>OPEN</code> and <code>HALF_OPEN</code>.</p>
@@ -1145,7 +1177,7 @@ retryContext.getEventStream()
 Then, all access to the backend is blocked for a (configurable) time duration. <code>CircuitBreaker::isCallPermitted()</code> throws a <code>CircuitBreakerOpenException</code>, if the CircuitBreaker is <code>OPEN</code>.</p>
 </div>
 <div class="paragraph">
-<p>The CircuitBreaker uses a Ring Bit Buffer in the <code>CLOSED</code> state to store the success or failure statuses of the calls. A successful call is stored as a <code>0</code> bit and a failed call is stored as a <code>1</code> bit. The Ring Bit Buffer has a (configurable) fixed-size. The Ring Bit Buffer uses internally a <a href="https://docs.oracle.com/javase/8/docs/api/java/util/BitSet.html">BitSet</a> to store the bits which is saving memory compared to a boolean array. The BitSet uses a long[] array to store the bits. That means the BitSet only needs an array of 16 long (64-bit) values to store the status of 1024 calls.</p>
+<p>The CircuitBreaker uses a Ring Bit Buffer in the <code>CLOSED</code> state to store the success or failure statuses of the calls. A successful call is stored as a <code>0</code> bit and a failed call is stored as a <code>1</code> bit. The Ring Bit Buffer has a (configurable) fixed-size. The Ring Bit Buffer uses internally a <a href="https://docs.oracle.com/javase/8/docs/api/java/util/BitSet.html">BitSet</a> like data structure to store the bits which is saving memory compared to a boolean array. The BitSet uses a long[] array to store the bits. That means the BitSet only needs an array of 16 long (64-bit) values to store the status of 1024 calls.</p>
 </div>
 <div class="imageblock">
 <div class="content">
@@ -1175,7 +1207,7 @@ circuitBreaker.getEventStream()
 </div>
 </div>
 <div class="sect1">
-<h2 id="_ratelimiter_implementation_details"><a class="anchor" href="#_ratelimiter_implementation_details"></a>5. RateLimiter implementation details</h2>
+<h2 id="_ratelimiter_implementation_details"><a class="anchor" href="#_ratelimiter_implementation_details"></a>6. RateLimiter implementation details</h2>
 <div class="sectionbody">
 <div class="paragraph">
 <p>Conceptually <code>RateLimiter</code> splits all nanoseconds from the start of epoch into cycles.<br>
@@ -1283,10 +1315,10 @@ reporter.start(<span class="integer">1</span>, <span class="predefined-type">Tim
 </div>
 </div>
 <div class="sect1">
-<h2 id="_license"><a class="anchor" href="#_license"></a>6. License</h2>
+<h2 id="_license"><a class="anchor" href="#_license"></a>7. License</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>Copyright 2016 Robert Winkler</p>
+<p>Copyright 2016 Robert Winkler and Bohdan Storozhuk</p>
 </div>
 <div class="paragraph">
 <p>Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at</p>
@@ -1304,7 +1336,7 @@ reporter.start(<span class="integer">1</span>, <span class="predefined-type">Tim
 </div>
 <div id="footer">
 <div id="footer-text">
-Version 0.7.1<br>
+Version 0.8.0<br>
 Last updated 2016-12-08 16:23:46 +01:00
 </div>
 </div>
