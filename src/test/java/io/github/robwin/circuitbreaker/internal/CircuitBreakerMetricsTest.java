@@ -25,7 +25,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class CircuitBreakerMetricsTest {
 
     @Test
-    public void testDefaultCircuitBreakerMetrics(){
+    public void testCircuitBreakerMetrics(){
         CircuitBreakerMetrics circuitBreakerMetrics = new CircuitBreakerMetrics(10);
         assertThat(circuitBreakerMetrics.getMaxNumberOfBufferedCalls()).isEqualTo(10);
 
@@ -59,5 +59,28 @@ public class CircuitBreakerMetricsTest {
         assertThat(circuitBreakerMetrics.getNumberOfFailedCalls()).isEqualTo(6);
         assertThat(circuitBreakerMetrics.getNumberOfSuccessfulCalls()).isEqualTo(4);
         assertThat(circuitBreakerMetrics.getFailureRate()).isEqualTo(60);
+    }
+
+    @Test
+    public void testCopyCircuitBreakerMetrics(){
+        CircuitBreakerMetrics halfOpenCircuitBreakerMetrics = new CircuitBreakerMetrics(10);
+        assertThat(halfOpenCircuitBreakerMetrics.getMaxNumberOfBufferedCalls()).isEqualTo(10);
+
+        halfOpenCircuitBreakerMetrics.onSuccess();
+        halfOpenCircuitBreakerMetrics.onSuccess();
+        halfOpenCircuitBreakerMetrics.onError();
+        halfOpenCircuitBreakerMetrics.onError();
+
+        assertThat(halfOpenCircuitBreakerMetrics.getNumberOfBufferedCalls()).isEqualTo(4);
+        assertThat(halfOpenCircuitBreakerMetrics.getNumberOfFailedCalls()).isEqualTo(2);
+        assertThat(halfOpenCircuitBreakerMetrics.getNumberOfSuccessfulCalls()).isEqualTo(2);
+
+
+        CircuitBreakerMetrics closedCircuitBreakerMetrics = halfOpenCircuitBreakerMetrics.copy(20);
+        assertThat(closedCircuitBreakerMetrics.getMaxNumberOfBufferedCalls()).isEqualTo(20);
+        assertThat(closedCircuitBreakerMetrics.getNumberOfBufferedCalls()).isEqualTo(4);
+        assertThat(closedCircuitBreakerMetrics.getNumberOfFailedCalls()).isEqualTo(2);
+        assertThat(closedCircuitBreakerMetrics.getNumberOfSuccessfulCalls()).isEqualTo(2);
+        assertThat(closedCircuitBreakerMetrics.getNumberOfNotPermittedCalls()).isEqualTo(0);
     }
 }

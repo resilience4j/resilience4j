@@ -162,7 +162,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
             if (currentState.getState() == CLOSED) {
                 return currentState;
             }
-            return new ClosedState(this);
+            return new ClosedState(this, currentState.getMetrics());
         });
         if (previousState.getState() != CLOSED) {
             publishStateTransitionEvent(StateTransition.transitionToClosedState(previousState.getState()));

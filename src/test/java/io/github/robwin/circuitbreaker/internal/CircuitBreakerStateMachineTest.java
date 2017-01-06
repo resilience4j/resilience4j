@@ -121,6 +121,7 @@ public class CircuitBreakerStateMachineTest {
         assertThat(circuitBreaker.isCallPermitted()).isEqualTo(true);
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.HALF_OPEN); // Should create a CircuitBreakerOnStateTransitionEvent (9)
         // Metrics are reseted
+        assertThat(circuitBreaker.getMetrics().getMaxNumberOfBufferedCalls()).isEqualTo(3);
         assertThat(circuitBreaker.getMetrics().getNumberOfNotPermittedCalls()).isEqualTo(0);
         assertThat(circuitBreaker.getMetrics().getNumberOfBufferedCalls()).isEqualTo(0);
         assertThat(circuitBreaker.getMetrics().getNumberOfFailedCalls()).isEqualTo(0);
@@ -176,8 +177,9 @@ public class CircuitBreakerStateMachineTest {
         // The state machine transitions back to CLOSED state
         assertThat(circuitBreaker.isCallPermitted()).isEqualTo(true);
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED); // Should create a CircuitBreakerOnStateTransitionEvent (19)
-        assertThat(circuitBreaker.getMetrics().getNumberOfBufferedCalls()).isEqualTo(0);
-        assertThat(circuitBreaker.getMetrics().getNumberOfFailedCalls()).isEqualTo(0);
+        assertThat(circuitBreaker.getMetrics().getMaxNumberOfBufferedCalls()).isEqualTo(5);
+        assertThat(circuitBreaker.getMetrics().getNumberOfBufferedCalls()).isEqualTo(3);
+        assertThat(circuitBreaker.getMetrics().getNumberOfFailedCalls()).isEqualTo(1);
         assertThat(circuitBreaker.getMetrics().getFailureRate()).isEqualTo(-1f);
 
         testSubscriber

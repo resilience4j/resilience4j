@@ -21,7 +21,7 @@ package io.github.robwin.circuitbreaker.internal;
 /**
  * A ring bit set which stores bits up to a maximum size of bits.
  */
-public class RingBitSet {
+class RingBitSet {
 
     private final int size;
     private final BitSetMod bitSet;
@@ -42,13 +42,23 @@ public class RingBitSet {
      * @throws NegativeArraySizeException if the specified initial size
      *                                    is negative
      */
-    public RingBitSet(int bitSetSize) {
+    RingBitSet(int bitSetSize) {
         notFull = true;
         size = bitSetSize;
         bitSet = new BitSetMod(bitSetSize);
     }
 
-    public RingBitSet(int bitSetSize, RingBitSet sourceSet) {
+    /**
+     * Creates a ring bit set whose size is large enough to explicitly
+     * represent bits with indices in the range {@code 0} through
+     * {@code bitSetSize-1}. The bits from the source ring bit set are copied into the new ring bit set.
+     *
+     * @param bitSetSize the size of the ring bit set
+     * @param sourceSet the source ring bit set
+     * @throws NegativeArraySizeException if the specified initial size
+     *                                    is negative
+     */
+    RingBitSet(int bitSetSize, RingBitSet sourceSet) {
         this(bitSetSize);
 
         int targetLength = Integer.min(bitSetSize, sourceSet.length);

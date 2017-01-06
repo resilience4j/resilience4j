@@ -30,9 +30,28 @@ class CircuitBreakerMetrics implements CircuitBreaker.Metrics {
     private final LongAdder numberOfNotPermittedCalls;
 
     CircuitBreakerMetrics(int ringBufferSize) {
+        this(ringBufferSize, null);
+    }
+
+    CircuitBreakerMetrics(int ringBufferSize, RingBitSet sourceSet) {
         this.ringBufferSize = ringBufferSize;
-        this.ringBitSet = new RingBitSet(this.ringBufferSize);
+        if(sourceSet != null) {
+            this.ringBitSet = new RingBitSet(this.ringBufferSize, sourceSet);
+        }else{
+            this.ringBitSet = new RingBitSet(this.ringBufferSize);
+        }
         this.numberOfNotPermittedCalls = new LongAdder();
+    }
+
+    /**
+     * Creates a new CircuitBreakerMetrics instance and copies the content of the current RingBitSet
+     * into the new RingBitSet.
+     *
+     * @param targetRingBufferSize the ringBufferSize of the new CircuitBreakerMetrics instances
+     * @return a CircuitBreakerMetrics
+     */
+    public CircuitBreakerMetrics copy(int targetRingBufferSize) {
+        return new CircuitBreakerMetrics(targetRingBufferSize, this.ringBitSet);
     }
 
     /**

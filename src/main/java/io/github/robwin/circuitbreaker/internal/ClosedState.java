@@ -18,8 +18,8 @@
  */
 package io.github.robwin.circuitbreaker.internal;
 
-import io.github.robwin.circuitbreaker.CircuitBreakerConfig;
 import io.github.robwin.circuitbreaker.CircuitBreaker;
+import io.github.robwin.circuitbreaker.CircuitBreakerConfig;
 
 final class ClosedState extends CircuitBreakerState {
 
@@ -27,10 +27,18 @@ final class ClosedState extends CircuitBreakerState {
     private final float failureRateThreshold;
 
     ClosedState(CircuitBreakerStateMachine stateMachine) {
+        this(stateMachine, null);
+    }
+
+    ClosedState(CircuitBreakerStateMachine stateMachine, CircuitBreakerMetrics circuitBreakerMetrics) {
         super(stateMachine);
         CircuitBreakerConfig circuitBreakerConfig = stateMachine.getCircuitBreakerConfig();
-        this.circuitBreakerMetrics = new CircuitBreakerMetrics(
+        if(circuitBreakerMetrics == null){
+            this.circuitBreakerMetrics = new CircuitBreakerMetrics(
                 circuitBreakerConfig.getRingBufferSizeInClosedState());
+        }else{
+            this.circuitBreakerMetrics = circuitBreakerMetrics.copy(circuitBreakerConfig.getRingBufferSizeInClosedState());
+        }
         this.failureRateThreshold = stateMachine.getCircuitBreakerConfig().getFailureRateThreshold();
     }
 

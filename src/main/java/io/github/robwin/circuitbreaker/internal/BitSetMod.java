@@ -76,7 +76,6 @@ class BitSetMod {
     boolean get(int bitIndex) {
         int wordIndex = wordIndex(bitIndex);
         long bitMask = 1L << bitIndex;
-        boolean bitValue = (words[wordIndex] & bitMask) != 0;
-        return bitValue;
+        return (words[wordIndex] & bitMask) != 0;
     }
 }
