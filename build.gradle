@@ -11,7 +11,6 @@ buildscript {
         classpath 'org.kt3k.gradle.plugin:coveralls-gradle-plugin:2.7.1'
         classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.2'
         classpath 'me.champeau.gradle:jmh-gradle-plugin:0.3.1'
-        classpath 'com.github.jengelman.gradle.plugins:shadow:1.2.0'
         classpath "org.asciidoctor:asciidoctor-gradle-plugin:1.5.3"
         classpath "org.ajoberstar:gradle-git:1.3.2"
         classpath "org.jfrog.buildinfo:build-info-extractor-gradle:4.0.0"
@@ -27,14 +26,13 @@ apply plugin: 'com.jfrog.bintray'
 apply plugin: "com.jfrog.artifactory"
 apply from: 'gradle/publishing.gradle'
 apply plugin: 'me.champeau.gradle.jmh'
-apply plugin: 'com.github.johnrengelman.shadow'
 apply plugin: 'org.asciidoctor.convert'
 apply plugin: 'org.ajoberstar.github-pages'
 
 group = 'io.github.robwin'
 description = 'A CircuitBreaker pattern implementation for Java 8 and functional programming.'
-version = '0.8.0-SNAPSHOT'
-ext.releaseVersion = '0.7.1'
+version = '0.8.1'
+ext.releaseVersion = '0.8.0'
 
 tasks.withType(JavaCompile) {
     sourceCompatibility = "1.8"
@@ -113,7 +111,7 @@ tasks.coveralls {
 }
 
 task wrapper(type: Wrapper) {
-    gradleVersion = '2.10'
+    gradleVersion = '3.3'
 }
 
 asciidoctor {
