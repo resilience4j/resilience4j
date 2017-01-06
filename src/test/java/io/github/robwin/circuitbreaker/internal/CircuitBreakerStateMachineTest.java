@@ -21,19 +21,20 @@ package io.github.robwin.circuitbreaker.internal;
 import io.github.robwin.circuitbreaker.CircuitBreaker;
 import io.github.robwin.circuitbreaker.CircuitBreakerConfig;
 import io.github.robwin.circuitbreaker.event.CircuitBreakerEvent;
-import io.github.robwin.consumer.CircularEventConsumer;
+import io.reactivex.subscribers.TestSubscriber;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.time.Duration;
 
+import static io.github.robwin.circuitbreaker.event.CircuitBreakerEvent.Type.*;
 import static java.lang.Thread.sleep;
 import static java.time.Duration.ZERO;
 import static org.assertj.core.api.BDDAssertions.assertThat;
 public class CircuitBreakerStateMachineTest {
 
     private CircuitBreaker circuitBreaker;
-    private CircularEventConsumer<CircuitBreakerEvent> circularEventConsumer;
+    private TestSubscriber<CircuitBreakerEvent.Type> testSubscriber;
 
     @Before
     public void setUp(){
@@ -44,9 +45,9 @@ public class CircuitBreakerStateMachineTest {
                 .waitDurationInOpenState(Duration.ofSeconds(1))
                 .recordFailure(error -> !(error instanceof NumberFormatException))
                 .build());
-        circularEventConsumer = new CircularEventConsumer<>(20);
-        circuitBreaker.getEventStream()
-                .subscribe(circularEventConsumer);
+        testSubscriber = circuitBreaker.getEventStream()
+                .map(CircuitBreakerEvent::getEventType)
+                .test();
     }
 
     @Test
@@ -179,11 +180,11 @@ public class CircuitBreakerStateMachineTest {
         assertThat(circuitBreaker.getMetrics().getNumberOfFailedCalls()).isEqualTo(0);
         assertThat(circuitBreaker.getMetrics().getFailureRate()).isEqualTo(-1f);
 
-        assertThat(circularEventConsumer.getBufferedEvents()).hasSize(19);
-        assertThat(circularEventConsumer.getBufferedEvents().filter(event -> event.getEventType().equals(CircuitBreakerEvent.Type.ERROR))).hasSize(6);
-        assertThat(circularEventConsumer.getBufferedEvents().filter(event -> event.getEventType().equals(CircuitBreakerEvent.Type.IGNORED_ERROR))).hasSize(1);
-        assertThat(circularEventConsumer.getBufferedEvents().filter(event -> event.getEventType().equals(CircuitBreakerEvent.Type.SUCCESS))).hasSize(5);
-        assertThat(circularEventConsumer.getBufferedEvents().filter(event -> event.getEventType().equals(CircuitBreakerEvent.Type.STATE_TRANSITION))).hasSize(5);
-        assertThat(circularEventConsumer.getBufferedEvents().filter(event -> event.getEventType().equals(CircuitBreakerEvent.Type.NOT_PERMITTED))).hasSize(2);
+        testSubscriber
+                .assertValueCount(19)
+                .assertValues(ERROR, ERROR, ERROR, SUCCESS, SUCCESS, STATE_TRANSITION,
+                        NOT_PERMITTED, NOT_PERMITTED, STATE_TRANSITION,
+                        ERROR, ERROR, SUCCESS, STATE_TRANSITION, STATE_TRANSITION,
+                        ERROR, IGNORED_ERROR, SUCCESS, SUCCESS, STATE_TRANSITION);
     }
 }
