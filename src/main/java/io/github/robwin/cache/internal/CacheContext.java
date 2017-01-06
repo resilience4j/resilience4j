@@ -65,13 +65,13 @@ public class CacheContext<K, V>  implements Cache<K,V> {
 
     private Option<V> getValueFromCache(K cacheKey){
         try {
-            V result = cache.get(cacheKey);
-            if (result != null) {
+            Option<V> result = Option.of(cache.get(cacheKey));
+            if (result.isDefined()) {
                 onCacheHit(cacheKey);
-                return Option.of(result);
+                return result;
             } else {
                 onCacheMiss(cacheKey);
-                return Option.none();
+                return result;
             }
         }catch (Exception exception){
             LOG.warn(String.format("Failed to get a value from Cache %s", getName()), exception);

@@ -19,7 +19,7 @@
 package io.github.robwin.cache.event;
 
 /**
- * A CacheEvent which informs about a cache hit
+ * A CacheEvent which informs about a cache miss.
  */
 public class CacheOnMissEvent<K> extends AbstractCacheEvent {
 

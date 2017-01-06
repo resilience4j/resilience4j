@@ -19,7 +19,7 @@
 package io.github.robwin.cache.event;
 
 /**
- * A CacheEvent which informs about an exception
+ * A CacheEvent which informs that accessing the cache has caused an exception.
  */
 public class CacheOnErrorEvent extends AbstractCacheEvent {
 

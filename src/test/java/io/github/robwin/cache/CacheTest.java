@@ -19,10 +19,7 @@
 package io.github.robwin.cache;
 
 import io.github.robwin.cache.event.CacheEvent;
-import io.github.robwin.cache.event.CacheOnErrorEvent;
-import io.github.robwin.cache.event.CacheOnHitEvent;
-import io.github.robwin.cache.event.CacheOnMissEvent;
-import io.github.robwin.consumer.CircularEventConsumer;
+import io.reactivex.subscribers.TestSubscriber;
 import javaslang.control.Try;
 import org.junit.Before;
 import org.junit.Test;
@@ -30,7 +27,7 @@ import org.junit.Test;
 import java.util.function.Function;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.*;
 import static org.mockito.Mockito.mock;
 
 public class CacheTest {
@@ -44,42 +41,102 @@ public class CacheTest {
     }
 
     @Test
-    public void shouldInvokeDecoratedCheckedSupplier() throws Throwable {
-        // Given the cache does not contain the key
-        given(cache.get("testKey")).willReturn(null);
-
-        Try.CheckedFunction<String, String> cachedFunction = Cache.decorateCheckedSupplier(Cache.of(cache), () -> "Hello world");
-        String value = cachedFunction.apply("testKey");
-        assertThat(value).isEqualTo("Hello world");
-    }
-
-    @Test
-    public void shouldInvokeDecoratedSupplier() throws Throwable {
-        // Given the cache does not contain the key
-        given(cache.get("testKey")).willReturn(null);
-
-        Function<String, String> cachedFunction = Cache.decorateSupplier(Cache.of(cache), () -> "Hello world");
-        String value = cachedFunction.apply("testKey");
-        assertThat(value).isEqualTo("Hello world");
-    }
-
-    @Test
-    public void shouldInvokeDecoratedCallable() throws Throwable {
+    public void shouldReturnValueFromDecoratedCheckedSupplier() throws Throwable {
         // Given the cache does not contain the key
         given(cache.get("testKey")).willReturn(null);
 
         Cache<String, String> cacheContext = Cache.of(cache);
-        CircularEventConsumer<CacheEvent> cacheEventConsumer = new CircularEventConsumer<>(10);
-        cacheContext.getEventStream()
-                .subscribe(cacheEventConsumer);
+        TestSubscriber<CacheEvent.Type> testSubscriber = cacheContext.getEventStream()
+                .map(CacheEvent::getEventType)
+                .test();
+
+        Try.CheckedFunction<String, String> cachedFunction = Cache.decorateCheckedSupplier(cacheContext, () -> "Hello world");
+        String value = cachedFunction.apply("testKey");
+        assertThat(value).isEqualTo("Hello world");
+
+        then(cache).should().put("testKey", "Hello world");
+        testSubscriber
+                .assertValueCount(1)
+                .assertValues(CacheEvent.Type.CACHE_MISS);
+    }
+
+    @Test
+    public void shouldReturnValueFromDecoratedSupplier() throws Throwable {
+        // Given the cache does not contain the key
+        given(cache.get("testKey")).willReturn(null);
+
+        Cache<String, String> cacheContext = Cache.of(cache);
+        TestSubscriber<CacheEvent.Type> testSubscriber = cacheContext.getEventStream()
+                .map(CacheEvent::getEventType)
+                .test();
+
+        Function<String, String> cachedFunction = Cache.decorateSupplier(cacheContext, () -> "Hello world");
+        String value = cachedFunction.apply("testKey");
+        assertThat(value).isEqualTo("Hello world");
+
+        then(cache).should().put("testKey", "Hello world");
+        testSubscriber
+                .assertValueCount(1)
+                .assertValues(CacheEvent.Type.CACHE_MISS);
+    }
+
+    @Test
+    public void shouldReturnValueFromDecoratedCallable() throws Throwable {
+        // Given the cache does not contain the key
+        given(cache.get("testKey")).willReturn(null);
+
+        Cache<String, String> cacheContext = Cache.of(cache);
+        TestSubscriber<CacheEvent.Type> testSubscriber = cacheContext.getEventStream()
+                .map(CacheEvent::getEventType)
+                .test();
 
         Try.CheckedFunction<String, String> cachedFunction = Cache.decorateCallable(cacheContext, () -> "Hello world");
         String value = cachedFunction.apply("testKey");
         assertThat(value).isEqualTo("Hello world");
 
+        then(cache).should().put("testKey", "Hello world");
+        testSubscriber
+                .assertValueCount(1)
+                .assertValues(CacheEvent.Type.CACHE_MISS);
+    }
 
-        assertThat(cacheEventConsumer.getBufferedEvents()).hasSize(1);
-        assertThat(cacheEventConsumer.getBufferedEvents().get(0)).isInstanceOf(CacheOnMissEvent.class);
+    /*
+    @Test(expected = IOException.class)
+    public void shouldRethrowExceptionOfSupplier() throws Throwable {
+        // Given the cache does not contain the key
+        given(cache.get("testKey")).willReturn(null);
+
+        Cache<String, String> cacheContext = Cache.of(cache);
+        TestSubscriber<CacheEvent.Type> testSubscriber = cacheContext.getEventStream()
+                .map(CacheEvent::getEventType)
+                .test();
+
+        Try.CheckedFunction<String, String> cachedFunction = Cache.decorateCheckedSupplier(cacheContext, () -> {throw new IOException();});
+        cachedFunction.apply("testKey");
+
+        testSubscriber
+                .assertValueCount(0);
+    }
+    */
+
+    @Test
+    public void shouldReturnValueOfSupplier() throws Throwable {
+        // Given the cache does not contain the key
+        given(cache.get("testKey")).willReturn(null);
+        willThrow(new RuntimeException("Cache is not available")).given(cache).put("testKey", "Hello world");
+
+        Cache<String, String> cacheContext = Cache.of(cache);
+        TestSubscriber<CacheEvent.Type> testSubscriber = cacheContext.getEventStream()
+                .map(CacheEvent::getEventType)
+                .test();
+
+        Try.CheckedFunction<String, String> cachedFunction = Cache.decorateCheckedSupplier(cacheContext, () -> "Hello world");
+        String value = cachedFunction.apply("testKey");
+        assertThat(value).isEqualTo("Hello world");
+
+        testSubscriber
+                .assertValueCount(2)
+                .assertValues(CacheEvent.Type.CACHE_MISS, CacheEvent.Type.ERROR);
     }
 
     @Test
@@ -88,35 +145,35 @@ public class CacheTest {
         given(cache.get("testKey")).willReturn("Hello from cache");
 
         Cache<String, String> cacheContext = Cache.of(cache);
-        CircularEventConsumer<CacheEvent> cacheEventConsumer = new CircularEventConsumer<>(10);
-        cacheContext.getEventStream()
-                .subscribe(cacheEventConsumer);
+        TestSubscriber<CacheEvent.Type> testSubscriber = cacheContext.getEventStream()
+                .map(CacheEvent::getEventType)
+                .test();
 
         Try.CheckedFunction<String, String> cachedFunction = Cache.decorateCheckedSupplier(cacheContext, () -> "Hello world");
         String value = cachedFunction.apply("testKey");
         assertThat(value).isEqualTo("Hello from cache");
 
-        assertThat(cacheEventConsumer.getBufferedEvents()).hasSize(1);
-        assertThat(cacheEventConsumer.getBufferedEvents().get(0)).isInstanceOf(CacheOnHitEvent.class);
+        testSubscriber
+                .assertValueCount(1)
+                .assertValues(CacheEvent.Type.CACHE_HIT);
     }
 
     @Test
-    public void shouldInvokeDecoratedCallableBecauseOfException() throws Throwable {
+    public void shouldReturnValueFromDecoratedCallableBecauseOfException() throws Throwable {
         // Given the cache contains the key
         given(cache.get("testKey")).willThrow(new RuntimeException("Cache is not available"));
 
         Cache<String, String> cacheContext = Cache.of(cache);
-        CircularEventConsumer<CacheEvent> cacheEventConsumer = new CircularEventConsumer<>(10);
-        cacheContext.getEventStream()
-                .subscribe(cacheEventConsumer);
+        TestSubscriber<CacheEvent.Type> testSubscriber = cacheContext.getEventStream()
+                .map(CacheEvent::getEventType)
+                .test();
 
         Try.CheckedFunction<String, String> cachedFunction = Cache.decorateCheckedSupplier(cacheContext, () -> "Hello world");
         String value = cachedFunction.apply("testKey");
         assertThat(value).isEqualTo("Hello world");
 
-        assertThat(cacheEventConsumer.getBufferedEvents()).hasSize(1);
-        assertThat(cacheEventConsumer.getBufferedEvents().get(0)).isInstanceOf(CacheOnErrorEvent.class);
-
-
+        testSubscriber
+                .assertValueCount(1)
+                .assertValues(CacheEvent.Type.ERROR);
     }
 }
