@@ -18,11 +18,11 @@
  */
 package io.github.robwin.retry.internal;
 
-import io.github.robwin.consumer.CircularEventConsumer;
 import io.github.robwin.retry.Retry;
 import io.github.robwin.retry.RetryConfig;
 import io.github.robwin.retry.event.RetryEvent;
 import io.github.robwin.test.HelloWorldService;
+import io.reactivex.subscribers.TestSubscriber;
 import javaslang.control.Try;
 import org.junit.Before;
 import org.junit.Test;
@@ -35,7 +35,7 @@ import static org.mockito.BDDMockito.willThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 
-public class CircularEventConsumerTest {
+public class EventConsumerTest {
 
 
     private HelloWorldService helloWorldService;
@@ -52,11 +52,11 @@ public class CircularEventConsumerTest {
         // Given the HelloWorldService throws an exception
         willThrow(new WebServiceException("BAM!")).given(helloWorldService).sayHelloWorld();
 
-        CircularEventConsumer<RetryEvent> ringBuffer = new CircularEventConsumer<>(2);
         // Create a Retry with default configuration
         RetryContext retryContext = (RetryContext) Retry.ofDefaults("id");
-        retryContext.getEventStream()
-                .subscribe(ringBuffer);
+        TestSubscriber<RetryEvent.Type> testSubscriber = retryContext.getEventStream()
+                .map(RetryEvent::getEventType)
+                .test();
         // Decorate the invocation of the HelloWorldService
         Try.CheckedRunnable retryableRunnable = Retry.decorateCheckedRunnable(retryContext, helloWorldService::sayHelloWorld);
 
@@ -71,9 +71,7 @@ public class CircularEventConsumerTest {
         assertThat(result.failed().get()).isInstanceOf(WebServiceException.class);
         assertThat(sleptTime).isEqualTo(RetryConfig.DEFAULT_WAIT_DURATION*2);
 
-        assertThat(ringBuffer.getBufferedEvents()).hasSize(1);
-        assertThat(ringBuffer.getBufferedEvents()).extracting("eventType")
-                .containsExactly(RetryEvent.Type.ERROR);
+        testSubscriber.assertValueCount(1).assertValues(RetryEvent.Type.ERROR);
     }
 
     @Test
@@ -81,11 +79,11 @@ public class CircularEventConsumerTest {
         // Given the HelloWorldService throws an exception
         willThrow(new WebServiceException("BAM!")).willNothing().given(helloWorldService).sayHelloWorld();
 
-        CircularEventConsumer<RetryEvent> ringBuffer = new CircularEventConsumer<>(2);
         // Create a Retry with default configuration
         RetryContext retryContext = (RetryContext) Retry.ofDefaults("id");
-        retryContext.getEventStream()
-                .subscribe(ringBuffer);
+        TestSubscriber<RetryEvent.Type> testSubscriber = retryContext.getEventStream()
+                .map(RetryEvent::getEventType)
+                .test();
         // Decorate the invocation of the HelloWorldService
         Try.CheckedRunnable retryableRunnable = Retry.decorateCheckedRunnable(retryContext, helloWorldService::sayHelloWorld);
 
@@ -98,8 +96,6 @@ public class CircularEventConsumerTest {
         assertThat(result.isSuccess()).isTrue();
         assertThat(sleptTime).isEqualTo(RetryConfig.DEFAULT_WAIT_DURATION);
 
-        assertThat(ringBuffer.getBufferedEvents()).hasSize(1);
-        assertThat(ringBuffer.getBufferedEvents()).extracting("eventType")
-                .containsExactly(RetryEvent.Type.SUCCESS);
+        testSubscriber.assertValueCount(1).assertValues(RetryEvent.Type.SUCCESS);
     }
 }
