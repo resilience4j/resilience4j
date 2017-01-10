@@ -80,3 +80,6 @@
 * Issue #39: A CircuitBreaker should copy the previous RingBitSet values during state transition from HALF_OPEN to CLOSED
 * Updated javaslang from 2.0.4 to 2.0.5
 * Updated rxjava from 2.0.1 to 2.0.3
+
+== Version 0.8.1
+* Issue #41: Added a method to the CircuitBreakerRegistry which returns a list of all managed CircuitBreaker instances

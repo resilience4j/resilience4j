@@ -18,8 +18,6 @@
  */
 package io.github.robwin.circuitbreaker;
 
-import io.github.robwin.circuitbreaker.CircuitBreaker;
-import io.github.robwin.circuitbreaker.CircuitBreakerRegistry;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -47,6 +45,7 @@ public class CircuitBreakerRegistryTest {
         CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("testName");
         CircuitBreaker circuitBreaker2 = circuitBreakerRegistry.circuitBreaker("testName");
         assertThat(circuitBreaker).isSameAs(circuitBreaker2);
+        assertThat(circuitBreakerRegistry.getAllCircuitBreakers()).hasSize(1);
     }
 
     @Test
@@ -54,5 +53,7 @@ public class CircuitBreakerRegistryTest {
         CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("testName");
         CircuitBreaker circuitBreaker2 = circuitBreakerRegistry.circuitBreaker("otherTestName");
         assertThat(circuitBreaker).isNotSameAs(circuitBreaker2);
+
+        assertThat(circuitBreakerRegistry.getAllCircuitBreakers()).hasSize(2);
     }
 }

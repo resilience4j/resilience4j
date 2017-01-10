@@ -20,6 +20,7 @@ package io.github.robwin.circuitbreaker;
 
 
 import io.github.robwin.circuitbreaker.internal.InMemoryCircuitBreakerRegistry;
+import javaslang.collection.Seq;
 
 import java.util.function.Supplier;
 
@@ -27,6 +28,13 @@ import java.util.function.Supplier;
  * The {@link CircuitBreakerRegistry} is a factory to create CircuitBreaker instances which stores all CircuitBreaker instances in a registry.
  */
 public interface CircuitBreakerRegistry {
+
+    /**
+     * Returns all managed {@link CircuitBreaker} instances.
+     *
+     * @return all managed {@link CircuitBreaker} instances.
+     */
+    Seq<CircuitBreaker> getAllCircuitBreakers();
 
     /**
      * Returns a managed {@link CircuitBreaker} or creates a new one with the default CircuitBreaker configuration.

@@ -18,9 +18,11 @@
  */
 package io.github.robwin.circuitbreaker.internal;
 
-import io.github.robwin.circuitbreaker.CircuitBreakerConfig;
 import io.github.robwin.circuitbreaker.CircuitBreaker;
+import io.github.robwin.circuitbreaker.CircuitBreakerConfig;
 import io.github.robwin.circuitbreaker.CircuitBreakerRegistry;
+import javaslang.collection.Array;
+import javaslang.collection.Seq;
 
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
@@ -56,6 +58,11 @@ public final class InMemoryCircuitBreakerRegistry implements CircuitBreakerRegis
     public InMemoryCircuitBreakerRegistry(CircuitBreakerConfig defaultCircuitBreakerConfig) {
         this.defaultCircuitBreakerConfig = Objects.requireNonNull(defaultCircuitBreakerConfig, "CircuitBreakerConfig must not be null");
         this.circuitBreakers = new ConcurrentHashMap<>();
+    }
+
+    @Override
+    public Seq<CircuitBreaker> getAllCircuitBreakers() {
+        return Array.ofAll(circuitBreakers.values());
     }
 
     /**
