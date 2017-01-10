@@ -33,7 +33,7 @@ apply plugin: 'org.ajoberstar.github-pages'
 
 group = 'io.github.robwin'
 description = 'A CircuitBreaker pattern implementation for Java 8 and functional programming.'
-version = '0.8.1'
+version = '0.8.1-SNAPSHOT'
 ext.releaseVersion = '0.8.0'
 
 tasks.withType(JavaCompile) {
