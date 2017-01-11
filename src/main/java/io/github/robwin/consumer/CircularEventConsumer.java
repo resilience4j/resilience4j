@@ -20,13 +20,12 @@ package io.github.robwin.consumer;
 
 import io.github.robwin.circularbuffer.CircularFifoBuffer;
 import io.github.robwin.circularbuffer.ConcurrentCircularFifoBuffer;
-import io.reactivex.functions.Consumer;
 import javaslang.collection.List;
 
 /**
  * A RxJava consumer which stores CircuitBreakerEvents in a circular buffer with a fixed capacity.
  */
-public class CircularEventConsumer<T> implements Consumer<T>{
+public class CircularEventConsumer<T> implements EventConsumer<T>{
 
     private CircularFifoBuffer<T> eventCircularFifoBuffer;
 
@@ -51,6 +50,7 @@ public class CircularEventConsumer<T> implements Consumer<T>{
      *
      * @return a list containing all of the buffered events.
      */
+    @Override
     public List<T> getBufferedEvents(){
         return eventCircularFifoBuffer.toList();
     }
