@@ -19,6 +19,10 @@ To highlight a few differences to Netflix Hystrix:
 
 Setup and usage is described in our http://robwin.github.io/javaslang-circuitbreaker/[User Guide].
 
+== Spring Boot demo
+
+Setup and usage in Spring Boot is demonstrated https://github.com/RobWin/javaslang-circuitbreaker-demo[here].
+
 == Examples
 
 * <<circuitbreaker>>
