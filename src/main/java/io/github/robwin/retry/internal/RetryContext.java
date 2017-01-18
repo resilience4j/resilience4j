@@ -47,16 +47,14 @@ public class RetryContext implements Retry {
 
     private String id;
     private int maxAttempts;
-    private Duration waitDuration;
-    private Function<Duration, Duration> backoffFunction;
+    private Function<Integer, Long> intervalFunction;
     private Predicate<Throwable> exceptionPredicate;
     /*package*/ static Try.CheckedConsumer<Long> sleepFunction = Thread::sleep;
 
     public RetryContext(String id, RetryConfig config){
         this.id = id;
         this.maxAttempts = config.getMaxAttempts();
-        this.waitDuration = config.getWaitDuration();
-        this.backoffFunction = config.getBackoffFunction();
+        this.intervalFunction = config.getIntervalFunction();
         this.exceptionPredicate = config.getExceptionPredicate();
         PublishProcessor<RetryEvent> publisher = PublishProcessor.create();
         this.eventPublisher = publisher.toSerialized();
@@ -100,9 +98,7 @@ public class RetryContext implements Retry {
 
     private void waitIntervalAfterFailure() {
         // wait interval until the next attempt should start
-        long interval = Stream.iterate(waitDuration, backoffFunction)
-            .get(numOfAttempts.get()-1)
-            .toMillis();
+        long interval = intervalFunction.apply(numOfAttempts.get());
         Try.run(() -> sleepFunction.accept(interval))
             .getOrElseThrow(ex -> lastRuntimeException.get());
     }

@@ -29,8 +29,8 @@ public class RetryConfig {
     public static final long DEFAULT_WAIT_DURATION = 500;
 
     private int maxAttempts = DEFAULT_MAX_ATTEMPTS;
-    private Duration waitDuration = Duration.ofMillis(DEFAULT_WAIT_DURATION);
-    private Function<Duration, Duration> backoffFunction = Function.identity();
+
+    private IntervalFunction intervalFunction = (x) -> DEFAULT_WAIT_DURATION;
     // The default exception predicate retries all exceptions.
     private Predicate<Throwable> exceptionPredicate = (exception) -> true;
 
@@ -41,12 +41,8 @@ public class RetryConfig {
         return maxAttempts;
     }
 
-    public Duration getWaitDuration() {
-        return waitDuration;
-    }
-
-    public Function<Duration, Duration> getBackoffFunction() {
-        return backoffFunction;
+    public Function<Integer, Long> getIntervalFunction() {
+        return intervalFunction;
     }
 
     public Predicate<Throwable> getExceptionPredicate() {
@@ -86,7 +82,7 @@ public class RetryConfig {
             if (waitDuration.toMillis() < 10) {
                 throw new IllegalArgumentException("waitDurationInOpenState must be at least 10ms");
             }
-            config.waitDuration = waitDuration;
+            config.intervalFunction = (x) -> waitDuration.toMillis();
             return this;
         }
 
@@ -97,8 +93,8 @@ public class RetryConfig {
          *
          * @param f Function to modify the interval after a failure
          */
-        public RetryConfig.Builder backoffFunction(Function<Duration, Duration> f) {
-            config.backoffFunction = f;
+        public RetryConfig.Builder intervalFunction(IntervalFunction f) {
+            config.intervalFunction = f;
             return this;
         }
 
