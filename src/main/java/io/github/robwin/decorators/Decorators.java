@@ -3,9 +3,12 @@ package io.github.robwin.decorators;
 import io.github.robwin.cache.Cache;
 import io.github.robwin.circuitbreaker.CircuitBreaker;
 import io.github.robwin.ratelimiter.RateLimiter;
+import io.github.robwin.retry.AsyncRetry;
 import io.github.robwin.retry.Retry;
 import javaslang.control.Try;
 
+import java.util.concurrent.CompletionStage;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -37,6 +40,11 @@ public interface Decorators{
     static DecorateCheckedRunnable ofCheckedRunnable(Try.CheckedRunnable supplier){
         return new DecorateCheckedRunnable(supplier);
     }
+
+    static <T> DecorateCompletionStage<T> ofCompletionStage(Supplier<CompletionStage<T>> stageSupplier){
+        return new DecorateCompletionStage<>(stageSupplier);
+    }
+
 
     class DecorateSupplier<T>{
         private Supplier<T> supplier;
@@ -207,6 +215,29 @@ public interface Decorators{
 
         public Try.CheckedRunnable decorate() {
             return runnable;
+        }
+    }
+
+    class DecorateCompletionStage<T> {
+
+        private Supplier<CompletionStage<T>> stageSupplier;
+
+        public DecorateCompletionStage(Supplier<CompletionStage<T>> stageSupplier) {
+            this.stageSupplier = stageSupplier;
+        }
+
+        public DecorateCompletionStage<T> withCircuitBreaker(CircuitBreaker circuitBreaker) {
+            stageSupplier = CircuitBreaker.decorateCompletionStage(circuitBreaker, stageSupplier);
+            return this;
+        }
+
+        public DecorateCompletionStage<T> withRetry(AsyncRetry retryContext, ScheduledExecutorService scheduler) {
+            stageSupplier = AsyncRetry.decorateCompletionStage(retryContext, scheduler, stageSupplier);
+            return this;
+        }
+
+        public Supplier<CompletionStage<T>> decorate() {
+            return stageSupplier;
         }
     }
 }
