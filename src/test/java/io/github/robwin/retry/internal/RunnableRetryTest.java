@@ -18,6 +18,7 @@
  */
 package io.github.robwin.retry.internal;
 
+import io.github.robwin.retry.IntervalFunction;
 import io.github.robwin.retry.Retry;
 import io.github.robwin.retry.RetryConfig;
 import io.github.robwin.test.HelloWorldService;
@@ -27,6 +28,8 @@ import org.junit.Test;
 import org.mockito.BDDMockito;
 
 import javax.xml.ws.WebServiceException;
+
+import java.time.Duration;
 
 import static javaslang.API.*;
 import static javaslang.Predicates.instanceOf;
@@ -162,7 +165,11 @@ public class RunnableRetryTest {
         willThrow(new WebServiceException("BAM!")).given(helloWorldService).sayHelloWorld();
 
         // Create a Retry with a backoff function squaring the interval
-        RetryConfig config = RetryConfig.custom().backoffFunction(x -> x.multipliedBy(x.toMillis())).build();
+        RetryConfig config = RetryConfig
+                .custom()
+                .intervalFunction(IntervalFunction.of(Duration.ofMillis(500), x -> x * x))
+                .build();
+
         Retry retryContext = Retry.of("id", config);
         // Decorate the invocation of the HelloWorldService
         Try.CheckedRunnable retryableRunnable = Retry.decorateCheckedRunnable(retryContext, helloWorldService::sayHelloWorld);

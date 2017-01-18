@@ -18,6 +18,7 @@
  */
 package io.github.robwin.retry.internal;
 
+import io.github.robwin.retry.IntervalFunction;
 import io.github.robwin.retry.Retry;
 import io.github.robwin.retry.RetryConfig;
 import io.github.robwin.test.HelloWorldService;
@@ -200,7 +201,7 @@ public class SupplierRetryTest {
         given(helloWorldService.returnHelloWorld()).willThrow(new WebServiceException("BAM!"));
 
         // Create a Retry with a backoff function doubling the interval
-        RetryConfig config = RetryConfig.custom().backoffFunction(x -> x.multipliedBy(2)).build();
+        RetryConfig config = RetryConfig.custom().intervalFunction(IntervalFunction.ofExponentialBackoff(500, 2.0)).build();
         Retry retryContext = Retry.of("id", config);
         // Decorate the invocation of the HelloWorldService
         Try.CheckedSupplier<String> retryableSupplier = Retry.decorateCheckedSupplier(retryContext, helloWorldService::returnHelloWorld);
