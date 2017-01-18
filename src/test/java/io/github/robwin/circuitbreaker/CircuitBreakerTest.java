@@ -31,6 +31,7 @@ import java.net.SocketTimeoutException;
 import java.time.Duration;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -638,7 +639,7 @@ public class CircuitBreakerTest {
     }
 
     @Test
-    public void shouldDecorateCompletableFutureAndReturnWithSuccess() throws ExecutionException, InterruptedException {
+    public void shouldDecorateCompletionStageAndReturnWithSuccess() throws ExecutionException, InterruptedException {
         // Given
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("backendName");
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
@@ -646,15 +647,18 @@ public class CircuitBreakerTest {
         given(helloWorldService.returnHelloWorld()).willReturn("Hello");
         // When
 
-        Supplier<CompletableFuture<String>> completableFutureSupplier = () -> CompletableFuture.supplyAsync(helloWorldService::returnHelloWorld);
+        Supplier<CompletionStage<String>> completionStageSupplier =
+                () -> CompletableFuture.supplyAsync(helloWorldService::returnHelloWorld);
 
-        Supplier<CompletableFuture<String>> decoratedCompletableFutureSupplier = CircuitBreaker.decorateCompletableFuture(circuitBreaker, completableFutureSupplier);
-        CompletableFuture<String> decoratedCompletableFuture = decoratedCompletableFutureSupplier.get()
+        Supplier<CompletionStage<String>> decoratedCompletionStageSupplier =
+                CircuitBreaker.decorateCompletionStage(circuitBreaker, completionStageSupplier);
+        CompletionStage<String> decoratedCompletionStage = decoratedCompletionStageSupplier
+                .get()
                 .thenApply(value -> value + " world");
 
         // Then the helloWorldService should be invoked 1 time
         BDDMockito.then(helloWorldService).should(times(1)).returnHelloWorld();
-        assertThat(decoratedCompletableFuture.get()).isEqualTo("Hello world");
+        assertThat(decoratedCompletionStage.toCompletableFuture().get()).isEqualTo("Hello world");
 
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
@@ -662,21 +666,51 @@ public class CircuitBreakerTest {
     }
 
     @Test
-    public void shouldDecorateCompletableFutureAndReturnWithException() throws ExecutionException, InterruptedException {
+    public void shouldDecorateCompletionStageAndReturnWithExceptionAtSyncStage() throws ExecutionException, InterruptedException {
         // Given
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("backendName");
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
         // Given the HelloWorldService throws an exception
-        given(helloWorldService.returnHelloWorld()).willThrow(new RuntimeException("BAM!"));
 
         // When
-        Supplier<CompletableFuture<String>> completableFutureSupplier = () -> CompletableFuture.supplyAsync(helloWorldService::returnHelloWorld);
-        Supplier<CompletableFuture<String>> decoratedCompletableFutureSupplier = CircuitBreaker.decorateCompletableFuture(circuitBreaker, completableFutureSupplier);
-        CompletableFuture<String> decoratedCompletableFuture = decoratedCompletableFutureSupplier.get();
+        Supplier<CompletionStage<String>> completionStageSupplier = () -> {
+            throw new WebServiceException("BAM! At sync stage");
+        };
+
+        Supplier<CompletionStage<String>> decoratedCompletionStageSupplier =
+                CircuitBreaker.decorateCompletionStage(circuitBreaker, completionStageSupplier);
+        Try<CompletionStage<String>> result = Try.of(decoratedCompletionStageSupplier::get);
+
+        // Then the helloWorldService should be invoked 1 time
+        BDDMockito.then(helloWorldService).should(times(0)).returnHelloWorld();
+
+        assertThat(result.isFailure()).isEqualTo(true);
+        assertThat(result.failed().get()).isInstanceOf(RuntimeException.class);
+
+        CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
+        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
+        assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(1);
+    }
+
+    @Test
+    public void shouldDecorateCompletionStageAndReturnWithExceptionAtAsyncStage() throws ExecutionException, InterruptedException {
+        // Given
+        CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("backendName");
+        assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
+        // Given the HelloWorldService throws an exception
+        given(helloWorldService.returnHelloWorld()).willThrow(new RuntimeException("BAM! At async stage"));
+
+        // When
+        Supplier<CompletionStage<String>> completionStageSupplier =
+                () -> CompletableFuture.supplyAsync(helloWorldService::returnHelloWorld);
+        Supplier<CompletionStage<String>> decoratedCompletionStageSupplier =
+                CircuitBreaker.decorateCompletionStage(circuitBreaker, completionStageSupplier);
+        CompletionStage<String> decoratedCompletionStage = decoratedCompletionStageSupplier.get();
 
         // Then the helloWorldService should be invoked 1 time
         BDDMockito.then(helloWorldService).should(times(1)).returnHelloWorld();
-        assertThatThrownBy(decoratedCompletableFuture::get).isInstanceOf(ExecutionException.class).hasCause(new RuntimeException("BAM!"));
+        assertThatThrownBy(decoratedCompletionStage.toCompletableFuture()::get)
+                .isInstanceOf(ExecutionException.class).hasCause(new RuntimeException("BAM! At async stage"));
 
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);

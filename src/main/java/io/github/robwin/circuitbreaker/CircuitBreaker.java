@@ -28,6 +28,7 @@ import javaslang.control.Try;
 import java.time.Duration;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -286,17 +287,43 @@ public interface CircuitBreaker {
      *
      * @return a supplier which is secured by a CircuitBreaker.
      */
-    static <T> Supplier<CompletableFuture<T>> decorateCompletableFuture(CircuitBreaker circuitBreaker, Supplier<CompletableFuture<T>> supplier){
+    static <T> Supplier<CompletionStage<T>> decorateCompletionStage(
+            CircuitBreaker circuitBreaker,
+            Supplier<CompletionStage<T>> supplier
+    ) {
         return () -> {
-            CircuitBreakerUtils.isCallPermitted(circuitBreaker);
-            StopWatch stopWatch = StopWatch.start(circuitBreaker.getName());
-            return supplier.get().whenComplete((returnValue, throwable) -> {
-                if (returnValue != null) {
-                    circuitBreaker.onSuccess(stopWatch.stop().getProcessingDuration());
-                } else {
+
+            final CompletableFuture<T> promise = new CompletableFuture<>();
+
+            if (!circuitBreaker.isCallPermitted()) {
+                promise.completeExceptionally(
+                        new CircuitBreakerOpenException(
+                                String.format("CircuitBreaker '%s' is open", circuitBreaker.getName())));
+
+            } else {
+                final StopWatch stopWatch = StopWatch.start(circuitBreaker.getName());
+
+                try {
+                    supplier.get().whenComplete((result, throwable) -> {
+
+                        final Duration duration = stopWatch.stop().getProcessingDuration();
+
+                        if (throwable != null) {
+                            circuitBreaker.onError(duration, throwable);
+                            promise.completeExceptionally(throwable);
+
+                        } else {
+                            circuitBreaker.onSuccess(duration);
+                            promise.complete(result);
+                        }
+                    });
+                } catch (Throwable throwable) {
                     circuitBreaker.onError(stopWatch.stop().getProcessingDuration(), throwable);
+                    throw throwable;
                 }
-            });
+            }
+
+            return promise;
         };
     }
 
