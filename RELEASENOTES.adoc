@@ -81,6 +81,9 @@
 * Updated javaslang from 2.0.4 to 2.0.5
 * Updated rxjava from 2.0.1 to 2.0.3
 
-== Version 0.8.1
+=== Version 0.8.1
 * Issue #41: Added a method to the CircuitBreakerRegistry which returns a list of all managed CircuitBreaker instances
 * Issue #42: Added a new EventConsumerRegistry which can be used to create and manage instances of EventConsumers.
+
+=== Version 0.8.2
+* Issue #43: Added a new higher-order function to decorate a method which returns a CompletableFuture.
