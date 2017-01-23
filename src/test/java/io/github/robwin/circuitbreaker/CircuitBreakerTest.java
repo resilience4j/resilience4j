@@ -40,6 +40,7 @@ import static javaslang.API.$;
 import static javaslang.API.Case;
 import static javaslang.Predicates.instanceOf;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
@@ -636,6 +637,51 @@ public class CircuitBreakerTest {
         assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(0);
     }
 
+    @Test
+    public void shouldDecorateCompletableFutureAndReturnWithSuccess() throws ExecutionException, InterruptedException {
+        // Given
+        CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("backendName");
+        assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
+        // Given the HelloWorldService returns Hello world
+        given(helloWorldService.returnHelloWorld()).willReturn("Hello");
+        // When
+
+        Supplier<CompletableFuture<String>> completableFutureSupplier = () -> CompletableFuture.supplyAsync(helloWorldService::returnHelloWorld);
+
+        Supplier<CompletableFuture<String>> decoratedCompletableFutureSupplier = CircuitBreaker.decorateCompletableFuture(circuitBreaker, completableFutureSupplier);
+        CompletableFuture<String> decoratedCompletableFuture = decoratedCompletableFutureSupplier.get()
+                .thenApply(value -> value + " world");
+
+        // Then the helloWorldService should be invoked 1 time
+        BDDMockito.then(helloWorldService).should(times(1)).returnHelloWorld();
+        assertThat(decoratedCompletableFuture.get()).isEqualTo("Hello world");
+
+        CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
+        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
+        assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(0);
+    }
+
+    @Test
+    public void shouldDecorateCompletableFutureAndReturnWithException() throws ExecutionException, InterruptedException {
+        // Given
+        CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("backendName");
+        assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
+        // Given the HelloWorldService throws an exception
+        given(helloWorldService.returnHelloWorld()).willThrow(new RuntimeException("BAM!"));
+
+        // When
+        Supplier<CompletableFuture<String>> completableFutureSupplier = () -> CompletableFuture.supplyAsync(helloWorldService::returnHelloWorld);
+        Supplier<CompletableFuture<String>> decoratedCompletableFutureSupplier = CircuitBreaker.decorateCompletableFuture(circuitBreaker, completableFutureSupplier);
+        CompletableFuture<String> decoratedCompletableFuture = decoratedCompletableFutureSupplier.get();
+
+        // Then the helloWorldService should be invoked 1 time
+        BDDMockito.then(helloWorldService).should(times(1)).returnHelloWorld();
+        assertThatThrownBy(decoratedCompletableFuture::get).isInstanceOf(ExecutionException.class).hasCause(new RuntimeException("BAM!"));
+
+        CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
+        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
+        assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(1);
+    }
 
     @Test
     public void shouldChainDecoratedFunctions() throws ExecutionException, InterruptedException {

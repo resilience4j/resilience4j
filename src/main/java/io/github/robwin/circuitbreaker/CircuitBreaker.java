@@ -19,7 +19,7 @@
 package io.github.robwin.circuitbreaker;
 
 import io.github.robwin.circuitbreaker.event.CircuitBreakerEvent;
-import io.github.robwin.circuitbreaker.internal.*;
+import io.github.robwin.circuitbreaker.internal.CircuitBreakerStateMachine;
 import io.github.robwin.circuitbreaker.utils.CircuitBreakerUtils;
 import io.github.robwin.metrics.StopWatch;
 import io.reactivex.Flowable;
@@ -27,6 +27,7 @@ import javaslang.control.Try;
 
 import java.time.Duration;
 import java.util.concurrent.Callable;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -255,7 +256,7 @@ public interface CircuitBreaker {
     }
 
     /**
-     * Creates a supplier which is secured by a CircuitBreaker.
+     * Returns a supplier which is secured by a CircuitBreaker.
      *
      * @param circuitBreaker the CircuitBreaker
      * @param supplier the original supplier
@@ -278,7 +279,29 @@ public interface CircuitBreaker {
     }
 
     /**
-     * Creates a runnable which is secured by a CircuitBreaker.
+     * Returns a supplier which is secured by a CircuitBreaker.
+     *
+     * @param circuitBreaker the CircuitBreaker
+     * @param supplier the original supplier
+     *
+     * @return a supplier which is secured by a CircuitBreaker.
+     */
+    static <T> Supplier<CompletableFuture<T>> decorateCompletableFuture(CircuitBreaker circuitBreaker, Supplier<CompletableFuture<T>> supplier){
+        return () -> {
+            CircuitBreakerUtils.isCallPermitted(circuitBreaker);
+            StopWatch stopWatch = StopWatch.start(circuitBreaker.getName());
+            return supplier.get().whenComplete((returnValue, throwable) -> {
+                if (returnValue != null) {
+                    circuitBreaker.onSuccess(stopWatch.stop().getProcessingDuration());
+                } else {
+                    circuitBreaker.onError(stopWatch.stop().getProcessingDuration(), throwable);
+                }
+            });
+        };
+    }
+
+    /**
+     * Returns a runnable which is secured by a CircuitBreaker.
      *
      * @param circuitBreaker the CircuitBreaker
      * @param runnable the original runnable
@@ -300,7 +323,7 @@ public interface CircuitBreaker {
     }
 
     /**
-     * Creates a callable which is secured by a CircuitBreaker.
+     * Returns a callable which is secured by a CircuitBreaker.
      *
      * @param circuitBreaker the CircuitBreaker
      * @param callable the original Callable
@@ -323,7 +346,7 @@ public interface CircuitBreaker {
     }
 
     /**
-     * Creates a supplier which is secured by a CircuitBreaker.
+     * Returns a supplier which is secured by a CircuitBreaker.
      *
      * @param circuitBreaker the CircuitBreaker
      * @param supplier the original supplier
@@ -346,7 +369,7 @@ public interface CircuitBreaker {
     }
 
     /**
-     * Creates a consumer which is secured by a CircuitBreaker.
+     * Returns a consumer which is secured by a CircuitBreaker.
 
      * @param circuitBreaker the CircuitBreaker
      * @param consumer the original consumer
@@ -368,7 +391,7 @@ public interface CircuitBreaker {
     }
 
     /**
-     * Creates a consumer which is secured by a CircuitBreaker.
+     * Returns a consumer which is secured by a CircuitBreaker.
 
      * @param circuitBreaker the CircuitBreaker
      * @param consumer the original consumer
@@ -390,7 +413,7 @@ public interface CircuitBreaker {
     }
 
     /**
-     * Creates a runnable which is secured by a CircuitBreaker.
+     * Returns a runnable which is secured by a CircuitBreaker.
      *
      * @param circuitBreaker the CircuitBreaker
      * @param runnable the original runnable
@@ -412,7 +435,7 @@ public interface CircuitBreaker {
     }
 
     /**
-     * Creates a function which is secured by a CircuitBreaker.
+     * Returns a function which is secured by a CircuitBreaker.
 
      * @param circuitBreaker the CircuitBreaker
      * @param function the original function
@@ -435,7 +458,7 @@ public interface CircuitBreaker {
     }
 
     /**
-     * Creates a function which is secured by a CircuitBreaker.
+     * Returns a function which is secured by a CircuitBreaker.
      *
      * @param circuitBreaker the CircuitBreaker
      * @param function the original function
