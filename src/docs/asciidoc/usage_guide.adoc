@@ -52,7 +52,7 @@ CircuitBreaker customCircuitBreaker = CircuitBreaker.of("testName", circuitBreak
 ==== Use a CircuitBreaker
 
 You can decorate any `Supplier / Runnable / Function` or `CheckedSupplier / CheckedRunnable / CheckedFunction` function with `CircuitBreaker.decorateCheckedSupplier()`, `CircuitBreaker.decorateCheckedRunnable()` or `CircuitBreaker.decorateCheckedFunction()`.
-You can invoke the decorated function with `Try.of(...)` or `Try.run(...)` from https://github.com/io/github/robwin/javaslang[Javaslang]. This allows to chain further functions with `map`, `flatMap`, `filter`, `recover` or `andThen`. The chained functions are only invoked, if the CircuitBreaker is CLOSED or HALF_OPEN.
+You can invoke the decorated function with `Try.of(...)` or `Try.run(...)` from https://github.com/javaslang/javaslang[Javaslang]. This allows to chain further functions with `map`, `flatMap`, `filter`, `recover` or `andThen`. The chained functions are only invoked, if the CircuitBreaker is CLOSED or HALF_OPEN.
 In the following example, `Try.of(...)` returns a `Success<String>` Monad, if the invocation of the function is successful. If the function throws an exception, a `Failure<Throwable>` Monad is returned and `map` is not invoked.
 
 [source,java,indent=0]
