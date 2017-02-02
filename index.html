@@ -516,7 +516,7 @@ table.CodeRay td.code>pre{padding:0}
 <div class="details">
 <span id="author" class="author">Robert Winkler</span><br>
 <span id="revnumber">version 0.8.1,</span>
-<span id="revdate">2017-01-11</span>
+<span id="revdate">2017-02-02</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">Table of Contents</div>
@@ -702,7 +702,7 @@ CircuitBreaker customCircuitBreaker = CircuitBreaker.of(<span class="string"><sp
 <h4 id="_use_a_circuitbreaker"><a class="anchor" href="#_use_a_circuitbreaker"></a>3.1.2. Use a CircuitBreaker</h4>
 <div class="paragraph">
 <p>You can decorate any <code>Supplier / Runnable / Function</code> or <code>CheckedSupplier / CheckedRunnable / CheckedFunction</code> function with <code>CircuitBreaker.decorateCheckedSupplier()</code>, <code>CircuitBreaker.decorateCheckedRunnable()</code> or <code>CircuitBreaker.decorateCheckedFunction()</code>.<br>
-You can invoke the decorated function with <code>Try.of(&#8230;&#8203;)</code> or <code>Try.run(&#8230;&#8203;)</code> from <a href="https://github.com/io/github/robwin/javaslang">Javaslang</a>. This allows to chain further functions with <code>map</code>, <code>flatMap</code>, <code>filter</code>, <code>recover</code> or <code>andThen</code>. The chained functions are only invoked, if the CircuitBreaker is CLOSED or HALF_OPEN.<br>
+You can invoke the decorated function with <code>Try.of(&#8230;&#8203;)</code> or <code>Try.run(&#8230;&#8203;)</code> from <a href="https://github.com/javaslang/javaslang">Javaslang</a>. This allows to chain further functions with <code>map</code>, <code>flatMap</code>, <code>filter</code>, <code>recover</code> or <code>andThen</code>. The chained functions are only invoked, if the CircuitBreaker is CLOSED or HALF_OPEN.<br>
 In the following example, <code>Try.of(&#8230;&#8203;)</code> returns a <code>Success&lt;String&gt;</code> Monad, if the invocation of the function is successful. If the function throws an exception, a <code>Failure&lt;Throwable&gt;</code> Monad is returned and <code>map</code> is not invoked.</p>
 </div>
 <div class="listingblock">
@@ -1337,7 +1337,7 @@ reporter.start(<span class="integer">1</span>, <span class="predefined-type">Tim
 <div id="footer">
 <div id="footer-text">
 Version 0.8.1<br>
-Last updated 2016-12-08 16:23:46 +01:00
+Last updated 2017-02-02 11:02:10 +01:00
 </div>
 </div>
 </body>
