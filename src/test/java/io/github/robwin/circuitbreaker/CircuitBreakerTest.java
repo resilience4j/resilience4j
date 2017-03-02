@@ -737,11 +737,8 @@ public class CircuitBreakerTest {
         given(helloWorldService.returnHelloWorld()).willReturn("Hello");
         // When
 
-        Supplier<CompletionStage<String>> completionStageSupplier =
-                () -> CompletableFuture.supplyAsync(helloWorldService::returnHelloWorld);
-
         CompletionStage<String> decoratedCompletionStage = circuitBreaker
-                .executeCompletionStage(completionStageSupplier)
+                .executeCompletionStage(() -> CompletableFuture.supplyAsync(helloWorldService::returnHelloWorld))
                 .thenApply(value -> value + " world");
 
         // Then the helloWorldService should be invoked 1 time
@@ -796,9 +793,9 @@ public class CircuitBreakerTest {
         CompletionStage<String> decoratedCompletionStage = decoratedCompletionStageSupplier.get();
 
         // Then the helloWorldService should be invoked 1 time
-        BDDMockito.then(helloWorldService).should(times(1)).returnHelloWorld();
         assertThatThrownBy(decoratedCompletionStage.toCompletableFuture()::get)
                 .isInstanceOf(ExecutionException.class).hasCause(new RuntimeException("BAM! At async stage"));
+        BDDMockito.then(helloWorldService).should(times(1)).returnHelloWorld();
 
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
