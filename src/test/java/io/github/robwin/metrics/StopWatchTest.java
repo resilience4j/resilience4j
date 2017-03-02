@@ -35,6 +35,6 @@ public class StopWatchTest {
         Thread.sleep(100);
         Duration duration = watch.stop().getProcessingDuration();
         LOG.info(watch.toString());
-        Assertions.assertThat(duration.toMillis()).isGreaterThanOrEqualTo(100).isLessThan(110);
+        Assertions.assertThat(duration.toMillis()).isGreaterThanOrEqualTo(90).isLessThan(110);
     }
 }

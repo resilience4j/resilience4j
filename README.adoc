@@ -46,16 +46,8 @@ The example uses Javaslang's Try Monad to recover from an exception and invoke a
 ----
 // Create a CircuitBreaker with a default configuration
 CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("backendName");
-// Create a Retry with at most 3 retries and a fixed time interval between retries
-// and only retry on IOExceptions
-RetryConfig config = RetryConfig.custom()
-    .maxAttempts(3)
-    .waitDuration(Duration.ofMillis(100))
-    .retryOnException(throwable -> Match(throwable).of(
-                        Case(instanceOf(IOException.class), true),
-                        Case($(), false)))
-    .build();
-Retry retryContext = Retry.of("id", config);
+// Create a Retry with at most 3 retries and a fixed time interval between retries of 500ms
+Retry retryContext = Retry.ofDefaults("backendName");
 
 // Decorate your call to BackendService.doSomething()
 Try.CheckedSupplier<String> decoratedSupplier = Decorators

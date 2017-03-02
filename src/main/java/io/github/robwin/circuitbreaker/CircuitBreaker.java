@@ -130,6 +130,48 @@ public interface CircuitBreaker {
     Flowable<CircuitBreakerEvent> getEventStream();
 
     /**
+     * Decorates and executes the decorated Supplier.
+     *
+     * @param supplier the original Supplier
+     *
+     * @return the result of the decorated Supplier.
+     */
+    default <T> T executeSupplier(Supplier<T> supplier){
+        return decorateSupplier(this, supplier).get();
+    }
+
+    /**
+     * Decorates and executes the decorated Callable.
+     *
+     * @param callable the original Callable
+     *
+     * @return the result of the decorated Callable.
+     * @throws Exception if unable to compute a result
+     */
+    default <T> T executeCallable(Callable<T> callable) throws Exception{
+        return decorateCallable(this, callable).call();
+    }
+
+    /**
+     * Decorates and executes the decorated Runnable.
+     *
+     * @param runnable the original Runnable
+     */
+    default void executeRunnable(Runnable runnable){
+        decorateRunnable(this, runnable).run();
+    }
+
+    /**
+     * Decorates and executes the decorated CompletionStage.
+     *
+     * @param supplier the original CompletionStage
+     * @return the decorated CompletionStage.
+     */
+    default <T> CompletionStage<T> executeCompletionStage(Supplier<CompletionStage<T>> supplier){
+        return decorateCompletionStage(this, supplier).get();
+    }
+
+    /**
      * States of the CircuitBreaker state machine.
      */
     enum State {

@@ -76,6 +76,10 @@ public interface Decorators{
         public Supplier<T> decorate() {
             return supplier;
         }
+
+        public T get() {
+            return supplier.get();
+        }
     }
 
     class DecorateFunction<T, R>{
@@ -103,6 +107,10 @@ public interface Decorators{
         public Function<T, R> decorate() {
             return function;
         }
+
+        public R apply(T t) {
+            return function.apply(t);
+        }
     }
 
     class DecorateRunnable{
@@ -129,6 +137,10 @@ public interface Decorators{
 
         public Runnable decorate() {
             return runnable;
+        }
+
+        public void run() {
+            runnable.run();
         }
     }
 
@@ -162,6 +174,10 @@ public interface Decorators{
         public Try.CheckedSupplier<T> decorate() {
             return supplier;
         }
+
+        public T get() throws Throwable {
+            return supplier.get();
+        }
     }
 
     class DecorateCheckedFunction<T, R>{
@@ -188,6 +204,10 @@ public interface Decorators{
 
         public Try.CheckedFunction<T, R> decorate() {
             return function;
+        }
+
+        public R apply(T t) throws Throwable {
+            return function.apply(t);
         }
     }
 
@@ -216,6 +236,10 @@ public interface Decorators{
         public Try.CheckedRunnable decorate() {
             return runnable;
         }
+
+        public void run() throws Throwable {
+            runnable.run();
+        }
     }
 
     class DecorateCompletionStage<T> {
@@ -238,6 +262,10 @@ public interface Decorators{
 
         public Supplier<CompletionStage<T>> decorate() {
             return stageSupplier;
+        }
+
+        public CompletionStage<T> get() {
+            return stageSupplier.get();
         }
     }
 }

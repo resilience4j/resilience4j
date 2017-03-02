@@ -87,3 +87,4 @@
 
 === Version 0.8.2
 * Issue #43: Added a new higher-order function to decorate a method which returns a CompletableFuture.
+* Issue #49: Added execute methods to CircuitBreaker interface and Decorators builder. This makes it easier to decorate and call a function at once.
