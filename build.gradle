@@ -11,11 +11,34 @@ buildscript {
         classpath 'org.kt3k.gradle.plugin:coveralls-gradle-plugin:2.7.1'
         classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.2'
         classpath 'me.champeau.gradle:jmh-gradle-plugin:0.3.1'
-        //classpath 'com.github.jengelman.gradle.plugins:shadow:1.2.0'
         classpath "org.asciidoctor:asciidoctor-gradle-plugin:1.5.3"
         classpath "org.ajoberstar:gradle-git:1.3.2"
         classpath "org.jfrog.buildinfo:build-info-extractor-gradle:4.0.0"
     }
+}
+
+task publishProject {
+    if (project.hasProperty('all')) {
+        apply from: 'gradle/publishing.gradle'
+    }
+}
+
+allprojects {
+    repositories {
+        jcenter()
+    }
+
+    tasks.withType(JavaCompile) {
+        sourceCompatibility = "1.8"
+        targetCompatibility = "1.8"
+        options.deprecation = true
+        options.encoding = 'UTF-8'
+        options.compilerArgs << "-Xlint:unchecked"
+    }
+}
+
+subprojects {
+    apply plugin: 'java'
 }
 
 apply plugin: 'idea'
@@ -25,9 +48,7 @@ apply plugin: 'net.saliman.cobertura'
 apply plugin: 'com.github.kt3k.coveralls'
 apply plugin: 'com.jfrog.bintray'
 apply plugin: "com.jfrog.artifactory"
-apply from: 'gradle/publishing.gradle'
 apply plugin: 'me.champeau.gradle.jmh'
-//apply plugin: 'com.github.johnrengelman.shadow'
 apply plugin: 'org.asciidoctor.convert'
 apply plugin: 'org.ajoberstar.github-pages'
 
@@ -35,14 +56,6 @@ group = 'io.github.robwin'
 description = 'A CircuitBreaker pattern implementation for Java 8 and functional programming.'
 version = '0.9-0-SNAPSHOT'
 ext.releaseVersion = '0.8.2'
-
-tasks.withType(JavaCompile) {
-    sourceCompatibility = "1.8"
-    targetCompatibility = "1.8"
-    options.deprecation = true
-    options.encoding = 'UTF-8'
-    options.compilerArgs << "-Xlint:unchecked"
-}
 
 repositories {
     maven { url 'http://repo.spring.io/libs-snapshot' }
@@ -60,8 +73,9 @@ jmh {
 }
 
 dependencies {
+    compile project('resilience4j-ratelimiter')
+
     compile "io.javaslang:javaslang:2.0.5"
-    // compile 'org.reactivestreams:reactive-streams:1.0.0'
     compile "io.reactivex.rxjava2:rxjava:2.0.6"
     compile "org.slf4j:slf4j-api:1.7.24"
     compile "javax.cache:cache-api:1.0.0"
@@ -83,11 +97,14 @@ dependencies {
 }
 
 test {
+    dependsOn(subprojects.test)
     exclude 'io/github/robwin/circularbuffer/concurrent/'
     exclude 'io/github/robwin/circuitbreaker/concurrent/'
 }
 
-task allTests(type: Test) {}
+task allTests(type: Test) {
+
+}
 
 task sourcesJar(type: Jar, dependsOn: classes) {
     classifier = 'sources'

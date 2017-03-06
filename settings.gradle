@@ -1,1 +1,4 @@
 rootProject.name = 'javaslang-circuitbreaker'
+include 'resilience4j-ratelimiter'
+
+project(':resilience4j-ratelimiter').name = 'resilience4j-ratelimiter'
