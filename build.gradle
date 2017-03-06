@@ -35,6 +35,8 @@ allprojects {
         options.encoding = 'UTF-8'
         options.compilerArgs << "-Xlint:unchecked"
     }
+
+    apply plugin: 'net.saliman.cobertura'
 }
 
 subprojects {
@@ -100,10 +102,6 @@ test {
     dependsOn(subprojects.test)
     exclude 'io/github/robwin/circularbuffer/concurrent/'
     exclude 'io/github/robwin/circuitbreaker/concurrent/'
-}
-
-task allTests(type: Test) {
-
 }
 
 task sourcesJar(type: Jar, dependsOn: classes) {
