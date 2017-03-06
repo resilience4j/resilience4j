@@ -101,6 +101,7 @@ public interface Retry {
      *
      * @param retryContext the retry context
      * @param supplier the original function
+     * @param <T> the type of results supplied by this supplier
      *
      * @return a retryable function
      */
@@ -141,6 +142,8 @@ public interface Retry {
      *
      * @param retryContext the retry context
      * @param function the original function
+     * @param <T> the type of the input to the function
+     * @param <R> the result type of the function
      *
      * @return a retryable function
      */
@@ -161,6 +164,7 @@ public interface Retry {
      *
      * @param retryContext the retry context
      * @param supplier the original function
+     * @param <T> the type of results supplied by this supplier
      *
      * @return a retryable function
      */
@@ -201,6 +205,8 @@ public interface Retry {
      *
      * @param retryContext the retry context
      * @param function the original function
+     * @param <T> the type of the input to the function
+     * @param <R> the result type of the function
      *
      * @return a retryable function
      */

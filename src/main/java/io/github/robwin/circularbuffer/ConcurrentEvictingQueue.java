@@ -196,11 +196,9 @@ public class ConcurrentEvictingQueue<E> extends AbstractQueue<E> {
     /**
      * Returns an array containing all of the elements in this queue, in
      * proper sequence.
-     * <p>
      * <p>The returned array will be "safe" in that no references to it are
      * maintained by this queue.  (In other words, this method must allocate
      * a new array).  The caller is free to modify the returned array.
-     * <p>
      * <p>This method acts as bridge between array-based and collection-based
      * APIs.
      *

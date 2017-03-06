@@ -33,6 +33,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * A RxJava operator which protects an Observable or Flowable by a CircuitBreaker
+ * @param <T> the value type of the upstream and downstream
  */
 public class CircuitBreakerOperator<T> implements ObservableOperator<T, T>, FlowableOperator<T, T>, SingleOperator<T, T> {
 
@@ -48,23 +49,32 @@ public class CircuitBreakerOperator<T> implements ObservableOperator<T, T>, Flow
      * Creates a CircuitBreakerOperator.
      *
      * @param circuitBreaker the CircuitBreaker
-     *
+     * @param <T> the value type of the upstream and downstream
      * @return a CircuitBreakerOperator
      */
     public static <T> CircuitBreakerOperator<T> of(CircuitBreaker circuitBreaker){
         return new CircuitBreakerOperator<>(circuitBreaker);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Subscriber<? super T> apply(Subscriber<? super T> childSubscriber) throws Exception {
         return new CircuitBreakerSubscriber(childSubscriber);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Observer<? super T> apply(Observer<? super T> childObserver) throws Exception {
         return new CircuitBreakerObserver(childObserver);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public SingleObserver<? super T> apply(SingleObserver<? super T> childObserver) throws Exception {
         return new CircuitBreakerSingleObserver(childObserver);
@@ -81,6 +91,9 @@ public class CircuitBreakerOperator<T> implements ObservableOperator<T, T>, Flow
             this.childSubscriber = childSubscriber;
         }
 
+        /**
+         * {@inheritDoc}
+         */
         @Override
         public void onSubscribe(Subscription subscription) {
             this.subscription = subscription;
@@ -98,6 +111,9 @@ public class CircuitBreakerOperator<T> implements ObservableOperator<T, T>, Flow
             }
         }
 
+        /**
+         * {@inheritDoc}
+         */
         @Override
         public void onNext(T event) {
             if(LOG.isDebugEnabled()){
@@ -108,6 +124,9 @@ public class CircuitBreakerOperator<T> implements ObservableOperator<T, T>, Flow
             }
         }
 
+        /**
+         * {@inheritDoc}
+         */
         @Override
         public void onError(Throwable e) {
             if(LOG.isDebugEnabled()){
@@ -120,6 +139,9 @@ public class CircuitBreakerOperator<T> implements ObservableOperator<T, T>, Flow
             }
         }
 
+        /**
+         * {@inheritDoc}
+         */
         @Override
         public void onComplete() {
             if(LOG.isDebugEnabled()){
@@ -131,11 +153,17 @@ public class CircuitBreakerOperator<T> implements ObservableOperator<T, T>, Flow
             }
         }
 
+        /**
+         * {@inheritDoc}
+         */
         @Override
         public void request(long n) {
             subscription.request(n);
         }
 
+        /**
+         * {@inheritDoc}
+         */
         @Override
         public void cancel() {
             if(!cancelled.get()) {
@@ -160,6 +188,9 @@ public class CircuitBreakerOperator<T> implements ObservableOperator<T, T>, Flow
             this.childObserver = childObserver;
         }
 
+        /**
+         * {@inheritDoc}
+         */
         @Override
         public void onSubscribe(Disposable disposable) {
             this.disposable = disposable;
@@ -177,6 +208,9 @@ public class CircuitBreakerOperator<T> implements ObservableOperator<T, T>, Flow
             }
         }
 
+        /**
+         * {@inheritDoc}
+         */
         @Override
         public void onNext(T event) {
             if(LOG.isDebugEnabled()){
@@ -187,6 +221,9 @@ public class CircuitBreakerOperator<T> implements ObservableOperator<T, T>, Flow
             }
         }
 
+        /**
+         * {@inheritDoc}
+         */
         @Override
         public void onError(Throwable e) {
             if(LOG.isDebugEnabled()){
@@ -198,6 +235,9 @@ public class CircuitBreakerOperator<T> implements ObservableOperator<T, T>, Flow
             }
         }
 
+        /**
+         * {@inheritDoc}
+         */
         @Override
         public void onComplete() {
             if(LOG.isDebugEnabled()){
@@ -209,6 +249,9 @@ public class CircuitBreakerOperator<T> implements ObservableOperator<T, T>, Flow
             }
         }
 
+        /**
+         * {@inheritDoc}
+         */
         @Override
         public void dispose() {
             if(!cancelled.get()) {
@@ -217,6 +260,9 @@ public class CircuitBreakerOperator<T> implements ObservableOperator<T, T>, Flow
             }
         }
 
+        /**
+         * {@inheritDoc}
+         */
         @Override
         public boolean isDisposed() {
             return cancelled.get();
@@ -235,6 +281,9 @@ public class CircuitBreakerOperator<T> implements ObservableOperator<T, T>, Flow
             this.childObserver = childObserver;
         }
 
+        /**
+         * {@inheritDoc}
+         */
         @Override
         public void onSubscribe(Disposable disposable) {
             this.disposable = disposable;
@@ -252,6 +301,9 @@ public class CircuitBreakerOperator<T> implements ObservableOperator<T, T>, Flow
             }
         }
 
+        /**
+         * {@inheritDoc}
+         */
         @Override
         public void onError(Throwable e) {
             if(LOG.isDebugEnabled()){
@@ -263,6 +315,9 @@ public class CircuitBreakerOperator<T> implements ObservableOperator<T, T>, Flow
             }
         }
 
+        /**
+         * {@inheritDoc}
+         */
         @Override
         public void onSuccess(T value) {
             if(LOG.isDebugEnabled()){
@@ -274,6 +329,9 @@ public class CircuitBreakerOperator<T> implements ObservableOperator<T, T>, Flow
             }
         }
 
+        /**
+         * {@inheritDoc}
+         */
         @Override
         public void dispose() {
             if(!cancelled.get()) {
@@ -282,6 +340,9 @@ public class CircuitBreakerOperator<T> implements ObservableOperator<T, T>, Flow
             }
         }
 
+        /**
+         * {@inheritDoc}
+         */
         @Override
         public boolean isDisposed() {
             return cancelled.get();

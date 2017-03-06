@@ -71,6 +71,7 @@ public interface RateLimiter {
      *
      * @param rateLimiter the RateLimiter
      * @param supplier    the original supplier
+     * @param <T> the type of results supplied supplier
      * @return a supplier which is restricted by a RateLimiter.
      */
     static <T> Try.CheckedSupplier<T> decorateCheckedSupplier(RateLimiter rateLimiter, Try.CheckedSupplier<T> supplier) {
@@ -100,6 +101,8 @@ public interface RateLimiter {
      *
      * @param rateLimiter the RateLimiter
      * @param function    the original function
+     * @param <T> the type of function argument
+     * @param <R> the type of function results
      * @return a function which is restricted by a RateLimiter.
      */
     static <T, R> Try.CheckedFunction<T, R> decorateCheckedFunction(RateLimiter rateLimiter, Try.CheckedFunction<T, R> function) {
@@ -114,6 +117,7 @@ public interface RateLimiter {
      *
      * @param rateLimiter the RateLimiter
      * @param supplier    the original supplier
+     * @param <T> the type of results supplied supplier
      * @return a supplier which is restricted by a RateLimiter.
      */
     static <T> Supplier<T> decorateSupplier(RateLimiter rateLimiter, Supplier<T> supplier) {
@@ -128,6 +132,7 @@ public interface RateLimiter {
      *
      * @param rateLimiter the RateLimiter
      * @param consumer    the original consumer
+     * @param <T> the type of the input to the consumer
      * @return a consumer which is restricted by a RateLimiter.
      */
     static <T> Consumer<T> decorateConsumer(RateLimiter rateLimiter, Consumer<T> consumer) {
@@ -156,6 +161,8 @@ public interface RateLimiter {
      *
      * @param rateLimiter the RateLimiter
      * @param function    the original function
+     * @param <T> the type of the input to the function
+     * @param <R> the type of the result of the function
      * @return a function which is restricted by a RateLimiter.
      */
     static <T, R> Function<T, R> decorateFunction(RateLimiter rateLimiter, Function<T, R> function) {
@@ -188,13 +195,13 @@ public interface RateLimiter {
     /**
      * Acquires a permission from this rate limiter, blocking until one is
      * available.
-     * <p>
      * <p>If the current thread is {@linkplain Thread#interrupt interrupted}
      * while waiting for a permit then it won't throw {@linkplain InterruptedException},
      * but its interrupt status will be set.
      *
+     * @param timeoutDuration the maximum time to wait
      * @return {@code true} if a permit was acquired and {@code false}
-     * if waiting time elapsed before a permit was acquired
+     * if waiting timeoutDuration elapsed before a permit was acquired
      */
     boolean getPermission(Duration timeoutDuration);
 

@@ -40,12 +40,10 @@ import java.util.function.UnaryOperator;
 /**
  * {@link AtomicRateLimiter} splits all nanoseconds from the start of epoch into cycles.
  * <p>Each cycle has duration of {@link RateLimiterConfig#limitRefreshPeriod} in nanoseconds.
- * <p>
  * <p>By contract on start of each cycle {@link AtomicRateLimiter} should
  * set {@link State#activePermissions} to {@link RateLimiterConfig#limitForPeriod}.
  * For the {@link AtomicRateLimiter} callers it is really looks so, but under the hood there is
  * some optimisations that will skip this refresh if {@link AtomicRateLimiter} is not used actively.
- * <p>
  * <p>All {@link AtomicRateLimiter} updates are atomic and state is encapsulated in {@link AtomicReference} to
  * {@link AtomicRateLimiter.State}
  */

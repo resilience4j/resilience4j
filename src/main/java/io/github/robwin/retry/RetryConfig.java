@@ -92,6 +92,7 @@ public class RetryConfig {
          * the same.
          *
          * @param f Function to modify the interval after a failure
+         * @return the CircuitBreakerConfig.Builder
          */
         public RetryConfig.Builder intervalFunction(IntervalFunction f) {
             config.intervalFunction = f;

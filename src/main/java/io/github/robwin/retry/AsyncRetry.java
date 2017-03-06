@@ -26,6 +26,7 @@ public interface AsyncRetry {
 
     /**
      * Records an failed call.
+     * @param throwable the exception to handle
      * @return delay in milliseconds until the next try
      */
     long onError(Throwable throwable);

@@ -31,7 +31,7 @@ import java.util.function.Supplier;
 public interface Cache<K, V>  {
 
     /**
-     * Return the cache name.
+     * @return the cache name
      */
     String getName();
 
@@ -42,6 +42,8 @@ public interface Cache<K, V>  {
      *
      * @param key   key with which the specified value is to be associated
      * @param supplier value to be associated with the specified key
+     *
+     * @return cached value
      */
     V computeIfAbsent(K key, Try.CheckedSupplier<V> supplier);
 
@@ -56,6 +58,8 @@ public interface Cache<K, V>  {
      * Creates a Retry with default configuration.
      *
      * @param cache the wrapped JCache instance
+     * @param <K> the type of key
+     * @param <V> the type of value
      * @return a Cache
      */
     static <K,V> Cache<K,V> of(javax.cache.Cache<K, V> cache){
@@ -69,7 +73,8 @@ public interface Cache<K, V>  {
      *
      * @param cache the Cache
      * @param supplier the original Supplier
-     *
+     * @param <K> the type of key
+     * @param <R> the type of value
      * @return a supplier which is secured by a CircuitBreaker.
      */
     static <K, R> Try.CheckedFunction<K, R> decorateCheckedSupplier(Cache<K, R> cache, Try.CheckedSupplier<R> supplier){
@@ -82,7 +87,8 @@ public interface Cache<K, V>  {
      *
      * @param cache the Cache
      * @param supplier the original Supplier
-     *
+     * @param <K> the type of key
+     * @param <R> the type of value
      * @return a supplier which is secured by a CircuitBreaker.
      */
     static <K, R> Function<K, R> decorateSupplier(Cache<K, R> cache, Supplier<R> supplier){
@@ -95,7 +101,8 @@ public interface Cache<K, V>  {
      *
      * @param cache the Cache
      * @param callable the original Callable
-     *
+     * @param <K> the type of key
+     * @param <R> the type of value
      * @return a supplier which is secured by a CircuitBreaker.
      */
     static <K, R> Try.CheckedFunction<K, R> decorateCallable(Cache<K, R> cache, Callable<R> callable){

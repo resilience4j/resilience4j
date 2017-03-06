@@ -59,6 +59,7 @@ public interface CircularFifoBuffer<T> {
      * Adds element to the {@link CircularFifoBuffer}
      * and overwrites the oldest element when {@link CircularFifoBuffer#isFull}.
      *
+     * @param element to add
      * @throws NullPointerException if the specified element is null
      */
     void add(T element);
