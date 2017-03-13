@@ -1,0 +1,91 @@
+apply plugin: 'me.champeau.gradle.jmh'
+apply plugin: 'org.asciidoctor.convert'
+apply plugin: 'org.ajoberstar.github-pages'
+
+dependencies {
+
+    compile project(':resilience4j-ratelimiter')
+
+    compile "io.javaslang:javaslang:2.0.5"
+    compile "io.reactivex.rxjava2:rxjava:2.0.6"
+    compile "org.slf4j:slf4j-api:1.7.24"
+    compile "javax.cache:cache-api:1.0.0"
+
+    testCompile "io.dropwizard.metrics:metrics-core:3.1.2"
+    testCompile "junit:junit:4.11"
+    testCompile "org.assertj:assertj-core:3.6.2"
+    testCompile "ch.qos.logback:logback-classic:0.9.26"
+    testCompile "io.dropwizard.metrics:metrics-healthchecks:3.1.2"
+    testCompile "org.mockito:mockito-core:1.10.19"
+    testCompile "org.powermock:powermock:1.6.6"
+    testCompile "org.powermock:powermock-api-mockito:1.6.6"
+    testCompile "org.powermock:powermock-module-junit4:1.6.6"
+    testCompile "com.jayway.awaitility:awaitility:1.7.0"
+    testCompile "org.mapdb:thread-weaver:3.0.mapdb"
+
+    jmh "ch.qos.logback:logback-classic:0.9.26"
+    jmh "org.openjdk.jmh:jmh-generator-annprocess:1.12"
+}
+
+sourceSets {
+    main {
+        java {
+            srcDir project(':resilience4j-ratelimiter').file('src/main/java')
+        }
+    }
+}
+
+jmh {
+    duplicateClassesStrategy = 'warn'
+    jmhVersion = '1.17'
+}
+
+task publishProject {
+    if (project.hasProperty('all')) {
+        print 'all'
+        apply from: '../gradle/publishing.gradle'
+    }
+}
+
+test {
+    exclude 'io/github/robwin/circularbuffer/concurrent/'
+    exclude 'io/github/robwin/circuitbreaker/concurrent/'
+}
+
+asciidoctor.dependsOn test
+publishGhPages.dependsOn asciidoctor
+
+githubPages {
+    repoUri = 'https://github.com/RobWin/javaslang-circuitbreaker.git'
+
+    credentials {
+        username = project.hasProperty('githubUser') ? project.githubUser : System.getenv('GITHUB_USER')
+        password = project.hasProperty('githubPassword') ? project.githubPassword : System.getenv('GITHUB_PASSWORD')
+    }
+
+    pages {
+        from file(asciidoctor.outputDir.path + '/html5')
+    }
+}
+
+asciidoctor {
+    sources {
+        include 'index.adoc'
+    }
+    backends = ['html5']
+    attributes = [
+            doctype: 'book',
+            toc: 'left',
+            toclevels: '3',
+            numbered: '',
+            sectlinks: '',
+            sectanchors: '',
+            hardbreaks: '',
+            'release-version': project.releaseVersion
+    ]
+    resources {
+        from(sourceDir) {
+            include 'images/**'
+        }
+    }
+}
