@@ -22,9 +22,6 @@ apply plugin: 'maven-publish'
 apply plugin: 'com.github.kt3k.coveralls'
 apply plugin: 'com.jfrog.bintray'
 apply plugin: "com.jfrog.artifactory"
-apply plugin: 'me.champeau.gradle.jmh'
-apply plugin: 'org.asciidoctor.convert'
-apply plugin: 'org.ajoberstar.github-pages'
 
 group = 'io.github.robwin'
 description = 'A CircuitBreaker pattern implementation for Java 8 and functional programming.'
@@ -107,28 +104,6 @@ task wrapper(type: Wrapper) {
     gradleVersion = '3.2'
 }
 
-asciidoctor {
-    sources {
-        include 'index.adoc'
-    }
-    backends = ['html5']
-    attributes = [
-            doctype: 'book',
-            toc: 'left',
-            toclevels: '3',
-            numbered: '',
-            sectlinks: '',
-            sectanchors: '',
-            hardbreaks: '',
-            'release-version': project.releaseVersion
-    ]
-    resources {
-        from(sourceDir) {
-            include 'images/**'
-        }
-    }
-}
-
 artifactory {
     contextUrl = 'https://oss.jfrog.org'
     resolve {
@@ -151,21 +126,5 @@ artifactory {
     if (System.properties['https.proxyHost']) {
         clientConfig.proxy.host = System.properties['https.proxyHost']
         clientConfig.proxy.port = System.properties['https.proxyPort'].toInteger()
-    }
-}
-
-asciidoctor.dependsOn test
-publishGhPages.dependsOn asciidoctor
-
-githubPages {
-    repoUri = 'https://github.com/RobWin/javaslang-circuitbreaker.git'
-
-    credentials {
-        username = project.hasProperty('githubUser') ? project.githubUser : System.getenv('GITHUB_USER')
-        password = project.hasProperty('githubPassword') ? project.githubPassword : System.getenv('GITHUB_PASSWORD')
-    }
-
-    pages {
-        from file(asciidoctor.outputDir.path + '/html5')
     }
 }
