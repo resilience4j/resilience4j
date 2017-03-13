@@ -65,9 +65,9 @@ public class CircuitBreakerConfig {
     /**
      * Returns a builder to create a custom CircuitBreakerConfig.
      *
-     * @return a {@link CircuitBreakerConfig.Builder}
+     * @return a {@link Builder}
      */
-    public static CircuitBreakerConfig.Builder custom(){
+    public static Builder custom(){
         return new Builder();
     }
 

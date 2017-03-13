@@ -332,8 +332,8 @@ public interface CircuitBreaker {
      * @return a supplier which is secured by a CircuitBreaker.
      */
     static <T> Supplier<CompletionStage<T>> decorateCompletionStage(
-            CircuitBreaker circuitBreaker,
-            Supplier<CompletionStage<T>> supplier
+        CircuitBreaker circuitBreaker,
+        Supplier<CompletionStage<T>> supplier
     ) {
         return () -> {
 

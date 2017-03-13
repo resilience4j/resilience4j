@@ -90,9 +90,9 @@ public interface IntervalFunction extends Function<Integer, Long> {
     }
 
     static IntervalFunction ofExponentialRandomBackoff(
-            long initialIntervalMillis,
-            double multiplier,
-            double randomizationFactor
+        long initialIntervalMillis,
+        double multiplier,
+        double randomizationFactor
     ) {
         checkInterval(initialIntervalMillis);
         checkMultiplier(multiplier);
@@ -105,35 +105,35 @@ public interface IntervalFunction extends Function<Integer, Long> {
     }
 
     static IntervalFunction ofExponentialRandomBackoff(
-            Duration initialInterval,
-            double multiplier,
-            double randomizationFactor
+        Duration initialInterval,
+        double multiplier,
+        double randomizationFactor
     ) {
         return ofExponentialRandomBackoff(initialInterval.toMillis(), multiplier, randomizationFactor);
     }
 
     static IntervalFunction ofExponentialRandomBackoff(
-            long initialIntervalMillis,
-            double multiplier
+        long initialIntervalMillis,
+        double multiplier
     ) {
         return ofExponentialRandomBackoff(initialIntervalMillis, multiplier, DEFAULT_RANDOMIZATION_FACTOR);
     }
 
     static IntervalFunction ofExponentialRandomBackoff(
-            Duration initialInterval,
-            double multiplier
+        Duration initialInterval,
+        double multiplier
     ) {
         return ofExponentialRandomBackoff(initialInterval.toMillis(), multiplier, DEFAULT_RANDOMIZATION_FACTOR);
     }
 
     static IntervalFunction ofExponentialRandomBackoff(
-            long initialIntervalMillis
+        long initialIntervalMillis
     ) {
         return ofExponentialRandomBackoff(initialIntervalMillis, DEFAULT_MULTIPLIER);
     }
 
     static IntervalFunction ofExponentialRandomBackoff(
-            Duration initialInterval
+        Duration initialInterval
     ) {
         return ofExponentialRandomBackoff(initialInterval.toMillis(), DEFAULT_MULTIPLIER);
     }

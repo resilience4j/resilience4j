@@ -52,10 +52,10 @@ public class RetryConfig {
     /**
      * Returns a builder to create a custom RetryConfig.
      *
-     * @return a {@link RetryConfig.Builder}
+     * @return a {@link Builder}
      */
-    public static RetryConfig.Builder custom(){
-        return new RetryConfig.Builder();
+    public static Builder custom(){
+        return new Builder();
     }
 
     /**
@@ -64,13 +64,13 @@ public class RetryConfig {
      * @return a default Retry configuration.
      */
     public static RetryConfig ofDefaults(){
-        return new RetryConfig.Builder().build();
+        return new Builder().build();
     }
 
     public static class Builder {
         private RetryConfig config = new RetryConfig();
 
-        public RetryConfig.Builder maxAttempts(int maxAttempts) {
+        public Builder maxAttempts(int maxAttempts) {
             if (maxAttempts < 1) {
                 throw new IllegalArgumentException("maxAttempts must be greater than or equal to 1");
             }
@@ -78,7 +78,7 @@ public class RetryConfig {
             return this;
         }
 
-        public RetryConfig.Builder waitDuration(Duration waitDuration) {
+        public Builder waitDuration(Duration waitDuration) {
             if (waitDuration.toMillis() < 10) {
                 throw new IllegalArgumentException("waitDurationInOpenState must be at least 10ms");
             }
@@ -94,7 +94,7 @@ public class RetryConfig {
          * @param f Function to modify the interval after a failure
          * @return the CircuitBreakerConfig.Builder
          */
-        public RetryConfig.Builder intervalFunction(IntervalFunction f) {
+        public Builder intervalFunction(IntervalFunction f) {
             config.intervalFunction = f;
             return this;
         }
@@ -106,7 +106,7 @@ public class RetryConfig {
          * @param predicate the Predicate which evaluates if an exception should be retried or not.
          * @return the CircuitBreakerConfig.Builder
          */
-        public RetryConfig.Builder retryOnException(Predicate<Throwable> predicate) {
+        public Builder retryOnException(Predicate<Throwable> predicate) {
             config.exceptionPredicate = predicate;
             return this;
         }

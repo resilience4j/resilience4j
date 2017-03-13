@@ -82,9 +82,9 @@ public interface AsyncRetry {
      * @return decorated supplier
      */
     static <T> Supplier<CompletionStage<T>> decorateCompletionStage(
-            AsyncRetry retryContext,
-            ScheduledExecutorService scheduler,
-            Supplier<CompletionStage<T>> supplier
+        AsyncRetry retryContext,
+        ScheduledExecutorService scheduler,
+        Supplier<CompletionStage<T>> supplier
     ) {
         return () -> {
 

@@ -36,8 +36,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class ConcurrentCircuitBreakerTest {
 
     private CircuitBreakerStateMachine circuitBreaker;
-    private TestSubscriber<CircuitBreakerEvent.Type> errorEventSubscriber;
-    private TestSubscriber<CircuitBreaker.StateTransition> stateTransitionSubsriber;
+    private TestSubscriber<Type> errorEventSubscriber;
+    private TestSubscriber<StateTransition> stateTransitionSubsriber;
 
     @Test
     public void concurrentConcurrentCircuitBreakerTest() {
