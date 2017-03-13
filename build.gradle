@@ -35,7 +35,13 @@ allprojects {
 
 subprojects {
     repositories {
+        maven { url 'http://repo.spring.io/libs-snapshot' }
+        mavenCentral()
         jcenter()
+
+        maven {
+            url "https://oss.sonatype.org/content/repositories/snapshots"
+        }
     }
 
     tasks.withType(JavaCompile) {
@@ -57,16 +63,6 @@ subprojects {
     task sourcesJar(type: Jar, dependsOn: classes) {
         classifier = 'sources'
         from sourceSets.main.allSource
-    }
-}
-
-repositories {
-    maven { url 'http://repo.spring.io/libs-snapshot' }
-    mavenCentral()
-    jcenter()
-
-    maven {
-        url "https://oss.sonatype.org/content/repositories/snapshots"
     }
 }
 
