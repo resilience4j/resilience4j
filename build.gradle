@@ -24,6 +24,9 @@ task publishProject {
 }
 
 allprojects {
+    apply plugin: 'java'
+    apply plugin: 'net.saliman.cobertura'
+
     repositories {
         jcenter()
     }
@@ -35,18 +38,16 @@ allprojects {
         options.encoding = 'UTF-8'
         options.compilerArgs << "-Xlint:unchecked"
     }
-
-    apply plugin: 'net.saliman.cobertura'
 }
 
 subprojects {
-    apply plugin: 'java'
+    cobertura {
+        coverageIgnoreTrivial = true
+    }
 }
 
 apply plugin: 'idea'
-apply plugin: 'java'
 apply plugin: 'maven-publish'
-apply plugin: 'net.saliman.cobertura'
 apply plugin: 'com.github.kt3k.coveralls'
 apply plugin: 'com.jfrog.bintray'
 apply plugin: "com.jfrog.artifactory"
@@ -67,6 +68,13 @@ repositories {
     maven {
         url "https://oss.sonatype.org/content/repositories/snapshots"
     }
+}
+
+def files = subprojects.collect { new File(it.projectDir, '/build/cobertura/cobertura.ser') }
+cobertura {
+    coverageFormats = ['html', 'xml']
+    coverageSourceDirs = subprojects.sourceSets.main.allSource.srcDirs.flatten()
+    coverageMergeDatafiles = files
 }
 
 jmh {
@@ -117,10 +125,6 @@ task javadocJar(type: Jar, dependsOn: javadoc) {
 artifacts {
     archives sourcesJar
     archives javadocJar
-}
-
-cobertura {
-    coverageFormats = ['html', 'xml']
 }
 
 tasks.coveralls {
