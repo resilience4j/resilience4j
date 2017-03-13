@@ -6,6 +6,7 @@ before_install:
 - chmod +x gradlew
 
 script:
+- rm -fr $HOME/.gradle/caches/
 - ./gradlew clean check
 
 after_success:
