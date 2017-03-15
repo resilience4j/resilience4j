@@ -1,0 +1,21 @@
+apply plugin: 'me.champeau.gradle.jmh'
+apply plugin: 'jcstress'
+
+dependencies {
+    compile "io.javaslang:javaslang:2.0.5"
+
+    testCompile "junit:junit:4.11"
+    testCompile "org.assertj:assertj-core:3.6.2"
+}
+
+jmh {
+    duplicateClassesStrategy = 'warn'
+    jmhVersion = '1.17'
+}
+
+task publishProject {
+    if (project.hasProperty('circularbuffer')) {
+        print 'rt'
+        apply from: '../gradle/publishing.gradle'
+    }
+}
