@@ -1,3 +1,5 @@
 rootProject.name = 'javaslang-circuitbreaker'
 include 'resilience4j-ratelimiter'
 include 'resilience4j-all'
+include 'resilience4j-documentation'
+

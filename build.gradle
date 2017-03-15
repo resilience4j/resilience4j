@@ -64,6 +64,16 @@ subprojects {
         classifier = 'sources'
         from sourceSets.main.allSource
     }
+
+    task javadocJar(type: Jar, dependsOn: javadoc) {
+        classifier = 'javadoc'
+        from javadoc.destinationDir
+    }
+
+    artifacts {
+        archives sourcesJar
+        archives javadocJar
+    }
 }
 
 def files = subprojects.collect { new File(it.projectDir, '/build/cobertura/cobertura.ser') }
@@ -75,21 +85,6 @@ cobertura {
 
 test {
     dependsOn(subprojects.test)
-}
-
-task sourcesJar(type: Jar, dependsOn: classes) {
-    classifier = 'sources'
-    from sourceSets.main.allSource
-}
-
-task javadocJar(type: Jar, dependsOn: javadoc) {
-    classifier = 'javadoc'
-    from javadoc.destinationDir
-}
-
-artifacts {
-    archives sourcesJar
-    archives javadocJar
 }
 
 tasks.coveralls {
