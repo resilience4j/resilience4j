@@ -1,0 +1,14 @@
+== Getting started
+
+The projects requires JDK 8. The project is published in JCenter and Maven Central.
+
+=== Gradle
+[source,groovy]
+[subs="attributes"]
+----
+repositories {
+    jcenter()
+}
+
+compile "io.github.robwin:javaslang-circuitbreaker:{release-version}"
+----
