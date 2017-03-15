@@ -1,0 +1,30 @@
+apply plugin: 'me.champeau.gradle.jmh'
+
+dependencies {
+    compile "io.javaslang:javaslang:2.0.5"
+    compile "io.reactivex.rxjava2:rxjava:2.0.6"
+    compile "org.slf4j:slf4j-api:1.7.24"
+
+    testCompile "junit:junit:4.11"
+    testCompile "org.assertj:assertj-core:3.6.2"
+    testCompile "org.powermock:powermock:1.6.6"
+    testCompile "ch.qos.logback:logback-classic:0.9.26"
+    testCompile "com.jayway.awaitility:awaitility:1.7.0"
+    testCompile "org.powermock:powermock-api-mockito:1.6.6"
+    testCompile "org.powermock:powermock-module-junit4:1.6.6"
+
+    jmh "ch.qos.logback:logback-classic:0.9.26"
+    jmh "org.openjdk.jmh:jmh-generator-annprocess:1.12"
+}
+
+jmh {
+    duplicateClassesStrategy = 'warn'
+    jmhVersion = '1.17'
+}
+
+task publishProject {
+    if (project.hasProperty('rateLimiter')) {
+        print 'rt'
+        apply from: '../gradle/publishing.gradle'
+    }
+}
