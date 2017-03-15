@@ -18,47 +18,45 @@
  */
 package io.github.robwin.circularbuffer.concurrent;
 
-import static java.util.Arrays.asList;
-import static org.assertj.core.api.Assertions.assertThat;
-
-import com.google.testing.threadtester.AnnotatedTestRunner;
-import com.google.testing.threadtester.ThreadedAfter;
-import com.google.testing.threadtester.ThreadedBefore;
-import com.google.testing.threadtester.ThreadedMain;
-import com.google.testing.threadtester.ThreadedSecondary;
 import io.github.robwin.circularbuffer.ConcurrentEvictingQueue;
-import org.junit.Test;
+import org.openjdk.jcstress.annotations.Actor;
+import org.openjdk.jcstress.annotations.Arbiter;
+import org.openjdk.jcstress.annotations.Expect;
+import org.openjdk.jcstress.annotations.JCStressTest;
+import org.openjdk.jcstress.annotations.Outcome;
+import org.openjdk.jcstress.annotations.State;
+import org.openjdk.jcstress.infra.results.StringResult2;
 
+@JCStressTest
+@State
+@Outcome(id="1, null", expect = Expect.ACCEPTABLE)
+@Outcome(id="null, 1", expect = Expect.ACCEPTABLE)
+@Outcome(id="null, null", expect = Expect.FORBIDDEN)
+@Outcome(id="1, 1", expect = Expect.FORBIDDEN)
 public class ConcurrentEvictingQueueDoubleReadTest {
 
     ConcurrentEvictingQueue<Integer> queue;
     private Integer first;
     private Integer second;
 
-    @Test
-    public void concurrentEvictingQueueDoubleWriteTest() {
-        AnnotatedTestRunner runner = new AnnotatedTestRunner();
-        runner.runTests(getClass(), ConcurrentEvictingQueue.class);
-    }
-
-    @ThreadedBefore
-    public void setup() {
+    public ConcurrentEvictingQueueDoubleReadTest() {
         queue = new ConcurrentEvictingQueue<>(2);
         queue.offer(1);
     }
 
-    @ThreadedMain
+    @Actor
     public void firstActor() {
         first = queue.poll();
     }
 
-    @ThreadedSecondary
+    @Actor
     public void secondActor() {
         second = queue.poll();
     }
 
-    @ThreadedAfter
-    public void arbiter() {
-        assertThat(asList(first, second)).containsOnly(1, null);
+    @Arbiter
+    public void arbiter(StringResult2 result2) {
+        result2.r1 = first == null ? "null" : String.valueOf(first);
+        result2.r2 = second == null ? "null" : String.valueOf(second);
     }
 }

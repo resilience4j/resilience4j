@@ -18,48 +18,45 @@
  */
 package io.github.robwin.circularbuffer.concurrent;
 
-import com.google.testing.threadtester.*;
 import io.github.robwin.circularbuffer.ConcurrentEvictingQueue;
-import org.junit.Test;
+import org.openjdk.jcstress.annotations.Actor;
+import org.openjdk.jcstress.annotations.Arbiter;
+import org.openjdk.jcstress.annotations.Expect;
+import org.openjdk.jcstress.annotations.JCStressTest;
+import org.openjdk.jcstress.annotations.Outcome;
+import org.openjdk.jcstress.annotations.State;
+import org.openjdk.jcstress.infra.results.StringResult2;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import java.util.Arrays;
 
+@JCStressTest
+@State
+@Outcome(id="[1, 2], [2]", expect = Expect.ACCEPTABLE)
+@Outcome(id="[2], [2]", expect = Expect.ACCEPTABLE)
 public class ConcurrentEvictingQueueReadWriteTest {
 
     ConcurrentEvictingQueue<Integer> queue;
     private Object[] array;
 
-    @Test
-    public void concurrentEvictingQueueDoubleWriteTest() {
-        AnnotatedTestRunner runner = new AnnotatedTestRunner();
-        runner.runTests(getClass(), ConcurrentEvictingQueue.class);
-    }
-
-    @ThreadedBefore
-    public void setUp() {
+    public ConcurrentEvictingQueueReadWriteTest() {
         queue = new ConcurrentEvictingQueue<>(2);
         queue.offer(1);
         queue.offer(2);
     }
 
-    @ThreadedMain
+    @Actor
     public void firstActor() {
          queue.poll();
     }
 
-    @ThreadedSecondary
+    @Actor
     public void secondActor() {
         array = queue.toArray();
     }
 
-    @ThreadedAfter
-    public void arbiter() {
-        assertThat(array.length).isBetween(1, 2);
-        if (array.length == 2) {
-            assertThat(array).containsExactly(1, 2);
-        }
-        if (array.length == 1) {
-            assertThat(array[0]).isEqualTo(2);
-        }
+    @Arbiter
+    public void arbiter(StringResult2 result) {
+        result.r1 = Arrays.toString(array);
+        result.r2 = queue.toString();
     }
 }

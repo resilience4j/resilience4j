@@ -18,42 +18,39 @@
  */
 package io.github.robwin.circularbuffer.concurrent;
 
-import com.google.testing.threadtester.*;
 import io.github.robwin.circularbuffer.ConcurrentEvictingQueue;
-import org.junit.Test;
+import org.openjdk.jcstress.annotations.Actor;
+import org.openjdk.jcstress.annotations.Arbiter;
+import org.openjdk.jcstress.annotations.Expect;
+import org.openjdk.jcstress.annotations.JCStressTest;
+import org.openjdk.jcstress.annotations.Outcome;
+import org.openjdk.jcstress.annotations.State;
+import org.openjdk.jcstress.infra.results.StringResult1;
 
-import static java.util.Arrays.asList;
-import static org.assertj.core.api.Assertions.assertThat;
-
+@JCStressTest
+@State
+@Outcome(id="[1, 2]", expect = Expect.ACCEPTABLE)
+@Outcome(id="[2, 1]", expect = Expect.ACCEPTABLE)
 public class ConcurrentEvictingQueueDoubleWriteTest {
 
     ConcurrentEvictingQueue<Integer> queue;
 
-    @Test
-    public void concurrentEvictingQueueDoubleWriteTest() {
-        AnnotatedTestRunner runner = new AnnotatedTestRunner();
-        runner.runTests(getClass(), ConcurrentEvictingQueue.class);
-    }
-
-    @ThreadedBefore
-    public void setUp() {
+    public ConcurrentEvictingQueueDoubleWriteTest() {
         queue = new ConcurrentEvictingQueue<>(3);
     }
 
-    @ThreadedMain
+    @Actor
     public void firstActor() {
          queue.offer(1);
     }
 
-    @ThreadedSecondary
+    @Actor
     public void secondActor() {
         queue.offer(2);
     }
 
-    @ThreadedAfter
-    public void arbiter() {
-        Integer first = queue.poll();
-        Integer second = queue.poll();
-        assertThat(asList(first, second)).containsOnly(1, 2);
+    @Arbiter
+    public void arbiter(StringResult1 result) {
+        result.r1 = queue.toString();
     }
 }

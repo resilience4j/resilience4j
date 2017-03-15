@@ -57,6 +57,7 @@ public class ConcurrentEvictingQueue<E> extends AbstractQueue<E> {
     private static final String ILLEGAL_CAPACITY = "Capacity must be bigger than 0";
     private static final String ILLEGAL_ELEMENT = "Element must not be null";
     private static final String ILLEGAL_DESTINATION_ARRAY = "Destination array must not be null";
+    private static final Object[] DEFAULT_DESTINATION = new Object[0];
     private static final int RETRIES = 5;
 
     private final int maxSize;
@@ -209,8 +210,7 @@ public class ConcurrentEvictingQueue<E> extends AbstractQueue<E> {
         if (size == 0) {
             return new Object[0];
         }
-        Object[] copy = new Object[size];
-        Object[] destination = toArray(copy);
+        Object[] destination = toArray(DEFAULT_DESTINATION);
         return destination;
     }
 

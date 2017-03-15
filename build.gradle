@@ -14,6 +14,7 @@ buildscript {
         classpath "org.asciidoctor:asciidoctor-gradle-plugin:1.5.3"
         classpath "org.ajoberstar:gradle-git:1.3.2"
         classpath "org.jfrog.buildinfo:build-info-extractor-gradle:4.0.0"
+        classpath 'com.github.erizo.gradle:jcstress-gradle-plugin:0.8.0'
     }
 }
 
