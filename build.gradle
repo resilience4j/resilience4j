@@ -20,6 +20,7 @@ buildscript {
 
 apply plugin: 'idea'
 apply plugin: 'java'
+apply plugin: 'osgi'
 apply plugin: 'maven-publish'
 apply plugin: 'net.saliman.cobertura'
 apply plugin: 'com.github.kt3k.coveralls'
