@@ -6,7 +6,7 @@ before_install:
 - chmod +x gradlew
 
 script:
-- ./gradlew clean check jcstress
+- ./gradlew clean check
 
 after_success:
 - ./gradlew coberturaReport coveralls
