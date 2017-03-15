@@ -100,6 +100,15 @@ task javadocJar(type: Jar, dependsOn: javadoc) {
     from javadoc.destinationDir
 }
 
+jar {
+    manifest {
+        instruction 'Export-Package', '!io.github.robwin.*.internal,*'
+        instruction 'Import-Package', '!io.github.robwin.*,*'
+        instruction 'Bundle-Description', 'A lightweight fault tolerance library'
+        instruction 'Bundle-DocURL', 'http://robwin.github.io/javaslang-circuitbreaker/'
+    }
+}
+
 artifacts {
     archives sourcesJar
     archives javadocJar
