@@ -103,7 +103,7 @@ task javadocJar(type: Jar, dependsOn: javadoc) {
 jar {
     manifest {
         instruction 'Export-Package', '!io.github.robwin.*.internal,*'
-        instruction 'Import-Package', '!io.github.robwin.*,io.reactivex.*;resolution:=optional,javax.cache;resolution:=optional,org.reactivestreams;resolution:=optional,*'
+        instruction 'Import-Package', '!io.github.robwin.*,*'
         instruction 'Bundle-Description', 'A lightweight fault tolerance library'
         instruction 'Bundle-DocURL', 'http://robwin.github.io/javaslang-circuitbreaker/'
     }
