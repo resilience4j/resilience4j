@@ -57,7 +57,7 @@ public class OsgiIntegrationTest {
     }
 
     private UrlProvisionOption projectBundle() {
-        final File dir = new File( PathUtils.getBaseDir() + "/build/libs/");
+        final File dir = new File( "./build/libs");
         final File[] files = dir.listFiles();
         return bundle("reference:file:" + files[0].getPath());
     }
