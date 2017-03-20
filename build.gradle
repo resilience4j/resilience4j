@@ -24,56 +24,68 @@ apply plugin: 'com.github.kt3k.coveralls'
 apply plugin: 'com.jfrog.bintray'
 apply plugin: "com.jfrog.artifactory"
 
-group = 'io.github.robwin'
-description = 'A CircuitBreaker pattern implementation for Java 8 and functional programming.'
 version = '0.9-0-SNAPSHOT'
-ext.releaseVersion = '0.8.2'
+
+ext {
+    releaseVersion = '0.8.2'
+    javaslangVersion = '2.0.5'
+    rxJavaVersion = '2.0.6'
+}
 
 allprojects {
     apply plugin: 'java'
     apply plugin: 'net.saliman.cobertura'
+    apply plugin: 'me.champeau.gradle.jmh'
+
+    group = 'io.github.robwin'
+    description = 'A lightweight, easy-to-use fault tolerance library designed for Java8 and functional programming'
+
+    repositories {
+        jcenter()
+        mavenCentral()
+    }
 }
 
-subprojects {
-    repositories {
-        maven { url 'http://repo.spring.io/libs-snapshot' }
-        mavenCentral()
-        jcenter()
-
-        maven {
-            url "https://oss.sonatype.org/content/repositories/snapshots"
+/* Why do we need this?
+sourceSets {
+    main {
+        java {
+            srcDir project(':resilience4j-ratelimiter').file('src/main/java')
+            srcDir project(':resilience4j-circularbuffer').file('src/main/java')
         }
     }
+}
+*/
 
-    tasks.withType(JavaCompile) {
-        sourceCompatibility = "1.8"
-        targetCompatibility = "1.8"
-        options.deprecation = true
-        options.encoding = 'UTF-8'
-        options.compilerArgs << "-Xlint:unchecked"
+subprojects {
+    dependencies {
+        compile "io.javaslang:javaslang:${javaslangVersion}"
+        compile "org.slf4j:slf4j-api:1.7.24"
+
+        testCompile "io.dropwizard.metrics:metrics-core:3.1.2"
+        testCompile "junit:junit:4.11"
+        testCompile "org.assertj:assertj-core:3.6.2"
+        testCompile "ch.qos.logback:logback-classic:0.9.26"
+        testCompile "io.dropwizard.metrics:metrics-healthchecks:3.1.2"
+        testCompile "org.mockito:mockito-core:1.10.19"
+        testCompile "org.powermock:powermock:1.6.6"
+        testCompile "org.powermock:powermock-api-mockito:1.6.6"
+        testCompile "org.powermock:powermock-module-junit4:1.6.6"
+        testCompile "com.jayway.awaitility:awaitility:1.7.0"
+        testCompile "org.mapdb:thread-weaver:3.0.mapdb"
+
+        jmh "ch.qos.logback:logback-classic:0.9.26"
+        jmh "org.openjdk.jmh:jmh-generator-annprocess:1.12"
     }
 
-    cobertura {
-        coverageIgnoreTrivial = true
+    jmh {
+        duplicateClassesStrategy = 'warn'
+        jmhVersion = '1.17'
     }
 
-    jar {
-        dependsOn(test)
-    }
-
-    task sourcesJar(type: Jar, dependsOn: classes) {
-        classifier = 'sources'
-        from sourceSets.main.allSource
-    }
-
-    task javadocJar(type: Jar, dependsOn: javadoc) {
-        classifier = 'javadoc'
-        from javadoc.destinationDir
-    }
-
-    artifacts {
-        archives sourcesJar
-        archives javadocJar
+    test {
+        exclude 'io/github/robwin/circularbuffer/concurrent/'
+        exclude 'io/github/robwin/circuitbreaker/concurrent/'
     }
 }
 
@@ -82,10 +94,6 @@ cobertura {
     coverageFormats = ['html', 'xml']
     coverageSourceDirs = subprojects.sourceSets.main.allSource.srcDirs.flatten()
     coverageMergeDatafiles = files
-}
-
-test {
-    dependsOn(subprojects.test)
 }
 
 tasks.coveralls {

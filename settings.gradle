@@ -1,6 +1,12 @@
-rootProject.name = 'javaslang-circuitbreaker'
+rootProject.name = 'resilience4j'
 include 'resilience4j-ratelimiter'
+include 'resilience4j-cache'
+include 'resilience4j-retry'
+include 'resilience4j-circuitbreaker'
 include 'resilience4j-all'
 include 'resilience4j-documentation'
 include 'resilience4j-circularbuffer'
+include 'resilience4j-metrics'
+include 'resilience4j-consumer'
+include 'resilience4j-test'
 

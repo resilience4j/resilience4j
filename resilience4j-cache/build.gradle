@@ -1,8 +1,9 @@
 dependencies {
     compile "io.reactivex.rxjava2:rxjava:${rxJavaVersion}"
+    compile "javax.cache:cache-api:1.0.0"
 }
 task publishProject {
-    if (project.hasProperty('rateLimiter')) {
+    if (project.hasProperty('circularbuffer')) {
         print 'rt'
         apply from: '../gradle/publishing.gradle'
     }
