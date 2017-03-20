@@ -1,0 +1,10 @@
+dependencies {
+    compile "io.reactivex.rxjava2:rxjava:${rxJavaVersion}"
+    testCompile project(':resilience4j-test')
+}
+task publishProject {
+    if (project.hasProperty('circularbuffer')) {
+        print 'rt'
+        apply from: '../gradle/publishing.gradle'
+    }
+}

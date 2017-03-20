@@ -1,0 +1,9 @@
+apply plugin: 'me.champeau.gradle.jmh'
+apply plugin: 'jcstress'
+
+task publishProject {
+    if (project.hasProperty('circularbuffer')) {
+        print 'rt'
+        apply from: '../gradle/publishing.gradle'
+    }
+}

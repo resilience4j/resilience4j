@@ -1,0 +1,9 @@
+dependencies {
+    compile "io.reactivex.rxjava2:rxjava:${rxJavaVersion}"
+}
+task publishProject {
+    if (project.hasProperty('rateLimiter')) {
+        print 'rt'
+        apply from: '../gradle/publishing.gradle'
+    }
+}

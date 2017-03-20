@@ -11,101 +11,85 @@ buildscript {
         classpath 'org.kt3k.gradle.plugin:coveralls-gradle-plugin:2.7.1'
         classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.2'
         classpath 'me.champeau.gradle:jmh-gradle-plugin:0.3.1'
-        //classpath 'com.github.jengelman.gradle.plugins:shadow:1.2.0'
         classpath "org.asciidoctor:asciidoctor-gradle-plugin:1.5.3"
         classpath "org.ajoberstar:gradle-git:1.3.2"
         classpath "org.jfrog.buildinfo:build-info-extractor-gradle:4.0.0"
+        classpath 'com.github.erizo.gradle:jcstress-gradle-plugin:0.8.0'
     }
 }
 
 apply plugin: 'idea'
-apply plugin: 'java'
 apply plugin: 'maven-publish'
-apply plugin: 'net.saliman.cobertura'
 apply plugin: 'com.github.kt3k.coveralls'
 apply plugin: 'com.jfrog.bintray'
 apply plugin: "com.jfrog.artifactory"
-apply from: 'gradle/publishing.gradle'
-apply plugin: 'me.champeau.gradle.jmh'
-//apply plugin: 'com.github.johnrengelman.shadow'
-apply plugin: 'org.asciidoctor.convert'
-apply plugin: 'org.ajoberstar.github-pages'
 
-group = 'io.github.robwin'
-description = 'A CircuitBreaker pattern implementation for Java 8 and functional programming.'
 version = '0.9-0-SNAPSHOT'
-ext.releaseVersion = '0.8.2'
 
-tasks.withType(JavaCompile) {
-    sourceCompatibility = "1.8"
-    targetCompatibility = "1.8"
-    options.deprecation = true
-    options.encoding = 'UTF-8'
-    options.compilerArgs << "-Xlint:unchecked"
+ext {
+    releaseVersion = '0.8.2'
+    javaslangVersion = '2.0.5'
+    rxJavaVersion = '2.0.6'
 }
 
-repositories {
-    maven { url 'http://repo.spring.io/libs-snapshot' }
-    mavenCentral()
-    jcenter()
+allprojects {
+    apply plugin: 'java'
+    apply plugin: 'net.saliman.cobertura'
+    apply plugin: 'me.champeau.gradle.jmh'
 
-    maven {
-        url "https://oss.sonatype.org/content/repositories/snapshots"
+    group = 'io.github.robwin'
+    description = 'A lightweight, easy-to-use fault tolerance library designed for Java8 and functional programming'
+
+    repositories {
+        jcenter()
+        mavenCentral()
     }
 }
 
-jmh {
-    duplicateClassesStrategy = 'warn'
-    jmhVersion = '1.17'
+subprojects {
+    dependencies {
+        compile "io.javaslang:javaslang:${javaslangVersion}"
+        compile "org.slf4j:slf4j-api:1.7.24"
+
+        testCompile "io.dropwizard.metrics:metrics-core:3.1.2"
+        testCompile "junit:junit:4.11"
+        testCompile "org.assertj:assertj-core:3.6.2"
+        testCompile "ch.qos.logback:logback-classic:0.9.26"
+        testCompile "io.dropwizard.metrics:metrics-healthchecks:3.1.2"
+        testCompile "org.mockito:mockito-core:1.10.19"
+        testCompile "org.powermock:powermock:1.6.6"
+        testCompile "org.powermock:powermock-api-mockito:1.6.6"
+        testCompile "org.powermock:powermock-module-junit4:1.6.6"
+        testCompile "com.jayway.awaitility:awaitility:1.7.0"
+        testCompile "org.mapdb:thread-weaver:3.0.mapdb"
+
+        jmh "ch.qos.logback:logback-classic:0.9.26"
+        jmh "org.openjdk.jmh:jmh-generator-annprocess:1.12"
+    }
+
+    cobertura {
+        coverageIgnoreTrivial = true
+    }
+
+    jmh {
+        duplicateClassesStrategy = 'warn'
+        jmhVersion = '1.17'
+    }
+
+    test {
+        exclude 'io/github/robwin/circuitbreaker/concurrent/'
+    }
 }
 
-dependencies {
-    compile "io.javaslang:javaslang:2.0.5"
-    // compile 'org.reactivestreams:reactive-streams:1.0.0'
-    compile "io.reactivex.rxjava2:rxjava:2.0.6"
-    compile "org.slf4j:slf4j-api:1.7.24"
-    compile "javax.cache:cache-api:1.0.0"
-
-    testCompile "io.dropwizard.metrics:metrics-core:3.1.2"
-    testCompile "junit:junit:4.11"
-    testCompile "org.assertj:assertj-core:3.6.2"
-    testCompile "ch.qos.logback:logback-classic:0.9.26"
-    testCompile "io.dropwizard.metrics:metrics-healthchecks:3.1.2"
-    testCompile "org.mockito:mockito-core:1.10.19"
-    testCompile "org.powermock:powermock:1.6.6"
-    testCompile "org.powermock:powermock-api-mockito:1.6.6"
-    testCompile "org.powermock:powermock-module-junit4:1.6.6"
-    testCompile "com.jayway.awaitility:awaitility:1.7.0"
-    testCompile "org.mapdb:thread-weaver:3.0.mapdb"
-
-    jmh "ch.qos.logback:logback-classic:0.9.26"
-    jmh "org.openjdk.jmh:jmh-generator-annprocess:1.12"
+def files = subprojects.collect { new File(it.projectDir, '/build/cobertura/cobertura.ser') }
+cobertura {
+    coverageFormats = ['html', 'xml']
+    coverageSourceDirs = subprojects.sourceSets.main.allSource.srcDirs.flatten()
+    coverageMergeDatafiles = files
 }
 
 test {
-    exclude 'io/github/robwin/circularbuffer/concurrent/'
-    exclude 'io/github/robwin/circuitbreaker/concurrent/'
-}
-
-task allTests(type: Test) {}
-
-task sourcesJar(type: Jar, dependsOn: classes) {
-    classifier = 'sources'
-    from sourceSets.main.allSource
-}
-
-task javadocJar(type: Jar, dependsOn: javadoc) {
-    classifier = 'javadoc'
-    from javadoc.destinationDir
-}
-
-artifacts {
-    archives sourcesJar
-    archives javadocJar
-}
-
-cobertura {
-    coverageFormats = ['html', 'xml']
+    dependsOn(subprojects.test) // required by cobertura to aggregate report
 }
 
 tasks.coveralls {
@@ -114,28 +98,6 @@ tasks.coveralls {
 
 task wrapper(type: Wrapper) {
     gradleVersion = '3.2'
-}
-
-asciidoctor {
-    sources {
-        include 'index.adoc'
-    }
-    backends = ['html5']
-    attributes = [
-            doctype: 'book',
-            toc: 'left',
-            toclevels: '3',
-            numbered: '',
-            sectlinks: '',
-            sectanchors: '',
-            hardbreaks: '',
-            'release-version': project.releaseVersion
-    ]
-    resources {
-        from(sourceDir) {
-            include 'images/**'
-        }
-    }
 }
 
 artifactory {
@@ -160,21 +122,5 @@ artifactory {
     if (System.properties['https.proxyHost']) {
         clientConfig.proxy.host = System.properties['https.proxyHost']
         clientConfig.proxy.port = System.properties['https.proxyPort'].toInteger()
-    }
-}
-
-asciidoctor.dependsOn test
-publishGhPages.dependsOn asciidoctor
-
-githubPages {
-    repoUri = 'https://github.com/RobWin/javaslang-circuitbreaker.git'
-
-    credentials {
-        username = project.hasProperty('githubUser') ? project.githubUser : System.getenv('GITHUB_USER')
-        password = project.hasProperty('githubPassword') ? project.githubPassword : System.getenv('GITHUB_PASSWORD')
-    }
-
-    pages {
-        from file(asciidoctor.outputDir.path + '/html5')
     }
 }
