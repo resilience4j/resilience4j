@@ -22,9 +22,6 @@ apply plugin: 'idea'
 apply plugin: 'maven-publish'
 apply plugin: 'com.github.kt3k.coveralls'
 apply plugin: 'com.jfrog.bintray'
-apply plugin: "com.jfrog.artifactory"
-
-version = '0.9-0-SNAPSHOT'
 
 ext {
     releaseVersion = '0.8.2'
@@ -32,11 +29,14 @@ ext {
     rxJavaVersion = '2.0.6'
 }
 
+
 allprojects {
     apply plugin: 'java'
     apply plugin: 'net.saliman.cobertura'
     apply plugin: 'me.champeau.gradle.jmh'
+    apply plugin: 'com.jfrog.artifactory'
 
+    version = '0.9-0-SNAPSHOT'
     group = 'io.github.robwin'
     description = 'A lightweight, easy-to-use fault tolerance library designed for Java8 and functional programming'
 
@@ -45,8 +45,11 @@ allprojects {
         mavenCentral()
     }
 }
+artifactoryPublish.skip=true // apply to all projects except the root
 
 subprojects {
+    apply plugin: 'maven'
+
     dependencies {
         compile "io.javaslang:javaslang:${javaslangVersion}"
         compile "org.slf4j:slf4j-api:1.7.24"
@@ -61,10 +64,32 @@ subprojects {
         testCompile "org.powermock:powermock-api-mockito:1.6.6"
         testCompile "org.powermock:powermock-module-junit4:1.6.6"
         testCompile "com.jayway.awaitility:awaitility:1.7.0"
-        testCompile "org.mapdb:thread-weaver:3.0.mapdb"
 
         jmh "ch.qos.logback:logback-classic:0.9.26"
         jmh "org.openjdk.jmh:jmh-generator-annprocess:1.12"
+    }
+
+    task sourceJar(type: Jar) {
+        from sourceSets.main.allSource
+        classifier = 'sources'
+    }
+
+    task javadocJar(type: Jar, dependsOn: javadoc) {
+        classifier = 'javadoc'
+        from javadoc.destinationDir
+    }
+
+    artifactoryPublish {
+        dependsOn sourceJar, javadocJar
+    }
+
+    configurations {
+        published
+    }
+
+    artifacts {
+        published sourceJar
+        published javadocJar
     }
 
     cobertura {
@@ -75,10 +100,10 @@ subprojects {
         duplicateClassesStrategy = 'warn'
         jmhVersion = '1.17'
     }
+}
 
-    test {
-        exclude 'io/github/robwin/circuitbreaker/concurrent/'
-    }
+configurations {
+    published
 }
 
 def files = subprojects.collect { new File(it.projectDir, '/build/cobertura/cobertura.ser') }
@@ -105,6 +130,7 @@ artifactory {
     resolve {
         repository {
             repoKey = 'libs-release'
+            maven = true
         }
     }
     publish {
@@ -116,7 +142,7 @@ artifactory {
             password = project.hasProperty('bintrayApiKey') ? project.bintrayApiKey : System.getenv('BINTRAY_KEY')
         }
         defaults {
-            publications('mavenJava')
+            publishConfigs('published')
         }
     }
     if (System.properties['https.proxyHost']) {
@@ -124,3 +150,46 @@ artifactory {
         clientConfig.proxy.port = System.properties['https.proxyPort'].toInteger()
     }
 }
+
+
+//publishing {
+//    publications {
+//        mavenJava(MavenPublication) {
+//            from components.java
+//            pom.withXml {
+//                def devs = ['RobWin': 'Robert Winkler']
+//                def root = asNode()
+//
+//                root.dependencies.'*'.findAll() {
+//                    it.scope.text() == 'runtime' && project.configurations.compile.allDependencies.find { dep ->
+//                        dep.name == it.artifactId.text()
+//                    }
+//                }.each() {
+//                    it.scope*.value = 'compile'
+//                }
+//
+//                root.appendNode('name', 'javaslang-circuitbreaker')
+//                root.appendNode('packaging', 'jar')
+//                root.appendNode('url', 'https://github.com/RobWin/javaslang-circuitbreaker')
+//                root.appendNode('description', 'A CircuitBreaker pattern implementation for Java8 and functional programming .')
+//
+//                def license = root.appendNode('licenses').appendNode('license')
+//                license.appendNode('name', 'Apache-2.0')
+//                license.appendNode('url', 'https://github.com/RobWin/javaslang-circuitbreaker/blob/master/LICENSE.txt')
+//                license.appendNode('distribution', 'repo')
+//
+//                root.appendNode('scm').appendNode('url', 'https://github.com/RobWin/javaslang-circuitbreaker.git')
+//
+//                def developers = root.appendNode('developers')
+//                devs.each {
+//                    def d = developers.appendNode('developer')
+//                    d.appendNode('id', it.key)
+//                    d.appendNode('name', it.value)
+//                }
+//            }
+//            artifact sourceJar
+//            artifact javadocJar
+//        }
+//    }
+//
+//}

@@ -18,46 +18,43 @@
  */
 package io.github.robwin.circuitbreaker.concurrent;
 
-import com.google.testing.threadtester.AnnotatedTestRunner;
-import com.google.testing.threadtester.ThreadedAfter;
-import com.google.testing.threadtester.ThreadedBefore;
-import com.google.testing.threadtester.ThreadedMain;
-import com.google.testing.threadtester.ThreadedSecondary;
-
-import org.junit.Test;
-
-import java.time.Duration;
+import static io.github.robwin.circuitbreaker.CircuitBreaker.StateTransition;
+import static io.github.robwin.circuitbreaker.CircuitBreaker.of;
+import static io.github.robwin.circuitbreaker.event.CircuitBreakerEvent.Type;
 
 import io.github.robwin.circuitbreaker.CircuitBreakerConfig;
 import io.github.robwin.circuitbreaker.event.CircuitBreakerEvent;
 import io.github.robwin.circuitbreaker.event.CircuitBreakerOnStateTransitionEvent;
 import io.github.robwin.circuitbreaker.internal.CircuitBreakerStateMachine;
 import io.reactivex.subscribers.TestSubscriber;
+import org.openjdk.jcstress.annotations.Actor;
+import org.openjdk.jcstress.annotations.Arbiter;
+import org.openjdk.jcstress.annotations.Expect;
+import org.openjdk.jcstress.annotations.JCStressTest;
+import org.openjdk.jcstress.annotations.Outcome;
+import org.openjdk.jcstress.infra.results.StringResult1;
 
-import static io.github.robwin.circuitbreaker.CircuitBreaker.State;
-import static io.github.robwin.circuitbreaker.CircuitBreaker.StateTransition;
-import static io.github.robwin.circuitbreaker.CircuitBreaker.of;
-import static io.github.robwin.circuitbreaker.event.CircuitBreakerEvent.Type;
-import static org.assertj.core.api.Assertions.assertThat;
+import java.text.MessageFormat;
+import java.time.Duration;
 
+@JCStressTest
+@org.openjdk.jcstress.annotations.State
+@Outcome(
+    id = "state=OPEN failed=1 buffered=1" +
+        " events=\\[\\[ERROR, ERROR\\], \\[\\], \\[\\]\\]" +
+        " transition=\\[\\[State transition from CLOSED to OPEN\\], \\[\\], \\[\\]\\]",
+    expect = Expect.ACCEPTABLE
+)
 public class ConcurrentCircuitBreakerTest {
 
     private CircuitBreakerStateMachine circuitBreaker;
     private TestSubscriber<Type> errorEventSubscriber;
     private TestSubscriber<StateTransition> stateTransitionSubsriber;
 
-    @Test
-    public void concurrentConcurrentCircuitBreakerTest() {
-        AnnotatedTestRunner runner = new AnnotatedTestRunner();
-        runner.runTests(getClass(), CircuitBreakerStateMachine.class);
-    }
-
-
-    @ThreadedBefore
-    public void setUp() {
+    public ConcurrentCircuitBreakerTest() {
         CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom()
-                .ringBufferSizeInClosedState(1)
-                .build();
+            .ringBufferSizeInClosedState(1)
+            .build();
 
         circuitBreaker = (CircuitBreakerStateMachine) of("testName", circuitBreakerConfig);
         errorEventSubscriber = circuitBreaker.getEventStream()
@@ -72,25 +69,26 @@ public class ConcurrentCircuitBreakerTest {
             .test();
     }
 
-    @ThreadedMain
+    @Actor
     public void firstActor() {
         circuitBreaker.onError(Duration.ZERO, new RuntimeException());
     }
 
-    @ThreadedSecondary
+    @Actor
     public void secondActor() {
         circuitBreaker.onError(Duration.ZERO, new RuntimeException());
     }
 
-    @ThreadedAfter
-    public void arbiter() {
-        assertThat(circuitBreaker.getState()).isEqualTo(State.OPEN);
-        assertThat(circuitBreaker.getMetrics().getNumberOfFailedCalls()).isEqualTo(1);
-        assertThat(circuitBreaker.getMetrics().getNumberOfBufferedCalls()).isEqualTo(1);
-        errorEventSubscriber
-            .assertValues(Type.ERROR, Type.ERROR);
-        stateTransitionSubsriber
-                .assertValue(StateTransition.CLOSED_TO_OPEN);
-
+    @Arbiter
+    public void arbiter(StringResult1 result1) {
+        String result = MessageFormat.format(
+            "state={0} failed={1} buffered={2} events={3} transition={4}",
+            circuitBreaker.getState(),
+            circuitBreaker.getMetrics().getNumberOfFailedCalls(),
+            circuitBreaker.getMetrics().getNumberOfBufferedCalls(),
+            errorEventSubscriber.getEvents(),
+            stateTransitionSubsriber.getEvents()
+        );
+        result1.r1 = result;
     }
 }
