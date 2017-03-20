@@ -18,7 +18,13 @@
  */
 package io.github.robwin.circuitbreaker;
 
-import org.assertj.core.api.Assertions;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
+import io.github.robwin.test.HelloWorldService;
+import javaslang.API;
+import javaslang.Predicates;
+import javaslang.control.Try;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.BDDMockito;
@@ -34,15 +40,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
-
 import javax.xml.ws.WebServiceException;
-
-import io.github.robwin.test.HelloWorldService;
-import javaslang.API;
-import javaslang.Predicates;
-import javaslang.control.Try;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 public class CircuitBreakerTest {
 
@@ -66,7 +64,7 @@ public class CircuitBreakerTest {
         Supplier<String> supplier = CircuitBreaker.decorateSupplier(circuitBreaker, helloWorldService::returnHelloWorld);
 
         //Then
-        Assertions.assertThat(supplier.get()).isEqualTo("Hello world");
+        assertThat(supplier.get()).isEqualTo("Hello world");
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
         assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(0);
         assertThat(metrics.getNumberOfSuccessfulCalls()).isEqualTo(1);
@@ -87,7 +85,7 @@ public class CircuitBreakerTest {
         String result = circuitBreaker.executeSupplier(helloWorldService::returnHelloWorld);
 
         //Then
-        Assertions.assertThat(result).isEqualTo("Hello world");
+        assertThat(result).isEqualTo("Hello world");
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
         assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(0);
         assertThat(metrics.getNumberOfSuccessfulCalls()).isEqualTo(1);
@@ -110,8 +108,8 @@ public class CircuitBreakerTest {
 
         //Then
         Try<String> result = Try.of(supplier::get);
-        Assertions.assertThat(result.isFailure()).isTrue();
-        Assertions.assertThat(result.failed().get()).isInstanceOf(RuntimeException.class);
+        assertThat(result.isFailure()).isTrue();
+        assertThat(result.failed().get()).isInstanceOf(RuntimeException.class);
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
         assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(1);
         assertThat(metrics.getNumberOfSuccessfulCalls()).isEqualTo(0);
@@ -133,7 +131,7 @@ public class CircuitBreakerTest {
         Try.CheckedSupplier<String> checkedSupplier = CircuitBreaker.decorateCheckedSupplier(circuitBreaker, helloWorldService::returnHelloWorldWithException);
 
         //Then
-        Assertions.assertThat(checkedSupplier.get()).isEqualTo("Hello world");
+        assertThat(checkedSupplier.get()).isEqualTo("Hello world");
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
         assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(0);
         assertThat(metrics.getNumberOfSuccessfulCalls()).isEqualTo(1);
@@ -157,8 +155,8 @@ public class CircuitBreakerTest {
 
         //Then
         Try<String> result = Try.of(checkedSupplier);
-        Assertions.assertThat(result.isFailure()).isTrue();
-        Assertions.assertThat(result.failed().get()).isInstanceOf(RuntimeException.class);
+        assertThat(result.isFailure()).isTrue();
+        assertThat(result.failed().get()).isInstanceOf(RuntimeException.class);
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
         assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(1);
         assertThat(metrics.getNumberOfSuccessfulCalls()).isEqualTo(0);
@@ -180,7 +178,7 @@ public class CircuitBreakerTest {
         Callable<String> callable = CircuitBreaker.decorateCallable(circuitBreaker, helloWorldService::returnHelloWorldWithException);
 
         //Then
-        Assertions.assertThat(callable.call()).isEqualTo("Hello world");
+        assertThat(callable.call()).isEqualTo("Hello world");
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
         assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(0);
         assertThat(metrics.getNumberOfSuccessfulCalls()).isEqualTo(1);
@@ -201,7 +199,7 @@ public class CircuitBreakerTest {
         String result = circuitBreaker.executeCallable(helloWorldService::returnHelloWorldWithException);
 
         //Then
-        Assertions.assertThat(result).isEqualTo("Hello world");
+        assertThat(result).isEqualTo("Hello world");
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
         assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(0);
         assertThat(metrics.getNumberOfSuccessfulCalls()).isEqualTo(1);
@@ -224,8 +222,8 @@ public class CircuitBreakerTest {
 
         //Then
         Try<String> result = Try.of(callable::call);
-        Assertions.assertThat(result.isFailure()).isTrue();
-        Assertions.assertThat(result.failed().get()).isInstanceOf(RuntimeException.class);
+        assertThat(result.isFailure()).isTrue();
+        assertThat(result.failed().get()).isInstanceOf(RuntimeException.class);
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
         assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(1);
         assertThat(metrics.getNumberOfSuccessfulCalls()).isEqualTo(0);
@@ -268,8 +266,8 @@ public class CircuitBreakerTest {
 
         //Then
         Try<Void> result = Try.run(checkedRunnable);
-        Assertions.assertThat(result.isFailure()).isTrue();
-        Assertions.assertThat(result.failed().get()).isInstanceOf(RuntimeException.class);
+        assertThat(result.isFailure()).isTrue();
+        assertThat(result.failed().get()).isInstanceOf(RuntimeException.class);
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
         assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(1);
         assertThat(metrics.getNumberOfSuccessfulCalls()).isEqualTo(0);
@@ -330,8 +328,8 @@ public class CircuitBreakerTest {
 
         //Then
         Try<Void> result = Try.run(runnable::run);
-        Assertions.assertThat(result.isFailure()).isTrue();
-        Assertions.assertThat(result.failed().get()).isInstanceOf(RuntimeException.class);
+        assertThat(result.isFailure()).isTrue();
+        assertThat(result.failed().get()).isInstanceOf(RuntimeException.class);
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
         assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(1);
         assertThat(metrics.getNumberOfSuccessfulCalls()).isEqualTo(0);
@@ -372,8 +370,8 @@ public class CircuitBreakerTest {
 
         //Then
         Try<Void> result = Try.run(() -> consumer.accept("Tom"));
-        Assertions.assertThat(result.isFailure()).isTrue();
-        Assertions.assertThat(result.failed().get()).isInstanceOf(RuntimeException.class);
+        assertThat(result.isFailure()).isTrue();
+        assertThat(result.failed().get()).isInstanceOf(RuntimeException.class);
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
         assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(1);
         assertThat(metrics.getNumberOfSuccessfulCalls()).isEqualTo(0);
@@ -414,8 +412,8 @@ public class CircuitBreakerTest {
 
         //Then
         Try<Void> result = Try.run(() -> checkedConsumer.accept("Tom"));
-        Assertions.assertThat(result.isFailure()).isTrue();
-        Assertions.assertThat(result.failed().get()).isInstanceOf(RuntimeException.class);
+        assertThat(result.isFailure()).isTrue();
+        assertThat(result.failed().get()).isInstanceOf(RuntimeException.class);
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
         assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(1);
         assertThat(metrics.getNumberOfSuccessfulCalls()).isEqualTo(0);
@@ -435,7 +433,7 @@ public class CircuitBreakerTest {
         Function<String, String> function = CircuitBreaker.decorateFunction(circuitBreaker, helloWorldService::returnHelloWorldWithName);
 
         //Then
-        Assertions.assertThat(function.apply("Tom")).isEqualTo("Hello world Tom");
+        assertThat(function.apply("Tom")).isEqualTo("Hello world Tom");
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
         assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(0);
         assertThat(metrics.getNumberOfSuccessfulCalls()).isEqualTo(1);
@@ -458,8 +456,8 @@ public class CircuitBreakerTest {
 
         //Then
         Try<String> result = Try.of(() -> function.apply("Tom"));
-        Assertions.assertThat(result.isFailure()).isTrue();
-        Assertions.assertThat(result.failed().get()).isInstanceOf(RuntimeException.class);
+        assertThat(result.isFailure()).isTrue();
+        assertThat(result.failed().get()).isInstanceOf(RuntimeException.class);
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
         assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(1);
         assertThat(metrics.getNumberOfSuccessfulCalls()).isEqualTo(0);
@@ -479,7 +477,7 @@ public class CircuitBreakerTest {
         Try.CheckedFunction<String, String> function = CircuitBreaker.decorateCheckedFunction(circuitBreaker, helloWorldService::returnHelloWorldWithNameWithException);
 
         //Then
-        Assertions.assertThat(function.apply("Tom")).isEqualTo("Hello world Tom");
+        assertThat(function.apply("Tom")).isEqualTo("Hello world Tom");
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
         assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(0);
         assertThat(metrics.getNumberOfSuccessfulCalls()).isEqualTo(1);
@@ -503,8 +501,8 @@ public class CircuitBreakerTest {
 
         //Then
         Try<String> result = Try.of(() -> function.apply("Tom"));
-        Assertions.assertThat(result.isFailure()).isTrue();
-        Assertions.assertThat(result.failed().get()).isInstanceOf(RuntimeException.class);
+        assertThat(result.isFailure()).isTrue();
+        assertThat(result.failed().get()).isInstanceOf(RuntimeException.class);
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
         assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(1);
         assertThat(metrics.getNumberOfSuccessfulCalls()).isEqualTo(0);
@@ -538,8 +536,8 @@ public class CircuitBreakerTest {
         Try result = Try.run(checkedRunnable);
 
         //Then
-        Assertions.assertThat(result.isFailure()).isTrue();
-        Assertions.assertThat(result.failed().get()).isInstanceOf(CircuitBreakerOpenException.class);
+        assertThat(result.isFailure()).isTrue();
+        assertThat(result.failed().get()).isInstanceOf(CircuitBreakerOpenException.class);
     }
 
     @Test
@@ -558,8 +556,8 @@ public class CircuitBreakerTest {
         Try result = Try.run(checkedRunnable);
 
         //Then
-        Assertions.assertThat(result.isFailure()).isTrue();
-        Assertions.assertThat(result.failed().get()).isInstanceOf(RuntimeException.class);
+        assertThat(result.isFailure()).isTrue();
+        assertThat(result.failed().get()).isInstanceOf(RuntimeException.class);
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
         assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(1);
     }
@@ -590,10 +588,10 @@ public class CircuitBreakerTest {
         Try result = Try.run(checkedRunnable);
 
         //Then
-        Assertions.assertThat(result.isFailure()).isTrue();
+        assertThat(result.isFailure()).isTrue();
         // CircuitBreaker is still CLOSED, because SocketTimeoutException has not been recorded as a failure
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
-        Assertions.assertThat(result.failed().get()).isInstanceOf(IOException.class);
+        assertThat(result.failed().get()).isInstanceOf(IOException.class);
         // end::shouldNotRecordIOExceptionAsAFailure[]
 
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
@@ -615,9 +613,9 @@ public class CircuitBreakerTest {
                 .recover(throwable -> "Hello Recovery");
 
         // Then the function should be a success, because the exception could be recovered
-        Assertions.assertThat(result.isSuccess()).isTrue();
+        assertThat(result.isSuccess()).isTrue();
         // and the result must match the result of the recovery function.
-        Assertions.assertThat(result.get()).isEqualTo("Hello Recovery");
+        assertThat(result.get()).isEqualTo("Hello Recovery");
         // end::shouldInvokeRecoverFunction[]
     }
 
@@ -636,8 +634,8 @@ public class CircuitBreakerTest {
                         .map(value -> value + " world'");
 
         // Then the Try Monad returns a Success<String>, if all functions ran successfully.
-        Assertions.assertThat(result.isSuccess()).isTrue();
-        Assertions.assertThat(result.get()).isEqualTo("This can be any method which returns: 'Hello world'");
+        assertThat(result.isSuccess()).isTrue();
+        assertThat(result.get()).isEqualTo("This can be any method which returns: 'Hello world'");
         // end::shouldInvokeMap[]
     }
 
@@ -665,9 +663,9 @@ public class CircuitBreakerTest {
                 .map(value -> value + " world");
 
         // Then the call fails, because CircuitBreaker is OPEN
-        Assertions.assertThat(result.isFailure()).isTrue();
+        assertThat(result.isFailure()).isTrue();
         // Exception is CircuitBreakerOpenException
-        Assertions.assertThat(result.failed().get()).isInstanceOf(CircuitBreakerOpenException.class);
+        assertThat(result.failed().get()).isInstanceOf(CircuitBreakerOpenException.class);
         // end::shouldThrowCircuitBreakerOpenException[]
 
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
@@ -690,7 +688,7 @@ public class CircuitBreakerTest {
                 .thenApply(value -> value + " world'");
 
         //Then
-        Assertions.assertThat(future.get()).isEqualTo("This can be any method which returns: 'Hello world'");
+        assertThat(future.get()).isEqualTo("This can be any method which returns: 'Hello world'");
         // end::shouldInvokeAsyncApply[]
 
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
@@ -717,7 +715,7 @@ public class CircuitBreakerTest {
                 .thenApply(value -> value + " world");
 
         // Then the helloWorldService should be invoked 1 time
-        Assertions.assertThat(decoratedCompletionStage.toCompletableFuture().get()).isEqualTo("Hello world");
+        assertThat(decoratedCompletionStage.toCompletableFuture().get()).isEqualTo("Hello world");
         BDDMockito.then(helloWorldService).should(Mockito.times(1)).returnHelloWorld();
 
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
@@ -740,7 +738,7 @@ public class CircuitBreakerTest {
                 .thenApply(value -> value + " world");
 
         // Then the helloWorldService should be invoked 1 time
-        Assertions.assertThat(decoratedCompletionStage.toCompletableFuture().get()).isEqualTo("Hello world");
+        assertThat(decoratedCompletionStage.toCompletableFuture().get()).isEqualTo("Hello world");
         BDDMockito.then(helloWorldService).should(Mockito.times(1)).returnHelloWorld();
 
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
@@ -767,8 +765,8 @@ public class CircuitBreakerTest {
         // Then the helloWorldService should be invoked 1 time
         BDDMockito.then(helloWorldService).should(Mockito.times(0)).returnHelloWorld();
 
-        Assertions.assertThat(result.isFailure()).isEqualTo(true);
-        Assertions.assertThat(result.failed().get()).isInstanceOf(RuntimeException.class);
+        assertThat(result.isFailure()).isEqualTo(true);
+        assertThat(result.failed().get()).isInstanceOf(RuntimeException.class);
 
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
@@ -791,7 +789,7 @@ public class CircuitBreakerTest {
         CompletionStage<String> decoratedCompletionStage = decoratedCompletionStageSupplier.get();
 
         // Then the helloWorldService should be invoked 1 time
-        Assertions.assertThatThrownBy(decoratedCompletionStage.toCompletableFuture()::get)
+        assertThatThrownBy(decoratedCompletionStage.toCompletableFuture()::get)
                 .isInstanceOf(ExecutionException.class).hasCause(new RuntimeException("BAM! At async stage"));
         BDDMockito.then(helloWorldService).should(Mockito.times(1)).returnHelloWorld();
 
@@ -819,8 +817,8 @@ public class CircuitBreakerTest {
                 .mapTry(decoratedFunction::apply);
 
         // Then
-        Assertions.assertThat(result.isSuccess()).isTrue();
-        Assertions.assertThat(result.get()).isEqualTo("Hello world");
+        assertThat(result.isSuccess()).isTrue();
+        assertThat(result.get()).isEqualTo("Hello world");
         // end::shouldChainDecoratedFunctions[]
 
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();

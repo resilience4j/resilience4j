@@ -57,14 +57,14 @@ In the following example, `Try.of(...)` returns a `Success<String>` Monad, if th
 
 [source,java,indent=0]
 ----
-include::../../test/java/io/github/robwin/circuitbreaker/CircuitBreakerTest.java[tags=shouldInvokeMap]
+include::../../../../resilience4j-circuitbreaker/src/test/java/io/github/robwin/circuitbreaker/CircuitBreakerTest.java[tags=shouldInvokeMap]
 ----
 
 You can also chain up functions which are decorated by different CircuitBreakers.
 
 [source,java,indent=0]
 ----
-include::../../test/java/io/github/robwin/circuitbreaker/CircuitBreakerTest.java[tags=shouldChainDecoratedFunctions]
+include::../../../../resilience4j-circuitbreaker/src/test/java/io/github/robwin/circuitbreaker/CircuitBreakerTest.java[tags=shouldChainDecoratedFunctions]
 ----
 
 ==== CircuitBreaker and RxJava
@@ -85,7 +85,7 @@ You can also invoke a decorated function asynchronously by using a `CompletableF
 
 [source,java,indent=0]
 ----
-include::../../test/java/io/github/robwin/circuitbreaker/CircuitBreakerTest.java[tags=shouldInvokeAsyncApply]
+include::../../../../resilience4j-circuitbreaker/src/test/java/io/github/robwin/circuitbreaker/CircuitBreakerTest.java[tags=shouldInvokeAsyncApply]
 ----
 
 ==== OPEN CircuitBreaker example
@@ -94,7 +94,7 @@ In this example `map` is not invoked, because the CircuitBreaker is OPEN. The ca
 
 [source,java,indent=0]
 ----
-include::../../test/java/io/github/robwin/circuitbreaker/CircuitBreakerTest.java[tags=shouldThrowCircuitBreakerOpenException]
+include::../../../../resilience4j-circuitbreaker/src/test/java/io/github/robwin/circuitbreaker/CircuitBreakerTest.java[tags=shouldThrowCircuitBreakerOpenException]
 ----
 
 ==== Recover from an exception
@@ -103,7 +103,7 @@ If you want to recover from any exception, you can chain the method `Try.recover
 
 [source,java,indent=0]
 ----
-include::../../test/java/io/github/robwin/circuitbreaker/CircuitBreakerTest.java[tags=shouldInvokeRecoverFunction]
+include::../../../../resilience4j-circuitbreaker/src/test/java/io/github/robwin/circuitbreaker/CircuitBreakerTest.java[tags=shouldInvokeRecoverFunction]
 ----
 
 ==== Customize the exception handler
@@ -112,7 +112,7 @@ The following example shows how to ignore an `IOException`, but all other except
 
 [source,java,indent=0]
 ----
-include::../../test/java/io/github/robwin/circuitbreaker/CircuitBreakerTest.java[tags=shouldNotRecordIOExceptionAsAFailure]
+include::../../../../resilience4j-circuitbreaker/src/test/java/io/github/robwin/circuitbreaker/CircuitBreakerTest.java[tags=shouldNotRecordIOExceptionAsAFailure]
 ----
 
 ==== Consume emitted CircuitBreakerEvents
