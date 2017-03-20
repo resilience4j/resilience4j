@@ -1,4 +1,10 @@
 language: java
+
+sudo: false
+addons:
+  apt:
+    packages:
+      - oracle-java8-installer
 jdk:
 - oraclejdk8
 
@@ -6,7 +12,7 @@ before_install:
 - chmod +x gradlew
 
 script:
-- ./gradlew clean check
+- ./gradlew clean check jcstress
 
 after_success:
 - ./gradlew coberturaReport coveralls
