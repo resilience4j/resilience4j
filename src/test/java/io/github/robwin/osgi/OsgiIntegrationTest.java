@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.util.Properties;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 import static org.ops4j.pax.exam.CoreOptions.bundle;
 import static org.ops4j.pax.exam.CoreOptions.junitBundles;
 import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
@@ -52,7 +53,12 @@ public class OsgiIntegrationTest {
 
     @Test
     public void circuitBreakerShouldResolve() {
-        CircuitBreaker.ofDefaults("test");
+        try {
+            Class.forName("io.github.robwin.circuitbreaker.CircuitBreaker");
+            CircuitBreaker.ofDefaults("test");
+        } catch (ClassNotFoundException cnfe) {
+            fail("Should be able load CircuitBreaker from public api");
+        }
     }
 
     @Test(expected = ClassNotFoundException.class)
