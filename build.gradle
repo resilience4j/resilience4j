@@ -46,17 +46,6 @@ allprojects {
     }
 }
 
-/* Why do we need this?
-sourceSets {
-    main {
-        java {
-            srcDir project(':resilience4j-ratelimiter').file('src/main/java')
-            srcDir project(':resilience4j-circularbuffer').file('src/main/java')
-        }
-    }
-}
-*/
-
 subprojects {
     dependencies {
         compile "io.javaslang:javaslang:${javaslangVersion}"
@@ -78,13 +67,16 @@ subprojects {
         jmh "org.openjdk.jmh:jmh-generator-annprocess:1.12"
     }
 
+    cobertura {
+        coverageIgnoreTrivial = true
+    }
+
     jmh {
         duplicateClassesStrategy = 'warn'
         jmhVersion = '1.17'
     }
 
     test {
-        exclude 'io/github/robwin/circularbuffer/concurrent/'
         exclude 'io/github/robwin/circuitbreaker/concurrent/'
     }
 }
@@ -94,6 +86,10 @@ cobertura {
     coverageFormats = ['html', 'xml']
     coverageSourceDirs = subprojects.sourceSets.main.allSource.srcDirs.flatten()
     coverageMergeDatafiles = files
+}
+
+test {
+    dependsOn(subprojects.test) // required by cobertura to aggregate report
 }
 
 tasks.coveralls {
