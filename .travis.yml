@@ -6,7 +6,7 @@ before_install:
 - chmod +x gradlew
 
 script:
-- ./gradlew clean check allTests -x test
+- ./gradlew clean check jar allTests -x test
 
 after_success:
 - ./gradlew coberturaReport coveralls
