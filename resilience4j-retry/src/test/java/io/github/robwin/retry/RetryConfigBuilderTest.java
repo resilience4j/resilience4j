@@ -18,11 +18,10 @@
  */
 package io.github.robwin.retry;
 
+import org.assertj.core.api.Assertions;
 import org.junit.Test;
 
 import java.time.Duration;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 public class RetryConfigBuilderTest {
 

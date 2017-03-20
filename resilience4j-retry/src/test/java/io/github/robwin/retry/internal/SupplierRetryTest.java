@@ -18,24 +18,23 @@
  */
 package io.github.robwin.retry.internal;
 
+import org.assertj.core.api.Assertions;
+import org.junit.Before;
+import org.junit.Test;
+import org.mockito.BDDMockito;
+import org.mockito.Mockito;
+
+import java.util.function.Supplier;
+
+import javax.xml.ws.WebServiceException;
+
 import io.github.robwin.retry.IntervalFunction;
 import io.github.robwin.retry.Retry;
 import io.github.robwin.retry.RetryConfig;
 import io.github.robwin.test.HelloWorldService;
+import javaslang.API;
+import javaslang.Predicates;
 import javaslang.control.Try;
-import org.junit.Before;
-import org.junit.Test;
-import org.mockito.BDDMockito;
-
-import javax.xml.ws.WebServiceException;
-import java.util.function.Supplier;
-
-import static javaslang.API.*;
-import static javaslang.Predicates.instanceOf;
-import static org.assertj.core.api.BDDAssertions.assertThat;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
 
 public class SupplierRetryTest {
 

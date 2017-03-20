@@ -1,23 +1,28 @@
 package io.github.robwin.retry.internal;
 
+import org.assertj.core.api.Assertions;
+import org.junit.Before;
+import org.junit.Test;
+import org.mockito.BDDMockito;
+import org.mockito.Mockito;
+
+import java.util.concurrent.CompletionStage;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+import java.util.function.Supplier;
+
+import javax.xml.ws.WebServiceException;
+
 import io.github.robwin.retry.AsyncRetry;
 import io.github.robwin.retry.RetryConfig;
 import io.github.robwin.test.AsyncHelloWorldService;
 import javaslang.control.Try;
-import org.junit.Before;
-import org.junit.Test;
-import org.mockito.BDDMockito;
-
-import javax.xml.ws.WebServiceException;
-import java.util.concurrent.*;
-import java.util.function.Supplier;
 
 import static java.util.concurrent.CompletableFuture.completedFuture;
 import static java.util.concurrent.CompletableFuture.supplyAsync;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
 
 public class AsyncRetryTest {
     private static final long DEFAULT_TIMEOUT_SECONDS = 5;
