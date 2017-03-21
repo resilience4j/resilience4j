@@ -6,7 +6,8 @@ ext {
     buildTime = new SimpleDateFormat('HH:mm:ss.SSSZ').format(buildTimeAndDate)
 }
 
-def projectArtifactId = 'javaslang-circuitbreaker'
+def projectArtifactId = 'resilience4j'
+def url = "https://github.com/resilience4j/resilience4j"
 
 jar {
     manifest {
@@ -29,6 +30,21 @@ if (!project.hasProperty('gpgPassphrase')) ext.gpgPassphrase = ''
 if (!project.hasProperty('ossUser')) ext.ossUser = ''
 if (!project.hasProperty('ossPassword')) ext.ossPassword = ''
 
+task sourcesJar(type: Jar) {
+    from sourceSets.main.allSource
+    classifier = 'sources'
+}
+
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    classifier = 'javadoc'
+    from javadoc.destinationDir
+}
+
+artifacts {
+    archives sourcesJar
+    archives javadocJar
+}
+
 bintray {
     user = project.bintrayUsername
     key = project.bintrayApiKey
@@ -37,10 +53,10 @@ bintray {
     publications = ['mavenJava']
     pkg {
         repo = 'maven'
-        name = 'javaslang-circuitbreaker'
-        websiteUrl = 'https://github.com/RobWin/javaslang-circuitbreaker'
-        issueTrackerUrl = 'https://github.com/RobWin/javaslang-circuitbreaker/issues'
-        vcsUrl = 'https://github.com/RobWin/javaslang-circuitbreaker.git'
+        name = "${projectArtifactId}"
+        websiteUrl = "${url}"
+        issueTrackerUrl = 'https://github.com/resilience4j/resilience4j/issues'
+        vcsUrl = 'https://github.com/resilience4j/resilience4j.git'
         desc = 'A CircuitBreaker pattern implementation for Java8 and functional programming.'
         licenses = ['Apache-2.0']
         version {
@@ -63,7 +79,7 @@ publishing {
         mavenJava(MavenPublication) {
             from components.java
             pom.withXml {
-                def devs = ['RobWin': 'Robert Winkler']
+                def devs = ['RobWin': 'Robert Winkler', 'storozhukBM': 'Bogdan Storozhuk']
                 def root = asNode()
 
                 root.dependencies.'*'.findAll() {
@@ -74,17 +90,17 @@ publishing {
                     it.scope*.value = 'compile'
                 }
 
-                root.appendNode('name', 'javaslang-circuitbreaker')
+                root.appendNode('name', "${projectArtifactId}")
                 root.appendNode('packaging', 'jar')
-                root.appendNode('url', 'https://github.com/RobWin/javaslang-circuitbreaker')
+                root.appendNode('url', "${url}")
                 root.appendNode('description', 'A CircuitBreaker pattern implementation for Java8 and functional programming .')
 
                 def license = root.appendNode('licenses').appendNode('license')
                 license.appendNode('name', 'Apache-2.0')
-                license.appendNode('url', 'https://github.com/RobWin/javaslang-circuitbreaker/blob/master/LICENSE.txt')
+                license.appendNode('url', 'https://github.com/resilience4j/resilience4j/blob/master/LICENSE.txt')
                 license.appendNode('distribution', 'repo')
 
-                root.appendNode('scm').appendNode('url', 'https://github.com/RobWin/javaslang-circuitbreaker.git')
+                root.appendNode('scm').appendNode('url', 'https://github.com/resilience4j/resilience4j.git')
 
                 def developers = root.appendNode('developers')
                 devs.each {

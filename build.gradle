@@ -13,13 +13,12 @@ buildscript {
         classpath 'me.champeau.gradle:jmh-gradle-plugin:0.3.1'
         classpath "org.asciidoctor:asciidoctor-gradle-plugin:1.5.3"
         classpath "org.ajoberstar:gradle-git:1.3.2"
-        classpath "org.jfrog.buildinfo:build-info-extractor-gradle:4.0.0"
+        classpath "org.jfrog.buildinfo:build-info-extractor-gradle:4.4.14"
         classpath 'com.github.erizo.gradle:jcstress-gradle-plugin:0.8.0'
     }
 }
 
 apply plugin: 'idea'
-apply plugin: 'maven-publish'
 apply plugin: 'com.github.kt3k.coveralls'
 apply plugin: 'com.jfrog.bintray'
 apply from: "./libraries.gradle"
@@ -44,9 +43,17 @@ allprojects {
 }
 artifactoryPublish.skip=true // apply to all projects except the root
 
+ext {
+    coreProjects = subprojects.findAll {
+        p -> !p.name.contains("test")
+    }
+}
+
 subprojects {
     apply plugin: 'java'
     apply plugin: 'maven'
+    apply plugin: 'maven-publish'
+    apply from: "${rootDir}/publishing.gradle"
 
     dependencies {
         compile ( libraries.javaslang)
@@ -73,29 +80,6 @@ subprojects {
         options.compilerArgs << "-Xlint:unchecked"
     }
 
-    task sourceJar(type: Jar) {
-        from sourceSets.main.allSource
-        classifier = 'sources'
-    }
-
-    task javadocJar(type: Jar, dependsOn: javadoc) {
-        classifier = 'javadoc'
-        from javadoc.destinationDir
-    }
-
-    artifactoryPublish {
-        dependsOn sourceJar, javadocJar
-    }
-
-    configurations {
-        published
-    }
-
-    artifacts {
-        published sourceJar
-        published javadocJar
-    }
-
     cobertura {
         coverageIgnoreTrivial = true
     }
@@ -104,10 +88,6 @@ subprojects {
         duplicateClassesStrategy = 'warn'
         jmhVersion = '1.17'
     }
-}
-
-configurations {
-    published
 }
 
 def files = subprojects.collect { new File(it.projectDir, '/build/cobertura/cobertura.ser') }
@@ -129,6 +109,7 @@ task wrapper(type: Wrapper) {
     gradleVersion = '3.2'
 }
 
+
 artifactory {
     contextUrl = 'https://oss.jfrog.org'
     resolve {
@@ -146,7 +127,7 @@ artifactory {
             password = project.hasProperty('bintrayApiKey') ? project.bintrayApiKey : System.getenv('BINTRAY_KEY')
         }
         defaults {
-            publishConfigs('published')
+            publications('mavenJava')
         }
     }
     if (System.properties['https.proxyHost']) {
