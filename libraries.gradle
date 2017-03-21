@@ -1,0 +1,37 @@
+// Allows centralized definition of the version of artifacts to
+// use.  In that respect it serves a role similar to <dependencyManagement> in Maven
+ext {
+    javaslangVersion = '2.0.5'
+    rxJavaVersion = '2.0.6'
+    junitVersion = '4.12'
+    slf4jVersion = '1.7.24'
+    assertjVersion = '3.6.2'
+    logbackVersion = '0.9.26'
+    mockitoVersion = '1.10.19'
+    powermockVersion = '1.6.6'
+    jcacheVersion = '1.0.0'
+    awaitilityVersion = '1.7.0'
+    metricsVersion = '3.1.2'
+
+    libraries = [
+            // compile
+            javaslang:  "io.javaslang:javaslang:${javaslangVersion}",
+            slf4j: "org.slf4j:slf4j-api:${slf4jVersion}",
+            rxjava2: "io.reactivex.rxjava2:rxjava:${rxJavaVersion}",
+            jcache: "javax.cache:cache-api:${jcacheVersion}",
+
+            // testCompile
+            junit:           "junit:junit:${junitVersion}",
+            assertj: "org.assertj:assertj-core:${assertjVersion}",
+            logback: "ch.qos.logback:logback-classic:${logbackVersion}",
+            mockito: "org.mockito:mockito-core:${mockitoVersion}",
+            powermock: "org.powermock:powermock:${powermockVersion}",
+            powermock_api_mockito: "org.powermock:powermock-api-mockito:${powermockVersion}",
+            powermock_module_junit4: "org.powermock:powermock-module-junit4:${powermockVersion}",
+            awaitility: "com.jayway.awaitility:awaitility:${awaitilityVersion}",
+
+            // circuitbreaker documentation
+            metrics: "io.dropwizard.metrics:metrics-core:${metricsVersion}",
+            metrics_healthcheck: "io.dropwizard.metrics:metrics-healthchecks:${metricsVersion}"
+    ]
+}

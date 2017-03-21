@@ -1,5 +1,5 @@
 dependencies {
-    compile "io.reactivex.rxjava2:rxjava:${rxJavaVersion}"
+    compile ( libraries.rxjava2)
 }
 task publishProject {
     if (project.hasProperty('rateLimiter')) {
