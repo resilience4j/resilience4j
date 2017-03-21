@@ -24,12 +24,6 @@ jar {
     }
 }
 
-if (!project.hasProperty('bintrayUsername')) ext.bintrayUsername = ''
-if (!project.hasProperty('bintrayApiKey')) ext.bintrayApiKey = ''
-if (!project.hasProperty('gpgPassphrase')) ext.gpgPassphrase = ''
-if (!project.hasProperty('ossUser')) ext.ossUser = ''
-if (!project.hasProperty('ossPassword')) ext.ossPassword = ''
-
 task sourcesJar(type: Jar) {
     from sourceSets.main.allSource
     classifier = 'sources'
@@ -46,8 +40,8 @@ artifacts {
 }
 
 bintray {
-    user = project.bintrayUsername
-    key = project.bintrayApiKey
+    user = project.hasProperty('bintrayUsername') ? project.property('bintrayUsername') : ''
+    key = project.hasProperty('bintrayApiKey') ? project.property('bintrayApiKey') : ''
     dryRun = false //Whether to run this as dry-run, without deploying
     publish = true //If version should be auto published after an upload
     publications = ['mavenJava']
@@ -63,12 +57,13 @@ bintray {
             vcsTag = project.version
             gpg {
                 sign = true //Determines whether to GPG sign the files. The default is false
-                passphrase = project.gpgPassphrase //Optional. The passphrase for GPG signing'
+                //Optional. The passphrase for GPG signing'
+                passphrase = project.hasProperty('gpgPassphrase') ? project.property('gpgPassphrase') : ''
             }
             mavenCentralSync {
                 sync = true //Optional (true by default). Determines whether to sync the version to Maven Central.
-                user = ossUser //OSS user token
-                password = ossPassword //OSS user password
+                user = project.hasProperty('ossUser') ? project.property('ossUser') : '' //OSS user token
+                password = project.hasProperty('ossPassword') ? project.property('ossPassword') : '' //OSS user password
             }
         }
     }
