@@ -12,6 +12,7 @@ ext {
     jcacheVersion = '1.0.0'
     awaitilityVersion = '1.7.0'
     metricsVersion = '3.1.2'
+    vertxVersion = '3.4.1'
 
     libraries = [
             // compile
@@ -19,6 +20,9 @@ ext {
             slf4j: "org.slf4j:slf4j-api:${slf4jVersion}",
             rxjava2: "io.reactivex.rxjava2:rxjava:${rxJavaVersion}",
             jcache: "javax.cache:cache-api:${jcacheVersion}",
+
+            // addons
+            vertx: "io.vertx:vertx-core:${vertxVersion}",
 
             // testCompile
             junit:           "junit:junit:${junitVersion}",
@@ -29,6 +33,8 @@ ext {
             powermock_api_mockito: "org.powermock:powermock-api-mockito:${powermockVersion}",
             powermock_module_junit4: "org.powermock:powermock-module-junit4:${powermockVersion}",
             awaitility: "com.jayway.awaitility:awaitility:${awaitilityVersion}",
+
+            vertx_unit: "io.vertx:vertx-unit:${vertxVersion}",
 
             // circuitbreaker documentation
             metrics: "io.dropwizard.metrics:metrics-core:${metricsVersion}",

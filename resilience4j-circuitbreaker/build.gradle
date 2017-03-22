@@ -6,9 +6,3 @@ dependencies {
     testCompile project(':resilience4j-test')
     testCompile ( libraries.metrics_healthcheck)
 }
-task publishProject {
-    if (project.hasProperty('circularbuffer')) {
-        print 'rt'
-        apply from: '../gradle/publishing.gradle'
-    }
-}

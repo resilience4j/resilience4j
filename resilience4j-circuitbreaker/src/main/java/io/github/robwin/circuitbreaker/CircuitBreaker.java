@@ -18,13 +18,6 @@
  */
 package io.github.robwin.circuitbreaker;
 
-import io.github.robwin.circuitbreaker.event.CircuitBreakerEvent;
-import io.github.robwin.circuitbreaker.internal.CircuitBreakerStateMachine;
-import io.github.robwin.circuitbreaker.utils.CircuitBreakerUtils;
-import io.github.robwin.metrics.StopWatch;
-import io.reactivex.Flowable;
-import javaslang.control.Try;
-
 import java.time.Duration;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
@@ -32,6 +25,13 @@ import java.util.concurrent.CompletionStage;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
+
+import io.github.robwin.circuitbreaker.event.CircuitBreakerEvent;
+import io.github.robwin.circuitbreaker.internal.CircuitBreakerStateMachine;
+import io.github.robwin.circuitbreaker.utils.CircuitBreakerUtils;
+import io.github.robwin.metrics.StopWatch;
+import io.reactivex.Flowable;
+import javaslang.control.Try;
 
 /**
  * A {@link CircuitBreaker} manages the state of a backend system.
@@ -301,12 +301,12 @@ public interface CircuitBreaker {
     }
 
     /**
-     * Returns a supplier which is secured by a CircuitBreaker.
+     * Returns a supplier which is decorated by a CircuitBreaker.
      *
      * @param circuitBreaker the CircuitBreaker
      * @param supplier the original supplier
      * @param <T> the type of results supplied by this supplier
-     * @return a supplier which is secured by a CircuitBreaker.
+     * @return a supplier which is decorated by a CircuitBreaker.
      */
     static <T> Try.CheckedSupplier<T> decorateCheckedSupplier(CircuitBreaker circuitBreaker, Try.CheckedSupplier<T> supplier){
         return () -> {
@@ -324,12 +324,12 @@ public interface CircuitBreaker {
     }
 
     /**
-     * Returns a supplier which is secured by a CircuitBreaker.
+     * Returns a supplier which is decorated by a CircuitBreaker.
      *
      * @param circuitBreaker the CircuitBreaker
      * @param supplier the original supplier
      * @param <T> the type of the returned CompletionStage's result
-     * @return a supplier which is secured by a CircuitBreaker.
+     * @return a supplier which is decorated by a CircuitBreaker.
      */
     static <T> Supplier<CompletionStage<T>> decorateCompletionStage(
         CircuitBreaker circuitBreaker,
@@ -372,12 +372,12 @@ public interface CircuitBreaker {
     }
 
     /**
-     * Returns a runnable which is secured by a CircuitBreaker.
+     * Returns a runnable which is decorated by a CircuitBreaker.
      *
      * @param circuitBreaker the CircuitBreaker
      * @param runnable the original runnable
      *
-     * @return a runnable which is secured by a CircuitBreaker.
+     * @return a runnable which is decorated by a CircuitBreaker.
      */
     static Try.CheckedRunnable decorateCheckedRunnable(CircuitBreaker circuitBreaker, Try.CheckedRunnable runnable){
         return () -> {
@@ -394,13 +394,13 @@ public interface CircuitBreaker {
     }
 
     /**
-     * Returns a callable which is secured by a CircuitBreaker.
+     * Returns a callable which is decorated by a CircuitBreaker.
      *
      * @param circuitBreaker the CircuitBreaker
      * @param callable the original Callable
      * @param <T> the result type of callable
      *
-     * @return a supplier which is secured by a CircuitBreaker.
+     * @return a supplier which is decorated by a CircuitBreaker.
      */
     static <T> Callable<T> decorateCallable(CircuitBreaker circuitBreaker, Callable<T> callable){
         return () -> {
@@ -418,13 +418,13 @@ public interface CircuitBreaker {
     }
 
     /**
-     * Returns a supplier which is secured by a CircuitBreaker.
+     * Returns a supplier which is decorated by a CircuitBreaker.
      *
      * @param circuitBreaker the CircuitBreaker
      * @param supplier the original supplier
      * @param <T> the type of results supplied by this supplier
      *
-     * @return a supplier which is secured by a CircuitBreaker.
+     * @return a supplier which is decorated by a CircuitBreaker.
      */
     static <T> Supplier<T> decorateSupplier(CircuitBreaker circuitBreaker, Supplier<T> supplier){
         return () -> {
@@ -442,13 +442,13 @@ public interface CircuitBreaker {
     }
 
     /**
-     * Returns a consumer which is secured by a CircuitBreaker.
+     * Returns a consumer which is decorated by a CircuitBreaker.
 
      * @param circuitBreaker the CircuitBreaker
      * @param consumer the original consumer
      * @param <T> the type of the input to the consumer
      *
-     * @return a consumer which is secured by a CircuitBreaker.
+     * @return a consumer which is decorated by a CircuitBreaker.
      */
     static <T> Consumer<T> decorateConsumer(CircuitBreaker circuitBreaker, Consumer<T> consumer){
         return (t) -> {
@@ -465,13 +465,13 @@ public interface CircuitBreaker {
     }
 
     /**
-     * Returns a consumer which is secured by a CircuitBreaker.
+     * Returns a consumer which is decorated by a CircuitBreaker.
 
      * @param circuitBreaker the CircuitBreaker
      * @param consumer the original consumer
      * @param <T> the type of the input to the consumer
      *
-     * @return a consumer which is secured by a CircuitBreaker.
+     * @return a consumer which is decorated by a CircuitBreaker.
      */
     static <T> Try.CheckedConsumer<T> decorateCheckedConsumer(CircuitBreaker circuitBreaker, Try.CheckedConsumer<T> consumer){
         return (t) -> {
@@ -488,12 +488,12 @@ public interface CircuitBreaker {
     }
 
     /**
-     * Returns a runnable which is secured by a CircuitBreaker.
+     * Returns a runnable which is decorated by a CircuitBreaker.
      *
      * @param circuitBreaker the CircuitBreaker
      * @param runnable the original runnable
      *
-     * @return a runnable which is secured by a CircuitBreaker.
+     * @return a runnable which is decorated by a CircuitBreaker.
      */
     static Runnable decorateRunnable(CircuitBreaker circuitBreaker, Runnable runnable){
         return () -> {
@@ -510,13 +510,13 @@ public interface CircuitBreaker {
     }
 
     /**
-     * Returns a function which is secured by a CircuitBreaker.
+     * Returns a function which is decorated by a CircuitBreaker.
 
      * @param circuitBreaker the CircuitBreaker
      * @param function the original function
      * @param <T> the type of the input to the function
      * @param <R> the type of the result of the function
-     * @return a function which is secured by a CircuitBreaker.
+     * @return a function which is decorated by a CircuitBreaker.
      */
     static <T, R> Function<T, R> decorateFunction(CircuitBreaker circuitBreaker, Function<T, R> function){
         return (T t) -> {
@@ -534,13 +534,13 @@ public interface CircuitBreaker {
     }
 
     /**
-     * Returns a function which is secured by a CircuitBreaker.
+     * Returns a function which is decorated by a CircuitBreaker.
      *
      * @param circuitBreaker the CircuitBreaker
      * @param function the original function
      * @param <T> the type of the input to the function
      * @param <R> the type of the result of the function
-     * @return a function which is secured by a CircuitBreaker.
+     * @return a function which is decorated by a CircuitBreaker.
      */
     static <T, R> Try.CheckedFunction<T, R> decorateCheckedFunction(CircuitBreaker circuitBreaker, Try.CheckedFunction<T, R> function){
         return (T t) -> {

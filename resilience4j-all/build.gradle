@@ -10,10 +10,3 @@ dependencies {
     compile project(':resilience4j-cache')
     testCompile project(':resilience4j-test')
 }
-
-task publishProject {
-    if (project.hasProperty('all')) {
-        print 'all'
-        apply from: '../gradle/publishing.gradle'
-    }
-}

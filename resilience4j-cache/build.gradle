@@ -2,10 +2,3 @@ dependencies {
     compile ( libraries.rxjava2)
     compile ( libraries.jcache)
 }
-
-task publishProject {
-    if (project.hasProperty('circularbuffer')) {
-        print 'rt'
-        apply from: '../gradle/publishing.gradle'
-    }
-}

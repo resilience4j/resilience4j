@@ -1,9 +1,3 @@
 dependencies {
     compile ( libraries.rxjava2)
 }
-task publishProject {
-    if (project.hasProperty('rateLimiter')) {
-        print 'rt'
-        apply from: '../gradle/publishing.gradle'
-    }
-}

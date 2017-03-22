@@ -2,9 +2,3 @@ dependencies {
     compile ( libraries.rxjava2)
     testCompile project(':resilience4j-test')
 }
-task publishProject {
-    if (project.hasProperty('circularbuffer')) {
-        print 'rt'
-        apply from: '../gradle/publishing.gradle'
-    }
-}
