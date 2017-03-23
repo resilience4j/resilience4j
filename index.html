@@ -6,7 +6,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="generator" content="Asciidoctor 1.5.3">
 <meta name="author" content="Robert Winkler">
-<title>Javaslang-Circuitbreaker User Guide</title>
+<title>Resilience4j User Guide</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
 <style>
 /* Asciidoctor default stylesheet | MIT License | http://asciidoctor.org */
@@ -512,7 +512,7 @@ table.CodeRay td.code>pre{padding:0}
 </head>
 <body class="book toc2 toc-left">
 <div id="header">
-<h1>Javaslang-Circuitbreaker User Guide</h1>
+<h1>Resilience4j User Guide</h1>
 <div class="details">
 <span id="author" class="author">Robert Winkler</span><br>
 <span id="revnumber">version 0.8.2,</span>
@@ -577,6 +577,18 @@ table.CodeRay td.code>pre{padding:0}
 <div class="sect1">
 <h2 id="_introduction"><a class="anchor" href="#_introduction"></a>1. Introduction</h2>
 <div class="sectionbody">
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+javaslang-circuitbreaker has been renamed to resilience4j. We are still migrating the project to the new GitHub Organisation.
+</td>
+</tr>
+</table>
+</div>
 <div class="paragraph">
 <p>This library is a lightweight, easy-to-use fault tolerance library inspired by <a href="https://github.com/Netflix/Hystrix">Netflix Hystrix</a>, but designed for Java 8 and functional programming. Lightweight, because the library only uses <a href="https://github.com/javaslang/javaslang">Javaslang</a>, <a href="https://github.com/ReactiveX/RxJava">RxJava</a> and SLF4J-API, which do no have any other external library dependencies. Netflix Hystrix, in contrast, has a compile dependency to <a href="https://github.com/Netflix/archaius">Archaius</a> which has many more external library dependencies such as Guava and Apache Commons Configuration.</p>
 </div>
@@ -1337,7 +1349,7 @@ reporter.start(<span class="integer">1</span>, <span class="predefined-type">Tim
 <div id="footer">
 <div id="footer-text">
 Version 0.8.2<br>
-Last updated 2017-03-23 08:23:11 +01:00
+Last updated 2017-03-23 08:35:45 +01:00
 </div>
 </div>
 </body>
