@@ -5,7 +5,7 @@ asciidoctor.dependsOn test
 publishGhPages.dependsOn asciidoctor
 
 githubPages {
-    repoUri = 'https://github.com/RobWin/javaslang-circuitbreaker.git'
+    repoUri = 'https://github.com/resilience4j/resilience4j.git'
 
     credentials {
         username = project.hasProperty('githubUser') ? project.githubUser : System.getenv('GITHUB_USER')
