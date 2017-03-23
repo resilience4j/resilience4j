@@ -516,7 +516,7 @@ table.CodeRay td.code>pre{padding:0}
 <div class="details">
 <span id="author" class="author">Robert Winkler</span><br>
 <span id="revnumber">version 0.8.2,</span>
-<span id="revdate">2017-03-02</span>
+<span id="revdate">2017-03-23</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">Table of Contents</div>
@@ -857,8 +857,8 @@ CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom()
         .ringBufferSizeInHalfOpenState(<span class="integer">2</span>)
         .waitDurationInOpenState(<span class="predefined-type">Duration</span>.ofMillis(<span class="integer">1000</span>))
         .recordFailure(throwable -&gt; API.Match(throwable).of(
-                Case(instanceOf(WebServiceException.class), <span class="predefined-constant">true</span>),
-                Case(<span class="error">$</span>(), <span class="predefined-constant">false</span>)))
+                API.Case(Predicates.instanceOf(WebServiceException.class), <span class="predefined-constant">true</span>),
+                API.Case(API.<span class="error">$</span>(), <span class="predefined-constant">false</span>)))
         .build();
 CircuitBreaker circuitBreaker = CircuitBreaker.of(<span class="string"><span class="delimiter">&quot;</span><span class="content">testName</span><span class="delimiter">&quot;</span></span>, circuitBreakerConfig);
 
@@ -1337,7 +1337,7 @@ reporter.start(<span class="integer">1</span>, <span class="predefined-type">Tim
 <div id="footer">
 <div id="footer-text">
 Version 0.8.2<br>
-Last updated 2017-02-02 11:02:10 +01:00
+Last updated 2017-03-23 08:23:11 +01:00
 </div>
 </div>
 </body>
