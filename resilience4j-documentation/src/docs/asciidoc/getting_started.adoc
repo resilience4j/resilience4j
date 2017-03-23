@@ -10,5 +10,5 @@ repositories {
     jcenter()
 }
 
-compile "io.github.robwin:javaslang-circuitbreaker:{release-version}"
+compile "io.github.resilience4j:javaslang-circuitbreaker:{release-version}"
 ----

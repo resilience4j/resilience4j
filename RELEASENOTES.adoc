@@ -90,3 +90,7 @@
 * Issue #49: Added execute methods to CircuitBreaker interface and Decorators builder. This makes it easier to decorate and call a function at once.
 * Updated rxjava from 2.0.3 to 2.0.6
 * Updated slf4j-api from 1.7.12 to 1.7.24
+
+== Version 0.9.0
+* PR #59: Project has been renamed to resilience4j and has been modularized.
+* PR #59: Renamed packages from io.github.robwin to io.github.resilience4j.
