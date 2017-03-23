@@ -1,0 +1,5 @@
+dependencies {
+    compile ( libraries.rxjava2)
+    compile project(':resilience4j-circularbuffer')
+    testCompile project(':resilience4j-circuitbreaker')
+}

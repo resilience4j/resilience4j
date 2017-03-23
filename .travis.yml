@@ -1,4 +1,10 @@
 language: java
+
+sudo: false
+addons:
+  apt:
+    packages:
+      - oracle-java8-installer
 jdk:
 - oraclejdk8
 
@@ -6,11 +12,11 @@ before_install:
 - chmod +x gradlew
 
 script:
-- ./gradlew clean check allTests -x test
+- ./gradlew clean check
 
 after_success:
 - ./gradlew coberturaReport coveralls
-- ./gradlew artifactoryPublish -PbintrayUsername="${BINTRAY_USER}" -PbintrayApiKey="${BINTRAY_KEY}"
+#- ./gradlew artifactoryPublish -PbintrayUsername="${BINTRAY_USER}" -PbintrayApiKey="${BINTRAY_KEY}"
 
 before_cache:
   - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock

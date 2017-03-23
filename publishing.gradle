@@ -1,0 +1,111 @@
+import java.text.SimpleDateFormat
+
+Date buildTimeAndDate = new Date()
+ext {
+    buildDate = new SimpleDateFormat('yyyy-MM-dd').format(buildTimeAndDate)
+    buildTime = new SimpleDateFormat('HH:mm:ss.SSSZ').format(buildTimeAndDate)
+}
+
+def projectArtifactId = 'resilience4j'
+def url = "https://github.com/resilience4j/resilience4j"
+
+jar {
+    manifest {
+        attributes(
+                'Built-By': 'Robert Winkler',
+                'Created-By': System.properties['java.version'] + " (" + System.properties['java.vendor'] + " " + System.properties['java.vm.version'] + ")",
+                'Build-Date': project.buildDate,
+                'Build-Time': project.buildTime,
+                'Specification-Title': projectArtifactId,
+                'Specification-Version': project.version,
+                'Implementation-Title': projectArtifactId,
+                'Implementation-Version': project.version
+        )
+    }
+}
+
+task sourcesJar(type: Jar) {
+    from sourceSets.main.allSource
+    classifier = 'sources'
+}
+
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    classifier = 'javadoc'
+    from javadoc.destinationDir
+}
+
+artifacts {
+    archives sourcesJar
+    archives javadocJar
+}
+
+bintray {
+    user = project.hasProperty('bintrayUsername') ? project.property('bintrayUsername') : ''
+    key = project.hasProperty('bintrayApiKey') ? project.property('bintrayApiKey') : ''
+    dryRun = false //Whether to run this as dry-run, without deploying
+    publish = true //If version should be auto published after an upload
+    publications = ['mavenJava']
+    pkg {
+        repo = 'maven'
+        name = "${projectArtifactId}"
+        websiteUrl = "${url}"
+        issueTrackerUrl = 'https://github.com/resilience4j/resilience4j/issues'
+        vcsUrl = 'https://github.com/resilience4j/resilience4j.git'
+        desc = 'A CircuitBreaker pattern implementation for Java8 and functional programming.'
+        licenses = ['Apache-2.0']
+        version {
+            vcsTag = project.version
+            gpg {
+                sign = true //Determines whether to GPG sign the files. The default is false
+                //Optional. The passphrase for GPG signing'
+                passphrase = project.hasProperty('gpgPassphrase') ? project.property('gpgPassphrase') : ''
+            }
+            mavenCentralSync {
+                sync = true //Optional (true by default). Determines whether to sync the version to Maven Central.
+                user = project.hasProperty('ossUser') ? project.property('ossUser') : '' //OSS user token
+                password = project.hasProperty('ossPassword') ? project.property('ossPassword') : '' //OSS user password
+            }
+        }
+    }
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+            pom.withXml {
+                def devs = ['RobWin': 'Robert Winkler', 'storozhukBM': 'Bogdan Storozhuk']
+                def root = asNode()
+
+                root.dependencies.'*'.findAll() {
+                    it.scope.text() == 'runtime' && project.configurations.compile.allDependencies.find { dep ->
+                        dep.name == it.artifactId.text()
+                    }
+                }.each() {
+                    it.scope*.value = 'compile'
+                }
+
+                root.appendNode('name', "${projectArtifactId}")
+                root.appendNode('packaging', 'jar')
+                root.appendNode('url', "${url}")
+                root.appendNode('description', 'A CircuitBreaker pattern implementation for Java8 and functional programming .')
+
+                def license = root.appendNode('licenses').appendNode('license')
+                license.appendNode('name', 'Apache-2.0')
+                license.appendNode('url', 'https://github.com/resilience4j/resilience4j/blob/master/LICENSE.txt')
+                license.appendNode('distribution', 'repo')
+
+                root.appendNode('scm').appendNode('url', 'https://github.com/resilience4j/resilience4j.git')
+
+                def developers = root.appendNode('developers')
+                devs.each {
+                    def d = developers.appendNode('developer')
+                    d.appendNode('id', it.key)
+                    d.appendNode('name', it.value)
+                }
+            }
+            artifact sourcesJar
+            artifact javadocJar
+        }
+    }
+}

@@ -1,0 +1,8 @@
+apply plugin: 'jcstress'
+
+dependencies {
+    compile project(':resilience4j-metrics')
+    compile ( libraries.rxjava2)
+    testCompile project(':resilience4j-test')
+    testCompile ( libraries.metrics_healthcheck)
+}
