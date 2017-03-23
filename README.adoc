@@ -19,7 +19,7 @@ To highlight a few differences to Netflix Hystrix:
 
 == Setup and Usage Guide
 
-Setup and usage is described in our http://robwin.github.io/javaslang-circuitbreaker/[User Guide].
+Setup and usage is described in our http://resilience4j.github.io/resilience4j/[User Guide].
 
 == Spring Boot demo
 
