@@ -216,6 +216,16 @@ public class SemaphoreBasedRateLimiterImplTest {
     }
 
     @Test
+    public void isUpperLimitedForPermissions() throws Exception {
+        ScheduledExecutorService scheduler = mock(ScheduledExecutorService.class);
+        SemaphoreBasedRateLimiter limit = new SemaphoreBasedRateLimiter("test", config, scheduler);
+        RateLimiter.Metrics metrics = limit.getMetrics();
+        then(metrics.getAvailablePermissions()).isEqualTo(2);
+        limit.refreshLimit();
+        then(metrics.getAvailablePermissions()).isEqualTo(2);
+    }
+
+    @Test
     public void getDetailedMetrics() throws Exception {
         ScheduledExecutorService scheduler = mock(ScheduledExecutorService.class);
         SemaphoreBasedRateLimiter limit = new SemaphoreBasedRateLimiter("test", config, scheduler);
