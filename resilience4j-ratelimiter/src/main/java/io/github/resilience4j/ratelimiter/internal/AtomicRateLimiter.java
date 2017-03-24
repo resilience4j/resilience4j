@@ -66,7 +66,7 @@ public class AtomicRateLimiter implements RateLimiter {
         permissionsPerCycle = rateLimiterConfig.getLimitForPeriod();
 
         waitingThreads = new AtomicInteger(0);
-        state = new AtomicReference<>(new State(0, 0, 0));
+        state = new AtomicReference<>(new State(0, permissionsPerCycle, 0));
 
         PublishProcessor<RateLimiterEvent> publisher = PublishProcessor.create();
         this.eventPublisher = publisher.toSerialized();
