@@ -294,7 +294,7 @@ it takes only `143±1 [ns]` to acquire permission.
 So you can easily restrict not only network calls but your local in-memory operations, too.
 
 
-== Companies who use javaslang-circuitbreaker
+== Companies who use Resilience4j
 
 * Deutsche Telekom (In an application with over 400 million request per day)
 * AOL (In an application with low latency requirements)

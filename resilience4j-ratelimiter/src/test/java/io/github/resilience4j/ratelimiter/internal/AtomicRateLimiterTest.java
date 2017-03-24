@@ -49,6 +49,7 @@ public class AtomicRateLimiterTest {
     private static final String LIMITER_NAME = "test";
     private static final long CYCLE_IN_NANOS = 500_000_000L;
     private static final long POLL_INTERVAL_IN_NANOS = 2_000_000L;
+    private static final int PERMISSIONS_RER_CYCLE = 1;
     private RateLimiterConfig rateLimiterConfig;
     private AtomicRateLimiter rateLimiter;
     private AtomicRateLimiter.AtomicRateLimiterMetrics metrics;
@@ -68,7 +69,7 @@ public class AtomicRateLimiterTest {
     @Before
     public void setup() {
         rateLimiterConfig = RateLimiterConfig.custom()
-            .limitForPeriod(1)
+            .limitForPeriod(PERMISSIONS_RER_CYCLE)
             .limitRefreshPeriod(Duration.ofNanos(CYCLE_IN_NANOS))
             .timeoutDuration(Duration.ZERO)
             .build();
@@ -76,6 +77,14 @@ public class AtomicRateLimiterTest {
         rateLimiter = PowerMockito.spy(testLimiter);
         metrics = rateLimiter.getDetailedMetrics();
         eventStream = rateLimiter.getEventStream();
+    }
+
+    @Test
+    public void permissionsInFirstCycle() throws Exception {
+        setTimeOnNanos(CYCLE_IN_NANOS - 10);
+        RateLimiter.Metrics metrics = rateLimiter.getMetrics();
+        int availablePermissions = metrics.getAvailablePermissions();
+        then(availablePermissions).isEqualTo(PERMISSIONS_RER_CYCLE);
     }
 
     @Test
