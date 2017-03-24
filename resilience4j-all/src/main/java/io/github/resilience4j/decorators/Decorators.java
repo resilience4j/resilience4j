@@ -9,11 +9,13 @@ import javaslang.control.Try;
 
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
 /**
- * A Decorator builder which can be used to apply multiple decorators to a (Checked-)Supplier, (Checked-)Function or (Checked-)Runnable.
+ * A Decorator builder which can be used to apply multiple decorators to a (Checked-)Supplier, (Checked-)Function,
+ * (Checked-)Runnable, (Checked-)CompletionStage or (Checked-)Consumer
  */
 public interface Decorators{
 
@@ -45,6 +47,9 @@ public interface Decorators{
         return new DecorateCompletionStage<>(stageSupplier);
     }
 
+    public static <T> DecorateConsumer<T> ofConsumer(Consumer<T> consumer) {
+        return new DecorateConsumer<>(consumer);
+    }
 
     class DecorateSupplier<T>{
         private Supplier<T> supplier;
@@ -266,6 +271,33 @@ public interface Decorators{
 
         public CompletionStage<T> get() {
             return stageSupplier.get();
+        }
+    }
+
+    class DecorateConsumer<T> {
+
+        private Consumer<T> consumer;
+
+        private DecorateConsumer(Consumer<T> consumer) {
+            this.consumer = consumer;
+        }
+
+        public DecorateConsumer<T> withCircuitBreaker(CircuitBreaker circuitBreaker) {
+            consumer = CircuitBreaker.decorateConsumer(circuitBreaker, consumer);
+            return this;
+        }
+
+        public DecorateConsumer<T> withRateLimiter(RateLimiter rateLimiter) {
+            consumer = RateLimiter.decorateConsumer(rateLimiter, consumer);
+            return this;
+        }
+
+        public Consumer<T> decorate() {
+            return consumer;
+        }
+
+        public void accept(T obj) {
+            consumer.accept(obj);
         }
     }
 }
