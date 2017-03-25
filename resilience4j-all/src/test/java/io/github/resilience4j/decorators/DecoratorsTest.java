@@ -212,7 +212,7 @@ public class DecoratorsTest {
             .withRateLimiter(rateLimiter)
             .decorate();
 
-        alignTime();
+        alignTime(rateLimiter);
         Try<String> firstTry = Try.of(restrictedSupplier);
         assertThat(firstTry.isSuccess()).isTrue();
         Try<String> secondTry = Try.of(restrictedSupplier);
@@ -223,9 +223,13 @@ public class DecoratorsTest {
         BDDMockito.then(helloWorldService).should(times(1)).returnHelloWorld();
     }
 
-    private void alignTime() {
-        // Wait to the start of the next second in spin loop
-        while (System.nanoTime() % 1_000_000_000L > 10_000L) {
+    private void alignTime(RateLimiter rateLimiter) {
+        RateLimiter.Metrics metrics = rateLimiter.getMetrics();
+        while (rateLimiter.getPermission(Duration.ZERO)) {
+            state = !state;
+        }
+        // Wait to the start of the next cycle in spin loop
+        while (metrics.getAvailablePermissions() == 0) {
             state = !state;
         }
         System.out.println(state);

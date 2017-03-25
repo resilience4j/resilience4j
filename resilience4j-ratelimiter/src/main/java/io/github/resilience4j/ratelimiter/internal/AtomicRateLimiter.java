@@ -48,6 +48,7 @@ import java.util.function.UnaryOperator;
  * {@link AtomicRateLimiter.State}
  */
 public class AtomicRateLimiter implements RateLimiter {
+    private static final long nanoTimeStart = nanoTime();
 
     private final String name;
     private final RateLimiterConfig rateLimiterConfig;
@@ -70,6 +71,13 @@ public class AtomicRateLimiter implements RateLimiter {
 
         PublishProcessor<RateLimiterEvent> publisher = PublishProcessor.create();
         this.eventPublisher = publisher.toSerialized();
+    }
+
+    /**
+     * Calculates time elapsed from the class loading.
+     */
+    private long currentNanoTime() {
+        return nanoTime() - nanoTimeStart;
     }
 
     /**
@@ -155,7 +163,6 @@ public class AtomicRateLimiter implements RateLimiter {
         State nextState = reservePermissions(timeoutInNanos, nextCycle, nextPermissions, nextNanosToWait);
         return nextState;
     }
-
 
     /**
      * Calculates time to wait for next permission as
@@ -282,13 +289,6 @@ public class AtomicRateLimiter implements RateLimiter {
         return new AtomicRateLimiterMetrics();
     }
 
-    /**
-     * Created only for test purposes. Simply calls {@link System#nanoTime()}
-     */
-    private long currentNanoTime() {
-        return nanoTime();
-    }
-
     private void publishRateLimiterEvent(boolean permissionAcquired) {
         if (!eventPublisher.hasSubscribers()) {
             return;
@@ -317,6 +317,7 @@ public class AtomicRateLimiter implements RateLimiter {
     private static class State {
 
         private final long activeCycle;
+
         private final int activePermissions;
         private final long nanosToWait;
 
@@ -371,5 +372,6 @@ public class AtomicRateLimiter implements RateLimiter {
             State estimatedState = calculateNextState(-1, currentState);
             return estimatedState.activeCycle;
         }
+
     }
 }
