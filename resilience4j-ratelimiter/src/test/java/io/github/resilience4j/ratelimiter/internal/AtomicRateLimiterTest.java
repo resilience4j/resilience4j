@@ -80,6 +80,31 @@ public class AtomicRateLimiterTest {
     }
 
     @Test
+    public void notSpyRawTest() {
+        AtomicRateLimiter rawLimiter = new AtomicRateLimiter("rawLimiter", rateLimiterConfig);
+        AtomicRateLimiter.AtomicRateLimiterMetrics rawDetailedMetrics = rawLimiter.getDetailedMetrics();
+
+        long firstCycle = rawDetailedMetrics.getCycle();
+        while (firstCycle == rawDetailedMetrics.getCycle()) {
+            System.out.print('.'); // wait for current cycle to pass
+        }
+
+        boolean firstPermission = rawLimiter.getPermission(Duration.ZERO);
+        long nanosToWait = rawDetailedMetrics.getNanosToWait();
+        long startTime = System.nanoTime();
+        while(System.nanoTime() - startTime < nanosToWait) {
+            System.out.print('*'); // wait for permission renewal
+        }
+
+        boolean secondPermission = rawLimiter.getPermission(Duration.ZERO);
+        long secondCycle = rawDetailedMetrics.getCycle();
+
+        then(secondCycle - firstCycle).isEqualTo(2);
+        then(firstPermission).isTrue();
+        then(secondPermission).isTrue();
+    }
+
+    @Test
     public void permissionsInFirstCycle() throws Exception {
         setTimeOnNanos(CYCLE_IN_NANOS - 10);
         RateLimiter.Metrics metrics = rateLimiter.getMetrics();
