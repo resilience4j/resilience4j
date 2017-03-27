@@ -28,6 +28,11 @@ import java.lang.reflect.Method;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 
+/**
+ * This Spring AOP aspect intercepts all methods which are annotated with a {@link CircuitBreaker} annotation.
+ * The aspect protects an annotated method with a CircuitBreaker. The CircuitBreakerRegistry is used to retrieve an instance of a CircuitBreaker for
+ * a specific backend.
+ */
 @Aspect
 public class CircuitBreakerAspect {
 

@@ -22,11 +22,16 @@ import org.springframework.context.annotation.Configuration;
 
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
+import io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent;
 import io.github.resilience4j.circuitbreaker.internal.InMemoryCircuitBreakerRegistry;
+import io.github.resilience4j.circuitbreaker.monitoring.endpoint.CircuitBreakerEndpoint;
+import io.github.resilience4j.circuitbreaker.monitoring.endpoint.CircuitBreakerEventsEndpoint;
+import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
+import io.github.resilience4j.consumer.EventConsumerRegistry;
 
 /**
  * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration
- * Auto-configuration} for javaslang-circuitbreaker.
+ * Auto-configuration} for resilience4j circuitbreaker.
  */
 @Configuration
 @ConditionalOnClass(CircuitBreaker.class)
@@ -42,5 +47,26 @@ public class CircuitBreakerAutoConfiguration {
     public CircuitBreakerAspect circuitBreakerAspect(CircuitBreakerProperties circuitBreakerProperties,
                                                      CircuitBreakerRegistry circuitBreakerRegistry){
         return new CircuitBreakerAspect(circuitBreakerProperties, circuitBreakerRegistry);
+    }
+
+    @Bean
+    public CircuitBreakerEndpoint circuitBreakerEndpoint(CircuitBreakerRegistry circuitBreakerRegistry) {
+        return new CircuitBreakerEndpoint(circuitBreakerRegistry);
+    }
+
+    @Bean
+    public CircuitBreakerEventsEndpoint circuitBreakerEventsEndpoint(CircuitBreakerEndpoint circuitBreakerEndpoint,
+                                                                     EventConsumerRegistry<CircuitBreakerEvent> eventConsumerRegistry) {
+        return new CircuitBreakerEventsEndpoint(circuitBreakerEndpoint, eventConsumerRegistry);
+    }
+
+    /**
+     * The EventConsumerRegistry is used to manage EventConsumer instances.
+     * The EventConsumerRegistry is used by the CircuitBreakerHealthIndicator to show the latest CircuitBreakerEvents events
+     * for each CircuitBreaker instance.
+     */
+    @Bean
+    public EventConsumerRegistry<CircuitBreakerEvent> eventConsumerRegistry() {
+        return new DefaultEventConsumerRegistry<>();
     }
 }

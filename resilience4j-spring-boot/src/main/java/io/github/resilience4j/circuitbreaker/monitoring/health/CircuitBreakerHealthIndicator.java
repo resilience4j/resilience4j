@@ -28,6 +28,9 @@ import io.github.resilience4j.circuitbreaker.autoconfigure.CircuitBreakerPropert
 import io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
 
+/**
+ * A Spring Boot health indicators which adds the state of a CircuitBreaker and it's metrics to the health endpoints
+ */
 public class CircuitBreakerHealthIndicator implements HealthIndicator {
 
     private static final String FAILURE_RATE = "failureRate";

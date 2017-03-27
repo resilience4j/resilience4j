@@ -19,19 +19,28 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
+import org.springframework.boot.actuate.health.HealthIndicator;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.context.annotation.Bean;
+import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import java.io.IOException;
 
 import io.github.resilience4j.circuitbreaker.autoconfigure.CircuitBreakerProperties;
+import io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent;
+import io.github.resilience4j.circuitbreaker.monitoring.endpoint.CircuitBreakerEndpointResponse;
+import io.github.resilience4j.circuitbreaker.monitoring.health.CircuitBreakerHealthIndicator;
 import io.github.resilience4j.circuitbreaker.test.DummyService;
+import io.github.resilience4j.consumer.EventConsumerRegistry;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 @RunWith(SpringJUnit4ClassRunner.class)
-@SpringBootTest(classes = CircuitBreakerAutoConfigurationTest.TestApplication.class)
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
+        classes = CircuitBreakerAutoConfigurationTest.TestApplication.class)
 public class CircuitBreakerAutoConfigurationTest {
 
     @Autowired
@@ -42,6 +51,9 @@ public class CircuitBreakerAutoConfigurationTest {
 
     @Autowired
     DummyService dummyService;
+
+    @Autowired
+    private TestRestTemplate restTemplate;
 
     /**
      * The test verifies that a CircuitBreaker instance is created and configured properly when the DummyService is invoked and
@@ -70,6 +82,16 @@ public class CircuitBreakerAutoConfigurationTest {
         assertThat(circuitBreaker.getCircuitBreakerConfig().getRingBufferSizeInClosedState()).isEqualTo(6);
         assertThat(circuitBreaker.getCircuitBreakerConfig().getRingBufferSizeInHalfOpenState()).isEqualTo(2);
         assertThat(circuitBreaker.getCircuitBreakerConfig().getFailureRateThreshold()).isEqualTo(70f);
+
+        // Test Actuator endpoints
+
+        ResponseEntity<CircuitBreakerEndpointResponse> circuitBreakerList = restTemplate.getForEntity("/circuitbreaker", CircuitBreakerEndpointResponse.class);
+        assertThat(circuitBreakerList.getBody().getCircuitBreakers()).hasSize(2).containsExactly("backendA", "backendB");
+
+        /*
+        ResponseEntity<CircuitBreakerEventsEndpointResponse> circuitBreakerEventList = restTemplate.getForEntity("/circuitbreaker/events", CircuitBreakerEventsEndpointResponse.class);
+        assertThat(circuitBreakerEventList.getBody().getCircuitBreakerEvents()).hasSize(21);
+        */
     }
 
     @SpringBootApplication
@@ -78,5 +100,24 @@ public class CircuitBreakerAutoConfigurationTest {
             SpringApplication.run(TestApplication.class, args);
         }
 
+        @Bean
+        public HealthIndicator backendA(CircuitBreakerRegistry circuitBreakerRegistry,
+                                        EventConsumerRegistry<CircuitBreakerEvent> eventConsumerRegistry,
+                                        CircuitBreakerProperties circuitBreakerProperties){
+            return new CircuitBreakerHealthIndicator(circuitBreakerRegistry,
+                    eventConsumerRegistry,
+                    circuitBreakerProperties,
+                    "backendA");
+        }
+
+        @Bean
+        public HealthIndicator backendB(CircuitBreakerRegistry circuitBreakerRegistry,
+                                        EventConsumerRegistry<CircuitBreakerEvent> eventConsumerRegistry,
+                                        CircuitBreakerProperties circuitBreakerProperties){
+            return new CircuitBreakerHealthIndicator(circuitBreakerRegistry,
+                    eventConsumerRegistry,
+                    circuitBreakerProperties,
+                    "backendB");
+        }
     }
 }
