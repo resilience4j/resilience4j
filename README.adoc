@@ -59,7 +59,7 @@ Try.CheckedSupplier<String> decoratedSupplier = Decorators
     .decorate();
 
 // Invoke the decorated function and recover from any exception
-Try<String> result = Try.of(supplier)
+Try<String> result = Try.of(decoratedSupplier)
     .recover(throwable -> "Hello from Recovery");
 ----
 
