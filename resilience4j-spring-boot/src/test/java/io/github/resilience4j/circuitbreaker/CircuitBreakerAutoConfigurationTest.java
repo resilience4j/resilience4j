@@ -32,6 +32,7 @@ import java.io.IOException;
 import io.github.resilience4j.circuitbreaker.autoconfigure.CircuitBreakerProperties;
 import io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent;
 import io.github.resilience4j.circuitbreaker.monitoring.endpoint.CircuitBreakerEndpointResponse;
+import io.github.resilience4j.circuitbreaker.monitoring.endpoint.CircuitBreakerEventsEndpointResponse;
 import io.github.resilience4j.circuitbreaker.monitoring.health.CircuitBreakerHealthIndicator;
 import io.github.resilience4j.circuitbreaker.test.DummyService;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
@@ -88,10 +89,9 @@ public class CircuitBreakerAutoConfigurationTest {
         ResponseEntity<CircuitBreakerEndpointResponse> circuitBreakerList = restTemplate.getForEntity("/circuitbreaker", CircuitBreakerEndpointResponse.class);
         assertThat(circuitBreakerList.getBody().getCircuitBreakers()).hasSize(2).containsExactly("backendA", "backendB");
 
-        /*
+
         ResponseEntity<CircuitBreakerEventsEndpointResponse> circuitBreakerEventList = restTemplate.getForEntity("/circuitbreaker/events", CircuitBreakerEventsEndpointResponse.class);
-        assertThat(circuitBreakerEventList.getBody().getCircuitBreakerEvents()).hasSize(21);
-        */
+        assertThat(circuitBreakerEventList.getBody().getCircuitBreakerEvents()).hasSize(2);
     }
 
     @SpringBootApplication
