@@ -1,0 +1,8 @@
+dependencies {
+    compile ( libraries.spring_boot_aop )
+    compile ( libraries.spring_boot_actuator )
+    compile ( libraries.spring_boot_web )
+    compile project(':resilience4j-circuitbreaker')
+    compile project(':resilience4j-consumer')
+    testCompile ( libraries.spring_boot_test )
+}

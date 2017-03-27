@@ -1,0 +1,2 @@
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+io.github.resilience4j.circuitbreaker.autoconfigure.CircuitBreakerAutoConfiguration

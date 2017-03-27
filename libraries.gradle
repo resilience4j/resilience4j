@@ -13,6 +13,7 @@ ext {
     awaitilityVersion = '1.7.0'
     metricsVersion = '3.1.2'
     vertxVersion = '3.4.1'
+    springBootVersion = '1.4.3.RELEASE'
 
     libraries = [
             // compile
@@ -20,9 +21,6 @@ ext {
             slf4j: "org.slf4j:slf4j-api:${slf4jVersion}",
             rxjava2: "io.reactivex.rxjava2:rxjava:${rxJavaVersion}",
             jcache: "javax.cache:cache-api:${jcacheVersion}",
-
-            // addons
-            vertx: "io.vertx:vertx-core:${vertxVersion}",
 
             // testCompile
             junit:           "junit:junit:${junitVersion}",
@@ -33,8 +31,15 @@ ext {
             powermock_api_mockito: "org.powermock:powermock-api-mockito:${powermockVersion}",
             powermock_module_junit4: "org.powermock:powermock-module-junit4:${powermockVersion}",
             awaitility: "com.jayway.awaitility:awaitility:${awaitilityVersion}",
-
+            // vert.x addon
+            vertx: "io.vertx:vertx-core:${vertxVersion}",
             vertx_unit: "io.vertx:vertx-unit:${vertxVersion}",
+
+            // spring boot addon
+            spring_boot_aop: "org.springframework.boot:spring-boot-starter-aop:${springBootVersion}",
+            spring_boot_actuator: "org.springframework.boot:spring-boot-starter-actuator:${springBootVersion}",
+            spring_boot_web: "org.springframework.boot:spring-boot-starter-web:${springBootVersion}",
+            spring_boot_test:  "org.springframework.boot:spring-boot-starter-test:${springBootVersion}",
 
             // circuitbreaker documentation
             metrics: "io.dropwizard.metrics:metrics-core:${metricsVersion}",

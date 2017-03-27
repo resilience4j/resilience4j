@@ -51,7 +51,7 @@ bintray {
         websiteUrl = "${url}"
         issueTrackerUrl = 'https://github.com/resilience4j/resilience4j/issues'
         vcsUrl = 'https://github.com/resilience4j/resilience4j.git'
-        desc = 'A CircuitBreaker pattern implementation for Java8 and functional programming.'
+        desc =  project.description
         licenses = ['Apache-2.0']
         version {
             vcsTag = project.version

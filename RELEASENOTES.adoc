@@ -60,7 +60,7 @@
 * Issue #13: CircuitBreaker should publish events as an event stream and clients should be able to subscribe
 * Issue #10: Reorder arguments in decorator methods
 * PR #19: Add a backoff function feature, to modify the waiting interval between failures
-* Renamed root package from javaslang to io.github.robwin, because the project had to leave the Javaslang GitHub organisation
+* Renamed root package from javaslang to io.github.resilience4j, because the project had to leave the Javaslang GitHub organisation
 
 === Version 0.7.1
 * Changed Event stream return type from Observable to Flowable
@@ -93,4 +93,4 @@
 
 == Version 0.9.0
 * PR #59: Project has been renamed to resilience4j and has been modularized.
-* PR #59: Renamed packages from io.github.robwin to io.github.resilience4j.
+* PR #59: Renamed packages from io.github.resilience4j to io.github.resilience4j.

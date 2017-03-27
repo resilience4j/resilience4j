@@ -10,4 +10,5 @@ include 'resilience4j-metrics'
 include 'resilience4j-consumer'
 include 'resilience4j-test'
 include 'resilience4j-vertx'
+include 'resilience4j-spring-boot'
 

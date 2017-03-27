@@ -34,7 +34,7 @@ allprojects {
 
     version = '0.9-0-SNAPSHOT'
     group = 'io.github.resilience4j'
-    description = 'A lightweight, easy-to-use fault tolerance library designed for Java8 and functional programming'
+    description = 'Resilience4j is a lightweight, easy-to-use fault tolerance library designed for Java8 and functional programming'
 
     repositories {
         jcenter()
