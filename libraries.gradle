@@ -15,6 +15,7 @@ ext {
     vertxVersion = '3.4.1'
     springBootVersion = '1.4.3.RELEASE'
     retrofitVersion = '2.1.0'
+    prometheusSimpleClientVersion = '0.0.21'
 
     libraries = [
             // compile
@@ -52,6 +53,9 @@ ext {
             metrics: "io.dropwizard.metrics:metrics-core:${metricsVersion}",
 
             // CircuitBreaker documentation
-            metrics_healthcheck: "io.dropwizard.metrics:metrics-healthchecks:${metricsVersion}"
+            metrics_healthcheck: "io.dropwizard.metrics:metrics-healthchecks:${metricsVersion}",
+
+            // Prometheus addon
+            prometheus_simpleclient: "io.prometheus:simpleclient_common:${prometheusSimpleClientVersion}"
     ]
 }
