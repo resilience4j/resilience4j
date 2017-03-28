@@ -16,29 +16,34 @@
 package io.github.resilience4j.circuitbreaker.monitoring.endpoint;
 
 
+import io.github.resilience4j.circuitbreaker.CircuitBreaker;
+import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
+import io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent;
+import io.github.resilience4j.consumer.EventConsumer;
+import io.github.resilience4j.consumer.EventConsumerRegistry;
 import org.springframework.boot.actuate.endpoint.mvc.EndpointMvcAdapter;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.util.Comparator;
-
-import io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent;
-import io.github.resilience4j.consumer.EventConsumer;
-import io.github.resilience4j.consumer.EventConsumerRegistry;
 
 
 @RequestMapping(method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
 public class CircuitBreakerEventsEndpoint extends EndpointMvcAdapter {
 
     private final EventConsumerRegistry<CircuitBreakerEvent> eventConsumerRegistry;
+    private final CircuitBreakerRegistry circuitBreakerRegistry;
+
 
     public CircuitBreakerEventsEndpoint(CircuitBreakerEndpoint circuitBreakerEndpoint,
-                                        EventConsumerRegistry<CircuitBreakerEvent> eventConsumerRegistry) {
+                                        EventConsumerRegistry<CircuitBreakerEvent> eventConsumerRegistry, CircuitBreakerRegistry circuitBreakerRegistry) {
         super(circuitBreakerEndpoint);
         this.eventConsumerRegistry = eventConsumerRegistry;
+        this.circuitBreakerRegistry = circuitBreakerRegistry;
     }
 
     @RequestMapping(value = "events", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
@@ -56,6 +61,17 @@ public class CircuitBreakerEventsEndpoint extends EndpointMvcAdapter {
         return new CircuitBreakerEventsEndpointResponse(eventConsumerRegistry.getEventConsumer(circuitBreakerName).getBufferedEvents()
                 .filter(event -> event.getCircuitBreakerName().equals(circuitBreakerName))
                 .map(CircuitBreakerEventDTOFactory::createCircuitBreakerEventDTO).toJavaList());
+    }
+
+    @RequestMapping(value = "events/{circuitBreakerName}", produces = "text/event-stream")
+    public SseEmitter getEventsStreamFilteredByCircuitBreakerName(@PathVariable("circuitBreakerName") String circuitBreakerName) {
+        CircuitBreaker circuitBreaker = circuitBreakerRegistry.getAllCircuitBreakers()
+                .find(cb -> cb.getName().equals(circuitBreakerName))
+                .getOrElseThrow(() ->
+                        new IllegalArgumentException(String.format("circuit breaker with name %s not found", circuitBreakerName)))
+                ;
+        CircuitBreakerEventSseEmitter eventEmitter = new CircuitBreakerEventSseEmitter(circuitBreaker);
+        return eventEmitter.getSseEmitter();
     }
 
     @RequestMapping(value = "events/{circuitBreakerName}/{eventType}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
