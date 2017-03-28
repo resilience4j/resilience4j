@@ -2,7 +2,7 @@
 :author: Robert Winkler and Bohdan Storozhuk
 :hardbreaks:
 
-image:https://travis-ci.org/resilience4j/resilience4j.svg?branch=master["Build Status", link="https://travis-ci.org/resilience4j/resilience4j"] image:https://coveralls.io/repos/github/RobWin/javaslang-circuitbreaker/badge.svg?branch=master&c=3["Coverage Status", link="https://coveralls.io/github/RobWin/javaslang-circuitbreaker?branch=master"] image:https://api.codacy.com/project/badge/Grade/f0295918d02b45d0928d5adc95f6eba1["Codacy code quality", link="https://www.codacy.com/app/robwin/resilience4j?utm_source=github.com&utm_medium=referral&utm_content=resilience4j/resilience4j&utm_campaign=Badge_Grade"] image:https://api.bintray.com/packages/robwin/maven/javaslang-circuitbreaker/images/download.svg[link="https://bintray.com/robwin/maven/javaslang-circuitbreaker/_latestVersion"] image:http://img.shields.io/badge/license-ASF2-blue.svg["Apache License 2", link="http://www.apache.org/licenses/LICENSE-2.0.txt"]
+image:https://travis-ci.org/resilience4j/resilience4j.svg?branch=master["Build Status", link="https://travis-ci.org/resilience4j/resilience4j"] image:https://coveralls.io/repos/github/resilience4j/resilience4j/badge.svg?branch=master["Coverage Status", link="https://coveralls.io/github/resilience4j/resilience4j?branch=master"] image:https://api.codacy.com/project/badge/Grade/f0295918d02b45d0928d5adc95f6eba1["Codacy code quality", link="https://www.codacy.com/app/robwin/resilience4j?utm_source=github.com&utm_medium=referral&utm_content=resilience4j/resilience4j&utm_campaign=Badge_Grade"] image:https://api.bintray.com/packages/robwin/maven/javaslang-circuitbreaker/images/download.svg[link="https://bintray.com/robwin/maven/javaslang-circuitbreaker/_latestVersion"] image:http://img.shields.io/badge/license-ASF2-blue.svg["Apache License 2", link="http://www.apache.org/licenses/LICENSE-2.0.txt"]
 
 NOTE: javaslang-circuitbreaker has been renamed to resilience4j. We are still migrating the project to the new GitHub Organisation.
 
@@ -301,7 +301,7 @@ So you can easily restrict not only network calls but your local in-memory opera
 
 == License
 
-Copyright 2016 Robert Winkler and Bohdan Storozhuk
+Copyright 2017 Robert Winkler and Bohdan Storozhuk
 
 Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at
 
