@@ -73,7 +73,7 @@ public class CircuitBreakerEventsEndpoint extends EndpointMvcAdapter {
                 .map(CircuitBreakerEventDTOFactory::createCircuitBreakerEventDTO).toJavaList());
     }
 
-    @RequestMapping(value = "stream/events", produces = MEDIA_TYPE_TEXT_EVENT_STREAM)
+    @RequestMapping(value = "stream/events/{circuitBreakerName}", produces = MEDIA_TYPE_TEXT_EVENT_STREAM)
     public SseEmitter getEventsStreamFilteredByCircuitBreakerName(@PathVariable("circuitBreakerName") String circuitBreakerName) {
         CircuitBreaker circuitBreaker = circuitBreakerRegistry.getAllCircuitBreakers()
                 .find(cb -> cb.getName().equals(circuitBreakerName))
