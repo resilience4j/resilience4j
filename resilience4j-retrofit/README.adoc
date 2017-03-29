@@ -1,0 +1,39 @@
+= Retrofit Circuitbreaker
+
+https://square.github.io/retrofit/[Retrofit] client circuit breaking
+using
+https://github.com/robwin/javaslang-circuitbreaker[Javaslang-circuitbreaker]
+
+[source,java]
+----
+// Create a CircuitBreaker
+private final CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testName");
+
+// Create a retrofit instance with CircuitBreaker call adapter
+Retrofit retrofit = new Retrofit.Builder()
+                .addCallAdapterFactory(new CircuitBreakerCallAdapterFactory(circuitBreaker))
+                .baseUrl("http://localhost:8080/")
+                .build();
+                
+// Get an instance of your service with circuit breaking built in.
+RetrofitService service = retrofit.create(RetrofitService.class);
+----
+
+By default, all exceptions and responses where
+`!Response.isSuccessful()` will be recorded as an error in the
+CircuitBreaker.
+
+Customising what is considered a _successful_ response is possible like
+so:
+
+[source,java]
+----
+Retrofit retrofit = new Retrofit.Builder()
+                .addCallAdapterFactory(new CircuitBreakerCallAdapterFactory(circuitBreaker, (r) -> r.code() < 500));
+                .baseUrl("http://localhost:8080/")
+                .build();
+----
+
+For circuit breaking triggered by timeout the thresholds can be set on
+the OkHttpClient
+
