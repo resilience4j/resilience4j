@@ -16,7 +16,7 @@ import java.util.function.Predicate;
  * All exceptions are marked as errors or responses not matching the supplied predicate.  For example:
  * <p>
  * <code>
- * RetrofitCircuitBreaker.decorateCall(circuitBreaker, call, (r) -> r.isSuccessful());
+ * RetrofitCircuitBreaker.decorateCall(circuitBreaker, call, Response::isSuccessful);
  * </code>
  */
 public interface RetrofitCircuitBreaker {
