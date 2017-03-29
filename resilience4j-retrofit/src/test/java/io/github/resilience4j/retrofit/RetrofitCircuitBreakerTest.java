@@ -27,8 +27,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 
 /**
- * Tests the integration of the Retrofit HTTP client and JavaSlang-circuitbreaker.
- * Validates that connection timeouts will trip circuit breaking
+ * Tests the integration of the Retrofit HTTP client and {@link CircuitBreaker}
  */
 public class RetrofitCircuitBreakerTest {
 
@@ -42,7 +41,6 @@ public class RetrofitCircuitBreakerTest {
             .build();
     private final CircuitBreaker circuitBreaker = CircuitBreaker.of("test", circuitBreakerConfig);
 
-
     @Before
     public void setUp() {
         final long TIMEOUT = 300; // ms
@@ -53,7 +51,7 @@ public class RetrofitCircuitBreakerTest {
                 .build();
 
         this.service = new Retrofit.Builder()
-                .addCallAdapterFactory(new CircuitBreakerCallAdapterFactory(circuitBreaker))
+                .addCallAdapterFactory(CircuitBreakerCallAdapter.of(circuitBreaker))
                 .addConverterFactory(ScalarsConverterFactory.create())
                 .baseUrl("http://localhost:8080/")
                 .client(client)
@@ -85,7 +83,7 @@ public class RetrofitCircuitBreakerTest {
 
         try {
             service.greeting().execute();
-        } catch (Throwable t) {
+        } catch (Throwable ignored) {
         }
 
         final CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
@@ -96,12 +94,12 @@ public class RetrofitCircuitBreakerTest {
 
         try {
             service.greeting().execute();
-        } catch (Throwable t) {
+        } catch (Throwable ignored) {
         }
 
         try {
             service.greeting().execute();
-        } catch (Throwable t) {
+        } catch (Throwable ignored) {
         }
 
         assertEquals(3, metrics.getNumberOfFailedCalls());

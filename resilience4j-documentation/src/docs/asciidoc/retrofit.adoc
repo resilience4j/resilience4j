@@ -9,7 +9,7 @@ private final CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testNam
 
 // Create a retrofit instance with CircuitBreaker call adapter
 Retrofit retrofit = new Retrofit.Builder()
-                .addCallAdapterFactory(new CircuitBreakerCallAdapterFactory(circuitBreaker))
+                .addCallAdapterFactory(CircuitBreakerCallAdapter.of(circuitBreaker))
                 .baseUrl("http://localhost:8080/")
                 .build();
                 
@@ -18,16 +18,14 @@ RetrofitService service = retrofit.create(RetrofitService.class);
 ----
 
 By default, all exceptions and responses where
-`!Response.isSuccessful()` will be recorded as an error in the
-CircuitBreaker.
+`!Response.isSuccessful()` will be recorded as an error in the CircuitBreaker.
 
-Customising what is considered a _successful_ response is possible like
-so:
+Customising what is considered a _successful_ response is possible like so:
 
 [source,java]
 ----
 Retrofit retrofit = new Retrofit.Builder()
-                .addCallAdapterFactory(new CircuitBreakerCallAdapterFactory(circuitBreaker, (r) -> r.code() < 500));
+                .addCallAdapterFactory(CircuitBreakerCallAdapter.of(circuitBreaker, (r) -> r.code() < 500));
                 .baseUrl("http://localhost:8080/")
                 .build();
 ----
