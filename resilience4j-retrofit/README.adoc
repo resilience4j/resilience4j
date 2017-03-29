@@ -1,8 +1,6 @@
-= Retrofit Circuitbreaker
+= resilience4j-retrofit
 
 https://square.github.io/retrofit/[Retrofit] client circuit breaking
-using
-https://github.com/robwin/javaslang-circuitbreaker[Javaslang-circuitbreaker]
 
 [source,java]
 ----
@@ -34,6 +32,5 @@ Retrofit retrofit = new Retrofit.Builder()
                 .build();
 ----
 
-For circuit breaking triggered by timeout the thresholds can be set on
-the OkHttpClient
+For circuit breaking triggered by timeout the thresholds can be set on the OkHttpClient
 
