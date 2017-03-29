@@ -1,0 +1,44 @@
+= resilience4j-retrofit
+
+https://square.github.io/retrofit/[Retrofit] client circuit breaking.  Short-circuits http client calls based upon the policy
+associated to the CircuitBreaker instance provided.
+
+For circuit breaking triggered by timeout the thresholds can be set
+on a OkHttpClient which can be set on the Retrofit.Builder.
+
+[source,java]
+----
+// Create a CircuitBreaker
+private final CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testName");
+
+// Create a retrofit instance with CircuitBreaker call adapter
+Retrofit retrofit = new Retrofit.Builder()
+                .addCallAdapterFactory(CircuitBreakerCallAdapter.of(circuitBreaker))
+                .baseUrl("http://localhost:8080/")
+                .build();
+
+// Get an instance of your service with circuit breaking built in.
+RetrofitService service = retrofit.create(RetrofitService.class);
+----
+
+By default, all exceptions and responses where `!Response.isSuccessful()` will be recorded as an error in the CircuitBreaker.
+
+Customising what is considered a _successful_ response is possible like so:
+
+[source,java]
+----
+Retrofit retrofit = new Retrofit.Builder()
+                .addCallAdapterFactory(CircuitBreakerCallAdapter.of(circuitBreaker, (r) -> r.code() < 500));
+                .baseUrl("http://localhost:8080/")
+                .build();
+----
+
+== License
+
+Copyright 2017 Christopher Pilsworth
+
+Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
