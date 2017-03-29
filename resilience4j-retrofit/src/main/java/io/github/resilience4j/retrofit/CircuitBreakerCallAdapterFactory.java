@@ -19,11 +19,9 @@ public final class CircuitBreakerCallAdapterFactory extends CallAdapter.Factory 
 
     private final CircuitBreaker circuitBreaker;
     private final Predicate<Response> successResponse;
-    private final Predicate<Response> PREDICATE_IS_SUCCESSFUL = Response::isSuccessful;
 
     public CircuitBreakerCallAdapterFactory(final CircuitBreaker circuitBreaker) {
-        this.circuitBreaker = circuitBreaker;
-        this.successResponse = PREDICATE_IS_SUCCESSFUL;
+        this(circuitBreaker, Response::isSuccessful);
     }
 
     public CircuitBreakerCallAdapterFactory(final CircuitBreaker circuitBreaker, Predicate<Response> successResponse) {
