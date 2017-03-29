@@ -7,6 +7,9 @@ import okhttp3.OkHttpClient;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.mockito.Mockito;
+import retrofit2.Call;
+import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.scalars.ScalarsConverterFactory;
 
@@ -20,6 +23,8 @@ import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.verify;
 import static org.junit.Assert.assertEquals;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.mock;
 
 /**
  * Tests the integration of the Retrofit HTTP client and JavaSlang-circuitbreaker.
@@ -102,6 +107,33 @@ public class RetrofitCircuitBreakerTest {
         assertEquals(3, metrics.getNumberOfFailedCalls());
         // Circuit breaker should be OPEN, threshold met
         assertEquals(CircuitBreaker.State.OPEN, circuitBreaker.getState());
+    }
+
+    @Test
+    public void passThroughCallsToDecoratedObject() {
+        final Call<String> call = mock(StringCall.class);
+        final Call<String> decorated = RetrofitCircuitBreaker.decorateCall(circuitBreaker, call, Response::isSuccessful);
+
+        decorated.cancel();
+        Mockito.verify(call).cancel();
+
+        decorated.enqueue(null);
+        Mockito.verify(call).enqueue(any());
+
+        decorated.isExecuted();
+        Mockito.verify(call).isExecuted();
+
+        decorated.isCanceled();
+        Mockito.verify(call).isCanceled();
+
+        decorated.clone();
+        Mockito.verify(call).clone();
+
+        decorated.request();
+        Mockito.verify(call).request();
+    }
+
+    private interface StringCall extends Call<String> {
     }
 
 }
