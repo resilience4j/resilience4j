@@ -1,0 +1,6 @@
+dependencies {
+    compile ( libraries.retrofit )
+    compile project(':resilience4j-circuitbreaker')
+    testCompile ( libraries.retrofit_test )
+    testCompile ( libraries.retrofit_wiremock )
+}

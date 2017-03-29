@@ -14,6 +14,7 @@ ext {
     metricsVersion = '3.1.2'
     vertxVersion = '3.4.1'
     springBootVersion = '1.4.3.RELEASE'
+    retrofitVersion = '2.1.0'
 
     libraries = [
             // compile
@@ -40,6 +41,11 @@ ext {
             spring_boot_actuator: "org.springframework.boot:spring-boot-starter-actuator:${springBootVersion}",
             spring_boot_web: "org.springframework.boot:spring-boot-starter-web:${springBootVersion}",
             spring_boot_test:  "org.springframework.boot:spring-boot-starter-test:${springBootVersion}",
+
+            // retrofit addon
+            retrofit: "com.squareup.retrofit2:retrofit:${retrofitVersion}",
+            retrofit_test: "com.squareup.retrofit2:converter-scalars:${retrofitVersion}",
+            retrofit_wiremock: "com.github.tomakehurst:wiremock:1.58",
 
             // circuitbreaker documentation
             metrics: "io.dropwizard.metrics:metrics-core:${metricsVersion}",

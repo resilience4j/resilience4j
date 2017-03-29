@@ -1,0 +1,34 @@
+= resilience4j-retrofit
+
+https://square.github.io/retrofit/[Retrofit] client circuit breaking.  Short-circuits http client calls based upon the policy
+associated to the CircuitBreaker instance provided.
+
+For circuit breaking triggered by timeout the thresholds can be set
+on a OkHttpClient which can be set on the Retrofit.Builder.
+
+[source,java]
+----
+// Create a CircuitBreaker
+private final CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testName");
+
+// Create a retrofit instance with CircuitBreaker call adapter
+Retrofit retrofit = new Retrofit.Builder()
+                .addCallAdapterFactory(CircuitBreakerCallAdapter.of(circuitBreaker))
+                .baseUrl("http://localhost:8080/")
+                .build();
+                
+// Get an instance of your service with circuit breaking built in.
+RetrofitService service = retrofit.create(RetrofitService.class);
+----
+
+By default, all exceptions and responses where `!Response.isSuccessful()` will be recorded as an error in the CircuitBreaker.
+
+Customising what is considered a _successful_ response is possible like so:
+
+[source,java]
+----
+Retrofit retrofit = new Retrofit.Builder()
+                .addCallAdapterFactory(CircuitBreakerCallAdapter.of(circuitBreaker, (r) -> r.code() < 500));
+                .baseUrl("http://localhost:8080/")
+                .build();
+----
