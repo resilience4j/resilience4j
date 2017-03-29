@@ -11,4 +11,5 @@ include 'resilience4j-consumer'
 include 'resilience4j-test'
 include 'resilience4j-vertx'
 include 'resilience4j-spring-boot'
+include 'resilience4j-retrofit'
 
