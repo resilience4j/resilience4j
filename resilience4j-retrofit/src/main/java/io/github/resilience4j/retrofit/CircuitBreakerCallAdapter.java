@@ -26,7 +26,7 @@ public final class CircuitBreakerCallAdapter extends CallAdapter.Factory {
      * @return a {@link CallAdapter.Factory} that can be passed into the {@link Retrofit.Builder}
      */
     public static CircuitBreakerCallAdapter of(final CircuitBreaker circuitBreaker) {
-        return new CircuitBreakerCallAdapter(circuitBreaker);
+        return of(circuitBreaker, Response::isSuccessful);
     }
 
     /**
@@ -37,10 +37,6 @@ public final class CircuitBreakerCallAdapter extends CallAdapter.Factory {
      */
     public static CircuitBreakerCallAdapter of(final CircuitBreaker circuitBreaker, final Predicate<Response> successResponse) {
         return new CircuitBreakerCallAdapter(circuitBreaker, successResponse);
-    }
-
-    private CircuitBreakerCallAdapter(final CircuitBreaker circuitBreaker) {
-        this(circuitBreaker, Response::isSuccessful);
     }
 
     private CircuitBreakerCallAdapter(final CircuitBreaker circuitBreaker, final Predicate<Response> successResponse) {
