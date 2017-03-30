@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright 2016 Robert Winkler
+ *  Copyright 2017: Robert Winkler
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -36,11 +36,8 @@ public interface Metrics {
      */
     static <T> Try.CheckedSupplier<T> decorateCheckedSupplier(Timer timer, Try.CheckedSupplier<T> supplier){
         return () -> {
-            Timer.Context context = timer.time();
-            try {
+            try (Timer.Context context = timer.time()) {
                 return supplier.get();
-            } finally{
-                context.stop();
             }
         };
     }
@@ -54,11 +51,8 @@ public interface Metrics {
      */
     static Try.CheckedRunnable decorateCheckedRunnable(Timer timer, Try.CheckedRunnable runnable){
         return () -> {
-            Timer.Context context = timer.time();
-            try{
+            try (Timer.Context context = timer.time()) {
                 runnable.run();
-            } finally{
-                context.stop();
             }
         };
     }
@@ -72,11 +66,8 @@ public interface Metrics {
      */
     static <T> Supplier<T> decorateSupplier(Timer timer, Supplier<T> supplier){
         return () -> {
-            Timer.Context context = timer.time();
-            try {
+            try (Timer.Context context = timer.time()) {
                 return supplier.get();
-            } finally{
-                context.stop();
             }
         };
     }
@@ -90,11 +81,8 @@ public interface Metrics {
      */
     static Runnable decorateRunnable(Timer timer, Runnable runnable){
         return () -> {
-            Timer.Context context = timer.time();
-            try{
+            try (Timer.Context context = timer.time()) {
                 runnable.run();
-            } finally{
-                context.stop();
             }
         };
     }
@@ -109,11 +97,8 @@ public interface Metrics {
      */
     static <T, R> Function<T, R> decorateFunction(Timer timer, Function<T, R> function){
         return (T t) -> {
-            Timer.Context context = timer.time();
-            try{
+            try (Timer.Context context = timer.time()) {
                 return function.apply(t);
-            } finally{
-                context.stop();
             }
         };
     }
@@ -127,11 +112,8 @@ public interface Metrics {
      */
     static <T, R> Try.CheckedFunction<T, R> decorateCheckedFunction(Timer timer, Try.CheckedFunction<T, R> function){
         return (T t) -> {
-            Timer.Context context = timer.time();
-            try{
+            try (Timer.Context context = timer.time()) {
                 return function.apply(t);
-            } finally{
-                context.stop();
             }
         };
     }
