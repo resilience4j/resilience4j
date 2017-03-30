@@ -1,0 +1,249 @@
+= resilience4j-spring-boot
+
+== Gradle
+
+Add the Spring Boot Starter of Resilience4j to your compile dependency:
+
+```
+repositories {
+	maven { url 'http://oss.jfrog.org/artifactory/oss-snapshot-local/' }
+	mavenCentral()
+}
+
+
+dependencies {
+	compile('io.github.resilience4j:resilience4j-spring-boot:0.9.0-SNAPSHOT')
+}
+```
+
+== Spring AOP
+
+The demo shows how to use the `CircuitBreaker` annotation to make your Spring Boot application more fault tolerant. You can either annotate a class in order to protect all public methods or just some specific methods.
+For example:
+
+[source,java]
+----
+@CircuitBreaker(backend = "backendA")
+@Component(value = "backendAConnector")
+public class BackendAConnector implements Connector {
+    ...
+}
+----
+
+== Functional style
+
+But you can still use a functional programming style. For example:
+
+[source,java]
+----
+@Service(value = "businessBService")
+public class BusinessBService implements BusinessService  {
+
+    public Try<String> methodWithRecovery() {
+        Try.CheckedSupplier<String> backendFunction = CircuitBreaker.decorateCheckedSupplier(circuitBreaker, () -> backendBConnector.failure());
+        return Try.of(backendFunction)
+                .recover((throwable) -> recovery(throwable));
+    }
+
+    private String recovery(Throwable throwable) {
+        // Handle exception and invoke fallback
+        return "Hello world from recovery";
+    }
+
+}
+----
+
+== RxJava
+
+You can even apply a CircuitBreaker to any RxJava `Flowable` or `Observable`.
+
+[source,java]
+----
+public Observable<String> methodWhichReturnsAStream() {
+    return backendBConnector.methodWhichReturnsAnObservable()
+            .timeout(1, TimeUnit.SECONDS)
+            .lift(CircuitBreakerOperator.of(circuitBreaker));
+}
+----
+
+== Monitoring
+
+Spring Boot Actuator health information can be used to check the status of your running application. It is often used by monitoring software to alert someone if a production system has serious issues. This demo publishes the status and metrics of all CircuitBreakers via a custom `CircuitBreakerHealthIndicator`. A closed CircuitBreaker state is mapped to UP, an open state to DOWN and a half-open state to UNKNOWN.
+For example:
+
+[source,json]
+----
+{
+  "status": "UP",
+  "backendA": {
+    "status": "DOWN",
+    "failureRate": "60.0%",
+    "failureRateThreshold": "50.0%",
+    "maxBufferedCalls": 5,
+    "bufferedCalls": 5,
+    "failedCalls": 3,
+    "notPermittedCalls": 0
+  },
+  "backendB": {
+    "status": "UP",
+    "failureRate": "0.0%",
+    "failureRateThreshold": "50.0%",
+    "maxBufferedCalls": 10,
+    "bufferedCalls": 10,
+    "failedCalls": 0,
+    "notPermittedCalls": 0
+  }
+}
+----
+
+== Configuration
+
+You can configure your CircuitBreakers in Spring Boot's `application.yml` config file.
+For example
+
+----
+resilience4j.circuitbreaker:
+    backends:
+        backendA:
+            ringBufferSizeInClosedState: 5
+            ringBufferSizeInHalfOpenState: 3
+            waitInterval: 5000
+            failureRateThreshold: 50
+            eventConsumerBufferSize: 10
+        backendB:
+            ringBufferSizeInClosedState: 10
+            ringBufferSizeInHalfOpenState: 5
+            waitInterval: 5000
+            failureRateThreshold: 50
+            eventConsumerBufferSize: 10
+----
+
+== CircuitBreaker Event Monitoring
+
+The emitted CircuitBreaker events are stored in a separate circular event consumer buffers. The size of a event consumer buffer can be configured per CircuitBreaker in the application.yml file (eventConsumerBufferSize).
+The demo adds a custom Spring Boot Actuator endpoint which can be used to monitor the emitted events of your CircuitBreakers.
+The endpoint `/management/circuitbreaker` lists the names of all CircuitBreaker instances.
+For example:
+
+----
+{
+    "circuitBreakers": [
+      "backendA",
+      "backendB"
+    ]
+}
+----
+
+The endpoint `/management/circuitbreaker/events` lists the latest 100 emitted events of all CircuitBreaker instances.
+The endpoint `/management/circuitbreaker/stream/events` streams emitted events of all CircuitBreaker instances using Server-Sent Events.
+
+----
+{
+"circuitBreakerEvents":[
+  {
+    "circuitBreakerName": "backendA",
+    "type": "ERROR",
+    "creationTime": "2017-01-10T15:39:17.117+01:00[Europe/Berlin]",
+    "errorMessage": "org.springframework.web.client.HttpServerErrorException: 500 This is a remote exception",
+    "durationInMs": 0
+  },
+  {
+    "circuitBreakerName": "backendA",
+    "type": "SUCCESS",
+    "creationTime": "2017-01-10T15:39:20.518+01:00[Europe/Berlin]",
+    "durationInMs": 0
+  },
+  {
+    "circuitBreakerName": "backendB",
+    "type": "ERROR",
+    "creationTime": "2017-01-10T15:41:31.159+01:00[Europe/Berlin]",
+    "errorMessage": "org.springframework.web.client.HttpServerErrorException: 500 This is a remote exception",
+    "durationInMs": 0
+  },
+  {
+    "circuitBreakerName": "backendB",
+    "type": "SUCCESS",
+    "creationTime": "2017-01-10T15:41:33.526+01:00[Europe/Berlin]",
+    "durationInMs": 0
+  }
+]
+}
+----
+
+The endpoint `/management/circuitbreaker/events/{circuitBreakerName}` lists the latest emitted events of a specific CircuitBreaker.
+The endpoint `/management/circuitbreaker/stream/events/{circuitBreakerName}` streams emitted events using Server-Sent Events.
+For example `/management/circuitbreaker/events/backendA`:
+
+----
+{
+"circuitBreakerEvents":[
+  {
+    "circuitBreakerName": "backendA",
+    "type": "ERROR",
+    "creationTime": "2017-01-10T15:39:17.117+01:00[Europe/Berlin]",
+    "errorMessage": "org.springframework.web.client.HttpServerErrorException: 500 This is a remote exception",
+    "durationInMs": 0
+  },
+  {
+    "circuitBreakerName": "backendA",
+    "type": "SUCCESS",
+    "creationTime": "2017-01-10T15:39:20.518+01:00[Europe/Berlin]",
+    "durationInMs": 0
+  },
+  {
+    "circuitBreakerName": "backendA",
+    "type": "STATE_TRANSITION",
+    "creationTime": "2017-01-10T15:39:22.341+01:00[Europe/Berlin]",
+    "stateTransition": "CLOSED_TO_OPEN"
+  },
+  {
+    "circuitBreakerName": "backendA",
+    "type": "NOT_PERMITTED",
+    "creationTime": "2017-01-10T15:39:22.780+01:00[Europe/Berlin]"
+  }
+]
+}
+----
+
+You can even filter the list of  events.
+The endpoint `/management/circuitbreaker/events/{circuitBreakerName}/{eventType}` lists the filtered events.
+The endpoint `/management/circuitbreaker/stream/events/{circuitBreakerName}/{eventType}` streams emitted events using Server-Sent Events.
+Event types can be:
+
+* ERROR: A CircuitBreakerEvent which informs that an error has been recorded.
+* IGNORED_ERROR: A CircuitBreakerEvent which informs that an error has been ignored.
+* SUCCESS: A CircuitBreakerEvent which informs that a success has been recorded.
+* NOT_PERMITTED: A CircuitBreakerEvent which informs that a call was not permitted because the CircuitBreaker state is OPEN.
+* STATE_TRANSITION: A CircuitBreakerEvent which informs the state of the CircuitBreaker has been changed.
+
+For example `/management/circuitbreaker/events/backendA/ERROR`:
+----
+{
+"circuitBreakerEvents":[
+  {
+    "circuitBreakerName": "backendA",
+    "type": "ERROR",
+    "creationTime": "2017-01-10T15:42:59.324+01:00[Europe/Berlin]",
+    "errorMessage": "org.springframework.web.client.HttpServerErrorException: 500 This is a remote exception",
+    "durationInMs": 0
+  },
+  {
+    "circuitBreakerName": "backendA",
+    "type": "ERROR",
+    "creationTime": "2017-01-10T15:43:22.802+01:00[Europe/Berlin]",
+    "errorMessage": "org.springframework.web.client.HttpServerErrorException: 500 This is a remote exception",
+    "durationInMs": 0
+  }
+]
+}
+----
+
+== License
+
+Copyright 2017 Robert Winkler
+
+Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.

@@ -18,16 +18,16 @@
  */
 package io.github.resilience4j.retrofit;
 
+import java.io.IOException;
+import java.util.function.Predicate;
+
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.utils.CircuitBreakerUtils;
-import io.github.resilience4j.metrics.StopWatch;
+import io.github.resilience4j.core.StopWatch;
 import okhttp3.Request;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
-
-import java.io.IOException;
-import java.util.function.Predicate;
 
 /**
  * Decorates a Retrofit {@link Call} to inform a Javaslang {@link CircuitBreaker} when an exception is thrown.

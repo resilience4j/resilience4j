@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright 2016 Robert Winkler
+ *  Copyright 2017: Robert Winkler
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
  *
  *
  */
-package io.github.resilience4j.metrics;
+package io.github.resilience4j.core;
 
 import java.time.Duration;
 
@@ -26,7 +26,7 @@ import java.time.Duration;
 public class StopWatch {
 
     private final String id;
-    private long startTime;
+    private final long startTime;
     private long elapsedTime;
 
     private StopWatch(String id){
