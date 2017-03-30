@@ -32,23 +32,26 @@ ext {
             powermock_api_mockito: "org.powermock:powermock-api-mockito:${powermockVersion}",
             powermock_module_junit4: "org.powermock:powermock-module-junit4:${powermockVersion}",
             awaitility: "com.jayway.awaitility:awaitility:${awaitilityVersion}",
-            // vert.x addon
+
+            // Vert.x addon
             vertx: "io.vertx:vertx-core:${vertxVersion}",
             vertx_unit: "io.vertx:vertx-unit:${vertxVersion}",
 
-            // spring boot addon
+            // Spring Boot addon
             spring_boot_aop: "org.springframework.boot:spring-boot-starter-aop:${springBootVersion}",
             spring_boot_actuator: "org.springframework.boot:spring-boot-starter-actuator:${springBootVersion}",
             spring_boot_web: "org.springframework.boot:spring-boot-starter-web:${springBootVersion}",
             spring_boot_test:  "org.springframework.boot:spring-boot-starter-test:${springBootVersion}",
 
-            // retrofit addon
+            // Retrofit addon
             retrofit: "com.squareup.retrofit2:retrofit:${retrofitVersion}",
             retrofit_test: "com.squareup.retrofit2:converter-scalars:${retrofitVersion}",
             retrofit_wiremock: "com.github.tomakehurst:wiremock:1.58",
 
-            // circuitbreaker documentation
+            // Metrics addon
             metrics: "io.dropwizard.metrics:metrics-core:${metricsVersion}",
+
+            // CircuitBreaker documentation
             metrics_healthcheck: "io.dropwizard.metrics:metrics-healthchecks:${metricsVersion}"
     ]
 }

@@ -1,11 +1,11 @@
 apply plugin: 'me.champeau.gradle.jmh'
 
 dependencies {
+    compile project(':resilience4j-core')
     compile project(':resilience4j-ratelimiter')
     compile project(':resilience4j-circularbuffer')
     compile project(':resilience4j-circuitbreaker')
     compile project(':resilience4j-retry')
-    compile project(':resilience4j-metrics')
     compile project(':resilience4j-consumer')
     compile project(':resilience4j-cache')
     testCompile project(':resilience4j-test')

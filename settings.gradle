@@ -1,4 +1,5 @@
 rootProject.name = 'resilience4j'
+include 'resilience4j-core'
 include 'resilience4j-ratelimiter'
 include 'resilience4j-cache'
 include 'resilience4j-retry'
