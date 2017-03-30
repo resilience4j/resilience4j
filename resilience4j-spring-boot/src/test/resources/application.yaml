@@ -1,5 +1,4 @@
 resilience4j.circuitbreaker:
-    eventBufferSize: 100
     backends:
         backendA:
             ringBufferSizeInClosedState: 6

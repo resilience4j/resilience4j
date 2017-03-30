@@ -1,0 +1,4 @@
+dependencies {
+    compile (libraries.metrics)
+    testCompile project(':resilience4j-test')
+}
