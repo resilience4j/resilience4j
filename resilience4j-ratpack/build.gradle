@@ -1,0 +1,10 @@
+apply plugin: 'groovy'
+
+dependencies {
+    compile ( libraries.ratpack )
+    compile project(':resilience4j-circuitbreaker')
+    compile project(':resilience4j-ratelimiter')
+    compile project(':resilience4j-retry')
+    testCompile ( libraries.ratpack_test )
+    testCompile ( libraries.spock )
+}

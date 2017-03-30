@@ -14,6 +14,8 @@ ext {
     metricsVersion = '3.1.2'
     vertxVersion = '3.4.1'
     springBootVersion = '1.4.3.RELEASE'
+    ratpackVersion = '1.4.5'
+    spockVersion = '1.1-groovy-2.4-rc-4'
     retrofitVersion = '2.1.0'
     prometheusSimpleClientVersion = '0.0.21'
 
@@ -43,6 +45,11 @@ ext {
             spring_boot_actuator: "org.springframework.boot:spring-boot-starter-actuator:${springBootVersion}",
             spring_boot_web: "org.springframework.boot:spring-boot-starter-web:${springBootVersion}",
             spring_boot_test:  "org.springframework.boot:spring-boot-starter-test:${springBootVersion}",
+
+            // ratpack addon
+            ratpack: "io.ratpack:ratpack-guice:${ratpackVersion}",
+            ratpack_test: "io.ratpack:ratpack-groovy-test:${ratpackVersion}",
+            spock: "org.spockframework:spock-core:${spockVersion}",
 
             // Retrofit addon
             retrofit: "com.squareup.retrofit2:retrofit:${retrofitVersion}",
