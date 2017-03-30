@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright 2016 Robert Winkler
+ *  Copyright 2017: Robert Winkler
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -29,7 +29,7 @@ import java.util.function.Supplier;
 import io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent;
 import io.github.resilience4j.circuitbreaker.internal.CircuitBreakerStateMachine;
 import io.github.resilience4j.circuitbreaker.utils.CircuitBreakerUtils;
-import io.github.resilience4j.metrics.StopWatch;
+import io.github.resilience4j.core.StopWatch;
 import io.reactivex.Flowable;
 import javaslang.control.Try;
 

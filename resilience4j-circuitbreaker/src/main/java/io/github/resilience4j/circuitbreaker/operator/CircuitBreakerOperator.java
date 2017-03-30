@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright 2016 Robert Winkler
+ *  Copyright 2017: Robert Winkler
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -28,7 +28,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerOpenException;
-import io.github.resilience4j.metrics.StopWatch;
+import io.github.resilience4j.core.StopWatch;
 import io.reactivex.FlowableOperator;
 import io.reactivex.ObservableOperator;
 import io.reactivex.Observer;
