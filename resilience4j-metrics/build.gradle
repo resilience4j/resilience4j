@@ -1,3 +1,4 @@
 dependencies {
-    compile ( libraries.metrics)
+    compile (libraries.metrics)
+    testCompile project(':resilience4j-test')
 }
