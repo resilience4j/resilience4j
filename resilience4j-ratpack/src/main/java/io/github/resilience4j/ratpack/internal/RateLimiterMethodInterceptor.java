@@ -67,7 +67,12 @@ public class RateLimiterMethodInterceptor implements MethodInterceptor {
                 throw new IllegalStateException("Thread was interrupted during permission wait");
             }
             if (!permission) {
-                throw new RequestNotPermitted("Request not permitted for limiter: " + rateLimiter.getName());
+                Throwable t = new RequestNotPermitted("Request not permitted for limiter: " + rateLimiter.getName());
+                if (!annotation.recovery().isAssignableFrom(DefaultRecoveryFunction.class)) {
+                    return recoveryFunction.apply(t);
+                } else {
+                    throw t;
+                }
             } else {
                 throw e;
             }
@@ -87,7 +92,15 @@ public class RateLimiterMethodInterceptor implements MethodInterceptor {
                 return stage;
             } else {
                 return CompletableFuture.supplyAsync(() -> {
-                    throw new RequestNotPermitted("Request not permitted for limiter: " + rateLimiter.getName());
+                    if (annotation.recovery().isAssignableFrom(DefaultRecoveryFunction.class)) {
+                        throw new RequestNotPermitted("Request not permitted for limiter: " + rateLimiter.getName());
+                    } else {
+                        try {
+                            return recoveryFunction.apply(new RequestNotPermitted("Request not permitted for limiter: " + rateLimiter.getName()));
+                        } catch (Exception e) {
+                            return null;
+                        }
+                    }
                 });
             }
         } else {

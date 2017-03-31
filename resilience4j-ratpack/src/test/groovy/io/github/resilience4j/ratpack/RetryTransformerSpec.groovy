@@ -11,6 +11,26 @@ import java.util.concurrent.atomic.AtomicInteger
 
 class RetryTransformerSpec extends Specification {
 
+
+    def "no retry without exception"() {
+        given:
+        Retry retry = buildRetry()
+        RetryTransformer<String> transformer = RetryTransformer.of(retry)
+        AtomicInteger times = new AtomicInteger(0)
+
+        when:
+        def r = ExecHarness.yieldSingle {
+            Blocking.<String> get { times.getAndIncrement(); "s" }
+                    .transform(transformer)
+        }
+
+        then:
+        r.value == "s"
+        !r.error
+        r.throwable == null
+        times.get() == 1
+    }
+
     def "can retry promise 3 times then throw exception"() {
         given:
         Retry retry = buildRetry()

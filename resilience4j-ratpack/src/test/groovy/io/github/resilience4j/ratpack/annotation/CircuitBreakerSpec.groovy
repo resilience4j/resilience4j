@@ -23,6 +23,7 @@ import io.github.resilience4j.ratelimiter.RateLimiterRegistry
 import io.github.resilience4j.ratpack.RecoveryFunction
 import io.github.resilience4j.ratpack.ResilienceModule
 import io.reactivex.Flowable
+import io.reactivex.Observable
 import io.reactivex.functions.Function
 import ratpack.exec.Promise
 import ratpack.test.embed.EmbeddedApp
@@ -96,6 +97,21 @@ class CircuitBreakerSpec extends Specification {
                         render it
                     }
                 }
+                get('observe') { Something something ->
+                    something.breakerObserve().subscribe {
+                        render it
+                    }
+                }
+                get('observeBad') { Something something ->
+                    something.breakerObserveBad().subscribe {
+                        render it
+                    }
+                }
+                get('observeRecover') { Something something ->
+                    something.breakerObserveRecover().subscribe {
+                        render it
+                    }
+                }
                 get('normal') { Something something ->
                     render something.breakerNormal()
                 }
@@ -143,6 +159,7 @@ class CircuitBreakerSpec extends Specification {
         'promise' | 'promiseBad' | 'promiseRecover' | 'test'      | 'breaker promise' | 500
         'stage'   | 'stageBad'   | 'stageRecover'   | 'test'      | 'breaker stage'   | 404
         'flow'    | 'flowBad'    | 'flowRecover'    | 'test'      | 'breaker flow'    | 500
+        'observe' | 'observeBad' | 'observeRecover' | 'test'      | 'breaker observe' | 500
         'normal'  | 'normalBad'  | 'normalRecover'  | 'test'      | 'breaker normal'  | 404
     }
 
@@ -206,6 +223,21 @@ class CircuitBreakerSpec extends Specification {
         @CircuitBreaker(name = "test", recovery = MyRecoveryFunction)
         Flowable<Void> breakerFlowRecover() {
             Flowable.just("breaker flow").map({ throw new Exception("bad") } as Function<String, Void>)
+        }
+
+        @CircuitBreaker(name = "test")
+        Observable<String> breakerObserve() {
+            Observable.just("breaker observe")
+        }
+
+        @CircuitBreaker(name = "test")
+        Observable<Void> breakerObserveBad() {
+            Observable.just("breaker observe").map({ throw new Exception("bad") } as Function<String, Void>)
+        }
+
+        @CircuitBreaker(name = "test", recovery = MyRecoveryFunction)
+        Observable<Void> breakerObserveRecover() {
+            Observable.just("breaker observe").map({ throw new Exception("bad") } as Function<String, Void>)
         }
 
         @CircuitBreaker(name = "test")

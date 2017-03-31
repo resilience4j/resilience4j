@@ -19,6 +19,7 @@ package io.github.resilience4j.ratpack.annotation
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry
 import io.github.resilience4j.ratelimiter.RateLimiterConfig
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry
+import io.github.resilience4j.ratpack.RecoveryFunction
 import io.github.resilience4j.ratpack.ResilienceModule
 import ratpack.exec.Promise
 import ratpack.test.embed.EmbeddedApp
@@ -42,7 +43,7 @@ class RateLimiterSpec extends Specification {
     @Delegate
     TestHttpClient client
 
-    def "test circuit break a method via annotation with fallback"() {
+    def "test rate limit a method via annotation"() {
         given:
         RateLimiterRegistry registry = RateLimiterRegistry.of(buildConfig())
         app = ratpack {
@@ -72,11 +73,100 @@ class RateLimiterSpec extends Specification {
         def actual = null
         for (int i = 0; i <= 10; i++) {
             actual = get(path)
+            println actual.body.text
         }
 
         then:
         actual.body.text.contains('io.github.resilience4j.ratelimiter.RequestNotPermitted: Request not permitted for limiter: test')
         actual.statusCode == 500
+
+        where:
+        path      | rateLimiterName
+        'promise' | 'test'
+        'stage'   | 'test'
+        'normal'  | 'test'
+    }
+
+    def "test rate limit a method via annotation with exception"() {
+        given:
+        RateLimiterRegistry registry = RateLimiterRegistry.of(buildConfig())
+        app = ratpack {
+            bindings {
+                bindInstance(CircuitBreakerRegistry, CircuitBreakerRegistry.ofDefaults())
+                bindInstance(RateLimiterRegistry, registry)
+                bind(Something)
+                module(ResilienceModule)
+            }
+            handlers {
+                get('promise') { Something something ->
+                    something.rateLimiterPromiseException().then {
+                        render it
+                    }
+                }
+                get('stage') { Something something ->
+                    render something.rateLimiterStageException().toCompletableFuture().get()
+                }
+                get('normal') { Something something ->
+                    render something.rateLimiterNormalException()
+                }
+            }
+        }
+        client = testHttpClient(app)
+
+        when:
+        def actual = null
+        for (int i = 0; i <= 10; i++) {
+            actual = get(path)
+            println actual.body.text
+        }
+
+        then:
+        actual.body.text.contains('io.github.resilience4j.ratelimiter.RequestNotPermitted: Request not permitted for limiter: test')
+        actual.statusCode == 500
+
+        where:
+        path      | rateLimiterName
+        'promise' | 'test'
+        'stage'   | 'test'
+        'normal'  | 'test'
+    }
+
+    def "test rate limit a method via annotation with fallback"() {
+        given:
+        RateLimiterRegistry registry = RateLimiterRegistry.of(buildConfig())
+        app = ratpack {
+            bindings {
+                bindInstance(CircuitBreakerRegistry, CircuitBreakerRegistry.ofDefaults())
+                bindInstance(RateLimiterRegistry, registry)
+                bind(Something)
+                module(ResilienceModule)
+            }
+            handlers {
+                get('promise') { Something something ->
+                    something.rateLimiterPromiseFallback().then {
+                        render it
+                    }
+                }
+                get('stage') { Something something ->
+                    render something.rateLimiterStageFallback().toCompletableFuture().get()
+                }
+                get('normal') { Something something ->
+                    render something.rateLimiterNormalFallback()
+                }
+            }
+        }
+        client = testHttpClient(app)
+
+        when:
+        def actual = null
+        for (int i = 0; i <= 10; i++) {
+            actual = get(path)
+            println actual.body.text
+        }
+
+        then:
+        actual.body.text.contains('recovered')
+        actual.statusCode == 200
 
         where:
         path      | rateLimiterName
@@ -113,6 +203,46 @@ class RateLimiterSpec extends Specification {
             "rateLimiter normal"
         }
 
+        @RateLimiter(name = "test")
+        Promise<String> rateLimiterPromiseException() {
+            Promise.async {
+                it.error(new Exception("rateLimiter promise exception"))
+            }
+        }
+
+        @RateLimiter(name = "test")
+        CompletionStage<Void> rateLimiterStageException() {
+            CompletableFuture.supplyAsync { throw new Exception('rateLimiter stage exception') }
+        }
+
+        @RateLimiter(name = "test")
+        String rateLimiterNormalException() {
+            throw new Exception("rateLimiter normal exception")
+        }
+
+        @RateLimiter(name = "test", recovery = MyRecoveryFunction)
+        Promise<String> rateLimiterPromiseFallback() {
+            Promise.async {
+                it.error(new Exception("rateLimiter promise exception"))
+            }
+        }
+
+        @RateLimiter(name = "test", recovery = MyRecoveryFunction)
+        CompletionStage<Void> rateLimiterStageFallback() {
+            CompletableFuture.supplyAsync { throw new Exception('rateLimiter stage exception') }
+        }
+
+        @RateLimiter(name = "test", recovery = MyRecoveryFunction)
+        String rateLimiterNormalFallback() {
+            throw new Exception("rateLimiter normal exception")
+        }
+    }
+
+    static class MyRecoveryFunction implements RecoveryFunction<String> {
+        @Override
+        String apply(Throwable t) throws Exception {
+            "recovered"
+        }
     }
 
 }
