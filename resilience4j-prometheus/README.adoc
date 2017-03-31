@@ -55,7 +55,7 @@ final RateLimiter foo = rateLimiterRegistry.rateLimiter("foo");
 final RateLimiter boo = rateLimiterRegistry.rateLimiter("boo");
 
 // Registering metrics in prometeus CollectorRegistry
-new RateLimiterExports(rateLimiterRegistry).registerregistry();
+new RateLimiterExports(rateLimiterRegistry).register(registry);
 --
 
 For both it is possible to use just a collection of breakers and limiters instead of registry.
