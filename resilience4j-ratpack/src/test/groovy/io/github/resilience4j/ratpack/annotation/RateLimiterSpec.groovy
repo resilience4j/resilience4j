@@ -70,7 +70,7 @@ class RateLimiterSpec extends Specification {
 
         when:
         def actual = null
-        for (int i = 0; i <= 100; i++) {
+        for (int i = 0; i <= 10; i++) {
             actual = get(path)
         }
 
@@ -85,11 +85,11 @@ class RateLimiterSpec extends Specification {
         'normal'  | 'test'
     }
 
-    // 100 events / 2s
+    // 10 events / 10 s
     def buildConfig() {
         RateLimiterConfig.custom()
-                .limitRefreshPeriod(Duration.ofSeconds(2))
-                .limitForPeriod(100)
+                .limitRefreshPeriod(Duration.ofSeconds(10))
+                .limitForPeriod(10)
                 .timeoutDuration(Duration.ofMillis(100))
                 .build()
     }

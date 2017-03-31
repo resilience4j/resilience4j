@@ -30,10 +30,10 @@ class RatelimiterTransformerSpec extends Specification {
     RateLimiter rateLimiter = buildRatelimiter()
     RateLimiterTransformer<Integer> transformer = RateLimiterTransformer.of(rateLimiter)
     Set<Integer> values = [].toSet()
-    Set<Integer> expected = (0..99).toSet()
+    Set<Integer> expected = (0..9).toSet()
 
     when:
-    for (int i = 0 ; i <= 100; i++) {
+    for (int i = 0 ; i <= 10; i++) {
       def r =  ExecHarness.yieldSingle {
         Blocking.<Integer> get {
           i
@@ -52,10 +52,10 @@ class RatelimiterTransformerSpec extends Specification {
     RateLimiter rateLimiter = buildRatelimiter()
     RateLimiterTransformer<Integer> transformer = RateLimiterTransformer.of(rateLimiter).recover { t -> failure }
     Set<Integer> values = [].toSet()
-    Set<Integer> expected = (0..99).toSet()
+    Set<Integer> expected = (0..9).toSet()
 
     when:
-    for (int i = 0 ; i <= 100; i++) {
+    for (int i = 0 ; i <= 10; i++) {
       def r =  ExecHarness.yieldSingle {
         Blocking.<Integer> get {
           i
@@ -68,11 +68,11 @@ class RatelimiterTransformerSpec extends Specification {
     values == expected << failure
   }
 
-  // 100 events / 2s
+  // 10 events / 10 s
   def buildRatelimiter() {
     RateLimiterConfig config = RateLimiterConfig.custom()
-      .limitRefreshPeriod(Duration.ofSeconds(2))
-      .limitForPeriod(100)
+      .limitRefreshPeriod(Duration.ofSeconds(10))
+      .limitForPeriod(10)
       .timeoutDuration(Duration.ofMillis(100))
       .build()
     RateLimiter.of("test", config)
