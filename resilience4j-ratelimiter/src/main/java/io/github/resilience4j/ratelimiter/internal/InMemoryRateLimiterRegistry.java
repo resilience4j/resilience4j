@@ -23,6 +23,8 @@ import static java.util.Objects.requireNonNull;
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RateLimiterConfig;
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
+import javaslang.collection.Array;
+import javaslang.collection.Seq;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -47,6 +49,14 @@ public class InMemoryRateLimiterRegistry implements RateLimiterRegistry {
     public InMemoryRateLimiterRegistry(final RateLimiterConfig defaultRateLimiterConfig) {
         this.defaultRateLimiterConfig = requireNonNull(defaultRateLimiterConfig, CONFIG_MUST_NOT_BE_NULL);
         rateLimiters = new ConcurrentHashMap<>();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Seq<RateLimiter> getAllRateLimiters() {
+        return Array.ofAll(rateLimiters.values());
     }
 
     /**
