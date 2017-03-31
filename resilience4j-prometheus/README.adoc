@@ -32,26 +32,30 @@ The names of the rate limiters and circuit breakers are exposed using label `nam
 
 [source,java]
 --
+final CollectorRegistry registry = new CollectorRegistry();
+
 final CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
 
 final CircuitBreaker foo = circuitBreakerRegistry.circuitBreaker("foo");
 final CircuitBreaker boo = circuitBreakerRegistry.circuitBreaker("boo");
 
-// Registering metrics in default prometeus CollectorRegistry
-new CircuitBreakerExports(circuitBreakerRegistry).register();
+// Registering metrics in prometeus CollectorRegistry
+new CircuitBreakerExports(circuitBreakerRegistry).register(registry);
 --
 
 === RateLimiter
 
 [source,java]
 --
+final CollectorRegistry registry = new CollectorRegistry();
+
 final RateLimiterRegistry rateLimiterRegistry = CircuitBreakerRegistry.ofDefaults();
 
 final RateLimiter foo = rateLimiterRegistry.rateLimiter("foo");
 final RateLimiter boo = rateLimiterRegistry.rateLimiter("boo");
 
-// Registering metrics in default prometeus CollectorRegistry
-new RateLimiterExports(rateLimiterRegistry).register();
+// Registering metrics in prometeus CollectorRegistry
+new RateLimiterExports(rateLimiterRegistry).registerregistry();
 --
 
 For both it is possible to use just a collection of breakers and limiters instead of registry.
