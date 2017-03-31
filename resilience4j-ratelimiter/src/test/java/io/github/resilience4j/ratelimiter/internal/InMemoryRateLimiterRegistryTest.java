@@ -19,6 +19,7 @@
 package io.github.resilience4j.ratelimiter.internal;
 
 import static org.assertj.core.api.BDDAssertions.then;
+import static org.assertj.core.api.Java6Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -132,5 +133,14 @@ public class InMemoryRateLimiterRegistryTest {
         RateLimiterRegistry registry = new InMemoryRateLimiterRegistry(config);
         Supplier<RateLimiterConfig> rateLimiterConfigSupplier = null;
         registry.rateLimiter("name", rateLimiterConfigSupplier);
+    }
+
+    @Test
+    public void rateLimiterGetAllRateLimiters() {
+        RateLimiterRegistry registry = new InMemoryRateLimiterRegistry(config);
+        registry.rateLimiter("foo");
+
+        assertThat(registry.getAllRateLimiters().size()).isEqualTo(1);
+        assertThat(registry.getAllRateLimiters().get(0).getName()).isEqualTo("foo");
     }
 }

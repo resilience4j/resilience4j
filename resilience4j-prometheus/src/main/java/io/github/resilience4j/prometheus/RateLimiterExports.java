@@ -1,0 +1,136 @@
+/*
+ *
+ *  Copyright 2017 Oleksandr Goldobin
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *         http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
+ *
+ */
+package io.github.resilience4j.prometheus;
+
+import io.github.resilience4j.ratelimiter.RateLimiter;
+import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
+import io.prometheus.client.Collector;
+import io.prometheus.client.GaugeMetricFamily;
+
+import java.util.List;
+import java.util.function.Supplier;
+
+import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
+import static java.util.Objects.requireNonNull;
+
+/**
+ * An adapter from builtin {@link RateLimiter.Metrics} to prometheus
+ * {@link io.prometheus.client.CollectorRegistry}.
+ */
+public class RateLimiterExports extends Collector {
+    private static final String DEFAULT_NAME = "rate_limiter";
+
+    private final String name;
+    private final Supplier<Iterable<RateLimiter>> rateLimitersSupplier;
+
+    /**
+     * Creates a new instance of {@link RateLimiterExports} with default metric name and
+     * {@link RateLimiterRegistry}.
+     *
+     * @param rateLimiterRegistry the rate limiter registry
+     */
+    public RateLimiterExports(RateLimiterRegistry rateLimiterRegistry) {
+        this(rateLimiterRegistry::getAllRateLimiters);
+    }
+
+    /**
+     * Creates a new instance of {@link RateLimiterExports} with default metric name and
+     * {@link Iterable} of rate limiters.
+     *
+     * @param rateLimiters the rate limiters
+     */
+    public RateLimiterExports(Iterable<RateLimiter> rateLimiters) {
+        this(() -> rateLimiters);
+    }
+
+    /**
+     * Creates a new instance of {@link RateLimiterExports} with default metric name and
+     * {@link Supplier} of rate limiters
+     *
+     * @param rateLimitersSupplier the supplier of rate limiters
+     */
+    public RateLimiterExports(Supplier<Iterable<RateLimiter>> rateLimitersSupplier) {
+        this(DEFAULT_NAME, rateLimitersSupplier);
+    }
+
+    /**
+     * Creates a new instance of {@link RateLimiterExports} with specified metric name and
+     * {@link RateLimiterRegistry}.
+     *
+     * @param name the name of metric
+     * @param rateLimiterRegistry the rate limiter registry
+     */
+    public RateLimiterExports(String name, RateLimiterRegistry rateLimiterRegistry) {
+        this(name, rateLimiterRegistry::getAllRateLimiters);
+    }
+
+    /**
+     * Creates a new instance of {@link RateLimiterExports} with specified metric name and
+     * {@link Iterable} of rate limiters.
+     *
+     * @param name the name of metric
+     * @param rateLimiters the rate limiters
+     */
+    public RateLimiterExports(String name, Iterable<RateLimiter> rateLimiters) {
+        this(name, () -> rateLimiters);
+    }
+
+    /**
+     * Creates a new instance of {@link RateLimiterExports} with specified metric name and
+     * {@link Supplier} of rate limiters
+     *
+     * @param name the name of metric
+     * @param rateLimitersSupplier the supplier of rate limiters
+     */
+    public RateLimiterExports(String name, Supplier<Iterable<RateLimiter>> rateLimitersSupplier) {
+        requireNonNull(name);
+        requireNonNull(rateLimitersSupplier);
+
+        this.name = name;
+        this.rateLimitersSupplier = rateLimitersSupplier;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public List<MetricFamilySamples> collect() {
+
+        final GaugeMetricFamily stats = new GaugeMetricFamily(
+                name,
+                "Rate Limiter Stats",
+                asList("name", "param"));
+
+        for (RateLimiter rateLimiter : rateLimitersSupplier.get()) {
+
+            final RateLimiter.Metrics metrics = rateLimiter.getMetrics();
+
+            stats.addMetric(
+                    asList(rateLimiter.getName(), "available_permissions"),
+                    metrics.getAvailablePermissions());
+
+            stats.addMetric(
+                    asList(rateLimiter.getName(), "waiting_threads"),
+                    metrics.getNumberOfWaitingThreads());
+        }
+
+        return singletonList(stats);
+    }
+}

@@ -19,6 +19,7 @@
 package io.github.resilience4j.ratelimiter;
 
 import io.github.resilience4j.ratelimiter.internal.InMemoryRateLimiterRegistry;
+import javaslang.collection.Seq;
 
 import java.util.function.Supplier;
 
@@ -26,6 +27,13 @@ import java.util.function.Supplier;
  * Manages all RateLimiter instances.
  */
 public interface RateLimiterRegistry {
+
+    /**
+     * Returns all managed {@link RateLimiter} instances.
+     *
+     * @return all managed {@link RateLimiter} instances.
+     */
+    Seq<RateLimiter> getAllRateLimiters();
 
     /**
      * Returns a managed {@link RateLimiter} or creates a new one with the default RateLimiter configuration.
