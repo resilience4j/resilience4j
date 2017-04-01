@@ -15,7 +15,7 @@
  */
 package io.github.resilience4j.ratpack.internal;
 
-import com.google.inject.Provider;
+import com.google.inject.Inject;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerOpenException;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.circuitbreaker.operator.CircuitBreakerOperator;
@@ -29,7 +29,6 @@ import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
 import ratpack.exec.Promise;
 
-import javax.inject.Inject;
 import java.time.Duration;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
@@ -41,18 +40,20 @@ import java.util.concurrent.CompletionStage;
  */
 public class CircuitBreakerMethodInterceptor implements MethodInterceptor {
 
-    private final Provider<CircuitBreakerRegistry> provider;
+    @Inject(optional = true)
+    private CircuitBreakerRegistry registry;
 
-    @Inject
-    public CircuitBreakerMethodInterceptor(Provider<CircuitBreakerRegistry> provider) {
-        this.provider = provider;
+    public CircuitBreakerMethodInterceptor() {
+        if (registry == null) {
+            registry = CircuitBreakerRegistry.ofDefaults();
+        }
     }
 
     @SuppressWarnings("unchecked")
     @Override
     public Object invoke(MethodInvocation invocation) throws Throwable {
         CircuitBreaker annotation = invocation.getMethod().getAnnotation(CircuitBreaker.class);
-        io.github.resilience4j.circuitbreaker.CircuitBreaker breaker = provider.get().circuitBreaker(annotation.name());
+        io.github.resilience4j.circuitbreaker.CircuitBreaker breaker = registry.circuitBreaker(annotation.name());
         if (breaker == null) {
             return invocation.proceed();
         }
