@@ -47,6 +47,30 @@ class CircuitBreakerSpec extends Specification {
     @Delegate
     TestHttpClient client
 
+    def "test no circuit breaker registry installed, app still works"() {
+        given:
+        app = ratpack {
+            bindings {
+                module(ResilienceModule)
+                bind(Something)
+            }
+            handlers {
+                get('promise') { Something something ->
+                    something.breakerPromise().then {
+                        render it
+                    }
+                }
+            }
+        }
+        client = testHttpClient(app)
+
+        when:
+        def actual = get('promise')
+
+        then:
+        actual.body.text == 'breaker promise'
+    }
+
     def "test circuit break a method via annotation with fallback"() {
         given:
         CircuitBreakerRegistry registry = CircuitBreakerRegistry.of(buildConfig())

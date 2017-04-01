@@ -16,19 +16,17 @@
 
 package io.github.resilience4j.ratpack.internal;
 
-import com.google.inject.Provider;
-
+import com.google.inject.Inject;
 import io.github.resilience4j.ratelimiter.RateLimiterConfig;
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
 import io.github.resilience4j.ratelimiter.RequestNotPermitted;
-import io.github.resilience4j.ratpack.annotation.RateLimiter;
 import io.github.resilience4j.ratpack.RateLimiterTransformer;
 import io.github.resilience4j.ratpack.RecoveryFunction;
+import io.github.resilience4j.ratpack.annotation.RateLimiter;
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
 import ratpack.exec.Promise;
 
-import javax.inject.Inject;
 import java.time.Duration;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
@@ -40,11 +38,13 @@ import java.util.concurrent.CompletionStage;
  */
 public class RateLimiterMethodInterceptor implements MethodInterceptor {
 
-    private final Provider<RateLimiterRegistry> provider;
+    @Inject(optional = true)
+    private RateLimiterRegistry registry;
 
-    @Inject
-    public RateLimiterMethodInterceptor(Provider<RateLimiterRegistry> provider) {
-        this.provider = provider;
+    public RateLimiterMethodInterceptor() {
+        if (registry == null) {
+            registry = RateLimiterRegistry.of(RateLimiterConfig.ofDefaults());
+        }
     }
 
     @SuppressWarnings("unchecked")
@@ -52,7 +52,7 @@ public class RateLimiterMethodInterceptor implements MethodInterceptor {
     public Object invoke(MethodInvocation invocation) throws Throwable {
         RateLimiter annotation = invocation.getMethod().getAnnotation(RateLimiter.class);
         RecoveryFunction<?> recoveryFunction = annotation.recovery().newInstance();
-        io.github.resilience4j.ratelimiter.RateLimiter rateLimiter = provider.get().rateLimiter(annotation.name());
+        io.github.resilience4j.ratelimiter.RateLimiter rateLimiter = registry.rateLimiter(annotation.name());
         if (rateLimiter == null) {
             return invocation.proceed();
         }
