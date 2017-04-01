@@ -43,6 +43,31 @@ class RateLimiterSpec extends Specification {
     @Delegate
     TestHttpClient client
 
+    def "test no rate limiter registry installed, app still works"() {
+        given:
+        app = ratpack {
+            bindings {
+                module(ResilienceModule)
+                bind(Something)
+            }
+            handlers {
+                get('promise') { Something something ->
+                    something.rateLimiterPromise().then {
+                        render it
+                    }
+                }
+            }
+        }
+        client = testHttpClient(app)
+
+        when:
+        def actual = get('promise')
+
+        then:
+        actual.body.text == 'rateLimiter promise'
+        actual.statusCode == 200
+    }
+
     def "test rate limit a method via annotation"() {
         given:
         RateLimiterRegistry registry = RateLimiterRegistry.of(buildConfig())
