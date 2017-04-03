@@ -1,4 +1,6 @@
 dependencies {
     compile (libraries.metrics)
+    compileOnly project(':resilience4j-circuitbreaker')
     testCompile project(':resilience4j-test')
+    testCompile project(':resilience4j-circuitbreaker')
 }

@@ -18,18 +18,19 @@
  */
 package io.github.resilience4j.prometheus;
 
+import org.junit.Test;
+
+import java.util.function.Supplier;
+
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerOpenException;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.circuitbreaker.internal.InMemoryCircuitBreakerRegistry;
 import io.prometheus.client.CollectorRegistry;
 import javaslang.Tuple;
-import javaslang.collection.HashSet;
 import javaslang.collection.HashMap;
+import javaslang.collection.HashSet;
 import javaslang.collection.Map;
-import org.junit.Test;
-
-import java.util.function.Supplier;
 
 import static java.util.Collections.singleton;
 import static java.util.Collections.singletonList;
@@ -44,7 +45,7 @@ public class CircuitBreakerExportsTest {
 
         final CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("foo");
 
-        new CircuitBreakerExports("boo_circuit_breaker", singletonList(circuitBreaker)).register(registry);
+        CircuitBreakerExports.ofIterable("boo_circuit_breaker", singletonList(circuitBreaker)).register(registry);
 
         final Supplier<Map<String, Double>> values = () -> HashSet
                 .of("closed", "open", "half_open")
@@ -101,7 +102,7 @@ public class CircuitBreakerExportsTest {
 
         final CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("foo");
 
-        new CircuitBreakerExports("boo_circuit_breaker", singletonList(circuitBreaker)).register(registry);
+        CircuitBreakerExports.ofIterable("boo_circuit_breaker", singletonList(circuitBreaker)).register(registry);
 
         final Supplier<Map<String, Double>> values = () -> HashSet
                 .of("successful", "failed", "not_permitted", "buffered", "buffered_max")
@@ -175,23 +176,23 @@ public class CircuitBreakerExportsTest {
     public void testConstructors() {
         final CircuitBreakerRegistry registry = new InMemoryCircuitBreakerRegistry();
 
-        new CircuitBreakerExports("boo_breakers", singleton(CircuitBreaker.ofDefaults("foo")));
-        new CircuitBreakerExports("boo_breakers", registry);
-        new CircuitBreakerExports("boo_breakers", () -> singleton(CircuitBreaker.ofDefaults("foo")));
+        CircuitBreakerExports.ofIterable("boo_breakers", singleton(CircuitBreaker.ofDefaults("foo")));
+        CircuitBreakerExports.ofCircuitBreakerRegistry("boo_breakers", registry);
+        CircuitBreakerExports.ofSupplier("boo_breakers", () -> singleton(CircuitBreaker.ofDefaults("foo")));
 
-        new CircuitBreakerExports(singleton(CircuitBreaker.ofDefaults("foo")));
-        new CircuitBreakerExports(registry);
-        new CircuitBreakerExports(() -> singleton(CircuitBreaker.ofDefaults("foo")));
+        CircuitBreakerExports.ofIterable(singleton(CircuitBreaker.ofDefaults("foo")));
+        CircuitBreakerExports.ofCircuitBreakerRegistry(registry);
+        CircuitBreakerExports.ofSupplier(() -> singleton(CircuitBreaker.ofDefaults("foo")));
     }
 
     @Test(expected = NullPointerException.class)
     public void testConstructorWithNullName() {
-        new CircuitBreakerExports(null, () -> singleton(CircuitBreaker.ofDefaults("foo")));
+        CircuitBreakerExports.ofCircuitBreaker(null, CircuitBreaker.ofDefaults("foo"));
     }
 
     @Test(expected = NullPointerException.class)
     public void testConstructorWithNullSupplier() {
-        new CircuitBreakerExports("boo_breakers", (Supplier<Iterable<CircuitBreaker>>) null);
+        CircuitBreakerExports.ofCircuitBreaker("boo_breakers", null);
     }
 
     private static class SomeAppException extends RuntimeException {
