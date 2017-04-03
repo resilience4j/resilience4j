@@ -24,6 +24,7 @@ import io.reactivex.Flowable;
 import javaslang.control.Try;
 
 import java.time.Duration;
+import java.util.concurrent.Callable;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -127,6 +128,13 @@ public interface RateLimiter {
         };
     }
 
+    static <T> Callable<T> decorateCallable(RateLimiter rateLimiter, Callable<T> callable) {
+        return () -> {
+            waitForPermission(rateLimiter);
+            return callable.call();
+        };
+    }
+
     /**
      * Creates a consumer which is restricted by a RateLimiter.
      *
@@ -156,6 +164,7 @@ public interface RateLimiter {
         };
     }
 
+
     /**
      * Creates a function which is restricted by a RateLimiter.
      *
@@ -171,7 +180,6 @@ public interface RateLimiter {
             return function.apply(t);
         };
     }
-
 
     /**
      * Will wait for permission within default timeout duration.
@@ -232,6 +240,40 @@ public interface RateLimiter {
      * @return a reactive stream of RateLimiter
      */
     Flowable<RateLimiterEvent> getEventStream();
+
+    /**
+     * Decorates and executes the decorated Supplier.
+     *
+     * @param supplier the original Supplier
+     * @param <T> the type of results supplied by this supplier
+     * @return the result of the decorated Supplier.
+     */
+    default <T> T executeSupplier(Supplier<T> supplier){
+        return decorateSupplier(this, supplier).get();
+    }
+
+    /**
+     * Decorates and executes the decorated Callable.
+     *
+     * @param callable the original Callable
+     *
+     * @return the result of the decorated Callable.
+     * @param <T> the result type of callable
+     * @throws Exception if unable to compute a result
+     */
+    default <T> T executeCallable(Callable<T> callable) throws Exception{
+        return decorateCallable(this, callable).call();
+    }
+
+    /**
+     * Decorates and executes the decorated Runnable.
+     *
+     * @param runnable the original Runnable
+     */
+    default void executeRunnable(Runnable runnable){
+        decorateRunnable(this, runnable).run();
+    }
+
 
     interface Metrics {
         /**
