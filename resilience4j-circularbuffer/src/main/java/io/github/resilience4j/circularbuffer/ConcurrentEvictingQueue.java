@@ -162,7 +162,7 @@ public class ConcurrentEvictingQueue<E> extends AbstractQueue<E> {
             }
             size--;
             modificationsCount++;
-            notFull.signal();
+            notFull.signal(); 
             return result;
         };
         return writeConcurrently(pollElement);
