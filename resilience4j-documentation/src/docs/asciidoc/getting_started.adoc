@@ -1,14 +1,75 @@
 == Getting started
 
 The projects requires JDK 8. The project is published in JCenter and Maven Central.
+If you use Gradle or Maven, you can include Resilience4j modules as follows.
+
+WARNING: The *groupId* has been changed from *io.github.robwin* to *io.github.resilience4j*
 
 === Gradle
-[source,groovy]
-[subs="attributes"]
+
+==== Release
+[source,groovy, subs="attributes"]
 ----
 repositories {
-    jcenter()
+    jCenter()
 }
 
-compile "io.github.resilience4j:javaslang-circuitbreaker:{release-version}"
+compile "io.github.resilience4j:resilience4j-circuitbreaker:{release-version}"
+compile "io.github.resilience4j:resilience4j-ratelimiter:{release-version}"
+compile "io.github.resilience4j:resilience4j-retry:{release-version}"
+----
+
+==== Snapshot
+
+[source,groovy]
+----
+repositories {
+   maven { url 'http://oss.jfrog.org/artifactory/oss-snapshot-local/' }
+}
+----
+
+=== Maven
+==== Release
+
+[source,xml, subs="specialcharacters,attributes"]
+----
+<repositories>
+    <repository>
+        <snapshots>
+            <enabled>false</enabled>
+        </snapshots>
+        <id>jcenter-releases</id>
+        <name>jcenter</name>
+        <url>http://jcenter.bintray.com</url>
+    </repository>
+</repositories>
+
+<dependency>
+    <groupId>io.github.resilience4j</groupId>
+    <artifactId>resilience4j-circuitbreaker</artifactId>
+    <version>{release-version}</version>
+</dependency>
+<dependency>
+    <groupId>io.github.resilience4j</groupId>
+    <artifactId>resilience4j-ratelimiter</artifactId>
+    <version>{release-version}</version>
+</dependency>
+<dependency>
+    <groupId>io.github.resilience4j</groupId>
+    <artifactId>resilience4j-retry</artifactId>
+    <version>{release-version}</version>
+</dependency>
+----
+
+==== Snapshot
+
+[source,java]
+----
+<repositories>
+    <repository>
+      <id>jcenter-snapshots</id>
+      <name>jcenter</name>
+      <url>http://oss.jfrog.org/artifactory/oss-snapshot-local/</url>
+    </repository>
+</repositories>
 ----
