@@ -1,6 +1,6 @@
 = resilience4j-prometheus
 
-Direct integration of circuit breaker and rate limiter metrics with
+Integration of circuit breaker and rate limiter metrics with
 https://github.com/prometheus/client_java[Prometheus simple client]
 
 For the circuit breaker library exports 2 metrics:
@@ -32,22 +32,21 @@ The names of the rate limiters and circuit breakers are exposed using label `nam
 
 [source,java]
 --
-final CollectorRegistry registry = new CollectorRegistry();
+final CollectorRegistry collectorRegistry = new CollectorRegistry();
 
 final CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
 
 final CircuitBreaker foo = circuitBreakerRegistry.circuitBreaker("foo");
 final CircuitBreaker boo = circuitBreakerRegistry.circuitBreaker("boo");
 
-// Registering metrics in prometeus CollectorRegistry
-CircuitBreakerExports.ofCircuitBreakerRegistry(circuitBreakerRegistry).register(registry);
+collectorRegistry.register(CircuitBreakerExports.ofCircuitBreakerRegistry(circuitBreakerRegistry));
 --
 
 === RateLimiter
 
 [source,java]
 --
-final CollectorRegistry registry = new CollectorRegistry();
+final CollectorRegistry collectorRegistry = new CollectorRegistry();
 
 final RateLimiterRegistry rateLimiterRegistry = CircuitBreakerRegistry.ofDefaults();
 
@@ -55,7 +54,7 @@ final RateLimiter foo = rateLimiterRegistry.rateLimiter("foo");
 final RateLimiter boo = rateLimiterRegistry.rateLimiter("boo");
 
 // Registering metrics in prometeus CollectorRegistry
-RateLimiterExports.ofRateLimiterRegistry(rateLimiterRegistry).register(registry);
+collectorRegistry.register(RateLimiterExports.ofRateLimiterRegistry(rateLimiterRegistry));
 --
 
 For both it is possible to use just a collection of breakers and limiters instead of registry.
