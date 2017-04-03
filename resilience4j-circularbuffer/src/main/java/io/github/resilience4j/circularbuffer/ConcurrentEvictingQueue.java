@@ -27,7 +27,10 @@ import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.concurrent.locks.StampedLock;
 import java.util.function.Supplier;
+<<<<<<< HEAD
 import java.util.concurrent.locks.LockSupport;
+=======
+>>>>>>> 832ce3d3de9e0a4adc574217598d5d4109589c4f
 
 /**
  *
@@ -65,11 +68,14 @@ public class ConcurrentEvictingQueue<E> extends AbstractQueue<E> {
     private volatile int size;
     private volatile int modificationsCount;
     private final StampedLock stampedLock;
+<<<<<<< HEAD
 
     private final ReentrantLock lock = new ReentrantLock();
     private final Condition notFull = lock.newCondition();
     private final Condition notEmpty = lock.newCondition();
 
+=======
+>>>>>>> 832ce3d3de9e0a4adc574217598d5d4109589c4f
     private Object[] ringBuffer;
     private int headIndex;
     private int tailIndex;
@@ -128,16 +134,29 @@ public class ConcurrentEvictingQueue<E> extends AbstractQueue<E> {
                 ringBuffer[tailIndex] = e;
                 modificationsCount++;
                 size++;
+<<<<<<< HEAD
             }
             else {
                 tailIndex = nextIndex(tailIndex);
                 while(headIndex == tailIndex) 
                     notFull.await();
+=======
+            } else if (size == maxSize) {
+                headIndex = nextIndex(headIndex);
+                tailIndex = nextIndex(tailIndex);
+                ringBuffer[tailIndex] = e;
+                modificationsCount++;
+            } else {
+                tailIndex = nextIndex(tailIndex);
+>>>>>>> 832ce3d3de9e0a4adc574217598d5d4109589c4f
                 ringBuffer[tailIndex] = e;
                 size++;
                 modificationsCount++;
             }
+<<<<<<< HEAD
             notEmpty.signal();
+=======
+>>>>>>> 832ce3d3de9e0a4adc574217598d5d4109589c4f
             return true;
         };
         return writeConcurrently(offerElement);
@@ -151,9 +170,13 @@ public class ConcurrentEvictingQueue<E> extends AbstractQueue<E> {
     public E poll() {
         Supplier<E> pollElement = () -> {
             if (size == 0) {
+<<<<<<< HEAD
                 //return null;
                 while (count == 0)
                     notEmpty.await();
+=======
+                return null;
+>>>>>>> 832ce3d3de9e0a4adc574217598d5d4109589c4f
             }
             E result = (E) ringBuffer[headIndex];
             ringBuffer[headIndex] = null;
@@ -162,7 +185,10 @@ public class ConcurrentEvictingQueue<E> extends AbstractQueue<E> {
             }
             size--;
             modificationsCount++;
+<<<<<<< HEAD
             notFull.signal(); 
+=======
+>>>>>>> 832ce3d3de9e0a4adc574217598d5d4109589c4f
             return result;
         };
         return writeConcurrently(pollElement);
@@ -192,7 +218,11 @@ public class ConcurrentEvictingQueue<E> extends AbstractQueue<E> {
             if (size == 0) {
                 return null;
             }
+<<<<<<< HEAD
             ringBuffer = new Object[maxSize]; // ?为啥要重新new
+=======
+            ringBuffer = new Object[maxSize];
+>>>>>>> 832ce3d3de9e0a4adc574217598d5d4109589c4f
             size = 0;
             headIndex = 0;
             tailIndex = 0;
@@ -316,7 +346,11 @@ public class ConcurrentEvictingQueue<E> extends AbstractQueue<E> {
 
     private <T> T readConcurrently(final Supplier<T> readSupplier) {
         T result;
+<<<<<<< HEAD
         /*long stamp;
+=======
+        long stamp;
+>>>>>>> 832ce3d3de9e0a4adc574217598d5d4109589c4f
         for (int i = 0; i < RETRIES; i++) {
             stamp = stampedLock.tryOptimisticRead();
             result = readSupplier.get();
@@ -324,6 +358,7 @@ public class ConcurrentEvictingQueue<E> extends AbstractQueue<E> {
                 return result;
             }
         }
+<<<<<<< HEAD
         */
         //stamp = stampedLock.readLock();
         lock.lock();
@@ -332,12 +367,20 @@ public class ConcurrentEvictingQueue<E> extends AbstractQueue<E> {
         } finally {
             //stampedLock.unlockRead(stamp);
             lock.unlock();
+=======
+        stamp = stampedLock.readLock();
+        try {
+            result = readSupplier.get();
+        } finally {
+            stampedLock.unlockRead(stamp);
+>>>>>>> 832ce3d3de9e0a4adc574217598d5d4109589c4f
         }
         return result;
     }
 
     private <T> T readConcurrentlyWithoutSpin(final Supplier<T> readSupplier) {
         T result;
+<<<<<<< HEAD
         //long stamp = stampedLock.readLock();
         lock.lock();
         try {
@@ -345,12 +388,20 @@ public class ConcurrentEvictingQueue<E> extends AbstractQueue<E> {
         } finally {
             //stampedLock.unlockRead(stamp);
             lock.unlock();
+=======
+        long stamp = stampedLock.readLock();
+        try {
+            result = readSupplier.get();
+        } finally {
+            stampedLock.unlockRead(stamp);
+>>>>>>> 832ce3d3de9e0a4adc574217598d5d4109589c4f
         }
         return result;
     }
 
     private <T> T writeConcurrently(final Supplier<T> writeSupplier) {
         T result;
+<<<<<<< HEAD
         //long stamp = stampedLock.writeLock();
         lock.lock();
         try {
@@ -358,6 +409,13 @@ public class ConcurrentEvictingQueue<E> extends AbstractQueue<E> {
         } finally {
             //stampedLock.unlockWrite(stamp);
             lock.unlock();
+=======
+        long stamp = stampedLock.writeLock();
+        try {
+            result = writeSupplier.get();
+        } finally {
+            stampedLock.unlockWrite(stamp);
+>>>>>>> 832ce3d3de9e0a4adc574217598d5d4109589c4f
         }
         return result;
     }
