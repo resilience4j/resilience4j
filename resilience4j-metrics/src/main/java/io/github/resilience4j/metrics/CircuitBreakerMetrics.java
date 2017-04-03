@@ -41,22 +41,29 @@ public class CircuitBreakerMetrics implements MetricSet{
 
     private CircuitBreakerMetrics(Seq<CircuitBreaker> circuitBreakers){
         circuitBreakers.forEach(circuitBreaker -> {
-            metricRegistry.register(name("resilience4j.circuitbreaker", circuitBreaker.getName(), "successful"),
-                    (Gauge<Integer>) () -> circuitBreaker.getMetrics().getNumberOfSuccessfulCalls());
-            metricRegistry.register(name("resilience4j.circuitbreaker", circuitBreaker.getName(), "failed"),
-                    (Gauge<Integer>) () -> circuitBreaker.getMetrics().getNumberOfFailedCalls());
-            metricRegistry.register(name("resilience4j.circuitbreaker", circuitBreaker.getName(), "not_permitted"),
-                    (Gauge<Long>) () -> circuitBreaker.getMetrics().getNumberOfNotPermittedCalls());
-            metricRegistry.register(name("resilience4j.circuitbreaker", circuitBreaker.getName(), "buffered"),
-                    (Gauge<Integer>) () -> circuitBreaker.getMetrics().getNumberOfBufferedCalls());
-            metricRegistry.register(name("resilience4j.circuitbreaker", circuitBreaker.getName(), "buffered_max"),
-                    (Gauge<Integer>) () -> circuitBreaker.getMetrics().getMaxNumberOfBufferedCalls());
+            String name = circuitBreaker.getName();
+            CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
+
+            metricRegistry.register(name("resilience4j.circuitbreaker", name, "successful"),
+                    (Gauge<Integer>) metrics::getNumberOfSuccessfulCalls);
+            metricRegistry.register(name("resilience4j.circuitbreaker", name, "failed"),
+                    (Gauge<Integer>) metrics::getNumberOfFailedCalls);
+            metricRegistry.register(name("resilience4j.circuitbreaker", name, "not_permitted"),
+                    (Gauge<Long>) metrics::getNumberOfNotPermittedCalls);
+            metricRegistry.register(name("resilience4j.circuitbreaker", name, "buffered"),
+                    (Gauge<Integer>) metrics::getNumberOfBufferedCalls);
+            metricRegistry.register(name("resilience4j.circuitbreaker", name, "buffered_max"),
+                    (Gauge<Integer>) metrics::getMaxNumberOfBufferedCalls);
             }
         );
     }
 
     public static CircuitBreakerMetrics of(CircuitBreakerRegistry circuitBreakerRegistry) {
         return new CircuitBreakerMetrics(circuitBreakerRegistry.getAllCircuitBreakers());
+    }
+
+    public static CircuitBreakerMetrics of(Seq<CircuitBreaker> circuitBreakers) {
+        return new CircuitBreakerMetrics(circuitBreakers);
     }
 
     public static CircuitBreakerMetrics of(CircuitBreaker circuitBreaker) {
