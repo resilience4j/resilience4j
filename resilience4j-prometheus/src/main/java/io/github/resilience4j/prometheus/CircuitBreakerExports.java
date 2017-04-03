@@ -18,6 +18,9 @@
  */
 package io.github.resilience4j.prometheus;
 
+import java.util.List;
+import java.util.function.Supplier;
+
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.prometheus.client.Collector;
@@ -25,9 +28,6 @@ import io.prometheus.client.GaugeMetricFamily;
 import javaslang.Tuple;
 import javaslang.Tuple2;
 import javaslang.collection.Array;
-
-import java.util.List;
-import java.util.function.Supplier;
 
 import static java.util.Arrays.asList;
 import static java.util.Objects.requireNonNull;
@@ -49,12 +49,104 @@ public class CircuitBreakerExports extends Collector {
     private final Supplier<Iterable<CircuitBreaker>> circuitBreakersSupplier;
 
     /**
+     * Creates a new instance of {@link CircuitBreakerExports} with specified metrics names prefix and
+     * {@link Supplier} of circuit breakers
+     *
+     * @param prefix the prefix of metrics names
+     * @param circuitBreakersSupplier the supplier of circuit breakers
+     */
+    public static CircuitBreakerExports ofSupplier(String prefix, Supplier<Iterable<CircuitBreaker>> circuitBreakersSupplier) {
+        return new CircuitBreakerExports(prefix, circuitBreakersSupplier);
+    }
+
+    /**
+     * Creates a new instance of {@link CircuitBreakerExports} with default metrics names prefix and
+     * {@link Supplier} of circuit breakers
+     *
+     * @param circuitBreakersSupplier the supplier of circuit breakers
+     */
+    public static CircuitBreakerExports ofSupplier(Supplier<Iterable<CircuitBreaker>> circuitBreakersSupplier) {
+        return new CircuitBreakerExports(DEFAULT_NAME, circuitBreakersSupplier);
+    }
+
+    /**
      * Creates a new instance of {@link CircuitBreakerExports} with default metrics names prefix and
      * {@link CircuitBreakerRegistry} as a source of circuit breakers.
 
      * @param circuitBreakerRegistry the registry of circuit breakers
      */
-    public CircuitBreakerExports(CircuitBreakerRegistry circuitBreakerRegistry) {
+    public static CircuitBreakerExports ofCircuitBreakerRegistry(CircuitBreakerRegistry circuitBreakerRegistry) {
+        return new CircuitBreakerExports(circuitBreakerRegistry.getAllCircuitBreakers());
+    }
+    /**
+     * Creates a new instance of {@link CircuitBreakerExports} with default metrics names prefix and
+     * a circuit breaker as a source.
+     *
+     * @param circuitBreaker the circuit breaker
+     */
+    public static CircuitBreakerExports ofCircuitBreaker(CircuitBreaker circuitBreaker) {
+        requireNonNull(circuitBreaker);
+        return new CircuitBreakerExports(Array.of(circuitBreaker));
+    }
+
+
+    /**
+     * Creates a new instance of {@link CircuitBreakerExports} with default metrics names prefix and
+     * {@link Iterable} of circuit breakers.
+     *
+     * @param circuitBreakers the circuit breakers
+     */
+    public static CircuitBreakerExports ofIterable(Iterable<CircuitBreaker> circuitBreakers) {
+        requireNonNull(circuitBreakers);
+        return new CircuitBreakerExports(circuitBreakers);
+    }
+
+    /**
+     * Creates a new instance of {@link CircuitBreakerExports} with specified metrics names prefix and
+     * {@link CircuitBreakerRegistry} as a source of circuit breakers.
+     *
+     * @param prefix the prefix of metrics names
+     * @param circuitBreakerRegistry the registry of circuit breakers
+     */
+    public static CircuitBreakerExports ofCircuitBreakerRegistry(String prefix, CircuitBreakerRegistry circuitBreakerRegistry) {
+        requireNonNull(prefix);
+        requireNonNull(circuitBreakerRegistry);
+        return new CircuitBreakerExports(prefix, circuitBreakerRegistry);
+    }
+
+    /**
+     * Creates a new instance of {@link CircuitBreakerExports} with specified metrics names prefix and
+     * {@link Iterable} of circuit breakers.
+     *
+     * @param prefix the prefix of metrics names
+     * @param circuitBreakers the circuit breakers
+     */
+    public static CircuitBreakerExports ofIterable(String prefix, Iterable<CircuitBreaker> circuitBreakers) {
+        requireNonNull(prefix);
+        requireNonNull(circuitBreakers);
+        return new CircuitBreakerExports(prefix, circuitBreakers);
+    }
+
+    /**
+     * Creates a new instance of {@link CircuitBreakerExports} with default metrics names prefix and
+     * a circuit breaker as a source.
+     *
+     * @param prefix the prefix of metrics names
+     * @param circuitBreaker the circuit breaker
+     */
+    public static CircuitBreakerExports ofCircuitBreaker(String prefix, CircuitBreaker circuitBreaker) {
+        requireNonNull(prefix);
+        requireNonNull(circuitBreaker);
+        return new CircuitBreakerExports(prefix, Array.of(circuitBreaker));
+    }
+
+    /**
+     * Creates a new instance of {@link CircuitBreakerExports} with default metrics names prefix and
+     * {@link CircuitBreakerRegistry} as a source of circuit breakers.
+
+     * @param circuitBreakerRegistry the registry of circuit breakers
+     */
+    private CircuitBreakerExports(CircuitBreakerRegistry circuitBreakerRegistry) {
         this(circuitBreakerRegistry::getAllCircuitBreakers);
     }
 
@@ -64,10 +156,9 @@ public class CircuitBreakerExports extends Collector {
      *
      * @param circuitBreakers the circuit breakers
      */
-    public CircuitBreakerExports(Iterable<CircuitBreaker> circuitBreakers) {
+    private CircuitBreakerExports(Iterable<CircuitBreaker> circuitBreakers) {
         this(() -> circuitBreakers);
     }
-
 
     /**
      * Creates a new instance of {@link CircuitBreakerExports} with default metrics names prefix and
@@ -75,7 +166,7 @@ public class CircuitBreakerExports extends Collector {
      *
      * @param circuitBreakersSupplier the supplier of circuit breakers
      */
-    public CircuitBreakerExports(Supplier<Iterable<CircuitBreaker>> circuitBreakersSupplier) {
+    private CircuitBreakerExports(Supplier<Iterable<CircuitBreaker>> circuitBreakersSupplier) {
         this(DEFAULT_NAME, circuitBreakersSupplier);
     }
 
@@ -86,7 +177,7 @@ public class CircuitBreakerExports extends Collector {
      * @param prefix the prefix of metrics names
      * @param circuitBreakerRegistry the registry of circuit breakers
      */
-    public CircuitBreakerExports(String prefix, CircuitBreakerRegistry circuitBreakerRegistry) {
+    private CircuitBreakerExports(String prefix, CircuitBreakerRegistry circuitBreakerRegistry) {
         this(prefix, circuitBreakerRegistry::getAllCircuitBreakers);
     }
 
@@ -97,7 +188,7 @@ public class CircuitBreakerExports extends Collector {
      * @param prefix the prefix of metrics names
      * @param circuitBreakers the circuit breakers
      */
-    public CircuitBreakerExports(String prefix, Iterable<CircuitBreaker> circuitBreakers) {
+    private CircuitBreakerExports(String prefix, Iterable<CircuitBreaker> circuitBreakers) {
         this(prefix, () -> circuitBreakers);
     }
 
@@ -108,10 +199,7 @@ public class CircuitBreakerExports extends Collector {
      * @param prefix the prefix of metrics names
      * @param circuitBreakersSupplier the supplier of circuit breakers
      */
-    public CircuitBreakerExports(String prefix, Supplier<Iterable<CircuitBreaker>> circuitBreakersSupplier) {
-        requireNonNull(prefix);
-        requireNonNull(circuitBreakersSupplier);
-
+    private CircuitBreakerExports(String prefix, Supplier<Iterable<CircuitBreaker>> circuitBreakersSupplier) {
         this.prefix = prefix;
         this.circuitBreakersSupplier = circuitBreakersSupplier;
     }

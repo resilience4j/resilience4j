@@ -28,9 +28,9 @@ import java.util.Map;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import javaslang.collection.Array;
-import javaslang.collection.Seq;
 
 import static com.codahale.metrics.MetricRegistry.name;
+import static java.util.Objects.requireNonNull;
 
 /**
  * An adapter which exports {@link CircuitBreaker.Metrics} as Dropwizard Metrics Gauges.
@@ -38,35 +38,81 @@ import static com.codahale.metrics.MetricRegistry.name;
 public class CircuitBreakerMetrics implements MetricSet{
 
     private final MetricRegistry metricRegistry = new MetricRegistry();
+    private static final String DEFAULT_PREFIX = "resilience4j.circuitbreaker";
 
-    private CircuitBreakerMetrics(Seq<CircuitBreaker> circuitBreakers){
+    private CircuitBreakerMetrics(Iterable<CircuitBreaker> circuitBreakers){
+        this(DEFAULT_PREFIX, circuitBreakers);
+    }
+
+    private CircuitBreakerMetrics(String prefix, Iterable<CircuitBreaker> circuitBreakers){
+        requireNonNull(prefix);
+        requireNonNull(circuitBreakers);
         circuitBreakers.forEach(circuitBreaker -> {
             String name = circuitBreaker.getName();
             CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
 
-            metricRegistry.register(name("resilience4j.circuitbreaker", name, "successful"),
+            metricRegistry.register(name(prefix, name, "successful"),
                     (Gauge<Integer>) metrics::getNumberOfSuccessfulCalls);
-            metricRegistry.register(name("resilience4j.circuitbreaker", name, "failed"),
+            metricRegistry.register(name(prefix, name, "failed"),
                     (Gauge<Integer>) metrics::getNumberOfFailedCalls);
-            metricRegistry.register(name("resilience4j.circuitbreaker", name, "not_permitted"),
+            metricRegistry.register(name(prefix, name, "not_permitted"),
                     (Gauge<Long>) metrics::getNumberOfNotPermittedCalls);
-            metricRegistry.register(name("resilience4j.circuitbreaker", name, "buffered"),
+            metricRegistry.register(name(prefix, name, "buffered"),
                     (Gauge<Integer>) metrics::getNumberOfBufferedCalls);
-            metricRegistry.register(name("resilience4j.circuitbreaker", name, "buffered_max"),
+            metricRegistry.register(name(prefix, name, "buffered_max"),
                     (Gauge<Integer>) metrics::getMaxNumberOfBufferedCalls);
             }
         );
     }
 
-    public static CircuitBreakerMetrics of(CircuitBreakerRegistry circuitBreakerRegistry) {
+    /**
+     * Creates a new instance CircuitBreakerMetrics {@link CircuitBreakerMetrics} with specified metrics names prefix and
+     * a {@link CircuitBreakerRegistry} as a source.
+     *
+     * @param prefix the prefix of metrics names
+     * @param circuitBreakerRegistry the registry of circuit breakers
+     */
+    public static CircuitBreakerMetrics ofCircuitBreakerRegistry(String prefix, CircuitBreakerRegistry circuitBreakerRegistry) {
+        return new CircuitBreakerMetrics(prefix, circuitBreakerRegistry.getAllCircuitBreakers());
+    }
+
+    /**
+     * Creates a new instance CircuitBreakerMetrics {@link CircuitBreakerMetrics} with
+     * a {@link CircuitBreakerRegistry} as a source.
+
+     * @param circuitBreakerRegistry the registry of circuit breakers
+     */
+    public static CircuitBreakerMetrics ofCircuitBreakerRegistry(CircuitBreakerRegistry circuitBreakerRegistry) {
         return new CircuitBreakerMetrics(circuitBreakerRegistry.getAllCircuitBreakers());
     }
 
-    public static CircuitBreakerMetrics of(Seq<CircuitBreaker> circuitBreakers) {
+    /**
+     * Creates a new instance CircuitBreakerMetrics {@link CircuitBreakerMetrics} with
+     * an {@link Iterable} of circuit breakers as a source.
+     *
+     * @param circuitBreakers the circuit breakers
+     */
+    public static CircuitBreakerMetrics ofIterable(Iterable<CircuitBreaker> circuitBreakers) {
         return new CircuitBreakerMetrics(circuitBreakers);
     }
 
-    public static CircuitBreakerMetrics of(CircuitBreaker circuitBreaker) {
+    /**
+     * Creates a new instance CircuitBreakerMetrics {@link CircuitBreakerMetrics} with
+     * an {@link Iterable} if circuit breakers as a source.
+     *
+     * @param circuitBreakers the circuit breakers
+     */
+    public static CircuitBreakerMetrics ofIterable(String prefix, Iterable<CircuitBreaker> circuitBreakers) {
+        return new CircuitBreakerMetrics(circuitBreakers);
+    }
+
+
+    /**
+     * Creates a new instance of CircuitBreakerMetrics {@link CircuitBreakerMetrics} with a circuit breaker as a source.
+     *
+     * @param circuitBreaker the circuit breaker
+     */
+    public static CircuitBreakerMetrics ofCircuitBreaker(CircuitBreaker circuitBreaker) {
         return new CircuitBreakerMetrics(Array.of(circuitBreaker));
     }
 
