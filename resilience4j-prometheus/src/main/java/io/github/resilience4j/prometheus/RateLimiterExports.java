@@ -18,13 +18,14 @@
  */
 package io.github.resilience4j.prometheus;
 
+import java.util.List;
+import java.util.function.Supplier;
+
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
 import io.prometheus.client.Collector;
 import io.prometheus.client.GaugeMetricFamily;
-
-import java.util.List;
-import java.util.function.Supplier;
+import javaslang.collection.Array;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
@@ -41,12 +42,96 @@ public class RateLimiterExports extends Collector {
     private final Supplier<Iterable<RateLimiter>> rateLimitersSupplier;
 
     /**
+     * Creates a new instance of {@link RateLimiterExports} with specified metrics names prefix and
+     * {@link Supplier} of rate limiters
+     *
+     * @param prefix the prefix of metrics names
+     * @param rateLimitersSupplier the supplier of rate limiters
+     */
+    public static RateLimiterExports ofSupplier(String prefix, Supplier<Iterable<RateLimiter>> rateLimitersSupplier) {
+        return new RateLimiterExports(prefix, rateLimitersSupplier);
+    }
+
+    /**
+     * Creates a new instance of {@link RateLimiterExports} with default metrics names prefix and
+     * {@link Supplier} of rate limiters
+     *
+     * @param rateLimitersSupplier the supplier of rate limiters
+     */
+    public static RateLimiterExports ofSupplier(Supplier<Iterable<RateLimiter>> rateLimitersSupplier) {
+        return new RateLimiterExports(DEFAULT_NAME, rateLimitersSupplier);
+    }
+
+    /**
+     * Creates a new instance of {@link RateLimiterExports} with default metrics names prefix and
+     * {@link RateLimiterRegistry} as a source of rate limiters.
+
+     * @param rateLimiterRegistry the registry of rate limiters
+     */
+    public static RateLimiterExports ofRateLimiterRegistry(RateLimiterRegistry rateLimiterRegistry) {
+        return new RateLimiterExports(rateLimiterRegistry.getAllRateLimiters());
+    }
+    /**
+     * Creates a new instance of {@link RateLimiterExports} with default metrics names prefix and
+     * a circuit breaker as a source.
+     *
+     * @param RateLimiter the rate limiter
+     */
+    public static RateLimiterExports ofRateLimiter(RateLimiter RateLimiter) {
+        return new RateLimiterExports(Array.of(RateLimiter));
+    }
+
+
+    /**
+     * Creates a new instance of {@link RateLimiterExports} with default metrics names prefix and
+     * {@link Iterable} of rate limiters.
+     *
+     * @param RateLimiters the rate limiters
+     */
+    public static RateLimiterExports ofIterable(Iterable<RateLimiter> RateLimiters) {
+        return new RateLimiterExports(RateLimiters);
+    }
+
+    /**
+     * Creates a new instance of {@link RateLimiterExports} with specified metrics names prefix and
+     * {@link RateLimiterRegistry} as a source of rate limiters.
+     *
+     * @param prefix the prefix of metrics names
+     * @param rateLimitersSupplier the registry of rate limiters
+     */
+    public static RateLimiterExports ofRateLimiterRegistry(String prefix, RateLimiterRegistry rateLimitersSupplier) {
+        return new RateLimiterExports(prefix, rateLimitersSupplier);
+    }
+
+    /**
+     * Creates a new instance of {@link RateLimiterExports} with specified metrics names prefix and
+     * {@link Iterable} of rate limiters.
+     *
+     * @param prefix the prefix of metrics names
+     * @param rateLimiter the rate limiters
+     */
+    public static RateLimiterExports ofIterable(String prefix, Iterable<RateLimiter> rateLimiter) {
+        return new RateLimiterExports(prefix, rateLimiter);
+    }
+
+    /**
+     * Creates a new instance of {@link RateLimiterExports} with default metrics names prefix and
+     * a circuit breaker as a source.
+     *
+     * @param prefix the prefix of metrics names
+     * @param RateLimiter the circuit breaker
+     */
+    public static RateLimiterExports ofRateLimiter(String prefix, RateLimiter RateLimiter) {
+        return new RateLimiterExports(prefix, Array.of(RateLimiter));
+    }
+    
+    /**
      * Creates a new instance of {@link RateLimiterExports} with default metric name and
      * {@link RateLimiterRegistry}.
      *
      * @param rateLimiterRegistry the rate limiter registry
      */
-    public RateLimiterExports(RateLimiterRegistry rateLimiterRegistry) {
+    private RateLimiterExports(RateLimiterRegistry rateLimiterRegistry) {
         this(rateLimiterRegistry::getAllRateLimiters);
     }
 
@@ -56,7 +141,7 @@ public class RateLimiterExports extends Collector {
      *
      * @param rateLimiters the rate limiters
      */
-    public RateLimiterExports(Iterable<RateLimiter> rateLimiters) {
+    private RateLimiterExports(Iterable<RateLimiter> rateLimiters) {
         this(() -> rateLimiters);
     }
 
@@ -66,7 +151,7 @@ public class RateLimiterExports extends Collector {
      *
      * @param rateLimitersSupplier the supplier of rate limiters
      */
-    public RateLimiterExports(Supplier<Iterable<RateLimiter>> rateLimitersSupplier) {
+    private RateLimiterExports(Supplier<Iterable<RateLimiter>> rateLimitersSupplier) {
         this(DEFAULT_NAME, rateLimitersSupplier);
     }
 
@@ -88,7 +173,7 @@ public class RateLimiterExports extends Collector {
      * @param name the name of metric
      * @param rateLimiters the rate limiters
      */
-    public RateLimiterExports(String name, Iterable<RateLimiter> rateLimiters) {
+    private RateLimiterExports(String name, Iterable<RateLimiter> rateLimiters) {
         this(name, () -> rateLimiters);
     }
 
@@ -99,7 +184,7 @@ public class RateLimiterExports extends Collector {
      * @param name the name of metric
      * @param rateLimitersSupplier the supplier of rate limiters
      */
-    public RateLimiterExports(String name, Supplier<Iterable<RateLimiter>> rateLimitersSupplier) {
+    private RateLimiterExports(String name, Supplier<Iterable<RateLimiter>> rateLimitersSupplier) {
         requireNonNull(name);
         requireNonNull(rateLimitersSupplier);
 
