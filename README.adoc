@@ -8,7 +8,7 @@ NOTE: javaslang-circuitbreaker has been renamed to resilience4j. We are still mi
 The *groupId* has been changed from *io.github.robwin* to *io.github.resilience4j*
 
 This library is a lightweight, easy-to-use fault tolerance library inspired by https://github.com/Netflix/Hystrix[Netflix Hystrix], but designed for Java 8 and functional programming. Lightweight, because the library only uses https://github.com/javaslang/javaslang[Javaslang], https://github.com/ReactiveX/RxJava[RxJava] and SLF4J-API, which do no have any other external library dependencies. Netflix Hystrix, in contrast, has a compile dependency to https://github.com/Netflix/archaius[Archaius] which has many more external library dependencies such as Guava and Apache Commons Configuration.
-In Resilience4j you don't have to go all-in, can pick what you need.
+With Resilience4j you don't have to go all-in, can pick what you need.
 
 Resilience4j features are:
 
