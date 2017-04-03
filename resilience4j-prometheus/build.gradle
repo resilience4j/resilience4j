@@ -2,4 +2,6 @@ dependencies {
     compile (libraries.prometheus_simpleclient)
     compileOnly project(':resilience4j-circuitbreaker')
     compileOnly project(':resilience4j-ratelimiter')
+    testCompile project(':resilience4j-circuitbreaker')
+    testCompile project(':resilience4j-ratelimiter')
 }
