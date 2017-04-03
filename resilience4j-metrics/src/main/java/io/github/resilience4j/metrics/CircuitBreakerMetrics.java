@@ -41,15 +41,15 @@ public class CircuitBreakerMetrics implements MetricSet{
 
     private CircuitBreakerMetrics(Seq<CircuitBreaker> circuitBreakers){
         circuitBreakers.forEach(circuitBreaker -> {
-            metricRegistry.register(name(CircuitBreaker.class, circuitBreaker.getName(), "successful"),
+            metricRegistry.register(name("resilience4j.circuitbreaker", circuitBreaker.getName(), "successful"),
                     (Gauge<Integer>) () -> circuitBreaker.getMetrics().getNumberOfSuccessfulCalls());
-            metricRegistry.register(name(CircuitBreaker.class, circuitBreaker.getName(), "failed"),
+            metricRegistry.register(name("resilience4j.circuitbreaker", circuitBreaker.getName(), "failed"),
                     (Gauge<Integer>) () -> circuitBreaker.getMetrics().getNumberOfFailedCalls());
-            metricRegistry.register(name(CircuitBreaker.class, circuitBreaker.getName(), "not_permitted"),
+            metricRegistry.register(name("resilience4j.circuitbreaker", circuitBreaker.getName(), "not_permitted"),
                     (Gauge<Long>) () -> circuitBreaker.getMetrics().getNumberOfNotPermittedCalls());
-            metricRegistry.register(name(CircuitBreaker.class, circuitBreaker.getName(), "buffered"),
+            metricRegistry.register(name("resilience4j.circuitbreaker", circuitBreaker.getName(), "buffered"),
                     (Gauge<Integer>) () -> circuitBreaker.getMetrics().getNumberOfBufferedCalls());
-            metricRegistry.register(name(CircuitBreaker.class, circuitBreaker.getName(), "buffered_max"),
+            metricRegistry.register(name("resilience4j.circuitbreaker", circuitBreaker.getName(), "buffered_max"),
                     (Gauge<Integer>) () -> circuitBreaker.getMetrics().getMaxNumberOfBufferedCalls());
             }
         );
