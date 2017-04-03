@@ -27,6 +27,8 @@ import java.util.Map;
 
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
+import javaslang.collection.Array;
+import javaslang.collection.Seq;
 
 import static com.codahale.metrics.MetricRegistry.name;
 
@@ -37,8 +39,8 @@ public class CircuitBreakerMetrics implements MetricSet{
 
     private final MetricRegistry metricRegistry = new MetricRegistry();
 
-    private CircuitBreakerMetrics(CircuitBreakerRegistry circuitBreakerRegistry){
-        circuitBreakerRegistry.getAllCircuitBreakers().forEach(circuitBreaker -> {
+    private CircuitBreakerMetrics(Seq<CircuitBreaker> circuitBreakers){
+        circuitBreakers.forEach(circuitBreaker -> {
             metricRegistry.register(name(CircuitBreaker.class, circuitBreaker.getName(), "successful"),
                     (Gauge<Integer>) () -> circuitBreaker.getMetrics().getNumberOfSuccessfulCalls());
             metricRegistry.register(name(CircuitBreaker.class, circuitBreaker.getName(), "failed"),
@@ -54,7 +56,11 @@ public class CircuitBreakerMetrics implements MetricSet{
     }
 
     public static CircuitBreakerMetrics of(CircuitBreakerRegistry circuitBreakerRegistry) {
-        return new CircuitBreakerMetrics(circuitBreakerRegistry);
+        return new CircuitBreakerMetrics(circuitBreakerRegistry.getAllCircuitBreakers());
+    }
+
+    public static CircuitBreakerMetrics of(CircuitBreaker circuitBreaker) {
+        return new CircuitBreakerMetrics(Array.of(circuitBreaker));
     }
 
     @Override

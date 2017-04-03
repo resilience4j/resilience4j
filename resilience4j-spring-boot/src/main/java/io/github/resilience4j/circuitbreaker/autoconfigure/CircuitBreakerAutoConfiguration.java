@@ -39,8 +39,13 @@ import io.github.resilience4j.consumer.EventConsumerRegistry;
 public class CircuitBreakerAutoConfiguration {
 
     @Bean
-    public CircuitBreakerRegistry circuitBreakerRegistry(){
-        return new InMemoryCircuitBreakerRegistry();
+    public CircuitBreakerRegistry circuitBreakerRegistry(CircuitBreakerProperties circuitBreakerProperties){
+        CircuitBreakerRegistry circuitBreakerRegistry = new InMemoryCircuitBreakerRegistry();
+        circuitBreakerProperties.getBackends().forEach(
+                (name, properties) -> circuitBreakerRegistry.circuitBreaker(name, circuitBreakerProperties
+                        .createCircuitBreakerConfig(name))
+        );
+        return circuitBreakerRegistry;
     }
 
     @Bean
