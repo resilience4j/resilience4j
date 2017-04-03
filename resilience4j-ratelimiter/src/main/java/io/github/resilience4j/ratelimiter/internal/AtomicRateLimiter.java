@@ -280,6 +280,13 @@ public class AtomicRateLimiter implements RateLimiter {
         return eventPublisher;
     }
 
+    @Override public String toString() {
+        return "AtomicRateLimiter{" +
+            "name='" + name + '\'' +
+            ", rateLimiterConfig=" + rateLimiterConfig +
+            '}';
+    }
+
     /**
      * Get the enhanced Metrics with some implementation specific details.
      *

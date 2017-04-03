@@ -1,0 +1,117 @@
+/*
+ * Copyright 2017 Bohdan Storozhuk
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package io.github.resilience4j.ratelimiter.autoconfigure;
+
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.github.resilience4j.ratelimiter.RateLimiterConfig;
+import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
+import io.github.resilience4j.ratelimiter.RequestNotPermitted;
+import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
+import org.aspectj.lang.ProceedingJoinPoint;
+import org.aspectj.lang.annotation.Around;
+import org.aspectj.lang.annotation.Aspect;
+import org.aspectj.lang.annotation.Pointcut;
+import org.aspectj.lang.reflect.MethodSignature;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.lang.reflect.Method;
+
+/**
+ * This Spring AOP aspect intercepts all methods which are annotated with a {@link CircuitBreaker} annotation.
+ * The aspect protects an annotated method with a CircuitBreaker. The CircuitBreakerRegistry is used to retrieve an instance of a CircuitBreaker for
+ * a specific backend.
+ */
+
+@Aspect
+public class RateLimiterAspect {
+    private static final Logger logger = LoggerFactory.getLogger(RateLimiterAspect.class);
+    public static final String RATE_LIMITER_RECEIVED = "Created or retrieved rate limiter '{}' with period: '{}'; limit for period: '{}'; timeout: '{}'; method: '{}'";
+
+    private final RateLimiterProperties rateLimiterProperties;
+    private final RateLimiterRegistry rateLimiterRegistry;
+
+    public RateLimiterAspect(RateLimiterProperties rateLimiterProperties, RateLimiterRegistry rateLimiterRegistry) {
+        this.rateLimiterProperties = rateLimiterProperties;
+        this.rateLimiterRegistry = rateLimiterRegistry;
+    }
+
+    @Pointcut(value = "@within(rateLimiter) || @annotation(rateLimiter)", argNames = "rateLimiter")
+    public void matchAnnotatedClassOrMethod(RateLimiter rateLimiter) {
+    }
+
+    @Around(value = "matchAnnotatedClassOrMethod(limitedService)", argNames = "proceedingJoinPoint, limitedService")
+    public Object circuitBreakerAroundAdvice(ProceedingJoinPoint proceedingJoinPoint, RateLimiter limitedService) throws Throwable {
+        Method method = ((MethodSignature) proceedingJoinPoint.getSignature()).getMethod();
+        String methodName = method.getDeclaringClass().getName() + "#" + method.getName();
+        if (limitedService == null) {
+            limitedService = getRateLimiterAnnotation(proceedingJoinPoint);
+        }
+        String name = limitedService.name();
+        io.github.resilience4j.ratelimiter.RateLimiter rateLimiter = getOrCreateRateLimiter(methodName, name);
+        return handleJoinPoint(proceedingJoinPoint, rateLimiter, methodName);
+    }
+
+    private io.github.resilience4j.ratelimiter.RateLimiter getOrCreateRateLimiter(String methodName, String name) {
+        io.github.resilience4j.ratelimiter.RateLimiter rateLimiter = rateLimiterRegistry.rateLimiter(name,
+            () -> rateLimiterProperties.createRateLimiterConfig(name));
+
+        if (logger.isDebugEnabled()) {
+            RateLimiterConfig rateLimiterConfig = rateLimiter.getRateLimiterConfig();
+            logger.debug(
+                RATE_LIMITER_RECEIVED,
+                name, rateLimiterConfig.getLimitRefreshPeriod(), rateLimiterConfig.getLimitForPeriod(),
+                rateLimiterConfig.getTimeoutDuration(), methodName
+            );
+        }
+
+        return rateLimiter;
+    }
+
+    private RateLimiter getRateLimiterAnnotation(ProceedingJoinPoint proceedingJoinPoint) {
+        RateLimiter rateLimiter = null;
+        Class<?> targetClass = proceedingJoinPoint.getTarget().getClass();
+        if (targetClass.isAnnotationPresent(RateLimiter.class)) {
+            rateLimiter = targetClass.getAnnotation(RateLimiter.class);
+            if (rateLimiter == null) {
+                if (logger.isDebugEnabled()) {
+                    logger.debug("TargetClass has no annotation 'RateLimiter'");
+                }
+                rateLimiter = targetClass.getDeclaredAnnotation(RateLimiter.class);
+                if (rateLimiter == null) {
+                    if (logger.isDebugEnabled()) {
+                        logger.debug("TargetClass has no declared annotation 'RateLimiter'");
+                    }
+                }
+            }
+        }
+        return rateLimiter;
+    }
+
+    private Object handleJoinPoint(ProceedingJoinPoint proceedingJoinPoint,
+                                   io.github.resilience4j.ratelimiter.RateLimiter rateLimiter, String methodName)
+        throws IllegalStateException, RequestNotPermitted, Throwable {
+        try {
+            io.github.resilience4j.ratelimiter.RateLimiter.waitForPermission(rateLimiter);
+            return proceedingJoinPoint.proceed();
+        } catch (Exception exception) {
+            if (logger.isDebugEnabled()) {
+                logger.debug("Invocation of method '" + methodName + "' failed!", exception);
+            }
+            throw exception;
+        }
+    }
+}

@@ -157,6 +157,13 @@ public class SemaphoreBasedRateLimiter implements RateLimiter {
         return this.rateLimiterConfig;
     }
 
+    @Override public String toString() {
+        return "SemaphoreBasedRateLimiter{" +
+            "name='" + name + '\'' +
+            ", rateLimiterConfig=" + rateLimiterConfig +
+            '}';
+    }
+
     /**
      * {@inheritDoc}
      */
