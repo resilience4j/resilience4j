@@ -40,7 +40,7 @@ final CircuitBreaker foo = circuitBreakerRegistry.circuitBreaker("foo");
 final CircuitBreaker boo = circuitBreakerRegistry.circuitBreaker("boo");
 
 // Registering metrics in prometeus CollectorRegistry
-new CircuitBreakerExports(circuitBreakerRegistry).register(registry);
+CircuitBreakerExports.ofCircuitBreakerRegistry(circuitBreakerRegistry).register(registry);
 --
 
 === RateLimiter
@@ -55,7 +55,7 @@ final RateLimiter foo = rateLimiterRegistry.rateLimiter("foo");
 final RateLimiter boo = rateLimiterRegistry.rateLimiter("boo");
 
 // Registering metrics in prometeus CollectorRegistry
-new RateLimiterExports(rateLimiterRegistry).register(registry);
+RateLimiterExports.ofRateLimiterRegistry(rateLimiterRegistry).register(registry);
 --
 
 For both it is possible to use just a collection of breakers and limiters instead of registry.
