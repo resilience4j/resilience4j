@@ -1,0 +1,4 @@
+dependencies {
+    compile ( libraries.rxjava2)
+    compile ( libraries.jcache)
+}

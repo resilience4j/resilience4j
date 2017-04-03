@@ -1,0 +1,40 @@
+language: java
+
+sudo: false
+addons:
+  apt:
+    packages:
+      - oracle-java8-installer
+jdk:
+- oraclejdk8
+
+before_install:
+- chmod +x gradlew
+
+script:
+- ./gradlew clean check
+
+after_success:
+- ./gradlew coberturaReport coveralls
+#- ./gradlew artifactoryPublish -PbintrayUsername="${BINTRAY_USER}" -PbintrayApiKey="${BINTRAY_KEY}"
+
+before_cache:
+  - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
+  - rm -fr $HOME/.gradle/caches/*/plugin-resolution/
+cache:
+  directories:
+    - $HOME/.gradle/caches/
+    - $HOME/.gradle/wrapper/
+
+notifications:
+  webhooks:
+    urls:
+    - https://webhooks.gitter.im/e/088d6d0266532abc60ee
+    on_success: change
+    on_failure: always
+    on_start: false
+
+env:
+  global:
+  - secure: OpcatJV2E2u1Li7KXacvTq6O+c/2TZor7dHl2dlo/8jDgGOZFK4rsZlTVWWqcwP1lOr5s5yOsysrJZ+3ZzFFpJ4VsTKyNQZEwzl7si40l4I29NU9fiySFSGOCYqIclXHh2lJgLhXPZonzr5KQVcEcRSNQHLDO22BVf8uUX8WOqM/ZMZyjQkYzgBfhaHoXnlRxuGoWWEolyBdKHf4Cr480u3Ep//7eZwKK/JpkM8DTu63TnjDh/Tpao95LQNY8RaRn7NAom6A0IlGR9gDLPnCNlziUPxHAL2KbUL4ePWICg/wYTiTvnh1D0gNGGHSC/jRfYE8BzBrXEwD9JUGkT+yMhUaWj+5/hxQbBivtGGuTrzMoJchiaBGjK2r17Xao4nkQF2MjsSJIzh5uE/td88tSrAVM1W0Ee7TlbtArR0knbvzZt4YyZjv26m0dEHmDx9Q+g1cjWKsCiPXlSvc8jOOoNlaq0dk8/bRu6D7yaHsxGhAokxcf/qzTF8zPp3ODrY5M6f5l4LFN8j7STFXt4GeR/B6W6uPL0JrPQhq5I54SJPGIv7amYv/QnmTMxLg1rCRA/Rnngz9IPKNzFcpNVVPL95v/W76xlk6UvCvm1aFBQd7KQ2qgGMZgSlxv5FX77Tzf3C97VNVm6JbBfkJEpIWiR1CUJAjWR6u2avS3jPShTk=
+  - secure: fw3GBzjy65kWBBHTjfkALQJxZvJOcE8kh+ogIypVJAwZKUVJ2TDlRQKGn5Y4FUbB0ilyQHDjJFmfMmnEs/OioThU0zrXqiYlUEUO5ZbIjSOg/lBKHZF4K/9T8nhlIvZ+B8hF3l0DojI9PB/o4ef/Z/ThtDGipGKg4qa/o/UOyX1qehuITtefda7j6BpNlzdC/FPrEuCySRrRJDyvmSOnRrEH+U79caS7hwWvf719bGmn99ufQJzVljqTt7vfq4dGXduk/9QyP3GVgamjckW903p0n9l14aV0tikfe1J8ehjD9yx4rAKl48VMc9EzCLkN4XfiUf60YxbsmrTGYjC5dV4KSDRazG68QT9tUM5Pyrw/LIH33aUHLRQhgb/A7ZyLYzlKwa5INlL0LbZR3WupswwUxsg9SOuu4NzSTi2k0cmSKiYuTE2sNYuO0L/WuL/l7FIbZ0dMhaJJNqDtnmDNzUTIfyDGDIeLJ9X5uoc3MHOzZtvBCXPlovTv4cgIXhrnXocjEafTU4gr75heBu0EkEKiCrJ7Bbo3TDcFPE83PEU3DGdf7M4oRSxU1JRytZ+JzWamoqzP38DPzLBrMgcVzptS++P3BcFb0x3U1GOaJr1TewRWbnGvoOd7VPKrSXYO1Db5sLAtX1b2HpJmhkZPuofRyOaqGetjwy9R0luBvzk=

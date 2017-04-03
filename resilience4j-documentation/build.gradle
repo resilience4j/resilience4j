@@ -1,0 +1,40 @@
+apply plugin: 'org.asciidoctor.convert'
+apply plugin: 'org.ajoberstar.github-pages'
+
+asciidoctor.dependsOn test
+publishGhPages.dependsOn asciidoctor
+
+githubPages {
+    repoUri = 'https://github.com/resilience4j/resilience4j.git'
+
+    credentials {
+        username = project.hasProperty('githubUser') ? project.githubUser : System.getenv('GITHUB_USER')
+        password = project.hasProperty('githubPassword') ? project.githubPassword : System.getenv('GITHUB_PASSWORD')
+    }
+
+    pages {
+        from file(asciidoctor.outputDir.path + '/html5')
+    }
+}
+
+asciidoctor {
+    sources {
+        include 'index.adoc'
+    }
+    backends = ['html5']
+    attributes = [
+            doctype: 'book',
+            toc: 'left',
+            toclevels: '3',
+            numbered: '',
+            sectlinks: '',
+            sectanchors: '',
+            hardbreaks: '',
+            'release-version': project.releaseVersion
+    ]
+    resources {
+        from(sourceDir) {
+            include 'images/**'
+        }
+    }
+}

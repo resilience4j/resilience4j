@@ -1,0 +1,137 @@
+buildscript {
+    repositories {
+        jcenter()
+        mavenCentral()
+        maven {
+            url "https://plugins.gradle.org/m2/"
+        }
+    }
+    dependencies {
+        classpath 'net.saliman:gradle-cobertura-plugin:2.3.2'
+        classpath 'org.kt3k.gradle.plugin:coveralls-gradle-plugin:2.7.1'
+        classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.7.3'
+        classpath 'me.champeau.gradle:jmh-gradle-plugin:0.3.1'
+        classpath "org.asciidoctor:asciidoctor-gradle-plugin:1.5.3"
+        classpath "org.ajoberstar:gradle-git:1.3.2"
+        classpath "org.jfrog.buildinfo:build-info-extractor-gradle:4.4.14"
+        classpath 'com.github.erizo.gradle:jcstress-gradle-plugin:0.8.0'
+    }
+}
+
+apply plugin: 'idea'
+apply plugin: 'com.github.kt3k.coveralls'
+apply plugin: 'com.jfrog.bintray'
+apply from: "./libraries.gradle"
+
+ext {
+    releaseVersion = '0.8.2'
+}
+
+allprojects {
+    apply plugin: 'net.saliman.cobertura'
+    apply plugin: 'me.champeau.gradle.jmh'
+    apply plugin: 'com.jfrog.artifactory'
+
+    version = '0.9-0-SNAPSHOT'
+    group = 'io.github.resilience4j'
+    description = 'A lightweight, easy-to-use fault tolerance library designed for Java8 and functional programming'
+
+    repositories {
+        jcenter()
+        mavenCentral()
+    }
+}
+artifactoryPublish.skip=true // apply to all projects except the root
+
+ext {
+    coreProjects = subprojects.findAll {
+        p -> !p.name.contains("test")
+    }
+}
+
+subprojects {
+    apply plugin: 'java'
+    apply plugin: 'maven'
+    apply plugin: 'maven-publish'
+    apply from: "${rootDir}/publishing.gradle"
+
+    dependencies {
+        compile ( libraries.javaslang)
+        compile ( libraries.slf4j)
+
+        testCompile ( libraries.junit)
+        testCompile ( libraries.assertj)
+        testCompile ( libraries.logback)
+        testCompile ( libraries.mockito)
+        testCompile ( libraries.powermock)
+        testCompile ( libraries.powermock_api_mockito)
+        testCompile ( libraries.powermock_module_junit4)
+        testCompile ( libraries.awaitility)
+
+        jmh ( libraries.logback)
+        jmh "org.openjdk.jmh:jmh-generator-annprocess:1.12"
+    }
+
+    tasks.withType(JavaCompile) {
+        sourceCompatibility = "1.8"
+        targetCompatibility = "1.8"
+        options.deprecation = true
+        options.encoding = 'UTF-8'
+        options.compilerArgs << "-Xlint:unchecked"
+    }
+
+    cobertura {
+        coverageIgnoreTrivial = true
+    }
+
+    jmh {
+        duplicateClassesStrategy = 'warn'
+        jmhVersion = '1.17'
+    }
+}
+
+def files = subprojects.collect { new File(it.projectDir, '/build/cobertura/cobertura.ser') }
+cobertura {
+    coverageFormats = ['html', 'xml']
+    coverageSourceDirs = subprojects.sourceSets.main.allSource.srcDirs.flatten()
+    coverageMergeDatafiles = files
+}
+
+test {
+    dependsOn(subprojects.test) // required by cobertura to aggregate report
+}
+
+tasks.coveralls {
+    dependsOn 'check'
+}
+
+task wrapper(type: Wrapper) {
+    gradleVersion = '3.2'
+}
+
+
+artifactory {
+    contextUrl = 'https://oss.jfrog.org'
+    resolve {
+        repository {
+            repoKey = 'libs-release'
+            maven = true
+        }
+    }
+    publish {
+        repository {
+            repoKey = 'oss-snapshot-local' //The Artifactory repository key to publish to
+            //when using oss.jfrog.org the credentials are from Bintray. For local build we expect them to be found in
+            //~/.gradle/gradle.properties, otherwise to be set in the build server
+            username = project.hasProperty('bintrayUsername') ? project.bintrayUsername : System.getenv('BINTRAY_USER')
+            password = project.hasProperty('bintrayApiKey') ? project.bintrayApiKey : System.getenv('BINTRAY_KEY')
+        }
+        defaults {
+            publications('mavenJava')
+        }
+    }
+    if (System.properties['https.proxyHost']) {
+        clientConfig.proxy.host = System.properties['https.proxyHost']
+        clientConfig.proxy.port = System.properties['https.proxyPort'].toInteger()
+    }
+}

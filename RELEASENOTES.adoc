@@ -1,0 +1,96 @@
+= Release Notes
+
+== Version 0.1.0
+* Initial version
+
+=== Version 0.1.1
+* Added the functionality to add exceptions with are ignored by the CircuitBreaker
+
+=== Version 0.1.2
+* Added the feature to get Metrics for function executions
+
+=== Version 0.1.3
+* Added a static factory method for the CircuitBreakerConfig builder
+
+=== Version 0.1.4
+* Added the feature to retry a failed function
+
+=== Version 0.1.5
+* Added builders to simplify chaining of decorators
+
+=== Version 0.1.6
+* Renamed project to javaslang-circuitbreaker
+
+=== Version 0.1.7
+* Fixed Issue #2
+* Issue #3 Added a listener mechanism for state transitions
+
+== Version 0.2.0
+* Removed Dropwizard Metrics, because its a too heavy dependency for such a lightweight library.
+* Changed the way exceptions can be handled. You have to provide a Predicate now instead of a list of exceptions to ignore.
+
+== Version 0.3.0
+* The CircuitBreaker is based on a Ring Bit Buffer and a failure rate now.
+
+=== Version 0.3.1
+* Changed the visibility of CircuitBreakerUtils.isCallPermitted to public.
+
+=== Version 0.3.2
+* CircuitBreakerRegistry has a new method which takes a Supplier of a CircuitBreakerConfig so that the CircuitBreakerConfig is only created when needed.
+
+=== Version 0.3.3
+* CircuitBreaker has a new method `getCircuitBreakerConfig` which allows to retrieve the CircuitBreakerConfig of the CircuitBreaker.
+* Renamed the state HALF_CLOSED to HALF_OPEN to match the pattern description of Martin Fowler.
+
+=== Version 0.3.4
+* Added a Metrics interface to the CircuitBreaker which allows to retrieve current statistics like failureRate and number of buffer calls.
+
+== Version 0.4.0
+* Updated javaslang from 2.0.0-RC4 to 2.0.1
+
+== Version 0.5.0
+* Updated javaslang from 2.0.1 to 2.0.2
+* Fixed issue #6: The CB changes to OPEN state when the failure rate is above (>) the threshold, but it should be above or equal (>=).
+
+== Version 0.6.0
+* Updated javaslang from 2.0.2 to 2.0.4
+
+== Version 0.7.0
+* Added rxjava 2.0.1 as a dependency
+* Issue #13: CircuitBreaker should publish events as an event stream and clients should be able to subscribe
+* Issue #10: Reorder arguments in decorator methods
+* PR #19: Add a backoff function feature, to modify the waiting interval between failures
+* Renamed root package from javaslang to io.github.robwin, because the project had to leave the Javaslang GitHub organisation
+
+=== Version 0.7.1
+* Changed Event stream return type from Observable to Flowable
+* Events contain a create time
+* Added getThrowable method to CircuitBreakerOnErrorEvent which was missing
+* Added CircuitBreakerOnIgnoredErrorEvent to signal exceptions which have been ignored because of a custom predicate
+* Added getMaxNumberOfBufferedCalls and getNumberOfSuccessfulCalls methods to Metrics interface
+
+== Version 0.8.0
+* Added the SingleOperator interface to CircuitBreakerOperator
+* Issue #12: Added a new RateLimiter decorator
+* Added a new Cache decorator
+* Removed CacheEventConsumer and CircuitBreakerEventConsumer and created a generic CircularEventConsumer
+* Added a StopWatch which is used to measure the elapsed time of decorated calls. CircuitBreakerEvents also contain the elapsed duration of a call now.
+* Issue #33: Added the ability to 'force' state transitions manually
+* Issue #38: A CircuitBreaker records not permitted calls when the state is OPEN and emits a event for each attempt. The metric "numberOfNotPermittedCalls" can be access via CircuitBreaker.Metrics
+* Issue #39: A CircuitBreaker should copy the previous RingBitSet values during state transition from HALF_OPEN to CLOSED
+* Updated javaslang from 2.0.4 to 2.0.5
+* Updated rxjava from 2.0.1 to 2.0.3
+
+=== Version 0.8.1
+* Issue #41: Added a method to the CircuitBreakerRegistry which returns a list of all managed CircuitBreaker instances
+* Issue #42: Added a new EventConsumerRegistry which can be used to create and manage instances of EventConsumers.
+
+=== Version 0.8.2
+* Issue #43: Added a new higher-order function to decorate a method which returns a CompletableFuture.
+* Issue #49: Added execute methods to CircuitBreaker interface and Decorators builder. This makes it easier to decorate and call a function at once.
+* Updated rxjava from 2.0.3 to 2.0.6
+* Updated slf4j-api from 1.7.12 to 1.7.24
+
+== Version 0.9.0
+* PR #59: Project has been renamed to resilience4j and has been modularized.
+* PR #59: Renamed packages from io.github.robwin to io.github.resilience4j.
