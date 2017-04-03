@@ -35,7 +35,7 @@ Setup and usage is described in our http://resilience4j.github.io/resilience4j/[
 
 Setup and usage in Spring Boot is demonstrated https://github.com/RobWin/resilience4j-spring-boot-demo[here].
 
-== Feature examples
+== Usage examples
 
 * <<circuitbreaker>>
 * <<ratelimiter>>
