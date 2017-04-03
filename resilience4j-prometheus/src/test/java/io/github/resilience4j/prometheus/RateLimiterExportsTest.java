@@ -18,6 +18,10 @@
  */
 package io.github.resilience4j.prometheus;
 
+import org.junit.Test;
+
+import java.util.function.Supplier;
+
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RateLimiterConfig;
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
@@ -27,9 +31,6 @@ import javaslang.Tuple;
 import javaslang.collection.HashMap;
 import javaslang.collection.HashSet;
 import javaslang.collection.Map;
-import org.junit.Test;
-
-import java.util.function.Supplier;
 
 import static java.util.Collections.singleton;
 import static java.util.Collections.singletonList;
@@ -44,7 +45,7 @@ public class RateLimiterExportsTest {
 
         final RateLimiter rateLimiter = RateLimiter.ofDefaults("foo");
 
-        new RateLimiterExports("boo_rate_limiter", singletonList(rateLimiter)).register(registry);
+        RateLimiterExports.ofIterable("boo_rate_limiter", singletonList(rateLimiter)).register(registry);
 
         final Supplier<Map<String, Double>> values = () -> HashSet
                 .of("available_permissions", "waiting_threads")
@@ -72,22 +73,22 @@ public class RateLimiterExportsTest {
     public void testConstructors() {
         final RateLimiterRegistry registry = new InMemoryRateLimiterRegistry(RateLimiterConfig.ofDefaults());
 
-        new RateLimiterExports("boo_limiters", singleton(RateLimiter.ofDefaults("foo")));
-        new RateLimiterExports("boo_limiters", registry);
-        new RateLimiterExports("boo_limiters", () -> singleton(RateLimiter.ofDefaults("foo")));
+        RateLimiterExports.ofIterable("boo_limiters", singleton(RateLimiter.ofDefaults("foo")));
+        RateLimiterExports.ofRateLimiterRegistry("boo_limiters", registry);
+        RateLimiterExports.ofSupplier("boo_limiters", () -> singleton(RateLimiter.ofDefaults("foo")));
 
-        new RateLimiterExports(singleton(RateLimiter.ofDefaults("foo")));
-        new RateLimiterExports(registry);
-        new RateLimiterExports(() -> singleton(RateLimiter.ofDefaults("foo")));
+        RateLimiterExports.ofIterable(singleton(RateLimiter.ofDefaults("foo")));
+        RateLimiterExports.ofRateLimiterRegistry(registry);
+        RateLimiterExports.ofSupplier(() -> singleton(RateLimiter.ofDefaults("foo")));
     }
 
     @Test(expected = NullPointerException.class)
     public void testConstructorWithNullName() {
-        new RateLimiterExports(null, () -> singleton(RateLimiter.ofDefaults("foo")));
+        RateLimiterExports.ofSupplier(null, () -> singleton(RateLimiter.ofDefaults("foo")));
     }
 
     @Test(expected = NullPointerException.class)
     public void testConstructorWithNullSupplier() {
-        new RateLimiterExports("boo_limiters", (Supplier<Iterable<RateLimiter>>) null);
+        RateLimiterExports.ofSupplier("boo_limiters", null);
     }
 }

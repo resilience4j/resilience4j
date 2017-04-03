@@ -48,7 +48,7 @@ public class CircuitBreakerMetricsTest {
         //Given
         CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
         CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("testName");
-        metricRegistry.registerAll(CircuitBreakerMetrics.of(circuitBreakerRegistry));
+        metricRegistry.registerAll(CircuitBreakerMetrics.ofCircuitBreakerRegistry(circuitBreakerRegistry));
 
         // Given the HelloWorldService returns Hello world
         BDDMockito.given(helloWorldService.returnHelloWorld()).willReturn("Hello world");
@@ -66,6 +66,30 @@ public class CircuitBreakerMetricsTest {
         assertThat(metricRegistry.getGauges().get("resilience4j.circuitbreaker.testName.failed").getValue()).isEqualTo(0);
         assertThat(metricRegistry.getGauges().get("resilience4j.circuitbreaker.testName.not_permitted").getValue()).isEqualTo(0L);
         assertThat(metricRegistry.getGauges().get("resilience4j.circuitbreaker.testName.buffered_max").getValue()).isEqualTo(100);
+    }
 
+    @Test
+    public void shouldUseCustomPrefix() throws Throwable {
+        //Given
+        CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
+        CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("testName");
+        metricRegistry.registerAll(CircuitBreakerMetrics.ofCircuitBreakerRegistry("testPrefix", circuitBreakerRegistry));
+
+        // Given the HelloWorldService returns Hello world
+        BDDMockito.given(helloWorldService.returnHelloWorld()).willReturn("Hello world");
+
+        //When
+        String value = circuitBreaker.executeSupplier(helloWorldService::returnHelloWorld);
+
+        //Then
+        assertThat(value).isEqualTo("Hello world");
+        // Then the helloWorldService should be invoked 1 time
+        BDDMockito.then(helloWorldService).should(times(1)).returnHelloWorld();
+        assertThat(metricRegistry.getMetrics()).hasSize(5);
+        assertThat(metricRegistry.getGauges().get("testPrefix.testName.buffered").getValue()).isEqualTo(1);
+        assertThat(metricRegistry.getGauges().get("testPrefix.testName.successful").getValue()).isEqualTo(1);
+        assertThat(metricRegistry.getGauges().get("testPrefix.testName.failed").getValue()).isEqualTo(0);
+        assertThat(metricRegistry.getGauges().get("testPrefix.testName.not_permitted").getValue()).isEqualTo(0L);
+        assertThat(metricRegistry.getGauges().get("testPrefix.testName.buffered_max").getValue()).isEqualTo(100);
     }
 }

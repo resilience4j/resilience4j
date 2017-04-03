@@ -61,7 +61,7 @@ public class MetricsTest {
 
         String value = timedSupplier.get();
 
-        // Then the counter of metrics should be one
+        // Then the counter ofCircuitBreakerRegistry metrics should be one
         assertThat(timer.getCount()).isEqualTo(1);
 
         assertThat(value).isEqualTo("Hello world");
@@ -76,7 +76,7 @@ public class MetricsTest {
 
         timedRunnable.run();
 
-        // Then the counter of metrics should be one
+        // Then the counter ofCircuitBreakerRegistry metrics should be one
         assertThat(timer.getCount()).isEqualTo(1);
 
         // Then the helloWorldService should be invoked 1 time
@@ -90,7 +90,7 @@ public class MetricsTest {
 
         timedRunnable.run();
 
-        // Then the counter of metrics should be one
+        // Then the counter ofCircuitBreakerRegistry metrics should be one
         assertThat(timer.getCount()).isEqualTo(1);
         // Then the helloWorldService should be invoked 1 time
         BDDMockito.then(helloWorldService).should(Mockito.times(1)).sayHelloWorldWithException();
@@ -108,7 +108,7 @@ public class MetricsTest {
         assertThat(result.isFailure()).isTrue();
         assertThat(result.failed().get()).isInstanceOf(RuntimeException.class);
 
-        // Then the counter of metrics should be one
+        // Then the counter ofCircuitBreakerRegistry metrics should be one
         assertThat(timer.getCount()).isEqualTo(1);
 
         // Then the helloWorldService should be invoked 1 time
@@ -126,7 +126,7 @@ public class MetricsTest {
 
         Stream.range(0,2).forEach((i) -> timedSupplier.get());
 
-        // Then the counter of metrics should be ten
+        // Then the counter ofCircuitBreakerRegistry metrics should be ten
         assertThat(timer.getCount()).isEqualTo(2);
         // Then the helloWorldService should be invoked 1 time
         BDDMockito.then(helloWorldService).should(times(2)).returnHelloWorld();
@@ -144,7 +144,7 @@ public class MetricsTest {
         //Then
         assertThat(function.apply("Tom")).isEqualTo("Hello world Tom");
 
-        // Then the counter of metrics should be ten
+        // Then the counter ofCircuitBreakerRegistry metrics should be ten
         assertThat(timer.getCount()).isEqualTo(1);
         // Then the helloWorldService should be invoked 1 time
         BDDMockito.then(helloWorldService).should(Mockito.times(1)).returnHelloWorldWithName("Tom");
@@ -162,7 +162,7 @@ public class MetricsTest {
         //Then
         assertThat(function.apply("Tom")).isEqualTo("Hello world Tom");
 
-        // Then the counter of metrics should be ten
+        // Then the counter ofCircuitBreakerRegistry metrics should be ten
         assertThat(timer.getCount()).isEqualTo(1);
         // Then the helloWorldService should be invoked 1 time
         BDDMockito.then(helloWorldService).should(Mockito.times(1)).returnHelloWorldWithNameWithException("Tom");
