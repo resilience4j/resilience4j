@@ -36,6 +36,8 @@ import io.github.resilience4j.circuitbreaker.monitoring.endpoint.CircuitBreakerE
 import io.github.resilience4j.circuitbreaker.monitoring.health.CircuitBreakerHealthIndicator;
 import io.github.resilience4j.circuitbreaker.test.DummyService;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
+import io.prometheus.client.spring.boot.EnablePrometheusEndpoint;
+import io.prometheus.client.spring.boot.EnableSpringBootMetricsCollector;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -95,6 +97,8 @@ public class CircuitBreakerAutoConfigurationTest {
     }
 
     @SpringBootApplication
+    @EnableSpringBootMetricsCollector
+    @EnablePrometheusEndpoint
     public static class TestApplication{
         public static void main(String[] args) {
             SpringApplication.run(TestApplication.class, args);

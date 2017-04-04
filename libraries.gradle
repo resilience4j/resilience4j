@@ -63,6 +63,9 @@ ext {
             metrics_healthcheck: "io.dropwizard.metrics:metrics-healthchecks:${metricsVersion}",
 
             // Prometheus addon
-            prometheus_simpleclient: "io.prometheus:simpleclient_common:${prometheusSimpleClientVersion}"
+            prometheus_simpleclient: "io.prometheus:simpleclient_common:${prometheusSimpleClientVersion}",
+            prometheus_spring_boot: "io.prometheus:simpleclient_spring_boot:${prometheusSimpleClientVersion}"
+
+
     ]
 }

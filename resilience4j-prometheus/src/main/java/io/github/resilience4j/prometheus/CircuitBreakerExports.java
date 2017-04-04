@@ -40,7 +40,7 @@ import static java.util.Objects.requireNonNull;
  */
 public class CircuitBreakerExports extends Collector {
 
-    private static final String DEFAULT_NAME = "circuit_breaker";
+    private static final String DEFAULT_NAME = "resilience4j_circuitbreaker";
     private static Array<Tuple2<CircuitBreaker.State, String>> STATE_NAME_MAP =
             Array.ofAll(asList(CircuitBreaker.State.values()))
                 .map(state -> Tuple.of(state, state.name().toLowerCase()));

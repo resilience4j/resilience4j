@@ -4,5 +4,10 @@ dependencies {
     compile ( libraries.spring_boot_web )
     compile project(':resilience4j-circuitbreaker')
     compile project(':resilience4j-consumer')
+    compileOnly project(':resilience4j-prometheus')
+    compileOnly project(':resilience4j-metrics')
     testCompile ( libraries.spring_boot_test )
+    testCompile project(':resilience4j-prometheus')
+    testCompile project(':resilience4j-metrics')
+    testCompile ( libraries.prometheus_spring_boot )
 }
