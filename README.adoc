@@ -75,8 +75,8 @@ Try.CheckedSupplier<String> decoratedSupplier = Decorators
 String result = Try.of(decoratedSupplier)
     .recover(throwable -> "Hello from Recovery").get();
 
-// You can execute a method reference in the context of a CircuitBreaker:
-String result = circuitBreaker.executeSupplier(helloWorldService::returnHelloWorld)
+// You can execute a method reference in the context of a CircuitBreaker
+String result = circuitBreaker.executeCallable(backendService.doSomething())
 ----
 
 === CircuitBreaker and RxJava
@@ -156,6 +156,9 @@ Timer timer = metricRegistry.timer(name("timerName"));
 // Decorate your call to BackendService.doSomething()
 Try.CheckedSupplier<String> timedSupplier = Metrics.decorateSupplier(timer, () -> backendService.doSomething()); 
 String result = Try.of(timedSupplier).get();
+
+// You can execute a method reference in the context of a Timer
+ String value = Metrics.executeCallable(timer, () -> backendService.doSomething());
 ----
 
 [[circuitbreaker_events]]
