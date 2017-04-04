@@ -26,6 +26,7 @@ import org.junit.Test;
 import org.mockito.BDDMockito;
 import org.mockito.Mockito;
 
+import java.util.concurrent.Callable;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -61,7 +62,6 @@ public class MetricsTest {
 
         String value = timedSupplier.get();
 
-        // Then the counter ofRateLimiterRegistry metrics should be one
         assertThat(timer.getCount()).isEqualTo(1);
 
         assertThat(value).isEqualTo("Hello world");
@@ -70,13 +70,45 @@ public class MetricsTest {
     }
 
     @Test
+    public void shouldDecorateCallable() throws Throwable {
+        // Given the HelloWorldService returns Hello world
+        BDDMockito.given(helloWorldService.returnHelloWorldWithException()).willReturn("Hello world");
+
+        // And measure the time with Metrics
+        Callable<String> timedSupplier = Metrics.decorateCallable(timer, helloWorldService::returnHelloWorldWithException);
+
+        String value = timedSupplier.call();
+
+        assertThat(timer.getCount()).isEqualTo(1);
+
+        assertThat(value).isEqualTo("Hello world");
+        // Then the helloWorldService should be invoked 1 time
+        BDDMockito.then(helloWorldService).should(times(1)).returnHelloWorldWithException();
+    }
+
+    @Test
+    public void shouldExecuteCallable() throws Throwable {
+        // Given the HelloWorldService returns Hello world
+        BDDMockito.given(helloWorldService.returnHelloWorldWithException()).willReturn("Hello world");
+
+        // And measure the time with Metrics
+        String value = Metrics.executeCallable(timer, helloWorldService::returnHelloWorldWithException);
+
+        assertThat(timer.getCount()).isEqualTo(1);
+
+        assertThat(value).isEqualTo("Hello world");
+        // Then the helloWorldService should be invoked 1 time
+        BDDMockito.then(helloWorldService).should(times(1)).returnHelloWorldWithException();
+    }
+
+
+    @Test
     public void shouldDecorateRunnable() throws Throwable {
         // And measure the time with Metrics
         Runnable timedRunnable = Metrics.decorateRunnable(timer, helloWorldService::sayHelloWorld);
 
         timedRunnable.run();
 
-        // Then the counter ofRateLimiterRegistry metrics should be one
         assertThat(timer.getCount()).isEqualTo(1);
 
         // Then the helloWorldService should be invoked 1 time
@@ -90,7 +122,6 @@ public class MetricsTest {
 
         timedRunnable.run();
 
-        // Then the counter ofRateLimiterRegistry metrics should be one
         assertThat(timer.getCount()).isEqualTo(1);
         // Then the helloWorldService should be invoked 1 time
         BDDMockito.then(helloWorldService).should(Mockito.times(1)).sayHelloWorldWithException();
@@ -108,7 +139,6 @@ public class MetricsTest {
         assertThat(result.isFailure()).isTrue();
         assertThat(result.failed().get()).isInstanceOf(RuntimeException.class);
 
-        // Then the counter ofRateLimiterRegistry metrics should be one
         assertThat(timer.getCount()).isEqualTo(1);
 
         // Then the helloWorldService should be invoked 1 time
@@ -126,11 +156,27 @@ public class MetricsTest {
 
         Stream.range(0,2).forEach((i) -> timedSupplier.get());
 
-        // Then the counter ofRateLimiterRegistry metrics should be ten
         assertThat(timer.getCount()).isEqualTo(2);
         // Then the helloWorldService should be invoked 1 time
         BDDMockito.then(helloWorldService).should(times(2)).returnHelloWorld();
     }
+
+    @Test
+    public void shouldExecuteSupplier() throws Throwable {
+        // Given the HelloWorldService returns Hello world
+        BDDMockito.given(helloWorldService.returnHelloWorld()).willReturn("Hello world");
+
+        // And measure the time with Metrics
+        String result = Metrics.executeSupplier(timer, helloWorldService::returnHelloWorld);
+
+        assertThat(timer.getCount()).isEqualTo(1);
+
+        assertThat(result).isEqualTo("Hello world");
+
+        // Then the helloWorldService should be invoked 1 time
+        BDDMockito.then(helloWorldService).should(times(1)).returnHelloWorld();
+    }
+
 
     @Test
     public void shouldDecorateFunctionAndReturnWithSuccess() throws Throwable {
@@ -144,7 +190,6 @@ public class MetricsTest {
         //Then
         assertThat(function.apply("Tom")).isEqualTo("Hello world Tom");
 
-        // Then the counter ofRateLimiterRegistry metrics should be ten
         assertThat(timer.getCount()).isEqualTo(1);
         // Then the helloWorldService should be invoked 1 time
         BDDMockito.then(helloWorldService).should(Mockito.times(1)).returnHelloWorldWithName("Tom");
@@ -162,7 +207,6 @@ public class MetricsTest {
         //Then
         assertThat(function.apply("Tom")).isEqualTo("Hello world Tom");
 
-        // Then the counter ofRateLimiterRegistry metrics should be ten
         assertThat(timer.getCount()).isEqualTo(1);
         // Then the helloWorldService should be invoked 1 time
         BDDMockito.then(helloWorldService).should(Mockito.times(1)).returnHelloWorldWithNameWithException("Tom");

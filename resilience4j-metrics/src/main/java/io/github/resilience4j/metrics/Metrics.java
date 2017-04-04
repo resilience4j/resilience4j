@@ -20,12 +20,25 @@ package io.github.resilience4j.metrics;
 
 import com.codahale.metrics.Timer;
 
+import java.util.concurrent.Callable;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
 import javaslang.control.Try;
 
 public interface Metrics {
+
+    /**
+     * Decorates and executes the decorated Callable.
+     *
+     * @param timer the timer to use
+     * @param callable the original Callable
+     * @param <T> the type of results supplied by this Callable
+     * @return the result of the decorated Callable.
+     */
+    static <T> T executeCallable(Timer timer, Callable<T> callable) throws Exception {
+        return decorateCallable(timer, callable).call();
+    }
 
     /**
      * Creates a timed checked supplier.
@@ -58,6 +71,18 @@ public interface Metrics {
     }
 
     /**
+     * Decorates and executes the decorated Supplier.
+     *
+     * @param timer the timer to use
+     * @param supplier the original Supplier
+     * @param <T> the type of results supplied by this supplier
+     * @return the result of the decorated Supplier.
+     */
+    static <T> T executeSupplier(Timer timer, Supplier<T> supplier){
+        return decorateSupplier(timer, supplier).get();
+    }
+
+    /**
      * Creates a timed checked supplier.
 
      * @param timer the timer to use
@@ -71,6 +96,22 @@ public interface Metrics {
             }
         };
     }
+
+    /**
+     * Creates a timed Callable.
+
+     * @param timer the timer to use
+     * @param callable the original Callable
+     * @return a timed Callable
+     */
+    static <T> Callable<T> decorateCallable(Timer timer, Callable<T> callable){
+        return () -> {
+            try (Timer.Context context = timer.time()) {
+                return callable.call();
+            }
+        };
+    }
+
 
     /**
      * Creates a timed runnable.
