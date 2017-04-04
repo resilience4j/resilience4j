@@ -154,11 +154,11 @@ MetricRegistry metricRegistry = new MetricRegistry();
 Timer timer = metricRegistry.timer(name("timerName"));
 
 // Decorate your call to BackendService.doSomething()
-Try.CheckedSupplier<String> timedSupplier = Metrics.decorateSupplier(timer, () -> backendService.doSomething()); 
-String result = Try.of(timedSupplier).get();
+Callable timedCallable = Metrics.decorateCallable(timer, () -> backendService.doSomething());
+String result = timedCallable.call();
 
 // You can execute a method reference in the context of a Timer
- String value = Metrics.executeCallable(timer, () -> backendService.doSomething());
+String value = Metrics.executeCallable(timer, () -> backendService.doSomething());
 ----
 
 [[circuitbreaker_events]]

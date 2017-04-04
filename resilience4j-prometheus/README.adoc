@@ -32,7 +32,7 @@ The names of the rate limiters and circuit breakers are exposed using label `nam
 
 [source,java]
 --
-final CollectorRegistry collectorRegistry = new CollectorRegistry();
+final CollectorRegistry collectorRegistry = CollectorRegistry.defaultRegistry;
 
 final CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
 
@@ -46,7 +46,7 @@ collectorRegistry.register(CircuitBreakerExports.ofCircuitBreakerRegistry(circui
 
 [source,java]
 --
-final CollectorRegistry collectorRegistry = new CollectorRegistry();
+final CollectorRegistry collectorRegistry = CollectorRegistry.defaultRegistry;
 
 final RateLimiterRegistry rateLimiterRegistry = CircuitBreakerRegistry.ofDefaults();
 
