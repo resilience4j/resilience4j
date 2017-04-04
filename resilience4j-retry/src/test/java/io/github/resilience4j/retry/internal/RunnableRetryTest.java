@@ -85,6 +85,18 @@ public class RunnableRetryTest {
     }
 
     @Test
+    public void testExecuteRunnable() {
+        // Create a Retry with default configuration
+        Retry retry = Retry.ofDefaults("id");
+        // Decorate the invocation of the HelloWorldService
+        retry.executeRunnable(helloWorldService::sayHelloWorld);
+
+        // Then the helloWorldService should be invoked 1 time
+        BDDMockito.then(helloWorldService).should(Mockito.times(1)).sayHelloWorld();
+        Assertions.assertThat(sleptTime).isEqualTo(0);
+    }
+
+    @Test
     public void shouldReturnAfterThreeAttempts() {
         // Given the HelloWorldService throws an exception
         BDDMockito.willThrow(new WebServiceException("BAM!")).given(helloWorldService).sayHelloWorld();

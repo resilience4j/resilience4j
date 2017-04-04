@@ -62,21 +62,25 @@ The example uses Javaslang's Try Monad to recover from an exception and invoke a
 // Create a CircuitBreaker with a default configuration
 CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("backendName");
 // Create a Retry with at most 3 retries and a fixed time interval between retries of 500ms
-Retry retryContext = Retry.ofDefaults("backendName");
+Retry retry = Retry.ofDefaults("backendName");
 
-// Decorate your call to BackendService.doSomething()
-Try.CheckedSupplier<String> decoratedSupplier = Decorators
-    .ofCheckedSupplier(backendService::doSomething)
-    .withCircuitBreaker(circuitBreaker)
-    .withRetry(retryContext)
-    .decorate();
+// Decorate your call to BackendService.doSomething() with a CircuitBreaker
+Try.CheckedSupplier<String> decoratedSupplier = CircuitBreaker
+    .decorateCheckedSupplier(circuitBreaker, backendService::doSomething);
 
-// Invoke the decorated function and recover from any exception
+// Decorate your call with automatic retry
+decoratedSupplier = Retry
+    .decorateCheckedSupplier(retry, decoratedSupplier);
+
+// Invoke the decorated supplier and recover from any exception
 String result = Try.of(decoratedSupplier)
     .recover(throwable -> "Hello from Recovery").get();
 
 // You can execute a method reference in the context of a CircuitBreaker
 String result = circuitBreaker.executeCallable(backendService::doSomething))
+
+// You can execute a method reference in the context of a Retry
+String result = retry.executeCallable(backendService::doSomething))
 ----
 
 === CircuitBreaker and RxJava
@@ -107,10 +111,8 @@ RateLimiterConfig config = RateLimiterConfig.custom()
 RateLimiter rateLimiter = RateLimiter.of("backendName", config);
 
 // Decorate your call to BackendService.doSomething()
-Try.CheckedSupplier<String> restrictedSupplier = Decorators
-    .ofCheckedSupplier(backendService::doSomething)
-    .withRateLimiter(rateLimiter)
-    .decorate();
+Try.CheckedSupplier<String> restrictedSupplier = RateLimiter
+    .decorateCheckedSupplier(limit, backendService::doSomething);
 
 // First call is successful
 Try<String> firstTry = Try.of(restrictedSupplier);
