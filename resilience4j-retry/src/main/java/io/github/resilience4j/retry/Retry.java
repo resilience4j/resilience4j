@@ -18,13 +18,14 @@
  */
 package io.github.resilience4j.retry;
 
+import java.util.concurrent.Callable;
+import java.util.function.Function;
+import java.util.function.Supplier;
+
 import io.github.resilience4j.retry.event.RetryEvent;
 import io.github.resilience4j.retry.internal.RetryContext;
 import io.reactivex.Flowable;
 import javaslang.control.Try;
-
-import java.util.function.Function;
-import java.util.function.Supplier;
 
 public interface Retry {
 
@@ -94,6 +95,39 @@ public interface Retry {
      */
     static Retry ofDefaults(String id){
         return new RetryContext(id, RetryConfig.ofDefaults());
+    }
+
+    /**
+     * Decorates and executes the decorated Supplier.
+     *
+     * @param supplier the original Supplier
+     * @param <T> the type of results supplied by this supplier
+     * @return the result of the decorated Supplier.
+     */
+    default <T> T executeSupplier(Supplier<T> supplier){
+        return decorateSupplier(this, supplier).get();
+    }
+
+    /**
+     * Decorates and executes the decorated Callable.
+     *
+     * @param callable the original Callable
+     *
+     * @return the result of the decorated Callable.
+     * @param <T> the result type of callable
+     * @throws Exception if unable to compute a result
+     */
+    default <T> T executeCallable(Callable<T> callable) throws Exception{
+        return decorateCallable(this, callable).call();
+    }
+
+    /**
+     * Decorates and executes the decorated Runnable.
+     *
+     * @param runnable the original Runnable
+     */
+    default void executeRunnable(Runnable runnable){
+        decorateRunnable(this, runnable).run();
     }
 
     /**
@@ -172,6 +206,27 @@ public interface Retry {
         return () -> {
             do try {
                 T result = supplier.get();
+                retryContext.onSuccess();
+                return result;
+            } catch (RuntimeException runtimeException) {
+                retryContext.onRuntimeError(runtimeException);
+            } while (true);
+        };
+    }
+
+    /**
+     * Creates a retryable callable.
+     *
+     * @param retryContext the retry context
+     * @param supplier the original function
+     * @param <T> the type of results supplied by this supplier
+     *
+     * @return a retryable function
+     */
+    static <T> Callable<T> decorateCallable(Retry retryContext, Callable<T> supplier){
+        return () -> {
+            do try {
+                T result = supplier.call();
                 retryContext.onSuccess();
                 return result;
             } catch (RuntimeException runtimeException) {
