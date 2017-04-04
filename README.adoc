@@ -149,8 +149,11 @@ String result = Try.of(() -> cachedFunction.apply("cacheKey")).get();
 The following example shows how to decorate a lambda expression to measure metrics using Dropwizard Metrics. 
 [source,java]
 ----
+// Create a Timer
 MetricRegistry metricRegistry = new MetricRegistry();
 Timer timer = metricRegistry.timer(name("timerName"));
+
+// Decorate your call to BackendService.doSomething()
 Try.CheckedSupplier<String> timedSupplier = Metrics.decorateSupplier(timer, () -> backendService.doSomething()); 
 String result = Try.of(timedSupplier).get();
 ----
