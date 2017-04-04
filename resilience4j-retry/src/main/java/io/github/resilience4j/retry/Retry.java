@@ -34,7 +34,7 @@ public interface Retry {
      *
      * @return the ID of this Retry
      */
-    String getId();
+    String getName();
 
     /**
      *  Records a successful call.
@@ -66,35 +66,35 @@ public interface Retry {
     /**
      * Creates a Retry with a custom Retry configuration.
      *
-     * @param id the ID of the Retry
+     * @param name the ID of the Retry
      * @param retryConfig a custom Retry configuration
      *
      * @return a Retry with a custom Retry configuration.
      */
-    static RetryContext of(String id, RetryConfig retryConfig){
-        return new RetryContext(id, retryConfig);
+    static RetryContext of(String name, RetryConfig retryConfig){
+        return new RetryContext(name, retryConfig);
     }
 
     /**
      * Creates a Retry with a custom Retry configuration.
      *
-     * @param id the ID of the Retry
+     * @param name the ID of the Retry
      * @param retryConfigSupplier a supplier of a custom Retry configuration
      *
      * @return a Retry with a custom Retry configuration.
      */
-    static RetryContext of(String id, Supplier<RetryConfig> retryConfigSupplier){
-        return new RetryContext(id, retryConfigSupplier.get());
+    static RetryContext of(String name, Supplier<RetryConfig> retryConfigSupplier){
+        return new RetryContext(name, retryConfigSupplier.get());
     }
 
     /**
      * Creates a Retry with default configuration.
      *
-     * @param id the ID of the Retry
+     * @param name the ID of the Retry
      * @return a Retry with default configuration
      */
-    static Retry ofDefaults(String id){
-        return new RetryContext(id, RetryConfig.ofDefaults());
+    static Retry ofDefaults(String name){
+        return new RetryContext(name, RetryConfig.ofDefaults());
     }
 
     /**
@@ -277,4 +277,26 @@ public interface Retry {
         };
     }
 
+    /**
+     * Get the Metrics of this RateLimiter.
+     *
+     * @return the Metrics of this RateLimiter
+     */
+    Metrics getMetrics();
+
+    interface Metrics {
+        /**
+         * Returns how many attempts this have been made by this retry.
+         *
+         * @return how many retries have been attempted, but failed.
+         */
+        int getNumAttempts();
+
+        /**
+         * Returns how many retry attempts are allowed before failure.
+         *
+         * @return how many retries are allowed before failure.
+         */
+        int getMaxAttempts();
+    }
 }

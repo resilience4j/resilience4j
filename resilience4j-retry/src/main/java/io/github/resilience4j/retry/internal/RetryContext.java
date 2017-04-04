@@ -41,34 +41,42 @@ public class RetryContext implements Retry {
     private AtomicReference<Exception> lastException = new AtomicReference<>();
     private AtomicReference<RuntimeException> lastRuntimeException = new AtomicReference<>();
 
+    private final Metrics metrics;
     private final FlowableProcessor<RetryEvent> eventPublisher;
 
-    private String id;
+    private String name;
     private int maxAttempts;
     private Function<Integer, Long> intervalFunction;
     private Predicate<Throwable> exceptionPredicate;
     /*package*/ static Try.CheckedConsumer<Long> sleepFunction = Thread::sleep;
 
-    public RetryContext(String id, RetryConfig config){
-        this.id = id;
+    public RetryContext(String name, RetryConfig config){
+        this.name = name;
         this.maxAttempts = config.getMaxAttempts();
         this.intervalFunction = config.getIntervalFunction();
         this.exceptionPredicate = config.getExceptionPredicate();
         PublishProcessor<RetryEvent> publisher = PublishProcessor.create();
+        this.metrics = this.new RetryContextMetrics();
         this.eventPublisher = publisher.toSerialized();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
-    public String getId() {
-        return id;
+    public String getName() {
+        return name;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void onSuccess() {
         int currentNumOfAttempts = numOfAttempts.get();
         if(currentNumOfAttempts > 0){
             Throwable throwable = Option.of(lastException.get()).getOrElse(lastRuntimeException.get());
-            publishRetryEvent(() -> new RetryOnSuccessEvent(getId(), currentNumOfAttempts, throwable));
+            publishRetryEvent(() -> new RetryOnSuccessEvent(getName(), currentNumOfAttempts, throwable));
         }
     }
 
@@ -76,7 +84,7 @@ public class RetryContext implements Retry {
         int currentNumOfAttempts = numOfAttempts.incrementAndGet();
         if(currentNumOfAttempts >= maxAttempts){
             Exception throwable = lastException.get();
-            publishRetryEvent(() -> new RetryOnErrorEvent(getId(), currentNumOfAttempts, throwable));
+            publishRetryEvent(() -> new RetryOnErrorEvent(getName(), currentNumOfAttempts, throwable));
             throw throwable;
         }else{
             waitIntervalAfterFailure();
@@ -87,7 +95,7 @@ public class RetryContext implements Retry {
         int currentNumOfAttempts = numOfAttempts.incrementAndGet();
         if(currentNumOfAttempts >= maxAttempts){
             RuntimeException throwable = lastRuntimeException.get();
-            publishRetryEvent(() -> new RetryOnErrorEvent(getId(), currentNumOfAttempts, throwable));
+            publishRetryEvent(() -> new RetryOnErrorEvent(getName(), currentNumOfAttempts, throwable));
             throw throwable;
         }else{
             waitIntervalAfterFailure();
@@ -101,6 +109,9 @@ public class RetryContext implements Retry {
             .getOrElseThrow(ex -> lastRuntimeException.get());
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void onError(Exception exception) throws Throwable{
         if(exceptionPredicate.test(exception)){
@@ -111,6 +122,9 @@ public class RetryContext implements Retry {
         }
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void onRuntimeError(RuntimeException runtimeException){
         if(exceptionPredicate.test(runtimeException)){
@@ -127,8 +141,43 @@ public class RetryContext implements Retry {
         }
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Flowable<RetryEvent> getEventStream() {
         return eventPublisher;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Metrics getMetrics() {
+        return this.metrics;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public final class RetryContextMetrics implements Metrics {
+        private RetryContextMetrics() {
+        }
+
+        /**
+         * @return current number of retry attempts made.
+         */
+        @Override
+        public int getNumAttempts() {
+            return numOfAttempts.get();
+        }
+
+        /**
+         * @return the maximum allowed retries to make.
+         */
+        @Override
+        public int getMaxAttempts() {
+            return maxAttempts;
+        }
     }
 }
