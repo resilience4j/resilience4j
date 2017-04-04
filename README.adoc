@@ -17,7 +17,7 @@ Resilience4j features are:
 * Automatic retrying
 * Response caching
 * Measuring metrics
-* Monitoring integration: Prometheus, Dropziward Metrics
+* Metrics integration: Prometheus, Dropwizard Metrics
 * Framework integration: Spring Boot, Vert.x, Ratpack
 
 To highlight a few differences to Netflix Hystrix:
