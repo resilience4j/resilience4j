@@ -112,7 +112,7 @@ RateLimiter rateLimiter = RateLimiter.of("backendName", config);
 
 // Decorate your call to BackendService.doSomething()
 Try.CheckedSupplier<String> restrictedSupplier = RateLimiter
-    .decorateCheckedSupplier(limit, backendService::doSomething);
+    .decorateCheckedSupplier(rateLimiter, backendService::doSomething);
 
 // First call is successful
 Try<String> firstTry = Try.of(restrictedSupplier);
