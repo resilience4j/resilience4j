@@ -42,6 +42,7 @@ Setup and usage in Spring Boot is demonstrated https://github.com/RobWin/resilie
 * <<circuitbreaker>>
 * <<ratelimiter>>
 * <<cache>>
+* <<metrics>>
 * <<circuitbreaker_events>>
 * <<ratelimiter_events>>
 * <<cache_events>>
@@ -71,8 +72,8 @@ Try.CheckedSupplier<String> decoratedSupplier = Decorators
     .decorate();
 
 // Invoke the decorated function and recover from any exception
-Try<String> result = Try.of(decoratedSupplier)
-    .recover(throwable -> "Hello from Recovery");
+String result = Try.of(decoratedSupplier)
+    .recover(throwable -> "Hello from Recovery").get();
 
 // You can execute a method reference in the context of a CircuitBreaker:
 String result = circuitBreaker.executeSupplier(helloWorldService::returnHelloWorld)
@@ -139,7 +140,19 @@ Try.CheckedFunction<String, String> cachedFunction = Decorators
     .ofCheckedSupplier(() -> backendService.doSomething())
     .withCache(cacheContext)
     .decorate();
-String value = Try.of(() -> cachedFunction.apply("cacheKey")).get();
+String result = Try.of(() -> cachedFunction.apply("cacheKey")).get();
+----
+
+[[metrics]]
+=== Metrics
+
+The following example shows how to decorate a lambda expression to measure metrics using Dropwizard Metrics. 
+[source,java]
+----
+MetricRegistry metricRegistry = new MetricRegistry();
+Timer timer = metricRegistry.timer(name("timerName"));
+Try.CheckedSupplier<String> timedSupplier = Metrics.decorateSupplier(timer, () -> backendService.doSomething()); 
+String result = Try.of(timedSupplier).get();
 ----
 
 [[circuitbreaker_events]]
