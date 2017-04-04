@@ -66,7 +66,7 @@ Retry retryContext = Retry.ofDefaults("backendName");
 
 // Decorate your call to BackendService.doSomething()
 Try.CheckedSupplier<String> decoratedSupplier = Decorators
-    .ofCheckedSupplier(() -> backendService.doSomething())
+    .ofCheckedSupplier(backendService::doSomething)
     .withCircuitBreaker(circuitBreaker)
     .withRetry(retryContext)
     .decorate();
@@ -76,7 +76,7 @@ String result = Try.of(decoratedSupplier)
     .recover(throwable -> "Hello from Recovery").get();
 
 // You can execute a method reference in the context of a CircuitBreaker
-String result = circuitBreaker.executeCallable(backendService.doSomething())
+String result = circuitBreaker.executeCallable(backendService::doSomething))
 ----
 
 === CircuitBreaker and RxJava
@@ -108,7 +108,7 @@ RateLimiter rateLimiter = RateLimiter.of("backendName", config);
 
 // Decorate your call to BackendService.doSomething()
 Try.CheckedSupplier<String> restrictedSupplier = Decorators
-    .ofCheckedSupplier(() -> backendService.doSomething())
+    .ofCheckedSupplier(backendService::doSomething)
     .withRateLimiter(rateLimiter)
     .decorate();
 
@@ -136,11 +136,8 @@ javax.cache.Cache<String, String> cacheInstance = Caching.getCache("cacheName", 
 Cache<String, String> cacheContext = Cache.of(cacheInstance);
 
 // Decorate your call to BackendService.doSomething()
-Try.CheckedFunction<String, String> cachedFunction = Decorators
-    .ofCheckedSupplier(() -> backendService.doSomething())
-    .withCache(cacheContext)
-    .decorate();
-String result = Try.of(() -> cachedFunction.apply("cacheKey")).get();
+Try.CheckedFunction<String, String> cachedFunction = Cache.decorateCallable(cacheContext, backendService::doSomething);
+String value = cachedFunction.apply("testKey");
 ----
 
 [[metrics]]
@@ -154,11 +151,11 @@ MetricRegistry metricRegistry = new MetricRegistry();
 Timer timer = metricRegistry.timer(name("timerName"));
 
 // Decorate your call to BackendService.doSomething()
-Callable timedCallable = Metrics.decorateCallable(timer, () -> backendService.doSomething());
+Callable timedCallable = Metrics.decorateCallable(timer, backendService::doSomething);
 String result = timedCallable.call();
 
 // You can execute a method reference in the context of a Timer
-String value = Metrics.executeCallable(timer, () -> backendService.doSomething());
+String value = Metrics.executeCallable(timer, backendService::doSomething);
 ----
 
 [[circuitbreaker_events]]
