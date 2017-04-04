@@ -36,7 +36,7 @@ import static java.util.Objects.requireNonNull;
  * {@link io.prometheus.client.CollectorRegistry}.
  */
 public class RateLimiterExports extends Collector {
-    private static final String DEFAULT_NAME = "rate_limiter";
+    private static final String DEFAULT_NAME = "resilience4j_ratelimiter";
 
     private final String name;
     private final Supplier<Iterable<RateLimiter>> rateLimitersSupplier;
