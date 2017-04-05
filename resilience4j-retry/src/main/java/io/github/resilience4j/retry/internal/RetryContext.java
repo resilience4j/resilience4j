@@ -91,7 +91,7 @@ public class RetryContext implements Retry {
         }
     }
 
-    public void throwOrSleepAfterRuntimeException(){
+    private void throwOrSleepAfterRuntimeException(){
         int currentNumOfAttempts = numOfAttempts.incrementAndGet();
         if(currentNumOfAttempts >= maxAttempts){
             RuntimeException throwable = lastRuntimeException.get();

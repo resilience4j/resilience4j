@@ -58,8 +58,11 @@ public Promise<String> methodWhichReturnsAPromise() {
 
 == Guice AOP
 
-Guice provides method interception capabilities. Here are provided some annotations which allow
-methods returning promises, completion stage, and normal values, to be operated on.
+Guice provides method interception capabilities. Here are provided some annotations which support
+methods returning types of promise and imperative objects. CircuitBreaker also supports methods returning
+Observable and Flowable.
+
+In the future, all annotations will also support methods returning CompletionStage.
 
 === CircuitBreaker
 The demo shows how to use the `CircuitBreaker` annotation to make your Ratpack application more fault tolerant.
@@ -78,8 +81,20 @@ Where `MyRecoveryFunction` is implements `io.github.resilience4j.ratpack.Recover
 a fallback value that is returned when the circuit breaker identified by `name` is open.
 
 === Retry
-TODO
-Retry will be supported once the concept of a RetryRegistry is in place.
+The demo shows how to use the `Retry` annotation to make your Ratpack application more fault tolerant.
+You can either annotate a class in order to protect all public methods or just some specific methods.
+For example:
+`
+[source,java]
+----
+@Retry(name = "backendA", recovery = MyRecoveryFunction.class)
+@Singleton
+public class BackendAConnector implements Connector {
+    ...
+}
+----
+Where `MyRecoveryFunction` is implements `io.github.resilience4j.ratpack.RecoveryFunction` and provides
+a fallback value that is returned when the retry identified by `name` is has exceeded it's max calls.
 
 === RateLimiter
 The demo shows how to use the `RateLimiter` annotation to make your Ratpack application more fault tolerant.

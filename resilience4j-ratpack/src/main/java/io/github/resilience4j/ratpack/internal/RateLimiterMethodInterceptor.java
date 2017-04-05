@@ -28,8 +28,6 @@ import org.aopalliance.intercept.MethodInvocation;
 import ratpack.exec.Promise;
 
 import java.time.Duration;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionStage;
 
 /**
  * A {@link MethodInterceptor} to handle all methods annotated with {@link RateLimiter}. It will
@@ -41,17 +39,14 @@ public class RateLimiterMethodInterceptor implements MethodInterceptor {
     @Inject(optional = true)
     private RateLimiterRegistry registry;
 
-    public RateLimiterMethodInterceptor() {
-        if (registry == null) {
-            registry = RateLimiterRegistry.of(RateLimiterConfig.ofDefaults());
-        }
-    }
-
     @SuppressWarnings("unchecked")
     @Override
     public Object invoke(MethodInvocation invocation) throws Throwable {
         RateLimiter annotation = invocation.getMethod().getAnnotation(RateLimiter.class);
         RecoveryFunction<?> recoveryFunction = annotation.recovery().newInstance();
+        if (registry == null) {
+            registry = RateLimiterRegistry.ofDefaults();
+        }
         io.github.resilience4j.ratelimiter.RateLimiter rateLimiter = registry.rateLimiter(annotation.name());
         if (rateLimiter == null) {
             return invocation.proceed();
@@ -83,27 +78,30 @@ public class RateLimiterMethodInterceptor implements MethodInterceptor {
                 transformer = transformer.recover(recoveryFunction);
             }
             result = ((Promise<?>) result).transform(transformer);
-        } else if (result instanceof CompletionStage) {
-            CompletionStage stage = (CompletionStage) result;
-            RateLimiterConfig rateLimiterConfig = rateLimiter.getRateLimiterConfig();
-            Duration timeoutDuration = rateLimiterConfig.getTimeoutDuration();
-            boolean permission = rateLimiter.getPermission(timeoutDuration);
-            if (permission) {
-                return stage;
-            } else {
-                return CompletableFuture.supplyAsync(() -> {
-                    if (annotation.recovery().isAssignableFrom(DefaultRecoveryFunction.class)) {
-                        throw new RequestNotPermitted("Request not permitted for limiter: " + rateLimiter.getName());
-                    } else {
-                        try {
-                            return recoveryFunction.apply(new RequestNotPermitted("Request not permitted for limiter: " + rateLimiter.getName()));
-                        } catch (Exception e) {
-                            return null;
-                        }
-                    }
-                });
-            }
-        } else {
+            // TODO drmaas - this will be fixed in a future PR. Commenting out for now.
+        }
+//        else if (result instanceof CompletionStage) {
+//            CompletionStage stage = (CompletionStage) result;
+//            RateLimiterConfig rateLimiterConfig = rateLimiter.getRateLimiterConfig();
+//            Duration timeoutDuration = rateLimiterConfig.getTimeoutDuration();
+//            boolean permission = rateLimiter.getPermission(timeoutDuration);
+//            if (permission) {
+//                return stage;
+//            } else {
+//                return CompletableFuture.supplyAsync(() -> {
+//                    if (annotation.recovery().isAssignableFrom(DefaultRecoveryFunction.class)) {
+//                        throw new RequestNotPermitted("Request not permitted for limiter: " + rateLimiter.getName());
+//                    } else {
+//                        try {
+//                            return recoveryFunction.apply(new RequestNotPermitted("Request not permitted for limiter: " + rateLimiter.getName()));
+//                        } catch (Exception e) {
+//                            return null;
+//                        }
+//                    }
+//                });
+//            }
+//        }
+        else {
             io.github.resilience4j.ratelimiter.RateLimiter.waitForPermission(rateLimiter);
         }
         return result;
