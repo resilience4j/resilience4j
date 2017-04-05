@@ -17,7 +17,7 @@ public interface AsyncRetry {
      *
      * @return the ID of this Retry
      */
-    String getId();
+    String getName();
 
     /**
      *  Records a successful call.
@@ -94,6 +94,29 @@ public interface AsyncRetry {
 
             return promise;
         };
+    }
+
+    /**
+     * Get the Metrics of this RateLimiter.
+     *
+     * @return the Metrics of this RateLimiter
+     */
+    Metrics getMetrics();
+
+    interface Metrics {
+        /**
+         * Returns how many attempts this have been made by this retry.
+         *
+         * @return how many retries have been attempted, but failed.
+         */
+        int getNumAttempts();
+
+        /**
+         * Returns how many retry attempts are allowed before failure.
+         *
+         * @return how many retries are allowed before failure.
+         */
+        int getMaxAttempts();
     }
 }
 

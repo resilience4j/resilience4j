@@ -31,7 +31,7 @@ public class RetryEventTest {
     public void testRetryOnErrorEvent() {
         RetryOnErrorEvent retryOnErrorEvent = new RetryOnErrorEvent("test", 2,
                 new IOException());
-        Assertions.assertThat(retryOnErrorEvent.getId()).isEqualTo("test");
+        Assertions.assertThat(retryOnErrorEvent.getName()).isEqualTo("test");
         Assertions.assertThat(retryOnErrorEvent.getNumberOfAttempts()).isEqualTo(2);
         Assertions.assertThat(retryOnErrorEvent.getEventType()).isEqualTo(Type.ERROR);
         Assertions.assertThat(retryOnErrorEvent.getLastThrowable()).isInstanceOf(IOException.class);
@@ -42,7 +42,7 @@ public class RetryEventTest {
     public void testRetryOnSuccessEvent() {
         RetryOnSuccessEvent retryOnSuccessEvent = new RetryOnSuccessEvent("test", 2,
                 new IOException());
-        Assertions.assertThat(retryOnSuccessEvent.getId()).isEqualTo("test");
+        Assertions.assertThat(retryOnSuccessEvent.getName()).isEqualTo("test");
         Assertions.assertThat(retryOnSuccessEvent.getNumberOfAttempts()).isEqualTo(2);
         Assertions.assertThat(retryOnSuccessEvent.getEventType()).isEqualTo(Type.SUCCESS);
         Assertions.assertThat(retryOnSuccessEvent.getLastThrowable()).isInstanceOf(IOException.class);

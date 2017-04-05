@@ -30,7 +30,7 @@ public interface RetryEvent {
      *
      * @return the ID of the Retry
      */
-    String getId();
+    String getName();
 
     /**
      * Returns the number of attempts.

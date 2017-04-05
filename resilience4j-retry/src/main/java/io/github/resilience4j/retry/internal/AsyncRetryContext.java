@@ -1,6 +1,7 @@
 package io.github.resilience4j.retry.internal;
 
 import io.github.resilience4j.retry.AsyncRetry;
+import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryConfig;
 import io.github.resilience4j.retry.event.RetryEvent;
 import io.github.resilience4j.retry.event.RetryOnErrorEvent;
@@ -16,33 +17,35 @@ import java.util.function.Supplier;
 
 public class AsyncRetryContext implements AsyncRetry {
 
-    private final String id;
+    private final String name;
     private final int maxAttempts;
     private final Function<Integer, Long> intervalFunction;
+    private final Metrics metrics;
     private final FlowableProcessor<RetryEvent> eventPublisher;
     private final Predicate<Throwable> exceptionPredicate;
 
     private final AtomicInteger numOfAttempts = new AtomicInteger(0);
 
-    public AsyncRetryContext(String id, RetryConfig config) {
-        this.id = id;
+    public AsyncRetryContext(String name, RetryConfig config) {
+        this.name = name;
         this.maxAttempts = config.getMaxAttempts();
         this.intervalFunction = config.getIntervalFunction();
         this.exceptionPredicate = config.getExceptionPredicate();
 
         PublishProcessor<RetryEvent> publisher = PublishProcessor.create();
         this.eventPublisher = publisher.toSerialized();
+        this.metrics = this.new AsyncRetryContextMetrics();
     }
 
     @Override
-    public String getId() {
-        return id;
+    public String getName() {
+        return name;
     }
 
     @Override
     public void onSuccess() {
         int currentNumOfAttempts = numOfAttempts.get();
-        publishRetryEvent(() -> new RetryOnSuccessEvent(id, currentNumOfAttempts, null));
+        publishRetryEvent(() -> new RetryOnSuccessEvent(name, currentNumOfAttempts, null));
     }
 
     @Override
@@ -57,7 +60,7 @@ public class AsyncRetryContext implements AsyncRetry {
             return -1;
         }
 
-        publishRetryEvent(() -> new RetryOnErrorEvent(id, attempt, throwable));
+        publishRetryEvent(() -> new RetryOnErrorEvent(name, attempt, throwable));
         return intervalFunction.apply(attempt);
     }
 
@@ -70,6 +73,38 @@ public class AsyncRetryContext implements AsyncRetry {
     private void publishRetryEvent(Supplier<RetryEvent> event) {
         if(eventPublisher.hasSubscribers()) {
             eventPublisher.onNext(event.get());
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Metrics getMetrics() {
+        return this.metrics;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public final class AsyncRetryContextMetrics implements Metrics {
+        private AsyncRetryContextMetrics() {
+        }
+
+        /**
+         * @return current number of retry attempts made.
+         */
+        @Override
+        public int getNumAttempts() {
+            return numOfAttempts.get();
+        }
+
+        /**
+         * @return the maximum allowed retries to make.
+         */
+        @Override
+        public int getMaxAttempts() {
+            return maxAttempts;
         }
     }
 }
