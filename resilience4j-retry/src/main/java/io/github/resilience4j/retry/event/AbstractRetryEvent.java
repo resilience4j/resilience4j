@@ -22,21 +22,21 @@ import java.time.ZonedDateTime;
 
 abstract class AbstractRetryEvent implements RetryEvent {
 
-    private final String id;
+    private final String name;
     private final ZonedDateTime creationTime;
     private final int numberOfAttempts;
     private final Throwable lastThrowable;
 
-    AbstractRetryEvent(String id, int numberOfAttempts, Throwable lastThrowable) {
-        this.id = id;
+    AbstractRetryEvent(String name, int numberOfAttempts, Throwable lastThrowable) {
+        this.name = name;
         this.numberOfAttempts = numberOfAttempts;
         this.creationTime = ZonedDateTime.now();
         this.lastThrowable = lastThrowable;
     }
 
     @Override
-    public String getId() {
-        return id;
+    public String getName() {
+        return name;
     }
 
     @Override
