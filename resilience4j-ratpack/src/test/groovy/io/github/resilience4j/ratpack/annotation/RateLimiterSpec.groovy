@@ -108,7 +108,7 @@ class RateLimiterSpec extends Specification {
         where:
         path      | rateLimiterName
         'promise' | 'test'
-        'stage'   | 'test'
+//        'stage'   | 'test'
         'normal'  | 'test'
     }
 
@@ -152,7 +152,7 @@ class RateLimiterSpec extends Specification {
         where:
         path      | rateLimiterName
         'promise' | 'test'
-        'stage'   | 'test'
+//        'stage'   | 'test'
         'normal'  | 'test'
     }
 
@@ -196,7 +196,7 @@ class RateLimiterSpec extends Specification {
         where:
         path      | rateLimiterName
         'promise' | 'test'
-        'stage'   | 'test'
+//        'stage'   | 'test'
         'normal'  | 'test'
     }
 
