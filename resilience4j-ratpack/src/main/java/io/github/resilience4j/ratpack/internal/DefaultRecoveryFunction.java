@@ -19,7 +19,12 @@ import io.github.resilience4j.ratpack.RecoveryFunction;
 
 public class DefaultRecoveryFunction<O> implements RecoveryFunction<O> {
     @Override
-    public O apply(Throwable e) throws Exception {
-        return null;
+    public O apply(Throwable t) throws Exception {
+        Exception exception = (Exception)t;
+        if (exception != null) {
+            throw exception;
+        } else {
+            return null;
+        }
     }
 }
