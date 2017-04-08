@@ -18,48 +18,35 @@
  */
 package io.github.resilience4j.retrofit;
 
-import io.github.resilience4j.circuitbreaker.CircuitBreaker;
+import io.github.resilience4j.ratelimiter.RateLimiter;
 import retrofit2.Call;
 import retrofit2.CallAdapter;
-import retrofit2.Response;
 import retrofit2.Retrofit;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-import java.util.function.Predicate;
 
 /**
  * Creates a Retrofit {@link CallAdapter.Factory} that decorates a Call to provide integration with a
- * {@link CircuitBreaker}
+ * supplied {@link RateLimiter}
  */
-public final class CircuitBreakerCallAdapter extends CallAdapter.Factory {
+public final class RateLimiterCallAdapter extends CallAdapter.Factory {
 
-    private final CircuitBreaker circuitBreaker;
-    private final Predicate<Response> successResponse;
-
-    /**
-     * Create a circuit-breaking call adapter that decorates retrofit calls
-     * @param circuitBreaker circuit breaker to use
-     * @return a {@link CallAdapter.Factory} that can be passed into the {@link Retrofit.Builder}
-     */
-    public static CircuitBreakerCallAdapter of(final CircuitBreaker circuitBreaker) {
-        return of(circuitBreaker, Response::isSuccessful);
-    }
+    private final RateLimiter rateLimiter;
 
     /**
-     * Create a circuit-breaking call adapter that decorates retrofit calls
-     * @param circuitBreaker circuit breaker to use
-     * @param successResponse {@link Predicate} that determines whether the {@link Call} {@link Response} should be considered successful
+     * Create a rate-limiting call adapter factory that decorates retrofit calls
+     *
+     * @param rateLimiter rate limiter to use
      * @return a {@link CallAdapter.Factory} that can be passed into the {@link Retrofit.Builder}
      */
-    public static CircuitBreakerCallAdapter of(final CircuitBreaker circuitBreaker, final Predicate<Response> successResponse) {
-        return new CircuitBreakerCallAdapter(circuitBreaker, successResponse);
+    public static RateLimiterCallAdapter of(final RateLimiter rateLimiter) {
+        return new RateLimiterCallAdapter(rateLimiter);
     }
 
-    private CircuitBreakerCallAdapter(final CircuitBreaker circuitBreaker, final Predicate<Response> successResponse) {
-        this.circuitBreaker = circuitBreaker;
-        this.successResponse = successResponse;
+    private RateLimiterCallAdapter(final RateLimiter rateLimiter) {
+        this.rateLimiter = rateLimiter;
     }
 
     @Override
@@ -77,7 +64,7 @@ public final class CircuitBreakerCallAdapter extends CallAdapter.Factory {
 
             @Override
             public <R> Call<R> adapt(Call<R> call) {
-                return RetrofitCircuitBreaker.decorateCall(circuitBreaker, call, successResponse);
+                return RetrofitRateLimiter.decorateCall(rateLimiter, call);
             }
         };
     }

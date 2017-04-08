@@ -19,20 +19,16 @@
 package io.github.resilience4j.retrofit;
 
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
-import io.github.resilience4j.circuitbreaker.CircuitBreaker;
-import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
-import okhttp3.OkHttpClient;
+import io.github.resilience4j.ratelimiter.RateLimiter;
+import io.github.resilience4j.ratelimiter.RateLimiterConfig;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.mockito.Mockito;
-import retrofit2.Call;
 import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.scalars.ScalarsConverterFactory;
 
 import java.time.Duration;
-import java.util.concurrent.TimeUnit;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
@@ -41,38 +37,31 @@ import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.verify;
 import static org.junit.Assert.assertEquals;
-import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.mock;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 /**
- * Tests the integration of the Retrofit HTTP client and {@link CircuitBreaker}
+ * Tests the integration of the Retrofit HTTP client and {@link RateLimiter}
  */
-public class RetrofitCircuitBreakerTest {
+public class RetrofitRateLimiterTest {
 
     @Rule
     public WireMockRule wireMockRule = new WireMockRule();
 
     private RetrofitService service;
-    private final CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom()
-            .ringBufferSizeInClosedState(3)
-            .waitDurationInOpenState(Duration.ofMillis(1000))
+    private final RateLimiterConfig config = RateLimiterConfig.custom()
+            .timeoutDuration(Duration.ofMillis(100))
+            .limitRefreshPeriod(Duration.ofSeconds(1))
+            .limitForPeriod(1)
             .build();
-    private final CircuitBreaker circuitBreaker = CircuitBreaker.of("test", circuitBreakerConfig);
+    private final RateLimiter rateLimiter = RateLimiter.of("backendName", config);
 
     @Before
     public void setUp() {
-        final long TIMEOUT = 300; // ms
-        OkHttpClient client = new OkHttpClient.Builder()
-                .connectTimeout(TIMEOUT, TimeUnit.MILLISECONDS)
-                .readTimeout(TIMEOUT, TimeUnit.MILLISECONDS)
-                .writeTimeout(TIMEOUT, TimeUnit.MILLISECONDS)
-                .build();
-
         this.service = new Retrofit.Builder()
-                .addCallAdapterFactory(CircuitBreakerCallAdapter.of(circuitBreaker))
+                .addCallAdapterFactory(RateLimiterCallAdapter.of(rateLimiter))
                 .addConverterFactory(ScalarsConverterFactory.create())
                 .baseUrl("http://localhost:8080/")
-                .client(client)
                 .build()
                 .create(RetrofitService.class);
     }
@@ -91,63 +80,27 @@ public class RetrofitCircuitBreakerTest {
     }
 
     @Test
-    public void decorateTimingOutCall() throws Exception {
+    public void decorateRateLimitedCall() throws Exception {
         stubFor(get(urlPathEqualTo("/greeting"))
                 .willReturn(aResponse()
-                        .withFixedDelay(500)
                         .withStatus(200)
                         .withHeader("Content-Type", "text/plain")
                         .withBody("hello world")));
 
-        try {
-            service.greeting().execute();
-        } catch (Throwable ignored) {
-        }
+        final Response<String> execute = service.greeting().execute();
+        assertTrue(execute.isSuccessful());
 
-        final CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
-        assertEquals(1, metrics.getNumberOfFailedCalls());
+        final Response<String> rateLimitedResponse = service.greeting().execute();
+        assertFalse("Expected unsuccessful, rate limited, response", rateLimitedResponse.isSuccessful());
+        assertEquals("Expected too many requests error code", 429, rateLimitedResponse.code());
 
-        // Circuit breaker should still be closed, not hit open threshold
-        assertEquals(CircuitBreaker.State.CLOSED, circuitBreaker.getState());
-
-        try {
-            service.greeting().execute();
-        } catch (Throwable ignored) {
-        }
-
-        try {
-            service.greeting().execute();
-        } catch (Throwable ignored) {
-        }
-
-        assertEquals(3, metrics.getNumberOfFailedCalls());
-        // Circuit breaker should be OPEN, threshold met
-        assertEquals(CircuitBreaker.State.OPEN, circuitBreaker.getState());
     }
-
-
-    @Test
-    public void decorateUnsuccessfulCall() throws Exception {
-        stubFor(get(urlPathEqualTo("/greeting"))
-                .willReturn(aResponse()
-                        .withStatus(500)
-                        .withHeader("Content-Type", "text/plain")));
-
-        final Response<String> response = service.greeting().execute();
-
-        assertEquals("Expected response code == 500", 500, response.code());
-
-
-        final CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
-        assertEquals(1, metrics.getNumberOfFailedCalls());
-    }
-
 
 
     @Test(expected = IllegalArgumentException.class)
     public void shouldThrowOnBadService() {
         BadRetrofitService badService = new Retrofit.Builder()
-                .addCallAdapterFactory(CircuitBreakerCallAdapter.of(circuitBreaker))
+                .addCallAdapterFactory(RateLimiterCallAdapter.of(rateLimiter))
                 .baseUrl("http://localhost:8080/")
                 .build()
                 .create(BadRetrofitService.class);

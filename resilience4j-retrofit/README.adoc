@@ -1,10 +1,10 @@
 = resilience4j-retrofit
 
-https://square.github.io/retrofit/[Retrofit] client circuit breaking.  Short-circuits http client calls based upon the policy
-associated to the CircuitBreaker instance provided.
+https://square.github.io/retrofit/[Retrofit] client circuit breaking & rate limiting.
 
-For circuit breaking triggered by timeout the thresholds can be set
-on a OkHttpClient which can be set on the Retrofit.Builder.
+== Circuit Breaking
+
+Circuit breaking http client calls is based upon the `CircuitBreaker` instance provided to a `CircuitBreakerCallAdaptor`.
 
 [source,java]
 ----
@@ -21,17 +21,59 @@ Retrofit retrofit = new Retrofit.Builder()
 RetrofitService service = retrofit.create(RetrofitService.class);
 ----
 
-By default, all exceptions and responses where `!Response.isSuccessful()` will be recorded as an error in the CircuitBreaker.
+=== Timeouts
+To trigger circuit breaking by timeout, the time thresholds should be set on a `OkHttpClient` instance passed into the
+`Retrofit.Builder`.
+
+[source,java]
+----
+// Create a CircuitBreaker
+private final CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testName");
+
+final long TIMEOUT = 300; // ms
+OkHttpClient client = new OkHttpClient.Builder()
+        .connectTimeout(TIMEOUT, TimeUnit.MILLISECONDS)
+        .readTimeout(TIMEOUT, TimeUnit.MILLISECONDS)
+        .writeTimeout(TIMEOUT, TimeUnit.MILLISECONDS)
+        .build();
+
+Retrofit retrofit = new Retrofit.Builder()
+        .addCallAdapterFactory(CircuitBreakerCallAdapter.of(circuitBreaker))
+        .baseUrl("http://localhost:8080/")
+        .client(client)
+        .build();
+----
+
+=== Error responses
+
+By default, all exceptions and responses where `!Response.isSuccessful()` will be recorded as an error in the `CircuitBreaker`.
 
 Customising what is considered a _successful_ response is possible like so:
 
 [source,java]
 ----
 Retrofit retrofit = new Retrofit.Builder()
-                .addCallAdapterFactory(CircuitBreakerCallAdapter.of(circuitBreaker, (r) -> r.code() < 500));
-                .baseUrl("http://localhost:8080/")
-                .build();
+        .addCallAdapterFactory(CircuitBreakerCallAdapter.of(circuitBreaker, (r) -> r.code() < 500));
+        .baseUrl("http://localhost:8080/")
+        .build();
 ----
+
+== Rate Limiting
+
+Rate limiting of http client calls is based upon the configuration passed to the RateLimiterCallAdaptor.
+
+[source, java]
+----
+RateLimiter rateLimiter = RateLimiter.ofDefaults("testName");
+
+Retrofit retrofit = new Retrofit.Builder()
+        .addCallAdapterFactory(RateLimiterCallAdapter.of(rateLimiter))
+        .baseUrl("http://localhost:8080/")
+        .build();
+----
+
+
+If the number of calls are exceeded within the period defined by the RateLimiter, a HTTP 429 response (too many requests) will be returned.
 
 == License
 
