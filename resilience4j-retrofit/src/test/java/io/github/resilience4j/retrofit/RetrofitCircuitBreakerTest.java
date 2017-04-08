@@ -25,8 +25,6 @@ import okhttp3.OkHttpClient;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.mockito.Mockito;
-import retrofit2.Call;
 import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.scalars.ScalarsConverterFactory;
@@ -40,9 +38,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.verify;
-import static org.junit.Assert.assertEquals;
-import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.mock;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Tests the integration of the Retrofit HTTP client and {@link CircuitBreaker}
@@ -105,10 +101,13 @@ public class RetrofitCircuitBreakerTest {
         }
 
         final CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
-        assertEquals(1, metrics.getNumberOfFailedCalls());
+        assertThat(metrics.getNumberOfFailedCalls())
+                .describedAs("Failed calls")
+                .isEqualTo(1);
 
         // Circuit breaker should still be closed, not hit open threshold
-        assertEquals(CircuitBreaker.State.CLOSED, circuitBreaker.getState());
+        assertThat(circuitBreaker.getState())
+                .isEqualTo(CircuitBreaker.State.CLOSED);
 
         try {
             service.greeting().execute();
@@ -120,9 +119,11 @@ public class RetrofitCircuitBreakerTest {
         } catch (Throwable ignored) {
         }
 
-        assertEquals(3, metrics.getNumberOfFailedCalls());
+        assertThat(metrics.getNumberOfFailedCalls())
+                .isEqualTo(3);
         // Circuit breaker should be OPEN, threshold met
-        assertEquals(CircuitBreaker.State.OPEN, circuitBreaker.getState());
+        assertThat(circuitBreaker.getState())
+                .isEqualTo(CircuitBreaker.State.OPEN);
     }
 
 
@@ -135,14 +136,13 @@ public class RetrofitCircuitBreakerTest {
 
         final Response<String> response = service.greeting().execute();
 
-        assertEquals("Expected response code == 500", 500, response.code());
-
+        assertThat(response.code())
+                .describedAs("Response code")
+                .isEqualTo(500);
 
         final CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
-        assertEquals(1, metrics.getNumberOfFailedCalls());
+        assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(1);
     }
-
-
 
     @Test(expected = IllegalArgumentException.class)
     public void shouldThrowOnBadService() {

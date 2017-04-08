@@ -36,9 +36,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.verify;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 /**
  * Tests the integration of the Retrofit HTTP client and {@link RateLimiter}
@@ -88,11 +86,17 @@ public class RetrofitRateLimiterTest {
                         .withBody("hello world")));
 
         final Response<String> execute = service.greeting().execute();
-        assertTrue(execute.isSuccessful());
+        assertThat(execute.isSuccessful())
+                .describedAs("Response successful")
+                .isTrue();
 
         final Response<String> rateLimitedResponse = service.greeting().execute();
-        assertFalse("Expected unsuccessful, rate limited, response", rateLimitedResponse.isSuccessful());
-        assertEquals("Expected too many requests error code", 429, rateLimitedResponse.code());
+        assertThat(rateLimitedResponse.isSuccessful())
+                .describedAs("Response successful")
+                .isFalse();
+        assertThat(rateLimitedResponse.code())
+                .describedAs("HTTP Error Code")
+                .isEqualTo(429);
 
     }
 
