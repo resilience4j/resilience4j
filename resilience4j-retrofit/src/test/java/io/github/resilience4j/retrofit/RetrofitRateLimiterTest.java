@@ -47,15 +47,18 @@ public class RetrofitRateLimiterTest {
     public WireMockRule wireMockRule = new WireMockRule();
 
     private RetrofitService service;
+
     private final RateLimiterConfig config = RateLimiterConfig.custom()
             .timeoutDuration(Duration.ofMillis(100))
             .limitRefreshPeriod(Duration.ofSeconds(1))
             .limitForPeriod(1)
             .build();
-    private final RateLimiter rateLimiter = RateLimiter.of("backendName", config);
+
+    private RateLimiter rateLimiter;
 
     @Before
     public void setUp() {
+        this.rateLimiter = RateLimiter.of("backendName", config);
         this.service = new Retrofit.Builder()
                 .addCallAdapterFactory(RateLimiterCallAdapter.of(rateLimiter))
                 .addConverterFactory(ScalarsConverterFactory.create())
