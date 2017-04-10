@@ -20,6 +20,7 @@ package io.github.resilience4j.retrofit;
 
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.ratelimiter.RateLimiter;
+import io.github.resilience4j.ratelimiter.RequestNotPermitted;
 import io.github.resilience4j.retrofit.internal.DecoratedCall;
 import javaslang.control.Try;
 import okhttp3.MediaType;
@@ -47,9 +48,9 @@ public interface RetrofitRateLimiter {
     /**
      * Decorate {@link Call}s allow {@link CircuitBreaker} functionality.
      *
-     * @param rateLimiter  {@link RateLimiter} to apply
-     * @param call            Call to decorate
-     * @param <T> Response type of call
+     * @param rateLimiter {@link RateLimiter} to apply
+     * @param call        Call to decorate
+     * @param <T>         Response type of call
      * @return Original Call decorated with CircuitBreaker
      */
     static <T> Call<T> decorateCall(final RateLimiter rateLimiter, final Call<T> call) {
@@ -58,7 +59,19 @@ public interface RetrofitRateLimiter {
             public Response<T> execute() throws IOException {
                 Try.CheckedSupplier<Response<T>> restrictedSupplier = RateLimiter.decorateCheckedSupplier(rateLimiter, call::execute);
                 final Try<Response<T>> response = Try.of(restrictedSupplier);
-                return response.isSuccess() ? response.get() : tooManyRequestsError();
+                return response.isSuccess() ? response.get() : handleFailure(response);
+            }
+
+            private Response<T> handleFailure(Try<Response<T>> response) throws IOException {
+                try {
+                    throw response.getCause();
+                } catch (RequestNotPermitted | IllegalStateException e) {
+                    return tooManyRequestsError();
+                } catch (IOException ioe) {
+                    throw ioe;
+                } catch (Throwable t) {
+                    throw new RuntimeException("Exception executing call", t);
+                }
             }
 
             private Response<T> tooManyRequestsError() {
