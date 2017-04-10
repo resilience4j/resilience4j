@@ -48,17 +48,21 @@ public class RetrofitCircuitBreakerTest {
     @Rule
     public WireMockRule wireMockRule = new WireMockRule();
 
-    private RetrofitService service;
-    private final CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom()
+    private static final CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom()
             .ringBufferSizeInClosedState(3)
             .waitDurationInOpenState(Duration.ofMillis(1000))
             .build();
-    private final CircuitBreaker circuitBreaker = CircuitBreaker.of("test", circuitBreakerConfig);
+
+    private CircuitBreaker circuitBreaker = CircuitBreaker.of("test", circuitBreakerConfig);
+
+    private RetrofitService service;
 
     @Before
     public void setUp() {
+        this.circuitBreaker = CircuitBreaker.of("test", circuitBreakerConfig);
+
         final long TIMEOUT = 300; // ms
-        OkHttpClient client = new OkHttpClient.Builder()
+        final OkHttpClient client = new OkHttpClient.Builder()
                 .connectTimeout(TIMEOUT, TimeUnit.MILLISECONDS)
                 .readTimeout(TIMEOUT, TimeUnit.MILLISECONDS)
                 .writeTimeout(TIMEOUT, TimeUnit.MILLISECONDS)
@@ -125,7 +129,6 @@ public class RetrofitCircuitBreakerTest {
         assertThat(circuitBreaker.getState())
                 .isEqualTo(CircuitBreaker.State.OPEN);
     }
-
 
     @Test
     public void decorateUnsuccessfulCall() throws Exception {
