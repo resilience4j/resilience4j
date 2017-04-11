@@ -20,7 +20,7 @@ import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry
 import io.github.resilience4j.ratelimiter.RateLimiterConfig
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry
 import io.github.resilience4j.ratpack.RecoveryFunction
-import io.github.resilience4j.ratpack.ResilienceModule
+import io.github.resilience4j.ratpack.Resilience4jModule
 import ratpack.exec.Promise
 import ratpack.test.embed.EmbeddedApp
 import ratpack.test.http.TestHttpClient
@@ -47,7 +47,7 @@ class RateLimiterSpec extends Specification {
         given:
         app = ratpack {
             bindings {
-                module(ResilienceModule)
+                module(Resilience4jModule)
                 bind(Something)
             }
             handlers {
@@ -76,7 +76,7 @@ class RateLimiterSpec extends Specification {
                 bindInstance(CircuitBreakerRegistry, CircuitBreakerRegistry.ofDefaults())
                 bindInstance(RateLimiterRegistry, registry)
                 bind(Something)
-                module(ResilienceModule)
+                module(Resilience4jModule)
             }
             handlers {
                 get('promise') { Something something ->
@@ -98,7 +98,6 @@ class RateLimiterSpec extends Specification {
         def actual = null
         for (int i = 0; i <= 10; i++) {
             actual = get(path)
-            println actual.body.text
         }
 
         then:
@@ -108,7 +107,7 @@ class RateLimiterSpec extends Specification {
         where:
         path      | rateLimiterName
         'promise' | 'test'
-//        'stage'   | 'test'
+        'stage'   | 'test'
         'normal'  | 'test'
     }
 
@@ -120,7 +119,7 @@ class RateLimiterSpec extends Specification {
                 bindInstance(CircuitBreakerRegistry, CircuitBreakerRegistry.ofDefaults())
                 bindInstance(RateLimiterRegistry, registry)
                 bind(Something)
-                module(ResilienceModule)
+                module(Resilience4jModule)
             }
             handlers {
                 get('promise') { Something something ->
@@ -142,7 +141,6 @@ class RateLimiterSpec extends Specification {
         def actual = null
         for (int i = 0; i <= 10; i++) {
             actual = get(path)
-            println actual.body.text
         }
 
         then:
@@ -152,7 +150,7 @@ class RateLimiterSpec extends Specification {
         where:
         path      | rateLimiterName
         'promise' | 'test'
-//        'stage'   | 'test'
+        'stage'   | 'test'
         'normal'  | 'test'
     }
 
@@ -164,7 +162,7 @@ class RateLimiterSpec extends Specification {
                 bindInstance(CircuitBreakerRegistry, CircuitBreakerRegistry.ofDefaults())
                 bindInstance(RateLimiterRegistry, registry)
                 bind(Something)
-                module(ResilienceModule)
+                module(Resilience4jModule)
             }
             handlers {
                 get('promise') { Something something ->
@@ -186,7 +184,6 @@ class RateLimiterSpec extends Specification {
         def actual = null
         for (int i = 0; i <= 10; i++) {
             actual = get(path)
-            println actual.body.text
         }
 
         then:
@@ -196,7 +193,7 @@ class RateLimiterSpec extends Specification {
         where:
         path      | rateLimiterName
         'promise' | 'test'
-//        'stage'   | 'test'
+        'stage'   | 'test'
         'normal'  | 'test'
     }
 

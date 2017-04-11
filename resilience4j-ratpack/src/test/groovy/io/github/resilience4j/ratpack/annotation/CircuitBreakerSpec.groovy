@@ -21,7 +21,7 @@ import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry
 import io.github.resilience4j.ratelimiter.RateLimiterConfig
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry
 import io.github.resilience4j.ratpack.RecoveryFunction
-import io.github.resilience4j.ratpack.ResilienceModule
+import io.github.resilience4j.ratpack.Resilience4jModule
 import io.reactivex.Flowable
 import io.reactivex.Observable
 import io.reactivex.functions.Function
@@ -51,7 +51,7 @@ class CircuitBreakerSpec extends Specification {
         given:
         app = ratpack {
             bindings {
-                module(ResilienceModule)
+                module(Resilience4jModule)
                 bind(Something)
             }
             handlers {
@@ -79,7 +79,7 @@ class CircuitBreakerSpec extends Specification {
                 bindInstance(CircuitBreakerRegistry, registry)
                 bindInstance(RateLimiterRegistry, RateLimiterRegistry.of(RateLimiterConfig.ofDefaults()))
                 bind(Something)
-                module(ResilienceModule)
+                module(Resilience4jModule)
             }
             handlers {
                 get('promise') { Something something ->
@@ -164,7 +164,7 @@ class CircuitBreakerSpec extends Specification {
         actual = get(badPath)
 
         then:
-        actual.statusCode == badStatus
+        actual.statusCode == 500
         !breaker.callPermitted
         breaker.state == io.github.resilience4j.circuitbreaker.CircuitBreaker.State.OPEN
 
@@ -179,12 +179,12 @@ class CircuitBreakerSpec extends Specification {
         breaker.state == io.github.resilience4j.circuitbreaker.CircuitBreaker.State.OPEN
 
         where:
-        path      | badPath      | recoverPath      | breakerName | expectedText      | badStatus
-        'promise' | 'promiseBad' | 'promiseRecover' | 'test'      | 'breaker promise' | 500
-//        'stage'   | 'stageBad'   | 'stageRecover'   | 'test'      | 'breaker stage'   | 404
-        'flow'    | 'flowBad'    | 'flowRecover'    | 'test'      | 'breaker flow'    | 500
-        'observe' | 'observeBad' | 'observeRecover' | 'test'      | 'breaker observe' | 500
-        'normal'  | 'normalBad'  | 'normalRecover'  | 'test'      | 'breaker normal'  | 500
+        path      | badPath      | recoverPath      | breakerName | expectedText
+        'promise' | 'promiseBad' | 'promiseRecover' | 'test'      | 'breaker promise'
+        'stage'   | 'stageBad'   | 'stageRecover'   | 'test'      | 'breaker stage'
+        'flow'    | 'flowBad'    | 'flowRecover'    | 'test'      | 'breaker flow'
+        'observe' | 'observeBad' | 'observeRecover' | 'test'      | 'breaker observe'
+        'normal'  | 'normalBad'  | 'normalRecover'  | 'test'      | 'breaker normal'
     }
 
     def buildConfig() {

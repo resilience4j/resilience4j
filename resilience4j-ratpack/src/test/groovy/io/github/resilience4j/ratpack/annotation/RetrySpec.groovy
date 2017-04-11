@@ -17,7 +17,7 @@
 package io.github.resilience4j.ratpack.annotation
 
 import io.github.resilience4j.ratpack.RecoveryFunction
-import io.github.resilience4j.ratpack.ResilienceModule
+import io.github.resilience4j.ratpack.Resilience4jModule
 import io.github.resilience4j.retry.RetryConfig
 import io.github.resilience4j.retry.RetryRegistry
 import ratpack.exec.Promise
@@ -50,7 +50,7 @@ class RetrySpec extends Specification {
         given:
         app = ratpack {
             bindings {
-                module(ResilienceModule)
+                module(Resilience4jModule)
                 bindInstance(Something, new Something(times))
             }
             handlers {
@@ -78,7 +78,7 @@ class RetrySpec extends Specification {
                 bindInstance(RetryRegistry, registry)
                 bindInstance(AtomicInteger, times)
                 bind(Something)
-                module(ResilienceModule)
+                module(Resilience4jModule)
             }
             handlers {
                 get('promise') { Something something ->
@@ -148,7 +148,7 @@ class RetrySpec extends Specification {
         where:
         path      | badPath      | recoverPath      | retryName | expectedText      | badStatus
         'promise' | 'promiseBad' | 'promiseRecover' | 'test'      | 'retry promise' | 500
-//        'stage'   | 'stageBad'   | 'stageRecover'   | 'test'      | 'retry stage'   | 500
+        'stage'   | 'stageBad'   | 'stageRecover'   | 'test'      | 'retry stage'   | 500
         'normal'  | 'normalBad'  | 'normalRecover'  | 'test'      | 'retry normal'  | 500
     }
 
