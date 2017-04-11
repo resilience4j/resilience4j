@@ -24,7 +24,7 @@ import io.github.resilience4j.ratpack.internal.CircuitBreakerMethodInterceptor;
 import io.github.resilience4j.ratpack.internal.RateLimiterMethodInterceptor;
 import io.github.resilience4j.ratpack.internal.RetryMethodInterceptor;
 
-public class ResilienceModule extends AbstractModule {
+public class Resilience4jModule extends AbstractModule {
 
     @Override
     protected void configure() {

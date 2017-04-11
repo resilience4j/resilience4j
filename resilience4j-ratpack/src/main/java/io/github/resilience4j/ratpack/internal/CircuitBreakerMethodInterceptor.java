@@ -16,6 +16,7 @@
 package io.github.resilience4j.ratpack.internal;
 
 import com.google.inject.Inject;
+import io.github.resilience4j.circuitbreaker.CircuitBreakerOpenException;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.circuitbreaker.operator.CircuitBreakerOperator;
 import io.github.resilience4j.core.StopWatch;
@@ -27,6 +28,10 @@ import io.reactivex.Observable;
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
 import ratpack.exec.Promise;
+
+import java.time.Duration;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
 
 /**
  * A {@link MethodInterceptor} to handle all methods annotated with {@link CircuitBreaker}. It will
@@ -50,60 +55,71 @@ public class CircuitBreakerMethodInterceptor implements MethodInterceptor {
         if (breaker == null) {
             return invocation.proceed();
         }
+        Class<?> returnType = invocation.getMethod().getReturnType();
+        if (Promise.class.isAssignableFrom(returnType)) {
+            Promise<?> result = (Promise<?>) proceed(invocation, breaker, recoveryFunction);
+            if (result != null) {
+                CircuitBreakerTransformer transformer = CircuitBreakerTransformer.of(breaker).recover(recoveryFunction);
+                result = result.transform(transformer);
+            }
+            return result;
+        } else if (Observable.class.isAssignableFrom(returnType)) {
+            Observable<?> result = (Observable<?>) proceed(invocation, breaker, recoveryFunction);
+            if (result != null) {
+                CircuitBreakerOperator operator = CircuitBreakerOperator.of(breaker);
+                result = result.lift(operator).onErrorReturn(t -> recoveryFunction.apply((Throwable) t));
+            }
+            return result;
+        } else if (Flowable.class.isAssignableFrom(returnType)) {
+            Flowable<?> result = (Flowable<?>) proceed(invocation, breaker, recoveryFunction);
+            if (result != null) {
+                CircuitBreakerOperator operator = CircuitBreakerOperator.of(breaker);
+                result = result.lift(operator).onErrorReturn(t -> recoveryFunction.apply((Throwable) t));
+            }
+            return result;
+        } else if (CompletionStage.class.isAssignableFrom(returnType)) {
+            final CompletableFuture promise = new CompletableFuture<>();
+            if (breaker.isCallPermitted()) {
+                CompletionStage<?> result = (CompletionStage<?>) proceed(invocation, breaker, recoveryFunction);
+                StopWatch stopWatch = StopWatch.start(breaker.getName());
+                result.whenCompleteAsync((v, t) -> {
+                    Duration d = stopWatch.stop().getProcessingDuration();
+                    if (t != null) {
+                        breaker.onError(d, t);
+                        try {
+                            promise.complete(recoveryFunction.apply((Throwable) t));
+                        } catch (Exception e) {
+                            promise.completeExceptionally(e);
+                        }
+                    } else {
+                        breaker.onSuccess(d);
+                        promise.complete(v);
+                    }
+                });
+            } else {
+                Throwable t = new CircuitBreakerOpenException(String.format("CircuitBreaker '%s' is open", breaker.getName()));
+                try {
+                    promise.complete(recoveryFunction.apply((Throwable) t));
+                } catch (Throwable t2) {
+                    promise.completeExceptionally(t2);
+                }
+            }
+            return promise;
+        }
+        return proceed(invocation, breaker, recoveryFunction);
+    }
+
+    private Object proceed(MethodInvocation invocation, io.github.resilience4j.circuitbreaker.CircuitBreaker breaker, RecoveryFunction<?> recoveryFunction) throws Throwable {
         Object result;
         StopWatch stopWatchOuter = StopWatch.start(breaker.getName());
         try {
             result = invocation.proceed();
         } catch (Exception e) {
             breaker.onError(stopWatchOuter.getProcessingDuration(), e);
-            return recoveryFunction.apply((Throwable) e);
+            return recoveryFunction.apply(e);
+        } finally {
+            stopWatchOuter.stop();
         }
-        if (result instanceof Promise<?>) {
-            CircuitBreakerTransformer transformer = CircuitBreakerTransformer.of(breaker);
-            if (!annotation.recovery().isAssignableFrom(DefaultRecoveryFunction.class)) {
-                transformer = transformer.recover(recoveryFunction);
-            }
-            result = ((Promise<?>) result).transform(transformer);
-        } else if (result instanceof Observable) {
-            CircuitBreakerOperator operator = CircuitBreakerOperator.of(breaker);
-            result = ((Observable<?>) result).lift(operator).onErrorReturn(t -> recoveryFunction.apply((Throwable) t));
-        } else if (result instanceof Flowable) {
-            CircuitBreakerOperator operator = CircuitBreakerOperator.of(breaker);
-            result = ((Flowable<?>) result).lift(operator).onErrorReturn(t -> recoveryFunction.apply((Throwable) t));
-        }
-        // TODO drmaas - this will be fixed in a future PR. Commenting out for now.
-//        else if (result instanceof CompletionStage) {
-//            CompletionStage stage = (CompletionStage) result;
-//            StopWatch stopWatch;
-//            CompletableFuture promise = new CompletableFuture();
-//            if (breaker.isCallPermitted()) {
-//                stopWatch = StopWatch.start(breaker.getName());
-//                stage.whenCompleteAsync((v, t) -> {
-//                    Duration d = stopWatch.stop().getProcessingDuration();
-//                    if (t != null) {
-//                        breaker.onError(d, (Throwable) t);
-//                        try {
-//                            promise.complete(recoveryFunction.apply((Throwable) t));
-//                        } catch (Exception e) {
-//                            promise.completeExceptionally(e);
-//                        }
-//                    } else {
-//                        breaker.onSuccess(d);
-//                        promise.complete(v);
-//                    }
-//                });
-//            } else {
-//                return CompletableFuture.supplyAsync(() -> {
-//                    Throwable t = new CircuitBreakerOpenException("CircuitBreaker is open: " + breaker.getName());
-//                    try {
-//                        return recoveryFunction.apply((Throwable) t);
-//                    } catch (Throwable t2) {
-//                        return null;
-//                    }
-//                });
-//            }
-//            return promise;
-//        }
         return result;
     }
 

@@ -62,7 +62,7 @@ Guice provides method interception capabilities. Here are provided some annotati
 methods returning types of promise and imperative objects. CircuitBreaker also supports methods returning
 Observable and Flowable.
 
-In the future, all annotations will also support methods returning CompletionStage.
+All annotations will also support methods returning CompletionStage.
 
 === CircuitBreaker
 The demo shows how to use the `CircuitBreaker` annotation to make your Ratpack application more fault tolerant.
@@ -143,7 +143,7 @@ When implemented they should function similarly to the spring boot health checks
 
 == Configuration
 
-You must install the `ResilienceModule` if you want to use AOP so that the method interceptors work.
+You must install the `Resilience4jModule` Guice Module if you want to use AOP so that the method interceptors work.
 You can optionally configure your CircuitBreakers, RateLimiters, and Retries in your Guice Module as well.
 
 Note: If you don't register a `CircuitBreakerRegistry` or `RateLimiterRegistry`, the defaults
@@ -159,7 +159,7 @@ public class MyModule extends AbstractModule {
     protected void configure() {
         CircuitBreakerConfig config = CircuitBreakerConfig.custom();
         bind(CircuitBreakerRegistry.class).toInstance(CircuitBreakerRegistry.of(config);
-        install(ResilienceModule.class);
+        install(Resilience4jModule.class);
     }
 }
 ----

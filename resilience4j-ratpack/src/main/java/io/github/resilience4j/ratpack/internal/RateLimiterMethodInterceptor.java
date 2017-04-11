@@ -28,6 +28,8 @@ import org.aopalliance.intercept.MethodInvocation;
 import ratpack.exec.Promise;
 
 import java.time.Duration;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
 
 /**
  * A {@link MethodInterceptor} to handle all methods annotated with {@link RateLimiter}. It will
@@ -51,60 +53,52 @@ public class RateLimiterMethodInterceptor implements MethodInterceptor {
         if (rateLimiter == null) {
             return invocation.proceed();
         }
+        Class<?> returnType = invocation.getMethod().getReturnType();
+        if (Promise.class.isAssignableFrom(returnType)) {
+            Promise<?> result = (Promise<?>) proceed(invocation, rateLimiter, recoveryFunction);
+            RateLimiterTransformer transformer = RateLimiterTransformer.of(rateLimiter).recover(recoveryFunction);
+            return result.transform(transformer);
+        } else if (CompletionStage.class.isAssignableFrom(returnType)) {
+            RateLimiterConfig rateLimiterConfig = rateLimiter.getRateLimiterConfig();
+            Duration timeoutDuration = rateLimiterConfig.getTimeoutDuration();
+            if (rateLimiter.getPermission(timeoutDuration)) {
+                return proceed(invocation, rateLimiter, recoveryFunction);
+            } else {
+                final CompletableFuture promise = new CompletableFuture<>();
+                Throwable t = new RequestNotPermitted("Request not permitted for limiter: " + rateLimiter.getName());
+                try {
+                    promise.complete(recoveryFunction.apply(t));
+                } catch (Throwable t2) {
+                    promise.completeExceptionally(t2);
+                }
+                return promise;
+            }
+        }
+        return handleProceedWithException(invocation, rateLimiter, recoveryFunction);
+    }
+
+    private Object proceed(MethodInvocation invocation, io.github.resilience4j.ratelimiter.RateLimiter rateLimiter, RecoveryFunction<?> recoveryFunction) throws Throwable {
         Object result;
         try {
             result = invocation.proceed();
         } catch (Exception e) {
-            RateLimiterConfig rateLimiterConfig = rateLimiter.getRateLimiterConfig();
-            Duration timeoutDuration = rateLimiterConfig.getTimeoutDuration();
-            boolean permission = rateLimiter.getPermission(timeoutDuration);
-            if (Thread.interrupted()) {
-                throw new IllegalStateException("Thread was interrupted during permission wait");
-            }
-            if (!permission) {
-                Throwable t = new RequestNotPermitted("Request not permitted for limiter: " + rateLimiter.getName());
-                if (!annotation.recovery().isAssignableFrom(DefaultRecoveryFunction.class)) {
-                    return recoveryFunction.apply(t);
-                } else {
-                    throw t;
-                }
-            } else {
-                throw e;
-            }
-        }
-        if (result instanceof Promise<?>) {
-            RateLimiterTransformer transformer = RateLimiterTransformer.of(rateLimiter);
-            if (!annotation.recovery().isAssignableFrom(DefaultRecoveryFunction.class)) {
-                transformer = transformer.recover(recoveryFunction);
-            }
-            result = ((Promise<?>) result).transform(transformer);
-            // TODO drmaas - this will be fixed in a future PR. Commenting out for now.
-        }
-//        else if (result instanceof CompletionStage) {
-//            CompletionStage stage = (CompletionStage) result;
-//            RateLimiterConfig rateLimiterConfig = rateLimiter.getRateLimiterConfig();
-//            Duration timeoutDuration = rateLimiterConfig.getTimeoutDuration();
-//            boolean permission = rateLimiter.getPermission(timeoutDuration);
-//            if (permission) {
-//                return stage;
-//            } else {
-//                return CompletableFuture.supplyAsync(() -> {
-//                    if (annotation.recovery().isAssignableFrom(DefaultRecoveryFunction.class)) {
-//                        throw new RequestNotPermitted("Request not permitted for limiter: " + rateLimiter.getName());
-//                    } else {
-//                        try {
-//                            return recoveryFunction.apply(new RequestNotPermitted("Request not permitted for limiter: " + rateLimiter.getName()));
-//                        } catch (Exception e) {
-//                            return null;
-//                        }
-//                    }
-//                });
-//            }
-//        }
-        else {
-            io.github.resilience4j.ratelimiter.RateLimiter.waitForPermission(rateLimiter);
+            result = handleProceedWithException(invocation, rateLimiter, recoveryFunction);
         }
         return result;
+    }
+
+    private Object handleProceedWithException(MethodInvocation invocation, io.github.resilience4j.ratelimiter.RateLimiter rateLimiter, RecoveryFunction<?> recoveryFunction) throws Throwable {
+        RateLimiterConfig rateLimiterConfig = rateLimiter.getRateLimiterConfig();
+        Duration timeoutDuration = rateLimiterConfig.getTimeoutDuration();
+        boolean permission = rateLimiter.getPermission(timeoutDuration);
+        if (Thread.interrupted()) {
+            throw new IllegalStateException("Thread was interrupted during permission wait");
+        }
+        if (!permission) {
+            Throwable t = new RequestNotPermitted("Request not permitted for limiter: " + rateLimiter.getName());
+            return recoveryFunction.apply(t);
+        }
+        return invocation.proceed();
     }
 
 }
