@@ -24,6 +24,9 @@ import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
 import ratpack.exec.Promise;
 
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
+
 /**
  * A {@link MethodInterceptor} to handle all methods annotated with {@link Retry}. It will
  * handle methods that return a Promise, CompletionStage, or value. It will execute the retry and
@@ -46,11 +49,49 @@ public class RetryMethodInterceptor implements MethodInterceptor {
         if (retry == null) {
             return invocation.proceed();
         }
-        Object result;
+        Class<?> returnType = invocation.getMethod().getReturnType();
+        if (Promise.class.isAssignableFrom(returnType)) {
+            Promise<?> result = (Promise<?>) proceed(invocation, retry, recoveryFunction);
+            RetryTransformer transformer = RetryTransformer.of(retry).recover(recoveryFunction);
+            return result.transform(transformer);
+        } else if (CompletionStage.class.isAssignableFrom(returnType)) {
+            CompletionStage stage = (CompletionStage) proceed(invocation, retry, recoveryFunction);
+            return executeCompletionStage(invocation, stage, retry, recoveryFunction);
+        }
+        return proceed(invocation, retry, recoveryFunction);
+    }
+
+    @SuppressWarnings("unchecked")
+    private CompletionStage<?> executeCompletionStage(MethodInvocation invocation, CompletionStage<?> stage, io.github.resilience4j.retry.Retry retry, RecoveryFunction<?> recoveryFunction) {
+        final CompletableFuture promise = new CompletableFuture();
+        stage.whenComplete((v, t) -> {
+            if (t != null) {
+                try {
+                    retry.onError((Exception) t);
+                    CompletionStage next = (CompletionStage) invocation.proceed();
+                    CompletableFuture temp = executeCompletionStage(invocation, next, retry, recoveryFunction).toCompletableFuture();
+                    promise.complete(temp.join());
+                } catch (Throwable t2) {
+                    try {
+                        Object result = recoveryFunction.apply(t);
+                        promise.complete(result);
+                    } catch (Throwable t3) {
+                        promise.completeExceptionally(t3);
+                    }
+                }
+            } else {
+                promise.complete(v);
+            }
+        });
+        return promise;
+    }
+
+    private Object proceed(MethodInvocation invocation, io.github.resilience4j.retry.Retry retry, RecoveryFunction<?> recoveryFunction) throws Throwable {
         try {
-            result = invocation.proceed();
+            return invocation.proceed();
         } catch (Exception e) {
             // exception thrown, we know a direct value was attempted to be returned
+            Object result;
             retry.onError(e);
             while (true) {
                 try {
@@ -66,47 +107,6 @@ public class RetryMethodInterceptor implements MethodInterceptor {
                 }
             }
         }
-        if (result instanceof Promise<?>) {
-            RetryTransformer transformer = RetryTransformer.of(retry);
-            if (!annotation.recovery().isAssignableFrom(DefaultRecoveryFunction.class)) {
-                transformer = transformer.recover(recoveryFunction);
-            }
-            result = ((Promise<?>) result).transform(transformer);
-        }
-        // TODO drmaas - this will be fixed in a future PR. Commenting out for now.
-//        else if (result instanceof CompletionStage) {
-//            CompletionStage stage = (CompletionStage) result;
-//            result = executeCompletionStage(invocation, stage, retry, recoveryFunction);
-//        }
-        else {
-            retry.onSuccess();
-        }
-        return result;
     }
-
-//    @SuppressWarnings("unchecked")
-//    private CompletionStage<?> executeCompletionStage(MethodInvocation invocation, CompletionStage<?> stage, io.github.resilience4j.retry.Retry retry, RecoveryFunction<?> recoveryFunction) {
-//        final CompletableFuture promise = new CompletableFuture();
-//        stage.whenComplete((v, t) -> {
-//            if (t != null) {
-//                try {
-//                    retry.onError((Exception) t);
-//                    CompletionStage next = (CompletionStage)invocation.proceed();
-//                    CompletableFuture temp = executeCompletionStage(invocation, next, retry, recoveryFunction).toCompletableFuture();
-//                    promise.complete(temp.join());
-//                } catch (Throwable t2) {
-//                    try {
-//                        Object result = recoveryFunction.apply(t);
-//                        promise.complete(result);
-//                    } catch (Throwable t3) {
-//                        promise.completeExceptionally(t3);
-//                    }
-//                }
-//            } else {
-//                promise.complete(v);
-//            }
-//        });
-//        return promise;
-//    }
 
 }
