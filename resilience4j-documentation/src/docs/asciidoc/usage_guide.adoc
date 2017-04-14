@@ -193,6 +193,17 @@ Try.run(restrictedCall)
     .onFailure((RequestNotPermitted throwable) -> LOG.info("Wait before call it again :)"));
 ----
 
+==== RateLimiter and RxJava
+
+The following example shows how to decorate an Observable by using the custom RxJava operator.
+
+[source,java]
+----
+RateLimiter rateLimiter = RateLimiter.ofDefaults("backendName");
+Observable.fromCallable(backendService::doSomething)
+    .lift(RateLimiterOperator.of(rateLimiter))
+----
+
 == Consume emitted RateLimiterEvents
 
 The RateLimiter emits a stream of RateLimiterEvents to any Observer/Consumer who subscribes.
@@ -320,6 +331,17 @@ Try<String> result = Try.of(retryableSupplier).recover((throwable) -> "Hello wor
 BDDMockito.then(helloWorldService).should(times(3)).sayHelloWorld();
 // and the exception should be handled by the recovery function
 assertThat(result.get()).isEqualTo("Hello world from recovery function");
+----
+
+==== Retry and RxJava
+
+The following example shows how to decorate an Observable by using the custom RxJava transformer.
+
+[source,java]
+----
+Retry retry = Retry.ofDefaults("backendName");
+Observable.fromCallable(backendService::doSomething)
+    .compose(RetryTransformer.of(retry))
 ----
 
 ==== Consume emitted RetryEvents
