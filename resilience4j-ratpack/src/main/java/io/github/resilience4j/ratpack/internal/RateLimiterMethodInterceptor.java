@@ -20,9 +20,13 @@ import com.google.inject.Inject;
 import io.github.resilience4j.ratelimiter.RateLimiterConfig;
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
 import io.github.resilience4j.ratelimiter.RequestNotPermitted;
+import io.github.resilience4j.ratelimiter.operator.RateLimiterOperator;
 import io.github.resilience4j.ratpack.RateLimiterTransformer;
 import io.github.resilience4j.ratpack.RecoveryFunction;
 import io.github.resilience4j.ratpack.annotation.RateLimiter;
+import io.reactivex.Flowable;
+import io.reactivex.Observable;
+import io.reactivex.Single;
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
 import ratpack.exec.Promise;
@@ -56,8 +60,32 @@ public class RateLimiterMethodInterceptor implements MethodInterceptor {
         Class<?> returnType = invocation.getMethod().getReturnType();
         if (Promise.class.isAssignableFrom(returnType)) {
             Promise<?> result = (Promise<?>) proceed(invocation, rateLimiter, recoveryFunction);
-            RateLimiterTransformer transformer = RateLimiterTransformer.of(rateLimiter).recover(recoveryFunction);
-            return result.transform(transformer);
+            if (result != null) {
+                RateLimiterTransformer transformer = RateLimiterTransformer.of(rateLimiter).recover(recoveryFunction);
+                result = result.transform(transformer);
+            }
+            return result;
+        } else if (Observable.class.isAssignableFrom(returnType)) {
+            Observable<?> result = (Observable<?>) proceed(invocation, rateLimiter, recoveryFunction);
+            if (result != null) {
+                RateLimiterOperator operator = RateLimiterOperator.of(rateLimiter);
+                result = result.lift(operator).onErrorReturn(t -> recoveryFunction.apply((Throwable) t));
+            }
+            return result;
+        } else if (Flowable.class.isAssignableFrom(returnType)) {
+            Flowable<?> result = (Flowable<?>) proceed(invocation, rateLimiter, recoveryFunction);
+            if (result != null) {
+                RateLimiterOperator operator = RateLimiterOperator.of(rateLimiter);
+                result = result.lift(operator).onErrorReturn(t -> recoveryFunction.apply((Throwable) t));
+            }
+            return result;
+        } else if (Single.class.isAssignableFrom(returnType)) {
+            Single<?> result = (Single<?>) proceed(invocation, rateLimiter, recoveryFunction);
+            if (result != null) {
+                RateLimiterOperator operator = RateLimiterOperator.of(rateLimiter);
+                result = result.lift(operator).onErrorReturn(t -> recoveryFunction.apply((Throwable) t));
+            }
+            return result;
         } else if (CompletionStage.class.isAssignableFrom(returnType)) {
             RateLimiterConfig rateLimiterConfig = rateLimiter.getRateLimiterConfig();
             Duration timeoutDuration = rateLimiterConfig.getTimeoutDuration();

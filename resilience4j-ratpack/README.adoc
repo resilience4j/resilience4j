@@ -59,10 +59,14 @@ public Promise<String> methodWhichReturnsAPromise() {
 == Guice AOP
 
 Guice provides method interception capabilities. Here are provided some annotations which support
-methods returning types of promise and imperative objects. CircuitBreaker also supports methods returning
-Observable and Flowable.
+methods returning types:
 
-All annotations will also support methods returning CompletionStage.
+* Promise
+* CompletionStage
+* object values
+* Observable
+* Flowable
+* Single
 
 === CircuitBreaker
 The demo shows how to use the `CircuitBreaker` annotation to make your Ratpack application more fault tolerant.
