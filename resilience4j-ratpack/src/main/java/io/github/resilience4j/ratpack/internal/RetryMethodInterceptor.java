@@ -20,6 +20,9 @@ import io.github.resilience4j.ratpack.RecoveryFunction;
 import io.github.resilience4j.ratpack.RetryTransformer;
 import io.github.resilience4j.ratpack.annotation.Retry;
 import io.github.resilience4j.retry.RetryRegistry;
+import io.reactivex.Flowable;
+import io.reactivex.Observable;
+import io.reactivex.Single;
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
 import ratpack.exec.Promise;
@@ -52,9 +55,34 @@ public class RetryMethodInterceptor implements MethodInterceptor {
         Class<?> returnType = invocation.getMethod().getReturnType();
         if (Promise.class.isAssignableFrom(returnType)) {
             Promise<?> result = (Promise<?>) proceed(invocation, retry, recoveryFunction);
-            RetryTransformer transformer = RetryTransformer.of(retry).recover(recoveryFunction);
-            return result.transform(transformer);
-        } else if (CompletionStage.class.isAssignableFrom(returnType)) {
+            if (result != null) {
+                RetryTransformer transformer = RetryTransformer.of(retry).recover(recoveryFunction);
+                result = result.transform(transformer);
+            }
+            return result;
+        } else if (Observable.class.isAssignableFrom(returnType)) {
+            Observable<?> result = (Observable<?>) proceed(invocation, retry, recoveryFunction);
+            if (result != null) {
+                io.github.resilience4j.retry.transformer.RetryTransformer transformer = io.github.resilience4j.retry.transformer.RetryTransformer.of(retry);
+                result = result.compose(transformer).onErrorReturn(t -> recoveryFunction.apply((Throwable) t));
+            }
+            return result;
+        } else if (Flowable.class.isAssignableFrom(returnType)) {
+            Flowable<?> result = (Flowable<?>) proceed(invocation, retry, recoveryFunction);
+            if (result != null) {
+                io.github.resilience4j.retry.transformer.RetryTransformer transformer = io.github.resilience4j.retry.transformer.RetryTransformer.of(retry);
+                result = result.compose(transformer).onErrorReturn(t -> recoveryFunction.apply((Throwable) t));
+            }
+            return result;
+        } else if (Single.class.isAssignableFrom(returnType)) {
+            Single<?> result = (Single<?>) proceed(invocation, retry, recoveryFunction);
+            if (result != null) {
+                io.github.resilience4j.retry.transformer.RetryTransformer transformer = io.github.resilience4j.retry.transformer.RetryTransformer.of(retry);
+                result = result.compose(transformer).onErrorReturn(t -> recoveryFunction.apply((Throwable) t));
+            }
+            return result;
+        }
+        else if (CompletionStage.class.isAssignableFrom(returnType)) {
             CompletionStage stage = (CompletionStage) proceed(invocation, retry, recoveryFunction);
             return executeCompletionStage(invocation, stage, retry, recoveryFunction);
         }
