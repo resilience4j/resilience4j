@@ -25,6 +25,7 @@ import io.github.resilience4j.ratpack.RecoveryFunction;
 import io.github.resilience4j.ratpack.annotation.CircuitBreaker;
 import io.reactivex.Flowable;
 import io.reactivex.Observable;
+import io.reactivex.Single;
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
 import ratpack.exec.Promise;
@@ -77,25 +78,34 @@ public class CircuitBreakerMethodInterceptor implements MethodInterceptor {
                 result = result.lift(operator).onErrorReturn(t -> recoveryFunction.apply((Throwable) t));
             }
             return result;
+        } else if (Single.class.isAssignableFrom(returnType)) {
+            Single<?> result = (Single<?>) proceed(invocation, breaker, recoveryFunction);
+            if (result != null) {
+                CircuitBreakerOperator operator = CircuitBreakerOperator.of(breaker);
+                result = result.lift(operator).onErrorReturn(t -> recoveryFunction.apply((Throwable) t));
+            }
+            return result;
         } else if (CompletionStage.class.isAssignableFrom(returnType)) {
             final CompletableFuture promise = new CompletableFuture<>();
             if (breaker.isCallPermitted()) {
                 CompletionStage<?> result = (CompletionStage<?>) proceed(invocation, breaker, recoveryFunction);
-                StopWatch stopWatch = StopWatch.start(breaker.getName());
-                result.whenCompleteAsync((v, t) -> {
-                    Duration d = stopWatch.stop().getProcessingDuration();
-                    if (t != null) {
-                        breaker.onError(d, t);
-                        try {
-                            promise.complete(recoveryFunction.apply((Throwable) t));
-                        } catch (Exception e) {
-                            promise.completeExceptionally(e);
+                if (result != null) {
+                    StopWatch stopWatch = StopWatch.start(breaker.getName());
+                    result.whenCompleteAsync((v, t) -> {
+                        Duration d = stopWatch.stop().getProcessingDuration();
+                        if (t != null) {
+                            breaker.onError(d, t);
+                            try {
+                                promise.complete(recoveryFunction.apply((Throwable) t));
+                            } catch (Exception e) {
+                                promise.completeExceptionally(e);
+                            }
+                        } else {
+                            breaker.onSuccess(d);
+                            promise.complete(v);
                         }
-                    } else {
-                        breaker.onSuccess(d);
-                        promise.complete(v);
-                    }
-                });
+                    });
+                }
             } else {
                 Throwable t = new CircuitBreakerOpenException(String.format("CircuitBreaker '%s' is open", breaker.getName()));
                 try {
