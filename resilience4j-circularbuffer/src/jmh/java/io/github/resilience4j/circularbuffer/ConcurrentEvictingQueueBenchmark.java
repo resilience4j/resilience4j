@@ -39,58 +39,44 @@ import org.openjdk.jmh.runner.options.OptionsBuilder;
 
 import java.util.concurrent.TimeUnit;
 
-import javaslang.collection.List;
-import javaslang.control.Option;
-
 /**
  * @author bstorozhuk
  */
 @State(Scope.Benchmark)
 @OutputTimeUnit(TimeUnit.NANOSECONDS)
 @BenchmarkMode(Mode.AverageTime)
-public class CircularBufferBenchmark {
+public class ConcurrentEvictingQueueBenchmark {
     public static final int FORK_COUNT = 2;
     private static final int WARMUP_COUNT = 10;
     private static final int ITERATION_COUNT = 10;
     private static final int CAPACITY = 10;
-    private CircularFifoBuffer<Object> circularFifoBuffer;
+    private ConcurrentEvictingQueue<Object> queue;
     private Object event;
 
     @Setup
     public void setUp() {
         event = new Object();
-        circularFifoBuffer = new ConcurrentCircularFifoBuffer<>(CAPACITY);
+        queue = new ConcurrentEvictingQueue<>(CAPACITY);
     }
 
     @Benchmark
     @Warmup(iterations = WARMUP_COUNT)
     @Fork(value = FORK_COUNT)
     @Measurement(iterations = ITERATION_COUNT)
-    @Group("circularBuffer")
-    @GroupThreads(1)
-    public void circularBufferAddEvent() {
-        circularFifoBuffer.add(event);
+    @Group("concurrentEvictingQueue")
+    @GroupThreads(2)
+    public void concurrentEvictingQueueAdd() {
+        queue.add(event);
     }
 
     @Benchmark
     @Warmup(iterations = WARMUP_COUNT)
     @Fork(value = FORK_COUNT)
     @Measurement(iterations = ITERATION_COUNT)
-    @Group("circularBuffer")
+    @Group("concurrentEvictingQueue")
     @GroupThreads(1)
-    public void circularBufferToList(Blackhole bh) {
-        List<Object> events = circularFifoBuffer.toList();
-        bh.consume(events);
-    }
-
-    @Benchmark
-    @Warmup(iterations = WARMUP_COUNT)
-    @Fork(value = FORK_COUNT)
-    @Measurement(iterations = ITERATION_COUNT)
-    @Group("circularBuffer")
-    @GroupThreads(1)
-    public void circularBufferSize(Blackhole bh) {
-        int size = circularFifoBuffer.size();
+    public void concurrentEvictingQueueSize(Blackhole bh) {
+        int size = queue.size();
         bh.consume(size);
     }
 
@@ -98,16 +84,28 @@ public class CircularBufferBenchmark {
     @Warmup(iterations = WARMUP_COUNT)
     @Fork(value = FORK_COUNT)
     @Measurement(iterations = ITERATION_COUNT)
-    @Group("circularBuffer")
+    @Group("concurrentEvictingQueue")
     @GroupThreads(1)
-    public void circularBufferTakeEvent(Blackhole bh) {
-        Option<Object> event = circularFifoBuffer.take();
+    public void concurrentEvictingQueuePoll(Blackhole bh) {
+        Object event = queue.poll();
         bh.consume(event);
     }
 
+    @Benchmark
+    @Warmup(iterations = WARMUP_COUNT)
+    @Fork(value = FORK_COUNT)
+    @Measurement(iterations = ITERATION_COUNT)
+    @Group("concurrentEvictingQueue")
+    @GroupThreads(1)
+    public void concurrentEvictingQueuePeek(Blackhole bh) {
+        Object event = queue.peek();
+        bh.consume(event);
+    }
+
+
     public static void main(String[] args) throws RunnerException {
         Options options = new OptionsBuilder()
-            .include(".*" + CircularBufferBenchmark.class.getSimpleName() + ".*")
+            .include(".*" + ConcurrentEvictingQueueBenchmark.class.getSimpleName() + ".*")
             .build();
         new Runner(options).run();
     }

@@ -185,7 +185,8 @@ public class SemaphoreBasedRateLimiterImplTest {
 
         awaitImpatiently()
             .atMost(2, TimeUnit.SECONDS).until(thread::getState, equalTo(RUNNABLE));
-        then(thread.isInterrupted()).isTrue();
+        awaitImpatiently()
+            .atMost(100, TimeUnit.MILLISECONDS).until(thread::isInterrupted);
 
         ArrayList<String> eventStrings = events.get();
         then(eventStrings.get(0)).contains("type=SUCCESSFUL_ACQUIRE");
