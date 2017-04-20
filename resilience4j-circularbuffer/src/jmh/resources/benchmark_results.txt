@@ -1,8 +1,13 @@
-# Run complete. Total time: 00:00:41
-
 Benchmark                                                       Mode  Cnt    Score    Error  Units
 CircularBufferBenchmark.circularBuffer                          avgt   20  135.347 ± 20.444  ns/op
 CircularBufferBenchmark.circularBuffer:circularBufferAddEvent   avgt   20  267.520 ± 55.244  ns/op
 CircularBufferBenchmark.circularBuffer:circularBufferSize       avgt   20    9.401 ±  4.046  ns/op
 CircularBufferBenchmark.circularBuffer:circularBufferTakeEvent  avgt   20   75.721 ± 29.743  ns/op
 CircularBufferBenchmark.circularBuffer:circularBufferToList     avgt   20  188.747 ± 72.451  ns/op
+
+Benchmark                                                                             Mode  Cnt    Score    Error  Units
+ConcurrentEvictingQueueBenchmark.concurrentEvictingQueue                              avgt   20  125.306 ±  6.340  ns/op
+ConcurrentEvictingQueueBenchmark.concurrentEvictingQueue:concurrentEvictingQueueAdd   avgt   20  183.945 ± 14.443  ns/op
+ConcurrentEvictingQueueBenchmark.concurrentEvictingQueue:concurrentEvictingQueuePeek  avgt   20  136.479 ± 26.481  ns/op
+ConcurrentEvictingQueueBenchmark.concurrentEvictingQueue:concurrentEvictingQueuePoll  avgt   20  116.871 ± 10.272  ns/op
+ConcurrentEvictingQueueBenchmark.concurrentEvictingQueue:concurrentEvictingQueueSize  avgt   20    5.291 ±  0.736  ns/op

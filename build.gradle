@@ -68,8 +68,8 @@ subprojects {
         testCompile ( libraries.powermock_module_junit4)
         testCompile ( libraries.awaitility)
 
-        jmh ( libraries.logback)
-        jmh "org.openjdk.jmh:jmh-generator-annprocess:1.12"
+        jmh "org.openjdk.jmh:jmh-core:1.18"
+        jmh "org.openjdk.jmh:jmh-generator-annprocess:1.18"
     }
 
     tasks.withType(JavaCompile) {
