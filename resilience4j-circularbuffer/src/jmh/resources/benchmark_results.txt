@@ -1,0 +1,8 @@
+# Run complete. Total time: 00:00:41
+
+Benchmark                                                       Mode  Cnt    Score    Error  Units
+CircularBufferBenchmark.circularBuffer                          avgt   20  135.347 ± 20.444  ns/op
+CircularBufferBenchmark.circularBuffer:circularBufferAddEvent   avgt   20  267.520 ± 55.244  ns/op
+CircularBufferBenchmark.circularBuffer:circularBufferSize       avgt   20    9.401 ±  4.046  ns/op
+CircularBufferBenchmark.circularBuffer:circularBufferTakeEvent  avgt   20   75.721 ± 29.743  ns/op
+CircularBufferBenchmark.circularBuffer:circularBufferToList     avgt   20  188.747 ± 72.451  ns/op
