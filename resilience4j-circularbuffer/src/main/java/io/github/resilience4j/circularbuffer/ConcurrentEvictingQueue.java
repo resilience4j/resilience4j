@@ -27,6 +27,7 @@ import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.concurrent.locks.StampedLock;
 import java.util.function.Supplier;
+import java.util.concurrent.locks.LockSupport;
 
 /**
  *
@@ -64,6 +65,11 @@ public class ConcurrentEvictingQueue<E> extends AbstractQueue<E> {
     private volatile int size;
     private volatile int modificationsCount;
     private final StampedLock stampedLock;
+
+    private final ReentrantLock lock = new ReentrantLock();
+    private final Condition notFull = lock.newCondition();
+    private final Condition notEmpty = lock.newCondition();
+
     private Object[] ringBuffer;
     private int headIndex;
     private int tailIndex;
@@ -122,17 +128,16 @@ public class ConcurrentEvictingQueue<E> extends AbstractQueue<E> {
                 ringBuffer[tailIndex] = e;
                 modificationsCount++;
                 size++;
-            } else if (size == maxSize) {
-                headIndex = nextIndex(headIndex);
+            }
+            else {
                 tailIndex = nextIndex(tailIndex);
-                ringBuffer[tailIndex] = e;
-                modificationsCount++;
-            } else {
-                tailIndex = nextIndex(tailIndex);
+                while(headIndex == tailIndex) 
+                    notFull.await();
                 ringBuffer[tailIndex] = e;
                 size++;
                 modificationsCount++;
             }
+            notEmpty.signal();
             return true;
         };
         return writeConcurrently(offerElement);
@@ -146,7 +151,9 @@ public class ConcurrentEvictingQueue<E> extends AbstractQueue<E> {
     public E poll() {
         Supplier<E> pollElement = () -> {
             if (size == 0) {
-                return null;
+                //return null;
+                while (count == 0)
+                    notEmpty.await();
             }
             E result = (E) ringBuffer[headIndex];
             ringBuffer[headIndex] = null;
@@ -155,6 +162,7 @@ public class ConcurrentEvictingQueue<E> extends AbstractQueue<E> {
             }
             size--;
             modificationsCount++;
+            notFull.signal(); 
             return result;
         };
         return writeConcurrently(pollElement);
@@ -184,7 +192,7 @@ public class ConcurrentEvictingQueue<E> extends AbstractQueue<E> {
             if (size == 0) {
                 return null;
             }
-            ringBuffer = new Object[maxSize];
+            ringBuffer = new Object[maxSize]; // ?为啥要重新new
             size = 0;
             headIndex = 0;
             tailIndex = 0;
@@ -308,7 +316,7 @@ public class ConcurrentEvictingQueue<E> extends AbstractQueue<E> {
 
     private <T> T readConcurrently(final Supplier<T> readSupplier) {
         T result;
-        long stamp;
+        /*long stamp;
         for (int i = 0; i < RETRIES; i++) {
             stamp = stampedLock.tryOptimisticRead();
             result = readSupplier.get();
@@ -316,33 +324,40 @@ public class ConcurrentEvictingQueue<E> extends AbstractQueue<E> {
                 return result;
             }
         }
-        stamp = stampedLock.readLock();
+        */
+        //stamp = stampedLock.readLock();
+        lock.lock();
         try {
             result = readSupplier.get();
         } finally {
-            stampedLock.unlockRead(stamp);
+            //stampedLock.unlockRead(stamp);
+            lock.unlock();
         }
         return result;
     }
 
     private <T> T readConcurrentlyWithoutSpin(final Supplier<T> readSupplier) {
         T result;
-        long stamp = stampedLock.readLock();
+        //long stamp = stampedLock.readLock();
+        lock.lock();
         try {
             result = readSupplier.get();
         } finally {
-            stampedLock.unlockRead(stamp);
+            //stampedLock.unlockRead(stamp);
+            lock.unlock();
         }
         return result;
     }
 
     private <T> T writeConcurrently(final Supplier<T> writeSupplier) {
         T result;
-        long stamp = stampedLock.writeLock();
+        //long stamp = stampedLock.writeLock();
+        lock.lock();
         try {
             result = writeSupplier.get();
         } finally {
-            stampedLock.unlockWrite(stamp);
+            //stampedLock.unlockWrite(stamp);
+            lock.unlock();
         }
         return result;
     }
