@@ -35,7 +35,7 @@ import java.util.function.Supplier;
  * the oldest element (the head) will be evicted, and then the new element added at the tail.
  *
  * In order to achieve thread-safety it utilizes capability-based locking features of {@link StampedLock}.
- * All spins optimistic/pessimistic reads and writes are encapsulated in flowing methods:
+ * All spins optimistic/pessimistic reads and writes are encapsulated in following methods:
  *
  * <ul>
  * <li> {@link ConcurrentEvictingQueue#readConcurrently(Supplier)}</li>
