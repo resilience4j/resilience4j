@@ -14,6 +14,50 @@ dependencies {
 }
 ```
 
+== Handlers
+
+You can rate limit an endpoint by defining a `RateLimiterHandler` for the endpoint.
+
+This will only rate limit the `/` endpoint.
+[source,groovy]
+----
+ratpack {
+            bindings {
+                bindInstance(RateLimiterRegistry, RateLimiterRegistry.ofDefaults())
+                module(Resilience4jModule)
+            }
+            handlers {
+                get(new RateLimiterHandler(registry, 'test'))
+                get {
+                    render 'success'
+                }
+                get('a') {
+                    render 'success'
+                }
+            }
+        }
+----
+
+This will rate limit all endpoints against the same `RateLimiter`.
+[source,groovy]
+----
+ratpack {
+            bindings {
+                bindInstance(RateLimiterRegistry, RateLimiterRegistry.ofDefaults())
+                module(Resilience4jModule)
+            }
+            handlers {
+                all(new RateLimiterHandler(registry, 'test'))
+                get {
+                    render 'success'
+                }
+                get('a') {
+                    render 'success'
+                }
+            }
+        }
+----
+
 == Promises
 
 Ratpack promises provide the means by which an application can become fully non-blocking and asynchronous.
