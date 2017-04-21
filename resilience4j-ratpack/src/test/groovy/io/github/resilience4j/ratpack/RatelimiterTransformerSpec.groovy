@@ -19,12 +19,14 @@ import io.github.resilience4j.ratelimiter.RateLimiter
 import io.github.resilience4j.ratelimiter.RateLimiterConfig
 import ratpack.exec.Blocking
 import ratpack.test.exec.ExecHarness
+import spock.lang.Ignore
 import spock.lang.Specification
 
 import java.time.Duration
 
 class RatelimiterTransformerSpec extends Specification {
 
+  @Ignore
   def "can ratelimit promise then throw exception when limit is exceeded"() {
     given:
     RateLimiter rateLimiter = buildRatelimiter()
@@ -46,6 +48,7 @@ class RatelimiterTransformerSpec extends Specification {
     values == expected
   }
 
+  @Ignore
   def "can ratelimit promise then throw exception when limit is exceeded then call recover"() {
     given:
     String failure = "failure"
