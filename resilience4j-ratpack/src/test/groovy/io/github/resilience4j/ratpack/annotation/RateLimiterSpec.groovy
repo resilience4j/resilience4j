@@ -268,10 +268,10 @@ class RateLimiterSpec extends Specification {
         'normal'     | 'test'
     }
 
-    // 10 events / 10 s
+    // 10 events / 1 minute
     def buildConfig() {
         RateLimiterConfig.custom()
-                .limitRefreshPeriod(Duration.ofSeconds(10))
+                .limitRefreshPeriod(Duration.ofSeconds(60))
                 .limitForPeriod(10)
                 .timeoutDuration(Duration.ofMillis(100))
                 .build()

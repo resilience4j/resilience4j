@@ -8,3 +8,7 @@ dependencies {
     testCompile ( libraries.ratpack_test )
     testCompile ( libraries.spock )
 }
+
+test {
+    maxParallelForks = 16
+}
