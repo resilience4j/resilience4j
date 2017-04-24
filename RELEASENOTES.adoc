@@ -93,7 +93,7 @@
 
 == Version 0.9.0
 * PR #59: Project has been renamed to resilience4j and has been modularized.
-* PR #59: Renamed packages from io.github.resilience4j to io.github.resilience4j.
+* PR #59: Renamed packages from io.github.robwin to io.github.resilience4j.
 * PR #76: Module for integration with Retrofit.
 * PR #82: Module for integration with Ratpack.
 * PR #80: Resilience4j metrics reporting with Dropwizard metrics.
