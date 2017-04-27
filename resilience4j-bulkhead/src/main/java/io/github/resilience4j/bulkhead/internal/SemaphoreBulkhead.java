@@ -97,7 +97,7 @@ public class SemaphoreBulkhead implements Bulkhead {
 
     @Override
     public String toString() {
-        return String.format("Bulkhesad '%s'", this.name);
+        return String.format("Bulkhead '%s'", this.name);
     }
 
     private void publishBulkheadEvent(Supplier<BulkheadEvent> eventSupplier) {

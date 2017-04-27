@@ -69,4 +69,15 @@ public class SemaphoreBulkheadTest {
                 .assertValues(CALL_PERMITTED, CALL_PERMITTED, CALL_REJECTED, CALL_PERMITTED);
     }
 
+    @Test
+    public void testToString() {
+
+        // when
+        String result = bulkhead.toString();
+
+        // then
+        assertThat(result).isEqualTo("Bulkhead 'test'");
+
+    }
+
 }
