@@ -67,7 +67,7 @@ public class BulkheadOperator<T> implements ObservableOperator<T, T>, FlowableOp
         return new BulkheadSingleObserver(childObserver);
     }
 
-    private final class BulkheadSubscriber implements Subscriber<T>, Subscription {
+    final class BulkheadSubscriber implements Subscriber<T>, Subscription {
 
         private final Subscriber<? super T> childSubscriber;
         private Subscription subscription;
@@ -136,7 +136,7 @@ public class BulkheadOperator<T> implements ObservableOperator<T, T>, FlowableOp
         }
     }
 
-    private final class BulkheadObserver implements Observer<T>, Disposable {
+    final class BulkheadObserver implements Observer<T>, Disposable {
 
         private final Observer<? super T> childObserver;
         private Disposable disposable;
@@ -204,7 +204,7 @@ public class BulkheadOperator<T> implements ObservableOperator<T, T>, FlowableOp
         }
     }
 
-    private class BulkheadSingleObserver implements SingleObserver<T>, Disposable {
+    class BulkheadSingleObserver implements SingleObserver<T>, Disposable {
 
         private final SingleObserver<? super T> childObserver;
         private Disposable disposable;
