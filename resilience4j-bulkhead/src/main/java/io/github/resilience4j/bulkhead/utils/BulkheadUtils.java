@@ -25,7 +25,7 @@ public final class BulkheadUtils {
 
     public static void isCallPermitted(Bulkhead bulkhead) {
         if(!bulkhead.isCallPermitted()) {
-            throw new BulkheadFullException(String.format("Bulkhead '%s' is open", bulkhead.getName()));
+            throw new BulkheadFullException(String.format("Bulkhead '%s' is full", bulkhead.getName()));
         }
     }
 }
