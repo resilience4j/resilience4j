@@ -37,7 +37,8 @@ public interface BulkheadRegistry {
     /**
      * Returns a managed {@link Bulkhead} or creates a new one with the depth specified.
      *
-     * @param name the name of the Bulkhead
+     * @param name  the name of the Bulkhead
+     * @param depth desired depth (amount of allowed parallel executions) of this bulkhead
      * @return The {@link Bulkhead}
      */
     Bulkhead bulkhead(String name, int depth);
