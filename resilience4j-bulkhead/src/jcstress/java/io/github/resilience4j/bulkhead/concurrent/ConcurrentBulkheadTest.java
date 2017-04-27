@@ -20,16 +20,16 @@ package io.github.resilience4j.bulkhead.concurrent;
 
 import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.bulkhead.event.BulkheadEvent;
+import io.github.resilience4j.bulkhead.event.BulkheadEvent.Type;
 import io.reactivex.subscribers.TestSubscriber;
 import org.openjdk.jcstress.annotations.*;
 import org.openjdk.jcstress.infra.results.StringResult1;
-import io.github.resilience4j.bulkhead.event.BulkheadEvent.Type;
+
 import java.text.MessageFormat;
-import java.time.Duration;
 
 
 @JCStressTest
-@org.openjdk.jcstress.annotations.State
+@State
 @Outcome.Outcomes(
     {
         @Outcome(

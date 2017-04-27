@@ -144,7 +144,7 @@ public class BulkheadTest {
         // Then
         assertThat(callable.call()).isEqualTo("Hello world");
         assertThat(bulkhead.getRemainingDepth()).isEqualTo(1);
-        BDDMockito.then(helloWorldService).should(Mockito.times(1)).returnHelloWorldWithException();
+        BDDMockito.then(helloWorldService).should(times(1)).returnHelloWorldWithException();
     }
 
     @Test
@@ -160,7 +160,7 @@ public class BulkheadTest {
         // Then
         assertThat(result).isEqualTo("Hello world");
         assertThat(bulkhead.getRemainingDepth()).isEqualTo(1);
-        BDDMockito.then(helloWorldService).should(Mockito.times(1)).returnHelloWorldWithException();
+        BDDMockito.then(helloWorldService).should(times(1)).returnHelloWorldWithException();
     }
 
     @Test
@@ -178,7 +178,7 @@ public class BulkheadTest {
         assertThat(result.isFailure()).isTrue();
         assertThat(result.failed().get()).isInstanceOf(RuntimeException.class);
         assertThat(bulkhead.getRemainingDepth()).isEqualTo(1);
-        BDDMockito.then(helloWorldService).should(Mockito.times(1)).returnHelloWorldWithException();
+        BDDMockito.then(helloWorldService).should(times(1)).returnHelloWorldWithException();
     }
 
     @Test
@@ -193,7 +193,7 @@ public class BulkheadTest {
 
         // Then
         assertThat(bulkhead.getRemainingDepth()).isEqualTo(1);
-        BDDMockito.then(helloWorldService).should(Mockito.times(1)).sayHelloWorldWithException();
+        BDDMockito.then(helloWorldService).should(times(1)).sayHelloWorldWithException();
     }
 
     @Test
@@ -224,7 +224,7 @@ public class BulkheadTest {
 
         //Then
         assertThat(bulkhead.getRemainingDepth()).isEqualTo(1);
-        BDDMockito.then(helloWorldService).should(Mockito.times(1)).sayHelloWorld();
+        BDDMockito.then(helloWorldService).should(times(1)).sayHelloWorld();
     }
 
     @Test
@@ -238,7 +238,7 @@ public class BulkheadTest {
 
         // Then
         assertThat(bulkhead.getRemainingDepth()).isEqualTo(1);
-        BDDMockito.then(helloWorldService).should(Mockito.times(1)).sayHelloWorld();
+        BDDMockito.then(helloWorldService).should(times(1)).sayHelloWorld();
     }
 
     @Test
@@ -269,7 +269,7 @@ public class BulkheadTest {
 
         // Then
         assertThat(bulkhead.getRemainingDepth()).isEqualTo(1);
-        BDDMockito.then(helloWorldService).should(Mockito.times(1)).sayHelloWorldWithName("Tom");
+        BDDMockito.then(helloWorldService).should(times(1)).sayHelloWorldWithName("Tom");
     }
 
     @Test
@@ -300,7 +300,7 @@ public class BulkheadTest {
 
         // Then
         assertThat(bulkhead.getRemainingDepth()).isEqualTo(1);
-        BDDMockito.then(helloWorldService).should(Mockito.times(1)).sayHelloWorldWithNameWithException("Tom");
+        BDDMockito.then(helloWorldService).should(times(1)).sayHelloWorldWithNameWithException("Tom");
     }
 
     @Test
@@ -334,7 +334,7 @@ public class BulkheadTest {
         // Then
         assertThat(function.apply("Tom")).isEqualTo("Hello world Tom");
         assertThat(bulkhead.getRemainingDepth()).isEqualTo(1);
-        BDDMockito.then(helloWorldService).should(Mockito.times(1)).returnHelloWorldWithName("Tom");
+        BDDMockito.then(helloWorldService).should(times(1)).returnHelloWorldWithName("Tom");
     }
 
     @Test
@@ -368,7 +368,7 @@ public class BulkheadTest {
         // Then
         assertThat(result).isEqualTo("Hello world Tom");
         assertThat(bulkhead.getRemainingDepth()).isEqualTo(1);
-        BDDMockito.then(helloWorldService).should(Mockito.times(1)).returnHelloWorldWithNameWithException("Tom");
+        BDDMockito.then(helloWorldService).should(times(1)).returnHelloWorldWithNameWithException("Tom");
     }
 
     @Test
@@ -463,7 +463,7 @@ public class BulkheadTest {
         // Then
         assertThat(decoratedCompletionStage.toCompletableFuture().get()).isEqualTo("Hello world");
         assertThat(bulkhead.getRemainingDepth()).isEqualTo(1);
-        BDDMockito.then(helloWorldService).should(Mockito.times(1)).returnHelloWorld();
+        BDDMockito.then(helloWorldService).should(times(1)).returnHelloWorld();
     }
 
     @Test
@@ -481,7 +481,7 @@ public class BulkheadTest {
         // Then
         assertThat(decoratedCompletionStage.toCompletableFuture().get()).isEqualTo("Hello world");
         assertThat(bulkhead.getRemainingDepth()).isEqualTo(1);
-        BDDMockito.then(helloWorldService).should(Mockito.times(1)).returnHelloWorld();
+        BDDMockito.then(helloWorldService).should(times(1)).returnHelloWorld();
     }
 
     @Test
@@ -502,7 +502,7 @@ public class BulkheadTest {
         Try<CompletionStage<String>> result = Try.of(decoratedCompletionStageSupplier::get);
 
         // Then the helloWorldService should be invoked 0 times
-        BDDMockito.then(helloWorldService).should(Mockito.times(0)).returnHelloWorld();
+        BDDMockito.then(helloWorldService).should(times(0)).returnHelloWorld();
         assertThat(result.isSuccess()).isTrue();
         result.get()
               .exceptionally(
@@ -532,7 +532,7 @@ public class BulkheadTest {
         // Then the helloWorldService should be invoked 1 time
         assertThatThrownBy(decoratedCompletionStage.toCompletableFuture()::get)
                 .isInstanceOf(ExecutionException.class).hasCause(new RuntimeException("BAM! At async stage"));
-        BDDMockito.then(helloWorldService).should(Mockito.times(1)).returnHelloWorld();
+        BDDMockito.then(helloWorldService).should(times(1)).returnHelloWorld();
         assertThat(bulkhead.getRemainingDepth()).isEqualTo(1);
     }
 

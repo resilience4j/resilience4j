@@ -21,7 +21,6 @@ package io.github.resilience4j.bulkhead;
 import org.junit.Before;
 import org.junit.Test;
 
-import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.BDDAssertions.assertThat;
 
 
