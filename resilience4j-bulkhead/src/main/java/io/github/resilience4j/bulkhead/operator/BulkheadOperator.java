@@ -173,10 +173,7 @@ public class BulkheadOperator<T> implements ObservableOperator<T, T>, FlowableOp
         @Override
         public void onError(Throwable e) {
             if (!isDisposed()) {
-                if (!(e instanceof BulkheadFullException)) {
-                    bulkhead.onComplete();
-                }
-
+                bulkhead.onComplete();
                 childObserver.onError(e);
             }
         }

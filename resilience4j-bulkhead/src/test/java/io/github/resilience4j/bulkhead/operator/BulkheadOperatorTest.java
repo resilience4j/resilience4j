@@ -20,14 +20,20 @@ package io.github.resilience4j.bulkhead.operator;
 
 import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.bulkhead.BulkheadFullException;
-import io.reactivex.Flowable;
-import io.reactivex.Observable;
-import io.reactivex.Single;
+import io.reactivex.*;
+import io.reactivex.disposables.Disposable;
 import org.junit.Test;
+import org.mockito.Mockito;
+import org.reactivestreams.Subscriber;
+import org.reactivestreams.Subscription;
 
 import java.io.IOException;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
 public class BulkheadOperatorTest {
 
@@ -35,14 +41,14 @@ public class BulkheadOperatorTest {
     public void shouldReturnOnCompleteUsingSingle() {
 
         // Given
-        Bulkhead bulkhead  = Bulkhead.of("test", 1);
+        Bulkhead bulkhead = Bulkhead.of("test", 1);
 
         Single.just(1)
-              .lift(BulkheadOperator.of(bulkhead))
-              .test()
-              .assertValueCount(1)
-              .assertValues(1)
-              .assertComplete();
+                .lift(BulkheadOperator.of(bulkhead))
+                .test()
+                .assertValueCount(1)
+                .assertValues(1)
+                .assertComplete();
 
         // Then
         assertThat(bulkhead.getRemainingDepth()).isEqualTo(1);
@@ -52,14 +58,16 @@ public class BulkheadOperatorTest {
     public void shouldReturnOnErrorUsingUsingSingle() {
 
         // Given
-        Bulkhead bulkhead  = Bulkhead.of("test", 1);
+        Bulkhead bulkhead = Bulkhead.of("test", 1);
 
-        Single.fromCallable(() -> {throw new IOException("BAM!");})
-              .lift(BulkheadOperator.of(bulkhead))
-              .test()
-              .assertError(IOException.class)
-              .assertNotComplete()
-              .assertSubscribed();
+        Single.fromCallable(() -> {
+            throw new IOException("BAM!");
+        })
+                .lift(BulkheadOperator.of(bulkhead))
+                .test()
+                .assertError(IOException.class)
+                .assertNotComplete()
+                .assertSubscribed();
 
         // Then
         assertThat(bulkhead.getRemainingDepth()).isEqualTo(1);
@@ -69,15 +77,15 @@ public class BulkheadOperatorTest {
     public void shouldReturnOnCompleteUsingObservable() {
 
         // Given
-        Bulkhead bulkhead  = Bulkhead.of("test", 1);
+        Bulkhead bulkhead = Bulkhead.of("test", 1);
 
         // When
         Observable.fromArray("Event 1", "Event 2")
-                  .lift(BulkheadOperator.of(bulkhead))
-                  .test()
-                  .assertValueCount(2)
-                  .assertValues("Event 1", "Event 2")
-                  .assertComplete();
+                .lift(BulkheadOperator.of(bulkhead))
+                .test()
+                .assertValueCount(2)
+                .assertValues("Event 1", "Event 2")
+                .assertComplete();
 
         // Then
         assertThat(bulkhead.getRemainingDepth()).isEqualTo(1);
@@ -87,7 +95,7 @@ public class BulkheadOperatorTest {
     public void shouldReturnOnCompleteUsingFlowable() {
 
         // Given
-        Bulkhead bulkhead  = Bulkhead.of("test", 1);
+        Bulkhead bulkhead = Bulkhead.of("test", 1);
 
         // When
         Flowable.fromArray("Event 1", "Event 2")
@@ -108,12 +116,14 @@ public class BulkheadOperatorTest {
         Bulkhead bulkhead = Bulkhead.of("test", 1);
 
         // When
-        Observable.fromCallable(() -> {throw new IOException("BAM!");})
-                  .lift(BulkheadOperator.of(bulkhead))
-                  .test()
-                  .assertError(IOException.class)
-                  .assertNotComplete()
-                  .assertSubscribed();
+        Observable.fromCallable(() -> {
+            throw new IOException("BAM!");
+        })
+                .lift(BulkheadOperator.of(bulkhead))
+                .test()
+                .assertError(IOException.class)
+                .assertNotComplete()
+                .assertSubscribed();
 
         // Then
         assertThat(bulkhead.getRemainingDepth()).isEqualTo(1);
@@ -126,7 +136,9 @@ public class BulkheadOperatorTest {
         Bulkhead bulkhead = Bulkhead.of("test", 1);
 
         // When
-        Flowable.fromCallable(() -> {throw new IOException("BAM!");})
+        Flowable.fromCallable(() -> {
+            throw new IOException("BAM!");
+        })
                 .lift(BulkheadOperator.of(bulkhead))
                 .test()
                 .assertError(IOException.class)
@@ -146,11 +158,11 @@ public class BulkheadOperatorTest {
 
         // When
         Observable.fromArray("Event 1", "Event 2")
-                  .lift(BulkheadOperator.of(bulkhead))
-                  .test()
-                  .assertError(BulkheadFullException.class)
-                  .assertNotComplete()
-                  .assertSubscribed();
+                .lift(BulkheadOperator.of(bulkhead))
+                .test()
+                .assertError(BulkheadFullException.class)
+                .assertNotComplete()
+                .assertSubscribed();
 
         bulkhead.onComplete();
 
@@ -188,13 +200,183 @@ public class BulkheadOperatorTest {
 
         // When
         Single.just("foobar")
-              .lift(BulkheadOperator.of(bulkhead))
-              .test()
-              .assertError(BulkheadFullException.class);
+                .lift(BulkheadOperator.of(bulkhead))
+                .test()
+                .assertError(BulkheadFullException.class);
 
         bulkhead.onComplete();
 
         // Then
+        assertThat(bulkhead.getRemainingDepth()).isEqualTo(1);
+    }
+
+    @Test
+    public void testBulkheadObserverOnNext() throws Exception {
+
+        // Given
+        Bulkhead bulkhead = Bulkhead.of("test", 1);
+        Disposable disposable = mock(Disposable.class);
+        Observer childObserver = mock(Observer.class);
+        Observer decoratedObserver = BulkheadOperator.of(bulkhead)
+                .apply(childObserver);
+
+        decoratedObserver.onSubscribe(disposable);
+
+        // When
+        decoratedObserver.onNext("one");
+        ((Disposable) decoratedObserver).dispose();
+        decoratedObserver.onNext("two");
+
+        // Then
+        verify(childObserver, times(1)).onNext(any());
+        assertThat(bulkhead.getRemainingDepth()).isEqualTo(1);
+    }
+
+    @Test
+    public void testBulkheadObserverOnError() throws Exception {
+
+        // Given
+        Bulkhead bulkhead = Bulkhead.of("test", 1);
+        Disposable disposable = mock(Disposable.class);
+        Observer childObserver = mock(Observer.class);
+        Observer decoratedObserver = BulkheadOperator.of(bulkhead)
+                .apply(childObserver);
+
+        decoratedObserver.onSubscribe(disposable);
+
+        // When
+        ((Disposable) decoratedObserver).dispose();
+        decoratedObserver.onError(new IllegalStateException());
+
+        // Then
+        verify(childObserver, times(0)).onError(any());
+        assertThat(bulkhead.getRemainingDepth()).isEqualTo(1);
+    }
+
+    @Test
+    public void testBulkheadObserverOnComplete() throws Exception {
+
+        // Given
+        Bulkhead bulkhead = Bulkhead.of("test", 1);
+        Disposable disposable = mock(Disposable.class);
+        Observer childObserver = mock(Observer.class);
+        Observer decoratedObserver = BulkheadOperator.of(bulkhead)
+                .apply(childObserver);
+
+        decoratedObserver.onSubscribe(disposable);
+
+        // When
+        ((Disposable) decoratedObserver).dispose();
+        decoratedObserver.onComplete();
+
+        // Then
+        verify(childObserver, times(0)).onComplete();
+        assertThat(bulkhead.getRemainingDepth()).isEqualTo(1);
+    }
+
+    @Test
+    public void testBulkheadSubscriberOnNext() throws Exception {
+
+        // Given
+        Bulkhead bulkhead = Bulkhead.of("test", 1);
+        Subscription subscription = mock(Subscription.class);
+        Subscriber childSubscriber = mock(Subscriber.class);
+        Subscriber decoratedSubcriber = BulkheadOperator.of(bulkhead)
+                .apply(childSubscriber);
+
+        decoratedSubcriber.onSubscribe(subscription);
+
+        // When
+        decoratedSubcriber.onNext("one");
+        ((Subscription) decoratedSubcriber).cancel();
+        decoratedSubcriber.onNext("two");
+
+        // Then
+        verify(childSubscriber, times(1)).onNext(any());
+        assertThat(bulkhead.getRemainingDepth()).isEqualTo(1);
+    }
+
+    @Test
+    public void testBulkheadSubscriberOnError() throws Exception {
+
+        // Given
+        Bulkhead bulkhead = Bulkhead.of("test", 1);
+        Subscription subscription = mock(Subscription.class);
+        Subscriber childSubscriber = mock(Subscriber.class);
+        Subscriber decoratedSubcriber = BulkheadOperator.of(bulkhead)
+                .apply(childSubscriber);
+
+        decoratedSubcriber.onSubscribe(subscription);
+
+        // When
+        ((Subscription) decoratedSubcriber).cancel();
+        decoratedSubcriber.onError(new IllegalStateException());
+
+        // Then
+        verify(childSubscriber, times(0)).onError(any());
+        assertThat(bulkhead.getRemainingDepth()).isEqualTo(1);
+    }
+
+    @Test
+    public void testBulkheadSubscriberOnComplete() throws Exception {
+
+        // Given
+        Bulkhead bulkhead = Bulkhead.of("test", 1);
+        Subscription subscription = mock(Subscription.class);
+        Subscriber childSubscriber = mock(Subscriber.class);
+        Subscriber decoratedSubcriber = BulkheadOperator.of(bulkhead)
+                .apply(childSubscriber);
+
+        decoratedSubcriber.onSubscribe(subscription);
+
+        // When
+        ((Subscription) decoratedSubcriber).cancel();
+        decoratedSubcriber.onComplete();
+
+        // Then
+        verify(childSubscriber, times(0)).onComplete();
+        assertThat(bulkhead.getRemainingDepth()).isEqualTo(1);
+    }
+
+    @Test
+    public void testBulkheadSingleOnSuccess() throws Exception {
+
+        // Given
+        Bulkhead bulkhead = Bulkhead.of("test", 1);
+        Disposable disposable = mock(Disposable.class);
+        SingleObserver childObserver = mock(SingleObserver.class);
+        SingleObserver decoratedObserver = BulkheadOperator.of(bulkhead)
+                .apply(childObserver);
+
+        decoratedObserver.onSubscribe(disposable);
+
+        // When
+        ((Disposable) decoratedObserver).dispose();
+        decoratedObserver.onSuccess("two");
+
+        // Then
+        verify(childObserver, times(0)).onSuccess(any());
+        assertThat(bulkhead.getRemainingDepth()).isEqualTo(1);
+    }
+
+    @Test
+    public void testBulkheadSingleOnError() throws Exception {
+
+        // Given
+        Bulkhead bulkhead = Bulkhead.of("test", 1);
+        Disposable disposable = mock(Disposable.class);
+        SingleObserver childObserver = mock(SingleObserver.class);
+        SingleObserver decoratedObserver = BulkheadOperator.of(bulkhead)
+                .apply(childObserver);
+
+        decoratedObserver.onSubscribe(disposable);
+
+        // When
+        ((Disposable) decoratedObserver).dispose();
+        decoratedObserver.onError(new IllegalStateException());
+
+        // Then
+        verify(childObserver, times(0)).onError(any());
         assertThat(bulkhead.getRemainingDepth()).isEqualTo(1);
     }
 
