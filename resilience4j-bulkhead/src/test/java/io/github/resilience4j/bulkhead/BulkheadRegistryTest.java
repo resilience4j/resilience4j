@@ -45,7 +45,7 @@ public class BulkheadRegistryTest {
     }
 
     @Test
-    public void shouldBeTheSameCircuitBreaker() {
+    public void shouldBeTheSameInstance() {
 
         Bulkhead bulkhead1 = bulkheadRegistry.bulkhead("test", 1);
         Bulkhead bulkhead2 = bulkheadRegistry.bulkhead("test", 1);
@@ -55,7 +55,7 @@ public class BulkheadRegistryTest {
     }
 
     @Test
-    public void shouldBeNotTheSameCircuitBreaker() {
+    public void shouldBeNotTheSameInstance() {
 
         Bulkhead bulkhead1 = bulkheadRegistry.bulkhead("test1", 1);
         Bulkhead bulkhead2 = bulkheadRegistry.bulkhead("test2", 1);

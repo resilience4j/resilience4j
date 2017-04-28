@@ -25,7 +25,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class BulkheadEventTest {
 
     @Test
-    public void testCircuitBreakerOnCallRejectedEvent() {
+    public void testBulkheadOnCallRejectedEvent() {
 
         BulkheadOnCallRejectedEvent event = new BulkheadOnCallRejectedEvent("test");
 
@@ -36,7 +36,7 @@ public class BulkheadEventTest {
     }
 
     @Test
-    public void testCircuitBreakerOnCallPermittedEvent() {
+    public void testBulkheadOnCallPermittedEvent() {
 
         BulkheadOnCallPermittedEvent event = new BulkheadOnCallPermittedEvent("test");
 
