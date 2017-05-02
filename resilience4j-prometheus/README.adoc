@@ -26,6 +26,10 @@ For the rate limiter following metric with default name `rate_limiter` and label
 
 The names of the rate limiters and circuit breakers are exposed using label `name`.
 
+== Dashboard Example
+
+image::dashboard.png[Circuit Breaker Dashboard Example]
+
 == Usage
 
 === CircuitBreaker
@@ -39,6 +43,7 @@ final CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofD
 final CircuitBreaker foo = circuitBreakerRegistry.circuitBreaker("foo");
 final CircuitBreaker boo = circuitBreakerRegistry.circuitBreaker("boo");
 
+// Registering metrics in prometeus CollectorRegistry
 collectorRegistry.register(CircuitBreakerExports.ofCircuitBreakerRegistry(circuitBreakerRegistry));
 --
 
@@ -48,7 +53,7 @@ collectorRegistry.register(CircuitBreakerExports.ofCircuitBreakerRegistry(circui
 --
 final CollectorRegistry collectorRegistry = CollectorRegistry.defaultRegistry;
 
-final RateLimiterRegistry rateLimiterRegistry = CircuitBreakerRegistry.ofDefaults();
+final RateLimiterRegistry rateLimiterRegistry = RateLimiterRegistry.ofDefaults();
 
 final RateLimiter foo = rateLimiterRegistry.rateLimiter("foo");
 final RateLimiter boo = rateLimiterRegistry.rateLimiter("boo");
