@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright 2017 Lucas Lech
+ *  Copyright 2017 Robert Winkler, Lucas Lech
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -21,47 +21,70 @@ package io.github.resilience4j.bulkhead;
 import org.junit.Before;
 import org.junit.Test;
 
+import static org.assertj.core.api.Assertions.registerCustomDateFormat;
 import static org.assertj.core.api.BDDAssertions.assertThat;
 
 
 public class BulkheadRegistryTest {
 
-    private BulkheadRegistry bulkheadRegistry;
+    private BulkheadConfig config;
+    private BulkheadRegistry registry;
 
     @Before
-    public void setUp(){
-        bulkheadRegistry = BulkheadRegistry.create();
+    public void setUp() {
+
+        // registry with default config
+        registry = BulkheadRegistry.ofDefaults();
+
+        // registry with custom config
+        config = BulkheadConfig.custom()
+                               .maxConcurrentCalls(100)
+                               .maxWaitTime(50)
+                               .build();
+    }
+
+    @Test
+    public void shouldReturnCustomConfig() {
+
+        // give
+        BulkheadRegistry registry = BulkheadRegistry.of(config);
+
+        // when
+        BulkheadConfig bulkheadConfig = registry.getDefaultBulkheadConfig();
+
+        // then
+        assertThat(bulkheadConfig).isSameAs(config);
     }
 
     @Test
     public void shouldReturnTheCorrectName() {
 
-        Bulkhead bulkhead = bulkheadRegistry.bulkhead("test", 1);
+        Bulkhead bulkhead = registry.bulkhead("test");
 
         assertThat(bulkhead).isNotNull();
         assertThat(bulkhead.getName()).isEqualTo("test");
-        assertThat(bulkhead.getConfiguredDepth()).isEqualTo(1);
-        assertThat(bulkhead.getRemainingDepth()).isEqualTo(1);
+        assertThat(bulkhead.getMaxConcurrentCalls()).isEqualTo(25);
+        assertThat(bulkhead.getAvailableConcurrentCalls()).isEqualTo(25);
     }
 
     @Test
     public void shouldBeTheSameInstance() {
 
-        Bulkhead bulkhead1 = bulkheadRegistry.bulkhead("test", 1);
-        Bulkhead bulkhead2 = bulkheadRegistry.bulkhead("test", 1);
+        Bulkhead bulkhead1 = registry.bulkhead("test", config);
+        Bulkhead bulkhead2 = registry.bulkhead("test", config);
 
         assertThat(bulkhead1).isSameAs(bulkhead2);
-        assertThat(bulkheadRegistry.getAllBulkheads()).hasSize(1);
+        assertThat(registry.getAllBulkheads()).hasSize(1);
     }
 
     @Test
     public void shouldBeNotTheSameInstance() {
 
-        Bulkhead bulkhead1 = bulkheadRegistry.bulkhead("test1", 1);
-        Bulkhead bulkhead2 = bulkheadRegistry.bulkhead("test2", 1);
+        Bulkhead bulkhead1 = registry.bulkhead("test1");
+        Bulkhead bulkhead2 = registry.bulkhead("test2");
 
         assertThat(bulkhead1).isNotSameAs(bulkhead2);
-        assertThat(bulkheadRegistry.getAllBulkheads()).hasSize(2);
+        assertThat(registry.getAllBulkheads()).hasSize(2);
     }
 
 }

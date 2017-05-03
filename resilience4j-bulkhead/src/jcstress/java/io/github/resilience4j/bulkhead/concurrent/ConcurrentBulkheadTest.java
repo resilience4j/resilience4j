@@ -19,6 +19,7 @@
 package io.github.resilience4j.bulkhead.concurrent;
 
 import io.github.resilience4j.bulkhead.Bulkhead;
+import io.github.resilience4j.bulkhead.BulkheadConfig;
 import io.github.resilience4j.bulkhead.event.BulkheadEvent;
 import io.github.resilience4j.bulkhead.event.BulkheadEvent.Type;
 import io.reactivex.subscribers.TestSubscriber;
@@ -34,13 +35,13 @@ import java.text.MessageFormat;
     {
         @Outcome(
             id = "remainingDepth=1" +
-                " events=\\[\\[CALL_REJECTED\\], \\[\\], \\[\\]\\]",
+                 " events=\\[\\[CALL_REJECTED\\], \\[\\], \\[\\]\\]",
             expect = Expect.ACCEPTABLE
         ),
         @Outcome(
-                id = "remainingDepth=1" +
-                        " events=\\[\\[\\], \\[\\], \\[\\]\\]",
-                expect = Expect.ACCEPTABLE
+            id = "remainingDepth=1" +
+                 " events=\\[\\[\\], \\[\\], \\[\\]\\]",
+            expect = Expect.ACCEPTABLE
         )
     }
 )
@@ -50,7 +51,8 @@ public class ConcurrentBulkheadTest {
     private TestSubscriber<Type> callRejectectedEventSubscriber;
 
     public ConcurrentBulkheadTest() {
-        bulkhead = Bulkhead.of("test", 1);
+
+        bulkhead = Bulkhead.of("test", BulkheadConfig.custom().maxConcurrentCalls(1).build());
 
         callRejectectedEventSubscriber = bulkhead.getEventStream()
                                                  .filter(event -> event.getEventType() == Type.CALL_REJECTED)
@@ -76,7 +78,7 @@ public class ConcurrentBulkheadTest {
     public void arbiter(StringResult1 result1) {
         String result = MessageFormat.format(
             "remainingDepth={0} events={1}",
-            bulkhead.getRemainingDepth(),
+            bulkhead.getAvailableConcurrentCalls(),
             callRejectectedEventSubscriber.getEvents()
         );
         result1.r1 = result;

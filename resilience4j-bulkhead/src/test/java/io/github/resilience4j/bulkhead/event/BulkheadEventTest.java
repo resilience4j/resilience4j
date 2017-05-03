@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright 2017 Lucas Lech
+ *  Copyright 2017 Robert Winkler, Lucas Lech
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.

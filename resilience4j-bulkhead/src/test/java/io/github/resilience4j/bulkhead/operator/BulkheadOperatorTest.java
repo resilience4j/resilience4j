@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright 2016 Robert Winkler
+ *  Copyright 2017 Robert Winkler, Lucas Lech
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -19,11 +19,12 @@
 package io.github.resilience4j.bulkhead.operator;
 
 import io.github.resilience4j.bulkhead.Bulkhead;
+import io.github.resilience4j.bulkhead.BulkheadConfig;
 import io.github.resilience4j.bulkhead.BulkheadFullException;
 import io.reactivex.*;
 import io.reactivex.disposables.Disposable;
+import org.junit.Before;
 import org.junit.Test;
-import org.mockito.Mockito;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
 
@@ -37,11 +38,21 @@ import static org.mockito.Mockito.verify;
 
 public class BulkheadOperatorTest {
 
+    BulkheadConfig config;
+
+    @Before
+    public void setUp() {
+        config = BulkheadConfig.custom()
+                               .maxConcurrentCalls(1)
+                               .maxWaitTime(0)
+                               .build();
+    }
+
     @Test
     public void shouldReturnOnCompleteUsingSingle() {
 
         // Given
-        Bulkhead bulkhead = Bulkhead.of("test", 1);
+        Bulkhead bulkhead = Bulkhead.of("test", config);
 
         Single.just(1)
                 .lift(BulkheadOperator.of(bulkhead))
@@ -51,14 +62,14 @@ public class BulkheadOperatorTest {
                 .assertComplete();
 
         // Then
-        assertThat(bulkhead.getRemainingDepth()).isEqualTo(1);
+        assertThat(bulkhead.getAvailableConcurrentCalls()).isEqualTo(1);
     }
 
     @Test
     public void shouldReturnOnErrorUsingUsingSingle() {
 
         // Given
-        Bulkhead bulkhead = Bulkhead.of("test", 1);
+        Bulkhead bulkhead = Bulkhead.of("test", config);
 
         Single.fromCallable(() -> {
             throw new IOException("BAM!");
@@ -70,14 +81,14 @@ public class BulkheadOperatorTest {
                 .assertSubscribed();
 
         // Then
-        assertThat(bulkhead.getRemainingDepth()).isEqualTo(1);
+        assertThat(bulkhead.getAvailableConcurrentCalls()).isEqualTo(1);
     }
 
     @Test
     public void shouldReturnOnCompleteUsingObservable() {
 
         // Given
-        Bulkhead bulkhead = Bulkhead.of("test", 1);
+        Bulkhead bulkhead = Bulkhead.of("test", config);
 
         // When
         Observable.fromArray("Event 1", "Event 2")
@@ -88,14 +99,14 @@ public class BulkheadOperatorTest {
                 .assertComplete();
 
         // Then
-        assertThat(bulkhead.getRemainingDepth()).isEqualTo(1);
+        assertThat(bulkhead.getAvailableConcurrentCalls()).isEqualTo(1);
     }
 
     @Test
     public void shouldReturnOnCompleteUsingFlowable() {
 
         // Given
-        Bulkhead bulkhead = Bulkhead.of("test", 1);
+        Bulkhead bulkhead = Bulkhead.of("test", config);
 
         // When
         Flowable.fromArray("Event 1", "Event 2")
@@ -106,14 +117,14 @@ public class BulkheadOperatorTest {
                 .assertComplete();
 
         // Then
-        assertThat(bulkhead.getRemainingDepth()).isEqualTo(1);
+        assertThat(bulkhead.getAvailableConcurrentCalls()).isEqualTo(1);
     }
 
     @Test
     public void shouldReturnOnErrorUsingObservable() {
 
         // Given
-        Bulkhead bulkhead = Bulkhead.of("test", 1);
+        Bulkhead bulkhead = Bulkhead.of("test", config);
 
         // When
         Observable.fromCallable(() -> {
@@ -126,14 +137,14 @@ public class BulkheadOperatorTest {
                 .assertSubscribed();
 
         // Then
-        assertThat(bulkhead.getRemainingDepth()).isEqualTo(1);
+        assertThat(bulkhead.getAvailableConcurrentCalls()).isEqualTo(1);
     }
 
     @Test
     public void shouldReturnOnErrorUsingFlowable() {
 
         // Given
-        Bulkhead bulkhead = Bulkhead.of("test", 1);
+        Bulkhead bulkhead = Bulkhead.of("test", config);
 
         // When
         Flowable.fromCallable(() -> {
@@ -146,14 +157,14 @@ public class BulkheadOperatorTest {
                 .assertSubscribed();
 
         // Then
-        assertThat(bulkhead.getRemainingDepth()).isEqualTo(1);
+        assertThat(bulkhead.getAvailableConcurrentCalls()).isEqualTo(1);
     }
 
     @Test
     public void shouldReturnOnErrorWithBulkheadFullExceptionUsingObservable() {
 
         // Given
-        Bulkhead bulkhead = Bulkhead.of("test", 1);
+        Bulkhead bulkhead = Bulkhead.of("test", config);
         bulkhead.isCallPermitted();
 
         // When
@@ -167,14 +178,14 @@ public class BulkheadOperatorTest {
         bulkhead.onComplete();
 
         // Then
-        assertThat(bulkhead.getRemainingDepth()).isEqualTo(1);
+        assertThat(bulkhead.getAvailableConcurrentCalls()).isEqualTo(1);
     }
 
     @Test
     public void shouldReturnOnErrorWithBulkheadFullExceptionUsingFlowable() {
 
         // Given
-        Bulkhead bulkhead = Bulkhead.of("test", 1);
+        Bulkhead bulkhead = Bulkhead.of("test", config);
         bulkhead.isCallPermitted();
 
         // When
@@ -188,14 +199,14 @@ public class BulkheadOperatorTest {
         bulkhead.onComplete();
 
         // Then
-        assertThat(bulkhead.getRemainingDepth()).isEqualTo(1);
+        assertThat(bulkhead.getAvailableConcurrentCalls()).isEqualTo(1);
     }
 
     @Test
     public void shouldReturnOnErrorWithBulkheadFullExceptionUsingSingle() {
 
         // Given
-        Bulkhead bulkhead = Bulkhead.of("test", 1);
+        Bulkhead bulkhead = Bulkhead.of("test", config);
         bulkhead.isCallPermitted();
 
         // When
@@ -207,14 +218,14 @@ public class BulkheadOperatorTest {
         bulkhead.onComplete();
 
         // Then
-        assertThat(bulkhead.getRemainingDepth()).isEqualTo(1);
+        assertThat(bulkhead.getAvailableConcurrentCalls()).isEqualTo(1);
     }
 
     @Test
     public void testBulkheadObserverOnNext() throws Exception {
 
         // Given
-        Bulkhead bulkhead = Bulkhead.of("test", 1);
+        Bulkhead bulkhead = Bulkhead.of("test", config);
         Disposable disposable = mock(Disposable.class);
         Observer childObserver = mock(Observer.class);
         Observer decoratedObserver = BulkheadOperator.of(bulkhead)
@@ -229,14 +240,14 @@ public class BulkheadOperatorTest {
 
         // Then
         verify(childObserver, times(1)).onNext(any());
-        assertThat(bulkhead.getRemainingDepth()).isEqualTo(1);
+        assertThat(bulkhead.getAvailableConcurrentCalls()).isEqualTo(1);
     }
 
     @Test
     public void testBulkheadObserverOnError() throws Exception {
 
         // Given
-        Bulkhead bulkhead = Bulkhead.of("test", 1);
+        Bulkhead bulkhead = Bulkhead.of("test", config);
         Disposable disposable = mock(Disposable.class);
         Observer childObserver = mock(Observer.class);
         Observer decoratedObserver = BulkheadOperator.of(bulkhead)
@@ -250,14 +261,14 @@ public class BulkheadOperatorTest {
 
         // Then
         verify(childObserver, times(0)).onError(any());
-        assertThat(bulkhead.getRemainingDepth()).isEqualTo(1);
+        assertThat(bulkhead.getAvailableConcurrentCalls()).isEqualTo(1);
     }
 
     @Test
     public void testBulkheadObserverOnComplete() throws Exception {
 
         // Given
-        Bulkhead bulkhead = Bulkhead.of("test", 1);
+        Bulkhead bulkhead = Bulkhead.of("test", config);
         Disposable disposable = mock(Disposable.class);
         Observer childObserver = mock(Observer.class);
         Observer decoratedObserver = BulkheadOperator.of(bulkhead)
@@ -271,14 +282,14 @@ public class BulkheadOperatorTest {
 
         // Then
         verify(childObserver, times(0)).onComplete();
-        assertThat(bulkhead.getRemainingDepth()).isEqualTo(1);
+        assertThat(bulkhead.getAvailableConcurrentCalls()).isEqualTo(1);
     }
 
     @Test
     public void testBulkheadSubscriberOnNext() throws Exception {
 
         // Given
-        Bulkhead bulkhead = Bulkhead.of("test", 1);
+        Bulkhead bulkhead = Bulkhead.of("test", config);
         Subscription subscription = mock(Subscription.class);
         Subscriber childSubscriber = mock(Subscriber.class);
         Subscriber decoratedSubcriber = BulkheadOperator.of(bulkhead)
@@ -293,14 +304,14 @@ public class BulkheadOperatorTest {
 
         // Then
         verify(childSubscriber, times(1)).onNext(any());
-        assertThat(bulkhead.getRemainingDepth()).isEqualTo(1);
+        assertThat(bulkhead.getAvailableConcurrentCalls()).isEqualTo(1);
     }
 
     @Test
     public void testBulkheadSubscriberOnError() throws Exception {
 
         // Given
-        Bulkhead bulkhead = Bulkhead.of("test", 1);
+        Bulkhead bulkhead = Bulkhead.of("test", config);
         Subscription subscription = mock(Subscription.class);
         Subscriber childSubscriber = mock(Subscriber.class);
         Subscriber decoratedSubcriber = BulkheadOperator.of(bulkhead)
@@ -314,14 +325,14 @@ public class BulkheadOperatorTest {
 
         // Then
         verify(childSubscriber, times(0)).onError(any());
-        assertThat(bulkhead.getRemainingDepth()).isEqualTo(1);
+        assertThat(bulkhead.getAvailableConcurrentCalls()).isEqualTo(1);
     }
 
     @Test
     public void testBulkheadSubscriberOnComplete() throws Exception {
 
         // Given
-        Bulkhead bulkhead = Bulkhead.of("test", 1);
+        Bulkhead bulkhead = Bulkhead.of("test", config);
         Subscription subscription = mock(Subscription.class);
         Subscriber childSubscriber = mock(Subscriber.class);
         Subscriber decoratedSubcriber = BulkheadOperator.of(bulkhead)
@@ -335,14 +346,14 @@ public class BulkheadOperatorTest {
 
         // Then
         verify(childSubscriber, times(0)).onComplete();
-        assertThat(bulkhead.getRemainingDepth()).isEqualTo(1);
+        assertThat(bulkhead.getAvailableConcurrentCalls()).isEqualTo(1);
     }
 
     @Test
     public void testBulkheadSingleOnSuccess() throws Exception {
 
         // Given
-        Bulkhead bulkhead = Bulkhead.of("test", 1);
+        Bulkhead bulkhead = Bulkhead.of("test", config);
         Disposable disposable = mock(Disposable.class);
         SingleObserver childObserver = mock(SingleObserver.class);
         SingleObserver decoratedObserver = BulkheadOperator.of(bulkhead)
@@ -356,14 +367,14 @@ public class BulkheadOperatorTest {
 
         // Then
         verify(childObserver, times(0)).onSuccess(any());
-        assertThat(bulkhead.getRemainingDepth()).isEqualTo(1);
+        assertThat(bulkhead.getAvailableConcurrentCalls()).isEqualTo(1);
     }
 
     @Test
     public void testBulkheadSingleOnError() throws Exception {
 
         // Given
-        Bulkhead bulkhead = Bulkhead.of("test", 1);
+        Bulkhead bulkhead = Bulkhead.of("test", config);
         Disposable disposable = mock(Disposable.class);
         SingleObserver childObserver = mock(SingleObserver.class);
         SingleObserver decoratedObserver = BulkheadOperator.of(bulkhead)
@@ -377,7 +388,7 @@ public class BulkheadOperatorTest {
 
         // Then
         verify(childObserver, times(0)).onError(any());
-        assertThat(bulkhead.getRemainingDepth()).isEqualTo(1);
+        assertThat(bulkhead.getAvailableConcurrentCalls()).isEqualTo(1);
     }
 
 }
