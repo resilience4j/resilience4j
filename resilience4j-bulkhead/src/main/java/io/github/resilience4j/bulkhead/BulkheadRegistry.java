@@ -22,6 +22,8 @@ package io.github.resilience4j.bulkhead;
 import io.github.resilience4j.bulkhead.internal.InMemoryBulkheadRegistry;
 import javaslang.collection.Seq;
 
+import java.util.function.Supplier;
+
 /**
  * The {@link BulkheadRegistry} is a factory to create Bulkhead instances which stores all bulkhead instances in a registry.
  */
@@ -35,21 +37,55 @@ public interface BulkheadRegistry {
     Seq<Bulkhead> getAllBulkheads();
 
     /**
-     * Returns a managed {@link Bulkhead} or creates a new one with the depth specified.
+     * Returns a managed {@link Bulkhead} or creates a new one with default configuration.
      *
-     * @param name  the name of the Bulkhead
-     * @param depth desired depth (amount of allowed parallel executions) of this bulkhead
+     * @param name the name of the Bulkhead
      * @return The {@link Bulkhead}
      */
-    Bulkhead bulkhead(String name, int depth);
+    Bulkhead bulkhead(String name);
 
     /**
-     * Creates a BulkheadRegistry instance
+     * Returns a managed {@link Bulkhead} or creates a new one with a custom BulkheadConfig configuration.
      *
-     * @return a BulkheadRegistry
+     * @param name  the name of the Bulkhead
+     * @param bulkheadConfig a custom Bulkhead configuration
+     * @return The {@link Bulkhead}
      */
-    static BulkheadRegistry create() {
-        return new InMemoryBulkheadRegistry();
+    Bulkhead bulkhead(String name, BulkheadConfig bulkheadConfig);
+
+    /**
+     * Returns a managed {@link Bulkhead} or creates a new one with a custom BulkheadConfig configuration.
+     *
+     * @param name  the name of the Bulkhead
+     * @param bulkheadConfigSupplier a custom Bulkhead configuration supplier
+     * @return The {@link Bulkhead}
+     */
+    Bulkhead bulkhead(String name, Supplier<BulkheadConfig> bulkheadConfigSupplier);
+
+    /**
+     * Returns a default BulkheadConfig instance this registry is using.
+     *
+     * @return BulkheadConfig instance
+     */
+    BulkheadConfig getDefaultBulkheadConfig();
+
+    /**
+     * Creates a BulkheadRegistry with a custom Bulkhead configuration.
+     *
+     * @param bulkheadConfig a custom Bulkhead configuration
+     * @return a BulkheadRegistry instance backed by a custom Bulkhead configuration
+     */
+    static BulkheadRegistry of(BulkheadConfig bulkheadConfig) {
+        return new InMemoryBulkheadRegistry(bulkheadConfig);
+    }
+
+    /**
+     * Creates a BulkheadRegistry with a default Bulkhead configuration
+     *
+     * @return a BulkheadRegistry instance backed by a default Bulkhead configuration
+     */
+    static BulkheadRegistry ofDefaults() {
+        return new InMemoryBulkheadRegistry(BulkheadConfig.ofDefaults());
     }
 
 }

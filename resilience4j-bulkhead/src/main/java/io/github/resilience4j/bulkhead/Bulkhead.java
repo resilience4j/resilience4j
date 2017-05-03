@@ -70,14 +70,21 @@ public interface Bulkhead {
      *
       * @return bulkhead depth
      */
-    int getConfiguredDepth();
+    int getMaxConcurrentCalls();
 
     /**
      * Returns the number of parallel executions this bulkhead can support at this point in time.
      *
      * @return remaining bulkhead depth
      */
-    int getRemainingDepth();
+    int getAvailableConcurrentCalls();
+
+    /**
+     * Returns the BulkheadConfig of this Bulkhead.
+     *
+     * @return bulkhead config
+     */
+    BulkheadConfig getBulkheadConfig();
 
     /**
      * Returns a reactive stream of BulkheadEvent events.
@@ -358,15 +365,34 @@ public interface Bulkhead {
     }
 
     /**
-     * Creates a bulkhead with a given name and depth
+     * Create a Bulkhead with a default configuration.
      *
      * @param name the name of the bulkhead
-     * @param depth max depth of the bulkhead
-     *
-     * @return a bulkhead
+     * @return a Bulkhead instance
      */
-    static Bulkhead of(String name, int depth) {
-        return new SemaphoreBulkhead(name, depth);
+    static Bulkhead ofDefaults(String name) {
+        return new SemaphoreBulkhead(name);
     }
 
+    /**
+     * Creates a bulkhead with a custom configuration
+     *
+     * @param name the name of the bulkhead
+     * @param config a custom BulkheadConfig configuration
+     * @return a Bulkhead instance
+     */
+    static Bulkhead of(String name, BulkheadConfig config) {
+        return new SemaphoreBulkhead(name, config);
+    }
+
+    /**
+     * Creates a bulkhead with a custom configuration
+     *
+     * @param name the name of the bulkhead
+     * @param bulkheadConfigSupplier custom configuration supplier
+     * @return a Bulkhead instance
+     */
+    static Bulkhead of(String name, Supplier<BulkheadConfig> bulkheadConfigSupplier) {
+        return new SemaphoreBulkhead(name, bulkheadConfigSupplier);
+    }
 }

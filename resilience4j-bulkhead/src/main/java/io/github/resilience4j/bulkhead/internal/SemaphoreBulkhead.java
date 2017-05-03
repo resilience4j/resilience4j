@@ -20,6 +20,7 @@ package io.github.resilience4j.bulkhead.internal;
 
 
 import io.github.resilience4j.bulkhead.Bulkhead;
+import io.github.resilience4j.bulkhead.BulkheadConfig;
 import io.github.resilience4j.bulkhead.event.BulkheadEvent;
 import io.github.resilience4j.bulkhead.event.BulkheadOnCallPermittedEvent;
 import io.github.resilience4j.bulkhead.event.BulkheadOnCallRejectedEvent;
@@ -28,6 +29,7 @@ import io.reactivex.processors.FlowableProcessor;
 import io.reactivex.processors.PublishProcessor;
 
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
 /**
@@ -36,31 +38,52 @@ import java.util.function.Supplier;
 public class SemaphoreBulkhead implements Bulkhead {
 
     private final String name;
-    private final int depth;
     private final Semaphore semaphore;
+    private final BulkheadConfig bulkheadConfig;
     private final FlowableProcessor<BulkheadEvent> eventPublisher;
 
     /**
-     * Creates a bulkhead.
+     * Creates a bulkhead using a configuration supplied
      *
-     * @param name  the name of the bulkhead
-     * @param depth the depth of the bulkhead
+     * @param name the name of this bulkhead
+     * @param bulkheadConfig custom bulkhead configuration
      */
-    public SemaphoreBulkhead(String name, int depth) {
-
+    public SemaphoreBulkhead(String name, BulkheadConfig bulkheadConfig) {
         this.name = name;
-        this.depth = depth;
-        this.semaphore = new Semaphore(depth, false);
+        this.bulkheadConfig = bulkheadConfig != null ? bulkheadConfig
+                                                     : BulkheadConfig.ofDefaults();
+        // init semaphore
+        this.semaphore = new Semaphore(this.bulkheadConfig.getMaxConcurrentCalls(), true);
 
         // init event publisher
         this.eventPublisher = PublishProcessor.<BulkheadEvent>create()
                                               .toSerialized();
     }
 
+    /**
+     * Creates a bulkhead with a default config.
+     *
+     * @param name the name of this bulkhead
+     */
+    public SemaphoreBulkhead(String name) {
+        this(name, BulkheadConfig.ofDefaults());
+    }
+
+    /**
+     * Create a bulkhead using a configuration supplier
+     *
+     * @param name the name of this bulkhead
+     * @param configSupplier BulkheadConfig supplier
+     */
+    public SemaphoreBulkhead(String name, Supplier<BulkheadConfig> configSupplier) {
+        this(name, configSupplier.get());
+    }
+
+
     @Override
     public boolean isCallPermitted() {
 
-        final boolean callPermitted = semaphore.tryAcquire();
+        boolean callPermitted = tryEnterBulkhead();
 
         publishBulkheadEvent(
             () -> callPermitted ? new BulkheadOnCallPermittedEvent(name)
@@ -81,13 +104,18 @@ public class SemaphoreBulkhead implements Bulkhead {
     }
 
     @Override
-    public int getConfiguredDepth() {
-        return this.depth;
+    public int getMaxConcurrentCalls() {
+        return this.bulkheadConfig.getMaxConcurrentCalls();
     }
 
     @Override
-    public int getRemainingDepth() {
+    public int getAvailableConcurrentCalls() {
         return this.semaphore.availablePermits();
+    }
+
+    @Override
+    public BulkheadConfig getBulkheadConfig() {
+        return bulkheadConfig;
     }
 
     @Override
@@ -98,6 +126,26 @@ public class SemaphoreBulkhead implements Bulkhead {
     @Override
     public String toString() {
         return String.format("Bulkhead '%s'", this.name);
+    }
+
+    boolean tryEnterBulkhead() {
+
+        boolean callPermitted = false;
+        long timeout = bulkheadConfig.getMaxWaitTime();
+
+        if (timeout == 0) {
+            callPermitted = semaphore.tryAcquire();
+        }
+        else {
+            try {
+                callPermitted = semaphore.tryAcquire(timeout, TimeUnit.MILLISECONDS);
+            }
+            catch (InterruptedException ex) {
+                callPermitted = false;
+            }
+        }
+        //
+        return callPermitted;
     }
 
     private void publishBulkheadEvent(Supplier<BulkheadEvent> eventSupplier) {

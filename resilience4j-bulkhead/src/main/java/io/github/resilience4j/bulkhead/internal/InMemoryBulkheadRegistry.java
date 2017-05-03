@@ -19,6 +19,7 @@
 package io.github.resilience4j.bulkhead.internal;
 
 import io.github.resilience4j.bulkhead.Bulkhead;
+import io.github.resilience4j.bulkhead.BulkheadConfig;
 import io.github.resilience4j.bulkhead.BulkheadRegistry;
 import javaslang.collection.Array;
 import javaslang.collection.Seq;
@@ -26,6 +27,7 @@ import javaslang.collection.Seq;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.function.Supplier;
 
 /**
  * Bulkhead instance manager;
@@ -33,12 +35,20 @@ import java.util.concurrent.ConcurrentMap;
  */
 public final class InMemoryBulkheadRegistry implements BulkheadRegistry {
 
+    private final BulkheadConfig defaultBulkheadConfig;
+
     /**
      * The bulkheads, indexed by name
      */
     private final ConcurrentMap<String, Bulkhead> bulkheads;
 
-    public InMemoryBulkheadRegistry() {
+    /**
+     * The constructor with custom default bulkhead config
+     *
+     * @param bulkheadConfig custom bulkhead config to use
+     */
+    public InMemoryBulkheadRegistry(BulkheadConfig bulkheadConfig) {
+        this.defaultBulkheadConfig = bulkheadConfig;
         this.bulkheads = new ConcurrentHashMap<>();
     }
 
@@ -48,11 +58,25 @@ public final class InMemoryBulkheadRegistry implements BulkheadRegistry {
     }
 
     @Override
-    public Bulkhead bulkhead(String name, int depth) {
-        return bulkheads.computeIfAbsent(
-                   Objects.requireNonNull(name, "Name must not be null"),
-                   (k) -> Bulkhead.of(name, depth)
-               );
+    public Bulkhead bulkhead(String name) {
+        return bulkhead(name, defaultBulkheadConfig);
     }
 
+    @Override
+    public Bulkhead bulkhead(String name, BulkheadConfig bulkheadConfig) {
+        return bulkheads.computeIfAbsent(
+                Objects.requireNonNull(name, "Name must not be null"),
+                k -> Bulkhead.of(name, bulkheadConfig)
+        );
+    }
+
+    @Override
+    public Bulkhead bulkhead(String name, Supplier<BulkheadConfig> bulkheadConfigSupplier) {
+        return bulkhead(name, bulkheadConfigSupplier.get());
+    }
+
+    @Override
+    public BulkheadConfig getDefaultBulkheadConfig() {
+        return defaultBulkheadConfig;
+    }
 }
