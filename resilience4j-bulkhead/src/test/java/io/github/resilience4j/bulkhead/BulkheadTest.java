@@ -394,7 +394,7 @@ public class BulkheadTest {
 
     @Test
     public void shouldReturnFailureWithBulkheadFullException() {
-
+        // tag::bulkheadFullException[]
         // Given
         BulkheadConfig config = BulkheadConfig.custom().maxConcurrentCalls(2).build();
         Bulkhead bulkhead = Bulkhead.of("test", config);
@@ -408,6 +408,7 @@ public class BulkheadTest {
         //Then
         assertThat(result.isFailure()).isTrue();
         assertThat(result.failed().get()).isInstanceOf(BulkheadFullException.class);
+        // end::bulkheadFullException[]
     }
 
     @Test
@@ -430,7 +431,7 @@ public class BulkheadTest {
 
     @Test
     public void shouldInvokeAsyncApply() throws ExecutionException, InterruptedException {
-
+        // tag::shouldInvokeAsyncApply[]
         // Given
         Bulkhead bulkhead = Bulkhead.of("test", config);
 
@@ -445,6 +446,7 @@ public class BulkheadTest {
         // Then
         assertThat(result).isEqualTo("This can be any method which returns: 'Hello world'");
         assertThat(bulkhead.getAvailableConcurrentCalls()).isEqualTo(1);
+        // end::shouldInvokeAsyncApply[]
     }
 
     @Test
@@ -544,17 +546,17 @@ public class BulkheadTest {
 
     @Test
     public void shouldChainDecoratedFunctions() throws ExecutionException, InterruptedException {
-
+        // tag::shouldChainDecoratedFunctions[]
         // Given
         Bulkhead bulkhead = Bulkhead.of("test", config);
-        Bulkhead anotherBulkhead = Bulkhead.of("test", config);
+        Bulkhead anotherBulkhead = Bulkhead.of("testAnother", config);
 
         // When I create a Supplier and a Function which are decorated by different Bulkheads
-        Try.CheckedSupplier<String> decoratedSupplier = Bulkhead
-                .decorateCheckedSupplier(bulkhead, () -> "Hello");
+        Try.CheckedSupplier<String> decoratedSupplier
+            = Bulkhead.decorateCheckedSupplier(bulkhead, () -> "Hello");
 
-        Try.CheckedFunction<String, String> decoratedFunction = Bulkhead
-                .decorateCheckedFunction(anotherBulkhead, (input) -> input + " world");
+        Try.CheckedFunction<String, String> decoratedFunction
+            = Bulkhead.decorateCheckedFunction(anotherBulkhead, (input) -> input + " world");
 
         // and I chain a function with map
         Try<String> result = Try.of(decoratedSupplier)
@@ -565,6 +567,28 @@ public class BulkheadTest {
         assertThat(result.get()).isEqualTo("Hello world");
         assertThat(bulkhead.getAvailableConcurrentCalls()).isEqualTo(1);
         assertThat(anotherBulkhead.getAvailableConcurrentCalls()).isEqualTo(1);
+        // end::shouldChainDecoratedFunctions[]
+    }
+
+
+    @Test
+    public void shouldInvokeMap() {
+        // tag::shouldInvokeMap[]
+        // Given
+        Bulkhead bulkhead = Bulkhead.of("testName", config);
+
+        // When I decorate my function
+        Try.CheckedSupplier<String> decoratedSupplier = Bulkhead.decorateCheckedSupplier(bulkhead, () -> "This can be any method which returns: 'Hello");
+
+        // and chain an other function with map
+        Try<String> result = Try.of(decoratedSupplier)
+                                .map(value -> value + " world'");
+
+        // Then the Try Monad returns a Success<String>, if all functions ran successfully.
+        assertThat(result.isSuccess()).isTrue();
+        assertThat(result.get()).isEqualTo("This can be any method which returns: 'Hello world'");
+        assertThat(bulkhead.getAvailableConcurrentCalls()).isEqualTo(1);
+        // end::shouldInvokeMap[]
     }
 
 }
