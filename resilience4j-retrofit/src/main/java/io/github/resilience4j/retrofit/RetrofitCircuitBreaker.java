@@ -57,15 +57,15 @@ public interface RetrofitCircuitBreaker {
                     final Response<T> response = call.execute();
 
                     if (responseSuccess.test(response)) {
-                        circuitBreaker.onSuccess(stopWatch.stop().getProcessingDuration());
+                        circuitBreaker.onSuccess(stopWatch.stop().getProcessingDuration().toNanos());
                     } else {
                         final Throwable throwable = new Throwable("Response error: HTTP " + response.code() + " - " + response.message());
-                        circuitBreaker.onError(stopWatch.stop().getProcessingDuration(), throwable);
+                        circuitBreaker.onError(stopWatch.stop().getProcessingDuration().toNanos(), throwable);
                     }
 
                     return response;
                 } catch (Throwable throwable) {
-                    circuitBreaker.onError(stopWatch.stop().getProcessingDuration(), throwable);
+                    circuitBreaker.onError(stopWatch.stop().getProcessingDuration().toNanos(), throwable);
                     throw throwable;
                 }
             }

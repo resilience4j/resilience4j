@@ -132,8 +132,8 @@ public class VertxCircuitBreakerTest {
         // Create a CircuitBreakerRegistry with a custom global configuration
         CircuitBreaker circuitBreaker = CircuitBreaker.of("testName", circuitBreakerConfig);
 
-        circuitBreaker.onError(Duration.ZERO, new RuntimeException());
-        circuitBreaker.onError(Duration.ZERO, new RuntimeException());
+        circuitBreaker.onError(0, new RuntimeException());
+        circuitBreaker.onError(0, new RuntimeException());
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.OPEN);
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(2);
