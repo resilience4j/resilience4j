@@ -71,12 +71,12 @@ public class ConcurrentCircuitBreakerTest {
 
     @Actor
     public void firstActor() {
-        circuitBreaker.onError(Duration.ZERO, new RuntimeException());
+        circuitBreaker.onError(0, new RuntimeException());
     }
 
     @Actor
     public void secondActor() {
-        circuitBreaker.onError(Duration.ZERO, new RuntimeException());
+        circuitBreaker.onError(0, new RuntimeException());
     }
 
     @Arbiter
