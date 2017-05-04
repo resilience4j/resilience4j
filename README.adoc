@@ -14,6 +14,7 @@ Resilience4j features are:
 
 * Circuit breaking
 * Rate limiting
+* Bulkheading
 * Automatic retrying
 * Response caching
 * Measuring metrics
