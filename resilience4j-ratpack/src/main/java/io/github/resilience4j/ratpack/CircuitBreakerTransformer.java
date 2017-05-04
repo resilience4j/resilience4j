@@ -58,20 +58,22 @@ public class CircuitBreakerTransformer<T> implements Function<Upstream<? extends
     @Override
     public Upstream<T> apply(Upstream<? extends T> upstream) throws Exception {
         return down -> {
-            StopWatch stopWatch;
+            long start;
             if (circuitBreaker.isCallPermitted()) {
-                stopWatch = StopWatch.start(circuitBreaker.getName());
+                start = System.nanoTime();
                 upstream.connect(new Downstream<T>() {
 
                     @Override
                     public void success(T value) {
-                        circuitBreaker.onSuccess(stopWatch.stop().getProcessingDuration());
+                        long durationInNanos = System.nanoTime() - start;
+                        circuitBreaker.onSuccess(durationInNanos);
                         down.success(value);
                     }
 
                     @Override
                     public void error(Throwable throwable) {
-                        circuitBreaker.onError(stopWatch.stop().getProcessingDuration(), throwable);
+                        long durationInNanos = System.nanoTime() - start;
+                        circuitBreaker.onError(durationInNanos, throwable);
                         try {
                             if (recoverer != null) {
                                 down.success(recoverer.apply(throwable));

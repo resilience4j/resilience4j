@@ -19,20 +19,28 @@
 package io.github.resilience4j.circuitbreaker.internal;
 
 
+import static io.github.resilience4j.circuitbreaker.CircuitBreaker.State.CLOSED;
+import static io.github.resilience4j.circuitbreaker.CircuitBreaker.State.HALF_OPEN;
+import static io.github.resilience4j.circuitbreaker.CircuitBreaker.State.OPEN;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
-import io.github.resilience4j.circuitbreaker.event.*;
+import io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent;
+import io.github.resilience4j.circuitbreaker.event.CircuitBreakerOnCallNotPermittedEvent;
+import io.github.resilience4j.circuitbreaker.event.CircuitBreakerOnErrorEvent;
+import io.github.resilience4j.circuitbreaker.event.CircuitBreakerOnIgnoredErrorEvent;
+import io.github.resilience4j.circuitbreaker.event.CircuitBreakerOnStateTransitionEvent;
+import io.github.resilience4j.circuitbreaker.event.CircuitBreakerOnSuccessEvent;
 import io.reactivex.Flowable;
 import io.reactivex.processors.FlowableProcessor;
 import io.reactivex.processors.PublishProcessor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
-
-import static io.github.resilience4j.circuitbreaker.CircuitBreaker.State.*;
 
 /**
  * A CircuitBreaker finite state machine.
@@ -49,7 +57,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
     /**
      * Creates a circuitBreaker.
      *
-     * @param name      the name of the CircuitBreaker
+     * @param name                 the name of the CircuitBreaker
      * @param circuitBreakerConfig The CircuitBreaker configuration.
      */
     public CircuitBreakerStateMachine(String name, CircuitBreakerConfig circuitBreakerConfig) {
@@ -63,7 +71,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
     /**
      * Creates a circuitBreaker with default config.
      *
-     * @param name      the name of the CircuitBreaker
+     * @param name the name of the CircuitBreaker
      */
     public CircuitBreakerStateMachine(String name) {
         this(name, CircuitBreakerConfig.ofDefaults());
@@ -72,7 +80,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
     /**
      * Creates a circuitBreaker.
      *
-     * @param name      the name of the CircuitBreaker
+     * @param name                 the name of the CircuitBreaker
      * @param circuitBreakerConfig The CircuitBreaker configuration supplier.
      */
     public CircuitBreakerStateMachine(String name, Supplier<CircuitBreakerConfig> circuitBreakerConfig) {
@@ -87,7 +95,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
     @Override
     public boolean isCallPermitted() {
         boolean callPermitted = stateReference.get().isCallPermitted();
-        if(!callPermitted){
+        if (!callPermitted) {
             publishCallNotPermittedEvent();
         }
         return callPermitted;
@@ -95,14 +103,14 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
 
     @Override
     public void onError(long durationInNanos, Throwable throwable) {
-        if(circuitBreakerConfig.getRecordFailurePredicate().test(throwable)){
-            if(LOG.isDebugEnabled()){
+        if (circuitBreakerConfig.getRecordFailurePredicate().test(throwable)) {
+            if (LOG.isDebugEnabled()) {
                 LOG.debug(String.format("CircuitBreaker '%s' recorded a failure:", name), throwable);
             }
             publishCircuitErrorEvent(name, durationInNanos, throwable);
             stateReference.get().onError(throwable);
-        }else{
-            publishCircuitErrorEvent(name, durationInNanos, throwable);
+        } else {
+            publishCircuitIgnoredErrorEvent(name, durationInNanos, throwable);
         }
     }
 
@@ -196,14 +204,14 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
         }
     }
 
-    private void publishStateTransitionEvent(final StateTransition stateTransition){
-        if(LOG.isDebugEnabled()){
+    private void publishStateTransitionEvent(final StateTransition stateTransition) {
+        if (LOG.isDebugEnabled()) {
             LOG.debug(
                 String.format("CircuitBreaker '%s' changed state from %s to %s",
-                name, stateTransition.getFromState(), stateTransition.getToState())
+                    name, stateTransition.getFromState(), stateTransition.getToState())
             );
         }
-        if(eventPublisher.hasSubscribers()) {
+        if (eventPublisher.hasSubscribers()) {
             eventPublisher.onNext(new CircuitBreakerOnStateTransitionEvent(name, stateTransition));
         }
     }
@@ -226,7 +234,13 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
         }
     }
 
-    public Flowable<CircuitBreakerEvent> getEventStream(){
+    private void publishCircuitIgnoredErrorEvent(String name, long durationInNanos, Throwable throwable) {
+        if (eventPublisher.hasSubscribers()) {
+            eventPublisher.onNext(new CircuitBreakerOnIgnoredErrorEvent(name, Duration.ofNanos(durationInNanos), throwable));
+        }
+    }
+
+    public Flowable<CircuitBreakerEvent> getEventStream() {
         return eventPublisher;
     }
 }
