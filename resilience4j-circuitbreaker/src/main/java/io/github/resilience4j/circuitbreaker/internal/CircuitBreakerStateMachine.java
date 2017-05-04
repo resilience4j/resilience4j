@@ -88,28 +88,27 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
     public boolean isCallPermitted() {
         boolean callPermitted = stateReference.get().isCallPermitted();
         if(!callPermitted){
-            publishCircuitBreakerEvent(() -> new CircuitBreakerOnCallNotPermittedEvent(getName()));
+            publishCallNotPermittedEvent();
         }
         return callPermitted;
     }
 
     @Override
-    public void onError(Duration duration, Throwable throwable) {
+    public void onError(long durationInNanos, Throwable throwable) {
         if(circuitBreakerConfig.getRecordFailurePredicate().test(throwable)){
             if(LOG.isDebugEnabled()){
                 LOG.debug(String.format("CircuitBreaker '%s' recorded a failure:", name), throwable);
             }
-            publishCircuitBreakerEvent(() -> new CircuitBreakerOnErrorEvent(getName(), duration, throwable));
+            publishCircuitErrorEvent(name, durationInNanos, throwable);
             stateReference.get().onError(throwable);
         }else{
-            publishCircuitBreakerEvent(() -> new CircuitBreakerOnIgnoredErrorEvent(getName(), duration, throwable));
+            publishCircuitErrorEvent(name, durationInNanos, throwable);
         }
     }
 
-
     @Override
-    public void onSuccess(Duration duration) {
-        publishCircuitBreakerEvent(() -> new CircuitBreakerOnSuccessEvent(getName(), duration));
+    public void onSuccess(long durationInNanos) {
+        publishSuccessEvent(durationInNanos);
         stateReference.get().onSuccess();
     }
 
@@ -132,6 +131,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
     public String getName() {
         return this.name;
     }
+
 
     /**
      * Get the config of this CircuitBreaker.
@@ -196,16 +196,33 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
         }
     }
 
-    private void publishStateTransitionEvent(StateTransition stateTransition){
+    private void publishStateTransitionEvent(final StateTransition stateTransition){
         if(LOG.isDebugEnabled()){
-            LOG.debug(String.format("CircuitBreaker '%s' changed state from %s to %s", name, stateTransition.getFromState(), stateTransition.getToState()));
+            LOG.debug(
+                String.format("CircuitBreaker '%s' changed state from %s to %s",
+                name, stateTransition.getFromState(), stateTransition.getToState())
+            );
         }
-        publishCircuitBreakerEvent(() -> new CircuitBreakerOnStateTransitionEvent(getName(), stateTransition));
+        if(eventPublisher.hasSubscribers()) {
+            eventPublisher.onNext(new CircuitBreakerOnStateTransitionEvent(name, stateTransition));
+        }
     }
 
-    private void publishCircuitBreakerEvent(Supplier<CircuitBreakerEvent> event) {
-        if(eventPublisher.hasSubscribers()) {
-            eventPublisher.onNext(event.get());
+    private void publishCallNotPermittedEvent() {
+        if (eventPublisher.hasSubscribers()) {
+            eventPublisher.onNext(new CircuitBreakerOnCallNotPermittedEvent(name));
+        }
+    }
+
+    private void publishSuccessEvent(final long durationInNanos) {
+        if (eventPublisher.hasSubscribers()) {
+            eventPublisher.onNext(new CircuitBreakerOnSuccessEvent(name, Duration.ofNanos(durationInNanos)));
+        }
+    }
+
+    private void publishCircuitErrorEvent(final String name, final long durationInNanos, final Throwable throwable) {
+        if (eventPublisher.hasSubscribers()) {
+            eventPublisher.onNext(new CircuitBreakerOnErrorEvent(name, Duration.ofNanos(durationInNanos), throwable));
         }
     }
 
