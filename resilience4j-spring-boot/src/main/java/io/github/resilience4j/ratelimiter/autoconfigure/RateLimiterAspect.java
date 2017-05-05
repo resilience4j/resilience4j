@@ -25,7 +25,6 @@ import org.slf4j.LoggerFactory;
 
 import io.github.resilience4j.ratelimiter.RateLimiterConfig;
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
-import io.github.resilience4j.ratelimiter.RequestNotPermitted;
 import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
 
 import java.lang.reflect.Method;
@@ -47,18 +46,23 @@ public class RateLimiterAspect {
         this.rateLimiterRegistry = rateLimiterRegistry;
     }
 
+    /**
+     * Method used as pointcut
+     * @param rateLimiter - matched annotation
+     */
     @Pointcut(value = "@within(rateLimiter) || @annotation(rateLimiter)", argNames = "rateLimiter")
     public void matchAnnotatedClassOrMethod(RateLimiter rateLimiter) {
     }
 
     @Around(value = "matchAnnotatedClassOrMethod(limitedService)", argNames = "proceedingJoinPoint, limitedService")
     public Object rateLimiterAroundAdvice(ProceedingJoinPoint proceedingJoinPoint, RateLimiter limitedService) throws Throwable {
+        RateLimiter targetService = limitedService;
         Method method = ((MethodSignature) proceedingJoinPoint.getSignature()).getMethod();
         String methodName = method.getDeclaringClass().getName() + "#" + method.getName();
-        if (limitedService == null) {
-            limitedService = getRateLimiterAnnotation(proceedingJoinPoint);
+        if (targetService == null) {
+            targetService = getRateLimiterAnnotation(proceedingJoinPoint);
         }
-        String name = limitedService.name();
+        String name = targetService.name();
         io.github.resilience4j.ratelimiter.RateLimiter rateLimiter = getOrCreateRateLimiter(methodName, name);
         return handleJoinPoint(proceedingJoinPoint, rateLimiter, methodName);
     }
@@ -84,15 +88,10 @@ public class RateLimiterAspect {
         if (targetClass.isAnnotationPresent(RateLimiter.class)) {
             rateLimiter = targetClass.getAnnotation(RateLimiter.class);
             if (rateLimiter == null) {
-                if (logger.isDebugEnabled()) {
-                    logger.debug("TargetClass has no annotation 'RateLimiter'");
-                }
                 rateLimiter = targetClass.getDeclaredAnnotation(RateLimiter.class);
-                if (rateLimiter == null) {
-                    if (logger.isDebugEnabled()) {
-                        logger.debug("TargetClass has no declared annotation 'RateLimiter'");
-                    }
-                }
+            }
+            if (rateLimiter == null) {
+                logger.debug("TargetClass has no declared annotation 'RateLimiter'");
             }
         }
         return rateLimiter;
