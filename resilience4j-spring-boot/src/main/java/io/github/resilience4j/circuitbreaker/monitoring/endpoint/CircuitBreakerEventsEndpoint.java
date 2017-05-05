@@ -18,13 +18,12 @@ package io.github.resilience4j.circuitbreaker.monitoring.endpoint;
 
 import org.springframework.boot.actuate.endpoint.mvc.EndpointMvcAdapter;
 import org.springframework.http.MediaType;
+import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
-
-import java.util.Comparator;
 
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
@@ -34,18 +33,19 @@ import io.github.resilience4j.consumer.EventConsumerRegistry;
 import io.reactivex.Flowable;
 import javaslang.collection.Seq;
 
+import java.util.Comparator;
 
-@RequestMapping(method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
-public class CircuitBreakerEventsEndpoint extends EndpointMvcAdapter {
+
+@Controller
+@RequestMapping(value = "circuitbreaker/", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+public class CircuitBreakerEventsEndpoint {
 
     private static final String MEDIA_TYPE_TEXT_EVENT_STREAM = "text/event-stream";
     private final EventConsumerRegistry<CircuitBreakerEvent> eventConsumerRegistry;
     private final CircuitBreakerRegistry circuitBreakerRegistry;
 
-    public CircuitBreakerEventsEndpoint(CircuitBreakerEndpoint circuitBreakerEndpoint,
-                                        EventConsumerRegistry<CircuitBreakerEvent> eventConsumerRegistry,
+    public CircuitBreakerEventsEndpoint(EventConsumerRegistry<CircuitBreakerEvent> eventConsumerRegistry,
                                         CircuitBreakerRegistry circuitBreakerRegistry) {
-        super(circuitBreakerEndpoint);
         this.eventConsumerRegistry = eventConsumerRegistry;
         this.circuitBreakerRegistry = circuitBreakerRegistry;
     }

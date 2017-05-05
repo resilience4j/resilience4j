@@ -1,4 +1,3 @@
-package io.github.resilience4j.ratelimiter.autoconfigure;
 /*
  * Copyright 2017 Bohdan Storozhuk
  *
@@ -14,6 +13,7 @@ package io.github.resilience4j.ratelimiter.autoconfigure;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package io.github.resilience4j.ratelimiter.autoconfigure;
 
 import io.github.resilience4j.ratelimiter.RateLimiterConfig;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -37,7 +37,7 @@ public class RateLimiterProperties {
         return createRateLimiterConfig(getLimiterProperties(limiter));
     }
 
-    private RateLimiterConfig createRateLimiterConfig(LimiterProperties limiterProperties) {
+    public static RateLimiterConfig createRateLimiterConfig(LimiterProperties limiterProperties) {
         if (limiterProperties == null) {
             return RateLimiterConfig.ofDefaults();
         }
@@ -71,6 +71,9 @@ public class RateLimiterProperties {
         private Integer limitForPeriod;
         private Integer limitRefreshPeriodInMillis;
         private Integer timeoutInMillis;
+        private Boolean subscribeForEvents = false;
+        private Boolean registerHealthIndicator = false;
+        private Integer eventConsumerBufferSize = 100;
 
         /**
          * Configures the permissions limit for refresh period.
@@ -138,6 +141,30 @@ public class RateLimiterProperties {
          */
         public void setTimeoutInMillis(Integer timeoutInMillis) {
             this.timeoutInMillis = timeoutInMillis;
+        }
+
+        public Boolean getSubscribeForEvents() {
+            return subscribeForEvents;
+        }
+
+        public void setSubscribeForEvents(Boolean subscribeForEvents) {
+            this.subscribeForEvents = subscribeForEvents;
+        }
+
+        public Integer getEventConsumerBufferSize() {
+            return eventConsumerBufferSize;
+        }
+
+        public void setEventConsumerBufferSize(Integer eventConsumerBufferSize) {
+            this.eventConsumerBufferSize = eventConsumerBufferSize;
+        }
+
+        public Boolean getRegisterHealthIndicator() {
+            return registerHealthIndicator;
+        }
+
+        public void setRegisterHealthIndicator(Boolean registerHealthIndicator) {
+            this.registerHealthIndicator = registerHealthIndicator;
         }
     }
 

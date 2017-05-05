@@ -15,11 +15,6 @@
  */
 package io.github.resilience4j.ratelimiter.autoconfigure;
 
-import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
-import io.github.resilience4j.ratelimiter.RateLimiterConfig;
-import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
-import io.github.resilience4j.ratelimiter.RequestNotPermitted;
-import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -28,11 +23,16 @@ import org.aspectj.lang.reflect.MethodSignature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import io.github.resilience4j.ratelimiter.RateLimiterConfig;
+import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
+import io.github.resilience4j.ratelimiter.RequestNotPermitted;
+import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
+
 import java.lang.reflect.Method;
 
 /**
- * This Spring AOP aspect intercepts all methods which are annotated with a {@link CircuitBreaker} annotation.
- * The aspect protects an annotated method with a CircuitBreaker. The CircuitBreakerRegistry is used to retrieve an instance of a CircuitBreaker for
+ * This Spring AOP aspect intercepts all methods which are annotated with a {@link RateLimiter} annotation.
+ * The aspect protects an annotated method with a RateLimiter. The RateLimiterRegistry is used to retrieve an instance of a RateLimiter for
  * a specific backend.
  */
 
@@ -41,11 +41,9 @@ public class RateLimiterAspect {
     private static final Logger logger = LoggerFactory.getLogger(RateLimiterAspect.class);
     public static final String RATE_LIMITER_RECEIVED = "Created or retrieved rate limiter '{}' with period: '{}'; limit for period: '{}'; timeout: '{}'; method: '{}'";
 
-    private final RateLimiterProperties rateLimiterProperties;
     private final RateLimiterRegistry rateLimiterRegistry;
 
-    public RateLimiterAspect(RateLimiterProperties rateLimiterProperties, RateLimiterRegistry rateLimiterRegistry) {
-        this.rateLimiterProperties = rateLimiterProperties;
+    public RateLimiterAspect(RateLimiterRegistry rateLimiterRegistry) {
         this.rateLimiterRegistry = rateLimiterRegistry;
     }
 
@@ -54,7 +52,7 @@ public class RateLimiterAspect {
     }
 
     @Around(value = "matchAnnotatedClassOrMethod(limitedService)", argNames = "proceedingJoinPoint, limitedService")
-    public Object circuitBreakerAroundAdvice(ProceedingJoinPoint proceedingJoinPoint, RateLimiter limitedService) throws Throwable {
+    public Object rateLimiterAroundAdvice(ProceedingJoinPoint proceedingJoinPoint, RateLimiter limitedService) throws Throwable {
         Method method = ((MethodSignature) proceedingJoinPoint.getSignature()).getMethod();
         String methodName = method.getDeclaringClass().getName() + "#" + method.getName();
         if (limitedService == null) {
@@ -66,8 +64,7 @@ public class RateLimiterAspect {
     }
 
     private io.github.resilience4j.ratelimiter.RateLimiter getOrCreateRateLimiter(String methodName, String name) {
-        io.github.resilience4j.ratelimiter.RateLimiter rateLimiter = rateLimiterRegistry.rateLimiter(name,
-            () -> rateLimiterProperties.createRateLimiterConfig(name));
+        io.github.resilience4j.ratelimiter.RateLimiter rateLimiter = rateLimiterRegistry.rateLimiter(name);
 
         if (logger.isDebugEnabled()) {
             RateLimiterConfig rateLimiterConfig = rateLimiter.getRateLimiterConfig();
@@ -103,7 +100,7 @@ public class RateLimiterAspect {
 
     private Object handleJoinPoint(ProceedingJoinPoint proceedingJoinPoint,
                                    io.github.resilience4j.ratelimiter.RateLimiter rateLimiter, String methodName)
-        throws IllegalStateException, RequestNotPermitted, Throwable {
+        throws Throwable {
         try {
             io.github.resilience4j.ratelimiter.RateLimiter.waitForPermission(rateLimiter);
             return proceedingJoinPoint.proceed();

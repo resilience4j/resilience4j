@@ -1,4 +1,4 @@
-package io.github.resilience4j.circuitbreaker.test;
+package io.github.resilience4j.service.test;
 
 
 import org.springframework.stereotype.Component;
@@ -6,8 +6,10 @@ import org.springframework.stereotype.Component;
 import java.io.IOException;
 
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
 
 @CircuitBreaker(backend = DummyService.BACKEND)
+@RateLimiter(name = DummyService.BACKEND)
 @Component
 public class DummyServiceImpl implements DummyService {
     @Override
