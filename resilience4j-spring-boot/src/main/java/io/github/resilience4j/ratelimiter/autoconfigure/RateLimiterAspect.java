@@ -52,6 +52,7 @@ public class RateLimiterAspect {
      */
     @Pointcut(value = "@within(rateLimiter) || @annotation(rateLimiter)", argNames = "rateLimiter")
     public void matchAnnotatedClassOrMethod(RateLimiter rateLimiter) {
+        // Method used as pointcut
     }
 
     @Around(value = "matchAnnotatedClassOrMethod(limitedService)", argNames = "proceedingJoinPoint, limitedService")

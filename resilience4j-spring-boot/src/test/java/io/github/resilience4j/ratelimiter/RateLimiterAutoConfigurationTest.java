@@ -43,13 +43,13 @@ import java.util.List;
 public class RateLimiterAutoConfigurationTest {
 
     @Autowired
-    RateLimiterRegistry rateLimiterRegistry;
+    private RateLimiterRegistry rateLimiterRegistry;
 
     @Autowired
-    RateLimiterProperties rateLimiterProperties;
+    private RateLimiterProperties rateLimiterProperties;
 
     @Autowired
-    DummyService dummyService;
+    private DummyService dummyService;
 
     @Autowired
     private TestRestTemplate restTemplate;
