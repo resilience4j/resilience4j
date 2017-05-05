@@ -15,6 +15,7 @@
  */
 package io.github.resilience4j.ratelimiter;
 
+import static com.jayway.awaitility.Awaitility.await;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.Test;
@@ -36,6 +37,7 @@ import io.github.resilience4j.service.test.TestApplication;
 import java.io.IOException;
 import java.time.Duration;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
@@ -63,15 +65,18 @@ public class RateLimiterAutoConfigurationTest {
         assertThat(rateLimiterRegistry).isNotNull();
         assertThat(rateLimiterProperties).isNotNull();
 
+        RateLimiter rateLimiter = rateLimiterRegistry.rateLimiter(DummyService.BACKEND);
+        assertThat(rateLimiter).isNotNull();
+        await()
+            .atMost(1, TimeUnit.SECONDS)
+            .until(() -> rateLimiter.getMetrics().getAvailablePermissions() == 10);
+
         try {
             dummyService.doSomething(true);
         } catch (IOException ex) {
             // Do nothing.
         }
         dummyService.doSomething(false);
-
-        RateLimiter rateLimiter = rateLimiterRegistry.rateLimiter(DummyService.BACKEND);
-        assertThat(rateLimiter).isNotNull();
 
         assertThat(rateLimiter.getMetrics().getAvailablePermissions()).isEqualTo(8);
         assertThat(rateLimiter.getMetrics().getNumberOfWaitingThreads()).isEqualTo(0);
@@ -102,5 +107,9 @@ public class RateLimiterAutoConfigurationTest {
         assertThat(eventsList).isNotEmpty();
         RateLimiterEventDTO lastEvent = eventsList.get(eventsList.size() - 1);
         assertThat(lastEvent.getRateLimiterEventType()).isEqualTo(RateLimiterEvent.Type.FAILED_ACQUIRE);
+
+        await()
+            .atMost(1, TimeUnit.SECONDS)
+            .until(() -> rateLimiter.getMetrics().getAvailablePermissions() == 10);
     }
 }
