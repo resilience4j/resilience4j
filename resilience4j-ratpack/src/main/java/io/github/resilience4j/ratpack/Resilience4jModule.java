@@ -19,15 +19,21 @@ import com.google.inject.AbstractModule;
 import com.google.inject.matcher.Matchers;
 import io.github.resilience4j.ratpack.annotation.CircuitBreaker;
 import io.github.resilience4j.ratpack.annotation.RateLimiter;
+import io.github.resilience4j.ratpack.annotation.Retry;
 import io.github.resilience4j.ratpack.internal.CircuitBreakerMethodInterceptor;
 import io.github.resilience4j.ratpack.internal.RateLimiterMethodInterceptor;
+import io.github.resilience4j.ratpack.internal.RetryMethodInterceptor;
 
-public class ResilienceModule extends AbstractModule {
+public class Resilience4jModule extends AbstractModule {
 
     @Override
     protected void configure() {
         bindInterceptor(Matchers.any(), Matchers.annotatedWith(CircuitBreaker.class), injected(new CircuitBreakerMethodInterceptor()));
         bindInterceptor(Matchers.any(), Matchers.annotatedWith(RateLimiter.class), injected(new RateLimiterMethodInterceptor()));
+        bindInterceptor(Matchers.any(), Matchers.annotatedWith(Retry.class), injected(new RetryMethodInterceptor()));
+        bindInterceptor(Matchers.annotatedWith(CircuitBreaker.class), Matchers.any(), injected(new CircuitBreakerMethodInterceptor()));
+        bindInterceptor(Matchers.annotatedWith(RateLimiter.class), Matchers.any(), injected(new RateLimiterMethodInterceptor()));
+        bindInterceptor(Matchers.annotatedWith(Retry.class), Matchers.any(), injected(new RetryMethodInterceptor()));
     }
 
     private <T> T injected(T instance) {

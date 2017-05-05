@@ -22,6 +22,7 @@ import static java.lang.reflect.Array.newInstance;
 import static java.util.Objects.requireNonNull;
 
 import java.util.AbstractQueue;
+import java.util.Arrays;
 import java.util.ConcurrentModificationException;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
@@ -35,7 +36,7 @@ import java.util.function.Supplier;
  * the oldest element (the head) will be evicted, and then the new element added at the tail.
  *
  * In order to achieve thread-safety it utilizes capability-based locking features of {@link StampedLock}.
- * All spins optimistic/pessimistic reads and writes are encapsulated in flowing methods:
+ * All spins optimistic/pessimistic reads and writes are encapsulated in following methods:
  *
  * <ul>
  * <li> {@link ConcurrentEvictingQueue#readConcurrently(Supplier)}</li>
@@ -62,11 +63,11 @@ public class ConcurrentEvictingQueue<E> extends AbstractQueue<E> {
 
     private final int maxSize;
     private volatile int size;
-    private volatile int modificationsCount;
     private final StampedLock stampedLock;
     private Object[] ringBuffer;
     private int headIndex;
     private int tailIndex;
+    private int modificationsCount;
 
     public ConcurrentEvictingQueue(int capacity) {
         if (capacity <= 0) {
@@ -184,7 +185,7 @@ public class ConcurrentEvictingQueue<E> extends AbstractQueue<E> {
             if (size == 0) {
                 return null;
             }
-            ringBuffer = new Object[maxSize];
+            Arrays.fill(ringBuffer, null);
             size = 0;
             headIndex = 0;
             tailIndex = 0;
@@ -244,10 +245,10 @@ public class ConcurrentEvictingQueue<E> extends AbstractQueue<E> {
         requireNonNull(destination, ILLEGAL_DESTINATION_ARRAY);
 
         Supplier<T[]> copyRingBuffer = () -> {
-            T[] result = destination;
             if (size == 0) {
-                return result;
+                return destination;
             }
+            T[] result = destination;
             if (destination.length < size) {
                 result = (T[]) newInstance(result.getClass().getComponentType(), size);
             }
@@ -311,6 +312,9 @@ public class ConcurrentEvictingQueue<E> extends AbstractQueue<E> {
         long stamp;
         for (int i = 0; i < RETRIES; i++) {
             stamp = stampedLock.tryOptimisticRead();
+            if(stamp == 0) {
+                continue;
+            }
             result = readSupplier.get();
             if (stampedLock.validate(stamp)) {
                 return result;

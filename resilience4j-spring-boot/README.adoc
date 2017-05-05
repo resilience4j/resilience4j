@@ -105,6 +105,52 @@ For example:
 }
 ----
 
+When you want to publish CircuitBreaker metrics on the Metrics endpoint, you can add `resilience4j-metrics` to register metrics in a Dropwizard Metrics Registry.
+For example:
+
+[source,json]
+----
+{
+    "resilience4j.circuitbreaker.backendA.successful": 2,
+    "resilience4j.circuitbreaker.backendA.failed": 3,
+    "resilience4j.circuitbreaker.backendA.buffered": 5,
+    "resilience4j.circuitbreaker.backendA.buffered_max": 5,
+    "resilience4j.circuitbreaker.backendA.not_permitted": 7,
+    "resilience4j.circuitbreaker.backendB.successful": 0,
+    "resilience4j.circuitbreaker.backendB.failed": 0,
+    "resilience4j.circuitbreaker.backendB.buffered": 0,
+    "resilience4j.circuitbreaker.backendB.buffered_max": 10,
+    "resilience4j.circuitbreaker.backendB.not_permitted": 0
+}
+----
+
+When you want to publish CircuitBreaker endpoints on the Prometheus endpoint, you have to add the optional module `resilience4j-prometheus`.
+For example:
+
+[source]
+----
+# HELP resilience4j_circuitbreaker_calls Circuit Breaker Call Stats
+# TYPE resilience4j_circuitbreaker_calls gauge
+resilience4j_circuitbreaker_calls{name="backendB",call_result="successful",} 0.0
+resilience4j_circuitbreaker_calls{name="backendB",call_result="failed",} 0.0
+resilience4j_circuitbreaker_calls{name="backendB",call_result="not_permitted",} 0.0
+resilience4j_circuitbreaker_calls{name="backendB",call_result="buffered",} 0.0
+resilience4j_circuitbreaker_calls{name="backendB",call_result="buffered_max",} 10.0
+resilience4j_circuitbreaker_calls{name="backendA",call_result="successful",} 0.0
+resilience4j_circuitbreaker_calls{name="backendA",call_result="failed",} 0.0
+resilience4j_circuitbreaker_calls{name="backendA",call_result="not_permitted",} 0.0
+resilience4j_circuitbreaker_calls{name="backendA",call_result="buffered",} 0.0
+resilience4j_circuitbreaker_calls{name="backendA",call_result="buffered_max",} 5.0
+# HELP resilience4j_circuitbreaker_states Circuit Breaker States
+# TYPE resilience4j_circuitbreaker_states gauge
+resilience4j_circuitbreaker_states{name="backendB",state="closed",} 1.0
+resilience4j_circuitbreaker_states{name="backendB",state="open",} 0.0
+resilience4j_circuitbreaker_states{name="backendB",state="half_open",} 0.0
+resilience4j_circuitbreaker_states{name="backendA",state="closed",} 1.0
+resilience4j_circuitbreaker_states{name="backendA",state="open",} 0.0
+resilience4j_circuitbreaker_states{name="backendA",state="half_open",} 0.0
+----
+
 === RateLimiter
 This demo publishes the status and metrics of all RateLimiter via a custom `RateLimiterHealthIndicator`.
 RateLimiterHealthIndicator changes its state DOWN only if there is some permission waiting threads

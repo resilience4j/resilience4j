@@ -31,7 +31,7 @@ import io.github.resilience4j.consumer.EventConsumerRegistry;
 
 /**
  * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration
- * Auto-configuration} for resilience4j circuitbreaker.
+ * Auto-configuration} for resilience4j-circuitbreaker.
  */
 @Configuration
 @ConditionalOnClass(CircuitBreaker.class)

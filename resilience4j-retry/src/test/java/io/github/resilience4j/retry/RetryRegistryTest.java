@@ -35,7 +35,7 @@ public class RetryRegistryTest {
     public void shouldReturnTheCorrectName() {
         Retry retry = retryRegistry.retry("testName");
         Assertions.assertThat(retry).isNotNull();
-        Assertions.assertThat(retry.getId()).isEqualTo("testName");
+        Assertions.assertThat(retry.getName()).isEqualTo("testName");
     }
 
     @Test

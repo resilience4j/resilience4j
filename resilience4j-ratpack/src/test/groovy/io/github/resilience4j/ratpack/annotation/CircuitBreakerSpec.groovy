@@ -21,9 +21,11 @@ import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry
 import io.github.resilience4j.ratelimiter.RateLimiterConfig
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry
 import io.github.resilience4j.ratpack.RecoveryFunction
-import io.github.resilience4j.ratpack.ResilienceModule
+import io.github.resilience4j.ratpack.Resilience4jModule
 import io.reactivex.Flowable
 import io.reactivex.Observable
+import io.reactivex.Single
+import io.reactivex.functions.Consumer
 import io.reactivex.functions.Function
 import ratpack.exec.Promise
 import ratpack.test.embed.EmbeddedApp
@@ -51,7 +53,7 @@ class CircuitBreakerSpec extends Specification {
         given:
         app = ratpack {
             bindings {
-                module(ResilienceModule)
+                module(Resilience4jModule)
                 bind(Something)
             }
             handlers {
@@ -79,7 +81,7 @@ class CircuitBreakerSpec extends Specification {
                 bindInstance(CircuitBreakerRegistry, registry)
                 bindInstance(RateLimiterRegistry, RateLimiterRegistry.of(RateLimiterConfig.ofDefaults()))
                 bind(Something)
-                module(ResilienceModule)
+                module(Resilience4jModule)
             }
             handlers {
                 get('promise') { Something something ->
@@ -136,6 +138,21 @@ class CircuitBreakerSpec extends Specification {
                         render it
                     }
                 }
+                get('single') { Something something ->
+                    something.breakerSingle().subscribe({
+                        render it
+                    } as Consumer<String>)
+                }
+                get('singleBad') { Something something ->
+                    something.breakerSingleBad().subscribe({
+                        render it
+                    } as Consumer<Void>)
+                }
+                get('singleRecover') { Something something ->
+                    something.breakerSingleRecover().subscribe({
+                        render it
+                    } as Consumer<Void>)
+                }
                 get('normal') { Something something ->
                     render something.breakerNormal()
                 }
@@ -164,7 +181,7 @@ class CircuitBreakerSpec extends Specification {
         actual = get(badPath)
 
         then:
-        actual.statusCode == badStatus
+        actual.statusCode == 500
         !breaker.callPermitted
         breaker.state == io.github.resilience4j.circuitbreaker.CircuitBreaker.State.OPEN
 
@@ -179,12 +196,13 @@ class CircuitBreakerSpec extends Specification {
         breaker.state == io.github.resilience4j.circuitbreaker.CircuitBreaker.State.OPEN
 
         where:
-        path      | badPath      | recoverPath      | breakerName | expectedText      | badStatus
-        'promise' | 'promiseBad' | 'promiseRecover' | 'test'      | 'breaker promise' | 500
-        'stage'   | 'stageBad'   | 'stageRecover'   | 'test'      | 'breaker stage'   | 404
-        'flow'    | 'flowBad'    | 'flowRecover'    | 'test'      | 'breaker flow'    | 500
-        'observe' | 'observeBad' | 'observeRecover' | 'test'      | 'breaker observe' | 500
-        'normal'  | 'normalBad'  | 'normalRecover'  | 'test'      | 'breaker normal'  | 404
+        path      | badPath      | recoverPath      | breakerName | expectedText
+        'promise' | 'promiseBad' | 'promiseRecover' | 'test'      | 'breaker promise'
+        'stage'   | 'stageBad'   | 'stageRecover'   | 'test'      | 'breaker stage'
+        'flow'    | 'flowBad'    | 'flowRecover'    | 'test'      | 'breaker flow'
+        'observe' | 'observeBad' | 'observeRecover' | 'test'      | 'breaker observe'
+        'single'  | 'singleBad'  | 'singleRecover'  | 'test'      | 'breaker single'
+        'normal'  | 'normalBad'  | 'normalRecover'  | 'test'      | 'breaker normal'
     }
 
     def buildConfig() {
@@ -262,6 +280,21 @@ class CircuitBreakerSpec extends Specification {
         @CircuitBreaker(name = "test", recovery = MyRecoveryFunction)
         Observable<Void> breakerObserveRecover() {
             Observable.just("breaker observe").map({ throw new Exception("bad") } as Function<String, Void>)
+        }
+
+        @CircuitBreaker(name = "test")
+        Single<String> breakerSingle() {
+            Single.just("breaker single")
+        }
+
+        @CircuitBreaker(name = "test")
+        Single<Void> breakerSingleBad() {
+            Single.just("breaker single").map({ throw new Exception("bad") } as Function<String, Void>)
+        }
+
+        @CircuitBreaker(name = "test", recovery = MyRecoveryFunction)
+        Single<Void> breakerSingleRecover() {
+            Single.just("breaker single").map({ throw new Exception("bad") } as Function<String, Void>)
         }
 
         @CircuitBreaker(name = "test")

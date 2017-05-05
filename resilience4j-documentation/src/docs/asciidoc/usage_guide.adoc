@@ -57,14 +57,14 @@ In the following example, `Try.of(...)` returns a `Success<String>` Monad, if th
 
 [source,java,indent=0]
 ----
-include::../../../../resilience4j-circuitbreaker/src/test/java/io/github/robwin/circuitbreaker/CircuitBreakerTest.java[tags=shouldInvokeMap]
+include::../../../../resilience4j-circuitbreaker/src/test/java/io/github/resilience4j/circuitbreaker/CircuitBreakerTest.java[tags=shouldInvokeMap]
 ----
 
 You can also chain up functions which are decorated by different CircuitBreakers.
 
 [source,java,indent=0]
 ----
-include::../../../../resilience4j-circuitbreaker/src/test/java/io/github/robwin/circuitbreaker/CircuitBreakerTest.java[tags=shouldChainDecoratedFunctions]
+include::../../../../resilience4j-circuitbreaker/src/test/java/io/github/resilience4j/circuitbreaker/CircuitBreakerTest.java[tags=shouldChainDecoratedFunctions]
 ----
 
 ==== CircuitBreaker and RxJava
@@ -85,7 +85,7 @@ You can also invoke a decorated function asynchronously by using a `CompletableF
 
 [source,java,indent=0]
 ----
-include::../../../../resilience4j-circuitbreaker/src/test/java/io/github/robwin/circuitbreaker/CircuitBreakerTest.java[tags=shouldInvokeAsyncApply]
+include::../../../../resilience4j-circuitbreaker/src/test/java/io/github/resilience4j/circuitbreaker/CircuitBreakerTest.java[tags=shouldInvokeAsyncApply]
 ----
 
 ==== OPEN CircuitBreaker example
@@ -94,7 +94,7 @@ In this example `map` is not invoked, because the CircuitBreaker is OPEN. The ca
 
 [source,java,indent=0]
 ----
-include::../../../../resilience4j-circuitbreaker/src/test/java/io/github/robwin/circuitbreaker/CircuitBreakerTest.java[tags=shouldThrowCircuitBreakerOpenException]
+include::../../../../resilience4j-circuitbreaker/src/test/java/io/github/resilience4j/circuitbreaker/CircuitBreakerTest.java[tags=shouldThrowCircuitBreakerOpenException]
 ----
 
 ==== Recover from an exception
@@ -103,7 +103,7 @@ If you want to recover from any exception, you can chain the method `Try.recover
 
 [source,java,indent=0]
 ----
-include::../../../../resilience4j-circuitbreaker/src/test/java/io/github/robwin/circuitbreaker/CircuitBreakerTest.java[tags=shouldInvokeRecoverFunction]
+include::../../../../resilience4j-circuitbreaker/src/test/java/io/github/resilience4j/circuitbreaker/CircuitBreakerTest.java[tags=shouldInvokeRecoverFunction]
 ----
 
 ==== Customize the exception handler
@@ -112,7 +112,7 @@ The following example shows how to ignore an `IOException`, but all other except
 
 [source,java,indent=0]
 ----
-include::../../../../resilience4j-circuitbreaker/src/test/java/io/github/robwin/circuitbreaker/CircuitBreakerTest.java[tags=shouldNotRecordIOExceptionAsAFailure]
+include::../../../../resilience4j-circuitbreaker/src/test/java/io/github/resilience4j/circuitbreaker/CircuitBreakerTest.java[tags=shouldNotRecordIOExceptionAsAFailure]
 ----
 
 ==== Consume emitted CircuitBreakerEvents
@@ -193,7 +193,18 @@ Try.run(restrictedCall)
     .onFailure((RequestNotPermitted throwable) -> LOG.info("Wait before call it again :)"));
 ----
 
-== Consume emitted RateLimiterEvents
+==== RateLimiter and RxJava
+
+The following example shows how to decorate an Observable by using the custom RxJava operator.
+
+[source,java]
+----
+RateLimiter rateLimiter = RateLimiter.ofDefaults("backendName");
+Observable.fromCallable(backendService::doSomething)
+    .lift(RateLimiterOperator.of(rateLimiter))
+----
+
+==== Consume emitted RateLimiterEvents
 
 The RateLimiter emits a stream of RateLimiterEvents to any Observer/Consumer who subscribes.
 An event can be a successful permission acquire or acquire failure.
@@ -231,6 +242,125 @@ int availablePermissions = metrics.getAvailablePermissions();
 AtomicRateLimiter atomicLimiter;
 // Estimated time duration in nanos to wait for the next permission
 long nanosToWaitForPermission = atomicLimiter.getNanosToWait();
+----
+
+=== Bulkhead
+==== Overview
+Provides an implementation of a bulkhead pattern that can be used to limit the amount of parallel executions - in case of backend calls to downstream dependencies, the bulkhead provides dependency isolation and load shedding. For cpu-bound work, the bulkhead provides load shedding only.
+
+This bulkhead abstraction should work well across a variety of threading and io models. It is based on a semaphore, and unlike Hystrix, does not provide "shadow" thread pool option. It is up to the client to ensure correct thread pool sizing that will be consistent with bulkhead configuration.
+
+==== Create a Bulkhead
+
+Just like the CircuitBreaker, this module provides in-memory 'BulkheadRegistry'. You can use the registry to manage (create and retrieve) Bulkhead instances.
+
+[source,java,indent=0]
+----
+BulkheadRegistry bulkheadRegistry = BulkheadRegistry.ofDefaults();
+----
+
+As an alternative you can provide custom global `BulkheadConfig`. In order to create a custom global BulkheadConfig or a BulkheadConfig for a specific Bulkhead, you can use the BulkheadConfig builder. You can use the builder to configure:
+
+* max amount of parallel executions allowed by the bulkhead
+* max amount of time a thread can be blocked for when attempting to enter a saturated bulkhead
+
+[source,java,indent=0]
+----
+// Create a custom configuration for a Bulkhead
+BulkheadConfig config = BulkheadConfig.custom()
+                                      .maxConcurrentCalls(150)
+                                      .maxWaitTime(100)
+                                      .build();
+
+// Create a BulkheadRegistry with a custom global configuration
+BulkheadRegistry registry = BulkheadRegistry.of(config);
+
+// Get-Or-Create a Bulkhead from the registry - bulkhead will be backed by the default config
+Bulkhead bulkhead1 = registry.bulkhead("foo");
+
+// Get-Or-Create a Bulkhead from the registry, use a custom configuration when creating the bulkhead
+BulkheadConfig custom = BulkheadConfig.custom()
+                                      .maxWaitTime(0)
+                                      .build();
+
+Bulkhead bulkhead2 = registry.bulkhead("bar", custom);
+----
+
+If you don't want to use the BulkheadRegistry to manage Bulkhead instances, you can also create instances directly:
+
+[source,java,indent=0]
+----
+Bulkhead bulkhead1 = Bulkhead.ofDefaults("foo");
+
+Bulkhead bulkhead2 = Bulkhead.of(
+                         "bar",
+                         BulkheadConfig.custom()
+                                       .maxConcurrentCalls(50)
+                                       .build()
+                     );
+----
+
+==== Using a Bulkhead
+
+You can decorate any `Supplier / Runnable / Function` or `CheckedSupplier / CheckedRunnable / CheckedFunction` function with `Bulkhead.decorateCheckedSupplier()`, `Bulkhead.decorateCheckedRunnable()` or `Bulkhead.decorateCheckedFunction()`.
+You can invoke the decorated function with `Try.of(...)` or `Try.run(...)` from https://github.com/javaslang/javaslang[Javaslang]. This allows to chain further functions with `map`, `flatMap`, `filter`, `recover` or `andThen`. The chained functions are only invoked, if the Bulkhead is not saturated. In the following example, `Try.of(...)` returns a `Success<String>` Monad, if the invocation of the function is successful. If the function throws an exception, a `Failure<Throwable>` Monad is returned and `map` is not invoked.
+
+[source,java,indent=0]
+----
+include::../../../../resilience4j-bulkhead/src/test/java/io/github/resilience4j/bulkhead/BulkheadTest.java[tags=shouldInvokeMap]
+----
+
+You can also chain up functions which are decorated by different Bulkheads and/or CircuitBreakers.
+
+[source,java,indent=0]
+----
+include::../../../../resilience4j-bulkhead/src/test/java/io/github/resilience4j/bulkhead/BulkheadTest.java[tags=shouldChainDecoratedFunctions]
+----
+
+==== Bulkhead and RxJava
+
+The following example shows how to decorate an Observable by using the custom RxJava operator.
+
+[source,java]
+----
+Bulkhead bulkhead = Bulkhead.ofDefaults("backendName");
+Observable.fromCallable(backendService::doSomething)
+          .lift(BulkheadOperator.of(bulkhead));
+----
+
+==== Bulkhead and CompletableFuture
+
+You can also invoke a decorated function asynchronously by using a `CompletableFuture` and chain further functions.
+
+[source,java,indent=0]
+----
+include::../../../../resilience4j-bulkhead/src/test/java/io/github/resilience4j/bulkhead/BulkheadTest.java[tags=shouldInvokeAsyncApply]
+----
+
+==== Saturated Bulkhead example
+
+In this example the decorated runnable is not executed because the Bulkhead is saturated and will not allow any more parallel executions. The call to `Try.run` returns a `Failure<Throwable>` Monad so that the chained function is not invoked.
+
+[source,java,indent=0]
+----
+include::../../../../resilience4j-bulkhead/src/test/java/io/github/resilience4j/bulkhead/BulkheadTest.java[tags=bulkheadFullException]
+----
+
+==== Consume emitted BulkheadEvents
+
+The Bulkhead emits a stream of BulkheadEvent events to any Observer/Consumer who subscribes. There are two types of events emitted: permitted execution & rejected execution. If you want to consume these events, you have to subscribe to the event stream. You can use the `CircularEventConsumer` to store events in a circular buffer with a fixed capacity. You can use RxJava to filter certain events.
+The advantage of an event stream is that you can use RxJava's `observeOn` operator to specify a different Scheduler that the Bulkhead will use to send notifications to its observers/consumers.
+
+[source,java]
+----
+Bulkhead bulkhead = Bulkhead.ofDefaults("backendName");
+CircularEventConsumer<BulkheadOnCallRejectedEvent> circularEventConsumer = new CircularEventConsumer<>(10);
+bulkhead.getEventStream()
+        .filter(event -> event.getEventType() == Type.CALL_REJECTED)
+        .cast(BulkheadOnCallRejectedEvent.class)
+        .subscribe(circularEventConsumer);
+
+List<BulkheadOnCallRejectedEvent> bufferedEvents = circularEventConsumer.getBufferedEvents();
 ----
 
 === Cache
@@ -320,6 +450,17 @@ Try<String> result = Try.of(retryableSupplier).recover((throwable) -> "Hello wor
 BDDMockito.then(helloWorldService).should(times(3)).sayHelloWorld();
 // and the exception should be handled by the recovery function
 assertThat(result.get()).isEqualTo("Hello world from recovery function");
+----
+
+==== Retry and RxJava
+
+The following example shows how to decorate an Observable by using the custom RxJava transformer.
+
+[source,java]
+----
+Retry retry = Retry.ofDefaults("backendName");
+Observable.fromCallable(backendService::doSomething)
+    .compose(RetryTransformer.of(retry))
 ----
 
 ==== Consume emitted RetryEvents

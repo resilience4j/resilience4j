@@ -23,8 +23,8 @@ package io.github.resilience4j.retry.event;
  */
 public class RetryOnErrorEvent extends AbstractRetryEvent {
 
-    public RetryOnErrorEvent(String id, int numberOfAttempts, Throwable lastThrowable) {
-        super(id, numberOfAttempts, lastThrowable);
+    public RetryOnErrorEvent(String name, int numberOfAttempts, Throwable lastThrowable) {
+        super(name, numberOfAttempts, lastThrowable);
     }
     @Override
     public Type getEventType() {
@@ -35,7 +35,7 @@ public class RetryOnErrorEvent extends AbstractRetryEvent {
     public String toString() {
         return String.format("%s: Retry '%s' recorded a failed retry attempt. Number of retry attempts: '%d', Last exception was: '%s'.",
                 getCreationTime(),
-                getId(),
+                getName(),
                 getNumberOfAttempts(),
                 getLastThrowable().toString());
     }

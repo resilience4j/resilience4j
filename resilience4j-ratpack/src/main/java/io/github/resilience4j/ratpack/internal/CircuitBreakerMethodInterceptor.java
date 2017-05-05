@@ -25,6 +25,7 @@ import io.github.resilience4j.ratpack.RecoveryFunction;
 import io.github.resilience4j.ratpack.annotation.CircuitBreaker;
 import io.reactivex.Flowable;
 import io.reactivex.Observable;
+import io.reactivex.Single;
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
 import ratpack.exec.Promise;
@@ -35,78 +36,99 @@ import java.util.concurrent.CompletionStage;
 
 /**
  * A {@link MethodInterceptor} to handle all methods annotated with {@link CircuitBreaker}. It will
- * handle methods that return a Promise only. It will add a transform to the promise with the circuit breaker and
- * fallback found in the annotation.
+ * handle methods that return a Promise, Observable, Flowable, CompletionStage, or value. It will execute the circuit breaker and
+ * the fallback found in the annotation.
  */
 public class CircuitBreakerMethodInterceptor implements MethodInterceptor {
 
     @Inject(optional = true)
     private CircuitBreakerRegistry registry;
 
-    public CircuitBreakerMethodInterceptor() {
-        if (registry == null) {
-            registry = CircuitBreakerRegistry.ofDefaults();
-        }
-    }
-
     @SuppressWarnings("unchecked")
     @Override
     public Object invoke(MethodInvocation invocation) throws Throwable {
         CircuitBreaker annotation = invocation.getMethod().getAnnotation(CircuitBreaker.class);
+        RecoveryFunction<?> recoveryFunction = annotation.recovery().newInstance();
+        if (registry == null) {
+            registry = CircuitBreakerRegistry.ofDefaults();
+        }
         io.github.resilience4j.circuitbreaker.CircuitBreaker breaker = registry.circuitBreaker(annotation.name());
         if (breaker == null) {
             return invocation.proceed();
         }
-        RecoveryFunction<?> recoveryFunction = annotation.recovery().newInstance();
+        Class<?> returnType = invocation.getMethod().getReturnType();
+        if (Promise.class.isAssignableFrom(returnType)) {
+            Promise<?> result = (Promise<?>) proceed(invocation, breaker, recoveryFunction);
+            if (result != null) {
+                CircuitBreakerTransformer transformer = CircuitBreakerTransformer.of(breaker).recover(recoveryFunction);
+                result = result.transform(transformer);
+            }
+            return result;
+        } else if (Observable.class.isAssignableFrom(returnType)) {
+            Observable<?> result = (Observable<?>) proceed(invocation, breaker, recoveryFunction);
+            if (result != null) {
+                CircuitBreakerOperator operator = CircuitBreakerOperator.of(breaker);
+                result = result.lift(operator).onErrorReturn(t -> recoveryFunction.apply((Throwable) t));
+            }
+            return result;
+        } else if (Flowable.class.isAssignableFrom(returnType)) {
+            Flowable<?> result = (Flowable<?>) proceed(invocation, breaker, recoveryFunction);
+            if (result != null) {
+                CircuitBreakerOperator operator = CircuitBreakerOperator.of(breaker);
+                result = result.lift(operator).onErrorReturn(t -> recoveryFunction.apply((Throwable) t));
+            }
+            return result;
+        } else if (Single.class.isAssignableFrom(returnType)) {
+            Single<?> result = (Single<?>) proceed(invocation, breaker, recoveryFunction);
+            if (result != null) {
+                CircuitBreakerOperator operator = CircuitBreakerOperator.of(breaker);
+                result = result.lift(operator).onErrorReturn(t -> recoveryFunction.apply((Throwable) t));
+            }
+            return result;
+        } else if (CompletionStage.class.isAssignableFrom(returnType)) {
+            final CompletableFuture promise = new CompletableFuture<>();
+            if (breaker.isCallPermitted()) {
+                CompletionStage<?> result = (CompletionStage<?>) proceed(invocation, breaker, recoveryFunction);
+                if (result != null) {
+                    StopWatch stopWatch = StopWatch.start(breaker.getName());
+                    result.whenCompleteAsync((v, t) -> {
+                        Duration d = stopWatch.stop().getProcessingDuration();
+                        if (t != null) {
+                            breaker.onError(d, t);
+                            try {
+                                promise.complete(recoveryFunction.apply((Throwable) t));
+                            } catch (Exception e) {
+                                promise.completeExceptionally(e);
+                            }
+                        } else {
+                            breaker.onSuccess(d);
+                            promise.complete(v);
+                        }
+                    });
+                }
+            } else {
+                Throwable t = new CircuitBreakerOpenException(String.format("CircuitBreaker '%s' is open", breaker.getName()));
+                try {
+                    promise.complete(recoveryFunction.apply((Throwable) t));
+                } catch (Throwable t2) {
+                    promise.completeExceptionally(t2);
+                }
+            }
+            return promise;
+        }
+        return proceed(invocation, breaker, recoveryFunction);
+    }
+
+    private Object proceed(MethodInvocation invocation, io.github.resilience4j.circuitbreaker.CircuitBreaker breaker, RecoveryFunction<?> recoveryFunction) throws Throwable {
         Object result;
         StopWatch stopWatchOuter = StopWatch.start(breaker.getName());
         try {
             result = invocation.proceed();
         } catch (Exception e) {
             breaker.onError(stopWatchOuter.getProcessingDuration(), e);
-            return recoveryFunction.apply((Throwable) e);
-        }
-        if (result instanceof Promise<?>) {
-            CircuitBreakerTransformer transformer = CircuitBreakerTransformer.of(breaker);
-            if (!annotation.recovery().isAssignableFrom(DefaultRecoveryFunction.class)) {
-                transformer = transformer.recover(recoveryFunction);
-            }
-            result = ((Promise<?>) result).transform(transformer);
-        } else if (result instanceof Observable) {
-            CircuitBreakerOperator operator = CircuitBreakerOperator.of(breaker);
-            result = ((Observable<?>) result).lift(operator).onErrorReturn(t -> recoveryFunction.apply((Throwable) t));
-        } else if (result instanceof Flowable) {
-            CircuitBreakerOperator operator = CircuitBreakerOperator.of(breaker);
-            result = ((Flowable<?>) result).lift(operator).onErrorReturn(t -> recoveryFunction.apply((Throwable) t));
-        } else if (result instanceof CompletionStage) {
-            CompletionStage stage = (CompletionStage) result;
-            StopWatch stopWatch;
-            if (breaker.isCallPermitted()) {
-                stopWatch = StopWatch.start(breaker.getName());
-                return stage.handle((v, t) -> {
-                    Duration d = stopWatch.stop().getProcessingDuration();
-                    if (t != null) {
-                        breaker.onError(d, (Throwable) t);
-                        try {
-                            return recoveryFunction.apply((Throwable) t);
-                        } catch (Exception e) {
-                            return v;
-                        }
-                    } else if (v != null) {
-                        breaker.onSuccess(d);
-                    }
-                    return v;
-                });
-            } else {
-                return CompletableFuture.supplyAsync(() -> {
-                    Throwable t = new CircuitBreakerOpenException("CircuitBreaker ${circuitBreaker.name} is open");
-                    try {
-                        return recoveryFunction.apply((Throwable) t);
-                    } catch (Throwable t2) {
-                        return null;
-                    }
-                });
-            }
+            return recoveryFunction.apply(e);
+        } finally {
+            stopWatchOuter.stop();
         }
         return result;
     }

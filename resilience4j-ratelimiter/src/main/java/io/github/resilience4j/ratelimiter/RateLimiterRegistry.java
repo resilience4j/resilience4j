@@ -64,4 +64,13 @@ public interface RateLimiterRegistry {
     static RateLimiterRegistry of(RateLimiterConfig defaultRateLimiterConfig) {
         return new InMemoryRateLimiterRegistry(defaultRateLimiterConfig);
     }
+
+    /**
+     * Returns a managed {@link RateLimiterConfig} or creates a new one with a default RateLimiterConfig configuration.
+     *
+     * @return The {@link RateLimiterConfig}
+     */
+    static RateLimiterRegistry ofDefaults() {
+        return new InMemoryRateLimiterRegistry(RateLimiterConfig.ofDefaults());
+    }
 }

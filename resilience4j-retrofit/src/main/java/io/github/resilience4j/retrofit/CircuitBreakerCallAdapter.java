@@ -31,7 +31,7 @@ import java.util.function.Predicate;
 
 /**
  * Creates a Retrofit {@link CallAdapter.Factory} that decorates a Call to provide integration with a
- * {@link CircuitBreaker} using {@link RetrofitCircuitBreaker}
+ * {@link CircuitBreaker}
  */
 public final class CircuitBreakerCallAdapter extends CallAdapter.Factory {
 
@@ -84,8 +84,7 @@ public final class CircuitBreakerCallAdapter extends CallAdapter.Factory {
 
     private static Type getCallResponseType(Type returnType) {
         if (!(returnType instanceof ParameterizedType)) {
-            throw new IllegalArgumentException(
-                    "Call return type must be parameterized as Call<Foo> or Call<? extends Foo>");
+            throw new IllegalArgumentException("Call return type must be parameterized as Call<Foo> or Call<? extends Foo>");
         }
         return getParameterUpperBound(0, (ParameterizedType) returnType);
     }

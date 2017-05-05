@@ -32,6 +32,10 @@ import org.openjdk.jmh.annotations.Setup;
 import org.openjdk.jmh.annotations.State;
 import org.openjdk.jmh.annotations.Warmup;
 import org.openjdk.jmh.infra.Blackhole;
+import org.openjdk.jmh.runner.Runner;
+import org.openjdk.jmh.runner.RunnerException;
+import org.openjdk.jmh.runner.options.Options;
+import org.openjdk.jmh.runner.options.OptionsBuilder;
 
 import java.util.concurrent.TimeUnit;
 
@@ -99,5 +103,12 @@ public class CircularBufferBenchmark {
     public void circularBufferTakeEvent(Blackhole bh) {
         Option<Object> event = circularFifoBuffer.take();
         bh.consume(event);
+    }
+
+    public static void main(String[] args) throws RunnerException {
+        Options options = new OptionsBuilder()
+            .include(".*" + CircularBufferBenchmark.class.getSimpleName() + ".*")
+            .build();
+        new Runner(options).run();
     }
 }

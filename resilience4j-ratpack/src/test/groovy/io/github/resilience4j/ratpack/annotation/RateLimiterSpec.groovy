@@ -20,7 +20,12 @@ import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry
 import io.github.resilience4j.ratelimiter.RateLimiterConfig
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry
 import io.github.resilience4j.ratpack.RecoveryFunction
-import io.github.resilience4j.ratpack.ResilienceModule
+import io.github.resilience4j.ratpack.Resilience4jModule
+import io.reactivex.Flowable
+import io.reactivex.Observable
+import io.reactivex.Single
+import io.reactivex.functions.Consumer
+import io.reactivex.functions.Function
 import ratpack.exec.Promise
 import ratpack.test.embed.EmbeddedApp
 import ratpack.test.http.TestHttpClient
@@ -47,7 +52,7 @@ class RateLimiterSpec extends Specification {
         given:
         app = ratpack {
             bindings {
-                module(ResilienceModule)
+                module(Resilience4jModule)
                 bind(Something)
             }
             handlers {
@@ -76,12 +81,33 @@ class RateLimiterSpec extends Specification {
                 bindInstance(CircuitBreakerRegistry, CircuitBreakerRegistry.ofDefaults())
                 bindInstance(RateLimiterRegistry, registry)
                 bind(Something)
-                module(ResilienceModule)
+                module(Resilience4jModule)
             }
             handlers {
                 get('promise') { Something something ->
                     something.rateLimiterPromise().then {
                         render it
+                    }
+                }
+                get('observable') { Something something ->
+                    something.rateLimiterObservable().subscribe {
+                        render it
+                    }{
+                        response.status(500).send(it.cause.cause.toString())
+                    }
+                }
+                get('flowable') { Something something ->
+                    something.rateLimiterFlowable().subscribe {
+                        render it
+                    } {
+                        response.status(500).send(it.cause.cause.toString())
+                    }
+                }
+                get('single') { Something something ->
+                    something.rateLimiterSingle().subscribe({
+                        render it
+                    } as Consumer<String>) {
+                        response.status(500).send(it.cause.cause.toString())
                     }
                 }
                 get('stage') { Something something ->
@@ -98,7 +124,6 @@ class RateLimiterSpec extends Specification {
         def actual = null
         for (int i = 0; i <= 10; i++) {
             actual = get(path)
-            println actual.body.text
         }
 
         then:
@@ -106,10 +131,13 @@ class RateLimiterSpec extends Specification {
         actual.statusCode == 500
 
         where:
-        path      | rateLimiterName
-        'promise' | 'test'
-        'stage'   | 'test'
-        'normal'  | 'test'
+        path         | rateLimiterName
+        'promise'    | 'test'
+        'observable' | 'test'
+        'flowable'   | 'test'
+        'single'     | 'test'
+        'stage'      | 'test'
+        'normal'     | 'test'
     }
 
     def "test rate limit a method via annotation with exception"() {
@@ -120,12 +148,33 @@ class RateLimiterSpec extends Specification {
                 bindInstance(CircuitBreakerRegistry, CircuitBreakerRegistry.ofDefaults())
                 bindInstance(RateLimiterRegistry, registry)
                 bind(Something)
-                module(ResilienceModule)
+                module(Resilience4jModule)
             }
             handlers {
                 get('promise') { Something something ->
                     something.rateLimiterPromiseException().then {
                         render it
+                    }
+                }
+                get('observable') { Something something ->
+                    something.rateLimiterObservableException().subscribe {
+                        render it
+                    } {
+                        response.status(500).send(it.cause.cause.toString())
+                    }
+                }
+                get('flowable') { Something something ->
+                    something.rateLimiterFlowableException().subscribe {
+                        render it
+                    } {
+                        response.status(500).send(it.cause.cause.toString())
+                    }
+                }
+                get('single') { Something something ->
+                    something.rateLimiterSingleException().subscribe({
+                        render it
+                    } as Consumer<Void>) {
+                        response.status(500).send(it.cause.cause.toString())
                     }
                 }
                 get('stage') { Something something ->
@@ -142,7 +191,6 @@ class RateLimiterSpec extends Specification {
         def actual = null
         for (int i = 0; i <= 10; i++) {
             actual = get(path)
-            println actual.body.text
         }
 
         then:
@@ -150,10 +198,13 @@ class RateLimiterSpec extends Specification {
         actual.statusCode == 500
 
         where:
-        path      | rateLimiterName
-        'promise' | 'test'
-        'stage'   | 'test'
-        'normal'  | 'test'
+        path         | rateLimiterName
+        'promise'    | 'test'
+        'observable' | 'test'
+        'flowable'   | 'test'
+        'single'     | 'test'
+        'stage'      | 'test'
+        'normal'     | 'test'
     }
 
     def "test rate limit a method via annotation with fallback"() {
@@ -164,13 +215,28 @@ class RateLimiterSpec extends Specification {
                 bindInstance(CircuitBreakerRegistry, CircuitBreakerRegistry.ofDefaults())
                 bindInstance(RateLimiterRegistry, registry)
                 bind(Something)
-                module(ResilienceModule)
+                module(Resilience4jModule)
             }
             handlers {
                 get('promise') { Something something ->
                     something.rateLimiterPromiseFallback().then {
                         render it
                     }
+                }
+                get('observable') { Something something ->
+                    something.rateLimiterObservableFallback().subscribe {
+                        render it
+                    }
+                }
+                get('flowable') { Something something ->
+                    something.rateLimiterFlowableFallback().subscribe {
+                        render it
+                    }
+                }
+                get('single') { Something something ->
+                    something.rateLimiterSingleFallback().subscribe({
+                        render it
+                    } as Consumer<Void>)
                 }
                 get('stage') { Something something ->
                     render something.rateLimiterStageFallback().toCompletableFuture().get()
@@ -186,7 +252,6 @@ class RateLimiterSpec extends Specification {
         def actual = null
         for (int i = 0; i <= 10; i++) {
             actual = get(path)
-            println actual.body.text
         }
 
         then:
@@ -194,16 +259,19 @@ class RateLimiterSpec extends Specification {
         actual.statusCode == 200
 
         where:
-        path      | rateLimiterName
-        'promise' | 'test'
-        'stage'   | 'test'
-        'normal'  | 'test'
+        path         | rateLimiterName
+        'promise'    | 'test'
+        'observable' | 'test'
+        'flowable'   | 'test'
+        'single'     | 'test'
+        'stage'      | 'test'
+        'normal'     | 'test'
     }
 
-    // 10 events / 10 s
+    // 10 events / 1 minute
     def buildConfig() {
         RateLimiterConfig.custom()
-                .limitRefreshPeriod(Duration.ofSeconds(10))
+                .limitRefreshPeriod(Duration.ofSeconds(60))
                 .limitForPeriod(10)
                 .timeoutDuration(Duration.ofMillis(100))
                 .build()
@@ -216,6 +284,21 @@ class RateLimiterSpec extends Specification {
             Promise.async {
                 it.success("rateLimiter promise")
             }
+        }
+
+        @RateLimiter(name = "test")
+        Observable<String> rateLimiterObservable() {
+            Observable.just("rateLimiter observable")
+        }
+
+        @RateLimiter(name = "test")
+        Flowable<String> rateLimiterFlowable() {
+            Flowable.just("rateLimiter flowable")
+        }
+
+        @RateLimiter(name = "test")
+        Single<String> rateLimiterSingle() {
+            Single.just("rateLimiter single")
         }
 
         @RateLimiter(name = "test")
@@ -236,6 +319,21 @@ class RateLimiterSpec extends Specification {
         }
 
         @RateLimiter(name = "test")
+        Observable<Void> rateLimiterObservableException() {
+            Observable.just("rateLimiter observable").map({ throw new Exception("bad") } as Function<String, Void>)
+        }
+
+        @RateLimiter(name = "test")
+        Flowable<Void> rateLimiterFlowableException() {
+            Flowable.just("rateLimiter flowable").map({ throw new Exception("bad") } as Function<String, Void>)
+        }
+
+        @RateLimiter(name = "test")
+        Single<Void> rateLimiterSingleException() {
+            Single.just("rateLimiter single").map({ throw new Exception("bad") } as Function<String, Void>)
+        }
+
+        @RateLimiter(name = "test")
         CompletionStage<Void> rateLimiterStageException() {
             CompletableFuture.supplyAsync { throw new Exception('rateLimiter stage exception') }
         }
@@ -250,6 +348,21 @@ class RateLimiterSpec extends Specification {
             Promise.async {
                 it.error(new Exception("rateLimiter promise exception"))
             }
+        }
+
+        @RateLimiter(name = "test", recovery = MyRecoveryFunction)
+        Observable<Void> rateLimiterObservableFallback() {
+            Observable.just("rateLimiter observable").map({ throw new Exception("bad") } as Function<String, Void>)
+        }
+
+        @RateLimiter(name = "test", recovery = MyRecoveryFunction)
+        Flowable<Void> rateLimiterFlowableFallback() {
+            Flowable.just("rateLimiter flowable").map({ throw new Exception("bad") } as Function<String, Void>)
+        }
+
+        @RateLimiter(name = "test", recovery = MyRecoveryFunction)
+        Single<Void> rateLimiterSingleFallback() {
+            Single.just("rateLimiter single").map({ throw new Exception("bad") } as Function<String, Void>)
         }
 
         @RateLimiter(name = "test", recovery = MyRecoveryFunction)

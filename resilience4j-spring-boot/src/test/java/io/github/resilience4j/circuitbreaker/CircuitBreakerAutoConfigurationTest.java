@@ -15,8 +15,6 @@
  */
 package io.github.resilience4j.circuitbreaker;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,15 +27,19 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
+import java.io.IOException;
+
 import io.github.resilience4j.circuitbreaker.autoconfigure.CircuitBreakerProperties;
 import io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent;
 import io.github.resilience4j.circuitbreaker.monitoring.endpoint.CircuitBreakerEndpointResponse;
 import io.github.resilience4j.circuitbreaker.monitoring.endpoint.CircuitBreakerEventsEndpointResponse;
 import io.github.resilience4j.circuitbreaker.monitoring.health.CircuitBreakerHealthIndicator;
+import io.github.resilience4j.circuitbreaker.test.DummyService;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
-import io.github.resilience4j.service.test.DummyService;
+import io.prometheus.client.spring.boot.EnablePrometheusEndpoint;
+import io.prometheus.client.spring.boot.EnableSpringBootMetricsCollector;
 
-import java.io.IOException;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
@@ -94,7 +96,9 @@ public class CircuitBreakerAutoConfigurationTest {
         assertThat(circuitBreakerEventList.getBody().getCircuitBreakerEvents()).hasSize(2);
     }
 
-    @SpringBootApplication(scanBasePackages={"io.github.resilience4j"})
+    @SpringBootApplication(scanBasePackages="io.github.resilience4j")
+    @EnableSpringBootMetricsCollector
+    @EnablePrometheusEndpoint
     public static class TestApplication{
         public static void main(String[] args) {
             SpringApplication.run(TestApplication.class, args);

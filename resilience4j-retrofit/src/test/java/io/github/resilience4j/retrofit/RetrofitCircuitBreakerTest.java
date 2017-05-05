@@ -25,8 +25,6 @@ import okhttp3.OkHttpClient;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.mockito.Mockito;
-import retrofit2.Call;
 import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.scalars.ScalarsConverterFactory;
@@ -40,9 +38,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.verify;
-import static org.junit.Assert.assertEquals;
-import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.mock;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Tests the integration of the Retrofit HTTP client and {@link CircuitBreaker}
@@ -52,17 +48,21 @@ public class RetrofitCircuitBreakerTest {
     @Rule
     public WireMockRule wireMockRule = new WireMockRule();
 
-    private RetrofitService service;
-    private final CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom()
+    private static final CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom()
             .ringBufferSizeInClosedState(3)
             .waitDurationInOpenState(Duration.ofMillis(1000))
             .build();
-    private final CircuitBreaker circuitBreaker = CircuitBreaker.of("test", circuitBreakerConfig);
+
+    private CircuitBreaker circuitBreaker = CircuitBreaker.of("test", circuitBreakerConfig);
+
+    private RetrofitService service;
 
     @Before
     public void setUp() {
+        this.circuitBreaker = CircuitBreaker.of("test", circuitBreakerConfig);
+
         final long TIMEOUT = 300; // ms
-        OkHttpClient client = new OkHttpClient.Builder()
+        final OkHttpClient client = new OkHttpClient.Builder()
                 .connectTimeout(TIMEOUT, TimeUnit.MILLISECONDS)
                 .readTimeout(TIMEOUT, TimeUnit.MILLISECONDS)
                 .writeTimeout(TIMEOUT, TimeUnit.MILLISECONDS)
@@ -105,10 +105,13 @@ public class RetrofitCircuitBreakerTest {
         }
 
         final CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
-        assertEquals(1, metrics.getNumberOfFailedCalls());
+        assertThat(metrics.getNumberOfFailedCalls())
+                .describedAs("Failed calls")
+                .isEqualTo(1);
 
         // Circuit breaker should still be closed, not hit open threshold
-        assertEquals(CircuitBreaker.State.CLOSED, circuitBreaker.getState());
+        assertThat(circuitBreaker.getState())
+                .isEqualTo(CircuitBreaker.State.CLOSED);
 
         try {
             service.greeting().execute();
@@ -120,36 +123,38 @@ public class RetrofitCircuitBreakerTest {
         } catch (Throwable ignored) {
         }
 
-        assertEquals(3, metrics.getNumberOfFailedCalls());
+        assertThat(metrics.getNumberOfFailedCalls())
+                .isEqualTo(3);
         // Circuit breaker should be OPEN, threshold met
-        assertEquals(CircuitBreaker.State.OPEN, circuitBreaker.getState());
+        assertThat(circuitBreaker.getState())
+                .isEqualTo(CircuitBreaker.State.OPEN);
     }
 
     @Test
-    public void passThroughCallsToDecoratedObject() {
-        final Call<String> call = mock(StringCall.class);
-        final Call<String> decorated = RetrofitCircuitBreaker.decorateCall(circuitBreaker, call, Response::isSuccessful);
+    public void decorateUnsuccessfulCall() throws Exception {
+        stubFor(get(urlPathEqualTo("/greeting"))
+                .willReturn(aResponse()
+                        .withStatus(500)
+                        .withHeader("Content-Type", "text/plain")));
 
-        decorated.cancel();
-        Mockito.verify(call).cancel();
+        final Response<String> response = service.greeting().execute();
 
-        decorated.enqueue(null);
-        Mockito.verify(call).enqueue(any());
+        assertThat(response.code())
+                .describedAs("Response code")
+                .isEqualTo(500);
 
-        decorated.isExecuted();
-        Mockito.verify(call).isExecuted();
-
-        decorated.isCanceled();
-        Mockito.verify(call).isCanceled();
-
-        decorated.clone();
-        Mockito.verify(call).clone();
-
-        decorated.request();
-        Mockito.verify(call).request();
+        final CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
+        assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(1);
     }
 
-    private interface StringCall extends Call<String> {
-    }
+    @Test(expected = IllegalArgumentException.class)
+    public void shouldThrowOnBadService() {
+        BadRetrofitService badService = new Retrofit.Builder()
+                .addCallAdapterFactory(CircuitBreakerCallAdapter.of(circuitBreaker))
+                .baseUrl("http://localhost:8080/")
+                .build()
+                .create(BadRetrofitService.class);
 
+        badService.greeting();
+    }
 }
