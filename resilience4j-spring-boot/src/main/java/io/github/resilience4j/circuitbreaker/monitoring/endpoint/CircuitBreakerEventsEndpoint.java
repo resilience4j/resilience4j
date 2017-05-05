@@ -16,7 +16,6 @@
 package io.github.resilience4j.circuitbreaker.monitoring.endpoint;
 
 
-import org.springframework.boot.actuate.endpoint.mvc.EndpointMvcAdapter;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;

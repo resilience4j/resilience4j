@@ -20,8 +20,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.ResponseEntity;
@@ -33,6 +31,7 @@ import io.github.resilience4j.ratelimiter.monitoring.model.RateLimiterEndpointRe
 import io.github.resilience4j.ratelimiter.monitoring.model.RateLimiterEventDTO;
 import io.github.resilience4j.ratelimiter.monitoring.model.RateLimiterEventsEndpointResponse;
 import io.github.resilience4j.service.test.DummyService;
+import io.github.resilience4j.service.test.TestApplication;
 
 import java.io.IOException;
 import java.time.Duration;
@@ -40,7 +39,7 @@ import java.util.List;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-        classes = RateLimiterAutoConfigurationTest.TestApplication.class)
+    classes = TestApplication.class)
 public class RateLimiterAutoConfigurationTest {
 
     @Autowired
@@ -66,7 +65,7 @@ public class RateLimiterAutoConfigurationTest {
 
         try {
             dummyService.doSomething(true);
-        }catch (IOException ex){
+        } catch (IOException ex) {
             // Do nothing.
         }
         dummyService.doSomething(false);
@@ -103,12 +102,5 @@ public class RateLimiterAutoConfigurationTest {
         assertThat(eventsList).isNotEmpty();
         RateLimiterEventDTO lastEvent = eventsList.get(eventsList.size() - 1);
         assertThat(lastEvent.getRateLimiterEventType()).isEqualTo(RateLimiterEvent.Type.FAILED_ACQUIRE);
-    }
-
-    @SpringBootApplication(scanBasePackages={"io.github.resilience4j"})
-    public static class TestApplication{
-        public static void main(String[] args) {
-            SpringApplication.run(TestApplication.class, args);
-        }
     }
 }
