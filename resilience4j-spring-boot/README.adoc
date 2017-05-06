@@ -18,12 +18,15 @@ dependencies {
 
 == Spring AOP
 
-The demo shows how to use the `CircuitBreaker` annotation to make your Spring Boot application more fault tolerant. You can either annotate a class in order to protect all public methods or just some specific methods.
+The demo shows how to use the `CircuitBreaker` and `RateLimiter` annotations
+to make your Spring Boot application more fault tolerant.
+You can either annotate a class in order to protect all public methods or just some specific methods.
 For example:
 
 [source,java]
 ----
 @CircuitBreaker(backend = "backendA")
+@RateLimiter("backendA")
 @Component(value = "backendAConnector")
 public class BackendAConnector implements Connector {
     ...
@@ -68,7 +71,13 @@ public Observable<String> methodWhichReturnsAStream() {
 
 == Monitoring
 
-Spring Boot Actuator health information can be used to check the status of your running application. It is often used by monitoring software to alert someone if a production system has serious issues. This demo publishes the status and metrics of all CircuitBreakers via a custom `CircuitBreakerHealthIndicator`. A closed CircuitBreaker state is mapped to UP, an open state to DOWN and a half-open state to UNKNOWN.
+Spring Boot Actuator health information can be used to check the status of your running application.
+It is often used by monitoring software to alert someone if a production system has serious issues.
+
+=== CircuitBreaker
+This demo publishes the status and metrics of all CircuitBreakers via a custom `CircuitBreakerHealthIndicator`.
+A closed CircuitBreaker state is mapped to UP, an open state to DOWN and a half-open state to UNKNOWN.
+
 For example:
 
 [source,json]
@@ -142,8 +151,28 @@ resilience4j_circuitbreaker_states{name="backendA",state="open",} 0.0
 resilience4j_circuitbreaker_states{name="backendA",state="half_open",} 0.0
 ----
 
+=== RateLimiter
+This demo publishes the status and metrics of all RateLimiter via a custom `RateLimiterHealthIndicator`.
+RateLimiterHealthIndicator changes its state DOWN only if there is some permission waiting threads
+and they won't be able to unblock until timeout.
+
+For example:
+
+[source,json]
+----
+{
+  "status": "UP",
+  "backendA": {
+    "status": "UP",
+    "availablePermissions": 10,
+    "numberOfWaitingThreads": 0
+  }
+}
+----
+
 == Configuration
 
+=== CircuitBreaker
 You can configure your CircuitBreakers in Spring Boot's `application.yml` config file.
 For example
 
@@ -164,7 +193,28 @@ resilience4j.circuitbreaker:
             eventConsumerBufferSize: 10
 ----
 
-== CircuitBreaker Event Monitoring
+=== RateLimiter
+You can configure your CircuitBreakers in Spring Boot's `application.yml` config file.
+For example
+
+----
+resilience4j.ratelimiter:
+    limiters:
+        backendA:
+            limitForPeriod: 10
+            limitRefreshPeriodInMillis: 1000
+            timeoutInMillis: 0
+            subscribeForEvents: true
+            registerHealthIndicator: true
+        backendB:
+            limitForPeriod: 6
+            limitRefreshPeriodInMillis: 500
+            timeoutInMillis: 3000
+----
+
+== Event Monitoring
+
+=== CircuitBreaker
 
 The emitted CircuitBreaker events are stored in a separate circular event consumer buffers. The size of a event consumer buffer can be configured per CircuitBreaker in the application.yml file (eventConsumerBufferSize).
 The demo adds a custom Spring Boot Actuator endpoint which can be used to monitor the emitted events of your CircuitBreakers.
@@ -284,9 +334,48 @@ For example `/management/circuitbreaker/events/backendA/ERROR`:
 }
 ----
 
+=== RateLimiter
+WARNING: Unlike the CircuitBreaker events, RateLimiter events require explicit subscription.
+Use property resilience4j.ratelimiter.limiters.{yourBackendName}.registerHealthIndicator=true
+
+There are literally the same endpoints implemented for RateLimiter,
+so for detailed documentation please refer to previous section:
+
+List of available endpoints:
+
+* `/ratelimiter/events`
+* `/ratelimiter/stream/events`
+* `/ratelimiter/events/{rateLimiterName}`
+* `/ratelimiter/stream/events/{rateLimiterName}`
+* `/ratelimiter/events/{rateLimiterName}/{eventType}`
+* `/ratelimiter/stream/events/{rateLimiterName}/{eventType}`
+
+Example of response:
+----
+{
+  "eventsList": [
+    {
+      "rateLimiterName": "backendA",
+      "rateLimiterEventType": "SUCCESSFUL_ACQUIRE",
+      "rateLimiterCreationTime": "2017-05-05T21:29:40.463+03:00[Europe/Uzhgorod]"
+    },
+    {
+      "rateLimiterName": "backendA",
+      "rateLimiterEventType": "SUCCESSFUL_ACQUIRE",
+      "rateLimiterCreationTime": "2017-05-05T21:29:40.469+03:00[Europe/Uzhgorod]"
+    },
+    {
+      "rateLimiterName": "backendA",
+      "rateLimiterEventType": "FAILED_ACQUIRE",
+      "rateLimiterCreationTime": "2017-05-05T21:29:41.268+03:00[Europe/Uzhgorod]"
+    }
+  ]
+}
+----
+
 == License
 
-Copyright 2017 Robert Winkler
+Copyright 2017 Robert Winkler and Bohdan Storozhuk
 
 Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at
 
