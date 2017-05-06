@@ -1,4 +1,4 @@
-package io.github.resilience4j.circuitbreaker.test;
+package io.github.resilience4j.service.test;
 
 
 import java.io.IOException;

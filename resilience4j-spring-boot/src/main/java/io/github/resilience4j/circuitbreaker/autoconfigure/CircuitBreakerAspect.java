@@ -36,7 +36,7 @@ import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 @Aspect
 public class CircuitBreakerAspect {
 
-    private static Logger logger = LoggerFactory.getLogger(CircuitBreakerAspect.class);
+    private static final Logger logger = LoggerFactory.getLogger(CircuitBreakerAspect.class);
 
     private final CircuitBreakerProperties circuitBreakerProperties;
     private final CircuitBreakerRegistry circuitBreakerRegistry;

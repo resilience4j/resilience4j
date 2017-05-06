@@ -3,6 +3,7 @@ dependencies {
     compile ( libraries.spring_boot_actuator )
     compile ( libraries.spring_boot_web )
     compile project(':resilience4j-circuitbreaker')
+    compile project(':resilience4j-ratelimiter')
     compile project(':resilience4j-consumer')
     compileOnly project(':resilience4j-prometheus')
     compileOnly project(':resilience4j-metrics')

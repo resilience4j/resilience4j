@@ -12,3 +12,16 @@ resilience4j.circuitbreaker:
             waitInterval: 5000
             failureRateThreshold: 50
             eventConsumerBufferSize: 10
+
+resilience4j.ratelimiter:
+    limiters:
+        backendA:
+            limitForPeriod: 10
+            limitRefreshPeriodInMillis: 1000
+            timeoutInMillis: 0
+            subscribeForEvents: true
+            registerHealthIndicator: true
+        backendB:
+            limitForPeriod: 6
+            limitRefreshPeriodInMillis: 500
+            timeoutInMillis: 3000

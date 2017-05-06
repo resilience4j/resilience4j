@@ -64,6 +64,14 @@ public class RateLimiterConfig {
         return limitForPeriod;
     }
 
+    @Override public String toString() {
+        return "RateLimiterConfig{" +
+            "timeoutDuration=" + timeoutDuration +
+            ", limitRefreshPeriod=" + limitRefreshPeriod +
+            ", limitForPeriod=" + limitForPeriod +
+            '}';
+    }
+
     public static class Builder {
 
         private RateLimiterConfig config = new RateLimiterConfig();

@@ -60,10 +60,9 @@ public class CircuitBreakerAutoConfiguration {
     }
 
     @Bean
-    public CircuitBreakerEventsEndpoint circuitBreakerEventsEndpoint(CircuitBreakerEndpoint circuitBreakerEndpoint,
-                                                                     EventConsumerRegistry<CircuitBreakerEvent> eventConsumerRegistry,
+    public CircuitBreakerEventsEndpoint circuitBreakerEventsEndpoint(EventConsumerRegistry<CircuitBreakerEvent> eventConsumerRegistry,
                                                                      CircuitBreakerRegistry circuitBreakerRegistry) {
-        return new CircuitBreakerEventsEndpoint(circuitBreakerEndpoint, eventConsumerRegistry, circuitBreakerRegistry);
+        return new CircuitBreakerEventsEndpoint(eventConsumerRegistry, circuitBreakerRegistry);
     }
 
     /**
