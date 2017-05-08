@@ -18,8 +18,23 @@
  */
 package io.github.resilience4j.bulkhead;
 
-import org.openjdk.jmh.annotations.*;
+import org.openjdk.jmh.annotations.Benchmark;
+import org.openjdk.jmh.annotations.BenchmarkMode;
+import org.openjdk.jmh.annotations.Fork;
+import org.openjdk.jmh.annotations.Measurement;
+import org.openjdk.jmh.annotations.Mode;
+import org.openjdk.jmh.annotations.OutputTimeUnit;
+import org.openjdk.jmh.annotations.Scope;
+import org.openjdk.jmh.annotations.Setup;
+import org.openjdk.jmh.annotations.State;
+import org.openjdk.jmh.annotations.Threads;
+import org.openjdk.jmh.annotations.Warmup;
 import org.openjdk.jmh.infra.Blackhole;
+import org.openjdk.jmh.profile.GCProfiler;
+import org.openjdk.jmh.runner.Runner;
+import org.openjdk.jmh.runner.RunnerException;
+import org.openjdk.jmh.runner.options.Options;
+import org.openjdk.jmh.runner.options.OptionsBuilder;
 
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
@@ -38,6 +53,14 @@ public class BulkheadBenchmark {
     private Supplier<String> protectedSupplierWithSb;
     private Supplier<String> stringSupplier;
 
+    public static void main(String[] args) throws RunnerException {
+        Options options = new OptionsBuilder()
+            .threads(2)
+            .addProfiler(GCProfiler.class)
+            .build();
+        new Runner(options).run();
+    }
+
     @Setup
     public void setUp() {
         stringSupplier = () -> {
@@ -45,10 +68,14 @@ public class BulkheadBenchmark {
             return "Hello Benchmark";
         };
 
-        Bulkhead bulkhead = Bulkhead.of("test", 2);
+        BulkheadConfig config = BulkheadConfig.custom()
+            .maxConcurrentCalls(2)
+            .build();
+
+        Bulkhead bulkhead = Bulkhead.of("test", config);
         protectedSupplier = Bulkhead.decorateSupplier(bulkhead, stringSupplier);
 
-        Bulkhead bulkheadWithSubscriber = Bulkhead.of("test-with-subscriber", 2);
+        Bulkhead bulkheadWithSubscriber = Bulkhead.of("test-with-subscriber", config);
         bulkheadWithSubscriber.getEventStream().subscribe();
         protectedSupplierWithSb = Bulkhead.decorateSupplier(bulkheadWithSubscriber, stringSupplier);
     }
