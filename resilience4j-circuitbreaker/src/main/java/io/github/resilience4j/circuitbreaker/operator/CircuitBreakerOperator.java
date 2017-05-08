@@ -138,7 +138,7 @@ public class CircuitBreakerOperator<T> implements ObservableOperator<T, T>, Flow
                 LOG.info("onError", e);
             }
             if (!isCancelled()) {
-                circuitBreaker.onError(stopWatch.stop().getProcessingDuration(), e);
+                circuitBreaker.onError(stopWatch.stop().getProcessingDuration().toNanos(), e);
                 childSubscriber.onError(e);
 
             }
@@ -153,7 +153,7 @@ public class CircuitBreakerOperator<T> implements ObservableOperator<T, T>, Flow
                 LOG.info("onComplete");
             }
             if (!isCancelled()) {
-                circuitBreaker.onSuccess(stopWatch.stop().getProcessingDuration());
+                circuitBreaker.onSuccess(stopWatch.stop().getProcessingDuration().toNanos());
                 childSubscriber.onComplete();
             }
         }
@@ -235,7 +235,7 @@ public class CircuitBreakerOperator<T> implements ObservableOperator<T, T>, Flow
                 LOG.info("onError", e);
             }
             if (!isDisposed()) {
-                circuitBreaker.onError(stopWatch.stop().getProcessingDuration(), e);
+                circuitBreaker.onError(stopWatch.stop().getProcessingDuration().toNanos(), e);
                 childObserver.onError(e);
             }
         }
@@ -249,7 +249,7 @@ public class CircuitBreakerOperator<T> implements ObservableOperator<T, T>, Flow
                 LOG.info("onComplete");
             }
             if (!isDisposed()) {
-                circuitBreaker.onSuccess(stopWatch.stop().getProcessingDuration());
+                circuitBreaker.onSuccess(stopWatch.stop().getProcessingDuration().toNanos());
                 childObserver.onComplete();
             }
         }
@@ -315,7 +315,7 @@ public class CircuitBreakerOperator<T> implements ObservableOperator<T, T>, Flow
                 LOG.info("onError", e);
             }
             if (!isDisposed()) {
-                circuitBreaker.onError(stopWatch.stop().getProcessingDuration(), e);
+                circuitBreaker.onError(stopWatch.stop().getProcessingDuration().toNanos(), e);
                 childObserver.onError(e);
             }
         }
@@ -329,7 +329,7 @@ public class CircuitBreakerOperator<T> implements ObservableOperator<T, T>, Flow
                 LOG.info("onComplete");
             }
             if (!isDisposed()) {
-                circuitBreaker.onSuccess(stopWatch.stop().getProcessingDuration());
+                circuitBreaker.onSuccess(stopWatch.stop().getProcessingDuration().toNanos());
                 childObserver.onSuccess(value);
             }
         }

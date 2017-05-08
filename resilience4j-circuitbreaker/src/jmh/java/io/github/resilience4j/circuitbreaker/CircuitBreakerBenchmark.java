@@ -30,6 +30,11 @@ import org.openjdk.jmh.annotations.State;
 import org.openjdk.jmh.annotations.Threads;
 import org.openjdk.jmh.annotations.Warmup;
 import org.openjdk.jmh.infra.Blackhole;
+import org.openjdk.jmh.profile.GCProfiler;
+import org.openjdk.jmh.runner.Runner;
+import org.openjdk.jmh.runner.RunnerException;
+import org.openjdk.jmh.runner.options.Options;
+import org.openjdk.jmh.runner.options.OptionsBuilder;
 
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
@@ -88,5 +93,12 @@ public class CircuitBreakerBenchmark {
     @Measurement(iterations = ITERATION_COUNT)
     public String protectedSupplierWithSubscriber() {
         return protectedSupplierWithSb.get();
+    }
+
+    public static void main(String[] args) throws RunnerException {
+        Options options = new OptionsBuilder()
+            .addProfiler(GCProfiler.class)
+            .build();
+        new Runner(options).run();
     }
 }

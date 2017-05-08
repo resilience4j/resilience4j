@@ -59,22 +59,21 @@ public interface VertxCircuitBreaker {
                                 String.format("CircuitBreaker '%s' is open", circuitBreaker.getName())));
 
             } else {
-                final StopWatch stopWatch = StopWatch.start(circuitBreaker.getName());
+                long start = System.nanoTime();
                 try {
                     supplier.get().setHandler(result -> {
-
-                        final Duration duration = stopWatch.stop().getProcessingDuration();
-
+                        long durationInNanos = System.nanoTime() - start;
                         if (result.failed()) {
-                            circuitBreaker.onError(duration, result.cause());
+                            circuitBreaker.onError(durationInNanos, result.cause());
                             future.fail(result.cause());
                         } else {
-                            circuitBreaker.onSuccess(duration);
+                            circuitBreaker.onSuccess(durationInNanos);
                             future.complete(result.result());
                         }
                     });
                 } catch (Throwable throwable) {
-                    circuitBreaker.onError(stopWatch.stop().getProcessingDuration(), throwable);
+                    long durationInNanos = System.nanoTime() - start;
+                    circuitBreaker.onError(durationInNanos, throwable);
                     future.fail(throwable);
                 }
             }

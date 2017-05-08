@@ -99,5 +99,10 @@
 * PR #80: Resilience4j metrics reporting with Dropwizard metrics.
 * PR #81: Resilience4j metrics reporting with Prometheus.
 * PR #103, #104, #101: Various improvements of rxJava integration.
+* PR #119: Zero allocation rate for CircuitBreaker when it has no event subscribers.
 * Issue #61: Permissions aren't available from the first cycle in AtomicRateLimiter.
 * Performance improvements of ConcurrentEvictingQueue
+
+NOTE: Braking changes:
+
+* PR #119 - changed API of CircuitBreaker interface.
