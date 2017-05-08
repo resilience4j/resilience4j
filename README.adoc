@@ -274,20 +274,25 @@ The CircuitBreaker is implemented via a finite state machine with three states: 
 
 image::resilience4j-documentation/src/docs/asciidoc/images/state_machine.jpg[]
 
-The CircuitBreaker does not know anything about the backend's state by itself, but uses the information provided by the decorators via `CircuitBreaker::onSuccess()` and `CircuitBreaker::onError(throwable)`. See example:
+The CircuitBreaker does not know anything about the backend's state by itself,
+but uses the information provided by the decorators
+via `CircuitBreaker::onSuccess` and `CircuitBreaker::onError`. See example:
 
 [source,java]
 ----
-static <T> Supplier<T> decorateSupplier(Supplier<T> supplier, CircuitBreaker circuitBreaker){
+static <T> Supplier<T> decorateSupplier(CircuitBreaker circuitBreaker, Supplier<T> supplier){
     return () -> {
-        circuitBreaker.isCallPermitted();
+        CircuitBreakerUtils.isCallPermitted(circuitBreaker);
+        long start = System.nanoTime();
         try {
             T returnValue = supplier.get();
-            circuitBreaker.onSuccess();
+            long durationInNanos = System.nanoTime() - start;
+            circuitBreaker.onSuccess(durationInNanos);
             return returnValue;
-        } catch (Exception exception) {
-            circuitBreaker.onFailure(exception);
-            throw exception;
+        } catch (Throwable throwable) {
+            long durationInNanos = System.nanoTime() - start;
+            circuitBreaker.onError(durationInNanos, throwable);
+            throw throwable;
         }
     };
 }
@@ -304,7 +309,7 @@ The Ring Bit Buffer must be full, before the failure rate can be calculated.
 For example, if the size of the Ring Buffer is 10, then at least 10 calls must evaluated, before the failure rate can be calculated. If only 9 calls have been evaluated the CircuitBreaker will not trip open even if all 9 calls have failed.
 
 After the time duration has elapsed, the CircuitBreaker state changes from `OPEN` to `HALF_OPEN` and allows calls to see if the backend is still unavailable or has become available again. The CircuitBreaker uses another (configurable) Ring Bit Buffer to evaluate the failure rate in the `HALF_OPEN` state. If the failure rate is above the configured threshold, the state changes back to `OPEN`. If the failure rate is below or equal to the threshold, the state changes back to `CLOSED`.
-`CircuitBreaker::onError(exception)` checks if the exception should be recorded as a failure or should be ignored. You can configure a custom `Predicate` which decides whether an exception should be recorded as a failure. The default Predicate records all exceptions as a failure.
+`CircuitBreaker::onError` checks if the exception should be recorded as a failure or should be ignored. You can configure a custom `Predicate` which decides whether an exception should be recorded as a failure. The default Predicate records all exceptions as a failure.
 
 == RateLimiter implementation details
 Conceptually `RateLimiter` splits all nanoseconds from the start of epoch into cycles.
