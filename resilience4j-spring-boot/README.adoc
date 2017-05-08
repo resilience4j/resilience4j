@@ -84,7 +84,7 @@ For example:
 ----
 {
   "status": "UP",
-  "backendA": {
+  "backendACircuitBreaker": {
     "status": "DOWN",
     "failureRate": "60.0%",
     "failureRateThreshold": "50.0%",
@@ -93,7 +93,7 @@ For example:
     "failedCalls": 3,
     "notPermittedCalls": 0
   },
-  "backendB": {
+  "backendBCircuitBreaker": {
     "status": "UP",
     "failureRate": "0.0%",
     "failureRateThreshold": "50.0%",
@@ -162,7 +162,7 @@ For example:
 ----
 {
   "status": "UP",
-  "backendA": {
+  "backendARateLimiter": {
     "status": "UP",
     "availablePermissions": 10,
     "numberOfWaitingThreads": 0
