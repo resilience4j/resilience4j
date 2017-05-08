@@ -81,6 +81,8 @@ public class CircuitBreakerProperties {
 
         private Integer eventConsumerBufferSize = 100;
 
+        private Boolean registerHealthIndicator = false;
+
 
         /**
          * Returns the wait duration in seconds the CircuitBreaker will stay open, before it switches to half closed.
@@ -160,6 +162,14 @@ public class CircuitBreakerProperties {
 
         public void setEventConsumerBufferSize(Integer eventConsumerBufferSize) {
             this.eventConsumerBufferSize = eventConsumerBufferSize;
+        }
+
+        public Boolean getRegisterHealthIndicator() {
+            return registerHealthIndicator;
+        }
+
+        public void setRegisterHealthIndicator(Boolean registerHealthIndicator) {
+            this.registerHealthIndicator = registerHealthIndicator;
         }
     }
 

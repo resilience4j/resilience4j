@@ -170,12 +170,27 @@ For example:
 }
 ----
 
+You can publish RateLimiter metrics on the Metrics endpoint,
+you can add `resilience4j-metrics` to register metrics in a Dropwizard Metrics Registry.
+For example:
+
+[source,json]
+----
+{
+    "resilience4j.ratelimiter.backendA.available_permissions": 10,
+    "resilience4j.ratelimiter.backendA.number_of_waiting_threads": 0,
+    "resilience4j.ratelimiter.backendB.available_permissions": 6,
+    "resilience4j.ratelimiter.backendB.number_of_waiting_threads": 0
+}
+----
+
 == Configuration
 
 === CircuitBreaker
 You can configure your CircuitBreakers in Spring Boot's `application.yml` config file.
 For example
 
+[source,yaml]
 ----
 resilience4j.circuitbreaker:
     backends:
@@ -185,18 +200,21 @@ resilience4j.circuitbreaker:
             waitInterval: 5000
             failureRateThreshold: 50
             eventConsumerBufferSize: 10
+            registerHealthIndicator: true
         backendB:
             ringBufferSizeInClosedState: 10
             ringBufferSizeInHalfOpenState: 5
             waitInterval: 5000
             failureRateThreshold: 50
             eventConsumerBufferSize: 10
+            registerHealthIndicator: true
 ----
 
 === RateLimiter
 You can configure your CircuitBreakers in Spring Boot's `application.yml` config file.
 For example
 
+[source,yaml]
 ----
 resilience4j.ratelimiter:
     limiters:
@@ -206,6 +224,7 @@ resilience4j.ratelimiter:
             timeoutInMillis: 0
             subscribeForEvents: true
             registerHealthIndicator: true
+            eventConsumerBufferSize: 100
         backendB:
             limitForPeriod: 6
             limitRefreshPeriodInMillis: 500

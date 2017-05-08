@@ -77,12 +77,6 @@ public class RateLimiterAutoConfiguration {
         return new RateLimiterEndpoint(rateLimiterRegistry);
     }
 
-    @Bean
-    public RateLimiterEventsEndpoint rateLimiterEventsEndpoint(EventConsumerRegistry<RateLimiterEvent> rateLimiterEventsConsumerRegistry,
-                                                               RateLimiterRegistry rateLimiterRegistry) {
-        return new RateLimiterEventsEndpoint(rateLimiterEventsConsumerRegistry, rateLimiterRegistry);
-    }
-
     /**
      * The EventConsumerRegistry is used to manage EventConsumer instances.
      * The EventConsumerRegistry is used by the RateLimiterHealthIndicator to show the latest RateLimiterEvents events
@@ -95,7 +89,7 @@ public class RateLimiterAutoConfiguration {
 
     private void createHealthIndicatorForLimiter(ConfigurableBeanFactory beanFactory, String name, RateLimiter rateLimiter) {
         beanFactory.registerSingleton(
-            name + "HealthIndicator",
+            name + "RateLimiterHealthIndicator",
             new RateLimiterHealthIndicator(rateLimiter)
         );
     }
