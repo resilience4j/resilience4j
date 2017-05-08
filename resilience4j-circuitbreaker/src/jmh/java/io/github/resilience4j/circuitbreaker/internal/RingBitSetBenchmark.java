@@ -23,6 +23,7 @@ import org.openjdk.jmh.infra.Blackhole;
 
 import java.util.concurrent.TimeUnit;
 
+
 @State(Scope.Benchmark)
 @OutputTimeUnit(TimeUnit.MICROSECONDS)
 @BenchmarkMode(Mode.Throughput)
@@ -41,7 +42,6 @@ public class RingBitSetBenchmark {
         ringBitSet = new RingBitSet(CAPACITY);
     }
 
-    @Benchmark
     @Fork(value = FORK_COUNT)
     @Group("ringBitSet")
     @GroupThreads(THREAD_COUNT)

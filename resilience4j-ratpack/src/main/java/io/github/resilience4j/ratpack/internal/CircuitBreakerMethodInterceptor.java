@@ -90,18 +90,18 @@ public class CircuitBreakerMethodInterceptor implements MethodInterceptor {
             if (breaker.isCallPermitted()) {
                 CompletionStage<?> result = (CompletionStage<?>) proceed(invocation, breaker, recoveryFunction);
                 if (result != null) {
-                    StopWatch stopWatch = StopWatch.start(breaker.getName());
+                    long start = System.nanoTime();
                     result.whenCompleteAsync((v, t) -> {
-                        Duration d = stopWatch.stop().getProcessingDuration();
+                        long durationInNanos = System.nanoTime() - start;
                         if (t != null) {
-                            breaker.onError(d, t);
+                            breaker.onError(durationInNanos, t);
                             try {
                                 promise.complete(recoveryFunction.apply((Throwable) t));
                             } catch (Exception e) {
                                 promise.completeExceptionally(e);
                             }
                         } else {
-                            breaker.onSuccess(d);
+                            breaker.onSuccess(durationInNanos);
                             promise.complete(v);
                         }
                     });
@@ -121,14 +121,13 @@ public class CircuitBreakerMethodInterceptor implements MethodInterceptor {
 
     private Object proceed(MethodInvocation invocation, io.github.resilience4j.circuitbreaker.CircuitBreaker breaker, RecoveryFunction<?> recoveryFunction) throws Throwable {
         Object result;
-        StopWatch stopWatchOuter = StopWatch.start(breaker.getName());
+        long start = System.nanoTime();
         try {
             result = invocation.proceed();
         } catch (Exception e) {
-            breaker.onError(stopWatchOuter.getProcessingDuration(), e);
+            long durationInNanos = System.nanoTime() - start;
+            breaker.onError(durationInNanos, e);
             return recoveryFunction.apply(e);
-        } finally {
-            stopWatchOuter.stop();
         }
         return result;
     }

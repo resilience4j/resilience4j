@@ -1,0 +1,27 @@
+# Run complete. Total time: 00:04:09
+
+Benchmark                                                                                  Mode  Cnt    Score    Error   Units
+CircuitBreakerBenchmark.directSupplier                                                    thrpt   20    9.356 ±  0.141  ops/us
+CircuitBreakerBenchmark.directSupplier:·gc.alloc.rate                                     thrpt   20    0.001 ±  0.001  MB/sec
+CircuitBreakerBenchmark.directSupplier:·gc.alloc.rate.norm                                thrpt   20   ≈ 10⁻⁴             B/op
+CircuitBreakerBenchmark.directSupplier:·gc.count                                          thrpt   20      ≈ 0           counts
+
+CircuitBreakerBenchmark.protectedSupplier                                                 thrpt   20    4.593 ±  0.084  ops/us
+CircuitBreakerBenchmark.protectedSupplier:·gc.alloc.rate                                  thrpt   20    0.001 ±  0.001  MB/sec
+CircuitBreakerBenchmark.protectedSupplier:·gc.alloc.rate.norm                             thrpt   20   ≈ 10⁻⁴             B/op
+CircuitBreakerBenchmark.protectedSupplier:·gc.count                                       thrpt   20      ≈ 0           counts
+
+CircuitBreakerBenchmark.protectedSupplierWithSubscriber                                   thrpt   20    2.617 ±  0.132  ops/us
+CircuitBreakerBenchmark.protectedSupplierWithSubscriber:·gc.alloc.rate                    thrpt   20  418.007 ± 17.892  MB/sec
+CircuitBreakerBenchmark.protectedSupplierWithSubscriber:·gc.alloc.rate.norm               thrpt   20  252.050 ± 10.691    B/op
+CircuitBreakerBenchmark.protectedSupplierWithSubscriber:·gc.churn.PS_Eden_Space           thrpt   20  430.914 ± 46.358  MB/sec
+CircuitBreakerBenchmark.protectedSupplierWithSubscriber:·gc.churn.PS_Eden_Space.norm      thrpt   20  259.786 ± 26.939    B/op
+CircuitBreakerBenchmark.protectedSupplierWithSubscriber:·gc.churn.PS_Survivor_Space       thrpt   20    0.039 ±  0.017  MB/sec
+CircuitBreakerBenchmark.protectedSupplierWithSubscriber:·gc.churn.PS_Survivor_Space.norm  thrpt   20    0.024 ±  0.011    B/op
+CircuitBreakerBenchmark.protectedSupplierWithSubscriber:·gc.count                         thrpt   20   84.000           counts
+CircuitBreakerBenchmark.protectedSupplierWithSubscriber:·gc.time                          thrpt   20   49.000               ms
+
+internal.RingBitSetBenchmark.ringBitSet                                                   thrpt   20  400.781 ± 19.870  ops/us
+internal.RingBitSetBenchmark.ringBitSet:·gc.alloc.rate                                    thrpt   20    0.001 ±  0.002  MB/sec
+internal.RingBitSetBenchmark.ringBitSet:·gc.alloc.rate.norm                               thrpt   20   ≈ 10⁻⁵             B/op
+internal.RingBitSetBenchmark.ringBitSet:·gc.count                                         thrpt   20      ≈ 0           counts

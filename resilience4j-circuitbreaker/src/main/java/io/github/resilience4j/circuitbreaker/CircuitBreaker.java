@@ -18,20 +18,18 @@
  */
 package io.github.resilience4j.circuitbreaker;
 
-import java.time.Duration;
+import io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent;
+import io.github.resilience4j.circuitbreaker.internal.CircuitBreakerStateMachine;
+import io.github.resilience4j.circuitbreaker.utils.CircuitBreakerUtils;
+import io.reactivex.Flowable;
+import javaslang.control.Try;
+
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
-
-import io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent;
-import io.github.resilience4j.circuitbreaker.internal.CircuitBreakerStateMachine;
-import io.github.resilience4j.circuitbreaker.utils.CircuitBreakerUtils;
-import io.github.resilience4j.core.StopWatch;
-import io.reactivex.Flowable;
-import javaslang.control.Try;
 
 /**
  * A {@link CircuitBreaker} manages the state of a backend system.
@@ -46,6 +44,7 @@ import javaslang.control.Try;
  * After the time duration has elapsed, the CircuitBreaker state changes from OPEN to HALF_OPEN and allows calls to see if the backend is still unavailable or has become available again.
  * If the failure rate is above the configured threshold, the state changes back to OPEN. If the failure rate is below or equal to the threshold, the state changes back to CLOSED.
  */
+@SuppressWarnings("ALL")
 public interface CircuitBreaker {
 
     /**
@@ -59,18 +58,18 @@ public interface CircuitBreaker {
      * Records a failed call.
      * This method must be invoked when a call failed.
      *
-     * @param duration The elapsed time duration of the call
+     * @param durationInNanos The elapsed time duration of the call
      * @param throwable The throwable which must be recorded
      */
-    void onError(Duration duration, Throwable throwable);
+    void onError(long durationInNanos, Throwable throwable);
 
      /**
       * Records a successful call.
       *
-      * @param duration The elapsed time duration of the call
+      * @param durationInNanos The elapsed time duration of the call
       * This method must be invoked when a call is successfully.
       */
-    void onSuccess(Duration duration);
+    void onSuccess(long durationInNanos);
 
 
     /**
@@ -311,13 +310,16 @@ public interface CircuitBreaker {
     static <T> Try.CheckedSupplier<T> decorateCheckedSupplier(CircuitBreaker circuitBreaker, Try.CheckedSupplier<T> supplier){
         return () -> {
             CircuitBreakerUtils.isCallPermitted(circuitBreaker);
-            StopWatch stopWatch = StopWatch.start(circuitBreaker.getName());
+            long start = System.nanoTime();
             try {
                 T returnValue = supplier.get();
-                circuitBreaker.onSuccess(stopWatch.stop().getProcessingDuration());
+                
+                long durationInNanos = System.nanoTime() - start;
+                circuitBreaker.onSuccess(durationInNanos);
                 return returnValue;
             } catch (Throwable throwable) {
-                circuitBreaker.onError(stopWatch.stop().getProcessingDuration(), throwable);
+                long durationInNanos = System.nanoTime() - start;
+                circuitBreaker.onError(durationInNanos, throwable);
                 throw throwable;
             }
         };
@@ -345,24 +347,22 @@ public interface CircuitBreaker {
                                 String.format("CircuitBreaker '%s' is open", circuitBreaker.getName())));
 
             } else {
-                final StopWatch stopWatch = StopWatch.start(circuitBreaker.getName());
+                final long start = System.nanoTime();
 
                 try {
                     supplier.get().whenComplete((result, throwable) -> {
-
-                        final Duration duration = stopWatch.stop().getProcessingDuration();
-
+                        long durationInNanos = System.nanoTime() - start;
                         if (throwable != null) {
-                            circuitBreaker.onError(duration, throwable);
+                            circuitBreaker.onError(durationInNanos, throwable);
                             promise.completeExceptionally(throwable);
-
                         } else {
-                            circuitBreaker.onSuccess(duration);
+                            circuitBreaker.onSuccess(durationInNanos);
                             promise.complete(result);
                         }
                     });
                 } catch (Throwable throwable) {
-                    circuitBreaker.onError(stopWatch.stop().getProcessingDuration(), throwable);
+                    long durationInNanos = System.nanoTime() - start;
+                    circuitBreaker.onError(durationInNanos, throwable);
                     throw throwable;
                 }
             }
@@ -382,12 +382,14 @@ public interface CircuitBreaker {
     static Try.CheckedRunnable decorateCheckedRunnable(CircuitBreaker circuitBreaker, Try.CheckedRunnable runnable){
         return () -> {
             CircuitBreakerUtils.isCallPermitted(circuitBreaker);
-            StopWatch stopWatch = StopWatch.start(circuitBreaker.getName());
+            long start = System.nanoTime();
             try{
                 runnable.run();
-                circuitBreaker.onSuccess(stopWatch.stop().getProcessingDuration());
+                long durationInNanos = System.nanoTime() - start;
+                circuitBreaker.onSuccess(durationInNanos);
             } catch (Throwable throwable){
-                circuitBreaker.onError(stopWatch.stop().getProcessingDuration(), throwable);
+                long durationInNanos = System.nanoTime() - start;
+                circuitBreaker.onError(durationInNanos, throwable);
                 throw throwable;
             }
         };
@@ -405,13 +407,15 @@ public interface CircuitBreaker {
     static <T> Callable<T> decorateCallable(CircuitBreaker circuitBreaker, Callable<T> callable){
         return () -> {
             CircuitBreakerUtils.isCallPermitted(circuitBreaker);
-            StopWatch stopWatch = StopWatch.start(circuitBreaker.getName());
+            long start = System.nanoTime();
             try {
                 T returnValue = callable.call();
-                circuitBreaker.onSuccess(stopWatch.stop().getProcessingDuration());
+                long durationInNanos = System.nanoTime() - start;
+                circuitBreaker.onSuccess(durationInNanos);
                 return returnValue;
             } catch (Throwable throwable) {
-                circuitBreaker.onError(stopWatch.stop().getProcessingDuration(), throwable);
+                long durationInNanos = System.nanoTime() - start;
+                circuitBreaker.onError(durationInNanos, throwable);
                 throw throwable;
             }
         };
@@ -429,13 +433,15 @@ public interface CircuitBreaker {
     static <T> Supplier<T> decorateSupplier(CircuitBreaker circuitBreaker, Supplier<T> supplier){
         return () -> {
             CircuitBreakerUtils.isCallPermitted(circuitBreaker);
-            StopWatch stopWatch = StopWatch.start(circuitBreaker.getName());
+            long start = System.nanoTime();
             try {
                 T returnValue = supplier.get();
-                circuitBreaker.onSuccess(stopWatch.stop().getProcessingDuration());
+                long durationInNanos = System.nanoTime() - start;
+                circuitBreaker.onSuccess(durationInNanos);
                 return returnValue;
             } catch (Throwable throwable) {
-                circuitBreaker.onError(stopWatch.stop().getProcessingDuration(), throwable);
+                long durationInNanos = System.nanoTime() - start;
+                circuitBreaker.onError(durationInNanos, throwable);
                 throw throwable;
             }
         };
@@ -453,12 +459,14 @@ public interface CircuitBreaker {
     static <T> Consumer<T> decorateConsumer(CircuitBreaker circuitBreaker, Consumer<T> consumer){
         return (t) -> {
             CircuitBreakerUtils.isCallPermitted(circuitBreaker);
-            StopWatch stopWatch = StopWatch.start(circuitBreaker.getName());
+            long start = System.nanoTime();
             try {
                 consumer.accept(t);
-                circuitBreaker.onSuccess(stopWatch.stop().getProcessingDuration());
+                long durationInNanos = System.nanoTime() - start;
+                circuitBreaker.onSuccess(durationInNanos);
             } catch (Throwable throwable) {
-                circuitBreaker.onError(stopWatch.stop().getProcessingDuration(), throwable);
+                long durationInNanos = System.nanoTime() - start;
+                circuitBreaker.onError(durationInNanos, throwable);
                 throw throwable;
             }
         };
@@ -476,12 +484,14 @@ public interface CircuitBreaker {
     static <T> Try.CheckedConsumer<T> decorateCheckedConsumer(CircuitBreaker circuitBreaker, Try.CheckedConsumer<T> consumer){
         return (t) -> {
             CircuitBreakerUtils.isCallPermitted(circuitBreaker);
-            StopWatch stopWatch = StopWatch.start(circuitBreaker.getName());
+            long start = System.nanoTime();
             try {
                 consumer.accept(t);
-                circuitBreaker.onSuccess(stopWatch.stop().getProcessingDuration());
+                long durationInNanos = System.nanoTime() - start;
+                circuitBreaker.onSuccess(durationInNanos);
             } catch (Throwable throwable) {
-                circuitBreaker.onError(stopWatch.stop().getProcessingDuration(), throwable);
+                long durationInNanos = System.nanoTime() - start;
+                circuitBreaker.onError(durationInNanos, throwable);
                 throw throwable;
             }
         };
@@ -498,12 +508,14 @@ public interface CircuitBreaker {
     static Runnable decorateRunnable(CircuitBreaker circuitBreaker, Runnable runnable){
         return () -> {
             CircuitBreakerUtils.isCallPermitted(circuitBreaker);
-            StopWatch stopWatch = StopWatch.start(circuitBreaker.getName());
+            long start = System.nanoTime();
             try{
                 runnable.run();
-                circuitBreaker.onSuccess(stopWatch.stop().getProcessingDuration());
+                long durationInNanos = System.nanoTime() - start;
+                circuitBreaker.onSuccess(durationInNanos);
             } catch (Throwable throwable){
-                circuitBreaker.onError(stopWatch.stop().getProcessingDuration(), throwable);
+                long durationInNanos = System.nanoTime() - start;
+                circuitBreaker.onError(durationInNanos, throwable);
                 throw throwable;
             }
         };
@@ -521,13 +533,15 @@ public interface CircuitBreaker {
     static <T, R> Function<T, R> decorateFunction(CircuitBreaker circuitBreaker, Function<T, R> function){
         return (T t) -> {
             CircuitBreakerUtils.isCallPermitted(circuitBreaker);
-            StopWatch stopWatch = StopWatch.start(circuitBreaker.getName());
+            long start = System.nanoTime();
             try{
                 R returnValue = function.apply(t);
-                circuitBreaker.onSuccess(stopWatch.stop().getProcessingDuration());
+                long durationInNanos = System.nanoTime() - start;
+                circuitBreaker.onSuccess(durationInNanos);
                 return returnValue;
             } catch (Throwable throwable){
-                circuitBreaker.onError(stopWatch.stop().getProcessingDuration(), throwable);
+                long durationInNanos = System.nanoTime() - start;
+                circuitBreaker.onError(durationInNanos, throwable);
                 throw throwable;
             }
         };
@@ -545,13 +559,15 @@ public interface CircuitBreaker {
     static <T, R> Try.CheckedFunction<T, R> decorateCheckedFunction(CircuitBreaker circuitBreaker, Try.CheckedFunction<T, R> function){
         return (T t) -> {
             CircuitBreakerUtils.isCallPermitted(circuitBreaker);
-            StopWatch stopWatch = StopWatch.start(circuitBreaker.getName());
+            long start = System.nanoTime();
             try{
                 R returnValue = function.apply(t);
-                circuitBreaker.onSuccess(stopWatch.stop().getProcessingDuration());
+                long durationInNanos = System.nanoTime() - start;
+                circuitBreaker.onSuccess(durationInNanos);
                 return returnValue;
             } catch (Throwable throwable){
-                circuitBreaker.onError(stopWatch.stop().getProcessingDuration(), throwable);
+                long durationInNanos = System.nanoTime() - start;
+                circuitBreaker.onError(durationInNanos, throwable);
                 throw throwable;
             }
         };
