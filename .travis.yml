@@ -9,7 +9,7 @@ jdk:
 before_install:
 - chmod +x gradlew
 script:
-- "./gradlew clean check"
+- "./gradlew clean :resilience4j-spring-boot:test"
 after_success:
 - "./gradlew coberturaReport coveralls"
 - ./gradlew artifactoryPublish -PbintrayUsername="${BINTRAY_USER}" -PbintrayApiKey="${BINTRAY_KEY}"
