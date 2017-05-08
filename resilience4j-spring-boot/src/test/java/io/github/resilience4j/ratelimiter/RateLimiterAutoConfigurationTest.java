@@ -68,7 +68,7 @@ public class RateLimiterAutoConfigurationTest {
         RateLimiter rateLimiter = rateLimiterRegistry.rateLimiter(DummyService.BACKEND);
         assertThat(rateLimiter).isNotNull();
         await()
-            .atMost(1, TimeUnit.SECONDS)
+            .atMost(2, TimeUnit.SECONDS)
             .until(() -> rateLimiter.getMetrics().getAvailablePermissions() == 10);
 
         try {
@@ -109,7 +109,7 @@ public class RateLimiterAutoConfigurationTest {
         assertThat(lastEvent.getRateLimiterEventType()).isEqualTo(RateLimiterEvent.Type.FAILED_ACQUIRE);
 
         await()
-            .atMost(1, TimeUnit.SECONDS)
+            .atMost(2, TimeUnit.SECONDS)
             .until(() -> rateLimiter.getMetrics().getAvailablePermissions() == 10);
     }
 }
