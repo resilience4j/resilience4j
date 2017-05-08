@@ -11,7 +11,7 @@ before_install:
 script:
 - "./gradlew clean check -i"
 after_success:
-- "./gradlew coberturaReport coveralls"
+- "./gradlew coberturaReport coveralls > /dev/null"
 - ./gradlew artifactoryPublish -PbintrayUsername="${BINTRAY_USER}" -PbintrayApiKey="${BINTRAY_KEY}"
 before_cache:
 - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
