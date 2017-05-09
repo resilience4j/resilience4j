@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Robert Winkler
+ * Copyright 2017 Bohdan Storozhuk
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,29 +13,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.resilience4j.circuitbreaker.autoconfigure;
+package io.github.resilience4j.ratelimiter.autoconfigure;
 
+import org.springframework.boot.actuate.metrics.repository.MetricRepository;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
-import io.github.resilience4j.prometheus.CircuitBreakerExports;
-import io.prometheus.client.CollectorRegistry;
+import io.github.resilience4j.prometheus.RateLimiterExports;
+import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
 
 /**
  * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration
  * Auto-configuration} for resilience4j-metrics.
  */
 @Configuration
-@ConditionalOnClass(CollectorRegistry.class)
-public class PrometheusAutoConfiguration {
-
+@ConditionalOnClass(MetricRepository.class)
+public class RateLimiterPrometheusAutoConfiguration {
     @Bean
-    public CircuitBreakerExports circuitBreakerCollector(CircuitBreakerRegistry circuitBreakerRegistry){
-        CircuitBreakerExports collector = CircuitBreakerExports.ofCircuitBreakerRegistry(circuitBreakerRegistry);
+    public RateLimiterExports rateLimiterPrometheusCollector(RateLimiterRegistry rateLimiterRegistry){
+        RateLimiterExports collector = RateLimiterExports.ofRateLimiterRegistry(rateLimiterRegistry);
         collector.register();
         return collector;
     }
-
 }

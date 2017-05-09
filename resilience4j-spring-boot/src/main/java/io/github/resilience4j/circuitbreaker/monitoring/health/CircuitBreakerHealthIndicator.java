@@ -19,14 +19,10 @@ package io.github.resilience4j.circuitbreaker.monitoring.health;
 import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.HealthIndicator;
 
-import java.util.Optional;
-
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
-import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
-import io.github.resilience4j.circuitbreaker.autoconfigure.CircuitBreakerProperties;
-import io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent;
-import io.github.resilience4j.consumer.EventConsumerRegistry;
+
+import java.util.Optional;
 
 /**
  * A Spring Boot health indicators which adds the state of a CircuitBreaker and it's metrics to the health endpoints
@@ -40,17 +36,9 @@ public class CircuitBreakerHealthIndicator implements HealthIndicator {
     private static final String NOT_PERMITTED = "notPermittedCalls";
     private static final String MAX_BUFFERED_CALLS = "maxBufferedCalls";
     private CircuitBreaker circuitBreaker;
-    private static final int DEFAULT_BUFFER_SIZE = 100;
 
-    public CircuitBreakerHealthIndicator(CircuitBreakerRegistry circuitBreakerRegistry,
-                                         EventConsumerRegistry<CircuitBreakerEvent> eventConsumerRegistry,
-                                         CircuitBreakerProperties circuitBreakerProperties,
-                                         String backendName) {
-        this.circuitBreaker = circuitBreakerRegistry.circuitBreaker(backendName, () -> circuitBreakerProperties.createCircuitBreakerConfig(backendName));
-        CircuitBreakerProperties.BackendProperties backendProperties = circuitBreakerProperties.getBackends().get(backendName);
-        int bufferSize = backendProperties != null ? backendProperties.getEventConsumerBufferSize() : DEFAULT_BUFFER_SIZE;
-        circuitBreaker.getEventStream()
-                .subscribe(eventConsumerRegistry.createEventConsumer(backendName, bufferSize));
+    public CircuitBreakerHealthIndicator(CircuitBreaker circuitBreaker) {
+        this.circuitBreaker = circuitBreaker;
     }
 
     @Override
