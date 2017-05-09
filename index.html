@@ -524,100 +524,26 @@ table.CodeRay td.code>pre{padding:0}
 <li><a href="#_introduction">1. Introduction</a></li>
 <li><a href="#_getting_started">2. Getting started</a>
 <ul class="sectlevel2">
-<li><a href="#_gradle">2.1. Gradle</a>
-<ul class="sectlevel3">
-<li><a href="#_release">2.1.1. Release</a></li>
-<li><a href="#_snapshot">2.1.2. Snapshot</a></li>
-</ul>
-</li>
-<li><a href="#_maven">2.2. Maven</a>
-<ul class="sectlevel3">
-<li><a href="#_release_2">2.2.1. Release</a></li>
-<li><a href="#_snapshot_2">2.2.2. Snapshot</a></li>
-</ul>
-</li>
+<li><a href="#_gradle">2.1. Gradle</a></li>
+<li><a href="#_maven">2.2. Maven</a></li>
 </ul>
 </li>
 <li><a href="#_usage_guide">3. Usage Guide</a>
 <ul class="sectlevel2">
-<li><a href="#_circuitbreaker">3.1. CircuitBreaker</a>
-<ul class="sectlevel3">
-<li><a href="#_create_a_circuitbreaker">3.1.1. Create a CircuitBreaker</a></li>
-<li><a href="#_use_a_circuitbreaker">3.1.2. Use a CircuitBreaker</a></li>
-<li><a href="#_circuitbreaker_and_rxjava">3.1.3. CircuitBreaker and RxJava</a></li>
-<li><a href="#_circuitbreaker_and_completablefuture">3.1.4. CircuitBreaker and CompletableFuture</a></li>
-<li><a href="#_open_circuitbreaker_example">3.1.5. OPEN CircuitBreaker example</a></li>
-<li><a href="#_recover_from_an_exception">3.1.6. Recover from an exception</a></li>
-<li><a href="#_customize_the_exception_handler">3.1.7. Customize the exception handler</a></li>
-<li><a href="#_consume_emitted_circuitbreakerevents">3.1.8. Consume emitted CircuitBreakerEvents</a></li>
-<li><a href="#_monitor_circuitbreaker_metrics">3.1.9. Monitor CircuitBreaker metrics</a></li>
-</ul>
-</li>
-<li><a href="#_ratelimiter">3.2. RateLimiter</a>
-<ul class="sectlevel3">
-<li><a href="#_create_a_ratelimiter">3.2.1. Create a RateLimiter</a></li>
-<li><a href="#_use_a_ratelimiter">3.2.2. Use a RateLimiter</a></li>
-<li><a href="#_ratelimiter_and_rxjava">3.2.3. RateLimiter and RxJava</a></li>
-<li><a href="#_consume_emitted_ratelimiterevents">3.2.4. Consume emitted RateLimiterEvents</a></li>
-<li><a href="#_monitor_ratelimiter_metrics">3.2.5. Monitor RateLimiter metrics</a></li>
-</ul>
-</li>
-<li><a href="#_bulkhead">3.3. Bulkhead</a>
-<ul class="sectlevel3">
-<li><a href="#_overview">3.3.1. Overview</a></li>
-<li><a href="#_create_a_bulkhead">3.3.2. Create a Bulkhead</a></li>
-<li><a href="#_using_a_bulkhead">3.3.3. Using a Bulkhead</a></li>
-<li><a href="#_bulkhead_and_rxjava">3.3.4. Bulkhead and RxJava</a></li>
-<li><a href="#_bulkhead_and_completablefuture">3.3.5. Bulkhead and CompletableFuture</a></li>
-<li><a href="#_saturated_bulkhead_example">3.3.6. Saturated Bulkhead example</a></li>
-<li><a href="#_consume_emitted_bulkheadevents">3.3.7. Consume emitted BulkheadEvents</a></li>
-</ul>
-</li>
-<li><a href="#_retry">3.4. Retry</a>
-<ul class="sectlevel3">
-<li><a href="#_retry_a_failed_function">3.4.1. Retry a failed function</a></li>
-<li><a href="#_retry_and_rxjava">3.4.2. Retry and RxJava</a></li>
-<li><a href="#_consume_emitted_retryevents">3.4.3. Consume emitted RetryEvents</a></li>
-</ul>
-</li>
-<li><a href="#_cache">3.5. Cache</a>
-<ul class="sectlevel3">
-<li><a href="#_cache_function_results">3.5.1. Cache function results</a></li>
-<li><a href="#_consume_emitted_cacheevents">3.5.2. Consume emitted CacheEvents</a></li>
-</ul>
-</li>
+<li><a href="#_circuitbreaker">3.1. CircuitBreaker</a></li>
+<li><a href="#_ratelimiter">3.2. RateLimiter</a></li>
+<li><a href="#_bulkhead">3.3. Bulkhead</a></li>
+<li><a href="#_retry">3.4. Retry</a></li>
+<li><a href="#_cache">3.5. Cache</a></li>
 </ul>
 </li>
 <li><a href="#_usage_guide_2">4. Usage Guide</a>
 <ul class="sectlevel2">
-<li><a href="#_spring_boot_starter">4.1. Spring Boot Starter</a>
-<ul class="sectlevel3">
-<li><a href="#_gradle_2">4.1.1. Gradle</a></li>
-<li><a href="#_monitoring">4.1.2. Monitoring</a></li>
-<li><a href="#_circuitbreaker_2">4.1.3. CircuitBreaker</a></li>
-<li><a href="#_ratelimiter_2">4.1.4. RateLimiter</a></li>
-<li><a href="#_configuration">4.1.5. Configuration</a></li>
-<li><a href="#_event_monitoring">4.1.6. Event Monitoring</a></li>
+<li><a href="#_spring_boot_starter">4.1. Spring Boot Starter</a></li>
+<li><a href="#_ratpack_starter">4.2. Ratpack Starter</a></li>
 </ul>
 </li>
-<li><a href="#_ratpack_starter">4.2. Ratpack Starter</a>
-<ul class="sectlevel3">
-<li><a href="#_gradle_3">4.2.1. Gradle</a></li>
-<li><a href="#_handlers">4.2.2. Handlers</a></li>
-<li><a href="#_promises">4.2.3. Promises</a></li>
-<li><a href="#_guice_aop">4.2.4. Guice AOP</a></li>
-<li><a href="#_functional_style">4.2.5. Functional style</a></li>
-<li><a href="#_monitoring_2">4.2.6. Monitoring</a></li>
-<li><a href="#_configuration_2">4.2.7. Configuration</a></li>
-<li><a href="#_circuitbreaker_event_monitoring">4.2.8. CircuitBreaker Event Monitoring</a></li>
-<li><a href="#_circuit_breaking">4.2.9. Circuit Breaking</a></li>
-<li><a href="#_rate_limiting">4.2.10. Rate Limiting</a></li>
-</ul>
-</li>
-</ul>
-</li>
-<li><a href="#_circuitbreaker_implementation_details">5. CircuitBreaker implementation details</a></li>
-<li><a href="#_ratelimiter_implementation_details">6. RateLimiter implementation details</a></li>
+<li><a href="#_ratelimiter_implementation_details">5. RateLimiter implementation details</a></li>
 </ul>
 </div>
 </div>
@@ -2459,15 +2385,9 @@ Retrofit retrofit = <span class="keyword">new</span> Retrofit.Builder()
 </div>
 </div>
 <div class="paragraph">
-<p>If the number of calls are exceeded within the period defined by the RateLimiter, a HTTP 429 response (too many requests) will be returned.</p>
+<p>If the number of calls are exceeded within the period defined by the RateLimiter, a HTTP 429 response (too many requests) will be returned.<br>
+== CircuitBreaker implementation details</p>
 </div>
-</div>
-</div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="_circuitbreaker_implementation_details"><a class="anchor" href="#_circuitbreaker_implementation_details"></a>5. CircuitBreaker implementation details</h2>
-<div class="sectionbody">
 <div class="paragraph">
 <p>The CircuitBreaker is implemented via a finite state machine with three states: <code>CLOSED</code>, <code>OPEN</code> and <code>HALF_OPEN</code>.</p>
 </div>
@@ -2533,8 +2453,10 @@ circuitBreaker.getEventStream()
 </div>
 </div>
 </div>
+</div>
+</div>
 <div class="sect1">
-<h2 id="_ratelimiter_implementation_details"><a class="anchor" href="#_ratelimiter_implementation_details"></a>6. RateLimiter implementation details</h2>
+<h2 id="_ratelimiter_implementation_details"><a class="anchor" href="#_ratelimiter_implementation_details"></a>5. RateLimiter implementation details</h2>
 <div class="sectionbody">
 <div class="paragraph">
 <p>Conceptually <code>RateLimiter</code> splits all nanoseconds from the start of epoch into cycles.<br>
