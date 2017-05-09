@@ -9,5 +9,4 @@ Robert Winkler
 include::introduction.adoc[]
 include::getting_started.adoc[]
 include::usage_guide.adoc[]
-include::monitoring.adoc[]
 include::license.adoc[]

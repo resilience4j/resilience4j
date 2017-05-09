@@ -1,0 +1,36 @@
+=== Cache
+
+==== Cache function results
+
+The following example shows how to decorate a lambda expression with a Cache abstraction. The cache abstraction puts the result of the lambda expression in a cache instance (JCache) and
+tries to retrieve a previous cached result from the cache before it invokes the lambda expression.
+If the cache retrieval from a distributed cache fails, the exception is taken care of and the lambda expression is called.
+
+[source,java]
+----
+// Create a CacheContext by wrapping a JCache instance.
+javax.cache.Cache<String, String> cacheInstance = Caching.getCache("cacheName", String.class, String.class);
+Cache<String, String> cacheContext = Cache.of(cacheInstance);
+
+// Decorate your call to BackendService.doSomething()
+Try.CheckedFunction<String, String> cachedFunction = Decorators.ofCheckedSupplier(() -> backendService.doSomething())
+    .withCache(cacheContext)
+    .decorate();
+String value = Try.of(() -> cachedFunction.apply("cacheKey")).get();
+----
+
+==== Consume emitted CacheEvents
+
+The CacheContext emits a stream of CacheEvents to any Observer/Consumer who subscribes. An event can be a cache hit, a cache miss or an error. You can use the `CircularEventConsumer` to store events in a circular buffer with a fixed capacity.
+
+[source,java]
+----
+Cache<String, String> cacheContext = Cache.of(cacheInstance);
+CircularEventConsumer<CacheOnMissEvent> circularEventConsumer = new CircularEventConsumer<>(10);
+cacheContext.getEventStream()
+    .filter(event -> event.getEventType() == Type.CACHE_MISS)
+    .cast(CacheOnMissEvent.class)
+    .subscribe(circularEventConsumer);
+
+List<CacheOnMissEvent> bufferedEvents = circularEventConsumer.getBufferedEvents();
+----

@@ -1,8 +1,8 @@
-= resilience4j-retrofit
+=== resilience4j-retrofit
 
 https://square.github.io/retrofit/[Retrofit] client circuit breaking & rate limiting.
 
-== Circuit Breaking
+==== Circuit Breaking
 
 Circuit breaking http client calls is based upon the `CircuitBreaker` instance provided to a `CircuitBreakerCallAdaptor`.
 
@@ -21,7 +21,7 @@ Retrofit retrofit = new Retrofit.Builder()
 RetrofitService service = retrofit.create(RetrofitService.class);
 ----
 
-=== Timeouts
+===== Timeouts
 To trigger circuit breaking by timeout, the time thresholds should be set on a `OkHttpClient` instance passed into the
 `Retrofit.Builder`.
 
@@ -44,7 +44,7 @@ Retrofit retrofit = new Retrofit.Builder()
         .build();
 ----
 
-=== Error responses
+===== Error responses
 
 By default, all exceptions and responses where `!Response.isSuccessful()` will be recorded as an error in the `CircuitBreaker`.
 
@@ -58,7 +58,7 @@ Retrofit retrofit = new Retrofit.Builder()
         .build();
 ----
 
-== Rate Limiting
+==== Rate Limiting
 
 Rate limiting of http client calls is based upon the configuration passed to the RateLimiterCallAdaptor.
 

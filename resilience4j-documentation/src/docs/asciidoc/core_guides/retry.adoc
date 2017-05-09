@@ -1,0 +1,76 @@
+=== Retry
+
+==== Retry a failed function
+
+You can also retry a failed function and recover from the exception, if the maximum retry count was reached. You can create a `Retry` context using a default configuration as follows.
+
+[source,java]
+----
+// Create a Retry context with a default global configuration
+// (maxAttempts = 3, waitDurationInOpenState = 500[ms])
+RetryConfig config = RetryConfig.custom()
+    .maxAttempts(3)
+    .waitDuration(Duration.ofMillis(500))
+    .build();
+Retry retryContext = Retry.of("id", config);
+----
+
+In order to create a custom `Retry` context, you can use the Retry context builder. You can configure the maximum number of retry attempts and the wait duration between successive attempts. Furthermore, you can configure a custom Predicate which evaluates if an exception should trigger a retry.
+
+[source,java]
+----
+RetryConfig config = RetryConfig.custom()
+    .maxAttempts(2)
+    .waitDurationInOpenState(Duration.ofMillis(100))
+    .retryOnException(throwable -> Match.of(throwable)
+        .whenType(WebServiceException.class).then(false)
+        .otherwise(true).get())
+    .build();
+----
+
+You can decorate any `Supplier / Runnable / Function` or `CheckedSupplier / CheckedRunnable / CheckedFunction` function with `Retry.decorateCheckedSupplier()`, `Retry.decorateCheckedRunnable()` or `Retry.decorateCheckedFunction()`.
+
+[source,java]
+----
+// Given I have a HelloWorldService which throws an exception
+HelloWorldService  helloWorldService = mock(HelloWorldService.class);
+given(helloWorldService.sayHelloWorld()).willThrow(new WebServiceException("BAM!"));
+
+// Create a Retry with default configuration
+Retry retryContext = Retry.ofDefaults("id");
+// Decorate the invocation of the HelloWorldService
+Try.CheckedSupplier<String> retryableSupplier = Retry.decorateCheckedSupplier(retryContext, helloWorldService::sayHelloWorld);
+
+// When I invoke the function
+Try<String> result = Try.of(retryableSupplier).recover((throwable) -> "Hello world from recovery function");
+
+// Then the helloWorldService should be invoked 3 times
+BDDMockito.then(helloWorldService).should(times(3)).sayHelloWorld();
+// and the exception should be handled by the recovery function
+assertThat(result.get()).isEqualTo("Hello world from recovery function");
+----
+
+==== Retry and RxJava
+
+The following example shows how to decorate an Observable by using the custom RxJava transformer.
+
+[source,java]
+----
+Retry retry = Retry.ofDefaults("backendName");
+Observable.fromCallable(backendService::doSomething)
+    .compose(RetryTransformer.of(retry))
+----
+
+==== Consume emitted RetryEvents
+
+The RetryContext emits a stream of RetryEvents to any Observer/Consumer who subscribes. An event can be a failure which signals that even all retries have failed or success if a retry was successful. You can use the `CircularEventConsumer` to store events in a circular buffer with a fixed capacity.
+
+[source,java]
+----
+Retry retryContext = Retry.ofDefaults("id");
+CircularEventConsumer<RetryEvent> circularEventConsumer = new CircularEventConsumer<>(10);
+retryContext.getEventStream()
+    .subscribe(circularEventConsumer);
+
+List<RetryEvent> bufferedEvents = circularEventConsumer.getBufferedEvents();
+----
