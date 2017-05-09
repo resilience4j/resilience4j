@@ -14,10 +14,11 @@
  * limitations under the License.
  */
 
-package io.github.resilience4j.ratpack.annotation
+package io.github.resilience4j.ratpack.retry
 
-import io.github.resilience4j.ratpack.RecoveryFunction
+import io.github.resilience4j.ratpack.recovery.RecoveryFunction
 import io.github.resilience4j.ratpack.Resilience4jModule
+import io.github.resilience4j.ratpack.retry.Retry
 import io.github.resilience4j.retry.RetryConfig
 import io.github.resilience4j.retry.RetryRegistry
 import io.reactivex.Flowable

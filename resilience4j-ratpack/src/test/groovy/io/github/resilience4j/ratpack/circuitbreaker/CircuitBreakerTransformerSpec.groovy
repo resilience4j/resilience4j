@@ -13,10 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.resilience4j.ratpack
+package io.github.resilience4j.ratpack.circuitbreaker
 
 import io.github.resilience4j.circuitbreaker.CircuitBreaker
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig
+import io.github.resilience4j.ratpack.circuitbreaker.CircuitBreakerTransformer
 import ratpack.exec.Blocking
 import ratpack.test.exec.ExecHarness
 import spock.lang.Specification
