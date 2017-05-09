@@ -17,6 +17,7 @@ Setup and usage is described in our *http://resilience4j.github.io/resilience4j/
 
 * Deutsche Telekom (In an application with over 400 million request per day)
 * AOL (In an application with low latency requirements)
+* Netpulse (In system with 40+ integrations)
 
 == License
 
