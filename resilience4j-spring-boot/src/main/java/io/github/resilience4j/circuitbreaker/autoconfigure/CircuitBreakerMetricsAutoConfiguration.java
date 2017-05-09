@@ -37,8 +37,7 @@ import io.github.resilience4j.metrics.CircuitBreakerMetrics;
 @ConditionalOnClass(MetricRepository.class)
 @AutoConfigureAfter(value = {CircuitBreakerAutoConfiguration.class, MetricsDropwizardAutoConfiguration.class})
 @AutoConfigureBefore(MetricRepositoryAutoConfiguration.class)
-public class MetricsAutoConfiguration{
-
+public class CircuitBreakerMetricsAutoConfiguration {
     @Bean
     public CircuitBreakerMetrics registerCircuitBreakerMetrics(CircuitBreakerRegistry circuitBreakerRegistry, MetricRegistry metricRegistry){
         CircuitBreakerMetrics circuitBreakerMetrics = CircuitBreakerMetrics.ofCircuitBreakerRegistry(circuitBreakerRegistry);

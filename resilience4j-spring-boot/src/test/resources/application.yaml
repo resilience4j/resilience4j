@@ -6,12 +6,14 @@ resilience4j.circuitbreaker:
             waitInterval: 5000
             failureRateThreshold: 70
             eventConsumerBufferSize: 10
+            registerHealthIndicator: true
         backendB:
             ringBufferSizeInClosedState: 10
             ringBufferSizeInHalfOpenState: 5
             waitInterval: 5000
             failureRateThreshold: 50
             eventConsumerBufferSize: 10
+            registerHealthIndicator: true
 
 resilience4j.ratelimiter:
     limiters:

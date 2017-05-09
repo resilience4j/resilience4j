@@ -15,17 +15,19 @@
  */
 package io.github.resilience4j.circuitbreaker.autoconfigure;
 
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
+import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent;
 import io.github.resilience4j.circuitbreaker.internal.InMemoryCircuitBreakerRegistry;
 import io.github.resilience4j.circuitbreaker.monitoring.endpoint.CircuitBreakerEndpoint;
-import io.github.resilience4j.circuitbreaker.monitoring.endpoint.CircuitBreakerEventsEndpoint;
+import io.github.resilience4j.circuitbreaker.monitoring.health.CircuitBreakerHealthIndicator;
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
 
@@ -39,30 +41,38 @@ import io.github.resilience4j.consumer.EventConsumerRegistry;
 public class CircuitBreakerAutoConfiguration {
 
     @Bean
-    public CircuitBreakerRegistry circuitBreakerRegistry(CircuitBreakerProperties circuitBreakerProperties){
+    public CircuitBreakerRegistry circuitBreakerRegistry(CircuitBreakerProperties circuitBreakerProperties,
+                                                         EventConsumerRegistry<CircuitBreakerEvent> eventConsumerRegistry,
+                                                         ConfigurableBeanFactory beanFactory) {
         CircuitBreakerRegistry circuitBreakerRegistry = new InMemoryCircuitBreakerRegistry();
         circuitBreakerProperties.getBackends().forEach(
-                (name, properties) -> circuitBreakerRegistry.circuitBreaker(name, circuitBreakerProperties
-                        .createCircuitBreakerConfig(name))
+            (name, properties) -> {
+                CircuitBreakerConfig circuitBreakerConfig = circuitBreakerProperties.createCircuitBreakerConfig(name);
+                CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker(name, circuitBreakerConfig);
+                circuitBreaker.getEventStream()
+                    .subscribe(eventConsumerRegistry.createEventConsumer(name, properties.getEventConsumerBufferSize()));
+
+                if (properties.getRegisterHealthIndicator()) {
+                    CircuitBreakerHealthIndicator healthIndicator = new CircuitBreakerHealthIndicator(circuitBreaker);
+                    beanFactory.registerSingleton(
+                        name + "CircuitBreakerHealthIndicator",
+                        healthIndicator
+                    );
+                }
+            }
         );
         return circuitBreakerRegistry;
     }
 
     @Bean
     public CircuitBreakerAspect circuitBreakerAspect(CircuitBreakerProperties circuitBreakerProperties,
-                                                     CircuitBreakerRegistry circuitBreakerRegistry){
+                                                     CircuitBreakerRegistry circuitBreakerRegistry) {
         return new CircuitBreakerAspect(circuitBreakerProperties, circuitBreakerRegistry);
     }
 
     @Bean
     public CircuitBreakerEndpoint circuitBreakerEndpoint(CircuitBreakerRegistry circuitBreakerRegistry) {
         return new CircuitBreakerEndpoint(circuitBreakerRegistry);
-    }
-
-    @Bean
-    public CircuitBreakerEventsEndpoint circuitBreakerEventsEndpoint(EventConsumerRegistry<CircuitBreakerEvent> eventConsumerRegistry,
-                                                                     CircuitBreakerRegistry circuitBreakerRegistry) {
-        return new CircuitBreakerEventsEndpoint(eventConsumerRegistry, circuitBreakerRegistry);
     }
 
     /**
