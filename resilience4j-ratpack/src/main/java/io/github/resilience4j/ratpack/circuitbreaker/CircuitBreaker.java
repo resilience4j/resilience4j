@@ -13,10 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.resilience4j.ratpack.annotation;
+package io.github.resilience4j.ratpack.circuitbreaker;
 
-import io.github.resilience4j.ratpack.RecoveryFunction;
-import io.github.resilience4j.ratpack.internal.DefaultRecoveryFunction;
+import io.github.resilience4j.ratpack.recovery.DefaultRecoveryFunction;
+import io.github.resilience4j.ratpack.recovery.RecoveryFunction;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
@@ -29,19 +29,19 @@ import java.lang.annotation.Target;
  * An annotation for marking a method of an annotated object as circuit breaker enabled.
  * Given a method like this:
  * <pre><code>
- *     {@literal @}Retry(name = "myRetry")
+ *     {@literal @}CircuitBreaker(name = "myCircuitBreaker")
  *     public String fancyName(String name) {
  *         return "Sir Captain " + name;
  *     }
  * </code></pre>
  * each time the {@code #fancyName(String)} method is invoked, the method's execution will pass through a
- * a retry according to the given retry policy.
+ * circuit breaker according to the given circuit breaker policy.
  */
 @Inherited
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.TYPE, ElementType.CONSTRUCTOR, ElementType.METHOD, ElementType.ANNOTATION_TYPE})
-public @interface Retry {
+public @interface CircuitBreaker {
     /**
      * @return The name of the circuit breaker. It will be looked up the circuit breaker registry.
      */

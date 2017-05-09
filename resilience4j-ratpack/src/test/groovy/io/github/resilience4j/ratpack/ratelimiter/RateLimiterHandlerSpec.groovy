@@ -14,10 +14,12 @@
  * limitations under the License.
  */
 
-package io.github.resilience4j.ratpack
+package io.github.resilience4j.ratpack.ratelimiter
 
 import io.github.resilience4j.ratelimiter.RateLimiterConfig
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry
+import io.github.resilience4j.ratpack.Resilience4jModule
+import io.github.resilience4j.ratpack.ratelimiter.RateLimiterHandler
 import ratpack.handling.HandlerDecorator
 import ratpack.test.embed.EmbeddedApp
 import ratpack.test.http.TestHttpClient

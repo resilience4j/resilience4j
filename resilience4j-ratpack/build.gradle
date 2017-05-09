@@ -5,10 +5,16 @@ dependencies {
     compile project(':resilience4j-circuitbreaker')
     compile project(':resilience4j-ratelimiter')
     compile project(':resilience4j-retry')
+    compileOnly ( libraries.ratpack_metrics )
+    compileOnly project(':resilience4j-prometheus')
+    compileOnly project(':resilience4j-metrics')
     testCompile ( libraries.ratpack_test )
     testCompile ( libraries.spock )
+    testCompile ( libraries.ratpack_metrics )
+    testCompile project(':resilience4j-prometheus')
+    testCompile project(':resilience4j-metrics')
 }
 
 test {
-    maxParallelForks = 16
+    maxParallelForks = 8
 }

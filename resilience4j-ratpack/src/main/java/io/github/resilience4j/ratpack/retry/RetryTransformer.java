@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.resilience4j.ratpack;
+package io.github.resilience4j.ratpack.retry;
 
 import io.github.resilience4j.retry.Retry;
 import ratpack.exec.Downstream;

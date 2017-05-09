@@ -125,7 +125,7 @@ public class BackendAConnector implements Connector {
     ...
 }
 ----
-Where `MyRecoveryFunction` is implements `io.github.resilience4j.ratpack.RecoveryFunction` and provides
+Where `MyRecoveryFunction` is implements `io.github.resilience4j.ratpack.recovery.RecoveryFunction` and provides
 a fallback value that is returned when the circuit breaker identified by `name` is open.
 
 === Retry
@@ -141,7 +141,7 @@ public class BackendAConnector implements Connector {
     ...
 }
 ----
-Where `MyRecoveryFunction` is implements `io.github.resilience4j.ratpack.RecoveryFunction` and provides
+Where `MyRecoveryFunction` is implements `io.github.resilience4j.ratpack.recovery.RecoveryFunction` and provides
 a fallback value that is returned when the retry identified by `name` is has exceeded it's max calls.
 
 === RateLimiter
@@ -157,7 +157,7 @@ public class BackendAConnector implements Connector {
     ...
 }
 ----
-Where `MyRecoveryFunction` is implements `io.github.resilience4j.ratpack.RecoveryFunction` and provides
+Where `MyRecoveryFunction` is implements `io.github.resilience4j.ratpack.recovery.RecoveryFunction` and provides
 a fallback value that is returned when the rate limiter rate limit identified by `name` is exceeded.
 
 == Functional style
@@ -183,6 +183,49 @@ public class BusinessBService implements BusinessService  {
 }
 ----
 
+== Metrics
+Both dropwizard and prometheus metrics can be auto configured and enabled for all registered
+circuitbreaker instances, ratelimiter instances, and retry instances.
+
+For dropwizard metrics to work, add a compile dependency on resilience4j-metrics and
+bind a MetricRegistry instance.
+
+For prometheus metrics to work, add a compile dependency on resilience4j-prometheus and
+bind a CollectorRegistry instance.
+
+Enabling Dropwizard Metrics:
+
+[source,java]
+----
+public class MyModule extends AbstractModule {
+
+    @Override
+    protected void configure() {
+        bind(MetricRegistry.class);
+        Resilience4jModule module = new Resilience4jModule();
+        module.configure(c -> c.metrics(true));
+        install(module);
+    }
+}
+----
+
+Enabling Prometheus Metrics:
+
+[source,java]
+----
+public class MyModule extends AbstractModule {
+
+    @Override
+    protected void configure() {
+        bind(CollectorRegistry.class);
+        Resilience4jModule module = new Resilience4jModule();
+        module.configure(c -> c.prometheus(true));
+        install(module);
+    }
+}
+----
+
+
 == Monitoring
 TODO
 Ratpack provides the concept of a health check. See https://ratpack.io/manual/current/api/ratpack/health/HealthCheckHandler.html for details.
@@ -195,9 +238,9 @@ You must install the `Resilience4jModule` Guice Module if you want to use AOP so
 You can optionally configure your CircuitBreakers, RateLimiters, and Retries in your Guice Module as well.
 
 Note: If you don't register a `CircuitBreakerRegistry` or `RateLimiterRegistry`, the defaults
-will be used when using AOP.
+will be used.
 
-For example
+For example:
 
 [source,java]
 ----

@@ -14,13 +14,14 @@
  * limitations under the License.
  */
 
-package io.github.resilience4j.ratpack.annotation
+package io.github.resilience4j.ratpack.ratelimiter
 
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry
 import io.github.resilience4j.ratelimiter.RateLimiterConfig
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry
-import io.github.resilience4j.ratpack.RecoveryFunction
+import io.github.resilience4j.ratpack.recovery.RecoveryFunction
 import io.github.resilience4j.ratpack.Resilience4jModule
+import io.github.resilience4j.ratpack.ratelimiter.RateLimiter
 import io.reactivex.Flowable
 import io.reactivex.Observable
 import io.reactivex.Single
