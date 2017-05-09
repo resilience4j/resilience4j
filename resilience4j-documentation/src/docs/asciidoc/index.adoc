@@ -1,4 +1,4 @@
-= Javaslang-Circuitbreaker User Guide
+= Resilience4j User Guide
 Robert Winkler
 :source-highlighter: coderay
 :revnumber: {release-version}
@@ -8,5 +8,7 @@ Robert Winkler
 
 include::introduction.adoc[]
 include::getting_started.adoc[]
-include::usage_guide.adoc[]
+include::core_guide.adoc[]
+include::addons_guide.adoc[]
+include::implementation_details.adoc[]
 include::license.adoc[]

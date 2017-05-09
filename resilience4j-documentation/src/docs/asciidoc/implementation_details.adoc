@@ -1,4 +1,6 @@
-== CircuitBreaker implementation details
+== Implementation details
+
+=== CircuitBreaker
 
 The CircuitBreaker is implemented via a finite state machine with three states: `CLOSED`, `OPEN` and `HALF_OPEN`.
 
@@ -50,7 +52,7 @@ circuitBreaker.getEventStream()
         .subscribe(ringBuffer);
 ----
 
-== RateLimiter implementation details
+=== RateLimiter
 Conceptually `RateLimiter` splits all nanoseconds from the start of epoch into cycles.
 Each cycle has duration configured by `RateLimiterConfig.limitRefreshPeriod`.
 By contract on start of each cycle `RateLimiter` should set `activePermissions` to `RateLimiterConfig.limitForPeriod`.
