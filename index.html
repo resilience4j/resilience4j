@@ -543,7 +543,12 @@ table.CodeRay td.code>pre{padding:0}
 <li><a href="#_ratpack_starter">4.2. Ratpack Starter</a></li>
 </ul>
 </li>
-<li><a href="#_ratelimiter_implementation_details">5. RateLimiter implementation details</a></li>
+<li><a href="#_implementation_details">5. Implementation details</a>
+<ul class="sectlevel2">
+<li><a href="#_circuitbreaker_7">5.1. CircuitBreaker</a></li>
+<li><a href="#_ratelimiter_implementation_details">5.2. RateLimiter implementation details</a></li>
+</ul>
+</li>
 </ul>
 </div>
 </div>
@@ -2385,9 +2390,17 @@ Retrofit retrofit = <span class="keyword">new</span> Retrofit.Builder()
 </div>
 </div>
 <div class="paragraph">
-<p>If the number of calls are exceeded within the period defined by the RateLimiter, a HTTP 429 response (too many requests) will be returned.<br>
-== CircuitBreaker implementation details</p>
+<p>If the number of calls are exceeded within the period defined by the RateLimiter, a HTTP 429 response (too many requests) will be returned.</p>
 </div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_implementation_details"><a class="anchor" href="#_implementation_details"></a>5. Implementation details</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_circuitbreaker_7"><a class="anchor" href="#_circuitbreaker_7"></a>5.1. CircuitBreaker</h3>
 <div class="paragraph">
 <p>The CircuitBreaker is implemented via a finite state machine with three states: <code>CLOSED</code>, <code>OPEN</code> and <code>HALF_OPEN</code>.</p>
 </div>
@@ -2452,12 +2465,8 @@ circuitBreaker.getEventStream()
 </div>
 </div>
 </div>
-</div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="_ratelimiter_implementation_details"><a class="anchor" href="#_ratelimiter_implementation_details"></a>5. RateLimiter implementation details</h2>
-<div class="sectionbody">
+<div class="sect2">
+<h3 id="_ratelimiter_implementation_details"><a class="anchor" href="#_ratelimiter_implementation_details"></a>5.2. RateLimiter implementation details</h3>
 <div class="paragraph">
 <p>Conceptually <code>RateLimiter</code> splits all nanoseconds from the start of epoch into cycles.<br>
 Each cycle has duration configured by <code>RateLimiterConfig.limitRefreshPeriod</code>.<br>
@@ -2507,6 +2516,7 @@ So you can easily restrict not only network calls but your local in-memory opera
 </div>
 <div class="paragraph">
 <p>Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.</p>
+</div>
 </div>
 </div>
 </div>
