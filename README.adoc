@@ -4,4 +4,149 @@
 
 image:https://travis-ci.org/resilience4j/resilience4j.svg?branch=master["Build Status", link="https://travis-ci.org/resilience4j/resilience4j"] image:https://s3.amazonaws.com/assets.coveralls.io/badges/coveralls_90.svg?k=1?branch=master["Coverage Status", link="https://coveralls.io/github/resilience4j/resilience4j?branch=master"] image:https://api.codacy.com/project/badge/Grade/f0295918d02b45d0928d5adc95f6eba1["Codacy code quality", link="https://www.codacy.com/app/robwin/resilience4j?utm_source=github.com&utm_medium=referral&utm_content=resilience4j/resilience4j&utm_campaign=Badge_Grade"] image:https://api.bintray.com/packages/robwin/maven/javaslang-circuitbreaker/images/download.svg[link="https://bintray.com/robwin/maven/javaslang-circuitbreaker/_latestVersion"] image:http://img.shields.io/badge/license-ASF2-blue.svg["Apache License 2", link="http://www.apache.org/licenses/LICENSE-2.0.txt"]
 
-include::resilience4j-documentation/src/docs/asciidoc/documentation_index.adoc[]
+== Introduction
+
+Resilience4j is a lightweight, easy-to-use fault tolerance library inspired by https://github.com/Netflix/Hystrix[Netflix Hystrix], but designed for Java 8 and functional programming. Lightweight, because the library only uses https://github.com/javaslang/javaslang[Javaslang], https://github.com/ReactiveX/RxJava[RxJava] and SLF4J-API, which do no have any other external library dependencies. Netflix Hystrix, in contrast, has a compile dependency to https://github.com/Netflix/archaius[Archaius] which has many more external library dependencies such as Guava and Apache Commons Configuration.
+With Resilience4j you don't have to go all-in, you can pick what you need.
+
+Resilience provides several core modules and add-on modules:
+
+Core modules:
+
+* resilience4j-circuitbreaker: Circuit breaking
+* resilience4j-ratelimiter: Rate limiting
+* resilience4j-bulkhead: Bulkheading
+* resilience4j-retry: Automatic retrying
+* resilience4j-cache: Response caching
+
+Add-on modules
+
+* resilience4j-metrics: Dropwizard Metrics exporter
+* resilience4j-prometheus: Prometheus Metrics exporter
+* resilience4j-spring-boot: Spring Boot Starter
+* resilience4j-ratpack: Ratpack Starter
+* resilience4j-retrofit: Retrofit Call Adapter Factories
+* resilience4j-vertx: Vertx Future decorator
+* resilience4j-consumer: Circular Buffer Event consumer
+
+To highlight a few differences to Netflix Hystrix:
+
+* In Hystrix calls to external systems have to be wrapped in a HystrixCommand. This library, in contrast, provides higher-order functions (decorators) to enhance any functional interface, lambda expression or method reference with a http://martinfowler.com/bliki/CircuitBreaker.html[Circuit Breaker] and optionally a https://www.linkedin.com/pulse/designing-bulkheads-microservices-architecture-subhash-chandran[Bulkhead]. Furthermore, the library provides decorators to retry failed calls, limit call frequency or cache call results. You can stack more than one decorator on any functional interface, lambda expression or method reference. That means, you can combine a RateLimiter and Retry decorator with a CircuitBreaker and/or Bulkhead decorator. This library provides a `Decorators` builder to simplify stacking decorators. The advantage is that you have the choice to select the decorator you need and nothing else. Any decorated function can be executed synchronously or asynchronously by using a CompletableFuture or RxJava.
+* Hystrix, by default, stores execution results in 10 1-second window buckets. If a 1-second window bucket is passed, a new bucket is created and the oldest is dropped. This library stores execution results in Ring Bit Buffer without a statistical rolling time window. A successful call is stored as a 0 bit and a failed call is stored as a 1 bit. The Ring Bit Buffer has a configurable fixed-size and stores the bits in a long[] array which is saving memory compared to a boolean array. That means the Ring Bit Buffer only needs an array of 16 long (64-bit) values to store the status of 1024 calls. The advantage is that this CircuitBreaker works out-of-the-box for low and high frequency backend systems, because execution results are not dropped when a time window is passed.
+* Hystrix only performs a single execution when in half-open state to determine whether to close a CircuitBreaker. This library allows to perform a configurable number of executions and compares the result against a configurable threshold to determine whether to close a CircuitBreaker.
+* This library provides a custom RxJava operator to decorate any `Observable` or `Flowable` with a Circuit Breaker, Bulkhead or Ratelimiter.
+* Hystrix and this library emit a stream of events which are useful to system operators to monitor metrics about execution outcomes and latency.
+* Hystrix features such as Request Collapsing are not in the scope of this library.
+
+==  Documentation
+
+NOTE: Setup and usage is described in our http://resilience4j.github.io/resilience4j/[User Guide].
+
+== Getting started
+
+The projects requires JDK 8. The project is published in JCenter and Maven Central.
+If you use Gradle or Maven, you can include Resilience4j modules as follows.
+
+WARNING: The *groupId* has been changed from *io.github.robwin* to *io.github.resilience4j*
+
+Resilience provides several core modules and add-on modules:
+
+Core modules:
+
+* resilience4j-circuitbreaker: Circuit breaking
+* resilience4j-ratelimiter: Rate limiting
+* resilience4j-bulkhead: Bulkheading
+* resilience4j-retry: Automatic retrying
+* resilience4j-cache: Response caching
+
+Add-on modules
+
+* resilience4j-metrics: Dropwizard Metrics exporter
+* resilience4j-prometheus: Prometheus Metrics exporter
+* resilience4j-spring-boot: Spring Boot Starter
+* resilience4j-ratpack: Ratpack Starter
+* resilience4j-retrofit: Retrofit Call Adapter Factories
+* resilience4j-vertx: Vertx Future decorator
+* resilience4j-consumer: Circular Buffer Event consumer
+
+=== Gradle
+
+==== Release
+[source,groovy, subs="attributes"]
+----
+repositories {
+    jCenter()
+}
+
+compile "io.github.resilience4j:resilience4j-circuitbreaker:{release-version}"
+compile "io.github.resilience4j:resilience4j-ratelimiter:{release-version}"
+compile "io.github.resilience4j:resilience4j-retry:{release-version}"
+compile "io.github.resilience4j:resilience4j-bulkhead:{release-version}"
+compile "io.github.resilience4j:resilience4j-cache:{release-version}"
+----
+
+==== Snapshot
+
+[source,groovy]
+----
+repositories {
+   maven { url 'http://oss.jfrog.org/artifactory/oss-snapshot-local/' }
+}
+----
+
+=== Maven
+==== Release
+
+[source,xml, subs="specialcharacters,attributes"]
+----
+<repositories>
+    <repository>
+        <snapshots>
+            <enabled>false</enabled>
+        </snapshots>
+        <id>jcenter-releases</id>
+        <name>jcenter</name>
+        <url>http://jcenter.bintray.com</url>
+    </repository>
+</repositories>
+
+<dependency>
+    <groupId>io.github.resilience4j</groupId>
+    <artifactId>resilience4j-circuitbreaker</artifactId>
+    <version>{release-version}</version>
+</dependency>
+<dependency>
+    <groupId>io.github.resilience4j</groupId>
+    <artifactId>resilience4j-ratelimiter</artifactId>
+    <version>{release-version}</version>
+</dependency>
+<dependency>
+    <groupId>io.github.resilience4j</groupId>
+    <artifactId>resilience4j-retry</artifactId>
+    <version>{release-version}</version>
+</dependency>
+<dependency>
+    <groupId>io.github.resilience4j</groupId>
+    <artifactId>resilience4j-bulkhead</artifactId>
+    <version>{release-version}</version>
+</dependency>
+<dependency>
+    <groupId>io.github.resilience4j</groupId>
+    <artifactId>resilience4j-cache</artifactId>
+    <version>{release-version}</version>
+</dependency>
+----
+
+==== Snapshot
+
+[source,java]
+----
+<repositories>
+    <repository>
+      <id>jcenter-snapshots</id>
+      <name>jcenter</name>
+      <url>http://oss.jfrog.org/artifactory/oss-snapshot-local/</url>
+    </repository>
+</repositories>
+----
+
