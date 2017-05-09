@@ -1,6 +1,6 @@
 === Retry
 
-==== Retry a failed function
+==== Set-Up
 
 You can also retry a failed function and recover from the exception, if the maximum retry count was reached. You can create a `Retry` context using a default configuration as follows.
 
@@ -28,6 +28,8 @@ RetryConfig config = RetryConfig.custom()
     .build();
 ----
 
+==== Examples
+
 You can decorate any `Supplier / Runnable / Function` or `CheckedSupplier / CheckedRunnable / CheckedFunction` function with `Retry.decorateCheckedSupplier()`, `Retry.decorateCheckedRunnable()` or `Retry.decorateCheckedFunction()`.
 
 [source,java]
@@ -50,7 +52,7 @@ BDDMockito.then(helloWorldService).should(times(3)).sayHelloWorld();
 assertThat(result.get()).isEqualTo("Hello world from recovery function");
 ----
 
-==== Retry and RxJava
+===== Retry and RxJava
 
 The following example shows how to decorate an Observable by using the custom RxJava transformer.
 
@@ -61,7 +63,7 @@ Observable.fromCallable(backendService::doSomething)
     .compose(RetryTransformer.of(retry))
 ----
 
-==== Consume emitted RetryEvents
+===== Consume emitted RetryEvents
 
 The RetryContext emits a stream of RetryEvents to any Observer/Consumer who subscribes. An event can be a failure which signals that even all retries have failed or success if a retry was successful. You can use the `CircularEventConsumer` to store events in a circular buffer with a fixed capacity.
 
