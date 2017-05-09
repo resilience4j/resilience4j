@@ -546,7 +546,7 @@ table.CodeRay td.code>pre{padding:0}
 <li><a href="#_implementation_details">5. Implementation details</a>
 <ul class="sectlevel2">
 <li><a href="#_circuitbreaker_7">5.1. CircuitBreaker</a></li>
-<li><a href="#_ratelimiter_implementation_details">5.2. RateLimiter implementation details</a></li>
+<li><a href="#_ratelimiter_7">5.2. RateLimiter</a></li>
 </ul>
 </li>
 </ul>
@@ -2466,7 +2466,7 @@ circuitBreaker.getEventStream()
 </div>
 </div>
 <div class="sect2">
-<h3 id="_ratelimiter_implementation_details"><a class="anchor" href="#_ratelimiter_implementation_details"></a>5.2. RateLimiter implementation details</h3>
+<h3 id="_ratelimiter_7"><a class="anchor" href="#_ratelimiter_7"></a>5.2. RateLimiter</h3>
 <div class="paragraph">
 <p>Conceptually <code>RateLimiter</code> splits all nanoseconds from the start of epoch into cycles.<br>
 Each cycle has duration configured by <code>RateLimiterConfig.limitRefreshPeriod</code>.<br>
