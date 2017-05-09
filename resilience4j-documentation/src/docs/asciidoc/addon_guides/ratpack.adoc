@@ -218,3 +218,4 @@ public class MyModule extends AbstractModule {
 TODO
 Handlers for displaying the last X CircuitBreaker, Ratelimiter, or Retry events are not yet implemented.
 When implemented they should function similarly to the spring boot management endpoints.
+

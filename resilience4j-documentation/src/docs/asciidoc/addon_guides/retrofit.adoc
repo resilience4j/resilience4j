@@ -1,4 +1,4 @@
-=== resilience4j-retrofit
+=== Retrofit
 
 https://square.github.io/retrofit/[Retrofit] client circuit breaking & rate limiting.
 

@@ -25,7 +25,7 @@ asciidoctor {
     attributes = [
             doctype: 'book',
             toc: 'left',
-            toclevels: '2',
+            toclevels: '3',
             numbered: '',
             sectlinks: '',
             sectanchors: '',
