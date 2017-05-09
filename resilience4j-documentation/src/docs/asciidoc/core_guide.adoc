@@ -1,0 +1,27 @@
+== Usage Guide
+
+Resilience provides several core modules and add-on modules:
+
+Core modules:
+
+* resilience4j-circuitbreaker: Circuit breaking
+* resilience4j-ratelimiter: Rate limiting
+* resilience4j-bulkhead: Bulkheading
+* resilience4j-retry: Automatic retrying
+* resilience4j-cache: Response caching
+
+Add-on modules
+
+* resilience4j-metrics: Dropwizard Metrics exporter
+* resilience4j-prometheus: Prometheus Metrics exporter
+* resilience4j-spring-boot: Spring Boot Starter
+* resilience4j-ratpack: Ratpack Starter
+* resilience4j-retrofit: Retrofit Call Adapter Factories
+* resilience4j-vertx: Vertx Future decorator
+* resilience4j-consumer: Circuit Buffer Event consumer
+
+include::core_guides/circuitbreaker.adoc[]
+include::core_guides/ratelimiter.adoc[]
+include::core_guides/bulkhead.adoc[]
+include::core_guides/retry.adoc[]
+include::core_guides/cache.adoc[]

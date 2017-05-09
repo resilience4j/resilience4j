@@ -1,0 +1,96 @@
+=== RateLimiter
+
+==== Create a RateLimiter
+
+The RateLimiter API is very similar to CircuitBreaker.
+So it also have in-memory RateLimiterRegistry and RateLimiterConfig where you can configure:
+
+* the period of limit refresh, after each period rate limiter sets its permissions count to `limitForPeriod` value.
+* the permissions limit for refresh period.
+* the default wait for permission duration.
+
+[source,java]
+----
+// For example you want to restrict the calling rate of some method to be not higher than 10 req/ms.
+RateLimiterConfig config = RateLimiterConfig.builder()
+    .limitRefreshPeriod(Duration.ofMillis(1))
+    .limitForPeriod(10)
+    .timeoutDuration(Duration.ofMillis(25))
+    .build();
+
+// Create registry
+RateLimiterRegistry rateLimiterRegistry = RateLimiterRegistry.of(config);
+
+// Use registry
+RateLimiter reateLimiterWithDefaultConfig = rateLimiterRegistry.rateLimiter("backend");
+RateLimiter reateLimiterWithCustomConfig = rateLimiterRegistry.rateLimiter("backend#2", config);
+
+// Or create RateLimiter directly
+RateLimiter rateLimiter = RateLimiter.of("NASDAQ :-)", config);
+----
+
+==== Use a RateLimiter
+
+As you can guess RateLimiter has all sort of higher order decorator functions just like CircuitBreaker.
+
+[source,java]
+----
+// Decorate your call to BackendService.doSomething()
+Try.CheckedRunnable restrictedCall = RateLimiter
+    .decorateCheckedRunnable(rateLimiter, backendService::doSomething);
+
+Try.run(restrictedCall)
+    .andThenTry(restrictedCall)
+    .onFailure((RequestNotPermitted throwable) -> LOG.info("Wait before call it again :)"));
+----
+
+==== RateLimiter and RxJava
+
+The following example shows how to decorate an Observable by using the custom RxJava operator.
+
+[source,java]
+----
+RateLimiter rateLimiter = RateLimiter.ofDefaults("backendName");
+Observable.fromCallable(backendService::doSomething)
+    .lift(RateLimiterOperator.of(rateLimiter))
+----
+
+==== Consume emitted RateLimiterEvents
+
+The RateLimiter emits a stream of RateLimiterEvents to any Observer/Consumer who subscribes.
+An event can be a successful permission acquire or acquire failure.
+All events contains additional information like event creation time and rate limiter name.
+If you want to consume events, you have to subscribe to the event stream.
+You can use the `CircularEventConsumer` to store events in a circular buffer with a fixed capacity.
+You can use RxJava to filter certain events.
+The advantage of an event stream is that you can use RxJava's `observeOn`
+operator to specify a different Scheduler that the RateLimiter will use to send notifications to its observers/consumers.
+
+[source,java]
+----
+RateLimiter rateLimiter = RateLimiter.ofDefaults("backendName");
+CircularEventConsumer<RateLimiterEvent> circularEventConsumer = new CircularEventConsumer<>(5);
+rateLimiter.getEventStream()
+    .filter(event -> event.getEventType() == FAILED_ACQUIRE)
+    .subscribe(circularEventConsumer);
+
+List<RateLimiterEvent> bufferedEvents = circularEventConsumer.getBufferedEvents();
+----
+
+==== Monitor RateLimiter metrics
+
+The RateLimiter provides simple an interface to monitor the current limiter.
+Also AtomicRateLimiter has some enhanced Metrics with some implementation specific details.
+
+[source,java]
+----
+RateLimiter limit;
+RateLimiter.Metrics metrics = limit.getMetrics();
+int numberOfThreadsWaitingForPermission = metrics.getNumberOfWaitingThreads();
+// Estimates count of available permissions. Can be negative if some permissions where reserved.
+int availablePermissions = metrics.getAvailablePermissions();
+
+AtomicRateLimiter atomicLimiter;
+// Estimated time duration in nanos to wait for the next permission
+long nanosToWaitForPermission = atomicLimiter.getNanosToWait();
+----

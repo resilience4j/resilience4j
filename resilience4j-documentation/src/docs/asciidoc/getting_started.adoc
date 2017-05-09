@@ -5,6 +5,26 @@ If you use Gradle or Maven, you can include Resilience4j modules as follows.
 
 WARNING: The *groupId* has been changed from *io.github.robwin* to *io.github.resilience4j*
 
+Resilience provides several core modules and add-on modules:
+
+Core modules:
+
+* resilience4j-circuitbreaker: Circuit breaking
+* resilience4j-ratelimiter: Rate limiting
+* resilience4j-bulkhead: Bulkheading
+* resilience4j-retry: Automatic retrying
+* resilience4j-cache: Response caching
+
+Add-on modules
+
+* resilience4j-metrics: Dropwizard Metrics exporter
+* resilience4j-prometheus: Prometheus Metrics exporter
+* resilience4j-spring-boot: Spring Boot Starter
+* resilience4j-ratpack: Ratpack Starter
+* resilience4j-retrofit: Retrofit Call Adapter Factories
+* resilience4j-vertx: Vertx Future decorator
+* resilience4j-consumer: Circular Buffer Event consumer
+
 === Gradle
 
 ==== Release
@@ -17,6 +37,8 @@ repositories {
 compile "io.github.resilience4j:resilience4j-circuitbreaker:{release-version}"
 compile "io.github.resilience4j:resilience4j-ratelimiter:{release-version}"
 compile "io.github.resilience4j:resilience4j-retry:{release-version}"
+compile "io.github.resilience4j:resilience4j-bulkhead:{release-version}"
+compile "io.github.resilience4j:resilience4j-cache:{release-version}"
 ----
 
 ==== Snapshot
@@ -57,6 +79,16 @@ repositories {
 <dependency>
     <groupId>io.github.resilience4j</groupId>
     <artifactId>resilience4j-retry</artifactId>
+    <version>{release-version}</version>
+</dependency>
+<dependency>
+    <groupId>io.github.resilience4j</groupId>
+    <artifactId>resilience4j-bulkhead</artifactId>
+    <version>{release-version}</version>
+</dependency>
+<dependency>
+    <groupId>io.github.resilience4j</groupId>
+    <artifactId>resilience4j-cache</artifactId>
     <version>{release-version}</version>
 </dependency>
 ----
