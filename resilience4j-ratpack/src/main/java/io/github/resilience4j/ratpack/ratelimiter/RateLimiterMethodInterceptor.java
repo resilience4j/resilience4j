@@ -14,16 +14,14 @@
  * limitations under the License.
  */
 
-package io.github.resilience4j.ratpack.internal;
+package io.github.resilience4j.ratpack.ratelimiter;
 
 import com.google.inject.Inject;
 import io.github.resilience4j.ratelimiter.RateLimiterConfig;
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
 import io.github.resilience4j.ratelimiter.RequestNotPermitted;
 import io.github.resilience4j.ratelimiter.operator.RateLimiterOperator;
-import io.github.resilience4j.ratpack.RateLimiterTransformer;
-import io.github.resilience4j.ratpack.RecoveryFunction;
-import io.github.resilience4j.ratpack.annotation.RateLimiter;
+import io.github.resilience4j.ratpack.recovery.RecoveryFunction;
 import io.reactivex.Flowable;
 import io.reactivex.Observable;
 import io.reactivex.Single;

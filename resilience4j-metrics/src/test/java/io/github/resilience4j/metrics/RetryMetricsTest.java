@@ -33,7 +33,7 @@ public class RetryMetricsTest {
         Retry retry = retryRegistry.retry("testName");
         CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
         CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("testName");
-        metricRegistry.registerAll(RetryMetrics.ofRateLimiterRegistry(retryRegistry));
+        metricRegistry.registerAll(RetryMetrics.ofRetryRegistry(retryRegistry));
 
         // Given the HelloWorldService returns Hello world
         BDDMockito.given(helloWorldService.returnHelloWorld()).willReturn("Hello world");
@@ -64,7 +64,7 @@ public class RetryMetricsTest {
         Retry retry = retryRegistry.retry("testName");
         CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
         CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("testName");
-        metricRegistry.registerAll(RetryMetrics.ofRateLimiterRegistry("testPrefix",retryRegistry));
+        metricRegistry.registerAll(RetryMetrics.ofRetryRegistry("testPrefix",retryRegistry));
 
         // Given the HelloWorldService returns Hello world
         BDDMockito.given(helloWorldService.returnHelloWorld()).willReturn("Hello world");

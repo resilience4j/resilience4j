@@ -14,7 +14,7 @@ ext {
     metricsVersion = '3.1.2'
     vertxVersion = '3.4.1'
     springBootVersion = '1.4.3.RELEASE'
-    ratpackVersion = '1.4.5'
+    ratpackVersion = '1.4.6'
     spockVersion = '1.1-groovy-2.4-rc-4'
     retrofitVersion = '2.1.0'
     prometheusSimpleClientVersion = '0.0.21'
@@ -48,6 +48,7 @@ ext {
 
             // ratpack addon
             ratpack: "io.ratpack:ratpack-guice:${ratpackVersion}",
+            ratpack_metrics: "io.ratpack:ratpack-dropwizard-metrics:${ratpackVersion}",
             ratpack_test: "io.ratpack:ratpack-groovy-test:${ratpackVersion}",
             spock: "org.spockframework:spock-core:${spockVersion}",
 
