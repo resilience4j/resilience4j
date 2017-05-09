@@ -19,7 +19,7 @@ Core modules:
 * resilience4j-retry: Automatic retrying
 * resilience4j-cache: Response caching
 
-Add-on modules
+Add-on modules:
 
 * resilience4j-metrics: Dropwizard Metrics exporter
 * resilience4j-prometheus: Prometheus Metrics exporter
@@ -40,113 +40,19 @@ To highlight a few differences to Netflix Hystrix:
 
 ==  Documentation
 
-NOTE: Setup and usage is described in our http://resilience4j.github.io/resilience4j/[User Guide].
+Setup and usage is described in our *http://resilience4j.github.io/resilience4j/[User Guide]*.
 
-== Getting started
+== Companies who use Resilience4j
 
-The projects requires JDK 8. The project is published in JCenter and Maven Central.
-If you use Gradle or Maven, you can include Resilience4j modules as follows.
+* Deutsche Telekom (In an application with over 400 million request per day)
+* AOL (In an application with low latency requirements)
 
-WARNING: The *groupId* has been changed from *io.github.robwin* to *io.github.resilience4j*
+== License
 
-Resilience provides several core modules and add-on modules:
+Copyright 2017 Robert Winkler and Bohdan Storozhuk
 
-Core modules:
+Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at
 
-* resilience4j-circuitbreaker: Circuit breaking
-* resilience4j-ratelimiter: Rate limiting
-* resilience4j-bulkhead: Bulkheading
-* resilience4j-retry: Automatic retrying
-* resilience4j-cache: Response caching
+    http://www.apache.org/licenses/LICENSE-2.0
 
-Add-on modules
-
-* resilience4j-metrics: Dropwizard Metrics exporter
-* resilience4j-prometheus: Prometheus Metrics exporter
-* resilience4j-spring-boot: Spring Boot Starter
-* resilience4j-ratpack: Ratpack Starter
-* resilience4j-retrofit: Retrofit Call Adapter Factories
-* resilience4j-vertx: Vertx Future decorator
-* resilience4j-consumer: Circular Buffer Event consumer
-
-=== Gradle
-
-==== Release
-[source,groovy, subs="attributes"]
-----
-repositories {
-    jCenter()
-}
-
-compile "io.github.resilience4j:resilience4j-circuitbreaker:{release-version}"
-compile "io.github.resilience4j:resilience4j-ratelimiter:{release-version}"
-compile "io.github.resilience4j:resilience4j-retry:{release-version}"
-compile "io.github.resilience4j:resilience4j-bulkhead:{release-version}"
-compile "io.github.resilience4j:resilience4j-cache:{release-version}"
-----
-
-==== Snapshot
-
-[source,groovy]
-----
-repositories {
-   maven { url 'http://oss.jfrog.org/artifactory/oss-snapshot-local/' }
-}
-----
-
-=== Maven
-==== Release
-
-[source,xml, subs="specialcharacters,attributes"]
-----
-<repositories>
-    <repository>
-        <snapshots>
-            <enabled>false</enabled>
-        </snapshots>
-        <id>jcenter-releases</id>
-        <name>jcenter</name>
-        <url>http://jcenter.bintray.com</url>
-    </repository>
-</repositories>
-
-<dependency>
-    <groupId>io.github.resilience4j</groupId>
-    <artifactId>resilience4j-circuitbreaker</artifactId>
-    <version>{release-version}</version>
-</dependency>
-<dependency>
-    <groupId>io.github.resilience4j</groupId>
-    <artifactId>resilience4j-ratelimiter</artifactId>
-    <version>{release-version}</version>
-</dependency>
-<dependency>
-    <groupId>io.github.resilience4j</groupId>
-    <artifactId>resilience4j-retry</artifactId>
-    <version>{release-version}</version>
-</dependency>
-<dependency>
-    <groupId>io.github.resilience4j</groupId>
-    <artifactId>resilience4j-bulkhead</artifactId>
-    <version>{release-version}</version>
-</dependency>
-<dependency>
-    <groupId>io.github.resilience4j</groupId>
-    <artifactId>resilience4j-cache</artifactId>
-    <version>{release-version}</version>
-</dependency>
-----
-
-==== Snapshot
-
-[source,java]
-----
-<repositories>
-    <repository>
-      <id>jcenter-snapshots</id>
-      <name>jcenter</name>
-      <url>http://oss.jfrog.org/artifactory/oss-snapshot-local/</url>
-    </repository>
-</repositories>
-----
-
+Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
