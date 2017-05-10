@@ -13,6 +13,215 @@ With Resilience4j you don't have to go all-in, you can pick what you need.
 
 Setup and usage is described in our *http://resilience4j.github.io/resilience4j/[User Guide]*.
 
+== Overview
+
+Resilience provides several core modules and add-on modules:
+
+Core modules:
+
+* resilience4j-circuitbreaker: Circuit breaking
+* resilience4j-ratelimiter: Rate limiting
+* resilience4j-bulkhead: Bulkheading
+* resilience4j-retry: Automatic retrying
+* resilience4j-cache: Response caching
+
+Add-on modules
+
+* resilience4j-metrics: Dropwizard Metrics exporter
+* resilience4j-prometheus: Prometheus Metrics exporter
+* resilience4j-spring-boot: Spring Boot Starter
+* resilience4j-ratpack: Ratpack Starter
+* resilience4j-retrofit: Retrofit Call Adapter Factories
+* resilience4j-vertx: Vertx Future decorator
+* resilience4j-consumer: Circular Buffer Event consumer
+
+To highlight a few differences to Netflix Hystrix:
+
+* In Hystrix calls to external systems have to be wrapped in a HystrixCommand. This library, in contrast, provides higher-order functions (decorators) to enhance any functional interface, lambda expression or method reference with a http://martinfowler.com/bliki/CircuitBreaker.html[Circuit Breaker] and optionally a https://www.linkedin.com/pulse/designing-bulkheads-microservices-architecture-subhash-chandran[Bulkhead]. Furthermore, the library provides decorators to retry failed calls, limit call frequency or cache call results. You can stack more than one decorator on any functional interface, lambda expression or method reference. That means, you can combine a RateLimiter and Retry decorator with a CircuitBreaker and/or Bulkhead decorator. This library provides a `Decorators` builder to simplify stacking decorators. The advantage is that you have the choice to select the decorator you need and nothing else. Any decorated function can be executed synchronously or asynchronously by using a CompletableFuture or RxJava.
+* Hystrix, by default, stores execution results in 10 1-second window buckets. If a 1-second window bucket is passed, a new bucket is created and the oldest is dropped. This library stores execution results in Ring Bit Buffer without a statistical rolling time window. A successful call is stored as a 0 bit and a failed call is stored as a 1 bit. The Ring Bit Buffer has a configurable fixed-size and stores the bits in a long[] array which is saving memory compared to a boolean array. That means the Ring Bit Buffer only needs an array of 16 long (64-bit) values to store the status of 1024 calls. The advantage is that this CircuitBreaker works out-of-the-box for low and high frequency backend systems, because execution results are not dropped when a time window is passed.
+* Hystrix only performs a single execution when in half-open state to determine whether to close a CircuitBreaker. This library allows to perform a configurable number of executions and compares the result against a configurable threshold to determine whether to close a CircuitBreaker.
+* This library provides a custom RxJava operator to decorate any `Observable` or `Flowable` with a Circuit Breaker, Bulkhead or Ratelimiter.
+* Hystrix and this library emit a stream of events which are useful to system operators to monitor metrics about execution outcomes and latency.
+* Hystrix features such as Request Collapsing are not in the scope of this library.
+
+== Spring Boot demo
+
+Setup and usage in Spring Boot is demonstrated https://github.com/RobWin/resilience4j-spring-boot-demo[here].
+
+== Usage examples
+
+* <<circuitbreaker>>
+* <<ratelimiter>>
+* <<cache>>
+* <<metrics>>
+* <<circuitbreaker_events>>
+* <<circuitbreaker_monitoring>>
+* <<ratelimiter_monitoring>>
+
+[[circuitbreaker]]
+=== CircuitBreaker, Retry and Fallback
+
+The following example shows how to decorate a lambda expression (CheckedSupplier) with a CircuitBreaker and how to retry the call at most 3 times when an exception occurs.
+You can configure the wait interval between retries and also configure a custom backoff algorithm.
+The example uses Javaslang's Try Monad to recover from an exception and invoke another lambda expression as a fallback, when even all retries have failed.
+
+[source,java]
+----
+// Create a CircuitBreaker with a default configuration
+CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("backendName");
+// Create a Retry with at most 3 retries and a fixed time interval between retries of 500ms
+Retry retry = Retry.ofDefaults("backendName");
+
+// Decorate your call to BackendService.doSomething() with a CircuitBreaker
+Try.CheckedSupplier<String> decoratedSupplier = CircuitBreaker
+    .decorateCheckedSupplier(circuitBreaker, backendService::doSomething);
+
+// Decorate your call with automatic retry
+decoratedSupplier = Retry
+    .decorateCheckedSupplier(retry, decoratedSupplier);
+
+// Invoke the decorated supplier and recover from any exception
+String result = Try.of(decoratedSupplier)
+    .recover(throwable -> "Hello from Recovery").get();
+
+// You can execute a method reference in the context of a CircuitBreaker
+String result = circuitBreaker.executeCallable(backendService::doSomething))
+
+// You can execute a method reference in the context of a Retry
+String result = retry.executeCallable(backendService::doSomething))
+----
+
+=== CircuitBreaker and RxJava
+
+The following example shows how to decorate an Observable by using the custom RxJava operator.
+
+[source,java]
+----
+CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testName");
+Observable.fromCallable(backendService::doSomething)
+    .lift(CircuitBreakerOperator.of(circuitBreaker))
+----
+
+[[ratelimiter]]
+=== RateLimiter
+
+The following example shows how to restrict the calling rate of some method to be not higher than 1 req/sec.
+
+[source,java]
+----
+// Create a custom RateLimiter configuration
+RateLimiterConfig config = RateLimiterConfig.custom()
+    .timeoutDuration(Duration.ofMillis(100))
+    .limitRefreshPeriod(Duration.ofSeconds(1))
+    .limitForPeriod(1)
+    .build();
+// Create a RateLimiter
+RateLimiter rateLimiter = RateLimiter.of("backendName", config);
+
+// Decorate your call to BackendService.doSomething()
+Try.CheckedSupplier<String> restrictedSupplier = RateLimiter
+    .decorateCheckedSupplier(rateLimiter, backendService::doSomething);
+
+// First call is successful
+Try<String> firstTry = Try.of(restrictedSupplier);
+assertThat(firstTry.isSuccess()).isTrue();
+
+// Second call fails, because the call was not permitted
+Try<String> secondTry = Try.of(restrictedSupplier);
+assertThat(secondTry.isFailure()).isTrue();
+assertThat(secondTry.getCause()).isInstanceOf(RequestNotPermitted.class);
+----
+
+[[cache]]
+=== Cache
+
+The following example shows how to decorate a lambda expression with a Cache abstraction. The cache abstraction puts the result of the lambda expression in a cache instance (JCache) and
+tries to retrieve a previous cached result from the cache before it invokes the lambda expression.
+If the cache retrieval from a distributed cache fails, the exception is taken care of and the lambda expression is called.
+
+[source,java]
+----
+// Create a CacheContext by wrapping a JCache instance.
+javax.cache.Cache<String, String> cacheInstance = Caching.getCache("cacheName", String.class, String.class);
+Cache<String, String> cacheContext = Cache.of(cacheInstance);
+
+// Decorate your call to BackendService.doSomething()
+Try.CheckedFunction<String, String> cachedFunction = Cache.decorateCallable(cacheContext, backendService::doSomething);
+String value = cachedFunction.apply("testKey");
+----
+
+[[metrics]]
+=== Metrics
+
+The following example shows how to decorate a lambda expression to measure metrics using Dropwizard Metrics.
+[source,java]
+----
+// Create a Timer
+MetricRegistry metricRegistry = new MetricRegistry();
+Timer timer = metricRegistry.timer(name("timerName"));
+
+// Decorate your call to BackendService.doSomething()
+Callable timedCallable = Metrics.decorateCallable(timer, backendService::doSomething);
+String result = timedCallable.call();
+
+// You can execute a method reference in the context of a Timer
+String value = Metrics.executeCallable(timer, backendService::doSomething);
+----
+
+[[circuitbreaker_events]]
+== Consume emitted CircuitBreakerEvents
+
+The CircuitBreaker emits a stream of CircuitBreakerEvents to any Observer/Consumer who subscribes. An event can be a state transition, a successful call, a recorded error or an ignored error. All events contains additional information like event creation time and processing duration of the call. If you want to consume events, you have to subscribe to the event stream. You can use the `CircularEventConsumer` to store events in a circular buffer with a fixed capacity. You can use RxJava to filter certain events.
+The advantage of an event stream is that you can use RxJava's `observeOn` operator to specify a different Scheduler that the CircuitBreaker will use to send notifications to its observers/consumers.
+
+[source,java]
+----
+CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testName");
+CircularEventConsumer<CircuitBreakerOnErrorEvent> circularEventConsumer = new CircularEventConsumer<>(10);
+circuitBreaker.getEventStream()
+    .filter(event -> event.getEventType() == Type.ERROR)
+    .cast(CircuitBreakerOnErrorEvent.class)
+    .subscribe(circularEventConsumer);
+
+List<CircuitBreakerOnErrorEvent> bufferedEvents = circularEventConsumer.getBufferedEvents();
+----
+You can also consume events from `RateLimiter`, `Cache` and `Retry`. Find out more in our *http://resilience4j.github.io/resilience4j/[User Guide]*
+
+
+[[circuitbreaker_monitoring]]
+== Monitor CircuitBreaker metrics
+
+The CircuitBreaker provides an interface to monitor the current metrics.
+
+[source,java]
+----
+CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
+// Returns the failure rate in percentage.
+float failureRate = metrics.getFailureRate();
+// Returns the current number of buffered calls.
+int bufferedCalls = metrics.getNumberOfBufferedCalls();
+// Returns the current number of failed calls.
+int failedCalls = metrics.getNumberOfFailedCalls();
+----
+
+[[ratelimiter_monitoring]]
+== Monitor RateLimiter metrics
+
+The RateLimiter provides an interface to monitor the current limiter. The AtomicRateLimiter has some enhanced Metrics with some implementation specific details.
+
+[source,java]
+----
+RateLimiter limit;
+RateLimiter.Metrics metrics = limit.getMetrics();
+int numberOfThreadsWaitingForPermission = metrics.getNumberOfWaitingThreads();
+// Estimates count of available permissions. Can be negative if some permissions where reserved.
+int availablePermissions = metrics.getAvailablePermissions();
+
+AtomicRateLimiter atomicLimiter;
+// Estimated time duration in nanos to wait for the next permission
+long nanosToWaitForPermission = atomicLimiter.getNanosToWait();
+----
+
 == Companies who use Resilience4j
 
 * Deutsche Telekom (In an application with over 400 million request per day)
