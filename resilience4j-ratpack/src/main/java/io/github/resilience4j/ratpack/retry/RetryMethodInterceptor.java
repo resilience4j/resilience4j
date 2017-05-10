@@ -13,12 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.resilience4j.ratpack.internal;
+package io.github.resilience4j.ratpack.retry;
 
 import com.google.inject.Inject;
-import io.github.resilience4j.ratpack.RecoveryFunction;
-import io.github.resilience4j.ratpack.RetryTransformer;
-import io.github.resilience4j.ratpack.annotation.Retry;
+import io.github.resilience4j.ratpack.recovery.RecoveryFunction;
 import io.github.resilience4j.retry.RetryRegistry;
 import io.reactivex.Flowable;
 import io.reactivex.Observable;
