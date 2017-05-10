@@ -1,6 +1,7 @@
 = Fault tolerance library designed for functional programming
 :author: Robert Winkler and Bohdan Storozhuk
 :hardbreaks:
+:icons:
 
 image:https://travis-ci.org/resilience4j/resilience4j.svg?branch=master["Build Status", link="https://travis-ci.org/resilience4j/resilience4j"] image:https://s3.amazonaws.com/assets.coveralls.io/badges/coveralls_90.svg?k=1?branch=master["Coverage Status", link="https://coveralls.io/github/resilience4j/resilience4j?branch=master"] image:https://api.codacy.com/project/badge/Grade/f0295918d02b45d0928d5adc95f6eba1["Codacy code quality", link="https://www.codacy.com/app/robwin/resilience4j?utm_source=github.com&utm_medium=referral&utm_content=resilience4j/resilience4j&utm_campaign=Badge_Grade"] image:https://api.bintray.com/packages/robwin/maven/javaslang-circuitbreaker/images/download.svg[link="https://bintray.com/robwin/maven/javaslang-circuitbreaker/_latestVersion"] image:http://img.shields.io/badge/license-ASF2-blue.svg["Apache License 2", link="http://www.apache.org/licenses/LICENSE-2.0.txt"]
 
@@ -185,7 +186,8 @@ circuitBreaker.getEventStream()
 
 List<CircuitBreakerOnErrorEvent> bufferedEvents = circularEventConsumer.getBufferedEvents();
 ----
-You can also consume events from `RateLimiter`, `Cache` and `Retry`. Find out more in our *http://resilience4j.github.io/resilience4j/[User Guide]*
+
+NOTE: You can also consume events from `RateLimiter`, `Cache` and `Retry`. Find out more in our *http://resilience4j.github.io/resilience4j/[User Guide]*
 
 
 [[circuitbreaker_monitoring]]
