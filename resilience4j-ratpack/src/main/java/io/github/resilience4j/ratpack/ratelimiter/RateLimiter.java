@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-package io.github.resilience4j.ratpack.annotation;
+package io.github.resilience4j.ratpack.ratelimiter;
 
-import io.github.resilience4j.ratpack.RecoveryFunction;
-import io.github.resilience4j.ratpack.internal.DefaultRecoveryFunction;
+import io.github.resilience4j.ratpack.recovery.RecoveryFunction;
+import io.github.resilience4j.ratpack.recovery.DefaultRecoveryFunction;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;

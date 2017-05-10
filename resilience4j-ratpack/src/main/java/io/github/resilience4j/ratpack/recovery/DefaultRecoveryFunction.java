@@ -13,9 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.resilience4j.ratpack.internal;
-
-import io.github.resilience4j.ratpack.RecoveryFunction;
+package io.github.resilience4j.ratpack.recovery;
 
 public class DefaultRecoveryFunction<O> implements RecoveryFunction<O> {
     @Override

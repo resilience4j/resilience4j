@@ -35,11 +35,11 @@ public class RetryMetrics implements MetricSet {
         });
     }
 
-    public static RetryMetrics ofRateLimiterRegistry(String prefix, RetryRegistry retryRegistry) {
+    public static RetryMetrics ofRetryRegistry(String prefix, RetryRegistry retryRegistry) {
         return new RetryMetrics(prefix, retryRegistry.getAllRetries());
     }
 
-    public static RetryMetrics ofRateLimiterRegistry(RetryRegistry retryRegistry) {
+    public static RetryMetrics ofRetryRegistry(RetryRegistry retryRegistry) {
         return new RetryMetrics(retryRegistry.getAllRetries());
     }
 

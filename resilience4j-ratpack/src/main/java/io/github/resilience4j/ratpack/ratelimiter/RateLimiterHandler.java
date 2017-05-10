@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.github.resilience4j.ratpack;
+package io.github.resilience4j.ratpack.ratelimiter;
 
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry;

@@ -13,16 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.resilience4j.ratpack.internal;
+package io.github.resilience4j.ratpack.circuitbreaker;
 
 import com.google.inject.Inject;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerOpenException;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.circuitbreaker.operator.CircuitBreakerOperator;
-import io.github.resilience4j.core.StopWatch;
-import io.github.resilience4j.ratpack.CircuitBreakerTransformer;
-import io.github.resilience4j.ratpack.RecoveryFunction;
-import io.github.resilience4j.ratpack.annotation.CircuitBreaker;
+import io.github.resilience4j.ratpack.recovery.RecoveryFunction;
 import io.reactivex.Flowable;
 import io.reactivex.Observable;
 import io.reactivex.Single;
@@ -30,7 +27,6 @@ import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
 import ratpack.exec.Promise;
 
-import java.time.Duration;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 
