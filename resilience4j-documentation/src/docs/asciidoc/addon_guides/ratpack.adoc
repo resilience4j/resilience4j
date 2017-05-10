@@ -1,5 +1,7 @@
 === Ratpack Starter
 
+This add-on provides integration with https://ratpack.io[Ratpack] libraries.
+
 ==== Gradle
 
 Add the Ratpack Starter of Resilience4j to your compile dependency:

@@ -1,0 +1,54 @@
+=== Dropwizard Metrics exporter
+
+==== Introduction
+
+Integration with http://metrics.dropwizard.io[Dropwizard Metrics].
+With this add-on you can easily add your circuit breaker or rate limiter metrics in your Dropwizard `MetricRegistry`.
+
+==== Usage
+
+===== CircuitBreaker
+
+[source,java]
+--
+final MetricRegistry collectorRegistry = new MetricRegistry();
+
+final CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
+final CircuitBreaker foo = circuitBreakerRegistry.circuitBreaker("foo");
+final CircuitBreaker boo = circuitBreakerRegistry.circuitBreaker("boo");
+
+// you can register all circuit breakers at once
+collectorRegistry.registerAll(CircuitBreakerMetrics.ofCircuitBreakerRegistry(circuitBreakerRegistry));
+// or register them one by one
+collectorRegistry.registerAll(CircuitBreakerMetrics.ofCircuitBreaker(foo));
+
+// there is some additional useful methods in CircuitBreakerMetrics class
+--
+
+For each circuit breaker this methods will export:
+
+* `successful` - current number of failed calls `[int]`
+* `failed` - current number of failed calls `[int]`
+* `buffered` - current number of buffered calls `[int]`
+* `buffered_max` - maximum number of buffered calls `[int]`
+* `not_permitted` - current number of not permitted calls `[int]`
+
+===== RateLimiter
+
+[source,java]
+--
+final MetricRegistry metricRegistry = new MetricRegistry();
+final RateLimiterRegistry rateLimiterRegistry = RateLimiterRegistry.ofDefaults();
+final RateLimiter rateLimiter = rateLimiterRegistry.rateLimiter("testLimit");
+
+// you can register all rate limiters at once
+metricRegistry.registerAll(RateLimiterMetrics.ofRateLimiterRegistry(rateLimiterRegistry));
+// or register them one by one
+metricRegistry.registerAll(RateLimiterMetrics.ofRateLimiter(rateLimiter));
+--
+
+For each rate limiter this methods will export:
+
+* `available_permissions` - current number of available permissions `[int]`
+* `number_of_waiting_threads` - current number of threads waiting for permission `[int]`
+
