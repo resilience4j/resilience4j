@@ -8,7 +8,7 @@ import io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent;
 import io.reactivex.Flowable;
 import io.reactivex.disposables.Disposable;
 
-class CircuitBreakerEventEmitter {
+public class CircuitBreakerEventEmitter {
 
     private final SseEmitter sseEmitter;
     private final Disposable disposable;
@@ -22,7 +22,7 @@ class CircuitBreakerEventEmitter {
                         this.sseEmitter::complete);
     }
 
-    static SseEmitter createSseEmitter(Flowable<CircuitBreakerEvent> eventStream) {
+    public static SseEmitter createSseEmitter(Flowable<CircuitBreakerEvent> eventStream) {
         return new CircuitBreakerEventEmitter(eventStream.map(CircuitBreakerEventDTOFactory::createCircuitBreakerEventDTO)).sseEmitter;
     }
 
