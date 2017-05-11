@@ -21,7 +21,9 @@ package io.github.resilience4j.ratelimiter;
 import io.github.resilience4j.ratelimiter.event.RateLimiterEvent;
 import io.github.resilience4j.ratelimiter.internal.AtomicRateLimiter;
 import io.reactivex.Flowable;
-import javaslang.control.Try;
+import io.vavr.CheckedFunction0;
+import io.vavr.CheckedFunction1;
+import io.vavr.CheckedRunnable;
 
 import java.time.Duration;
 import java.util.concurrent.Callable;
@@ -75,10 +77,10 @@ public interface RateLimiter {
      * @param <T> the type of results supplied supplier
      * @return a supplier which is restricted by a RateLimiter.
      */
-    static <T> Try.CheckedSupplier<T> decorateCheckedSupplier(RateLimiter rateLimiter, Try.CheckedSupplier<T> supplier) {
+    static <T> CheckedFunction0<T> decorateCheckedSupplier(RateLimiter rateLimiter, CheckedFunction0<T> supplier) {
         return () -> {
             waitForPermission(rateLimiter);
-            return supplier.get();
+            return supplier.apply();
         };
     }
 
@@ -89,7 +91,7 @@ public interface RateLimiter {
      * @param runnable    the original runnable
      * @return a runnable which is restricted by a RateLimiter.
      */
-    static Try.CheckedRunnable decorateCheckedRunnable(RateLimiter rateLimiter, Try.CheckedRunnable runnable) {
+    static CheckedRunnable decorateCheckedRunnable(RateLimiter rateLimiter, CheckedRunnable runnable) {
 
         return () -> {
             waitForPermission(rateLimiter);
@@ -106,7 +108,7 @@ public interface RateLimiter {
      * @param <R> the type of function results
      * @return a function which is restricted by a RateLimiter.
      */
-    static <T, R> Try.CheckedFunction<T, R> decorateCheckedFunction(RateLimiter rateLimiter, Try.CheckedFunction<T, R> function) {
+    static <T, R> CheckedFunction1<T, R> decorateCheckedFunction(RateLimiter rateLimiter, CheckedFunction1<T, R> function) {
         return (T t) -> {
             waitForPermission(rateLimiter);
             return function.apply(t);

@@ -3,6 +3,7 @@ apply plugin: 'me.champeau.gradle.jmh'
 dependencies {
     compile project(':resilience4j-core')
     compile project(':resilience4j-ratelimiter')
+    compile project(':resilience4j-bulkhead')
     compile project(':resilience4j-circularbuffer')
     compile project(':resilience4j-circuitbreaker')
     compile project(':resilience4j-bulkhead')

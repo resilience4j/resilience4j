@@ -18,11 +18,6 @@
  */
 package io.github.resilience4j.decorators;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
-
 import io.github.resilience4j.cache.Cache;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.ratelimiter.RateLimiter;
@@ -30,7 +25,10 @@ import io.github.resilience4j.ratelimiter.RateLimiterConfig;
 import io.github.resilience4j.ratelimiter.RequestNotPermitted;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.test.HelloWorldService;
-import javaslang.control.Try;
+import io.vavr.CheckedFunction0;
+import io.vavr.CheckedFunction1;
+import io.vavr.CheckedRunnable;
+import io.vavr.control.Try;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.BDDMockito;
@@ -39,6 +37,11 @@ import java.io.IOException;
 import java.time.Duration;
 import java.util.function.Function;
 import java.util.function.Supplier;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 
 public class DecoratorsTest {
     public boolean state = false;
@@ -77,7 +80,7 @@ public class DecoratorsTest {
         given(helloWorldService.returnHelloWorldWithException()).willReturn("Hello world");
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("helloBackend");
 
-        Try.CheckedSupplier<String> decoratedSupplier = Decorators.ofCheckedSupplier(() -> helloWorldService.returnHelloWorldWithException())
+        CheckedFunction0<String> decoratedSupplier = Decorators.ofCheckedSupplier(() -> helloWorldService.returnHelloWorldWithException())
             .withCircuitBreaker(circuitBreaker)
             .withRetry(Retry.ofDefaults("id"))
             .withRateLimiter(RateLimiter.ofDefaults("testName"))
@@ -117,7 +120,7 @@ public class DecoratorsTest {
     public void testDecorateCheckedRunnable() throws IOException {
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("helloBackend");
 
-        Try.CheckedRunnable decoratedRunnable = Decorators.ofCheckedRunnable(() -> helloWorldService.sayHelloWorldWithException())
+        CheckedRunnable decoratedRunnable = Decorators.ofCheckedRunnable(() -> helloWorldService.sayHelloWorldWithException())
             .withCircuitBreaker(circuitBreaker)
             .withRetry(Retry.ofDefaults("id"))
             .withRateLimiter(RateLimiter.ofDefaults("testName"))
@@ -158,7 +161,7 @@ public class DecoratorsTest {
         given(helloWorldService.returnHelloWorldWithNameWithException("Name")).willReturn("Hello world Name");
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("helloBackend");
 
-        Try.CheckedFunction<String, String> decoratedFunction = Decorators.ofCheckedFunction(helloWorldService::returnHelloWorldWithNameWithException)
+        CheckedFunction1<String, String> decoratedFunction = Decorators.ofCheckedFunction(helloWorldService::returnHelloWorldWithNameWithException)
             .withCircuitBreaker(circuitBreaker)
             .withRetry(Retry.ofDefaults("id"))
             .withRateLimiter(RateLimiter.ofDefaults("testName"))
@@ -208,7 +211,7 @@ public class DecoratorsTest {
         // Create a RateLimiter
         RateLimiter rateLimiter = RateLimiter.of("backendName", config);
 
-        Try.CheckedSupplier<String> restrictedSupplier = Decorators.ofCheckedSupplier(() -> helloWorldService.returnHelloWorld())
+        CheckedFunction0<String> restrictedSupplier = Decorators.ofCheckedSupplier(() -> helloWorldService.returnHelloWorld())
             .withRateLimiter(rateLimiter)
             .decorate();
 
@@ -244,7 +247,7 @@ public class DecoratorsTest {
         // Return the value from cache
         given(cache.get("testKey")).willReturn("Hello from cache");
 
-        Try.CheckedFunction<String, String> cachedFunction = Decorators.ofCheckedSupplier(() -> "Hello world")
+        CheckedFunction1<String, String> cachedFunction = Decorators.ofCheckedSupplier(() -> "Hello world")
             .withCache(Cache.of(cache))
             .decorate();
         String value = Try.of(() -> cachedFunction.apply("testKey")).get();

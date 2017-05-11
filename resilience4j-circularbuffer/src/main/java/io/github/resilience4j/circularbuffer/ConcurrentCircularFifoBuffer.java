@@ -18,8 +18,8 @@
  */
 package io.github.resilience4j.circularbuffer;
 
-import javaslang.collection.List;
-import javaslang.control.Option;
+import io.vavr.collection.List;
+import io.vavr.control.Option;
 
 import java.util.Arrays;
 

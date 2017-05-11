@@ -25,9 +25,9 @@ import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.prometheus.client.Collector;
 import io.prometheus.client.GaugeMetricFamily;
-import javaslang.Tuple;
-import javaslang.Tuple2;
-import javaslang.collection.Array;
+import io.vavr.Tuple;
+import io.vavr.Tuple2;
+import io.vavr.collection.Array;
 
 import static java.util.Arrays.asList;
 import static java.util.Objects.requireNonNull;

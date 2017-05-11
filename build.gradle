@@ -56,7 +56,7 @@ subprojects {
     apply from: "${rootDir}/publishing.gradle"
 
     dependencies {
-        compile ( libraries.javaslang)
+        compile ( libraries.vavr)
         compile ( libraries.slf4j)
 
         testCompile ( libraries.junit)

@@ -26,8 +26,9 @@ import io.github.resilience4j.retry.event.RetryOnSuccessEvent;
 import io.reactivex.Flowable;
 import io.reactivex.processors.FlowableProcessor;
 import io.reactivex.processors.PublishProcessor;
-import javaslang.control.Option;
-import javaslang.control.Try;
+import io.vavr.CheckedConsumer;
+import io.vavr.control.Option;
+import io.vavr.control.Try;
 
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
@@ -48,7 +49,7 @@ public class RetryContext implements Retry {
     private int maxAttempts;
     private Function<Integer, Long> intervalFunction;
     private Predicate<Throwable> exceptionPredicate;
-    /*package*/ static Try.CheckedConsumer<Long> sleepFunction = Thread::sleep;
+    /*package*/ static CheckedConsumer<Long> sleepFunction = Thread::sleep;
 
     public RetryContext(String name, RetryConfig config){
         this.name = name;

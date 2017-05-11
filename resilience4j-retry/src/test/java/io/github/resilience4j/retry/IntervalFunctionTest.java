@@ -1,12 +1,11 @@
 package io.github.resilience4j.retry;
 
+import io.vavr.collection.List;
+import io.vavr.control.Try;
 import org.assertj.core.api.Assertions;
 import org.junit.Test;
 
 import java.time.Duration;
-
-import javaslang.collection.List;
-import javaslang.control.Try;
 
 public class IntervalFunctionTest {
 

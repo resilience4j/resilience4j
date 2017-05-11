@@ -18,23 +18,20 @@
  */
 package io.github.resilience4j.consumer;
 
-import org.junit.Test;
-
-import java.io.IOException;
-import java.time.Duration;
-
-import javax.xml.ws.WebServiceException;
-
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent;
 import io.github.resilience4j.circuitbreaker.event.CircuitBreakerOnErrorEvent;
-import javaslang.API;
+import io.vavr.API;
+import org.junit.Test;
+
+import javax.xml.ws.WebServiceException;
+import java.io.IOException;
 
 import static io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent.Type;
-import static javaslang.API.$;
-import static javaslang.API.Case;
-import static javaslang.Predicates.instanceOf;
+import static io.vavr.API.$;
+import static io.vavr.API.Case;
+import static io.vavr.Predicates.instanceOf;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class CircularEventConsumerTest {
@@ -75,7 +72,7 @@ public class CircularEventConsumerTest {
         CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom()
                 .ringBufferSizeInClosedState(3)
                 .recordFailure(throwable -> API.Match(throwable).of(
-                        Case(instanceOf(WebServiceException.class), true),
+                        Case($(instanceOf(WebServiceException.class)), true),
                         Case($(), false)))
                 .build();
         CircuitBreaker circuitBreaker = CircuitBreaker.of("testName", circuitBreakerConfig);

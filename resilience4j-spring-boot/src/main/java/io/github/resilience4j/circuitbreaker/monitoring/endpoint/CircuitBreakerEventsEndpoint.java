@@ -30,7 +30,7 @@ import io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent;
 import io.github.resilience4j.consumer.EventConsumer;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
 import io.reactivex.Flowable;
-import javaslang.collection.Seq;
+import io.vavr.collection.Seq;
 
 import java.util.Comparator;
 

@@ -37,7 +37,7 @@ As you can guess RateLimiter has all sort of higher order decorator functions ju
 [source,java]
 ----
 // Decorate your call to BackendService.doSomething()
-Try.CheckedRunnable restrictedCall = RateLimiter
+CheckedRunnable restrictedCall = RateLimiter
     .decorateCheckedRunnable(rateLimiter, backendService::doSomething);
 
 Try.run(restrictedCall)

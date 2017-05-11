@@ -20,7 +20,7 @@ package io.github.resilience4j.bulkhead;
 
 
 import io.github.resilience4j.bulkhead.internal.InMemoryBulkheadRegistry;
-import javaslang.collection.Seq;
+import io.vavr.collection.Seq;
 
 import java.util.function.Supplier;
 

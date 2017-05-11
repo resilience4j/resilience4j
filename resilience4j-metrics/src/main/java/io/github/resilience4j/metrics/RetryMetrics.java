@@ -3,7 +3,7 @@ package io.github.resilience4j.metrics;
 import com.codahale.metrics.*;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryRegistry;
-import javaslang.collection.Array;
+import io.vavr.collection.Array;
 
 import java.util.Map;
 

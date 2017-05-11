@@ -22,7 +22,8 @@ import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RequestNotPermitted;
 import io.github.resilience4j.retrofit.internal.DecoratedCall;
-import javaslang.control.Try;
+import io.vavr.CheckedFunction0;
+import io.vavr.control.Try;
 import okhttp3.MediaType;
 import okhttp3.ResponseBody;
 import retrofit2.Call;
@@ -57,7 +58,7 @@ public interface RetrofitRateLimiter {
         return new DecoratedCall<T>(call) {
             @Override
             public Response<T> execute() throws IOException {
-                Try.CheckedSupplier<Response<T>> restrictedSupplier = RateLimiter.decorateCheckedSupplier(rateLimiter, call::execute);
+                CheckedFunction0<Response<T>> restrictedSupplier = RateLimiter.decorateCheckedSupplier(rateLimiter, call::execute);
                 final Try<Response<T>> response = Try.of(restrictedSupplier);
                 return response.isSuccess() ? response.get() : handleFailure(response);
             }

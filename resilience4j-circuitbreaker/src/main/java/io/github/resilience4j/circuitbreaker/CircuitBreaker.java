@@ -22,7 +22,10 @@ import io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent;
 import io.github.resilience4j.circuitbreaker.internal.CircuitBreakerStateMachine;
 import io.github.resilience4j.circuitbreaker.utils.CircuitBreakerUtils;
 import io.reactivex.Flowable;
-import javaslang.control.Try;
+import io.vavr.CheckedConsumer;
+import io.vavr.CheckedFunction0;
+import io.vavr.CheckedFunction1;
+import io.vavr.CheckedRunnable;
 
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
@@ -307,12 +310,12 @@ public interface CircuitBreaker {
      * @param <T> the type of results supplied by this supplier
      * @return a supplier which is decorated by a CircuitBreaker.
      */
-    static <T> Try.CheckedSupplier<T> decorateCheckedSupplier(CircuitBreaker circuitBreaker, Try.CheckedSupplier<T> supplier){
+    static <T> CheckedFunction0<T> decorateCheckedSupplier(CircuitBreaker circuitBreaker, CheckedFunction0<T> supplier){
         return () -> {
             CircuitBreakerUtils.isCallPermitted(circuitBreaker);
             long start = System.nanoTime();
             try {
-                T returnValue = supplier.get();
+                T returnValue = supplier.apply();
                 
                 long durationInNanos = System.nanoTime() - start;
                 circuitBreaker.onSuccess(durationInNanos);
@@ -379,7 +382,7 @@ public interface CircuitBreaker {
      *
      * @return a runnable which is decorated by a CircuitBreaker.
      */
-    static Try.CheckedRunnable decorateCheckedRunnable(CircuitBreaker circuitBreaker, Try.CheckedRunnable runnable){
+    static CheckedRunnable decorateCheckedRunnable(CircuitBreaker circuitBreaker, CheckedRunnable runnable){
         return () -> {
             CircuitBreakerUtils.isCallPermitted(circuitBreaker);
             long start = System.nanoTime();
@@ -481,7 +484,7 @@ public interface CircuitBreaker {
      *
      * @return a consumer which is decorated by a CircuitBreaker.
      */
-    static <T> Try.CheckedConsumer<T> decorateCheckedConsumer(CircuitBreaker circuitBreaker, Try.CheckedConsumer<T> consumer){
+    static <T> CheckedConsumer<T> decorateCheckedConsumer(CircuitBreaker circuitBreaker, CheckedConsumer<T> consumer){
         return (t) -> {
             CircuitBreakerUtils.isCallPermitted(circuitBreaker);
             long start = System.nanoTime();
@@ -556,7 +559,7 @@ public interface CircuitBreaker {
      * @param <R> the type of the result of the function
      * @return a function which is decorated by a CircuitBreaker.
      */
-    static <T, R> Try.CheckedFunction<T, R> decorateCheckedFunction(CircuitBreaker circuitBreaker, Try.CheckedFunction<T, R> function){
+    static <T, R> CheckedFunction1<T, R> decorateCheckedFunction(CircuitBreaker circuitBreaker, CheckedFunction1<T, R> function){
         return (T t) -> {
             CircuitBreakerUtils.isCallPermitted(circuitBreaker);
             long start = System.nanoTime();

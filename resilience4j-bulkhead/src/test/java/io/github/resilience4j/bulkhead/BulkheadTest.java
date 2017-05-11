@@ -19,7 +19,11 @@
 package io.github.resilience4j.bulkhead;
 
 import io.github.resilience4j.test.HelloWorldService;
-import javaslang.control.Try;
+import io.vavr.CheckedConsumer;
+import io.vavr.CheckedFunction0;
+import io.vavr.CheckedFunction1;
+import io.vavr.CheckedRunnable;
+import io.vavr.control.Try;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.BDDMockito;
@@ -109,10 +113,10 @@ public class BulkheadTest {
         BDDMockito.given(helloWorldService.returnHelloWorldWithException()).willReturn("Hello world");
 
         // When
-        Try.CheckedSupplier<String> checkedSupplier = Bulkhead.decorateCheckedSupplier(bulkhead, helloWorldService::returnHelloWorldWithException);
+        CheckedFunction0<String> checkedSupplier = Bulkhead.decorateCheckedSupplier(bulkhead, helloWorldService::returnHelloWorldWithException);
 
         // Then
-        assertThat(checkedSupplier.get()).isEqualTo("Hello world");
+        assertThat(checkedSupplier.apply()).isEqualTo("Hello world");
         assertThat(bulkhead.getAvailableConcurrentCalls()).isEqualTo(1);
         BDDMockito.then(helloWorldService).should(times(1)).returnHelloWorldWithException();
     }
@@ -125,7 +129,7 @@ public class BulkheadTest {
         BDDMockito.given(helloWorldService.returnHelloWorldWithException()).willThrow(new RuntimeException("BAM!"));
 
         // When
-        Try.CheckedSupplier<String> checkedSupplier = Bulkhead.decorateCheckedSupplier(bulkhead, helloWorldService::returnHelloWorldWithException);
+        CheckedFunction0<String> checkedSupplier = Bulkhead.decorateCheckedSupplier(bulkhead, helloWorldService::returnHelloWorldWithException);
         Try<String> result = Try.of(checkedSupplier);
 
         // Then
@@ -207,7 +211,7 @@ public class BulkheadTest {
         Bulkhead bulkhead = Bulkhead.of("test", config);
 
         // When
-        Try.CheckedRunnable checkedRunnable = Bulkhead.decorateCheckedRunnable(bulkhead, () -> {throw new RuntimeException("BAM!");});
+        CheckedRunnable checkedRunnable = Bulkhead.decorateCheckedRunnable(bulkhead, () -> {throw new RuntimeException("BAM!");});
         Try<Void> result = Try.run(checkedRunnable);
 
         // Then
@@ -314,7 +318,7 @@ public class BulkheadTest {
         Bulkhead bulkhead = Bulkhead.of("test", config);
 
         // When
-        Try.CheckedConsumer<String> checkedConsumer = Bulkhead.decorateCheckedConsumer(bulkhead, (value) -> {
+        CheckedConsumer<String> checkedConsumer = Bulkhead.decorateCheckedConsumer(bulkhead, (value) -> {
             throw new RuntimeException("BAM!");
         });
         Try<Void> result = Try.run(() -> checkedConsumer.accept("Tom"));
@@ -383,7 +387,7 @@ public class BulkheadTest {
         BDDMockito.given(helloWorldService.returnHelloWorldWithNameWithException("Tom")).willThrow(new RuntimeException("BAM!"));
 
         // When
-        Try.CheckedFunction<String, String> function  = Bulkhead.decorateCheckedFunction(bulkhead, helloWorldService::returnHelloWorldWithNameWithException);
+        CheckedFunction1<String, String> function  = Bulkhead.decorateCheckedFunction(bulkhead, helloWorldService::returnHelloWorldWithNameWithException);
         Try<String> result = Try.of(() -> function.apply("Tom"));
 
         // Then
@@ -402,7 +406,7 @@ public class BulkheadTest {
         bulkhead.isCallPermitted();
 
         // When
-        Try.CheckedRunnable checkedRunnable = Bulkhead.decorateCheckedRunnable(bulkhead, () -> {throw new RuntimeException("BAM!");});
+        CheckedRunnable checkedRunnable = Bulkhead.decorateCheckedRunnable(bulkhead, () -> {throw new RuntimeException("BAM!");});
         Try result = Try.run(checkedRunnable);
 
         //Then
@@ -420,7 +424,7 @@ public class BulkheadTest {
         bulkhead.isCallPermitted();
 
         //v When
-        Try.CheckedRunnable checkedRunnable = Bulkhead.decorateCheckedRunnable(bulkhead, () -> {throw new RuntimeException("BAM!");});
+        CheckedRunnable checkedRunnable = Bulkhead.decorateCheckedRunnable(bulkhead, () -> {throw new RuntimeException("BAM!");});
         Try result = Try.run(checkedRunnable);
 
         //Then
@@ -552,10 +556,10 @@ public class BulkheadTest {
         Bulkhead anotherBulkhead = Bulkhead.of("testAnother", config);
 
         // When I create a Supplier and a Function which are decorated by different Bulkheads
-        Try.CheckedSupplier<String> decoratedSupplier
+        CheckedFunction0<String> decoratedSupplier
             = Bulkhead.decorateCheckedSupplier(bulkhead, () -> "Hello");
 
-        Try.CheckedFunction<String, String> decoratedFunction
+        CheckedFunction1<String, String> decoratedFunction
             = Bulkhead.decorateCheckedFunction(anotherBulkhead, (input) -> input + " world");
 
         // and I chain a function with map
@@ -578,7 +582,7 @@ public class BulkheadTest {
         Bulkhead bulkhead = Bulkhead.of("testName", config);
 
         // When I decorate my function
-        Try.CheckedSupplier<String> decoratedSupplier = Bulkhead.decorateCheckedSupplier(bulkhead, () -> "This can be any method which returns: 'Hello");
+        CheckedFunction0<String> decoratedSupplier = Bulkhead.decorateCheckedSupplier(bulkhead, () -> "This can be any method which returns: 'Hello");
 
         // and chain an other function with map
         Try<String> result = Try.of(decoratedSupplier)

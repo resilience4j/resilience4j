@@ -18,23 +18,23 @@
  */
 package io.github.resilience4j.retry.internal;
 
+import io.github.resilience4j.retry.IntervalFunction;
+import io.github.resilience4j.retry.Retry;
+import io.github.resilience4j.retry.RetryConfig;
+import io.github.resilience4j.test.HelloWorldService;
+import io.vavr.CheckedRunnable;
+import io.vavr.Predicates;
+import io.vavr.control.Try;
 import org.assertj.core.api.Assertions;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.BDDMockito;
 import org.mockito.Mockito;
 
+import javax.xml.ws.WebServiceException;
 import java.time.Duration;
 
-import javax.xml.ws.WebServiceException;
-
-import io.github.resilience4j.retry.IntervalFunction;
-import io.github.resilience4j.retry.Retry;
-import io.github.resilience4j.retry.RetryConfig;
-import io.github.resilience4j.test.HelloWorldService;
-import javaslang.API;
-import javaslang.Predicates;
-import javaslang.control.Try;
+import static io.vavr.API.*;
 
 public class RunnableRetryTest {
 
@@ -104,7 +104,7 @@ public class RunnableRetryTest {
         // Create a Retry with default configuration
         RetryContext retryContext = (RetryContext) Retry.ofDefaults("id");
         // Decorate the invocation of the HelloWorldService
-        Try.CheckedRunnable retryableRunnable = Retry.decorateCheckedRunnable(retryContext, helloWorldService::sayHelloWorld);
+        CheckedRunnable retryableRunnable = Retry.decorateCheckedRunnable(retryContext, helloWorldService::sayHelloWorld);
 
         // When
         Try<Void> result = Try.run(retryableRunnable);
@@ -127,7 +127,7 @@ public class RunnableRetryTest {
         RetryConfig config = RetryConfig.custom().maxAttempts(1).build();
         Retry retryContext = Retry.of("id", config);
         // Decorate the invocation of the HelloWorldService
-        Try.CheckedRunnable retryableRunnable = Retry.decorateCheckedRunnable(retryContext, helloWorldService::sayHelloWorld);
+        CheckedRunnable retryableRunnable = Retry.decorateCheckedRunnable(retryContext, helloWorldService::sayHelloWorld);
 
         // When
         Try<Void> result = Try.run(retryableRunnable);
@@ -148,14 +148,14 @@ public class RunnableRetryTest {
 
         // Create a Retry with default configuration
         RetryConfig config = RetryConfig.custom()
-                .retryOnException(throwable -> API.Match(throwable).of(
-                        API.Case(Predicates.instanceOf(WebServiceException.class), false),
-                        API.Case(API.$(), true)))
+                .retryOnException(throwable -> Match(throwable).of(
+                        Case($(Predicates.instanceOf(WebServiceException.class)), false),
+                        Case($(), true)))
                 .build();
         Retry retryContext = Retry.of("id", config);
 
         // Decorate the invocation of the HelloWorldService
-        Try.CheckedRunnable retryableRunnable = Retry.decorateCheckedRunnable(retryContext, helloWorldService::sayHelloWorld);
+        CheckedRunnable retryableRunnable = Retry.decorateCheckedRunnable(retryContext, helloWorldService::sayHelloWorld);
 
         // When
         Try<Void> result = Try.run(retryableRunnable);
@@ -182,7 +182,7 @@ public class RunnableRetryTest {
 
         Retry retryContext = Retry.of("id", config);
         // Decorate the invocation of the HelloWorldService
-        Try.CheckedRunnable retryableRunnable = Retry.decorateCheckedRunnable(retryContext, helloWorldService::sayHelloWorld);
+        CheckedRunnable retryableRunnable = Retry.decorateCheckedRunnable(retryContext, helloWorldService::sayHelloWorld);
 
         // When
         Try<Void> result = Try.run(retryableRunnable);

@@ -26,8 +26,10 @@ import io.github.resilience4j.cache.event.CacheOnMissEvent;
 import io.reactivex.Flowable;
 import io.reactivex.processors.FlowableProcessor;
 import io.reactivex.processors.PublishProcessor;
-import javaslang.control.Option;
-import javaslang.control.Try;
+import io.vavr.CheckedFunction0;
+import io.vavr.Function0;
+import io.vavr.control.Option;
+import io.vavr.control.Try;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -52,12 +54,12 @@ public class CacheContext<K, V>  implements Cache<K,V> {
     }
 
     @Override
-    public V computeIfAbsent(K cacheKey, Try.CheckedSupplier<V> supplier) {
+    public V computeIfAbsent(K cacheKey, CheckedFunction0<V> supplier) {
         return getValueFromCache(cacheKey)
                 .getOrElse(() -> computeAndPut(cacheKey, supplier));
     }
 
-    private V computeAndPut(K cacheKey, Try.CheckedSupplier<V> supplier) {
+    private V computeAndPut(K cacheKey, CheckedFunction0<V> supplier) {
         return Try.of(supplier)
                 .andThen(value -> putValueIntoCache(cacheKey, value))
             .get();

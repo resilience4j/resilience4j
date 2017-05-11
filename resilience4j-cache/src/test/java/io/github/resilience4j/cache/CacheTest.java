@@ -20,7 +20,7 @@ package io.github.resilience4j.cache;
 
 import io.github.resilience4j.cache.event.CacheEvent;
 import io.reactivex.subscribers.TestSubscriber;
-import javaslang.control.Try;
+import io.vavr.CheckedFunction1;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -50,7 +50,7 @@ public class CacheTest {
                 .map(CacheEvent::getEventType)
                 .test();
 
-        Try.CheckedFunction<String, String> cachedFunction = Cache.decorateCheckedSupplier(cacheContext, () -> "Hello world");
+        CheckedFunction1<String, String> cachedFunction = Cache.decorateCheckedSupplier(cacheContext, () -> "Hello world");
         String value = cachedFunction.apply("testKey");
         assertThat(value).isEqualTo("Hello world");
 
@@ -90,7 +90,7 @@ public class CacheTest {
                 .map(CacheEvent::getEventType)
                 .test();
 
-        Try.CheckedFunction<String, String> cachedFunction = Cache.decorateCallable(cacheContext, () -> "Hello world");
+        CheckedFunction1<String, String> cachedFunction = Cache.decorateCallable(cacheContext, () -> "Hello world");
         String value = cachedFunction.apply("testKey");
         assertThat(value).isEqualTo("Hello world");
 
@@ -111,7 +111,7 @@ public class CacheTest {
                 .map(CacheEvent::getEventType)
                 .test();
 
-        Try.CheckedFunction<String, String> cachedFunction = Cache.decorateCheckedSupplier(cacheContext, () -> {throw new IOException();});
+        CheckedFunction1<String, String> cachedFunction = Cache.decorateCheckedSupplier(cacheContext, () -> {throw new IOException();});
         cachedFunction.apply("testKey");
 
         testSubscriber
@@ -130,7 +130,7 @@ public class CacheTest {
                 .map(CacheEvent::getEventType)
                 .test();
 
-        Try.CheckedFunction<String, String> cachedFunction = Cache.decorateCheckedSupplier(cacheContext, () -> "Hello world");
+        CheckedFunction1<String, String> cachedFunction = Cache.decorateCheckedSupplier(cacheContext, () -> "Hello world");
         String value = cachedFunction.apply("testKey");
         assertThat(value).isEqualTo("Hello world");
 
@@ -149,7 +149,7 @@ public class CacheTest {
                 .map(CacheEvent::getEventType)
                 .test();
 
-        Try.CheckedFunction<String, String> cachedFunction = Cache.decorateCheckedSupplier(cacheContext, () -> "Hello world");
+        CheckedFunction1<String, String> cachedFunction = Cache.decorateCheckedSupplier(cacheContext, () -> "Hello world");
         String value = cachedFunction.apply("testKey");
         assertThat(value).isEqualTo("Hello from cache");
 
@@ -168,7 +168,7 @@ public class CacheTest {
                 .map(CacheEvent::getEventType)
                 .test();
 
-        Try.CheckedFunction<String, String> cachedFunction = Cache.decorateCheckedSupplier(cacheContext, () -> "Hello world");
+        CheckedFunction1<String, String> cachedFunction = Cache.decorateCheckedSupplier(cacheContext, () -> "Hello world");
         String value = cachedFunction.apply("testKey");
         assertThat(value).isEqualTo("Hello world");
 

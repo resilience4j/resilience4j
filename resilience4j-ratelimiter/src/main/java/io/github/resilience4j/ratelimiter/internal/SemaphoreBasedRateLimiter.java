@@ -29,7 +29,7 @@ import io.github.resilience4j.ratelimiter.event.RateLimiterOnSuccessEvent;
 import io.reactivex.Flowable;
 import io.reactivex.processors.FlowableProcessor;
 import io.reactivex.processors.PublishProcessor;
-import javaslang.control.Option;
+import io.vavr.control.Option;
 
 import java.time.Duration;
 import java.util.concurrent.ScheduledExecutorService;
