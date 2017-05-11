@@ -36,7 +36,7 @@ public class RetryConfigBuilderTest {
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void WaitIntervalUnderTenMillisShouldFail() {
+    public void waitIntervalUnderTenMillisShouldFail() {
         RetryConfig.custom().waitDuration(Duration.ofMillis(5)).build();
     }
 
