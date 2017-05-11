@@ -100,9 +100,13 @@
 * PR #81: Resilience4j metrics reporting with Prometheus.
 * PR #103, #104, #101: Various improvements of rxJava integration.
 * PR #119: Zero allocation rate for CircuitBreaker when it has no event subscribers.
+* Issue #70: Module with Spring Boot starter.
 * Issue #61: Permissions aren't available from the first cycle in AtomicRateLimiter.
 * Performance improvements of ConcurrentEvictingQueue
 
 NOTE: Braking changes:
 
 * PR #119 - changed API of CircuitBreaker interface.
+* The *groupId* has been changed from *io.github.robwin* to *io.github.resilience4j*
+
+Detailed https://github.com/resilience4j/resilience4j/milestone/6?closed=1[PR list]

@@ -1,0 +1,67 @@
+=== Prometheus Metrics exporter
+
+==== Introduction
+
+Integration of circuit breaker and rate limiter metrics with
+https://github.com/prometheus/client_java[Prometheus simple client]
+
+For the circuit breaker library exports 2 metrics:
+
+1. By state with default metric name `circuit_breaker_states` and label `state`:
+
+    - `closed`
+    - `open`
+    - `half_open`
+
+2. By call result with default metric name `circuit_breaker_calls` and label `call_result`:
+
+    - `successful`
+    - `failed`
+    - `not_permitted`
+    - `buffered`
+    - `buffered_max`
+
+For the rate limiter following metric with default name `rate_limiter` and label `param` exported:
+
+- `available_permissions`
+- `waiting_threads`
+
+The names of the rate limiters and circuit breakers are exposed using label `name`.
+
+==== Dashboard Example
+
+image::images/prometheus-dashboard.png[Circuit Breaker Dashboard Example]
+
+==== Usage
+
+===== CircuitBreaker
+
+[source,java]
+--
+final CollectorRegistry collectorRegistry = CollectorRegistry.defaultRegistry;
+
+final CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
+
+final CircuitBreaker foo = circuitBreakerRegistry.circuitBreaker("foo");
+final CircuitBreaker boo = circuitBreakerRegistry.circuitBreaker("boo");
+
+// Registering metrics in prometeus CollectorRegistry
+collectorRegistry.register(CircuitBreakerExports.ofCircuitBreakerRegistry(circuitBreakerRegistry));
+--
+
+===== RateLimiter
+
+[source,java]
+--
+final CollectorRegistry collectorRegistry = CollectorRegistry.defaultRegistry;
+
+final RateLimiterRegistry rateLimiterRegistry = RateLimiterRegistry.ofDefaults();
+
+final RateLimiter foo = rateLimiterRegistry.rateLimiter("foo");
+final RateLimiter boo = rateLimiterRegistry.rateLimiter("boo");
+
+// Registering metrics in prometeus CollectorRegistry
+collectorRegistry.register(RateLimiterExports.ofRateLimiterRegistry(rateLimiterRegistry));
+--
+
+For both it is possible to use just a collection of breakers and limiters instead of registry.

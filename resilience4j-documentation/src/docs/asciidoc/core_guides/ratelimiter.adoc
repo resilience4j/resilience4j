@@ -1,6 +1,6 @@
 === RateLimiter
 
-==== Create a RateLimiter
+==== Introduction
 
 The RateLimiter API is very similar to CircuitBreaker.
 So it also have in-memory RateLimiterRegistry and RateLimiterConfig where you can configure:
@@ -9,6 +9,7 @@ So it also have in-memory RateLimiterRegistry and RateLimiterConfig where you ca
 * the permissions limit for refresh period.
 * the default wait for permission duration.
 
+==== Examples
 [source,java]
 ----
 // For example you want to restrict the calling rate of some method to be not higher than 10 req/ms.
@@ -29,7 +30,7 @@ RateLimiter reateLimiterWithCustomConfig = rateLimiterRegistry.rateLimiter("back
 RateLimiter rateLimiter = RateLimiter.of("NASDAQ :-)", config);
 ----
 
-==== Use a RateLimiter
+===== Use a RateLimiter
 
 As you can guess RateLimiter has all sort of higher order decorator functions just like CircuitBreaker.
 
@@ -44,7 +45,7 @@ Try.run(restrictedCall)
     .onFailure((RequestNotPermitted throwable) -> LOG.info("Wait before call it again :)"));
 ----
 
-==== RateLimiter and RxJava
+===== RateLimiter and RxJava
 
 The following example shows how to decorate an Observable by using the custom RxJava operator.
 
@@ -55,7 +56,7 @@ Observable.fromCallable(backendService::doSomething)
     .lift(RateLimiterOperator.of(rateLimiter))
 ----
 
-==== Consume emitted RateLimiterEvents
+===== Consume emitted RateLimiterEvents
 
 The RateLimiter emits a stream of RateLimiterEvents to any Observer/Consumer who subscribes.
 An event can be a successful permission acquire or acquire failure.
@@ -77,7 +78,7 @@ rateLimiter.getEventStream()
 List<RateLimiterEvent> bufferedEvents = circularEventConsumer.getBufferedEvents();
 ----
 
-==== Monitor RateLimiter metrics
+==== Monitoring
 
 The RateLimiter provides simple an interface to monitor the current limiter.
 Also AtomicRateLimiter has some enhanced Metrics with some implementation specific details.
