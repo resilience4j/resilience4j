@@ -43,7 +43,7 @@ public class RateLimiterHealthIndicator implements HealthIndicator {
             AtomicRateLimiter atomicRateLimiter = (AtomicRateLimiter) this.rateLimiter;
             AtomicRateLimiter.AtomicRateLimiterMetrics detailedMetrics = atomicRateLimiter.getDetailedMetrics();
             if (detailedMetrics.getNanosToWait() > timeoutInNanos) {
-                rateLimiterHealth(Status.DOWN, availablePermissions, numberOfWaitingThreads);
+                return rateLimiterHealth(Status.DOWN, availablePermissions, numberOfWaitingThreads);
             }
         }
         return rateLimiterHealth(Status.UNKNOWN, availablePermissions, numberOfWaitingThreads);
