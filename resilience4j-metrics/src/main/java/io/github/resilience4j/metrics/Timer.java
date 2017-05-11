@@ -270,7 +270,7 @@ public interface Timer {
         /**
          * Returns the fifteen-minute exponentially-weighted moving average rate at which events have
          * occurred since the meter was created.
-         * <p/>
+         *
          * This rate has the same exponential decay factor as the fifteen-minute load average in the
          * {@code top} Unix command.
          *
@@ -282,7 +282,7 @@ public interface Timer {
         /**
          * Returns the five-minute exponentially-weighted moving average rate at which events have
          * occurred since the meter was created.
-         * <p/>
+         *
          * This rate has the same exponential decay factor as the five-minute load average in the {@code
          * top} Unix command.
          *
@@ -301,7 +301,7 @@ public interface Timer {
         /**
          * Returns the one-minute exponentially-weighted moving average rate at which events have
          * occurred since the meter was created.
-         * <p/>
+         *
          * This rate has the same exponential decay factor as the one-minute load average in the {@code
          * top} Unix command.
          *
