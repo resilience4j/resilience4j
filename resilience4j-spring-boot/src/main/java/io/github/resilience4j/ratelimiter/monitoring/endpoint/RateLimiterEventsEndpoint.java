@@ -31,7 +31,7 @@ import io.github.resilience4j.ratelimiter.event.RateLimiterEvent;
 import io.github.resilience4j.ratelimiter.monitoring.model.RateLimiterEventDTO;
 import io.github.resilience4j.ratelimiter.monitoring.model.RateLimiterEventsEndpointResponse;
 import io.reactivex.Flowable;
-import javaslang.collection.Seq;
+import io.vavr.collection.Seq;
 
 import java.util.Comparator;
 import java.util.List;

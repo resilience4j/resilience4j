@@ -23,8 +23,8 @@ import static java.util.Objects.requireNonNull;
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RateLimiterConfig;
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
-import javaslang.collection.Array;
-import javaslang.collection.Seq;
+import io.vavr.collection.Array;
+import io.vavr.collection.Seq;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;

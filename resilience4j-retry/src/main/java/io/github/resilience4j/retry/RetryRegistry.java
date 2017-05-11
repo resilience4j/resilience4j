@@ -17,7 +17,7 @@ package io.github.resilience4j.retry;
 
 
 import io.github.resilience4j.retry.internal.InMemoryRetryRegistry;
-import javaslang.collection.Seq;
+import io.vavr.collection.Seq;
 
 import java.util.function.Supplier;
 

@@ -18,18 +18,18 @@
  */
 package io.github.resilience4j.metrics;
 
-import static com.codahale.metrics.MetricRegistry.name;
-import static java.util.Objects.requireNonNull;
-
 import com.codahale.metrics.Gauge;
 import com.codahale.metrics.Metric;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.MetricSet;
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
-import javaslang.collection.Array;
+import io.vavr.collection.Array;
 
 import java.util.Map;
+
+import static com.codahale.metrics.MetricRegistry.name;
+import static java.util.Objects.requireNonNull;
 
 /**
  * An adapter which exports {@link RateLimiter.Metrics} as Dropwizard Metrics Gauges.

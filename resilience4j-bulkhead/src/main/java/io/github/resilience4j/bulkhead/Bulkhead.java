@@ -22,7 +22,10 @@ import io.github.resilience4j.bulkhead.event.BulkheadEvent;
 import io.github.resilience4j.bulkhead.internal.SemaphoreBulkhead;
 import io.github.resilience4j.bulkhead.utils.BulkheadUtils;
 import io.reactivex.Flowable;
-import javaslang.control.Try;
+import io.vavr.CheckedConsumer;
+import io.vavr.CheckedFunction0;
+import io.vavr.CheckedFunction1;
+import io.vavr.CheckedRunnable;
 
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
@@ -145,11 +148,11 @@ public interface Bulkhead {
      * @param <T> the type of results supplied by this supplier
      * @return a supplier which is decorated by a Bulkhead.
      */
-    static <T> Try.CheckedSupplier<T> decorateCheckedSupplier(Bulkhead bulkhead, Try.CheckedSupplier<T> supplier){
+    static <T> CheckedFunction0<T> decorateCheckedSupplier(Bulkhead bulkhead, CheckedFunction0<T> supplier){
         return () -> {
             BulkheadUtils.isCallPermitted(bulkhead);
             try {
-                return supplier.get();
+                return supplier.apply();
             }
             finally {
                 bulkhead.onComplete();
@@ -206,7 +209,7 @@ public interface Bulkhead {
      *
      * @return a runnable which is decorated by a Bulkhead.
      */
-    static Try.CheckedRunnable decorateCheckedRunnable(Bulkhead bulkhead, Try.CheckedRunnable runnable){
+    static CheckedRunnable decorateCheckedRunnable(Bulkhead bulkhead, CheckedRunnable runnable){
         return () -> {
             BulkheadUtils.isCallPermitted(bulkhead);
             try{
@@ -290,7 +293,7 @@ public interface Bulkhead {
      *
      * @return a consumer which is decorated by a Bulkhead.
      */
-    static <T> Try.CheckedConsumer<T> decorateCheckedConsumer(Bulkhead bulkhead, Try.CheckedConsumer<T> consumer){
+    static <T> CheckedConsumer<T> decorateCheckedConsumer(Bulkhead bulkhead, CheckedConsumer<T> consumer){
         return (t) -> {
             BulkheadUtils.isCallPermitted(bulkhead);
             try {
@@ -352,7 +355,7 @@ public interface Bulkhead {
      * @param <R> the type of the result of the function
      * @return a function which is decorated by a bulkhead.
      */
-    static <T, R> Try.CheckedFunction<T, R> decorateCheckedFunction(Bulkhead bulkhead, Try.CheckedFunction<T, R> function){
+    static <T, R> CheckedFunction1<T, R> decorateCheckedFunction(Bulkhead bulkhead, CheckedFunction1<T, R> function){
         return (T t) -> {
             BulkheadUtils.isCallPermitted(bulkhead);
             try{

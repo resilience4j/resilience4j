@@ -18,8 +18,8 @@ package io.github.resilience4j.retry.internal;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryConfig;
 import io.github.resilience4j.retry.RetryRegistry;
-import javaslang.collection.Array;
-import javaslang.collection.Seq;
+import io.vavr.collection.Array;
+import io.vavr.collection.Seq;
 
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;

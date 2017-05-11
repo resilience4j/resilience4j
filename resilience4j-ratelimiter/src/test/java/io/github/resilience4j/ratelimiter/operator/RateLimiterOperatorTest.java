@@ -22,7 +22,7 @@ import io.github.resilience4j.ratelimiter.RequestNotPermitted;
 import io.reactivex.Flowable;
 import io.reactivex.Observable;
 import io.reactivex.Single;
-import javaslang.collection.List;
+import io.vavr.collection.List;
 import org.junit.Test;
 
 import java.io.IOException;

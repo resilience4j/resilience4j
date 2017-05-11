@@ -174,7 +174,7 @@ You can still use a functional programming style for CircuitBreaker, Retry, and 
 public class BusinessBService implements BusinessService  {
 
     public Try<String> methodWithRecovery() {
-        Try.CheckedSupplier<String> backendFunction = CircuitBreaker.decorateCheckedSupplier(circuitBreaker, () -> backendBConnector.failure());
+        CheckedFunction0<String> backendFunction = CircuitBreaker.decorateCheckedSupplier(circuitBreaker, () -> backendBConnector.failure());
         return Try.of(backendFunction)
                 .recover((throwable) -> recovery(throwable));
     }

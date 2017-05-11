@@ -13,7 +13,7 @@ javax.cache.Cache<String, String> cacheInstance = Caching.getCache("cacheName", 
 Cache<String, String> cacheContext = Cache.of(cacheInstance);
 
 // Decorate your call to BackendService.doSomething()
-Try.CheckedFunction<String, String> cachedFunction = Decorators.ofCheckedSupplier(() -> backendService.doSomething())
+CheckedFunction1<String, String> cachedFunction = Decorators.ofCheckedSupplier(() -> backendService.doSomething())
     .withCache(cacheContext)
     .decorate();
 String value = Try.of(() -> cachedFunction.apply("cacheKey")).get();

@@ -39,7 +39,7 @@ import static com.jayway.awaitility.Awaitility.await;
 import static com.jayway.awaitility.Duration.FIVE_HUNDRED_MILLISECONDS;
 import static java.lang.Thread.State.*;
 import static java.time.Duration.ZERO;
-import static javaslang.control.Try.run;
+import static io.vavr.control.Try.run;
 import static org.assertj.core.api.BDDAssertions.then;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.mockito.Matchers.eq;

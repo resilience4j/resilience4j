@@ -41,7 +41,7 @@ given(helloWorldService.sayHelloWorld()).willThrow(new WebServiceException("BAM!
 // Create a Retry with default configuration
 Retry retryContext = Retry.ofDefaults("id");
 // Decorate the invocation of the HelloWorldService
-Try.CheckedSupplier<String> retryableSupplier = Retry.decorateCheckedSupplier(retryContext, helloWorldService::sayHelloWorld);
+CheckedFunction0<String> retryableSupplier = Retry.decorateCheckedSupplier(retryContext, helloWorldService::sayHelloWorld);
 
 // When I invoke the function
 Try<String> result = Try.of(retryableSupplier).recover((throwable) -> "Hello world from recovery function");

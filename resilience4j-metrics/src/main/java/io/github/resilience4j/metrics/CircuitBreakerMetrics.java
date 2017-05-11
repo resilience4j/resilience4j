@@ -27,7 +27,7 @@ import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.MetricSet;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
-import javaslang.collection.Array;
+import io.vavr.collection.Array;
 
 import java.util.Map;
 

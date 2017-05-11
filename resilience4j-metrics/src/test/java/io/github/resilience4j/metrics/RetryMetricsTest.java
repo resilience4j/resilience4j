@@ -6,7 +6,8 @@ import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryRegistry;
 import io.github.resilience4j.test.HelloWorldService;
-import javaslang.control.Try;
+import io.vavr.CheckedFunction0;
+import io.vavr.control.Try;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.BDDMockito;
@@ -39,7 +40,7 @@ public class RetryMetricsTest {
         BDDMockito.given(helloWorldService.returnHelloWorld()).willReturn("Hello world");
 
         // Setup circuitbreaker with retry
-        Try.CheckedSupplier<String> decoratedSupplier = CircuitBreaker
+        CheckedFunction0<String> decoratedSupplier = CircuitBreaker
                 .decorateCheckedSupplier(circuitBreaker, helloWorldService::returnHelloWorld);
         decoratedSupplier = Retry
                 .decorateCheckedSupplier(retry, decoratedSupplier);
@@ -70,7 +71,7 @@ public class RetryMetricsTest {
         BDDMockito.given(helloWorldService.returnHelloWorld()).willReturn("Hello world");
 
         // Setup circuitbreaker with retry
-        Try.CheckedSupplier<String> decoratedSupplier = CircuitBreaker
+        CheckedFunction0<String> decoratedSupplier = CircuitBreaker
                 .decorateCheckedSupplier(circuitBreaker, helloWorldService::returnHelloWorld);
         decoratedSupplier = Retry
                 .decorateCheckedSupplier(retry, decoratedSupplier);

@@ -25,7 +25,7 @@ import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
 import io.prometheus.client.Collector;
 import io.prometheus.client.GaugeMetricFamily;
-import javaslang.collection.Array;
+import io.vavr.collection.Array;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;

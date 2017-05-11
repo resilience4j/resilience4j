@@ -15,11 +15,11 @@
  */
 package io.github.resilience4j.consumer;
 
+import io.vavr.collection.Array;
+import io.vavr.collection.Seq;
+
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-
-import javaslang.collection.Array;
-import javaslang.collection.Seq;
 
 public class DefaultEventConsumerRegistry<T> implements EventConsumerRegistry<T>{
 

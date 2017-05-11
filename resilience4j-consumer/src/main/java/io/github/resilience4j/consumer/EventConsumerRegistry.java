@@ -15,7 +15,7 @@
  */
 package io.github.resilience4j.consumer;
 
-import javaslang.collection.Seq;
+import io.vavr.collection.Seq;
 
 
 public interface EventConsumerRegistry<T> {

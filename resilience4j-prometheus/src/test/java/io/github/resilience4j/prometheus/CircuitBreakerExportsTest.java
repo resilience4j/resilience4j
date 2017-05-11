@@ -27,10 +27,10 @@ import io.github.resilience4j.circuitbreaker.CircuitBreakerOpenException;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.circuitbreaker.internal.InMemoryCircuitBreakerRegistry;
 import io.prometheus.client.CollectorRegistry;
-import javaslang.Tuple;
-import javaslang.collection.HashMap;
-import javaslang.collection.HashSet;
-import javaslang.collection.Map;
+import io.vavr.Tuple;
+import io.vavr.collection.HashMap;
+import io.vavr.collection.HashSet;
+import io.vavr.collection.Map;
 
 import static java.util.Collections.singleton;
 import static java.util.Collections.singletonList;

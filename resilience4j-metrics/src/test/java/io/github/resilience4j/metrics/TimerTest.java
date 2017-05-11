@@ -21,8 +21,11 @@ package io.github.resilience4j.metrics;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.SharedMetricRegistries;
 import io.github.resilience4j.test.HelloWorldService;
-import javaslang.collection.Stream;
-import javaslang.control.Try;
+import io.vavr.CheckedFunction0;
+import io.vavr.CheckedFunction1;
+import io.vavr.CheckedRunnable;
+import io.vavr.collection.Stream;
+import io.vavr.control.Try;
 import org.assertj.core.api.Assertions;
 import org.junit.Before;
 import org.junit.Test;
@@ -58,9 +61,9 @@ public class TimerTest {
         BDDMockito.given(helloWorldService.returnHelloWorldWithException()).willReturn("Hello world");
 
         // And measure the time with Metrics
-        Try.CheckedSupplier<String> timedSupplier = Timer.decorateCheckedSupplier(timer, helloWorldService::returnHelloWorldWithException);
+        CheckedFunction0<String> timedSupplier = Timer.decorateCheckedSupplier(timer, helloWorldService::returnHelloWorldWithException);
 
-        String value = timedSupplier.get();
+        String value = timedSupplier.apply();
 
         assertThat(timer.getMetrics().getNumberOfTotalCalls()).isEqualTo(1);
         assertThat(timer.getMetrics().getNumberOfSuccessfulCalls()).isEqualTo(1);
@@ -129,7 +132,7 @@ public class TimerTest {
     @Test
     public void shouldDecorateCheckedRunnableAndReturnWithSuccess() throws Throwable {
         // And measure the time with Metrics
-        Try.CheckedRunnable timedRunnable = Timer.decorateCheckedRunnable(timer, helloWorldService::sayHelloWorldWithException);
+        CheckedRunnable timedRunnable = Timer.decorateCheckedRunnable(timer, helloWorldService::sayHelloWorldWithException);
 
         timedRunnable.run();
 
@@ -227,7 +230,7 @@ public class TimerTest {
         BDDMockito.given(helloWorldService.returnHelloWorldWithNameWithException("Tom")).willReturn("Hello world Tom");
 
         //When
-        Try.CheckedFunction<String, String> function = Timer.decorateCheckedFunction(timer, helloWorldService::returnHelloWorldWithNameWithException);
+        CheckedFunction1<String, String> function = Timer.decorateCheckedFunction(timer, helloWorldService::returnHelloWorldWithNameWithException);
 
         //Then
         assertThat(function.apply("Tom")).isEqualTo("Hello world Tom");

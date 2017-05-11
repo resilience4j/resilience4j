@@ -18,6 +18,13 @@
  */
 package io.github.resilience4j.retry.internal;
 
+import io.github.resilience4j.retry.Retry;
+import io.github.resilience4j.retry.RetryConfig;
+import io.github.resilience4j.retry.event.RetryEvent;
+import io.github.resilience4j.test.HelloWorldService;
+import io.reactivex.subscribers.TestSubscriber;
+import io.vavr.CheckedRunnable;
+import io.vavr.control.Try;
 import org.assertj.core.api.Assertions;
 import org.junit.Before;
 import org.junit.Test;
@@ -25,13 +32,6 @@ import org.mockito.BDDMockito;
 import org.mockito.Mockito;
 
 import javax.xml.ws.WebServiceException;
-
-import io.github.resilience4j.retry.Retry;
-import io.github.resilience4j.retry.RetryConfig;
-import io.github.resilience4j.retry.event.RetryEvent;
-import io.github.resilience4j.test.HelloWorldService;
-import io.reactivex.subscribers.TestSubscriber;
-import javaslang.control.Try;
 
 public class EventConsumerTest {
 
@@ -56,7 +56,7 @@ public class EventConsumerTest {
                 .map(RetryEvent::getEventType)
                 .test();
         // Decorate the invocation of the HelloWorldService
-        Try.CheckedRunnable retryableRunnable = Retry.decorateCheckedRunnable(retryContext, helloWorldService::sayHelloWorld);
+        CheckedRunnable retryableRunnable = Retry.decorateCheckedRunnable(retryContext, helloWorldService::sayHelloWorld);
 
         // When
         Try<Void> result = Try.run(retryableRunnable);
@@ -83,7 +83,7 @@ public class EventConsumerTest {
                 .map(RetryEvent::getEventType)
                 .test();
         // Decorate the invocation of the HelloWorldService
-        Try.CheckedRunnable retryableRunnable = Retry.decorateCheckedRunnable(retryContext, helloWorldService::sayHelloWorld);
+        CheckedRunnable retryableRunnable = Retry.decorateCheckedRunnable(retryContext, helloWorldService::sayHelloWorld);
 
         // When
         Try<Void> result = Try.run(retryableRunnable);
