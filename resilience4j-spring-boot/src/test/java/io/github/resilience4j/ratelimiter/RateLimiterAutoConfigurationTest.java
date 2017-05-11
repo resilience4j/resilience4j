@@ -67,6 +67,7 @@ public class RateLimiterAutoConfigurationTest {
 
         RateLimiter rateLimiter = rateLimiterRegistry.rateLimiter(DummyService.BACKEND);
         assertThat(rateLimiter).isNotNull();
+        rateLimiter.getPermission(Duration.ZERO);
         await()
             .atMost(2, TimeUnit.SECONDS)
             .until(() -> rateLimiter.getMetrics().getAvailablePermissions() == 10);
