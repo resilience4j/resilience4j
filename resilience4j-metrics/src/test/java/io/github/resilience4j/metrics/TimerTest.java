@@ -19,7 +19,6 @@
 package io.github.resilience4j.metrics;
 
 import com.codahale.metrics.MetricRegistry;
-import com.codahale.metrics.SharedMetricRegistries;
 import io.github.resilience4j.test.HelloWorldService;
 import io.vavr.CheckedFunction0;
 import io.vavr.CheckedFunction1;
@@ -50,7 +49,7 @@ public class TimerTest {
 
     @Before
     public void setUp(){
-        metricRegistry = SharedMetricRegistries.getOrCreate("MyRegistry");
+        metricRegistry = new MetricRegistry();
         timer = Timer.ofMetricRegistry(TimerTest.class.getName(), metricRegistry);
         helloWorldService = mock(HelloWorldService.class);
     }
