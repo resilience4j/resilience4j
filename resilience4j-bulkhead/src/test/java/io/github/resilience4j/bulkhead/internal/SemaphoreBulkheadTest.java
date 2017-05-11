@@ -181,6 +181,10 @@ public class SemaphoreBulkheadTest {
     }
 
     void sleep(long time) {
-        try {Thread.sleep(time);} catch (Exception ex) {}
+        try {
+            Thread.sleep(time);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
     }
 }
