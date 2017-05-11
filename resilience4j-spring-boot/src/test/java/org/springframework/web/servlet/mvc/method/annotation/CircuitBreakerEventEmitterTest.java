@@ -1,6 +1,7 @@
 package org.springframework.web.servlet.mvc.method.annotation;
 
 import static org.assertj.core.api.BDDAssertions.then;
+import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static io.github.resilience4j.circuitbreaker.CircuitBreaker.decorateRunnable;
 import static io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent.Type.ERROR;
 import static io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent.Type.IGNORED_ERROR;
@@ -8,7 +9,6 @@ import static io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent.Ty
 import static io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent.Type.STATE_TRANSITION;
 import static io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent.Type.SUCCESS;
 import static io.github.resilience4j.circuitbreaker.monitoring.endpoint.CircuitBreakerEventEmitter.createSseEmitter;
-
 import static java.util.stream.Collectors.toList;
 
 import org.junit.Test;
@@ -24,6 +24,7 @@ import io.vavr.control.Try;
 import java.io.IOException;
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.ConcurrentModificationException;
 import java.util.List;
 
 /**
@@ -43,8 +44,12 @@ public class CircuitBreakerEventEmitterTest {
 
         CircuitBreaker circuitBreaker = CircuitBreakerRegistry.ofDefaults().circuitBreaker("test", config);
         Runnable run = decorateRunnable(circuitBreaker, () -> System.out.println("."));
-        Runnable fail = decorateRunnable(circuitBreaker, () -> {throw new RuntimeException();});
-        Runnable ignore = decorateRunnable(circuitBreaker, () -> {throw new IllegalArgumentException();});
+        Runnable fail = decorateRunnable(circuitBreaker, () -> {
+            throw new ConcurrentModificationException();
+        });
+        Runnable ignore = decorateRunnable(circuitBreaker, () -> {
+            throw new IllegalArgumentException();
+        });
 
         SseEmitter sseEmitter = createSseEmitter(circuitBreaker.getEventStream());
         TestHandler handler = new TestHandler();
@@ -78,10 +83,8 @@ public class CircuitBreakerEventEmitterTest {
         private Runnable callback;
 
         @Override public void send(Object data, MediaType mediaType) throws IOException {
-            if (MediaType.APPLICATION_JSON == mediaType) {
-                if (data instanceof CircuitBreakerEventDTO) {
-                    events.add(((CircuitBreakerEventDTO) data));
-                }
+            if (APPLICATION_JSON == mediaType && data instanceof CircuitBreakerEventDTO) {
+                events.add(((CircuitBreakerEventDTO) data));
             }
         }
 
@@ -92,12 +95,12 @@ public class CircuitBreakerEventEmitterTest {
 
         @Override
         public void completeWithError(Throwable failure) {
-            throw new RuntimeException(failure);
+            System.out.println("E");
         }
 
         @Override
         public void onTimeout(Runnable callback) {
-
+            System.out.println("T");
         }
 
         @Override
