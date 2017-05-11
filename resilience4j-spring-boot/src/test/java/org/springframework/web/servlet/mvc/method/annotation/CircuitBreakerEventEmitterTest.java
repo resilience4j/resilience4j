@@ -59,7 +59,7 @@ public class CircuitBreakerEventEmitterTest {
         exec(ignore, 1);
         exec(fail, 3);
         sseEmitter.complete();
-        then(handler.isCompleted).isTrue();
+        assert handler.isCompleted;
 
         exec(run, 2);
 
@@ -78,8 +78,8 @@ public class CircuitBreakerEventEmitterTest {
     }
 
     private static class TestHandler implements ResponseBodyEmitter.Handler {
-        List<CircuitBreakerEventDTO> events = new ArrayList<>();
-        boolean isCompleted = false;
+        public List<CircuitBreakerEventDTO> events = new ArrayList<>();
+        public boolean isCompleted = false;
         private Runnable callback;
 
         @Override public void send(Object data, MediaType mediaType) throws IOException {
