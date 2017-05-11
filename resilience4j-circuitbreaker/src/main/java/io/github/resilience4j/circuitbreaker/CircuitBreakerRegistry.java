@@ -20,7 +20,7 @@ package io.github.resilience4j.circuitbreaker;
 
 
 import io.github.resilience4j.circuitbreaker.internal.InMemoryCircuitBreakerRegistry;
-import javaslang.collection.Seq;
+import io.vavr.collection.Seq;
 
 import java.util.function.Supplier;
 

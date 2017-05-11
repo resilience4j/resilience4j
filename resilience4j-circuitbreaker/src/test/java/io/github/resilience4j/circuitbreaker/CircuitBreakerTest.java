@@ -18,18 +18,15 @@
  */
 package io.github.resilience4j.circuitbreaker;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-
 import io.github.resilience4j.test.HelloWorldService;
-import javaslang.API;
-import javaslang.Predicates;
-import javaslang.control.Try;
+import io.vavr.*;
+import io.vavr.control.Try;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.BDDMockito;
 import org.mockito.Mockito;
 
+import javax.xml.ws.WebServiceException;
 import java.io.IOException;
 import java.net.SocketTimeoutException;
 import java.time.Duration;
@@ -40,7 +37,12 @@ import java.util.concurrent.ExecutionException;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
-import javax.xml.ws.WebServiceException;
+
+import static io.vavr.API.*;
+import static io.vavr.API.$;
+import static io.vavr.Predicates.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 public class CircuitBreakerTest {
 
@@ -128,10 +130,10 @@ public class CircuitBreakerTest {
         BDDMockito.given(helloWorldService.returnHelloWorldWithException()).willReturn("Hello world");
 
         //When
-        Try.CheckedSupplier<String> checkedSupplier = CircuitBreaker.decorateCheckedSupplier(circuitBreaker, helloWorldService::returnHelloWorldWithException);
+        CheckedFunction0<String> checkedSupplier = CircuitBreaker.decorateCheckedSupplier(circuitBreaker, helloWorldService::returnHelloWorldWithException);
 
         //Then
-        assertThat(checkedSupplier.get()).isEqualTo("Hello world");
+        assertThat(checkedSupplier.apply()).isEqualTo("Hello world");
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
         assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(0);
         assertThat(metrics.getNumberOfSuccessfulCalls()).isEqualTo(1);
@@ -151,7 +153,7 @@ public class CircuitBreakerTest {
         BDDMockito.given(helloWorldService.returnHelloWorldWithException()).willThrow(new RuntimeException("BAM!"));
 
         //When
-        Try.CheckedSupplier<String> checkedSupplier = CircuitBreaker.decorateCheckedSupplier(circuitBreaker, helloWorldService::returnHelloWorldWithException);
+        CheckedFunction0<String> checkedSupplier = CircuitBreaker.decorateCheckedSupplier(circuitBreaker, helloWorldService::returnHelloWorldWithException);
 
         //Then
         Try<String> result = Try.of(checkedSupplier);
@@ -240,7 +242,7 @@ public class CircuitBreakerTest {
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(0);
 
         //When
-        Try.CheckedRunnable checkedRunnable = CircuitBreaker.decorateCheckedRunnable(circuitBreaker, helloWorldService::sayHelloWorldWithException);
+        CheckedRunnable checkedRunnable = CircuitBreaker.decorateCheckedRunnable(circuitBreaker, helloWorldService::sayHelloWorldWithException);
 
         //Then
         checkedRunnable.run();
@@ -260,7 +262,7 @@ public class CircuitBreakerTest {
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(0);
 
         //When
-        Try.CheckedRunnable checkedRunnable = CircuitBreaker.decorateCheckedRunnable(circuitBreaker, () -> {
+        CheckedRunnable checkedRunnable = CircuitBreaker.decorateCheckedRunnable(circuitBreaker, () -> {
             throw new RuntimeException("BAM!");
         });
 
@@ -386,7 +388,7 @@ public class CircuitBreakerTest {
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(0);
 
         //When
-        Try.CheckedConsumer<String> checkedConsumer = CircuitBreaker.decorateCheckedConsumer(circuitBreaker, helloWorldService::sayHelloWorldWithNameWithException);
+        CheckedConsumer<String> checkedConsumer = CircuitBreaker.decorateCheckedConsumer(circuitBreaker, helloWorldService::sayHelloWorldWithNameWithException);
 
         //Then
         checkedConsumer.accept("Tom");
@@ -406,7 +408,7 @@ public class CircuitBreakerTest {
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(0);
 
         //When
-        Try.CheckedConsumer<String> checkedConsumer = CircuitBreaker.decorateCheckedConsumer(circuitBreaker, (value) -> {
+        CheckedConsumer<String> checkedConsumer = CircuitBreaker.decorateCheckedConsumer(circuitBreaker, (value) -> {
             throw new RuntimeException("BAM!");
         });
 
@@ -474,7 +476,7 @@ public class CircuitBreakerTest {
         BDDMockito.given(helloWorldService.returnHelloWorldWithNameWithException("Tom")).willReturn("Hello world Tom");
 
         //When
-        Try.CheckedFunction<String, String> function = CircuitBreaker.decorateCheckedFunction(circuitBreaker, helloWorldService::returnHelloWorldWithNameWithException);
+        CheckedFunction1<String, String> function = CircuitBreaker.decorateCheckedFunction(circuitBreaker, helloWorldService::returnHelloWorldWithNameWithException);
 
         //Then
         assertThat(function.apply("Tom")).isEqualTo("Hello world Tom");
@@ -497,7 +499,7 @@ public class CircuitBreakerTest {
         BDDMockito.given(helloWorldService.returnHelloWorldWithNameWithException("Tom")).willThrow(new RuntimeException("BAM!"));
 
         //When
-        Try.CheckedFunction<String, String> function  = CircuitBreaker.decorateCheckedFunction(circuitBreaker, helloWorldService::returnHelloWorldWithNameWithException);
+        CheckedFunction1<String, String> function  = CircuitBreaker.decorateCheckedFunction(circuitBreaker, helloWorldService::returnHelloWorldWithNameWithException);
 
         //Then
         Try<String> result = Try.of(() -> function.apply("Tom"));
@@ -530,7 +532,7 @@ public class CircuitBreakerTest {
         assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(2);
 
         //When
-        Try.CheckedRunnable checkedRunnable = CircuitBreaker.decorateCheckedRunnable(circuitBreaker, () -> {
+        CheckedRunnable checkedRunnable = CircuitBreaker.decorateCheckedRunnable(circuitBreaker, () -> {
             throw new RuntimeException("BAM!");
         });
         Try result = Try.run(checkedRunnable);
@@ -550,7 +552,7 @@ public class CircuitBreakerTest {
         assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(0);
 
         //When
-        Try.CheckedRunnable checkedRunnable = CircuitBreaker.decorateCheckedRunnable(circuitBreaker, () -> {
+        CheckedRunnable checkedRunnable = CircuitBreaker.decorateCheckedRunnable(circuitBreaker, () -> {
             throw new RuntimeException("BAM!");
         });
         Try result = Try.run(checkedRunnable);
@@ -570,9 +572,9 @@ public class CircuitBreakerTest {
                 .ringBufferSizeInClosedState(2)
                 .ringBufferSizeInHalfOpenState(2)
                 .waitDurationInOpenState(Duration.ofMillis(1000))
-                .recordFailure(throwable -> API.Match(throwable).of(
-                        API.Case(Predicates.instanceOf(WebServiceException.class), true),
-                        API.Case(API.$(), false)))
+                .recordFailure(throwable -> Match(throwable).of(
+                        Case($(instanceOf(WebServiceException.class)), true),
+                        Case($(), false)))
                 .build();
         CircuitBreaker circuitBreaker = CircuitBreaker.of("testName", circuitBreakerConfig);
 
@@ -582,7 +584,7 @@ public class CircuitBreakerTest {
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
 
         //When
-        Try.CheckedRunnable checkedRunnable = CircuitBreaker.decorateCheckedRunnable(circuitBreaker, () -> {
+        CheckedRunnable checkedRunnable = CircuitBreaker.decorateCheckedRunnable(circuitBreaker, () -> {
             throw new SocketTimeoutException("BAM!");
         });
         Try result = Try.run(checkedRunnable);
@@ -606,7 +608,7 @@ public class CircuitBreakerTest {
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testName");
 
         // When I decorate my function and invoke the decorated function
-        Try.CheckedSupplier<String> checkedSupplier = CircuitBreaker.decorateCheckedSupplier(circuitBreaker, () -> {
+        CheckedFunction0<String> checkedSupplier = CircuitBreaker.decorateCheckedSupplier(circuitBreaker, () -> {
             throw new RuntimeException("BAM!");
         });
         Try<String> result = Try.of(checkedSupplier)
@@ -626,7 +628,7 @@ public class CircuitBreakerTest {
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testName");
 
         // When I decorate my function
-        Try.CheckedSupplier<String> decoratedSupplier = CircuitBreaker
+        CheckedFunction0<String> decoratedSupplier = CircuitBreaker
                 .decorateCheckedSupplier(circuitBreaker, () -> "This can be any method which returns: 'Hello");
 
         // and chain an other function with map
@@ -806,10 +808,10 @@ public class CircuitBreakerTest {
         CircuitBreaker anotherCircuitBreaker = CircuitBreaker.ofDefaults("anotherTestName");
 
         // When I create a Supplier and a Function which are decorated by different CircuitBreakers
-        Try.CheckedSupplier<String> decoratedSupplier = CircuitBreaker
+        CheckedFunction0<String> decoratedSupplier = CircuitBreaker
                 .decorateCheckedSupplier(circuitBreaker, () -> "Hello");
 
-        Try.CheckedFunction<String, String> decoratedFunction = CircuitBreaker
+        CheckedFunction1<String, String> decoratedFunction = CircuitBreaker
                 .decorateCheckedFunction(anotherCircuitBreaker, (input) -> input + " world");
 
         // and I chain a function with map

@@ -21,7 +21,7 @@ package io.github.resilience4j.circularbuffer;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import javaslang.collection.List;
+import io.vavr.collection.List;
 import org.junit.Test;
 
 import java.io.IOException;

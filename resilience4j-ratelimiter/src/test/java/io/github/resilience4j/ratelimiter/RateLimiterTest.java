@@ -18,6 +18,10 @@
  */
 package io.github.resilience4j.ratelimiter;
 
+import io.vavr.CheckedFunction0;
+import io.vavr.CheckedFunction1;
+import io.vavr.CheckedRunnable;
+import io.vavr.control.Try;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -29,20 +33,15 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-import javaslang.control.Try;
-
 import static com.jayway.awaitility.Awaitility.await;
-import static javaslang.API.Case;
-import static javaslang.API.Match;
-import static javaslang.Predicates.instanceOf;
+import static io.vavr.API.$;
+import static io.vavr.API.Case;
+import static io.vavr.API.Match;
+import static io.vavr.Predicates.instanceOf;
 import static org.assertj.core.api.BDDAssertions.then;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 
 @SuppressWarnings("unchecked")
@@ -69,8 +68,8 @@ public class RateLimiterTest {
 
     @Test
     public void decorateCheckedSupplier() throws Throwable {
-        Try.CheckedSupplier supplier = mock(Try.CheckedSupplier.class);
-        Try.CheckedSupplier decorated = RateLimiter.decorateCheckedSupplier(limit, supplier);
+        CheckedFunction0 supplier = mock(CheckedFunction0.class);
+        CheckedFunction0 decorated = RateLimiter.decorateCheckedSupplier(limit, supplier);
 
         when(limit.getPermission(config.getTimeoutDuration()))
             .thenReturn(false);
@@ -78,19 +77,19 @@ public class RateLimiterTest {
         Try decoratedSupplierResult = Try.of(decorated);
         then(decoratedSupplierResult.isFailure()).isTrue();
         then(decoratedSupplierResult.getCause()).isInstanceOf(RequestNotPermitted.class);
-        verify(supplier, never()).get();
+        verify(supplier, never()).apply();
 
         when(limit.getPermission(config.getTimeoutDuration()))
             .thenReturn(true);
         Try secondSupplierResult = Try.of(decorated);
         then(secondSupplierResult.isSuccess()).isTrue();
-        verify(supplier, times(1)).get();
+        verify(supplier, times(1)).apply();
     }
 
     @Test
     public void decorateCheckedRunnable() throws Throwable {
-        Try.CheckedRunnable runnable = mock(Try.CheckedRunnable.class);
-        Try.CheckedRunnable decorated = RateLimiter.decorateCheckedRunnable(limit, runnable);
+        CheckedRunnable runnable = mock(CheckedRunnable.class);
+        CheckedRunnable decorated = RateLimiter.decorateCheckedRunnable(limit, runnable);
 
         when(limit.getPermission(config.getTimeoutDuration()))
             .thenReturn(false);
@@ -109,8 +108,8 @@ public class RateLimiterTest {
 
     @Test
     public void decorateCheckedFunction() throws Throwable {
-        Try.CheckedFunction<Integer, String> function = mock(Try.CheckedFunction.class);
-        Try.CheckedFunction<Integer, String> decorated = RateLimiter.decorateCheckedFunction(limit, function);
+        CheckedFunction1<Integer, String> function = mock(CheckedFunction1.class);
+        CheckedFunction1<Integer, String> decorated = RateLimiter.decorateCheckedFunction(limit, function);
 
         when(limit.getPermission(config.getTimeoutDuration()))
             .thenReturn(false);
@@ -238,7 +237,7 @@ public class RateLimiterTest {
             Throwable cause = Try.run(() -> RateLimiter.waitForPermission(limit))
                 .getCause();
             Boolean interrupted = Match(cause).of(
-                Case(instanceOf(IllegalStateException.class), true)
+                Case($(instanceOf(IllegalStateException.class)), true)
             );
             wasInterrupted.set(interrupted);
         });

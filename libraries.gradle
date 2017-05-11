@@ -1,8 +1,8 @@
 // Allows centralized definition of the version of artifacts to
 // use.  In that respect it serves a role similar to <dependencyManagement> in Maven
 ext {
-    javaslangVersion = '2.0.5'
-    rxJavaVersion = '2.0.6'
+    vavrVersion = '0.9.0'
+    rxJavaVersion = '2.1.0'
     junitVersion = '4.12'
     slf4jVersion = '1.7.24'
     assertjVersion = '3.6.2'
@@ -21,7 +21,7 @@ ext {
 
     libraries = [
             // compile
-            javaslang:  "io.javaslang:javaslang:${javaslangVersion}",
+            vavr:  "io.vavr:vavr:${vavrVersion}",
             slf4j: "org.slf4j:slf4j-api:${slf4jVersion}",
             rxjava2: "io.reactivex.rxjava2:rxjava:${rxJavaVersion}",
             jcache: "javax.cache:cache-api:${jcacheVersion}",

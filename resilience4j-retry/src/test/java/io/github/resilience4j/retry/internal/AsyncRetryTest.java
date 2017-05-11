@@ -1,25 +1,18 @@
 package io.github.resilience4j.retry.internal;
 
+import io.github.resilience4j.retry.AsyncRetry;
+import io.github.resilience4j.retry.RetryConfig;
+import io.github.resilience4j.test.AsyncHelloWorldService;
+import io.vavr.control.Try;
 import org.assertj.core.api.Assertions;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.BDDMockito;
 import org.mockito.Mockito;
 
-import java.util.concurrent.CompletionStage;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
-import java.util.function.Supplier;
-
 import javax.xml.ws.WebServiceException;
-
-import io.github.resilience4j.retry.AsyncRetry;
-import io.github.resilience4j.retry.RetryConfig;
-import io.github.resilience4j.test.AsyncHelloWorldService;
-import javaslang.control.Try;
+import java.util.concurrent.*;
+import java.util.function.Supplier;
 
 import static java.util.concurrent.CompletableFuture.completedFuture;
 import static java.util.concurrent.CompletableFuture.supplyAsync;

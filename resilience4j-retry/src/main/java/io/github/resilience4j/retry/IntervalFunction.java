@@ -1,6 +1,6 @@
 package io.github.resilience4j.retry;
 
-import javaslang.collection.Stream;
+import io.vavr.collection.Stream;
 
 import java.time.Duration;
 import java.util.function.Function;

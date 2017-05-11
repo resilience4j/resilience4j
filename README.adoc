@@ -74,7 +74,7 @@ CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("backendName");
 Retry retry = Retry.ofDefaults("backendName");
 
 // Decorate your call to BackendService.doSomething() with a CircuitBreaker
-Try.CheckedSupplier<String> decoratedSupplier = CircuitBreaker
+CheckedFunction1<String> decoratedSupplier = CircuitBreaker
     .decorateCheckedSupplier(circuitBreaker, backendService::doSomething);
 
 // Decorate your call with automatic retry
@@ -120,7 +120,7 @@ RateLimiterConfig config = RateLimiterConfig.custom()
 RateLimiter rateLimiter = RateLimiter.of("backendName", config);
 
 // Decorate your call to BackendService.doSomething()
-Try.CheckedSupplier<String> restrictedSupplier = RateLimiter
+CheckedFunction1<String> restrictedSupplier = RateLimiter
     .decorateCheckedSupplier(rateLimiter, backendService::doSomething);
 
 // First call is successful
@@ -147,7 +147,7 @@ javax.cache.Cache<String, String> cacheInstance = Caching.getCache("cacheName", 
 Cache<String, String> cacheContext = Cache.of(cacheInstance);
 
 // Decorate your call to BackendService.doSomething()
-Try.CheckedFunction<String, String> cachedFunction = Cache.decorateCallable(cacheContext, backendService::doSomething);
+CheckedFunction1<String, String> cachedFunction = Cache.decorateCallable(cacheContext, backendService::doSomething);
 String value = cachedFunction.apply("testKey");
 ----
 

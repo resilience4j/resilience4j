@@ -18,14 +18,16 @@
  */
 package io.github.resilience4j.retry;
 
-import java.util.concurrent.Callable;
-import java.util.function.Function;
-import java.util.function.Supplier;
-
 import io.github.resilience4j.retry.event.RetryEvent;
 import io.github.resilience4j.retry.internal.RetryContext;
 import io.reactivex.Flowable;
-import javaslang.control.Try;
+import io.vavr.CheckedFunction0;
+import io.vavr.CheckedFunction1;
+import io.vavr.CheckedRunnable;
+
+import java.util.concurrent.Callable;
+import java.util.function.Function;
+import java.util.function.Supplier;
 
 public interface Retry {
 
@@ -139,10 +141,10 @@ public interface Retry {
      *
      * @return a retryable function
      */
-    static <T> Try.CheckedSupplier<T> decorateCheckedSupplier(Retry retryContext, Try.CheckedSupplier<T> supplier){
+    static <T> CheckedFunction0<T> decorateCheckedSupplier(Retry retryContext, CheckedFunction0<T> supplier){
         return () -> {
             do try {
-                T result = supplier.get();
+                T result = supplier.apply();
                 retryContext.onSuccess();
                 return result;
             } catch (Exception exception) {
@@ -159,7 +161,7 @@ public interface Retry {
      *
      * @return a retryable runnable
      */
-    static Try.CheckedRunnable decorateCheckedRunnable(Retry retryContext, Try.CheckedRunnable runnable){
+    static CheckedRunnable decorateCheckedRunnable(Retry retryContext, CheckedRunnable runnable){
         return () -> {
             do try {
                 runnable.run();
@@ -181,7 +183,7 @@ public interface Retry {
      *
      * @return a retryable function
      */
-    static <T, R> Try.CheckedFunction<T, R> decorateCheckedFunction(Retry retryContext, Try.CheckedFunction<T, R> function){
+    static <T, R> CheckedFunction1<T, R> decorateCheckedFunction(Retry retryContext, CheckedFunction1<T, R> function){
         return (T t) -> {
             do try {
                 R result = function.apply(t);

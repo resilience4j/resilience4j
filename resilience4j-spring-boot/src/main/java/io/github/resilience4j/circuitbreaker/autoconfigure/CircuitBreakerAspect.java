@@ -15,6 +15,8 @@
  */
 package io.github.resilience4j.circuitbreaker.autoconfigure;
 
+import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -24,9 +26,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Method;
-
-import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
-import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 
 /**
  * This Spring AOP aspect intercepts all methods which are annotated with a {@link CircuitBreaker} annotation.
@@ -100,7 +99,7 @@ public class CircuitBreakerAspect {
 
     private Object handleJoinPoint(ProceedingJoinPoint proceedingJoinPoint, io.github.resilience4j.circuitbreaker.CircuitBreaker circuitBreaker, String methodName) throws Throwable {
         try {
-            return io.github.resilience4j.circuitbreaker.CircuitBreaker.decorateCheckedSupplier(circuitBreaker, proceedingJoinPoint::proceed).get();
+            return io.github.resilience4j.circuitbreaker.CircuitBreaker.decorateCheckedSupplier(circuitBreaker, proceedingJoinPoint::proceed).apply();
         } catch (Exception exception) {
             if (logger.isDebugEnabled()) {
                 logger.debug("Invocation of method '" + methodName + "' failed!", exception);

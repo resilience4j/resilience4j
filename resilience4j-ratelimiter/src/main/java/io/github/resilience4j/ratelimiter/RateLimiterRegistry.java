@@ -19,7 +19,7 @@
 package io.github.resilience4j.ratelimiter;
 
 import io.github.resilience4j.ratelimiter.internal.InMemoryRateLimiterRegistry;
-import javaslang.collection.Seq;
+import io.vavr.collection.Seq;
 
 import java.util.function.Supplier;
 

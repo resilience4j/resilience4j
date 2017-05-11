@@ -5,7 +5,9 @@ import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.retry.AsyncRetry;
 import io.github.resilience4j.retry.Retry;
-import javaslang.control.Try;
+import io.vavr.CheckedFunction0;
+import io.vavr.CheckedFunction1;
+import io.vavr.CheckedRunnable;
 
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ScheduledExecutorService;
@@ -31,15 +33,15 @@ public interface Decorators{
         return new DecorateRunnable(runnable);
     }
 
-    static <T> DecorateCheckedSupplier<T> ofCheckedSupplier(Try.CheckedSupplier<T> supplier){
+    static <T> DecorateCheckedSupplier<T> ofCheckedSupplier(CheckedFunction0<T> supplier){
         return new DecorateCheckedSupplier<>(supplier);
     }
 
-    static <T, R> DecorateCheckedFunction<T, R> ofCheckedFunction(Try.CheckedFunction<T, R> function){
+    static <T, R> DecorateCheckedFunction<T, R> ofCheckedFunction(CheckedFunction1<T, R> function){
         return new DecorateCheckedFunction<>(function);
     }
 
-    static DecorateCheckedRunnable ofCheckedRunnable(Try.CheckedRunnable supplier){
+    static DecorateCheckedRunnable ofCheckedRunnable(CheckedRunnable supplier){
         return new DecorateCheckedRunnable(supplier);
     }
 
@@ -150,9 +152,9 @@ public interface Decorators{
     }
 
     class DecorateCheckedSupplier<T>{
-        private Try.CheckedSupplier<T> supplier;
+        private CheckedFunction0<T> supplier;
 
-        private DecorateCheckedSupplier(Try.CheckedSupplier<T>supplier) {
+        private DecorateCheckedSupplier(CheckedFunction0<T>supplier) {
             this.supplier = supplier;
         }
 
@@ -176,19 +178,19 @@ public interface Decorators{
             return Decorators.ofCheckedFunction(Cache.decorateCheckedSupplier(cache, supplier));
         }
 
-        public Try.CheckedSupplier<T> decorate() {
+        public CheckedFunction0<T> decorate() {
             return supplier;
         }
 
         public T get() throws Throwable {
-            return supplier.get();
+            return supplier.apply();
         }
     }
 
     class DecorateCheckedFunction<T, R>{
-        private Try.CheckedFunction<T, R> function;
+        private CheckedFunction1<T, R> function;
 
-        private DecorateCheckedFunction(Try.CheckedFunction<T, R> function) {
+        private DecorateCheckedFunction(CheckedFunction1<T, R> function) {
             this.function = function;
         }
 
@@ -207,7 +209,7 @@ public interface Decorators{
             return this;
         }
 
-        public Try.CheckedFunction<T, R> decorate() {
+        public CheckedFunction1<T, R> decorate() {
             return function;
         }
 
@@ -217,9 +219,9 @@ public interface Decorators{
     }
 
     class DecorateCheckedRunnable {
-        private Try.CheckedRunnable runnable;
+        private CheckedRunnable runnable;
 
-        private DecorateCheckedRunnable(Try.CheckedRunnable runnable) {
+        private DecorateCheckedRunnable(CheckedRunnable runnable) {
             this.runnable = runnable;
         }
 
@@ -238,7 +240,7 @@ public interface Decorators{
             return this;
         }
 
-        public Try.CheckedRunnable decorate() {
+        public CheckedRunnable decorate() {
             return runnable;
         }
 

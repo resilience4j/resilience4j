@@ -19,7 +19,7 @@
 package io.github.resilience4j.consumer;
 
 import io.reactivex.functions.Consumer;
-import javaslang.collection.List;
+import io.vavr.collection.List;
 
 public interface EventConsumer<T> extends Consumer<T> {
 

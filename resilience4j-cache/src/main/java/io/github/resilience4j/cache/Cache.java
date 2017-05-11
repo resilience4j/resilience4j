@@ -18,15 +18,16 @@
  */
 package io.github.resilience4j.cache;
 
+import io.github.resilience4j.cache.event.CacheEvent;
+import io.github.resilience4j.cache.internal.CacheContext;
+import io.reactivex.Flowable;
+import io.vavr.CheckedFunction0;
+import io.vavr.CheckedFunction1;
+
 import java.util.Objects;
 import java.util.concurrent.Callable;
 import java.util.function.Function;
 import java.util.function.Supplier;
-
-import io.github.resilience4j.cache.event.CacheEvent;
-import io.github.resilience4j.cache.internal.CacheContext;
-import io.reactivex.Flowable;
-import javaslang.control.Try;
 
 public interface Cache<K, V>  {
 
@@ -45,7 +46,7 @@ public interface Cache<K, V>  {
      *
      * @return cached value
      */
-    V computeIfAbsent(K key, Try.CheckedSupplier<V> supplier);
+    V computeIfAbsent(K key, CheckedFunction0<V> supplier);
 
     /**
      * Returns a reactive stream of CacheEvents.
@@ -77,7 +78,7 @@ public interface Cache<K, V>  {
      * @param <R> the type of value
      * @return a supplier which is secured by a CircuitBreaker.
      */
-    static <K, R> Try.CheckedFunction<K, R> decorateCheckedSupplier(Cache<K, R> cache, Try.CheckedSupplier<R> supplier){
+    static <K, R> CheckedFunction1<K, R> decorateCheckedSupplier(Cache<K, R> cache, CheckedFunction0<R> supplier){
         return (K cacheKey) -> cache.computeIfAbsent(cacheKey, supplier);
     }
 
@@ -105,7 +106,7 @@ public interface Cache<K, V>  {
      * @param <R> the type of value
      * @return a supplier which is secured by a CircuitBreaker.
      */
-    static <K, R> Try.CheckedFunction<K, R> decorateCallable(Cache<K, R> cache, Callable<R> callable){
+    static <K, R> CheckedFunction1<K, R> decorateCallable(Cache<K, R> cache, Callable<R> callable){
         return (K cacheKey) -> cache.computeIfAbsent(cacheKey, callable::call);
     }
 }
