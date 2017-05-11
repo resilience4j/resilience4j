@@ -1,6 +1,6 @@
 === Cache
 
-==== Cache function results
+==== Set-Up
 
 The following example shows how to decorate a lambda expression with a Cache abstraction. The cache abstraction puts the result of the lambda expression in a cache instance (JCache) and
 tries to retrieve a previous cached result from the cache before it invokes the lambda expression.
@@ -19,7 +19,7 @@ Try.CheckedFunction<String, String> cachedFunction = Decorators.ofCheckedSupplie
 String value = Try.of(() -> cachedFunction.apply("cacheKey")).get();
 ----
 
-==== Consume emitted CacheEvents
+==== Example
 
 The CacheContext emits a stream of CacheEvents to any Observer/Consumer who subscribes. An event can be a cache hit, a cache miss or an error. You can use the `CircularEventConsumer` to store events in a circular buffer with a fixed capacity.
 

@@ -1,9 +1,10 @@
 === CircuitBreaker
 
-==== Create a CircuitBreaker
+==== Introduction
 
 This library comes with an in-memory `CircuitBreakerRegistry` based on a `ConcurrentHashMap` which provides thread safety and atomicity guarantees. You can use the CircuitBreakerRegistry to manage (create and retrieve) CircuitBreaker instances. You can create a CircuitBreakerRegistry with a default global `CircuitBreakerConfig` for all of your CircuitBreaker instances as follows.
 
+==== Set-Up
 [source,java,indent=0]
 ----
 CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
@@ -47,7 +48,7 @@ CircuitBreaker defauktCircuitBreaker = CircuitBreaker.ofDefaults("testName");
 CircuitBreaker customCircuitBreaker = CircuitBreaker.of("testName", circuitBreakerConfig);
 ----
 
-==== Use a CircuitBreaker
+==== Examples
 
 You can decorate any `Supplier / Runnable / Function` or `CheckedSupplier / CheckedRunnable / CheckedFunction` function with `CircuitBreaker.decorateCheckedSupplier()`, `CircuitBreaker.decorateCheckedRunnable()` or `CircuitBreaker.decorateCheckedFunction()`.
 You can invoke the decorated function with `Try.of(...)` or `Try.run(...)` from https://github.com/javaslang/javaslang[Javaslang]. This allows to chain further functions with `map`, `flatMap`, `filter`, `recover` or `andThen`. The chained functions are only invoked, if the CircuitBreaker is CLOSED or HALF_OPEN.
@@ -65,7 +66,7 @@ You can also chain up functions which are decorated by different CircuitBreakers
 include::../../../../../resilience4j-circuitbreaker/src/test/java/io/github/resilience4j/circuitbreaker/CircuitBreakerTest.java[tags=shouldChainDecoratedFunctions]
 ----
 
-==== CircuitBreaker and RxJava
+===== CircuitBreaker and RxJava
 
 The following example shows how to decorate an Observable by using the custom RxJava operator.
 
@@ -77,7 +78,7 @@ Observable.fromCallable(backendService::doSomething)
 ----
 
 
-==== CircuitBreaker and CompletableFuture
+===== CircuitBreaker and CompletableFuture
 
 You can also invoke a decorated function asynchronously by using a `CompletableFuture` and chain further functions.
 
@@ -86,7 +87,7 @@ You can also invoke a decorated function asynchronously by using a `CompletableF
 include::../../../../../resilience4j-circuitbreaker/src/test/java/io/github/resilience4j/circuitbreaker/CircuitBreakerTest.java[tags=shouldInvokeAsyncApply]
 ----
 
-==== OPEN CircuitBreaker example
+===== OPEN CircuitBreaker example
 
 In this example `map` is not invoked, because the CircuitBreaker is OPEN. The call to `Try.of` returns a `Failure<Throwable>` Monad so that the chained function is not invoked.
 
@@ -95,7 +96,7 @@ In this example `map` is not invoked, because the CircuitBreaker is OPEN. The ca
 include::../../../../../resilience4j-circuitbreaker/src/test/java/io/github/resilience4j/circuitbreaker/CircuitBreakerTest.java[tags=shouldThrowCircuitBreakerOpenException]
 ----
 
-==== Recover from an exception
+===== Recover from an exception
 
 If you want to recover from any exception, you can chain the method `Try.recover()`. The recovery method is only invoked, if `Try.of()` returns a `Failure<Throwable>` Monad.
 
@@ -104,7 +105,7 @@ If you want to recover from any exception, you can chain the method `Try.recover
 include::../../../../../resilience4j-circuitbreaker/src/test/java/io/github/resilience4j/circuitbreaker/CircuitBreakerTest.java[tags=shouldInvokeRecoverFunction]
 ----
 
-==== Customize the exception handler
+===== Customize the exception handler
 The default exception handler counts all type of exceptions as failures and triggers the CircuitBreaker. If you want to use a custom exception handler, you have to implement the functional interface `Predicate` which has a method `test`. The Predicate must return true if the exception should count as a failure, otherwise it must return false.
 The following example shows how to ignore an `IOException`, but all other exception types still count as failures.
 
@@ -113,7 +114,7 @@ The following example shows how to ignore an `IOException`, but all other except
 include::../../../../../resilience4j-circuitbreaker/src/test/java/io/github/resilience4j/circuitbreaker/CircuitBreakerTest.java[tags=shouldNotRecordIOExceptionAsAFailure]
 ----
 
-==== Consume emitted CircuitBreakerEvents
+===== Consume emitted CircuitBreakerEvents
 
 The CircuitBreaker emits a stream of CircuitBreakerEvents to any Observer/Consumer who subscribes. An event can be a state transition, a successful call, a recorded error or an ignored error. All events contains additional information like event creation time and processing duration of the call. If you want to consume events, you have to subscribe to the event stream. You can use the `CircularEventConsumer` to store events in a circular buffer with a fixed capacity. You can use RxJava to filter certain events.
 The advantage of an event stream is that you can use RxJava's `observeOn` operator to specify a different Scheduler that the CircuitBreaker will use to send notifications to its observers/consumers.
@@ -130,7 +131,7 @@ circuitBreaker.getEventStream()
 List<CircuitBreakerOnErrorEvent> bufferedEvents = circularEventConsumer.getBufferedEvents();
 ----
 
-==== Monitor CircuitBreaker metrics
+==== Monitoring
 
 The CircuitBreaker provides an interface to monitor the current metrics.
 
