@@ -18,11 +18,13 @@
  */
 package io.github.resilience4j.decorators;
 
+import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.cache.Cache;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RateLimiterConfig;
 import io.github.resilience4j.ratelimiter.RequestNotPermitted;
+import io.github.resilience4j.retry.AsyncRetry;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.test.HelloWorldService;
 import io.vavr.CheckedFunction0;
@@ -35,6 +37,10 @@ import org.mockito.BDDMockito;
 
 import java.io.IOException;
 import java.time.Duration;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executors;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -62,6 +68,7 @@ public class DecoratorsTest {
             .withCircuitBreaker(circuitBreaker)
             .withRetry(Retry.ofDefaults("id"))
             .withRateLimiter(RateLimiter.ofDefaults("testName"))
+            .withBulkhead(Bulkhead.ofDefaults("testName"))
             .decorate();
 
         String result = decoratedSupplier.get();
@@ -84,6 +91,7 @@ public class DecoratorsTest {
             .withCircuitBreaker(circuitBreaker)
             .withRetry(Retry.ofDefaults("id"))
             .withRateLimiter(RateLimiter.ofDefaults("testName"))
+            .withBulkhead(Bulkhead.ofDefaults("testName"))
             .decorate();
 
         String result = Try.of(decoratedSupplier).get();
@@ -104,6 +112,7 @@ public class DecoratorsTest {
             .withCircuitBreaker(circuitBreaker)
             .withRetry(Retry.ofDefaults("id"))
             .withRateLimiter(RateLimiter.ofDefaults("testName"))
+            .withBulkhead(Bulkhead.ofDefaults("testName"))
             .decorate();
 
         decoratedRunnable.run();
@@ -124,6 +133,7 @@ public class DecoratorsTest {
             .withCircuitBreaker(circuitBreaker)
             .withRetry(Retry.ofDefaults("id"))
             .withRateLimiter(RateLimiter.ofDefaults("testName"))
+            .withBulkhead(Bulkhead.ofDefaults("testName"))
             .decorate();
 
         Try.run(decoratedRunnable);
@@ -133,6 +143,53 @@ public class DecoratorsTest {
         assertThat(metrics.getNumberOfSuccessfulCalls()).isEqualTo(1);
         // Then the helloWorldService should be invoked 1 time
         BDDMockito.then(helloWorldService).should(times(1)).sayHelloWorldWithException();
+    }
+
+
+    @Test
+    public void testDecorateCompletionStage() throws ExecutionException, InterruptedException {
+        // Given the HelloWorldService returns Hello world
+        given(helloWorldService.returnHelloWorld()).willReturn("Hello world");
+        CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("helloBackend");
+
+        Supplier<CompletionStage<String>> completionStageSupplier =
+                () -> CompletableFuture.supplyAsync(helloWorldService::returnHelloWorld);
+
+        CompletionStage<String> completionStage = Decorators.ofCompletionStage(completionStageSupplier)
+                .withCircuitBreaker(circuitBreaker)
+                .withRetry(AsyncRetry.ofDefaults("id"), Executors.newSingleThreadScheduledExecutor())
+                .withBulkhead(Bulkhead.ofDefaults("testName"))
+                .get();
+
+        String value = completionStage.toCompletableFuture().get();
+        assertThat(value).isEqualTo("Hello world");
+
+        CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
+        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
+        assertThat(metrics.getNumberOfSuccessfulCalls()).isEqualTo(1);
+
+        // Then the helloWorldService should be invoked 1 time
+        BDDMockito.then(helloWorldService).should(times(1)).returnHelloWorld();
+    }
+
+    @Test
+    public void testExecuteConsumer() throws ExecutionException, InterruptedException {
+        // Given the HelloWorldService returns Hello world
+        CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("helloBackend");
+
+
+        Decorators.ofConsumer((String input) -> helloWorldService.sayHelloWorldWithName(input))
+                .withCircuitBreaker(circuitBreaker)
+                .withBulkhead(Bulkhead.ofDefaults("testName"))
+                .withRateLimiter(RateLimiter.ofDefaults("testName"))
+                .accept("test");
+
+        CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
+        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
+        assertThat(metrics.getNumberOfSuccessfulCalls()).isEqualTo(1);
+
+        // Then the helloWorldService should be invoked 1 time
+        BDDMockito.then(helloWorldService).should(times(1)).sayHelloWorldWithName("test");
     }
 
     @Test
@@ -145,6 +202,7 @@ public class DecoratorsTest {
             .withCircuitBreaker(circuitBreaker)
             .withRetry(Retry.ofDefaults("id"))
             .withRateLimiter(RateLimiter.ofDefaults("testName"))
+            .withBulkhead(Bulkhead.ofDefaults("testName"))
             .decorate();
 
         String result = decoratedFunction.apply("Name");
@@ -165,6 +223,7 @@ public class DecoratorsTest {
             .withCircuitBreaker(circuitBreaker)
             .withRetry(Retry.ofDefaults("id"))
             .withRateLimiter(RateLimiter.ofDefaults("testName"))
+            .withBulkhead(Bulkhead.ofDefaults("testName"))
             .decorate();
 
         String result = Try.of(() -> decoratedFunction.apply("Name")).get();
@@ -185,6 +244,7 @@ public class DecoratorsTest {
         Supplier<String> decoratedSupplier = Decorators.ofSupplier(() -> helloWorldService.returnHelloWorld())
             .withCircuitBreaker(circuitBreaker)
             .withRetry(Retry.ofDefaults("id"))
+            .withBulkhead(Bulkhead.ofDefaults("testName"))
             .decorate();
 
         Try.of(decoratedSupplier::get);
