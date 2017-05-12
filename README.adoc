@@ -218,8 +218,13 @@ The Timer counts the number of total calls, successful calls, failed calls and m
 // Create a Timer
 Timer timer = Timer.of("backend");
 Supplier<String> supplier = Timer.decorateSupplier(timer, backendService::doSomething);
+----
 
-// Get Timer metrics
+The Timer provides an interface to monitor metrics.
+
+[source,java]
+----
+// Retrieve Timer metrics
 Timer.Metrics metrics = timer.getMetrics();
 // Returns the number of total calls
 long totalCalls = metrics.getNumberOfTotalCalls();
