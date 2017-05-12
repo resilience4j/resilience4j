@@ -18,30 +18,41 @@
  */
 package io.github.resilience4j.ratelimiter;
 
-import io.vavr.CheckedFunction0;
-import io.vavr.CheckedFunction1;
-import io.vavr.CheckedRunnable;
-import io.vavr.control.Try;
-import org.junit.Before;
-import org.junit.Test;
-
-import java.time.Duration;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.locks.LockSupport;
-import java.util.function.Consumer;
-import java.util.function.Function;
-import java.util.function.Supplier;
-
 import static com.jayway.awaitility.Awaitility.await;
+import static org.assertj.core.api.BDDAssertions.then;
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import static io.vavr.API.$;
 import static io.vavr.API.Case;
 import static io.vavr.API.Match;
 import static io.vavr.Predicates.instanceOf;
-import static org.assertj.core.api.BDDAssertions.then;
-import static org.hamcrest.CoreMatchers.equalTo;
-import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.*;
+import static java.util.concurrent.CompletableFuture.supplyAsync;
+
+import org.junit.Before;
+import org.junit.Test;
+import org.mockito.BDDMockito;
+
+import io.vavr.CheckedFunction0;
+import io.vavr.CheckedFunction1;
+import io.vavr.CheckedRunnable;
+import io.vavr.control.Try;
+
+import java.time.Duration;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.locks.LockSupport;
+import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.Supplier;
 
 
 @SuppressWarnings("unchecked")
@@ -204,6 +215,42 @@ public class RateLimiterTest {
         Try secondFunctionResult = Try.success(1).map(decorated);
         then(secondFunctionResult.isSuccess()).isTrue();
         verify(function, times(1)).apply(1);
+    }
+
+    @Test
+    public void decorateCompletionStage() throws Exception {
+        Supplier supplier = mock(Supplier.class);
+        BDDMockito.given(supplier.get()).willReturn("Resource");
+        Supplier<CompletionStage<String>> completionStage = () -> supplyAsync(supplier);
+
+        Supplier<CompletionStage<String>> decorated = RateLimiter.decorateCompletionStage(limit, completionStage);
+
+        when(limit.getPermission(config.getTimeoutDuration()))
+            .thenReturn(false);
+
+        AtomicReference<Throwable> error = new AtomicReference<>(null);
+        CompletableFuture<String> notPermittedFuture = decorated.get()
+            .whenComplete((v, e) -> error.set(e))
+            .toCompletableFuture();
+        Try<String> errorResult = Try.of(notPermittedFuture::get);
+        then(errorResult.isFailure()).isTrue();
+        then(errorResult.getCause()).isInstanceOf(ExecutionException.class);
+        then(notPermittedFuture.isCompletedExceptionally()).isTrue();
+        then(error.get()).isExactlyInstanceOf(RequestNotPermitted.class);
+        verify(supplier, never()).get();
+
+        when(limit.getPermission(config.getTimeoutDuration()))
+            .thenReturn(true);
+
+        AtomicReference<Throwable> shouldBeEmpty = new AtomicReference<>(null);
+        CompletableFuture<String> success = decorated.get()
+            .whenComplete((v, e) -> error.set(e))
+            .toCompletableFuture();
+        Try<String> successResult = Try.of(success::get);
+        then(successResult.isSuccess()).isTrue();
+        then(success.isCompletedExceptionally()).isFalse();
+        then(shouldBeEmpty.get()).isNull();
+        verify(supplier).get();
     }
 
     @Test

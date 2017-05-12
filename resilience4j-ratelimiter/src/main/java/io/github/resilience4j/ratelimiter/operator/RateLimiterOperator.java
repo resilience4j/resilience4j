@@ -16,6 +16,11 @@
 
 package io.github.resilience4j.ratelimiter.operator;
 
+import org.reactivestreams.Subscriber;
+import org.reactivestreams.Subscription;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RequestNotPermitted;
 import io.reactivex.FlowableOperator;
@@ -24,10 +29,6 @@ import io.reactivex.Observer;
 import io.reactivex.SingleObserver;
 import io.reactivex.SingleOperator;
 import io.reactivex.disposables.Disposable;
-import org.reactivestreams.Subscriber;
-import org.reactivestreams.Subscription;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -92,9 +93,7 @@ public class RateLimiterOperator<T> implements ObservableOperator<T, T>, Flowabl
         @Override
         public void onSubscribe(Subscription subscription) {
             this.subscription = subscription;
-            if (LOG.isDebugEnabled()) {
-                LOG.info("onSubscribe");
-            }
+            LOG.debug("onSubscribe");
             if (rateLimiter.getPermission(rateLimiter.getRateLimiterConfig().getTimeoutDuration())) {
                 childSubscriber.onSubscribe(this);
             } else {
@@ -109,9 +108,7 @@ public class RateLimiterOperator<T> implements ObservableOperator<T, T>, Flowabl
          */
         @Override
         public void onNext(T event) {
-            if (LOG.isDebugEnabled()) {
-                LOG.info("onNext: {}", event);
-            }
+            LOG.debug("onNext: {}", event);
             if (!isCancelled()) {
                 if (rateLimiter.getPermission(rateLimiter.getRateLimiterConfig().getTimeoutDuration())) {
                     childSubscriber.onNext(event);
@@ -127,9 +124,7 @@ public class RateLimiterOperator<T> implements ObservableOperator<T, T>, Flowabl
          */
         @Override
         public void onError(Throwable e) {
-            if (LOG.isDebugEnabled()) {
-                LOG.info("onError", e);
-            }
+            LOG.debug("onError", e);
             if (!isCancelled()) {
                 childSubscriber.onError(e);
 
@@ -141,9 +136,7 @@ public class RateLimiterOperator<T> implements ObservableOperator<T, T>, Flowabl
          */
         @Override
         public void onComplete() {
-            if (LOG.isDebugEnabled()) {
-                LOG.info("onComplete");
-            }
+            LOG.debug("onComplete");
             if (!isCancelled()) {
                 childSubscriber.onComplete();
             }
@@ -189,9 +182,7 @@ public class RateLimiterOperator<T> implements ObservableOperator<T, T>, Flowabl
         @Override
         public void onSubscribe(Disposable disposable) {
             this.disposable = disposable;
-            if (LOG.isDebugEnabled()) {
-                LOG.info("onSubscribe");
-            }
+            LOG.debug("onSubscribe");
             if (rateLimiter.getPermission(rateLimiter.getRateLimiterConfig().getTimeoutDuration())) {
                 childObserver.onSubscribe(this);
             } else {
@@ -206,9 +197,7 @@ public class RateLimiterOperator<T> implements ObservableOperator<T, T>, Flowabl
          */
         @Override
         public void onNext(T event) {
-            if (LOG.isDebugEnabled()) {
-                LOG.info("onNext: {}", event);
-            }
+            LOG.debug("onNext: {}", event);
             if (!isDisposed()) {
                 if (rateLimiter.getPermission(rateLimiter.getRateLimiterConfig().getTimeoutDuration())) {
                     childObserver.onNext(event);
@@ -224,9 +213,7 @@ public class RateLimiterOperator<T> implements ObservableOperator<T, T>, Flowabl
          */
         @Override
         public void onError(Throwable e) {
-            if (LOG.isDebugEnabled()) {
-                LOG.info("onError", e);
-            }
+            LOG.debug("onError", e);
             if (!isDisposed()) {
                 childObserver.onError(e);
             }
@@ -237,9 +224,7 @@ public class RateLimiterOperator<T> implements ObservableOperator<T, T>, Flowabl
          */
         @Override
         public void onComplete() {
-            if (LOG.isDebugEnabled()) {
-                LOG.info("onComplete");
-            }
+            LOG.debug("onComplete");
             if (!isDisposed()) {
                 childObserver.onComplete();
             }
@@ -282,9 +267,7 @@ public class RateLimiterOperator<T> implements ObservableOperator<T, T>, Flowabl
         @Override
         public void onSubscribe(Disposable disposable) {
             this.disposable = disposable;
-            if (LOG.isDebugEnabled()) {
-                LOG.info("onSubscribe");
-            }
+            LOG.debug("onSubscribe");
             if (rateLimiter.getPermission(rateLimiter.getRateLimiterConfig().getTimeoutDuration())) {
                 childObserver.onSubscribe(this);
             } else {
@@ -299,9 +282,7 @@ public class RateLimiterOperator<T> implements ObservableOperator<T, T>, Flowabl
          */
         @Override
         public void onError(Throwable e) {
-            if (LOG.isDebugEnabled()) {
-                LOG.info("onError", e);
-            }
+            LOG.debug("onError", e);
             if (!isDisposed()) {
                 childObserver.onError(e);
             }
@@ -312,9 +293,7 @@ public class RateLimiterOperator<T> implements ObservableOperator<T, T>, Flowabl
          */
         @Override
         public void onSuccess(T value) {
-            if (LOG.isDebugEnabled()) {
-                LOG.info("onComplete");
-            }
+            LOG.debug("onComplete");
             if (!isDisposed()) {
                 childObserver.onSuccess(value);
             }
