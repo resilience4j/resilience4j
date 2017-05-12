@@ -10,7 +10,7 @@ Core modules:
 * resilience4j-circuitbreaker: Circuit breaking
 * resilience4j-ratelimiter: Rate limiting
 * resilience4j-bulkhead: Bulkheading
-* resilience4j-retry: Automatic retrying
+* resilience4j-retry: Automatic retrying (sync and async)
 * resilience4j-cache: Response caching
 
 Add-on modules
