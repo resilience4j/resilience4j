@@ -8,6 +8,7 @@ import io.vavr.CheckedFunction1;
 import io.vavr.CheckedRunnable;
 
 import java.util.concurrent.Callable;
+import java.util.concurrent.CompletionStage;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -75,6 +76,15 @@ public interface Timer {
 
 
     /**
+     * Decorates and executes the decorated Runnable.
+     *
+     * @param runnable the original Callable
+     */
+    default void executeRunnable(Runnable runnable) throws Exception {
+        decorateRunnable(this, runnable).run();
+    }
+
+    /**
      * Decorates and executes the decorated Callable.
      *
      * @param callable the original Callable
@@ -86,6 +96,28 @@ public interface Timer {
     }
 
     /**
+     * Decorates and executes the decorated Supplier.
+     *
+     * @param supplier the original Supplier
+     * @param <T> the type of results supplied by this supplier
+     * @return the result of the decorated Supplier.
+     */
+    default <T> T executeSupplier(Supplier<T> supplier){
+        return decorateSupplier(this, supplier).get();
+    }
+
+    /**
+     * Decorates and executes the decorated CompletionStage Supplier.
+     *
+     * @param supplier the CompletionStage Supplier
+     * @param <T> the type of results supplied by this supplier
+     * @return the result of the decorated Supplier.
+     */
+    default <T> CompletionStage<T> executeCompletionStageSupplier(Supplier<CompletionStage<T>> supplier){
+        return decorateCompletionStageSupplier(this, supplier).get();
+    }
+
+    /**
      * Creates a timed checked supplier.
 
      * @param timer the timer to use
@@ -94,7 +126,7 @@ public interface Timer {
      */
     static <T> CheckedFunction0<T> decorateCheckedSupplier(Timer timer, CheckedFunction0<T> supplier){
         return () -> {
-            Context context = timer.time();
+            final Context context = timer.time();
             try {
                 T returnValue = supplier.apply();
                 timer.onSuccess(context);
@@ -115,7 +147,7 @@ public interface Timer {
      */
     static CheckedRunnable decorateCheckedRunnable(Timer timer, CheckedRunnable runnable){
         return () -> {
-            Context context = timer.time();
+            final Context context = timer.time();
             try {
                 runnable.run();
                 timer.onSuccess(context);
@@ -127,17 +159,6 @@ public interface Timer {
     }
 
     /**
-     * Decorates and executes the decorated Supplier.
-     *
-     * @param supplier the original Supplier
-     * @param <T> the type of results supplied by this supplier
-     * @return the result of the decorated Supplier.
-     */
-    default <T> T executeSupplier(Supplier<T> supplier){
-        return decorateSupplier(this, supplier).get();
-    }
-
-    /**
      * Creates a timed checked supplier.
 
      * @param timer the timer to use
@@ -146,7 +167,7 @@ public interface Timer {
      */
     static <T> Supplier<T> decorateSupplier(Timer timer, Supplier<T> supplier){
         return () -> {
-            Context context = timer.time();
+            final Context context = timer.time();
             try {
                 T returnValue = supplier.get();
                 timer.onSuccess(context);
@@ -167,7 +188,7 @@ public interface Timer {
      */
     static <T> Callable<T> decorateCallable(Timer timer, Callable<T> callable){
         return () -> {
-            Context context = timer.time();
+            final Context context = timer.time();
             try {
                 T returnValue = callable.call();
                 timer.onSuccess(context);
@@ -189,7 +210,7 @@ public interface Timer {
      */
     static Runnable decorateRunnable(Timer timer, Runnable runnable){
         return () -> {
-            Context context = timer.time();
+            final Context context = timer.time();
             try {
                 runnable.run();
                 timer.onSuccess(context);
@@ -210,7 +231,7 @@ public interface Timer {
      */
     static <T, R> Function<T, R> decorateFunction(Timer timer, Function<T, R> function){
         return (T t) -> {
-            Context context = timer.time();
+            final Context context = timer.time();
             try {
                 R returnValue = function.apply(t);
                 timer.onSuccess(context);
@@ -231,7 +252,7 @@ public interface Timer {
      */
     static <T, R> CheckedFunction1<T, R> decorateCheckedFunction(Timer timer, CheckedFunction1<T, R> function){
         return (T t) -> {
-            Context context = timer.time();
+            final Context context = timer.time();
             try {
                 R returnValue = function.apply(t);
                 timer.onSuccess(context);
@@ -239,6 +260,34 @@ public interface Timer {
             }catch (Throwable e){
                 timer.onError(context);
                 throw e;
+            }
+        };
+    }
+
+    /**
+     *
+     * @param timer the timer to use
+     * @param stageSupplier the CompletionStage Supplier
+     * @return a decorated completion stage
+     */
+    static <T> Supplier<CompletionStage<T>> decorateCompletionStageSupplier(Timer timer, Supplier<CompletionStage<T>> stageSupplier) {
+        return () -> {
+            final Context context = timer.time();
+            try {
+                final CompletionStage<T> stage = stageSupplier.get();
+
+                stage.whenComplete((result, throwable) -> {
+                    if (throwable != null) {
+                        timer.onError(context);
+                    } else {
+                        timer.onSuccess(context);
+                    }
+                });
+
+                return stage;
+            } catch (Throwable throwable) {
+                timer.onError(context);
+                throw throwable;
             }
         };
     }

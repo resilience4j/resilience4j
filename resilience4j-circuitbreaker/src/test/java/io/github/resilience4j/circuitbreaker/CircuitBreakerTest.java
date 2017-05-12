@@ -764,11 +764,8 @@ public class CircuitBreakerTest {
                 CircuitBreaker.decorateCompletionStage(circuitBreaker, completionStageSupplier);
         Try<CompletionStage<String>> result = Try.of(decoratedCompletionStageSupplier::get);
 
-        // Then the helloWorldService should be invoked 1 time
-        BDDMockito.then(helloWorldService).should(Mockito.times(0)).returnHelloWorld();
-
         assertThat(result.isFailure()).isEqualTo(true);
-        assertThat(result.failed().get()).isInstanceOf(RuntimeException.class);
+        assertThat(result.failed().get()).isInstanceOf(WebServiceException.class);
 
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
@@ -786,6 +783,7 @@ public class CircuitBreakerTest {
         // When
         Supplier<CompletionStage<String>> completionStageSupplier =
                 () -> CompletableFuture.supplyAsync(helloWorldService::returnHelloWorld);
+
         Supplier<CompletionStage<String>> decoratedCompletionStageSupplier =
                 CircuitBreaker.decorateCompletionStage(circuitBreaker, completionStageSupplier);
         CompletionStage<String> decoratedCompletionStage = decoratedCompletionStageSupplier.get();
