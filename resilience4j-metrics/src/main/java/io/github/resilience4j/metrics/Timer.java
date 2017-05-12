@@ -2,7 +2,7 @@ package io.github.resilience4j.metrics;
 
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Snapshot;
-import io.github.resilience4j.metrics.internal.TimerImpl;
+import io.github.resilience4j.metrics.internal.TimerContext;
 import io.vavr.CheckedFunction0;
 import io.vavr.CheckedFunction1;
 import io.vavr.CheckedRunnable;
@@ -61,7 +61,7 @@ public interface Timer {
      * @return a Bulkhead instance
      */
     static Timer ofMetricRegistry(String name, MetricRegistry metricRegistry) {
-        return new TimerImpl(name, metricRegistry);
+        return new TimerContext(name, metricRegistry);
     }
 
     /**
@@ -71,7 +71,7 @@ public interface Timer {
      * @return a Bulkhead instance
      */
     static Timer of(String name) {
-        return new TimerImpl(name, new MetricRegistry());
+        return new TimerContext(name, new MetricRegistry());
     }
 
 

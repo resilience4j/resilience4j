@@ -37,6 +37,13 @@ public interface Cache<K, V>  {
     String getName();
 
     /**
+     * Returns the Metrics of this Cache.
+     *
+     * @return the Metrics of this Cache
+     */
+    Metrics getMetrics();
+
+    /**
      * If the key is not already associated with a cached value, attempts to compute its value using the
      * given supplier and puts it into the cache. Otherwise it returns the cached value.
      * If the function itself throws an (unchecked) exception, the exception is rethrown.
@@ -108,5 +115,22 @@ public interface Cache<K, V>  {
      */
     static <K, R> CheckedFunction1<K, R> decorateCallable(Cache<K, R> cache, Callable<R> callable){
         return (K cacheKey) -> cache.computeIfAbsent(cacheKey, callable::call);
+    }
+
+    interface Metrics {
+
+        /**
+         * Returns the current number of cache hits
+         *
+         * @return the current number of cache hits
+         */
+        long getNumberOfCacheHits();
+
+        /**
+         * Returns the current number of cache misses.
+         *
+         * @return the current number of cache misses
+         */
+        long getNumberOfCacheMisses();
     }
 }

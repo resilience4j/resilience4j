@@ -62,16 +62,16 @@ public class SemaphoreBulkheadTest {
         bulkhead.isCallPermitted();
         bulkhead.isCallPermitted();
 
-        assertThat(bulkhead.getAvailableConcurrentCalls()).isEqualTo(0);
+        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(0);
 
         bulkhead.isCallPermitted();
         bulkhead.onComplete();
 
-        assertThat(bulkhead.getAvailableConcurrentCalls()).isEqualTo(1);
+        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
 
         bulkhead.onComplete();
 
-        assertThat(bulkhead.getAvailableConcurrentCalls()).isEqualTo(2);
+        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(2);
 
         bulkhead.isCallPermitted();
 

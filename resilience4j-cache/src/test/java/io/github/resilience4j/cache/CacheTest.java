@@ -54,6 +54,9 @@ public class CacheTest {
         String value = cachedFunction.apply("testKey");
         assertThat(value).isEqualTo("Hello world");
 
+        assertThat(cacheContext.getMetrics().getNumberOfCacheHits()).isEqualTo(0);
+        assertThat(cacheContext.getMetrics().getNumberOfCacheMisses()).isEqualTo(1);
+
         then(cache).should().put("testKey", "Hello world");
         testSubscriber
                 .assertValueCount(1)
@@ -74,6 +77,9 @@ public class CacheTest {
         String value = cachedFunction.apply("testKey");
         assertThat(value).isEqualTo("Hello world");
 
+        assertThat(cacheContext.getMetrics().getNumberOfCacheHits()).isEqualTo(0);
+        assertThat(cacheContext.getMetrics().getNumberOfCacheMisses()).isEqualTo(1);
+
         then(cache).should().put("testKey", "Hello world");
         testSubscriber
                 .assertValueCount(1)
@@ -93,6 +99,9 @@ public class CacheTest {
         CheckedFunction1<String, String> cachedFunction = Cache.decorateCallable(cacheContext, () -> "Hello world");
         String value = cachedFunction.apply("testKey");
         assertThat(value).isEqualTo("Hello world");
+
+        assertThat(cacheContext.getMetrics().getNumberOfCacheHits()).isEqualTo(0);
+        assertThat(cacheContext.getMetrics().getNumberOfCacheMisses()).isEqualTo(1);
 
         then(cache).should().put("testKey", "Hello world");
         testSubscriber
@@ -134,6 +143,9 @@ public class CacheTest {
         String value = cachedFunction.apply("testKey");
         assertThat(value).isEqualTo("Hello world");
 
+        assertThat(cacheContext.getMetrics().getNumberOfCacheHits()).isEqualTo(0);
+        assertThat(cacheContext.getMetrics().getNumberOfCacheMisses()).isEqualTo(1);
+
         testSubscriber
                 .assertValueCount(2)
                 .assertValues(CacheEvent.Type.CACHE_MISS, CacheEvent.Type.ERROR);
@@ -153,6 +165,9 @@ public class CacheTest {
         String value = cachedFunction.apply("testKey");
         assertThat(value).isEqualTo("Hello from cache");
 
+        assertThat(cacheContext.getMetrics().getNumberOfCacheHits()).isEqualTo(1);
+        assertThat(cacheContext.getMetrics().getNumberOfCacheMisses()).isEqualTo(0);
+
         testSubscriber
                 .assertValueCount(1)
                 .assertValues(CacheEvent.Type.CACHE_HIT);
@@ -171,6 +186,9 @@ public class CacheTest {
         CheckedFunction1<String, String> cachedFunction = Cache.decorateCheckedSupplier(cacheContext, () -> "Hello world");
         String value = cachedFunction.apply("testKey");
         assertThat(value).isEqualTo("Hello world");
+
+        assertThat(cacheContext.getMetrics().getNumberOfCacheHits()).isEqualTo(0);
+        assertThat(cacheContext.getMetrics().getNumberOfCacheMisses()).isEqualTo(0);
 
         testSubscriber
                 .assertValueCount(1)

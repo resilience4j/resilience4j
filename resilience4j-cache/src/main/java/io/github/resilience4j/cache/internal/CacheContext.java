@@ -27,12 +27,12 @@ import io.reactivex.Flowable;
 import io.reactivex.processors.FlowableProcessor;
 import io.reactivex.processors.PublishProcessor;
 import io.vavr.CheckedFunction0;
-import io.vavr.Function0;
 import io.vavr.control.Option;
 import io.vavr.control.Try;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.concurrent.atomic.LongAdder;
 import java.util.function.Supplier;
 
 public class CacheContext<K, V>  implements Cache<K,V> {
@@ -41,16 +41,23 @@ public class CacheContext<K, V>  implements Cache<K,V> {
 
     private final javax.cache.Cache<K, V> cache;
     private final FlowableProcessor<CacheEvent> eventPublisher;
+    private final CacheMetrics metrics;
 
     public CacheContext(javax.cache.Cache<K, V> cache) {
         this.cache = cache;
         PublishProcessor<CacheEvent> publisher = PublishProcessor.create();
         this.eventPublisher = publisher.toSerialized();
+        this.metrics = new CacheMetrics();
     }
 
     @Override
     public String getName() {
         return cache.getName();
+    }
+
+    @Override
+    public Metrics getMetrics() {
+        return metrics;
     }
 
     @Override
@@ -98,10 +105,12 @@ public class CacheContext<K, V>  implements Cache<K,V> {
     }
 
     private void onCacheMiss(K cacheKey) {
+        metrics.onCacheMiss();
         publishCacheEvent(() -> new CacheOnMissEvent<>(cache.getName(), cacheKey));
     }
 
     private void onCacheHit(K cacheKey) {
+        metrics.onCacheHit();
         publishCacheEvent(() -> new CacheOnHitEvent<>(cache.getName(), cacheKey));
     }
 
@@ -114,5 +123,33 @@ public class CacheContext<K, V>  implements Cache<K,V> {
     @Override
     public Flowable<CacheEvent> getEventStream() {
         return eventPublisher;
+    }
+
+    private final class CacheMetrics implements Metrics {
+
+        private final LongAdder cacheMisses;
+        private final LongAdder cacheHits;
+        private CacheMetrics() {
+            cacheMisses = new LongAdder();
+            cacheHits = new LongAdder();
+        }
+
+        public void onCacheMiss(){
+            cacheMisses.increment();
+        }
+
+        public void onCacheHit(){
+            cacheHits.increment();
+        }
+
+        @Override
+        public long getNumberOfCacheHits() {
+            return cacheHits.longValue();
+        }
+
+        @Override
+        public long getNumberOfCacheMisses() {
+            return cacheMisses.longValue();
+        }
     }
 }

@@ -109,7 +109,7 @@ public class CircuitBreakerTest {
         Supplier<String> supplier = CircuitBreaker.decorateSupplier(circuitBreaker, helloWorldService::returnHelloWorld);
 
         //Then
-        Try<String> result = Try.of(supplier::get);
+        Try<String> result = Try.ofSupplier(supplier);
         assertThat(result.isFailure()).isTrue();
         assertThat(result.failed().get()).isInstanceOf(RuntimeException.class);
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);

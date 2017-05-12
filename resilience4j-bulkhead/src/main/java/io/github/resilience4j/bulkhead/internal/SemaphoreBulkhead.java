@@ -35,12 +35,13 @@ import java.util.function.Supplier;
 /**
  * A Bulkhead implementation based on a semaphore.
  */
-public class SemaphoreBulkhead implements Bulkhead {
+public class SemaphoreBulkhead implements Bulkhead{
 
     private final String name;
     private final Semaphore semaphore;
     private final BulkheadConfig bulkheadConfig;
     private final FlowableProcessor<BulkheadEvent> eventPublisher;
+    private final BulkheadMetrics metrics;
 
     /**
      * Creates a bulkhead using a configuration supplied
@@ -58,6 +59,8 @@ public class SemaphoreBulkhead implements Bulkhead {
         // init event publisher
         this.eventPublisher = PublishProcessor.<BulkheadEvent>create()
                                               .toSerialized();
+
+        this.metrics = new BulkheadMetrics();
     }
 
     /**
@@ -104,18 +107,13 @@ public class SemaphoreBulkhead implements Bulkhead {
     }
 
     @Override
-    public int getMaxConcurrentCalls() {
-        return this.bulkheadConfig.getMaxConcurrentCalls();
-    }
-
-    @Override
-    public int getAvailableConcurrentCalls() {
-        return this.semaphore.availablePermits();
-    }
-
-    @Override
     public BulkheadConfig getBulkheadConfig() {
         return bulkheadConfig;
+    }
+
+    @Override
+    public Metrics getMetrics() {
+        return metrics;
     }
 
     @Override
@@ -151,6 +149,16 @@ public class SemaphoreBulkhead implements Bulkhead {
     private void publishBulkheadEvent(Supplier<BulkheadEvent> eventSupplier) {
         if(eventPublisher.hasSubscribers()) {
             eventPublisher.onNext(eventSupplier.get());
+        }
+    }
+
+    private final class BulkheadMetrics implements Metrics {
+        private BulkheadMetrics() {
+        }
+
+        @Override
+        public int getAvailableConcurrentCalls() {
+            return semaphore.availablePermits();
         }
     }
 

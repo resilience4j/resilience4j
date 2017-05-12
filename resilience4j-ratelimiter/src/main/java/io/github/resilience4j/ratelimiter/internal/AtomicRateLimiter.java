@@ -18,11 +18,6 @@
  */
 package io.github.resilience4j.ratelimiter.internal;
 
-import static java.lang.Long.min;
-import static java.lang.System.nanoTime;
-import static java.lang.Thread.currentThread;
-import static java.util.concurrent.locks.LockSupport.parkNanos;
-
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RateLimiterConfig;
 import io.github.resilience4j.ratelimiter.event.RateLimiterEvent;
@@ -36,6 +31,11 @@ import java.time.Duration;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.UnaryOperator;
+
+import static java.lang.Long.min;
+import static java.lang.System.nanoTime;
+import static java.lang.Thread.currentThread;
+import static java.util.concurrent.locks.LockSupport.parkNanos;
 
 /**
  * {@link AtomicRateLimiter} splits all nanoseconds from the start of epoch into cycles.
@@ -339,7 +339,7 @@ public class AtomicRateLimiter implements RateLimiter {
     /**
      * Enhanced {@link Metrics} with some implementation specific details
      */
-    public class AtomicRateLimiterMetrics implements Metrics {
+    private class AtomicRateLimiterMetrics implements Metrics {
 
         private AtomicRateLimiterMetrics() {
         }

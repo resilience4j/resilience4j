@@ -69,25 +69,18 @@ public interface Bulkhead {
     String getName();
 
     /**
-     * Returns a configured max amount of parallel executions that this bulkhead supports.
-     *
-      * @return bulkhead depth
-     */
-    int getMaxConcurrentCalls();
-
-    /**
-     * Returns the number of parallel executions this bulkhead can support at this point in time.
-     *
-     * @return remaining bulkhead depth
-     */
-    int getAvailableConcurrentCalls();
-
-    /**
      * Returns the BulkheadConfig of this Bulkhead.
      *
      * @return bulkhead config
      */
     BulkheadConfig getBulkheadConfig();
+
+    /**
+     * Get the Metrics of this Bulkhead.
+     *
+     * @return the Metrics of this Bulkhead
+     */
+    Metrics getMetrics();
 
     /**
      * Returns a reactive stream of BulkheadEvent events.
@@ -397,5 +390,16 @@ public interface Bulkhead {
      */
     static Bulkhead of(String name, Supplier<BulkheadConfig> bulkheadConfigSupplier) {
         return new SemaphoreBulkhead(name, bulkheadConfigSupplier);
+    }
+
+    interface Metrics {
+
+
+        /**
+         * Returns the number of parallel executions this bulkhead can support at this point in time.
+         *
+         * @return remaining bulkhead depth
+         */
+        int getAvailableConcurrentCalls();
     }
 }

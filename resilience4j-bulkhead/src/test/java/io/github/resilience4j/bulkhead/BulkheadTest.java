@@ -51,8 +51,8 @@ public class BulkheadTest {
     public void setUp(){
         helloWorldService = Mockito.mock(HelloWorldService.class);
         config = BulkheadConfig.custom()
-                               .maxConcurrentCalls(1)
-                               .build();
+                   .maxConcurrentCalls(1)
+                   .build();
     }
 
     @Test
@@ -67,7 +67,7 @@ public class BulkheadTest {
 
         // Then
         assertThat(supplier.get()).isEqualTo("Hello world");
-        assertThat(bulkhead.getAvailableConcurrentCalls()).isEqualTo(1);
+        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
         BDDMockito.then(helloWorldService).should(times(1)).returnHelloWorld();
     }
 
@@ -83,7 +83,7 @@ public class BulkheadTest {
 
         // Then
         assertThat(result).isEqualTo("Hello world");
-        assertThat(bulkhead.getAvailableConcurrentCalls()).isEqualTo(1);
+        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
         BDDMockito.then(helloWorldService).should(times(1)).returnHelloWorld();
     }
 
@@ -101,7 +101,7 @@ public class BulkheadTest {
         //Then
         assertThat(result.isFailure()).isTrue();
         assertThat(result.failed().get()).isInstanceOf(RuntimeException.class);
-        assertThat(bulkhead.getAvailableConcurrentCalls()).isEqualTo(1);
+        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
         BDDMockito.then(helloWorldService).should(times(1)).returnHelloWorld();
     }
 
@@ -117,7 +117,7 @@ public class BulkheadTest {
 
         // Then
         assertThat(checkedSupplier.apply()).isEqualTo("Hello world");
-        assertThat(bulkhead.getAvailableConcurrentCalls()).isEqualTo(1);
+        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
         BDDMockito.then(helloWorldService).should(times(1)).returnHelloWorldWithException();
     }
 
@@ -135,7 +135,7 @@ public class BulkheadTest {
         // Then
         assertThat(result.isFailure()).isTrue();
         assertThat(result.failed().get()).isInstanceOf(RuntimeException.class);
-        assertThat(bulkhead.getAvailableConcurrentCalls()).isEqualTo(1);
+        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
         BDDMockito.then(helloWorldService).should(times(1)).returnHelloWorldWithException();
     }
 
@@ -151,7 +151,7 @@ public class BulkheadTest {
 
         // Then
         assertThat(callable.call()).isEqualTo("Hello world");
-        assertThat(bulkhead.getAvailableConcurrentCalls()).isEqualTo(1);
+        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
         BDDMockito.then(helloWorldService).should(times(1)).returnHelloWorldWithException();
     }
 
@@ -167,7 +167,7 @@ public class BulkheadTest {
 
         // Then
         assertThat(result).isEqualTo("Hello world");
-        assertThat(bulkhead.getAvailableConcurrentCalls()).isEqualTo(1);
+        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
         BDDMockito.then(helloWorldService).should(times(1)).returnHelloWorldWithException();
     }
 
@@ -185,7 +185,7 @@ public class BulkheadTest {
         // Then
         assertThat(result.isFailure()).isTrue();
         assertThat(result.failed().get()).isInstanceOf(RuntimeException.class);
-        assertThat(bulkhead.getAvailableConcurrentCalls()).isEqualTo(1);
+        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
         BDDMockito.then(helloWorldService).should(times(1)).returnHelloWorldWithException();
     }
 
@@ -200,7 +200,7 @@ public class BulkheadTest {
                 .run();
 
         // Then
-        assertThat(bulkhead.getAvailableConcurrentCalls()).isEqualTo(1);
+        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
         BDDMockito.then(helloWorldService).should(times(1)).sayHelloWorldWithException();
     }
 
@@ -217,7 +217,7 @@ public class BulkheadTest {
         // Then
         assertThat(result.isFailure()).isTrue();
         assertThat(result.failed().get()).isInstanceOf(RuntimeException.class);
-        assertThat(bulkhead.getAvailableConcurrentCalls()).isEqualTo(1);
+        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
     }
 
     @Test
@@ -231,7 +231,7 @@ public class BulkheadTest {
                 .run();
 
         //Then
-        assertThat(bulkhead.getAvailableConcurrentCalls()).isEqualTo(1);
+        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
         BDDMockito.then(helloWorldService).should(times(1)).sayHelloWorld();
     }
 
@@ -245,7 +245,7 @@ public class BulkheadTest {
         bulkhead.executeRunnable(helloWorldService::sayHelloWorld);
 
         // Then
-        assertThat(bulkhead.getAvailableConcurrentCalls()).isEqualTo(1);
+        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
         BDDMockito.then(helloWorldService).should(times(1)).sayHelloWorld();
     }
 
@@ -262,7 +262,7 @@ public class BulkheadTest {
         //Then
         assertThat(result.isFailure()).isTrue();
         assertThat(result.failed().get()).isInstanceOf(RuntimeException.class);
-        assertThat(bulkhead.getAvailableConcurrentCalls()).isEqualTo(1);
+        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
     }
 
     @Test
@@ -276,7 +276,7 @@ public class BulkheadTest {
                 .accept("Tom");
 
         // Then
-        assertThat(bulkhead.getAvailableConcurrentCalls()).isEqualTo(1);
+        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
         BDDMockito.then(helloWorldService).should(times(1)).sayHelloWorldWithName("Tom");
     }
 
@@ -293,7 +293,7 @@ public class BulkheadTest {
         // Then
         assertThat(result.isFailure()).isTrue();
         assertThat(result.failed().get()).isInstanceOf(RuntimeException.class);
-        assertThat(bulkhead.getAvailableConcurrentCalls()).isEqualTo(1);
+        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
     }
 
     @Test
@@ -307,7 +307,7 @@ public class BulkheadTest {
                 .accept("Tom");
 
         // Then
-        assertThat(bulkhead.getAvailableConcurrentCalls()).isEqualTo(1);
+        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
         BDDMockito.then(helloWorldService).should(times(1)).sayHelloWorldWithNameWithException("Tom");
     }
 
@@ -326,7 +326,7 @@ public class BulkheadTest {
         // Then
         assertThat(result.isFailure()).isTrue();
         assertThat(result.failed().get()).isInstanceOf(RuntimeException.class);
-        assertThat(bulkhead.getAvailableConcurrentCalls()).isEqualTo(1);
+        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
     }
 
     @Test
@@ -341,7 +341,7 @@ public class BulkheadTest {
 
         // Then
         assertThat(function.apply("Tom")).isEqualTo("Hello world Tom");
-        assertThat(bulkhead.getAvailableConcurrentCalls()).isEqualTo(1);
+        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
         BDDMockito.then(helloWorldService).should(times(1)).returnHelloWorldWithName("Tom");
     }
 
@@ -359,7 +359,7 @@ public class BulkheadTest {
         // Then
         assertThat(result.isFailure()).isTrue();
         assertThat(result.failed().get()).isInstanceOf(RuntimeException.class);
-        assertThat(bulkhead.getAvailableConcurrentCalls()).isEqualTo(1);
+        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
     }
 
     @Test
@@ -375,7 +375,7 @@ public class BulkheadTest {
 
         // Then
         assertThat(result).isEqualTo("Hello world Tom");
-        assertThat(bulkhead.getAvailableConcurrentCalls()).isEqualTo(1);
+        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
         BDDMockito.then(helloWorldService).should(times(1)).returnHelloWorldWithNameWithException("Tom");
     }
 
@@ -393,7 +393,7 @@ public class BulkheadTest {
         // Then
         assertThat(result.isFailure()).isTrue();
         assertThat(result.failed().get()).isInstanceOf(RuntimeException.class);
-        assertThat(bulkhead.getAvailableConcurrentCalls()).isEqualTo(1);
+        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
     }
 
     @Test
@@ -430,7 +430,7 @@ public class BulkheadTest {
         //Then
         assertThat(result.isFailure()).isTrue();
         assertThat(result.failed().get()).isInstanceOf(RuntimeException.class);
-        assertThat(bulkhead.getAvailableConcurrentCalls()).isEqualTo(1);
+        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
     }
 
     @Test
@@ -449,7 +449,7 @@ public class BulkheadTest {
 
         // Then
         assertThat(result).isEqualTo("This can be any method which returns: 'Hello world'");
-        assertThat(bulkhead.getAvailableConcurrentCalls()).isEqualTo(1);
+        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
         // end::shouldInvokeAsyncApply[]
     }
 
@@ -474,7 +474,7 @@ public class BulkheadTest {
 
         // Then
         assertThat(decoratedCompletionStage.toCompletableFuture().get()).isEqualTo("Hello world");
-        assertThat(bulkhead.getAvailableConcurrentCalls()).isEqualTo(1);
+        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
         BDDMockito.then(helloWorldService).should(times(1)).returnHelloWorld();
     }
 
@@ -492,7 +492,7 @@ public class BulkheadTest {
 
         // Then
         assertThat(decoratedCompletionStage.toCompletableFuture().get()).isEqualTo("Hello world");
-        assertThat(bulkhead.getAvailableConcurrentCalls()).isEqualTo(1);
+        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
         BDDMockito.then(helloWorldService).should(times(1)).returnHelloWorld();
     }
 
@@ -524,7 +524,7 @@ public class BulkheadTest {
                       return null;
                   }
               );
-        assertThat(bulkhead.getAvailableConcurrentCalls()).isEqualTo(1);
+        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
     }
 
     @Test
@@ -545,7 +545,7 @@ public class BulkheadTest {
         assertThatThrownBy(decoratedCompletionStage.toCompletableFuture()::get)
                 .isInstanceOf(ExecutionException.class).hasCause(new RuntimeException("BAM! At async stage"));
         BDDMockito.then(helloWorldService).should(times(1)).returnHelloWorld();
-        assertThat(bulkhead.getAvailableConcurrentCalls()).isEqualTo(1);
+        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
     }
 
     @Test
@@ -569,8 +569,8 @@ public class BulkheadTest {
         // Then
         assertThat(result.isSuccess()).isTrue();
         assertThat(result.get()).isEqualTo("Hello world");
-        assertThat(bulkhead.getAvailableConcurrentCalls()).isEqualTo(1);
-        assertThat(anotherBulkhead.getAvailableConcurrentCalls()).isEqualTo(1);
+        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
+        assertThat(anotherBulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
         // end::shouldChainDecoratedFunctions[]
     }
 
@@ -591,7 +591,7 @@ public class BulkheadTest {
         // Then the Try Monad returns a Success<String>, if all functions ran successfully.
         assertThat(result.isSuccess()).isTrue();
         assertThat(result.get()).isEqualTo("This can be any method which returns: 'Hello world'");
-        assertThat(bulkhead.getAvailableConcurrentCalls()).isEqualTo(1);
+        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
         // end::shouldInvokeMap[]
     }
 

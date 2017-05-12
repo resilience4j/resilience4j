@@ -18,9 +18,6 @@
  */
 package io.github.resilience4j.ratelimiter.internal;
 
-import static java.util.Objects.requireNonNull;
-import static java.util.concurrent.Executors.newSingleThreadScheduledExecutor;
-
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RateLimiterConfig;
 import io.github.resilience4j.ratelimiter.event.RateLimiterEvent;
@@ -36,6 +33,9 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
+
+import static java.util.Objects.requireNonNull;
+import static java.util.concurrent.Executors.newSingleThreadScheduledExecutor;
 
 /**
  * A RateLimiter implementation that consists of {@link Semaphore}
@@ -167,7 +167,7 @@ public class SemaphoreBasedRateLimiter implements RateLimiter {
     /**
      * {@inheritDoc}
      */
-    public final class SemaphoreBasedRateLimiterMetrics implements Metrics {
+    private final class SemaphoreBasedRateLimiterMetrics implements Metrics {
         private SemaphoreBasedRateLimiterMetrics() {
         }
 
