@@ -339,7 +339,7 @@ public class AtomicRateLimiter implements RateLimiter {
     /**
      * Enhanced {@link Metrics} with some implementation specific details
      */
-    private class AtomicRateLimiterMetrics implements Metrics {
+    public class AtomicRateLimiterMetrics implements Metrics {
 
         private AtomicRateLimiterMetrics() {
         }
