@@ -233,7 +233,7 @@ public class RateLimiterTest {
             .whenComplete((v, e) -> error.set(e))
             .toCompletableFuture();
         Try<String> errorResult = Try.of(notPermittedFuture::get);
-        then(errorResult.isFailure()).isTrue();
+        assert errorResult.isFailure();
         then(errorResult.getCause()).isInstanceOf(ExecutionException.class);
         then(notPermittedFuture.isCompletedExceptionally()).isTrue();
         then(error.get()).isExactlyInstanceOf(RequestNotPermitted.class);
