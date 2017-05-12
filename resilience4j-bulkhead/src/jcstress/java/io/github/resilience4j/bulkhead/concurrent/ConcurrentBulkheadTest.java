@@ -78,7 +78,7 @@ public class ConcurrentBulkheadTest {
     public void arbiter(StringResult1 result1) {
         String result = MessageFormat.format(
             "remainingDepth={0} events={1}",
-            bulkhead.getAvailableConcurrentCalls(),
+            bulkhead.getMetrics().getAvailableConcurrentCalls(),
             callRejectectedEventSubscriber.getEvents()
         );
         result1.r1 = result;
