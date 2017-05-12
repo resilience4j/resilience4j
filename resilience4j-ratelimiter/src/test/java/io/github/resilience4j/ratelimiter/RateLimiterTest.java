@@ -21,6 +21,7 @@ package io.github.resilience4j.ratelimiter;
 import static com.jayway.awaitility.Awaitility.await;
 import static org.assertj.core.api.BDDAssertions.then;
 import static org.hamcrest.CoreMatchers.equalTo;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -233,7 +234,7 @@ public class RateLimiterTest {
             .whenComplete((v, e) -> error.set(e))
             .toCompletableFuture();
         Try<String> errorResult = Try.of(notPermittedFuture::get);
-        assert errorResult.isFailure();
+        assertTrue(errorResult.isFailure());
         then(errorResult.getCause()).isInstanceOf(ExecutionException.class);
         then(notPermittedFuture.isCompletedExceptionally()).isTrue();
         then(error.get()).isExactlyInstanceOf(RequestNotPermitted.class);
