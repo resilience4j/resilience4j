@@ -21,7 +21,6 @@ package io.github.resilience4j.bulkhead;
 import org.junit.Before;
 import org.junit.Test;
 
-import static org.assertj.core.api.Assertions.registerCustomDateFormat;
 import static org.assertj.core.api.BDDAssertions.assertThat;
 
 
@@ -63,8 +62,8 @@ public class BulkheadRegistryTest {
 
         assertThat(bulkhead).isNotNull();
         assertThat(bulkhead.getName()).isEqualTo("test");
-        assertThat(bulkhead.getMaxConcurrentCalls()).isEqualTo(25);
-        assertThat(bulkhead.getAvailableConcurrentCalls()).isEqualTo(25);
+        assertThat(bulkhead.getBulkheadConfig().getMaxConcurrentCalls()).isEqualTo(25);
+        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(25);
     }
 
     @Test
