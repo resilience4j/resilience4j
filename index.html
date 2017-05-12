@@ -516,7 +516,7 @@ table.CodeRay td.code>pre{padding:0}
 <div class="details">
 <span id="author" class="author">Robert Winkler</span><br>
 <span id="revnumber">version 0.8.2,</span>
-<span id="revdate">2017-05-10</span>
+<span id="revdate">2017-05-12</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">Table of Contents</div>
@@ -637,7 +637,7 @@ table.CodeRay td.code>pre{padding:0}
 <h2 id="_introduction"><a class="anchor" href="#_introduction"></a>1. Introduction</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>Resilience4j is a lightweight, easy-to-use fault tolerance library inspired by <a href="https://github.com/Netflix/Hystrix">Netflix Hystrix</a>, but designed for Java 8 and functional programming. Lightweight, because the library only uses <a href="https://github.com/javaslang/javaslang">Javaslang</a>, <a href="https://github.com/ReactiveX/RxJava">RxJava</a> and SLF4J-API, which do no have any other external library dependencies. Netflix Hystrix, in contrast, has a compile dependency to <a href="https://github.com/Netflix/archaius">Archaius</a> which has many more external library dependencies such as Guava and Apache Commons Configuration.<br>
+<p>Resilience4j is a lightweight, easy-to-use fault tolerance library inspired by <a href="https://github.com/Netflix/Hystrix">Netflix Hystrix</a>, but designed for Java 8 and functional programming. Lightweight, because the library only uses <a href="http://www.vavr.io/">Vavr (formerly Javaslang)</a> and <a href="https://github.com/ReactiveX/RxJava">RxJava</a>, which do no have any other external library dependencies. Netflix Hystrix, in contrast, has a compile dependency to <a href="https://github.com/Netflix/archaius">Archaius</a> which has many more external library dependencies such as Guava and Apache Commons Configuration.<br>
 With Resilience4j you don&#8217;t have to go all-in, you can pick what you need.</p>
 </div>
 <div class="paragraph">
@@ -1023,7 +1023,7 @@ In the following example, <code>Try.of(&#8230;&#8203;)</code> returns a <code>Su
 CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults(<span class="string"><span class="delimiter">&quot;</span><span class="content">testName</span><span class="delimiter">&quot;</span></span>);
 
 <span class="comment">// When I decorate my function</span>
-Try.CheckedSupplier&lt;<span class="predefined-type">String</span>&gt; decoratedSupplier = CircuitBreaker
+CheckedFunction0&lt;<span class="predefined-type">String</span>&gt; decoratedSupplier = CircuitBreaker
         .decorateCheckedSupplier(circuitBreaker, () -&gt; <span class="string"><span class="delimiter">&quot;</span><span class="content">This can be any method which returns: 'Hello</span><span class="delimiter">&quot;</span></span>);
 
 <span class="comment">// and chain an other function with map</span>
@@ -1045,10 +1045,10 @@ CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults(<span class="string"><
 CircuitBreaker anotherCircuitBreaker = CircuitBreaker.ofDefaults(<span class="string"><span class="delimiter">&quot;</span><span class="content">anotherTestName</span><span class="delimiter">&quot;</span></span>);
 
 <span class="comment">// When I create a Supplier and a Function which are decorated by different CircuitBreakers</span>
-Try.CheckedSupplier&lt;<span class="predefined-type">String</span>&gt; decoratedSupplier = CircuitBreaker
+CheckedFunction0&lt;<span class="predefined-type">String</span>&gt; decoratedSupplier = CircuitBreaker
         .decorateCheckedSupplier(circuitBreaker, () -&gt; <span class="string"><span class="delimiter">&quot;</span><span class="content">Hello</span><span class="delimiter">&quot;</span></span>);
 
-Try.CheckedFunction&lt;<span class="predefined-type">String</span>, <span class="predefined-type">String</span>&gt; decoratedFunction = CircuitBreaker
+CheckedFunction1&lt;<span class="predefined-type">String</span>, <span class="predefined-type">String</span>&gt; decoratedFunction = CircuitBreaker
         .decorateCheckedFunction(anotherCircuitBreaker, (input) -&gt; input + <span class="string"><span class="delimiter">&quot;</span><span class="content"> world</span><span class="delimiter">&quot;</span></span>);
 
 <span class="comment">// and I chain a function with map</span>
@@ -1141,7 +1141,7 @@ assertThat(result.failed().get()).isInstanceOf(CircuitBreakerOpenException.class
 CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults(<span class="string"><span class="delimiter">&quot;</span><span class="content">testName</span><span class="delimiter">&quot;</span></span>);
 
 <span class="comment">// When I decorate my function and invoke the decorated function</span>
-Try.CheckedSupplier&lt;<span class="predefined-type">String</span>&gt; checkedSupplier = CircuitBreaker.decorateCheckedSupplier(circuitBreaker, () -&gt; {
+CheckedFunction0&lt;<span class="predefined-type">String</span>&gt; checkedSupplier = CircuitBreaker.decorateCheckedSupplier(circuitBreaker, () -&gt; {
     <span class="keyword">throw</span> <span class="keyword">new</span> <span class="exception">RuntimeException</span>(<span class="string"><span class="delimiter">&quot;</span><span class="content">BAM!</span><span class="delimiter">&quot;</span></span>);
 });
 Try&lt;<span class="predefined-type">String</span>&gt; result = Try.of(checkedSupplier)
@@ -1167,9 +1167,9 @@ CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom()
         .ringBufferSizeInClosedState(<span class="integer">2</span>)
         .ringBufferSizeInHalfOpenState(<span class="integer">2</span>)
         .waitDurationInOpenState(<span class="predefined-type">Duration</span>.ofMillis(<span class="integer">1000</span>))
-        .recordFailure(throwable -&gt; API.Match(throwable).of(
-                API.Case(Predicates.instanceOf(WebServiceException.class), <span class="predefined-constant">true</span>),
-                API.Case(API.<span class="error">$</span>(), <span class="predefined-constant">false</span>)))
+        .recordFailure(throwable -&gt; Match(throwable).of(
+                Case(<span class="error">$</span>(instanceOf(WebServiceException.class)), <span class="predefined-constant">true</span>),
+                Case(<span class="error">$</span>(), <span class="predefined-constant">false</span>)))
         .build();
 CircuitBreaker circuitBreaker = CircuitBreaker.of(<span class="string"><span class="delimiter">&quot;</span><span class="content">testName</span><span class="delimiter">&quot;</span></span>, circuitBreakerConfig);
 
@@ -1179,7 +1179,7 @@ circuitBreaker.onError(<span class="integer">0</span>, <span class="keyword">new
 assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
 
 <span class="comment">//When</span>
-Try.CheckedRunnable checkedRunnable = CircuitBreaker.decorateCheckedRunnable(circuitBreaker, () -&gt; {
+CheckedRunnable checkedRunnable = CircuitBreaker.decorateCheckedRunnable(circuitBreaker, () -&gt; {
     <span class="keyword">throw</span> <span class="keyword">new</span> <span class="exception">SocketTimeoutException</span>(<span class="string"><span class="delimiter">&quot;</span><span class="content">BAM!</span><span class="delimiter">&quot;</span></span>);
 });
 Try result = Try.run(checkedRunnable);
@@ -1282,7 +1282,7 @@ RateLimiter rateLimiter = RateLimiter.of(<span class="string"><span class="delim
 <div class="listingblock">
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="java"><span class="comment">// Decorate your call to BackendService.doSomething()</span>
-Try.CheckedRunnable restrictedCall = RateLimiter
+CheckedRunnable restrictedCall = RateLimiter
     .decorateCheckedRunnable(rateLimiter, backendService::doSomething);
 
 Try.run(restrictedCall)
@@ -1434,7 +1434,7 @@ You can invoke the decorated function with <code>Try.of(&#8230;&#8203;)</code> o
 Bulkhead bulkhead = Bulkhead.of(<span class="string"><span class="delimiter">&quot;</span><span class="content">testName</span><span class="delimiter">&quot;</span></span>, config);
 
 <span class="comment">// When I decorate my function</span>
-Try.CheckedSupplier&lt;<span class="predefined-type">String</span>&gt; decoratedSupplier = Bulkhead.decorateCheckedSupplier(bulkhead, () -&gt; <span class="string"><span class="delimiter">&quot;</span><span class="content">This can be any method which returns: 'Hello</span><span class="delimiter">&quot;</span></span>);
+CheckedFunction0&lt;<span class="predefined-type">String</span>&gt; decoratedSupplier = Bulkhead.decorateCheckedSupplier(bulkhead, () -&gt; <span class="string"><span class="delimiter">&quot;</span><span class="content">This can be any method which returns: 'Hello</span><span class="delimiter">&quot;</span></span>);
 
 <span class="comment">// and chain an other function with map</span>
 Try&lt;<span class="predefined-type">String</span>&gt; result = Try.of(decoratedSupplier)
@@ -1443,7 +1443,7 @@ Try&lt;<span class="predefined-type">String</span>&gt; result = Try.of(decorated
 <span class="comment">// Then the Try Monad returns a Success&lt;String&gt;, if all functions ran successfully.</span>
 assertThat(result.isSuccess()).isTrue();
 assertThat(result.get()).isEqualTo(<span class="string"><span class="delimiter">&quot;</span><span class="content">This can be any method which returns: 'Hello world'</span><span class="delimiter">&quot;</span></span>);
-assertThat(bulkhead.getAvailableConcurrentCalls()).isEqualTo(<span class="integer">1</span>);</code></pre>
+assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(<span class="integer">1</span>);</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -1456,10 +1456,10 @@ Bulkhead bulkhead = Bulkhead.of(<span class="string"><span class="delimiter">&qu
 Bulkhead anotherBulkhead = Bulkhead.of(<span class="string"><span class="delimiter">&quot;</span><span class="content">testAnother</span><span class="delimiter">&quot;</span></span>, config);
 
 <span class="comment">// When I create a Supplier and a Function which are decorated by different Bulkheads</span>
-Try.CheckedSupplier&lt;<span class="predefined-type">String</span>&gt; decoratedSupplier
+CheckedFunction0&lt;<span class="predefined-type">String</span>&gt; decoratedSupplier
     = Bulkhead.decorateCheckedSupplier(bulkhead, () -&gt; <span class="string"><span class="delimiter">&quot;</span><span class="content">Hello</span><span class="delimiter">&quot;</span></span>);
 
-Try.CheckedFunction&lt;<span class="predefined-type">String</span>, <span class="predefined-type">String</span>&gt; decoratedFunction
+CheckedFunction1&lt;<span class="predefined-type">String</span>, <span class="predefined-type">String</span>&gt; decoratedFunction
     = Bulkhead.decorateCheckedFunction(anotherBulkhead, (input) -&gt; input + <span class="string"><span class="delimiter">&quot;</span><span class="content"> world</span><span class="delimiter">&quot;</span></span>);
 
 <span class="comment">// and I chain a function with map</span>
@@ -1469,8 +1469,8 @@ Try&lt;<span class="predefined-type">String</span>&gt; result = Try.of(decorated
 <span class="comment">// Then</span>
 assertThat(result.isSuccess()).isTrue();
 assertThat(result.get()).isEqualTo(<span class="string"><span class="delimiter">&quot;</span><span class="content">Hello world</span><span class="delimiter">&quot;</span></span>);
-assertThat(bulkhead.getAvailableConcurrentCalls()).isEqualTo(<span class="integer">1</span>);
-assertThat(anotherBulkhead.getAvailableConcurrentCalls()).isEqualTo(<span class="integer">1</span>);</code></pre>
+assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(<span class="integer">1</span>);
+assertThat(anotherBulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(<span class="integer">1</span>);</code></pre>
 </div>
 </div>
 <div class="sect4">
@@ -1506,7 +1506,7 @@ CompletableFuture&lt;<span class="predefined-type">String</span>&gt; future = Co
 
 <span class="comment">// Then</span>
 assertThat(result).isEqualTo(<span class="string"><span class="delimiter">&quot;</span><span class="content">This can be any method which returns: 'Hello world'</span><span class="delimiter">&quot;</span></span>);
-assertThat(bulkhead.getAvailableConcurrentCalls()).isEqualTo(<span class="integer">1</span>);</code></pre>
+assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(<span class="integer">1</span>);</code></pre>
 </div>
 </div>
 </div>
@@ -1524,7 +1524,7 @@ bulkhead.isCallPermitted();
 bulkhead.isCallPermitted();
 
 <span class="comment">// When</span>
-Try.CheckedRunnable checkedRunnable = Bulkhead.decorateCheckedRunnable(bulkhead, () -&gt; {<span class="keyword">throw</span> <span class="keyword">new</span> <span class="exception">RuntimeException</span>(<span class="string"><span class="delimiter">&quot;</span><span class="content">BAM!</span><span class="delimiter">&quot;</span></span>);});
+CheckedRunnable checkedRunnable = Bulkhead.decorateCheckedRunnable(bulkhead, () -&gt; {<span class="keyword">throw</span> <span class="keyword">new</span> <span class="exception">RuntimeException</span>(<span class="string"><span class="delimiter">&quot;</span><span class="content">BAM!</span><span class="delimiter">&quot;</span></span>);});
 Try result = Try.run(checkedRunnable);
 
 <span class="comment">//Then</span>
@@ -1601,7 +1601,7 @@ given(helloWorldService.sayHelloWorld()).willThrow(<span class="keyword">new</sp
 <span class="comment">// Create a Retry with default configuration</span>
 Retry retryContext = Retry.ofDefaults(<span class="string"><span class="delimiter">&quot;</span><span class="content">id</span><span class="delimiter">&quot;</span></span>);
 <span class="comment">// Decorate the invocation of the HelloWorldService</span>
-Try.CheckedSupplier&lt;<span class="predefined-type">String</span>&gt; retryableSupplier = Retry.decorateCheckedSupplier(retryContext, helloWorldService::sayHelloWorld);
+CheckedFunction0&lt;<span class="predefined-type">String</span>&gt; retryableSupplier = Retry.decorateCheckedSupplier(retryContext, helloWorldService::sayHelloWorld);
 
 <span class="comment">// When I invoke the function</span>
 Try&lt;<span class="predefined-type">String</span>&gt; result = Try.of(retryableSupplier).recover((throwable) -&gt; <span class="string"><span class="delimiter">&quot;</span><span class="content">Hello world from recovery function</span><span class="delimiter">&quot;</span></span>);
@@ -1659,7 +1659,7 @@ javax.cache.Cache&lt;<span class="predefined-type">String</span>, <span class="p
 Cache&lt;<span class="predefined-type">String</span>, <span class="predefined-type">String</span>&gt; cacheContext = Cache.of(cacheInstance);
 
 <span class="comment">// Decorate your call to BackendService.doSomething()</span>
-Try.CheckedFunction&lt;<span class="predefined-type">String</span>, <span class="predefined-type">String</span>&gt; cachedFunction = Decorators.ofCheckedSupplier(() -&gt; backendService.doSomething())
+CheckedFunction1&lt;<span class="predefined-type">String</span>, <span class="predefined-type">String</span>&gt; cachedFunction = Decorators.ofCheckedSupplier(() -&gt; backendService.doSomething())
     .withCache(cacheContext)
     .decorate();
 <span class="predefined-type">String</span> value = Try.of(() -&gt; cachedFunction.apply(<span class="string"><span class="delimiter">&quot;</span><span class="content">cacheKey</span><span class="delimiter">&quot;</span></span>)).get();</code></pre>
@@ -2340,7 +2340,7 @@ a fallback value that is returned when the rate limiter rate limit identified by
 <span class="directive">public</span> <span class="type">class</span> <span class="class">BusinessBService</span> <span class="directive">implements</span> BusinessService  {
 
     <span class="directive">public</span> Try&lt;<span class="predefined-type">String</span>&gt; methodWithRecovery() {
-        Try.CheckedSupplier&lt;<span class="predefined-type">String</span>&gt; backendFunction = CircuitBreaker.decorateCheckedSupplier(circuitBreaker, () -&gt; backendBConnector.failure());
+        CheckedFunction0&lt;<span class="predefined-type">String</span>&gt; backendFunction = CircuitBreaker.decorateCheckedSupplier(circuitBreaker, () -&gt; backendBConnector.failure());
         <span class="keyword">return</span> Try.of(backendFunction)
                 .recover((throwable) -&gt; recovery(throwable));
     }
@@ -2870,7 +2870,7 @@ So you can easily restrict not only network calls but your local in-memory opera
 <div id="footer">
 <div id="footer-text">
 Version 0.8.2<br>
-Last updated 2017-05-10 20:35:45 +03:00
+Last updated 2017-05-11 10:18:41 +02:00
 </div>
 </div>
 </body>
