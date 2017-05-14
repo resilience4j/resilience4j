@@ -27,6 +27,8 @@ import io.vavr.CheckedRunnable;
 
 import java.time.Duration;
 import java.util.concurrent.Callable;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -67,6 +69,37 @@ public interface RateLimiter {
      */
     static RateLimiter ofDefaults(String name) {
         return new AtomicRateLimiter(name, RateLimiterConfig.ofDefaults());
+    }
+
+    /**
+     * Returns a supplier which is decorated by a rateLimiter.
+     *
+     * @param rateLimiter the rateLimiter
+     * @param supplier the original supplier
+     * @param <T> the type of the returned CompletionStage's result
+     * @return a supplier which is decorated by a RateLimiter.
+     */
+    static <T> Supplier<CompletionStage<T>> decorateCompletionStage(RateLimiter rateLimiter, Supplier<CompletionStage<T>> supplier) {
+        return () -> {
+
+            final CompletableFuture<T> promise = new CompletableFuture<>();
+            try {
+                waitForPermission(rateLimiter);
+                supplier.get()
+                    .whenComplete(
+                        (result, throwable) -> {
+                            if (throwable != null) {
+                                promise.completeExceptionally(throwable);
+                            } else {
+                                promise.complete(result);
+                            }
+                        }
+                    );
+            } catch (Throwable throwable) {
+                promise.completeExceptionally(throwable);
+            }
+            return promise;
+        };
     }
 
     /**

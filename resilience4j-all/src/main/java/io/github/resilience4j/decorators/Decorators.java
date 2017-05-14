@@ -303,6 +303,11 @@ public interface Decorators{
             return this;
         }
 
+        public DecorateCompletionStage<T> withRateLimiter(RateLimiter rateLimiter) {
+            stageSupplier = RateLimiter.decorateCompletionStage(rateLimiter, stageSupplier);
+            return this;
+        }
+
         public Supplier<CompletionStage<T>> decorate() {
             return stageSupplier;
         }
