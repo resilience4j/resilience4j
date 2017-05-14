@@ -19,6 +19,11 @@
 package io.github.resilience4j.circuitbreaker.operator;
 
 
+import org.reactivestreams.Subscriber;
+import org.reactivestreams.Subscription;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerOpenException;
 import io.github.resilience4j.core.StopWatch;
@@ -28,10 +33,6 @@ import io.reactivex.Observer;
 import io.reactivex.SingleObserver;
 import io.reactivex.SingleOperator;
 import io.reactivex.disposables.Disposable;
-import org.reactivestreams.Subscriber;
-import org.reactivestreams.Subscription;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -102,9 +103,7 @@ public class CircuitBreakerOperator<T> implements ObservableOperator<T, T>, Flow
         @Override
         public void onSubscribe(Subscription subscription) {
             this.subscription = subscription;
-            if (LOG.isDebugEnabled()) {
-                LOG.info("onSubscribe");
-            }
+            LOG.debug("onSubscribe");
             if (circuitBreaker.isCallPermitted()) {
                 stopWatch = StopWatch.start(circuitBreaker.getName());
                 childSubscriber.onSubscribe(this);
@@ -121,9 +120,7 @@ public class CircuitBreakerOperator<T> implements ObservableOperator<T, T>, Flow
          */
         @Override
         public void onNext(T event) {
-            if (LOG.isDebugEnabled()) {
-                LOG.info("onNext: {}", event);
-            }
+            LOG.debug("onNext: {}", event);
             if (!isCancelled()) {
                 childSubscriber.onNext(event);
             }
@@ -134,9 +131,7 @@ public class CircuitBreakerOperator<T> implements ObservableOperator<T, T>, Flow
          */
         @Override
         public void onError(Throwable e) {
-            if (LOG.isDebugEnabled()) {
-                LOG.info("onError", e);
-            }
+            LOG.debug("onError", e);
             if (!isCancelled()) {
                 circuitBreaker.onError(stopWatch.stop().getProcessingDuration().toNanos(), e);
                 childSubscriber.onError(e);
@@ -149,9 +144,7 @@ public class CircuitBreakerOperator<T> implements ObservableOperator<T, T>, Flow
          */
         @Override
         public void onComplete() {
-            if (LOG.isDebugEnabled()) {
-                LOG.info("onComplete");
-            }
+            LOG.debug("onComplete");
             if (!isCancelled()) {
                 circuitBreaker.onSuccess(stopWatch.stop().getProcessingDuration().toNanos());
                 childSubscriber.onComplete();
@@ -199,9 +192,7 @@ public class CircuitBreakerOperator<T> implements ObservableOperator<T, T>, Flow
         @Override
         public void onSubscribe(Disposable disposable) {
             this.disposable = disposable;
-            if (LOG.isDebugEnabled()) {
-                LOG.info("onSubscribe");
-            }
+            LOG.debug("onSubscribe");
             if (circuitBreaker.isCallPermitted()) {
                 stopWatch = StopWatch.start(circuitBreaker.getName());
                 childObserver.onSubscribe(this);
@@ -218,9 +209,7 @@ public class CircuitBreakerOperator<T> implements ObservableOperator<T, T>, Flow
          */
         @Override
         public void onNext(T event) {
-            if (LOG.isDebugEnabled()) {
-                LOG.info("onNext: {}", event);
-            }
+            LOG.debug("onNext: {}", event);
             if (!isDisposed()) {
                 childObserver.onNext(event);
             }
@@ -231,9 +220,7 @@ public class CircuitBreakerOperator<T> implements ObservableOperator<T, T>, Flow
          */
         @Override
         public void onError(Throwable e) {
-            if (LOG.isDebugEnabled()) {
-                LOG.info("onError", e);
-            }
+            LOG.debug("onError", e);
             if (!isDisposed()) {
                 circuitBreaker.onError(stopWatch.stop().getProcessingDuration().toNanos(), e);
                 childObserver.onError(e);
@@ -245,9 +232,7 @@ public class CircuitBreakerOperator<T> implements ObservableOperator<T, T>, Flow
          */
         @Override
         public void onComplete() {
-            if (LOG.isDebugEnabled()) {
-                LOG.info("onComplete");
-            }
+            LOG.debug("onComplete");
             if (!isDisposed()) {
                 circuitBreaker.onSuccess(stopWatch.stop().getProcessingDuration().toNanos());
                 childObserver.onComplete();
@@ -292,9 +277,7 @@ public class CircuitBreakerOperator<T> implements ObservableOperator<T, T>, Flow
         @Override
         public void onSubscribe(Disposable disposable) {
             this.disposable = disposable;
-            if (LOG.isDebugEnabled()) {
-                LOG.info("onSubscribe");
-            }
+            LOG.debug("onSubscribe");
             if (circuitBreaker.isCallPermitted()) {
                 stopWatch = StopWatch.start(circuitBreaker.getName());
                 childObserver.onSubscribe(this);
@@ -311,9 +294,7 @@ public class CircuitBreakerOperator<T> implements ObservableOperator<T, T>, Flow
          */
         @Override
         public void onError(Throwable e) {
-            if (LOG.isDebugEnabled()) {
-                LOG.info("onError", e);
-            }
+            LOG.debug("onError", e);
             if (!isDisposed()) {
                 circuitBreaker.onError(stopWatch.stop().getProcessingDuration().toNanos(), e);
                 childObserver.onError(e);
@@ -325,9 +306,7 @@ public class CircuitBreakerOperator<T> implements ObservableOperator<T, T>, Flow
          */
         @Override
         public void onSuccess(T value) {
-            if (LOG.isDebugEnabled()) {
-                LOG.info("onComplete");
-            }
+            LOG.debug("onComplete");
             if (!isDisposed()) {
                 circuitBreaker.onSuccess(stopWatch.stop().getProcessingDuration().toNanos());
                 childObserver.onSuccess(value);
