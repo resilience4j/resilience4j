@@ -1,6 +1,8 @@
 apply plugin: 'org.asciidoctor.convert'
 apply plugin: 'org.ajoberstar.github-pages'
 
+artifactoryPublish.skip=true
+
 asciidoctor.dependsOn test
 publishGhPages.dependsOn asciidoctor
 
