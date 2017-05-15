@@ -46,8 +46,9 @@ bintray {
     publish = true //If version should be auto published after an upload
     publications = ['mavenJava']
     pkg {
-        repo = 'maven'
+        repo = 'Maven'
         name = "${projectArtifactId}"
+        userOrg = "${projectArtifactId}"
         websiteUrl = "${url}"
         issueTrackerUrl = 'https://github.com/resilience4j/resilience4j/issues'
         vcsUrl = 'https://github.com/resilience4j/resilience4j.git'
@@ -74,7 +75,10 @@ publishing {
         mavenJava(MavenPublication) {
             from components.java
             pom.withXml {
-                def devs = ['RobWin': 'Robert Winkler', 'storozhukBM': 'Bogdan Storozhuk']
+                def devs = ['RobWin': 'Robert Winkler',
+                            'storozhukBM': 'Bogdan Storozhuk',
+                            'drmaas': 'Dan Maas',
+                            'goldobin': 'Oleksandr Goldobin']
                 def root = asNode()
 
                 root.dependencies.'*'.findAll() {
@@ -88,7 +92,7 @@ publishing {
                 root.appendNode('name', "${projectArtifactId}")
                 root.appendNode('packaging', 'jar')
                 root.appendNode('url', "${url}")
-                root.appendNode('description', 'A CircuitBreaker pattern implementation for Java8 and functional programming .')
+                root.appendNode('description', project.description)
 
                 def license = root.appendNode('licenses').appendNode('license')
                 license.appendNode('name', 'Apache-2.0')

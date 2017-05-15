@@ -13,18 +13,17 @@ buildscript {
         classpath 'me.champeau.gradle:jmh-gradle-plugin:0.3.1'
         classpath "org.asciidoctor:asciidoctor-gradle-plugin:1.5.3"
         classpath "org.ajoberstar:gradle-git:1.3.2"
-        classpath "org.jfrog.buildinfo:build-info-extractor-gradle:4.4.14"
+        classpath "org.jfrog.buildinfo:build-info-extractor-gradle:4.4.17"
         classpath 'com.github.erizo.gradle:jcstress-gradle-plugin:0.8.0'
     }
 }
 
 apply plugin: 'idea'
 apply plugin: 'com.github.kt3k.coveralls'
-apply plugin: 'com.jfrog.bintray'
-apply from: "./libraries.gradle"
+apply from: "${rootDir}/libraries.gradle"
 
 ext {
-    releaseVersion = '0.8.2'
+    releaseVersion = '0.9.0'
 }
 
 allprojects {
@@ -32,7 +31,7 @@ allprojects {
     apply plugin: 'me.champeau.gradle.jmh'
     apply plugin: 'com.jfrog.artifactory'
 
-    version = '0.9.0-SNAPSHOT'
+    version = '0.9.1-SNAPSHOT'
     group = 'io.github.resilience4j'
     description = 'Resilience4j is a lightweight, easy-to-use fault tolerance library designed for Java8 and functional programming'
 
@@ -45,7 +44,7 @@ artifactoryPublish.skip=true // apply to all projects except the root
 
 ext {
     coreProjects = subprojects.findAll {
-        p -> !p.name.contains("test")
+        p -> !p.name.contains("test") || !p.name.contains("documentation")
     }
 }
 
@@ -53,8 +52,8 @@ subprojects {
     apply plugin: 'java'
     apply plugin: 'maven'
     apply plugin: 'maven-publish'
+    apply plugin: 'com.jfrog.bintray'
     apply from: "${rootDir}/publishing.gradle"
-
     dependencies {
         compile ( libraries.vavr)
         compile ( libraries.slf4j)
