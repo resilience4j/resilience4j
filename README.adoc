@@ -87,7 +87,8 @@ decoratedSupplier = Retry
 String result = Try.ofSupplier(decoratedSupplier)
     .recover(throwable -> "Hello from Recovery").get();
     
-// When you don't want to decorate your lambda expression, but just execute it and protect the call by a CircuitBreaker.
+// When you don't want to decorate your lambda expression, 
+// but just execute it and protect the call by a CircuitBreaker.
 String result = circuitBreaker.executeSupplier(backendService::doSomething);
 
 ----
