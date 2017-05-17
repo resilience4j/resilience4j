@@ -29,9 +29,10 @@ import ratpack.test.http.TestHttpClient
 import spock.lang.AutoCleanup
 import spock.lang.Specification
 
+import java.time.Duration
+
 import static ratpack.groovy.test.embed.GroovyEmbeddedApp.ratpack
 
-// TODO add docs
 class Resilience4jModuleSpec extends Specification {
 
     @AutoCleanup
@@ -39,6 +40,398 @@ class Resilience4jModuleSpec extends Specification {
 
     @Delegate
     TestHttpClient client
+
+    def "test circuit breakers"() {
+        given:
+        def circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults()
+        app = ratpack {
+            serverConfig {
+                development(false)
+            }
+            bindings {
+                bindInstance(CircuitBreakerRegistry, circuitBreakerRegistry)
+                module(Resilience4jModule) {
+                    it.circuitBreaker('test') {
+                        it.defaults(true)
+                    }.circuitBreaker('test2') {
+                        it.failureRateThreshold(50)
+                                .waitIntervalInMillis(5000)
+                                .ringBufferSizeInClosedState(200)
+                                .ringBufferSizeInHalfOpenState(20)
+                    }
+                }
+            }
+            handlers {
+                get {
+                    render 'ok'
+                }
+            }
+        }
+        client = testHttpClient(app)
+
+        when:
+        def actual = client.get()
+
+        then:
+        actual.statusCode == 200
+        actual.body.text == 'ok'
+
+        and:
+        circuitBreakerRegistry.allCircuitBreakers.size() == 2
+        def test1 = circuitBreakerRegistry.circuitBreaker('test1')
+        test1.name == 'test1'
+        test1.circuitBreakerConfig.with {
+            assert ringBufferSizeInClosedState == 100
+            assert ringBufferSizeInHalfOpenState == 10
+            assert waitDurationInOpenState == Duration.ofMinutes(1)
+            assert failureRateThreshold == 50
+            it
+        }
+        def test2 = circuitBreakerRegistry.circuitBreaker('test2')
+        test2.name == 'test2'
+        test2.circuitBreakerConfig.with {
+            assert ringBufferSizeInClosedState == 200
+            assert ringBufferSizeInHalfOpenState == 20
+            assert waitDurationInOpenState == Duration.ofMillis(5000)
+            assert failureRateThreshold == 50
+            it
+        }
+    }
+
+    def "test no circuit breakers"() {
+        given:
+        def circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults()
+        app = ratpack {
+            serverConfig {
+                development(false)
+            }
+            bindings {
+                bindInstance(CircuitBreakerRegistry, circuitBreakerRegistry)
+                module(Resilience4jModule)
+            }
+            handlers {
+                get {
+                    render 'ok'
+                }
+            }
+        }
+        client = testHttpClient(app)
+
+        when:
+        def actual = client.get()
+
+        then:
+        actual.statusCode == 200
+        actual.body.text == 'ok'
+
+        and:
+        circuitBreakerRegistry.allCircuitBreakers.size() == 0
+    }
+
+    def "test circuit breakers from yaml"() {
+        given:
+        def circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults()
+        app = ratpack {
+            serverConfig {
+                development(false)
+                yaml(getClass().classLoader.getResource('application.yml'))
+                require("/resilience4j", Resilience4jConfig)
+            }
+            bindings {
+                bindInstance(CircuitBreakerRegistry, circuitBreakerRegistry)
+                module(Resilience4jModule)
+            }
+            handlers {
+                get {
+                    render 'ok'
+                }
+            }
+        }
+        client = testHttpClient(app)
+
+        when:
+        def actual = client.get()
+
+        then:
+        actual.statusCode == 200
+        actual.body.text == 'ok'
+
+        and:
+        circuitBreakerRegistry.allCircuitBreakers.size() == 2
+        def test1 = circuitBreakerRegistry.circuitBreaker('test1')
+        test1.name == 'test1'
+        test1.circuitBreakerConfig.with {
+            assert ringBufferSizeInClosedState == 100
+            assert ringBufferSizeInHalfOpenState == 10
+            assert waitDurationInOpenState == Duration.ofMinutes(1)
+            assert failureRateThreshold == 50
+            it
+        }
+        def test2 = circuitBreakerRegistry.circuitBreaker('test2')
+        test2.name == 'test2'
+        test2.circuitBreakerConfig.with {
+            assert ringBufferSizeInClosedState == 200
+            assert ringBufferSizeInHalfOpenState == 20
+            assert waitDurationInOpenState == Duration.ofMillis(5000)
+            assert failureRateThreshold == 50
+            it
+        }
+    }
+
+    def "test rate limiters"() {
+        given:
+        def rateLimiterRegistry = RateLimiterRegistry.ofDefaults()
+        app = ratpack {
+            serverConfig {
+                development(false)
+            }
+            bindings {
+                bindInstance(RateLimiterRegistry, rateLimiterRegistry)
+                module(Resilience4jModule) {
+                    it.rateLimiter('test') {
+                        it.defaults(true)
+                    }.rateLimiter('test2') {
+                        it.limitForPeriod(100)
+                                .limitRefreshPeriodInNanos(900)
+                                .timeoutInMillis(10)
+                    }
+                }
+            }
+            handlers {
+                get {
+                    render 'ok'
+                }
+            }
+        }
+        client = testHttpClient(app)
+
+        when:
+        def actual = client.get()
+
+        then:
+        actual.statusCode == 200
+        actual.body.text == 'ok'
+
+        and:
+        rateLimiterRegistry.allRateLimiters.size() == 2
+        def test1 = rateLimiterRegistry.rateLimiter('test1')
+        test1.name == 'test1'
+        test1.rateLimiterConfig.with {
+            assert limitForPeriod == 50
+            assert limitRefreshPeriod == Duration.ofNanos(500)
+            assert timeoutDuration == Duration.ofSeconds(5)
+            it
+        }
+        def test2 = rateLimiterRegistry.rateLimiter('test2')
+        test2.name == 'test2'
+        test2.rateLimiterConfig.with {
+            assert limitForPeriod == 100
+            assert limitRefreshPeriod == Duration.ofNanos(900)
+            assert timeoutDuration == Duration.ofMillis(10)
+            it
+        }
+    }
+
+    def "test no rate limiters"() {
+        given:
+        def rateLimiterRegistry = RateLimiterRegistry.ofDefaults()
+        app = ratpack {
+            serverConfig {
+                development(false)
+            }
+            bindings {
+                bindInstance(RateLimiterRegistry, rateLimiterRegistry)
+                module(Resilience4jModule)
+            }
+            handlers {
+                get {
+                    render 'ok'
+                }
+            }
+        }
+        client = testHttpClient(app)
+
+        when:
+        def actual = client.get()
+
+        then:
+        actual.statusCode == 200
+        actual.body.text == 'ok'
+
+        and:
+        rateLimiterRegistry.allRateLimiters.size() == 0
+    }
+
+    def "test rate limiters from yaml"() {
+        given:
+        def rateLimiterRegistry = RateLimiterRegistry.ofDefaults()
+        app = ratpack {
+            serverConfig {
+                development(false)
+                yaml(getClass().classLoader.getResource('application.yml'))
+                require("/resilience4j", Resilience4jConfig)
+            }
+            bindings {
+                bindInstance(RateLimiterRegistry, rateLimiterRegistry)
+                module(Resilience4jModule)
+            }
+            handlers {
+                get {
+                    render 'ok'
+                }
+            }
+        }
+        client = testHttpClient(app)
+
+        when:
+        def actual = client.get()
+
+        then:
+        actual.statusCode == 200
+        actual.body.text == 'ok'
+
+        and:
+        rateLimiterRegistry.allRateLimiters.size() == 2
+        def test1 = rateLimiterRegistry.rateLimiter('test1')
+        test1.name == 'test1'
+        test1.rateLimiterConfig.with {
+            assert limitForPeriod == 50
+            assert limitRefreshPeriod == Duration.ofNanos(500)
+            assert timeoutDuration == Duration.ofSeconds(5)
+            it
+        }
+        def test2 = rateLimiterRegistry.rateLimiter('test2')
+        test2.name == 'test2'
+        test2.rateLimiterConfig.with {
+            assert limitForPeriod == 100
+            assert limitRefreshPeriod == Duration.ofNanos(900)
+            assert timeoutDuration == Duration.ofMillis(10)
+            it
+        }
+    }
+
+    def "test retries"() {
+        given:
+        def retryRegistry = RetryRegistry.ofDefaults()
+        app = ratpack {
+            serverConfig {
+                development(false)
+            }
+            bindings {
+                bindInstance(RetryRegistry, retryRegistry)
+                module(Resilience4jModule) {
+                    it.retry('test') {
+                        it.defaults(true)
+                    }.retry('test2') {
+                        it.maxAttempts(3)
+                                .waitDurationInMillis(1000)
+                    }
+                }
+            }
+            handlers {
+                get {
+                    render 'ok'
+                }
+            }
+        }
+        client = testHttpClient(app)
+
+        when:
+        def actual = client.get()
+
+        then:
+        actual.statusCode == 200
+        actual.body.text == 'ok'
+
+        and:
+        retryRegistry.allRetries.size() == 2
+        def test1 = retryRegistry.retry('test1')
+        test1.name == 'test1'
+        test1.retryConfig.with {
+            assert maxAttempts == 3
+            it
+        }
+        def test2 = retryRegistry.retry('test2')
+        test2.name == 'test2'
+        test2.retryConfig.with {
+            assert maxAttempts == 3
+            it
+        }
+    }
+
+    def "test no retries"() {
+        given:
+        def retryRegistry = RetryRegistry.ofDefaults()
+        app = ratpack {
+            serverConfig {
+                development(false)
+            }
+            bindings {
+                bindInstance(RetryRegistry, retryRegistry)
+                module(Resilience4jModule)
+            }
+            handlers {
+                get {
+                    render 'ok'
+                }
+            }
+        }
+        client = testHttpClient(app)
+
+        when:
+        def actual = client.get()
+
+        then:
+        actual.statusCode == 200
+        actual.body.text == 'ok'
+
+        and:
+        retryRegistry.allRetries.size() == 0
+    }
+
+    def "test retries from yaml"() {
+        given:
+        def retryRegistry = RetryRegistry.ofDefaults()
+        app = ratpack {
+            serverConfig {
+                development(false)
+                yaml(getClass().classLoader.getResource('application.yml'))
+                require("/resilience4j", Resilience4jConfig)
+            }
+            bindings {
+                bindInstance(RetryRegistry, retryRegistry)
+                module(Resilience4jModule)
+            }
+            handlers {
+                get {
+                    render 'ok'
+                }
+            }
+        }
+        client = testHttpClient(app)
+
+        when:
+        def actual = client.get()
+
+        then:
+        actual.statusCode == 200
+        actual.body.text == 'ok'
+
+        and:
+        retryRegistry.allRetries.size() == 2
+        def test1 = retryRegistry.retry('test1')
+        test1.name == 'test1'
+        test1.retryConfig.with {
+            assert maxAttempts == 3
+            it
+        }
+        def test2 = retryRegistry.retry('test2')
+        test2.name == 'test2'
+        test2.retryConfig.with {
+            assert maxAttempts == 3
+            it
+        }
+    }
 
     def "test dropwizard metrics"() {
         given:
