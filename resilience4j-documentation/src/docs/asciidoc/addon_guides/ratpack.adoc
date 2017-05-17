@@ -18,6 +18,31 @@ dependencies {
 }
 ```
 
+==== Basic Usage
+
+Installing the `Resilience4jModule` module provides a `CircuitBreakerRegistry`, `RateLimiterRegistry`,
+and `RetryRegistry` with the default configurations. It also install the Guice method interceptors
+for CircuitBreakers, RateLimiters, and Retries. Finally, it allows configuration of metrics
+and even the building of CircuitBreakers, RateLimiters, and Retries. See below for configuration details.
+
+Note: If you don't register a `CircuitBreakerRegistry` or `RateLimiterRegistry` or `RetryRegistry`, the defaults
+will be used.
+
+For example
+
+[source,java]
+----
+public class MyModule extends AbstractModule {
+
+    @Override
+    protected void configure() {
+        CircuitBreakerConfig config = CircuitBreakerConfig.custom();
+        bind(CircuitBreakerRegistry.class).toInstance(CircuitBreakerRegistry.of(config);
+        install(Resilience4jModule.class);
+    }
+}
+----
+
 ==== Handlers
 
 You can rate limit an endpoint by defining a `RateLimiterHandler` for the endpoint.
@@ -187,6 +212,92 @@ public class BusinessBService implements BusinessService  {
 }
 ----
 
+==== Adding CircuitBreakers, RateLimiters, and Retries
+These can be defined in the module configuration or in an external configuration.
+Note that the module only provide default registries, which you can replace by
+binding your own.
+
+Module configuration example:
+
+[source,java]
+----
+public class MyModule extends AbstractModule {
+
+    @Override
+    protected void configure() {
+        Resilience4jModule module = new Resilience4jModule();
+        module.configure(c -> c
+            .circuitBreaker("test1", cb -> cb
+                .defaults(true)
+            ).circuitBreaker("test2", cb -> cb
+                .failureRateThreshold(50)
+                .waitIntervalInMillis(5000)
+                .ringBufferSizeInClosedState(200)
+                .ringBufferSizeInHalfOpenState(20)
+            ).rateLimiter("test1", cb -> cb
+                .defaults(true)
+            ).rateLimiter("test2", cb -> cb
+                .limitForPeriod(100)
+                .limitRefreshPeriodInNanos(500)
+                .timeoutInMillis(10)
+            ).retry("test1", cb -> cb
+                .defaults(true)
+            ).retry("test2", cb -> cb
+                .maxAttempts(3)
+                .waitDurationInMillis(1000)
+            )
+        );
+        install(module);
+    }
+}
+----
+
+External configuration example:
+
+[source,groovy]
+----
+ratpack {
+    serverConfig {
+        yaml(getClass().classLoader.getResource('application.yml'))
+        require("/resilience4j", Resilience4jConfig)
+    }
+    bindings {
+        module(Resilience4jModule)
+    }
+    handlers {
+        get {
+            render 'ok'
+        }
+    }
+}
+----
+
+[source,yaml]
+----
+resilience4j:
+    circuitBreakers:
+        test1:
+            defaults: true
+        test2:
+            ringBufferSizeInClosedState: 200
+            ringBufferSizeInHalfOpenState: 20
+            waitInterval: 5000
+            failureRateThreshold: 50
+    rateLimiters:
+        test1:
+            defaults: true
+        test2:
+            limitForPeriod: 100
+            limitRefreshPeriodInNanos: 500
+            timeoutInMillis: 10
+    retries:
+        test1:
+            defaults: true
+        test2:
+            maxAttempts: 3
+            waitDurationInMillis: 1000
+----
+
 ==== Metrics
 Both dropwizard and prometheus metrics can be auto configured and enabled for all registered
 circuitbreaker instances, ratelimiter instances, and retry instances.
@@ -236,29 +347,6 @@ TODO
 Ratpack provides the concept of a health check. See https://ratpack.io/manual/current/api/ratpack/health/HealthCheckHandler.html for details.
 CircuitBreaker, RateLimiter, and Retry health checks have not been implemented yet.
 When implemented they should function similarly to the spring boot health checks.
-
-==== Configuration
-
-You must install the `Resilience4jModule` Guice Module if you want to use AOP so that the method interceptors work.
-You can optionally configure your CircuitBreakers, RateLimiters, and Retries in your Guice Module as well.
-
-Note: If you don't register a `CircuitBreakerRegistry` or `RateLimiterRegistry`, the defaults
-will be used when using AOP.
-
-For example
-
-[source,java]
-----
-public class MyModule extends AbstractModule {
-
-    @Override
-    protected void configure() {
-        CircuitBreakerConfig config = CircuitBreakerConfig.custom();
-        bind(CircuitBreakerRegistry.class).toInstance(CircuitBreakerRegistry.of(config);
-        install(Resilience4jModule.class);
-    }
-}
-----
 
 ==== CircuitBreaker Event Monitoring
 TODO

@@ -1,0 +1,22 @@
+resilience4j:
+    circuitBreakers:
+        test1:
+            defaults: true
+        test2:
+            ringBufferSizeInClosedState: 200
+            ringBufferSizeInHalfOpenState: 20
+            waitIntervalInMillis: 5000
+            failureRateThreshold: 50
+    rateLimiters:
+        test1:
+            defaults: true
+        test2:
+            limitForPeriod: 100
+            limitRefreshPeriodInNanos: 900
+            timeoutInMillis: 10
+    retries:
+        test1:
+            defaults: true
+        test2:
+            maxAttempts: 3
+            waitDurationInMillis: 1000
