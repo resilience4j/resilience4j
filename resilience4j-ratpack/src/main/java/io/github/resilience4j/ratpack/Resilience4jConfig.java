@@ -16,9 +16,52 @@
 
 package io.github.resilience4j.ratpack;
 
+import io.github.resilience4j.ratpack.circuitbreaker.CircuitBreakerConfig;
+import io.github.resilience4j.ratpack.ratelimiter.RateLimiterConfig;
+import io.github.resilience4j.ratpack.retry.RetryConfig;
+import ratpack.func.Function;
+
+import java.util.HashMap;
+import java.util.Map;
+
+import static ratpack.util.Exceptions.uncheck;
+
 public class Resilience4jConfig {
+    private Map<String, CircuitBreakerConfig> circuitBreakers = new HashMap<>();
+    private Map<String, RateLimiterConfig> rateLimiters = new HashMap<>();
+    private Map<String, RetryConfig> retries = new HashMap<>();
     private boolean metrics = false;
     private boolean prometheus = false;
+
+    public Resilience4jConfig circuitBreaker(String name, Function<? super CircuitBreakerConfig, ? extends CircuitBreakerConfig> configure) {
+        try {
+            CircuitBreakerConfig finalConfig = configure.apply(new CircuitBreakerConfig());
+            circuitBreakers.put(name, finalConfig);
+            return this;
+        } catch (Exception e) {
+            throw uncheck(e);
+        }
+    }
+
+    public Resilience4jConfig rateLimiter(String name, Function<? super RateLimiterConfig, ? extends RateLimiterConfig> configure) {
+        try {
+            RateLimiterConfig finalConfig = configure.apply(new RateLimiterConfig());
+            rateLimiters.put(name, finalConfig);
+            return this;
+        } catch (Exception e) {
+            throw uncheck(e);
+        }
+    }
+
+    public Resilience4jConfig retry(String name, Function<? super RetryConfig, ? extends RetryConfig> configure) {
+        try {
+            RetryConfig finalConfig = configure.apply(new RetryConfig());
+            retries.put(name, finalConfig);
+            return this;
+        } catch (Exception e) {
+            throw uncheck(e);
+        }
+    }
 
     public Resilience4jConfig metrics(boolean metrics) {
         this.metrics = metrics;
@@ -28,6 +71,18 @@ public class Resilience4jConfig {
     public Resilience4jConfig prometheus(boolean prometheus) {
         this.prometheus = prometheus;
         return this;
+    }
+
+    public Map<String, CircuitBreakerConfig> getCircuitBreakers() {
+        return circuitBreakers;
+    }
+
+    public Map<String, RateLimiterConfig> getRateLimiters() {
+        return rateLimiters;
+    }
+
+    public Map<String, RetryConfig> getRetries() {
+        return retries;
     }
 
     public boolean isMetrics() {
