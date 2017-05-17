@@ -17,9 +17,11 @@ import static com.codahale.metrics.Timer.Context;
 public interface Timer {
 
     /**
-     * Starts the Timer
+     * Creates a Timer context and starts the timer
+     *
+     * @return the Timer context
      */
-    Context time();
+    Context context();
 
     /**
      * Stops the Timer and records a failed call.
@@ -126,7 +128,7 @@ public interface Timer {
      */
     static <T> CheckedFunction0<T> decorateCheckedSupplier(Timer timer, CheckedFunction0<T> supplier){
         return () -> {
-            final Context context = timer.time();
+            final Context context = timer.context();
             try {
                 T returnValue = supplier.apply();
                 timer.onSuccess(context);
@@ -147,7 +149,7 @@ public interface Timer {
      */
     static CheckedRunnable decorateCheckedRunnable(Timer timer, CheckedRunnable runnable){
         return () -> {
-            final Context context = timer.time();
+            final Context context = timer.context();
             try {
                 runnable.run();
                 timer.onSuccess(context);
@@ -167,7 +169,7 @@ public interface Timer {
      */
     static <T> Supplier<T> decorateSupplier(Timer timer, Supplier<T> supplier){
         return () -> {
-            final Context context = timer.time();
+            final Context context = timer.context();
             try {
                 T returnValue = supplier.get();
                 timer.onSuccess(context);
@@ -188,7 +190,7 @@ public interface Timer {
      */
     static <T> Callable<T> decorateCallable(Timer timer, Callable<T> callable){
         return () -> {
-            final Context context = timer.time();
+            final Context context = timer.context();
             try {
                 T returnValue = callable.call();
                 timer.onSuccess(context);
@@ -210,7 +212,7 @@ public interface Timer {
      */
     static Runnable decorateRunnable(Timer timer, Runnable runnable){
         return () -> {
-            final Context context = timer.time();
+            final Context context = timer.context();
             try {
                 runnable.run();
                 timer.onSuccess(context);
@@ -231,7 +233,7 @@ public interface Timer {
      */
     static <T, R> Function<T, R> decorateFunction(Timer timer, Function<T, R> function){
         return (T t) -> {
-            final Context context = timer.time();
+            final Context context = timer.context();
             try {
                 R returnValue = function.apply(t);
                 timer.onSuccess(context);
@@ -252,7 +254,7 @@ public interface Timer {
      */
     static <T, R> CheckedFunction1<T, R> decorateCheckedFunction(Timer timer, CheckedFunction1<T, R> function){
         return (T t) -> {
-            final Context context = timer.time();
+            final Context context = timer.context();
             try {
                 R returnValue = function.apply(t);
                 timer.onSuccess(context);
@@ -272,7 +274,7 @@ public interface Timer {
      */
     static <T> Supplier<CompletionStage<T>> decorateCompletionStageSupplier(Timer timer, Supplier<CompletionStage<T>> stageSupplier) {
         return () -> {
-            final Context context = timer.time();
+            final Context context = timer.context();
             try {
                 final CompletionStage<T> stage = stageSupplier.get();
 

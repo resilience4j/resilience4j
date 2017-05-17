@@ -34,7 +34,7 @@ import java.lang.annotation.Target;
  *         return "Sir Captain " + name;
  *     }
  * </code></pre>
- * each time the {@code #fancyName(String)} method is invoked, the method's execution will pass through a
+ * each context the {@code #fancyName(String)} method is invoked, the method's execution will pass through a
  * circuit breaker according to the given circuit breaker policy.
  */
 @Inherited

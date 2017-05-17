@@ -58,7 +58,7 @@ public class CircuitBreakerMetricsTest {
 
         //Then
         assertThat(value).isEqualTo("Hello world");
-        // Then the helloWorldService should be invoked 1 time
+        // Then the helloWorldService should be invoked 1 context
         BDDMockito.then(helloWorldService).should(times(1)).returnHelloWorld();
         assertThat(metricRegistry.getMetrics()).hasSize(5);
         assertThat(metricRegistry.getGauges().get("resilience4j.circuitbreaker.testName.buffered").getValue()).isEqualTo(1);
@@ -83,7 +83,7 @@ public class CircuitBreakerMetricsTest {
 
         //Then
         assertThat(value).isEqualTo("Hello world");
-        // Then the helloWorldService should be invoked 1 time
+        // Then the helloWorldService should be invoked 1 context
         BDDMockito.then(helloWorldService).should(times(1)).returnHelloWorld();
         assertThat(metricRegistry.getMetrics()).hasSize(5);
         assertThat(metricRegistry.getGauges().get("testPrefix.testName.buffered").getValue()).isEqualTo(1);

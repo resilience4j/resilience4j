@@ -52,7 +52,7 @@ public class RetryMetricsTest {
 
         //Then
         assertThat(value).isEqualTo("Hello world");
-        // Then the helloWorldService should be invoked 1 time
+        // Then the helloWorldService should be invoked 1 context
         BDDMockito.then(helloWorldService).should(times(1)).returnHelloWorld();
         assertThat(metricRegistry.getMetrics()).hasSize(1);
         assertThat(metricRegistry.getGauges().get("resilience4j.retry.testName.retry_max_ratio").getValue()).isEqualTo(0.0);
@@ -82,7 +82,7 @@ public class RetryMetricsTest {
 
         //Then
         assertThat(value).isEqualTo("Hello world");
-        // Then the helloWorldService should be invoked 1 time
+        // Then the helloWorldService should be invoked 1 context
         BDDMockito.then(helloWorldService).should(times(1)).returnHelloWorld();
         assertThat(metricRegistry.getMetrics()).hasSize(1);
         assertThat(metricRegistry.getGauges().get("testPrefix.testName.retry_max_ratio").getValue()).isEqualTo(0.0);

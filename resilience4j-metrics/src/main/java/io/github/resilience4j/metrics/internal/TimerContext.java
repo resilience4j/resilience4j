@@ -27,7 +27,7 @@ public class TimerContext implements Timer{
 
 
     @Override
-    public Context time() {
+    public Context context() {
         totalCallsCounter.inc();
         return successfulCallsTimer.time();
     }

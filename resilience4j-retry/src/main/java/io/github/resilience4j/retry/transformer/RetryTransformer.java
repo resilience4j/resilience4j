@@ -61,7 +61,7 @@ public class RetryTransformer<T> implements FlowableTransformer<T, T>, Observabl
         return Flowable.fromPublisher(d -> {
             SubscriptionArbiter sa = new SubscriptionArbiter();
             d.onSubscribe(sa);
-            RetrySubscriber<T> repeatSubscriber = new RetrySubscriber<>(d, retry.getMetrics().getMaxAttempts(), sa, upstream, retry);
+            RetrySubscriber<T> repeatSubscriber = new RetrySubscriber<>(d, retry.getRetryConfig().getMaxAttempts(), sa, upstream, retry);
             upstream.subscribe(repeatSubscriber);
         });
     }
@@ -72,7 +72,7 @@ public class RetryTransformer<T> implements FlowableTransformer<T, T>, Observabl
             Flowable<T> flowable = upstream.toFlowable(BackpressureStrategy.BUFFER);
             SubscriptionArbiter sa = new SubscriptionArbiter();
             d.onSubscribe(sa);
-            RetrySubscriber<T> retrySubscriber = new RetrySubscriber<>(d, retry.getMetrics().getMaxAttempts(), sa, flowable, retry);
+            RetrySubscriber<T> retrySubscriber = new RetrySubscriber<>(d, retry.getRetryConfig().getMaxAttempts(), sa, flowable, retry);
             flowable.subscribe(retrySubscriber);
         }).toObservable();
     }
@@ -83,7 +83,7 @@ public class RetryTransformer<T> implements FlowableTransformer<T, T>, Observabl
             Flowable<T> flowable = upstream.toFlowable();
             SubscriptionArbiter sa = new SubscriptionArbiter();
             d.onSubscribe(sa);
-            RetrySubscriber<T> retrySubscriber = new RetrySubscriber<>(d, retry.getMetrics().getMaxAttempts(), sa, flowable, retry);
+            RetrySubscriber<T> retrySubscriber = new RetrySubscriber<>(d, retry.getRetryConfig().getMaxAttempts(), sa, flowable, retry);
             flowable.subscribe(retrySubscriber);
         }).singleOrError();
     }
@@ -93,7 +93,7 @@ public class RetryTransformer<T> implements FlowableTransformer<T, T>, Observabl
         private final Subscriber<? super T> actual;
         private final SubscriptionArbiter sa;
         private final Publisher<? extends T> source;
-        private final Retry retry;
+        private final Retry.Context context;
         private long remaining;
         RetrySubscriber(Subscriber<? super T> actual, long count,
                          SubscriptionArbiter sa, Publisher<? extends T> source,
@@ -101,7 +101,7 @@ public class RetryTransformer<T> implements FlowableTransformer<T, T>, Observabl
             this.actual = actual;
             this.sa = sa;
             this.source = source;
-            this.retry = retry;
+            this.context = retry.context();
             this.remaining = count;
         }
 
@@ -118,7 +118,7 @@ public class RetryTransformer<T> implements FlowableTransformer<T, T>, Observabl
             if (LOG.isDebugEnabled()) {
                 LOG.info("onNext");
             }
-            retry.onSuccess();
+            context.onSuccess();
             actual.onNext(t);
             sa.produced(1L);
         }
@@ -135,7 +135,7 @@ public class RetryTransformer<T> implements FlowableTransformer<T, T>, Observabl
                 actual.onError(t);
             } else {
                 try {
-                    retry.onError((Exception) t);
+                    context.onError((Exception) t);
                     subscribeNext();
                 } catch (Throwable t2) {
                     actual.onError(t2);

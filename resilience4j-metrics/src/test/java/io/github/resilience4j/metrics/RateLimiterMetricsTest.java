@@ -58,7 +58,7 @@ public class RateLimiterMetricsTest {
 
         //Then
         assertThat(value).isEqualTo("Hello world");
-        // Then the helloWorldService should be invoked 1 time
+        // Then the helloWorldService should be invoked 1 context
         BDDMockito.then(helloWorldService).should(times(1)).returnHelloWorld();
         assertThat(metricRegistry.getMetrics()).hasSize(2);
         assertThat(metricRegistry.getGauges().get("resilience4j.ratelimiter.testLimit.number_of_waiting_threads")
@@ -82,7 +82,7 @@ public class RateLimiterMetricsTest {
 
         //Then
         assertThat(value).isEqualTo("Hello world");
-        // Then the helloWorldService should be invoked 1 time
+        // Then the helloWorldService should be invoked 1 context
         BDDMockito.then(helloWorldService).should(times(1)).returnHelloWorld();
         assertThat(metricRegistry.getMetrics()).hasSize(2);
         assertThat(metricRegistry.getGauges().get("testPre.testLimit.number_of_waiting_threads")
