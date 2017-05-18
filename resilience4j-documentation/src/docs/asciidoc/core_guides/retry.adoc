@@ -22,9 +22,9 @@ In order to create a custom `Retry` context, you can use the Retry context build
 RetryConfig config = RetryConfig.custom()
     .maxAttempts(2)
     .waitDurationInOpenState(Duration.ofMillis(100))
-    .retryOnException(throwable -> Match.of(throwable)
-        .whenType(WebServiceException.class).then(false)
-        .otherwise(true).get())
+    .retryOnException(throwable -> API.Match(throwable).of(
+            API.Case($(Predicates.instanceOf(WebServiceException.class)), true),
+            API.Case($(), false)))
     .build();
 ----
 
