@@ -34,9 +34,9 @@ public class RetryMetrics implements MetricSet {
             Retry.Metrics metrics = retry.getMetrics();
 
             metricRegistry.register(name(prefix, name, SUCCESSFUL_CALLS_WITHOUT_RETRY),
-                    (Gauge<Long>) metrics::getNumberOfSucceededCallsWithoutRetryAttempt);
+                    (Gauge<Long>) metrics::getNumberOfSuccessfulCallsWithoutRetryAttempt);
             metricRegistry.register(name(prefix, name, SUCCESSFUL_CALLS_WITH_RETRY),
-                    (Gauge<Long>) metrics::getNumberOfSucceededCallsWithRetryAttempt);
+                    (Gauge<Long>) metrics::getNumberOfSuccessfulCallsWithRetryAttempt);
             metricRegistry.register(name(prefix, name, FAILED_CALLS_WITHOUT_RETRY),
                     (Gauge<Long>) metrics::getNumberOfFailedCallsWithoutRetryAttempt);
             metricRegistry.register(name(prefix, name, FAILED_CALLS_WITH_RETRY),

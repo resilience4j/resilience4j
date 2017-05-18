@@ -188,7 +188,7 @@ public class RetryContext implements Retry {
         }
 
         @Override
-        public long getNumberOfSucceededCallsWithoutRetryAttempt() {
+        public long getNumberOfSuccessfulCallsWithoutRetryAttempt() {
             return succeededWithoutRetryCounter.longValue();
         }
 
@@ -198,7 +198,7 @@ public class RetryContext implements Retry {
         }
 
         @Override
-        public long getNumberOfSucceededCallsWithRetryAttempt() {
+        public long getNumberOfSuccessfulCallsWithRetryAttempt() {
             return succeededAfterRetryCounter.longValue();
         }
 

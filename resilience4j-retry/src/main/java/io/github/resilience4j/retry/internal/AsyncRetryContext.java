@@ -117,7 +117,7 @@ public class AsyncRetryContext implements AsyncRetry {
         }
 
         @Override
-        public long getNumberOfSucceededCallsWithoutRetryAttempt() {
+        public long getNumberOfSuccessfulCallsWithoutRetryAttempt() {
             return succeededWithoutRetryCounter.longValue();
         }
 
@@ -127,7 +127,7 @@ public class AsyncRetryContext implements AsyncRetry {
         }
 
         @Override
-        public long getNumberOfSucceededCallsWithRetryAttempt() {
+        public long getNumberOfSuccessfulCallsWithRetryAttempt() {
             return succeededAfterRetryCounter.longValue();
         }
 

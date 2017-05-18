@@ -55,7 +55,7 @@ public class RetryTransformerTest {
         //Then
         Retry.Metrics metrics = retry.getMetrics();
 
-        assertThat(metrics.getNumberOfSucceededCallsWithoutRetryAttempt()).isEqualTo(2);
+        assertThat(metrics.getNumberOfSuccessfulCallsWithoutRetryAttempt()).isEqualTo(2);
     }
 
     @Test
@@ -156,7 +156,7 @@ public class RetryTransformerTest {
         //Then
         Retry.Metrics metrics = retry.getMetrics();
 
-        assertThat(metrics.getNumberOfSucceededCallsWithRetryAttempt()).isEqualTo(1);
+        assertThat(metrics.getNumberOfSuccessfulCallsWithRetryAttempt()).isEqualTo(1);
     }
 
     @Test
@@ -175,7 +175,7 @@ public class RetryTransformerTest {
         //Then
         Retry.Metrics metrics = retry.getMetrics();
 
-        assertThat(metrics.getNumberOfSucceededCallsWithoutRetryAttempt()).isEqualTo(1);
+        assertThat(metrics.getNumberOfSuccessfulCallsWithoutRetryAttempt()).isEqualTo(1);
     }
 
     @Test
@@ -269,7 +269,7 @@ public class RetryTransformerTest {
         //Then
         Retry.Metrics metrics = retry.getMetrics();
 
-        assertThat(metrics.getNumberOfSucceededCallsWithRetryAttempt()).isEqualTo(1);
+        assertThat(metrics.getNumberOfSuccessfulCallsWithRetryAttempt()).isEqualTo(1);
     }
 
     @Test
@@ -288,7 +288,7 @@ public class RetryTransformerTest {
         //Then
         Retry.Metrics metrics = retry.getMetrics();
 
-        assertThat(metrics.getNumberOfSucceededCallsWithoutRetryAttempt()).isEqualTo(1);
+        assertThat(metrics.getNumberOfSuccessfulCallsWithoutRetryAttempt()).isEqualTo(1);
     }
 
     @Test
@@ -382,7 +382,7 @@ public class RetryTransformerTest {
         //Then
         Retry.Metrics metrics = retry.getMetrics();
 
-        assertThat(metrics.getNumberOfSucceededCallsWithRetryAttempt()).isEqualTo(1);
+        assertThat(metrics.getNumberOfSuccessfulCallsWithRetryAttempt()).isEqualTo(1);
     }
 
 

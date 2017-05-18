@@ -111,11 +111,11 @@ public interface AsyncRetry {
     interface Metrics {
 
         /**
-         * Returns the number of succeeded calls without a retry attempt.
+         * Returns the number of successful calls without a retry attempt.
          *
-         * @return the number of succeeded calls without a retry attempt
+         * @return the number of successful calls without a retry attempt
          */
-        long getNumberOfSucceededCallsWithoutRetryAttempt();
+        long getNumberOfSuccessfulCallsWithoutRetryAttempt();
 
         /**
          * Returns the number of failed calls without a retry attempt.
@@ -125,11 +125,11 @@ public interface AsyncRetry {
         long getNumberOfFailedCallsWithoutRetryAttempt();
 
         /**
-         * Returns the number of succeeded calls after a retry attempt.
+         * Returns the number of successful calls after a retry attempt.
          *
-         * @return the number of succeeded calls after a retry attempt
+         * @return the number of successful calls after a retry attempt
          */
-        long getNumberOfSucceededCallsWithRetryAttempt();
+        long getNumberOfSuccessfulCallsWithRetryAttempt();
 
         /**
          * Returns the number of failed calls after all retry attempts.

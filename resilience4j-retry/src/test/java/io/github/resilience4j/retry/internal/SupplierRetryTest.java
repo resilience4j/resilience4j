@@ -108,7 +108,7 @@ public class SupplierRetryTest {
         assertThat(result).isEqualTo("Hello world");
         assertThat(result2).isEqualTo("Hello world");
         assertThat(sleptTime).isEqualTo(RetryConfig.DEFAULT_WAIT_DURATION*2);
-        assertThat(retryContext.getMetrics().getNumberOfSucceededCallsWithRetryAttempt()).isEqualTo(2);
+        assertThat(retryContext.getMetrics().getNumberOfSuccessfulCallsWithRetryAttempt()).isEqualTo(2);
     }
 
     @Test
