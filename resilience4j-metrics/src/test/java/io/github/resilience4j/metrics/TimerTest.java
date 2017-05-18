@@ -85,7 +85,7 @@ public class TimerTest {
         // Given the HelloWorldService returns Hello world
         BDDMockito.given(helloWorldService.returnHelloWorldWithException()).willReturn("Hello world");
 
-        // And measure the context with Metrics
+        // And measure the call with a Timer
         Callable<String> timedSupplier = Timer.decorateCallable(timer, helloWorldService::returnHelloWorldWithException);
 
         String value = timedSupplier.call();
@@ -104,7 +104,7 @@ public class TimerTest {
         // Given the HelloWorldService returns Hello world
         BDDMockito.given(helloWorldService.returnHelloWorldWithException()).willReturn("Hello world");
 
-        // And measure the context with Metrics
+        // And measure the call with a Timer
         String value = timer.executeCallable(helloWorldService::returnHelloWorldWithException);
 
         assertThat(timer.getMetrics().getNumberOfTotalCalls()).isEqualTo(1);
@@ -119,7 +119,7 @@ public class TimerTest {
 
     @Test
     public void shouldDecorateRunnable() throws Throwable {
-        // And measure the context with Metrics
+        // And measure the call with a Timer
         Runnable timedRunnable = Timer.decorateRunnable(timer, helloWorldService::sayHelloWorld);
 
         timedRunnable.run();
@@ -134,7 +134,7 @@ public class TimerTest {
 
     @Test
     public void shouldExecuteRunnable() throws Throwable {
-        // And measure the context with Metrics
+        // And measure the call with a Timer
         timer.executeRunnable(helloWorldService::sayHelloWorld);
 
         assertThat(timer.getMetrics().getNumberOfTotalCalls()).isEqualTo(1);
@@ -149,7 +149,7 @@ public class TimerTest {
     public void shouldExecuteCompletionStageSupplier() throws Throwable {
         // Given the HelloWorldService returns Hello world
         BDDMockito.given(helloWorldService.returnHelloWorld()).willReturn("Hello world");
-        // And measure the context with Metrics
+        // And measure the call with a Timer
         Supplier<CompletionStage<String>> completionStageSupplier =
                 () -> CompletableFuture.supplyAsync(helloWorldService::returnHelloWorld);
 
@@ -186,7 +186,7 @@ public class TimerTest {
     public void shouldExecuteCompletionStageAndReturnWithExceptionAtASyncStage() throws Throwable {
         // Given the HelloWorldService returns Hello world
         BDDMockito.given(helloWorldService.returnHelloWorld()).willThrow(new WebServiceException("BAM!"));
-        // And measure the context with Metrics
+        // And measure the call with a Timer
         Supplier<CompletionStage<String>> completionStageSupplier =
                 () -> CompletableFuture.supplyAsync(helloWorldService::returnHelloWorld);
 
@@ -206,7 +206,7 @@ public class TimerTest {
 
     @Test
     public void shouldDecorateCheckedRunnableAndReturnWithSuccess() throws Throwable {
-        // And measure the context with Metrics
+        // And measure the call with a Timer
         CheckedRunnable timedRunnable = Timer.decorateCheckedRunnable(timer, helloWorldService::sayHelloWorldWithException);
 
         timedRunnable.run();
@@ -220,7 +220,6 @@ public class TimerTest {
 
     @Test
     public void shouldDecorateSupplierAndReturnWithException() throws Throwable {
-        // And measure the context with Metrics
         BDDMockito.given(helloWorldService.returnHelloWorld()).willThrow(new RuntimeException("BAM!"));
 
         // And measure the context with Metrics
@@ -244,7 +243,7 @@ public class TimerTest {
         // Given the HelloWorldService returns Hello world
         BDDMockito.given(helloWorldService.returnHelloWorld()).willReturn("Hello world");
 
-        // And measure the context with Metrics
+        // And measure the call with a Timer
         Supplier<String> timedSupplier = Timer.decorateSupplier(timer, helloWorldService::returnHelloWorld);
 
         Stream.range(0,2).forEach((i) -> timedSupplier.get());
@@ -261,7 +260,7 @@ public class TimerTest {
         // Given the HelloWorldService returns Hello world
         BDDMockito.given(helloWorldService.returnHelloWorld()).willReturn("Hello world").willThrow(new IllegalArgumentException("BAM!"));
 
-        // And measure the context with Metrics
+        // And measure the call with a Timer
         Stream.range(0,2).forEach((i) -> {
             try{
                 timer.executeSupplier(helloWorldService::returnHelloWorld);
