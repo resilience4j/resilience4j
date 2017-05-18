@@ -35,6 +35,8 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 /**
+ *  A Bulkhead instance is thread-safe can be used to decorate multiple requests.
+ *
  * A {@link Bulkhead} represent an entity limiting the amount of parallel operations. It does not assume nor does it mandate usage
  * of any particular concurrency and/or io model. These details are left for the client to manage. This bulkhead, depending on the
  * underlying concurrency/io model can be used to shed load, and, where it makes sense, limit resource use (i.e. limit amount of

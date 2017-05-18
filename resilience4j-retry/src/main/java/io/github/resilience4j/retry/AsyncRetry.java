@@ -10,6 +10,9 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
+/**
+ * A AsyncRetry instance is thread-safe can be used to decorate multiple requests.
+ */
 public interface AsyncRetry {
 
     /**

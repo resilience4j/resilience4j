@@ -29,6 +29,9 @@ import java.util.concurrent.Callable;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+/**
+ * A Retry instance is thread-safe can be used to decorate multiple requests.
+ */
 public interface Retry {
 
     /**
