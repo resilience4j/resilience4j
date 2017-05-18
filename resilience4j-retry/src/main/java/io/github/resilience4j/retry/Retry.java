@@ -31,6 +31,7 @@ import java.util.function.Supplier;
 
 /**
  * A Retry instance is thread-safe can be used to decorate multiple requests.
+ * A Retry.
  */
 public interface Retry {
 
