@@ -7,15 +7,6 @@ package io.github.resilience4j.timeout;
 public class TimeoutException extends RuntimeException {
 
     /**
-     * The constructor with a message.
-     *
-     * @param message The message.
-     */
-    public TimeoutException(final String message) {
-        super(message);
-    }
-
-    /**
      * The constructor with a cause.
      *
      * @param cause the cause
