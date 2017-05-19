@@ -71,11 +71,6 @@ public final class InMemoryRetryRegistry implements RetryRegistry {
                 defaultRetryConfig));
     }
 
-    @Override
-    public Retry newRetry(String name) {
-        return Retry.of(name, defaultRetryConfig);
-    }
-
     /**
      * {@inheritDoc}
      */
@@ -86,18 +81,8 @@ public final class InMemoryRetryRegistry implements RetryRegistry {
     }
 
     @Override
-    public Retry newRetry(String name, RetryConfig retryConfig) {
-        return Retry.of(name, retryConfig);
-    }
-
-    @Override
     public Retry retry(String name, Supplier<RetryConfig> retryConfigSupplier) {
         return retries.computeIfAbsent(Objects.requireNonNull(name, "Name must not be null"), (k) -> Retry.of(name,
                 retryConfigSupplier.get()));
-    }
-
-    @Override
-    public Retry newRetry(String name, Supplier<RetryConfig> retryConfigSupplier) {
-        return Retry.of(name, retryConfigSupplier.get());
     }
 }

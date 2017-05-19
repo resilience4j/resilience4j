@@ -16,9 +16,8 @@
 
 package io.github.resilience4j.ratpack.retry
 
-import io.github.resilience4j.ratpack.recovery.RecoveryFunction
 import io.github.resilience4j.ratpack.Resilience4jModule
-import io.github.resilience4j.ratpack.retry.Retry
+import io.github.resilience4j.ratpack.recovery.RecoveryFunction
 import io.github.resilience4j.retry.RetryConfig
 import io.github.resilience4j.retry.RetryRegistry
 import io.reactivex.Flowable
@@ -76,7 +75,7 @@ class RetrySpec extends Specification {
         actual.body.text == 'retry promise'
     }
 
-    def "test circuit break a method via annotation with fallback"() {
+    def "test retry a method via annotation with fallback"() {
         given:
         RetryRegistry registry = RetryRegistry.of(buildConfig())
         app = ratpack {

@@ -5,10 +5,12 @@ import com.codahale.metrics.Snapshot;
 import io.github.resilience4j.metrics.Timer;
 
 import static com.codahale.metrics.MetricRegistry.name;
-import static com.codahale.metrics.Timer.*;
 
-public class TimerContext implements Timer{
+public class TimerImpl implements Timer{
 
+    public static final String SUCCESSFUL = "successful";
+    public static final String TOTAL = "total";
+    public static final String FAILED = "failed";
     private final String timerName;
     private final MetricRegistry metricRegistry;
     private com.codahale.metrics.Timer successfulCallsTimer;
@@ -16,30 +18,20 @@ public class TimerContext implements Timer{
     private com.codahale.metrics.Counter failedCallsCounter;
     private final TimerMetrics metrics;
 
-    public TimerContext(String timerName, MetricRegistry metricRegistry){
+    public TimerImpl(String timerName, MetricRegistry metricRegistry){
         this.timerName = timerName;
         this.metricRegistry = metricRegistry;
-        this.successfulCallsTimer = metricRegistry.timer(name(timerName, "successful"));
-        this.totalCallsCounter = metricRegistry.counter(name(timerName, "total"));
-        this.failedCallsCounter = metricRegistry.counter(name(timerName, "failed"));
+        this.successfulCallsTimer = metricRegistry.timer(name(timerName, SUCCESSFUL));
+        this.totalCallsCounter = metricRegistry.counter(name(timerName, TOTAL));
+        this.failedCallsCounter = metricRegistry.counter(name(timerName, FAILED));
         this.metrics = new TimerMetrics();
     }
 
 
     @Override
-    public Context time() {
+    public Timer.Context context() {
         totalCallsCounter.inc();
-        return successfulCallsTimer.time();
-    }
-
-    @Override
-    public void onError(Context context) {
-        failedCallsCounter.inc();
-    }
-
-    @Override
-    public void onSuccess(Context context) {
-        context.stop();
+        return new ContextImpl();
     }
 
     @Override
@@ -56,6 +48,25 @@ public class TimerContext implements Timer{
     public Metrics getMetrics() {
         return metrics;
     }
+
+    public final class ContextImpl implements Timer.Context {
+        com.codahale.metrics.Timer.Context timerContext;
+
+        private ContextImpl() {
+            timerContext = successfulCallsTimer.time();
+        }
+
+        @Override
+        public void onError() {
+            failedCallsCounter.inc();
+        }
+
+        @Override
+        public void onSuccess() {
+            timerContext.stop();
+        }
+    }
+
 
     private final class TimerMetrics implements Metrics {
         private TimerMetrics() {

@@ -55,18 +55,19 @@ public class RetryTransformer<T> implements Function<Upstream<? extends T>, Upst
     @Override
     public Upstream<T> apply(Upstream<? extends T> upstream) throws Exception {
         return down -> {
+            Retry.Context context = retry.context();
             Downstream<T> downstream = new Downstream<T>() {
 
                 @Override
                 public void success(T value) {
-                    retry.onSuccess();
+                    context.onSuccess();
                     down.success(value);
                 }
 
                 @Override
                 public void error(Throwable throwable) {
                     try {
-                        retry.onError((Exception) throwable);
+                        context.onError((Exception) throwable);
                         upstream.connect(this);
                     } catch (Throwable t) {
                         if (recoverer != null) {

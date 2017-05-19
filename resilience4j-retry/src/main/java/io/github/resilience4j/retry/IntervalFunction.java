@@ -19,22 +19,26 @@ public interface IntervalFunction extends Function<Integer, Long> {
         return of(DEFAULT_INITIAL_INTERVAL);
     }
 
-    static IntervalFunction of(long intervalMillis, Function<Long, Long> backoffFn) {
+    static IntervalFunction of(long intervalMillis, Function<Long, Long> backoffFunction) {
         checkInterval(intervalMillis);
-        requireNonNull(backoffFn);
+        requireNonNull(backoffFunction);
 
         return (attempt) -> {
             checkAttempt(attempt);
-            return Stream.iterate(intervalMillis, backoffFn).get(attempt - 1);
+            return Stream.iterate(intervalMillis, backoffFunction).get(attempt - 1);
         };
     }
 
-    static IntervalFunction of(Duration interval, Function<Long, Long> backoffFn) {
-        return of(interval.toMillis(), backoffFn);
+    static IntervalFunction of(Duration interval, Function<Long, Long> backoffFunction) {
+        return of(interval.toMillis(), backoffFunction);
     }
 
     static IntervalFunction of(long intervalMillis) {
-        return of(intervalMillis, x -> x);
+        checkInterval(intervalMillis);
+        return (attempt) -> {
+            checkAttempt(attempt);
+            return intervalMillis;
+        };
     }
 
     static IntervalFunction of(Duration interval) {
@@ -155,27 +159,27 @@ final class IntervalFunctionCompanion {
         return (min + (Math.random() * (max - min + 1)));
     }
 
-    static void checkInterval(long v) {
-        if (v < 10) {
-            throw new IllegalArgumentException("Illegal argument interval: " + v + " millis");
+    static void checkInterval(long interval) {
+        if (interval < 10) {
+            throw new IllegalArgumentException("Illegal argument interval: " + interval + " millis");
         }
     }
 
-    static void checkMultiplier(double v) {
-        if (v < 1.0) {
-            throw new IllegalArgumentException("Illegal argument multiplier: " + v);
+    static void checkMultiplier(double multiplier) {
+        if (multiplier < 1.0) {
+            throw new IllegalArgumentException("Illegal argument multiplier: " + multiplier);
         }
     }
 
-    static void checkRandomizationFactor(double v) {
-        if (v < 0.0 || v >= 1.0) {
-            throw new IllegalArgumentException("Illegal argument randomizationFactor: " + v);
+    static void checkRandomizationFactor(double randomizationFactor) {
+        if (randomizationFactor < 0.0 || randomizationFactor >= 1.0) {
+            throw new IllegalArgumentException("Illegal argument randomizationFactor: " + randomizationFactor);
         }
     }
 
-    static void checkAttempt(long v) {
-        if (v < 1) {
-            throw new IllegalArgumentException("Illegal argument attempt: " + v);
+    static void checkAttempt(long attempt) {
+        if (attempt < 1) {
+            throw new IllegalArgumentException("Illegal argument attempt: " + attempt);
         }
     }
 }

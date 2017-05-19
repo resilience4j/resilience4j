@@ -42,17 +42,6 @@ public interface RetryRegistry {
     Retry retry(String name);
 
     /**
-     * Returns a new {@link Retry} with the default Retry configuration.
-     *
-     * This should be used when a retry is used in concurrent code blocks, and each retry
-     * should be isolated to its own scope.
-     *
-     * @param name the name of the Retry
-     * @return The {@link Retry}
-     */
-    Retry newRetry(String name);
-
-    /**
      * Returns a managed {@link Retry} or creates a new one with a custom Retry configuration.
      *
      * @param name        the name of the Retry
@@ -62,18 +51,6 @@ public interface RetryRegistry {
     Retry retry(String name, RetryConfig retryConfig);
 
     /**
-     * Returns a new {@link Retry} with a custom Retry configuration.
-     *
-     * This should be used when a retry is used in concurrent code blocks, and each retry
-     * should be isolated to its own scope.
-     *
-     * @param name        the name of the Retry
-     * @param retryConfig a custom Retry configuration
-     * @return The {@link Retry}
-     */
-    Retry newRetry(String name, RetryConfig retryConfig);
-
-    /**
      * Returns a managed {@link Retry} or creates a new one with a custom Retry configuration.
      *
      * @param name                the name of the Retry
@@ -81,18 +58,6 @@ public interface RetryRegistry {
      * @return The {@link Retry}
      */
     Retry retry(String name, Supplier<RetryConfig> retryConfigSupplier);
-
-    /**
-     * Returns a new {@link Retry} with a custom Retry configuration.
-     *
-     * This should be used when a retry is used in concurrent code blocks, and each retry
-     * should be isolated to its own scope.
-     *
-     * @param name                the name of the Retry
-     * @param retryConfigSupplier a supplier of a custom Retry configuration
-     * @return The {@link Retry}
-     */
-    Retry newRetry(String name, Supplier<RetryConfig> retryConfigSupplier);
 
 
     /**

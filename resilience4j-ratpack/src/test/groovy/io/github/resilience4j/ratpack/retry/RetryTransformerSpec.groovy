@@ -16,7 +16,6 @@
 
 package io.github.resilience4j.ratpack.retry
 
-import io.github.resilience4j.ratpack.retry.RetryTransformer
 import io.github.resilience4j.retry.Retry
 import io.github.resilience4j.retry.RetryConfig
 import ratpack.exec.Blocking
@@ -66,6 +65,35 @@ class RetryTransformerSpec extends Specification {
         r.error
         r.throwable == e
         times.get() == 3
+    }
+
+
+    def "same retry transformer instance can be used to transform multiple promises"() {
+        given:
+        Retry retry = buildRetry()
+        RetryTransformer<String> transformer = RetryTransformer.of(retry)
+        Exception e1 = new Exception("puke1")
+        Exception e2 = new Exception("puke2")
+        AtomicInteger times = new AtomicInteger(0)
+
+        when:
+        def r1 = ExecHarness.yieldSingle {
+            Blocking.<String> get { times.getAndIncrement(); throw e1 }
+                    .transform(transformer)
+        }
+        def r2 = ExecHarness.yieldSingle {
+            Blocking.<String> get { times.getAndIncrement(); throw e2 }
+                    .transform(transformer)
+        }
+
+        then:
+        r1.value == null
+        r1.error
+        r1.throwable == e1
+        r2.value == null
+        r2.error
+        r2.throwable == e2
+        times.get() == 6
     }
 
     def "can retry promise 3 times then recover"() {

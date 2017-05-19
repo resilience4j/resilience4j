@@ -33,11 +33,11 @@ public interface RetryEvent {
     String getName();
 
     /**
-     * Returns the number of attempts.
+     * Returns the number of retry attempts.
      *
-     * @return the the number of attempts
+     * @return the the number of retry attempts
      */
-    int getNumberOfAttempts();
+    int getNumberOfRetryAttempts();
 
     /**
      * Returns the type of the Retry event.
@@ -66,7 +66,9 @@ public interface RetryEvent {
     enum Type {
         /** A RetryEvent which informs that a call has been retried, but still failed */
         ERROR,
-        /** A RetryEvent which informs that a call has been retried and a retry was successful */
-        SUCCESS
+        /** A RetryEvent which informs that a call has been successful */
+        SUCCESS,
+        /** A RetryEvent which informs that an error has been ignored */
+        IGNORED_ERROR
     }
 }

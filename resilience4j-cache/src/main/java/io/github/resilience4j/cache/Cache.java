@@ -19,7 +19,7 @@
 package io.github.resilience4j.cache;
 
 import io.github.resilience4j.cache.event.CacheEvent;
-import io.github.resilience4j.cache.internal.CacheContext;
+import io.github.resilience4j.cache.internal.CacheImpl;
 import io.reactivex.Flowable;
 import io.vavr.CheckedFunction0;
 import io.vavr.CheckedFunction1;
@@ -72,7 +72,7 @@ public interface Cache<K, V>  {
      */
     static <K,V> Cache<K,V> of(javax.cache.Cache<K, V> cache){
         Objects.requireNonNull(cache, "Cache must not be null");
-        return new CacheContext<>(cache);
+        return new CacheImpl<>(cache);
     }
 
     /**

@@ -19,25 +19,23 @@
 package io.github.resilience4j.retry.event;
 
 /**
- * A RetryEvent which informs that a call has been retried and a retry was successful
+ * A RetryEvent which informs that an error has been ignored
  */
-public class RetryOnSuccessEvent extends AbstractRetryEvent {
+public class RetryOnIgnoredErrorEvent extends AbstractRetryEvent {
 
-    public RetryOnSuccessEvent(String name, int currentNumOfAttempts, Throwable lastThrowable) {
-        super(name, currentNumOfAttempts, lastThrowable);
+    public RetryOnIgnoredErrorEvent(String name, Throwable lastThrowable) {
+        super(name, 0, lastThrowable);
     }
-
     @Override
     public Type getEventType() {
-        return Type.SUCCESS;
+        return Type.IGNORED_ERROR;
     }
 
     @Override
     public String toString() {
-        return String.format("%s: Retry '%s' recorded a successful retry attempt. Number of retry attempts: '%d', Last exception was: '%s'.",
+        return String.format("%s: Retry '%s' recorded an error which has been ignored: '%s'.",
                 getCreationTime(),
                 getName(),
-                getNumberOfRetryAttempts(),
                 getLastThrowable().toString());
     }
 }

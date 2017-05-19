@@ -35,6 +35,8 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 /**
+ * A CircuitBreaker instance is thread-safe can be used to decorate multiple requests.
+ *
  * A {@link CircuitBreaker} manages the state of a backend system.
  * The CircuitBreaker is implemented via a finite state machine with three states: CLOSED, OPEN and HALF_OPEN.
  * The CircuitBreaker does not know anything about the backend’s state by itself, but uses the information provided by the decorators via

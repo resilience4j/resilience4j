@@ -45,7 +45,7 @@ abstract class AbstractRetryEvent implements RetryEvent {
     }
 
     @Override
-    public int getNumberOfAttempts() {
+    public int getNumberOfRetryAttempts() {
         return numberOfAttempts;
     }
 
