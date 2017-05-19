@@ -268,6 +268,7 @@ NOTE: You can also consume events from `RateLimiter`, `Cache` and `Retry`. Find 
 * Deutsche Telekom (In an application with over 400 million request per day)
 * AOL (In an application with low latency requirements)
 * Netpulse (In system with 40+ integrations)
+* wescale.de (In a B2B integration platform)
 
 == License
 
