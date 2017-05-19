@@ -34,7 +34,7 @@ import java.lang.annotation.Target;
  *         return "Sir Captain " + name;
  *     }
  * </code></pre>
- * each context the {@code #fancyName(String)} method is invoked, the method's execution will pass through a
+ * each time the {@code #fancyName(String)} method is invoked, the method's execution will pass through a
  * a retry according to the given retry policy.
  */
 @Inherited
