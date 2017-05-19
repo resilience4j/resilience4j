@@ -42,13 +42,13 @@ public class RetryMethodInterceptor implements MethodInterceptor {
     @Override
     public Object invoke(MethodInvocation invocation) throws Throwable {
         Retry annotation = invocation.getMethod().getAnnotation(Retry.class);
-        RecoveryFunction<?> recoveryFunction = annotation.recovery().newInstance();
-        if (registry == null) {
-            registry = RetryRegistry.ofDefaults();
-        }
         io.github.resilience4j.retry.Retry retry = registry.retry(annotation.name());
         if (retry == null) {
             return invocation.proceed();
+        }
+        RecoveryFunction<?> recoveryFunction = annotation.recovery().newInstance();
+        if (registry == null) {
+            registry = RetryRegistry.ofDefaults();
         }
         Class<?> returnType = invocation.getMethod().getReturnType();
         if (Promise.class.isAssignableFrom(returnType)) {

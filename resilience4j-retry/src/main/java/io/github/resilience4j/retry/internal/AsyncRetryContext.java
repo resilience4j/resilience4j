@@ -4,6 +4,7 @@ import io.github.resilience4j.retry.AsyncRetry;
 import io.github.resilience4j.retry.RetryConfig;
 import io.github.resilience4j.retry.event.RetryEvent;
 import io.github.resilience4j.retry.event.RetryOnErrorEvent;
+import io.github.resilience4j.retry.event.RetryOnIgnoredErrorEvent;
 import io.github.resilience4j.retry.event.RetryOnSuccessEvent;
 import io.reactivex.Flowable;
 import io.reactivex.processors.FlowableProcessor;
@@ -64,6 +65,7 @@ public class AsyncRetryContext implements AsyncRetry {
         public long onError(Throwable throwable) {
             if (!exceptionPredicate.test(throwable)) {
                 failedWithoutRetryCounter.increment();
+                publishRetryEvent(() -> new RetryOnIgnoredErrorEvent(getName(), throwable));
                 return -1;
             }
             lastException.set(throwable);

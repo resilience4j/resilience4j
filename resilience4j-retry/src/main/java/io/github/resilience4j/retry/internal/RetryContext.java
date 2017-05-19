@@ -22,6 +22,7 @@ import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryConfig;
 import io.github.resilience4j.retry.event.RetryEvent;
 import io.github.resilience4j.retry.event.RetryOnErrorEvent;
+import io.github.resilience4j.retry.event.RetryOnIgnoredErrorEvent;
 import io.github.resilience4j.retry.event.RetryOnSuccessEvent;
 import io.reactivex.Flowable;
 import io.reactivex.processors.FlowableProcessor;
@@ -95,6 +96,7 @@ public class RetryContext implements Retry {
                 throwOrSleepAfterException();
             }else{
                 failedWithoutRetryCounter.increment();
+                publishRetryEvent(() -> new RetryOnIgnoredErrorEvent(getName(), exception));
                 throw exception;
             }
         }

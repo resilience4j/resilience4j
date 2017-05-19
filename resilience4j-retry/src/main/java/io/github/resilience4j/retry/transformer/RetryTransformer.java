@@ -58,34 +58,34 @@ public class RetryTransformer<T> implements FlowableTransformer<T, T>, Observabl
 
     @Override
     public Publisher<T> apply(Flowable<T> upstream) {
-        return Flowable.fromPublisher(d -> {
+        return Flowable.fromPublisher(downstream -> {
             SubscriptionArbiter sa = new SubscriptionArbiter();
-            d.onSubscribe(sa);
-            RetrySubscriber<T> repeatSubscriber = new RetrySubscriber<>(d, retry.getRetryConfig().getMaxAttempts(), sa, upstream, retry);
+            downstream.onSubscribe(sa);
+            RetrySubscriber<T> repeatSubscriber = new RetrySubscriber<>(downstream, retry.getRetryConfig().getMaxAttempts(), sa, upstream, retry);
             upstream.subscribe(repeatSubscriber);
         });
     }
 
     @Override
     public ObservableSource<T> apply(Observable<T> upstream) {
-        return Flowable.<T>fromPublisher(d -> {
+        return Observable.fromPublisher(downstream -> {
             Flowable<T> flowable = upstream.toFlowable(BackpressureStrategy.BUFFER);
             SubscriptionArbiter sa = new SubscriptionArbiter();
-            d.onSubscribe(sa);
-            RetrySubscriber<T> retrySubscriber = new RetrySubscriber<>(d, retry.getRetryConfig().getMaxAttempts(), sa, flowable, retry);
+            downstream.onSubscribe(sa);
+            RetrySubscriber<T> retrySubscriber = new RetrySubscriber<>(downstream, retry.getRetryConfig().getMaxAttempts(), sa, flowable, retry);
             flowable.subscribe(retrySubscriber);
-        }).toObservable();
+        });
     }
 
     @Override
     public SingleSource<T> apply(Single<T> upstream) {
-        return Flowable.<T>fromPublisher(d -> {
+        return Single.fromPublisher(downstream -> {
             Flowable<T> flowable = upstream.toFlowable();
             SubscriptionArbiter sa = new SubscriptionArbiter();
-            d.onSubscribe(sa);
-            RetrySubscriber<T> retrySubscriber = new RetrySubscriber<>(d, retry.getRetryConfig().getMaxAttempts(), sa, flowable, retry);
+            downstream.onSubscribe(sa);
+            RetrySubscriber<T> retrySubscriber = new RetrySubscriber<>(downstream, retry.getRetryConfig().getMaxAttempts(), sa, flowable, retry);
             flowable.subscribe(retrySubscriber);
-        }).singleOrError();
+        });
     }
 
     static final class RetrySubscriber<T> extends AtomicInteger implements Subscriber<T> {

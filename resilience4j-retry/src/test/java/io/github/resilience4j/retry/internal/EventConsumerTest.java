@@ -32,6 +32,7 @@ import org.mockito.BDDMockito;
 import org.mockito.Mockito;
 
 import javax.xml.ws.WebServiceException;
+import java.io.IOException;
 
 public class EventConsumerTest {
 
@@ -69,7 +70,8 @@ public class EventConsumerTest {
         Assertions.assertThat(result.failed().get()).isInstanceOf(WebServiceException.class);
         Assertions.assertThat(sleptTime).isEqualTo(RetryConfig.DEFAULT_WAIT_DURATION*2);
 
-        testSubscriber.assertValueCount(1).assertValues(RetryEvent.Type.ERROR);
+        testSubscriber.assertValueCount(1)
+                .assertValues(RetryEvent.Type.ERROR);
     }
 
     @Test
@@ -95,5 +97,33 @@ public class EventConsumerTest {
         Assertions.assertThat(sleptTime).isEqualTo(RetryConfig.DEFAULT_WAIT_DURATION);
 
         testSubscriber.assertValueCount(1).assertValues(RetryEvent.Type.SUCCESS);
+    }
+
+    @Test
+    public void shouldIgnoreError() {
+        // Given the HelloWorldService throws an exception
+        BDDMockito.willThrow(new WebServiceException("BAM!")).willNothing().given(helloWorldService).sayHelloWorld();
+
+        // Create a Retry with default configuration
+        RetryConfig config = RetryConfig.custom()
+                .retryOnException(t -> t instanceof IOException)
+                .maxAttempts(3).build();
+        RetryContext retryContext = (RetryContext) Retry.of("id", config);
+        TestSubscriber<RetryEvent.Type> testSubscriber = retryContext.getEventStream()
+                .map(RetryEvent::getEventType)
+                .test();
+        // Decorate the invocation of the HelloWorldService
+        CheckedRunnable retryableRunnable = Retry.decorateCheckedRunnable(retryContext, helloWorldService::sayHelloWorld);
+
+        // When
+        Try<Void> result = Try.run(retryableRunnable);
+
+        // Then the helloWorldService should be invoked 2 times
+        BDDMockito.then(helloWorldService).should(Mockito.times(1)).sayHelloWorld();
+        // and the result should be a sucess
+        Assertions.assertThat(result.isFailure()).isTrue();
+        Assertions.assertThat(sleptTime).isEqualTo(0);
+
+        testSubscriber.assertValueCount(1).assertValues(RetryEvent.Type.IGNORED_ERROR);
     }
 }
