@@ -63,7 +63,7 @@ public class TimerTest {
         // Given the HelloWorldService returns Hello world
         BDDMockito.given(helloWorldService.returnHelloWorldWithException()).willReturn("Hello world");
 
-        // And measure the context with Metrics
+        // And measure the call with  a Timer
         CheckedFunction0<String> timedSupplier = Timer.decorateCheckedSupplier(timer, helloWorldService::returnHelloWorldWithException);
 
         String value = timedSupplier.apply();
@@ -222,7 +222,7 @@ public class TimerTest {
     public void shouldDecorateSupplierAndReturnWithException() throws Throwable {
         BDDMockito.given(helloWorldService.returnHelloWorld()).willThrow(new RuntimeException("BAM!"));
 
-        // And measure the context with Metrics
+        // And measure the call with a Timer
         Supplier<String> supplier = Timer.decorateSupplier(timer, helloWorldService::returnHelloWorld);
 
         Try<String> result = Try.of(supplier::get);
