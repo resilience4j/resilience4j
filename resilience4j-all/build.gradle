@@ -10,5 +10,6 @@ dependencies {
     compile project(':resilience4j-retry')
     compile project(':resilience4j-consumer')
     compile project(':resilience4j-cache')
+    compile project(':resilience4j-timeout')
     testCompile project(':resilience4j-test')
 }
