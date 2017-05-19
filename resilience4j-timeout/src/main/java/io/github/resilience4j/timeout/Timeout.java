@@ -202,14 +202,19 @@ public interface Timeout {
     static <T> T waitForCheckedFunction0(final Timeout timeout, final CheckedFunction0<T> supplier) throws TimeoutException {
         TimeoutConfig timeoutConfig = timeout.getTimeoutConfig();
         Duration timeoutDuration = timeoutConfig.getTimeoutDuration();
+        Boolean cancelOnExecution = timeoutConfig.shouldCancelOnException();
 
         ExecutorService executorService = Executors.newSingleThreadExecutor();
 
         Future<T> task = executorService.submit(() -> Try.of(supplier)
                 .getOrElseThrow((Function<? super Throwable, ExecutionException>) ExecutionException::new));
 
-        return Try.of(() -> task.get(timeoutDuration.getNano(), TimeUnit.NANOSECONDS))
-                .getOrElseThrow(throwable -> new TimeoutException(throwable.getCause()));
+        return Try.of(() -> task.get(timeoutDuration.toMillis(), TimeUnit.MILLISECONDS))
+                .getOrElseThrow(throwable -> {
+                    if (cancelOnExecution && !task.isDone())
+                        task.cancel(true);
+                    return new TimeoutException(throwable);
+                });
     }
 
     /**
@@ -222,14 +227,19 @@ public interface Timeout {
     static Void waitForCheckedRunnable(final Timeout timeout, final CheckedRunnable runnable) throws TimeoutException {
         TimeoutConfig timeoutConfig = timeout.getTimeoutConfig();
         Duration timeoutDuration = timeoutConfig.getTimeoutDuration();
+        Boolean cancelOnExecution = timeoutConfig.shouldCancelOnException();
 
         ExecutorService executorService = Executors.newSingleThreadExecutor();
 
         Future<Void> task = executorService.submit(() -> Try.run(runnable)
                 .getOrElseThrow((Function<? super Throwable, ExecutionException>) ExecutionException::new));
 
-        return Try.of(() -> task.get(timeoutDuration.getNano(), TimeUnit.NANOSECONDS))
-                .getOrElseThrow(throwable -> new TimeoutException(throwable.getCause()));
+        return Try.of(() -> task.get(timeoutDuration.toMillis(), TimeUnit.MILLISECONDS))
+                .getOrElseThrow(throwable -> {
+                    if (cancelOnExecution && !task.isDone())
+                        task.cancel(true);
+                    return new TimeoutException(throwable);
+                });
     }
 
     /**
@@ -245,14 +255,19 @@ public interface Timeout {
     static <T,R> R waitForCheckedFunction1(final Timeout timeout, final CheckedFunction1<T,R> function, final T t) throws TimeoutException {
         TimeoutConfig timeoutConfig = timeout.getTimeoutConfig();
         Duration timeoutDuration = timeoutConfig.getTimeoutDuration();
+        Boolean cancelOnExecution = timeoutConfig.shouldCancelOnException();
 
         ExecutorService executorService = Executors.newSingleThreadExecutor();
 
         Future<R> task = executorService.submit(() -> Try.of(() -> function.apply(t))
         .getOrElseThrow((Function<? super Throwable, ExecutionException>) ExecutionException::new));
 
-        return Try.of(() -> task.get(timeoutDuration.getNano(), TimeUnit.NANOSECONDS))
-                .getOrElseThrow(throwable -> new TimeoutException(throwable.getCause()));
+        return Try.of(() -> task.get(timeoutDuration.toMillis(), TimeUnit.MILLISECONDS))
+                .getOrElseThrow(throwable -> {
+                    if (cancelOnExecution && !task.isDone())
+                        task.cancel(true);
+                    return new TimeoutException(throwable);
+                });
     }
 
     /**
@@ -266,13 +281,18 @@ public interface Timeout {
     static <T> T waitForSupplier(final Timeout timeout, final Supplier<T> supplier) throws TimeoutException {
         TimeoutConfig timeoutConfig = timeout.getTimeoutConfig();
         Duration timeoutDuration = timeoutConfig.getTimeoutDuration();
+        Boolean cancelOnExecution = timeoutConfig.shouldCancelOnException();
 
         ExecutorService executorService = Executors.newSingleThreadExecutor();
 
         Future<T> task = executorService.submit(supplier::get);
 
-        return Try.of(() -> task.get(timeoutDuration.getNano(), TimeUnit.NANOSECONDS))
-                .getOrElseThrow(throwable -> new TimeoutException(throwable.getCause()));
+        return Try.of(() -> task.get(timeoutDuration.toMillis(), TimeUnit.MILLISECONDS))
+                .getOrElseThrow(throwable -> {
+                    if (cancelOnExecution && !task.isDone())
+                        task.cancel(true);
+                    return new TimeoutException(throwable);
+                });
     }
 
     /**
@@ -286,13 +306,18 @@ public interface Timeout {
     static <T> T waitForCallable(final Timeout timeout, final Callable<T> callable) throws TimeoutException {
         TimeoutConfig timeoutConfig = timeout.getTimeoutConfig();
         Duration timeoutDuration = timeoutConfig.getTimeoutDuration();
+        Boolean cancelOnExecution = timeoutConfig.shouldCancelOnException();
 
         ExecutorService executorService = Executors.newSingleThreadExecutor();
 
         Future<T> task = executorService.submit(callable);
 
-        return Try.of(() -> task.get(timeoutDuration.getNano(), TimeUnit.NANOSECONDS))
-                .getOrElseThrow(throwable -> new TimeoutException(throwable.getCause()));
+        return Try.of(() -> task.get(timeoutDuration.toMillis(), TimeUnit.MILLISECONDS))
+                .getOrElseThrow(throwable -> {
+                    if (cancelOnExecution && !task.isDone())
+                        task.cancel(true);
+                    return new TimeoutException(throwable);
+                });
     }
 
     /**
@@ -307,6 +332,7 @@ public interface Timeout {
     static <T> Void waitForConsumer(final Timeout timeout, final Consumer<T> consumer, final T t) throws TimeoutException {
         TimeoutConfig timeoutConfig = timeout.getTimeoutConfig();
         Duration timeoutDuration = timeoutConfig.getTimeoutDuration();
+        Boolean cancelOnExecution = timeoutConfig.shouldCancelOnException();
 
         ExecutorService executorService = Executors.newSingleThreadExecutor();
 
@@ -315,8 +341,12 @@ public interface Timeout {
             return null;
         });
 
-        return Try.of(() -> task.get(timeoutDuration.getNano(), TimeUnit.NANOSECONDS))
-                .getOrElseThrow(throwable -> new TimeoutException(throwable.getCause()));
+        return Try.of(() -> task.get(timeoutDuration.toMillis(), TimeUnit.MILLISECONDS))
+                .getOrElseThrow(throwable -> {
+                    if (cancelOnExecution && !task.isDone())
+                        task.cancel(true);
+                    return new TimeoutException(throwable);
+                });
     }
 
     /**
@@ -329,6 +359,7 @@ public interface Timeout {
     static Void waitForRunnable(final Timeout timeout, final Runnable runnable) throws TimeoutException {
         TimeoutConfig timeoutConfig = timeout.getTimeoutConfig();
         Duration timeoutDuration = timeoutConfig.getTimeoutDuration();
+        Boolean cancelOnExecution = timeoutConfig.shouldCancelOnException();
 
         ExecutorService executorService = Executors.newSingleThreadExecutor();
 
@@ -337,8 +368,12 @@ public interface Timeout {
             return null;
         });
 
-        return Try.of(() -> task.get(timeoutDuration.getNano(), TimeUnit.NANOSECONDS))
-                .getOrElseThrow(throwable -> new TimeoutException(throwable.getCause()));
+        return Try.of(() -> task.get(timeoutDuration.toMillis(), TimeUnit.MILLISECONDS))
+                .getOrElseThrow(throwable -> {
+                    if (cancelOnExecution && !task.isDone())
+                        task.cancel(true);
+                    return new TimeoutException(throwable);
+                });
     }
 
     /**
@@ -354,12 +389,17 @@ public interface Timeout {
     static <T,R> R waitForFunction(final Timeout timeout, final Function<T,R> function, final T t) throws TimeoutException {
         TimeoutConfig timeoutConfig = timeout.getTimeoutConfig();
         Duration timeoutDuration = timeoutConfig.getTimeoutDuration();
+        Boolean cancelOnExecution = timeoutConfig.shouldCancelOnException();
 
         ExecutorService executorService = Executors.newSingleThreadExecutor();
 
         Future<R> task = executorService.submit(() -> function.apply(t));
 
-        return Try.of(() -> task.get(timeoutDuration.getNano(), TimeUnit.NANOSECONDS))
-                .getOrElseThrow(throwable -> new TimeoutException(throwable.getCause()));
+        return Try.of(() -> task.get(timeoutDuration.toMillis(), TimeUnit.MILLISECONDS))
+                .getOrElseThrow(throwable -> {
+                    if (cancelOnExecution && !task.isDone())
+                        task.cancel(true);
+                    return new TimeoutException(throwable);
+                });
     }
 }
