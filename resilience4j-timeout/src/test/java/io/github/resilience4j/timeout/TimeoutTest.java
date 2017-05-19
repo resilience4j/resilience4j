@@ -5,6 +5,7 @@ import org.junit.Test;
 
 import java.time.Duration;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -17,6 +18,7 @@ import io.vavr.control.Try;
 import static io.github.resilience4j.timeout.SleepStubber.doSleep;
 import static org.assertj.core.api.BDDAssertions.then;
 import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -221,5 +223,55 @@ public class TimeoutTest {
 
         Try secondResult = Try.success(1).map(decorated);
         then(secondResult.isSuccess()).isTrue();
+    }
+
+    @Test
+    public void throwsExceptionWhenCheckedSupplierThrows() throws Throwable {
+        CheckedFunction0 supplier = mock(CheckedFunction0.class);
+        CheckedFunction0 decorated = Timeout.decorateCheckedSupplier(timeout, supplier);
+
+        doThrow(new NullPointerException()).when(supplier).apply();
+
+        when(timeout.getTimeoutConfig())
+                .thenReturn(longConfig);
+
+        Try decoratedResult = Try.of(decorated);
+        then(decoratedResult.isFailure()).isTrue();
+        then(decoratedResult.getCause()).isInstanceOf(TimeoutException.class);
+        then(decoratedResult.getCause().getCause()).isInstanceOf(ExecutionException.class);
+        then(decoratedResult.getCause().getCause().getCause()).isInstanceOf(NullPointerException.class);
+    }
+
+
+    @Test
+    public void throwsExceptionWhenCheckedRunnableThrows() throws Throwable {
+        CheckedRunnable runnable = mock(CheckedRunnable.class);
+        CheckedRunnable decorated = Timeout.decorateCheckedRunnable(timeout, runnable);
+
+        doThrow(new NullPointerException()).when(runnable).run();
+        when(timeout.getTimeoutConfig())
+                .thenReturn(longConfig);
+
+        Try decoratedResult = Try.run(decorated);
+        then(decoratedResult.isFailure()).isTrue();
+        then(decoratedResult.getCause()).isInstanceOf(TimeoutException.class);
+        then(decoratedResult.getCause().getCause()).isInstanceOf(ExecutionException.class);
+        then(decoratedResult.getCause().getCause().getCause()).isInstanceOf(NullPointerException.class);
+    }
+
+    @Test
+    public void throwsExceptionWhenCheckedFunctionThrows() throws Throwable {
+        CheckedFunction1<Integer, String> function = mock(CheckedFunction1.class);
+        CheckedFunction1<Integer, String> decorated = Timeout.decorateCheckedFunction(timeout, function);
+
+        doThrow(new NullPointerException()).when(function).apply(any());
+        when(timeout.getTimeoutConfig())
+                .thenReturn(longConfig);
+
+        Try<String> decoratedResult = Try.success(1).mapTry(decorated);
+        then(decoratedResult.isFailure()).isTrue();
+        then(decoratedResult.getCause()).isInstanceOf(TimeoutException.class);
+        then(decoratedResult.getCause().getCause()).isInstanceOf(ExecutionException.class);
+        then(decoratedResult.getCause().getCause().getCause()).isInstanceOf(NullPointerException.class);
     }
 }

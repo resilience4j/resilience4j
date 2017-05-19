@@ -2,7 +2,6 @@ package io.github.resilience4j.timeout;
 
 import java.time.Duration;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -206,8 +205,7 @@ public interface Timeout {
 
         ExecutorService executorService = Executors.newSingleThreadExecutor();
 
-        Future<T> task = executorService.submit(() -> Try.of(supplier)
-                .getOrElseThrow((Function<? super Throwable, ExecutionException>) ExecutionException::new));
+        Future<T> task = executorService.submit(() -> Try.of(supplier).get());
 
         return Try.of(() -> task.get(timeoutDuration.toMillis(), TimeUnit.MILLISECONDS))
                 .getOrElseThrow(throwable -> {
@@ -231,8 +229,7 @@ public interface Timeout {
 
         ExecutorService executorService = Executors.newSingleThreadExecutor();
 
-        Future<Void> task = executorService.submit(() -> Try.run(runnable)
-                .getOrElseThrow((Function<? super Throwable, ExecutionException>) ExecutionException::new));
+        Future<Void> task = executorService.submit(() -> Try.run(runnable).get());
 
         return Try.of(() -> task.get(timeoutDuration.toMillis(), TimeUnit.MILLISECONDS))
                 .getOrElseThrow(throwable -> {
@@ -259,8 +256,7 @@ public interface Timeout {
 
         ExecutorService executorService = Executors.newSingleThreadExecutor();
 
-        Future<R> task = executorService.submit(() -> Try.of(() -> function.apply(t))
-        .getOrElseThrow((Function<? super Throwable, ExecutionException>) ExecutionException::new));
+        Future<R> task = executorService.submit(() -> Try.of(() -> function.apply(t)).get());
 
         return Try.of(() -> task.get(timeoutDuration.toMillis(), TimeUnit.MILLISECONDS))
                 .getOrElseThrow(throwable -> {
