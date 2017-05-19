@@ -92,8 +92,18 @@ class Resilience4jModuleSpec extends Specification {
         timer.count == 3
 
         and:
-        registry.gauges.size() == 8
-        registry.gauges.keySet() == ['resilience4j.circuitbreaker.test.buffered', 'resilience4j.circuitbreaker.test.buffered_max', 'resilience4j.circuitbreaker.test.failed', 'resilience4j.circuitbreaker.test.not_permitted', 'resilience4j.circuitbreaker.test.successful', 'resilience4j.ratelimiter.test.available_permissions', 'resilience4j.ratelimiter.test.number_of_waiting_threads', 'resilience4j.retry.test.retry_max_ratio'].toSet()
+        registry.gauges.size() == 11
+        registry.gauges.keySet() == ['resilience4j.circuitbreaker.test.buffered',
+                                     'resilience4j.circuitbreaker.test.buffered_max',
+                                     'resilience4j.circuitbreaker.test.failed',
+                                     'resilience4j.circuitbreaker.test.not_permitted',
+                                     'resilience4j.circuitbreaker.test.successful',
+                                     'resilience4j.ratelimiter.test.available_permissions',
+                                     'resilience4j.ratelimiter.test.number_of_waiting_threads',
+                                     'resilience4j.retry.test.successful_calls_without_retry',
+                                     'resilience4j.retry.test.successful_calls_with_retry',
+                                     'resilience4j.retry.test.failed_calls_without_retry',
+                                     'resilience4j.retry.test.failed_calls_with_retry'].toSet()
     }
 
     def "test prometheus"() {
@@ -140,7 +150,9 @@ class Resilience4jModuleSpec extends Specification {
         def families = collectorRegistry.metricFamilySamples().collect { it.name }.sort()
 
         then:
-        families == ['resilience4j_circuitbreaker_calls', 'resilience4j_circuitbreaker_states', 'resilience4j_ratelimiter'].sort()
+        families == ['resilience4j_circuitbreaker_calls',
+                     'resilience4j_circuitbreaker_states',
+                     'resilience4j_ratelimiter'].sort()
     }
 
     static class Something {

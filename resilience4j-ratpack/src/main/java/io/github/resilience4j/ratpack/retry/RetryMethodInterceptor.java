@@ -42,13 +42,13 @@ public class RetryMethodInterceptor implements MethodInterceptor {
     @Override
     public Object invoke(MethodInvocation invocation) throws Throwable {
         Retry annotation = invocation.getMethod().getAnnotation(Retry.class);
+        io.github.resilience4j.retry.Retry retry = registry.retry(annotation.name());
+        if (retry == null) {
+            return invocation.proceed();
+        }
         RecoveryFunction<?> recoveryFunction = annotation.recovery().newInstance();
         if (registry == null) {
             registry = RetryRegistry.ofDefaults();
-        }
-        io.github.resilience4j.retry.Retry retry = registry.newRetry(annotation.name());
-        if (retry == null) {
-            return invocation.proceed();
         }
         Class<?> returnType = invocation.getMethod().getReturnType();
         if (Promise.class.isAssignableFrom(returnType)) {
@@ -82,20 +82,20 @@ public class RetryMethodInterceptor implements MethodInterceptor {
         }
         else if (CompletionStage.class.isAssignableFrom(returnType)) {
             CompletionStage stage = (CompletionStage) proceed(invocation, retry, recoveryFunction);
-            return executeCompletionStage(invocation, stage, retry, recoveryFunction);
+            return executeCompletionStage(invocation, stage, retry.context(), recoveryFunction);
         }
         return proceed(invocation, retry, recoveryFunction);
     }
 
     @SuppressWarnings("unchecked")
-    private CompletionStage<?> executeCompletionStage(MethodInvocation invocation, CompletionStage<?> stage, io.github.resilience4j.retry.Retry retry, RecoveryFunction<?> recoveryFunction) {
+    private CompletionStage<?> executeCompletionStage(MethodInvocation invocation, CompletionStage<?> stage, io.github.resilience4j.retry.Retry.Context context, RecoveryFunction<?> recoveryFunction) {
         final CompletableFuture promise = new CompletableFuture();
         stage.whenComplete((v, t) -> {
             if (t != null) {
                 try {
-                    retry.onError((Exception) t);
+                    context.onError((Exception) t);
                     CompletionStage next = (CompletionStage) invocation.proceed();
-                    CompletableFuture temp = executeCompletionStage(invocation, next, retry, recoveryFunction).toCompletableFuture();
+                    CompletableFuture temp = executeCompletionStage(invocation, next, context, recoveryFunction).toCompletableFuture();
                     promise.complete(temp.join());
                 } catch (Throwable t2) {
                     try {
@@ -106,6 +106,7 @@ public class RetryMethodInterceptor implements MethodInterceptor {
                     }
                 }
             } else {
+                context.onSuccess();
                 promise.complete(v);
             }
         });
@@ -113,20 +114,23 @@ public class RetryMethodInterceptor implements MethodInterceptor {
     }
 
     private Object proceed(MethodInvocation invocation, io.github.resilience4j.retry.Retry retry, RecoveryFunction<?> recoveryFunction) throws Throwable {
+        io.github.resilience4j.retry.Retry.Context context = retry.context();
         try {
-            return invocation.proceed();
+            Object result = invocation.proceed();
+            context.onSuccess();
+            return result;
         } catch (Exception e) {
             // exception thrown, we know a direct value was attempted to be returned
             Object result;
-            retry.onError(e);
+            context.onError(e);
             while (true) {
                 try {
                     result = invocation.proceed();
-                    retry.onSuccess();
+                    context.onSuccess();
                     return result;
                 } catch (Exception e1) {
                     try {
-                        retry.onError(e1);
+                        context.onError(e1);
                     } catch (Throwable t) {
                         return recoveryFunction.apply(t);
                     }

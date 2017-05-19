@@ -36,7 +36,7 @@ public class RetryOnErrorEvent extends AbstractRetryEvent {
         return String.format("%s: Retry '%s' recorded a failed retry attempt. Number of retry attempts: '%d', Last exception was: '%s'.",
                 getCreationTime(),
                 getName(),
-                getNumberOfAttempts(),
+                getNumberOfRetryAttempts(),
                 getLastThrowable().toString());
     }
 }

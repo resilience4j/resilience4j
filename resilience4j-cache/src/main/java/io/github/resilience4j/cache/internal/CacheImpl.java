@@ -35,15 +35,15 @@ import org.slf4j.LoggerFactory;
 import java.util.concurrent.atomic.LongAdder;
 import java.util.function.Supplier;
 
-public class CacheContext<K, V>  implements Cache<K,V> {
+public class CacheImpl<K, V>  implements Cache<K,V> {
 
-    private static final Logger LOG = LoggerFactory.getLogger(CacheContext.class);
+    private static final Logger LOG = LoggerFactory.getLogger(CacheImpl.class);
 
     private final javax.cache.Cache<K, V> cache;
     private final FlowableProcessor<CacheEvent> eventPublisher;
     private final CacheMetrics metrics;
 
-    public CacheContext(javax.cache.Cache<K, V> cache) {
+    public CacheImpl(javax.cache.Cache<K, V> cache) {
         this.cache = cache;
         PublishProcessor<CacheEvent> publisher = PublishProcessor.create();
         this.eventPublisher = publisher.toSerialized();

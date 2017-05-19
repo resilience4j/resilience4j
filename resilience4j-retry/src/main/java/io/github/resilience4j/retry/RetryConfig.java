@@ -30,13 +30,16 @@ public class RetryConfig {
 
     private int maxAttempts = DEFAULT_MAX_ATTEMPTS;
 
-    private IntervalFunction intervalFunction = (x) -> DEFAULT_WAIT_DURATION;
+    private IntervalFunction intervalFunction = (numOfAttempts) -> DEFAULT_WAIT_DURATION;
     // The default exception predicate retries all exceptions.
     private Predicate<Throwable> exceptionPredicate = (exception) -> true;
 
     private RetryConfig(){
     }
 
+    /**
+     * @return the maximum allowed retries to make.
+     */
     public int getMaxAttempts() {
         return maxAttempts;
     }

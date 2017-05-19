@@ -15,6 +15,10 @@ import static java.util.Objects.requireNonNull;
  */
 public class RetryMetrics implements MetricSet {
 
+    public static final String SUCCESSFUL_CALLS_WITHOUT_RETRY = "successful_calls_without_retry";
+    public static final String SUCCESSFUL_CALLS_WITH_RETRY = "successful_calls_with_retry";
+    public static final String FAILED_CALLS_WITHOUT_RETRY = "failed_calls_without_retry";
+    public static final String FAILED_CALLS_WITH_RETRY = "failed_calls_with_retry";
     private final MetricRegistry metricRegistry = new MetricRegistry();
     private static final String DEFAULT_PREFIX = "resilience4j.retry";
 
@@ -29,9 +33,14 @@ public class RetryMetrics implements MetricSet {
             String name = retry.getName();
             Retry.Metrics metrics = retry.getMetrics();
 
-            metricRegistry.register(name(prefix, name, "retry_max_ratio"),
-                    new RetryRatio(metrics.getNumAttempts(), metrics.getMaxAttempts()));
-            
+            metricRegistry.register(name(prefix, name, SUCCESSFUL_CALLS_WITHOUT_RETRY),
+                    (Gauge<Long>) metrics::getNumberOfSuccessfulCallsWithoutRetryAttempt);
+            metricRegistry.register(name(prefix, name, SUCCESSFUL_CALLS_WITH_RETRY),
+                    (Gauge<Long>) metrics::getNumberOfSuccessfulCallsWithRetryAttempt);
+            metricRegistry.register(name(prefix, name, FAILED_CALLS_WITHOUT_RETRY),
+                    (Gauge<Long>) metrics::getNumberOfFailedCallsWithoutRetryAttempt);
+            metricRegistry.register(name(prefix, name, FAILED_CALLS_WITH_RETRY),
+                    (Gauge<Long>) metrics::getNumberOfFailedCallsWithRetryAttempt);
         });
     }
 

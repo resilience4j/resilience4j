@@ -18,9 +18,6 @@
  */
 package io.github.resilience4j.metrics;
 
-import static com.codahale.metrics.MetricRegistry.name;
-import static java.util.Objects.requireNonNull;
-
 import com.codahale.metrics.Gauge;
 import com.codahale.metrics.Metric;
 import com.codahale.metrics.MetricRegistry;
@@ -31,12 +28,20 @@ import io.vavr.collection.Array;
 
 import java.util.Map;
 
+import static com.codahale.metrics.MetricRegistry.name;
+import static java.util.Objects.requireNonNull;
+
 /**
  * An adapter which exports {@link CircuitBreaker.Metrics} as Dropwizard Metrics Gauges.
  */
 public class CircuitBreakerMetrics implements MetricSet {
 
     private static final String DEFAULT_PREFIX = "resilience4j.circuitbreaker";
+    public static final String SUCCESSFUL = "successful";
+    public static final String FAILED = "failed";
+    public static final String NOT_PERMITTED = "not_permitted";
+    public static final String BUFFERED = "buffered";
+    public static final String BUFFERED_MAX = "buffered_max";
     private final MetricRegistry metricRegistry = new MetricRegistry();
 
     private CircuitBreakerMetrics(Iterable<CircuitBreaker> circuitBreakers) {
@@ -50,15 +55,15 @@ public class CircuitBreakerMetrics implements MetricSet {
                 String name = circuitBreaker.getName();
                 CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
 
-                metricRegistry.register(name(prefix, name, "successful"),
+                metricRegistry.register(name(prefix, name, SUCCESSFUL),
                     (Gauge<Integer>) metrics::getNumberOfSuccessfulCalls);
-                metricRegistry.register(name(prefix, name, "failed"),
+                metricRegistry.register(name(prefix, name, FAILED),
                     (Gauge<Integer>) metrics::getNumberOfFailedCalls);
-                metricRegistry.register(name(prefix, name, "not_permitted"),
+                metricRegistry.register(name(prefix, name, NOT_PERMITTED),
                     (Gauge<Long>) metrics::getNumberOfNotPermittedCalls);
-                metricRegistry.register(name(prefix, name, "buffered"),
+                metricRegistry.register(name(prefix, name, BUFFERED),
                     (Gauge<Integer>) metrics::getNumberOfBufferedCalls);
-                metricRegistry.register(name(prefix, name, "buffered_max"),
+                metricRegistry.register(name(prefix, name, BUFFERED_MAX),
                     (Gauge<Integer>) metrics::getMaxNumberOfBufferedCalls);
             }
         );
