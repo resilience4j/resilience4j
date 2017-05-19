@@ -41,7 +41,7 @@ public class RetryMetricsTest {
 
         //Then
         assertThat(value).isEqualTo("Hello world");
-        // Then the helloWorldService should be invoked 1 context
+        // Then the helloWorldService should be invoked 1 time
         BDDMockito.then(helloWorldService).should(times(1)).returnHelloWorld();
         assertThat(metricRegistry.getMetrics()).hasSize(4);
         assertThat(metricRegistry.getGauges().get("resilience4j.retry.testName." + RetryMetrics.SUCCESSFUL_CALLS_WITH_RETRY).getValue()).isEqualTo(0L);
@@ -71,7 +71,7 @@ public class RetryMetricsTest {
 
         //Then
         assertThat(value1).isEqualTo("Hello world");
-        // Then the helloWorldService should be invoked 1 context
+        // Then the helloWorldService should be invoked 1 time
         BDDMockito.then(helloWorldService).should(times(5)).returnHelloWorld();
         assertThat(metricRegistry.getMetrics()).hasSize(4);
         assertThat(metricRegistry.getGauges().get("resilience4j.retry.testName." + RetryMetrics.SUCCESSFUL_CALLS_WITH_RETRY).getValue()).isEqualTo(1L);
@@ -94,7 +94,7 @@ public class RetryMetricsTest {
 
         //Then
         assertThat(value).isEqualTo("Hello world");
-        // Then the helloWorldService should be invoked 1 context
+        // Then the helloWorldService should be invoked 1 time
         BDDMockito.then(helloWorldService).should(times(1)).returnHelloWorld();
         assertThat(metricRegistry.getMetrics()).hasSize(4);
         assertThat(metricRegistry.getGauges().get("testPrefix.testName." + RetryMetrics.SUCCESSFUL_CALLS_WITH_RETRY).getValue()).isEqualTo(0L);
