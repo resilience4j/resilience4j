@@ -12,10 +12,10 @@ RetryConfig config = RetryConfig.custom()
     .maxAttempts(3)
     .waitDuration(Duration.ofMillis(500))
     .build();
-Retry retryContext = Retry.of("id", config);
+Retry retry = Retry.of("id", config);
 ----
 
-In order to create a custom `Retry` context, you can use the Retry context builder. You can configure the maximum number of retry attempts and the wait duration between successive attempts. Furthermore, you can configure a custom Predicate which evaluates if an exception should trigger a retry.
+In order to create a custom-configured `Retry`, you can use the RetryConfig builder. You can configure the maximum number of retry attempts and the wait duration between successive attempts. Furthermore, you can configure a custom Predicate which evaluates if an exception should trigger a retry.
 
 [source,java]
 ----
@@ -39,9 +39,9 @@ HelloWorldService  helloWorldService = mock(HelloWorldService.class);
 given(helloWorldService.sayHelloWorld()).willThrow(new WebServiceException("BAM!"));
 
 // Create a Retry with default configuration
-Retry retryContext = Retry.ofDefaults("id");
+Retry retry = Retry.ofDefaults("id");
 // Decorate the invocation of the HelloWorldService
-CheckedFunction0<String> retryableSupplier = Retry.decorateCheckedSupplier(retryContext, helloWorldService::sayHelloWorld);
+CheckedFunction0<String> retryableSupplier = Retry.decorateCheckedSupplier(retry, helloWorldService::sayHelloWorld);
 
 // When I invoke the function
 Try<String> result = Try.of(retryableSupplier).recover((throwable) -> "Hello world from recovery function");
@@ -69,9 +69,9 @@ The RetryContext emits a stream of RetryEvents to any Observer/Consumer who subs
 
 [source,java]
 ----
-Retry retryContext = Retry.ofDefaults("id");
+Retry retry = Retry.ofDefaults("id");
 CircularEventConsumer<RetryEvent> circularEventConsumer = new CircularEventConsumer<>(10);
-retryContext.getEventStream()
+retry.getEventStream()
     .subscribe(circularEventConsumer);
 
 List<RetryEvent> bufferedEvents = circularEventConsumer.getBufferedEvents();

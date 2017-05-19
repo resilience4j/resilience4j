@@ -19,7 +19,7 @@
 package io.github.resilience4j.retry;
 
 import io.github.resilience4j.retry.event.RetryEvent;
-import io.github.resilience4j.retry.internal.RetryContext;
+import io.github.resilience4j.retry.internal.RetryImpl;
 import io.reactivex.Flowable;
 import io.vavr.CheckedFunction0;
 import io.vavr.CheckedFunction1;
@@ -72,7 +72,7 @@ public interface Retry {
      * @return a Retry with a custom Retry configuration.
      */
     static Retry of(String name, RetryConfig retryConfig){
-        return new RetryContext(name, retryConfig);
+        return new RetryImpl(name, retryConfig);
     }
 
     /**
@@ -84,7 +84,7 @@ public interface Retry {
      * @return a Retry with a custom Retry configuration.
      */
     static Retry of(String name, Supplier<RetryConfig> retryConfigSupplier){
-        return new RetryContext(name, retryConfigSupplier.get());
+        return new RetryImpl(name, retryConfigSupplier.get());
     }
 
     /**
@@ -94,7 +94,7 @@ public interface Retry {
      * @return a Retry with default configuration
      */
     static Retry ofDefaults(String name){
-        return new RetryContext(name, RetryConfig.ofDefaults());
+        return new RetryImpl(name, RetryConfig.ofDefaults());
     }
 
     /**

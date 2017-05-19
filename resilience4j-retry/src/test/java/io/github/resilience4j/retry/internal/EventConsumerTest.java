@@ -43,7 +43,7 @@ public class EventConsumerTest {
     @Before
     public void setUp(){
         helloWorldService = Mockito.mock(HelloWorldService.class);
-        RetryContext.sleepFunction = sleep -> sleptTime += sleep;
+        RetryImpl.sleepFunction = sleep -> sleptTime += sleep;
     }
 
     @Test
@@ -52,12 +52,12 @@ public class EventConsumerTest {
         BDDMockito.willThrow(new WebServiceException("BAM!")).given(helloWorldService).sayHelloWorld();
 
         // Create a Retry with default configuration
-        RetryContext retryContext = (RetryContext) Retry.ofDefaults("id");
-        TestSubscriber<RetryEvent.Type> testSubscriber = retryContext.getEventStream()
+        Retry retry = Retry.ofDefaults("id");
+        TestSubscriber<RetryEvent.Type> testSubscriber = retry.getEventStream()
                 .map(RetryEvent::getEventType)
                 .test();
         // Decorate the invocation of the HelloWorldService
-        CheckedRunnable retryableRunnable = Retry.decorateCheckedRunnable(retryContext, helloWorldService::sayHelloWorld);
+        CheckedRunnable retryableRunnable = Retry.decorateCheckedRunnable(retry, helloWorldService::sayHelloWorld);
 
         // When
         Try<Void> result = Try.run(retryableRunnable);
@@ -80,12 +80,12 @@ public class EventConsumerTest {
         BDDMockito.willThrow(new WebServiceException("BAM!")).willNothing().given(helloWorldService).sayHelloWorld();
 
         // Create a Retry with default configuration
-        RetryContext retryContext = (RetryContext) Retry.ofDefaults("id");
-        TestSubscriber<RetryEvent.Type> testSubscriber = retryContext.getEventStream()
+        Retry retry = Retry.ofDefaults("id");
+        TestSubscriber<RetryEvent.Type> testSubscriber = retry.getEventStream()
                 .map(RetryEvent::getEventType)
                 .test();
         // Decorate the invocation of the HelloWorldService
-        CheckedRunnable retryableRunnable = Retry.decorateCheckedRunnable(retryContext, helloWorldService::sayHelloWorld);
+        CheckedRunnable retryableRunnable = Retry.decorateCheckedRunnable(retry, helloWorldService::sayHelloWorld);
 
         // When
         Try<Void> result = Try.run(retryableRunnable);
@@ -108,12 +108,12 @@ public class EventConsumerTest {
         RetryConfig config = RetryConfig.custom()
                 .retryOnException(t -> t instanceof IOException)
                 .maxAttempts(3).build();
-        RetryContext retryContext = (RetryContext) Retry.of("id", config);
-        TestSubscriber<RetryEvent.Type> testSubscriber = retryContext.getEventStream()
+        Retry retry = Retry.of("id", config);
+        TestSubscriber<RetryEvent.Type> testSubscriber = retry.getEventStream()
                 .map(RetryEvent::getEventType)
                 .test();
         // Decorate the invocation of the HelloWorldService
-        CheckedRunnable retryableRunnable = Retry.decorateCheckedRunnable(retryContext, helloWorldService::sayHelloWorld);
+        CheckedRunnable retryableRunnable = Retry.decorateCheckedRunnable(retry, helloWorldService::sayHelloWorld);
 
         // When
         Try<Void> result = Try.run(retryableRunnable);

@@ -1,7 +1,7 @@
 package io.github.resilience4j.retry;
 
 import io.github.resilience4j.retry.event.RetryEvent;
-import io.github.resilience4j.retry.internal.AsyncRetryContext;
+import io.github.resilience4j.retry.internal.AsyncRetryImpl;
 import io.reactivex.Flowable;
 
 import java.util.concurrent.CompletableFuture;
@@ -52,7 +52,7 @@ public interface AsyncRetry {
      * @return a Retry with a custom Retry configuration.
      */
     static AsyncRetry of(String id, RetryConfig retryConfig){
-        return new AsyncRetryContext(id, retryConfig);
+        return new AsyncRetryImpl(id, retryConfig);
     }
 
     /**

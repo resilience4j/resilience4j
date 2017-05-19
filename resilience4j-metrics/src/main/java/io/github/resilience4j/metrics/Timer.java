@@ -2,7 +2,7 @@ package io.github.resilience4j.metrics;
 
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Snapshot;
-import io.github.resilience4j.metrics.internal.TimerContext;
+import io.github.resilience4j.metrics.internal.TimerImpl;
 import io.vavr.CheckedFunction0;
 import io.vavr.CheckedFunction1;
 import io.vavr.CheckedRunnable;
@@ -12,8 +12,6 @@ import java.util.concurrent.CompletionStage;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-import static com.codahale.metrics.Timer.Context;
-
 public interface Timer {
 
     /**
@@ -21,18 +19,7 @@ public interface Timer {
      *
      * @return the Timer context
      */
-    Context context();
-
-    /**
-     * Stops the Timer and records a failed call.
-     * This method must be invoked when a call failed.
-     */
-    void onError(Context context);
-
-    /**
-     * Stops the Timer and records a successful call.
-     */
-    void onSuccess(Context context);
+    Timer.Context context();
 
     /**
      * Returns the name of this Timer.
@@ -63,7 +50,7 @@ public interface Timer {
      * @return a Bulkhead instance
      */
     static Timer ofMetricRegistry(String name, MetricRegistry metricRegistry) {
-        return new TimerContext(name, metricRegistry);
+        return new TimerImpl(name, metricRegistry);
     }
 
     /**
@@ -73,7 +60,7 @@ public interface Timer {
      * @return a Bulkhead instance
      */
     static Timer of(String name) {
-        return new TimerContext(name, new MetricRegistry());
+        return new TimerImpl(name, new MetricRegistry());
     }
 
 
@@ -128,13 +115,13 @@ public interface Timer {
      */
     static <T> CheckedFunction0<T> decorateCheckedSupplier(Timer timer, CheckedFunction0<T> supplier){
         return () -> {
-            final Context context = timer.context();
+            final Timer.Context context = timer.context();
             try {
                 T returnValue = supplier.apply();
-                timer.onSuccess(context);
+                context.onSuccess();
                 return returnValue;
             }catch (Throwable e){
-                timer.onError(context);
+                context.onError();
                 throw e;
             }
         };
@@ -149,12 +136,12 @@ public interface Timer {
      */
     static CheckedRunnable decorateCheckedRunnable(Timer timer, CheckedRunnable runnable){
         return () -> {
-            final Context context = timer.context();
+            final Timer.Context context = timer.context();
             try {
                 runnable.run();
-                timer.onSuccess(context);
+                context.onSuccess();
             }catch (Throwable e){
-                timer.onError(context);
+                context.onError();
                 throw e;
             }
         };
@@ -169,13 +156,13 @@ public interface Timer {
      */
     static <T> Supplier<T> decorateSupplier(Timer timer, Supplier<T> supplier){
         return () -> {
-            final Context context = timer.context();
+            final Timer.Context context = timer.context();
             try {
                 T returnValue = supplier.get();
-                timer.onSuccess(context);
+                context.onSuccess();
                 return returnValue;
             }catch (Throwable e){
-                timer.onError(context);
+                context.onError();
                 throw e;
             }
         };
@@ -190,13 +177,13 @@ public interface Timer {
      */
     static <T> Callable<T> decorateCallable(Timer timer, Callable<T> callable){
         return () -> {
-            final Context context = timer.context();
+            final Timer.Context context = timer.context();
             try {
                 T returnValue = callable.call();
-                timer.onSuccess(context);
+                context.onSuccess();
                 return returnValue;
             }catch (Throwable e){
-                timer.onError(context);
+                context.onError();
                 throw e;
             }
         };
@@ -212,12 +199,12 @@ public interface Timer {
      */
     static Runnable decorateRunnable(Timer timer, Runnable runnable){
         return () -> {
-            final Context context = timer.context();
+            final Timer.Context context = timer.context();
             try {
                 runnable.run();
-                timer.onSuccess(context);
+                context.onSuccess();
             }catch (Throwable e){
-                timer.onError(context);
+                context.onError();
                 throw e;
             }
         };
@@ -233,13 +220,13 @@ public interface Timer {
      */
     static <T, R> Function<T, R> decorateFunction(Timer timer, Function<T, R> function){
         return (T t) -> {
-            final Context context = timer.context();
+            final Timer.Context context = timer.context();
             try {
                 R returnValue = function.apply(t);
-                timer.onSuccess(context);
+                context.onSuccess();
                 return returnValue;
             }catch (Throwable e){
-                timer.onError(context);
+                context.onError();
                 throw e;
             }
         };
@@ -254,13 +241,13 @@ public interface Timer {
      */
     static <T, R> CheckedFunction1<T, R> decorateCheckedFunction(Timer timer, CheckedFunction1<T, R> function){
         return (T t) -> {
-            final Context context = timer.context();
+            final Timer.Context context = timer.context();
             try {
                 R returnValue = function.apply(t);
-                timer.onSuccess(context);
+                context.onSuccess();
                 return returnValue;
             }catch (Throwable e){
-                timer.onError(context);
+                context.onError();
                 throw e;
             }
         };
@@ -274,24 +261,39 @@ public interface Timer {
      */
     static <T> Supplier<CompletionStage<T>> decorateCompletionStageSupplier(Timer timer, Supplier<CompletionStage<T>> stageSupplier) {
         return () -> {
-            final Context context = timer.context();
+            final Timer.Context context = timer.context();
             try {
                 final CompletionStage<T> stage = stageSupplier.get();
 
                 stage.whenComplete((result, throwable) -> {
                     if (throwable != null) {
-                        timer.onError(context);
+                        context.onError();
                     } else {
-                        timer.onSuccess(context);
+                        context.onSuccess();
                     }
                 });
 
                 return stage;
             } catch (Throwable throwable) {
-                timer.onError(context);
+                context.onError();
                 throw throwable;
             }
         };
+    }
+
+
+    interface Context {
+
+        /**
+         * Stops the Timer and records a failed call.
+         * This method must be invoked when a call failed.
+         */
+        void onError();
+
+        /**
+         * Stops the Timer and records a successful call.
+         */
+        void onSuccess();
     }
 
     interface Metrics {

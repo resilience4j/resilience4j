@@ -38,7 +38,7 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
-public class RetryContext implements Retry {
+public class RetryImpl implements Retry {
 
 
     private final Metrics metrics;
@@ -55,7 +55,7 @@ public class RetryContext implements Retry {
     private LongAdder failedWithoutRetryCounter;
     /*package*/ static CheckedConsumer<Long> sleepFunction = Thread::sleep;
 
-    public RetryContext(String name, RetryConfig config){
+    public RetryImpl(String name, RetryConfig config){
         this.name = name;
         this.config = config;
         this.maxAttempts = config.getMaxAttempts();
@@ -73,8 +73,8 @@ public class RetryContext implements Retry {
     public final class ContextImpl implements Retry.Context {
 
         private final AtomicInteger numOfAttempts = new AtomicInteger(0);
-        private AtomicReference<Exception> lastException = new AtomicReference<>();
-        private AtomicReference<RuntimeException> lastRuntimeException = new AtomicReference<>();
+        private final AtomicReference<Exception> lastException = new AtomicReference<>();
+        private final AtomicReference<RuntimeException> lastRuntimeException = new AtomicReference<>();
 
         private ContextImpl() {
         }

@@ -17,7 +17,7 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
-public class AsyncRetryContext implements AsyncRetry {
+public class AsyncRetryImpl implements AsyncRetry {
 
     private final String name;
     private final int maxAttempts;
@@ -32,7 +32,7 @@ public class AsyncRetryContext implements AsyncRetry {
     private LongAdder succeededWithoutRetryCounter;
     private LongAdder failedWithoutRetryCounter;
 
-    public AsyncRetryContext(String name, RetryConfig config) {
+    public AsyncRetryImpl(String name, RetryConfig config) {
         this.config = config;
         this.name = name;
         this.maxAttempts = config.getMaxAttempts();
@@ -51,7 +51,7 @@ public class AsyncRetryContext implements AsyncRetry {
     public final class ContextImpl implements AsyncRetry.Context {
 
         private final AtomicInteger numOfAttempts = new AtomicInteger(0);
-        private AtomicReference<Throwable> lastException = new AtomicReference<>();
+        private final AtomicReference<Throwable> lastException = new AtomicReference<>();
 
         @Override
         public void onSuccess() {
