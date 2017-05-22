@@ -9,7 +9,7 @@ public class TimeoutConfig {
     private static final String TIMEOUT_DURATION_MUST_NOT_BE_NULL = "TimeoutDuration must not be null";
     private static final String CANCEL_ON_EXCEPTION_MUST_NOT_BE_NULL = "CancelOnExecution must not be null";
 
-    private Duration timeoutDuration =  Duration.ofSeconds(0);
+    private Duration timeoutDuration =  Duration.ofMillis(1000);
     private Boolean cancelOnException = TRUE;
 
     private TimeoutConfig() {

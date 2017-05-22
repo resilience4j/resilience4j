@@ -230,7 +230,7 @@ public class TimeoutTest {
         CheckedFunction0 supplier = mock(CheckedFunction0.class);
         CheckedFunction0 decorated = Timeout.decorateCheckedSupplier(timeout, supplier);
 
-        doThrow(new NullPointerException()).when(supplier).apply();
+        doThrow(new IllegalStateException()).when(supplier).apply();
 
         when(timeout.getTimeoutConfig())
                 .thenReturn(longConfig);
@@ -239,7 +239,7 @@ public class TimeoutTest {
         then(decoratedResult.isFailure()).isTrue();
         then(decoratedResult.getCause()).isInstanceOf(TimeoutException.class);
         then(decoratedResult.getCause().getCause()).isInstanceOf(ExecutionException.class);
-        then(decoratedResult.getCause().getCause().getCause()).isInstanceOf(NullPointerException.class);
+        then(decoratedResult.getCause().getCause().getCause()).isInstanceOf(IllegalStateException.class);
     }
 
 
@@ -248,7 +248,7 @@ public class TimeoutTest {
         CheckedRunnable runnable = mock(CheckedRunnable.class);
         CheckedRunnable decorated = Timeout.decorateCheckedRunnable(timeout, runnable);
 
-        doThrow(new NullPointerException()).when(runnable).run();
+        doThrow(new IllegalStateException()).when(runnable).run();
         when(timeout.getTimeoutConfig())
                 .thenReturn(longConfig);
 
@@ -256,7 +256,7 @@ public class TimeoutTest {
         then(decoratedResult.isFailure()).isTrue();
         then(decoratedResult.getCause()).isInstanceOf(TimeoutException.class);
         then(decoratedResult.getCause().getCause()).isInstanceOf(ExecutionException.class);
-        then(decoratedResult.getCause().getCause().getCause()).isInstanceOf(NullPointerException.class);
+        then(decoratedResult.getCause().getCause().getCause()).isInstanceOf(IllegalStateException.class);
     }
 
     @Test
@@ -264,7 +264,7 @@ public class TimeoutTest {
         CheckedFunction1<Integer, String> function = mock(CheckedFunction1.class);
         CheckedFunction1<Integer, String> decorated = Timeout.decorateCheckedFunction(timeout, function);
 
-        doThrow(new NullPointerException()).when(function).apply(any());
+        doThrow(new IllegalStateException()).when(function).apply(any());
         when(timeout.getTimeoutConfig())
                 .thenReturn(longConfig);
 
@@ -272,6 +272,6 @@ public class TimeoutTest {
         then(decoratedResult.isFailure()).isTrue();
         then(decoratedResult.getCause()).isInstanceOf(TimeoutException.class);
         then(decoratedResult.getCause().getCause()).isInstanceOf(ExecutionException.class);
-        then(decoratedResult.getCause().getCause().getCause()).isInstanceOf(NullPointerException.class);
+        then(decoratedResult.getCause().getCause().getCause()).isInstanceOf(IllegalStateException.class);
     }
 }

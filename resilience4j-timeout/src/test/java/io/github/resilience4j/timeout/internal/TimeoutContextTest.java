@@ -21,7 +21,7 @@ public class TimeoutContextTest {
     private TimeoutContext timeout;
 
     @Before
-    public void setup() {
+    public void init() {
         timeoutConfig = TimeoutConfig.custom()
                 .timeoutDuration(Duration.ZERO)
                 .build();
