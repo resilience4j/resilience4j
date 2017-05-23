@@ -63,7 +63,7 @@ public class CircuitBreakerChain implements Action<Chain> {
             chain1.get("stream/events", ctx -> {
                 Seq<Flowable<CircuitBreakerEvent>> eventStreams = circuitBreakerRegistry.getAllCircuitBreakers().map(CircuitBreaker::getEventStream);
                 Function<CircuitBreakerEvent, String> data = c -> Jackson.getObjectWriter(chain1.getRegistry()).writeValueAsString(CircuitBreakerEventDTOFactory.createCircuitBreakerEventDTO(c));
-                ServerSentEvents events = ServerSentEvents.serverSentEvents(Flowable.merge(eventStreams).publish(), e -> e.id(CircuitBreakerEvent::getCircuitBreakerName).event(c -> c.getEventType().name()).data(data));
+                ServerSentEvents events = ServerSentEvents.serverSentEvents(Flowable.merge(eventStreams), e -> e.id(CircuitBreakerEvent::getCircuitBreakerName).event(c -> c.getEventType().name()).data(data));
                 ctx.render(events);
             });
             chain1.get("events/:name", ctx -> {
@@ -81,7 +81,7 @@ public class CircuitBreakerChain implements Action<Chain> {
                 CircuitBreaker circuitBreaker = circuitBreakerRegistry.getAllCircuitBreakers().find(cb -> cb.getName().equals(circuitBreakerName))
                         .getOrElseThrow(() -> new IllegalArgumentException(String.format("circuit breaker with name %s not found", circuitBreakerName)));
                 Function<CircuitBreakerEvent, String> data = c -> Jackson.getObjectWriter(chain1.getRegistry()).writeValueAsString(CircuitBreakerEventDTOFactory.createCircuitBreakerEventDTO(c));
-                ServerSentEvents events = ServerSentEvents.serverSentEvents(circuitBreaker.getEventStream().publish(), e -> e.id(CircuitBreakerEvent::getCircuitBreakerName).event(c -> c.getEventType().name()).data(data));
+                ServerSentEvents events = ServerSentEvents.serverSentEvents(circuitBreaker.getEventStream(), e -> e.id(CircuitBreakerEvent::getCircuitBreakerName).event(c -> c.getEventType().name()).data(data));
                 ctx.render(events);
             });
             chain1.get("events/:name/:type", ctx -> {
@@ -104,7 +104,7 @@ public class CircuitBreakerChain implements Action<Chain> {
                 Flowable<CircuitBreakerEvent> eventStream = circuitBreaker.getEventStream()
                         .filter(event -> event.getEventType() == CircuitBreakerEvent.Type.valueOf(eventType.toUpperCase()));
                 Function<CircuitBreakerEvent, String> data = c -> Jackson.getObjectWriter(chain1.getRegistry()).writeValueAsString(CircuitBreakerEventDTOFactory.createCircuitBreakerEventDTO(c));
-                ServerSentEvents events = ServerSentEvents.serverSentEvents(eventStream.publish(), e -> e.id(CircuitBreakerEvent::getCircuitBreakerName).event(c -> c.getEventType().name()).data(data));
+                ServerSentEvents events = ServerSentEvents.serverSentEvents(eventStream, e -> e.id(CircuitBreakerEvent::getCircuitBreakerName).event(c -> c.getEventType().name()).data(data));
                 ctx.render(events);
             });
         });

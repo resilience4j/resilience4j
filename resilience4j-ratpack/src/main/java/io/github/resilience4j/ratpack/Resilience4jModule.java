@@ -185,7 +185,7 @@ public class Resilience4jModule extends ConfigurableModule<Resilience4jConfig> {
             CircuitBreakerRegistry circuitBreakerRegistry = injector.getInstance(CircuitBreakerRegistry.class);
             EventConsumerRegistry<CircuitBreakerEvent> cbConsumerRegistry = injector.getInstance(Key.get(new TypeLiteral<EventConsumerRegistry<CircuitBreakerEvent>>() {}));
             config.getCircuitBreakers().forEach((name, circuitBreakerConfig) -> {
-                io.github.resilience4j.circuitbreaker.CircuitBreaker circuitBreaker = null;
+                io.github.resilience4j.circuitbreaker.CircuitBreaker circuitBreaker;
                 if (circuitBreakerConfig.getDefaults()) {
                     circuitBreaker = circuitBreakerRegistry.circuitBreaker(name);
                 } else {

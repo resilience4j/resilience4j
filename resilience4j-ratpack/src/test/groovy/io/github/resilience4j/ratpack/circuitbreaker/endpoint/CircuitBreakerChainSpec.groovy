@@ -16,9 +16,12 @@
 
 package io.github.resilience4j.ratpack.circuitbreaker.endpoint
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry
 import io.github.resilience4j.ratpack.Resilience4jModule
+import ratpack.http.client.HttpClient
 import ratpack.test.embed.EmbeddedApp
+import ratpack.test.exec.ExecHarness
 import ratpack.test.http.TestHttpClient
 import spock.lang.AutoCleanup
 import spock.lang.Specification
@@ -33,8 +36,12 @@ class CircuitBreakerChainSpec extends Specification {
     @Delegate
     TestHttpClient client
 
+    HttpClient streamer = HttpClient.of { it.poolSize(8) }
+
+    def mapper = new ObjectMapper()
+
     def "test events"() {
-        given:
+        given: "an app"
         def circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults()
         app = ratpack {
             serverConfig {
@@ -57,29 +64,125 @@ class CircuitBreakerChainSpec extends Specification {
             }
         }
         client = testHttpClient(app)
-        app.server.start() // disable lazy start
+        app.server.start() // override lazy start
 
-        and:
+        and: "some circuit breaker events"
         ['test1', 'test2'].each {
             def c = circuitBreakerRegistry.circuitBreaker(it)
             c.onSuccess(1000)
             c.onError(1000, new Exception("meh"))
         }
 
-        when:
+        when: "we do a sanity check"
         def actual = client.get()
 
-        then:
+        then: "it works"
         actual.statusCode == 200
         actual.body.text == 'ok'
-
-        when:
-        actual = client.get('circuitbreaker/events')
-
-        then:
         circuitBreakerRegistry.circuitBreaker('test1').metrics.numberOfBufferedCalls == 2
-        println actual.body.text
+        circuitBreakerRegistry.circuitBreaker('test2').metrics.numberOfBufferedCalls == 2
 
+        when: "we get all circuit breaker events"
+        actual = client.get('circuitbreaker/events')
+        def dto = mapper.readValue(actual.body.text, CircuitBreakerEventsEndpointResponse)
+
+        then: "it works"
+        dto.circuitBreakerEvents.size() == 4
+
+        when: "we get events for a single circuit breaker"
+        actual = client.get('circuitbreaker/events/test1')
+        dto = mapper.readValue(actual.body.text, CircuitBreakerEventsEndpointResponse)
+
+        then: "it works"
+        dto.circuitBreakerEvents.size() == 2
+
+        when: "we get events for a single circuit breaker by error type"
+        actual = client.get('circuitbreaker/events/test1/error')
+        dto = mapper.readValue(actual.body.text, CircuitBreakerEventsEndpointResponse)
+
+        then: "it works"
+        dto.circuitBreakerEvents.size() == 1
+
+        when: "we get events for a single circuit breaker by success type"
+        actual = client.get('circuitbreaker/events/test1/success')
+        dto = mapper.readValue(actual.body.text, CircuitBreakerEventsEndpointResponse)
+
+        then: "it works"
+        dto.circuitBreakerEvents.size() == 1
+    }
+
+    def "test stream events"() {
+        given: "an app"
+        def circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults()
+        app = ratpack {
+            serverConfig {
+                development(false)
+            }
+            bindings {
+                bindInstance(CircuitBreakerRegistry, circuitBreakerRegistry)
+                module(Resilience4jModule) {
+                    it.circuitBreaker('test1') {
+                        it.failureRateThreshold(75).waitIntervalInMillis(5000)
+                    }.circuitBreaker('test2') {
+                        it.failureRateThreshold(25).waitIntervalInMillis(5000)
+                    }
+                }
+            }
+            handlers {
+                get {
+                    render 'ok'
+                }
+            }
+        }
+        app.server.start() // override lazy start
+
+        when: "we get all circuit breaker events"
+        Thread.start {
+            sleep 1000
+            ['test1', 'test2'].each {
+                def c = circuitBreakerRegistry.circuitBreaker(it)
+                c.onSuccess(1000)
+                c.onError(1000, new Exception("meh"))
+            }
+        }
+        def actual = ExecHarness.yieldSingle {
+            streamer.requestStream(new URI("http://$app.server.bindHost:$app.server.bindPort/circuitbreaker/stream/events")) {
+                it.get()
+            }
+        }
+
+        then: "it works"
+        "text/event-stream;charset=UTF-8" == actual.value.headers["Content-Type"]
+
+        when: "we get circuit breaker events by name"
+        actual = ExecHarness.yieldSingle {
+            streamer.requestStream(new URI("http://$app.server.bindHost:$app.server.bindPort/circuitbreaker/stream/events/test1")) {
+                it.get()
+            }
+        }
+
+        then: "it works"
+        "text/event-stream;charset=UTF-8" == actual.value.headers["Content-Type"]
+
+        when: "we get circuit breaker events by name and error"
+        actual = ExecHarness.yieldSingle {
+            streamer.requestStream(new URI("http://$app.server.bindHost:$app.server.bindPort/circuitbreaker/stream/events/test1/error")) {
+                it.get()
+            }
+        }
+
+        then: "it works"
+        "text/event-stream;charset=UTF-8" == actual.value.headers["Content-Type"]
+
+        when: "we get circuit breaker events by name and success"
+        actual = ExecHarness.yieldSingle {
+            streamer.requestStream(new URI("http://$app.server.bindHost:$app.server.bindPort/circuitbreaker/stream/events/test1/success")) {
+                it.get()
+            }
+        }
+
+        then: "it works"
+        "text/event-stream;charset=UTF-8" == actual.value.headers["Content-Type"]
     }
 
 }
