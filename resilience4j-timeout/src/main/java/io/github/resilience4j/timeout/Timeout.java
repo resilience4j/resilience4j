@@ -1,20 +1,11 @@
 package io.github.resilience4j.timeout;
 
 import java.time.Duration;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import java.util.function.Consumer;
-import java.util.function.Function;
 import java.util.function.Supplier;
 
+import io.github.resilience4j.timeout.internal.FutureTimeoutProxy;
 import io.github.resilience4j.timeout.internal.TimeoutContext;
-import io.vavr.CheckedFunction0;
-import io.vavr.CheckedFunction1;
-import io.vavr.CheckedRunnable;
-import io.vavr.control.Try;
 
 /**
  * A Timeout decorator stops execution at a configurable rate.
@@ -37,7 +28,7 @@ public interface Timeout {
      * @return The {@link Timeout}
      */
     static Timeout of(TimeoutConfig timeoutConfig) {
-        return new TimeoutContext(TimeoutConfig.ofDefaults());
+        return new TimeoutContext(timeoutConfig);
     }
 
     /**
@@ -55,99 +46,29 @@ public interface Timeout {
     }
 
     /**
-     * Creates a supplier which is restricted by a Timeout.
+     * Creates a future which is restricted by a Timeout.
      *
-     * @param timeout     the Timeout
-     * @param supplier    the original supplier
+     * @param timeout   the {@link Timeout}
+     * @param future    the original future
      * @param <T> the type of results supplied supplier
-     * @return a supplier which is restricted by a Timeout.
+     * @param <F> the future type supplied
+     * @return a future which is restricted by a {@link Timeout}.
      */
-    static <T> CheckedFunction0<T> decorateCheckedSupplier(Timeout timeout, CheckedFunction0<T> supplier) {
-        return () -> waitForCheckedFunction0(timeout, supplier);
+    static <T, F extends Future<T>> F decorateFuture(Timeout timeout, F future) {
+        return waitForFuture(timeout, future);
     }
 
     /**
-     * Creates a runnable which is restricted by a Timeout.
+     * Creates a future which is restricted by a Timeout.
      *
-     * @param timeout     the Timeout
-     * @param runnable    the original runnable
-     * @return a runnable which is restricted by a Timeout.
-     */
-    static CheckedRunnable decorateCheckedRunnable(Timeout timeout, CheckedRunnable runnable) {
-        return () -> waitForCheckedRunnable(timeout, runnable);
-    }
-
-    /**
-     * Creates a function which is restricted by a Timeout.
-     *
-     * @param timeout the Timeout
-     * @param function    the original function
-     * @param <T> the type of function argument
-     * @param <R> the type of function results
-     * @return a function which is restricted by a Timeout.
-     */
-    static <T, R> CheckedFunction1<T, R> decorateCheckedFunction(Timeout timeout, CheckedFunction1<T, R> function) {
-        return (T t) -> waitForCheckedFunction1(timeout, function, t);
-    }
-
-    /**
-     * Creates a supplier which is restricted by a Timeout.
-     *
-     * @param timeout     the Timeout
-     * @param supplier    the original supplier
+     * @param timeout        the {@link Timeout}
+     * @param futureSupplier the original future supplier
      * @param <T> the type of results supplied supplier
-     * @return a supplier which is restricted by a Timeout.
+     * @param <F> the future type supplied
+     * @return a future supplier which is restricted by a {@link Timeout}.
      */
-    static <T> Supplier<T> decorateSupplier(Timeout timeout, Supplier<T> supplier) {
-        return () -> waitForSupplier(timeout, supplier);
-    }
-
-    /**
-     * Creates a callable which is restricted by a Timeout.
-     *
-     * @param timeout     the Timeout
-     * @param callable    the original callable
-     * @param <T> the type of results supplied by the callable
-     * @return a callable which is restricted by a Timeout.
-     */
-    static <T> Callable<T> decorateCallable(Timeout timeout, Callable<T> callable) {
-        return () -> waitForCallable(timeout, callable);
-    }
-
-    /**
-     * Creates a consumer which is restricted by a Timeout.
-     *
-     * @param timeout     the Timeout
-     * @param consumer    the original consumer
-     * @param <T> the type of the input to the consumer
-     * @return a consumer which is restricted by a Timeout.
-     */
-    static <T> Consumer<T> decorateConsumer(Timeout timeout, Consumer<T> consumer) {
-        return (T t) -> waitForConsumer(timeout, consumer, t);
-    }
-
-    /**
-     * Creates a runnable which is restricted by a Timeout.
-     *
-     * @param timeout     the Timeout
-     * @param runnable    the original runnable
-     * @return a runnable which is restricted by a Timeout.
-     */
-    static Runnable decorateRunnable(Timeout timeout, Runnable runnable) {
-        return () -> waitForRunnable(timeout, runnable);
-    }
-
-    /**
-     * Creates a function which is restricted by a Timeout.
-     *
-     * @param timeout     the Timeout
-     * @param function    the original function
-     * @param <T> the type of the input to the function
-     * @param <R> the type of the result of the function
-     * @return a function which is restricted by a Timeout.
-     */
-    static <T, R> Function<T, R> decorateFunction(Timeout timeout, Function<T, R> function) {
-        return (T t) -> waitForFunction(timeout, function, t);
+    static <T, F extends Future<T>> Supplier<F> decorateFutureSupplier(Timeout timeout, Supplier<F> futureSupplier) {
+        return waitForFutureSupplier(timeout, futureSupplier);
     }
 
     /**
@@ -158,244 +79,63 @@ public interface Timeout {
     TimeoutConfig getTimeoutConfig();
 
     /**
-     * Decorates and executes the decorated Supplier.
+     * Decorates and executes the decorated Future.
      *
-     * @param supplier the original Supplier
-     * @param <T> the type of results supplied by this supplier
-     * @return the result of the decorated Supplier.
-     */
-    default <T> T executeSupplier(Supplier<T> supplier){
-        return decorateSupplier(this, supplier).get();
-    }
-
-    /**
-     * Decorates and executes the decorated Callable.
+     * @param future the original Future
      *
-     * @param callable the original Callable
-     *
-     * @return the result of the decorated Callable.
-     * @param <T> the result type of callable
+     * @return the result of the decorated Future.
+     * @param <T> the result type of the future
+     * @param <F> the type of Future
      * @throws Exception if unable to compute a result
      */
-    default <T> T executeCallable(Callable<T> callable) throws Exception{
-        return decorateCallable(this, callable).call();
+    default <T, F extends Future<T>> T executeFuture(F future) throws Exception{
+        return decorateFuture(this, future).get();
     }
 
     /**
-     * Decorates and executes the decorated Runnable.
+     * Decorates and executes the decorated future supplier.
      *
-     * @param runnable the original Runnable
-     */
-    default void executeRunnable(Runnable runnable){
-        decorateRunnable(this, runnable).run();
-    }
-
-    /**
-     * Will wait for completion within default timeout duration.
+     * @param futureSupplier the original future Supplier
      *
-     * @param timeout     the Timeout
-     * @param supplier    the original supplier
-     * @param <T> the type of results supplied supplier
-     * @throws TimeoutException if waiting time elapsed before executed completion.
+     * @return the result of the decorated Supplier.
+     * @param <T> the result type of the future
+     * @param <F> the type of Future
+     * @throws Exception if unable to compute a result
      */
-    static <T> T waitForCheckedFunction0(final Timeout timeout, final CheckedFunction0<T> supplier) throws TimeoutException {
-        TimeoutConfig timeoutConfig = timeout.getTimeoutConfig();
-        Duration timeoutDuration = timeoutConfig.getTimeoutDuration();
-        Boolean cancelOnExecution = timeoutConfig.shouldCancelOnException();
-
-        ExecutorService executorService = Executors.newSingleThreadExecutor();
-
-        Future<T> task = executorService.submit(() -> Try.of(supplier).get());
-
-        return Try.of(() -> task.get(timeoutDuration.toMillis(), TimeUnit.MILLISECONDS))
-                .getOrElseThrow(throwable -> {
-                    if (cancelOnExecution && !task.isDone())
-                        task.cancel(true);
-                    return new TimeoutException(throwable);
-                });
+    default <T, F extends Future<T>> F executeFutureSupplier(Supplier<F> futureSupplier) throws Exception{
+        return decorateFutureSupplier(this, futureSupplier).get();
     }
 
     /**
      * Will wait for completion within default timeout duration.
      *
      * @param timeout     the Timeout
-     * @param runnable    the original runnable
+     * @param future      the original future
+     * @param <T> the type of results from the future
+     * @param <F> the type of Future
      * @throws TimeoutException if waiting time elapsed before executed completion.
      */
-    static Void waitForCheckedRunnable(final Timeout timeout, final CheckedRunnable runnable) throws TimeoutException {
+    static <T, F extends Future<T>> F waitForFuture(final Timeout timeout, final F future) throws TimeoutException {
         TimeoutConfig timeoutConfig = timeout.getTimeoutConfig();
         Duration timeoutDuration = timeoutConfig.getTimeoutDuration();
-        Boolean cancelOnExecution = timeoutConfig.shouldCancelOnException();
 
-        ExecutorService executorService = Executors.newSingleThreadExecutor();
-
-        Future<Void> task = executorService.submit(() -> Try.run(runnable).get());
-
-        return Try.of(() -> task.get(timeoutDuration.toMillis(), TimeUnit.MILLISECONDS))
-                .getOrElseThrow(throwable -> {
-                    if (cancelOnExecution && !task.isDone())
-                        task.cancel(true);
-                    return new TimeoutException(throwable);
-                });
+        return (F) FutureTimeoutProxy.getProxy(future, timeoutDuration);
     }
 
     /**
      * Will wait for completion within default timeout duration.
      *
-     * @param timeout     the Timeout
-     * @param function    the original function
-     * @param t           the consumed value
-     * @param <T> the type of results supplied function
-     * @param <R> the type of the result of the function
+     * @param timeout           the Timeout
+     * @param futureSupplier    the original future supplier
+     * @param <T> the type of result from the future
+     * @param <F> the type of Future
      * @throws TimeoutException if waiting time elapsed before executed completion.
      */
-    static <T,R> R waitForCheckedFunction1(final Timeout timeout, final CheckedFunction1<T,R> function, final T t) throws TimeoutException {
+    static <T, F extends Future<T>> Supplier<F> waitForFutureSupplier(final Timeout timeout, final Supplier<F> futureSupplier) throws TimeoutException {
         TimeoutConfig timeoutConfig = timeout.getTimeoutConfig();
         Duration timeoutDuration = timeoutConfig.getTimeoutDuration();
-        Boolean cancelOnExecution = timeoutConfig.shouldCancelOnException();
 
-        ExecutorService executorService = Executors.newSingleThreadExecutor();
-
-        Future<R> task = executorService.submit(() -> Try.of(() -> function.apply(t)).get());
-
-        return Try.of(() -> task.get(timeoutDuration.toMillis(), TimeUnit.MILLISECONDS))
-                .getOrElseThrow(throwable -> {
-                    if (cancelOnExecution && !task.isDone())
-                        task.cancel(true);
-                    return new TimeoutException(throwable);
-                });
+        return () -> FutureTimeoutProxy.getProxy(futureSupplier.get(), timeoutDuration);
     }
 
-    /**
-     * Will wait for completion within default timeout duration.
-     *
-     * @param timeout     the Timeout
-     * @param supplier    the original supplier
-     * @param <T> the type of results supplied supplier
-     * @throws TimeoutException if waiting time elapsed before executed completion.
-     */
-    static <T> T waitForSupplier(final Timeout timeout, final Supplier<T> supplier) throws TimeoutException {
-        TimeoutConfig timeoutConfig = timeout.getTimeoutConfig();
-        Duration timeoutDuration = timeoutConfig.getTimeoutDuration();
-        Boolean cancelOnExecution = timeoutConfig.shouldCancelOnException();
-
-        ExecutorService executorService = Executors.newSingleThreadExecutor();
-
-        Future<T> task = executorService.submit(supplier::get);
-
-        return Try.of(() -> task.get(timeoutDuration.toMillis(), TimeUnit.MILLISECONDS))
-                .getOrElseThrow(throwable -> {
-                    if (cancelOnExecution && !task.isDone())
-                        task.cancel(true);
-                    return new TimeoutException(throwable);
-                });
-    }
-
-    /**
-     * Will wait for completion within default timeout duration.
-     *
-     * @param timeout     the Timeout
-     * @param callable    the original callable
-     * @param <T> the type of results supplied callable
-     * @throws TimeoutException if waiting time elapsed before executed completion.
-     */
-    static <T> T waitForCallable(final Timeout timeout, final Callable<T> callable) throws TimeoutException {
-        TimeoutConfig timeoutConfig = timeout.getTimeoutConfig();
-        Duration timeoutDuration = timeoutConfig.getTimeoutDuration();
-        Boolean cancelOnExecution = timeoutConfig.shouldCancelOnException();
-
-        ExecutorService executorService = Executors.newSingleThreadExecutor();
-
-        Future<T> task = executorService.submit(callable);
-
-        return Try.of(() -> task.get(timeoutDuration.toMillis(), TimeUnit.MILLISECONDS))
-                .getOrElseThrow(throwable -> {
-                    if (cancelOnExecution && !task.isDone())
-                        task.cancel(true);
-                    return new TimeoutException(throwable);
-                });
-    }
-
-    /**
-     * Will wait for completion within default timeout duration.
-     *
-     * @param timeout     the Timeout
-     * @param consumer    the original consumer
-     * @param t           the consumed value
-     * @param <T> the type of results supplied consumer
-     * @throws TimeoutException if waiting time elapsed before executed completion.
-     */
-    static <T> Void waitForConsumer(final Timeout timeout, final Consumer<T> consumer, final T t) throws TimeoutException {
-        TimeoutConfig timeoutConfig = timeout.getTimeoutConfig();
-        Duration timeoutDuration = timeoutConfig.getTimeoutDuration();
-        Boolean cancelOnExecution = timeoutConfig.shouldCancelOnException();
-
-        ExecutorService executorService = Executors.newSingleThreadExecutor();
-
-        Future<Void> task = executorService.submit(() -> {
-            consumer.accept(t);
-            return null;
-        });
-
-        return Try.of(() -> task.get(timeoutDuration.toMillis(), TimeUnit.MILLISECONDS))
-                .getOrElseThrow(throwable -> {
-                    if (cancelOnExecution && !task.isDone())
-                        task.cancel(true);
-                    return new TimeoutException(throwable);
-                });
-    }
-
-    /**
-     * Will wait for completion within default timeout duration.
-     *
-     * @param timeout     the Timeout
-     * @param runnable    the original runnable
-     * @throws TimeoutException if waiting time elapsed before executed completion.
-     */
-    static Void waitForRunnable(final Timeout timeout, final Runnable runnable) throws TimeoutException {
-        TimeoutConfig timeoutConfig = timeout.getTimeoutConfig();
-        Duration timeoutDuration = timeoutConfig.getTimeoutDuration();
-        Boolean cancelOnExecution = timeoutConfig.shouldCancelOnException();
-
-        ExecutorService executorService = Executors.newSingleThreadExecutor();
-
-        Future<Void> task = executorService.submit(() -> {
-            runnable.run();
-            return null;
-        });
-
-        return Try.of(() -> task.get(timeoutDuration.toMillis(), TimeUnit.MILLISECONDS))
-                .getOrElseThrow(throwable -> {
-                    if (cancelOnExecution && !task.isDone())
-                        task.cancel(true);
-                    return new TimeoutException(throwable);
-                });
-    }
-
-    /**
-     * Will wait for completion within default timeout duration.
-     *
-     * @param timeout     the Timeout
-     * @param function    the original function
-     * @param t           the consumed value
-     * @param <T> the type of results supplied function
-     * @param <R> the type of the result of the function
-     * @throws TimeoutException if waiting time elapsed before executed completion.
-     */
-    static <T,R> R waitForFunction(final Timeout timeout, final Function<T,R> function, final T t) throws TimeoutException {
-        TimeoutConfig timeoutConfig = timeout.getTimeoutConfig();
-        Duration timeoutDuration = timeoutConfig.getTimeoutDuration();
-        Boolean cancelOnExecution = timeoutConfig.shouldCancelOnException();
-
-        ExecutorService executorService = Executors.newSingleThreadExecutor();
-
-        Future<R> task = executorService.submit(() -> function.apply(t));
-
-        return Try.of(() -> task.get(timeoutDuration.toMillis(), TimeUnit.MILLISECONDS))
-                .getOrElseThrow(throwable -> {
-                    if (cancelOnExecution && !task.isDone())
-                        task.cancel(true);
-                    return new TimeoutException(throwable);
-                });
-    }
 }

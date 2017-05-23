@@ -4,21 +4,14 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.time.Duration;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
-import java.util.function.Consumer;
-import java.util.function.Function;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.function.Supplier;
 
-import io.vavr.CheckedFunction0;
-import io.vavr.CheckedFunction1;
-import io.vavr.CheckedRunnable;
 import io.vavr.control.Try;
 
-import static io.github.resilience4j.timeout.SleepStubber.doSleep;
 import static org.assertj.core.api.BDDAssertions.then;
-import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -26,7 +19,9 @@ public class TimeoutTest {
 
     private static final Duration SHORT_TIMEOUT = Duration.ofNanos(1);
     private static final Duration LONG_TIMEOUT = Duration.ofSeconds(15);
-    private static final Duration SLEEP_DURATION = Duration.ofSeconds(1);
+    private static final Duration SLEEP_DURATION = Duration.ofSeconds(5);
+
+    private static final ExecutorService EXECUTOR_SERVICE = Executors.newSingleThreadExecutor();
 
     private static final java.util.concurrent.TimeoutException JAVA_TIMEOUT_EXCEPTION = new java.util.concurrent.TimeoutException();
 
@@ -52,16 +47,18 @@ public class TimeoutTest {
     }
 
     @Test
-    public void decorateCheckedSupplier() throws Throwable {
-        CheckedFunction0 supplier = mock(CheckedFunction0.class);
-        CheckedFunction0 decorated = Timeout.decorateCheckedSupplier(timeout, supplier);
+    public void decorateFuture() throws Throwable {
+        when(timeout.getTimeoutConfig()).thenReturn(shortConfig);
 
-        doSleep(SLEEP_DURATION).when(supplier).apply();
+        Future<Integer> future = EXECUTOR_SERVICE.submit(() -> {
+                    Thread.sleep(SLEEP_DURATION.toMillis());
+                    return 1;
+                }
+            );
 
-        when(timeout.getTimeoutConfig())
-                .thenReturn(shortConfig);
+        Future<Integer> decorated = Timeout.decorateFuture(timeout, future);
 
-        Try decoratedResult = Try.of(decorated);
+        Try decoratedResult = Try.success(decorated).mapTry(Future::get);
         then(decoratedResult.isFailure()).isTrue();
         then(decoratedResult.getCause()).isInstanceOf(TimeoutException.class);
         then(decoratedResult.getCause()).hasCause(JAVA_TIMEOUT_EXCEPTION);
@@ -69,20 +66,43 @@ public class TimeoutTest {
         when(timeout.getTimeoutConfig())
                 .thenReturn(longConfig);
 
-        Try secondResult = Try.of(decorated);
+        decorated = Timeout.decorateFuture(timeout, future);
+
+        Try secondResult = Try.success(decorated).mapTry(Future::get);
         then(secondResult.isSuccess()).isTrue();
     }
 
     @Test
-    public void decorateCheckedRunnable() throws Throwable {
-        CheckedRunnable runnable = mock(CheckedRunnable.class);
-        CheckedRunnable decorated = Timeout.decorateCheckedRunnable(timeout, runnable);
+    public void executeFuture() throws Throwable {
+        Future<Integer> future = EXECUTOR_SERVICE.submit(() -> {
+                    Thread.sleep(SLEEP_DURATION.toMillis());
+                    return 1;
+                }
+        );
 
-        doSleep(SLEEP_DURATION).when(runnable).run();
-        when(timeout.getTimeoutConfig())
-                .thenReturn(shortConfig);
+        Try decoratedResult = Try.of(() -> Timeout.of(shortConfig).executeFuture(future));
+        then(decoratedResult.isFailure()).isTrue();
+        then(decoratedResult.getCause()).isInstanceOf(TimeoutException.class);
+        then(decoratedResult.getCause()).hasCause(JAVA_TIMEOUT_EXCEPTION);
 
-        Try decoratedResult = Try.run(decorated);
+        Try secondResult = Try.of(() -> Timeout.of(longConfig).executeFuture(future));
+        then(secondResult.isSuccess()).isTrue();
+    }
+
+    @Test
+    public void decorateFutureSupplier() throws Throwable {
+        when(timeout.getTimeoutConfig()).thenReturn(shortConfig);
+
+        Future<Integer> future = EXECUTOR_SERVICE.submit(() -> {
+                    Thread.sleep(SLEEP_DURATION.toMillis());
+                    return 1;
+                }
+        );
+
+        Supplier<Future<Integer>> supplier = () -> future;
+        Supplier<Future<Integer>> decorated = Timeout.decorateFutureSupplier(timeout, supplier);
+
+        Try decoratedResult = Try.success(decorated).mapTry(Supplier::get).mapTry(Future::get);
         then(decoratedResult.isFailure()).isTrue();
         then(decoratedResult.getCause()).isInstanceOf(TimeoutException.class);
         then(decoratedResult.getCause()).hasCause(JAVA_TIMEOUT_EXCEPTION);
@@ -90,188 +110,28 @@ public class TimeoutTest {
         when(timeout.getTimeoutConfig())
                 .thenReturn(longConfig);
 
-        Try secondResult = Try.run(decorated);
+        decorated = Timeout.decorateFutureSupplier(timeout, supplier);
+
+        Try secondResult = Try.success(decorated).mapTry(Supplier::get).mapTry(Future::get);
         then(secondResult.isSuccess()).isTrue();
     }
 
     @Test
-    public void decorateCheckedFunction() throws Throwable {
-        CheckedFunction1<Integer, String> function = mock(CheckedFunction1.class);
-        CheckedFunction1<Integer, String> decorated = Timeout.decorateCheckedFunction(timeout, function);
+    public void executeFutureSupplier() throws Throwable {
+        Future<Integer> future = EXECUTOR_SERVICE.submit(() -> {
+                    Thread.sleep(SLEEP_DURATION.toMillis());
+                    return 1;
+                }
+        );
 
-        doSleep(SLEEP_DURATION).when(function).apply(any());
+        Supplier<Future<Integer>> supplier = () -> future;
 
-        when(timeout.getTimeoutConfig())
-                .thenReturn(shortConfig);
-
-        Try<String> decoratedResult = Try.success(1).mapTry(decorated);
+        Try decoratedResult = Try.of(() -> Timeout.of(shortConfig).executeFutureSupplier(supplier)).mapTry(Future::get);
         then(decoratedResult.isFailure()).isTrue();
         then(decoratedResult.getCause()).isInstanceOf(TimeoutException.class);
         then(decoratedResult.getCause()).hasCause(JAVA_TIMEOUT_EXCEPTION);
 
-        when(timeout.getTimeoutConfig())
-                .thenReturn(longConfig);
-
-        Try secondResult = Try.success(1).mapTry(decorated);
+        Try secondResult = Try.of(() -> Timeout.of(longConfig).executeFutureSupplier(supplier)).mapTry(Future::get);
         then(secondResult.isSuccess()).isTrue();
-    }
-
-    @Test
-    public void decorateSupplier() throws Throwable {
-        Supplier supplier = mock(Supplier.class);
-        Supplier decorated = Timeout.decorateSupplier(timeout, supplier);
-
-        doSleep(SLEEP_DURATION).when(supplier).get();
-
-        when(timeout.getTimeoutConfig())
-                .thenReturn(shortConfig);
-
-        Try decoratedResult = Try.success(decorated).map(Supplier::get);
-        then(decoratedResult.isFailure()).isTrue();
-        then(decoratedResult.getCause()).isInstanceOf(TimeoutException.class);
-        then(decoratedResult.getCause()).hasCause(JAVA_TIMEOUT_EXCEPTION);
-
-        when(timeout.getTimeoutConfig())
-                .thenReturn(longConfig);
-
-        Try secondResult = Try.success(decorated).map(Supplier::get);
-        then(secondResult.isSuccess()).isTrue();
-    }
-
-    @Test
-    public void decorateCallable() throws Throwable {
-        Callable callable = mock(Callable.class);
-        Callable decorated = Timeout.decorateCallable(timeout, callable);
-
-        doSleep(SLEEP_DURATION).when(callable).call();
-
-        when(timeout.getTimeoutConfig())
-                .thenReturn(shortConfig);
-
-        Try decoratedResult = Try.success(decorated).mapTry(Callable::call);
-        then(decoratedResult.isFailure()).isTrue();
-        then(decoratedResult.getCause()).isInstanceOf(TimeoutException.class);
-        then(decoratedResult.getCause()).hasCause(JAVA_TIMEOUT_EXCEPTION);
-
-        when(timeout.getTimeoutConfig())
-                .thenReturn(longConfig);
-
-        Try secondResult = Try.success(decorated).mapTry(Callable::call);
-        then(secondResult.isSuccess()).isTrue();
-    }
-
-    @Test
-    public void decorateConsumer() throws Throwable {
-        Consumer<Integer> consumer = mock(Consumer.class);
-        Consumer<Integer> decorated = Timeout.decorateConsumer(timeout, consumer);
-
-        doSleep(SLEEP_DURATION).when(consumer).accept(any());
-
-        when(timeout.getTimeoutConfig())
-                .thenReturn(shortConfig);
-
-        Try decoratedResult = Try.success(1).andThen(decorated);
-        then(decoratedResult.isFailure()).isTrue();
-        then(decoratedResult.getCause()).isInstanceOf(TimeoutException.class);
-        then(decoratedResult.getCause()).hasCause(JAVA_TIMEOUT_EXCEPTION);
-
-        when(timeout.getTimeoutConfig())
-                .thenReturn(longConfig);
-
-        Try secondResult = Try.success(1).andThen(decorated);
-        then(secondResult.isSuccess()).isTrue();
-    }
-
-    @Test
-    public void decoratedRunnable() throws Throwable {
-        Runnable runnable = mock(Runnable.class);
-        Runnable decorated = Timeout.decorateRunnable(timeout, runnable);
-
-        doSleep(SLEEP_DURATION).when(runnable).run();
-        when(timeout.getTimeoutConfig())
-                .thenReturn(shortConfig);
-
-        Try decoratedResult = Try.success(decorated).andThen(Runnable::run);
-        then(decoratedResult.isFailure()).isTrue();
-        then(decoratedResult.getCause()).isInstanceOf(TimeoutException.class);
-        then(decoratedResult.getCause()).hasCause(JAVA_TIMEOUT_EXCEPTION);
-
-        when(timeout.getTimeoutConfig())
-                .thenReturn(longConfig);
-
-        Try secondResult = Try.success(decorated).andThen(Runnable::run);
-        then(secondResult.isSuccess()).isTrue();
-    }
-
-    @Test
-    public void decorateFunction() throws Throwable {
-        Function<Integer, String> function = mock(Function.class);
-        Function<Integer, String> decorated = Timeout.decorateFunction(timeout, function);
-
-        doSleep(SLEEP_DURATION).when(function).apply(any());
-
-        when(timeout.getTimeoutConfig())
-                .thenReturn(shortConfig);
-
-        Try<String> decoratedResult = Try.success(1).map(decorated);
-        then(decoratedResult.isFailure()).isTrue();
-        then(decoratedResult.getCause()).isInstanceOf(TimeoutException.class);
-        then(decoratedResult.getCause()).hasCause(JAVA_TIMEOUT_EXCEPTION);
-
-        when(timeout.getTimeoutConfig())
-                .thenReturn(longConfig);
-
-        Try secondResult = Try.success(1).map(decorated);
-        then(secondResult.isSuccess()).isTrue();
-    }
-
-    @Test
-    public void throwsExceptionWhenCheckedSupplierThrows() throws Throwable {
-        CheckedFunction0 supplier = mock(CheckedFunction0.class);
-        CheckedFunction0 decorated = Timeout.decorateCheckedSupplier(timeout, supplier);
-
-        doThrow(new IllegalStateException()).when(supplier).apply();
-
-        when(timeout.getTimeoutConfig())
-                .thenReturn(longConfig);
-
-        Try decoratedResult = Try.of(decorated);
-        then(decoratedResult.isFailure()).isTrue();
-        then(decoratedResult.getCause()).isInstanceOf(TimeoutException.class);
-        then(decoratedResult.getCause().getCause()).isInstanceOf(ExecutionException.class);
-        then(decoratedResult.getCause().getCause().getCause()).isInstanceOf(IllegalStateException.class);
-    }
-
-
-    @Test
-    public void throwsExceptionWhenCheckedRunnableThrows() throws Throwable {
-        CheckedRunnable runnable = mock(CheckedRunnable.class);
-        CheckedRunnable decorated = Timeout.decorateCheckedRunnable(timeout, runnable);
-
-        doThrow(new IllegalStateException()).when(runnable).run();
-        when(timeout.getTimeoutConfig())
-                .thenReturn(longConfig);
-
-        Try decoratedResult = Try.run(decorated);
-        then(decoratedResult.isFailure()).isTrue();
-        then(decoratedResult.getCause()).isInstanceOf(TimeoutException.class);
-        then(decoratedResult.getCause().getCause()).isInstanceOf(ExecutionException.class);
-        then(decoratedResult.getCause().getCause().getCause()).isInstanceOf(IllegalStateException.class);
-    }
-
-    @Test
-    public void throwsExceptionWhenCheckedFunctionThrows() throws Throwable {
-        CheckedFunction1<Integer, String> function = mock(CheckedFunction1.class);
-        CheckedFunction1<Integer, String> decorated = Timeout.decorateCheckedFunction(timeout, function);
-
-        doThrow(new IllegalStateException()).when(function).apply(any());
-        when(timeout.getTimeoutConfig())
-                .thenReturn(longConfig);
-
-        Try<String> decoratedResult = Try.success(1).mapTry(decorated);
-        then(decoratedResult.isFailure()).isTrue();
-        then(decoratedResult.getCause()).isInstanceOf(TimeoutException.class);
-        then(decoratedResult.getCause().getCause()).isInstanceOf(ExecutionException.class);
-        then(decoratedResult.getCause().getCause().getCause()).isInstanceOf(IllegalStateException.class);
     }
 }
