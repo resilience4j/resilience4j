@@ -137,13 +137,10 @@ class CircuitBreakerChainSpec extends Specification {
         app.server.start() // override lazy start
 
         when: "we get all circuit breaker events"
-        Thread.start {
-            sleep 1000
-            ['test1', 'test2'].each {
-                def c = circuitBreakerRegistry.circuitBreaker(it)
-                c.onSuccess(1000)
-                c.onError(1000, new Exception("meh"))
-            }
+        ['test1', 'test2'].each {
+            def c = circuitBreakerRegistry.circuitBreaker(it)
+            c.onSuccess(1000)
+            c.onError(1000, new Exception("meh"))
         }
         def actual = ExecHarness.yieldSingle {
             streamer.requestStream(new URI("http://$app.server.bindHost:$app.server.bindPort/circuitbreaker/stream/events")) {

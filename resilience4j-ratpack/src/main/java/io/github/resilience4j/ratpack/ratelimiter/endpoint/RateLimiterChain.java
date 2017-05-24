@@ -51,7 +51,7 @@ public class RateLimiterChain implements Action<Chain> {
 
     @Override
     public void execute(Chain chain) throws Exception {
-        chain.prefix("circuitbreaker", chain1 -> {
+        chain.prefix("ratelimiter", chain1 -> {
             chain1.get("events", ctx ->
                     Promise.<RateLimiterEventsEndpointResponse>async(d -> {
                         List<RateLimiterEventDTO> eventsList = eventConsumerRegistry.getAllEventConsumer()
