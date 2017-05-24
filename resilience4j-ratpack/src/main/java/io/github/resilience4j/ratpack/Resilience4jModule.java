@@ -42,6 +42,7 @@ import io.github.resilience4j.ratpack.circuitbreaker.CircuitBreakerMethodInterce
 import io.github.resilience4j.ratpack.circuitbreaker.endpoint.CircuitBreakerChain;
 import io.github.resilience4j.ratpack.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratpack.ratelimiter.RateLimiterMethodInterceptor;
+import io.github.resilience4j.ratpack.ratelimiter.endpoint.RateLimiterChain;
 import io.github.resilience4j.ratpack.retry.Retry;
 import io.github.resilience4j.ratpack.retry.RetryMethodInterceptor;
 import io.github.resilience4j.retry.RetryConfig;
@@ -102,7 +103,9 @@ public class Resilience4jModule extends ConfigurableModule<Resilience4jConfig> {
         // event chains
         Multibinder<HandlerDecorator> binder = Multibinder.newSetBinder(binder(), HandlerDecorator.class);
         bind(CircuitBreakerChain.class).in(Scopes.SINGLETON);
+        bind(RateLimiterChain.class).in(Scopes.SINGLETON);
         binder.addBinding().toProvider(() -> (registry, rest) -> Handlers.chain(Handlers.chain(registry, registry.get(CircuitBreakerChain.class)), rest));
+        binder.addBinding().toProvider(() -> (registry, rest) -> Handlers.chain(Handlers.chain(registry, registry.get(RateLimiterChain.class)), rest));
 
         // startup
         bind(Resilience4jService.class);
@@ -201,16 +204,19 @@ public class Resilience4jModule extends ConfigurableModule<Resilience4jConfig> {
 
             // build rate limiters
             RateLimiterRegistry rateLimiterRegistry = injector.getInstance(RateLimiterRegistry.class);
+            EventConsumerRegistry<RateLimiterEvent> rlConsumerRegistry = injector.getInstance(Key.get(new TypeLiteral<EventConsumerRegistry<RateLimiterEvent>>() {}));
             config.getRateLimiters().forEach((name, rateLimiterConfig) -> {
+                io.github.resilience4j.ratelimiter.RateLimiter rateLimiter;
                 if (rateLimiterConfig.getDefaults()) {
-                    rateLimiterRegistry.rateLimiter(name);
+                    rateLimiter = rateLimiterRegistry.rateLimiter(name);
                 } else {
-                    rateLimiterRegistry.rateLimiter(name, RateLimiterConfig.custom()
+                    rateLimiter = rateLimiterRegistry.rateLimiter(name, RateLimiterConfig.custom()
                             .limitForPeriod(rateLimiterConfig.getLimitForPeriod())
                             .limitRefreshPeriod(Duration.ofNanos(rateLimiterConfig.getLimitRefreshPeriodInNanos()))
                             .timeoutDuration(Duration.ofMillis(rateLimiterConfig.getTimeoutInMillis()))
                             .build());
                 }
+                rateLimiter.getEventStream().subscribe(rlConsumerRegistry.createEventConsumer(name, rateLimiterConfig.getEventConsumerBufferSize()));
             });
 
             // build retries

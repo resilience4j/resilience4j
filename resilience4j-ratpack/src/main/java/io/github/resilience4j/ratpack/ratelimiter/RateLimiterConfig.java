@@ -22,22 +22,7 @@ public class RateLimiterConfig {
     private Integer limitForPeriod = 50;
     private Integer limitRefreshPeriodInNanos = 500;
     private Integer timeoutInMillis = 5000;
-
-    public Boolean getDefaults() {
-        return defaults;
-    }
-
-    public Integer getLimitForPeriod() {
-        return limitForPeriod;
-    }
-
-    public Integer getLimitRefreshPeriodInNanos() {
-        return limitRefreshPeriodInNanos;
-    }
-
-    public Integer getTimeoutInMillis() {
-        return timeoutInMillis;
-    }
+    private Integer eventConsumerBufferSize = 100;
 
     public RateLimiterConfig defaults(boolean defaults) {
         this.defaults = defaults;
@@ -58,4 +43,30 @@ public class RateLimiterConfig {
         this.timeoutInMillis = timeoutInMillis;
         return this;
     }
+
+    public RateLimiterConfig eventConsumerBufferSize(Integer eventConsumerBufferSize) {
+        this.eventConsumerBufferSize = eventConsumerBufferSize;
+        return this;
+    }
+
+    public Boolean getDefaults() {
+        return defaults;
+    }
+
+    public Integer getLimitForPeriod() {
+        return limitForPeriod;
+    }
+
+    public Integer getLimitRefreshPeriodInNanos() {
+        return limitRefreshPeriodInNanos;
+    }
+
+    public Integer getTimeoutInMillis() {
+        return timeoutInMillis;
+    }
+
+    public Integer getEventConsumerBufferSize() {
+        return eventConsumerBufferSize;
+    }
+
 }

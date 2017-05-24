@@ -69,8 +69,9 @@ public class CircuitBreakerChain implements Action<Chain> {
             chain1.get("events/:name", ctx -> {
                         String circuitBreakerName = ctx.getPathTokens().get("name");
                         Promise.<CircuitBreakerEventsEndpointResponse>async(d -> {
-                            CircuitBreakerEventsEndpointResponse response = new CircuitBreakerEventsEndpointResponse(eventConsumerRegistry.getEventConsumer(circuitBreakerName).getBufferedEvents()
-                                    .filter(event -> event.getCircuitBreakerName().equals(circuitBreakerName))
+                            CircuitBreakerEventsEndpointResponse response = new CircuitBreakerEventsEndpointResponse(eventConsumerRegistry
+                                    .getEventConsumer(circuitBreakerName)
+                                    .getBufferedEvents()
                                     .map(CircuitBreakerEventDTOFactory::createCircuitBreakerEventDTO).toJavaList());
                             d.success(response);
                         }).then(r -> ctx.render(Jackson.json(r)));
@@ -88,8 +89,9 @@ public class CircuitBreakerChain implements Action<Chain> {
                         String circuitBreakerName = ctx.getPathTokens().get("name");
                         String eventType = ctx.getPathTokens().get("type");
                         Promise.<CircuitBreakerEventsEndpointResponse>async(d -> {
-                            CircuitBreakerEventsEndpointResponse response = new CircuitBreakerEventsEndpointResponse(eventConsumerRegistry.getEventConsumer(circuitBreakerName).getBufferedEvents()
-                                    .filter(event -> event.getCircuitBreakerName().equals(circuitBreakerName))
+                            CircuitBreakerEventsEndpointResponse response = new CircuitBreakerEventsEndpointResponse(eventConsumerRegistry
+                                    .getEventConsumer(circuitBreakerName)
+                                    .getBufferedEvents()
                                     .filter(event -> event.getEventType() == CircuitBreakerEvent.Type.valueOf(eventType.toUpperCase()))
                                     .map(CircuitBreakerEventDTOFactory::createCircuitBreakerEventDTO).toJavaList());
                             d.success(response);
