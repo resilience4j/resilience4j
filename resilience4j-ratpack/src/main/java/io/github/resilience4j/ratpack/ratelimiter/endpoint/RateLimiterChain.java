@@ -37,7 +37,6 @@ import java.util.List;
 /**
  * Provides event and stream event endpoints for circuitbreaker events.
  */
-// TODO test
 public class RateLimiterChain implements Action<Chain> {
 
     private final EventConsumerRegistry<RateLimiterEvent> eventConsumerRegistry;

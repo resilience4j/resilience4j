@@ -45,6 +45,7 @@ import io.github.resilience4j.ratpack.ratelimiter.RateLimiterMethodInterceptor;
 import io.github.resilience4j.ratpack.ratelimiter.endpoint.RateLimiterChain;
 import io.github.resilience4j.ratpack.retry.Retry;
 import io.github.resilience4j.ratpack.retry.RetryMethodInterceptor;
+import io.github.resilience4j.ratpack.retry.endpoint.RetryChain;
 import io.github.resilience4j.retry.RetryConfig;
 import io.github.resilience4j.retry.RetryRegistry;
 import io.github.resilience4j.retry.event.RetryEvent;
@@ -104,8 +105,10 @@ public class Resilience4jModule extends ConfigurableModule<Resilience4jConfig> {
         Multibinder<HandlerDecorator> binder = Multibinder.newSetBinder(binder(), HandlerDecorator.class);
         bind(CircuitBreakerChain.class).in(Scopes.SINGLETON);
         bind(RateLimiterChain.class).in(Scopes.SINGLETON);
+        bind(RetryChain.class).in(Scopes.SINGLETON);
         binder.addBinding().toProvider(() -> (registry, rest) -> Handlers.chain(Handlers.chain(registry, registry.get(CircuitBreakerChain.class)), rest));
         binder.addBinding().toProvider(() -> (registry, rest) -> Handlers.chain(Handlers.chain(registry, registry.get(RateLimiterChain.class)), rest));
+        binder.addBinding().toProvider(() -> (registry, rest) -> Handlers.chain(Handlers.chain(registry, registry.get(RetryChain.class)), rest));
 
         // startup
         bind(Resilience4jService.class);
@@ -199,7 +202,7 @@ public class Resilience4jModule extends ConfigurableModule<Resilience4jConfig> {
                             .waitDurationInOpenState(Duration.ofMillis(circuitBreakerConfig.getWaitIntervalInMillis()))
                             .build());
                 }
-                circuitBreaker.getEventStream().subscribe(cbConsumerRegistry.createEventConsumer(name, circuitBreakerConfig.getEventConsumerBufferSize()));
+                circuitBreaker.getEventStream().subscribe(cbConsumerRegistry.createEventConsumer(name, 100));
             });
 
             // build rate limiters
@@ -216,20 +219,23 @@ public class Resilience4jModule extends ConfigurableModule<Resilience4jConfig> {
                             .timeoutDuration(Duration.ofMillis(rateLimiterConfig.getTimeoutInMillis()))
                             .build());
                 }
-                rateLimiter.getEventStream().subscribe(rlConsumerRegistry.createEventConsumer(name, rateLimiterConfig.getEventConsumerBufferSize()));
+                rateLimiter.getEventStream().subscribe(rlConsumerRegistry.createEventConsumer(name, 100));
             });
 
             // build retries
             RetryRegistry retryRegistry = injector.getInstance(RetryRegistry.class);
+            EventConsumerRegistry<RetryEvent> rConsumerRegistry = injector.getInstance(Key.get(new TypeLiteral<EventConsumerRegistry<RetryEvent>>() {}));
             config.getRetries().forEach((name, retryConfig) -> {
+                io.github.resilience4j.retry.Retry retry;
                 if (retryConfig.getDefaults()) {
-                    retryRegistry.retry(name);
+                    retry = retryRegistry.retry(name);
                 } else {
-                    retryRegistry.retry(name, RetryConfig.custom()
+                    retry = retryRegistry.retry(name, RetryConfig.custom()
                             .maxAttempts(retryConfig.getMaxAttempts())
                             .waitDuration(Duration.ofMillis(retryConfig.getWaitDurationInMillis()))
                             .build());
                 }
+                retry.getEventStream().subscribe(rConsumerRegistry.createEventConsumer(name, 100));
             });
 
             // dropwizard metrics

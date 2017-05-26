@@ -470,10 +470,10 @@ List of available endpoints:
 
 * `/ratelimiter/events`
 * `/ratelimiter/stream/events`
-* `/ratelimiter/events/{rateLimiterName}`
-* `/ratelimiter/stream/events/{rateLimiterName}`
-* `/ratelimiter/events/{rateLimiterName}/{eventType}`
-* `/ratelimiter/stream/events/{rateLimiterName}/{eventType}`
+* `/ratelimiter/events/{retryName}`
+* `/ratelimiter/stream/events/{retryName}`
+* `/ratelimiter/events/{retryName}/{eventType}`
+* `/ratelimiter/stream/events/{retryName}/{eventType}`
 
 Example of response:
 ----
@@ -493,6 +493,45 @@ Example of response:
       "rateLimiterName": "backendA",
       "rateLimiterEventType": "FAILED_ACQUIRE",
       "rateLimiterCreationTime": "2017-05-05T21:29:41.268+03:00[Europe/Uzhgorod]"
+    }
+  ]
+}
+----
+
+===== Retry
+These are the same endpoints as implemented for CircuitBreaker,
+so for detailed documentation please refer to previous sections.
+
+List of available endpoints:
+
+* `/retry/events`
+* `/retry/stream/events`
+* `/retry/events/{retryName}`
+* `/retry/stream/events/{retryName}`
+* `/retry/events/{retryName}/{eventType}`
+* `/retry/stream/events/{retryName}/{eventType}`
+
+Example of response:
+----
+{
+  "retryEvents": [
+    {
+      "retryName": "backendA",
+      "retryEventType": "ERROR",
+      "numberOfRetryAttempts":3,
+      "retryCreationTime": "2017-05-05T21:29:40.463+03:00[Europe/Uzhgorod]"
+    },
+    {
+      "retryName": "backendA",
+      "retryEventType": "ERROR",
+      "numberOfRetryAttempts":3,
+      "retryCreationTime": "2017-05-05T21:29:40.469+03:00[Europe/Uzhgorod]"
+    },
+    {
+      "retryName": "backendA",
+      "retryEventType": "ERROR",
+      "numberOfRetryAttempts":3,
+      "retryCreationTime": "2017-05-05T21:29:41.268+03:00[Europe/Uzhgorod]"
     }
   ]
 }

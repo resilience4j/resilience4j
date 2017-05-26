@@ -27,7 +27,6 @@ public class CircuitBreakerConfig {
     private Integer failureRateThreshold = DEFAULT_MAX_FAILURE_THRESHOLD;
     private Integer ringBufferSizeInClosedState = DEFAULT_RING_BUFFER_SIZE_IN_CLOSED_STATE;
     private Integer ringBufferSizeInHalfOpenState = DEFAULT_RING_BUFFER_SIZE_IN_HALF_OPEN_STATE;
-    private Integer eventConsumerBufferSize = 100;
 
     /**
      * Use config provided by circuitbreaker registry instead of these config values.
@@ -60,11 +59,6 @@ public class CircuitBreakerConfig {
         return this;
     }
 
-    public CircuitBreakerConfig eventConsumerBufferSize(Integer eventConsumerBufferSize) {
-        this.eventConsumerBufferSize = eventConsumerBufferSize;
-        return this;
-    }
-
     public boolean getDefaults() {
         return defaults;
     }
@@ -85,7 +79,4 @@ public class CircuitBreakerConfig {
         return ringBufferSizeInHalfOpenState;
     }
 
-    public Integer getEventConsumerBufferSize() {
-        return eventConsumerBufferSize;
-    }
 }
