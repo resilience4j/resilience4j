@@ -106,9 +106,27 @@ public class Resilience4jModule extends ConfigurableModule<Resilience4jConfig> {
         bind(CircuitBreakerChain.class).in(Scopes.SINGLETON);
         bind(RateLimiterChain.class).in(Scopes.SINGLETON);
         bind(RetryChain.class).in(Scopes.SINGLETON);
-        binder.addBinding().toProvider(() -> (registry, rest) -> Handlers.chain(Handlers.chain(registry, registry.get(CircuitBreakerChain.class)), rest));
-        binder.addBinding().toProvider(() -> (registry, rest) -> Handlers.chain(Handlers.chain(registry, registry.get(RateLimiterChain.class)), rest));
-        binder.addBinding().toProvider(() -> (registry, rest) -> Handlers.chain(Handlers.chain(registry, registry.get(RetryChain.class)), rest));
+        binder.addBinding().toProvider(() -> (registry, rest) -> {
+            if (registry.get(Resilience4jConfig.class).getEndpoints().getCircuitBreakers().isEnabled()) {
+                return Handlers.chain(Handlers.chain(registry, registry.get(CircuitBreakerChain.class)), rest);
+            } else {
+                return rest;
+            }
+        });
+        binder.addBinding().toProvider(() -> (registry, rest) -> {
+            if (registry.get(Resilience4jConfig.class).getEndpoints().getRateLimiters().isEnabled()) {
+                return Handlers.chain(Handlers.chain(registry, registry.get(RateLimiterChain.class)), rest);
+            } else {
+                return rest;
+            }
+        });
+        binder.addBinding().toProvider(() -> (registry, rest) -> {
+            if (registry.get(Resilience4jConfig.class).getEndpoints().getRetries().isEnabled()) {
+                return Handlers.chain(Handlers.chain(registry, registry.get(RetryChain.class)), rest);
+            } else {
+                return rest;
+            }
+        });
 
         // startup
         bind(Resilience4jService.class);
@@ -187,6 +205,8 @@ public class Resilience4jModule extends ConfigurableModule<Resilience4jConfig> {
         @Override
         public void onStart(StartEvent event) throws Exception {
 
+            EndpointsConfig endpointsConfig = event.getRegistry().get(Resilience4jConfig.class).getEndpoints();
+
             // build circuit breakers
             CircuitBreakerRegistry circuitBreakerRegistry = injector.getInstance(CircuitBreakerRegistry.class);
             EventConsumerRegistry<CircuitBreakerEvent> cbConsumerRegistry = injector.getInstance(Key.get(new TypeLiteral<EventConsumerRegistry<CircuitBreakerEvent>>() {}));
@@ -202,7 +222,9 @@ public class Resilience4jModule extends ConfigurableModule<Resilience4jConfig> {
                             .waitDurationInOpenState(Duration.ofMillis(circuitBreakerConfig.getWaitIntervalInMillis()))
                             .build());
                 }
-                circuitBreaker.getEventStream().subscribe(cbConsumerRegistry.createEventConsumer(name, 100));
+                if (endpointsConfig.getCircuitBreakers().isEnabled()) {
+                    circuitBreaker.getEventStream().subscribe(cbConsumerRegistry.createEventConsumer(name, endpointsConfig.getCircuitBreakers().getEventConsumerBufferSize()));
+                }
             });
 
             // build rate limiters
@@ -219,7 +241,9 @@ public class Resilience4jModule extends ConfigurableModule<Resilience4jConfig> {
                             .timeoutDuration(Duration.ofMillis(rateLimiterConfig.getTimeoutInMillis()))
                             .build());
                 }
-                rateLimiter.getEventStream().subscribe(rlConsumerRegistry.createEventConsumer(name, 100));
+                if (endpointsConfig.getRateLimiters().isEnabled()) {
+                    rateLimiter.getEventStream().subscribe(rlConsumerRegistry.createEventConsumer(name, endpointsConfig.getRateLimiters().getEventConsumerBufferSize()));
+                }
             });
 
             // build retries
@@ -235,7 +259,9 @@ public class Resilience4jModule extends ConfigurableModule<Resilience4jConfig> {
                             .waitDuration(Duration.ofMillis(retryConfig.getWaitDurationInMillis()))
                             .build());
                 }
-                retry.getEventStream().subscribe(rConsumerRegistry.createEventConsumer(name, 100));
+                if (endpointsConfig.getRetries().isEnabled()) {
+                    retry.getEventStream().subscribe(rConsumerRegistry.createEventConsumer(name, endpointsConfig.getRetries().getEventConsumerBufferSize()));
+                }
             });
 
             // dropwizard metrics

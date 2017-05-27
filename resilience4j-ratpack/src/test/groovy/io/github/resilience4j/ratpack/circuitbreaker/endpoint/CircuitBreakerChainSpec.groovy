@@ -182,4 +182,43 @@ class CircuitBreakerChainSpec extends Specification {
         "text/event-stream;charset=UTF-8" == actual.value.headers["Content-Type"]
     }
 
+    def "test disabled"() {
+        given: "an app"
+        def circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults()
+        app = ratpack {
+            serverConfig {
+                development(false)
+            }
+            bindings {
+                bindInstance(CircuitBreakerRegistry, circuitBreakerRegistry)
+                module(Resilience4jModule) {
+                    it.circuitBreaker('test1') {
+                        it.failureRateThreshold(75).waitIntervalInMillis(5000)
+                    }.circuitBreaker('test2') {
+                        it.failureRateThreshold(25).waitIntervalInMillis(5000)
+                    }.endpoints {
+                        it.circuitBreakers {
+                            it.enabled(false)
+                        }
+                    }
+                }
+            }
+        }
+        client = testHttpClient(app)
+        app.server.start() // override lazy start
+
+        and: "some circuit breaker events"
+        ['test1', 'test2'].each {
+            def c = circuitBreakerRegistry.circuitBreaker(it)
+            c.onSuccess(1000)
+            c.onError(1000, new Exception("meh"))
+        }
+
+        when: "we get all circuit breaker events"
+        def actual = client.get('circuitbreaker/events')
+
+        then: "it fails"
+        actual.statusCode == 404
+    }
+
 }

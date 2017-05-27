@@ -21,6 +21,7 @@ import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent;
 import io.github.resilience4j.consumer.EventConsumer;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
+import io.github.resilience4j.ratpack.Resilience4jConfig;
 import io.reactivex.Flowable;
 import io.vavr.collection.Seq;
 import ratpack.exec.Promise;
@@ -49,7 +50,8 @@ public class CircuitBreakerChain implements Action<Chain> {
 
     @Override
     public void execute(Chain chain) throws Exception {
-        chain.prefix("circuitbreaker", chain1 -> {
+        String prefix = chain.getRegistry().get(Resilience4jConfig.class).getEndpoints().getCircuitBreakers().getPath();
+        chain.prefix(prefix, chain1 -> {
             chain1.get("events", ctx ->
                     Promise.<CircuitBreakerEventsEndpointResponse>async(d -> {
                         CircuitBreakerEventsEndpointResponse response = new CircuitBreakerEventsEndpointResponse(eventConsumerRegistry

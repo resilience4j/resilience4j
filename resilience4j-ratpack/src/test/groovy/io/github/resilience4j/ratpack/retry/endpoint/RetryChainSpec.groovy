@@ -89,7 +89,6 @@ class RetryChainSpec extends Specification {
             Try.of(Retry.decorateCheckedSupplier(r, { throw new Exception('derek olk'); 'unreachable' } as CheckedFunction0<String>)).recover { "recovered" }.get()
         }
         actual = client.get('retry/events')
-        println actual.body.text
         def dto = mapper.readValue(actual.body.text, RetryEventsEndpointResponse)
 
         then: "it works"
@@ -188,6 +187,44 @@ class RetryChainSpec extends Specification {
 
         then: "it works"
         "text/event-stream;charset=UTF-8" == actual.value.headers["Content-Type"]
+    }
+
+    def "test disabled"() {
+        given: "an app"
+        def retryRegistry = RetryRegistry.ofDefaults()
+        app = ratpack {
+            serverConfig {
+                development(false)
+            }
+            bindings {
+                bindInstance(RetryRegistry, retryRegistry)
+                module(Resilience4jModule) {
+                    it.retry('test1') {
+                        it.maxAttempts(3).waitDurationInMillis(100)
+                    }.retry('test2') {
+                        it.maxAttempts(3).waitDurationInMillis(100)
+                    }.endpoints {
+                        it.retries {
+                            it.enabled(false)
+                        }
+                    }
+                }
+            }
+        }
+        client = testHttpClient(app)
+        app.server.start() // override lazy start
+
+        when: "we get all retry events"
+        ['test1', 'test2'].each {
+            def r = retryRegistry.retry(it)
+            Try.of(Retry.decorateCheckedSupplier(r, {
+                throw new Exception('derek olk'); 'unreachable'
+            } as CheckedFunction0<String>)).recover { "recovered" }.get()
+        }
+        def actual = client.get('retry/events')
+
+        then: "it fails"
+        actual.statusCode == 404
     }
 
 }

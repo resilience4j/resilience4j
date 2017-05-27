@@ -1,4 +1,17 @@
 resilience4j:
+    endpoints:
+        circuitBreakers:
+            enabled: true
+            path: circuitbreaker
+            eventConsumerBufferSize: 100
+        rateLimiters:
+            enabled: true
+            path: ratelimiter
+            eventConsumerBufferSize: 100
+        retries:
+            enabled: true
+            path: retry
+            eventConsumerBufferSize: 100
     circuitBreakers:
         test1:
             defaults: true

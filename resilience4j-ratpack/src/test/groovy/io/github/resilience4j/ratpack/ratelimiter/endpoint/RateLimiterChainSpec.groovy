@@ -203,4 +203,42 @@ class RateLimiterChainSpec extends Specification {
         "text/event-stream;charset=UTF-8" == actual.value.headers["Content-Type"]
     }
 
+    def "test disabled"() {
+        given: "an app"
+        def rateLimiterRegistry = RateLimiterRegistry.ofDefaults()
+        app = ratpack {
+            serverConfig {
+                development(false)
+            }
+            bindings {
+                bindInstance(RateLimiterRegistry, rateLimiterRegistry)
+                module(Resilience4jModule) {
+                    it.rateLimiter('test1') {
+                        it.limitForPeriod(10).limitRefreshPeriodInNanos(1000000000).timeoutInMillis(0)
+                    }.rateLimiter('test2') {
+                        it.limitForPeriod(10).limitRefreshPeriodInNanos(1000000000).timeoutInMillis(0)
+                    }.endpoints {
+                        it.rateLimiters {
+                            it.enabled(false)
+                        }
+                    }
+                }
+            }
+        }
+        client = testHttpClient(app)
+        app.server.start() // override lazy start
+
+        when: "we get all rate limiter events"
+        ['test1', 'test2'].each {
+            def r = rateLimiterRegistry.rateLimiter(it)
+            (0..10).each {
+                r.getPermission(Duration.ZERO)
+            }
+        }
+        def actual = client.get('ratelimiter/events')
+
+        then: "it fails"
+        actual.statusCode == 404
+    }
+
 }

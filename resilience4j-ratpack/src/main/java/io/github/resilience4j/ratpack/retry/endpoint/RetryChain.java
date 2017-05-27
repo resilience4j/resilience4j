@@ -18,6 +18,7 @@ package io.github.resilience4j.ratpack.retry.endpoint;
 
 import io.github.resilience4j.consumer.EventConsumer;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
+import io.github.resilience4j.ratpack.Resilience4jConfig;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryRegistry;
 import io.github.resilience4j.retry.event.RetryEvent;
@@ -51,7 +52,8 @@ public class RetryChain implements Action<Chain> {
 
     @Override
     public void execute(Chain chain) throws Exception {
-        chain.prefix("retry", chain1 -> {
+        String prefix = chain.getRegistry().get(Resilience4jConfig.class).getEndpoints().getRetries().getPath();
+        chain.prefix(prefix, chain1 -> {
             chain1.get("events", ctx ->
                     Promise.<RetryEventsEndpointResponse>async(d -> {
                         List<RetryEventDTO> eventsList = eventConsumerRegistry.getAllEventConsumer()

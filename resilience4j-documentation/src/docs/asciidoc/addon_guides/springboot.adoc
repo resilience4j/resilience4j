@@ -311,29 +311,29 @@ List of available endpoints:
 
 * `/ratelimiter/events`
 * `/ratelimiter/stream/events`
-* `/ratelimiter/events/{retryName}`
-* `/ratelimiter/stream/events/{retryName}`
-* `/ratelimiter/events/{retryName}/{eventType}`
-* `/ratelimiter/stream/events/{retryName}/{eventType}`
+* `/ratelimiter/events/{rateLimiterName}`
+* `/ratelimiter/stream/events/{rateLimiterName}`
+* `/ratelimiter/events/{rateLimiterName}/{eventType}`
+* `/ratelimiter/stream/events/{rateLimiterName}/{eventType}`
 
 Example of response:
 ----
 {
   "eventsList": [
     {
-      "retryName": "backendA",
-      "retryEventType": "SUCCESSFUL_ACQUIRE",
-      "retryCreationTime": "2017-05-05T21:29:40.463+03:00[Europe/Uzhgorod]"
+      "rateLimiterName": "backendA",
+      "rateLimiterEventType": "SUCCESSFUL_ACQUIRE",
+      "rateLimiterCreationTime": "2017-05-05T21:29:40.463+03:00[Europe/Uzhgorod]"
     },
     {
-      "retryName": "backendA",
-      "retryEventType": "SUCCESSFUL_ACQUIRE",
-      "retryCreationTime": "2017-05-05T21:29:40.469+03:00[Europe/Uzhgorod]"
+      "rateLimiterName": "backendA",
+      "rateLimiterEventType": "SUCCESSFUL_ACQUIRE",
+      "rateLimiterCreationTime": "2017-05-05T21:29:40.469+03:00[Europe/Uzhgorod]"
     },
     {
-      "retryName": "backendA",
-      "retryEventType": "FAILED_ACQUIRE",
-      "retryCreationTime": "2017-05-05T21:29:41.268+03:00[Europe/Uzhgorod]"
+      "rateLimiterName": "backendA",
+      "rateLimiterEventType": "FAILED_ACQUIRE",
+      "rateLimiterCreationTime": "2017-05-05T21:29:41.268+03:00[Europe/Uzhgorod]"
     }
   ]
 }

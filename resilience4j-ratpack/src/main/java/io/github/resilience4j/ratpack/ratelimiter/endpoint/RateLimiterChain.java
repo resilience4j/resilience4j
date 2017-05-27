@@ -21,6 +21,7 @@ import io.github.resilience4j.consumer.EventConsumerRegistry;
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
 import io.github.resilience4j.ratelimiter.event.RateLimiterEvent;
+import io.github.resilience4j.ratpack.Resilience4jConfig;
 import io.reactivex.Flowable;
 import io.vavr.collection.Seq;
 import ratpack.exec.Promise;
@@ -50,7 +51,8 @@ public class RateLimiterChain implements Action<Chain> {
 
     @Override
     public void execute(Chain chain) throws Exception {
-        chain.prefix("ratelimiter", chain1 -> {
+        String prefix = chain.getRegistry().get(Resilience4jConfig.class).getEndpoints().getRateLimiters().getPath();
+        chain.prefix(prefix, chain1 -> {
             chain1.get("events", ctx ->
                     Promise.<RateLimiterEventsEndpointResponse>async(d -> {
                         List<RateLimiterEventDTO> eventsList = eventConsumerRegistry.getAllEventConsumer()

@@ -17,5 +17,5 @@ dependencies {
 }
 
 test {
-    maxParallelForks = 8
+    maxParallelForks = 1
 }
