@@ -12,7 +12,6 @@ import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.retry.AsyncRetry;
 import io.github.resilience4j.retry.Retry;
-import io.github.resilience4j.timeout.Timeout;
 import io.vavr.CheckedFunction0;
 import io.vavr.CheckedFunction1;
 import io.vavr.CheckedRunnable;
@@ -87,11 +86,6 @@ public interface Decorators{
             return this;
         }
 
-        public DecorateSupplier<T> withTimeout(Timeout timeout) {
-            supplier = Timeout.decorateSupplier(timeout, supplier);
-            return this;
-        }
-
         public Supplier<T> decorate() {
             return supplier;
         }
@@ -128,11 +122,6 @@ public interface Decorators{
             return this;
         }
 
-        public DecorateFunction<T, R> withTimeout(Timeout timeout) {
-            function = Timeout.decorateFunction(timeout, function);
-            return this;
-        }
-
         public Function<T, R> decorate() {
             return function;
         }
@@ -166,11 +155,6 @@ public interface Decorators{
 
         public DecorateRunnable withBulkhead(Bulkhead bulkhead) {
             runnable = Bulkhead.decorateRunnable(bulkhead, runnable);
-            return this;
-        }
-
-        public DecorateRunnable withTimeout(Timeout timeout) {
-            runnable = Timeout.decorateRunnable(timeout, runnable);
             return this;
         }
 
@@ -215,11 +199,6 @@ public interface Decorators{
             return this;
         }
 
-        public DecorateCheckedSupplier<T> withTimeout(Timeout timeout) {
-            supplier = Timeout.decorateCheckedSupplier(timeout, supplier);
-            return this;
-        }
-
         public CheckedFunction0<T> decorate() {
             return supplier;
         }
@@ -256,11 +235,6 @@ public interface Decorators{
             return this;
         }
 
-        public DecorateCheckedFunction<T, R> withTimeout(Timeout timeout) {
-            function = Timeout.decorateCheckedFunction(timeout, function);
-            return this;
-        }
-
         public CheckedFunction1<T, R> decorate() {
             return function;
         }
@@ -294,11 +268,6 @@ public interface Decorators{
 
         public DecorateCheckedRunnable withBulkhead(Bulkhead bulkhead) {
             runnable = Bulkhead.decorateCheckedRunnable(bulkhead, runnable);
-            return this;
-        }
-
-        public DecorateCheckedRunnable withTimeout(Timeout timeout) {
-            runnable = Timeout.decorateCheckedRunnable(timeout, runnable);
             return this;
         }
 
@@ -368,11 +337,6 @@ public interface Decorators{
 
         public DecorateConsumer<T> withBulkhead(Bulkhead bulkhead) {
             consumer = Bulkhead.decorateConsumer(bulkhead, consumer);
-            return this;
-        }
-
-        public DecorateConsumer<T> withTimeout(Timeout timeout) {
-            consumer = Timeout.decorateConsumer(timeout, consumer);
             return this;
         }
 

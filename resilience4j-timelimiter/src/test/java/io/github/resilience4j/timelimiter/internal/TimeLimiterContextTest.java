@@ -1,5 +1,6 @@
-package io.github.resilience4j.timeout.internal;
+package io.github.resilience4j.timelimiter.internal;
 
+import io.github.resilience4j.timelimiter.TimeLimiterConfig;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -9,28 +10,26 @@ import org.powermock.modules.junit4.PowerMockRunner;
 
 import java.time.Duration;
 
-import io.github.resilience4j.timeout.TimeoutConfig;
-
 import static org.assertj.core.api.BDDAssertions.then;
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest(TimeoutContext.class)
-public class TimeoutContextTest {
+@PrepareForTest(TimeLimiterContext.class)
+public class TimeLimiterContextTest {
 
-    private TimeoutConfig timeoutConfig;
-    private TimeoutContext timeout;
+    private TimeLimiterConfig timeLimiterConfig;
+    private TimeLimiterContext timeout;
 
     @Before
     public void init() {
-        timeoutConfig = TimeoutConfig.custom()
+        timeLimiterConfig = TimeLimiterConfig.custom()
                 .timeoutDuration(Duration.ZERO)
                 .build();
-        TimeoutContext testTimeout = new TimeoutContext(timeoutConfig);
+        TimeLimiterContext testTimeout = new TimeLimiterContext(timeLimiterConfig);
         timeout = PowerMockito.spy(testTimeout);
     }
 
     @Test
     public void configPropagation() {
-        then(timeout.getTimeoutConfig()).isEqualTo(timeoutConfig);
+        then(timeout.getTimeLimiterConfig()).isEqualTo(timeLimiterConfig);
     }
 }
