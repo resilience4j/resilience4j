@@ -10,7 +10,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.function.Supplier;
 
 /**
- * A TimeLimiter decorator stops execution at a configurable rate.
+ * A TimeLimiter decorator stops execution after a configurable duration.
  */
 public interface TimeLimiter {
 
@@ -48,11 +48,11 @@ public interface TimeLimiter {
     }
 
     /**
-     * Creates a Callable which is restricted by a TimeLimiter.
+     * Creates a Callable that is restricted by a TimeLimiter.
      *
-     * @param timeLimiter   the {@link TimeLimiter}
-     * @param future    the original future
-     * @param <T> the type of results supplied supplier
+     * @param timeLimiter   the TimeLimiter
+     * @param future        the original future
+     * @param <T> the type of results supplied by the future
      * @param <F> the future type supplied
      * @return a future which is restricted by a {@link TimeLimiter}.
      */
@@ -70,11 +70,11 @@ public interface TimeLimiter {
     }
 
     /**
-     * Creates a Callback which is restricted by a TimeLimiter.
+     * Creates a Callback that is restricted by a TimeLimiter.
      *
-     * @param timeLimiter        the {@link TimeLimiter}
-     * @param futureSupplier the original future supplier
-     * @param <T> the type of results supplied supplier
+     * @param timeLimiter        the TimeLimiter
+     * @param futureSupplier     the original future supplier
+     * @param <T> the type of results supplied by the supplier
      * @param <F> the future type supplied
      * @return a future supplier which is restricted by a {@link TimeLimiter}.
      */
@@ -100,13 +100,12 @@ public interface TimeLimiter {
     TimeLimiterConfig getTimeLimiterConfig();
 
     /**
-     * Decorates and executes the decorated Future.
+     * Decorates and executes the Future.
      *
      * @param future the original Future
-     *
-     * @return the result of the decorated Future.
      * @param <T> the result type of the future
      * @param <F> the type of Future
+     * @return the result of the decorated Future.
      * @throws Exception if unable to compute a result
      */
     default <T, F extends Future<T>> T executeFuture(F future) throws Exception {
@@ -114,13 +113,12 @@ public interface TimeLimiter {
     }
 
     /**
-     * Decorates and executes the decorated Future Supplier.
+     * Decorates and executes the Future Supplier.
      *
      * @param futureSupplier the original future supplier
-     *
-     * @return the result of the Future.
      * @param <T> the result type of the future
      * @param <F> the type of Future
+     * @return the result of the Future.
      * @throws Exception if unable to compute a result
      */
     default <T, F extends Future<T>> T executeFutureSupplier(Supplier<F> futureSupplier) throws Exception {

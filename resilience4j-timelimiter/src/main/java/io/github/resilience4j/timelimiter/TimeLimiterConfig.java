@@ -61,7 +61,7 @@ public class TimeLimiterConfig {
 
         /**
          * Configures the thread execution timeout
-         * Default value is 5 seconds.
+         * Default value is 1 second.
          *
          * @param timeoutDuration the timeout Duration
          * @return the TimeLimiterConfig.Builder
