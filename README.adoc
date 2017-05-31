@@ -77,7 +77,8 @@ CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("backendName");
 Retry retry = Retry.ofDefaults("backendName");
 
 // Decorate your call to BackendService.doSomething() with a CircuitBreaker
-Supplier<String> decoratedSupplier = CircuitBreaker.decorateSupplier(circuitBreaker, backendService::doSomething);
+Supplier<String> decoratedSupplier = CircuitBreaker
+    .decorateSupplier(circuitBreaker, backendService::doSomething);
 
 // Decorate your call with automatic retry
 decoratedSupplier = Retry
@@ -118,7 +119,7 @@ Observable.fromCallable(backendService::doSomething)
 ----
 
 
-NOTE: Resilience4j also provides RxJava operators for `RateLimiter`, `Bulkhead` and `Retry`.
+NOTE: Resilience4j also provides RxJava operators for `RateLimiter`, `Bulkhead` and `Retry`. Find out more in our *http://resilience4j.github.io/resilience4j/[User Guide]*
 
 
 [[ratelimiter]]
@@ -260,7 +261,7 @@ circuitBreaker.getEventStream()
 List<CircuitBreakerOnErrorEvent> bufferedEvents = circularEventConsumer.getBufferedEvents();
 ----
 
-NOTE: You can also consume events from `RateLimiter`, `Cache` and `Retry`. Find out more in our *http://resilience4j.github.io/resilience4j/[User Guide]*
+NOTE: You can also consume events from `RateLimiter`, `Bulkhead`, `Cache` and `Retry`. Find out more in our *http://resilience4j.github.io/resilience4j/[User Guide]*
 
 There is also a shortcut to subscribe to events and register event consumers.
 
