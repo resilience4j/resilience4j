@@ -19,6 +19,9 @@
 package io.github.resilience4j.cache;
 
 import io.github.resilience4j.cache.event.CacheEvent;
+import io.github.resilience4j.cache.event.CacheOnErrorEvent;
+import io.github.resilience4j.cache.event.CacheOnHitEvent;
+import io.github.resilience4j.cache.event.CacheOnMissEvent;
 import io.github.resilience4j.cache.internal.CacheImpl;
 import io.reactivex.Flowable;
 import io.vavr.CheckedFunction0;
@@ -26,6 +29,7 @@ import io.vavr.CheckedFunction1;
 
 import java.util.Objects;
 import java.util.concurrent.Callable;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -61,6 +65,14 @@ public interface Cache<K, V>  {
      * @return a reactive stream of CacheEvents
      */
     Flowable<CacheEvent> getEventStream();
+
+    /**
+     * Returns an EventConsumer which subscribes to the reactive stream of CircuitBreakerEvents and
+     * can be used to register event consumers.
+     *
+     * @return an EventConsumer
+     */
+    EventConsumer getEventConsumer();
 
     /**
      * Creates a Retry with default configuration.
@@ -132,5 +144,19 @@ public interface Cache<K, V>  {
          * @return the current number of cache misses
          */
         long getNumberOfCacheMisses();
+    }
+
+    /**
+     * An EventConsumer which subscribes to the reactive stream of CacheEvents and
+     * can be used to register event consumers.
+     */
+    interface EventConsumer {
+
+        EventConsumer onCacheHit(Consumer<CacheOnHitEvent> eventConsumer);
+
+        EventConsumer onCacheMiss(Consumer<CacheOnMissEvent> eventConsumer);
+
+        EventConsumer onError(Consumer<CacheOnErrorEvent> eventConsumer);
+
     }
 }

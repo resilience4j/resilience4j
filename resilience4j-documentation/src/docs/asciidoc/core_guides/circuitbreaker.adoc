@@ -129,7 +129,18 @@ circuitBreaker.getEventStream()
     .subscribe(circularEventConsumer);
 
 List<CircuitBreakerOnErrorEvent> bufferedEvents = circularEventConsumer.getBufferedEvents();
+
 ----
+There is also a shortcut to subscribe to events and register event consumers.
+
+[source,java]
+----
+circuitBreaker.getEventConsumer()
+    .onSuccess(event -> logger.info(event.getEventType().toString()))
+    .onError(event -> logger.info(event.getEventType().toString()))
+    .onStateTransition(event -> logger.info(event.getEventType().toString()));
+----
+
 
 ==== Monitoring
 

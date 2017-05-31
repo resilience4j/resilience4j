@@ -1,6 +1,9 @@
 package io.github.resilience4j.retry;
 
 import io.github.resilience4j.retry.event.RetryEvent;
+import io.github.resilience4j.retry.event.RetryOnErrorEvent;
+import io.github.resilience4j.retry.event.RetryOnIgnoredErrorEvent;
+import io.github.resilience4j.retry.event.RetryOnSuccessEvent;
 import io.github.resilience4j.retry.internal.AsyncRetryImpl;
 import io.reactivex.Flowable;
 
@@ -8,6 +11,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 /**
@@ -28,6 +32,14 @@ public interface AsyncRetry {
      * @return a reactive stream of RetryEvents
      */
     Flowable<RetryEvent> getEventStream();
+
+    /**
+     * Returns an EventConsumer which subsribes to the reactive stream of RetryEvents and
+     * can be used to register event consumers.
+     *
+     * @return an EventConsumer
+     */
+    EventConsumer getEventConsumer();
 
     /**
      * Creates a retry Context.
@@ -75,6 +87,18 @@ public interface AsyncRetry {
      */
     static AsyncRetry ofDefaults(String id){
         return of(id, RetryConfig.ofDefaults());
+    }
+
+    /**
+     * Decorates and executes the decorated CompletionStage.
+
+     * @param scheduler execution service to use to schedule retries
+     * @param supplier the original CompletionStage
+     * @param <T> the type of results supplied by this supplier
+     * @return the decorated CompletionStage.
+     */
+    default <T> CompletionStage<T> executeCompletionStage( ScheduledExecutorService scheduler, Supplier<CompletionStage<T>> supplier){
+        return decorateCompletionStage(this, scheduler, supplier).get();
     }
 
     /**
@@ -152,6 +176,20 @@ public interface AsyncRetry {
          * @return delay in milliseconds until the next try
          */
         long onError(Throwable throwable);
+    }
+
+    /**
+     * An EventConsumer which subscribes to the reactive stream of RetryEvents and
+     * can be used to register event consumers.
+     */
+    interface EventConsumer {
+
+        EventConsumer onSuccess(Consumer<RetryOnSuccessEvent> eventConsumer);
+
+        EventConsumer onError(Consumer<RetryOnErrorEvent> eventConsumer);
+
+        EventConsumer onIgnoredError(Consumer<RetryOnIgnoredErrorEvent> eventConsumer);
+
     }
 }
 

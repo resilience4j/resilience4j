@@ -27,9 +27,11 @@ import io.github.resilience4j.bulkhead.event.BulkheadOnCallRejectedEvent;
 import io.reactivex.Flowable;
 import io.reactivex.processors.FlowableProcessor;
 import io.reactivex.processors.PublishProcessor;
+import io.vavr.Lazy;
 
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 /**
@@ -42,6 +44,7 @@ public class SemaphoreBulkhead implements Bulkhead{
     private final BulkheadConfig bulkheadConfig;
     private final FlowableProcessor<BulkheadEvent> eventPublisher;
     private final BulkheadMetrics metrics;
+    private final Lazy<EventConsumer> lazyEventConsumer;
 
     /**
      * Creates a bulkhead using a configuration supplied
@@ -59,6 +62,7 @@ public class SemaphoreBulkhead implements Bulkhead{
         // init event publisher
         this.eventPublisher = PublishProcessor.<BulkheadEvent>create()
                                               .toSerialized();
+        this.lazyEventConsumer = Lazy.of(() -> new EventDispatcher(getEventStream()));
 
         this.metrics = new BulkheadMetrics();
     }
@@ -119,6 +123,52 @@ public class SemaphoreBulkhead implements Bulkhead{
     @Override
     public Flowable<BulkheadEvent> getEventStream() {
         return eventPublisher;
+    }
+
+    @Override
+    public EventConsumer getEventConsumer() {
+        return lazyEventConsumer.get();
+    }
+
+    private class EventDispatcher implements EventConsumer, io.reactivex.functions.Consumer<BulkheadEvent> {
+
+        private volatile Consumer<BulkheadOnCallPermittedEvent> onCallPermittedEventConsumer;
+        private volatile Consumer<BulkheadOnCallRejectedEvent> onCallRejectedEventConsumer;
+
+        EventDispatcher(Flowable<BulkheadEvent> eventStream) {
+            eventStream.subscribe(this);
+        }
+
+        @Override
+        public EventConsumer onCallPermitted(Consumer<BulkheadOnCallPermittedEvent> onCallPermittedEventConsumer) {
+            this.onCallPermittedEventConsumer = onCallPermittedEventConsumer;
+            return this;
+        }
+
+        @Override
+        public EventConsumer onCallRejected(Consumer<BulkheadOnCallRejectedEvent> onCallRejectedEventConsumer) {
+            this.onCallRejectedEventConsumer = onCallRejectedEventConsumer;
+            return this;
+        }
+
+        @Override
+        public void accept(BulkheadEvent event) throws Exception {
+            BulkheadEvent.Type eventType = event.getEventType();
+            switch (eventType) {
+                case CALL_PERMITTED:
+                    if(onCallPermittedEventConsumer != null){
+                        onCallPermittedEventConsumer.accept((BulkheadOnCallPermittedEvent) event);
+                    }
+                    break;
+                case CALL_REJECTED:
+                    if(onCallRejectedEventConsumer != null) {
+                        onCallRejectedEventConsumer.accept((BulkheadOnCallRejectedEvent) event);
+                    }
+                    break;
+                default:
+                    break;
+            }
+        }
     }
 
     @Override

@@ -19,6 +19,8 @@
 package io.github.resilience4j.ratelimiter;
 
 import io.github.resilience4j.ratelimiter.event.RateLimiterEvent;
+import io.github.resilience4j.ratelimiter.event.RateLimiterOnFailureEvent;
+import io.github.resilience4j.ratelimiter.event.RateLimiterOnSuccessEvent;
 import io.github.resilience4j.ratelimiter.internal.AtomicRateLimiter;
 import io.reactivex.Flowable;
 import io.vavr.CheckedFunction0;
@@ -278,6 +280,15 @@ public interface RateLimiter {
      */
     Flowable<RateLimiterEvent> getEventStream();
 
+
+    /**
+     * Returns an EventConsumer which subscribes to the reactive stream of CircuitBreakerEvents and
+     * can be used to register event consumers.
+     *
+     * @return an EventConsumer
+     */
+    EventConsumer getEventConsumer();
+
     /**
      * Decorates and executes the decorated Supplier.
      *
@@ -330,5 +341,17 @@ public interface RateLimiter {
          * @return estimated count of permissions
          */
         int getAvailablePermissions();
+    }
+
+    /**
+     * An EventConsumer which subscribes to the reactive stream of CacheEvents and
+     * can be used to register event consumers.
+     */
+    interface EventConsumer {
+
+        EventConsumer onSuccess(Consumer<RateLimiterOnSuccessEvent> eventConsumer);
+
+        EventConsumer onFailure(Consumer<RateLimiterOnFailureEvent> eventConsumer);
+
     }
 }

@@ -19,28 +19,22 @@
 package io.github.resilience4j.circuitbreaker.internal;
 
 
-import static io.github.resilience4j.circuitbreaker.CircuitBreaker.State.CLOSED;
-import static io.github.resilience4j.circuitbreaker.CircuitBreaker.State.HALF_OPEN;
-import static io.github.resilience4j.circuitbreaker.CircuitBreaker.State.OPEN;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
-import io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent;
-import io.github.resilience4j.circuitbreaker.event.CircuitBreakerOnCallNotPermittedEvent;
-import io.github.resilience4j.circuitbreaker.event.CircuitBreakerOnErrorEvent;
-import io.github.resilience4j.circuitbreaker.event.CircuitBreakerOnIgnoredErrorEvent;
-import io.github.resilience4j.circuitbreaker.event.CircuitBreakerOnStateTransitionEvent;
-import io.github.resilience4j.circuitbreaker.event.CircuitBreakerOnSuccessEvent;
+import io.github.resilience4j.circuitbreaker.event.*;
 import io.reactivex.Flowable;
 import io.reactivex.processors.FlowableProcessor;
 import io.reactivex.processors.PublishProcessor;
+import io.vavr.Lazy;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
+
+import static io.github.resilience4j.circuitbreaker.CircuitBreaker.State.*;
 
 /**
  * A CircuitBreaker finite state machine.
@@ -53,6 +47,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
     private final AtomicReference<CircuitBreakerState> stateReference;
     private final CircuitBreakerConfig circuitBreakerConfig;
     private final FlowableProcessor<CircuitBreakerEvent> eventPublisher;
+    private final Lazy<EventConsumer> lazyEventConsumer;
 
     /**
      * Creates a circuitBreaker.
@@ -66,6 +61,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
         this.stateReference = new AtomicReference<>(new ClosedState(this));
         PublishProcessor<CircuitBreakerEvent> publisher = PublishProcessor.create();
         this.eventPublisher = publisher.toSerialized();
+        this.lazyEventConsumer = Lazy.of(() -> new EventDispatcher(getEventStream()));
     }
 
     /**
@@ -242,5 +238,87 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
 
     public Flowable<CircuitBreakerEvent> getEventStream() {
         return eventPublisher;
+    }
+
+    @Override
+    public EventConsumer getEventConsumer() {
+        return lazyEventConsumer.get();
+    }
+
+    private class EventDispatcher implements EventConsumer, io.reactivex.functions.Consumer<CircuitBreakerEvent> {
+
+        private volatile Consumer<CircuitBreakerOnSuccessEvent> onSuccessEventConsumer;
+        private volatile Consumer<CircuitBreakerOnErrorEvent> onErrorEventConsumer;
+        private volatile Consumer<CircuitBreakerOnStateTransitionEvent> onStateTransitionEventConsumer;
+        private volatile Consumer<CircuitBreakerOnIgnoredErrorEvent> onIgnoredErrorEventConsumer;
+        private volatile Consumer<CircuitBreakerOnCallNotPermittedEvent> onCallNotPermittedEventConsumer;
+
+        EventDispatcher(Flowable<CircuitBreakerEvent> eventStream) {
+            eventStream.subscribe(this);
+        }
+
+        @Override
+        public EventConsumer onSuccess(Consumer<CircuitBreakerOnSuccessEvent> onSuccessEventConsumer) {
+            this.onSuccessEventConsumer = onSuccessEventConsumer;
+            return this;
+        }
+
+        @Override
+        public EventConsumer onError(Consumer<CircuitBreakerOnErrorEvent> onErrorEventConsumer) {
+            this.onErrorEventConsumer = onErrorEventConsumer;
+            return this;
+        }
+
+        @Override
+        public EventConsumer onStateTransition(Consumer<CircuitBreakerOnStateTransitionEvent> onStateTransitionEventConsumer) {
+            this.onStateTransitionEventConsumer = onStateTransitionEventConsumer;
+            return this;
+        }
+
+        @Override
+        public EventConsumer onIgnoredError(Consumer<CircuitBreakerOnIgnoredErrorEvent> onIgnoredErrorEventConsumer) {
+            this.onIgnoredErrorEventConsumer = onIgnoredErrorEventConsumer;
+            return this;
+        }
+
+        @Override
+        public EventConsumer onCallNotPermitted(Consumer<CircuitBreakerOnCallNotPermittedEvent> onCallNotPermittedEventConsumer) {
+            this.onCallNotPermittedEventConsumer = onCallNotPermittedEventConsumer;
+            return this;
+        }
+
+        @Override
+        public void accept(CircuitBreakerEvent event) throws Exception {
+            CircuitBreakerEvent.Type eventType = event.getEventType();
+            switch (eventType) {
+                case SUCCESS:
+                    if(onSuccessEventConsumer != null){
+                        onSuccessEventConsumer.accept((CircuitBreakerOnSuccessEvent) event);
+                    }
+                    break;
+                case ERROR:
+                    if(onErrorEventConsumer != null) {
+                        onErrorEventConsumer.accept((CircuitBreakerOnErrorEvent) event);
+                    }
+                    break;
+                case STATE_TRANSITION:
+                    if(onStateTransitionEventConsumer != null) {
+                        onStateTransitionEventConsumer.accept((CircuitBreakerOnStateTransitionEvent) event);
+                    }
+                    break;
+                case IGNORED_ERROR:
+                    if(onIgnoredErrorEventConsumer != null) {
+                        onIgnoredErrorEventConsumer.accept((CircuitBreakerOnIgnoredErrorEvent) event);
+                    }
+                    break;
+                case NOT_PERMITTED:
+                    if(onCallNotPermittedEventConsumer != null){
+                        onCallNotPermittedEventConsumer.accept((CircuitBreakerOnCallNotPermittedEvent) event);
+                    }
+                    break;
+                default:
+                    break;
+            }
+        }
     }
 }

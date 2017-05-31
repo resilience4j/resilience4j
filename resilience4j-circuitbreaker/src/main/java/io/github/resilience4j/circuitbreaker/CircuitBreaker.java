@@ -18,7 +18,7 @@
  */
 package io.github.resilience4j.circuitbreaker;
 
-import io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent;
+import io.github.resilience4j.circuitbreaker.event.*;
 import io.github.resilience4j.circuitbreaker.internal.CircuitBreakerStateMachine;
 import io.github.resilience4j.circuitbreaker.utils.CircuitBreakerUtils;
 import io.reactivex.Flowable;
@@ -132,6 +132,14 @@ public interface CircuitBreaker {
      * @return a reactive stream of CircuitBreakerEvents
      */
     Flowable<CircuitBreakerEvent> getEventStream();
+
+    /**
+     * Returns an EventConsumer which subscribes to the reactive stream of CircuitBreakerEvents and
+     * can be used to register event consumers.
+     *
+     * @return an EventConsumer
+     */
+    EventConsumer getEventConsumer();
 
     /**
      * Decorates and executes the decorated Supplier.
@@ -253,6 +261,24 @@ public interface CircuitBreaker {
         public String toString(){
             return String.format("State transition from %s to %s", fromState, toState);
         }
+    }
+
+    /**
+     * An EventConsumer which subscribes to the reactive stream of CircuitBreakerEvents and
+     * can be used to register event consumers.
+     */
+    interface EventConsumer {
+
+        EventConsumer onSuccess(Consumer<CircuitBreakerOnSuccessEvent> eventConsumer);
+
+        EventConsumer onError(Consumer<CircuitBreakerOnErrorEvent> eventConsumer);
+
+        EventConsumer onStateTransition(Consumer<CircuitBreakerOnStateTransitionEvent> eventConsumer);
+
+        EventConsumer onIgnoredError(Consumer<CircuitBreakerOnIgnoredErrorEvent> eventConsumer);
+
+        EventConsumer onCallNotPermitted(Consumer<CircuitBreakerOnCallNotPermittedEvent> eventConsumer);
+
     }
 
     interface Metrics {
