@@ -13,18 +13,18 @@ import java.time.Duration;
 import static org.assertj.core.api.BDDAssertions.then;
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest(TimeLimiterContext.class)
-public class TimeLimiterContextTest {
+@PrepareForTest(TimeLimiterImpl.class)
+public class TimeLimiterImplTest {
 
     private TimeLimiterConfig timeLimiterConfig;
-    private TimeLimiterContext timeout;
+    private TimeLimiterImpl timeout;
 
     @Before
     public void init() {
         timeLimiterConfig = TimeLimiterConfig.custom()
                 .timeoutDuration(Duration.ZERO)
                 .build();
-        TimeLimiterContext testTimeout = new TimeLimiterContext(timeLimiterConfig);
+        TimeLimiterImpl testTimeout = new TimeLimiterImpl(timeLimiterConfig);
         timeout = PowerMockito.spy(testTimeout);
     }
 

@@ -1,6 +1,6 @@
 package io.github.resilience4j.timelimiter;
 
-import io.github.resilience4j.timelimiter.internal.TimeLimiterContext;
+import io.github.resilience4j.timelimiter.internal.TimeLimiterImpl;
 
 import java.time.Duration;
 import java.util.concurrent.Callable;
@@ -20,7 +20,7 @@ public interface TimeLimiter {
      * @return The {@link TimeLimiter}
      */
     static TimeLimiter ofDefaults() {
-        return new TimeLimiterContext(TimeLimiterConfig.ofDefaults());
+        return new TimeLimiterImpl(TimeLimiterConfig.ofDefaults());
     }
 
     /**
@@ -30,7 +30,7 @@ public interface TimeLimiter {
      * @return The {@link TimeLimiter}
      */
     static TimeLimiter of(TimeLimiterConfig timeLimiterConfig) {
-        return new TimeLimiterContext(timeLimiterConfig);
+        return new TimeLimiterImpl(timeLimiterConfig);
     }
 
     /**
@@ -44,7 +44,7 @@ public interface TimeLimiter {
                 .timeoutDuration(timeoutDuration)
                 .build();
 
-        return new TimeLimiterContext(timeLimiterConfig);
+        return new TimeLimiterImpl(timeLimiterConfig);
     }
 
     /**
