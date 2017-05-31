@@ -26,6 +26,7 @@ import io.github.resilience4j.ratelimiter.event.RateLimiterOnSuccessEvent;
 import io.reactivex.Flowable;
 import io.reactivex.processors.FlowableProcessor;
 import io.reactivex.processors.PublishProcessor;
+import io.vavr.Lazy;
 import io.vavr.control.Option;
 
 import java.time.Duration;
@@ -53,6 +54,7 @@ public class SemaphoreBasedRateLimiter implements RateLimiter {
     private final Semaphore semaphore;
     private final SemaphoreBasedRateLimiterMetrics metrics;
     private final FlowableProcessor<RateLimiterEvent> eventPublisher;
+    private final Lazy<EventConsumer> lazyEventConsumer;
 
     /**
      * Creates a RateLimiter.
@@ -82,6 +84,8 @@ public class SemaphoreBasedRateLimiter implements RateLimiter {
 
         PublishProcessor<RateLimiterEvent> publisher = PublishProcessor.create();
         this.eventPublisher = publisher.toSerialized();
+
+        this.lazyEventConsumer = Lazy.of(() -> new EventDispatcher(getEventStream()));
 
         scheduleLimitRefresh();
     }
@@ -147,6 +151,11 @@ public class SemaphoreBasedRateLimiter implements RateLimiter {
     @Override
     public Flowable<RateLimiterEvent> getEventStream() {
         return eventPublisher;
+    }
+
+    @Override
+    public EventConsumer getEventConsumer() {
+        return lazyEventConsumer.get();
     }
 
     /**

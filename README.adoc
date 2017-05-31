@@ -262,6 +262,15 @@ List<CircuitBreakerOnErrorEvent> bufferedEvents = circularEventConsumer.getBuffe
 
 NOTE: You can also consume events from `RateLimiter`, `Cache` and `Retry`. Find out more in our *http://resilience4j.github.io/resilience4j/[User Guide]*
 
+There is also a shortcut to subscribe to events and register event consumers.
+
+[source,java]
+----
+circuitBreaker.getEventConsumer()
+    .onSuccess(event -> logger.info(event.getEventType().toString()))
+    .onError(event -> logger.info(event.getEventType().toString()))
+    .onStateTransition(event -> logger.info(event.getEventType().toString()));
+----
 
 == Companies who use Resilience4j
 

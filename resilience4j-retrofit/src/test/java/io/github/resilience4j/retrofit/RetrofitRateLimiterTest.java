@@ -51,7 +51,7 @@ public class RetrofitRateLimiterTest {
 
     private static final RateLimiterConfig config = RateLimiterConfig.custom()
             .timeoutDuration(Duration.ofMillis(50))
-            .limitRefreshPeriod(Duration.ofSeconds(1))
+            .limitRefreshPeriod(Duration.ofSeconds(5))
             .limitForPeriod(1)
             .build();
 
