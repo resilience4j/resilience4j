@@ -23,22 +23,6 @@ public class RateLimiterConfig {
     private Integer limitRefreshPeriodInNanos = 500;
     private Integer timeoutInMillis = 5000;
 
-    public Boolean getDefaults() {
-        return defaults;
-    }
-
-    public Integer getLimitForPeriod() {
-        return limitForPeriod;
-    }
-
-    public Integer getLimitRefreshPeriodInNanos() {
-        return limitRefreshPeriodInNanos;
-    }
-
-    public Integer getTimeoutInMillis() {
-        return timeoutInMillis;
-    }
-
     public RateLimiterConfig defaults(boolean defaults) {
         this.defaults = defaults;
         return this;
@@ -58,4 +42,21 @@ public class RateLimiterConfig {
         this.timeoutInMillis = timeoutInMillis;
         return this;
     }
+
+    public Boolean getDefaults() {
+        return defaults;
+    }
+
+    public Integer getLimitForPeriod() {
+        return limitForPeriod;
+    }
+
+    public Integer getLimitRefreshPeriodInNanos() {
+        return limitRefreshPeriodInNanos;
+    }
+
+    public Integer getTimeoutInMillis() {
+        return timeoutInMillis;
+    }
+
 }
