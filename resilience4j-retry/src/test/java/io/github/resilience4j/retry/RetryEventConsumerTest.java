@@ -22,8 +22,6 @@ import io.github.resilience4j.test.HelloWorldService;
 import io.vavr.control.Try;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.BDDMockito;
-import org.mockito.Mockito;
 import org.slf4j.Logger;
 
 import javax.xml.ws.WebServiceException;
@@ -31,6 +29,7 @@ import javax.xml.ws.WebServiceException;
 import static io.vavr.API.*;
 import static io.vavr.Predicates.instanceOf;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
@@ -43,7 +42,7 @@ public class RetryEventConsumerTest {
 
     @Before
     public void setUp(){
-        helloWorldService = Mockito.mock(HelloWorldService.class);
+        helloWorldService = mock(HelloWorldService.class);
         logger = mock(Logger.class);
         retry = Retry.ofDefaults("testName");
     }
@@ -59,7 +58,7 @@ public class RetryEventConsumerTest {
     @Test
     public void shouldConsumeOnSuccessEvent() {
         // Given the HelloWorldService returns Hello world
-        BDDMockito.given(helloWorldService.returnHelloWorld())
+        given(helloWorldService.returnHelloWorld())
                 .willThrow(new WebServiceException("BAM!"))
                 .willReturn("Hello world");
 
@@ -69,13 +68,13 @@ public class RetryEventConsumerTest {
 
         retry.executeSupplier(helloWorldService::returnHelloWorld);
 
-        BDDMockito.then(helloWorldService).should(Mockito.times(2)).returnHelloWorld();
+        then(helloWorldService).should(times(2)).returnHelloWorld();
         then(logger).should(times(1)).info("SUCCESS");
     }
 
     @Test
     public void shouldConsumeOnErrorEvent() {
-        BDDMockito.given(helloWorldService.returnHelloWorld())
+        given(helloWorldService.returnHelloWorld())
                 .willThrow(new WebServiceException("BAM!"));
 
         retry.getEventConsumer()
@@ -86,12 +85,12 @@ public class RetryEventConsumerTest {
         Try.ofSupplier(Retry.decorateSupplier(retry, helloWorldService::returnHelloWorld));
 
         then(logger).should(times(1)).info("ERROR");
-        BDDMockito.then(helloWorldService).should(Mockito.times(3)).returnHelloWorld();
+        then(helloWorldService).should(times(3)).returnHelloWorld();
     }
 
     @Test
     public void shouldConsumeIgnoredErrorEvent() {
-        BDDMockito.given(helloWorldService.returnHelloWorld())
+        given(helloWorldService.returnHelloWorld())
                 .willThrow(new WebServiceException("BAM!"));
 
         RetryConfig retryConfig = RetryConfig.custom()
@@ -108,7 +107,7 @@ public class RetryEventConsumerTest {
         Try.ofSupplier(Retry.decorateSupplier(retry, helloWorldService::returnHelloWorld));
 
         then(logger).should(times(1)).info("IGNORED_ERROR");
-        BDDMockito.then(helloWorldService).should(Mockito.times(1)).returnHelloWorld();
+        then(helloWorldService).should(times(1)).returnHelloWorld();
     }
 
 }

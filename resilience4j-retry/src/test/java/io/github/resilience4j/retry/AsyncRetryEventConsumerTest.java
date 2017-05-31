@@ -20,10 +20,8 @@ package io.github.resilience4j.retry;
 
 import io.github.resilience4j.test.AsyncHelloWorldService;
 import io.vavr.control.Try;
-import org.assertj.core.api.Assertions;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.Mockito;
 import org.slf4j.Logger;
 
 import javax.xml.ws.WebServiceException;
@@ -50,7 +48,7 @@ public class AsyncRetryEventConsumerTest {
 
     @Before
     public void setUp(){
-        helloWorldService = Mockito.mock(AsyncHelloWorldService.class);
+        helloWorldService = mock(AsyncHelloWorldService.class);
         logger = mock(Logger.class);
         retry = AsyncRetry.ofDefaults("testName");
     }
@@ -80,8 +78,8 @@ public class AsyncRetryEventConsumerTest {
         String result = awaitResult(retry.executeCompletionStage(scheduler,
                 () -> helloWorldService.returnHelloWorld()));
 
-        Assertions.assertThat(result).isEqualTo("Hello world");
-        then(helloWorldService).should(Mockito.times(2)).returnHelloWorld();
+        assertThat(result).isEqualTo("Hello world");
+        then(helloWorldService).should(times(2)).returnHelloWorld();
         then(logger).should(times(1)).info("SUCCESS");
     }
 
@@ -102,7 +100,7 @@ public class AsyncRetryEventConsumerTest {
                 () -> helloWorldService.returnHelloWorld())));
 
         then(logger).should(times(1)).info("ERROR");
-        then(helloWorldService).should(Mockito.times(3)).returnHelloWorld();
+        then(helloWorldService).should(times(3)).returnHelloWorld();
     }
 
     @Test
@@ -125,7 +123,7 @@ public class AsyncRetryEventConsumerTest {
                 () -> helloWorldService.returnHelloWorld())));
 
         then(logger).should(times(1)).info("IGNORED_ERROR");
-        then(helloWorldService).should(Mockito.times(1)).returnHelloWorld();
+        then(helloWorldService).should(times(1)).returnHelloWorld();
     }
 
 }
