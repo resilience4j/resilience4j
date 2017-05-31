@@ -64,8 +64,8 @@ public class RetryImpl implements Retry {
         this.maxAttempts = config.getMaxAttempts();
         this.intervalFunction = config.getIntervalFunction();
         this.exceptionPredicate = config.getExceptionPredicate();
-        PublishProcessor<RetryEvent> publisher = PublishProcessor.create();
         this.metrics = this.new RetryMetrics();
+        PublishProcessor<RetryEvent> publisher = PublishProcessor.create();
         this.eventPublisher = publisher.toSerialized();
         succeededAfterRetryCounter = new LongAdder();
         failedAfterRetryCounter = new LongAdder();

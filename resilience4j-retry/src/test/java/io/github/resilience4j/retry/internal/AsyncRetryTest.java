@@ -14,15 +14,13 @@ import javax.xml.ws.WebServiceException;
 import java.util.concurrent.*;
 import java.util.function.Supplier;
 
+import static io.github.resilience4j.retry.utils.AsyncUtils.awaitResult;
 import static java.util.concurrent.CompletableFuture.completedFuture;
-import static java.util.concurrent.CompletableFuture.supplyAsync;
 
 public class AsyncRetryTest {
-    private static final long DEFAULT_TIMEOUT_SECONDS = 5;
 
     private AsyncHelloWorldService helloWorldService;
     private ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
-
 
     @Before
     public void setUp(){
@@ -32,7 +30,8 @@ public class AsyncRetryTest {
     @Test
     public void shouldNotRetry() throws InterruptedException, ExecutionException, TimeoutException {
         // Given the HelloWorldService returns Hello world
-        BDDMockito.given(helloWorldService.returnHelloWorld()).willReturn(completedFuture("Hello world"));
+        BDDMockito.given(helloWorldService.returnHelloWorld())
+                .willReturn(completedFuture("Hello world"));
         // Create a Retry with default configuration
         AsyncRetry retryContext = AsyncRetry.ofDefaults("id");
         // Decorate the invocation of the HelloWorldService
@@ -73,9 +72,12 @@ public class AsyncRetryTest {
 
     @Test
     public void shouldRetryInCaseOfAnExceptionAtAsyncStage() {
+        CompletableFuture<String> failedFuture = new CompletableFuture<>();
+        failedFuture.completeExceptionally(new WebServiceException("BAM!"));
+
         // Given the HelloWorldService throws an exception
         BDDMockito.given(helloWorldService.returnHelloWorld())
-                .willReturn(supplyAsync(() -> { throw new WebServiceException("BAM!"); }))
+                .willReturn(failedFuture)
                 .willReturn(completedFuture("Hello world"));
 
         // Create a Retry with default configuration
@@ -131,7 +133,7 @@ public class AsyncRetryTest {
         Try<String> resultTry = Try.of(() -> awaitResult(supplier.get()));
 
         // Then the helloWorldService should be invoked n + 1  times
-        BDDMockito.then(helloWorldService).should(Mockito.times(noOfAttempts + 1)).returnHelloWorld();
+        BDDMockito.then(helloWorldService).should(Mockito.times(noOfAttempts)).returnHelloWorld();
         Assertions.assertThat(resultTry.isFailure()).isTrue();
         Assertions.assertThat(resultTry.getCause().getCause()).isInstanceOf(WebServiceException.class);
     }
@@ -152,9 +154,12 @@ public class AsyncRetryTest {
     }
 
     private void shouldCompleteFutureAfterAttemptsInCaseOfExceptionAtAsyncStage(int noOfAttempts) {
+        CompletableFuture<String> failedFuture = new CompletableFuture<>();
+        failedFuture.completeExceptionally(new WebServiceException("BAM!"));
+
         // Given the HelloWorldService throws an exception
         BDDMockito.given(helloWorldService.returnHelloWorld())
-                .willReturn(supplyAsync(() -> { throw new WebServiceException("BAM!"); }));
+                .willReturn(failedFuture);
 
         // Create a Retry with default configuration
         AsyncRetry retryContext = AsyncRetry.of(
@@ -173,37 +178,9 @@ public class AsyncRetryTest {
         Try<String> resultTry = Try.of(() -> awaitResult(supplier.get()));
 
         // Then the helloWorldService should be invoked n + 1 times
-        BDDMockito.then(helloWorldService).should(Mockito.times(noOfAttempts + 1)).returnHelloWorld();
+        BDDMockito.then(helloWorldService).should(Mockito.times(noOfAttempts)).returnHelloWorld();
         Assertions.assertThat(resultTry.isFailure()).isTrue();
         Assertions.assertThat(resultTry.getCause().getCause()).isInstanceOf(WebServiceException.class);
-    }
-
-    private static class RuntimeExecutionException extends RuntimeException {
-        RuntimeExecutionException(Throwable cause) {
-            super(cause);
-        }
-    }
-
-    private static <T> T awaitResult(CompletionStage<T> completionStage, long timeoutSeconds) {
-        try {
-            return completionStage.toCompletableFuture().get(timeoutSeconds, TimeUnit.SECONDS);
-        } catch (InterruptedException | TimeoutException e) {
-            throw new AssertionError(e);
-        } catch (ExecutionException e) {
-            throw new RuntimeExecutionException(e.getCause());
-        }
-    }
-
-    private static <T> T awaitResult(CompletionStage<T> completionStage) {
-        return awaitResult(completionStage, DEFAULT_TIMEOUT_SECONDS);
-    }
-
-    private static <T> T awaitResult(Supplier<CompletionStage<T>> completionStageSupplier, long timeoutSeconds) {
-        return awaitResult(completionStageSupplier.get(), timeoutSeconds);
-    }
-
-    private static <T> T awaitResult(Supplier<CompletionStage<T>> completionStageSupplier) {
-        return awaitResult(completionStageSupplier, DEFAULT_TIMEOUT_SECONDS);
     }
 
 }
