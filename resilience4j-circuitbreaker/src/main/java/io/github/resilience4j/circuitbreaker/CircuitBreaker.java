@@ -134,7 +134,7 @@ public interface CircuitBreaker {
     Flowable<CircuitBreakerEvent> getEventStream();
 
     /**
-     * Returns an EventConsumer which subsribes to the reactive stream of CircuitBreakerEvents and
+     * Returns an EventConsumer which subscribes to the reactive stream of CircuitBreakerEvents and
      * can be used to register event consumers.
      *
      * @return an EventConsumer

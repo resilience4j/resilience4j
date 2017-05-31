@@ -27,12 +27,14 @@ import io.reactivex.Flowable;
 import io.reactivex.processors.FlowableProcessor;
 import io.reactivex.processors.PublishProcessor;
 import io.vavr.CheckedFunction0;
+import io.vavr.Lazy;
 import io.vavr.control.Option;
 import io.vavr.control.Try;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.atomic.LongAdder;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 public class CacheImpl<K, V>  implements Cache<K,V> {
@@ -42,12 +44,14 @@ public class CacheImpl<K, V>  implements Cache<K,V> {
     private final javax.cache.Cache<K, V> cache;
     private final FlowableProcessor<CacheEvent> eventPublisher;
     private final CacheMetrics metrics;
+    private final Lazy<EventConsumer> lazyEventConsumer;
 
     public CacheImpl(javax.cache.Cache<K, V> cache) {
         this.cache = cache;
         PublishProcessor<CacheEvent> publisher = PublishProcessor.create();
         this.eventPublisher = publisher.toSerialized();
         this.metrics = new CacheMetrics();
+        this.lazyEventConsumer = Lazy.of(() -> new EventDispatcher(getEventStream()));
     }
 
     @Override
@@ -125,6 +129,64 @@ public class CacheImpl<K, V>  implements Cache<K,V> {
         return eventPublisher;
     }
 
+    @Override
+    public EventConsumer getEventConsumer() {
+        return lazyEventConsumer.get();
+    }
+
+    private class EventDispatcher implements EventConsumer, io.reactivex.functions.Consumer<CacheEvent> {
+
+        private volatile Consumer<CacheOnHitEvent> onCacheHitEventConsumer;
+        private volatile Consumer<CacheOnMissEvent> onCacheMissEventConsumer;
+        private volatile Consumer<CacheOnErrorEvent> onErrorEventConsumer;
+
+        EventDispatcher(Flowable<CacheEvent> eventStream) {
+            eventStream.subscribe(this);
+        }
+
+        @Override
+        public void accept(CacheEvent event) throws Exception {
+            CacheEvent.Type eventType = event.getEventType();
+            switch (eventType) {
+                case CACHE_HIT:
+                    if(onCacheHitEventConsumer != null){
+                        onCacheHitEventConsumer.accept((CacheOnHitEvent) event);
+                    }
+                    break;
+                case CACHE_MISS:
+                    if(onCacheMissEventConsumer != null) {
+                        onCacheMissEventConsumer.accept((CacheOnMissEvent) event);
+                    }
+                    break;
+                case ERROR:
+                    if(onErrorEventConsumer != null) {
+                        onErrorEventConsumer.accept((CacheOnErrorEvent) event);
+                    }
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        @Override
+        public EventConsumer onCacheHit(Consumer<CacheOnHitEvent> eventConsumer) {
+            this.onCacheHitEventConsumer = eventConsumer;
+            return this;
+        }
+
+        @Override
+        public EventConsumer onCacheMiss(Consumer<CacheOnMissEvent> eventConsumer) {
+            this.onCacheMissEventConsumer = eventConsumer;
+            return this;
+        }
+
+        @Override
+        public EventConsumer onError(Consumer<CacheOnErrorEvent> eventConsumer) {
+            this.onErrorEventConsumer = eventConsumer;
+            return this;
+        }
+    }
+
     private final class CacheMetrics implements Metrics {
 
         private final LongAdder cacheMisses;
@@ -134,11 +196,11 @@ public class CacheImpl<K, V>  implements Cache<K,V> {
             cacheHits = new LongAdder();
         }
 
-        public void onCacheMiss(){
+        void onCacheMiss(){
             cacheMisses.increment();
         }
 
-        public void onCacheHit(){
+        void onCacheHit(){
             cacheHits.increment();
         }
 
