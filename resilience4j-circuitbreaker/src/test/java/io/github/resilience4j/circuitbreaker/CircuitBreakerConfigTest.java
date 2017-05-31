@@ -47,7 +47,7 @@ public class CircuitBreakerConfigTest {
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void failureRateThresholdShouldFail() {
+    public void zeroFailureRateThresholdShouldFail() {
         CircuitBreakerConfig.custom().failureRateThreshold(0).build();
     }
 
@@ -70,6 +70,12 @@ public class CircuitBreakerConfigTest {
     public void shouldSetFailureRateThreshold() {
         CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom().failureRateThreshold(25).build();
         then(circuitBreakerConfig.getFailureRateThreshold()).isEqualTo(25);
+    }
+
+    @Test()
+    public void shouldSetLowFailureRateThreshold() {
+        CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom().failureRateThreshold(0.001f).build();
+        then(circuitBreakerConfig.getFailureRateThreshold()).isEqualTo(0.001f);
     }
 
     @Test()
