@@ -19,6 +19,8 @@
 package io.github.resilience4j.bulkhead;
 
 import io.github.resilience4j.bulkhead.event.BulkheadEvent;
+import io.github.resilience4j.bulkhead.event.BulkheadOnCallPermittedEvent;
+import io.github.resilience4j.bulkhead.event.BulkheadOnCallRejectedEvent;
 import io.github.resilience4j.bulkhead.internal.SemaphoreBulkhead;
 import io.github.resilience4j.bulkhead.utils.BulkheadUtils;
 import io.reactivex.Flowable;
@@ -90,6 +92,14 @@ public interface Bulkhead {
      * @return a stream of events
      */
     Flowable<BulkheadEvent> getEventStream();
+
+    /**
+     * Returns an EventConsumer which subscribes to the reactive stream of BulkheadEvent and
+     * can be used to register event consumers.
+     *
+     * @return an EventConsumer
+     */
+    EventConsumer getEventConsumer();
 
     /**
      * Decorates and executes the decorated Supplier.
@@ -403,5 +413,17 @@ public interface Bulkhead {
          * @return remaining bulkhead depth
          */
         int getAvailableConcurrentCalls();
+    }
+
+    /**
+     * An EventConsumer which subscribes to the reactive stream of CacheEvents and
+     * can be used to register event consumers.
+     */
+    interface EventConsumer {
+
+        EventConsumer onCallRejected(Consumer<BulkheadOnCallRejectedEvent> eventConsumer);
+
+        EventConsumer onCallPermitted(Consumer<BulkheadOnCallPermittedEvent> eventConsumer);
+
     }
 }

@@ -19,7 +19,6 @@
 package io.github.resilience4j.cache;
 
 import io.vavr.CheckedFunction1;
-import io.vavr.control.Try;
 import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -40,6 +39,15 @@ public class CacheEventConsumerTest {
     public void setUp(){
         cache = mock(javax.cache.Cache.class);
         logger = mock(Logger.class);
+    }
+
+    @Test
+    public void shouldReturnTheSameConsumer() {
+        Cache<String, String> cacheContext = Cache.of(cache);
+        Cache.EventConsumer eventConsumer = cacheContext.getEventConsumer();
+        Cache.EventConsumer eventConsumer2 = cacheContext.getEventConsumer();
+
+        assertThat(eventConsumer).isEqualTo(eventConsumer2);
     }
 
     @Test
@@ -84,7 +92,8 @@ public class CacheEventConsumerTest {
                 logger.info(event.getEventType().toString()));
 
         CheckedFunction1<String, String> cachedFunction = Cache.decorateCheckedSupplier(cacheContext, () -> "Hello world");
-        Try.of(() -> cachedFunction.apply("testKey"));
+        String value = cachedFunction.apply("testKey");
+        assertThat(value).isEqualTo("Hello world");
 
         then(logger).should(times(1)).info("ERROR");
     }
