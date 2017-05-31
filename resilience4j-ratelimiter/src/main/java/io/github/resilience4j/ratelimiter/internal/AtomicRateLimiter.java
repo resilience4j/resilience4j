@@ -26,6 +26,7 @@ import io.github.resilience4j.ratelimiter.event.RateLimiterOnSuccessEvent;
 import io.reactivex.Flowable;
 import io.reactivex.processors.FlowableProcessor;
 import io.reactivex.processors.PublishProcessor;
+import io.vavr.Lazy;
 
 import java.time.Duration;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -57,6 +58,7 @@ public class AtomicRateLimiter implements RateLimiter {
     private final AtomicInteger waitingThreads;
     private final AtomicReference<State> state;
     private final FlowableProcessor<RateLimiterEvent> eventPublisher;
+    private final Lazy<EventConsumer> lazyEventConsumer;
 
 
     public AtomicRateLimiter(String name, RateLimiterConfig rateLimiterConfig) {
@@ -71,6 +73,7 @@ public class AtomicRateLimiter implements RateLimiter {
 
         PublishProcessor<RateLimiterEvent> publisher = PublishProcessor.create();
         this.eventPublisher = publisher.toSerialized();
+        this.lazyEventConsumer = Lazy.of(() -> new EventDispatcher(getEventStream()));
     }
 
     /**
@@ -278,6 +281,11 @@ public class AtomicRateLimiter implements RateLimiter {
     @Override
     public Flowable<RateLimiterEvent> getEventStream() {
         return eventPublisher;
+    }
+
+    @Override
+    public EventConsumer getEventConsumer() {
+        return lazyEventConsumer.get();
     }
 
     @Override public String toString() {
