@@ -87,13 +87,13 @@ public class CircuitBreakerConfig {
         /**
          * Configures the failure rate threshold in percentage above which the CircuitBreaker should trip open and start short-circuiting calls.
          *
-         * The threshold must be between 1 and 100. Default value is 50 percentage.
+         * The threshold must be greater than 0 and not greater than 100. Default value is 50 percentage.
          *
          * @param failureRateThreshold the failure rate threshold in percentage
          * @return the CircuitBreakerConfig.Builder
          */
-        public Builder failureRateThreshold(int failureRateThreshold) {
-            if (failureRateThreshold < 1 || failureRateThreshold > 100) {
+        public Builder failureRateThreshold(float failureRateThreshold) {
+            if (failureRateThreshold <= 0 || failureRateThreshold > 100) {
                 throw new IllegalArgumentException("failureRateThreshold must be between 1 and 100");
             }
             config.failureRateThreshold = failureRateThreshold;

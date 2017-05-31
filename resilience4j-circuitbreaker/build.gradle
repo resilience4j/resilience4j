@@ -4,5 +4,4 @@ dependencies {
     compile project(':resilience4j-core')
     compile ( libraries.rxjava2)
     testCompile project(':resilience4j-test')
-    testCompile ( libraries.metrics_healthcheck)
 }
