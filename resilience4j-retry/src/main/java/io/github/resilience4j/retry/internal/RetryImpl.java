@@ -28,12 +28,14 @@ import io.reactivex.Flowable;
 import io.reactivex.processors.FlowableProcessor;
 import io.reactivex.processors.PublishProcessor;
 import io.vavr.CheckedConsumer;
+import io.vavr.Lazy;
 import io.vavr.control.Option;
 import io.vavr.control.Try;
 
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.atomic.LongAdder;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -54,6 +56,7 @@ public class RetryImpl implements Retry {
     private LongAdder succeededWithoutRetryCounter;
     private LongAdder failedWithoutRetryCounter;
     /*package*/ static CheckedConsumer<Long> sleepFunction = Thread::sleep;
+    private final Lazy<EventConsumer> lazyEventConsumer;
 
     public RetryImpl(String name, RetryConfig config){
         this.name = name;
@@ -68,6 +71,7 @@ public class RetryImpl implements Retry {
         failedAfterRetryCounter = new LongAdder();
         succeededWithoutRetryCounter = new LongAdder();
         failedWithoutRetryCounter = new LongAdder();
+        this.lazyEventConsumer = Lazy.of(() -> new EventDispatcher(getEventStream()));
     }
 
     public final class ContextImpl implements Retry.Context {
@@ -107,6 +111,7 @@ public class RetryImpl implements Retry {
                 throwOrSleepAfterRuntimeException();
             }else{
                 failedWithoutRetryCounter.increment();
+                publishRetryEvent(() -> new RetryOnIgnoredErrorEvent(getName(), runtimeException));
                 throw runtimeException;
             }
         }
@@ -175,6 +180,64 @@ public class RetryImpl implements Retry {
     @Override
     public Flowable<RetryEvent> getEventStream() {
         return eventPublisher;
+    }
+
+    @Override
+    public EventConsumer getEventConsumer() {
+        return lazyEventConsumer.get();
+    }
+
+    private class EventDispatcher implements EventConsumer, io.reactivex.functions.Consumer<RetryEvent> {
+
+        private volatile Consumer<RetryOnSuccessEvent> onSuccessEventConsumer;
+        private volatile Consumer<RetryOnErrorEvent> onErrorEventConsumer;
+        private volatile Consumer<RetryOnIgnoredErrorEvent> onIgnoredErrorEventConsumer;
+
+        EventDispatcher(Flowable<RetryEvent> eventStream) {
+            eventStream.subscribe(this);
+        }
+
+        @Override
+        public EventConsumer onSuccess(Consumer<RetryOnSuccessEvent> onSuccessEventConsumer) {
+            this.onSuccessEventConsumer = onSuccessEventConsumer;
+            return this;
+        }
+
+        @Override
+        public EventConsumer onError(Consumer<RetryOnErrorEvent> onErrorEventConsumer) {
+            this.onErrorEventConsumer = onErrorEventConsumer;
+            return this;
+        }
+
+        @Override
+        public EventConsumer onIgnoredError(Consumer<RetryOnIgnoredErrorEvent> onIgnoredErrorEventConsumer) {
+            this.onIgnoredErrorEventConsumer = onIgnoredErrorEventConsumer;
+            return this;
+        }
+
+        @Override
+        public void accept(RetryEvent event) throws Exception {
+            RetryEvent.Type eventType = event.getEventType();
+            switch (eventType) {
+                case SUCCESS:
+                    if(onSuccessEventConsumer != null){
+                        onSuccessEventConsumer.accept((RetryOnSuccessEvent) event);
+                    }
+                    break;
+                case ERROR:
+                    if(onErrorEventConsumer != null) {
+                        onErrorEventConsumer.accept((RetryOnErrorEvent) event);
+                    }
+                    break;
+                case IGNORED_ERROR:
+                    if(onIgnoredErrorEventConsumer != null) {
+                        onIgnoredErrorEventConsumer.accept((RetryOnIgnoredErrorEvent) event);
+                    }
+                    break;
+                default:
+                    break;
+            }
+        }
     }
 
     /**

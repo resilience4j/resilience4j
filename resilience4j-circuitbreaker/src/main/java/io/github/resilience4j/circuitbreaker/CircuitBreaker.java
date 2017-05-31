@@ -264,7 +264,7 @@ public interface CircuitBreaker {
     }
 
     /**
-     * An EventConsumer which subsribes to the reactive stream of CircuitBreakerEvents and
+     * An EventConsumer which subscribes to the reactive stream of CircuitBreakerEvents and
      * can be used to register event consumers.
      */
     interface EventConsumer {
