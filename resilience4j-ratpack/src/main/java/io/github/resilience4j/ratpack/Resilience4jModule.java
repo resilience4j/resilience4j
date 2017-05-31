@@ -19,10 +19,16 @@ import com.codahale.metrics.MetricRegistry;
 import com.google.inject.Injector;
 import com.google.inject.Key;
 import com.google.inject.Provides;
+import com.google.inject.Scopes;
+import com.google.inject.TypeLiteral;
 import com.google.inject.matcher.Matchers;
+import com.google.inject.multibindings.Multibinder;
 import com.google.inject.multibindings.OptionalBinder;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
+import io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent;
+import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
+import io.github.resilience4j.consumer.EventConsumerRegistry;
 import io.github.resilience4j.metrics.CircuitBreakerMetrics;
 import io.github.resilience4j.metrics.RateLimiterMetrics;
 import io.github.resilience4j.metrics.RetryMetrics;
@@ -30,18 +36,25 @@ import io.github.resilience4j.prometheus.CircuitBreakerExports;
 import io.github.resilience4j.prometheus.RateLimiterExports;
 import io.github.resilience4j.ratelimiter.RateLimiterConfig;
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
+import io.github.resilience4j.ratelimiter.event.RateLimiterEvent;
 import io.github.resilience4j.ratpack.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.ratpack.circuitbreaker.CircuitBreakerMethodInterceptor;
+import io.github.resilience4j.ratpack.circuitbreaker.endpoint.CircuitBreakerChain;
 import io.github.resilience4j.ratpack.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratpack.ratelimiter.RateLimiterMethodInterceptor;
+import io.github.resilience4j.ratpack.ratelimiter.endpoint.RateLimiterChain;
 import io.github.resilience4j.ratpack.retry.Retry;
 import io.github.resilience4j.ratpack.retry.RetryMethodInterceptor;
+import io.github.resilience4j.ratpack.retry.endpoint.RetryChain;
 import io.github.resilience4j.retry.RetryConfig;
 import io.github.resilience4j.retry.RetryRegistry;
+import io.github.resilience4j.retry.event.RetryEvent;
 import io.prometheus.client.CollectorRegistry;
 import ratpack.api.Nullable;
 import ratpack.dropwizard.metrics.DropwizardMetricsModule;
 import ratpack.guice.ConfigurableModule;
+import ratpack.handling.HandlerDecorator;
+import ratpack.handling.Handlers;
 import ratpack.service.Service;
 import ratpack.service.StartEvent;
 
@@ -70,6 +83,7 @@ public class Resilience4jModule extends ConfigurableModule<Resilience4jConfig> {
 
     @Override
     protected void configure() {
+        // interceptors
         bindInterceptor(Matchers.any(), Matchers.annotatedWith(CircuitBreaker.class), injected(new CircuitBreakerMethodInterceptor()));
         bindInterceptor(Matchers.any(), Matchers.annotatedWith(RateLimiter.class), injected(new RateLimiterMethodInterceptor()));
         bindInterceptor(Matchers.any(), Matchers.annotatedWith(Retry.class), injected(new RetryMethodInterceptor()));
@@ -77,10 +91,44 @@ public class Resilience4jModule extends ConfigurableModule<Resilience4jConfig> {
         bindInterceptor(Matchers.annotatedWith(RateLimiter.class), Matchers.any(), injected(new RateLimiterMethodInterceptor()));
         bindInterceptor(Matchers.annotatedWith(Retry.class), Matchers.any(), injected(new RetryMethodInterceptor()));
 
+        // default registries
         OptionalBinder.newOptionalBinder(binder(), CircuitBreakerRegistry.class).setDefault().toInstance(CircuitBreakerRegistry.ofDefaults());
         OptionalBinder.newOptionalBinder(binder(), RateLimiterRegistry.class).setDefault().toInstance(RateLimiterRegistry.ofDefaults());
         OptionalBinder.newOptionalBinder(binder(), RetryRegistry.class).setDefault().toInstance(RetryRegistry.ofDefaults());
 
+        // event consumers
+        bind(new TypeLiteral<EventConsumerRegistry<CircuitBreakerEvent>>() {}).toInstance(new DefaultEventConsumerRegistry<>());
+        bind(new TypeLiteral<EventConsumerRegistry<RateLimiterEvent>>() {}).toInstance(new DefaultEventConsumerRegistry<>());
+        bind(new TypeLiteral<EventConsumerRegistry<RetryEvent>>() {}).toInstance(new DefaultEventConsumerRegistry<>());
+
+        // event chains
+        Multibinder<HandlerDecorator> binder = Multibinder.newSetBinder(binder(), HandlerDecorator.class);
+        bind(CircuitBreakerChain.class).in(Scopes.SINGLETON);
+        bind(RateLimiterChain.class).in(Scopes.SINGLETON);
+        bind(RetryChain.class).in(Scopes.SINGLETON);
+        binder.addBinding().toProvider(() -> (registry, rest) -> {
+            if (registry.get(Resilience4jConfig.class).getEndpoints().getCircuitBreakers().isEnabled()) {
+                return Handlers.chain(Handlers.chain(registry, registry.get(CircuitBreakerChain.class)), rest);
+            } else {
+                return rest;
+            }
+        });
+        binder.addBinding().toProvider(() -> (registry, rest) -> {
+            if (registry.get(Resilience4jConfig.class).getEndpoints().getRateLimiters().isEnabled()) {
+                return Handlers.chain(Handlers.chain(registry, registry.get(RateLimiterChain.class)), rest);
+            } else {
+                return rest;
+            }
+        });
+        binder.addBinding().toProvider(() -> (registry, rest) -> {
+            if (registry.get(Resilience4jConfig.class).getEndpoints().getRetries().isEnabled()) {
+                return Handlers.chain(Handlers.chain(registry, registry.get(RetryChain.class)), rest);
+            } else {
+                return rest;
+            }
+        });
+
+        // startup
         bind(Resilience4jService.class);
     }
 
@@ -157,45 +205,62 @@ public class Resilience4jModule extends ConfigurableModule<Resilience4jConfig> {
         @Override
         public void onStart(StartEvent event) throws Exception {
 
+            EndpointsConfig endpointsConfig = event.getRegistry().get(Resilience4jConfig.class).getEndpoints();
+
             // build circuit breakers
             CircuitBreakerRegistry circuitBreakerRegistry = injector.getInstance(CircuitBreakerRegistry.class);
+            EventConsumerRegistry<CircuitBreakerEvent> cbConsumerRegistry = injector.getInstance(Key.get(new TypeLiteral<EventConsumerRegistry<CircuitBreakerEvent>>() {}));
             config.getCircuitBreakers().forEach((name, circuitBreakerConfig) -> {
+                io.github.resilience4j.circuitbreaker.CircuitBreaker circuitBreaker;
                 if (circuitBreakerConfig.getDefaults()) {
-                    circuitBreakerRegistry.circuitBreaker(name);
+                    circuitBreaker = circuitBreakerRegistry.circuitBreaker(name);
                 } else {
-                    circuitBreakerRegistry.circuitBreaker(name, CircuitBreakerConfig.custom()
+                    circuitBreaker = circuitBreakerRegistry.circuitBreaker(name, CircuitBreakerConfig.custom()
                             .failureRateThreshold(circuitBreakerConfig.getFailureRateThreshold())
                             .ringBufferSizeInClosedState(circuitBreakerConfig.getRingBufferSizeInClosedState())
                             .ringBufferSizeInHalfOpenState(circuitBreakerConfig.getRingBufferSizeInHalfOpenState())
                             .waitDurationInOpenState(Duration.ofMillis(circuitBreakerConfig.getWaitIntervalInMillis()))
                             .build());
                 }
+                if (endpointsConfig.getCircuitBreakers().isEnabled()) {
+                    circuitBreaker.getEventStream().subscribe(cbConsumerRegistry.createEventConsumer(name, endpointsConfig.getCircuitBreakers().getEventConsumerBufferSize()));
+                }
             });
 
             // build rate limiters
             RateLimiterRegistry rateLimiterRegistry = injector.getInstance(RateLimiterRegistry.class);
+            EventConsumerRegistry<RateLimiterEvent> rlConsumerRegistry = injector.getInstance(Key.get(new TypeLiteral<EventConsumerRegistry<RateLimiterEvent>>() {}));
             config.getRateLimiters().forEach((name, rateLimiterConfig) -> {
+                io.github.resilience4j.ratelimiter.RateLimiter rateLimiter;
                 if (rateLimiterConfig.getDefaults()) {
-                    rateLimiterRegistry.rateLimiter(name);
+                    rateLimiter = rateLimiterRegistry.rateLimiter(name);
                 } else {
-                    rateLimiterRegistry.rateLimiter(name, RateLimiterConfig.custom()
+                    rateLimiter = rateLimiterRegistry.rateLimiter(name, RateLimiterConfig.custom()
                             .limitForPeriod(rateLimiterConfig.getLimitForPeriod())
                             .limitRefreshPeriod(Duration.ofNanos(rateLimiterConfig.getLimitRefreshPeriodInNanos()))
                             .timeoutDuration(Duration.ofMillis(rateLimiterConfig.getTimeoutInMillis()))
                             .build());
                 }
+                if (endpointsConfig.getRateLimiters().isEnabled()) {
+                    rateLimiter.getEventStream().subscribe(rlConsumerRegistry.createEventConsumer(name, endpointsConfig.getRateLimiters().getEventConsumerBufferSize()));
+                }
             });
 
             // build retries
             RetryRegistry retryRegistry = injector.getInstance(RetryRegistry.class);
+            EventConsumerRegistry<RetryEvent> rConsumerRegistry = injector.getInstance(Key.get(new TypeLiteral<EventConsumerRegistry<RetryEvent>>() {}));
             config.getRetries().forEach((name, retryConfig) -> {
+                io.github.resilience4j.retry.Retry retry;
                 if (retryConfig.getDefaults()) {
-                    retryRegistry.retry(name);
+                    retry = retryRegistry.retry(name);
                 } else {
-                    retryRegistry.retry(name, RetryConfig.custom()
+                    retry = retryRegistry.retry(name, RetryConfig.custom()
                             .maxAttempts(retryConfig.getMaxAttempts())
                             .waitDuration(Duration.ofMillis(retryConfig.getWaitDurationInMillis()))
                             .build());
+                }
+                if (endpointsConfig.getRetries().isEnabled()) {
+                    retry.getEventStream().subscribe(rConsumerRegistry.createEventConsumer(name, endpointsConfig.getRetries().getEventConsumerBufferSize()));
                 }
             });
 

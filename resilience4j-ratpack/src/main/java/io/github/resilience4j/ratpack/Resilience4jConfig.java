@@ -32,6 +32,7 @@ public class Resilience4jConfig {
     private Map<String, RetryConfig> retries = new HashMap<>();
     private boolean metrics = false;
     private boolean prometheus = false;
+    private EndpointsConfig endpoints = new EndpointsConfig();
 
     public Resilience4jConfig circuitBreaker(String name, Function<? super CircuitBreakerConfig, ? extends CircuitBreakerConfig> configure) {
         try {
@@ -73,6 +74,15 @@ public class Resilience4jConfig {
         return this;
     }
 
+    public Resilience4jConfig endpoints(Function<? super EndpointsConfig, ? extends EndpointsConfig> configure) {
+        try {
+            endpoints = configure.apply(new EndpointsConfig());
+            return this;
+        } catch (Exception e) {
+            throw uncheck(e);
+        }
+    }
+
     public Map<String, CircuitBreakerConfig> getCircuitBreakers() {
         return circuitBreakers;
     }
@@ -91,5 +101,9 @@ public class Resilience4jConfig {
 
     public boolean isPrometheus() {
         return prometheus;
+    }
+
+    public EndpointsConfig getEndpoints() {
+        return endpoints;
     }
 }

@@ -340,16 +340,199 @@ public class MyModule extends AbstractModule {
 }
 ----
 
+==== Event Monitoring
 
+===== CircuitBreaker
 
-==== Monitoring
-TODO
-Ratpack provides the concept of a health check. See https://ratpack.io/manual/current/api/ratpack/health/HealthCheckHandler.html for details.
-CircuitBreaker, RateLimiter, and Retry health checks have not been implemented yet.
-When implemented they should function similarly to the spring boot health checks.
+The emitted CircuitBreaker events are stored in a separate circular event consumer buffers. The size of a event consumer buffer can be configured per CircuitBreaker in the application.yml file (eventConsumerBufferSize).
+The demo adds a custom Ratpack actuator endpoint which can be used to monitor the emitted events of your CircuitBreakers.
+The endpoint `/circuitbreaker` lists the names of all CircuitBreaker instances.
+For example:
 
-==== CircuitBreaker Event Monitoring
-TODO
-Handlers for displaying the last X CircuitBreaker, Ratelimiter, or Retry events are not yet implemented.
-When implemented they should function similarly to the spring boot management endpoints.
+----
+{
+    "circuitBreakers": [
+      "backendA",
+      "backendB"
+    ]
+}
+----
 
+The endpoint `/circuitbreaker/events` lists the latest 100 emitted events of all CircuitBreaker instances.
+The endpoint `/circuitbreaker/stream/events` streams emitted events of all CircuitBreaker instances using Server-Sent Events.
+
+----
+{
+"circuitBreakerEvents":[
+  {
+    "circuitBreakerName": "backendA",
+    "type": "ERROR",
+    "creationTime": "2017-01-10T15:39:17.117+01:00[Europe/Berlin]",
+    "errorMessage": "org.springframework.web.client.HttpServerErrorException: 500 This is a remote exception",
+    "durationInMs": 0
+  },
+  {
+    "circuitBreakerName": "backendA",
+    "type": "SUCCESS",
+    "creationTime": "2017-01-10T15:39:20.518+01:00[Europe/Berlin]",
+    "durationInMs": 0
+  },
+  {
+    "circuitBreakerName": "backendB",
+    "type": "ERROR",
+    "creationTime": "2017-01-10T15:41:31.159+01:00[Europe/Berlin]",
+    "errorMessage": "org.springframework.web.client.HttpServerErrorException: 500 This is a remote exception",
+    "durationInMs": 0
+  },
+  {
+    "circuitBreakerName": "backendB",
+    "type": "SUCCESS",
+    "creationTime": "2017-01-10T15:41:33.526+01:00[Europe/Berlin]",
+    "durationInMs": 0
+  }
+]
+}
+----
+
+The endpoint `/circuitbreaker/events/{circuitBreakerName}` lists the latest emitted events of a specific CircuitBreaker.
+The endpoint `/circuitbreaker/stream/events/{circuitBreakerName}` streams emitted events using Server-Sent Events.
+For example `/circuitbreaker/events/backendA`:
+
+----
+{
+"circuitBreakerEvents":[
+  {
+    "circuitBreakerName": "backendA",
+    "type": "ERROR",
+    "creationTime": "2017-01-10T15:39:17.117+01:00[Europe/Berlin]",
+    "errorMessage": "org.springframework.web.client.HttpServerErrorException: 500 This is a remote exception",
+    "durationInMs": 0
+  },
+  {
+    "circuitBreakerName": "backendA",
+    "type": "SUCCESS",
+    "creationTime": "2017-01-10T15:39:20.518+01:00[Europe/Berlin]",
+    "durationInMs": 0
+  },
+  {
+    "circuitBreakerName": "backendA",
+    "type": "STATE_TRANSITION",
+    "creationTime": "2017-01-10T15:39:22.341+01:00[Europe/Berlin]",
+    "stateTransition": "CLOSED_TO_OPEN"
+  },
+  {
+    "circuitBreakerName": "backendA",
+    "type": "NOT_PERMITTED",
+    "creationTime": "2017-01-10T15:39:22.780+01:00[Europe/Berlin]"
+  }
+]
+}
+----
+
+You can even filter the list of  events.
+The endpoint `/circuitbreaker/events/{circuitBreakerName}/{eventType}` lists the filtered events.
+The endpoint `/circuitbreaker/stream/events/{circuitBreakerName}/{eventType}` streams emitted events using Server-Sent Events.
+Event types can be:
+
+* ERROR: A CircuitBreakerEvent which informs that an error has been recorded.
+* IGNORED_ERROR: A CircuitBreakerEvent which informs that an error has been ignored.
+* SUCCESS: A CircuitBreakerEvent which informs that a success has been recorded.
+* NOT_PERMITTED: A CircuitBreakerEvent which informs that a call was not permitted because the CircuitBreaker state is OPEN.
+* STATE_TRANSITION: A CircuitBreakerEvent which informs the state of the CircuitBreaker has been changed.
+
+For example /circuitbreaker/events/backendA/ERROR`:
+----
+{
+"circuitBreakerEvents":[
+  {
+    "circuitBreakerName": "backendA",
+    "type": "ERROR",
+    "creationTime": "2017-01-10T15:42:59.324+01:00[Europe/Berlin]",
+    "errorMessage": "org.springframework.web.client.HttpServerErrorException: 500 This is a remote exception",
+    "durationInMs": 0
+  },
+  {
+    "circuitBreakerName": "backendA",
+    "type": "ERROR",
+    "creationTime": "2017-01-10T15:43:22.802+01:00[Europe/Berlin]",
+    "errorMessage": "org.springframework.web.client.HttpServerErrorException: 500 This is a remote exception",
+    "durationInMs": 0
+  }
+]
+}
+----
+
+===== RateLimiter
+These are the same endpoints as implemented for CircuitBreaker,
+so for detailed documentation please refer to previous section.
+
+List of available endpoints:
+
+* `/ratelimiter/events`
+* `/ratelimiter/stream/events`
+* `/ratelimiter/events/{retryName}`
+* `/ratelimiter/stream/events/{retryName}`
+* `/ratelimiter/events/{retryName}/{eventType}`
+* `/ratelimiter/stream/events/{retryName}/{eventType}`
+
+Example of response:
+----
+{
+  "rateLimiterEvents": [
+    {
+      "rateLimiterName": "backendA",
+      "rateLimiterEventType": "SUCCESSFUL_ACQUIRE",
+      "rateLimiterCreationTime": "2017-05-05T21:29:40.463+03:00[Europe/Uzhgorod]"
+    },
+    {
+      "rateLimiterName": "backendA",
+      "rateLimiterEventType": "SUCCESSFUL_ACQUIRE",
+      "rateLimiterCreationTime": "2017-05-05T21:29:40.469+03:00[Europe/Uzhgorod]"
+    },
+    {
+      "rateLimiterName": "backendA",
+      "rateLimiterEventType": "FAILED_ACQUIRE",
+      "rateLimiterCreationTime": "2017-05-05T21:29:41.268+03:00[Europe/Uzhgorod]"
+    }
+  ]
+}
+----
+
+===== Retry
+These are the same endpoints as implemented for CircuitBreaker,
+so for detailed documentation please refer to previous sections.
+
+List of available endpoints:
+
+* `/retry/events`
+* `/retry/stream/events`
+* `/retry/events/{retryName}`
+* `/retry/stream/events/{retryName}`
+* `/retry/events/{retryName}/{eventType}`
+* `/retry/stream/events/{retryName}/{eventType}`
+
+Example of response:
+----
+{
+  "retryEvents": [
+    {
+      "retryName": "backendA",
+      "retryEventType": "ERROR",
+      "numberOfRetryAttempts":3,
+      "retryCreationTime": "2017-05-05T21:29:40.463+03:00[Europe/Uzhgorod]"
+    },
+    {
+      "retryName": "backendA",
+      "retryEventType": "ERROR",
+      "numberOfRetryAttempts":3,
+      "retryCreationTime": "2017-05-05T21:29:40.469+03:00[Europe/Uzhgorod]"
+    },
+    {
+      "retryName": "backendA",
+      "retryEventType": "ERROR",
+      "numberOfRetryAttempts":3,
+      "retryCreationTime": "2017-05-05T21:29:41.268+03:00[Europe/Uzhgorod]"
+    }
+  ]
+}
+----
