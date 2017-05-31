@@ -258,28 +258,33 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
         }
 
         @Override
-        public void onSuccessEventConsumer(Consumer<CircuitBreakerOnSuccessEvent> onSuccessEventConsumer) {
+        public EventConsumer onSuccess(Consumer<CircuitBreakerOnSuccessEvent> onSuccessEventConsumer) {
             this.onSuccessEventConsumer = onSuccessEventConsumer;
+            return this;
         }
 
         @Override
-        public void onErrorEventConsumer(Consumer<CircuitBreakerOnErrorEvent> onErrorEventConsumer) {
+        public EventConsumer onError(Consumer<CircuitBreakerOnErrorEvent> onErrorEventConsumer) {
             this.onErrorEventConsumer = onErrorEventConsumer;
+            return this;
         }
 
         @Override
-        public void onStateTransitionConsumer(Consumer<CircuitBreakerOnStateTransitionEvent> onStateTransitionEventConsumer) {
+        public EventConsumer onStateTransition(Consumer<CircuitBreakerOnStateTransitionEvent> onStateTransitionEventConsumer) {
             this.onStateTransitionEventConsumer = onStateTransitionEventConsumer;
+            return this;
         }
 
         @Override
-        public void onIgnoredErrorConsumer(Consumer<CircuitBreakerOnIgnoredErrorEvent> onIgnoredErrorEventConsumer) {
+        public EventConsumer onIgnoredError(Consumer<CircuitBreakerOnIgnoredErrorEvent> onIgnoredErrorEventConsumer) {
             this.onIgnoredErrorEventConsumer = onIgnoredErrorEventConsumer;
+            return this;
         }
 
         @Override
-        public void onCallNotPermittedConsumer(Consumer<CircuitBreakerOnCallNotPermittedEvent> onCallNotPermittedEventConsumer) {
+        public EventConsumer onCallNotPermitted(Consumer<CircuitBreakerOnCallNotPermittedEvent> onCallNotPermittedEventConsumer) {
             this.onCallNotPermittedEventConsumer = onCallNotPermittedEventConsumer;
+            return this;
         }
 
         @Override

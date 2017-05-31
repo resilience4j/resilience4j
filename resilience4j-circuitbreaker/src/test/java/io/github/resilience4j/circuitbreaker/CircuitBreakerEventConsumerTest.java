@@ -54,7 +54,7 @@ public class CircuitBreakerEventConsumerTest {
     @Test
     public void shouldConsumeOnSuccessEvent() {
         circuitBreaker.getEventConsumer()
-                .onSuccessEventConsumer(event ->
+                .onSuccess(event ->
                         logger.info(event.getEventType().toString()));
 
 
@@ -67,7 +67,7 @@ public class CircuitBreakerEventConsumerTest {
     @Test
     public void shouldConsumeOnErrorEvent() {
         circuitBreaker.getEventConsumer()
-                .onErrorEventConsumer(event ->
+                .onError(event ->
                         logger.info(event.getEventType().toString()));
 
 
@@ -82,7 +82,7 @@ public class CircuitBreakerEventConsumerTest {
                 .ringBufferSizeInClosedState(1).build());
 
         circuitBreaker.getEventConsumer()
-                .onStateTransitionConsumer(event ->
+                .onStateTransition(event ->
                         logger.info(event.getEventType().toString()));
 
 
@@ -90,7 +90,7 @@ public class CircuitBreakerEventConsumerTest {
         circuitBreaker.onError(1000, new IOException("BAM!"));
 
 
-        then(logger).should(times(1)).debug("STATE_TRANSITION");
+        then(logger).should(times(1)).info("STATE_TRANSITION");
     }
 
 
@@ -100,7 +100,7 @@ public class CircuitBreakerEventConsumerTest {
                 .ringBufferSizeInClosedState(1).build());
 
         circuitBreaker.getEventConsumer()
-                .onCallNotPermittedConsumer(event ->
+                .onCallNotPermitted(event ->
                         logger.info(event.getEventType().toString()));
 
 
@@ -123,7 +123,7 @@ public class CircuitBreakerEventConsumerTest {
         circuitBreaker = CircuitBreaker.of("test", circuitBreakerConfig);
 
         circuitBreaker.getEventConsumer()
-                .onIgnoredErrorConsumer(event ->
+                .onIgnoredError(event ->
                         logger.info(event.getEventType().toString()));
 
 

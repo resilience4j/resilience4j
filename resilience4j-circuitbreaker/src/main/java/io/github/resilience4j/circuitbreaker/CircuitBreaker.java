@@ -269,15 +269,15 @@ public interface CircuitBreaker {
      */
     interface EventConsumer {
 
-        void onSuccessEventConsumer(Consumer<CircuitBreakerOnSuccessEvent> eventConsumer);
+        EventConsumer onSuccess(Consumer<CircuitBreakerOnSuccessEvent> eventConsumer);
 
-        void onErrorEventConsumer(Consumer<CircuitBreakerOnErrorEvent> eventConsumer);
+        EventConsumer onError(Consumer<CircuitBreakerOnErrorEvent> eventConsumer);
 
-        void onStateTransitionConsumer(Consumer<CircuitBreakerOnStateTransitionEvent> eventConsumer);
+        EventConsumer onStateTransition(Consumer<CircuitBreakerOnStateTransitionEvent> eventConsumer);
 
-        void onIgnoredErrorConsumer(Consumer<CircuitBreakerOnIgnoredErrorEvent> eventConsumer);
+        EventConsumer onIgnoredError(Consumer<CircuitBreakerOnIgnoredErrorEvent> eventConsumer);
 
-        void onCallNotPermittedConsumer(Consumer<CircuitBreakerOnCallNotPermittedEvent> eventConsumer);
+        EventConsumer onCallNotPermitted(Consumer<CircuitBreakerOnCallNotPermittedEvent> eventConsumer);
 
     }
 
