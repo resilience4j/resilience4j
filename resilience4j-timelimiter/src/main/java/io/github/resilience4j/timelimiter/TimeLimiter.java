@@ -48,28 +48,6 @@ public interface TimeLimiter {
     }
 
     /**
-     * Creates a Callable that is restricted by a TimeLimiter.
-     *
-     * @param timeLimiter   the TimeLimiter
-     * @param future        the original future
-     * @param <T> the type of results supplied by the future
-     * @param <F> the future type supplied
-     * @return a future which is restricted by a {@link TimeLimiter}.
-     */
-    static <T, F extends Future<T>> Callable<T> decorateFuture(final TimeLimiter timeLimiter, final F future) {
-        return () -> {
-            try {
-                return future.get(timeLimiter.getTimeLimiterConfig().getTimeoutDuration().toMillis(), TimeUnit.MILLISECONDS);
-            } catch (TimeoutException e) {
-                if (timeLimiter.getTimeLimiterConfig().shouldCancelRunningFuture()) {
-                    future.cancel(true);
-                }
-                throw e;
-            }
-        };
-    }
-
-    /**
      * Creates a Callback that is restricted by a TimeLimiter.
      *
      * @param timeLimiter        the TimeLimiter
@@ -98,19 +76,6 @@ public interface TimeLimiter {
      * @return the TimeLimiterConfig of this TimeLimiter decorator
      */
     TimeLimiterConfig getTimeLimiterConfig();
-
-    /**
-     * Decorates and executes the Future.
-     *
-     * @param future the original Future
-     * @param <T> the result type of the future
-     * @param <F> the type of Future
-     * @return the result of the decorated Future.
-     * @throws Exception if unable to compute a result
-     */
-    default <T, F extends Future<T>> T executeFuture(F future) throws Exception {
-        return decorateFuture(this, future).call();
-    }
 
     /**
      * Decorates and executes the Future Supplier.
