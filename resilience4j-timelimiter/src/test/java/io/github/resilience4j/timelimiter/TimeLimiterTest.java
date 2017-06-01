@@ -56,61 +56,6 @@ public class TimeLimiterTest {
     }
 
     @Test
-    public void decorateFuture() throws Throwable {
-        when(timeLimiter.getTimeLimiterConfig()).thenReturn(shortConfig);
-
-        Future<Integer> future = EXECUTOR_SERVICE.submit(() -> {
-                    Thread.sleep(SLEEP_DURATION.toMillis());
-                    return 1;
-                }
-            );
-
-        Callable<Integer> decorated = TimeLimiter.decorateFuture(timeLimiter, future);
-
-        Try decoratedResult = Try.success(decorated).mapTry(Callable::call);
-        then(decoratedResult.isFailure()).isTrue();
-        then(decoratedResult.getCause()).isInstanceOf(TimeoutException.class);
-        then(future.isCancelled()).isTrue();
-
-        when(timeLimiter.getTimeLimiterConfig())
-                .thenReturn(longConfig);
-
-        future = EXECUTOR_SERVICE.submit(() -> {
-                    Thread.sleep(SLEEP_DURATION.toMillis());
-                    return 1;
-                }
-        );
-
-        decorated = TimeLimiter.decorateFuture(timeLimiter, future);
-
-        Try secondResult = Try.success(decorated).mapTry(Callable::call);
-        then(secondResult.isSuccess()).isTrue();
-    }
-
-    @Test
-    public void executeFuture() throws Throwable {
-        Future<Integer> future = EXECUTOR_SERVICE.submit(() -> {
-                    Thread.sleep(SLEEP_DURATION.toMillis());
-                    return 1;
-                }
-        );
-
-        Try decoratedResult = Try.of(() -> TimeLimiter.of(shortConfig).executeFuture(future));
-        then(decoratedResult.isFailure()).isTrue();
-        then(decoratedResult.getCause()).isInstanceOf(TimeoutException.class);
-        then(future.isCancelled()).isTrue();
-
-        Future<Integer> secondFuture = EXECUTOR_SERVICE.submit(() -> {
-                    Thread.sleep(SLEEP_DURATION.toMillis());
-                    return 1;
-                }
-        );
-
-        Try secondResult = Try.of(() -> TimeLimiter.of(longConfig).executeFuture(secondFuture));
-        then(secondResult.isSuccess()).isTrue();
-    }
-
-    @Test
     public void decorateFutureSupplier() throws Throwable {
         when(timeLimiter.getTimeLimiterConfig()).thenReturn(shortConfig);
 
