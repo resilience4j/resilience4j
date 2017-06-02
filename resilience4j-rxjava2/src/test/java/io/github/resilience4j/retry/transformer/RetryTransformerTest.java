@@ -22,6 +22,7 @@ import io.github.resilience4j.test.HelloWorldService;
 import io.reactivex.Flowable;
 import io.reactivex.Observable;
 import io.reactivex.Single;
+import org.assertj.core.api.Assertions;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.BDDMockito;
@@ -74,10 +75,10 @@ public class RetryTransformerTest {
         BDDMockito.then(helloWorldService).should(Mockito.times(4)).returnHelloWorld();
         Retry.Metrics metrics = retry.getMetrics();
 
-        assertThat(metrics.getNumberOfSuccessfulCallsWithoutRetryAttempt()).isEqualTo(1);
-        assertThat(metrics.getNumberOfSuccessfulCallsWithRetryAttempt()).isEqualTo(1);
-        assertThat(metrics.getNumberOfFailedCallsWithRetryAttempt()).isEqualTo(0);
-        assertThat(metrics.getNumberOfFailedCallsWithoutRetryAttempt()).isEqualTo(0);
+        Assertions.assertThat(metrics.getNumberOfSuccessfulCallsWithoutRetryAttempt()).isEqualTo(1);
+        Assertions.assertThat(metrics.getNumberOfSuccessfulCallsWithRetryAttempt()).isEqualTo(1);
+        Assertions.assertThat(metrics.getNumberOfFailedCallsWithRetryAttempt()).isEqualTo(0);
+        Assertions.assertThat(metrics.getNumberOfFailedCallsWithoutRetryAttempt()).isEqualTo(0);
     }
 
     @Test
@@ -108,8 +109,8 @@ public class RetryTransformerTest {
         BDDMockito.then(helloWorldService).should(Mockito.times(6)).returnHelloWorld();
         Retry.Metrics metrics = retry.getMetrics();
 
-        assertThat(metrics.getNumberOfFailedCallsWithRetryAttempt()).isEqualTo(2);
-        assertThat(metrics.getNumberOfFailedCallsWithoutRetryAttempt()).isEqualTo(0);
+        Assertions.assertThat(metrics.getNumberOfFailedCallsWithRetryAttempt()).isEqualTo(2);
+        Assertions.assertThat(metrics.getNumberOfFailedCallsWithoutRetryAttempt()).isEqualTo(0);
     }
 
     @Test
@@ -133,8 +134,8 @@ public class RetryTransformerTest {
         BDDMockito.then(helloWorldService).should(Mockito.times(1)).returnHelloWorld();
         Retry.Metrics metrics = retry.getMetrics();
 
-        assertThat(metrics.getNumberOfFailedCallsWithoutRetryAttempt()).isEqualTo(1);
-        assertThat(metrics.getNumberOfFailedCallsWithRetryAttempt()).isEqualTo(0);
+        Assertions.assertThat(metrics.getNumberOfFailedCallsWithoutRetryAttempt()).isEqualTo(1);
+        Assertions.assertThat(metrics.getNumberOfFailedCallsWithRetryAttempt()).isEqualTo(0);
     }
 
     @Test
@@ -165,8 +166,8 @@ public class RetryTransformerTest {
         BDDMockito.then(helloWorldService).should(Mockito.times(6)).returnHelloWorld();
         Retry.Metrics metrics = retry.getMetrics();
 
-        assertThat(metrics.getNumberOfFailedCallsWithRetryAttempt()).isEqualTo(2);
-        assertThat(metrics.getNumberOfFailedCallsWithoutRetryAttempt()).isEqualTo(0);
+        Assertions.assertThat(metrics.getNumberOfFailedCallsWithRetryAttempt()).isEqualTo(2);
+        Assertions.assertThat(metrics.getNumberOfFailedCallsWithoutRetryAttempt()).isEqualTo(0);
     }
 
     @Test
@@ -197,8 +198,8 @@ public class RetryTransformerTest {
         BDDMockito.then(helloWorldService).should(Mockito.times(6)).returnHelloWorld();
         Retry.Metrics metrics = retry.getMetrics();
 
-        assertThat(metrics.getNumberOfFailedCallsWithRetryAttempt()).isEqualTo(2);
-        assertThat(metrics.getNumberOfFailedCallsWithoutRetryAttempt()).isEqualTo(0);
+        Assertions.assertThat(metrics.getNumberOfFailedCallsWithRetryAttempt()).isEqualTo(2);
+        Assertions.assertThat(metrics.getNumberOfFailedCallsWithoutRetryAttempt()).isEqualTo(0);
     }
 
     @Test
@@ -222,8 +223,8 @@ public class RetryTransformerTest {
         BDDMockito.then(helloWorldService).should(Mockito.times(1)).returnHelloWorld();
         Retry.Metrics metrics = retry.getMetrics();
 
-        assertThat(metrics.getNumberOfFailedCallsWithoutRetryAttempt()).isEqualTo(1);
-        assertThat(metrics.getNumberOfFailedCallsWithRetryAttempt()).isEqualTo(0);
+        Assertions.assertThat(metrics.getNumberOfFailedCallsWithoutRetryAttempt()).isEqualTo(1);
+        Assertions.assertThat(metrics.getNumberOfFailedCallsWithRetryAttempt()).isEqualTo(0);
     }
 
     @Test
@@ -254,8 +255,8 @@ public class RetryTransformerTest {
         BDDMockito.then(helloWorldService).should(Mockito.times(6)).returnHelloWorld();
         Retry.Metrics metrics = retry.getMetrics();
 
-        assertThat(metrics.getNumberOfFailedCallsWithRetryAttempt()).isEqualTo(2);
-        assertThat(metrics.getNumberOfFailedCallsWithoutRetryAttempt()).isEqualTo(0);
+        Assertions.assertThat(metrics.getNumberOfFailedCallsWithRetryAttempt()).isEqualTo(2);
+        Assertions.assertThat(metrics.getNumberOfFailedCallsWithoutRetryAttempt()).isEqualTo(0);
     }
 
     @Test
@@ -286,8 +287,8 @@ public class RetryTransformerTest {
         BDDMockito.then(helloWorldService).should(Mockito.times(6)).returnHelloWorld();
         Retry.Metrics metrics = retry.getMetrics();
 
-        assertThat(metrics.getNumberOfFailedCallsWithRetryAttempt()).isEqualTo(2);
-        assertThat(metrics.getNumberOfFailedCallsWithoutRetryAttempt()).isEqualTo(0);
+        Assertions.assertThat(metrics.getNumberOfFailedCallsWithRetryAttempt()).isEqualTo(2);
+        Assertions.assertThat(metrics.getNumberOfFailedCallsWithoutRetryAttempt()).isEqualTo(0);
     }
 
     @Test
@@ -311,8 +312,8 @@ public class RetryTransformerTest {
         BDDMockito.then(helloWorldService).should(Mockito.times(1)).returnHelloWorld();
         Retry.Metrics metrics = retry.getMetrics();
 
-        assertThat(metrics.getNumberOfFailedCallsWithoutRetryAttempt()).isEqualTo(1);
-        assertThat(metrics.getNumberOfFailedCallsWithRetryAttempt()).isEqualTo(0);
+        Assertions.assertThat(metrics.getNumberOfFailedCallsWithoutRetryAttempt()).isEqualTo(1);
+        Assertions.assertThat(metrics.getNumberOfFailedCallsWithRetryAttempt()).isEqualTo(0);
     }
 
 }

@@ -18,6 +18,7 @@
  */
 package io.github.resilience4j.cache;
 
+import io.github.resilience4j.cache.event.CacheEvent;
 import io.github.resilience4j.cache.event.CacheOnErrorEvent;
 import io.github.resilience4j.cache.event.CacheOnHitEvent;
 import io.github.resilience4j.cache.event.CacheOnMissEvent;
@@ -139,7 +140,7 @@ public interface Cache<K, V>  {
     /**
      * An EventPublisher which can be used to register event consumers.
      */
-    interface EventPublisher extends io.github.resilience4j.core.EventPublisher {
+    interface EventPublisher extends io.github.resilience4j.core.EventPublisher<CacheEvent> {
 
         EventPublisher onCacheHit(EventConsumer<CacheOnHitEvent> eventConsumer);
 

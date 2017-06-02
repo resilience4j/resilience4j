@@ -48,7 +48,7 @@ public class SemaphoreBasedRateLimiter implements RateLimiter {
     private final ScheduledExecutorService scheduler;
     private final Semaphore semaphore;
     private final SemaphoreBasedRateLimiterMetrics metrics;
-    private final EventProcessor eventProcessor;
+    private final RateLimiterEventProcessor eventProcessor;
 
     /**
      * Creates a RateLimiter.
@@ -76,7 +76,7 @@ public class SemaphoreBasedRateLimiter implements RateLimiter {
         this.semaphore = new Semaphore(this.rateLimiterConfig.getLimitForPeriod(), true);
         this.metrics = this.new SemaphoreBasedRateLimiterMetrics();
 
-        this.eventProcessor = new EventProcessor();
+        this.eventProcessor = new RateLimiterEventProcessor();
 
         scheduleLimitRefresh();
     }

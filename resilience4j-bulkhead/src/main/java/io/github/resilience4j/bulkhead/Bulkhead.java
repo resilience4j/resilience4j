@@ -23,6 +23,7 @@ import io.github.resilience4j.bulkhead.event.BulkheadOnCallPermittedEvent;
 import io.github.resilience4j.bulkhead.event.BulkheadOnCallRejectedEvent;
 import io.github.resilience4j.bulkhead.internal.SemaphoreBulkhead;
 import io.github.resilience4j.bulkhead.utils.BulkheadUtils;
+import io.github.resilience4j.core.EventConsumer;
 import io.vavr.CheckedConsumer;
 import io.vavr.CheckedFunction0;
 import io.vavr.CheckedFunction1;
@@ -412,9 +413,9 @@ public interface Bulkhead {
      */
     interface EventPublisher extends io.github.resilience4j.core.EventPublisher<BulkheadEvent> {
 
-        EventPublisher onCallRejected(Consumer<BulkheadOnCallRejectedEvent> eventConsumer);
+        EventPublisher onCallRejected(EventConsumer<BulkheadOnCallRejectedEvent> eventConsumer);
 
-        EventPublisher onCallPermitted(Consumer<BulkheadOnCallPermittedEvent> eventConsumer);
+        EventPublisher onCallPermitted(EventConsumer<BulkheadOnCallPermittedEvent> eventConsumer);
 
     }
 }

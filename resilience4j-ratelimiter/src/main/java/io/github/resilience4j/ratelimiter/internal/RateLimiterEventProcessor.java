@@ -25,42 +25,22 @@ import io.github.resilience4j.ratelimiter.event.RateLimiterEvent;
 import io.github.resilience4j.ratelimiter.event.RateLimiterOnFailureEvent;
 import io.github.resilience4j.ratelimiter.event.RateLimiterOnSuccessEvent;
 
-public class EventProcessor extends io.github.resilience4j.core.EventProcessor<RateLimiterEvent> implements EventConsumer<RateLimiterEvent>, RateLimiter.EventPublisher {
-
-    private volatile EventConsumer<RateLimiterOnSuccessEvent> onSuccessEventConsumer;
-    private volatile EventConsumer<RateLimiterOnFailureEvent> onOnFailureEventConsumer;
+public class RateLimiterEventProcessor extends io.github.resilience4j.core.EventProcessor<RateLimiterEvent> implements EventConsumer<RateLimiterEvent>, RateLimiter.EventPublisher {
 
     @Override
     public void consumeEvent(RateLimiterEvent event) {
-        super.processEvent(event.getClass(), event);
-        RateLimiterEvent.Type eventType = event.getEventType();
-        switch (eventType) {
-            case SUCCESSFUL_ACQUIRE:
-                if(onSuccessEventConsumer != null){
-                    onSuccessEventConsumer.consumeEvent((RateLimiterOnSuccessEvent) event);
-                }
-                break;
-            case FAILED_ACQUIRE:
-                if(onOnFailureEventConsumer != null) {
-                    onOnFailureEventConsumer.consumeEvent((RateLimiterOnFailureEvent) event);
-                }
-                break;
-            default:
-                break;
-        }
+        super.processEvent(event);
     }
 
     @Override
     public RateLimiter.EventPublisher onSuccess(EventConsumer<RateLimiterOnSuccessEvent> onSuccessEventConsumer) {
-        consumerRegistered = true;
-        this.onSuccessEventConsumer = onSuccessEventConsumer;
+        registerConsumer(RateLimiterOnSuccessEvent.class, onSuccessEventConsumer);
         return this;
     }
 
     @Override
     public RateLimiter.EventPublisher onFailure(EventConsumer<RateLimiterOnFailureEvent> onOnFailureEventConsumer) {
-        consumerRegistered = true;
-        this.onOnFailureEventConsumer = onOnFailureEventConsumer;
+        registerConsumer(RateLimiterOnFailureEvent.class, onOnFailureEventConsumer);
         return this;
     }
 }

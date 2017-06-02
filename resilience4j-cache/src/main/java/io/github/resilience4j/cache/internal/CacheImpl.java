@@ -23,18 +23,15 @@ import io.github.resilience4j.cache.event.CacheEvent;
 import io.github.resilience4j.cache.event.CacheOnErrorEvent;
 import io.github.resilience4j.cache.event.CacheOnHitEvent;
 import io.github.resilience4j.cache.event.CacheOnMissEvent;
-import io.reactivex.Flowable;
-import io.reactivex.processors.FlowableProcessor;
-import io.reactivex.processors.PublishProcessor;
+import io.github.resilience4j.core.EventConsumer;
+import io.github.resilience4j.core.EventProcessor;
 import io.vavr.CheckedFunction0;
-import io.vavr.Lazy;
 import io.vavr.control.Option;
 import io.vavr.control.Try;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.atomic.LongAdder;
-import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 public class CacheImpl<K, V>  implements Cache<K,V> {
@@ -42,16 +39,13 @@ public class CacheImpl<K, V>  implements Cache<K,V> {
     private static final Logger LOG = LoggerFactory.getLogger(CacheImpl.class);
 
     private final javax.cache.Cache<K, V> cache;
-    private final FlowableProcessor<CacheEvent> eventPublisher;
     private final CacheMetrics metrics;
-    private final Lazy<EventPublisher> lazyEventConsumer;
+    private final CacheEventProcessor eventProcessor;
 
     public CacheImpl(javax.cache.Cache<K, V> cache) {
         this.cache = cache;
-        PublishProcessor<CacheEvent> publisher = PublishProcessor.create();
-        this.eventPublisher = publisher.toSerialized();
         this.metrics = new CacheMetrics();
-        this.lazyEventConsumer = Lazy.of(() -> new EventDispatcher(getEventStream()));
+        this.eventProcessor = new CacheEventProcessor();
     }
 
     @Override
@@ -119,71 +113,39 @@ public class CacheImpl<K, V>  implements Cache<K,V> {
     }
 
     private void publishCacheEvent(Supplier<CacheEvent> event) {
-        if(eventPublisher.hasSubscribers()) {
-            eventPublisher.onNext(event.get());
+        if(eventProcessor.hasConsumers()) {
+            eventProcessor.processEvent(event.get());
         }
-    }
-
-    @Override
-    public Flowable<CacheEvent> getEventStream() {
-        return eventPublisher;
     }
 
     @Override
     public EventPublisher getEventPublisher() {
-        return lazyEventConsumer.get();
+        return eventProcessor;
     }
 
-    private class EventDispatcher implements EventPublisher, io.reactivex.functions.Consumer<CacheEvent> {
-
-        private volatile Consumer<CacheOnHitEvent> onCacheHitEventConsumer;
-        private volatile Consumer<CacheOnMissEvent> onCacheMissEventConsumer;
-        private volatile Consumer<CacheOnErrorEvent> onErrorEventConsumer;
-
-        EventDispatcher(Flowable<CacheEvent> eventStream) {
-            eventStream.subscribe(this);
-        }
+    private class CacheEventProcessor extends EventProcessor<CacheEvent> implements EventConsumer<CacheEvent>, EventPublisher {
 
         @Override
-        public void accept(CacheEvent event) throws Exception {
-            CacheEvent.Type eventType = event.getEventType();
-            switch (eventType) {
-                case CACHE_HIT:
-                    if(onCacheHitEventConsumer != null){
-                        onCacheHitEventConsumer.accept((CacheOnHitEvent) event);
-                    }
-                    break;
-                case CACHE_MISS:
-                    if(onCacheMissEventConsumer != null) {
-                        onCacheMissEventConsumer.accept((CacheOnMissEvent) event);
-                    }
-                    break;
-                case ERROR:
-                    if(onErrorEventConsumer != null) {
-                        onErrorEventConsumer.accept((CacheOnErrorEvent) event);
-                    }
-                    break;
-                default:
-                    break;
-            }
-        }
-
-        @Override
-        public EventPublisher onCacheHit(Consumer<CacheOnHitEvent> eventConsumer) {
-            this.onCacheHitEventConsumer = eventConsumer;
+        public EventPublisher onCacheHit(EventConsumer<CacheOnHitEvent> eventConsumer) {
+            registerConsumer(CacheOnHitEvent.class, eventConsumer);
             return this;
         }
 
         @Override
-        public EventPublisher onCacheMiss(Consumer<CacheOnMissEvent> eventConsumer) {
-            this.onCacheMissEventConsumer = eventConsumer;
+        public EventPublisher onCacheMiss(EventConsumer<CacheOnMissEvent> eventConsumer) {
+            registerConsumer(CacheOnMissEvent.class, eventConsumer);
             return this;
         }
 
         @Override
-        public EventPublisher onError(Consumer<CacheOnErrorEvent> eventConsumer) {
-            this.onErrorEventConsumer = eventConsumer;
+        public EventPublisher onError(EventConsumer<CacheOnErrorEvent> eventConsumer) {
+            registerConsumer(CacheOnErrorEvent.class, eventConsumer);
             return this;
+        }
+
+        @Override
+        public void consumeEvent(CacheEvent event) {
+            super.processEvent(event);
         }
     }
 

@@ -52,7 +52,7 @@ public class AtomicRateLimiter implements RateLimiter {
     private final int permissionsPerCycle;
     private final AtomicInteger waitingThreads;
     private final AtomicReference<State> state;
-    private final EventProcessor eventProcessor;
+    private final RateLimiterEventProcessor eventProcessor;
 
 
     public AtomicRateLimiter(String name, RateLimiterConfig rateLimiterConfig) {
@@ -65,7 +65,7 @@ public class AtomicRateLimiter implements RateLimiter {
         waitingThreads = new AtomicInteger(0);
         state = new AtomicReference<>(new State(0, permissionsPerCycle, 0));
 
-        this.eventProcessor = new EventProcessor();
+        this.eventProcessor = new RateLimiterEventProcessor();
     }
 
     /**

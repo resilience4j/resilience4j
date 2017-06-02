@@ -23,6 +23,7 @@ import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.circuitbreaker.event.*;
 import io.github.resilience4j.core.EventConsumer;
+import io.github.resilience4j.core.EventProcessor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,7 +43,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
     private final String name;
     private final AtomicReference<CircuitBreakerState> stateReference;
     private final CircuitBreakerConfig circuitBreakerConfig;
-    private final EventProcessor eventProcessor;
+    private final CircuitBreakerEventProcessor eventProcessor;
 
     /**
      * Creates a circuitBreaker.
@@ -54,7 +55,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
         this.name = name;
         this.circuitBreakerConfig = circuitBreakerConfig;
         this.stateReference = new AtomicReference<>(new ClosedState(this));
-        this.eventProcessor = new EventProcessor();
+        this.eventProcessor = new CircuitBreakerEventProcessor();
     }
 
     /**
@@ -235,7 +236,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
         return eventProcessor;
     }
 
-    private class EventProcessor extends io.github.resilience4j.core.EventProcessor<CircuitBreakerEvent> implements EventConsumer<CircuitBreakerEvent>, EventPublisher {
+    private class CircuitBreakerEventProcessor extends EventProcessor<CircuitBreakerEvent> implements EventConsumer<CircuitBreakerEvent>, EventPublisher {
         @Override
         public EventPublisher onSuccess(EventConsumer<CircuitBreakerOnSuccessEvent> onSuccessEventConsumer) {
             registerConsumer(CircuitBreakerOnSuccessEvent.class, onSuccessEventConsumer);
@@ -268,7 +269,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
 
         @Override
         public void consumeEvent(CircuitBreakerEvent event) {
-            super.processEvent(event.getClass(), event);
+            super.processEvent(event);
         }
     }
 }
