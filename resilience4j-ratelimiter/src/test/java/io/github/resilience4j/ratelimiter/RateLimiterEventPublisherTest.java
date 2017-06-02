@@ -32,7 +32,7 @@ import static org.mockito.Mockito.times;
 
 
 @SuppressWarnings("unchecked")
-public class RateLimiterEventConsumerTest {
+public class RateLimiterEventPublisherTest {
 
     private static final int LIMIT = 1;
     private static final Duration TIMEOUT = Duration.ZERO;
@@ -55,16 +55,16 @@ public class RateLimiterEventConsumerTest {
 
     @Test
     public void shouldReturnTheSameConsumer() {
-        RateLimiter.EventConsumer eventConsumer = rateLimiter.getEventConsumer();
-        RateLimiter.EventConsumer eventConsumer2 = rateLimiter.getEventConsumer();
+        RateLimiter.EventPublisher eventPublisher = rateLimiter.getEventPublisher();
+        RateLimiter.EventPublisher eventPublisher2 = rateLimiter.getEventPublisher();
 
-        assertThat(eventConsumer).isEqualTo(eventConsumer2);
+        assertThat(eventPublisher).isEqualTo(eventPublisher2);
     }
 
 
     @Test
     public void shouldConsumeOnSuccessEvent() throws Throwable {
-        rateLimiter.getEventConsumer()
+        rateLimiter.getEventPublisher()
             .onSuccess(event ->
                 logger.info(event.getEventType().toString()));
 
@@ -78,7 +78,7 @@ public class RateLimiterEventConsumerTest {
 
     @Test
     public void shouldConsumeOnFailureEvent() throws Throwable {
-        rateLimiter.getEventConsumer()
+        rateLimiter.getEventPublisher()
                 .onFailure(event ->
                     logger.info(event.getEventType().toString()));
 

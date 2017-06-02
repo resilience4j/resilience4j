@@ -19,35 +19,30 @@
 package io.github.resilience4j.ratelimiter.internal;
 
 
+import io.github.resilience4j.core.EventConsumer;
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.event.RateLimiterEvent;
 import io.github.resilience4j.ratelimiter.event.RateLimiterOnFailureEvent;
 import io.github.resilience4j.ratelimiter.event.RateLimiterOnSuccessEvent;
-import io.reactivex.Flowable;
 
-import java.util.function.Consumer;
+public class EventProcessor extends io.github.resilience4j.core.EventProcessor<RateLimiterEvent> implements EventConsumer<RateLimiterEvent>, RateLimiter.EventPublisher {
 
-public class EventDispatcher implements RateLimiter.EventConsumer, io.reactivex.functions.Consumer<RateLimiterEvent> {
-
-    private volatile Consumer<RateLimiterOnSuccessEvent> onSuccessEventConsumer;
-    private volatile Consumer<RateLimiterOnFailureEvent> onOnFailureEventConsumer;
-
-    EventDispatcher(Flowable<RateLimiterEvent> eventStream) {
-        eventStream.subscribe(this);
-    }
+    private volatile EventConsumer<RateLimiterOnSuccessEvent> onSuccessEventConsumer;
+    private volatile EventConsumer<RateLimiterOnFailureEvent> onOnFailureEventConsumer;
 
     @Override
-    public void accept(RateLimiterEvent event) throws Exception {
+    public void consumeEvent(RateLimiterEvent event) {
+        super.processEvent(event.getClass(), event);
         RateLimiterEvent.Type eventType = event.getEventType();
         switch (eventType) {
             case SUCCESSFUL_ACQUIRE:
                 if(onSuccessEventConsumer != null){
-                    onSuccessEventConsumer.accept((RateLimiterOnSuccessEvent) event);
+                    onSuccessEventConsumer.consumeEvent((RateLimiterOnSuccessEvent) event);
                 }
                 break;
             case FAILED_ACQUIRE:
                 if(onOnFailureEventConsumer != null) {
-                    onOnFailureEventConsumer.accept((RateLimiterOnFailureEvent) event);
+                    onOnFailureEventConsumer.consumeEvent((RateLimiterOnFailureEvent) event);
                 }
                 break;
             default:
@@ -56,13 +51,15 @@ public class EventDispatcher implements RateLimiter.EventConsumer, io.reactivex.
     }
 
     @Override
-    public RateLimiter.EventConsumer onSuccess(Consumer<RateLimiterOnSuccessEvent> onSuccessEventConsumer) {
+    public RateLimiter.EventPublisher onSuccess(EventConsumer<RateLimiterOnSuccessEvent> onSuccessEventConsumer) {
+        consumerRegistered = true;
         this.onSuccessEventConsumer = onSuccessEventConsumer;
         return this;
     }
 
     @Override
-    public RateLimiter.EventConsumer onFailure(Consumer<RateLimiterOnFailureEvent> onOnFailureEventConsumer) {
+    public RateLimiter.EventPublisher onFailure(EventConsumer<RateLimiterOnFailureEvent> onOnFailureEventConsumer) {
+        consumerRegistered = true;
         this.onOnFailureEventConsumer = onOnFailureEventConsumer;
         return this;
     }

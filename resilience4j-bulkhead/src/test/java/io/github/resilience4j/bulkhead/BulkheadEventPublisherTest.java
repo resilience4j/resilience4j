@@ -31,7 +31,7 @@ import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 
-public class BulkheadEventConsumerTest {
+public class BulkheadEventPublisherTest {
 
     private HelloWorldService helloWorldService;
     private BulkheadConfig config;
@@ -52,10 +52,10 @@ public class BulkheadEventConsumerTest {
 
     @Test
     public void shouldReturnTheSameConsumer() {
-        Bulkhead.EventConsumer eventConsumer = bulkhead.getEventConsumer();
-        Bulkhead.EventConsumer eventConsumer2 = bulkhead.getEventConsumer();
+        Bulkhead.EventPublisher eventPublisher = bulkhead.getEventPublisher();
+        Bulkhead.EventPublisher eventPublisher2 = bulkhead.getEventPublisher();
 
-        assertThat(eventConsumer).isEqualTo(eventConsumer2);
+        assertThat(eventPublisher).isEqualTo(eventPublisher2);
     }
 
     @Test
@@ -66,7 +66,7 @@ public class BulkheadEventConsumerTest {
         BDDMockito.given(helloWorldService.returnHelloWorld()).willReturn("Hello world");
 
         // When
-        bulkhead.getEventConsumer()
+        bulkhead.getEventPublisher()
             .onCallPermitted(event ->
                     logger.info(event.getEventType().toString()));
 
@@ -85,7 +85,7 @@ public class BulkheadEventConsumerTest {
         Bulkhead bulkhead = Bulkhead.of("test", config);
 
         // When
-        bulkhead.getEventConsumer()
+        bulkhead.getEventPublisher()
                 .onCallRejected(event ->
                         logger.info(event.getEventType().toString()));
 

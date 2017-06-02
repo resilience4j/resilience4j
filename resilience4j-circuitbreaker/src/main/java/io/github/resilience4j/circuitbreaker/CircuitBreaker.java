@@ -21,7 +21,7 @@ package io.github.resilience4j.circuitbreaker;
 import io.github.resilience4j.circuitbreaker.event.*;
 import io.github.resilience4j.circuitbreaker.internal.CircuitBreakerStateMachine;
 import io.github.resilience4j.circuitbreaker.utils.CircuitBreakerUtils;
-import io.reactivex.Flowable;
+import io.github.resilience4j.core.EventConsumer;
 import io.vavr.CheckedConsumer;
 import io.vavr.CheckedFunction0;
 import io.vavr.CheckedFunction1;
@@ -127,19 +127,11 @@ public interface CircuitBreaker {
     Metrics getMetrics();
 
     /**
-     * Returns a reactive stream of CircuitBreakerEvents.
+     * Returns an EventPublisher which can be used to register event consumers.
      *
-     * @return a reactive stream of CircuitBreakerEvents
+     * @return an EventPublisher
      */
-    Flowable<CircuitBreakerEvent> getEventStream();
-
-    /**
-     * Returns an EventConsumer which subscribes to the reactive stream of CircuitBreakerEvents and
-     * can be used to register event consumers.
-     *
-     * @return an EventConsumer
-     */
-    EventConsumer getEventConsumer();
+    EventPublisher getEventPublisher();
 
     /**
      * Decorates and executes the decorated Supplier.
@@ -264,20 +256,19 @@ public interface CircuitBreaker {
     }
 
     /**
-     * An EventConsumer which subscribes to the reactive stream of CircuitBreakerEvents and
-     * can be used to register event consumers.
+     * An EventPublisher can be used to register event consumers.
      */
-    interface EventConsumer {
+    interface EventPublisher extends io.github.resilience4j.core.EventPublisher<CircuitBreakerEvent> {
 
-        EventConsumer onSuccess(Consumer<CircuitBreakerOnSuccessEvent> eventConsumer);
+        EventPublisher onSuccess(EventConsumer<CircuitBreakerOnSuccessEvent> eventConsumer);
 
-        EventConsumer onError(Consumer<CircuitBreakerOnErrorEvent> eventConsumer);
+        EventPublisher onError(EventConsumer<CircuitBreakerOnErrorEvent> eventConsumer);
 
-        EventConsumer onStateTransition(Consumer<CircuitBreakerOnStateTransitionEvent> eventConsumer);
+        EventPublisher onStateTransition(EventConsumer<CircuitBreakerOnStateTransitionEvent> eventConsumer);
 
-        EventConsumer onIgnoredError(Consumer<CircuitBreakerOnIgnoredErrorEvent> eventConsumer);
+        EventPublisher onIgnoredError(EventConsumer<CircuitBreakerOnIgnoredErrorEvent> eventConsumer);
 
-        EventConsumer onCallNotPermitted(Consumer<CircuitBreakerOnCallNotPermittedEvent> eventConsumer);
+        EventPublisher onCallNotPermitted(EventConsumer<CircuitBreakerOnCallNotPermittedEvent> eventConsumer);
 
     }
 

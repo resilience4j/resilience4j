@@ -44,7 +44,7 @@ public class CacheImpl<K, V>  implements Cache<K,V> {
     private final javax.cache.Cache<K, V> cache;
     private final FlowableProcessor<CacheEvent> eventPublisher;
     private final CacheMetrics metrics;
-    private final Lazy<EventConsumer> lazyEventConsumer;
+    private final Lazy<EventPublisher> lazyEventConsumer;
 
     public CacheImpl(javax.cache.Cache<K, V> cache) {
         this.cache = cache;
@@ -130,11 +130,11 @@ public class CacheImpl<K, V>  implements Cache<K,V> {
     }
 
     @Override
-    public EventConsumer getEventConsumer() {
+    public EventPublisher getEventPublisher() {
         return lazyEventConsumer.get();
     }
 
-    private class EventDispatcher implements EventConsumer, io.reactivex.functions.Consumer<CacheEvent> {
+    private class EventDispatcher implements EventPublisher, io.reactivex.functions.Consumer<CacheEvent> {
 
         private volatile Consumer<CacheOnHitEvent> onCacheHitEventConsumer;
         private volatile Consumer<CacheOnMissEvent> onCacheMissEventConsumer;
@@ -169,19 +169,19 @@ public class CacheImpl<K, V>  implements Cache<K,V> {
         }
 
         @Override
-        public EventConsumer onCacheHit(Consumer<CacheOnHitEvent> eventConsumer) {
+        public EventPublisher onCacheHit(Consumer<CacheOnHitEvent> eventConsumer) {
             this.onCacheHitEventConsumer = eventConsumer;
             return this;
         }
 
         @Override
-        public EventConsumer onCacheMiss(Consumer<CacheOnMissEvent> eventConsumer) {
+        public EventPublisher onCacheMiss(Consumer<CacheOnMissEvent> eventConsumer) {
             this.onCacheMissEventConsumer = eventConsumer;
             return this;
         }
 
         @Override
-        public EventConsumer onError(Consumer<CacheOnErrorEvent> eventConsumer) {
+        public EventPublisher onError(Consumer<CacheOnErrorEvent> eventConsumer) {
             this.onErrorEventConsumer = eventConsumer;
             return this;
         }

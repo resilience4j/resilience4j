@@ -32,7 +32,7 @@ import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 
-public class CircuitBreakerEventConsumerTest {
+public class CircuitBreakerEventPublisherTest {
 
     private Logger logger;
     private CircuitBreaker circuitBreaker;
@@ -45,15 +45,28 @@ public class CircuitBreakerEventConsumerTest {
 
     @Test
     public void shouldReturnTheSameConsumer() {
-        CircuitBreaker.EventConsumer eventConsumer = circuitBreaker.getEventConsumer();
-        CircuitBreaker.EventConsumer eventConsumer2 = circuitBreaker.getEventConsumer();
+        CircuitBreaker.EventPublisher eventPublisher = circuitBreaker.getEventPublisher();
+        CircuitBreaker.EventPublisher eventPublisher2 = circuitBreaker.getEventPublisher();
 
-        assertThat(eventConsumer).isEqualTo(eventConsumer2);
+        assertThat(eventPublisher).isEqualTo(eventPublisher2);
+    }
+
+    @Test
+    public void shouldConsumeOnEvent() {
+        circuitBreaker.getEventPublisher()
+                .onEvent(event ->
+                        logger.info(event.getEventType().toString()));
+
+
+        circuitBreaker.onSuccess(1000);
+
+
+        then(logger).should(times(1)).info("SUCCESS");
     }
 
     @Test
     public void shouldConsumeOnSuccessEvent() {
-        circuitBreaker.getEventConsumer()
+        circuitBreaker.getEventPublisher()
                 .onSuccess(event ->
                         logger.info(event.getEventType().toString()));
 
@@ -66,7 +79,7 @@ public class CircuitBreakerEventConsumerTest {
 
     @Test
     public void shouldConsumeOnErrorEvent() {
-        circuitBreaker.getEventConsumer()
+        circuitBreaker.getEventPublisher()
                 .onError(event ->
                         logger.info(event.getEventType().toString()));
 
@@ -81,7 +94,7 @@ public class CircuitBreakerEventConsumerTest {
         circuitBreaker = CircuitBreaker.of("test", CircuitBreakerConfig.custom()
                 .ringBufferSizeInClosedState(1).build());
 
-        circuitBreaker.getEventConsumer()
+        circuitBreaker.getEventPublisher()
                 .onStateTransition(event ->
                         logger.info(event.getEventType().toString()));
 
@@ -99,7 +112,7 @@ public class CircuitBreakerEventConsumerTest {
         circuitBreaker = CircuitBreaker.of("test", CircuitBreakerConfig.custom()
                 .ringBufferSizeInClosedState(1).build());
 
-        circuitBreaker.getEventConsumer()
+        circuitBreaker.getEventPublisher()
                 .onCallNotPermitted(event ->
                         logger.info(event.getEventType().toString()));
 
@@ -122,7 +135,7 @@ public class CircuitBreakerEventConsumerTest {
 
         circuitBreaker = CircuitBreaker.of("test", circuitBreakerConfig);
 
-        circuitBreaker.getEventConsumer()
+        circuitBreaker.getEventPublisher()
                 .onIgnoredError(event ->
                         logger.info(event.getEventType().toString()));
 

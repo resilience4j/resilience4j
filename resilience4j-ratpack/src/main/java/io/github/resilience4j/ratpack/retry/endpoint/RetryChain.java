@@ -16,7 +16,6 @@
 
 package io.github.resilience4j.ratpack.retry.endpoint;
 
-import io.github.resilience4j.consumer.EventConsumer;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
 import io.github.resilience4j.ratpack.Resilience4jConfig;
 import io.github.resilience4j.retry.Retry;

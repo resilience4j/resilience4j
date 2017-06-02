@@ -20,12 +20,13 @@ package io.github.resilience4j.consumer;
 
 import io.github.resilience4j.circularbuffer.CircularFifoBuffer;
 import io.github.resilience4j.circularbuffer.ConcurrentCircularFifoBuffer;
+import io.github.resilience4j.core.EventConsumer;
 import io.vavr.collection.List;
 
 /**
  * A RxJava consumer which stores CircuitBreakerEvents in a circular buffer with a fixed capacity.
  */
-public class CircularEventConsumer<T> implements EventConsumer<T>{
+public class CircularEventConsumer<T> implements EventConsumer<T> {
 
     private CircularFifoBuffer<T> eventCircularFifoBuffer;
 
@@ -41,7 +42,7 @@ public class CircularEventConsumer<T> implements EventConsumer<T>{
     }
 
     @Override
-    public void accept(T event) throws Exception {
+    public void consumeEvent(T event){
         eventCircularFifoBuffer.add(event);
     }
 
@@ -50,7 +51,6 @@ public class CircularEventConsumer<T> implements EventConsumer<T>{
      *
      * @return a list containing all of the buffered events.
      */
-    @Override
     public List<T> getBufferedEvents(){
         return eventCircularFifoBuffer.toList();
     }

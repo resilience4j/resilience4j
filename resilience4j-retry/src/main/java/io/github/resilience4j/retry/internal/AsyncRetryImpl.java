@@ -28,7 +28,7 @@ public class AsyncRetryImpl implements AsyncRetry {
     private final FlowableProcessor<RetryEvent> eventPublisher;
     private final Predicate<Throwable> exceptionPredicate;
     private final RetryConfig config;
-    private final Lazy<EventConsumer> lazyEventConsumer;
+    private final Lazy<EventPublisher> lazyEventConsumer;
 
     private LongAdder succeededAfterRetryCounter;
     private LongAdder failedAfterRetryCounter;
@@ -118,11 +118,11 @@ public class AsyncRetryImpl implements AsyncRetry {
     }
 
     @Override
-    public EventConsumer getEventConsumer() {
+    public EventPublisher getEventPublisher() {
         return lazyEventConsumer.get();
     }
 
-    private class EventDispatcher implements EventConsumer, io.reactivex.functions.Consumer<RetryEvent> {
+    private class EventDispatcher implements EventPublisher, io.reactivex.functions.Consumer<RetryEvent> {
 
         private volatile Consumer<RetryOnSuccessEvent> onSuccessEventConsumer;
         private volatile Consumer<RetryOnErrorEvent> onErrorEventConsumer;
@@ -133,19 +133,19 @@ public class AsyncRetryImpl implements AsyncRetry {
         }
 
         @Override
-        public EventConsumer onSuccess(Consumer<RetryOnSuccessEvent> onSuccessEventConsumer) {
+        public EventPublisher onSuccess(Consumer<RetryOnSuccessEvent> onSuccessEventConsumer) {
             this.onSuccessEventConsumer = onSuccessEventConsumer;
             return this;
         }
 
         @Override
-        public EventConsumer onError(Consumer<RetryOnErrorEvent> onErrorEventConsumer) {
+        public EventPublisher onError(Consumer<RetryOnErrorEvent> onErrorEventConsumer) {
             this.onErrorEventConsumer = onErrorEventConsumer;
             return this;
         }
 
         @Override
-        public EventConsumer onIgnoredError(Consumer<RetryOnIgnoredErrorEvent> onIgnoredErrorEventConsumer) {
+        public EventPublisher onIgnoredError(Consumer<RetryOnIgnoredErrorEvent> onIgnoredErrorEventConsumer) {
             this.onIgnoredErrorEventConsumer = onIgnoredErrorEventConsumer;
             return this;
         }

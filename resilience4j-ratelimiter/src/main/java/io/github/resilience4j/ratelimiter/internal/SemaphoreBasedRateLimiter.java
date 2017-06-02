@@ -20,13 +20,8 @@ package io.github.resilience4j.ratelimiter.internal;
 
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RateLimiterConfig;
-import io.github.resilience4j.ratelimiter.event.RateLimiterEvent;
 import io.github.resilience4j.ratelimiter.event.RateLimiterOnFailureEvent;
 import io.github.resilience4j.ratelimiter.event.RateLimiterOnSuccessEvent;
-import io.reactivex.Flowable;
-import io.reactivex.processors.FlowableProcessor;
-import io.reactivex.processors.PublishProcessor;
-import io.vavr.Lazy;
 import io.vavr.control.Option;
 
 import java.time.Duration;
@@ -53,8 +48,7 @@ public class SemaphoreBasedRateLimiter implements RateLimiter {
     private final ScheduledExecutorService scheduler;
     private final Semaphore semaphore;
     private final SemaphoreBasedRateLimiterMetrics metrics;
-    private final FlowableProcessor<RateLimiterEvent> eventPublisher;
-    private final Lazy<EventConsumer> lazyEventConsumer;
+    private final EventProcessor eventProcessor;
 
     /**
      * Creates a RateLimiter.
@@ -82,10 +76,7 @@ public class SemaphoreBasedRateLimiter implements RateLimiter {
         this.semaphore = new Semaphore(this.rateLimiterConfig.getLimitForPeriod(), true);
         this.metrics = this.new SemaphoreBasedRateLimiterMetrics();
 
-        PublishProcessor<RateLimiterEvent> publisher = PublishProcessor.create();
-        this.eventPublisher = publisher.toSerialized();
-
-        this.lazyEventConsumer = Lazy.of(() -> new EventDispatcher(getEventStream()));
+        this.eventProcessor = new EventProcessor();
 
         scheduleLimitRefresh();
     }
@@ -145,17 +136,9 @@ public class SemaphoreBasedRateLimiter implements RateLimiter {
         return this.metrics;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
-    public Flowable<RateLimiterEvent> getEventStream() {
-        return eventPublisher;
-    }
-
-    @Override
-    public EventConsumer getEventConsumer() {
-        return lazyEventConsumer.get();
+    public EventPublisher getEventPublisher() {
+        return eventProcessor;
     }
 
     /**
@@ -198,13 +181,13 @@ public class SemaphoreBasedRateLimiter implements RateLimiter {
     }
 
     private void publishRateLimiterEvent(boolean permissionAcquired) {
-        if (!eventPublisher.hasSubscribers()) {
+        if (!eventProcessor.hasConsumers()) {
             return;
         }
         if (permissionAcquired) {
-            eventPublisher.onNext(new RateLimiterOnSuccessEvent(name));
+            eventProcessor.consumeEvent(new RateLimiterOnSuccessEvent(name));
             return;
         }
-        eventPublisher.onNext(new RateLimiterOnFailureEvent(name));
+        eventProcessor.consumeEvent(new RateLimiterOnFailureEvent(name));
     }
 }

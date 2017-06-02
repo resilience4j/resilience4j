@@ -21,7 +21,6 @@ package io.github.resilience4j.consumer;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent;
-import io.github.resilience4j.circuitbreaker.event.CircuitBreakerOnErrorEvent;
 import io.vavr.API;
 import org.junit.Test;
 
@@ -42,11 +41,9 @@ public class CircularEventConsumerTest {
 
         // tag::shouldBufferEvents[]
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testName");
-        CircularEventConsumer<CircuitBreakerOnErrorEvent> ringBuffer = new CircularEventConsumer<>(2);
-        circuitBreaker.getEventStream()
-                .filter(event -> event.getEventType() == Type.ERROR)
-                .cast(CircuitBreakerOnErrorEvent.class)
-                .subscribe(ringBuffer);
+        CircularEventConsumer<CircuitBreakerEvent> ringBuffer = new CircularEventConsumer<>(2);
+
+        circuitBreaker.getEventPublisher().onEvent(ringBuffer);
         // end::shouldBufferEvents[]
 
         assertThat(ringBuffer.getBufferedEvents()).isEmpty();
@@ -77,8 +74,7 @@ public class CircularEventConsumerTest {
                 .build();
         CircuitBreaker circuitBreaker = CircuitBreaker.of("testName", circuitBreakerConfig);
         CircularEventConsumer<CircuitBreakerEvent> ringBuffer = new CircularEventConsumer<>(10);
-        circuitBreaker.getEventStream()
-                .subscribe(ringBuffer);
+        circuitBreaker.getEventPublisher().onEvent(ringBuffer);
 
         assertThat(ringBuffer.getBufferedEvents()).isEmpty();
 
@@ -106,7 +102,7 @@ public class CircularEventConsumerTest {
         // Given
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testName");
 
-        CircularEventConsumer<CircuitBreakerOnErrorEvent> ringBuffer = new CircularEventConsumer<>(2);
+        CircularEventConsumer<CircuitBreakerEvent> ringBuffer = new CircularEventConsumer<>(2);
         assertThat(ringBuffer.getBufferedEvents()).isEmpty();
 
         circuitBreaker.onError(0, new RuntimeException("Bla"));
@@ -114,10 +110,7 @@ public class CircularEventConsumerTest {
         circuitBreaker.onError(0, new RuntimeException("Bla"));
 
         //Subscription is too late
-        circuitBreaker.getEventStream()
-                .filter(event -> event.getEventType() == Type.ERROR)
-                .cast(CircuitBreakerOnErrorEvent.class)
-                .subscribe(ringBuffer);
+        circuitBreaker.getEventPublisher().onEvent(ringBuffer);
 
         //Then
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();

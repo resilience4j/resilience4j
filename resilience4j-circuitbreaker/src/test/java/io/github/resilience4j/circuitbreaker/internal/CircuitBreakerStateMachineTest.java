@@ -20,20 +20,16 @@ package io.github.resilience4j.circuitbreaker.internal;
 
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
-import io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent;
-import io.reactivex.subscribers.TestSubscriber;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.time.Duration;
 
-import static io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent.Type.*;
 import static java.lang.Thread.sleep;
 import static org.assertj.core.api.BDDAssertions.assertThat;
 public class CircuitBreakerStateMachineTest {
 
     private CircuitBreaker circuitBreaker;
-    private TestSubscriber<CircuitBreakerEvent.Type> testSubscriber;
 
     @Before
     public void setUp(){
@@ -44,9 +40,6 @@ public class CircuitBreakerStateMachineTest {
                 .waitDurationInOpenState(Duration.ofSeconds(1))
                 .recordFailure(error -> !(error instanceof NumberFormatException))
                 .build());
-        testSubscriber = circuitBreaker.getEventStream()
-                .map(CircuitBreakerEvent::getEventType)
-                .test();
     }
 
     @Test
@@ -180,12 +173,5 @@ public class CircuitBreakerStateMachineTest {
         assertThat(circuitBreaker.getMetrics().getNumberOfBufferedCalls()).isEqualTo(3);
         assertThat(circuitBreaker.getMetrics().getNumberOfFailedCalls()).isEqualTo(1);
         assertThat(circuitBreaker.getMetrics().getFailureRate()).isEqualTo(-1f);
-
-        testSubscriber
-                .assertValueCount(19)
-                .assertValues(ERROR, ERROR, ERROR, SUCCESS, SUCCESS, STATE_TRANSITION,
-                        NOT_PERMITTED, NOT_PERMITTED, STATE_TRANSITION,
-                        ERROR, ERROR, SUCCESS, STATE_TRANSITION, STATE_TRANSITION,
-                        ERROR, IGNORED_ERROR, SUCCESS, SUCCESS, STATE_TRANSITION);
     }
 }

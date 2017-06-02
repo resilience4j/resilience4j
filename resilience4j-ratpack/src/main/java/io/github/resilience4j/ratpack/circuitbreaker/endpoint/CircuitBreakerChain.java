@@ -19,7 +19,6 @@ package io.github.resilience4j.ratpack.circuitbreaker.endpoint;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent;
-import io.github.resilience4j.consumer.EventConsumer;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
 import io.github.resilience4j.ratpack.Resilience4jConfig;
 import io.reactivex.Flowable;

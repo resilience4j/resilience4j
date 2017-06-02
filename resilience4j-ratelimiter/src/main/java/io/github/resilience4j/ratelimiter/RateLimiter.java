@@ -18,11 +18,11 @@
  */
 package io.github.resilience4j.ratelimiter;
 
+import io.github.resilience4j.core.EventConsumer;
 import io.github.resilience4j.ratelimiter.event.RateLimiterEvent;
 import io.github.resilience4j.ratelimiter.event.RateLimiterOnFailureEvent;
 import io.github.resilience4j.ratelimiter.event.RateLimiterOnSuccessEvent;
 import io.github.resilience4j.ratelimiter.internal.AtomicRateLimiter;
-import io.reactivex.Flowable;
 import io.vavr.CheckedFunction0;
 import io.vavr.CheckedFunction1;
 import io.vavr.CheckedRunnable;
@@ -274,20 +274,11 @@ public interface RateLimiter {
     Metrics getMetrics();
 
     /**
-     * Returns a reactive stream of RateLimiter.
+     * Returns an EventPublisher which can be used to register event consumers.
      *
-     * @return a reactive stream of RateLimiter
+     * @return an EventPublisher
      */
-    Flowable<RateLimiterEvent> getEventStream();
-
-
-    /**
-     * Returns an EventConsumer which subscribes to the reactive stream of CircuitBreakerEvents and
-     * can be used to register event consumers.
-     *
-     * @return an EventConsumer
-     */
-    EventConsumer getEventConsumer();
+    EventPublisher getEventPublisher();
 
     /**
      * Decorates and executes the decorated Supplier.
@@ -344,14 +335,13 @@ public interface RateLimiter {
     }
 
     /**
-     * An EventConsumer which subscribes to the reactive stream of CacheEvents and
-     * can be used to register event consumers.
+     * An EventPublisher which can be used to register event consumers.
      */
-    interface EventConsumer {
+    interface EventPublisher extends io.github.resilience4j.core.EventPublisher<RateLimiterEvent> {
 
-        EventConsumer onSuccess(Consumer<RateLimiterOnSuccessEvent> eventConsumer);
+        EventPublisher onSuccess(EventConsumer<RateLimiterOnSuccessEvent> eventConsumer);
 
-        EventConsumer onFailure(Consumer<RateLimiterOnFailureEvent> eventConsumer);
+        EventPublisher onFailure(EventConsumer<RateLimiterOnFailureEvent> eventConsumer);
 
     }
 }

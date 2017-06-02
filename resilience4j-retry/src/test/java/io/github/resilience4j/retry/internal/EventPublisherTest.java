@@ -34,7 +34,7 @@ import org.mockito.Mockito;
 import javax.xml.ws.WebServiceException;
 import java.io.IOException;
 
-public class EventConsumerTest {
+public class EventPublisherTest {
 
 
     private HelloWorldService helloWorldService;

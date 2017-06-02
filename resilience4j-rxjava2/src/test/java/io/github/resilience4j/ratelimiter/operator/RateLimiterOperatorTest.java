@@ -23,6 +23,7 @@ import io.reactivex.Flowable;
 import io.reactivex.Observable;
 import io.reactivex.Single;
 import io.vavr.collection.List;
+import org.assertj.core.api.Assertions;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -42,7 +43,7 @@ public class RateLimiterOperatorTest {
     public void shouldReturnOnCompleteUsingSingle() {
         //Given
         RateLimiter rateLimiter = RateLimiter.ofDefaults(LIMITER_NAME);
-        assertThat(rateLimiter.getPermission(rateLimiter.getRateLimiterConfig().getTimeoutDuration()));
+        Assertions.assertThat(rateLimiter.getPermission(rateLimiter.getRateLimiterConfig().getTimeoutDuration()));
 
         Single.just(1)
                 .lift(RateLimiterOperator.of(rateLimiter))
@@ -54,15 +55,15 @@ public class RateLimiterOperatorTest {
         //Then
         RateLimiter.Metrics metrics = rateLimiter.getMetrics();
 
-        assertThat(metrics.getAvailablePermissions()).isEqualTo(50);
-        assertThat(metrics.getNumberOfWaitingThreads()).isEqualTo(0);
+        Assertions.assertThat(metrics.getAvailablePermissions()).isEqualTo(50);
+        Assertions.assertThat(metrics.getNumberOfWaitingThreads()).isEqualTo(0);
     }
 
     @Test
     public void shouldReturnOnErrorUsingUsingSingle() {
         //Given
         RateLimiter rateLimiter = RateLimiter.ofDefaults(LIMITER_NAME);
-        assertThat(rateLimiter.getPermission(rateLimiter.getRateLimiterConfig().getTimeoutDuration()));
+        Assertions.assertThat(rateLimiter.getPermission(rateLimiter.getRateLimiterConfig().getTimeoutDuration()));
 
         Single.fromCallable(() -> {throw new IOException("BAM!");})
                 .lift(RateLimiterOperator.of(rateLimiter))
@@ -74,15 +75,15 @@ public class RateLimiterOperatorTest {
         //Then
         RateLimiter.Metrics metrics = rateLimiter.getMetrics();
 
-        assertThat(metrics.getAvailablePermissions()).isEqualTo(50);
-        assertThat(metrics.getNumberOfWaitingThreads()).isEqualTo(0);
+        Assertions.assertThat(metrics.getAvailablePermissions()).isEqualTo(50);
+        Assertions.assertThat(metrics.getNumberOfWaitingThreads()).isEqualTo(0);
     }
 
     @Test
     public void shouldReturnOnCompleteUsingObservable() {
         //Given
         RateLimiter rateLimiter = RateLimiter.ofDefaults(LIMITER_NAME);
-        assertThat(rateLimiter.getPermission(rateLimiter.getRateLimiterConfig().getTimeoutDuration()));
+        Assertions.assertThat(rateLimiter.getPermission(rateLimiter.getRateLimiterConfig().getTimeoutDuration()));
 
         //When
         Observable.fromArray("Event 1", "Event 2")
@@ -95,15 +96,15 @@ public class RateLimiterOperatorTest {
         //Then
         RateLimiter.Metrics metrics = rateLimiter.getMetrics();
 
-        assertThat(metrics.getAvailablePermissions()).isEqualTo(50);
-        assertThat(metrics.getNumberOfWaitingThreads()).isEqualTo(0);
+        Assertions.assertThat(metrics.getAvailablePermissions()).isEqualTo(50);
+        Assertions.assertThat(metrics.getNumberOfWaitingThreads()).isEqualTo(0);
     }
 
     @Test
     public void shouldReturnOnCompleteUsingFlowable() {
         //Given
         RateLimiter rateLimiter = RateLimiter.ofDefaults(LIMITER_NAME);
-        assertThat(rateLimiter.getPermission(rateLimiter.getRateLimiterConfig().getTimeoutDuration()));
+        Assertions.assertThat(rateLimiter.getPermission(rateLimiter.getRateLimiterConfig().getTimeoutDuration()));
 
         //When
         Flowable.fromArray("Event 1", "Event 2")
@@ -116,15 +117,15 @@ public class RateLimiterOperatorTest {
         //Then
         RateLimiter.Metrics metrics = rateLimiter.getMetrics();
 
-        assertThat(metrics.getAvailablePermissions()).isEqualTo(50);
-        assertThat(metrics.getNumberOfWaitingThreads()).isEqualTo(0);
+        Assertions.assertThat(metrics.getAvailablePermissions()).isEqualTo(50);
+        Assertions.assertThat(metrics.getNumberOfWaitingThreads()).isEqualTo(0);
     }
 
     @Test
     public void shouldReturnOnErrorUsingObservable() {
         //Given
         RateLimiter rateLimiter = RateLimiter.ofDefaults(LIMITER_NAME);
-        assertThat(rateLimiter.getPermission(rateLimiter.getRateLimiterConfig().getTimeoutDuration()));
+        Assertions.assertThat(rateLimiter.getPermission(rateLimiter.getRateLimiterConfig().getTimeoutDuration()));
 
         //When
         Observable.fromCallable(() -> {throw new IOException("BAM!");})
@@ -137,15 +138,15 @@ public class RateLimiterOperatorTest {
         //Then
         RateLimiter.Metrics metrics = rateLimiter.getMetrics();
 
-        assertThat(metrics.getAvailablePermissions()).isEqualTo(50);
-        assertThat(metrics.getNumberOfWaitingThreads()).isEqualTo(0);
+        Assertions.assertThat(metrics.getAvailablePermissions()).isEqualTo(50);
+        Assertions.assertThat(metrics.getNumberOfWaitingThreads()).isEqualTo(0);
     }
 
     @Test
     public void shouldReturnOnErrorUsingFlowable() {
         //Given
         RateLimiter rateLimiter = RateLimiter.ofDefaults(LIMITER_NAME);
-        assertThat(rateLimiter.getPermission(rateLimiter.getRateLimiterConfig().getTimeoutDuration()));
+        Assertions.assertThat(rateLimiter.getPermission(rateLimiter.getRateLimiterConfig().getTimeoutDuration()));
 
         //When
         Flowable.fromCallable(() -> {throw new IOException("BAM!");})
@@ -158,8 +159,8 @@ public class RateLimiterOperatorTest {
         //Then
         RateLimiter.Metrics metrics = rateLimiter.getMetrics();
 
-        assertThat(metrics.getAvailablePermissions()).isEqualTo(50);
-        assertThat(metrics.getNumberOfWaitingThreads()).isEqualTo(0);
+        Assertions.assertThat(metrics.getAvailablePermissions()).isEqualTo(50);
+        Assertions.assertThat(metrics.getNumberOfWaitingThreads()).isEqualTo(0);
     }
 
     @Test
@@ -175,7 +176,7 @@ public class RateLimiterOperatorTest {
         // Create a RateLimiterRegistry with a custom global configuration
         RateLimiter rateLimiter = RateLimiter.of(LIMITER_NAME, rateLimiterConfig);
 
-        assertThat(rateLimiter.getPermission(rateLimiter.getRateLimiterConfig().getTimeoutDuration()));
+        Assertions.assertThat(rateLimiter.getPermission(rateLimiter.getRateLimiterConfig().getTimeoutDuration()));
 
         Observable.fromIterable(makeEleven())
                 .lift(RateLimiterOperator.of(rateLimiter))
@@ -188,8 +189,8 @@ public class RateLimiterOperatorTest {
 
         RateLimiter.Metrics metrics = rateLimiter.getMetrics();
 
-        assertThat(metrics.getAvailablePermissions()).isEqualTo(0);
-        assertThat(metrics.getNumberOfWaitingThreads()).isEqualTo(0);
+        Assertions.assertThat(metrics.getAvailablePermissions()).isEqualTo(0);
+        Assertions.assertThat(metrics.getNumberOfWaitingThreads()).isEqualTo(0);
     }
 
     @Test
@@ -205,7 +206,7 @@ public class RateLimiterOperatorTest {
         // Create a RateLimiterRegistry with a custom global configuration
         RateLimiter rateLimiter = RateLimiter.of(LIMITER_NAME, rateLimiterConfig);
 
-        assertThat(rateLimiter.getPermission(rateLimiter.getRateLimiterConfig().getTimeoutDuration()));
+        Assertions.assertThat(rateLimiter.getPermission(rateLimiter.getRateLimiterConfig().getTimeoutDuration()));
 
         Flowable.fromIterable(makeEleven())
                 .lift(RateLimiterOperator.of(rateLimiter))
@@ -218,8 +219,8 @@ public class RateLimiterOperatorTest {
 
         RateLimiter.Metrics metrics = rateLimiter.getMetrics();
 
-        assertThat(metrics.getAvailablePermissions()).isEqualTo(0);
-        assertThat(metrics.getNumberOfWaitingThreads()).isEqualTo(0);
+        Assertions.assertThat(metrics.getAvailablePermissions()).isEqualTo(0);
+        Assertions.assertThat(metrics.getNumberOfWaitingThreads()).isEqualTo(0);
     }
 
     @Test
@@ -235,7 +236,7 @@ public class RateLimiterOperatorTest {
         // Create a RateLimiterRegistry with a custom global configuration
         RateLimiter rateLimiter = RateLimiter.of(LIMITER_NAME, rateLimiterConfig);
 
-        assertThat(rateLimiter.getPermission(rateLimiter.getRateLimiterConfig().getTimeoutDuration()));
+        Assertions.assertThat(rateLimiter.getPermission(rateLimiter.getRateLimiterConfig().getTimeoutDuration()));
 
         Observable.fromCallable(() -> {throw new IOException("BAM!");})
                 .lift(RateLimiterOperator.of(rateLimiter))
@@ -246,8 +247,8 @@ public class RateLimiterOperatorTest {
 
         RateLimiter.Metrics metrics = rateLimiter.getMetrics();
 
-        assertThat(metrics.getAvailablePermissions()).isEqualTo(8);
-        assertThat(metrics.getNumberOfWaitingThreads()).isEqualTo(0);
+        Assertions.assertThat(metrics.getAvailablePermissions()).isEqualTo(8);
+        Assertions.assertThat(metrics.getNumberOfWaitingThreads()).isEqualTo(0);
     }
 
     private List<String> makeEleven() {

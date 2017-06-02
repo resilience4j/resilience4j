@@ -15,6 +15,7 @@
  */
 package io.github.resilience4j.consumer;
 
+import io.github.resilience4j.core.EventConsumer;
 import io.vavr.collection.Seq;
 
 

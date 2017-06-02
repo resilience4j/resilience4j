@@ -44,7 +44,7 @@ public class SemaphoreBulkhead implements Bulkhead{
     private final BulkheadConfig bulkheadConfig;
     private final FlowableProcessor<BulkheadEvent> eventPublisher;
     private final BulkheadMetrics metrics;
-    private final Lazy<EventConsumer> lazyEventConsumer;
+    private final Lazy<EventPublisher> lazyEventConsumer;
 
     /**
      * Creates a bulkhead using a configuration supplied
@@ -126,11 +126,11 @@ public class SemaphoreBulkhead implements Bulkhead{
     }
 
     @Override
-    public EventConsumer getEventConsumer() {
+    public EventPublisher getEventPublisher() {
         return lazyEventConsumer.get();
     }
 
-    private class EventDispatcher implements EventConsumer, io.reactivex.functions.Consumer<BulkheadEvent> {
+    private class EventDispatcher implements EventPublisher, io.reactivex.functions.Consumer<BulkheadEvent> {
 
         private volatile Consumer<BulkheadOnCallPermittedEvent> onCallPermittedEventConsumer;
         private volatile Consumer<BulkheadOnCallRejectedEvent> onCallRejectedEventConsumer;
@@ -140,13 +140,13 @@ public class SemaphoreBulkhead implements Bulkhead{
         }
 
         @Override
-        public EventConsumer onCallPermitted(Consumer<BulkheadOnCallPermittedEvent> onCallPermittedEventConsumer) {
+        public EventPublisher onCallPermitted(Consumer<BulkheadOnCallPermittedEvent> onCallPermittedEventConsumer) {
             this.onCallPermittedEventConsumer = onCallPermittedEventConsumer;
             return this;
         }
 
         @Override
-        public EventConsumer onCallRejected(Consumer<BulkheadOnCallRejectedEvent> onCallRejectedEventConsumer) {
+        public EventPublisher onCallRejected(Consumer<BulkheadOnCallRejectedEvent> onCallRejectedEventConsumer) {
             this.onCallRejectedEventConsumer = onCallRejectedEventConsumer;
             return this;
         }
