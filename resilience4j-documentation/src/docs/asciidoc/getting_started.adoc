@@ -14,6 +14,7 @@ Core modules:
 * resilience4j-bulkhead: Bulkheading
 * resilience4j-retry: Automatic retrying
 * resilience4j-cache: Response caching
+* resilience4j-timelimiter: Timeout handling
 
 Add-on modules
 
@@ -39,6 +40,7 @@ compile "io.github.resilience4j:resilience4j-ratelimiter:{release-version}"
 compile "io.github.resilience4j:resilience4j-retry:{release-version}"
 compile "io.github.resilience4j:resilience4j-bulkhead:{release-version}"
 compile "io.github.resilience4j:resilience4j-cache:{release-version}"
+compile "io.github.resilience4j:resilience4j-timelimiter:{release-version}"
 ----
 
 ==== Snapshot
@@ -89,6 +91,11 @@ repositories {
 <dependency>
     <groupId>io.github.resilience4j</groupId>
     <artifactId>resilience4j-cache</artifactId>
+    <version>{release-version}</version>
+</dependency>
+<dependency>
+    <groupId>io.github.resilience4j</groupId>
+    <artifactId>resilience4j-timelimiter</artifactId>
     <version>{release-version}</version>
 </dependency>
 ----
