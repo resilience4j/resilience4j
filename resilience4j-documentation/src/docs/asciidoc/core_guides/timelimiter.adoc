@@ -3,7 +3,7 @@
 ==== Introduction
 
 The TimeLimiter API sets a time limit on the execution of a supplied future. The decorated supplied
-future can be chained with a CircuitBreaker in order to trip the circuit breaker if the supplied
+future can be chained with a CircuitBreaker to trip the circuit breaker if the supplied
 future's timeout has exceeded.
 
 The TimeLimiter provides the flexibility to handle custom future implementations such as ones that
@@ -13,7 +13,7 @@ if an exception occurs. This is configurable within the configuration.
 ==== Examples
 [source,java]
 ----
-// For example you want to restrict the execution of a long running task to 60 seconds.
+// For example, you want to restrict the execution of a long running task to 60 seconds.
 TimeLimiterConfig config = TimeLimiterConfig.custom()
     .timeoutDuration(Duration.ofSeconds(60))
     .cancelRunningFuture(true)
@@ -25,7 +25,7 @@ TimeLimiter timeLimiter = TimeLimiter.of(config);
 
 ===== Using a TimeLimiter
 
-TimeLimiter takes a Future Supplier and returns a Callable which wull unwraps the Future and attempt
+TimeLimiter takes a Future Supplier and returns a Callable that will unwrap the Future and attempt
 to retrieve the future's value within the configured timeout period. If the timeout is reached, then
 an exception is thrown upstream and TimeLimiter, if configured, will attempt to cancel the future.
 
