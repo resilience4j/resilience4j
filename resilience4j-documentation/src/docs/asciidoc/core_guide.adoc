@@ -9,6 +9,7 @@ Core modules:
 * resilience4j-bulkhead: Bulkheading
 * resilience4j-retry: Automatic retrying
 * resilience4j-cache: Response caching
+* resilience4j-timelimiter: Timeout handling
 
 Add-on modules
 
@@ -25,3 +26,4 @@ include::core_guides/ratelimiter.adoc[]
 include::core_guides/bulkhead.adoc[]
 include::core_guides/retry.adoc[]
 include::core_guides/cache.adoc[]
+include::core_guides/timeout.adoc[]
