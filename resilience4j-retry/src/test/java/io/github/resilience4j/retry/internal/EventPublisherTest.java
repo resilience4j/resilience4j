@@ -34,6 +34,8 @@ import org.mockito.Mockito;
 import javax.xml.ws.WebServiceException;
 import java.io.IOException;
 
+import static io.github.resilience4j.adapter.RxJava2Adapter.toFlowable;
+
 public class EventPublisherTest {
 
 
@@ -53,7 +55,7 @@ public class EventPublisherTest {
 
         // Create a Retry with default configuration
         Retry retry = Retry.ofDefaults("id");
-        TestSubscriber<RetryEvent.Type> testSubscriber = retry.getEventStream()
+        TestSubscriber<RetryEvent.Type> testSubscriber = toFlowable(retry.getEventPublisher())
                 .map(RetryEvent::getEventType)
                 .test();
         // Decorate the invocation of the HelloWorldService
@@ -81,7 +83,7 @@ public class EventPublisherTest {
 
         // Create a Retry with default configuration
         Retry retry = Retry.ofDefaults("id");
-        TestSubscriber<RetryEvent.Type> testSubscriber = retry.getEventStream()
+        TestSubscriber<RetryEvent.Type> testSubscriber = toFlowable(retry.getEventPublisher())
                 .map(RetryEvent::getEventType)
                 .test();
         // Decorate the invocation of the HelloWorldService
@@ -109,7 +111,7 @@ public class EventPublisherTest {
                 .retryOnException(t -> t instanceof IOException)
                 .maxAttempts(3).build();
         Retry retry = Retry.of("id", config);
-        TestSubscriber<RetryEvent.Type> testSubscriber = retry.getEventStream()
+        TestSubscriber<RetryEvent.Type> testSubscriber = toFlowable(retry.getEventPublisher())
                 .map(RetryEvent::getEventType)
                 .test();
         // Decorate the invocation of the HelloWorldService

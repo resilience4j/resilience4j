@@ -26,6 +26,7 @@ import org.junit.Test;
 
 import java.util.function.Function;
 
+import static io.github.resilience4j.adapter.RxJava2Adapter.toFlowable;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.*;
 import static org.mockito.Mockito.mock;
@@ -46,7 +47,7 @@ public class CacheTest {
         given(cache.get("testKey")).willReturn(null);
 
         Cache<String, String> cacheContext = Cache.of(cache);
-        TestSubscriber<CacheEvent.Type> testSubscriber = cacheContext.getEventStream()
+        TestSubscriber<CacheEvent.Type> testSubscriber = toFlowable(cacheContext.getEventPublisher())
                 .map(CacheEvent::getEventType)
                 .test();
 
@@ -69,7 +70,7 @@ public class CacheTest {
         given(cache.get("testKey")).willReturn(null);
 
         Cache<String, String> cacheContext = Cache.of(cache);
-        TestSubscriber<CacheEvent.Type> testSubscriber = cacheContext.getEventStream()
+        TestSubscriber<CacheEvent.Type> testSubscriber = toFlowable(cacheContext.getEventPublisher())
                 .map(CacheEvent::getEventType)
                 .test();
 
@@ -92,7 +93,7 @@ public class CacheTest {
         given(cache.get("testKey")).willReturn(null);
 
         Cache<String, String> cacheContext = Cache.of(cache);
-        TestSubscriber<CacheEvent.Type> testSubscriber = cacheContext.getEventStream()
+        TestSubscriber<CacheEvent.Type> testSubscriber = toFlowable(cacheContext.getEventPublisher())
                 .map(CacheEvent::getEventType)
                 .test();
 
@@ -135,7 +136,7 @@ public class CacheTest {
         willThrow(new RuntimeException("Cache is not available")).given(cache).put("testKey", "Hello world");
 
         Cache<String, String> cacheContext = Cache.of(cache);
-        TestSubscriber<CacheEvent.Type> testSubscriber = cacheContext.getEventStream()
+        TestSubscriber<CacheEvent.Type> testSubscriber = toFlowable(cacheContext.getEventPublisher())
                 .map(CacheEvent::getEventType)
                 .test();
 
@@ -157,7 +158,7 @@ public class CacheTest {
         given(cache.get("testKey")).willReturn("Hello from cache");
 
         Cache<String, String> cacheContext = Cache.of(cache);
-        TestSubscriber<CacheEvent.Type> testSubscriber = cacheContext.getEventStream()
+        TestSubscriber<CacheEvent.Type> testSubscriber = toFlowable(cacheContext.getEventPublisher())
                 .map(CacheEvent::getEventType)
                 .test();
 
@@ -179,7 +180,7 @@ public class CacheTest {
         given(cache.get("testKey")).willThrow(new RuntimeException("Cache is not available"));
 
         Cache<String, String> cacheContext = Cache.of(cache);
-        TestSubscriber<CacheEvent.Type> testSubscriber = cacheContext.getEventStream()
+        TestSubscriber<CacheEvent.Type> testSubscriber = toFlowable(cacheContext.getEventPublisher())
                 .map(CacheEvent::getEventType)
                 .test();
 
