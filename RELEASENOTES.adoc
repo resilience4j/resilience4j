@@ -117,5 +117,6 @@ Detailed https://github.com/resilience4j/resilience4j/milestone/6?closed=1[PR li
 * Issue #139: Support CircuitBreaker failure rate threshold < 1.
 
 NOTE: Braking changes:
+
 * Issue #51: Removed RxJava2 dependency to make Resilience4j more lightweight. Added a RxJava2 module.
 * Issue #148: Created an EventPublisher which replaces the RxJava Event Stream.
