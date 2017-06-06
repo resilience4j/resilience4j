@@ -250,7 +250,7 @@ long failedCalls = metrics.getNumberOfFailedCalls();
 
 [source,java]
 ----
-circuitBreaker.getEventConsumer()
+circuitBreaker.getEventPublisher()
     .onSuccess(event -> logger.info(...))
     .onError(event -> logger.info(...))
     .onStateTransition(event -> logger.info(...));
