@@ -110,7 +110,7 @@ The CircuitBreaker emits a stream of CircuitBreakerEvents. A `CircuitBreakerEven
 
 [source,java]
 ----
-circuitBreaker.getEventConsumer()
+circuitBreaker.getEventPublisher()
     .onSuccess(event -> logger.info(...))
     .onError(event -> logger.info(...))
     .onStateTransition(event -> logger.info(...));
