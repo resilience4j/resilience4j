@@ -23,7 +23,6 @@ import io.vavr.control.Try;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.BDDMockito;
-import org.mockito.Mockito;
 import org.slf4j.Logger;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -40,7 +39,7 @@ public class BulkheadEventPublisherTest {
 
     @Before
     public void setUp(){
-        helloWorldService = Mockito.mock(HelloWorldService.class);
+        helloWorldService = mock(HelloWorldService.class);
         config = BulkheadConfig.custom()
                    .maxConcurrentCalls(1)
                    .build();

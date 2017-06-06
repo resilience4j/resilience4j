@@ -38,17 +38,16 @@ public class RateLimiterEventPublisherTest {
     private static final Duration TIMEOUT = Duration.ZERO;
     private static final Duration REFRESH_PERIOD = Duration.ofSeconds(5);
 
-    private RateLimiterConfig config;
     private RateLimiter rateLimiter;
     private Logger logger;
 
     @Before
     public void setUp() {
-        config = RateLimiterConfig.custom()
-            .timeoutDuration(TIMEOUT)
-            .limitRefreshPeriod(REFRESH_PERIOD)
-            .limitForPeriod(LIMIT)
-            .build();
+        RateLimiterConfig config = RateLimiterConfig.custom()
+                .timeoutDuration(TIMEOUT)
+                .limitRefreshPeriod(REFRESH_PERIOD)
+                .limitForPeriod(LIMIT)
+                .build();
         rateLimiter = RateLimiter.of("test", config);
         logger = mock(Logger.class);
     }
