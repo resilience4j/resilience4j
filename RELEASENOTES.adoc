@@ -110,3 +110,12 @@ NOTE: Braking changes:
 * The *groupId* has been changed from *io.github.robwin* to *io.github.resilience4j*
 
 Detailed https://github.com/resilience4j/resilience4j/milestone/6?closed=1[PR list]
+
+== Version 0.10.0
+* Issue #139: Support CircuitBreaker failure rate threshold < 1.
+* Issue #123: Autobuild circuitbreaker, retry, ratelimiter registry from properties.
+* Issue #126: Created Ratpack circuitbreaker, ratelimiter sse event streams.
+
+NOTE: Braking changes:
+* Issue #148: Create an EventPublisher which replaces the RxJava Event Stream.
+* Issue #51: Removed RxJava2 dependency to make Resilience4j more lightweight. Added a RxJava2 module.
