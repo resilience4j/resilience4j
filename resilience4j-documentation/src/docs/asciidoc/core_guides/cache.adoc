@@ -21,16 +21,12 @@ String value = Try.of(() -> cachedFunction.apply("cacheKey")).get();
 
 ==== Example
 
-The CacheContext emits a stream of CacheEvents to any Observer/Consumer who subscribes. An event can be a cache hit, a cache miss or an error. You can use the `CircularEventConsumer` to store events in a circular buffer with a fixed capacity.
+The Cache emits a stream of CacheEvents. An event can be a cache hit, a cache miss or an error.
 
 [source,java]
 ----
-Cache<String, String> cacheContext = Cache.of(cacheInstance);
-CircularEventConsumer<CacheOnMissEvent> circularEventConsumer = new CircularEventConsumer<>(10);
-cacheContext.getEventStream()
-    .filter(event -> event.getEventType() == Type.CACHE_MISS)
-    .cast(CacheOnMissEvent.class)
-    .subscribe(circularEventConsumer);
-
-List<CacheOnMissEvent> bufferedEvents = circularEventConsumer.getBufferedEvents();
+cacheContext.getEventPublisher()
+    .onCacheHit(event -> logger.info(...))
+    .onCacheMiss(event -> logger.info(...))
+    .onError(event -> logger.info(...));
 ----

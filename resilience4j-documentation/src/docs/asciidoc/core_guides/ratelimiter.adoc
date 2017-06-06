@@ -58,24 +58,24 @@ Observable.fromCallable(backendService::doSomething)
 
 ===== Consume emitted RateLimiterEvents
 
-The RateLimiter emits a stream of RateLimiterEvents to any Observer/Consumer who subscribes.
-An event can be a successful permission acquire or acquire failure.
+The RateLimiter emits a stream of RateLimiterEvents. An event can be a successful permission acquire or acquire failure.
 All events contains additional information like event creation time and rate limiter name.
-If you want to consume events, you have to subscribe to the event stream.
-You can use the `CircularEventConsumer` to store events in a circular buffer with a fixed capacity.
-You can use RxJava to filter certain events.
-The advantage of an event stream is that you can use RxJava's `observeOn`
-operator to specify a different Scheduler that the RateLimiter will use to send notifications to its observers/consumers.
+If you want to consume events, you have to register an event consumer.
 
 [source,java]
 ----
-RateLimiter rateLimiter = RateLimiter.ofDefaults("backendName");
-CircularEventConsumer<RateLimiterEvent> circularEventConsumer = new CircularEventConsumer<>(5);
-rateLimiter.getEventStream()
-    .filter(event -> event.getEventType() == FAILED_ACQUIRE)
-    .subscribe(circularEventConsumer);
+rateLimiter.getEventPublisher()
+    .onSuccess(event -> logger.info(...))
+    .onFailure(event -> logger.info(...));
+----
 
-List<RateLimiterEvent> bufferedEvents = circularEventConsumer.getBufferedEvents();
+You can use RxJava or Spring Reactor Adapters to convert the `EventPublisher` into a Reactive Stream.
+
+[source,java]
+----
+RxJava2Adapter.toFlowable(rateLimiter.getEventPublisher())
+    .filter(event -> event.getEventType() == FAILED_ACQUIRE)
+    .subscribe(event -> logger.info(...))
 ----
 
 ==== Monitoring
