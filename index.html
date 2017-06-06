@@ -663,6 +663,9 @@ With Resilience4j you don&#8217;t have to go all-in, you can pick what you need.
 <li>
 <p>resilience4j-cache: Response caching</p>
 </li>
+<li>
+<p>resilience4j-timelimiter: Timeout handling</p>
+</li>
 </ul>
 </div>
 <div class="paragraph">
@@ -759,6 +762,9 @@ The <strong>groupId</strong> has been changed from <strong>io.github.robwin</str
 <li>
 <p>resilience4j-cache: Response caching</p>
 </li>
+<li>
+<p>resilience4j-timelimiter: Timeout handling</p>
+</li>
 </ul>
 </div>
 <div class="paragraph">
@@ -803,7 +809,8 @@ compile "io.github.resilience4j:resilience4j-circuitbreaker:0.10.0"
 compile "io.github.resilience4j:resilience4j-ratelimiter:0.10.0"
 compile "io.github.resilience4j:resilience4j-retry:0.10.0"
 compile "io.github.resilience4j:resilience4j-bulkhead:0.10.0"
-compile "io.github.resilience4j:resilience4j-cache:0.10.0"</code></pre>
+compile "io.github.resilience4j:resilience4j-cache:0.10.0"
+compile "io.github.resilience4j:resilience4j-timelimiter:0.10.0"</code></pre>
 </div>
 </div>
 </div>
@@ -859,6 +866,11 @@ compile "io.github.resilience4j:resilience4j-cache:0.10.0"</code></pre>
     <span class="tag">&lt;groupId&gt;</span>io.github.resilience4j<span class="tag">&lt;/groupId&gt;</span>
     <span class="tag">&lt;artifactId&gt;</span>resilience4j-cache<span class="tag">&lt;/artifactId&gt;</span>
     <span class="tag">&lt;version&gt;</span>0.10.0<span class="tag">&lt;/version&gt;</span>
+<span class="tag">&lt;/dependency&gt;</span>
+<span class="tag">&lt;dependency&gt;</span>
+    <span class="tag">&lt;groupId&gt;</span>io.github.resilience4j<span class="tag">&lt;/groupId&gt;</span>
+    <span class="tag">&lt;artifactId&gt;</span>resilience4j-timelimiter<span class="tag">&lt;/artifactId&gt;</span>
+    <span class="tag">&lt;version&gt;</span>0.10.0<span class="tag">&lt;/version&gt;</span>
 <span class="tag">&lt;/dependency&gt;</span></code></pre>
 </div>
 </div>
@@ -905,6 +917,9 @@ compile "io.github.resilience4j:resilience4j-cache:0.10.0"</code></pre>
 </li>
 <li>
 <p>resilience4j-cache: Response caching</p>
+</li>
+<li>
+<p>resilience4j-timelimiter: Timeout handling</p>
 </li>
 </ul>
 </div>
@@ -1636,6 +1651,9 @@ CheckedFunction1&lt;<span class="predefined-type">String</span>, <span class="pr
     .onCacheMiss(event -&gt; logger.info(...))
     .onError(event -&gt; logger.info(...));</code></pre>
 </div>
+</div>
+<div class="paragraph">
+<p>Unresolved directive in core_guide.adoc - include::core_guides/timeout.adoc[]</p>
 </div>
 </div>
 </div>
