@@ -39,7 +39,7 @@ import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 
-public class AsyncRetryEventConsumerTest {
+public class AsyncRetryEventPublisherTest {
 
     private AsyncHelloWorldService helloWorldService;
     private Logger logger;
@@ -55,10 +55,10 @@ public class AsyncRetryEventConsumerTest {
 
     @Test
     public void shouldReturnTheSameConsumer() {
-        AsyncRetry.EventConsumer eventConsumer = retry.getEventConsumer();
-        AsyncRetry.EventConsumer eventConsumer2 = retry.getEventConsumer();
+        AsyncRetry.EventPublisher eventPublisher = retry.getEventPublisher();
+        AsyncRetry.EventPublisher eventPublisher2 = retry.getEventPublisher();
 
-        assertThat(eventConsumer).isEqualTo(eventConsumer2);
+        assertThat(eventPublisher).isEqualTo(eventPublisher2);
     }
 
     @Test
@@ -71,7 +71,7 @@ public class AsyncRetryEventConsumerTest {
                 .willReturn(failedFuture)
                 .willReturn(completedFuture("Hello world"));
 
-        retry.getEventConsumer()
+        retry.getEventPublisher()
             .onSuccess(event ->
                     logger.info(event.getEventType().toString()));
 
@@ -91,7 +91,7 @@ public class AsyncRetryEventConsumerTest {
         given(helloWorldService.returnHelloWorld())
                 .willReturn(failedFuture);
 
-        retry.getEventConsumer()
+        retry.getEventPublisher()
             .onError(event ->
                     logger.info(event.getEventType().toString()));
 
@@ -115,7 +115,7 @@ public class AsyncRetryEventConsumerTest {
                 .build();
         retry = AsyncRetry.of("testName", retryConfig);
 
-        retry.getEventConsumer()
+        retry.getEventPublisher()
             .onIgnoredError(event ->
                     logger.info(event.getEventType().toString()));
 

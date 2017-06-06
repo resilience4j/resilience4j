@@ -18,9 +18,9 @@
  */
 package io.github.resilience4j.consumer;
 
-import org.junit.Test;
-
 import io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent;
+import io.github.resilience4j.core.EventConsumer;
+import org.junit.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -32,7 +32,6 @@ public class EventConsumerRegistryTest {
         EventConsumer<CircuitBreakerEvent> eventEventConsumer = registry.createEventConsumer("testName", 5);
 
         assertThat(eventEventConsumer).isNotNull();
-        assertThat(eventEventConsumer.getBufferedEvents()).hasSize(0);
     }
 
     @Test

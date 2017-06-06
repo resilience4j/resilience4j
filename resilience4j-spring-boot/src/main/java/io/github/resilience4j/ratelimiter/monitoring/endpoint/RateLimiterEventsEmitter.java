@@ -15,39 +15,47 @@
  */
 package io.github.resilience4j.ratelimiter.monitoring.endpoint;
 
-import org.springframework.http.MediaType;
-import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
-
 import io.github.resilience4j.ratelimiter.event.RateLimiterEvent;
 import io.github.resilience4j.ratelimiter.monitoring.model.RateLimiterEventDTO;
-import io.reactivex.Flowable;
-import io.reactivex.disposables.Disposable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.http.MediaType;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
+import reactor.core.Disposable;
+import reactor.core.publisher.Flux;
 
 import java.io.IOException;
 
 public class RateLimiterEventsEmitter {
+
+    private static final Logger LOG = LoggerFactory.getLogger(RateLimiterEventsEmitter.class);
+
     private final SseEmitter sseEmitter;
     private final Disposable disposable;
 
-    public RateLimiterEventsEmitter(Flowable<RateLimiterEventDTO> flowable) {
+    public RateLimiterEventsEmitter(Flux<RateLimiterEventDTO> eventStream) {
         this.sseEmitter = new SseEmitter();
         this.sseEmitter.onCompletion(this::unsubscribe);
         this.sseEmitter.onTimeout(this::unsubscribe);
-        this.disposable = flowable.subscribe(this::notify,
+        this.disposable = eventStream.subscribe(this::notify,
             this.sseEmitter::completeWithError,
             this.sseEmitter::complete);
     }
 
-    private void notify(RateLimiterEventDTO rateLimiterEventDTO) throws IOException {
-        sseEmitter.send(rateLimiterEventDTO, MediaType.APPLICATION_JSON);
+    private void notify(RateLimiterEventDTO rateLimiterEventDTO){
+        try {
+            sseEmitter.send(rateLimiterEventDTO, MediaType.APPLICATION_JSON);
+        } catch (IOException e) {
+            LOG.warn("Failed to send circuitbreaker event", e);
+        }
     }
 
     private void unsubscribe() {
         this.disposable.dispose();
     }
 
-    public static SseEmitter createSseEmitter(Flowable<RateLimiterEvent> eventStream) {
-        Flowable<RateLimiterEventDTO> flowable = eventStream.map(RateLimiterEventDTO::createRateLimiterEventDTO);
+    public static SseEmitter createSseEmitter(Flux<RateLimiterEvent> eventStream) {
+        Flux<RateLimiterEventDTO> flowable = eventStream.map(RateLimiterEventDTO::createRateLimiterEventDTO);
         return new RateLimiterEventsEmitter(flowable).sseEmitter;
     }
 }

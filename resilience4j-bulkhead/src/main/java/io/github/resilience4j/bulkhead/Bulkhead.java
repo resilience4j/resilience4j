@@ -23,7 +23,7 @@ import io.github.resilience4j.bulkhead.event.BulkheadOnCallPermittedEvent;
 import io.github.resilience4j.bulkhead.event.BulkheadOnCallRejectedEvent;
 import io.github.resilience4j.bulkhead.internal.SemaphoreBulkhead;
 import io.github.resilience4j.bulkhead.utils.BulkheadUtils;
-import io.reactivex.Flowable;
+import io.github.resilience4j.core.EventConsumer;
 import io.vavr.CheckedConsumer;
 import io.vavr.CheckedFunction0;
 import io.vavr.CheckedFunction1;
@@ -87,19 +87,12 @@ public interface Bulkhead {
     Metrics getMetrics();
 
     /**
-     * Returns a reactive stream of BulkheadEvent events.
-     *
-     * @return a stream of events
-     */
-    Flowable<BulkheadEvent> getEventStream();
-
-    /**
-     * Returns an EventConsumer which subscribes to the reactive stream of BulkheadEvent and
+     * Returns an EventPublisher which subscribes to the reactive stream of BulkheadEvent and
      * can be used to register event consumers.
      *
-     * @return an EventConsumer
+     * @return an EventPublisher
      */
-    EventConsumer getEventConsumer();
+    EventPublisher getEventPublisher();
 
     /**
      * Decorates and executes the decorated Supplier.
@@ -416,14 +409,13 @@ public interface Bulkhead {
     }
 
     /**
-     * An EventConsumer which subscribes to the reactive stream of CacheEvents and
-     * can be used to register event consumers.
+     * An EventPublisher which can be used to register event consumers.
      */
-    interface EventConsumer {
+    interface EventPublisher extends io.github.resilience4j.core.EventPublisher<BulkheadEvent> {
 
-        EventConsumer onCallRejected(Consumer<BulkheadOnCallRejectedEvent> eventConsumer);
+        EventPublisher onCallRejected(EventConsumer<BulkheadOnCallRejectedEvent> eventConsumer);
 
-        EventConsumer onCallPermitted(Consumer<BulkheadOnCallPermittedEvent> eventConsumer);
+        EventPublisher onCallPermitted(EventConsumer<BulkheadOnCallPermittedEvent> eventConsumer);
 
     }
 }

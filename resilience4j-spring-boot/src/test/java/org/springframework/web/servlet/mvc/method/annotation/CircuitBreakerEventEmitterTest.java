@@ -1,31 +1,27 @@
 package org.springframework.web.servlet.mvc.method.annotation;
 
-import static org.assertj.core.api.BDDAssertions.then;
-import static org.springframework.http.MediaType.APPLICATION_JSON;
-import static io.github.resilience4j.circuitbreaker.CircuitBreaker.decorateRunnable;
-import static io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent.Type.ERROR;
-import static io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent.Type.IGNORED_ERROR;
-import static io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent.Type.NOT_PERMITTED;
-import static io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent.Type.STATE_TRANSITION;
-import static io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent.Type.SUCCESS;
-import static io.github.resilience4j.circuitbreaker.monitoring.endpoint.CircuitBreakerEventEmitter.createSseEmitter;
-import static java.util.stream.Collectors.toList;
-
-import org.junit.Test;
-import org.springframework.http.MediaType;
-
+import io.github.resilience4j.adapter.ReactorAdapter;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent;
 import io.github.resilience4j.circuitbreaker.monitoring.endpoint.CircuitBreakerEventDTO;
 import io.vavr.control.Try;
+import org.junit.Test;
+import org.springframework.http.MediaType;
 
 import java.io.IOException;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.ConcurrentModificationException;
 import java.util.List;
+
+import static io.github.resilience4j.circuitbreaker.CircuitBreaker.decorateRunnable;
+import static io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent.Type.*;
+import static io.github.resilience4j.circuitbreaker.monitoring.endpoint.CircuitBreakerEventEmitter.createSseEmitter;
+import static java.util.stream.Collectors.toList;
+import static org.assertj.core.api.BDDAssertions.then;
+import static org.springframework.http.MediaType.APPLICATION_JSON;
 
 /**
  * @author bstorozhuk
@@ -51,7 +47,7 @@ public class CircuitBreakerEventEmitterTest {
             throw new IllegalArgumentException();
         });
 
-        SseEmitter sseEmitter = createSseEmitter(circuitBreaker.getEventStream());
+        SseEmitter sseEmitter = createSseEmitter(ReactorAdapter.toFlux(circuitBreaker.getEventPublisher()));
         TestHandler handler = new TestHandler();
         sseEmitter.initialize(handler);
 

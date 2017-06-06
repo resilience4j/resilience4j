@@ -15,8 +15,16 @@
  */
 package io.github.resilience4j.ratelimiter.autoconfigure;
 
-import static io.github.resilience4j.ratelimiter.autoconfigure.RateLimiterProperties.createRateLimiterConfig;
-
+import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
+import io.github.resilience4j.consumer.EventConsumerRegistry;
+import io.github.resilience4j.core.EventConsumer;
+import io.github.resilience4j.ratelimiter.RateLimiter;
+import io.github.resilience4j.ratelimiter.RateLimiterConfig;
+import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
+import io.github.resilience4j.ratelimiter.event.RateLimiterEvent;
+import io.github.resilience4j.ratelimiter.internal.InMemoryRateLimiterRegistry;
+import io.github.resilience4j.ratelimiter.monitoring.endpoint.RateLimiterEndpoint;
+import io.github.resilience4j.ratelimiter.monitoring.health.RateLimiterHealthIndicator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
@@ -25,17 +33,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
-import io.github.resilience4j.consumer.EventConsumer;
-import io.github.resilience4j.consumer.EventConsumerRegistry;
-import io.github.resilience4j.ratelimiter.RateLimiter;
-import io.github.resilience4j.ratelimiter.RateLimiterConfig;
-import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
-import io.github.resilience4j.ratelimiter.event.RateLimiterEvent;
-import io.github.resilience4j.ratelimiter.internal.InMemoryRateLimiterRegistry;
-import io.github.resilience4j.ratelimiter.monitoring.endpoint.RateLimiterEndpoint;
-import io.github.resilience4j.ratelimiter.monitoring.endpoint.RateLimiterEventsEndpoint;
-import io.github.resilience4j.ratelimiter.monitoring.health.RateLimiterHealthIndicator;
+import static io.github.resilience4j.ratelimiter.autoconfigure.RateLimiterProperties.createRateLimiterConfig;
 
 /**
  * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration
@@ -97,7 +95,7 @@ public class RateLimiterAutoConfiguration {
     private void subscribeToLimiterEvents(EventConsumerRegistry<RateLimiterEvent> rateLimiterEventsConsumerRegistry, String name, RateLimiterProperties.LimiterProperties properties, RateLimiter rateLimiter) {
         EventConsumer<RateLimiterEvent> eventConsumer = rateLimiterEventsConsumerRegistry
             .createEventConsumer(name, properties.getEventConsumerBufferSize());
-        rateLimiter.getEventStream().subscribe(eventConsumer);
+       rateLimiter.getEventPublisher().onEvent(eventConsumer);
 
         logger.debug("Autoconfigure subscription for Rate Limiter {}", rateLimiter);
     }

@@ -18,6 +18,7 @@
  */
 package io.github.resilience4j.bulkhead.internal;
 
+import io.github.resilience4j.adapter.RxJava2Adapter;
 import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.bulkhead.BulkheadConfig;
 import io.github.resilience4j.bulkhead.event.BulkheadEvent;
@@ -46,7 +47,7 @@ public class SemaphoreBulkheadTest {
                                               .build();
 
         bulkhead = Bulkhead.of("test", config);
-        testSubscriber = bulkhead.getEventStream()
+        testSubscriber = RxJava2Adapter.toFlowable(bulkhead.getEventPublisher())
                                  .map(BulkheadEvent::getEventType)
                                  .test();
     }

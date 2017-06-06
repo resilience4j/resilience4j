@@ -17,3 +17,5 @@ include 'resilience4j-retrofit'
 include 'resilience4j-ratpack'
 include 'resilience4j-prometheus'
 include 'resilience4j-timelimiter'
+include 'resilience4j-rxjava2'
+

@@ -29,7 +29,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.*;
 import static org.mockito.Mockito.mock;
 
-public class CacheEventConsumerTest {
+public class CacheEventPublisherTest {
 
     private javax.cache.Cache<String, String> cache;
     private Logger logger;
@@ -44,10 +44,10 @@ public class CacheEventConsumerTest {
     @Test
     public void shouldReturnTheSameConsumer() {
         Cache<String, String> cacheContext = Cache.of(cache);
-        Cache.EventConsumer eventConsumer = cacheContext.getEventConsumer();
-        Cache.EventConsumer eventConsumer2 = cacheContext.getEventConsumer();
+        Cache.EventPublisher eventPublisher = cacheContext.getEventPublisher();
+        Cache.EventPublisher eventPublisher2 = cacheContext.getEventPublisher();
 
-        assertThat(eventConsumer).isEqualTo(eventConsumer2);
+        assertThat(eventPublisher).isEqualTo(eventPublisher2);
     }
 
     @Test
@@ -56,7 +56,7 @@ public class CacheEventConsumerTest {
         given(cache.get("testKey")).willReturn("Hello world");
 
         Cache<String, String> cacheContext = Cache.of(cache);
-        cacheContext.getEventConsumer().onCacheHit(event ->
+        cacheContext.getEventPublisher().onCacheHit(event ->
                 logger.info(event.getEventType().toString()));
 
         CheckedFunction1<String, String> cachedFunction = Cache.decorateCheckedSupplier(cacheContext, () -> "Hello world");
@@ -72,7 +72,7 @@ public class CacheEventConsumerTest {
         given(cache.get("testKey")).willReturn(null);
 
         Cache<String, String> cacheContext = Cache.of(cache);
-        cacheContext.getEventConsumer().onCacheMiss(event ->
+        cacheContext.getEventPublisher().onCacheMiss(event ->
                 logger.info(event.getEventType().toString()));
 
         CheckedFunction1<String, String> cachedFunction = Cache.decorateCheckedSupplier(cacheContext, () -> "Hello world");
@@ -88,7 +88,7 @@ public class CacheEventConsumerTest {
         given(cache.get("testKey")).willThrow(new WebServiceException("BLA"));
 
         Cache<String, String> cacheContext = Cache.of(cache);
-        cacheContext.getEventConsumer().onError(event ->
+        cacheContext.getEventPublisher().onError(event ->
                 logger.info(event.getEventType().toString()));
 
         CheckedFunction1<String, String> cachedFunction = Cache.decorateCheckedSupplier(cacheContext, () -> "Hello world");

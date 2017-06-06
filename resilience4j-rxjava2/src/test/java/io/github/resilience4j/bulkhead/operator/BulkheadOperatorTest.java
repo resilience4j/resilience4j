@@ -23,6 +23,7 @@ import io.github.resilience4j.bulkhead.BulkheadConfig;
 import io.github.resilience4j.bulkhead.BulkheadFullException;
 import io.reactivex.*;
 import io.reactivex.disposables.Disposable;
+import org.assertj.core.api.Assertions;
 import org.junit.Before;
 import org.junit.Test;
 import org.reactivestreams.Subscriber;
@@ -30,11 +31,8 @@ import org.reactivestreams.Subscription;
 
 import java.io.IOException;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
 
 public class BulkheadOperatorTest {
 
@@ -62,7 +60,7 @@ public class BulkheadOperatorTest {
                 .assertComplete();
 
         // Then
-        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
+        Assertions.assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
     }
 
     @Test
@@ -81,7 +79,7 @@ public class BulkheadOperatorTest {
                 .assertSubscribed();
 
         // Then
-        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
+        Assertions.assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
     }
 
     @Test
@@ -99,7 +97,7 @@ public class BulkheadOperatorTest {
                 .assertComplete();
 
         // Then
-        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
+        Assertions.assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
     }
 
     @Test
@@ -117,7 +115,7 @@ public class BulkheadOperatorTest {
                 .assertComplete();
 
         // Then
-        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
+        Assertions.assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
     }
 
     @Test
@@ -137,7 +135,7 @@ public class BulkheadOperatorTest {
                 .assertSubscribed();
 
         // Then
-        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
+        Assertions.assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
     }
 
     @Test
@@ -157,7 +155,7 @@ public class BulkheadOperatorTest {
                 .assertSubscribed();
 
         // Then
-        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
+        Assertions.assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
     }
 
     @Test
@@ -178,7 +176,7 @@ public class BulkheadOperatorTest {
         bulkhead.onComplete();
 
         // Then
-        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
+        Assertions.assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
     }
 
     @Test
@@ -199,7 +197,7 @@ public class BulkheadOperatorTest {
         bulkhead.onComplete();
 
         // Then
-        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
+        Assertions.assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
     }
 
     @Test
@@ -218,7 +216,7 @@ public class BulkheadOperatorTest {
         bulkhead.onComplete();
 
         // Then
-        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
+        Assertions.assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
     }
 
     @Test
@@ -240,7 +238,7 @@ public class BulkheadOperatorTest {
 
         // Then
         verify(childObserver, times(1)).onNext(any());
-        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
+        Assertions.assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
     }
 
     @Test
@@ -261,7 +259,7 @@ public class BulkheadOperatorTest {
 
         // Then
         verify(childObserver, times(0)).onError(any());
-        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
+        Assertions.assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
     }
 
     @Test
@@ -282,7 +280,7 @@ public class BulkheadOperatorTest {
 
         // Then
         verify(childObserver, times(0)).onComplete();
-        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
+        Assertions.assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
     }
 
     @Test
@@ -304,7 +302,7 @@ public class BulkheadOperatorTest {
 
         // Then
         verify(childSubscriber, times(1)).onNext(any());
-        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
+        Assertions.assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
     }
 
     @Test
@@ -325,7 +323,7 @@ public class BulkheadOperatorTest {
 
         // Then
         verify(childSubscriber, times(0)).onError(any());
-        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
+        Assertions.assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
     }
 
     @Test
@@ -346,7 +344,7 @@ public class BulkheadOperatorTest {
 
         // Then
         verify(childSubscriber, times(0)).onComplete();
-        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
+        Assertions.assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
     }
 
     @Test
@@ -367,7 +365,7 @@ public class BulkheadOperatorTest {
 
         // Then
         verify(childObserver, times(0)).onSuccess(any());
-        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
+        Assertions.assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
     }
 
     @Test
@@ -388,7 +386,7 @@ public class BulkheadOperatorTest {
 
         // Then
         verify(childObserver, times(0)).onError(any());
-        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
+        Assertions.assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
     }
 
 }

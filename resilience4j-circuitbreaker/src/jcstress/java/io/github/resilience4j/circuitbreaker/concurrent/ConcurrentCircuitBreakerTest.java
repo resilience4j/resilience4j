@@ -18,24 +18,20 @@
  */
 package io.github.resilience4j.circuitbreaker.concurrent;
 
-import static io.github.resilience4j.circuitbreaker.CircuitBreaker.StateTransition;
-import static io.github.resilience4j.circuitbreaker.CircuitBreaker.of;
-import static io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent.Type;
-
+import io.github.resilience4j.adapter.RxJava2Adapter;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent;
 import io.github.resilience4j.circuitbreaker.event.CircuitBreakerOnStateTransitionEvent;
 import io.github.resilience4j.circuitbreaker.internal.CircuitBreakerStateMachine;
 import io.reactivex.subscribers.TestSubscriber;
-import org.openjdk.jcstress.annotations.Actor;
-import org.openjdk.jcstress.annotations.Arbiter;
-import org.openjdk.jcstress.annotations.Expect;
-import org.openjdk.jcstress.annotations.JCStressTest;
-import org.openjdk.jcstress.annotations.Outcome;
+import org.openjdk.jcstress.annotations.*;
 import org.openjdk.jcstress.infra.results.StringResult1;
 
 import java.text.MessageFormat;
-import java.time.Duration;
+
+import static io.github.resilience4j.circuitbreaker.CircuitBreaker.StateTransition;
+import static io.github.resilience4j.circuitbreaker.CircuitBreaker.of;
+import static io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent.Type;
 
 @JCStressTest
 @org.openjdk.jcstress.annotations.State
@@ -57,12 +53,12 @@ public class ConcurrentCircuitBreakerTest {
             .build();
 
         circuitBreaker = (CircuitBreakerStateMachine) of("testName", circuitBreakerConfig);
-        errorEventSubscriber = circuitBreaker.getEventStream()
+        errorEventSubscriber = RxJava2Adapter.toFlowable(circuitBreaker.getEventPublisher())
             .filter(event -> event.getEventType() == Type.ERROR)
             .map(CircuitBreakerEvent::getEventType)
             .test();
 
-        stateTransitionSubsriber = circuitBreaker.getEventStream()
+        stateTransitionSubsriber = RxJava2Adapter.toFlowable(circuitBreaker.getEventPublisher())
             .filter(event -> event.getEventType() == Type.STATE_TRANSITION)
             .cast(CircuitBreakerOnStateTransitionEvent.class)
             .map(CircuitBreakerOnStateTransitionEvent::getStateTransition)

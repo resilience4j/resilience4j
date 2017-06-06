@@ -18,18 +18,17 @@
  */
 package io.github.resilience4j.retry;
 
+import io.github.resilience4j.core.EventConsumer;
 import io.github.resilience4j.retry.event.RetryEvent;
 import io.github.resilience4j.retry.event.RetryOnErrorEvent;
 import io.github.resilience4j.retry.event.RetryOnIgnoredErrorEvent;
 import io.github.resilience4j.retry.event.RetryOnSuccessEvent;
 import io.github.resilience4j.retry.internal.RetryImpl;
-import io.reactivex.Flowable;
 import io.vavr.CheckedFunction0;
 import io.vavr.CheckedFunction1;
 import io.vavr.CheckedRunnable;
 
 import java.util.concurrent.Callable;
-import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -61,19 +60,11 @@ public interface Retry {
     RetryConfig getRetryConfig();
 
     /**
-     * Returns a reactive stream of RetryEvents.
+     * Returns an EventPublisher can be used to register event consumers.
      *
-     * @return a reactive stream of RetryEvents
+     * @return an EventPublisher
      */
-    Flowable<RetryEvent> getEventStream();
-
-    /**
-     * Returns an EventConsumer which subsribes to the reactive stream of RetryEvents and
-     * can be used to register event consumers.
-     *
-     * @return an EventConsumer
-     */
-    EventConsumer getEventConsumer();
+    EventPublisher getEventPublisher();
 
     /**
      * Creates a Retry with a custom Retry configuration.
@@ -358,16 +349,16 @@ public interface Retry {
     }
 
     /**
-     * An EventConsumer which subscribes to the reactive stream of RetryEvents and
+     * An EventPublisher which subscribes to the reactive stream of RetryEvents and
      * can be used to register event consumers.
      */
-    interface EventConsumer {
+    interface EventPublisher extends io.github.resilience4j.core.EventPublisher<RetryEvent>{
 
-        EventConsumer onSuccess(Consumer<RetryOnSuccessEvent> eventConsumer);
+        EventPublisher onSuccess(EventConsumer<RetryOnSuccessEvent> eventConsumer);
 
-        EventConsumer onError(Consumer<RetryOnErrorEvent> eventConsumer);
+        EventPublisher onError(EventConsumer<RetryOnErrorEvent> eventConsumer);
 
-        EventConsumer onIgnoredError(Consumer<RetryOnIgnoredErrorEvent> eventConsumer);
+        EventPublisher onIgnoredError(EventConsumer<RetryOnIgnoredErrorEvent> eventConsumer);
 
     }
 }

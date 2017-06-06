@@ -24,14 +24,11 @@ import io.github.resilience4j.bulkhead.BulkheadConfig;
 import io.github.resilience4j.bulkhead.event.BulkheadEvent;
 import io.github.resilience4j.bulkhead.event.BulkheadOnCallPermittedEvent;
 import io.github.resilience4j.bulkhead.event.BulkheadOnCallRejectedEvent;
-import io.reactivex.Flowable;
-import io.reactivex.processors.FlowableProcessor;
-import io.reactivex.processors.PublishProcessor;
-import io.vavr.Lazy;
+import io.github.resilience4j.core.EventConsumer;
+import io.github.resilience4j.core.EventProcessor;
 
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 /**
@@ -42,9 +39,8 @@ public class SemaphoreBulkhead implements Bulkhead{
     private final String name;
     private final Semaphore semaphore;
     private final BulkheadConfig bulkheadConfig;
-    private final FlowableProcessor<BulkheadEvent> eventPublisher;
     private final BulkheadMetrics metrics;
-    private final Lazy<EventConsumer> lazyEventConsumer;
+    private final BulkheadEventProcessor eventProcessor;
 
     /**
      * Creates a bulkhead using a configuration supplied
@@ -59,12 +55,8 @@ public class SemaphoreBulkhead implements Bulkhead{
         // init semaphore
         this.semaphore = new Semaphore(this.bulkheadConfig.getMaxConcurrentCalls(), true);
 
-        // init event publisher
-        this.eventPublisher = PublishProcessor.<BulkheadEvent>create()
-                                              .toSerialized();
-        this.lazyEventConsumer = Lazy.of(() -> new EventDispatcher(getEventStream()));
-
         this.metrics = new BulkheadMetrics();
+        this.eventProcessor = new BulkheadEventProcessor();
     }
 
     /**
@@ -120,54 +112,29 @@ public class SemaphoreBulkhead implements Bulkhead{
         return metrics;
     }
 
-    @Override
-    public Flowable<BulkheadEvent> getEventStream() {
-        return eventPublisher;
-    }
 
     @Override
-    public EventConsumer getEventConsumer() {
-        return lazyEventConsumer.get();
+    public EventPublisher getEventPublisher() {
+        return eventProcessor;
     }
 
-    private class EventDispatcher implements EventConsumer, io.reactivex.functions.Consumer<BulkheadEvent> {
-
-        private volatile Consumer<BulkheadOnCallPermittedEvent> onCallPermittedEventConsumer;
-        private volatile Consumer<BulkheadOnCallRejectedEvent> onCallRejectedEventConsumer;
-
-        EventDispatcher(Flowable<BulkheadEvent> eventStream) {
-            eventStream.subscribe(this);
-        }
+    private class BulkheadEventProcessor extends EventProcessor<BulkheadEvent> implements EventPublisher, EventConsumer<BulkheadEvent> {
 
         @Override
-        public EventConsumer onCallPermitted(Consumer<BulkheadOnCallPermittedEvent> onCallPermittedEventConsumer) {
-            this.onCallPermittedEventConsumer = onCallPermittedEventConsumer;
+        public EventPublisher onCallPermitted(EventConsumer<BulkheadOnCallPermittedEvent> onCallPermittedEventConsumer) {
+            registerConsumer(BulkheadOnCallPermittedEvent.class, onCallPermittedEventConsumer);
             return this;
         }
 
         @Override
-        public EventConsumer onCallRejected(Consumer<BulkheadOnCallRejectedEvent> onCallRejectedEventConsumer) {
-            this.onCallRejectedEventConsumer = onCallRejectedEventConsumer;
+        public EventPublisher onCallRejected(EventConsumer<BulkheadOnCallRejectedEvent> onCallRejectedEventConsumer) {
+            registerConsumer(BulkheadOnCallRejectedEvent.class, onCallRejectedEventConsumer);
             return this;
         }
 
         @Override
-        public void accept(BulkheadEvent event) throws Exception {
-            BulkheadEvent.Type eventType = event.getEventType();
-            switch (eventType) {
-                case CALL_PERMITTED:
-                    if(onCallPermittedEventConsumer != null){
-                        onCallPermittedEventConsumer.accept((BulkheadOnCallPermittedEvent) event);
-                    }
-                    break;
-                case CALL_REJECTED:
-                    if(onCallRejectedEventConsumer != null) {
-                        onCallRejectedEventConsumer.accept((BulkheadOnCallRejectedEvent) event);
-                    }
-                    break;
-                default:
-                    break;
-            }
+        public void consumeEvent(BulkheadEvent event) {
+            super.processEvent(event);
         }
     }
 
@@ -197,8 +164,8 @@ public class SemaphoreBulkhead implements Bulkhead{
     }
 
     private void publishBulkheadEvent(Supplier<BulkheadEvent> eventSupplier) {
-        if(eventPublisher.hasSubscribers()) {
-            eventPublisher.onNext(eventSupplier.get());
+        if(eventProcessor.hasConsumers()) {
+            eventProcessor.consumeEvent(eventSupplier.get());
         }
     }
 
