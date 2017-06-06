@@ -83,15 +83,6 @@ Observable.fromCallable(backendService::doSomething)
           .lift(BulkheadOperator.of(bulkhead));
 ----
 
-===== Bulkhead and CompletableFuture
-
-You can also invoke a decorated function asynchronously by using a `CompletableFuture` and chain further functions.
-
-[source,java,indent=0]
-----
-include::../../../../../resilience4j-bulkhead/src/test/java/io/github/resilience4j/bulkhead/BulkheadTest.java[tags=shouldInvokeAsyncApply]
-----
-
 ===== Saturated Bulkhead example
 
 In this example the decorated runnable is not executed because the Bulkhead is saturated and will not allow any more parallel executions. The call to `Try.run` returns a `Failure<Throwable>` Monad so that the chained function is not invoked.
@@ -103,17 +94,11 @@ include::../../../../../resilience4j-bulkhead/src/test/java/io/github/resilience
 
 ===== Consume emitted BulkheadEvents
 
-The Bulkhead emits a stream of BulkheadEvent events to any Observer/Consumer who subscribes. There are two types of events emitted: permitted execution & rejected execution. If you want to consume these events, you have to subscribe to the event stream. You can use the `CircularEventConsumer` to store events in a circular buffer with a fixed capacity. You can use RxJava to filter certain events.
-The advantage of an event stream is that you can use RxJava's `observeOn` operator to specify a different Scheduler that the Bulkhead will use to send notifications to its observers/consumers.
+The BulkHead emits a stream of BulkHeadEvents. There are two types of events emitted: permitted execution & rejected execution. If you want to consume these events, you have to register an event consumer.
 
 [source,java]
 ----
-Bulkhead bulkhead = Bulkhead.ofDefaults("backendName");
-CircularEventConsumer<BulkheadOnCallRejectedEvent> circularEventConsumer = new CircularEventConsumer<>(10);
-bulkhead.getEventStream()
-        .filter(event -> event.getEventType() == Type.CALL_REJECTED)
-        .cast(BulkheadOnCallRejectedEvent.class)
-        .subscribe(circularEventConsumer);
-
-List<BulkheadOnCallRejectedEvent> bufferedEvents = circularEventConsumer.getBufferedEvents();
+bulkhead.getEventPublisher()
+    .onCallPermitted(event -> logger.info(...))
+    .onCallRejected(event -> logger.info(...));
 ----

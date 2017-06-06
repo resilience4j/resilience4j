@@ -27,7 +27,7 @@ public interface EventConsumerRegistry<T> {
      * @param bufferSize the size of the EventConsumer
      * @return a new EventConsumer
      */
-    EventConsumer<T> createEventConsumer(String id, int bufferSize);
+    CircularEventConsumer<T> createEventConsumer(String id, int bufferSize);
 
     /**
      * Returns the EventConsumer to which the specified id is mapped.
@@ -35,12 +35,12 @@ public interface EventConsumerRegistry<T> {
      * @param id the id of the EventConsumer
      * @return the EventConsumer to which the specified id is mapped
      */
-    EventConsumer<T> getEventConsumer(String id);
+    CircularEventConsumer<T> getEventConsumer(String id);
 
     /**
      * Returns all EventConsumer instances.
      *
      * @return all EventConsumer instances
      */
-    Seq<EventConsumer<T>> getAllEventConsumer();
+    Seq<CircularEventConsumer<T>> getAllEventConsumer();
 }

@@ -18,6 +18,7 @@
  */
 package io.github.resilience4j.bulkhead;
 
+import io.github.resilience4j.adapter.RxJava2Adapter;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.BenchmarkMode;
 import org.openjdk.jmh.annotations.Fork;
@@ -76,7 +77,7 @@ public class BulkheadBenchmark {
         protectedSupplier = Bulkhead.decorateSupplier(bulkhead, stringSupplier);
 
         Bulkhead bulkheadWithSubscriber = Bulkhead.of("test-with-subscriber", config);
-        bulkheadWithSubscriber.getEventStream().subscribe();
+        RxJava2Adapter.toFlowable(bulkheadWithSubscriber.getEventPublisher()).subscribe();
         protectedSupplierWithSb = Bulkhead.decorateSupplier(bulkheadWithSubscriber, stringSupplier);
     }
 

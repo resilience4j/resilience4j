@@ -23,7 +23,6 @@ import io.vavr.control.Try;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.BDDMockito;
-import org.mockito.Mockito;
 import org.slf4j.Logger;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -31,7 +30,7 @@ import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 
-public class BulkheadEventConsumerTest {
+public class BulkheadEventPublisherTest {
 
     private HelloWorldService helloWorldService;
     private BulkheadConfig config;
@@ -40,7 +39,7 @@ public class BulkheadEventConsumerTest {
 
     @Before
     public void setUp(){
-        helloWorldService = Mockito.mock(HelloWorldService.class);
+        helloWorldService = mock(HelloWorldService.class);
         config = BulkheadConfig.custom()
                    .maxConcurrentCalls(1)
                    .build();
@@ -52,10 +51,10 @@ public class BulkheadEventConsumerTest {
 
     @Test
     public void shouldReturnTheSameConsumer() {
-        Bulkhead.EventConsumer eventConsumer = bulkhead.getEventConsumer();
-        Bulkhead.EventConsumer eventConsumer2 = bulkhead.getEventConsumer();
+        Bulkhead.EventPublisher eventPublisher = bulkhead.getEventPublisher();
+        Bulkhead.EventPublisher eventPublisher2 = bulkhead.getEventPublisher();
 
-        assertThat(eventConsumer).isEqualTo(eventConsumer2);
+        assertThat(eventPublisher).isEqualTo(eventPublisher2);
     }
 
     @Test
@@ -66,7 +65,7 @@ public class BulkheadEventConsumerTest {
         BDDMockito.given(helloWorldService.returnHelloWorld()).willReturn("Hello world");
 
         // When
-        bulkhead.getEventConsumer()
+        bulkhead.getEventPublisher()
             .onCallPermitted(event ->
                     logger.info(event.getEventType().toString()));
 
@@ -85,7 +84,7 @@ public class BulkheadEventConsumerTest {
         Bulkhead bulkhead = Bulkhead.of("test", config);
 
         // When
-        bulkhead.getEventConsumer()
+        bulkhead.getEventPublisher()
                 .onCallRejected(event ->
                         logger.info(event.getEventType().toString()));
 

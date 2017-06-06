@@ -18,24 +18,21 @@
  */
 package io.github.resilience4j.retry.internal;
 
+import io.github.resilience4j.core.EventConsumer;
+import io.github.resilience4j.core.EventProcessor;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryConfig;
 import io.github.resilience4j.retry.event.RetryEvent;
 import io.github.resilience4j.retry.event.RetryOnErrorEvent;
 import io.github.resilience4j.retry.event.RetryOnIgnoredErrorEvent;
 import io.github.resilience4j.retry.event.RetryOnSuccessEvent;
-import io.reactivex.Flowable;
-import io.reactivex.processors.FlowableProcessor;
-import io.reactivex.processors.PublishProcessor;
 import io.vavr.CheckedConsumer;
-import io.vavr.Lazy;
 import io.vavr.control.Option;
 import io.vavr.control.Try;
 
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.atomic.LongAdder;
-import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -44,7 +41,7 @@ public class RetryImpl implements Retry {
 
 
     private final Metrics metrics;
-    private final FlowableProcessor<RetryEvent> eventPublisher;
+    private final RetryEventProcessor eventProcessor;
 
     private String name;
     private RetryConfig config;
@@ -56,7 +53,6 @@ public class RetryImpl implements Retry {
     private LongAdder succeededWithoutRetryCounter;
     private LongAdder failedWithoutRetryCounter;
     /*package*/ static CheckedConsumer<Long> sleepFunction = Thread::sleep;
-    private final Lazy<EventConsumer> lazyEventConsumer;
 
     public RetryImpl(String name, RetryConfig config){
         this.name = name;
@@ -65,13 +61,11 @@ public class RetryImpl implements Retry {
         this.intervalFunction = config.getIntervalFunction();
         this.exceptionPredicate = config.getExceptionPredicate();
         this.metrics = this.new RetryMetrics();
-        PublishProcessor<RetryEvent> publisher = PublishProcessor.create();
-        this.eventPublisher = publisher.toSerialized();
+        this.eventProcessor = new RetryEventProcessor();
         succeededAfterRetryCounter = new LongAdder();
         failedAfterRetryCounter = new LongAdder();
         succeededWithoutRetryCounter = new LongAdder();
         failedWithoutRetryCounter = new LongAdder();
-        this.lazyEventConsumer = Lazy.of(() -> new EventDispatcher(getEventStream()));
     }
 
     public final class ContextImpl implements Retry.Context {
@@ -169,75 +163,14 @@ public class RetryImpl implements Retry {
 
 
     private void publishRetryEvent(Supplier<RetryEvent> event) {
-        if(eventPublisher.hasSubscribers()) {
-            eventPublisher.onNext(event.get());
+        if(eventProcessor.hasConsumers()) {
+            eventProcessor.consumeEvent(event.get());
         }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Flowable<RetryEvent> getEventStream() {
-        return eventPublisher;
     }
 
     @Override
-    public EventConsumer getEventConsumer() {
-        return lazyEventConsumer.get();
-    }
-
-    private class EventDispatcher implements EventConsumer, io.reactivex.functions.Consumer<RetryEvent> {
-
-        private volatile Consumer<RetryOnSuccessEvent> onSuccessEventConsumer;
-        private volatile Consumer<RetryOnErrorEvent> onErrorEventConsumer;
-        private volatile Consumer<RetryOnIgnoredErrorEvent> onIgnoredErrorEventConsumer;
-
-        EventDispatcher(Flowable<RetryEvent> eventStream) {
-            eventStream.subscribe(this);
-        }
-
-        @Override
-        public EventConsumer onSuccess(Consumer<RetryOnSuccessEvent> onSuccessEventConsumer) {
-            this.onSuccessEventConsumer = onSuccessEventConsumer;
-            return this;
-        }
-
-        @Override
-        public EventConsumer onError(Consumer<RetryOnErrorEvent> onErrorEventConsumer) {
-            this.onErrorEventConsumer = onErrorEventConsumer;
-            return this;
-        }
-
-        @Override
-        public EventConsumer onIgnoredError(Consumer<RetryOnIgnoredErrorEvent> onIgnoredErrorEventConsumer) {
-            this.onIgnoredErrorEventConsumer = onIgnoredErrorEventConsumer;
-            return this;
-        }
-
-        @Override
-        public void accept(RetryEvent event) throws Exception {
-            RetryEvent.Type eventType = event.getEventType();
-            switch (eventType) {
-                case SUCCESS:
-                    if(onSuccessEventConsumer != null){
-                        onSuccessEventConsumer.accept((RetryOnSuccessEvent) event);
-                    }
-                    break;
-                case ERROR:
-                    if(onErrorEventConsumer != null) {
-                        onErrorEventConsumer.accept((RetryOnErrorEvent) event);
-                    }
-                    break;
-                case IGNORED_ERROR:
-                    if(onIgnoredErrorEventConsumer != null) {
-                        onIgnoredErrorEventConsumer.accept((RetryOnIgnoredErrorEvent) event);
-                    }
-                    break;
-                default:
-                    break;
-            }
-        }
+    public EventPublisher getEventPublisher() {
+        return eventProcessor;
     }
 
     /**
@@ -270,6 +203,32 @@ public class RetryImpl implements Retry {
         @Override
         public long getNumberOfFailedCallsWithRetryAttempt() {
             return failedAfterRetryCounter.longValue();
+        }
+    }
+
+    private class RetryEventProcessor extends EventProcessor<RetryEvent> implements EventConsumer<RetryEvent>, EventPublisher {
+
+        @Override
+        public void consumeEvent(RetryEvent event) {
+            super.processEvent(event);
+        }
+
+        @Override
+        public EventPublisher onSuccess(EventConsumer<RetryOnSuccessEvent> onSuccessEventConsumer) {
+            registerConsumer(RetryOnSuccessEvent.class, onSuccessEventConsumer);
+            return this;
+        }
+
+        @Override
+        public EventPublisher onError(EventConsumer<RetryOnErrorEvent> onErrorEventConsumer) {
+            registerConsumer(RetryOnErrorEvent.class, onErrorEventConsumer);
+            return this;
+        }
+
+        @Override
+        public EventPublisher onIgnoredError(EventConsumer<RetryOnIgnoredErrorEvent> onIgnoredErrorEventConsumer) {
+            registerConsumer(RetryOnIgnoredErrorEvent.class, onIgnoredErrorEventConsumer);
+            return this;
         }
     }
 }

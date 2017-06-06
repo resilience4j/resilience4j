@@ -23,13 +23,12 @@ import io.github.resilience4j.cache.event.CacheOnErrorEvent;
 import io.github.resilience4j.cache.event.CacheOnHitEvent;
 import io.github.resilience4j.cache.event.CacheOnMissEvent;
 import io.github.resilience4j.cache.internal.CacheImpl;
-import io.reactivex.Flowable;
+import io.github.resilience4j.core.EventConsumer;
 import io.vavr.CheckedFunction0;
 import io.vavr.CheckedFunction1;
 
 import java.util.Objects;
 import java.util.concurrent.Callable;
-import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -60,19 +59,11 @@ public interface Cache<K, V>  {
     V computeIfAbsent(K key, CheckedFunction0<V> supplier);
 
     /**
-     * Returns a reactive stream of CacheEvents.
+     * Returns an EventPublisher which can be used to register event consumers.
      *
-     * @return a reactive stream of CacheEvents
+     * @return an EventPublisher
      */
-    Flowable<CacheEvent> getEventStream();
-
-    /**
-     * Returns an EventConsumer which subscribes to the reactive stream of CircuitBreakerEvents and
-     * can be used to register event consumers.
-     *
-     * @return an EventConsumer
-     */
-    EventConsumer getEventConsumer();
+    EventPublisher getEventPublisher();
 
     /**
      * Creates a Retry with default configuration.
@@ -147,16 +138,15 @@ public interface Cache<K, V>  {
     }
 
     /**
-     * An EventConsumer which subscribes to the reactive stream of CacheEvents and
-     * can be used to register event consumers.
+     * An EventPublisher which can be used to register event consumers.
      */
-    interface EventConsumer {
+    interface EventPublisher extends io.github.resilience4j.core.EventPublisher<CacheEvent> {
 
-        EventConsumer onCacheHit(Consumer<CacheOnHitEvent> eventConsumer);
+        EventPublisher onCacheHit(EventConsumer<CacheOnHitEvent> eventConsumer);
 
-        EventConsumer onCacheMiss(Consumer<CacheOnMissEvent> eventConsumer);
+        EventPublisher onCacheMiss(EventConsumer<CacheOnMissEvent> eventConsumer);
 
-        EventConsumer onError(Consumer<CacheOnErrorEvent> eventConsumer);
+        EventPublisher onError(EventConsumer<CacheOnErrorEvent> eventConsumer);
 
     }
 }

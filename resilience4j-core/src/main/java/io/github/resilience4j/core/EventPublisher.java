@@ -1,6 +1,8 @@
+package io.github.resilience4j.core;
+
 /*
  *
- *  Copyright 2016 Robert Winkler
+ *  Copyright 2017: Robert Winkler
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -16,17 +18,7 @@
  *
  *
  */
-package io.github.resilience4j.consumer;
+public interface EventPublisher<T> {
 
-import io.reactivex.functions.Consumer;
-import io.vavr.collection.List;
-
-public interface EventConsumer<T> extends Consumer<T> {
-
-    /**
-     * Returns a list containing all of the buffered events.
-     *
-     * @return a list containing all of the buffered events.
-     */
-    List<T> getBufferedEvents();
+    void onEvent(EventConsumer<T> onEventConsumer);
 }

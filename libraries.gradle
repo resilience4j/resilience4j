@@ -3,6 +3,7 @@
 ext {
     vavrVersion = '0.9.0'
     rxJavaVersion = '2.1.0'
+    reactorVersion = '3.0.7.RELEASE'
     junitVersion = '4.12'
     slf4jVersion = '1.7.24'
     assertjVersion = '3.6.2'
@@ -41,6 +42,7 @@ ext {
             vertx_unit: "io.vertx:vertx-unit:${vertxVersion}",
 
             // Spring Boot addon
+            spring_reactor: "io.projectreactor:reactor-core:${reactorVersion}",
             spring_boot_aop: "org.springframework.boot:spring-boot-starter-aop:${springBootVersion}",
             spring_boot_actuator: "org.springframework.boot:spring-boot-starter-actuator:${springBootVersion}",
             spring_boot_web: "org.springframework.boot:spring-boot-starter-web:${springBootVersion}",

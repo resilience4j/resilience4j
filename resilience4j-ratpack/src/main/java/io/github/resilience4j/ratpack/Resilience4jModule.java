@@ -223,7 +223,7 @@ public class Resilience4jModule extends ConfigurableModule<Resilience4jConfig> {
                             .build());
                 }
                 if (endpointsConfig.getCircuitBreakers().isEnabled()) {
-                    circuitBreaker.getEventStream().subscribe(cbConsumerRegistry.createEventConsumer(name, endpointsConfig.getCircuitBreakers().getEventConsumerBufferSize()));
+                    circuitBreaker.getEventPublisher().onEvent(cbConsumerRegistry.createEventConsumer(name, endpointsConfig.getCircuitBreakers().getEventConsumerBufferSize()));
                 }
             });
 
@@ -242,7 +242,7 @@ public class Resilience4jModule extends ConfigurableModule<Resilience4jConfig> {
                             .build());
                 }
                 if (endpointsConfig.getRateLimiters().isEnabled()) {
-                    rateLimiter.getEventStream().subscribe(rlConsumerRegistry.createEventConsumer(name, endpointsConfig.getRateLimiters().getEventConsumerBufferSize()));
+                    rateLimiter.getEventPublisher().onEvent(rlConsumerRegistry.createEventConsumer(name, endpointsConfig.getRateLimiters().getEventConsumerBufferSize()));
                 }
             });
 
@@ -260,7 +260,7 @@ public class Resilience4jModule extends ConfigurableModule<Resilience4jConfig> {
                             .build());
                 }
                 if (endpointsConfig.getRetries().isEnabled()) {
-                    retry.getEventStream().subscribe(rConsumerRegistry.createEventConsumer(name, endpointsConfig.getRetries().getEventConsumerBufferSize()));
+                    retry.getEventPublisher().onEvent(rConsumerRegistry.createEventConsumer(name, endpointsConfig.getRetries().getEventConsumerBufferSize()));
                 }
             });
 

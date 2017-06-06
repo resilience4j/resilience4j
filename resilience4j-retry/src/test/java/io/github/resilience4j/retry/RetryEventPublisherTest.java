@@ -34,7 +34,7 @@ import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 
-public class RetryEventConsumerTest {
+public class RetryEventPublisherTest {
 
     private HelloWorldService helloWorldService;
     private Logger logger;
@@ -49,10 +49,10 @@ public class RetryEventConsumerTest {
 
     @Test
     public void shouldReturnTheSameConsumer() {
-        Retry.EventConsumer eventConsumer = retry.getEventConsumer();
-        Retry.EventConsumer eventConsumer2 = retry.getEventConsumer();
+        Retry.EventPublisher eventPublisher = retry.getEventPublisher();
+        Retry.EventPublisher eventPublisher2 = retry.getEventPublisher();
 
-        assertThat(eventConsumer).isEqualTo(eventConsumer2);
+        assertThat(eventPublisher).isEqualTo(eventPublisher2);
     }
 
     @Test
@@ -62,7 +62,7 @@ public class RetryEventConsumerTest {
                 .willThrow(new WebServiceException("BAM!"))
                 .willReturn("Hello world");
 
-        retry.getEventConsumer()
+        retry.getEventPublisher()
             .onSuccess(event ->
                     logger.info(event.getEventType().toString()));
 
@@ -77,7 +77,7 @@ public class RetryEventConsumerTest {
         given(helloWorldService.returnHelloWorld())
                 .willThrow(new WebServiceException("BAM!"));
 
-        retry.getEventConsumer()
+        retry.getEventPublisher()
             .onError(event ->
                     logger.info(event.getEventType().toString()));
 
@@ -100,7 +100,7 @@ public class RetryEventConsumerTest {
                 .build();
         retry = Retry.of("testName", retryConfig);
 
-        retry.getEventConsumer()
+        retry.getEventPublisher()
             .onIgnoredError(event ->
                     logger.info(event.getEventType().toString()));
 

@@ -65,14 +65,11 @@ Observable.fromCallable(backendService::doSomething)
 
 ===== Consume emitted RetryEvents
 
-The RetryContext emits a stream of RetryEvents to any Observer/Consumer who subscribes. An event can be a failure which signals that even all retries have failed or success if a retry was successful. You can use the `CircularEventConsumer` to store events in a circular buffer with a fixed capacity.
+The Retry emits a stream of RetryEvents. An event can be a failure which signals that even all retries have failed or success if a retry was successful.
 
 [source,java]
 ----
-Retry retry = Retry.ofDefaults("id");
-CircularEventConsumer<RetryEvent> circularEventConsumer = new CircularEventConsumer<>(10);
-retry.getEventStream()
-    .subscribe(circularEventConsumer);
-
-List<RetryEvent> bufferedEvents = circularEventConsumer.getBufferedEvents();
+retry.getEventPublisher()
+    .onSuccess(event -> logger.info(...))
+    .onError(event -> logger.info(...));
 ----

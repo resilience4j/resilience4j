@@ -49,8 +49,7 @@ public class CircuitBreakerAutoConfiguration {
             (name, properties) -> {
                 CircuitBreakerConfig circuitBreakerConfig = circuitBreakerProperties.createCircuitBreakerConfig(name);
                 CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker(name, circuitBreakerConfig);
-                circuitBreaker.getEventStream()
-                    .subscribe(eventConsumerRegistry.createEventConsumer(name, properties.getEventConsumerBufferSize()));
+                circuitBreaker.getEventPublisher().onEvent(eventConsumerRegistry.createEventConsumer(name, properties.getEventConsumerBufferSize()));
 
                 if (properties.getRegisterHealthIndicator()) {
                     CircuitBreakerHealthIndicator healthIndicator = new CircuitBreakerHealthIndicator(circuitBreaker);

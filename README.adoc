@@ -242,36 +242,40 @@ long failedCalls = metrics.getNumberOfFailedCalls();
 [[events]]
 == Consume emitted events
 
-`CircuitBreaker`, `RateLimiter`, `Cache` and `Retry` components can emit a stream of events to any Observer/Consumer who subscribes.
+`CircuitBreaker`, `RateLimiter`, `Cache` and `Retry` components emit a stream of events which can be consumed.
 
 `CircuitBreaker` example below:
 
-`CircuitBreakerEvent` can be a state transition, a successful call, a recorded error or an ignored error. All events contains additional information like event creation time and processing duration of the call. If you want to consume events, you have to subscribe to the event stream. You can use the `CircularEventConsumer` to store events in a circular buffer with a fixed capacity. You can use RxJava to filter certain events.
-The advantage of an event stream is that you can use RxJava's `observeOn` operator to specify a different Scheduler that the CircuitBreaker will use to send notifications to its observers/consumers.
-
-[source,java]
-----
-CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testName");
-CircularEventConsumer<CircuitBreakerOnErrorEvent> circularEventConsumer = new CircularEventConsumer<>(10);
-circuitBreaker.getEventStream()
-    .filter(event -> event.getEventType() == Type.ERROR)
-    .cast(CircuitBreakerOnErrorEvent.class)
-    .subscribe(circularEventConsumer);
-
-List<CircuitBreakerOnErrorEvent> bufferedEvents = circularEventConsumer.getBufferedEvents();
-----
-
-NOTE: You can also consume events from `RateLimiter`, `Bulkhead`, `Cache` and `Retry`. Find out more in our *http://resilience4j.github.io/resilience4j/[User Guide]*
-
-There is also a shortcut to subscribe to events and register event consumers.
+`CircuitBreakerEvent` can be a state transition, a successful call, a recorded error or an ignored error. All events contains additional information like event creation time and processing duration of the call. If you want to consume events, you have to register an event consumer.
 
 [source,java]
 ----
 circuitBreaker.getEventConsumer()
-    .onSuccess(event -> logger.info(event.getEventType().toString()))
-    .onError(event -> logger.info(event.getEventType().toString()))
-    .onStateTransition(event -> logger.info(event.getEventType().toString()));
+    .onSuccess(event -> logger.info(...))
+    .onError(event -> logger.info(...))
+    .onStateTransition(event -> logger.info(...));
 ----
+
+You could use the `CircularEventConsumer` to store events in a circular buffer with a fixed capacity.
+
+[source,java]
+----
+CircularEventConsumer<CircuitBreakerEvent> ringBuffer = new CircularEventConsumer<>(10);
+circuitBreaker.getEventPublisher().onEvent(ringBuffer);
+List<CircuitBreakerEvent> bufferedEvents = ringBuffer.getBufferedEvents()
+----
+
+You can use RxJava or Spring Reactor Adapters to convert the `EventPublisher` into a Reactive Stream. The advantage of a Reactive Stream is that you can use RxJava's `observeOn` operator to specify a different Scheduler that the CircuitBreaker will use to send notifications to its observers/consumers.
+
+[source,java]
+----
+RxJava2Adapter.toFlowable(circuitBreaker.getEventPublisher())
+    .filter(event -> event.getEventType() == Type.ERROR)
+    .cast(CircuitBreakerOnErrorEvent.class)
+    .subscribe(event -> logger.info(...))
+----
+
+NOTE: You can also consume events from `RateLimiter`, `Bulkhead`, `Cache` and `Retry`. Find out more in our *http://resilience4j.github.io/resilience4j/[User Guide]*
 
 == Companies who use Resilience4j
 

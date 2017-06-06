@@ -22,16 +22,13 @@ package io.github.resilience4j.circuitbreaker.internal;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.circuitbreaker.event.*;
-import io.reactivex.Flowable;
-import io.reactivex.processors.FlowableProcessor;
-import io.reactivex.processors.PublishProcessor;
-import io.vavr.Lazy;
+import io.github.resilience4j.core.EventConsumer;
+import io.github.resilience4j.core.EventProcessor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import static io.github.resilience4j.circuitbreaker.CircuitBreaker.State.*;
@@ -46,8 +43,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
     private final String name;
     private final AtomicReference<CircuitBreakerState> stateReference;
     private final CircuitBreakerConfig circuitBreakerConfig;
-    private final FlowableProcessor<CircuitBreakerEvent> eventPublisher;
-    private final Lazy<EventConsumer> lazyEventConsumer;
+    private final CircuitBreakerEventProcessor eventProcessor;
 
     /**
      * Creates a circuitBreaker.
@@ -59,9 +55,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
         this.name = name;
         this.circuitBreakerConfig = circuitBreakerConfig;
         this.stateReference = new AtomicReference<>(new ClosedState(this));
-        PublishProcessor<CircuitBreakerEvent> publisher = PublishProcessor.create();
-        this.eventPublisher = publisher.toSerialized();
-        this.lazyEventConsumer = Lazy.of(() -> new EventDispatcher(getEventStream()));
+        this.eventProcessor = new CircuitBreakerEventProcessor();
     }
 
     /**
@@ -207,118 +201,75 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
                     name, stateTransition.getFromState(), stateTransition.getToState())
             );
         }
-        if (eventPublisher.hasSubscribers()) {
-            eventPublisher.onNext(new CircuitBreakerOnStateTransitionEvent(name, stateTransition));
+        if(eventProcessor.hasConsumers()){
+            eventProcessor.consumeEvent(new CircuitBreakerOnStateTransitionEvent(name, stateTransition));
         }
+
     }
 
     private void publishCallNotPermittedEvent() {
-        if (eventPublisher.hasSubscribers()) {
-            eventPublisher.onNext(new CircuitBreakerOnCallNotPermittedEvent(name));
+        if(eventProcessor.hasConsumers()) {
+            eventProcessor.consumeEvent(new CircuitBreakerOnCallNotPermittedEvent(name));
         }
     }
 
     private void publishSuccessEvent(final long durationInNanos) {
-        if (eventPublisher.hasSubscribers()) {
-            eventPublisher.onNext(new CircuitBreakerOnSuccessEvent(name, Duration.ofNanos(durationInNanos)));
+        if(eventProcessor.hasConsumers()) {
+            eventProcessor.consumeEvent(new CircuitBreakerOnSuccessEvent(name, Duration.ofNanos(durationInNanos)));
         }
     }
 
     private void publishCircuitErrorEvent(final String name, final long durationInNanos, final Throwable throwable) {
-        if (eventPublisher.hasSubscribers()) {
-            eventPublisher.onNext(new CircuitBreakerOnErrorEvent(name, Duration.ofNanos(durationInNanos), throwable));
+        if(eventProcessor.hasConsumers()) {
+            eventProcessor.consumeEvent(new CircuitBreakerOnErrorEvent(name, Duration.ofNanos(durationInNanos), throwable));
         }
     }
 
     private void publishCircuitIgnoredErrorEvent(String name, long durationInNanos, Throwable throwable) {
-        if (eventPublisher.hasSubscribers()) {
-            eventPublisher.onNext(new CircuitBreakerOnIgnoredErrorEvent(name, Duration.ofNanos(durationInNanos), throwable));
+        if(eventProcessor.hasConsumers()) {
+            eventProcessor.consumeEvent(new CircuitBreakerOnIgnoredErrorEvent(name, Duration.ofNanos(durationInNanos), throwable));
         }
-    }
-
-    public Flowable<CircuitBreakerEvent> getEventStream() {
-        return eventPublisher;
     }
 
     @Override
-    public EventConsumer getEventConsumer() {
-        return lazyEventConsumer.get();
+    public EventPublisher getEventPublisher() {
+        return eventProcessor;
     }
 
-    private class EventDispatcher implements EventConsumer, io.reactivex.functions.Consumer<CircuitBreakerEvent> {
-
-        private volatile Consumer<CircuitBreakerOnSuccessEvent> onSuccessEventConsumer;
-        private volatile Consumer<CircuitBreakerOnErrorEvent> onErrorEventConsumer;
-        private volatile Consumer<CircuitBreakerOnStateTransitionEvent> onStateTransitionEventConsumer;
-        private volatile Consumer<CircuitBreakerOnIgnoredErrorEvent> onIgnoredErrorEventConsumer;
-        private volatile Consumer<CircuitBreakerOnCallNotPermittedEvent> onCallNotPermittedEventConsumer;
-
-        EventDispatcher(Flowable<CircuitBreakerEvent> eventStream) {
-            eventStream.subscribe(this);
-        }
-
+    private class CircuitBreakerEventProcessor extends EventProcessor<CircuitBreakerEvent> implements EventConsumer<CircuitBreakerEvent>, EventPublisher {
         @Override
-        public EventConsumer onSuccess(Consumer<CircuitBreakerOnSuccessEvent> onSuccessEventConsumer) {
-            this.onSuccessEventConsumer = onSuccessEventConsumer;
+        public EventPublisher onSuccess(EventConsumer<CircuitBreakerOnSuccessEvent> onSuccessEventConsumer) {
+            registerConsumer(CircuitBreakerOnSuccessEvent.class, onSuccessEventConsumer);
             return this;
         }
 
         @Override
-        public EventConsumer onError(Consumer<CircuitBreakerOnErrorEvent> onErrorEventConsumer) {
-            this.onErrorEventConsumer = onErrorEventConsumer;
+        public EventPublisher onError(EventConsumer<CircuitBreakerOnErrorEvent> onErrorEventConsumer) {
+            registerConsumer(CircuitBreakerOnErrorEvent.class, onErrorEventConsumer);
             return this;
         }
 
         @Override
-        public EventConsumer onStateTransition(Consumer<CircuitBreakerOnStateTransitionEvent> onStateTransitionEventConsumer) {
-            this.onStateTransitionEventConsumer = onStateTransitionEventConsumer;
+        public EventPublisher onStateTransition(EventConsumer<CircuitBreakerOnStateTransitionEvent> onStateTransitionEventConsumer) {
+            registerConsumer(CircuitBreakerOnStateTransitionEvent.class, onStateTransitionEventConsumer);
             return this;
         }
 
         @Override
-        public EventConsumer onIgnoredError(Consumer<CircuitBreakerOnIgnoredErrorEvent> onIgnoredErrorEventConsumer) {
-            this.onIgnoredErrorEventConsumer = onIgnoredErrorEventConsumer;
+        public EventPublisher onIgnoredError(EventConsumer<CircuitBreakerOnIgnoredErrorEvent> onIgnoredErrorEventConsumer) {
+            registerConsumer(CircuitBreakerOnIgnoredErrorEvent.class, onIgnoredErrorEventConsumer);
             return this;
         }
 
         @Override
-        public EventConsumer onCallNotPermitted(Consumer<CircuitBreakerOnCallNotPermittedEvent> onCallNotPermittedEventConsumer) {
-            this.onCallNotPermittedEventConsumer = onCallNotPermittedEventConsumer;
+        public EventPublisher onCallNotPermitted(EventConsumer<CircuitBreakerOnCallNotPermittedEvent> onCallNotPermittedEventConsumer) {
+            registerConsumer(CircuitBreakerOnCallNotPermittedEvent.class, onCallNotPermittedEventConsumer);
             return this;
         }
 
         @Override
-        public void accept(CircuitBreakerEvent event) throws Exception {
-            CircuitBreakerEvent.Type eventType = event.getEventType();
-            switch (eventType) {
-                case SUCCESS:
-                    if(onSuccessEventConsumer != null){
-                        onSuccessEventConsumer.accept((CircuitBreakerOnSuccessEvent) event);
-                    }
-                    break;
-                case ERROR:
-                    if(onErrorEventConsumer != null) {
-                        onErrorEventConsumer.accept((CircuitBreakerOnErrorEvent) event);
-                    }
-                    break;
-                case STATE_TRANSITION:
-                    if(onStateTransitionEventConsumer != null) {
-                        onStateTransitionEventConsumer.accept((CircuitBreakerOnStateTransitionEvent) event);
-                    }
-                    break;
-                case IGNORED_ERROR:
-                    if(onIgnoredErrorEventConsumer != null) {
-                        onIgnoredErrorEventConsumer.accept((CircuitBreakerOnIgnoredErrorEvent) event);
-                    }
-                    break;
-                case NOT_PERMITTED:
-                    if(onCallNotPermittedEventConsumer != null){
-                        onCallNotPermittedEventConsumer.accept((CircuitBreakerOnCallNotPermittedEvent) event);
-                    }
-                    break;
-                default:
-                    break;
-            }
+        public void consumeEvent(CircuitBreakerEvent event) {
+            super.processEvent(event);
         }
     }
 }
