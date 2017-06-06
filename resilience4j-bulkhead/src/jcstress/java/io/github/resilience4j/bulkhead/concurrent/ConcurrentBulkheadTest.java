@@ -18,6 +18,7 @@
  */
 package io.github.resilience4j.bulkhead.concurrent;
 
+import io.github.resilience4j.adapter.RxJava2Adapter;
 import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.bulkhead.BulkheadConfig;
 import io.github.resilience4j.bulkhead.event.BulkheadEvent;
@@ -54,7 +55,7 @@ public class ConcurrentBulkheadTest {
 
         bulkhead = Bulkhead.of("test", BulkheadConfig.custom().maxConcurrentCalls(1).build());
 
-        callRejectectedEventSubscriber = bulkhead.getEventStream()
+        callRejectectedEventSubscriber = RxJava2Adapter.toFlowable(bulkhead.getEventPublisher())
                                                  .filter(event -> event.getEventType() == Type.CALL_REJECTED)
                                                  .map(BulkheadEvent::getEventType)
                                                  .test();

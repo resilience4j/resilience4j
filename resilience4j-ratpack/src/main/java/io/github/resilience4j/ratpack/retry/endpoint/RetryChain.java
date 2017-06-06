@@ -16,6 +16,7 @@
 
 package io.github.resilience4j.ratpack.retry.endpoint;
 
+import io.github.resilience4j.consumer.CircularEventConsumer;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
 import io.github.resilience4j.ratpack.Resilience4jConfig;
 import io.github.resilience4j.retry.Retry;
@@ -33,6 +34,8 @@ import ratpack.sse.ServerSentEvents;
 import javax.inject.Inject;
 import java.util.Comparator;
 import java.util.List;
+
+import static io.github.resilience4j.adapter.RxJava2Adapter.toFlowable;
 
 /**
  * Provides event and stream event endpoints for circuitbreaker events.
@@ -56,14 +59,14 @@ public class RetryChain implements Action<Chain> {
             chain1.get("events", ctx ->
                     Promise.<RetryEventsEndpointResponse>async(d -> {
                         List<RetryEventDTO> eventsList = eventConsumerRegistry.getAllEventConsumer()
-                                .flatMap(EventConsumer::getBufferedEvents)
+                                .flatMap(CircularEventConsumer::getBufferedEvents)
                                 .sorted(Comparator.comparing(RetryEvent::getCreationTime))
                                 .map(RetryEventDTO::createRetryEventDTO).toJavaList();
                         d.success(new RetryEventsEndpointResponse(eventsList));
                     }).then(r -> ctx.render(Jackson.json(r)))
             );
             chain1.get("stream/events", ctx -> {
-                Seq<Flowable<RetryEvent>> eventStreams = retryRegistry.getAllRetries().map(Retry::getEventStream);
+                Seq<Flowable<RetryEvent>> eventStreams = retryRegistry.getAllRetries().map(retry -> toFlowable(retry.getEventPublisher()));
                 Function<RetryEvent, String> data = r -> Jackson.getObjectWriter(chain1.getRegistry()).writeValueAsString(RetryEventDTO.createRetryEventDTO(r));
                 ServerSentEvents events = ServerSentEvents.serverSentEvents(Flowable.merge(eventStreams), e -> e.id(RetryEvent::getName).event(c -> c.getEventType().name()).data(data));
                 ctx.render(events);
@@ -86,7 +89,7 @@ public class RetryChain implements Action<Chain> {
                         .getOrElseThrow(() ->
                                 new IllegalArgumentException(String.format("rate limiter with name %s not found", rateLimiterName)));
                 Function<RetryEvent, String> data = r -> Jackson.getObjectWriter(chain1.getRegistry()).writeValueAsString(RetryEventDTO.createRetryEventDTO(r));
-                ServerSentEvents events = ServerSentEvents.serverSentEvents(retry.getEventStream(), e -> e.id(RetryEvent::getName).event(c -> c.getEventType().name()).data(data));
+                ServerSentEvents events = ServerSentEvents.serverSentEvents(toFlowable(retry.getEventPublisher()), e -> e.id(RetryEvent::getName).event(c -> c.getEventType().name()).data(data));
                 ctx.render(events);
             });
             chain1.get("events/:name/:type", ctx -> {
@@ -109,7 +112,7 @@ public class RetryChain implements Action<Chain> {
                         .find(rL -> rL.getName().equals(retryName))
                         .getOrElseThrow(() ->
                                 new IllegalArgumentException(String.format("rate limiter with name %s not found", retryName)));
-                Flowable<RetryEvent> eventStream = retry.getEventStream()
+                Flowable<RetryEvent> eventStream = toFlowable(retry.getEventPublisher())
                         .filter(event -> event.getEventType() == RetryEvent.Type.valueOf(eventType.toUpperCase()));
                 Function<RetryEvent, String> data = r -> Jackson.getObjectWriter(chain1.getRegistry()).writeValueAsString(RetryEventDTO.createRetryEventDTO(r));
                 ServerSentEvents events = ServerSentEvents.serverSentEvents(eventStream, e -> e.id(RetryEvent::getName).event(c -> c.getEventType().name()).data(data));

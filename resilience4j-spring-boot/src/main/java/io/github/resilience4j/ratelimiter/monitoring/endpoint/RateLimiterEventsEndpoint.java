@@ -15,6 +15,14 @@
  */
 package io.github.resilience4j.ratelimiter.monitoring.endpoint;
 
+import io.github.resilience4j.consumer.CircularEventConsumer;
+import io.github.resilience4j.consumer.EventConsumerRegistry;
+import io.github.resilience4j.ratelimiter.RateLimiter;
+import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
+import io.github.resilience4j.ratelimiter.event.RateLimiterEvent;
+import io.github.resilience4j.ratelimiter.monitoring.model.RateLimiterEventDTO;
+import io.github.resilience4j.ratelimiter.monitoring.model.RateLimiterEventsEndpointResponse;
+import io.vavr.collection.Seq;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -22,18 +30,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
-
-import io.github.resilience4j.consumer.EventConsumerRegistry;
-import io.github.resilience4j.ratelimiter.RateLimiter;
-import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
-import io.github.resilience4j.ratelimiter.event.RateLimiterEvent;
-import io.github.resilience4j.ratelimiter.monitoring.model.RateLimiterEventDTO;
-import io.github.resilience4j.ratelimiter.monitoring.model.RateLimiterEventsEndpointResponse;
-import io.reactivex.Flowable;
-import io.vavr.collection.Seq;
+import reactor.core.publisher.Flux;
 
 import java.util.Comparator;
 import java.util.List;
+
+import static io.github.resilience4j.adapter.ReactorAdapter.toFlux;
 
 @Controller
 @RequestMapping(value = "ratelimiter/", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
@@ -53,7 +55,7 @@ public class RateLimiterEventsEndpoint {
     @ResponseBody
     public RateLimiterEventsEndpointResponse getAllRateLimiterEvents() {
         List<RateLimiterEventDTO> eventsList = eventsConsumerRegistry.getAllEventConsumer()
-            .flatMap(EventConsumer::getBufferedEvents)
+            .flatMap(CircularEventConsumer::getBufferedEvents)
             .sorted(Comparator.comparing(RateLimiterEvent::getCreationTime))
             .map(RateLimiterEventDTO::createRateLimiterEventDTO).toJavaList();
         return new RateLimiterEventsEndpointResponse(eventsList);
@@ -61,9 +63,9 @@ public class RateLimiterEventsEndpoint {
 
     @RequestMapping(value = "stream/events", produces = MEDIA_TYPE_TEXT_EVENT_STREAM)
     public SseEmitter getAllRateLimiterEventsStream() {
-        Seq<Flowable<RateLimiterEvent>> eventStreams = rateLimiterRegistry.getAllRateLimiters()
-            .map(RateLimiter::getEventStream);
-        return RateLimiterEventsEmitter.createSseEmitter(Flowable.merge(eventStreams));
+        Seq<Flux<RateLimiterEvent>> eventStreams = rateLimiterRegistry.getAllRateLimiters()
+            .map(rateLimiter -> toFlux(rateLimiter.getEventPublisher()));
+        return RateLimiterEventsEmitter.createSseEmitter(Flux.merge(eventStreams));
     }
 
     @RequestMapping(value = "events/{rateLimiterName}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
@@ -81,7 +83,7 @@ public class RateLimiterEventsEndpoint {
             .find(rL -> rL.getName().equals(rateLimiterName))
             .getOrElseThrow(() ->
                 new IllegalArgumentException(String.format("rate limiter with name %s not found", rateLimiterName)));
-        return RateLimiterEventsEmitter.createSseEmitter(rateLimiter.getEventStream());
+        return RateLimiterEventsEmitter.createSseEmitter(toFlux(rateLimiter.getEventPublisher()));
     }
 
     @RequestMapping(value = "events/{rateLimiterName}/{eventType}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
@@ -104,7 +106,7 @@ public class RateLimiterEventsEndpoint {
             .find(rL -> rL.getName().equals(rateLimiterName))
             .getOrElseThrow(() ->
                 new IllegalArgumentException(String.format("rate limiter with name %s not found", rateLimiterName)));
-        Flowable<RateLimiterEvent> eventStream = rateLimiter.getEventStream()
+        Flux<RateLimiterEvent> eventStream = toFlux(rateLimiter.getEventPublisher())
             .filter(event -> event.getEventType() == targetType);
         return RateLimiterEventsEmitter.createSseEmitter(eventStream);
     }

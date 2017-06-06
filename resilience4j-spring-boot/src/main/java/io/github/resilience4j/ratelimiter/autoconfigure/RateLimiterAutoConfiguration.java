@@ -17,6 +17,7 @@ package io.github.resilience4j.ratelimiter.autoconfigure;
 
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
+import io.github.resilience4j.core.EventConsumer;
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RateLimiterConfig;
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
@@ -94,7 +95,7 @@ public class RateLimiterAutoConfiguration {
     private void subscribeToLimiterEvents(EventConsumerRegistry<RateLimiterEvent> rateLimiterEventsConsumerRegistry, String name, RateLimiterProperties.LimiterProperties properties, RateLimiter rateLimiter) {
         EventConsumer<RateLimiterEvent> eventConsumer = rateLimiterEventsConsumerRegistry
             .createEventConsumer(name, properties.getEventConsumerBufferSize());
-        rateLimiter.getEventStream().subscribe(eventConsumer::accept);
+       rateLimiter.getEventPublisher().onEvent(eventConsumer);
 
         logger.debug("Autoconfigure subscription for Rate Limiter {}", rateLimiter);
     }

@@ -15,7 +15,6 @@
  */
 package io.github.resilience4j.consumer;
 
-import io.github.resilience4j.core.EventConsumer;
 import io.vavr.collection.Array;
 import io.vavr.collection.Seq;
 
@@ -27,7 +26,7 @@ public class DefaultEventConsumerRegistry<T> implements EventConsumerRegistry<T>
     /**
      * The CircularEventConsumers, indexed by name of the backend.
      */
-    private final ConcurrentMap<String, EventConsumer<T>> registry;
+    private final ConcurrentMap<String, CircularEventConsumer<T>> registry;
 
     /**
      * The constructor with default circuitBreaker properties.
@@ -37,19 +36,19 @@ public class DefaultEventConsumerRegistry<T> implements EventConsumerRegistry<T>
     }
 
     @Override
-    public EventConsumer<T> createEventConsumer(String id, int bufferSize) {
-        EventConsumer<T> eventConsumer = new CircularEventConsumer<>(bufferSize);
+    public CircularEventConsumer<T> createEventConsumer(String id, int bufferSize) {
+        CircularEventConsumer<T> eventConsumer = new CircularEventConsumer<>(bufferSize);
         registry.put(id, eventConsumer);
         return eventConsumer;
     }
 
     @Override
-    public EventConsumer<T> getEventConsumer(String id){
+    public CircularEventConsumer<T> getEventConsumer(String id){
         return registry.get(id);
     }
 
     @Override
-    public Seq<EventConsumer<T>> getAllEventConsumer(){
+    public Seq<CircularEventConsumer<T>> getAllEventConsumer(){
         return Array.ofAll(registry.values());
     }
 }

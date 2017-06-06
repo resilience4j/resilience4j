@@ -19,6 +19,7 @@ package io.github.resilience4j.circuitbreaker.monitoring.endpoint;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent;
+import io.github.resilience4j.consumer.CircularEventConsumer;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
 import io.vavr.collection.Seq;
 import org.springframework.http.MediaType;
@@ -53,14 +54,15 @@ public class CircuitBreakerEventsEndpoint {
     @ResponseBody
     public CircuitBreakerEventsEndpointResponse getAllCircuitBreakerEvents() {
         return new CircuitBreakerEventsEndpointResponse(eventConsumerRegistry.getAllEventConsumer()
-                .flatMap(EventConsumer::getBufferedEvents)
+                .flatMap(CircularEventConsumer::getBufferedEvents)
                 .sorted(Comparator.comparing(CircuitBreakerEvent::getCreationTime))
                 .map(CircuitBreakerEventDTOFactory::createCircuitBreakerEventDTO).toJavaList());
     }
 
     @RequestMapping(value = "stream/events", produces = MEDIA_TYPE_TEXT_EVENT_STREAM)
     public SseEmitter getAllCircuitBreakerEventsStream() {
-        Seq<Flux<CircuitBreakerEvent>> eventStreams = circuitBreakerRegistry.getAllCircuitBreakers().map(circuitBreaker -> toFlux(circuitBreaker.getEventPublisher()));
+        Seq<Flux<CircuitBreakerEvent>> eventStreams = circuitBreakerRegistry.getAllCircuitBreakers()
+                .map(circuitBreaker -> toFlux(circuitBreaker.getEventPublisher()));
         return CircuitBreakerEventEmitter.createSseEmitter(Flux.merge(eventStreams));
     }
 
