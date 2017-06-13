@@ -31,7 +31,7 @@ allprojects {
     apply plugin: 'me.champeau.gradle.jmh'
     apply plugin: 'com.jfrog.artifactory'
 
-    version = '0.10.0-SNAPSHOT'
+    version = '0.10.1-SNAPSHOT'
     group = 'io.github.resilience4j'
     description = 'Resilience4j is a lightweight, easy-to-use fault tolerance library designed for Java8 and functional programming'
 
@@ -44,12 +44,13 @@ artifactoryPublish.skip=true // apply to all projects except the root
 
 ext {
     coreProjects = subprojects.findAll {
-        p -> !p.name.contains("test") || !p.name.contains("documentation")
+        p -> !p.name.contains("documentation")
     }
 }
 
-subprojects {
+configure(project.coreProjects) {
     apply plugin: 'java'
+    apply plugin: 'osgi'
     apply plugin: 'maven'
     apply plugin: 'maven-publish'
     apply plugin: 'com.jfrog.bintray'

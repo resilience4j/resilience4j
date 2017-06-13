@@ -37,7 +37,7 @@ import io.reactivex.disposables.Disposable;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
- * A RxJava operator which protects an Observable or Flowable by a CircuitBreaker
+ * A RxJava operator which protects a Single, Observable or Flowable by a CircuitBreaker.
  *
  * @param <T> the value type of the upstream and downstream
  */
