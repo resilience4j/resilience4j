@@ -21,6 +21,10 @@ jar {
                 'Implementation-Title': projectArtifactId,
                 'Implementation-Version': project.version
         )
+        instruction 'Export-Package', '!io.github.resilience4j.*.internal,*'
+        instruction 'Import-Package', '!io.github.resilience4j.*,*'
+        instruction 'Bundle-Description', 'A lightweight fault tolerance library'
+        instruction 'Bundle-DocURL', 'https://github.com/resilience4j/resilience4j'
     }
 }
 
