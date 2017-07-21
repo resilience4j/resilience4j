@@ -78,15 +78,29 @@ For both it is possible to use just a collection of breakers and limiters instea
 
 ===== Call Meter
 
+Simple example without labels
+
+[source,java]
+--
+final CollectorRegistry registry = new CollectorRegistry();
+
+final CallMeter meter = CallMeter.of("foo_call", "Foo call help", registry);
+
+CallMeter.decorateCompletionStageSupplier(meter, () -> supplyAsync(() -> { /* ... */ }));
+--
+
+Advanced example with labels
+
 [source,java]
 --
 final CollectorRegistry registry = new CollectorRegistry();
 
 final CallMeter meter = CallMeter
-        .build()
+        .builder()
         .name("foo_call")
         .help("Foo call help")
         .labelNames("label_1")
+        .build()
         .register(registry);
 
 meter.labels("boo").executeRunnable(() -> { /* ... */ });
