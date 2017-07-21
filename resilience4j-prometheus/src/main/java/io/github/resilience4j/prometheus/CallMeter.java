@@ -12,20 +12,65 @@ import java.util.function.Supplier;
 
 public interface CallMeter extends CallMeterBase {
 
-    Child labels(String... labels);
-
+    /**
+     * Creates call meter with the given name and help message
+     *
+     * @param name - metric name
+     * @param help - metric help
+     * @return the call meter
+     */
+    static CallMeter of(String name, String help) {
+        return CallMeter
+            .builder()
+            .name(name)
+            .help(help)
+            .build();
+    }
 
     /**
-     * Creates a new CallMeter {@link Builder}
+     * Creates call meter with the given name and registers it in
+     * the specified collector registry
+     *
+     * @param name - metric name
+     * @param help - metric help
+     * @param registry - collector registry
+     * @return the call meter
+     */
+    static CallMeter ofCollectorRegistry(String name, String help, CollectorRegistry registry) {
+        return of(name, help).register(registry);
+    }
+
+    /**
+     * Creates a child call meter with the given labels
+     * @param labels
+     * @return child collector
+     */
+    Child labels(String... labels);
+
+    /**
+     * Register this call meter with the default registry.
+     */
+    default CallMeter register() {
+        return register(CollectorRegistry.defaultRegistry);
+    }
+
+    /**
+     * Registers this call meter with the given registry.
+     */
+    CallMeter register(CollectorRegistry registry);
+
+    /**
+     * Creates a new call meter {@link Builder}
+     *
      * @return the new {@link Builder}
      */
-    static Builder build() {
+    static Builder builder() {
         return new Builder();
     }
 
     /**
      * Creates a timed checked supplier.
-
+     *
      * @param meter the call meter to use
      * @param supplier the original supplier
      * @return a timed supplier
@@ -46,7 +91,7 @@ public interface CallMeter extends CallMeterBase {
 
     /**
      * Creates a timed runnable.
-
+     *
      * @param meter the call meter to use
      * @param runnable the original runnable
      * @return a timed runnable
@@ -66,7 +111,7 @@ public interface CallMeter extends CallMeterBase {
 
     /**
      * Creates a timed checked supplier.
-
+     *
      * @param meter the call meter to use
      * @param supplier the original supplier
      * @return a timed supplier
@@ -87,7 +132,7 @@ public interface CallMeter extends CallMeterBase {
 
     /**
      * Creates a timed Callable.
-
+     *
      * @param meter the call meter to use
      * @param callable the original Callable
      * @return a timed Callable
@@ -130,7 +175,7 @@ public interface CallMeter extends CallMeterBase {
 
     /**
      * Creates a timed function.
-
+     *
      * @param meter the call meter to use
      * @param function the original function
      * @return a timed function
@@ -151,7 +196,7 @@ public interface CallMeter extends CallMeterBase {
 
     /**
      * Creates a timed function.
-
+     *
      * @param meter the call meter to use
      * @param function the original function
      * @return a timed function
@@ -171,6 +216,7 @@ public interface CallMeter extends CallMeterBase {
     }
 
     /**
+     * Decorates completion stage supplier with call meter
      *
      * @param meter the call meter to use
      * @param stageSupplier the CompletionStage Supplier
@@ -202,9 +248,6 @@ public interface CallMeter extends CallMeterBase {
 
     }
 
-    /**
-     * Builders let you configure and then create collectors.
-     */
     class Builder {
         private String namespace = "";
         private String subsystem = "";
@@ -251,32 +294,11 @@ public interface CallMeter extends CallMeterBase {
         /**
          * Return the constructed collector.
          */
-        public CallMeter create() {
+        public CallMeter build() {
             return new CallMeterImpl(createMetrics());
         }
 
-        /**
-         * Create and register the Collector with the default registry.
-         */
-        public CallMeter register() {
-            return register(CollectorRegistry.defaultRegistry);
-        }
-
-        /**
-         * Create and register the Collector with the given registry.
-         */
-        public CallMeter register(CollectorRegistry registry) {
-
-            final CallCollectors metrics = createMetrics();
-
-            registry.register(metrics.histogram);
-            registry.register(metrics.totalCounter);
-            registry.register(metrics.errorCounter);
-
-            return new CallMeterImpl(metrics);
-        }
-
-        public CallCollectors createMetrics() {
+        private CallCollectors createMetrics() {
             final Counter totalCounter = Counter
                     .build()
                     .namespace(namespace)

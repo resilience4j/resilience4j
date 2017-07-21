@@ -1,6 +1,7 @@
 package io.github.resilience4j.prometheus;
 
 
+import io.prometheus.client.CollectorRegistry;
 import io.prometheus.client.Histogram;
 
 import static java.util.Objects.requireNonNull;
@@ -39,5 +40,13 @@ class CallMeterImpl implements CallMeter {
                 timer.observeDuration();
             }
         };
+    }
+
+    @Override
+    public CallMeter register(CollectorRegistry registry) {
+        registry.register(collectors.histogram);
+        registry.register(collectors.totalCounter);
+        registry.register(collectors.errorCounter);
+        return this;
     }
 }

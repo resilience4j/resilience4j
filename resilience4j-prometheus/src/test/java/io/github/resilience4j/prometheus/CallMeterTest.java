@@ -14,10 +14,7 @@ public class CallMeterTest {
         // Given
         final CollectorRegistry registry = new CollectorRegistry();
 
-        final CallMeter timer = CallMeter.build()
-                .name("some_call")
-                .help("Some call help")
-                .register(registry);
+        final CallMeter timer = CallMeter.ofCollectorRegistry("some_call", "Some help", registry);
 
         // When
         timer.executeRunnable(() -> {
@@ -54,11 +51,7 @@ public class CallMeterTest {
         // Given
         final CollectorRegistry registry = new CollectorRegistry();
 
-        final CallMeter timer = CallMeter.build()
-                .name("some_call")
-                .help("Some call help")
-                .register(registry);
-
+        final CallMeter timer = CallMeter.ofCollectorRegistry("some_call", "Some help", registry);
 
         try {
             // When
@@ -101,10 +94,12 @@ public class CallMeterTest {
         // Given
         final CollectorRegistry registry = new CollectorRegistry();
 
-        final CallMeter timer = CallMeter.build()
+        final CallMeter timer = CallMeter
+                .builder()
                 .name("some_call")
                 .help("Some call help")
                 .labelNames("label_1")
+                .build()
                 .register(registry);
 
         // When
@@ -142,10 +137,12 @@ public class CallMeterTest {
         // Given
         final CollectorRegistry registry = new CollectorRegistry();
 
-        final CallMeter timer = CallMeter.build()
+        final CallMeter timer = CallMeter
+                .builder()
                 .name("some_call")
                 .help("Some test help")
                 .labelNames("label_1")
+                .build()
                 .register(registry);
 
         try {
