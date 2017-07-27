@@ -56,9 +56,9 @@ class RateLimiterChainSpec extends Specification {
                 bindInstance(RateLimiterRegistry, rateLimiterRegistry)
                 module(Resilience4jModule) {
                     it.rateLimiter('test1') {
-                        it.limitForPeriod(10).limitRefreshPeriodInNanos(1000000000).timeoutInMillis(0)
+                        it.limitForPeriod(5).limitRefreshPeriodInNanos(1000000000).timeoutInMillis(0)
                     }.rateLimiter('test2') {
-                        it.limitForPeriod(10).limitRefreshPeriodInNanos(1000000000).timeoutInMillis(0)
+                        it.limitForPeriod(5).limitRefreshPeriodInNanos(1000000000).timeoutInMillis(0)
                     }
                 }
             }
@@ -77,13 +77,13 @@ class RateLimiterChainSpec extends Specification {
         then: "it works"
         actual.statusCode == 200
         actual.body.text == 'ok'
-        rateLimiterRegistry.rateLimiter('test1').metrics.availablePermissions == 10
+        rateLimiterRegistry.rateLimiter('test1').metrics.availablePermissions == 5
         rateLimiterRegistry.rateLimiter('test2').metrics.numberOfWaitingThreads == 0
 
         when: "we get all rate limiter events"
         ['test1', 'test2'].each {
             def r = rateLimiterRegistry.rateLimiter(it)
-            (0..10).each {
+            (0..5).each {
                 r.getPermission(Duration.ZERO)
             }
         }
@@ -91,16 +91,16 @@ class RateLimiterChainSpec extends Specification {
         def dto = mapper.readValue(actual.body.text, RateLimiterEventsEndpointResponse)
 
         then: "it works"
-        dto.rateLimiterEvents.size() == 22
-        dto.rateLimiterEvents.get(21).rateLimiterEventType == RateLimiterEvent.Type.FAILED_ACQUIRE
+        dto.rateLimiterEvents.size() == 12
+        dto.rateLimiterEvents.get(11).rateLimiterEventType == RateLimiterEvent.Type.FAILED_ACQUIRE
 
         when: "we get events for a single rate limiter"
         actual = client.get('ratelimiter/events/test1')
         dto = mapper.readValue(actual.body.text, RateLimiterEventsEndpointResponse)
 
         then: "it works"
-        dto.rateLimiterEvents.size() == 11
-        dto.rateLimiterEvents.get(10).rateLimiterEventType == RateLimiterEvent.Type.FAILED_ACQUIRE
+        dto.rateLimiterEvents.size() == 6
+        dto.rateLimiterEvents.get(5).rateLimiterEventType == RateLimiterEvent.Type.FAILED_ACQUIRE
 
         when: "we get events for a single rate limiter by type"
         actual = client.get('ratelimiter/events/test1/failed_acquire')
@@ -115,8 +115,8 @@ class RateLimiterChainSpec extends Specification {
         dto = mapper.readValue(actual.body.text, RateLimiterEventsEndpointResponse)
 
         then: "it works"
-        dto.rateLimiterEvents.size() == 10
-        (0..9).each { i ->
+        dto.rateLimiterEvents.size() == 5
+        (0..4).each { i ->
             assert dto.rateLimiterEvents.get(i).rateLimiterEventType == RateLimiterEvent.Type.SUCCESSFUL_ACQUIRE
         }
 
@@ -128,7 +128,7 @@ class RateLimiterChainSpec extends Specification {
         await().atMost(2, TimeUnit.SECONDS).until {
             ['test1', 'test2'].each {
                 def r = rateLimiterRegistry.rateLimiter(it)
-                assert r.metrics.availablePermissions == 10
+                assert r.metrics.availablePermissions == 5
             }
         }
     }
@@ -144,9 +144,9 @@ class RateLimiterChainSpec extends Specification {
                 bindInstance(RateLimiterRegistry, rateLimiterRegistry)
                 module(Resilience4jModule) {
                     it.rateLimiter('test1') {
-                        it.limitForPeriod(10).limitRefreshPeriodInNanos(1000000000).timeoutInMillis(0)
+                        it.limitForPeriod(5).limitRefreshPeriodInNanos(1000000000).timeoutInMillis(0)
                     }.rateLimiter('test2') {
-                        it.limitForPeriod(10).limitRefreshPeriodInNanos(1000000000).timeoutInMillis(0)
+                        it.limitForPeriod(5).limitRefreshPeriodInNanos(1000000000).timeoutInMillis(0)
                     }
                 }
             }
@@ -214,9 +214,9 @@ class RateLimiterChainSpec extends Specification {
                 bindInstance(RateLimiterRegistry, rateLimiterRegistry)
                 module(Resilience4jModule) {
                     it.rateLimiter('test1') {
-                        it.limitForPeriod(10).limitRefreshPeriodInNanos(1000000000).timeoutInMillis(0)
+                        it.limitForPeriod(5).limitRefreshPeriodInNanos(1000000000).timeoutInMillis(0)
                     }.rateLimiter('test2') {
-                        it.limitForPeriod(10).limitRefreshPeriodInNanos(1000000000).timeoutInMillis(0)
+                        it.limitForPeriod(5).limitRefreshPeriodInNanos(1000000000).timeoutInMillis(0)
                     }.endpoints {
                         it.rateLimiters {
                             it.enabled(false)
@@ -231,7 +231,7 @@ class RateLimiterChainSpec extends Specification {
         when: "we get all rate limiter events"
         ['test1', 'test2'].each {
             def r = rateLimiterRegistry.rateLimiter(it)
-            (0..10).each {
+            (0..5).each {
                 r.getPermission(Duration.ZERO)
             }
         }
