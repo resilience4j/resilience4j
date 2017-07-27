@@ -1,9 +1,10 @@
-=== Prometheus Metrics exporter
+=== Prometheus Metrics Integration
 
 ==== Introduction
 
-Integration of circuit breaker and rate limiter metrics with
-https://github.com/prometheus/client_java[Prometheus simple client]
+Integration with https://github.com/prometheus/client_java[Prometheus simple client]
+
+Module provides exporters for `CircuitBreaker` and `RateLimiter` metrics.
 
 For the circuit breaker library exports 2 metrics:
 
@@ -27,6 +28,15 @@ For the rate limiter following metric with default name `rate_limiter` and label
 - `waiting_threads`
 
 The names of the rate limiters and circuit breakers are exposed using label `name`.
+
+This module also provides `CallMeter` -- a composite metric to measure single call/request metrics such as:
+    - execution time distribution,
+    - number of attempts and
+    - number of failures.
+
+It is implemented in Prometheus simple client's style, supports labels and produces histogram and counter metrics.
+
+Usage examples provided bellow in this section.
 
 ==== Dashboard Example
 
@@ -65,3 +75,40 @@ collectorRegistry.register(RateLimiterExports.ofRateLimiterRegistry(rateLimiterR
 --
 
 For both it is possible to use just a collection of breakers and limiters instead of registry.
+
+===== Call Meter
+
+Simple example without labels
+
+[source,java]
+--
+final CollectorRegistry registry = new CollectorRegistry();
+
+final CallMeter meter = CallMeter.of("foo_call", "Foo call help", registry);
+
+CallMeter.decorateCompletionStageSupplier(meter, () -> supplyAsync(() -> { /* ... */ }));
+--
+
+Advanced example with labels
+
+[source,java]
+--
+final CollectorRegistry registry = new CollectorRegistry();
+
+final CallMeter meter = CallMeter
+        .builder()
+        .name("foo_call")
+        .help("Foo call help")
+        .labelNames("label_1")
+        .build()
+        .register(registry);
+
+meter.labels("boo").executeRunnable(() -> { /* ... */ });
+
+CallMeter.decorateCompletionStageSupplier(
+    meter.labels("baz"),
+    () -> supplyAsync(() -> { /* ... */ })
+);
+
+--
+
