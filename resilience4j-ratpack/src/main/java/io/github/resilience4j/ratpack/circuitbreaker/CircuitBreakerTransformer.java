@@ -90,7 +90,7 @@ public class CircuitBreakerTransformer<T> implements Function<Upstream<? extends
                     }
                 });
             } else {
-                Throwable t = new CircuitBreakerOpenException("CircuitBreaker ${circuitBreaker.name} is open");
+                Throwable t = new CircuitBreakerOpenException(String.format("CircuitBreaker '%s' is open", circuitBreaker.getName()));
                 if (recoverer != null) {
                     try {
                         down.success(recoverer.apply(t));
