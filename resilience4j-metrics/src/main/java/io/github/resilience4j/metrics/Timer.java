@@ -47,7 +47,7 @@ public interface Timer {
      *
      * @param name the name of the timer
      * @param metricRegistry the MetricRegistry
-     * @return a Bulkhead instance
+     * @return a Timer instance
      */
     static Timer ofMetricRegistry(String name, MetricRegistry metricRegistry) {
         return new TimerImpl(name, metricRegistry);
@@ -57,7 +57,7 @@ public interface Timer {
      * Creates a timer of a default MetricRegistry
      *
      * @param name the name of the timer
-     * @return a Bulkhead instance
+     * @return a Timer instance
      */
     static Timer of(String name) {
         return new TimerImpl(name, new MetricRegistry());

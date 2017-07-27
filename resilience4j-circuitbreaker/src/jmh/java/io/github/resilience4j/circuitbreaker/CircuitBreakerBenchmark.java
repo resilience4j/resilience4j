@@ -64,7 +64,6 @@ public class CircuitBreakerBenchmark {
         protectedSupplier = CircuitBreaker.decorateSupplier(circuitBreaker, stringSupplier);
 
         CircuitBreaker circuitBreakerWithSubscriber = CircuitBreaker.ofDefaults("testCircuitBreakerWithSb");
-        circuitBreakerWithSubscriber.getEventStream().subscribe();
         protectedSupplierWithSb = CircuitBreaker.decorateSupplier(circuitBreakerWithSubscriber, stringSupplier);
     }
 
