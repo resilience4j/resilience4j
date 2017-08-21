@@ -21,7 +21,7 @@ In order to create a custom-configured `Retry`, you can use the RetryConfig buil
 ----
 RetryConfig config = RetryConfig.custom()
     .maxAttempts(2)
-    .waitDurationInOpenState(Duration.ofMillis(100))
+    .waitDuration(Duration.ofMillis(100))
     .retryOnException(throwable -> API.Match(throwable).of(
             API.Case($(Predicates.instanceOf(WebServiceException.class)), true),
             API.Case($(), false)))
