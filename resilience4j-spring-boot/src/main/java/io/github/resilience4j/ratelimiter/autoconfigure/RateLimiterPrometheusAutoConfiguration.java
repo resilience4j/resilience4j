@@ -17,7 +17,6 @@ package io.github.resilience4j.ratelimiter.autoconfigure;
 
 import io.github.resilience4j.prometheus.RateLimiterExports;
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
-import io.prometheus.client.CollectorRegistry;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.context.annotation.Bean;
@@ -29,7 +28,7 @@ import org.springframework.context.annotation.Configuration;
  */
 @Configuration
 @AutoConfigureAfter(value = RateLimiterAutoConfiguration.class)
-@ConditionalOnClass(CollectorRegistry.class)
+@ConditionalOnClass(RateLimiterExports.class)
 public class RateLimiterPrometheusAutoConfiguration {
     @Bean
     public RateLimiterExports rateLimiterPrometheusCollector(RateLimiterRegistry rateLimiterRegistry){
