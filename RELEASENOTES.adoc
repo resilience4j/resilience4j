@@ -120,3 +120,7 @@ NOTE: Braking changes:
 
 * Issue #51: Removed RxJava2 dependency to make Resilience4j more lightweight. Added a RxJava2 module.
 * Issue #148: Created an EventPublisher which replaces the RxJava Event Stream.
+
+== Version 0.10.1
+* Issue #153: Fixed CircuitBreakerTransformer error messaging
+* Issue #161: Fixed Spring Boot Prometheus AutoConfiguration
