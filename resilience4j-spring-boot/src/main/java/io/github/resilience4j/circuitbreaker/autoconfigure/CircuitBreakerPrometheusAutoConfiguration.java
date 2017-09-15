@@ -17,7 +17,6 @@ package io.github.resilience4j.circuitbreaker.autoconfigure;
 
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.prometheus.CircuitBreakerExports;
-import io.prometheus.client.CollectorRegistry;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.context.annotation.Bean;
@@ -29,7 +28,7 @@ import org.springframework.context.annotation.Configuration;
  */
 @Configuration
 @AutoConfigureAfter(value = CircuitBreakerAutoConfiguration.class)
-@ConditionalOnClass(CollectorRegistry.class)
+@ConditionalOnClass(CircuitBreakerExports.class)
 public class CircuitBreakerPrometheusAutoConfiguration {
     @Bean
     public CircuitBreakerExports circuitBreakerPrometheusCollector(CircuitBreakerRegistry circuitBreakerRegistry){
