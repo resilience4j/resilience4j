@@ -15,20 +15,19 @@
  */
 package io.github.resilience4j.ratelimiter.autoconfigure;
 
-import org.springframework.boot.actuate.metrics.repository.MetricRepository;
+import io.github.resilience4j.prometheus.RateLimiterExports;
+import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
+import io.prometheus.client.CollectorRegistry;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-
-import io.github.resilience4j.prometheus.RateLimiterExports;
-import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
 
 /**
  * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration
  * Auto-configuration} for resilience4j-metrics.
  */
 @Configuration
-@ConditionalOnClass(MetricRepository.class)
+@ConditionalOnClass(CollectorRegistry.class)
 public class RateLimiterPrometheusAutoConfiguration {
     @Bean
     public RateLimiterExports rateLimiterPrometheusCollector(RateLimiterRegistry rateLimiterRegistry){
