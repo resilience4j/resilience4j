@@ -515,8 +515,8 @@ table.CodeRay td.code>pre{padding:0}
 <h1>Resilience4j User Guide</h1>
 <div class="details">
 <span id="author" class="author">Robert Winkler</span><br>
-<span id="revnumber">version 0.10.0,</span>
-<span id="revdate">2017-06-06</span>
+<span id="revnumber">version 0.10.1,</span>
+<span id="revdate">2017-09-18</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">Table of Contents</div>
@@ -613,7 +613,7 @@ table.CodeRay td.code>pre{padding:0}
 <li><a href="#_usage">4.4.2. Usage</a></li>
 </ul>
 </li>
-<li><a href="#_prometheus_metrics_exporter">4.5. Prometheus Metrics exporter</a>
+<li><a href="#_prometheus_metrics_integration">4.5. Prometheus Metrics Integration</a>
 <ul class="sectlevel3">
 <li><a href="#_introduction_6">4.5.1. Introduction</a></li>
 <li><a href="#_dashboard_example">4.5.2. Dashboard Example</a></li>
@@ -805,12 +805,12 @@ The <strong>groupId</strong> has been changed from <strong>io.github.robwin</str
     jCenter()
 }
 
-compile "io.github.resilience4j:resilience4j-circuitbreaker:0.10.0"
-compile "io.github.resilience4j:resilience4j-ratelimiter:0.10.0"
-compile "io.github.resilience4j:resilience4j-retry:0.10.0"
-compile "io.github.resilience4j:resilience4j-bulkhead:0.10.0"
-compile "io.github.resilience4j:resilience4j-cache:0.10.0"
-compile "io.github.resilience4j:resilience4j-timelimiter:0.10.0"</code></pre>
+compile "io.github.resilience4j:resilience4j-circuitbreaker:0.10.1"
+compile "io.github.resilience4j:resilience4j-ratelimiter:0.10.1"
+compile "io.github.resilience4j:resilience4j-retry:0.10.1"
+compile "io.github.resilience4j:resilience4j-bulkhead:0.10.1"
+compile "io.github.resilience4j:resilience4j-cache:0.10.1"
+compile "io.github.resilience4j:resilience4j-timelimiter:0.10.1"</code></pre>
 </div>
 </div>
 </div>
@@ -845,32 +845,32 @@ compile "io.github.resilience4j:resilience4j-timelimiter:0.10.0"</code></pre>
 <span class="tag">&lt;dependency&gt;</span>
     <span class="tag">&lt;groupId&gt;</span>io.github.resilience4j<span class="tag">&lt;/groupId&gt;</span>
     <span class="tag">&lt;artifactId&gt;</span>resilience4j-circuitbreaker<span class="tag">&lt;/artifactId&gt;</span>
-    <span class="tag">&lt;version&gt;</span>0.10.0<span class="tag">&lt;/version&gt;</span>
+    <span class="tag">&lt;version&gt;</span>0.10.1<span class="tag">&lt;/version&gt;</span>
 <span class="tag">&lt;/dependency&gt;</span>
 <span class="tag">&lt;dependency&gt;</span>
     <span class="tag">&lt;groupId&gt;</span>io.github.resilience4j<span class="tag">&lt;/groupId&gt;</span>
     <span class="tag">&lt;artifactId&gt;</span>resilience4j-ratelimiter<span class="tag">&lt;/artifactId&gt;</span>
-    <span class="tag">&lt;version&gt;</span>0.10.0<span class="tag">&lt;/version&gt;</span>
+    <span class="tag">&lt;version&gt;</span>0.10.1<span class="tag">&lt;/version&gt;</span>
 <span class="tag">&lt;/dependency&gt;</span>
 <span class="tag">&lt;dependency&gt;</span>
     <span class="tag">&lt;groupId&gt;</span>io.github.resilience4j<span class="tag">&lt;/groupId&gt;</span>
     <span class="tag">&lt;artifactId&gt;</span>resilience4j-retry<span class="tag">&lt;/artifactId&gt;</span>
-    <span class="tag">&lt;version&gt;</span>0.10.0<span class="tag">&lt;/version&gt;</span>
+    <span class="tag">&lt;version&gt;</span>0.10.1<span class="tag">&lt;/version&gt;</span>
 <span class="tag">&lt;/dependency&gt;</span>
 <span class="tag">&lt;dependency&gt;</span>
     <span class="tag">&lt;groupId&gt;</span>io.github.resilience4j<span class="tag">&lt;/groupId&gt;</span>
     <span class="tag">&lt;artifactId&gt;</span>resilience4j-bulkhead<span class="tag">&lt;/artifactId&gt;</span>
-    <span class="tag">&lt;version&gt;</span>0.10.0<span class="tag">&lt;/version&gt;</span>
+    <span class="tag">&lt;version&gt;</span>0.10.1<span class="tag">&lt;/version&gt;</span>
 <span class="tag">&lt;/dependency&gt;</span>
 <span class="tag">&lt;dependency&gt;</span>
     <span class="tag">&lt;groupId&gt;</span>io.github.resilience4j<span class="tag">&lt;/groupId&gt;</span>
     <span class="tag">&lt;artifactId&gt;</span>resilience4j-cache<span class="tag">&lt;/artifactId&gt;</span>
-    <span class="tag">&lt;version&gt;</span>0.10.0<span class="tag">&lt;/version&gt;</span>
+    <span class="tag">&lt;version&gt;</span>0.10.1<span class="tag">&lt;/version&gt;</span>
 <span class="tag">&lt;/dependency&gt;</span>
 <span class="tag">&lt;dependency&gt;</span>
     <span class="tag">&lt;groupId&gt;</span>io.github.resilience4j<span class="tag">&lt;/groupId&gt;</span>
     <span class="tag">&lt;artifactId&gt;</span>resilience4j-timelimiter<span class="tag">&lt;/artifactId&gt;</span>
-    <span class="tag">&lt;version&gt;</span>0.10.0<span class="tag">&lt;/version&gt;</span>
+    <span class="tag">&lt;version&gt;</span>0.10.1<span class="tag">&lt;/version&gt;</span>
 <span class="tag">&lt;/dependency&gt;</span></code></pre>
 </div>
 </div>
@@ -1555,7 +1555,7 @@ Retry retry = Retry.of(<span class="string"><span class="delimiter">&quot;</span
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="java">RetryConfig config = RetryConfig.custom()
     .maxAttempts(<span class="integer">2</span>)
-    .waitDurationInOpenState(<span class="predefined-type">Duration</span>.ofMillis(<span class="integer">100</span>))
+    .waitDuration(<span class="predefined-type">Duration</span>.ofMillis(<span class="integer">100</span>))
     .retryOnException(throwable -&gt; API.Match(throwable).of(
             API.Case(<span class="error">$</span>(Predicates.instanceOf(WebServiceException.class)), <span class="predefined-constant">true</span>),
             API.Case(<span class="error">$</span>(), <span class="predefined-constant">false</span>)))
@@ -2934,12 +2934,14 @@ metricRegistry.registerAll(RateLimiterMetrics.ofRateLimiter(rateLimiter));</code
 </div>
 </div>
 <div class="sect2">
-<h3 id="_prometheus_metrics_exporter"><a class="anchor" href="#_prometheus_metrics_exporter"></a>4.5. Prometheus Metrics exporter</h3>
+<h3 id="_prometheus_metrics_integration"><a class="anchor" href="#_prometheus_metrics_integration"></a>4.5. Prometheus Metrics Integration</h3>
 <div class="sect3">
 <h4 id="_introduction_6"><a class="anchor" href="#_introduction_6"></a>4.5.1. Introduction</h4>
 <div class="paragraph">
-<p>Integration of circuit breaker and rate limiter metrics with<br>
-<a href="https://github.com/prometheus/client_java">Prometheus simple client</a></p>
+<p>Integration with <a href="https://github.com/prometheus/client_java">Prometheus simple client</a></p>
+</div>
+<div class="paragraph">
+<p>Module provides exporters for <code>CircuitBreaker</code> and <code>RateLimiter</code> metrics.</p>
 </div>
 <div class="paragraph">
 <p>For the circuit breaker library exports 2 metrics:</p>
@@ -3002,6 +3004,18 @@ metricRegistry.registerAll(RateLimiterMetrics.ofRateLimiter(rateLimiter));</code
 <div class="paragraph">
 <p>The names of the rate limiters and circuit breakers are exposed using label <code>name</code>.</p>
 </div>
+<div class="paragraph">
+<p>This module also provides <code>CallMeter</code>&#8201;&#8212;&#8201;a composite metric to measure single call/request metrics such as:<br>
+    - execution time distribution,<br>
+    - number of attempts and<br>
+    - number of failures.</p>
+</div>
+<div class="paragraph">
+<p>It is implemented in Prometheus simple client&#8217;s style, supports labels and produces histogram and counter metrics.</p>
+</div>
+<div class="paragraph">
+<p>Usage examples provided bellow in this section.</p>
+</div>
 </div>
 <div class="sect3">
 <h4 id="_dashboard_example"><a class="anchor" href="#_dashboard_example"></a>4.5.2. Dashboard Example</h4>
@@ -3046,6 +3060,44 @@ collectorRegistry.register(RateLimiterExports.ofRateLimiterRegistry(rateLimiterR
 </div>
 <div class="paragraph">
 <p>For both it is possible to use just a collection of breakers and limiters instead of registry.</p>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_call_meter"><a class="anchor" href="#_call_meter"></a>Call Meter</h5>
+<div class="paragraph">
+<p>Simple example without labels</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="java"><span class="directive">final</span> CollectorRegistry registry = <span class="keyword">new</span> CollectorRegistry();
+
+<span class="directive">final</span> CallMeter meter = CallMeter.of(<span class="string"><span class="delimiter">&quot;</span><span class="content">foo_call</span><span class="delimiter">&quot;</span></span>, <span class="string"><span class="delimiter">&quot;</span><span class="content">Foo call help</span><span class="delimiter">&quot;</span></span>, registry);
+
+CallMeter.decorateCompletionStageSupplier(meter, () -&gt; supplyAsync(() -&gt; { <span class="comment">/* ... */</span> }));</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Advanced example with labels</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="java"><span class="directive">final</span> CollectorRegistry registry = <span class="keyword">new</span> CollectorRegistry();
+
+<span class="directive">final</span> CallMeter meter = CallMeter
+        .builder()
+        .name(<span class="string"><span class="delimiter">&quot;</span><span class="content">foo_call</span><span class="delimiter">&quot;</span></span>)
+        .help(<span class="string"><span class="delimiter">&quot;</span><span class="content">Foo call help</span><span class="delimiter">&quot;</span></span>)
+        .labelNames(<span class="string"><span class="delimiter">&quot;</span><span class="content">label_1</span><span class="delimiter">&quot;</span></span>)
+        .build()
+        .register(registry);
+
+meter.labels(<span class="string"><span class="delimiter">&quot;</span><span class="content">boo</span><span class="delimiter">&quot;</span></span>).executeRunnable(() -&gt; { <span class="comment">/* ... */</span> });
+
+CallMeter.decorateCompletionStageSupplier(
+    meter.labels(<span class="string"><span class="delimiter">&quot;</span><span class="content">baz</span><span class="delimiter">&quot;</span></span>),
+    () -&gt; supplyAsync(() -&gt; { <span class="comment">/* ... */</span> })
+);</code></pre>
+</div>
 </div>
 </div>
 </div>
@@ -3183,8 +3235,8 @@ So you can easily restrict not only network calls but your local in-memory opera
 </div>
 <div id="footer">
 <div id="footer-text">
-Version 0.10.0<br>
-Last updated 2017-05-11 10:18:41 +02:00
+Version 0.10.1<br>
+Last updated 2017-08-31 09:20:51 +02:00
 </div>
 </div>
 </body>
