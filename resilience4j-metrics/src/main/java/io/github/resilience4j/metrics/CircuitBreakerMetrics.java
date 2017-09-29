@@ -42,8 +42,9 @@ public class CircuitBreakerMetrics implements MetricSet {
     public static final String NOT_PERMITTED = "not_permitted";
     public static final String BUFFERED = "buffered";
     public static final String BUFFERED_MAX = "buffered_max";
-    public static final String IS_OPEN = "is_open";
-    public static final String CURRENT_STATE = "current_state";
+    public static final String STATE_OPEN = "state_open";
+    public static final String STATE_HALF_OPEN = "state_halfopen";
+    public static final String STATE_CLOSED = "state_closed";
 
     private final MetricRegistry metricRegistry = new MetricRegistry();
 
@@ -57,11 +58,14 @@ public class CircuitBreakerMetrics implements MetricSet {
         circuitBreakers.forEach(circuitBreaker -> {
                 String name = circuitBreaker.getName();
                 CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
-                //add a metric that reports the status and a boolean on the open state
-                metricRegistry.register(name(prefix, name, IS_OPEN),
+                //metric states
+                metricRegistry.register(name(prefix, name, STATE_OPEN),
                       (Gauge<Boolean>)()-> CircuitBreaker.State.OPEN.equals(circuitBreaker.getState()));
-                metricRegistry.register(name(prefix, name, CURRENT_STATE),
-                     (Gauge<Integer>) () -> circuitBreaker.getState().ordinal());
+                metricRegistry.register(name(prefix, name, STATE_HALF_OPEN),
+                    (Gauge<Boolean>)()-> CircuitBreaker.State.HALF_OPEN.equals(circuitBreaker.getState()));
+                metricRegistry.register(name(prefix, name, STATE_CLOSED),
+                    (Gauge<Boolean>)()-> CircuitBreaker.State.CLOSED.equals(circuitBreaker.getState()));
+
                 metricRegistry.register(name(prefix, name, SUCCESSFUL),
                     (Gauge<Integer>) metrics::getNumberOfSuccessfulCalls);
                 metricRegistry.register(name(prefix, name, FAILED),

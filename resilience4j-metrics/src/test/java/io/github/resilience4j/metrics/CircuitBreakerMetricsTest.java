@@ -60,9 +60,10 @@ public class CircuitBreakerMetricsTest {
         assertThat(value).isEqualTo("Hello world");
         // Then the helloWorldService should be invoked 1 time
         BDDMockito.then(helloWorldService).should(times(1)).returnHelloWorld();
-        assertThat(metricRegistry.getMetrics()).hasSize(7);
-        assertThat(metricRegistry.getGauges().get("resilience4j.circuitbreaker.testName.is_open").getValue()).isEqualTo(Boolean.FALSE);
-        assertThat(metricRegistry.getGauges().get("resilience4j.circuitbreaker.testName.current_state").getValue()).isEqualTo(CircuitBreaker.State.CLOSED.ordinal());
+        assertThat(metricRegistry.getMetrics()).hasSize(8);
+        assertThat(metricRegistry.getGauges().get("resilience4j.circuitbreaker.testName.state_open").getValue()).isEqualTo(Boolean.FALSE);
+        assertThat(metricRegistry.getGauges().get("resilience4j.circuitbreaker.testName.state_halfopen").getValue()).isEqualTo(Boolean.FALSE);
+        assertThat(metricRegistry.getGauges().get("resilience4j.circuitbreaker.testName.state_closed").getValue()).isEqualTo(Boolean.TRUE);
         assertThat(metricRegistry.getGauges().get("resilience4j.circuitbreaker.testName.buffered").getValue()).isEqualTo(1);
         assertThat(metricRegistry.getGauges().get("resilience4j.circuitbreaker.testName.successful").getValue()).isEqualTo(1);
         assertThat(metricRegistry.getGauges().get("resilience4j.circuitbreaker.testName.failed").getValue()).isEqualTo(0);
@@ -87,9 +88,10 @@ public class CircuitBreakerMetricsTest {
         assertThat(value).isEqualTo("Hello world");
         // Then the helloWorldService should be invoked 1 time
         BDDMockito.then(helloWorldService).should(times(1)).returnHelloWorld();
-        assertThat(metricRegistry.getMetrics()).hasSize(7);
-        assertThat(metricRegistry.getGauges().get("testPrefix.testName.is_open").getValue()).isEqualTo(Boolean.FALSE);
-        assertThat(metricRegistry.getGauges().get("testPrefix.testName.current_state").getValue()).isEqualTo(CircuitBreaker.State.CLOSED.ordinal());
+        assertThat(metricRegistry.getMetrics()).hasSize(8);
+        assertThat(metricRegistry.getGauges().get("testPrefix.testName.state_open").getValue()).isEqualTo(Boolean.FALSE);
+        assertThat(metricRegistry.getGauges().get("testPrefix.testName.state_halfopen").getValue()).isEqualTo(Boolean.FALSE);
+        assertThat(metricRegistry.getGauges().get("testPrefix.testName.state_closed").getValue()).isEqualTo(Boolean.TRUE);
         assertThat(metricRegistry.getGauges().get("testPrefix.testName.buffered").getValue()).isEqualTo(1);
         assertThat(metricRegistry.getGauges().get("testPrefix.testName.successful").getValue()).isEqualTo(1);
         assertThat(metricRegistry.getGauges().get("testPrefix.testName.failed").getValue()).isEqualTo(0);
