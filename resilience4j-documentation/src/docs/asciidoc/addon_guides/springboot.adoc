@@ -178,6 +178,13 @@ resilience4j.ratelimiter:
             timeoutInMillis: 3000
 ----
 
+===== Explicit ordering for CircuitBreaker and RateLimiter aspects
+You can adjust `RateLimiterProperties.rateLimiterAspectOrder` and `CircuitBreakerProperties.circuitBreakerAspectOrder`
+and explicitly define `CircuitBreaker` and `RateLimiter` execution sequence.
+By default `CircuitBreaker` will be executed BEFORE `RateLimiter`.
+
+WARNING: Please be careful changing of `CircuitBreaker`/`RateLimiter` ordering can drastically change application behavior.
+
 ==== Event Monitoring
 
 ===== CircuitBreaker

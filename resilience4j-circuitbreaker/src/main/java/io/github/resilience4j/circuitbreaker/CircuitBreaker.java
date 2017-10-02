@@ -335,7 +335,7 @@ public interface CircuitBreaker {
             long start = System.nanoTime();
             try {
                 T returnValue = supplier.apply();
-                
+
                 long durationInNanos = System.nanoTime() - start;
                 circuitBreaker.onSuccess(durationInNanos);
                 return returnValue;
