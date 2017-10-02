@@ -485,10 +485,8 @@ class Resilience4jModuleSpec extends Specification {
         timer.count == 3
 
         and:
-        registry.gauges.size() == 14
-        registry.gauges.keySet() == ['resilience4j.circuitbreaker.test.state_open',
-                                     'resilience4j.circuitbreaker.test.state_halfopen',
-                                     'resilience4j.circuitbreaker.test.state_closed',
+        registry.gauges.size() == 12
+        registry.gauges.keySet() == ['resilience4j.circuitbreaker.test.state',
                                      'resilience4j.circuitbreaker.test.buffered',
                                      'resilience4j.circuitbreaker.test.buffered_max',
                                      'resilience4j.circuitbreaker.test.failed',
