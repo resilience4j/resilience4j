@@ -183,13 +183,32 @@ public interface CircuitBreaker {
     enum State {
         /** A CLOSED breaker is operating normally and allowing
          requests through. */
-        CLOSED,
+        CLOSED(0),
         /** An OPEN breaker has tripped and will not allow requests
          through. */
-        OPEN,
+        OPEN(1),
         /** A HALF_OPEN breaker has completed its wait interval
          and will allow requests */
-        HALF_OPEN
+        HALF_OPEN(2);
+
+        private final int order;
+
+        /**
+         * Order is a FIXED integer, it should be preserved regardless of the ordinal number of the enumeration.
+         * While a State.ordinal() does mostly the same, it is prone to changing the order based on how the
+         * programmer  sets the enum. If more states are added the "order" should be preserved. For example, if
+         * there is a state inserted between CLOSED and HALF_OPEN (say FIXED_OPEN) then the order of HALF_OPEN remains
+         * at 2 and the new state takes 3 regardless of its order in the enum.
+         *
+         * @param order
+         */
+        private State(int order){
+            this.order = order;
+        }
+
+        public int getOrder(){
+            return order;
+        }
     }
 
     /**
