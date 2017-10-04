@@ -60,7 +60,8 @@ public class CircuitBreakerMetricsTest {
         assertThat(value).isEqualTo("Hello world");
         // Then the helloWorldService should be invoked 1 time
         BDDMockito.then(helloWorldService).should(times(1)).returnHelloWorld();
-        assertThat(metricRegistry.getMetrics()).hasSize(5);
+        assertThat(metricRegistry.getMetrics()).hasSize(6);
+        assertThat(metricRegistry.getGauges().get("resilience4j.circuitbreaker.testName.state").getValue()).isEqualTo(0);
         assertThat(metricRegistry.getGauges().get("resilience4j.circuitbreaker.testName.buffered").getValue()).isEqualTo(1);
         assertThat(metricRegistry.getGauges().get("resilience4j.circuitbreaker.testName.successful").getValue()).isEqualTo(1);
         assertThat(metricRegistry.getGauges().get("resilience4j.circuitbreaker.testName.failed").getValue()).isEqualTo(0);
@@ -85,7 +86,8 @@ public class CircuitBreakerMetricsTest {
         assertThat(value).isEqualTo("Hello world");
         // Then the helloWorldService should be invoked 1 time
         BDDMockito.then(helloWorldService).should(times(1)).returnHelloWorld();
-        assertThat(metricRegistry.getMetrics()).hasSize(5);
+        assertThat(metricRegistry.getMetrics()).hasSize(6);
+        assertThat(metricRegistry.getGauges().get("testPrefix.testName.state").getValue()).isEqualTo(0);
         assertThat(metricRegistry.getGauges().get("testPrefix.testName.buffered").getValue()).isEqualTo(1);
         assertThat(metricRegistry.getGauges().get("testPrefix.testName.successful").getValue()).isEqualTo(1);
         assertThat(metricRegistry.getGauges().get("testPrefix.testName.failed").getValue()).isEqualTo(0);

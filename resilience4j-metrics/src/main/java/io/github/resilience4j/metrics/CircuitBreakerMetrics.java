@@ -42,6 +42,8 @@ public class CircuitBreakerMetrics implements MetricSet {
     public static final String NOT_PERMITTED = "not_permitted";
     public static final String BUFFERED = "buffered";
     public static final String BUFFERED_MAX = "buffered_max";
+    public static final String STATE = "state";
+
     private final MetricRegistry metricRegistry = new MetricRegistry();
 
     private CircuitBreakerMetrics(Iterable<CircuitBreaker> circuitBreakers) {
@@ -54,7 +56,9 @@ public class CircuitBreakerMetrics implements MetricSet {
         circuitBreakers.forEach(circuitBreaker -> {
                 String name = circuitBreaker.getName();
                 CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
-
+                //state as an integer
+                metricRegistry.register(name(prefix, name, STATE),
+                      (Gauge<Integer>)()-> circuitBreaker.getState().getOrder());
                 metricRegistry.register(name(prefix, name, SUCCESSFUL),
                     (Gauge<Integer>) metrics::getNumberOfSuccessfulCalls);
                 metricRegistry.register(name(prefix, name, FAILED),
