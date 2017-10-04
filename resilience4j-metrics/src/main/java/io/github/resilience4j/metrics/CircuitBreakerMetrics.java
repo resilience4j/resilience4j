@@ -58,7 +58,7 @@ public class CircuitBreakerMetrics implements MetricSet {
                 CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
                 //state as an integer
                 metricRegistry.register(name(prefix, name, STATE),
-                      (Gauge<Integer>)()-> circuitBreaker.getState().ordinal());
+                      (Gauge<Integer>)()-> circuitBreaker.getState().getOrder());
                 metricRegistry.register(name(prefix, name, SUCCESSFUL),
                     (Gauge<Integer>) metrics::getNumberOfSuccessfulCalls);
                 metricRegistry.register(name(prefix, name, FAILED),
