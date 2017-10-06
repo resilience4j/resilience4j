@@ -1,4 +1,5 @@
 resilience4j.circuitbreaker:
+    circuitBreakerAspectOrder: 400
     backends:
         backendA:
             ringBufferSizeInClosedState: 6
@@ -16,6 +17,7 @@ resilience4j.circuitbreaker:
             registerHealthIndicator: true
 
 resilience4j.ratelimiter:
+    rateLimiterAspectOrder: 401
     limiters:
         backendA:
             limitForPeriod: 10

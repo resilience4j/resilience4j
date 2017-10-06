@@ -66,8 +66,8 @@ public class RateLimiterAutoConfiguration {
     }
 
     @Bean
-    public RateLimiterAspect rateLimiterAspect(RateLimiterRegistry rateLimiterRegistry) {
-        return new RateLimiterAspect(rateLimiterRegistry);
+    public RateLimiterAspect rateLimiterAspect(RateLimiterProperties rateLimiterProperties, RateLimiterRegistry rateLimiterRegistry) {
+        return new RateLimiterAspect(rateLimiterRegistry, rateLimiterProperties);
     }
 
     @Bean
