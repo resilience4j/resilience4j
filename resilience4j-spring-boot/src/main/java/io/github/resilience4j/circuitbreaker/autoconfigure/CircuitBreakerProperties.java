@@ -14,6 +14,8 @@ package io.github.resilience4j.circuitbreaker.autoconfigure;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
@@ -21,13 +23,23 @@ import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 
-import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
-
 @ConfigurationProperties(prefix = "resilience4j.circuitbreaker")
 @Component
 public class CircuitBreakerProperties {
-
+    // This property gives you control over CircuitBreaker aspect application order.
+    // By default CircuitBreaker will be executed BEFORE RateLimiter.
+    // By adjusting RateLimiterProperties.rateLimiterAspectOrder and CircuitBreakerProperties.circuitBreakerAspectOrder
+    // you explicitly define aspects CircuitBreaker and RateLimiter execution sequence.
+    private int circuitBreakerAspectOrder = Integer.MAX_VALUE - 1;
     private Map<String, BackendProperties> backends = new HashMap<>();
+
+    public int getCircuitBreakerAspectOrder() {
+        return circuitBreakerAspectOrder;
+    }
+
+    public void setCircuitBreakerAspectOrder(int circuitBreakerAspectOrder) {
+        this.circuitBreakerAspectOrder = circuitBreakerAspectOrder;
+    }
 
     private BackendProperties getBackendProperties(String backend) {
         return backends.get(backend);

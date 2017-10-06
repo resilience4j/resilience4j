@@ -17,6 +17,7 @@ package io.github.resilience4j.circuitbreaker.autoconfigure;
 
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.github.resilience4j.circuitbreaker.utils.CircuitBreakerUtils;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -24,6 +25,7 @@ import org.aspectj.lang.annotation.Pointcut;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.core.Ordered;
 
 import java.lang.reflect.Method;
 
@@ -33,7 +35,7 @@ import java.lang.reflect.Method;
  * a specific backend.
  */
 @Aspect
-public class CircuitBreakerAspect {
+public class CircuitBreakerAspect implements Ordered {
 
     private static final Logger logger = LoggerFactory.getLogger(CircuitBreakerAspect.class);
 
@@ -98,13 +100,26 @@ public class CircuitBreakerAspect {
     }
 
     private Object handleJoinPoint(ProceedingJoinPoint proceedingJoinPoint, io.github.resilience4j.circuitbreaker.CircuitBreaker circuitBreaker, String methodName) throws Throwable {
+        CircuitBreakerUtils.isCallPermitted(circuitBreaker);
+        long start = System.nanoTime();
         try {
-            return io.github.resilience4j.circuitbreaker.CircuitBreaker.decorateCheckedSupplier(circuitBreaker, proceedingJoinPoint::proceed).apply();
-        } catch (Exception exception) {
+            Object returnValue = proceedingJoinPoint.proceed();
+
+            long durationInNanos = System.nanoTime() - start;
+            circuitBreaker.onSuccess(durationInNanos);
+            return returnValue;
+        } catch (Throwable throwable) {
+            long durationInNanos = System.nanoTime() - start;
+            circuitBreaker.onError(durationInNanos, throwable);
             if (logger.isDebugEnabled()) {
-                logger.debug("Invocation of method '" + methodName + "' failed!", exception);
+                logger.debug("Invocation of method '" + methodName + "' failed!", throwable);
             }
-            throw exception;
+            throw throwable;
         }
+    }
+
+    @Override
+    public int getOrder() {
+        return circuitBreakerProperties.getCircuitBreakerAspectOrder();
     }
 }

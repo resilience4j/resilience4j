@@ -15,6 +15,9 @@
  */
 package io.github.resilience4j.ratelimiter.autoconfigure;
 
+import io.github.resilience4j.ratelimiter.RateLimiterConfig;
+import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
+import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -22,10 +25,7 @@ import org.aspectj.lang.annotation.Pointcut;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import io.github.resilience4j.ratelimiter.RateLimiterConfig;
-import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
-import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
+import org.springframework.core.Ordered;
 
 import java.lang.reflect.Method;
 
@@ -36,14 +36,16 @@ import java.lang.reflect.Method;
  */
 
 @Aspect
-public class RateLimiterAspect {
+public class RateLimiterAspect implements Ordered {
     private static final Logger logger = LoggerFactory.getLogger(RateLimiterAspect.class);
     public static final String RATE_LIMITER_RECEIVED = "Created or retrieved rate limiter '{}' with period: '{}'; limit for period: '{}'; timeout: '{}'; method: '{}'";
 
     private final RateLimiterRegistry rateLimiterRegistry;
+    private final RateLimiterProperties properties;
 
-    public RateLimiterAspect(RateLimiterRegistry rateLimiterRegistry) {
+    public RateLimiterAspect(RateLimiterRegistry rateLimiterRegistry, RateLimiterProperties properties) {
         this.rateLimiterRegistry = rateLimiterRegistry;
+        this.properties = properties;
     }
 
     /**
@@ -110,5 +112,10 @@ public class RateLimiterAspect {
             }
             throw exception;
         }
+    }
+
+    @Override
+    public int getOrder() {
+        return properties.getRateLimiterAspectOrder();
     }
 }
