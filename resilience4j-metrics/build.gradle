@@ -1,9 +1,11 @@
 dependencies {
     compile (libraries.metrics)
+    compileOnly project(':resilience4j-bulkhead')
     compileOnly project(':resilience4j-circuitbreaker')
     compileOnly project(':resilience4j-retry')
     compileOnly project(':resilience4j-ratelimiter')
     testCompile project(':resilience4j-test')
+    testCompile project(':resilience4j-bulkhead')
     testCompile project(':resilience4j-circuitbreaker')
     testCompile project(':resilience4j-ratelimiter')
     testCompile project(':resilience4j-retry')
