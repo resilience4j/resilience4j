@@ -3,9 +3,29 @@
 ==== Introduction
 
 Integration with http://metrics.dropwizard.io[Dropwizard Metrics].
-With this add-on you can easily add your circuit breaker or rate limiter metrics in your Dropwizard `MetricRegistry`.
+With this add-on you can easily add your bulkhead, circuit breaker, rate limiter, retry metrics in your Dropwizard `MetricRegistry`.
 
 ==== Usage
+
+===== Bulkhead
+
+[source,java]
+--
+final MetricRegistry collectorRegistry = new MetricRegistry();
+
+final BulkheadRegistry bulkheadRegistry = BulkheadRegistry.ofDefaults();
+final Bulkhead foo = bulkheadRegistry.bulkhead("foo");
+final Bulkhead boo = bulkheadRegistry.bulkhead("boo");
+
+// you can register all bulkheads at once
+collectorRegistry.registerAll(BulkheadMetrics.ofBulkheadRegistry(bulkheadRegistry));
+// or register them one by one
+collectorRegistry.registerAll(BulkheadMetrics.ofBulkhead(foo));
+--
+
+For each bulkhead this registry will export:
+
+* `available_concurrent_calls` - instantaneous read of the number of currently available concurrent calls `[int]`
 
 ===== CircuitBreaker
 
@@ -25,7 +45,7 @@ collectorRegistry.registerAll(CircuitBreakerMetrics.ofCircuitBreaker(foo));
 // there is some additional useful methods in CircuitBreakerMetrics class
 --
 
-For each circuit breaker this methods will export:
+For each circuit breaker this registry will export:
 
 * `state` - instantaneous read of the current state where 0-CLOSED, 1-OPEN, 2-HALF-OPEN `[int]`
 * `successful` - current number of failed calls `[int]`
@@ -48,8 +68,29 @@ metricRegistry.registerAll(RateLimiterMetrics.ofRateLimiterRegistry(rateLimiterR
 metricRegistry.registerAll(RateLimiterMetrics.ofRateLimiter(rateLimiter));
 --
 
-For each rate limiter this methods will export:
+For each rate limiter this registry will export:
 
 * `available_permissions` - current number of available permissions `[int]`
 * `number_of_waiting_threads` - current number of threads waiting for permission `[int]`
+
+===== Retry
+
+[source,java]
+--
+final MetricRegistry metricRegistry = new MetricRegistry();
+final RetryRegistry retryRegistry = RetryRegistry.ofDefaults();
+final Retry retry = retryRegistry.retry("testLimit");
+
+// you can register all rate limiters at once
+metricRegistry.registerAll(RetryMetrics.ofRetryRegistry(retryRegistry));
+// or register them one by one
+metricRegistry.registerAll(RetryMetrics.ofRetry(retry));
+--
+
+For each retry this registry will export:
+
+* `successful_calls_without_retry` - the number of successful calls without a retry attempt `[long]`
+* `successful_calls_with_retry` - the number of successful calls after a retry attempt `[long]`
+* `failed_calls_without_retry` - the number of failed calls without a retry attempt `[long]`
+* `failed_calls_with_retry` - the number of failed calls after all retry attempts `[long]`
 
