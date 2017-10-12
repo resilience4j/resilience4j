@@ -102,3 +102,14 @@ bulkhead.getEventPublisher()
     .onCallPermitted(event -> logger.info(...))
     .onCallRejected(event -> logger.info(...));
 ----
+
+==== Monitoring
+
+The Bulkhead provides an interface to monitor the current metrics.
+
+[source,java]
+----
+Bulkhead.Metrics metrics = bulkhead.getMetrics();
+// Returns the number of parallel executions this bulkhead can support at this point in time.
+in remainingBulkheadDepth = metrics.getAvailableConcurrentCalls()
+----
