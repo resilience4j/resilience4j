@@ -48,7 +48,7 @@ collectorRegistry.registerAll(CircuitBreakerMetrics.ofCircuitBreaker(foo));
 For each circuit breaker this registry will export:
 
 * `state` - instantaneous read of the current state where 0-CLOSED, 1-OPEN, 2-HALF-OPEN `[int]`
-* `successful` - current number of failed calls `[int]`
+* `successful` - current number of successful calls `[int]`
 * `failed` - current number of failed calls `[int]`
 * `buffered` - current number of buffered calls `[int]`
 * `buffered_max` - maximum number of buffered calls `[int]`
