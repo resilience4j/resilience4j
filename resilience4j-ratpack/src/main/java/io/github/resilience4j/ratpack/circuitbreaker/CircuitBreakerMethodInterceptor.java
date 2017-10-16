@@ -87,7 +87,7 @@ public class CircuitBreakerMethodInterceptor implements MethodInterceptor {
                 CompletionStage<?> result = (CompletionStage<?>) proceed(invocation, breaker, recoveryFunction);
                 if (result != null) {
                     long start = System.nanoTime();
-                    result.whenCompleteAsync((v, t) -> {
+                    result.whenComplete((v, t) -> {
                         long durationInNanos = System.nanoTime() - start;
                         if (t != null) {
                             breaker.onError(durationInNanos, t);
