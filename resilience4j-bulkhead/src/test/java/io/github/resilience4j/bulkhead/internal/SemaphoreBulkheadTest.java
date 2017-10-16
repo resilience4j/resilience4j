@@ -76,8 +76,8 @@ public class SemaphoreBulkheadTest {
 
         bulkhead.isCallPermitted();
 
-        testSubscriber.assertValueCount(4)
-                      .assertValues(CALL_PERMITTED, CALL_PERMITTED, CALL_REJECTED, CALL_PERMITTED);
+        testSubscriber.assertValueCount(6)
+                      .assertValues(CALL_PERMITTED, CALL_PERMITTED, CALL_REJECTED, CALL_FINISHED, CALL_FINISHED, CALL_PERMITTED);
     }
 
     @Test

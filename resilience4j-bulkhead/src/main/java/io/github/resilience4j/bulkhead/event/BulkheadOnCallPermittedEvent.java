@@ -40,6 +40,4 @@ public class BulkheadOnCallPermittedEvent extends AbstractBulkheadEvent {
                    getBulkheadName()
                );
     }
-
-
 }

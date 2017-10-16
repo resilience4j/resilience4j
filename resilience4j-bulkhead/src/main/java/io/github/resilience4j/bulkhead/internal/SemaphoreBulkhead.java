@@ -22,6 +22,7 @@ package io.github.resilience4j.bulkhead.internal;
 import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.bulkhead.BulkheadConfig;
 import io.github.resilience4j.bulkhead.event.BulkheadEvent;
+import io.github.resilience4j.bulkhead.event.BulkheadFinishedCallEvent;
 import io.github.resilience4j.bulkhead.event.BulkheadOnCallPermittedEvent;
 import io.github.resilience4j.bulkhead.event.BulkheadOnCallRejectedEvent;
 import io.github.resilience4j.core.EventConsumer;
@@ -34,7 +35,7 @@ import java.util.function.Supplier;
 /**
  * A Bulkhead implementation based on a semaphore.
  */
-public class SemaphoreBulkhead implements Bulkhead{
+public class SemaphoreBulkhead implements Bulkhead {
 
     private final String name;
     private final Semaphore semaphore;
@@ -71,7 +72,7 @@ public class SemaphoreBulkhead implements Bulkhead{
     /**
      * Create a bulkhead using a configuration supplier
      *
-     * @param name the name of this bulkhead
+     * @param name           the name of this bulkhead
      * @param configSupplier BulkheadConfig supplier
      */
     public SemaphoreBulkhead(String name, Supplier<BulkheadConfig> configSupplier) {
@@ -94,7 +95,11 @@ public class SemaphoreBulkhead implements Bulkhead{
 
     @Override
     public void onComplete() {
-        semaphore.release();
+        try {
+            publishBulkheadEvent(() -> new BulkheadFinishedCallEvent(name));
+        } finally {
+            semaphore.release();
+        }
     }
 
     @Override
@@ -150,12 +155,10 @@ public class SemaphoreBulkhead implements Bulkhead{
 
         if (timeout == 0) {
             callPermitted = semaphore.tryAcquire();
-        }
-        else {
+        } else {
             try {
                 callPermitted = semaphore.tryAcquire(timeout, TimeUnit.MILLISECONDS);
-            }
-            catch (InterruptedException ex) {
+            } catch (InterruptedException ex) {
                 callPermitted = false;
             }
         }
@@ -164,7 +167,7 @@ public class SemaphoreBulkhead implements Bulkhead{
     }
 
     private void publishBulkheadEvent(Supplier<BulkheadEvent> eventSupplier) {
-        if(eventProcessor.hasConsumers()) {
+        if (eventProcessor.hasConsumers()) {
             eventProcessor.consumeEvent(eventSupplier.get());
         }
     }
@@ -178,5 +181,4 @@ public class SemaphoreBulkhead implements Bulkhead{
             return semaphore.availablePermits();
         }
     }
-
 }

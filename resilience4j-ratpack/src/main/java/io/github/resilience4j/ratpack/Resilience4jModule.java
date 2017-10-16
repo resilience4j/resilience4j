@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Dan Maas
+ * Copyright 2017 Dan Maas, Jan Sykora
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,11 +24,15 @@ import com.google.inject.TypeLiteral;
 import com.google.inject.matcher.Matchers;
 import com.google.inject.multibindings.Multibinder;
 import com.google.inject.multibindings.OptionalBinder;
+import io.github.resilience4j.bulkhead.BulkheadConfig;
+import io.github.resilience4j.bulkhead.BulkheadRegistry;
+import io.github.resilience4j.bulkhead.event.BulkheadEvent;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent;
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
+import io.github.resilience4j.metrics.BulkheadMetrics;
 import io.github.resilience4j.metrics.CircuitBreakerMetrics;
 import io.github.resilience4j.metrics.RateLimiterMetrics;
 import io.github.resilience4j.metrics.RetryMetrics;
@@ -37,6 +41,9 @@ import io.github.resilience4j.prometheus.RateLimiterExports;
 import io.github.resilience4j.ratelimiter.RateLimiterConfig;
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
 import io.github.resilience4j.ratelimiter.event.RateLimiterEvent;
+import io.github.resilience4j.ratpack.bulkhead.Bulkhead;
+import io.github.resilience4j.ratpack.bulkhead.BulkheadMethodInterceptor;
+import io.github.resilience4j.ratpack.bulkhead.endpoint.BulkheadChain;
 import io.github.resilience4j.ratpack.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.ratpack.circuitbreaker.CircuitBreakerMethodInterceptor;
 import io.github.resilience4j.ratpack.circuitbreaker.endpoint.CircuitBreakerChain;
@@ -63,10 +70,10 @@ import javax.inject.Singleton;
 import java.time.Duration;
 
 /**
- * This module registers class and method interceptors for circuit breakers, rate limiters, and retries.
+ * This module registers class and method interceptors for bulkheads, circuit breakers, rate limiters, and retries.
  * <p>
  * This module also registers metrics:
- * - circuitbreaker, ratelimiter, and retry metrics with dropwizard metrics, if enabled.
+ * - bulkhead, circuitbreaker, ratelimiter, and retry metrics with dropwizard metrics, if enabled.
  * - circuitbreaker, ratelimiter, and retry metrics with prometheus, if enabled.
  * <p>
  * Only enable metrics if you have dependencies for resilience4j-metrics in the classpath and an instance of
@@ -87,25 +94,30 @@ public class Resilience4jModule extends ConfigurableModule<Resilience4jConfig> {
         bindInterceptor(Matchers.any(), Matchers.annotatedWith(CircuitBreaker.class), injected(new CircuitBreakerMethodInterceptor()));
         bindInterceptor(Matchers.any(), Matchers.annotatedWith(RateLimiter.class), injected(new RateLimiterMethodInterceptor()));
         bindInterceptor(Matchers.any(), Matchers.annotatedWith(Retry.class), injected(new RetryMethodInterceptor()));
+        bindInterceptor(Matchers.any(), Matchers.annotatedWith(Bulkhead.class), injected(new BulkheadMethodInterceptor()));
         bindInterceptor(Matchers.annotatedWith(CircuitBreaker.class), Matchers.any(), injected(new CircuitBreakerMethodInterceptor()));
         bindInterceptor(Matchers.annotatedWith(RateLimiter.class), Matchers.any(), injected(new RateLimiterMethodInterceptor()));
         bindInterceptor(Matchers.annotatedWith(Retry.class), Matchers.any(), injected(new RetryMethodInterceptor()));
+        bindInterceptor(Matchers.annotatedWith(Bulkhead.class), Matchers.any(), injected(new BulkheadMethodInterceptor()));
 
         // default registries
         OptionalBinder.newOptionalBinder(binder(), CircuitBreakerRegistry.class).setDefault().toInstance(CircuitBreakerRegistry.ofDefaults());
         OptionalBinder.newOptionalBinder(binder(), RateLimiterRegistry.class).setDefault().toInstance(RateLimiterRegistry.ofDefaults());
         OptionalBinder.newOptionalBinder(binder(), RetryRegistry.class).setDefault().toInstance(RetryRegistry.ofDefaults());
+        OptionalBinder.newOptionalBinder(binder(), BulkheadRegistry.class).setDefault().toInstance(BulkheadRegistry.ofDefaults());
 
         // event consumers
         bind(new TypeLiteral<EventConsumerRegistry<CircuitBreakerEvent>>() {}).toInstance(new DefaultEventConsumerRegistry<>());
         bind(new TypeLiteral<EventConsumerRegistry<RateLimiterEvent>>() {}).toInstance(new DefaultEventConsumerRegistry<>());
         bind(new TypeLiteral<EventConsumerRegistry<RetryEvent>>() {}).toInstance(new DefaultEventConsumerRegistry<>());
+        bind(new TypeLiteral<EventConsumerRegistry<BulkheadEvent>>() {}).toInstance(new DefaultEventConsumerRegistry<>());
 
         // event chains
         Multibinder<HandlerDecorator> binder = Multibinder.newSetBinder(binder(), HandlerDecorator.class);
         bind(CircuitBreakerChain.class).in(Scopes.SINGLETON);
         bind(RateLimiterChain.class).in(Scopes.SINGLETON);
         bind(RetryChain.class).in(Scopes.SINGLETON);
+        bind(BulkheadChain.class).in(Scopes.SINGLETON);
         binder.addBinding().toProvider(() -> (registry, rest) -> {
             if (registry.get(Resilience4jConfig.class).getEndpoints().getCircuitBreakers().isEnabled()) {
                 return Handlers.chain(Handlers.chain(registry, registry.get(CircuitBreakerChain.class)), rest);
@@ -127,6 +139,14 @@ public class Resilience4jModule extends ConfigurableModule<Resilience4jConfig> {
                 return rest;
             }
         });
+        binder.addBinding().toProvider(() -> (registry, rest) -> {
+            if (registry.get(Resilience4jConfig.class).getEndpoints().getBulkheads().isEnabled()) {
+                return Handlers.chain(Handlers.chain(registry, registry.get(BulkheadChain.class)), rest);
+            } else {
+                return rest;
+            }
+        });
+
 
         // startup
         bind(Resilience4jService.class);
@@ -169,6 +189,18 @@ public class Resilience4jModule extends ConfigurableModule<Resilience4jConfig> {
             return null;
         }
     }
+
+    @Provides
+    @Singleton
+    @Nullable
+    public BulkheadMetrics bulkheadMetrics(BulkheadRegistry bulkheadRegistry, Resilience4jConfig config) {
+        if (config.isMetrics()) {
+            return BulkheadMetrics.ofBulkheadRegistry(bulkheadRegistry);
+        } else {
+            return null;
+        }
+    }
+
 
     @Provides
     @Singleton
@@ -264,12 +296,31 @@ public class Resilience4jModule extends ConfigurableModule<Resilience4jConfig> {
                 }
             });
 
+            // build bulkheads
+            BulkheadRegistry bulkheadRegistry = injector.getInstance(BulkheadRegistry.class);
+            EventConsumerRegistry<BulkheadEvent> bConsumerRegistry = injector.getInstance(Key.get(new TypeLiteral<EventConsumerRegistry<BulkheadEvent>>() {}));
+            config.getBulkheads().forEach((name, bulkheadConfig) -> {
+                io.github.resilience4j.bulkhead.Bulkhead bulkhead;
+                if (bulkheadConfig.getDefaults()) {
+                    bulkhead = bulkheadRegistry.bulkhead(name);
+                } else {
+                    bulkhead = bulkheadRegistry.bulkhead(name, BulkheadConfig.custom()
+                            .maxConcurrentCalls(bulkheadConfig.getMaxConcurrentCalls())
+                            .maxWaitTime(bulkheadConfig.getMaxWaitTime())
+                            .build());
+                }
+                if (endpointsConfig.getBulkheads().isEnabled()) {
+                    bulkhead.getEventPublisher().onEvent(bConsumerRegistry.createEventConsumer(name, endpointsConfig.getBulkheads().getEventConsumerBufferSize()));
+                }
+            });
+
             // dropwizard metrics
             if (config.isMetrics() && injector.getExistingBinding(Key.get(MetricRegistry.class)) != null) {
                 MetricRegistry metricRegistry = injector.getInstance(MetricRegistry.class);
                 metricRegistry.registerAll(injector.getInstance(CircuitBreakerMetrics.class));
                 metricRegistry.registerAll(injector.getInstance(RateLimiterMetrics.class));
                 metricRegistry.registerAll(injector.getInstance(RetryMetrics.class));
+                metricRegistry.registerAll(injector.getInstance(BulkheadMetrics.class));
             }
 
             // prometheus
