@@ -22,7 +22,7 @@ package io.github.resilience4j.bulkhead.internal;
 import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.bulkhead.BulkheadConfig;
 import io.github.resilience4j.bulkhead.event.BulkheadEvent;
-import io.github.resilience4j.bulkhead.event.BulkheadFinishedCallEvent;
+import io.github.resilience4j.bulkhead.event.BulkheadOnCallFinishedEvent;
 import io.github.resilience4j.bulkhead.event.BulkheadOnCallPermittedEvent;
 import io.github.resilience4j.bulkhead.event.BulkheadOnCallRejectedEvent;
 import io.github.resilience4j.core.EventConsumer;
@@ -96,7 +96,7 @@ public class SemaphoreBulkhead implements Bulkhead {
     @Override
     public void onComplete() {
         try {
-            publishBulkheadEvent(() -> new BulkheadFinishedCallEvent(name));
+            publishBulkheadEvent(() -> new BulkheadOnCallFinishedEvent(name));
         } finally {
             semaphore.release();
         }
@@ -134,6 +134,12 @@ public class SemaphoreBulkhead implements Bulkhead {
         @Override
         public EventPublisher onCallRejected(EventConsumer<BulkheadOnCallRejectedEvent> onCallRejectedEventConsumer) {
             registerConsumer(BulkheadOnCallRejectedEvent.class, onCallRejectedEventConsumer);
+            return this;
+        }
+
+        @Override
+        public EventPublisher onCallFinished(EventConsumer<BulkheadOnCallFinishedEvent> onCallFinishedEventConsumer) {
+            registerConsumer(BulkheadOnCallFinishedEvent.class, onCallFinishedEventConsumer);
             return this;
         }
 
