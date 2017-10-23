@@ -51,7 +51,7 @@ class BulkheadTransformerSpec extends Specification {
         }
 
         then:
-        r.with {
+        with(r) {
             value == "s"
             !error
             throwable == null
@@ -78,14 +78,14 @@ class BulkheadTransformerSpec extends Specification {
         }
 
         then:
-        r1.with {
+        with(r1) {
             value == "r1"
             !error
             throwable == null
         }
 
         and:
-        r2.with {
+        with(r2) {
             value == "r2"
             !error
             throwable == null
@@ -114,14 +114,14 @@ class BulkheadTransformerSpec extends Specification {
         }
 
         then:
-        r1.with {
+        with(r1) {
             value == null
             error
             throwable.message == "Expected"
         }
 
         and:
-        r2.with {
+        with(r2) {
             value == "r2"
             !error
             throwable == null
@@ -162,7 +162,7 @@ class BulkheadTransformerSpec extends Specification {
         }
 
         then:
-        denied.with {
+        with(denied) {
             error
             throwable instanceof BulkheadFullException
             throwable.message == "Bulkhead 'test' is full"
@@ -170,7 +170,7 @@ class BulkheadTransformerSpec extends Specification {
 
         and:
         blockingLatch.countDown()
-        acceptedFuture.get().with {
+        with(acceptedFuture.get()) {
             !error
             value == "r"
             throwable == null
@@ -211,14 +211,14 @@ class BulkheadTransformerSpec extends Specification {
         }
 
         then:
-        recovered.with {
+        with(recovered) {
             !error
             value == "recover"
         }
 
         and:
         blockingLatch.countDown()
-        acceptedFuture.get().with {
+        with(acceptedFuture.get()) {
             !error
             value == "r"
             throwable == null

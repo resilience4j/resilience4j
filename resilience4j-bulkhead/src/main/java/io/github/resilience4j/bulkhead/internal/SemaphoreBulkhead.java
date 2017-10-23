@@ -95,11 +95,8 @@ public class SemaphoreBulkhead implements Bulkhead {
 
     @Override
     public void onComplete() {
-        try {
-            publishBulkheadEvent(() -> new BulkheadOnCallFinishedEvent(name));
-        } finally {
-            semaphore.release();
-        }
+        semaphore.release();
+        publishBulkheadEvent(() -> new BulkheadOnCallFinishedEvent(name));
     }
 
     @Override
