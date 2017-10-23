@@ -134,13 +134,13 @@ class BulkheadSpec extends Specification {
         } as Callable<ReceivedResponse>)
 
         and:
-        assert blockLatch.await(10, TimeUnit.SECONDS)
+        assert blockLatch.await(30, TimeUnit.SECONDS)
         def rejectedResponse = executor.submit({
             client.get(path)
         } as Callable<ReceivedResponse>)
 
         and:
-        rejectedResponse.get(10, TimeUnit.SECONDS)
+        rejectedResponse.get(30, TimeUnit.SECONDS)
         latch.countDown() // unblock blocked response
         def permittedResponse = executor.submit({
             client.get(path)
@@ -221,13 +221,13 @@ class BulkheadSpec extends Specification {
         } as Callable<ReceivedResponse>)
 
         and:
-        assert blockLatch.await(10, TimeUnit.SECONDS)
+        assert blockLatch.await(30, TimeUnit.SECONDS)
         def rejectedResponse = executor.submit({
             client.get(path)
         } as Callable<ReceivedResponse>)
 
         and:
-        rejectedResponse.get(10, TimeUnit.SECONDS)
+        rejectedResponse.get(30, TimeUnit.SECONDS)
         latch.countDown() // unblock blocked response
         def permittedResponse = executor.submit({
             client.get(path)
@@ -299,13 +299,13 @@ class BulkheadSpec extends Specification {
         } as Callable<ReceivedResponse>)
 
         and:
-        assert blockLatch.await(10, TimeUnit.SECONDS)
+        assert blockLatch.await(30, TimeUnit.SECONDS)
         def rejectedResponse = executor.submit({
             client.get(path)
         } as Callable<ReceivedResponse>)
 
         and:
-        rejectedResponse.get(10, TimeUnit.SECONDS)
+        rejectedResponse.get(30, TimeUnit.SECONDS)
         latch.countDown() // unblock blocked response
         def permittedResponse = executor.submit({
             client.get(path)
@@ -352,7 +352,7 @@ class BulkheadSpec extends Specification {
         Promise<String> bulkheadPromise(CountDownLatch latch, CountDownLatch blockLatch) {
             Promise.async {
                 blockLatch.countDown()
-                assert latch.await(10, TimeUnit.SECONDS): "Timeout - test failure"
+                assert latch.await(30, TimeUnit.SECONDS): "Timeout - test failure"
                 it.success("bulkhead promise")
             }
         }
@@ -361,7 +361,7 @@ class BulkheadSpec extends Specification {
         Observable<String> bulkheadObservable(CountDownLatch latch, CountDownLatch blockLatch) {
             Observable.just("bulkhead observable").map({ it ->
                 blockLatch.countDown()
-                assert latch.await(10, TimeUnit.SECONDS): "Timeout - test failure"
+                assert latch.await(30, TimeUnit.SECONDS): "Timeout - test failure"
                 it
             })
         }
@@ -370,7 +370,7 @@ class BulkheadSpec extends Specification {
         Flowable<String> bulkheadFlowable(CountDownLatch latch, CountDownLatch blockLatch) {
             Observable.just("bulkhead observable").map({ it ->
                 blockLatch.countDown()
-                assert latch.await(10, TimeUnit.SECONDS): "Timeout - test failure"
+                assert latch.await(30, TimeUnit.SECONDS): "Timeout - test failure"
                 it
             }).toFlowable(BackpressureStrategy.ERROR)
         }
@@ -379,7 +379,7 @@ class BulkheadSpec extends Specification {
         Single<String> bulkheadSingle(CountDownLatch latch, CountDownLatch blockLatch) {
             Single.just("bulkhead single").map({ it ->
                 blockLatch.countDown()
-                assert latch.await(10, TimeUnit.SECONDS): "Timeout - test failure"
+                assert latch.await(30, TimeUnit.SECONDS): "Timeout - test failure"
                 it
             })
         }
@@ -388,7 +388,7 @@ class BulkheadSpec extends Specification {
         CompletionStage<String> bulkheadStage(CountDownLatch latch, CountDownLatch blockLatch) {
             CompletableFuture.supplyAsync {
                 blockLatch.countDown()
-                assert latch.await(10, TimeUnit.SECONDS): "Timeout - test failure"
+                assert latch.await(30, TimeUnit.SECONDS): "Timeout - test failure"
                 'bulkhead stage'
             }
         }
@@ -396,7 +396,7 @@ class BulkheadSpec extends Specification {
         @Bulkhead(name = "test")
         String bulkheadNormal(CountDownLatch latch, CountDownLatch blockLatch) {
             blockLatch.countDown()
-            assert latch.await(10, TimeUnit.SECONDS): "Timeout - test failure"
+            assert latch.await(30, TimeUnit.SECONDS): "Timeout - test failure"
             "bulkhead normal"
         }
 
@@ -404,7 +404,7 @@ class BulkheadSpec extends Specification {
         Promise<String> bulkheadPromiseException(CountDownLatch latch, CountDownLatch blockLatch) {
             Promise.async {
                 blockLatch.countDown()
-                assert latch.await(10, TimeUnit.SECONDS): "Timeout - test failure"
+                assert latch.await(30, TimeUnit.SECONDS): "Timeout - test failure"
                 it.error(new Exception("bulkhead promise exception"))
             }
         }
@@ -413,7 +413,7 @@ class BulkheadSpec extends Specification {
         Observable<Void> bulkheadObservableException(CountDownLatch latch, CountDownLatch blockLatch) {
             Observable.just("bulkhead observable").map({
                 blockLatch.countDown()
-                assert latch.await(10, TimeUnit.SECONDS): "Timeout - test failure"
+                assert latch.await(30, TimeUnit.SECONDS): "Timeout - test failure"
                 throw new Exception("bulkhead observable exception")
             } as Function<String, Void>)
         }
@@ -422,7 +422,7 @@ class BulkheadSpec extends Specification {
         Flowable<Void> bulkheadFlowableException(CountDownLatch latch, CountDownLatch blockLatch) {
             Observable.just("bulkhead flowable").map({
                 blockLatch.countDown()
-                assert latch.await(10, TimeUnit.SECONDS): "Timeout - test failure"
+                assert latch.await(30, TimeUnit.SECONDS): "Timeout - test failure"
                 throw new Exception("bulkhead flowable exception")
             } as Function<String, Void>).toFlowable(BackpressureStrategy.ERROR)
         }
@@ -431,7 +431,7 @@ class BulkheadSpec extends Specification {
         Single<Void> bulkheadSingleException(CountDownLatch latch, CountDownLatch blockLatch) {
             Single.just("bulkhead single").map({
                 blockLatch.countDown()
-                assert latch.await(10, TimeUnit.SECONDS): "Timeout - test failure"
+                assert latch.await(30, TimeUnit.SECONDS): "Timeout - test failure"
                 throw new Exception("bulkhead single exception")
             } as Function<String, Void>)
         }
@@ -440,7 +440,7 @@ class BulkheadSpec extends Specification {
         CompletionStage<Void> bulkheadStageException(CountDownLatch latch, CountDownLatch blockLatch) {
             CompletableFuture.supplyAsync {
                 blockLatch.countDown()
-                assert latch.await(10, TimeUnit.SECONDS): "Timeout - test failure"
+                assert latch.await(30, TimeUnit.SECONDS): "Timeout - test failure"
                 throw new Exception('bulkhead stage exception')
             }
         }
@@ -448,7 +448,7 @@ class BulkheadSpec extends Specification {
         @Bulkhead(name = "test")
         String bulkheadNormalException(CountDownLatch latch, CountDownLatch blockLatch) {
             blockLatch.countDown()
-            assert latch.await(10, TimeUnit.SECONDS): "Timeout - test failure"
+            assert latch.await(30, TimeUnit.SECONDS): "Timeout - test failure"
             throw new Exception("bulkhead normal exception")
         }
 
@@ -456,7 +456,7 @@ class BulkheadSpec extends Specification {
         Promise<String> bulkheadPromiseFallback(CountDownLatch latch, CountDownLatch blockLatch) {
             Promise.async {
                 blockLatch.countDown()
-                assert latch.await(10, TimeUnit.SECONDS): "Timeout - test failure"
+                assert latch.await(30, TimeUnit.SECONDS): "Timeout - test failure"
                 it.error(new Exception("bulkhead promise exception"))
             }
         }
@@ -465,7 +465,7 @@ class BulkheadSpec extends Specification {
         Observable<Void> bulkheadObservableFallback(CountDownLatch latch, CountDownLatch blockLatch) {
             Observable.just("bulkhead observable").map({
                 blockLatch.countDown()
-                assert latch.await(10, TimeUnit.SECONDS): "Timeout - test failure"
+                assert latch.await(30, TimeUnit.SECONDS): "Timeout - test failure"
                 throw new Exception("bulkhead observable exception")
             } as Function<String, Void>)
         }
@@ -474,7 +474,7 @@ class BulkheadSpec extends Specification {
         Flowable<Void> bulkheadFlowableFallback(CountDownLatch latch, CountDownLatch blockLatch) {
             Observable.just("bulkhead flowable").map({
                 blockLatch.countDown()
-                assert latch.await(10, TimeUnit.SECONDS): "Timeout - test failure"
+                assert latch.await(30, TimeUnit.SECONDS): "Timeout - test failure"
                 throw new Exception("bulkhead flowable exception")
             } as Function<String, Void>).toFlowable(BackpressureStrategy.ERROR)
         }
@@ -483,7 +483,7 @@ class BulkheadSpec extends Specification {
         Single<Void> bulkheadSingleFallback(CountDownLatch latch, CountDownLatch blockLatch) {
             Single.just("bulkhead single").map({
                 blockLatch.countDown()
-                assert latch.await(10, TimeUnit.SECONDS): "Timeout - test failure"
+                assert latch.await(30, TimeUnit.SECONDS): "Timeout - test failure"
                 throw new Exception("bulkhead single exception")
             } as Function<String, Void>)
         }
@@ -492,7 +492,7 @@ class BulkheadSpec extends Specification {
         CompletionStage<Void> bulkheadStageFallback(CountDownLatch latch, CountDownLatch blockLatch) {
             CompletableFuture.supplyAsync {
                 blockLatch.countDown()
-                assert latch.await(10, TimeUnit.SECONDS): "Timeout - test failure"
+                assert latch.await(30, TimeUnit.SECONDS): "Timeout - test failure"
                 throw new Exception('bulkhead stage exception')
             }
         }
@@ -500,7 +500,7 @@ class BulkheadSpec extends Specification {
         @Bulkhead(name = "test", recovery = MyRecoveryFunction)
         String bulkheadNormalFallback(CountDownLatch latch, CountDownLatch blockLatch) {
             blockLatch.countDown()
-            assert latch.await(10, TimeUnit.SECONDS): "Timeout - test failure"
+            assert latch.await(30, TimeUnit.SECONDS): "Timeout - test failure"
             throw new Exception("bulkhead normal exception")
         }
     }
