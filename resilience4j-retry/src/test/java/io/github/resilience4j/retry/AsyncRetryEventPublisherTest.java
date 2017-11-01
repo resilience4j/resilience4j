@@ -26,11 +26,15 @@ import org.slf4j.Logger;
 
 import javax.xml.ws.WebServiceException;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import static io.github.resilience4j.retry.utils.AsyncUtils.awaitResult;
-import static io.vavr.API.*;
+import static io.vavr.API.$;
+import static io.vavr.API.Case;
+import static io.vavr.API.Match;
 import static io.vavr.Predicates.instanceOf;
 import static java.util.concurrent.CompletableFuture.completedFuture;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -62,9 +66,11 @@ public class AsyncRetryEventPublisherTest {
     }
 
     @Test
-    public void shouldConsumeOnSuccessEvent() {
+    public void shouldConsumeOnSuccessEvent() throws Exception {
         CompletableFuture<String> failedFuture = new CompletableFuture<>();
         failedFuture.completeExceptionally(new WebServiceException("BAM!"));
+
+        CountDownLatch latch = new CountDownLatch(1);
 
         // Given the HelloWorldService returns Hello world
         given(helloWorldService.returnHelloWorld())
@@ -72,12 +78,15 @@ public class AsyncRetryEventPublisherTest {
                 .willReturn(completedFuture("Hello world"));
 
         retry.getEventPublisher()
-            .onSuccess(event ->
-                    logger.info(event.getEventType().toString()));
+            .onSuccess(event -> {
+                logger.info(event.getEventType().toString());
+                latch.countDown();
+            });
 
         String result = awaitResult(retry.executeCompletionStage(scheduler,
                 () -> helloWorldService.returnHelloWorld()));
 
+        assertThat(latch.await(10, TimeUnit.SECONDS)).isTrue();
         assertThat(result).isEqualTo("Hello world");
         then(helloWorldService).should(times(2)).returnHelloWorld();
         then(logger).should(times(1)).info("SUCCESS");
