@@ -121,10 +121,6 @@ class RateLimiterChainSpec extends Specification {
         }
 
         and:
-        ['test1', 'test2'].each {
-            def r = rateLimiterRegistry.rateLimiter(it)
-            assert r.metrics.availablePermissions == 0
-        }
         await().atMost(2, TimeUnit.SECONDS).until {
             ['test1', 'test2'].each {
                 def r = rateLimiterRegistry.rateLimiter(it)
