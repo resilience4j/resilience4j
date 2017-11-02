@@ -46,8 +46,11 @@ class BulkheadTransformerSpec extends Specification {
 
         when:
         def r = ExecHarness.yieldSingle {
-            Blocking.<String> get { times.getAndIncrement(); "s" }
-                    .transform(transformer)
+            Blocking.<String> get {
+                times.getAndIncrement();
+                "s"
+            }
+            .transform(transformer)
         }
 
         then:
@@ -67,14 +70,20 @@ class BulkheadTransformerSpec extends Specification {
 
         when:
         def r1 = ExecHarness.yieldSingle {
-            Blocking.<String> get { times.getAndIncrement(); "r1" }
-                    .transform(transformer)
+            Blocking.<String> get {
+                times.getAndIncrement();
+                "r1"
+            }
+            .transform(transformer)
         }
 
         and:
         def r2 = ExecHarness.yieldSingle {
-            Blocking.<String> get { times.getAndIncrement(); "r2" }
-                    .transform(transformer)
+            Blocking.<String> get {
+                times.getAndIncrement();
+                "r2"
+            }
+            .transform(transformer)
         }
 
         then:
@@ -103,14 +112,20 @@ class BulkheadTransformerSpec extends Specification {
 
         when:
         def r1 = ExecHarness.yieldSingle {
-            Blocking.<String> get { times.getAndIncrement(); throw new RuntimeException("Expected") }
-                    .transform(transformer)
+            Blocking.<String> get {
+                times.getAndIncrement();
+                throw new RuntimeException("Expected")
+            }
+            .transform(transformer)
         }
 
         and:
         def r2 = ExecHarness.yieldSingle {
-            Blocking.<String> get { times.getAndIncrement(); "r2" }
-                    .transform(transformer)
+            Blocking.<String> get {
+                times.getAndIncrement();
+                "r2"
+            }
+            .transform(transformer)
         }
 
         then:
@@ -157,8 +172,10 @@ class BulkheadTransformerSpec extends Specification {
         and:
         assert orderLatch.await(10, TimeUnit.SECONDS)
         def denied = ExecHarness.yieldSingle {
-            Blocking.<String> get { assert false: "Should never be called" }
-                    .transform(transformer)
+            Blocking.<String> get {
+                assert false: "Should never be called"
+            }
+            .transform(transformer)
         }
 
         then:
@@ -206,8 +223,10 @@ class BulkheadTransformerSpec extends Specification {
         and:
         assert orderLatch.await(10, TimeUnit.SECONDS)
         def recovered = ExecHarness.yieldSingle {
-            Blocking.<String> get { assert false: "Should never be called" }
-                    .transform(transformer)
+            Blocking.<String> get {
+                assert false: "Should never be called"
+            }
+            .transform(transformer)
         }
 
         then:
