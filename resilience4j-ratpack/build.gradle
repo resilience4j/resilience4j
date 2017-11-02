@@ -17,7 +17,3 @@ dependencies {
     testCompile project(':resilience4j-prometheus')
     testCompile project(':resilience4j-metrics')
 }
-
-test {
-    maxParallelForks = 1
-}
