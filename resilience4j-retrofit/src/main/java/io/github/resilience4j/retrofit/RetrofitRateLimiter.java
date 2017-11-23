@@ -27,6 +27,7 @@ import io.vavr.control.Try;
 import okhttp3.MediaType;
 import okhttp3.ResponseBody;
 import retrofit2.Call;
+import retrofit2.Callback;
 import retrofit2.Response;
 
 import java.io.IOException;
@@ -56,6 +57,18 @@ public interface RetrofitRateLimiter {
      */
     static <T> Call<T> decorateCall(final RateLimiter rateLimiter, final Call<T> call) {
         return new DecoratedCall<T>(call) {
+            @Override
+            public void enqueue(final Callback<T> callback) {
+                try {
+                    RateLimiter.waitForPermission(rateLimiter);
+                } catch (RequestNotPermitted | IllegalStateException e) {
+                    callback.onResponse(call, tooManyRequestsError());
+                    return;
+                }
+
+                call.enqueue(callback);
+            }
+
             @Override
             public Response<T> execute() throws IOException {
                 CheckedFunction0<Response<T>> restrictedSupplier = RateLimiter.decorateCheckedSupplier(rateLimiter, call::execute);
