@@ -33,12 +33,7 @@ import java.io.IOException;
 import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
-import static com.github.tomakehurst.wiremock.client.WireMock.get;
-import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
-import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
-import static com.github.tomakehurst.wiremock.client.WireMock.verify;
+import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 /**
@@ -91,6 +86,19 @@ public class RetrofitRateLimiterTest {
         verify(1, getRequestedFor(urlPathEqualTo("/greeting")));
     }
 
+    @Test
+    public void decorateSuccessfulEnqueuedCall() throws Throwable {
+        stubFor(get(urlPathEqualTo("/greeting"))
+                        .willReturn(aResponse()
+                                            .withStatus(200)
+                                            .withHeader("Content-Type", "text/plain")
+                                            .withBody("hello world")));
+
+        EnqueueDecorator.enqueue(service.greeting());
+
+        verify(1, getRequestedFor(urlPathEqualTo("/greeting")));
+    }
+
     @Test(expected = IOException.class)
     public void shouldNotCatchCallExceptionsInRateLimiter() throws Exception {
         stubFor(get(urlPathEqualTo("/greeting"))
@@ -99,6 +107,16 @@ public class RetrofitRateLimiterTest {
                         .withFixedDelay(400)));
 
         service.greeting().execute();
+    }
+
+    @Test(expected = IOException.class)
+    public void shouldNotCatchEnqueuedCallExceptionsInRateLimiter() throws Throwable {
+        stubFor(get(urlPathEqualTo("/greeting"))
+                        .willReturn(aResponse()
+                                            .withStatus(200)
+                                            .withFixedDelay(400)));
+
+        EnqueueDecorator.enqueue(service.greeting());
     }
 
     @Test
@@ -123,6 +141,27 @@ public class RetrofitRateLimiterTest {
                 .isEqualTo(429);
     }
 
+    @Test
+    public void decorateRateLimitedEnqueuedCall() throws Throwable {
+        stubFor(get(urlPathEqualTo("/greeting"))
+                        .willReturn(aResponse()
+                                            .withStatus(200)
+                                            .withHeader("Content-Type", "text/plain")
+                                            .withBody("hello world")));
+
+        final Response<String> execute = EnqueueDecorator.enqueue(service.greeting());
+        assertThat(execute.isSuccessful())
+                .describedAs("Response successful")
+                .isTrue();
+
+        final Response<String> rateLimitedResponse = EnqueueDecorator.enqueue(service.greeting());
+        assertThat(rateLimitedResponse.isSuccessful())
+                .describedAs("Response successful")
+                .isFalse();
+        assertThat(rateLimitedResponse.code())
+                .describedAs("HTTP Error Code")
+                .isEqualTo(429);
+    }
 
     @Test(expected = IllegalArgumentException.class)
     public void shouldThrowOnBadService() {
