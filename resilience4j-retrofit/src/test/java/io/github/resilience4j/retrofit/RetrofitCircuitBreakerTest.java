@@ -32,12 +32,7 @@ import retrofit2.converter.scalars.ScalarsConverterFactory;
 import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
-import static com.github.tomakehurst.wiremock.client.WireMock.get;
-import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
-import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
-import static com.github.tomakehurst.wiremock.client.WireMock.verify;
+import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
@@ -91,6 +86,19 @@ public class RetrofitCircuitBreakerTest {
     }
 
     @Test
+    public void decorateSuccessfulEnqueuedCall() throws Throwable {
+        stubFor(get(urlPathEqualTo("/greeting"))
+                        .willReturn(aResponse()
+                                            .withStatus(200)
+                                            .withHeader("Content-Type", "text/plain")
+                                            .withBody("hello world")));
+
+        EnqueueDecorator.enqueue(service.greeting());
+
+        verify(1, getRequestedFor(urlPathEqualTo("/greeting")));
+    }
+
+    @Test
     public void decorateTimingOutCall() throws Exception {
         stubFor(get(urlPathEqualTo("/greeting"))
                 .willReturn(aResponse()
@@ -131,6 +139,46 @@ public class RetrofitCircuitBreakerTest {
     }
 
     @Test
+    public void decorateTimingOutEnqueuedCall() throws Exception {
+        stubFor(get(urlPathEqualTo("/greeting"))
+                        .willReturn(aResponse()
+                                            .withFixedDelay(500)
+                                            .withStatus(200)
+                                            .withHeader("Content-Type", "text/plain")
+                                            .withBody("hello world")));
+
+        try {
+            EnqueueDecorator.enqueue(service.greeting());
+        } catch (Throwable ignored) {
+        }
+
+        final CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
+        assertThat(metrics.getNumberOfFailedCalls())
+                .describedAs("Failed calls")
+                .isEqualTo(1);
+
+        // Circuit breaker should still be closed, not hit open threshold
+        assertThat(circuitBreaker.getState())
+                .isEqualTo(CircuitBreaker.State.CLOSED);
+
+        try {
+            EnqueueDecorator.enqueue(service.greeting());
+        } catch (Throwable ignored) {
+        }
+
+        try {
+            EnqueueDecorator.enqueue(service.greeting());
+        } catch (Throwable ignored) {
+        }
+
+        assertThat(metrics.getNumberOfFailedCalls())
+                .isEqualTo(3);
+        // Circuit breaker should be OPEN, threshold met
+        assertThat(circuitBreaker.getState())
+                .isEqualTo(CircuitBreaker.State.OPEN);
+    }
+
+    @Test
     public void decorateUnsuccessfulCall() throws Exception {
         stubFor(get(urlPathEqualTo("/greeting"))
                 .willReturn(aResponse()
@@ -138,6 +186,23 @@ public class RetrofitCircuitBreakerTest {
                         .withHeader("Content-Type", "text/plain")));
 
         final Response<String> response = service.greeting().execute();
+
+        assertThat(response.code())
+                .describedAs("Response code")
+                .isEqualTo(500);
+
+        final CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
+        assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(1);
+    }
+
+    @Test
+    public void decorateUnsuccessfulEnqueuedCall() throws Throwable {
+        stubFor(get(urlPathEqualTo("/greeting"))
+                        .willReturn(aResponse()
+                                            .withStatus(500)
+                                            .withHeader("Content-Type", "text/plain")));
+
+        final Response<String> response = EnqueueDecorator.enqueue(service.greeting());
 
         assertThat(response.code())
                 .describedAs("Response code")
