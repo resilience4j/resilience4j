@@ -19,10 +19,12 @@
 package io.github.resilience4j.retrofit;
 
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
+import io.github.resilience4j.circuitbreaker.CircuitBreakerOpenException;
 import io.github.resilience4j.circuitbreaker.utils.CircuitBreakerUtils;
 import io.github.resilience4j.core.StopWatch;
 import io.github.resilience4j.retrofit.internal.DecoratedCall;
 import retrofit2.Call;
+import retrofit2.Callback;
 import retrofit2.Response;
 
 import java.io.IOException;
@@ -49,6 +51,36 @@ public interface RetrofitCircuitBreaker {
      */
     static <T> Call<T> decorateCall(final CircuitBreaker circuitBreaker, final Call<T> call, final Predicate<Response> responseSuccess) {
         return new DecoratedCall<T>(call) {
+
+            @Override
+            public void enqueue(final Callback<T> callback) {
+                try {
+                    CircuitBreakerUtils.isCallPermitted(circuitBreaker);
+                } catch (CircuitBreakerOpenException cb) {
+                    callback.onFailure(call, cb);
+                }
+
+                final StopWatch stopWatch = StopWatch.start(circuitBreaker.getName());
+                call.enqueue(new Callback<T>() {
+                    @Override
+                    public void onResponse(final Call<T> call, final Response<T> response) {
+                        if (responseSuccess.test(response)) {
+                            circuitBreaker.onSuccess(stopWatch.stop().getProcessingDuration().toNanos());
+                        } else {
+                            final Throwable throwable = new Throwable("Response error: HTTP " + response.code() + " - " + response.message());
+                            circuitBreaker.onError(stopWatch.stop().getProcessingDuration().toNanos(), throwable);
+                        }
+                        callback.onResponse(call, response);
+                    }
+
+                    @Override
+                    public void onFailure(final Call<T> call, final Throwable t) {
+                        circuitBreaker.onError(stopWatch.stop().getProcessingDuration().toNanos(), t);
+                        callback.onFailure(call, t);
+                    }
+                });
+            }
+
             @Override
             public Response<T> execute() throws IOException {
                 CircuitBreakerUtils.isCallPermitted(circuitBreaker);
