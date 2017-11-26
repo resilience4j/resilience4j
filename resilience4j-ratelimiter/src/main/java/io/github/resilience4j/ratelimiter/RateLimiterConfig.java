@@ -27,11 +27,18 @@ public class RateLimiterConfig {
     private static final String LIMIT_REFRESH_PERIOD_MUST_NOT_BE_NULL = "LimitRefreshPeriod must not be null";
     private static final Duration ACCEPTABLE_REFRESH_PERIOD = Duration.ofNanos(1L);
 
-    private Duration timeoutDuration =  Duration.ofSeconds(5);
-    private Duration limitRefreshPeriod = Duration.ofNanos(500);
-    private int limitForPeriod = 50;
+    private final Duration timeoutDuration;
+    private final long timeoutDurationInNanos;
+    private final Duration limitRefreshPeriod;
+    private final long limitRefreshPeriodInNanos;
+    private final int limitForPeriod;
 
-    private RateLimiterConfig() {
+    private RateLimiterConfig(Duration timeoutDuration, Duration limitRefreshPeriod, int limitForPeriod) {
+        this.timeoutDuration = timeoutDuration;
+        this.timeoutDurationInNanos = timeoutDuration.toNanos();
+        this.limitRefreshPeriod = limitRefreshPeriod;
+        this.limitRefreshPeriodInNanos = limitRefreshPeriod.toNanos();
+        this.limitForPeriod = limitForPeriod;
     }
 
     /**
@@ -41,6 +48,15 @@ public class RateLimiterConfig {
      */
     public static Builder custom() {
         return new Builder();
+    }
+
+    /**
+     * Returns a builder to create a custom RateLimiterConfig using specified config as prototype
+     *
+     * @return a {@link RateLimiterConfig.Builder}
+     */
+    public static Builder from(RateLimiterConfig prototype) {
+        return new Builder(prototype);
     }
 
     /**
@@ -64,6 +80,14 @@ public class RateLimiterConfig {
         return limitForPeriod;
     }
 
+    public long getTimeoutDurationInNanos() {
+        return timeoutDurationInNanos;
+    }
+
+    public long getLimitRefreshPeriodInNanos() {
+        return limitRefreshPeriodInNanos;
+    }
+
     @Override public String toString() {
         return "RateLimiterConfig{" +
             "timeoutDuration=" + timeoutDuration +
@@ -73,8 +97,18 @@ public class RateLimiterConfig {
     }
 
     public static class Builder {
+        private Duration timeoutDuration =  Duration.ofSeconds(5);
+        private Duration limitRefreshPeriod = Duration.ofNanos(500);
+        private int limitForPeriod = 50;
 
-        private RateLimiterConfig config = new RateLimiterConfig();
+        public Builder() {
+        }
+
+        public Builder(RateLimiterConfig prototype) {
+            this.timeoutDuration = prototype.timeoutDuration;
+            this.limitRefreshPeriod = prototype.limitRefreshPeriod;
+            this.limitForPeriod = prototype.limitForPeriod;
+        }
 
         /**
          * Builds a RateLimiterConfig
@@ -82,7 +116,7 @@ public class RateLimiterConfig {
          * @return the RateLimiterConfig
          */
         public RateLimiterConfig build() {
-            return config;
+            return new RateLimiterConfig(timeoutDuration, limitRefreshPeriod, limitForPeriod);
         }
 
         /**
@@ -93,7 +127,7 @@ public class RateLimiterConfig {
          * @return the RateLimiterConfig.Builder
          */
         public Builder timeoutDuration(final Duration timeoutDuration) {
-            config.timeoutDuration = checkTimeoutDuration(timeoutDuration);
+            this.timeoutDuration = checkTimeoutDuration(timeoutDuration);
             return this;
         }
 
@@ -107,7 +141,7 @@ public class RateLimiterConfig {
          * @return the RateLimiterConfig.Builder
          */
         public Builder limitRefreshPeriod(final Duration limitRefreshPeriod) {
-            config.limitRefreshPeriod = checkLimitRefreshPeriod(limitRefreshPeriod);
+            this.limitRefreshPeriod = checkLimitRefreshPeriod(limitRefreshPeriod);
             return this;
         }
 
@@ -121,7 +155,7 @@ public class RateLimiterConfig {
          * @return the RateLimiterConfig.Builder
          */
         public Builder limitForPeriod(final int limitForPeriod) {
-            config.limitForPeriod = checkLimitForPeriod(limitForPeriod);
+            this.limitForPeriod = checkLimitForPeriod(limitForPeriod);
             return this;
         }
 

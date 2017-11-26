@@ -29,6 +29,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static java.util.Objects.requireNonNull;
 import static java.util.concurrent.Executors.newSingleThreadScheduledExecutor;
@@ -44,7 +45,7 @@ public class SemaphoreBasedRateLimiter implements RateLimiter {
     private static final String CONFIG_MUST_NOT_BE_NULL = "RateLimiterConfig must not be null";
 
     private final String name;
-    private final RateLimiterConfig rateLimiterConfig;
+    private final AtomicReference<RateLimiterConfig> rateLimiterConfig;
     private final ScheduledExecutorService scheduler;
     private final Semaphore semaphore;
     private final SemaphoreBasedRateLimiterMetrics metrics;
@@ -70,10 +71,10 @@ public class SemaphoreBasedRateLimiter implements RateLimiter {
     public SemaphoreBasedRateLimiter(String name, RateLimiterConfig rateLimiterConfig,
                                      ScheduledExecutorService scheduler) {
         this.name = requireNonNull(name, NAME_MUST_NOT_BE_NULL);
-        this.rateLimiterConfig = requireNonNull(rateLimiterConfig, CONFIG_MUST_NOT_BE_NULL);
+        this.rateLimiterConfig = new AtomicReference<>(requireNonNull(rateLimiterConfig, CONFIG_MUST_NOT_BE_NULL));
 
         this.scheduler = Option.of(scheduler).getOrElse(this::configureScheduler);
-        this.semaphore = new Semaphore(this.rateLimiterConfig.getLimitForPeriod(), true);
+        this.semaphore = new Semaphore(this.rateLimiterConfig.get().getLimitForPeriod(), true);
         this.metrics = this.new SemaphoreBasedRateLimiterMetrics();
 
         this.eventProcessor = new RateLimiterEventProcessor();
@@ -93,15 +94,37 @@ public class SemaphoreBasedRateLimiter implements RateLimiter {
     private void scheduleLimitRefresh() {
         scheduler.scheduleAtFixedRate(
             this::refreshLimit,
-            this.rateLimiterConfig.getLimitRefreshPeriod().toNanos(),
-            this.rateLimiterConfig.getLimitRefreshPeriod().toNanos(),
+            this.rateLimiterConfig.get().getLimitRefreshPeriodInNanos(),
+            this.rateLimiterConfig.get().getLimitRefreshPeriodInNanos(),
             TimeUnit.NANOSECONDS
         );
     }
 
     void refreshLimit() {
-        int permissionsToRelease = this.rateLimiterConfig.getLimitForPeriod() - semaphore.availablePermits();
+        int permissionsToRelease = this.rateLimiterConfig.get().getLimitForPeriod() - semaphore.availablePermits();
         semaphore.release(permissionsToRelease);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void changeTimeoutDuration(Duration timeoutDuration) {
+        RateLimiterConfig newConfig = RateLimiterConfig.from(rateLimiterConfig.get())
+                .timeoutDuration(timeoutDuration)
+                .build();
+        rateLimiterConfig.set(newConfig);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void changeLimitForPeriod(int limitForPeriod) {
+        RateLimiterConfig newConfig = RateLimiterConfig.from(rateLimiterConfig.get())
+                .limitForPeriod(limitForPeriod)
+                .build();
+        rateLimiterConfig.set(newConfig);
     }
 
     /**
@@ -146,7 +169,7 @@ public class SemaphoreBasedRateLimiter implements RateLimiter {
      */
     @Override
     public RateLimiterConfig getRateLimiterConfig() {
-        return this.rateLimiterConfig;
+        return this.rateLimiterConfig.get();
     }
 
     @Override public String toString() {
