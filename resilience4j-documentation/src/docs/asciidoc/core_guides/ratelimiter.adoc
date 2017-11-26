@@ -45,6 +45,27 @@ Try.run(restrictedCall)
     .onFailure((RequestNotPermitted throwable) -> LOG.info("Wait before call it again :)"));
 ----
 
+===== Dynamic rate limiter reconfiguration
+
+You can use `changeTimeoutDuration` and `changeLimitForPeriod` methods to change rate limiter params in runtime.
+
+[source,java]
+----
+// Decorate your call to BackendService.doSomething()
+CheckedRunnable restrictedCall = RateLimiter
+    .decorateCheckedRunnable(rateLimiter, backendService::doSomething);
+
+Try.run(restrictedCall)
+    .andThenTry(restrictedCall)
+    .onFailure((RequestNotPermitted throwable) -> LOG.info("Wait before call it again :)"));
+
+// durring second refresh cycle limiter will get 100 permissions
+rateLimiter.changeLimitForPeriod(100);
+----
+
+New timeout duration won't affect threads that are currently waiting for permission.
+New limit won't affect current period permissions and will apply only from next one.
+
 ===== RateLimiter and RxJava
 
 The following example shows how to decorate an Observable by using the custom RxJava operator.

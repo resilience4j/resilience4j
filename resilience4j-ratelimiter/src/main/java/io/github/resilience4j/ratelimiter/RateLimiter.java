@@ -240,6 +240,22 @@ public interface RateLimiter {
     }
 
     /**
+     * Dynamic rate limiter configuration change.
+     * This method allows to change timeout duration of current limiter.
+     * NOTE! New timeout duration won't affect threads that are currently waiting for permission.
+     * @param timeoutDuration new timeout duration
+     */
+    void changeTimeoutDuration(Duration timeoutDuration);
+
+    /**
+     * Dynamic rate limiter configuration change.
+     * This method allows to change count of permissions available during refresh period.
+     * NOTE! New limit won't affect current period permissions and will apply only from next one.
+     * @param limitForPeriod new permissions limit
+     */
+    void changeLimitForPeriod(int limitForPeriod);
+
+    /**
      * Acquires a permission from this rate limiter, blocking until one is
      * available.
      * <p>If the current thread is {@linkplain Thread#interrupt interrupted}
