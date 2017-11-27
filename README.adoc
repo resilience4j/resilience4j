@@ -87,8 +87,8 @@ decoratedSupplier = Retry
 // Execute the decorated supplier and recover from any exception
 String result = Try.ofSupplier(decoratedSupplier)
     .recover(throwable -> "Hello from Recovery").get();
-    
-// When you don't want to decorate your lambda expression, 
+
+// When you don't want to decorate your lambda expression,
 // but just execute it and protect the call by a CircuitBreaker.
 String result = circuitBreaker.executeSupplier(backendService::doSomething);
 
@@ -165,6 +165,9 @@ AtomicRateLimiter atomicLimiter;
 // Estimated time duration in nanos to wait for the next permission
 long nanosToWaitForPermission = atomicLimiter.getNanosToWait();
 ----
+
+You can also dynamically change some rate limiter configurations. Find out more in our *http://resilience4j.github.io/resilience4j/[User Guide]*
+
 
 [[bulkhead]]
 === Bulkhead
