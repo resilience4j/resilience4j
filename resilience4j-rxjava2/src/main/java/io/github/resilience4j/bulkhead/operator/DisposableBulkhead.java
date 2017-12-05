@@ -34,11 +34,11 @@ class DisposableBulkhead implements Disposable {
         return disposed.get();
     }
 
-    void setDisposable(Disposable disposable) {
+    protected void setDisposable(Disposable disposable) {
         this.disposable = requireNonNull(disposable);
     }
 
-    boolean acquireCallPermit() {
+    protected boolean acquireCallPermit() {
         boolean callPermitted = false;
         if (permitted.compareAndSet(false, true)) {
             callPermitted = bulkhead.isCallPermitted();
@@ -49,17 +49,17 @@ class DisposableBulkhead implements Disposable {
         return callPermitted;
     }
 
-    boolean isInvocationPermitted() {
+    protected boolean isInvocationPermitted() {
         return !isDisposed() && wasCallPermitted();
     }
 
-    void releaseBulkhead() {
+    protected void releaseBulkhead() {
         if (wasCallPermitted()) {
             bulkhead.onComplete();
         }
     }
 
-    Exception bulkheadFullException() {
+    protected Exception bulkheadFullException() {
         return new BulkheadFullException(String.format("Bulkhead '%s' is full", bulkhead.getName()));
     }
 
