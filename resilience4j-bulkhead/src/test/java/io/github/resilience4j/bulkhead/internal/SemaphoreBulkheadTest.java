@@ -29,8 +29,8 @@ import org.junit.Test;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Supplier;
 
-import static io.github.resilience4j.bulkhead.event.BulkheadEvent.Type.*;
-
+import static io.github.resilience4j.bulkhead.event.BulkheadEvent.Type.CALL_PERMITTED;
+import static io.github.resilience4j.bulkhead.event.BulkheadEvent.Type.CALL_REJECTED;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class SemaphoreBulkheadTest {
@@ -39,17 +39,17 @@ public class SemaphoreBulkheadTest {
     private TestSubscriber<BulkheadEvent.Type> testSubscriber;
 
     @Before
-    public void setUp(){
+    public void setUp() {
 
         BulkheadConfig config = BulkheadConfig.custom()
-                                              .maxConcurrentCalls(2)
-                                              .maxWaitTime(0)
-                                              .build();
+                .maxConcurrentCalls(2)
+                .maxWaitTime(0)
+                .build();
 
         bulkhead = Bulkhead.of("test", config);
         testSubscriber = RxJava2Adapter.toFlowable(bulkhead.getEventPublisher())
-                                 .map(BulkheadEvent::getEventType)
-                                 .test();
+                .map(BulkheadEvent::getEventType)
+                .test();
     }
 
     @Test
@@ -77,7 +77,7 @@ public class SemaphoreBulkheadTest {
         bulkhead.isCallPermitted();
 
         testSubscriber.assertValueCount(4)
-                      .assertValues(CALL_PERMITTED, CALL_PERMITTED, CALL_REJECTED, CALL_PERMITTED);
+                .assertValues(CALL_PERMITTED, CALL_PERMITTED, CALL_REJECTED, CALL_PERMITTED);
     }
 
     @Test
@@ -120,9 +120,9 @@ public class SemaphoreBulkheadTest {
 
         // given
         BulkheadConfig config = BulkheadConfig.custom()
-                                              .maxConcurrentCalls(1)
-                                              .maxWaitTime(100)
-                                              .build();
+                .maxConcurrentCalls(1)
+                .maxWaitTime(100)
+                .build();
 
         SemaphoreBulkhead bulkhead = new SemaphoreBulkhead("test", config);
 
@@ -166,10 +166,10 @@ public class SemaphoreBulkheadTest {
         AtomicBoolean entered = new AtomicBoolean(true);
 
         Thread t = new Thread(
-                       () -> {
-                           entered.set(bulkhead.tryEnterBulkhead());
-                       }
-                   );
+                () -> {
+                    entered.set(bulkhead.tryEnterBulkhead());
+                }
+        );
 
         // when
         t.start();
@@ -180,6 +180,53 @@ public class SemaphoreBulkheadTest {
         // then
         //assertThat(entered.get()).isFalse();
     }
+
+    @Test
+    public void changePermissionsInIdleState() {
+        BulkheadConfig originalConfig = BulkheadConfig.custom()
+                .maxConcurrentCalls(3)
+                .maxWaitTime(5000)
+                .build();
+        SemaphoreBulkhead bulkhead = new SemaphoreBulkhead("test", originalConfig);
+
+        assertThat(bulkhead.getBulkheadConfig().getMaxConcurrentCalls()).isEqualTo(3);
+        assertThat(bulkhead.getBulkheadConfig().getMaxWaitTime()).isEqualTo(5000);
+
+        BulkheadConfig newConfig = BulkheadConfig.custom()
+                .maxConcurrentCalls(5)
+                .maxWaitTime(5000)
+                .build();
+
+        bulkhead.changeConfig(newConfig);
+        assertThat(bulkhead.getBulkheadConfig().getMaxConcurrentCalls()).isEqualTo(5);
+        assertThat(bulkhead.getBulkheadConfig().getMaxWaitTime()).isEqualTo(5000);
+
+
+        newConfig = BulkheadConfig.custom()
+                .maxConcurrentCalls(2)
+                .maxWaitTime(5000)
+                .build();
+
+        bulkhead.changeConfig(newConfig);
+        assertThat(bulkhead.getBulkheadConfig().getMaxConcurrentCalls()).isEqualTo(2);
+        assertThat(bulkhead.getBulkheadConfig().getMaxWaitTime()).isEqualTo(5000);
+
+        bulkhead.changeConfig(newConfig);
+    }
+
+    /*
+    TODO:
+    change waiting time in idle state // simplest case
+
+    change permissions count +|- during other threads are running with permission
+    change permissions count +|- during other threads are waiting for permission
+    change waiting time during other threads are waiting for permission
+
+    change permissions to zero while other threads using permissions
+
+    concurrent permissions change // test blocking behaviour
+
+     */
 
     void sleep(long time) {
         try {
