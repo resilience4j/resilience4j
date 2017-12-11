@@ -29,6 +29,7 @@ import ratpack.http.client.ReceivedResponse
 import ratpack.test.embed.EmbeddedApp
 import ratpack.test.http.TestHttpClient
 import spock.lang.AutoCleanup
+import spock.lang.IgnoreIf
 import spock.lang.Specification
 import spock.lang.Unroll
 
@@ -36,6 +37,7 @@ import java.util.concurrent.*
 
 import static ratpack.groovy.test.embed.GroovyEmbeddedApp.ratpack
 
+@IgnoreIf({env.TRAVIS})
 @Unroll
 class BulkheadSpec extends Specification {
 
@@ -133,7 +135,7 @@ class BulkheadSpec extends Specification {
         } as Callable<ReceivedResponse>)
 
         and:
-        rejectedResponse.get(60, TimeUnit.SECONDS)
+        rejectedResponse.get(5, TimeUnit.SECONDS)
         latch.countDown() // unblock blocked response
         def permittedResponse = executor.submit({
             client.get(path)
@@ -220,7 +222,7 @@ class BulkheadSpec extends Specification {
         } as Callable<ReceivedResponse>)
 
         and:
-        rejectedResponse.get(60, TimeUnit.SECONDS)
+        rejectedResponse.get(5, TimeUnit.SECONDS)
         latch.countDown() // unblock blocked response
         def permittedResponse = executor.submit({
             client.get(path)
@@ -298,7 +300,7 @@ class BulkheadSpec extends Specification {
         } as Callable<ReceivedResponse>)
 
         and:
-        rejectedResponse.get(60, TimeUnit.SECONDS)
+        rejectedResponse.get(5, TimeUnit.SECONDS)
         latch.countDown() // unblock blocked response
         def permittedResponse = executor.submit({
             client.get(path)
