@@ -46,10 +46,9 @@ public class BulkheadMetrics implements MetricSet {
         requireNonNull(bulkheads);
         bulkheads.forEach(bulkhead -> {
                     String name = bulkhead.getName();
-                    Bulkhead.Metrics metrics = bulkhead.getMetrics();
-                    //number of available concurrent calls as an integer
+            //number of available concurrent calls as an integer
                     metricRegistry.register(name(prefix, name, AVAILABLE_CONCURRENT_CALLS),
-                            (Gauge<Integer>) metrics::getAvailableConcurrentCalls);
+                            (Gauge<Integer>) () -> bulkhead.getMetrics().getAvailableConcurrentCalls());
                 }
         );
     }
