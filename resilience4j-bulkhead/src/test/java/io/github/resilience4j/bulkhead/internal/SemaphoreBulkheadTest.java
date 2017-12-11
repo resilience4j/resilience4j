@@ -30,8 +30,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Supplier;
 
 import static com.jayway.awaitility.Awaitility.await;
-import static io.github.resilience4j.bulkhead.event.BulkheadEvent.Type.CALL_PERMITTED;
-import static io.github.resilience4j.bulkhead.event.BulkheadEvent.Type.CALL_REJECTED;
+import static io.github.resilience4j.bulkhead.event.BulkheadEvent.Type.*;
 import static java.lang.Thread.State.*;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
