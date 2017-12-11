@@ -83,7 +83,7 @@ public class SemaphoreBulkhead implements Bulkhead {
     @Override
     public void changeConfig(final BulkheadConfig newConfig) {
         synchronized (configChangesLock) {
-            int delta = config.get().getMaxConcurrentCalls() - newConfig.getMaxConcurrentCalls();
+            int delta =  newConfig.getMaxConcurrentCalls() - config.get().getMaxConcurrentCalls();
             if (delta < 0) {
                 semaphore.acquireUninterruptibly(-delta);
             } else if (delta > 0) {
