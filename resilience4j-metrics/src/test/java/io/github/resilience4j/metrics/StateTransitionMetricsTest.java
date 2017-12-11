@@ -23,7 +23,7 @@ public class StateTransitionMetricsTest {
     private CircuitBreaker circuitBreaker;
 
     @Before
-    public void setup() throws Exception {
+    public void setUp() throws Exception {
         CircuitBreakerConfig config =
                 CircuitBreakerConfig.custom()
                         .waitDurationInOpenState(Duration.ofSeconds(1))
