@@ -187,6 +187,8 @@ The Bulkhead provides an interface to monitor the current number of available co
 int availableConcurrentCalls = bulkhead.getMetrics().getAvailableConcurrentCalls()
 ----
 
+You can also dynamically change it's configuration.
+
 [[cache]]
 === Cache
 
