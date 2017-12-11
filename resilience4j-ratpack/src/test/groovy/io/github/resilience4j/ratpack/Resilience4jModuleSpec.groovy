@@ -18,6 +18,7 @@ package io.github.resilience4j.ratpack
 
 import com.codahale.metrics.SharedMetricRegistries
 import com.codahale.metrics.annotation.Timed
+import io.github.resilience4j.bulkhead.BulkheadRegistry
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry
 import io.github.resilience4j.ratpack.circuitbreaker.CircuitBreaker
@@ -433,6 +434,133 @@ class Resilience4jModuleSpec extends Specification {
         }
     }
 
+    def "test bulkheads"() {
+        given:
+        def bulkheadRegistry = BulkheadRegistry.ofDefaults()
+        app = ratpack {
+            serverConfig {
+                development(false)
+            }
+            bindings {
+                bindInstance(BulkheadRegistry, bulkheadRegistry)
+                module(Resilience4jModule) {
+                    it.bulkhead('test') {
+                        it.defaults(true)
+                    }.bulkhead('test2') {
+                        it.maxConcurrentCalls(100)
+                                .maxWaitTime(1000)
+                    }
+                }
+            }
+            handlers {
+                get {
+                    render 'ok'
+                }
+            }
+        }
+        client = testHttpClient(app)
+
+        when:
+        def actual = client.get()
+
+        then:
+        actual.statusCode == 200
+        actual.body.text == 'ok'
+
+        and:
+        bulkheadRegistry.allBulkheads.size() == 2
+        def test1 = bulkheadRegistry.bulkhead('test1')
+        test1.name == 'test1'
+        test1.bulkheadConfig.with {
+            assert maxConcurrentCalls == 25
+            assert maxWaitTime == 0
+            it
+        }
+        def test2 = bulkheadRegistry.bulkhead('test2')
+        test2.name == 'test2'
+        test2.bulkheadConfig.with {
+            assert maxConcurrentCalls == 100
+            assert maxWaitTime == 1000
+            it
+        }
+    }
+
+    def "test no bulkheads"() {
+        given:
+        def bulkheadRegistry = BulkheadRegistry.ofDefaults()
+        app = ratpack {
+            serverConfig {
+                development(false)
+            }
+            bindings {
+                bindInstance(BulkheadRegistry, bulkheadRegistry)
+                module(Resilience4jModule)
+            }
+            handlers {
+                get {
+                    render 'ok'
+                }
+            }
+        }
+        client = testHttpClient(app)
+
+        when:
+        def actual = client.get()
+
+        then:
+        actual.statusCode == 200
+        actual.body.text == 'ok'
+
+        and:
+        bulkheadRegistry.allBulkheads.size() == 0
+    }
+
+    def "test bulkheads from yaml"() {
+        given:
+        def bulkheadRegistry = BulkheadRegistry.ofDefaults()
+        app = ratpack {
+            serverConfig {
+                development(false)
+                yaml(getClass().classLoader.getResource('application.yml'))
+                require("/resilience4j", Resilience4jConfig)
+            }
+            bindings {
+                bindInstance(BulkheadRegistry, bulkheadRegistry)
+                module(Resilience4jModule)
+            }
+            handlers {
+                get {
+                    render 'ok'
+                }
+            }
+        }
+        client = testHttpClient(app)
+
+        when:
+        def actual = client.get()
+
+        then:
+        actual.statusCode == 200
+        actual.body.text == 'ok'
+
+        and:
+        bulkheadRegistry.allBulkheads.size() == 2
+        def test1 = bulkheadRegistry.bulkhead('test1')
+        test1.name == 'test1'
+        test1.bulkheadConfig.with {
+            assert maxConcurrentCalls == 25
+            assert maxWaitTime == 0
+            it
+        }
+        def test2 = bulkheadRegistry.bulkhead('test2')
+        test2.name == 'test2'
+        test2.bulkheadConfig.with {
+            assert maxConcurrentCalls == 100
+            assert maxWaitTime == 1000
+            it
+        }
+    }
+
     def "test dropwizard metrics"() {
         given:
         def circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults()
@@ -441,6 +569,8 @@ class Resilience4jModuleSpec extends Specification {
         rateLimiterRegistry.rateLimiter('test')
         def retryRegistry = RetryRegistry.ofDefaults()
         retryRegistry.retry('test')
+        def bulkheadRegistry = BulkheadRegistry.ofDefaults()
+        bulkheadRegistry.bulkhead('test')
         app = ratpack {
             serverConfig {
                 development(false)
@@ -449,6 +579,7 @@ class Resilience4jModuleSpec extends Specification {
                 bindInstance(CircuitBreakerRegistry, circuitBreakerRegistry)
                 bindInstance(RateLimiterRegistry, rateLimiterRegistry)
                 bindInstance(RetryRegistry, retryRegistry)
+                bindInstance(BulkheadRegistry, bulkheadRegistry)
                 module(Resilience4jModule) {
                     it.metrics(true)
                 }
@@ -485,7 +616,7 @@ class Resilience4jModuleSpec extends Specification {
         timer.count == 3
 
         and:
-        registry.gauges.size() == 12
+        registry.gauges.size() == 13
         registry.gauges.keySet() == ['resilience4j.circuitbreaker.test.state',
                                      'resilience4j.circuitbreaker.test.buffered',
                                      'resilience4j.circuitbreaker.test.buffered_max',
@@ -497,7 +628,8 @@ class Resilience4jModuleSpec extends Specification {
                                      'resilience4j.retry.test.successful_calls_without_retry',
                                      'resilience4j.retry.test.successful_calls_with_retry',
                                      'resilience4j.retry.test.failed_calls_without_retry',
-                                     'resilience4j.retry.test.failed_calls_with_retry'].toSet()
+                                     'resilience4j.retry.test.failed_calls_with_retry',
+                                     'resilience4j.bulkhead.test.available_concurrent_calls'].toSet()
     }
 
     def "test prometheus"() {
@@ -556,7 +688,5 @@ class Resilience4jModuleSpec extends Specification {
         String name() {
             "dan"
         }
-
     }
-
 }

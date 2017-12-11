@@ -99,13 +99,14 @@ include::../../../../../resilience4j-bulkhead/src/test/java/io/github/resilience
 
 ===== Consume emitted BulkheadEvents
 
-The BulkHead emits a stream of BulkHeadEvents. There are two types of events emitted: permitted execution & rejected execution. If you want to consume these events, you have to register an event consumer.
+The BulkHead emits a stream of BulkHeadEvents. There are two types of events emitted: permitted execution, rejected execution & finished execution. If you want to consume these events, you have to register an event consumer.
 
 [source,java]
 ----
 bulkhead.getEventPublisher()
     .onCallPermitted(event -> logger.info(...))
-    .onCallRejected(event -> logger.info(...));
+    .onCallRejected(event -> logger.info(...))
+    .onCallFinished(event -> logger.info(...));
 ----
 
 ==== Monitoring

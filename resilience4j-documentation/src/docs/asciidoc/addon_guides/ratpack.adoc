@@ -20,10 +20,10 @@ dependencies {
 
 ==== Basic Usage
 
-Installing the `Resilience4jModule` module provides a `CircuitBreakerRegistry`, `RateLimiterRegistry`,
+Installing the `Resilience4jModule` module provides a `BulkheadRegistry` `CircuitBreakerRegistry`, `RateLimiterRegistry`,
 and `RetryRegistry` with the default configurations. It also install the Guice method interceptors
-for CircuitBreakers, RateLimiters, and Retries. Finally, it allows configuration of metrics
-and even the building of CircuitBreakers, RateLimiters, and Retries. See below for configuration details.
+for Bulkheads, CircuitBreakers, RateLimiters, and Retries. Finally, it allows configuration of metrics
+and even the building of Bulkheads, CircuitBreakers, RateLimiters, and Retries. See below for configuration details.
 
 Note: If you don't register a `CircuitBreakerRegistry` or `RateLimiterRegistry` or `RetryRegistry`, the defaults
 will be used.
@@ -93,6 +93,18 @@ Ratpack promises provide the means by which an application can become fully non-
 Resilience4j provides transformers that can be applied to Promises. This is ideal when promising a value
 that is coming from some sort of I/O source.
 
+===== Bulkhead
+
+You can easily apply a Bulkhead to any Ratpack Promise.
+
+[source,java]
+----
+public Promise<String> methodWhichReturnsAPromise() {
+    return backendBConnector.methodWhichReturnsAPromise()
+            .transform(BulkheadTransformer.of(bulkhead).recover(t -> "recovered"));
+}
+----
+
 ===== CircuitBreaker
 
 You can easily apply a CircuitBreaker to any Ratpack Promise.
@@ -140,6 +152,23 @@ methods returning types:
 * Observable
 * Flowable
 * Single
+
+===== Bulkhead
+The demo shows how to use the `Bulkhead` annotation to have your Ratpack application limiting number of method calls.
+You can either annotate a class in order to protect all public methods or just some specific methods.
+For example:
+
+[source,java]
+----
+@Bulkhead(name = "backendA", recovery = MyRecoveryFunction.class)
+@Singleton
+public class BackendAConnector implements Connector {
+    ...
+}
+----
+Where `MyRecoveryFunction` is implements `io.github.resilience4j.ratpack.RecoveryFunction` and provides
+a fallback value that is returned when the bulkhead identified by `name` is full or call ends in exception.
+
 
 ===== CircuitBreaker
 The demo shows how to use the `CircuitBreaker` annotation to make your Ratpack application more fault tolerant.
@@ -191,7 +220,7 @@ a fallback value that is returned when the rate limiter rate limit identified by
 
 ==== Functional style
 
-You can still use a functional programming style for CircuitBreaker, Retry, and RateLimiter. For example:
+You can still use a functional programming style for Bulkhead, CircuitBreaker, Retry, and RateLimiter. For example:
 
 [source,java]
 ----
@@ -212,7 +241,7 @@ public class BusinessBService implements BusinessService  {
 }
 ----
 
-==== Adding CircuitBreakers, RateLimiters, and Retries
+==== Adding Bulkheads, CircuitBreakers, RateLimiters, and Retries
 These can be defined in the module configuration or in an external configuration.
 Note that the module only provide default registries, which you can replace by
 binding your own.
@@ -227,7 +256,12 @@ public class MyModule extends AbstractModule {
     protected void configure() {
         Resilience4jModule module = new Resilience4jModule();
         module.configure(c -> c
-            .circuitBreaker("test1", cb -> cb
+            .bulkhead("test1", b -> b
+                .defaults(true)
+            ).bulkhead("test2", b -> b
+                .maxConcurrentCalls(100)
+                .maxWaitTime(1000)
+            ).circuitBreaker("test1", cb -> cb
                 .defaults(true)
             ).circuitBreaker("test2", cb -> cb
                 .failureRateThreshold(50)
@@ -275,6 +309,12 @@ ratpack {
 [source,yaml]
 ----
 resilience4j:
+    bulkheads:
+        test1:
+            defaults: true
+        test2:
+            maxConcurrentCalls: 100
+            maxWaitTime: 1000
     circuitBreakers:
         test1:
             defaults: true
@@ -300,7 +340,7 @@ resilience4j:
 
 ==== Metrics
 Both dropwizard and prometheus metrics can be auto configured and enabled for all registered
-circuitbreaker instances, ratelimiter instances, and retry instances.
+bulkhead instances, circuitbreaker instances, ratelimiter instances, and retry instances.
 
 For dropwizard metrics to work, add a compile dependency on resilience4j-metrics and
 bind a MetricRegistry instance.
@@ -341,6 +381,41 @@ public class MyModule extends AbstractModule {
 ----
 
 ==== Event Monitoring
+
+===== Bulkhead
+These are the same endpoints as implemented for Bulkhead,
+so for detailed documentation please refer to previous sections.
+
+List of available endpoints:
+
+* `/bulkhead/events`
+* `/bulkhead/stream/events`
+* `/bulkhead/events/{bulkheadName}`
+* `/bulkhead/stream/events/{bulkheadName}`
+* `/bulkhead/events/{bulkheadName}/{eventType}`
+* `/bulkhead/stream/events/{bulkheadName}/{eventType}`
+
+Example of response:
+----
+{
+  "bulkheadEvents": [
+    {
+      "bulkheadName": "backendA",
+      "type": "CALL_PERMITTED",
+      "creationTime": "2017-05-05T21:29:40.463+03:00[Europe/Uzhgorod]"
+    },
+    {
+      "bulkheadName": "backendA",
+      "type": "CALL_REJECTED",
+      "creationTime": "2017-05-05T21:29:40.469+03:00[Europe/Uzhgorod]"
+    },
+    {
+      "bulkheadName": "backendA",
+      "type": "CALL_FINISHED",
+      "creationTime": "2017-05-05T21:29:41.268+03:00[Europe/Uzhgorod]"
+    }
+  ]
+}
 
 ===== CircuitBreaker
 

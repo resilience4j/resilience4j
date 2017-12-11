@@ -2,6 +2,7 @@ apply plugin: 'groovy'
 
 dependencies {
     compile ( libraries.ratpack )
+    compile project(':resilience4j-bulkhead')
     compile project(':resilience4j-circuitbreaker')
     compile project(':resilience4j-ratelimiter')
     compile project(':resilience4j-retry')
@@ -15,8 +16,4 @@ dependencies {
     testCompile ( libraries.ratpack_metrics )
     testCompile project(':resilience4j-prometheus')
     testCompile project(':resilience4j-metrics')
-}
-
-test {
-    maxParallelForks = 1
 }
