@@ -74,7 +74,7 @@ include::../../../../../resilience4j-bulkhead/src/test/java/io/github/resilience
 
 ==== Dynamic bulkhead reconfiguration
 
-You can use `changeConfig` method to modify balkhead params in runtime.
+You can use `changeConfig` method to modify bulkhead params in runtime.
 NOTE! New `maxWaitTime` duration won't affect threads that are currently waiting for permission.
 
 ===== Bulkhead and RxJava
