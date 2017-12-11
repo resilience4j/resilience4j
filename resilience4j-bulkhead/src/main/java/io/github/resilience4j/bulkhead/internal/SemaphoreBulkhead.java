@@ -208,26 +208,6 @@ public class SemaphoreBulkhead implements Bulkhead {
         }
     }
 
-    private class BulkheadEventProcessor extends EventProcessor<BulkheadEvent> implements EventPublisher, EventConsumer<BulkheadEvent> {
-
-        @Override
-        public EventPublisher onCallPermitted(EventConsumer<BulkheadOnCallPermittedEvent> onCallPermittedEventConsumer) {
-            registerConsumer(BulkheadOnCallPermittedEvent.class, onCallPermittedEventConsumer);
-            return this;
-        }
-
-        @Override
-        public EventPublisher onCallRejected(EventConsumer<BulkheadOnCallRejectedEvent> onCallRejectedEventConsumer) {
-            registerConsumer(BulkheadOnCallRejectedEvent.class, onCallRejectedEventConsumer);
-            return this;
-        }
-
-        @Override
-        public void consumeEvent(BulkheadEvent event) {
-            super.processEvent(event);
-        }
-    }
-
     private final class BulkheadMetrics implements Metrics {
         private BulkheadMetrics() {
         }
