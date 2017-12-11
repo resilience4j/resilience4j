@@ -53,12 +53,10 @@ public class RateLimiterMetrics implements MetricSet {
 
         rateLimiters.forEach(rateLimiter -> {
                 String name = rateLimiter.getName();
-                RateLimiter.Metrics metrics = rateLimiter.getMetrics();
-
-                metricRegistry.register(name(prefix, name, "number_of_waiting_threads"),
-                    (Gauge<Integer>) metrics::getNumberOfWaitingThreads);
+            metricRegistry.register(name(prefix, name, "number_of_waiting_threads"),
+                    (Gauge<Integer>) rateLimiter.getMetrics()::getNumberOfWaitingThreads);
                 metricRegistry.register(name(prefix, name, "available_permissions"),
-                    (Gauge<Integer>) metrics::getAvailablePermissions);
+                    (Gauge<Integer>) rateLimiter.getMetrics()::getAvailablePermissions);
             }
         );
     }
