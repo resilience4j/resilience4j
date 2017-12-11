@@ -53,22 +53,21 @@ public class CircuitBreakerMetrics implements MetricSet {
     private CircuitBreakerMetrics(String prefix, Iterable<CircuitBreaker> circuitBreakers) {
         requireNonNull(prefix);
         requireNonNull(circuitBreakers);
-        circuitBreakers.forEach(circuitBreaker -> {
+        circuitBreakers.forEach((CircuitBreaker circuitBreaker) -> {
                 String name = circuitBreaker.getName();
-                CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
-                //state as an integer
+            //state as an integer
                 metricRegistry.register(name(prefix, name, STATE),
                       (Gauge<Integer>)()-> circuitBreaker.getState().getOrder());
                 metricRegistry.register(name(prefix, name, SUCCESSFUL),
-                    (Gauge<Integer>) metrics::getNumberOfSuccessfulCalls);
+                    (Gauge<Integer>) () -> circuitBreaker.getMetrics().getNumberOfSuccessfulCalls());
                 metricRegistry.register(name(prefix, name, FAILED),
-                    (Gauge<Integer>) metrics::getNumberOfFailedCalls);
+                    (Gauge<Integer>) () -> circuitBreaker.getMetrics().getNumberOfFailedCalls());
                 metricRegistry.register(name(prefix, name, NOT_PERMITTED),
-                    (Gauge<Long>) metrics::getNumberOfNotPermittedCalls);
+                    (Gauge<Long>) () -> circuitBreaker.getMetrics().getNumberOfNotPermittedCalls());
                 metricRegistry.register(name(prefix, name, BUFFERED),
-                    (Gauge<Integer>) metrics::getNumberOfBufferedCalls);
+                    (Gauge<Integer>) () -> circuitBreaker.getMetrics().getNumberOfBufferedCalls());
                 metricRegistry.register(name(prefix, name, BUFFERED_MAX),
-                    (Gauge<Integer>) metrics::getMaxNumberOfBufferedCalls);
+                    (Gauge<Integer>) () -> circuitBreaker.getMetrics().getMaxNumberOfBufferedCalls());
             }
         );
     }

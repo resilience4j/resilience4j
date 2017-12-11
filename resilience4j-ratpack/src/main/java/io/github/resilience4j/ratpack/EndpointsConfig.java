@@ -25,6 +25,7 @@ public class EndpointsConfig {
     private EndpointConfig circuitBreakers = new EndpointConfig("circuitbreaker");
     private EndpointConfig rateLimiters = new EndpointConfig("ratelimiter");
     private EndpointConfig retries = new EndpointConfig("retry");
+    private EndpointConfig bulkheads = new EndpointConfig("bulkhead");
 
     public EndpointConfig getCircuitBreakers() {
         return circuitBreakers;
@@ -59,6 +60,19 @@ public class EndpointsConfig {
     public EndpointsConfig retries(Function<? super EndpointConfig, ? extends EndpointConfig> configure) {
         try {
             retries = configure.apply(new EndpointConfig("retry"));
+            return this;
+        } catch (Exception e) {
+            throw uncheck(e);
+        }
+    }
+
+    public EndpointConfig getBulkheads() {
+        return bulkheads;
+    }
+
+    public EndpointsConfig bulkheads(Function<? super EndpointConfig, ? extends EndpointConfig> configure) {
+        try {
+            bulkheads = configure.apply(new EndpointConfig("bulkhead"));
             return this;
         } catch (Exception e) {
             throw uncheck(e);

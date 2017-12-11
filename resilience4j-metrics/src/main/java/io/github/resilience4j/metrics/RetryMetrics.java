@@ -31,16 +31,15 @@ public class RetryMetrics implements MetricSet {
         requireNonNull(retries);
         retries.forEach(retry -> {
             String name = retry.getName();
-            Retry.Metrics metrics = retry.getMetrics();
 
             metricRegistry.register(name(prefix, name, SUCCESSFUL_CALLS_WITHOUT_RETRY),
-                    (Gauge<Long>) metrics::getNumberOfSuccessfulCallsWithoutRetryAttempt);
+                    (Gauge<Long>) () -> retry.getMetrics().getNumberOfSuccessfulCallsWithoutRetryAttempt());
             metricRegistry.register(name(prefix, name, SUCCESSFUL_CALLS_WITH_RETRY),
-                    (Gauge<Long>) metrics::getNumberOfSuccessfulCallsWithRetryAttempt);
+                    (Gauge<Long>) () -> retry.getMetrics().getNumberOfSuccessfulCallsWithRetryAttempt());
             metricRegistry.register(name(prefix, name, FAILED_CALLS_WITHOUT_RETRY),
-                    (Gauge<Long>) metrics::getNumberOfFailedCallsWithoutRetryAttempt);
+                    (Gauge<Long>) () -> retry.getMetrics().getNumberOfFailedCallsWithoutRetryAttempt());
             metricRegistry.register(name(prefix, name, FAILED_CALLS_WITH_RETRY),
-                    (Gauge<Long>) metrics::getNumberOfFailedCallsWithRetryAttempt);
+                    (Gauge<Long>) () -> retry.getMetrics().getNumberOfFailedCallsWithRetryAttempt());
         });
     }
 

@@ -16,6 +16,7 @@
 
 package io.github.resilience4j.ratpack;
 
+import io.github.resilience4j.ratpack.bulkhead.BulkheadConfig;
 import io.github.resilience4j.ratpack.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.ratpack.ratelimiter.RateLimiterConfig;
 import io.github.resilience4j.ratpack.retry.RetryConfig;
@@ -30,6 +31,7 @@ public class Resilience4jConfig {
     private Map<String, CircuitBreakerConfig> circuitBreakers = new HashMap<>();
     private Map<String, RateLimiterConfig> rateLimiters = new HashMap<>();
     private Map<String, RetryConfig> retries = new HashMap<>();
+    private Map<String, BulkheadConfig> bulkheads = new HashMap<>();
     private boolean metrics = false;
     private boolean prometheus = false;
     private EndpointsConfig endpoints = new EndpointsConfig();
@@ -58,6 +60,16 @@ public class Resilience4jConfig {
         try {
             RetryConfig finalConfig = configure.apply(new RetryConfig());
             retries.put(name, finalConfig);
+            return this;
+        } catch (Exception e) {
+            throw uncheck(e);
+        }
+    }
+
+    public Resilience4jConfig bulkhead(String name, Function<? super BulkheadConfig, ? extends BulkheadConfig> configure) {
+        try {
+            BulkheadConfig finalConfig = configure.apply(new BulkheadConfig());
+            bulkheads.put(name, finalConfig);
             return this;
         } catch (Exception e) {
             throw uncheck(e);
@@ -93,6 +105,10 @@ public class Resilience4jConfig {
 
     public Map<String, RetryConfig> getRetries() {
         return retries;
+    }
+
+    public Map<String, BulkheadConfig> getBulkheads() {
+        return bulkheads;
     }
 
     public boolean isMetrics() {

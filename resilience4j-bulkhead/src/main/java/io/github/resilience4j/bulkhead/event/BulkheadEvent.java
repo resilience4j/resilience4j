@@ -54,5 +54,7 @@ public interface BulkheadEvent {
         CALL_PERMITTED,
         /** A BulkheadEvent which informs that a call was rejected due to bulkhead being full */
         CALL_REJECTED,
+        /** A BulkheadEvent which informs that a call was finished(success and failure is indistinguishable) */
+        CALL_FINISHED
     }
 }

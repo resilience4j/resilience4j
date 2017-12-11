@@ -22,6 +22,7 @@ package io.github.resilience4j.bulkhead.internal;
 import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.bulkhead.BulkheadConfig;
 import io.github.resilience4j.bulkhead.event.BulkheadEvent;
+import io.github.resilience4j.bulkhead.event.BulkheadOnCallFinishedEvent;
 import io.github.resilience4j.bulkhead.event.BulkheadOnCallPermittedEvent;
 import io.github.resilience4j.bulkhead.event.BulkheadOnCallRejectedEvent;
 import io.github.resilience4j.core.EventConsumer;
@@ -118,6 +119,7 @@ public class SemaphoreBulkhead implements Bulkhead {
     @Override
     public void onComplete() {
         semaphore.release();
+        publishBulkheadEvent(() -> new BulkheadOnCallFinishedEvent(name));
     }
 
     /**
@@ -152,9 +154,32 @@ public class SemaphoreBulkhead implements Bulkhead {
         return eventProcessor;
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    private class BulkheadEventProcessor extends EventProcessor<BulkheadEvent> implements EventPublisher, EventConsumer<BulkheadEvent> {
+
+        @Override
+        public EventPublisher onCallPermitted(EventConsumer<BulkheadOnCallPermittedEvent> onCallPermittedEventConsumer) {
+            registerConsumer(BulkheadOnCallPermittedEvent.class, onCallPermittedEventConsumer);
+            return this;
+        }
+
+        @Override
+        public EventPublisher onCallRejected(EventConsumer<BulkheadOnCallRejectedEvent> onCallRejectedEventConsumer) {
+            registerConsumer(BulkheadOnCallRejectedEvent.class, onCallRejectedEventConsumer);
+            return this;
+        }
+
+        @Override
+        public EventPublisher onCallFinished(EventConsumer<BulkheadOnCallFinishedEvent> onCallFinishedEventConsumer) {
+            registerConsumer(BulkheadOnCallFinishedEvent.class, onCallFinishedEventConsumer);
+            return this;
+        }
+
+        @Override
+        public void consumeEvent(BulkheadEvent event) {
+            super.processEvent(event);
+        }
+    }
+
     @Override
     public String toString() {
         return String.format("Bulkhead '%s'", this.name);
@@ -212,5 +237,4 @@ public class SemaphoreBulkhead implements Bulkhead {
             return semaphore.availablePermits();
         }
     }
-
 }
