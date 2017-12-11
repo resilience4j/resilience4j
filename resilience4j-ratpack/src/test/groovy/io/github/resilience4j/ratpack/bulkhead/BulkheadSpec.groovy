@@ -29,20 +29,15 @@ import ratpack.http.client.ReceivedResponse
 import ratpack.test.embed.EmbeddedApp
 import ratpack.test.http.TestHttpClient
 import spock.lang.AutoCleanup
+import spock.lang.IgnoreIf
 import spock.lang.Specification
 import spock.lang.Unroll
 
-import java.util.concurrent.Callable
-import java.util.concurrent.CompletableFuture
-import java.util.concurrent.CompletionStage
-import java.util.concurrent.CountDownLatch
-import java.util.concurrent.ExecutionException
-import java.util.concurrent.ExecutorService
-import java.util.concurrent.Executors
-import java.util.concurrent.TimeUnit
+import java.util.concurrent.*
 
 import static ratpack.groovy.test.embed.GroovyEmbeddedApp.ratpack
 
+@IgnoreIf({env.TRAVIS})
 @Unroll
 class BulkheadSpec extends Specification {
 
@@ -140,7 +135,7 @@ class BulkheadSpec extends Specification {
         } as Callable<ReceivedResponse>)
 
         and:
-        rejectedResponse.get(30, TimeUnit.SECONDS)
+        rejectedResponse.get(5, TimeUnit.SECONDS)
         latch.countDown() // unblock blocked response
         def permittedResponse = executor.submit({
             client.get(path)
@@ -227,7 +222,7 @@ class BulkheadSpec extends Specification {
         } as Callable<ReceivedResponse>)
 
         and:
-        rejectedResponse.get(30, TimeUnit.SECONDS)
+        rejectedResponse.get(5, TimeUnit.SECONDS)
         latch.countDown() // unblock blocked response
         def permittedResponse = executor.submit({
             client.get(path)
@@ -305,7 +300,7 @@ class BulkheadSpec extends Specification {
         } as Callable<ReceivedResponse>)
 
         and:
-        rejectedResponse.get(30, TimeUnit.SECONDS)
+        rejectedResponse.get(5, TimeUnit.SECONDS)
         latch.countDown() // unblock blocked response
         def permittedResponse = executor.submit({
             client.get(path)
