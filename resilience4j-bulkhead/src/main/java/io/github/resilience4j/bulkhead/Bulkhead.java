@@ -19,6 +19,7 @@
 package io.github.resilience4j.bulkhead;
 
 import io.github.resilience4j.bulkhead.event.BulkheadEvent;
+import io.github.resilience4j.bulkhead.event.BulkheadOnCallFinishedEvent;
 import io.github.resilience4j.bulkhead.event.BulkheadOnCallPermittedEvent;
 import io.github.resilience4j.bulkhead.event.BulkheadOnCallRejectedEvent;
 import io.github.resilience4j.bulkhead.internal.SemaphoreBulkhead;
@@ -417,5 +418,6 @@ public interface Bulkhead {
 
         EventPublisher onCallPermitted(EventConsumer<BulkheadOnCallPermittedEvent> eventConsumer);
 
+        EventPublisher onCallFinished(EventConsumer<BulkheadOnCallFinishedEvent> eventConsumer);
     }
 }

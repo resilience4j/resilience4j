@@ -12,6 +12,10 @@ resilience4j:
             enabled: true
             path: retry
             eventConsumerBufferSize: 100
+        bulkheads:
+            enabled: true
+            path: bulkhead
+            eventConsumerBufferSize: 100
     circuitBreakers:
         test1:
             defaults: true
@@ -33,3 +37,9 @@ resilience4j:
         test2:
             maxAttempts: 3
             waitDurationInMillis: 1000
+    bulkheads:
+        test1:
+            defaults: true
+        test2:
+            maxConcurrentCalls: 100
+            maxWaitTime: 1000

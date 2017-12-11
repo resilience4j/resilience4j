@@ -59,7 +59,6 @@ public class BulkheadEventPublisherTest {
 
     @Test
     public void shouldConsumeOnCallPermittedEvent() {
-
         // Given
         Bulkhead bulkhead = Bulkhead.of("test", config);
         BDDMockito.given(helloWorldService.returnHelloWorld()).willReturn("Hello world");
@@ -79,7 +78,6 @@ public class BulkheadEventPublisherTest {
 
     @Test
     public void shouldConsumeOnCallRejectedEvent() {
-
         // Given
         Bulkhead bulkhead = Bulkhead.of("test", config);
 
@@ -96,5 +94,35 @@ public class BulkheadEventPublisherTest {
         then(logger).should(times(1)).info("CALL_REJECTED");
     }
 
+    @Test
+    public void shouldConsumeOnCallFinishedEventWhenExecutionIsFinished() throws Exception {
+        // Given
+        Bulkhead bulkhead = Bulkhead.of("test", config);
 
+        // When
+        bulkhead.getEventPublisher()
+                .onCallFinished(event ->
+                        logger.info(event.getEventType().toString()));
+
+        Try.ofSupplier(Bulkhead.decorateSupplier(bulkhead,helloWorldService::returnHelloWorld));
+
+        // Then
+        then(logger).should(times(1)).info("CALL_FINISHED");
+    }
+
+    @Test
+    public void shouldConsumeOnCallFinishedEventOnComplete() throws Exception {
+        // Given
+        Bulkhead bulkhead = Bulkhead.of("test", config);
+
+        // When
+        bulkhead.getEventPublisher()
+                .onCallFinished(event ->
+                        logger.info(event.getEventType().toString()));
+
+        bulkhead.onComplete();
+
+        // Then
+        then(logger).should(times(1)).info("CALL_FINISHED");
+    }
 }
