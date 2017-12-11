@@ -80,6 +80,9 @@ public class SemaphoreBulkhead implements Bulkhead {
         this(name, configSupplier.get());
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void changeConfig(final BulkheadConfig newConfig) {
         synchronized (configChangesLock) {
@@ -93,6 +96,9 @@ public class SemaphoreBulkhead implements Bulkhead {
         }
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public boolean isCallPermitted() {
 
@@ -106,32 +112,49 @@ public class SemaphoreBulkhead implements Bulkhead {
         return callPermitted;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void onComplete() {
         semaphore.release();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public String getName() {
         return this.name;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public BulkheadConfig getBulkheadConfig() {
         return config.get();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Metrics getMetrics() {
         return metrics;
     }
 
-
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public EventPublisher getEventPublisher() {
         return eventProcessor;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public String toString() {
         return String.format("Bulkhead '%s'", this.name);
