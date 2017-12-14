@@ -30,6 +30,7 @@ import io.github.resilience4j.core.EventProcessor;
 
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 
 /**
@@ -39,22 +40,23 @@ public class SemaphoreBulkhead implements Bulkhead {
 
     private final String name;
     private final Semaphore semaphore;
-    private final BulkheadConfig bulkheadConfig;
+    private final Object configChangesLock = new Object();
+    private final AtomicReference<BulkheadConfig> config;
     private final BulkheadMetrics metrics;
     private final BulkheadEventProcessor eventProcessor;
 
     /**
      * Creates a bulkhead using a configuration supplied
      *
-     * @param name the name of this bulkhead
+     * @param name           the name of this bulkhead
      * @param bulkheadConfig custom bulkhead configuration
      */
     public SemaphoreBulkhead(String name, BulkheadConfig bulkheadConfig) {
         this.name = name;
-        this.bulkheadConfig = bulkheadConfig != null ? bulkheadConfig
-                                                     : BulkheadConfig.ofDefaults();
+        this.config = new AtomicReference<>(bulkheadConfig != null ? bulkheadConfig
+                : BulkheadConfig.ofDefaults());
         // init semaphore
-        this.semaphore = new Semaphore(this.bulkheadConfig.getMaxConcurrentCalls(), true);
+        this.semaphore = new Semaphore(this.config.get().getMaxConcurrentCalls(), true);
 
         this.metrics = new BulkheadMetrics();
         this.eventProcessor = new BulkheadEventProcessor();
@@ -79,42 +81,74 @@ public class SemaphoreBulkhead implements Bulkhead {
         this(name, configSupplier.get());
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void changeConfig(final BulkheadConfig newConfig) {
+        synchronized (configChangesLock) {
+            int delta =  newConfig.getMaxConcurrentCalls() - config.get().getMaxConcurrentCalls();
+            if (delta < 0) {
+                semaphore.acquireUninterruptibly(-delta);
+            } else if (delta > 0) {
+                semaphore.release(delta);
+            }
+            config.set(newConfig);
+        }
+    }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public boolean isCallPermitted() {
 
         boolean callPermitted = tryEnterBulkhead();
 
         publishBulkheadEvent(
-            () -> callPermitted ? new BulkheadOnCallPermittedEvent(name)
-                                : new BulkheadOnCallRejectedEvent(name)
+                () -> callPermitted ? new BulkheadOnCallPermittedEvent(name)
+                        : new BulkheadOnCallRejectedEvent(name)
         );
 
         return callPermitted;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void onComplete() {
         semaphore.release();
         publishBulkheadEvent(() -> new BulkheadOnCallFinishedEvent(name));
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public String getName() {
         return this.name;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public BulkheadConfig getBulkheadConfig() {
-        return bulkheadConfig;
+        return config.get();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Metrics getMetrics() {
         return metrics;
     }
 
-
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public EventPublisher getEventPublisher() {
         return eventProcessor;
@@ -154,7 +188,7 @@ public class SemaphoreBulkhead implements Bulkhead {
     boolean tryEnterBulkhead() {
 
         boolean callPermitted = false;
-        long timeout = bulkheadConfig.getMaxWaitTime();
+        long timeout = config.get().getMaxWaitTime();
 
         if (timeout == 0) {
             callPermitted = semaphore.tryAcquire();
@@ -165,7 +199,6 @@ public class SemaphoreBulkhead implements Bulkhead {
                 callPermitted = false;
             }
         }
-        //
         return callPermitted;
     }
 
