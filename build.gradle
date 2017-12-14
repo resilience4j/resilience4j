@@ -82,6 +82,7 @@ configure(project.coreProjects) {
 
     cobertura {
         coverageIgnoreTrivial = true
+        coverageExcludes = ['.*io.github.resilience4j.bulkhead.internal.*']
     }
 
     jmh {

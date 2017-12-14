@@ -55,6 +55,13 @@ import java.util.function.Supplier;
 public interface Bulkhead {
 
     /**
+     * Dynamic bulkhead configuration change.
+     * NOTE! New `maxWaitTime` duration won't affect threads that are currently waiting for permission.
+     * @param newConfig new BulkheadConfig
+     */
+    void changeConfig(BulkheadConfig newConfig);
+
+    /**
      * Attempts to acquire a permit, which allows an call to be executed.
      *
      * @return boolean whether a call should be executed
