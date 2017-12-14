@@ -126,3 +126,15 @@ NOTE: Braking changes:
 * Issue #161: Fixed Spring Boot Prometheus AutoConfiguration
 * Updated Vavr from 0.9.0 to 0.9.1
 * Updated RxJava from 2.1.0 to 2.1.3
+
+== Version 0.11.0
+* RP #164 Additional gauges to monitor the circuit breaker state
+* PR #165 Allow explicit ordering for CircuitBreaker and RateLimiter aspects in SpringBoot starter
+* PR #166 Bulkhead metrics for Dropwizard metrics module
+* PR #176 Retrofit enqueue support for circuit breaker and rate limiter
+* PR #177 Dynamic rate limiter configuration
+* PR #181 RxJava bulkhead operator for `Maybe` and `Completable`
+* PR #169 Bulkhead integration with Ratpack and call finished metric for bulkhead
+* PR #184 Dynamic bulkhead configuration
+
+* Issue #182 Fix for circuit breaker show only first state values in Dropwizard metrics
