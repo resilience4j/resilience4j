@@ -18,8 +18,14 @@
  */
 package io.github.resilience4j.circuitbreaker.operator;
 
+import static java.util.Objects.requireNonNull;
+
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
+import io.reactivex.CompletableObserver;
+import io.reactivex.CompletableOperator;
 import io.reactivex.FlowableOperator;
+import io.reactivex.MaybeObserver;
+import io.reactivex.MaybeOperator;
 import io.reactivex.ObservableOperator;
 import io.reactivex.Observer;
 import io.reactivex.SingleObserver;
@@ -31,11 +37,11 @@ import org.reactivestreams.Subscriber;
  *
  * @param <T> the value type of the upstream and downstream
  */
-public class CircuitBreakerOperator<T> implements ObservableOperator<T, T>, FlowableOperator<T, T>, SingleOperator<T, T> {
+public class CircuitBreakerOperator<T> implements ObservableOperator<T, T>, FlowableOperator<T, T>, SingleOperator<T, T>, CompletableOperator, MaybeOperator<T, T> {
     private final CircuitBreaker circuitBreaker;
 
     private CircuitBreakerOperator(CircuitBreaker circuitBreaker) {
-        this.circuitBreaker = circuitBreaker;
+        this.circuitBreaker = requireNonNull(circuitBreaker);
     }
 
     /**
@@ -62,5 +68,15 @@ public class CircuitBreakerOperator<T> implements ObservableOperator<T, T>, Flow
     @Override
     public SingleObserver<? super T> apply(SingleObserver<? super T> childObserver) throws Exception {
         return new CircuitBreakerSingleObserver<>(circuitBreaker, childObserver);
+    }
+
+    @Override
+    public CompletableObserver apply(CompletableObserver observer) throws Exception {
+        return new CircuitBreakerCompletableObserver(circuitBreaker, observer);
+    }
+
+    @Override
+    public MaybeObserver<? super T> apply(MaybeObserver<? super T> observer) throws Exception {
+        return new CircuitBreakerMaybeObserver<>(circuitBreaker, observer);
     }
 }

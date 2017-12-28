@@ -1,121 +1,125 @@
 package io.github.resilience4j.circuitbreaker.operator;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
 import java.io.IOException;
-import java.time.Duration;
 
-import io.github.resilience4j.circuitbreaker.CircuitBreaker;
-import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerOpenException;
 import io.reactivex.Observable;
+import io.reactivex.Observer;
+import io.reactivex.disposables.Disposable;
 import org.junit.Test;
 
 /**
  * Unit test for {@link CircuitBreakerObserver}.
  */
-public class CircuitBreakerObserverTest {
+@SuppressWarnings("unchecked")
+public class CircuitBreakerObserverTest extends CircuitBreakerAssertions {
     @Test
-    public void shouldReturnOnCompleteUsingObservable() {
-        //Given
-        CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testName");
-        assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
-
-        //When
+    public void shouldEmitAllEvents() {
         Observable.fromArray("Event 1", "Event 2")
             .lift(CircuitBreakerOperator.of(circuitBreaker))
             .test()
-            .assertValueCount(2)
-            .assertValues("Event 1", "Event 2")
-            .assertComplete();
+            .assertResult("Event 1", "Event 2");
 
-        //Then
-        CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
-
-        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
-        assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(0);
+        assertSingleSuccessfulCall();
     }
 
     @Test
-    public void shouldReturnOnErrorUsingObservable() {
-        //Given
-        CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testName");
-        assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
-
-        //When
-        Observable.fromCallable(() -> {throw new IOException("BAM!");})
+    public void shouldPropagateError() {
+        Observable.error(new IOException("BAM!"))
             .lift(CircuitBreakerOperator.of(circuitBreaker))
             .test()
+            .assertSubscribed()
             .assertError(IOException.class)
-            .assertNotComplete()
-            .assertSubscribed();
+            .assertNotComplete();
 
-        //Then
-        CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
-
-        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
-        assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(1);
+        assertSingleFailedCall();
     }
 
     @Test
-    public void shouldReturnOnErrorWithCircuitBreakerOpenExceptionUsingObservable() {
-        // Given
-        // Create a custom configuration for a CircuitBreaker
-        CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom()
-            .ringBufferSizeInClosedState(2)
-            .ringBufferSizeInHalfOpenState(2)
-            .waitDurationInOpenState(Duration.ofMillis(1000))
-            .build();
-
-        // Create a CircuitBreakerRegistry with a custom global configuration
-        CircuitBreaker circuitBreaker = CircuitBreaker.of("testName", circuitBreakerConfig);
-        circuitBreaker.onError(0, new RuntimeException("Bla"));
-        circuitBreaker.onError(0, new RuntimeException("Bla"));
-
-        assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.OPEN);
+    public void shouldEmitErrorWithCircuitBreakerOpenException() {
+        circuitBreaker.transitionToOpenState();
 
         Observable.fromArray("Event 1", "Event 2")
             .lift(CircuitBreakerOperator.of(circuitBreaker))
             .test()
+            .assertSubscribed()
             .assertError(CircuitBreakerOpenException.class)
-            .assertNotComplete()
-            .assertSubscribed();
+            .assertNotComplete();
 
-        CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
-
-        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(2);
-        assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(2);
+        assertNoRegisteredCall();
     }
 
     @Test
-    public void shouldReturnOnErrorAndWithIOExceptionUsingObservable() {
+    public void shouldHonorDisposedWhenCallingOnNext() throws Exception {
         // Given
-        // Create a custom configuration for a CircuitBreaker
-        CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom()
-            .ringBufferSizeInClosedState(2)
-            .ringBufferSizeInHalfOpenState(2)
-            .waitDurationInOpenState(Duration.ofMillis(1000))
-            .build();
+        Disposable disposable = mock(Disposable.class);
+        Observer childObserver = mock(Observer.class);
+        Observer decoratedObserver = CircuitBreakerOperator.of(circuitBreaker).apply(childObserver);
+        decoratedObserver.onSubscribe(disposable);
 
-        // Create a CircuitBreakerRegistry with a custom global configuration
-        CircuitBreaker circuitBreaker = CircuitBreaker.of("testName", circuitBreakerConfig);
-        circuitBreaker.onError(0, new RuntimeException("Bla"));
+        // When
+        decoratedObserver.onNext("one");
+        ((Disposable) decoratedObserver).dispose();
+        decoratedObserver.onNext("two");
 
-        assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
-
-        Observable.fromCallable(() -> {throw new IOException("BAM!");})
-            .lift(CircuitBreakerOperator.of(circuitBreaker))
-            .test()
-            .assertError(IOException.class)
-            .assertNotComplete()
-            .assertSubscribed();
-
-        assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.OPEN);
-
-        CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
-
-        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(2);
-        assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(2);
+        // Then
+        verify(childObserver, times(1)).onNext("one");
+        assertNoRegisteredCall();
     }
 
+    @Test
+    public void shouldHonorDisposedWhenCallingOnComplete() throws Exception {
+        // Given
+        Disposable disposable = mock(Disposable.class);
+        Observer childObserver = mock(Observer.class);
+        Observer decoratedObserver = CircuitBreakerOperator.of(circuitBreaker).apply(childObserver);
+        decoratedObserver.onSubscribe(disposable);
+
+        // When
+        ((Disposable) decoratedObserver).dispose();
+        decoratedObserver.onComplete();
+
+        // Then
+        verify(childObserver, never()).onComplete();
+        assertSingleSuccessfulCall();
+    }
+
+    @Test
+    public void shouldHonorDisposedWhenCallingOnError() throws Exception {
+        // Given
+        Disposable disposable = mock(Disposable.class);
+        Observer childObserver = mock(Observer.class);
+        Observer decoratedObserver = CircuitBreakerOperator.of(circuitBreaker).apply(childObserver);
+        decoratedObserver.onSubscribe(disposable);
+
+        // When
+        ((Disposable) decoratedObserver).dispose();
+        decoratedObserver.onError(new IllegalStateException());
+
+        // Then
+        verify(childObserver, never()).onError(any());
+        assertSingleFailedCall();
+    }
+
+    @Test
+    public void shouldNotAffectCircuitBreakerWhenWasDisposedAfterNotPermittedSubscribe() throws Exception {
+        // Given
+        Disposable disposable = mock(Disposable.class);
+        Observer childObserver = mock(Observer.class);
+        Observer decoratedObserver = CircuitBreakerOperator.of(circuitBreaker).apply(childObserver);
+        circuitBreaker.transitionToOpenState();
+        decoratedObserver.onSubscribe(disposable);
+
+        // When
+        ((Disposable) decoratedObserver).dispose();
+
+        // Then
+        assertNoRegisteredCall();
+    }
 }

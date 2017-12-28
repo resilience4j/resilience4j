@@ -48,7 +48,7 @@ final class CircuitBreakerSubscriber<T> implements Subscriber<T>, Subscription {
     @Override
     public void onNext(T event) {
         LOG.debug("onNext: {}", event);
-        if (!isCancelled()) {
+        if (notCancelled()) {
             childSubscriber.onNext(event);
         }
     }
@@ -56,7 +56,7 @@ final class CircuitBreakerSubscriber<T> implements Subscriber<T>, Subscription {
     @Override
     public void onError(Throwable e) {
         LOG.debug("onError", e);
-        if (!isCancelled()) {
+        if (notCancelled()) {
             circuitBreaker.onError(stopWatch.stop().getProcessingDuration().toNanos(), e);
             childSubscriber.onError(e);
 
@@ -66,7 +66,7 @@ final class CircuitBreakerSubscriber<T> implements Subscriber<T>, Subscription {
     @Override
     public void onComplete() {
         LOG.debug("onComplete");
-        if (!isCancelled()) {
+        if (notCancelled()) {
             circuitBreaker.onSuccess(stopWatch.stop().getProcessingDuration().toNanos());
             childSubscriber.onComplete();
         }
@@ -79,13 +79,13 @@ final class CircuitBreakerSubscriber<T> implements Subscriber<T>, Subscription {
 
     @Override
     public void cancel() {
-        if (!cancelled.get()) {
+        if (notCancelled()) {
             cancelled.set(true);
             subscription.cancel();
         }
     }
 
-    public boolean isCancelled() {
-        return cancelled.get();
+    private boolean notCancelled() {
+        return !cancelled.get();
     }
 }

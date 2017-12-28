@@ -8,19 +8,19 @@ import static org.mockito.Mockito.verify;
 import java.io.IOException;
 
 import io.github.resilience4j.circuitbreaker.CircuitBreakerOpenException;
-import io.reactivex.Single;
-import io.reactivex.SingleObserver;
+import io.reactivex.Maybe;
+import io.reactivex.MaybeObserver;
 import io.reactivex.disposables.Disposable;
 import org.junit.Test;
 
 /**
- * Unit test for {@link CircuitBreakerSingleObserver}.
+ * Unit test for {@link CircuitBreakerMaybeObserver}.
  */
 @SuppressWarnings("unchecked")
-public class CircuitBreakerSingleObserverTest extends CircuitBreakerAssertions {
+public class CircuitBreakerMaybeObserverTest extends CircuitBreakerAssertions {
     @Test
     public void shouldEmitAllEvents() {
-        Single.just(1)
+        Maybe.just(1)
             .lift(CircuitBreakerOperator.of(circuitBreaker))
             .test()
             .assertResult(1);
@@ -30,7 +30,7 @@ public class CircuitBreakerSingleObserverTest extends CircuitBreakerAssertions {
 
     @Test
     public void shouldPropagateError() {
-        Single.error(new IOException("BAM!"))
+        Maybe.error(new IOException("BAM!"))
             .lift(CircuitBreakerOperator.of(circuitBreaker))
             .test()
             .assertSubscribed()
@@ -44,7 +44,7 @@ public class CircuitBreakerSingleObserverTest extends CircuitBreakerAssertions {
     public void shouldEmitErrorWithCircuitBreakerOpenException() {
         circuitBreaker.transitionToOpenState();
 
-        Single.just(1)
+        Maybe.just(1)
             .lift(CircuitBreakerOperator.of(circuitBreaker))
             .test()
             .assertSubscribed()
@@ -58,8 +58,8 @@ public class CircuitBreakerSingleObserverTest extends CircuitBreakerAssertions {
     public void shouldHonorDisposedWhenCallingOnSuccess() throws Exception {
         // Given
         Disposable disposable = mock(Disposable.class);
-        SingleObserver childObserver = mock(SingleObserver.class);
-        SingleObserver decoratedObserver = CircuitBreakerOperator.of(circuitBreaker).apply(childObserver);
+        MaybeObserver childObserver = mock(MaybeObserver.class);
+        MaybeObserver decoratedObserver = CircuitBreakerOperator.of(circuitBreaker).apply(childObserver);
         decoratedObserver.onSubscribe(disposable);
 
         // When
@@ -75,8 +75,8 @@ public class CircuitBreakerSingleObserverTest extends CircuitBreakerAssertions {
     public void shouldHonorDisposedWhenCallingOnError() throws Exception {
         // Given
         Disposable disposable = mock(Disposable.class);
-        SingleObserver childObserver = mock(SingleObserver.class);
-        SingleObserver decoratedObserver = CircuitBreakerOperator.of(circuitBreaker).apply(childObserver);
+        MaybeObserver childObserver = mock(MaybeObserver.class);
+        MaybeObserver decoratedObserver = CircuitBreakerOperator.of(circuitBreaker).apply(childObserver);
         decoratedObserver.onSubscribe(disposable);
 
         // When
@@ -89,11 +89,28 @@ public class CircuitBreakerSingleObserverTest extends CircuitBreakerAssertions {
     }
 
     @Test
-    public void shouldNotReleaseBulkheadWhenWasDisposedAfterNotPermittedSubscribe() throws Exception {
+    public void shouldHonorDisposedWhenCallingOnComplete() throws Exception {
         // Given
         Disposable disposable = mock(Disposable.class);
-        SingleObserver childObserver = mock(SingleObserver.class);
-        SingleObserver decoratedObserver = CircuitBreakerOperator.of(circuitBreaker).apply(childObserver);
+        MaybeObserver childObserver = mock(MaybeObserver.class);
+        MaybeObserver decoratedObserver = CircuitBreakerOperator.of(circuitBreaker).apply(childObserver);
+        decoratedObserver.onSubscribe(disposable);
+
+        // When
+        ((Disposable) decoratedObserver).dispose();
+        decoratedObserver.onComplete();
+
+        // Then
+        verify(childObserver, never()).onComplete();
+        assertSingleSuccessfulCall();
+    }
+
+    @Test
+    public void shouldNotAffectCircuitBreakerWhenWasDisposedAfterNotPermittedSubscribe() throws Exception {
+        // Given
+        Disposable disposable = mock(Disposable.class);
+        MaybeObserver childObserver = mock(MaybeObserver.class);
+        MaybeObserver decoratedObserver = CircuitBreakerOperator.of(circuitBreaker).apply(childObserver);
         circuitBreaker.transitionToOpenState();
         decoratedObserver.onSubscribe(disposable);
 
@@ -103,5 +120,4 @@ public class CircuitBreakerSingleObserverTest extends CircuitBreakerAssertions {
         // Then
         assertNoRegisteredCall();
     }
-
 }

@@ -1,25 +1,21 @@
 package io.github.resilience4j.circuitbreaker.operator;
 
-import static java.util.Objects.requireNonNull;
-
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
-import io.reactivex.Observer;
+import io.reactivex.CompletableObserver;
 import io.reactivex.disposables.Disposable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * A RxJava {@link Observer} to protect another observer by a CircuitBreaker.
- *
- * @param <T> the value type of the upstream and downstream
+ * A RxJava {@link CompletableObserver} to protect another observer by a CircuitBreaker.
  */
-final class CircuitBreakerObserver<T> extends DisposableCircuitBreaker implements Observer<T> {
-    private static final Logger LOG = LoggerFactory.getLogger(CircuitBreakerObserver.class);
-    private final Observer<? super T> childObserver;
+final class CircuitBreakerCompletableObserver extends DisposableCircuitBreaker implements CompletableObserver {
+    private static final Logger LOG = LoggerFactory.getLogger(CircuitBreakerMaybeObserver.class);
+    private final CompletableObserver childObserver;
 
-    CircuitBreakerObserver(CircuitBreaker circuitBreaker, Observer<? super T> childObserver) {
+    CircuitBreakerCompletableObserver(CircuitBreaker circuitBreaker, CompletableObserver childObserver) {
         super(circuitBreaker);
-        this.childObserver = requireNonNull(childObserver);
+        this.childObserver = childObserver;
     }
 
     @Override
@@ -36,10 +32,11 @@ final class CircuitBreakerObserver<T> extends DisposableCircuitBreaker implement
     }
 
     @Override
-    public void onNext(T event) {
-        LOG.debug("onNext: {}", event);
+    public void onComplete() {
+        LOG.debug("onComplete");
+        markSuccess();
         if (isInvocationPermitted()) {
-            childObserver.onNext(event);
+            childObserver.onComplete();
         }
     }
 
@@ -49,15 +46,6 @@ final class CircuitBreakerObserver<T> extends DisposableCircuitBreaker implement
         markFailure(e);
         if (isInvocationPermitted()) {
             childObserver.onError(e);
-        }
-    }
-
-    @Override
-    public void onComplete() {
-        LOG.debug("onComplete");
-        markSuccess();
-        if (isInvocationPermitted()) {
-            childObserver.onComplete();
         }
     }
 }
