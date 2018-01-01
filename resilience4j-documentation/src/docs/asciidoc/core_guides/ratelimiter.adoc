@@ -77,6 +77,26 @@ Observable.fromCallable(backendService::doSomething)
     .lift(RateLimiterOperator.of(rateLimiter))
 ----
 
+Please note that only Flowable and Single are supported directly. For Maybe and Completable one should convert it to Observable and back.
+
+[source,java]
+----
+RateLimiter rateLimiter = RateLimiter.ofDefaults("backendName");
+Maybe.fromCallable(backendService::doSomething)
+    .toObservable()
+    .lift(RateLimiterOperator.of(rateLimiter))
+    .firstElement()
+----
+
+[source,java]
+----
+RateLimiter rateLimiter = RateLimiter.ofDefaults("backendName");
+Completable.fromCallable(backendService::doSomething)
+    .toObservable()
+    .lift(RateLimiterOperator.of(rateLimiter))
+    .ignoreElements()
+----
+
 ===== Consume emitted RateLimiterEvents
 
 The RateLimiter emits a stream of RateLimiterEvents. An event can be a successful permission acquire or acquire failure.
