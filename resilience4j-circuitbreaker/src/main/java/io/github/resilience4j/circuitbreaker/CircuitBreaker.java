@@ -78,6 +78,13 @@ public interface CircuitBreaker {
 
 
     /**
+     * Returns the circuit breaker to its original closed state, losing statistics.
+     *
+     * Should only be used, when you want to want to fully reset the circuit breaker without creating a new one.
+     */
+    void resetToClosedState();
+
+    /**
      * Transitions the state machine to CLOSED state.
      *
      * Should only be used, when you want to force a state transition. State transition are normally done internally.

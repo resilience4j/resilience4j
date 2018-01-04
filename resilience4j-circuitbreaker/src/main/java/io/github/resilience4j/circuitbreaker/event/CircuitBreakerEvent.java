@@ -59,6 +59,8 @@ public interface CircuitBreakerEvent {
         /** A CircuitBreakerEvent which informs that a call was not permitted because the CircuitBreaker state is OPEN */
         NOT_PERMITTED,
         /** A CircuitBreakerEvent which informs the state of the CircuitBreaker has been changed */
-        STATE_TRANSITION;
+        STATE_TRANSITION,
+        /** A CircuitBreakerEvent which informs the CircuitBreaker has been reset */
+        STATE_RESET;
     }
 }
