@@ -22,7 +22,7 @@ jar {
                 'Implementation-Version': project.version
         )
         instruction 'Export-Package', '!io.github.resilience4j.*.internal,*'
-        instruction 'Import-Package', '!io.github.resilience4j.*,*'
+        instruction 'Import-Package', "!${project.osgiManifest().symbolicName}.*,*"
         instruction 'Bundle-Description', 'A lightweight fault tolerance library'
         instruction 'Bundle-DocURL', 'https://github.com/resilience4j/resilience4j'
     }
