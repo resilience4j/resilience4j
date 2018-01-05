@@ -160,7 +160,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
     public void resetToClosedState() {
         CircuitBreakerState previousState = stateReference.getAndUpdate(currentState -> new ClosedState(this));
         if (previousState.getState() != CLOSED) {
-            publishStateTransitionEvent(StateTransition.transitionToClosedState(previousState.getState()));
+            publishStateResetEvent(StateTransition.transitionToClosedState(previousState.getState()));
         }
     }
 
@@ -216,6 +216,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
         }
 
     }
+
     private void publishStateResetEvent(final StateTransition stateTransition) {
         if (LOG.isDebugEnabled()) {
             LOG.debug(
@@ -274,6 +275,12 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
         @Override
         public EventPublisher onStateTransition(EventConsumer<CircuitBreakerOnStateTransitionEvent> onStateTransitionEventConsumer) {
             registerConsumer(CircuitBreakerOnStateTransitionEvent.class, onStateTransitionEventConsumer);
+            return this;
+        }
+
+        @Override
+        public EventPublisher onStateReset(EventConsumer<CircuitBreakerOnStateResetEvent> onStateResetEventConsumer) {
+            registerConsumer(CircuitBreakerOnStateResetEvent.class, onStateResetEventConsumer);
             return this;
         }
 

@@ -54,6 +54,7 @@ public class CircuitBreakerEventEmitterTest {
         exec(run, 2);
         exec(ignore, 1);
         exec(fail, 3);
+        circuitBreaker.resetToClosedState();
         sseEmitter.complete();
         assert handler.isCompleted;
 
@@ -63,7 +64,7 @@ public class CircuitBreakerEventEmitterTest {
             .map(CircuitBreakerEventDTO::getType)
             .collect(toList());
 
-        then(events).containsExactly(SUCCESS, SUCCESS, IGNORED_ERROR, ERROR, ERROR, STATE_TRANSITION, NOT_PERMITTED);
+        then(events).containsExactly(SUCCESS, SUCCESS, IGNORED_ERROR, ERROR, ERROR, STATE_TRANSITION, NOT_PERMITTED, STATE_RESET);
     }
 
     private void exec(Runnable runnable, int times) {

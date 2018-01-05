@@ -292,6 +292,8 @@ public interface CircuitBreaker {
 
         EventPublisher onStateTransition(EventConsumer<CircuitBreakerOnStateTransitionEvent> eventConsumer);
 
+        EventPublisher onStateReset(EventConsumer<CircuitBreakerOnStateResetEvent> eventConsumer);
+
         EventPublisher onIgnoredError(EventConsumer<CircuitBreakerOnIgnoredErrorEvent> eventConsumer);
 
         EventPublisher onCallNotPermitted(EventConsumer<CircuitBreakerOnCallNotPermittedEvent> eventConsumer);
