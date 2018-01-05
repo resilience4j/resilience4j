@@ -64,14 +64,12 @@ public class CircuitBreakerEventTest {
     }
 
     @Test
-    public void testCircuitBreakerOnStateResetEvent() {
-        CircuitBreakerOnStateResetEvent circuitBreakerEvent = new CircuitBreakerOnStateResetEvent("test",
-                StateTransition.CLOSED_TO_OPEN);
+    public void testCircuitBreakerOnResetEvent() {
+        CircuitBreakerOnResetEvent circuitBreakerEvent = new CircuitBreakerOnResetEvent("test");
 
         assertThat(circuitBreakerEvent.getCircuitBreakerName()).isEqualTo("test");
-        assertThat(circuitBreakerEvent.getStateTransition()).isEqualTo(StateTransition.CLOSED_TO_OPEN);
-        assertThat(circuitBreakerEvent.getEventType()).isEqualTo(Type.STATE_RESET);
-        assertThat(circuitBreakerEvent.toString()).contains("CircuitBreaker 'test' reset state from CLOSED to OPEN");
+        assertThat(circuitBreakerEvent.getEventType()).isEqualTo(Type.RESET);
+        assertThat(circuitBreakerEvent.toString()).contains("CircuitBreaker 'test' reset");
     }
 
     @Test

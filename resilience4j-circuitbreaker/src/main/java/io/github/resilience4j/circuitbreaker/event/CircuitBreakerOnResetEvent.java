@@ -18,36 +18,25 @@
  */
 package io.github.resilience4j.circuitbreaker.event;
 
-import io.github.resilience4j.circuitbreaker.CircuitBreaker;
-
 /**
  * A CircuitBreakerEvent which informs about a reset.
  */
-public class CircuitBreakerOnStateResetEvent extends AbstractCircuitBreakerEvent{
+public class CircuitBreakerOnResetEvent extends AbstractCircuitBreakerEvent{
 
-    private CircuitBreaker.StateTransition stateTransition;
-
-    public CircuitBreakerOnStateResetEvent(String circuitBreakerName, CircuitBreaker.StateTransition stateTransition) {
+    public CircuitBreakerOnResetEvent(String circuitBreakerName) {
         super(circuitBreakerName);
-        this.stateTransition = stateTransition;
-    }
-
-    public CircuitBreaker.StateTransition getStateTransition() {
-        return stateTransition;
     }
 
     @Override
     public Type getEventType() {
-        return Type.STATE_RESET;
+        return Type.RESET;
     }
 
     @Override
     public String toString(){
-        return String.format("%s: CircuitBreaker '%s' reset state from %s to %s",
+        return String.format("%s: CircuitBreaker '%s' reset",
                 getCreationTime(),
-                getCircuitBreakerName(),
-                getStateTransition().getFromState(),
-                getStateTransition().getToState());
+                getCircuitBreakerName());
 
     }
 }

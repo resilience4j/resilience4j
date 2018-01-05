@@ -82,7 +82,7 @@ public interface CircuitBreaker {
      *
      * Should only be used, when you want to want to fully reset the circuit breaker without creating a new one.
      */
-    void resetToClosedState();
+    void reset();
 
     /**
      * Transitions the state machine to CLOSED state.
@@ -292,7 +292,7 @@ public interface CircuitBreaker {
 
         EventPublisher onStateTransition(EventConsumer<CircuitBreakerOnStateTransitionEvent> eventConsumer);
 
-        EventPublisher onStateReset(EventConsumer<CircuitBreakerOnStateResetEvent> eventConsumer);
+        EventPublisher onStateReset(EventConsumer<CircuitBreakerOnResetEvent> eventConsumer);
 
         EventPublisher onIgnoredError(EventConsumer<CircuitBreakerOnIgnoredErrorEvent> eventConsumer);
 
