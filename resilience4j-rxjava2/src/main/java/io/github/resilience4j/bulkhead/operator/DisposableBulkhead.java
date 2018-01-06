@@ -2,7 +2,6 @@ package io.github.resilience4j.bulkhead.operator;
 
 import static java.util.Objects.requireNonNull;
 
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
@@ -10,14 +9,13 @@ import io.github.resilience4j.adapter.Permit;
 import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.bulkhead.BulkheadFullException;
 import io.reactivex.disposables.Disposable;
+import io.reactivex.internal.disposables.DisposableHelper;
 
 /**
  * A disposable bulkhead acting as a base class for bulkhead operators.
  */
-class DisposableBulkhead implements Disposable {
-    private Disposable disposable;
+class DisposableBulkhead extends AtomicReference<Disposable> implements Disposable {
     private final Bulkhead bulkhead;
-    private final AtomicBoolean disposed = new AtomicBoolean(false);
     private final AtomicReference<Permit> permitted = new AtomicReference<>(Permit.PENDING);
 
     DisposableBulkhead(Bulkhead bulkhead) {
@@ -26,19 +24,18 @@ class DisposableBulkhead implements Disposable {
 
     @Override
     public void dispose() {
-        if (disposed.compareAndSet(false, true)) {
+        if (DisposableHelper.dispose(this)) {
             releaseBulkhead();
-            disposable.dispose();
         }
     }
 
     @Override
     public boolean isDisposed() {
-        return disposed.get();
+        return DisposableHelper.isDisposed(get());
     }
 
     protected void onSubscribe(Disposable disposable, Consumer<Disposable> onSubscribe, Consumer<Throwable> onError) {
-        this.disposable = requireNonNull(disposable);
+        DisposableHelper.setOnce(this, disposable);
         if (acquireCallPermit()) {
             onSubscribe.accept(this);
         } else {
