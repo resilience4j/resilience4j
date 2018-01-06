@@ -21,37 +21,21 @@ final class BulkheadMaybeObserver<T> extends DisposableBulkhead implements Maybe
 
     @Override
     public void onSubscribe(Disposable disposable) {
-        setDisposable(disposable);
-        if (acquireCallPermit()) {
-            childObserver.onSubscribe(this);
-        } else {
-            dispose();
-            childObserver.onSubscribe(this);
-            childObserver.onError(bulkheadFullException());
-        }
+        onSubscribe(disposable, childObserver::onSubscribe, childObserver::onError);
     }
 
     @Override
     public void onError(Throwable e) {
-        if (isInvocationPermitted()) {
-            releaseBulkhead();
-            childObserver.onError(e);
-        }
+        onError(e, childObserver::onError);
     }
 
     @Override
     public void onComplete() {
-        if (isInvocationPermitted()) {
-            releaseBulkhead();
-            childObserver.onComplete();
-        }
+        onComplete(childObserver::onComplete);
     }
 
     @Override
     public void onSuccess(T value) {
-        if (isInvocationPermitted()) {
-            releaseBulkhead();
-            childObserver.onSuccess(value);
-        }
+        onSuccess(value, childObserver::onSuccess);
     }
 }

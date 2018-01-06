@@ -4,6 +4,7 @@ import static java.util.Objects.requireNonNull;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Consumer;
 
 import io.github.resilience4j.adapter.Permit;
 import io.github.resilience4j.bulkhead.Bulkhead;
@@ -11,7 +12,7 @@ import io.github.resilience4j.bulkhead.BulkheadFullException;
 import io.reactivex.disposables.Disposable;
 
 /**
- * A disposable bulkhead.
+ * A disposable bulkhead acting as a base class for bulkhead operators.
  */
 class DisposableBulkhead implements Disposable {
     private Disposable disposable;
@@ -36,11 +37,43 @@ class DisposableBulkhead implements Disposable {
         return disposed.get();
     }
 
-    protected void setDisposable(Disposable disposable) {
+    protected void onSubscribe(Disposable disposable, Consumer<Disposable> onSubscribe, Consumer<Throwable> onError) {
         this.disposable = requireNonNull(disposable);
+        if (acquireCallPermit()) {
+            onSubscribe.accept(this);
+        } else {
+            dispose();
+            onSubscribe.accept(this);
+            onError.accept(bulkheadFullException());
+        }
     }
 
-    protected boolean acquireCallPermit() {
+    protected void onError(Throwable e, Consumer<Throwable> onError) {
+        if (isInvocationPermitted()) {
+            releaseBulkhead();
+            onError.accept(e);
+        }
+    }
+
+    protected void onComplete(Action onComplete) {
+        if (isInvocationPermitted()) {
+            releaseBulkhead();
+            onComplete.execute();
+        }
+    }
+
+    protected <T> void onSuccess(T value, Consumer<T> onSuccess) {
+        if (isInvocationPermitted()) {
+            releaseBulkhead();
+            onSuccess.accept(value);
+        }
+    }
+
+    protected boolean isInvocationPermitted() {
+        return !isDisposed() && wasCallPermitted();
+    }
+
+    private boolean acquireCallPermit() {
         boolean callPermitted = false;
         if (permitted.compareAndSet(Permit.PENDING, Permit.ACQUIRED)) {
             callPermitted = bulkhead.isCallPermitted();
@@ -51,21 +84,21 @@ class DisposableBulkhead implements Disposable {
         return callPermitted;
     }
 
-    protected boolean isInvocationPermitted() {
-        return !isDisposed() && wasCallPermitted();
-    }
-
-    protected void releaseBulkhead() {
-        if (wasCallPermitted()) {
-            bulkhead.onComplete();
-        }
-    }
-
-    protected Exception bulkheadFullException() {
+    private Exception bulkheadFullException() {
         return new BulkheadFullException(String.format("Bulkhead '%s' is full", bulkhead.getName()));
     }
 
     private boolean wasCallPermitted() {
         return permitted.get() == Permit.ACQUIRED;
+    }
+
+    private void releaseBulkhead() {
+        if (wasCallPermitted()) {
+            bulkhead.onComplete();
+        }
+    }
+
+    protected interface Action {
+        void execute();
     }
 }
