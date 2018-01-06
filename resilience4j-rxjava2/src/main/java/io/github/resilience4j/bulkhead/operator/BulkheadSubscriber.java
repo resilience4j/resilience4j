@@ -2,10 +2,12 @@ package io.github.resilience4j.bulkhead.operator;
 
 import static java.util.Objects.requireNonNull;
 
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 
+import io.github.resilience4j.adapter.Permit;
 import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.bulkhead.BulkheadFullException;
+import io.reactivex.internal.subscriptions.SubscriptionHelper;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
 
@@ -14,12 +16,10 @@ import org.reactivestreams.Subscription;
  *
  * @param <T> the value type of the upstream and downstream
  */
-final class BulkheadSubscriber<T> implements Subscriber<T>, Subscription {
+final class BulkheadSubscriber<T> extends AtomicReference<Subscription> implements Subscriber<T>, Subscription {
     private final Bulkhead bulkhead;
     private final Subscriber<? super T> childSubscriber;
-    private Subscription subscription;
-    private final AtomicBoolean cancelled = new AtomicBoolean(false);
-    private final AtomicBoolean permitted = new AtomicBoolean(false);
+    private final AtomicReference<Permit> permitted = new AtomicReference<>(Permit.PENDING);
 
     BulkheadSubscriber(Bulkhead bulkhead, Subscriber<? super T> childSubscriber) {
         this.bulkhead = requireNonNull(bulkhead);
@@ -28,13 +28,14 @@ final class BulkheadSubscriber<T> implements Subscriber<T>, Subscription {
 
     @Override
     public void onSubscribe(Subscription subscription) {
-        this.subscription = subscription;
-        if (acquireCallPermit()) {
-            childSubscriber.onSubscribe(this);
-        } else {
-            cancel();
-            childSubscriber.onSubscribe(this);
-            childSubscriber.onError(new BulkheadFullException(String.format("Bulkhead '%s' is full", bulkhead.getName())));
+        if (SubscriptionHelper.setOnce(this, subscription)) {
+            if (acquireCallPermit()) {
+                childSubscriber.onSubscribe(this);
+            } else {
+                cancel();
+                childSubscriber.onSubscribe(this);
+                childSubscriber.onError(new BulkheadFullException(String.format("Bulkhead '%s' is full", bulkhead.getName())));
+            }
         }
     }
 
@@ -63,34 +64,33 @@ final class BulkheadSubscriber<T> implements Subscriber<T>, Subscription {
 
     @Override
     public void request(long n) {
-        subscription.request(n);
+        this.get().request(n);
     }
 
     @Override
     public void cancel() {
-        if (cancelled.compareAndSet(false, true)) {
+        if (SubscriptionHelper.cancel(this)) {
             releaseBulkhead();
-            subscription.cancel();
         }
     }
 
     private boolean acquireCallPermit() {
         boolean callPermitted = false;
-        if (permitted.compareAndSet(false, true)) {
+        if (permitted.compareAndSet(Permit.PENDING, Permit.ACQUIRED)) {
             callPermitted = bulkhead.isCallPermitted();
             if (!callPermitted) {
-                permitted.set(false);
+                permitted.set(Permit.REJECTED);
             }
         }
         return callPermitted;
     }
 
     private boolean isInvocationPermitted() {
-        return !cancelled.get() && wasCallPermitted();
+        return !SubscriptionHelper.isCancelled(get()) && wasCallPermitted();
     }
 
     private boolean wasCallPermitted() {
-        return permitted.get();
+        return permitted.get() == Permit.ACQUIRED;
     }
 
     private void releaseBulkhead() {

@@ -61,7 +61,7 @@ public class BulkheadSubscriberTest {
     }
 
     @Test
-    public void shouldHonorDisposedWhenCallingOnNext() throws Exception {
+    public void shouldHonorCancelledWhenCallingOnNext() throws Exception {
         // Given
         Subscription subscription = mock(Subscription.class);
         Subscriber childSubscriber = mock(Subscriber.class);
@@ -79,7 +79,7 @@ public class BulkheadSubscriberTest {
     }
 
     @Test
-    public void shouldHonorDisposedWhenCallingOnError() throws Exception {
+    public void shouldHonorCancelledWhenCallingOnError() throws Exception {
         // Given
         Subscription subscription = mock(Subscription.class);
         Subscriber childSubscriber = mock(Subscriber.class);
@@ -96,7 +96,7 @@ public class BulkheadSubscriberTest {
     }
 
     @Test
-    public void shouldHonorDisposedWhenCallingOnComplete() throws Exception {
+    public void shouldHonorCancelledWhenCallingOnComplete() throws Exception {
         // Given
         Subscription subscription = mock(Subscription.class);
         Subscriber childSubscriber = mock(Subscriber.class);
