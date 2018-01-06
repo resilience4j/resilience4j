@@ -19,7 +19,7 @@ final class BulkheadCompletableObserver extends DisposableBulkhead implements Co
 
     @Override
     public void onSubscribe(Disposable disposable) {
-        permittedOnSubscribe(disposable);
+        onSubscribeWithPermit(disposable);
     }
 
     @Override
@@ -43,7 +43,7 @@ final class BulkheadCompletableObserver extends DisposableBulkhead implements Co
     }
 
     @Override
-    protected void permittedOnErrorInner(Throwable e) {
+    protected void permittedOnError(Throwable e) {
         childObserver.onError(e);
     }
 }

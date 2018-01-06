@@ -21,7 +21,7 @@ final class BulkheadObserver<T> extends DisposableBulkhead<T> implements Observe
 
     @Override
     public void onSubscribe(Disposable disposable) {
-        permittedOnSubscribe(disposable);
+        onSubscribeWithPermit(disposable);
     }
 
     @Override
@@ -55,7 +55,7 @@ final class BulkheadObserver<T> extends DisposableBulkhead<T> implements Observe
     }
 
     @Override
-    protected void permittedOnErrorInner(Throwable e) {
+    protected void permittedOnError(Throwable e) {
         childObserver.onError(e);
     }
 }

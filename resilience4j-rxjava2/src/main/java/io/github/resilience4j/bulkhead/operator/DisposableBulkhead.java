@@ -33,42 +33,48 @@ abstract class DisposableBulkhead<T> extends AtomicReference<Disposable> impleme
         return DisposableHelper.isDisposed(get());
     }
 
+    /**
+     * onSuccess ensured to be called only when safe.
+     *
+     * @param disposable the disposable
+     */
     protected void onSubscribeInner(Disposable disposable) {
+        //Override when needed.
     }
 
-    protected final void permittedOnSubscribe(Disposable disposable) {
+    protected final void onSubscribeWithPermit(Disposable disposable) {
         if (DisposableHelper.setOnce(this, disposable)) {
             if (acquireCallPermit()) {
                 onSubscribeInner(this);
             } else {
                 dispose();
                 onSubscribeInner(this);
-                permittedOnErrorInner(bulkheadFullException());
+                permittedOnError(bulkheadFullException());
             }
         }
     }
 
     /**
      * onError ensured to be called only when permitted.
-     * Override when needed.
      *
      * @param e the error
      */
-    protected void permittedOnErrorInner(Throwable e) {
+    protected void permittedOnError(Throwable e) {
+        //Override when needed.
     }
 
     protected final void onErrorInner(Throwable e) {
         if (isInvocationPermitted()) {
             releaseBulkhead();
-            permittedOnErrorInner(e);
+            permittedOnError(e);
         }
     }
 
     /**
      * onComplete ensured to be called only when permitted.
-     * Override when needed.
      */
     protected void permittedOnComplete() {
+        //Override when needed.
     }
 
     protected final void onCompleteInner() {
@@ -80,11 +86,11 @@ abstract class DisposableBulkhead<T> extends AtomicReference<Disposable> impleme
 
     /**
      * onSuccess ensured to be called only when permitted.
-     * Override when needed.
      *
      * @param value the value
      */
     protected void permittedOnSuccess(T value) {
+        //Override when needed.
     }
 
     protected final void onSuccessInner(T value) {
@@ -96,11 +102,11 @@ abstract class DisposableBulkhead<T> extends AtomicReference<Disposable> impleme
 
     /**
      * onNext ensured to be called only when permitted.
-     * Override when needed.
      *
      * @param value the value
      */
     protected void permittedOnNext(T value) {
+        //Override when needed.
     }
 
     protected final void onNextInner(T value) {
