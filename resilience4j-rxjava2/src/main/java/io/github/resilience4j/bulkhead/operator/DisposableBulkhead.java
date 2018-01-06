@@ -3,7 +3,6 @@ package io.github.resilience4j.bulkhead.operator;
 import static java.util.Objects.requireNonNull;
 
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Consumer;
 
 import io.github.resilience4j.adapter.Permit;
 import io.github.resilience4j.bulkhead.Bulkhead;
@@ -14,7 +13,7 @@ import io.reactivex.internal.disposables.DisposableHelper;
 /**
  * A disposable bulkhead acting as a base class for bulkhead operators.
  */
-class DisposableBulkhead extends AtomicReference<Disposable> implements Disposable {
+abstract class DisposableBulkhead<T> extends AtomicReference<Disposable> implements Disposable {
     private final Bulkhead bulkhead;
     private final AtomicReference<Permit> permitted = new AtomicReference<>(Permit.PENDING);
 
@@ -23,50 +22,72 @@ class DisposableBulkhead extends AtomicReference<Disposable> implements Disposab
     }
 
     @Override
-    public void dispose() {
+    public final void dispose() {
         if (DisposableHelper.dispose(this)) {
             releaseBulkhead();
         }
     }
 
     @Override
-    public boolean isDisposed() {
+    public final boolean isDisposed() {
         return DisposableHelper.isDisposed(get());
     }
 
-    protected void onSubscribe(Disposable disposable, Consumer<Disposable> onSubscribe, Consumer<Throwable> onError) {
-        DisposableHelper.setOnce(this, disposable);
-        if (acquireCallPermit()) {
-            onSubscribe.accept(this);
-        } else {
-            dispose();
-            onSubscribe.accept(this);
-            onError.accept(bulkheadFullException());
+    protected void onSubscribeInner(Disposable disposable) {
+    }
+
+    protected final void permittedOnSubscribe(Disposable disposable) {
+        if (DisposableHelper.setOnce(this, disposable)) {
+            if (acquireCallPermit()) {
+                onSubscribeInner(this);
+            } else {
+                dispose();
+                onSubscribeInner(this);
+                permittedOnErrorInner(bulkheadFullException());
+            }
         }
     }
 
-    protected void onError(Throwable e, Consumer<Throwable> onError) {
+    protected void permittedOnErrorInner(Throwable e) {
+    }
+
+    protected final void onErrorInner(Throwable e) {
         if (isInvocationPermitted()) {
             releaseBulkhead();
-            onError.accept(e);
+            permittedOnErrorInner(e);
         }
     }
 
-    protected void onComplete(Action onComplete) {
+    protected void permittedOnComplete() {
+    }
+
+    protected final void onCompleteInner() {
         if (isInvocationPermitted()) {
             releaseBulkhead();
-            onComplete.execute();
+            permittedOnComplete();
         }
     }
 
-    protected <T> void onSuccess(T value, Consumer<T> onSuccess) {
+    protected void permittedOnSuccess(T value) {
+    }
+
+    protected final void onSuccessInner(T value) {
         if (isInvocationPermitted()) {
             releaseBulkhead();
-            onSuccess.accept(value);
+            permittedOnSuccess(value);
         }
     }
 
-    protected boolean isInvocationPermitted() {
+    protected void permittedOnNext(T value) {
+    }
+
+    protected final void onNextInner(T value) {
+        if (isInvocationPermitted()) {
+            permittedOnNext(value);
+        }
+    }
+
+    private boolean isInvocationPermitted() {
         return !isDisposed() && wasCallPermitted();
     }
 
@@ -93,9 +114,5 @@ class DisposableBulkhead extends AtomicReference<Disposable> implements Disposab
         if (wasCallPermitted()) {
             bulkhead.onComplete();
         }
-    }
-
-    protected interface Action {
-        void execute();
     }
 }

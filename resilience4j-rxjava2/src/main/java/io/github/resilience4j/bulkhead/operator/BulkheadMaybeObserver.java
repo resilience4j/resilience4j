@@ -11,7 +11,7 @@ import io.reactivex.disposables.Disposable;
  *
  * @param <T> the value type of the upstream and downstream
  */
-final class BulkheadMaybeObserver<T> extends DisposableBulkhead implements MaybeObserver<T> {
+final class BulkheadMaybeObserver<T> extends DisposableBulkhead<T> implements MaybeObserver<T> {
     private final MaybeObserver<? super T> childObserver;
 
     BulkheadMaybeObserver(Bulkhead bulkhead, MaybeObserver<? super T> childObserver) {
@@ -21,21 +21,41 @@ final class BulkheadMaybeObserver<T> extends DisposableBulkhead implements Maybe
 
     @Override
     public void onSubscribe(Disposable disposable) {
-        onSubscribe(disposable, childObserver::onSubscribe, childObserver::onError);
+        permittedOnSubscribe(disposable);
     }
 
     @Override
-    public void onError(Throwable e) {
-        onError(e, childObserver::onError);
+    protected void onSubscribeInner(Disposable disposable) {
+        childObserver.onSubscribe(disposable);
     }
 
     @Override
     public void onComplete() {
-        onComplete(childObserver::onComplete);
+        onCompleteInner();
+    }
+
+    @Override
+    protected void permittedOnComplete() {
+        childObserver.onComplete();
     }
 
     @Override
     public void onSuccess(T value) {
-        onSuccess(value, childObserver::onSuccess);
+        onSuccessInner(value);
+    }
+
+    @Override
+    protected void permittedOnSuccess(T value) {
+        childObserver.onSuccess(value);
+    }
+
+    @Override
+    public void onError(Throwable e) {
+        onErrorInner(e);
+    }
+
+    @Override
+    protected void permittedOnErrorInner(Throwable e) {
+        childObserver.onError(e);
     }
 }

@@ -19,16 +19,31 @@ final class BulkheadCompletableObserver extends DisposableBulkhead implements Co
 
     @Override
     public void onSubscribe(Disposable disposable) {
-        onSubscribe(disposable, childObserver::onSubscribe, childObserver::onError);
+        permittedOnSubscribe(disposable);
+    }
+
+    @Override
+    protected void onSubscribeInner(Disposable disposable) {
+        childObserver.onSubscribe(disposable);
     }
 
     @Override
     public void onComplete() {
-        onComplete(childObserver::onComplete);
+        onCompleteInner();
+    }
+
+    @Override
+    protected void permittedOnComplete() {
+        childObserver.onComplete();
     }
 
     @Override
     public void onError(Throwable e) {
-        onError(e, childObserver::onError);
+        onErrorInner(e);
+    }
+
+    @Override
+    protected void permittedOnErrorInner(Throwable e) {
+        childObserver.onError(e);
     }
 }
