@@ -78,6 +78,13 @@ public interface CircuitBreaker {
 
 
     /**
+     * Returns the circuit breaker to its original closed state, losing statistics.
+     *
+     * Should only be used, when you want to want to fully reset the circuit breaker without creating a new one.
+     */
+    void reset();
+
+    /**
      * Transitions the state machine to CLOSED state.
      *
      * Should only be used, when you want to force a state transition. State transition are normally done internally.
@@ -284,6 +291,8 @@ public interface CircuitBreaker {
         EventPublisher onError(EventConsumer<CircuitBreakerOnErrorEvent> eventConsumer);
 
         EventPublisher onStateTransition(EventConsumer<CircuitBreakerOnStateTransitionEvent> eventConsumer);
+
+        EventPublisher onStateReset(EventConsumer<CircuitBreakerOnResetEvent> eventConsumer);
 
         EventPublisher onIgnoredError(EventConsumer<CircuitBreakerOnIgnoredErrorEvent> eventConsumer);
 

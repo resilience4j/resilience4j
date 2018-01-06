@@ -64,6 +64,15 @@ public class CircuitBreakerEventTest {
     }
 
     @Test
+    public void testCircuitBreakerOnResetEvent() {
+        CircuitBreakerOnResetEvent circuitBreakerEvent = new CircuitBreakerOnResetEvent("test");
+
+        assertThat(circuitBreakerEvent.getCircuitBreakerName()).isEqualTo("test");
+        assertThat(circuitBreakerEvent.getEventType()).isEqualTo(Type.RESET);
+        assertThat(circuitBreakerEvent.toString()).contains("CircuitBreaker 'test' reset");
+    }
+
+    @Test
     public void testCircuitBreakerOnSuccessEvent() {
         CircuitBreakerOnSuccessEvent circuitBreakerEvent = new CircuitBreakerOnSuccessEvent("test", Duration.ofSeconds(1));
 

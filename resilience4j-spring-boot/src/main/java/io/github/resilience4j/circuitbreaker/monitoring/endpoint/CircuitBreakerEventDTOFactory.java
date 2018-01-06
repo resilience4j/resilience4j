@@ -33,6 +33,10 @@ class CircuitBreakerEventDTOFactory {
                 CircuitBreakerOnStateTransitionEvent onStateTransitionEvent = (CircuitBreakerOnStateTransitionEvent) event;
                 return newCircuitBreakerEventDTOBuilder(onStateTransitionEvent).setStateTransition(onStateTransitionEvent.getStateTransition())
                         .build();
+            case RESET:
+                CircuitBreakerOnResetEvent onResetEvent = (CircuitBreakerOnResetEvent) event;
+                return newCircuitBreakerEventDTOBuilder(onResetEvent)
+                        .build();
             case IGNORED_ERROR:
                 CircuitBreakerOnIgnoredErrorEvent onIgnoredErrorEvent = (CircuitBreakerOnIgnoredErrorEvent) event;
                 return newCircuitBreakerEventDTOBuilder(onIgnoredErrorEvent).setThrowable(onIgnoredErrorEvent.getThrowable())
