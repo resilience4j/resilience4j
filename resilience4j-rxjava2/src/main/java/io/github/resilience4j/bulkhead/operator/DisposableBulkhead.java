@@ -48,6 +48,12 @@ abstract class DisposableBulkhead<T> extends AtomicReference<Disposable> impleme
         }
     }
 
+    /**
+     * onError ensured to be called only when permitted.
+     * Override when needed.
+     *
+     * @param e the error
+     */
     protected void permittedOnErrorInner(Throwable e) {
     }
 
@@ -58,6 +64,10 @@ abstract class DisposableBulkhead<T> extends AtomicReference<Disposable> impleme
         }
     }
 
+    /**
+     * onComplete ensured to be called only when permitted.
+     * Override when needed.
+     */
     protected void permittedOnComplete() {
     }
 
@@ -68,6 +78,12 @@ abstract class DisposableBulkhead<T> extends AtomicReference<Disposable> impleme
         }
     }
 
+    /**
+     * onSuccess ensured to be called only when permitted.
+     * Override when needed.
+     *
+     * @param value the value
+     */
     protected void permittedOnSuccess(T value) {
     }
 
@@ -78,6 +94,12 @@ abstract class DisposableBulkhead<T> extends AtomicReference<Disposable> impleme
         }
     }
 
+    /**
+     * onNext ensured to be called only when permitted.
+     * Override when needed.
+     *
+     * @param value the value
+     */
     protected void permittedOnNext(T value) {
     }
 
