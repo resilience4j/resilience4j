@@ -110,6 +110,8 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
         stateReference.get().onSuccess();
     }
 
+
+
     /**
      * Get the state of this CircuitBreaker.
      *
@@ -155,6 +157,15 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
     }
 
     @Override
+    public void reset() {
+        CircuitBreakerState previousState = stateReference.getAndUpdate(currentState -> new ClosedState(this));
+        if (previousState.getState() != CLOSED) {
+            publishStateTransitionEvent(StateTransition.transitionToClosedState(previousState.getState()));
+        }
+        publishResetEvent();
+    }
+
+    @Override
     public void transitionToClosedState() {
         CircuitBreakerState previousState = stateReference.getAndUpdate(currentState -> {
             if (currentState.getState() == CLOSED) {
@@ -165,7 +176,6 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
         if (previousState.getState() != CLOSED) {
             publishStateTransitionEvent(StateTransition.transitionToClosedState(previousState.getState()));
         }
-
     }
 
     @Override
@@ -203,6 +213,19 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
         }
         if(eventProcessor.hasConsumers()){
             eventProcessor.consumeEvent(new CircuitBreakerOnStateTransitionEvent(name, stateTransition));
+        }
+
+    }
+
+    private void publishResetEvent() {
+        if (LOG.isDebugEnabled()) {
+            LOG.debug(
+                String.format("CircuitBreaker '%s' reset ",
+                    name)
+            );
+        }
+        if(eventProcessor.hasConsumers()){
+            eventProcessor.consumeEvent(new CircuitBreakerOnResetEvent(name));
         }
 
     }
@@ -252,6 +275,12 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
         @Override
         public EventPublisher onStateTransition(EventConsumer<CircuitBreakerOnStateTransitionEvent> onStateTransitionEventConsumer) {
             registerConsumer(CircuitBreakerOnStateTransitionEvent.class, onStateTransitionEventConsumer);
+            return this;
+        }
+
+        @Override
+        public EventPublisher onStateReset(EventConsumer<CircuitBreakerOnResetEvent> onStateResetEventConsumer) {
+            registerConsumer(CircuitBreakerOnResetEvent.class, onStateResetEventConsumer);
             return this;
         }
 
