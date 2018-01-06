@@ -106,7 +106,6 @@ public class CircuitBreakerEventPublisherTest {
         then(logger).should(times(1)).info("STATE_TRANSITION");
     }
 
-
     @Test
     public void shouldConsumeCallNotPermittedEvent() {
         circuitBreaker = CircuitBreaker.of("test", CircuitBreakerConfig.custom()

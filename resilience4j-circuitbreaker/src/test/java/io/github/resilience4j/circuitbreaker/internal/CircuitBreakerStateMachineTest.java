@@ -173,5 +173,17 @@ public class CircuitBreakerStateMachineTest {
         assertThat(circuitBreaker.getMetrics().getNumberOfBufferedCalls()).isEqualTo(3);
         assertThat(circuitBreaker.getMetrics().getNumberOfFailedCalls()).isEqualTo(1);
         assertThat(circuitBreaker.getMetrics().getFailureRate()).isEqualTo(-1f);
+
+        circuitBreaker.reset(); // Should create a CircuitBreakerOnSuccessEvent (20)
+
+        // The ring buffer back to initial state
+        // The state machine transitions back to CLOSED state
+        assertThat(circuitBreaker.isCallPermitted()).isEqualTo(true);
+        assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED); // Should create a CircuitBreakerOnStateTransitionEvent (21)
+        assertThat(circuitBreaker.getMetrics().getFailureRate()).isEqualTo(-1f);
+        assertThat(circuitBreaker.getMetrics().getNumberOfBufferedCalls()).isEqualTo(0);
+        assertThat(circuitBreaker.getMetrics().getNumberOfFailedCalls()).isEqualTo(0);
+        assertThat(circuitBreaker.getMetrics().getNumberOfNotPermittedCalls()).isEqualTo(0);
+
     }
 }
