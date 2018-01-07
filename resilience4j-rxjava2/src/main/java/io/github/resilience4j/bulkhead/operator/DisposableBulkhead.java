@@ -12,6 +12,8 @@ import io.reactivex.internal.disposables.DisposableHelper;
 
 /**
  * A disposable bulkhead acting as a base class for bulkhead operators.
+ *
+ * @param <T> the type of the emitted event
  */
 abstract class DisposableBulkhead<T> extends AtomicReference<Disposable> implements Disposable {
     private final Bulkhead bulkhead;

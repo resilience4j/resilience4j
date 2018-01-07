@@ -2,29 +2,24 @@ package io.github.resilience4j.circuitbreaker.operator;
 
 import static java.util.Objects.requireNonNull;
 
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
 import io.github.resilience4j.adapter.Permit;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerOpenException;
 import io.github.resilience4j.core.StopWatch;
+import io.reactivex.internal.subscriptions.SubscriptionHelper;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * A RxJava {@link Subscriber} to protect another subscriber by a CircuitBreaker.
  *
  * @param <T> the value type of the upstream and downstream
  */
-final class CircuitBreakerSubscriber<T> implements Subscriber<T>, Subscription {
-    private static final Logger LOG = LoggerFactory.getLogger(CircuitBreakerSubscriber.class);
+final class CircuitBreakerSubscriber<T> extends AtomicReference<Subscription> implements Subscriber<T>, Subscription {
     private final CircuitBreaker circuitBreaker;
     private final Subscriber<? super T> childSubscriber;
-    private Subscription subscription;
-    private final AtomicBoolean cancelled = new AtomicBoolean(false);
     private final AtomicReference<Permit> permitted = new AtomicReference<>(Permit.PENDING);
     private StopWatch stopWatch;
 
@@ -35,20 +30,19 @@ final class CircuitBreakerSubscriber<T> implements Subscriber<T>, Subscription {
 
     @Override
     public void onSubscribe(Subscription subscription) {
-        this.subscription = subscription;
-        LOG.debug("onSubscribe");
-        if (acquireCallPermit()) {
-            childSubscriber.onSubscribe(this);
-        } else {
-            subscription.cancel();
-            childSubscriber.onSubscribe(this);
-            childSubscriber.onError(new CircuitBreakerOpenException(String.format("CircuitBreaker '%s' is open", circuitBreaker.getName())));
+        if (SubscriptionHelper.setOnce(this, subscription)) {
+            if (acquireCallPermit()) {
+                childSubscriber.onSubscribe(this);
+            } else {
+                subscription.cancel();
+                childSubscriber.onSubscribe(this);
+                childSubscriber.onError(new CircuitBreakerOpenException(String.format("CircuitBreaker '%s' is open", circuitBreaker.getName())));
+            }
         }
     }
 
     @Override
     public void onNext(T event) {
-        LOG.debug("onNext: {}", event);
         if (isInvocationPermitted()) {
             childSubscriber.onNext(event);
         }
@@ -56,7 +50,6 @@ final class CircuitBreakerSubscriber<T> implements Subscriber<T>, Subscription {
 
     @Override
     public void onError(Throwable e) {
-        LOG.debug("onError", e);
         markFailure(e);
         if (isInvocationPermitted()) {
             childSubscriber.onError(e);
@@ -65,7 +58,6 @@ final class CircuitBreakerSubscriber<T> implements Subscriber<T>, Subscription {
 
     @Override
     public void onComplete() {
-        LOG.debug("onComplete");
         markSuccess();
         if (isInvocationPermitted()) {
             childSubscriber.onComplete();
@@ -74,14 +66,12 @@ final class CircuitBreakerSubscriber<T> implements Subscriber<T>, Subscription {
 
     @Override
     public void request(long n) {
-        subscription.request(n);
+        this.get().request(n);
     }
 
     @Override
     public void cancel() {
-        if (cancelled.compareAndSet(false, true)) {
-            subscription.cancel();
-        }
+        SubscriptionHelper.cancel(this);
     }
 
     private boolean acquireCallPermit() {
@@ -102,7 +92,7 @@ final class CircuitBreakerSubscriber<T> implements Subscriber<T>, Subscription {
     }
 
     private boolean notCancelled() {
-        return !cancelled.get();
+        return !SubscriptionHelper.isCancelled(get());
     }
 
     private void markFailure(Throwable e) {

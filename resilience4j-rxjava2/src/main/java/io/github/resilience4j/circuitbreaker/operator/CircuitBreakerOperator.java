@@ -34,6 +34,8 @@ import org.reactivestreams.Subscriber;
 
 /**
  * A RxJava operator which protects a reactive type by a CircuitBreaker.
+ * Please note that the subscribed operators might affect the circuit breaker
+ * even after disposed if the upstream still propagates terminal events.
  *
  * @param <T> the value type of the upstream and downstream
  */
