@@ -16,7 +16,7 @@
  *
  *
  */
-package io.github.resilience4j.circuitbreaker.internal;
+package io.github.resilience4j.bitset;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
