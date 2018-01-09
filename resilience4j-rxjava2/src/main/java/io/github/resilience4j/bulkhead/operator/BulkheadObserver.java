@@ -11,7 +11,7 @@ import io.reactivex.disposables.Disposable;
  *
  * @param <T> the value type of the upstream and downstream
  */
-final class BulkheadObserver<T> extends DisposableBulkhead implements Observer<T> {
+final class BulkheadObserver<T> extends DisposableBulkhead<T> implements Observer<T> {
     private final Observer<? super T> childObserver;
 
     BulkheadObserver(Bulkhead bulkhead, Observer<? super T> childObserver) {
@@ -21,36 +21,41 @@ final class BulkheadObserver<T> extends DisposableBulkhead implements Observer<T
 
     @Override
     public void onSubscribe(Disposable disposable) {
-        setDisposable(disposable);
-        if (acquireCallPermit()) {
-            childObserver.onSubscribe(this);
-        } else {
-            dispose();
-            childObserver.onSubscribe(this);
-            childObserver.onError(bulkheadFullException());
-        }
+        onSubscribeWithPermit(disposable);
     }
 
     @Override
-    public void onNext(T event) {
-        if (isInvocationPermitted()) {
-            childObserver.onNext(event);
-        }
+    protected void onSubscribeInner(Disposable disposable) {
+        childObserver.onSubscribe(disposable);
     }
 
     @Override
-    public void onError(Throwable e) {
-        if (isInvocationPermitted()) {
-            releaseBulkhead();
-            childObserver.onError(e);
-        }
+    public void onNext(T value) {
+        onNextInner(value);
+    }
+
+    @Override
+    protected void permittedOnNext(T value) {
+        childObserver.onNext(value);
     }
 
     @Override
     public void onComplete() {
-        if (isInvocationPermitted()) {
-            releaseBulkhead();
-            childObserver.onComplete();
-        }
+        onCompleteInner();
+    }
+
+    @Override
+    protected void permittedOnComplete() {
+        childObserver.onComplete();
+    }
+
+    @Override
+    public void onError(Throwable e) {
+        onErrorInner(e);
+    }
+
+    @Override
+    protected void permittedOnError(Throwable e) {
+        childObserver.onError(e);
     }
 }

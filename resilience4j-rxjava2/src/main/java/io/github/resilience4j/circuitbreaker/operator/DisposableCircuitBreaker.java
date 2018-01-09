@@ -1,33 +1,33 @@
-package io.github.resilience4j.bulkhead.operator;
+package io.github.resilience4j.circuitbreaker.operator;
 
 import static java.util.Objects.requireNonNull;
 
 import java.util.concurrent.atomic.AtomicReference;
 
 import io.github.resilience4j.adapter.Permit;
-import io.github.resilience4j.bulkhead.Bulkhead;
-import io.github.resilience4j.bulkhead.BulkheadFullException;
+import io.github.resilience4j.circuitbreaker.CircuitBreaker;
+import io.github.resilience4j.circuitbreaker.CircuitBreakerOpenException;
+import io.github.resilience4j.core.StopWatch;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.internal.disposables.DisposableHelper;
 
 /**
- * A disposable bulkhead acting as a base class for bulkhead operators.
+ * A disposable circuit-breaker.
  *
  * @param <T> the type of the emitted event
  */
-abstract class DisposableBulkhead<T> extends AtomicReference<Disposable> implements Disposable {
-    private final Bulkhead bulkhead;
+class DisposableCircuitBreaker<T> extends AtomicReference<Disposable> implements Disposable {
+    private final CircuitBreaker circuitBreaker;
+    private StopWatch stopWatch;
     private final AtomicReference<Permit> permitted = new AtomicReference<>(Permit.PENDING);
 
-    DisposableBulkhead(Bulkhead bulkhead) {
-        this.bulkhead = requireNonNull(bulkhead);
+    DisposableCircuitBreaker(CircuitBreaker circuitBreaker) {
+        this.circuitBreaker = requireNonNull(circuitBreaker);
     }
 
     @Override
     public final void dispose() {
-        if (DisposableHelper.dispose(this)) {
-            releaseBulkhead();
-        }
+        DisposableHelper.dispose(this);
     }
 
     @Override
@@ -51,7 +51,7 @@ abstract class DisposableBulkhead<T> extends AtomicReference<Disposable> impleme
             } else {
                 dispose();
                 onSubscribeInner(this);
-                permittedOnError(bulkheadFullException());
+                permittedOnError(circuitBreakerOpenException());
             }
         }
     }
@@ -66,8 +66,8 @@ abstract class DisposableBulkhead<T> extends AtomicReference<Disposable> impleme
     }
 
     protected final void onErrorInner(Throwable e) {
+        markFailure(e);
         if (isInvocationPermitted()) {
-            releaseBulkhead();
             permittedOnError(e);
         }
     }
@@ -80,8 +80,8 @@ abstract class DisposableBulkhead<T> extends AtomicReference<Disposable> impleme
     }
 
     protected final void onCompleteInner() {
+        markSuccess();
         if (isInvocationPermitted()) {
-            releaseBulkhead();
             permittedOnComplete();
         }
     }
@@ -96,8 +96,8 @@ abstract class DisposableBulkhead<T> extends AtomicReference<Disposable> impleme
     }
 
     protected final void onSuccessInner(T value) {
+        markSuccess();
         if (isInvocationPermitted()) {
-            releaseBulkhead();
             permittedOnSuccess(value);
         }
     }
@@ -117,32 +117,40 @@ abstract class DisposableBulkhead<T> extends AtomicReference<Disposable> impleme
         }
     }
 
-    private boolean isInvocationPermitted() {
-        return !isDisposed() && wasCallPermitted();
-    }
-
     private boolean acquireCallPermit() {
         boolean callPermitted = false;
         if (permitted.compareAndSet(Permit.PENDING, Permit.ACQUIRED)) {
-            callPermitted = bulkhead.isCallPermitted();
+            callPermitted = circuitBreaker.isCallPermitted();
             if (!callPermitted) {
                 permitted.set(Permit.REJECTED);
+            } else {
+                stopWatch = StopWatch.start(circuitBreaker.getName());
             }
         }
         return callPermitted;
     }
 
-    private Exception bulkheadFullException() {
-        return new BulkheadFullException(String.format("Bulkhead '%s' is full", bulkhead.getName()));
+    private boolean isInvocationPermitted() {
+        return !isDisposed() && wasCallPermitted();
+    }
+
+    private Exception circuitBreakerOpenException() {
+        return new CircuitBreakerOpenException(String.format("CircuitBreaker '%s' is open", circuitBreaker.getName()));
+    }
+
+    private void markFailure(Throwable e) {
+        if (wasCallPermitted()) {
+            circuitBreaker.onError(stopWatch.stop().getProcessingDuration().toNanos(), e);
+        }
+    }
+
+    private void markSuccess() {
+        if (wasCallPermitted()) {
+            circuitBreaker.onSuccess(stopWatch.stop().getProcessingDuration().toNanos());
+        }
     }
 
     private boolean wasCallPermitted() {
         return permitted.get() == Permit.ACQUIRED;
-    }
-
-    private void releaseBulkhead() {
-        if (wasCallPermitted()) {
-            bulkhead.onComplete();
-        }
     }
 }

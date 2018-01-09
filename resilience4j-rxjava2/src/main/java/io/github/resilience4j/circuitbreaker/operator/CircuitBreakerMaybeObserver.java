@@ -1,21 +1,21 @@
-package io.github.resilience4j.bulkhead.operator;
+package io.github.resilience4j.circuitbreaker.operator;
 
 import static java.util.Objects.requireNonNull;
 
-import io.github.resilience4j.bulkhead.Bulkhead;
+import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.reactivex.MaybeObserver;
 import io.reactivex.disposables.Disposable;
 
 /**
- * A RxJava {@link MaybeObserver} to wrap another observer in a bulkhead.
+ * A RxJava {@link MaybeObserver} to protect another observer by a CircuitBreaker.
  *
  * @param <T> the value type of the upstream and downstream
  */
-final class BulkheadMaybeObserver<T> extends DisposableBulkhead<T> implements MaybeObserver<T> {
+final class CircuitBreakerMaybeObserver<T> extends DisposableCircuitBreaker<T> implements MaybeObserver<T> {
     private final MaybeObserver<? super T> childObserver;
 
-    BulkheadMaybeObserver(Bulkhead bulkhead, MaybeObserver<? super T> childObserver) {
-        super(bulkhead);
+    CircuitBreakerMaybeObserver(CircuitBreaker circuitBreaker, MaybeObserver<? super T> childObserver) {
+        super(circuitBreaker);
         this.childObserver = requireNonNull(childObserver);
     }
 

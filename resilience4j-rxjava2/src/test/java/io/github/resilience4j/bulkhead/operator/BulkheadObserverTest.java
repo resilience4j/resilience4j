@@ -66,6 +66,7 @@ public class BulkheadObserverTest {
         Disposable disposable = mock(Disposable.class);
         Observer childObserver = mock(Observer.class);
         Observer decoratedObserver = BulkheadOperator.of(bulkhead).apply(childObserver);
+        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
         decoratedObserver.onSubscribe(disposable);
 
         // When
