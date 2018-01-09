@@ -1,20 +1,18 @@
-package io.github.resilience4j.bulkhead.operator;
+package io.github.resilience4j.circuitbreaker.operator;
 
-import static java.util.Objects.requireNonNull;
-
-import io.github.resilience4j.bulkhead.Bulkhead;
+import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.reactivex.CompletableObserver;
 import io.reactivex.disposables.Disposable;
 
 /**
- * A RxJava {@link CompletableObserver} to wrap another observer in a bulkhead.
+ * A RxJava {@link CompletableObserver} to protect another observer by a CircuitBreaker.
  */
-final class BulkheadCompletableObserver extends DisposableBulkhead implements CompletableObserver {
+final class CircuitBreakerCompletableObserver extends DisposableCircuitBreaker implements CompletableObserver {
     private final CompletableObserver childObserver;
 
-    BulkheadCompletableObserver(Bulkhead bulkhead, CompletableObserver childObserver) {
-        super(bulkhead);
-        this.childObserver = requireNonNull(childObserver);
+    CircuitBreakerCompletableObserver(CircuitBreaker circuitBreaker, CompletableObserver childObserver) {
+        super(circuitBreaker);
+        this.childObserver = childObserver;
     }
 
     @Override

@@ -77,6 +77,8 @@ Observable.fromCallable(backendService::doSomething)
     .lift(CircuitBreakerOperator.of(circuitBreaker))
 ----
 
+Other reactive types (Flowable, Single, Maybe and Completable) are also supported.
+
 ===== OPEN CircuitBreaker example
 
 In this example `map` is not invoked, because the CircuitBreaker is OPEN. The call to `Try.of` returns a `Failure<Throwable>` Monad so that the chained function is not invoked.

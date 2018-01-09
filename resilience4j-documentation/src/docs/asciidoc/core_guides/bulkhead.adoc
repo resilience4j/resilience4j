@@ -88,6 +88,8 @@ Observable.fromCallable(backendService::doSomething)
           .lift(BulkheadOperator.of(bulkhead));
 ----
 
+Other reactive types (Flowable, Single, Maybe and Completable) are also supported.
+
 ===== Saturated Bulkhead example
 
 In this example the decorated runnable is not executed because the Bulkhead is saturated and will not allow any more parallel executions. The call to `Try.run` returns a `Failure<Throwable>` Monad so that the chained function is not invoked.

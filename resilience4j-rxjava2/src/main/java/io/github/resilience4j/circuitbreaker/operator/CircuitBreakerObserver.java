@@ -1,19 +1,21 @@
-package io.github.resilience4j.bulkhead.operator;
+package io.github.resilience4j.circuitbreaker.operator;
 
 import static java.util.Objects.requireNonNull;
 
-import io.github.resilience4j.bulkhead.Bulkhead;
-import io.reactivex.CompletableObserver;
+import io.github.resilience4j.circuitbreaker.CircuitBreaker;
+import io.reactivex.Observer;
 import io.reactivex.disposables.Disposable;
 
 /**
- * A RxJava {@link CompletableObserver} to wrap another observer in a bulkhead.
+ * A RxJava {@link Observer} to protect another observer by a CircuitBreaker.
+ *
+ * @param <T> the value type of the upstream and downstream
  */
-final class BulkheadCompletableObserver extends DisposableBulkhead implements CompletableObserver {
-    private final CompletableObserver childObserver;
+final class CircuitBreakerObserver<T> extends DisposableCircuitBreaker<T> implements Observer<T> {
+    private final Observer<? super T> childObserver;
 
-    BulkheadCompletableObserver(Bulkhead bulkhead, CompletableObserver childObserver) {
-        super(bulkhead);
+    CircuitBreakerObserver(CircuitBreaker circuitBreaker, Observer<? super T> childObserver) {
+        super(circuitBreaker);
         this.childObserver = requireNonNull(childObserver);
     }
 
@@ -25,6 +27,16 @@ final class BulkheadCompletableObserver extends DisposableBulkhead implements Co
     @Override
     protected void onSubscribeInner(Disposable disposable) {
         childObserver.onSubscribe(disposable);
+    }
+
+    @Override
+    public void onNext(T value) {
+        onNextInner(value);
+    }
+
+    @Override
+    protected void permittedOnNext(T value) {
+        childObserver.onNext(value);
     }
 
     @Override
