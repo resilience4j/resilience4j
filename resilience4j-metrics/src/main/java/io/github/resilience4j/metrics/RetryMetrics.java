@@ -11,7 +11,7 @@ import static com.codahale.metrics.MetricRegistry.name;
 import static java.util.Objects.requireNonNull;
 
 /**
- * An adapter which exports {@link Retry.Metrics} as Dropwizard Metrics Gauges.
+ * An adapter which exports {@link io.github.resilience4j.retry.Retry.Metrics} as Dropwizard Metrics Gauges.
  */
 public class RetryMetrics implements MetricSet {
 
@@ -59,7 +59,7 @@ public class RetryMetrics implements MetricSet {
         return new RetryMetrics(retries);
     }
 
-    public static RetryMetrics ofRateLimiter(Retry retry) {
+    public static RetryMetrics ofRetry(Retry retry) {
         return new RetryMetrics(Array.of(retry));
     }
 

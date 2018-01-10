@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright 2016 Robert Winkler
+ *  Copyright 2016 Robert Winkler, Jan Sykora at GoodData(R) Corporation
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -288,9 +288,9 @@ public interface Retry {
     }
 
     /**
-     * Get the Metrics of this RateLimiter.
+     * Get the Metrics of this Retry.
      *
-     * @return the Metrics of this RateLimiter
+     * @return the Metrics of this Retry
      */
     Metrics getMetrics();
 
