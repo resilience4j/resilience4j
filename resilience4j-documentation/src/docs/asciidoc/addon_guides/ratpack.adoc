@@ -416,6 +416,7 @@ Example of response:
     }
   ]
 }
+----
 
 ===== CircuitBreaker
 
