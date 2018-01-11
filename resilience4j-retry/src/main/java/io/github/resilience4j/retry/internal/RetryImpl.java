@@ -48,7 +48,7 @@ public class RetryImpl implements Retry {
     private LongAdder failedAfterRetryCounter;
     private LongAdder succeededWithoutRetryCounter;
     private LongAdder failedWithoutRetryCounter;
-    /*package*/ static CheckedConsumer<Long> sleepFunction = Thread::sleep;
+    private CheckedConsumer<Long> sleepFunction;
 
     public RetryImpl(String name, RetryConfig config) {
         this.name = name;
@@ -57,6 +57,7 @@ public class RetryImpl implements Retry {
         this.intervalFunction = config.getIntervalFunction();
         this.exceptionPredicate = config.getExceptionPredicate();
         this.eventProcessor = new RetryEventProcessor();
+        this.sleepFunction = config.getSleepFunction();
         this.succeededAfterRetryCounter = new LongAdder();
         this.failedAfterRetryCounter = new LongAdder();
         this.succeededWithoutRetryCounter = new LongAdder();

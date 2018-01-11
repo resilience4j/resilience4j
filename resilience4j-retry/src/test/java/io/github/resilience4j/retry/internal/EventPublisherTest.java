@@ -28,33 +28,34 @@ import io.vavr.control.Try;
 import org.assertj.core.api.Assertions;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.mockito.BDDMockito;
+import org.mockito.Mock;
 import org.mockito.Mockito;
+import org.mockito.runners.MockitoJUnitRunner;
 
 import javax.xml.ws.WebServiceException;
 import java.io.IOException;
 
 import static io.github.resilience4j.adapter.RxJava2Adapter.toFlowable;
 
+@RunWith(MockitoJUnitRunner.class)
 public class EventPublisherTest {
 
-
+    @Mock
     private HelloWorldService helloWorldService;
     private long sleptTime = 0L;
-
-    @Before
-    public void setUp(){
-        helloWorldService = Mockito.mock(HelloWorldService.class);
-        RetryImpl.sleepFunction = sleep -> sleptTime += sleep;
-    }
 
     @Test
     public void shouldReturnAfterThreeAttempts() {
         // Given the HelloWorldService throws an exception
         BDDMockito.willThrow(new WebServiceException("BAM!")).given(helloWorldService).sayHelloWorld();
 
-        // Create a Retry with default configuration
-        Retry retry = Retry.ofDefaults("id");
+        // Create a Retry with custom configuration
+        RetryConfig config = RetryConfig.custom()
+                .sleepFunction(sleep -> sleptTime += sleep)
+                .build();
+        Retry retry = Retry.of("id", config);
         TestSubscriber<RetryEvent.Type> testSubscriber = toFlowable(retry.getEventPublisher())
                 .map(RetryEvent::getEventType)
                 .test();
@@ -81,8 +82,11 @@ public class EventPublisherTest {
         // Given the HelloWorldService throws an exception
         BDDMockito.willThrow(new WebServiceException("BAM!")).willNothing().given(helloWorldService).sayHelloWorld();
 
-        // Create a Retry with default configuration
-        Retry retry = Retry.ofDefaults("id");
+        // Create a Retry with custom configuration
+        RetryConfig config = RetryConfig.custom()
+                .sleepFunction(sleep -> sleptTime += sleep)
+                .build();
+        Retry retry = Retry.of("id", config);
         TestSubscriber<RetryEvent.Type> testSubscriber = toFlowable(retry.getEventPublisher())
                 .map(RetryEvent::getEventType)
                 .test();
@@ -108,6 +112,7 @@ public class EventPublisherTest {
 
         // Create a Retry with default configuration
         RetryConfig config = RetryConfig.custom()
+                .sleepFunction(sleep -> sleptTime += sleep)
                 .retryOnException(t -> t instanceof IOException)
                 .maxAttempts(3).build();
         Retry retry = Retry.of("id", config);

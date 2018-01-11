@@ -72,6 +72,7 @@ public class RetryBudgetImpl implements Retry {
         this.failedWithoutRetryCounter = new LongAdder();
         this.metrics = new RetryMetricsImpl(succeededAfterRetryCounter, failedAfterRetryCounter, succeededWithoutRetryCounter, failedWithoutRetryCounter);
         this.ringBitSet = new RingBitSet(config.getBufferSize());
+        this.sleepFunction = config.getSleepFunction();
     }
 
     public final class ContextImpl implements Retry.Context {
