@@ -78,22 +78,6 @@ public interface CircuitBreaker {
 
 
     /**
-     * Transitions the state machine to a DISABLED state, stopping state transition, metrics and event publishing.
-     *
-     * Should only be used, when you want to disable the circuit breaker allowing all calls to pass.
-     * To recover from this state you must force a new state transition
-     */
-    void disable();
-
-    /**
-     * Transitions the state machine to a FORCED_OPEN state,  stopping state transition, metrics and event publishing.
-     *
-     * Should only be used, when you want to disable the circuit breaker allowing no call to pass.
-     * To recover from this state you must force a new state transition
-     */
-    void forceOpen();
-
-    /**
      * Returns the circuit breaker to its original closed state, losing statistics.
      *
      * Should only be used, when you want to want to fully reset the circuit breaker without creating a new one.
@@ -120,6 +104,22 @@ public interface CircuitBreaker {
      * Should only be used, when you want to force a state transition. State transition are normally done internally.
      */
     void transitionToHalfOpenState();
+
+    /**
+     * Transitions the state machine to a DISABLED state, stopping state transition, metrics and event publishing.
+     *
+     * Should only be used, when you want to disable the circuit breaker allowing all calls to pass.
+     * To recover from this state you must force a new state transition
+     */
+    void transitionToDisabled();
+
+    /**
+     * Transitions the state machine to a FORCED_OPEN state,  stopping state transition, metrics and event publishing.
+     *
+     * Should only be used, when you want to disable the circuit breaker allowing no call to pass.
+     * To recover from this state you must force a new state transition
+     */
+    void transitionToForcedOpen();
 
     /**
      * Returns the name of this CircuitBreaker.
@@ -315,10 +315,6 @@ public interface CircuitBreaker {
         EventPublisher onStateTransition(EventConsumer<CircuitBreakerOnStateTransitionEvent> eventConsumer);
 
         EventPublisher onReset(EventConsumer<CircuitBreakerOnResetEvent> eventConsumer);
-
-        EventPublisher onDisable(EventConsumer<CircuitBreakerOnDisabledEvent> eventConsumer);
-
-        EventPublisher onForceOpen(EventConsumer<CircuitBreakerOnForcedOpenEvent> eventConsumer);
 
         EventPublisher onIgnoredError(EventConsumer<CircuitBreakerOnIgnoredErrorEvent> eventConsumer);
 

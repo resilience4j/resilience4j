@@ -180,12 +180,12 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
 
 
     @Override
-    public void disable() {
+    public void transitionToDisabled() {
         stateTransition(DISABLED, currentState -> new DisabledState(this));
     }
 
     @Override
-    public void forceOpen() {
+    public void transitionToForcedOpen() {
         stateTransition(FORCED_OPEN, currentState -> new ForcedOpenState(this));
     }
 
