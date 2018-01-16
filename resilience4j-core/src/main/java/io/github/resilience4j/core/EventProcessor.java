@@ -32,7 +32,7 @@ public class EventProcessor<T> implements EventPublisher<T> {
     }
 
     @SuppressWarnings("unchecked")
-    public <E extends T> void registerConsumer(Class<E> eventType, EventConsumer<E> eventConsumer){
+    public <E extends T> void registerConsumer(Class<? extends E> eventType, EventConsumer<E> eventConsumer){
         consumerRegistered = true;
         eventConsumers.put(eventType, (EventConsumer<Object>) eventConsumer);
     }

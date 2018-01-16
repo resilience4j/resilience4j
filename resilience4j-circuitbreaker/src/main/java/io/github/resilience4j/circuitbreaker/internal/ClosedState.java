@@ -86,7 +86,7 @@ final class ClosedState extends CircuitBreakerState {
     }
     /**
      *
-     * Get metricsof the CircuitBreaker
+     * Get metrics of the CircuitBreaker
      */
     @Override
     CircuitBreakerMetrics getMetrics() {

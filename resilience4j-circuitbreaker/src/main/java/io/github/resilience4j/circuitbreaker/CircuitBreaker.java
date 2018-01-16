@@ -111,7 +111,7 @@ public interface CircuitBreaker {
      * Should only be used, when you want to disable the circuit breaker allowing all calls to pass.
      * To recover from this state you must force a new state transition
      */
-    void transitionToDisabled();
+    void transitionToDisabledState();
 
     /**
      * Transitions the state machine to a FORCED_OPEN state,  stopping state transition, metrics and event publishing.
@@ -119,7 +119,7 @@ public interface CircuitBreaker {
      * Should only be used, when you want to disable the circuit breaker allowing no call to pass.
      * To recover from this state you must force a new state transition
      */
-    void transitionToForcedOpen();
+    void transitionToForcedOpenState();
 
     /**
      * Returns the name of this CircuitBreaker.
@@ -206,21 +206,22 @@ public interface CircuitBreaker {
     enum State {
          /** A DISABLED breaker is not operating (no state transition, no events)
           and allowing all requests through. */
-        DISABLED(3),
+        DISABLED(3, false),
         /** A CLOSED breaker is operating normally and allowing
          requests through. */
-        CLOSED(0),
+        CLOSED(0, true),
         /** An OPEN breaker has tripped and will not allow requests
          through. */
-        OPEN(1),
+        OPEN(1, true),
         /** A FORCED_OPEN breaker is not operating (no state transition, no events)
          and not allowing any requests through. */
-        FORCED_OPEN(4),
+        FORCED_OPEN(4, false),
         /** A HALF_OPEN breaker has completed its wait interval
          and will allow requests */
-        HALF_OPEN(2);
+        HALF_OPEN(2, true);
 
         private final int order;
+        public final boolean allowPublish;
 
         /**
          * Order is a FIXED integer, it should be preserved regardless of the ordinal number of the enumeration.
@@ -230,9 +231,11 @@ public interface CircuitBreaker {
          * at 2 and the new state takes 3 regardless of its order in the enum.
          *
          * @param order
+         * @param allowPublish
          */
-        private State(int order){
+        private State(int order, boolean allowPublish){
             this.order = order;
+            this.allowPublish = allowPublish;
         }
 
         public int getOrder(){
@@ -320,6 +323,7 @@ public interface CircuitBreaker {
 
         EventPublisher onCallNotPermitted(EventConsumer<CircuitBreakerOnCallNotPermittedEvent> eventConsumer);
 
+        EventPublisher onAny(EventConsumer<CircuitBreakerEvent> onCallNotPermittedEventConsumer);
     }
 
     interface Metrics {
