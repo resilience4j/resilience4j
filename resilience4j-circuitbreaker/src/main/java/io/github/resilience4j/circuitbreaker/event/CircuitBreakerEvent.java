@@ -61,6 +61,10 @@ public interface CircuitBreakerEvent {
         /** A CircuitBreakerEvent which informs the state of the CircuitBreaker has been changed */
         STATE_TRANSITION,
         /** A CircuitBreakerEvent which informs the CircuitBreaker has been reset */
-        RESET;
+        RESET,
+        /** A CircuitBreakerEvent which informs the CircuitBreaker has been forced open */
+        FORCED_OPEN,
+        /** A CircuitBreakerEvent which informs the CircuitBreaker has been disabled */
+        DISABLED
     }
 }

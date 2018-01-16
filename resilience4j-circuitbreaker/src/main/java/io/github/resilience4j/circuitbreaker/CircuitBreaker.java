@@ -18,27 +18,21 @@
  */
 package io.github.resilience4j.circuitbreaker;
 
+import io.github.resilience4j.circuitbreaker.event.*;
+import io.github.resilience4j.circuitbreaker.internal.CircuitBreakerStateMachine;
+import io.github.resilience4j.circuitbreaker.utils.CircuitBreakerUtils;
+import io.github.resilience4j.core.EventConsumer;
+import io.vavr.*;
+
+import java.util.Arrays;
+import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
-
-import io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent;
-import io.github.resilience4j.circuitbreaker.event.CircuitBreakerOnCallNotPermittedEvent;
-import io.github.resilience4j.circuitbreaker.event.CircuitBreakerOnErrorEvent;
-import io.github.resilience4j.circuitbreaker.event.CircuitBreakerOnIgnoredErrorEvent;
-import io.github.resilience4j.circuitbreaker.event.CircuitBreakerOnResetEvent;
-import io.github.resilience4j.circuitbreaker.event.CircuitBreakerOnStateTransitionEvent;
-import io.github.resilience4j.circuitbreaker.event.CircuitBreakerOnSuccessEvent;
-import io.github.resilience4j.circuitbreaker.internal.CircuitBreakerStateMachine;
-import io.github.resilience4j.circuitbreaker.utils.CircuitBreakerUtils;
-import io.github.resilience4j.core.EventConsumer;
-import io.vavr.CheckedConsumer;
-import io.vavr.CheckedFunction0;
-import io.vavr.CheckedFunction1;
-import io.vavr.CheckedRunnable;
+import java.util.stream.Collectors;
 
 /**
  * A CircuitBreaker instance is thread-safe can be used to decorate multiple requests.
@@ -82,6 +76,22 @@ public interface CircuitBreaker {
       */
     void onSuccess(long durationInNanos);
 
+
+    /**
+     * Transitions the state machine to a DISABLED state, stopping state transition, metrics and event publishing.
+     *
+     * Should only be used, when you want to disable the circuit breaker allowing all calls to pass.
+     * To recover from this state you must force a new state transition
+     */
+    void disable();
+
+    /**
+     * Transitions the state machine to a FORCED_OPEN state,  stopping state transition, metrics and event publishing.
+     *
+     * Should only be used, when you want to disable the circuit breaker allowing no call to pass.
+     * To recover from this state you must force a new state transition
+     */
+    void forceOpen();
 
     /**
      * Returns the circuit breaker to its original closed state, losing statistics.
@@ -194,12 +204,18 @@ public interface CircuitBreaker {
      * States of the CircuitBreaker state machine.
      */
     enum State {
+         /** A DISABLED breaker is not operating (no state transition, no events)
+          and allowing all requests through. */
+        DISABLED(3),
         /** A CLOSED breaker is operating normally and allowing
          requests through. */
         CLOSED(0),
         /** An OPEN breaker has tripped and will not allow requests
          through. */
         OPEN(1),
+        /** A FORCED_OPEN breaker is not operating (no state transition, no events)
+         and not allowing any requests through. */
+        FORCED_OPEN(4),
         /** A HALF_OPEN breaker has completed its wait interval
          and will allow requests */
         HALF_OPEN(2);
@@ -229,13 +245,44 @@ public interface CircuitBreaker {
      */
     enum StateTransition {
         CLOSED_TO_OPEN(State.CLOSED, State.OPEN),
+        CLOSED_TO_DISABLED(State.CLOSED, State.DISABLED),
+        CLOSED_TO_FORCED_OPEN(State.CLOSED, State.FORCED_OPEN),
         HALF_OPEN_TO_CLOSED(State.HALF_OPEN, State.CLOSED),
         HALF_OPEN_TO_OPEN(State.HALF_OPEN, State.OPEN),
+        HALF_OPEN_TO_DISABLED(State.HALF_OPEN, State.DISABLED),
+        HALF_OPEN_TO_FORCED_OPEN(State.HALF_OPEN, State.FORCED_OPEN),
+        OPEN_TO_CLOSED(State.OPEN, State.CLOSED),
         OPEN_TO_HALF_OPEN(State.OPEN, State.HALF_OPEN),
-        FORCED_OPEN_TO_CLOSED(State.OPEN, State.CLOSED);
+        OPEN_TO_DISABLED(State.OPEN, State.DISABLED),
+        OPEN_TO_FORCED_OPEN(State.OPEN, State.FORCED_OPEN),
+        FORCED_OPEN_TO_CLOSED(State.FORCED_OPEN, State.CLOSED),
+        FORCED_OPEN_TO_OPEN(State.FORCED_OPEN, State.OPEN),
+        FORCED_OPEN_TO_DISABLED(State.FORCED_OPEN, State.DISABLED),
+        FORCED_OPEN_TO_HALF_OPEN(State.FORCED_OPEN, State.HALF_OPEN),
+        DISABLED_TO_CLOSED(State.DISABLED, State.CLOSED),
+        DISABLED_TO_OPEN(State.DISABLED, State.OPEN),
+        DISABLED_TO_FORCED_OPEN(State.DISABLED, State.FORCED_OPEN),
+        DISABLED_TO_HALF_OPEN(State.DISABLED, State.HALF_OPEN);
 
-        State fromState;
-        State toState;
+        private boolean matches(State fromState, State toState) {
+            return this.fromState == fromState && this.toState == toState;
+        }
+
+        final State fromState;
+        final State toState;
+        private static final Map<Tuple2<State, State>, StateTransition> STATE_TRANSITION_MAP =
+                Arrays
+                        .stream(StateTransition.values())
+                        .collect(Collectors.toMap(v -> new Tuple2(v.fromState, v.toState), Function.identity()));
+
+        public static StateTransition transitionBetween(State fromState, State toState){
+            final StateTransition stateTransition = STATE_TRANSITION_MAP.get(new Tuple2<>(fromState, toState));
+            if(stateTransition == null) {
+                throw new IllegalStateException(
+                        String.format("Illegal state transition from %s to %s", fromState.toString(), toState.toString()));
+            }
+            return stateTransition;
+        }
 
         StateTransition(State fromState, State toState) {
             this.fromState = fromState;
@@ -248,37 +295,6 @@ public interface CircuitBreaker {
 
         public State getToState() {
             return toState;
-        }
-
-        public static StateTransition transitionToClosedState(State fromState){
-            switch (fromState) {
-                case HALF_OPEN:
-                    return HALF_OPEN_TO_CLOSED;
-                case OPEN:
-                    return FORCED_OPEN_TO_CLOSED;
-                default:
-                    throw new IllegalStateException(String.format("Illegal state transition from %s to %s", fromState.toString(), State.CLOSED.toString()));
-            }
-        }
-
-        public static StateTransition transitionToOpenState(State fromState){
-            switch (fromState) {
-                case HALF_OPEN:
-                    return HALF_OPEN_TO_OPEN;
-                case CLOSED:
-                    return CLOSED_TO_OPEN;
-                default:
-                    throw new IllegalStateException(String.format("Illegal state transition from %s to %s", fromState.toString(), State.OPEN.toString()));
-            }
-        }
-
-        public static StateTransition transitionToHalfOpenState(State fromState){
-            switch (fromState) {
-                case OPEN:
-                    return OPEN_TO_HALF_OPEN;
-                default:
-                    throw new IllegalStateException(String.format("Illegal state transition from %s to %s", fromState.toString(), State.HALF_OPEN.toString()));
-            }
         }
 
         @Override
@@ -298,7 +314,11 @@ public interface CircuitBreaker {
 
         EventPublisher onStateTransition(EventConsumer<CircuitBreakerOnStateTransitionEvent> eventConsumer);
 
-        EventPublisher onStateReset(EventConsumer<CircuitBreakerOnResetEvent> eventConsumer);
+        EventPublisher onReset(EventConsumer<CircuitBreakerOnResetEvent> eventConsumer);
+
+        EventPublisher onDisable(EventConsumer<CircuitBreakerOnDisabledEvent> eventConsumer);
+
+        EventPublisher onForceOpen(EventConsumer<CircuitBreakerOnForcedOpenEvent> eventConsumer);
 
         EventPublisher onIgnoredError(EventConsumer<CircuitBreakerOnIgnoredErrorEvent> eventConsumer);
 

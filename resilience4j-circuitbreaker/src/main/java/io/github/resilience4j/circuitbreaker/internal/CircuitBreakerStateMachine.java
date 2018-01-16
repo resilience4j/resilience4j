@@ -29,6 +29,7 @@ import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 import static io.github.resilience4j.circuitbreaker.CircuitBreaker.State.*;
@@ -160,48 +161,47 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
     public void reset() {
         CircuitBreakerState previousState = stateReference.getAndUpdate(currentState -> new ClosedState(this));
         if (previousState.getState() != CLOSED) {
-            publishStateTransitionEvent(StateTransition.transitionToClosedState(previousState.getState()));
+            publishStateTransitionEvent(StateTransition.transitionBetween(previousState.getState(), CLOSED));
         }
         publishResetEvent();
     }
 
-    @Override
-    public void transitionToClosedState() {
+    private void stateTransition(State newState, Function<CircuitBreakerState, CircuitBreakerState> newStateGenerator) {
         CircuitBreakerState previousState = stateReference.getAndUpdate(currentState -> {
-            if (currentState.getState() == CLOSED) {
+            if (currentState.getState() == newState) {
                 return currentState;
             }
-            return new ClosedState(this, currentState.getMetrics());
+            return newStateGenerator.apply(currentState);
         });
-        if (previousState.getState() != CLOSED) {
-            publishStateTransitionEvent(StateTransition.transitionToClosedState(previousState.getState()));
+        if (previousState.getState() != newState) {
+            publishStateTransitionEvent(StateTransition.transitionBetween(previousState.getState(), newState));
         }
+    }
+
+
+    @Override
+    public void disable() {
+        stateTransition(DISABLED, currentState -> new DisabledState(this));
+    }
+
+    @Override
+    public void forceOpen() {
+        stateTransition(FORCED_OPEN, currentState -> new ForcedOpenState(this));
+    }
+
+    @Override
+    public void transitionToClosedState() {
+        stateTransition(CLOSED, currentState -> new ClosedState(this, currentState.getMetrics()));
     }
 
     @Override
     public void transitionToOpenState() {
-        CircuitBreakerState previousState = stateReference.getAndUpdate(currentState -> {
-            if (currentState.getState() == OPEN) {
-                return currentState;
-            }
-            return new OpenState(this, currentState.getMetrics());
-        });
-        if (previousState.getState() != OPEN) {
-            publishStateTransitionEvent(StateTransition.transitionToOpenState(previousState.getState()));
-        }
+        stateTransition(OPEN, currentState -> new OpenState(this, currentState.getMetrics()));
     }
 
     @Override
     public void transitionToHalfOpenState() {
-        CircuitBreakerState previousState = stateReference.getAndUpdate(currentState -> {
-            if (currentState.getState() == HALF_OPEN) {
-                return currentState;
-            }
-            return new HalfOpenState(this);
-        });
-        if (previousState.getState() != HALF_OPEN) {
-            publishStateTransitionEvent(StateTransition.transitionToHalfOpenState(previousState.getState()));
-        }
+        stateTransition(HALF_OPEN, currentState -> new HalfOpenState(this));
     }
 
     private void publishStateTransitionEvent(final StateTransition stateTransition) {
@@ -211,7 +211,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
                     name, stateTransition.getFromState(), stateTransition.getToState())
             );
         }
-        if(eventProcessor.hasConsumers()){
+        if (eventProcessor.hasConsumers()) {
             eventProcessor.consumeEvent(new CircuitBreakerOnStateTransitionEvent(name, stateTransition));
         }
 
@@ -224,7 +224,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
                     name)
             );
         }
-        if(eventProcessor.hasConsumers()){
+        if (eventProcessor.hasConsumers()) {
             eventProcessor.consumeEvent(new CircuitBreakerOnResetEvent(name));
         }
 
@@ -279,8 +279,20 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
         }
 
         @Override
-        public EventPublisher onStateReset(EventConsumer<CircuitBreakerOnResetEvent> onStateResetEventConsumer) {
-            registerConsumer(CircuitBreakerOnResetEvent.class, onStateResetEventConsumer);
+        public EventPublisher onReset(EventConsumer<CircuitBreakerOnResetEvent> onResetEventConsumer) {
+            registerConsumer(CircuitBreakerOnResetEvent.class, onResetEventConsumer);
+            return this;
+        }
+
+        @Override
+        public EventPublisher onDisable(EventConsumer<CircuitBreakerOnDisabledEvent> onDisabledEventConsumer) {
+            registerConsumer(CircuitBreakerOnDisabledEvent.class, onDisabledEventConsumer);
+            return this;
+        }
+
+        @Override
+        public EventPublisher onForceOpen(EventConsumer<CircuitBreakerOnForcedOpenEvent> onForcedOpenEventConsumer) {
+            registerConsumer(CircuitBreakerOnForcedOpenEvent.class, onForcedOpenEventConsumer);
             return this;
         }
 
