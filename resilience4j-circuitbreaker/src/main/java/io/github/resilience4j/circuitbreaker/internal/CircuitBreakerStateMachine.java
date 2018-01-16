@@ -213,29 +213,22 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
     private void publishEventIfPossible(CircuitBreakerEvent event) {
         if(shouldPublishEvents(event)) {
             if (eventProcessor.hasConsumers()) {
+                LOG.debug(String.format("Event %s published: %s", event.getEventType(), event));
                 eventProcessor.consumeEvent(event);
+            } else {
+                LOG.debug(String.format("No Consumers: Event %s not published", event.getEventType()));
             }
+        } else {
+            LOG.debug(String.format("Publishing not allowed: Event %s not published", event.getEventType()));
         }
     }
 
     private void publishStateTransitionEvent(final StateTransition stateTransition) {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug(
-                String.format("CircuitBreaker '%s' changed state from %s to %s",
-                    name, stateTransition.getFromState(), stateTransition.getToState())
-            );
-        }
         final CircuitBreakerOnStateTransitionEvent event = new CircuitBreakerOnStateTransitionEvent(name, stateTransition);
         publishEventIfPossible(event);
     }
 
     private void publishResetEvent() {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug(
-                String.format("CircuitBreaker '%s' reset ",
-                    name)
-            );
-        }
         final CircuitBreakerOnResetEvent event = new CircuitBreakerOnResetEvent(name);
         publishEventIfPossible(event);
     }

@@ -267,16 +267,18 @@ public interface CircuitBreaker {
         DISABLED_TO_FORCED_OPEN(State.DISABLED, State.FORCED_OPEN),
         DISABLED_TO_HALF_OPEN(State.DISABLED, State.HALF_OPEN);
 
-        private boolean matches(State fromState, State toState) {
-            return this.fromState == fromState && this.toState == toState;
-        }
+        private final State fromState;
 
-        final State fromState;
-        final State toState;
+        private final State toState;
+
         private static final Map<Tuple2<State, State>, StateTransition> STATE_TRANSITION_MAP =
                 Arrays
                         .stream(StateTransition.values())
                         .collect(Collectors.toMap(v -> new Tuple2(v.fromState, v.toState), Function.identity()));
+
+        private boolean matches(State fromState, State toState) {
+            return this.fromState == fromState && this.toState == toState;
+        }
 
         public static StateTransition transitionBetween(State fromState, State toState){
             final StateTransition stateTransition = STATE_TRANSITION_MAP.get(new Tuple2<>(fromState, toState));
