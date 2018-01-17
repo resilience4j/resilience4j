@@ -18,11 +18,21 @@
  */
 package io.github.resilience4j.circuitbreaker;
 
-import io.github.resilience4j.circuitbreaker.event.*;
+import io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent;
+import io.github.resilience4j.circuitbreaker.event.CircuitBreakerOnCallNotPermittedEvent;
+import io.github.resilience4j.circuitbreaker.event.CircuitBreakerOnErrorEvent;
+import io.github.resilience4j.circuitbreaker.event.CircuitBreakerOnIgnoredErrorEvent;
+import io.github.resilience4j.circuitbreaker.event.CircuitBreakerOnResetEvent;
+import io.github.resilience4j.circuitbreaker.event.CircuitBreakerOnStateTransitionEvent;
+import io.github.resilience4j.circuitbreaker.event.CircuitBreakerOnSuccessEvent;
 import io.github.resilience4j.circuitbreaker.internal.CircuitBreakerStateMachine;
 import io.github.resilience4j.circuitbreaker.utils.CircuitBreakerUtils;
 import io.github.resilience4j.core.EventConsumer;
-import io.vavr.*;
+import io.vavr.CheckedConsumer;
+import io.vavr.CheckedFunction0;
+import io.vavr.CheckedFunction1;
+import io.vavr.CheckedRunnable;
+import io.vavr.Tuple2;
 
 import java.util.Arrays;
 import java.util.Map;

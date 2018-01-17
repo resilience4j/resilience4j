@@ -21,7 +21,13 @@ package io.github.resilience4j.circuitbreaker.internal;
 
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
-import io.github.resilience4j.circuitbreaker.event.*;
+import io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent;
+import io.github.resilience4j.circuitbreaker.event.CircuitBreakerOnCallNotPermittedEvent;
+import io.github.resilience4j.circuitbreaker.event.CircuitBreakerOnErrorEvent;
+import io.github.resilience4j.circuitbreaker.event.CircuitBreakerOnIgnoredErrorEvent;
+import io.github.resilience4j.circuitbreaker.event.CircuitBreakerOnResetEvent;
+import io.github.resilience4j.circuitbreaker.event.CircuitBreakerOnStateTransitionEvent;
+import io.github.resilience4j.circuitbreaker.event.CircuitBreakerOnSuccessEvent;
 import io.github.resilience4j.core.EventConsumer;
 import io.github.resilience4j.core.EventProcessor;
 import org.slf4j.Logger;
@@ -32,7 +38,11 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-import static io.github.resilience4j.circuitbreaker.CircuitBreaker.State.*;
+import static io.github.resilience4j.circuitbreaker.CircuitBreaker.State.CLOSED;
+import static io.github.resilience4j.circuitbreaker.CircuitBreaker.State.DISABLED;
+import static io.github.resilience4j.circuitbreaker.CircuitBreaker.State.FORCED_OPEN;
+import static io.github.resilience4j.circuitbreaker.CircuitBreaker.State.HALF_OPEN;
+import static io.github.resilience4j.circuitbreaker.CircuitBreaker.State.OPEN;
 
 /**
  * A CircuitBreaker finite state machine.
