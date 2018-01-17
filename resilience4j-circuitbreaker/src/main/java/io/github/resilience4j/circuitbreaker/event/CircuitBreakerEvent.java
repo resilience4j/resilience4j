@@ -69,8 +69,8 @@ public interface CircuitBreakerEvent {
 
         public final boolean forcePublish;
 
-        Type(boolean ignorable) {
-            this.forcePublish = ignorable;
+        Type(boolean forcePublish) {
+            this.forcePublish = forcePublish;
         }
     }
 }

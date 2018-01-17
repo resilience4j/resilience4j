@@ -130,7 +130,7 @@ circuitBreaker.getEventPublisher()
     .onStateTransition(event -> logger.info(...));
 // Or if you want to register a consumer listening to all events, you can do:
 circuitBreaker.getEventPublisher()
-    .onAny(event -> logger.info(...));
+    .onEvent(event -> logger.info(...));
 ----
 
 You could use the `CircularEventConsumer` to store events in a circular buffer with a fixed capacity.

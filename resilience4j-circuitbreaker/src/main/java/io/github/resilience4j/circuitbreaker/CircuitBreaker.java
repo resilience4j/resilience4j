@@ -32,6 +32,7 @@ import io.vavr.CheckedConsumer;
 import io.vavr.CheckedFunction0;
 import io.vavr.CheckedFunction1;
 import io.vavr.CheckedRunnable;
+import io.vavr.Tuple;
 import io.vavr.Tuple2;
 
 import java.util.Arrays;
@@ -284,14 +285,14 @@ public interface CircuitBreaker {
         private static final Map<Tuple2<State, State>, StateTransition> STATE_TRANSITION_MAP =
                 Arrays
                         .stream(StateTransition.values())
-                        .collect(Collectors.toMap(v -> new Tuple2(v.fromState, v.toState), Function.identity()));
+                        .collect(Collectors.toMap(v -> Tuple.of(v.fromState, v.toState), Function.identity()));
 
         private boolean matches(State fromState, State toState) {
             return this.fromState == fromState && this.toState == toState;
         }
 
         public static StateTransition transitionBetween(State fromState, State toState){
-            final StateTransition stateTransition = STATE_TRANSITION_MAP.get(new Tuple2<>(fromState, toState));
+            final StateTransition stateTransition = STATE_TRANSITION_MAP.get(Tuple.of(fromState, toState));
             if(stateTransition == null) {
                 throw new IllegalStateException(
                         String.format("Illegal state transition from %s to %s", fromState.toString(), toState.toString()));
@@ -334,9 +335,7 @@ public interface CircuitBreaker {
         EventPublisher onIgnoredError(EventConsumer<CircuitBreakerOnIgnoredErrorEvent> eventConsumer);
 
         EventPublisher onCallNotPermitted(EventConsumer<CircuitBreakerOnCallNotPermittedEvent> eventConsumer);
-
-        EventPublisher onAny(EventConsumer<CircuitBreakerEvent> onCallNotPermittedEventConsumer);
-    }
+        }
 
     interface Metrics {
 

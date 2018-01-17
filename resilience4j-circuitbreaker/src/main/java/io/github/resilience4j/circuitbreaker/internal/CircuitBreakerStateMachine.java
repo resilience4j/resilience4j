@@ -306,18 +306,6 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
         }
 
         @Override
-        public EventPublisher onAny(EventConsumer<CircuitBreakerEvent> onCallNotPermittedEventConsumer) {
-            registerConsumer(CircuitBreakerOnStateTransitionEvent.class, onCallNotPermittedEventConsumer);
-            registerConsumer(CircuitBreakerOnSuccessEvent.class, onCallNotPermittedEventConsumer);
-            registerConsumer(CircuitBreakerOnErrorEvent.class, onCallNotPermittedEventConsumer);
-            registerConsumer(CircuitBreakerOnIgnoredErrorEvent.class, onCallNotPermittedEventConsumer);
-            registerConsumer(CircuitBreakerOnResetEvent.class, onCallNotPermittedEventConsumer);
-            registerConsumer(CircuitBreakerOnCallNotPermittedEvent.class, onCallNotPermittedEventConsumer);
-            return this;
-        }
-
-
-        @Override
         public void consumeEvent(CircuitBreakerEvent event) {
             super.processEvent(event);
         }

@@ -138,7 +138,7 @@ public class CircuitBreakerEventPublisherTest {
                 .ringBufferSizeInClosedState(1).build());
 
         circuitBreaker.getEventPublisher()
-                .onAny(this::logEventType);
+                .onEvent(this::logEventType);
 
         //When we transition to disabled
         circuitBreaker.transitionToDisabledState();
