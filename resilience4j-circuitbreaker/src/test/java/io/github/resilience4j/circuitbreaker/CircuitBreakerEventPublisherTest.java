@@ -133,23 +133,28 @@ public class CircuitBreakerEventPublisherTest {
 
     @Test
     public void shouldNotProduceEventsInDisabledState() {
+        //Given
         circuitBreaker = CircuitBreaker.of("test", CircuitBreakerConfig.custom()
                 .ringBufferSizeInClosedState(1).build());
 
         circuitBreaker.getEventPublisher()
                 .onAny(this::logEventType);
 
+        //When we transition to disabled
         circuitBreaker.transitionToDisabledState();
+        //And we execute other calls that should generate events
         circuitBreaker.onError(1000, new IOException("BAM!"));
         circuitBreaker.onError(1000, new IOException("BAM!"));
         circuitBreaker.isCallPermitted();
         circuitBreaker.onSuccess(0);
         circuitBreaker.onError(1000, new IOException("BAM!"));
 
+        //Then we do not produce events
         then(logger).should(times(1)).info("STATE_TRANSITION");
         then(logger).should(times(0)).info("NOT_PERMITTED");
         then(logger).should(times(0)).info("SUCCESS");
-        then(logger).should(times(0)).info("FAILURE");
+        then(logger).should(times(0)).info("ERROR");
+        then(logger).should(times(0)).info("IGNORED_ERROR");
     }
 
     private void logEventType(CircuitBreakerEvent event) {
