@@ -291,10 +291,6 @@ public interface CircuitBreaker {
             return this.fromState == fromState && this.toState == toState;
         }
 
-        private boolean matches(State fromState, State toState) {
-            return this.fromState == fromState && this.toState == toState;
-        }
-
         public static StateTransition transitionBetween(State fromState, State toState){
             final StateTransition stateTransition = STATE_TRANSITION_MAP.get(Tuple.of(fromState, toState));
             if(stateTransition == null) {
