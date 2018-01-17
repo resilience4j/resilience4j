@@ -251,14 +251,19 @@ long failedCalls = metrics.getNumberOfFailedCalls();
 
 `CircuitBreaker` example below:
 
-A `CircuitBreakerEvent` can be a state transition, a successful call, a recorded error or an ignored error. All events contains additional information like event creation time and processing duration of the call. If you want to consume events, you have to register an event consumer.
+A `CircuitBreakerEvent` can be a state transition, a circuit breaker reset, a successful call, a recorded error or an ignored error. All events contains additional information like event creation time and processing duration of the call. If you want to consume events, you have to register an event consumer.
 
 [source,java]
 ----
 circuitBreaker.getEventPublisher()
     .onSuccess(event -> logger.info(...))
     .onError(event -> logger.info(...))
+    .onIgnoredError(event -> logger.info(...))
+    .onReset(event -> logger.info(...))
     .onStateTransition(event -> logger.info(...));
+// Or if you want to register a consumer listening to all events, you can do:
+circuitBreaker.getEventPublisher()
+    .onAny(event -> logger.info(...));
 ----
 
 You could use the `CircularEventConsumer` to store events in a circular buffer with a fixed capacity.
