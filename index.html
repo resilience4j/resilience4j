@@ -516,7 +516,7 @@ table.CodeRay td.code>pre{padding:0}
 <div class="details">
 <span id="author" class="author">Robert Winkler</span><br>
 <span id="revnumber">version 0.11.0,</span>
-<span id="revdate">2017-12-15</span>
+<span id="revdate">2018-01-18</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">Table of Contents</div>
@@ -576,6 +576,12 @@ table.CodeRay td.code>pre{padding:0}
 <li><a href="#_example">3.5.2. Example</a></li>
 </ul>
 </li>
+<li><a href="#_timelimiter">3.6. TimeLimiter</a>
+<ul class="sectlevel3">
+<li><a href="#_introduction_5">3.6.1. Introduction</a></li>
+<li><a href="#_examples_5">3.6.2. Examples</a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li><a href="#_add_on_modules_usage_guide">4. Add-on modules Usage Guide</a>
@@ -603,8 +609,34 @@ table.CodeRay td.code>pre{padding:0}
 <li><a href="#_event_monitoring_2">4.2.9. Event Monitoring</a></li>
 </ul>
 </li>
+<li><a href="#_retrofit">4.3. Retrofit</a>
+<ul class="sectlevel3">
+<li><a href="#_circuit_breaking">4.3.1. Circuit Breaking</a></li>
+<li><a href="#_rate_limiting">4.3.2. Rate Limiting</a></li>
 </ul>
 </li>
+<li><a href="#_dropwizard_metrics_exporter">4.4. Dropwizard Metrics exporter</a>
+<ul class="sectlevel3">
+<li><a href="#_introduction_6">4.4.1. Introduction</a></li>
+<li><a href="#_usage">4.4.2. Usage</a></li>
+</ul>
+</li>
+<li><a href="#_prometheus_metrics_integration">4.5. Prometheus Metrics Integration</a>
+<ul class="sectlevel3">
+<li><a href="#_introduction_7">4.5.1. Introduction</a></li>
+<li><a href="#_dashboard_example">4.5.2. Dashboard Example</a></li>
+<li><a href="#_usage_2">4.5.3. Usage</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#_implementation_details">5. Implementation details</a>
+<ul class="sectlevel2">
+<li><a href="#_circuitbreaker_10">5.1. CircuitBreaker</a></li>
+<li><a href="#_ratelimiter_10">5.2. RateLimiter</a></li>
+</ul>
+</li>
+<li><a href="#_license">6. License</a></li>
 </ul>
 </div>
 </div>
@@ -1060,6 +1092,9 @@ assertThat(result.get()).isEqualTo(<span class="string"><span class="delimiter">
     .lift(CircuitBreakerOperator.of(circuitBreaker))</code></pre>
 </div>
 </div>
+<div class="paragraph">
+<p>Other reactive types (Flowable, Single, Maybe and Completable) are also supported.</p>
+</div>
 </div>
 <div class="sect4">
 <h5 id="_open_circuitbreaker_example"><a class="anchor" href="#_open_circuitbreaker_example"></a>OPEN CircuitBreaker example</h5>
@@ -1308,6 +1343,27 @@ New limit won&#8217;t affect current period permissions and will apply only from
     .lift(RateLimiterOperator.of(rateLimiter))</code></pre>
 </div>
 </div>
+<div class="paragraph">
+<p>Please note that only Flowable and Single are supported directly. For Maybe and Completable one should convert it to Observable and back.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="java">RateLimiter rateLimiter = RateLimiter.ofDefaults(<span class="string"><span class="delimiter">&quot;</span><span class="content">backendName</span><span class="delimiter">&quot;</span></span>);
+Maybe.fromCallable(backendService::doSomething)
+    .toObservable()
+    .lift(RateLimiterOperator.of(rateLimiter))
+    .firstElement()</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="java">RateLimiter rateLimiter = RateLimiter.ofDefaults(<span class="string"><span class="delimiter">&quot;</span><span class="content">backendName</span><span class="delimiter">&quot;</span></span>);
+Completable.fromCallable(backendService::doSomething)
+    .toObservable()
+    .lift(RateLimiterOperator.of(rateLimiter))
+    .ignoreElements()</code></pre>
+</div>
+</div>
 </div>
 <div class="sect4">
 <h5 id="_consume_emitted_ratelimiterevents"><a class="anchor" href="#_consume_emitted_ratelimiterevents"></a>Consume emitted RateLimiterEvents</h5>
@@ -1498,6 +1554,9 @@ NOTE! New <code>maxWaitTime</code> duration won&#8217;t affect threads that are 
           .lift(BulkheadOperator.of(bulkhead));</code></pre>
 </div>
 </div>
+<div class="paragraph">
+<p>Other reactive types (Flowable, Single, Maybe and Completable) are also supported.</p>
+</div>
 </div>
 <div class="sect4">
 <h5 id="_saturated_bulkhead_example"><a class="anchor" href="#_saturated_bulkhead_example"></a>Saturated Bulkhead example</h5>
@@ -1673,8 +1732,77 @@ CheckedFunction1&lt;<span class="predefined-type">String</span>, <span class="pr
     .onError(event -&gt; logger.info(...));</code></pre>
 </div>
 </div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_timelimiter"><a class="anchor" href="#_timelimiter"></a>3.6. TimeLimiter</h3>
+<div class="sect3">
+<h4 id="_introduction_5"><a class="anchor" href="#_introduction_5"></a>3.6.1. Introduction</h4>
 <div class="paragraph">
-<p>Unresolved directive in core_guide.adoc - include::core_guides/timeout.adoc[]</p>
+<p>The TimeLimiter API sets a time limit on the execution of a supplied future. The decorated supplied<br>
+future can be chained with a CircuitBreaker to trip the circuit breaker if the supplied<br>
+future&#8217;s timeout has exceeded.</p>
+</div>
+<div class="paragraph">
+<p>The TimeLimiter provides the flexibility to handle custom future implementations such as ones that<br>
+can cancel its execution gracefully. The TimeLimiter by default is configured to cancel the future<br>
+if an exception occurs. This is configurable within the configuration.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_examples_5"><a class="anchor" href="#_examples_5"></a>3.6.2. Examples</h4>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="java"><span class="comment">// For example, you want to restrict the execution of a long running task to 60 seconds.</span>
+TimeLimiterConfig config = TimeLimiterConfig.custom()
+    .timeoutDuration(<span class="predefined-type">Duration</span>.ofSeconds(<span class="integer">60</span>))
+    .cancelRunningFuture(<span class="predefined-constant">true</span>)
+    .build();
+
+<span class="comment">// Create TimeLimiter</span>
+TimeLimiter timeLimiter = TimeLimiter.of(config);</code></pre>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_using_a_timelimiter"><a class="anchor" href="#_using_a_timelimiter"></a>Using a TimeLimiter</h5>
+<div class="paragraph">
+<p>TimeLimiter takes a Future Supplier and returns a Callable that will unwrap the Future and attempt<br>
+to retrieve the future&#8217;s value within the configured timeout period. If the timeout is reached, then<br>
+an exception is thrown upstream and TimeLimiter, if configured, will attempt to cancel the future.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="java"><span class="predefined-type">ExecutorService</span> executorService = <span class="predefined-type">Executors</span>.newSingleThreadExecutor();
+
+<span class="comment">// Wrap your call to BackendService.doSomething() in a future provided by your executor</span>
+Supplier&lt;<span class="predefined-type">Future</span>&lt;<span class="predefined-type">Integer</span>&gt;&gt; futureSupplier = () -&gt; executorService.submit(backendService::doSomething)
+
+<span class="comment">// Decorate your supplier so that the future can be retrieved and executed upon</span>
+<span class="predefined-type">Callable</span> restrictedCall = TimeLimiter
+    .decorateFutureSupplier(timeLimiter, futureSupplier);
+
+Try.of(restrictedCall.call)
+    .onFailure(throwable -&gt; LOG.info(<span class="string"><span class="delimiter">&quot;</span><span class="content">A timeout possibly occurred.</span><span class="delimiter">&quot;</span></span>));</code></pre>
+</div>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_timelimiter_and_circuitbreaker"><a class="anchor" href="#_timelimiter_and_circuitbreaker"></a>TimeLimiter and CircuitBreaker</h5>
+<div class="paragraph">
+<p>The following example shows how to apply a timelimit to a circuit breaker callable.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="java"><span class="predefined-type">Callable</span> restrictedCall = TimeLimiter
+    .decorateFutureSupplier(timeLimiter, futureSupplier);
+
+<span class="comment">// Decorate the restricted callable with a CircuitBreaker</span>
+<span class="predefined-type">Callable</span> chainedCallable = CircuitBreaker.decorateCallable(circuitBreaker, restrictedCall);
+
+Try.of(chainedCallable::call)
+    .onFailure(throwable -&gt; LOG.info(<span class="string"><span class="delimiter">&quot;</span><span class="content">We might have timed out or the circuit breaker has opened.</span><span class="delimiter">&quot;</span></span>));</code></pre>
+</div>
+</div>
 </div>
 </div>
 </div>
@@ -2638,614 +2766,806 @@ so for detailed documentation please refer to previous sections.</p>
       "creationTime": "2017-05-05T21:29:41.268+03:00[Europe/Uzhgorod]"
     }
   ]
-}
-
-===== CircuitBreaker
-
-The emitted CircuitBreaker events are stored in a separate circular event consumer buffers. The size of a event consumer buffer can be configured per CircuitBreaker in the application.yml file (eventConsumerBufferSize).
-The demo adds a custom Ratpack actuator endpoint which can be used to monitor the emitted events of your CircuitBreakers.
-The endpoint `/circuitbreaker` lists the names of all CircuitBreaker instances.
-For example:</pre>
+}</pre>
 </div>
 </div>
+</div>
+<div class="sect4">
+<h5 id="_circuitbreaker_7"><a class="anchor" href="#_circuitbreaker_7"></a>CircuitBreaker</h5>
 <div class="paragraph">
-<p>{<br>
-    "circuitBreakers": [<br>
-      "backendA",<br>
-      "backendB"<br>
-    ]<br>
-}</p>
+<p>The emitted CircuitBreaker events are stored in a separate circular event consumer buffers. The size of a event consumer buffer can be configured per CircuitBreaker in the application.yml file (eventConsumerBufferSize).<br>
+The demo adds a custom Ratpack actuator endpoint which can be used to monitor the emitted events of your CircuitBreakers.<br>
+The endpoint <code>/circuitbreaker</code> lists the names of all CircuitBreaker instances.<br>
+For example:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre>The endpoint `/circuitbreaker/events` lists the latest 100 emitted events of all CircuitBreaker instances.
-The endpoint `/circuitbreaker/stream/events` streams emitted events of all CircuitBreaker instances using Server-Sent Events.</pre>
+<pre>{
+    "circuitBreakers": [
+      "backendA",
+      "backendB"
+    ]
+}</pre>
 </div>
 </div>
 <div class="paragraph">
-<p>{<br>
-"circuitBreakerEvents":[<br>
-  {<br>
-    "circuitBreakerName": "backendA",<br>
-    "type": "ERROR",<br>
-    "creationTime": "2017-01-10T15:39:17.117+01:00[Europe/Berlin]",<br>
-    "errorMessage": "org.springframework.web.client.HttpServerErrorException: 500 This is a remote exception",<br>
-    "durationInMs": 0<br>
-  },<br>
-  {<br>
-    "circuitBreakerName": "backendA",<br>
-    "type": "SUCCESS",<br>
-    "creationTime": "2017-01-10T15:39:20.518+01:00[Europe/Berlin]",<br>
-    "durationInMs": 0<br>
-  },<br>
-  {<br>
-    "circuitBreakerName": "backendB",<br>
-    "type": "ERROR",<br>
-    "creationTime": "2017-01-10T15:41:31.159+01:00[Europe/Berlin]",<br>
-    "errorMessage": "org.springframework.web.client.HttpServerErrorException: 500 This is a remote exception",<br>
-    "durationInMs": 0<br>
-  },<br>
-  {<br>
-    "circuitBreakerName": "backendB",<br>
-    "type": "SUCCESS",<br>
-    "creationTime": "2017-01-10T15:41:33.526+01:00[Europe/Berlin]",<br>
-    "durationInMs": 0<br>
-  }<br>
-]<br>
-}</p>
+<p>The endpoint <code>/circuitbreaker/events</code> lists the latest 100 emitted events of all CircuitBreaker instances.<br>
+The endpoint <code>/circuitbreaker/stream/events</code> streams emitted events of all CircuitBreaker instances using Server-Sent Events.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre>The endpoint `/circuitbreaker/events/{circuitBreakerName}` lists the latest emitted events of a specific CircuitBreaker.
-The endpoint `/circuitbreaker/stream/events/{circuitBreakerName}` streams emitted events using Server-Sent Events.
-For example `/circuitbreaker/events/backendA`:</pre>
+<pre>{
+"circuitBreakerEvents":[
+  {
+    "circuitBreakerName": "backendA",
+    "type": "ERROR",
+    "creationTime": "2017-01-10T15:39:17.117+01:00[Europe/Berlin]",
+    "errorMessage": "org.springframework.web.client.HttpServerErrorException: 500 This is a remote exception",
+    "durationInMs": 0
+  },
+  {
+    "circuitBreakerName": "backendA",
+    "type": "SUCCESS",
+    "creationTime": "2017-01-10T15:39:20.518+01:00[Europe/Berlin]",
+    "durationInMs": 0
+  },
+  {
+    "circuitBreakerName": "backendB",
+    "type": "ERROR",
+    "creationTime": "2017-01-10T15:41:31.159+01:00[Europe/Berlin]",
+    "errorMessage": "org.springframework.web.client.HttpServerErrorException: 500 This is a remote exception",
+    "durationInMs": 0
+  },
+  {
+    "circuitBreakerName": "backendB",
+    "type": "SUCCESS",
+    "creationTime": "2017-01-10T15:41:33.526+01:00[Europe/Berlin]",
+    "durationInMs": 0
+  }
+]
+}</pre>
 </div>
 </div>
 <div class="paragraph">
-<p>{<br>
-"circuitBreakerEvents":[<br>
-  {<br>
-    "circuitBreakerName": "backendA",<br>
-    "type": "ERROR",<br>
-    "creationTime": "2017-01-10T15:39:17.117+01:00[Europe/Berlin]",<br>
-    "errorMessage": "org.springframework.web.client.HttpServerErrorException: 500 This is a remote exception",<br>
-    "durationInMs": 0<br>
-  },<br>
-  {<br>
-    "circuitBreakerName": "backendA",<br>
-    "type": "SUCCESS",<br>
-    "creationTime": "2017-01-10T15:39:20.518+01:00[Europe/Berlin]",<br>
-    "durationInMs": 0<br>
-  },<br>
-  {<br>
-    "circuitBreakerName": "backendA",<br>
-    "type": "STATE_TRANSITION",<br>
-    "creationTime": "2017-01-10T15:39:22.341+01:00[Europe/Berlin]",<br>
-    "stateTransition": "CLOSED_TO_OPEN"<br>
-  },<br>
-  {<br>
-    "circuitBreakerName": "backendA",<br>
-    "type": "NOT_PERMITTED",<br>
-    "creationTime": "2017-01-10T15:39:22.780+01:00[Europe/Berlin]"<br>
-  }<br>
-]<br>
-}</p>
+<p>The endpoint <code>/circuitbreaker/events/{circuitBreakerName}</code> lists the latest emitted events of a specific CircuitBreaker.<br>
+The endpoint <code>/circuitbreaker/stream/events/{circuitBreakerName}</code> streams emitted events using Server-Sent Events.<br>
+For example <code>/circuitbreaker/events/backendA</code>:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre>You can even filter the list of  events.
-The endpoint `/circuitbreaker/events/{circuitBreakerName}/{eventType}` lists the filtered events.
-The endpoint `/circuitbreaker/stream/events/{circuitBreakerName}/{eventType}` streams emitted events using Server-Sent Events.
-Event types can be:
-
-* ERROR: A CircuitBreakerEvent which informs that an error has been recorded.
-* IGNORED_ERROR: A CircuitBreakerEvent which informs that an error has been ignored.
-* SUCCESS: A CircuitBreakerEvent which informs that a success has been recorded.
-* NOT_PERMITTED: A CircuitBreakerEvent which informs that a call was not permitted because the CircuitBreaker state is OPEN.
-* STATE_TRANSITION: A CircuitBreakerEvent which informs the state of the CircuitBreaker has been changed.
-
-For example /circuitbreaker/events/backendA/ERROR`:</pre>
+<pre>{
+"circuitBreakerEvents":[
+  {
+    "circuitBreakerName": "backendA",
+    "type": "ERROR",
+    "creationTime": "2017-01-10T15:39:17.117+01:00[Europe/Berlin]",
+    "errorMessage": "org.springframework.web.client.HttpServerErrorException: 500 This is a remote exception",
+    "durationInMs": 0
+  },
+  {
+    "circuitBreakerName": "backendA",
+    "type": "SUCCESS",
+    "creationTime": "2017-01-10T15:39:20.518+01:00[Europe/Berlin]",
+    "durationInMs": 0
+  },
+  {
+    "circuitBreakerName": "backendA",
+    "type": "STATE_TRANSITION",
+    "creationTime": "2017-01-10T15:39:22.341+01:00[Europe/Berlin]",
+    "stateTransition": "CLOSED_TO_OPEN"
+  },
+  {
+    "circuitBreakerName": "backendA",
+    "type": "NOT_PERMITTED",
+    "creationTime": "2017-01-10T15:39:22.780+01:00[Europe/Berlin]"
+  }
+]
+}</pre>
 </div>
 </div>
 <div class="paragraph">
-<p>{<br>
-"circuitBreakerEvents":[<br>
-  {<br>
-    "circuitBreakerName": "backendA",<br>
-    "type": "ERROR",<br>
-    "creationTime": "2017-01-10T15:42:59.324+01:00[Europe/Berlin]",<br>
-    "errorMessage": "org.springframework.web.client.HttpServerErrorException: 500 This is a remote exception",<br>
-    "durationInMs": 0<br>
-  },<br>
-  {<br>
-    "circuitBreakerName": "backendA",<br>
-    "type": "ERROR",<br>
-    "creationTime": "2017-01-10T15:43:22.802+01:00[Europe/Berlin]",<br>
-    "errorMessage": "org.springframework.web.client.HttpServerErrorException: 500 This is a remote exception",<br>
-    "durationInMs": 0<br>
-  }<br>
-]<br>
-}</p>
+<p>You can even filter the list of  events.<br>
+The endpoint <code>/circuitbreaker/events/{circuitBreakerName}/{eventType}</code> lists the filtered events.<br>
+The endpoint <code>/circuitbreaker/stream/events/{circuitBreakerName}/{eventType}</code> streams emitted events using Server-Sent Events.<br>
+Event types can be:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>ERROR: A CircuitBreakerEvent which informs that an error has been recorded.</p>
+</li>
+<li>
+<p>IGNORED_ERROR: A CircuitBreakerEvent which informs that an error has been ignored.</p>
+</li>
+<li>
+<p>SUCCESS: A CircuitBreakerEvent which informs that a success has been recorded.</p>
+</li>
+<li>
+<p>NOT_PERMITTED: A CircuitBreakerEvent which informs that a call was not permitted because the CircuitBreaker state is OPEN.</p>
+</li>
+<li>
+<p>STATE_TRANSITION: A CircuitBreakerEvent which informs the state of the CircuitBreaker has been changed.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>For example /circuitbreaker/events/backendA/ERROR`:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre>===== RateLimiter
-These are the same endpoints as implemented for CircuitBreaker,
-so for detailed documentation please refer to previous section.
-
-List of available endpoints:
-
-* `/ratelimiter/events`
-* `/ratelimiter/stream/events`
-* `/ratelimiter/events/{retryName}`
-* `/ratelimiter/stream/events/{retryName}`
-* `/ratelimiter/events/{retryName}/{eventType}`
-* `/ratelimiter/stream/events/{retryName}/{eventType}`
-
-Example of response:</pre>
+<pre>{
+"circuitBreakerEvents":[
+  {
+    "circuitBreakerName": "backendA",
+    "type": "ERROR",
+    "creationTime": "2017-01-10T15:42:59.324+01:00[Europe/Berlin]",
+    "errorMessage": "org.springframework.web.client.HttpServerErrorException: 500 This is a remote exception",
+    "durationInMs": 0
+  },
+  {
+    "circuitBreakerName": "backendA",
+    "type": "ERROR",
+    "creationTime": "2017-01-10T15:43:22.802+01:00[Europe/Berlin]",
+    "errorMessage": "org.springframework.web.client.HttpServerErrorException: 500 This is a remote exception",
+    "durationInMs": 0
+  }
+]
+}</pre>
 </div>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_ratelimiter_7"><a class="anchor" href="#_ratelimiter_7"></a>RateLimiter</h5>
+<div class="paragraph">
+<p>These are the same endpoints as implemented for CircuitBreaker,<br>
+so for detailed documentation please refer to previous section.</p>
 </div>
 <div class="paragraph">
-<p>{<br>
-  "rateLimiterEvents": [<br>
-    {<br>
-      "rateLimiterName": "backendA",<br>
-      "rateLimiterEventType": "SUCCESSFUL_ACQUIRE",<br>
-      "rateLimiterCreationTime": "2017-05-05T21:29:40.463+03:00[Europe/Uzhgorod]"<br>
-    },<br>
-    {<br>
-      "rateLimiterName": "backendA",<br>
-      "rateLimiterEventType": "SUCCESSFUL_ACQUIRE",<br>
-      "rateLimiterCreationTime": "2017-05-05T21:29:40.469+03:00[Europe/Uzhgorod]"<br>
-    },<br>
-    {<br>
-      "rateLimiterName": "backendA",<br>
-      "rateLimiterEventType": "FAILED_ACQUIRE",<br>
-      "rateLimiterCreationTime": "2017-05-05T21:29:41.268+03:00[Europe/Uzhgorod]"<br>
-    }<br>
-  ]<br>
-}</p>
+<p>List of available endpoints:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>/ratelimiter/events</code></p>
+</li>
+<li>
+<p><code>/ratelimiter/stream/events</code></p>
+</li>
+<li>
+<p><code>/ratelimiter/events/{retryName}</code></p>
+</li>
+<li>
+<p><code>/ratelimiter/stream/events/{retryName}</code></p>
+</li>
+<li>
+<p><code>/ratelimiter/events/{retryName}/{eventType}</code></p>
+</li>
+<li>
+<p><code>/ratelimiter/stream/events/{retryName}/{eventType}</code></p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>Example of response:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre>===== Retry
-These are the same endpoints as implemented for CircuitBreaker,
-so for detailed documentation please refer to previous sections.
-
-List of available endpoints:
-
-* `/retry/events`
-* `/retry/stream/events`
-* `/retry/events/{retryName}`
-* `/retry/stream/events/{retryName}`
-* `/retry/events/{retryName}/{eventType}`
-* `/retry/stream/events/{retryName}/{eventType}`
-
-Example of response:</pre>
+<pre>{
+  "rateLimiterEvents": [
+    {
+      "rateLimiterName": "backendA",
+      "rateLimiterEventType": "SUCCESSFUL_ACQUIRE",
+      "rateLimiterCreationTime": "2017-05-05T21:29:40.463+03:00[Europe/Uzhgorod]"
+    },
+    {
+      "rateLimiterName": "backendA",
+      "rateLimiterEventType": "SUCCESSFUL_ACQUIRE",
+      "rateLimiterCreationTime": "2017-05-05T21:29:40.469+03:00[Europe/Uzhgorod]"
+    },
+    {
+      "rateLimiterName": "backendA",
+      "rateLimiterEventType": "FAILED_ACQUIRE",
+      "rateLimiterCreationTime": "2017-05-05T21:29:41.268+03:00[Europe/Uzhgorod]"
+    }
+  ]
+}</pre>
 </div>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_retry_4"><a class="anchor" href="#_retry_4"></a>Retry</h5>
+<div class="paragraph">
+<p>These are the same endpoints as implemented for CircuitBreaker,<br>
+so for detailed documentation please refer to previous sections.</p>
 </div>
 <div class="paragraph">
-<p>{<br>
-  "retryEvents": [<br>
-    {<br>
-      "retryName": "backendA",<br>
-      "retryEventType": "ERROR",<br>
-      "numberOfRetryAttempts":3,<br>
-      "retryCreationTime": "2017-05-05T21:29:40.463+03:00[Europe/Uzhgorod]"<br>
-    },<br>
-    {<br>
-      "retryName": "backendA",<br>
-      "retryEventType": "ERROR",<br>
-      "numberOfRetryAttempts":3,<br>
-      "retryCreationTime": "2017-05-05T21:29:40.469+03:00[Europe/Uzhgorod]"<br>
-    },<br>
-    {<br>
-      "retryName": "backendA",<br>
-      "retryEventType": "ERROR",<br>
-      "numberOfRetryAttempts":3,<br>
-      "retryCreationTime": "2017-05-05T21:29:41.268+03:00[Europe/Uzhgorod]"<br>
-    }<br>
-  ]<br>
-}</p>
+<p>List of available endpoints:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>/retry/events</code></p>
+</li>
+<li>
+<p><code>/retry/stream/events</code></p>
+</li>
+<li>
+<p><code>/retry/events/{retryName}</code></p>
+</li>
+<li>
+<p><code>/retry/stream/events/{retryName}</code></p>
+</li>
+<li>
+<p><code>/retry/events/{retryName}/{eventType}</code></p>
+</li>
+<li>
+<p><code>/retry/stream/events/{retryName}/{eventType}</code></p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>Example of response:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre>=== Retrofit
-
-https://square.github.io/retrofit/[Retrofit] client circuit breaking &amp; rate limiting.
-
-==== Circuit Breaking
-
-Circuit breaking http client calls is based upon the `CircuitBreaker` instance provided to a `CircuitBreakerCallAdaptor`.
-
-[source,java]</pre>
+<pre>{
+  "retryEvents": [
+    {
+      "retryName": "backendA",
+      "retryEventType": "ERROR",
+      "numberOfRetryAttempts":3,
+      "retryCreationTime": "2017-05-05T21:29:40.463+03:00[Europe/Uzhgorod]"
+    },
+    {
+      "retryName": "backendA",
+      "retryEventType": "ERROR",
+      "numberOfRetryAttempts":3,
+      "retryCreationTime": "2017-05-05T21:29:40.469+03:00[Europe/Uzhgorod]"
+    },
+    {
+      "retryName": "backendA",
+      "retryEventType": "ERROR",
+      "numberOfRetryAttempts":3,
+      "retryCreationTime": "2017-05-05T21:29:41.268+03:00[Europe/Uzhgorod]"
+    }
+  ]
+}</pre>
 </div>
 </div>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_retrofit"><a class="anchor" href="#_retrofit"></a>4.3. Retrofit</h3>
 <div class="paragraph">
-<p>private final CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testName");</p>
+<p><a href="https://square.github.io/retrofit/">Retrofit</a> client circuit breaking &amp; rate limiting.</p>
 </div>
+<div class="sect3">
+<h4 id="_circuit_breaking"><a class="anchor" href="#_circuit_breaking"></a>4.3.1. Circuit Breaking</h4>
 <div class="paragraph">
-<p>Retrofit retrofit = new Retrofit.Builder()<br>
-                .addCallAdapterFactory(CircuitBreakerCallAdapter.of(circuitBreaker))<br>
-                .baseUrl("http://localhost:8080/")<br>
-                .build();</p>
-</div>
-<div class="paragraph">
-<p>RetrofitService service = retrofit.create(RetrofitService.class);</p>
+<p>Circuit breaking http client calls is based upon the <code>CircuitBreaker</code> instance provided to a <code>CircuitBreakerCallAdaptor</code>.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre>===== Timeouts
-To trigger circuit breaking by timeout, the time thresholds should be set on a `OkHttpClient` instance passed into the
-`Retrofit.Builder`.
+<pre class="CodeRay highlight"><code data-lang="java"><span class="comment">// Create a CircuitBreaker</span>
+<span class="directive">private</span> <span class="directive">final</span> CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults(<span class="string"><span class="delimiter">&quot;</span><span class="content">testName</span><span class="delimiter">&quot;</span></span>);
 
-[source,java]</pre>
+<span class="comment">// Create a retrofit instance with CircuitBreaker call adapter</span>
+Retrofit retrofit = <span class="keyword">new</span> Retrofit.Builder()
+                .addCallAdapterFactory(CircuitBreakerCallAdapter.of(circuitBreaker))
+                .baseUrl(<span class="string"><span class="delimiter">&quot;</span><span class="content">http://localhost:8080/</span><span class="delimiter">&quot;</span></span>)
+                .build();
+
+<span class="comment">// Get an instance of your service with circuit breaking built in.</span>
+RetrofitService service = retrofit.create(RetrofitService.class);</code></pre>
 </div>
 </div>
+<div class="sect4">
+<h5 id="_timeouts"><a class="anchor" href="#_timeouts"></a>Timeouts</h5>
 <div class="paragraph">
-<p>private final CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testName");</p>
-</div>
-<div class="paragraph">
-<p>final long TIMEOUT = 300; // ms<br>
-OkHttpClient client = new OkHttpClient.Builder()<br>
-        .connectTimeout(TIMEOUT, TimeUnit.MILLISECONDS)<br>
-        .readTimeout(TIMEOUT, TimeUnit.MILLISECONDS)<br>
-        .writeTimeout(TIMEOUT, TimeUnit.MILLISECONDS)<br>
-        .build();</p>
-</div>
-<div class="paragraph">
-<p>Retrofit retrofit = new Retrofit.Builder()<br>
-        .addCallAdapterFactory(CircuitBreakerCallAdapter.of(circuitBreaker))<br>
-        .baseUrl("http://localhost:8080/")<br>
-        .client(client)<br>
-        .build();</p>
+<p>To trigger circuit breaking by timeout, the time thresholds should be set on a <code>OkHttpClient</code> instance passed into the<br>
+<code>Retrofit.Builder</code>.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre>===== Error responses
+<pre class="CodeRay highlight"><code data-lang="java"><span class="comment">// Create a CircuitBreaker</span>
+<span class="directive">private</span> <span class="directive">final</span> CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults(<span class="string"><span class="delimiter">&quot;</span><span class="content">testName</span><span class="delimiter">&quot;</span></span>);
 
-By default, all exceptions and responses where `!Response.isSuccessful()` will be recorded as an error in the `CircuitBreaker`.
+<span class="directive">final</span> <span class="type">long</span> TIMEOUT = <span class="integer">300</span>; <span class="comment">// ms</span>
+OkHttpClient client = <span class="keyword">new</span> OkHttpClient.Builder()
+        .connectTimeout(TIMEOUT, <span class="predefined-type">TimeUnit</span>.MILLISECONDS)
+        .readTimeout(TIMEOUT, <span class="predefined-type">TimeUnit</span>.MILLISECONDS)
+        .writeTimeout(TIMEOUT, <span class="predefined-type">TimeUnit</span>.MILLISECONDS)
+        .build();
 
-Customising what is considered a _successful_ response is possible like so:
-
-[source,java]</pre>
+Retrofit retrofit = <span class="keyword">new</span> Retrofit.Builder()
+        .addCallAdapterFactory(CircuitBreakerCallAdapter.of(circuitBreaker))
+        .baseUrl(<span class="string"><span class="delimiter">&quot;</span><span class="content">http://localhost:8080/</span><span class="delimiter">&quot;</span></span>)
+        .client(client)
+        .build();</code></pre>
 </div>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_error_responses"><a class="anchor" href="#_error_responses"></a>Error responses</h5>
+<div class="paragraph">
+<p>By default, all exceptions and responses where <code>!Response.isSuccessful()</code> will be recorded as an error in the <code>CircuitBreaker</code>.</p>
 </div>
 <div class="paragraph">
-<p>Retrofit retrofit = new Retrofit.Builder()<br>
-        .addCallAdapterFactory(CircuitBreakerCallAdapter.of(circuitBreaker, (r) &#8594; r.code() &lt; 500));<br>
-        .baseUrl("http://localhost:8080/")<br>
-        .build();</p>
+<p>Customising what is considered a <em>successful</em> response is possible like so:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre>==== Rate Limiting
-
-Rate limiting of http client calls is based upon the configuration passed to the RateLimiterCallAdaptor.
-
-[source, java]</pre>
+<pre class="CodeRay highlight"><code data-lang="java">Retrofit retrofit = <span class="keyword">new</span> Retrofit.Builder()
+        .addCallAdapterFactory(CircuitBreakerCallAdapter.of(circuitBreaker, (r) -&gt; r.code() &lt; <span class="integer">500</span>));
+        .baseUrl(<span class="string"><span class="delimiter">&quot;</span><span class="content">http://localhost:8080/</span><span class="delimiter">&quot;</span></span>)
+        .build();</code></pre>
 </div>
 </div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_rate_limiting"><a class="anchor" href="#_rate_limiting"></a>4.3.2. Rate Limiting</h4>
 <div class="paragraph">
-<p>RateLimiter rateLimiter = RateLimiter.ofDefaults("testName");</p>
-</div>
-<div class="paragraph">
-<p>Retrofit retrofit = new Retrofit.Builder()<br>
-        .addCallAdapterFactory(RateLimiterCallAdapter.of(rateLimiter))<br>
-        .baseUrl("http://localhost:8080/")<br>
-        .build();</p>
+<p>Rate limiting of http client calls is based upon the configuration passed to the RateLimiterCallAdaptor.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre>If the number of calls are exceeded within the period defined by the RateLimiter, a HTTP 429 response (too many requests) will be returned.
+<pre class="CodeRay highlight"><code data-lang="java">RateLimiter rateLimiter = RateLimiter.ofDefaults(<span class="string"><span class="delimiter">&quot;</span><span class="content">testName</span><span class="delimiter">&quot;</span></span>);
 
+Retrofit retrofit = <span class="keyword">new</span> Retrofit.Builder()
+        .addCallAdapterFactory(RateLimiterCallAdapter.of(rateLimiter))
+        .baseUrl(<span class="string"><span class="delimiter">&quot;</span><span class="content">http://localhost:8080/</span><span class="delimiter">&quot;</span></span>)
+        .build();</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>If the number of calls are exceeded within the period defined by the RateLimiter, a HTTP 429 response (too many requests) will be returned.</p>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_dropwizard_metrics_exporter"><a class="anchor" href="#_dropwizard_metrics_exporter"></a>4.4. Dropwizard Metrics exporter</h3>
+<div class="sect3">
+<h4 id="_introduction_6"><a class="anchor" href="#_introduction_6"></a>4.4.1. Introduction</h4>
+<div class="paragraph">
+<p>Integration with <a href="http://metrics.dropwizard.io">Dropwizard Metrics</a>.<br>
+With this add-on you can easily add your bulkhead, circuit breaker, rate limiter, retry metrics in your Dropwizard <code>MetricRegistry</code>.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_usage"><a class="anchor" href="#_usage"></a>4.4.2. Usage</h4>
+<div class="sect4">
+<h5 id="_bulkhead_5"><a class="anchor" href="#_bulkhead_5"></a>Bulkhead</h5>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="java"><span class="directive">final</span> MetricRegistry collectorRegistry = <span class="keyword">new</span> MetricRegistry();
 
-=== Dropwizard Metrics exporter
+<span class="directive">final</span> BulkheadRegistry bulkheadRegistry = BulkheadRegistry.ofDefaults();
+<span class="directive">final</span> Bulkhead foo = bulkheadRegistry.bulkhead(<span class="string"><span class="delimiter">&quot;</span><span class="content">foo</span><span class="delimiter">&quot;</span></span>);
+<span class="directive">final</span> Bulkhead boo = bulkheadRegistry.bulkhead(<span class="string"><span class="delimiter">&quot;</span><span class="content">boo</span><span class="delimiter">&quot;</span></span>);
 
-==== Introduction
-
-Integration with http://metrics.dropwizard.io[Dropwizard Metrics].
-With this add-on you can easily add your bulkhead, circuit breaker, rate limiter, retry metrics in your Dropwizard `MetricRegistry`.
-
-==== Usage
-
-===== Bulkhead
-
-[source,java]
---
-final MetricRegistry collectorRegistry = new MetricRegistry();
-
-final BulkheadRegistry bulkheadRegistry = BulkheadRegistry.ofDefaults();
-final Bulkhead foo = bulkheadRegistry.bulkhead("foo");
-final Bulkhead boo = bulkheadRegistry.bulkhead("boo");
-
-// you can register all bulkheads at once
+<span class="comment">// you can register all bulkheads at once</span>
 collectorRegistry.registerAll(BulkheadMetrics.ofBulkheadRegistry(bulkheadRegistry));
-// or register them one by one
-collectorRegistry.registerAll(BulkheadMetrics.ofBulkhead(foo));
---
+<span class="comment">// or register them one by one</span>
+collectorRegistry.registerAll(BulkheadMetrics.ofBulkhead(foo));</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>For each bulkhead this registry will export:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>available_concurrent_calls</code> - instantaneous read of the number of currently available concurrent calls <code>[int]</code></p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_circuitbreaker_8"><a class="anchor" href="#_circuitbreaker_8"></a>CircuitBreaker</h5>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="java"><span class="directive">final</span> MetricRegistry collectorRegistry = <span class="keyword">new</span> MetricRegistry();
 
-For each bulkhead this registry will export:
+<span class="directive">final</span> CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
+<span class="directive">final</span> CircuitBreaker foo = circuitBreakerRegistry.circuitBreaker(<span class="string"><span class="delimiter">&quot;</span><span class="content">foo</span><span class="delimiter">&quot;</span></span>);
+<span class="directive">final</span> CircuitBreaker boo = circuitBreakerRegistry.circuitBreaker(<span class="string"><span class="delimiter">&quot;</span><span class="content">boo</span><span class="delimiter">&quot;</span></span>);
 
-* `available_concurrent_calls` - instantaneous read of the number of currently available concurrent calls `[int]`
-
-===== CircuitBreaker
-
-[source,java]
---
-final MetricRegistry collectorRegistry = new MetricRegistry();
-
-final CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
-final CircuitBreaker foo = circuitBreakerRegistry.circuitBreaker("foo");
-final CircuitBreaker boo = circuitBreakerRegistry.circuitBreaker("boo");
-
-// you can register all circuit breakers at once
+<span class="comment">// you can register all circuit breakers at once</span>
 collectorRegistry.registerAll(CircuitBreakerMetrics.ofCircuitBreakerRegistry(circuitBreakerRegistry));
-// or register them one by one
+<span class="comment">// or register them one by one</span>
 collectorRegistry.registerAll(CircuitBreakerMetrics.ofCircuitBreaker(foo));
 
-// there is some additional useful methods in CircuitBreakerMetrics class
---
+<span class="comment">// there is some additional useful methods in CircuitBreakerMetrics class</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>For each circuit breaker this registry will export:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>state</code> - instantaneous read of the current state where 0-CLOSED, 1-OPEN, 2-HALF-OPEN <code>[int]</code></p>
+</li>
+<li>
+<p><code>successful</code> - current number of successful calls <code>[int]</code></p>
+</li>
+<li>
+<p><code>failed</code> - current number of failed calls <code>[int]</code></p>
+</li>
+<li>
+<p><code>buffered</code> - current number of buffered calls <code>[int]</code></p>
+</li>
+<li>
+<p><code>buffered_max</code> - maximum number of buffered calls <code>[int]</code></p>
+</li>
+<li>
+<p><code>not_permitted</code> - current number of not permitted calls <code>[int]</code></p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_ratelimiter_8"><a class="anchor" href="#_ratelimiter_8"></a>RateLimiter</h5>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="java"><span class="directive">final</span> MetricRegistry metricRegistry = <span class="keyword">new</span> MetricRegistry();
+<span class="directive">final</span> RateLimiterRegistry rateLimiterRegistry = RateLimiterRegistry.ofDefaults();
+<span class="directive">final</span> RateLimiter rateLimiter = rateLimiterRegistry.rateLimiter(<span class="string"><span class="delimiter">&quot;</span><span class="content">testLimit</span><span class="delimiter">&quot;</span></span>);
 
-For each circuit breaker this registry will export:
-
-* `state` - instantaneous read of the current state where 0-CLOSED, 1-OPEN, 2-HALF-OPEN `[int]`
-* `successful` - current number of successful calls `[int]`
-* `failed` - current number of failed calls `[int]`
-* `buffered` - current number of buffered calls `[int]`
-* `buffered_max` - maximum number of buffered calls `[int]`
-* `not_permitted` - current number of not permitted calls `[int]`
-
-===== RateLimiter
-
-[source,java]
---
-final MetricRegistry metricRegistry = new MetricRegistry();
-final RateLimiterRegistry rateLimiterRegistry = RateLimiterRegistry.ofDefaults();
-final RateLimiter rateLimiter = rateLimiterRegistry.rateLimiter("testLimit");
-
-// you can register all rate limiters at once
+<span class="comment">// you can register all rate limiters at once</span>
 metricRegistry.registerAll(RateLimiterMetrics.ofRateLimiterRegistry(rateLimiterRegistry));
-// or register them one by one
-metricRegistry.registerAll(RateLimiterMetrics.ofRateLimiter(rateLimiter));
---
+<span class="comment">// or register them one by one</span>
+metricRegistry.registerAll(RateLimiterMetrics.ofRateLimiter(rateLimiter));</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>For each rate limiter this registry will export:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>available_permissions</code> - current number of available permissions <code>[int]</code></p>
+</li>
+<li>
+<p><code>number_of_waiting_threads</code> - current number of threads waiting for permission <code>[int]</code></p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_retry_5"><a class="anchor" href="#_retry_5"></a>Retry</h5>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="java"><span class="directive">final</span> MetricRegistry metricRegistry = <span class="keyword">new</span> MetricRegistry();
+<span class="directive">final</span> RetryRegistry retryRegistry = RetryRegistry.ofDefaults();
+<span class="directive">final</span> Retry retry = retryRegistry.retry(<span class="string"><span class="delimiter">&quot;</span><span class="content">testLimit</span><span class="delimiter">&quot;</span></span>);
 
-For each rate limiter this registry will export:
-
-* `available_permissions` - current number of available permissions `[int]`
-* `number_of_waiting_threads` - current number of threads waiting for permission `[int]`
-
-===== Retry
-
-[source,java]
---
-final MetricRegistry metricRegistry = new MetricRegistry();
-final RetryRegistry retryRegistry = RetryRegistry.ofDefaults();
-final Retry retry = retryRegistry.retry("testLimit");
-
-// you can register all rate limiters at once
+<span class="comment">// you can register all rate limiters at once</span>
 metricRegistry.registerAll(RetryMetrics.ofRetryRegistry(retryRegistry));
-// or register them one by one
-metricRegistry.registerAll(RetryMetrics.ofRetry(retry));
---
+<span class="comment">// or register them one by one</span>
+metricRegistry.registerAll(RetryMetrics.ofRetry(retry));</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>For each retry this registry will export:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>successful_calls_without_retry</code> - the number of successful calls without a retry attempt <code>[long]</code></p>
+</li>
+<li>
+<p><code>successful_calls_with_retry</code> - the number of successful calls after a retry attempt <code>[long]</code></p>
+</li>
+<li>
+<p><code>failed_calls_without_retry</code> - the number of failed calls without a retry attempt <code>[long]</code></p>
+</li>
+<li>
+<p><code>failed_calls_with_retry</code> - the number of failed calls after all retry attempts <code>[long]</code></p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_prometheus_metrics_integration"><a class="anchor" href="#_prometheus_metrics_integration"></a>4.5. Prometheus Metrics Integration</h3>
+<div class="sect3">
+<h4 id="_introduction_7"><a class="anchor" href="#_introduction_7"></a>4.5.1. Introduction</h4>
+<div class="paragraph">
+<p>Integration with <a href="https://github.com/prometheus/client_java">Prometheus simple client</a></p>
+</div>
+<div class="paragraph">
+<p>Module provides exporters for <code>CircuitBreaker</code> and <code>RateLimiter</code> metrics.</p>
+</div>
+<div class="paragraph">
+<p>For the circuit breaker library exports 2 metrics:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>By state with default metric name <code>circuit_breaker_states</code> and label <code>state</code>:</p>
+<div class="ulist">
+<ul>
+<li>
+<p><code>closed</code></p>
+</li>
+<li>
+<p><code>open</code></p>
+</li>
+<li>
+<p><code>half_open</code></p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p>By call result with default metric name <code>circuit_breaker_calls</code> and label <code>call_result</code>:</p>
+<div class="ulist">
+<ul>
+<li>
+<p><code>successful</code></p>
+</li>
+<li>
+<p><code>failed</code></p>
+</li>
+<li>
+<p><code>not_permitted</code></p>
+</li>
+<li>
+<p><code>buffered</code></p>
+</li>
+<li>
+<p><code>buffered_max</code></p>
+</li>
+</ul>
+</div>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>For the rate limiter following metric with default name <code>rate_limiter</code> and label <code>param</code> exported:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>available_permissions</code></p>
+</li>
+<li>
+<p><code>waiting_threads</code></p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>The names of the rate limiters and circuit breakers are exposed using label <code>name</code>.</p>
+</div>
+<div class="paragraph">
+<p>This module also provides <code>CallMeter</code>&#8201;&#8212;&#8201;a composite metric to measure single call/request metrics such as:<br>
+    - execution time distribution,<br>
+    - number of attempts and<br>
+    - number of failures.</p>
+</div>
+<div class="paragraph">
+<p>It is implemented in Prometheus simple client&#8217;s style, supports labels and produces histogram and counter metrics.</p>
+</div>
+<div class="paragraph">
+<p>Usage examples provided bellow in this section.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_dashboard_example"><a class="anchor" href="#_dashboard_example"></a>4.5.2. Dashboard Example</h4>
+<div class="imageblock">
+<div class="content">
+<img src="images/prometheus-dashboard.png" alt="Circuit Breaker Dashboard Example">
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_usage_2"><a class="anchor" href="#_usage_2"></a>4.5.3. Usage</h4>
+<div class="sect4">
+<h5 id="_circuitbreaker_9"><a class="anchor" href="#_circuitbreaker_9"></a>CircuitBreaker</h5>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="java"><span class="directive">final</span> CollectorRegistry collectorRegistry = CollectorRegistry.defaultRegistry;
 
-For each retry this registry will export:
+<span class="directive">final</span> CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
 
-* `successful_calls_without_retry` - the number of successful calls without a retry attempt `[long]`
-* `successful_calls_with_retry` - the number of successful calls after a retry attempt `[long]`
-* `failed_calls_without_retry` - the number of failed calls without a retry attempt `[long]`
-* `failed_calls_with_retry` - the number of failed calls after all retry attempts `[long]`
+<span class="directive">final</span> CircuitBreaker foo = circuitBreakerRegistry.circuitBreaker(<span class="string"><span class="delimiter">&quot;</span><span class="content">foo</span><span class="delimiter">&quot;</span></span>);
+<span class="directive">final</span> CircuitBreaker boo = circuitBreakerRegistry.circuitBreaker(<span class="string"><span class="delimiter">&quot;</span><span class="content">boo</span><span class="delimiter">&quot;</span></span>);
 
+<span class="comment">// Registering metrics in prometeus CollectorRegistry</span>
+collectorRegistry.register(CircuitBreakerExports.ofCircuitBreakerRegistry(circuitBreakerRegistry));</code></pre>
+</div>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_ratelimiter_9"><a class="anchor" href="#_ratelimiter_9"></a>RateLimiter</h5>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="java"><span class="directive">final</span> CollectorRegistry collectorRegistry = CollectorRegistry.defaultRegistry;
 
-=== Prometheus Metrics Integration
+<span class="directive">final</span> RateLimiterRegistry rateLimiterRegistry = RateLimiterRegistry.ofDefaults();
 
-==== Introduction
+<span class="directive">final</span> RateLimiter foo = rateLimiterRegistry.rateLimiter(<span class="string"><span class="delimiter">&quot;</span><span class="content">foo</span><span class="delimiter">&quot;</span></span>);
+<span class="directive">final</span> RateLimiter boo = rateLimiterRegistry.rateLimiter(<span class="string"><span class="delimiter">&quot;</span><span class="content">boo</span><span class="delimiter">&quot;</span></span>);
 
-Integration with https://github.com/prometheus/client_java[Prometheus simple client]
+<span class="comment">// Registering metrics in prometeus CollectorRegistry</span>
+collectorRegistry.register(RateLimiterExports.ofRateLimiterRegistry(rateLimiterRegistry));</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>For both it is possible to use just a collection of breakers and limiters instead of registry.</p>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_call_meter"><a class="anchor" href="#_call_meter"></a>Call Meter</h5>
+<div class="paragraph">
+<p>Simple example without labels</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="java"><span class="directive">final</span> CollectorRegistry registry = <span class="keyword">new</span> CollectorRegistry();
 
-Module provides exporters for `CircuitBreaker` and `RateLimiter` metrics.
+<span class="directive">final</span> CallMeter meter = CallMeter.of(<span class="string"><span class="delimiter">&quot;</span><span class="content">foo_call</span><span class="delimiter">&quot;</span></span>, <span class="string"><span class="delimiter">&quot;</span><span class="content">Foo call help</span><span class="delimiter">&quot;</span></span>, registry);
 
-For the circuit breaker library exports 2 metrics:
+CallMeter.decorateCompletionStageSupplier(meter, () -&gt; supplyAsync(() -&gt; { <span class="comment">/* ... */</span> }));</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Advanced example with labels</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="java"><span class="directive">final</span> CollectorRegistry registry = <span class="keyword">new</span> CollectorRegistry();
 
-1. By state with default metric name `circuit_breaker_states` and label `state`:
-
-    - `closed`
-    - `open`
-    - `half_open`
-
-2. By call result with default metric name `circuit_breaker_calls` and label `call_result`:
-
-    - `successful`
-    - `failed`
-    - `not_permitted`
-    - `buffered`
-    - `buffered_max`
-
-For the rate limiter following metric with default name `rate_limiter` and label `param` exported:
-
-- `available_permissions`
-- `waiting_threads`
-
-The names of the rate limiters and circuit breakers are exposed using label `name`.
-
-This module also provides `CallMeter` -- a composite metric to measure single call/request metrics such as:
-    - execution time distribution,
-    - number of attempts and
-    - number of failures.
-
-It is implemented in Prometheus simple client's style, supports labels and produces histogram and counter metrics.
-
-Usage examples provided bellow in this section.
-
-==== Dashboard Example
-
-image::images/prometheus-dashboard.png[Circuit Breaker Dashboard Example]
-
-==== Usage
-
-===== CircuitBreaker
-
-[source,java]
---
-final CollectorRegistry collectorRegistry = CollectorRegistry.defaultRegistry;
-
-final CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
-
-final CircuitBreaker foo = circuitBreakerRegistry.circuitBreaker("foo");
-final CircuitBreaker boo = circuitBreakerRegistry.circuitBreaker("boo");
-
-// Registering metrics in prometeus CollectorRegistry
-collectorRegistry.register(CircuitBreakerExports.ofCircuitBreakerRegistry(circuitBreakerRegistry));
---
-
-===== RateLimiter
-
-[source,java]
---
-final CollectorRegistry collectorRegistry = CollectorRegistry.defaultRegistry;
-
-final RateLimiterRegistry rateLimiterRegistry = RateLimiterRegistry.ofDefaults();
-
-final RateLimiter foo = rateLimiterRegistry.rateLimiter("foo");
-final RateLimiter boo = rateLimiterRegistry.rateLimiter("boo");
-
-// Registering metrics in prometeus CollectorRegistry
-collectorRegistry.register(RateLimiterExports.ofRateLimiterRegistry(rateLimiterRegistry));
---
-
-For both it is possible to use just a collection of breakers and limiters instead of registry.
-
-===== Call Meter
-
-Simple example without labels
-
-[source,java]
---
-final CollectorRegistry registry = new CollectorRegistry();
-
-final CallMeter meter = CallMeter.of("foo_call", "Foo call help", registry);
-
-CallMeter.decorateCompletionStageSupplier(meter, () -&gt; supplyAsync(() -&gt; { /* ... */ }));
---
-
-Advanced example with labels
-
-[source,java]
---
-final CollectorRegistry registry = new CollectorRegistry();
-
-final CallMeter meter = CallMeter
+<span class="directive">final</span> CallMeter meter = CallMeter
         .builder()
-        .name("foo_call")
-        .help("Foo call help")
-        .labelNames("label_1")
+        .name(<span class="string"><span class="delimiter">&quot;</span><span class="content">foo_call</span><span class="delimiter">&quot;</span></span>)
+        .help(<span class="string"><span class="delimiter">&quot;</span><span class="content">Foo call help</span><span class="delimiter">&quot;</span></span>)
+        .labelNames(<span class="string"><span class="delimiter">&quot;</span><span class="content">label_1</span><span class="delimiter">&quot;</span></span>)
         .build()
         .register(registry);
 
-meter.labels("boo").executeRunnable(() -&gt; { /* ... */ });
+meter.labels(<span class="string"><span class="delimiter">&quot;</span><span class="content">boo</span><span class="delimiter">&quot;</span></span>).executeRunnable(() -&gt; { <span class="comment">/* ... */</span> });
 
 CallMeter.decorateCompletionStageSupplier(
-    meter.labels("baz"),
-    () -&gt; supplyAsync(() -&gt; { /* ... */ })
-);
-
---
-
-
-== Implementation details
-
-=== CircuitBreaker
-
-The CircuitBreaker is implemented via a finite state machine with three states: `CLOSED`, `OPEN` and `HALF_OPEN`.
-
-image::images/state_machine.jpg[]
-
-The CircuitBreaker does not know anything about the backend's state by itself, but uses the information provided by the decorators via `CircuitBreaker::onSuccess` and `CircuitBreaker::onError`. See example:
-
-[source,java]</pre>
+    meter.labels(<span class="string"><span class="delimiter">&quot;</span><span class="content">baz</span><span class="delimiter">&quot;</span></span>),
+    () -&gt; supplyAsync(() -&gt; { <span class="comment">/* ... */</span> })
+);</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_implementation_details"><a class="anchor" href="#_implementation_details"></a>5. Implementation details</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_circuitbreaker_10"><a class="anchor" href="#_circuitbreaker_10"></a>5.1. CircuitBreaker</h3>
+<div class="paragraph">
+<p>The CircuitBreaker is implemented via a finite state machine with three states: <code>CLOSED</code>, <code>OPEN</code> and <code>HALF_OPEN</code>.</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="images/state_machine.jpg" alt="state machine">
 </div>
 </div>
 <div class="paragraph">
-<p>static &lt;T&gt; Supplier&lt;T&gt; decorateSupplier(CircuitBreaker circuitBreaker, Supplier&lt;T&gt; supplier){<br>
-    return () &#8594; {<br>
-        CircuitBreakerUtils.isCallPermitted(circuitBreaker);<br>
-        long start = System.nanoTime();<br>
-        try {<br>
-            T returnValue = supplier.get();<br>
-            long durationInNanos = System.nanoTime() - start;<br>
-            circuitBreaker.onSuccess(durationInNanos);<br>
-            return returnValue;<br>
-        } catch (Throwable throwable) {<br>
-            long durationInNanos = System.nanoTime() - start;<br>
-            circuitBreaker.onError(durationInNanos, throwable);<br>
-            throw throwable;<br>
-        }<br>
-    };<br>
-}</p>
+<p>The CircuitBreaker does not know anything about the backend&#8217;s state by itself, but uses the information provided by the decorators via <code>CircuitBreaker::onSuccess</code> and <code>CircuitBreaker::onError</code>. See example:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre>The state of the CircuitBreaker changes from `CLOSED` to `OPEN` when the failure rate is above a (configurable) threshold.
-Then, all access to the backend is blocked for a (configurable) time duration. `CircuitBreaker::isCallPermitted()` throws a `CircuitBreakerOpenException`, if the CircuitBreaker is `OPEN`.
-
-The CircuitBreaker uses a Ring Bit Buffer in the `CLOSED` state to store the success or failure statuses of the calls. A successful call is stored as a `0` bit and a failed call is stored as a `1` bit. The Ring Bit Buffer has a (configurable) fixed-size. The Ring Bit Buffer uses internally a https://docs.oracle.com/javase/8/docs/api/java/util/BitSet.html[BitSet] like data structure to store the bits which is saving memory compared to a boolean array. The BitSet uses a long[] array to store the bits. That means the BitSet only needs an array of 16 long (64-bit) values to store the status of 1024 calls.
-
-image::images/ring_buffer.jpg[Ring Bit Buffer]
-
-The Ring Bit Buffer must be full, before the failure rate can be calculated.
-For example, if the size of the Ring Buffer is 10, then at least 10 calls must evaluated, before the failure rate can be calculated. If only 9 calls have been evaluated the CircuitBreaker will not trip open even if all 9 calls have failed.
-
-After the time duration has elapsed, the CircuitBreaker state changes from `OPEN` to `HALF_OPEN` and allows calls to see if the backend is still unavailable or has become available again. The CircuitBreaker uses another (configurable) Ring Bit Buffer to evaluate the failure rate in the `HALF_OPEN` state. If the failure rate is above the configured threshold, the state changes back to `OPEN`. If the failure rate is below or equal to the threshold, the state changes back to `CLOSED`.
-`CircuitBreaker::onError` checks if the exception should be recorded as a failure or should be ignored. You can configure a custom `Predicate` which decides whether an exception should be recorded as a failure. The default Predicate records all exceptions as a failure.
-
-The CircuitBreaker publishes a stream of CircuitBreakerEvents to any Subscriber/Consumer who subscribes. An event can be a state transition or a recorded error. This library uses RxJava to to provide this functionality. If you want to consume events, you have to subscribe to the event stream. This library provides a consumer `CircuitBreakerEventConsumer` which can be used to store events in a circular buffer with a fixed capacity. You can use RxJava to filter certain events.
-
-[source,java]</pre>
+<pre class="CodeRay highlight"><code data-lang="java"><span class="directive">static</span> &lt;T&gt; Supplier&lt;T&gt; decorateSupplier(CircuitBreaker circuitBreaker, Supplier&lt;T&gt; supplier){
+    <span class="keyword">return</span> () -&gt; {
+        CircuitBreakerUtils.isCallPermitted(circuitBreaker);
+        <span class="type">long</span> start = <span class="predefined-type">System</span>.nanoTime();
+        <span class="keyword">try</span> {
+            T returnValue = supplier.get();
+            <span class="type">long</span> durationInNanos = <span class="predefined-type">System</span>.nanoTime() - start;
+            circuitBreaker.onSuccess(durationInNanos);
+            <span class="keyword">return</span> returnValue;
+        } <span class="keyword">catch</span> (<span class="predefined-type">Throwable</span> throwable) {
+            <span class="type">long</span> durationInNanos = <span class="predefined-type">System</span>.nanoTime() - start;
+            circuitBreaker.onError(durationInNanos, throwable);
+            <span class="keyword">throw</span> throwable;
+        }
+    };
+}</code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testName");<br>
-CircuitBreakerEventConsumer ringBuffer = new CircuitBreakerEventConsumer(10);<br>
-circuitBreaker.getEventStream()<br>
-        .filter(event &#8594; event.getEventType() == Type.ERROR)<br>
-        .subscribe(ringBuffer);</p>
+<p>The state of the CircuitBreaker changes from <code>CLOSED</code> to <code>OPEN</code> when the failure rate is above a (configurable) threshold.<br>
+Then, all access to the backend is blocked for a (configurable) time duration. <code>CircuitBreaker::isCallPermitted()</code> throws a <code>CircuitBreakerOpenException</code>, if the CircuitBreaker is <code>OPEN</code>.</p>
+</div>
+<div class="paragraph">
+<p>The CircuitBreaker uses a Ring Bit Buffer in the <code>CLOSED</code> state to store the success or failure statuses of the calls. A successful call is stored as a <code>0</code> bit and a failed call is stored as a <code>1</code> bit. The Ring Bit Buffer has a (configurable) fixed-size. The Ring Bit Buffer uses internally a <a href="https://docs.oracle.com/javase/8/docs/api/java/util/BitSet.html">BitSet</a> like data structure to store the bits which is saving memory compared to a boolean array. The BitSet uses a long[] array to store the bits. That means the BitSet only needs an array of 16 long (64-bit) values to store the status of 1024 calls.</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="images/ring_buffer.jpg" alt="Ring Bit Buffer">
+</div>
+</div>
+<div class="paragraph">
+<p>The Ring Bit Buffer must be full, before the failure rate can be calculated.<br>
+For example, if the size of the Ring Buffer is 10, then at least 10 calls must evaluated, before the failure rate can be calculated. If only 9 calls have been evaluated the CircuitBreaker will not trip open even if all 9 calls have failed.</p>
+</div>
+<div class="paragraph">
+<p>After the time duration has elapsed, the CircuitBreaker state changes from <code>OPEN</code> to <code>HALF_OPEN</code> and allows calls to see if the backend is still unavailable or has become available again. The CircuitBreaker uses another (configurable) Ring Bit Buffer to evaluate the failure rate in the <code>HALF_OPEN</code> state. If the failure rate is above the configured threshold, the state changes back to <code>OPEN</code>. If the failure rate is below or equal to the threshold, the state changes back to <code>CLOSED</code>.<br>
+<code>CircuitBreaker::onError</code> checks if the exception should be recorded as a failure or should be ignored. You can configure a custom <code>Predicate</code> which decides whether an exception should be recorded as a failure. The default Predicate records all exceptions as a failure.</p>
+</div>
+<div class="paragraph">
+<p>The CircuitBreaker publishes a stream of CircuitBreakerEvents to any Subscriber/Consumer who subscribes. An event can be a state transition or a recorded error. This library uses RxJava to to provide this functionality. If you want to consume events, you have to subscribe to the event stream. This library provides a consumer <code>CircuitBreakerEventConsumer</code> which can be used to store events in a circular buffer with a fixed capacity. You can use RxJava to filter certain events.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre>=== RateLimiter
-Conceptually `RateLimiter` splits all nanoseconds from the start of epoch into cycles.
-Each cycle has duration configured by `RateLimiterConfig.limitRefreshPeriod`.
-By contract on start of each cycle `RateLimiter` should set `activePermissions` to `RateLimiterConfig.limitForPeriod`.
-For the `RateLimiter` callers it is really looks so, but for example `AtomicRateLimiter` implementation has
-some optimisations under the hood that will skip this refresh if `RateLimiter` is not used actively.
-
-image::images/rate_limiter.png[Rate Limiter]
-
-The default implementation of `RateLimiter` is `AtomicRateLimiter` it manages state via `AtomicReference`.
-`AtomicRateLimiter.State` is completely immutable and has the folowing fields:
-
-* `activeCycle` - cycle number that was used by the last call.
-* `activePermissions` - count of available permissions after the last call.
-Can be negative if some permissions where reserved.
-* `nanosToWait` - count of nanoseconds to wait for permission for the last call.
-
-`AtomicRateLimiter` is also very fast on i7-5557U processor and with x64 Java-1.8.0_112
-it takes only `143±1 [ns]` to acquire permission.
-So you can easily restrict not only network calls but your local in-memory operations, too.
-
-== License
-
-Copyright 2017 Robert Winkler, Bohdan Storozhuk, Oleksandr Goldobin, Christopher Pilsworth and Dan Maas
-
-Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.</pre>
+<pre class="CodeRay highlight"><code data-lang="java">CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults(<span class="string"><span class="delimiter">&quot;</span><span class="content">testName</span><span class="delimiter">&quot;</span></span>);
+CircuitBreakerEventConsumer ringBuffer = <span class="keyword">new</span> CircuitBreakerEventConsumer(<span class="integer">10</span>);
+circuitBreaker.getEventStream()
+        .filter(event -&gt; event.getEventType() == <span class="predefined-type">Type</span>.ERROR)
+        .subscribe(ringBuffer);</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_ratelimiter_10"><a class="anchor" href="#_ratelimiter_10"></a>5.2. RateLimiter</h3>
+<div class="paragraph">
+<p>Conceptually <code>RateLimiter</code> splits all nanoseconds from the start of epoch into cycles.<br>
+Each cycle has duration configured by <code>RateLimiterConfig.limitRefreshPeriod</code>.<br>
+By contract on start of each cycle <code>RateLimiter</code> should set <code>activePermissions</code> to <code>RateLimiterConfig.limitForPeriod</code>.<br>
+For the <code>RateLimiter</code> callers it is really looks so, but for example <code>AtomicRateLimiter</code> implementation has<br>
+some optimisations under the hood that will skip this refresh if <code>RateLimiter</code> is not used actively.</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="images/rate_limiter.png" alt="Rate Limiter">
+</div>
+</div>
+<div class="paragraph">
+<p>The default implementation of <code>RateLimiter</code> is <code>AtomicRateLimiter</code> it manages state via <code>AtomicReference</code>.<br>
+<code>AtomicRateLimiter.State</code> is completely immutable and has the folowing fields:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>activeCycle</code> - cycle number that was used by the last call.</p>
+</li>
+<li>
+<p><code>activePermissions</code> - count of available permissions after the last call.<br>
+Can be negative if some permissions where reserved.</p>
+</li>
+<li>
+<p><code>nanosToWait</code> - count of nanoseconds to wait for permission for the last call.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p><code>AtomicRateLimiter</code> is also very fast on i7-5557U processor and with x64 Java-1.8.0_112<br>
+it takes only <code>143±1 [ns]</code> to acquire permission.<br>
+So you can easily restrict not only network calls but your local in-memory operations, too.</p>
 </div>
 </div>
 </div>
 </div>
+<div class="sect1">
+<h2 id="_license"><a class="anchor" href="#_license"></a>6. License</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Copyright 2017 Robert Winkler, Bohdan Storozhuk, Oleksandr Goldobin, Christopher Pilsworth and Dan Maas</p>
+</div>
+<div class="paragraph">
+<p>Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>http://www.apache.org/licenses/LICENSE-2.0</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.</p>
 </div>
 </div>
 </div>
