@@ -16,11 +16,13 @@
  *
  *
  */
-package io.github.resilience4j.circuitbreaker;
+package io.github.resilience4j.vertx;
 
 import java.time.Duration;
 import java.util.function.Supplier;
 
+import io.github.resilience4j.circuitbreaker.CircuitBreaker;
+import io.github.resilience4j.circuitbreaker.CircuitBreakerOpenException;
 import io.github.resilience4j.core.StopWatch;
 import io.vertx.core.Future;
 

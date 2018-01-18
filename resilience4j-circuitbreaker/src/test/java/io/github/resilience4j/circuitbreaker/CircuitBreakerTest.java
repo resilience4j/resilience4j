@@ -26,7 +26,6 @@ import org.junit.Test;
 import org.mockito.BDDMockito;
 import org.mockito.Mockito;
 
-import javax.xml.ws.WebServiceException;
 import java.io.IOException;
 import java.net.SocketTimeoutException;
 import java.time.Duration;
@@ -573,13 +572,13 @@ public class CircuitBreakerTest {
                 .ringBufferSizeInHalfOpenState(2)
                 .waitDurationInOpenState(Duration.ofMillis(1000))
                 .recordFailure(throwable -> Match(throwable).of(
-                        Case($(instanceOf(WebServiceException.class)), true),
+                        Case($(instanceOf(IllegalStateException.class)), true),
                         Case($(), false)))
                 .build();
         CircuitBreaker circuitBreaker = CircuitBreaker.of("testName", circuitBreakerConfig);
 
         // Simulate a failure attempt
-        circuitBreaker.onError(0, new WebServiceException());
+        circuitBreaker.onError(0, new IllegalStateException());
         // CircuitBreaker is still CLOSED, because 1 failure is allowed
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
 
@@ -749,7 +748,7 @@ public class CircuitBreakerTest {
     }
 
     @Test
-    public void shouldDecorateCompletionStageAndReturnWithExceptionAtSyncStage() throws ExecutionException, InterruptedException {
+    public void shouldDecorateCompletionStageAndReturnWithExceptionAtSyncStage() {
         // Given
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("backendName");
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
@@ -757,7 +756,7 @@ public class CircuitBreakerTest {
 
         // When
         Supplier<CompletionStage<String>> completionStageSupplier = () -> {
-            throw new WebServiceException("BAM! At sync stage");
+            throw new IllegalStateException("BAM! At sync stage");
         };
 
         Supplier<CompletionStage<String>> decoratedCompletionStageSupplier =
@@ -765,7 +764,7 @@ public class CircuitBreakerTest {
         Try<CompletionStage<String>> result = Try.of(decoratedCompletionStageSupplier::get);
 
         assertThat(result.isFailure()).isEqualTo(true);
-        assertThat(result.failed().get()).isInstanceOf(WebServiceException.class);
+        assertThat(result.failed().get()).isInstanceOf(IllegalStateException.class);
 
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
@@ -773,7 +772,7 @@ public class CircuitBreakerTest {
     }
 
     @Test
-    public void shouldDecorateCompletionStageAndReturnWithExceptionAtAsyncStage() throws ExecutionException, InterruptedException {
+    public void shouldDecorateCompletionStageAndReturnWithExceptionAtAsyncStage() {
         // Given
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("backendName");
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
@@ -799,7 +798,7 @@ public class CircuitBreakerTest {
     }
 
     @Test
-    public void shouldChainDecoratedFunctions() throws ExecutionException, InterruptedException {
+    public void shouldChainDecoratedFunctions() {
         // tag::shouldChainDecoratedFunctions[]
         // Given
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testName");

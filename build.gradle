@@ -73,8 +73,8 @@ configure(project.coreProjects) {
     }
 
     tasks.withType(JavaCompile) {
-        sourceCompatibility = "1.8"
-        targetCompatibility = "1.8"
+        sourceCompatibility = "1.9"
+        targetCompatibility = "1.9"
         options.deprecation = true
         options.encoding = 'UTF-8'
         options.compilerArgs << "-Xlint:unchecked"

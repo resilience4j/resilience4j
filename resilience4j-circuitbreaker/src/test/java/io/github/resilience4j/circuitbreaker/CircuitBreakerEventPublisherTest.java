@@ -22,7 +22,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
 
-import javax.xml.ws.WebServiceException;
 import java.io.IOException;
 
 import static io.vavr.API.*;
@@ -129,7 +128,7 @@ public class CircuitBreakerEventPublisherTest {
     public void shouldConsumeIgnoredErrorEvent() {
         CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom()
                 .recordFailure(throwable -> Match(throwable).of(
-                        Case($(instanceOf(WebServiceException.class)), true),
+                        Case($(instanceOf(IllegalStateException.class)), true),
                         Case($(), false)))
                 .build();
 
