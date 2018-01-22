@@ -16,30 +16,31 @@
 
 package io.github.resilience4j.ratelimiter.operator;
 
-import org.reactivestreams.Subscriber;
-import org.reactivestreams.Subscription;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import static java.util.Objects.requireNonNull;
 
 import io.github.resilience4j.ratelimiter.RateLimiter;
-import io.github.resilience4j.ratelimiter.RequestNotPermitted;
+import io.reactivex.CompletableObserver;
+import io.reactivex.CompletableOperator;
 import io.reactivex.FlowableOperator;
+import io.reactivex.MaybeObserver;
+import io.reactivex.MaybeOperator;
 import io.reactivex.ObservableOperator;
 import io.reactivex.Observer;
 import io.reactivex.SingleObserver;
 import io.reactivex.SingleOperator;
-import io.reactivex.disposables.Disposable;
+import org.reactivestreams.Subscriber;
 
-import java.util.concurrent.atomic.AtomicBoolean;
-
-public class RateLimiterOperator<T> implements ObservableOperator<T, T>, FlowableOperator<T, T>, SingleOperator<T, T> {
-
-    private static final Logger LOG = LoggerFactory.getLogger(RateLimiterOperator.class);
-
+/**
+ * A RxJava operator which wraps a reactive type in a rate limiter.
+ * All operators consumes one permit at subscription and one permit per emitted event except the first one.
+ *
+ * @param <T> the value type of the upstream and downstream
+ */
+public class RateLimiterOperator<T> implements ObservableOperator<T, T>, FlowableOperator<T, T>, SingleOperator<T, T>, CompletableOperator, MaybeOperator<T, T> {
     private final RateLimiter rateLimiter;
 
     private RateLimiterOperator(RateLimiter rateLimiter) {
-        this.rateLimiter = rateLimiter;
+        this.rateLimiter = requireNonNull(rateLimiter);
     }
 
     /**
@@ -53,269 +54,28 @@ public class RateLimiterOperator<T> implements ObservableOperator<T, T>, Flowabl
         return new RateLimiterOperator<>(rateLimiter);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public Subscriber<? super T> apply(Subscriber<? super T> childSubscriber) throws Exception {
-        return new RateLimiterSubscriber(childSubscriber);
+        return new RateLimiterSubscriber<>(rateLimiter, childSubscriber);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public Observer<? super T> apply(Observer<? super T> childObserver) throws Exception {
-        return new RateLimiterObserver(childObserver);
+        return new RateLimiterObserver<>(rateLimiter, childObserver);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public SingleObserver<? super T> apply(SingleObserver<? super T> childObserver) throws Exception {
-        return new RateLimiterSingleObserver(childObserver);
+        return new RateLimiterSingleObserver<>(rateLimiter, childObserver);
     }
 
-    private final class RateLimiterSubscriber implements Subscriber<T>, Subscription {
-
-        private final Subscriber<? super T> childSubscriber;
-        private Subscription subscription;
-        private AtomicBoolean cancelled = new AtomicBoolean(false);
-
-        RateLimiterSubscriber(Subscriber<? super T> childSubscriber) {
-            this.childSubscriber = childSubscriber;
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public void onSubscribe(Subscription subscription) {
-            this.subscription = subscription;
-            LOG.debug("onSubscribe");
-            if (rateLimiter.getPermission(rateLimiter.getRateLimiterConfig().getTimeoutDuration())) {
-                childSubscriber.onSubscribe(this);
-            } else {
-                subscription.cancel();
-                childSubscriber.onSubscribe(this);
-                childSubscriber.onError(new RequestNotPermitted("Request not permitted for limiter: " + rateLimiter.getName()));
-            }
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public void onNext(T event) {
-            LOG.debug("onNext: {}", event);
-            if (!isCancelled()) {
-                if (rateLimiter.getPermission(rateLimiter.getRateLimiterConfig().getTimeoutDuration())) {
-                    childSubscriber.onNext(event);
-                } else {
-                    subscription.cancel();
-                    childSubscriber.onError(new RequestNotPermitted("Request not permitted for limiter: " + rateLimiter.getName()));
-                }
-            }
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public void onError(Throwable e) {
-            LOG.debug("onError", e);
-            if (!isCancelled()) {
-                childSubscriber.onError(e);
-
-            }
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public void onComplete() {
-            LOG.debug("onComplete");
-            if (!isCancelled()) {
-                childSubscriber.onComplete();
-            }
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public void request(long n) {
-            subscription.request(n);
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public void cancel() {
-            if (!cancelled.get()) {
-                cancelled.set(true);
-                subscription.cancel();
-            }
-        }
-
-        public boolean isCancelled() {
-            return cancelled.get();
-        }
+    @Override
+    public CompletableObserver apply(CompletableObserver observer) throws Exception {
+        return new RateLimiterCompletableObserver(rateLimiter, observer);
     }
 
-    private final class RateLimiterObserver implements Observer<T>, Disposable {
-
-        private final Observer<? super T> childObserver;
-        private Disposable disposable;
-        private AtomicBoolean cancelled = new AtomicBoolean(false);
-
-        RateLimiterObserver(Observer<? super T> childObserver) {
-            this.childObserver = childObserver;
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public void onSubscribe(Disposable disposable) {
-            this.disposable = disposable;
-            LOG.debug("onSubscribe");
-            if (rateLimiter.getPermission(rateLimiter.getRateLimiterConfig().getTimeoutDuration())) {
-                childObserver.onSubscribe(this);
-            } else {
-                disposable.dispose();
-                childObserver.onSubscribe(this);
-                childObserver.onError(new RequestNotPermitted("Request not permitted for limiter: " + rateLimiter.getName()));
-            }
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public void onNext(T event) {
-            LOG.debug("onNext: {}", event);
-            if (!isDisposed()) {
-                if (rateLimiter.getPermission(rateLimiter.getRateLimiterConfig().getTimeoutDuration())) {
-                    childObserver.onNext(event);
-                } else {
-                    disposable.dispose();
-                    childObserver.onError(new RequestNotPermitted("Request not permitted for limiter: " + rateLimiter.getName()));
-                }
-            }
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public void onError(Throwable e) {
-            LOG.debug("onError", e);
-            if (!isDisposed()) {
-                childObserver.onError(e);
-            }
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public void onComplete() {
-            LOG.debug("onComplete");
-            if (!isDisposed()) {
-                childObserver.onComplete();
-            }
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public void dispose() {
-            if (!cancelled.get()) {
-                cancelled.set(true);
-                disposable.dispose();
-            }
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public boolean isDisposed() {
-            return cancelled.get();
-        }
-    }
-
-    private class RateLimiterSingleObserver implements SingleObserver<T>, Disposable {
-
-        private final SingleObserver<? super T> childObserver;
-        private Disposable disposable;
-        private AtomicBoolean cancelled = new AtomicBoolean(false);
-
-
-        RateLimiterSingleObserver(SingleObserver<? super T> childObserver) {
-            this.childObserver = childObserver;
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public void onSubscribe(Disposable disposable) {
-            this.disposable = disposable;
-            LOG.debug("onSubscribe");
-            if (rateLimiter.getPermission(rateLimiter.getRateLimiterConfig().getTimeoutDuration())) {
-                childObserver.onSubscribe(this);
-            } else {
-                disposable.dispose();
-                childObserver.onSubscribe(this);
-                childObserver.onError(new RequestNotPermitted("Request not permitted for limiter: " + rateLimiter.getName()));
-            }
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public void onError(Throwable e) {
-            LOG.debug("onError", e);
-            if (!isDisposed()) {
-                childObserver.onError(e);
-            }
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public void onSuccess(T value) {
-            LOG.debug("onComplete");
-            if (!isDisposed()) {
-                childObserver.onSuccess(value);
-            }
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public void dispose() {
-            if (!cancelled.get()) {
-                cancelled.set(true);
-                disposable.dispose();
-            }
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public boolean isDisposed() {
-            return cancelled.get();
-        }
+    @Override
+    public MaybeObserver<? super T> apply(MaybeObserver<? super T> observer) throws Exception {
+        return new RateLimiterMaybeObserver<>(rateLimiter, observer);
     }
 }
