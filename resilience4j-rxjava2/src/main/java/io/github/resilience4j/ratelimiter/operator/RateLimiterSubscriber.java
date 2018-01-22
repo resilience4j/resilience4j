@@ -1,30 +1,31 @@
-package io.github.resilience4j.circuitbreaker.operator;
+package io.github.resilience4j.ratelimiter.operator;
 
 import static java.util.Objects.requireNonNull;
 
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
 import io.github.resilience4j.adapter.Permit;
-import io.github.resilience4j.circuitbreaker.CircuitBreaker;
-import io.github.resilience4j.circuitbreaker.CircuitBreakerOpenException;
-import io.github.resilience4j.core.StopWatch;
+import io.github.resilience4j.ratelimiter.RateLimiter;
+import io.github.resilience4j.ratelimiter.RequestNotPermitted;
 import io.reactivex.internal.subscriptions.SubscriptionHelper;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
 
 /**
- * A RxJava {@link Subscriber} to protect another subscriber by a CircuitBreaker.
+ * A RxJava {@link Subscriber} to protect another subscriber by a {@link RateLimiter}.
+ * Consumes one permit when subscribed and one permit per emitted event except the first one.
  *
  * @param <T> the value type of the upstream and downstream
  */
-final class CircuitBreakerSubscriber<T> extends AtomicReference<Subscription> implements Subscriber<T>, Subscription {
-    private final CircuitBreaker circuitBreaker;
+final class RateLimiterSubscriber<T> extends AtomicReference<Subscription> implements Subscriber<T>, Subscription {
+    private final RateLimiter rateLimiter;
     private final Subscriber<? super T> childSubscriber;
     private final AtomicReference<Permit> permitted = new AtomicReference<>(Permit.PENDING);
-    private StopWatch stopWatch;
+    private final AtomicBoolean firstEvent = new AtomicBoolean(true);
 
-    CircuitBreakerSubscriber(CircuitBreaker circuitBreaker, Subscriber<? super T> childSubscriber) {
-        this.circuitBreaker = requireNonNull(circuitBreaker);
+    RateLimiterSubscriber(RateLimiter rateLimiter, Subscriber<? super T> childSubscriber) {
+        this.rateLimiter = requireNonNull(rateLimiter);
         this.childSubscriber = requireNonNull(childSubscriber);
     }
 
@@ -36,7 +37,7 @@ final class CircuitBreakerSubscriber<T> extends AtomicReference<Subscription> im
             } else {
                 cancel();
                 childSubscriber.onSubscribe(this);
-                childSubscriber.onError(new CircuitBreakerOpenException(String.format("CircuitBreaker '%s' is open", circuitBreaker.getName())));
+                childSubscriber.onError(rateLimitExceededException());
             }
         }
     }
@@ -44,13 +45,17 @@ final class CircuitBreakerSubscriber<T> extends AtomicReference<Subscription> im
     @Override
     public void onNext(T event) {
         if (isInvocationPermitted()) {
-            childSubscriber.onNext(event);
+            if (firstEvent.getAndSet(false) || rateLimiter.getPermission(rateLimiter.getRateLimiterConfig().getTimeoutDuration())) {
+                childSubscriber.onNext(event);
+            } else {
+                cancel();
+                childSubscriber.onError(rateLimitExceededException());
+            }
         }
     }
 
     @Override
     public void onError(Throwable e) {
-        markFailure(e);
         if (isInvocationPermitted()) {
             childSubscriber.onError(e);
         }
@@ -58,7 +63,6 @@ final class CircuitBreakerSubscriber<T> extends AtomicReference<Subscription> im
 
     @Override
     public void onComplete() {
-        markSuccess();
         if (isInvocationPermitted()) {
             childSubscriber.onComplete();
         }
@@ -77,11 +81,9 @@ final class CircuitBreakerSubscriber<T> extends AtomicReference<Subscription> im
     private boolean acquireCallPermit() {
         boolean callPermitted = false;
         if (permitted.compareAndSet(Permit.PENDING, Permit.ACQUIRED)) {
-            callPermitted = circuitBreaker.isCallPermitted();
+            callPermitted = rateLimiter.getPermission(rateLimiter.getRateLimiterConfig().getTimeoutDuration());
             if (!callPermitted) {
                 permitted.set(Permit.REJECTED);
-            } else {
-                stopWatch = StopWatch.start(circuitBreaker.getName());
             }
         }
         return callPermitted;
@@ -95,19 +97,11 @@ final class CircuitBreakerSubscriber<T> extends AtomicReference<Subscription> im
         return !SubscriptionHelper.isCancelled(get());
     }
 
-    private void markFailure(Throwable e) {
-        if (wasCallPermitted()) {
-            circuitBreaker.onError(stopWatch.stop().getProcessingDuration().toNanos(), e);
-        }
-    }
-
-    private void markSuccess() {
-        if (wasCallPermitted()) {
-            circuitBreaker.onSuccess(stopWatch.stop().getProcessingDuration().toNanos());
-        }
-    }
-
     private boolean wasCallPermitted() {
         return permitted.get() == Permit.ACQUIRED;
+    }
+
+    private Exception rateLimitExceededException() {
+        return new RequestNotPermitted("Request not permitted for limiter: " + rateLimiter.getName());
     }
 }
