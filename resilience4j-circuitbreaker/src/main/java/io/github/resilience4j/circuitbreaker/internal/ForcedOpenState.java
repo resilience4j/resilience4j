@@ -33,13 +33,13 @@ final class ForcedOpenState extends CircuitBreakerState {
     }
 
     /**
-     * Returns false, if the wait duration has not elapsed.
-     * Returns true, if the wait duration has elapsed and transitions the state machine to HALF_OPEN state.
+     * Returns always false, and records the rejected call.
      *
-     * @return false, if the wait duration has not elapsed. true, if the wait duration has elapsed.
+     * @return always false, since the FORCED_OPEN state always denies calls.
      */
     @Override
     boolean isCallPermitted() {
+        circuitBreakerMetrics.onCallNotPermitted();
         return false;
     }
 
