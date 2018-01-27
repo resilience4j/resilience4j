@@ -18,6 +18,7 @@ ext {
     ratpackVersion = '1.4.6'
     spockVersion = '1.1-groovy-2.4-rc-4'
     retrofitVersion = '2.1.0'
+    feignVersion = '9.5.1'
     prometheusSimpleClientVersion = '0.0.21'
 
     libraries = [
@@ -58,7 +59,11 @@ ext {
             retrofit: "com.squareup.retrofit2:retrofit:${retrofitVersion}",
             retrofit_test: "com.squareup.retrofit2:converter-scalars:${retrofitVersion}",
             retrofit_wiremock: "com.github.tomakehurst:wiremock:1.58",
-
+            
+            // Feign addon
+            feign: "io.github.openfeign:feign-core:${feignVersion}",
+            feign_wiremock: "com.github.tomakehurst:wiremock:1.58",
+            
             // Metrics addon
             metrics: "io.dropwizard.metrics:metrics-core:${metricsVersion}",
 
