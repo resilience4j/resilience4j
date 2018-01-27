@@ -76,15 +76,16 @@ public class Resilience4jFeignCircuitBreakerTest {
 
     @Test
     public void testFailedCalls() throws Exception {
+        boolean exceptionThrown = false;
         setupStub(400);
 
         try {
             testService.greeting();
-            assertTrue("Expected service to throw FeignException!", false);
         } catch (final FeignException ex) {
-            // ignore
+            exceptionThrown = true;
         }
 
+        assertTrue("Expected service to throw FeignException!", exceptionThrown);
         final CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
         assertThat(metrics.getNumberOfFailedCalls())
                 .describedAs("Successful Calls")
