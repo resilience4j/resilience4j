@@ -4,3 +4,5 @@
 build
 classes
 /resilience4j-ratpack/src/test/groovy/io/github/resilience4j/ratpack/annotation/RateLimiterSpec.groovy
+/.classpath
+/.project
