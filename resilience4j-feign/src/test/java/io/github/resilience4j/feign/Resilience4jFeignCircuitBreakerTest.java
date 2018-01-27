@@ -23,7 +23,6 @@ import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.verify;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertTrue;
 
 import java.time.Duration;
 
@@ -63,12 +62,13 @@ public class Resilience4jFeignCircuitBreakerTest {
 
     @Test
     public void testSuccessfulCalls() throws Exception {
+        final CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
+
         setupStub(200);
 
         testService.greeting();
 
         verify(1, getRequestedFor(urlPathEqualTo("/greeting")));
-        final CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
         assertThat(metrics.getNumberOfSuccessfulCalls())
                 .describedAs("Successful Calls")
                 .isEqualTo(1);
@@ -76,7 +76,9 @@ public class Resilience4jFeignCircuitBreakerTest {
 
     @Test
     public void testFailedCalls() throws Exception {
+        final CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
         boolean exceptionThrown = false;
+
         setupStub(400);
 
         try {
@@ -85,8 +87,9 @@ public class Resilience4jFeignCircuitBreakerTest {
             exceptionThrown = true;
         }
 
-        assertTrue("Expected service to throw FeignException!", exceptionThrown);
-        final CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
+        assertThat(exceptionThrown)
+                .describedAs("Exception")
+                .isTrue();
         assertThat(metrics.getNumberOfFailedCalls())
                 .describedAs("Successful Calls")
                 .isEqualTo(1);

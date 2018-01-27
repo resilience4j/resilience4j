@@ -16,8 +16,7 @@
  */
 package io.github.resilience4j.feign;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
@@ -47,7 +46,7 @@ public class DecoratorInvocationHandlerTest {
 
     @Before
     public void setUp() throws Throwable {
-        target = new HardCodedTarget<TestService>(TestService.class, "test");
+        target = new HardCodedTarget<TestService>(TestService.class, TestService.class.getSimpleName());
         testService = new TestServiceImpl();
         method = testService.getClass().getDeclaredMethod("greeting");
         feignDecorator = new TestFeignDecorator();
@@ -65,19 +64,28 @@ public class DecoratorInvocationHandlerTest {
         final Object result = testSubject.invoke(testService, method, new Object[0]);
 
         verify(methodHandler, times(1)).invoke(any());
-        assertTrue(feignDecorator.isCalled());
-        assertEquals(testService.greeting(), result);
+
+        assertThat(feignDecorator.isCalled())
+                .describedAs("FeignDecorator is called")
+                .isTrue();
+        assertThat(result)
+                .describedAs("Return of invocation")
+                .isEqualTo(testService.greeting());
     }
 
     @Test
     public void testDecorator() throws Throwable {
-        feignDecorator.setAlternativeFunction(fnArgs -> "test");
+        feignDecorator.setAlternativeFunction(fnArgs -> "AlternativeFunction");
         testSubject = new DecoratorInvocationHandler(target, dispatch, feignDecorator);
         final Object result = testSubject.invoke(testService, method, new Object[0]);
 
         verify(methodHandler, times(0)).invoke(any());
-        assertTrue(feignDecorator.isCalled());
-        assertEquals("test", result);
+        assertThat(feignDecorator.isCalled())
+                .describedAs("FeignDecorator is called")
+                .isTrue();
+        assertThat(result)
+                .describedAs("Return of invocation")
+                .isEqualTo("AlternativeFunction");
     }
 
 }
