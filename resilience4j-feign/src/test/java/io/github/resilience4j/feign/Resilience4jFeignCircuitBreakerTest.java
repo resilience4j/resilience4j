@@ -35,6 +35,7 @@ import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import feign.FeignException;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
+import io.github.resilience4j.circuitbreaker.CircuitBreakerOpenException;
 import io.github.resilience4j.feign.test.TestService;
 
 /**
@@ -55,10 +56,9 @@ public class Resilience4jFeignCircuitBreakerTest {
 
     @Before
     public void setUp() {
-        FeignDecorators.builder().withCircuitBreaker(circuitBreaker).build();
-        this.circuitBreaker = CircuitBreaker.of("test", circuitBreakerConfig);
+        circuitBreaker = CircuitBreaker.of("test", circuitBreakerConfig);
         final FeignDecorators decorators = FeignDecorators.builder().withCircuitBreaker(circuitBreaker).build();
-        this.testService = Resilience4jFeign.builder(decorators).target(TestService.class, "http://localhost:8080/");
+        testService = Resilience4jFeign.builder(decorators).target(TestService.class, "http://localhost:8080/");
     }
 
     @Test
@@ -89,11 +89,66 @@ public class Resilience4jFeignCircuitBreakerTest {
         }
 
         assertThat(exceptionThrown)
-                .describedAs("Exception")
+                .describedAs("FeignException thrown")
                 .isTrue();
         assertThat(metrics.getNumberOfFailedCalls())
                 .describedAs("Successful Calls")
                 .isEqualTo(1);
+    }
+
+    @Test
+    public void testCircuitBreakerOpen() throws Exception {
+        boolean exceptionThrown = false;
+        final int threshold = circuitBreaker
+                .getCircuitBreakerConfig()
+                .getRingBufferSizeInClosedState() + 1;
+
+        setupStub(400);
+
+        for (int i = 0; i < threshold; i++) {
+            try {
+                testService.greeting();
+            } catch (final FeignException ex) {
+                // ignore
+            } catch (final CircuitBreakerOpenException ex) {
+                exceptionThrown = true;
+            }
+        }
+
+        assertThat(exceptionThrown)
+                .describedAs("CircuitBreakerOpenException thrown")
+                .isTrue();
+        assertThat(circuitBreaker.isCallPermitted())
+                .describedAs("CircuitBreaker Closed")
+                .isFalse();
+    }
+
+
+    @Test
+    public void testCircuitBreakerClosed() throws Exception {
+        boolean exceptionThrown = false;
+        final int threshold = circuitBreaker
+                .getCircuitBreakerConfig()
+                .getRingBufferSizeInClosedState() - 1;
+
+        setupStub(400);
+
+        for (int i = 0; i < threshold; i++) {
+            try {
+                testService.greeting();
+            } catch (final FeignException ex) {
+                // ignore
+            } catch (final CircuitBreakerOpenException ex) {
+                exceptionThrown = true;
+            }
+        }
+
+        assertThat(exceptionThrown)
+                .describedAs("CircuitBreakerOpenException thrown")
+                .isFalse();
+        assertThat(circuitBreaker.isCallPermitted())
+                .describedAs("CircuitBreaker Closed")
+                .isTrue();
     }
 
     private void setupStub(int responseCode) {

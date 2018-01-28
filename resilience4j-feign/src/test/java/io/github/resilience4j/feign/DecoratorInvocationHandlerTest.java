@@ -41,7 +41,7 @@ public class DecoratorInvocationHandlerTest {
 
     private DecoratorInvocationHandler testSubject;
     private TestService testService;
-    private Method method;
+    private Method greetingMethod;
     private TestFeignDecorator feignDecorator;
     private MethodHandler methodHandler;
     private Map<Method, MethodHandler> dispatch;
@@ -51,23 +51,23 @@ public class DecoratorInvocationHandlerTest {
     public void setUp() throws Throwable {
         target = new HardCodedTarget<TestService>(TestService.class, TestService.class.getSimpleName());
         testService = new TestServiceImpl();
-        method = testService.getClass().getDeclaredMethod("greeting");
+        greetingMethod = testService.getClass().getDeclaredMethod("greeting");
         feignDecorator = new TestFeignDecorator();
 
         methodHandler = mock(MethodHandler.class);
         when(methodHandler.invoke(any())).thenReturn(testService.greeting());
 
         dispatch = new HashMap<>();
-        dispatch.put(method, methodHandler);
+        dispatch.put(greetingMethod, methodHandler);
+
+        testSubject = new DecoratorInvocationHandler(target, dispatch, feignDecorator);
     }
 
     @Test
     public void testInvoke() throws Throwable {
-        testSubject = new DecoratorInvocationHandler(target, dispatch, feignDecorator);
-        final Object result = testSubject.invoke(testService, method, new Object[0]);
+        final Object result = testSubject.invoke(testService, greetingMethod, new Object[0]);
 
         verify(methodHandler, times(1)).invoke(any());
-
         assertThat(feignDecorator.isCalled())
                 .describedAs("FeignDecorator is called")
                 .isTrue();
@@ -80,7 +80,8 @@ public class DecoratorInvocationHandlerTest {
     public void testDecorator() throws Throwable {
         feignDecorator.setAlternativeFunction(fnArgs -> "AlternativeFunction");
         testSubject = new DecoratorInvocationHandler(target, dispatch, feignDecorator);
-        final Object result = testSubject.invoke(testService, method, new Object[0]);
+
+        final Object result = testSubject.invoke(testService, greetingMethod, new Object[0]);
 
         verify(methodHandler, times(0)).invoke(any());
         assertThat(feignDecorator.isCalled())
@@ -91,4 +92,49 @@ public class DecoratorInvocationHandlerTest {
                 .isEqualTo("AlternativeFunction");
     }
 
+    @Test
+    public void testInvokeToString() throws Throwable {
+        final Method toStringMethod = testService.getClass().getMethod("toString");
+
+        final Object result = testSubject.invoke(testService, toStringMethod, new Object[0]);
+
+        verify(methodHandler, times(0)).invoke(any());
+        assertThat(feignDecorator.isCalled())
+                .describedAs("FeignDecorator is called")
+                .isTrue();
+        assertThat(result)
+                .describedAs("Return of invocation")
+                .isEqualTo(target.toString());
+    }
+
+    @Test
+    public void testInvokeEquals() throws Throwable {
+        final Method equalsMethod = testService.getClass().getMethod("equals", Object.class);
+
+        final Boolean result = (Boolean) testSubject.invoke(testService, equalsMethod, new Object[] {testSubject});
+
+        verify(methodHandler, times(0)).invoke(any());
+        assertThat(feignDecorator.isCalled())
+                .describedAs("FeignDecorator is called")
+                .isTrue();
+        assertThat(result)
+                .describedAs("Return of invocation")
+                .isTrue();
+    }
+
+
+    @Test
+    public void testInvokeHashcode() throws Throwable {
+        final Method hashCodeMethod = testService.getClass().getMethod("hashCode");
+
+        final Integer result = (Integer) testSubject.invoke(testService, hashCodeMethod, new Object[0]);
+
+        verify(methodHandler, times(0)).invoke(any());
+        assertThat(feignDecorator.isCalled())
+                .describedAs("FeignDecorator is called")
+                .isTrue();
+        assertThat(result)
+                .describedAs("Return of invocation")
+                .isEqualTo(target.hashCode());
+    }
 }

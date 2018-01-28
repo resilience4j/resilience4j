@@ -5,7 +5,7 @@ import io.vavr.CheckedFunction1;
 
 public class TestFeignDecorator implements FeignDecorator {
 
-    private boolean called;
+    private boolean called = false;
     private CheckedFunction1<Object[], Object> alternativeFunction;
 
     public boolean isCalled() {
