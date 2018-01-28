@@ -3,8 +3,12 @@
 Resilience4j decorators for https://github.com/OpenFeign/feign[feign].
 Similar to https://github.com/OpenFeign/feign/tree/master/hystrix[HystrixFeign], 
 resilience4j-feign makes it easy to incorporate "resilience" patterns into the feign framework, such as 
-circuitBreaker or/and rateLimiter.
+circuitBreaker or/and rateLimiter. 
 
+== Current Features
+* CircuitBreaker
+* RateLimiter
+ 
 == Usage
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("backendName");
         RateLimiter rateLimiter = RateLimiter.ofDefaults("backendName");
@@ -14,6 +18,7 @@ circuitBreaker or/and rateLimiter.
                                          .build();
         MyService myService = Resilience4jFeign.builder(decorators).target(MyService.class, "http://localhost:8080/");
 
+FeignDecorators are executed at the end of the feign chain, i.e. after the Retryer, ErrorDecoder and so on.
 
 == License
 

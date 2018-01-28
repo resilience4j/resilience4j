@@ -75,14 +75,15 @@ public class DecoratorInvocationHandler implements InvocationHandler {
 
     @Override
     public boolean equals(Object obj) {
-        if (obj == null) {
+        Object compareTo = obj;
+        if (compareTo == null) {
             return false;
         }
-        if (Proxy.isProxyClass(obj.getClass())) {
-            obj = Proxy.getInvocationHandler(obj);
+        if (Proxy.isProxyClass(compareTo.getClass())) {
+            compareTo = Proxy.getInvocationHandler(compareTo);
         }
-        if (obj instanceof DecoratorInvocationHandler) {
-            final DecoratorInvocationHandler other = (DecoratorInvocationHandler) obj;
+        if (compareTo instanceof DecoratorInvocationHandler) {
+            final DecoratorInvocationHandler other = (DecoratorInvocationHandler) compareTo;
             return target.equals(other.target);
         }
         return false;
