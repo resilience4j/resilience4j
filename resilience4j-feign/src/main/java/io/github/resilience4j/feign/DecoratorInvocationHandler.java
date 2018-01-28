@@ -58,9 +58,7 @@ public class DecoratorInvocationHandler implements InvocationHandler {
             throws Throwable {
         switch (method.getName()) {
             case "equals":
-                final Object otherHandler =
-                        args.length > 0 && args[0] != null ? Proxy.getInvocationHandler(args[0]) : null;
-                return equals(otherHandler);
+                return equals(args.length > 0 ? args[0] : null);
 
             case "hashCode":
                 return hashCode();
@@ -77,6 +75,12 @@ public class DecoratorInvocationHandler implements InvocationHandler {
 
     @Override
     public boolean equals(Object obj) {
+        if (obj == null) {
+            return false;
+        }
+        if (Proxy.isProxyClass(obj.getClass())) {
+            obj = Proxy.getInvocationHandler(obj);
+        }
         if (obj instanceof DecoratorInvocationHandler) {
             final DecoratorInvocationHandler other = (DecoratorInvocationHandler) obj;
             return target.equals(other.target);
