@@ -35,6 +35,7 @@ import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import feign.FeignException;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
+import io.github.resilience4j.feign.test.TestService;
 
 /**
  * Tests the integration of the {@link Resilience4jFeign} with {@link CircuitBreaker}

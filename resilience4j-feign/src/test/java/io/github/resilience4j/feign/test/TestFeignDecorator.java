@@ -1,5 +1,6 @@
-package io.github.resilience4j.feign;
+package io.github.resilience4j.feign.test;
 
+import io.github.resilience4j.feign.FeignDecorator;
 import io.vavr.CheckedFunction1;
 
 public class TestFeignDecorator implements FeignDecorator {
