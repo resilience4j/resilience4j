@@ -33,6 +33,9 @@ import org.junit.Test;
 import feign.InvocationHandlerFactory.MethodHandler;
 import feign.Target;
 import feign.Target.HardCodedTarget;
+import io.github.resilience4j.feign.test.TestFeignDecorator;
+import io.github.resilience4j.feign.test.TestService;
+import io.github.resilience4j.feign.test.TestServiceImpl;
 
 public class DecoratorInvocationHandlerTest {
 

@@ -1,4 +1,4 @@
-package io.github.resilience4j.feign;
+package io.github.resilience4j.feign.test;
 
 public class TestServiceImpl implements TestService {
 
