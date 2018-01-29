@@ -2,7 +2,7 @@
 
 === CircuitBreaker
 
-The CircuitBreaker is implemented via a finite state machine with three states: `CLOSED`, `OPEN` and `HALF_OPEN`.
+The CircuitBreaker is implemented via a finite state machine with three normal states: `CLOSED`, `OPEN` and `HALF_OPEN` and two special states `DISABLED` and `FORCED_OPEN`.
 
 image::images/state_machine.jpg[]
 
@@ -40,6 +40,26 @@ For example, if the size of the Ring Buffer is 10, then at least 10 calls must e
 
 After the time duration has elapsed, the CircuitBreaker state changes from `OPEN` to `HALF_OPEN` and allows calls to see if the backend is still unavailable or has become available again. The CircuitBreaker uses another (configurable) Ring Bit Buffer to evaluate the failure rate in the `HALF_OPEN` state. If the failure rate is above the configured threshold, the state changes back to `OPEN`. If the failure rate is below or equal to the threshold, the state changes back to `CLOSED`.
 `CircuitBreaker::onError` checks if the exception should be recorded as a failure or should be ignored. You can configure a custom `Predicate` which decides whether an exception should be recorded as a failure. The default Predicate records all exceptions as a failure.
+
+The CircuitBreaker supports resetting to its original state, losing all the metrics and resetting its Ring Bit Buffer.
+[source,java]
+----
+CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testName");
+circuitBreaker.reset();
+----
+
+The CircuitBreaker supports two more special states, `DISABLED` (always allow access) and `FORCED_OPEN` (always deny access). In these two states no CircuitBreakerEvents (apart from the state transition) are generated, and no metrics are recorded. The only way to exit from those states are to trigger a state transition or to reset the CircuitBreaker.
+
+[source,java]
+----
+CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testName");
+circuitBreaker.transitionToDisabledState();
+// circuitBreaker.onFailure(...) won't trigger a state change
+circuitBreaker.transitionToClosedState(); // will transition to CLOSED state and re-enable normal behaviour, keeping metrics
+circuitBreaker.transitionToForcedOpenState();
+// circuitBreaker.onSuccess(...) won't trigger a state change
+circuitBreaker.reset(); //  will transition to CLOSED state and re-enable normal behaviour, losing metrics
+----
 
 The CircuitBreaker publishes a stream of CircuitBreakerEvents to any Subscriber/Consumer who subscribes. An event can be a state transition or a recorded error. This library uses RxJava to to provide this functionality. If you want to consume events, you have to subscribe to the event stream. This library provides a consumer `CircuitBreakerEventConsumer` which can be used to store events in a circular buffer with a fixed capacity. You can use RxJava to filter certain events.
 

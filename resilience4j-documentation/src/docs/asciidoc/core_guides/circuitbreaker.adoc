@@ -43,7 +43,7 @@ If you don't want to use the CircuitBreakerRegistry to manage CircuitBreaker ins
 
 [source,java,indent=0]
 ----
-CircuitBreaker defauktCircuitBreaker = CircuitBreaker.ofDefaults("testName");
+CircuitBreaker defaultCircuitBreaker = CircuitBreaker.ofDefaults("testName");
 
 CircuitBreaker customCircuitBreaker = CircuitBreaker.of("testName", circuitBreakerConfig);
 ----
@@ -88,6 +88,15 @@ In this example `map` is not invoked, because the CircuitBreaker is OPEN. The ca
 include::../../../../../resilience4j-circuitbreaker/src/test/java/io/github/resilience4j/circuitbreaker/CircuitBreakerTest.java[tags=shouldThrowCircuitBreakerOpenException]
 ----
 
+==== Reset
+
+The CircuitBreaker supports resetting, returning to its original state while losing all the current metrics.
+
+[source,java]
+----
+circuitBreaker.reset();
+----
+
 ===== Recover from an exception
 
 If you want to recover from any exception, you can chain the method `Try.recover()`. The recovery method is only invoked, if `Try.of()` returns a `Failure<Throwable>` Monad.
@@ -108,14 +117,20 @@ include::../../../../../resilience4j-circuitbreaker/src/test/java/io/github/resi
 
 ===== Consume emitted CircuitBreakerEvents
 
-The CircuitBreaker emits a stream of CircuitBreakerEvents. A `CircuitBreakerEvent` can be a state transition, a successful call, a recorded error or an ignored error. All events contains additional information like event creation time and processing duration of the call. If you want to consume events, you have to register an event consumer.
+
+A `CircuitBreakerEvent` can be a state transition, a circuit breaker reset, a successful call, a recorded error or an ignored error. All events contains additional information like event creation time and processing duration of the call. If you want to consume events, you have to register an event consumer.
 
 [source,java]
 ----
 circuitBreaker.getEventPublisher()
     .onSuccess(event -> logger.info(...))
     .onError(event -> logger.info(...))
+    .onIgnoredError(event -> logger.info(...))
+    .onReset(event -> logger.info(...))
     .onStateTransition(event -> logger.info(...));
+// Or if you want to register a consumer listening to all events, you can do:
+circuitBreaker.getEventPublisher()
+    .onEvent(event -> logger.info(...));
 ----
 
 You could use the `CircularEventConsumer` to store events in a circular buffer with a fixed capacity.
@@ -151,3 +166,4 @@ int bufferedCalls = metrics.getNumberOfBufferedCalls();
 // Returns the current number of failed calls.
 int failedCalls = metrics.getNumberOfFailedCalls();
 ----
+

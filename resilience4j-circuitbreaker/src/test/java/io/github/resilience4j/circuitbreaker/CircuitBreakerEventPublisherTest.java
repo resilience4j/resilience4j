@@ -18,6 +18,7 @@
  */
 package io.github.resilience4j.circuitbreaker;
 
+import io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent;
 import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -54,8 +55,7 @@ public class CircuitBreakerEventPublisherTest {
     @Test
     public void shouldConsumeOnEvent() {
         circuitBreaker.getEventPublisher()
-                .onEvent(event ->
-                        logger.info(event.getEventType().toString()));
+                .onEvent(this::logEventType);
 
 
         circuitBreaker.onSuccess(1000);
@@ -67,8 +67,7 @@ public class CircuitBreakerEventPublisherTest {
     @Test
     public void shouldConsumeOnSuccessEvent() {
         circuitBreaker.getEventPublisher()
-                .onSuccess(event ->
-                        logger.info(event.getEventType().toString()));
+                .onSuccess(this::logEventType);
 
 
         circuitBreaker.onSuccess(1000);
@@ -80,8 +79,7 @@ public class CircuitBreakerEventPublisherTest {
     @Test
     public void shouldConsumeOnErrorEvent() {
         circuitBreaker.getEventPublisher()
-                .onError(event ->
-                        logger.info(event.getEventType().toString()));
+                .onError(this::logEventType);
 
 
         circuitBreaker.onError(1000, new IOException("BAM!"));
@@ -90,13 +88,23 @@ public class CircuitBreakerEventPublisherTest {
     }
 
     @Test
+    public void shouldConsumeOnResetEvent() {
+        circuitBreaker.getEventPublisher()
+                .onReset(this::logEventType);
+
+
+        circuitBreaker.reset();
+
+        then(logger).should(times(1)).info("RESET");
+    }
+
+    @Test
     public void shouldConsumeOnStateTransitionEvent() {
         circuitBreaker = CircuitBreaker.of("test", CircuitBreakerConfig.custom()
                 .ringBufferSizeInClosedState(1).build());
 
         circuitBreaker.getEventPublisher()
-                .onStateTransition(event ->
-                        logger.info(event.getEventType().toString()));
+                .onStateTransition(this::logEventType);
 
 
         circuitBreaker.onError(1000, new IOException("BAM!"));
@@ -112,8 +120,7 @@ public class CircuitBreakerEventPublisherTest {
                 .ringBufferSizeInClosedState(1).build());
 
         circuitBreaker.getEventPublisher()
-                .onCallNotPermitted(event ->
-                        logger.info(event.getEventType().toString()));
+                .onCallNotPermitted(this::logEventType);
 
 
         circuitBreaker.onError(1000, new IOException("BAM!"));
@@ -122,6 +129,36 @@ public class CircuitBreakerEventPublisherTest {
 
 
         then(logger).should(times(1)).info("NOT_PERMITTED");
+    }
+
+    @Test
+    public void shouldNotProduceEventsInDisabledState() {
+        //Given
+        circuitBreaker = CircuitBreaker.of("test", CircuitBreakerConfig.custom()
+                .ringBufferSizeInClosedState(1).build());
+
+        circuitBreaker.getEventPublisher()
+                .onEvent(this::logEventType);
+
+        //When we transition to disabled
+        circuitBreaker.transitionToDisabledState();
+        //And we execute other calls that should generate events
+        circuitBreaker.onError(1000, new IOException("BAM!"));
+        circuitBreaker.onError(1000, new IOException("BAM!"));
+        circuitBreaker.isCallPermitted();
+        circuitBreaker.onSuccess(0);
+        circuitBreaker.onError(1000, new IOException("BAM!"));
+
+        //Then we do not produce events
+        then(logger).should(times(1)).info("STATE_TRANSITION");
+        then(logger).should(times(0)).info("NOT_PERMITTED");
+        then(logger).should(times(0)).info("SUCCESS");
+        then(logger).should(times(0)).info("ERROR");
+        then(logger).should(times(0)).info("IGNORED_ERROR");
+    }
+
+    private void logEventType(CircuitBreakerEvent event) {
+        logger.info(event.getEventType().toString());
     }
 
     @Test
@@ -135,8 +172,8 @@ public class CircuitBreakerEventPublisherTest {
         circuitBreaker = CircuitBreaker.of("test", circuitBreakerConfig);
 
         circuitBreaker.getEventPublisher()
-                .onIgnoredError(event ->
-                        logger.info(event.getEventType().toString()));
+                .onIgnoredError(this::logEventType)
+        ;
 
 
         circuitBreaker.onError(1000, new IOException("BAM!"));
