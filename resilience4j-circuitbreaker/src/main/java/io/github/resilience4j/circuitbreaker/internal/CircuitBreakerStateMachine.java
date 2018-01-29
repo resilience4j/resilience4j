@@ -21,7 +21,13 @@ package io.github.resilience4j.circuitbreaker.internal;
 
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
-import io.github.resilience4j.circuitbreaker.event.*;
+import io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent;
+import io.github.resilience4j.circuitbreaker.event.CircuitBreakerOnCallNotPermittedEvent;
+import io.github.resilience4j.circuitbreaker.event.CircuitBreakerOnErrorEvent;
+import io.github.resilience4j.circuitbreaker.event.CircuitBreakerOnIgnoredErrorEvent;
+import io.github.resilience4j.circuitbreaker.event.CircuitBreakerOnResetEvent;
+import io.github.resilience4j.circuitbreaker.event.CircuitBreakerOnStateTransitionEvent;
+import io.github.resilience4j.circuitbreaker.event.CircuitBreakerOnSuccessEvent;
 import io.github.resilience4j.core.EventConsumer;
 import io.github.resilience4j.core.EventProcessor;
 import org.slf4j.Logger;
@@ -29,9 +35,14 @@ import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
-import static io.github.resilience4j.circuitbreaker.CircuitBreaker.State.*;
+import static io.github.resilience4j.circuitbreaker.CircuitBreaker.State.CLOSED;
+import static io.github.resilience4j.circuitbreaker.CircuitBreaker.State.DISABLED;
+import static io.github.resilience4j.circuitbreaker.CircuitBreaker.State.FORCED_OPEN;
+import static io.github.resilience4j.circuitbreaker.CircuitBreaker.State.HALF_OPEN;
+import static io.github.resilience4j.circuitbreaker.CircuitBreaker.State.OPEN;
 
 /**
  * A CircuitBreaker finite state machine.
@@ -160,98 +171,96 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
     public void reset() {
         CircuitBreakerState previousState = stateReference.getAndUpdate(currentState -> new ClosedState(this));
         if (previousState.getState() != CLOSED) {
-            publishStateTransitionEvent(StateTransition.transitionToClosedState(previousState.getState()));
+            publishStateTransitionEvent(StateTransition.transitionBetween(previousState.getState(), CLOSED));
         }
         publishResetEvent();
     }
 
-    @Override
-    public void transitionToClosedState() {
+    private void stateTransition(State newState, Function<CircuitBreakerState, CircuitBreakerState> newStateGenerator) {
         CircuitBreakerState previousState = stateReference.getAndUpdate(currentState -> {
-            if (currentState.getState() == CLOSED) {
+            if (currentState.getState() == newState) {
                 return currentState;
             }
-            return new ClosedState(this, currentState.getMetrics());
+            return newStateGenerator.apply(currentState);
         });
-        if (previousState.getState() != CLOSED) {
-            publishStateTransitionEvent(StateTransition.transitionToClosedState(previousState.getState()));
+        if (previousState.getState() != newState) {
+            publishStateTransitionEvent(StateTransition.transitionBetween(previousState.getState(), newState));
         }
+    }
+
+
+    @Override
+    public void transitionToDisabledState() {
+        stateTransition(DISABLED, currentState -> new DisabledState(this));
+    }
+
+    @Override
+    public void transitionToForcedOpenState() {
+        stateTransition(FORCED_OPEN, currentState -> new ForcedOpenState(this));
+    }
+
+    @Override
+    public void transitionToClosedState() {
+        stateTransition(CLOSED, currentState -> new ClosedState(this, currentState.getMetrics()));
     }
 
     @Override
     public void transitionToOpenState() {
-        CircuitBreakerState previousState = stateReference.getAndUpdate(currentState -> {
-            if (currentState.getState() == OPEN) {
-                return currentState;
-            }
-            return new OpenState(this, currentState.getMetrics());
-        });
-        if (previousState.getState() != OPEN) {
-            publishStateTransitionEvent(StateTransition.transitionToOpenState(previousState.getState()));
-        }
+        stateTransition(OPEN, currentState -> new OpenState(this, currentState.getMetrics()));
     }
 
     @Override
     public void transitionToHalfOpenState() {
-        CircuitBreakerState previousState = stateReference.getAndUpdate(currentState -> {
-            if (currentState.getState() == HALF_OPEN) {
-                return currentState;
+        stateTransition(HALF_OPEN, currentState -> new HalfOpenState(this));
+    }
+
+
+    private boolean shouldPublishEvents(CircuitBreakerEvent event) {
+        return stateReference.get().shouldPublishEvents(event);
+    }
+
+
+    private void publishEventIfPossible(CircuitBreakerEvent event) {
+        if(shouldPublishEvents(event)) {
+            if (eventProcessor.hasConsumers()) {
+                LOG.debug(String.format("Event %s published: %s", event.getEventType(), event));
+                eventProcessor.consumeEvent(event);
+            } else {
+                LOG.debug(String.format("No Consumers: Event %s not published", event.getEventType()));
             }
-            return new HalfOpenState(this);
-        });
-        if (previousState.getState() != HALF_OPEN) {
-            publishStateTransitionEvent(StateTransition.transitionToHalfOpenState(previousState.getState()));
+        } else {
+            LOG.debug(String.format("Publishing not allowed: Event %s not published", event.getEventType()));
         }
     }
 
     private void publishStateTransitionEvent(final StateTransition stateTransition) {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug(
-                String.format("CircuitBreaker '%s' changed state from %s to %s",
-                    name, stateTransition.getFromState(), stateTransition.getToState())
-            );
-        }
-        if(eventProcessor.hasConsumers()){
-            eventProcessor.consumeEvent(new CircuitBreakerOnStateTransitionEvent(name, stateTransition));
-        }
-
+        final CircuitBreakerOnStateTransitionEvent event = new CircuitBreakerOnStateTransitionEvent(name, stateTransition);
+        publishEventIfPossible(event);
     }
 
     private void publishResetEvent() {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug(
-                String.format("CircuitBreaker '%s' reset ",
-                    name)
-            );
-        }
-        if(eventProcessor.hasConsumers()){
-            eventProcessor.consumeEvent(new CircuitBreakerOnResetEvent(name));
-        }
-
+        final CircuitBreakerOnResetEvent event = new CircuitBreakerOnResetEvent(name);
+        publishEventIfPossible(event);
     }
 
     private void publishCallNotPermittedEvent() {
-        if(eventProcessor.hasConsumers()) {
-            eventProcessor.consumeEvent(new CircuitBreakerOnCallNotPermittedEvent(name));
-        }
+        final CircuitBreakerOnCallNotPermittedEvent event = new CircuitBreakerOnCallNotPermittedEvent(name);
+        publishEventIfPossible(event);
     }
 
     private void publishSuccessEvent(final long durationInNanos) {
-        if(eventProcessor.hasConsumers()) {
-            eventProcessor.consumeEvent(new CircuitBreakerOnSuccessEvent(name, Duration.ofNanos(durationInNanos)));
-        }
+        final CircuitBreakerOnSuccessEvent event = new CircuitBreakerOnSuccessEvent(name, Duration.ofNanos(durationInNanos));
+        publishEventIfPossible(event);
     }
 
     private void publishCircuitErrorEvent(final String name, final long durationInNanos, final Throwable throwable) {
-        if(eventProcessor.hasConsumers()) {
-            eventProcessor.consumeEvent(new CircuitBreakerOnErrorEvent(name, Duration.ofNanos(durationInNanos), throwable));
-        }
+        final CircuitBreakerOnErrorEvent event = new CircuitBreakerOnErrorEvent(name, Duration.ofNanos(durationInNanos), throwable);
+        publishEventIfPossible(event);
     }
 
     private void publishCircuitIgnoredErrorEvent(String name, long durationInNanos, Throwable throwable) {
-        if(eventProcessor.hasConsumers()) {
-            eventProcessor.consumeEvent(new CircuitBreakerOnIgnoredErrorEvent(name, Duration.ofNanos(durationInNanos), throwable));
-        }
+        final CircuitBreakerOnIgnoredErrorEvent event = new CircuitBreakerOnIgnoredErrorEvent(name, Duration.ofNanos(durationInNanos), throwable);
+        publishEventIfPossible(event);
     }
 
     @Override
@@ -279,8 +288,8 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
         }
 
         @Override
-        public EventPublisher onStateReset(EventConsumer<CircuitBreakerOnResetEvent> onStateResetEventConsumer) {
-            registerConsumer(CircuitBreakerOnResetEvent.class, onStateResetEventConsumer);
+        public EventPublisher onReset(EventConsumer<CircuitBreakerOnResetEvent> onResetEventConsumer) {
+            registerConsumer(CircuitBreakerOnResetEvent.class, onResetEventConsumer);
             return this;
         }
 

@@ -19,13 +19,14 @@
 package io.github.resilience4j.circuitbreaker.internal;
 
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
+import io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent;
 
 /**
  * Abstract state of the CircuitBreaker state machine.
  */
 abstract class CircuitBreakerState{
 
-    protected CircuitBreakerStateMachine stateMachine;
+    CircuitBreakerStateMachine stateMachine;
 
     CircuitBreakerState(CircuitBreakerStateMachine stateMachine) {
         this.stateMachine = stateMachine;
@@ -40,4 +41,12 @@ abstract class CircuitBreakerState{
     abstract CircuitBreaker.State getState();
 
     abstract CircuitBreakerMetrics getMetrics();
+
+    /**
+     * Should the CircuitBreaker in this state publish events
+     * @return a boolean signaling if the events should be published
+     */
+    boolean shouldPublishEvents(CircuitBreakerEvent event){
+        return event.getEventType().forcePublish || getState().allowPublish;
+    }
 }
