@@ -203,7 +203,6 @@ public class CircuitBreakerStateMachineTest {
 
         assertThat(circuitBreaker.isCallPermitted()).isEqualTo(false);
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.FORCED_OPEN); // Should create a CircuitBreakerOnStateTransitionEvent (21)
-        final CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
         assertCircuitBreakerMetricsEqualTo(-1f, null, 0, null, 0, 2L);
 
 
