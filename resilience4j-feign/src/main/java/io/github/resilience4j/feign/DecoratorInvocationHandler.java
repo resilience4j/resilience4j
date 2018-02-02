@@ -32,7 +32,7 @@ import io.vavr.CheckedFunction1;
  * An instance of {@link InvocationHandler} that uses {@link FeignDecorator}s to enhance the
  * invocations of methods.
  */
-public class DecoratorInvocationHandler implements InvocationHandler {
+class DecoratorInvocationHandler implements InvocationHandler {
 
     private final Target<?> target;
     private final Map<Method, CheckedFunction1<Object[], Object>> decoratedDispatch;
