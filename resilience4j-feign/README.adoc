@@ -3,13 +3,17 @@
 Resilience4j decorators for https://github.com/OpenFeign/feign[feign].
 Similar to https://github.com/OpenFeign/feign/tree/master/hystrix[HystrixFeign], 
 resilience4j-feign makes it easy to incorporate "resilience" patterns into the feign framework, such as 
-circuitBreaker or/and rateLimiter. 
+ the CircuitBreaker or/and RateLimiter patterns. 
+
 
 == Current Features
 * CircuitBreaker
 * RateLimiter
+* Fallback
  
-== Usage
+ 
+== Example of combining patterns
+``` java
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("backendName");
         RateLimiter rateLimiter = RateLimiter.ofDefaults("backendName");
         FeignDecorators decorators = FeignDecorators.builder()
@@ -17,8 +21,50 @@ circuitBreaker or/and rateLimiter.
                                          .withRateLimiter(rateLimiter)
                                          .build();
         MyService myService = Resilience4jFeign.builder(decorators).target(MyService.class, "http://localhost:8080/");
-
+```
 FeignDecorators are executed at the end of the feign chain, i.e. after the Retryer, ErrorDecoder and so on.
+
+
+== Ordering of Decorators
+The order in which decorators are applied correspond to the order in which they are declared. 
+When building `FeignDecorators`, it is important to be wary of this since the order affects the resulting behavior.
+
+For example,
+``` java
+        FeignDecorators decoratorsA = FeignDecorators.builder()
+                                         .withCircuitBreaker(circuitBreaker)
+                                         .withRateLimiter(rateLimiter)
+                                         .build();
+                                         
+        FeignDecorators decoratorsB = FeignDecorators.builder()
+                                         .withRateLimiter(rateLimiter)
+                                         .withCircuitBreaker(circuitBreaker)
+                                         .build();
+```        
+
+With `decoratorsA` the RateLimiter will be called before the CircuitBreaker. That means that even if the CircuitBreaker is open, the RateLimiter will still limit the rate of calls.
+`decoratorsB` applies the reserve order. Meaning that once the CircuitBreaker is open, the RateLimiter will no longer be called.
+
+
+
+== Fallback
+A fallback can be defined that is called if the a http request fails. 
+The fallback must implement that same interface that is declared in the "target" method. 
+
+``` java
+        public interface MyService {
+            @RequestLine("GET /greeting")
+            String greeting();
+        }
+
+        MyService fallback = () -> "fallback greeting";
+        CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("backendName");
+        FeignDecorators decorators = FeignDecorators.builder()
+                                         .withFallback(fallback)
+                                         .build();
+        MyService myService = Resilience4jFeign.builder(decorators).target(MyService.class, "http://localhost:8080/", fallback);
+```
+
 
 == License
 

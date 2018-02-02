@@ -33,8 +33,7 @@ public class FeignDecoratorsTest {
     public void testWithNothing() throws Throwable {
         final FeignDecorators testSubject = FeignDecorators.builder().build();
 
-
-        final Object result = testSubject.decorate(args -> args[0]).apply(new Object[] {"test01"});
+        final Object result = testSubject.decorate(args -> args[0], null, null, null).apply(new Object[] {"test01"});
 
         assertThat(result)
                 .describedAs("Returned result is correct")
@@ -49,7 +48,7 @@ public class FeignDecoratorsTest {
         final FeignDecorators testSubject = FeignDecorators.builder().withCircuitBreaker(circuitBreaker).build();
 
 
-        final Object result = testSubject.decorate(args -> args[0]).apply(new Object[] {"test01"});
+        final Object result = testSubject.decorate(args -> args[0], null, null, null).apply(new Object[] {"test01"});
 
         assertThat(result)
                 .describedAs("Returned result is correct")
@@ -65,7 +64,7 @@ public class FeignDecoratorsTest {
         final RateLimiter rateLimiter = spy(RateLimiter.ofDefaults("test"));
         final FeignDecorators testSubject = FeignDecorators.builder().withRateLimiter(rateLimiter).build();
 
-        final Object result = testSubject.decorate(args -> args[0]).apply(new Object[] {"test01"});
+        final Object result = testSubject.decorate(args -> args[0], null, null, null).apply(new Object[] {"test01"});
 
         assertThat(result)
                 .describedAs("Returned result is correct")
