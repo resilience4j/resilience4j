@@ -20,7 +20,8 @@ import feign.Feign;
 import feign.InvocationHandlerFactory;
 
 /**
- * Main class for combining Feign with Resilience4j modules.
+ * Main class for combining Feign with Resilience4j modules. See {@link FeignDecorators} on how to
+ * build decorators.
  */
 public final class Resilience4jFeign {
 

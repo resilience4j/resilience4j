@@ -23,7 +23,8 @@ import feign.Target;
 import io.vavr.CheckedFunction1;
 
 /**
- * Used to decorate methods defined by feign interfaces. Hint: Decorators can be stacked.
+ * Used to decorate methods defined by feign interfaces. Decorators can be stacked, allowing
+ * multiple Decorators to be combined. See {@link FeignDecorators}.
  */
 @FunctionalInterface
 public interface FeignDecorator {
