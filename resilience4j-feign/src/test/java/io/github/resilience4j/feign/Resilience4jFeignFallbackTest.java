@@ -41,6 +41,8 @@ import io.github.resilience4j.feign.test.TestService;
  */
 public class Resilience4jFeignFallbackTest {
 
+    private static final String MOCK_URL = "http://localhost:8080/";
+
     @Rule
     public WireMockRule wireMockRule = new WireMockRule();
 
@@ -49,14 +51,12 @@ public class Resilience4jFeignFallbackTest {
 
     @Before
     public void setUp() {
-        final String url = "http://localhost:8080/";
-
         testServiceFallback = mock(TestService.class);
         when(testServiceFallback.greeting()).thenReturn("fallback");
 
         final FeignDecorators decorators = FeignDecorators.builder().withFallback(testServiceFallback).build();
 
-        testService = Resilience4jFeign.builder(decorators).target(TestService.class, url);
+        testService = Resilience4jFeign.builder(decorators).target(TestService.class, MOCK_URL);
     }
 
     @Test
@@ -70,6 +70,11 @@ public class Resilience4jFeignFallbackTest {
         verify(1, getRequestedFor(urlPathEqualTo("/greeting")));
     }
 
+    @Test(expected = DecoratorException.class)
+    public void testInvalidFallback() throws Throwable {
+        final FeignDecorators decorators = FeignDecorators.builder().withFallback("not a fallback").build();
+        Resilience4jFeign.builder(decorators).target(TestService.class, MOCK_URL);
+    }
 
     @Test
     public void testFallback() throws Exception {
