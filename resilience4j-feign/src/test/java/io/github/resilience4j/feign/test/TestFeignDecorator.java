@@ -1,12 +1,16 @@
 package io.github.resilience4j.feign.test;
 
+import java.lang.reflect.Method;
+
+import feign.InvocationHandlerFactory.MethodHandler;
+import feign.Target;
 import io.github.resilience4j.feign.FeignDecorator;
 import io.vavr.CheckedFunction1;
 
 public class TestFeignDecorator implements FeignDecorator {
 
-    private boolean called = false;
-    private CheckedFunction1<Object[], Object> alternativeFunction;
+    private volatile boolean called = false;
+    private volatile CheckedFunction1<Object[], Object> alternativeFunction;
 
     public boolean isCalled() {
         return called;
@@ -25,9 +29,11 @@ public class TestFeignDecorator implements FeignDecorator {
     }
 
     @Override
-    public CheckedFunction1<Object[], Object> decorate(CheckedFunction1<Object[], Object> fn) {
+    public CheckedFunction1<Object[], Object> decorate(CheckedFunction1<Object[], Object> invocationCall,
+            Method method, MethodHandler methodHandler,
+            Target<?> target) {
         called = true;
-        return alternativeFunction != null ? alternativeFunction : fn;
+        return alternativeFunction != null ? alternativeFunction : invocationCall;
     }
 
 }

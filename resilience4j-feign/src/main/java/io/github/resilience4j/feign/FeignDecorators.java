@@ -16,9 +16,12 @@
  */
 package io.github.resilience4j.feign;
 
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 
+import feign.InvocationHandlerFactory.MethodHandler;
+import feign.Target;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.vavr.CheckedFunction1;
@@ -35,10 +38,11 @@ public class FeignDecorators implements FeignDecorator {
     }
 
     @Override
-    public CheckedFunction1<Object[], Object> decorate(CheckedFunction1<Object[], Object> fn) {
+    public CheckedFunction1<Object[], Object> decorate(CheckedFunction1<Object[], Object> fn,
+            Method method, MethodHandler methodHandler, Target<?> target) {
         CheckedFunction1<Object[], Object> decoratedFn = fn;
         for (final FeignDecorator decorator : decorators) {
-            decoratedFn = decorator.decorate(decoratedFn);
+            decoratedFn = decorator.decorate(decoratedFn, method, methodHandler, target);
         }
         return decoratedFn;
     }
@@ -52,12 +56,28 @@ public class FeignDecorators implements FeignDecorator {
         private final List<FeignDecorator> decorators = new ArrayList<>();
 
         public Builder withCircuitBreaker(CircuitBreaker circuitBreaker) {
-            decorators.add(fn -> CircuitBreaker.decorateCheckedFunction(circuitBreaker, fn));
+            decorators.add((fn, m, mh, t) -> CircuitBreaker.decorateCheckedFunction(circuitBreaker, fn));
             return this;
         }
 
         public Builder withRateLimiter(RateLimiter rateLimiter) {
-            decorators.add(fn -> RateLimiter.decorateCheckedFunction(rateLimiter, fn));
+            decorators.add((fn, m, mh, t) -> RateLimiter.decorateCheckedFunction(rateLimiter, fn));
+            return this;
+        }
+
+        public Builder withFallback(Object fallback) {
+            decorators.add((fn, m, mh, t) -> {
+                return args -> {
+                    try {
+                        return fn.apply(args);
+                    } catch (final Throwable throwable) {
+                        if (fallback != null) {
+                            return fallback.getClass().getMethod(m.getName(), m.getParameterTypes()).invoke(fallback, args);
+                        }
+                        throw throwable;
+                    }
+                };
+            });
             return this;
         }
 
