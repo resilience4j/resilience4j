@@ -73,18 +73,7 @@ public class FeignDecorators implements FeignDecorator {
         }
 
         public Builder withFallback(Object fallback) {
-            decorators.add((fn, m, mh, t) -> {
-                return args -> {
-                    try {
-                        return fn.apply(args);
-                    } catch (final Throwable throwable) {
-                        if (fallback != null) {
-                            return fallback.getClass().getMethod(m.getName(), m.getParameterTypes()).invoke(fallback, args);
-                        }
-                        throw throwable;
-                    }
-                };
-            });
+            decorators.add(new FallbackDecorator<Object>(fallback));
             return this;
         }
 
