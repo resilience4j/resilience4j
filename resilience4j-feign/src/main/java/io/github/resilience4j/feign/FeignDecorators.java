@@ -27,7 +27,14 @@ import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.vavr.CheckedFunction1;
 
 /**
- * Builder to help build stacked decorators.
+ * Builder to help build stacked decorators. The order in which decorators are applied correspond to
+ * the order in which they are declared. For example, calling
+ * {@link FeignDecorators.Builder#withCircuitBreaker(CircuitBreaker)} before
+ * {@link FeignDecorators.Builder#withFallback(Object)} would mean that the fallback is called when
+ * the CircuitBreaker is open. However, reversing the order would mean that although the fallback
+ * would still be called when the HTTP request fails, it would no longer be called when the
+ * CircuitBreaker is open. <br>
+ * So be wary of this when designing your "resilience" strategy.
  */
 public class FeignDecorators implements FeignDecorator {
 
