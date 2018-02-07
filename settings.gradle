@@ -18,4 +18,4 @@ include 'resilience4j-ratpack'
 include 'resilience4j-prometheus'
 include 'resilience4j-timelimiter'
 include 'resilience4j-rxjava2'
-
+include 'resilience4j-bitset'

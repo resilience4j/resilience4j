@@ -73,3 +73,18 @@ retry.getEventPublisher()
     .onSuccess(event -> logger.info(...))
     .onError(event -> logger.info(...));
 ----
+
+==== Retry budget
+Alternative implementation of Retry component, that was inspired by Finagle and its implementaion of retry budget pattern. The implemention keeps count of call count and retry count in circular buffer, which allows only certain percentage of retries. This implementation should avoid possible "Retry hell", that can be caused by default implementation.
+
+The retry budget can be configured similiary as default retry implementation.
+
+[source,java]
+----
+RetryConfig config = RetryConfig.custom()
+                .bufferSize(1000)
+                .retryThreshold(0.3)
+                .maxAttempts(3)
+                .build()
+Retry retryBudget = new RetryBudgetImpl("test", config)
+----

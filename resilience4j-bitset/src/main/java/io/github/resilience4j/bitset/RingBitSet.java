@@ -16,12 +16,12 @@
  *
  *
  */
-package io.github.resilience4j.circuitbreaker.internal;
+package io.github.resilience4j.bitset;
 
 /**
  * A ring bit set which stores bits up to a maximum size of bits.
  */
-class RingBitSet {
+public class RingBitSet {
 
     private final int size;
     private final BitSetMod bitSet;
@@ -42,7 +42,7 @@ class RingBitSet {
      * @throws NegativeArraySizeException if the specified initial size
      *                                    is negative
      */
-    RingBitSet(int bitSetSize) {
+    public RingBitSet(int bitSetSize) {
         notFull = true;
         size = bitSetSize;
         bitSet = new BitSetMod(bitSetSize);
@@ -58,7 +58,7 @@ class RingBitSet {
      * @throws NegativeArraySizeException if the specified initial size
      *                                    is negative
      */
-    RingBitSet(int bitSetSize, RingBitSet sourceSet) {
+    public RingBitSet(int bitSetSize, RingBitSet sourceSet) {
         this(bitSetSize);
 
         int targetLength = Integer.min(bitSetSize, sourceSet.length);

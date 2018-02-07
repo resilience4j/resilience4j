@@ -19,6 +19,7 @@
 package io.github.resilience4j.circuitbreaker.internal;
 
 
+import io.github.resilience4j.bitset.RingBitSet;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 
 import java.util.concurrent.atomic.LongAdder;

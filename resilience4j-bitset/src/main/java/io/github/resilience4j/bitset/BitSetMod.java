@@ -16,7 +16,7 @@
  *
  *
  */
-package io.github.resilience4j.circuitbreaker.internal;
+package io.github.resilience4j.bitset;
 
 /**
  * {@link BitSetMod} is simplified version of {@link java.util.BitSet}.
