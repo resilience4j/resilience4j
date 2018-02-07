@@ -16,6 +16,7 @@ package io.github.resilience4j.circuitbreaker.autoconfigure;
  */
 
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
+import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.*;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
@@ -50,11 +51,15 @@ public class CircuitBreakerProperties {
     }
 
     private CircuitBreakerConfig createCircuitBreakerConfig(BackendProperties backendProperties) {
+        return buildCircuitBreakerConfig(backendProperties).build();
+    }
+
+    public Builder buildCircuitBreakerConfig(BackendProperties backendProperties) {
         if (backendProperties == null) {
-            return CircuitBreakerConfig.ofDefaults();
+            return new Builder();
         }
 
-        CircuitBreakerConfig.Builder circuitBreakerConfigBuilder = CircuitBreakerConfig.custom();
+        Builder circuitBreakerConfigBuilder = CircuitBreakerConfig.custom();
 
         if (backendProperties.getWaitInterval() != null) {
             circuitBreakerConfigBuilder.waitDurationInOpenState(Duration.ofMillis(backendProperties.getWaitInterval()));
@@ -71,7 +76,7 @@ public class CircuitBreakerProperties {
         if (backendProperties.getRingBufferSizeInHalfOpenState() != null) {
             circuitBreakerConfigBuilder.ringBufferSizeInHalfOpenState(backendProperties.getRingBufferSizeInHalfOpenState());
         }
-        return circuitBreakerConfigBuilder.build();
+        return circuitBreakerConfigBuilder;
     }
 
     public Map<String, BackendProperties> getBackends() {
