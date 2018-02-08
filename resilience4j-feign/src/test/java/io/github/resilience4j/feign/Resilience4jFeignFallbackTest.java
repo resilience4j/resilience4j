@@ -70,7 +70,7 @@ public class Resilience4jFeignFallbackTest {
         verify(1, getRequestedFor(urlPathEqualTo("/greeting")));
     }
 
-    @Test(expected = DecoratorException.class)
+    @Test(expected = IllegalArgumentException.class)
     public void testInvalidFallback() throws Throwable {
         final FeignDecorators decorators = FeignDecorators.builder().withFallback("not a fallback").build();
         Resilience4jFeign.builder(decorators).target(TestService.class, MOCK_URL);

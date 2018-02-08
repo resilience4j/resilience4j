@@ -16,6 +16,8 @@
  */
 package io.github.resilience4j.feign;
 
+import static java.util.Objects.requireNonNull;
+
 import java.lang.reflect.Method;
 
 import feign.InvocationHandlerFactory.MethodHandler;
@@ -30,25 +32,23 @@ class FallbackDecorator<T> implements FeignDecorator {
     private final T fallback;
 
     public FallbackDecorator(T fallback) {
-        this.fallback = fallback;
+        this.fallback = requireNonNull(fallback, "Fallback cannot be null!");
     }
 
     /**
      * Calls the fallback if the invocationCall throws an {@link Exception}.
+     *
+     * @throws IllegalArgumentException if the fallback object does not have a corresponding
+     *         fallback method.
      */
     @Override
     public CheckedFunction1<Object[], Object> decorate(CheckedFunction1<Object[], Object> invocationCall,
             Method method,
             MethodHandler methodHandler,
             Target<?> target) {
-        Method fallbackMethod;
-        try {
-            fallbackMethod = fallback.getClass().getMethod(method.getName(), method.getParameterTypes());
-        } catch (NoSuchMethodException | SecurityException e) {
-            throw new DecoratorException("Cannot use the fallback ["
-                    + fallback.getClass() + "] for ["
-                    + method.getDeclaringClass() + "]", e);
-        }
+        final Method fallbackMethod;
+        validateFallback(method);
+        fallbackMethod = getFallbackMethod(method);
         return args -> {
             try {
                 return invocationCall.apply(args);
@@ -56,6 +56,26 @@ class FallbackDecorator<T> implements FeignDecorator {
                 return fallbackMethod.invoke(fallback, args);
             }
         };
+    }
+
+    private void validateFallback(Method method) {
+        if (fallback.getClass().isAssignableFrom(method.getDeclaringClass())) {
+            throw new IllegalArgumentException("Cannot use the fallback ["
+                    + fallback.getClass() + "] for ["
+                    + method.getDeclaringClass() + "]!");
+        }
+    }
+
+    private Method getFallbackMethod(Method method) {
+        Method fallbackMethod;
+        try {
+            fallbackMethod = fallback.getClass().getMethod(method.getName(), method.getParameterTypes());
+        } catch (NoSuchMethodException | SecurityException e) {
+            throw new IllegalArgumentException("Cannot use the fallback ["
+                    + fallback.getClass() + "] for ["
+                    + method.getDeclaringClass() + "]", e);
+        }
+        return fallbackMethod;
     }
 
 }
