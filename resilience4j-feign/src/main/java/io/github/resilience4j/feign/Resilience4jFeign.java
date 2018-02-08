@@ -20,8 +20,18 @@ import feign.Feign;
 import feign.InvocationHandlerFactory;
 
 /**
- * Main class for combining Feign with Resilience4j modules. See {@link FeignDecorators} on how to
- * build decorators.
+ * Main class for combining feign with Resilience4j.
+ *
+ * <pre>
+ * {@code
+ *     MyService myService = Resilience4jFeign.builder(decorators).target(MyService.class, "http://localhost:8080/");
+ * }
+ * </pre>
+ *
+ * {@link Resilience4jFeign} works in the same way as the standard {@link Feign.Builder}. Only
+ * {@link Feign.Builder#invocationHandlerFactory(InvocationHandlerFactory)} may not be called as
+ * this is how {@link Resilience4jFeign} decorates the feign interface. <br>
+ * See {@link FeignDecorators} on how to build decorators and enhance your feign interfaces.
  */
 public final class Resilience4jFeign {
 
@@ -37,6 +47,9 @@ public final class Resilience4jFeign {
             this.invocationDecorator = invocationDecorator;
         }
 
+        /**
+         * Will throw an {@link UnsupportedOperationException} exception.
+         */
         @Override
         public Feign.Builder invocationHandlerFactory(InvocationHandlerFactory invocationHandlerFactory) {
             throw new UnsupportedOperationException();
