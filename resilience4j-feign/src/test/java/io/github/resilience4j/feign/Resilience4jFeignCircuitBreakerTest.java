@@ -62,7 +62,7 @@ public class Resilience4jFeignCircuitBreakerTest {
     }
 
     @Test
-    public void testSuccessfulCalls() throws Exception {
+    public void testSuccessfulCall() throws Exception {
         final CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
 
         setupStub(200);
@@ -76,7 +76,7 @@ public class Resilience4jFeignCircuitBreakerTest {
     }
 
     @Test
-    public void testFailedCalls() throws Exception {
+    public void testFailedCall() throws Exception {
         final CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
         boolean exceptionThrown = false;
 
