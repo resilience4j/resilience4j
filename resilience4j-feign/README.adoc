@@ -58,8 +58,7 @@ With `decoratorsA` the RateLimiter will be called before the CircuitBreaker. Tha
 
 
 == Fallback
-A fallback can be defined that is called if the a http request fails. 
-The fallback must implement that same interface that is declared in the "target" method. 
+A fallback can be defined that is called if the a http request fails.  
 
 ``` java
         public interface MyService {
@@ -75,6 +74,8 @@ The fallback must implement that same interface that is declared in the "target"
         MyService myService = Resilience4jFeign.builder(decorators).target(MyService.class, "http://localhost:8080/", fallback);
 ```
 
+The fallback must implement that same interface that is declared in the "target" (Resilience4jFeign.Builder#target) method otherwise an IllegalArgumentException will be thrown.
+Multiple fallbacks can be applied with the next fallback being called when the previous one fails.
 
 == License
 
