@@ -2,8 +2,8 @@
 
 Resilience4j decorators for https://github.com/OpenFeign/feign[feign].
 Similar to https://github.com/OpenFeign/feign/tree/master/hystrix[HystrixFeign], 
-resilience4j-feign makes it easy to incorporate "resilience" patterns into the feign framework, such as 
- the CircuitBreaker or/and RateLimiter patterns. 
+resilience4j-feign makes it easy to incorporate "fault tolerance" patterns into the feign framework, such as 
+ the CircuitBreaker and RateLimiter. 
 
 
 == Current Features
@@ -32,12 +32,14 @@ resilience4j-feign makes it easy to incorporate "resilience" patterns into the f
 ```
 
 This will build an instance of `MyService` with each method being decorated with a CircuitBreaker and RateLimiter.
-FeignDecorators are executed at the end of the feign chain, i.e. after the Retryer, ErrorDecoder and so on.
+If one of these mechanisms take affect, then the corresponding RuntimeException will be thrown, for example, `CircuitBreakerOpenException` or `RequestNotPermitted` (Hint: These do not extend the `FeignException` class).
+`FeignDecorators` are executed at the end of the feign chain, i.e. after the Retryer, ErrorDecoder and so on.
+
 
 
 == Ordering of Decorators
 The order in which decorators are applied correspond to the order in which they are declared. 
-When building `FeignDecorators`, it is important to be wary of this since the order affects the resulting behavior.
+When building `FeignDecorators`, it is important to be wary of this, since the order affects the resulting behavior.
 
 For example,
 ``` java
