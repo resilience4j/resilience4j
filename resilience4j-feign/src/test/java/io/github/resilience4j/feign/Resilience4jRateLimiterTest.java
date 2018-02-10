@@ -52,11 +52,10 @@ public class Resilience4jRateLimiterTest {
             .build();
 
     private TestService testService;
-    private RateLimiter rateLimiter;
 
     @Before
     public void setUp() {
-        rateLimiter = RateLimiter.of("backendName", config);
+        final RateLimiter rateLimiter = RateLimiter.of("backendName", config);
         final FeignDecorators decorators = FeignDecorators.builder().withRateLimiter(rateLimiter).build();
         testService = Resilience4jFeign.builder(decorators).target(TestService.class, "http://localhost:8080/");
     }
