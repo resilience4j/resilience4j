@@ -57,7 +57,8 @@ For example,
 With `decoratorsA` the RateLimiter will be called before the CircuitBreaker. That means that even if the CircuitBreaker is open, the RateLimiter will still limit the rate of calls.
 `decoratorsB` applies the reserve order. Meaning that once the CircuitBreaker is open, the RateLimiter will no longer be called.
 
-
+Here is a visual aid that demonstrates the execution order of `decoratorsB`.
+image::feign-decorators.png[]
 
 == Fallback
 Fallbacks can be defined that are called when Exceptions are thrown. Exceptions can occur when the HTTP request fails, but also when one of the `FeignDecorators` activates, for example, the CircuitBreaker.
