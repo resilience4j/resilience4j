@@ -60,7 +60,7 @@ With `decoratorsA` the RateLimiter will be called before the CircuitBreaker. Tha
 
 
 == Fallback
-A fallback can be defined that is called if the a http request fails.  
+Fallbacks can be defined that are called when Exceptions are thrown. Exceptions can occur when the HTTP request fails, but also when one of the `FeignDecorators` activates, for example, the CircuitBreaker.
 
 ``` java
         public interface MyService {
@@ -68,16 +68,23 @@ A fallback can be defined that is called if the a http request fails.
             String greeting();
         }
 
-        MyService fallback = () -> "fallback greeting";
+        MyService requestFailedFallback = () -> "fallback greeting";
+        MyService circuitBreakerFallback = () -> "CircuitBreaker is open!";
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("backendName");
         FeignDecorators decorators = FeignDecorators.builder()
-                                         .withFallback(fallback)
+                                         .withFallback(requestFailedFallback, FeignException.class)
+                                         .withFallback(circuitBreakerFallback, CircuitBreakerOpenException.class)
                                          .build();
         MyService myService = Resilience4jFeign.builder(decorators).target(MyService.class, "http://localhost:8080/", fallback);
 ```
+In this example, the `requestFailedFallback` is called when a `FeignException` is thrown (usually when the HTTP request fails), whereas
+ the `circuitBreakerFallback` is only called in the case of a `CircuitBreakerOpenException`. 
+ Check the `FeignDecorators` class for more ways to filter fallbacks.
 
-The fallback must implement that same interface that is declared in the "target" (Resilience4jFeign.Builder#target) method otherwise an IllegalArgumentException will be thrown.
-Multiple fallbacks can be applied with the next fallback being called when the previous one fails.
+All fallbacks must implement the same interface that is declared in the "target" (Resilience4jFeign.Builder#target) method, otherwise an IllegalArgumentException will be thrown.
+Multiple fallbacks can be assigned to handle the same Exception with the next fallback being called when the previous one fails.
+
+
 
 == License
 

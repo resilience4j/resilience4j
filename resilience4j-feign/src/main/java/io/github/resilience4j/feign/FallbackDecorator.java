@@ -19,6 +19,7 @@ package io.github.resilience4j.feign;
 import static java.util.Objects.requireNonNull;
 
 import java.lang.reflect.Method;
+import java.util.function.Predicate;
 
 import feign.InvocationHandlerFactory.MethodHandler;
 import feign.Target;
@@ -30,9 +31,30 @@ import io.vavr.CheckedFunction1;
 class FallbackDecorator<T> implements FeignDecorator {
 
     private final T fallback;
+    private Predicate<Exception> filter;
 
+    /**
+     * Creates a fallback that will be called for every {@link Exception}.
+     */
     public FallbackDecorator(T fallback) {
+        this(fallback, ex -> true);
+    }
+
+    /**
+     * Creates a fallback that will only be called for the specified {@link Exception}.
+     */
+    public FallbackDecorator(T fallback, Class<? extends Exception> filter) {
+        this(fallback, filter::isInstance);
+        requireNonNull(filter, "Filter cannot be null!");
+    }
+
+    /**
+     * Creates a fallback that will only be called if the specified {@link Predicate} returns
+     * <code>true</code>.
+     */
+    public FallbackDecorator(T fallback, Predicate<Exception> filter) {
         this.fallback = requireNonNull(fallback, "Fallback cannot be null!");
+        this.filter = requireNonNull(filter, "Filter cannot be null!");
     }
 
     /**
@@ -53,7 +75,10 @@ class FallbackDecorator<T> implements FeignDecorator {
             try {
                 return invocationCall.apply(args);
             } catch (final Exception exception) {
-                return fallbackMethod.invoke(fallback, args);
+                if (filter.test(exception)) {
+                    return fallbackMethod.invoke(fallback, args);
+                }
+                throw exception;
             }
         };
     }

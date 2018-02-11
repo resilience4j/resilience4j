@@ -19,6 +19,7 @@ package io.github.resilience4j.feign;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Predicate;
 
 import feign.InvocationHandlerFactory.MethodHandler;
 import feign.Target;
@@ -30,7 +31,8 @@ import io.vavr.CheckedFunction1;
  * Builder to help build stacked decorators. <br>
  *
  * <pre>
- * {@code
+ * {
+ *     &#64;code
  *     CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("backendName");
  *     RateLimiter rateLimiter = RateLimiter.ofDefaults("backendName");
  *     FeignDecorators decorators = FeignDecorators.builder()
@@ -40,7 +42,7 @@ import io.vavr.CheckedFunction1;
  *     MyService myService = Resilience4jFeign.builder(decorators).target(MyService.class, "http://localhost:8080/");
  * }
  * </pre>
- * 
+ *
  * The order in which decorators are applied correspond to the order in which they are declared. For
  * example, calling {@link FeignDecorators.Builder#withFallback(Object)} before
  * {@link FeignDecorators.Builder#withCircuitBreaker(CircuitBreaker)} would mean that the fallback
@@ -107,6 +109,35 @@ public class FeignDecorators implements FeignDecorator {
          */
         public Builder withFallback(Object fallback) {
             decorators.add(new FallbackDecorator<Object>(fallback));
+            return this;
+        }
+
+        /**
+         * Adds a fallback to the decorator chain. Multiple fallbacks can be applied with the next
+         * fallback being called when the previous one fails.
+         *
+         * @param fallback must match the feign interface, i.e. the interface specified when calling
+         *        {@link Resilience4jFeign.Builder#target(Class, String)}.
+         * @param filter only {@link Exception}s matching the specified {@link Exception} will
+         *        trigger the fallback.
+         * @return the builder
+         */
+        public Builder withFallback(Object fallback, Class<? extends Exception> filter) {
+            decorators.add(new FallbackDecorator<Object>(fallback, filter));
+            return this;
+        }
+
+        /**
+         * Adds a fallback to the decorator chain. Multiple fallbacks can be applied with the next
+         * fallback being called when the previous one fails.
+         *
+         * @param fallback must match the feign interface, i.e. the interface specified when calling
+         *        {@link Resilience4jFeign.Builder#target(Class, String)}.
+         * @param filter the filter must return <code>true</code> for the fallback to be called.
+         * @return the builder
+         */
+        public Builder withFallback(Object fallback, Predicate<Exception> filter) {
+            decorators.add(new FallbackDecorator<Object>(fallback, filter));
             return this;
         }
 
