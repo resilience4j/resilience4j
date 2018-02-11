@@ -34,6 +34,8 @@ import org.junit.Test;
 
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 
+import feign.FeignException;
+import io.github.resilience4j.circuitbreaker.CircuitBreakerOpenException;
 import io.github.resilience4j.feign.test.TestService;
 
 /**
@@ -54,7 +56,9 @@ public class Resilience4jFeignFallbackTest {
         testServiceFallback = mock(TestService.class);
         when(testServiceFallback.greeting()).thenReturn("fallback");
 
-        final FeignDecorators decorators = FeignDecorators.builder().withFallback(testServiceFallback).build();
+        final FeignDecorators decorators = FeignDecorators.builder()
+                .withFallback(testServiceFallback)
+                .build();
 
         testService = Resilience4jFeign.builder(decorators).target(TestService.class, MOCK_URL);
     }
@@ -88,6 +92,94 @@ public class Resilience4jFeignFallbackTest {
         verify(1, getRequestedFor(urlPathEqualTo("/greeting")));
     }
 
+
+    @Test
+    public void testFallbackExceptionFilter() throws Exception {
+        final TestService testServiceExceptionFallback = mock(TestService.class);
+        when(testServiceExceptionFallback.greeting()).thenReturn("exception fallback");
+
+        final FeignDecorators decorators = FeignDecorators.builder()
+                .withFallback(testServiceExceptionFallback, FeignException.class)
+                .withFallback(testServiceFallback)
+                .build();
+
+        testService = Resilience4jFeign.builder(decorators).target(TestService.class, MOCK_URL);
+        setupStub(400);
+
+        final String result = testService.greeting();
+
+        assertThat(result).describedAs("Result").isNotEqualTo("Hello, world!");
+        assertThat(result).describedAs("Result").isEqualTo("exception fallback");
+        verify(testServiceFallback, times(0)).greeting();
+        verify(testServiceExceptionFallback, times(1)).greeting();
+        verify(1, getRequestedFor(urlPathEqualTo("/greeting")));
+    }
+
+    @Test
+    public void testFallbackExceptionFilterNotCalled() throws Exception {
+        final TestService testServiceExceptionFallback = mock(TestService.class);
+        when(testServiceExceptionFallback.greeting()).thenReturn("exception fallback");
+
+        final FeignDecorators decorators = FeignDecorators.builder()
+                .withFallback(testServiceExceptionFallback, CircuitBreakerOpenException.class)
+                .withFallback(testServiceFallback)
+                .build();
+
+        testService = Resilience4jFeign.builder(decorators).target(TestService.class, MOCK_URL);
+        setupStub(400);
+
+        final String result = testService.greeting();
+
+        assertThat(result).describedAs("Result").isNotEqualTo("Hello, world!");
+        assertThat(result).describedAs("Result").isEqualTo("fallback");
+        verify(testServiceFallback, times(1)).greeting();
+        verify(testServiceExceptionFallback, times(0)).greeting();
+        verify(1, getRequestedFor(urlPathEqualTo("/greeting")));
+    }
+
+    @Test
+    public void testFallbackFilter() throws Exception {
+        final TestService testServiceFilterFallback = mock(TestService.class);
+        when(testServiceFilterFallback.greeting()).thenReturn("filter fallback");
+
+        final FeignDecorators decorators = FeignDecorators.builder()
+                .withFallback(testServiceFilterFallback, ex -> true)
+                .withFallback(testServiceFallback)
+                .build();
+
+        testService = Resilience4jFeign.builder(decorators).target(TestService.class, MOCK_URL);
+        setupStub(400);
+
+        final String result = testService.greeting();
+
+        assertThat(result).describedAs("Result").isNotEqualTo("Hello, world!");
+        assertThat(result).describedAs("Result").isEqualTo("filter fallback");
+        verify(testServiceFallback, times(0)).greeting();
+        verify(testServiceFilterFallback, times(1)).greeting();
+        verify(1, getRequestedFor(urlPathEqualTo("/greeting")));
+    }
+
+    @Test
+    public void testFallbackFilterNotCalled() throws Exception {
+        final TestService testServiceFilterFallback = mock(TestService.class);
+        when(testServiceFilterFallback.greeting()).thenReturn("filter fallback");
+
+        final FeignDecorators decorators = FeignDecorators.builder()
+                .withFallback(testServiceFilterFallback, ex -> false)
+                .withFallback(testServiceFallback)
+                .build();
+
+        testService = Resilience4jFeign.builder(decorators).target(TestService.class, MOCK_URL);
+        setupStub(400);
+
+        final String result = testService.greeting();
+
+        assertThat(result).describedAs("Result").isNotEqualTo("Hello, world!");
+        assertThat(result).describedAs("Result").isEqualTo("fallback");
+        verify(testServiceFallback, times(1)).greeting();
+        verify(testServiceFilterFallback, times(0)).greeting();
+        verify(1, getRequestedFor(urlPathEqualTo("/greeting")));
+    }
 
     @Test
     public void testRevertFallback() throws Exception {
