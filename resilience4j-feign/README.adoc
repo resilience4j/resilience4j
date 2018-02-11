@@ -25,16 +25,18 @@ resilience4j-feign makes it easy to incorporate "fault tolerance" patterns into 
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("backendName");
         RateLimiter rateLimiter = RateLimiter.ofDefaults("backendName");
         FeignDecorators decorators = FeignDecorators.builder()
-                                         .withCircuitBreaker(circuitBreaker)
                                          .withRateLimiter(rateLimiter)
+                                         .withCircuitBreaker(circuitBreaker)
                                          .build();
         MyService myService = Resilience4jFeign.builder(decorators).target(MyService.class, "http://localhost:8080/");
 ```
 
-This will build an instance of `MyService` with each method being decorated with a CircuitBreaker and RateLimiter.
+This will build an instance of `MyService` with each method being decorated with a RateLimiter and CircuitBreaker.
 If one of these mechanisms take affect, then the corresponding RuntimeException will be thrown, for example, `CircuitBreakerOpenException` or `RequestNotPermitted` (Hint: These do not extend the `FeignException` class).
-`FeignDecorators` are executed at the end of the feign chain, i.e. after the Retryer, ErrorDecoder and so on.
+`FeignDecorators` are executed before feign operations, i.e. after the Retryer, ErrorDecoder and so on.
 
+The following diagram illustrates how the decorators are stacked.
+image::feign-decorators.png[]
 
 
 == Ordering of Decorators
@@ -57,8 +59,6 @@ For example,
 With `decoratorsA` the RateLimiter will be called before the CircuitBreaker. That means that even if the CircuitBreaker is open, the RateLimiter will still limit the rate of calls.
 `decoratorsB` applies the reserve order. Meaning that once the CircuitBreaker is open, the RateLimiter will no longer be called.
 
-Here is a visual aid that demonstrates the execution order of `decoratorsB`.
-image::feign-decorators.png[]
 
 == Fallback
 Fallbacks can be defined that are called when Exceptions are thrown. Exceptions can occur when the HTTP request fails, but also when one of the `FeignDecorators` activates, for example, the CircuitBreaker.
