@@ -8,7 +8,6 @@ import org.reactivestreams.Subscription;
 import reactor.core.CoreSubscriber;
 import reactor.core.publisher.Operators;
 
-import java.util.Objects;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static java.util.Objects.requireNonNull;
@@ -48,7 +47,7 @@ class BulkheadSubscriber<T> extends Operators.MonoSubscriber<T, T> {
 
     @Override
     public void onNext(T t) {
-        Objects.requireNonNull(t);
+        requireNonNull(t);
 
         if (isInvocationPermitted()) {
             actual.onNext(t);
@@ -57,7 +56,7 @@ class BulkheadSubscriber<T> extends Operators.MonoSubscriber<T, T> {
 
     @Override
     public void onError(Throwable t) {
-        Objects.requireNonNull(t);
+        requireNonNull(t);
 
         if (isInvocationPermitted()) {
             bulkhead.onComplete();

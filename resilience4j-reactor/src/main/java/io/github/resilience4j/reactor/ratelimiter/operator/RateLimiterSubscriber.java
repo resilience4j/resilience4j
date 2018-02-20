@@ -8,7 +8,6 @@ import org.reactivestreams.Subscription;
 import reactor.core.CoreSubscriber;
 import reactor.core.publisher.Operators;
 
-import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -49,7 +48,7 @@ class RateLimiterSubscriber<T> extends Operators.MonoSubscriber<T, T> {
 
     @Override
     public void onNext(T t) {
-        Objects.requireNonNull(t);
+        requireNonNull(t);
 
         if (isInvocationPermitted()) {
             if (firstEvent.getAndSet(false) || rateLimiter.getPermission(rateLimiter.getRateLimiterConfig().getTimeoutDuration())) {
@@ -63,7 +62,7 @@ class RateLimiterSubscriber<T> extends Operators.MonoSubscriber<T, T> {
 
     @Override
     public void onError(Throwable t) {
-        Objects.requireNonNull(t);
+        requireNonNull(t);
 
         if (isInvocationPermitted()) {
             actual.onError(t);
