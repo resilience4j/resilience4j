@@ -79,6 +79,19 @@ Observable.fromCallable(backendService::doSomething)
 
 Other reactive types (Flowable, Single, Maybe and Completable) are also supported.
 
+===== CircuitBreaker and Reactor
+
+The following example shows how to decorate a Mono by using the custom Reactor operator.
+
+[source,java]
+----
+CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("backendName");
+Mono.fromCallable(backendService::doSomething)
+    .transform(CircuitBreakerOperator.of(circuitBreaker))
+----
+
+Flux is also supported.
+
 ===== OPEN CircuitBreaker example
 
 In this example `map` is not invoked, because the CircuitBreaker is OPEN. The call to `Try.of` returns a `Failure<Throwable>` Monad so that the chained function is not invoked.

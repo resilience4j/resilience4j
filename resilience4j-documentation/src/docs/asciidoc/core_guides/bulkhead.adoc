@@ -90,6 +90,19 @@ Observable.fromCallable(backendService::doSomething)
 
 Other reactive types (Flowable, Single, Maybe and Completable) are also supported.
 
+===== Bulkhead and RxJava
+
+The following example shows how to decorate a Mono by using the custom Reactor operator.
+
+[source,java]
+----
+Bulkhead bulkhead = Bulkhead.ofDefaults("backendName");
+Mono.fromCallable(backendService::doSomething)
+          .transform(BulkheadOperator.of(bulkhead));
+----
+
+Flux is also supported.
+
 ===== Saturated Bulkhead example
 
 In this example the decorated runnable is not executed because the Bulkhead is saturated and will not allow any more parallel executions. The call to `Try.run` returns a `Failure<Throwable>` Monad so that the chained function is not invoked.
