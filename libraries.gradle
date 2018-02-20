@@ -17,7 +17,7 @@ ext {
     springBootVersion = '1.4.3.RELEASE'
     ratpackVersion = '1.4.6'
     spockVersion = '1.1-groovy-2.4-rc-4'
-    retrofitVersion = '2.1.0'
+    retrofitVersion = '2.3.0'
     prometheusSimpleClientVersion = '0.0.21'
 
     libraries = [
