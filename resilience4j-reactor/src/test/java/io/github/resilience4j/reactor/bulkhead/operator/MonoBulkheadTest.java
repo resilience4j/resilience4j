@@ -5,10 +5,11 @@ import io.github.resilience4j.bulkhead.BulkheadConfig;
 import io.github.resilience4j.bulkhead.BulkheadFullException;
 import java.io.IOException;
 import java.time.Duration;
-import org.assertj.core.api.Assertions;
 import org.junit.Test;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class MonoBulkheadTest {
 
@@ -23,7 +24,7 @@ public class MonoBulkheadTest {
         .expectNext("Event")
         .verifyComplete();
 
-    Assertions.assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
+    assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
   }
 
   @Test
@@ -35,7 +36,7 @@ public class MonoBulkheadTest {
         .expectError(IOException.class)
         .verify(Duration.ofSeconds(1));
 
-    Assertions.assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
+    assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
   }
 
   @Test
@@ -49,7 +50,7 @@ public class MonoBulkheadTest {
         .expectError(BulkheadFullException.class)
         .verify(Duration.ofSeconds(1));
 
-    Assertions.assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(0);
+    assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(0);
 
   }
 }

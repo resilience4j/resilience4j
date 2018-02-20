@@ -5,10 +5,11 @@ import io.github.resilience4j.bulkhead.BulkheadConfig;
 import io.github.resilience4j.bulkhead.BulkheadFullException;
 import java.io.IOException;
 import java.time.Duration;
-import org.assertj.core.api.Assertions;
 import org.junit.Test;
 import reactor.core.publisher.Flux;
 import reactor.test.StepVerifier;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class FluxBulkheadTest {
 
@@ -24,7 +25,7 @@ public class FluxBulkheadTest {
         .expectNext("Event 2")
         .verifyComplete();
 
-    Assertions.assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
+    assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
   }
 
   @Test
@@ -36,7 +37,7 @@ public class FluxBulkheadTest {
         .expectError(IOException.class)
         .verify(Duration.ofSeconds(1));
 
-    Assertions.assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
+    assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
   }
 
   @Test
@@ -50,7 +51,7 @@ public class FluxBulkheadTest {
         .expectError(BulkheadFullException.class)
         .verify(Duration.ofSeconds(1));
 
-    Assertions.assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(0);
+    assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(0);
 
   }
 }
