@@ -121,6 +121,20 @@ Observable.fromCallable(backendService::doSomething)
 
 NOTE: Resilience4j also provides RxJava operators for `RateLimiter`, `Bulkhead` and `Retry`. Find out more in our *http://resilience4j.github.io/resilience4j/[User Guide]*
 
+=== CircuitBreaker and Reactor
+
+The following example shows how to decorate a Mono by using the custom Reactor operator.
+
+[source,java]
+----
+CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testName");
+Mono.fromCallable(backendService::doSomething)
+    .transform(CircuitBreakerOperator.of(circuitBreaker))
+----
+
+
+NOTE: Resilience4j also provides Reactor operators for `RateLimiter` and `Bulkhead`. Find out more in our *http://resilience4j.github.io/resilience4j/[User Guide]*
+
 
 [[ratelimiter]]
 === RateLimiter

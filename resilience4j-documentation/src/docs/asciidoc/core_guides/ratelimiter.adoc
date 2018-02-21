@@ -79,6 +79,19 @@ Observable.fromCallable(backendService::doSomething)
 
 Other reactive types (Flowable, Single, Maybe and Completable) are also supported.
 
+===== RateLimiter and Reactor
+
+The following example shows how to decorate a Mono by using the custom Reactor operator.
+
+[source,java]
+----
+RateLimiter rateLimiter = RateLimiter.ofDefaults("backendName");
+Mono.fromCallable(backendService::doSomething)
+    .transform(RateLimiterOperator.of(rateLimiter))
+----
+
+Flux is also supported.
+
 ===== Consume emitted RateLimiterEvents
 
 The RateLimiter emits a stream of RateLimiterEvents. An event can be a successful permission acquire or acquire failure.
