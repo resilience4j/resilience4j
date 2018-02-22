@@ -29,6 +29,9 @@ import io.vavr.collection.Array;
 import java.util.Map;
 
 import static com.codahale.metrics.MetricRegistry.name;
+import static io.github.resilience4j.ratelimiter.utils.MetricNames.AVAILABLE_PERMISSIONS;
+import static io.github.resilience4j.ratelimiter.utils.MetricNames.DEFAULT_PREFIX;
+import static io.github.resilience4j.ratelimiter.utils.MetricNames.WAITING_THREADS;
 import static java.util.Objects.requireNonNull;
 
 /**
@@ -38,8 +41,6 @@ public class RateLimiterMetrics implements MetricSet {
 
     private static final String PREFIX_NULL = "Prefix must not be null";
     private static final String ITERABLE_NULL = "RateLimiters iterable must not be null";
-
-    private static final String DEFAULT_PREFIX = "resilience4j.ratelimiter";
 
     private final MetricRegistry metricRegistry = new MetricRegistry();
 
@@ -53,9 +54,9 @@ public class RateLimiterMetrics implements MetricSet {
 
         rateLimiters.forEach(rateLimiter -> {
                 String name = rateLimiter.getName();
-            metricRegistry.register(name(prefix, name, "number_of_waiting_threads"),
+                metricRegistry.register(name(prefix, name, WAITING_THREADS),
                     (Gauge<Integer>) rateLimiter.getMetrics()::getNumberOfWaitingThreads);
-                metricRegistry.register(name(prefix, name, "available_permissions"),
+                metricRegistry.register(name(prefix, name, AVAILABLE_PERMISSIONS),
                     (Gauge<Integer>) rateLimiter.getMetrics()::getAvailablePermissions);
             }
         );
