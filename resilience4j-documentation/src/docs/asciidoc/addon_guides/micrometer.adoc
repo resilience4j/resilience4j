@@ -1,0 +1,85 @@
+=== Micrometer Metrics exporter
+
+==== Introduction
+
+Integration with http://micrometer.io/[Micrometer].
+With this add-on you can easily add your bulkhead, circuit breaker, rate limiter, retry metrics in Micrometer `MeterRegistry`.
+
+==== Usage
+
+===== Bulkhead
+
+[source,java]
+--
+final BulkheadRegistry bulkheadRegistry = BulkheadRegistry.ofDefaults();
+final Bulkhead foo = bulkheadRegistry.bulkhead("foo");
+final Bulkhead boo = bulkheadRegistry.bulkhead("boo");
+
+// Register all bulkheads at once
+BulkheadMetrics bulkheadMetrics = BulkheadMetrics.ofBulkheadRegistry(bulkheadRegistry);
+bulkheadMetrics.bindTo(meterRegistry);
+--
+
+For each bulkhead this registry will export:
+
+* `available_concurrent_calls` - instantaneous read of the number of currently available concurrent calls `[int]`
+
+===== CircuitBreaker
+
+[source,java]
+--
+final CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
+final CircuitBreaker foo = circuitBreakerRegistry.circuitBreaker("foo");
+final CircuitBreaker boo = circuitBreakerRegistry.circuitBreaker("boo");
+
+// Register all circuit breakers at once
+CircuitBreakerMetrics circuitBreakerMetrics = CircuitBreakerMetrics.ofCircuitBreakerRegistry(circuitBreakerRegistry);
+circuitBreakerMetrics.bindTo(meterRegistry);
+--
+
+For each circuit breaker this registry will export:
+
+* `state` - instantaneous read of the current state where 0-CLOSED, 1-OPEN, 2-HALF-OPEN `[int]`
+* `successful` - current number of successful calls `[int]`
+* `failed` - current number of failed calls `[int]`
+* `buffered` - current number of buffered calls `[int]`
+* `buffered_max` - maximum number of buffered calls `[int]`
+* `not_permitted` - current number of not permitted calls `[int]`
+
+===== RateLimiter
+
+[source,java]
+--
+final RateLimiterRegistry rateLimiterRegistry = RateLimiterRegistry.ofDefaults();
+final RateLimiter rateLimiter = rateLimiterRegistry.rateLimiter("testLimit");
+
+// Register rate limiters at once
+RateLimiterMetrics rateLimiterMetrics = RateLimiterMetrics.ofRateLimiterRegistry(rateLimiterRegistry);
+rateLimiterMetrics.bindTo(meterRegistry);
+--
+
+For each rate limiter this registry will export:
+
+* `available_permissions` - current number of available permissions `[int]`
+* `number_of_waiting_threads` - current number of threads waiting for permission `[int]`
+
+===== Retry
+
+[source,java]
+--
+final MetricRegistry metricRegistry = new MetricRegistry();
+final RetryRegistry retryRegistry = RetryRegistry.ofDefaults();
+final Retry retry = retryRegistry.retry("testLimit");
+
+// Register all retries at once
+RetryMetrics retryMetrics = RetryMetrics.ofRetryRegistry(retryRegistry);
+retryMetrics.bindTo(meterRegistry);
+--
+
+For each retry this registry will export:
+
+* `successful_calls_without_retry` - the number of successful calls without a retry attempt `[long]`
+* `successful_calls_with_retry` - the number of successful calls after a retry attempt `[long]`
+* `failed_calls_without_retry` - the number of failed calls without a retry attempt `[long]`
+* `failed_calls_with_retry` - the number of failed calls after all retry attempts `[long]`
+

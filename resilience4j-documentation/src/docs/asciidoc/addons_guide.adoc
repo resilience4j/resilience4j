@@ -9,3 +9,5 @@ include::addon_guides/retrofit.adoc[]
 include::addon_guides/dropwizard.adoc[]
 
 include::addon_guides/prometheus.adoc[]
+
+include::addon_guides/micrometer.adoc[]

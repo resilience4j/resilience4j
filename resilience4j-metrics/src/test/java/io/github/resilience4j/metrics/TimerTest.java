@@ -39,6 +39,8 @@ import java.util.concurrent.ExecutionException;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+import static com.jayway.awaitility.Awaitility.await;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
@@ -158,9 +160,12 @@ public class TimerTest {
 
         assertThat(value).isEqualTo("Hello world");
 
-        assertThat(timer.getMetrics().getNumberOfTotalCalls()).isEqualTo(1);
-        assertThat(timer.getMetrics().getNumberOfSuccessfulCalls()).isEqualTo(1);
-        assertThat(timer.getMetrics().getNumberOfFailedCalls()).isEqualTo(0);
+        await().atMost(1, SECONDS)
+                .until(() -> {
+                    assertThat(timer.getMetrics().getNumberOfTotalCalls()).isEqualTo(1);
+                    assertThat(timer.getMetrics().getNumberOfSuccessfulCalls()).isEqualTo(1);
+                    assertThat(timer.getMetrics().getNumberOfFailedCalls()).isEqualTo(0);
+                });
 
         // Then the helloWorldService should be invoked 1 time
         BDDMockito.then(helloWorldService).should(times(1)).returnHelloWorld();
