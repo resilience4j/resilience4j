@@ -27,12 +27,13 @@ import java.time.Duration;
 
 import static java.lang.Thread.sleep;
 import static org.assertj.core.api.BDDAssertions.assertThat;
+
 public class CircuitBreakerStateMachineTest {
 
     private CircuitBreaker circuitBreaker;
 
     @Before
-    public void setUp(){
+    public void setUp() {
         circuitBreaker = new CircuitBreakerStateMachine("testName", CircuitBreakerConfig.custom()
                 .failureRateThreshold(50)
                 .ringBufferSizeInClosedState(5)
@@ -53,42 +54,31 @@ public class CircuitBreakerStateMachineTest {
         // Initially the CircuitBreaker is closed
         assertThat(circuitBreaker.isCallPermitted()).isEqualTo(true);
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
-        assertThat(circuitBreaker.getMetrics().getFailureRate()).isEqualTo(-1f);
-        assertThat(circuitBreaker.getMetrics().getNumberOfBufferedCalls()).isEqualTo(0);
-        assertThat(circuitBreaker.getMetrics().getNumberOfFailedCalls()).isEqualTo(0);
-        assertThat(circuitBreaker.getMetrics().getNumberOfNotPermittedCalls()).isEqualTo(0);
+        assertThatMetricsAreReset();
 
         // Call 1 is a failure
         circuitBreaker.onError(0, new RuntimeException()); // Should create a CircuitBreakerOnErrorEvent (1)
         assertThat(circuitBreaker.isCallPermitted()).isEqualTo(true);
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
-        assertThat(circuitBreaker.getMetrics().getNumberOfBufferedCalls()).isEqualTo(1);
-        assertThat(circuitBreaker.getMetrics().getNumberOfFailedCalls()).isEqualTo(1);
-        assertThat(circuitBreaker.getMetrics().getFailureRate()).isEqualTo(-1f);
+        assertCircuitBreakerMetricsEqualTo(-1f, null, 1, null, 1, 0L);
 
         // Call 2 is a failure
         circuitBreaker.onError(0, new RuntimeException()); // Should create a CircuitBreakerOnErrorEvent (2)
         assertThat(circuitBreaker.isCallPermitted()).isEqualTo(true);
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
-        assertThat(circuitBreaker.getMetrics().getNumberOfBufferedCalls()).isEqualTo(2);
-        assertThat(circuitBreaker.getMetrics().getNumberOfFailedCalls()).isEqualTo(2);
-        assertThat(circuitBreaker.getMetrics().getFailureRate()).isEqualTo(-1f);
+        assertCircuitBreakerMetricsEqualTo(-1f, null, 2, null, 2, 0L);
 
         // Call 3 is a failure
         circuitBreaker.onError(0, new RuntimeException()); // Should create a CircuitBreakerOnErrorEvent (3)
         assertThat(circuitBreaker.isCallPermitted()).isEqualTo(true);
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
-        assertThat(circuitBreaker.getMetrics().getNumberOfBufferedCalls()).isEqualTo(3);
-        assertThat(circuitBreaker.getMetrics().getNumberOfFailedCalls()).isEqualTo(3);
-        assertThat(circuitBreaker.getMetrics().getFailureRate()).isEqualTo(-1f);
+        assertCircuitBreakerMetricsEqualTo(-1f, null, 3, null, 3, 0L);
 
         // Call 4 is a success
         circuitBreaker.onSuccess(0); // Should create a CircuitBreakerOnSuccessEvent (4)
         assertThat(circuitBreaker.isCallPermitted()).isEqualTo(true);
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
-        assertThat(circuitBreaker.getMetrics().getNumberOfBufferedCalls()).isEqualTo(4);
-        assertThat(circuitBreaker.getMetrics().getNumberOfFailedCalls()).isEqualTo(3);
-        assertThat(circuitBreaker.getMetrics().getFailureRate()).isEqualTo(-1f);
+        assertCircuitBreakerMetricsEqualTo(-1f, null, 4, null, 3, 0L);
 
         // Call 5 is a success
         circuitBreaker.onSuccess(0); // Should create a CircuitBreakerOnSuccessEvent (5)
@@ -97,6 +87,7 @@ public class CircuitBreakerStateMachineTest {
         assertThat(circuitBreaker.getMetrics().getNumberOfBufferedCalls()).isEqualTo(5);
         assertThat(circuitBreaker.getMetrics().getNumberOfFailedCalls()).isEqualTo(3);
         assertThat(circuitBreaker.getMetrics().getFailureRate()).isEqualTo(60.0f);
+        assertCircuitBreakerMetricsEqualTo(60.0f, null, 5, null, 3, 0L);
 
         sleep(500);
 
@@ -112,21 +103,16 @@ public class CircuitBreakerStateMachineTest {
         // The CircuitBreaker switches to half open, because the wait duration of 1 second is elapsed
         assertThat(circuitBreaker.isCallPermitted()).isEqualTo(true);
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.HALF_OPEN); // Should create a CircuitBreakerOnStateTransitionEvent (9)
-        // Metrics are reseted
-        assertThat(circuitBreaker.getMetrics().getMaxNumberOfBufferedCalls()).isEqualTo(3);
-        assertThat(circuitBreaker.getMetrics().getNumberOfNotPermittedCalls()).isEqualTo(0);
-        assertThat(circuitBreaker.getMetrics().getNumberOfBufferedCalls()).isEqualTo(0);
+        // Metrics are resetted
         assertThat(circuitBreaker.getMetrics().getNumberOfFailedCalls()).isEqualTo(0);
+        assertCircuitBreakerMetricsEqualTo(-1f, null, 0, 3, 0, 0L);
 
         // A ring buffer with size 2 is used in half open state
         // Call 1 is a failure
         circuitBreaker.onError(0, new RuntimeException()); // Should create a CircuitBreakerOnErrorEvent (10)
         assertThat(circuitBreaker.isCallPermitted()).isEqualTo(true);
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.HALF_OPEN);
-        assertThat(circuitBreaker.getMetrics().getNumberOfBufferedCalls()).isEqualTo(1);
-        assertThat(circuitBreaker.getMetrics().getNumberOfFailedCalls()).isEqualTo(1);
-        assertThat(circuitBreaker.getMetrics().getNumberOfNotPermittedCalls()).isEqualTo(0);
-        assertThat(circuitBreaker.getMetrics().getFailureRate()).isEqualTo(-1f);
+        assertCircuitBreakerMetricsEqualTo(-1f, null, 1, null, 1, 0L);
 
         // Call 2 is a failure
         circuitBreaker.onError(0, new RuntimeException()); // Should create a CircuitBreakerOnErrorEvent (11)
@@ -144,46 +130,113 @@ public class CircuitBreakerStateMachineTest {
 
         // The CircuitBreaker switches to half open, because the wait duration of 1 second is elapsed
         assertThat(circuitBreaker.isCallPermitted()).isEqualTo(true);
-        assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.HALF_OPEN);  // Should create a CircuitBreakerOnStateTransitionEvent (14)
+        assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.HALF_OPEN);
 
         // Call 1 is a failure
         circuitBreaker.onError(0, new RuntimeException()); // Should create a CircuitBreakerOnErrorEvent (15)
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.HALF_OPEN);
-        assertThat(circuitBreaker.getMetrics().getNumberOfBufferedCalls()).isEqualTo(1);
-        assertThat(circuitBreaker.getMetrics().getNumberOfFailedCalls()).isEqualTo(1);
-        assertThat(circuitBreaker.getMetrics().getFailureRate()).isEqualTo(-1f);
+        assertCircuitBreakerMetricsEqualTo(-1f, null, 1, null, 1, null);
 
         // Call 2 should be ignored, because it's a NumberFormatException
         circuitBreaker.onError(0, new NumberFormatException()); // Should create a CircuitBreakerOnIgnoredErrorEvent (16)
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.HALF_OPEN);
-        assertThat(circuitBreaker.getMetrics().getNumberOfBufferedCalls()).isEqualTo(1);
-        assertThat(circuitBreaker.getMetrics().getNumberOfFailedCalls()).isEqualTo(1);
-        assertThat(circuitBreaker.getMetrics().getFailureRate()).isEqualTo(-1f);
+        assertCircuitBreakerMetricsEqualTo(-1f, null, 1, null, 1, null);
 
         // Call 3 is a success
         circuitBreaker.onSuccess(0); // Should create a CircuitBreakerOnSuccessEvent (17)
-        // Call 43 is a success
+        // Call 4 is a success
         circuitBreaker.onSuccess(0); // Should create a CircuitBreakerOnSuccessEvent (18)
 
         // The ring buffer is filled and the failure rate is below 50%
         // The state machine transitions back to CLOSED state
         assertThat(circuitBreaker.isCallPermitted()).isEqualTo(true);
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED); // Should create a CircuitBreakerOnStateTransitionEvent (19)
-        assertThat(circuitBreaker.getMetrics().getMaxNumberOfBufferedCalls()).isEqualTo(5);
-        assertThat(circuitBreaker.getMetrics().getNumberOfBufferedCalls()).isEqualTo(3);
-        assertThat(circuitBreaker.getMetrics().getNumberOfFailedCalls()).isEqualTo(1);
-        assertThat(circuitBreaker.getMetrics().getFailureRate()).isEqualTo(-1f);
+        assertCircuitBreakerMetricsEqualTo(-1f, null, 3, 5, 1, 0L);
 
-        circuitBreaker.reset(); // Should create a CircuitBreakerOnSuccessEvent (20)
+        circuitBreaker.reset(); // Should create a CircuitBreakerOnResetEvent (20)
 
         // The ring buffer back to initial state
         // The state machine transitions back to CLOSED state
         assertThat(circuitBreaker.isCallPermitted()).isEqualTo(true);
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED); // Should create a CircuitBreakerOnStateTransitionEvent (21)
-        assertThat(circuitBreaker.getMetrics().getFailureRate()).isEqualTo(-1f);
-        assertThat(circuitBreaker.getMetrics().getNumberOfBufferedCalls()).isEqualTo(0);
-        assertThat(circuitBreaker.getMetrics().getNumberOfFailedCalls()).isEqualTo(0);
-        assertThat(circuitBreaker.getMetrics().getNumberOfNotPermittedCalls()).isEqualTo(0);
+        assertThatMetricsAreReset();
+
+        circuitBreaker.transitionToDisabledState(); // Should create a CircuitBreakerOnStateTransitionEvent (20)
+        // The ring buffer back to initial state
+        // The state machine transitions back to CLOSED state
+        assertThat(circuitBreaker.isCallPermitted()).isEqualTo(true);
+        assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.DISABLED); // Should create a CircuitBreakerOnStateTransitionEvent (21)
+        assertThatMetricsAreReset();
+
+        // Call 5 is a success
+        circuitBreaker.onSuccess(0); // Should not create a CircuitBreakerOnSuccessEvent
+        // Call 6 is a failure
+        circuitBreaker.onError(0, new RuntimeException()); // Should not create a CircuitBreakerOnErrorEvent
+        // Call 7 is a failure
+        circuitBreaker.onError(0, new RuntimeException()); // Should not create a CircuitBreakerOnErrorEvent
+        // Call 8 is a failure
+        circuitBreaker.onError(0, new RuntimeException()); // Should not create a CircuitBreakerOnErrorEvent
+        assertThat(circuitBreaker.isCallPermitted()).isEqualTo(true);
+        assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.DISABLED); // Should create a CircuitBreakerOnStateTransitionEvent (21)
+        assertThatMetricsAreReset();
+
+        circuitBreaker.transitionToClosedState(); // Should create a CircuitBreakerOnStateTransitionEvent (22)
+        assertThat(circuitBreaker.isCallPermitted()).isEqualTo(true);
+        assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
+        assertThatMetricsAreReset();
+
+        circuitBreaker.onSuccess(0); // Should create a CircuitBreakerOnSuccessEvent (23)
+        assertCircuitBreakerMetricsEqualTo(-1f, 1, 1, null, 0, 0L);
+
+
+        circuitBreaker.transitionToForcedOpenState(); // Should create a CircuitBreakerOnStateTransitionEvent (20)
+        // The ring buffer back to initial state
+        // The state machine transitions back to CLOSED state
+        assertThat(circuitBreaker.isCallPermitted()).isEqualTo(false);
+        assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.FORCED_OPEN); // Should create a CircuitBreakerOnStateTransitionEvent (21)
+        assertCircuitBreakerMetricsEqualTo(-1f, 0, 0, null, 0, 1L);
+
+        circuitBreaker.onSuccess(0); // Should not create a CircuitBreakerOnSuccessEvent
+        circuitBreaker.onSuccess(0); // Should not create a CircuitBreakerOnSuccessEvent
+        circuitBreaker.onSuccess(0); // Should not create a CircuitBreakerOnSuccessEvent
+        circuitBreaker.onSuccess(0); // Should not create a CircuitBreakerOnSuccessEvent
+
+        assertThat(circuitBreaker.isCallPermitted()).isEqualTo(false);
+        assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.FORCED_OPEN); // Should create a CircuitBreakerOnStateTransitionEvent (21)
+        assertCircuitBreakerMetricsEqualTo(-1f, null, 0, null, 0, 2L);
+
+
+        circuitBreaker.transitionToOpenState(); // Should create a CircuitBreakerOnStateTransitionEvent (20)
+        assertThat(circuitBreaker.isCallPermitted()).isEqualTo(false);
+        assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.OPEN);
+        assertCircuitBreakerMetricsEqualTo(-1f, null, 0, null, 0, 3L);
 
     }
+
+    private void assertCircuitBreakerMetricsEqualTo(Float expectedFailureRate, Integer expectedSuccessCalls, Integer expectedBufferedCalls, Integer expectedMaxBufferedCalls, Integer expectedFailedCalls, Long expectedNotPermittedCalls) {
+        final CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
+        if (expectedFailureRate != null) {
+            assertThat(metrics.getFailureRate()).isEqualTo(expectedFailureRate);
+        }
+        if (expectedSuccessCalls != null) {
+            assertThat(metrics.getNumberOfSuccessfulCalls()).isEqualTo(expectedSuccessCalls);
+        }
+        if (expectedBufferedCalls != null) {
+            assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(expectedBufferedCalls);
+        }
+        if (expectedMaxBufferedCalls != null) {
+            assertThat(metrics.getMaxNumberOfBufferedCalls()).isEqualTo(expectedMaxBufferedCalls);
+        }
+        if (expectedFailedCalls != null) {
+            assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(expectedFailedCalls);
+        }
+        if (expectedNotPermittedCalls != null) {
+            assertThat(metrics.getNumberOfNotPermittedCalls()).isEqualTo(expectedNotPermittedCalls);
+        }
+    }
+
+    private void assertThatMetricsAreReset() {
+        assertCircuitBreakerMetricsEqualTo(-1f, 0, 0, null, 0, 0L);
+    }
+
 }

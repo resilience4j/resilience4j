@@ -121,6 +121,20 @@ Observable.fromCallable(backendService::doSomething)
 
 NOTE: Resilience4j also provides RxJava operators for `RateLimiter`, `Bulkhead` and `Retry`. Find out more in our *http://resilience4j.github.io/resilience4j/[User Guide]*
 
+=== CircuitBreaker and Reactor
+
+The following example shows how to decorate a Mono by using the custom Reactor operator.
+
+[source,java]
+----
+CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testName");
+Mono.fromCallable(backendService::doSomething)
+    .transform(CircuitBreakerOperator.of(circuitBreaker))
+----
+
+
+NOTE: Resilience4j also provides Reactor operators for `RateLimiter` and `Bulkhead`. Find out more in our *http://resilience4j.github.io/resilience4j/[User Guide]*
+
 
 [[ratelimiter]]
 === RateLimiter
@@ -251,14 +265,19 @@ long failedCalls = metrics.getNumberOfFailedCalls();
 
 `CircuitBreaker` example below:
 
-A `CircuitBreakerEvent` can be a state transition, a successful call, a recorded error or an ignored error. All events contains additional information like event creation time and processing duration of the call. If you want to consume events, you have to register an event consumer.
+A `CircuitBreakerEvent` can be a state transition, a circuit breaker reset, a successful call, a recorded error or an ignored error. All events contains additional information like event creation time and processing duration of the call. If you want to consume events, you have to register an event consumer.
 
 [source,java]
 ----
 circuitBreaker.getEventPublisher()
     .onSuccess(event -> logger.info(...))
     .onError(event -> logger.info(...))
+    .onIgnoredError(event -> logger.info(...))
+    .onReset(event -> logger.info(...))
     .onStateTransition(event -> logger.info(...));
+// Or if you want to register a consumer listening to all events, you can do:
+circuitBreaker.getEventPublisher()
+    .onEvent(event -> logger.info(...));
 ----
 
 You could use the `CircularEventConsumer` to store events in a circular buffer with a fixed capacity.

@@ -8,6 +8,7 @@ import io.vavr.collection.Array;
 import java.util.Map;
 
 import static com.codahale.metrics.MetricRegistry.name;
+import static io.github.resilience4j.retry.utils.MetricNames.*;
 import static java.util.Objects.requireNonNull;
 
 /**
@@ -15,12 +16,7 @@ import static java.util.Objects.requireNonNull;
  */
 public class RetryMetrics implements MetricSet {
 
-    public static final String SUCCESSFUL_CALLS_WITHOUT_RETRY = "successful_calls_without_retry";
-    public static final String SUCCESSFUL_CALLS_WITH_RETRY = "successful_calls_with_retry";
-    public static final String FAILED_CALLS_WITHOUT_RETRY = "failed_calls_without_retry";
-    public static final String FAILED_CALLS_WITH_RETRY = "failed_calls_with_retry";
     private final MetricRegistry metricRegistry = new MetricRegistry();
-    private static final String DEFAULT_PREFIX = "resilience4j.retry";
 
     private RetryMetrics(Iterable<Retry> retries){
         this(DEFAULT_PREFIX, retries);

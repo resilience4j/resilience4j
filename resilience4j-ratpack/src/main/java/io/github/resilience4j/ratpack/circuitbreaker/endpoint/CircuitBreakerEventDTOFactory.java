@@ -15,12 +15,7 @@
  */
 package io.github.resilience4j.ratpack.circuitbreaker.endpoint;
 
-import io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent;
-import io.github.resilience4j.circuitbreaker.event.CircuitBreakerOnCallNotPermittedEvent;
-import io.github.resilience4j.circuitbreaker.event.CircuitBreakerOnErrorEvent;
-import io.github.resilience4j.circuitbreaker.event.CircuitBreakerOnIgnoredErrorEvent;
-import io.github.resilience4j.circuitbreaker.event.CircuitBreakerOnStateTransitionEvent;
-import io.github.resilience4j.circuitbreaker.event.CircuitBreakerOnSuccessEvent;
+import io.github.resilience4j.circuitbreaker.event.*;
 
 class CircuitBreakerEventDTOFactory {
 
@@ -33,6 +28,10 @@ class CircuitBreakerEventDTOFactory {
             case SUCCESS:
                 CircuitBreakerOnSuccessEvent onSuccessEvent = (CircuitBreakerOnSuccessEvent) event;
                 return newCircuitBreakerEventDTOBuilder(onSuccessEvent).setDuration(onSuccessEvent.getElapsedDuration())
+                        .build();
+            case RESET:
+                CircuitBreakerOnResetEvent onResetEvent = (CircuitBreakerOnResetEvent) event;
+                return newCircuitBreakerEventDTOBuilder(onResetEvent)
                         .build();
             case STATE_TRANSITION:
                 CircuitBreakerOnStateTransitionEvent onStateTransitionEvent = (CircuitBreakerOnStateTransitionEvent) event;

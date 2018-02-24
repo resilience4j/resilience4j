@@ -20,6 +20,9 @@ ext {
     retrofitVersion = '2.3.0'
     feignVersion = '9.5.1'
     prometheusSimpleClientVersion = '0.0.21'
+    reactorVersion = '3.1.3.RELEASE'
+    reactiveStreamsVersion = '1.0.2'
+    micrometerVersion = '1.0.0'
 
     libraries = [
             // compile
@@ -27,6 +30,7 @@ ext {
             slf4j: "org.slf4j:slf4j-api:${slf4jVersion}",
             rxjava2: "io.reactivex.rxjava2:rxjava:${rxJavaVersion}",
             jcache: "javax.cache:cache-api:${jcacheVersion}",
+            reactor: "io.projectreactor:reactor-core:${reactorVersion}",
 
             // testCompile
             junit:           "junit:junit:${junitVersion}",
@@ -37,6 +41,8 @@ ext {
             powermock_api_mockito: "org.powermock:powermock-api-mockito:${powermockVersion}",
             powermock_module_junit4: "org.powermock:powermock-module-junit4:${powermockVersion}",
             awaitility: "com.jayway.awaitility:awaitility:${awaitilityVersion}",
+            reactor_test: "io.projectreactor:reactor-test:${reactorVersion}",
+            reactive_streams_tck: "org.reactivestreams:reactive-streams-tck:${reactiveStreamsVersion}",
 
             // Vert.x addon
             vertx: "io.vertx:vertx-core:${vertxVersion}",
@@ -66,6 +72,9 @@ ext {
             
             // Metrics addon
             metrics: "io.dropwizard.metrics:metrics-core:${metricsVersion}",
+
+            // Micrometers addon
+            micrometer: "io.micrometer:micrometer-core:${micrometerVersion}",
 
             // CircuitBreaker documentation
             metrics_healthcheck: "io.dropwizard.metrics:metrics-healthchecks:${metricsVersion}",
