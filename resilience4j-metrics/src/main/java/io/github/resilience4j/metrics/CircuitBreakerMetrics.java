@@ -29,20 +29,13 @@ import io.vavr.collection.Array;
 import java.util.Map;
 
 import static com.codahale.metrics.MetricRegistry.name;
+import static io.github.resilience4j.circuitbreaker.utils.MetricNames.*;
 import static java.util.Objects.requireNonNull;
 
 /**
  * An adapter which exports {@link CircuitBreaker.Metrics} as Dropwizard Metrics Gauges.
  */
 public class CircuitBreakerMetrics implements MetricSet {
-
-    private static final String DEFAULT_PREFIX = "resilience4j.circuitbreaker";
-    public static final String SUCCESSFUL = "successful";
-    public static final String FAILED = "failed";
-    public static final String NOT_PERMITTED = "not_permitted";
-    public static final String BUFFERED = "buffered";
-    public static final String BUFFERED_MAX = "buffered_max";
-    public static final String STATE = "state";
 
     private final MetricRegistry metricRegistry = new MetricRegistry();
 

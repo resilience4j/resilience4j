@@ -63,20 +63,20 @@ public final class CircuitBreakerCallAdapter extends CallAdapter.Factory {
     }
 
     @Override
-    public CallAdapter<?> get(Type returnType, Annotation[] annotations, Retrofit retrofit) {
+    public CallAdapter<?,?> get(Type returnType, Annotation[] annotations, Retrofit retrofit) {
         if (getRawType(returnType) != Call.class) {
             return null;
         }
 
         final Type responseType = getCallResponseType(returnType);
-        return new CallAdapter<Call<?>>() {
+        return new CallAdapter<Object, Call<?>>() {
             @Override
             public Type responseType() {
                 return responseType;
             }
 
             @Override
-            public <R> Call<R> adapt(Call<R> call) {
+            public Call<Object> adapt(Call<Object> call) {
                 return RetrofitCircuitBreaker.decorateCall(circuitBreaker, call, successResponse);
             }
         };

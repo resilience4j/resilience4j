@@ -26,15 +26,14 @@ import io.vavr.collection.Array;
 import java.util.Map;
 
 import static com.codahale.metrics.MetricRegistry.name;
+import static io.github.resilience4j.bulkhead.utils.MetricNames.AVAILABLE_CONCURRENT_CALLS;
+import static io.github.resilience4j.bulkhead.utils.MetricNames.DEFAULT_PREFIX;
 import static java.util.Objects.requireNonNull;
 
 /**
  * An adapter which exports {@link Bulkhead.Metrics} as Dropwizard Metrics Gauges.
  */
 public class BulkheadMetrics implements MetricSet {
-    private static final String DEFAULT_PREFIX = "resilience4j.bulkhead";
-    private static final String AVAILABLE_CONCURRENT_CALLS = "available_concurrent_calls";
-
     private final MetricRegistry metricRegistry = new MetricRegistry();
 
     private BulkheadMetrics(Iterable<Bulkhead> bulkheads) {
