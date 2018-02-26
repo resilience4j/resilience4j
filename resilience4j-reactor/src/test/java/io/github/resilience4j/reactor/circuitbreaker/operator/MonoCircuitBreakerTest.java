@@ -21,6 +21,7 @@ import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 import java.io.IOException;
+import java.time.Duration;
 
 public class MonoCircuitBreakerTest extends CircuitBreakerAssertions {
 
@@ -41,7 +42,7 @@ public class MonoCircuitBreakerTest extends CircuitBreakerAssertions {
                 Mono.error(new IOException("BAM!"))
                         .transform(CircuitBreakerOperator.of(circuitBreaker)))
                 .expectError(IOException.class)
-                .verify();
+                .verify(Duration.ofSeconds(1));
 
         assertSingleFailedCall();
     }
@@ -53,7 +54,7 @@ public class MonoCircuitBreakerTest extends CircuitBreakerAssertions {
                 Mono.just("Event")
                         .transform(CircuitBreakerOperator.of(circuitBreaker)))
                 .expectError(CircuitBreakerOpenException.class)
-                .verify();
+                .verify(Duration.ofSeconds(1));
 
         assertNoRegisteredCall();
     }
