@@ -50,6 +50,13 @@ class DecoratorInvocationHandler implements InvocationHandler {
      * returns the result as a map of {@link CheckedFunction1}s. Invoking a {@link CheckedFunction1}
      * will therefore invoke the decorator which, in turn, may invoke the corresponding
      * {@link MethodHandler}.
+     *
+     * @param dispatch a map of the methods from the feign interface to the {@link MethodHandler}s.
+     * @param invocationDecorator the {@link FeignDecorator} with which to decorate the
+     *        {@link MethodHandler}s.
+     * @param target the target feign interface.
+     * @return a new map where the {@link MethodHandler}s are decorated with the
+     *         {@link FeignDecorator}.
      */
     private Map<Method, CheckedFunction1<Object[], Object>> decorateMethodHandlers(Map<Method, MethodHandler> dispatch,
             FeignDecorator invocationDecorator, Target<?> target) {
