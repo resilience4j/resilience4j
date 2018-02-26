@@ -22,7 +22,7 @@ import io.github.resilience4j.reactor.Permit;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
 import reactor.core.CoreSubscriber;
-import reactor.core.publisher.Operators;
+import reactor.core.publisher.BaseSubscriber;
 
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -33,65 +33,54 @@ import static java.util.Objects.requireNonNull;
  *
  * @param <T> the value type of the upstream and downstream
  */
-class CircuitBreakerSubscriber<T> extends Operators.MonoSubscriber<T, T> {
+class CircuitBreakerSubscriber<T> extends BaseSubscriber<T> {
 
+    private final CoreSubscriber<? super T> actual;
     private final CircuitBreaker circuitBreaker;
     private final AtomicReference<Permit> permitted = new AtomicReference<>(Permit.PENDING);
     private StopWatch stopWatch;
-    private Subscription subscription;
 
     public CircuitBreakerSubscriber(CircuitBreaker circuitBreaker,
                                     CoreSubscriber<? super T> actual) {
-        super(actual);
+        this.actual = actual;
         this.circuitBreaker = requireNonNull(circuitBreaker);
     }
 
     @Override
-    public void onSubscribe(Subscription subscription) {
-        if (Operators.validate(this.subscription, subscription)) {
-            this.subscription = subscription;
-
-            if (acquireCallPermit()) {
-                actual.onSubscribe(this);
-            } else {
-                cancel();
-                actual.onSubscribe(this);
-                actual.onError(new CircuitBreakerOpenException(
-                        String.format("CircuitBreaker '%s' is open", circuitBreaker.getName())));
-            }
+    protected void hookOnSubscribe(Subscription subscription) {
+        if (acquireCallPermit()) {
+            actual.onSubscribe(this);
+        } else {
+            cancel();
+            actual.onSubscribe(this);
+            actual.onError(new CircuitBreakerOpenException(
+                    String.format("CircuitBreaker '%s' is open", circuitBreaker.getName())));
         }
     }
 
     @Override
-    public void onNext(T t) {
-        requireNonNull(t);
-
-        if (isInvocationPermitted()) {
-            actual.onNext(t);
+    protected void hookOnNext(T value) {
+        if (notCancelled() && wasCallPermitted()) {
+            actual.onNext(value);
         }
     }
 
     @Override
-    public void onError(Throwable t) {
-        requireNonNull(t);
-
-        markFailure(t);
-        if (isInvocationPermitted()) {
-            actual.onError(t);
-        }
-    }
-
-    @Override
-    public void onComplete() {
+    protected void hookOnComplete() {
         markSuccess();
-        if (isInvocationPermitted()) {
+        if (wasCallPermitted()) {
             actual.onComplete();
         }
     }
 
     @Override
-    public void request(long n) {
-        subscription.request(n);
+    protected void hookOnError(Throwable t) {
+        requireNonNull(t);
+
+        markFailure(t);
+        if (wasCallPermitted()) {
+            actual.onError(t);
+        }
     }
 
     private boolean acquireCallPermit() {
@@ -107,10 +96,6 @@ class CircuitBreakerSubscriber<T> extends Operators.MonoSubscriber<T, T> {
         return callPermitted;
     }
 
-    private boolean isInvocationPermitted() {
-        return !this.isCancelled() && wasCallPermitted();
-    }
-
     private void markFailure(Throwable e) {
         if (wasCallPermitted()) {
             circuitBreaker.onError(stopWatch.stop().getProcessingDuration().toNanos(), e);
@@ -121,6 +106,10 @@ class CircuitBreakerSubscriber<T> extends Operators.MonoSubscriber<T, T> {
         if (wasCallPermitted()) {
             circuitBreaker.onSuccess(stopWatch.stop().getProcessingDuration().toNanos());
         }
+    }
+
+    private boolean notCancelled() {
+        return !this.isDisposed();
     }
 
     private boolean wasCallPermitted() {

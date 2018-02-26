@@ -33,8 +33,8 @@ public class BulkheadSubscriberWhiteboxVerification extends
     public Subscriber<Integer> createSubscriber(WhiteboxSubscriberProbe<Integer> probe) {
         return new io.github.resilience4j.reactor.bulkhead.operator.BulkheadSubscriber<Integer>(Bulkhead.ofDefaults("verification"), MonoProcessor.create()) {
             @Override
-            public void onSubscribe(Subscription subscription) {
-                super.onSubscribe(subscription);
+            public void hookOnSubscribe(Subscription subscription) {
+                super.hookOnSubscribe(subscription);
 
                 // register a successful Subscription, and create a Puppet,
                 // for the WhiteboxVerification to be able to drive its tests:
@@ -53,20 +53,20 @@ public class BulkheadSubscriberWhiteboxVerification extends
             }
 
             @Override
-            public void onNext(Integer integer) {
-                super.onNext(integer);
+            public void hookOnNext(Integer integer) {
+                super.hookOnNext(integer);
                 probe.registerOnNext(integer);
             }
 
             @Override
-            public void onError(Throwable t) {
-                super.onError(t);
+            public void hookOnError(Throwable t) {
+                super.hookOnError(t);
                 probe.registerOnError(t);
             }
 
             @Override
-            public void onComplete() {
-                super.onComplete();
+            public void hookOnComplete() {
+                super.hookOnComplete();
                 probe.registerOnComplete();
             }
         };

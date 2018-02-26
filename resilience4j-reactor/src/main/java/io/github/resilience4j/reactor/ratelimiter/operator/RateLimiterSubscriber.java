@@ -21,7 +21,7 @@ import io.github.resilience4j.reactor.Permit;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
 import reactor.core.CoreSubscriber;
-import reactor.core.publisher.Operators;
+import reactor.core.publisher.BaseSubscriber;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
@@ -33,39 +33,33 @@ import static java.util.Objects.requireNonNull;
  *
  * @param <T> the value type of the upstream and downstream
  */
-class RateLimiterSubscriber<T> extends Operators.MonoSubscriber<T, T> {
+class RateLimiterSubscriber<T> extends BaseSubscriber<T> {
 
+    private final CoreSubscriber<? super T> actual;
     private final RateLimiter rateLimiter;
     private final AtomicReference<Permit> permitted = new AtomicReference<>(Permit.PENDING);
     private final AtomicBoolean firstEvent = new AtomicBoolean(true);
 
-    private Subscription subscription;
-
     public RateLimiterSubscriber(RateLimiter rateLimiter,
                                  CoreSubscriber<? super T> actual) {
-        super(actual);
+        this.actual = actual;
         this.rateLimiter = requireNonNull(rateLimiter);
     }
 
     @Override
-    public void onSubscribe(Subscription subscription) {
-        if (Operators.validate(this.subscription, subscription)) {
-            this.subscription = subscription;
-            if (acquireCallPermit()) {
-                actual.onSubscribe(this);
-            } else {
-                cancel();
-                actual.onSubscribe(this);
-                actual.onError(rateLimitExceededException());
-            }
+    public void hookOnSubscribe(Subscription subscription) {
+        if (acquireCallPermit()) {
+            actual.onSubscribe(this);
+        } else {
+            cancel();
+            actual.onSubscribe(this);
+            actual.onError(rateLimitExceededException());
         }
     }
 
     @Override
-    public void onNext(T t) {
-        requireNonNull(t);
-
-        if (isInvocationPermitted()) {
+    public void hookOnNext(T t) {
+        if (notCancelled() && wasCallPermitted()) {
             if (firstEvent.getAndSet(false) || rateLimiter.getPermission(rateLimiter.getRateLimiterConfig().getTimeoutDuration())) {
                 actual.onNext(t);
             } else {
@@ -76,29 +70,17 @@ class RateLimiterSubscriber<T> extends Operators.MonoSubscriber<T, T> {
     }
 
     @Override
-    public void onError(Throwable t) {
-        requireNonNull(t);
-
-        if (isInvocationPermitted()) {
+    public void hookOnError(Throwable t) {
+        if (wasCallPermitted()) {
             actual.onError(t);
         }
     }
 
     @Override
-    public void onComplete() {
-        if (isInvocationPermitted()) {
+    public void hookOnComplete() {
+        if (wasCallPermitted()) {
             actual.onComplete();
         }
-    }
-
-    @Override
-    public void request(long n) {
-        subscription.request(n);
-    }
-
-    @Override
-    public void cancel() {
-        super.cancel();
     }
 
     private boolean acquireCallPermit() {
@@ -112,12 +94,8 @@ class RateLimiterSubscriber<T> extends Operators.MonoSubscriber<T, T> {
         return callPermitted;
     }
 
-    private boolean isInvocationPermitted() {
-        return notCancelled() && wasCallPermitted();
-    }
-
     private boolean notCancelled() {
-        return !this.isCancelled();
+        return !this.isDisposed();
     }
 
     private boolean wasCallPermitted() {

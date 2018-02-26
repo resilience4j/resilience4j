@@ -21,7 +21,7 @@ import io.github.resilience4j.reactor.Permit;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
 import reactor.core.CoreSubscriber;
-import reactor.core.publisher.Operators;
+import reactor.core.publisher.BaseSubscriber;
 
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -32,69 +32,51 @@ import static java.util.Objects.requireNonNull;
  *
  * @param <T> the value type of the upstream and downstream
  */
-class BulkheadSubscriber<T> extends Operators.MonoSubscriber<T, T> {
+class BulkheadSubscriber<T> extends BaseSubscriber<T> {
 
+    private final CoreSubscriber<? super T> actual;
     private final Bulkhead bulkhead;
     private final AtomicReference<Permit> permitted = new AtomicReference<>(Permit.PENDING);
 
-    private Subscription subscription;
-
     public BulkheadSubscriber(Bulkhead bulkhead,
                               CoreSubscriber<? super T> actual) {
-        super(actual);
+        this.actual = actual;
         this.bulkhead = requireNonNull(bulkhead);
     }
 
     @Override
-    public void onSubscribe(Subscription subscription) {
-        if (Operators.validate(this.subscription, subscription)) {
-            this.subscription = subscription;
-            if (acquireCallPermit()) {
-                actual.onSubscribe(this);
-            } else {
-                cancel();
-                actual.onSubscribe(this);
-                actual.onError(new BulkheadFullException(
-                        String.format("Bulkhead '%s' is full", bulkhead.getName())));
-            }
+    public void hookOnSubscribe(Subscription subscription) {
+        if (acquireCallPermit()) {
+            actual.onSubscribe(this);
+        } else {
+            cancel();
+            actual.onSubscribe(this);
+            actual.onError(new BulkheadFullException(
+                    String.format("Bulkhead '%s' is full", bulkhead.getName())));
         }
     }
 
     @Override
-    public void onNext(T t) {
-        requireNonNull(t);
-
-        if (isInvocationPermitted()) {
+    public void hookOnNext(T t) {
+        if (notCancelled() && wasCallPermitted()) {
             actual.onNext(t);
         }
     }
 
     @Override
-    public void onError(Throwable t) {
-        requireNonNull(t);
-
-        if (isInvocationPermitted()) {
+    public void hookOnError(Throwable t) {
+        if (wasCallPermitted()) {
             bulkhead.onComplete();
             actual.onError(t);
         }
     }
 
     @Override
-    public void onComplete() {
-        if (isInvocationPermitted()) {
+    public void hookOnComplete() {
+        if (wasCallPermitted()) {
             releaseBulkhead();
             actual.onComplete();
         }
-    }
-
-    @Override
-    public void request(long n) {
-        subscription.request(n);
-    }
-
-    @Override
-    public void cancel() {
-        super.cancel();
     }
 
     private boolean acquireCallPermit() {
@@ -108,12 +90,8 @@ class BulkheadSubscriber<T> extends Operators.MonoSubscriber<T, T> {
         return callPermitted;
     }
 
-    private boolean isInvocationPermitted() {
-        return notCancelled() && wasCallPermitted();
-    }
-
     private boolean notCancelled() {
-        return !this.isCancelled();
+        return !this.isDisposed();
     }
 
     private boolean wasCallPermitted() {
