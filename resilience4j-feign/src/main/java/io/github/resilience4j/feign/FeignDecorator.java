@@ -36,6 +36,7 @@ public interface FeignDecorator {
      *        implementing class.
      * @param method the method of the feign interface that is invoked.
      * @param methodHandler the feign methodHandler that executes the http request.
+     * @return the decorated invocationCall
      */
     CheckedFunction1<Object[], Object> decorate(CheckedFunction1<Object[], Object> invocationCall, Method method, MethodHandler methodHandler,
             Target<?> target);

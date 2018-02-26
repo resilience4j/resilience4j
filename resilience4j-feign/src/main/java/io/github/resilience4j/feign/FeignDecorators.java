@@ -80,7 +80,7 @@ public class FeignDecorators implements FeignDecorator {
         /**
          * Adds a {@link CircuitBreaker} to the decorator chain.
          *
-         * @param rateLimiter a fully configured {@link CircuitBreaker}.
+         * @param circuitBreaker a fully configured {@link CircuitBreaker}.
          * @return the builder
          */
         public Builder withCircuitBreaker(CircuitBreaker circuitBreaker) {
