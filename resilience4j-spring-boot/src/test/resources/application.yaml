@@ -29,3 +29,5 @@ resilience4j.ratelimiter:
             limitForPeriod: 6
             limitRefreshPeriodInMillis: 500
             timeoutInMillis: 3000
+
+management.security.enabled: false
