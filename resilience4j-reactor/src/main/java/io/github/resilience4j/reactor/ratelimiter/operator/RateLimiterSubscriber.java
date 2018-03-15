@@ -17,14 +17,11 @@ package io.github.resilience4j.reactor.ratelimiter.operator;
 
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RequestNotPermitted;
-import io.github.resilience4j.reactor.Permit;
+import io.github.resilience4j.reactor.ResilienceBaseSubscriber;
 import org.reactivestreams.Subscriber;
-import org.reactivestreams.Subscription;
 import reactor.core.CoreSubscriber;
-import reactor.core.publisher.BaseSubscriber;
 
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicReference;
 
 import static java.util.Objects.requireNonNull;
 
@@ -33,28 +30,15 @@ import static java.util.Objects.requireNonNull;
  *
  * @param <T> the value type of the upstream and downstream
  */
-class RateLimiterSubscriber<T> extends BaseSubscriber<T> {
+class RateLimiterSubscriber<T> extends ResilienceBaseSubscriber<T> {
 
-    private final CoreSubscriber<? super T> actual;
     private final RateLimiter rateLimiter;
-    private final AtomicReference<Permit> permitted = new AtomicReference<>(Permit.PENDING);
     private final AtomicBoolean firstEvent = new AtomicBoolean(true);
 
     public RateLimiterSubscriber(RateLimiter rateLimiter,
                                  CoreSubscriber<? super T> actual) {
-        this.actual = actual;
+        super(actual);
         this.rateLimiter = requireNonNull(rateLimiter);
-    }
-
-    @Override
-    public void hookOnSubscribe(Subscription subscription) {
-        if (acquireCallPermit()) {
-            actual.onSubscribe(this);
-        } else {
-            cancel();
-            actual.onSubscribe(this);
-            actual.onError(rateLimitExceededException());
-        }
     }
 
     @Override
@@ -77,29 +61,20 @@ class RateLimiterSubscriber<T> extends BaseSubscriber<T> {
     }
 
     @Override
+    protected boolean isCallPermitted() {
+        return rateLimiter.getPermission(rateLimiter.getRateLimiterConfig().getTimeoutDuration());
+    }
+
+    @Override
+    protected Throwable getThrowable() {
+        return rateLimitExceededException();
+    }
+
+    @Override
     public void hookOnComplete() {
         if (wasCallPermitted()) {
             actual.onComplete();
         }
-    }
-
-    private boolean acquireCallPermit() {
-        boolean callPermitted = false;
-        if (permitted.compareAndSet(Permit.PENDING, Permit.ACQUIRED)) {
-            callPermitted = rateLimiter.getPermission(rateLimiter.getRateLimiterConfig().getTimeoutDuration());
-            if (!callPermitted) {
-                permitted.set(Permit.REJECTED);
-            }
-        }
-        return callPermitted;
-    }
-
-    private boolean notCancelled() {
-        return !this.isDisposed();
-    }
-
-    private boolean wasCallPermitted() {
-        return permitted.get() == Permit.ACQUIRED;
     }
 
     private Exception rateLimitExceededException() {

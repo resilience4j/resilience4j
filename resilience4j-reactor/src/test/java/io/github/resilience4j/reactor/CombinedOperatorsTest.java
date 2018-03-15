@@ -4,6 +4,7 @@ import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.bulkhead.BulkheadConfig;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
+import io.github.resilience4j.circuitbreaker.CircuitBreakerOpenException;
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RateLimiterConfig;
 import io.github.resilience4j.reactor.bulkhead.operator.BulkheadOperator;
@@ -12,6 +13,7 @@ import io.github.resilience4j.reactor.ratelimiter.operator.RateLimiterOperator;
 import org.junit.Test;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 import reactor.test.StepVerifier;
 
 import java.io.IOException;
@@ -64,6 +66,18 @@ public class CombinedOperatorsTest {
                         .transform(RateLimiterOperator.of(rateLimiter))
                         .transform(CircuitBreakerOperator.of(circuitBreaker))
         ).expectError(IOException.class)
+                .verify(Duration.ofSeconds(1));
+    }
+
+    @Test
+    public void shouldEmitErrorWithCircuitBreakerOpenExceptionEvenWhenErrorDuringSubscribe() {
+        circuitBreaker.transitionToOpenState();
+        StepVerifier.create(
+                Flux.error(new IOException("BAM!"))
+                        .transform(CircuitBreakerOperator.of(circuitBreaker))
+                        .transform(BulkheadOperator.of(bulkhead, Schedulers.immediate()))
+                        .transform(RateLimiterOperator.of(rateLimiter, Schedulers.immediate()))
+        ).expectError(CircuitBreakerOpenException.class)
                 .verify(Duration.ofSeconds(1));
     }
 }
