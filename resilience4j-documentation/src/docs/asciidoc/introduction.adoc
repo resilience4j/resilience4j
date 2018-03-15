@@ -16,6 +16,9 @@ Core modules:
 
 Add-on modules
 
+* resilience4j-reactor: Spring Reactor adapter
+* resilience4j-rxjava2: RxJava2 adapter
+* resilience4j-micrometer: Micrometer Metrics exporter
 * resilience4j-metrics: Dropwizard Metrics exporter
 * resilience4j-prometheus: Prometheus Metrics exporter
 * resilience4j-spring-boot: Spring Boot Starter
