@@ -48,6 +48,18 @@ public class MonoCircuitBreakerTest extends CircuitBreakerAssertions {
     }
 
     @Test
+    public void shouldEmitCircuitBreakerOpenExceptionEvenWhenErrorDuringSubscribe() {
+        circuitBreaker.transitionToForcedOpenState();
+        StepVerifier.create(
+                Mono.error(new IOException("BAM!"))
+                        .transform(CircuitBreakerOperator.of(circuitBreaker)))
+                .expectError(CircuitBreakerOpenException.class)
+                .verify(Duration.ofSeconds(1));
+
+        assertNoRegisteredCall();
+    }
+
+    @Test
     public void shouldEmitErrorWithCircuitBreakerOpenException() {
         circuitBreaker.transitionToOpenState();
         StepVerifier.create(

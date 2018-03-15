@@ -18,13 +18,9 @@ package io.github.resilience4j.reactor.circuitbreaker.operator;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerOpenException;
 import io.github.resilience4j.core.StopWatch;
-import io.github.resilience4j.reactor.Permit;
+import io.github.resilience4j.reactor.ResilienceBaseSubscriber;
 import org.reactivestreams.Subscriber;
-import org.reactivestreams.Subscription;
 import reactor.core.CoreSubscriber;
-import reactor.core.publisher.BaseSubscriber;
-
-import java.util.concurrent.atomic.AtomicReference;
 
 import static java.util.Objects.requireNonNull;
 
@@ -33,29 +29,15 @@ import static java.util.Objects.requireNonNull;
  *
  * @param <T> the value type of the upstream and downstream
  */
-class CircuitBreakerSubscriber<T> extends BaseSubscriber<T> {
+class CircuitBreakerSubscriber<T> extends ResilienceBaseSubscriber<T> {
 
-    private final CoreSubscriber<? super T> actual;
     private final CircuitBreaker circuitBreaker;
-    private final AtomicReference<Permit> permitted = new AtomicReference<>(Permit.PENDING);
     private StopWatch stopWatch;
 
     public CircuitBreakerSubscriber(CircuitBreaker circuitBreaker,
                                     CoreSubscriber<? super T> actual) {
-        this.actual = actual;
+        super(actual);
         this.circuitBreaker = requireNonNull(circuitBreaker);
-    }
-
-    @Override
-    protected void hookOnSubscribe(Subscription subscription) {
-        if (acquireCallPermit()) {
-            actual.onSubscribe(this);
-        } else {
-            cancel();
-            actual.onSubscribe(this);
-            actual.onError(new CircuitBreakerOpenException(
-                    String.format("CircuitBreaker '%s' is open", circuitBreaker.getName())));
-        }
     }
 
     @Override
@@ -83,17 +65,20 @@ class CircuitBreakerSubscriber<T> extends BaseSubscriber<T> {
         }
     }
 
-    private boolean acquireCallPermit() {
-        boolean callPermitted = false;
-        if (permitted.compareAndSet(Permit.PENDING, Permit.ACQUIRED)) {
-            callPermitted = circuitBreaker.isCallPermitted();
-            if (!callPermitted) {
-                permitted.set(Permit.REJECTED);
-            } else {
-                stopWatch = StopWatch.start(circuitBreaker.getName());
-            }
-        }
-        return callPermitted;
+    @Override
+    protected void hookOnPermitAcquired() {
+        stopWatch = StopWatch.start(circuitBreaker.getName());
+    }
+
+    @Override
+    protected boolean isCallPermitted() {
+        return circuitBreaker.isCallPermitted();
+    }
+
+    @Override
+    protected Throwable getThrowable() {
+        return new CircuitBreakerOpenException(
+                String.format("CircuitBreaker '%s' is open", circuitBreaker.getName()));
     }
 
     private void markFailure(Throwable e) {
@@ -106,13 +91,5 @@ class CircuitBreakerSubscriber<T> extends BaseSubscriber<T> {
         if (wasCallPermitted()) {
             circuitBreaker.onSuccess(stopWatch.stop().getProcessingDuration().toNanos());
         }
-    }
-
-    private boolean notCancelled() {
-        return !this.isDisposed();
-    }
-
-    private boolean wasCallPermitted() {
-        return permitted.get() == Permit.ACQUIRED;
     }
 }
