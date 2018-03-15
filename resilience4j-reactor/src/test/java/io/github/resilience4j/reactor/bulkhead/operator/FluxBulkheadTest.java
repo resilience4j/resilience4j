@@ -84,4 +84,18 @@ public class FluxBulkheadTest {
 
         assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(0);
     }
+
+    @Test
+    public void shouldEmitBulkheadFullExceptionEvenWhenErrorNotOnSubscribe() {
+        bulkhead.isCallPermitted();
+
+        StepVerifier.create(
+                Flux.error(new IOException("BAM!"), true)
+                        .transform(BulkheadOperator.of(bulkhead, Schedulers.immediate())))
+                .expectSubscription()
+                .expectError(BulkheadFullException.class)
+                .verify(Duration.ofSeconds(1));
+
+        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(0);
+    }
 }
