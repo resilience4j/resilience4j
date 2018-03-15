@@ -155,3 +155,6 @@ NOTE: Breaking changes:
 * Updated Prometheus from 0.0.21 to 0.3.0
 
 * Issue #47: OSGI Support. Fixed bnd configuration in publishing.gradle
+
+== Version 0.12.1
+* Issue #212: Fixed r4j-reactor bug when onSubscribe throws an error
