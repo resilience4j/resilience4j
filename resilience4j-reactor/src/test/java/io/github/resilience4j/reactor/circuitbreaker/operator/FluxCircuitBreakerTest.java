@@ -61,6 +61,18 @@ public class FluxCircuitBreakerTest extends CircuitBreakerAssertions {
     }
 
     @Test
+    public void shouldEmitCircuitBreakerOpenExceptionEvenWhenErrorNotOnSubscribe() {
+        circuitBreaker.transitionToOpenState();
+        StepVerifier.create(
+                Flux.error(new IOException("BAM!"), true)
+                        .transform(CircuitBreakerOperator.of(circuitBreaker)))
+                .expectError(CircuitBreakerOpenException.class)
+                .verify(Duration.ofSeconds(1));
+
+        assertNoRegisteredCall();
+    }
+
+    @Test
     public void shouldEmitCircuitBreakerOpenExceptionEvenWhenErrorDuringSubscribe() {
         circuitBreaker.transitionToOpenState();
         StepVerifier.create(
