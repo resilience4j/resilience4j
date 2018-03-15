@@ -17,13 +17,9 @@ package io.github.resilience4j.reactor.bulkhead.operator;
 
 import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.bulkhead.BulkheadFullException;
-import io.github.resilience4j.reactor.Permit;
+import io.github.resilience4j.reactor.ResilienceBaseSubscriber;
 import org.reactivestreams.Subscriber;
-import org.reactivestreams.Subscription;
 import reactor.core.CoreSubscriber;
-import reactor.core.publisher.BaseSubscriber;
-
-import java.util.concurrent.atomic.AtomicReference;
 
 import static java.util.Objects.requireNonNull;
 
@@ -32,28 +28,14 @@ import static java.util.Objects.requireNonNull;
  *
  * @param <T> the value type of the upstream and downstream
  */
-class BulkheadSubscriber<T> extends BaseSubscriber<T> {
+class BulkheadSubscriber<T> extends ResilienceBaseSubscriber<T> {
 
-    private final CoreSubscriber<? super T> actual;
     private final Bulkhead bulkhead;
-    private final AtomicReference<Permit> permitted = new AtomicReference<>(Permit.PENDING);
 
     public BulkheadSubscriber(Bulkhead bulkhead,
                               CoreSubscriber<? super T> actual) {
-        this.actual = actual;
+        super(actual);
         this.bulkhead = requireNonNull(bulkhead);
-    }
-
-    @Override
-    public void hookOnSubscribe(Subscription subscription) {
-        if (acquireCallPermit()) {
-            actual.onSubscribe(this);
-        } else {
-            cancel();
-            actual.onSubscribe(this);
-            actual.onError(new BulkheadFullException(
-                    String.format("Bulkhead '%s' is full", bulkhead.getName())));
-        }
     }
 
     @Override
@@ -72,30 +54,21 @@ class BulkheadSubscriber<T> extends BaseSubscriber<T> {
     }
 
     @Override
+    protected boolean isCallPermitted() {
+        return bulkhead.isCallPermitted();
+    }
+
+    @Override
+    protected Throwable getThrowable() {
+        return new BulkheadFullException(String.format("Bulkhead '%s' is full", bulkhead.getName()));
+    }
+
+    @Override
     public void hookOnComplete() {
         if (wasCallPermitted()) {
             releaseBulkhead();
             actual.onComplete();
         }
-    }
-
-    private boolean acquireCallPermit() {
-        boolean callPermitted = false;
-        if (permitted.compareAndSet(Permit.PENDING, Permit.ACQUIRED)) {
-            callPermitted = bulkhead.isCallPermitted();
-            if (!callPermitted) {
-                permitted.set(Permit.REJECTED);
-            }
-        }
-        return callPermitted;
-    }
-
-    private boolean notCancelled() {
-        return !this.isDisposed();
-    }
-
-    private boolean wasCallPermitted() {
-        return permitted.get() == Permit.ACQUIRED;
     }
 
     private void releaseBulkhead() {
