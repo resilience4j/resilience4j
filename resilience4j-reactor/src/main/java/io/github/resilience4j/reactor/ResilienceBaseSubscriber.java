@@ -37,12 +37,12 @@ public abstract class ResilienceBaseSubscriber<T> implements CoreSubscriber<T>, 
 
     protected final CoreSubscriber<? super T> actual;
 
-    volatile Subscription subscription;
+    private volatile Subscription subscription;
 
-    static AtomicReferenceFieldUpdater<ResilienceBaseSubscriber, Subscription> S =
+    private static final AtomicReferenceFieldUpdater<ResilienceBaseSubscriber, Subscription> S =
             AtomicReferenceFieldUpdater.newUpdater(ResilienceBaseSubscriber.class, Subscription.class, "subscription");
 
-    protected final AtomicReference<Permit> permitted = new AtomicReference<>(Permit.PENDING);
+    private final AtomicReference<Permit> permitted = new AtomicReference<>(Permit.PENDING);
 
     protected ResilienceBaseSubscriber(CoreSubscriber<? super T> actual) {
         this.actual = actual;
@@ -282,7 +282,7 @@ public abstract class ResilienceBaseSubscriber<T> implements CoreSubscriber<T>, 
         }
     }
 
-    void safeHookFinally(SignalType type) {
+    private void safeHookFinally(SignalType type) {
         try {
             hookFinally(type);
         }
