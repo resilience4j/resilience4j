@@ -515,8 +515,8 @@ table.CodeRay td.code>pre{padding:0}
 <h1>Resilience4j User Guide</h1>
 <div class="details">
 <span id="author" class="author">Robert Winkler</span><br>
-<span id="revnumber">version 0.11.0,</span>
-<span id="revdate">2018-01-18</span>
+<span id="revnumber">version 0.12.1,</span>
+<span id="revdate">2018-03-15</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">Table of Contents</div>
@@ -545,7 +545,8 @@ table.CodeRay td.code>pre{padding:0}
 <li><a href="#_introduction_2">3.1.1. Introduction</a></li>
 <li><a href="#_set_up">3.1.2. Set-Up</a></li>
 <li><a href="#_examples">3.1.3. Examples</a></li>
-<li><a href="#_monitoring">3.1.4. Monitoring</a></li>
+<li><a href="#_reset">3.1.4. Reset</a></li>
+<li><a href="#_monitoring">3.1.5. Monitoring</a></li>
 </ul>
 </li>
 <li><a href="#_ratelimiter">3.2. RateLimiter</a>
@@ -628,12 +629,18 @@ table.CodeRay td.code>pre{padding:0}
 <li><a href="#_usage_2">4.5.3. Usage</a></li>
 </ul>
 </li>
+<li><a href="#_micrometer_metrics_exporter">4.6. Micrometer Metrics exporter</a>
+<ul class="sectlevel3">
+<li><a href="#_introduction_8">4.6.1. Introduction</a></li>
+<li><a href="#_usage_3">4.6.2. Usage</a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li><a href="#_implementation_details">5. Implementation details</a>
 <ul class="sectlevel2">
-<li><a href="#_circuitbreaker_10">5.1. CircuitBreaker</a></li>
-<li><a href="#_ratelimiter_10">5.2. RateLimiter</a></li>
+<li><a href="#_circuitbreaker_11">5.1. CircuitBreaker</a></li>
+<li><a href="#_ratelimiter_11">5.2. RateLimiter</a></li>
 </ul>
 </li>
 <li><a href="#_license">6. License</a></li>
@@ -813,12 +820,12 @@ The <strong>groupId</strong> has been changed from <strong>io.github.robwin</str
     jCenter()
 }
 
-compile "io.github.resilience4j:resilience4j-circuitbreaker:0.11.0"
-compile "io.github.resilience4j:resilience4j-ratelimiter:0.11.0"
-compile "io.github.resilience4j:resilience4j-retry:0.11.0"
-compile "io.github.resilience4j:resilience4j-bulkhead:0.11.0"
-compile "io.github.resilience4j:resilience4j-cache:0.11.0"
-compile "io.github.resilience4j:resilience4j-timelimiter:0.11.0"</code></pre>
+compile "io.github.resilience4j:resilience4j-circuitbreaker:0.12.1"
+compile "io.github.resilience4j:resilience4j-ratelimiter:0.12.1"
+compile "io.github.resilience4j:resilience4j-retry:0.12.1"
+compile "io.github.resilience4j:resilience4j-bulkhead:0.12.1"
+compile "io.github.resilience4j:resilience4j-cache:0.12.1"
+compile "io.github.resilience4j:resilience4j-timelimiter:0.12.1"</code></pre>
 </div>
 </div>
 </div>
@@ -853,32 +860,32 @@ compile "io.github.resilience4j:resilience4j-timelimiter:0.11.0"</code></pre>
 <span class="tag">&lt;dependency&gt;</span>
     <span class="tag">&lt;groupId&gt;</span>io.github.resilience4j<span class="tag">&lt;/groupId&gt;</span>
     <span class="tag">&lt;artifactId&gt;</span>resilience4j-circuitbreaker<span class="tag">&lt;/artifactId&gt;</span>
-    <span class="tag">&lt;version&gt;</span>0.11.0<span class="tag">&lt;/version&gt;</span>
+    <span class="tag">&lt;version&gt;</span>0.12.1<span class="tag">&lt;/version&gt;</span>
 <span class="tag">&lt;/dependency&gt;</span>
 <span class="tag">&lt;dependency&gt;</span>
     <span class="tag">&lt;groupId&gt;</span>io.github.resilience4j<span class="tag">&lt;/groupId&gt;</span>
     <span class="tag">&lt;artifactId&gt;</span>resilience4j-ratelimiter<span class="tag">&lt;/artifactId&gt;</span>
-    <span class="tag">&lt;version&gt;</span>0.11.0<span class="tag">&lt;/version&gt;</span>
+    <span class="tag">&lt;version&gt;</span>0.12.1<span class="tag">&lt;/version&gt;</span>
 <span class="tag">&lt;/dependency&gt;</span>
 <span class="tag">&lt;dependency&gt;</span>
     <span class="tag">&lt;groupId&gt;</span>io.github.resilience4j<span class="tag">&lt;/groupId&gt;</span>
     <span class="tag">&lt;artifactId&gt;</span>resilience4j-retry<span class="tag">&lt;/artifactId&gt;</span>
-    <span class="tag">&lt;version&gt;</span>0.11.0<span class="tag">&lt;/version&gt;</span>
+    <span class="tag">&lt;version&gt;</span>0.12.1<span class="tag">&lt;/version&gt;</span>
 <span class="tag">&lt;/dependency&gt;</span>
 <span class="tag">&lt;dependency&gt;</span>
     <span class="tag">&lt;groupId&gt;</span>io.github.resilience4j<span class="tag">&lt;/groupId&gt;</span>
     <span class="tag">&lt;artifactId&gt;</span>resilience4j-bulkhead<span class="tag">&lt;/artifactId&gt;</span>
-    <span class="tag">&lt;version&gt;</span>0.11.0<span class="tag">&lt;/version&gt;</span>
+    <span class="tag">&lt;version&gt;</span>0.12.1<span class="tag">&lt;/version&gt;</span>
 <span class="tag">&lt;/dependency&gt;</span>
 <span class="tag">&lt;dependency&gt;</span>
     <span class="tag">&lt;groupId&gt;</span>io.github.resilience4j<span class="tag">&lt;/groupId&gt;</span>
     <span class="tag">&lt;artifactId&gt;</span>resilience4j-cache<span class="tag">&lt;/artifactId&gt;</span>
-    <span class="tag">&lt;version&gt;</span>0.11.0<span class="tag">&lt;/version&gt;</span>
+    <span class="tag">&lt;version&gt;</span>0.12.1<span class="tag">&lt;/version&gt;</span>
 <span class="tag">&lt;/dependency&gt;</span>
 <span class="tag">&lt;dependency&gt;</span>
     <span class="tag">&lt;groupId&gt;</span>io.github.resilience4j<span class="tag">&lt;/groupId&gt;</span>
     <span class="tag">&lt;artifactId&gt;</span>resilience4j-timelimiter<span class="tag">&lt;/artifactId&gt;</span>
-    <span class="tag">&lt;version&gt;</span>0.11.0<span class="tag">&lt;/version&gt;</span>
+    <span class="tag">&lt;version&gt;</span>0.12.1<span class="tag">&lt;/version&gt;</span>
 <span class="tag">&lt;/dependency&gt;</span></code></pre>
 </div>
 </div>
@@ -1024,7 +1031,7 @@ CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker(<span clas
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="CodeRay highlight"><code data-lang="java">CircuitBreaker defauktCircuitBreaker = CircuitBreaker.ofDefaults(<span class="string"><span class="delimiter">&quot;</span><span class="content">testName</span><span class="delimiter">&quot;</span></span>);
+<pre class="CodeRay highlight"><code data-lang="java">CircuitBreaker defaultCircuitBreaker = CircuitBreaker.ofDefaults(<span class="string"><span class="delimiter">&quot;</span><span class="content">testName</span><span class="delimiter">&quot;</span></span>);
 
 CircuitBreaker customCircuitBreaker = CircuitBreaker.of(<span class="string"><span class="delimiter">&quot;</span><span class="content">testName</span><span class="delimiter">&quot;</span></span>, circuitBreakerConfig);</code></pre>
 </div>
@@ -1097,6 +1104,22 @@ assertThat(result.get()).isEqualTo(<span class="string"><span class="delimiter">
 </div>
 </div>
 <div class="sect4">
+<h5 id="_circuitbreaker_and_reactor"><a class="anchor" href="#_circuitbreaker_and_reactor"></a>CircuitBreaker and Reactor</h5>
+<div class="paragraph">
+<p>The following example shows how to decorate a Mono by using the custom Reactor operator.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="java">CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults(<span class="string"><span class="delimiter">&quot;</span><span class="content">backendName</span><span class="delimiter">&quot;</span></span>);
+Mono.fromCallable(backendService::doSomething)
+    .transform(CircuitBreakerOperator.of(circuitBreaker))</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Flux is also supported.</p>
+</div>
+</div>
+<div class="sect4">
 <h5 id="_open_circuitbreaker_example"><a class="anchor" href="#_open_circuitbreaker_example"></a>OPEN CircuitBreaker example</h5>
 <div class="paragraph">
 <p>In this example <code>map</code> is not invoked, because the CircuitBreaker is OPEN. The call to <code>Try.of</code> returns a <code>Failure&lt;Throwable&gt;</code> Monad so that the chained function is not invoked.</p>
@@ -1128,6 +1151,17 @@ assertThat(result.isFailure()).isTrue();
 <span class="comment">// Exception is CircuitBreakerOpenException</span>
 assertThat(result.failed().get()).isInstanceOf(CircuitBreakerOpenException.class);</code></pre>
 </div>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_reset"><a class="anchor" href="#_reset"></a>3.1.4. Reset</h4>
+<div class="paragraph">
+<p>The CircuitBreaker supports resetting, returning to its original state while losing all the current metrics.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="java">circuitBreaker.reset();</code></pre>
 </div>
 </div>
 <div class="sect4">
@@ -1195,14 +1229,19 @@ assertThat(result.failed().get()).isInstanceOf(<span class="exception">IOExcepti
 <div class="sect4">
 <h5 id="_consume_emitted_circuitbreakerevents"><a class="anchor" href="#_consume_emitted_circuitbreakerevents"></a>Consume emitted CircuitBreakerEvents</h5>
 <div class="paragraph">
-<p>The CircuitBreaker emits a stream of CircuitBreakerEvents. A <code>CircuitBreakerEvent</code> can be a state transition, a successful call, a recorded error or an ignored error. All events contains additional information like event creation time and processing duration of the call. If you want to consume events, you have to register an event consumer.</p>
+<p>A <code>CircuitBreakerEvent</code> can be a state transition, a circuit breaker reset, a successful call, a recorded error or an ignored error. All events contains additional information like event creation time and processing duration of the call. If you want to consume events, you have to register an event consumer.</p>
 </div>
 <div class="listingblock">
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="java">circuitBreaker.getEventPublisher()
     .onSuccess(event -&gt; logger.info(...))
     .onError(event -&gt; logger.info(...))
-    .onStateTransition(event -&gt; logger.info(...));</code></pre>
+    .onIgnoredError(event -&gt; logger.info(...))
+    .onReset(event -&gt; logger.info(...))
+    .onStateTransition(event -&gt; logger.info(...));
+<span class="comment">// Or if you want to register a consumer listening to all events, you can do:</span>
+circuitBreaker.getEventPublisher()
+    .onEvent(event -&gt; logger.info(...));</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -1229,7 +1268,7 @@ circuitBreaker.getEventPublisher().onEvent(ringBuffer);
 </div>
 </div>
 <div class="sect3">
-<h4 id="_monitoring"><a class="anchor" href="#_monitoring"></a>3.1.4. Monitoring</h4>
+<h4 id="_monitoring"><a class="anchor" href="#_monitoring"></a>3.1.5. Monitoring</h4>
 <div class="paragraph">
 <p>The CircuitBreaker provides an interface to monitor the current metrics.</p>
 </div>
@@ -1344,25 +1383,23 @@ New limit won&#8217;t affect current period permissions and will apply only from
 </div>
 </div>
 <div class="paragraph">
-<p>Please note that only Flowable and Single are supported directly. For Maybe and Completable one should convert it to Observable and back.</p>
+<p>Other reactive types (Flowable, Single, Maybe and Completable) are also supported.</p>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_ratelimiter_and_reactor"><a class="anchor" href="#_ratelimiter_and_reactor"></a>RateLimiter and Reactor</h5>
+<div class="paragraph">
+<p>The following example shows how to decorate a Mono by using the custom Reactor operator.</p>
 </div>
 <div class="listingblock">
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="java">RateLimiter rateLimiter = RateLimiter.ofDefaults(<span class="string"><span class="delimiter">&quot;</span><span class="content">backendName</span><span class="delimiter">&quot;</span></span>);
-Maybe.fromCallable(backendService::doSomething)
-    .toObservable()
-    .lift(RateLimiterOperator.of(rateLimiter))
-    .firstElement()</code></pre>
+Mono.fromCallable(backendService::doSomething)
+    .transform(RateLimiterOperator.of(rateLimiter))</code></pre>
 </div>
 </div>
-<div class="listingblock">
-<div class="content">
-<pre class="CodeRay highlight"><code data-lang="java">RateLimiter rateLimiter = RateLimiter.ofDefaults(<span class="string"><span class="delimiter">&quot;</span><span class="content">backendName</span><span class="delimiter">&quot;</span></span>);
-Completable.fromCallable(backendService::doSomething)
-    .toObservable()
-    .lift(RateLimiterOperator.of(rateLimiter))
-    .ignoreElements()</code></pre>
-</div>
+<div class="paragraph">
+<p>Flux is also supported.</p>
 </div>
 </div>
 <div class="sect4">
@@ -1556,6 +1593,22 @@ NOTE! New <code>maxWaitTime</code> duration won&#8217;t affect threads that are 
 </div>
 <div class="paragraph">
 <p>Other reactive types (Flowable, Single, Maybe and Completable) are also supported.</p>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_bulkhead_and_rxjava_2"><a class="anchor" href="#_bulkhead_and_rxjava_2"></a>Bulkhead and RxJava</h5>
+<div class="paragraph">
+<p>The following example shows how to decorate a Mono by using the custom Reactor operator.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="java">Bulkhead bulkhead = Bulkhead.ofDefaults(<span class="string"><span class="delimiter">&quot;</span><span class="content">backendName</span><span class="delimiter">&quot;</span></span>);
+Mono.fromCallable(backendService::doSomething)
+          .transform(BulkheadOperator.of(bulkhead));</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Flux is also supported.</p>
 </div>
 </div>
 <div class="sect4">
@@ -3439,15 +3492,150 @@ CallMeter.decorateCompletionStageSupplier(
 </div>
 </div>
 </div>
+<div class="sect2">
+<h3 id="_micrometer_metrics_exporter"><a class="anchor" href="#_micrometer_metrics_exporter"></a>4.6. Micrometer Metrics exporter</h3>
+<div class="sect3">
+<h4 id="_introduction_8"><a class="anchor" href="#_introduction_8"></a>4.6.1. Introduction</h4>
+<div class="paragraph">
+<p>Integration with <a href="http://micrometer.io/">Micrometer</a>.<br>
+With this add-on you can easily add your bulkhead, circuit breaker, rate limiter, retry metrics in Micrometer <code>MeterRegistry</code>.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_usage_3"><a class="anchor" href="#_usage_3"></a>4.6.2. Usage</h4>
+<div class="sect4">
+<h5 id="_bulkhead_6"><a class="anchor" href="#_bulkhead_6"></a>Bulkhead</h5>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="java"><span class="directive">final</span> BulkheadRegistry bulkheadRegistry = BulkheadRegistry.ofDefaults();
+<span class="directive">final</span> Bulkhead foo = bulkheadRegistry.bulkhead(<span class="string"><span class="delimiter">&quot;</span><span class="content">foo</span><span class="delimiter">&quot;</span></span>);
+<span class="directive">final</span> Bulkhead boo = bulkheadRegistry.bulkhead(<span class="string"><span class="delimiter">&quot;</span><span class="content">boo</span><span class="delimiter">&quot;</span></span>);
+
+<span class="comment">// Register all bulkheads at once</span>
+BulkheadMetrics bulkheadMetrics = BulkheadMetrics.ofBulkheadRegistry(bulkheadRegistry);
+bulkheadMetrics.bindTo(meterRegistry);</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>For each bulkhead this registry will export:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>available_concurrent_calls</code> - instantaneous read of the number of currently available concurrent calls <code>[int]</code></p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_circuitbreaker_10"><a class="anchor" href="#_circuitbreaker_10"></a>CircuitBreaker</h5>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="java"><span class="directive">final</span> CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
+<span class="directive">final</span> CircuitBreaker foo = circuitBreakerRegistry.circuitBreaker(<span class="string"><span class="delimiter">&quot;</span><span class="content">foo</span><span class="delimiter">&quot;</span></span>);
+<span class="directive">final</span> CircuitBreaker boo = circuitBreakerRegistry.circuitBreaker(<span class="string"><span class="delimiter">&quot;</span><span class="content">boo</span><span class="delimiter">&quot;</span></span>);
+
+<span class="comment">// Register all circuit breakers at once</span>
+CircuitBreakerMetrics circuitBreakerMetrics = CircuitBreakerMetrics.ofCircuitBreakerRegistry(circuitBreakerRegistry);
+circuitBreakerMetrics.bindTo(meterRegistry);</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>For each circuit breaker this registry will export:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>state</code> - instantaneous read of the current state where 0-CLOSED, 1-OPEN, 2-HALF-OPEN <code>[int]</code></p>
+</li>
+<li>
+<p><code>successful</code> - current number of successful calls <code>[int]</code></p>
+</li>
+<li>
+<p><code>failed</code> - current number of failed calls <code>[int]</code></p>
+</li>
+<li>
+<p><code>buffered</code> - current number of buffered calls <code>[int]</code></p>
+</li>
+<li>
+<p><code>buffered_max</code> - maximum number of buffered calls <code>[int]</code></p>
+</li>
+<li>
+<p><code>not_permitted</code> - current number of not permitted calls <code>[int]</code></p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_ratelimiter_10"><a class="anchor" href="#_ratelimiter_10"></a>RateLimiter</h5>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="java"><span class="directive">final</span> RateLimiterRegistry rateLimiterRegistry = RateLimiterRegistry.ofDefaults();
+<span class="directive">final</span> RateLimiter rateLimiter = rateLimiterRegistry.rateLimiter(<span class="string"><span class="delimiter">&quot;</span><span class="content">testLimit</span><span class="delimiter">&quot;</span></span>);
+
+<span class="comment">// Register rate limiters at once</span>
+RateLimiterMetrics rateLimiterMetrics = RateLimiterMetrics.ofRateLimiterRegistry(rateLimiterRegistry);
+rateLimiterMetrics.bindTo(meterRegistry);</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>For each rate limiter this registry will export:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>available_permissions</code> - current number of available permissions <code>[int]</code></p>
+</li>
+<li>
+<p><code>number_of_waiting_threads</code> - current number of threads waiting for permission <code>[int]</code></p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_retry_6"><a class="anchor" href="#_retry_6"></a>Retry</h5>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="java"><span class="directive">final</span> MetricRegistry metricRegistry = <span class="keyword">new</span> MetricRegistry();
+<span class="directive">final</span> RetryRegistry retryRegistry = RetryRegistry.ofDefaults();
+<span class="directive">final</span> Retry retry = retryRegistry.retry(<span class="string"><span class="delimiter">&quot;</span><span class="content">testLimit</span><span class="delimiter">&quot;</span></span>);
+
+<span class="comment">// Register all retries at once</span>
+RetryMetrics retryMetrics = RetryMetrics.ofRetryRegistry(retryRegistry);
+retryMetrics.bindTo(meterRegistry);</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>For each retry this registry will export:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>successful_calls_without_retry</code> - the number of successful calls without a retry attempt <code>[long]</code></p>
+</li>
+<li>
+<p><code>successful_calls_with_retry</code> - the number of successful calls after a retry attempt <code>[long]</code></p>
+</li>
+<li>
+<p><code>failed_calls_without_retry</code> - the number of failed calls without a retry attempt <code>[long]</code></p>
+</li>
+<li>
+<p><code>failed_calls_with_retry</code> - the number of failed calls after all retry attempts <code>[long]</code></p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+</div>
 </div>
 </div>
 <div class="sect1">
 <h2 id="_implementation_details"><a class="anchor" href="#_implementation_details"></a>5. Implementation details</h2>
 <div class="sectionbody">
 <div class="sect2">
-<h3 id="_circuitbreaker_10"><a class="anchor" href="#_circuitbreaker_10"></a>5.1. CircuitBreaker</h3>
+<h3 id="_circuitbreaker_11"><a class="anchor" href="#_circuitbreaker_11"></a>5.1. CircuitBreaker</h3>
 <div class="paragraph">
-<p>The CircuitBreaker is implemented via a finite state machine with three states: <code>CLOSED</code>, <code>OPEN</code> and <code>HALF_OPEN</code>.</p>
+<p>The CircuitBreaker is implemented via a finite state machine with three normal states: <code>CLOSED</code>, <code>OPEN</code> and <code>HALF_OPEN</code> and two special states <code>DISABLED</code> and <code>FORCED_OPEN</code>.</p>
 </div>
 <div class="imageblock">
 <div class="content">
@@ -3498,6 +3686,29 @@ For example, if the size of the Ring Buffer is 10, then at least 10 calls must e
 <code>CircuitBreaker::onError</code> checks if the exception should be recorded as a failure or should be ignored. You can configure a custom <code>Predicate</code> which decides whether an exception should be recorded as a failure. The default Predicate records all exceptions as a failure.</p>
 </div>
 <div class="paragraph">
+<p>The CircuitBreaker supports resetting to its original state, losing all the metrics and resetting its Ring Bit Buffer.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="java">CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults(<span class="string"><span class="delimiter">&quot;</span><span class="content">testName</span><span class="delimiter">&quot;</span></span>);
+circuitBreaker.reset();</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The CircuitBreaker supports two more special states, <code>DISABLED</code> (always allow access) and <code>FORCED_OPEN</code> (always deny access). In these two states no CircuitBreakerEvents (apart from the state transition) are generated, and no metrics are recorded. The only way to exit from those states are to trigger a state transition or to reset the CircuitBreaker.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="java">CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults(<span class="string"><span class="delimiter">&quot;</span><span class="content">testName</span><span class="delimiter">&quot;</span></span>);
+circuitBreaker.transitionToDisabledState();
+<span class="comment">// circuitBreaker.onFailure(...) won't trigger a state change</span>
+circuitBreaker.transitionToClosedState(); <span class="comment">// will transition to CLOSED state and re-enable normal behaviour, keeping metrics</span>
+circuitBreaker.transitionToForcedOpenState();
+<span class="comment">// circuitBreaker.onSuccess(...) won't trigger a state change</span>
+circuitBreaker.reset(); <span class="comment">//  will transition to CLOSED state and re-enable normal behaviour, losing metrics</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
 <p>The CircuitBreaker publishes a stream of CircuitBreakerEvents to any Subscriber/Consumer who subscribes. An event can be a state transition or a recorded error. This library uses RxJava to to provide this functionality. If you want to consume events, you have to subscribe to the event stream. This library provides a consumer <code>CircuitBreakerEventConsumer</code> which can be used to store events in a circular buffer with a fixed capacity. You can use RxJava to filter certain events.</p>
 </div>
 <div class="listingblock">
@@ -3511,7 +3722,7 @@ circuitBreaker.getEventStream()
 </div>
 </div>
 <div class="sect2">
-<h3 id="_ratelimiter_10"><a class="anchor" href="#_ratelimiter_10"></a>5.2. RateLimiter</h3>
+<h3 id="_ratelimiter_11"><a class="anchor" href="#_ratelimiter_11"></a>5.2. RateLimiter</h3>
 <div class="paragraph">
 <p>Conceptually <code>RateLimiter</code> splits all nanoseconds from the start of epoch into cycles.<br>
 Each cycle has duration configured by <code>RateLimiterConfig.limitRefreshPeriod</code>.<br>
@@ -3572,7 +3783,7 @@ So you can easily restrict not only network calls but your local in-memory opera
 </div>
 <div id="footer">
 <div id="footer-text">
-Version 0.11.0<br>
+Version 0.12.1<br>
 Last updated 2017-11-17 09:27:25 +01:00
 </div>
 </div>
