@@ -14,7 +14,8 @@ ext {
     awaitilityVersion = '1.7.0'
     metricsVersion = '3.2.5'
     vertxVersion = '3.5.1'
-    springBootVersion = '1.5.5.RELEASE'
+    springBootVersion = '1.5.10.RELEASE'
+    springBoot2Version = '2.0.0.RELEASE'
     ratpackVersion = '1.5.4'
     spockVersion = '1.1-groovy-2.4-rc-4'
     retrofitVersion = '2.3.0'
@@ -53,6 +54,12 @@ ext {
             spring_boot_actuator: "org.springframework.boot:spring-boot-starter-actuator:${springBootVersion}",
             spring_boot_web: "org.springframework.boot:spring-boot-starter-web:${springBootVersion}",
             spring_boot_test:  "org.springframework.boot:spring-boot-starter-test:${springBootVersion}",
+
+            // Spring Boot2 addon
+            spring_boot2_aop: "org.springframework.boot:spring-boot-starter-aop:${springBoot2Version}",
+            spring_boot2_actuator: "org.springframework.boot:spring-boot-starter-actuator:${springBoot2Version}",
+            spring_boot2_web: "org.springframework.boot:spring-boot-starter-web:${springBoot2Version}",
+            spring_boot2_test:  "org.springframework.boot:spring-boot-starter-test:${springBoot2Version}",
 
             // ratpack addon
             ratpack: "io.ratpack:ratpack-guice:${ratpackVersion}",

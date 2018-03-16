@@ -1,0 +1,15 @@
+dependencies {
+    compile ( libraries.spring_boot2_aop )
+    compile ( libraries.spring_boot2_actuator )
+    compile ( libraries.spring_boot2_web )
+    compile ( libraries.spring_reactor )
+    compile project(':resilience4j-circuitbreaker')
+    compile project(':resilience4j-ratelimiter')
+    compile project(':resilience4j-consumer')
+    compileOnly project(':resilience4j-prometheus')
+    compileOnly project(':resilience4j-metrics')
+    testCompile ( libraries.spring_boot2_test )
+    testCompile project(':resilience4j-prometheus')
+    testCompile project(':resilience4j-metrics')
+    testCompile ( libraries.prometheus_spring_boot )
+}
