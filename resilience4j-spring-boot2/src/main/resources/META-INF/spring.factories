@@ -1,7 +1,5 @@
 org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
 io.github.resilience4j.circuitbreaker.autoconfigure.CircuitBreakerAutoConfiguration,\
 io.github.resilience4j.circuitbreaker.autoconfigure.CircuitBreakerMetricsAutoConfiguration,\
-io.github.resilience4j.circuitbreaker.autoconfigure.CircuitBreakerPrometheusAutoConfiguration,\
 io.github.resilience4j.ratelimiter.autoconfigure.RateLimiterAutoConfiguration,\
-io.github.resilience4j.ratelimiter.autoconfigure.RateLimiterMetricsAutoConfiguration,\
-io.github.resilience4j.ratelimiter.autoconfigure.RateLimiterPrometheusAutoConfiguration
+io.github.resilience4j.ratelimiter.autoconfigure.RateLimiterMetricsAutoConfiguration
