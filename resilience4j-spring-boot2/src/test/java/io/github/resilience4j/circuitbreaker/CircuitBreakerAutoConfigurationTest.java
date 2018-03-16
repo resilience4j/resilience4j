@@ -84,11 +84,11 @@ public class CircuitBreakerAutoConfigurationTest {
 
         // Test Actuator endpoints
 
-        ResponseEntity<CircuitBreakerEndpointResponse> circuitBreakerList = restTemplate.getForEntity("/circuitbreaker", CircuitBreakerEndpointResponse.class);
+        ResponseEntity<CircuitBreakerEndpointResponse> circuitBreakerList = restTemplate.getForEntity("/actuator/circuitbreaker", CircuitBreakerEndpointResponse.class);
         assertThat(circuitBreakerList.getBody().getCircuitBreakers()).hasSize(2).containsExactly("backendA", "backendB");
 
 
-        ResponseEntity<CircuitBreakerEventsEndpointResponse> circuitBreakerEventList = restTemplate.getForEntity("/circuitbreaker/events", CircuitBreakerEventsEndpointResponse.class);
+        ResponseEntity<CircuitBreakerEventsEndpointResponse> circuitBreakerEventList = restTemplate.getForEntity("/actuator/circuitbreaker/events", CircuitBreakerEventsEndpointResponse.class);
         assertThat(circuitBreakerEventList.getBody().getCircuitBreakerEvents()).hasSize(2);
 
         assertThat(circuitBreakerAspect.getOrder()).isEqualTo(400);
