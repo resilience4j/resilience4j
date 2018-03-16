@@ -23,11 +23,11 @@ import java.util.List;
 
 import org.springframework.boot.actuate.endpoint.web.annotation.WebEndpoint;
 import org.springframework.http.MediaType;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
@@ -39,7 +39,7 @@ import io.vavr.collection.Seq;
 import reactor.core.publisher.Flux;
 
 
-@Controller
+@RestController
 @WebEndpoint(id = "circuitbreaker")
 @RequestMapping(value = "circuitbreaker", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
 public class CircuitBreakerEventsEndpoint {
