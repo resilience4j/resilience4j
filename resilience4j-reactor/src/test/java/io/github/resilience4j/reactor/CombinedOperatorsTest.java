@@ -80,4 +80,16 @@ public class CombinedOperatorsTest {
         ).expectError(CircuitBreakerOpenException.class)
                 .verify(Duration.ofSeconds(1));
     }
+
+    @Test
+    public void shouldEmitErrorWithCircuitBreakerOpenExceptionEvenWhenErrorNotOnSubscribe() {
+        circuitBreaker.transitionToOpenState();
+        StepVerifier.create(
+                Flux.error(new IOException("BAM!"), true)
+                        .transform(CircuitBreakerOperator.of(circuitBreaker))
+                        .transform(BulkheadOperator.of(bulkhead, Schedulers.immediate()))
+                        .transform(RateLimiterOperator.of(rateLimiter, Schedulers.immediate()))
+        ).expectError(CircuitBreakerOpenException.class)
+                .verify(Duration.ofSeconds(1));
+    }
 }

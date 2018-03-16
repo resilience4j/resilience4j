@@ -51,12 +51,40 @@ public class FluxRateLimiterTest extends RateLimiterAssertions {
     }
 
     @Test
-    public void shouldEmitErrorWithBulkheadFullException() {
+    public void shouldEmitRequestNotPermittedException() {
         saturateRateLimiter();
 
         StepVerifier.create(
                 Flux.just("Event")
                         .transform(RateLimiterOperator.of(rateLimiter, Schedulers.immediate())))
+                .expectSubscription()
+                .expectError(RequestNotPermitted.class)
+                .verify(Duration.ofSeconds(1));
+
+        assertNoPermitLeft();
+    }
+
+    @Test
+    public void shouldEmitRequestNotPermittedExceptionEvenWhenErrorDuringSubscribe() {
+        saturateRateLimiter();
+
+        StepVerifier.create(
+                Flux.error(new IOException("BAM!"))
+                        .transform(RateLimiterOperator.of(rateLimiter)))
+                .expectSubscription()
+                .expectError(RequestNotPermitted.class)
+                .verify(Duration.ofSeconds(1));
+
+        assertNoPermitLeft();
+    }
+
+    @Test
+    public void shouldEmitRequestNotPermittedExceptionEvenWhenErrorNotOnSubscribe() {
+        saturateRateLimiter();
+
+        StepVerifier.create(
+                Flux.error(new IOException("BAM!"), true)
+                        .transform(RateLimiterOperator.of(rateLimiter)))
                 .expectSubscription()
                 .expectError(RequestNotPermitted.class)
                 .verify(Duration.ofSeconds(1));

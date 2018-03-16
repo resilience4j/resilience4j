@@ -83,4 +83,18 @@ public class MonoBulkheadTest {
 
         assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(0);
     }
+
+    @Test
+    public void shouldEmitBulkheadFullExceptionEvenWhenErrorNotOnSubscribe() {
+        bulkhead.isCallPermitted();
+
+        StepVerifier.create(
+                Mono.error(new IOException("BAM!")).delayElement(Duration.ofMillis(1))
+                        .transform(BulkheadOperator.of(bulkhead, Schedulers.immediate())))
+                .expectSubscription()
+                .expectError(BulkheadFullException.class)
+                .verify(Duration.ofSeconds(1));
+
+        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(0);
+    }
 }
