@@ -34,7 +34,6 @@ import java.lang.annotation.Target;
 public @interface RateLimiter {
     /**
      * Name of the rate limiter
-     * @return
      */
     String name();
 }
