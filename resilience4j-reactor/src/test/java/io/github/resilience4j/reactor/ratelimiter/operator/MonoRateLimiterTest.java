@@ -64,10 +64,22 @@ public class MonoRateLimiterTest extends RateLimiterAssertions {
     }
 
     @Test
-    public void shouldEmitCircuitBreakerOpenExceptionEvenWhenErrorDuringSubscribe() {
+    public void shouldEmitRequestNotPermittedExceptionEvenWhenErrorDuringSubscribe() {
         saturateRateLimiter();
         StepVerifier.create(
                 Mono.error(new IOException("BAM!"))
+                        .transform(RateLimiterOperator.of(rateLimiter, Schedulers.immediate())))
+                .expectError(RequestNotPermitted.class)
+                .verify(Duration.ofSeconds(1));
+
+        assertNoPermitLeft();
+    }
+
+    @Test
+    public void shouldEmitRequestNotPermittedExceptionEvenWhenErrorNotOnSubscribe() {
+        saturateRateLimiter();
+        StepVerifier.create(
+                Mono.error(new IOException("BAM!")).delayElement(Duration.ofMillis(1))
                         .transform(RateLimiterOperator.of(rateLimiter, Schedulers.immediate())))
                 .expectError(RequestNotPermitted.class)
                 .verify(Duration.ofSeconds(1));
