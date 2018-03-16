@@ -16,32 +16,19 @@
 package io.github.resilience4j.circuitbreaker.monitoring.endpoint;
 
 
-import static io.github.resilience4j.adapter.ReactorAdapter.toFlux;
-
 import java.util.Comparator;
-import java.util.List;
 
+import org.springframework.boot.actuate.endpoint.annotation.ReadOperation;
+import org.springframework.boot.actuate.endpoint.annotation.Selector;
 import org.springframework.boot.actuate.endpoint.web.annotation.WebEndpoint;
-import org.springframework.http.MediaType;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
-import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent;
 import io.github.resilience4j.consumer.CircularEventConsumer;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
-import io.vavr.collection.Seq;
-import reactor.core.publisher.Flux;
 
 
-@RestController
-@WebEndpoint(id = "circuitbreaker")
-@RequestMapping(value = "circuitbreaker", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+@WebEndpoint(id = "circuitbreaker-events")
 public class CircuitBreakerEventsEndpoint {
 
     private static final String MEDIA_TYPE_TEXT_EVENT_STREAM = "text/event-stream";
@@ -54,16 +41,7 @@ public class CircuitBreakerEventsEndpoint {
         this.circuitBreakerRegistry = circuitBreakerRegistry;
     }
 
-    @RequestMapping(method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
-    @ResponseBody
-    public CircuitBreakerEndpointResponse getAllCircuitBreakers() {
-        List<String> circuitBreakers = circuitBreakerRegistry.getAllCircuitBreakers()
-                .map(CircuitBreaker::getName).sorted().toJavaList();
-        return new CircuitBreakerEndpointResponse(circuitBreakers);
-    }
-
-    @RequestMapping(value = "events", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
-    @ResponseBody
+    @ReadOperation
     public CircuitBreakerEventsEndpointResponse getAllCircuitBreakerEvents() {
         return new CircuitBreakerEventsEndpointResponse(eventConsumerRegistry.getAllEventConsumer()
                 .flatMap(CircularEventConsumer::getBufferedEvents)
@@ -71,50 +49,20 @@ public class CircuitBreakerEventsEndpoint {
                 .map(CircuitBreakerEventDTOFactory::createCircuitBreakerEventDTO).toJavaList());
     }
 
-    @RequestMapping(value = "stream/events", produces = MEDIA_TYPE_TEXT_EVENT_STREAM)
-    public SseEmitter getAllCircuitBreakerEventsStream() {
-        Seq<Flux<CircuitBreakerEvent>> eventStreams = circuitBreakerRegistry.getAllCircuitBreakers()
-                .map(circuitBreaker -> toFlux(circuitBreaker.getEventPublisher()));
-        return CircuitBreakerEventEmitter.createSseEmitter(Flux.merge(eventStreams));
-    }
-
-    @RequestMapping(value = "events/{circuitBreakerName}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
-    @ResponseBody
-    public CircuitBreakerEventsEndpointResponse getEventsFilteredByCircuitBreakerName(@PathVariable("circuitBreakerName") String circuitBreakerName) {
+    @ReadOperation
+    public CircuitBreakerEventsEndpointResponse getEventsFilteredByCircuitBreakerName(@Selector String circuitBreakerName) {
         return new CircuitBreakerEventsEndpointResponse(eventConsumerRegistry.getEventConsumer(circuitBreakerName).getBufferedEvents()
                 .filter(event -> event.getCircuitBreakerName().equals(circuitBreakerName))
                 .map(CircuitBreakerEventDTOFactory::createCircuitBreakerEventDTO).toJavaList());
     }
 
-    @RequestMapping(value = "stream/events/{circuitBreakerName}", produces = MEDIA_TYPE_TEXT_EVENT_STREAM)
-    public SseEmitter getEventsStreamFilteredByCircuitBreakerName(@PathVariable("circuitBreakerName") String circuitBreakerName) {
-        CircuitBreaker circuitBreaker = circuitBreakerRegistry.getAllCircuitBreakers()
-                .find(cb -> cb.getName().equals(circuitBreakerName))
-                .getOrElseThrow(() ->
-                        new IllegalArgumentException(String.format("circuit breaker with name %s not found", circuitBreakerName)));
-        return CircuitBreakerEventEmitter.createSseEmitter(toFlux(circuitBreaker.getEventPublisher()));
-    }
-
-    @RequestMapping(value = "events/{circuitBreakerName}/{eventType}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
-    @ResponseBody
-    public CircuitBreakerEventsEndpointResponse getEventsFilteredByCircuitBreakerNameAndEventType(@PathVariable("circuitBreakerName") String circuitBreakerName,
-                                                @PathVariable("eventType") String eventType) {
+    @ReadOperation
+    public CircuitBreakerEventsEndpointResponse getEventsFilteredByCircuitBreakerNameAndEventType(@Selector String circuitBreakerName,
+                                                @Selector String eventType) {
         return new CircuitBreakerEventsEndpointResponse(eventConsumerRegistry.getEventConsumer(circuitBreakerName).getBufferedEvents()
                 .filter(event -> event.getCircuitBreakerName().equals(circuitBreakerName))
                 .filter(event -> event.getEventType() == CircuitBreakerEvent.Type.valueOf(eventType.toUpperCase()))
                 .map(CircuitBreakerEventDTOFactory::createCircuitBreakerEventDTO).toJavaList());
-    }
-
-    @RequestMapping(value = "stream/events/{circuitBreakerName}/{eventType}", produces = MEDIA_TYPE_TEXT_EVENT_STREAM)
-    public SseEmitter getEventsStreamFilteredByCircuitBreakerNameAndEventType(@PathVariable("circuitBreakerName") String circuitBreakerName,
-                                                                        @PathVariable("eventType") String eventType) {
-        CircuitBreaker circuitBreaker = circuitBreakerRegistry.getAllCircuitBreakers()
-                .find(cb -> cb.getName().equals(circuitBreakerName))
-                .getOrElseThrow(() ->
-                        new IllegalArgumentException(String.format("circuit breaker with name %s not found", circuitBreakerName)));
-        Flux<CircuitBreakerEvent> eventStream = toFlux(circuitBreaker.getEventPublisher())
-                .filter(event -> event.getEventType() == CircuitBreakerEvent.Type.valueOf(eventType.toUpperCase()));
-        return CircuitBreakerEventEmitter.createSseEmitter(eventStream);
     }
 
 }

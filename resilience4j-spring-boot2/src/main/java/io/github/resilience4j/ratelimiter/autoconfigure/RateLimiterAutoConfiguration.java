@@ -20,6 +20,7 @@ import static io.github.resilience4j.ratelimiter.autoconfigure.RateLimiterProper
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.boot.actuate.autoconfigure.endpoint.condition.ConditionalOnEnabledEndpoint;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -33,6 +34,8 @@ import io.github.resilience4j.ratelimiter.RateLimiterConfig;
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
 import io.github.resilience4j.ratelimiter.event.RateLimiterEvent;
 import io.github.resilience4j.ratelimiter.internal.InMemoryRateLimiterRegistry;
+import io.github.resilience4j.ratelimiter.monitoring.endpoint.RateLimiterEndpoint;
+import io.github.resilience4j.ratelimiter.monitoring.endpoint.RateLimiterEventsEndpoint;
 import io.github.resilience4j.ratelimiter.monitoring.health.RateLimiterHealthIndicator;
 
 /**
@@ -63,6 +66,19 @@ public class RateLimiterAutoConfiguration {
             }
         );
         return rateLimiterRegistry;
+    }
+
+    @Bean
+    @ConditionalOnEnabledEndpoint
+    public RateLimiterEndpoint rateLimiterEndpoint(RateLimiterRegistry rateLimiterRegistry) {
+        return new RateLimiterEndpoint(rateLimiterRegistry);
+    }
+
+    @Bean
+    @ConditionalOnEnabledEndpoint
+    public RateLimiterEventsEndpoint rateLimiterEventsEndpoint(EventConsumerRegistry<RateLimiterEvent> eventConsumerRegistry,
+                                                            RateLimiterRegistry rateLimiterRegistry) {
+        return new RateLimiterEventsEndpoint(eventConsumerRegistry, rateLimiterRegistry);
     }
 
     @Bean

@@ -31,3 +31,4 @@ resilience4j.ratelimiter:
             timeoutInMillis: 3000
 
 management.security.enabled: false
+management.endpoints.web.exposure.include: '*'
