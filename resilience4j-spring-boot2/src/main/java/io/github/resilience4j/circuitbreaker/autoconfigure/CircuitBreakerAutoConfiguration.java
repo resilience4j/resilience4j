@@ -16,6 +16,7 @@
 package io.github.resilience4j.circuitbreaker.autoconfigure;
 
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.boot.actuate.autoconfigure.endpoint.condition.ConditionalOnEnabledEndpoint;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -26,6 +27,8 @@ import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent;
 import io.github.resilience4j.circuitbreaker.internal.InMemoryCircuitBreakerRegistry;
+import io.github.resilience4j.circuitbreaker.monitoring.endpoint.CircuitBreakerEndpoint;
+import io.github.resilience4j.circuitbreaker.monitoring.endpoint.CircuitBreakerEventsEndpoint;
 import io.github.resilience4j.circuitbreaker.monitoring.health.CircuitBreakerHealthIndicator;
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
@@ -60,6 +63,19 @@ public class CircuitBreakerAutoConfiguration {
             }
         );
         return circuitBreakerRegistry;
+    }
+
+    @Bean
+    @ConditionalOnEnabledEndpoint
+    public CircuitBreakerEndpoint circuitBreakerEndpoint(CircuitBreakerRegistry circuitBreakerRegistry) {
+        return new CircuitBreakerEndpoint(circuitBreakerRegistry);
+    }
+
+    @Bean
+    @ConditionalOnEnabledEndpoint
+    public CircuitBreakerEventsEndpoint circuitBreakerEventsEndpoint(EventConsumerRegistry<CircuitBreakerEvent> eventConsumerRegistry,
+                                                               CircuitBreakerRegistry circuitBreakerRegistry) {
+        return new CircuitBreakerEventsEndpoint(eventConsumerRegistry, circuitBreakerRegistry);
     }
 
     @Bean
