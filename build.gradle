@@ -77,7 +77,8 @@ configure(project.coreProjects) {
         targetCompatibility = "1.8"
         options.deprecation = true
         options.encoding = 'UTF-8'
-        options.compilerArgs << "-Xlint:unchecked"
+        options.compilerArgs += ["-Xlint:unchecked", "-parameters"]
+
     }
 
     cobertura {

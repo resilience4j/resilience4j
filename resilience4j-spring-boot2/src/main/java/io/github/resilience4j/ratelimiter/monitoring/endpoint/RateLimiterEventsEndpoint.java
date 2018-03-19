@@ -52,4 +52,15 @@ public class RateLimiterEventsEndpoint {
             .map(RateLimiterEventDTO::createRateLimiterEventDTO).toJavaList();
         return new RateLimiterEventsEndpointResponse(eventsList);
     }
+
+    @ReadOperation
+    public RateLimiterEventsEndpointResponse getEventsFilteredByRateLimiterNameAndEventType(@Selector String name,
+                                                                                            @Selector String eventType) {
+        RateLimiterEvent.Type targetType = RateLimiterEvent.Type.valueOf(eventType.toUpperCase());
+        List<RateLimiterEventDTO> eventsList = eventsConsumerRegistry.getEventConsumer(name).getBufferedEvents()
+                .filter(event -> event.getRateLimiterName().equals(name))
+                .filter(event -> event.getEventType() == targetType)
+                .map(RateLimiterEventDTO::createRateLimiterEventDTO).toJavaList();
+        return new RateLimiterEventsEndpointResponse(eventsList);
+    }
 }

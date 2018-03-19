@@ -31,6 +31,8 @@ public @interface CircuitBreaker {
 
     /**
      * Name of the backend monitor.
+     *
+     * @return the name of the circuit breaker
      */
     String backend();
 
