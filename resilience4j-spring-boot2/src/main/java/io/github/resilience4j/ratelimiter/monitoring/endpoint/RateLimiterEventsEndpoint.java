@@ -24,21 +24,16 @@ import org.springframework.boot.actuate.endpoint.annotation.Selector;
 
 import io.github.resilience4j.consumer.CircularEventConsumer;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
-import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
 import io.github.resilience4j.ratelimiter.event.RateLimiterEvent;
 import io.github.resilience4j.ratelimiter.monitoring.model.RateLimiterEventDTO;
 import io.github.resilience4j.ratelimiter.monitoring.model.RateLimiterEventsEndpointResponse;
 
 @Endpoint(id = "ratelimiter-events")
 public class RateLimiterEventsEndpoint {
-    private static final String MEDIA_TYPE_TEXT_EVENT_STREAM = "text/event-stream";
     private final EventConsumerRegistry<RateLimiterEvent> eventsConsumerRegistry;
-    private final RateLimiterRegistry rateLimiterRegistry;
 
-    public RateLimiterEventsEndpoint(EventConsumerRegistry<RateLimiterEvent> eventsConsumerRegistry,
-                                     RateLimiterRegistry rateLimiterRegistry) {
+    public RateLimiterEventsEndpoint(EventConsumerRegistry<RateLimiterEvent> eventsConsumerRegistry) {
         this.eventsConsumerRegistry = eventsConsumerRegistry;
-        this.rateLimiterRegistry = rateLimiterRegistry;
     }
 
     @ReadOperation
@@ -54,17 +49,6 @@ public class RateLimiterEventsEndpoint {
     public RateLimiterEventsEndpointResponse getEventsFilteredByRateLimiterName(@Selector String rateLimiterName) {
         List<RateLimiterEventDTO> eventsList = eventsConsumerRegistry.getEventConsumer(rateLimiterName).getBufferedEvents()
             .filter(event -> event.getRateLimiterName().equals(rateLimiterName))
-            .map(RateLimiterEventDTO::createRateLimiterEventDTO).toJavaList();
-        return new RateLimiterEventsEndpointResponse(eventsList);
-    }
-
-    @ReadOperation
-    public RateLimiterEventsEndpointResponse getEventsFilteredByRateLimiterNameAndEventType(@Selector String rateLimiterName,
-                                                                                            @Selector String eventType) {
-        RateLimiterEvent.Type targetType = RateLimiterEvent.Type.valueOf(eventType.toUpperCase());
-        List<RateLimiterEventDTO> eventsList = eventsConsumerRegistry.getEventConsumer(rateLimiterName).getBufferedEvents()
-            .filter(event -> event.getRateLimiterName().equals(rateLimiterName))
-            .filter(event -> event.getEventType() == targetType)
             .map(RateLimiterEventDTO::createRateLimiterEventDTO).toJavaList();
         return new RateLimiterEventsEndpointResponse(eventsList);
     }

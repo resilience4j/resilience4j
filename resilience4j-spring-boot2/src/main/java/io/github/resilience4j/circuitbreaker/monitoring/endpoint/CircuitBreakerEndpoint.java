@@ -18,14 +18,14 @@ package io.github.resilience4j.circuitbreaker.monitoring.endpoint;
 
 import java.util.List;
 
+import org.springframework.boot.actuate.endpoint.annotation.Endpoint;
 import org.springframework.boot.actuate.endpoint.annotation.ReadOperation;
-import org.springframework.boot.actuate.endpoint.web.annotation.WebEndpoint;
 
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 
 
-@WebEndpoint(id = "circuitbreaker")
+@Endpoint(id = "circuitbreakers")
 public class CircuitBreakerEndpoint {
 
     private final CircuitBreakerRegistry circuitBreakerRegistry;
