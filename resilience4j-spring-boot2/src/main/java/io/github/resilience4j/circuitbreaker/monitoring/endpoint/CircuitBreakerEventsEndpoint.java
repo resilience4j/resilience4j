@@ -50,4 +50,12 @@ public class CircuitBreakerEventsEndpoint {
                 .filter(event -> event.getCircuitBreakerName().equals(name))
                 .map(CircuitBreakerEventDTOFactory::createCircuitBreakerEventDTO).toJavaList());
     }
+
+    @ReadOperation
+    public CircuitBreakerEventsEndpointResponse getEventsFilteredByCircuitBreakerNameAndEventType(@Selector String name, @Selector String eventType) {
+        return new CircuitBreakerEventsEndpointResponse(eventConsumerRegistry.getEventConsumer(name).getBufferedEvents()
+                .filter(event -> event.getCircuitBreakerName().equals(name))
+                .filter(event -> event.getEventType() == CircuitBreakerEvent.Type.valueOf(eventType.toUpperCase()))
+                .map(CircuitBreakerEventDTOFactory::createCircuitBreakerEventDTO).toJavaList());
+    }
 }
