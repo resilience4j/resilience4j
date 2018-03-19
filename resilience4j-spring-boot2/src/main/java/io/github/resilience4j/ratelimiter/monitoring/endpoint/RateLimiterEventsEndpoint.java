@@ -46,9 +46,9 @@ public class RateLimiterEventsEndpoint {
     }
 
     @ReadOperation
-    public RateLimiterEventsEndpointResponse getEventsFilteredByRateLimiterName(@Selector String rateLimiterName) {
-        List<RateLimiterEventDTO> eventsList = eventsConsumerRegistry.getEventConsumer(rateLimiterName).getBufferedEvents()
-            .filter(event -> event.getRateLimiterName().equals(rateLimiterName))
+    public RateLimiterEventsEndpointResponse getEventsFilteredByRateLimiterName(@Selector String name) {
+        List<RateLimiterEventDTO> eventsList = eventsConsumerRegistry.getEventConsumer(name).getBufferedEvents()
+            .filter(event -> event.getRateLimiterName().equals(name))
             .map(RateLimiterEventDTO::createRateLimiterEventDTO).toJavaList();
         return new RateLimiterEventsEndpointResponse(eventsList);
     }
