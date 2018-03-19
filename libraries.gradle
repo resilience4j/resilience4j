@@ -77,6 +77,7 @@ ext {
 
             // Micrometers addon
             micrometer: "io.micrometer:micrometer-core:${micrometerVersion}",
+            micrometer_prometheus: "io.micrometer:micrometer-registry-prometheus:${micrometerVersion}",
 
             // CircuitBreaker documentation
             metrics_healthcheck: "io.dropwizard.metrics:metrics-healthchecks:${metricsVersion}",

@@ -93,7 +93,7 @@ public class RateLimiterAutoConfigurationTest {
         // Test Actuator endpoints
 
         ResponseEntity<RateLimiterEndpointResponse> rateLimiterList = restTemplate
-            .getForEntity("/actuator/ratelimiter", RateLimiterEndpointResponse.class);
+            .getForEntity("/actuator/ratelimiters", RateLimiterEndpointResponse.class);
 
         assertThat(rateLimiterList.getBody().getRateLimitersNames()).hasSize(2).containsExactly("backendA", "backendB");
 

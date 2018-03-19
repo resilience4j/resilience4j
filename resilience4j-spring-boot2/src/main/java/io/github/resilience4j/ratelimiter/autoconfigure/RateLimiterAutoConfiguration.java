@@ -76,9 +76,8 @@ public class RateLimiterAutoConfiguration {
 
     @Bean
     @ConditionalOnEnabledEndpoint
-    public RateLimiterEventsEndpoint rateLimiterEventsEndpoint(EventConsumerRegistry<RateLimiterEvent> eventConsumerRegistry,
-                                                            RateLimiterRegistry rateLimiterRegistry) {
-        return new RateLimiterEventsEndpoint(eventConsumerRegistry, rateLimiterRegistry);
+    public RateLimiterEventsEndpoint rateLimiterEventsEndpoint(EventConsumerRegistry<RateLimiterEvent> eventConsumerRegistry) {
+        return new RateLimiterEventsEndpoint(eventConsumerRegistry);
     }
 
     @Bean

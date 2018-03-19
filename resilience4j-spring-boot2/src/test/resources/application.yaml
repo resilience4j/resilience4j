@@ -2,6 +2,7 @@ resilience4j.circuitbreaker:
     circuitBreakerAspectOrder: 400
     backends:
         backendA:
+            registerHealthIndicator: true
             ringBufferSizeInClosedState: 6
             ringBufferSizeInHalfOpenState: 2
             waitInterval: 5000
@@ -9,6 +10,7 @@ resilience4j.circuitbreaker:
             eventConsumerBufferSize: 10
             registerHealthIndicator: true
         backendB:
+            registerHealthIndicator: true
             ringBufferSizeInClosedState: 10
             ringBufferSizeInHalfOpenState: 5
             waitInterval: 5000
@@ -32,3 +34,4 @@ resilience4j.ratelimiter:
 
 management.security.enabled: false
 management.endpoints.web.exposure.include: '*'
+management.endpoint.health.show-details: always

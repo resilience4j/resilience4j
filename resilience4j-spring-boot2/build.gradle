@@ -6,5 +6,6 @@ dependencies {
     compile project(':resilience4j-ratelimiter')
     compile project(':resilience4j-consumer')
     testCompile ( libraries.spring_boot2_test )
+    testCompile ( libraries.micrometer_prometheus )
     testCompile ( libraries.spring_boot2_web )
 }
