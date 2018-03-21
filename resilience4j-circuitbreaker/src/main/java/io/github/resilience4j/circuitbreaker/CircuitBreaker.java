@@ -34,7 +34,9 @@ import io.vavr.CheckedFunction1;
 import io.vavr.CheckedRunnable;
 import io.vavr.Tuple;
 import io.vavr.Tuple2;
+import io.vavr.control.Option;
 
+import java.time.Instant;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -131,6 +133,13 @@ public interface CircuitBreaker {
      * To recover from this state you must force a new state transition
      */
     void transitionToForcedOpenState();
+
+    /**
+     * Returns option of the retry after wait time. None if the CircuitBreaker is not in OPEN state
+     *
+     * @return option of the retry after wait time. None if the CircuitBreaker is not in OPEN state
+     */
+    Option<Instant> getRetryAfterWaitDuration();
 
     /**
      * Returns the name of this CircuitBreaker.

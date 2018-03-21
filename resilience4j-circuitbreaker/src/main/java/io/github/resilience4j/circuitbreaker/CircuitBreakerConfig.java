@@ -41,6 +41,7 @@ public class CircuitBreakerConfig {
     private Duration waitDurationInOpenState = Duration.ofSeconds(DEFAULT_WAIT_DURATION_IN_OPEN_STATE);
     // The default exception predicate counts all exceptions as failures.
     private Predicate<Throwable> recordFailurePredicate = DEFAULT_RECORD_FAILURE_PREDICATE;
+    private boolean enableAutomaticTransitionFromOpenToHalfOpen = false;
 
     private CircuitBreakerConfig(){
     }
@@ -64,7 +65,12 @@ public class CircuitBreakerConfig {
     public Predicate<Throwable> getRecordFailurePredicate() {
         return recordFailurePredicate;
     }
-    
+
+
+    public boolean getEnableAutomaticTransitionFromOpenToHalfOpen() {
+        return enableAutomaticTransitionFromOpenToHalfOpen;
+    }
+
     /**
      * Returns a builder to create a custom CircuitBreakerConfig.
      *
@@ -94,6 +100,7 @@ public class CircuitBreakerConfig {
         private int ringBufferSizeInHalfOpenState = DEFAULT_RING_BUFFER_SIZE_IN_HALF_OPEN_STATE;
         private int ringBufferSizeInClosedState = DEFAULT_RING_BUFFER_SIZE_IN_CLOSED_STATE;
         private Duration waitDurationInOpenState = Duration.ofSeconds(DEFAULT_WAIT_DURATION_IN_OPEN_STATE);
+        private boolean enableAutomaticTransitionFromOpenToHalfOpen = false;
 
         /**
          * Configures the failure rate threshold in percentage above which the CircuitBreaker should trip open and start short-circuiting calls.
@@ -221,6 +228,18 @@ public class CircuitBreakerConfig {
         }
 
         /**
+         * Configures whether a circuit breaker can automatically transition from OPEN to HALF_OPEN state once the waitDurationInOpenState
+         * has passed. Defaults to false.
+         *
+         * @param enableAutomaticTransitionFromOpenToHalfOpen true to enable.
+         * @return the CircuitBreakerConfig.Builder
+         */
+        public Builder enableAutomaticTransitionFromOpenToHalfOpen(boolean enableAutomaticTransitionFromOpenToHalfOpen) {
+            this.enableAutomaticTransitionFromOpenToHalfOpen = enableAutomaticTransitionFromOpenToHalfOpen;
+            return this;
+        }
+
+        /**
          * Builds a CircuitBreakerConfig
          *
          * @return the CircuitBreakerConfig
@@ -233,6 +252,7 @@ public class CircuitBreakerConfig {
             config.ringBufferSizeInClosedState = ringBufferSizeInClosedState;
             config.ringBufferSizeInHalfOpenState = ringBufferSizeInHalfOpenState;
             config.recordFailurePredicate = errorRecordingPredicate;
+            config.enableAutomaticTransitionFromOpenToHalfOpen = enableAutomaticTransitionFromOpenToHalfOpen;
             return config;
         }
 

@@ -30,10 +30,12 @@ import io.github.resilience4j.circuitbreaker.event.CircuitBreakerOnStateTransiti
 import io.github.resilience4j.circuitbreaker.event.CircuitBreakerOnSuccessEvent;
 import io.github.resilience4j.core.EventConsumer;
 import io.github.resilience4j.core.EventProcessor;
+import io.vavr.control.Option;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
+import java.time.Instant;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -185,6 +187,10 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
         });
         if (previousState.getState() != newState) {
             publishStateTransitionEvent(StateTransition.transitionBetween(previousState.getState(), newState));
+
+            if (circuitBreakerConfig.getEnableAutomaticTransitionFromOpenToHalfOpen() && newState.equals(State.OPEN)) {
+                OpenToHalfOpenAutoTransitioner.scheduleAutoTransitionToHalfOpen(this);
+            }
         }
     }
 
@@ -214,6 +220,13 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
         stateTransition(HALF_OPEN, currentState -> new HalfOpenState(this));
     }
 
+    @Override
+    public Option<Instant> getRetryAfterWaitDuration() {
+        if (this.stateReference.get().getState().equals(State.OPEN)) {
+            return Option.of(((OpenState) this.stateReference.get()).getRetryAfterWaitDuration());
+        }
+        return Option.none();
+    }
 
     private boolean shouldPublishEvents(CircuitBreakerEvent event) {
         return stateReference.get().shouldPublishEvents(event);

@@ -84,4 +84,8 @@ final class OpenState extends CircuitBreakerState {
     CircuitBreakerMetrics getMetrics() {
         return circuitBreakerMetrics;
     }
+
+    Instant getRetryAfterWaitDuration() {
+        return retryAfterWaitDuration;
+    }
 }
