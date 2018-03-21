@@ -41,7 +41,7 @@ public class CircuitBreakerAutoTransitionStateMachineTest {
     private final List<CircuitBreaker> circuitBreakersGroupB = new ArrayList<>();
     private final Map<Integer, Integer> stateTransitionFromOpenToHalfOpen = new HashMap<>();
 
-    private static final int TOTAL_NUMBER_CIRCUIT_BREAKERS = 50;
+    private static final int TOTAL_NUMBER_CIRCUIT_BREAKERS = 10;
 
     @Before
     public void setUp() {
