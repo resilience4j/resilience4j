@@ -188,7 +188,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
         if (previousState.getState() != newState) {
             publishStateTransitionEvent(StateTransition.transitionBetween(previousState.getState(), newState));
 
-            if (circuitBreakerConfig.getEnableAutomaticTransitionFromOpenToHalfOpen() && newState.equals(State.OPEN)) {
+            if (circuitBreakerConfig.getEnableAutomaticTransitionFromOpenToHalfOpen() && newState.equals(OPEN)) {
                 OpenToHalfOpenAutoTransitioner.scheduleAutoTransitionToHalfOpen(this);
             }
         }
@@ -222,7 +222,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
 
     @Override
     public Option<Instant> getRetryAfterWaitDuration() {
-        if (this.stateReference.get().getState().equals(State.OPEN)) {
+        if (this.stateReference.get().getState().equals(OPEN)) {
             return Option.of(((OpenState) this.stateReference.get()).getRetryAfterWaitDuration());
         }
         return Option.none();

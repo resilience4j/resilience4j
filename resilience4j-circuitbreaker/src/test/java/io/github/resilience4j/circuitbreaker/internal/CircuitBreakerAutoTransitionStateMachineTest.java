@@ -35,13 +35,13 @@ import java.util.function.Function;
 import static java.lang.Thread.sleep;
 import static org.assertj.core.api.BDDAssertions.assertThat;
 
-public class CircuitBreakerAutoCloseStateMachineTest {
+public class CircuitBreakerAutoTransitionStateMachineTest {
 
     private final List<CircuitBreaker> circuitBreakersGroupA = new ArrayList<>();
     private final List<CircuitBreaker> circuitBreakersGroupB = new ArrayList<>();
     private final Map<Integer, Integer> stateTransitionFromOpenToHalfOpen = new HashMap<>();
 
-    private static final int TOTAL_NUMBER_CIRCUIT_BREAKERS = 100;
+    private static final int TOTAL_NUMBER_CIRCUIT_BREAKERS = 50;
 
     @Before
     public void setUp() {
@@ -63,7 +63,7 @@ public class CircuitBreakerAutoCloseStateMachineTest {
                 .recordFailure(error -> !(error instanceof NumberFormatException))
                 .build();
 
-        // Instantiate 100 circuit breakers, 50 in group A, 50 in group B
+        // Instantiate multiple circuit breakers in two groups, A & B
         for (int i = 0; i < TOTAL_NUMBER_CIRCUIT_BREAKERS; i++) {
 
             stateTransitionFromOpenToHalfOpen.put(i, 0);
@@ -91,7 +91,7 @@ public class CircuitBreakerAutoCloseStateMachineTest {
     }
 
     @Test
-    public void testCircuitBreakerStateMachine() throws InterruptedException {
+    public void testAutoTransition() throws InterruptedException {
         // A ring buffer with size 5 is used in closed state
         // Initially the CircuitBreakers are closed
         this.assertAllGroupACircuitBreakers(CircuitBreaker::isCallPermitted, true);
@@ -187,7 +187,7 @@ public class CircuitBreakerAutoCloseStateMachineTest {
         // Two calls are tried, but not permitted, because the CircuitBreakers are open
         this.assertAllGroupBCircuitBreakers((CircuitBreaker cb) -> cb.getMetrics().getNumberOfNotPermittedCalls(), 2L);
 
-        sleep(900);
+        sleep(650);
 
         // The CircuitBreakers in group A are still open, because the wait duration of 2 seconds is not elapsed
         this.assertAllGroupACircuitBreakers(CircuitBreaker::getState, CircuitBreaker.State.OPEN);
