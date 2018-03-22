@@ -27,6 +27,8 @@ import static org.assertj.core.api.BDDAssertions.then;
 
 public class CircuitBreakerConfigTest {
 
+    public static final Predicate<Throwable> TEST_PREDICATE = e -> "test".equals(e.getMessage());
+
     @Test(expected = IllegalArgumentException.class)
     public void zeroMaxFailuresShouldFail() {
         CircuitBreakerConfig.custom().failureRateThreshold(0).build();
@@ -99,10 +101,13 @@ public class CircuitBreakerConfigTest {
 
     @Test()
     public void shouldUseRecordFailureThrowablePredicate() {
-        final Predicate<Throwable> throwablePredicate = (Throwable throwable) -> false;
         CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom()
-                .recordFailure(throwablePredicate).build();
-        then(circuitBreakerConfig.getRecordFailurePredicate()).isEqualTo(throwablePredicate);
+                .recordFailure(TEST_PREDICATE).build();
+        then(circuitBreakerConfig.getRecordFailurePredicate().test(new Error("test"))).isEqualTo(true);
+        then(circuitBreakerConfig.getRecordFailurePredicate().test(new Error("fail"))).isEqualTo(false);
+        then(circuitBreakerConfig.getRecordFailurePredicate().test(new RuntimeException("test"))).isEqualTo(true);
+        then(circuitBreakerConfig.getRecordFailurePredicate().test(new Error())).isEqualTo(false);
+        then(circuitBreakerConfig.getRecordFailurePredicate().test(new RuntimeException())).isEqualTo(false);
     }
 
     private static class ExtendsException extends Exception {
@@ -161,7 +166,7 @@ public class CircuitBreakerConfigTest {
    @Test()
     public void shouldUseBothRecordToBuildPredicate() {
         CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom()
-                .recordFailure(e -> "test".equals(e.getMessage())) //1
+                .recordFailure(TEST_PREDICATE) //1
                 .recordExceptions(RuntimeException.class, ExtendsExtendsException.class) //2
                 .ignoreExceptions(ExtendsException.class, ExtendsRuntimeException.class) //3
                 .build();

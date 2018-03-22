@@ -229,15 +229,17 @@ public class CircuitBreakerConfig {
         }
 
         private void buildErrorRecordingPredicate() {
-            final Optional<Predicate<Throwable>> recordExceptionsPredicate = buildRecordExceptionsPredicate();
-            if (recordExceptionsPredicate.isPresent()) {
-                final Predicate<Throwable> predicate = recordExceptionsPredicate.get();
-                this.errorRecordingPredicate = recordFailurePredicate != null ? recordFailurePredicate.or(predicate) : predicate;
-            } else {
-                this.errorRecordingPredicate = recordFailurePredicate != null ? recordFailurePredicate : DEFAULT_RECORD_FAILURE_PREDICATE;
-            }
-            buildIgnoreExceptionsPredicate().ifPresent(p -> this.errorRecordingPredicate = errorRecordingPredicate.and(p));
+            this.errorRecordingPredicate =
+                    getRecordingPredicate()
+                            .and(buildIgnoreExceptionsPredicate()
+                                    .orElse(DEFAULT_RECORD_FAILURE_PREDICATE));
             config.recordFailurePredicate = errorRecordingPredicate;
+        }
+
+        private Predicate<Throwable> getRecordingPredicate() {
+            return buildRecordExceptionsPredicate()
+                    .map(predicate -> recordFailurePredicate != null ? predicate.or(recordFailurePredicate) : predicate)
+                    .orElseGet(() -> recordFailurePredicate != null ? recordFailurePredicate : DEFAULT_RECORD_FAILURE_PREDICATE);
         }
 
         private Optional<Predicate<Throwable>> buildRecordExceptionsPredicate() {
