@@ -49,7 +49,7 @@ public class CircuitBreakerAutoTransitionStateMachineTest {
                 .failureRateThreshold(50)
                 .ringBufferSizeInClosedState(5)
                 .ringBufferSizeInHalfOpenState(3)
-                .enableAutomaticTransitionFromOpenToHalfOpen(true)
+                .enableAutomaticTransitionFromOpenToHalfOpen()
                 .waitDurationInOpenState(Duration.ofSeconds(2))
                 .recordFailure(error -> !(error instanceof NumberFormatException))
                 .build();
@@ -58,7 +58,7 @@ public class CircuitBreakerAutoTransitionStateMachineTest {
                 .failureRateThreshold(50)
                 .ringBufferSizeInClosedState(5)
                 .ringBufferSizeInHalfOpenState(3)
-                .enableAutomaticTransitionFromOpenToHalfOpen(true)
+                .enableAutomaticTransitionFromOpenToHalfOpen()
                 .waitDurationInOpenState(Duration.ofSeconds(1))
                 .recordFailure(error -> !(error instanceof NumberFormatException))
                 .build();

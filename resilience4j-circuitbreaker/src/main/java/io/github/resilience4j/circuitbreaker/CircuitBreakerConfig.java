@@ -41,7 +41,7 @@ public class CircuitBreakerConfig {
     private Duration waitDurationInOpenState = Duration.ofSeconds(DEFAULT_WAIT_DURATION_IN_OPEN_STATE);
     // The default exception predicate counts all exceptions as failures.
     private Predicate<Throwable> recordFailurePredicate = DEFAULT_RECORD_FAILURE_PREDICATE;
-    private boolean enableAutomaticTransitionFromOpenToHalfOpen = false;
+    private boolean automaticTransitionFromOpenToHalfOpenEnabled = false;
 
     private CircuitBreakerConfig(){
     }
@@ -66,9 +66,8 @@ public class CircuitBreakerConfig {
         return recordFailurePredicate;
     }
 
-
-    public boolean getEnableAutomaticTransitionFromOpenToHalfOpen() {
-        return enableAutomaticTransitionFromOpenToHalfOpen;
+    public boolean isAutomaticTransitionFromOpenToHalfOpenEnabled() {
+        return automaticTransitionFromOpenToHalfOpenEnabled;
     }
 
     /**
@@ -228,10 +227,8 @@ public class CircuitBreakerConfig {
         }
 
         /**
-         * Configures whether a circuit breaker can automatically transition from OPEN to HALF_OPEN state once the waitDurationInOpenState
-         * has passed. Defaults to false.
+         * Enables automatic transition from OPEN to HALF_OPEN state once the waitDurationInOpenState has passed.
          *
-         * @param enableAutomaticTransitionFromOpenToHalfOpen true to enable.
          * @return the CircuitBreakerConfig.Builder
          */
         public Builder enableAutomaticTransitionFromOpenToHalfOpen(boolean enableAutomaticTransitionFromOpenToHalfOpen) {

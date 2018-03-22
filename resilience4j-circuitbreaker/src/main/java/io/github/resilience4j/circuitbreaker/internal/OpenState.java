@@ -31,6 +31,10 @@ final class OpenState extends CircuitBreakerState {
         super(stateMachine);
         this.retryAfterWaitDuration = Instant.now().plus(stateMachine.getCircuitBreakerConfig().getWaitDurationInOpenState());
         this.circuitBreakerMetrics = circuitBreakerMetrics;
+
+        if (stateMachine.getCircuitBreakerConfig().isAutomaticTransitionFromOpenToHalfOpenEnabled()) {
+            OpenToHalfOpenAutoTransitioner.scheduleAutoTransitionToHalfOpen(stateMachine, this.retryAfterWaitDuration);
+        }
     }
 
     /**
@@ -83,9 +87,5 @@ final class OpenState extends CircuitBreakerState {
     @Override
     CircuitBreakerMetrics getMetrics() {
         return circuitBreakerMetrics;
-    }
-
-    Instant getRetryAfterWaitDuration() {
-        return retryAfterWaitDuration;
     }
 }
