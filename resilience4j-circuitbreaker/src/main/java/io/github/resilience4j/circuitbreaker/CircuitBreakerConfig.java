@@ -90,8 +90,10 @@ public class CircuitBreakerConfig {
         private Class<? extends Throwable>[] recordExceptions = new Class[0];
         @SuppressWarnings("unchecked")
         private Class<? extends Throwable>[] ignoreExceptions = new Class[0];
-
-        private CircuitBreakerConfig config = new CircuitBreakerConfig();
+        private float failureRateThreshold = DEFAULT_MAX_FAILURE_THRESHOLD;
+        private int ringBufferSizeInHalfOpenState = DEFAULT_RING_BUFFER_SIZE_IN_HALF_OPEN_STATE;
+        private int ringBufferSizeInClosedState = DEFAULT_RING_BUFFER_SIZE_IN_CLOSED_STATE;
+        private Duration waitDurationInOpenState = Duration.ofSeconds(DEFAULT_WAIT_DURATION_IN_OPEN_STATE);
 
         /**
          * Configures the failure rate threshold in percentage above which the CircuitBreaker should trip open and start short-circuiting calls.
@@ -105,7 +107,7 @@ public class CircuitBreakerConfig {
             if (failureRateThreshold <= 0 || failureRateThreshold > 100) {
                 throw new IllegalArgumentException("failureRateThreshold must be between 1 and 100");
             }
-            config.failureRateThreshold = failureRateThreshold;
+            this.failureRateThreshold = failureRateThreshold;
             return this;
         }
 
@@ -120,7 +122,7 @@ public class CircuitBreakerConfig {
             if (waitDurationInOpenState.getSeconds() < 1) {
                 throw new IllegalArgumentException("waitDurationInOpenState must be at least 1000[ms]");
             }
-            config.waitDurationInOpenState = waitDurationInOpenState;
+            this.waitDurationInOpenState = waitDurationInOpenState;
             return this;
         }
 
@@ -138,7 +140,7 @@ public class CircuitBreakerConfig {
             if (ringBufferSizeInHalfOpenState < 1 ) {
                 throw new IllegalArgumentException("ringBufferSizeInHalfOpenState must be greater than 0");
             }
-            config.ringBufferSizeInHalfOpenState = ringBufferSizeInHalfOpenState;
+            this.ringBufferSizeInHalfOpenState = ringBufferSizeInHalfOpenState;
             return this;
         }
 
@@ -156,7 +158,7 @@ public class CircuitBreakerConfig {
             if (ringBufferSizeInClosedState < 1) {
                 throw new IllegalArgumentException("ringBufferSizeInClosedState must be greater than 0");
             }
-            config.ringBufferSizeInClosedState = ringBufferSizeInClosedState;
+            this.ringBufferSizeInClosedState = ringBufferSizeInClosedState;
             return this;
         }
 
@@ -225,6 +227,12 @@ public class CircuitBreakerConfig {
          */
         public CircuitBreakerConfig build() {
             buildErrorRecordingPredicate();
+            CircuitBreakerConfig config = new CircuitBreakerConfig();
+            config.waitDurationInOpenState = waitDurationInOpenState;
+            config.failureRateThreshold = failureRateThreshold;
+            config.ringBufferSizeInClosedState = ringBufferSizeInClosedState;
+            config.ringBufferSizeInHalfOpenState = ringBufferSizeInHalfOpenState;
+            config.recordFailurePredicate = errorRecordingPredicate;
             return config;
         }
 
@@ -233,7 +241,6 @@ public class CircuitBreakerConfig {
                     getRecordingPredicate()
                             .and(buildIgnoreExceptionsPredicate()
                                     .orElse(DEFAULT_RECORD_FAILURE_PREDICATE));
-            config.recordFailurePredicate = errorRecordingPredicate;
         }
 
         private Predicate<Throwable> getRecordingPredicate() {

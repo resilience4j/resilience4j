@@ -24,6 +24,7 @@ import java.time.Duration;
 import java.util.function.Predicate;
 
 import static org.assertj.core.api.BDDAssertions.then;
+import static org.assertj.core.api.Java6Assertions.assertThat;
 
 public class CircuitBreakerConfigTest {
 
@@ -196,6 +197,16 @@ public class CircuitBreakerConfigTest {
 
     }
 
+    @Test()
+    public void shouldBuilderCreateConfigEveryTime() {
+        final CircuitBreakerConfig.Builder builder =  CircuitBreakerConfig.custom();
+        builder.ringBufferSizeInClosedState(5);
+        final CircuitBreakerConfig config1 = builder.build();
+        builder.ringBufferSizeInClosedState(3);
+        final CircuitBreakerConfig config2 = builder.build();
+        assertThat(config2.getRingBufferSizeInClosedState()).isEqualTo(3);
+        assertThat(config1.getRingBufferSizeInClosedState()).isEqualTo(5);
+    }
 
 
 }
