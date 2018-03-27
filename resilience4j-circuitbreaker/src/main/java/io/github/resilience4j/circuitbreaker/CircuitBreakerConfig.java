@@ -99,7 +99,7 @@ public class CircuitBreakerConfig {
         private int ringBufferSizeInHalfOpenState = DEFAULT_RING_BUFFER_SIZE_IN_HALF_OPEN_STATE;
         private int ringBufferSizeInClosedState = DEFAULT_RING_BUFFER_SIZE_IN_CLOSED_STATE;
         private Duration waitDurationInOpenState = Duration.ofSeconds(DEFAULT_WAIT_DURATION_IN_OPEN_STATE);
-        private boolean enableAutomaticTransitionFromOpenToHalfOpen = false;
+        private boolean automaticTransitionFromOpenToHalfOpenEnabled = false;
 
         /**
          * Configures the failure rate threshold in percentage above which the CircuitBreaker should trip open and start short-circuiting calls.
@@ -231,8 +231,8 @@ public class CircuitBreakerConfig {
          *
          * @return the CircuitBreakerConfig.Builder
          */
-        public Builder enableAutomaticTransitionFromOpenToHalfOpen(boolean enableAutomaticTransitionFromOpenToHalfOpen) {
-            this.enableAutomaticTransitionFromOpenToHalfOpen = enableAutomaticTransitionFromOpenToHalfOpen;
+        public Builder enableAutomaticTransitionFromOpenToHalfOpen() {
+            this.automaticTransitionFromOpenToHalfOpenEnabled = true;
             return this;
         }
 
@@ -249,7 +249,7 @@ public class CircuitBreakerConfig {
             config.ringBufferSizeInClosedState = ringBufferSizeInClosedState;
             config.ringBufferSizeInHalfOpenState = ringBufferSizeInHalfOpenState;
             config.recordFailurePredicate = errorRecordingPredicate;
-            config.enableAutomaticTransitionFromOpenToHalfOpen = enableAutomaticTransitionFromOpenToHalfOpen;
+            config.automaticTransitionFromOpenToHalfOpenEnabled = automaticTransitionFromOpenToHalfOpenEnabled;
             return config;
         }
 
