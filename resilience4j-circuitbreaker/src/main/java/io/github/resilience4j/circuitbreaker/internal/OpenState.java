@@ -20,6 +20,7 @@ package io.github.resilience4j.circuitbreaker.internal;
 
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 
+import java.time.Duration;
 import java.time.Instant;
 
 final class OpenState extends CircuitBreakerState {
@@ -29,8 +30,13 @@ final class OpenState extends CircuitBreakerState {
 
     OpenState(CircuitBreakerStateMachine stateMachine, CircuitBreakerMetrics circuitBreakerMetrics) {
         super(stateMachine);
-        this.retryAfterWaitDuration = Instant.now().plus(stateMachine.getCircuitBreakerConfig().getWaitDurationInOpenState());
+        final Duration waitDurationInOpenState = stateMachine.getCircuitBreakerConfig().getWaitDurationInOpenState();
+        this.retryAfterWaitDuration = Instant.now().plus(waitDurationInOpenState);
         this.circuitBreakerMetrics = circuitBreakerMetrics;
+
+        if (stateMachine.getCircuitBreakerConfig().isAutomaticTransitionFromOpenToHalfOpenEnabled()) {
+            AutoTransitioner.scheduleAutoTransition(stateMachine::transitionToHalfOpenState, waitDurationInOpenState);
+        }
     }
 
     /**
