@@ -1,4 +1,4 @@
-package io.github.resilience4j.bulkhead.internal;
+package io.github.resilience4j.bulkhead.adaptive.internal;
 
 import java.util.Arrays;
 
