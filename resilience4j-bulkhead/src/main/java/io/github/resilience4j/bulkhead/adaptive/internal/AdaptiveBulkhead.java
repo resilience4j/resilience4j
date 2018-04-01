@@ -9,24 +9,26 @@ import static java.lang.Math.*;
 public class AdaptiveBulkhead {
     private static final double NANO_SCALE = 1_000_000_000d;
     private static final double MILLI_SCALE = 1_000_000d;
-    public static final double LOW_LATENCY_MUL = 0.8d;
-    public static final double CONCURRENCY_DROP_MUL = 0.85d;
+    private static final double LOW_LATENCY_MUL = 0.8d;
+    private static final double CONCURRENCY_DROP_MUL = 0.85d;
     // TODO:bstorozhuk Add metrics and event publisher possibly
     // TODO:bstorozhuk configure LOW_LATENCY_MUL and CONCURRENCY_DROP_MUL
     // TODO:bstorozhuk try to unify measurement units for metrics
+    // TODO:bstorozhuk replace adaptation window with cumulative moving average
 
     // initialization constants
     private final String name;
     private final BulkheadAdaptationConfig adaptationConfig;
     private final double initialMaxLatency;
     private final double desirableLatency;
-    private final Object windowsLock = new Object();
     private final InternalMetrics metrics;
+    private final Object windowsLock = new Object();
+
+    private SemaphoreBulkhead bulkhead;
 
     // measurement window collections. They are !!!NOT THREAD SAFE!!!
     private MeasurementWindow adaptationWindow;
     // internal bulkhead that is thread safe;
-    private SemaphoreBulkhead bulkhead;
     private MeasurementWindow reconfigurationWindow;
 
     // current settings and measurements that you can read concurrently to expose metrics
