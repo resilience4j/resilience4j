@@ -1,10 +1,16 @@
-package io.github.resilience4j.bulkhead;
+package io.github.resilience4j.bulkhead.adaptive;
+
+import io.github.resilience4j.bulkhead.BulkheadConfig;
+import io.github.resilience4j.bulkhead.adaptive.internal.AdaptiveBulkhead;
 
 import java.time.Duration;
 
 import static java.lang.Double.NaN;
 import static java.lang.Double.isNaN;
 
+/**
+ * A {@link BulkheadAdaptationConfig} configures a adaptation capabilities of  {@link AdaptiveBulkhead}
+ */
 public class BulkheadAdaptationConfig {
     private double desirableAverageThroughput = NaN; // in req/sec
     private double desirableOperationLatency = NaN; // in sec/op
@@ -33,6 +39,17 @@ public class BulkheadAdaptationConfig {
 
     public Duration getWindowForReconfiguration() {
         return windowForReconfiguration;
+    }
+
+    @Override
+    public String toString() {
+        return "BulkheadAdaptationConfig{" +
+                "desirableAverageThroughput=" + desirableAverageThroughput +
+                ", desirableOperationLatency=" + desirableOperationLatency +
+                ", maxAcceptableRequestLatency=" + maxAcceptableRequestLatency +
+                ", windowForAdaptation=" + windowForAdaptation +
+                ", windowForReconfiguration=" + windowForReconfiguration +
+                '}';
     }
 
     public static class Builder {
