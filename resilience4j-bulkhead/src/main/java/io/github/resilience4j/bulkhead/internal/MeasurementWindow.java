@@ -16,7 +16,7 @@ class MeasurementWindow {
 
     public boolean measure(long measurement) {
         window[cursor] = measurement;
-        cursor = (cursor + 1) / window.length;
+        cursor = (cursor + 1) % window.length;
         return cursor == 0;
     }
 
@@ -39,5 +39,12 @@ class MeasurementWindow {
             return (long) Math.sqrt((1.0d / (window.length - 1)) * accumulator);
         }
         return (long) Math.sqrt(((double) (accumulator)) / window.length);
+    }
+
+    @Override
+    public String toString() {
+        return "MeasurementWindow{" +
+                "window=" + Arrays.toString(window) +
+                '}';
     }
 }

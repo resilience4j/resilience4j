@@ -29,7 +29,8 @@ public class BulkheadConfig {
     private int maxConcurrentCalls = DEFAULT_MAX_CONCURRENT_CALLS;
     private long maxWaitTime = DEFAULT_MAX_WAIT_TIME;
 
-    private BulkheadConfig() { }
+    private BulkheadConfig() {
+    }
 
     public int getMaxConcurrentCalls() {
         return maxConcurrentCalls;
@@ -39,12 +40,20 @@ public class BulkheadConfig {
         return maxWaitTime;
     }
 
+    @Override
+    public String toString() {
+        return "BulkheadConfig{" +
+                "maxConcurrentCalls=" + maxConcurrentCalls +
+                ", maxWaitTime=" + maxWaitTime +
+                '}';
+    }
+
     /**
      * Returns a builder to create a custom BulkheadConfig.
      *
      * @return a {@link Builder}
      */
-    public static Builder custom(){
+    public static Builder custom() {
         return new Builder();
     }
 
@@ -76,9 +85,9 @@ public class BulkheadConfig {
         }
 
         /**
-         * Configures a maximum amount of time in ms the calling thread will wait to enter the bulkhead. If bulkhead has space available, entry
+         * Configures a maximum amount of time in milliseconds the calling thread will wait to enter the bulkhead. If bulkhead has space available, entry
          * is guaranteed and immediate. If bulkhead is full, calling threads will contest for space, if it becomes available. maxWaitTime can be set to 0.
-         *
+         * <p>
          * Note: for threads running on an event-loop or equivalent (rx computation pool, etc), setting maxWaitTime to 0 is highly recommended. Blocking
          * an event-loop thread will most likely have a negative effect on application throughput.
          *
