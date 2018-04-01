@@ -48,6 +48,14 @@ public class BulkheadConfig implements Serializable {
         this.fairCallHandlingEnabled = fairCallHandlingEnabled;
     }
 
+    @Override
+    public String toString() {
+        return "BulkheadConfig{" +
+                "maxConcurrentCalls=" + maxConcurrentCalls +
+                ", maxWaitTime=" + maxWaitTime +
+                '}';
+    }
+
     /**
      * Returns a builder to create a custom BulkheadConfig.
      *

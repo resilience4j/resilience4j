@@ -12,6 +12,14 @@ public class BulkheadAdaptationConfig {
     private Duration windowForAdaptation;
     private Duration windowForReconfiguration;
 
+    public BulkheadAdaptationConfig(double desirableAverageThroughput, double desirableOperationLatency, double maxAcceptableRequestLatency, Duration windowForAdaptation, Duration windowForReconfiguration) {
+        this.desirableAverageThroughput = desirableAverageThroughput;
+        this.desirableOperationLatency = desirableOperationLatency;
+        this.maxAcceptableRequestLatency = maxAcceptableRequestLatency;
+        this.windowForAdaptation = windowForAdaptation;
+        this.windowForReconfiguration = windowForReconfiguration;
+    }
+
     public double getDesirableAverageThroughput() {
         return desirableAverageThroughput;
     }
