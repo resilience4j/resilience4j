@@ -312,6 +312,8 @@ NOTE: You can also consume events from `RateLimiter`, `Bulkhead`, `Cache` and `R
 * wescale.de (In a B2B integration platform)
 * Topia (In an HR application built with microservices architecture)
 * Auto Trader Group plc (UK’s largest digital automotive marketplace)
+* PlayStation Network (Platform backend)
+
 
 == License
 
