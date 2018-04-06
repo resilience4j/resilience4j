@@ -13,22 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.resilience4j.circuitbreaker.autoconfigure;
+package io.github.resilience4j.circuitbreaker.configure;
 
-import io.github.resilience4j.circuitbreaker.configure.CircuitBreakerPrometheusConfiguration;
+import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.prometheus.CircuitBreakerExports;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Import;
 
-/**
- * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration
- * Auto-configuration} for resilience4j-metrics.
- */
+
 @Configuration
-@Import(CircuitBreakerPrometheusConfiguration.class)
-@AutoConfigureAfter(value = CircuitBreakerAutoConfiguration.class)
-@ConditionalOnClass(CircuitBreakerExports.class)
-public class CircuitBreakerPrometheusAutoConfiguration {
+public class CircuitBreakerPrometheusConfiguration {
+    @Bean
+    public CircuitBreakerExports circuitBreakerPrometheusCollector(CircuitBreakerRegistry circuitBreakerRegistry){
+        CircuitBreakerExports collector = CircuitBreakerExports.ofCircuitBreakerRegistry(circuitBreakerRegistry);
+        collector.register();
+        return collector;
+    }
 }

@@ -14,6 +14,8 @@ ext {
     awaitilityVersion = '1.7.0'
     metricsVersion = '3.2.5'
     vertxVersion = '3.5.1'
+    aspectjVersion = '1.8.13'
+    spring4Version = '4.3.10.RELEASE'
     springBootVersion = '1.5.10.RELEASE'
     springBoot2Version = '2.0.0.RELEASE'
     ratpackVersion = '1.5.4'
@@ -49,7 +51,12 @@ ext {
             vertx: "io.vertx:vertx-core:${vertxVersion}",
             vertx_unit: "io.vertx:vertx-unit:${vertxVersion}",
 
+            // Aspectj for Spring addon
+            aspectj: "org.aspectj:aspectjrt:${aspectjVersion}",
+
             // Spring Boot addon
+            spring_4_core: "org.springframework:spring-core:${spring4Version}",
+            spring_4_context: "org.springframework:spring-context:${spring4Version}",
             spring_reactor: "io.projectreactor:reactor-core:${reactorVersion}",
             spring_boot_aop: "org.springframework.boot:spring-boot-starter-aop:${springBootVersion}",
             spring_boot_actuator: "org.springframework.boot:spring-boot-starter-actuator:${springBootVersion}",
@@ -88,4 +95,6 @@ ext {
             prometheus_simpleclient: "io.prometheus:simpleclient_common:${prometheusSimpleClientVersion}",
             prometheus_spring_boot: "io.prometheus:simpleclient_spring_boot:${prometheusSimpleClientVersion}"
     ]
+    micrometerVersion = '1.0.0'
+
 }

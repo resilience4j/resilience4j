@@ -1,4 +1,4 @@
-package io.github.resilience4j.circuitbreaker.autoconfigure;
+package io.github.resilience4j.circuitbreaker.configure;
 /*
  * Copyright 2017 Robert Winkler
  *
@@ -16,16 +16,12 @@ package io.github.resilience4j.circuitbreaker.autoconfigure;
  */
 
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
-import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.*;
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.stereotype.Component;
+import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.Builder;
 
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 
-@ConfigurationProperties(prefix = "resilience4j.circuitbreaker")
-@Component
 public class CircuitBreakerProperties {
     // This property gives you control over CircuitBreaker aspect application order.
     // By default CircuitBreaker will be executed BEFORE RateLimiter.

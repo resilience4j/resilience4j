@@ -2,6 +2,7 @@ dependencies {
     compile ( libraries.spring_boot2_aop )
     compile ( libraries.spring_boot2_actuator )
     compile ( libraries.hibernate_validator )
+    compile project(':resilience4j-annotations')
     compile project(':resilience4j-micrometer')
     compile project(':resilience4j-circuitbreaker')
     compile project(':resilience4j-ratelimiter')

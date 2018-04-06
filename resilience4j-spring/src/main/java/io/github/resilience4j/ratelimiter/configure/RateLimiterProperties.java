@@ -13,18 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.resilience4j.ratelimiter.autoconfigure;
+package io.github.resilience4j.ratelimiter.configure;
 
 import io.github.resilience4j.ratelimiter.RateLimiterConfig;
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.stereotype.Component;
 
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 
-@ConfigurationProperties(prefix = "resilience4j.ratelimiter")
-@Component
 public class RateLimiterProperties {
     // This property gives you control over RateLimiter aspect application order.
     // Integer.MAX_VALUE means that RateLimiter aspect will be last one applied to any decorated bean.
@@ -33,22 +29,6 @@ public class RateLimiterProperties {
     // you explicitly define aspects CircuitBreaker and RateLimiter execution sequence.
     private int rateLimiterAspectOrder = Integer.MAX_VALUE;
     private Map<String, LimiterProperties> limiters = new HashMap<>();
-
-    private LimiterProperties getLimiterProperties(String limiter) {
-        return limiters.get(limiter);
-    }
-
-    public RateLimiterConfig createRateLimiterConfig(String limiter) {
-        return createRateLimiterConfig(getLimiterProperties(limiter));
-    }
-
-    public int getRateLimiterAspectOrder() {
-        return rateLimiterAspectOrder;
-    }
-
-    public void setRateLimiterAspectOrder(int rateLimiterAspectOrder) {
-        this.rateLimiterAspectOrder = rateLimiterAspectOrder;
-    }
 
     public static RateLimiterConfig createRateLimiterConfig(LimiterProperties limiterProperties) {
         if (limiterProperties == null) {
@@ -72,12 +52,28 @@ public class RateLimiterProperties {
         return rateLimiterConfigBuilder.build();
     }
 
+    private LimiterProperties getLimiterProperties(String limiter) {
+        return limiters.get(limiter);
+    }
+
+    public RateLimiterConfig createRateLimiterConfig(String limiter) {
+        return createRateLimiterConfig(getLimiterProperties(limiter));
+    }
+
+    public int getRateLimiterAspectOrder() {
+        return rateLimiterAspectOrder;
+    }
+
+    public void setRateLimiterAspectOrder(int rateLimiterAspectOrder) {
+        this.rateLimiterAspectOrder = rateLimiterAspectOrder;
+    }
+
     public Map<String, LimiterProperties> getLimiters() {
         return limiters;
     }
 
     /**
-     * Class storing property values for configuring {@link io.github.resilience4j.ratelimiter.RateLimiterConfig} instances.
+     * Class storing property values for configuring {@link RateLimiterConfig} instances.
      */
     public static class LimiterProperties {
 
