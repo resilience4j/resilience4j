@@ -3,7 +3,7 @@ dependencies {
     compile ( libraries.spring_boot_actuator )
     compile ( libraries.spring_boot_web )
     compile ( libraries.spring_reactor )
-    optional ( libraries.spring_boot_config_processor )
+    compileOnly ( libraries.spring_boot_config_processor )
     compile project(':resilience4j-annotations')
     compile project(':resilience4j-spring')
     compile project(':resilience4j-circuitbreaker')

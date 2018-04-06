@@ -51,9 +51,6 @@ public class RateLimiterConfiguration {
                     if (properties.getSubscribeForEvents()) {
                         subscribeToLimiterEvents(rateLimiterEventsConsumerRegistry, name, properties, rateLimiter);
                     }
-                    if (properties.getRegisterHealthIndicator()) {
-                        createHealthIndicatorForLimiter(beanFactory, name, rateLimiter);
-                    }
                 }
         );
         return rateLimiterRegistry;
@@ -72,13 +69,6 @@ public class RateLimiterConfiguration {
     @Bean
     public EventConsumerRegistry<RateLimiterEvent> rateLimiterEventsConsumerRegistry() {
         return new DefaultEventConsumerRegistry<>();
-    }
-
-    private void createHealthIndicatorForLimiter(ConfigurableBeanFactory beanFactory, String name, RateLimiter rateLimiter) {
-        beanFactory.registerSingleton(
-                name + "RateLimiterHealthIndicator",
-                new RateLimiterHealthIndicator(rateLimiter)
-        );
     }
 
     private void subscribeToLimiterEvents(EventConsumerRegistry<RateLimiterEvent> rateLimiterEventsConsumerRegistry, String name, RateLimiterProperties.LimiterProperties properties, RateLimiter rateLimiter) {

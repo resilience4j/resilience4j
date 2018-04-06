@@ -17,7 +17,7 @@ ext {
     aspectjVersion = '1.8.13'
     spring4Version = '4.3.10.RELEASE'
     springBootVersion = '1.5.10.RELEASE'
-    springBoot2Version = '2.0.0.RELEASE'
+    springBoot2Version = '2.0.1.RELEASE'
     ratpackVersion = '1.5.4'
     spockVersion = '1.1-groovy-2.4-rc-4'
     retrofitVersion = '2.3.0'
@@ -62,12 +62,16 @@ ext {
             spring_boot_actuator: "org.springframework.boot:spring-boot-starter-actuator:${springBootVersion}",
             spring_boot_web: "org.springframework.boot:spring-boot-starter-web:${springBootVersion}",
             spring_boot_test:  "org.springframework.boot:spring-boot-starter-test:${springBootVersion}",
+            spring_boot_config_processor : "org.springframework.boot:spring-boot-configuration-processor:${springBootVersion}",
 
             // Spring Boot2 addon
             spring_boot2_aop: "org.springframework.boot:spring-boot-starter-aop:${springBoot2Version}",
             spring_boot2_actuator: "org.springframework.boot:spring-boot-starter-actuator:${springBoot2Version}",
             spring_boot2_web: "org.springframework.boot:spring-boot-starter-web:${springBoot2Version}",
             spring_boot2_test:  "org.springframework.boot:spring-boot-starter-test:${springBoot2Version}",
+            spring_boot2_config_processor : "org.springframework.boot:spring-boot-configuration-processor:${springBoot2Version}",
+
+            // Hibernate validator addon
             hibernate_validator: "org.hibernate.validator:hibernate-validator:${hibernateValidatorVersion}",
 
             // ratpack addon

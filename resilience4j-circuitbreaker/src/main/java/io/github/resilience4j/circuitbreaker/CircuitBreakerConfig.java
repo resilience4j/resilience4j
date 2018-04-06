@@ -196,6 +196,7 @@ public class CircuitBreakerConfig {
          * @return the CircuitBreakerConfig.Builder
          */
         @SafeVarargs
+        @SuppressWarnings("unchecked")
         public final Builder recordExceptions(Class<? extends Throwable>... errorClasses) {
             this.recordExceptions = errorClasses != null ? errorClasses : new Class[0];
             return this;
@@ -221,6 +222,7 @@ public class CircuitBreakerConfig {
          * @return the CircuitBreakerConfig.Builder
          */
         @SafeVarargs
+        @SuppressWarnings("unchecked")
         public final Builder ignoreExceptions(Class<? extends Throwable>... errorClasses) {
             this.ignoreExceptions = errorClasses != null ? errorClasses : new Class[0];
             return this;

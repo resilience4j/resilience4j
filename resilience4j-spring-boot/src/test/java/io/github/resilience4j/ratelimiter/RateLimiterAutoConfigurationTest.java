@@ -15,8 +15,8 @@
  */
 package io.github.resilience4j.ratelimiter;
 
-import io.github.resilience4j.ratelimiter.autoconfigure.RateLimiterPropertiesAutoConfigured;
 import io.github.resilience4j.ratelimiter.configure.RateLimiterAspect;
+import io.github.resilience4j.ratelimiter.configure.RateLimiterProperties;
 import io.github.resilience4j.ratelimiter.event.RateLimiterEvent;
 import io.github.resilience4j.ratelimiter.monitoring.model.RateLimiterEndpointResponse;
 import io.github.resilience4j.ratelimiter.monitoring.model.RateLimiterEventDTO;
@@ -48,7 +48,7 @@ public class RateLimiterAutoConfigurationTest {
     private RateLimiterRegistry rateLimiterRegistry;
 
     @Autowired
-    private RateLimiterPropertiesAutoConfigured rateLimiterProperties;
+    private RateLimiterProperties rateLimiterProperties;
 
     @Autowired
     private RateLimiterAspect rateLimiterAspect;
