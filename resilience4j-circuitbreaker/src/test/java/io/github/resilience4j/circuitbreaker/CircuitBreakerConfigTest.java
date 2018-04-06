@@ -28,7 +28,7 @@ import static org.assertj.core.api.Java6Assertions.assertThat;
 
 public class CircuitBreakerConfigTest {
 
-    public static final Predicate<Throwable> TEST_PREDICATE = e -> "test".equals(e.getMessage());
+    private static final Predicate<Throwable> TEST_PREDICATE = e -> "test".equals(e.getMessage());
 
     @Test(expected = IllegalArgumentException.class)
     public void zeroMaxFailuresShouldFail() {
@@ -112,13 +112,13 @@ public class CircuitBreakerConfigTest {
     }
 
     private static class ExtendsException extends Exception {
-        public ExtendsException() { }
-        public ExtendsException(String message) { super(message); }
+        ExtendsException() { }
+        ExtendsException(String message) { super(message); }
     }
     private static class ExtendsRuntimeException extends RuntimeException {}
     private static class ExtendsExtendsException extends ExtendsException {}
-    private static class ExtendsException2 extends Exception {};
-    private static class ExtendsError extends Error {};
+    private static class ExtendsException2 extends Exception {}
+    private static class ExtendsError extends Error {}
 
     @Test()
     public void shouldUseIgnoreExceptionToBuildPredicate() {
