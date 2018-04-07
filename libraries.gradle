@@ -17,7 +17,7 @@ ext {
     aspectjVersion = '1.8.13'
     spring4Version = '4.3.10.RELEASE'
     springBootVersion = '1.5.10.RELEASE'
-    springBoot2Version = '2.0.1.RELEASE'
+    springBoot2Version = '2.0.0.RELEASE'
     ratpackVersion = '1.5.4'
     spockVersion = '1.1-groovy-2.4-rc-4'
     retrofitVersion = '2.3.0'
