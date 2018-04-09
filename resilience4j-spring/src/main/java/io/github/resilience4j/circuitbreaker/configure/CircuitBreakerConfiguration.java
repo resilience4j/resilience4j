@@ -56,6 +56,7 @@ public class CircuitBreakerConfiguration {
      * The EventConsumerRegistry is used to manage EventConsumer instances.
      * The EventConsumerRegistry is used by the CircuitBreakerHealthIndicator to show the latest CircuitBreakerEvents events
      * for each CircuitBreaker instance.
+     * @return a default EventConsumerRegistry {@link io.github.resilience4j.consumer.DefaultEventConsumerRegistry}
      */
     @Bean
     public EventConsumerRegistry<CircuitBreakerEvent> eventConsumerRegistry() {

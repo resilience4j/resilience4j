@@ -18,7 +18,6 @@ package io.github.resilience4j.circuitbreaker.configure;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.Builder;
 
-import javax.annotation.PostConstruct;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
@@ -78,11 +77,6 @@ public class CircuitBreakerProperties {
 
     public Map<String, BackendProperties> getBackends() {
         return backends;
-    }
-
-    @PostConstruct
-    public void init(){
-        System.out.println("test");
     }
 
     /**
