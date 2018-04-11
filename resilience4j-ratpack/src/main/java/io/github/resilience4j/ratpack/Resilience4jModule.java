@@ -18,7 +18,6 @@ package io.github.resilience4j.ratpack;
 import com.codahale.metrics.MetricRegistry;
 import com.google.inject.Injector;
 import com.google.inject.Key;
-import com.google.inject.Provides;
 import com.google.inject.Scopes;
 import com.google.inject.TypeLiteral;
 import com.google.inject.matcher.Matchers;
@@ -57,7 +56,6 @@ import io.github.resilience4j.retry.RetryConfig;
 import io.github.resilience4j.retry.RetryRegistry;
 import io.github.resilience4j.retry.event.RetryEvent;
 import io.prometheus.client.CollectorRegistry;
-import ratpack.api.Nullable;
 import ratpack.dropwizard.metrics.DropwizardMetricsModule;
 import ratpack.guice.ConfigurableModule;
 import ratpack.handling.HandlerDecorator;
@@ -66,7 +64,6 @@ import ratpack.service.Service;
 import ratpack.service.StartEvent;
 
 import javax.inject.Inject;
-import javax.inject.Singleton;
 import java.time.Duration;
 
 /**
@@ -147,81 +144,13 @@ public class Resilience4jModule extends ConfigurableModule<Resilience4jConfig> {
             }
         });
 
-
         // startup
-        bind(Resilience4jService.class);
+        bind(Resilience4jService.class).in(Scopes.SINGLETON);
     }
 
     private <T> T injected(T instance) {
         requestInjection(instance);
         return instance;
-    }
-
-    @Provides
-    @Singleton
-    @Nullable
-    public CircuitBreakerMetrics circuitBreakerMetrics(CircuitBreakerRegistry circuitBreakerRegistry, Resilience4jConfig config) {
-        if (config.isMetrics()) {
-            return CircuitBreakerMetrics.ofCircuitBreakerRegistry(circuitBreakerRegistry);
-        } else {
-            return null;
-        }
-    }
-
-    @Provides
-    @Singleton
-    @Nullable
-    public RateLimiterMetrics rateLimiterMetrics(RateLimiterRegistry rateLimiterRegistry, Resilience4jConfig config) {
-        if (config.isMetrics()) {
-            return RateLimiterMetrics.ofRateLimiterRegistry(rateLimiterRegistry);
-        } else {
-            return null;
-        }
-    }
-
-    @Provides
-    @Singleton
-    @Nullable
-    public RetryMetrics retryMetrics(RetryRegistry retryRegistry, Resilience4jConfig config) {
-        if (config.isMetrics()) {
-            return RetryMetrics.ofRetryRegistry(retryRegistry);
-        } else {
-            return null;
-        }
-    }
-
-    @Provides
-    @Singleton
-    @Nullable
-    public BulkheadMetrics bulkheadMetrics(BulkheadRegistry bulkheadRegistry, Resilience4jConfig config) {
-        if (config.isMetrics()) {
-            return BulkheadMetrics.ofBulkheadRegistry(bulkheadRegistry);
-        } else {
-            return null;
-        }
-    }
-
-
-    @Provides
-    @Singleton
-    @Nullable
-    public CircuitBreakerExports circuitBreakerExports(CircuitBreakerRegistry circuitBreakerRegistry, Resilience4jConfig config) {
-        if (config.isPrometheus()) {
-            return CircuitBreakerExports.ofCircuitBreakerRegistry(circuitBreakerRegistry);
-        } else {
-            return null;
-        }
-    }
-
-    @Provides
-    @Singleton
-    @Nullable
-    public RateLimiterExports rateLimiterExports(RateLimiterRegistry rateLimiterRegistry, Resilience4jConfig config) {
-        if (config.isPrometheus()) {
-            return RateLimiterExports.ofRateLimiterRegistry(rateLimiterRegistry);
-        } else {
-            return null;
-        }
     }
 
     private static class Resilience4jService implements Service {
@@ -241,7 +170,8 @@ public class Resilience4jModule extends ConfigurableModule<Resilience4jConfig> {
 
             // build circuit breakers
             CircuitBreakerRegistry circuitBreakerRegistry = injector.getInstance(CircuitBreakerRegistry.class);
-            EventConsumerRegistry<CircuitBreakerEvent> cbConsumerRegistry = injector.getInstance(Key.get(new TypeLiteral<EventConsumerRegistry<CircuitBreakerEvent>>() {}));
+            EventConsumerRegistry<CircuitBreakerEvent> cbConsumerRegistry = injector.getInstance(Key.get(new TypeLiteral<EventConsumerRegistry<CircuitBreakerEvent>>() {
+            }));
             config.getCircuitBreakers().forEach((name, circuitBreakerConfig) -> {
                 io.github.resilience4j.circuitbreaker.CircuitBreaker circuitBreaker;
                 if (circuitBreakerConfig.getDefaults()) {
@@ -261,7 +191,8 @@ public class Resilience4jModule extends ConfigurableModule<Resilience4jConfig> {
 
             // build rate limiters
             RateLimiterRegistry rateLimiterRegistry = injector.getInstance(RateLimiterRegistry.class);
-            EventConsumerRegistry<RateLimiterEvent> rlConsumerRegistry = injector.getInstance(Key.get(new TypeLiteral<EventConsumerRegistry<RateLimiterEvent>>() {}));
+            EventConsumerRegistry<RateLimiterEvent> rlConsumerRegistry = injector.getInstance(Key.get(new TypeLiteral<EventConsumerRegistry<RateLimiterEvent>>() {
+            }));
             config.getRateLimiters().forEach((name, rateLimiterConfig) -> {
                 io.github.resilience4j.ratelimiter.RateLimiter rateLimiter;
                 if (rateLimiterConfig.getDefaults()) {
@@ -280,7 +211,8 @@ public class Resilience4jModule extends ConfigurableModule<Resilience4jConfig> {
 
             // build retries
             RetryRegistry retryRegistry = injector.getInstance(RetryRegistry.class);
-            EventConsumerRegistry<RetryEvent> rConsumerRegistry = injector.getInstance(Key.get(new TypeLiteral<EventConsumerRegistry<RetryEvent>>() {}));
+            EventConsumerRegistry<RetryEvent> rConsumerRegistry = injector.getInstance(Key.get(new TypeLiteral<EventConsumerRegistry<RetryEvent>>() {
+            }));
             config.getRetries().forEach((name, retryConfig) -> {
                 io.github.resilience4j.retry.Retry retry;
                 if (retryConfig.getDefaults()) {
@@ -298,7 +230,8 @@ public class Resilience4jModule extends ConfigurableModule<Resilience4jConfig> {
 
             // build bulkheads
             BulkheadRegistry bulkheadRegistry = injector.getInstance(BulkheadRegistry.class);
-            EventConsumerRegistry<BulkheadEvent> bConsumerRegistry = injector.getInstance(Key.get(new TypeLiteral<EventConsumerRegistry<BulkheadEvent>>() {}));
+            EventConsumerRegistry<BulkheadEvent> bConsumerRegistry = injector.getInstance(Key.get(new TypeLiteral<EventConsumerRegistry<BulkheadEvent>>() {
+            }));
             config.getBulkheads().forEach((name, bulkheadConfig) -> {
                 io.github.resilience4j.bulkhead.Bulkhead bulkhead;
                 if (bulkheadConfig.getDefaults()) {
@@ -317,17 +250,23 @@ public class Resilience4jModule extends ConfigurableModule<Resilience4jConfig> {
             // dropwizard metrics
             if (config.isMetrics() && injector.getExistingBinding(Key.get(MetricRegistry.class)) != null) {
                 MetricRegistry metricRegistry = injector.getInstance(MetricRegistry.class);
-                metricRegistry.registerAll(injector.getInstance(CircuitBreakerMetrics.class));
-                metricRegistry.registerAll(injector.getInstance(RateLimiterMetrics.class));
-                metricRegistry.registerAll(injector.getInstance(RetryMetrics.class));
-                metricRegistry.registerAll(injector.getInstance(BulkheadMetrics.class));
+                CircuitBreakerMetrics circuitBreakerMetrics = CircuitBreakerMetrics.ofCircuitBreakerRegistry(circuitBreakerRegistry);
+                RateLimiterMetrics rateLimiterMetrics = RateLimiterMetrics.ofRateLimiterRegistry(rateLimiterRegistry);
+                RetryMetrics retryMetrics = RetryMetrics.ofRetryRegistry(retryRegistry);
+                BulkheadMetrics bulkheadMetrics = BulkheadMetrics.ofBulkheadRegistry(bulkheadRegistry);
+                metricRegistry.registerAll(circuitBreakerMetrics);
+                metricRegistry.registerAll(rateLimiterMetrics);
+                metricRegistry.registerAll(retryMetrics);
+                metricRegistry.registerAll(bulkheadMetrics);
             }
 
             // prometheus
             if (config.isPrometheus() && injector.getExistingBinding(Key.get(CollectorRegistry.class)) != null) {
                 CollectorRegistry collectorRegistry = injector.getInstance(CollectorRegistry.class);
-                injector.getInstance(CircuitBreakerExports.class).register(collectorRegistry);
-                injector.getInstance(RateLimiterExports.class).register(collectorRegistry);
+                CircuitBreakerExports circuitBreakerExports = CircuitBreakerExports.ofCircuitBreakerRegistry(circuitBreakerRegistry);
+                RateLimiterExports rateLimiterExports = RateLimiterExports.ofRateLimiterRegistry(rateLimiterRegistry);
+                circuitBreakerExports.register(collectorRegistry);
+                rateLimiterExports.register(collectorRegistry);
             }
 
         }
