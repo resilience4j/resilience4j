@@ -20,14 +20,11 @@ import io.github.resilience4j.ratpack.Resilience4jModule
 import io.github.resilience4j.ratpack.recovery.RecoveryFunction
 import io.github.resilience4j.retry.RetryConfig
 import io.github.resilience4j.retry.RetryRegistry
-import io.reactivex.Flowable
-import io.reactivex.Observable
-import io.reactivex.Single
-import io.reactivex.functions.Consumer
-import io.reactivex.functions.Function
 import ratpack.exec.Promise
 import ratpack.test.embed.EmbeddedApp
 import ratpack.test.http.TestHttpClient
+import reactor.core.publisher.Flux
+import reactor.core.publisher.Mono
 import spock.lang.AutoCleanup
 import spock.lang.Specification
 import spock.lang.Unroll
@@ -37,6 +34,8 @@ import java.time.Duration
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.CompletionStage
 import java.util.concurrent.atomic.AtomicInteger
+import java.util.function.Consumer
+import java.util.function.Function
 
 import static ratpack.groovy.test.embed.GroovyEmbeddedApp.ratpack
 
@@ -101,50 +100,35 @@ class RetrySpec extends Specification {
                         render it
                     }
                 }
-                get('observable') { Something something ->
-                    something.retryObservable().subscribe {
+                get('Flux') { Something something ->
+                    something.retryFlux().subscribe {
+                        render it[0]
+                    }
+                }
+                get('FluxBad') { Something something ->
+                    something.retryFluxBad().subscribe {
                         render it
                     }
                 }
-                get('observableBad') { Something something ->
-                    something.retryObservableBad().subscribe {
+                get('FluxRecover') { Something something ->
+                    something.retryFluxRecovery().subscribe {
                         render it
                     }
                 }
-                get('observableRecover') { Something something ->
-                    something.retryObservableRecovery().subscribe {
-                        render it
-                    }
-                }
-                get('flowable') { Something something ->
-                    something.retryFlowable().subscribe {
-                        render it
-                    }
-                }
-                get('flowableBad') { Something something ->
-                    something.retryFlowableBad().subscribe {
-                        render it
-                    }
-                }
-                get('flowableRecover') { Something something ->
-                    something.retryFlowableRecovery().subscribe {
-                        render it
-                    }
-                }
-                get('single') { Something something ->
-                    something.retrySingle().subscribe({
+                get('Mono') { Something something ->
+                    something.retryMono().subscribe({
                         render it
                     } as Consumer<String>)
                 }
-                get('singleBad') { Something something ->
-                    something.retrySingleBad().subscribe({
+                get('MonoBad') { Something something ->
+                    something.retryMonoBad().subscribe({
                         render it
-                    } as Consumer<String>)
+                    } as Consumer<Void>)
                 }
-                get('singleRecover') { Something something ->
-                    something.retrySingleRecovery().subscribe({
+                get('MonoRecover') { Something something ->
+                    something.retryMonoRecovery().subscribe({
                         render it
-                    } as Consumer<String>)
+                    } as Consumer<Void>)
                 }
                 get('stage') { Something something ->
                     render something.retryStage().toCompletableFuture().get()
@@ -198,9 +182,8 @@ class RetrySpec extends Specification {
         where:
         path         | badPath         | recoverPath         | retryName | expectedText       | badStatus
         'promise'    | 'promiseBad'    | 'promiseRecover'    | 'test'    | 'retry promise'    | 500
-        'observable' | 'observableBad' | 'observableRecover' | 'test'    | 'retry observable' | 500
-        'flowable'   | 'flowableBad'   | 'flowableRecover'   | 'test'    | 'retry flowable'   | 500
-        'single'     | 'singleBad'     | 'singleRecover'     | 'test'    | 'retry single'     | 500
+        'Flux'       | 'FluxBad'       | 'FluxRecover'       | 'test'    | 'retry Flux'       | 500
+        'Mono'       | 'MonoBad'       | 'MonoRecover'       | 'test'    | 'retry Mono'       | 500
         'stage'      | 'stageBad'      | 'stageRecover'      | 'test'    | 'retry stage'      | 500
         'normal'     | 'normalBad'     | 'normalRecover'     | 'test'    | 'retry normal'     | 500
     }
@@ -246,89 +229,61 @@ class RetrySpec extends Specification {
         }
 
         @Retry(name = "test")
-        Observable<String> retryObservable() {
-            Observable.fromCallable {
+        Flux<String> retryFlux() {
+            Mono.fromCallable {
                 times.getAndIncrement()
-                "retry observable"
-            }
+                "retry Flux"
+            }.flux()
         }
 
         @Retry(name = "test")
-        Observable<Void> retryObservableBad() {
-            Observable.fromCallable {
+        Flux<Void> retryFluxBad() {
+            Mono.fromCallable {
                 times.getAndIncrement()
-                "retry observable"
-            }.map {
-                throw new Exception("retry observable bad")
-            }
+                "retry Flux"
+            }.map({
+                throw new Exception("retry Flux bad")
+            } as Function<String, Void>).flux()
         }
 
         @Retry(name = "test", recovery = MyRecoveryFunction)
-        Observable<Void> retryObservableRecovery() {
-            Observable.fromCallable {
+        Flux<Void> retryFluxRecovery() {
+            Mono.fromCallable {
                 times.getAndIncrement()
-                "retry observable"
-            }.map {
-                throw new Exception("retry observable bad")
-            }
-        }
-
-        @Retry(name = "test")
-        Flowable<String> retryFlowable() {
-            Flowable.fromCallable {
-                times.getAndIncrement()
-                "retry flowable"
-            }
-        }
-
-        @Retry(name = "test")
-        Flowable<Void> retryFlowableBad() {
-            Flowable.fromCallable {
-                times.getAndIncrement()
-                "retry flowable"
+                "retry Flux"
             }.map({
-                throw new Exception("retry flowable bad")
+                throw new Exception("retry Flux bad")
+            } as Function<String, Void>).flux()
+        }
+
+        @Retry(name = "test")
+        Mono<String> retryMono() {
+            Mono.fromCallable {
+                times.getAndIncrement()
+                "retry Mono"
+            }
+        }
+
+        @Retry(name = "test")
+        Mono<Void> retryMonoBad() {
+            Mono.fromCallable {
+                times.getAndIncrement()
+                "retry Mono"
+            }.map({
+                throw new Exception("retry Mono bad")
             } as Function<String, Void>)
         }
 
         @Retry(name = "test", recovery = MyRecoveryFunction)
-        Flowable<Void> retryFlowableRecovery() {
-            Flowable.fromCallable {
+        Mono<Void> retryMonoRecovery() {
+            Mono.fromCallable {
                 times.getAndIncrement()
-                "retry flowable"
+                "retry Mono"
             }.map({
-                throw new Exception("retry flowable bad")
+                throw new Exception("retry Mono bad")
             } as Function<String, Void>)
         }
-        
-        @Retry(name = "test")
-        Single<String> retrySingle() {
-            Single.fromCallable {
-                times.getAndIncrement()
-                "retry single"
-            }
-        }
 
-        @Retry(name = "test")
-        Single<Void> retrySingleBad() {
-            Single.fromCallable {
-                times.getAndIncrement()
-                "retry single"
-            }.map {
-                throw new Exception("retry single bad")
-            }
-        }
-
-        @Retry(name = "test", recovery = MyRecoveryFunction)
-        Single<Void> retrySingleRecovery() {
-            Single.fromCallable {
-                times.getAndIncrement()
-                "retry single"
-            }.map {
-                throw new Exception("retry single bad")
-            }
-        }
-        
         @Retry(name = "test")
         CompletionStage<String> retryStage() {
             CompletableFuture.supplyAsync {
