@@ -18,15 +18,15 @@ package io.github.resilience4j.ratpack.bulkhead;
 import com.google.inject.Inject;
 import io.github.resilience4j.bulkhead.BulkheadFullException;
 import io.github.resilience4j.bulkhead.BulkheadRegistry;
-import io.github.resilience4j.bulkhead.operator.BulkheadOperator;
 import io.github.resilience4j.ratpack.recovery.RecoveryFunction;
-import io.reactivex.Flowable;
-import io.reactivex.Observable;
-import io.reactivex.Single;
+import io.github.resilience4j.reactor.bulkhead.operator.BulkheadOperator;
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
 import ratpack.exec.Promise;
 import ratpack.util.Exceptions;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
@@ -61,25 +61,18 @@ public class BulkheadMethodInterceptor implements MethodInterceptor {
                 result = result.transform(transformer);
             }
             return result;
-        } else if (Observable.class.isAssignableFrom(returnType)) {
-            Observable<?> result = (Observable<?>) invocation.proceed();
+        } else if (Flux.class.isAssignableFrom(returnType)) {
+            Flux<?> result = (Flux<?>) invocation.proceed();
             if (result != null) {
-                BulkheadOperator operator = BulkheadOperator.of(bulkhead);
-                result = result.lift(operator).onErrorReturn(t -> recoveryFunction.apply((Throwable) t));
+                BulkheadOperator operator = BulkheadOperator.of(bulkhead, Schedulers.immediate());
+                result = recoveryFunction.onErrorResume(result.transform(operator));
             }
             return result;
-        } else if (Flowable.class.isAssignableFrom(returnType)) {
-            Flowable<?> result = (Flowable<?>) invocation.proceed();
+        } else if (Mono.class.isAssignableFrom(returnType)) {
+            Mono<?> result = (Mono<?>) invocation.proceed();
             if (result != null) {
-                BulkheadOperator operator = BulkheadOperator.of(bulkhead);
-                result = result.lift(operator).onErrorReturn(t -> recoveryFunction.apply((Throwable) t));
-            }
-            return result;
-        } else if (Single.class.isAssignableFrom(returnType)) {
-            Single<?> result = (Single<?>) invocation.proceed();
-            if (result != null) {
-                BulkheadOperator operator = BulkheadOperator.of(bulkhead);
-                result = result.lift(operator).onErrorReturn(t -> recoveryFunction.apply((Throwable) t));
+                BulkheadOperator operator = BulkheadOperator.of(bulkhead, Schedulers.immediate());
+                result = recoveryFunction.onErrorResume(result.transform(operator));
             }
             return result;
         } else if (CompletionStage.class.isAssignableFrom(returnType)) {

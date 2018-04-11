@@ -16,14 +16,13 @@
 
 package io.github.resilience4j.ratpack.ratelimiter.endpoint;
 
-import io.github.resilience4j.adapter.RxJava2Adapter;
 import io.github.resilience4j.consumer.CircularEventConsumer;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
 import io.github.resilience4j.ratelimiter.event.RateLimiterEvent;
 import io.github.resilience4j.ratpack.Resilience4jConfig;
-import io.reactivex.Flowable;
+import io.github.resilience4j.ratpack.adapter.ReactorAdapter;
 import io.vavr.collection.Seq;
 import ratpack.exec.Promise;
 import ratpack.func.Action;
@@ -31,6 +30,7 @@ import ratpack.func.Function;
 import ratpack.handling.Chain;
 import ratpack.jackson.Jackson;
 import ratpack.sse.ServerSentEvents;
+import reactor.core.publisher.Flux;
 
 import javax.inject.Inject;
 import java.util.Comparator;
@@ -64,9 +64,9 @@ public class RateLimiterChain implements Action<Chain> {
                     }).then(r -> ctx.render(Jackson.json(r)))
             );
             chain1.get("stream/events", ctx -> {
-                Seq<Flowable<RateLimiterEvent>> eventStreams = rateLimiterRegistry.getAllRateLimiters().map(rateLimiter -> RxJava2Adapter.toFlowable(rateLimiter.getEventPublisher()));
+                Seq<Flux<RateLimiterEvent>> eventStreams = rateLimiterRegistry.getAllRateLimiters().map(rateLimiter -> ReactorAdapter.toFlux(rateLimiter.getEventPublisher()));
                 Function<RateLimiterEvent, String> data = r -> Jackson.getObjectWriter(chain1.getRegistry()).writeValueAsString(RateLimiterEventDTO.createRateLimiterEventDTO(r));
-                ServerSentEvents events = ServerSentEvents.serverSentEvents(Flowable.merge(eventStreams), e -> e.id(RateLimiterEvent::getRateLimiterName).event(c -> c.getEventType().name()).data(data));
+                ServerSentEvents events = ServerSentEvents.serverSentEvents(Flux.merge(eventStreams), e -> e.id(RateLimiterEvent::getRateLimiterName).event(c -> c.getEventType().name()).data(data));
                 ctx.render(events);
             });
             chain1.get("events/:name", ctx -> {
@@ -87,7 +87,7 @@ public class RateLimiterChain implements Action<Chain> {
                         .getOrElseThrow(() ->
                                 new IllegalArgumentException(String.format("rate limiter with name %s not found", rateLimiterName)));
                 Function<RateLimiterEvent, String> data = r -> Jackson.getObjectWriter(chain1.getRegistry()).writeValueAsString(RateLimiterEventDTO.createRateLimiterEventDTO(r));
-                ServerSentEvents events = ServerSentEvents.serverSentEvents(RxJava2Adapter.toFlowable(rateLimiter.getEventPublisher()), e -> e.id(RateLimiterEvent::getRateLimiterName).event(c -> c.getEventType().name()).data(data));
+                ServerSentEvents events = ServerSentEvents.serverSentEvents(ReactorAdapter.toFlux(rateLimiter.getEventPublisher()), e -> e.id(RateLimiterEvent::getRateLimiterName).event(c -> c.getEventType().name()).data(data));
                 ctx.render(events);
             });
             chain1.get("events/:name/:type", ctx -> {
@@ -110,7 +110,7 @@ public class RateLimiterChain implements Action<Chain> {
                         .find(rL -> rL.getName().equals(rateLimiterName))
                         .getOrElseThrow(() ->
                                 new IllegalArgumentException(String.format("rate limiter with name %s not found", rateLimiterName)));
-                Flowable<RateLimiterEvent> eventStream = RxJava2Adapter.toFlowable(rateLimiter.getEventPublisher())
+                Flux<RateLimiterEvent> eventStream = ReactorAdapter.toFlux(rateLimiter.getEventPublisher())
                         .filter(event -> event.getEventType() == RateLimiterEvent.Type.valueOf(eventType.toUpperCase()));
                 Function<RateLimiterEvent, String> data = r -> Jackson.getObjectWriter(chain1.getRegistry()).writeValueAsString(RateLimiterEventDTO.createRateLimiterEventDTO(r));
                 ServerSentEvents events = ServerSentEvents.serverSentEvents(eventStream, e -> e.id(RateLimiterEvent::getRateLimiterName).event(c -> c.getEventType().name()).data(data));

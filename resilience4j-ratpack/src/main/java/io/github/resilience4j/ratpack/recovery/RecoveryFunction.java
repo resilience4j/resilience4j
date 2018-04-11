@@ -16,6 +16,33 @@
 package io.github.resilience4j.ratpack.recovery;
 
 import ratpack.func.Function;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 public interface RecoveryFunction<O> extends Function<Throwable, O> {
+
+    default Flux<? super O> onErrorResume(Flux<? super O> flux) {
+        return flux.onErrorResume(t -> {
+            O fallbackValue;
+            try {
+                fallbackValue = apply(t);
+            } catch (Exception e) {
+                return Flux.error(e);
+            }
+            return Flux.just(fallbackValue);
+        });
+    }
+
+    default Mono<? super O> onErrorResume(Mono<? super O> mono) {
+        return mono.onErrorResume(t -> {
+            O fallbackValue;
+            try {
+                fallbackValue = apply(t);
+            } catch (Exception e) {
+                return Mono.error(e);
+            }
+            return Mono.just(fallbackValue);
+        });
+    }
+
 }
