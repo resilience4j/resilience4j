@@ -15,14 +15,13 @@
  */
 package io.github.resilience4j.ratpack.bulkhead.endpoint;
 
-import io.github.resilience4j.adapter.RxJava2Adapter;
 import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.bulkhead.BulkheadRegistry;
 import io.github.resilience4j.bulkhead.event.BulkheadEvent;
 import io.github.resilience4j.consumer.CircularEventConsumer;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
 import io.github.resilience4j.ratpack.Resilience4jConfig;
-import io.reactivex.Flowable;
+import io.github.resilience4j.ratpack.adapter.ReactorAdapter;
 import io.vavr.collection.Seq;
 import ratpack.exec.Promise;
 import ratpack.func.Action;
@@ -30,6 +29,7 @@ import ratpack.func.Function;
 import ratpack.handling.Chain;
 import ratpack.jackson.Jackson;
 import ratpack.sse.ServerSentEvents;
+import reactor.core.publisher.Flux;
 
 import javax.inject.Inject;
 import java.util.Comparator;
@@ -63,9 +63,9 @@ public class BulkheadChain implements Action<Chain> {
                     }).then(r -> ctx.render(Jackson.json(r)))
             );
             chain1.get("stream/events", ctx -> {
-                Seq<Flowable<BulkheadEvent>> eventStreams = bulkheadRegistry.getAllBulkheads().map(bulkhead -> RxJava2Adapter.toFlowable(bulkhead.getEventPublisher()));
+                Seq<Flux<BulkheadEvent>> eventStreams = bulkheadRegistry.getAllBulkheads().map(bulkhead -> ReactorAdapter.toFlux(bulkhead.getEventPublisher()));
                 Function<BulkheadEvent, String> data = b -> Jackson.getObjectWriter(chain1.getRegistry()).writeValueAsString(BulkheadEventDTO.createEventDTO(b));
-                ServerSentEvents events = ServerSentEvents.serverSentEvents(Flowable.merge(eventStreams), e -> e.id(BulkheadEvent::getBulkheadName).event(c -> c.getEventType().name()).data(data));
+                ServerSentEvents events = ServerSentEvents.serverSentEvents(Flux.merge(eventStreams), e -> e.id(BulkheadEvent::getBulkheadName).event(c -> c.getEventType().name()).data(data));
                 ctx.render(events);
             });
             chain1.get("events/:name", ctx -> {
@@ -84,7 +84,7 @@ public class BulkheadChain implements Action<Chain> {
                 Bulkhead bulkhead = bulkheadRegistry.getAllBulkheads().find(b -> b.getName().equals(bulkheadName))
                         .getOrElseThrow(() -> new IllegalArgumentException(String.format("bulkhead with name %s not found", bulkheadName)));
                 Function<BulkheadEvent, String> data = b -> Jackson.getObjectWriter(chain1.getRegistry()).writeValueAsString(BulkheadEventDTO.createEventDTO(b));
-                ServerSentEvents events = ServerSentEvents.serverSentEvents(RxJava2Adapter.toFlowable(bulkhead.getEventPublisher()), e -> e.id(BulkheadEvent::getBulkheadName).event(c -> c.getEventType().name()).data(data));
+                ServerSentEvents events = ServerSentEvents.serverSentEvents(ReactorAdapter.toFlux(bulkhead.getEventPublisher()), e -> e.id(BulkheadEvent::getBulkheadName).event(c -> c.getEventType().name()).data(data));
                 ctx.render(events);
             });
             chain1.get("events/:name/:type", ctx -> {
@@ -105,7 +105,7 @@ public class BulkheadChain implements Action<Chain> {
                 String eventType = ctx.getPathTokens().get("type");
                 Bulkhead bulkhead = bulkheadRegistry.getAllBulkheads().find(b -> b.getName().equals(bulkheadName))
                         .getOrElseThrow(() -> new IllegalArgumentException(String.format("bulkhead with name %s not found", bulkheadName)));
-                Flowable<BulkheadEvent> eventStream = RxJava2Adapter.toFlowable(bulkhead.getEventPublisher())
+                Flux<BulkheadEvent> eventStream = ReactorAdapter.toFlux(bulkhead.getEventPublisher())
                         .filter(event -> event.getEventType() == BulkheadEvent.Type.valueOf(eventType.toUpperCase()));
                 Function<BulkheadEvent, String> data = b -> Jackson.getObjectWriter(chain1.getRegistry()).writeValueAsString(BulkheadEventDTO.createEventDTO(b));
                 ServerSentEvents events = ServerSentEvents.serverSentEvents(eventStream, e -> e.id(BulkheadEvent::getBulkheadName).event(c -> c.getEventType().name()).data(data));

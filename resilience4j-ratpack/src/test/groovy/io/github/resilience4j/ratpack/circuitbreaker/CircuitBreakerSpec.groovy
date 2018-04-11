@@ -20,17 +20,13 @@ import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry
 import io.github.resilience4j.ratelimiter.RateLimiterConfig
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry
-import io.github.resilience4j.ratpack.recovery.RecoveryFunction
 import io.github.resilience4j.ratpack.Resilience4jModule
-import io.github.resilience4j.ratpack.circuitbreaker.CircuitBreaker
-import io.reactivex.Flowable
-import io.reactivex.Observable
-import io.reactivex.Single
-import io.reactivex.functions.Consumer
-import io.reactivex.functions.Function
+import io.github.resilience4j.ratpack.recovery.RecoveryFunction
 import ratpack.exec.Promise
 import ratpack.test.embed.EmbeddedApp
 import ratpack.test.http.TestHttpClient
+import reactor.core.publisher.Flux
+import reactor.core.publisher.Mono
 import spock.lang.AutoCleanup
 import spock.lang.Specification
 import spock.lang.Unroll
@@ -38,6 +34,8 @@ import spock.lang.Unroll
 import java.time.Duration
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.CompletionStage
+import java.util.function.Consumer
+import java.util.function.Function
 
 import static ratpack.groovy.test.embed.GroovyEmbeddedApp.ratpack
 
@@ -124,33 +122,18 @@ class CircuitBreakerSpec extends Specification {
                         render it
                     }
                 }
-                get('observe') { Something something ->
-                    something.breakerObserve().subscribe {
-                        render it
-                    }
-                }
-                get('observeBad') { Something something ->
-                    something.breakerObserveBad().subscribe {
-                        render it
-                    }
-                }
-                get('observeRecover') { Something something ->
-                    something.breakerObserveRecover().subscribe {
-                        render it
-                    }
-                }
-                get('single') { Something something ->
-                    something.breakerSingle().subscribe({
+                get('Mono') { Something something ->
+                    something.breakerMono().subscribe({
                         render it
                     } as Consumer<String>)
                 }
-                get('singleBad') { Something something ->
-                    something.breakerSingleBad().subscribe({
+                get('MonoBad') { Something something ->
+                    something.breakerMonoBad().subscribe({
                         render it
                     } as Consumer<Void>)
                 }
-                get('singleRecover') { Something something ->
-                    something.breakerSingleRecover().subscribe({
+                get('MonoRecover') { Something something ->
+                    something.breakerMonoRecover().subscribe({
                         render it
                     } as Consumer<Void>)
                 }
@@ -201,8 +184,7 @@ class CircuitBreakerSpec extends Specification {
         'promise' | 'promiseBad' | 'promiseRecover' | 'test'      | 'breaker promise'
         'stage'   | 'stageBad'   | 'stageRecover'   | 'test'      | 'breaker stage'
         'flow'    | 'flowBad'    | 'flowRecover'    | 'test'      | 'breaker flow'
-        'observe' | 'observeBad' | 'observeRecover' | 'test'      | 'breaker observe'
-        'single'  | 'singleBad'  | 'singleRecover'  | 'test'      | 'breaker single'
+        'Mono'    | 'MonoBad'    | 'MonoRecover'    | 'test'      | 'breaker Mono'
         'normal'  | 'normalBad'  | 'normalRecover'  | 'test'      | 'breaker normal'
     }
 
@@ -254,48 +236,33 @@ class CircuitBreakerSpec extends Specification {
         }
 
         @CircuitBreaker(name = "test")
-        Flowable<String> breakerFlow() {
-            Flowable.just("breaker flow")
+        Flux<String> breakerFlow() {
+            Flux.just("breaker flow")
         }
 
         @CircuitBreaker(name = "test")
-        Flowable<Void> breakerFlowBad() {
-            Flowable.just("breaker flow").map({ throw new Exception("bad") } as Function<String, Void>)
+        Flux<Void> breakerFlowBad() {
+            Flux.just("breaker flow").map({ throw new Exception("bad") } as Function<String, Void>)
         }
 
         @CircuitBreaker(name = "test", recovery = MyRecoveryFunction)
-        Flowable<Void> breakerFlowRecover() {
-            Flowable.just("breaker flow").map({ throw new Exception("bad") } as Function<String, Void>)
+        Flux<Void> breakerFlowRecover() {
+            Flux.just("breaker flow").map({ throw new Exception("bad") } as Function<String, Void>)
         }
 
         @CircuitBreaker(name = "test")
-        Observable<String> breakerObserve() {
-            Observable.just("breaker observe")
+        Mono<String> breakerMono() {
+            Mono.just("breaker Mono")
         }
 
         @CircuitBreaker(name = "test")
-        Observable<Void> breakerObserveBad() {
-            Observable.just("breaker observe").map({ throw new Exception("bad") } as Function<String, Void>)
+        Mono<Void> breakerMonoBad() {
+            Mono.just("breaker Mono").map({ throw new Exception("bad") } as Function<String, Void>)
         }
 
         @CircuitBreaker(name = "test", recovery = MyRecoveryFunction)
-        Observable<Void> breakerObserveRecover() {
-            Observable.just("breaker observe").map({ throw new Exception("bad") } as Function<String, Void>)
-        }
-
-        @CircuitBreaker(name = "test")
-        Single<String> breakerSingle() {
-            Single.just("breaker single")
-        }
-
-        @CircuitBreaker(name = "test")
-        Single<Void> breakerSingleBad() {
-            Single.just("breaker single").map({ throw new Exception("bad") } as Function<String, Void>)
-        }
-
-        @CircuitBreaker(name = "test", recovery = MyRecoveryFunction)
-        Single<Void> breakerSingleRecover() {
-            Single.just("breaker single").map({ throw new Exception("bad") } as Function<String, Void>)
+        Mono<Void> breakerMonoRecover() {
+            Mono.just("breaker Mono").map({ throw new Exception("bad") } as Function<String, Void>)
         }
 
         @CircuitBreaker(name = "test")

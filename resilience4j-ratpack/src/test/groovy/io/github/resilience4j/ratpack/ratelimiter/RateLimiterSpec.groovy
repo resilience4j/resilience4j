@@ -19,17 +19,13 @@ package io.github.resilience4j.ratpack.ratelimiter
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry
 import io.github.resilience4j.ratelimiter.RateLimiterConfig
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry
-import io.github.resilience4j.ratpack.recovery.RecoveryFunction
 import io.github.resilience4j.ratpack.Resilience4jModule
-import io.github.resilience4j.ratpack.ratelimiter.RateLimiter
-import io.reactivex.Flowable
-import io.reactivex.Observable
-import io.reactivex.Single
-import io.reactivex.functions.Consumer
-import io.reactivex.functions.Function
+import io.github.resilience4j.ratpack.recovery.RecoveryFunction
 import ratpack.exec.Promise
 import ratpack.test.embed.EmbeddedApp
 import ratpack.test.http.TestHttpClient
+import reactor.core.publisher.Flux
+import reactor.core.publisher.Mono
 import spock.lang.AutoCleanup
 import spock.lang.Specification
 import spock.lang.Unroll
@@ -37,6 +33,7 @@ import spock.lang.Unroll
 import java.time.Duration
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.CompletionStage
+import java.util.function.Function
 
 import static ratpack.groovy.test.embed.GroovyEmbeddedApp.ratpack
 
@@ -90,25 +87,18 @@ class RateLimiterSpec extends Specification {
                         render it
                     }
                 }
-                get('observable') { Something something ->
-                    something.rateLimiterObservable().subscribe {
-                        render it
-                    }{
-                        response.status(500).send(it.cause.cause.toString())
-                    }
-                }
-                get('flowable') { Something something ->
-                    something.rateLimiterFlowable().subscribe {
+                get('Flux') { Something something ->
+                    something.rateLimiterFlux().subscribe {
                         render it
                     } {
-                        response.status(500).send(it.cause.cause.toString())
+                        response.status(500).send(it.toString())
                     }
                 }
-                get('single') { Something something ->
-                    something.rateLimiterSingle().subscribe({
+                get('Mono') { Something something ->
+                    something.rateLimiterMono().subscribe{
                         render it
-                    } as Consumer<String>) {
-                        response.status(500).send(it.cause.cause.toString())
+                    } {
+                        response.status(500).send(it.toString())
                     }
                 }
                 get('stage') { Something something ->
@@ -134,9 +124,8 @@ class RateLimiterSpec extends Specification {
         where:
         path         | rateLimiterName
         'promise'    | 'test'
-        'observable' | 'test'
-        'flowable'   | 'test'
-        'single'     | 'test'
+        'Flux'       | 'test'
+        'Mono'       | 'test'
         'stage'      | 'test'
         'normal'     | 'test'
     }
@@ -157,25 +146,18 @@ class RateLimiterSpec extends Specification {
                         render it
                     }
                 }
-                get('observable') { Something something ->
-                    something.rateLimiterObservableException().subscribe {
+                get('Flux') { Something something ->
+                    something.rateLimiterFluxException().subscribe {
                         render it
                     } {
-                        response.status(500).send(it.cause.cause.toString())
+                        response.status(500).send(it.toString())
                     }
                 }
-                get('flowable') { Something something ->
-                    something.rateLimiterFlowableException().subscribe {
+                get('Mono') { Something something ->
+                    something.rateLimiterMonoException().subscribe{
                         render it
                     } {
-                        response.status(500).send(it.cause.cause.toString())
-                    }
-                }
-                get('single') { Something something ->
-                    something.rateLimiterSingleException().subscribe({
-                        render it
-                    } as Consumer<Void>) {
-                        response.status(500).send(it.cause.cause.toString())
+                        response.status(500).send(it.toString())
                     }
                 }
                 get('stage') { Something something ->
@@ -199,13 +181,12 @@ class RateLimiterSpec extends Specification {
         actual.statusCode == 500
 
         where:
-        path         | rateLimiterName
-        'promise'    | 'test'
-        'observable' | 'test'
-        'flowable'   | 'test'
-        'single'     | 'test'
-        'stage'      | 'test'
-        'normal'     | 'test'
+        path      | rateLimiterName
+        'promise' | 'test'
+        'Flux'    | 'test'
+        'Mono'    | 'test'
+        'stage'   | 'test'
+        'normal'  | 'test'
     }
 
     def "test rate limit a method via annotation with fallback"() {
@@ -224,20 +205,15 @@ class RateLimiterSpec extends Specification {
                         render it
                     }
                 }
-                get('observable') { Something something ->
-                    something.rateLimiterObservableFallback().subscribe {
+                get('Flux') { Something something ->
+                    something.rateLimiterFluxFallback().subscribe {
                         render it
                     }
                 }
-                get('flowable') { Something something ->
-                    something.rateLimiterFlowableFallback().subscribe {
+                get('Mono') { Something something ->
+                    something.rateLimiterMonoFallback().subscribe {
                         render it
                     }
-                }
-                get('single') { Something something ->
-                    something.rateLimiterSingleFallback().subscribe({
-                        render it
-                    } as Consumer<Void>)
                 }
                 get('stage') { Something something ->
                     render something.rateLimiterStageFallback().toCompletableFuture().get()
@@ -260,13 +236,12 @@ class RateLimiterSpec extends Specification {
         actual.statusCode == 200
 
         where:
-        path         | rateLimiterName
-        'promise'    | 'test'
-        'observable' | 'test'
-        'flowable'   | 'test'
-        'single'     | 'test'
-        'stage'      | 'test'
-        'normal'     | 'test'
+        path      | rateLimiterName
+        'promise' | 'test'
+        'Flux'    | 'test'
+        'Mono'    | 'test'
+        'stage'   | 'test'
+        'normal'  | 'test'
     }
 
     // 10 events / 1 minute
@@ -288,18 +263,13 @@ class RateLimiterSpec extends Specification {
         }
 
         @RateLimiter(name = "test")
-        Observable<String> rateLimiterObservable() {
-            Observable.just("rateLimiter observable")
+        Flux<String> rateLimiterFlux() {
+            Flux.just("rateLimiter Flux")
         }
 
         @RateLimiter(name = "test")
-        Flowable<String> rateLimiterFlowable() {
-            Flowable.just("rateLimiter flowable")
-        }
-
-        @RateLimiter(name = "test")
-        Single<String> rateLimiterSingle() {
-            Single.just("rateLimiter single")
+        Mono<String> rateLimiterMono() {
+            Mono.just("rateLimiter Mono")
         }
 
         @RateLimiter(name = "test")
@@ -320,18 +290,13 @@ class RateLimiterSpec extends Specification {
         }
 
         @RateLimiter(name = "test")
-        Observable<Void> rateLimiterObservableException() {
-            Observable.just("rateLimiter observable").map({ throw new Exception("bad") } as Function<String, Void>)
+        Flux<Void> rateLimiterFluxException() {
+            Flux.just("rateLimiter Flux").map({ throw new Exception("bad") } as Function<String, Void>)
         }
 
         @RateLimiter(name = "test")
-        Flowable<Void> rateLimiterFlowableException() {
-            Flowable.just("rateLimiter flowable").map({ throw new Exception("bad") } as Function<String, Void>)
-        }
-
-        @RateLimiter(name = "test")
-        Single<Void> rateLimiterSingleException() {
-            Single.just("rateLimiter single").map({ throw new Exception("bad") } as Function<String, Void>)
+        Mono<Void> rateLimiterMonoException() {
+            Mono.just("rateLimiter Mono").map({ throw new Exception("bad") } as Function<String, Void>)
         }
 
         @RateLimiter(name = "test")
@@ -352,18 +317,13 @@ class RateLimiterSpec extends Specification {
         }
 
         @RateLimiter(name = "test", recovery = MyRecoveryFunction)
-        Observable<Void> rateLimiterObservableFallback() {
-            Observable.just("rateLimiter observable").map({ throw new Exception("bad") } as Function<String, Void>)
+        Flux<Void> rateLimiterFluxFallback() {
+            Flux.just("rateLimiter Flux").map({ throw new Exception("bad") } as Function<String, Void>)
         }
 
         @RateLimiter(name = "test", recovery = MyRecoveryFunction)
-        Flowable<Void> rateLimiterFlowableFallback() {
-            Flowable.just("rateLimiter flowable").map({ throw new Exception("bad") } as Function<String, Void>)
-        }
-
-        @RateLimiter(name = "test", recovery = MyRecoveryFunction)
-        Single<Void> rateLimiterSingleFallback() {
-            Single.just("rateLimiter single").map({ throw new Exception("bad") } as Function<String, Void>)
+        Mono<Void> rateLimiterMonoFallback() {
+            Mono.just("rateLimiter Mono").map({ throw new Exception("bad") } as Function<String, Void>)
         }
 
         @RateLimiter(name = "test", recovery = MyRecoveryFunction)
