@@ -19,7 +19,9 @@ import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.Builder;
 
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class CircuitBreakerProperties {
@@ -29,6 +31,7 @@ public class CircuitBreakerProperties {
     // you explicitly define aspects CircuitBreaker and RateLimiter execution sequence.
     private int circuitBreakerAspectOrder = Integer.MAX_VALUE - 1;
     private Map<String, BackendProperties> backends = new HashMap<>();
+    @SuppressWarnings("unchecked") private static final Class<? extends Throwable>[] EMPTY = new Class[0];
 
     public int getCircuitBreakerAspectOrder() {
         return circuitBreakerAspectOrder;
@@ -50,29 +53,37 @@ public class CircuitBreakerProperties {
         return buildCircuitBreakerConfig(backendProperties).build();
     }
 
-    public Builder buildCircuitBreakerConfig(BackendProperties backendProperties) {
-        if (backendProperties == null) {
+    public Builder buildCircuitBreakerConfig(BackendProperties properties) {
+        if (properties == null) {
             return new Builder();
         }
 
-        Builder circuitBreakerConfigBuilder = CircuitBreakerConfig.custom();
+        Builder builder = CircuitBreakerConfig.custom();
 
-        if (backendProperties.getWaitInterval() != null) {
-            circuitBreakerConfigBuilder.waitDurationInOpenState(Duration.ofMillis(backendProperties.getWaitInterval()));
+        if (properties.getWaitInterval() != null) {
+            builder.waitDurationInOpenState(Duration.ofMillis(properties.getWaitInterval()));
         }
 
-        if (backendProperties.getFailureRateThreshold() != null) {
-            circuitBreakerConfigBuilder.failureRateThreshold(backendProperties.getFailureRateThreshold());
+        if (properties.getFailureRateThreshold() != null) {
+            builder.failureRateThreshold(properties.getFailureRateThreshold());
         }
 
-        if (backendProperties.getRingBufferSizeInClosedState() != null) {
-            circuitBreakerConfigBuilder.ringBufferSizeInClosedState(backendProperties.getRingBufferSizeInClosedState());
+        if (properties.getRingBufferSizeInClosedState() != null) {
+            builder.ringBufferSizeInClosedState(properties.getRingBufferSizeInClosedState());
         }
 
-        if (backendProperties.getRingBufferSizeInHalfOpenState() != null) {
-            circuitBreakerConfigBuilder.ringBufferSizeInHalfOpenState(backendProperties.getRingBufferSizeInHalfOpenState());
+        if (properties.getRingBufferSizeInHalfOpenState() != null) {
+            builder.ringBufferSizeInHalfOpenState(properties.getRingBufferSizeInHalfOpenState());
         }
-        return circuitBreakerConfigBuilder;
+
+        if(!properties.getInclude().isEmpty()){
+            builder.recordExceptions(properties.getInclude().toArray(EMPTY));
+        }
+
+        if(!properties.getExclude().isEmpty()){
+            builder.ignoreExceptions(properties.getExclude().toArray(EMPTY));
+        }
+        return builder;
     }
 
     public Map<String, BackendProperties> getBackends() {
@@ -95,6 +106,10 @@ public class CircuitBreakerProperties {
         private Integer eventConsumerBufferSize = 100;
 
         private Boolean registerHealthIndicator = false;
+
+        private List<Class<? extends Throwable>> include = new ArrayList<>();
+
+        private List<Class<? extends Throwable>> exclude = new ArrayList<>();
 
 
         /**
@@ -183,6 +198,22 @@ public class CircuitBreakerProperties {
 
         public void setRegisterHealthIndicator(Boolean registerHealthIndicator) {
             this.registerHealthIndicator = registerHealthIndicator;
+        }
+
+        public List<Class<? extends Throwable>> getInclude() {
+            return new ArrayList<>(include);
+        }
+
+        public void setInclude(List<Class<? extends Throwable>> include) {
+            this.include = new ArrayList<>(include);
+        }
+
+        public List<Class<? extends Throwable>> getExclude() {
+            return new ArrayList<>(exclude);
+        }
+
+        public void setExclude(List<Class<? extends Throwable>> exclude) {
+            this.exclude = new ArrayList<>(exclude);
         }
     }
 

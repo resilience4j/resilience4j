@@ -8,6 +8,7 @@ resilience4j.circuitbreaker:
             failureRateThreshold: 70
             eventConsumerBufferSize: 10
             registerHealthIndicator: true
+            exclude: java.lang.RuntimeException
         backendB:
             ringBufferSizeInClosedState: 10
             ringBufferSizeInHalfOpenState: 5
@@ -15,6 +16,7 @@ resilience4j.circuitbreaker:
             failureRateThreshold: 50
             eventConsumerBufferSize: 10
             registerHealthIndicator: true
+            include: java.lang.RuntimeException
 
 resilience4j.ratelimiter:
     rateLimiterAspectOrder: 401
