@@ -92,8 +92,8 @@ class RetryChainSpec extends Specification {
         def dto = mapper.readValue(actual.body.text, RetryEventsEndpointResponse)
 
         then: "it works"
-        dto.retryEvents.size() == 2
-        dto.retryEvents.get(1).retryEventType == RetryEvent.Type.ERROR
+        dto.retryEvents.size() == 6
+        dto.retryEvents.get(5).retryEventType == RetryEvent.Type.ERROR
         ['test1', 'test2'].collect { retryRegistry.retry(it).metrics }.each {
             assert it.numberOfFailedCallsWithoutRetryAttempt == 0
             assert it.numberOfFailedCallsWithRetryAttempt == 1
@@ -106,16 +106,24 @@ class RetryChainSpec extends Specification {
         dto = mapper.readValue(actual.body.text, RetryEventsEndpointResponse)
 
         then: "it works"
-        dto.retryEvents.size() == 1
-        dto.retryEvents.get(0).retryEventType == RetryEvent.Type.ERROR
+        dto.retryEvents.size() == 3
+        dto.retryEvents.get(2).retryEventType == RetryEvent.Type.ERROR
 
-        when: "we get events for a single retry by type"
+        when: "we get events for a single retry by type error"
         actual = client.get('retry/events/test1/error')
         dto = mapper.readValue(actual.body.text, RetryEventsEndpointResponse)
 
         then: "it works"
         dto.retryEvents.size() == 1
         dto.retryEvents.get(0).retryEventType == RetryEvent.Type.ERROR
+
+        when: "we get events for a single retry by type retry"
+        actual = client.get('retry/events/test1/retry')
+        dto = mapper.readValue(actual.body.text, RetryEventsEndpointResponse)
+
+        then: "it works"
+        dto.retryEvents.size() == 2
+        dto.retryEvents.get(0).retryEventType == RetryEvent.Type.RETRY
     }
 
     def "test stream events"() {

@@ -26,7 +26,9 @@ import org.slf4j.Logger;
 
 import javax.xml.ws.WebServiceException;
 
-import static io.vavr.API.*;
+import static io.vavr.API.$;
+import static io.vavr.API.Case;
+import static io.vavr.API.Match;
 import static io.vavr.Predicates.instanceOf;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
@@ -70,6 +72,21 @@ public class RetryEventPublisherTest {
 
         then(helloWorldService).should(times(2)).returnHelloWorld();
         then(logger).should(times(1)).info("SUCCESS");
+    }
+
+    @Test
+    public void shouldConsumeOnRetryEvent() {
+        given(helloWorldService.returnHelloWorld())
+                .willThrow(new WebServiceException("BAM!"));
+
+        retry.getEventPublisher()
+            .onRetry(event ->
+                    logger.info(event.getEventType().toString()));
+
+        Try.ofSupplier(Retry.decorateSupplier(retry, helloWorldService::returnHelloWorld));
+
+        then(helloWorldService).should(times(3)).returnHelloWorld();
+        then(logger).should(times(2)).info("RETRY");
     }
 
     @Test

@@ -7,6 +7,7 @@ import io.github.resilience4j.retry.RetryConfig;
 import io.github.resilience4j.retry.event.RetryEvent;
 import io.github.resilience4j.retry.event.RetryOnErrorEvent;
 import io.github.resilience4j.retry.event.RetryOnIgnoredErrorEvent;
+import io.github.resilience4j.retry.event.RetryOnRetryEvent;
 import io.github.resilience4j.retry.event.RetryOnSuccessEvent;
 
 import java.util.concurrent.atomic.AtomicInteger;
@@ -74,7 +75,9 @@ public class AsyncRetryImpl implements AsyncRetry {
                 return -1;
             }
 
-            return intervalFunction.apply(attempt);
+            long interval = intervalFunction.apply(attempt);
+            publishRetryEvent(()-> new RetryOnRetryEvent(getName(), attempt, throwable, interval));
+            return interval;
         }
     }
 
@@ -141,6 +144,12 @@ public class AsyncRetryImpl implements AsyncRetry {
         @Override
         public void consumeEvent(RetryEvent event) {
             super.processEvent(event);
+        }
+
+        @Override
+        public EventPublisher onRetry(EventConsumer<RetryOnRetryEvent> onRetryEventConsumer) {
+            registerConsumer(RetryOnRetryEvent.class, onRetryEventConsumer);
+            return this;
         }
 
         @Override
