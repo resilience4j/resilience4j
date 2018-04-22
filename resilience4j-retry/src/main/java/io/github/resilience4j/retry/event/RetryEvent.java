@@ -64,6 +64,8 @@ public interface RetryEvent {
      * Event types which are created by a Retry.
      */
     enum Type {
+        /** A RetryEvent which informs that a call has been tried, failed and will now be retried */
+        RETRY,
         /** A RetryEvent which informs that a call has been retried, but still failed */
         ERROR,
         /** A RetryEvent which informs that a call has been successful */

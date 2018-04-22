@@ -72,14 +72,14 @@ public class EventPublisherTest {
         Assertions.assertThat(result.failed().get()).isInstanceOf(WebServiceException.class);
         Assertions.assertThat(sleptTime).isEqualTo(RetryConfig.DEFAULT_WAIT_DURATION*2);
 
-        testSubscriber.assertValueCount(1)
-                .assertValues(RetryEvent.Type.ERROR);
+        testSubscriber.assertValueCount(3)
+                .assertValues(RetryEvent.Type.RETRY, RetryEvent.Type.RETRY, RetryEvent.Type.ERROR);
     }
 
     @Test
     public void shouldReturnAfterTwoAttempts() {
         // Given the HelloWorldService throws an exception
-        BDDMockito.willThrow(new WebServiceException("BAM!")).willNothing().given(helloWorldService).sayHelloWorld();
+        BDDMockito.willThrow(new WebServiceException("BAM!")).willDoNothing().given(helloWorldService).sayHelloWorld();
 
         // Create a Retry with default configuration
         Retry retry = Retry.ofDefaults("id");
@@ -98,13 +98,13 @@ public class EventPublisherTest {
         Assertions.assertThat(result.isSuccess()).isTrue();
         Assertions.assertThat(sleptTime).isEqualTo(RetryConfig.DEFAULT_WAIT_DURATION);
 
-        testSubscriber.assertValueCount(1).assertValues(RetryEvent.Type.SUCCESS);
+        testSubscriber.assertValueCount(2).assertValues(RetryEvent.Type.RETRY, RetryEvent.Type.SUCCESS);
     }
 
     @Test
     public void shouldIgnoreError() {
         // Given the HelloWorldService throws an exception
-        BDDMockito.willThrow(new WebServiceException("BAM!")).willNothing().given(helloWorldService).sayHelloWorld();
+        BDDMockito.willThrow(new WebServiceException("BAM!")).willDoNothing().given(helloWorldService).sayHelloWorld();
 
         // Create a Retry with default configuration
         RetryConfig config = RetryConfig.custom()
