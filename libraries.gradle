@@ -23,6 +23,7 @@ ext {
     reactorVersion = '3.1.5.RELEASE'
     reactiveStreamsVersion = '1.0.2'
     micrometerVersion = '1.0.0'
+    hibernateValidatorVersion = '6.0.9.Final'
 
     libraries = [
             // compile
@@ -60,6 +61,7 @@ ext {
             spring_boot2_actuator: "org.springframework.boot:spring-boot-starter-actuator:${springBoot2Version}",
             spring_boot2_web: "org.springframework.boot:spring-boot-starter-web:${springBoot2Version}",
             spring_boot2_test:  "org.springframework.boot:spring-boot-starter-test:${springBoot2Version}",
+            hibernate_validator: "org.hibernate.validator:hibernate-validator:${hibernateValidatorVersion}",
 
             // ratpack addon
             ratpack: "io.ratpack:ratpack-guice:${ratpackVersion}",
