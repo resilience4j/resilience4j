@@ -18,6 +18,8 @@ package io.github.resilience4j.circuitbreaker;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.IOException;
+import java.time.Duration;
+import java.util.Map;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -78,24 +80,42 @@ public class CircuitBreakerAutoConfigurationTest {
         assertThat(circuitBreaker.getMetrics().getNumberOfSuccessfulCalls()).isEqualTo(1);
         assertThat(circuitBreaker.getMetrics().getNumberOfFailedCalls()).isEqualTo(1);
 
+        // expect circuitbreaker is configured as defined in application.yml
         assertThat(circuitBreaker.getCircuitBreakerConfig().getRingBufferSizeInClosedState()).isEqualTo(6);
         assertThat(circuitBreaker.getCircuitBreakerConfig().getRingBufferSizeInHalfOpenState()).isEqualTo(2);
         assertThat(circuitBreaker.getCircuitBreakerConfig().getFailureRateThreshold()).isEqualTo(70f);
+        assertThat(circuitBreaker.getCircuitBreakerConfig().getWaitDurationInOpenState()).isEqualByComparingTo(Duration.ofSeconds(5L));
 
-        // Test Actuator endpoints
-
+        // expect circuitbreakers actuator endpoint contains both circuitbreakers
         ResponseEntity<CircuitBreakerEndpointResponse> circuitBreakerList = restTemplate.getForEntity("/actuator/circuitbreakers", CircuitBreakerEndpointResponse.class);
         assertThat(circuitBreakerList.getBody().getCircuitBreakers()).hasSize(2).containsExactly("backendA", "backendB");
 
-
+        // expect circuitbreaker-event actuator endpoint recorded both events
         ResponseEntity<CircuitBreakerEventsEndpointResponse> circuitBreakerEventList = restTemplate.getForEntity("/actuator/circuitbreaker-events", CircuitBreakerEventsEndpointResponse.class);
         assertThat(circuitBreakerEventList.getBody().getCircuitBreakerEvents()).hasSize(2);
 
         circuitBreakerEventList = restTemplate.getForEntity("/actuator/circuitbreaker-events?name=backendA", CircuitBreakerEventsEndpointResponse.class);
         assertThat(circuitBreakerEventList.getBody().getCircuitBreakerEvents()).hasSize(2);
 
+        // expect no health indicator for backendB, as it is disabled via properties
+        ResponseEntity<HealthResponse> healthResponse = restTemplate.getForEntity("/actuator/health", HealthResponse.class);
+        assertThat(healthResponse.getBody().getDetails()).isNotNull();
+        assertThat(healthResponse.getBody().getDetails().get("backendACircuitBreaker")).isNotNull();
+        assertThat(healthResponse.getBody().getDetails().get("backendBCircuitBreaker")).isNull();
 
-
+        // expect aspect configured as defined in application.yml
         assertThat(circuitBreakerAspect.getOrder()).isEqualTo(400);
+    }
+    
+    private final static class HealthResponse {
+    	private Map<String, Object> details;
+    	
+    	public Map<String, Object> getDetails() {
+			return details;
+		}
+    	
+    	public void setDetails(Map<String, Object> details) {
+			this.details = details;
+		}
     }
 }

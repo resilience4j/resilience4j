@@ -17,21 +17,29 @@ package io.github.resilience4j.circuitbreaker.autoconfigure;
 
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.*;
+import org.hibernate.validator.constraints.time.DurationMin;
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.stereotype.Component;
+import org.springframework.validation.annotation.Validated;
 
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.validation.Valid;
+import javax.validation.constraints.Max;
+import javax.validation.constraints.Min;
+import javax.validation.constraints.NotNull;
+
+@Validated
 @ConfigurationProperties(prefix = "resilience4j.circuitbreaker")
-@Component
 public class CircuitBreakerProperties {
     // This property gives you control over CircuitBreaker aspect application order.
     // By default CircuitBreaker will be executed BEFORE RateLimiter.
     // By adjusting RateLimiterProperties.rateLimiterAspectOrder and CircuitBreakerProperties.circuitBreakerAspectOrder
     // you explicitly define aspects CircuitBreaker and RateLimiter execution sequence.
     private int circuitBreakerAspectOrder = Integer.MAX_VALUE - 1;
+    
+    @Valid
     private Map<String, BackendProperties> backends = new HashMap<>();
 
     public int getCircuitBreakerAspectOrder() {
@@ -61,8 +69,8 @@ public class CircuitBreakerProperties {
 
         Builder circuitBreakerConfigBuilder = CircuitBreakerConfig.custom();
 
-        if (backendProperties.getWaitInterval() != null) {
-            circuitBreakerConfigBuilder.waitDurationInOpenState(Duration.ofMillis(backendProperties.getWaitInterval()));
+        if (backendProperties.getWaitDurationInOpenState() != null) {
+            circuitBreakerConfigBuilder.waitDurationInOpenState(backendProperties.getWaitDurationInOpenState());
         }
 
         if (backendProperties.getFailureRateThreshold() != null) {
@@ -88,35 +96,42 @@ public class CircuitBreakerProperties {
      */
     public static class BackendProperties {
 
-        private Integer waitInterval;
+    	@DurationMin(seconds = 1)
+        private Duration waitDurationInOpenState;
 
+    	@Min(1)
+		@Max(100)
         private Integer failureRateThreshold;
 
+    	@Min(1)
         private Integer ringBufferSizeInClosedState;
 
+    	@Min(1)
         private Integer ringBufferSizeInHalfOpenState;
 
+    	@Min(1)
         private Integer eventConsumerBufferSize = 100;
 
-        private Boolean registerHealthIndicator = false;
+    	@NotNull
+        private Boolean registerHealthIndicator = true;
 
 
         /**
-         * Returns the wait duration in seconds the CircuitBreaker will stay open, before it switches to half closed.
+         * Returns the wait duration the CircuitBreaker will stay open, before it switches to half closed.
          *
          * @return the wait duration
          */
-        public Integer getWaitInterval() {
-            return waitInterval;
+        public Duration getWaitDurationInOpenState() {
+            return waitDurationInOpenState;
         }
 
         /**
-         * Sets the wait duration in seconds the CircuitBreaker should stay open, before it switches to half closed.
+         * Sets the wait duration the CircuitBreaker should stay open, before it switches to half closed.
          *
-         * @param waitInterval the wait duration
+         * @param waitDurationInOpenState the wait duration
          */
-        public void setWaitInterval(Integer waitInterval) {
-            this.waitInterval = waitInterval;
+        public void setWaitDurationInOpenState(Duration waitDurationInOpenState) {
+            this.waitDurationInOpenState = waitDurationInOpenState;
         }
 
         /**

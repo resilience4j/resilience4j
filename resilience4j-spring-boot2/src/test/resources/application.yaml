@@ -2,21 +2,18 @@ resilience4j.circuitbreaker:
     circuitBreakerAspectOrder: 400
     backends:
         backendA:
-            registerHealthIndicator: true
             ringBufferSizeInClosedState: 6
             ringBufferSizeInHalfOpenState: 2
-            waitInterval: 5000
+            waitDurationInOpenState: 5s
             failureRateThreshold: 70
             eventConsumerBufferSize: 10
-            registerHealthIndicator: true
         backendB:
-            registerHealthIndicator: true
             ringBufferSizeInClosedState: 10
             ringBufferSizeInHalfOpenState: 5
-            waitInterval: 5000
+            waitDurationInOpenState: 5000
             failureRateThreshold: 50
             eventConsumerBufferSize: 10
-            registerHealthIndicator: true
+            registerHealthIndicator: false
 
 resilience4j.ratelimiter:
     rateLimiterAspectOrder: 401
