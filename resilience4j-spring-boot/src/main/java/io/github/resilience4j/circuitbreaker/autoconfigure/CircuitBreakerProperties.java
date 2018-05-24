@@ -17,12 +17,14 @@ package io.github.resilience4j.circuitbreaker.autoconfigure;
 
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.*;
+import org.springframework.beans.BeanUtils;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Predicate;
 
 @ConfigurationProperties(prefix = "resilience4j.circuitbreaker")
 @Component
@@ -76,6 +78,19 @@ public class CircuitBreakerProperties {
         if (backendProperties.getRingBufferSizeInHalfOpenState() != null) {
             circuitBreakerConfigBuilder.ringBufferSizeInHalfOpenState(backendProperties.getRingBufferSizeInHalfOpenState());
         }
+
+        if (backendProperties.recordFailurePredicate != null) {
+            circuitBreakerConfigBuilder.recordFailure(BeanUtils.instantiateClass(backendProperties.getRecordFailurePredicate()));
+        }
+
+        if (backendProperties.recordExceptions != null) {
+            circuitBreakerConfigBuilder.recordExceptions(backendProperties.recordExceptions);
+        }
+
+        if (backendProperties.ignoreExceptions != null) {
+            circuitBreakerConfigBuilder.ignoreExceptions(backendProperties.ignoreExceptions);
+        }
+
         return circuitBreakerConfigBuilder;
     }
 
@@ -100,6 +115,11 @@ public class CircuitBreakerProperties {
 
         private Boolean registerHealthIndicator = false;
 
+        private Class<Predicate<Throwable>> recordFailurePredicate;
+
+        private Class<? extends Throwable>[] recordExceptions;
+
+        private Class<? extends Throwable>[] ignoreExceptions;
 
         /**
          * Returns the wait duration in seconds the CircuitBreaker will stay open, before it switches to half closed.
@@ -187,6 +207,30 @@ public class CircuitBreakerProperties {
 
         public void setRegisterHealthIndicator(Boolean registerHealthIndicator) {
             this.registerHealthIndicator = registerHealthIndicator;
+        }
+
+        public Class<Predicate<Throwable>> getRecordFailurePredicate() {
+            return recordFailurePredicate;
+        }
+
+        public void setRecordFailurePredicate(Class<Predicate<Throwable>> recordFailurePredicate) {
+            this.recordFailurePredicate = recordFailurePredicate;
+        }
+
+        public Class<? extends Throwable>[] getRecordExceptions() {
+            return recordExceptions;
+        }
+
+        public void setRecordExceptions(Class<? extends Throwable>[] recordExceptions) {
+            this.recordExceptions = recordExceptions;
+        }
+
+        public Class<? extends Throwable>[] getIgnoreExceptions() {
+            return ignoreExceptions;
+        }
+
+        public void setIgnoreExceptions(Class<? extends Throwable>[] ignoreExceptions) {
+            this.ignoreExceptions = ignoreExceptions;
         }
     }
 

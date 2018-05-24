@@ -18,12 +18,15 @@ package io.github.resilience4j.circuitbreaker.autoconfigure;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.*;
 import org.hibernate.validator.constraints.time.DurationMin;
+import org.springframework.beans.BeanUtils;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.boot.context.properties.PropertyMapper;
 import org.springframework.validation.annotation.Validated;
 
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Predicate;
 
 import javax.validation.Valid;
 import javax.validation.constraints.Max;
@@ -38,7 +41,7 @@ public class CircuitBreakerProperties {
     // By adjusting RateLimiterProperties.rateLimiterAspectOrder and CircuitBreakerProperties.circuitBreakerAspectOrder
     // you explicitly define aspects CircuitBreaker and RateLimiter execution sequence.
     private int circuitBreakerAspectOrder = Integer.MAX_VALUE - 1;
-    
+
     @Valid
     private Map<String, BackendProperties> backends = new HashMap<>();
 
@@ -84,6 +87,22 @@ public class CircuitBreakerProperties {
         if (backendProperties.getRingBufferSizeInHalfOpenState() != null) {
             circuitBreakerConfigBuilder.ringBufferSizeInHalfOpenState(backendProperties.getRingBufferSizeInHalfOpenState());
         }
+
+        if (backendProperties.recordFailurePredicate != null) {
+            PropertyMapper.get()
+                    .from(backendProperties::getRecordFailurePredicate)
+                    .whenNonNull().as(BeanUtils::instantiateClass)
+                    .to(circuitBreakerConfigBuilder::recordFailure);
+        }
+
+        if (backendProperties.recordExceptions != null) {
+            circuitBreakerConfigBuilder.recordExceptions(backendProperties.recordExceptions);
+        }
+
+        if (backendProperties.ignoreExceptions != null) {
+            circuitBreakerConfigBuilder.ignoreExceptions(backendProperties.ignoreExceptions);
+        }
+
         return circuitBreakerConfigBuilder;
     }
 
@@ -96,25 +115,30 @@ public class CircuitBreakerProperties {
      */
     public static class BackendProperties {
 
-    	@DurationMin(seconds = 1)
+        @DurationMin(seconds = 1)
         private Duration waitDurationInOpenState;
 
-    	@Min(1)
-		@Max(100)
+        @Min(1)
+        @Max(100)
         private Integer failureRateThreshold;
 
-    	@Min(1)
+        @Min(1)
         private Integer ringBufferSizeInClosedState;
 
-    	@Min(1)
+        @Min(1)
         private Integer ringBufferSizeInHalfOpenState;
 
-    	@Min(1)
+        @Min(1)
         private Integer eventConsumerBufferSize = 100;
 
-    	@NotNull
+        @NotNull
         private Boolean registerHealthIndicator = true;
 
+        private Class<Predicate<Throwable>> recordFailurePredicate;
+
+        private Class<? extends Throwable>[] recordExceptions;
+
+        private Class<? extends Throwable>[] ignoreExceptions;
 
         /**
          * Returns the wait duration the CircuitBreaker will stay open, before it switches to half closed.
@@ -202,6 +226,30 @@ public class CircuitBreakerProperties {
 
         public void setRegisterHealthIndicator(Boolean registerHealthIndicator) {
             this.registerHealthIndicator = registerHealthIndicator;
+        }
+
+        public Class<Predicate<Throwable>> getRecordFailurePredicate() {
+            return recordFailurePredicate;
+        }
+
+        public void setRecordFailurePredicate(Class<Predicate<Throwable>> recordFailurePredicate) {
+            this.recordFailurePredicate = recordFailurePredicate;
+        }
+
+        public Class<? extends Throwable>[] getRecordExceptions() {
+            return recordExceptions;
+        }
+
+        public void setRecordExceptions(Class<? extends Throwable>[] recordExceptions) {
+            this.recordExceptions = recordExceptions;
+        }
+
+        public Class<? extends Throwable>[] getIgnoreExceptions() {
+            return ignoreExceptions;
+        }
+
+        public void setIgnoreExceptions(Class<? extends Throwable>[] ignoreExceptions) {
+            this.ignoreExceptions = ignoreExceptions;
         }
     }
 

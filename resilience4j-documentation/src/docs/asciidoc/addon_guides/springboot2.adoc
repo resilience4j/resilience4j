@@ -149,6 +149,11 @@ resilience4j.circuitbreaker:
             failureRateThreshold: 50
             eventConsumerBufferSize: 10
             registerHealthIndicator: true
+            recordFailurePredicate: com.foo.FooRecordFailurePredicate
+            recordExceptions:
+                - org.springframework.web.client.HttpServerErrorException
+            ignoreExceptions:
+                - org.springframework.web.client.HttpClientErrorException
         backendB:
             ringBufferSizeInClosedState: 10
             ringBufferSizeInHalfOpenState: 5
@@ -156,6 +161,11 @@ resilience4j.circuitbreaker:
             failureRateThreshold: 50
             eventConsumerBufferSize: 10
             registerHealthIndicator: true
+            recordFailurePredicate: com.foo.FooRecordFailurePredicate
+            recordExceptions:
+                - org.springframework.web.client.HttpServerErrorException
+            ignoreExceptions:
+                - org.springframework.web.client.HttpClientErrorException
 ----
 
 ===== RateLimiter
