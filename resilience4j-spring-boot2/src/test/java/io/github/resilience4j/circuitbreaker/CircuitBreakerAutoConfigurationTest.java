@@ -68,7 +68,7 @@ public class CircuitBreakerAutoConfigurationTest {
         try {
             dummyService.doSomething(true);
         } catch (IOException ex) {
-            // Do nothing. The IOException is recorded by the CircuitBreaker as a failure.
+            // Do nothing. The IOException is recorded by the CircuitBreaker as part of the recordFailurePredicate as a failure.
         }
         // The invocation is recorded by the CircuitBreaker as a success.
         dummyService.doSomething(false);
@@ -103,17 +103,24 @@ public class CircuitBreakerAutoConfigurationTest {
         assertThat(healthResponse.getBody().getDetails().get("backendACircuitBreaker")).isNotNull();
         assertThat(healthResponse.getBody().getDetails().get("backendBCircuitBreaker")).isNull();
 
+        assertThat(circuitBreaker.getCircuitBreakerConfig().getRecordFailurePredicate().test(new RecordedException())).isTrue();
+        assertThat(circuitBreaker.getCircuitBreakerConfig().getRecordFailurePredicate().test(new IgnoredException())).isFalse();
+
+        // Verify that an exception for which recordFailurePredicate returns false and it is not included in
+        // recordExceptions evaluates to false.
+        assertThat(circuitBreaker.getCircuitBreakerConfig().getRecordFailurePredicate().test(new Exception())).isFalse();
+
         // expect aspect configured as defined in application.yml
         assertThat(circuitBreakerAspect.getOrder()).isEqualTo(400);
     }
-    
+
     private final static class HealthResponse {
     	private Map<String, Object> details;
-    	
+
     	public Map<String, Object> getDetails() {
 			return details;
 		}
-    	
+
     	public void setDetails(Map<String, Object> details) {
 			this.details = details;
 		}
