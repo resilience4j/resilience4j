@@ -7,6 +7,11 @@ resilience4j.circuitbreaker:
             waitDurationInOpenState: 5s
             failureRateThreshold: 70
             eventConsumerBufferSize: 10
+            recordFailurePredicate: io.github.resilience4j.circuitbreaker.RecordFailurePredicate
+            recordExceptions:
+                - io.github.resilience4j.circuitbreaker.RecordedException
+            ignoreExceptions:
+                - io.github.resilience4j.circuitbreaker.IgnoredException
         backendB:
             ringBufferSizeInClosedState: 10
             ringBufferSizeInHalfOpenState: 5
