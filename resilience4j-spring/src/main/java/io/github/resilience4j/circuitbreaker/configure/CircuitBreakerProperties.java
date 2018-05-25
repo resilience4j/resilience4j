@@ -17,7 +17,11 @@ package io.github.resilience4j.circuitbreaker.configure;
 
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.Builder;
+import org.hibernate.validator.constraints.time.DurationMin;
 
+import javax.validation.constraints.Max;
+import javax.validation.constraints.Min;
+import javax.validation.constraints.NotNull;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -60,8 +64,8 @@ public class CircuitBreakerProperties {
 
         Builder builder = CircuitBreakerConfig.custom();
 
-        if (properties.getWaitInterval() != null) {
-            builder.waitDurationInOpenState(Duration.ofMillis(properties.getWaitInterval()));
+        if (properties.getWaitDurationInOpenState() != null) {
+            builder.waitDurationInOpenState(properties.getWaitDurationInOpenState());
         }
 
         if (properties.getFailureRateThreshold() != null) {
@@ -95,39 +99,39 @@ public class CircuitBreakerProperties {
      */
     public static class BackendProperties {
 
-        private Integer waitInterval;
+        @DurationMin(seconds = 1)
+        private Duration waitDurationInOpenState;
 
+        @Min(1)
+        @Max(100)
         private Integer failureRateThreshold;
 
+        @Min(1)
         private Integer ringBufferSizeInClosedState;
 
+        @Min(1)
         private Integer ringBufferSizeInHalfOpenState;
 
+        @Min(1)
         private Integer eventConsumerBufferSize = 100;
 
+        @NotNull
         private Boolean registerHealthIndicator = false;
 
+        @NotNull
         private List<Class<? extends Throwable>> include = new ArrayList<>();
 
+        @NotNull
         private List<Class<? extends Throwable>> exclude = new ArrayList<>();
-
-
-        /**
-         * Returns the wait duration in seconds the CircuitBreaker will stay open, before it switches to half closed.
-         *
-         * @return the wait duration
-         */
-        public Integer getWaitInterval() {
-            return waitInterval;
-        }
 
         /**
          * Sets the wait duration in seconds the CircuitBreaker should stay open, before it switches to half closed.
          *
          * @param waitInterval the wait duration
          */
+        @Deprecated
         public void setWaitInterval(Integer waitInterval) {
-            this.waitInterval = waitInterval;
+            this.waitDurationInOpenState = Duration.ofMillis(waitInterval);
         }
 
         /**
@@ -146,6 +150,24 @@ public class CircuitBreakerProperties {
          */
         public void setFailureRateThreshold(Integer failureRateThreshold) {
             this.failureRateThreshold = failureRateThreshold;
+        }
+
+        /**
+         * Returns the wait duration the CircuitBreaker will stay open, before it switches to half closed.
+         *
+         * @return the wait duration
+         */
+        public Duration getWaitDurationInOpenState() {
+            return waitDurationInOpenState;
+        }
+
+        /**
+         * Sets the wait duration the CircuitBreaker should stay open, before it switches to half closed.
+         *
+         * @param waitDurationInOpenState the wait duration
+         */
+        public void setWaitDurationInOpenState(Duration waitDurationInOpenState) {
+            this.waitDurationInOpenState = waitDurationInOpenState;
         }
 
         /**

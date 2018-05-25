@@ -15,7 +15,7 @@ resilience4j.circuitbreaker:
             waitDurationInOpenState: 5000
             failureRateThreshold: 50
             eventConsumerBufferSize: 10
-            registerHealthIndicator: true
+            registerHealthIndicator: false
             include: java.lang.RuntimeException
 
 resilience4j.ratelimiter:

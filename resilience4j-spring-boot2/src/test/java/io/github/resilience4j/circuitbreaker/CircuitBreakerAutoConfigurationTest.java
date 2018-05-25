@@ -21,12 +21,6 @@ import io.github.resilience4j.circuitbreaker.monitoring.endpoint.CircuitBreakerE
 import io.github.resilience4j.circuitbreaker.monitoring.endpoint.CircuitBreakerEventsEndpointResponse;
 import io.github.resilience4j.service.test.DummyService;
 import io.github.resilience4j.service.test.TestApplication;
-import static org.assertj.core.api.Assertions.assertThat;
-
-import java.io.IOException;
-import java.time.Duration;
-import java.util.Map;
-
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,6 +33,8 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.util.StringUtils;
 
 import java.io.IOException;
+import java.time.Duration;
+import java.util.Map;
 
 import static io.github.resilience4j.service.test.DummyService.BACKEND_A;
 import static io.github.resilience4j.service.test.DummyService.BACKEND_B;
@@ -155,7 +151,7 @@ public class CircuitBreakerAutoConfigurationTest {
         circuitBreakerEventList = getEventList("backendB");
         assertThat(circuitBreakerEventList.getBody().getCircuitBreakerEvents()).hasSize(2);
         // expect no health indicator for backendB, as it is disabled via properties
-        ResponseEntity<HealthResponse> healthResponse = restTemplate.getForEntity("/actuator/health", HealthResponse.class);
+        healthResponse = restTemplate.getForEntity("/actuator/health", HealthResponse.class);
         assertThat(healthResponse.getBody().getDetails()).isNotNull();
         assertThat(healthResponse.getBody().getDetails().get("backendACircuitBreaker")).isNotNull();
         assertThat(healthResponse.getBody().getDetails().get("backendBCircuitBreaker")).isNull();
