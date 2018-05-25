@@ -26,6 +26,7 @@ import io.github.resilience4j.service.test.TestApplication;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.ResponseEntity;
@@ -37,6 +38,7 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import static com.jayway.awaitility.Awaitility.await;
+import static io.github.resilience4j.service.test.DummyService.BACKEND_A;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @RunWith(SpringJUnit4ClassRunner.class)
@@ -54,6 +56,7 @@ public class RateLimiterAutoConfigurationTest {
     private RateLimiterAspect rateLimiterAspect;
 
     @Autowired
+    @Qualifier(BACKEND_A)
     private DummyService dummyService;
 
     @Autowired
@@ -64,16 +67,16 @@ public class RateLimiterAutoConfigurationTest {
      * that the RateLimiter records successful and failed calls.
      */
     @Test
-    public void testRateLimiterAutoConfiguration() throws IOException {
+    public void testRateLimiterAutoConfiguration() throws Throwable {
         assertThat(rateLimiterRegistry).isNotNull();
         assertThat(rateLimiterProperties).isNotNull();
 
-        RateLimiter rateLimiter = rateLimiterRegistry.rateLimiter(DummyService.BACKEND);
+        RateLimiter rateLimiter = rateLimiterRegistry.rateLimiter(BACKEND_A);
         assertThat(rateLimiter).isNotNull();
         rateLimiter.getPermission(Duration.ZERO);
         await()
-            .atMost(2, TimeUnit.SECONDS)
-            .until(() -> rateLimiter.getMetrics().getAvailablePermissions() == 10);
+                .atMost(2, TimeUnit.SECONDS)
+                .until(() -> rateLimiter.getMetrics().getAvailablePermissions() == 10);
 
         try {
             dummyService.doSomething(true);
@@ -113,8 +116,8 @@ public class RateLimiterAutoConfigurationTest {
         assertThat(lastEvent.getRateLimiterEventType()).isEqualTo(RateLimiterEvent.Type.FAILED_ACQUIRE);
 
         await()
-            .atMost(2, TimeUnit.SECONDS)
-            .until(() -> rateLimiter.getMetrics().getAvailablePermissions() == 10);
+                .atMost(2, TimeUnit.SECONDS)
+                .until(() -> rateLimiter.getMetrics().getAvailablePermissions() == 10);
 
 
         assertThat(rateLimiterAspect.getOrder()).isEqualTo(401);
