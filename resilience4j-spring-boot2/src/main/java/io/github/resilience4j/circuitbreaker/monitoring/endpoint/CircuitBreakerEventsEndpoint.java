@@ -16,15 +16,14 @@
 package io.github.resilience4j.circuitbreaker.monitoring.endpoint;
 
 
-import java.util.Comparator;
-
+import io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent;
+import io.github.resilience4j.consumer.CircularEventConsumer;
+import io.github.resilience4j.consumer.EventConsumerRegistry;
 import org.springframework.boot.actuate.endpoint.annotation.Endpoint;
 import org.springframework.boot.actuate.endpoint.annotation.ReadOperation;
 import org.springframework.boot.actuate.endpoint.annotation.Selector;
 
-import io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent;
-import io.github.resilience4j.consumer.CircularEventConsumer;
-import io.github.resilience4j.consumer.EventConsumerRegistry;
+import java.util.Comparator;
 
 
 @Endpoint(id = "circuitbreaker-events")

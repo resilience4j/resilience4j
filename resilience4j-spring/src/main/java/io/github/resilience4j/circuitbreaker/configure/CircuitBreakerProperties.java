@@ -1,4 +1,4 @@
-package io.github.resilience4j.circuitbreaker.autoconfigure;
+package io.github.resilience4j.circuitbreaker.configure;
 /*
  * Copyright 2017 Robert Winkler
  *
@@ -16,16 +16,18 @@ package io.github.resilience4j.circuitbreaker.autoconfigure;
  */
 
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
-import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.*;
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.stereotype.Component;
+import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.Builder;
+import org.hibernate.validator.constraints.time.DurationMin;
 
+import javax.validation.constraints.Max;
+import javax.validation.constraints.Min;
+import javax.validation.constraints.NotNull;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
-@ConfigurationProperties(prefix = "resilience4j.circuitbreaker")
-@Component
 public class CircuitBreakerProperties {
     // This property gives you control over CircuitBreaker aspect application order.
     // By default CircuitBreaker will be executed BEFORE RateLimiter.
@@ -33,6 +35,7 @@ public class CircuitBreakerProperties {
     // you explicitly define aspects CircuitBreaker and RateLimiter execution sequence.
     private int circuitBreakerAspectOrder = Integer.MAX_VALUE - 1;
     private Map<String, BackendProperties> backends = new HashMap<>();
+    @SuppressWarnings("unchecked") private static final Class<? extends Throwable>[] EMPTY = new Class[0];
 
     public int getCircuitBreakerAspectOrder() {
         return circuitBreakerAspectOrder;
@@ -54,29 +57,37 @@ public class CircuitBreakerProperties {
         return buildCircuitBreakerConfig(backendProperties).build();
     }
 
-    public Builder buildCircuitBreakerConfig(BackendProperties backendProperties) {
-        if (backendProperties == null) {
+    public Builder buildCircuitBreakerConfig(BackendProperties properties) {
+        if (properties == null) {
             return new Builder();
         }
 
-        Builder circuitBreakerConfigBuilder = CircuitBreakerConfig.custom();
+        Builder builder = CircuitBreakerConfig.custom();
 
-        if (backendProperties.getWaitInterval() != null) {
-            circuitBreakerConfigBuilder.waitDurationInOpenState(Duration.ofMillis(backendProperties.getWaitInterval()));
+        if (properties.getWaitDurationInOpenState() != null) {
+            builder.waitDurationInOpenState(properties.getWaitDurationInOpenState());
         }
 
-        if (backendProperties.getFailureRateThreshold() != null) {
-            circuitBreakerConfigBuilder.failureRateThreshold(backendProperties.getFailureRateThreshold());
+        if (properties.getFailureRateThreshold() != null) {
+            builder.failureRateThreshold(properties.getFailureRateThreshold());
         }
 
-        if (backendProperties.getRingBufferSizeInClosedState() != null) {
-            circuitBreakerConfigBuilder.ringBufferSizeInClosedState(backendProperties.getRingBufferSizeInClosedState());
+        if (properties.getRingBufferSizeInClosedState() != null) {
+            builder.ringBufferSizeInClosedState(properties.getRingBufferSizeInClosedState());
         }
 
-        if (backendProperties.getRingBufferSizeInHalfOpenState() != null) {
-            circuitBreakerConfigBuilder.ringBufferSizeInHalfOpenState(backendProperties.getRingBufferSizeInHalfOpenState());
+        if (properties.getRingBufferSizeInHalfOpenState() != null) {
+            builder.ringBufferSizeInHalfOpenState(properties.getRingBufferSizeInHalfOpenState());
         }
-        return circuitBreakerConfigBuilder;
+
+        if(!properties.getInclude().isEmpty()){
+            builder.recordExceptions(properties.getInclude().toArray(EMPTY));
+        }
+
+        if(!properties.getExclude().isEmpty()){
+            builder.ignoreExceptions(properties.getExclude().toArray(EMPTY));
+        }
+        return builder;
     }
 
     public Map<String, BackendProperties> getBackends() {
@@ -88,35 +99,39 @@ public class CircuitBreakerProperties {
      */
     public static class BackendProperties {
 
-        private Integer waitInterval;
+        @DurationMin(seconds = 1)
+        private Duration waitDurationInOpenState;
 
+        @Min(1)
+        @Max(100)
         private Integer failureRateThreshold;
 
+        @Min(1)
         private Integer ringBufferSizeInClosedState;
 
+        @Min(1)
         private Integer ringBufferSizeInHalfOpenState;
 
+        @Min(1)
         private Integer eventConsumerBufferSize = 100;
 
+        @NotNull
         private Boolean registerHealthIndicator = false;
 
+        @NotNull
+        private List<Class<? extends Throwable>> include = new ArrayList<>();
 
-        /**
-         * Returns the wait duration in seconds the CircuitBreaker will stay open, before it switches to half closed.
-         *
-         * @return the wait duration
-         */
-        public Integer getWaitInterval() {
-            return waitInterval;
-        }
+        @NotNull
+        private List<Class<? extends Throwable>> exclude = new ArrayList<>();
 
         /**
          * Sets the wait duration in seconds the CircuitBreaker should stay open, before it switches to half closed.
          *
          * @param waitInterval the wait duration
          */
+        @Deprecated
         public void setWaitInterval(Integer waitInterval) {
-            this.waitInterval = waitInterval;
+            this.waitDurationInOpenState = Duration.ofMillis(waitInterval);
         }
 
         /**
@@ -135,6 +150,24 @@ public class CircuitBreakerProperties {
          */
         public void setFailureRateThreshold(Integer failureRateThreshold) {
             this.failureRateThreshold = failureRateThreshold;
+        }
+
+        /**
+         * Returns the wait duration the CircuitBreaker will stay open, before it switches to half closed.
+         *
+         * @return the wait duration
+         */
+        public Duration getWaitDurationInOpenState() {
+            return waitDurationInOpenState;
+        }
+
+        /**
+         * Sets the wait duration the CircuitBreaker should stay open, before it switches to half closed.
+         *
+         * @param waitDurationInOpenState the wait duration
+         */
+        public void setWaitDurationInOpenState(Duration waitDurationInOpenState) {
+            this.waitDurationInOpenState = waitDurationInOpenState;
         }
 
         /**
@@ -187,6 +220,22 @@ public class CircuitBreakerProperties {
 
         public void setRegisterHealthIndicator(Boolean registerHealthIndicator) {
             this.registerHealthIndicator = registerHealthIndicator;
+        }
+
+        public List<Class<? extends Throwable>> getInclude() {
+            return new ArrayList<>(include);
+        }
+
+        public void setInclude(List<Class<? extends Throwable>> include) {
+            this.include = new ArrayList<>(include);
+        }
+
+        public List<Class<? extends Throwable>> getExclude() {
+            return new ArrayList<>(exclude);
+        }
+
+        public void setExclude(List<Class<? extends Throwable>> exclude) {
+            this.exclude = new ArrayList<>(exclude);
         }
     }
 

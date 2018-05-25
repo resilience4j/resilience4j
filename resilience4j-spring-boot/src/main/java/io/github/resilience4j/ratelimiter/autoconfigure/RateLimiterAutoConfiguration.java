@@ -15,25 +15,20 @@
  */
 package io.github.resilience4j.ratelimiter.autoconfigure;
 
-import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
-import io.github.resilience4j.consumer.EventConsumerRegistry;
-import io.github.resilience4j.core.EventConsumer;
 import io.github.resilience4j.ratelimiter.RateLimiter;
-import io.github.resilience4j.ratelimiter.RateLimiterConfig;
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
-import io.github.resilience4j.ratelimiter.event.RateLimiterEvent;
-import io.github.resilience4j.ratelimiter.internal.InMemoryRateLimiterRegistry;
+import io.github.resilience4j.ratelimiter.configure.RateLimiterConfiguration;
+import io.github.resilience4j.ratelimiter.configure.RateLimiterProperties;
 import io.github.resilience4j.ratelimiter.monitoring.endpoint.RateLimiterEndpoint;
 import io.github.resilience4j.ratelimiter.monitoring.health.RateLimiterHealthIndicator;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 
-import static io.github.resilience4j.ratelimiter.autoconfigure.RateLimiterProperties.createRateLimiterConfig;
+import javax.annotation.PostConstruct;
 
 /**
  * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration
@@ -41,33 +36,17 @@ import static io.github.resilience4j.ratelimiter.autoconfigure.RateLimiterProper
  */
 @Configuration
 @ConditionalOnClass(RateLimiter.class)
-@EnableConfigurationProperties(RateLimiterProperties.class)
+@EnableConfigurationProperties(RateLimiterPropertiesAutoConfigured.class)
+@Import(RateLimiterConfiguration.class)
 public class RateLimiterAutoConfiguration {
+    private final RateLimiterProperties rateLimiterProperties;
+    private final RateLimiterRegistry rateLimiterRegistry;
+    private final ConfigurableBeanFactory beanFactory;
 
-    private static final Logger logger = LoggerFactory.getLogger(RateLimiterAutoConfiguration.class);
-
-    @Bean
-    public RateLimiterRegistry rateLimiterRegistry(RateLimiterProperties rateLimiterProperties,
-                                                   EventConsumerRegistry<RateLimiterEvent> rateLimiterEventsConsumerRegistry,
-                                                   ConfigurableBeanFactory beanFactory) {
-        RateLimiterRegistry rateLimiterRegistry = new InMemoryRateLimiterRegistry(RateLimiterConfig.ofDefaults());
-        rateLimiterProperties.getLimiters().forEach(
-            (name, properties) -> {
-                RateLimiter rateLimiter = createRateLimiter(rateLimiterRegistry, name, properties);
-                if (properties.getSubscribeForEvents()) {
-                    subscribeToLimiterEvents(rateLimiterEventsConsumerRegistry, name, properties, rateLimiter);
-                }
-                if (properties.getRegisterHealthIndicator()) {
-                    createHealthIndicatorForLimiter(beanFactory, name, rateLimiter);
-                }
-            }
-        );
-        return rateLimiterRegistry;
-    }
-
-    @Bean
-    public RateLimiterAspect rateLimiterAspect(RateLimiterProperties rateLimiterProperties, RateLimiterRegistry rateLimiterRegistry) {
-        return new RateLimiterAspect(rateLimiterRegistry, rateLimiterProperties);
+    public RateLimiterAutoConfiguration(RateLimiterProperties rateLimiterProperties, RateLimiterRegistry rateLimiterRegistry, ConfigurableBeanFactory beanFactory) {
+        this.rateLimiterProperties = rateLimiterProperties;
+        this.rateLimiterRegistry = rateLimiterRegistry;
+        this.beanFactory = beanFactory;
     }
 
     @Bean
@@ -75,35 +54,24 @@ public class RateLimiterAutoConfiguration {
         return new RateLimiterEndpoint(rateLimiterRegistry);
     }
 
-    /**
-     * The EventConsumerRegistry is used to manage EventConsumer instances.
-     * The EventConsumerRegistry is used by the RateLimiterHealthIndicator to show the latest RateLimiterEvents events
-     * for each RateLimiter instance.
-     */
-    @Bean
-    public EventConsumerRegistry<RateLimiterEvent> rateLimiterEventsConsumerRegistry() {
-        return new DefaultEventConsumerRegistry<>();
+    @PostConstruct
+    public void configureHealthIndicators() {
+        rateLimiterProperties.getLimiters().forEach(
+                (name, properties) -> {
+                    RateLimiter rateLimiter = rateLimiterRegistry.rateLimiter(name);
+                    if (properties.getRegisterHealthIndicator()) {
+                        createHealthIndicatorForLimiter(beanFactory, name, rateLimiter);
+                    }
+                }
+        );
     }
 
     private void createHealthIndicatorForLimiter(ConfigurableBeanFactory beanFactory, String name, RateLimiter rateLimiter) {
         beanFactory.registerSingleton(
-            name + "RateLimiterHealthIndicator",
-            new RateLimiterHealthIndicator(rateLimiter)
+                name + "RateLimiterHealthIndicator",
+                new RateLimiterHealthIndicator(rateLimiter)
         );
     }
 
-    private void subscribeToLimiterEvents(EventConsumerRegistry<RateLimiterEvent> rateLimiterEventsConsumerRegistry, String name, RateLimiterProperties.LimiterProperties properties, RateLimiter rateLimiter) {
-        EventConsumer<RateLimiterEvent> eventConsumer = rateLimiterEventsConsumerRegistry
-            .createEventConsumer(name, properties.getEventConsumerBufferSize());
-       rateLimiter.getEventPublisher().onEvent(eventConsumer);
 
-        logger.debug("Autoconfigure subscription for Rate Limiter {}", rateLimiter);
-    }
-
-    private RateLimiter createRateLimiter(RateLimiterRegistry rateLimiterRegistry, String name, RateLimiterProperties.LimiterProperties properties) {
-        RateLimiter rateLimiter =
-            rateLimiterRegistry.rateLimiter(name, createRateLimiterConfig(properties));
-        logger.debug("Autoconfigure Rate Limiter registered. {}", rateLimiter);
-        return rateLimiter;
-    }
 }

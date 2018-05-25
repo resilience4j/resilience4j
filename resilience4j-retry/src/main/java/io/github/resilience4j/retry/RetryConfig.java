@@ -142,6 +142,7 @@ public class RetryConfig {
          * @return the RetryConfig.Builder
          */
         @SafeVarargs
+        @SuppressWarnings("unchecked")
         public final Builder retryExceptions(Class<? extends Throwable>... errorClasses) {
             this.retryExceptions = errorClasses != null ? errorClasses : new Class[0];
             return this;
@@ -167,6 +168,7 @@ public class RetryConfig {
          * @return the RetryConfig.Builder
          */
         @SafeVarargs
+        @SuppressWarnings("unchecked")
         public final Builder ignoreExceptions(Class<? extends Throwable>... errorClasses) {
             this.ignoreExceptions = errorClasses != null ? errorClasses : new Class[0];
             return this;

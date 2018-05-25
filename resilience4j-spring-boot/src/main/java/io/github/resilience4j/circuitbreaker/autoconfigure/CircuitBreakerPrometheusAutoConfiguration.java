@@ -30,10 +30,12 @@ import org.springframework.context.annotation.Configuration;
 @AutoConfigureAfter(value = CircuitBreakerAutoConfiguration.class)
 @ConditionalOnClass(CircuitBreakerExports.class)
 public class CircuitBreakerPrometheusAutoConfiguration {
+
     @Bean
-    public CircuitBreakerExports circuitBreakerPrometheusCollector(CircuitBreakerRegistry circuitBreakerRegistry){
+    public CircuitBreakerExports circuitBreakerPrometheusCollector(CircuitBreakerRegistry circuitBreakerRegistry) {
         CircuitBreakerExports collector = CircuitBreakerExports.ofCircuitBreakerRegistry(circuitBreakerRegistry);
         collector.register();
         return collector;
     }
+
 }

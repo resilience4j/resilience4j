@@ -39,7 +39,7 @@ import io.github.resilience4j.metrics.CircuitBreakerMetrics;
 @AutoConfigureBefore(MetricRepositoryAutoConfiguration.class)
 public class CircuitBreakerMetricsAutoConfiguration {
     @Bean
-    public CircuitBreakerMetrics registerCircuitBreakerMetrics(CircuitBreakerRegistry circuitBreakerRegistry, MetricRegistry metricRegistry){
+    public CircuitBreakerMetrics registerCircuitBreakerMetrics(CircuitBreakerRegistry circuitBreakerRegistry, MetricRegistry metricRegistry) {
         CircuitBreakerMetrics circuitBreakerMetrics = CircuitBreakerMetrics.ofCircuitBreakerRegistry(circuitBreakerRegistry);
         metricRegistry.registerAll(circuitBreakerMetrics);
         return circuitBreakerMetrics;

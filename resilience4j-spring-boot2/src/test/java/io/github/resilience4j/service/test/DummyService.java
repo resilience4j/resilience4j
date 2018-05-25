@@ -1,10 +1,9 @@
 package io.github.resilience4j.service.test;
 
 
-import java.io.IOException;
-
 public interface DummyService {
-    String BACKEND = "backendA";
+    String BACKEND_A = "backendA";
+    String BACKEND_B = "backendB";
 
-    void doSomething(boolean throwException) throws IOException;
+    void doSomething(boolean throwException) throws Exception;
 }

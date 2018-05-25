@@ -30,6 +30,7 @@ import org.springframework.context.annotation.Configuration;
 @AutoConfigureAfter(value = RateLimiterAutoConfiguration.class)
 @ConditionalOnClass(RateLimiterExports.class)
 public class RateLimiterPrometheusAutoConfiguration {
+
     @Bean
     public RateLimiterExports rateLimiterPrometheusCollector(RateLimiterRegistry rateLimiterRegistry){
         RateLimiterExports collector = RateLimiterExports.ofRateLimiterRegistry(rateLimiterRegistry);

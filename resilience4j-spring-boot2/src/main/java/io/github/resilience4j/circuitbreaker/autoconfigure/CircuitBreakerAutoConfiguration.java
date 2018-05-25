@@ -15,23 +15,26 @@
  */
 package io.github.resilience4j.circuitbreaker.autoconfigure;
 
+import io.github.resilience4j.circuitbreaker.CircuitBreaker;
+import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
+import io.github.resilience4j.circuitbreaker.configure.CircuitBreakerConfiguration;
+import io.github.resilience4j.circuitbreaker.configure.CircuitBreakerProperties;
+import io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent;
+import io.github.resilience4j.circuitbreaker.monitoring.endpoint.CircuitBreakerEndpoint;
+import io.github.resilience4j.circuitbreaker.monitoring.endpoint.CircuitBreakerEventsEndpoint;
+import io.github.resilience4j.circuitbreaker.monitoring.health.CircuitBreakerHealthIndicator;
+import io.github.resilience4j.consumer.EventConsumerRegistry;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.boot.actuate.autoconfigure.endpoint.condition.ConditionalOnEnabledEndpoint;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 
-import io.github.resilience4j.circuitbreaker.CircuitBreaker;
-import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
-import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
-import io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent;
-import io.github.resilience4j.circuitbreaker.internal.InMemoryCircuitBreakerRegistry;
-import io.github.resilience4j.circuitbreaker.monitoring.endpoint.CircuitBreakerEndpoint;
-import io.github.resilience4j.circuitbreaker.monitoring.endpoint.CircuitBreakerEventsEndpoint;
-import io.github.resilience4j.circuitbreaker.monitoring.health.CircuitBreakerHealthIndicator;
-import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
-import io.github.resilience4j.consumer.EventConsumerRegistry;
+import javax.annotation.PostConstruct;
+
+
 
 /**
  * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration
@@ -39,30 +42,18 @@ import io.github.resilience4j.consumer.EventConsumerRegistry;
  */
 @Configuration
 @ConditionalOnClass(CircuitBreaker.class)
-@EnableConfigurationProperties(CircuitBreakerProperties.class)
+@EnableConfigurationProperties(CircuitBreakerPropertiesAutoConfigured.class)
+@Import(CircuitBreakerConfiguration.class)
 public class CircuitBreakerAutoConfiguration {
 
-    @Bean
-    public CircuitBreakerRegistry circuitBreakerRegistry(CircuitBreakerProperties circuitBreakerProperties,
-                                                         EventConsumerRegistry<CircuitBreakerEvent> eventConsumerRegistry,
-                                                         ConfigurableBeanFactory beanFactory) {
-        CircuitBreakerRegistry circuitBreakerRegistry = new InMemoryCircuitBreakerRegistry();
-        circuitBreakerProperties.getBackends().forEach(
-            (name, properties) -> {
-                CircuitBreakerConfig circuitBreakerConfig = circuitBreakerProperties.createCircuitBreakerConfig(name);
-                CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker(name, circuitBreakerConfig);
-                circuitBreaker.getEventPublisher().onEvent(eventConsumerRegistry.createEventConsumer(name, properties.getEventConsumerBufferSize()));
+    private final CircuitBreakerProperties circuitBreakerProperties;
+    private final CircuitBreakerRegistry circuitBreakerRegistry;
+    private final ConfigurableBeanFactory beanFactory;
 
-                if (properties.getRegisterHealthIndicator()) {
-                    CircuitBreakerHealthIndicator healthIndicator = new CircuitBreakerHealthIndicator(circuitBreaker);
-                    beanFactory.registerSingleton(
-                        name + "CircuitBreakerHealthIndicator",
-                        healthIndicator
-                    );
-                }
-            }
-        );
-        return circuitBreakerRegistry;
+    public CircuitBreakerAutoConfiguration(CircuitBreakerProperties circuitBreakerProperties, CircuitBreakerRegistry circuitBreakerRegistry, ConfigurableBeanFactory beanFactory) {
+        this.circuitBreakerProperties = circuitBreakerProperties;
+        this.circuitBreakerRegistry = circuitBreakerRegistry;
+        this.beanFactory = beanFactory;
     }
 
     @Bean
@@ -77,19 +68,24 @@ public class CircuitBreakerAutoConfiguration {
         return new CircuitBreakerEventsEndpoint(eventConsumerRegistry);
     }
 
-    @Bean
-    public CircuitBreakerAspect circuitBreakerAspect(CircuitBreakerProperties circuitBreakerProperties,
-                                                     CircuitBreakerRegistry circuitBreakerRegistry) {
-        return new CircuitBreakerAspect(circuitBreakerProperties, circuitBreakerRegistry);
+    @PostConstruct
+    public void configureRegistryWithHealthEndpoint(){
+        circuitBreakerProperties.getBackends().forEach(
+                (name, properties) -> {
+                    if (properties.getRegisterHealthIndicator()) {
+                        createHeathIndicatorForCircuitBreaker(name);
+                    }
+                }
+        );
     }
 
-    /**
-     * The EventConsumerRegistry is used to manage EventConsumer instances.
-     * The EventConsumerRegistry is used by the CircuitBreakerHealthIndicator to show the latest CircuitBreakerEvents events
-     * for each CircuitBreaker instance.
-     */
-    @Bean
-    public EventConsumerRegistry<CircuitBreakerEvent> eventConsumerRegistry() {
-        return new DefaultEventConsumerRegistry<>();
+    private void createHeathIndicatorForCircuitBreaker(String name) {
+        CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker(name);
+        CircuitBreakerHealthIndicator healthIndicator = new CircuitBreakerHealthIndicator(circuitBreaker);
+        beanFactory.registerSingleton(
+                name + "CircuitBreakerHealthIndicator",
+                healthIndicator
+        );
     }
+
 }
