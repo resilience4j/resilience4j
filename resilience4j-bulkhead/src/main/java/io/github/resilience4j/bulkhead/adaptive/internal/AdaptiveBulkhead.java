@@ -111,7 +111,7 @@ public class AdaptiveBulkhead {
         return name;
     }
 
-    public BulkheadAdaptationConfig getAdaptiveBulkheadConfig() {
+    public BulkheadAdaptationConfig getConfig() {
         return adaptationConfig;
     }
 
