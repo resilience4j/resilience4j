@@ -158,3 +158,6 @@ NOTE: Breaking changes:
 
 == Version 0.12.1
 * Issue #212: Fixed r4j-reactor bug when onSubscribe throws an error
+
+== Version 0.13.0
+* PR #234: Non-blocking API for RateLimiter
