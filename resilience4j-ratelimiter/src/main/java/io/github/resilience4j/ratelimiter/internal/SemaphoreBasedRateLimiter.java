@@ -145,6 +145,16 @@ public class SemaphoreBasedRateLimiter implements RateLimiter {
 
     /**
      * {@inheritDoc}
+     * SemaphoreBasedRateLimiter is totally blocking by it's nature. So this non-blocking API isn't supported.
+     * It will return negative numbers all the time.
+     */
+    @Override
+    public long reservePermission(Duration timeoutDuration) {
+        return -1;
+    }
+
+    /**
+     * {@inheritDoc}
      */
     @Override
     public String getName() {

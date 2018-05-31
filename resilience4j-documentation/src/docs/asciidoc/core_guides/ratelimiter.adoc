@@ -23,8 +23,8 @@ RateLimiterConfig config = RateLimiterConfig.builder()
 RateLimiterRegistry rateLimiterRegistry = RateLimiterRegistry.of(config);
 
 // Use registry
-RateLimiter reateLimiterWithDefaultConfig = rateLimiterRegistry.rateLimiter("backend");
-RateLimiter reateLimiterWithCustomConfig = rateLimiterRegistry.rateLimiter("backend#2", config);
+RateLimiter rateLimiterWithDefaultConfig = rateLimiterRegistry.rateLimiter("backend");
+RateLimiter rateLimiterWithCustomConfig = rateLimiterRegistry.rateLimiter("backend#2", config);
 
 // Or create RateLimiter directly
 RateLimiter rateLimiter = RateLimiter.of("NASDAQ :-)", config);
@@ -131,3 +131,9 @@ AtomicRateLimiter atomicLimiter;
 // Estimated time duration in nanos to wait for the next permission
 long nanosToWaitForPermission = atomicLimiter.getNanosToWait();
 ----
+
+
+===== Low level API
+
+If you're interested in making your own thing on top of Resilience4j RateLimiter you'll possibly be interested in
+our lower level APIs like `getPermission` and `reservePermission` methods.
