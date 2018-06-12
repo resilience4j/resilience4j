@@ -35,7 +35,6 @@ public class CircuitBreakerConfigurationProperties {
     // you explicitly define aspects CircuitBreaker and RateLimiter execution sequence.
     private int circuitBreakerAspectOrder = Integer.MAX_VALUE - 1;
     private Map<String, BackendProperties> backends = new HashMap<>();
-    @SuppressWarnings("unchecked") private static final Class<? extends Throwable>[] EMPTY = new Class[0];
 
     public int getCircuitBreakerAspectOrder() {
         return circuitBreakerAspectOrder;
