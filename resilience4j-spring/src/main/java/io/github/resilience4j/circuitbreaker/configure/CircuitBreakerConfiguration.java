@@ -33,7 +33,7 @@ import org.springframework.context.annotation.Configuration;
 public class CircuitBreakerConfiguration {
 
     @Bean
-    public CircuitBreakerRegistry circuitBreakerRegistry(CircuitBreakerProperties circuitBreakerProperties,
+    public CircuitBreakerRegistry circuitBreakerRegistry(CircuitBreakerConfigurationProperties circuitBreakerProperties,
                                                          EventConsumerRegistry<CircuitBreakerEvent> eventConsumerRegistry) {
         CircuitBreakerRegistry circuitBreakerRegistry = new InMemoryCircuitBreakerRegistry();
         circuitBreakerProperties.getBackends().forEach(
@@ -47,7 +47,7 @@ public class CircuitBreakerConfiguration {
     }
 
     @Bean
-    public CircuitBreakerAspect circuitBreakerAspect(CircuitBreakerProperties circuitBreakerProperties,
+    public CircuitBreakerAspect circuitBreakerAspect(CircuitBreakerConfigurationProperties circuitBreakerProperties,
                                                      CircuitBreakerRegistry circuitBreakerRegistry) {
         return new CircuitBreakerAspect(circuitBreakerProperties, circuitBreakerRegistry);
     }

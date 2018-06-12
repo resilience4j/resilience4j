@@ -35,7 +35,7 @@ public @interface RateLimiter {
     /**
      * Name of the rate limiter
      *
-     * @return the name of the rate limiter
+     * @return the name of the limiter
      */
     String name();
 }
