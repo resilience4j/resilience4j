@@ -39,10 +39,10 @@ public class CircuitBreakerAspect implements Ordered {
 
     private static final Logger logger = LoggerFactory.getLogger(CircuitBreakerAspect.class);
 
-    private final CircuitBreakerProperties circuitBreakerProperties;
+    private final CircuitBreakerConfigurationProperties circuitBreakerProperties;
     private final CircuitBreakerRegistry circuitBreakerRegistry;
 
-    public CircuitBreakerAspect(CircuitBreakerProperties backendMonitorPropertiesRegistry, CircuitBreakerRegistry circuitBreakerRegistry) {
+    public CircuitBreakerAspect(CircuitBreakerConfigurationProperties backendMonitorPropertiesRegistry, CircuitBreakerRegistry circuitBreakerRegistry) {
         this.circuitBreakerProperties = backendMonitorPropertiesRegistry;
         this.circuitBreakerRegistry = circuitBreakerRegistry;
     }
