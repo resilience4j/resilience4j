@@ -81,7 +81,7 @@ public class CircuitBreakerConfigurationProperties {
         }
 
         if (properties.recordFailurePredicate != null) {
-            builder.recordFailure(getPredicate(properties.getRecordFailurePredicate()));
+            buildRecordFailurePredicate(properties, builder);
         }
 
         if (properties.recordExceptions != null) {
@@ -94,8 +94,8 @@ public class CircuitBreakerConfigurationProperties {
         return builder;
     }
 
-    protected Predicate<Throwable> getPredicate(Class<Predicate<Throwable>> predicateClass) {
-        return BeanUtils.instantiateClass(predicateClass);
+    protected void buildRecordFailurePredicate(BackendProperties properties, Builder builder) {
+        builder.recordFailure(BeanUtils.instantiateClass(properties.getRecordFailurePredicate()));
     }
 
     public Map<String, BackendProperties> getBackends() {
@@ -124,7 +124,7 @@ public class CircuitBreakerConfigurationProperties {
         private Integer eventConsumerBufferSize = 100;
 
         @NotNull
-        private Boolean registerHealthIndicator = false;
+        private Boolean registerHealthIndicator = true;
 
         @NotNull
         private Class<Predicate<Throwable>> recordFailurePredicate;
