@@ -1,0 +1,4 @@
+dependencies {
+    compileOnly project(':resilience4j-circuitbreaker')
+    compileOnly project(':resilience4j-ratelimiter')
+}

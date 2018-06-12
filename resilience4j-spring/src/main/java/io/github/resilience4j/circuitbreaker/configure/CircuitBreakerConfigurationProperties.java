@@ -18,17 +18,17 @@ package io.github.resilience4j.circuitbreaker.configure;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.Builder;
 import org.hibernate.validator.constraints.time.DurationMin;
+import org.springframework.beans.BeanUtils;
 
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 import java.time.Duration;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
+import java.util.function.Predicate;
 
-public class CircuitBreakerProperties {
+public class CircuitBreakerConfigurationProperties {
     // This property gives you control over CircuitBreaker aspect application order.
     // By default CircuitBreaker will be executed BEFORE RateLimiter.
     // By adjusting RateLimiterProperties.rateLimiterAspectOrder and CircuitBreakerProperties.circuitBreakerAspectOrder
@@ -80,14 +80,22 @@ public class CircuitBreakerProperties {
             builder.ringBufferSizeInHalfOpenState(properties.getRingBufferSizeInHalfOpenState());
         }
 
-        if(!properties.getInclude().isEmpty()){
-            builder.recordExceptions(properties.getInclude().toArray(EMPTY));
+        if (properties.recordFailurePredicate != null) {
+            builder.recordFailure(getPredicate(properties.getRecordFailurePredicate()));
         }
 
-        if(!properties.getExclude().isEmpty()){
-            builder.ignoreExceptions(properties.getExclude().toArray(EMPTY));
+        if (properties.recordExceptions != null) {
+            builder.recordExceptions(properties.recordExceptions);
+        }
+
+        if (properties.ignoreExceptions != null) {
+            builder.ignoreExceptions(properties.ignoreExceptions);
         }
         return builder;
+    }
+
+    protected Predicate<Throwable> getPredicate(Class<Predicate<Throwable>> predicateClass) {
+        return BeanUtils.instantiateClass(predicateClass);
     }
 
     public Map<String, BackendProperties> getBackends() {
@@ -119,11 +127,13 @@ public class CircuitBreakerProperties {
         private Boolean registerHealthIndicator = false;
 
         @NotNull
-        private List<Class<? extends Throwable>> include = new ArrayList<>();
+        private Class<Predicate<Throwable>> recordFailurePredicate;
 
         @NotNull
-        private List<Class<? extends Throwable>> exclude = new ArrayList<>();
+        private Class<? extends Throwable>[] recordExceptions;
 
+        @NotNull
+        private Class<? extends Throwable>[] ignoreExceptions;
         /**
          * Sets the wait duration in seconds the CircuitBreaker should stay open, before it switches to half closed.
          *
@@ -222,21 +232,28 @@ public class CircuitBreakerProperties {
             this.registerHealthIndicator = registerHealthIndicator;
         }
 
-        public List<Class<? extends Throwable>> getInclude() {
-            return new ArrayList<>(include);
+        public Class<Predicate<Throwable>> getRecordFailurePredicate() {
+            return recordFailurePredicate;
         }
 
-        public void setInclude(List<Class<? extends Throwable>> include) {
-            this.include = new ArrayList<>(include);
+        public void setRecordFailurePredicate(Class<Predicate<Throwable>> recordFailurePredicate) {
+            this.recordFailurePredicate = recordFailurePredicate;
         }
 
-        public List<Class<? extends Throwable>> getExclude() {
-            return new ArrayList<>(exclude);
+        public Class<? extends Throwable>[] getRecordExceptions() {
+            return recordExceptions;
         }
 
-        public void setExclude(List<Class<? extends Throwable>> exclude) {
-            this.exclude = new ArrayList<>(exclude);
+        public void setRecordExceptions(Class<? extends Throwable>[] recordExceptions) {
+            this.recordExceptions = recordExceptions;
         }
-    }
+
+        public Class<? extends Throwable>[] getIgnoreExceptions() {
+            return ignoreExceptions;
+        }
+
+        public void setIgnoreExceptions(Class<? extends Throwable>[] ignoreExceptions) {
+            this.ignoreExceptions = ignoreExceptions;
+        }    }
 
 }
