@@ -17,3 +17,5 @@ dependencies {
     testCompile project(':resilience4j-metrics')
     testCompile ( libraries.prometheus_spring_boot )
 }
+
+compileJava.dependsOn(processResources)
