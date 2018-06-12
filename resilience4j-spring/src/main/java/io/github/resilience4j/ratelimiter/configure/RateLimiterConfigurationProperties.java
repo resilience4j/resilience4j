@@ -21,7 +21,7 @@ import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 
-public class RateLimiterProperties {
+public class RateLimiterConfigurationProperties {
     // This property gives you control over RateLimiter aspect application order.
     // Integer.MAX_VALUE means that RateLimiter aspect will be last one applied to any decorated bean.
     // It also means that by default RateLimiter will be executed AFTER CircuitBreaker.
