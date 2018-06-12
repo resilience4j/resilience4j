@@ -13,3 +13,5 @@ dependencies {
     testCompile ( libraries.micrometer_prometheus )
     testCompile ( libraries.spring_boot2_web )
 }
+
+compileJava.dependsOn(processResources)

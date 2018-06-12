@@ -40,9 +40,9 @@ public class RateLimiterAspect implements Ordered {
     public static final String RATE_LIMITER_RECEIVED = "Created or retrieved rate limiter '{}' with period: '{}'; limit for period: '{}'; timeout: '{}'; method: '{}'";
     private static final Logger logger = LoggerFactory.getLogger(RateLimiterAspect.class);
     private final RateLimiterRegistry rateLimiterRegistry;
-    private final RateLimiterProperties properties;
+    private final RateLimiterConfigurationProperties properties;
 
-    public RateLimiterAspect(RateLimiterRegistry rateLimiterRegistry, RateLimiterProperties properties) {
+    public RateLimiterAspect(RateLimiterRegistry rateLimiterRegistry, RateLimiterConfigurationProperties properties) {
         this.rateLimiterRegistry = rateLimiterRegistry;
         this.properties = properties;
     }
