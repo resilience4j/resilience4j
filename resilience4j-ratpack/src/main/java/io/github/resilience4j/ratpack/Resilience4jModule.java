@@ -177,12 +177,16 @@ public class Resilience4jModule extends ConfigurableModule<Resilience4jConfig> {
                 if (circuitBreakerConfig.getDefaults()) {
                     circuitBreaker = circuitBreakerRegistry.circuitBreaker(name);
                 } else {
-                    circuitBreaker = circuitBreakerRegistry.circuitBreaker(name, CircuitBreakerConfig.custom()
+                    CircuitBreakerConfig.Builder builder = CircuitBreakerConfig.custom()
                             .failureRateThreshold(circuitBreakerConfig.getFailureRateThreshold())
                             .ringBufferSizeInClosedState(circuitBreakerConfig.getRingBufferSizeInClosedState())
                             .ringBufferSizeInHalfOpenState(circuitBreakerConfig.getRingBufferSizeInHalfOpenState())
                             .waitDurationInOpenState(Duration.ofMillis(circuitBreakerConfig.getWaitIntervalInMillis()))
-                            .build());
+                            .recordFailure(circuitBreakerConfig.getRecordFailurePredicate());
+                    if (circuitBreakerConfig.isAutomaticTransitionFromOpenToHalfOpen()) {
+                        builder.enableAutomaticTransitionFromOpenToHalfOpen();
+                    }
+                    circuitBreaker = circuitBreakerRegistry.circuitBreaker(name, builder.build());
                 }
                 if (endpointsConfig.getCircuitBreakers().isEnabled()) {
                     circuitBreaker.getEventPublisher().onEvent(cbConsumerRegistry.createEventConsumer(name, endpointsConfig.getCircuitBreakers().getEventConsumerBufferSize()));

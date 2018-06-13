@@ -36,9 +36,18 @@ public class MyModule extends AbstractModule {
 
     @Override
     protected void configure() {
-        CircuitBreakerConfig config = CircuitBreakerConfig.custom();
-        bind(CircuitBreakerRegistry.class).toInstance(CircuitBreakerRegistry.of(config);
-        install(Resilience4jModule.class);
+        CircuitBreakerConfig config = CircuitBreakerConfig.custom().build();
+        bind(CircuitBreakerRegistry.class).toInstance(CircuitBreakerRegistry.of(config));
+        Resilience4jModule module = new Resilience4jModule();
+        module.configure(c -> {
+            c.circuitBreaker("test", circuitBreakerConfig ->
+                circuitBreakerConfig
+                        .defaults(false)
+                        .automaticTransitionFromOpenToHalfOpen(false)
+                        .failureRateThreshold(25)
+            );
+        });
+        install(new Resilience4jModule());
     }
 }
 ----
@@ -51,40 +60,40 @@ This will only rate limit the `/` endpoint.
 [source,groovy]
 ----
 ratpack {
-            bindings {
-                bindInstance(RateLimiterRegistry, RateLimiterRegistry.ofDefaults())
-                module(Resilience4jModule)
-            }
-            handlers {
-                get(new RateLimiterHandler(registry, 'test'))
-                get {
-                    render 'success'
-                }
-                get('a') {
-                    render 'success'
-                }
-            }
+    bindings {
+        bindInstance(RateLimiterRegistry, RateLimiterRegistry.ofDefaults())
+        module(Resilience4jModule)
+    }
+    handlers {
+        get(new RateLimiterHandler(registry, 'test'))
+        get {
+            render 'success'
         }
+        get('a') {
+            render 'success'
+        }
+    }
+}
 ----
 
 This will rate limit all endpoints against the same `RateLimiter`.
 [source,groovy]
 ----
 ratpack {
-            bindings {
-                bindInstance(RateLimiterRegistry, RateLimiterRegistry.ofDefaults())
-                module(Resilience4jModule)
-            }
-            handlers {
-                all(new RateLimiterHandler(registry, 'test'))
-                get {
-                    render 'success'
-                }
-                get('a') {
-                    render 'success'
-                }
-            }
+    bindings {
+        bindInstance(RateLimiterRegistry, RateLimiterRegistry.ofDefaults())
+        module(Resilience4jModule)
+    }
+    handlers {
+        all(new RateLimiterHandler(registry, 'test'))
+        get {
+            render 'success'
         }
+        get('a') {
+            render 'success'
+        }
+    }
+}
 ----
 
 ==== Promises
@@ -95,7 +104,7 @@ that is coming from some sort of I/O source.
 
 ===== Bulkhead
 
-You can easily apply a Bulkhead to any Ratpack Promise.
+You can easily apply a Bulkhead to any Ratpack Promise, given an existing `Bulkhead` instance called `bulkhead`.
 
 [source,java]
 ----
@@ -107,7 +116,7 @@ public Promise<String> methodWhichReturnsAPromise() {
 
 ===== CircuitBreaker
 
-You can easily apply a CircuitBreaker to any Ratpack Promise.
+You can easily apply a CircuitBreaker to any Ratpack Promise, given an existing `CircuitBreaker` instance called `circuitBreaker`.
 
 [source,java]
 ----
@@ -117,9 +126,26 @@ public Promise<String> methodWhichReturnsAPromise() {
 }
 ----
 
+You can also specify in-line which exception conditions should be recorded as a failure. In this example when
+`MyException` is thrown, it will be recorded as a circuitbreaker failure. Other exceptions will be ignored by
+the `circuitBreaker`.
+
+[source,java]
+----
+public Promise<String> methodWhichReturnsAPromise() {
+    return backendBConnector.methodWhichReturnsAPromise()
+            .transform(
+                CircuitBreakerTransformer
+                    .of(circuitBreaker)
+                    .recover(t -> "recovered")
+                    .recordFailurePredicate(e -> e instanceof MyException)
+            );
+}
+----
+
 ===== Retry
 
-You can easily apply a Retry to any Ratpack Promise.
+You can easily apply a Retry to any Ratpack Promise, given an existing `Retry` instance called `retry`.
 
 [source,java]
 ----
@@ -131,7 +157,7 @@ public Promise<String> methodWhichReturnsAPromise() {
 
 ===== RateLimiter
 
-You can easily apply a RateLimiter to any Ratpack Promise.
+You can easily apply a RateLimiter to any Ratpack Promise, given an existing `RateLimiter` instance called `rateLimiter`.
 
 [source,java]
 ----
@@ -305,6 +331,8 @@ ratpack {
     }
 }
 ----
+
+Note that `recordFailurePredicate` cannot be specified via `yaml` configuration.
 
 [source,yaml]
 ----
