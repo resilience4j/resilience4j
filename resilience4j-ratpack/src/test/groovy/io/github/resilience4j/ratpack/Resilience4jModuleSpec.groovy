@@ -59,6 +59,9 @@ class Resilience4jModuleSpec extends Specification {
                                 .waitIntervalInMillis(5000)
                                 .ringBufferSizeInClosedState(200)
                                 .ringBufferSizeInHalfOpenState(20)
+                                .failureRateThreshold(60)
+                                .automaticTransitionFromOpenToHalfOpen(true)
+                                .recordFailurePredicate { true }
                     }
                 }
             }
@@ -86,6 +89,7 @@ class Resilience4jModuleSpec extends Specification {
             assert ringBufferSizeInHalfOpenState == 10
             assert waitDurationInOpenState == Duration.ofMinutes(1)
             assert failureRateThreshold == 50
+            assert !automaticTransitionFromOpenToHalfOpenEnabled
             it
         }
         def test2 = circuitBreakerRegistry.circuitBreaker('test2')
@@ -94,7 +98,9 @@ class Resilience4jModuleSpec extends Specification {
             assert ringBufferSizeInClosedState == 200
             assert ringBufferSizeInHalfOpenState == 20
             assert waitDurationInOpenState == Duration.ofMillis(5000)
-            assert failureRateThreshold == 50
+            assert failureRateThreshold == 60
+            assert automaticTransitionFromOpenToHalfOpenEnabled
+            assert recordFailurePredicate.test(new Exception())
             it
         }
     }
@@ -166,6 +172,8 @@ class Resilience4jModuleSpec extends Specification {
             assert ringBufferSizeInHalfOpenState == 10
             assert waitDurationInOpenState == Duration.ofMinutes(1)
             assert failureRateThreshold == 50
+            assert !automaticTransitionFromOpenToHalfOpenEnabled
+            assert recordFailurePredicate.test(new Exception())
             it
         }
         def test2 = circuitBreakerRegistry.circuitBreaker('test2')
@@ -174,7 +182,9 @@ class Resilience4jModuleSpec extends Specification {
             assert ringBufferSizeInClosedState == 200
             assert ringBufferSizeInHalfOpenState == 20
             assert waitDurationInOpenState == Duration.ofMillis(5000)
-            assert failureRateThreshold == 50
+            assert failureRateThreshold == 60
+            assert automaticTransitionFromOpenToHalfOpenEnabled
+            assert recordFailurePredicate.test(new Exception())
             it
         }
     }

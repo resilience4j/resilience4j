@@ -16,10 +16,9 @@
 
 package io.github.resilience4j.ratpack.circuitbreaker;
 
-import static io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.DEFAULT_MAX_FAILURE_THRESHOLD;
-import static io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.DEFAULT_RING_BUFFER_SIZE_IN_CLOSED_STATE;
-import static io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.DEFAULT_RING_BUFFER_SIZE_IN_HALF_OPEN_STATE;
-import static io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.DEFAULT_WAIT_DURATION_IN_OPEN_STATE;
+import java.util.function.Predicate;
+
+import static io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.*;
 
 public class CircuitBreakerConfig {
     private boolean defaults = false;
@@ -27,6 +26,8 @@ public class CircuitBreakerConfig {
     private Integer failureRateThreshold = DEFAULT_MAX_FAILURE_THRESHOLD;
     private Integer ringBufferSizeInClosedState = DEFAULT_RING_BUFFER_SIZE_IN_CLOSED_STATE;
     private Integer ringBufferSizeInHalfOpenState = DEFAULT_RING_BUFFER_SIZE_IN_HALF_OPEN_STATE;
+    private Predicate<Throwable> recordFailurePredicate = DEFAULT_RECORD_FAILURE_PREDICATE;
+    private boolean automaticTransitionFromOpenToHalfOpen = false;
 
     /**
      * Use config provided by circuitbreaker registry instead of these config values.
@@ -59,6 +60,16 @@ public class CircuitBreakerConfig {
         return this;
     }
 
+    public CircuitBreakerConfig recordFailurePredicate(Predicate<Throwable> recordFailurePredicate) {
+        this.recordFailurePredicate = recordFailurePredicate;
+        return this;
+    }
+
+    public CircuitBreakerConfig automaticTransitionFromOpenToHalfOpen(boolean automaticTransitionFromOpenToHalfOpen) {
+        this.automaticTransitionFromOpenToHalfOpen = automaticTransitionFromOpenToHalfOpen;
+        return this;
+    }
+
     public boolean getDefaults() {
         return defaults;
     }
@@ -77,6 +88,14 @@ public class CircuitBreakerConfig {
 
     public Integer getRingBufferSizeInHalfOpenState() {
         return ringBufferSizeInHalfOpenState;
+    }
+
+    public Predicate<Throwable> getRecordFailurePredicate() {
+        return recordFailurePredicate;
+    }
+
+    public boolean isAutomaticTransitionFromOpenToHalfOpen() {
+        return automaticTransitionFromOpenToHalfOpen;
     }
 
 }

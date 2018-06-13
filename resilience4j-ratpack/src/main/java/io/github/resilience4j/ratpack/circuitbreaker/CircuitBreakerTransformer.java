@@ -17,17 +17,20 @@ package io.github.resilience4j.ratpack.circuitbreaker;
 
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerOpenException;
+import io.github.resilience4j.ratpack.internal.AbstractTransformer;
 import ratpack.exec.Downstream;
 import ratpack.exec.Upstream;
 import ratpack.func.Function;
 
-public class CircuitBreakerTransformer<T> implements Function<Upstream<? extends T>, Upstream<T>> {
+import java.util.function.Predicate;
 
+public class CircuitBreakerTransformer<T> extends AbstractTransformer<T> {
     private final CircuitBreaker circuitBreaker;
-    private Function<Throwable, ? extends T> recoverer;
+    private Predicate<Throwable> recordFailurePredicate;
 
     private CircuitBreakerTransformer(CircuitBreaker circuitBreaker) {
         this.circuitBreaker = circuitBreaker;
+        this.recordFailurePredicate = circuitBreaker.getCircuitBreakerConfig().getRecordFailurePredicate();
     }
 
     /**
@@ -41,6 +44,18 @@ public class CircuitBreakerTransformer<T> implements Function<Upstream<? extends
      */
     public static <T> CircuitBreakerTransformer<T> of(CircuitBreaker circuitBreaker) {
         return new CircuitBreakerTransformer<>(circuitBreaker);
+    }
+
+    /**
+     * Set predicate for which exceptions should record circuitbreaker failure.
+     * This will override any values configured in {@link CircuitBreakerConfig}.
+     *
+     * @param recordFailurePredicate the predicate. When it evaluates to true, the throwable will record an error.
+     * @return the transformer
+     */
+    public CircuitBreakerTransformer<T> recordFailurePredicate(Predicate<Throwable> recordFailurePredicate) {
+        this.recordFailurePredicate = recordFailurePredicate;
+        return this;
     }
 
     /**
@@ -72,16 +87,10 @@ public class CircuitBreakerTransformer<T> implements Function<Upstream<? extends
                     @Override
                     public void error(Throwable throwable) {
                         long durationInNanos = System.nanoTime() - start;
-                        circuitBreaker.onError(durationInNanos, throwable);
-                        try {
-                            if (recoverer != null) {
-                                down.success(recoverer.apply(throwable));
-                            } else {
-                                down.error(throwable);
-                            }
-                        } catch (Throwable t) {
-                            down.error(t);
+                        if (recordFailurePredicate.test(throwable)) {
+                            circuitBreaker.onError(durationInNanos, throwable);
                         }
+                        handleRecovery(down, throwable);
                     }
 
                     @Override
@@ -91,15 +100,7 @@ public class CircuitBreakerTransformer<T> implements Function<Upstream<? extends
                 });
             } else {
                 Throwable t = new CircuitBreakerOpenException(String.format("CircuitBreaker '%s' is open", circuitBreaker.getName()));
-                if (recoverer != null) {
-                    try {
-                        down.success(recoverer.apply(t));
-                    } catch (Throwable t2) {
-                        down.error(t2);
-                    }
-                } else {
-                    down.error(t);
-                }
+                handleRecovery(down, t);
             }
         };
     }
