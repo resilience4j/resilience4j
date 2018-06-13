@@ -15,15 +15,15 @@
  */
 package io.github.resilience4j.ratpack.retry;
 
+import io.github.resilience4j.ratpack.internal.AbstractTransformer;
 import io.github.resilience4j.retry.Retry;
 import ratpack.exec.Downstream;
 import ratpack.exec.Upstream;
 import ratpack.func.Function;
 
-public class RetryTransformer<T> implements Function<Upstream<? extends T>, Upstream<T>> {
+public class RetryTransformer<T> extends AbstractTransformer<T> {
 
     private final Retry retry;
-    private Function<Throwable, ? extends T> recoverer;
 
     private RetryTransformer(Retry retry) {
         this.retry = retry;

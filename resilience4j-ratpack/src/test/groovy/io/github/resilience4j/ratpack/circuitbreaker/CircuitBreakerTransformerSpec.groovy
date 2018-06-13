@@ -15,8 +15,11 @@
  */
 package io.github.resilience4j.ratpack.circuitbreaker
 
+import groovy.transform.Canonical
+import groovy.transform.TupleConstructor
 import io.github.resilience4j.circuitbreaker.CircuitBreaker
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig
+import io.github.resilience4j.circuitbreaker.CircuitBreakerOpenException
 import io.github.resilience4j.ratpack.circuitbreaker.CircuitBreakerTransformer
 import ratpack.exec.Blocking
 import ratpack.test.exec.ExecHarness
@@ -144,6 +147,45 @@ class CircuitBreakerTransformerSpec extends Specification {
         breaker.state == CircuitBreaker.State.CLOSED
     }
 
+    def "test that only specific exceptions are recorded as errors"() {
+        given:
+        CircuitBreaker breaker = buildBreaker()
+        CircuitBreakerTransformer<String> transformer = CircuitBreakerTransformer
+                .of(breaker)
+                .recordFailurePredicate { it instanceof DummyException2 }
+        Exception e1 = new DummyException1("puke")
+        Exception e2 = new DummyException2("puke")
+
+        when:
+        def r = null
+        (1..10).forEach {
+            r = ExecHarness.yieldSingle {
+                Blocking.<String> get { throw e1 }
+                        .transform(transformer)
+            }
+        }
+
+        then:
+        r.value == null
+        r.error
+        r.throwable == e1
+        breaker.state == CircuitBreaker.State.CLOSED
+
+        when:
+        (1..10).forEach {
+            r = ExecHarness.yieldSingle {
+                Blocking.<String> get { throw e2 }
+                        .transform(transformer)
+            }
+        }
+
+        then:
+        r.value == null
+        r.error
+        r.throwable instanceof CircuitBreakerOpenException
+        breaker.state == CircuitBreaker.State.OPEN
+    }
+
     def buildBreaker() {
         CircuitBreakerConfig config = CircuitBreakerConfig.custom()
                 .failureRateThreshold(50)
@@ -154,4 +196,16 @@ class CircuitBreakerTransformerSpec extends Specification {
         CircuitBreaker.of("test", config)
     }
 
+}
+
+class DummyException1 extends Exception {
+    DummyException1(String message) {
+        super(message)
+    }
+}
+
+class DummyException2 extends Exception {
+    DummyException2(String message) {
+        super(message)
+    }
 }

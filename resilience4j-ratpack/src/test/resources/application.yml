@@ -23,7 +23,8 @@ resilience4j:
             ringBufferSizeInClosedState: 200
             ringBufferSizeInHalfOpenState: 20
             waitIntervalInMillis: 5000
-            failureRateThreshold: 50
+            failureRateThreshold: 60
+            automaticTransitionFromOpenToHalfOpen: true
     rateLimiters:
         test1:
             defaults: true
