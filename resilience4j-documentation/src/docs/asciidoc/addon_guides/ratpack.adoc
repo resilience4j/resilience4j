@@ -332,7 +332,8 @@ ratpack {
 }
 ----
 
-Note that `recordFailurePredicate` cannot be specified via `yaml` configuration.
+Note that `recordFailurePredicate` cannot be specified via `yaml` configuration. Instead specify `recordExceptions` and `ignoreExceptions`.
+The below example will record everything exception `java.io.IOException`.
 
 [source,yaml]
 ----
@@ -351,6 +352,8 @@ resilience4j:
             ringBufferSizeInHalfOpenState: 20
             waitInterval: 5000
             failureRateThreshold: 50
+            recordExceptions: java.lang.Exception
+            ignoreExceptions: java.io.IOException
     rateLimiters:
         test1:
             defaults: true

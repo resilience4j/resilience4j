@@ -282,6 +282,7 @@ public class CircuitBreakerConfig {
         }
 
         static Predicate<Throwable> makePredicate(Class<? extends Throwable> exClass) {
+
             return (Throwable e) -> exClass.isAssignableFrom(e.getClass());
         }
     }

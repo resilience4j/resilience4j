@@ -15,8 +15,6 @@
  */
 package io.github.resilience4j.ratpack.circuitbreaker
 
-import groovy.transform.Canonical
-import groovy.transform.TupleConstructor
 import io.github.resilience4j.circuitbreaker.CircuitBreaker
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig
 import io.github.resilience4j.circuitbreaker.CircuitBreakerOpenException
@@ -26,6 +24,7 @@ import ratpack.test.exec.ExecHarness
 import spock.lang.Specification
 
 import java.time.Duration
+import java.util.function.Predicate
 
 class CircuitBreakerTransformerSpec extends Specification {
 
@@ -149,10 +148,8 @@ class CircuitBreakerTransformerSpec extends Specification {
 
     def "test that only specific exceptions are recorded as errors"() {
         given:
-        CircuitBreaker breaker = buildBreaker()
-        CircuitBreakerTransformer<String> transformer = CircuitBreakerTransformer
-                .of(breaker)
-                .recordFailurePredicate { it instanceof DummyException2 }
+        CircuitBreaker breaker = buildBreaker(new MyPredicate())
+        CircuitBreakerTransformer<String> transformer = CircuitBreakerTransformer.of(breaker)
         Exception e1 = new DummyException1("puke")
         Exception e2 = new DummyException2("puke")
 
@@ -186,26 +183,39 @@ class CircuitBreakerTransformerSpec extends Specification {
         breaker.state == CircuitBreaker.State.OPEN
     }
 
-    def buildBreaker() {
+    def buildBreaker(Predicate<Throwable> predicate) {
         CircuitBreakerConfig config = CircuitBreakerConfig.custom()
                 .failureRateThreshold(50)
                 .waitDurationInOpenState(Duration.ofMillis(1000))
                 .ringBufferSizeInHalfOpenState(2)
                 .ringBufferSizeInClosedState(2)
+                .recordFailure(predicate)
                 .build()
         CircuitBreaker.of("test", config)
     }
 
-}
-
-class DummyException1 extends Exception {
-    DummyException1(String message) {
-        super(message)
+    def buildBreaker() {
+        return buildBreaker(null)
     }
-}
 
-class DummyException2 extends Exception {
-    DummyException2(String message) {
-        super(message)
+    static class MyPredicate implements Predicate<Throwable> {
+
+        @Override
+        boolean test(Throwable throwable) {
+            return !(throwable instanceof DummyException1)
+        }
     }
+
+    static class DummyException1 extends Exception {
+        DummyException1(String message) {
+            super(message)
+        }
+    }
+
+    static class DummyException2 extends Exception {
+        DummyException2(String message) {
+            super(message)
+        }
+    }
+
 }

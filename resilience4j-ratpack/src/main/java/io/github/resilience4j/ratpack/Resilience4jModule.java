@@ -182,7 +182,8 @@ public class Resilience4jModule extends ConfigurableModule<Resilience4jConfig> {
                             .ringBufferSizeInClosedState(circuitBreakerConfig.getRingBufferSizeInClosedState())
                             .ringBufferSizeInHalfOpenState(circuitBreakerConfig.getRingBufferSizeInHalfOpenState())
                             .waitDurationInOpenState(Duration.ofMillis(circuitBreakerConfig.getWaitIntervalInMillis()))
-                            .recordFailure(circuitBreakerConfig.getRecordFailurePredicate());
+                            .recordExceptions(circuitBreakerConfig.getRecordExceptionClasses())
+                            .ignoreExceptions(circuitBreakerConfig.getIgnoreExceptionClasses());
                     if (circuitBreakerConfig.isAutomaticTransitionFromOpenToHalfOpen()) {
                         builder.enableAutomaticTransitionFromOpenToHalfOpen();
                     }
