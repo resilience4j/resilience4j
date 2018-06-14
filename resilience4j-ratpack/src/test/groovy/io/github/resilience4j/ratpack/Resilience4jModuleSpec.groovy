@@ -61,7 +61,6 @@ class Resilience4jModuleSpec extends Specification {
                                 .ringBufferSizeInHalfOpenState(20)
                                 .failureRateThreshold(60)
                                 .automaticTransitionFromOpenToHalfOpen(true)
-                                .recordFailurePredicate { true }
                     }
                 }
             }
@@ -173,7 +172,8 @@ class Resilience4jModuleSpec extends Specification {
             assert waitDurationInOpenState == Duration.ofMinutes(1)
             assert failureRateThreshold == 50
             assert !automaticTransitionFromOpenToHalfOpenEnabled
-            assert recordFailurePredicate.test(new Exception())
+            assert recordFailurePredicate.test(new DummyException1("test"))
+            assert recordFailurePredicate.test(new DummyException2("test"))
             it
         }
         def test2 = circuitBreakerRegistry.circuitBreaker('test2')
@@ -184,7 +184,8 @@ class Resilience4jModuleSpec extends Specification {
             assert waitDurationInOpenState == Duration.ofMillis(5000)
             assert failureRateThreshold == 60
             assert automaticTransitionFromOpenToHalfOpenEnabled
-            assert recordFailurePredicate.test(new Exception())
+            assert recordFailurePredicate.test(new DummyException1("test"))
+            assert !recordFailurePredicate.test(new DummyException2("test"))
             it
         }
     }
@@ -697,6 +698,18 @@ class Resilience4jModuleSpec extends Specification {
         @CircuitBreaker(name = "test")
         String name() {
             "dan"
+        }
+    }
+
+    static class DummyException1 extends Exception {
+        DummyException1(String message) {
+            super(message)
+        }
+    }
+
+    static class DummyException2 extends Exception {
+        DummyException2(String message) {
+            super(message)
         }
     }
 }
