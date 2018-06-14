@@ -22,15 +22,11 @@ import ratpack.exec.Downstream;
 import ratpack.exec.Upstream;
 import ratpack.func.Function;
 
-import java.util.function.Predicate;
-
 public class CircuitBreakerTransformer<T> extends AbstractTransformer<T> {
-    private final CircuitBreaker circuitBreaker;
-    private Predicate<Throwable> recordFailurePredicate;
+    private CircuitBreaker circuitBreaker;
 
     private CircuitBreakerTransformer(CircuitBreaker circuitBreaker) {
         this.circuitBreaker = circuitBreaker;
-        this.recordFailurePredicate = circuitBreaker.getCircuitBreakerConfig().getRecordFailurePredicate();
     }
 
     /**
@@ -44,18 +40,6 @@ public class CircuitBreakerTransformer<T> extends AbstractTransformer<T> {
      */
     public static <T> CircuitBreakerTransformer<T> of(CircuitBreaker circuitBreaker) {
         return new CircuitBreakerTransformer<>(circuitBreaker);
-    }
-
-    /**
-     * Set predicate for which exceptions should record circuitbreaker failure.
-     * This will override any values configured in {@link CircuitBreakerConfig}.
-     *
-     * @param recordFailurePredicate the predicate. When it evaluates to true, the throwable will record an error.
-     * @return the transformer
-     */
-    public CircuitBreakerTransformer<T> recordFailurePredicate(Predicate<Throwable> recordFailurePredicate) {
-        this.recordFailurePredicate = recordFailurePredicate;
-        return this;
     }
 
     /**
@@ -87,9 +71,7 @@ public class CircuitBreakerTransformer<T> extends AbstractTransformer<T> {
                     @Override
                     public void error(Throwable throwable) {
                         long durationInNanos = System.nanoTime() - start;
-                        if (recordFailurePredicate.test(throwable)) {
-                            circuitBreaker.onError(durationInNanos, throwable);
-                        }
+                        circuitBreaker.onError(durationInNanos, throwable);
                         handleRecovery(down, throwable);
                     }
 
