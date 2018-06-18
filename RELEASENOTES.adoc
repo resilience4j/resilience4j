@@ -159,7 +159,7 @@ NOTE: Breaking changes:
 == Version 0.12.1
 * Issue #212: Fixed r4j-reactor bug when onSubscribe throws an error
 
-== Version 0.13.
+== Version 0.13.0
 * PR #216: Added Circuit Breaker option to auto transition to half open
 * PR #217: Added ignoreExceptions() and recordExceptions() to CircuitBreakerConfig.Builder
 * PR #226: Ratpack does no longer depend on Dropwizard or Prometheus
