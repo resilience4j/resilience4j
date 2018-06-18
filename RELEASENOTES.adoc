@@ -159,5 +159,12 @@ NOTE: Breaking changes:
 == Version 0.12.1
 * Issue #212: Fixed r4j-reactor bug when onSubscribe throws an error
 
-== Version 0.13.0
+== Version 0.13.
+* PR #216: Added Circuit Breaker option to auto transition to half open
+* PR #217: Added ignoreExceptions() and recordExceptions() to CircuitBreakerConfig.Builder
+* PR #226: Ratpack does no longer depend on Dropwizard or Prometheus
+* PR #227: Ratpack module uses Spring Reactor now
+* PR #229: Publish retry event for every retry
+* PR #231: Added validation to Spring Boot CircuitBreakerProperties
 * PR #234: Non-blocking API for RateLimiter
+* PR #236: Added Spring 4, Spring Boot 1 and Spring Boot 2 modules
