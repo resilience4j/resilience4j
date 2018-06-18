@@ -30,10 +30,10 @@ import java.lang.annotation.*;
 public @interface CircuitBreaker {
 
     /**
-     * Name of the backend monitor.
+     * Name of the circuit breaker.
      *
      * @return the name of the circuit breaker
      */
-    String backend();
+    String name();
 
 }
