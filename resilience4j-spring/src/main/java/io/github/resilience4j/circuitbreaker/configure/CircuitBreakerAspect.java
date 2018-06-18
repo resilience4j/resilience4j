@@ -15,9 +15,8 @@
  */
 package io.github.resilience4j.circuitbreaker.configure;
 
-import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
-import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
-import io.github.resilience4j.circuitbreaker.utils.CircuitBreakerUtils;
+import java.lang.reflect.Method;
+
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -27,12 +26,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.Ordered;
 
-import java.lang.reflect.Method;
+import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.github.resilience4j.circuitbreaker.utils.CircuitBreakerUtils;
 
 /**
  * This Spring AOP aspect intercepts all methods which are annotated with a {@link CircuitBreaker} annotation.
  * The aspect protects an annotated method with a CircuitBreaker. The CircuitBreakerRegistry is used to retrieve an instance of a CircuitBreaker for
- * a specific backend.
+ * a specific name.
  */
 @Aspect
 public class CircuitBreakerAspect implements Ordered {
@@ -58,7 +59,7 @@ public class CircuitBreakerAspect implements Ordered {
         if (backendMonitored == null) {
             backendMonitored = getBackendMonitoredAnnotation(proceedingJoinPoint);
         }
-        String backend = backendMonitored.backend();
+        String backend = backendMonitored.name();
         io.github.resilience4j.circuitbreaker.CircuitBreaker circuitBreaker = getOrCreateCircuitBreaker(methodName, backend);
         return handleJoinPoint(proceedingJoinPoint, circuitBreaker, methodName);
     }
