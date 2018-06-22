@@ -15,16 +15,14 @@
  */
 package io.github.resilience4j.ratelimiter.autoconfigure;
 
+import io.github.resilience4j.circuitbreaker.autoconfigure.CircuitBreakerAutoConfiguration;
+import io.github.resilience4j.micrometer.RateLimiterMetrics;
+import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
 import org.springframework.boot.actuate.autoconfigure.metrics.MetricsAutoConfiguration;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-
-import io.github.resilience4j.circuitbreaker.autoconfigure.CircuitBreakerAutoConfiguration;
-import io.github.resilience4j.micrometer.RateLimiterMetrics;
-import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
-import io.micrometer.core.instrument.MeterRegistry;
 
 /**
  * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration
@@ -35,9 +33,7 @@ import io.micrometer.core.instrument.MeterRegistry;
 @AutoConfigureAfter(value = {CircuitBreakerAutoConfiguration.class, MetricsAutoConfiguration.class})
 public class RateLimiterMetricsAutoConfiguration {
     @Bean
-    public RateLimiterMetrics registerRateLimiterMetrics(RateLimiterRegistry rateLimiterRegistry, MeterRegistry meterRegistry) {
-        RateLimiterMetrics rateLimiterMetrics = RateLimiterMetrics.ofRateLimiterRegistry(rateLimiterRegistry);
-        rateLimiterMetrics.bindTo(meterRegistry);
-        return rateLimiterMetrics;
+    public RateLimiterMetrics registerRateLimiterMetrics(RateLimiterRegistry rateLimiterRegistry) {
+        return RateLimiterMetrics.ofRateLimiterRegistry(rateLimiterRegistry);
     }
 }
