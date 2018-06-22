@@ -24,7 +24,7 @@ ext {
     prometheusSimpleClientVersion = '0.3.0'
     reactorVersion = '3.1.5.RELEASE'
     reactiveStreamsVersion = '1.0.2'
-    micrometerVersion = '1.0.4'
+    micrometerVersion = '1.0.5'
     hibernateValidatorVersion = '6.0.9.Final'
 
     libraries = [
