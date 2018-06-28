@@ -3,7 +3,7 @@
 Integration of circuit breaker and rate limiter metrics with
 https://github.com/prometheus/client_java[Prometheus simple client]
 
-NOTE: For detailed documentation look at our *http://resilience4j.github.io/resilience4j/#_prometheus_metrics_exporter[Usage Guide]*
+NOTE: For detailed documentation look at our *http://resilience4j.github.io/resilience4j/#_prometheus_metrics_integration[Usage Guide]*
 
 == License
 
