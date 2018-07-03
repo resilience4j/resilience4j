@@ -224,7 +224,7 @@ public class RetrofitCircuitBreakerTest {
                         .withStatus(200)
                         .withHeader("Content-Type", "text/plain")
                         .withBody("hello world")));
-;
+
         circuitBreaker.transitionToOpenState();
 
         try {
