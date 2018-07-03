@@ -21,6 +21,8 @@ package io.github.resilience4j.retrofit;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
+import io.github.resilience4j.circuitbreaker.CircuitBreakerOpenException;
+import okhttp3.Dispatcher;
 import okhttp3.OkHttpClient;
 import org.junit.Before;
 import org.junit.Rule;
@@ -34,6 +36,7 @@ import java.util.concurrent.TimeUnit;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.fail;
 
 /**
  * Tests the integration of the Retrofit HTTP client and {@link CircuitBreaker}
@@ -50,6 +53,8 @@ public class RetrofitCircuitBreakerTest {
 
     private CircuitBreaker circuitBreaker = CircuitBreaker.of("test", circuitBreakerConfig);
 
+    private OkHttpClient client;
+
     private RetrofitService service;
 
     @Before
@@ -57,7 +62,7 @@ public class RetrofitCircuitBreakerTest {
         this.circuitBreaker = CircuitBreaker.of("test", circuitBreakerConfig);
 
         final long TIMEOUT = 300; // ms
-        final OkHttpClient client = new OkHttpClient.Builder()
+        this.client = new OkHttpClient.Builder()
                 .connectTimeout(TIMEOUT, TimeUnit.MILLISECONDS)
                 .readTimeout(TIMEOUT, TimeUnit.MILLISECONDS)
                 .writeTimeout(TIMEOUT, TimeUnit.MILLISECONDS)
@@ -212,6 +217,27 @@ public class RetrofitCircuitBreakerTest {
         assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(1);
     }
 
+    @Test
+    public void shouldNotCallServiceOnEnqueueWhenOpen() throws Throwable {
+        stubFor(get(urlPathEqualTo("/greeting"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "text/plain")
+                        .withBody("hello world")));
+;
+        circuitBreaker.transitionToOpenState();
+
+        try {
+            EnqueueDecorator.enqueue(service.greeting());
+            fail("CircuitBreakerOpenException was expected");
+        } catch (CircuitBreakerOpenException ignore) {
+
+        }
+
+        ensureAllRequestsAreExecuted(Duration.ofSeconds(1));
+        verify(0, getRequestedFor(urlPathEqualTo("/greeting")));
+    }
+
     @Test(expected = IllegalArgumentException.class)
     public void shouldThrowOnBadService() {
         BadRetrofitService badService = new Retrofit.Builder()
@@ -221,5 +247,17 @@ public class RetrofitCircuitBreakerTest {
                 .create(BadRetrofitService.class);
 
         badService.greeting();
+    }
+
+    private void ensureAllRequestsAreExecuted(Duration timeout) throws InterruptedException {
+        long end = System.nanoTime() + timeout.toNanos();
+        Dispatcher dispatcher = client.dispatcher();
+        while (System.nanoTime() < end) {
+            if (dispatcher.queuedCallsCount() <= 0 && dispatcher.runningCallsCount() <= 0) {
+                return;
+            }
+            Thread.sleep(10);
+        }
+        fail("Timeout exceeded while waiting for requests to be finished");
     }
 }
