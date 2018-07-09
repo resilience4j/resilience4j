@@ -156,7 +156,7 @@ NOTE: Breaking changes:
 
 * Issue #47: OSGI Support. Fixed bnd configuration in publishing.gradle
 
-== Version 0.12.1
+=== Version 0.12.1
 * Issue #212: Fixed r4j-reactor bug when onSubscribe throws an error
 
 == Version 0.13.0
@@ -168,3 +168,6 @@ NOTE: Breaking changes:
 * PR #231: Added validation to Spring Boot CircuitBreakerProperties
 * PR #234: Non-blocking API for RateLimiter
 * PR #236: Added Spring 4, Spring Boot 1 and Spring Boot 2 modules
+
+=== Version 0.13.1
+* PR #243: Allow Spring to bind MeterBinders instead of directly binding
