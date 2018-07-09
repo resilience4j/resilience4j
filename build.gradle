@@ -23,7 +23,7 @@ apply plugin: 'com.github.kt3k.coveralls'
 apply from: "${rootDir}/libraries.gradle"
 
 ext {
-    releaseVersion = '0.13.0'
+    releaseVersion = '0.13.1'
 }
 
 allprojects {
@@ -31,7 +31,7 @@ allprojects {
     apply plugin: 'me.champeau.gradle.jmh'
     apply plugin: 'com.jfrog.artifactory'
 
-    version = '0.13.1'
+    version = '0.14.0-SNAPSHOT'
     group = 'io.github.resilience4j'
     description = 'Resilience4j is a lightweight, easy-to-use fault tolerance library designed for Java8 and functional programming'
 
