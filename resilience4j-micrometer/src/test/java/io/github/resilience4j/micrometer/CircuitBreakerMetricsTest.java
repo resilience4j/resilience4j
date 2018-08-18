@@ -49,6 +49,7 @@ public class CircuitBreakerMetricsTest {
                 .stream()
                 .map(Meter::getId)
                 .map(Meter.Id::getName)
+                .distinct() // collapse tag variants
                 .collect(Collectors.toList());
 
         final List<String> expectedMetrics = newArrayList(
@@ -57,7 +58,8 @@ public class CircuitBreakerMetricsTest {
                 "resilience4j.circuitbreaker.testName.not_permitted",
                 "resilience4j.circuitbreaker.testName.state",
                 "resilience4j.circuitbreaker.testName.buffered",
-                "resilience4j.circuitbreaker.testName.buffered_max");
+                "resilience4j.circuitbreaker.testName.buffered_max",
+                "resilience4j.circuitbreaker.testName.elapsed");
         assertThat(metricNames).hasSameElementsAs(expectedMetrics);
 
     }
