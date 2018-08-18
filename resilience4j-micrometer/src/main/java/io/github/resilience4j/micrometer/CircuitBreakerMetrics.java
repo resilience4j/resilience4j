@@ -19,13 +19,21 @@ import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Tag;
+import io.micrometer.core.instrument.Timer;
 import io.micrometer.core.instrument.binder.MeterBinder;
+import io.vavr.collection.Array;
 
 import static io.github.resilience4j.circuitbreaker.utils.MetricNames.*;
 import static io.github.resilience4j.micrometer.MetricUtils.getName;
 import static java.util.Objects.requireNonNull;
 
 public class CircuitBreakerMetrics implements MeterBinder {
+
+    private static final String RESULT_TAG = "result";
+    private static final Iterable<Tag> SUCCESS_TAGS = Array.of(Tag.of(RESULT_TAG, "success"));
+    private static final Iterable<Tag> ERROR_TAGS = Array.of(Tag.of(RESULT_TAG, "error"));
+    private static final Iterable<Tag> IGNORED_ERROR_TAGS = Array.of(Tag.of(RESULT_TAG, "ignoredError"));
 
     private final Iterable<CircuitBreaker> circuitBreakers;
     private final String prefix;
@@ -65,6 +73,15 @@ public class CircuitBreakerMetrics implements MeterBinder {
                     .register(registry);
             Gauge.builder(getName(prefix, name, SUCCESSFUL), circuitBreaker, (cb) -> cb.getMetrics().getNumberOfSuccessfulCalls())
                     .register(registry);
+
+            final String elapsedDurationMetricName = getName(prefix, name, ELAPSED);
+            final Timer successTimer = Timer.builder(elapsedDurationMetricName).tags(SUCCESS_TAGS).register(registry);
+            final Timer errorTimer = Timer.builder(elapsedDurationMetricName).tags(ERROR_TAGS).register(registry);
+            final Timer ignoredErrorTimer = Timer.builder(elapsedDurationMetricName).tags(IGNORED_ERROR_TAGS).register(registry);
+            circuitBreaker.getEventPublisher()
+                    .onSuccess(event -> successTimer.record(event.getElapsedDuration()))
+                    .onError(event -> errorTimer.record(event.getElapsedDuration()))
+                    .onIgnoredError(event -> ignoredErrorTimer.record(event.getElapsedDuration()));
         }
     }
 }
