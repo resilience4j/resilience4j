@@ -49,6 +49,26 @@ public class CircuitBreakerMetrics implements MeterBinder {
         return new CircuitBreakerMetrics(circuitBreakerRegistry.getAllCircuitBreakers());
     }
 
+    /**
+     * Creates a new instance CircuitBreakerMetrics {@link CircuitBreakerMetrics} with
+     * an {@link Iterable} of circuit breakers as a source.
+     *
+     * @param circuitBreakers the circuit breakers
+     */
+    public static CircuitBreakerMetrics ofIterable(Iterable<CircuitBreaker> circuitBreakers) {
+        return new CircuitBreakerMetrics(circuitBreakers);
+    }
+
+    /**
+     * Creates a new instance CircuitBreakerMetrics {@link CircuitBreakerMetrics} with
+     * an {@link Iterable} of circuit breakers as a source.
+     *
+     * @param circuitBreakers the circuit breakers
+     */
+    public static CircuitBreakerMetrics ofIterable(String prefix, Iterable<CircuitBreaker> circuitBreakers) {
+        return new CircuitBreakerMetrics(circuitBreakers, prefix);
+    }
+
     @Override
     public void bindTo(MeterRegistry registry) {
         for (CircuitBreaker circuitBreaker : circuitBreakers) {
