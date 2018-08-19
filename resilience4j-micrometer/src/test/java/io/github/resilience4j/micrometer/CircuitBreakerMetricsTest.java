@@ -88,8 +88,8 @@ public class CircuitBreakerMetricsTest {
         CircuitBreakerMetrics circuitBreakerMetrics = CircuitBreakerMetrics.ofCircuitBreakerRegistry(circuitBreakerRegistry);
         circuitBreakerMetrics.bindTo(meterRegistry);
 
-        assertThatExceptionOfType(RuntimeException.class).isThrownBy(() ->
-            circuitBreaker.executeCallable(() -> { throw new RuntimeException(); }));
+        assertThatExceptionOfType(IllegalStateException.class).isThrownBy(() ->
+            circuitBreaker.executeCallable(() -> { throw new IllegalStateException(); }));
 
         assertThat(meterRegistry.timer("resilience4j.circuitbreaker.testName.elapsed", "result", "error").count())
                 .isEqualTo(1L);
