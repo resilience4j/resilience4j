@@ -15,6 +15,7 @@
  */
 package io.github.resilience4j.micrometer;
 
+import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.micrometer.core.instrument.Meter;
 import io.micrometer.core.instrument.MeterRegistry;
@@ -26,6 +27,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.util.Lists.newArrayList;
 
 public class CircuitBreakerMetricsTest {
@@ -64,5 +66,32 @@ public class CircuitBreakerMetricsTest {
 
     }
 
+    @Test
+    public void shouldPublishElapsedTimeMetricTaggedWithSuccess() throws Exception {
+        CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
+        CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("testName");
 
+        CircuitBreakerMetrics circuitBreakerMetrics = CircuitBreakerMetrics.ofCircuitBreakerRegistry(circuitBreakerRegistry);
+        circuitBreakerMetrics.bindTo(meterRegistry);
+
+        circuitBreaker.executeCallable(() -> null);
+
+        assertThat(meterRegistry.timer("resilience4j.circuitbreaker.testName.elapsed", "result", "success").count())
+                .isEqualTo(1L);
+    }
+
+    @Test
+    public void shouldPublishElapsedTimeMetricTaggedWithError() {
+        CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
+        CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("testName");
+
+        CircuitBreakerMetrics circuitBreakerMetrics = CircuitBreakerMetrics.ofCircuitBreakerRegistry(circuitBreakerRegistry);
+        circuitBreakerMetrics.bindTo(meterRegistry);
+
+        assertThatExceptionOfType(RuntimeException.class).isThrownBy(() ->
+            circuitBreaker.executeCallable(() -> { throw new RuntimeException(); }));
+
+        assertThat(meterRegistry.timer("resilience4j.circuitbreaker.testName.elapsed", "result", "error").count())
+                .isEqualTo(1L);
+    }
 }
