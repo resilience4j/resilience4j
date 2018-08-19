@@ -45,6 +45,7 @@ For each circuit breaker this registry will export:
 * `buffered` - current number of buffered calls `[int]`
 * `buffered_max` - maximum number of buffered calls `[int]`
 * `not_permitted` - current number of not permitted calls `[int]`
+* `elapsed` - timer metric measuring the elapsed time of the decorated calls `[Duration]`, tagged with the outcome of the operation: `result:success`, `result:error` or `result:ignoredError`.
 
 ===== RateLimiter
 
