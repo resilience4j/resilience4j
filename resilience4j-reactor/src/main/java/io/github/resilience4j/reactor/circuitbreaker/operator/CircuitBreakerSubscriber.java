@@ -22,6 +22,8 @@ import io.github.resilience4j.reactor.ResilienceBaseSubscriber;
 import org.reactivestreams.Subscriber;
 import reactor.core.CoreSubscriber;
 
+import java.util.concurrent.atomic.AtomicIntegerFieldUpdater;
+
 import static java.util.Objects.requireNonNull;
 
 /**
@@ -33,15 +35,27 @@ class CircuitBreakerSubscriber<T> extends ResilienceBaseSubscriber<T> {
 
     private final CircuitBreaker circuitBreaker;
     private StopWatch stopWatch;
+    private final boolean singleProducer;
+
+    @SuppressWarnings("PMD")
+    private volatile int successSignaled = 0;
+    private static final AtomicIntegerFieldUpdater<CircuitBreakerSubscriber> SUCCESS_SIGNALED =
+            AtomicIntegerFieldUpdater.newUpdater(CircuitBreakerSubscriber.class, "successSignaled");
 
     public CircuitBreakerSubscriber(CircuitBreaker circuitBreaker,
-                                    CoreSubscriber<? super T> actual) {
+                                    CoreSubscriber<? super T> actual,
+                                    boolean singleProducer) {
         super(actual);
         this.circuitBreaker = requireNonNull(circuitBreaker);
+        this.singleProducer = singleProducer;
     }
 
     @Override
     protected void hookOnNext(T value) {
+        if (singleProducer && SUCCESS_SIGNALED.compareAndSet(this, 0, 1)) {
+            markSuccess();
+        }
+
         if (notCancelled() && wasCallPermitted()) {
             actual.onNext(value);
         }
@@ -49,7 +63,10 @@ class CircuitBreakerSubscriber<T> extends ResilienceBaseSubscriber<T> {
 
     @Override
     protected void hookOnComplete() {
-        markSuccess();
+        if (SUCCESS_SIGNALED.compareAndSet(this, 0, 1)) {
+            markSuccess();
+        }
+
         if (wasCallPermitted()) {
             actual.onComplete();
         }
