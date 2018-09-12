@@ -37,6 +37,7 @@ class CircuitBreakerSubscriber<T> extends ResilienceBaseSubscriber<T> {
     private StopWatch stopWatch;
     private final boolean singleProducer;
 
+    @SuppressWarnings("PMD")
     private volatile int successSignaled = 0;
     private static final AtomicIntegerFieldUpdater<CircuitBreakerSubscriber> SUCCESS_SIGNALED =
             AtomicIntegerFieldUpdater.newUpdater(CircuitBreakerSubscriber.class, "successSignaled");
@@ -51,10 +52,8 @@ class CircuitBreakerSubscriber<T> extends ResilienceBaseSubscriber<T> {
 
     @Override
     protected void hookOnNext(T value) {
-        if (singleProducer) {
-            if (SUCCESS_SIGNALED.compareAndSet(this, 0, 1)) {
-                markSuccess();
-            }
+        if (singleProducer && SUCCESS_SIGNALED.compareAndSet(this, 0, 1)) {
+            markSuccess();
         }
 
         if (notCancelled() && wasCallPermitted()) {
