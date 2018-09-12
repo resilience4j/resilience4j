@@ -22,6 +22,9 @@ import reactor.test.StepVerifier;
 
 import java.io.IOException;
 import java.time.Duration;
+import java.util.concurrent.ExecutionException;
+
+import static org.junit.Assert.fail;
 
 public class MonoCircuitBreakerTest extends CircuitBreakerAssertions {
 
@@ -31,6 +34,16 @@ public class MonoCircuitBreakerTest extends CircuitBreakerAssertions {
                 Mono.just("Event")
                         .transform(CircuitBreakerOperator.of(circuitBreaker)))
                 .expectNext("Event")
+                .verifyComplete();
+
+        assertSingleSuccessfulCall();
+    }
+
+    @Test
+    public void shouldEmptyMonoShouldBeSuccessful() {
+        StepVerifier.create(
+                Mono.empty()
+                        .transform(CircuitBreakerOperator.of(circuitBreaker)))
                 .verifyComplete();
 
         assertSingleSuccessfulCall();
@@ -81,5 +94,20 @@ public class MonoCircuitBreakerTest extends CircuitBreakerAssertions {
                 .verify(Duration.ofSeconds(1));
 
         assertNoRegisteredCall();
+    }
+
+    @Test
+    public void shouldRecordSuccessWhenUsingToFuture() {
+        try {
+            Mono.just("Event")
+                    .transform(CircuitBreakerOperator.of(circuitBreaker))
+                    .toFuture()
+                    .get();
+
+            assertSingleSuccessfulCall();
+        } catch (InterruptedException | ExecutionException e) {
+            fail();
+        }
+
     }
 }

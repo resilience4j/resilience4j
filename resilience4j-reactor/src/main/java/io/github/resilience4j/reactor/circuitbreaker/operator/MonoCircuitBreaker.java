@@ -30,6 +30,6 @@ public class MonoCircuitBreaker<T> extends MonoOperator<T, T> {
 
     @Override
     public void subscribe(CoreSubscriber<? super T> actual) {
-        source.subscribe(new CircuitBreakerSubscriber<>(circuitBreaker, actual));
+        source.subscribe(new CircuitBreakerSubscriber<>(circuitBreaker, actual, true));
     }
 }
