@@ -28,6 +28,9 @@ Core modules:
 
 Add-on modules
 
+* resilience4j-reactor: Spring Reactor adapter
+* resilience4j-rxjava2: RxJava2 adapter
+* resilience4j-micrometer: Micrometer Metrics exporter
 * resilience4j-metrics: Dropwizard Metrics exporter
 * resilience4j-prometheus: Prometheus Metrics exporter
 * resilience4j-spring-boot: Spring Boot Starter
@@ -307,6 +310,10 @@ NOTE: You can also consume events from `RateLimiter`, `Bulkhead`, `Cache` and `R
 * AOL (In an application with low latency requirements)
 * Netpulse (In system with 40+ integrations)
 * wescale.de (In a B2B integration platform)
+* Topia (In an HR application built with microservices architecture)
+* Auto Trader Group plc (UK’s largest digital automotive marketplace)
+* PlayStation Network (Platform backend)
+
 
 == License
 

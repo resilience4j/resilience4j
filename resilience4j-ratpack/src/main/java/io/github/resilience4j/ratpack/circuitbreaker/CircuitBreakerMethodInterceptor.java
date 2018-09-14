@@ -18,14 +18,13 @@ package io.github.resilience4j.ratpack.circuitbreaker;
 import com.google.inject.Inject;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerOpenException;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
-import io.github.resilience4j.circuitbreaker.operator.CircuitBreakerOperator;
 import io.github.resilience4j.ratpack.recovery.RecoveryFunction;
-import io.reactivex.Flowable;
-import io.reactivex.Observable;
-import io.reactivex.Single;
+import io.github.resilience4j.reactor.circuitbreaker.operator.CircuitBreakerOperator;
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
 import ratpack.exec.Promise;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
@@ -60,25 +59,18 @@ public class CircuitBreakerMethodInterceptor implements MethodInterceptor {
                 result = result.transform(transformer);
             }
             return result;
-        } else if (Observable.class.isAssignableFrom(returnType)) {
-            Observable<?> result = (Observable<?>) proceed(invocation, breaker, recoveryFunction);
+        } else if (Flux.class.isAssignableFrom(returnType)) {
+            Flux<?> result = (Flux<?>) proceed(invocation, breaker, recoveryFunction);
             if (result != null) {
                 CircuitBreakerOperator operator = CircuitBreakerOperator.of(breaker);
-                result = result.lift(operator).onErrorReturn(t -> recoveryFunction.apply((Throwable) t));
+                result = recoveryFunction.onErrorResume(result.transform(operator));
             }
             return result;
-        } else if (Flowable.class.isAssignableFrom(returnType)) {
-            Flowable<?> result = (Flowable<?>) proceed(invocation, breaker, recoveryFunction);
+        } else if (Mono.class.isAssignableFrom(returnType)) {
+            Mono<?> result = (Mono<?>) proceed(invocation, breaker, recoveryFunction);
             if (result != null) {
                 CircuitBreakerOperator operator = CircuitBreakerOperator.of(breaker);
-                result = result.lift(operator).onErrorReturn(t -> recoveryFunction.apply((Throwable) t));
-            }
-            return result;
-        } else if (Single.class.isAssignableFrom(returnType)) {
-            Single<?> result = (Single<?>) proceed(invocation, breaker, recoveryFunction);
-            if (result != null) {
-                CircuitBreakerOperator operator = CircuitBreakerOperator.of(breaker);
-                result = result.lift(operator).onErrorReturn(t -> recoveryFunction.apply((Throwable) t));
+                result = recoveryFunction.onErrorResume(result.transform(operator));
             }
             return result;
         } else if (CompletionStage.class.isAssignableFrom(returnType)) {

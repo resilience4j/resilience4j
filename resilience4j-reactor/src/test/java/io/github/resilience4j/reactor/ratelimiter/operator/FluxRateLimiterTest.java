@@ -18,6 +18,7 @@ package io.github.resilience4j.reactor.ratelimiter.operator;
 import io.github.resilience4j.ratelimiter.RequestNotPermitted;
 import org.junit.Test;
 import reactor.core.publisher.Flux;
+import reactor.core.scheduler.Schedulers;
 import reactor.test.StepVerifier;
 
 import java.io.IOException;
@@ -50,11 +51,39 @@ public class FluxRateLimiterTest extends RateLimiterAssertions {
     }
 
     @Test
-    public void shouldEmitErrorWithBulkheadFullException() {
+    public void shouldEmitRequestNotPermittedException() {
         saturateRateLimiter();
 
         StepVerifier.create(
                 Flux.just("Event")
+                        .transform(RateLimiterOperator.of(rateLimiter, Schedulers.immediate())))
+                .expectSubscription()
+                .expectError(RequestNotPermitted.class)
+                .verify(Duration.ofSeconds(1));
+
+        assertNoPermitLeft();
+    }
+
+    @Test
+    public void shouldEmitRequestNotPermittedExceptionEvenWhenErrorDuringSubscribe() {
+        saturateRateLimiter();
+
+        StepVerifier.create(
+                Flux.error(new IOException("BAM!"))
+                        .transform(RateLimiterOperator.of(rateLimiter)))
+                .expectSubscription()
+                .expectError(RequestNotPermitted.class)
+                .verify(Duration.ofSeconds(1));
+
+        assertNoPermitLeft();
+    }
+
+    @Test
+    public void shouldEmitRequestNotPermittedExceptionEvenWhenErrorNotOnSubscribe() {
+        saturateRateLimiter();
+
+        StepVerifier.create(
+                Flux.error(new IOException("BAM!"), true)
                         .transform(RateLimiterOperator.of(rateLimiter)))
                 .expectSubscription()
                 .expectError(RequestNotPermitted.class)

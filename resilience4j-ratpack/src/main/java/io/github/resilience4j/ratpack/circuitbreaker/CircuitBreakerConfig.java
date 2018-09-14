@@ -16,10 +16,11 @@
 
 package io.github.resilience4j.ratpack.circuitbreaker;
 
-import static io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.DEFAULT_MAX_FAILURE_THRESHOLD;
-import static io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.DEFAULT_RING_BUFFER_SIZE_IN_CLOSED_STATE;
-import static io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.DEFAULT_RING_BUFFER_SIZE_IN_HALF_OPEN_STATE;
-import static io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.DEFAULT_WAIT_DURATION_IN_OPEN_STATE;
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import static io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.*;
 
 public class CircuitBreakerConfig {
     private boolean defaults = false;
@@ -27,6 +28,10 @@ public class CircuitBreakerConfig {
     private Integer failureRateThreshold = DEFAULT_MAX_FAILURE_THRESHOLD;
     private Integer ringBufferSizeInClosedState = DEFAULT_RING_BUFFER_SIZE_IN_CLOSED_STATE;
     private Integer ringBufferSizeInHalfOpenState = DEFAULT_RING_BUFFER_SIZE_IN_HALF_OPEN_STATE;
+    // default is that all exceptions are recorded, and none are ignored
+    private List<String> recordExceptions = Arrays.asList(Throwable.class.getName());
+    private List<String> ignoreExceptions = Arrays.asList();
+    private boolean automaticTransitionFromOpenToHalfOpen = false;
 
     /**
      * Use config provided by circuitbreaker registry instead of these config values.
@@ -59,6 +64,33 @@ public class CircuitBreakerConfig {
         return this;
     }
 
+    /**
+     * Each element must be the fully qualified string class name of an exception class.
+     *
+     * @param recordExceptions
+     * @return
+     */
+    public CircuitBreakerConfig recordExceptions(List<String> recordExceptions) {
+        this.recordExceptions = recordExceptions;
+        return this;
+    }
+
+    /**
+     * Each element must be the fully qualified string class name of an exception class.
+     *
+     * @param ignoreExceptions
+     * @return
+     */
+    public CircuitBreakerConfig ignoreExceptions(List<String> ignoreExceptions) {
+        this.ignoreExceptions = ignoreExceptions;
+        return this;
+    }
+
+    public CircuitBreakerConfig automaticTransitionFromOpenToHalfOpen(boolean automaticTransitionFromOpenToHalfOpen) {
+        this.automaticTransitionFromOpenToHalfOpen = automaticTransitionFromOpenToHalfOpen;
+        return this;
+    }
+
     public boolean getDefaults() {
         return defaults;
     }
@@ -77,6 +109,49 @@ public class CircuitBreakerConfig {
 
     public Integer getRingBufferSizeInHalfOpenState() {
         return ringBufferSizeInHalfOpenState;
+    }
+
+    public List<String> getRecordExceptions() {
+        return recordExceptions;
+    }
+
+    @SuppressWarnings("unchecked")
+    public Class<? extends Throwable>[] getRecordExceptionClasses() {
+        List<Class<? extends Throwable>> classList = buildArray(recordExceptions);
+        Class<? extends Throwable>[] classes = new Class[classList.size() < 1 ? 1 : classList.size()];
+        if (classes.length == 1 && classes[0] == null) {
+            classes[0] = Throwable.class;
+        }
+        return classList.toArray(classes);
+    }
+
+    public List<String> getIgnoreExceptions() {
+        return ignoreExceptions;
+    }
+
+    @SuppressWarnings("unchecked")
+    public Class<? extends Throwable>[] getIgnoreExceptionClasses() {
+        List<Class<? extends Throwable>> classList = buildArray(ignoreExceptions);
+        Class<? extends Throwable>[] classes = new Class[classList.size()];
+        return classList.toArray(classes);
+    }
+
+    public boolean isAutomaticTransitionFromOpenToHalfOpen() {
+        return automaticTransitionFromOpenToHalfOpen;
+    }
+
+    @SuppressWarnings("unchecked")
+    private List<Class<? extends Throwable>> buildArray(List<String> list) {
+        return list.stream()
+                .map(t -> {
+                    try {
+                        return (Class<? extends Throwable>)Class.forName(t);
+                    } catch (ClassNotFoundException e) {
+                        return null;
+                    }
+                })
+                .filter(c -> c != null)
+                .collect(Collectors.toList());
     }
 
 }

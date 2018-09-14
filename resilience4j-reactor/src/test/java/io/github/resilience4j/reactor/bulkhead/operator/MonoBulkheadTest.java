@@ -20,6 +20,7 @@ import io.github.resilience4j.bulkhead.BulkheadConfig;
 import io.github.resilience4j.bulkhead.BulkheadFullException;
 import org.junit.Test;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 import reactor.test.StepVerifier;
 
 import java.io.IOException;
@@ -36,7 +37,7 @@ public class MonoBulkheadTest {
     public void shouldEmitEvent() {
         StepVerifier.create(
                 Mono.just("Event")
-                        .transform(io.github.resilience4j.reactor.bulkhead.operator.BulkheadOperator.of(bulkhead)))
+                        .transform(BulkheadOperator.of(bulkhead)))
                 .expectNext("Event")
                 .verifyComplete();
 
@@ -47,7 +48,7 @@ public class MonoBulkheadTest {
     public void shouldPropagateError() {
         StepVerifier.create(
                 Mono.error(new IOException("BAM!"))
-                        .transform(io.github.resilience4j.reactor.bulkhead.operator.BulkheadOperator.of(bulkhead)))
+                        .transform(BulkheadOperator.of(bulkhead)))
                 .expectSubscription()
                 .expectError(IOException.class)
                 .verify(Duration.ofSeconds(1));
@@ -67,6 +68,33 @@ public class MonoBulkheadTest {
                 .verify(Duration.ofSeconds(1));
 
         assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(0);
+    }
 
+    @Test
+    public void shouldEmitBulkheadFullExceptionEvenWhenErrorDuringSubscribe() {
+        bulkhead.isCallPermitted();
+
+        StepVerifier.create(
+                Mono.error(new IOException("BAM!"))
+                        .transform(BulkheadOperator.of(bulkhead, Schedulers.immediate())))
+                .expectSubscription()
+                .expectError(BulkheadFullException.class)
+                .verify(Duration.ofSeconds(1));
+
+        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(0);
+    }
+
+    @Test
+    public void shouldEmitBulkheadFullExceptionEvenWhenErrorNotOnSubscribe() {
+        bulkhead.isCallPermitted();
+
+        StepVerifier.create(
+                Mono.error(new IOException("BAM!")).delayElement(Duration.ofMillis(1))
+                        .transform(BulkheadOperator.of(bulkhead, Schedulers.immediate())))
+                .expectSubscription()
+                .expectError(BulkheadFullException.class)
+                .verify(Duration.ofSeconds(1));
+
+        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(0);
     }
 }

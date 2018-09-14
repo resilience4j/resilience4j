@@ -89,8 +89,16 @@ public class SemaphoreBasedRateLimiterImplTest {
         Runnable refreshLimitRunnable = refreshLimitRunnableCaptor.getValue();
 
         then(limit.getPermission(ZERO)).isTrue();
+        then(limit.reservePermission(ZERO)).isNegative();
+        then(limit.reservePermission(TIMEOUT)).isNegative();
+
         then(limit.getPermission(ZERO)).isTrue();
+        then(limit.reservePermission(ZERO)).isNegative();
+        then(limit.reservePermission(TIMEOUT)).isNegative();
+
         then(limit.getPermission(ZERO)).isFalse();
+        then(limit.reservePermission(ZERO)).isNegative();
+        then(limit.reservePermission(TIMEOUT)).isNegative();
 
         Thread.sleep(REFRESH_PERIOD.toMillis() * 2);
         verify(configSpy, times(1)).getLimitForPeriod();
@@ -138,11 +146,17 @@ public class SemaphoreBasedRateLimiterImplTest {
             synchronousQueue.take();
         }
 
+        then(limit.reservePermission(ZERO)).isNegative();
+        then(limit.reservePermission(TIMEOUT)).isNegative();
+
         awaitImpatiently()
             .atMost(100, TimeUnit.MILLISECONDS).until(detailedMetrics::getAvailablePermissions, equalTo(0));
         awaitImpatiently()
             .atMost(2, TimeUnit.SECONDS).until(thread::getState, equalTo(TIMED_WAITING));
         then(detailedMetrics.getAvailablePermissions()).isEqualTo(0);
+
+        then(limit.reservePermission(ZERO)).isNegative();
+        then(limit.reservePermission(TIMEOUT)).isNegative();
 
         limit.refreshLimit();
         awaitImpatiently()
@@ -154,6 +168,8 @@ public class SemaphoreBasedRateLimiterImplTest {
         limit.changeLimitForPeriod(3);
         limit.refreshLimit();
         then(detailedMetrics.getAvailablePermissions()).isEqualTo(3);
+        then(limit.reservePermission(ZERO)).isNegative();
+        then(limit.reservePermission(TIMEOUT)).isNegative();
     }
 
     @Test

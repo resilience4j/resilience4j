@@ -37,7 +37,7 @@ import java.util.function.Supplier;
 
 /**
  * A RateLimiter instance is thread-safe can be used to decorate multiple requests.
- *
+ * <p>
  * A RateLimiter distributes permits at a configurable rate. {@link #getPermission} blocks if necessary
  * until a permit is available, and then takes it. Once acquired, permits need not be released.
  */
@@ -68,7 +68,7 @@ public interface RateLimiter {
     /**
      * Creates a RateLimiter with a default RateLimiterConfig configuration.
      *
-     * @param name                      the name of the RateLimiter
+     * @param name the name of the RateLimiter
      * @return The {@link RateLimiter}
      */
     static RateLimiter ofDefaults(String name) {
@@ -79,8 +79,8 @@ public interface RateLimiter {
      * Returns a supplier which is decorated by a rateLimiter.
      *
      * @param rateLimiter the rateLimiter
-     * @param supplier the original supplier
-     * @param <T> the type of the returned CompletionStage's result
+     * @param supplier    the original supplier
+     * @param <T>         the type of the returned CompletionStage's result
      * @return a supplier which is decorated by a RateLimiter.
      */
     static <T> Supplier<CompletionStage<T>> decorateCompletionStage(RateLimiter rateLimiter, Supplier<CompletionStage<T>> supplier) {
@@ -90,15 +90,15 @@ public interface RateLimiter {
             try {
                 waitForPermission(rateLimiter);
                 supplier.get()
-                    .whenComplete(
-                        (result, throwable) -> {
-                            if (throwable != null) {
-                                promise.completeExceptionally(throwable);
-                            } else {
-                                promise.complete(result);
-                            }
-                        }
-                    );
+                        .whenComplete(
+                                (result, throwable) -> {
+                                    if (throwable != null) {
+                                        promise.completeExceptionally(throwable);
+                                    } else {
+                                        promise.complete(result);
+                                    }
+                                }
+                        );
             } catch (Throwable throwable) {
                 promise.completeExceptionally(throwable);
             }
@@ -111,7 +111,7 @@ public interface RateLimiter {
      *
      * @param rateLimiter the RateLimiter
      * @param supplier    the original supplier
-     * @param <T> the type of results supplied supplier
+     * @param <T>         the type of results supplied supplier
      * @return a supplier which is restricted by a RateLimiter.
      */
     static <T> CheckedFunction0<T> decorateCheckedSupplier(RateLimiter rateLimiter, CheckedFunction0<T> supplier) {
@@ -141,8 +141,8 @@ public interface RateLimiter {
      *
      * @param rateLimiter the RateLimiter
      * @param function    the original function
-     * @param <T> the type of function argument
-     * @param <R> the type of function results
+     * @param <T>         the type of function argument
+     * @param <R>         the type of function results
      * @return a function which is restricted by a RateLimiter.
      */
     static <T, R> CheckedFunction1<T, R> decorateCheckedFunction(RateLimiter rateLimiter, CheckedFunction1<T, R> function) {
@@ -157,7 +157,7 @@ public interface RateLimiter {
      *
      * @param rateLimiter the RateLimiter
      * @param supplier    the original supplier
-     * @param <T> the type of results supplied supplier
+     * @param <T>         the type of results supplied supplier
      * @return a supplier which is restricted by a RateLimiter.
      */
     static <T> Supplier<T> decorateSupplier(RateLimiter rateLimiter, Supplier<T> supplier) {
@@ -179,7 +179,7 @@ public interface RateLimiter {
      *
      * @param rateLimiter the RateLimiter
      * @param consumer    the original consumer
-     * @param <T> the type of the input to the consumer
+     * @param <T>         the type of the input to the consumer
      * @return a consumer which is restricted by a RateLimiter.
      */
     static <T> Consumer<T> decorateConsumer(RateLimiter rateLimiter, Consumer<T> consumer) {
@@ -209,8 +209,8 @@ public interface RateLimiter {
      *
      * @param rateLimiter the RateLimiter
      * @param function    the original function
-     * @param <T> the type of the input to the function
-     * @param <R> the type of the result of the function
+     * @param <T>         the type of the input to the function
+     * @param <R>         the type of the result of the function
      * @return a function which is restricted by a RateLimiter.
      */
     static <T, R> Function<T, R> decorateFunction(RateLimiter rateLimiter, Function<T, R> function) {
@@ -224,7 +224,7 @@ public interface RateLimiter {
      * Will wait for permission within default timeout duration.
      *
      * @param rateLimiter the RateLimiter to get permission from
-     * @throws RequestNotPermitted if waiting time elapsed before a permit was acquired.
+     * @throws RequestNotPermitted   if waiting time elapsed before a permit was acquired.
      * @throws IllegalStateException if thread was interrupted during permission wait
      */
     static void waitForPermission(final RateLimiter rateLimiter) throws IllegalStateException, RequestNotPermitted {
@@ -243,6 +243,7 @@ public interface RateLimiter {
      * Dynamic rate limiter configuration change.
      * This method allows to change timeout duration of current limiter.
      * NOTE! New timeout duration won't affect threads that are currently waiting for permission.
+     *
      * @param timeoutDuration new timeout duration
      */
     void changeTimeoutDuration(Duration timeoutDuration);
@@ -251,6 +252,7 @@ public interface RateLimiter {
      * Dynamic rate limiter configuration change.
      * This method allows to change count of permissions available during refresh period.
      * NOTE! New limit won't affect current period permissions and will apply only from next one.
+     *
      * @param limitForPeriod new permissions limit
      */
     void changeLimitForPeriod(int limitForPeriod);
@@ -267,6 +269,16 @@ public interface RateLimiter {
      * if waiting timeoutDuration elapsed before a permit was acquired
      */
     boolean getPermission(Duration timeoutDuration);
+
+    /**
+     * Reserves a permission from this rate limiter and returns nanoseconds you should wait for it.
+     * If returned long is negative, it means that you failed to reserve permission,
+     * possibly your {@code timeoutDuration} is less then time to wait for permission.
+     *
+     * @param timeoutDuration the maximum time you want to wait.
+     * @return {@code long} amount of nanoseconds you should wait for reserved permission. if negative, it means you failed to reserve.
+     */
+    long reservePermission(Duration timeoutDuration);
 
     /**
      * Get the name of this RateLimiter
@@ -300,10 +312,10 @@ public interface RateLimiter {
      * Decorates and executes the decorated Supplier.
      *
      * @param supplier the original Supplier
-     * @param <T> the type of results supplied by this supplier
+     * @param <T>      the type of results supplied by this supplier
      * @return the result of the decorated Supplier.
      */
-    default <T> T executeSupplier(Supplier<T> supplier){
+    default <T> T executeSupplier(Supplier<T> supplier) {
         return decorateSupplier(this, supplier).get();
     }
 
@@ -311,12 +323,11 @@ public interface RateLimiter {
      * Decorates and executes the decorated Callable.
      *
      * @param callable the original Callable
-     *
+     * @param <T>      the result type of callable
      * @return the result of the decorated Callable.
-     * @param <T> the result type of callable
      * @throws Exception if unable to compute a result
      */
-    default <T> T executeCallable(Callable<T> callable) throws Exception{
+    default <T> T executeCallable(Callable<T> callable) throws Exception {
         return decorateCallable(this, callable).call();
     }
 
@@ -325,7 +336,7 @@ public interface RateLimiter {
      *
      * @param runnable the original Runnable
      */
-    default void executeRunnable(Runnable runnable){
+    default void executeRunnable(Runnable runnable) {
         decorateRunnable(this, runnable).run();
     }
 

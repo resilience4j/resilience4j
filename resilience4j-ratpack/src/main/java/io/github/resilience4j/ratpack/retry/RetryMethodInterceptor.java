@@ -18,12 +18,11 @@ package io.github.resilience4j.ratpack.retry;
 import com.google.inject.Inject;
 import io.github.resilience4j.ratpack.recovery.RecoveryFunction;
 import io.github.resilience4j.retry.RetryRegistry;
-import io.reactivex.Flowable;
-import io.reactivex.Observable;
-import io.reactivex.Single;
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
 import ratpack.exec.Promise;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
@@ -58,25 +57,31 @@ public class RetryMethodInterceptor implements MethodInterceptor {
                 result = result.transform(transformer);
             }
             return result;
-        } else if (Observable.class.isAssignableFrom(returnType)) {
-            Observable<?> result = (Observable<?>) proceed(invocation, retry, recoveryFunction);
+        } else if (Flux.class.isAssignableFrom(returnType)) {
+            Flux<?> result = (Flux<?>) proceed(invocation, retry, recoveryFunction);
             if (result != null) {
-                io.github.resilience4j.retry.transformer.RetryTransformer transformer = io.github.resilience4j.retry.transformer.RetryTransformer.of(retry);
-                result = result.compose(transformer).onErrorReturn(t -> recoveryFunction.apply((Throwable) t));
+                RetryTransformer transformer = RetryTransformer.of(retry).recover(recoveryFunction);
+                final Flux<?> temp = result;
+                Promise<?> promise = Promise.async(f -> temp.collectList().subscribe(f::success, f::error)).transform(transformer);
+                Flux next = Flux.create(subscriber ->
+                        promise.onError(subscriber::error).then(value -> {
+                            subscriber.next(value);
+                            subscriber.complete();
+                        })
+                );
+                result = recoveryFunction.onErrorResume(next);
             }
             return result;
-        } else if (Flowable.class.isAssignableFrom(returnType)) {
-            Flowable<?> result = (Flowable<?>) proceed(invocation, retry, recoveryFunction);
+        } else if (Mono.class.isAssignableFrom(returnType)) {
+            Mono<?> result = (Mono<?>) proceed(invocation, retry, recoveryFunction);
             if (result != null) {
-                io.github.resilience4j.retry.transformer.RetryTransformer transformer = io.github.resilience4j.retry.transformer.RetryTransformer.of(retry);
-                result = result.compose(transformer).onErrorReturn(t -> recoveryFunction.apply((Throwable) t));
-            }
-            return result;
-        } else if (Single.class.isAssignableFrom(returnType)) {
-            Single<?> result = (Single<?>) proceed(invocation, retry, recoveryFunction);
-            if (result != null) {
-                io.github.resilience4j.retry.transformer.RetryTransformer transformer = io.github.resilience4j.retry.transformer.RetryTransformer.of(retry);
-                result = result.compose(transformer).onErrorReturn(t -> recoveryFunction.apply((Throwable) t));
+                RetryTransformer transformer = RetryTransformer.of(retry).recover(recoveryFunction);
+                final Mono<?> temp = result;
+                Promise<?> promise = Promise.async(f -> temp.subscribe(f::success, f::error)).transform(transformer);
+                Mono next = Mono.create(subscriber ->
+                        promise.onError(subscriber::error).then(subscriber::success)
+                );
+                result = recoveryFunction.onErrorResume(next);
             }
             return result;
         }

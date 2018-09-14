@@ -21,6 +21,10 @@ import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 import java.io.IOException;
+import java.time.Duration;
+import java.util.concurrent.ExecutionException;
+
+import static org.junit.Assert.fail;
 
 public class MonoCircuitBreakerTest extends CircuitBreakerAssertions {
 
@@ -36,14 +40,48 @@ public class MonoCircuitBreakerTest extends CircuitBreakerAssertions {
     }
 
     @Test
+    public void shouldEmptyMonoShouldBeSuccessful() {
+        StepVerifier.create(
+                Mono.empty()
+                        .transform(CircuitBreakerOperator.of(circuitBreaker)))
+                .verifyComplete();
+
+        assertSingleSuccessfulCall();
+    }
+
+    @Test
     public void shouldPropagateError() {
         StepVerifier.create(
                 Mono.error(new IOException("BAM!"))
                         .transform(CircuitBreakerOperator.of(circuitBreaker)))
                 .expectError(IOException.class)
-                .verify();
+                .verify(Duration.ofSeconds(1));
 
         assertSingleFailedCall();
+    }
+
+    @Test
+    public void shouldEmitCircuitBreakerOpenExceptionEvenWhenErrorNotOnSubscribe() {
+        circuitBreaker.transitionToForcedOpenState();
+        StepVerifier.create(
+                Mono.error(new IOException("BAM!")).delayElement(Duration.ofMillis(1))
+                        .transform(CircuitBreakerOperator.of(circuitBreaker)))
+                .expectError(CircuitBreakerOpenException.class)
+                .verify(Duration.ofSeconds(1));
+
+        assertNoRegisteredCall();
+    }
+
+    @Test
+    public void shouldEmitCircuitBreakerOpenExceptionEvenWhenErrorDuringSubscribe() {
+        circuitBreaker.transitionToForcedOpenState();
+        StepVerifier.create(
+                Mono.error(new IOException("BAM!"))
+                        .transform(CircuitBreakerOperator.of(circuitBreaker)))
+                .expectError(CircuitBreakerOpenException.class)
+                .verify(Duration.ofSeconds(1));
+
+        assertNoRegisteredCall();
     }
 
     @Test
@@ -53,8 +91,23 @@ public class MonoCircuitBreakerTest extends CircuitBreakerAssertions {
                 Mono.just("Event")
                         .transform(CircuitBreakerOperator.of(circuitBreaker)))
                 .expectError(CircuitBreakerOpenException.class)
-                .verify();
+                .verify(Duration.ofSeconds(1));
 
         assertNoRegisteredCall();
+    }
+
+    @Test
+    public void shouldRecordSuccessWhenUsingToFuture() {
+        try {
+            Mono.just("Event")
+                    .transform(CircuitBreakerOperator.of(circuitBreaker))
+                    .toFuture()
+                    .get();
+
+            assertSingleSuccessfulCall();
+        } catch (InterruptedException | ExecutionException e) {
+            fail();
+        }
+
     }
 }

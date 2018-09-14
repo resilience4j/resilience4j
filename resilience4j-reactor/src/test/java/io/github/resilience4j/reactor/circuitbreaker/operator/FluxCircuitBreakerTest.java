@@ -21,6 +21,7 @@ import reactor.core.publisher.Flux;
 import reactor.test.StepVerifier;
 
 import java.io.IOException;
+import java.time.Duration;
 
 public class FluxCircuitBreakerTest extends CircuitBreakerAssertions {
 
@@ -42,7 +43,18 @@ public class FluxCircuitBreakerTest extends CircuitBreakerAssertions {
                 Flux.error(new IOException("BAM!"))
                         .transform(CircuitBreakerOperator.of(circuitBreaker)))
                 .expectError(IOException.class)
-                .verify();
+                .verify(Duration.ofSeconds(1));
+
+        assertSingleFailedCall();
+    }
+
+    @Test
+    public void shouldPropagateErrorWhenErrorNotOnSubscribe() {
+        StepVerifier.create(
+                Flux.error(new IOException("BAM!"), true)
+                        .transform(CircuitBreakerOperator.of(circuitBreaker)))
+                .expectError(IOException.class)
+                .verify(Duration.ofSeconds(1));
 
         assertSingleFailedCall();
     }
@@ -54,7 +66,31 @@ public class FluxCircuitBreakerTest extends CircuitBreakerAssertions {
                 Flux.just("Event 1", "Event 2")
                         .transform(CircuitBreakerOperator.of(circuitBreaker)))
                 .expectError(CircuitBreakerOpenException.class)
-                .verify();
+                .verify(Duration.ofSeconds(1));
+
+        assertNoRegisteredCall();
+    }
+
+    @Test
+    public void shouldEmitCircuitBreakerOpenExceptionEvenWhenErrorNotOnSubscribe() {
+        circuitBreaker.transitionToOpenState();
+        StepVerifier.create(
+                Flux.error(new IOException("BAM!"), true)
+                        .transform(CircuitBreakerOperator.of(circuitBreaker)))
+                .expectError(CircuitBreakerOpenException.class)
+                .verify(Duration.ofSeconds(1));
+
+        assertNoRegisteredCall();
+    }
+
+    @Test
+    public void shouldEmitCircuitBreakerOpenExceptionEvenWhenErrorDuringSubscribe() {
+        circuitBreaker.transitionToOpenState();
+        StepVerifier.create(
+                Flux.error(new IOException("BAM!"))
+                        .transform(CircuitBreakerOperator.of(circuitBreaker)))
+                .expectError(CircuitBreakerOpenException.class)
+                .verify(Duration.ofSeconds(1));
 
         assertNoRegisteredCall();
     }

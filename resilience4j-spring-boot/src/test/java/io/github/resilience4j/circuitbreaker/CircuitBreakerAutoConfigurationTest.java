@@ -15,8 +15,8 @@
  */
 package io.github.resilience4j.circuitbreaker;
 
-import io.github.resilience4j.circuitbreaker.autoconfigure.CircuitBreakerAspect;
 import io.github.resilience4j.circuitbreaker.autoconfigure.CircuitBreakerProperties;
+import io.github.resilience4j.circuitbreaker.configure.CircuitBreakerAspect;
 import io.github.resilience4j.circuitbreaker.monitoring.endpoint.CircuitBreakerEndpointResponse;
 import io.github.resilience4j.circuitbreaker.monitoring.endpoint.CircuitBreakerEventsEndpointResponse;
 import io.github.resilience4j.service.test.DummyService;
@@ -65,7 +65,7 @@ public class CircuitBreakerAutoConfigurationTest {
         try {
             dummyService.doSomething(true);
         } catch (IOException ex) {
-            // Do nothing. The IOException is recorded by the CircuitBreaker as a failure.
+            // Do nothing. The IOException is recorded by the CircuitBreaker as part of the recordFailurePredicate as a failure.
         }
         // The invocation is recorded by the CircuitBreaker as a success.
         dummyService.doSomething(false);
@@ -89,6 +89,13 @@ public class CircuitBreakerAutoConfigurationTest {
 
         ResponseEntity<CircuitBreakerEventsEndpointResponse> circuitBreakerEventList = restTemplate.getForEntity("/circuitbreaker/events", CircuitBreakerEventsEndpointResponse.class);
         assertThat(circuitBreakerEventList.getBody().getCircuitBreakerEvents()).hasSize(2);
+
+        assertThat(circuitBreaker.getCircuitBreakerConfig().getRecordFailurePredicate().test(new RecordedException())).isTrue();
+        assertThat(circuitBreaker.getCircuitBreakerConfig().getRecordFailurePredicate().test(new IgnoredException())).isFalse();
+
+        // Verify that an exception for which recordFailurePredicate returns false and it is not included in
+        // recordExceptions evaluates to false.
+        assertThat(circuitBreaker.getCircuitBreakerConfig().getRecordFailurePredicate().test(new Exception())).isFalse();
 
         assertThat(circuitBreakerAspect.getOrder()).isEqualTo(400);
     }
