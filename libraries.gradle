@@ -21,7 +21,7 @@ ext {
     ratpackVersion = '1.5.4'
     spockVersion = '1.1-groovy-2.4-rc-4'
     retrofitVersion = '2.3.0'
-    feignVersion = '9.5.1'
+    feignVersion = '10.0.1'
     prometheusSimpleClientVersion = '0.3.0'
     reactorVersion = '3.1.5.RELEASE'
     reactiveStreamsVersion = '1.0.2'
