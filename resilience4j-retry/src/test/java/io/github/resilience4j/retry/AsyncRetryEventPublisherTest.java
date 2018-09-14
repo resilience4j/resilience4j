@@ -93,6 +93,26 @@ public class AsyncRetryEventPublisherTest {
     }
 
     @Test
+    public void shouldConsumeOnRetryEvent() {
+        CompletableFuture<String> failedFuture = new CompletableFuture<>();
+        failedFuture.completeExceptionally(new WebServiceException("BAM!"));
+
+        given(helloWorldService.returnHelloWorld())
+                .willReturn(failedFuture);
+
+        retry.getEventPublisher()
+            .onRetry(event ->
+                    logger.info(event.getEventType().toString()));
+
+
+        Try.of(() -> awaitResult(retry.executeCompletionStage(scheduler,
+                () -> helloWorldService.returnHelloWorld())));
+
+        then(logger).should(times(2)).info("RETRY");
+        then(helloWorldService).should(times(3)).returnHelloWorld();
+    }
+
+    @Test
     public void shouldConsumeOnErrorEvent() {
         CompletableFuture<String> failedFuture = new CompletableFuture<>();
         failedFuture.completeExceptionally(new WebServiceException("BAM!"));

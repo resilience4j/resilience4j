@@ -16,14 +16,13 @@
 
 package io.github.resilience4j.ratpack.circuitbreaker.endpoint;
 
-import io.github.resilience4j.adapter.RxJava2Adapter;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent;
 import io.github.resilience4j.consumer.CircularEventConsumer;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
 import io.github.resilience4j.ratpack.Resilience4jConfig;
-import io.reactivex.Flowable;
+import io.github.resilience4j.ratpack.adapter.ReactorAdapter;
 import io.vavr.collection.Seq;
 import ratpack.exec.Promise;
 import ratpack.func.Action;
@@ -31,6 +30,7 @@ import ratpack.func.Function;
 import ratpack.handling.Chain;
 import ratpack.jackson.Jackson;
 import ratpack.sse.ServerSentEvents;
+import reactor.core.publisher.Flux;
 
 import javax.inject.Inject;
 import java.util.Comparator;
@@ -64,9 +64,9 @@ public class CircuitBreakerChain implements Action<Chain> {
                     }).then(r -> ctx.render(Jackson.json(r)))
             );
             chain1.get("stream/events", ctx -> {
-                Seq<Flowable<CircuitBreakerEvent>> eventStreams = circuitBreakerRegistry.getAllCircuitBreakers().map(circuitBreaker -> RxJava2Adapter.toFlowable(circuitBreaker.getEventPublisher()));
+                Seq<Flux<CircuitBreakerEvent>> eventStreams = circuitBreakerRegistry.getAllCircuitBreakers().map(circuitBreaker -> ReactorAdapter.toFlux(circuitBreaker.getEventPublisher()));
                 Function<CircuitBreakerEvent, String> data = c -> Jackson.getObjectWriter(chain1.getRegistry()).writeValueAsString(CircuitBreakerEventDTOFactory.createCircuitBreakerEventDTO(c));
-                ServerSentEvents events = ServerSentEvents.serverSentEvents(Flowable.merge(eventStreams), e -> e.id(CircuitBreakerEvent::getCircuitBreakerName).event(c -> c.getEventType().name()).data(data));
+                ServerSentEvents events = ServerSentEvents.serverSentEvents(Flux.merge(eventStreams), e -> e.id(CircuitBreakerEvent::getCircuitBreakerName).event(c -> c.getEventType().name()).data(data));
                 ctx.render(events);
             });
             chain1.get("events/:name", ctx -> {
@@ -85,7 +85,7 @@ public class CircuitBreakerChain implements Action<Chain> {
                 CircuitBreaker circuitBreaker = circuitBreakerRegistry.getAllCircuitBreakers().find(cb -> cb.getName().equals(circuitBreakerName))
                         .getOrElseThrow(() -> new IllegalArgumentException(String.format("circuit breaker with name %s not found", circuitBreakerName)));
                 Function<CircuitBreakerEvent, String> data = c -> Jackson.getObjectWriter(chain1.getRegistry()).writeValueAsString(CircuitBreakerEventDTOFactory.createCircuitBreakerEventDTO(c));
-                ServerSentEvents events = ServerSentEvents.serverSentEvents(RxJava2Adapter.toFlowable(circuitBreaker.getEventPublisher()), e -> e.id(CircuitBreakerEvent::getCircuitBreakerName).event(c -> c.getEventType().name()).data(data));
+                ServerSentEvents events = ServerSentEvents.serverSentEvents(ReactorAdapter.toFlux(circuitBreaker.getEventPublisher()), e -> e.id(CircuitBreakerEvent::getCircuitBreakerName).event(c -> c.getEventType().name()).data(data));
                 ctx.render(events);
             });
             chain1.get("events/:name/:type", ctx -> {
@@ -106,7 +106,7 @@ public class CircuitBreakerChain implements Action<Chain> {
                 String eventType = ctx.getPathTokens().get("type");
                 CircuitBreaker circuitBreaker = circuitBreakerRegistry.getAllCircuitBreakers().find(cb -> cb.getName().equals(circuitBreakerName))
                         .getOrElseThrow(() -> new IllegalArgumentException(String.format("circuit breaker with name %s not found", circuitBreakerName)));
-                Flowable<CircuitBreakerEvent> eventStream = RxJava2Adapter.toFlowable(circuitBreaker.getEventPublisher())
+                Flux<CircuitBreakerEvent> eventStream = ReactorAdapter.toFlux(circuitBreaker.getEventPublisher())
                         .filter(event -> event.getEventType() == CircuitBreakerEvent.Type.valueOf(eventType.toUpperCase()));
                 Function<CircuitBreakerEvent, String> data = c -> Jackson.getObjectWriter(chain1.getRegistry()).writeValueAsString(CircuitBreakerEventDTOFactory.createCircuitBreakerEventDTO(c));
                 ServerSentEvents events = ServerSentEvents.serverSentEvents(eventStream, e -> e.id(CircuitBreakerEvent::getCircuitBreakerName).event(c -> c.getEventType().name()).data(data));

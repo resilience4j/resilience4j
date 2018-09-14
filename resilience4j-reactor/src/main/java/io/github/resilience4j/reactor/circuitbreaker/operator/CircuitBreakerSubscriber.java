@@ -18,13 +18,11 @@ package io.github.resilience4j.reactor.circuitbreaker.operator;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerOpenException;
 import io.github.resilience4j.core.StopWatch;
-import io.github.resilience4j.reactor.Permit;
+import io.github.resilience4j.reactor.ResilienceBaseSubscriber;
 import org.reactivestreams.Subscriber;
-import org.reactivestreams.Subscription;
 import reactor.core.CoreSubscriber;
-import reactor.core.publisher.Operators;
 
-import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.atomic.AtomicIntegerFieldUpdater;
 
 import static java.util.Objects.requireNonNull;
 
@@ -33,82 +31,71 @@ import static java.util.Objects.requireNonNull;
  *
  * @param <T> the value type of the upstream and downstream
  */
-class CircuitBreakerSubscriber<T> extends Operators.MonoSubscriber<T, T> {
+class CircuitBreakerSubscriber<T> extends ResilienceBaseSubscriber<T> {
 
     private final CircuitBreaker circuitBreaker;
-    private final AtomicReference<Permit> permitted = new AtomicReference<>(Permit.PENDING);
     private StopWatch stopWatch;
-    private Subscription subscription;
+    private final boolean singleProducer;
+
+    @SuppressWarnings("PMD")
+    private volatile int successSignaled = 0;
+    private static final AtomicIntegerFieldUpdater<CircuitBreakerSubscriber> SUCCESS_SIGNALED =
+            AtomicIntegerFieldUpdater.newUpdater(CircuitBreakerSubscriber.class, "successSignaled");
 
     public CircuitBreakerSubscriber(CircuitBreaker circuitBreaker,
-                                    CoreSubscriber<? super T> actual) {
+                                    CoreSubscriber<? super T> actual,
+                                    boolean singleProducer) {
         super(actual);
         this.circuitBreaker = requireNonNull(circuitBreaker);
+        this.singleProducer = singleProducer;
     }
 
     @Override
-    public void onSubscribe(Subscription subscription) {
-        if (Operators.validate(this.subscription, subscription)) {
-            this.subscription = subscription;
+    protected void hookOnNext(T value) {
+        if (singleProducer && SUCCESS_SIGNALED.compareAndSet(this, 0, 1)) {
+            markSuccess();
+        }
 
-            if (acquireCallPermit()) {
-                actual.onSubscribe(this);
-            } else {
-                cancel();
-                actual.onSubscribe(this);
-                actual.onError(new CircuitBreakerOpenException(
-                        String.format("CircuitBreaker '%s' is open", circuitBreaker.getName())));
-            }
+        if (notCancelled() && wasCallPermitted()) {
+            actual.onNext(value);
         }
     }
 
     @Override
-    public void onNext(T t) {
-        requireNonNull(t);
-
-        if (isInvocationPermitted()) {
-            actual.onNext(t);
+    protected void hookOnComplete() {
+        if (SUCCESS_SIGNALED.compareAndSet(this, 0, 1)) {
+            markSuccess();
         }
-    }
 
-    @Override
-    public void onError(Throwable t) {
-        requireNonNull(t);
-
-        markFailure(t);
-        if (isInvocationPermitted()) {
-            actual.onError(t);
-        }
-    }
-
-    @Override
-    public void onComplete() {
-        markSuccess();
-        if (isInvocationPermitted()) {
+        if (wasCallPermitted()) {
             actual.onComplete();
         }
     }
 
     @Override
-    public void request(long n) {
-        subscription.request(n);
-    }
+    protected void hookOnError(Throwable t) {
+        requireNonNull(t);
 
-    private boolean acquireCallPermit() {
-        boolean callPermitted = false;
-        if (permitted.compareAndSet(Permit.PENDING, Permit.ACQUIRED)) {
-            callPermitted = circuitBreaker.isCallPermitted();
-            if (!callPermitted) {
-                permitted.set(Permit.REJECTED);
-            } else {
-                stopWatch = StopWatch.start(circuitBreaker.getName());
-            }
+        markFailure(t);
+        if (wasCallPermitted()) {
+            actual.onError(t);
         }
-        return callPermitted;
     }
 
-    private boolean isInvocationPermitted() {
-        return !this.isCancelled() && wasCallPermitted();
+    @Override
+    protected void hookOnPermitAcquired() {
+        stopWatch = StopWatch.start(circuitBreaker.getName());
+    }
+
+    @Override
+    protected boolean isCallPermitted() {
+        return circuitBreaker.isCallPermitted();
+    }
+
+    @Override
+    protected Throwable getThrowable() {
+        return new CircuitBreakerOpenException(
+                String.format("CircuitBreaker '%s' is open", circuitBreaker.getName()));
     }
 
     private void markFailure(Throwable e) {
@@ -121,9 +108,5 @@ class CircuitBreakerSubscriber<T> extends Operators.MonoSubscriber<T, T> {
         if (wasCallPermitted()) {
             circuitBreaker.onSuccess(stopWatch.stop().getProcessingDuration().toNanos());
         }
-    }
-
-    private boolean wasCallPermitted() {
-        return permitted.get() == Permit.ACQUIRED;
     }
 }

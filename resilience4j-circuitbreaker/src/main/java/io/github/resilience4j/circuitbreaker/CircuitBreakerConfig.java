@@ -19,6 +19,8 @@
 package io.github.resilience4j.circuitbreaker;
 
 import java.time.Duration;
+import java.util.Arrays;
+import java.util.Optional;
 import java.util.function.Predicate;
 
 
@@ -31,13 +33,15 @@ public class CircuitBreakerConfig {
     public static final int DEFAULT_WAIT_DURATION_IN_OPEN_STATE = 60; // Seconds
     public static final int DEFAULT_RING_BUFFER_SIZE_IN_HALF_OPEN_STATE = 10;
     public static final int DEFAULT_RING_BUFFER_SIZE_IN_CLOSED_STATE = 100;
+    public static final Predicate<Throwable> DEFAULT_RECORD_FAILURE_PREDICATE = (throwable) -> true;
 
     private float failureRateThreshold = DEFAULT_MAX_FAILURE_THRESHOLD;
     private int ringBufferSizeInHalfOpenState = DEFAULT_RING_BUFFER_SIZE_IN_HALF_OPEN_STATE;
     private int ringBufferSizeInClosedState = DEFAULT_RING_BUFFER_SIZE_IN_CLOSED_STATE;
     private Duration waitDurationInOpenState = Duration.ofSeconds(DEFAULT_WAIT_DURATION_IN_OPEN_STATE);
     // The default exception predicate counts all exceptions as failures.
-    private Predicate<? super Throwable> recordFailurePredicate = (exception) -> true;
+    private Predicate<Throwable> recordFailurePredicate = DEFAULT_RECORD_FAILURE_PREDICATE;
+    private boolean automaticTransitionFromOpenToHalfOpenEnabled = false;
 
     private CircuitBreakerConfig(){
     }
@@ -58,8 +62,12 @@ public class CircuitBreakerConfig {
         return ringBufferSizeInClosedState;
     }
 
-    public Predicate<? super Throwable> getRecordFailurePredicate() {
+    public Predicate<Throwable> getRecordFailurePredicate() {
         return recordFailurePredicate;
+    }
+
+    public boolean isAutomaticTransitionFromOpenToHalfOpenEnabled() {
+        return automaticTransitionFromOpenToHalfOpenEnabled;
     }
 
     /**
@@ -81,8 +89,17 @@ public class CircuitBreakerConfig {
     }
 
     public static class Builder {
-
-        private CircuitBreakerConfig config = new CircuitBreakerConfig();
+        private Predicate<Throwable> recordFailurePredicate;
+        private Predicate<Throwable> errorRecordingPredicate;
+        @SuppressWarnings("unchecked")
+        private Class<? extends Throwable>[] recordExceptions = new Class[0];
+        @SuppressWarnings("unchecked")
+        private Class<? extends Throwable>[] ignoreExceptions = new Class[0];
+        private float failureRateThreshold = DEFAULT_MAX_FAILURE_THRESHOLD;
+        private int ringBufferSizeInHalfOpenState = DEFAULT_RING_BUFFER_SIZE_IN_HALF_OPEN_STATE;
+        private int ringBufferSizeInClosedState = DEFAULT_RING_BUFFER_SIZE_IN_CLOSED_STATE;
+        private Duration waitDurationInOpenState = Duration.ofSeconds(DEFAULT_WAIT_DURATION_IN_OPEN_STATE);
+        private boolean automaticTransitionFromOpenToHalfOpenEnabled = false;
 
         /**
          * Configures the failure rate threshold in percentage above which the CircuitBreaker should trip open and start short-circuiting calls.
@@ -96,7 +113,7 @@ public class CircuitBreakerConfig {
             if (failureRateThreshold <= 0 || failureRateThreshold > 100) {
                 throw new IllegalArgumentException("failureRateThreshold must be between 1 and 100");
             }
-            config.failureRateThreshold = failureRateThreshold;
+            this.failureRateThreshold = failureRateThreshold;
             return this;
         }
 
@@ -111,7 +128,7 @@ public class CircuitBreakerConfig {
             if (waitDurationInOpenState.getSeconds() < 1) {
                 throw new IllegalArgumentException("waitDurationInOpenState must be at least 1000[ms]");
             }
-            config.waitDurationInOpenState = waitDurationInOpenState;
+            this.waitDurationInOpenState = waitDurationInOpenState;
             return this;
         }
 
@@ -129,7 +146,7 @@ public class CircuitBreakerConfig {
             if (ringBufferSizeInHalfOpenState < 1 ) {
                 throw new IllegalArgumentException("ringBufferSizeInHalfOpenState must be greater than 0");
             }
-            config.ringBufferSizeInHalfOpenState = ringBufferSizeInHalfOpenState;
+            this.ringBufferSizeInHalfOpenState = ringBufferSizeInHalfOpenState;
             return this;
         }
 
@@ -147,7 +164,7 @@ public class CircuitBreakerConfig {
             if (ringBufferSizeInClosedState < 1) {
                 throw new IllegalArgumentException("ringBufferSizeInClosedState must be greater than 0");
             }
-            config.ringBufferSizeInClosedState = ringBufferSizeInClosedState;
+            this.ringBufferSizeInClosedState = ringBufferSizeInClosedState;
             return this;
         }
 
@@ -158,8 +175,64 @@ public class CircuitBreakerConfig {
          * @param predicate the Predicate which evaluates if an exception should be recorded as a failure and thus trigger the CircuitBreaker
          * @return the CircuitBreakerConfig.Builder
          */
-        public Builder recordFailure(Predicate<? super Throwable> predicate) {
-            config.recordFailurePredicate = predicate;
+        public Builder recordFailure(Predicate<Throwable> predicate) {
+            this.recordFailurePredicate = predicate;
+            return this;
+        }
+
+        /**
+         * Configures a list of error classes that are recorded as a failure and thus increase the failure rate.
+         * Any exception matching or inheriting from one of the list should count as a failure, unless ignored via
+         * @see #ignoreExceptions(Class[]) ). Ignoring an exception has priority over recording an exception.
+         *
+         * Example:
+         *  recordExceptions(Throwable.class) and ignoreExceptions(RuntimeException.class)
+         *  would capture all Errors and checked Exceptions, and ignore unchecked
+         *
+         *  For a more sophisticated exception management use the
+         *  @see #recordFailure(Predicate) method
+         *
+         * @param errorClasses the error classes that are recorded
+         * @return the CircuitBreakerConfig.Builder
+         */
+        @SafeVarargs
+        public final Builder recordExceptions(Class<? extends Throwable>... errorClasses) {
+            this.recordExceptions = errorClasses != null ? errorClasses : new Class[0];
+            return this;
+        }
+
+        /**
+         * Configures a list of error classes that are ignored as a failure and thus do not increase the failure rate.
+         * Any exception matching or inheriting from one of the list will not count as a failure, even if marked via
+         * @see #recordExceptions(Class[]) . Ignoring an exception has priority over recording an exception.
+         *
+         * Example:
+         *  ignoreExceptions(Throwable.class) and recordExceptions(Exception.class)
+         *  would capture nothing
+         *
+         * Example:
+         *  ignoreExceptions(Exception.class) and recordExceptions(Throwable.class)
+         *  would capture Errors
+         *
+         *  For a more sophisticated exception management use the
+         *  @see #recordFailure(Predicate) method
+         *
+         * @param errorClasses the error classes that are recorded
+         * @return the CircuitBreakerConfig.Builder
+         */
+        @SafeVarargs
+        public final Builder ignoreExceptions(Class<? extends Throwable>... errorClasses) {
+            this.ignoreExceptions = errorClasses != null ? errorClasses : new Class[0];
+            return this;
+        }
+
+        /**
+         * Enables automatic transition from OPEN to HALF_OPEN state once the waitDurationInOpenState has passed.
+         *
+         * @return the CircuitBreakerConfig.Builder
+         */
+        public Builder enableAutomaticTransitionFromOpenToHalfOpen() {
+            this.automaticTransitionFromOpenToHalfOpenEnabled = true;
             return this;
         }
 
@@ -169,7 +242,48 @@ public class CircuitBreakerConfig {
          * @return the CircuitBreakerConfig
          */
         public CircuitBreakerConfig build() {
+            buildErrorRecordingPredicate();
+            CircuitBreakerConfig config = new CircuitBreakerConfig();
+            config.waitDurationInOpenState = waitDurationInOpenState;
+            config.failureRateThreshold = failureRateThreshold;
+            config.ringBufferSizeInClosedState = ringBufferSizeInClosedState;
+            config.ringBufferSizeInHalfOpenState = ringBufferSizeInHalfOpenState;
+            config.recordFailurePredicate = errorRecordingPredicate;
+            config.automaticTransitionFromOpenToHalfOpenEnabled = automaticTransitionFromOpenToHalfOpenEnabled;
             return config;
+        }
+
+        private void buildErrorRecordingPredicate() {
+            this.errorRecordingPredicate =
+                    getRecordingPredicate()
+                            .and(buildIgnoreExceptionsPredicate()
+                                    .orElse(DEFAULT_RECORD_FAILURE_PREDICATE));
+        }
+
+        private Predicate<Throwable> getRecordingPredicate() {
+            return buildRecordExceptionsPredicate()
+                    .map(predicate -> recordFailurePredicate != null ? predicate.or(recordFailurePredicate) : predicate)
+                    .orElseGet(() -> recordFailurePredicate != null ? recordFailurePredicate : DEFAULT_RECORD_FAILURE_PREDICATE);
+        }
+
+        private Optional<Predicate<Throwable>> buildRecordExceptionsPredicate() {
+            return Arrays.stream(recordExceptions)
+                    .distinct()
+                    .map(Builder::makePredicate)
+                    .reduce(Predicate::or);
+        }
+
+        private Optional<Predicate<Throwable>> buildIgnoreExceptionsPredicate() {
+            return Arrays.stream(ignoreExceptions)
+                    .distinct()
+                    .map(Builder::makePredicate)
+                    .reduce(Predicate::or)
+                    .map(Predicate::negate);
+        }
+
+        static Predicate<Throwable> makePredicate(Class<? extends Throwable> exClass) {
+
+            return (Throwable e) -> exClass.isAssignableFrom(e.getClass());
         }
     }
 }

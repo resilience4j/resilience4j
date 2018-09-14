@@ -57,7 +57,7 @@ public class AtomicRateLimiter implements RateLimiter {
 
         waitingThreads = new AtomicInteger(0);
         state = new AtomicReference<>(new State(
-                rateLimiterConfig,0, rateLimiterConfig.getLimitForPeriod(), 0
+                rateLimiterConfig, 0, rateLimiterConfig.getLimitForPeriod(), 0
         ));
         eventProcessor = new RateLimiterEventProcessor();
     }
@@ -105,6 +105,30 @@ public class AtomicRateLimiter implements RateLimiter {
         boolean result = waitForPermissionIfNecessary(timeoutInNanos, modifiedState.nanosToWait);
         publishRateLimiterEvent(result);
         return result;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public long reservePermission(Duration timeoutDuration) {
+        long timeoutInNanos = timeoutDuration.toNanos();
+        State modifiedState = updateStateWithBackOff(timeoutInNanos);
+
+        boolean canAcquireImmediately = modifiedState.nanosToWait <= 0;
+        if (canAcquireImmediately) {
+            publishRateLimiterEvent(true);
+            return 0;
+        }
+
+        boolean canAcquireInTime = timeoutInNanos >= modifiedState.nanosToWait;
+        if (canAcquireInTime) {
+            publishRateLimiterEvent(true);
+            return modifiedState.nanosToWait;
+        }
+
+        publishRateLimiterEvent(false);
+        return -1;
     }
 
     /**
@@ -188,10 +212,9 @@ public class AtomicRateLimiter implements RateLimiter {
      * Calculates time to wait for next permission as
      * [time to the next cycle] + [duration of full cycles until reserved permissions expire]
      *
-     *
-     * @param cyclePeriodInNanos current configuration values
-     * @param permissionsPerCycle current configuration values
-     *@param availablePermissions currently available permissions, can be negative if some permissions have been reserved
+     * @param cyclePeriodInNanos   current configuration values
+     * @param permissionsPerCycle  current configuration values
+     * @param availablePermissions currently available permissions, can be negative if some permissions have been reserved
      * @param currentNanos         current time in nanoseconds
      * @param currentCycle         current {@link AtomicRateLimiter} cycle    @return nanoseconds to wait for the next permission
      */
@@ -209,7 +232,6 @@ public class AtomicRateLimiter implements RateLimiter {
     /**
      * Determines whether caller can acquire permission before timeout or not and then creates corresponding {@link State}.
      * Reserves permissions only if caller can successfully wait for permission.
-     *
      *
      * @param config
      * @param timeoutInNanos max time that caller can wait for permission in nanoseconds
@@ -303,11 +325,12 @@ public class AtomicRateLimiter implements RateLimiter {
         return eventProcessor;
     }
 
-    @Override public String toString() {
+    @Override
+    public String toString() {
         return "AtomicRateLimiter{" +
-            "name='" + name + '\'' +
-            ", rateLimiterConfig=" + state.get().config +
-            '}';
+                "name='" + name + '\'' +
+                ", rateLimiterConfig=" + state.get().config +
+                '}';
     }
 
     /**

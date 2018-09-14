@@ -58,6 +58,7 @@ public interface RetrofitCircuitBreaker {
                     CircuitBreakerUtils.isCallPermitted(circuitBreaker);
                 } catch (CircuitBreakerOpenException cb) {
                     callback.onFailure(call, cb);
+                    return;
                 }
 
                 final StopWatch stopWatch = StopWatch.start(circuitBreaker.getName());

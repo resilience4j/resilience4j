@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Bohdan Storozhuk
+ * Copyright 2017 Robert Winkler
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,28 +13,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.resilience4j.ratelimiter.annotation;
+package io.github.resilience4j.circuitbreaker.annotation;
 
-import java.lang.annotation.Documented;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import java.lang.annotation.*;
 
 /**
  * This annotation can be applied to a class or a specific method.
  * Applying it on a class is equivalent to applying it on all its public methods.
- * The annotation enables throttling for all methods where it is applied.
- * Throttling monitoring is performed via a rate limiter.
- * See {@link io.github.resilience4j.ratelimiter.RateLimiter} for details.
+ * The annotation enables backend monitoring for all methods where it is applied.
+ * Backend monitoring is performed via a circuit breaker.
+ * See {@link io.github.resilience4j.circuitbreaker.CircuitBreaker} for details.
  */
 @Retention(value = RetentionPolicy.RUNTIME)
 @Target(value = {ElementType.METHOD, ElementType.TYPE})
 @Documented
-public @interface RateLimiter {
+public @interface CircuitBreaker {
+
     /**
-     * Name of the rate limiter
-     * @return
+     * Name of the circuit breaker.
+     *
+     * @return the name of the circuit breaker
      */
     String name();
+
 }

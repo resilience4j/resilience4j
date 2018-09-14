@@ -8,6 +8,11 @@ resilience4j.circuitbreaker:
             failureRateThreshold: 70
             eventConsumerBufferSize: 10
             registerHealthIndicator: true
+            recordFailurePredicate: io.github.resilience4j.circuitbreaker.RecordFailurePredicate
+            recordExceptions:
+                - io.github.resilience4j.circuitbreaker.RecordedException
+            ignoreExceptions:
+                - io.github.resilience4j.circuitbreaker.IgnoredException
         backendB:
             ringBufferSizeInClosedState: 10
             ringBufferSizeInHalfOpenState: 5
@@ -29,3 +34,5 @@ resilience4j.ratelimiter:
             limitForPeriod: 6
             limitRefreshPeriodInMillis: 500
             timeoutInMillis: 3000
+
+management.security.enabled: false

@@ -1,3 +1,6 @@
+
+
+
 === Bulkhead
 
 ==== Introduction
@@ -90,7 +93,7 @@ Observable.fromCallable(backendService::doSomething)
 
 Other reactive types (Flowable, Single, Maybe and Completable) are also supported.
 
-===== Bulkhead and RxJava
+===== Bulkhead and Reactor
 
 The following example shows how to decorate a Mono by using the custom Reactor operator.
 

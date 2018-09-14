@@ -25,6 +25,7 @@ import io.github.resilience4j.retry.RetryConfig;
 import io.github.resilience4j.retry.event.RetryEvent;
 import io.github.resilience4j.retry.event.RetryOnErrorEvent;
 import io.github.resilience4j.retry.event.RetryOnIgnoredErrorEvent;
+import io.github.resilience4j.retry.event.RetryOnRetryEvent;
 import io.github.resilience4j.retry.event.RetryOnSuccessEvent;
 import io.vavr.CheckedConsumer;
 import io.vavr.control.Option;
@@ -112,31 +113,32 @@ public class RetryImpl implements Retry {
 
         private void throwOrSleepAfterException() throws Exception {
             int currentNumOfAttempts = numOfAttempts.incrementAndGet();
+            Exception throwable = lastException.get();
             if(currentNumOfAttempts >= maxAttempts){
                 failedAfterRetryCounter.increment();
-                Exception throwable = lastException.get();
                 publishRetryEvent(() -> new RetryOnErrorEvent(getName(), currentNumOfAttempts, throwable));
                 throw throwable;
             }else{
-                waitIntervalAfterFailure();
+                waitIntervalAfterFailure(currentNumOfAttempts, throwable);
             }
         }
 
         private void throwOrSleepAfterRuntimeException(){
             int currentNumOfAttempts = numOfAttempts.incrementAndGet();
+            RuntimeException throwable = lastRuntimeException.get();
             if(currentNumOfAttempts >= maxAttempts){
                 failedAfterRetryCounter.increment();
-                RuntimeException throwable = lastRuntimeException.get();
                 publishRetryEvent(() -> new RetryOnErrorEvent(getName(), currentNumOfAttempts, throwable));
                 throw throwable;
             }else{
-                waitIntervalAfterFailure();
+                waitIntervalAfterFailure(currentNumOfAttempts, throwable);
             }
         }
 
-        private void waitIntervalAfterFailure() {
+        private void waitIntervalAfterFailure(int currentNumOfAttempts, Throwable throwable) {
             // wait interval until the next attempt should start
             long interval = intervalFunction.apply(numOfAttempts.get());
+            publishRetryEvent(()-> new RetryOnRetryEvent(getName(), currentNumOfAttempts, throwable, interval));
             Try.run(() -> sleepFunction.accept(interval))
                     .getOrElseThrow(ex -> lastRuntimeException.get());
         }
@@ -211,6 +213,12 @@ public class RetryImpl implements Retry {
         @Override
         public void consumeEvent(RetryEvent event) {
             super.processEvent(event);
+        }
+
+        @Override
+        public EventPublisher onRetry(EventConsumer<RetryOnRetryEvent> onRetryEventConsumer) {
+            registerConsumer(RetryOnRetryEvent.class, onRetryEventConsumer);
+            return this;
         }
 
         @Override

@@ -4,6 +4,7 @@ import io.github.resilience4j.core.EventConsumer;
 import io.github.resilience4j.retry.event.RetryEvent;
 import io.github.resilience4j.retry.event.RetryOnErrorEvent;
 import io.github.resilience4j.retry.event.RetryOnIgnoredErrorEvent;
+import io.github.resilience4j.retry.event.RetryOnRetryEvent;
 import io.github.resilience4j.retry.event.RetryOnSuccessEvent;
 import io.github.resilience4j.retry.internal.AsyncRetryImpl;
 
@@ -174,6 +175,8 @@ public interface AsyncRetry {
      * can be used to register event consumers.
      */
     interface EventPublisher extends io.github.resilience4j.core.EventPublisher<RetryEvent> {
+
+        EventPublisher onRetry(EventConsumer<RetryOnRetryEvent> eventConsumer);
 
         EventPublisher onSuccess(EventConsumer<RetryOnSuccessEvent> eventConsumer);
 
