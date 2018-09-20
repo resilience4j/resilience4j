@@ -171,3 +171,12 @@ NOTE: Breaking changes:
 
 === Version 0.13.1
 * PR #243: Allow Spring to bind MeterBinders instead of directly binding
+
+=== Version 0.13.2
+* PR #244: Corrected link to Prometheus Metrics Integration
+* PR #246: Make async retrofit call not make the request when circuit is open
+* PR #248: Removed rxjava2 dependency for time limiter
+* PR #253: Fixed documentation
+* PR #254: Additional factory methods for Micrometer CircuitBreakerMetrics
+* Issue #245; PR #260: Fix CircuitBreakerSubscriber for Reactor doesn't count successes when using Mono/Flux.toFuture()
+* Issue #263; PR #264: Fix bulkhead on Single and Maybe
