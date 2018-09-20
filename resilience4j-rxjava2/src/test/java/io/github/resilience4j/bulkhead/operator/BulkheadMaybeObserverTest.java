@@ -7,12 +7,14 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
 import java.io.IOException;
+import java.util.Arrays;
 
 import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.bulkhead.BulkheadConfig;
 import io.github.resilience4j.bulkhead.BulkheadFullException;
 import io.reactivex.Maybe;
 import io.reactivex.MaybeObserver;
+import io.reactivex.Observable;
 import io.reactivex.disposables.Disposable;
 import org.junit.Test;
 
@@ -125,5 +127,17 @@ public class BulkheadMaybeObserverTest {
 
         // Then
         assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(0);
+    }
+
+    @Test
+    public void shouldReleaseBulkheadOnlyOnce() {
+        Maybe.just(Arrays.asList(1, 2, 3))
+            .lift(BulkheadOperator.of(bulkhead))
+            .flatMapObservable(Observable::fromIterable)
+            .take(2) //this with the previous line triggers an extra dispose
+            .test()
+            .assertResult(1, 2);
+
+        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
     }
 }
