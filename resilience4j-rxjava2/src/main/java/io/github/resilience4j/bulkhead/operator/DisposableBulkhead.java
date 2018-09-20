@@ -141,7 +141,7 @@ abstract class DisposableBulkhead<T> extends AtomicReference<Disposable> impleme
     }
 
     private void releaseBulkhead() {
-        if (wasCallPermitted()) {
+        if (permitted.compareAndSet(Permit.ACQUIRED, Permit.RELEASED)) {
             bulkhead.onComplete();
         }
     }
