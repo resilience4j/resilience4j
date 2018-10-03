@@ -8,7 +8,7 @@ import retrofit2.Call;
 
 import java.io.IOException;
 
-import static org.mockito.Matchers.any;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 
 @RunWith(JUnit4.class)
