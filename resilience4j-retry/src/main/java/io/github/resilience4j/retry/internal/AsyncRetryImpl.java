@@ -1,5 +1,12 @@
 package io.github.resilience4j.retry.internal;
 
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.atomic.LongAdder;
+import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.function.Supplier;
+
 import io.github.resilience4j.core.EventConsumer;
 import io.github.resilience4j.core.EventProcessor;
 import io.github.resilience4j.retry.AsyncRetry;
@@ -10,14 +17,7 @@ import io.github.resilience4j.retry.event.RetryOnIgnoredErrorEvent;
 import io.github.resilience4j.retry.event.RetryOnRetryEvent;
 import io.github.resilience4j.retry.event.RetryOnSuccessEvent;
 
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.concurrent.atomic.LongAdder;
-import java.util.function.Function;
-import java.util.function.Predicate;
-import java.util.function.Supplier;
-
-public class AsyncRetryImpl implements AsyncRetry {
+public class AsyncRetryImpl<T> implements AsyncRetry {
 
     private final String name;
     private final int maxAttempts;
@@ -26,6 +26,7 @@ public class AsyncRetryImpl implements AsyncRetry {
     private final Predicate<Throwable> exceptionPredicate;
     private final RetryConfig config;
     private final RetryEventProcessor eventProcessor;
+	private final Predicate<T> resultPredicate;
 
     private LongAdder succeededAfterRetryCounter;
     private LongAdder failedAfterRetryCounter;
@@ -38,6 +39,7 @@ public class AsyncRetryImpl implements AsyncRetry {
         this.maxAttempts = config.getMaxAttempts();
         this.intervalFunction = config.getIntervalFunction();
         this.exceptionPredicate = config.getExceptionPredicate();
+	    this.resultPredicate = config.getResultPredicate();
         this.metrics = this.new AsyncRetryMetrics();
         succeededAfterRetryCounter = new LongAdder();
         failedAfterRetryCounter = new LongAdder();
@@ -46,7 +48,7 @@ public class AsyncRetryImpl implements AsyncRetry {
         this.eventProcessor = new RetryEventProcessor();
     }
 
-    public final class ContextImpl implements AsyncRetry.Context {
+	public final class ContextImpl implements AsyncRetry.Context<T> {
 
         private final AtomicInteger numOfAttempts = new AtomicInteger(0);
         private final AtomicReference<Throwable> lastException = new AtomicReference<>();
@@ -54,7 +56,7 @@ public class AsyncRetryImpl implements AsyncRetry {
         @Override
         public void onSuccess() {
             int currentNumOfAttempts = numOfAttempts.get();
-            if(currentNumOfAttempts > 0) {
+	        if (currentNumOfAttempts > 0) {
                 publishRetryEvent(() -> new RetryOnSuccessEvent(name, currentNumOfAttempts, lastException.get()));
             }
         }
@@ -76,9 +78,22 @@ public class AsyncRetryImpl implements AsyncRetry {
             }
 
             long interval = intervalFunction.apply(attempt);
-            publishRetryEvent(()-> new RetryOnRetryEvent(getName(), attempt, throwable, interval));
+	        publishRetryEvent(() -> new RetryOnRetryEvent(getName(), attempt, throwable, interval));
             return interval;
         }
+
+		@Override
+		public long onResult(T result) {
+			if (null != resultPredicate && resultPredicate.test(result)) {
+				int attempt = numOfAttempts.incrementAndGet();
+				if (attempt >= maxAttempts) {
+					return -1;
+				}
+				return intervalFunction.apply(attempt);
+			} else {
+				return -1;
+			}
+		}
     }
 
     @Override
@@ -87,6 +102,7 @@ public class AsyncRetryImpl implements AsyncRetry {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public Context context() {
         return new ContextImpl();
     }
