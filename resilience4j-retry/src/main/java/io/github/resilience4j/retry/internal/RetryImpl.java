@@ -18,6 +18,13 @@
  */
 package io.github.resilience4j.retry.internal;
 
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.atomic.LongAdder;
+import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.function.Supplier;
+
 import io.github.resilience4j.core.EventConsumer;
 import io.github.resilience4j.core.EventProcessor;
 import io.github.resilience4j.retry.Retry;
@@ -31,19 +38,12 @@ import io.vavr.CheckedConsumer;
 import io.vavr.control.Option;
 import io.vavr.control.Try;
 
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.concurrent.atomic.LongAdder;
-import java.util.function.Function;
-import java.util.function.Predicate;
-import java.util.function.Supplier;
-
-public class RetryImpl implements Retry {
+public class RetryImpl<T> implements Retry {
 
 
     private final Metrics metrics;
     private final RetryEventProcessor eventProcessor;
-
+    private final Predicate<T> resultPredicate;
     private String name;
     private RetryConfig config;
     private int maxAttempts;
@@ -61,6 +61,7 @@ public class RetryImpl implements Retry {
         this.maxAttempts = config.getMaxAttempts();
         this.intervalFunction = config.getIntervalFunction();
         this.exceptionPredicate = config.getExceptionPredicate();
+        this.resultPredicate = config.getResultPredicate();
         this.metrics = this.new RetryMetrics();
         this.eventProcessor = new RetryEventProcessor();
         succeededAfterRetryCounter = new LongAdder();
@@ -69,7 +70,7 @@ public class RetryImpl implements Retry {
         failedWithoutRetryCounter = new LongAdder();
     }
 
-    public final class ContextImpl implements Retry.Context {
+    public final class ContextImpl implements Retry.Context<T> {
 
         private final AtomicInteger numOfAttempts = new AtomicInteger(0);
         private final AtomicReference<Exception> lastException = new AtomicReference<>();
@@ -87,6 +88,19 @@ public class RetryImpl implements Retry {
             }else{
                 succeededWithoutRetryCounter.increment();
             }
+        }
+
+        public boolean onResult(T result) {
+            if (null != resultPredicate && resultPredicate.test(result)) {
+                int currentNumOfAttempts = numOfAttempts.incrementAndGet();
+                if (currentNumOfAttempts >= maxAttempts) {
+                    return false;
+                } else {
+                    waitIntervalAfterResultFailure(currentNumOfAttempts, result);
+                    return true;
+                }
+            }
+            return false;
         }
 
         public void onError(Exception exception) throws Throwable{
@@ -114,11 +128,11 @@ public class RetryImpl implements Retry {
         private void throwOrSleepAfterException() throws Exception {
             int currentNumOfAttempts = numOfAttempts.incrementAndGet();
             Exception throwable = lastException.get();
-            if(currentNumOfAttempts >= maxAttempts){
+            if (currentNumOfAttempts >= maxAttempts) {
                 failedAfterRetryCounter.increment();
                 publishRetryEvent(() -> new RetryOnErrorEvent(getName(), currentNumOfAttempts, throwable));
                 throw throwable;
-            }else{
+            } else {
                 waitIntervalAfterFailure(currentNumOfAttempts, throwable);
             }
         }
@@ -143,6 +157,15 @@ public class RetryImpl implements Retry {
                     .getOrElseThrow(ex -> lastRuntimeException.get());
         }
 
+        private void waitIntervalAfterResultFailure(int currentNumOfAttempts, T result) {
+            // wait interval until the next attempt should start
+            long interval = intervalFunction.apply(numOfAttempts.get());
+            publishRetryEvent(() -> new RetryOnRetryEvent(getName(), currentNumOfAttempts, null, interval));
+            Try.run(() -> sleepFunction.accept(interval))
+                    .getOrElseThrow(ex -> lastRuntimeException.get());
+
+        }
+
     }
 
     /**
@@ -154,6 +177,7 @@ public class RetryImpl implements Retry {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public Context context() {
         return new ContextImpl();
     }
