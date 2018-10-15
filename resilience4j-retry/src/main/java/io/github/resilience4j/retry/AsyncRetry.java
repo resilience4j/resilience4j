@@ -1,5 +1,11 @@
 package io.github.resilience4j.retry;
 
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
+
 import io.github.resilience4j.core.EventConsumer;
 import io.github.resilience4j.retry.event.RetryEvent;
 import io.github.resilience4j.retry.event.RetryOnErrorEvent;
@@ -7,12 +13,6 @@ import io.github.resilience4j.retry.event.RetryOnIgnoredErrorEvent;
 import io.github.resilience4j.retry.event.RetryOnRetryEvent;
 import io.github.resilience4j.retry.event.RetryOnSuccessEvent;
 import io.github.resilience4j.retry.internal.AsyncRetryImpl;
-
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionStage;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
-import java.util.function.Supplier;
 
 /**
  * A AsyncRetry instance is thread-safe can be used to decorate multiple requests.
@@ -110,7 +110,7 @@ public interface AsyncRetry {
         return () -> {
 
             final CompletableFuture<T> promise = new CompletableFuture<>();
-            final Runnable block = new AsyncRetryBlock<>(scheduler, retry.context(), supplier, promise);
+	        @SuppressWarnings("unchecked") final Runnable block = new AsyncRetryBlock<>(scheduler, retry.context(), supplier, promise);
             block.run();
 
             return promise;
@@ -155,7 +155,7 @@ public interface AsyncRetry {
         long getNumberOfFailedCallsWithRetryAttempt();
     }
 
-    interface Context {
+	interface Context<T> {
 
         /**
          *  Records a successful call.
@@ -168,6 +168,14 @@ public interface AsyncRetry {
          * @return delay in milliseconds until the next try
          */
         long onError(Throwable throwable);
+
+		/**
+		 * check the result call.
+		 *
+		 * @param result the  result to validate
+		 * @return delay in milliseconds until the next try if the result match the predicate
+		 */
+		long onResult(T result);
     }
 
     /**
@@ -189,15 +197,15 @@ public interface AsyncRetry {
 
 class AsyncRetryBlock<T> implements Runnable {
     private final ScheduledExecutorService scheduler;
-    private final AsyncRetry.Context retryContext;
+	private final AsyncRetry.Context<T> retryContext;
     private final Supplier<CompletionStage<T>> supplier;
     private final CompletableFuture<T> promise;
 
     AsyncRetryBlock(
-            ScheduledExecutorService scheduler,
-            AsyncRetry.Context retryContext,
-            Supplier<CompletionStage<T>> supplier,
-            CompletableFuture<T> promise
+		    ScheduledExecutorService scheduler,
+		    AsyncRetry.Context<T> retryContext,
+		    Supplier<CompletionStage<T>> supplier,
+		    CompletableFuture<T> promise
     ) {
         this.scheduler = scheduler;
         this.retryContext = retryContext;
@@ -217,11 +225,10 @@ class AsyncRetryBlock<T> implements Runnable {
         }
 
         stage.whenComplete((result, t) -> {
-            if (t != null) {
+	        if (result != null) {
+		        onResult(result);
+	        } else if (t != null) {
                 onError(t);
-            } else {
-                promise.complete(result);
-                retryContext.onSuccess();
             }
         });
     }
@@ -235,4 +242,15 @@ class AsyncRetryBlock<T> implements Runnable {
             scheduler.schedule(this, delay, TimeUnit.MILLISECONDS);
         }
     }
+
+	private void onResult(T result) {
+		final long delay = retryContext.onResult(result);
+
+		if (delay < 1) {
+			promise.complete(result);
+			retryContext.onSuccess();
+		} else {
+			scheduler.schedule(this, delay, TimeUnit.MILLISECONDS);
+		}
+	}
 }

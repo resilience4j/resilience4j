@@ -18,6 +18,10 @@
  */
 package io.github.resilience4j.retry;
 
+import java.util.concurrent.Callable;
+import java.util.function.Function;
+import java.util.function.Supplier;
+
 import io.github.resilience4j.core.EventConsumer;
 import io.github.resilience4j.retry.event.RetryEvent;
 import io.github.resilience4j.retry.event.RetryOnErrorEvent;
@@ -28,10 +32,6 @@ import io.github.resilience4j.retry.internal.RetryImpl;
 import io.vavr.CheckedFunction0;
 import io.vavr.CheckedFunction1;
 import io.vavr.CheckedRunnable;
-
-import java.util.concurrent.Callable;
-import java.util.function.Function;
-import java.util.function.Supplier;
 
 /**
  * A Retry instance is thread-safe can be used to decorate multiple requests.
@@ -145,11 +145,15 @@ public interface Retry {
      */
     static <T> CheckedFunction0<T> decorateCheckedSupplier(Retry retry, CheckedFunction0<T> supplier){
         return () -> {
-            Retry.Context context = retry.context();
+	        @SuppressWarnings("unchecked")
+	        Retry.Context<T> context = retry.context();
             do try {
                 T result = supplier.apply();
-                context.onSuccess();
-                return result;
+	            final boolean validationOfResult = context.onResult(result);
+	            if (!validationOfResult) {
+		            context.onSuccess();
+		            return result;
+	            }
             } catch (Exception exception) {
                 context.onError(exception);
             } while (true);
@@ -189,11 +193,15 @@ public interface Retry {
      */
     static <T, R> CheckedFunction1<T, R> decorateCheckedFunction(Retry retry, CheckedFunction1<T, R> function){
         return (T t) -> {
-            Retry.Context context = retry.context();
+	        @SuppressWarnings("unchecked")
+	        Retry.Context<R> context = retry.context();
             do try {
-                R result = function.apply(t);
-                context.onSuccess();
-                return result;
+	            R result = function.apply(t);
+	            final boolean validationOfResult = context.onResult(result);
+	            if (!validationOfResult) {
+		            context.onSuccess();
+		            return result;
+	            }
             } catch (Exception exception) {
                 context.onError(exception);
             } while (true);
@@ -211,11 +219,15 @@ public interface Retry {
      */
     static <T> Supplier<T> decorateSupplier(Retry retry, Supplier<T> supplier){
         return () -> {
-            Retry.Context context = retry.context();
+	        @SuppressWarnings("unchecked")
+	        Retry.Context<T> context = retry.context();
             do try {
-                T result = supplier.get();
-                context.onSuccess();
-                return result;
+	            T result = supplier.get();
+	            final boolean validationOfResult = context.onResult(result);
+	            if (!validationOfResult) {
+		            context.onSuccess();
+		            return result;
+	            }
             } catch (RuntimeException runtimeException) {
                 context.onRuntimeError(runtimeException);
             } while (true);
@@ -233,11 +245,15 @@ public interface Retry {
      */
     static <T> Callable<T> decorateCallable(Retry retry, Callable<T> supplier){
         return () -> {
-            Retry.Context context = retry.context();
+	        @SuppressWarnings("unchecked")
+	        Retry.Context<T> context = retry.context();
             do try {
-                T result = supplier.call();
-                context.onSuccess();
-                return result;
+	            T result = supplier.call();
+	            final boolean validationOfResult = context.onResult(result);
+	            if (!validationOfResult) {
+		            context.onSuccess();
+		            return result;
+	            }
             } catch (RuntimeException runtimeException) {
                 context.onRuntimeError(runtimeException);
             } while (true);
@@ -277,11 +293,15 @@ public interface Retry {
      */
     static <T, R> Function<T, R> decorateFunction(Retry retry, Function<T, R> function){
         return (T t) -> {
-            Retry.Context context = retry.context();
+	        @SuppressWarnings("unchecked")
+	        Retry.Context<R> context = retry.context();
             do try {
-                R result = function.apply(t);
-                context.onSuccess();
-                return result;
+	            R result = function.apply(t);
+	            final boolean validationOfResult = context.onResult(result);
+	            if (!validationOfResult) {
+		            context.onSuccess();
+		            return result;
+	            }
             } catch (RuntimeException runtimeException) {
                 context.onRuntimeError(runtimeException);
             } while (true);
@@ -326,12 +346,23 @@ public interface Retry {
         long getNumberOfFailedCallsWithRetryAttempt();
     }
 
-    interface Context {
+	/**
+	 * the retry context which will be used during the retry iteration to decide what can be done on error , result, on runtime error
+	 *
+	 * @param <T> the result type
+	 */
+	interface Context<T> {
 
         /**
          *  Records a successful call.
          */
         void onSuccess();
+
+		/**
+		 * @param result the returned result from the called logic
+		 * @return true if we need to retry again or false if no retry anymore
+		 */
+		boolean onResult(T result);
 
         /**
          * Handles a checked exception
