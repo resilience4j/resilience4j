@@ -14,6 +14,7 @@ import java.util.function.Supplier;
 import javax.xml.ws.WebServiceException;
 
 import org.assertj.core.api.Assertions;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.BDDMockito;
@@ -75,6 +76,8 @@ public class AsyncRetryTest {
 		// Then the helloWorldService should be invoked 1 time
 		BDDMockito.then(helloWorldService).should(Mockito.times(1)).returnHelloWorld();
 		Assertions.assertThat(result).isEqualTo("Hello world");
+		// for code quality scan , it does not not recognize assertJ do not why
+		Assert.assertEquals(result, "Hello world");
 	}
 
 	@Test
@@ -250,7 +253,7 @@ public class AsyncRetryTest {
 
 		// Then the helloWorldService should be invoked n + 1 times
 		BDDMockito.then(helloWorldService).should(Mockito.times(noOfAttempts)).returnHelloWorld();
-		Assertions.assertThat(resultTry.isSuccess()).isTrue();
+		Assert.assertTrue(resultTry.isSuccess());
 
 	}
 
