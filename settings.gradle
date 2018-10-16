@@ -23,4 +23,4 @@ include 'resilience4j-timelimiter'
 include 'resilience4j-rxjava2'
 include 'resilience4j-reactor'
 include 'resilience4j-micrometer'
-
+include 'resilience4j-bom'
