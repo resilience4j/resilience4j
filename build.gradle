@@ -44,7 +44,7 @@ artifactoryPublish.skip=true // apply to all projects except the root
 
 ext {
     coreProjects = subprojects.findAll {
-        p -> !p.name.contains("documentation")
+        p -> !p.name.contains("documentation") && !p.name.endsWith("-bom")
     }
 }
 
