@@ -178,5 +178,10 @@ NOTE: Breaking changes:
 * PR #248: Removed rxjava2 dependency for time limiter
 * PR #253: Fixed documentation
 * PR #254: Additional factory methods for Micrometer CircuitBreakerMetrics
+* PR #271: Remove deprecated usage of Mockito Matchers
+* PR #276: Add response predicate to retry sync and async for enhancement
+* PR #277: Generate BOM for resilience4j
+* PR #281: Avoid creating unnecessary logging strings
+* PR #284: Avoiding calling bulkheadConfigSupplier needlessly
 * Issue #245; PR #260: Fix CircuitBreakerSubscriber for Reactor doesn't count successes when using Mono/Flux.toFuture()
 * Issue #263; PR #264: Fix bulkhead on Single and Maybe
