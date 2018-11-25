@@ -5,6 +5,7 @@ dependencies {
     compile ( libraries.spring_reactor )
     compile ( libraries.hibernate_validator )
     compileOnly ( libraries.spring_boot_config_processor )
+    compileOnly ( libraries.spring_boot_autoconfigure_processor )
     compile project(':resilience4j-annotations')
     compile project(':resilience4j-spring')
     compile project(':resilience4j-circuitbreaker')
