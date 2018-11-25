@@ -1,0 +1,10 @@
+{
+  "properties": [
+    {
+      "name": "resilience4j.circuitbreaker.metrics.enabled",
+      "defaultValue": true,
+      "description": "Whether to enable the circuitbreaker-metrics.",
+      "type": "java.lang.Boolean"
+    }
+  ]
+}
