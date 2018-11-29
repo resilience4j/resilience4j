@@ -27,6 +27,6 @@ public class RetryOnRetryEvent extends AbstractRetryEvent {
                              getName(),
                              waitInterval,
                              getNumberOfRetryAttempts(),
-                             getLastThrowable().toString()); //FIXME potential NPE
+                             getLastThrowable() != null ? getLastThrowable().toString() : "null");
     }
 }

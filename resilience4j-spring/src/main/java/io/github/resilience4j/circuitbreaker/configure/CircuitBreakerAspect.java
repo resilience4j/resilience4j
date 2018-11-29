@@ -68,7 +68,10 @@ public class CircuitBreakerAspect implements Ordered {
 		if (backendMonitored == null) {
 			backendMonitored = getBackendMonitoredAnnotation(proceedingJoinPoint);
 		}
-        String backend = backendMonitored.name(); //TODO potential NPE
+        if(backendMonitored == null) { //because annotations wasn't found
+            return proceedingJoinPoint.proceed();
+        }
+        String backend = backendMonitored.name();
 		io.github.resilience4j.circuitbreaker.CircuitBreaker circuitBreaker = getOrCreateCircuitBreaker(methodName, backend);
 		Class<?> returnType = method.getReturnType();
 		if (circuitBreakerAspectExtList != null && !circuitBreakerAspectExtList.isEmpty()) {

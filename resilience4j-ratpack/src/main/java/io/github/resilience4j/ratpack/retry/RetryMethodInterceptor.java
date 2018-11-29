@@ -44,10 +44,10 @@ public class RetryMethodInterceptor implements MethodInterceptor {
     @Override
     public Object invoke(MethodInvocation invocation) throws Throwable {
         Retry annotation = invocation.getMethod().getAnnotation(Retry.class);
-        io.github.resilience4j.retry.Retry retry = registry.retry(annotation.name()); //FIXME potential NPE
-        if (retry == null) { //FIXME retry can't ever be null (assuming the registry exists)
+        if(registry == null) {
             return invocation.proceed();
         }
+        io.github.resilience4j.retry.Retry retry = registry.retry(annotation.name());
         RecoveryFunction<?> recoveryFunction = annotation.recovery().newInstance();
         if (registry == null) {
             registry = RetryRegistry.ofDefaults();

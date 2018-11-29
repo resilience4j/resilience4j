@@ -51,9 +51,6 @@ public class CircuitBreakerMethodInterceptor implements MethodInterceptor {
             registry = CircuitBreakerRegistry.ofDefaults();
         }
         io.github.resilience4j.circuitbreaker.CircuitBreaker breaker = registry.circuitBreaker(annotation.name());
-        if (breaker == null) { //FIXME this is impossible breakers are always returned from registry
-            return invocation.proceed();
-        }
         Class<?> returnType = invocation.getMethod().getReturnType();
         if (Promise.class.isAssignableFrom(returnType)) {
             Promise<?> result = (Promise<?>) proceed(invocation, breaker, recoveryFunction);

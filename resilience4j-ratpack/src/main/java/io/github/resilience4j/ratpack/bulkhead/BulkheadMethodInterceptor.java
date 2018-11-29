@@ -53,9 +53,6 @@ public class BulkheadMethodInterceptor implements MethodInterceptor {
             registry = BulkheadRegistry.ofDefaults();
         }
         io.github.resilience4j.bulkhead.Bulkhead bulkhead = registry.bulkhead(annotation.name());
-        if (bulkhead == null) { //FIXME this is impossible since registry never returns null
-            return invocation.proceed();
-        }
         Class<?> returnType = invocation.getMethod().getReturnType();
         if (Promise.class.isAssignableFrom(returnType)) {
             Promise<?> result = (Promise<?>) invocation.proceed();

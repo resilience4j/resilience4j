@@ -36,6 +36,6 @@ public class RetryOnIgnoredErrorEvent extends AbstractRetryEvent {
         return String.format("%s: Retry '%s' recorded an error which has been ignored: '%s'.",
                 getCreationTime(),
                 getName(),
-                getLastThrowable().toString()); //FIXME potential NPE
+                getLastThrowable() != null ? getLastThrowable().toString() : "null");
     }
 }

@@ -37,6 +37,6 @@ public class RetryOnErrorEvent extends AbstractRetryEvent {
                 getCreationTime(),
                 getName(),
                 getNumberOfRetryAttempts(),
-                getLastThrowable().toString()); //FIXME potential NPE
+                getLastThrowable() != null ? getLastThrowable().toString() : "null");
     }
 }
