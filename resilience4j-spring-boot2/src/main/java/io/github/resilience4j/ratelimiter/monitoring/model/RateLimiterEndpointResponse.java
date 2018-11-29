@@ -15,25 +15,29 @@
  */
 package io.github.resilience4j.ratelimiter.monitoring.model;
 
+import io.github.resilience4j.core.lang.Nullable;
+
 import java.util.List;
 
 
 public class RateLimiterEndpointResponse {
 
+    @Nullable
     private List<String> rateLimitersNames;
 
     // created for spring to be able to construct POJO
     public RateLimiterEndpointResponse() {}
 
-    public RateLimiterEndpointResponse(List<String> rateLimitersNames) {
+    public RateLimiterEndpointResponse(@Nullable List<String> rateLimitersNames) {
         this.rateLimitersNames = rateLimitersNames;
     }
 
+    @Nullable
     public List<String> getRateLimitersNames() {
         return rateLimitersNames;
     }
 
-    public void setRateLimitersNames(List<String> rateLimitersNames) {
+    public void setRateLimitersNames(@Nullable List<String> rateLimitersNames) {
         this.rateLimitersNames = rateLimitersNames;
     }
 }

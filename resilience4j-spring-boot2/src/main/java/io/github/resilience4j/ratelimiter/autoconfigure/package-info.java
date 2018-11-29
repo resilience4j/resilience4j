@@ -18,7 +18,7 @@
  */
 @NonNullApi
 @NonNullFields
-package io.github.resilience4j.circuitbreaker;
+package io.github.resilience4j.ratelimiter.autoconfigure;
 
 import io.github.resilience4j.core.lang.NonNullApi;
 import io.github.resilience4j.core.lang.NonNullFields;
