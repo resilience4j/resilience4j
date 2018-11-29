@@ -15,6 +15,7 @@
  */
 package io.github.resilience4j.ratelimiter.configure;
 
+import io.github.resilience4j.core.lang.Nullable;
 import io.github.resilience4j.ratelimiter.RateLimiterConfig;
 
 import java.time.Duration;
@@ -30,7 +31,7 @@ public class RateLimiterConfigurationProperties {
     private int rateLimiterAspectOrder = Integer.MAX_VALUE;
     private Map<String, LimiterProperties> limiters = new HashMap<>();
 
-    public static RateLimiterConfig createRateLimiterConfig(LimiterProperties limiterProperties) {
+    public static RateLimiterConfig createRateLimiterConfig(@Nullable LimiterProperties limiterProperties) {
         if (limiterProperties == null) {
             return RateLimiterConfig.ofDefaults();
         }
@@ -92,6 +93,7 @@ public class RateLimiterConfigurationProperties {
          *
          * @return the permissions limit for refresh period
          */
+        @Nullable
         public Integer getLimitForPeriod() {
             return limitForPeriod;
         }
@@ -116,6 +118,7 @@ public class RateLimiterConfigurationProperties {
          *
          * @return the period of limit refresh
          */
+        @Nullable
         public Integer getLimitRefreshPeriodInMillis() {
             return limitRefreshPeriodInMillis;
         }
@@ -138,6 +141,7 @@ public class RateLimiterConfigurationProperties {
          *
          * @return wait for permission duration
          */
+        @Nullable
         public Integer getTimeoutInMillis() {
             return timeoutInMillis;
         }
