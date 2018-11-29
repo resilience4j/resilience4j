@@ -18,6 +18,7 @@
  */
 package io.github.resilience4j.ratelimiter.internal;
 
+import io.github.resilience4j.core.lang.Nullable;
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RateLimiterConfig;
 import io.github.resilience4j.ratelimiter.event.RateLimiterOnFailureEvent;
@@ -69,7 +70,7 @@ public class SemaphoreBasedRateLimiter implements RateLimiter {
      * @param scheduler         executor that will refresh permissions
      */
     public SemaphoreBasedRateLimiter(String name, RateLimiterConfig rateLimiterConfig,
-                                     ScheduledExecutorService scheduler) {
+                                     @Nullable ScheduledExecutorService scheduler) {
         this.name = requireNonNull(name, NAME_MUST_NOT_BE_NULL);
         this.rateLimiterConfig = new AtomicReference<>(requireNonNull(rateLimiterConfig, CONFIG_MUST_NOT_BE_NULL));
 

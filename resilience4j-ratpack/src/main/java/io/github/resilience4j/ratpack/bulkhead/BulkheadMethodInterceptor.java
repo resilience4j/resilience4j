@@ -18,6 +18,7 @@ package io.github.resilience4j.ratpack.bulkhead;
 import com.google.inject.Inject;
 import io.github.resilience4j.bulkhead.BulkheadFullException;
 import io.github.resilience4j.bulkhead.BulkheadRegistry;
+import io.github.resilience4j.core.lang.Nullable;
 import io.github.resilience4j.ratpack.recovery.RecoveryFunction;
 import io.github.resilience4j.reactor.bulkhead.operator.BulkheadOperator;
 import org.aopalliance.intercept.MethodInterceptor;
@@ -39,9 +40,11 @@ import java.util.concurrent.CompletionStage;
 public class BulkheadMethodInterceptor implements MethodInterceptor {
 
     @Inject(optional = true)
+    @Nullable
     private BulkheadRegistry registry;
 
     @SuppressWarnings("unchecked")
+    @Nullable
     @Override
     public Object invoke(MethodInvocation invocation) throws Throwable {
         Bulkhead annotation = invocation.getMethod().getAnnotation(Bulkhead.class);
@@ -50,7 +53,7 @@ public class BulkheadMethodInterceptor implements MethodInterceptor {
             registry = BulkheadRegistry.ofDefaults();
         }
         io.github.resilience4j.bulkhead.Bulkhead bulkhead = registry.bulkhead(annotation.name());
-        if (bulkhead == null) {
+        if (bulkhead == null) { //FIXME this is impossible since registry never returns null
             return invocation.proceed();
         }
         Class<?> returnType = invocation.getMethod().getReturnType();

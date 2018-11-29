@@ -18,6 +18,7 @@ package io.github.resilience4j.reactor.circuitbreaker.operator;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerOpenException;
 import io.github.resilience4j.core.StopWatch;
+import io.github.resilience4j.core.lang.Nullable;
 import io.github.resilience4j.reactor.ResilienceBaseSubscriber;
 import org.reactivestreams.Subscriber;
 import reactor.core.CoreSubscriber;
@@ -34,6 +35,7 @@ import static java.util.Objects.requireNonNull;
 class CircuitBreakerSubscriber<T> extends ResilienceBaseSubscriber<T> {
 
     private final CircuitBreaker circuitBreaker;
+    @Nullable
     private StopWatch stopWatch;
     private final boolean singleProducer;
 
