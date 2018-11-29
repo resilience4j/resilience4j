@@ -18,6 +18,8 @@
  */
 package io.github.resilience4j.retry.event;
 
+import io.github.resilience4j.core.lang.Nullable;
+
 import java.time.ZonedDateTime;
 
 abstract class AbstractRetryEvent implements RetryEvent {
@@ -25,9 +27,10 @@ abstract class AbstractRetryEvent implements RetryEvent {
     private final String name;
     private final ZonedDateTime creationTime;
     private final int numberOfAttempts;
+    @Nullable
     private final Throwable lastThrowable;
 
-    AbstractRetryEvent(String name, int numberOfAttempts, Throwable lastThrowable) {
+    AbstractRetryEvent(String name, int numberOfAttempts, @Nullable Throwable lastThrowable) {
         this.name = name;
         this.numberOfAttempts = numberOfAttempts;
         this.creationTime = ZonedDateTime.now();
@@ -50,6 +53,7 @@ abstract class AbstractRetryEvent implements RetryEvent {
     }
 
     @Override
+    @Nullable
     public Throwable getLastThrowable() {
         return lastThrowable;
     }
