@@ -2,8 +2,6 @@ package io.github.resilience4j.metrics;
 
 import com.codahale.metrics.*;
 import io.github.resilience4j.retry.AsyncRetry;
-import io.github.resilience4j.retry.Retry;
-import io.github.resilience4j.retry.RetryRegistry;
 import io.vavr.collection.Array;
 
 import java.util.Map;
@@ -13,7 +11,7 @@ import static io.github.resilience4j.retry.utils.MetricNames.*;
 import static java.util.Objects.requireNonNull;
 
 /**
- * An adapter which exports {@link Retry.Metrics} as Dropwizard Metrics Gauges.
+ * An adapter which exports {@link AsyncRetry.Metrics} as Dropwizard Metrics Gauges.
  */
 public class AsyncRetryMetrics implements MetricSet {
 
