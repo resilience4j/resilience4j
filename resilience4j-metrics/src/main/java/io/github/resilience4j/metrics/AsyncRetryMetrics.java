@@ -46,7 +46,7 @@ public class AsyncRetryMetrics implements MetricSet {
         return new AsyncRetryMetrics(retries);
     }
 
-    public static AsyncRetryMetrics ofRateLimiter(AsyncRetry retry) {
+    public static AsyncRetryMetrics ofAsyncRetry(AsyncRetry retry) {
         return new AsyncRetryMetrics(Array.of(retry));
     }
 
