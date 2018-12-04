@@ -125,8 +125,8 @@ public class CircuitBreakerConfig {
          * @return the CircuitBreakerConfig.Builder
          */
         public Builder waitDurationInOpenState(Duration waitDurationInOpenState) {
-            if (waitDurationInOpenState.getSeconds() < 1) {
-                throw new IllegalArgumentException("waitDurationInOpenState must be at least 1000[ms]");
+            if (waitDurationInOpenState.toMillis() < 1) {
+                throw new IllegalArgumentException("waitDurationInOpenState must be at least 1[ms]");
             }
             this.waitDurationInOpenState = waitDurationInOpenState;
             return this;
