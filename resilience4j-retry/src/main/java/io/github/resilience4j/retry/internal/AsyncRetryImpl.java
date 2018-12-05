@@ -1,21 +1,17 @@
 package io.github.resilience4j.retry.internal;
 
+import io.github.resilience4j.core.EventConsumer;
+import io.github.resilience4j.core.EventProcessor;
+import io.github.resilience4j.retry.AsyncRetry;
+import io.github.resilience4j.retry.RetryConfig;
+import io.github.resilience4j.retry.event.*;
+
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.atomic.LongAdder;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
-
-import io.github.resilience4j.core.EventConsumer;
-import io.github.resilience4j.core.EventProcessor;
-import io.github.resilience4j.retry.AsyncRetry;
-import io.github.resilience4j.retry.RetryConfig;
-import io.github.resilience4j.retry.event.RetryEvent;
-import io.github.resilience4j.retry.event.RetryOnErrorEvent;
-import io.github.resilience4j.retry.event.RetryOnIgnoredErrorEvent;
-import io.github.resilience4j.retry.event.RetryOnRetryEvent;
-import io.github.resilience4j.retry.event.RetryOnSuccessEvent;
 
 public class AsyncRetryImpl<T> implements AsyncRetry {
 
@@ -26,7 +22,7 @@ public class AsyncRetryImpl<T> implements AsyncRetry {
     private final Predicate<Throwable> exceptionPredicate;
     private final RetryConfig config;
     private final RetryEventProcessor eventProcessor;
-	private final Predicate<T> resultPredicate;
+    private final Predicate<T> resultPredicate;
 
     private LongAdder succeededAfterRetryCounter;
     private LongAdder failedAfterRetryCounter;
@@ -39,7 +35,7 @@ public class AsyncRetryImpl<T> implements AsyncRetry {
         this.maxAttempts = config.getMaxAttempts();
         this.intervalFunction = config.getIntervalFunction();
         this.exceptionPredicate = config.getExceptionPredicate();
-	    this.resultPredicate = config.getResultPredicate();
+        this.resultPredicate = config.getResultPredicate();
         this.metrics = this.new AsyncRetryMetrics();
         succeededAfterRetryCounter = new LongAdder();
         failedAfterRetryCounter = new LongAdder();
@@ -48,7 +44,7 @@ public class AsyncRetryImpl<T> implements AsyncRetry {
         this.eventProcessor = new RetryEventProcessor();
     }
 
-	public final class ContextImpl implements AsyncRetry.Context<T> {
+    public final class ContextImpl implements AsyncRetry.Context<T> {
 
         private final AtomicInteger numOfAttempts = new AtomicInteger(0);
         private final AtomicReference<Throwable> lastException = new AtomicReference<>();
@@ -56,12 +52,12 @@ public class AsyncRetryImpl<T> implements AsyncRetry {
         @Override
         public void onSuccess() {
             int currentNumOfAttempts = numOfAttempts.get();
-	        if (currentNumOfAttempts > 0) {
-              succeededAfterRetryCounter.increment();
+            if (currentNumOfAttempts > 0) {
+                succeededAfterRetryCounter.increment();
                 publishRetryEvent(() -> new RetryOnSuccessEvent(name, currentNumOfAttempts, lastException.get()));
             } else {
-              succeededWithoutRetryCounter.increment();
-          }
+                succeededWithoutRetryCounter.increment();
+            }
         }
 
         @Override
@@ -81,22 +77,22 @@ public class AsyncRetryImpl<T> implements AsyncRetry {
             }
 
             long interval = intervalFunction.apply(attempt);
-	        publishRetryEvent(() -> new RetryOnRetryEvent(getName(), attempt, throwable, interval));
+            publishRetryEvent(() -> new RetryOnRetryEvent(getName(), attempt, throwable, interval));
             return interval;
         }
 
-		@Override
-		public long onResult(T result) {
-			if (null != resultPredicate && resultPredicate.test(result)) {
-				int attempt = numOfAttempts.incrementAndGet();
-				if (attempt >= maxAttempts) {
-					return -1;
-				}
-				return intervalFunction.apply(attempt);
-			} else {
-				return -1;
-			}
-		}
+        @Override
+        public long onResult(T result) {
+            if (null != resultPredicate && resultPredicate.test(result)) {
+                int attempt = numOfAttempts.incrementAndGet();
+                if (attempt >= maxAttempts) {
+                    return -1;
+                }
+                return intervalFunction.apply(attempt);
+            } else {
+                return -1;
+            }
+        }
     }
 
     @Override
@@ -117,7 +113,7 @@ public class AsyncRetryImpl<T> implements AsyncRetry {
 
 
     private void publishRetryEvent(Supplier<RetryEvent> event) {
-        if(eventProcessor.hasConsumers()) {
+        if (eventProcessor.hasConsumers()) {
             eventProcessor.consumeEvent(event.get());
         }
     }
