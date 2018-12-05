@@ -57,6 +57,9 @@ public final class InMemoryAsyncRetryRegistry implements AsyncRetryRegistry {
         this.retries = new ConcurrentHashMap<>();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Seq<AsyncRetry> getAllRetries() {
         return Array.ofAll(retries.values());
@@ -80,6 +83,9 @@ public final class InMemoryAsyncRetryRegistry implements AsyncRetryRegistry {
                 customRetryConfig));
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public AsyncRetry retry(String name, Supplier<RetryConfig> retryConfigSupplier) {
         return retries.computeIfAbsent(Objects.requireNonNull(name, "Name must not be null"), (k) -> AsyncRetry.of(name,
