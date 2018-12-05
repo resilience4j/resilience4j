@@ -91,11 +91,11 @@ public class AsyncRetryMetricsTest {
 
         // Given the HelloWorldService returns Hello world
         BDDMockito.given(helloWorldService.returnHelloWorld())
-                .willThrow(new WebServiceException("BAM!"))
+                .willReturn(failedFuture(new WebServiceException("BAM!")))
                 .willReturn(CompletableFuture.completedFuture("Hello world"))
-                .willThrow(new WebServiceException("BAM!"))
-                .willThrow(new WebServiceException("BAM!"))
-                .willThrow(new WebServiceException("BAM!"));
+                .willReturn(failedFuture(new WebServiceException("BAM!")))
+                .willReturn(failedFuture(new WebServiceException("BAM!")))
+                .willReturn(failedFuture(new WebServiceException("BAM!")));
 
         // Setup circuitbreaker with retry
         String value1 = awaitResult(retry.executeCompletionStage(scheduler, helloWorldService::returnHelloWorld));
