@@ -1,14 +1,5 @@
 package io.github.resilience4j.metrics;
 
-import com.codahale.metrics.MetricRegistry;
-import io.github.resilience4j.retry.AsyncRetry;
-import io.github.resilience4j.retry.AsyncRetryRegistry;
-import io.github.resilience4j.test.AsyncHelloWorldService;
-import io.vavr.control.Try;
-import org.junit.Before;
-import org.junit.Test;
-import org.mockito.BDDMockito;
-
 import javax.xml.ws.WebServiceException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
@@ -17,6 +8,15 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+
+import com.codahale.metrics.MetricRegistry;
+import io.github.resilience4j.retry.AsyncRetry;
+import io.github.resilience4j.retry.AsyncRetryRegistry;
+import io.github.resilience4j.test.AsyncHelloWorldService;
+import io.vavr.control.Try;
+import org.junit.Before;
+import org.junit.Test;
+import org.mockito.BDDMockito;
 
 import static io.github.resilience4j.retry.utils.MetricNames.FAILED_CALLS_WITHOUT_RETRY;
 import static io.github.resilience4j.retry.utils.MetricNames.FAILED_CALLS_WITH_RETRY;

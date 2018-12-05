@@ -15,16 +15,16 @@
  */
 package io.github.resilience4j.retry.internal;
 
+import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.function.Supplier;
+
 import io.github.resilience4j.retry.AsyncRetry;
 import io.github.resilience4j.retry.AsyncRetryRegistry;
 import io.github.resilience4j.retry.RetryConfig;
 import io.vavr.collection.Array;
 import io.vavr.collection.Seq;
-
-import java.util.Objects;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-import java.util.function.Supplier;
 
 /**
  * Backend retry manager.

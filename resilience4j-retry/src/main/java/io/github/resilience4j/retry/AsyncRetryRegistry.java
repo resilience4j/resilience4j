@@ -16,10 +16,10 @@
 package io.github.resilience4j.retry;
 
 
+import java.util.function.Supplier;
+
 import io.github.resilience4j.retry.internal.InMemoryAsyncRetryRegistry;
 import io.vavr.collection.Seq;
-
-import java.util.function.Supplier;
 
 /**
  * The {@link AsyncRetryRegistry} is a factory to create Retry instances which stores all Retry instances in a registry.
