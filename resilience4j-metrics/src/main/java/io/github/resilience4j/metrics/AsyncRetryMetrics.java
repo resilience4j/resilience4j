@@ -2,6 +2,8 @@ package io.github.resilience4j.metrics;
 
 import com.codahale.metrics.*;
 import io.github.resilience4j.retry.AsyncRetry;
+import io.github.resilience4j.retry.AsyncRetryRegistry;
+import io.github.resilience4j.retry.RetryRegistry;
 import io.vavr.collection.Array;
 
 import java.util.Map;
@@ -36,6 +38,14 @@ public class AsyncRetryMetrics implements MetricSet {
             metricRegistry.register(name(prefix, name, FAILED_CALLS_WITH_RETRY),
                     (Gauge<Long>) () -> retry.getMetrics().getNumberOfFailedCallsWithRetryAttempt());
         });
+    }
+
+    public static AsyncRetryMetrics ofAsyncRetryRegistry(String prefix, AsyncRetryRegistry retryRegistry) {
+        return new AsyncRetryMetrics(prefix, retryRegistry.getAllRetries());
+    }
+
+    public static AsyncRetryMetrics ofAsyncRetryRegistry(AsyncRetryRegistry retryRegistry) {
+        return new AsyncRetryMetrics(retryRegistry.getAllRetries());
     }
 
     public static AsyncRetryMetrics ofIterable(String prefix, Iterable<AsyncRetry> retries) {

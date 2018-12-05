@@ -19,8 +19,11 @@
 package io.github.resilience4j.test;
 
 import java.io.IOException;
+import java.util.concurrent.CompletableFuture;
 
 public interface HelloWorldService {
+
+    CompletableFuture<String> returnAsyncHelloWorld();
 
     String returnHelloWorld();
 

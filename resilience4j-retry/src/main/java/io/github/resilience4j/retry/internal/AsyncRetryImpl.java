@@ -57,8 +57,11 @@ public class AsyncRetryImpl<T> implements AsyncRetry {
         public void onSuccess() {
             int currentNumOfAttempts = numOfAttempts.get();
 	        if (currentNumOfAttempts > 0) {
+              succeededAfterRetryCounter.increment();
                 publishRetryEvent(() -> new RetryOnSuccessEvent(name, currentNumOfAttempts, lastException.get()));
-            }
+            } else {
+              succeededWithoutRetryCounter.increment();
+          }
         }
 
         @Override
