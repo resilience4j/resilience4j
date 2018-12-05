@@ -49,7 +49,7 @@ public class AsyncRetryMetricsTest {
     private MetricRegistry metricRegistry;
     private AsyncHelloWorldService helloWorldService;
     private ScheduledExecutorService scheduler =
-      Executors.newSingleThreadScheduledExecutor();;
+      Executors.newSingleThreadScheduledExecutor();
 
     @Before
     public void setUp(){
@@ -58,7 +58,7 @@ public class AsyncRetryMetricsTest {
     }
 
     @Test
-    public void shouldRegisterMetricsWithoutRetry() throws Throwable {
+    public void shouldRegisterMetricsWithoutRetry() {
         //Given
         AsyncRetryRegistry retryRegistry = AsyncRetryRegistry.ofDefaults();
         AsyncRetry retry = retryRegistry.retry("testName");
@@ -83,7 +83,7 @@ public class AsyncRetryMetricsTest {
     }
 
     @Test
-    public void shouldRegisterMetricsWithRetry() throws Throwable {
+    public void shouldRegisterMetricsWithRetry() {
         //Given
         AsyncRetryRegistry retryRegistry = AsyncRetryRegistry.ofDefaults();
         AsyncRetry retry = retryRegistry.retry("testName");
@@ -113,7 +113,7 @@ public class AsyncRetryMetricsTest {
     }
 
     @Test
-    public void shouldUseCustomPrefix() throws Throwable {
+    public void shouldUseCustomPrefix() {
         //Given
         AsyncRetryRegistry retryRegistry = AsyncRetryRegistry.ofDefaults();
         AsyncRetry retry = retryRegistry.retry("testName");
