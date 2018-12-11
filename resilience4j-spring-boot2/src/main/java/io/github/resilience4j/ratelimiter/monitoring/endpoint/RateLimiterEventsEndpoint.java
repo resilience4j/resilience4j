@@ -28,7 +28,7 @@ import io.github.resilience4j.ratelimiter.event.RateLimiterEvent;
 import io.github.resilience4j.ratelimiter.monitoring.model.RateLimiterEventDTO;
 import io.github.resilience4j.ratelimiter.monitoring.model.RateLimiterEventsEndpointResponse;
 
-@Endpoint(id = "ratelimiter-events")
+@Endpoint(id = "ratelimiterevents")
 public class RateLimiterEventsEndpoint {
     private final EventConsumerRegistry<RateLimiterEvent> eventsConsumerRegistry;
 
