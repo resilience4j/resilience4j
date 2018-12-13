@@ -72,7 +72,10 @@ public final class InMemoryBulkheadRegistry implements BulkheadRegistry {
 
     @Override
     public Bulkhead bulkhead(String name, Supplier<BulkheadConfig> bulkheadConfigSupplier) {
-        return bulkhead(name, bulkheadConfigSupplier.get());
+        return bulkheads.computeIfAbsent(
+                Objects.requireNonNull(name, "Name must not be null"),
+                k -> Bulkhead.of(name, bulkheadConfigSupplier.get())
+        );
     }
 
     @Override

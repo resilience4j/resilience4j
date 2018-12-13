@@ -105,7 +105,7 @@ public class RateLimiterAutoConfigurationTest {
         }
 
         ResponseEntity<RateLimiterEventsEndpointResponse> rateLimiterEventList = restTemplate
-            .getForEntity("/actuator/ratelimiter-events", RateLimiterEventsEndpointResponse.class);
+            .getForEntity("/actuator/ratelimiterevents", RateLimiterEventsEndpointResponse.class);
 
         List<RateLimiterEventDTO> eventsList = rateLimiterEventList.getBody().getEventsList();
         assertThat(eventsList).isNotEmpty();

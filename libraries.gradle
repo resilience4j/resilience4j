@@ -21,6 +21,7 @@ ext {
     ratpackVersion = '1.5.4'
     spockVersion = '1.1-groovy-2.4-rc-4'
     retrofitVersion = '2.3.0'
+    feignVersion = '10.0.1'
     prometheusSimpleClientVersion = '0.3.0'
     reactorVersion = '3.1.5.RELEASE'
     reactiveStreamsVersion = '1.0.2'
@@ -63,6 +64,7 @@ ext {
             spring_boot_web: "org.springframework.boot:spring-boot-starter-web:${springBootVersion}",
             spring_boot_test:  "org.springframework.boot:spring-boot-starter-test:${springBootVersion}",
             spring_boot_config_processor : "org.springframework.boot:spring-boot-configuration-processor:${springBootVersion}",
+            spring_boot_autoconfigure_processor : "org.springframework.boot:spring-boot-autoconfigure-processor:${springBootVersion}",
 
             // Spring Boot2 addon
             spring_boot2_aop: "org.springframework.boot:spring-boot-starter-aop:${springBoot2Version}",
@@ -70,6 +72,7 @@ ext {
             spring_boot2_web: "org.springframework.boot:spring-boot-starter-web:${springBoot2Version}",
             spring_boot2_test:  "org.springframework.boot:spring-boot-starter-test:${springBoot2Version}",
             spring_boot2_config_processor : "org.springframework.boot:spring-boot-configuration-processor:${springBoot2Version}",
+            spring_boot2_autoconfigure_processor : "org.springframework.boot:spring-boot-autoconfigure-processor:${springBoot2Version}",
 
             // Hibernate validator addon
             hibernate_validator: "org.hibernate.validator:hibernate-validator:${hibernateValidatorVersion}",
@@ -84,7 +87,11 @@ ext {
             retrofit: "com.squareup.retrofit2:retrofit:${retrofitVersion}",
             retrofit_test: "com.squareup.retrofit2:converter-scalars:${retrofitVersion}",
             retrofit_wiremock: "com.github.tomakehurst:wiremock:1.58",
-
+            
+            // Feign addon
+            feign: "io.github.openfeign:feign-core:${feignVersion}",
+            feign_wiremock: "com.github.tomakehurst:wiremock:1.58",
+            
             // Metrics addon
             metrics: "io.dropwizard.metrics:metrics-core:${metricsVersion}",
 

@@ -96,7 +96,7 @@ public class RetryImpl<T> implements Retry {
                 if (currentNumOfAttempts >= maxAttempts) {
                     return false;
                 } else {
-                    waitIntervalAfterResultFailure(currentNumOfAttempts, result);
+	                waitIntervalAfterFailure(currentNumOfAttempts, null);
                     return true;
                 }
             }
@@ -155,15 +155,6 @@ public class RetryImpl<T> implements Retry {
             publishRetryEvent(()-> new RetryOnRetryEvent(getName(), currentNumOfAttempts, throwable, interval));
             Try.run(() -> sleepFunction.accept(interval))
                     .getOrElseThrow(ex -> lastRuntimeException.get());
-        }
-
-        private void waitIntervalAfterResultFailure(int currentNumOfAttempts, T result) {
-            // wait interval until the next attempt should start
-            long interval = intervalFunction.apply(numOfAttempts.get());
-            publishRetryEvent(() -> new RetryOnRetryEvent(getName(), currentNumOfAttempts, null, interval));
-            Try.run(() -> sleepFunction.accept(interval))
-                    .getOrElseThrow(ex -> lastRuntimeException.get());
-
         }
 
     }

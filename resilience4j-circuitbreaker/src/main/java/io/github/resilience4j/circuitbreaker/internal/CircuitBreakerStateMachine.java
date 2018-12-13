@@ -106,9 +106,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
     @Override
     public void onError(long durationInNanos, Throwable throwable) {
         if (circuitBreakerConfig.getRecordFailurePredicate().test(throwable)) {
-            if (LOG.isDebugEnabled()) {
-                LOG.debug(String.format("CircuitBreaker '%s' recorded a failure:", name), throwable);
-            }
+            LOG.debug("CircuitBreaker '{}' recorded a failure:", name, throwable);
             publishCircuitErrorEvent(name, durationInNanos, throwable);
             stateReference.get().onError(throwable);
         } else {
@@ -224,17 +222,17 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
     private void publishEventIfPossible(CircuitBreakerEvent event) {
         if(shouldPublishEvents(event)) {
             if (eventProcessor.hasConsumers()) {
-                LOG.debug(String.format("Event %s published: %s", event.getEventType(), event));
+                LOG.debug("Event {} published: {}", event.getEventType(), event);
                 try{
                     eventProcessor.consumeEvent(event);
                 }catch (Throwable t){
-                    LOG.warn(String.format("Failed to handle event %s", event.getEventType()), t);
+                    LOG.warn("Failed to handle event {}", event.getEventType(), t);
                 }
             } else {
-                LOG.debug(String.format("No Consumers: Event %s not published", event.getEventType()));
+                LOG.debug("No Consumers: Event {} not published", event.getEventType());
             }
         } else {
-            LOG.debug(String.format("Publishing not allowed: Event %s not published", event.getEventType()));
+            LOG.debug("Publishing not allowed: Event {} not published", event.getEventType());
         }
     }
 

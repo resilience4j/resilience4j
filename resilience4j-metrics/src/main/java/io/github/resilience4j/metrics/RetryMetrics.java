@@ -55,32 +55,12 @@ public class RetryMetrics implements MetricSet {
         return new RetryMetrics(retries);
     }
 
-    public static RetryMetrics ofRateLimiter(Retry retry) {
+    public static RetryMetrics ofRetry(Retry retry) {
         return new RetryMetrics(Array.of(retry));
     }
 
     @Override
     public Map<String, Metric> getMetrics() {
         return metricRegistry.getMetrics();
-    }
-
-    /**
-     * Implements a {@link RatioGauge} that represents the ratio between attempts made, and the maximum allowed retry attempts.
-     */
-    private final class RetryRatio extends RatioGauge {
-
-        private double numAttempts;
-
-        private double maxAttempts;
-
-        public RetryRatio(int numAttempts, int maxAttempts) {
-            this.numAttempts = (double) numAttempts;
-            this.maxAttempts = (double) maxAttempts;
-        }
-
-        @Override
-        protected Ratio getRatio() {
-            return Ratio.of(numAttempts, maxAttempts);
-        }
     }
 }
