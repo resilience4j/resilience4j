@@ -90,10 +90,10 @@ public class CircuitBreakerAutoConfigurationTest {
         assertThat(circuitBreakerList.getBody().getCircuitBreakers()).hasSize(2).containsExactly("backendA", "backendB");
 
         // expect circuitbreaker-event actuator endpoint recorded both events
-        ResponseEntity<CircuitBreakerEventsEndpointResponse> circuitBreakerEventList = restTemplate.getForEntity("/actuator/circuitbreaker-events", CircuitBreakerEventsEndpointResponse.class);
+        ResponseEntity<CircuitBreakerEventsEndpointResponse> circuitBreakerEventList = restTemplate.getForEntity("/actuator/circuitbreakerevents", CircuitBreakerEventsEndpointResponse.class);
         assertThat(circuitBreakerEventList.getBody().getCircuitBreakerEvents()).hasSize(2);
 
-        circuitBreakerEventList = restTemplate.getForEntity("/actuator/circuitbreaker-events?name=backendA", CircuitBreakerEventsEndpointResponse.class);
+        circuitBreakerEventList = restTemplate.getForEntity("/actuator/circuitbreakerevents?name=backendA", CircuitBreakerEventsEndpointResponse.class);
         assertThat(circuitBreakerEventList.getBody().getCircuitBreakerEvents()).hasSize(2);
 
         // expect no health indicator for backendB, as it is disabled via properties

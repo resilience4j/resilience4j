@@ -27,7 +27,7 @@ import io.github.resilience4j.consumer.CircularEventConsumer;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
 
 
-@Endpoint(id = "circuitbreaker-events")
+@Endpoint(id = "circuitbreakerevents")
 public class CircuitBreakerEventsEndpoint {
 
     private final EventConsumerRegistry<CircuitBreakerEvent> eventConsumerRegistry;
