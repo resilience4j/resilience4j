@@ -138,7 +138,7 @@ public class CircuitBreakerAspect implements Ordered {
 	}
 
 	/**
-	 * handle the normal Java API types
+	 * handle the normal Java API types which is the default behavior
 	 */
 	private Object defaultHandling(ProceedingJoinPoint proceedingJoinPoint, io.github.resilience4j.circuitbreaker.CircuitBreaker circuitBreaker, String methodName) throws Throwable {
 		CircuitBreakerUtils.isCallPermitted(circuitBreaker);
