@@ -71,14 +71,15 @@ public class RateLimiterExports extends Collector {
     public static RateLimiterExports ofRateLimiterRegistry(RateLimiterRegistry rateLimiterRegistry) {
         return new RateLimiterExports(rateLimiterRegistry.getAllRateLimiters());
     }
+
     /**
      * Creates a new instance of {@link RateLimiterExports} with default metrics names prefix and
-     * a circuit breaker as a source.
+     * a rate limiter as a source.
      *
-     * @param RateLimiter the rate limiter
+     * @param rateLimiter the rate limiter
      */
-    public static RateLimiterExports ofRateLimiter(RateLimiter RateLimiter) {
-        return new RateLimiterExports(Array.of(RateLimiter));
+    public static RateLimiterExports ofRateLimiter(RateLimiter rateLimiter) {
+        return new RateLimiterExports(Array.of(rateLimiter));
     }
 
 
@@ -86,10 +87,10 @@ public class RateLimiterExports extends Collector {
      * Creates a new instance of {@link RateLimiterExports} with default metrics names prefix and
      * {@link Iterable} of rate limiters.
      *
-     * @param RateLimiters the rate limiters
+     * @param rateLimiters the rate limiters
      */
-    public static RateLimiterExports ofIterable(Iterable<RateLimiter> RateLimiters) {
-        return new RateLimiterExports(RateLimiters);
+    public static RateLimiterExports ofIterable(Iterable<RateLimiter> rateLimiters) {
+        return new RateLimiterExports(rateLimiters);
     }
 
     /**
@@ -108,21 +109,21 @@ public class RateLimiterExports extends Collector {
      * {@link Iterable} of rate limiters.
      *
      * @param prefix the prefix of metrics names
-     * @param rateLimiter the rate limiters
+     * @param rateLimiters the rate limiters
      */
-    public static RateLimiterExports ofIterable(String prefix, Iterable<RateLimiter> rateLimiter) {
-        return new RateLimiterExports(prefix, rateLimiter);
+    public static RateLimiterExports ofIterable(String prefix, Iterable<RateLimiter> rateLimiters) {
+        return new RateLimiterExports(prefix, rateLimiters);
     }
 
     /**
      * Creates a new instance of {@link RateLimiterExports} with default metrics names prefix and
-     * a circuit breaker as a source.
+     * a rate limiter as a source.
      *
      * @param prefix the prefix of metrics names
-     * @param RateLimiter the circuit breaker
+     * @param rateLimiter the rate limiter
      */
-    public static RateLimiterExports ofRateLimiter(String prefix, RateLimiter RateLimiter) {
-        return new RateLimiterExports(prefix, Array.of(RateLimiter));
+    public static RateLimiterExports ofRateLimiter(String prefix, RateLimiter rateLimiter) {
+        return new RateLimiterExports(prefix, Array.of(rateLimiter));
     }
     
     /**
