@@ -21,6 +21,7 @@ import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
 import org.springframework.boot.actuate.autoconfigure.metrics.MetricsAutoConfiguration;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -33,6 +34,7 @@ import org.springframework.context.annotation.Configuration;
 @AutoConfigureAfter(value = {CircuitBreakerAutoConfiguration.class, MetricsAutoConfiguration.class})
 public class RateLimiterMetricsAutoConfiguration {
     @Bean
+    @ConditionalOnMissingBean
     public RateLimiterMetrics registerRateLimiterMetrics(RateLimiterRegistry rateLimiterRegistry) {
         return RateLimiterMetrics.ofRateLimiterRegistry(rateLimiterRegistry);
     }
