@@ -59,7 +59,7 @@ public class RetryTransformer<T> implements FlowableTransformer<T, T>, Observabl
     @Override
     public Publisher<T> apply(Flowable<T> upstream) {
         return Flowable.fromPublisher(downstream -> {
-            SubscriptionArbiter sa = new SubscriptionArbiter();
+            SubscriptionArbiter sa = new SubscriptionArbiter(true);
             downstream.onSubscribe(sa);
             RetrySubscriber<T> repeatSubscriber = new RetrySubscriber<>(downstream, retry.getRetryConfig().getMaxAttempts(), sa, upstream, retry);
             upstream.subscribe(repeatSubscriber);
@@ -70,7 +70,7 @@ public class RetryTransformer<T> implements FlowableTransformer<T, T>, Observabl
     public ObservableSource<T> apply(Observable<T> upstream) {
         return Observable.fromPublisher(downstream -> {
             Flowable<T> flowable = upstream.toFlowable(BackpressureStrategy.BUFFER);
-            SubscriptionArbiter sa = new SubscriptionArbiter();
+            SubscriptionArbiter sa = new SubscriptionArbiter(true);
             downstream.onSubscribe(sa);
             RetrySubscriber<T> retrySubscriber = new RetrySubscriber<>(downstream, retry.getRetryConfig().getMaxAttempts(), sa, flowable, retry);
             flowable.subscribe(retrySubscriber);
@@ -81,7 +81,7 @@ public class RetryTransformer<T> implements FlowableTransformer<T, T>, Observabl
     public SingleSource<T> apply(Single<T> upstream) {
         return Single.fromPublisher(downstream -> {
             Flowable<T> flowable = upstream.toFlowable();
-            SubscriptionArbiter sa = new SubscriptionArbiter();
+            SubscriptionArbiter sa = new SubscriptionArbiter(true);
             downstream.onSubscribe(sa);
             RetrySubscriber<T> retrySubscriber = new RetrySubscriber<>(downstream, retry.getRetryConfig().getMaxAttempts(), sa, flowable, retry);
             flowable.subscribe(retrySubscriber);
@@ -122,6 +122,7 @@ public class RetryTransformer<T> implements FlowableTransformer<T, T>, Observabl
             actual.onNext(t);
             sa.produced(1L);
         }
+
         @Override
         public void onError(Throwable t) {
             if (LOG.isDebugEnabled()) {
@@ -131,10 +132,14 @@ public class RetryTransformer<T> implements FlowableTransformer<T, T>, Observabl
             if (r != Long.MAX_VALUE) {
                 remaining = r - 1;
             }
-            if (r == 0) {
+            if (r == 0 || t instanceof StackOverflowError) {
                 actual.onError(t);
             } else {
                 try {
+                    // Filter catchable
+                    if (t instanceof Error) {
+                        throw (Error)t;
+                    }
                     context.onError((Exception) t);
                     subscribeNext();
                 } catch (Throwable t2) {
