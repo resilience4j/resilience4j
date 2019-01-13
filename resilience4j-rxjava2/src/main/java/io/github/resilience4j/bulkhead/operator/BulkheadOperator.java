@@ -33,6 +33,7 @@ import org.reactivestreams.Subscriber;
 
 /**
  * A RxJava operator which wraps a reactive type in a bulkhead.
+ * Please note that Bulkhead shouldn't use wait time as it may block while acquiring the permit.
  *
  * @param <T> the value type of the upstream and downstream
  */

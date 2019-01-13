@@ -33,6 +33,7 @@ import org.reactivestreams.Subscriber;
 /**
  * A RxJava operator which wraps a reactive type in a rate limiter.
  * All operators consumes one permit at subscription and one permit per emitted event except the first one.
+ * Please note that RateLimiter shouldn't use timeout as it may block while acquiring the permit.
  *
  * @param <T> the value type of the upstream and downstream
  */
