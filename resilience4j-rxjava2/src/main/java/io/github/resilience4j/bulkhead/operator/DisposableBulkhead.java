@@ -3,6 +3,7 @@ package io.github.resilience4j.bulkhead.operator;
 import static java.util.Objects.requireNonNull;
 
 import io.github.resilience4j.bulkhead.Bulkhead;
+import io.github.resilience4j.internal.DisposedDisposable;
 import io.reactivex.disposables.Disposable;
 
 /**
@@ -32,26 +33,12 @@ abstract class DisposableBulkhead<T> extends AbstractBulkheadOperator<T, Disposa
     }
 
     @Override
-    protected Disposable getDisposable() {
+    protected Disposable currentDisposable() {
         return this;
     }
 
     @Override
     protected void dispose(Disposable disposable) {
         disposable.dispose();
-    }
-
-    private enum DisposedDisposable implements Disposable {
-        DISPOSED;
-
-        @Override
-        public void dispose() {
-
-        }
-
-        @Override
-        public boolean isDisposed() {
-            return true;
-        }
     }
 }

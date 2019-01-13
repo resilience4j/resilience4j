@@ -1,6 +1,7 @@
 package io.github.resilience4j.circuitbreaker.operator;
 
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
+import io.github.resilience4j.internal.DisposedSubscription;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
 
@@ -31,7 +32,7 @@ final class CircuitBreakerSubscriber<T> extends AbstractCircuitBreakerOperator<T
 
     @Override
     public void onNext(T value) {
-        onNextInner(value);
+        safeOnNext(value);
     }
 
     @Override
@@ -41,7 +42,7 @@ final class CircuitBreakerSubscriber<T> extends AbstractCircuitBreakerOperator<T
 
     @Override
     public void onComplete() {
-        onCompleteInner();
+        safeOnComplete();
     }
 
     @Override
@@ -51,7 +52,7 @@ final class CircuitBreakerSubscriber<T> extends AbstractCircuitBreakerOperator<T
 
     @Override
     public void onError(Throwable e) {
-        onErrorInner(e);
+        safeOnError(e);
     }
 
     @Override
@@ -75,26 +76,12 @@ final class CircuitBreakerSubscriber<T> extends AbstractCircuitBreakerOperator<T
     }
 
     @Override
-    protected Subscription getDisposable() {
+    protected Subscription currentDisposable() {
         return this;
     }
 
     @Override
     protected void dispose(Subscription disposable) {
         disposable.cancel();
-    }
-
-    private enum DisposedSubscription implements Subscription {
-        CANCELLED;
-
-        @Override
-        public void request(long n) {
-
-        }
-
-        @Override
-        public void cancel() {
-
-        }
     }
 }

@@ -1,6 +1,7 @@
 package io.github.resilience4j.circuitbreaker.operator;
 
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
+import io.github.resilience4j.internal.DisposedDisposable;
 import io.reactivex.disposables.Disposable;
 
 /**
@@ -8,7 +9,7 @@ import io.reactivex.disposables.Disposable;
  *
  * @param <T> the type of the emitted event
  */
-class DisposableCircuitBreaker<T> extends AbstractCircuitBreakerOperator<T, Disposable> implements Disposable {
+abstract class DisposableCircuitBreaker<T> extends AbstractCircuitBreakerOperator<T, Disposable> implements Disposable {
 
     DisposableCircuitBreaker(CircuitBreaker circuitBreaker) {
         super(circuitBreaker);
@@ -30,26 +31,12 @@ class DisposableCircuitBreaker<T> extends AbstractCircuitBreakerOperator<T, Disp
     }
 
     @Override
-    protected Disposable getDisposable() {
+    protected Disposable currentDisposable() {
         return this;
     }
 
     @Override
     protected void dispose(Disposable disposable) {
         disposable.dispose();
-    }
-
-    private enum DisposedDisposable implements Disposable {
-        DISPOSED;
-
-        @Override
-        public void dispose() {
-
-        }
-
-        @Override
-        public boolean isDisposed() {
-            return true;
-        }
     }
 }

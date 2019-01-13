@@ -1,13 +1,11 @@
 package io.github.resilience4j.bulkhead.operator;
 
-import static java.util.Objects.requireNonNull;
-
-import io.github.resilience4j.adapter.Permit;
 import io.github.resilience4j.bulkhead.Bulkhead;
-import io.github.resilience4j.bulkhead.BulkheadFullException;
-import io.reactivex.internal.subscriptions.SubscriptionHelper;
+import io.github.resilience4j.internal.DisposedSubscription;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * A RxJava {@link Subscriber} to wrap another subscriber in a bulkhead.
@@ -34,7 +32,7 @@ final class BulkheadSubscriber<T> extends AbstractBulkheadOperator<T, Subscripti
 
     @Override
     public void onNext(T value) {
-        onNextInner(value);
+        safeOnNext(value);
     }
 
     @Override
@@ -44,7 +42,7 @@ final class BulkheadSubscriber<T> extends AbstractBulkheadOperator<T, Subscripti
 
     @Override
     public void onComplete() {
-        onCompleteInner();
+        safeOnComplete();
     }
 
     @Override
@@ -54,7 +52,7 @@ final class BulkheadSubscriber<T> extends AbstractBulkheadOperator<T, Subscripti
 
     @Override
     public void onError(Throwable e) {
-        onErrorInner(e);
+        safeOnError(e);
     }
 
     @Override
@@ -78,26 +76,12 @@ final class BulkheadSubscriber<T> extends AbstractBulkheadOperator<T, Subscripti
     }
 
     @Override
-    protected Subscription getDisposable() {
+    protected Subscription currentDisposable() {
         return this;
     }
 
     @Override
     protected void dispose(Subscription disposable) {
         disposable.cancel();
-    }
-
-    private enum DisposedSubscription implements Subscription {
-        CANCELLED;
-
-        @Override
-        public void request(long n) {
-
-        }
-
-        @Override
-        public void cancel() {
-
-        }
     }
 }

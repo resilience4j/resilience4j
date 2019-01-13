@@ -31,7 +31,7 @@ final class BulkheadObserver<T> extends DisposableBulkhead<T> implements Observe
 
     @Override
     public void onNext(T value) {
-        onNextInner(value);
+        safeOnNext(value);
     }
 
     @Override
@@ -41,7 +41,7 @@ final class BulkheadObserver<T> extends DisposableBulkhead<T> implements Observe
 
     @Override
     public void onComplete() {
-        onCompleteInner();
+        safeOnComplete();
     }
 
     @Override
@@ -51,7 +51,7 @@ final class BulkheadObserver<T> extends DisposableBulkhead<T> implements Observe
 
     @Override
     public void onError(Throwable e) {
-        onErrorInner(e);
+        safeOnError(e);
     }
 
     @Override

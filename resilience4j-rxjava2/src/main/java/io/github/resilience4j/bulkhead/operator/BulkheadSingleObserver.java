@@ -31,7 +31,7 @@ final class BulkheadSingleObserver<T> extends DisposableBulkhead<T> implements S
 
     @Override
     public void onSuccess(T value) {
-        onSuccessInner(value);
+        safeOnSuccess(value);
     }
 
     @Override
@@ -41,7 +41,7 @@ final class BulkheadSingleObserver<T> extends DisposableBulkhead<T> implements S
 
     @Override
     public void onError(Throwable e) {
-        onErrorInner(e);
+        safeOnError(e);
     }
 
     @Override

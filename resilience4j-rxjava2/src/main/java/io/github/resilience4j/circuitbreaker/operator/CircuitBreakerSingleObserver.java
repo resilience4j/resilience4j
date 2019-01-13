@@ -31,7 +31,7 @@ final class CircuitBreakerSingleObserver<T> extends DisposableCircuitBreaker<T> 
 
     @Override
     public void onSuccess(T value) {
-        onSuccessInner(value);
+        safeOnSuccess(value);
     }
 
     @Override
@@ -41,7 +41,7 @@ final class CircuitBreakerSingleObserver<T> extends DisposableCircuitBreaker<T> 
 
     @Override
     public void onError(Throwable e) {
-        onErrorInner(e);
+        safeOnError(e);
     }
 
     @Override

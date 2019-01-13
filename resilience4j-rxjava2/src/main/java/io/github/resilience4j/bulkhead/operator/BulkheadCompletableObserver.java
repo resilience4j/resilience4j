@@ -1,10 +1,10 @@
 package io.github.resilience4j.bulkhead.operator;
 
-import static java.util.Objects.requireNonNull;
-
 import io.github.resilience4j.bulkhead.Bulkhead;
 import io.reactivex.CompletableObserver;
 import io.reactivex.disposables.Disposable;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * A RxJava {@link CompletableObserver} to wrap another observer in a bulkhead.
@@ -29,7 +29,7 @@ final class BulkheadCompletableObserver extends DisposableBulkhead<Object> imple
 
     @Override
     public void onComplete() {
-        onCompleteInner();
+        safeOnComplete();
     }
 
     @Override
@@ -39,7 +39,7 @@ final class BulkheadCompletableObserver extends DisposableBulkhead<Object> imple
 
     @Override
     public void onError(Throwable e) {
-        onErrorInner(e);
+        safeOnError(e);
     }
 
     @Override

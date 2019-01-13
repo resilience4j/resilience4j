@@ -27,7 +27,7 @@ final class CircuitBreakerCompletableObserver extends DisposableCircuitBreaker<O
 
     @Override
     public void onComplete() {
-        onCompleteInner();
+        safeOnComplete();
     }
 
     @Override
@@ -37,7 +37,7 @@ final class CircuitBreakerCompletableObserver extends DisposableCircuitBreaker<O
 
     @Override
     public void onError(Throwable e) {
-        onErrorInner(e);
+        safeOnError(e);
     }
 
     @Override

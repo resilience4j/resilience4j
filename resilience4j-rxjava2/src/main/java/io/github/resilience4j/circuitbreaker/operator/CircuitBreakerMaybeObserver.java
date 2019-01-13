@@ -31,7 +31,7 @@ final class CircuitBreakerMaybeObserver<T> extends DisposableCircuitBreaker<T> i
 
     @Override
     public void onComplete() {
-        onCompleteInner();
+        safeOnComplete();
     }
 
     @Override
@@ -41,7 +41,7 @@ final class CircuitBreakerMaybeObserver<T> extends DisposableCircuitBreaker<T> i
 
     @Override
     public void onSuccess(T value) {
-        onSuccessInner(value);
+        safeOnSuccess(value);
     }
 
     @Override
@@ -51,7 +51,7 @@ final class CircuitBreakerMaybeObserver<T> extends DisposableCircuitBreaker<T> i
 
     @Override
     public void onError(Throwable e) {
-        onErrorInner(e);
+        safeOnError(e);
     }
 
     @Override
