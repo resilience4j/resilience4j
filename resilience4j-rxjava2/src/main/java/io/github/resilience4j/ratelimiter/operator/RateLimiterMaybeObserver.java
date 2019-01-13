@@ -32,7 +32,7 @@ final class RateLimiterMaybeObserver<T> extends DisposableRateLimiter<T> impleme
 
     @Override
     public void onComplete() {
-        onCompleteInner();
+        safeOnComplete();
     }
 
     @Override
@@ -42,7 +42,7 @@ final class RateLimiterMaybeObserver<T> extends DisposableRateLimiter<T> impleme
 
     @Override
     public void onSuccess(T value) {
-        onSuccessInner(value);
+        safeOnSuccess(value);
     }
 
     @Override
@@ -52,7 +52,7 @@ final class RateLimiterMaybeObserver<T> extends DisposableRateLimiter<T> impleme
 
     @Override
     public void onError(Throwable e) {
-        onErrorInner(e);
+        safeOnError(e);
     }
 
     @Override

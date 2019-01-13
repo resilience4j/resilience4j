@@ -1,10 +1,10 @@
 package io.github.resilience4j.ratelimiter.operator;
 
-import static java.util.Objects.requireNonNull;
-
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.reactivex.SingleObserver;
 import io.reactivex.disposables.Disposable;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * A RxJava {@link SingleObserver} to protect another observer by a {@link RateLimiter}.
@@ -32,7 +32,7 @@ final class RateLimiterSingleObserver<T> extends DisposableRateLimiter<T> implem
 
     @Override
     public void onSuccess(T value) {
-        onSuccessInner(value);
+        safeOnSuccess(value);
     }
 
     @Override
@@ -42,7 +42,7 @@ final class RateLimiterSingleObserver<T> extends DisposableRateLimiter<T> implem
 
     @Override
     public void onError(Throwable e) {
-        onErrorInner(e);
+        safeOnError(e);
     }
 
     @Override

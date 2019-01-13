@@ -1,12 +1,12 @@
 package io.github.resilience4j.ratelimiter.operator;
 
-import static java.util.Objects.requireNonNull;
-
-import java.util.concurrent.atomic.AtomicBoolean;
-
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.reactivex.Observer;
 import io.reactivex.disposables.Disposable;
+
+import java.util.concurrent.atomic.AtomicBoolean;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * A RxJava {@link Observer} to protect another observer by a {@link RateLimiter}.
@@ -35,17 +35,22 @@ final class RateLimiterObserver<T> extends DisposableRateLimiter<T> implements O
 
     @Override
     public void onNext(T value) {
-        onNextInner(value, firstEvent.getAndSet(false));
+        safeOnNext(value);
     }
 
     @Override
     protected void permittedOnNext(T value) {
-        childObserver.onNext(value);
+        if (firstEvent.getAndSet(false) || tryCallPermit()) {
+            childObserver.onNext(value);
+        } else {
+            dispose();
+            childObserver.onError(notPermittedException());
+        }
     }
 
     @Override
     public void onComplete() {
-        onCompleteInner();
+        safeOnComplete();
     }
 
     @Override
@@ -55,7 +60,7 @@ final class RateLimiterObserver<T> extends DisposableRateLimiter<T> implements O
 
     @Override
     public void onError(Throwable e) {
-        onErrorInner(e);
+        safeOnError(e);
     }
 
     @Override

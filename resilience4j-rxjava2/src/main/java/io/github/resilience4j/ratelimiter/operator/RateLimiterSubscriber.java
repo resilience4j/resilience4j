@@ -1,16 +1,13 @@
 package io.github.resilience4j.ratelimiter.operator;
 
-import static java.util.Objects.requireNonNull;
-
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicReference;
-
-import io.github.resilience4j.adapter.Permit;
+import io.github.resilience4j.internal.DisposedSubscription;
 import io.github.resilience4j.ratelimiter.RateLimiter;
-import io.github.resilience4j.ratelimiter.RequestNotPermitted;
-import io.reactivex.internal.subscriptions.SubscriptionHelper;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
+
+import java.util.concurrent.atomic.AtomicBoolean;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * A RxJava {@link Subscriber} to protect another subscriber by a {@link RateLimiter}.
@@ -18,54 +15,58 @@ import org.reactivestreams.Subscription;
  *
  * @param <T> the value type of the upstream and downstream
  */
-final class RateLimiterSubscriber<T> extends AtomicReference<Subscription> implements Subscriber<T>, Subscription {
-    private final RateLimiter rateLimiter;
+final class RateLimiterSubscriber<T> extends AbstractRateLimiterOperator<T, Subscription> implements Subscriber<T>, Subscription {
     private final Subscriber<? super T> childSubscriber;
-    private final AtomicReference<Permit> permitted = new AtomicReference<>(Permit.PENDING);
     private final AtomicBoolean firstEvent = new AtomicBoolean(true);
 
     RateLimiterSubscriber(RateLimiter rateLimiter, Subscriber<? super T> childSubscriber) {
-        this.rateLimiter = requireNonNull(rateLimiter);
+        super(rateLimiter);
         this.childSubscriber = requireNonNull(childSubscriber);
     }
 
     @Override
     public void onSubscribe(Subscription subscription) {
-        if (SubscriptionHelper.setOnce(this, subscription)) {
-            if (acquireCallPermit()) {
-                childSubscriber.onSubscribe(this);
-            } else {
-                cancel();
-                childSubscriber.onSubscribe(this);
-                childSubscriber.onError(rateLimitExceededException());
-            }
-        }
+        onSubscribeWithPermit(subscription);
     }
 
     @Override
-    public void onNext(T event) {
-        if (isInvocationPermitted()) {
-            if (firstEvent.getAndSet(false) || rateLimiter.getPermission(rateLimiter.getRateLimiterConfig().getTimeoutDuration())) {
-                childSubscriber.onNext(event);
-            } else {
-                cancel();
-                childSubscriber.onError(rateLimitExceededException());
-            }
-        }
+    protected void onSubscribeInner(Subscription subscription) {
+        childSubscriber.onSubscribe(subscription);
     }
 
     @Override
-    public void onError(Throwable e) {
-        if (isInvocationPermitted()) {
-            childSubscriber.onError(e);
+    public void onNext(T value) {
+        safeOnNext(value);
+    }
+
+    @Override
+    protected void permittedOnNext(T value) {
+        if (firstEvent.getAndSet(false) || tryCallPermit()) {
+            childSubscriber.onNext(value);
+        } else {
+            cancel();
+            childSubscriber.onError(notPermittedException());
         }
     }
 
     @Override
     public void onComplete() {
-        if (isInvocationPermitted()) {
-            childSubscriber.onComplete();
-        }
+        safeOnComplete();
+    }
+
+    @Override
+    protected void permittedOnComplete() {
+        childSubscriber.onComplete();
+    }
+
+    @Override
+    public void onError(Throwable e) {
+        safeOnError(e);
+    }
+
+    @Override
+    protected void permittedOnError(Throwable e) {
+        childSubscriber.onError(e);
     }
 
     @Override
@@ -75,33 +76,21 @@ final class RateLimiterSubscriber<T> extends AtomicReference<Subscription> imple
 
     @Override
     public void cancel() {
-        SubscriptionHelper.cancel(this);
+        dispose();
     }
 
-    private boolean acquireCallPermit() {
-        boolean callPermitted = false;
-        if (permitted.compareAndSet(Permit.PENDING, Permit.ACQUIRED)) {
-            callPermitted = rateLimiter.getPermission(rateLimiter.getRateLimiterConfig().getTimeoutDuration());
-            if (!callPermitted) {
-                permitted.set(Permit.REJECTED);
-            }
-        }
-        return callPermitted;
+    @Override
+    protected Subscription getDisposedDisposable() {
+        return DisposedSubscription.CANCELLED;
     }
 
-    private boolean isInvocationPermitted() {
-        return notCancelled() && wasCallPermitted();
+    @Override
+    protected Subscription currentDisposable() {
+        return this;
     }
 
-    private boolean notCancelled() {
-        return !SubscriptionHelper.isCancelled(get());
-    }
-
-    private boolean wasCallPermitted() {
-        return permitted.get() == Permit.ACQUIRED;
-    }
-
-    private Exception rateLimitExceededException() {
-        return new RequestNotPermitted("Request not permitted for limiter: " + rateLimiter.getName());
+    @Override
+    protected void dispose(Subscription disposable) {
+        disposable.cancel();
     }
 }

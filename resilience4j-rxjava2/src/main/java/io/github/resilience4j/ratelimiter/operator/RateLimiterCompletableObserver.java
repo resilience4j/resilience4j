@@ -8,7 +8,7 @@ import io.reactivex.disposables.Disposable;
  * A RxJava {@link CompletableObserver} to protect another observer by a {@link RateLimiter}.
  * Consumes one permit when subscribed.
  */
-final class RateLimiterCompletableObserver extends DisposableRateLimiter implements CompletableObserver {
+final class RateLimiterCompletableObserver extends DisposableRateLimiter<Object> implements CompletableObserver {
     private final CompletableObserver childObserver;
 
     RateLimiterCompletableObserver(RateLimiter rateLimiter, CompletableObserver childObserver) {
@@ -28,7 +28,7 @@ final class RateLimiterCompletableObserver extends DisposableRateLimiter impleme
 
     @Override
     public void onComplete() {
-        onCompleteInner();
+        safeOnComplete();
     }
 
     @Override
@@ -38,7 +38,7 @@ final class RateLimiterCompletableObserver extends DisposableRateLimiter impleme
 
     @Override
     public void onError(Throwable e) {
-        onErrorInner(e);
+        safeOnError(e);
     }
 
     @Override
