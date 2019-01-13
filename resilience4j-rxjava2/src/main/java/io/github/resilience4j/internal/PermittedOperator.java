@@ -22,7 +22,9 @@ public abstract class PermittedOperator<T, DISPOSABLE> extends AtomicReference<D
      */
     protected void dispose() {
         if (disposeOnce()) {
-            release();
+            if (onlyOnceIfCallWasPermitted()) {
+                doOnDispose();
+            }
         }
     }
 
@@ -71,9 +73,10 @@ public abstract class PermittedOperator<T, DISPOSABLE> extends AtomicReference<D
     protected abstract Exception notPermittedException();
 
     /**
-     * Releases any resources (e.g. permits) reserved after a permitted call finishes.
+     * Releases any resources (e.g. permits) reserved after operator was disposed.
+     * Only one of {@link #doOnSuccess()}, {@link #doOnError(Throwable)} and {@link #doOnDispose()} is called.
      */
-    protected void doOnRelease() {
+    protected void doOnDispose() {
         // override when needed
     }
 
@@ -118,6 +121,7 @@ public abstract class PermittedOperator<T, DISPOSABLE> extends AtomicReference<D
 
     /**
      * Called if a permitted execution ended up in an error.
+     * Only one of {@link #doOnSuccess()}, {@link #doOnError(Throwable)} and {@link #doOnDispose()} is called.
      *
      * @param e the error thrown
      */
@@ -156,6 +160,7 @@ public abstract class PermittedOperator<T, DISPOSABLE> extends AtomicReference<D
 
     /**
      * Called if a permitted execution ended successfully.
+     * Only one of {@link #doOnSuccess()}, {@link #doOnError(Throwable)} and {@link #doOnDispose()} is called.
      */
     protected void doOnSuccess() {
         // override if needed
@@ -204,10 +209,10 @@ public abstract class PermittedOperator<T, DISPOSABLE> extends AtomicReference<D
         //Override when needed.
     }
 
-    private boolean setDisposableOnce(DISPOSABLE DISPOSABLE) {
-        requireNonNull(DISPOSABLE, "DISPOSABLE is null");
-        if (!compareAndSet(null, DISPOSABLE)) {
-            dispose(DISPOSABLE);
+    private boolean setDisposableOnce(DISPOSABLE disposable) {
+        requireNonNull(disposable, "disposable is null");
+        if (!compareAndSet(null, disposable)) {
+            dispose(disposable);
             if (get() != getDisposedDisposable()) {
                 RxJavaPlugins.onError(new ProtocolViolationException("Disposable/subscription already set!"));
             }
@@ -248,11 +253,5 @@ public abstract class PermittedOperator<T, DISPOSABLE> extends AtomicReference<D
 
     private boolean onlyOnceIfCallWasPermitted() {
         return permitted.compareAndSet(Permit.ACQUIRED, Permit.RELEASED);
-    }
-
-    private void release() {
-        if (onlyOnceIfCallWasPermitted()) {
-            doOnRelease();
-        }
     }
 }

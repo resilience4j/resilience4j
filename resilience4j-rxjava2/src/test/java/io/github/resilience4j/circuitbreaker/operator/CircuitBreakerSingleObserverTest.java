@@ -68,7 +68,7 @@ public class CircuitBreakerSingleObserverTest extends CircuitBreakerAssertions {
 
         // Then
         verify(childObserver, never()).onSuccess(any());
-        assertSingleSuccessfulCall();
+        assertNoRegisteredCall();
     }
 
     @Test
@@ -85,7 +85,7 @@ public class CircuitBreakerSingleObserverTest extends CircuitBreakerAssertions {
 
         // Then
         verify(childObserver, never()).onError(any());
-        assertSingleFailedCall();
+        assertNoRegisteredCall();
     }
 
     @Test

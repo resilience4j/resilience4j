@@ -40,7 +40,7 @@ abstract class AbstractBulkheadOperator<T, DISPOSABLE> extends PermittedOperator
     }
 
     @Override
-    protected void doOnRelease() {
+    protected void doOnDispose() {
         bulkhead.onComplete();
     }
 }
