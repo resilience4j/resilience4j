@@ -2,8 +2,6 @@ package io.github.resilience4j.bulkhead.operator;
 
 import static java.util.Objects.requireNonNull;
 
-import java.util.concurrent.atomic.AtomicReference;
-
 import io.github.resilience4j.adapter.Permit;
 import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.bulkhead.BulkheadFullException;
@@ -16,50 +14,52 @@ import org.reactivestreams.Subscription;
  *
  * @param <T> the value type of the upstream and downstream
  */
-final class BulkheadSubscriber<T> extends AtomicReference<Subscription> implements Subscriber<T>, Subscription {
-    private final Bulkhead bulkhead;
+final class BulkheadSubscriber<T> extends AbstractBulkheadOperator<T, Subscription> implements Subscriber<T>, Subscription {
     private final Subscriber<? super T> childSubscriber;
-    private final AtomicReference<Permit> permitted = new AtomicReference<>(Permit.PENDING);
 
     BulkheadSubscriber(Bulkhead bulkhead, Subscriber<? super T> childSubscriber) {
-        this.bulkhead = requireNonNull(bulkhead);
+        super(bulkhead);
         this.childSubscriber = requireNonNull(childSubscriber);
     }
 
     @Override
     public void onSubscribe(Subscription subscription) {
-        if (SubscriptionHelper.setOnce(this, subscription)) {
-            if (acquireCallPermit()) {
-                childSubscriber.onSubscribe(this);
-            } else {
-                cancel();
-                childSubscriber.onSubscribe(this);
-                childSubscriber.onError(new BulkheadFullException(String.format("Bulkhead '%s' is full", bulkhead.getName())));
-            }
-        }
+        onSubscribeWithPermit(subscription);
     }
 
     @Override
-    public void onNext(T event) {
-        if (isInvocationPermitted()) {
-            childSubscriber.onNext(event);
-        }
+    protected void onSubscribeInner(Subscription subscription) {
+        childSubscriber.onSubscribe(subscription);
     }
 
     @Override
-    public void onError(Throwable e) {
-        if (isInvocationPermitted()) {
-            bulkhead.onComplete();
-            childSubscriber.onError(e);
-        }
+    public void onNext(T value) {
+        onNextInner(value);
+    }
+
+    @Override
+    protected void permittedOnNext(T value) {
+        childSubscriber.onNext(value);
     }
 
     @Override
     public void onComplete() {
-        if (isInvocationPermitted()) {
-            releaseBulkhead();
-            childSubscriber.onComplete();
-        }
+        onCompleteInner();
+    }
+
+    @Override
+    protected void permittedOnComplete() {
+        childSubscriber.onComplete();
+    }
+
+    @Override
+    public void onError(Throwable e) {
+        onErrorInner(e);
+    }
+
+    @Override
+    protected void permittedOnError(Throwable e) {
+        childSubscriber.onError(e);
     }
 
     @Override
@@ -69,33 +69,35 @@ final class BulkheadSubscriber<T> extends AtomicReference<Subscription> implemen
 
     @Override
     public void cancel() {
-        if (SubscriptionHelper.cancel(this)) {
-            releaseBulkhead();
+        dispose();
+    }
+
+    @Override
+    protected Subscription getDisposedDisposable() {
+        return DisposedSubscription.CANCELLED;
+    }
+
+    @Override
+    protected Subscription getDisposable() {
+        return this;
+    }
+
+    @Override
+    protected void dispose(Subscription disposable) {
+        disposable.cancel();
+    }
+
+    private enum DisposedSubscription implements Subscription {
+        CANCELLED;
+
+        @Override
+        public void request(long n) {
+
         }
-    }
 
-    private boolean acquireCallPermit() {
-        boolean callPermitted = false;
-        if (permitted.compareAndSet(Permit.PENDING, Permit.ACQUIRED)) {
-            callPermitted = bulkhead.isCallPermitted();
-            if (!callPermitted) {
-                permitted.set(Permit.REJECTED);
-            }
-        }
-        return callPermitted;
-    }
+        @Override
+        public void cancel() {
 
-    private boolean isInvocationPermitted() {
-        return !SubscriptionHelper.isCancelled(get()) && wasCallPermitted();
-    }
-
-    private boolean wasCallPermitted() {
-        return permitted.get() == Permit.ACQUIRED;
-    }
-
-    private void releaseBulkhead() {
-        if (wasCallPermitted()) {
-            bulkhead.onComplete();
         }
     }
 }

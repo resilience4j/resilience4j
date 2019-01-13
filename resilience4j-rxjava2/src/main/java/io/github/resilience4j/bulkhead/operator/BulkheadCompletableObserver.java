@@ -9,7 +9,7 @@ import io.reactivex.disposables.Disposable;
 /**
  * A RxJava {@link CompletableObserver} to wrap another observer in a bulkhead.
  */
-final class BulkheadCompletableObserver extends DisposableBulkhead implements CompletableObserver {
+final class BulkheadCompletableObserver extends DisposableBulkhead<Object> implements CompletableObserver {
     private final CompletableObserver childObserver;
 
     BulkheadCompletableObserver(Bulkhead bulkhead, CompletableObserver childObserver) {
