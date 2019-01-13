@@ -1,67 +1,62 @@
 package io.github.resilience4j.circuitbreaker.operator;
 
-import static java.util.Objects.requireNonNull;
-
-import java.util.concurrent.atomic.AtomicReference;
-
-import io.github.resilience4j.adapter.Permit;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
-import io.github.resilience4j.circuitbreaker.CircuitBreakerOpenException;
-import io.github.resilience4j.core.StopWatch;
-import io.reactivex.internal.subscriptions.SubscriptionHelper;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * A RxJava {@link Subscriber} to protect another subscriber by a CircuitBreaker.
  *
  * @param <T> the value type of the upstream and downstream
  */
-final class CircuitBreakerSubscriber<T> extends AtomicReference<Subscription> implements Subscriber<T>, Subscription {
-    private final CircuitBreaker circuitBreaker;
+final class CircuitBreakerSubscriber<T> extends AbstractCircuitBreakerOperator<T, Subscription> implements Subscriber<T>, Subscription {
     private final Subscriber<? super T> childSubscriber;
-    private final AtomicReference<Permit> permitted = new AtomicReference<>(Permit.PENDING);
-    private StopWatch stopWatch;
 
     CircuitBreakerSubscriber(CircuitBreaker circuitBreaker, Subscriber<? super T> childSubscriber) {
-        this.circuitBreaker = requireNonNull(circuitBreaker);
+        super(circuitBreaker);
         this.childSubscriber = requireNonNull(childSubscriber);
     }
 
     @Override
     public void onSubscribe(Subscription subscription) {
-        if (SubscriptionHelper.setOnce(this, subscription)) {
-            if (acquireCallPermit()) {
-                childSubscriber.onSubscribe(this);
-            } else {
-                cancel();
-                childSubscriber.onSubscribe(this);
-                childSubscriber.onError(new CircuitBreakerOpenException(String.format("CircuitBreaker '%s' is open", circuitBreaker.getName())));
-            }
-        }
+        onSubscribeWithPermit(subscription);
     }
 
     @Override
-    public void onNext(T event) {
-        if (isInvocationPermitted()) {
-            childSubscriber.onNext(event);
-        }
+    protected void onSubscribeInner(Subscription subscription) {
+        childSubscriber.onSubscribe(subscription);
     }
 
     @Override
-    public void onError(Throwable e) {
-        markFailure(e);
-        if (isInvocationPermitted()) {
-            childSubscriber.onError(e);
-        }
+    public void onNext(T value) {
+        onNextInner(value);
+    }
+
+    @Override
+    protected void permittedOnNext(T value) {
+        childSubscriber.onNext(value);
     }
 
     @Override
     public void onComplete() {
-        markSuccess();
-        if (isInvocationPermitted()) {
-            childSubscriber.onComplete();
-        }
+        onCompleteInner();
+    }
+
+    @Override
+    protected void permittedOnComplete() {
+        childSubscriber.onComplete();
+    }
+
+    @Override
+    public void onError(Throwable e) {
+        onErrorInner(e);
+    }
+
+    @Override
+    protected void permittedOnError(Throwable e) {
+        childSubscriber.onError(e);
     }
 
     @Override
@@ -71,43 +66,35 @@ final class CircuitBreakerSubscriber<T> extends AtomicReference<Subscription> im
 
     @Override
     public void cancel() {
-        SubscriptionHelper.cancel(this);
+        dispose();
     }
 
-    private boolean acquireCallPermit() {
-        boolean callPermitted = false;
-        if (permitted.compareAndSet(Permit.PENDING, Permit.ACQUIRED)) {
-            callPermitted = circuitBreaker.isCallPermitted();
-            if (!callPermitted) {
-                permitted.set(Permit.REJECTED);
-            } else {
-                stopWatch = StopWatch.start(circuitBreaker.getName());
-            }
+    @Override
+    protected Subscription getDisposedDisposable() {
+        return DisposedSubscription.CANCELLED;
+    }
+
+    @Override
+    protected Subscription getDisposable() {
+        return this;
+    }
+
+    @Override
+    protected void dispose(Subscription disposable) {
+        disposable.cancel();
+    }
+
+    private enum DisposedSubscription implements Subscription {
+        CANCELLED;
+
+        @Override
+        public void request(long n) {
+
         }
-        return callPermitted;
-    }
 
-    private boolean isInvocationPermitted() {
-        return notCancelled() && wasCallPermitted();
-    }
+        @Override
+        public void cancel() {
 
-    private boolean notCancelled() {
-        return !SubscriptionHelper.isCancelled(get());
-    }
-
-    private void markFailure(Throwable e) {
-        if (wasCallPermitted()) {
-            circuitBreaker.onError(stopWatch.stop().getProcessingDuration().toNanos(), e);
         }
-    }
-
-    private void markSuccess() {
-        if (wasCallPermitted()) {
-            circuitBreaker.onSuccess(stopWatch.stop().getProcessingDuration().toNanos());
-        }
-    }
-
-    private boolean wasCallPermitted() {
-        return permitted.get() == Permit.ACQUIRED;
     }
 }
