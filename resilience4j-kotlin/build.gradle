@@ -1,0 +1,17 @@
+plugins {
+    id 'org.jetbrains.kotlin.jvm' version '1.3.11'
+}
+
+dependencies {
+    implementation(libraries.kotlin_stdlib)
+    implementation(project(':resilience4j-circuitbreaker'))
+    testImplementation(libraries.kotlin_coroutines)
+}
+
+compileKotlin {
+    kotlinOptions.jvmTarget = "1.8"
+}
+
+compileTestKotlin {
+    kotlinOptions.jvmTarget = "1.8"
+}
