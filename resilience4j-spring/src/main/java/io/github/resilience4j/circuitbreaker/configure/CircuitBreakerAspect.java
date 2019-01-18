@@ -122,8 +122,8 @@ public class CircuitBreakerAspect implements Ordered {
 				Flux fluxReturnValue = (Flux) returnValue;
 				return fluxReturnValue.transform(CircuitBreakerOperator.of(circuitBreaker));
 			} else if (returnValue instanceof Mono) {
-				Mono fluxReturnValue = (Mono) returnValue;
-				return fluxReturnValue.transform(CircuitBreakerOperator.of(circuitBreaker));
+				Mono monoReturnValue = (Mono) returnValue;
+				return monoReturnValue.transform(CircuitBreakerOperator.of(circuitBreaker));
 			} else {
 				throw new IllegalArgumentException("Not Supported type for the circuit breaker in web flux :" + returnValue.getClass().getName());
 
