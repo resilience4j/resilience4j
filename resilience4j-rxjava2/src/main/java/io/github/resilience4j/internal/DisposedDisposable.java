@@ -10,7 +10,7 @@ public enum DisposedDisposable implements Disposable {
 
     @Override
     public void dispose() {
-
+        // it is already disposed
     }
 
     @Override

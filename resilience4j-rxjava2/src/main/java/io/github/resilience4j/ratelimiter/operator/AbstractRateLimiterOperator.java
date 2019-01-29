@@ -9,10 +9,10 @@ import static java.util.Objects.requireNonNull;
 /**
  * A disposable rate limiter acting as a base class for rate limiter operators.
  *
- * @param <T>          the type of the emitted event
- * @param <DISPOSABLE> the actual type of the disposable/subscription
+ * @param <T> the type of the emitted event
+ * @param <D> the actual type of the disposable/subscription
  */
-abstract class AbstractRateLimiterOperator<T, DISPOSABLE> extends PermittedOperator<T, DISPOSABLE> {
+abstract class AbstractRateLimiterOperator<T, D> extends PermittedOperator<T, D> {
     private final RateLimiter rateLimiter;
 
     AbstractRateLimiterOperator(RateLimiter rateLimiter) {

@@ -10,10 +10,10 @@ import static java.util.Objects.requireNonNull;
 /**
  * A disposable circuit-breaker acting as a base class for circuit-breaker operators.
  *
- * @param <T>          the type of the emitted event
- * @param <DISPOSABLE> the actual type of the disposable/subscription
+ * @param <T> the type of the emitted event
+ * @param <D> the actual type of the disposable/subscription
  */
-abstract class AbstractCircuitBreakerOperator<T, DISPOSABLE> extends PermittedOperator<T, DISPOSABLE> {
+abstract class AbstractCircuitBreakerOperator<T, D> extends PermittedOperator<T, D> {
     private final CircuitBreaker circuitBreaker;
     private StopWatch stopWatch;
 

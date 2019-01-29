@@ -1,7 +1,5 @@
 package io.github.resilience4j.bulkhead.operator;
 
-import static java.util.Objects.requireNonNull;
-
 import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.internal.DisposedDisposable;
 import io.reactivex.disposables.Disposable;

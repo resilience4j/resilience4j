@@ -11,20 +11,18 @@ import static java.util.Objects.requireNonNull;
 /**
  * A disposable operator acting as a base class for permitted operators.
  *
- * @param <T>          the type of the emitted event
- * @param <DISPOSABLE> the actual type of the disposable/subscription
+ * @param <T> the type of the emitted event
+ * @param <D> the actual type of the disposable/subscription
  */
-public abstract class PermittedOperator<T, DISPOSABLE> extends AtomicReference<DISPOSABLE> {
+public abstract class PermittedOperator<T, D> extends AtomicReference<D> {
     private final AtomicReference<Permit> permitted = new AtomicReference<>(Permit.PENDING);
 
     /**
      * Disposes this operator exactly once.
      */
     protected void dispose() {
-        if (disposeOnce()) {
-            if (onlyOnceIfCallWasPermitted()) {
-                doOnDispose();
-            }
+        if (disposeOnce() && onlyOnceIfCallWasPermitted()) {
+            doOnDispose();
         }
     }
 
@@ -42,21 +40,21 @@ public abstract class PermittedOperator<T, DISPOSABLE> extends AtomicReference<D
      *
      * @return the disposable
      */
-    protected abstract DISPOSABLE currentDisposable();
+    protected abstract D currentDisposable();
 
     /**
      * Gets the reference of the one and only disposed disposable.
      *
      * @return the disposed disposable
      */
-    protected abstract DISPOSABLE getDisposedDisposable();
+    protected abstract D getDisposedDisposable();
 
     /**
      * Disposes a disposable.
      *
      * @param disposable the disposable to dispose
      */
-    protected abstract void dispose(DISPOSABLE disposable);
+    protected abstract void dispose(D disposable);
 
     /**
      * Tries getting a call permit.
@@ -85,7 +83,7 @@ public abstract class PermittedOperator<T, DISPOSABLE> extends AtomicReference<D
      *
      * @param disposable the disposable
      */
-    protected abstract void onSubscribeInner(DISPOSABLE disposable);
+    protected abstract void onSubscribeInner(D disposable);
 
     /**
      * onSubscribe safe to be called from operator's onSubscribe.
@@ -93,7 +91,7 @@ public abstract class PermittedOperator<T, DISPOSABLE> extends AtomicReference<D
      *
      * @param disposable the disposable/subscription
      */
-    protected final void onSubscribeWithPermit(DISPOSABLE disposable) {
+    protected final void onSubscribeWithPermit(D disposable) {
         if (setDisposableOnce(disposable)) {
             if (acquireCallPermit()) {
                 onSubscribeInner(currentDisposable());
@@ -209,7 +207,7 @@ public abstract class PermittedOperator<T, DISPOSABLE> extends AtomicReference<D
         //Override when needed.
     }
 
-    private boolean setDisposableOnce(DISPOSABLE disposable) {
+    private boolean setDisposableOnce(D disposable) {
         requireNonNull(disposable, "disposable is null");
         if (!compareAndSet(null, disposable)) {
             dispose(disposable);
@@ -222,8 +220,8 @@ public abstract class PermittedOperator<T, DISPOSABLE> extends AtomicReference<D
     }
 
     private boolean disposeOnce() {
-        DISPOSABLE current = get();
-        DISPOSABLE disposed = getDisposedDisposable();
+        D current = get();
+        D disposed = getDisposedDisposable();
         if (current != disposed) {
             current = getAndSet(disposed);
             if (current != disposed) {
