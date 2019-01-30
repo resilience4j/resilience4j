@@ -97,4 +97,18 @@ public class MonoBulkheadTest {
 
         assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(0);
     }
+
+    @Test
+    public void shouldReleaseBulkheadSemaphoreOnCancel() {
+        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
+        StepVerifier.create(
+                Mono.just("Event")
+                        .transform(BulkheadOperator.of(bulkhead)))
+                .expectSubscription()
+                .expectNext("Event")
+                .thenCancel()
+                .verify();
+        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
+    }
+
 }
