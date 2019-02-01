@@ -23,6 +23,9 @@ import io.github.resilience4j.consumer.CircularEventConsumer;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
 import io.github.resilience4j.ratpack.Resilience4jConfig;
 import io.github.resilience4j.ratpack.adapter.ReactorAdapter;
+import io.github.resilience4j.ratpack.circuitbreaker.endpoint.metrics.CircuitBreakerMetricsDTO;
+import io.github.resilience4j.ratpack.circuitbreaker.endpoint.states.CircuitBreakerStateDTO;
+import io.github.resilience4j.ratpack.circuitbreaker.endpoint.states.CircuitBreakerStatesEndpointResponse;
 import io.vavr.collection.Seq;
 import ratpack.exec.Promise;
 import ratpack.func.Action;
@@ -53,6 +56,28 @@ public class CircuitBreakerChain implements Action<Chain> {
     public void execute(Chain chain) throws Exception {
         String prefix = chain.getRegistry().get(Resilience4jConfig.class).getEndpoints().getCircuitBreakers().getPath();
         chain.prefix(prefix, chain1 -> {
+            chain1.get("states/:name", ctx -> {
+                String circuitBreakerName = ctx.getPathTokens().get("name");
+                Promise.<CircuitBreakerStatesEndpointResponse>async(d -> {
+                    CircuitBreakerStatesEndpointResponse response = new CircuitBreakerStatesEndpointResponse(circuitBreakerRegistry
+                            .getAllCircuitBreakers()
+                            .filter(c -> c.getName().equals(circuitBreakerName))
+                            .map(c -> new CircuitBreakerStateDTO(c.getName(), c.getState(), new CircuitBreakerMetricsDTO(c.getMetrics())))
+                            .toJavaList()
+                    );
+                    d.success(response);
+                }).then(r -> ctx.render(Jackson.json(r)));
+            });
+            chain1.get("states", ctx ->
+                    Promise.<CircuitBreakerStatesEndpointResponse>async(d -> {
+                        CircuitBreakerStatesEndpointResponse response = new CircuitBreakerStatesEndpointResponse(circuitBreakerRegistry
+                                .getAllCircuitBreakers()
+                                .map(c -> new CircuitBreakerStateDTO(c.getName(), c.getState(), new CircuitBreakerMetricsDTO(c.getMetrics())))
+                                .toJavaList()
+                        );
+                        d.success(response);
+                    }).then(r -> ctx.render(Jackson.json(r)))
+            );
             chain1.get("events", ctx ->
                     Promise.<CircuitBreakerEventsEndpointResponse>async(d -> {
                         CircuitBreakerEventsEndpointResponse response = new CircuitBreakerEventsEndpointResponse(eventConsumerRegistry
