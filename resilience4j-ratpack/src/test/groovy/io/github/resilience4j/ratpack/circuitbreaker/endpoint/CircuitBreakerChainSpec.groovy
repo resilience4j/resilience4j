@@ -19,6 +19,7 @@ package io.github.resilience4j.ratpack.circuitbreaker.endpoint
 import com.fasterxml.jackson.databind.ObjectMapper
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry
 import io.github.resilience4j.ratpack.Resilience4jModule
+import io.github.resilience4j.ratpack.circuitbreaker.endpoint.states.CircuitBreakerStatesEndpointResponse
 import ratpack.http.client.HttpClient
 import ratpack.test.embed.EmbeddedApp
 import ratpack.test.exec.ExecHarness
@@ -39,6 +40,68 @@ class CircuitBreakerChainSpec extends Specification {
     HttpClient streamer = HttpClient.of { it.poolSize(8) }
 
     def mapper = new ObjectMapper()
+
+    def "test states"() {
+        given: "a ratpack app"
+        def circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults()
+
+        app = ratpack {
+            serverConfig {
+                development(false)
+            }
+            bindings {
+                bindInstance(CircuitBreakerRegistry, circuitBreakerRegistry)
+                module(Resilience4jModule) {
+                    it.circuitBreaker('test1') {
+                        it.failureRateThreshold(75).waitIntervalInMillis(5000)
+                    }.circuitBreaker('test2') {
+                        it.failureRateThreshold(25).waitIntervalInMillis(5000)
+                    }
+                }
+            }
+            handlers {
+                get {
+                    render 'ok'
+                }
+            }
+        }
+        client = testHttpClient(app)
+        app.server.start() // override lazy start
+
+        and: "some circuit breaker events"
+        ['test1', 'test2'].each {
+            def c = circuitBreakerRegistry.circuitBreaker(it)
+            c.onSuccess(1000)
+            c.onError(1000, new Exception("meh"))
+        }
+
+        when: "we do a sanity check"
+        def actual = client.get()
+
+        then: "it works"
+        actual.statusCode == 200
+        actual.body.text == 'ok'
+        circuitBreakerRegistry.circuitBreaker('test1').metrics.numberOfBufferedCalls == 2
+        circuitBreakerRegistry.circuitBreaker('test2').metrics.numberOfBufferedCalls == 2
+
+        when: "we get all circuit breaker states"
+        actual = client.get('circuitbreaker/states')
+        def dto = mapper.readValue(actual.body.text, CircuitBreakerStatesEndpointResponse)
+
+        then: "it works"
+        dto.circuitBreakerStates.size() == 2
+        dto.circuitBreakerStates.each {
+            assert it.metrics.numberOfBufferedCalls == 2
+        }
+
+        when: "we get state for just the test1 circuit"
+        actual = client.get('circuitbreaker/states/test1')
+        dto = mapper.readValue(actual.body.text, CircuitBreakerStatesEndpointResponse)
+
+        then: "we retrieved the test1 circuit"
+        dto.circuitBreakerStates.size() == 1
+        dto.circuitBreakerStates.get(0).metrics.numberOfBufferedCalls == 2
+    }
 
     def "test events"() {
         given: "an app"
