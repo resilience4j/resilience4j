@@ -46,6 +46,11 @@ class BulkheadSubscriber<T> extends ResilienceBaseSubscriber<T> {
     }
 
     @Override
+    public void hookOnCancel() {
+        releaseBulkhead();
+    }
+
+    @Override
     public void hookOnError(Throwable t) {
         if (wasCallPermitted()) {
             bulkhead.onComplete();
