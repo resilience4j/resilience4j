@@ -294,11 +294,11 @@ public class RateLimiterTest {
 
         await()
             .atMost(5, TimeUnit.SECONDS)
-            .until(wasInterrupted::get, equalTo(false));
+            .untilFalse(wasInterrupted);
         thread.interrupt();
         await()
             .atMost(5, TimeUnit.SECONDS)
-            .until(wasInterrupted::get, equalTo(true));
+            .untilTrue(wasInterrupted);
     }
 
     @Test
