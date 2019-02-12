@@ -17,7 +17,6 @@ package io.github.resilience4j.circuitbreaker.autoconfigure;
 
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
-import io.github.resilience4j.circuitbreaker.configure.CircuitBreakerConfiguration;
 import io.github.resilience4j.circuitbreaker.monitoring.endpoint.CircuitBreakerEndpoint;
 import io.github.resilience4j.circuitbreaker.monitoring.health.CircuitBreakerHealthIndicator;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
@@ -36,7 +35,7 @@ import javax.annotation.PostConstruct;
 @Configuration
 @ConditionalOnClass(CircuitBreaker.class)
 @EnableConfigurationProperties(CircuitBreakerProperties.class)
-@Import(CircuitBreakerConfiguration.class)
+@Import(CircuitBreakerConfigurationOnMissingBean.class)
 public class CircuitBreakerAutoConfiguration {
 
     private final CircuitBreakerProperties circuitBreakerProperties;
@@ -55,7 +54,7 @@ public class CircuitBreakerAutoConfiguration {
     }
 
     @PostConstruct
-    public void configureRegistryWithHealthEndpoint(){
+    public void configureRegistryWithHealthEndpoint() {
         circuitBreakerProperties.getBackends().forEach(
                 (name, properties) -> {
                     if (properties.getRegisterHealthIndicator()) {
@@ -70,4 +69,4 @@ public class CircuitBreakerAutoConfiguration {
         );
     }
 
- }
+}

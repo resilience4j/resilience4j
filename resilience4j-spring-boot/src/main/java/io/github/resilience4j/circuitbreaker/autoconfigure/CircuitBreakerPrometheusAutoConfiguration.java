@@ -19,6 +19,7 @@ import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.prometheus.CircuitBreakerExports;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -31,6 +32,7 @@ import org.springframework.context.annotation.Configuration;
 @ConditionalOnClass(CircuitBreakerExports.class)
 public class CircuitBreakerPrometheusAutoConfiguration {
     @Bean
+    @ConditionalOnMissingBean
     public CircuitBreakerExports circuitBreakerPrometheusCollector(CircuitBreakerRegistry circuitBreakerRegistry){
         CircuitBreakerExports collector = CircuitBreakerExports.ofCircuitBreakerRegistry(circuitBreakerRegistry);
         collector.register();
