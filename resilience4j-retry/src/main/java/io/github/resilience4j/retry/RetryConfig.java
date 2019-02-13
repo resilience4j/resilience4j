@@ -165,6 +165,7 @@ public class RetryConfig {
 		 * For a more sophisticated exception management use the
 		 * @see #retryOnException(Predicate) method
 		 */
+		@SuppressWarnings("unchecked")
 		@SafeVarargs
 		public final Builder<T> retryExceptions(Class<? extends Throwable>... errorClasses) {
 			this.retryExceptions = errorClasses != null ? errorClasses : new Class[0];
@@ -190,6 +191,7 @@ public class RetryConfig {
 		 * For a more sophisticated exception management use the
 		 * @see #retryOnException(Predicate) method
 		 */
+		@SuppressWarnings("unchecked")
 		@SafeVarargs
 		public final Builder<T> ignoreExceptions(Class<? extends Throwable>... errorClasses) {
 			this.ignoreExceptions = errorClasses != null ? errorClasses : new Class[0];
