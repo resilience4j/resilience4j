@@ -22,7 +22,10 @@ public class CircuitBreakerConfigurationOnMissingBeanTest {
                         .getMethod(methodCircuitBreakerConfiguration.getName(), methodCircuitBreakerConfiguration.getParameterTypes());
 
                 assertThat(methodOnMissing.isAnnotationPresent(Bean.class)).isTrue();
-                assertThat(methodOnMissing.isAnnotationPresent(ConditionalOnMissingBean.class)).isTrue();
+
+                if(!methodOnMissing.getName().equals("eventConsumerRegistry")) {
+                    assertThat(methodOnMissing.isAnnotationPresent(ConditionalOnMissingBean.class)).isTrue();
+                }
             }
         }
     }

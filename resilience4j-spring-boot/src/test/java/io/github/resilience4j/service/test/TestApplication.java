@@ -9,7 +9,13 @@ import io.prometheus.client.spring.boot.EnableSpringBootMetricsCollector;
 /**
  * @author bstorozhuk
  */
-@SpringBootApplication(scanBasePackages = "io.github.resilience4j")
+@SpringBootApplication(scanBasePackages = {
+        "io.github.resilience4j.circuitbreaker.autoconfigure",
+        "io.github.resilience4j.ratelimiter.autoconfigure",
+        "io.github.resilience4j.circuitbreaker.monitoring.endpoint",
+        "io.github.resilience4j.ratelimiter.monitoring.endpoint",
+        "io.github.resilience4j.service.test"
+})
 @EnableSpringBootMetricsCollector
 @EnablePrometheusEndpoint
 public class TestApplication {

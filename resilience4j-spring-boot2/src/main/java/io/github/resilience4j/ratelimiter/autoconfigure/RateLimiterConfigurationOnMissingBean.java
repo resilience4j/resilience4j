@@ -30,7 +30,7 @@ import org.springframework.context.annotation.Configuration;
 public class RateLimiterConfigurationOnMissingBean {
     private final RateLimiterConfiguration rateLimiterConfiguration;
 
-    RateLimiterConfigurationOnMissingBean() {
+    public RateLimiterConfigurationOnMissingBean() {
         this.rateLimiterConfiguration = new RateLimiterConfiguration();
     }
 
@@ -49,7 +49,7 @@ public class RateLimiterConfigurationOnMissingBean {
     }
 
     @Bean
-    @ConditionalOnMissingBean
+    @ConditionalOnMissingBean(value = RateLimiterEvent.class, parameterizedContainer = EventConsumerRegistry.class)
     public EventConsumerRegistry<RateLimiterEvent> rateLimiterEventsConsumerRegistry() {
         return rateLimiterConfiguration.rateLimiterEventsConsumerRegistry();
     }

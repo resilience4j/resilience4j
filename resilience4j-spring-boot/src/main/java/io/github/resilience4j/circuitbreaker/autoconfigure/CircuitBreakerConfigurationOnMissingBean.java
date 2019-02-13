@@ -49,7 +49,6 @@ public class CircuitBreakerConfigurationOnMissingBean {
     }
 
     @Bean
-    @ConditionalOnMissingBean
     public EventConsumerRegistry<CircuitBreakerEvent> eventConsumerRegistry() {
         return circuitBreakerConfiguration.eventConsumerRegistry();
     }

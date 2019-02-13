@@ -22,7 +22,10 @@ public class RateLimiterConfigurationOnMissingBeanTest {
                         .getMethod(methodCircuitBreakerConfiguration.getName(), methodCircuitBreakerConfiguration.getParameterTypes());
 
                 assertThat(methodOnMissing.isAnnotationPresent(Bean.class)).isTrue();
-                assertThat(methodOnMissing.isAnnotationPresent(ConditionalOnMissingBean.class)).isTrue();
+
+                if(!methodOnMissing.getName().equals("rateLimiterEventsConsumerRegistry")) {
+                    assertThat(methodOnMissing.isAnnotationPresent(ConditionalOnMissingBean.class)).isTrue();
+                }
             }
         }
     }
