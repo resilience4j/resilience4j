@@ -42,6 +42,7 @@ public class CircuitBreakerConfig {
     // The default exception predicate counts all exceptions as failures.
     private Predicate<Throwable> recordFailurePredicate = DEFAULT_RECORD_FAILURE_PREDICATE;
     private boolean automaticTransitionFromOpenToHalfOpenEnabled = false;
+    private String configurationName;
 
     private CircuitBreakerConfig(){
     }
@@ -68,6 +69,10 @@ public class CircuitBreakerConfig {
 
     public boolean isAutomaticTransitionFromOpenToHalfOpenEnabled() {
         return automaticTransitionFromOpenToHalfOpenEnabled;
+    }
+    
+    public String getConfigurationName() {
+    	return configurationName;
     }
 
     /**
@@ -100,6 +105,7 @@ public class CircuitBreakerConfig {
         private int ringBufferSizeInClosedState = DEFAULT_RING_BUFFER_SIZE_IN_CLOSED_STATE;
         private Duration waitDurationInOpenState = Duration.ofSeconds(DEFAULT_WAIT_DURATION_IN_OPEN_STATE);
         private boolean automaticTransitionFromOpenToHalfOpenEnabled = false;
+        private String configurationName;
 
         /**
          * Configures the failure rate threshold in percentage above which the CircuitBreaker should trip open and start short-circuiting calls.
@@ -195,6 +201,7 @@ public class CircuitBreakerConfig {
          * @param errorClasses the error classes that are recorded
          * @return the CircuitBreakerConfig.Builder
          */
+        @SuppressWarnings("unchecked")
         @SafeVarargs
         public final Builder recordExceptions(Class<? extends Throwable>... errorClasses) {
             this.recordExceptions = errorClasses != null ? errorClasses : new Class[0];
@@ -220,6 +227,7 @@ public class CircuitBreakerConfig {
          * @param errorClasses the error classes that are recorded
          * @return the CircuitBreakerConfig.Builder
          */
+        @SuppressWarnings("unchecked")
         @SafeVarargs
         public final Builder ignoreExceptions(Class<? extends Throwable>... errorClasses) {
             this.ignoreExceptions = errorClasses != null ? errorClasses : new Class[0];
@@ -234,6 +242,17 @@ public class CircuitBreakerConfig {
         public Builder enableAutomaticTransitionFromOpenToHalfOpen() {
             this.automaticTransitionFromOpenToHalfOpenEnabled = true;
             return this;
+        }
+        
+        /**
+         * A name for referencing the configuration. This is not required, but can be used for referencing configurations if set.
+         * 
+         * @param configurationName A name for referencing the configuration.
+         * @return The CircuitBreakerConfig.Builder
+         */
+        public Builder configurationName(String configurationName) {
+        	this.configurationName = configurationName;
+        	return this;
         }
 
         /**
@@ -250,6 +269,7 @@ public class CircuitBreakerConfig {
             config.ringBufferSizeInHalfOpenState = ringBufferSizeInHalfOpenState;
             config.recordFailurePredicate = errorRecordingPredicate;
             config.automaticTransitionFromOpenToHalfOpenEnabled = automaticTransitionFromOpenToHalfOpenEnabled;
+            config.configurationName = configurationName;
             return config;
         }
 

@@ -22,6 +22,7 @@ package io.github.resilience4j.circuitbreaker;
 import io.github.resilience4j.circuitbreaker.internal.InMemoryCircuitBreakerRegistry;
 import io.vavr.collection.Seq;
 
+import java.util.function.BiConsumer;
 import java.util.function.Supplier;
 
 /**
@@ -61,7 +62,14 @@ public interface CircuitBreakerRegistry {
      * @return The {@link CircuitBreaker}
      */
     CircuitBreaker circuitBreaker(String name, Supplier<CircuitBreakerConfig> circuitBreakerConfigSupplier);
-
+    
+    /**
+     * Allows for configuring some functionality to be executed when a new CircuitBreaker is created.
+     * 
+     * @param postCreationConsumer A consumer function to execute for a CircuitBreaker that was created.
+     */
+    void registerPostCreationConsumer(BiConsumer<CircuitBreaker, CircuitBreakerConfig> postCreationConsumer);
+    
     /**
      * Creates a CircuitBreakerRegistry with a custom CircuitBreaker configuration.
      *

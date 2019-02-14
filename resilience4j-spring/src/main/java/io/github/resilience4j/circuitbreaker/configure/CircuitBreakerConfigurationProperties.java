@@ -15,8 +15,10 @@ package io.github.resilience4j.circuitbreaker.configure;
  * limitations under the License.
  */
 
+import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.Builder;
+
 import org.hibernate.validator.constraints.time.DurationMin;
 import org.springframework.beans.BeanUtils;
 
@@ -35,6 +37,7 @@ public class CircuitBreakerConfigurationProperties {
     // you explicitly define aspects CircuitBreaker and RateLimiter execution sequence.
     private int circuitBreakerAspectOrder = Integer.MAX_VALUE - 1;
     private Map<String, BackendProperties> backends = new HashMap<>();
+    private Map<String, BackendProperties> sharedConfigs = new HashMap<>();
 
     public int getCircuitBreakerAspectOrder() {
         return circuitBreakerAspectOrder;
@@ -45,11 +48,27 @@ public class CircuitBreakerConfigurationProperties {
     }
 
     private BackendProperties getBackendProperties(String backend) {
-        return backends.get(backend);
+    	BackendProperties properties = backends.get(backend);
+    	if(properties.getSharedConfigName() != null && !properties.getSharedConfigName().isEmpty() ) {
+    		return getSharedConfigProperties(properties.getSharedConfigName());
+    	}
+    	return properties;
+    }
+    
+    private BackendProperties getSharedConfigProperties(String sharedConfig) {
+        return sharedConfigs.get(sharedConfig);
     }
 
     public CircuitBreakerConfig createCircuitBreakerConfig(String backend) {
         return createCircuitBreakerConfig(getBackendProperties(backend));
+    }
+    
+    public CircuitBreakerConfig createCircuitBreakerConfigFromShared(String sharedConfig) {
+        BackendProperties backendProperties = getSharedConfigProperties(sharedConfig);
+        if(backendProperties.getSharedConfigName() == null) {
+            return buildCircuitBreakerConfig(backendProperties).configurationName(sharedConfig).build();
+        }
+        return createCircuitBreakerConfig(getSharedConfigProperties(sharedConfig));
     }
 
     private CircuitBreakerConfig createCircuitBreakerConfig(BackendProperties backendProperties) {
@@ -90,6 +109,10 @@ public class CircuitBreakerConfigurationProperties {
         if (properties.ignoreExceptions != null) {
             builder.ignoreExceptions(properties.ignoreExceptions);
         }
+        
+        if(properties.sharedConfigName != null) {
+        	builder.configurationName(properties.sharedConfigName);
+        }
         return builder;
     }
 
@@ -99,6 +122,21 @@ public class CircuitBreakerConfigurationProperties {
 
     public Map<String, BackendProperties> getBackends() {
         return backends;
+    }
+    
+    public Map<String, BackendProperties> getSharedConfigs() {
+        return sharedConfigs;
+    }
+    
+    public BackendProperties findCircuitBreakerBackend(CircuitBreaker circuitBreaker, CircuitBreakerConfig circuitBreakerConfig) {
+    	BackendProperties backendProperties = backends.getOrDefault(circuitBreaker.getName(), null);
+    	
+    	if(circuitBreakerConfig.getConfigurationName() != null 
+    			&& sharedConfigs.containsKey(circuitBreakerConfig.getConfigurationName())) {
+    		backendProperties = sharedConfigs.get(circuitBreakerConfig.getConfigurationName());
+    	}
+    	
+    	return backendProperties;
     }
 
     /**
@@ -133,6 +171,9 @@ public class CircuitBreakerConfigurationProperties {
 
         @NotNull
         private Class<? extends Throwable>[] ignoreExceptions;
+        
+        private String sharedConfigName;
+        
         /**
          * Sets the wait duration in seconds the CircuitBreaker should stay open, before it switches to half closed.
          *
@@ -253,6 +294,28 @@ public class CircuitBreakerConfigurationProperties {
 
         public void setIgnoreExceptions(Class<? extends Throwable>[] ignoreExceptions) {
             this.ignoreExceptions = ignoreExceptions;
-        }    }
+        }
+
+        /**
+         * Gets the shared configuration name. If this is set, the configuration builder will use the the shared
+         * configuration backend over this one.
+         * 
+         * @return The shared configuration name.
+         */
+		public String getSharedConfigName() {
+			return sharedConfigName;
+		}
+
+		/**
+		 * Sets the shared configuration name. If this is set, the configuration builder will use the the shared
+         * configuration backend over this one.
+         * 
+		 * @param sharedConfigName The shared configuration name.
+		 */
+		public void setSharedConfigName(String sharedConfigName) {
+			this.sharedConfigName = sharedConfigName;
+		}
+		
+    }
 
 }

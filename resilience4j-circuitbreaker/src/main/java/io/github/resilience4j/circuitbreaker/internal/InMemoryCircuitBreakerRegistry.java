@@ -24,9 +24,12 @@ import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.vavr.collection.Array;
 import io.vavr.collection.Seq;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.function.BiConsumer;
 import java.util.function.Supplier;
 
 /**
@@ -41,6 +44,11 @@ public final class InMemoryCircuitBreakerRegistry implements CircuitBreakerRegis
      * The circuitBreakers, indexed by name of the backend.
      */
     private final ConcurrentMap<String, CircuitBreaker> circuitBreakers;
+    
+    /**
+     * The list of consumer functions to execute after a circuit breaker is created.
+     */
+    private final List<BiConsumer<CircuitBreaker, CircuitBreakerConfig>> postCreationConsumers;
 
     /**
      * The constructor with default circuitBreaker properties.
@@ -48,6 +56,7 @@ public final class InMemoryCircuitBreakerRegistry implements CircuitBreakerRegis
     public InMemoryCircuitBreakerRegistry() {
         this.defaultCircuitBreakerConfig = CircuitBreakerConfig.ofDefaults();
         this.circuitBreakers = new ConcurrentHashMap<>();
+        this.postCreationConsumers = new ArrayList<>();
     }
 
     /**
@@ -58,6 +67,7 @@ public final class InMemoryCircuitBreakerRegistry implements CircuitBreakerRegis
     public InMemoryCircuitBreakerRegistry(CircuitBreakerConfig defaultCircuitBreakerConfig) {
         this.defaultCircuitBreakerConfig = Objects.requireNonNull(defaultCircuitBreakerConfig, "CircuitBreakerConfig must not be null");
         this.circuitBreakers = new ConcurrentHashMap<>();
+        this.postCreationConsumers = new ArrayList<>();
     }
 
     @Override
@@ -70,8 +80,8 @@ public final class InMemoryCircuitBreakerRegistry implements CircuitBreakerRegis
      */
     @Override
     public CircuitBreaker circuitBreaker(String name) {
-        return circuitBreakers.computeIfAbsent(Objects.requireNonNull(name, "Name must not be null"), (k) -> CircuitBreaker.of(name,
-                defaultCircuitBreakerConfig));
+        return circuitBreakers.computeIfAbsent(Objects.requireNonNull(name, "Name must not be null"), 
+        		(k) -> postCreateCircuitBreaker(CircuitBreaker.of(name, defaultCircuitBreakerConfig), defaultCircuitBreakerConfig));
     }
 
     /**
@@ -79,13 +89,30 @@ public final class InMemoryCircuitBreakerRegistry implements CircuitBreakerRegis
      */
     @Override
     public CircuitBreaker circuitBreaker(String name, CircuitBreakerConfig customCircuitBreakerConfig) {
-        return circuitBreakers.computeIfAbsent(Objects.requireNonNull(name, "Name must not be null"), (k) -> CircuitBreaker.of(name,
-                customCircuitBreakerConfig));
+        return circuitBreakers.computeIfAbsent(Objects.requireNonNull(name, "Name must not be null"), 
+        		(k) ->  postCreateCircuitBreaker(CircuitBreaker.of(name, customCircuitBreakerConfig), customCircuitBreakerConfig));
     }
 
     @Override
     public CircuitBreaker circuitBreaker(String name, Supplier<CircuitBreakerConfig> circuitBreakerConfigSupplier) {
-        return circuitBreakers.computeIfAbsent(Objects.requireNonNull(name, "Name must not be null"), (k) -> CircuitBreaker.of(name,
-                circuitBreakerConfigSupplier.get()));
+        return circuitBreakers.computeIfAbsent(Objects.requireNonNull(name, "Name must not be null"), 
+        		(k) -> {
+        			CircuitBreakerConfig config = circuitBreakerConfigSupplier.get();
+        			return postCreateCircuitBreaker(CircuitBreaker.of(name, config), config);
+        		});
     }
+    
+    private CircuitBreaker postCreateCircuitBreaker(CircuitBreaker createdCircuitBreaker, CircuitBreakerConfig circuitBreakerConfig) {
+    	if(postCreationConsumers != null) {
+    		postCreationConsumers.forEach(consumer -> {
+    			consumer.accept(createdCircuitBreaker, circuitBreakerConfig);
+    		});
+    	}
+    	return createdCircuitBreaker;
+    }
+
+	@Override
+	public void registerPostCreationConsumer(BiConsumer<CircuitBreaker, CircuitBreakerConfig> postCreationConsumer) {
+		postCreationConsumers.add(postCreationConsumer);
+	}
 }

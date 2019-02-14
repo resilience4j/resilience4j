@@ -167,6 +167,27 @@ resilience4j.circuitbreaker:
                 - org.springframework.web.client.HttpClientErrorException
 ----
 
+You can also share configuration for your CircuitBreakers in Spring Boot's `application.yml` config file.
+For example
+
+[source,yaml]
+----
+resilience4j.circuitbreaker:
+    sharedConfigs:
+        default:
+            ringBufferSizeInClosedState: 100
+            ringBufferSizeInHalfOpenState: 10
+            waitInterval: 10000
+            failureRateThreshold: 60
+            eventConsumerBufferSize: 10
+            registerHealthIndicator: true
+    backends:
+        backendA:
+            sharedConfigName: default
+        backendB:
+            sharedConfigName: default
+----
+
 ===== RateLimiter
 You can configure your CircuitBreakers in Spring Boot's `application.yml` config file.
 For example

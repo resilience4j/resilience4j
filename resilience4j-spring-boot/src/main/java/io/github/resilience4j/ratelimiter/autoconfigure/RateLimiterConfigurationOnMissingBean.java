@@ -49,7 +49,6 @@ public class RateLimiterConfigurationOnMissingBean {
     }
 
     @Bean
-    @ConditionalOnMissingBean
     public EventConsumerRegistry<RateLimiterEvent> rateLimiterEventsConsumerRegistry() {
         return rateLimiterConfiguration.rateLimiterEventsConsumerRegistry();
     }
