@@ -103,16 +103,16 @@ public final class InMemoryCircuitBreakerRegistry implements CircuitBreakerRegis
     }
     
     private CircuitBreaker postCreateCircuitBreaker(CircuitBreaker createdCircuitBreaker, CircuitBreakerConfig circuitBreakerConfig) {
-    	if(postCreationConsumers != null) {
-    		postCreationConsumers.forEach(consumer -> {
-    			consumer.accept(createdCircuitBreaker, circuitBreakerConfig);
-    		});
-    	}
-    	return createdCircuitBreaker;
+        if(postCreationConsumers != null) {
+            postCreationConsumers.forEach(consumer -> {
+                consumer.accept(createdCircuitBreaker, circuitBreakerConfig);
+            });
+        }
+        return createdCircuitBreaker;
     }
 
-	@Override
-	public void registerPostCreationConsumer(BiConsumer<CircuitBreaker, CircuitBreakerConfig> postCreationConsumer) {
-		postCreationConsumers.add(postCreationConsumer);
-	}
+    @Override
+    public void registerPostCreationConsumer(BiConsumer<CircuitBreaker, CircuitBreakerConfig> postCreationConsumer) {
+        postCreationConsumers.add(postCreationConsumer);
+    }
 }

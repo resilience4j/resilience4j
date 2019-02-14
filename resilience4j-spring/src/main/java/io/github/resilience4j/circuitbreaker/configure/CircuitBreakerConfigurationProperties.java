@@ -302,20 +302,20 @@ public class CircuitBreakerConfigurationProperties {
          * 
          * @return The shared configuration name.
          */
-		public String getSharedConfigName() {
-			return sharedConfigName;
-		}
+        public String getSharedConfigName() {
+            return sharedConfigName;
+        }
 
-		/**
-		 * Sets the shared configuration name. If this is set, the configuration builder will use the the shared
+        /**
+         * Sets the shared configuration name. If this is set, the configuration builder will use the the shared
          * configuration backend over this one.
-         * 
-		 * @param sharedConfigName The shared configuration name.
-		 */
-		public void setSharedConfigName(String sharedConfigName) {
-			this.sharedConfigName = sharedConfigName;
-		}
-		
+         *
+         * @param sharedConfigName The shared configuration name.
+         */
+        public void setSharedConfigName(String sharedConfigName) {
+            this.sharedConfigName = sharedConfigName;
+        }
+
     }
 
 }
