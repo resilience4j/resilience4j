@@ -23,6 +23,7 @@ import io.micrometer.core.instrument.binder.MeterBinder;
 
 import static io.github.resilience4j.bulkhead.utils.MetricNames.AVAILABLE_CONCURRENT_CALLS;
 import static io.github.resilience4j.bulkhead.utils.MetricNames.DEFAULT_PREFIX;
+import static io.github.resilience4j.bulkhead.utils.MetricNames.MAX_ALLOWED_CONCURRENT_CALLS;
 import static io.github.resilience4j.micrometer.MetricUtils.getName;
 import static java.util.Objects.requireNonNull;
 
@@ -55,6 +56,8 @@ public class BulkheadMetrics implements MeterBinder {
         for (Bulkhead bulkhead : bulkheads) {
             final String name = bulkhead.getName();
             Gauge.builder(getName(prefix, name, AVAILABLE_CONCURRENT_CALLS), bulkhead, (cb) -> cb.getMetrics().getAvailableConcurrentCalls())
+                    .register(registry);
+            Gauge.builder(getName(prefix, name, MAX_ALLOWED_CONCURRENT_CALLS), bulkhead, (bh) -> bh.getMetrics().getMaxAllowedConcurrentCalls())
                     .register(registry);
         }
     }
