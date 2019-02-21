@@ -43,16 +43,6 @@ import static org.junit.Assert.assertEquals;
     classes = {TestApplication.class, CircuitBreakerAutoConfigurationTest.AdditionalConfiguration.class})
 public class CircuitBreakerAutoConfigurationTest {
 
-    @Configuration
-    public static class AdditionalConfiguration {
-
-        // Shows that a circuit breaker can be created in code and still use the shared configuration.
-        @Bean
-        public CircuitBreaker otherCircuitBreaker(CircuitBreakerRegistry registry, CircuitBreakerProperties properties) {
-            return registry.circuitBreaker("backendSharedC", properties.createCircuitBreakerConfigFromShared("default"));
-        }
-    }
-
     @Autowired
     CircuitBreakerRegistry circuitBreakerRegistry;
 
@@ -67,6 +57,16 @@ public class CircuitBreakerAutoConfigurationTest {
 
     @Autowired
     private TestRestTemplate restTemplate;
+
+    @Configuration
+    public static class AdditionalConfiguration {
+
+        // Shows that a circuit breaker can be created in code and still use the shared configuration.
+        @Bean
+        public CircuitBreaker otherCircuitBreaker(CircuitBreakerRegistry registry, CircuitBreakerProperties properties) {
+            return registry.circuitBreaker("backendSharedC", properties.createCircuitBreakerConfigFromShared("default"));
+        }
+    }
 
     /**
      * The test verifies that a CircuitBreaker instance is created and configured properly when the DummyService is invoked and

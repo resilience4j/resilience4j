@@ -23,16 +23,28 @@ import java.lang.reflect.Method;
 import static org.assertj.core.api.BDDAssertions.assertThat;
 import static org.junit.Assert.assertEquals;
 
-//@RunWith(SpringJUnit4ClassRunner.class)
-//@ContextConfiguration(classes = {
-//        RateLimiterConfigurationOnMissingBeanTest.ConfigWithOverrides.class,
-//        RateLimiterAutoConfiguration.class,
-//        RateLimiterConfigurationOnMissingBean.class
-//})
-//@EnableConfigurationProperties(RateLimiterProperties.class)
+@RunWith(SpringJUnit4ClassRunner.class)
+@ContextConfiguration(classes = {
+        RateLimiterConfigurationOnMissingBeanTest.ConfigWithOverrides.class,
+        RateLimiterAutoConfiguration.class,
+        RateLimiterConfigurationOnMissingBean.class
+})
+@EnableConfigurationProperties(RateLimiterProperties.class)
 public class RateLimiterConfigurationOnMissingBeanTest {
 
-    /*@Configuration
+    @Autowired
+    public ConfigWithOverrides configWithOverrides;
+
+    @Autowired
+    private RateLimiterRegistry rateLimiterRegistry;
+
+    @Autowired
+    private RateLimiterAspect rateLimiterAspect;
+
+    @Autowired
+    private EventConsumerRegistry<RateLimiterEvent> rateLimiterEventsConsumerRegistry;
+
+    @Configuration
     public static class ConfigWithOverrides {
 
         public RateLimiterRegistry rateLimiterRegistry;
@@ -61,18 +73,6 @@ public class RateLimiterConfigurationOnMissingBeanTest {
 
     }
 
-    @Autowired
-    public ConfigWithOverrides configWithOverrides;
-
-    @Autowired
-    private RateLimiterRegistry rateLimiterRegistry;
-
-    @Autowired
-    private RateLimiterAspect rateLimiterAspect;
-
-    @Autowired
-    private EventConsumerRegistry<RateLimiterEvent> rateLimiterEventsConsumerRegistry;
-*/
     @Test
     public void testAllBeansFromCircuitBreakerConfigurationHasOnMissingBean() throws NoSuchMethodException {
         final Class<RateLimiterConfiguration> originalClass = RateLimiterConfiguration.class;
@@ -88,11 +88,11 @@ public class RateLimiterConfigurationOnMissingBeanTest {
             }
         }
     }
-/*
+
     @Test
     public void testAllCircuitBreakerConfigurationBeansOverridden() {
         assertEquals(rateLimiterRegistry, configWithOverrides.rateLimiterRegistry);
         assertEquals(rateLimiterAspect, configWithOverrides.rateLimiterAspect);
         assertEquals(rateLimiterEventsConsumerRegistry, configWithOverrides.rateLimiterEventsConsumerRegistry);
-    }*/
+    }
 }

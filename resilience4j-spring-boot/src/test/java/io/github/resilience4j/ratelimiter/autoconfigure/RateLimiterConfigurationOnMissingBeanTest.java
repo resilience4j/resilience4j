@@ -33,6 +33,18 @@ import static org.junit.Assert.assertNotEquals;
 @EnableConfigurationProperties(RateLimiterProperties.class)
 public class RateLimiterConfigurationOnMissingBeanTest {
 
+    @Autowired
+    public ConfigWithOverrides configWithOverrides;
+
+    @Autowired
+    private RateLimiterRegistry rateLimiterRegistry;
+
+    @Autowired
+    private RateLimiterAspect rateLimiterAspect;
+
+    @Autowired
+    private EventConsumerRegistry<RateLimiterEvent> rateLimiterEventsConsumerRegistry;
+
     @Configuration
     public static class ConfigWithOverrides {
 
@@ -61,18 +73,6 @@ public class RateLimiterConfigurationOnMissingBeanTest {
         }
 
     }
-
-    @Autowired
-    public ConfigWithOverrides configWithOverrides;
-
-    @Autowired
-    private RateLimiterRegistry rateLimiterRegistry;
-
-    @Autowired
-    private RateLimiterAspect rateLimiterAspect;
-
-    @Autowired
-    private EventConsumerRegistry<RateLimiterEvent> rateLimiterEventsConsumerRegistry;
 
     @Test
     public void testAllBeansFromCircuitBreakerConfigurationHasOnMissingBean() throws NoSuchMethodException {

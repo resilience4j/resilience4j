@@ -62,7 +62,7 @@ public class RateLimiterAutoConfigurationTest {
     private TestRestTemplate restTemplate;
 
     @BeforeClass
-    public static void setup() {
+    public static void setUp() {
         // Need to clear this static registry out since multiple tests register collectors that could collide.
         CollectorRegistry.defaultRegistry.clear();
     }

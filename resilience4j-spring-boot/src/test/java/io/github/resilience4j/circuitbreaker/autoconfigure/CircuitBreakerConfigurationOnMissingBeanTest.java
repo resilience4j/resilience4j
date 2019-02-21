@@ -31,6 +31,18 @@ import static org.junit.Assert.assertNotEquals;
 @EnableConfigurationProperties(CircuitBreakerProperties.class)
 public class CircuitBreakerConfigurationOnMissingBeanTest {
 
+    @Autowired
+    private ConfigWithOverrides configWithOverrides;
+
+    @Autowired
+    private CircuitBreakerRegistry circuitBreakerRegistry;
+
+    @Autowired
+    private CircuitBreakerAspect circuitBreakerAspect;
+
+    @Autowired
+    private EventConsumerRegistry<CircuitBreakerEvent> circuitEventConsumerBreakerRegistry;
+
     @Configuration
     public static class ConfigWithOverrides {
 
@@ -58,18 +70,6 @@ public class CircuitBreakerConfigurationOnMissingBeanTest {
             return circuitEventConsumerBreakerRegistry;
         }
     }
-
-    @Autowired
-    private ConfigWithOverrides configWithOverrides;
-
-    @Autowired
-    private CircuitBreakerRegistry circuitBreakerRegistry;
-
-    @Autowired
-    private CircuitBreakerAspect circuitBreakerAspect;
-
-    @Autowired
-    private EventConsumerRegistry<CircuitBreakerEvent> circuitEventConsumerBreakerRegistry;
 
     @Test
     public void testAllBeansFromCircuitBreakerConfigurationHasOnMissingBean() throws NoSuchMethodException {
