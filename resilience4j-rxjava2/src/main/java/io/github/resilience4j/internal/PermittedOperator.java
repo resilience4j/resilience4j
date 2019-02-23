@@ -4,6 +4,7 @@ import io.github.resilience4j.adapter.Permit;
 import io.reactivex.exceptions.ProtocolViolationException;
 import io.reactivex.plugins.RxJavaPlugins;
 
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static java.util.Objects.requireNonNull;
@@ -222,9 +223,9 @@ public abstract class PermittedOperator<T, D> extends AtomicReference<D> {
     private boolean disposeOnce() {
         D current = get();
         D disposed = getDisposedDisposable();
-        if (current != disposed) {
+        if (!Objects.equals(current, disposed)) {
             current = getAndSet(disposed);
-            if (current != disposed) {
+            if (!Objects.equals(current, disposed)) {
                 if (current != null) {
                     dispose(current);
                 }
