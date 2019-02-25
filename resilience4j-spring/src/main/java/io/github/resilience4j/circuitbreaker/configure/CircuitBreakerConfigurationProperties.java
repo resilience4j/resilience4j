@@ -132,13 +132,10 @@ public class CircuitBreakerConfigurationProperties {
         @NotNull
         private Boolean registerHealthIndicator = true;
 
-        @NotNull
         private Class<Predicate<Throwable>> recordFailurePredicate;
 
-        @NotNull
         private Class<? extends Throwable>[] recordExceptions;
 
-        @NotNull
         private Class<? extends Throwable>[] ignoreExceptions;
         /**
          * Sets the wait duration in seconds the CircuitBreaker should stay open, before it switches to half closed.
