@@ -627,7 +627,7 @@ class Resilience4jModuleSpec extends Specification {
         timer.count == 3
 
         and:
-        registry.gauges.size() == 13
+        registry.gauges.size() == 14
         registry.gauges.keySet() == ['resilience4j.circuitbreaker.test.state',
                                      'resilience4j.circuitbreaker.test.buffered',
                                      'resilience4j.circuitbreaker.test.buffered_max',
@@ -640,7 +640,8 @@ class Resilience4jModuleSpec extends Specification {
                                      'resilience4j.retry.test.successful_calls_with_retry',
                                      'resilience4j.retry.test.failed_calls_without_retry',
                                      'resilience4j.retry.test.failed_calls_with_retry',
-                                     'resilience4j.bulkhead.test.available_concurrent_calls'].toSet()
+                                     'resilience4j.bulkhead.test.available_concurrent_calls',
+                                     'resilience4j.bulkhead.test.max_allowed_concurrent_calls'].toSet()
     }
 
     def "test prometheus"() {

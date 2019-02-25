@@ -414,6 +414,15 @@ public interface Bulkhead {
          * @return remaining bulkhead depth
          */
         int getAvailableConcurrentCalls();
+
+        /**
+         * Returns the configured max amount of concurrent calls
+         * allowed for this bulkhead, basically it's a top inclusive bound for
+         * the value returned from {@link #getAvailableConcurrentCalls()}.
+         *
+         * @return max allowed concurrent calls
+         */
+        int getMaxAllowedConcurrentCalls();
     }
 
     /**
