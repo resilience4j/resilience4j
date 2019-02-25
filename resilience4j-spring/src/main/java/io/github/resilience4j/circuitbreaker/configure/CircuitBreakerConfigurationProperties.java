@@ -90,6 +90,10 @@ public class CircuitBreakerConfigurationProperties {
         if (properties.ignoreExceptions != null) {
             builder.ignoreExceptions(properties.ignoreExceptions);
         }
+
+        if (properties.automaticTransitionFromOpenToHalfOpenEnabled) {
+            builder.enableAutomaticTransitionFromOpenToHalfOpen();
+        }
         return builder;
     }
 
@@ -118,6 +122,9 @@ public class CircuitBreakerConfigurationProperties {
 
         @Min(1)
         private Integer ringBufferSizeInHalfOpenState;
+
+        @NotNull
+        private Boolean automaticTransitionFromOpenToHalfOpenEnabled = false;
 
         @Min(1)
         private Integer eventConsumerBufferSize = 100;
@@ -213,6 +220,22 @@ public class CircuitBreakerConfigurationProperties {
          */
         public void setRingBufferSizeInHalfOpenState(Integer ringBufferSizeInHalfOpenState) {
             this.ringBufferSizeInHalfOpenState = ringBufferSizeInHalfOpenState;
+        }
+
+        /**
+         * Returns if we should automaticly transition to half open after the timer has run out.
+         *
+         * @return automaticTransitionFromOpenToHalfOpenEnabled if we should automaticly go to half open or not
+         */
+        public Boolean getAutomaticTransitionFromOpenToHalfOpenEnabled() {
+            return this.automaticTransitionFromOpenToHalfOpenEnabled;
+        }
+
+        /**
+         * Sets if we should automaticly transition to half open after the timer has run out.
+         */
+        public void setAutomaticTransitionFromOpenToHalfOpenEnabled(Boolean automaticTransitionFromOpenToHalfOpenEnabled) {
+            this.automaticTransitionFromOpenToHalfOpenEnabled = automaticTransitionFromOpenToHalfOpenEnabled;
         }
 
         public Integer getEventConsumerBufferSize() {
