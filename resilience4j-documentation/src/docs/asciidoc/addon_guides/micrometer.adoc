@@ -23,6 +23,7 @@ bulkheadMetrics.bindTo(meterRegistry);
 For each bulkhead this registry will export:
 
 * `available_concurrent_calls` - instantaneous read of the number of currently available concurrent calls `[int]`
+* `max_allowed_concurrent_calls` - maximum number of allowed concurrent calls `[int]`
 
 ===== CircuitBreaker
 

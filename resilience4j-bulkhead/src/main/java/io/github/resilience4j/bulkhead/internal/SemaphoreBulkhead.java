@@ -215,5 +215,10 @@ public class SemaphoreBulkhead implements Bulkhead {
         public int getAvailableConcurrentCalls() {
             return semaphore.availablePermits();
         }
+
+        @Override
+        public int getMaxAllowedConcurrentCalls() {
+            return config.getMaxConcurrentCalls();
+        }
     }
 }

@@ -15,7 +15,9 @@
  */
 package io.github.resilience4j.micrometer;
 
+import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.bulkhead.BulkheadRegistry;
+import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.Meter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
@@ -52,10 +54,24 @@ public class BulkheadMetricsTest {
                 .collect(Collectors.toList());
 
         final List<String> expectedMetrics = newArrayList(
-                "resilience4j.bulkhead.testName.available_concurrent_calls");
+                "resilience4j.bulkhead.testName.available_concurrent_calls",
+                "resilience4j.bulkhead.testName.max_allowed_concurrent_calls"
+        );
         assertThat(metricNames).hasSameElementsAs(expectedMetrics);
 
     }
 
+    @Test
+    public void maxConcurrentCallsValueCorrespondsToTheConfigValue() {
+        // Given
+        BulkheadRegistry bulkheadRegistry = BulkheadRegistry.ofDefaults();
+        Bulkhead bulkhead = bulkheadRegistry.bulkhead("testName");
+        BulkheadMetrics.ofBulkheadRegistry(bulkheadRegistry).bindTo(meterRegistry);
 
+        // When getting the corresponding gauge
+        Gauge gauge = meterRegistry.get("resilience4j.bulkhead.testName.max_allowed_concurrent_calls").gauge();
+
+        // Then the value is the same as configured one
+        assertThat(gauge.value()).isEqualTo(bulkhead.getBulkheadConfig().getMaxConcurrentCalls());
+    }
 }
