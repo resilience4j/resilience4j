@@ -137,3 +137,4 @@ long nanosToWaitForPermission = atomicLimiter.getNanosToWait();
 
 If you're interested in making your own thing on top of Resilience4j RateLimiter you'll possibly be interested in
 our lower level APIs like `getPermission` and `reservePermission` methods.
+

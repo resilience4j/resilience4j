@@ -28,6 +28,7 @@ import java.util.Map;
 import static com.codahale.metrics.MetricRegistry.name;
 import static io.github.resilience4j.bulkhead.utils.MetricNames.AVAILABLE_CONCURRENT_CALLS;
 import static io.github.resilience4j.bulkhead.utils.MetricNames.DEFAULT_PREFIX;
+import static io.github.resilience4j.bulkhead.utils.MetricNames.MAX_ALLOWED_CONCURRENT_CALLS;
 import static java.util.Objects.requireNonNull;
 
 /**
@@ -48,6 +49,8 @@ public class BulkheadMetrics implements MetricSet {
             //number of available concurrent calls as an integer
                     metricRegistry.register(name(prefix, name, AVAILABLE_CONCURRENT_CALLS),
                             (Gauge<Integer>) () -> bulkhead.getMetrics().getAvailableConcurrentCalls());
+                    metricRegistry.register(name(prefix, name, MAX_ALLOWED_CONCURRENT_CALLS),
+                            (Gauge<Integer>) () -> bulkhead.getMetrics().getMaxAllowedConcurrentCalls());
                 }
         );
     }
