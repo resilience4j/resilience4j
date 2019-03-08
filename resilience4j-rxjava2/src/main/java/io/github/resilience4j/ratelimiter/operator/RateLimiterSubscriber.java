@@ -1,16 +1,17 @@
 package io.github.resilience4j.ratelimiter.operator;
 
-import static java.util.Objects.requireNonNull;
-
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicReference;
-
 import io.github.resilience4j.adapter.Permit;
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RequestNotPermitted;
 import io.reactivex.internal.subscriptions.SubscriptionHelper;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
+
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
+
+import static io.reactivex.internal.subscriptions.SubscriptionHelper.CANCELLED;
+import static java.util.Objects.requireNonNull;
 
 /**
  * A RxJava {@link Subscriber} to protect another subscriber by a {@link RateLimiter}.
@@ -94,7 +95,7 @@ final class RateLimiterSubscriber<T> extends AtomicReference<Subscription> imple
     }
 
     private boolean notCancelled() {
-        return !SubscriptionHelper.isCancelled(get());
+        return !(get() == CANCELLED);
     }
 
     private boolean wasCallPermitted() {
