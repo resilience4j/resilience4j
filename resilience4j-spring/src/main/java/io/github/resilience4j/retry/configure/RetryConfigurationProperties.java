@@ -25,18 +25,20 @@ import javax.validation.constraints.NotNull;
 
 import org.springframework.beans.BeanUtils;
 
+import io.github.resilience4j.retry.IntervalFunction;
 import io.github.resilience4j.retry.RetryConfig;
 
 /**
  * Main spring properties for retry configuration
  */
 public class RetryConfigurationProperties {
-	/* This property gives you control over Retry aspect application order.
-	By default Retry will be executed BEFORE Circuit breaker and rateLimiter.
-	By adjusting RateLimiterProperties.rateLimiterAspectOrder and CircuitBreakerProperties.circuitBreakerAspectOrder
-	you explicitly define aspects CircuitBreaker and RateLimiter execution sequence.*/
-	private int retryAspectOrder = Integer.MAX_VALUE - 1;
 	private final Map<String, BackendProperties> backends = new HashMap<>();
+	/*  This property gives you control over Retry aspect application order.
+		By default Retry will be executed BEFORE Circuit breaker and rateLimiter.
+		By adjusting RateLimiterProperties.rateLimiterAspectOrder and CircuitBreakerProperties.circuitBreakerAspectOrder
+		you explicitly define aspects CircuitBreaker and RateLimiter execution sequence.
+	*/
+	private int retryAspectOrder = Integer.MAX_VALUE - 1;
 
 	/**
 	 * @param backend backend name
@@ -94,9 +96,11 @@ public class RetryConfigurationProperties {
 
 		RetryConfig.Builder<Object> builder = RetryConfig.custom();
 
-		if (properties.getWaitDuration() != 0) {
-			builder.waitDuration(Duration.ofMillis(properties.getWaitDuration()));
+		if (properties.enableExponentialBackoff && properties.enableRandomizedWait) {
+			throw new IllegalStateException("you can not enable Exponential backoff policy and randomized delay at the same time , please enable only one of them");
 		}
+
+		configureRetryIntervalFunction(properties, builder);
 
 		if (properties.getMaxRetryAttempts() != 0) {
 			builder.maxAttempts(properties.getMaxRetryAttempts());
@@ -118,27 +122,97 @@ public class RetryConfigurationProperties {
 			builder.retryOnResult(BeanUtils.instantiateClass(properties.getResultPredicate()));
 		}
 
+
 		return builder;
+	}
+
+	/**
+	 * decide which retry delay polciy will be configured based into the configured properties
+	 *
+	 * @param properties the backend retry properties
+	 * @param builder    the retry config builder
+	 */
+	private void configureRetryIntervalFunction(BackendProperties properties, RetryConfig.Builder<Object> builder) {
+		if (properties.getWaitDuration() != 0) {
+			long waitDuration = properties.getWaitDuration();
+			if (properties.enableExponentialBackoff) {
+				if (properties.getExponentialBackoffMultiplier() != 0) {
+					builder.intervalFunction(IntervalFunction.ofExponentialBackoff(waitDuration, properties.getExponentialBackoffMultiplier()));
+				} else {
+					builder.intervalFunction(IntervalFunction.ofExponentialBackoff(properties.getWaitDuration()));
+				}
+			} else if (properties.enableRandomizedWait) {
+				if (properties.getRandomizedWaitFactor() != 0) {
+					builder.intervalFunction(IntervalFunction.ofRandomized(waitDuration, properties.getRandomizedWaitFactor()));
+				} else {
+					builder.intervalFunction(IntervalFunction.ofRandomized(waitDuration));
+				}
+			} else {
+				builder.waitDuration(Duration.ofMillis(properties.getWaitDuration()));
+			}
+		}
 	}
 
 	/**
 	 * Class storing property values for configuring {@link io.github.resilience4j.retry.Retry} instances.
 	 */
 	public static class BackendProperties {
+		/*
+		 * wait long value for the next try
+		 */
 		@Min(100)
 		private Long waitDuration;
+		/*
+		 * max retry attempts value
+		 */
 		@Min(1)
 		private Integer maxRetryAttempts;
+		/*
+		 * retry exception predicate class to be used to evaluate the exception to retry or not
+		 */
 		private Class<? extends Predicate<Throwable>> retryExceptionPredicate;
+		/*
+		 * retry resultPredicate predicate class to be used to evaluate the result to retry or not
+		 */
 		private Class<? extends Predicate> resultPredicate;
+		/*
+		 * list of retry exception classes
+		 */
 		@SuppressWarnings("unchecked")
 		private Class<? extends Throwable>[] retryExceptions;
+		/*
+		 * list of retry ignored exception classes
+		 */
 		@SuppressWarnings("unchecked")
 		private Class<? extends Throwable>[] ignoreExceptions;
+		/*
+		 * event buffer size for generated retry events
+		 */
 		@Min(1)
 		private Integer eventConsumerBufferSize = 100;
+		/*
+		 * flag to register retry health indicator or not
+		 */
 		@NotNull
 		private Boolean registerHealthIndicator = true;
+		/*
+		 * flag to enable Exponential backoff policy or not for retry policy delay
+		 */
+		@NotNull
+		private Boolean enableExponentialBackoff = false;
+		/*
+		 * exponential backoff multiplier value
+		 */
+		private double exponentialBackoffMultiplier;
+		@NotNull
+		/*
+		 * flag to enable randomized delay  policy or not for retry policy delay
+		 */
+		private Boolean enableRandomizedWait = false;
+		/*
+		 * randomized delay factor value
+		 */
+		private double randomizedWaitFactor;
 
 		public Long getWaitDuration() {
 			return waitDuration;
@@ -203,6 +277,39 @@ public class RetryConfigurationProperties {
 		public void setRegisterHealthIndicator(Boolean registerHealthIndicator) {
 			this.registerHealthIndicator = registerHealthIndicator;
 		}
+
+		public Boolean getEnableExponentialBackoff() {
+			return enableExponentialBackoff;
+		}
+
+		public void setEnableExponentialBackoff(Boolean enableExponentialBackoff) {
+			this.enableExponentialBackoff = enableExponentialBackoff;
+		}
+
+		public double getExponentialBackoffMultiplier() {
+			return exponentialBackoffMultiplier;
+		}
+
+		public void setExponentialBackoffMultiplier(double exponentialBackoffMultiplier) {
+			this.exponentialBackoffMultiplier = exponentialBackoffMultiplier;
+		}
+
+		public Boolean getEnableRandomizedWait() {
+			return enableRandomizedWait;
+		}
+
+		public void setEnableRandomizedWait(Boolean enableRandomizedWait) {
+			this.enableRandomizedWait = enableRandomizedWait;
+		}
+
+		public double getRandomizedWaitFactor() {
+			return randomizedWaitFactor;
+		}
+
+		public void setRandomizedWaitFactor(double randomizedWaitFactor) {
+			this.randomizedWaitFactor = randomizedWaitFactor;
+		}
+
 
 	}
 

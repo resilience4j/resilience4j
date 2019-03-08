@@ -26,7 +26,6 @@ import org.springframework.context.annotation.Import;
 
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryRegistry;
-import io.github.resilience4j.retry.configure.RetryConfiguration;
 import io.github.resilience4j.retry.monitoring.endpoint.RetryEndpoint;
 import io.github.resilience4j.retry.monitoring.health.RetryHealthIndicator;
 
@@ -38,7 +37,7 @@ import io.github.resilience4j.retry.monitoring.health.RetryHealthIndicator;
 @Configuration
 @ConditionalOnClass(Retry.class)
 @EnableConfigurationProperties(RetryProperties.class)
-@Import(RetryConfiguration.class)
+@Import(RetryConfigurationOnMissingBean.class)
 public class RetryAutoConfiguration {
 
 	private final RetryProperties retryProperties;
