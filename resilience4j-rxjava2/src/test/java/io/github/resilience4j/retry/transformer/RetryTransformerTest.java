@@ -141,6 +141,55 @@ public class RetryTransformerTest {
     }
 
     @Test
+    public void retryOnResultUsingSingle() {
+        //Given
+        RetryConfig config = RetryConfig.<String>custom()
+                .retryOnResult("retry"::equals)
+                .maxAttempts(3).build();
+        Retry retry = Retry.of("testName", config);
+        given(helloWorldService.returnHelloWorld())
+                .willReturn("retry")
+                .willReturn("success");
+
+        //When
+        Single.fromCallable(helloWorldService::returnHelloWorld)
+                .compose(RetryTransformer.of(retry))
+                .test()
+                .assertValueCount(1)
+                .assertValue("success")
+                .assertComplete()
+                .assertSubscribed();
+        //Then
+        BDDMockito.then(helloWorldService).should(Mockito.times(2)).returnHelloWorld();
+        Retry.Metrics metrics = retry.getMetrics();
+
+        assertThat(metrics.getNumberOfFailedCallsWithoutRetryAttempt()).isEqualTo(0);
+        assertThat(metrics.getNumberOfSuccessfulCallsWithRetryAttempt()).isEqualTo(1);
+    }
+
+    @Test
+    public void retryOnResultFailAfterMaxAttemptsUsingSingle() {
+        //Given
+        RetryConfig config = RetryConfig.<String>custom()
+                .retryOnResult("retry"::equals)
+                .maxAttempts(3).build();
+        Retry retry = Retry.of("testName", config);
+        given(helloWorldService.returnHelloWorld())
+                .willReturn("retry");
+
+        //When
+        Single.fromCallable(helloWorldService::returnHelloWorld)
+                .compose(RetryTransformer.of(retry))
+                .test()
+                .assertValueCount(1)
+                .assertValue("retry")
+                .assertComplete()
+                .assertSubscribed();
+        //Then
+        BDDMockito.then(helloWorldService).should(Mockito.times(3)).returnHelloWorld();
+    }
+
+    @Test
     public void returnOnCompleteUsingCompletable() {
         //Given
         RetryConfig config = RetryConfig.ofDefaults();
@@ -319,6 +368,55 @@ public class RetryTransformerTest {
     }
 
     @Test
+    public void retryOnResultUsingObservable() {
+        //Given
+        RetryConfig config = RetryConfig.<String>custom()
+                .retryOnResult("retry"::equals)
+                .maxAttempts(3).build();
+        Retry retry = Retry.of("testName", config);
+        given(helloWorldService.returnHelloWorld())
+                .willReturn("retry")
+                .willReturn("success");
+
+        //When
+        Observable.fromCallable(helloWorldService::returnHelloWorld)
+                .compose(RetryTransformer.of(retry))
+                .test()
+                .assertValueCount(1)
+                .assertValue("success")
+                .assertComplete()
+                .assertSubscribed();
+        //Then
+        BDDMockito.then(helloWorldService).should(Mockito.times(2)).returnHelloWorld();
+        Retry.Metrics metrics = retry.getMetrics();
+
+        assertThat(metrics.getNumberOfFailedCallsWithoutRetryAttempt()).isEqualTo(0);
+        assertThat(metrics.getNumberOfSuccessfulCallsWithRetryAttempt()).isEqualTo(1);
+    }
+
+    @Test
+    public void retryOnResultFailAfterMaxAttemptsUsingObservable() {
+        //Given
+        RetryConfig config = RetryConfig.<String>custom()
+                .retryOnResult("retry"::equals)
+                .maxAttempts(3).build();
+        Retry retry = Retry.of("testName", config);
+        given(helloWorldService.returnHelloWorld())
+                .willReturn("retry");
+
+        //When
+        Observable.fromCallable(helloWorldService::returnHelloWorld)
+                .compose(RetryTransformer.of(retry))
+                .test()
+                .assertValueCount(1)
+                .assertValue("retry")
+                .assertComplete()
+                .assertSubscribed();
+        //Then
+        BDDMockito.then(helloWorldService).should(Mockito.times(3)).returnHelloWorld();
+    }
+
+    @Test
     public void returnOnCompleteUsingFlowable() {
         //Given
         RetryConfig config = RetryConfig.ofDefaults();
@@ -407,4 +505,52 @@ public class RetryTransformerTest {
         assertThat(metrics.getNumberOfFailedCallsWithRetryAttempt()).isEqualTo(0);
     }
 
+    @Test
+    public void retryOnResultUsingFlowable() {
+        //Given
+        RetryConfig config = RetryConfig.<String>custom()
+                .retryOnResult("retry"::equals)
+                .maxAttempts(3).build();
+        Retry retry = Retry.of("testName", config);
+        given(helloWorldService.returnHelloWorld())
+                .willReturn("retry")
+                .willReturn("success");
+
+        //When
+        Flowable.fromCallable(helloWorldService::returnHelloWorld)
+                .compose(RetryTransformer.of(retry))
+                .test()
+                .assertValueCount(1)
+                .assertValue("success")
+                .assertComplete()
+                .assertSubscribed();
+        //Then
+        BDDMockito.then(helloWorldService).should(Mockito.times(2)).returnHelloWorld();
+        Retry.Metrics metrics = retry.getMetrics();
+
+        assertThat(metrics.getNumberOfFailedCallsWithoutRetryAttempt()).isEqualTo(0);
+        assertThat(metrics.getNumberOfSuccessfulCallsWithRetryAttempt()).isEqualTo(1);
+    }
+
+    @Test
+    public void retryOnResultFailAfterMaxAttemptsUsingFlowable() {
+        //Given
+        RetryConfig config = RetryConfig.<String>custom()
+                .retryOnResult("retry"::equals)
+                .maxAttempts(3).build();
+        Retry retry = Retry.of("testName", config);
+        given(helloWorldService.returnHelloWorld())
+                .willReturn("retry");
+
+        //When
+        Flowable.fromCallable(helloWorldService::returnHelloWorld)
+                .compose(RetryTransformer.of(retry))
+                .test()
+                .assertValueCount(1)
+                .assertValue("retry")
+                .assertComplete()
+                .assertSubscribed();
+        //Then
+        BDDMockito.then(helloWorldService).should(Mockito.times(3)).returnHelloWorld();
+    }
 }

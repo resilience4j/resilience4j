@@ -32,6 +32,8 @@ public class RetryTransformer<T> implements FlowableTransformer<T, T>, Observabl
 
     private static final Logger LOG = LoggerFactory.getLogger(RetryTransformer.class);
 
+    private static final RuntimeException RESULT_EXCEPTION = new RuntimeException("retry due to retryOnResult predicate");
+
     private final Retry retry;
 
     private RetryTransformer(Retry retry) {
@@ -71,18 +73,27 @@ public class RetryTransformer<T> implements FlowableTransformer<T, T>, Observabl
             Flowable<T> flowable = upstream.toFlowable();
             SubscriptionArbiter sa = new SubscriptionArbiter(true);
             downstream.onSubscribe(sa);
+            //noinspection unchecked
             RetrySubscriber<T> retrySubscriber = new RetrySubscriber<>(downstream,
-                    retry.getRetryConfig().getMaxAttempts(), sa, flowable, retry, true);
+                    retry.getRetryConfig().getMaxAttempts(), sa, flowable, retry.context(), true);
             flowable.subscribe(retrySubscriber);
         });
     }
 
+    @SuppressWarnings("unchecked")
     private void applyRetrySubscriber(Subscriber<? super T> downstream, Flowable<T> flowable) {
+        Retry.Context<T> context = retry.context();
+        flowable = flowable.doOnNext(value -> throwExceptionToForceRetryOnResult(context, value));
         SubscriptionArbiter sa = new SubscriptionArbiter(true);
         downstream.onSubscribe(sa);
         RetrySubscriber<T> retrySubscriber = new RetrySubscriber<>(downstream, retry.getRetryConfig().getMaxAttempts(),
-                sa, flowable, retry, false);
+                sa, flowable, context, false);
         flowable.subscribe(retrySubscriber);
+    }
+
+    private void throwExceptionToForceRetryOnResult(Retry.Context<T> context, T value) {
+        if (context.onResult(value))
+            throw RESULT_EXCEPTION;
     }
 
     static final class RetrySubscriber<T> extends AtomicInteger implements Subscriber<T> {
@@ -90,17 +101,17 @@ public class RetryTransformer<T> implements FlowableTransformer<T, T>, Observabl
         private final Subscriber<? super T> actual;
         private final SubscriptionArbiter sa;
         private final Publisher<? extends T> source;
-        private final Retry.Context context;
+        private final Retry.Context<T> context;
         private long remaining;
         private final boolean countCompleteAsSuccess;
 
         RetrySubscriber(Subscriber<? super T> actual, long count,
                         SubscriptionArbiter sa, Publisher<? extends T> source,
-                        Retry retry, boolean countCompleteAsSuccess) {
+                        Retry.Context<T> context, boolean countCompleteAsSuccess) {
             this.actual = actual;
             this.sa = sa;
             this.source = source;
-            this.context = retry.context();
+            this.context = context;
             this.remaining = count;
             this.countCompleteAsSuccess = countCompleteAsSuccess;
         }
@@ -125,6 +136,10 @@ public class RetryTransformer<T> implements FlowableTransformer<T, T>, Observabl
 
         @Override
         public void onError(Throwable t) {
+            if (t == RESULT_EXCEPTION) {
+                subscribeNext();
+                return;
+            }
             if (LOG.isDebugEnabled()) {
                 LOG.info("onError");
             }
@@ -173,5 +188,4 @@ public class RetryTransformer<T> implements FlowableTransformer<T, T>, Observabl
             }
         }
     }
-
 }
