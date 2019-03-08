@@ -33,6 +33,11 @@ import io.github.resilience4j.retry.internal.InMemoryRetryRegistry;
 @Configuration
 public class RetryConfiguration {
 
+	/**
+	 * @param retryConfigurationProperties retryConfigurationProperties retry configuration spring properties
+	 * @param retryEventConsumerRegistry   the event retry registry
+	 * @return the retry definition registry
+	 */
 	@Bean
 	public RetryRegistry retryRegistry(RetryConfigurationProperties retryConfigurationProperties, EventConsumerRegistry<RetryEvent> retryEventConsumerRegistry) {
 		RetryRegistry retryRegistry = new InMemoryRetryRegistry();
@@ -46,6 +51,11 @@ public class RetryConfiguration {
 		return retryRegistry;
 	}
 
+	/**
+	 * @param retryConfigurationProperties retry configuration spring properties
+	 * @param retryRegistry retry in memory registry
+	 * @return the spring retry AOP aspect
+	 */
 	@Bean
 	public RetryAspect retryAspect(RetryConfigurationProperties retryConfigurationProperties,
 	                               RetryRegistry retryRegistry) {

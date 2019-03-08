@@ -36,28 +36,57 @@ public class RetryConfigurationProperties {
 	By adjusting RateLimiterProperties.rateLimiterAspectOrder and CircuitBreakerProperties.circuitBreakerAspectOrder
 	you explicitly define aspects CircuitBreaker and RateLimiter execution sequence.*/
 	private int retryAspectOrder = Integer.MAX_VALUE - 1;
-	private Map<String, BackendProperties> backends = new HashMap<>();
+	private final Map<String, BackendProperties> backends = new HashMap<>();
 
-	public int getRetryAspectOrder() {
-		return retryAspectOrder;
-	}
-
-	public void setRetryAspectOrder(int retryAspectOrder) {
-		this.retryAspectOrder = retryAspectOrder;
-	}
-
-	private BackendProperties getBackendProperties(String backend) {
-		return backends.get(backend);
-	}
-
+	/**
+	 * @param backend backend name
+	 * @return the retry configuration
+	 */
 	public RetryConfig createRetryBreakerConfig(String backend) {
 		return createRetryConfig(getBackendProperties(backend));
 	}
 
+	/**
+	 * @return spring aspect apply order
+	 */
+	public int getRetryAspectOrder() {
+		return retryAspectOrder;
+	}
+
+	/**
+	 * @param retryAspectOrder spring the aspect apply order
+	 */
+	public void setRetryAspectOrder(int retryAspectOrder) {
+		this.retryAspectOrder = retryAspectOrder;
+	}
+
+	/**
+	 * @return the configured retry backend properties
+	 */
+	public Map<String, BackendProperties> getBackends() {
+		return backends;
+	}
+
+	/**
+	 * @param backendProperties the retry backend spring properties
+	 * @return the retry configuration
+	 */
 	private RetryConfig createRetryConfig(BackendProperties backendProperties) {
 		return buildRetryConfig(backendProperties).build();
 	}
 
+	/**
+	 * @param backend retry backend name
+	 * @return the configured spring backend properties
+	 */
+	private BackendProperties getBackendProperties(String backend) {
+		return backends.get(backend);
+	}
+
+	/**
+	 * @param properties the configured spring backend properties
+	 * @return retry config builder instance
+	 */
 	public RetryConfig.Builder buildRetryConfig(BackendProperties properties) {
 		if (properties == null) {
 			return new RetryConfig.Builder();
@@ -90,10 +119,6 @@ public class RetryConfigurationProperties {
 		}
 
 		return builder;
-	}
-
-	public Map<String, BackendProperties> getBackends() {
-		return backends;
 	}
 
 	/**

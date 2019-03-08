@@ -43,6 +43,10 @@ public class RetryAspect implements Ordered {
 	private final RetryConfigurationProperties retryConfigurationProperties;
 	private final RetryRegistry retryRegistry;
 
+	/**
+	 * @param retryConfigurationProperties spring retry config properties
+	 * @param retryRegistry                retry definition registry
+	 */
 	public RetryAspect(RetryConfigurationProperties retryConfigurationProperties, RetryRegistry retryRegistry) {
 		this.retryConfigurationProperties = retryConfigurationProperties;
 		this.retryRegistry = retryRegistry;
@@ -64,6 +68,11 @@ public class RetryAspect implements Ordered {
 		return handleJoinPoint(proceedingJoinPoint, retry, methodName);
 	}
 
+	/**
+	 * @param methodName the retry method name
+	 * @param backend the retry backend name
+	 * @return the configured retry
+	 */
 	private io.github.resilience4j.retry.Retry getOrCreateRetry(String methodName, String backend) {
 		io.github.resilience4j.retry.Retry retry = retryRegistry.retry(backend,
 				() -> retryConfigurationProperties.createRetryBreakerConfig(backend));
@@ -75,6 +84,10 @@ public class RetryAspect implements Ordered {
 		return retry;
 	}
 
+	/**
+	 * @param proceedingJoinPoint the aspect joint point
+	 * @return the retry annotation
+	 */
 	private Retry getBackendMonitoredAnnotation(ProceedingJoinPoint proceedingJoinPoint) {
 		if (logger.isDebugEnabled()) {
 			logger.debug("circuitBreaker parameter is null");
@@ -94,6 +107,13 @@ public class RetryAspect implements Ordered {
 		return retry;
 	}
 
+	/**
+	 * @param proceedingJoinPoint the AOP logic joint point
+	 * @param retry the configured retry
+	 * @param methodName the retry method name
+	 * @return the result object if any
+	 * @throws Throwable
+	 */
 	private Object handleJoinPoint(ProceedingJoinPoint proceedingJoinPoint, io.github.resilience4j.retry.Retry retry, String methodName) throws Throwable {
 		if (logger.isDebugEnabled()) {
 			logger.debug("retry invocation of method {} ", methodName);
