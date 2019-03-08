@@ -2,6 +2,9 @@ package io.github.resilience4j.retry.monitoring.endpoint;
 
 import java.util.List;
 
+/**
+ * retry get all retries response DTO
+ */
 public class RetryEndpointResponse {
 	private List<String> retries;
 

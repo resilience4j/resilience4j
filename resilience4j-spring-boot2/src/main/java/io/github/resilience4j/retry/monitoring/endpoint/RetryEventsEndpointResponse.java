@@ -17,6 +17,9 @@ package io.github.resilience4j.retry.monitoring.endpoint;
 
 import java.util.List;
 
+/**
+ * retry events DTP for rest API
+ */
 public class RetryEventsEndpointResponse {
 	private List<RetryEventDTO> retryEvents;
 

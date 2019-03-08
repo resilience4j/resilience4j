@@ -19,6 +19,9 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 
 import io.github.resilience4j.retry.event.RetryEvent;
 
+/**
+ * Retry event data DTO which will be returned from the REST API
+ */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class RetryEventDTO {
 

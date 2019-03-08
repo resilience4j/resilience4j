@@ -17,6 +17,9 @@ package io.github.resilience4j.retry.monitoring.endpoint;
 
 import io.github.resilience4j.retry.event.RetryEvent;
 
+/**
+ * retry event DTO builder class
+ */
 class RetryEventDTOBuilder {
 
 	private final String retryName;

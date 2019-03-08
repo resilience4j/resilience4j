@@ -21,6 +21,9 @@ import io.github.resilience4j.retry.event.RetryOnIgnoredErrorEvent;
 import io.github.resilience4j.retry.event.RetryOnRetryEvent;
 import io.github.resilience4j.retry.event.RetryOnSuccessEvent;
 
+/**
+ * retry event DTO factory
+ */
 class RetryEventDTOFactory {
 
 	private RetryEventDTOFactory() {
