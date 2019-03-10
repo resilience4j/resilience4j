@@ -17,6 +17,7 @@ package io.github.resilience4j.retry.autoconfigure;
 
 import javax.annotation.PostConstruct;
 
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.boot.actuate.autoconfigure.endpoint.condition.ConditionalOnEnabledEndpoint;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -26,11 +27,14 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 
 import io.github.resilience4j.consumer.EventConsumerRegistry;
+import io.github.resilience4j.retry.AsyncRetry;
+import io.github.resilience4j.retry.AsyncRetryRegistry;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryRegistry;
 import io.github.resilience4j.retry.event.RetryEvent;
 import io.github.resilience4j.retry.monitoring.endpoint.RetryEndpoint;
 import io.github.resilience4j.retry.monitoring.endpoint.RetryEventsEndpoint;
+import io.github.resilience4j.retry.monitoring.health.AsyncRetryHealthIndicator;
 import io.github.resilience4j.retry.monitoring.health.RetryHealthIndicator;
 
 
@@ -46,24 +50,27 @@ public class RetryAutoConfiguration {
 
 	private final RetryProperties retryProperties;
 	private final RetryRegistry retryRegistry;
+	private final AsyncRetryRegistry asyncRetryRegistry;
 	private final ConfigurableBeanFactory beanFactory;
 
-	public RetryAutoConfiguration(RetryProperties retryProperties, RetryRegistry retryRegistry, ConfigurableBeanFactory beanFactory) {
+	public RetryAutoConfiguration(RetryProperties retryProperties, RetryRegistry retryRegistry, AsyncRetryRegistry asyncRetryRegistry, ConfigurableBeanFactory beanFactory) {
 		this.retryProperties = retryProperties;
 		this.retryRegistry = retryRegistry;
+		this.asyncRetryRegistry = asyncRetryRegistry;
 		this.beanFactory = beanFactory;
 	}
 
 	@Bean
 	@ConditionalOnEnabledEndpoint
-	public RetryEndpoint retryEndpoint(RetryRegistry retryRegistry) {
-		return new RetryEndpoint(retryRegistry);
+	public RetryEndpoint retryEndpoint(RetryRegistry retryRegistry, AsyncRetryRegistry asyncRetryRegistry) {
+		return new RetryEndpoint(retryRegistry, asyncRetryRegistry);
 	}
 
 	@Bean
 	@ConditionalOnEnabledEndpoint
-	public RetryEventsEndpoint retryEventsEndpoint(EventConsumerRegistry<RetryEvent> eventConsumerRegistry) {
-		return new RetryEventsEndpoint(eventConsumerRegistry);
+	public RetryEventsEndpoint retryEventsEndpoint(@Qualifier("retryEventConsumerRegistry") EventConsumerRegistry<RetryEvent> eventConsumerRegistry,
+	                                               @Qualifier("asyncRetryEventConsumerRegistry") EventConsumerRegistry<RetryEvent> asyncRetryEventConsumerRegistry) {
+		return new RetryEventsEndpoint(eventConsumerRegistry, asyncRetryEventConsumerRegistry);
 	}
 
 	@PostConstruct
@@ -79,10 +86,16 @@ public class RetryAutoConfiguration {
 
 	private void createHeathIndicatorForRetry(String name) {
 		Retry retry = retryRegistry.retry(name);
+		AsyncRetry asyncRetry = asyncRetryRegistry.retry(name);
 		RetryHealthIndicator healthIndicator = new RetryHealthIndicator(retry);
+		AsyncRetryHealthIndicator asyncHealthIndicator = new AsyncRetryHealthIndicator(asyncRetry);
 		beanFactory.registerSingleton(
 				name + "RetryHealthIndicator",
 				healthIndicator
+		);
+		beanFactory.registerSingleton(
+				name + "AsyncRetryHealthIndicator",
+				asyncHealthIndicator
 		);
 	}
 

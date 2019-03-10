@@ -310,7 +310,6 @@ public class RetryConfigurationProperties {
 			this.randomizedWaitFactor = randomizedWaitFactor;
 		}
 
-
 	}
 
 }

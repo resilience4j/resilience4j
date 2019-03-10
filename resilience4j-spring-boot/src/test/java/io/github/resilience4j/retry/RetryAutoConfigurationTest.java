@@ -19,6 +19,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.IOException;
 import java.util.Map;
+import java.util.concurrent.CompletionStage;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -43,6 +47,10 @@ public class RetryAutoConfigurationTest {
 
 	@Autowired
 	RetryRegistry retryRegistry;
+
+
+	@Autowired
+	AsyncRetryRegistry asyncRetryRegistry;
 
 	@Autowired
 	RetryProperties retryProperties;
@@ -88,7 +96,7 @@ public class RetryAutoConfigurationTest {
 
 		// expect retry actuator endpoint contains both retries
 		ResponseEntity<RetryEndpointResponse> retriesList = restTemplate.getForEntity("/retries", RetryEndpointResponse.class);
-		assertThat(retriesList.getBody().getRetries()).hasSize(1).containsExactly("retryBackendA");
+		assertThat(retriesList.getBody().getRetries()).hasSize(2).containsExactly("retryBackendA", "retryBackendA");
 
 		// expect retry-event actuator endpoint recorded both events
 		ResponseEntity<RetryEventsEndpointResponse> retryEventList = restTemplate.getForEntity("/retries/events", RetryEventsEndpointResponse.class);
@@ -107,6 +115,69 @@ public class RetryAutoConfigurationTest {
 	}
 
 
+	/**
+	 * The test verifies that a Async Retry instance is created and configured properly when the RetryDummyService is invoked and
+	 * that the Async Retry logic is properly handled
+	 */
+	@Test
+	public void testRetryAutoConfigurationAsync() throws Throwable {
+		assertThat(asyncRetryRegistry).isNotNull();
+
+		try {
+			final CompletionStage<String> stringCompletionStage = retryDummyService.doSomethingAsync(true);
+			String result = awaitResult(stringCompletionStage, 5);
+			assertThat(result).isNull();
+
+		} catch (IOException ex) {
+			// Do nothing. The IOException is recorded by the retry as it is one of failure exceptions
+			assertThat(ex.getMessage()).contains("Test Message");
+		}
+		// The invocation is recorded by the CircuitBreaker as a success.
+		String resultSuccess = awaitResult(retryDummyService.doSomethingAsync(false), 5);
+		assertThat(resultSuccess).isNotEmpty();
+		AsyncRetry retry = asyncRetryRegistry.retry(RetryDummyService.BACKEND);
+		assertThat(retry).isNotNull();
+
+		// expect retry is configured as defined in application.yml
+		assertThat(retry.getRetryConfig().getMaxAttempts()).isEqualTo(3);
+		assertThat(retry.getName()).isEqualTo(RetryDummyService.BACKEND);
+		assertThat(retry.getRetryConfig().getExceptionPredicate().test(new IOException())).isTrue();
+
+		assertThat(retry.getMetrics().getNumberOfFailedCallsWithoutRetryAttempt()).isEqualTo(0);
+		assertThat(retry.getMetrics().getNumberOfFailedCallsWithRetryAttempt()).isEqualTo(1);
+		assertThat(retry.getMetrics().getNumberOfSuccessfulCallsWithoutRetryAttempt()).isEqualTo(1);
+		assertThat(retry.getMetrics().getNumberOfSuccessfulCallsWithRetryAttempt()).isEqualTo(0);
+
+		// expect retry actuator endpoint contains both retries
+		ResponseEntity<RetryEndpointResponse> retriesList = restTemplate.getForEntity("/retries", RetryEndpointResponse.class);
+		assertThat(retriesList.getBody().getRetries()).hasSize(2).containsExactly("retryBackendA", "retryBackendA");
+
+		// expect retry-event actuator endpoint recorded both events
+		ResponseEntity<RetryEventsEndpointResponse> retryEventList = restTemplate.getForEntity("/retries/events", RetryEventsEndpointResponse.class);
+		assertThat(retryEventList.getBody().getRetryEvents()).hasSize(6);
+
+		retryEventList = restTemplate.getForEntity("/retries/events/retryBackendA", RetryEventsEndpointResponse.class);
+		assertThat(retryEventList.getBody().getRetryEvents()).hasSize(6);
+
+
+		assertThat(retry.getRetryConfig().getExceptionPredicate().test(new IOException())).isTrue();
+		assertThat(retry.getRetryConfig().getExceptionPredicate().test(new IgnoredException())).isFalse();
+
+
+		// expect aspect configured as defined in application.yml
+		assertThat(retryAspect.getOrder()).isEqualTo(399);
+	}
+
+	private <T> T awaitResult(CompletionStage<T> completionStage, long timeoutSeconds) throws Throwable {
+		try {
+			return completionStage.toCompletableFuture().get(timeoutSeconds, TimeUnit.SECONDS);
+		} catch (InterruptedException | TimeoutException e) {
+			throw new AssertionError(e);
+		} catch (ExecutionException e) {
+			throw e.getCause();
+		}
+	}
+
 	private final static class HealthResponse {
 		private Map<String, Object> details;
 
@@ -118,4 +189,6 @@ public class RetryAutoConfigurationTest {
 			this.details = details;
 		}
 	}
+
+
 }

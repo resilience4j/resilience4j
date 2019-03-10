@@ -18,6 +18,7 @@
  */
 package io.github.resilience4j.retry.internal;
 
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.atomic.LongAdder;
@@ -66,6 +67,38 @@ public class AsyncRetryImpl<T> implements AsyncRetry {
         this.eventProcessor = new RetryEventProcessor();
     }
 
+    @Override
+    public String getName() {
+        return name;
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public Context context() {
+        return new ContextImpl();
+    }
+
+    @Override
+    public RetryConfig getRetryConfig() {
+        return config;
+    }
+
+    private void publishRetryEvent(Supplier<RetryEvent> event) {
+        if (eventProcessor.hasConsumers()) {
+            eventProcessor.consumeEvent(event.get());
+        }
+    }
+
+    @Override
+    public Metrics getMetrics() {
+        return this.metrics;
+    }
+
+    @Override
+    public EventPublisher getEventPublisher() {
+        return eventProcessor;
+    }
+
     public final class ContextImpl implements AsyncRetry.Context<T> {
 
         private final AtomicInteger numOfAttempts = new AtomicInteger(0);
@@ -84,14 +117,30 @@ public class AsyncRetryImpl<T> implements AsyncRetry {
 
         @Override
         public long onError(Throwable throwable) {
+            // handle the case if the completable future throw CompletionException wrapping the original exception
+            // where original exception is the the one to retry not the CompletionException
+            // for more information about exception handling in completable future check for example :
+            //https://stackoverflow.com/questions/44409962/throwing-exception-from-completablefuture
+            if (throwable instanceof CompletionException && !exceptionPredicate.test(throwable)) {
+                if (!exceptionPredicate.test(throwable.getCause())) {
+                    failedWithoutRetryCounter.increment();
+                    publishRetryEvent(() -> new RetryOnIgnoredErrorEvent(getName(), throwable));
+                    return -1;
+                }
+                return handleOnError(throwable.getCause());
+            }
             if (!exceptionPredicate.test(throwable)) {
                 failedWithoutRetryCounter.increment();
                 publishRetryEvent(() -> new RetryOnIgnoredErrorEvent(getName(), throwable));
                 return -1;
             }
+            return handleOnError(throwable);
+
+        }
+
+        private long handleOnError(Throwable throwable) {
             lastException.set(throwable);
             int attempt = numOfAttempts.incrementAndGet();
-
             if (attempt >= maxAttempts) {
                 failedAfterRetryCounter.increment();
                 publishRetryEvent(() -> new RetryOnErrorEvent(name, attempt, throwable));
@@ -116,40 +165,6 @@ public class AsyncRetryImpl<T> implements AsyncRetry {
             }
         }
     }
-
-    @Override
-    public String getName() {
-        return name;
-    }
-
-    @Override
-    @SuppressWarnings("unchecked")
-    public Context context() {
-        return new ContextImpl();
-    }
-
-    @Override
-    public RetryConfig getRetryConfig() {
-        return config;
-    }
-
-
-    private void publishRetryEvent(Supplier<RetryEvent> event) {
-        if (eventProcessor.hasConsumers()) {
-            eventProcessor.consumeEvent(event.get());
-        }
-    }
-
-    @Override
-    public Metrics getMetrics() {
-        return this.metrics;
-    }
-
-    @Override
-    public EventPublisher getEventPublisher() {
-        return eventProcessor;
-    }
-
 
     public final class AsyncRetryMetrics implements AsyncRetry.Metrics {
         private AsyncRetryMetrics() {

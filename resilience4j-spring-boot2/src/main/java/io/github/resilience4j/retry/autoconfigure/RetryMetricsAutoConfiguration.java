@@ -22,7 +22,9 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import io.github.resilience4j.micrometer.AsyncRetryMetrics;
 import io.github.resilience4j.micrometer.RetryMetrics;
+import io.github.resilience4j.retry.AsyncRetryRegistry;
 import io.github.resilience4j.retry.RetryRegistry;
 
 /**
@@ -39,4 +41,12 @@ public class RetryMetricsAutoConfiguration {
 	public RetryMetrics registerRetryMetrics(RetryRegistry retryRegistry) {
 		return RetryMetrics.ofRetryRegistry(retryRegistry);
 	}
+
+	@Bean
+	@ConditionalOnProperty(value = "resilience4j.retry.metrics.enabled", matchIfMissing = true)
+	public AsyncRetryMetrics asyncRetryMetrics(AsyncRetryRegistry asyncRetryRegistry) {
+		return AsyncRetryMetrics.ofRetryRegistry(asyncRetryRegistry);
+
+	}
+
 }

@@ -21,6 +21,8 @@ import java.util.List;
 import org.springframework.boot.actuate.endpoint.annotation.Endpoint;
 import org.springframework.boot.actuate.endpoint.annotation.ReadOperation;
 
+import io.github.resilience4j.retry.AsyncRetry;
+import io.github.resilience4j.retry.AsyncRetryRegistry;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryRegistry;
 
@@ -32,15 +34,19 @@ import io.github.resilience4j.retry.RetryRegistry;
 public class RetryEndpoint {
 
 	private final RetryRegistry retryRegistry;
+	private final AsyncRetryRegistry asyncRetryRegistry;
 
-	public RetryEndpoint(RetryRegistry retryRegistry) {
+	public RetryEndpoint(RetryRegistry retryRegistry, AsyncRetryRegistry asyncRetryRegistry) {
 		this.retryRegistry = retryRegistry;
+		this.asyncRetryRegistry = asyncRetryRegistry;
 	}
 
 	@ReadOperation
 	public RetryEndpointResponse getAllRetries() {
 		List<String> retries = retryRegistry.getAllRetries()
 				.map(Retry::getName).sorted().toJavaList();
+		retries.addAll(asyncRetryRegistry.getAllRetries()
+				.map(AsyncRetry::getName).sorted().toJavaList());
 		return new RetryEndpointResponse(retries);
 	}
 }

@@ -1,12 +1,15 @@
 package io.github.resilience4j.retry.autoconfigure;
 
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
+import io.github.resilience4j.retry.AsyncRetryRegistry;
 import io.github.resilience4j.retry.RetryRegistry;
+import io.github.resilience4j.retry.configure.AsyncRetryAspect;
 import io.github.resilience4j.retry.configure.RetryAspect;
 import io.github.resilience4j.retry.configure.RetryConfiguration;
 import io.github.resilience4j.retry.configure.RetryConfigurationProperties;
@@ -37,6 +40,30 @@ public class RetryConfigurationOnMissingBean {
 	}
 
 	/**
+	 * @param retryConfigurationProperties retryConfigurationProperties retry configuration spring properties
+	 * @param retryEventConsumerRegistry   the event retry registry
+	 * @return the async retry definition registry
+	 */
+	@Bean
+	@ConditionalOnMissingBean
+	public AsyncRetryRegistry asyncRetryRegistry(RetryConfigurationProperties retryConfigurationProperties, EventConsumerRegistry<RetryEvent> retryEventConsumerRegistry) {
+		return retryConfiguration.asyncRetryRegistry(retryConfigurationProperties, retryEventConsumerRegistry);
+	}
+
+
+	/**
+	 * @param retryConfigurationProperties retry configuration spring properties
+	 * @param asyncRetryRegistry           async retry in memory registry
+	 * @return the spring retry AOP aspect
+	 */
+	@Bean
+	@ConditionalOnMissingBean
+	public AsyncRetryAspect asyncRetryAspect(RetryConfigurationProperties retryConfigurationProperties,
+	                                         AsyncRetryRegistry asyncRetryRegistry) {
+		return retryConfiguration.asyncRetryAspect(retryConfigurationProperties, asyncRetryRegistry);
+	}
+
+	/**
 	 * @param retryConfigurationProperties retry configuration spring properties
 	 * @param retryRegistry                retry in memory registry
 	 * @return the spring retry AOP aspect
@@ -57,7 +84,22 @@ public class RetryConfigurationOnMissingBean {
 	 */
 	@Bean
 	@ConditionalOnMissingBean
+	@Qualifier("syncRetryEventConsumerRegistry")
 	public EventConsumerRegistry<RetryEvent> retryEventConsumerRegistry() {
 		return retryConfiguration.retryEventConsumerRegistry();
+	}
+
+	/**
+	 * The EventConsumerRegistry is used to manage EventConsumer instances.
+	 * The EventConsumerRegistry is used by the Retry events monitor to show the latest Async RetryEvent events
+	 * for each async Retry instance.
+	 *
+	 * @return a default EventConsumerRegistry {@link DefaultEventConsumerRegistry}
+	 */
+	@Bean
+	@ConditionalOnMissingBean
+	@Qualifier("asyncRetryEventConsumerRegistry")
+	public EventConsumerRegistry<RetryEvent> asyncRetryEventConsumerRegistry() {
+		return retryConfiguration.asyncRetryEventConsumerRegistry();
 	}
 }

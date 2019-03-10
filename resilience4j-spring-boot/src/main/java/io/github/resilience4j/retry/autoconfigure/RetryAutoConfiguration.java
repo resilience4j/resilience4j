@@ -24,9 +24,12 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 
+import io.github.resilience4j.retry.AsyncRetry;
+import io.github.resilience4j.retry.AsyncRetryRegistry;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryRegistry;
 import io.github.resilience4j.retry.monitoring.endpoint.RetryEndpoint;
+import io.github.resilience4j.retry.monitoring.health.AsyncRetryHealthIndicator;
 import io.github.resilience4j.retry.monitoring.health.RetryHealthIndicator;
 
 
@@ -43,16 +46,18 @@ public class RetryAutoConfiguration {
 	private final RetryProperties retryProperties;
 	private final RetryRegistry retryRegistry;
 	private final ConfigurableBeanFactory beanFactory;
+	private final AsyncRetryRegistry asyncRetryRegistry;
 
-	public RetryAutoConfiguration(RetryProperties retryProperties, RetryRegistry retryRegistry, ConfigurableBeanFactory beanFactory) {
+	public RetryAutoConfiguration(RetryProperties retryProperties, RetryRegistry retryRegistry, ConfigurableBeanFactory beanFactory, AsyncRetryRegistry asyncRetryRegistry) {
 		this.retryProperties = retryProperties;
 		this.retryRegistry = retryRegistry;
 		this.beanFactory = beanFactory;
+		this.asyncRetryRegistry = asyncRetryRegistry;
 	}
 
 	@Bean
-	public RetryEndpoint retryEndpoint(RetryRegistry retryRegistry) {
-		return new RetryEndpoint(retryRegistry);
+	public RetryEndpoint retryEndpoint(RetryRegistry retryRegistry, AsyncRetryRegistry asyncRetryRegistry) {
+		return new RetryEndpoint(retryRegistry, asyncRetryRegistry);
 	}
 
 
@@ -69,10 +74,16 @@ public class RetryAutoConfiguration {
 
 	private void createHeathIndicatorForRetry(String name) {
 		Retry retry = retryRegistry.retry(name);
+		AsyncRetry asyncRetry = asyncRetryRegistry.retry(name);
 		RetryHealthIndicator healthIndicator = new RetryHealthIndicator(retry);
+		AsyncRetryHealthIndicator asyncHealthIndicator = new AsyncRetryHealthIndicator(asyncRetry);
 		beanFactory.registerSingleton(
 				name + "RetryHealthIndicator",
 				healthIndicator
+		);
+		beanFactory.registerSingleton(
+				name + "AsyncRetryHealthIndicator",
+				asyncHealthIndicator
 		);
 	}
 
