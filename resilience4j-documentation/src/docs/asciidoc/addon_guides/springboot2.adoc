@@ -37,7 +37,7 @@ For example :
         "successCallsWithRetry": 0
       }
     },
-    "retryBackendAAsyncRetry": {
+ "retryBackendAAsyncRetry": {
       "status": "UP",
       "details": {
         "failedCallsWithoutRetry": "0%",
@@ -207,7 +207,7 @@ resilience4j.retry:
 ----
 The rules for Retry configuration :
 
-    - By default the same beck end configuration will be used for sync and async retry configuration if not defined otherwise.
+    - By default the same back end configuration will be used for sync and async retry configuration if not defined otherwise.
     - enableRandomizedWait and enableExponentialBackoff is false by default.
     - registerHealthIndicator is true by default.
     - You can not enable both enableRandomizedWait and enableExponentialBackoff , validation exception will be thrown if it happen.
