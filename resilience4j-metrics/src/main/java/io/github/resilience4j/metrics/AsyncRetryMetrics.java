@@ -19,7 +19,7 @@
 package io.github.resilience4j.metrics;
 
 import static com.codahale.metrics.MetricRegistry.name;
-import static io.github.resilience4j.retry.utils.MetricNames.DEFAULT_PREFIX;
+import static io.github.resilience4j.retry.utils.MetricNames.DEFAULT_PREFIX_ASYNC;
 import static io.github.resilience4j.retry.utils.MetricNames.FAILED_CALLS_WITHOUT_RETRY;
 import static io.github.resilience4j.retry.utils.MetricNames.FAILED_CALLS_WITH_RETRY;
 import static io.github.resilience4j.retry.utils.MetricNames.SUCCESSFUL_CALLS_WITHOUT_RETRY;
@@ -42,51 +42,51 @@ import io.vavr.collection.Array;
  */
 public class AsyncRetryMetrics implements MetricSet {
 
-    private final MetricRegistry metricRegistry = new MetricRegistry();
+	private final MetricRegistry metricRegistry = new MetricRegistry();
 
-    private AsyncRetryMetrics(Iterable<AsyncRetry> retries) {
-        this(DEFAULT_PREFIX, retries);
-    }
+	private AsyncRetryMetrics(Iterable<AsyncRetry> retries) {
+		this(DEFAULT_PREFIX_ASYNC, retries);
+	}
 
-    private AsyncRetryMetrics(String prefix, Iterable<AsyncRetry> retries) {
-        requireNonNull(prefix);
-        requireNonNull(retries);
-        retries.forEach(retry -> {
-            String name = retry.getName();
+	private AsyncRetryMetrics(String prefix, Iterable<AsyncRetry> retries) {
+		requireNonNull(prefix);
+		requireNonNull(retries);
+		retries.forEach(retry -> {
+			String name = retry.getName();
 
-            metricRegistry.register(name(prefix, name, AsyncRetry.class.getSimpleName(), SUCCESSFUL_CALLS_WITHOUT_RETRY),
-                    (Gauge<Long>) () -> retry.getMetrics().getNumberOfSuccessfulCallsWithoutRetryAttempt());
-            metricRegistry.register(name(prefix, name, AsyncRetry.class.getSimpleName(), SUCCESSFUL_CALLS_WITH_RETRY),
-                    (Gauge<Long>) () -> retry.getMetrics().getNumberOfSuccessfulCallsWithRetryAttempt());
-            metricRegistry.register(name(prefix, name, AsyncRetry.class.getSimpleName(), FAILED_CALLS_WITHOUT_RETRY),
-                    (Gauge<Long>) () -> retry.getMetrics().getNumberOfFailedCallsWithoutRetryAttempt());
-            metricRegistry.register(name(prefix, name, AsyncRetry.class.getSimpleName(), FAILED_CALLS_WITH_RETRY),
-                    (Gauge<Long>) () -> retry.getMetrics().getNumberOfFailedCallsWithRetryAttempt());
-        });
-    }
+			metricRegistry.register(name(prefix, name, SUCCESSFUL_CALLS_WITHOUT_RETRY),
+					(Gauge<Long>) () -> retry.getMetrics().getNumberOfSuccessfulCallsWithoutRetryAttempt());
+			metricRegistry.register(name(prefix, name, SUCCESSFUL_CALLS_WITH_RETRY),
+					(Gauge<Long>) () -> retry.getMetrics().getNumberOfSuccessfulCallsWithRetryAttempt());
+			metricRegistry.register(name(prefix, name, FAILED_CALLS_WITHOUT_RETRY),
+					(Gauge<Long>) () -> retry.getMetrics().getNumberOfFailedCallsWithoutRetryAttempt());
+			metricRegistry.register(name(prefix, name, FAILED_CALLS_WITH_RETRY),
+					(Gauge<Long>) () -> retry.getMetrics().getNumberOfFailedCallsWithRetryAttempt());
+		});
+	}
 
-    public static AsyncRetryMetrics ofAsyncRetryRegistry(String prefix, AsyncRetryRegistry retryRegistry) {
-        return new AsyncRetryMetrics(prefix, retryRegistry.getAllRetries());
-    }
+	public static AsyncRetryMetrics ofAsyncRetryRegistry(String prefix, AsyncRetryRegistry retryRegistry) {
+		return new AsyncRetryMetrics(prefix, retryRegistry.getAllRetries());
+	}
 
-    public static AsyncRetryMetrics ofAsyncRetryRegistry(AsyncRetryRegistry retryRegistry) {
-        return new AsyncRetryMetrics(retryRegistry.getAllRetries());
-    }
+	public static AsyncRetryMetrics ofAsyncRetryRegistry(AsyncRetryRegistry retryRegistry) {
+		return new AsyncRetryMetrics(retryRegistry.getAllRetries());
+	}
 
-    public static AsyncRetryMetrics ofIterable(String prefix, Iterable<AsyncRetry> retries) {
-        return new AsyncRetryMetrics(prefix, retries);
-    }
+	public static AsyncRetryMetrics ofIterable(String prefix, Iterable<AsyncRetry> retries) {
+		return new AsyncRetryMetrics(prefix, retries);
+	}
 
-    public static AsyncRetryMetrics ofIterable(Iterable<AsyncRetry> retries) {
-        return new AsyncRetryMetrics(retries);
-    }
+	public static AsyncRetryMetrics ofIterable(Iterable<AsyncRetry> retries) {
+		return new AsyncRetryMetrics(retries);
+	}
 
-    public static AsyncRetryMetrics ofAsyncRetry(AsyncRetry retry) {
-        return new AsyncRetryMetrics(Array.of(retry));
-    }
+	public static AsyncRetryMetrics ofAsyncRetry(AsyncRetry retry) {
+		return new AsyncRetryMetrics(Array.of(retry));
+	}
 
-    @Override
-    public Map<String, Metric> getMetrics() {
-        return metricRegistry.getMetrics();
-    }
+	@Override
+	public Map<String, Metric> getMetrics() {
+		return metricRegistry.getMetrics();
+	}
 }

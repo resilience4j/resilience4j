@@ -49,114 +49,114 @@ import io.vavr.control.Try;
 
 public class AsyncRetryMetricsTest {
 
-    private MetricRegistry metricRegistry;
-    private AsyncHelloWorldService helloWorldService;
-    private ScheduledExecutorService scheduler =
-      Executors.newSingleThreadScheduledExecutor();
+	private MetricRegistry metricRegistry;
+	private AsyncHelloWorldService helloWorldService;
+	private ScheduledExecutorService scheduler =
+			Executors.newSingleThreadScheduledExecutor();
 
-    @Before
-    public void setUp(){
-        metricRegistry = new MetricRegistry();
-        helloWorldService = mock(AsyncHelloWorldService.class);
-    }
+	private static <T> CompletableFuture<T> failedFuture(Throwable t) {
+		CompletableFuture<T> future = new CompletableFuture<>();
+		future.completeExceptionally(t);
+		return future;
+	}
 
-    @Test
-    public void shouldRegisterMetricsWithoutRetry() {
-        //Given
-        AsyncRetryRegistry retryRegistry = AsyncRetryRegistry.ofDefaults();
-        AsyncRetry retry = retryRegistry.retry("testName");
-        metricRegistry.registerAll(AsyncRetryMetrics.ofAsyncRetryRegistry(retryRegistry));
+	private static <T> T awaitResult(CompletionStage<T> completionStage) {
+		try {
+			return completionStage.toCompletableFuture().get(5, TimeUnit.SECONDS);
+		} catch (InterruptedException | TimeoutException e) {
+			throw new AssertionError(e);
+		} catch (ExecutionException e) {
+			throw new RuntimeExecutionException(e.getCause());
+		}
+	}
 
-        // Given the HelloWorldService returns Hello world
-        BDDMockito.given(helloWorldService.returnHelloWorld())
-          .willReturn(CompletableFuture.completedFuture("Hello world"));
+	@Before
+	public void setUp() {
+		metricRegistry = new MetricRegistry();
+		helloWorldService = mock(AsyncHelloWorldService.class);
+	}
 
-        // Setup circuitbreaker with retry
-        String value = awaitResult(retry.executeCompletionStage(scheduler, helloWorldService::returnHelloWorld));
+	@Test
+	public void shouldRegisterMetricsWithoutRetry() {
+		//Given
+		AsyncRetryRegistry retryRegistry = AsyncRetryRegistry.ofDefaults();
+		AsyncRetry retry = retryRegistry.retry("testName");
+		metricRegistry.registerAll(AsyncRetryMetrics.ofAsyncRetryRegistry(retryRegistry));
 
-        //Then
-        assertThat(value).isEqualTo("Hello world");
-        // Then the helloWorldService should be invoked 1 time
-        BDDMockito.then(helloWorldService).should(times(1)).returnHelloWorld();
-        assertThat(metricRegistry.getMetrics()).hasSize(4);
-        assertThat(metricRegistry.getGauges().get("resilience4j.retry.testName.AsyncRetry." + SUCCESSFUL_CALLS_WITH_RETRY).getValue()).isEqualTo(0L);
-        assertThat(metricRegistry.getGauges().get("resilience4j.retry.testName.AsyncRetry." + SUCCESSFUL_CALLS_WITHOUT_RETRY).getValue()).isEqualTo(1L);
-        assertThat(metricRegistry.getGauges().get("resilience4j.retry.testName.AsyncRetry." + FAILED_CALLS_WITH_RETRY).getValue()).isEqualTo(0L);
-        assertThat(metricRegistry.getGauges().get("resilience4j.retry.testName.AsyncRetry." + FAILED_CALLS_WITHOUT_RETRY).getValue()).isEqualTo(0L);
-    }
+		// Given the HelloWorldService returns Hello world
+		BDDMockito.given(helloWorldService.returnHelloWorld())
+				.willReturn(CompletableFuture.completedFuture("Hello world"));
 
-    @Test
-    public void shouldRegisterMetricsWithRetry() {
-        //Given
-        AsyncRetryRegistry retryRegistry = AsyncRetryRegistry.ofDefaults();
-        AsyncRetry retry = retryRegistry.retry("testName");
-        metricRegistry.registerAll(AsyncRetryMetrics.ofAsyncRetryRegistry(retryRegistry));
+		// Setup circuitbreaker with retry
+		String value = awaitResult(retry.executeCompletionStage(scheduler, helloWorldService::returnHelloWorld));
 
-        // Given the HelloWorldService returns Hello world
-        BDDMockito.given(helloWorldService.returnHelloWorld())
-                .willReturn(failedFuture(new WebServiceException("BAM!")))
-                .willReturn(CompletableFuture.completedFuture("Hello world"))
-                .willReturn(failedFuture(new WebServiceException("BAM!")))
-                .willReturn(failedFuture(new WebServiceException("BAM!")))
-                .willReturn(failedFuture(new WebServiceException("BAM!")));
+		//Then
+		assertThat(value).isEqualTo("Hello world");
+		// Then the helloWorldService should be invoked 1 time
+		BDDMockito.then(helloWorldService).should(times(1)).returnHelloWorld();
+		assertThat(metricRegistry.getMetrics()).hasSize(4);
+		assertThat(metricRegistry.getGauges().get("resilience4j.asyncRetry.testName." + SUCCESSFUL_CALLS_WITH_RETRY).getValue()).isEqualTo(0L);
+		assertThat(metricRegistry.getGauges().get("resilience4j.asyncRetry.testName." + SUCCESSFUL_CALLS_WITHOUT_RETRY).getValue()).isEqualTo(1L);
+		assertThat(metricRegistry.getGauges().get("resilience4j.asyncRetry.testName." + FAILED_CALLS_WITH_RETRY).getValue()).isEqualTo(0L);
+		assertThat(metricRegistry.getGauges().get("resilience4j.asyncRetry.testName." + FAILED_CALLS_WITHOUT_RETRY).getValue()).isEqualTo(0L);
+	}
 
-        // Setup circuitbreaker with retry
-        String value1 = awaitResult(retry.executeCompletionStage(scheduler, helloWorldService::returnHelloWorld));
-        Try.ofCallable(() -> awaitResult(AsyncRetry.decorateCompletionStage(retry, scheduler, helloWorldService::returnHelloWorld).get()));
+	@Test
+	public void shouldRegisterMetricsWithRetry() {
+		//Given
+		AsyncRetryRegistry retryRegistry = AsyncRetryRegistry.ofDefaults();
+		AsyncRetry retry = retryRegistry.retry("testName");
+		metricRegistry.registerAll(AsyncRetryMetrics.ofAsyncRetryRegistry(retryRegistry));
 
-        //Then
-        assertThat(value1).isEqualTo("Hello world");
-        // Then the helloWorldService should be invoked 5 times
-        BDDMockito.then(helloWorldService).should(times(5)).returnHelloWorld();
-        assertThat(metricRegistry.getMetrics()).hasSize(4);
-        assertThat(metricRegistry.getGauges().get("resilience4j.retry.testName.AsyncRetry." + SUCCESSFUL_CALLS_WITH_RETRY).getValue()).isEqualTo(1L);
-        assertThat(metricRegistry.getGauges().get("resilience4j.retry.testName.AsyncRetry." + SUCCESSFUL_CALLS_WITHOUT_RETRY).getValue()).isEqualTo(0L);
-        assertThat(metricRegistry.getGauges().get("resilience4j.retry.testName.AsyncRetry." + FAILED_CALLS_WITH_RETRY).getValue()).isEqualTo(1L);
-        assertThat(metricRegistry.getGauges().get("resilience4j.retry.testName.AsyncRetry." + FAILED_CALLS_WITHOUT_RETRY).getValue()).isEqualTo(0L);
-    }
+		// Given the HelloWorldService returns Hello world
+		BDDMockito.given(helloWorldService.returnHelloWorld())
+				.willReturn(failedFuture(new WebServiceException("BAM!")))
+				.willReturn(CompletableFuture.completedFuture("Hello world"))
+				.willReturn(failedFuture(new WebServiceException("BAM!")))
+				.willReturn(failedFuture(new WebServiceException("BAM!")))
+				.willReturn(failedFuture(new WebServiceException("BAM!")));
 
-    @Test
-    public void shouldUseCustomPrefix() {
-        //Given
-        AsyncRetryRegistry retryRegistry = AsyncRetryRegistry.ofDefaults();
-        AsyncRetry retry = retryRegistry.retry("testName");
-        metricRegistry.registerAll(AsyncRetryMetrics.ofAsyncRetryRegistry("testPrefix",retryRegistry));
+		// Setup circuitbreaker with retry
+		String value1 = awaitResult(retry.executeCompletionStage(scheduler, helloWorldService::returnHelloWorld));
+		Try.ofCallable(() -> awaitResult(AsyncRetry.decorateCompletionStage(retry, scheduler, helloWorldService::returnHelloWorld).get()));
 
-        // Given the HelloWorldService returns Hello world
-        BDDMockito.given(helloWorldService.returnHelloWorld()).willReturn(CompletableFuture.completedFuture("Hello world"));
+		//Then
+		assertThat(value1).isEqualTo("Hello world");
+		// Then the helloWorldService should be invoked 5 times
+		BDDMockito.then(helloWorldService).should(times(5)).returnHelloWorld();
+		assertThat(metricRegistry.getMetrics()).hasSize(4);
+		assertThat(metricRegistry.getGauges().get("resilience4j.asyncRetry.testName." + SUCCESSFUL_CALLS_WITH_RETRY).getValue()).isEqualTo(1L);
+		assertThat(metricRegistry.getGauges().get("resilience4j.asyncRetry.testName." + SUCCESSFUL_CALLS_WITHOUT_RETRY).getValue()).isEqualTo(0L);
+		assertThat(metricRegistry.getGauges().get("resilience4j.asyncRetry.testName." + FAILED_CALLS_WITH_RETRY).getValue()).isEqualTo(1L);
+		assertThat(metricRegistry.getGauges().get("resilience4j.asyncRetry.testName." + FAILED_CALLS_WITHOUT_RETRY).getValue()).isEqualTo(0L);
+	}
 
-        String value = awaitResult(retry.executeCompletionStage(scheduler, helloWorldService::returnHelloWorld));
+	@Test
+	public void shouldUseCustomPrefix() {
+		//Given
+		AsyncRetryRegistry retryRegistry = AsyncRetryRegistry.ofDefaults();
+		AsyncRetry retry = retryRegistry.retry("testName");
+		metricRegistry.registerAll(AsyncRetryMetrics.ofAsyncRetryRegistry("testPrefix", retryRegistry));
 
-        //Then
-        assertThat(value).isEqualTo("Hello world");
-        // Then the helloWorldService should be invoked 1 time
-        BDDMockito.then(helloWorldService).should(times(1)).returnHelloWorld();
-        assertThat(metricRegistry.getMetrics()).hasSize(4);
-        assertThat(metricRegistry.getGauges().get("testPrefix.testName.AsyncRetry." + SUCCESSFUL_CALLS_WITH_RETRY).getValue()).isEqualTo(0L);
-        assertThat(metricRegistry.getGauges().get("testPrefix.testName.AsyncRetry." + SUCCESSFUL_CALLS_WITHOUT_RETRY).getValue()).isEqualTo(1L);
-        assertThat(metricRegistry.getGauges().get("testPrefix.testName.AsyncRetry." + FAILED_CALLS_WITH_RETRY).getValue()).isEqualTo(0L);
-        assertThat(metricRegistry.getGauges().get("testPrefix.testName.AsyncRetry." + FAILED_CALLS_WITHOUT_RETRY).getValue()).isEqualTo(0L);
-    }
+		// Given the HelloWorldService returns Hello world
+		BDDMockito.given(helloWorldService.returnHelloWorld()).willReturn(CompletableFuture.completedFuture("Hello world"));
 
-    private static <T> CompletableFuture<T> failedFuture(Throwable t) {
-        CompletableFuture<T> future = new CompletableFuture<>();
-        future.completeExceptionally(t);
-        return future;
-    }
+		String value = awaitResult(retry.executeCompletionStage(scheduler, helloWorldService::returnHelloWorld));
 
-    private static <T> T awaitResult(CompletionStage<T> completionStage) {
-        try {
-            return completionStage.toCompletableFuture().get(5, TimeUnit.SECONDS);
-        } catch (InterruptedException | TimeoutException e) {
-            throw new AssertionError(e);
-        } catch (ExecutionException e) {
-            throw new RuntimeExecutionException(e.getCause());
-        }
-    }
+		//Then
+		assertThat(value).isEqualTo("Hello world");
+		// Then the helloWorldService should be invoked 1 time
+		BDDMockito.then(helloWorldService).should(times(1)).returnHelloWorld();
+		assertThat(metricRegistry.getMetrics()).hasSize(4);
+		assertThat(metricRegistry.getGauges().get("testPrefix.testName." + SUCCESSFUL_CALLS_WITH_RETRY).getValue()).isEqualTo(0L);
+		assertThat(metricRegistry.getGauges().get("testPrefix.testName." + SUCCESSFUL_CALLS_WITHOUT_RETRY).getValue()).isEqualTo(1L);
+		assertThat(metricRegistry.getGauges().get("testPrefix.testName." + FAILED_CALLS_WITH_RETRY).getValue()).isEqualTo(0L);
+		assertThat(metricRegistry.getGauges().get("testPrefix.testName." + FAILED_CALLS_WITHOUT_RETRY).getValue()).isEqualTo(0L);
+	}
 
-    private static class RuntimeExecutionException extends RuntimeException {
-        RuntimeExecutionException(Throwable cause) {
-            super(cause);
-        }
-    }
+	private static class RuntimeExecutionException extends RuntimeException {
+		RuntimeExecutionException(Throwable cause) {
+			super(cause);
+		}
+	}
 }

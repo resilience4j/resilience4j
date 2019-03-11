@@ -16,7 +16,7 @@
 package io.github.resilience4j.micrometer;
 
 import static io.github.resilience4j.micrometer.MetricUtils.getName;
-import static io.github.resilience4j.retry.utils.MetricNames.DEFAULT_PREFIX;
+import static io.github.resilience4j.retry.utils.MetricNames.DEFAULT_PREFIX_ASYNC;
 import static io.github.resilience4j.retry.utils.MetricNames.FAILED_CALLS_WITHOUT_RETRY;
 import static io.github.resilience4j.retry.utils.MetricNames.FAILED_CALLS_WITH_RETRY;
 import static io.github.resilience4j.retry.utils.MetricNames.SUCCESSFUL_CALLS_WITHOUT_RETRY;
@@ -36,7 +36,7 @@ public class AsyncRetryMetrics implements MeterBinder {
 	private final String prefix;
 
 	private AsyncRetryMetrics(Iterable<AsyncRetry> retries) {
-		this(retries, DEFAULT_PREFIX);
+		this(retries, DEFAULT_PREFIX_ASYNC);
 	}
 
 	private AsyncRetryMetrics(Iterable<AsyncRetry> retries, String prefix) {
