@@ -135,13 +135,13 @@ public class RetryConfigurationProperties {
 	private void configureRetryIntervalFunction(BackendProperties properties, RetryConfig.Builder<Object> builder) {
 		if (properties.getWaitDuration() != 0) {
 			long waitDuration = properties.getWaitDuration();
-			if (properties.enableExponentialBackoff) {
+			if (properties.getEnableExponentialBackoff()) {
 				if (properties.getExponentialBackoffMultiplier() != 0) {
 					builder.intervalFunction(IntervalFunction.ofExponentialBackoff(waitDuration, properties.getExponentialBackoffMultiplier()));
 				} else {
 					builder.intervalFunction(IntervalFunction.ofExponentialBackoff(properties.getWaitDuration()));
 				}
-			} else if (properties.enableRandomizedWait) {
+			} else if (properties.getEnableRandomizedWait()) {
 				if (properties.getRandomizedWaitFactor() != 0) {
 					builder.intervalFunction(IntervalFunction.ofRandomized(waitDuration, properties.getRandomizedWaitFactor()));
 				} else {
@@ -190,11 +190,6 @@ public class RetryConfigurationProperties {
 		 */
 		@Min(1)
 		private Integer eventConsumerBufferSize = 100;
-		/*
-		 * flag to register retry health indicator or not
-		 */
-		@NotNull
-		private Boolean registerHealthIndicator = true;
 		/*
 		 * flag to enable Exponential backoff policy or not for retry policy delay
 		 */
@@ -268,14 +263,6 @@ public class RetryConfigurationProperties {
 
 		public void setEventConsumerBufferSize(Integer eventConsumerBufferSize) {
 			this.eventConsumerBufferSize = eventConsumerBufferSize;
-		}
-
-		public Boolean getRegisterHealthIndicator() {
-			return registerHealthIndicator;
-		}
-
-		public void setRegisterHealthIndicator(Boolean registerHealthIndicator) {
-			this.registerHealthIndicator = registerHealthIndicator;
 		}
 
 		public Boolean getEnableExponentialBackoff() {

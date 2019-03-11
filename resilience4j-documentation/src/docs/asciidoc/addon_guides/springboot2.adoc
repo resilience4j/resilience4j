@@ -22,32 +22,8 @@ Spring Boot Actuator health information can be used to check the status of your 
 It is often used by monitoring software to alert someone if a production system has serious issues.
 
 ==== Retry
-When you enable retry , the service calls that has retry/ async retry annotation, it will publish the status
-and metrics via custom `RetryHealthIndicator`  and `AsyncRetryHealthIndicator`
+When you enable retry ,Metrics are automatically published on the Metrics endpoint.
 
-For example :
-[source,json]
-----
- "retryBackendARetry": {
-      "status": "UP",
-      "details": {
-        "failedCallsWithoutRetry": "0%",
-        "failedCallsWithRetry": 1,
-        "successCalls": 1,
-        "successCallsWithRetry": 0
-      }
-    },
- "retryBackendAAsyncRetry": {
-      "status": "UP",
-      "details": {
-        "failedCallsWithoutRetry": "0%",
-        "failedCallsWithRetry": 0,
-        "successCalls": 0,
-        "successCallsWithRetry": 0
-      }
-    }
-----
-Metrics are automatically published on the Metrics endpoint.
 For example:
 
 [source,json]
@@ -193,7 +169,6 @@ resilience4j.retry:
     retryBackendA:
       maxRetryAttempts: 3
       waitDuration: 600
-      registerHealthIndicator: true
       eventConsumerBufferSize: 100
       enableExponentialBackoff: false
       exponentialBackoffMultiplier: 2

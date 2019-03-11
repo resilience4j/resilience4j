@@ -104,14 +104,8 @@ public class RetryAutoConfigurationTest {
 		retryEventList = restTemplate.getForEntity("/actuator/retryevents/retryBackendA", RetryEventsEndpointResponse.class);
 		assertThat(retryEventList.getBody().getRetryEvents()).hasSize(3);
 
-		// expect health indicator for retryBackendARetry
-		ResponseEntity<HealthResponse> healthResponse = restTemplate.getForEntity("/actuator/health", HealthResponse.class);
-		assertThat(healthResponse.getBody().getDetails()).isNotNull();
-		assertThat(healthResponse.getBody().getDetails().get("retryBackendARetry")).isNotNull();
-
 		assertThat(retry.getRetryConfig().getExceptionPredicate().test(new IOException())).isTrue();
 		assertThat(retry.getRetryConfig().getExceptionPredicate().test(new IgnoredException())).isFalse();
-
 
 		// expect aspect configured as defined in application.yml
 		assertThat(retryAspect.getOrder()).isEqualTo(399);
@@ -161,10 +155,8 @@ public class RetryAutoConfigurationTest {
 		retryEventList = restTemplate.getForEntity("/actuator/retryevents/retryBackendA", RetryEventsEndpointResponse.class);
 		assertThat(retryEventList.getBody().getRetryEvents()).hasSize(6);
 
-
 		assertThat(retry.getRetryConfig().getExceptionPredicate().test(new IOException())).isTrue();
 		assertThat(retry.getRetryConfig().getExceptionPredicate().test(new IgnoredException())).isFalse();
-
 
 		// expect aspect configured as defined in application.yml
 		assertThat(retryAspect.getOrder()).isEqualTo(399);
