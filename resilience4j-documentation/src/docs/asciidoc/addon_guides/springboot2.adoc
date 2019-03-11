@@ -21,6 +21,54 @@ dependencies {
 Spring Boot Actuator health information can be used to check the status of your running application.
 It is often used by monitoring software to alert someone if a production system has serious issues.
 
+==== Retry
+When you enable retry , the service calls that has retry/ async retry annotation, it will publish the status
+and metrics via custom `RetryHealthIndicator`  and `AsyncRetryHealthIndicator`
+
+For example :
+[source,json]
+----
+ "retryBackendARetry": {
+      "status": "UP",
+      "details": {
+        "failedCallsWithoutRetry": "0%",
+        "failedCallsWithRetry": 1,
+        "successCalls": 1,
+        "successCallsWithRetry": 0
+      }
+    },
+    "retryBackendAAsyncRetry": {
+      "status": "UP",
+      "details": {
+        "failedCallsWithoutRetry": "0%",
+        "failedCallsWithRetry": 0,
+        "successCalls": 0,
+        "successCallsWithRetry": 0
+      }
+    }
+----
+Metrics are automatically published on the Metrics endpoint.
+For example:
+
+[source,json]
+----
+{
+    "names": [
+        "resilience4j.retry.backendA.failedCallsWithoutRetry",
+        "resilience4j.retry.backendA.failedCallsWithRetry",
+        "resilience4j.retry.backendA.successCalls",
+        "resilience4j.retry.backendA.successCallsWithRetry",
+        "resilience4j.asyncRetry.backendA.failedCallsWithoutRetry",
+        "resilience4j.asyncRetry.backendB.failedCallsWithRetry",
+        "resilience4j.asyncRetry.backendB.successCalls",
+        "resilience4j.asyncRetry.backendB.successCallsWithRetry"
+        ]
+}
+----
+
+When you want to publish Retry/AsyncRetry endpoints on the Prometheus endpoint, you have to add the dependency `io.micrometer:micrometer-registry-prometheus`.
+and you have same metrics exposed there , check circuit breaker below for more information about the example.
+
 ==== CircuitBreaker
 This demo publishes the status and metrics of all CircuitBreakers via a custom `CircuitBreakerHealthIndicator`.
 A closed CircuitBreaker state is mapped to UP, an open state to DOWN and a half-open state to UNKNOWN.
@@ -134,6 +182,70 @@ For example:
 
 ==== Configuration
 
+===== Retry
+You can configure your Retries in Spring Boot's `application.yml` config file.
+For example
+[source,yaml]
+----
+resilience4j.retry:
+  retryAspectOrder: 399
+  backends:
+    retryBackendA:
+      maxRetryAttempts: 3
+      waitDuration: 600
+      registerHealthIndicator: true
+      eventConsumerBufferSize: 100
+      enableExponentialBackoff: false
+      exponentialBackoffMultiplier: 2
+      enableRandomizedWait: false
+      randomizedWaitFactor: 2
+      retryExceptionPredicate: io.github.resilience4j.circuitbreaker.RecordFailurePredicate
+      retryExceptions:
+      - java.io.IOException
+      ignoreExceptions:
+      - io.github.resilience4j.circuitbreaker.IgnoredException
+----
+The rules for Retry configuration :
+
+    - By default the same beck end configuration will be used for sync and async retry configuration if not defined otherwise.
+    - enableRandomizedWait and enableExponentialBackoff is false by default.
+    - registerHealthIndicator is true by default.
+    - You can not enable both enableRandomizedWait and enableExponentialBackoff , validation exception will be thrown if it happen.
+    - If exponentialBackoffMultiplier is not provided if enableExponentialBackoff is enabled , default ExponentialBackoff will be used , same story for enableRandomizedWait.
+
+The rules for Retry spring annotation usage  :
+
+    - You can use the same back-end configuration for both sync and async retry if you use both annotations in for the same backed method level wise only ,
+     if you mix annotations between class level and method level on the same back-end class , validation exception will be thrown
+    - For `AsyncRetry` annotation , please make sure the return type is instance of Java `CompletionStage` otherwise runtime exception will be thrown
+
+Code example of retry and async retry annotation usage in Java Spring component :
+[source,java]
+----
+@component
+public class RetryDummyServiceImpl implements RetryDummyService {
+
+@Retry(name = RetryDummyService.BACKEND)
+@Override
+public void doSomething(boolean throwBackendTrouble) throws IOException {
+	if (throwBackendTrouble) {
+		throw new IOException("Test Message");
+	}
+}
+
+@AsyncRetry(name = RetryDummyService.BACKEND)
+@Override
+public CompletionStage<String> doSomethingAsync(boolean throwException) throws IOException {
+	if (throwException) {
+		throw new IOException("Test Message");
+	} else {
+		return CompletableFuture.supplyAsync(() -> "test");
+	}
+}
+
+}
+----
+
 ===== CircuitBreaker
 You can configure your CircuitBreakers in Spring Boot's `application.yml` config file.
 For example
@@ -197,6 +309,82 @@ By default `CircuitBreaker` will be executed BEFORE `RateLimiter`.
 WARNING: Please be careful changing of `CircuitBreaker`/`RateLimiter` ordering can drastically change application behavior.
 
 ==== Event Monitoring
+
+===== Retry
+
+The emitted Retry events are stored in a separate circular event consumer buffers. The size of a event consumer buffer can be configured per Retry in the application.yml file (eventConsumerBufferSize).
+The demo adds a custom Spring Boot Actuator endpoint which can be used to monitor the emitted events of your Retries.
+The endpoint `/actuator/retries` lists the names of all Retries instances.
+For example:
+----
+{
+  "retries": [
+    "retryBackendA",
+    "retryBackendA"
+  ]
+}
+----
+
+The endpoint `/actuator/retriesevents` lists the latest 100 emitted events of all Retries instances.
+
+----
+{
+  "retryEvents": [
+    {
+      "retryName": "retryBackendC",
+      "type": "RETRY",
+      "creationTime": "2019-03-11T17:32:49.648+01:00[Europe/Brussels]",
+      "errorMessage": "java.io.IOException: Test Message",
+      "numberOfAttempts": 1
+    },
+    {
+      "retryName": "retryBackendA",
+      "type": "RETRY",
+      "creationTime": "2019-03-11T17:32:50.259+01:00[Europe/Brussels]",
+      "errorMessage": "java.io.IOException: Test Message",
+      "numberOfAttempts": 2
+    },
+    {
+      "retryName": "retryBackendA",
+      "type": "ERROR",
+      "creationTime": "2019-03-11T17:32:50.866+01:00[Europe/Brussels]",
+      "errorMessage": "java.io.IOException: Test Message",
+      "numberOfAttempts": 3
+    }
+  ]
+}
+----
+
+The endpoint `/actuator/retryevents/{retryrName}` lists the latest emitted events of a specific Retry.
+For example `/actuator/retryevents/retryBackendA`:
+
+----
+{
+  "retryEvents": [
+    {
+      "retryName": "retryBackendA",
+      "type": "RETRY",
+      "creationTime": "2019-03-11T17:32:49.648+01:00[Europe/Brussels]",
+      "errorMessage": "java.io.IOException: Test Message",
+      "numberOfAttempts": 1
+    },
+    {
+      "retryName": "retryBackendA",
+      "type": "RETRY",
+      "creationTime": "2019-03-11T17:32:50.259+01:00[Europe/Brussels]",
+      "errorMessage": "java.io.IOException: Test Message",
+      "numberOfAttempts": 2
+    },
+    {
+      "retryName": "retryBackendA",
+      "type": "ERROR",
+      "creationTime": "2019-03-11T17:32:50.866+01:00[Europe/Brussels]",
+      "errorMessage": "java.io.IOException: Test Message",
+      "numberOfAttempts": 3
+    }
+  ]
+}
+----
 
 ===== CircuitBreaker
 
