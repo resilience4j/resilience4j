@@ -33,9 +33,9 @@ import java.lang.annotation.Target;
 public @interface AsyncRetry {
 
 	/**
-	 * Name of the circuit breaker.
+	 * Name of the async retry.
 	 *
-	 * @return the name of the circuit breaker
+	 * @return return name of the async retry
 	 */
 	String name();
 }

@@ -33,9 +33,9 @@ import java.lang.annotation.Target;
 public @interface Retry {
 
 	/**
-	 * Name of the circuit breaker.
+	 * Name of the sync retry.
 	 *
-	 * @return the name of the circuit breaker
+	 * @return the name of the sync retry.
 	 */
 	String name();
 }
