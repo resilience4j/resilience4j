@@ -67,6 +67,11 @@ public class AsyncRetryAspect implements Ordered {
 		if (method.getReturnType().isInstance(CompletionStage.class) || method.getReturnType().isInstance(CompletableFuture.class)) {
 			throw new IllegalStateException("You can not use async retry with methods that does not return CompletionStage or CompletableFuture");
 		}
+		if (method.getAnnotation(Retry.class) != null || method.getDeclaredAnnotation(Retry.class) != null) {
+			throw new IllegalStateException("You mix AsyncRetry and Retry annotations in not right way ," +
+					" you can use one of them class level and the other one method level in the same class," +
+					" if yon want to use both please use them ONLY method level and remove the class level usage   ");
+		}
 		String methodName = method.getDeclaringClass().getName() + "#" + method.getName();
 		if (backendMonitored == null) {
 			backendMonitored = getBackendMonitoredAnnotation(proceedingJoinPoint);
@@ -102,6 +107,9 @@ public class AsyncRetryAspect implements Ordered {
 		}
 		AsyncRetry retry = null;
 		Class<?> targetClass = proceedingJoinPoint.getTarget().getClass();
+		if (targetClass.getDeclaredAnnotation(Retry.class) != null || targetClass.getAnnotation(Retry.class) != null) {
+			throw new IllegalStateException("You can not have AsyncRetry and Retry annotation both defined on class level, please use only one of them ");
+		}
 		if (targetClass.isAnnotationPresent(AsyncRetry.class)) {
 			retry = targetClass.getAnnotation(AsyncRetry.class);
 			if (retry == null && logger.isDebugEnabled()) {

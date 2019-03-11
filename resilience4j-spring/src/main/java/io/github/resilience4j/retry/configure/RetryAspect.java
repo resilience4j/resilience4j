@@ -27,6 +27,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.core.Ordered;
 
 import io.github.resilience4j.retry.RetryRegistry;
+import io.github.resilience4j.retry.annotation.AsyncRetry;
 import io.github.resilience4j.retry.annotation.Retry;
 import io.vavr.CheckedFunction0;
 
@@ -59,6 +60,11 @@ public class RetryAspect implements Ordered {
 	@Around(value = "matchAnnotatedClassOrMethod(backendMonitored)", argNames = "proceedingJoinPoint, backendMonitored")
 	public Object retryAroundAdvice(ProceedingJoinPoint proceedingJoinPoint, Retry backendMonitored) throws Throwable {
 		Method method = ((MethodSignature) proceedingJoinPoint.getSignature()).getMethod();
+		if (method.getAnnotation(AsyncRetry.class) != null || method.getDeclaredAnnotation(AsyncRetry.class) != null) {
+			throw new IllegalStateException("You mix AsyncRetry and Retry annotations in not right way ," +
+					" you can use one of them class level and the other one method level in the same class," +
+					" if yon want to use both please use them ONLY method level and remove the class level usage   ");
+		}
 		String methodName = method.getDeclaringClass().getName() + "#" + method.getName();
 		if (backendMonitored == null) {
 			backendMonitored = getBackendMonitoredAnnotation(proceedingJoinPoint);
@@ -94,6 +100,9 @@ public class RetryAspect implements Ordered {
 		}
 		Retry retry = null;
 		Class<?> targetClass = proceedingJoinPoint.getTarget().getClass();
+		if (targetClass.getDeclaredAnnotation(AsyncRetry.class) != null || targetClass.getAnnotation(AsyncRetry.class) != null) {
+			throw new IllegalStateException("You can not have AsyncRetry and Retry annotation both defined on class level, please use only one of them ");
+		}
 		if (targetClass.isAnnotationPresent(Retry.class)) {
 			retry = targetClass.getAnnotation(Retry.class);
 			if (retry == null && logger.isDebugEnabled()) {
