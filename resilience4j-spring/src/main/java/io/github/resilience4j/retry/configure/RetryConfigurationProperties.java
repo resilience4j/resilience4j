@@ -44,7 +44,7 @@ public class RetryConfigurationProperties {
 	 * @param backend backend name
 	 * @return the retry configuration
 	 */
-	public RetryConfig createRetryBreakerConfig(String backend) {
+	public RetryConfig createRetryConfig(String backend) {
 		return createRetryConfig(getBackendProperties(backend));
 	}
 

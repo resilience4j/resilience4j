@@ -1,6 +1,5 @@
 package io.github.resilience4j.retry.autoconfigure;
 
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -84,7 +83,6 @@ public class RetryConfigurationOnMissingBean {
 	 */
 	@Bean
 	@ConditionalOnMissingBean
-	@Qualifier("syncRetryEventConsumerRegistry")
 	public EventConsumerRegistry<RetryEvent> retryEventConsumerRegistry() {
 		return retryConfiguration.retryEventConsumerRegistry();
 	}
@@ -98,7 +96,6 @@ public class RetryConfigurationOnMissingBean {
 	 */
 	@Bean
 	@ConditionalOnMissingBean
-	@Qualifier("asyncRetryEventConsumerRegistry")
 	public EventConsumerRegistry<RetryEvent> asyncRetryEventConsumerRegistry() {
 		return retryConfiguration.asyncRetryEventConsumerRegistry();
 	}

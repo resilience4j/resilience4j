@@ -47,7 +47,7 @@ public class RetryConfiguration {
 		RetryRegistry retryRegistry = new InMemoryRetryRegistry();
 		retryConfigurationProperties.getBackends().forEach(
 				(name, properties) -> {
-					RetryConfig retryConfig = retryConfigurationProperties.createRetryBreakerConfig(name);
+					RetryConfig retryConfig = retryConfigurationProperties.createRetryConfig(name);
 					Retry retry = retryRegistry.retry(name, retryConfig);
 					retry.getEventPublisher().onEvent(retryEventConsumerRegistry.createEventConsumer(name, properties.getEventConsumerBufferSize()));
 				}
@@ -65,7 +65,7 @@ public class RetryConfiguration {
 		AsyncRetryRegistry retryRegistry = new InMemoryAsyncRetryRegistry();
 		retryConfigurationProperties.getBackends().forEach(
 				(name, properties) -> {
-					RetryConfig retryConfig = retryConfigurationProperties.createRetryBreakerConfig(name);
+					RetryConfig retryConfig = retryConfigurationProperties.createRetryConfig(name);
 					AsyncRetry retry = retryRegistry.retry(name, retryConfig);
 					retry.getEventPublisher().onEvent(retryEventConsumerRegistry.createEventConsumer(name, properties.getEventConsumerBufferSize()));
 				}

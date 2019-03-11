@@ -81,7 +81,7 @@ public class RetryAspect implements Ordered {
 	 */
 	private io.github.resilience4j.retry.Retry getOrCreateRetry(String methodName, String backend) {
 		io.github.resilience4j.retry.Retry retry = retryRegistry.retry(backend,
-				() -> retryConfigurationProperties.createRetryBreakerConfig(backend));
+				() -> retryConfigurationProperties.createRetryConfig(backend));
 
 		if (logger.isDebugEnabled()) {
 			logger.debug("Created or retrieved retry '{}' with max attempts rate '{}'  for method: '{}'",
