@@ -72,7 +72,6 @@ public class RetryAutoConfigurationTest {
 	public void testRetryAutoConfiguration() throws IOException {
 		assertThat(retryRegistry).isNotNull();
 		assertThat(retryProperties).isNotNull();
-
 		try {
 			retryDummyService.doSomething(true);
 		} catch (IOException ex) {
@@ -105,10 +104,8 @@ public class RetryAutoConfigurationTest {
 		retryEventList = restTemplate.getForEntity("/retries/events/retryBackendA", RetryEventsEndpointResponse.class);
 		assertThat(retryEventList.getBody().getRetryEvents()).hasSize(3);
 
-
 		assertThat(retry.getRetryConfig().getExceptionPredicate().test(new IOException())).isTrue();
 		assertThat(retry.getRetryConfig().getExceptionPredicate().test(new IgnoredException())).isFalse();
-
 
 		// expect aspect configured as defined in application.yml
 		assertThat(retryAspect.getOrder()).isEqualTo(399);
