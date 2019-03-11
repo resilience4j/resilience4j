@@ -15,7 +15,11 @@
  */
 package io.github.resilience4j.circuitbreaker.annotation;
 
-import java.lang.annotation.*;
+import java.lang.annotation.Documented;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 /**
  * This annotation can be applied to a class or a specific method.
@@ -29,11 +33,17 @@ import java.lang.annotation.*;
 @Documented
 public @interface CircuitBreaker {
 
-    /**
-     * Name of the circuit breaker.
-     *
-     * @return the name of the circuit breaker
-     */
-    String name();
+	/**
+	 * Name of the circuit breaker.
+	 *
+	 * @return the name of the circuit breaker
+	 */
+	String name();
+
+	/**
+	 * @return the type of circuit breaker (default or webflux which is reactor circuit breaker)
+	 */
+	ApiType type() default ApiType.DEFAULT;
+
 
 }
