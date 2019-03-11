@@ -1,38 +1,40 @@
 resilience4j.circuitbreaker:
-    circuitBreakerAspectOrder: 400
-    backends:
-        backendA:
-            ringBufferSizeInClosedState: 6
-            ringBufferSizeInHalfOpenState: 2
-            waitDurationInOpenState: 5s
-            failureRateThreshold: 70
-            eventConsumerBufferSize: 10
-            recordFailurePredicate: io.github.resilience4j.circuitbreaker.RecordFailurePredicate
-            recordExceptions:
-                - io.github.resilience4j.circuitbreaker.RecordedException
-            ignoreExceptions:
-                - io.github.resilience4j.circuitbreaker.IgnoredException
-        backendB:
-            ringBufferSizeInClosedState: 10
-            ringBufferSizeInHalfOpenState: 5
-            waitDurationInOpenState: 5000
-            failureRateThreshold: 50
-            eventConsumerBufferSize: 10
-            registerHealthIndicator: false
+  circuitBreakerAspectOrder: 400
+  backends:
+    backendA:
+      ringBufferSizeInClosedState: 6
+      ringBufferSizeInHalfOpenState: 2
+      waitDurationInOpenState: 5s
+      failureRateThreshold: 70
+      eventConsumerBufferSize: 10
+      recordFailurePredicate: io.github.resilience4j.circuitbreaker.RecordFailurePredicate
+      recordExceptions:
+      - io.github.resilience4j.circuitbreaker.RecordedException
+      ignoreExceptions:
+      - io.github.resilience4j.circuitbreaker.IgnoredException
+    backendB:
+      ringBufferSizeInClosedState: 6
+      ringBufferSizeInHalfOpenState: 2
+      waitDurationInOpenState: 5s
+      failureRateThreshold: 70
+      eventConsumerBufferSize: 10
+      registerHealthIndicator: false
 
 resilience4j.ratelimiter:
-    rateLimiterAspectOrder: 401
-    limiters:
-        backendA:
-            limitForPeriod: 10
-            limitRefreshPeriodInMillis: 1000
-            timeoutInMillis: 0
-            subscribeForEvents: true
-            registerHealthIndicator: true
-        backendB:
-            limitForPeriod: 6
-            limitRefreshPeriodInMillis: 500
-            timeoutInMillis: 3000
+  rateLimiterAspectOrder: 401
+  limiters:
+    backendA:
+      limitForPeriod: 10
+      limitRefreshPeriodInMillis: 1000
+      timeoutInMillis: 0
+      subscribeForEvents: true
+      registerHealthIndicator: true
+    backendB:
+      limitForPeriod: 6
+      limitRefreshPeriodInMillis: 500
+      timeoutInMillis: 3000
+      subscribeForEvents: true
+      registerHealthIndicator: true
 
 management.security.enabled: false
 management.endpoints.web.exposure.include: '*'
