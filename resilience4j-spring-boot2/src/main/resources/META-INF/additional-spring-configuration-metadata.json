@@ -5,6 +5,12 @@
       "defaultValue": true,
       "description": "Whether to enable the circuitbreaker-metrics.",
       "type": "java.lang.Boolean"
+    },
+    {
+      "name": "resilience4j.retry.metrics.enabled",
+      "defaultValue": true,
+      "description": "Whether to enable the retry-metrics.",
+      "type": "java.lang.Boolean"
     }
   ]
 }
