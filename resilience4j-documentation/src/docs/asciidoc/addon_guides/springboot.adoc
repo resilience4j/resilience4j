@@ -22,7 +22,7 @@ Spring Boot Actuator health information can be used to check the status of your 
 It is often used by monitoring software to alert someone if a production system has serious issues.
 
 ==== Retry
-When you enable retry ,Metrics are automatically published on the Metrics endpoint.
+When you enable retry, metrics are automatically published on the metrics endpoint.
 
 For example:
 
@@ -183,7 +183,6 @@ The rules for Retry configuration :
 
     - By default the same back end configuration will be used for sync and async retry configuration if not defined otherwise.
     - enableRandomizedWait and enableExponentialBackoff is false by default.
-    - registerHealthIndicator is true by default.
     - You can not enable both enableRandomizedWait and enableExponentialBackoff , validation exception will be thrown if it happen.
     - If exponentialBackoffMultiplier is not provided if enableExponentialBackoff is enabled , default ExponentialBackoff will be used , same story for enableRandomizedWait.
 
