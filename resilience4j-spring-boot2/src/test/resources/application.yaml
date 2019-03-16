@@ -1,51 +1,64 @@
+resilience4j.retry:
+  retryAspectOrder: 399
+  backends:
+    retryBackendA:
+      maxRetryAttempts: 3
+      waitDuration: 600
+      retryExceptionPredicate: io.github.resilience4j.circuitbreaker.RecordFailurePredicate
+      retryExceptions:
+      - java.io.IOException
+      ignoreExceptions:
+      - io.github.resilience4j.circuitbreaker.IgnoredException
+
 resilience4j.circuitbreaker:
-    circuitBreakerAspectOrder: 400
-    sharedConfigs:
-        default:
-            ringBufferSizeInClosedState: 100
-            ringBufferSizeInHalfOpenState: 10
-            waitDurationInOpenState: 10000
-            failureRateThreshold: 60
-            eventConsumerBufferSize: 10
-            registerHealthIndicator: true
-    backends:
-        backendA:
-            ringBufferSizeInClosedState: 6
-            ringBufferSizeInHalfOpenState: 2
-            waitDurationInOpenState: 5s
-            failureRateThreshold: 70
-            eventConsumerBufferSize: 10
-            recordFailurePredicate: io.github.resilience4j.circuitbreaker.RecordFailurePredicate
-            recordExceptions:
-                - io.github.resilience4j.circuitbreaker.RecordedException
-            ignoreExceptions:
-                - io.github.resilience4j.circuitbreaker.IgnoredException
-        backendB:
-            ringBufferSizeInClosedState: 10
-            ringBufferSizeInHalfOpenState: 5
-            waitDurationInOpenState: 5000
-            failureRateThreshold: 50
-            eventConsumerBufferSize: 10
-            registerHealthIndicator: false
-        backendSharedA:
-            sharedConfigName: default
-        backendSharedB:
-            sharedConfigName: default
+  circuitBreakerAspectOrder: 400
+  sharedConfigs:
+    default:
+      ringBufferSizeInClosedState: 100
+      ringBufferSizeInHalfOpenState: 10
+      waitDurationInOpenState: 10000
+      failureRateThreshold: 60
+      eventConsumerBufferSize: 10
+      registerHealthIndicator: true
+  backends:
+    backendA:
+      ringBufferSizeInClosedState: 6
+      ringBufferSizeInHalfOpenState: 2
+      waitDurationInOpenState: 5s
+      failureRateThreshold: 70
+      eventConsumerBufferSize: 10
+      recordFailurePredicate: io.github.resilience4j.circuitbreaker.RecordFailurePredicate
+      recordExceptions:
+      - io.github.resilience4j.circuitbreaker.RecordedException
+      ignoreExceptions:
+      - io.github.resilience4j.circuitbreaker.IgnoredException
+    backendB:
+      ringBufferSizeInClosedState: 10
+      ringBufferSizeInHalfOpenState: 5
+      waitDurationInOpenState: 5000
+      failureRateThreshold: 50
+      eventConsumerBufferSize: 10
+      registerHealthIndicator: false
+    backendSharedA:
+      sharedConfigName: default
+    backendSharedB:
+      sharedConfigName: default
 
 resilience4j.ratelimiter:
-    rateLimiterAspectOrder: 401
-    limiters:
-        backendA:
-            limitForPeriod: 10
-            limitRefreshPeriodInMillis: 1000
-            timeoutInMillis: 0
-            subscribeForEvents: true
-            registerHealthIndicator: true
-        backendB:
-            limitForPeriod: 6
-            limitRefreshPeriodInMillis: 500
-            timeoutInMillis: 3000
+  rateLimiterAspectOrder: 401
+  limiters:
+    backendA:
+      limitForPeriod: 10
+      limitRefreshPeriodInMillis: 1000
+      timeoutInMillis: 0
+      subscribeForEvents: true
+      registerHealthIndicator: true
+    backendB:
+      limitForPeriod: 6
+      limitRefreshPeriodInMillis: 500
+      timeoutInMillis: 3000
 
 management.security.enabled: false
 management.endpoints.web.exposure.include: '*'
 management.endpoint.health.show-details: always
+

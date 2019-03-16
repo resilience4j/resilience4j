@@ -9,6 +9,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 @SpringBootApplication(scanBasePackages = {
         "io.github.resilience4j.circuitbreaker.autoconfigure",
         "io.github.resilience4j.ratelimiter.autoconfigure",
+        "io.github.resilience4j.retry.configure",
         "io.github.resilience4j.service.test"
 })
 public class TestApplication {

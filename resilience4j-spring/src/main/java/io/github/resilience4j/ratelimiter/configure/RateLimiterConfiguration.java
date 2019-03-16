@@ -64,6 +64,8 @@ public class RateLimiterConfiguration {
      * The EventConsumerRegistry is used to manage EventConsumer instances.
      * The EventConsumerRegistry is used by the RateLimiterHealthIndicator to show the latest RateLimiterEvents events
      * for each RateLimiter instance.
+     *
+     * @return The EventConsumerRegistry of RateLimiterEvent bean.
      */
     @Bean
     public EventConsumerRegistry<RateLimiterEvent> rateLimiterEventsConsumerRegistry() {

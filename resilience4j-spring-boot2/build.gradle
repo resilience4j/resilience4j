@@ -13,6 +13,7 @@ dependencies {
     testCompile ( libraries.spring_boot2_test )
     testCompile ( libraries.micrometer_prometheus )
     testCompile ( libraries.spring_boot2_web )
+    testCompile project(':resilience4j-reactor')
 }
 
 compileJava.dependsOn(processResources)

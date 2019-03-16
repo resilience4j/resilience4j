@@ -271,7 +271,9 @@ public class CircuitBreakerConfigurationProperties {
         }
 
         /**
-         * Sets if we should automaticly transition to half open after the timer has run out.
+         * Sets if we should automatically transition to half open after the timer has run out.
+         *
+         * @param automaticTransitionFromOpenToHalfOpenEnabled The flag for automatic transition to half open after the timer has run out.
          */
         public void setAutomaticTransitionFromOpenToHalfOpenEnabled(Boolean automaticTransitionFromOpenToHalfOpenEnabled) {
             this.automaticTransitionFromOpenToHalfOpenEnabled = automaticTransitionFromOpenToHalfOpenEnabled;

@@ -13,8 +13,7 @@ import java.util.concurrent.TimeUnit;
  */
 public class AutoTransitioner {
 
-    private static final Lazy<ScheduledExecutorService> executorService = Lazy.of(
-            Executors::newSingleThreadScheduledExecutor);
+    private static final Lazy<ScheduledExecutorService> executorService = Lazy.of(AutoTransitioner::autoTransitionerSchedulerFactory);
 
     private AutoTransitioner() {
     }
@@ -24,5 +23,13 @@ public class AutoTransitioner {
                 transition,
                 waitDurationInOpenState.toMillis(),
                 TimeUnit.MILLISECONDS);
+    }
+
+    private static ScheduledExecutorService autoTransitionerSchedulerFactory() {
+        return Executors.newSingleThreadScheduledExecutor(threadTask -> {
+            Thread thread = new Thread(threadTask, "AutomaticTransitionerFromOpenToHalfOpen");
+            thread.setDaemon(true);
+            return thread;
+        });
     }
 }

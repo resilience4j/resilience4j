@@ -60,6 +60,7 @@ public class RetryConfig {
 	 * Return the Predicate which evaluates if an result should be retried.
 	 * The Predicate must return true if the result should  be retried, otherwise it must return false.
 	 *
+	 * @param <T> The type of result.
 	 * @return the resultPredicate
 	 */
 	@SuppressWarnings("unchecked")
@@ -70,6 +71,7 @@ public class RetryConfig {
 	/**
 	 * Returns a builder to create a custom RetryConfig.
 	 *
+	 * @param <T> The type being built.
 	 * @return a {@link Builder}
 	 */
 	public static <T> Builder<T> custom() {

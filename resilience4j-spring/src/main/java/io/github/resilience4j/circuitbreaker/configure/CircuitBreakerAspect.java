@@ -27,8 +27,12 @@ import org.slf4j.LoggerFactory;
 import org.springframework.core.Ordered;
 
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
+import io.github.resilience4j.circuitbreaker.annotation.ApiType;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.utils.CircuitBreakerUtils;
+import io.github.resilience4j.reactor.circuitbreaker.operator.CircuitBreakerOperator;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 /**
  * This Spring AOP aspect intercepts all methods which are annotated with a {@link CircuitBreaker} annotation.
@@ -38,89 +42,127 @@ import io.github.resilience4j.circuitbreaker.utils.CircuitBreakerUtils;
 @Aspect
 public class CircuitBreakerAspect implements Ordered {
 
-    private static final Logger logger = LoggerFactory.getLogger(CircuitBreakerAspect.class);
+	private static final Logger logger = LoggerFactory.getLogger(CircuitBreakerAspect.class);
 
-    private final CircuitBreakerConfigurationProperties circuitBreakerProperties;
-    private final CircuitBreakerRegistry circuitBreakerRegistry;
+	private final CircuitBreakerConfigurationProperties circuitBreakerProperties;
+	private final CircuitBreakerRegistry circuitBreakerRegistry;
 
-    public CircuitBreakerAspect(CircuitBreakerConfigurationProperties backendMonitorPropertiesRegistry, CircuitBreakerRegistry circuitBreakerRegistry) {
-        this.circuitBreakerProperties = backendMonitorPropertiesRegistry;
-        this.circuitBreakerRegistry = circuitBreakerRegistry;
-    }
+	public CircuitBreakerAspect(CircuitBreakerConfigurationProperties backendMonitorPropertiesRegistry, CircuitBreakerRegistry circuitBreakerRegistry) {
+		this.circuitBreakerProperties = backendMonitorPropertiesRegistry;
+		this.circuitBreakerRegistry = circuitBreakerRegistry;
+	}
 
-    @Pointcut(value = "@within(circuitBreaker) || @annotation(circuitBreaker)", argNames = "circuitBreaker")
-    public void matchAnnotatedClassOrMethod(CircuitBreaker circuitBreaker) {
-    }
+	@Pointcut(value = "@within(circuitBreaker) || @annotation(circuitBreaker)", argNames = "circuitBreaker")
+	public void matchAnnotatedClassOrMethod(CircuitBreaker circuitBreaker) {
+	}
 
-    @Around(value = "matchAnnotatedClassOrMethod(backendMonitored)", argNames = "proceedingJoinPoint, backendMonitored")
-    public Object circuitBreakerAroundAdvice(ProceedingJoinPoint proceedingJoinPoint, CircuitBreaker backendMonitored) throws Throwable {
-        Method method = ((MethodSignature) proceedingJoinPoint.getSignature()).getMethod();
-        String methodName = method.getDeclaringClass().getName() + "#" + method.getName();
-        if (backendMonitored == null) {
-            backendMonitored = getBackendMonitoredAnnotation(proceedingJoinPoint);
-        }
-        String backend = backendMonitored.name();
-        io.github.resilience4j.circuitbreaker.CircuitBreaker circuitBreaker = getOrCreateCircuitBreaker(methodName, backend);
-        return handleJoinPoint(proceedingJoinPoint, circuitBreaker, methodName);
-    }
+	@Around(value = "matchAnnotatedClassOrMethod(backendMonitored)", argNames = "proceedingJoinPoint, backendMonitored")
+	public Object circuitBreakerAroundAdvice(ProceedingJoinPoint proceedingJoinPoint, CircuitBreaker backendMonitored) throws Throwable {
+		Method method = ((MethodSignature) proceedingJoinPoint.getSignature()).getMethod();
+		String methodName = method.getDeclaringClass().getName() + "#" + method.getName();
+		if (backendMonitored == null) {
+			backendMonitored = getBackendMonitoredAnnotation(proceedingJoinPoint);
+		}
+		String backend = backendMonitored.name();
+		ApiType type = backendMonitored.type();
+		io.github.resilience4j.circuitbreaker.CircuitBreaker circuitBreaker = getOrCreateCircuitBreaker(methodName, backend);
+		return handleJoinPoint(proceedingJoinPoint, circuitBreaker, methodName, type);
+	}
 
-    private io.github.resilience4j.circuitbreaker.CircuitBreaker getOrCreateCircuitBreaker(String methodName, String backend) {
-        io.github.resilience4j.circuitbreaker.CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker(backend,
-                () -> circuitBreakerProperties.createCircuitBreakerConfig(backend));
+	private io.github.resilience4j.circuitbreaker.CircuitBreaker getOrCreateCircuitBreaker(String methodName, String backend) {
+		io.github.resilience4j.circuitbreaker.CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker(backend,
+				() -> circuitBreakerProperties.createCircuitBreakerConfig(backend));
 
-        if (logger.isDebugEnabled()) {
-            logger.debug("Created or retrieved circuit breaker '{}' with failure rate '{}' and wait interval'{}' for method: '{}'",
-                    backend, circuitBreaker.getCircuitBreakerConfig().getFailureRateThreshold(),
-                    circuitBreaker.getCircuitBreakerConfig().getWaitDurationInOpenState(), methodName);
-        }
+		if (logger.isDebugEnabled()) {
+			logger.debug("Created or retrieved circuit breaker '{}' with failure rate '{}' and wait interval'{}' for method: '{}'",
+					backend, circuitBreaker.getCircuitBreakerConfig().getFailureRateThreshold(),
+					circuitBreaker.getCircuitBreakerConfig().getWaitDurationInOpenState(), methodName);
+		}
 
-        return circuitBreaker;
-    }
+		return circuitBreaker;
+	}
 
-    private CircuitBreaker getBackendMonitoredAnnotation(ProceedingJoinPoint proceedingJoinPoint) {
-        if (logger.isDebugEnabled()) {
-            logger.debug("circuitBreaker parameter is null");
-        }
-        CircuitBreaker circuitBreaker = null;
-        Class<?> targetClass = proceedingJoinPoint.getTarget().getClass();
-        if (targetClass.isAnnotationPresent(CircuitBreaker.class)) {
-            circuitBreaker = targetClass.getAnnotation(CircuitBreaker.class);
-            if (circuitBreaker == null) {
-                if (logger.isDebugEnabled()) {
-                    logger.debug("TargetClass has no annotation 'CircuitBreaker'");
-                }
-                circuitBreaker = targetClass.getDeclaredAnnotation(CircuitBreaker.class);
-                if (circuitBreaker == null) {
-                    if (logger.isDebugEnabled()) {
-                        logger.debug("TargetClass has no declared annotation 'CircuitBreaker'");
-                    }
-                }
-            }
-        }
-        return circuitBreaker;
-    }
+	private CircuitBreaker getBackendMonitoredAnnotation(ProceedingJoinPoint proceedingJoinPoint) {
+		if (logger.isDebugEnabled()) {
+			logger.debug("circuitBreaker parameter is null");
+		}
+		CircuitBreaker circuitBreaker = null;
+		Class<?> targetClass = proceedingJoinPoint.getTarget().getClass();
+		if (targetClass.isAnnotationPresent(CircuitBreaker.class)) {
+			circuitBreaker = targetClass.getAnnotation(CircuitBreaker.class);
+			if (circuitBreaker == null && logger.isDebugEnabled()) {
+				logger.debug("TargetClass has no annotation 'CircuitBreaker'");
+				circuitBreaker = targetClass.getDeclaredAnnotation(CircuitBreaker.class);
+				if (circuitBreaker == null && logger.isDebugEnabled()) {
+					logger.debug("TargetClass has no declared annotation 'CircuitBreaker'");
+				}
+			}
+		}
+		return circuitBreaker;
+	}
 
-    private Object handleJoinPoint(ProceedingJoinPoint proceedingJoinPoint, io.github.resilience4j.circuitbreaker.CircuitBreaker circuitBreaker, String methodName) throws Throwable {
-        CircuitBreakerUtils.isCallPermitted(circuitBreaker);
-        long start = System.nanoTime();
-        try {
-            Object returnValue = proceedingJoinPoint.proceed();
+	private Object handleJoinPoint(ProceedingJoinPoint proceedingJoinPoint, io.github.resilience4j.circuitbreaker.CircuitBreaker circuitBreaker, String methodName, ApiType type) throws Throwable {
+		if (type == ApiType.WEBFLUX) {
+			return defaultWebFlux(proceedingJoinPoint, circuitBreaker, methodName);
+		} else {
+			return defaultHandling(proceedingJoinPoint, circuitBreaker, methodName);
+		}
+	}
 
-            long durationInNanos = System.nanoTime() - start;
-            circuitBreaker.onSuccess(durationInNanos);
-            return returnValue;
-        } catch (Throwable throwable) {
-            long durationInNanos = System.nanoTime() - start;
-            circuitBreaker.onError(durationInNanos, throwable);
-            if (logger.isDebugEnabled()) {
-                logger.debug("Invocation of method '" + methodName + "' failed!", throwable);
-            }
-            throw throwable;
-        }
-    }
+	/**
+	 * handle the Spring web flux (Flux /Mono) return types AOP based into reactor circuit-breaker
+	 * See {@link io.github.resilience4j.reactor.circuitbreaker.operator.CircuitBreakerOperator} for details.
+	 */
+	@SuppressWarnings("unchecked")
+	private Object defaultWebFlux(ProceedingJoinPoint proceedingJoinPoint, io.github.resilience4j.circuitbreaker.CircuitBreaker circuitBreaker, String methodName) throws Throwable {
+		CircuitBreakerUtils.isCallPermitted(circuitBreaker);
+		long start = System.nanoTime();
+		try {
+			Object returnValue = proceedingJoinPoint.proceed();
+			if (returnValue instanceof Flux) {
+				Flux fluxReturnValue = (Flux) returnValue;
+				return fluxReturnValue.transform(CircuitBreakerOperator.of(circuitBreaker));
+			} else if (returnValue instanceof Mono) {
+				Mono monoReturnValue = (Mono) returnValue;
+				return monoReturnValue.transform(CircuitBreakerOperator.of(circuitBreaker));
+			} else {
+				throw new IllegalArgumentException("Not Supported type for the circuit breaker in web flux :" + returnValue.getClass().getName());
 
-    @Override
-    public int getOrder() {
-        return circuitBreakerProperties.getCircuitBreakerAspectOrder();
-    }
+			}
+		} catch (Throwable throwable) {
+			long durationInNanos = System.nanoTime() - start;
+			circuitBreaker.onError(durationInNanos, throwable);
+			if (logger.isDebugEnabled()) {
+				logger.debug("Invocation of method '" + methodName + "' failed!", throwable);
+			}
+			throw throwable;
+		}
+	}
+
+	/**
+	 * the default Java types handling for the circuit breaker AOP
+	 */
+	private Object defaultHandling(ProceedingJoinPoint proceedingJoinPoint, io.github.resilience4j.circuitbreaker.CircuitBreaker circuitBreaker, String methodName) throws Throwable {
+		CircuitBreakerUtils.isCallPermitted(circuitBreaker);
+		long start = System.nanoTime();
+		try {
+			Object returnValue = proceedingJoinPoint.proceed();
+
+			long durationInNanos = System.nanoTime() - start;
+			circuitBreaker.onSuccess(durationInNanos);
+			return returnValue;
+		} catch (Throwable throwable) {
+			long durationInNanos = System.nanoTime() - start;
+			circuitBreaker.onError(durationInNanos, throwable);
+			if (logger.isDebugEnabled()) {
+				logger.debug("Invocation of method '" + methodName + "' failed!", throwable);
+			}
+			throw throwable;
+		}
+	}
+
+	@Override
+	public int getOrder() {
+		return circuitBreakerProperties.getCircuitBreakerAspectOrder();
+	}
 }
