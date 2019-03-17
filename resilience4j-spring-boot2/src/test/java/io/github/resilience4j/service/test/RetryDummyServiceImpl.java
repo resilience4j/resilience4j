@@ -14,7 +14,7 @@ import io.github.resilience4j.retry.annotation.Retry;
 @Component
 public class RetryDummyServiceImpl implements RetryDummyService {
 
-	@Retry(name = RetryDummyService.BACKEND)
+	@Retry(name = RetryDummyService.BACKEND_A)
 	@Override
 	public void doSomething(boolean throwBackendTrouble) throws IOException {
 		if (throwBackendTrouble) {
@@ -22,7 +22,7 @@ public class RetryDummyServiceImpl implements RetryDummyService {
 		}
 	}
 
-	@AsyncRetry(name = RetryDummyService.BACKEND)
+	@AsyncRetry(name = RetryDummyService.BACKEND_B)
 	@Override
 	public CompletionStage<String> doSomethingAsync(boolean throwException) throws IOException {
 		if (throwException) {
