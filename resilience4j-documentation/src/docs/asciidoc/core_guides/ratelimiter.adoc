@@ -13,7 +13,7 @@ So it also have in-memory RateLimiterRegistry and RateLimiterConfig where you ca
 [source,java]
 ----
 // For example you want to restrict the calling rate of some method to be not higher than 10 req/ms.
-RateLimiterConfig config = RateLimiterConfig.builder()
+RateLimiterConfig config = RateLimiterConfig.custom()
     .limitRefreshPeriod(Duration.ofMillis(1))
     .limitForPeriod(10)
     .timeoutDuration(Duration.ofMillis(25))
