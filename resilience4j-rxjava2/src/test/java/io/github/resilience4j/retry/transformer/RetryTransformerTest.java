@@ -19,9 +19,7 @@ package io.github.resilience4j.retry.transformer;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryConfig;
 import io.github.resilience4j.test.HelloWorldService;
-import io.reactivex.Flowable;
-import io.reactivex.Observable;
-import io.reactivex.Single;
+import io.reactivex.*;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.BDDMockito;
@@ -32,18 +30,20 @@ import java.io.IOException;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
 
 public class RetryTransformerTest {
 
     private HelloWorldService helloWorldService;
 
     @Before
-    public void setUp(){
+    public void setUp() {
         helloWorldService = Mockito.mock(HelloWorldService.class);
     }
 
     @Test
-    public void shouldReturnOnCompleteUsingSingle() {
+    public void returnOnCompleteUsingSingle() {
         //Given
         RetryConfig config = RetryConfig.ofDefaults();
         Retry retry = Retry.of("testName", config);
@@ -81,7 +81,7 @@ public class RetryTransformerTest {
     }
 
     @Test
-    public void shouldReturnOnErrorUsingSingle() {
+    public void returnOnErrorUsingSingle() {
         //Given
         RetryConfig config = RetryConfig.ofDefaults();
         Retry retry = Retry.of("testName", config);
@@ -113,7 +113,7 @@ public class RetryTransformerTest {
     }
 
     @Test
-    public void shouldNotRetryFromPredicateUsingSingle() {
+    public void doNotRetryFromPredicateUsingSingle() {
         //Given
         RetryConfig config = RetryConfig.custom()
                 .retryOnException(t -> t instanceof IOException)
@@ -138,7 +138,289 @@ public class RetryTransformerTest {
     }
 
     @Test
-    public void shouldReturnOnCompleteUsingObservable() {
+    public void retryOnResultUsingSingle() {
+        //Given
+        RetryConfig config = RetryConfig.<String>custom()
+                .retryOnResult("retry"::equals)
+                .maxAttempts(3).build();
+        Retry retry = Retry.of("testName", config);
+        given(helloWorldService.returnHelloWorld())
+                .willReturn("retry")
+                .willReturn("success");
+
+        //When
+        Single.fromCallable(helloWorldService::returnHelloWorld)
+                .compose(RetryTransformer.of(retry))
+                .test()
+                .assertValueCount(1)
+                .assertValue("success")
+                .assertComplete()
+                .assertSubscribed();
+        //Then
+        BDDMockito.then(helloWorldService).should(Mockito.times(2)).returnHelloWorld();
+        Retry.Metrics metrics = retry.getMetrics();
+
+        assertThat(metrics.getNumberOfFailedCallsWithoutRetryAttempt()).isEqualTo(0);
+        assertThat(metrics.getNumberOfSuccessfulCallsWithRetryAttempt()).isEqualTo(1);
+    }
+
+    @Test
+    public void retryOnResultFailAfterMaxAttemptsUsingSingle() {
+        //Given
+        RetryConfig config = RetryConfig.<String>custom()
+                .retryOnResult("retry"::equals)
+                .maxAttempts(3).build();
+        Retry retry = Retry.of("testName", config);
+        given(helloWorldService.returnHelloWorld())
+                .willReturn("retry");
+
+        //When
+        Single.fromCallable(helloWorldService::returnHelloWorld)
+                .compose(RetryTransformer.of(retry))
+                .test()
+                .assertValueCount(1)
+                .assertValue("retry")
+                .assertComplete()
+                .assertSubscribed();
+        //Then
+        BDDMockito.then(helloWorldService).should(Mockito.times(3)).returnHelloWorld();
+    }
+
+    @Test
+    public void returnOnCompleteUsingMaybe() {
+        //Given
+        RetryConfig config = RetryConfig.ofDefaults();
+        Retry retry = Retry.of("testName", config);
+        RetryTransformer<Object> retryTransformer = RetryTransformer.of(retry);
+
+        given(helloWorldService.returnHelloWorld())
+                .willReturn("Hello world")
+                .willThrow(new WebServiceException("BAM!"))
+                .willThrow(new WebServiceException("BAM!"))
+                .willReturn("Hello world");
+
+        //When
+        Maybe.fromCallable(helloWorldService::returnHelloWorld)
+                .compose(retryTransformer)
+                .test()
+                .assertValueCount(1)
+                .assertValues("Hello world")
+                .assertComplete();
+
+        Maybe.fromCallable(helloWorldService::returnHelloWorld)
+                .compose(retryTransformer)
+                .test()
+                .assertValueCount(1)
+                .assertValues("Hello world")
+                .assertComplete();
+
+        //Then
+        BDDMockito.then(helloWorldService).should(Mockito.times(4)).returnHelloWorld();
+        Retry.Metrics metrics = retry.getMetrics();
+
+        assertThat(metrics.getNumberOfSuccessfulCallsWithoutRetryAttempt()).isEqualTo(1);
+        assertThat(metrics.getNumberOfSuccessfulCallsWithRetryAttempt()).isEqualTo(1);
+        assertThat(metrics.getNumberOfFailedCallsWithRetryAttempt()).isEqualTo(0);
+        assertThat(metrics.getNumberOfFailedCallsWithoutRetryAttempt()).isEqualTo(0);
+    }
+
+    @Test
+    public void returnOnErrorUsingMaybe() {
+        //Given
+        RetryConfig config = RetryConfig.ofDefaults();
+        Retry retry = Retry.of("testName", config);
+        RetryTransformer<Object> retryTransformer = RetryTransformer.of(retry);
+
+        given(helloWorldService.returnHelloWorld())
+                .willThrow(new WebServiceException("BAM!"));
+
+        //When
+        Maybe.fromCallable(helloWorldService::returnHelloWorld)
+                .compose(retryTransformer)
+                .test()
+                .assertError(WebServiceException.class)
+                .assertNotComplete()
+                .assertSubscribed();
+
+        Maybe.fromCallable(helloWorldService::returnHelloWorld)
+                .compose(retryTransformer)
+                .test()
+                .assertError(WebServiceException.class)
+                .assertNotComplete()
+                .assertSubscribed();
+        //Then
+        BDDMockito.then(helloWorldService).should(Mockito.times(6)).returnHelloWorld();
+        Retry.Metrics metrics = retry.getMetrics();
+
+        assertThat(metrics.getNumberOfFailedCallsWithRetryAttempt()).isEqualTo(2);
+        assertThat(metrics.getNumberOfFailedCallsWithoutRetryAttempt()).isEqualTo(0);
+    }
+
+    @Test
+    public void doNotRetryFromPredicateUsingMaybe() {
+        //Given
+        RetryConfig config = RetryConfig.custom()
+                .retryOnException(t -> t instanceof IOException)
+                .maxAttempts(3).build();
+        Retry retry = Retry.of("testName", config);
+        given(helloWorldService.returnHelloWorld())
+                .willThrow(new WebServiceException("BAM!"));
+
+        //When
+        Maybe.fromCallable(helloWorldService::returnHelloWorld)
+                .compose(RetryTransformer.of(retry))
+                .test()
+                .assertError(WebServiceException.class)
+                .assertNotComplete()
+                .assertSubscribed();
+        //Then
+        BDDMockito.then(helloWorldService).should(Mockito.times(1)).returnHelloWorld();
+        Retry.Metrics metrics = retry.getMetrics();
+
+        assertThat(metrics.getNumberOfFailedCallsWithoutRetryAttempt()).isEqualTo(1);
+        assertThat(metrics.getNumberOfFailedCallsWithRetryAttempt()).isEqualTo(0);
+    }
+
+    @Test
+    public void retryOnResultUsingMaybe() {
+        //Given
+        RetryConfig config = RetryConfig.<String>custom()
+                .retryOnResult("retry"::equals)
+                .maxAttempts(3).build();
+        Retry retry = Retry.of("testName", config);
+        given(helloWorldService.returnHelloWorld())
+                .willReturn("retry")
+                .willReturn("success");
+
+        //When
+        Maybe.fromCallable(helloWorldService::returnHelloWorld)
+                .compose(RetryTransformer.of(retry))
+                .test()
+                .assertValueCount(1)
+                .assertValue("success")
+                .assertComplete()
+                .assertSubscribed();
+        //Then
+        BDDMockito.then(helloWorldService).should(Mockito.times(2)).returnHelloWorld();
+        Retry.Metrics metrics = retry.getMetrics();
+
+        assertThat(metrics.getNumberOfFailedCallsWithoutRetryAttempt()).isEqualTo(0);
+        assertThat(metrics.getNumberOfSuccessfulCallsWithRetryAttempt()).isEqualTo(1);
+    }
+
+    @Test
+    public void retryOnResultFailAfterMaxAttemptsUsingMaybe() {
+        //Given
+        RetryConfig config = RetryConfig.<String>custom()
+                .retryOnResult("retry"::equals)
+                .maxAttempts(3).build();
+        Retry retry = Retry.of("testName", config);
+        given(helloWorldService.returnHelloWorld())
+                .willReturn("retry");
+
+        //When
+        Maybe.fromCallable(helloWorldService::returnHelloWorld)
+                .compose(RetryTransformer.of(retry))
+                .test()
+                .assertValueCount(1)
+                .assertValue("retry")
+                .assertComplete()
+                .assertSubscribed();
+        //Then
+        BDDMockito.then(helloWorldService).should(Mockito.times(3)).returnHelloWorld();
+    }
+
+    @Test
+    public void returnOnCompleteUsingCompletable() {
+        //Given
+        RetryConfig config = RetryConfig.ofDefaults();
+        Retry retry = Retry.of("testName", config);
+        RetryTransformer<Object> retryTransformer = RetryTransformer.of(retry);
+        doNothing()
+                .doThrow(new WebServiceException("BAM!"))
+                .doThrow(new WebServiceException("BAM!"))
+                .doNothing()
+                .when(helloWorldService).sayHelloWorld();
+
+        //When
+        Completable.fromRunnable(helloWorldService::sayHelloWorld)
+                .compose(retryTransformer)
+                .test()
+                .assertNoValues()
+                .assertComplete();
+
+        Completable.fromRunnable(helloWorldService::sayHelloWorld)
+                .compose(retryTransformer)
+                .test()
+                .assertNoValues()
+                .assertComplete();
+
+        //Then
+        BDDMockito.then(helloWorldService).should(Mockito.times(4)).sayHelloWorld();
+        Retry.Metrics metrics = retry.getMetrics();
+
+        assertThat(metrics.getNumberOfSuccessfulCallsWithoutRetryAttempt()).isEqualTo(1);
+        assertThat(metrics.getNumberOfSuccessfulCallsWithRetryAttempt()).isEqualTo(1);
+        assertThat(metrics.getNumberOfFailedCallsWithRetryAttempt()).isEqualTo(0);
+        assertThat(metrics.getNumberOfFailedCallsWithoutRetryAttempt()).isEqualTo(0);
+    }
+
+    @Test
+    public void returnOnErrorUsingCompletable() {
+        //Given
+        RetryConfig config = RetryConfig.ofDefaults();
+        Retry retry = Retry.of("testName", config);
+        RetryTransformer<Object> retryTransformer = RetryTransformer.of(retry);
+        doThrow(new WebServiceException("BAM!")).when(helloWorldService).sayHelloWorld();
+
+        //When
+        Completable.fromRunnable(helloWorldService::sayHelloWorld)
+                .compose(retryTransformer)
+                .test()
+                .assertError(WebServiceException.class)
+                .assertNotComplete()
+                .assertSubscribed();
+
+        Completable.fromRunnable(helloWorldService::sayHelloWorld)
+                .compose(retryTransformer)
+                .test()
+                .assertError(WebServiceException.class)
+                .assertNotComplete()
+                .assertSubscribed();
+        //Then
+        BDDMockito.then(helloWorldService).should(Mockito.times(6)).sayHelloWorld();
+        Retry.Metrics metrics = retry.getMetrics();
+
+        assertThat(metrics.getNumberOfFailedCallsWithRetryAttempt()).isEqualTo(2);
+        assertThat(metrics.getNumberOfFailedCallsWithoutRetryAttempt()).isEqualTo(0);
+    }
+
+    @Test
+    public void doNotRetryFromPredicateUsingCompletable() {
+        //Given
+        RetryConfig config = RetryConfig.custom()
+                .retryOnException(t -> t instanceof IOException)
+                .maxAttempts(3).build();
+        Retry retry = Retry.of("testName", config);
+        doThrow(new WebServiceException("BAM!")).when(helloWorldService).sayHelloWorld();
+
+        //When
+        Completable.fromRunnable(helloWorldService::sayHelloWorld)
+                .compose(RetryTransformer.of(retry))
+                .test()
+                .assertError(WebServiceException.class)
+                .assertNotComplete()
+                .assertSubscribed();
+        //Then
+        BDDMockito.then(helloWorldService).should(Mockito.times(1)).sayHelloWorld();
+        Retry.Metrics metrics = retry.getMetrics();
+
+        assertThat(metrics.getNumberOfFailedCallsWithoutRetryAttempt()).isEqualTo(1);
+        assertThat(metrics.getNumberOfFailedCallsWithRetryAttempt()).isEqualTo(0);
+    }
+
+    @Test
+    public void returnOnCompleteUsingObservable() {
         //Given
         RetryConfig config = RetryConfig.ofDefaults();
         Retry retry = Retry.of("testName", config);
@@ -170,7 +452,7 @@ public class RetryTransformerTest {
     }
 
     @Test
-    public void shouldReturnOnErrorUsingObservable() {
+    public void returnOnErrorUsingObservable() {
         //Given
         RetryConfig config = RetryConfig.ofDefaults();
         Retry retry = Retry.of("testName", config);
@@ -202,7 +484,7 @@ public class RetryTransformerTest {
     }
 
     @Test
-    public void shouldNotRetryFromPredicateUsingObservable() {
+    public void doNotRetryFromPredicateUsingObservable() {
         //Given
         RetryConfig config = RetryConfig.custom()
                 .retryOnException(t -> t instanceof IOException)
@@ -227,7 +509,56 @@ public class RetryTransformerTest {
     }
 
     @Test
-    public void shouldReturnOnCompleteUsingFlowable() {
+    public void retryOnResultUsingObservable() {
+        //Given
+        RetryConfig config = RetryConfig.<String>custom()
+                .retryOnResult("retry"::equals)
+                .maxAttempts(3).build();
+        Retry retry = Retry.of("testName", config);
+        given(helloWorldService.returnHelloWorld())
+                .willReturn("retry")
+                .willReturn("success");
+
+        //When
+        Observable.fromCallable(helloWorldService::returnHelloWorld)
+                .compose(RetryTransformer.of(retry))
+                .test()
+                .assertValueCount(1)
+                .assertValue("success")
+                .assertComplete()
+                .assertSubscribed();
+        //Then
+        BDDMockito.then(helloWorldService).should(Mockito.times(2)).returnHelloWorld();
+        Retry.Metrics metrics = retry.getMetrics();
+
+        assertThat(metrics.getNumberOfFailedCallsWithoutRetryAttempt()).isEqualTo(0);
+        assertThat(metrics.getNumberOfSuccessfulCallsWithRetryAttempt()).isEqualTo(1);
+    }
+
+    @Test
+    public void retryOnResultFailAfterMaxAttemptsUsingObservable() {
+        //Given
+        RetryConfig config = RetryConfig.<String>custom()
+                .retryOnResult("retry"::equals)
+                .maxAttempts(3).build();
+        Retry retry = Retry.of("testName", config);
+        given(helloWorldService.returnHelloWorld())
+                .willReturn("retry");
+
+        //When
+        Observable.fromCallable(helloWorldService::returnHelloWorld)
+                .compose(RetryTransformer.of(retry))
+                .test()
+                .assertValueCount(1)
+                .assertValue("retry")
+                .assertComplete()
+                .assertSubscribed();
+        //Then
+        BDDMockito.then(helloWorldService).should(Mockito.times(3)).returnHelloWorld();
+    }
+
+    @Test
+    public void returnOnCompleteUsingFlowable() {
         //Given
         RetryConfig config = RetryConfig.ofDefaults();
         Retry retry = Retry.of("testName", config);
@@ -259,7 +590,7 @@ public class RetryTransformerTest {
     }
 
     @Test
-    public void shouldReturnOnErrorUsingFlowable() {
+    public void returnOnErrorUsingFlowable() {
         //Given
         RetryConfig config = RetryConfig.ofDefaults();
         Retry retry = Retry.of("testName", config);
@@ -291,7 +622,7 @@ public class RetryTransformerTest {
     }
 
     @Test
-    public void shouldNotRetryFromPredicateUsingFlowable() {
+    public void doNotRetryFromPredicateUsingFlowable() {
         //Given
         RetryConfig config = RetryConfig.custom()
                 .retryOnException(t -> t instanceof IOException)
@@ -315,4 +646,52 @@ public class RetryTransformerTest {
         assertThat(metrics.getNumberOfFailedCallsWithRetryAttempt()).isEqualTo(0);
     }
 
+    @Test
+    public void retryOnResultUsingFlowable() {
+        //Given
+        RetryConfig config = RetryConfig.<String>custom()
+                .retryOnResult("retry"::equals)
+                .maxAttempts(3).build();
+        Retry retry = Retry.of("testName", config);
+        given(helloWorldService.returnHelloWorld())
+                .willReturn("retry")
+                .willReturn("success");
+
+        //When
+        Flowable.fromCallable(helloWorldService::returnHelloWorld)
+                .compose(RetryTransformer.of(retry))
+                .test()
+                .assertValueCount(1)
+                .assertValue("success")
+                .assertComplete()
+                .assertSubscribed();
+        //Then
+        BDDMockito.then(helloWorldService).should(Mockito.times(2)).returnHelloWorld();
+        Retry.Metrics metrics = retry.getMetrics();
+
+        assertThat(metrics.getNumberOfFailedCallsWithoutRetryAttempt()).isEqualTo(0);
+        assertThat(metrics.getNumberOfSuccessfulCallsWithRetryAttempt()).isEqualTo(1);
+    }
+
+    @Test
+    public void retryOnResultFailAfterMaxAttemptsUsingFlowable() {
+        //Given
+        RetryConfig config = RetryConfig.<String>custom()
+                .retryOnResult("retry"::equals)
+                .maxAttempts(3).build();
+        Retry retry = Retry.of("testName", config);
+        given(helloWorldService.returnHelloWorld())
+                .willReturn("retry");
+
+        //When
+        Flowable.fromCallable(helloWorldService::returnHelloWorld)
+                .compose(RetryTransformer.of(retry))
+                .test()
+                .assertValueCount(1)
+                .assertValue("retry")
+                .assertComplete()
+                .assertSubscribed();
+        //Then
+        BDDMockito.then(helloWorldService).should(Mockito.times(3)).returnHelloWorld();
+    }
 }

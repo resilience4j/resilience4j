@@ -2,7 +2,7 @@
 // use.  In that respect it serves a role similar to <dependencyManagement> in Maven
 ext {
     vavrVersion = '0.9.2'
-    rxJavaVersion = '2.1.10'
+    rxJavaVersion = '2.2.7'
     reactorVersion = '3.0.7.RELEASE'
     junitVersion = '4.12'
     slf4jVersion = '1.7.24'
