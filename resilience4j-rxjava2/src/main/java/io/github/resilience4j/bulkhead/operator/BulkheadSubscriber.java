@@ -1,5 +1,6 @@
 package io.github.resilience4j.bulkhead.operator;
 
+import static io.reactivex.internal.subscriptions.SubscriptionHelper.CANCELLED;
 import static java.util.Objects.requireNonNull;
 
 import java.util.concurrent.atomic.AtomicReference;
@@ -86,7 +87,7 @@ final class BulkheadSubscriber<T> extends AtomicReference<Subscription> implemen
     }
 
     private boolean isInvocationPermitted() {
-        return !SubscriptionHelper.isCancelled(get()) && wasCallPermitted();
+        return !(get() == CANCELLED) && wasCallPermitted();
     }
 
     private boolean wasCallPermitted() {
