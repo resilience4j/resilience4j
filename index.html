@@ -515,8 +515,8 @@ table.CodeRay td.code>pre{padding:0}
 <h1>Resilience4j User Guide</h1>
 <div class="details">
 <span id="author" class="author">Robert Winkler</span><br>
-<span id="revnumber">version 0.13.1,</span>
-<span id="revdate">2018-07-09</span>
+<span id="revnumber">version 0.13.2,</span>
+<span id="revdate">2019-03-21</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">Table of Contents</div>
@@ -554,29 +554,33 @@ table.CodeRay td.code>pre{padding:0}
 <li><a href="#_introduction_3">3.2.1. Introduction</a></li>
 <li><a href="#_examples_2">3.2.2. Examples</a></li>
 <li><a href="#_monitoring_2">3.2.3. Monitoring</a></li>
-<li><a href="#_introduction_4">3.2.4. Introduction</a></li>
-<li><a href="#_set_up_2">3.2.5. Set-Up</a></li>
-<li><a href="#_examples_3">3.2.6. Examples</a></li>
-<li><a href="#_dynamic_bulkhead_reconfiguration">3.2.7. Dynamic bulkhead reconfiguration</a></li>
-<li><a href="#_monitoring_3">3.2.8. Monitoring</a></li>
 </ul>
 </li>
-<li><a href="#_retry">3.3. Retry</a>
+<li><a href="#_bulkhead">3.3. Bulkhead</a>
 <ul class="sectlevel3">
-<li><a href="#_set_up_3">3.3.1. Set-Up</a></li>
-<li><a href="#_examples_4">3.3.2. Examples</a></li>
+<li><a href="#_introduction_4">3.3.1. Introduction</a></li>
+<li><a href="#_set_up_2">3.3.2. Set-Up</a></li>
+<li><a href="#_examples_3">3.3.3. Examples</a></li>
+<li><a href="#_dynamic_bulkhead_reconfiguration">3.3.4. Dynamic bulkhead reconfiguration</a></li>
+<li><a href="#_monitoring_3">3.3.5. Monitoring</a></li>
 </ul>
 </li>
-<li><a href="#_cache">3.4. Cache</a>
+<li><a href="#_retry">3.4. Retry</a>
 <ul class="sectlevel3">
-<li><a href="#_set_up_4">3.4.1. Set-Up</a></li>
-<li><a href="#_example">3.4.2. Example</a></li>
+<li><a href="#_set_up_3">3.4.1. Set-Up</a></li>
+<li><a href="#_examples_4">3.4.2. Examples</a></li>
 </ul>
 </li>
-<li><a href="#_timelimiter">3.5. TimeLimiter</a>
+<li><a href="#_cache">3.5. Cache</a>
 <ul class="sectlevel3">
-<li><a href="#_introduction_5">3.5.1. Introduction</a></li>
-<li><a href="#_examples_5">3.5.2. Examples</a></li>
+<li><a href="#_set_up_4">3.5.1. Set-Up</a></li>
+<li><a href="#_example">3.5.2. Example</a></li>
+</ul>
+</li>
+<li><a href="#_timelimiter">3.6. TimeLimiter</a>
+<ul class="sectlevel3">
+<li><a href="#_introduction_5">3.6.1. Introduction</a></li>
+<li><a href="#_examples_5">3.6.2. Examples</a></li>
 </ul>
 </li>
 </ul>
@@ -587,10 +591,11 @@ table.CodeRay td.code>pre{padding:0}
 <ul class="sectlevel3">
 <li><a href="#_gradle_2">4.1.1. Gradle</a></li>
 <li><a href="#_monitoring_4">4.1.2. Monitoring</a></li>
-<li><a href="#_circuitbreaker_2">4.1.3. CircuitBreaker</a></li>
-<li><a href="#_ratelimiter_2">4.1.4. RateLimiter</a></li>
-<li><a href="#_configuration">4.1.5. Configuration</a></li>
-<li><a href="#_event_monitoring">4.1.6. Event Monitoring</a></li>
+<li><a href="#_retry_2">4.1.3. Retry</a></li>
+<li><a href="#_circuitbreaker_2">4.1.4. CircuitBreaker</a></li>
+<li><a href="#_ratelimiter_2">4.1.5. RateLimiter</a></li>
+<li><a href="#_configuration">4.1.6. Configuration</a></li>
+<li><a href="#_event_monitoring">4.1.7. Event Monitoring</a></li>
 </ul>
 </li>
 <li><a href="#_ratpack_starter">4.2. Ratpack Starter</a>
@@ -825,12 +830,12 @@ The <strong>groupId</strong> has been changed from <strong>io.github.robwin</str
     jCenter()
 }
 
-compile "io.github.resilience4j:resilience4j-circuitbreaker:0.13.1"
-compile "io.github.resilience4j:resilience4j-ratelimiter:0.13.1"
-compile "io.github.resilience4j:resilience4j-retry:0.13.1"
-compile "io.github.resilience4j:resilience4j-bulkhead:0.13.1"
-compile "io.github.resilience4j:resilience4j-cache:0.13.1"
-compile "io.github.resilience4j:resilience4j-timelimiter:0.13.1"</code></pre>
+compile "io.github.resilience4j:resilience4j-circuitbreaker:0.13.2"
+compile "io.github.resilience4j:resilience4j-ratelimiter:0.13.2"
+compile "io.github.resilience4j:resilience4j-retry:0.13.2"
+compile "io.github.resilience4j:resilience4j-bulkhead:0.13.2"
+compile "io.github.resilience4j:resilience4j-cache:0.13.2"
+compile "io.github.resilience4j:resilience4j-timelimiter:0.13.2"</code></pre>
 </div>
 </div>
 </div>
@@ -865,32 +870,32 @@ compile "io.github.resilience4j:resilience4j-timelimiter:0.13.1"</code></pre>
 <span class="tag">&lt;dependency&gt;</span>
     <span class="tag">&lt;groupId&gt;</span>io.github.resilience4j<span class="tag">&lt;/groupId&gt;</span>
     <span class="tag">&lt;artifactId&gt;</span>resilience4j-circuitbreaker<span class="tag">&lt;/artifactId&gt;</span>
-    <span class="tag">&lt;version&gt;</span>0.13.1<span class="tag">&lt;/version&gt;</span>
+    <span class="tag">&lt;version&gt;</span>0.13.2<span class="tag">&lt;/version&gt;</span>
 <span class="tag">&lt;/dependency&gt;</span>
 <span class="tag">&lt;dependency&gt;</span>
     <span class="tag">&lt;groupId&gt;</span>io.github.resilience4j<span class="tag">&lt;/groupId&gt;</span>
     <span class="tag">&lt;artifactId&gt;</span>resilience4j-ratelimiter<span class="tag">&lt;/artifactId&gt;</span>
-    <span class="tag">&lt;version&gt;</span>0.13.1<span class="tag">&lt;/version&gt;</span>
+    <span class="tag">&lt;version&gt;</span>0.13.2<span class="tag">&lt;/version&gt;</span>
 <span class="tag">&lt;/dependency&gt;</span>
 <span class="tag">&lt;dependency&gt;</span>
     <span class="tag">&lt;groupId&gt;</span>io.github.resilience4j<span class="tag">&lt;/groupId&gt;</span>
     <span class="tag">&lt;artifactId&gt;</span>resilience4j-retry<span class="tag">&lt;/artifactId&gt;</span>
-    <span class="tag">&lt;version&gt;</span>0.13.1<span class="tag">&lt;/version&gt;</span>
+    <span class="tag">&lt;version&gt;</span>0.13.2<span class="tag">&lt;/version&gt;</span>
 <span class="tag">&lt;/dependency&gt;</span>
 <span class="tag">&lt;dependency&gt;</span>
     <span class="tag">&lt;groupId&gt;</span>io.github.resilience4j<span class="tag">&lt;/groupId&gt;</span>
     <span class="tag">&lt;artifactId&gt;</span>resilience4j-bulkhead<span class="tag">&lt;/artifactId&gt;</span>
-    <span class="tag">&lt;version&gt;</span>0.13.1<span class="tag">&lt;/version&gt;</span>
+    <span class="tag">&lt;version&gt;</span>0.13.2<span class="tag">&lt;/version&gt;</span>
 <span class="tag">&lt;/dependency&gt;</span>
 <span class="tag">&lt;dependency&gt;</span>
     <span class="tag">&lt;groupId&gt;</span>io.github.resilience4j<span class="tag">&lt;/groupId&gt;</span>
     <span class="tag">&lt;artifactId&gt;</span>resilience4j-cache<span class="tag">&lt;/artifactId&gt;</span>
-    <span class="tag">&lt;version&gt;</span>0.13.1<span class="tag">&lt;/version&gt;</span>
+    <span class="tag">&lt;version&gt;</span>0.13.2<span class="tag">&lt;/version&gt;</span>
 <span class="tag">&lt;/dependency&gt;</span>
 <span class="tag">&lt;dependency&gt;</span>
     <span class="tag">&lt;groupId&gt;</span>io.github.resilience4j<span class="tag">&lt;/groupId&gt;</span>
     <span class="tag">&lt;artifactId&gt;</span>resilience4j-timelimiter<span class="tag">&lt;/artifactId&gt;</span>
-    <span class="tag">&lt;version&gt;</span>0.13.1<span class="tag">&lt;/version&gt;</span>
+    <span class="tag">&lt;version&gt;</span>0.13.2<span class="tag">&lt;/version&gt;</span>
 <span class="tag">&lt;/dependency&gt;</span></code></pre>
 </div>
 </div>
@@ -1317,7 +1322,7 @@ So it also have in-memory RateLimiterRegistry and RateLimiterConfig where you ca
 <div class="listingblock">
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="java"><span class="comment">// For example you want to restrict the calling rate of some method to be not higher than 10 req/ms.</span>
-RateLimiterConfig config = RateLimiterConfig.builder()
+RateLimiterConfig config = RateLimiterConfig.custom()
     .limitRefreshPeriod(<span class="predefined-type">Duration</span>.ofMillis(<span class="integer">1</span>))
     .limitForPeriod(<span class="integer">10</span>)
     .timeoutDuration(<span class="predefined-type">Duration</span>.ofMillis(<span class="integer">25</span>))
@@ -1456,13 +1461,15 @@ AtomicRateLimiter atomicLimiter;
 <h5 id="_low_level_api"><a class="anchor" href="#_low_level_api"></a>Low level API</h5>
 <div class="paragraph">
 <p>If you&#8217;re interested in making your own thing on top of Resilience4j RateLimiter you&#8217;ll possibly be interested in<br>
-our lower level APIs like <code>getPermission</code> and <code>reservePermission</code> methods.<br>
-=== Bulkhead</p>
+our lower level APIs like <code>getPermission</code> and <code>reservePermission</code> methods.</p>
 </div>
 </div>
 </div>
+</div>
+<div class="sect2">
+<h3 id="_bulkhead"><a class="anchor" href="#_bulkhead"></a>3.3. Bulkhead</h3>
 <div class="sect3">
-<h4 id="_introduction_4"><a class="anchor" href="#_introduction_4"></a>3.2.4. Introduction</h4>
+<h4 id="_introduction_4"><a class="anchor" href="#_introduction_4"></a>3.3.1. Introduction</h4>
 <div class="paragraph">
 <p>Provides an implementation of a bulkhead pattern that can be used to limit the amount of parallel executions - in case of backend calls to downstream dependencies, the bulkhead provides dependency isolation and load shedding. For cpu-bound work, the bulkhead provides load shedding only.</p>
 </div>
@@ -1471,7 +1478,7 @@ our lower level APIs like <code>getPermission</code> and <code>reservePermission
 </div>
 </div>
 <div class="sect3">
-<h4 id="_set_up_2"><a class="anchor" href="#_set_up_2"></a>3.2.5. Set-Up</h4>
+<h4 id="_set_up_2"><a class="anchor" href="#_set_up_2"></a>3.3.2. Set-Up</h4>
 <div class="paragraph">
 <p>Just like the CircuitBreaker, this module provides in-memory 'BulkheadRegistry'. You can use the registry to manage (create and retrieve) Bulkhead instances.</p>
 </div>
@@ -1532,7 +1539,7 @@ Bulkhead bulkhead2 = Bulkhead.of(
 </div>
 </div>
 <div class="sect3">
-<h4 id="_examples_3"><a class="anchor" href="#_examples_3"></a>3.2.6. Examples</h4>
+<h4 id="_examples_3"><a class="anchor" href="#_examples_3"></a>3.3.3. Examples</h4>
 <div class="paragraph">
 <p>You can decorate any <code>Supplier / Runnable / Function</code> or <code>CheckedSupplier / CheckedRunnable / CheckedFunction</code> function with <code>Bulkhead.decorateCheckedSupplier()</code>, <code>Bulkhead.decorateCheckedRunnable()</code> or <code>Bulkhead.decorateCheckedFunction()</code>.<br>
 You can invoke the decorated function with <code>Try.of(&#8230;&#8203;)</code> or <code>Try.run(&#8230;&#8203;)</code> from <a href="https://github.com/javaslang/javaslang">Javaslang</a>. This allows to chain further functions with <code>map</code>, <code>flatMap</code>, <code>filter</code>, <code>recover</code> or <code>andThen</code>. The chained functions are only invoked, if the Bulkhead is not saturated. In the following example, <code>Try.of(&#8230;&#8203;)</code> returns a <code>Success&lt;String&gt;</code> Monad, if the invocation of the function is successful. If the function throws an exception, a <code>Failure&lt;Throwable&gt;</code> Monad is returned and <code>map</code> is not invoked.</p>
@@ -1584,7 +1591,7 @@ assertThat(anotherBulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo
 </div>
 </div>
 <div class="sect3">
-<h4 id="_dynamic_bulkhead_reconfiguration"><a class="anchor" href="#_dynamic_bulkhead_reconfiguration"></a>3.2.7. Dynamic bulkhead reconfiguration</h4>
+<h4 id="_dynamic_bulkhead_reconfiguration"><a class="anchor" href="#_dynamic_bulkhead_reconfiguration"></a>3.3.4. Dynamic bulkhead reconfiguration</h4>
 <div class="paragraph">
 <p>You can use <code>changeConfig</code> method to modify bulkhead params in runtime.<br>
 NOTE! New <code>maxWaitTime</code> duration won&#8217;t affect threads that are currently waiting for permission.</p>
@@ -1660,7 +1667,7 @@ assertThat(result.failed().get()).isInstanceOf(BulkheadFullException.class);</co
 </div>
 </div>
 <div class="sect3">
-<h4 id="_monitoring_3"><a class="anchor" href="#_monitoring_3"></a>3.2.8. Monitoring</h4>
+<h4 id="_monitoring_3"><a class="anchor" href="#_monitoring_3"></a>3.3.5. Monitoring</h4>
 <div class="paragraph">
 <p>The Bulkhead provides an interface to monitor the current metrics.</p>
 </div>
@@ -1674,9 +1681,9 @@ in remainingBulkheadDepth = metrics.getAvailableConcurrentCalls()</code></pre>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_retry"><a class="anchor" href="#_retry"></a>3.3. Retry</h3>
+<h3 id="_retry"><a class="anchor" href="#_retry"></a>3.4. Retry</h3>
 <div class="sect3">
-<h4 id="_set_up_3"><a class="anchor" href="#_set_up_3"></a>3.3.1. Set-Up</h4>
+<h4 id="_set_up_3"><a class="anchor" href="#_set_up_3"></a>3.4.1. Set-Up</h4>
 <div class="paragraph">
 <p>You can also retry a failed function and recover from the exception, if the maximum retry count was reached. You can create a <code>Retry</code> context using a default configuration as follows.</p>
 </div>
@@ -1707,7 +1714,7 @@ Retry retry = Retry.of(<span class="string"><span class="delimiter">&quot;</span
 </div>
 </div>
 <div class="sect3">
-<h4 id="_examples_4"><a class="anchor" href="#_examples_4"></a>3.3.2. Examples</h4>
+<h4 id="_examples_4"><a class="anchor" href="#_examples_4"></a>3.4.2. Examples</h4>
 <div class="paragraph">
 <p>You can decorate any <code>Supplier / Runnable / Function</code> or <code>CheckedSupplier / CheckedRunnable / CheckedFunction</code> function with <code>Retry.decorateCheckedSupplier()</code>, <code>Retry.decorateCheckedRunnable()</code> or <code>Retry.decorateCheckedFunction()</code>.</p>
 </div>
@@ -1760,9 +1767,9 @@ assertThat(result.get()).isEqualTo(<span class="string"><span class="delimiter">
 </div>
 </div>
 <div class="sect2">
-<h3 id="_cache"><a class="anchor" href="#_cache"></a>3.4. Cache</h3>
+<h3 id="_cache"><a class="anchor" href="#_cache"></a>3.5. Cache</h3>
 <div class="sect3">
-<h4 id="_set_up_4"><a class="anchor" href="#_set_up_4"></a>3.4.1. Set-Up</h4>
+<h4 id="_set_up_4"><a class="anchor" href="#_set_up_4"></a>3.5.1. Set-Up</h4>
 <div class="paragraph">
 <p>The following example shows how to decorate a lambda expression with a Cache abstraction. The cache abstraction puts the result of the lambda expression in a cache instance (JCache) and<br>
 tries to retrieve a previous cached result from the cache before it invokes the lambda expression.<br>
@@ -1783,7 +1790,7 @@ CheckedFunction1&lt;<span class="predefined-type">String</span>, <span class="pr
 </div>
 </div>
 <div class="sect3">
-<h4 id="_example"><a class="anchor" href="#_example"></a>3.4.2. Example</h4>
+<h4 id="_example"><a class="anchor" href="#_example"></a>3.5.2. Example</h4>
 <div class="paragraph">
 <p>The Cache emits a stream of CacheEvents. An event can be a cache hit, a cache miss or an error.</p>
 </div>
@@ -1798,9 +1805,9 @@ CheckedFunction1&lt;<span class="predefined-type">String</span>, <span class="pr
 </div>
 </div>
 <div class="sect2">
-<h3 id="_timelimiter"><a class="anchor" href="#_timelimiter"></a>3.5. TimeLimiter</h3>
+<h3 id="_timelimiter"><a class="anchor" href="#_timelimiter"></a>3.6. TimeLimiter</h3>
 <div class="sect3">
-<h4 id="_introduction_5"><a class="anchor" href="#_introduction_5"></a>3.5.1. Introduction</h4>
+<h4 id="_introduction_5"><a class="anchor" href="#_introduction_5"></a>3.6.1. Introduction</h4>
 <div class="paragraph">
 <p>The TimeLimiter API sets a time limit on the execution of a supplied future. The decorated supplied<br>
 future can be chained with a CircuitBreaker to trip the circuit breaker if the supplied<br>
@@ -1813,7 +1820,7 @@ if an exception occurs. This is configurable within the configuration.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="_examples_5"><a class="anchor" href="#_examples_5"></a>3.5.2. Examples</h4>
+<h4 id="_examples_5"><a class="anchor" href="#_examples_5"></a>3.6.2. Examples</h4>
 <div class="listingblock">
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="java"><span class="comment">// For example, you want to restrict the execution of a long running task to 60 seconds.</span>
@@ -1903,7 +1910,36 @@ It is often used by monitoring software to alert someone if a production system 
 </div>
 </div>
 <div class="sect3">
-<h4 id="_circuitbreaker_2"><a class="anchor" href="#_circuitbreaker_2"></a>4.1.3. CircuitBreaker</h4>
+<h4 id="_retry_2"><a class="anchor" href="#_retry_2"></a>4.1.3. Retry</h4>
+<div class="paragraph">
+<p>When you enable retry, metrics are automatically published on the metrics endpoint.</p>
+</div>
+<div class="paragraph">
+<p>For example:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="json">{
+    <span class="key"><span class="delimiter">&quot;</span><span class="content">names</span><span class="delimiter">&quot;</span></span>: [
+        <span class="string"><span class="delimiter">&quot;</span><span class="content">resilience4j.retry.backendA.failedCallsWithoutRetry</span><span class="delimiter">&quot;</span></span>,
+        <span class="string"><span class="delimiter">&quot;</span><span class="content">resilience4j.retry.backendA.failedCallsWithRetry</span><span class="delimiter">&quot;</span></span>,
+        <span class="string"><span class="delimiter">&quot;</span><span class="content">resilience4j.retry.backendA.successCalls</span><span class="delimiter">&quot;</span></span>,
+        <span class="string"><span class="delimiter">&quot;</span><span class="content">resilience4j.retry.backendA.successCallsWithRetry</span><span class="delimiter">&quot;</span></span>,
+        <span class="string"><span class="delimiter">&quot;</span><span class="content">resilience4j.asyncRetry.backendA.failedCallsWithoutRetry</span><span class="delimiter">&quot;</span></span>,
+        <span class="string"><span class="delimiter">&quot;</span><span class="content">resilience4j.asyncRetry.backendB.failedCallsWithRetry</span><span class="delimiter">&quot;</span></span>,
+        <span class="string"><span class="delimiter">&quot;</span><span class="content">resilience4j.asyncRetry.backendB.successCalls</span><span class="delimiter">&quot;</span></span>,
+        <span class="string"><span class="delimiter">&quot;</span><span class="content">resilience4j.asyncRetry.backendB.successCallsWithRetry</span><span class="delimiter">&quot;</span></span>
+        ]
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>When you want to publish Retry/AsyncRetry endpoints on the Prometheus endpoint, you have to add the dependency <code>io.micrometer:micrometer-registry-prometheus</code>.<br>
+and you have same metrics exposed there , check circuit breaker below for more information about the example.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_circuitbreaker_2"><a class="anchor" href="#_circuitbreaker_2"></a>4.1.4. CircuitBreaker</h4>
 <div class="paragraph">
 <p>This demo publishes the status and metrics of all CircuitBreakers via a custom <code>CircuitBreakerHealthIndicator</code>.<br>
 A closed CircuitBreaker state is mapped to UP, an open state to DOWN and a half-open state to UNKNOWN.</p>
@@ -1986,7 +2022,7 @@ resilience4j_circuitbreaker_states{name="backendA",state="half_open",} 0.0</code
 </div>
 </div>
 <div class="sect3">
-<h4 id="_ratelimiter_2"><a class="anchor" href="#_ratelimiter_2"></a>4.1.4. RateLimiter</h4>
+<h4 id="_ratelimiter_2"><a class="anchor" href="#_ratelimiter_2"></a>4.1.5. RateLimiter</h4>
 <div class="paragraph">
 <p>This demo publishes the status and metrics of all RateLimiter via a custom <code>RateLimiterHealthIndicator</code>.<br>
 RateLimiterHealthIndicator changes its state DOWN only if there is some permission waiting threads<br>
@@ -2024,7 +2060,96 @@ For example:</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="_configuration"><a class="anchor" href="#_configuration"></a>4.1.5. Configuration</h4>
+<h4 id="_configuration"><a class="anchor" href="#_configuration"></a>4.1.6. Configuration</h4>
+<div class="sect4">
+<h5 id="_retry_3"><a class="anchor" href="#_retry_3"></a>Retry</h5>
+<div class="paragraph">
+<p>You can configure your Retries in Spring Boot&#8217;s <code>application.yml</code> config file.<br>
+For example</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="yaml"><span class="key">resilience4j.retry</span>:
+  <span class="key">retryAspectOrder</span>: <span class="string"><span class="content">399</span></span>
+  <span class="key">backends</span>:
+    <span class="key">retryBackendA</span>:
+      <span class="key">maxRetryAttempts</span>: <span class="string"><span class="content">3</span></span>
+      <span class="key">waitDuration</span>: <span class="string"><span class="content">600</span></span>
+      <span class="key">eventConsumerBufferSize</span>: <span class="string"><span class="content">100</span></span>
+      <span class="key">enableExponentialBackoff</span>: <span class="string"><span class="content">false</span></span>
+      <span class="key">exponentialBackoffMultiplier</span>: <span class="string"><span class="content">2</span></span>
+      <span class="key">enableRandomizedWait</span>: <span class="string"><span class="content">false</span></span>
+      <span class="key">randomizedWaitFactor</span>: <span class="string"><span class="content">2</span></span>
+      <span class="key">retryExceptionPredicate</span>: <span class="string"><span class="content">io.github.resilience4j.circuitbreaker.RecordFailurePredicate</span></span>
+      <span class="key">retryExceptions</span>:
+      - <span class="string"><span class="content">java.io.IOException</span></span>
+      <span class="key">ignoreExceptions</span>:
+      - <span class="string"><span class="content">io.github.resilience4j.circuitbreaker.IgnoredException</span></span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The rules for Retry configuration :</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>By default the same back end configuration will be used for sync and async retry configuration if not defined otherwise.</p>
+</li>
+<li>
+<p>enableRandomizedWait and enableExponentialBackoff is false by default.</p>
+</li>
+<li>
+<p>You can not enable both enableRandomizedWait and enableExponentialBackoff , validation exception will be thrown if it happen.</p>
+</li>
+<li>
+<p>If exponentialBackoffMultiplier is not provided if enableExponentialBackoff is enabled , default ExponentialBackoff will be used , same story for enableRandomizedWait.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>The rules for Retry spring annotation usage  :</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>You can use the same back-end configuration for both sync and async retry if you use both annotations in for the same backed method level wise only ,<br>
+if you mix annotations between class level and method level on the same back-end class , validation exception will be thrown</p>
+</li>
+<li>
+<p>For <code>AsyncRetry</code> annotation , please make sure the return type is instance of Java <code>CompletionStage</code> otherwise runtime exception will be thrown</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>Code example of retry and async retry annotation usage in Java Spring component :</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="java"><span class="annotation">@component</span>
+<span class="directive">public</span> <span class="type">class</span> <span class="class">RetryDummyServiceImpl</span> <span class="directive">implements</span> RetryDummyService {
+
+<span class="annotation">@Retry</span>(name = RetryDummyService.BACKEND)
+<span class="annotation">@Override</span>
+<span class="directive">public</span> <span class="type">void</span> doSomething(<span class="type">boolean</span> throwBackendTrouble) <span class="directive">throws</span> <span class="exception">IOException</span> {
+        <span class="keyword">if</span> (throwBackendTrouble) {
+                <span class="keyword">throw</span> <span class="keyword">new</span> <span class="exception">IOException</span>(<span class="string"><span class="delimiter">&quot;</span><span class="content">Test Message</span><span class="delimiter">&quot;</span></span>);
+        }
+}
+
+<span class="annotation">@AsyncRetry</span>(name = RetryDummyService.BACKEND)
+<span class="annotation">@Override</span>
+<span class="directive">public</span> CompletionStage&lt;<span class="predefined-type">String</span>&gt; doSomethingAsync(<span class="type">boolean</span> throwException) <span class="directive">throws</span> <span class="exception">IOException</span> {
+        <span class="keyword">if</span> (throwException) {
+                <span class="keyword">throw</span> <span class="keyword">new</span> <span class="exception">IOException</span>(<span class="string"><span class="delimiter">&quot;</span><span class="content">Test Message</span><span class="delimiter">&quot;</span></span>);
+        } <span class="keyword">else</span> {
+                <span class="keyword">return</span> CompletableFuture.supplyAsync(() -&gt; <span class="string"><span class="delimiter">&quot;</span><span class="content">test</span><span class="delimiter">&quot;</span></span>);
+        }
+}
+
+}</code></pre>
+</div>
+</div>
+</div>
 <div class="sect4">
 <h5 id="_circuitbreaker_3"><a class="anchor" href="#_circuitbreaker_3"></a>CircuitBreaker</h5>
 <div class="paragraph">
@@ -2108,7 +2233,91 @@ Please be careful changing of <code>CircuitBreaker</code>/<code>RateLimiter</cod
 </div>
 </div>
 <div class="sect3">
-<h4 id="_event_monitoring"><a class="anchor" href="#_event_monitoring"></a>4.1.6. Event Monitoring</h4>
+<h4 id="_event_monitoring"><a class="anchor" href="#_event_monitoring"></a>4.1.7. Event Monitoring</h4>
+<div class="sect4">
+<h5 id="_retry_4"><a class="anchor" href="#_retry_4"></a>Retry</h5>
+<div class="paragraph">
+<p>The emitted Retry events are stored in a separate circular event consumer buffers. The size of a event consumer buffer can be configured per Retry in the application.yml file (eventConsumerBufferSize).<br>
+The demo adds a custom Spring Boot Actuator endpoint which can be used to monitor the emitted events of your Retries.<br>
+The endpoint <code>/management/retries</code> lists the names of all Retries instances.<br>
+For example:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>{
+  "retries": [
+    "retryBackendA",
+    "retryBackendA"
+  ]
+}</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The endpoint <code>/management/retries/events</code> lists the latest 100 emitted events of all Retries instances.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>{
+  "retryEvents": [
+    {
+      "retryName": "retryBackendC",
+      "type": "RETRY",
+      "creationTime": "2019-03-11T17:32:49.648+01:00[Europe/Brussels]",
+      "errorMessage": "java.io.IOException: Test Message",
+      "numberOfAttempts": 1
+    },
+    {
+      "retryName": "retryBackendA",
+      "type": "RETRY",
+      "creationTime": "2019-03-11T17:32:50.259+01:00[Europe/Brussels]",
+      "errorMessage": "java.io.IOException: Test Message",
+      "numberOfAttempts": 2
+    },
+    {
+      "retryName": "retryBackendA",
+      "type": "ERROR",
+      "creationTime": "2019-03-11T17:32:50.866+01:00[Europe/Brussels]",
+      "errorMessage": "java.io.IOException: Test Message",
+      "numberOfAttempts": 3
+    }
+  ]
+}</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The endpoint <code>/management/retries/events/{retryrName}</code> lists the latest emitted events of a specific Retry.<br>
+For example <code>/management/retries/events/retryBackendA</code>:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>{
+  "retryEvents": [
+    {
+      "retryName": "retryBackendA",
+      "type": "RETRY",
+      "creationTime": "2019-03-11T17:32:49.648+01:00[Europe/Brussels]",
+      "errorMessage": "java.io.IOException: Test Message",
+      "numberOfAttempts": 1
+    },
+    {
+      "retryName": "retryBackendA",
+      "type": "RETRY",
+      "creationTime": "2019-03-11T17:32:50.259+01:00[Europe/Brussels]",
+      "errorMessage": "java.io.IOException: Test Message",
+      "numberOfAttempts": 2
+    },
+    {
+      "retryName": "retryBackendA",
+      "type": "ERROR",
+      "creationTime": "2019-03-11T17:32:50.866+01:00[Europe/Brussels]",
+      "errorMessage": "java.io.IOException: Test Message",
+      "numberOfAttempts": 3
+    }
+  ]
+}</pre>
+</div>
+</div>
+</div>
 <div class="sect4">
 <h5 id="_circuitbreaker_4"><a class="anchor" href="#_circuitbreaker_4"></a>CircuitBreaker</h5>
 <div class="paragraph">
@@ -2446,7 +2655,7 @@ Resilience4j provides transformers that can be applied to Promises. This is idea
 that is coming from some sort of I/O source.</p>
 </div>
 <div class="sect4">
-<h5 id="_bulkhead"><a class="anchor" href="#_bulkhead"></a>Bulkhead</h5>
+<h5 id="_bulkhead_2"><a class="anchor" href="#_bulkhead_2"></a>Bulkhead</h5>
 <div class="paragraph">
 <p>You can easily apply a Bulkhead to any Ratpack Promise, given an existing <code>Bulkhead</code> instance called <code>bulkhead</code>.</p>
 </div>
@@ -2492,7 +2701,7 @@ the <code>circuitBreaker</code>.</p>
 </div>
 </div>
 <div class="sect4">
-<h5 id="_retry_2"><a class="anchor" href="#_retry_2"></a>Retry</h5>
+<h5 id="_retry_5"><a class="anchor" href="#_retry_5"></a>Retry</h5>
 <div class="paragraph">
 <p>You can easily apply a Retry to any Ratpack Promise, given an existing <code>Retry</code> instance called <code>retry</code>.</p>
 </div>
@@ -2549,7 +2758,7 @@ methods returning types:</p>
 </ul>
 </div>
 <div class="sect4">
-<h5 id="_bulkhead_2"><a class="anchor" href="#_bulkhead_2"></a>Bulkhead</h5>
+<h5 id="_bulkhead_3"><a class="anchor" href="#_bulkhead_3"></a>Bulkhead</h5>
 <div class="paragraph">
 <p>The demo shows how to use the <code>Bulkhead</code> annotation to have your Ratpack application limiting number of method calls.<br>
 You can either annotate a class in order to protect all public methods or just some specific methods.<br>
@@ -2591,7 +2800,7 @@ a fallback value that is returned when the circuit breaker identified by <code>n
 </div>
 </div>
 <div class="sect4">
-<h5 id="_retry_3"><a class="anchor" href="#_retry_3"></a>Retry</h5>
+<h5 id="_retry_6"><a class="anchor" href="#_retry_6"></a>Retry</h5>
 <div class="paragraph">
 <p>The demo shows how to use the <code>Retry</code> annotation to make your Ratpack application more fault tolerant.<br>
 You can either annotate a class in order to protect all public methods or just some specific methods.<br>
@@ -2819,7 +3028,7 @@ bind a CollectorRegistry instance.</p>
 <div class="sect3">
 <h4 id="_event_monitoring_2"><a class="anchor" href="#_event_monitoring_2"></a>4.2.9. Event Monitoring</h4>
 <div class="sect4">
-<h5 id="_bulkhead_3"><a class="anchor" href="#_bulkhead_3"></a>Bulkhead</h5>
+<h5 id="_bulkhead_4"><a class="anchor" href="#_bulkhead_4"></a>Bulkhead</h5>
 <div class="paragraph">
 <p>These are the same endpoints as implemented for Bulkhead,<br>
 so for detailed documentation please refer to previous sections.</p>
@@ -3079,7 +3288,7 @@ so for detailed documentation please refer to previous section.</p>
 </div>
 </div>
 <div class="sect4">
-<h5 id="_retry_4"><a class="anchor" href="#_retry_4"></a>Retry</h5>
+<h5 id="_retry_7"><a class="anchor" href="#_retry_7"></a>Retry</h5>
 <div class="paragraph">
 <p>These are the same endpoints as implemented for CircuitBreaker,<br>
 so for detailed documentation please refer to previous sections.</p>
@@ -3242,7 +3451,7 @@ With this add-on you can easily add your bulkhead, circuit breaker, rate limiter
 <div class="sect3">
 <h4 id="_usage"><a class="anchor" href="#_usage"></a>4.4.2. Usage</h4>
 <div class="sect4">
-<h5 id="_bulkhead_4"><a class="anchor" href="#_bulkhead_4"></a>Bulkhead</h5>
+<h5 id="_bulkhead_5"><a class="anchor" href="#_bulkhead_5"></a>Bulkhead</h5>
 <div class="listingblock">
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="java"><span class="directive">final</span> MetricRegistry collectorRegistry = <span class="keyword">new</span> MetricRegistry();
@@ -3264,6 +3473,9 @@ collectorRegistry.registerAll(BulkheadMetrics.ofBulkhead(foo));</code></pre>
 <ul>
 <li>
 <p><code>available_concurrent_calls</code> - instantaneous read of the number of currently available concurrent calls <code>[int]</code></p>
+</li>
+<li>
+<p><code>max_allowed_concurrent_calls</code> - maximum number of allowed concurrent calls <code>[int]</code></p>
 </li>
 </ul>
 </div>
@@ -3341,7 +3553,7 @@ metricRegistry.registerAll(RateLimiterMetrics.ofRateLimiter(rateLimiter));</code
 </div>
 </div>
 <div class="sect4">
-<h5 id="_retry_5"><a class="anchor" href="#_retry_5"></a>Retry</h5>
+<h5 id="_retry_8"><a class="anchor" href="#_retry_8"></a>Retry</h5>
 <div class="listingblock">
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="java"><span class="directive">final</span> MetricRegistry metricRegistry = <span class="keyword">new</span> MetricRegistry();
@@ -3557,7 +3769,7 @@ With this add-on you can easily add your bulkhead, circuit breaker, rate limiter
 <div class="sect3">
 <h4 id="_usage_3"><a class="anchor" href="#_usage_3"></a>4.6.2. Usage</h4>
 <div class="sect4">
-<h5 id="_bulkhead_5"><a class="anchor" href="#_bulkhead_5"></a>Bulkhead</h5>
+<h5 id="_bulkhead_6"><a class="anchor" href="#_bulkhead_6"></a>Bulkhead</h5>
 <div class="listingblock">
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="java"><span class="directive">final</span> BulkheadRegistry bulkheadRegistry = BulkheadRegistry.ofDefaults();
@@ -3576,6 +3788,9 @@ bulkheadMetrics.bindTo(meterRegistry);</code></pre>
 <ul>
 <li>
 <p><code>available_concurrent_calls</code> - instantaneous read of the number of currently available concurrent calls <code>[int]</code></p>
+</li>
+<li>
+<p><code>max_allowed_concurrent_calls</code> - maximum number of allowed concurrent calls <code>[int]</code></p>
 </li>
 </ul>
 </div>
@@ -3646,7 +3861,7 @@ rateLimiterMetrics.bindTo(meterRegistry);</code></pre>
 </div>
 </div>
 <div class="sect4">
-<h5 id="_retry_6"><a class="anchor" href="#_retry_6"></a>Retry</h5>
+<h5 id="_retry_9"><a class="anchor" href="#_retry_9"></a>Retry</h5>
 <div class="listingblock">
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="java"><span class="directive">final</span> MetricRegistry metricRegistry = <span class="keyword">new</span> MetricRegistry();
@@ -3836,8 +4051,8 @@ So you can easily restrict not only network calls but your local in-memory opera
 </div>
 <div id="footer">
 <div id="footer-text">
-Version 0.13.1<br>
-Last updated 2017-11-17 10:27:25 +01:00
+Version 0.13.2<br>
+Last updated 2017-08-31 08:20:51 +02:00
 </div>
 </div>
 </body>
