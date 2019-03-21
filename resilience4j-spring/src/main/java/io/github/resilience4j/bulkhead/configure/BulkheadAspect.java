@@ -18,6 +18,7 @@ package io.github.resilience4j.bulkhead.configure;
 import io.github.resilience4j.bulkhead.BulkheadRegistry;
 import io.github.resilience4j.bulkhead.annotation.Bulkhead;
 import io.github.resilience4j.bulkhead.utils.BulkheadUtils;
+import io.github.resilience4j.utils.AnnotationExtractor;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -80,19 +81,8 @@ public class BulkheadAspect implements Ordered {
 		if (logger.isDebugEnabled()) {
 			logger.debug("bulkhead parameter is null");
 		}
-		Bulkhead bulkhead = null;
-		Class<?> targetClass = proceedingJoinPoint.getTarget().getClass();
-		if (targetClass.isAnnotationPresent(Bulkhead.class)) {
-			bulkhead = targetClass.getAnnotation(Bulkhead.class);
-			if (bulkhead == null && logger.isDebugEnabled()) {
-				logger.debug("TargetClass has no annotation 'Bulkhead'");
-				bulkhead = targetClass.getDeclaredAnnotation(Bulkhead.class);
-				if (bulkhead == null && logger.isDebugEnabled()) {
-					logger.debug("TargetClass has no declared annotation 'Bulkhead'");
-				}
-			}
-		}
-		return bulkhead;
+
+		return AnnotationExtractor.extract(proceedingJoinPoint.getTarget().getClass(), Bulkhead.class);
 	}
 
 	private Object handleJoinPoint(ProceedingJoinPoint proceedingJoinPoint, io.github.resilience4j.bulkhead.Bulkhead  bulkhead, String methodName) throws Throwable {
