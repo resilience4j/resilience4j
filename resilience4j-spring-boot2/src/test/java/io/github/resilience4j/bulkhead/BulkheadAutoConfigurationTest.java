@@ -115,7 +115,8 @@ public class BulkheadAutoConfigurationTest {
 
         assertThat(bulkheadEventsByBackend).hasSameSizeAs(bulkheadEvents);
         assertThat(bulkheadEventsByBackend.get(bulkheadEvents.size() - 1).getType()).isEqualTo(BulkheadEvent.Type.CALL_FINISHED);
-        assertThat(bulkheadEventsByBackend.get(bulkheadEvents.size() - 2).getType()).isEqualTo(BulkheadEvent.Type.CALL_REJECTED);
+        assertThat(bulkheadEventsByBackend).filteredOn(it -> it.getType() == BulkheadEvent.Type.CALL_REJECTED)
+                .isNotEmpty();
 
         assertThat(bulkheadAspect.getOrder()).isEqualTo(398);
 

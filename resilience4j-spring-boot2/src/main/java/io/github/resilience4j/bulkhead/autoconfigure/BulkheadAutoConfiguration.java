@@ -24,7 +24,9 @@ import io.github.resilience4j.bulkhead.monitoring.endpoint.BulkheadEventsEndpoin
 import io.github.resilience4j.bulkhead.monitoring.health.BulkheadHealthIndicator;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.boot.actuate.autoconfigure.endpoint.EndpointAutoConfiguration;
 import org.springframework.boot.actuate.autoconfigure.endpoint.condition.ConditionalOnEnabledEndpoint;
+import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -41,14 +43,15 @@ import javax.annotation.PostConstruct;
 @ConditionalOnClass(Bulkhead.class)
 @EnableConfigurationProperties(BulkheadProperties.class)
 @Import(BulkheadConfiguration.class)
+@AutoConfigureBefore(EndpointAutoConfiguration.class)
 public class BulkheadAutoConfiguration {
 
     private final BulkheadProperties bulkheadProperties;
     private final BulkheadRegistry bulkheadRegistry;
     private final ConfigurableBeanFactory beanFactory;
 
-    public BulkheadAutoConfiguration(BulkheadProperties circuitBreakerProperties, BulkheadRegistry bulkheadRegistry, ConfigurableBeanFactory beanFactory) {
-        this.bulkheadProperties = circuitBreakerProperties;
+    public BulkheadAutoConfiguration(BulkheadProperties bulkheadProperties, BulkheadRegistry bulkheadRegistry, ConfigurableBeanFactory beanFactory) {
+        this.bulkheadProperties = bulkheadProperties;
         this.bulkheadRegistry = bulkheadRegistry;
         this.beanFactory = beanFactory;
     }
