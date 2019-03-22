@@ -13,7 +13,7 @@ import java.util.concurrent.CompletionStage;
 @Component
 public class RetryDummyServiceImpl implements RetryDummyService {
 
-	@Retry(name = RetryDummyService.BACKEND_A)
+	@Retry(name = RetryDummyService.BACKEND)
 	@Override
 	public void doSomething(boolean throwBackendTrouble) throws IOException {
 		if (throwBackendTrouble) {
@@ -21,7 +21,7 @@ public class RetryDummyServiceImpl implements RetryDummyService {
 		}
 	}
 
-	@AsyncRetry(name = RetryDummyService.BACKEND_B)
+	@AsyncRetry(name = RetryDummyService.BACKEND)
 	@Override
 	public CompletionStage<String> doSomethingAsync(boolean throwException) throws IOException {
 		if (throwException) {
