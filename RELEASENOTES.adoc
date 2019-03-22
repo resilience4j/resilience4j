@@ -185,3 +185,15 @@ NOTE: Breaking changes:
 * PR #284: Avoiding calling bulkheadConfigSupplier needlessly
 * Issue #245; PR #260: Fix CircuitBreakerSubscriber for Reactor doesn't count successes when using Mono/Flux.toFuture()
 * Issue #263; PR #264: Fix bulkhead on Single and Maybe
+
+== Version 0.14.0
+* Issue #196: Added a new resilience4j-feign module
+* Issue #241: Added support to configure automaticTransitionFromOpenToHalfOpenEnabled in Spring Boot
+* Issue #286: Spring Boot emitted warnings about invalid actuator endpoint name
+* PR #308: Added bulkhead metrics support for Prometheus
+* Issue #332: Bulkhead reactor operator did not release semaphore on cancel
+* Issue #338: Fixed that SpringBoot2 auto-configuration fails when not specifying all properties
+* Issue #344: Exposed bulkhead max allowed concurrent calls metric
+* Issue #349: Added Spring Boot 2 support for resilience4j-retry
+* Issue #351: Fixed that CircuitBreaker AutoTransitioner prevents JVM shutdown
+* Issue #359: Support for retryOnResult method and Completable, Maybe types missing
