@@ -90,8 +90,6 @@ public class BulkheadConfigurationProperties {
         @Min(1)
         private Integer eventConsumerBufferSize = 100;
 
-        private Boolean registerHealthIndicator = true;
-
         /**
          * Returns the max concurrent call of the bulkhead.
          *
@@ -134,14 +132,6 @@ public class BulkheadConfigurationProperties {
 
         public void setEventConsumerBufferSize(Integer eventConsumerBufferSize) {
             this.eventConsumerBufferSize = eventConsumerBufferSize;
-        }
-
-        public Boolean getRegisterHealthIndicator() {
-            return registerHealthIndicator;
-        }
-
-        public void setRegisterHealthIndicator(Boolean registerHealthIndicator) {
-            this.registerHealthIndicator = registerHealthIndicator;
         }
     }
 }

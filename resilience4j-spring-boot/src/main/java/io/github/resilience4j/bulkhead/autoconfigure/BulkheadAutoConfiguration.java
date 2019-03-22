@@ -19,8 +19,6 @@ import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.bulkhead.BulkheadRegistry;
 import io.github.resilience4j.bulkhead.configure.BulkheadConfiguration;
 import io.github.resilience4j.bulkhead.monitoring.endpoint.BulkheadEndpoint;
-import io.github.resilience4j.bulkhead.monitoring.health.BulkheadHealthIndicator;
-import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.boot.actuate.autoconfigure.EndpointAutoConfiguration;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -28,8 +26,6 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
-
-import javax.annotation.PostConstruct;
 
 /**
  * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration
@@ -42,35 +38,8 @@ import javax.annotation.PostConstruct;
 @AutoConfigureBefore(EndpointAutoConfiguration.class)
 public class BulkheadAutoConfiguration {
 
-    private final BulkheadProperties bulkheadProperties;
-    private final BulkheadRegistry bulkheadRegistry;
-    private final ConfigurableBeanFactory beanFactory;
-
-    public BulkheadAutoConfiguration(BulkheadProperties bulkheadProperties, BulkheadRegistry bulkheadRegistry, ConfigurableBeanFactory beanFactory) {
-        this.bulkheadProperties = bulkheadProperties;
-        this.bulkheadRegistry = bulkheadRegistry;
-        this.beanFactory = beanFactory;
-    }
-
     @Bean
     public BulkheadEndpoint bulkheadEndpoint(BulkheadRegistry bulkheadRegistry) {
         return new BulkheadEndpoint(bulkheadRegistry);
     }
-
-    @PostConstruct
-    public void configureRegistryWithHealthEndpoint(){
-        bulkheadProperties.getBackends().forEach(
-                (name, properties) -> {
-                    if (properties.getRegisterHealthIndicator()) {
-                        Bulkhead bu = bulkheadRegistry.bulkhead(name);
-                        BulkheadHealthIndicator healthIndicator = new BulkheadHealthIndicator(bu);
-                        beanFactory.registerSingleton(
-                                name + "BulkheadHealthIndicator",
-                                healthIndicator
-                        );
-                    }
-                }
-        );
-    }
-
- }
+}

@@ -21,9 +21,7 @@ import io.github.resilience4j.bulkhead.configure.BulkheadConfiguration;
 import io.github.resilience4j.bulkhead.event.BulkheadEvent;
 import io.github.resilience4j.bulkhead.monitoring.endpoint.BulkheadEndpoint;
 import io.github.resilience4j.bulkhead.monitoring.endpoint.BulkheadEventsEndpoint;
-import io.github.resilience4j.bulkhead.monitoring.health.BulkheadHealthIndicator;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
-import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.boot.actuate.autoconfigure.endpoint.EndpointAutoConfiguration;
 import org.springframework.boot.actuate.autoconfigure.endpoint.condition.ConditionalOnEnabledEndpoint;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
@@ -32,8 +30,6 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
-
-import javax.annotation.PostConstruct;
 
 /**
  * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration
@@ -45,17 +41,6 @@ import javax.annotation.PostConstruct;
 @Import(BulkheadConfiguration.class)
 @AutoConfigureBefore(EndpointAutoConfiguration.class)
 public class BulkheadAutoConfiguration {
-
-    private final BulkheadProperties bulkheadProperties;
-    private final BulkheadRegistry bulkheadRegistry;
-    private final ConfigurableBeanFactory beanFactory;
-
-    public BulkheadAutoConfiguration(BulkheadProperties bulkheadProperties, BulkheadRegistry bulkheadRegistry, ConfigurableBeanFactory beanFactory) {
-        this.bulkheadProperties = bulkheadProperties;
-        this.bulkheadRegistry = bulkheadRegistry;
-        this.beanFactory = beanFactory;
-    }
-
     @Bean
     @ConditionalOnEnabledEndpoint
     public BulkheadEndpoint bulkheadEndpoint(BulkheadRegistry bulkheadRegistry) {
@@ -67,21 +52,4 @@ public class BulkheadAutoConfiguration {
     public BulkheadEventsEndpoint bulkheadEventsEndpoint(EventConsumerRegistry<BulkheadEvent> eventConsumerRegistry) {
         return new BulkheadEventsEndpoint(eventConsumerRegistry);
     }
-
-    @PostConstruct
-    public void configureRegistryWithHealthEndpoint(){
-        bulkheadProperties.getBackends().forEach(
-                (name, properties) -> {
-                    if (properties.getRegisterHealthIndicator()) {
-                        Bulkhead bu = bulkheadRegistry.bulkhead(name);
-                        BulkheadHealthIndicator healthIndicator = new BulkheadHealthIndicator(bu);
-                        beanFactory.registerSingleton(
-                                name + "BulkheadHealthIndicator",
-                                healthIndicator
-                        );
-                    }
-                }
-        );
-    }
-
- }
+}
