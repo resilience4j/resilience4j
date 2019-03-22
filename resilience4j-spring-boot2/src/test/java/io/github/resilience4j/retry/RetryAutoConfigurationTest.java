@@ -15,7 +15,14 @@
  */
 package io.github.resilience4j.retry;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.http.ResponseEntity;
+import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import java.io.IOException;
 import java.util.Map;
@@ -24,14 +31,6 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.web.client.TestRestTemplate;
-import org.springframework.http.ResponseEntity;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-
 import io.github.resilience4j.circuitbreaker.IgnoredException;
 import io.github.resilience4j.retry.autoconfigure.RetryProperties;
 import io.github.resilience4j.retry.configure.RetryAspect;
@@ -39,6 +38,8 @@ import io.github.resilience4j.retry.monitoring.endpoint.RetryEndpointResponse;
 import io.github.resilience4j.retry.monitoring.endpoint.RetryEventsEndpointResponse;
 import io.github.resilience4j.service.test.RetryDummyService;
 import io.github.resilience4j.service.test.TestApplication;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
@@ -68,6 +69,7 @@ public class RetryAutoConfigurationTest {
 	 * that the Retry logic is properly handled
 	 */
 	@Test
+	@DirtiesContext
 	public void testRetryAutoConfiguration() throws IOException {
 		assertThat(retryRegistry).isNotNull();
 		assertThat(retryProperties).isNotNull();
@@ -116,6 +118,7 @@ public class RetryAutoConfigurationTest {
 	 * that the Async Retry logic is properly handled
 	 */
 	@Test
+	@DirtiesContext
 	public void testRetryAutoConfigurationAsync() throws Throwable {
 		assertThat(asyncRetryRegistry).isNotNull();
 
@@ -150,10 +153,10 @@ public class RetryAutoConfigurationTest {
 
 		// expect retry-event actuator endpoint recorded both events
 		ResponseEntity<RetryEventsEndpointResponse> retryEventList = restTemplate.getForEntity("/actuator/retryevents", RetryEventsEndpointResponse.class);
-		assertThat(retryEventList.getBody().getRetryEvents()).hasSize(6);
+		assertThat(retryEventList.getBody().getRetryEvents()).hasSize(3);
 
 		retryEventList = restTemplate.getForEntity("/actuator/retryevents/retryBackendA", RetryEventsEndpointResponse.class);
-		assertThat(retryEventList.getBody().getRetryEvents()).hasSize(6);
+		assertThat(retryEventList.getBody().getRetryEvents()).hasSize(3);
 
 		assertThat(retry.getRetryConfig().getExceptionPredicate().test(new IOException())).isTrue();
 		assertThat(retry.getRetryConfig().getExceptionPredicate().test(new IgnoredException())).isFalse();
