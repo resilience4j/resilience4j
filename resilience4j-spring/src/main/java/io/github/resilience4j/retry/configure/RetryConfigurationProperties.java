@@ -38,7 +38,7 @@ public class RetryConfigurationProperties {
 		By adjusting RateLimiterProperties.rateLimiterAspectOrder and CircuitBreakerProperties.circuitBreakerAspectOrder
 		you explicitly define aspects CircuitBreaker and RateLimiter execution sequence.
 	*/
-	private int retryAspectOrder = Integer.MAX_VALUE - 1;
+	private int retryAspectOrder = Integer.MAX_VALUE - 2;
 
 	/**
 	 * @param backend backend name

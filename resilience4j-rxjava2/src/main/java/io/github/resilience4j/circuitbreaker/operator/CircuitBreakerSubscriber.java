@@ -1,9 +1,5 @@
 package io.github.resilience4j.circuitbreaker.operator;
 
-import static java.util.Objects.requireNonNull;
-
-import java.util.concurrent.atomic.AtomicReference;
-
 import io.github.resilience4j.adapter.Permit;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerOpenException;
@@ -11,6 +7,11 @@ import io.github.resilience4j.core.StopWatch;
 import io.reactivex.internal.subscriptions.SubscriptionHelper;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
+
+import java.util.concurrent.atomic.AtomicReference;
+
+import static io.reactivex.internal.subscriptions.SubscriptionHelper.CANCELLED;
+import static java.util.Objects.requireNonNull;
 
 /**
  * A RxJava {@link Subscriber} to protect another subscriber by a CircuitBreaker.
@@ -92,7 +93,7 @@ final class CircuitBreakerSubscriber<T> extends AtomicReference<Subscription> im
     }
 
     private boolean notCancelled() {
-        return !SubscriptionHelper.isCancelled(get());
+        return !(get() == CANCELLED);
     }
 
     private void markFailure(Throwable e) {

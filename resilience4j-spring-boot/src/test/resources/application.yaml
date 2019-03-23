@@ -39,7 +39,7 @@ resilience4j.circuitbreaker:
       waitInterval: 5000
       failureRateThreshold: 50
       eventConsumerBufferSize: 10
-      registerHealthIndicator: true
+      registerHealthIndicator: false
     backendSharedA:
       sharedConfigName: default
     backendSharedB:

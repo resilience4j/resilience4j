@@ -8,17 +8,18 @@ import retrofit2.Call;
 
 import java.io.IOException;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 
 @RunWith(JUnit4.class)
 public class DecoratedCallTest {
 
+    private final Call<String> call = mock(StringCall.class);
+    private final Call<String> decorated = new DecoratedCall<>(call);
+
     @Test
     public void passThroughCallsToDecoratedObject() throws IOException {
-        final Call<String> call = mock(StringCall.class);
-        final Call<String> decorated = new DecoratedCall<>(call);
-
         decorated.cancel();
         Mockito.verify(call).cancel();
 
@@ -39,6 +40,23 @@ public class DecoratedCallTest {
 
         decorated.execute();
         Mockito.verify(call).execute();
+    }
+
+    @Test
+    public void cloneShouldReturnDecoratedCall() {
+        Call<String> clonedTarget = mock(StringCall.class);
+        Mockito.when(call.clone()).thenReturn(clonedTarget);
+
+        Call<String> clonedDecorator = decorated.clone();
+        Mockito.verify(call).clone();
+        assertThat(clonedDecorator).isInstanceOf(DecoratedCall.class);
+
+        decorated.request();
+        Mockito.verify(call).request();
+        Mockito.verifyNoMoreInteractions(call);
+
+        clonedDecorator.request();
+        Mockito.verify(clonedTarget).request();
     }
 
     private interface StringCall extends Call<String> {
