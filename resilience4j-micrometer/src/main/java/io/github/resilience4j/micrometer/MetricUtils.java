@@ -19,4 +19,8 @@ public class MetricUtils {
     public static String getName(String prefix, String name, String type) {
         return prefix + '.' + name + '.' + type;
     }
+
+    public static String getName(String prefix, String type) {
+        return prefix + '.' + type;
+    }
 }

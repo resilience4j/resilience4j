@@ -19,6 +19,7 @@ import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Tags;
 import io.micrometer.core.instrument.binder.MeterBinder;
 
 import static io.github.resilience4j.circuitbreaker.utils.MetricNames.*;
@@ -73,17 +74,31 @@ public class CircuitBreakerMetrics implements MeterBinder {
     public void bindTo(MeterRegistry registry) {
         for (CircuitBreaker circuitBreaker : circuitBreakers) {
             final String name = circuitBreaker.getName();
-            Gauge.builder(getName(prefix, name, STATE), circuitBreaker, (cb) -> cb.getState().getOrder())
+            Gauge.builder(getName(prefix, STATE), circuitBreaker, (cb) -> cb.getState().getOrder())
+                    .tag(NAME_TAG, name)
                     .register(registry);
-            Gauge.builder(getName(prefix, name, BUFFERED_MAX), circuitBreaker, (cb) -> cb.getMetrics().getMaxNumberOfBufferedCalls())
+
+            Gauge.builder(getName(prefix, CALLS), circuitBreaker, (cb) -> cb.getMetrics().getNumberOfFailedCalls())
+                    .tag(NAME_TAG, name)
+                    .tag(CALL_RESULT_TAG, FAILED)
                     .register(registry);
-            Gauge.builder(getName(prefix, name, BUFFERED), circuitBreaker, (cb) -> cb.getMetrics().getNumberOfBufferedCalls())
+
+            Gauge.builder(getName(prefix, CALLS), circuitBreaker, (cb) -> cb.getMetrics().getNumberOfSuccessfulCalls())
+                    .tag(NAME_TAG, name)
+                    .tag(CALL_RESULT_TAG, SUCCESSFUL)
                     .register(registry);
-            Gauge.builder(getName(prefix, name, FAILED), circuitBreaker, (cb) -> cb.getMetrics().getNumberOfFailedCalls())
+
+            Gauge.builder(getName(prefix, CALLS), circuitBreaker, (cb) -> cb.getMetrics().getNumberOfNotPermittedCalls())
+                    .tag(NAME_TAG, name)
+                    .tag(CALL_RESULT_TAG, NOT_PERMITTED)
                     .register(registry);
-            Gauge.builder(getName(prefix, name, NOT_PERMITTED), circuitBreaker, (cb) -> cb.getMetrics().getNumberOfNotPermittedCalls())
+
+            Gauge.builder(getName(prefix, BUFFER), circuitBreaker, (cb) -> cb.getMetrics().getNumberOfBufferedCalls())
+                    .tag(NAME_TAG, name)
                     .register(registry);
-            Gauge.builder(getName(prefix, name, SUCCESSFUL), circuitBreaker, (cb) -> cb.getMetrics().getNumberOfSuccessfulCalls())
+
+            Gauge.builder(getName(prefix, CONFIG_BUFFER_MAX), circuitBreaker, (cb) -> cb.getMetrics().getMaxNumberOfBufferedCalls())
+                    .tag(NAME_TAG, name)
                     .register(registry);
         }
     }
