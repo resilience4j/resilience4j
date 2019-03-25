@@ -62,7 +62,8 @@ public class CircuitBreakerHealthIndicatorTest {
                 entry("bufferedCalls", 100),
                 entry("failedCalls", 20),
                 entry("notPermittedCalls", 0L),
-                entry("maxBufferedCalls", 100)
+                entry("maxBufferedCalls", 100),
+                entry("state", CLOSED)
             );
     }
 

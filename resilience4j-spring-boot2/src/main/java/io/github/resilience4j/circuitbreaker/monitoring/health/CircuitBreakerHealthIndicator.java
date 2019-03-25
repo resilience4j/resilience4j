@@ -35,6 +35,7 @@ public class CircuitBreakerHealthIndicator implements HealthIndicator {
     private static final String FAILED_CALLS = "failedCalls";
     private static final String NOT_PERMITTED = "notPermittedCalls";
     private static final String MAX_BUFFERED_CALLS = "maxBufferedCalls";
+    private static final String STATE = "state";
     private CircuitBreaker circuitBreaker;
 
     public CircuitBreakerHealthIndicator(CircuitBreaker circuitBreaker) {
@@ -49,19 +50,20 @@ public class CircuitBreakerHealthIndicator implements HealthIndicator {
     }
 
     private Health mapBackendMonitorState(CircuitBreaker circuitBreaker) {
-        switch (circuitBreaker.getState()) {
+        CircuitBreaker.State state = circuitBreaker.getState();
+        switch (state) {
             case CLOSED:
-                return addDetails(Health.up(), circuitBreaker).build();
+                return addDetails(Health.up(), circuitBreaker, state).build();
             case OPEN:
-                return addDetails(Health.down(), circuitBreaker).build();
+                return addDetails(Health.down(), circuitBreaker, state).build();
             case HALF_OPEN:
-                return addDetails(Health.unknown(),circuitBreaker).build();
+                return addDetails(Health.unknown(),circuitBreaker, state).build();
             default:
-                return addDetails(Health.unknown(), circuitBreaker).build();
+                return addDetails(Health.unknown(), circuitBreaker, state).build();
         }
     }
 
-    private Health.Builder addDetails(Health.Builder builder, CircuitBreaker circuitBreaker) {
+    private Health.Builder addDetails(Health.Builder builder, CircuitBreaker circuitBreaker, CircuitBreaker.State state) {
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
         CircuitBreakerConfig config = circuitBreaker.getCircuitBreakerConfig();
         builder.withDetail(FAILURE_RATE, metrics.getFailureRate() + "%")
@@ -69,7 +71,8 @@ public class CircuitBreakerHealthIndicator implements HealthIndicator {
             .withDetail(MAX_BUFFERED_CALLS, metrics.getMaxNumberOfBufferedCalls())
             .withDetail(BUFFERED_CALLS, metrics.getNumberOfBufferedCalls())
             .withDetail(FAILED_CALLS, metrics.getNumberOfFailedCalls())
-            .withDetail(NOT_PERMITTED, metrics.getNumberOfNotPermittedCalls());
+            .withDetail(NOT_PERMITTED, metrics.getNumberOfNotPermittedCalls())
+            .withDetail(STATE, state);
         return builder;
     }
 }
