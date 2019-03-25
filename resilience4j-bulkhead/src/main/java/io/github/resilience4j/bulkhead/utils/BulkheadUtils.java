@@ -20,12 +20,19 @@ package io.github.resilience4j.bulkhead.utils;
 
 import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.bulkhead.BulkheadFullException;
+import io.github.resilience4j.bulkhead.ThreadPoolBulkhead;
 
 public final class BulkheadUtils {
 
     public static void isCallPermitted(Bulkhead bulkhead) {
         if(!bulkhead.isCallPermitted()) {
             throw new BulkheadFullException(String.format("Bulkhead '%s' is full", bulkhead.getName()));
+        }
+    }
+
+    public static void isCallPermitted(ThreadPoolBulkhead bulkhead) {
+        if(!bulkhead.isCallPermitted()) {
+            throw new BulkheadFullException(String.format("ThreadPoolBulkhead '%s' is full", bulkhead.getName()));
         }
     }
 }

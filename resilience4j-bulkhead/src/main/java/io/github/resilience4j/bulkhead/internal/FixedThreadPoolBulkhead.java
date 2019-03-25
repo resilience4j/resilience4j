@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright 2017 Robert Winkler, Lucas Lech
+ *  Copyright 2019 Robert Winkler
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -19,12 +19,15 @@
 package io.github.resilience4j.bulkhead.internal;
 
 
-import java.util.concurrent.Semaphore;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.Callable;
+import java.util.concurrent.Future;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
-import io.github.resilience4j.bulkhead.Bulkhead;
-import io.github.resilience4j.bulkhead.BulkheadConfig;
+import io.github.resilience4j.bulkhead.ThreadPoolBulkhead;
+import io.github.resilience4j.bulkhead.ThreadPoolBulkheadConfig;
 import io.github.resilience4j.bulkhead.event.BulkheadEvent;
 import io.github.resilience4j.bulkhead.event.BulkheadOnCallFinishedEvent;
 import io.github.resilience4j.bulkhead.event.BulkheadOnCallPermittedEvent;
@@ -33,16 +36,15 @@ import io.github.resilience4j.core.EventConsumer;
 import io.github.resilience4j.core.EventProcessor;
 
 /**
- * A Bulkhead implementation based on a semaphore.
+ * A Bulkhead implementation based on a fixed ThreadPoolExecutor.
  */
-public class SemaphoreBulkhead implements Bulkhead {
+public class FixedThreadPoolBulkhead implements ThreadPoolBulkhead {
 
     private final String name;
-    private final Semaphore semaphore;
-    private final Object configChangesLock = new Object();
-    private volatile BulkheadConfig config;
-    private final BulkheadMetrics metrics;
-    private final BulkheadEventProcessor eventProcessor;
+    private final ThreadPoolExecutor executorService;
+    private volatile ThreadPoolBulkheadConfig config;
+    private final FixedThreadPoolBulkhead.BulkheadMetrics metrics;
+    private final FixedThreadPoolBulkhead.BulkheadEventProcessor eventProcessor;
 
     /**
      * Creates a bulkhead using a configuration supplied
@@ -50,15 +52,17 @@ public class SemaphoreBulkhead implements Bulkhead {
      * @param name           the name of this bulkhead
      * @param bulkheadConfig custom bulkhead configuration
      */
-    public SemaphoreBulkhead(String name, BulkheadConfig bulkheadConfig) {
+    public FixedThreadPoolBulkhead(String name, ThreadPoolBulkheadConfig bulkheadConfig) {
         this.name = name;
         this.config = bulkheadConfig != null ? bulkheadConfig
-                : BulkheadConfig.ofDefaults();
-        // init semaphore
-        this.semaphore = new Semaphore(this.config.getMaxConcurrentCalls(), true);
+                : ThreadPoolBulkheadConfig.ofDefaults();
+        // init thread pool executor
+        this.executorService = new ThreadPoolExecutor(config.getCoreThreadPoolSize(), config.getMaxThreadPoolSize(),
+                0L, TimeUnit.MILLISECONDS,
+                new ArrayBlockingQueue<>(config.getQueueCapacity()));
 
-        this.metrics = new BulkheadMetrics();
-        this.eventProcessor = new BulkheadEventProcessor();
+        this.metrics = new FixedThreadPoolBulkhead.BulkheadMetrics();
+        this.eventProcessor = new FixedThreadPoolBulkhead.BulkheadEventProcessor();
     }
 
     /**
@@ -66,8 +70,8 @@ public class SemaphoreBulkhead implements Bulkhead {
      *
      * @param name the name of this bulkhead
      */
-    public SemaphoreBulkhead(String name) {
-        this(name, BulkheadConfig.ofDefaults());
+    public FixedThreadPoolBulkhead(String name) {
+        this(name, ThreadPoolBulkheadConfig.ofDefaults());
     }
 
     /**
@@ -76,33 +80,13 @@ public class SemaphoreBulkhead implements Bulkhead {
      * @param name           the name of this bulkhead
      * @param configSupplier BulkheadConfig supplier
      */
-    public SemaphoreBulkhead(String name, Supplier<BulkheadConfig> configSupplier) {
+    public FixedThreadPoolBulkhead(String name, Supplier<ThreadPoolBulkheadConfig> configSupplier) {
         this(name, configSupplier.get());
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void changeConfig(final BulkheadConfig newConfig) {
-        synchronized (configChangesLock) {
-            int delta =  newConfig.getMaxConcurrentCalls() - config.getMaxConcurrentCalls();
-            if (delta < 0) {
-                semaphore.acquireUninterruptibly(-delta);
-            } else if (delta > 0) {
-                semaphore.release(delta);
-            }
-            config = newConfig;
-        }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public boolean isCallPermitted() {
-
-        boolean callPermitted = tryEnterBulkhead();
+        boolean callPermitted = executorService.getQueue().remainingCapacity() > 0;
 
         publishBulkheadEvent(
                 () -> callPermitted ? new BulkheadOnCallPermittedEvent(name)
@@ -112,12 +96,18 @@ public class SemaphoreBulkhead implements Bulkhead {
         return callPermitted;
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    @Override
+    public <T> Future<T> submit(Callable<T> callable) {
+        return executorService.submit(callable);
+    }
+
+    @Override
+    public void submit(Runnable runnable) {
+        executorService.submit(runnable);
+    }
+
     @Override
     public void onComplete() {
-        semaphore.release();
         publishBulkheadEvent(() -> new BulkheadOnCallFinishedEvent(name));
     }
 
@@ -133,7 +123,7 @@ public class SemaphoreBulkhead implements Bulkhead {
      * {@inheritDoc}
      */
     @Override
-    public BulkheadConfig getBulkheadConfig() {
+    public ThreadPoolBulkheadConfig getBulkheadConfig() {
         return config;
     }
 
@@ -151,6 +141,17 @@ public class SemaphoreBulkhead implements Bulkhead {
     @Override
     public EventPublisher getEventPublisher() {
         return eventProcessor;
+    }
+
+    private void publishBulkheadEvent(Supplier<BulkheadEvent> eventSupplier) {
+        if (eventProcessor.hasConsumers()) {
+            eventProcessor.consumeEvent(eventSupplier.get());
+        }
+    }
+
+    @Override
+    public String toString() {
+        return String.format("FixedThreadPoolBulkhead '%s'", this.name);
     }
 
     private class BulkheadEventProcessor extends EventProcessor<BulkheadEvent> implements EventPublisher, EventConsumer<BulkheadEvent> {
@@ -179,46 +180,19 @@ public class SemaphoreBulkhead implements Bulkhead {
         }
     }
 
-    @Override
-    public String toString() {
-        return String.format("Bulkhead '%s'", this.name);
-    }
-
-    boolean tryEnterBulkhead() {
-
-        boolean callPermitted;
-        long timeout = config.getMaxWaitTime();
-
-        if (timeout == 0) {
-            callPermitted = semaphore.tryAcquire();
-        } else {
-            try {
-                callPermitted = semaphore.tryAcquire(timeout, TimeUnit.MILLISECONDS);
-            } catch (InterruptedException ex) {
-                callPermitted = false;
-            }
-        }
-        return callPermitted;
-    }
-
-    private void publishBulkheadEvent(Supplier<BulkheadEvent> eventSupplier) {
-        if (eventProcessor.hasConsumers()) {
-            eventProcessor.consumeEvent(eventSupplier.get());
-        }
-    }
-
     private final class BulkheadMetrics implements Metrics {
         private BulkheadMetrics() {
         }
 
         @Override
         public int getAvailableConcurrentCalls() {
-            return semaphore.availablePermits();
+            return executorService.getPoolSize() - executorService.getActiveCount();
         }
 
         @Override
         public int getMaxAllowedConcurrentCalls() {
-            return config.getMaxConcurrentCalls();
+            return executorService.getPoolSize();
         }
     }
+
 }
