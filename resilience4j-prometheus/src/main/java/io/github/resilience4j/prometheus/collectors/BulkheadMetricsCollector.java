@@ -92,12 +92,12 @@ public class BulkheadMetricsCollector extends Collector {
         GaugeMetricFamily availableCallsFamily = new GaugeMetricFamily(
             names.getAvailableConcurrentCallsMetricName(),
             "The number of bulkhead available concurrent calls",
-            singletonList(LabelNames.NAME)
+            LabelNames.NAME
         );
         GaugeMetricFamily maxAllowedCallsFamily = new GaugeMetricFamily(
             names.getMaxAllowedConcurrentCallsMetricName(),
             "The number of bulkhead max allowed concurrent calls",
-            singletonList(LabelNames.NAME)
+            LabelNames.NAME
         );
 
         for (Bulkhead bulkhead: bulkheadsSupplier.get()) {

@@ -92,22 +92,22 @@ public class CircuitBreakerMetricsCollector extends Collector {
         GaugeMetricFamily stateFamily = new GaugeMetricFamily(
             names.getStateMetricName(),
             "The state of the circuit breaker: 0 - CLOSED, 1 - OPEN, 2 - HALF_OPEN",
-            singletonList(LabelNames.NAME)
+            LabelNames.NAME
         );
         GaugeMetricFamily callsFamily = new GaugeMetricFamily(
             names.getCallsMetricName(),
             "The number of circuit breaker calls for corresponding kind",
-            asList(LabelNames.NAME, LabelNames.KIND)
+            LabelNames.NAME_AND_KIND
         );
         GaugeMetricFamily bufferedCallsFamily = new GaugeMetricFamily(
             names.getBufferedCallsMetricName(),
             "The number of circuit breaker buffered calls",
-            singletonList(LabelNames.NAME)
+            LabelNames.NAME
         );
         GaugeMetricFamily maxBufferedCallsFamily = new GaugeMetricFamily(
             names.getMaxBufferedCallsMetricName(),
             "The number of circuit breaker max buffered calls",
-            singletonList(LabelNames.NAME)
+            LabelNames.NAME
         );
 
         for (CircuitBreaker circuitBreaker : supplier.get()) {

@@ -15,8 +15,12 @@
  */
 package io.github.resilience4j.prometheus.collectors;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+
 /** Common constants for metric binder implementations based on tags. */
 public final class LabelNames {
-    public static final String NAME = "name";
-    public static final String KIND = "kind";
+    public static final List<String> NAME = Collections.singletonList("name");
+    public static final List<String> NAME_AND_KIND = Arrays.asList("name", "kind");
 }
