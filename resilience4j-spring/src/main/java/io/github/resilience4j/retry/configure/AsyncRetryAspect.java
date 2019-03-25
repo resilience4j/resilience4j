@@ -15,13 +15,11 @@
  */
 package io.github.resilience4j.retry.configure;
 
-import java.lang.reflect.Method;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionException;
-import java.util.concurrent.CompletionStage;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-
+import io.github.resilience4j.recovery.RecoveryFunction;
+import io.github.resilience4j.retry.AsyncRetryRegistry;
+import io.github.resilience4j.retry.annotation.AsyncRetry;
+import io.github.resilience4j.retry.annotation.Retry;
+import io.vavr.control.Try;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -31,9 +29,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.Ordered;
 
-import io.github.resilience4j.retry.AsyncRetryRegistry;
-import io.github.resilience4j.retry.annotation.AsyncRetry;
-import io.github.resilience4j.retry.annotation.Retry;
+import java.lang.reflect.Method;
+import java.util.concurrent.*;
 
 /**
  * This Spring AOP aspect intercepts all methods which are annotated with a {@link Retry} annotation.
@@ -78,7 +75,9 @@ public class AsyncRetryAspect implements Ordered {
 		}
 		String backend = backendMonitored.name();
 		io.github.resilience4j.retry.AsyncRetry retry = getOrCreateRetry(methodName, backend);
-		return handleJoinPoint(proceedingJoinPoint, retry, methodName);
+		RecoveryFunction recovery = backendMonitored.recovery().newInstance();
+
+		return handleJoinPoint(proceedingJoinPoint, retry, recovery, methodName);
 	}
 
 	/**
@@ -130,7 +129,8 @@ public class AsyncRetryAspect implements Ordered {
 	 * @return the result object if any
 	 * @throws Throwable
 	 */
-	private Object handleJoinPoint(ProceedingJoinPoint proceedingJoinPoint, io.github.resilience4j.retry.AsyncRetry retry, String methodName) throws Throwable {
+	@SuppressWarnings("unchecked")
+	private Object handleJoinPoint(ProceedingJoinPoint proceedingJoinPoint, io.github.resilience4j.retry.AsyncRetry retry, RecoveryFunction recovery, String methodName) throws Throwable {
 		if (logger.isDebugEnabled()) {
 			logger.debug("async retry invocation of method {} ", methodName);
 		}
@@ -138,7 +138,11 @@ public class AsyncRetryAspect implements Ordered {
 			try {
 				return (CompletionStage<Object>) proceedingJoinPoint.proceed();
 			} catch (Throwable throwable) {
-				throw new CompletionException(throwable);
+				try {
+					return (CompletionStage<Object>) recovery.apply(throwable);
+				} catch (Throwable recoveryThrowable) {
+					throw new CompletionException(recoveryThrowable);
+				}
 			}
 		}).get();
 	}

@@ -15,11 +15,10 @@
  */
 package io.github.resilience4j.retry.annotation;
 
-import java.lang.annotation.Documented;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import io.github.resilience4j.recovery.DefaultRecoveryFunction;
+import io.github.resilience4j.recovery.RecoveryFunction;
+
+import java.lang.annotation.*;
 
 /**
  * This annotation can be applied to a class or a specific method.
@@ -38,4 +37,6 @@ public @interface Retry {
 	 * @return the name of the sync retry.
 	 */
 	String name();
+
+	Class<? extends RecoveryFunction> recovery() default DefaultRecoveryFunction.class;
 }

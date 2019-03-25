@@ -18,6 +18,7 @@ package io.github.resilience4j.ratelimiter.configure;
 import io.github.resilience4j.ratelimiter.RateLimiterConfig;
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
 import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
+import io.github.resilience4j.recovery.RecoveryFunction;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -67,7 +68,8 @@ public class RateLimiterAspect implements Ordered {
         }
         String name = targetService.name();
         io.github.resilience4j.ratelimiter.RateLimiter rateLimiter = getOrCreateRateLimiter(methodName, name);
-        return handleJoinPoint(proceedingJoinPoint, rateLimiter, methodName);
+        RecoveryFunction recovery = targetService.recovery().newInstance();
+        return handleJoinPoint(proceedingJoinPoint, rateLimiter, recovery, methodName);
     }
 
     private io.github.resilience4j.ratelimiter.RateLimiter getOrCreateRateLimiter(String methodName, String name) {
@@ -100,8 +102,11 @@ public class RateLimiterAspect implements Ordered {
         return rateLimiter;
     }
 
+    @SuppressWarnings("unchecked")
     private Object handleJoinPoint(ProceedingJoinPoint proceedingJoinPoint,
-                                   io.github.resilience4j.ratelimiter.RateLimiter rateLimiter, String methodName)
+                                   io.github.resilience4j.ratelimiter.RateLimiter rateLimiter,
+                                   RecoveryFunction recovery,
+                                   String methodName)
             throws Throwable {
         try {
             io.github.resilience4j.ratelimiter.RateLimiter.waitForPermission(rateLimiter);
@@ -110,7 +115,8 @@ public class RateLimiterAspect implements Ordered {
             if (logger.isDebugEnabled()) {
                 logger.debug("Invocation of method '" + methodName + "' failed!", exception);
             }
-            throw exception;
+
+            return recovery.apply(exception);
         }
     }
 
