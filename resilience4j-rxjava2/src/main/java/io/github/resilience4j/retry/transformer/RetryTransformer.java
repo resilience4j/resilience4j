@@ -116,7 +116,7 @@ public class RetryTransformer<T> implements FlowableTransformer<T, T>, Observabl
 
         void onError(Throwable throwable) throws Exception {
             if (throwable instanceof RetryDueToResultException) return;
-            // Filter catchable
+	        // Filter Error to not retry on it
             if (throwable instanceof Error) {
                 throw (Error) throwable;
             }
