@@ -15,12 +15,6 @@
  */
 package io.github.resilience4j.circuitbreaker;
 
-import io.github.resilience4j.circuitbreaker.autoconfigure.CircuitBreakerProperties;
-import io.github.resilience4j.circuitbreaker.configure.CircuitBreakerAspect;
-import io.github.resilience4j.circuitbreaker.monitoring.endpoint.CircuitBreakerEndpointResponse;
-import io.github.resilience4j.circuitbreaker.monitoring.endpoint.CircuitBreakerEventsEndpointResponse;
-import io.github.resilience4j.service.test.DummyService;
-import io.github.resilience4j.service.test.TestApplication;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,6 +24,13 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import java.io.IOException;
+
+import io.github.resilience4j.circuitbreaker.autoconfigure.CircuitBreakerProperties;
+import io.github.resilience4j.circuitbreaker.configure.CircuitBreakerAspect;
+import io.github.resilience4j.circuitbreaker.monitoring.endpoint.CircuitBreakerEndpointResponse;
+import io.github.resilience4j.circuitbreaker.monitoring.endpoint.CircuitBreakerEventsEndpointResponse;
+import io.github.resilience4j.service.test.DummyService;
+import io.github.resilience4j.service.test.TestApplication;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -92,6 +93,12 @@ public class CircuitBreakerAutoConfigurationTest {
 
         assertThat(circuitBreaker.getCircuitBreakerConfig().getRecordFailurePredicate().test(new RecordedException())).isTrue();
         assertThat(circuitBreaker.getCircuitBreakerConfig().getRecordFailurePredicate().test(new IgnoredException())).isFalse();
+
+        // expect no health indicator for backendB, as it is disabled via properties
+        ResponseEntity<String> healthResponse = restTemplate.getForEntity("/health", String.class);
+        assertThat(healthResponse.getBody()).isNotNull();
+        assertThat(healthResponse.getBody()).contains("backendACircuitBreaker");
+        assertThat(healthResponse.getBody()).doesNotContain("backendBCircuitBreaker");
 
         // Verify that an exception for which recordFailurePredicate returns false and it is not included in
         // recordExceptions evaluates to false.

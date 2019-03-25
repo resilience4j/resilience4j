@@ -31,7 +31,7 @@ resilience4j.circuitbreaker:
       waitInterval: 5000
       failureRateThreshold: 50
       eventConsumerBufferSize: 10
-      registerHealthIndicator: true
+      registerHealthIndicator: false
 
 resilience4j.ratelimiter:
   rateLimiterAspectOrder: 401
