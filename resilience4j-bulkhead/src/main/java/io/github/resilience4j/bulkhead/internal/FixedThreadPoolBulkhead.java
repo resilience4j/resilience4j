@@ -185,13 +185,33 @@ public class FixedThreadPoolBulkhead implements ThreadPoolBulkhead {
         }
 
         @Override
-        public int getAvailableConcurrentCalls() {
-            return executorService.getPoolSize() - executorService.getActiveCount();
+        public int getCoreThreadPoolSize() {
+            return executorService.getCorePoolSize();
         }
 
         @Override
-        public int getMaxAllowedConcurrentCalls() {
+        public int getThreadPoolSize() {
             return executorService.getPoolSize();
+        }
+
+        @Override
+        public int getMaximumThreadPoolSize() {
+            return executorService.getMaximumPoolSize();
+        }
+
+        @Override
+        public int getQueueDepth() {
+            return executorService.getQueue().size();
+        }
+
+        @Override
+        public int getRemainingQueueCapacity() {
+            return executorService.getQueue().remainingCapacity();
+        }
+
+        @Override
+        public int getQueueCapacity() {
+            return config.getQueueCapacity();
         }
     }
 

@@ -53,6 +53,11 @@ public interface ThreadPoolBulkhead {
      */
     <T> Future<T> submit(Callable<T> task);
 
+    /**
+     * Submits a task for execution.
+     *
+     * @param task the task to submit
+     */
     void submit(Runnable task);
 
     /**
@@ -219,22 +224,47 @@ public interface ThreadPoolBulkhead {
 
     interface Metrics {
 
+        /**
+         * Returns the core number of threads.
+         *
+         * @return the core number of threads
+         */
+        int getCoreThreadPoolSize();
 
         /**
-         * Returns the number of parallel executions this bulkhead can support at this point in time.
+         * Returns the current number of threads in the pool.
          *
-         * @return remaining bulkhead depth
+         * @return the current number of threads
          */
-        int getAvailableConcurrentCalls();
+        int getThreadPoolSize();
 
         /**
-         * Returns the configured max amount of concurrent calls
-         * allowed for this bulkhead, basically it's a top inclusive bound for
-         * the value returned from {@link #getAvailableConcurrentCalls()}.
+         * Returns the maximum allowed number of threads.
          *
-         * @return max allowed concurrent calls
+         * @return the maximum allowed number of threads
          */
-        int getMaxAllowedConcurrentCalls();
+        int getMaximumThreadPoolSize();
+
+        /**
+         * Returns the number of tasks in the queue.
+         *
+         * @return the number of tasks in the queue
+         */
+        int getQueueDepth();
+
+        /**
+         * Returns the remaining queue capacity.
+         *
+         * @return the remaining queue capacity
+         */
+        int getRemainingQueueCapacity();
+
+        /**
+         * Returns the queue capacity.
+         *
+         * @return the queue capacity
+         */
+        int getQueueCapacity();
     }
 
     /**
