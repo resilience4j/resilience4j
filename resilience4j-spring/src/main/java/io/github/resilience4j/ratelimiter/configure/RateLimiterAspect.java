@@ -18,6 +18,7 @@ package io.github.resilience4j.ratelimiter.configure;
 import io.github.resilience4j.ratelimiter.RateLimiterConfig;
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
 import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
+import io.github.resilience4j.utils.AnnotationExtractor;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -86,18 +87,7 @@ public class RateLimiterAspect implements Ordered {
     }
 
     private RateLimiter getRateLimiterAnnotation(ProceedingJoinPoint proceedingJoinPoint) {
-        RateLimiter rateLimiter = null;
-        Class<?> targetClass = proceedingJoinPoint.getTarget().getClass();
-        if (targetClass.isAnnotationPresent(RateLimiter.class)) {
-            rateLimiter = targetClass.getAnnotation(RateLimiter.class);
-            if (rateLimiter == null) {
-                rateLimiter = targetClass.getDeclaredAnnotation(RateLimiter.class);
-            }
-            if (rateLimiter == null) {
-                logger.debug("TargetClass has no declared annotation 'RateLimiter'");
-            }
-        }
-        return rateLimiter;
+        return AnnotationExtractor.extract(proceedingJoinPoint.getTarget().getClass(), RateLimiter.class);
     }
 
     private Object handleJoinPoint(ProceedingJoinPoint proceedingJoinPoint,

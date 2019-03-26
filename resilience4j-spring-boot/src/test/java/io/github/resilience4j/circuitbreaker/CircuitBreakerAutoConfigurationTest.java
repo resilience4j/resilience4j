@@ -18,6 +18,7 @@ package io.github.resilience4j.circuitbreaker;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.ResponseEntity;
@@ -49,6 +50,7 @@ public class CircuitBreakerAutoConfigurationTest {
     CircuitBreakerAspect circuitBreakerAspect;
 
     @Autowired
+    @Qualifier("circuitBreakerDummyService")
     DummyService dummyService;
 
     @Autowired
