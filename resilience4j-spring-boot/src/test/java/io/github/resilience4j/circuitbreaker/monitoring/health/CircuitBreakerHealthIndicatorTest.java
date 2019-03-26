@@ -1,11 +1,13 @@
 package io.github.resilience4j.circuitbreaker.monitoring.health;
 
-import static org.assertj.core.api.BDDAssertions.then;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 import static io.github.resilience4j.circuitbreaker.CircuitBreaker.State.CLOSED;
 import static io.github.resilience4j.circuitbreaker.CircuitBreaker.State.HALF_OPEN;
 import static io.github.resilience4j.circuitbreaker.CircuitBreaker.State.OPEN;
+import static org.assertj.core.api.BDDAssertions.then;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
+import java.util.AbstractMap.SimpleEntry;
 
 import org.junit.Test;
 import org.springframework.boot.actuate.health.Health;
@@ -14,14 +16,12 @@ import org.springframework.boot.actuate.health.Status;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 
-import java.util.AbstractMap.SimpleEntry;
-
 /**
  * @author bstorozhuk
  */
 public class CircuitBreakerHealthIndicatorTest {
     @Test
-    public void health() throws Exception {
+    public void health() {
         // given
         CircuitBreakerConfig config = mock(CircuitBreakerConfig.class);
         CircuitBreaker.Metrics metrics = mock(CircuitBreaker.Metrics.class);
@@ -45,25 +45,37 @@ public class CircuitBreakerHealthIndicatorTest {
         // then
         Health health = healthIndicator.health();
         then(health.getStatus()).isEqualTo(Status.UP);
+        then(health.getDetails())
+                .contains(
+                        entry("failureRate", "0.2%"),
+                        entry("failureRateThreshold", "0.3%"),
+                        entry("bufferedCalls", 100),
+                        entry("failedCalls", 20),
+                        entry("notPermittedCalls", 0L),
+                        entry("maxBufferedCalls", 100),
+                        entry("state", CLOSED)
+                );
 
         health = healthIndicator.health();
         then(health.getStatus()).isEqualTo(Status.DOWN);
+        then(health.getDetails())
+                .contains(
+                        entry("state", OPEN)
+                );
 
         health = healthIndicator.health();
         then(health.getStatus()).isEqualTo(Status.UNKNOWN);
+        then(health.getDetails())
+                .contains(
+                        entry("state", HALF_OPEN)
+                );
 
         health = healthIndicator.health();
         then(health.getStatus()).isEqualTo(Status.UP);
-
         then(health.getDetails())
-            .contains(
-                entry("failureRate", "0.2%"),
-                entry("failureRateThreshold", "0.3%"),
-                entry("bufferedCalls", 100),
-                entry("failedCalls", 20),
-                entry("notPermittedCalls", 0L),
-                entry("maxBufferedCalls", 100)
-            );
+                .contains(
+                        entry("state", CLOSED)
+                );
     }
 
     private SimpleEntry<String, ?> entry(String key, Object value) {
