@@ -50,20 +50,19 @@ public class CircuitBreakerHealthIndicator implements HealthIndicator {
     }
 
     private Health mapBackendMonitorState(CircuitBreaker circuitBreaker) {
-        CircuitBreaker.State state = circuitBreaker.getState();
-        switch (state) {
+        switch (circuitBreaker.getState()) {
             case CLOSED:
-                return addDetails(Health.up(), circuitBreaker, state).build();
+                return addDetails(Health.up(), circuitBreaker).build();
             case OPEN:
-                return addDetails(Health.down(), circuitBreaker, state).build();
+                return addDetails(Health.down(), circuitBreaker).build();
             case HALF_OPEN:
-                return addDetails(Health.unknown(),circuitBreaker, state).build();
+                return addDetails(Health.unknown(),circuitBreaker).build();
             default:
-                return addDetails(Health.unknown(), circuitBreaker, state).build();
+                return addDetails(Health.unknown(), circuitBreaker).build();
         }
     }
 
-    private Health.Builder addDetails(Health.Builder builder, CircuitBreaker circuitBreaker, CircuitBreaker.State state) {
+    private Health.Builder addDetails(Health.Builder builder, CircuitBreaker circuitBreaker) {
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
         CircuitBreakerConfig config = circuitBreaker.getCircuitBreakerConfig();
         builder.withDetail(FAILURE_RATE, metrics.getFailureRate() + "%")
@@ -72,7 +71,7 @@ public class CircuitBreakerHealthIndicator implements HealthIndicator {
             .withDetail(BUFFERED_CALLS, metrics.getNumberOfBufferedCalls())
             .withDetail(FAILED_CALLS, metrics.getNumberOfFailedCalls())
             .withDetail(NOT_PERMITTED, metrics.getNumberOfNotPermittedCalls())
-            .withDetail(STATE, state);
+            .withDetail(STATE, circuitBreaker.getState());
         return builder;
     }
 }
