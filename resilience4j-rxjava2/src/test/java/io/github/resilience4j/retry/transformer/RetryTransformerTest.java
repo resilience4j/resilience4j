@@ -16,22 +16,28 @@
 
 package io.github.resilience4j.retry.transformer;
 
-import io.github.resilience4j.retry.Retry;
-import io.github.resilience4j.retry.RetryConfig;
-import io.github.resilience4j.test.HelloWorldService;
-import io.reactivex.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
+
+import java.io.IOException;
+
+import javax.xml.ws.WebServiceException;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.BDDMockito;
 import org.mockito.Mockito;
 
-import javax.xml.ws.WebServiceException;
-import java.io.IOException;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.doThrow;
+import io.github.resilience4j.retry.Retry;
+import io.github.resilience4j.retry.RetryConfig;
+import io.github.resilience4j.test.HelloWorldService;
+import io.reactivex.Completable;
+import io.reactivex.Flowable;
+import io.reactivex.Maybe;
+import io.reactivex.Observable;
+import io.reactivex.Single;
 
 public class RetryTransformerTest {
 
@@ -79,6 +85,57 @@ public class RetryTransformerTest {
         assertThat(metrics.getNumberOfFailedCallsWithRetryAttempt()).isEqualTo(0);
         assertThat(metrics.getNumberOfFailedCallsWithoutRetryAttempt()).isEqualTo(0);
     }
+
+
+    @Test(expected = StackOverflowError.class)
+    public void shouldNotRetryUsingSingleStackOverFlow() {
+        //Given
+        RetryConfig config = RetryConfig.ofDefaults();
+        Retry retry = Retry.of("testName", config);
+        RetryTransformer<Object> retryTransformer = RetryTransformer.of(retry);
+
+        given(helloWorldService.returnHelloWorld())
+                .willThrow(new StackOverflowError("BAM!"));
+
+        //When
+        Single.fromCallable(helloWorldService::returnHelloWorld)
+                .compose(retryTransformer)
+                .test();
+
+
+        //Then
+        BDDMockito.then(helloWorldService).should(Mockito.times(1)).returnHelloWorld();
+        Retry.Metrics metrics = retry.getMetrics();
+
+        assertThat(metrics.getNumberOfFailedCallsWithoutRetryAttempt()).isEqualTo(0);
+        assertThat(metrics.getNumberOfFailedCallsWithRetryAttempt()).isEqualTo(0);
+    }
+
+    @Test
+    public void shouldNotRetryWhenItThrowErrorSingle() {
+        //Given
+        RetryConfig config = RetryConfig.ofDefaults();
+        Retry retry = Retry.of("testName", config);
+        RetryTransformer<Object> retryTransformer = RetryTransformer.of(retry);
+
+        given(helloWorldService.returnHelloWorld())
+                .willThrow(new Error("BAM!"));
+
+        //When
+        Single.fromCallable(helloWorldService::returnHelloWorld)
+                .compose(retryTransformer)
+                .test()
+                .assertError(Error.class)
+                .assertNotComplete()
+                .assertSubscribed();
+        //Then
+        BDDMockito.then(helloWorldService).should(Mockito.times(1)).returnHelloWorld();
+        Retry.Metrics metrics = retry.getMetrics();
+
+        assertThat(metrics.getNumberOfFailedCallsWithRetryAttempt()).isEqualTo(0);
+        assertThat(metrics.getNumberOfFailedCallsWithoutRetryAttempt()).isEqualTo(0);
+    }
+
 
     @Test
     public void returnOnErrorUsingSingle() {
