@@ -21,7 +21,7 @@ import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
  */
 public class CircuitBreakerHealthIndicatorTest {
     @Test
-    public void health() throws Exception {
+    public void health() {
         // given
         CircuitBreakerConfig config = mock(CircuitBreakerConfig.class);
         CircuitBreaker.Metrics metrics = mock(CircuitBreaker.Metrics.class);
@@ -45,26 +45,37 @@ public class CircuitBreakerHealthIndicatorTest {
         // then
         Health health = healthIndicator.health();
         then(health.getStatus()).isEqualTo(Status.UP);
+        then(health.getDetails())
+                .contains(
+                        entry("failureRate", "0.2%"),
+                        entry("failureRateThreshold", "0.3%"),
+                        entry("bufferedCalls", 100),
+                        entry("failedCalls", 20),
+                        entry("notPermittedCalls", 0L),
+                        entry("maxBufferedCalls", 100),
+                        entry("state", CLOSED)
+                );
 
         health = healthIndicator.health();
         then(health.getStatus()).isEqualTo(Status.DOWN);
+        then(health.getDetails())
+                .contains(
+                        entry("state", OPEN)
+                );
 
         health = healthIndicator.health();
         then(health.getStatus()).isEqualTo(Status.UNKNOWN);
+        then(health.getDetails())
+                .contains(
+                        entry("state", HALF_OPEN)
+                );
 
         health = healthIndicator.health();
         then(health.getStatus()).isEqualTo(Status.UP);
-
         then(health.getDetails())
-            .contains(
-                entry("failureRate", "0.2%"),
-                entry("failureRateThreshold", "0.3%"),
-                entry("bufferedCalls", 100),
-                entry("failedCalls", 20),
-                entry("notPermittedCalls", 0L),
-                entry("maxBufferedCalls", 100),
-                entry("state", CLOSED)
-            );
+                .contains(
+                        entry("state", CLOSED)
+                );
     }
 
     private SimpleEntry<String, ?> entry(String key, Object value) {
