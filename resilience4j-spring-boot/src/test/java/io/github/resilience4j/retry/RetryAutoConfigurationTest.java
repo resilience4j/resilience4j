@@ -70,7 +70,6 @@ public class RetryAutoConfigurationTest {
 	 * that the Retry logic is properly handled
 	 */
 	@Test
-	@DirtiesContext
 	public void testRetryAutoConfiguration() throws IOException {
 		assertThat(retryRegistry).isNotNull();
 		assertThat(retryProperties).isNotNull();
@@ -121,7 +120,6 @@ public class RetryAutoConfigurationTest {
 	 * that the Async Retry logic is properly handled
 	 */
 	@Test
-	@DirtiesContext
 	public void testRetryAutoConfigurationAsync() throws Throwable {
 		assertThat(asyncRetryRegistry).isNotNull();
 

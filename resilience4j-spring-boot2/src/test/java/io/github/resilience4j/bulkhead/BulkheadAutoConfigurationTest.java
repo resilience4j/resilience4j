@@ -72,7 +72,7 @@ public class BulkheadAutoConfigurationTest {
         assertThat(bulkheadRegistry).isNotNull();
         assertThat(bulkheadProperties).isNotNull();
 
-        Bulkhead bulkhead = bulkheadRegistry.bulkhead(DummyService.BACKEND);
+        Bulkhead bulkhead = bulkheadRegistry.bulkhead(BulkheadDummyService.BACKEND);
         assertThat(bulkhead).isNotNull();
 
         es.submit(dummyService::doSomething);

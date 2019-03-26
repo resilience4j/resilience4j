@@ -3,7 +3,7 @@ package io.github.resilience4j.service.test;
 import io.github.resilience4j.bulkhead.annotation.Bulkhead;
 import org.springframework.stereotype.Component;
 
-@Bulkhead(name = DummyService.BACKEND)
+@Bulkhead(name = BulkheadDummyService.BACKEND)
 @Component
 public class BulkheadDummyServiceImpl implements BulkheadDummyService {
     @Override
