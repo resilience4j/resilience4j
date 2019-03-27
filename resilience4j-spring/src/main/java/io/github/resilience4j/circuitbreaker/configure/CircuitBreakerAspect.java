@@ -15,8 +15,12 @@
  */
 package io.github.resilience4j.circuitbreaker.configure;
 
-import java.lang.reflect.Method;
-
+import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
+import io.github.resilience4j.circuitbreaker.annotation.ApiType;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.github.resilience4j.circuitbreaker.utils.CircuitBreakerUtils;
+import io.github.resilience4j.reactor.circuitbreaker.operator.CircuitBreakerOperator;
+import io.github.resilience4j.utils.AnnotationExtractor;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -25,14 +29,10 @@ import org.aspectj.lang.reflect.MethodSignature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.Ordered;
-
-import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
-import io.github.resilience4j.circuitbreaker.annotation.ApiType;
-import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
-import io.github.resilience4j.circuitbreaker.utils.CircuitBreakerUtils;
-import io.github.resilience4j.reactor.circuitbreaker.operator.CircuitBreakerOperator;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+
+import java.lang.reflect.Method;
 
 /**
  * This Spring AOP aspect intercepts all methods which are annotated with a {@link CircuitBreaker} annotation.
@@ -86,19 +86,8 @@ public class CircuitBreakerAspect implements Ordered {
 		if (logger.isDebugEnabled()) {
 			logger.debug("circuitBreaker parameter is null");
 		}
-		CircuitBreaker circuitBreaker = null;
-		Class<?> targetClass = proceedingJoinPoint.getTarget().getClass();
-		if (targetClass.isAnnotationPresent(CircuitBreaker.class)) {
-			circuitBreaker = targetClass.getAnnotation(CircuitBreaker.class);
-			if (circuitBreaker == null && logger.isDebugEnabled()) {
-				logger.debug("TargetClass has no annotation 'CircuitBreaker'");
-				circuitBreaker = targetClass.getDeclaredAnnotation(CircuitBreaker.class);
-				if (circuitBreaker == null && logger.isDebugEnabled()) {
-					logger.debug("TargetClass has no declared annotation 'CircuitBreaker'");
-				}
-			}
-		}
-		return circuitBreaker;
+
+		return AnnotationExtractor.extract(proceedingJoinPoint.getTarget().getClass(), CircuitBreaker.class);
 	}
 
 	private Object handleJoinPoint(ProceedingJoinPoint proceedingJoinPoint, io.github.resilience4j.circuitbreaker.CircuitBreaker circuitBreaker, String methodName, ApiType type) throws Throwable {

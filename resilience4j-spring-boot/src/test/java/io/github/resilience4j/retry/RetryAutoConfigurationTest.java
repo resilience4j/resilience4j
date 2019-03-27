@@ -30,6 +30,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.ResponseEntity;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import io.github.resilience4j.circuitbreaker.IgnoredException;
@@ -80,12 +81,12 @@ public class RetryAutoConfigurationTest {
 		// The invocation is recorded by the CircuitBreaker as a success.
 		retryDummyService.doSomething(false);
 
-		Retry retry = retryRegistry.retry(RetryDummyService.BACKEND);
+		Retry retry = retryRegistry.retry(RetryDummyService.BACKEND_A);
 		assertThat(retry).isNotNull();
 
 		// expect retry is configured as defined in application.yml
 		assertThat(retry.getRetryConfig().getMaxAttempts()).isEqualTo(3);
-		assertThat(retry.getName()).isEqualTo(RetryDummyService.BACKEND);
+		assertThat(retry.getName()).isEqualTo(RetryDummyService.BACKEND_A);
 		assertThat(retry.getRetryConfig().getExceptionPredicate().test(new IOException())).isTrue();
 
 		assertThat(retry.getMetrics().getNumberOfFailedCallsWithoutRetryAttempt()).isEqualTo(0);
@@ -95,14 +96,16 @@ public class RetryAutoConfigurationTest {
 
 		// expect retry actuator endpoint contains both retries
 		ResponseEntity<RetryEndpointResponse> retriesList = restTemplate.getForEntity("/retries", RetryEndpointResponse.class);
-		assertThat(retriesList.getBody().getRetries()).hasSize(2).containsExactly("retryBackendA", "retryBackendA");
+		assertThat(retriesList.getBody().getRetries()).hasSize(4).containsOnly("retryBackendA", "retryBackendB");
 
 		// expect retry-event actuator endpoint recorded both events
-		ResponseEntity<RetryEventsEndpointResponse> retryEventList = restTemplate.getForEntity("/retries/events", RetryEventsEndpointResponse.class);
-		assertThat(retryEventList.getBody().getRetryEvents()).hasSize(3);
+		ResponseEntity<RetryEventsEndpointResponse> retryEventListA = restTemplate.getForEntity("/retries/events/retryBackendA", RetryEventsEndpointResponse.class);
+		assertThat(retryEventListA.getBody().getRetryEvents()).hasSize(3);
 
-		retryEventList = restTemplate.getForEntity("/retries/events/retryBackendA", RetryEventsEndpointResponse.class);
-		assertThat(retryEventList.getBody().getRetryEvents()).hasSize(3);
+		ResponseEntity<RetryEventsEndpointResponse> retryEventListB = restTemplate.getForEntity("/retries/events/retryBackendB", RetryEventsEndpointResponse.class);
+
+		ResponseEntity<RetryEventsEndpointResponse> retryEventList = restTemplate.getForEntity("/retries/events", RetryEventsEndpointResponse.class);
+		assertThat(retryEventList.getBody().getRetryEvents()).hasSize(3 + retryEventListB.getBody().getRetryEvents().size());
 
 		assertThat(retry.getRetryConfig().getExceptionPredicate().test(new IOException())).isTrue();
 		assertThat(retry.getRetryConfig().getExceptionPredicate().test(new IgnoredException())).isFalse();
@@ -132,12 +135,12 @@ public class RetryAutoConfigurationTest {
 		// The invocation is recorded by the CircuitBreaker as a success.
 		String resultSuccess = awaitResult(retryDummyService.doSomethingAsync(false), 5);
 		assertThat(resultSuccess).isNotEmpty();
-		AsyncRetry retry = asyncRetryRegistry.retry(RetryDummyService.BACKEND);
+		AsyncRetry retry = asyncRetryRegistry.retry(RetryDummyService.BACKEND_B);
 		assertThat(retry).isNotNull();
 
 		// expect retry is configured as defined in application.yml
 		assertThat(retry.getRetryConfig().getMaxAttempts()).isEqualTo(3);
-		assertThat(retry.getName()).isEqualTo(RetryDummyService.BACKEND);
+		assertThat(retry.getName()).isEqualTo(RetryDummyService.BACKEND_B);
 		assertThat(retry.getRetryConfig().getExceptionPredicate().test(new IOException())).isTrue();
 
 		assertThat(retry.getMetrics().getNumberOfFailedCallsWithoutRetryAttempt()).isEqualTo(0);
@@ -147,15 +150,16 @@ public class RetryAutoConfigurationTest {
 
 		// expect retry actuator endpoint contains both retries
 		ResponseEntity<RetryEndpointResponse> retriesList = restTemplate.getForEntity("/retries", RetryEndpointResponse.class);
-		assertThat(retriesList.getBody().getRetries()).hasSize(2).containsExactly("retryBackendA", "retryBackendA");
+		assertThat(retriesList.getBody().getRetries()).hasSize(4).containsOnly("retryBackendA", "retryBackendB");
 
 		// expect retry-event actuator endpoint recorded both events
+		ResponseEntity<RetryEventsEndpointResponse> retryEventListA = restTemplate.getForEntity("/retries/events/retryBackendA", RetryEventsEndpointResponse.class);
+
+		ResponseEntity<RetryEventsEndpointResponse> retryEventListB = restTemplate.getForEntity("/retries/events/retryBackendB", RetryEventsEndpointResponse.class);
+		assertThat(retryEventListB.getBody().getRetryEvents()).hasSize(3);
+
 		ResponseEntity<RetryEventsEndpointResponse> retryEventList = restTemplate.getForEntity("/retries/events", RetryEventsEndpointResponse.class);
-		assertThat(retryEventList.getBody().getRetryEvents()).hasSize(6);
-
-		retryEventList = restTemplate.getForEntity("/retries/events/retryBackendA", RetryEventsEndpointResponse.class);
-		assertThat(retryEventList.getBody().getRetryEvents()).hasSize(6);
-
+		assertThat(retryEventList.getBody().getRetryEvents()).hasSize(retryEventListA.getBody().getRetryEvents().size() + 3);
 
 		assertThat(retry.getRetryConfig().getExceptionPredicate().test(new IOException())).isTrue();
 		assertThat(retry.getRetryConfig().getExceptionPredicate().test(new IgnoredException())).isFalse();

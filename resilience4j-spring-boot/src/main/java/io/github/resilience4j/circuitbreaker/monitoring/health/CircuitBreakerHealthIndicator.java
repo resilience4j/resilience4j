@@ -35,6 +35,7 @@ public class CircuitBreakerHealthIndicator implements HealthIndicator {
     private static final String FAILED_CALLS = "failedCalls";
     private static final String NOT_PERMITTED = "notPermittedCalls";
     private static final String MAX_BUFFERED_CALLS = "maxBufferedCalls";
+    private static final String STATE = "state";
     private CircuitBreaker circuitBreaker;
 
     public CircuitBreakerHealthIndicator(CircuitBreaker circuitBreaker) {
@@ -69,7 +70,8 @@ public class CircuitBreakerHealthIndicator implements HealthIndicator {
             .withDetail(MAX_BUFFERED_CALLS, metrics.getMaxNumberOfBufferedCalls())
             .withDetail(BUFFERED_CALLS, metrics.getNumberOfBufferedCalls())
             .withDetail(FAILED_CALLS, metrics.getNumberOfFailedCalls())
-            .withDetail(NOT_PERMITTED, metrics.getNumberOfNotPermittedCalls());
+            .withDetail(NOT_PERMITTED, metrics.getNumberOfNotPermittedCalls())
+            .withDetail(STATE, circuitBreaker.getState());
         return builder;
     }
 }
