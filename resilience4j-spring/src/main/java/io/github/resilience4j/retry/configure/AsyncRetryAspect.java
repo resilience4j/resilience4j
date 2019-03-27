@@ -19,7 +19,7 @@ import io.github.resilience4j.recovery.RecoveryFunction;
 import io.github.resilience4j.retry.AsyncRetryRegistry;
 import io.github.resilience4j.retry.annotation.AsyncRetry;
 import io.github.resilience4j.retry.annotation.Retry;
-import io.vavr.control.Try;
+import io.github.resilience4j.utils.AnnotationExtractor;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -104,22 +104,13 @@ public class AsyncRetryAspect implements Ordered {
 		if (logger.isDebugEnabled()) {
 			logger.debug("async retry parameter is null");
 		}
-		AsyncRetry retry = null;
+
 		Class<?> targetClass = proceedingJoinPoint.getTarget().getClass();
 		if (targetClass.getDeclaredAnnotation(Retry.class) != null || targetClass.getAnnotation(Retry.class) != null) {
 			throw new IllegalStateException("You can not have AsyncRetry and Retry annotation both defined on class level, please use only one of them ");
 		}
-		if (targetClass.isAnnotationPresent(AsyncRetry.class)) {
-			retry = targetClass.getAnnotation(AsyncRetry.class);
-			if (retry == null && logger.isDebugEnabled()) {
-				logger.debug("TargetClass has no annotation 'Retry'");
-				retry = targetClass.getDeclaredAnnotation(AsyncRetry.class);
-				if (retry == null && logger.isDebugEnabled()) {
-					logger.debug("TargetClass has no declared annotation 'Retry'");
-				}
-			}
-		}
-		return retry;
+
+		return AnnotationExtractor.extract(targetClass, AsyncRetry.class);
 	}
 
 	/**

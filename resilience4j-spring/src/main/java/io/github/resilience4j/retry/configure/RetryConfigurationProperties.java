@@ -34,11 +34,11 @@ import io.github.resilience4j.retry.RetryConfig;
 public class RetryConfigurationProperties {
 	private final Map<String, BackendProperties> backends = new HashMap<>();
 	/*  This property gives you control over Retry aspect application order.
-		By default Retry will be executed BEFORE Circuit breaker and rateLimiter.
-		By adjusting RateLimiterProperties.rateLimiterAspectOrder and CircuitBreakerProperties.circuitBreakerAspectOrder
-		you explicitly define aspects CircuitBreaker and RateLimiter execution sequence.
+		By default Retry will be executed BEFORE Circuit breaker, rateLimiter and bulkhead.
+		By adjusting each aspect order from ConfigurationProperties
+		you explicitly define aspects execution sequence.
 	*/
-	private int retryAspectOrder = Integer.MAX_VALUE - 2;
+	private int retryAspectOrder = Integer.MAX_VALUE - 3;
 
 	/**
 	 * @param backend backend name

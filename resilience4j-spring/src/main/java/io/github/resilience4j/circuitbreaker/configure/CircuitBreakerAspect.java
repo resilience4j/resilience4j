@@ -20,6 +20,7 @@ import io.github.resilience4j.circuitbreaker.annotation.ApiType;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.utils.CircuitBreakerUtils;
 import io.github.resilience4j.reactor.circuitbreaker.operator.CircuitBreakerOperator;
+import io.github.resilience4j.utils.AnnotationExtractor;
 import io.github.resilience4j.recovery.RecoveryFunction;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
@@ -87,19 +88,8 @@ public class CircuitBreakerAspect implements Ordered {
 		if (logger.isDebugEnabled()) {
 			logger.debug("circuitBreaker parameter is null");
 		}
-		CircuitBreaker circuitBreaker = null;
-		Class<?> targetClass = proceedingJoinPoint.getTarget().getClass();
-		if (targetClass.isAnnotationPresent(CircuitBreaker.class)) {
-			circuitBreaker = targetClass.getAnnotation(CircuitBreaker.class);
-			if (circuitBreaker == null && logger.isDebugEnabled()) {
-				logger.debug("TargetClass has no annotation 'CircuitBreaker'");
-				circuitBreaker = targetClass.getDeclaredAnnotation(CircuitBreaker.class);
-				if (circuitBreaker == null && logger.isDebugEnabled()) {
-					logger.debug("TargetClass has no declared annotation 'CircuitBreaker'");
-				}
-			}
-		}
-		return circuitBreaker;
+
+		return AnnotationExtractor.extract(proceedingJoinPoint.getTarget().getClass(), CircuitBreaker.class);
 	}
 
 	private Object handleJoinPoint(ProceedingJoinPoint proceedingJoinPoint, io.github.resilience4j.circuitbreaker.CircuitBreaker circuitBreaker, RecoveryFunction recovery, String methodName, ApiType type) throws Throwable {
