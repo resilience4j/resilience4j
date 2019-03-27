@@ -33,7 +33,6 @@ import org.springframework.context.annotation.Configuration;
 public class CircuitBreakerConfiguration {
 
 	private final CircuitBreakerConfigurationProperties circuitBreakerProperties;
-	private EventConsumerRegister eventConsumerRegister;
 	
 	public CircuitBreakerConfiguration(CircuitBreakerConfigurationProperties circuitBreakerProperties) {
 		this.circuitBreakerProperties = circuitBreakerProperties;
@@ -43,7 +42,7 @@ public class CircuitBreakerConfiguration {
     public CircuitBreakerRegistry circuitBreakerRegistry(EventConsumerRegistry<CircuitBreakerEvent> eventConsumerRegistry) {
         CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
         registerPostCreationEventConsumer(circuitBreakerRegistry, eventConsumerRegistry);
-        initializeBackends(circuitBreakerRegistry, eventConsumerRegistry);
+        initializeBackends(circuitBreakerRegistry);
         return circuitBreakerRegistry;
     }
 
@@ -67,10 +66,8 @@ public class CircuitBreakerConfiguration {
      * Initializes the backends configured in the properties.
      * 
      * @param circuitBreakerRegistry The circuit breaker registry.
-     * @param eventConsumerRegistry The event consumer registry.
      */
-    public void initializeBackends(CircuitBreakerRegistry circuitBreakerRegistry,
-    							   EventConsumerRegistry<CircuitBreakerEvent> eventConsumerRegistry) {
+    public void initializeBackends(CircuitBreakerRegistry circuitBreakerRegistry) {
     	
     	circuitBreakerProperties.getBackends().forEach(
                 (name, properties) -> {
@@ -80,7 +77,7 @@ public class CircuitBreakerConfiguration {
         );
     	
     }
-    
+
     /**
      * Registers the post creation consumer function that registers the consumer events to the circuit breakers.
      * 
@@ -89,9 +86,8 @@ public class CircuitBreakerConfiguration {
      */
     public void registerPostCreationEventConsumer(CircuitBreakerRegistry circuitBreakerRegistry,
     		EventConsumerRegistry<CircuitBreakerEvent> eventConsumerRegistry) {
-    	eventConsumerRegister = new EventConsumerRegister(eventConsumerRegistry);
-		circuitBreakerRegistry.registerPostCreationConsumer(
-				(circuitBreaker, config) -> eventConsumerRegister.registerEventConsumer(circuitBreaker, config));
+        final EventConsumerRegister eventConsumerRegister = new EventConsumerRegister(eventConsumerRegistry);
+		circuitBreakerRegistry.registerPostCreationConsumer(eventConsumerRegister::registerEventConsumer);
     }
     
     /**

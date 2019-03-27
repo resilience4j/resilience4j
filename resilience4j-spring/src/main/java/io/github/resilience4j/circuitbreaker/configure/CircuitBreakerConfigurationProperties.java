@@ -21,6 +21,7 @@ import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.Builder;
 
 import org.hibernate.validator.constraints.time.DurationMin;
 import org.springframework.beans.BeanUtils;
+import org.springframework.util.StringUtils;
 
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
@@ -48,11 +49,11 @@ public class CircuitBreakerConfigurationProperties {
     }
 
     private BackendProperties getBackendProperties(String backend) {
-    	BackendProperties properties = backends.get(backend);
-    	if(properties.getSharedConfigName() != null && !properties.getSharedConfigName().isEmpty() ) {
-    		return getSharedConfigProperties(properties.getSharedConfigName());
+    	BackendProperties backendProperties = backends.get(backend);
+        if(!StringUtils.isEmpty(backendProperties.getSharedConfigName())) {
+    		return getSharedConfigProperties(backendProperties.getSharedConfigName());
     	}
-    	return properties;
+    	return backendProperties;
     }
     
     private BackendProperties getSharedConfigProperties(String sharedConfig) {
@@ -65,7 +66,7 @@ public class CircuitBreakerConfigurationProperties {
     
     public CircuitBreakerConfig createCircuitBreakerConfigFromShared(String sharedConfig) {
         BackendProperties backendProperties = getSharedConfigProperties(sharedConfig);
-        if(backendProperties.getSharedConfigName() == null) {
+        if(StringUtils.isEmpty(backendProperties.getSharedConfigName())) {
             return buildCircuitBreakerConfig(backendProperties).configurationName(sharedConfig).build();
         }
         return createCircuitBreakerConfig(getSharedConfigProperties(sharedConfig));

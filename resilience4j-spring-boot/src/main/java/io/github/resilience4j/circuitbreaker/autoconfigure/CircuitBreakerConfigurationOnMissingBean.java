@@ -54,10 +54,10 @@ public class CircuitBreakerConfigurationOnMissingBean {
         circuitBreakerConfiguration.registerPostCreationEventConsumer(circuitBreakerRegistry, eventConsumerRegistry);
         // Register a consumer to hook up any health indicators for circuit breakers after creation. This will catch ones that get
         // created beyond initially configured backends.
-        circuitBreakerRegistry.registerPostCreationConsumer((circuitBreaker, config) -> createHeathIndicatorForCircuitBreaker(circuitBreaker, config));
+        circuitBreakerRegistry.registerPostCreationConsumer(this::createHeathIndicatorForCircuitBreaker);
 
         // Initialize backends that were initially configured.
-        circuitBreakerConfiguration.initializeBackends(circuitBreakerRegistry, eventConsumerRegistry);
+        circuitBreakerConfiguration.initializeBackends(circuitBreakerRegistry);
 
         return circuitBreakerRegistry;
     }
