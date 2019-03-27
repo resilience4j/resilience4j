@@ -29,14 +29,7 @@ public class BulkheadConfig {
     private int maxConcurrentCalls = DEFAULT_MAX_CONCURRENT_CALLS;
     private long maxWaitTime = DEFAULT_MAX_WAIT_TIME;
 
-    private BulkheadConfig() { }
-
-    public int getMaxConcurrentCalls() {
-        return maxConcurrentCalls;
-    }
-
-    public long getMaxWaitTime() {
-        return maxWaitTime;
+    private BulkheadConfig() {
     }
 
     /**
@@ -44,7 +37,7 @@ public class BulkheadConfig {
      *
      * @return a {@link Builder}
      */
-    public static Builder custom(){
+    public static Builder custom() {
         return new Builder();
     }
 
@@ -55,6 +48,14 @@ public class BulkheadConfig {
      */
     public static BulkheadConfig ofDefaults() {
         return new Builder().build();
+    }
+
+    public int getMaxConcurrentCalls() {
+        return maxConcurrentCalls;
+    }
+
+    public long getMaxWaitTime() {
+        return maxWaitTime;
     }
 
     public static class Builder {
@@ -77,9 +78,9 @@ public class BulkheadConfig {
 
         /**
          * Configures a maximum amount of time in ms the calling thread will wait to enter the bulkhead. If bulkhead has space available, entry
-         * is guaranteed and immediate. If bulkhead is full, calling threads will contest for space, if it becomes available. maxWaitTime can be set to 0.
-         *
-         * Note: for threads running on an event-loop or equivalent (rx computation pool, etc), setting maxWaitTime to 0 is highly recommended. Blocking
+         * is guaranteed and immediate. If bulkhead is full, calling threads will contest for space, if it becomes available. keepAliveTime can be set to 0.
+         * <p>
+         * Note: for threads running on an event-loop or equivalent (rx computation pool, etc), setting keepAliveTime to 0 is highly recommended. Blocking
          * an event-loop thread will most likely have a negative effect on application throughput.
          *
          * @param maxWaitTime maximum wait time for bulkhead entry
@@ -87,7 +88,7 @@ public class BulkheadConfig {
          */
         public Builder maxWaitTime(long maxWaitTime) {
             if (maxWaitTime < 0) {
-                throw new IllegalArgumentException("maxWaitTime must be a positive integer value >= 0");
+                throw new IllegalArgumentException("keepAliveTime must be a positive integer value >= 0");
             }
             config.maxWaitTime = maxWaitTime;
             return this;

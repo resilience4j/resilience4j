@@ -18,9 +18,9 @@
  */
 package io.github.resilience4j.bulkhead;
 
-import org.junit.Test;
-
 import static org.assertj.core.api.Java6Assertions.assertThat;
+
+import org.junit.Test;
 
 public class ThreadPoolBulkheadConfigTest {
 
@@ -35,17 +35,17 @@ public class ThreadPoolBulkheadConfigTest {
 
         // when
         ThreadPoolBulkheadConfig config = ThreadPoolBulkheadConfig.custom()
-            .maxThreadPoolSize(maxThreadPoolSize)
-            .coreThreadPoolSize(coreThreadPoolSize)
-            .queueCapacity(queueCapacity)
-            .maxWaitTime(maxWait)
-            .build();
+                .maxThreadPoolSize(maxThreadPoolSize)
+                .coreThreadPoolSize(coreThreadPoolSize)
+                .queueCapacity(queueCapacity)
+                .keepAliveTime(maxWait)
+                .build();
 
         // then
         assertThat(config).isNotNull();
         assertThat(config.getMaxThreadPoolSize()).isEqualTo(maxThreadPoolSize);
         assertThat(config.getCoreThreadPoolSize()).isEqualTo(coreThreadPoolSize);
-        assertThat(config.getMaxWaitTime()).isEqualTo(maxWait);
+        assertThat(config.getKeepAliveTime()).isEqualTo(maxWait);
         assertThat(config.getQueueCapacity()).isEqualTo(queueCapacity);
     }
 
@@ -53,8 +53,8 @@ public class ThreadPoolBulkheadConfigTest {
     public void testBuildWithIllegalMaxThreadPoolSize() {
         // when
         ThreadPoolBulkheadConfig.custom()
-            .maxThreadPoolSize(-1)
-            .build();
+                .maxThreadPoolSize(-1)
+                .build();
 
     }
 
@@ -71,16 +71,16 @@ public class ThreadPoolBulkheadConfigTest {
     public void testBuildWithIllegalMaxWait() {
         // when
         ThreadPoolBulkheadConfig.custom()
-            .maxWaitTime(-1)
-            .build();
+                .keepAliveTime(-1)
+                .build();
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void testBuildWithIllegalQueueCapacity() {
         // when
         ThreadPoolBulkheadConfig.custom()
-            .queueCapacity(-1)
-            .build();
+                .queueCapacity(-1)
+                .build();
     }
 
 }

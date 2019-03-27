@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright 2017 Robert Winkler, Lucas Lech
+ *  Copyright 2017 Robert Winkler, Lucas Lech, Mahmoud Romeh
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -18,51 +18,135 @@
  */
 package io.github.resilience4j.bulkhead;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.times;
+
+import java.util.concurrent.CompletionStage;
+import java.util.concurrent.ExecutionException;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.BDDMockito;
 import org.mockito.Mockito;
 
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
-
 import io.github.resilience4j.test.HelloWorldService;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.times;
 
 public class ThreadPoolBulkheadTest {
 
-    private HelloWorldService helloWorldService;
-    private ThreadPoolBulkheadConfig config;
+	private HelloWorldService helloWorldService;
+	private ThreadPoolBulkheadConfig config;
 
-    @Before
-    public void setUp(){
-        helloWorldService = Mockito.mock(HelloWorldService.class);
-        config = ThreadPoolBulkheadConfig.custom()
-            .maxThreadPoolSize(1)
-            .coreThreadPoolSize(1)
-            .queueCapacity(10)
-            .build();
-    }
+	@Before
+	public void setUp() {
+		helloWorldService = Mockito.mock(HelloWorldService.class);
+		config = ThreadPoolBulkheadConfig.custom()
+				.maxThreadPoolSize(1)
+				.coreThreadPoolSize(1)
+				.queueCapacity(1)
+				.build();
+	}
 
-    @Test
-    public void shouldExecuteSupplierAndReturnWithSuccess() throws ExecutionException, InterruptedException {
+	@Test
+	public void shouldExecuteSupplierAndFailWithBulkHeadFull() throws InterruptedException {
 
-        // Given
-        ThreadPoolBulkhead bulkhead = ThreadPoolBulkhead.of("test", config);
+		// Given
+		ThreadPoolBulkhead bulkhead = ThreadPoolBulkhead.of("testSupplier", config);
 
-        BDDMockito.given(helloWorldService.returnHelloWorld()).willReturn("Hello world");
+		BDDMockito.given(helloWorldService.returnHelloWorld()).willReturn("Hello world");
+		final Exception exception = new Exception();
+		// When
+		new Thread(() -> {
+			try {
+				bulkhead.executeRunnable(() -> {
+					try {
+						Thread.sleep(200);
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+				});
+			} catch (Exception e) {
+				exception.initCause(e);
+			}
+		}).start();
+		new Thread(() -> {
+			try {
+				bulkhead.executeSupplier(helloWorldService::returnHelloWorld);
+			} catch (Exception e) {
+				exception.initCause(e);
+			}
+		}).start();
+		new Thread(() -> {
+			try {
+				bulkhead.executeSupplier(helloWorldService::returnHelloWorld);
+			} catch (Exception e) {
+				exception.initCause(e);
+			}
+		}).start();
+		Thread.sleep(500);
+		// Then
+		assertThat(exception.getCause().getMessage()).contains("ThreadPoolBulkhead 'testSupplier' is full");
+	}
 
-        // When
-        Future<String> result = bulkhead.executeSupplier(helloWorldService::returnHelloWorld);
 
-        // Then
-        assertThat(result.get()).isEqualTo("Hello world");
-        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
-        BDDMockito.then(helloWorldService).should(times(1)).returnHelloWorld();
-    }
+	@Test
+	public void shouldExecuteCallableAndFailWithBulkHeadFull() throws InterruptedException {
 
+		// Given
+		ThreadPoolBulkhead bulkhead = ThreadPoolBulkhead.of("test", config);
+
+		BDDMockito.given(helloWorldService.returnHelloWorld()).willReturn("Hello world");
+		final Exception exception = new Exception();
+		// When
+		new Thread(() -> {
+			try {
+				bulkhead.executeRunnable(() -> {
+					try {
+						Thread.sleep(200);
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+				});
+			} catch (Exception e) {
+				exception.initCause(e);
+			}
+
+		}).start();
+		new Thread(() -> {
+			try {
+				bulkhead.executeCallable(helloWorldService::returnHelloWorld);
+			} catch (Exception e) {
+				exception.initCause(e);
+			}
+		}).start();
+		new Thread(() -> {
+			try {
+				bulkhead.executeCallable(helloWorldService::returnHelloWorld);
+			} catch (Exception e) {
+				exception.initCause(e);
+			}
+		}).start();
+		Thread.sleep(500);
+		// Then
+		assertThat(exception).hasCauseInstanceOf(BulkheadFullException.class);
+	}
+
+
+	@Test
+	public void shouldExecuteSupplierAndReturnWithSuccess() throws ExecutionException, InterruptedException {
+
+		// Given
+		ThreadPoolBulkhead bulkhead = ThreadPoolBulkhead.of("test", config);
+
+		BDDMockito.given(helloWorldService.returnHelloWorld()).willReturn("Hello world");
+
+		// When
+		CompletionStage<String> result = bulkhead.executeSupplier(helloWorldService::returnHelloWorld);
+
+
+		// Then
+		assertThat(result.toCompletableFuture().get()).isEqualTo("Hello world");
+		BDDMockito.then(helloWorldService).should(times(1)).returnHelloWorld();
+	}
 
 
 }

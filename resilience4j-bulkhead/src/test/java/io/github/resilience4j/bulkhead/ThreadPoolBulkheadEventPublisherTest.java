@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright 2017 Robert Winkler, Lucas Lech
+ *  Copyright 2017 Robert Winkler, Lucas Lech, Mahmoud Romeh
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -18,79 +18,130 @@
  */
 package io.github.resilience4j.bulkhead;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.mockito.BDDMockito;
-import org.slf4j.Logger;
-
-import java.util.concurrent.ExecutionException;
-
-import io.github.resilience4j.test.HelloWorldService;
-
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 
+import java.util.concurrent.ExecutionException;
+
+import org.junit.Before;
+import org.junit.Test;
+import org.mockito.BDDMockito;
+import org.slf4j.Logger;
+
+import io.github.resilience4j.test.HelloWorldService;
+
 public class ThreadPoolBulkheadEventPublisherTest {
 
-    private HelloWorldService helloWorldService;
-    private ThreadPoolBulkheadConfig config;
-    private Logger logger;
-    private ThreadPoolBulkhead bulkhead;
+	private HelloWorldService helloWorldService;
+	private ThreadPoolBulkheadConfig config;
+	private Logger logger;
+	private ThreadPoolBulkhead bulkhead;
 
-    @Before
-    public void setUp(){
-        helloWorldService = mock(HelloWorldService.class);
-        config = ThreadPoolBulkheadConfig.custom()
-            .maxThreadPoolSize(1)
-            .coreThreadPoolSize(1)
-            .build();
+	@Before
+	public void setUp() {
+		helloWorldService = mock(HelloWorldService.class);
+		config = ThreadPoolBulkheadConfig.custom()
+				.maxThreadPoolSize(1)
+				.coreThreadPoolSize(1)
+				.build();
 
-        bulkhead = ThreadPoolBulkhead.of("test", config);
+		bulkhead = ThreadPoolBulkhead.of("test", config);
 
-        logger = mock(Logger.class);
-    }
+		logger = mock(Logger.class);
+	}
 
-    @Test
-    public void shouldReturnTheSameConsumer() {
-        ThreadPoolBulkhead.EventPublisher eventPublisher = bulkhead.getEventPublisher();
-        ThreadPoolBulkhead.EventPublisher eventPublisher2 = bulkhead.getEventPublisher();
+	@Test
+	public void shouldReturnTheSameConsumer() {
+		ThreadPoolBulkhead.EventPublisher eventPublisher = bulkhead.getEventPublisher();
+		ThreadPoolBulkhead.EventPublisher eventPublisher2 = bulkhead.getEventPublisher();
 
-        assertThat(eventPublisher).isEqualTo(eventPublisher2);
-    }
+		assertThat(eventPublisher).isEqualTo(eventPublisher2);
+	}
 
-    @Test
-    public void shouldConsumeOnCallPermittedEvent() throws ExecutionException, InterruptedException {
-        // Given
-        ThreadPoolBulkhead bulkhead = ThreadPoolBulkhead.of("test", config);
-        BDDMockito.given(helloWorldService.returnHelloWorld()).willReturn("Hello world");
+	@Test
+	public void shouldConsumeOnCallRejectedEvent() throws ExecutionException, InterruptedException {
+		// Given
+		ThreadPoolBulkhead bulkhead = ThreadPoolBulkhead.of("test", ThreadPoolBulkheadConfig.custom()
+				.maxThreadPoolSize(1)
+				.coreThreadPoolSize(1)
+				.queueCapacity(1)
+				.build());
 
-        // When
-        bulkhead.getEventPublisher()
-            .onCallPermitted(event ->
-                    logger.info(event.getEventType().toString()));
+		BDDMockito.given(helloWorldService.returnHelloWorld()).willReturn("Hello world");
 
-        String result = bulkhead.executeSupplier(helloWorldService::returnHelloWorld).get();
+		// When
+		bulkhead.getEventPublisher()
+				.onCallRejected(event ->
+						logger.info(event.getEventType().toString()));
+		final Exception exception = new Exception();
+		// When
+		new Thread(() -> {
+			try {
+				bulkhead.executeRunnable(() -> {
+					try {
+						Thread.sleep(200);
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+				});
+			} catch (Exception e) {
+				exception.initCause(e);
+			}
 
-        // Then
-        assertThat(result).isEqualTo("Hello world");
-        then(logger).should(times(1)).info("CALL_PERMITTED");
-    }
+		}).start();
+		new Thread(() -> {
+			try {
+				bulkhead.executeCallable(helloWorldService::returnHelloWorld);
+			} catch (Exception e) {
+				exception.initCause(e);
+			}
+		}).start();
+		new Thread(() -> {
+			try {
+				bulkhead.executeCallable(helloWorldService::returnHelloWorld);
+			} catch (Exception e) {
+				exception.initCause(e);
+			}
+		}).start();
+		Thread.sleep(500);
+		// Then
+		assertThat(exception).hasCauseInstanceOf(BulkheadFullException.class);
+		then(logger).should(times(1)).info("CALL_REJECTED");
+	}
 
-    @Test
-    public void shouldConsumeOnCallFinishedEventWhenExecutionIsFinished() throws Exception {
-        // Given
-        ThreadPoolBulkhead bulkhead = ThreadPoolBulkhead.of("test", config);
+	@Test
+	public void shouldConsumeOnCallPermittedEvent() throws ExecutionException, InterruptedException {
+		// Given
+		ThreadPoolBulkhead bulkhead = ThreadPoolBulkhead.of("test", config);
+		BDDMockito.given(helloWorldService.returnHelloWorld()).willReturn("Hello world");
 
-        // When
-        bulkhead.getEventPublisher()
-                .onCallFinished(event ->
-                        logger.info(event.getEventType().toString()));
+		// When
+		bulkhead.getEventPublisher()
+				.onCallPermitted(event ->
+						logger.info(event.getEventType().toString()));
 
-        bulkhead.onComplete();
+		String result = bulkhead.executeSupplier(helloWorldService::returnHelloWorld).toCompletableFuture().get();
 
-        // Then
-        then(logger).should(times(1)).info("CALL_FINISHED");
-    }
+		// Then
+		assertThat(result).isEqualTo("Hello world");
+		then(logger).should(times(1)).info("CALL_PERMITTED");
+	}
+
+	@Test
+	public void shouldConsumeOnCallFinishedEventWhenExecutionIsFinished() throws Exception {
+		// Given
+		ThreadPoolBulkhead bulkhead = ThreadPoolBulkhead.of("test", config);
+
+		// When
+		bulkhead.getEventPublisher()
+				.onCallFinished(event ->
+						logger.info(event.getEventType().toString()));
+
+		bulkhead.onComplete();
+
+		// Then
+		then(logger).should(times(1)).info("CALL_FINISHED");
+	}
 }
