@@ -13,4 +13,7 @@ dependencies {
     compileOnly project(':resilience4j-metrics')
     testCompile project(':resilience4j-prometheus')
     testCompile project(':resilience4j-metrics')
+    testCompile ( libraries.spring_boot_web )
+    testCompile ( libraries.spring_boot_aop )
+    testCompile ( libraries.spring_boot_test )
 }
