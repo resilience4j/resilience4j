@@ -16,5 +16,10 @@ public @interface Bulkhead {
      */
     String name();
 
+    /**
+     * recovery function. Default is {@link DefaultRecoveryFunction} which does nothing.
+     *
+     * @return recovery function class
+     */
     Class<? extends RecoveryFunction> recovery() default DefaultRecoveryFunction.class;
 }
