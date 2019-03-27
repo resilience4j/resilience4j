@@ -65,7 +65,7 @@ public class AsyncRetryAutoConfigurationTest {
 	private TestRestTemplate restTemplate;
 
 	/**
-	 * The test verifies that a Async Retry instance is created and configured properly when the RetryDummyService is invoked and
+	 * The test verifies that the Async Retry instance is created and configured properly when the RetryDummyService is invoked and
 	 * that the Async Retry logic is properly handled
 	 */
 	@Test
