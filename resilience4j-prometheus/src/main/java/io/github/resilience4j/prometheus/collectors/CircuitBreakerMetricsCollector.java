@@ -96,17 +96,17 @@ public class CircuitBreakerMetricsCollector extends Collector {
         );
         GaugeMetricFamily callsFamily = new GaugeMetricFamily(
             names.getCallsMetricName(),
-            "The number of circuit breaker calls for corresponding kind",
+            "The number of calls for a corresponding kind",
             LabelNames.NAME_AND_KIND
         );
         GaugeMetricFamily bufferedCallsFamily = new GaugeMetricFamily(
             names.getBufferedCallsMetricName(),
-            "The number of circuit breaker buffered calls",
+            "The number of buffered calls",
             LabelNames.NAME
         );
         GaugeMetricFamily maxBufferedCallsFamily = new GaugeMetricFamily(
             names.getMaxBufferedCallsMetricName(),
-            "The number of circuit breaker max buffered calls",
+            "The maximum number of buffered calls",
             LabelNames.NAME
         );
 

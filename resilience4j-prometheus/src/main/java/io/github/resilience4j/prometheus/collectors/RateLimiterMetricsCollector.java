@@ -90,12 +90,12 @@ public class RateLimiterMetricsCollector extends Collector  {
     public List<MetricFamilySamples> collect() {
         GaugeMetricFamily availablePermissionsFamily = new GaugeMetricFamily(
             names.getAvailablePermissionsMetricName(),
-            "The number of rate limiter available permissions",
+            "The number of available permissions",
             LabelNames.NAME
         );
         GaugeMetricFamily waitingThreadsFamily = new GaugeMetricFamily(
             names.getWaitingThreadsMetricName(),
-            "The number of rate limiter waiting threads",
+            "The number of waiting threads",
             LabelNames.NAME
         );
 
