@@ -16,6 +16,7 @@ public class AnnotationExtractor {
      *
      * @param targetClass target class
      * @param annotationClass annotation class
+     * @param <T> The annotation type.
      * @return annotation
      */
     public static <T extends Annotation> T extract(Class<?> targetClass, Class<T> annotationClass) {

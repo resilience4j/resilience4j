@@ -36,6 +36,7 @@ public class TaggedAsyncRetryMetrics implements MeterBinder {
      * Creates a new binder that uses given {@code registry} as source of retries.
      *
      * @param registry the source of async retries
+     * @return The {@link TaggedAsyncRetryMetrics} instance.
      */
     public static TaggedAsyncRetryMetrics ofAsyncRetryRegistry(AsyncRetryRegistry registry) {
         return new TaggedAsyncRetryMetrics(MetricNames.ofDefaults(), registry.getAllRetries());
@@ -46,6 +47,7 @@ public class TaggedAsyncRetryMetrics implements MeterBinder {
      *
      * @param names custom metric names
      * @param registry the source of retries
+     * @return The {@link TaggedAsyncRetryMetrics} instance.
      */
     public static TaggedAsyncRetryMetrics ofAsyncRetryRegistry(MetricNames names, AsyncRetryRegistry registry) {
         return new TaggedAsyncRetryMetrics(names, registry.getAllRetries());
@@ -89,12 +91,15 @@ public class TaggedAsyncRetryMetrics implements MeterBinder {
         /**
          * Returns a builder for creating custom metric names.
          * Note that names have default values, so only desired metrics can be renamed.
+         * @return The builder.
          */
         public static Builder custom() {
             return new Builder();
         }
 
-        /** Returns default metric names. */
+        /** Returns default metric names.
+         * @return The default {@link MetricNames} instance.
+         */
         public static MetricNames ofDefaults() {
             return new MetricNames();
         }
@@ -103,7 +108,9 @@ public class TaggedAsyncRetryMetrics implements MeterBinder {
 
         private MetricNames() {}
 
-        /** Returns the metric name for async retry calls, defaults to {@value DEFAULT_ASYNC_RETRY_CALLS}. */
+        /** Returns the metric name for async retry calls, defaults to {@value DEFAULT_ASYNC_RETRY_CALLS}.
+         * @return The calls metric name.
+         */
         public String getCallsMetricName() {
             return callsMetricName;
         }
@@ -112,13 +119,18 @@ public class TaggedAsyncRetryMetrics implements MeterBinder {
         public static class Builder {
             private final MetricNames metricNames = new MetricNames();
 
-            /** Overrides the default metric name {@value MetricNames#DEFAULT_ASYNC_RETRY_CALLS} with a given one. */
+            /** Overrides the default metric name {@value MetricNames#DEFAULT_ASYNC_RETRY_CALLS} with a given one.
+             * @param callsMetricName The calls metric name.
+             * @return The builder.
+             */
             public Builder callsMetricName(String callsMetricName) {
                 metricNames.callsMetricName = requireNonNull(callsMetricName);
                 return this;
             }
 
-            /** Builds {@link MetricNames} instance. */
+            /** Builds {@link MetricNames} instance.
+             * @return The built {@link MetricNames} instance.
+             */
             public MetricNames build() {
                 return metricNames;
             }
