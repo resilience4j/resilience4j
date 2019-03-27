@@ -18,6 +18,7 @@ package io.github.resilience4j.bulkhead.configure;
 import io.github.resilience4j.bulkhead.BulkheadRegistry;
 import io.github.resilience4j.bulkhead.annotation.Bulkhead;
 import io.github.resilience4j.bulkhead.utils.BulkheadUtils;
+import io.github.resilience4j.recovery.RecoveryFunction;
 import io.github.resilience4j.utils.AnnotationExtractor;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
@@ -61,7 +62,9 @@ public class BulkheadAspect implements Ordered {
 		}
 		String backend = backendMonitored.name();
 		io.github.resilience4j.bulkhead.Bulkhead bulkhead = getOrCreateBulkhead(methodName, backend);
-		return handleJoinPoint(proceedingJoinPoint, bulkhead, methodName);
+		RecoveryFunction recovery = backendMonitored.recovery().newInstance();
+
+		return handleJoinPoint(proceedingJoinPoint, bulkhead, recovery, methodName);
 	}
 
 	private io.github.resilience4j.bulkhead.Bulkhead getOrCreateBulkhead(String methodName, String backend) {
@@ -85,7 +88,8 @@ public class BulkheadAspect implements Ordered {
 		return AnnotationExtractor.extract(proceedingJoinPoint.getTarget().getClass(), Bulkhead.class);
 	}
 
-	private Object handleJoinPoint(ProceedingJoinPoint proceedingJoinPoint, io.github.resilience4j.bulkhead.Bulkhead  bulkhead, String methodName) throws Throwable {
+	@SuppressWarnings("unchecked")
+	private Object handleJoinPoint(ProceedingJoinPoint proceedingJoinPoint, io.github.resilience4j.bulkhead.Bulkhead  bulkhead, RecoveryFunction recovery, String methodName) throws Throwable {
 		BulkheadUtils.isCallPermitted(bulkhead);
 		try {
 			return proceedingJoinPoint.proceed();
@@ -93,7 +97,8 @@ public class BulkheadAspect implements Ordered {
 			if (logger.isDebugEnabled()) {
 				logger.debug("Invocation of method '" + methodName + "' failed!", throwable);
 			}
-			throw throwable;
+
+			return recovery.apply(throwable);
 		} finally {
 			bulkhead.onComplete();
 		}
