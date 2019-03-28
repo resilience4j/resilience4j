@@ -133,14 +133,12 @@ public class ThreadPoolBulkheadEventPublisherTest {
 	public void shouldConsumeOnCallFinishedEventWhenExecutionIsFinished() throws Exception {
 		// Given
 		ThreadPoolBulkhead bulkhead = ThreadPoolBulkhead.of("test", config);
-
+		BDDMockito.given(helloWorldService.returnHelloWorld()).willReturn("Hello world");
 		// When
 		bulkhead.getEventPublisher()
 				.onCallFinished(event ->
 						logger.info(event.getEventType().toString()));
-
-		bulkhead.onComplete();
-
+		bulkhead.executeSupplier(helloWorldService::returnHelloWorld).toCompletableFuture().get();
 		// Then
 		then(logger).should(times(1)).info("CALL_FINISHED");
 	}

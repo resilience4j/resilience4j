@@ -119,11 +119,6 @@ public interface ThreadPoolBulkhead {
 	void submit(Runnable task) throws BulkheadFullException;
 
 	/**
-	 * Records a completed call.
-	 */
-	void onComplete();
-
-	/**
 	 * Returns the name of this bulkhead.
 	 *
 	 * @return the name of this bulkhead

@@ -109,7 +109,7 @@ public class FixedThreadPoolBulkhead implements ThreadPoolBulkhead {
 					throw new CompletionException(e);
 				}
 			}, executorService).whenComplete((result, throwable) -> {
-				this.onComplete();
+				publishBulkheadEvent(() -> new BulkheadOnCallFinishedEvent(name));
 				if (throwable != null) {
 					promise.completeExceptionally(throwable);
 				} else {
@@ -136,16 +136,11 @@ public class FixedThreadPoolBulkhead implements ThreadPoolBulkhead {
 				} catch (Exception e) {
 					throw new CompletionException(e);
 				}
-			}, executorService).whenComplete((voidResult, throwable) -> this.onComplete());
+			}, executorService).whenComplete((voidResult, throwable) -> publishBulkheadEvent(() -> new BulkheadOnCallFinishedEvent(name)));
 		} catch (RejectedExecutionException rejected) {
 			publishBulkheadEvent(() -> new BulkheadOnCallRejectedEvent(name));
 			throw new BulkheadFullException(String.format("ThreadPoolBulkhead '%s' is full", name));
 		}
-	}
-
-	@Override
-	public void onComplete() {
-		publishBulkheadEvent(() -> new BulkheadOnCallFinishedEvent(name));
 	}
 
 	/**
