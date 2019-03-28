@@ -15,9 +15,18 @@
  */
 package io.github.resilience4j.recovery;
 
-public class DefaultRecoveryFunction<R> implements RecoveryFunction<R> {
+public final class DefaultRecoveryFunction<R> implements RecoveryFunction<R> {
+    private static final DefaultRecoveryFunction<Object> INSTANCE = new DefaultRecoveryFunction<>();
+
+    private DefaultRecoveryFunction() {}
+
     @Override
     public R apply(Throwable throwable) throws Throwable {
         throw  throwable;
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <T> DefaultRecoveryFunction<T> getInstance() {
+        return (DefaultRecoveryFunction<T>) INSTANCE;
     }
 }

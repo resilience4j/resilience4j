@@ -20,6 +20,7 @@ import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
 import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
 import io.github.resilience4j.recovery.RecoveryFunction;
 import io.github.resilience4j.utils.AnnotationExtractor;
+import io.github.resilience4j.utils.RecoveryFunctionUtils;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -69,7 +70,7 @@ public class RateLimiterAspect implements Ordered {
         }
         String name = targetService.name();
         io.github.resilience4j.ratelimiter.RateLimiter rateLimiter = getOrCreateRateLimiter(methodName, name);
-        RecoveryFunction recovery = targetService.recovery().newInstance();
+        RecoveryFunction recovery = RecoveryFunctionUtils.getInstance(targetService.recovery());
         return handleJoinPoint(proceedingJoinPoint, rateLimiter, recovery, methodName);
     }
 

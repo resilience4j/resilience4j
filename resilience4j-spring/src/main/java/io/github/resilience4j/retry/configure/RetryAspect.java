@@ -19,6 +19,7 @@ import io.github.resilience4j.recovery.RecoveryFunction;
 import io.github.resilience4j.retry.RetryRegistry;
 import io.github.resilience4j.retry.annotation.AsyncRetry;
 import io.github.resilience4j.retry.annotation.Retry;
+import io.github.resilience4j.utils.RecoveryFunctionUtils;
 import io.vavr.CheckedFunction0;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
@@ -71,7 +72,7 @@ public class RetryAspect implements Ordered {
 		}
 		String backend = backendMonitored.name();
 		io.github.resilience4j.retry.Retry retry = getOrCreateRetry(methodName, backend);
-		RecoveryFunction recovery = backendMonitored.recovery().newInstance();
+		RecoveryFunction recovery = RecoveryFunctionUtils.getInstance(backendMonitored.recovery());
 
 		return handleJoinPoint(proceedingJoinPoint, retry, recovery, methodName);
 	}

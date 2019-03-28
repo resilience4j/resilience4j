@@ -20,6 +20,7 @@ import io.github.resilience4j.bulkhead.annotation.Bulkhead;
 import io.github.resilience4j.bulkhead.utils.BulkheadUtils;
 import io.github.resilience4j.recovery.RecoveryFunction;
 import io.github.resilience4j.utils.AnnotationExtractor;
+import io.github.resilience4j.utils.RecoveryFunctionUtils;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -62,7 +63,7 @@ public class BulkheadAspect implements Ordered {
 		}
 		String backend = backendMonitored.name();
 		io.github.resilience4j.bulkhead.Bulkhead bulkhead = getOrCreateBulkhead(methodName, backend);
-		RecoveryFunction recovery = backendMonitored.recovery().newInstance();
+		RecoveryFunction recovery = RecoveryFunctionUtils.getInstance(backendMonitored.recovery());
 
 		return handleJoinPoint(proceedingJoinPoint, bulkhead, recovery, methodName);
 	}

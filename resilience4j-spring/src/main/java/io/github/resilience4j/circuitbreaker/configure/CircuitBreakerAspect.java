@@ -20,8 +20,9 @@ import io.github.resilience4j.circuitbreaker.annotation.ApiType;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.utils.CircuitBreakerUtils;
 import io.github.resilience4j.reactor.circuitbreaker.operator.CircuitBreakerOperator;
-import io.github.resilience4j.utils.AnnotationExtractor;
 import io.github.resilience4j.recovery.RecoveryFunction;
+import io.github.resilience4j.utils.AnnotationExtractor;
+import io.github.resilience4j.utils.RecoveryFunctionUtils;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -66,7 +67,7 @@ public class CircuitBreakerAspect implements Ordered {
 		}
 		String backend = backendMonitored.name();
 		ApiType type = backendMonitored.type();
-		RecoveryFunction recovery = backendMonitored.recovery().newInstance();
+		RecoveryFunction recovery = RecoveryFunctionUtils.getInstance(backendMonitored.recovery());
 		io.github.resilience4j.circuitbreaker.CircuitBreaker circuitBreaker = getOrCreateCircuitBreaker(methodName, backend);
 		return handleJoinPoint(proceedingJoinPoint, circuitBreaker, recovery, methodName, type);
 	}
