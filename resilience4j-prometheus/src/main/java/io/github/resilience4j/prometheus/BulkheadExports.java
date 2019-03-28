@@ -34,7 +34,10 @@ import static java.util.Objects.requireNonNull;
 /**
  * An adapter from builtin {@link Bulkhead.Metrics} to prometheus
  * {@link io.prometheus.client.CollectorRegistry}.
+ *
+ * @deprecated use {@link io.github.resilience4j.prometheus.collectors.BulkheadMetricsCollector} instead
  */
+@Deprecated
 public class BulkheadExports extends Collector {
     private static final String DEFAULT_NAME = "resilience4j_bulkhead";
 

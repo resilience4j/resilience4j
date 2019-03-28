@@ -37,7 +37,10 @@ import static java.util.Objects.requireNonNull;
  * {@link io.prometheus.client.CollectorRegistry}.
  *
  * Also exports {@link CircuitBreaker} state as a labeled metric
+ *
+ * @deprecated use {@link io.github.resilience4j.prometheus.collectors.CircuitBreakerMetricsCollector} instead.
  */
+@Deprecated
 public class CircuitBreakerExports extends Collector {
 
     private static final String DEFAULT_NAME = "resilience4j_circuitbreaker";
