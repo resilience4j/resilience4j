@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 lespinsideg
+ * Copyright 2019 Yevhenii Voievodin
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,11 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.resilience4j.bulkhead.autoconfigure;
+package io.github.resilience4j.retry.autoconfigure;
 
-import io.github.resilience4j.bulkhead.BulkheadRegistry;
-import io.github.resilience4j.micrometer.BulkheadMetrics;
-import io.github.resilience4j.micrometer.tagged.TaggedBulkheadMetrics;
+import io.github.resilience4j.micrometer.AsyncRetryMetrics;
+import io.github.resilience4j.micrometer.tagged.TaggedAsyncRetryMetrics;
+import io.github.resilience4j.retry.AsyncRetryRegistry;
 import org.springframework.boot.actuate.autoconfigure.metrics.MetricsAutoConfiguration;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -25,29 +25,25 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-/**
- * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration
- * Auto-configuration} for resilience4j-metrics.
- */
 @Configuration
 @ConditionalOnClass(MetricsAutoConfiguration.class)
-@AutoConfigureAfter(value = {BulkheadMetricsAutoConfiguration.class, MetricsAutoConfiguration.class})
-@ConditionalOnProperty(value = "resilience4j.bulkhead.metrics.enabled", matchIfMissing = true)
-public class BulkheadMetricsAutoConfiguration {
+@AutoConfigureAfter(value = {RetryAutoConfiguration.class, MetricsAutoConfiguration.class})
+@ConditionalOnProperty(value = "resilience4j.async_retry.metrics.enabled", matchIfMissing = true)
+public class AsyncRetryMetricsAutoConfiguration {
 
     @Bean
-    @ConditionalOnProperty(value = "resilience4j.bulkhead.metrics.use_legacy_binder", havingValue = "true")
-    public BulkheadMetrics registerLegacyBulkheadMetrics(BulkheadRegistry bulkheadRegistry) {
-        return BulkheadMetrics.ofBulkheadRegistry(bulkheadRegistry);
+    @ConditionalOnProperty(value = "resilience4j.async_retry.metrics.use_legacy_binder", havingValue = "true")
+    public AsyncRetryMetrics registerLegacyAsyncRetryMetrics(AsyncRetryRegistry asyncRetryRegistry) {
+        return AsyncRetryMetrics.ofRetryRegistry(asyncRetryRegistry);
     }
 
     @Bean
     @ConditionalOnProperty(
-        value = "resilience4j.bulkhead.metrics.use_legacy_binder",
+        value = "resilience4j.async_retry.metrics.use_legacy_binder",
         havingValue = "false",
         matchIfMissing = true
     )
-    public TaggedBulkheadMetrics registerBulkheadMetrics(BulkheadRegistry bulkheadRegistry) {
-        return TaggedBulkheadMetrics.ofBulkheadRegistry(bulkheadRegistry);
+    public TaggedAsyncRetryMetrics registerAsyncRetryMetrics(AsyncRetryRegistry asyncRetryRegistry) {
+        return TaggedAsyncRetryMetrics.ofAsyncRetryRegistry(asyncRetryRegistry);
     }
 }
