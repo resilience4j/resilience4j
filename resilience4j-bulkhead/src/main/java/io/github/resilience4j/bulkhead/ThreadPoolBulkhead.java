@@ -108,15 +108,17 @@ public interface ThreadPoolBulkhead {
 	 * @param task the task to submit
 	 * @param <T>  the type of the task's result
 	 * @return a CompletableFuture representing listenable future completion of the task
+	 * @throws BulkheadFullException if the no permits
 	 */
-	<T> CompletionStage<T> submit(Callable<T> task) throws BulkheadFullException;
+	<T> CompletionStage<T> submit(Callable<T> task);
 
 	/**
 	 * Submits a task for execution.
 	 *
 	 * @param task the task to submit
+	 * @throws BulkheadFullException if the no permits
 	 */
-	void submit(Runnable task) throws BulkheadFullException;
+	void submit(Runnable task);
 
 	/**
 	 * Returns the name of this bulkhead.
@@ -153,8 +155,9 @@ public interface ThreadPoolBulkhead {
 	 * @param supplier the original Supplier
 	 * @param <T>      the type of results supplied by this supplier
 	 * @return the result of the decorated Supplier.
+	 * @throws BulkheadFullException if the no permits
 	 */
-	default <T> CompletionStage<T> executeSupplier(Supplier<T> supplier) throws BulkheadFullException {
+	default <T> CompletionStage<T> executeSupplier(Supplier<T> supplier) {
 		return decorateSupplier(this, supplier).get();
 	}
 

@@ -197,7 +197,7 @@ public class FixedThreadPoolBulkhead implements ThreadPoolBulkhead {
 				if (!executorService.isTerminated()) {
 					executorService.shutdownNow();
 				}
-
+				Thread.currentThread().interrupt();
 			}
 		}));
 	}

@@ -25,7 +25,7 @@ public class ThreadPoolBulkheadConfig {
 
 	public static final int DEFAULT_QUEUE_CAPACITY = 100;
 	public static final long DEFAULT_KEEP_ALIVE_TIME = 20L;
-	public static final int DEFAULT_CORE_THREAD_POOL_SIZE = 2;
+	public static final int DEFAULT_CORE_THREAD_POOL_SIZE = Runtime.getRuntime().availableProcessors() > 1 ? Runtime.getRuntime().availableProcessors() - 1 : 1;
 	public static final int DEFAULT_MAX_THREAD_POOL_SIZE = Runtime.getRuntime().availableProcessors();
 
 	private int maxThreadPoolSize = DEFAULT_MAX_THREAD_POOL_SIZE;
@@ -72,7 +72,7 @@ public class ThreadPoolBulkheadConfig {
 
 	public static class Builder {
 
-		private ThreadPoolBulkheadConfig config = new ThreadPoolBulkheadConfig();
+		private final ThreadPoolBulkheadConfig config = new ThreadPoolBulkheadConfig();
 
 		/**
 		 * Configures the max thread pool size.
