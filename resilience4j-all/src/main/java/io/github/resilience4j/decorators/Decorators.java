@@ -297,7 +297,7 @@ public interface Decorators {
 		 * @param retryContext
 		 * @param scheduler
 		 * @return the decorated CompletionStage
-		 * @deprecated replaced by {@link #withRetry(Retry retryContext, ScheduledExecutorService scheduler)()}
+		 * @deprecated replaced by {@link #withRetry(Retry retryContext, ScheduledExecutorService scheduler)}
 		 */
 		@Deprecated
 		public DecorateCompletionStage<T> withRetry(AsyncRetry retryContext, ScheduledExecutorService scheduler) {
