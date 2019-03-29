@@ -21,6 +21,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.ResponseEntity;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import java.io.IOException;
@@ -38,7 +39,8 @@ import io.github.resilience4j.retry.monitoring.endpoint.RetryEventsEndpointRespo
 import io.github.resilience4j.service.test.RetryDummyService;
 import io.github.resilience4j.service.test.TestApplication;
 
-import static io.github.resilience4j.service.test.RetryDummyService.*;
+import static io.github.resilience4j.service.test.RetryDummyService.RETRY_BACKEND_A;
+import static io.github.resilience4j.service.test.RetryDummyService.RETRY_BACKEND_B;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @RunWith(SpringJUnit4ClassRunner.class)
@@ -70,6 +72,7 @@ public class RetryAutoConfigurationTest {
 	 * that the Retry logic is properly handled
 	 */
 	@Test
+	@DirtiesContext()
 	public void testRetryAutoConfiguration() throws IOException {
 		assertThat(retryRegistry).isNotNull();
 		assertThat(retryProperties).isNotNull();
@@ -115,6 +118,7 @@ public class RetryAutoConfigurationTest {
 	 * that the Async Retry logic is properly handled
 	 */
 	@Test
+	@DirtiesContext()
 	public void testRetryAutoConfigurationAsync() throws Throwable {
 		assertThat(asyncRetryRegistry).isNotNull();
 
