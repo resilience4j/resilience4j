@@ -9,6 +9,14 @@ resilience4j.retry:
       - java.io.IOException
       ignoreExceptions:
       - io.github.resilience4j.circuitbreaker.IgnoredException
+    retryBackendB:
+      maxRetryAttempts: 3
+      waitDuration: 600
+      retryExceptionPredicate: io.github.resilience4j.circuitbreaker.RecordFailurePredicate
+      retryExceptions:
+      - java.io.IOException
+      ignoreExceptions:
+      - io.github.resilience4j.circuitbreaker.IgnoredException
 
 resilience4j.circuitbreaker:
   circuitBreakerAspectOrder: 400
