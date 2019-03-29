@@ -16,10 +16,12 @@
 package io.github.resilience4j.retry.monitoring.endpoint;
 
 
-import java.util.List;
-
 import org.springframework.boot.actuate.endpoint.AbstractEndpoint;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
 
 import io.github.resilience4j.retry.AsyncRetry;
 import io.github.resilience4j.retry.AsyncRetryRegistry;
@@ -44,10 +46,13 @@ public class RetryEndpoint extends AbstractEndpoint {
 
 	@Override
 	public RetryEndpointResponse invoke() {
-		List<String> retries = retryRegistry.getAllRetries()
-				.map(Retry::getName).sorted().toJavaList();
-		retries.addAll(asyncRetryRegistry.getAllRetries()
-				.map(AsyncRetry::getName).sorted().toJavaList());
+		Set<String> retriesSet = retryRegistry.getAllRetries()
+				.map(Retry::getName).sorted().toJavaSet();
+		retriesSet.addAll(asyncRetryRegistry.getAllRetries()
+				.map(AsyncRetry::getName).sorted().toJavaSet());
+
+		List<String> retries = new ArrayList<>();
+		retries.addAll(retriesSet);
 		return new RetryEndpointResponse(retries);
 	}
 }
