@@ -78,9 +78,9 @@ public class BulkheadConfig {
 
 		/**
 		 * Configures a maximum amount of time in ms the calling thread will wait to enter the bulkhead. If bulkhead has space available, entry
-		 * is guaranteed and immediate. If bulkhead is full, calling threads will contest for space, if it becomes available. keepAliveTime can be set to 0.
+		 * is guaranteed and immediate. If bulkhead is full, calling threads will contest for space, if it becomes available. maxWaitTime can be set to 0.
 		 * <p>
-		 * Note: for threads running on an event-loop or equivalent (rx computation pool, etc), setting keepAliveTime to 0 is highly recommended. Blocking
+		 * Note: for threads running on an event-loop or equivalent (rx computation pool, etc), setting maxWaitTime to 0 is highly recommended. Blocking
 		 * an event-loop thread will most likely have a negative effect on application throughput.
 		 *
 		 * @param maxWaitTime maximum wait time for bulkhead entry
