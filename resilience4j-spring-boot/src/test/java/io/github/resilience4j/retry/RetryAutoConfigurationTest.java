@@ -45,10 +45,6 @@ public class RetryAutoConfigurationTest {
 	@Autowired
 	RetryRegistry retryRegistry;
 
-
-	@Autowired
-	AsyncRetryRegistry asyncRetryRegistry;
-
 	@Autowired
 	RetryProperties retryProperties;
 

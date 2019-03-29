@@ -47,7 +47,7 @@ import io.github.resilience4j.service.test.TestApplication;
 public class AsyncRetryAutoConfigurationTest {
 
 	@Autowired
-	AsyncRetryRegistry asyncRetryRegistry;
+	RetryRegistry retryRegistry;
 
 	@Autowired
 	RetryProperties retryProperties;
@@ -65,7 +65,7 @@ public class AsyncRetryAutoConfigurationTest {
 	 */
 	@Test
 	public void testRetryAutoConfigurationAsync() throws Throwable {
-		assertThat(asyncRetryRegistry).isNotNull();
+		assertThat(retryRegistry).isNotNull();
 
 		try {
 			final CompletionStage<String> stringCompletionStage = retryDummyService.doSomethingAsync(true);
@@ -79,7 +79,7 @@ public class AsyncRetryAutoConfigurationTest {
 		// The invocation is recorded by the CircuitBreaker as a success.
 		String resultSuccess = awaitResult(retryDummyService.doSomethingAsync(false), 5);
 		assertThat(resultSuccess).isNotEmpty();
-		AsyncRetry retry = asyncRetryRegistry.retry(RETRY_BACKEND_B);
+		Retry retry = retryRegistry.retry(RETRY_BACKEND_B);
 		assertThat(retry).isNotNull();
 
 		// expect retry is configured as defined in application.yml
