@@ -10,7 +10,6 @@ import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.cache.Cache;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.ratelimiter.RateLimiter;
-import io.github.resilience4j.retry.AsyncRetry;
 import io.github.resilience4j.retry.Retry;
 import io.vavr.CheckedFunction0;
 import io.vavr.CheckedFunction1;
@@ -293,8 +292,8 @@ public interface Decorators{
             return this;
         }
 
-        public DecorateCompletionStage<T> withRetry(AsyncRetry retryContext, ScheduledExecutorService scheduler) {
-            stageSupplier = AsyncRetry.decorateCompletionStage(retryContext, scheduler, stageSupplier);
+        public DecorateCompletionStage<T> withRetry(Retry retryContext, ScheduledExecutorService scheduler) {
+            stageSupplier = Retry.decorateCompletionStage(retryContext, scheduler, stageSupplier);
             return this;
         }
 

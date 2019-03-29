@@ -18,19 +18,6 @@
  */
 package io.github.resilience4j.decorators;
 
-import io.github.resilience4j.bulkhead.Bulkhead;
-import io.github.resilience4j.cache.Cache;
-import io.github.resilience4j.circuitbreaker.CircuitBreaker;
-import io.github.resilience4j.ratelimiter.RateLimiter;
-import io.github.resilience4j.ratelimiter.RateLimiterConfig;
-import io.github.resilience4j.ratelimiter.RequestNotPermitted;
-import io.github.resilience4j.retry.AsyncRetry;
-import io.github.resilience4j.retry.Retry;
-import io.github.resilience4j.test.HelloWorldService;
-import io.vavr.CheckedFunction0;
-import io.vavr.CheckedFunction1;
-import io.vavr.CheckedRunnable;
-import io.vavr.control.Try;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.BDDMockito;
@@ -43,6 +30,19 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.function.Function;
 import java.util.function.Supplier;
+
+import io.github.resilience4j.bulkhead.Bulkhead;
+import io.github.resilience4j.cache.Cache;
+import io.github.resilience4j.circuitbreaker.CircuitBreaker;
+import io.github.resilience4j.ratelimiter.RateLimiter;
+import io.github.resilience4j.ratelimiter.RateLimiterConfig;
+import io.github.resilience4j.ratelimiter.RequestNotPermitted;
+import io.github.resilience4j.retry.Retry;
+import io.github.resilience4j.test.HelloWorldService;
+import io.vavr.CheckedFunction0;
+import io.vavr.CheckedFunction1;
+import io.vavr.CheckedRunnable;
+import io.vavr.control.Try;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
@@ -157,7 +157,7 @@ public class DecoratorsTest {
 
         CompletionStage<String> completionStage = Decorators.ofCompletionStage(completionStageSupplier)
                 .withCircuitBreaker(circuitBreaker)
-                .withRetry(AsyncRetry.ofDefaults("id"), Executors.newSingleThreadScheduledExecutor())
+                .withRetry(Retry.ofDefaults("id"), Executors.newSingleThreadScheduledExecutor())
                 .withBulkhead(Bulkhead.ofDefaults("testName"))
                 .get();
 

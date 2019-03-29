@@ -15,22 +15,21 @@
  */
 package io.github.resilience4j;
 
-import io.github.resilience4j.micrometer.AsyncRetryMetrics;
-import io.github.resilience4j.micrometer.BulkheadMetrics;
-import io.github.resilience4j.micrometer.CircuitBreakerMetrics;
-import io.github.resilience4j.micrometer.RateLimiterMetrics;
-import io.github.resilience4j.micrometer.RetryMetrics;
-import io.github.resilience4j.micrometer.tagged.TaggedAsyncRetryMetrics;
-import io.github.resilience4j.micrometer.tagged.TaggedBulkheadMetrics;
-import io.github.resilience4j.micrometer.tagged.TaggedCircuitBreakerMetrics;
-import io.github.resilience4j.micrometer.tagged.TaggedRateLimiterMetrics;
-import io.github.resilience4j.micrometer.tagged.TaggedRetryMetrics;
-import io.github.resilience4j.service.test.TestApplication;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+
+import io.github.resilience4j.micrometer.BulkheadMetrics;
+import io.github.resilience4j.micrometer.CircuitBreakerMetrics;
+import io.github.resilience4j.micrometer.RateLimiterMetrics;
+import io.github.resilience4j.micrometer.RetryMetrics;
+import io.github.resilience4j.micrometer.tagged.TaggedBulkheadMetrics;
+import io.github.resilience4j.micrometer.tagged.TaggedCircuitBreakerMetrics;
+import io.github.resilience4j.micrometer.tagged.TaggedRateLimiterMetrics;
+import io.github.resilience4j.micrometer.tagged.TaggedRetryMetrics;
+import io.github.resilience4j.service.test.TestApplication;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -51,9 +50,6 @@ public class MetricsAutoConfigurationTest {
     RetryMetrics retryMetrics;
 
     @Autowired(required = false)
-    AsyncRetryMetrics asyncRetryMetrics;
-
-    @Autowired(required = false)
     TaggedCircuitBreakerMetrics taggedCircuitBreakerMetrics;
 
     @Autowired(required = false)
@@ -64,9 +60,6 @@ public class MetricsAutoConfigurationTest {
 
     @Autowired(required = false)
     TaggedRetryMetrics taggedRetryMetrics;
-
-    @Autowired(required = false)
-    TaggedAsyncRetryMetrics taggedAsyncRetryMetrics;
 
     @Test
     public void legacyCircuitBreakerBinderIsNotBound() {
@@ -89,11 +82,6 @@ public class MetricsAutoConfigurationTest {
     }
 
     @Test
-    public void legacyAsyncRetryBinderIsNotBound() {
-        assertThat(asyncRetryMetrics).isNull();
-    }
-
-    @Test
     public void newCircuitBreakerBinderIsBound() {
         assertThat(taggedCircuitBreakerMetrics).isNotNull();
     }
@@ -111,10 +99,5 @@ public class MetricsAutoConfigurationTest {
     @Test
     public void newRetryBinderIsBound() {
         assertThat(taggedRetryMetrics).isNotNull();
-    }
-
-    @Test
-    public void newAsyncRetryBinderIsBound() {
-        assertThat(taggedAsyncRetryMetrics).isNotNull();
     }
 }

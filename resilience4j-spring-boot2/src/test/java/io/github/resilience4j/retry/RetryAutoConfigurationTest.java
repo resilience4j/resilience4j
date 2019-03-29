@@ -21,7 +21,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.ResponseEntity;
-import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import java.io.IOException;
@@ -52,9 +51,6 @@ public class RetryAutoConfigurationTest {
 	RetryRegistry retryRegistry;
 
 	@Autowired
-	AsyncRetryRegistry asyncRetryRegistry;
-
-	@Autowired
 	RetryProperties retryProperties;
 
 	@Autowired
@@ -71,7 +67,6 @@ public class RetryAutoConfigurationTest {
 	 * that the Retry logic is properly handled
 	 */
 	@Test
-	@DirtiesContext
 	public void testRetryAutoConfiguration() throws IOException {
 		assertThat(retryRegistry).isNotNull();
 		assertThat(retryProperties).isNotNull();
@@ -101,11 +96,7 @@ public class RetryAutoConfigurationTest {
 		ResponseEntity<RetryEndpointResponse> retriesList = restTemplate.getForEntity("/actuator/retries", RetryEndpointResponse.class);
 		assertThat(retriesList.getBody().getRetries()).hasSize(2).containsOnly(RETRY_BACKEND_A, RETRY_BACKEND_B);
 
-		// expect retry-event actuator endpoint recorded both events
-		ResponseEntity<RetryEventsEndpointResponse> retryEventList = restTemplate.getForEntity("/actuator/retryevents", RetryEventsEndpointResponse.class);
-		assertThat(retryEventList.getBody().getRetryEvents()).hasSize(3);
-
-		retryEventList = restTemplate.getForEntity("/actuator/retryevents/" + RETRY_BACKEND_A, RetryEventsEndpointResponse.class);
+		ResponseEntity<RetryEventsEndpointResponse> retryEventList = restTemplate.getForEntity("/actuator/retryevents/" + RETRY_BACKEND_A, RetryEventsEndpointResponse.class);
 		assertThat(retryEventList.getBody().getRetryEvents()).hasSize(3);
 
 		assertThat(retry.getRetryConfig().getExceptionPredicate().test(new IOException())).isTrue();
@@ -120,9 +111,8 @@ public class RetryAutoConfigurationTest {
 	 * that the Async Retry logic is properly handled
 	 */
 	@Test
-	@DirtiesContext
 	public void testRetryAutoConfigurationAsync() throws Throwable {
-		assertThat(asyncRetryRegistry).isNotNull();
+		assertThat(retryRegistry).isNotNull();
 
 		try {
 			final CompletionStage<String> stringCompletionStage = retryDummyService.doSomethingAsync(true);
@@ -136,7 +126,7 @@ public class RetryAutoConfigurationTest {
 		// The invocation is recorded by the CircuitBreaker as a success.
 		String resultSuccess = awaitResult(retryDummyService.doSomethingAsync(false), 5);
 		assertThat(resultSuccess).isNotEmpty();
-		AsyncRetry retry = asyncRetryRegistry.retry(RETRY_BACKEND_B);
+		Retry retry = retryRegistry.retry(RETRY_BACKEND_B);
 		assertThat(retry).isNotNull();
 
 		// expect retry is configured as defined in application.yml
@@ -153,11 +143,7 @@ public class RetryAutoConfigurationTest {
 		ResponseEntity<RetryEndpointResponse> retriesList = restTemplate.getForEntity("/actuator/retries", RetryEndpointResponse.class);
 		assertThat(retriesList.getBody().getRetries()).hasSize(2).containsOnly(RETRY_BACKEND_A, RETRY_BACKEND_B);
 
-		// expect retry-event actuator endpoint recorded both events
-		ResponseEntity<RetryEventsEndpointResponse> retryEventList = restTemplate.getForEntity("/actuator/retryevents", RetryEventsEndpointResponse.class);
-		assertThat(retryEventList.getBody().getRetryEvents()).hasSize(3);
-
-		retryEventList = restTemplate.getForEntity("/actuator/retryevents/" + RETRY_BACKEND_B, RetryEventsEndpointResponse.class);
+		ResponseEntity<RetryEventsEndpointResponse> retryEventList = restTemplate.getForEntity("/actuator/retryevents/" + RETRY_BACKEND_B, RetryEventsEndpointResponse.class);
 		assertThat(retryEventList.getBody().getRetryEvents()).hasSize(3);
 
 		assertThat(retry.getRetryConfig().getExceptionPredicate().test(new IOException())).isTrue();
