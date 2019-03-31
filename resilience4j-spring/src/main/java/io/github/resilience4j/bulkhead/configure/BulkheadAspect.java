@@ -63,9 +63,8 @@ public class BulkheadAspect implements Ordered {
 		}
 		String backend = backendMonitored.name();
 		io.github.resilience4j.bulkhead.Bulkhead bulkhead = getOrCreateBulkhead(methodName, backend);
-		RecoveryFunction recovery = RecoveryFunctionUtils.getInstance(backendMonitored.recovery());
 
-		return handleJoinPoint(proceedingJoinPoint, bulkhead, recovery, methodName);
+		return handleJoinPoint(proceedingJoinPoint, bulkhead, backendMonitored.recovery(), methodName);
 	}
 
 	private io.github.resilience4j.bulkhead.Bulkhead getOrCreateBulkhead(String methodName, String backend) {
@@ -90,7 +89,7 @@ public class BulkheadAspect implements Ordered {
 	}
 
 	@SuppressWarnings("unchecked")
-	private Object handleJoinPoint(ProceedingJoinPoint proceedingJoinPoint, io.github.resilience4j.bulkhead.Bulkhead  bulkhead, RecoveryFunction recovery, String methodName) throws Throwable {
+	private Object handleJoinPoint(ProceedingJoinPoint proceedingJoinPoint, io.github.resilience4j.bulkhead.Bulkhead  bulkhead, Class<? extends RecoveryFunction> recoveryFunctionClass, String methodName) throws Throwable {
 		BulkheadUtils.isCallPermitted(bulkhead);
 		try {
 			return proceedingJoinPoint.proceed();
@@ -99,6 +98,7 @@ public class BulkheadAspect implements Ordered {
 				logger.debug("Invocation of method '" + methodName + "' failed!", throwable);
 			}
 
+			RecoveryFunction recovery = RecoveryFunctionUtils.getInstance(recoveryFunctionClass);
 			return recovery.apply(throwable);
 		} finally {
 			bulkhead.onComplete();

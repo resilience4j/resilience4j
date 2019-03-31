@@ -70,8 +70,7 @@ public class RateLimiterAspect implements Ordered {
         }
         String name = targetService.name();
         io.github.resilience4j.ratelimiter.RateLimiter rateLimiter = getOrCreateRateLimiter(methodName, name);
-        RecoveryFunction recovery = RecoveryFunctionUtils.getInstance(targetService.recovery());
-        return handleJoinPoint(proceedingJoinPoint, rateLimiter, recovery, methodName);
+        return handleJoinPoint(proceedingJoinPoint, rateLimiter, targetService.recovery(), methodName);
     }
 
     private io.github.resilience4j.ratelimiter.RateLimiter getOrCreateRateLimiter(String methodName, String name) {
@@ -96,7 +95,7 @@ public class RateLimiterAspect implements Ordered {
     @SuppressWarnings("unchecked")
     private Object handleJoinPoint(ProceedingJoinPoint proceedingJoinPoint,
                                    io.github.resilience4j.ratelimiter.RateLimiter rateLimiter,
-                                   RecoveryFunction recovery,
+                                   Class<? extends RecoveryFunction> recoveryFunctionClass,
                                    String methodName)
             throws Throwable {
         try {
@@ -107,6 +106,7 @@ public class RateLimiterAspect implements Ordered {
                 logger.debug("Invocation of method '" + methodName + "' failed!", exception);
             }
 
+            RecoveryFunction recovery = RecoveryFunctionUtils.getInstance(recoveryFunctionClass);
             return recovery.apply(exception);
         }
     }

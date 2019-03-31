@@ -67,9 +67,9 @@ public class CircuitBreakerAspect implements Ordered {
 		}
 		String backend = backendMonitored.name();
 		ApiType type = backendMonitored.type();
-		RecoveryFunction recovery = RecoveryFunctionUtils.getInstance(backendMonitored.recovery());
 		io.github.resilience4j.circuitbreaker.CircuitBreaker circuitBreaker = getOrCreateCircuitBreaker(methodName, backend);
-		return handleJoinPoint(proceedingJoinPoint, circuitBreaker, recovery, methodName, type);
+
+		return handleJoinPoint(proceedingJoinPoint, circuitBreaker, backendMonitored.recovery(), methodName, type);
 	}
 
 	private io.github.resilience4j.circuitbreaker.CircuitBreaker getOrCreateCircuitBreaker(String methodName, String backend) {
@@ -93,11 +93,11 @@ public class CircuitBreakerAspect implements Ordered {
 		return AnnotationExtractor.extract(proceedingJoinPoint.getTarget().getClass(), CircuitBreaker.class);
 	}
 
-	private Object handleJoinPoint(ProceedingJoinPoint proceedingJoinPoint, io.github.resilience4j.circuitbreaker.CircuitBreaker circuitBreaker, RecoveryFunction recovery, String methodName, ApiType type) throws Throwable {
+	private Object handleJoinPoint(ProceedingJoinPoint proceedingJoinPoint, io.github.resilience4j.circuitbreaker.CircuitBreaker circuitBreaker, Class<? extends RecoveryFunction> recoveryFunctionClass, String methodName, ApiType type) throws Throwable {
 		if (type == ApiType.WEBFLUX) {
-			return defaultWebFlux(proceedingJoinPoint, circuitBreaker, recovery, methodName);
+			return defaultWebFlux(proceedingJoinPoint, circuitBreaker, recoveryFunctionClass, methodName);
 		} else {
-			return defaultHandling(proceedingJoinPoint, circuitBreaker, recovery, methodName);
+			return defaultHandling(proceedingJoinPoint, circuitBreaker, recoveryFunctionClass, methodName);
 		}
 	}
 
@@ -106,20 +106,35 @@ public class CircuitBreakerAspect implements Ordered {
 	 * See {@link io.github.resilience4j.reactor.circuitbreaker.operator.CircuitBreakerOperator} for details.
 	 */
 	@SuppressWarnings("unchecked")
-	private Object defaultWebFlux(ProceedingJoinPoint proceedingJoinPoint, io.github.resilience4j.circuitbreaker.CircuitBreaker circuitBreaker, RecoveryFunction recovery, String methodName) throws Throwable {
+	private Object defaultWebFlux(ProceedingJoinPoint proceedingJoinPoint, io.github.resilience4j.circuitbreaker.CircuitBreaker circuitBreaker, Class<? extends RecoveryFunction> recoveryFunctionClass, String methodName) throws Throwable {
 		CircuitBreakerUtils.isCallPermitted(circuitBreaker);
 		long start = System.nanoTime();
 		try {
 			Object returnValue = proceedingJoinPoint.proceed();
 			if (returnValue instanceof Flux) {
 				Flux fluxReturnValue = (Flux) returnValue;
-				return fluxReturnValue.transform(CircuitBreakerOperator.of(circuitBreaker));
+				return fluxReturnValue.transform(CircuitBreakerOperator.of(circuitBreaker))
+						.onErrorResume(Throwable.class, (t) -> {
+							try {
+								RecoveryFunction recovery = RecoveryFunctionUtils.getInstance(recoveryFunctionClass);
+								return recovery.apply(t);
+							} catch (Throwable throwable) {
+								return Flux.error(throwable);
+							}
+						});
 			} else if (returnValue instanceof Mono) {
 				Mono monoReturnValue = (Mono) returnValue;
-				return monoReturnValue.transform(CircuitBreakerOperator.of(circuitBreaker));
+				return monoReturnValue.transform(CircuitBreakerOperator.of(circuitBreaker))
+						.onErrorResume(Throwable.class,  (t) -> {
+							try {
+								RecoveryFunction recovery = RecoveryFunctionUtils.getInstance(recoveryFunctionClass);
+								return recovery.apply(t);
+							} catch (Throwable throwable) {
+								return Mono.error(throwable);
+							}
+						});
 			} else {
 				throw new IllegalArgumentException("Not Supported type for the circuit breaker in web flux :" + returnValue.getClass().getName());
-
 			}
 		} catch (Throwable throwable) {
 			long durationInNanos = System.nanoTime() - start;
@@ -128,6 +143,7 @@ public class CircuitBreakerAspect implements Ordered {
 				logger.debug("Invocation of method '" + methodName + "' failed!", throwable);
 			}
 
+			RecoveryFunction recovery = RecoveryFunctionUtils.getInstance(recoveryFunctionClass);
 			return recovery.apply(throwable);
 		}
 	}
@@ -136,7 +152,7 @@ public class CircuitBreakerAspect implements Ordered {
 	 * the default Java types handling for the circuit breaker AOP
 	 */
 	@SuppressWarnings("unchecked")
-	private Object defaultHandling(ProceedingJoinPoint proceedingJoinPoint, io.github.resilience4j.circuitbreaker.CircuitBreaker circuitBreaker, RecoveryFunction recovery, String methodName) throws Throwable {
+	private Object defaultHandling(ProceedingJoinPoint proceedingJoinPoint, io.github.resilience4j.circuitbreaker.CircuitBreaker circuitBreaker, Class<? extends RecoveryFunction> recoveryFunctionClass, String methodName) throws Throwable {
 		CircuitBreakerUtils.isCallPermitted(circuitBreaker);
 		long start = System.nanoTime();
 		try {
@@ -152,6 +168,7 @@ public class CircuitBreakerAspect implements Ordered {
 				logger.debug("Invocation of method '" + methodName + "' failed!", throwable);
 			}
 
+			RecoveryFunction recovery = RecoveryFunctionUtils.getInstance(recoveryFunctionClass);
 			return recovery.apply(throwable);
 		}
 	}

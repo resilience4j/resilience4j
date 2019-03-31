@@ -76,9 +76,8 @@ public class AsyncRetryAspect implements Ordered {
 		}
 		String backend = backendMonitored.name();
 		io.github.resilience4j.retry.AsyncRetry retry = getOrCreateRetry(methodName, backend);
-		RecoveryFunction recovery = RecoveryFunctionUtils.getInstance(backendMonitored.recovery());
 
-		return handleJoinPoint(proceedingJoinPoint, retry, recovery, methodName);
+		return handleJoinPoint(proceedingJoinPoint, retry, backendMonitored.recovery(), methodName);
 	}
 
 	/**
@@ -122,7 +121,7 @@ public class AsyncRetryAspect implements Ordered {
 	 * @throws Throwable
 	 */
 	@SuppressWarnings("unchecked")
-	private Object handleJoinPoint(ProceedingJoinPoint proceedingJoinPoint, io.github.resilience4j.retry.AsyncRetry retry, RecoveryFunction recovery, String methodName) throws Throwable {
+	private Object handleJoinPoint(ProceedingJoinPoint proceedingJoinPoint, io.github.resilience4j.retry.AsyncRetry retry, Class<? extends RecoveryFunction> recoveryFunctionClass, String methodName) throws Throwable {
 		if (logger.isDebugEnabled()) {
 			logger.debug("async retry invocation of method {} ", methodName);
 		}
@@ -131,6 +130,7 @@ public class AsyncRetryAspect implements Ordered {
 				return (CompletionStage<Object>) proceedingJoinPoint.proceed();
 			} catch (Throwable throwable) {
 				try {
+					RecoveryFunction recovery = RecoveryFunctionUtils.getInstance(recoveryFunctionClass);
 					return (CompletionStage<Object>) recovery.apply(throwable);
 				} catch (Throwable recoveryThrowable) {
 					throw new CompletionException(recoveryThrowable);

@@ -36,4 +36,9 @@ public class CircuitBreakerAspectTest {
     public void testRecovery() {
         assertThat(recoveryTestService.circuitBreaker()).isEqualTo("recovered");
     }
+
+    @Test
+    public void testFluxRecovery() {
+        assertThat(recoveryTestService.circuitBreakerFlux().blockFirst()).isEqualTo("recovered");
+    }
 }

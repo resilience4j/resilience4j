@@ -16,12 +16,14 @@
 package io.github.resilience4j;
 
 import io.github.resilience4j.bulkhead.annotation.Bulkhead;
+import io.github.resilience4j.circuitbreaker.annotation.ApiType;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
 import io.github.resilience4j.recovery.RecoveryFunction;
 import io.github.resilience4j.retry.annotation.AsyncRetry;
 import io.github.resilience4j.retry.annotation.Retry;
 import org.springframework.stereotype.Component;
+import reactor.core.publisher.Flux;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
@@ -33,6 +35,11 @@ public class RecoveryTestService {
     @CircuitBreaker(name = RecoveryTestService.BACKEND, recovery = TestRecovery.class)
     public String circuitBreaker() {
         throw new RuntimeException("Test");
+    }
+
+    @CircuitBreaker(name = RecoveryTestService.BACKEND, type = ApiType.WEBFLUX, recovery = FluxTestRecovery.class)
+    public Flux<String> circuitBreakerFlux() {
+        return Flux.error(new RuntimeException("Test"));
     }
 
     @Bulkhead(name = RecoveryTestService.BACKEND, recovery = TestRecovery.class)
@@ -66,6 +73,13 @@ public class RecoveryTestService {
         @Override
         public CompletionStage<String> apply(Throwable throwable) throws Throwable {
             return CompletableFuture.supplyAsync(() -> "recovered");
+        }
+    }
+
+    public static class FluxTestRecovery implements RecoveryFunction<Flux<String>> {
+        @Override
+        public Flux<String> apply(Throwable throwable) throws Throwable {
+            return Flux.just("recovered");
         }
     }
 }
