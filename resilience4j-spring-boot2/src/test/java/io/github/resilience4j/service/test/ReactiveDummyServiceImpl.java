@@ -20,7 +20,6 @@ import java.io.IOException;
 import org.assertj.core.util.Arrays;
 import org.springframework.stereotype.Component;
 
-import io.github.resilience4j.circuitbreaker.annotation.ApiType;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
 import reactor.core.publisher.Flux;
@@ -29,7 +28,7 @@ import reactor.core.publisher.Mono;
 /**
  * reactive test service for web flux API type for the circuit brealer annotation AOP processing
  */
-@CircuitBreaker(name = ReactiveDummyService.BACKEND, type = ApiType.WEBFLUX)
+@CircuitBreaker(name = ReactiveDummyService.BACKEND)
 @RateLimiter(name = ReactiveDummyService.BACKEND)
 @Component
 public class ReactiveDummyServiceImpl implements ReactiveDummyService {
