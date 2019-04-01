@@ -56,7 +56,7 @@ public class RecoveryTestService {
         throw new RuntimeException("Test");
     }
 
-    @Retry(name = RecoveryTestService.BACKEND, recovery = AsyncTestRecovery.class)
+    @Retry(name = RecoveryTestService.BACKEND, recovery = TestRecovery.class)
     public CompletionStage<String> asyncRetry() {
         throw new RuntimeException("Test");
     }
@@ -65,13 +65,6 @@ public class RecoveryTestService {
         @Override
         public String apply(Throwable throwable) throws Throwable {
             return "recovered";
-        }
-    }
-
-    public static class AsyncTestRecovery implements RecoveryFunction<CompletionStage<String>> {
-        @Override
-        public CompletionStage<String> apply(Throwable throwable) throws Throwable {
-            return CompletableFuture.supplyAsync(() -> "recovered");
         }
     }
 

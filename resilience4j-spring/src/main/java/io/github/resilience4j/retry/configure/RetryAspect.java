@@ -69,7 +69,7 @@ public class RetryAspect implements Ordered {
 		}
 		String backend = backendMonitored.name();
 		io.github.resilience4j.retry.Retry retry = getOrCreateRetry(methodName, backend);
-		if (method.getReturnType().isInstance(CompletionStage.class) || method.getReturnType().isInstance(CompletableFuture.class)) {
+		if (method.getReturnType().isAssignableFrom(CompletionStage.class) || method.getReturnType().isAssignableFrom(CompletableFuture.class)) {
 			return handleAsyncJoinPoint(proceedingJoinPoint, retry, backendMonitored.recovery(), methodName);
 		} else {
 			return handleSyncJoinPoint(proceedingJoinPoint, retry, backendMonitored.recovery(), methodName);
@@ -148,20 +148,17 @@ public class RetryAspect implements Ordered {
 		if (logger.isDebugEnabled()) {
 			logger.debug("async retry invocation of method {} ", methodName);
 		}
-		return io.github.resilience4j.retry.Retry.decorateCompletionStage(retry, retryExecutorService, () -> {
+
+		CompletionStage<Object> completionStage = io.github.resilience4j.retry.Retry.decorateCompletionStage(retry, retryExecutorService, () -> {
 			try {
 				return (CompletionStage<Object>) proceedingJoinPoint.proceed();
 			} catch (Throwable throwable) {
-				try {
-					RecoveryFunction recovery = RecoveryFunctionUtils.getInstance(recoveryFunctionClass);
-					return (CompletionStage<Object>) recovery.apply(throwable);
-				} catch (Throwable recoveryThrowable) {
-					throw new CompletionException(recoveryThrowable);
-				}
+				throw new CompletionException(throwable);
 			}
 		}).get();
-	}
 
+		return RecoveryFunctionUtils.decorateCompletionStage(() -> RecoveryFunctionUtils.getInstance(recoveryFunctionClass), completionStage);
+	}
 
 	@Override
 	public int getOrder() {

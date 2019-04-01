@@ -23,6 +23,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
+import java.util.concurrent.TimeUnit;
+
 import static org.assertj.core.api.Java6Assertions.assertThat;
 
 @RunWith(SpringJUnit4ClassRunner.class)
@@ -35,5 +37,12 @@ public class RetryAspectTest {
     @Test
     public void testRecovery() throws Exception {
         assertThat(recoveryTestService.retry()).isEqualTo("recovered");
+    }
+
+    @Test
+    public void testAsyncRecovery() throws Exception {
+        String result = recoveryTestService.asyncRetry().toCompletableFuture().get(5, TimeUnit.SECONDS);
+
+        assertThat(result).isEqualTo("recovered");
     }
 }
