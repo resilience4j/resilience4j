@@ -18,14 +18,20 @@
  */
 package io.github.resilience4j.retry.internal;
 
+import static io.github.resilience4j.retry.utils.AsyncUtils.awaitResult;
 import static io.vavr.API.$;
+import static java.util.concurrent.CompletableFuture.completedFuture;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.concurrent.Callable;
+import java.util.concurrent.CompletionStage;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.function.Supplier;
 
 import javax.xml.ws.WebServiceException;
 
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.BDDMockito;
@@ -34,6 +40,7 @@ import org.mockito.Mockito;
 import io.github.resilience4j.retry.IntervalFunction;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryConfig;
+import io.github.resilience4j.test.AsyncHelloWorldService;
 import io.github.resilience4j.test.HelloWorldService;
 import io.vavr.API;
 import io.vavr.CheckedFunction0;
@@ -41,13 +48,15 @@ import io.vavr.Predicates;
 import io.vavr.control.Try;
 
 public class SupplierRetryTest {
-
+	private ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
 	private HelloWorldService helloWorldService;
+	private AsyncHelloWorldService helloWorldServiceAsync;
 	private long sleptTime = 0L;
 
 	@Before
 	public void setUp() {
 		helloWorldService = Mockito.mock(HelloWorldService.class);
+		helloWorldServiceAsync = Mockito.mock(AsyncHelloWorldService.class);
 		RetryImpl.sleepFunction = sleep -> sleptTime += sleep;
 	}
 
@@ -414,5 +423,41 @@ public class SupplierRetryTest {
 		assertThat(sleptTime).isEqualTo(
 				RetryConfig.DEFAULT_WAIT_DURATION +
 						RetryConfig.DEFAULT_WAIT_DURATION * 2);
+	}
+
+	@Test
+	public void shouldRetryInCaseOResultRetryMatchAtSyncStage() {
+		shouldCompleteFutureAfterAttemptsInCaseOfRetyOnResultAtAsyncStage(1, "Hello world");
+	}
+
+	private void shouldCompleteFutureAfterAttemptsInCaseOfRetyOnResultAtAsyncStage(int noOfAttempts,
+	                                                                               String retryResponse) {
+
+		// Given the HelloWorldService return
+		BDDMockito.given(helloWorldServiceAsync.returnHelloWorld())
+				.willReturn(completedFuture("Hello world"));
+
+
+		// Create a Retry with default configuration
+		Retry retryContext = Retry.of(
+				"id",
+				RetryConfig
+						.<String>custom()
+						.maxAttempts(noOfAttempts)
+						.retryOnResult(s -> s.contains(retryResponse))
+						.build());
+		// Decorate the invocation of the HelloWorldService
+		Supplier<CompletionStage<String>> supplier = Retry.decorateCompletionStage(
+				retryContext,
+				scheduler,
+				() -> helloWorldServiceAsync.returnHelloWorld());
+
+		// When
+		Try<String> resultTry = Try.of(() -> awaitResult(supplier.get()));
+
+		// Then the helloWorldService should be invoked n + 1 times
+		BDDMockito.then(helloWorldServiceAsync).should(Mockito.times(noOfAttempts)).returnHelloWorld();
+		Assert.assertTrue(resultTry.isSuccess());
+
 	}
 }

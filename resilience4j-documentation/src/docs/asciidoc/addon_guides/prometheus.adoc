@@ -4,30 +4,43 @@
 
 Integration with https://github.com/prometheus/client_java[Prometheus simple client]
 
-Module provides exporters for `CircuitBreaker` and `RateLimiter` metrics.
+Module provides exporters for `CircuitBreaker`, `RateLimiter` and `Bulkhead` metrics.
+Every metric has `name` label indicating the relation to certain object, object category
+such as `bulkhead` is inlined to the metric name, so that the combination of metric name + `name` label
+uniquely identifies metric per backend. For example:
 
-For the circuit breaker library exports 2 metrics:
+```
+resilience4j_bulkhead_available_concurrent_calls{name="Backend1"}
+resilience4j_circuitbreaker_buffered_calls{name="Backend1"}
+resilience4j_ratelimiter_waiting_threads{name=Backend1"}
+```
 
-1. By state with default metric name `circuit_breaker_states` and label `state`:
+For every `CircuitBreaker` the library exports the following metrics:
 
-    - `closed`
-    - `open`
-    - `half_open`
+1. `resilience4j_circuitbreaker_state` - the state of the circuit breaker, possible values:
 
-2. By call result with default metric name `circuit_breaker_calls` and label `call_result`:
+    - 0 - CLOSED
+    - 1 - OPEN
+    - 2 - HALF_OPEN
 
-    - `successful`
-    - `failed`
-    - `not_permitted`
-    - `buffered`
-    - `buffered_max`
+2. `resilience4j_circuitbreaker_calls` - the number of recorded calls,
+the additional `kind` label indicates type of calls being recorded, the possible
+`kind` values are `successful`, `failed` or `not_permitted`.
 
-For the rate limiter following metric with default name `rate_limiter` and label `param` exported:
+3. `resilience4j_circuitbreaker_buffered_calls` - the number of buffered calls
 
-- `available_permissions`
-- `waiting_threads`
+4. `resilience4j_circuitbreaker_max_buffered_calls` - the maximum number of buffered calls
 
-The names of the rate limiters and circuit breakers are exposed using label `name`.
+For every `RateLimiter` the library exports the following metrics:
+
+1. `resilience4j_ratelimiter_available_permissions` - the number of available permissions
+2. `resilience4j_ratelimiter_waiting_threads` - the number of waiting threads
+
+For every `Bulkhead` the library exports the following metrics:
+
+1. `resilience4j_bulkhead_available_concurrent_calls` - the number of available concurrent calls
+2. `resilience4j_bulkhead_max_allowed_concurrent_calls` - the maximum number of allowed concurrent calls
+
 
 This module also provides `CallMeter` -- a composite metric to measure single call/request metrics such as:
     - execution time distribution,
@@ -56,7 +69,7 @@ final CircuitBreaker foo = circuitBreakerRegistry.circuitBreaker("foo");
 final CircuitBreaker boo = circuitBreakerRegistry.circuitBreaker("boo");
 
 // Registering metrics in prometeus CollectorRegistry
-collectorRegistry.register(CircuitBreakerExports.ofCircuitBreakerRegistry(circuitBreakerRegistry));
+collectorRegistry.register(CircuitBreakerMetricsCollector.ofCircuitBreakerRegistry(circuitBreakerRegistry));
 --
 
 ===== RateLimiter
@@ -71,10 +84,26 @@ final RateLimiter foo = rateLimiterRegistry.rateLimiter("foo");
 final RateLimiter boo = rateLimiterRegistry.rateLimiter("boo");
 
 // Registering metrics in prometeus CollectorRegistry
-collectorRegistry.register(RateLimiterExports.ofRateLimiterRegistry(rateLimiterRegistry));
+collectorRegistry.register(RateLimiterMetricsCollector.ofRateLimiterRegistry(rateLimiterRegistry));
 --
 
-For both it is possible to use just a collection of breakers and limiters instead of registry.
+===== Bulkhead
+
+[source,java]
+--
+final CollectorRegistry collectorRegistry = CollectorRegistry.defaultRegistry;
+
+final BulkheadRegistry bulkheadRegistry = BulkheadRegistry.ofDefaults();
+
+final Bulkhead foo = bulkheadRegistry.bulkhead("foo");
+final Bulkhead boo = bulkheadRegistry.bulkhead("boo");
+
+// Registering metrics in prometeus CollectorRegistry
+collectorRegistry.register(BulkheadMetricsCollector.ofBulkheadRegistry(rateLimiterRegistry));
+--
+
+Every collector exposes more methods for binding corresponding objects, for example,
+you can use suppliers, collections or even collect metrics for a single object.
 
 ===== Call Meter
 
