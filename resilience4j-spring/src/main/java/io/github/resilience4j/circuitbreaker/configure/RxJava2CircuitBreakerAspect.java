@@ -22,7 +22,10 @@ import java.util.Set;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.annotation.Conditional;
+import org.springframework.stereotype.Component;
 
+import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.operator.CircuitBreakerOperator;
 import io.github.resilience4j.circuitbreaker.utils.CircuitBreakerUtils;
 import io.reactivex.Completable;
@@ -36,15 +39,25 @@ import io.reactivex.Single;
 import io.reactivex.SingleSource;
 
 /**
- * Rx helper class for the RX circuit breaker logic support for the spring AOP
+ * the Rx circuit breaker logic support for the spring AOP
+ * conditional on the presence of Rx classes on the spring class loader
  */
 
-final class Rx2Helper {
+@Component
+@Conditional(value = {InjectRxJava2Aspect.class})
+class RxJava2CircuitBreakerAspect implements CircuitBreakerAspectExt {
 
 	private static final Logger logger = LoggerFactory.getLogger(CircuitBreakerAspect.class);
-	private static final Set<Class> rxSupportedTypes = newHashSet(ObservableSource.class, SingleSource.class, CompletableSource.class, MaybeSource.class, Flowable.class);
+	private final Set<Class> rxSupportedTypes = newHashSet(ObservableSource.class, SingleSource.class, CompletableSource.class, MaybeSource.class, Flowable.class);
 
-	private Rx2Helper() {
+	public RxJava2CircuitBreakerAspect() {
+	}
+
+	@SafeVarargs
+	private static <T> Set<T> newHashSet(T... objs) {
+		Set<T> set = new HashSet<>();
+		Collections.addAll(set, objs);
+		return Collections.unmodifiableSet(set);
 	}
 
 	/**
@@ -52,10 +65,10 @@ final class Rx2Helper {
 	 * @return boolean if the method has Rx java 2 rerun type
 	 */
 	@SuppressWarnings("unchecked")
-	public static boolean isRxJava2ReturnType(Class returnType) {
+	@Override
+	public boolean matchReturnType(Class returnType) {
 		return rxSupportedTypes.stream().anyMatch(classType -> classType.isAssignableFrom(returnType));
 	}
-
 
 	/**
 	 * @param proceedingJoinPoint Spring AOP proceedingJoinPoint
@@ -65,7 +78,8 @@ final class Rx2Helper {
 	 * @throws Throwable exception in case of faulty flow
 	 */
 	@SuppressWarnings("unchecked")
-	public static Object defaultRx2Retry(ProceedingJoinPoint proceedingJoinPoint, io.github.resilience4j.circuitbreaker.CircuitBreaker circuitBreaker, String methodName) throws Throwable {
+	@Override
+	public Object handle(ProceedingJoinPoint proceedingJoinPoint, CircuitBreaker circuitBreaker, String methodName) throws Throwable {
 		CircuitBreakerUtils.isCallPermitted(circuitBreaker);
 		CircuitBreakerOperator circuitBreakerOperator = CircuitBreakerOperator.of(circuitBreaker);
 		long start = System.nanoTime();
@@ -97,12 +111,5 @@ final class Rx2Helper {
 			}
 			throw throwable;
 		}
-	}
-
-	@SafeVarargs
-	private static <T> Set<T> newHashSet(T... objs) {
-		Set<T> set = new HashSet<>();
-		Collections.addAll(set, objs);
-		return Collections.unmodifiableSet(set);
 	}
 }
