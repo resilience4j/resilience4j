@@ -15,106 +15,90 @@
  */
 package io.github.resilience4j;
 
-import io.github.resilience4j.micrometer.AsyncRetryMetrics;
-import io.github.resilience4j.micrometer.BulkheadMetrics;
-import io.github.resilience4j.micrometer.CircuitBreakerMetrics;
-import io.github.resilience4j.micrometer.RateLimiterMetrics;
-import io.github.resilience4j.micrometer.RetryMetrics;
-import io.github.resilience4j.micrometer.tagged.TaggedAsyncRetryMetrics;
-import io.github.resilience4j.micrometer.tagged.TaggedBulkheadMetrics;
-import io.github.resilience4j.micrometer.tagged.TaggedCircuitBreakerMetrics;
-import io.github.resilience4j.micrometer.tagged.TaggedRateLimiterMetrics;
-import io.github.resilience4j.micrometer.tagged.TaggedRetryMetrics;
-import io.github.resilience4j.service.test.TestApplication;
+import static org.assertj.core.api.Assertions.assertThat;
+
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import io.github.resilience4j.micrometer.BulkheadMetrics;
+import io.github.resilience4j.micrometer.CircuitBreakerMetrics;
+import io.github.resilience4j.micrometer.RateLimiterMetrics;
+import io.github.resilience4j.micrometer.RetryMetrics;
+import io.github.resilience4j.micrometer.tagged.TaggedBulkheadMetrics;
+import io.github.resilience4j.micrometer.tagged.TaggedCircuitBreakerMetrics;
+import io.github.resilience4j.micrometer.tagged.TaggedRateLimiterMetrics;
+import io.github.resilience4j.micrometer.tagged.TaggedRetryMetrics;
+import io.github.resilience4j.service.test.TestApplication;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, classes = TestApplication.class)
 public class MetricsAutoConfigurationTest {
 
-    @Autowired(required = false)
-    CircuitBreakerMetrics circuitBreakerMetrics;
+	@Autowired(required = false)
+	CircuitBreakerMetrics circuitBreakerMetrics;
 
-    @Autowired(required = false)
-    BulkheadMetrics bulkheadMetrics;
+	@Autowired(required = false)
+	BulkheadMetrics bulkheadMetrics;
 
-    @Autowired(required = false)
-    RateLimiterMetrics rateLimiterMetrics;
+	@Autowired(required = false)
+	RateLimiterMetrics rateLimiterMetrics;
 
-    @Autowired(required = false)
-    RetryMetrics retryMetrics;
+	@Autowired(required = false)
+	RetryMetrics retryMetrics;
 
-    @Autowired(required = false)
-    AsyncRetryMetrics asyncRetryMetrics;
+	@Autowired(required = false)
+	TaggedCircuitBreakerMetrics taggedCircuitBreakerMetrics;
 
-    @Autowired(required = false)
-    TaggedCircuitBreakerMetrics taggedCircuitBreakerMetrics;
+	@Autowired(required = false)
+	TaggedBulkheadMetrics taggedBulkheadMetrics;
 
-    @Autowired(required = false)
-    TaggedBulkheadMetrics taggedBulkheadMetrics;
+	@Autowired(required = false)
+	TaggedRateLimiterMetrics taggedRateLimiterMetrics;
 
-    @Autowired(required = false)
-    TaggedRateLimiterMetrics taggedRateLimiterMetrics;
+	@Autowired(required = false)
+	TaggedRetryMetrics taggedRetryMetrics;
 
-    @Autowired(required = false)
-    TaggedRetryMetrics taggedRetryMetrics;
+	@Test
+	public void legacyCircuitBreakerBinderIsNotBound() {
+		assertThat(circuitBreakerMetrics).isNull();
+	}
 
-    @Autowired(required = false)
-    TaggedAsyncRetryMetrics taggedAsyncRetryMetrics;
+	@Test
+	public void legacyBulkheadBinderIsNotBound() {
+		assertThat(bulkheadMetrics).isNull();
+	}
 
-    @Test
-    public void legacyCircuitBreakerBinderIsNotBound() {
-        assertThat(circuitBreakerMetrics).isNull();
-    }
+	@Test
+	public void legacyRateLimiterBinderIsNotBound() {
+		assertThat(bulkheadMetrics).isNull();
+	}
 
-    @Test
-    public void legacyBulkheadBinderIsNotBound() {
-        assertThat(bulkheadMetrics).isNull();
-    }
+	@Test
+	public void legacyRetryBinderIsNotBound() {
+		assertThat(retryMetrics).isNull();
+	}
 
-    @Test
-    public void legacyRateLimiterBinderIsNotBound() {
-        assertThat(bulkheadMetrics).isNull();
-    }
+	@Test
+	public void newCircuitBreakerBinderIsBound() {
+		assertThat(taggedCircuitBreakerMetrics).isNotNull();
+	}
 
-    @Test
-    public void legacyRetryBinderIsNotBound() {
-        assertThat(retryMetrics).isNull();
-    }
+	@Test
+	public void mewBulkheadBinderIsBound() {
+		assertThat(taggedBulkheadMetrics).isNotNull();
+	}
 
-    @Test
-    public void legacyAsyncRetryBinderIsNotBound() {
-        assertThat(asyncRetryMetrics).isNull();
-    }
+	@Test
+	public void newRateLimiterBinderIsBound() {
+		assertThat(taggedBulkheadMetrics).isNotNull();
+	}
 
-    @Test
-    public void newCircuitBreakerBinderIsBound() {
-        assertThat(taggedCircuitBreakerMetrics).isNotNull();
-    }
+	@Test
+	public void newRetryBinderIsBound() {
+		assertThat(taggedRetryMetrics).isNotNull();
+	}
 
-    @Test
-    public void mewBulkheadBinderIsBound() {
-        assertThat(taggedBulkheadMetrics).isNotNull();
-    }
-
-    @Test
-    public void newRateLimiterBinderIsBound() {
-        assertThat(taggedBulkheadMetrics).isNotNull();
-    }
-
-    @Test
-    public void newRetryBinderIsBound() {
-        assertThat(taggedRetryMetrics).isNotNull();
-    }
-
-    @Test
-    public void newAsyncRetryBinderIsBound() {
-        assertThat(taggedAsyncRetryMetrics).isNotNull();
-    }
 }

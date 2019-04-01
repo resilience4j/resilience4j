@@ -15,6 +15,17 @@
  */
 package io.github.resilience4j.retry;
 
+import static io.github.resilience4j.service.test.RetryDummyService.RETRY_BACKEND_A;
+import static io.github.resilience4j.service.test.RetryDummyService.RETRY_BACKEND_B;
+import static org.assertj.core.api.Assertions.assertThat;
+
+import java.io.IOException;
+import java.util.Map;
+import java.util.concurrent.CompletionStage;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,13 +35,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import java.io.IOException;
-import java.util.Map;
-import java.util.concurrent.CompletionStage;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
-
 import io.github.resilience4j.circuitbreaker.IgnoredException;
 import io.github.resilience4j.retry.autoconfigure.RetryProperties;
 import io.github.resilience4j.retry.configure.RetryAspect;
@@ -39,10 +43,6 @@ import io.github.resilience4j.retry.monitoring.endpoint.RetryEventsEndpointRespo
 import io.github.resilience4j.service.test.RetryDummyService;
 import io.github.resilience4j.service.test.TestApplication;
 
-import static io.github.resilience4j.service.test.RetryDummyService.RETRY_BACKEND_A;
-import static io.github.resilience4j.service.test.RetryDummyService.RETRY_BACKEND_B;
-import static org.assertj.core.api.Assertions.assertThat;
-
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
 		classes = TestApplication.class)
@@ -50,9 +50,6 @@ public class RetryAutoConfigurationTest {
 
 	@Autowired
 	RetryRegistry retryRegistry;
-
-	@Autowired
-	AsyncRetryRegistry asyncRetryRegistry;
 
 	@Autowired
 	RetryProperties retryProperties;
@@ -122,7 +119,7 @@ public class RetryAutoConfigurationTest {
 	@Test
 	@DirtiesContext
 	public void testRetryAutoConfigurationAsync() throws Throwable {
-		assertThat(asyncRetryRegistry).isNotNull();
+		assertThat(retryRegistry).isNotNull();
 
 		try {
 			final CompletionStage<String> stringCompletionStage = retryDummyService.doSomethingAsync(true);
@@ -136,7 +133,7 @@ public class RetryAutoConfigurationTest {
 		// The invocation is recorded by the CircuitBreaker as a success.
 		String resultSuccess = awaitResult(retryDummyService.doSomethingAsync(false), 5);
 		assertThat(resultSuccess).isNotEmpty();
-		AsyncRetry retry = asyncRetryRegistry.retry(RETRY_BACKEND_B);
+		Retry retry = retryRegistry.retry(RETRY_BACKEND_B);
 		assertThat(retry).isNotNull();
 
 		// expect retry is configured as defined in application.yml
