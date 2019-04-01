@@ -15,14 +15,11 @@
  */
 package io.github.resilience4j.retry.configure;
 
-import java.lang.reflect.Method;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionException;
-import java.util.concurrent.CompletionStage;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
-
+import io.github.resilience4j.recovery.RecoveryFunction;
+import io.github.resilience4j.retry.RetryRegistry;
+import io.github.resilience4j.retry.annotation.Retry;
+import io.github.resilience4j.utils.RecoveryFunctionUtils;
+import io.vavr.CheckedFunction0;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -32,9 +29,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.Ordered;
 
-import io.github.resilience4j.retry.RetryRegistry;
-import io.github.resilience4j.retry.annotation.Retry;
-import io.vavr.CheckedFunction0;
+import java.lang.reflect.Method;
+import java.util.concurrent.*;
 
 /**
  * This Spring AOP aspect intercepts all methods which are annotated with a {@link Retry} annotation.
@@ -74,9 +70,9 @@ public class RetryAspect implements Ordered {
 		String backend = backendMonitored.name();
 		io.github.resilience4j.retry.Retry retry = getOrCreateRetry(methodName, backend);
 		if (method.getReturnType().isInstance(CompletionStage.class) || method.getReturnType().isInstance(CompletableFuture.class)) {
-			return handleAsyncJoinPoint(proceedingJoinPoint, retry, methodName);
+			return handleAsyncJoinPoint(proceedingJoinPoint, retry, backendMonitored.recovery(), methodName);
 		} else {
-			return handleSyncJoinPoint(proceedingJoinPoint, retry, methodName);
+			return handleSyncJoinPoint(proceedingJoinPoint, retry, backendMonitored.recovery(), methodName);
 		}
 	}
 
@@ -126,12 +122,18 @@ public class RetryAspect implements Ordered {
 	 * @return the result object if any
 	 * @throws Throwable
 	 */
-	private Object handleSyncJoinPoint(ProceedingJoinPoint proceedingJoinPoint, io.github.resilience4j.retry.Retry retry, String methodName) throws Throwable {
+	@SuppressWarnings("unchecked")
+	private Object handleSyncJoinPoint(ProceedingJoinPoint proceedingJoinPoint, io.github.resilience4j.retry.Retry retry, Class<? extends RecoveryFunction> recoveryFunctionClass, String methodName) throws Throwable {
 		if (logger.isDebugEnabled()) {
 			logger.debug("retry invocation of method {} ", methodName);
 		}
 		final CheckedFunction0<Object> objectCheckedFunction0 = io.github.resilience4j.retry.Retry.decorateCheckedSupplier(retry, proceedingJoinPoint::proceed);
-		return objectCheckedFunction0.apply();
+		try {
+			return objectCheckedFunction0.apply();
+		} catch (Throwable throwable) {
+			RecoveryFunction recovery = RecoveryFunctionUtils.getInstance(recoveryFunctionClass);
+			return recovery.apply(throwable);
+		}
 	}
 
 	/**
@@ -141,7 +143,8 @@ public class RetryAspect implements Ordered {
 	 * @return the result object if any
 	 * @throws Throwable
 	 */
-	private Object handleAsyncJoinPoint(ProceedingJoinPoint proceedingJoinPoint, io.github.resilience4j.retry.Retry retry, String methodName) throws Throwable {
+	@SuppressWarnings("unchecked")
+	private Object handleAsyncJoinPoint(ProceedingJoinPoint proceedingJoinPoint, io.github.resilience4j.retry.Retry retry, Class<? extends RecoveryFunction> recoveryFunctionClass, String methodName) throws Throwable {
 		if (logger.isDebugEnabled()) {
 			logger.debug("async retry invocation of method {} ", methodName);
 		}
@@ -149,7 +152,12 @@ public class RetryAspect implements Ordered {
 			try {
 				return (CompletionStage<Object>) proceedingJoinPoint.proceed();
 			} catch (Throwable throwable) {
-				throw new CompletionException(throwable);
+				try {
+					RecoveryFunction recovery = RecoveryFunctionUtils.getInstance(recoveryFunctionClass);
+					return (CompletionStage<Object>) recovery.apply(throwable);
+				} catch (Throwable recoveryThrowable) {
+					throw new CompletionException(recoveryThrowable);
+				}
 			}
 		}).get();
 	}

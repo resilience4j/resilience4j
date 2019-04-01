@@ -20,7 +20,6 @@ import io.github.resilience4j.circuitbreaker.annotation.ApiType;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
 import io.github.resilience4j.recovery.RecoveryFunction;
-import io.github.resilience4j.retry.annotation.AsyncRetry;
 import io.github.resilience4j.retry.annotation.Retry;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
@@ -57,7 +56,7 @@ public class RecoveryTestService {
         throw new RuntimeException("Test");
     }
 
-    @AsyncRetry(name = RecoveryTestService.BACKEND, recovery = AsyncTestRecovery.class)
+    @Retry(name = RecoveryTestService.BACKEND, recovery = AsyncTestRecovery.class)
     public CompletionStage<String> asyncRetry() {
         throw new RuntimeException("Test");
     }
