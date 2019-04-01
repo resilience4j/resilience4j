@@ -149,12 +149,6 @@ public class CircuitBreakerAutoConfigurationTest {
 		assertThat(circuitBreaker.getMetrics().getNumberOfSuccessfulCalls()).isEqualTo(1);
 		assertThat(circuitBreaker.getMetrics().getNumberOfFailedCalls()).isEqualTo(1);
 
-		// expect circuitbreaker is configured as defined in application.yml
-		assertThat(circuitBreaker.getCircuitBreakerConfig().getRingBufferSizeInClosedState()).isEqualTo(6);
-		assertThat(circuitBreaker.getCircuitBreakerConfig().getRingBufferSizeInHalfOpenState()).isEqualTo(2);
-		assertThat(circuitBreaker.getCircuitBreakerConfig().getFailureRateThreshold()).isEqualTo(70f);
-		assertThat(circuitBreaker.getCircuitBreakerConfig().getWaitDurationInOpenState()).isEqualByComparingTo(Duration.ofSeconds(5L));
-
 		// expect circuitbreakers actuator endpoint contains both circuitbreakers
 		ResponseEntity<CircuitBreakerEndpointResponse> circuitBreakerList = restTemplate.getForEntity("/actuator/circuitbreakers", CircuitBreakerEndpointResponse.class);
 		assertThat(circuitBreakerList.getBody().getCircuitBreakers()).hasSize(2).containsExactly("backendA", "backendB");
@@ -172,15 +166,7 @@ public class CircuitBreakerAutoConfigurationTest {
 		assertThat(healthResponse.getBody().getDetails().get("backendACircuitBreaker")).isNotNull();
 		assertThat(healthResponse.getBody().getDetails().get("backendBCircuitBreaker")).isNull();
 
-		assertThat(circuitBreaker.getCircuitBreakerConfig().getRecordFailurePredicate().test(new RecordedException())).isTrue();
-		assertThat(circuitBreaker.getCircuitBreakerConfig().getRecordFailurePredicate().test(new IgnoredException())).isFalse();
 
-		// Verify that an exception for which recordFailurePredicate returns false and it is not included in
-		// recordExceptions evaluates to false.
-		assertThat(circuitBreaker.getCircuitBreakerConfig().getRecordFailurePredicate().test(new Exception())).isFalse();
-
-		// expect aspect configured as defined in application.yml
-		assertThat(circuitBreakerAspect.getOrder()).isEqualTo(400);
 	}
 
 	/**

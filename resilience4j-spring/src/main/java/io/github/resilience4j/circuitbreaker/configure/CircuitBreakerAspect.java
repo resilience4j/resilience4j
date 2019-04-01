@@ -70,8 +70,9 @@ public class CircuitBreakerAspect implements Ordered {
 		Class<?> returnType = method.getReturnType();
 		if ((Flux.class.isAssignableFrom(returnType)) || (Mono.class.isAssignableFrom(returnType))) {
 			return defaultWebFlux(proceedingJoinPoint, circuitBreaker, methodName);
-		}
-		if (CompletionStage.class.isAssignableFrom(returnType)) {
+		} else if (Rx2Helper.isRxJava2ReturnType(returnType)) {
+			return Rx2Helper.defaultRx2Retry(proceedingJoinPoint, circuitBreaker, methodName);
+		} else if (CompletionStage.class.isAssignableFrom(returnType)) {
 			return defaultCompletionStage(proceedingJoinPoint, circuitBreaker, methodName);
 		}
 		return defaultHandling(proceedingJoinPoint, circuitBreaker, methodName);
@@ -102,15 +103,16 @@ public class CircuitBreakerAspect implements Ordered {
 	 * handle the Spring web flux (Flux /Mono) return types AOP based into reactor circuit-breaker
 	 * See {@link io.github.resilience4j.reactor.circuitbreaker.operator.CircuitBreakerOperator} for details.
 	 */
+	@SuppressWarnings("unchecked")
 	private Object defaultWebFlux(ProceedingJoinPoint proceedingJoinPoint, io.github.resilience4j.circuitbreaker.CircuitBreaker circuitBreaker, String methodName) throws Throwable {
 		CircuitBreakerUtils.isCallPermitted(circuitBreaker);
 		long start = System.nanoTime();
 		try {
 			Object returnValue = proceedingJoinPoint.proceed();
-			if (returnValue instanceof Flux) {
+			if (Flux.class.isAssignableFrom(returnValue.getClass())) {
 				Flux fluxReturnValue = (Flux) returnValue;
 				return fluxReturnValue.transform(CircuitBreakerOperator.of(circuitBreaker));
-			} else if (returnValue instanceof Mono) {
+			} else if (Mono.class.isAssignableFrom(returnValue.getClass())) {
 				Mono monoReturnValue = (Mono) returnValue;
 				return monoReturnValue.transform(CircuitBreakerOperator.of(circuitBreaker));
 			} else {
@@ -130,6 +132,7 @@ public class CircuitBreakerAspect implements Ordered {
 	/**
 	 * handle the CompletionStage return types AOP based into configured circuit-breaker
 	 */
+	@SuppressWarnings("unchecked")
 	private Object defaultCompletionStage(ProceedingJoinPoint proceedingJoinPoint, io.github.resilience4j.circuitbreaker.CircuitBreaker circuitBreaker, String methodName) throws Throwable {
 		CircuitBreakerUtils.isCallPermitted(circuitBreaker);
 		long start = System.nanoTime();
