@@ -33,11 +33,7 @@ For example:
         "resilience4j.retry.backendA.failedCallsWithoutRetry",
         "resilience4j.retry.backendA.failedCallsWithRetry",
         "resilience4j.retry.backendA.successCalls",
-        "resilience4j.retry.backendA.successCallsWithRetry",
-        "resilience4j.asyncRetry.backendA.failedCallsWithoutRetry",
-        "resilience4j.asyncRetry.backendB.failedCallsWithRetry",
-        "resilience4j.asyncRetry.backendB.successCalls",
-        "resilience4j.asyncRetry.backendB.successCallsWithRetry"
+        "resilience4j.retry.backendA.successCallsWithRetry"
         ]
 }
 ----
@@ -188,9 +184,7 @@ The rules for Retry configuration :
 
 The rules for Retry spring annotation usage  :
 
-    - You can use the same back-end configuration for both sync and async retry if you use both annotations in for the same backed method level wise only ,
-     if you mix annotations between class level and method level on the same back-end class , validation exception will be thrown
-    - For `AsyncRetry` annotation , please make sure the return type is instance of Java `CompletionStage` otherwise runtime exception will be thrown
+    - Retry aspect will detect the proper handling based into the method return type for synchronous and asynchronous execution
 
 Code example of retry and async retry annotation usage in Java Spring component :
 [source,java]
@@ -206,7 +200,7 @@ public void doSomething(boolean throwBackendTrouble) throws IOException {
 	}
 }
 
-@AsyncRetry(name = RetryDummyService.BACKEND)
+@Retry(name = RetryDummyService.BACKEND)
 @Override
 public CompletionStage<String> doSomethingAsync(boolean throwException) throws IOException {
 	if (throwException) {

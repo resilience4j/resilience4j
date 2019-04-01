@@ -21,7 +21,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 
-import io.github.resilience4j.retry.AsyncRetryRegistry;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryRegistry;
 import io.github.resilience4j.retry.configure.RetryConfiguration;
@@ -39,8 +38,8 @@ import io.github.resilience4j.retry.monitoring.endpoint.RetryEndpoint;
 public class RetryAutoConfiguration {
 
 	@Bean
-	public RetryEndpoint retryEndpoint(RetryRegistry retryRegistry, AsyncRetryRegistry asyncRetryRegistry) {
-		return new RetryEndpoint(retryRegistry, asyncRetryRegistry);
+	public RetryEndpoint retryEndpoint(RetryRegistry retryRegistry) {
+		return new RetryEndpoint(retryRegistry);
 	}
 
 }
