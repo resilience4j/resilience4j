@@ -1,5 +1,4 @@
-/*
- * Copyright 2019 Mahmoud Romeh
+/* Copyright 2019 Mahmoud Romeh
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,23 +15,20 @@
 package io.github.resilience4j.circuitbreaker.configure;
 
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.context.annotation.Condition;
 import org.springframework.context.annotation.ConditionContext;
-import org.springframework.core.type.AnnotatedTypeMetadata;
-
 
 /**
- * the inject Rx java aspect support spring condition check
+ * common util methods
  */
-public class InjectReactorAspect implements Condition {
+public class CircuitBreakerAspectUtil {
 
-	private static final Logger logger = LoggerFactory.getLogger(InjectReactorAspect.class);
-	private static final String CLASS_TO_CHECK = "reactor.core.publisher.Flux";
-
-	@Override
-	public boolean matches(ConditionContext context, AnnotatedTypeMetadata metadata) {
-		return CircuitBreakerAspectUtil.checkClassIfFound(context, CLASS_TO_CHECK, logger);
+	static boolean checkClassIfFound(ConditionContext context, String classToCheck, Logger logger) {
+		try {
+			final Class<?> aClass = context.getClassLoader().loadClass(classToCheck);
+			return aClass != null;
+		} catch (ClassNotFoundException e) {
+			logger.warn(e.getLocalizedMessage());
+			return false;
+		}
 	}
-
 }
