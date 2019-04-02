@@ -404,10 +404,11 @@ public interface CircuitBreaker {
                 long durationInNanos = System.nanoTime() - start;
                 circuitBreaker.onSuccess(durationInNanos);
                 return returnValue;
-            } catch (Throwable throwable) {
+            } catch (Exception exception) {
+                // Do not handle java.lang.Error
                 long durationInNanos = System.nanoTime() - start;
-                circuitBreaker.onError(durationInNanos, throwable);
-                throw throwable;
+                circuitBreaker.onError(durationInNanos, exception);
+                throw exception;
             }
         };
     }
@@ -439,12 +440,15 @@ public interface CircuitBreaker {
                 try {
                     supplier.get().whenComplete((result, throwable) -> {
                         long durationInNanos = System.nanoTime() - start;
-                        if (throwable != null) {
-                            circuitBreaker.onError(durationInNanos, throwable);
-                            promise.completeExceptionally(throwable);
-                        } else {
+                        if (result != null) {
                             circuitBreaker.onSuccess(durationInNanos);
                             promise.complete(result);
+                        } else if (throwable instanceof Exception) {
+                            circuitBreaker.onError(durationInNanos, throwable);
+                            promise.completeExceptionally(throwable);
+                        } else{
+                            // Do not handle java.lang.Error
+                            promise.completeExceptionally(throwable);
                         }
                     });
                 } catch (Throwable throwable) {
@@ -474,10 +478,11 @@ public interface CircuitBreaker {
                 runnable.run();
                 long durationInNanos = System.nanoTime() - start;
                 circuitBreaker.onSuccess(durationInNanos);
-            } catch (Throwable throwable){
+            } catch (Exception exception){
+                // Do not handle java.lang.Error
                 long durationInNanos = System.nanoTime() - start;
-                circuitBreaker.onError(durationInNanos, throwable);
-                throw throwable;
+                circuitBreaker.onError(durationInNanos, exception);
+                throw exception;
             }
         };
     }
@@ -500,10 +505,11 @@ public interface CircuitBreaker {
                 long durationInNanos = System.nanoTime() - start;
                 circuitBreaker.onSuccess(durationInNanos);
                 return returnValue;
-            } catch (Throwable throwable) {
+            } catch (Exception exception) {
+                // Do not handle java.lang.Error
                 long durationInNanos = System.nanoTime() - start;
-                circuitBreaker.onError(durationInNanos, throwable);
-                throw throwable;
+                circuitBreaker.onError(durationInNanos, exception);
+                throw exception;
             }
         };
     }
@@ -526,10 +532,11 @@ public interface CircuitBreaker {
                 long durationInNanos = System.nanoTime() - start;
                 circuitBreaker.onSuccess(durationInNanos);
                 return returnValue;
-            } catch (Throwable throwable) {
+            } catch (Exception exception) {
+                // Do not handle java.lang.Error
                 long durationInNanos = System.nanoTime() - start;
-                circuitBreaker.onError(durationInNanos, throwable);
-                throw throwable;
+                circuitBreaker.onError(durationInNanos, exception);
+                throw exception;
             }
         };
     }
@@ -551,10 +558,11 @@ public interface CircuitBreaker {
                 consumer.accept(t);
                 long durationInNanos = System.nanoTime() - start;
                 circuitBreaker.onSuccess(durationInNanos);
-            } catch (Throwable throwable) {
+            } catch (Exception exception) {
+                // Do not handle java.lang.Error
                 long durationInNanos = System.nanoTime() - start;
-                circuitBreaker.onError(durationInNanos, throwable);
-                throw throwable;
+                circuitBreaker.onError(durationInNanos, exception);
+                throw exception;
             }
         };
     }
@@ -576,10 +584,11 @@ public interface CircuitBreaker {
                 consumer.accept(t);
                 long durationInNanos = System.nanoTime() - start;
                 circuitBreaker.onSuccess(durationInNanos);
-            } catch (Throwable throwable) {
+            } catch (Exception exception) {
+                // Do not handle java.lang.Error
                 long durationInNanos = System.nanoTime() - start;
-                circuitBreaker.onError(durationInNanos, throwable);
-                throw throwable;
+                circuitBreaker.onError(durationInNanos, exception);
+                throw exception;
             }
         };
     }
@@ -600,10 +609,11 @@ public interface CircuitBreaker {
                 runnable.run();
                 long durationInNanos = System.nanoTime() - start;
                 circuitBreaker.onSuccess(durationInNanos);
-            } catch (Throwable throwable){
+            } catch (Exception exception){
+                // Do not handle java.lang.Error
                 long durationInNanos = System.nanoTime() - start;
-                circuitBreaker.onError(durationInNanos, throwable);
-                throw throwable;
+                circuitBreaker.onError(durationInNanos, exception);
+                throw exception;
             }
         };
     }
@@ -626,10 +636,11 @@ public interface CircuitBreaker {
                 long durationInNanos = System.nanoTime() - start;
                 circuitBreaker.onSuccess(durationInNanos);
                 return returnValue;
-            } catch (Throwable throwable){
+            } catch (Exception exception){
+                // Do not handle java.lang.Error
                 long durationInNanos = System.nanoTime() - start;
-                circuitBreaker.onError(durationInNanos, throwable);
-                throw throwable;
+                circuitBreaker.onError(durationInNanos, exception);
+                throw exception;
             }
         };
     }
@@ -652,10 +663,11 @@ public interface CircuitBreaker {
                 long durationInNanos = System.nanoTime() - start;
                 circuitBreaker.onSuccess(durationInNanos);
                 return returnValue;
-            } catch (Throwable throwable){
+            } catch (Exception exception){
+                // Do not handle java.lang.Error
                 long durationInNanos = System.nanoTime() - start;
-                circuitBreaker.onError(durationInNanos, throwable);
-                throw throwable;
+                circuitBreaker.onError(durationInNanos, exception);
+                throw exception;
             }
         };
     }
