@@ -92,7 +92,7 @@ public interface Retry {
 		return () -> {
 
 			final CompletableFuture<T> promise = new CompletableFuture<>();
-			@SuppressWarnings("unchecked") final Runnable block = new AsyncRetryBlock<>(scheduler, retry.asyncContext(), supplier, promise);
+			final Runnable block = new AsyncRetryBlock<>(scheduler, retry.asyncContext(), supplier, promise);
 			block.run();
 
 			return promise;
@@ -109,7 +109,6 @@ public interface Retry {
 	 */
 	static <T> CheckedFunction0<T> decorateCheckedSupplier(Retry retry, CheckedFunction0<T> supplier) {
 		return () -> {
-			@SuppressWarnings("unchecked")
 			Retry.Context<T> context = retry.context();
 			do try {
 				T result = supplier.apply();
@@ -155,7 +154,6 @@ public interface Retry {
 	 */
 	static <T, R> CheckedFunction1<T, R> decorateCheckedFunction(Retry retry, CheckedFunction1<T, R> function) {
 		return (T t) -> {
-			@SuppressWarnings("unchecked")
 			Retry.Context<R> context = retry.context();
 			do try {
 				R result = function.apply(t);
@@ -180,7 +178,6 @@ public interface Retry {
 	 */
 	static <T> Supplier<T> decorateSupplier(Retry retry, Supplier<T> supplier) {
 		return () -> {
-			@SuppressWarnings("unchecked")
 			Retry.Context<T> context = retry.context();
 			do try {
 				T result = supplier.get();
@@ -205,7 +202,6 @@ public interface Retry {
 	 */
 	static <T> Callable<T> decorateCallable(Retry retry, Callable<T> supplier) {
 		return () -> {
-			@SuppressWarnings("unchecked")
 			Retry.Context<T> context = retry.context();
 			do try {
 				T result = supplier.call();
@@ -214,8 +210,8 @@ public interface Retry {
 					context.onSuccess();
 					return result;
 				}
-			} catch (RuntimeException runtimeException) {
-				context.onRuntimeError(runtimeException);
+			} catch (Exception exception) {
+				context.onError(exception);
 			} while (true);
 		};
 	}
@@ -251,7 +247,6 @@ public interface Retry {
 	 */
 	static <T, R> Function<T, R> decorateFunction(Retry retry, Function<T, R> function) {
 		return (T t) -> {
-			@SuppressWarnings("unchecked")
 			Retry.Context<R> context = retry.context();
 			do try {
 				R result = function.apply(t);
@@ -278,14 +273,14 @@ public interface Retry {
 	 *
 	 * @return the retry Context
 	 */
-	Retry.Context context();
+	<T> Retry.Context<T> context();
 
 	/**
 	 * Creates a async retry Context.
 	 *
 	 * @return the async retry Context
 	 */
-	Retry.AsyncContext asyncContext();
+	<T> Retry.AsyncContext<T> asyncContext();
 
 	/**
 	 * Returns the RetryConfig of this Retry.
@@ -300,6 +295,18 @@ public interface Retry {
 	 * @return an EventPublisher
 	 */
 	EventPublisher getEventPublisher();
+
+	/**
+	 * Decorates and executes the decorated Supplier.
+	 *
+	 * @param checkedSupplier the original Supplier
+	 * @param <T>      the type of results supplied by this supplier
+	 * @return the result of the decorated Supplier.
+	 * @throws Throwable if something goes wrong applying this function to the given arguments
+	 */
+	default <T> T executeCheckedSupplier(CheckedFunction0<T> checkedSupplier) throws Throwable {
+		return decorateCheckedSupplier(this, checkedSupplier).apply();
+	}
 
 	/**
 	 * Decorates and executes the decorated Supplier.
@@ -429,14 +436,15 @@ public interface Retry {
 		 * Handles a checked exception
 		 *
 		 * @param exception the exception to handle
-		 * @throws Throwable the exception
+		 * @throws Exception when retry count has exceeded
 		 */
-		void onError(Exception exception) throws Throwable;
+		void onError(Exception exception) throws Exception;
 
 		/**
 		 * Handles a runtime exception
 		 *
 		 * @param runtimeException the exception to handle
+         * @throws RuntimeException when retry count has exceeded
 		 */
 		void onRuntimeError(RuntimeException runtimeException);
 	}
@@ -481,7 +489,7 @@ public interface Retry {
 
 			try {
 				stage = supplier.get();
-			} catch (Throwable t) {
+			} catch (Exception t) {
 				onError(t);
 				return;
 			}
@@ -489,13 +497,16 @@ public interface Retry {
 			stage.whenComplete((result, t) -> {
 				if (result != null) {
 					onResult(result);
-				} else if (t != null) {
-					onError(t);
+				} else if (t instanceof Exception) {
+					onError((Exception) t);
+				} else{
+					// Do not handle java.lang.Error
+					promise.completeExceptionally(t);
 				}
 			});
 		}
 
-		private void onError(Throwable t) {
+		private void onError(Exception t) {
 			final long delay = retryContext.onError(t);
 
 			if (delay < 1) {
