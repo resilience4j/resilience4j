@@ -92,7 +92,7 @@ public interface Retry {
 		return () -> {
 
 			final CompletableFuture<T> promise = new CompletableFuture<>();
-			@SuppressWarnings("unchecked") final Runnable block = new AsyncRetryBlock<>(scheduler, retry.asyncContext(), supplier, promise);
+			final Runnable block = new AsyncRetryBlock<>(scheduler, retry.asyncContext(), supplier, promise);
 			block.run();
 
 			return promise;
@@ -280,7 +280,7 @@ public interface Retry {
 	 *
 	 * @return the async retry Context
 	 */
-	Retry.AsyncContext asyncContext();
+	<T> Retry.AsyncContext<T> asyncContext();
 
 	/**
 	 * Returns the RetryConfig of this Retry.

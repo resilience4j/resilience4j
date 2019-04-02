@@ -86,6 +86,7 @@ public class RetryImpl<T> implements Retry {
 	}
 
 	@Override
+	@SuppressWarnings("unchecked")
 	public AsyncContext asyncContext() {
 		return new AsyncContextImpl();
 	}
