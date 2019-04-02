@@ -15,10 +15,6 @@
  */
 package io.github.resilience4j.circuitbreaker.configure;
 
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
-
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,7 +22,6 @@ import org.springframework.context.annotation.Conditional;
 import org.springframework.stereotype.Component;
 
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
-import io.github.resilience4j.circuitbreaker.utils.CircuitBreakerUtils;
 import io.github.resilience4j.reactor.circuitbreaker.operator.CircuitBreakerOperator;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -37,20 +32,10 @@ import reactor.core.publisher.Mono;
  */
 
 @Component
-@Conditional(value = {InjectReactorAspect.class})
+@Conditional(value = {ReactorOnClasspathCondition.class})
 class ReactorCircuitBreakerAspect implements CircuitBreakerAspectExt {
 
 	private static final Logger logger = LoggerFactory.getLogger(ReactorCircuitBreakerAspect.class);
-
-	public ReactorCircuitBreakerAspect() {
-	}
-
-	@SafeVarargs
-	private static <T> Set<T> newHashSet(T... objs) {
-		Set<T> set = new HashSet<>();
-		Collections.addAll(set, objs);
-		return Collections.unmodifiableSet(set);
-	}
 
 	/**
 	 * @param returnType the AOP method return type class
@@ -58,7 +43,7 @@ class ReactorCircuitBreakerAspect implements CircuitBreakerAspectExt {
 	 */
 	@SuppressWarnings("unchecked")
 	@Override
-	public boolean matchReturnType(Class returnType) {
+	public boolean canHandleReturnType(Class returnType) {
 		return (Flux.class.isAssignableFrom(returnType)) || (Mono.class.isAssignableFrom(returnType));
 	}
 
@@ -75,27 +60,16 @@ class ReactorCircuitBreakerAspect implements CircuitBreakerAspectExt {
 	@SuppressWarnings("unchecked")
 	@Override
 	public Object handle(ProceedingJoinPoint proceedingJoinPoint, CircuitBreaker circuitBreaker, String methodName) throws Throwable {
-		CircuitBreakerUtils.isCallPermitted(circuitBreaker);
-		long start = System.nanoTime();
-		try {
-			Object returnValue = proceedingJoinPoint.proceed();
-			if (Flux.class.isAssignableFrom(returnValue.getClass())) {
-				Flux fluxReturnValue = (Flux) returnValue;
-				return fluxReturnValue.transform(io.github.resilience4j.reactor.circuitbreaker.operator.CircuitBreakerOperator.of(circuitBreaker));
-			} else if (Mono.class.isAssignableFrom(returnValue.getClass())) {
-				Mono monoReturnValue = (Mono) returnValue;
-				return monoReturnValue.transform(CircuitBreakerOperator.of(circuitBreaker));
-			} else {
-				throw new IllegalArgumentException("Not Supported type for the circuit breaker in web flux :" + returnValue.getClass().getName());
+		Object returnValue = proceedingJoinPoint.proceed();
+		if (Flux.class.isAssignableFrom(returnValue.getClass())) {
+			Flux fluxReturnValue = (Flux) returnValue;
+			return fluxReturnValue.transform(io.github.resilience4j.reactor.circuitbreaker.operator.CircuitBreakerOperator.of(circuitBreaker));
+		} else if (Mono.class.isAssignableFrom(returnValue.getClass())) {
+			Mono monoReturnValue = (Mono) returnValue;
+			return monoReturnValue.transform(CircuitBreakerOperator.of(circuitBreaker));
+		} else {
+			throw new IllegalArgumentException("Not Supported type for the circuit breaker in web flux :" + returnValue.getClass().getName());
 
-			}
-		} catch (Throwable throwable) {
-			long durationInNanos = System.nanoTime() - start;
-			circuitBreaker.onError(durationInNanos, throwable);
-			if (logger.isDebugEnabled()) {
-				logger.debug("Invocation of method '" + methodName + "' failed!", throwable);
-			}
-			throw throwable;
 		}
 	}
 }

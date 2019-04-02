@@ -27,7 +27,7 @@ public class CircuitBreakerAspectUtil {
 			final Class<?> aClass = context.getClassLoader().loadClass(classToCheck);
 			return aClass != null;
 		} catch (ClassNotFoundException e) {
-			logger.warn(e.getLocalizedMessage());
+			logger.info(e.getLocalizedMessage());
 			return false;
 		}
 	}

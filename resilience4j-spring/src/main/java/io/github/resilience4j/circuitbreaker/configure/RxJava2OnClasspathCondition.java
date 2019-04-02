@@ -25,14 +25,13 @@ import org.springframework.core.type.AnnotatedTypeMetadata;
 /**
  * the inject Rx java aspect support spring condition check
  */
-public class InjectReactorAspect implements Condition {
+public class RxJava2OnClasspathCondition implements Condition {
 
-	private static final Logger logger = LoggerFactory.getLogger(InjectReactorAspect.class);
-	private static final String CLASS_TO_CHECK = "reactor.core.publisher.Flux";
+	private static final Logger logger = LoggerFactory.getLogger(RxJava2OnClasspathCondition.class);
+	private static final String CLASS_TO_CHECK = "io.reactivex.Flowable";
 
 	@Override
 	public boolean matches(ConditionContext context, AnnotatedTypeMetadata metadata) {
 		return CircuitBreakerAspectUtil.checkClassIfFound(context, CLASS_TO_CHECK, logger);
 	}
-
 }

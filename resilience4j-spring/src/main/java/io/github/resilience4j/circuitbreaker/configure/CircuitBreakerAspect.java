@@ -30,6 +30,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.Ordered;
 
+import io.github.resilience4j.circuitbreaker.CircuitBreakerOpenException;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.utils.CircuitBreakerUtils;
@@ -71,7 +72,7 @@ public class CircuitBreakerAspect implements Ordered {
 		Class<?> returnType = method.getReturnType();
 		if (circuitBreakerAspectExtList != null && !circuitBreakerAspectExtList.isEmpty()) {
 			for (CircuitBreakerAspectExt circuitBreakerAspectExt : circuitBreakerAspectExtList) {
-				if (circuitBreakerAspectExt.matchReturnType(returnType)) {
+				if (circuitBreakerAspectExt.canHandleReturnType(returnType)) {
 					return circuitBreakerAspectExt.handle(proceedingJoinPoint, circuitBreaker, methodName);
 				}
 			}
@@ -107,35 +108,31 @@ public class CircuitBreakerAspect implements Ordered {
 	 */
 	@SuppressWarnings("unchecked")
 	private Object defaultCompletionStage(ProceedingJoinPoint proceedingJoinPoint, io.github.resilience4j.circuitbreaker.CircuitBreaker circuitBreaker, String methodName) throws Throwable {
-		CircuitBreakerUtils.isCallPermitted(circuitBreaker);
-		long start = System.nanoTime();
-		try {
-			final CompletableFuture promise = new CompletableFuture<>();
-			if (circuitBreaker.isCallPermitted()) {
-				CompletionStage<?> result = (CompletionStage<?>) proceedingJoinPoint.proceed();
-				if (result != null) {
-					result.whenComplete((v, t) -> {
-						long durationInNanos = System.nanoTime() - start;
-						if (t != null) {
-							circuitBreaker.onError(durationInNanos, t);
-							promise.completeExceptionally(t);
 
-						} else {
-							circuitBreaker.onSuccess(durationInNanos);
-							promise.complete(v);
-						}
-					});
-				}
+		final CompletableFuture promise = new CompletableFuture<>();
+		long start = System.nanoTime();
+		if (!circuitBreaker.isCallPermitted()) {
+			promise.completeExceptionally(
+					new CircuitBreakerOpenException(
+							String.format("CircuitBreaker '%s' is open", circuitBreaker.getName())));
+
+		} else {
+			CompletionStage<?> result = (CompletionStage<?>) proceedingJoinPoint.proceed();
+			if (result != null) {
+				result.whenComplete((v, t) -> {
+					long durationInNanos = System.nanoTime() - start;
+					if (t != null) {
+						circuitBreaker.onError(durationInNanos, t);
+						promise.completeExceptionally(t);
+
+					} else {
+						circuitBreaker.onSuccess(durationInNanos);
+						promise.complete(v);
+					}
+				});
 			}
-			return promise;
-		} catch (Throwable throwable) {
-			long durationInNanos = System.nanoTime() - start;
-			circuitBreaker.onError(durationInNanos, throwable);
-			if (logger.isDebugEnabled()) {
-				logger.debug("Invocation of method '" + methodName + "' failed!", throwable);
-			}
-			throw throwable;
 		}
+		return promise;
 	}
 
 	/**

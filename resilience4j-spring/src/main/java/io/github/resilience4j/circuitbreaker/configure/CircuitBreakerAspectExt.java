@@ -22,7 +22,7 @@ import org.aspectj.lang.ProceedingJoinPoint;
  */
 public interface CircuitBreakerAspectExt {
 
-	boolean matchReturnType(Class returnType);
+	boolean canHandleReturnType(Class returnType);
 
 	Object handle(ProceedingJoinPoint proceedingJoinPoint, io.github.resilience4j.circuitbreaker.CircuitBreaker circuitBreaker, String methodName) throws Throwable;
 }

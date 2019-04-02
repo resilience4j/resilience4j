@@ -27,7 +27,6 @@ import org.springframework.stereotype.Component;
 
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.operator.CircuitBreakerOperator;
-import io.github.resilience4j.circuitbreaker.utils.CircuitBreakerUtils;
 import io.reactivex.Completable;
 import io.reactivex.CompletableSource;
 import io.reactivex.Flowable;
@@ -44,14 +43,11 @@ import io.reactivex.SingleSource;
  */
 
 @Component
-@Conditional(value = {InjectRxJava2Aspect.class})
+@Conditional(value = {RxJava2OnClasspathCondition.class})
 class RxJava2CircuitBreakerAspect implements CircuitBreakerAspectExt {
 
 	private static final Logger logger = LoggerFactory.getLogger(CircuitBreakerAspect.class);
 	private final Set<Class> rxSupportedTypes = newHashSet(ObservableSource.class, SingleSource.class, CompletableSource.class, MaybeSource.class, Flowable.class);
-
-	public RxJava2CircuitBreakerAspect() {
-	}
 
 	@SafeVarargs
 	private static <T> Set<T> newHashSet(T... objs) {
@@ -66,7 +62,7 @@ class RxJava2CircuitBreakerAspect implements CircuitBreakerAspectExt {
 	 */
 	@SuppressWarnings("unchecked")
 	@Override
-	public boolean matchReturnType(Class returnType) {
+	public boolean canHandleReturnType(Class returnType) {
 		return rxSupportedTypes.stream().anyMatch(classType -> classType.isAssignableFrom(returnType));
 	}
 
@@ -80,36 +76,25 @@ class RxJava2CircuitBreakerAspect implements CircuitBreakerAspectExt {
 	@SuppressWarnings("unchecked")
 	@Override
 	public Object handle(ProceedingJoinPoint proceedingJoinPoint, CircuitBreaker circuitBreaker, String methodName) throws Throwable {
-		CircuitBreakerUtils.isCallPermitted(circuitBreaker);
 		CircuitBreakerOperator circuitBreakerOperator = CircuitBreakerOperator.of(circuitBreaker);
-		long start = System.nanoTime();
-		try {
-			Object returnValue = proceedingJoinPoint.proceed();
-			if (returnValue instanceof ObservableSource) {
-				Observable observable = (Observable) returnValue;
-				return observable.lift(circuitBreakerOperator);
-			} else if (returnValue instanceof SingleSource) {
-				Single single = (Single) returnValue;
-				return single.lift(circuitBreakerOperator);
-			} else if (returnValue instanceof CompletableSource) {
-				Completable completable = (Completable) returnValue;
-				return completable.lift(circuitBreakerOperator);
-			} else if (returnValue instanceof MaybeSource) {
-				Maybe maybe = (Maybe) returnValue;
-				return maybe.lift(circuitBreakerOperator);
-			} else if (returnValue instanceof Flowable) {
-				Flowable flowable = (Flowable) returnValue;
-				return flowable.lift(circuitBreakerOperator);
-			} else {
-				throw new IllegalArgumentException("Not Supported type for the circuit breaker in web flux :" + returnValue.getClass().getName());
-			}
-		} catch (Throwable throwable) {
-			long durationInNanos = System.nanoTime() - start;
-			circuitBreaker.onError(durationInNanos, throwable);
-			if (logger.isDebugEnabled()) {
-				logger.debug("Invocation of method '" + methodName + "' failed!", throwable);
-			}
-			throw throwable;
+		Object returnValue = proceedingJoinPoint.proceed();
+		if (returnValue instanceof ObservableSource) {
+			Observable observable = (Observable) returnValue;
+			return observable.lift(circuitBreakerOperator);
+		} else if (returnValue instanceof SingleSource) {
+			Single single = (Single) returnValue;
+			return single.lift(circuitBreakerOperator);
+		} else if (returnValue instanceof CompletableSource) {
+			Completable completable = (Completable) returnValue;
+			return completable.lift(circuitBreakerOperator);
+		} else if (returnValue instanceof MaybeSource) {
+			Maybe maybe = (Maybe) returnValue;
+			return maybe.lift(circuitBreakerOperator);
+		} else if (returnValue instanceof Flowable) {
+			Flowable flowable = (Flowable) returnValue;
+			return flowable.lift(circuitBreakerOperator);
+		} else {
+			throw new IllegalArgumentException("Not Supported type for the circuit breaker in web flux :" + returnValue.getClass().getName());
 		}
 	}
 }
