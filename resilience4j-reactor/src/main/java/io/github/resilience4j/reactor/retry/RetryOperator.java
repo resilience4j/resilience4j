@@ -26,7 +26,6 @@ import reactor.core.publisher.Mono;
 
 /**
  * A Reactor Retry operator which wraps a reactive type in a Retry.
- *
  * @param <T> the value type of the upstream and downstream
  */
 public class RetryOperator<T> implements Function<Publisher<T>, Publisher<T>> {
