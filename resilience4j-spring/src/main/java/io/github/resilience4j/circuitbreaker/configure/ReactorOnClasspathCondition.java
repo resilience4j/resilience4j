@@ -32,7 +32,7 @@ public class ReactorOnClasspathCondition implements Condition {
 
 	@Override
 	public boolean matches(ConditionContext context, AnnotatedTypeMetadata metadata) {
-		return CircuitBreakerAspectUtil.checkClassIfFound(context, CLASS_TO_CHECK, (e) -> logger.info("ReactorCircuitBreakerAspect no activated, because Reactor is not on the classpath."));
+		return CircuitBreakerAspectUtil.checkClassIfFound(context, CLASS_TO_CHECK, (e) -> logger.info("ReactorCircuitBreakerAspectExt no activated, because Reactor is not on the classpath."));
 	}
 
 }

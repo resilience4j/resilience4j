@@ -39,7 +39,7 @@ import io.reactivex.SingleSource;
  * the Rx circuit breaker logic support for the spring AOP
  * conditional on the presence of Rx classes on the spring class loader
  */
-public class RxJava2CircuitBreakerAspect implements CircuitBreakerAspectExt {
+public class RxJava2CircuitBreakerAspectExt implements CircuitBreakerAspectExt {
 
 	private static final Logger logger = LoggerFactory.getLogger(CircuitBreakerAspect.class);
 	private final Set<Class> rxSupportedTypes = newHashSet(ObservableSource.class, SingleSource.class, CompletableSource.class, MaybeSource.class, Flowable.class);

@@ -28,9 +28,9 @@ import reactor.core.publisher.Mono;
  * the Reactor breaker logic support for the spring AOP
  * Conditional on Reactor class existence on spring class loader
  */
-public class ReactorCircuitBreakerAspect implements CircuitBreakerAspectExt {
+public class ReactorCircuitBreakerAspectExt implements CircuitBreakerAspectExt {
 
-	private static final Logger logger = LoggerFactory.getLogger(ReactorCircuitBreakerAspect.class);
+	private static final Logger logger = LoggerFactory.getLogger(ReactorCircuitBreakerAspectExt.class);
 
 	/**
 	 * @param returnType the AOP method return type class

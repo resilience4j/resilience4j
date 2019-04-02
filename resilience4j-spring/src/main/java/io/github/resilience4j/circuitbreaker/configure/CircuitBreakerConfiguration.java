@@ -59,14 +59,14 @@ public class CircuitBreakerConfiguration {
 
 	@Bean
 	@Conditional(value = {RxJava2OnClasspathCondition.class})
-	public RxJava2CircuitBreakerAspect rxJava2CircuitBreakerAspect() {
-		return new RxJava2CircuitBreakerAspect();
+	public RxJava2CircuitBreakerAspectExt rxJava2CircuitBreakerAspect() {
+		return new RxJava2CircuitBreakerAspectExt();
 	}
 
 	@Bean
 	@Conditional(value = {ReactorOnClasspathCondition.class})
-	public ReactorCircuitBreakerAspect reactorCircuitBreakerAspect() {
-		return new ReactorCircuitBreakerAspect();
+	public ReactorCircuitBreakerAspectExt reactorCircuitBreakerAspect() {
+		return new ReactorCircuitBreakerAspectExt();
 	}
 
 	/**
