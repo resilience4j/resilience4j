@@ -33,7 +33,7 @@ import reactor.core.publisher.Mono;
 
 @Component
 @Conditional(value = {ReactorOnClasspathCondition.class})
-class ReactorCircuitBreakerAspect implements CircuitBreakerAspectExt {
+public class ReactorCircuitBreakerAspect implements CircuitBreakerAspectExt {
 
 	private static final Logger logger = LoggerFactory.getLogger(ReactorCircuitBreakerAspect.class);
 

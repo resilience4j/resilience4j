@@ -44,7 +44,7 @@ import io.reactivex.SingleSource;
 
 @Component
 @Conditional(value = {RxJava2OnClasspathCondition.class})
-class RxJava2CircuitBreakerAspect implements CircuitBreakerAspectExt {
+public class RxJava2CircuitBreakerAspect implements CircuitBreakerAspectExt {
 
 	private static final Logger logger = LoggerFactory.getLogger(CircuitBreakerAspect.class);
 	private final Set<Class> rxSupportedTypes = newHashSet(ObservableSource.class, SingleSource.class, CompletableSource.class, MaybeSource.class, Flowable.class);
