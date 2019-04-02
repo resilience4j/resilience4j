@@ -1,5 +1,11 @@
 package io.github.resilience4j.reactor;
 
+import java.io.IOException;
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
+
+import org.junit.Test;
+
 import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.bulkhead.BulkheadConfig;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
@@ -10,15 +16,13 @@ import io.github.resilience4j.ratelimiter.RateLimiterConfig;
 import io.github.resilience4j.reactor.bulkhead.operator.BulkheadOperator;
 import io.github.resilience4j.reactor.circuitbreaker.operator.CircuitBreakerOperator;
 import io.github.resilience4j.reactor.ratelimiter.operator.RateLimiterOperator;
-import org.junit.Test;
+import io.github.resilience4j.reactor.retry.RetryOperator;
+import io.github.resilience4j.retry.Retry;
+import io.github.resilience4j.retry.RetryConfig;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 import reactor.test.StepVerifier;
-
-import java.io.IOException;
-import java.time.Duration;
-import java.time.temporal.ChronoUnit;
 
 public class CombinedOperatorsTest {
 
@@ -35,6 +39,10 @@ public class CombinedOperatorsTest {
     private Bulkhead bulkhead = Bulkhead
             .of("test", BulkheadConfig.custom().maxConcurrentCalls(1).maxWaitTime(0).build());
 
+    private final RetryConfig config = io.github.resilience4j.retry.RetryConfig.ofDefaults();
+    private final Retry retry = Retry.of("testName", config);
+    private final RetryOperator<String> retryOperator = RetryOperator.of(retry);
+
     @Test
     public void shouldEmitEvents() {
         StepVerifier.create(
@@ -48,9 +56,34 @@ public class CombinedOperatorsTest {
     }
 
     @Test
+    public void shouldEmitEventsWithRetry() {
+        StepVerifier.create(
+                Flux.just("Event 1", "Event 2")
+                        .transform(retryOperator)
+                        .transform(BulkheadOperator.of(bulkhead))
+                        .transform(RateLimiterOperator.of(rateLimiter))
+                        .transform(CircuitBreakerOperator.of(circuitBreaker))
+        ).expectNext("Event 1")
+                .expectNext("Event 2")
+                .verifyComplete();
+    }
+
+    @Test
     public void shouldEmitEvent() {
         StepVerifier.create(
                 Mono.just("Event 1")
+                        .transform(BulkheadOperator.of(bulkhead))
+                        .transform(RateLimiterOperator.of(rateLimiter))
+                        .transform(CircuitBreakerOperator.of(circuitBreaker))
+        ).expectNext("Event 1")
+                .verifyComplete();
+    }
+
+    @Test
+    public void shouldEmitEventWithRetry() {
+        StepVerifier.create(
+                Mono.just("Event 1")
+                        .transform(retryOperator)
                         .transform(BulkheadOperator.of(bulkhead))
                         .transform(RateLimiterOperator.of(rateLimiter))
                         .transform(CircuitBreakerOperator.of(circuitBreaker))
