@@ -22,8 +22,6 @@ import java.util.Set;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.context.annotation.Conditional;
-import org.springframework.stereotype.Component;
 
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.operator.CircuitBreakerOperator;
@@ -41,9 +39,6 @@ import io.reactivex.SingleSource;
  * the Rx circuit breaker logic support for the spring AOP
  * conditional on the presence of Rx classes on the spring class loader
  */
-
-@Component
-@Conditional(value = {RxJava2OnClasspathCondition.class})
 public class RxJava2CircuitBreakerAspect implements CircuitBreakerAspectExt {
 
 	private static final Logger logger = LoggerFactory.getLogger(CircuitBreakerAspect.class);

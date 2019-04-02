@@ -32,6 +32,6 @@ public class RxJava2OnClasspathCondition implements Condition {
 
 	@Override
 	public boolean matches(ConditionContext context, AnnotatedTypeMetadata metadata) {
-		return CircuitBreakerAspectUtil.checkClassIfFound(context, CLASS_TO_CHECK, logger);
+		return CircuitBreakerAspectUtil.checkClassIfFound(context, CLASS_TO_CHECK, (e) -> logger.info("RxJava2CircuitBreakerAspect no activated, because RxJava2 is not on the classpath."));
 	}
 }

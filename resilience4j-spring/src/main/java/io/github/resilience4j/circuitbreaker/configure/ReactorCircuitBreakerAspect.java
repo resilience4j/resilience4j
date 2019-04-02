@@ -18,8 +18,6 @@ package io.github.resilience4j.circuitbreaker.configure;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.context.annotation.Conditional;
-import org.springframework.stereotype.Component;
 
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.reactor.circuitbreaker.operator.CircuitBreakerOperator;
@@ -30,9 +28,6 @@ import reactor.core.publisher.Mono;
  * the Reactor breaker logic support for the spring AOP
  * Conditional on Reactor class existence on spring class loader
  */
-
-@Component
-@Conditional(value = {ReactorOnClasspathCondition.class})
 public class ReactorCircuitBreakerAspect implements CircuitBreakerAspectExt {
 
 	private static final Logger logger = LoggerFactory.getLogger(ReactorCircuitBreakerAspect.class);

@@ -14,20 +14,27 @@
  */
 package io.github.resilience4j.circuitbreaker.configure;
 
-import org.slf4j.Logger;
+import java.util.function.Consumer;
+
 import org.springframework.context.annotation.ConditionContext;
 
 /**
- * common util methods
+ * common CircuitBreakerAspect util methods
  */
 public class CircuitBreakerAspectUtil {
 
-	static boolean checkClassIfFound(ConditionContext context, String classToCheck, Logger logger) {
+	/**
+	 * @param context           the spring condition context
+	 * @param classToCheck      the class to check in spring class laoder
+	 * @param exceptionConsumer the custom exception consumer
+	 * @return true or false if the class is found or not
+	 */
+	static boolean checkClassIfFound(ConditionContext context, String classToCheck, Consumer<Exception> exceptionConsumer) {
 		try {
 			final Class<?> aClass = context.getClassLoader().loadClass(classToCheck);
 			return aClass != null;
 		} catch (ClassNotFoundException e) {
-			logger.info(e.getLocalizedMessage());
+			exceptionConsumer.accept(e);
 			return false;
 		}
 	}

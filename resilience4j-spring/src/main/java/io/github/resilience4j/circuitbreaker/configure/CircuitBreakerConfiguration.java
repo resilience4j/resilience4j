@@ -19,6 +19,7 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
 
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
@@ -53,6 +54,19 @@ public class CircuitBreakerConfiguration {
 	public CircuitBreakerAspect circuitBreakerAspect(CircuitBreakerConfigurationProperties circuitBreakerProperties,
 	                                                 CircuitBreakerRegistry circuitBreakerRegistry, @Autowired(required = false) List<CircuitBreakerAspectExt> circuitBreakerAspectExtList) {
 		return new CircuitBreakerAspect(circuitBreakerProperties, circuitBreakerRegistry, circuitBreakerAspectExtList);
+	}
+
+
+	@Bean
+	@Conditional(value = {RxJava2OnClasspathCondition.class})
+	public RxJava2CircuitBreakerAspect rxJava2CircuitBreakerAspect() {
+		return new RxJava2CircuitBreakerAspect();
+	}
+
+	@Bean
+	@Conditional(value = {ReactorOnClasspathCondition.class})
+	public ReactorCircuitBreakerAspect reactorCircuitBreakerAspect() {
+		return new ReactorCircuitBreakerAspect();
 	}
 
 	/**
