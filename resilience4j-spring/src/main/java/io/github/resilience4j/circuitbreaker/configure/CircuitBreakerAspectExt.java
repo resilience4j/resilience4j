@@ -18,7 +18,7 @@ package io.github.resilience4j.circuitbreaker.configure;
 import org.aspectj.lang.ProceedingJoinPoint;
 
 /**
- * circuit breaker aspect extension support interface type
+ * circuit breaker aspect extension support interface type if you want to support new types
  */
 public interface CircuitBreakerAspectExt {
 
