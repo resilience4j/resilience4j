@@ -86,6 +86,7 @@ public class RetryImpl<T> implements Retry {
 	}
 
 	@Override
+	@SuppressWarnings("unchecked")
 	public AsyncContext asyncContext() {
 		return new AsyncContextImpl();
 	}
@@ -147,7 +148,7 @@ public class RetryImpl<T> implements Retry {
 			return false;
 		}
 
-		public void onError(Exception exception) throws Throwable {
+		public void onError(Exception exception) throws Exception {
 			if (exceptionPredicate.test(exception)) {
 				lastException.set(exception);
 				throwOrSleepAfterException();
