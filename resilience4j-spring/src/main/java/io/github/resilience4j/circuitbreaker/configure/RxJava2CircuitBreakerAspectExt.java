@@ -72,7 +72,16 @@ public class RxJava2CircuitBreakerAspectExt implements CircuitBreakerAspectExt {
 	@Override
 	public Object handle(ProceedingJoinPoint proceedingJoinPoint, CircuitBreaker circuitBreaker, String methodName) throws Throwable {
 		CircuitBreakerOperator circuitBreakerOperator = CircuitBreakerOperator.of(circuitBreaker);
-		Object returnValue = proceedingJoinPoint.proceed();
+		long start = System.nanoTime();
+		Object returnValue;
+		try {
+			returnValue = proceedingJoinPoint.proceed();
+		} catch (Exception e) {
+			long durationInNanos = System.nanoTime() - start;
+			circuitBreaker.onError(durationInNanos, e);
+			logger.error("Exception has been thrown during RxJava2 circuit breaker invoke {}", e.getCause());
+			throw e;
+		}
 		if (returnValue instanceof ObservableSource) {
 			Observable observable = (Observable) returnValue;
 			return observable.lift(circuitBreakerOperator);
@@ -89,6 +98,7 @@ public class RxJava2CircuitBreakerAspectExt implements CircuitBreakerAspectExt {
 			Flowable flowable = (Flowable) returnValue;
 			return flowable.lift(circuitBreakerOperator);
 		} else {
+			logger.error("Unsupported type for RxJava2 circuit breaker {}", returnValue.getClass().getTypeName());
 			throw new IllegalArgumentException("Not Supported type for the circuit breaker in web flux :" + returnValue.getClass().getName());
 		}
 	}
