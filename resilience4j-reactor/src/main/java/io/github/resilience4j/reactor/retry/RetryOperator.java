@@ -25,7 +25,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 /**
- * A Reactor Retry operator which wraps a reactive type in a circuit breaker.
+ * A Reactor Retry operator which wraps a reactive type in a Retry.
  *
  * @param <T> the value type of the upstream and downstream
  */
