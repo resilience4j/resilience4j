@@ -5,7 +5,8 @@ import java.io.IOException;
 import java.util.concurrent.CompletionStage;
 
 public interface RetryDummyService {
-	String BACKEND = "retryBackendA";
+	String RETRY_BACKEND_A = "retryBackendA";
+	String RETRY_BACKEND_B = "retryBackendB";
 
 	void doSomething(boolean throwException) throws IOException;
 

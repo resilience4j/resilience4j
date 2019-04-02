@@ -17,8 +17,10 @@ package io.github.resilience4j.bulkhead.autoconfigure;
 
 import io.github.resilience4j.bulkhead.BulkheadRegistry;
 import io.github.resilience4j.prometheus.BulkheadExports;
+import io.github.resilience4j.prometheus.collectors.BulkheadMetricsCollector;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -30,9 +32,23 @@ import org.springframework.context.annotation.Configuration;
 @AutoConfigureAfter(value = BulkheadAutoConfiguration.class)
 @ConditionalOnClass(BulkheadExports.class)
 public class BulkheadPrometheusAutoConfiguration {
+
     @Bean
-    public BulkheadExports bulkheadPrometheusCollector(BulkheadRegistry bulkheadRegistry){
+    @ConditionalOnProperty(value = "resilience4j.bulkhead.metrics.use_legacy_collector", havingValue = "true")
+    public BulkheadExports legacyBulkheadPrometheusCollector(BulkheadRegistry bulkheadRegistry) {
         BulkheadExports collector = BulkheadExports.ofBulkheadRegistry(bulkheadRegistry);
+        collector.register();
+        return collector;
+    }
+
+    @Bean
+    @ConditionalOnProperty(
+        value = "resilience4j.bulkhead.metrics.use_legacy_collector",
+        havingValue = "false",
+        matchIfMissing = true
+    )
+    public BulkheadMetricsCollector bulkheadPrometheusCollector(BulkheadRegistry bulkheadRegistry) {
+        BulkheadMetricsCollector collector = BulkheadMetricsCollector.ofBulkheadRegistry(bulkheadRegistry);
         collector.register();
         return collector;
     }

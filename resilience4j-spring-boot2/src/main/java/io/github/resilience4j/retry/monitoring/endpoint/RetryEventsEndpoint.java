@@ -18,7 +18,6 @@ package io.github.resilience4j.retry.monitoring.endpoint;
 
 import java.util.Comparator;
 
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.actuate.endpoint.annotation.Endpoint;
 import org.springframework.boot.actuate.endpoint.annotation.ReadOperation;
 import org.springframework.boot.actuate.endpoint.annotation.Selector;
@@ -36,12 +35,9 @@ import io.vavr.collection.List;
 public class RetryEventsEndpoint {
 
 	private final EventConsumerRegistry<RetryEvent> syncRetryEventConsumerRegistry;
-	private final EventConsumerRegistry<RetryEvent> asyncRetryEventConsumerRegistry;
 
-	public RetryEventsEndpoint(@Qualifier("retryEventConsumerRegistry") EventConsumerRegistry<RetryEvent> eventConsumerRegistry,
-	                           @Qualifier("asyncRetryEventConsumerRegistry") EventConsumerRegistry<RetryEvent> asyncRetryEventConsumerRegistry) {
+	public RetryEventsEndpoint(EventConsumerRegistry<RetryEvent> eventConsumerRegistry) {
 		this.syncRetryEventConsumerRegistry = eventConsumerRegistry;
-		this.asyncRetryEventConsumerRegistry = asyncRetryEventConsumerRegistry;
 	}
 
 	/**
@@ -50,7 +46,6 @@ public class RetryEventsEndpoint {
 	@ReadOperation
 	public RetryEventsEndpointResponse getAllRetryEvenets() {
 		return new RetryEventsEndpointResponse(syncRetryEventConsumerRegistry.getAllEventConsumer()
-				.appendAll(asyncRetryEventConsumerRegistry.getAllEventConsumer())
 				.flatMap(CircularEventConsumer::getBufferedEvents)
 				.sorted(Comparator.comparing(RetryEvent::getCreationTime))
 				.map(RetryEventDTOFactory::createRetryEventDTO).toJavaList());
@@ -82,13 +77,8 @@ public class RetryEventsEndpoint {
 
 	private List<RetryEvent> getRetryEventCircularEventConsumer(String name) {
 		final CircularEventConsumer<RetryEvent> syncEvents = syncRetryEventConsumerRegistry.getEventConsumer(name);
-		final CircularEventConsumer<RetryEvent> asyncEvents = asyncRetryEventConsumerRegistry.getEventConsumer(name);
-		if (syncEvents != null && asyncEvents != null) {
-			return syncEvents.getBufferedEvents().appendAll(asyncEvents.getBufferedEvents());
-		} else if (syncEvents != null) {
+		if (syncEvents != null) {
 			return syncEvents.getBufferedEvents();
-		} else if (asyncEvents != null) {
-			return asyncEvents.getBufferedEvents();
 		} else {
 			return List.empty();
 		}
