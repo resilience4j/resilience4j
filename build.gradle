@@ -8,11 +8,10 @@ buildscript {
     }
     dependencies {
         classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.8.4'
-        classpath 'me.champeau.gradle:jmh-gradle-plugin:0.3.1'
-        classpath "org.asciidoctor:asciidoctor-gradle-plugin:1.5.3"
-        classpath "org.ajoberstar:gradle-git:1.3.2"
-        classpath "org.jfrog.buildinfo:build-info-extractor-gradle:4.4.17"
-        classpath 'com.github.erizo.gradle:jcstress-gradle-plugin:0.8.0'
+        classpath 'me.champeau.gradle:jmh-gradle-plugin:0.4.8'
+        classpath "org.asciidoctor:asciidoctor-gradle-plugin:1.5.9.2"
+        classpath "org.ajoberstar:gradle-git:1.7.2"
+        classpath "org.jfrog.buildinfo:build-info-extractor-gradle:4.9.5"
         classpath "com.netflix.nebula:gradle-extra-configurations-plugin:4.0.1"
     }
 }
@@ -73,9 +72,6 @@ configure(project.coreProjects) {
         testCompile ( libraries.powermock_api_mockito)
         testCompile ( libraries.powermock_module_junit4)
         testCompile ( libraries.awaitility)
-
-        jmh "org.openjdk.jmh:jmh-core:1.18"
-        jmh "org.openjdk.jmh:jmh-generator-annprocess:1.18"
     }
 
     tasks.withType(JavaCompile) {
@@ -85,11 +81,11 @@ configure(project.coreProjects) {
         options.encoding = 'UTF-8'
         options.compilerArgs += ["-Xlint:unchecked", "-parameters"]
 
+
     }
 
     jmh {
         duplicateClassesStrategy = 'warn'
-        jmhVersion = '1.17'
     }
 }
 
@@ -145,9 +141,6 @@ test {
     dependsOn(subprojects.test) // required by cobertura to aggregate report
 }
 
-task wrapper(type: Wrapper) {
-    gradleVersion = '4.10.2'
-}
 
 artifactory {
     contextUrl = 'https://oss.jfrog.org'
