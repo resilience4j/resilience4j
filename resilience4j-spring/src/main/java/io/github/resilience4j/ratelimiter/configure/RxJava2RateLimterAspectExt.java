@@ -65,14 +65,14 @@ public class RxJava2RateLimterAspectExt implements RateLimiterAspectExt {
 	@SuppressWarnings("unchecked")
 	@Override
 	public Object handle(ProceedingJoinPoint proceedingJoinPoint, RateLimiter rateLimiter, String methodName) throws Throwable {
-		RateLimiterOperator rateLimiterOperator = RateLimiterOperator.of(rateLimiter);
+		RateLimiterOperator<?> rateLimiterOperator = RateLimiterOperator.of(rateLimiter);
 		Object returnValue = proceedingJoinPoint.proceed();
 		return executeRxJava2Aspect(rateLimiterOperator, returnValue);
 	}
 
 	private Object executeRxJava2Aspect(RateLimiterOperator rateLimiterOperator, Object returnValue) {
 		if (returnValue instanceof ObservableSource) {
-			Observable<?> observable = (Observable<?>) returnValue;
+			Observable<?> observable = (Observable) returnValue;
 			return observable.lift(rateLimiterOperator);
 		} else if (returnValue instanceof SingleSource) {
 			Single<?> single = (Single) returnValue;

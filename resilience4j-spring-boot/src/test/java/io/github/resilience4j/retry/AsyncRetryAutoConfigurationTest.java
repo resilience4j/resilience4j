@@ -20,7 +20,6 @@ import static io.github.resilience4j.service.test.RetryDummyService.RETRY_BACKEN
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.IOException;
-import java.util.Map;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -114,18 +113,4 @@ public class AsyncRetryAutoConfigurationTest {
 			throw e.getCause();
 		}
 	}
-
-	private final static class HealthResponse {
-		private Map<String, Object> details;
-
-		public Map<String, Object> getDetails() {
-			return details;
-		}
-
-		public void setDetails(Map<String, Object> details) {
-			this.details = details;
-		}
-	}
-
-
 }

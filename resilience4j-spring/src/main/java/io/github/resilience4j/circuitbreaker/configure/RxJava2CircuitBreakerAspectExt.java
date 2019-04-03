@@ -15,8 +15,8 @@
  */
 package io.github.resilience4j.circuitbreaker.configure;
 
-import java.util.Collections;
-import java.util.HashSet;
+import static io.github.resilience4j.utils.AspectUtil.newHashSet;
+
 import java.util.Set;
 
 import org.aspectj.lang.ProceedingJoinPoint;
@@ -43,13 +43,6 @@ public class RxJava2CircuitBreakerAspectExt implements CircuitBreakerAspectExt {
 
 	private static final Logger logger = LoggerFactory.getLogger(CircuitBreakerAspect.class);
 	private final Set<Class> rxSupportedTypes = newHashSet(ObservableSource.class, SingleSource.class, CompletableSource.class, MaybeSource.class, Flowable.class);
-
-	@SafeVarargs
-	private static <T> Set<T> newHashSet(T... objs) {
-		Set<T> set = new HashSet<>();
-		Collections.addAll(set, objs);
-		return Collections.unmodifiableSet(set);
-	}
 
 	/**
 	 * @param returnType the AOP method return type class
