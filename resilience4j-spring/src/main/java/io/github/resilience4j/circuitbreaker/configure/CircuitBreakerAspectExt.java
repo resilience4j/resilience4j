@@ -13,12 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.resilience4j.circuitbreaker.annotation;
+package io.github.resilience4j.circuitbreaker.configure;
+
+import org.aspectj.lang.ProceedingJoinPoint;
 
 /**
- * API type support for circuit breaker annotation
+ * circuit breaker aspect extension support interface type if you want to support new types
  */
-public enum ApiType {
+public interface CircuitBreakerAspectExt {
 
-	DEFAULT, WEBFLUX
+	boolean canHandleReturnType(Class returnType);
+
+	Object handle(ProceedingJoinPoint proceedingJoinPoint, io.github.resilience4j.circuitbreaker.CircuitBreaker circuitBreaker, String methodName) throws Throwable;
 }

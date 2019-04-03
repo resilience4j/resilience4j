@@ -6,6 +6,7 @@ dependencies {
     compile project(':resilience4j-consumer')
     compile project(':resilience4j-circuitbreaker')
     compileOnly project(':resilience4j-reactor')
+    compileOnly project(':resilience4j-rxjava2')
     compile project(':resilience4j-ratelimiter')
     compile project(':resilience4j-retry')
     compile project(':resilience4j-bulkhead')
