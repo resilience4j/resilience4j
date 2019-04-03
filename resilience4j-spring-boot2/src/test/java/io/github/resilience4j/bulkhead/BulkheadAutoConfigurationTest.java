@@ -94,7 +94,7 @@ public class BulkheadAutoConfigurationTest {
 		assertThat(bulkhead.getBulkheadConfig().getMaxConcurrentCalls()).isEqualTo(1);
 
 		await()
-				.atMost(2, TimeUnit.SECONDS)
+				.atMost(1, TimeUnit.SECONDS)
 				.until(() -> bulkhead.getMetrics().getAvailableConcurrentCalls() == 1);
 		// Test Actuator endpoints
 
@@ -106,7 +106,7 @@ public class BulkheadAutoConfigurationTest {
 		}
 
 		await()
-				.atMost(2, TimeUnit.SECONDS)
+				.atMost(1, TimeUnit.SECONDS)
 				.until(() -> bulkhead.getMetrics().getAvailableConcurrentCalls() == 1);
 
 		ResponseEntity<BulkheadEventsEndpointResponse> bulkheadEventList = restTemplate.getForEntity("/actuator/bulkheadevents", BulkheadEventsEndpointResponse.class);
@@ -148,11 +148,11 @@ public class BulkheadAutoConfigurationTest {
 					.subscribe(String::toUpperCase, throwable -> System.out.println("Bulkhead Exception received: " + throwable.getMessage()))));
 		}
 		await()
-				.atMost(2200, TimeUnit.MILLISECONDS)
+				.atMost(1200, TimeUnit.MILLISECONDS)
 				.until(() -> bulkhead.getMetrics().getAvailableConcurrentCalls() == 0);
 
 		await()
-				.atMost(2000, TimeUnit.MILLISECONDS)
+				.atMost(1000, TimeUnit.MILLISECONDS)
 				.until(() -> bulkhead.getMetrics().getAvailableConcurrentCalls() == 2);
 
 		for (int i = 0; i < 5; i++) {
@@ -161,7 +161,7 @@ public class BulkheadAutoConfigurationTest {
 		}
 
 		await()
-				.atMost(2000, TimeUnit.MILLISECONDS)
+				.atMost(1000, TimeUnit.MILLISECONDS)
 				.until(() -> bulkhead.getMetrics().getAvailableConcurrentCalls() == 2);
 
 		assertThat(bulkhead.getBulkheadConfig().getMaxWaitTime()).isEqualTo(10);
@@ -191,11 +191,11 @@ public class BulkheadAutoConfigurationTest {
 					.subscribe(String::toUpperCase, throwable -> System.out.println("Bulkhead Exception received: " + throwable.getMessage()))));
 		}
 		await()
-				.atMost(2200, TimeUnit.MILLISECONDS)
+				.atMost(1200, TimeUnit.MILLISECONDS)
 				.until(() -> bulkhead.getMetrics().getAvailableConcurrentCalls() == 0);
 
 		await()
-				.atMost(2000, TimeUnit.MILLISECONDS)
+				.atMost(1000, TimeUnit.MILLISECONDS)
 				.until(() -> bulkhead.getMetrics().getAvailableConcurrentCalls() == 2);
 
 		for (int i = 0; i < 5; i++) {
@@ -204,7 +204,7 @@ public class BulkheadAutoConfigurationTest {
 		}
 
 		await()
-				.atMost(2000, TimeUnit.MILLISECONDS)
+				.atMost(1000, TimeUnit.MILLISECONDS)
 				.until(() -> bulkhead.getMetrics().getAvailableConcurrentCalls() == 2);
 
 		commonAssertions();

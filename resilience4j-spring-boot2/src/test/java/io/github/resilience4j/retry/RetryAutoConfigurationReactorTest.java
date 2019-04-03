@@ -26,6 +26,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.ResponseEntity;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import io.github.resilience4j.circuitbreaker.IgnoredException;
@@ -40,6 +41,7 @@ import io.github.resilience4j.service.test.retry.ReactiveRetryDummyService;
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
 		classes = TestApplication.class)
+@DirtiesContext
 public class RetryAutoConfigurationReactorTest {
 
 	@Autowired

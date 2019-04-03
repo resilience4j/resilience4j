@@ -18,11 +18,11 @@ public class BulkheadReactiveDummyServiceImpl implements BulkheadReactiveDummySe
 
 	@Override
 	public Flux<String> doSomethingFlux() {
-		return Flux.just("test").delayElements(Duration.ofSeconds(1));
+		return Flux.just("test").delayElements(Duration.ofMillis(500));
 	}
 
 	@Override
 	public Flowable<String> doSomethingFlowable() {
-		return Flowable.just("testMaybe").delay(1, TimeUnit.SECONDS);
+		return Flowable.just("testMaybe").delay(500, TimeUnit.MILLISECONDS);
 	}
 }
