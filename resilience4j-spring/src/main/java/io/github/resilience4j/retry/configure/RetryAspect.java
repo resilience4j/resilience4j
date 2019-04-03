@@ -141,6 +141,7 @@ public class RetryAspect implements Ordered {
 	 * @return the result object if any
 	 * @throws Throwable
 	 */
+	@SuppressWarnings("unchecked")
 	private Object handleAsyncJoinPoint(ProceedingJoinPoint proceedingJoinPoint, io.github.resilience4j.retry.Retry retry, String methodName) throws Throwable {
 		if (logger.isDebugEnabled()) {
 			logger.debug("async retry invocation of method {} ", methodName);
