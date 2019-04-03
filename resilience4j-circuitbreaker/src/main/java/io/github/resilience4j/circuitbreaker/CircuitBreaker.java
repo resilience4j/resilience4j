@@ -436,26 +436,19 @@ public interface CircuitBreaker {
 
             } else {
                 final long start = System.nanoTime();
-
-                try {
-                    supplier.get().whenComplete((result, throwable) -> {
-                        long durationInNanos = System.nanoTime() - start;
-                        if (result != null) {
-                            circuitBreaker.onSuccess(durationInNanos);
-                            promise.complete(result);
-                        } else if (throwable instanceof Exception) {
-                            circuitBreaker.onError(durationInNanos, throwable);
-                            promise.completeExceptionally(throwable);
-                        } else{
-                            // Do not handle java.lang.Error
-                            promise.completeExceptionally(throwable);
-                        }
-                    });
-                } catch (Throwable throwable) {
+                supplier.get().whenComplete((result, throwable) -> {
                     long durationInNanos = System.nanoTime() - start;
-                    circuitBreaker.onError(durationInNanos, throwable);
-                    throw throwable;
-                }
+                    if (result != null) {
+                        circuitBreaker.onSuccess(durationInNanos);
+                        promise.complete(result);
+                    } else if (throwable instanceof Exception) {
+                        circuitBreaker.onError(durationInNanos, throwable);
+                        promise.completeExceptionally(throwable);
+                    } else{
+                        // Do not handle java.lang.Error
+                        promise.completeExceptionally(throwable);
+                    }
+                });
             }
 
             return promise;
