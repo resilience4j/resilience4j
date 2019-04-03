@@ -30,10 +30,7 @@ import javax.xml.ws.WebServiceException;
 import java.io.IOException;
 import java.net.SocketTimeoutException;
 import java.time.Duration;
-import java.util.concurrent.Callable;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionStage;
-import java.util.concurrent.ExecutionException;
+import java.util.concurrent.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -796,6 +793,35 @@ public class CircuitBreakerTest {
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
         assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(1);
+    }
+
+    @Test
+    public void shouldDecorateCompletionStageAndIgnoreWebServiceException() {
+        // Given
+        CircuitBreakerConfig config = CircuitBreakerConfig.custom()
+                .ignoreExceptions(WebServiceException.class)
+                .build();
+
+        CircuitBreaker circuitBreaker = CircuitBreaker.of("backendName", config);
+        assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
+        // Given the HelloWorldService throws an exception
+        BDDMockito.given(helloWorldService.returnHelloWorld()).willThrow(new WebServiceException("BAM! At async stage"));
+
+        // When
+        Supplier<CompletionStage<String>> completionStageSupplier =
+                () -> CompletableFuture.supplyAsync(helloWorldService::returnHelloWorld);
+
+        CompletionStage<String> stringCompletionStage = circuitBreaker.executeCompletionStage(completionStageSupplier);
+
+        // Then the helloWorldService should be invoked 1 time
+        assertThatThrownBy(stringCompletionStage.toCompletableFuture()::get)
+                .isInstanceOf(ExecutionException.class).hasCause(new WebServiceException("BAM! At async stage"));
+        BDDMockito.then(helloWorldService).should(Mockito.times(1)).returnHelloWorld();
+
+        CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
+        // WebServiceException should be ignored
+        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(0);
+        assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(0);
     }
 
     @Test
