@@ -52,10 +52,10 @@ public class CircuitBreakerOperator<T> implements Function<Publisher<T>, Publish
     public Publisher<T> apply(Publisher<T> publisher) {
         if (publisher instanceof Mono) {
             return MonoResilience
-                    .onAssembly(new MonoCircuitBreaker<T>((Mono<? extends T>) publisher, circuitBreaker));
+                    .onAssembly(new MonoCircuitBreaker<>((Mono<? extends T>) publisher, circuitBreaker));
         } else if (publisher instanceof Flux) {
             return FluxResilience
-                    .onAssembly(new FluxCircuitBreaker<T>((Flux<? extends T>) publisher, circuitBreaker));
+                    .onAssembly(new FluxCircuitBreaker<>((Flux<? extends T>) publisher, circuitBreaker));
         }
 
         throw new IllegalStateException("Publisher of type <" + publisher.getClass().getSimpleName()
