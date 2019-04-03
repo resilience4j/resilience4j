@@ -180,19 +180,17 @@ public class CircuitBreakerAutoConfigurationTest {
 		assertThat(circuitBreakerProperties).isNotNull();
 
 		try {
-			reactiveDummyService.doSomethingFlux(true).subscribe(String::toUpperCase, Throwable::getCause);
+			reactiveDummyService.doSomethingFlux(true).subscribe(System.out::println, System.out::println);
 		} catch (IOException ex) {
 			// Do nothing. The IOException is recorded by the CircuitBreaker as part of the recordFailurePredicate as a failure.
 		}
 		// The invocation is recorded by the CircuitBreaker as a success.
-		reactiveDummyService.doSomethingFlux(false).subscribe(String::toUpperCase, Throwable::getCause);
+		reactiveDummyService.doSomethingFlux(false)
+				.subscribe(System.out::println, System.out::println);
 
 		CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker(ReactiveDummyService.BACKEND);
 		assertThat(circuitBreaker).isNotNull();
 
-		assertThat(circuitBreaker.getMetrics().getNumberOfBufferedCalls()).isEqualTo(2);
-		assertThat(circuitBreaker.getMetrics().getNumberOfSuccessfulCalls()).isEqualTo(1);
-		assertThat(circuitBreaker.getMetrics().getNumberOfFailedCalls()).isEqualTo(1);
 
 		// expect circuitbreaker is configured as defined in application.yml
 		assertThat(circuitBreaker.getCircuitBreakerConfig().getRingBufferSizeInClosedState()).isEqualTo(10);
@@ -219,6 +217,9 @@ public class CircuitBreakerAutoConfigurationTest {
 
 		// expect aspect configured as defined in application.yml
 		assertThat(circuitBreakerAspect.getOrder()).isEqualTo(400);
+		assertThat(circuitBreaker.getMetrics().getNumberOfBufferedCalls()).isEqualTo(2);
+		assertThat(circuitBreaker.getMetrics().getNumberOfSuccessfulCalls()).isEqualTo(1);
+		assertThat(circuitBreaker.getMetrics().getNumberOfFailedCalls()).isEqualTo(1);
 	}
 
 	private final static class HealthResponse {

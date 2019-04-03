@@ -117,25 +117,19 @@ public class CircuitBreakerAspect implements Ordered {
 							String.format("CircuitBreaker '%s' is open", circuitBreaker.getName())));
 
 		} else {
-			try {
-				CompletionStage<?> result = (CompletionStage<?>) proceedingJoinPoint.proceed();
-				if (result != null) {
-					result.whenComplete((v, t) -> {
-						long durationInNanos = System.nanoTime() - start;
-						if (t != null) {
-							circuitBreaker.onError(durationInNanos, t);
-							promise.completeExceptionally(t);
+			CompletionStage<?> result = (CompletionStage<?>) proceedingJoinPoint.proceed();
+			if (result != null) {
+				result.whenComplete((v, t) -> {
+					long durationInNanos = System.nanoTime() - start;
+					if (t != null) {
+						circuitBreaker.onError(durationInNanos, t);
+						promise.completeExceptionally(t);
 
-						} else {
-							circuitBreaker.onSuccess(durationInNanos);
-							promise.complete(v);
-						}
-					});
-				}
-			} catch (Exception e) {
-				long durationInNanos = System.nanoTime() - start;
-				circuitBreaker.onError(durationInNanos, e);
-				throw e;
+					} else {
+						circuitBreaker.onSuccess(durationInNanos);
+						promise.complete(v);
+					}
+				});
 			}
 		}
 		return promise;

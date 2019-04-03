@@ -13,24 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.resilience4j.circuitbreaker.configure;
+package io.github.resilience4j.ratelimiter.configure;
 
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import io.github.resilience4j.circuitbreaker.CircuitBreaker;
-import io.github.resilience4j.reactor.circuitbreaker.operator.CircuitBreakerOperator;
+import io.github.resilience4j.ratelimiter.RateLimiter;
+import io.github.resilience4j.reactor.ratelimiter.operator.RateLimiterOperator;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 /**
- * the Reactor breaker logic support for the spring AOP
+ * the Reactor RateLimiter logic support for the spring AOP
  * Conditional on Reactor class existence on spring class loader
  */
-public class ReactorCircuitBreakerAspectExt implements CircuitBreakerAspectExt {
+public class ReactorRateLimiterAspectExt implements RateLimiterAspectExt {
 
-	private static final Logger logger = LoggerFactory.getLogger(ReactorCircuitBreakerAspectExt.class);
+	private static final Logger logger = LoggerFactory.getLogger(ReactorRateLimiterAspectExt.class);
 
 	/**
 	 * @param returnType the AOP method return type class
@@ -43,28 +43,28 @@ public class ReactorCircuitBreakerAspectExt implements CircuitBreakerAspectExt {
 	}
 
 	/**
-	 * handle the Spring web flux (Flux /Mono) return types AOP based into reactor circuit-breaker
-	 * See {@link io.github.resilience4j.reactor.circuitbreaker.operator.CircuitBreakerOperator} for details.
+	 * handle the Spring web flux (Flux /Mono) return types AOP based into reactor rate limiter
+	 * See {@link RateLimiter} for details.
 	 *
 	 * @param proceedingJoinPoint Spring AOP proceedingJoinPoint
-	 * @param circuitBreaker      the configured circuitBreaker
+	 * @param rateLimiter         the configured rateLimiter
 	 * @param methodName          the method name
 	 * @return the result object
 	 * @throws Throwable exception in case of faulty flow
 	 */
 	@SuppressWarnings("unchecked")
 	@Override
-	public Object handle(ProceedingJoinPoint proceedingJoinPoint, CircuitBreaker circuitBreaker, String methodName) throws Throwable {
+	public Object handle(ProceedingJoinPoint proceedingJoinPoint, RateLimiter rateLimiter, String methodName) throws Throwable {
 		Object returnValue = proceedingJoinPoint.proceed();
 		if (Flux.class.isAssignableFrom(returnValue.getClass())) {
-			Flux fluxReturnValue = (Flux) returnValue;
-			return fluxReturnValue.transform(io.github.resilience4j.reactor.circuitbreaker.operator.CircuitBreakerOperator.of(circuitBreaker));
+			Flux<?> fluxReturnValue = (Flux<?>) returnValue;
+			return fluxReturnValue.transform(RateLimiterOperator.of(rateLimiter));
 		} else if (Mono.class.isAssignableFrom(returnValue.getClass())) {
-			Mono monoReturnValue = (Mono) returnValue;
-			return monoReturnValue.transform(CircuitBreakerOperator.of(circuitBreaker));
+			Mono<?> monoReturnValue = (Mono<?>) returnValue;
+			return monoReturnValue.transform(RateLimiterOperator.of(rateLimiter));
 		} else {
-			logger.error("Unsupported type for Reactor circuit breaker {}", returnValue.getClass().getTypeName());
-			throw new IllegalArgumentException("Not Supported type for the circuit breaker in Reactor:" + returnValue.getClass().getName());
+			logger.error("Unsupported type for Reactor rateLimiter {}", returnValue.getClass().getTypeName());
+			throw new IllegalArgumentException("Not Supported type for the rateLimiter in Reactor :" + returnValue.getClass().getName());
 
 		}
 	}
