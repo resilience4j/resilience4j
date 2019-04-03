@@ -189,8 +189,9 @@ NOTE: Breaking changes:
 == Version 0.14.0
 * Issue #196: Added a new resilience4j-feign module
 * Issue #241: Added support to configure automaticTransitionFromOpenToHalfOpenEnabled in Spring Boot
+* Issue #248: Support The Use Of @CircuitBreaker on methods that return a mono Or flux
 * Issue #286: Spring Boot emitted warnings about invalid actuator endpoint name
-* PR #308: Added bulkhead metrics support for Prometheus
+* Issue #307: Bulkhead Support in Prometheus
 * Issue #331: Fixed Retry.decorateCallable which catched RuntimeException instead of Exception
 * Issue #332: Bulkhead reactor operator did not release semaphore on cancel
 * Issue #338: Fixed that SpringBoot2 auto-configuration fails when not specifying all properties
