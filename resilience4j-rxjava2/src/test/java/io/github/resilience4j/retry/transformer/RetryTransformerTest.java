@@ -235,7 +235,6 @@ public class RetryTransformerTest {
         Single.fromCallable(helloWorldService::returnHelloWorld)
                 .compose(RetryTransformer.of(retry))
                 .test()
-                .assertValueCount(1)
                 .assertValue("retry")
                 .assertComplete()
                 .assertSubscribed();
