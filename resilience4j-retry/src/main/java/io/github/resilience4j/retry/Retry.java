@@ -485,14 +485,7 @@ public interface Retry {
 
 		@Override
 		public void run() {
-			final CompletionStage<T> stage;
-
-			try {
-				stage = supplier.get();
-			} catch (Exception t) {
-				onError(t);
-				return;
-			}
+			final CompletionStage<T> stage = supplier.get();
 
 			stage.whenComplete((result, t) -> {
 				if (result != null) {

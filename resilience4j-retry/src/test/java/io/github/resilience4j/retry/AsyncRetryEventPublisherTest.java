@@ -132,27 +132,4 @@ public class AsyncRetryEventPublisherTest {
         then(helloWorldService).should(times(3)).returnHelloWorld();
     }
 
-    @Test
-    public void shouldConsumeIgnoredErrorEvent() {
-        given(helloWorldService.returnHelloWorld())
-                .willThrow(new WebServiceException("BAM!"));
-
-        RetryConfig retryConfig = RetryConfig.custom()
-                .retryOnException(throwable -> Match(throwable).of(
-                        Case($(instanceOf(WebServiceException.class)), false),
-                        Case($(), true)))
-                .build();
-        retry = AsyncRetry.of("testName", retryConfig);
-
-        retry.getEventPublisher()
-            .onIgnoredError(event ->
-                    logger.info(event.getEventType().toString()));
-
-        Try.of(() -> awaitResult(retry.executeCompletionStage(scheduler,
-                () -> helloWorldService.returnHelloWorld())));
-
-        then(logger).should(times(1)).info("IGNORED_ERROR");
-        then(helloWorldService).should(times(1)).returnHelloWorld();
-    }
-
 }
