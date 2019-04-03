@@ -11,7 +11,7 @@ buildscript {
         classpath 'org.kt3k.gradle.plugin:coveralls-gradle-plugin:2.8.2'
         classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.8.4'
         classpath 'me.champeau.gradle:jmh-gradle-plugin:0.4.8'
-        classpath "org.asciidoctor:asciidoctor-gradle-plugin:1.5.9.2"
+        classpath "org.asciidoctor:asciidoctor-gradle-plugin:1.6.0"
         classpath "org.ajoberstar:gradle-git:1.7.2"
         classpath "org.jfrog.buildinfo:build-info-extractor-gradle:4.9.5"
     }
