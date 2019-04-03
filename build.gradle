@@ -7,14 +7,14 @@ buildscript {
         }
     }
     dependencies {
-        classpath 'net.saliman:gradle-cobertura-plugin:2.3.2'
-        classpath 'org.kt3k.gradle.plugin:coveralls-gradle-plugin:2.7.1'
-        classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.7.3'
-        classpath 'me.champeau.gradle:jmh-gradle-plugin:0.3.1'
-        classpath "org.asciidoctor:asciidoctor-gradle-plugin:1.5.3"
-        classpath "org.ajoberstar:gradle-git:1.3.2"
-        classpath "org.jfrog.buildinfo:build-info-extractor-gradle:4.4.17"
-        classpath 'com.github.erizo.gradle:jcstress-gradle-plugin:0.8.0'
+        classpath 'net.saliman:gradle-cobertura-plugin:2.6.1'
+        classpath 'org.kt3k.gradle.plugin:coveralls-gradle-plugin:2.8.2'
+        classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.8.4'
+        classpath 'me.champeau.gradle:jmh-gradle-plugin:0.4.8'
+        classpath "org.asciidoctor:asciidoctor-gradle-plugin:1.5.9.2"
+        classpath "org.ajoberstar:gradle-git:1.7.2"
+        classpath "org.jfrog.buildinfo:build-info-extractor-gradle:4.9.5"
+        classpath 'com.github.erizo.gradle:jcstress-gradle-plugin:0.8.2'
     }
 }
 
@@ -67,9 +67,6 @@ configure(project.coreProjects) {
         testCompile ( libraries.powermock_api_mockito)
         testCompile ( libraries.powermock_module_junit4)
         testCompile ( libraries.awaitility)
-
-        jmh "org.openjdk.jmh:jmh-core:1.18"
-        jmh "org.openjdk.jmh:jmh-generator-annprocess:1.18"
     }
 
     tasks.withType(JavaCompile) {
@@ -88,7 +85,6 @@ configure(project.coreProjects) {
 
     jmh {
         duplicateClassesStrategy = 'warn'
-        jmhVersion = '1.17'
     }
 }
 
@@ -107,9 +103,7 @@ tasks.coveralls {
     dependsOn 'check'
 }
 
-task wrapper(type: Wrapper) {
-    gradleVersion = '3.2'
-}
+
 
 
 artifactory {
