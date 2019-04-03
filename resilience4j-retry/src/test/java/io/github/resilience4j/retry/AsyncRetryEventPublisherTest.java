@@ -47,20 +47,20 @@ public class AsyncRetryEventPublisherTest {
 
     private AsyncHelloWorldService helloWorldService;
     private Logger logger;
-    private AsyncRetry retry;
+    private Retry retry;
     private ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
 
     @Before
     public void setUp(){
         helloWorldService = mock(AsyncHelloWorldService.class);
         logger = mock(Logger.class);
-        retry = AsyncRetry.ofDefaults("testName");
+        retry = Retry.ofDefaults("testName");
     }
 
     @Test
     public void shouldReturnTheSameConsumer() {
-        AsyncRetry.EventPublisher eventPublisher = retry.getEventPublisher();
-        AsyncRetry.EventPublisher eventPublisher2 = retry.getEventPublisher();
+        Retry.EventPublisher eventPublisher = retry.getEventPublisher();
+        Retry.EventPublisher eventPublisher2 = retry.getEventPublisher();
 
         assertThat(eventPublisher).isEqualTo(eventPublisher2);
     }
