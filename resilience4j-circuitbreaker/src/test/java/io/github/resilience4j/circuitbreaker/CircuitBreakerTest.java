@@ -749,7 +749,7 @@ public class CircuitBreakerTest {
     }
 
     @Test
-    public void shouldDecorateCompletionStageAndReturnWithExceptionAtSyncStage() throws ExecutionException, InterruptedException {
+    public void shouldRethrowExceptionAndNotRecordAsAFailure() {
         // Given
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("backendName");
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
@@ -768,12 +768,12 @@ public class CircuitBreakerTest {
         assertThat(result.failed().get()).isInstanceOf(WebServiceException.class);
 
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
-        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
-        assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(1);
+        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(0);
+        assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(0);
     }
 
     @Test
-    public void shouldDecorateCompletionStageAndReturnWithExceptionAtAsyncStage() throws ExecutionException, InterruptedException {
+    public void shouldDecorateCompletionStageAndReturnWithExceptionAtAsyncStage() {
         // Given
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("backendName");
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
@@ -799,7 +799,7 @@ public class CircuitBreakerTest {
     }
 
     @Test
-    public void shouldChainDecoratedFunctions() throws ExecutionException, InterruptedException {
+    public void shouldChainDecoratedFunctions() {
         // tag::shouldChainDecoratedFunctions[]
         // Given
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testName");
