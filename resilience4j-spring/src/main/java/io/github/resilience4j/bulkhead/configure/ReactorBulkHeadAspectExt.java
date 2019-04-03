@@ -23,6 +23,7 @@ import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.reactor.bulkhead.operator.BulkheadOperator;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 /**
  * the Reactor bulkhead logic support for the spring AOP
@@ -58,10 +59,10 @@ public class ReactorBulkHeadAspectExt implements BulkHeadAspectExt {
 		Object returnValue = proceedingJoinPoint.proceed();
 		if (Flux.class.isAssignableFrom(returnValue.getClass())) {
 			Flux<?> fluxReturnValue = (Flux<?>) returnValue;
-			return fluxReturnValue.transform(BulkheadOperator.of(bulkhead));
+			return fluxReturnValue.transform(BulkheadOperator.of(bulkhead, Schedulers.immediate()));
 		} else if (Mono.class.isAssignableFrom(returnValue.getClass())) {
 			Mono<?> monoReturnValue = (Mono<?>) returnValue;
-			return monoReturnValue.transform(BulkheadOperator.of(bulkhead));
+			return monoReturnValue.transform(BulkheadOperator.of(bulkhead, Schedulers.immediate()));
 		} else {
 			logger.error("Unsupported type for Reactor BulkHead {}", returnValue.getClass().getTypeName());
 			throw new IllegalArgumentException("Not Supported type for the BulkHead in Reactor :" + returnValue.getClass().getName());

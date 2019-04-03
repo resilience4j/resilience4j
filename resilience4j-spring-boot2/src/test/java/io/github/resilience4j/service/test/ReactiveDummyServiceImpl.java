@@ -31,7 +31,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 /**
- * reactive test service for web flux API type for the circuit breaker annotation AOP processing
+ * reactive test service for Reactor and RxJava API type for the circuit breaker annotation AOP processing
  */
 @CircuitBreaker(name = ReactiveDummyService.BACKEND)
 @RateLimiter(name = ReactiveDummyService.BACKEND)

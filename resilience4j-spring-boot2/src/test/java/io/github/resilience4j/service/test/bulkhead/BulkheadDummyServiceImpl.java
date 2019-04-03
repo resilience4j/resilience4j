@@ -1,7 +1,8 @@
-package io.github.resilience4j.service.test;
+package io.github.resilience4j.service.test.bulkhead;
+
+import org.springframework.stereotype.Component;
 
 import io.github.resilience4j.bulkhead.annotation.Bulkhead;
-import org.springframework.stereotype.Component;
 
 @Bulkhead(name = BulkheadDummyService.BACKEND)
 @Component

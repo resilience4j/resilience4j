@@ -23,6 +23,7 @@ import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.reactor.ratelimiter.operator.RateLimiterOperator;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 /**
  * the Reactor RateLimiter logic support for the spring AOP
@@ -58,10 +59,10 @@ public class ReactorRateLimiterAspectExt implements RateLimiterAspectExt {
 		Object returnValue = proceedingJoinPoint.proceed();
 		if (Flux.class.isAssignableFrom(returnValue.getClass())) {
 			Flux<?> fluxReturnValue = (Flux<?>) returnValue;
-			return fluxReturnValue.transform(RateLimiterOperator.of(rateLimiter));
+			return fluxReturnValue.transform(RateLimiterOperator.of(rateLimiter, Schedulers.immediate()));
 		} else if (Mono.class.isAssignableFrom(returnValue.getClass())) {
 			Mono<?> monoReturnValue = (Mono<?>) returnValue;
-			return monoReturnValue.transform(RateLimiterOperator.of(rateLimiter));
+			return monoReturnValue.transform(RateLimiterOperator.of(rateLimiter, Schedulers.immediate()));
 		} else {
 			logger.error("Unsupported type for Reactor rateLimiter {}", returnValue.getClass().getTypeName());
 			throw new IllegalArgumentException("Not Supported type for the rateLimiter in Reactor :" + returnValue.getClass().getName());

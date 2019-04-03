@@ -15,8 +15,8 @@
  */
 package io.github.resilience4j.retry;
 
-import static io.github.resilience4j.service.test.RetryDummyService.RETRY_BACKEND_A;
-import static io.github.resilience4j.service.test.RetryDummyService.RETRY_BACKEND_B;
+import static io.github.resilience4j.service.test.retry.RetryDummyService.RETRY_BACKEND_A;
+import static io.github.resilience4j.service.test.retry.RetryDummyService.RETRY_BACKEND_B;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.IOException;
@@ -40,8 +40,8 @@ import io.github.resilience4j.retry.autoconfigure.RetryProperties;
 import io.github.resilience4j.retry.configure.RetryAspect;
 import io.github.resilience4j.retry.monitoring.endpoint.RetryEndpointResponse;
 import io.github.resilience4j.retry.monitoring.endpoint.RetryEventsEndpointResponse;
-import io.github.resilience4j.service.test.RetryDummyService;
 import io.github.resilience4j.service.test.TestApplication;
+import io.github.resilience4j.service.test.retry.RetryDummyService;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
