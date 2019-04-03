@@ -1,5 +1,5 @@
 dependencies {
-    compile ( libraries.vertx)
+    compileOnly ( libraries.vertx)
     compile project(':resilience4j-circuitbreaker')
     testCompile ( libraries.vertx_unit)
 }

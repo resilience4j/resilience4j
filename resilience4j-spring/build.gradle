@@ -1,5 +1,5 @@
 dependencies {
-    compile(libraries.aspectj)
+    compileOnly(libraries.aspectj)
     compileOnly(libraries.hibernate_validator)
     compileOnly(libraries.spring_4_core, libraries.spring_4_context)
     compile project(':resilience4j-annotations')

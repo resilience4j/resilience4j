@@ -1,5 +1,5 @@
 dependencies {
-    compile ( libraries.retrofit )
+    compileOnly ( libraries.retrofit )
     compile project(':resilience4j-circuitbreaker')
     compile project(':resilience4j-ratelimiter')
     testCompile ( libraries.retrofit_test )

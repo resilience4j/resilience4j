@@ -1,7 +1,7 @@
 dependencies {
-    compile(libraries.spring_boot2_aop)
-    compile(libraries.spring_boot2_actuator)
-    compile(libraries.hibernate_validator)
+    compileOnly(libraries.spring_boot2_aop)
+    compileOnly(libraries.spring_boot2_actuator)
+    compileOnly(libraries.hibernate_validator)
     compileOnly(libraries.spring_boot2_config_processor)
     compileOnly(libraries.spring_boot2_autoconfigure_processor)
     compile project(':resilience4j-annotations')

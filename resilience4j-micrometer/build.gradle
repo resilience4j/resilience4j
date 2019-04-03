@@ -1,5 +1,5 @@
 dependencies {
-    compile (libraries.micrometer)
+    compileOnly (libraries.micrometer)
     compileOnly project(':resilience4j-bulkhead')
     compileOnly project(':resilience4j-circuitbreaker')
     compileOnly project(':resilience4j-retry')

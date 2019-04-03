@@ -1,5 +1,5 @@
 dependencies {
-    compile ( libraries.feign )
+    compileOnly ( libraries.feign )
     compile project(':resilience4j-circuitbreaker')
     compile project(':resilience4j-ratelimiter')
     testCompile ( libraries.feign_wiremock )
