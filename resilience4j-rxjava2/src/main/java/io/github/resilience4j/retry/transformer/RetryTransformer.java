@@ -55,8 +55,7 @@ public class RetryTransformer<T> implements FlowableTransformer<T, T>, Observabl
 
     @Override
     public Publisher<T> apply(Flowable<T> upstream) {
-        //noinspection unchecked
-        Context<T> context = new Context<T>(retry.context());
+        Context<T> context = new Context<>(retry.context());
         return upstream.doOnNext(context::throwExceptionToForceRetryOnResult)
                 .retryWhen(errors -> errors.doOnNext(context::onError))
                 .doOnComplete(context::onComplete);
@@ -64,8 +63,7 @@ public class RetryTransformer<T> implements FlowableTransformer<T, T>, Observabl
 
     @Override
     public ObservableSource<T> apply(Observable<T> upstream) {
-        //noinspection unchecked
-        Context<T> context = new Context<T>(retry.context());
+        Context<T> context = new Context<>(retry.context());
         return upstream.doOnNext(context::throwExceptionToForceRetryOnResult)
                 .retryWhen(errors -> errors.doOnNext(context::onError))
                 .doOnComplete(context::onComplete);
@@ -73,8 +71,7 @@ public class RetryTransformer<T> implements FlowableTransformer<T, T>, Observabl
 
     @Override
     public SingleSource<T> apply(Single<T> upstream) {
-        //noinspection unchecked
-        Context<T> context = new Context<T>(retry.context());
+        Context<T> context = new Context<>(retry.context());
         return upstream.doOnSuccess(context::throwExceptionToForceRetryOnResult)
                 .retryWhen(errors -> errors.doOnNext(context::onError))
                 .doOnSuccess(t -> context.onComplete());
@@ -82,16 +79,14 @@ public class RetryTransformer<T> implements FlowableTransformer<T, T>, Observabl
 
     @Override
     public CompletableSource apply(Completable upstream) {
-        //noinspection unchecked
-        Context<T> context = new Context<T>(retry.context());
+        Context<T> context = new Context<>(retry.context());
         return upstream.retryWhen(errors -> errors.doOnNext(context::onError))
                 .doOnComplete(context::onComplete);
     }
 
     @Override
     public MaybeSource<T> apply(Maybe<T> upstream) {
-        //noinspection unchecked
-        Context<T> context = new Context<T>(retry.context());
+        Context<T> context = new Context<>(retry.context());
         return upstream.doOnSuccess(context::throwExceptionToForceRetryOnResult)
                 .retryWhen(errors -> errors.doOnNext(context::onError))
                 .doOnSuccess(t -> context.onComplete())

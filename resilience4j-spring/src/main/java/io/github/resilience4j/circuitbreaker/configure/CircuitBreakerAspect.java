@@ -77,7 +77,7 @@ public class CircuitBreakerAspect implements Ordered {
 				}
 			}
 		} else if (CompletionStage.class.isAssignableFrom(returnType)) {
-			return defaultCompletionStage(proceedingJoinPoint, circuitBreaker, methodName);
+			return defaultCompletionStage(proceedingJoinPoint, circuitBreaker);
 		}
 		return defaultHandling(proceedingJoinPoint, circuitBreaker, methodName);
 	}
@@ -107,7 +107,7 @@ public class CircuitBreakerAspect implements Ordered {
 	 * handle the CompletionStage return types AOP based into configured circuit-breaker
 	 */
 	@SuppressWarnings("unchecked")
-	private Object defaultCompletionStage(ProceedingJoinPoint proceedingJoinPoint, io.github.resilience4j.circuitbreaker.CircuitBreaker circuitBreaker, String methodName) throws Throwable {
+	private Object defaultCompletionStage(ProceedingJoinPoint proceedingJoinPoint, io.github.resilience4j.circuitbreaker.CircuitBreaker circuitBreaker) throws Throwable {
 
 		final CompletableFuture promise = new CompletableFuture<>();
 		long start = System.nanoTime();
