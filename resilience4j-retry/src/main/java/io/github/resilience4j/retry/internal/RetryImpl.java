@@ -86,6 +86,7 @@ public class RetryImpl<T> implements Retry {
 	}
 
 	@Override
+	@SuppressWarnings("unchecked")
 	public AsyncContext asyncContext() {
 		return new AsyncContextImpl();
 	}
@@ -147,7 +148,7 @@ public class RetryImpl<T> implements Retry {
 			return false;
 		}
 
-		public void onError(Exception exception) throws Throwable {
+		public void onError(Exception exception) throws Exception {
 			if (exceptionPredicate.test(exception)) {
 				lastException.set(exception);
 				throwOrSleepAfterException();
@@ -221,25 +222,25 @@ public class RetryImpl<T> implements Retry {
 
 		@Override
 		public long onError(Throwable throwable) {
-			// handle the case if the completable future throw CompletionException wrapping the original exception
-			// where original exception is the the one to retry not the CompletionException
-			// for more information about exception handling in completable future check for example :
-			//https://stackoverflow.com/questions/44409962/throwing-exception-from-completablefuture
-			if (throwable instanceof CompletionException && !exceptionPredicate.test(throwable)) {
-				if (!exceptionPredicate.test(throwable.getCause())) {
-					failedWithoutRetryCounter.increment();
-					publishRetryEvent(() -> new RetryOnIgnoredErrorEvent(getName(), throwable));
-					return -1;
-				}
-				return handleOnError(throwable.getCause());
+			// Handle the case if the completable future throw CompletionException wrapping the original exception
+			// where original exception is the the one to retry not the CompletionException.
+			if (throwable instanceof CompletionException) {
+				Throwable cause = throwable.getCause();
+				return handleThrowable(cause);
+		}
+			else {
+				return handleThrowable(throwable);
 			}
+
+		}
+
+		private long handleThrowable(Throwable throwable) {
 			if (!exceptionPredicate.test(throwable)) {
 				failedWithoutRetryCounter.increment();
 				publishRetryEvent(() -> new RetryOnIgnoredErrorEvent(getName(), throwable));
 				return -1;
 			}
 			return handleOnError(throwable);
-
 		}
 
 		private long handleOnError(Throwable throwable) {

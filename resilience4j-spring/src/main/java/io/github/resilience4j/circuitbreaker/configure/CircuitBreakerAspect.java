@@ -15,11 +15,10 @@
  */
 package io.github.resilience4j.circuitbreaker.configure;
 
+import io.github.resilience4j.circuitbreaker.CircuitBreakerOpenException;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
-import io.github.resilience4j.circuitbreaker.annotation.ApiType;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.utils.CircuitBreakerUtils;
-import io.github.resilience4j.reactor.circuitbreaker.operator.CircuitBreakerOperator;
 import io.github.resilience4j.recovery.RecoveryFunction;
 import io.github.resilience4j.utils.AnnotationExtractor;
 import io.github.resilience4j.utils.RecoveryFunctionUtils;
@@ -30,11 +29,13 @@ import org.aspectj.lang.annotation.Pointcut;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.Ordered;
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
 
 import java.lang.reflect.Method;
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
 
 /**
  * This Spring AOP aspect intercepts all methods which are annotated with a {@link CircuitBreaker} annotation.
@@ -48,10 +49,12 @@ public class CircuitBreakerAspect implements Ordered {
 
 	private final CircuitBreakerConfigurationProperties circuitBreakerProperties;
 	private final CircuitBreakerRegistry circuitBreakerRegistry;
+	private final List<CircuitBreakerAspectExt> circuitBreakerAspectExtList;
 
-	public CircuitBreakerAspect(CircuitBreakerConfigurationProperties backendMonitorPropertiesRegistry, CircuitBreakerRegistry circuitBreakerRegistry) {
+	public CircuitBreakerAspect(CircuitBreakerConfigurationProperties backendMonitorPropertiesRegistry, CircuitBreakerRegistry circuitBreakerRegistry, @Autowired(required = false) List<CircuitBreakerAspectExt> circuitBreakerAspectExtList) {
 		this.circuitBreakerProperties = backendMonitorPropertiesRegistry;
 		this.circuitBreakerRegistry = circuitBreakerRegistry;
+		this.circuitBreakerAspectExtList = circuitBreakerAspectExtList;
 	}
 
 	@Pointcut(value = "@within(circuitBreaker) || @annotation(circuitBreaker)", argNames = "circuitBreaker")
@@ -66,10 +69,18 @@ public class CircuitBreakerAspect implements Ordered {
 			backendMonitored = getBackendMonitoredAnnotation(proceedingJoinPoint);
 		}
 		String backend = backendMonitored.name();
-		ApiType type = backendMonitored.type();
 		io.github.resilience4j.circuitbreaker.CircuitBreaker circuitBreaker = getOrCreateCircuitBreaker(methodName, backend);
-
-		return handleJoinPoint(proceedingJoinPoint, circuitBreaker, backendMonitored.recovery(), methodName, type);
+		Class<?> returnType = method.getReturnType();
+		if (circuitBreakerAspectExtList != null && !circuitBreakerAspectExtList.isEmpty()) {
+			for (CircuitBreakerAspectExt circuitBreakerAspectExt : circuitBreakerAspectExtList) {
+				if (circuitBreakerAspectExt.canHandleReturnType(returnType)) {
+					return circuitBreakerAspectExt.handle(proceedingJoinPoint, circuitBreaker, methodName);
+				}
+			}
+		} else if (CompletionStage.class.isAssignableFrom(returnType)) {
+			return defaultCompletionStage(proceedingJoinPoint, circuitBreaker);
+		}
+		return defaultHandling(proceedingJoinPoint, circuitBreaker, backendMonitored.recovery(), methodName);
 	}
 
 	private io.github.resilience4j.circuitbreaker.CircuitBreaker getOrCreateCircuitBreaker(String methodName, String backend) {
@@ -93,59 +104,42 @@ public class CircuitBreakerAspect implements Ordered {
 		return AnnotationExtractor.extract(proceedingJoinPoint.getTarget().getClass(), CircuitBreaker.class);
 	}
 
-	private Object handleJoinPoint(ProceedingJoinPoint proceedingJoinPoint, io.github.resilience4j.circuitbreaker.CircuitBreaker circuitBreaker, Class<? extends RecoveryFunction> recoveryFunctionClass, String methodName, ApiType type) throws Throwable {
-		if (type == ApiType.WEBFLUX) {
-			return defaultWebFlux(proceedingJoinPoint, circuitBreaker, recoveryFunctionClass, methodName);
-		} else {
-			return defaultHandling(proceedingJoinPoint, circuitBreaker, recoveryFunctionClass, methodName);
-		}
-	}
-
 	/**
-	 * handle the Spring web flux (Flux /Mono) return types AOP based into reactor circuit-breaker
-	 * See {@link io.github.resilience4j.reactor.circuitbreaker.operator.CircuitBreakerOperator} for details.
+	 * handle the CompletionStage return types AOP based into configured circuit-breaker
 	 */
 	@SuppressWarnings("unchecked")
-	private Object defaultWebFlux(ProceedingJoinPoint proceedingJoinPoint, io.github.resilience4j.circuitbreaker.CircuitBreaker circuitBreaker, Class<? extends RecoveryFunction> recoveryFunctionClass, String methodName) throws Throwable {
-		CircuitBreakerUtils.isCallPermitted(circuitBreaker);
-		long start = System.nanoTime();
-		try {
-			Object returnValue = proceedingJoinPoint.proceed();
-			if (returnValue instanceof Flux) {
-				Flux fluxReturnValue = (Flux) returnValue;
-				return fluxReturnValue.transform(CircuitBreakerOperator.of(circuitBreaker))
-						.onErrorResume(Throwable.class, (t) -> {
-							try {
-								RecoveryFunction recovery = RecoveryFunctionUtils.getInstance(recoveryFunctionClass);
-								return recovery.apply(t);
-							} catch (Throwable throwable) {
-								return Flux.error(throwable);
-							}
-						});
-			} else if (returnValue instanceof Mono) {
-				Mono monoReturnValue = (Mono) returnValue;
-				return monoReturnValue.transform(CircuitBreakerOperator.of(circuitBreaker))
-						.onErrorResume(Throwable.class,  (t) -> {
-							try {
-								RecoveryFunction recovery = RecoveryFunctionUtils.getInstance(recoveryFunctionClass);
-								return recovery.apply(t);
-							} catch (Throwable throwable) {
-								return Mono.error(throwable);
-							}
-						});
-			} else {
-				throw new IllegalArgumentException("Not Supported type for the circuit breaker in web flux :" + returnValue.getClass().getName());
-			}
-		} catch (Throwable throwable) {
-			long durationInNanos = System.nanoTime() - start;
-			circuitBreaker.onError(durationInNanos, throwable);
-			if (logger.isDebugEnabled()) {
-				logger.debug("Invocation of method '" + methodName + "' failed!", throwable);
-			}
+	private Object defaultCompletionStage(ProceedingJoinPoint proceedingJoinPoint, io.github.resilience4j.circuitbreaker.CircuitBreaker circuitBreaker) throws Throwable {
 
-			RecoveryFunction recovery = RecoveryFunctionUtils.getInstance(recoveryFunctionClass);
-			return recovery.apply(throwable);
+		final CompletableFuture promise = new CompletableFuture<>();
+		long start = System.nanoTime();
+		if (!circuitBreaker.isCallPermitted()) {
+			promise.completeExceptionally(
+					new CircuitBreakerOpenException(
+							String.format("CircuitBreaker '%s' is open", circuitBreaker.getName())));
+
+		} else {
+			try {
+				CompletionStage<?> result = (CompletionStage<?>) proceedingJoinPoint.proceed();
+				if (result != null) {
+					result.whenComplete((v, t) -> {
+						long durationInNanos = System.nanoTime() - start;
+						if (t != null) {
+							circuitBreaker.onError(durationInNanos, t);
+							promise.completeExceptionally(t);
+
+						} else {
+							circuitBreaker.onSuccess(durationInNanos);
+							promise.complete(v);
+						}
+					});
+				}
+			} catch (Exception e) {
+				long durationInNanos = System.nanoTime() - start;
+				circuitBreaker.onError(durationInNanos, e);
+				throw e;
+			}
 		}
+		return promise;
 	}
 
 	/**
@@ -157,7 +151,6 @@ public class CircuitBreakerAspect implements Ordered {
 		long start = System.nanoTime();
 		try {
 			Object returnValue = proceedingJoinPoint.proceed();
-
 			long durationInNanos = System.nanoTime() - start;
 			circuitBreaker.onSuccess(durationInNanos);
 			return returnValue;

@@ -18,7 +18,7 @@
  */
 package io.github.resilience4j.retry.internal;
 
-import io.github.resilience4j.retry.AsyncRetry;
+import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryConfig;
 import io.github.resilience4j.test.AsyncHelloWorldService;
 import io.vavr.control.Try;
@@ -39,7 +39,7 @@ import java.util.function.Supplier;
 import static io.github.resilience4j.retry.utils.AsyncUtils.awaitResult;
 import static java.util.concurrent.CompletableFuture.completedFuture;
 
-public class AsyncRetryTest {
+public class CompletationStageRetryTest {
 
 	private AsyncHelloWorldService helloWorldService;
 	private ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
@@ -55,9 +55,9 @@ public class AsyncRetryTest {
 		BDDMockito.given(helloWorldService.returnHelloWorld())
 				.willReturn(completedFuture("Hello world"));
 		// Create a Retry with default configuration
-		AsyncRetry retryContext = AsyncRetry.ofDefaults("id");
+		Retry retryContext = Retry.ofDefaults("id");
 		// Decorate the invocation of the HelloWorldService
-		Supplier<CompletionStage<String>> supplier = AsyncRetry.decorateCompletionStage(
+		Supplier<CompletionStage<String>> supplier = Retry.decorateCompletionStage(
 				retryContext,
 				scheduler,
 				() -> helloWorldService.returnHelloWorld());
@@ -78,9 +78,9 @@ public class AsyncRetryTest {
 		final RetryConfig retryConfig = RetryConfig.<String>custom().retryOnResult(s -> s.contains("NoRetry"))
 				.maxAttempts(1)
 				.build();
-		AsyncRetry retryContext = AsyncRetry.of("id", retryConfig);
+		Retry retryContext = Retry.of("id", retryConfig);
 		// Decorate the invocation of the HelloWorldService
-		Supplier<CompletionStage<String>> supplier = AsyncRetry.decorateCompletionStage(
+		Supplier<CompletionStage<String>> supplier = Retry.decorateCompletionStage(
 				retryContext,
 				scheduler,
 				() -> helloWorldService.returnHelloWorld());
@@ -111,7 +111,7 @@ public class AsyncRetryTest {
 				.willThrow(new IllegalArgumentException("BAM!"));
 
 		// Create a Retry with default configuration
-		AsyncRetry retry = AsyncRetry.ofDefaults("id");
+		Retry retry = Retry.ofDefaults("id");
 		// Decorate the invocation of the HelloWorldService
 		retry.executeCompletionStage(
 				scheduler,
@@ -129,9 +129,9 @@ public class AsyncRetryTest {
 				.willReturn(completedFuture("Hello world"));
 
 		// Create a Retry with default configuration
-		AsyncRetry retryContext = AsyncRetry.ofDefaults("id");
+		Retry retryContext = Retry.ofDefaults("id");
 		// Decorate the invocation of the HelloWorldService
-		Supplier<CompletionStage<String>> supplier = AsyncRetry.decorateCompletionStage(
+		Supplier<CompletionStage<String>> supplier = Retry.decorateCompletionStage(
 				retryContext,
 				scheduler,
 				() -> helloWorldService.returnHelloWorld());
@@ -150,14 +150,14 @@ public class AsyncRetryTest {
 				.willThrow(new WebServiceException("BAM!"));
 
 		// Create a Retry with default configuration
-		AsyncRetry retryContext = AsyncRetry.of(
+		Retry retryContext = Retry.of(
 				"id",
 				RetryConfig
 						.custom()
 						.maxAttempts(noOfAttempts)
 						.build());
 		// Decorate the invocation of the HelloWorldService
-		Supplier<CompletionStage<String>> supplier = AsyncRetry.decorateCompletionStage(
+		Supplier<CompletionStage<String>> supplier = Retry.decorateCompletionStage(
 				retryContext,
 				scheduler,
 				() -> helloWorldService.returnHelloWorld());
@@ -195,14 +195,14 @@ public class AsyncRetryTest {
 				.willReturn(failedFuture);
 
 		// Create a Retry with default configuration
-		AsyncRetry retryContext = AsyncRetry.of(
+		Retry retryContext = Retry.of(
 				"id",
 				RetryConfig
 						.custom()
 						.maxAttempts(noOfAttempts)
 						.build());
 		// Decorate the invocation of the HelloWorldService
-		Supplier<CompletionStage<String>> supplier = AsyncRetry.decorateCompletionStage(
+		Supplier<CompletionStage<String>> supplier = Retry.decorateCompletionStage(
 				retryContext,
 				scheduler,
 				() -> helloWorldService.returnHelloWorld());
@@ -225,7 +225,7 @@ public class AsyncRetryTest {
 
 
 		// Create a Retry with default configuration
-		AsyncRetry retryContext = AsyncRetry.of(
+		Retry retryContext = Retry.of(
 				"id",
 				RetryConfig
 						.<String>custom()
@@ -233,7 +233,7 @@ public class AsyncRetryTest {
 						.retryOnResult(s -> s.contains(retryResponse))
 						.build());
 		// Decorate the invocation of the HelloWorldService
-		Supplier<CompletionStage<String>> supplier = AsyncRetry.decorateCompletionStage(
+		Supplier<CompletionStage<String>> supplier = Retry.decorateCompletionStage(
 				retryContext,
 				scheduler,
 				() -> helloWorldService.returnHelloWorld());

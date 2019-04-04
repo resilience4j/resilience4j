@@ -40,11 +40,6 @@ public @interface CircuitBreaker {
 	String name();
 
 	/**
-	 * @return the type of circuit breaker (default or webflux which is reactor circuit breaker)
-	 */
-	ApiType type() default ApiType.DEFAULT;
-
-	/**
 	 * recovery function. Default is {@link DefaultRecoveryFunction} which does nothing.
 	 *
 	 * @return recovery function class

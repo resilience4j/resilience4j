@@ -26,8 +26,10 @@ import static io.github.resilience4j.circuitbreaker.CircuitBreaker.State.HALF_OP
 import static io.github.resilience4j.circuitbreaker.CircuitBreaker.State.OPEN;
 
 import java.time.Duration;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 import org.slf4j.Logger;
@@ -105,7 +107,19 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
 
     @Override
     public void onError(long durationInNanos, Throwable throwable) {
-        if (circuitBreakerConfig.getRecordFailurePredicate().test(throwable)) {
+        // Handle the case if the completable future throw CompletionException wrapping the original exception
+        // where original exception is the the one to retry not the CompletionException.
+        Predicate<Throwable> recordFailurePredicate = circuitBreakerConfig.getRecordFailurePredicate();
+        if (throwable instanceof CompletionException) {
+            Throwable cause = throwable.getCause();
+            handleThrowable(durationInNanos, recordFailurePredicate, cause);
+        }else{
+            handleThrowable(durationInNanos, recordFailurePredicate, throwable);
+        }
+    }
+
+    private void handleThrowable(long durationInNanos, Predicate<Throwable> recordFailurePredicate, Throwable throwable) {
+        if (recordFailurePredicate.test(throwable)) {
             LOG.debug("CircuitBreaker '{}' recorded a failure:", name, throwable);
             publishCircuitErrorEvent(name, durationInNanos, throwable);
             stateReference.get().onError(throwable);
