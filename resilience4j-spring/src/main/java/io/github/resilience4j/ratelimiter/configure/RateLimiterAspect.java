@@ -82,7 +82,8 @@ public class RateLimiterAspect implements Ordered {
 					return rateLimiterAspectExt.handle(proceedingJoinPoint, rateLimiter, methodName);
 				}
 			}
-		} else if (CompletionStage.class.isAssignableFrom(returnType)) {
+		}
+		if (CompletionStage.class.isAssignableFrom(returnType)) {
 			return handleJoinPointCompletableFuture(proceedingJoinPoint, rateLimiter, methodName);
 		}
 		return handleJoinPoint(proceedingJoinPoint, rateLimiter, methodName);
@@ -134,7 +135,7 @@ public class RateLimiterAspect implements Ordered {
 				logger.error("Exception being thrown during RateLimiter invocation {} ", methodName, throwable.getCause());
 				throw new CompletionException(throwable);
 			}
-		});
+		}).get();
 	}
 
 
