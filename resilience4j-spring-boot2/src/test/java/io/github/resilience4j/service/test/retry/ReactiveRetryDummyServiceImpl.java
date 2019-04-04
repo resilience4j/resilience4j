@@ -25,7 +25,7 @@ import reactor.core.publisher.Flux;
 /**
  * reactive test service for Reactor and RxJava2 retry
  */
-@Retry(name = ReactiveRetryDummyService.BACKEND)
+@Retry(name = ReactiveRetryDummyService.BACKEND_C)
 @Component
 public class ReactiveRetryDummyServiceImpl implements ReactiveRetryDummyService {
 	@Override

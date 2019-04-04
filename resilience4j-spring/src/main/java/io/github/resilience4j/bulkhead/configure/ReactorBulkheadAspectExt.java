@@ -29,9 +29,9 @@ import reactor.core.scheduler.Schedulers;
  * the Reactor bulkhead logic support for the spring AOP
  * Conditional on Reactor class existence on spring class loader
  */
-public class ReactorBulkHeadAspectExt implements BulkHeadAspectExt {
+public class ReactorBulkheadAspectExt implements BulkheadAspectExt {
 
-	private static final Logger logger = LoggerFactory.getLogger(ReactorBulkHeadAspectExt.class);
+	private static final Logger logger = LoggerFactory.getLogger(ReactorBulkheadAspectExt.class);
 
 	/**
 	 * @param returnType the AOP method return type class

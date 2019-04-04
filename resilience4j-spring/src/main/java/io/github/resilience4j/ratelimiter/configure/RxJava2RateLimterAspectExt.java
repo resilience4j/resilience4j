@@ -70,6 +70,7 @@ public class RxJava2RateLimterAspectExt implements RateLimiterAspectExt {
 		return executeRxJava2Aspect(rateLimiterOperator, returnValue);
 	}
 
+	@SuppressWarnings("unchecked")
 	private Object executeRxJava2Aspect(RateLimiterOperator rateLimiterOperator, Object returnValue) {
 		if (returnValue instanceof ObservableSource) {
 			Observable<?> observable = (Observable) returnValue;

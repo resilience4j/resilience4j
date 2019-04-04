@@ -20,7 +20,7 @@ import org.aspectj.lang.ProceedingJoinPoint;
 /**
  * BulkHead aspect extension support interface type if you want to support new types
  */
-public interface BulkHeadAspectExt {
+public interface BulkheadAspectExt {
 
 	boolean canHandleReturnType(Class returnType);
 

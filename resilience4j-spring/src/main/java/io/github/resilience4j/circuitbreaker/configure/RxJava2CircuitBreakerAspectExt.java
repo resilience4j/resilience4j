@@ -82,7 +82,7 @@ public class RxJava2CircuitBreakerAspectExt implements CircuitBreakerAspectExt {
 			Flowable<?> flowable = (Flowable) returnValue;
 			return flowable.lift(circuitBreakerOperator);
 		} else {
-			logger.error("Unsupported type for RxJava2 circuit breaker {}", returnValue.getClass().getTypeName());
+			logger.error("Unsupported type for RxJava2 circuit breaker return type {} for method {}", returnValue.getClass().getTypeName(), methodName);
 			throw new IllegalArgumentException("Not Supported type for the circuit breaker in RxJava2:" + returnValue.getClass().getName());
 		}
 	}

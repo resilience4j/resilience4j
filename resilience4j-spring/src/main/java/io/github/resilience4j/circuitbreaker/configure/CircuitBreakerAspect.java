@@ -33,7 +33,6 @@ import org.springframework.core.Ordered;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerOpenException;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
-import io.github.resilience4j.circuitbreaker.utils.CircuitBreakerUtils;
 import io.github.resilience4j.utils.AnnotationExtractor;
 
 /**
@@ -139,21 +138,7 @@ public class CircuitBreakerAspect implements Ordered {
 	 * the default Java types handling for the circuit breaker AOP
 	 */
 	private Object defaultHandling(ProceedingJoinPoint proceedingJoinPoint, io.github.resilience4j.circuitbreaker.CircuitBreaker circuitBreaker, String methodName) throws Throwable {
-		CircuitBreakerUtils.isCallPermitted(circuitBreaker);
-		long start = System.nanoTime();
-		try {
-			Object returnValue = proceedingJoinPoint.proceed();
-			long durationInNanos = System.nanoTime() - start;
-			circuitBreaker.onSuccess(durationInNanos);
-			return returnValue;
-		} catch (Throwable throwable) {
-			long durationInNanos = System.nanoTime() - start;
-			circuitBreaker.onError(durationInNanos, throwable);
-			if (logger.isDebugEnabled()) {
-				logger.debug("Invocation of method '" + methodName + "' failed!", throwable);
-			}
-			throw throwable;
-		}
+		return circuitBreaker.executeCheckedSupplier(proceedingJoinPoint::proceed);
 	}
 
 	@Override

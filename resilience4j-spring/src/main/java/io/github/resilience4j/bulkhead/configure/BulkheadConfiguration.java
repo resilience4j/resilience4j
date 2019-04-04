@@ -54,20 +54,20 @@ public class BulkheadConfiguration {
 
 	@Bean
 	public BulkheadAspect bulkheadAspect(BulkheadConfigurationProperties bulkheadConfigurationProperties,
-	                                     BulkheadRegistry bulkheadRegistry, @Autowired(required = false) List<BulkHeadAspectExt> bulkHeadAspectExtList) {
+	                                     BulkheadRegistry bulkheadRegistry, @Autowired(required = false) List<BulkheadAspectExt> bulkHeadAspectExtList) {
 		return new BulkheadAspect(bulkheadConfigurationProperties, bulkheadRegistry, bulkHeadAspectExtList);
 	}
 
 	@Bean
 	@Conditional(value = {RxJava2OnClasspathCondition.class})
-	public RxJava2BulkHeadAspectExt rxJava2BulkHeadAspectExt() {
-		return new RxJava2BulkHeadAspectExt();
+	public RxJava2BulkheadAspectExt rxJava2BulkHeadAspectExt() {
+		return new RxJava2BulkheadAspectExt();
 	}
 
 	@Bean
 	@Conditional(value = {ReactorOnClasspathCondition.class})
-	public ReactorBulkHeadAspectExt reactorBulkHeadAspectExt() {
-		return new ReactorBulkHeadAspectExt();
+	public ReactorBulkheadAspectExt reactorBulkHeadAspectExt() {
+		return new ReactorBulkheadAspectExt();
 	}
 
 	/**

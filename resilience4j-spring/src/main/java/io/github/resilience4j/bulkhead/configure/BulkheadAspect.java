@@ -32,7 +32,6 @@ import org.springframework.core.Ordered;
 
 import io.github.resilience4j.bulkhead.BulkheadRegistry;
 import io.github.resilience4j.bulkhead.annotation.Bulkhead;
-import io.github.resilience4j.bulkhead.utils.BulkheadUtils;
 import io.github.resilience4j.utils.AnnotationExtractor;
 
 /**
@@ -47,12 +46,12 @@ public class BulkheadAspect implements Ordered {
 
 	private final BulkheadConfigurationProperties bulkheadConfigurationProperties;
 	private final BulkheadRegistry bulkheadRegistry;
-	private final List<BulkHeadAspectExt> bulkHeadAspectExts;
+	private final List<BulkheadAspectExt> bulkheadAspectExts;
 
-	public BulkheadAspect(BulkheadConfigurationProperties backendMonitorPropertiesRegistry, BulkheadRegistry bulkheadRegistry, @Autowired(required = false) List<BulkHeadAspectExt> bulkHeadAspectExts) {
+	public BulkheadAspect(BulkheadConfigurationProperties backendMonitorPropertiesRegistry, BulkheadRegistry bulkheadRegistry, @Autowired(required = false) List<BulkheadAspectExt> bulkheadAspectExts) {
 		this.bulkheadConfigurationProperties = backendMonitorPropertiesRegistry;
 		this.bulkheadRegistry = bulkheadRegistry;
-		this.bulkHeadAspectExts = bulkHeadAspectExts;
+		this.bulkheadAspectExts = bulkheadAspectExts;
 	}
 
 	@Pointcut(value = "@within(Bulkhead) || @annotation(Bulkhead)", argNames = "Bulkhead")
@@ -69,8 +68,8 @@ public class BulkheadAspect implements Ordered {
 		String backend = backendMonitored.name();
 		io.github.resilience4j.bulkhead.Bulkhead bulkhead = getOrCreateBulkhead(methodName, backend);
 		Class<?> returnType = method.getReturnType();
-		if (bulkHeadAspectExts != null && !bulkHeadAspectExts.isEmpty()) {
-			for (BulkHeadAspectExt bulkHeadAspectExt : bulkHeadAspectExts) {
+		if (bulkheadAspectExts != null && !bulkheadAspectExts.isEmpty()) {
+			for (BulkheadAspectExt bulkHeadAspectExt : bulkheadAspectExts) {
 				if (bulkHeadAspectExt.canHandleReturnType(returnType)) {
 					return bulkHeadAspectExt.handle(proceedingJoinPoint, bulkhead, methodName);
 				}
@@ -103,17 +102,10 @@ public class BulkheadAspect implements Ordered {
 	}
 
 	private Object handleJoinPoint(ProceedingJoinPoint proceedingJoinPoint, io.github.resilience4j.bulkhead.Bulkhead bulkhead, String methodName) throws Throwable {
-		BulkheadUtils.isCallPermitted(bulkhead);
-		try {
-			return proceedingJoinPoint.proceed();
-		} catch (Throwable throwable) {
-			if (logger.isDebugEnabled()) {
-				logger.debug("Invocation of method '" + methodName + "' failed!", throwable);
-			}
-			throw throwable;
-		} finally {
-			bulkhead.onComplete();
+		if (logger.isDebugEnabled()) {
+			logger.debug("bulkhead method invocation for method {}", methodName);
 		}
+		return bulkhead.executeCheckedSupplier(proceedingJoinPoint::proceed);
 	}
 
 	/**

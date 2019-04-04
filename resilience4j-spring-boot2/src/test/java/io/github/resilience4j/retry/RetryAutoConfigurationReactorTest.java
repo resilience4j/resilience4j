@@ -15,7 +15,7 @@
  */
 package io.github.resilience4j.retry;
 
-import static io.github.resilience4j.service.test.retry.ReactiveRetryDummyService.BACKEND;
+import static io.github.resilience4j.service.test.retry.ReactiveRetryDummyService.BACKEND_C;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.IOException;
@@ -78,12 +78,12 @@ public class RetryAutoConfigurationReactorTest {
 		retryDummyService.doSomethingFlux(false).subscribe(String::toUpperCase, throwable -> System.out.println("Exception received:" + throwable.getMessage()));
 		;
 
-		Retry retry = retryRegistry.retry(BACKEND);
+		Retry retry = retryRegistry.retry(BACKEND_C);
 		assertThat(retry).isNotNull();
 
 		// expect retry is configured as defined in application.yml
 		assertThat(retry.getRetryConfig().getMaxAttempts()).isEqualTo(3);
-		assertThat(retry.getName()).isEqualTo(BACKEND);
+		assertThat(retry.getName()).isEqualTo(BACKEND_C);
 		assertThat(retry.getRetryConfig().getExceptionPredicate().test(new IOException())).isTrue();
 
 		// expect retry actuator endpoint contains both retries
@@ -94,7 +94,7 @@ public class RetryAutoConfigurationReactorTest {
 		ResponseEntity<RetryEventsEndpointResponse> retryEventList = restTemplate.getForEntity("/actuator/retryevents", RetryEventsEndpointResponse.class);
 		assertThat(retryEventList.getBody().getRetryEvents()).hasSize(3);
 
-		retryEventList = restTemplate.getForEntity("/actuator/retryevents/" + BACKEND, RetryEventsEndpointResponse.class);
+		retryEventList = restTemplate.getForEntity("/actuator/retryevents/" + BACKEND_C, RetryEventsEndpointResponse.class);
 		assertThat(retryEventList.getBody().getRetryEvents()).hasSize(3);
 
 		assertThat(retry.getRetryConfig().getExceptionPredicate().test(new IllegalArgumentException())).isTrue();

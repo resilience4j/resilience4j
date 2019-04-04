@@ -40,7 +40,7 @@ import io.reactivex.SingleSource;
  * the Rx bulkhead logic support for the spring AOP
  * conditional on the presence of Rx classes on the spring class loader
  */
-public class RxJava2BulkHeadAspectExt implements BulkHeadAspectExt {
+public class RxJava2BulkheadAspectExt implements BulkheadAspectExt {
 
 	private static final Logger logger = LoggerFactory.getLogger(CircuitBreakerAspect.class);
 	private final Set<Class> rxSupportedTypes = newHashSet(ObservableSource.class, SingleSource.class, CompletableSource.class, MaybeSource.class, Flowable.class);
@@ -65,11 +65,12 @@ public class RxJava2BulkHeadAspectExt implements BulkHeadAspectExt {
 	@SuppressWarnings("unchecked")
 	@Override
 	public Object handle(ProceedingJoinPoint proceedingJoinPoint, Bulkhead bulkhead, String methodName) throws Throwable {
-		BulkheadOperator bulkheadOperator = BulkheadOperator.of(bulkhead);
+		BulkheadOperator<?> bulkheadOperator = BulkheadOperator.of(bulkhead);
 		Object returnValue = proceedingJoinPoint.proceed();
 		return executeRxJava2Aspect(bulkheadOperator, returnValue);
 	}
 
+	@SuppressWarnings("unchecked")
 	private Object executeRxJava2Aspect(BulkheadOperator bulkheadOperator, Object returnValue) {
 		if (returnValue instanceof ObservableSource) {
 			Observable<?> observable = (Observable<?>) returnValue;
