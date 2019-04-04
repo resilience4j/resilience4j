@@ -75,7 +75,9 @@ public class CircuitBreakerAspect implements Ordered {
 					return circuitBreakerAspectExt.handle(proceedingJoinPoint, circuitBreaker, methodName);
 				}
 			}
-		} else if (CompletionStage.class.isAssignableFrom(returnType)) {
+		}
+
+		if (CompletionStage.class.isAssignableFrom(returnType)) {
 			return handleJoinPointCompletableFuture(proceedingJoinPoint, circuitBreaker);
 		}
 		return defaultHandling(proceedingJoinPoint, circuitBreaker, methodName);
