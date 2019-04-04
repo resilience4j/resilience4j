@@ -136,7 +136,7 @@ public class RateLimiterAspect implements Ordered {
 				logger.error("Exception being thrown during RateLimiter invocation {} ", methodName, throwable.getCause());
 				throw new CompletionException(throwable);
 			}
-		});
+		}).get();
 	}
 
 
