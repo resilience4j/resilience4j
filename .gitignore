@@ -8,3 +8,4 @@ classes
 .project
 .settings
 */bin
+*.orig
