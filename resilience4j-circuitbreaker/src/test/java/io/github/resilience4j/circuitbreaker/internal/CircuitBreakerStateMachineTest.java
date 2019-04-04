@@ -59,6 +59,13 @@ public class CircuitBreakerStateMachineTest {
         assertThat(circuitBreaker.isCallPermitted()).isEqualTo(true);
         assertThat(circuitBreaker.isCallPermitted()).isEqualTo(false);
         assertThat(circuitBreaker.isCallPermitted()).isEqualTo(false);
+        circuitBreaker.transitionToOpenState();
+        circuitBreaker.transitionToHalfOpenState();
+        assertThat(circuitBreaker.isCallPermitted()).isEqualTo(true);
+        assertThat(circuitBreaker.isCallPermitted()).isEqualTo(true);
+        assertThat(circuitBreaker.isCallPermitted()).isEqualTo(true);
+        assertThat(circuitBreaker.isCallPermitted()).isEqualTo(false);
+        assertThat(circuitBreaker.isCallPermitted()).isEqualTo(false);
     }
 
     @Test
