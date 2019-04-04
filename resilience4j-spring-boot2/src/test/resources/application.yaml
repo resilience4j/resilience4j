@@ -3,7 +3,7 @@ resilience4j.retry:
   backends:
     retryBackendA:
       maxRetryAttempts: 3
-      waitDuration: 600
+      waitDuration: 100
       retryExceptionPredicate: io.github.resilience4j.circuitbreaker.RecordFailurePredicate
       retryExceptions:
       - java.io.IOException
@@ -11,7 +11,7 @@ resilience4j.retry:
       - io.github.resilience4j.circuitbreaker.IgnoredException
     retryBackendB:
       maxRetryAttempts: 3
-      waitDuration: 600
+      waitDuration: 100
       retryExceptionPredicate: io.github.resilience4j.circuitbreaker.RecordFailurePredicate
       retryExceptions:
       - java.io.IOException
@@ -19,7 +19,7 @@ resilience4j.retry:
       - io.github.resilience4j.circuitbreaker.IgnoredException
     retryBackendC:
       maxRetryAttempts: 3
-      waitDuration: 600
+      waitDuration: 100
       retryExceptionPredicate: io.github.resilience4j.circuitbreaker.RecordFailurePredicate
       retryExceptions:
       - java.lang.IllegalArgumentException
