@@ -82,7 +82,9 @@ public class RateLimiterAspect implements Ordered {
 					return rateLimiterAspectExt.handle(proceedingJoinPoint, rateLimiter, methodName);
 				}
 			}
-		} else if (CompletionStage.class.isAssignableFrom(returnType)) {
+		}
+
+		if (CompletionStage.class.isAssignableFrom(returnType)) {
 			return handleJoinPointCompletableFuture(proceedingJoinPoint, rateLimiter, methodName);
 		}
 		return handleJoinPoint(proceedingJoinPoint, rateLimiter, methodName);
