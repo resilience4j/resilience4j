@@ -18,23 +18,24 @@ package io.github.resilience4j.circuitbreaker.autoconfigure;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
-import io.github.resilience4j.circuitbreaker.configure.CircuitBreakerAspect;
-import io.github.resilience4j.circuitbreaker.configure.CircuitBreakerConfiguration;
-import io.github.resilience4j.circuitbreaker.configure.CircuitBreakerConfigurationProperties;
+import io.github.resilience4j.circuitbreaker.configure.*;
 import io.github.resilience4j.circuitbreaker.configure.CircuitBreakerConfigurationProperties.BackendProperties;
 import io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent;
 import io.github.resilience4j.circuitbreaker.monitoring.health.CircuitBreakerHealthIndicator;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
 
 import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.boot.actuate.health.HealthIndicatorRegistry;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
 
+import java.util.List;
 import java.util.Map;
 
 @Configuration
@@ -77,8 +78,23 @@ public class CircuitBreakerConfigurationOnMissingBean implements ApplicationCont
 
     @Bean
     @ConditionalOnMissingBean
-    public CircuitBreakerAspect circuitBreakerAspect(CircuitBreakerRegistry circuitBreakerRegistry) {
-        return circuitBreakerConfiguration.circuitBreakerAspect(circuitBreakerRegistry);
+    public CircuitBreakerAspect circuitBreakerAspect(CircuitBreakerRegistry circuitBreakerRegistry,
+                                                     @Autowired(required = false) List<CircuitBreakerAspectExt> circuitBreakerAspectExtList) {
+        return circuitBreakerConfiguration.circuitBreakerAspect(circuitBreakerRegistry, circuitBreakerAspectExtList);
+    }
+
+    @Bean
+    @Conditional(value = {RxJava2OnClasspathCondition.class})
+    @ConditionalOnMissingBean
+    public RxJava2CircuitBreakerAspectExt rxJava2CircuitBreakerAspect() {
+        return circuitBreakerConfiguration.rxJava2CircuitBreakerAspect();
+    }
+
+    @Bean
+    @Conditional(value = {ReactorOnClasspathCondition.class})
+    @ConditionalOnMissingBean
+    public ReactorCircuitBreakerAspectExt reactorCircuitBreakerAspect() {
+        return circuitBreakerConfiguration.reactorCircuitBreakerAspect();
     }
 
     @Bean

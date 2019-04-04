@@ -39,11 +39,4 @@ public @interface CircuitBreaker {
 	 * @return the name of the circuit breaker
 	 */
 	String name();
-
-	/**
-	 * @return the type of circuit breaker (default or webflux which is reactor circuit breaker)
-	 */
-	ApiType type() default ApiType.DEFAULT;
-
-
 }

@@ -15,6 +15,14 @@
  */
 package io.github.resilience4j.circuitbreaker;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
+import java.io.IOException;
+import java.time.Duration;
+import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,10 +34,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import java.io.IOException;
-import java.time.Duration;
-import java.util.Map;
-
 import io.github.resilience4j.circuitbreaker.autoconfigure.CircuitBreakerProperties;
 import io.github.resilience4j.circuitbreaker.configure.CircuitBreakerAspect;
 import io.github.resilience4j.circuitbreaker.monitoring.endpoint.CircuitBreakerEndpointResponse;
@@ -39,8 +43,6 @@ import io.github.resilience4j.service.test.ReactiveDummyService;
 import io.github.resilience4j.service.test.TestApplication;
 
 import static org.junit.Assert.assertEquals;
-import static org.assertj.core.api.Assertions.assertThat;
-
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
 		classes = {TestApplication.class, CircuitBreakerAutoConfigurationTest.AdditionalConfiguration.class})
@@ -150,6 +152,56 @@ public class CircuitBreakerAutoConfigurationTest {
 		assertEquals(sharedA.getCircuitBreakerConfig().getRingBufferSizeInHalfOpenState(), sharedC.getCircuitBreakerConfig().getRingBufferSizeInHalfOpenState());
 		assertThat(sharedC.getCircuitBreakerConfig().getFailureRateThreshold()).isEqualTo(60f);
 		assertEquals(sharedA.getCircuitBreakerConfig().getWaitDurationInOpenState(), sharedC.getCircuitBreakerConfig().getWaitDurationInOpenState());
+	}
+
+
+	/**
+	 * The test verifies that a CircuitBreaker instance is created and configured properly when the DummyService is invoked and
+	 * that the CircuitBreaker records successful and failed calls.
+	 */
+	@Test
+	@DirtiesContext
+	public void testCircuitBreakerAutoConfigurationAsync() throws IOException, ExecutionException, InterruptedException {
+		assertThat(circuitBreakerRegistry).isNotNull();
+		assertThat(circuitBreakerProperties).isNotNull();
+
+		try {
+			dummyService.doSomethingAsync(true);
+		} catch (IOException ex) {
+			// Do nothing. The IOException is recorded by the CircuitBreaker as part of the recordFailurePredicate as a failure.
+		}
+		// The invocation is recorded by the CircuitBreaker as a success.
+		final CompletableFuture<String> stringCompletionStage = dummyService.doSomethingAsync(false);
+		assertThat(stringCompletionStage.get().equals("Test result"));
+
+		CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker(DummyService.BACKEND);
+		assertThat(circuitBreaker).isNotNull();
+
+		assertThat(circuitBreaker.getMetrics().getNumberOfBufferedCalls()).isEqualTo(2);
+		assertThat(circuitBreaker.getMetrics().getNumberOfSuccessfulCalls()).isEqualTo(1);
+		assertThat(circuitBreaker.getMetrics().getNumberOfFailedCalls()).isEqualTo(1);
+
+		// expect circuitbreakers actuator endpoint contains both circuitbreakers
+		ResponseEntity<CircuitBreakerEndpointResponse> circuitBreakerList = restTemplate.getForEntity("/actuator/circuitbreakers", CircuitBreakerEndpointResponse.class);
+		assertThat(circuitBreakerList.getBody().getCircuitBreakers()).hasSize(5).containsExactly("backendA", "backendB", "backendSharedA", "backendSharedB", "backendSharedC");
+
+		// expect circuitbreaker-event actuator endpoint recorded both events
+		ResponseEntity<CircuitBreakerEventsEndpointResponse> circuitBreakerEventList = restTemplate.getForEntity("/actuator/circuitbreakerevents", CircuitBreakerEventsEndpointResponse.class);
+		assertThat(circuitBreakerEventList.getBody().getCircuitBreakerEvents()).hasSize(2);
+
+		circuitBreakerEventList = restTemplate.getForEntity("/actuator/circuitbreakerevents/backendA", CircuitBreakerEventsEndpointResponse.class);
+		assertThat(circuitBreakerEventList.getBody().getCircuitBreakerEvents()).hasSize(2);
+
+		// expect no health indicator for backendB, as it is disabled via properties
+		ResponseEntity<HealthResponse> healthResponse = restTemplate.getForEntity("/actuator/health", HealthResponse.class);
+		assertThat(healthResponse.getBody().getDetails()).isNotNull();
+		assertThat(healthResponse.getBody().getDetails().get("backendACircuitBreaker")).isNotNull();
+		assertThat(healthResponse.getBody().getDetails().get("backendBCircuitBreaker")).isNull();
+		assertThat(healthResponse.getBody().getDetails().get("backendSharedACircuitBreaker")).isNotNull();
+		assertThat(healthResponse.getBody().getDetails().get("backendSharedBCircuitBreaker")).isNotNull();
+		assertThat(healthResponse.getBody().getDetails().get("backendSharedCCircuitBreaker")).isNotNull();
+
+
 	}
 
 	/**

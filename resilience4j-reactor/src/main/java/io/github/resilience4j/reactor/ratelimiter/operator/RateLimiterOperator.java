@@ -68,10 +68,10 @@ public class RateLimiterOperator<T> implements Function<Publisher<T>, Publisher<
     public Publisher<T> apply(Publisher<T> publisher) {
         if (publisher instanceof Mono) {
             return MonoResilience
-                    .onAssembly(new MonoRateLimiter<T>((Mono<? extends T>) publisher, rateLimiter, scheduler));
+                    .onAssembly(new MonoRateLimiter<>((Mono<? extends T>) publisher, rateLimiter, scheduler));
         } else if (publisher instanceof Flux) {
             return FluxResilience
-                    .onAssembly(new FluxRateLimiter<T>((Flux<? extends T>) publisher, rateLimiter, scheduler));
+                    .onAssembly(new FluxRateLimiter<>((Flux<? extends T>) publisher, rateLimiter, scheduler));
         }
 
         throw new IllegalStateException("Publisher of type <" + publisher.getClass().getSimpleName()
