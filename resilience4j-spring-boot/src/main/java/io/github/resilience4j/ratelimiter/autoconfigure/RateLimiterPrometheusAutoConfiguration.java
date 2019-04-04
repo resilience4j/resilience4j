@@ -30,7 +30,7 @@ import org.springframework.context.annotation.Configuration;
  */
 @Configuration
 @AutoConfigureAfter(value = RateLimiterAutoConfiguration.class)
-@ConditionalOnClass(RateLimiterExports.class)
+@ConditionalOnClass(RateLimiterMetricsCollector.class)
 public class RateLimiterPrometheusAutoConfiguration {
 
     @ConditionalOnProperty(value = "resilience4j.ratelimiter.metrics.use_legacy_collector", havingValue = "true")

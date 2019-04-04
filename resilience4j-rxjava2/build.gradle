@@ -9,4 +9,5 @@ dependencies {
     testCompile project(':resilience4j-ratelimiter')
     testCompile project(':resilience4j-bulkhead')
     testCompile project(':resilience4j-retry')
+    testCompile ( libraries.rxjava2)
 }

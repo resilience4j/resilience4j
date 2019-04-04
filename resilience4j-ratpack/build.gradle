@@ -8,6 +8,7 @@ dependencies {
     compile project(':resilience4j-retry')
     compile project(':resilience4j-consumer')
     compile project(':resilience4j-reactor')
+    compile ( libraries.reactor )
     compileOnly ( libraries.ratpack_metrics )
     compileOnly project(':resilience4j-prometheus')
     compileOnly project(':resilience4j-metrics')
@@ -16,4 +17,5 @@ dependencies {
     testCompile ( libraries.ratpack_metrics )
     testCompile project(':resilience4j-prometheus')
     testCompile project(':resilience4j-metrics')
+    testCompile ( libraries.ratpack )
 }

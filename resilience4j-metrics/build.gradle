@@ -11,4 +11,5 @@ dependencies {
     testCompile project(':resilience4j-retry')
     testCompile project(':resilience4j-test')
     testCompile project(':resilience4j-circuitbreaker')
+    testCompile (libraries.metrics)
 }

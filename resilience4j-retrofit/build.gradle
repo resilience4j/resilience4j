@@ -4,4 +4,5 @@ dependencies {
     compile project(':resilience4j-ratelimiter')
     testCompile ( libraries.retrofit_test )
     testCompile ( libraries.retrofit_wiremock )
+    testCompile ( libraries.retrofit )
 }

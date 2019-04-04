@@ -9,6 +9,7 @@ dependencies {
     testCompile project(':resilience4j-ratelimiter')
     testCompile project(':resilience4j-bulkhead')
     testCompile project(':resilience4j-retry')
+    testCompile (libraries.reactor)
     testCompile (libraries.reactor_test)
     testCompile (libraries.assertj)
     testCompile (libraries.reactive_streams_tck)
