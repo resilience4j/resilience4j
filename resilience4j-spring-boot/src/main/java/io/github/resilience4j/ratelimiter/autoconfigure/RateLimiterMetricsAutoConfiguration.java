@@ -15,16 +15,15 @@
  */
 package io.github.resilience4j.ratelimiter.autoconfigure;
 
-import com.codahale.metrics.MetricRegistry;
-
 import org.springframework.boot.actuate.autoconfigure.MetricRepositoryAutoConfiguration;
 import org.springframework.boot.actuate.autoconfigure.MetricsDropwizardAutoConfiguration;
-import org.springframework.boot.actuate.metrics.repository.MetricRepository;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+
+import com.codahale.metrics.MetricRegistry;
 
 import io.github.resilience4j.metrics.RateLimiterMetrics;
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
@@ -34,14 +33,14 @@ import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
  * Auto-configuration} for resilience4j-metrics.
  */
 @Configuration
-@ConditionalOnClass(MetricRepository.class)
+@ConditionalOnClass(MetricRegistry.class)
 @AutoConfigureAfter(value = {RateLimiterAutoConfiguration.class, MetricsDropwizardAutoConfiguration.class})
 @AutoConfigureBefore(MetricRepositoryAutoConfiguration.class)
 public class RateLimiterMetricsAutoConfiguration {
-    @Bean
-    public RateLimiterMetrics registerRateLimiterMetrics(RateLimiterRegistry rateLimiterRegistry, MetricRegistry metricRegistry) {
-        RateLimiterMetrics rateLimiterMetrics = RateLimiterMetrics.ofRateLimiterRegistry(rateLimiterRegistry);
-        metricRegistry.registerAll(rateLimiterMetrics);
-        return rateLimiterMetrics;
-    }
+	@Bean
+	public RateLimiterMetrics registerRateLimiterMetrics(RateLimiterRegistry rateLimiterRegistry, MetricRegistry metricRegistry) {
+		RateLimiterMetrics rateLimiterMetrics = RateLimiterMetrics.ofRateLimiterRegistry(rateLimiterRegistry);
+		metricRegistry.registerAll(rateLimiterMetrics);
+		return rateLimiterMetrics;
+	}
 }
