@@ -73,7 +73,7 @@ public class RetryAspect implements Ordered {
 		}
 		String backend = backendMonitored.name();
 		io.github.resilience4j.retry.Retry retry = getOrCreateRetry(methodName, backend);
-		if (method.getReturnType().isInstance(CompletionStage.class) || method.getReturnType().isInstance(CompletableFuture.class)) {
+		if (method.getReturnType().isAssignableFrom(CompletionStage.class) || method.getReturnType().isAssignableFrom(CompletableFuture.class)) {
 			return handleAsyncJoinPoint(proceedingJoinPoint, retry, methodName);
 		} else {
 			return handleSyncJoinPoint(proceedingJoinPoint, retry, methodName);
