@@ -80,7 +80,8 @@ public class RetryAspect implements Ordered {
 		Class<?> returnType = method.getReturnType();
 		if (CompletionStage.class.isAssignableFrom(returnType)) {
 			return handleJoinPointCompletableFuture(proceedingJoinPoint, retry, methodName);
-		} else if (retryAspectExtList != null && !retryAspectExtList.isEmpty()) {
+		}
+		if (retryAspectExtList != null && !retryAspectExtList.isEmpty()) {
 			for (RetryAspectExt retryAspectExt : retryAspectExtList) {
 				if (retryAspectExt.canHandleReturnType(returnType)) {
 					return retryAspectExt.handle(proceedingJoinPoint, retry, methodName);
