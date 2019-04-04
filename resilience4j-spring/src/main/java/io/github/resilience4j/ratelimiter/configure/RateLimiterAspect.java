@@ -110,15 +110,10 @@ public class RateLimiterAspect implements Ordered {
 	private Object handleJoinPoint(ProceedingJoinPoint proceedingJoinPoint,
 	                               io.github.resilience4j.ratelimiter.RateLimiter rateLimiter, String methodName)
 			throws Throwable {
-		try {
-			io.github.resilience4j.ratelimiter.RateLimiter.waitForPermission(rateLimiter);
-			return proceedingJoinPoint.proceed();
-		} catch (Exception exception) {
-			if (logger.isDebugEnabled()) {
-				logger.debug("Invocation of method '" + methodName + "' failed!", exception);
-			}
-			throw exception;
+		if (logger.isDebugEnabled()) {
+			logger.debug("Rate limiter invocation for method {} ", methodName);
 		}
+		return rateLimiter.executeCheckedSupplier(proceedingJoinPoint::proceed);
 	}
 
 	/**

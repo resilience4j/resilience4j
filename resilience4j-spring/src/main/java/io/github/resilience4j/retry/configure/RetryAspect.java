@@ -79,7 +79,7 @@ public class RetryAspect implements Ordered {
 		io.github.resilience4j.retry.Retry retry = getOrCreateRetry(methodName, backend);
 		Class<?> returnType = method.getReturnType();
 		if (CompletionStage.class.isAssignableFrom(returnType)) {
-			return handleAsyncJoinPoint(proceedingJoinPoint, retry, methodName);
+			return handleJoinPointCompletableFuture(proceedingJoinPoint, retry, methodName);
 		} else if (retryAspectExtList != null && !retryAspectExtList.isEmpty()) {
 			for (RetryAspectExt retryAspectExt : retryAspectExtList) {
 				if (retryAspectExt.canHandleReturnType(returnType)) {
@@ -87,7 +87,7 @@ public class RetryAspect implements Ordered {
 				}
 			}
 		}
-		return handleSyncJoinPoint(proceedingJoinPoint, retry, methodName);
+		return handleDefaultJoinPoint(proceedingJoinPoint, retry, methodName);
 	}
 
 	/**
@@ -136,7 +136,7 @@ public class RetryAspect implements Ordered {
 	 * @return the result object if any
 	 * @throws Throwable
 	 */
-	private Object handleSyncJoinPoint(ProceedingJoinPoint proceedingJoinPoint, io.github.resilience4j.retry.Retry retry, String methodName) throws Throwable {
+	private Object handleDefaultJoinPoint(ProceedingJoinPoint proceedingJoinPoint, io.github.resilience4j.retry.Retry retry, String methodName) throws Throwable {
 		if (logger.isDebugEnabled()) {
 			logger.debug("retry invocation of method {} ", methodName);
 		}
@@ -152,7 +152,7 @@ public class RetryAspect implements Ordered {
 	 * @throws Throwable
 	 */
 	@SuppressWarnings("unchecked")
-	private Object handleAsyncJoinPoint(ProceedingJoinPoint proceedingJoinPoint, io.github.resilience4j.retry.Retry retry, String methodName) throws Throwable {
+	private Object handleJoinPointCompletableFuture(ProceedingJoinPoint proceedingJoinPoint, io.github.resilience4j.retry.Retry retry, String methodName) throws Throwable {
 		if (logger.isDebugEnabled()) {
 			logger.debug("async retry invocation of method {} ", methodName);
 		}
