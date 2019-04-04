@@ -28,6 +28,7 @@ import java.util.function.Supplier;
 
 import io.github.resilience4j.core.EventConsumer;
 import io.github.resilience4j.core.EventProcessor;
+import io.github.resilience4j.core.lang.Nullable;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryConfig;
 import io.github.resilience4j.retry.event.RetryEvent;
@@ -45,16 +46,18 @@ public class RetryImpl<T> implements Retry {
 	/*package*/ static CheckedConsumer<Long> sleepFunction = Thread::sleep;
 	private final Metrics metrics;
 	private final RetryEventProcessor eventProcessor;
+    @Nullable
 	private final Predicate<T> resultPredicate;
-	private String name;
-	private RetryConfig config;
-	private int maxAttempts;
-	private Function<Integer, Long> intervalFunction;
-	private Predicate<Throwable> exceptionPredicate;
-	private LongAdder succeededAfterRetryCounter;
-	private LongAdder failedAfterRetryCounter;
-	private LongAdder succeededWithoutRetryCounter;
-	private LongAdder failedWithoutRetryCounter;
+    private final String name;
+    private final RetryConfig config;
+
+    private final int maxAttempts;
+    private final Function<Integer, Long> intervalFunction;
+    private final Predicate<Throwable> exceptionPredicate;
+    private final LongAdder succeededAfterRetryCounter;
+    private final LongAdder failedAfterRetryCounter;
+    private final LongAdder succeededWithoutRetryCounter;
+    private final LongAdder failedWithoutRetryCounter;
 
 	public RetryImpl(String name, RetryConfig config) {
 		this.name = name;
@@ -194,7 +197,7 @@ public class RetryImpl<T> implements Retry {
 			}
 		}
 
-		private void waitIntervalAfterFailure(int currentNumOfAttempts, Throwable throwable) {
+        private void waitIntervalAfterFailure(int currentNumOfAttempts,@Nullable Throwable throwable) {
 			// wait interval until the next attempt should start
 			long interval = intervalFunction.apply(numOfAttempts.get());
 			publishRetryEvent(() -> new RetryOnRetryEvent(getName(), currentNumOfAttempts, throwable, interval));

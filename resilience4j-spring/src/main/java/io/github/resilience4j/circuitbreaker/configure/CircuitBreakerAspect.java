@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 
+import io.github.resilience4j.core.lang.Nullable;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -60,13 +61,16 @@ public class CircuitBreakerAspect implements Ordered {
 	}
 
 	@Around(value = "matchAnnotatedClassOrMethod(backendMonitored)", argNames = "proceedingJoinPoint, backendMonitored")
-	public Object circuitBreakerAroundAdvice(ProceedingJoinPoint proceedingJoinPoint, CircuitBreaker backendMonitored) throws Throwable {
+    public Object circuitBreakerAroundAdvice(ProceedingJoinPoint proceedingJoinPoint, @Nullable CircuitBreaker backendMonitored) throws Throwable {
 		Method method = ((MethodSignature) proceedingJoinPoint.getSignature()).getMethod();
 		String methodName = method.getDeclaringClass().getName() + "#" + method.getName();
 		if (backendMonitored == null) {
 			backendMonitored = getBackendMonitoredAnnotation(proceedingJoinPoint);
 		}
-		String backend = backendMonitored.name();
+        if(backendMonitored == null) { //because annotations wasn't found
+            return proceedingJoinPoint.proceed();
+        }
+        String backend = backendMonitored.name();
 		io.github.resilience4j.circuitbreaker.CircuitBreaker circuitBreaker = getOrCreateCircuitBreaker(methodName, backend);
 		Class<?> returnType = method.getReturnType();
 		if (circuitBreakerAspectExtList != null && !circuitBreakerAspectExtList.isEmpty()) {
@@ -95,6 +99,7 @@ public class CircuitBreakerAspect implements Ordered {
 		return circuitBreaker;
 	}
 
+    @Nullable
 	private CircuitBreaker getBackendMonitoredAnnotation(ProceedingJoinPoint proceedingJoinPoint) {
 		if (logger.isDebugEnabled()) {
 			logger.debug("circuitBreaker parameter is null");

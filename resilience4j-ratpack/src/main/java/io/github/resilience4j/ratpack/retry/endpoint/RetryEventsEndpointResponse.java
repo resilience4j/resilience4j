@@ -15,10 +15,13 @@
  */
 package io.github.resilience4j.ratpack.retry.endpoint;
 
+import io.github.resilience4j.core.lang.Nullable;
+
 import java.util.List;
 
 public class RetryEventsEndpointResponse {
 
+    @Nullable
     private List<RetryEventDTO> retryEvents;
 
     public RetryEventsEndpointResponse() {
@@ -28,6 +31,7 @@ public class RetryEventsEndpointResponse {
         this.retryEvents = retryEvents;
     }
 
+    @Nullable
     public List<RetryEventDTO> getRetryEvents() {
         return retryEvents;
     }

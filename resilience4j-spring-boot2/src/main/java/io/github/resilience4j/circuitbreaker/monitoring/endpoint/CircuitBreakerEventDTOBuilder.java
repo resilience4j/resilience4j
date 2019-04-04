@@ -19,13 +19,17 @@ import java.time.Duration;
 
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent;
+import io.github.resilience4j.core.lang.Nullable;
 
 class CircuitBreakerEventDTOBuilder {
     private String circuitBreakerName;
     private CircuitBreakerEvent.Type type;
     private String creationTime;
+    @Nullable
     private String throwable = null;
+    @Nullable
     private Long duration = null;
+    @Nullable
     private CircuitBreaker.StateTransition stateTransition = null;
 
     CircuitBreakerEventDTOBuilder(String circuitBreakerName, CircuitBreakerEvent.Type type, String creationTime){

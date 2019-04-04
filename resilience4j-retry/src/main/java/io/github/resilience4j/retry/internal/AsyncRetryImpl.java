@@ -28,6 +28,7 @@ import java.util.function.Supplier;
 
 import io.github.resilience4j.core.EventConsumer;
 import io.github.resilience4j.core.EventProcessor;
+import io.github.resilience4j.core.lang.Nullable;
 import io.github.resilience4j.retry.AsyncRetry;
 import io.github.resilience4j.retry.RetryConfig;
 import io.github.resilience4j.retry.event.RetryEvent;
@@ -47,6 +48,7 @@ public class AsyncRetryImpl<T> implements AsyncRetry {
 	private final Predicate<Throwable> exceptionPredicate;
 	private final RetryConfig config;
 	private final RetryEventProcessor eventProcessor;
+    @Nullable
 	private final Predicate<T> resultPredicate;
 
 	private LongAdder succeededAfterRetryCounter;

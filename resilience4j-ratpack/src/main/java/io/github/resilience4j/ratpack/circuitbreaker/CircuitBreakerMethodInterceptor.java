@@ -18,6 +18,7 @@ package io.github.resilience4j.ratpack.circuitbreaker;
 import com.google.inject.Inject;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerOpenException;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
+import io.github.resilience4j.core.lang.Nullable;
 import io.github.resilience4j.ratpack.recovery.RecoveryFunction;
 import io.github.resilience4j.reactor.circuitbreaker.operator.CircuitBreakerOperator;
 import org.aopalliance.intercept.MethodInterceptor;
@@ -37,9 +38,11 @@ import java.util.concurrent.CompletionStage;
 public class CircuitBreakerMethodInterceptor implements MethodInterceptor {
 
     @Inject(optional = true)
+    @Nullable
     private CircuitBreakerRegistry registry;
 
     @SuppressWarnings("unchecked")
+    @Nullable
     @Override
     public Object invoke(MethodInvocation invocation) throws Throwable {
         CircuitBreaker annotation = invocation.getMethod().getAnnotation(CircuitBreaker.class);
@@ -48,9 +51,6 @@ public class CircuitBreakerMethodInterceptor implements MethodInterceptor {
             registry = CircuitBreakerRegistry.ofDefaults();
         }
         io.github.resilience4j.circuitbreaker.CircuitBreaker breaker = registry.circuitBreaker(annotation.name());
-        if (breaker == null) {
-            return invocation.proceed();
-        }
         Class<?> returnType = invocation.getMethod().getReturnType();
         if (Promise.class.isAssignableFrom(returnType)) {
             Promise<?> result = (Promise<?>) proceed(invocation, breaker, recoveryFunction);
@@ -107,6 +107,7 @@ public class CircuitBreakerMethodInterceptor implements MethodInterceptor {
         return proceed(invocation, breaker, recoveryFunction);
     }
 
+    @Nullable
     private Object proceed(MethodInvocation invocation, io.github.resilience4j.circuitbreaker.CircuitBreaker breaker, RecoveryFunction<?> recoveryFunction) throws Throwable {
         Object result;
         long start = System.nanoTime();

@@ -17,6 +17,7 @@
 package io.github.resilience4j.ratpack.ratelimiter;
 
 import com.google.inject.Inject;
+import io.github.resilience4j.core.lang.Nullable;
 import io.github.resilience4j.ratelimiter.RateLimiterConfig;
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
 import io.github.resilience4j.ratelimiter.RequestNotPermitted;
@@ -41,9 +42,11 @@ import java.util.concurrent.CompletionStage;
 public class RateLimiterMethodInterceptor implements MethodInterceptor {
 
     @Inject(optional = true)
+    @Nullable
     private RateLimiterRegistry registry;
 
     @SuppressWarnings("unchecked")
+    @Nullable
     @Override
     public Object invoke(MethodInvocation invocation) throws Throwable {
         RateLimiter annotation = invocation.getMethod().getAnnotation(RateLimiter.class);
@@ -96,6 +99,7 @@ public class RateLimiterMethodInterceptor implements MethodInterceptor {
         return handleProceedWithException(invocation, rateLimiter, recoveryFunction);
     }
 
+    @Nullable
     private Object proceed(MethodInvocation invocation, io.github.resilience4j.ratelimiter.RateLimiter rateLimiter, RecoveryFunction<?> recoveryFunction) throws Throwable {
         Object result;
         try {
@@ -106,6 +110,7 @@ public class RateLimiterMethodInterceptor implements MethodInterceptor {
         return result;
     }
 
+    @Nullable
     private Object handleProceedWithException(MethodInvocation invocation, io.github.resilience4j.ratelimiter.RateLimiter rateLimiter, RecoveryFunction<?> recoveryFunction) throws Throwable {
         RateLimiterConfig rateLimiterConfig = rateLimiter.getRateLimiterConfig();
         Duration timeoutDuration = rateLimiterConfig.getTimeoutDuration();

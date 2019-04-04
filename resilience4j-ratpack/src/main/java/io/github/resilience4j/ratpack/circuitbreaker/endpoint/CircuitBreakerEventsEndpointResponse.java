@@ -16,9 +16,12 @@
 
 package io.github.resilience4j.ratpack.circuitbreaker.endpoint;
 
+import io.github.resilience4j.core.lang.Nullable;
+
 import java.util.List;
 
 public class CircuitBreakerEventsEndpointResponse {
+    @Nullable
     private List<CircuitBreakerEventDTO> circuitBreakerEvents;
 
     public CircuitBreakerEventsEndpointResponse(){
@@ -28,6 +31,7 @@ public class CircuitBreakerEventsEndpointResponse {
         this.circuitBreakerEvents = circuitBreakerEvents;
     }
 
+    @Nullable
     public List<CircuitBreakerEventDTO> getCircuitBreakerEvents() {
         return circuitBreakerEvents;
     }

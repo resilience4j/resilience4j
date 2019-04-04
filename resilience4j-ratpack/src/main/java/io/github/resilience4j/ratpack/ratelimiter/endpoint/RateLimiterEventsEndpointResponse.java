@@ -15,10 +15,13 @@
  */
 package io.github.resilience4j.ratpack.ratelimiter.endpoint;
 
+import io.github.resilience4j.core.lang.Nullable;
+
 import java.util.List;
 
 public class RateLimiterEventsEndpointResponse {
 
+    @Nullable
     private List<RateLimiterEventDTO> rateLimiterEvents;
 
     public RateLimiterEventsEndpointResponse() {
@@ -28,6 +31,7 @@ public class RateLimiterEventsEndpointResponse {
         this.rateLimiterEvents = rateLimiterEvents;
     }
 
+    @Nullable
     public List<RateLimiterEventDTO> getRateLimiterEvents() {
         return rateLimiterEvents;
     }

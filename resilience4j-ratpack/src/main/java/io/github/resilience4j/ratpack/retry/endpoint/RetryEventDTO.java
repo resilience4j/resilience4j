@@ -16,14 +16,18 @@
 package io.github.resilience4j.ratpack.retry.endpoint;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import io.github.resilience4j.core.lang.Nullable;
 import io.github.resilience4j.retry.event.RetryEvent;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class RetryEventDTO {
 
+    @Nullable
     private String retryName;
+    @Nullable
     private RetryEvent.Type retryEventType;
     private int numberOfRetryAttempts;
+    @Nullable
     private String retryCreationTime;
 
     public static RetryEventDTO createRetryEventDTO(RetryEvent retryEvent) {
@@ -35,6 +39,7 @@ public class RetryEventDTO {
         return dto;
     }
 
+    @Nullable
     public String getRetryName() {
         return retryName;
     }
@@ -43,6 +48,7 @@ public class RetryEventDTO {
         this.retryName = retryName;
     }
 
+    @Nullable
     public RetryEvent.Type getRetryEventType() {
         return retryEventType;
     }
@@ -59,6 +65,7 @@ public class RetryEventDTO {
         this.numberOfRetryAttempts = numberOfRetryAttempts;
     }
 
+    @Nullable
     public String getRetryCreationTime() {
         return retryCreationTime;
     }
