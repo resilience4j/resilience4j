@@ -15,7 +15,11 @@
  */
 package io.github.resilience4j.retry.configure;
 
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
 
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
@@ -25,6 +29,8 @@ import io.github.resilience4j.retry.RetryConfig;
 import io.github.resilience4j.retry.RetryRegistry;
 import io.github.resilience4j.retry.event.RetryEvent;
 import io.github.resilience4j.retry.internal.InMemoryRetryRegistry;
+import io.github.resilience4j.utils.ReactorOnClasspathCondition;
+import io.github.resilience4j.utils.RxJava2OnClasspathCondition;
 
 /**
  * {@link Configuration
@@ -51,7 +57,6 @@ public class RetryConfiguration {
 		return retryRegistry;
 	}
 
-
 	/**
 	 * @param retryConfigurationProperties retry configuration spring properties
 	 * @param retryRegistry                retry in memory registry
@@ -59,8 +64,20 @@ public class RetryConfiguration {
 	 */
 	@Bean
 	public RetryAspect retryAspect(RetryConfigurationProperties retryConfigurationProperties,
-	                               RetryRegistry retryRegistry) {
-		return new RetryAspect(retryConfigurationProperties, retryRegistry);
+	                               RetryRegistry retryRegistry, @Autowired(required = false) List<RetryAspectExt> retryAspectExtList) {
+		return new RetryAspect(retryConfigurationProperties, retryRegistry, retryAspectExtList);
+	}
+
+	@Bean
+	@Conditional(value = {RxJava2OnClasspathCondition.class})
+	public RxJava2RetryAspectExt rxJava2RetryAspectExt() {
+		return new RxJava2RetryAspectExt();
+	}
+
+	@Bean
+	@Conditional(value = {ReactorOnClasspathCondition.class})
+	public ReactorRetryAspectExt reactorRetryAspectExt() {
+		return new ReactorRetryAspectExt();
 	}
 
 	/**

@@ -15,14 +15,21 @@
  */
 package io.github.resilience4j.bulkhead.configure;
 
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Conditional;
+import org.springframework.context.annotation.Configuration;
+
 import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.bulkhead.BulkheadConfig;
 import io.github.resilience4j.bulkhead.BulkheadRegistry;
 import io.github.resilience4j.bulkhead.event.BulkheadEvent;
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
+import io.github.resilience4j.utils.ReactorOnClasspathCondition;
+import io.github.resilience4j.utils.RxJava2OnClasspathCondition;
 
 /**
  * {@link Configuration
@@ -31,34 +38,47 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class BulkheadConfiguration {
 
-    @Bean
-    public BulkheadRegistry bulkheadRegistry(BulkheadConfigurationProperties bulkheadConfigurationProperties,
-                                             EventConsumerRegistry<BulkheadEvent> bulkheadEventConsumerRegistry) {
-        BulkheadRegistry bulkheadRegistry = BulkheadRegistry.ofDefaults();
-        bulkheadConfigurationProperties.getBackends().forEach(
-                (name, properties) -> {
-                    BulkheadConfig bulkheadConfig = bulkheadConfigurationProperties.createBulkheadConfig(name);
-                    Bulkhead bulkhead = bulkheadRegistry.bulkhead(name, bulkheadConfig);
-                    bulkhead.getEventPublisher().onEvent(bulkheadEventConsumerRegistry.createEventConsumer(name, properties.getEventConsumerBufferSize()));
-                }
-        );
-        return bulkheadRegistry;
-    }
+	@Bean
+	public BulkheadRegistry bulkheadRegistry(BulkheadConfigurationProperties bulkheadConfigurationProperties,
+	                                         EventConsumerRegistry<BulkheadEvent> bulkheadEventConsumerRegistry) {
+		BulkheadRegistry bulkheadRegistry = BulkheadRegistry.ofDefaults();
+		bulkheadConfigurationProperties.getBackends().forEach(
+				(name, properties) -> {
+					BulkheadConfig bulkheadConfig = bulkheadConfigurationProperties.createBulkheadConfig(name);
+					Bulkhead bulkhead = bulkheadRegistry.bulkhead(name, bulkheadConfig);
+					bulkhead.getEventPublisher().onEvent(bulkheadEventConsumerRegistry.createEventConsumer(name, properties.getEventConsumerBufferSize()));
+				}
+		);
+		return bulkheadRegistry;
+	}
 
-    @Bean
-    public BulkheadAspect bulkheadAspect(BulkheadConfigurationProperties bulkheadConfigurationProperties,
-                                               BulkheadRegistry bulkheadRegistry) {
-        return new BulkheadAspect(bulkheadConfigurationProperties, bulkheadRegistry);
-    }
+	@Bean
+	public BulkheadAspect bulkheadAspect(BulkheadConfigurationProperties bulkheadConfigurationProperties,
+	                                     BulkheadRegistry bulkheadRegistry, @Autowired(required = false) List<BulkheadAspectExt> bulkHeadAspectExtList) {
+		return new BulkheadAspect(bulkheadConfigurationProperties, bulkheadRegistry, bulkHeadAspectExtList);
+	}
 
-    /**
-     * The EventConsumerRegistry is used to manage EventConsumer instances.
-     * The EventConsumerRegistry is used by the BulkheadHealthIndicator to show the latest Bulkhead events
-     * for each Bulkhead instance.
-     * @return a default EventConsumerRegistry {@link DefaultEventConsumerRegistry}
-     */
-    @Bean
-    public EventConsumerRegistry<BulkheadEvent> bulkheadEventConsumerRegistry() {
-        return new DefaultEventConsumerRegistry<>();
-    }
+	@Bean
+	@Conditional(value = {RxJava2OnClasspathCondition.class})
+	public RxJava2BulkheadAspectExt rxJava2BulkHeadAspectExt() {
+		return new RxJava2BulkheadAspectExt();
+	}
+
+	@Bean
+	@Conditional(value = {ReactorOnClasspathCondition.class})
+	public ReactorBulkheadAspectExt reactorBulkHeadAspectExt() {
+		return new ReactorBulkheadAspectExt();
+	}
+
+	/**
+	 * The EventConsumerRegistry is used to manage EventConsumer instances.
+	 * The EventConsumerRegistry is used by the BulkheadHealthIndicator to show the latest Bulkhead events
+	 * for each Bulkhead instance.
+	 *
+	 * @return a default EventConsumerRegistry {@link DefaultEventConsumerRegistry}
+	 */
+	@Bean
+	public EventConsumerRegistry<BulkheadEvent> bulkheadEventConsumerRegistry() {
+		return new DefaultEventConsumerRegistry<>();
+	}
 }

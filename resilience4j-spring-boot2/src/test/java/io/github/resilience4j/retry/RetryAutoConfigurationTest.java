@@ -15,12 +15,12 @@
  */
 package io.github.resilience4j.retry;
 
-import static io.github.resilience4j.service.test.RetryDummyService.RETRY_BACKEND_A;
-import static io.github.resilience4j.service.test.RetryDummyService.RETRY_BACKEND_B;
+import static io.github.resilience4j.service.test.retry.ReactiveRetryDummyService.BACKEND_C;
+import static io.github.resilience4j.service.test.retry.RetryDummyService.RETRY_BACKEND_A;
+import static io.github.resilience4j.service.test.retry.RetryDummyService.RETRY_BACKEND_B;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.IOException;
-import java.util.Map;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -40,8 +40,8 @@ import io.github.resilience4j.retry.autoconfigure.RetryProperties;
 import io.github.resilience4j.retry.configure.RetryAspect;
 import io.github.resilience4j.retry.monitoring.endpoint.RetryEndpointResponse;
 import io.github.resilience4j.retry.monitoring.endpoint.RetryEventsEndpointResponse;
-import io.github.resilience4j.service.test.RetryDummyService;
 import io.github.resilience4j.service.test.TestApplication;
+import io.github.resilience4j.service.test.retry.RetryDummyService;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
@@ -96,7 +96,7 @@ public class RetryAutoConfigurationTest {
 
 		// expect retry actuator endpoint contains both retries
 		ResponseEntity<RetryEndpointResponse> retriesList = restTemplate.getForEntity("/actuator/retries", RetryEndpointResponse.class);
-		assertThat(retriesList.getBody().getRetries()).hasSize(2).containsOnly(RETRY_BACKEND_A, RETRY_BACKEND_B);
+		assertThat(retriesList.getBody().getRetries()).hasSize(3).containsOnly(RETRY_BACKEND_A, RETRY_BACKEND_B, BACKEND_C);
 
 		// expect retry-event actuator endpoint recorded both events
 		ResponseEntity<RetryEventsEndpointResponse> retryEventList = restTemplate.getForEntity("/actuator/retryevents", RetryEventsEndpointResponse.class);
@@ -148,7 +148,7 @@ public class RetryAutoConfigurationTest {
 
 		// expect retry actuator endpoint contains both retries
 		ResponseEntity<RetryEndpointResponse> retriesList = restTemplate.getForEntity("/actuator/retries", RetryEndpointResponse.class);
-		assertThat(retriesList.getBody().getRetries()).hasSize(2).containsOnly(RETRY_BACKEND_A, RETRY_BACKEND_B);
+		assertThat(retriesList.getBody().getRetries()).hasSize(3).containsOnly(RETRY_BACKEND_A, RETRY_BACKEND_B, BACKEND_C);
 
 		// expect retry-event actuator endpoint recorded both events
 		ResponseEntity<RetryEventsEndpointResponse> retryEventList = restTemplate.getForEntity("/actuator/retryevents", RetryEventsEndpointResponse.class);
@@ -172,18 +172,6 @@ public class RetryAutoConfigurationTest {
 			throw new AssertionError(e);
 		} catch (ExecutionException e) {
 			throw e.getCause();
-		}
-	}
-
-	private final static class HealthResponse {
-		private Map<String, Object> details;
-
-		public Map<String, Object> getDetails() {
-			return details;
-		}
-
-		public void setDetails(Map<String, Object> details) {
-			this.details = details;
 		}
 	}
 }
