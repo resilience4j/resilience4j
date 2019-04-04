@@ -15,7 +15,8 @@ dependencies {
     testCompile project(':resilience4j-prometheus')
     testCompile project(':resilience4j-metrics')
     testCompile ( libraries.spring_boot_web )
-    testCompile ( libraries.spring_reactor )
     testCompile ( libraries.spring_boot_aop )
     testCompile ( libraries.spring_boot_test )
+    testCompile project(':resilience4j-reactor')
+    testCompile project(':resilience4j-rxjava2')
 }

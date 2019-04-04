@@ -15,12 +15,12 @@
  */
 package io.github.resilience4j.circuitbreaker.configure;
 
+import io.github.resilience4j.circuitbreaker.CircuitBreaker;
+import io.github.resilience4j.reactor.circuitbreaker.operator.CircuitBreakerOperator;
+import io.github.resilience4j.utils.RecoveryUtils;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import io.github.resilience4j.circuitbreaker.CircuitBreaker;
-import io.github.resilience4j.reactor.circuitbreaker.operator.CircuitBreakerOperator;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -54,7 +54,7 @@ public class ReactorCircuitBreakerAspectExt implements CircuitBreakerAspectExt {
 	 */
 	@SuppressWarnings("unchecked")
 	@Override
-	public Object handle(ProceedingJoinPoint proceedingJoinPoint, CircuitBreaker circuitBreaker, String methodName) throws Throwable {
+	public Object handle(ProceedingJoinPoint proceedingJoinPoint, CircuitBreaker circuitBreaker, String recoveryMethodName, String methodName) throws Throwable {
 		long start = System.nanoTime();
 		Object returnValue;
 		try {
@@ -67,10 +67,12 @@ public class ReactorCircuitBreakerAspectExt implements CircuitBreakerAspectExt {
 		}
 		if (Flux.class.isAssignableFrom(returnValue.getClass())) {
 			Flux fluxReturnValue = (Flux) returnValue;
-			return fluxReturnValue.transform(io.github.resilience4j.reactor.circuitbreaker.operator.CircuitBreakerOperator.of(circuitBreaker));
+			return fluxReturnValue.transform(io.github.resilience4j.reactor.circuitbreaker.operator.CircuitBreakerOperator.of(circuitBreaker))
+					.onErrorResume(RecoveryUtils.reactorOnErrorResume(recoveryMethodName, proceedingJoinPoint.getArgs(), proceedingJoinPoint.getTarget(), Flux::error));
 		} else if (Mono.class.isAssignableFrom(returnValue.getClass())) {
 			Mono monoReturnValue = (Mono) returnValue;
-			return monoReturnValue.transform(CircuitBreakerOperator.of(circuitBreaker));
+			return monoReturnValue.transform(CircuitBreakerOperator.of(circuitBreaker))
+					.onErrorResume(RecoveryUtils.reactorOnErrorResume(recoveryMethodName, proceedingJoinPoint.getArgs(), proceedingJoinPoint.getTarget(), Mono::error));
 		} else {
 			logger.error("Unsupported type for Reactor circuit breaker {}", returnValue.getClass().getTypeName());
 			throw new IllegalArgumentException("Not Supported type for the circuit breaker in web flux :" + returnValue.getClass().getName());

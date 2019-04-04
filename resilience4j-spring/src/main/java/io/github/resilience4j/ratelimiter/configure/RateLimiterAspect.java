@@ -18,9 +18,8 @@ package io.github.resilience4j.ratelimiter.configure;
 import io.github.resilience4j.ratelimiter.RateLimiterConfig;
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
 import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
-import io.github.resilience4j.recovery.RecoveryFunction;
 import io.github.resilience4j.utils.AnnotationExtractor;
-import io.github.resilience4j.utils.RecoveryFunctionUtils;
+import io.github.resilience4j.utils.RecoveryUtils;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -95,7 +94,7 @@ public class RateLimiterAspect implements Ordered {
     @SuppressWarnings("unchecked")
     private Object handleJoinPoint(ProceedingJoinPoint proceedingJoinPoint,
                                    io.github.resilience4j.ratelimiter.RateLimiter rateLimiter,
-                                   Class<? extends RecoveryFunction> recoveryFunctionClass,
+                                   String recoveryMethodName,
                                    String methodName)
             throws Throwable {
         try {
@@ -106,8 +105,7 @@ public class RateLimiterAspect implements Ordered {
                 logger.debug("Invocation of method '" + methodName + "' failed!", exception);
             }
 
-            RecoveryFunction recovery = RecoveryFunctionUtils.getInstance(recoveryFunctionClass);
-            return recovery.apply(exception);
+            return RecoveryUtils.invoke(recoveryMethodName, proceedingJoinPoint.getArgs(), exception, proceedingJoinPoint.getThis());
         }
     }
 

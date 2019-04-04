@@ -15,9 +15,6 @@
  */
 package io.github.resilience4j.ratelimiter.annotation;
 
-import io.github.resilience4j.recovery.DefaultRecoveryFunction;
-import io.github.resilience4j.recovery.RecoveryFunction;
-
 import java.lang.annotation.*;
 
 /**
@@ -39,9 +36,9 @@ public @interface RateLimiter {
     String name();
 
     /**
-     * recovery function. Default is {@link DefaultRecoveryFunction} which does nothing.
+     * recovery method name.
      *
-     * @return recovery function class
+     * @return recovery method name.
      */
-    Class<? extends RecoveryFunction> recovery() default DefaultRecoveryFunction.class;
+    String recovery() default "";
 }

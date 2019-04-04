@@ -23,6 +23,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
+import java.util.concurrent.TimeUnit;
+
 import static org.assertj.core.api.Java6Assertions.assertThat;
 
 @RunWith(SpringJUnit4ClassRunner.class)
@@ -38,7 +40,42 @@ public class CircuitBreakerAspectTest {
     }
 
     @Test
+    public void testAsyncRecovery() throws Exception {
+        assertThat(recoveryTestService.asyncCircuitBreaker().toCompletableFuture().get(5, TimeUnit.SECONDS)).isEqualTo("recovered");
+    }
+
+    @Test
+    public void testMonoRecovery() {
+        assertThat(recoveryTestService.circuitBreakerMono("test").block()).isEqualTo("test");
+    }
+
+    @Test
     public void testFluxRecovery() {
         assertThat(recoveryTestService.circuitBreakerFlux().blockFirst()).isEqualTo("recovered");
+    }
+
+    @Test
+    public void testObservableRecovery() {
+        assertThat(recoveryTestService.circuitBreakerObservable().blockingFirst()).isEqualTo("recovered");
+    }
+
+    @Test
+    public void testSingleRecovery() {
+        assertThat(recoveryTestService.circuitBreakerSingle().blockingGet()).isEqualTo("recovered");
+    }
+
+    @Test
+    public void testCompletableRecovery() {
+        assertThat(recoveryTestService.circuitBreakerCompletable().blockingGet()).isNull();
+    }
+
+    @Test
+    public void testMaybeRecovery() {
+        assertThat(recoveryTestService.circuitBreakerMaybe().blockingGet()).isEqualTo("recovered");
+    }
+
+    @Test
+    public void testFlowableRecovery() {
+        assertThat(recoveryTestService.circuitBreakerFlowable().blockingFirst()).isEqualTo("recovered");
     }
 }

@@ -15,10 +15,9 @@
  */
 package io.github.resilience4j.retry.configure;
 
-import io.github.resilience4j.recovery.RecoveryFunction;
 import io.github.resilience4j.retry.RetryRegistry;
 import io.github.resilience4j.retry.annotation.Retry;
-import io.github.resilience4j.utils.RecoveryFunctionUtils;
+import io.github.resilience4j.utils.RecoveryUtils;
 import io.vavr.CheckedFunction0;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
@@ -123,7 +122,7 @@ public class RetryAspect implements Ordered {
 	 * @throws Throwable
 	 */
 	@SuppressWarnings("unchecked")
-	private Object handleSyncJoinPoint(ProceedingJoinPoint proceedingJoinPoint, io.github.resilience4j.retry.Retry retry, Class<? extends RecoveryFunction> recoveryFunctionClass, String methodName) throws Throwable {
+	private Object handleSyncJoinPoint(ProceedingJoinPoint proceedingJoinPoint, io.github.resilience4j.retry.Retry retry, String recoveryMethodName, String methodName) throws Throwable {
 		if (logger.isDebugEnabled()) {
 			logger.debug("retry invocation of method {} ", methodName);
 		}
@@ -131,8 +130,11 @@ public class RetryAspect implements Ordered {
 		try {
 			return objectCheckedFunction0.apply();
 		} catch (Throwable throwable) {
-			RecoveryFunction recovery = RecoveryFunctionUtils.getInstance(recoveryFunctionClass);
-			return recovery.apply(throwable);
+			if (recoveryMethodName.isEmpty()) {
+				throw throwable;
+			}
+
+			return RecoveryUtils.invoke(recoveryMethodName, proceedingJoinPoint.getArgs(), throwable, proceedingJoinPoint.getThis());
 		}
 	}
 
@@ -144,7 +146,7 @@ public class RetryAspect implements Ordered {
 	 * @throws Throwable
 	 */
 	@SuppressWarnings("unchecked")
-	private Object handleAsyncJoinPoint(ProceedingJoinPoint proceedingJoinPoint, io.github.resilience4j.retry.Retry retry, Class<? extends RecoveryFunction> recoveryFunctionClass, String methodName) throws Throwable {
+	private Object handleAsyncJoinPoint(ProceedingJoinPoint proceedingJoinPoint, io.github.resilience4j.retry.Retry retry, String recoveryMethodName, String methodName) throws Throwable {
 		if (logger.isDebugEnabled()) {
 			logger.debug("async retry invocation of method {} ", methodName);
 		}
@@ -157,7 +159,7 @@ public class RetryAspect implements Ordered {
 			}
 		}).get();
 
-		return RecoveryFunctionUtils.decorateCompletionStage(() -> RecoveryFunctionUtils.getInstance(recoveryFunctionClass), completionStage);
+		return RecoveryUtils.decorateCompletionStage(recoveryMethodName, proceedingJoinPoint.getArgs(), proceedingJoinPoint.getThis(), completionStage);
 	}
 
 	@Override

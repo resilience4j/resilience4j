@@ -16,13 +16,13 @@
 package io.github.resilience4j;
 
 import io.github.resilience4j.bulkhead.annotation.Bulkhead;
-import io.github.resilience4j.circuitbreaker.annotation.ApiType;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
-import io.github.resilience4j.recovery.RecoveryFunction;
 import io.github.resilience4j.retry.annotation.Retry;
+import io.reactivex.*;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
@@ -31,47 +31,106 @@ import java.util.concurrent.CompletionStage;
 public class RecoveryTestService {
     public static final String BACKEND = "backendA";
 
-    @CircuitBreaker(name = RecoveryTestService.BACKEND, recovery = TestRecovery.class)
+    @CircuitBreaker(name = RecoveryTestService.BACKEND, recovery = "testRecovery")
     public String circuitBreaker() {
         throw new RuntimeException("Test");
     }
 
-    @CircuitBreaker(name = RecoveryTestService.BACKEND, type = ApiType.WEBFLUX, recovery = FluxTestRecovery.class)
+    @CircuitBreaker(name = RecoveryTestService.BACKEND, recovery = "testRecovery")
+    public CompletionStage<String> asyncCircuitBreaker() {
+        CompletableFuture<String> future = new CompletableFuture<>();
+        future.completeExceptionally(new RuntimeException("Test"));
+
+        return future;
+    }
+
+    @CircuitBreaker(name = RecoveryTestService.BACKEND, recovery = "fluxTestRecovery")
     public Flux<String> circuitBreakerFlux() {
         return Flux.error(new RuntimeException("Test"));
     }
 
-    @Bulkhead(name = RecoveryTestService.BACKEND, recovery = TestRecovery.class)
+    @CircuitBreaker(name = RecoveryTestService.BACKEND, recovery = "monoTestRecovery")
+    public Mono<String> circuitBreakerMono(String parameter) {
+        return Mono.error(new RuntimeException("Test"));
+    }
+
+    @CircuitBreaker(name = RecoveryTestService.BACKEND, recovery = "observableTestRecovery")
+    public Observable<String> circuitBreakerObservable() {
+        return Observable.error(new RuntimeException("Test"));
+    }
+
+    @CircuitBreaker(name = RecoveryTestService.BACKEND, recovery = "singleTestRecovery")
+    public Single<String> circuitBreakerSingle() {
+        return Single.error(new RuntimeException("Test"));
+    }
+
+    @CircuitBreaker(name = RecoveryTestService.BACKEND, recovery = "completableTestRecovery")
+    public Completable circuitBreakerCompletable() {
+        return Completable.error(new RuntimeException("Test"));
+    }
+
+    @CircuitBreaker(name = RecoveryTestService.BACKEND, recovery = "maybeTestRecovery")
+    public Maybe<String> circuitBreakerMaybe() {
+        return Maybe.error(new RuntimeException("Test"));
+    }
+
+    @CircuitBreaker(name = RecoveryTestService.BACKEND, recovery = "flowableTestRecovery")
+    public Flowable<String> circuitBreakerFlowable() {
+        return Flowable.error(new RuntimeException("Test"));
+    }
+
+    @Bulkhead(name = RecoveryTestService.BACKEND, recovery = "testRecovery")
     public String bulkhead() {
         throw new RuntimeException("Test");
     }
 
-    @RateLimiter(name = RecoveryTestService.BACKEND, recovery = TestRecovery.class)
+    @RateLimiter(name = RecoveryTestService.BACKEND, recovery = "testRecovery")
     public String rateLimiter() {
         throw new RuntimeException("Test");
     }
 
-    @Retry(name = RecoveryTestService.BACKEND, recovery = TestRecovery.class)
+    @Retry(name = RecoveryTestService.BACKEND, recovery = "testRecovery")
     public String retry() {
         throw new RuntimeException("Test");
     }
 
-    @Retry(name = RecoveryTestService.BACKEND, recovery = TestRecovery.class)
+    @Retry(name = RecoveryTestService.BACKEND, recovery = "testRecovery")
     public CompletionStage<String> asyncRetry() {
-        throw new RuntimeException("Test");
+        CompletableFuture<String> future = new CompletableFuture<>();
+        future.completeExceptionally(new RuntimeException("Test"));
+
+        return future;
     }
 
-    public static class TestRecovery implements RecoveryFunction<String> {
-        @Override
-        public String apply(Throwable throwable) throws Throwable {
-            return "recovered";
-        }
+    public String testRecovery(Throwable throwable) {
+        return "recovered";
     }
 
-    public static class FluxTestRecovery implements RecoveryFunction<Flux<String>> {
-        @Override
-        public Flux<String> apply(Throwable throwable) throws Throwable {
-            return Flux.just("recovered");
-        }
+    public Flux<String> fluxTestRecovery(Throwable throwable) {
+        return Flux.just("recovered");
+    }
+
+    public Mono<String> monoTestRecovery(String parameter, Throwable throwable) {
+        return Mono.just(parameter);
+    }
+
+    public Observable<String> observableTestRecovery(Throwable throwable) {
+        return Observable.just("recovered");
+    }
+
+    public Single<String> singleTestRecovery(Throwable throwable) {
+        return Single.just("recovered");
+    }
+
+    public Completable completableTestRecovery(Throwable throwable) {
+        return Completable.complete();
+    }
+
+    public Maybe<String> maybeTestRecovery(Throwable throwable) {
+        return Maybe.just("recovered");
+    }
+
+    public Flowable<String> flowableTestRecovery(Throwable throwable) {
+        return Flowable.just("recovered");
     }
 }

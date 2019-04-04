@@ -18,9 +18,8 @@ package io.github.resilience4j.bulkhead.configure;
 import io.github.resilience4j.bulkhead.BulkheadRegistry;
 import io.github.resilience4j.bulkhead.annotation.Bulkhead;
 import io.github.resilience4j.bulkhead.utils.BulkheadUtils;
-import io.github.resilience4j.recovery.RecoveryFunction;
 import io.github.resilience4j.utils.AnnotationExtractor;
-import io.github.resilience4j.utils.RecoveryFunctionUtils;
+import io.github.resilience4j.utils.RecoveryUtils;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -89,7 +88,7 @@ public class BulkheadAspect implements Ordered {
 	}
 
 	@SuppressWarnings("unchecked")
-	private Object handleJoinPoint(ProceedingJoinPoint proceedingJoinPoint, io.github.resilience4j.bulkhead.Bulkhead  bulkhead, Class<? extends RecoveryFunction> recoveryFunctionClass, String methodName) throws Throwable {
+	private Object handleJoinPoint(ProceedingJoinPoint proceedingJoinPoint, io.github.resilience4j.bulkhead.Bulkhead  bulkhead, String recoveryMethodName, String methodName) throws Throwable {
 		BulkheadUtils.isCallPermitted(bulkhead);
 		try {
 			return proceedingJoinPoint.proceed();
@@ -98,8 +97,7 @@ public class BulkheadAspect implements Ordered {
 				logger.debug("Invocation of method '" + methodName + "' failed!", throwable);
 			}
 
-			RecoveryFunction recovery = RecoveryFunctionUtils.getInstance(recoveryFunctionClass);
-			return recovery.apply(throwable);
+			return RecoveryUtils.invoke(recoveryMethodName, proceedingJoinPoint.getArgs(), throwable, proceedingJoinPoint.getThis());
 		} finally {
 			bulkhead.onComplete();
 		}
