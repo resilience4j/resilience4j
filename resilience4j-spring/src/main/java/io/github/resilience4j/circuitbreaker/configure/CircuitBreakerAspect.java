@@ -33,7 +33,6 @@ import org.springframework.core.Ordered;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerOpenException;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
-import io.github.resilience4j.circuitbreaker.utils.CircuitBreakerUtils;
 import io.github.resilience4j.utils.AnnotationExtractor;
 
 /**
@@ -77,7 +76,7 @@ public class CircuitBreakerAspect implements Ordered {
 				}
 			}
 		} else if (CompletionStage.class.isAssignableFrom(returnType)) {
-			return defaultCompletionStage(proceedingJoinPoint, circuitBreaker);
+			return handleJoinPointCompletableFuture(proceedingJoinPoint, circuitBreaker);
 		}
 		return defaultHandling(proceedingJoinPoint, circuitBreaker, methodName);
 	}
@@ -107,7 +106,7 @@ public class CircuitBreakerAspect implements Ordered {
 	 * handle the CompletionStage return types AOP based into configured circuit-breaker
 	 */
 	@SuppressWarnings("unchecked")
-	private Object defaultCompletionStage(ProceedingJoinPoint proceedingJoinPoint, io.github.resilience4j.circuitbreaker.CircuitBreaker circuitBreaker) throws Throwable {
+	private Object handleJoinPointCompletableFuture(ProceedingJoinPoint proceedingJoinPoint, io.github.resilience4j.circuitbreaker.CircuitBreaker circuitBreaker) throws Throwable {
 
 		final CompletableFuture promise = new CompletableFuture<>();
 		long start = System.nanoTime();
@@ -117,25 +116,19 @@ public class CircuitBreakerAspect implements Ordered {
 							String.format("CircuitBreaker '%s' is open", circuitBreaker.getName())));
 
 		} else {
-			try {
-				CompletionStage<?> result = (CompletionStage<?>) proceedingJoinPoint.proceed();
-				if (result != null) {
-					result.whenComplete((v, t) -> {
-						long durationInNanos = System.nanoTime() - start;
-						if (t != null) {
-							circuitBreaker.onError(durationInNanos, t);
-							promise.completeExceptionally(t);
+			CompletionStage<?> result = (CompletionStage<?>) proceedingJoinPoint.proceed();
+			if (result != null) {
+				result.whenComplete((v, t) -> {
+					long durationInNanos = System.nanoTime() - start;
+					if (t != null) {
+						circuitBreaker.onError(durationInNanos, t);
+						promise.completeExceptionally(t);
 
-						} else {
-							circuitBreaker.onSuccess(durationInNanos);
-							promise.complete(v);
-						}
-					});
-				}
-			} catch (Exception e) {
-				long durationInNanos = System.nanoTime() - start;
-				circuitBreaker.onError(durationInNanos, e);
-				throw e;
+					} else {
+						circuitBreaker.onSuccess(durationInNanos);
+						promise.complete(v);
+					}
+				});
 			}
 		}
 		return promise;
@@ -145,21 +138,7 @@ public class CircuitBreakerAspect implements Ordered {
 	 * the default Java types handling for the circuit breaker AOP
 	 */
 	private Object defaultHandling(ProceedingJoinPoint proceedingJoinPoint, io.github.resilience4j.circuitbreaker.CircuitBreaker circuitBreaker, String methodName) throws Throwable {
-		CircuitBreakerUtils.isCallPermitted(circuitBreaker);
-		long start = System.nanoTime();
-		try {
-			Object returnValue = proceedingJoinPoint.proceed();
-			long durationInNanos = System.nanoTime() - start;
-			circuitBreaker.onSuccess(durationInNanos);
-			return returnValue;
-		} catch (Throwable throwable) {
-			long durationInNanos = System.nanoTime() - start;
-			circuitBreaker.onError(durationInNanos, throwable);
-			if (logger.isDebugEnabled()) {
-				logger.debug("Invocation of method '" + methodName + "' failed!", throwable);
-			}
-			throw throwable;
-		}
+		return circuitBreaker.executeCheckedSupplier(proceedingJoinPoint::proceed);
 	}
 
 	@Override
