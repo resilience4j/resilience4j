@@ -17,14 +17,15 @@ package io.github.resilience4j.ratelimiter.monitoring.model;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 
+import io.github.resilience4j.core.lang.Nullable;
 import io.github.resilience4j.ratelimiter.event.RateLimiterEvent;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class RateLimiterEventDTO {
 
-    private String rateLimiterName;
-    private RateLimiterEvent.Type rateLimiterEventType;
-    private String rateLimiterCreationTime;
+    @Nullable private String rateLimiterName;
+    @Nullable private RateLimiterEvent.Type rateLimiterEventType;
+    @Nullable private String rateLimiterCreationTime;
 
     public static RateLimiterEventDTO createRateLimiterEventDTO(RateLimiterEvent rateLimiterEvent) {
         RateLimiterEventDTO dto = new RateLimiterEventDTO();
@@ -34,27 +35,30 @@ public class RateLimiterEventDTO {
         return dto;
     }
 
+    @Nullable
     public String getRateLimiterName() {
         return rateLimiterName;
     }
 
-    public void setRateLimiterName(String rateLimiterName) {
+    public void setRateLimiterName(@Nullable String rateLimiterName) {
         this.rateLimiterName = rateLimiterName;
     }
 
+    @Nullable
     public RateLimiterEvent.Type getRateLimiterEventType() {
         return rateLimiterEventType;
     }
 
-    public void setRateLimiterEventType(RateLimiterEvent.Type rateLimiterEventType) {
+    public void setRateLimiterEventType(@Nullable RateLimiterEvent.Type rateLimiterEventType) {
         this.rateLimiterEventType = rateLimiterEventType;
     }
 
+    @Nullable
     public String getRateLimiterCreationTime() {
         return rateLimiterCreationTime;
     }
 
-    public void setRateLimiterCreationTime(String rateLimiterCreationTime) {
+    public void setRateLimiterCreationTime(@Nullable String rateLimiterCreationTime) {
         this.rateLimiterCreationTime = rateLimiterCreationTime;
     }
 }

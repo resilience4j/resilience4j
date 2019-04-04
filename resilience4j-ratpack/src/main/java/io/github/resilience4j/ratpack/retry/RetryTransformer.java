@@ -15,6 +15,7 @@
  */
 package io.github.resilience4j.ratpack.retry;
 
+import io.github.resilience4j.core.lang.Nullable;
 import io.github.resilience4j.ratpack.internal.AbstractTransformer;
 import io.github.resilience4j.retry.Retry;
 import ratpack.exec.Downstream;
@@ -47,7 +48,7 @@ public class RetryTransformer<T> extends AbstractTransformer<T> {
      * @param recoverer the recovery function
      * @return the transformer
      */
-    public RetryTransformer<T> recover(Function<Throwable, ? extends T> recoverer) {
+    public RetryTransformer<T> recover(@Nullable Function<Throwable, ? extends T> recoverer) {
         this.recoverer = recoverer;
         return this;
     }

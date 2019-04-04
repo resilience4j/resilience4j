@@ -15,9 +15,12 @@
  */
 package io.github.resilience4j.ratpack.bulkhead.endpoint;
 
+import io.github.resilience4j.core.lang.Nullable;
+
 import java.util.List;
 
 public class BulkheadEventsEndpointResponse {
+    @Nullable
     private List<BulkheadEventDTO> bulkheadEvents;
 
     public BulkheadEventsEndpointResponse() {
@@ -27,6 +30,7 @@ public class BulkheadEventsEndpointResponse {
         this.bulkheadEvents = bulkheadEvents;
     }
 
+    @Nullable
     public List<BulkheadEventDTO> getBulkheadEvents() {
         return bulkheadEvents;
     }

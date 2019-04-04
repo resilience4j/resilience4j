@@ -4,6 +4,7 @@ import io.github.resilience4j.adapter.Permit;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerOpenException;
 import io.github.resilience4j.core.StopWatch;
+import io.github.resilience4j.core.lang.Nullable;
 import io.reactivex.internal.subscriptions.SubscriptionHelper;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
@@ -22,6 +23,7 @@ final class CircuitBreakerSubscriber<T> extends AtomicReference<Subscription> im
     private final CircuitBreaker circuitBreaker;
     private final Subscriber<? super T> childSubscriber;
     private final AtomicReference<Permit> permitted = new AtomicReference<>(Permit.PENDING);
+    @Nullable
     private StopWatch stopWatch;
 
     CircuitBreakerSubscriber(CircuitBreaker circuitBreaker, Subscriber<? super T> childSubscriber) {

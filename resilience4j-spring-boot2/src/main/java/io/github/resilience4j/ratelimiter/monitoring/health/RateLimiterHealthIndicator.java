@@ -28,7 +28,7 @@ public class RateLimiterHealthIndicator implements HealthIndicator {
 
     public RateLimiterHealthIndicator(RateLimiter rateLimiter) {
         this.rateLimiter = rateLimiter;
-        timeoutInNanos = rateLimiter.getRateLimiterConfig().getTimeoutDuration().toNanos();
+        this.timeoutInNanos = rateLimiter.getRateLimiterConfig().getTimeoutDuration().toNanos();
     }
 
     @Override
