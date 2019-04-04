@@ -49,6 +49,19 @@ public class CircuitBreakerStateMachineTest {
     }
 
     @Test
+    public void shouldOnlyAllowThreeTestRequests() {
+        assertThatMetricsAreReset();
+        circuitBreaker.transitionToOpenState();
+        circuitBreaker.transitionToHalfOpenState();
+        assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.HALF_OPEN);
+        assertThat(circuitBreaker.isCallPermitted()).isEqualTo(true);
+        assertThat(circuitBreaker.isCallPermitted()).isEqualTo(true);
+        assertThat(circuitBreaker.isCallPermitted()).isEqualTo(true);
+        assertThat(circuitBreaker.isCallPermitted()).isEqualTo(false);
+        assertThat(circuitBreaker.isCallPermitted()).isEqualTo(false);
+    }
+
+    @Test
     public void testCircuitBreakerStateMachine() throws InterruptedException {
         // A ring buffer with size 5 is used in closed state
         // Initially the CircuitBreaker is closed
