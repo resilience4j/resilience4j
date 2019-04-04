@@ -74,7 +74,8 @@ public class BulkheadAspect implements Ordered {
 					return bulkHeadAspectExt.handle(proceedingJoinPoint, bulkhead, methodName);
 				}
 			}
-		} else if (CompletionStage.class.isAssignableFrom(returnType)) {
+		}
+		if (CompletionStage.class.isAssignableFrom(returnType)) {
 			return handleJoinPointCompletableFuture(proceedingJoinPoint, bulkhead, methodName);
 		}
 		return handleJoinPoint(proceedingJoinPoint, bulkhead, methodName);

@@ -41,7 +41,6 @@ import io.github.resilience4j.service.test.retry.ReactiveRetryDummyService;
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
 		classes = TestApplication.class)
-@DirtiesContext
 public class RetryAutoConfigurationRxJavaTest {
 
 	@Autowired
@@ -64,6 +63,7 @@ public class RetryAutoConfigurationRxJavaTest {
 	 * that the Retry logic is properly handled
 	 */
 	@Test
+	@DirtiesContext
 	public void testRetryAutoConfigurationRxJava2() throws IOException {
 		assertThat(retryRegistry).isNotNull();
 		assertThat(retryProperties).isNotNull();
