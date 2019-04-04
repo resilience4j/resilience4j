@@ -1,4 +1,4 @@
-package io.github.resilience4j.service.test;
+package io.github.resilience4j.service.test.retry;
 
 
 import java.io.IOException;

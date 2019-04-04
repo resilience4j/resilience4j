@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 lespinsideg
+ * Copyright 2019 lespinsideg, Mahmoud Romeh
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,111 +15,228 @@
  */
 package io.github.resilience4j.bulkhead;
 
-import io.github.resilience4j.bulkhead.autoconfigure.BulkheadProperties;
-import io.github.resilience4j.bulkhead.configure.BulkheadAspect;
-import io.github.resilience4j.bulkhead.event.BulkheadEvent;
-import io.github.resilience4j.bulkhead.monitoring.endpoint.BulkheadEndpointResponse;
-import io.github.resilience4j.bulkhead.monitoring.endpoint.BulkheadEventDTO;
-import io.github.resilience4j.bulkhead.monitoring.endpoint.BulkheadEventsEndpointResponse;
-import io.github.resilience4j.service.test.BulkheadDummyService;
-import io.github.resilience4j.service.test.DummyService;
-import io.github.resilience4j.service.test.TestApplication;
+import static com.jayway.awaitility.Awaitility.await;
+import static org.assertj.core.api.Assertions.assertThat;
+
+import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.ResponseEntity;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import java.io.IOException;
-import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
-
-import static com.jayway.awaitility.Awaitility.await;
-import static org.assertj.core.api.Assertions.assertThat;
+import io.github.resilience4j.bulkhead.autoconfigure.BulkheadProperties;
+import io.github.resilience4j.bulkhead.configure.BulkheadAspect;
+import io.github.resilience4j.bulkhead.event.BulkheadEvent;
+import io.github.resilience4j.bulkhead.monitoring.endpoint.BulkheadEndpointResponse;
+import io.github.resilience4j.bulkhead.monitoring.endpoint.BulkheadEventDTO;
+import io.github.resilience4j.bulkhead.monitoring.endpoint.BulkheadEventsEndpointResponse;
+import io.github.resilience4j.service.test.TestApplication;
+import io.github.resilience4j.service.test.bulkhead.BulkheadDummyService;
+import io.github.resilience4j.service.test.bulkhead.BulkheadReactiveDummyService;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-    classes = TestApplication.class)
+		classes = TestApplication.class)
 public class BulkheadAutoConfigurationTest {
 
-    @Autowired
-    private BulkheadRegistry bulkheadRegistry;
+	@Autowired
+	private BulkheadRegistry bulkheadRegistry;
 
-    @Autowired
-    private BulkheadProperties bulkheadProperties;
+	@Autowired
+	private BulkheadProperties bulkheadProperties;
 
-    @Autowired
-    private BulkheadAspect bulkheadAspect;
+	@Autowired
+	private BulkheadAspect bulkheadAspect;
 
-    @Autowired
-    private BulkheadDummyService dummyService;
+	@Autowired
+	private BulkheadDummyService dummyService;
 
-    @Autowired
-    private TestRestTemplate restTemplate;
+	@Autowired
+	private BulkheadReactiveDummyService reactiveDummyService;
 
-    /**
-     * The test verifies that a Bulkhead instance is created and configured properly when the BulkheadDummyService is invoked and
-     * that the Bulkhead records permitted and rejected calls.
-     */
-    @Test
-    public void testBulkheadAutoConfiguration() throws IOException {
-        ExecutorService es = Executors.newFixedThreadPool(5);
 
-        assertThat(bulkheadRegistry).isNotNull();
-        assertThat(bulkheadProperties).isNotNull();
+	@Autowired
+	private TestRestTemplate restTemplate;
 
-        Bulkhead bulkhead = bulkheadRegistry.bulkhead(BulkheadDummyService.BACKEND);
-        assertThat(bulkhead).isNotNull();
+	/**
+	 * The test verifies that a Bulkhead instance is created and configured properly when the BulkheadDummyService is invoked and
+	 * that the Bulkhead records permitted and rejected calls.
+	 */
+	@Test
+	@DirtiesContext
+	public void testBulkheadAutoConfiguration() {
+		ExecutorService es = Executors.newFixedThreadPool(5);
 
-        es.submit(dummyService::doSomething);
-        es.submit(dummyService::doSomething);
-        es.submit(dummyService::doSomething);
-        es.submit(dummyService::doSomething);
+		assertThat(bulkheadRegistry).isNotNull();
+		assertThat(bulkheadProperties).isNotNull();
 
-        await()
-                .atMost(1, TimeUnit.SECONDS)
-                .until(() -> bulkhead.getMetrics().getAvailableConcurrentCalls() == 0);
+		Bulkhead bulkhead = bulkheadRegistry.bulkhead(BulkheadDummyService.BACKEND);
+		assertThat(bulkhead).isNotNull();
 
-        assertThat(bulkhead.getBulkheadConfig().getMaxWaitTime()).isEqualTo(0);
-        assertThat(bulkhead.getBulkheadConfig().getMaxConcurrentCalls()).isEqualTo(1);
+		es.submit(dummyService::doSomething);
+		es.submit(dummyService::doSomething);
+		es.submit(dummyService::doSomething);
+		es.submit(dummyService::doSomething);
 
-        await()
-                .atMost(2, TimeUnit.SECONDS)
-                .until(() -> bulkhead.getMetrics().getAvailableConcurrentCalls() == 1);
-        // Test Actuator endpoints
+		await()
+				.atMost(1, TimeUnit.SECONDS)
+				.until(() -> bulkhead.getMetrics().getAvailableConcurrentCalls() == 0);
 
-        ResponseEntity<BulkheadEndpointResponse> bulkheadList = restTemplate.getForEntity("/actuator/bulkheads", BulkheadEndpointResponse.class);
-        assertThat(bulkheadList.getBody().getBulkheads()).hasSize(2).containsExactly("backendA", "backendB");
+		assertThat(bulkhead.getBulkheadConfig().getMaxWaitTime()).isEqualTo(0);
+		assertThat(bulkhead.getBulkheadConfig().getMaxConcurrentCalls()).isEqualTo(1);
 
-        for (int i = 0; i < 5; i++) {
-            es.submit(dummyService::doSomething);
-        }
+		await()
+				.atMost(1, TimeUnit.SECONDS)
+				.until(() -> bulkhead.getMetrics().getAvailableConcurrentCalls() == 1);
+		// Test Actuator endpoints
 
-        await()
-                .atMost(2, TimeUnit.SECONDS)
-                .until(() -> bulkhead.getMetrics().getAvailableConcurrentCalls() == 1);
+		ResponseEntity<BulkheadEndpointResponse> bulkheadList = restTemplate.getForEntity("/actuator/bulkheads", BulkheadEndpointResponse.class);
+		assertThat(bulkheadList.getBody().getBulkheads()).hasSize(2).containsExactly("backendA", "backendB");
 
-        ResponseEntity<BulkheadEventsEndpointResponse> bulkheadEventList = restTemplate.getForEntity("/actuator/bulkheadevents", BulkheadEventsEndpointResponse.class);
-        List<BulkheadEventDTO> bulkheadEvents = bulkheadEventList.getBody().getBulkheadEvents();
+		for (int i = 0; i < 5; i++) {
+			es.submit(dummyService::doSomething);
+		}
 
-        assertThat(bulkheadEvents).isNotEmpty();
-        assertThat(bulkheadEvents.get(bulkheadEvents.size() - 1).getType()).isEqualTo(BulkheadEvent.Type.CALL_FINISHED);
-        assertThat(bulkheadEvents.get(bulkheadEvents.size() - 2).getType()).isEqualTo(BulkheadEvent.Type.CALL_REJECTED);
+		await()
+				.atMost(1, TimeUnit.SECONDS)
+				.until(() -> bulkhead.getMetrics().getAvailableConcurrentCalls() == 1);
 
-        bulkheadEventList = restTemplate.getForEntity("/actuator/bulkheadevents/backendA", BulkheadEventsEndpointResponse.class);
-        List<BulkheadEventDTO> bulkheadEventsByBackend = bulkheadEventList.getBody().getBulkheadEvents();
+		ResponseEntity<BulkheadEventsEndpointResponse> bulkheadEventList = restTemplate.getForEntity("/actuator/bulkheadevents", BulkheadEventsEndpointResponse.class);
+		List<BulkheadEventDTO> bulkheadEvents = bulkheadEventList.getBody().getBulkheadEvents();
 
-        assertThat(bulkheadEventsByBackend).hasSameSizeAs(bulkheadEvents);
-        assertThat(bulkheadEventsByBackend.get(bulkheadEvents.size() - 1).getType()).isEqualTo(BulkheadEvent.Type.CALL_FINISHED);
-        assertThat(bulkheadEventsByBackend).filteredOn(it -> it.getType() == BulkheadEvent.Type.CALL_REJECTED)
-                .isNotEmpty();
+		assertThat(bulkheadEvents).isNotEmpty();
+		assertThat(bulkheadEvents.get(bulkheadEvents.size() - 1).getType()).isEqualTo(BulkheadEvent.Type.CALL_FINISHED);
+		assertThat(bulkheadEvents.get(bulkheadEvents.size() - 2).getType()).isEqualTo(BulkheadEvent.Type.CALL_REJECTED);
 
-        assertThat(bulkheadAspect.getOrder()).isEqualTo(398);
+		bulkheadEventList = restTemplate.getForEntity("/actuator/bulkheadevents/backendA", BulkheadEventsEndpointResponse.class);
+		List<BulkheadEventDTO> bulkheadEventsByBackend = bulkheadEventList.getBody().getBulkheadEvents();
 
-        es.shutdown();
-    }
+		assertThat(bulkheadEventsByBackend).hasSameSizeAs(bulkheadEvents);
+		assertThat(bulkheadEventsByBackend.get(bulkheadEvents.size() - 1).getType()).isEqualTo(BulkheadEvent.Type.CALL_FINISHED);
+		assertThat(bulkheadEventsByBackend).filteredOn(it -> it.getType() == BulkheadEvent.Type.CALL_REJECTED)
+				.isNotEmpty();
+
+		assertThat(bulkheadAspect.getOrder()).isEqualTo(398);
+
+		es.shutdown();
+	}
+
+	/**
+	 * The test verifies that a Bulkhead instance is created and configured properly when the BulkheadReactiveDummyService is invoked and
+	 * that the Bulkhead records permitted and rejected calls.
+	 */
+	@Test
+	@DirtiesContext
+	public void testBulkheadAutoConfigurationRxJava2() {
+		ExecutorService es = Executors.newFixedThreadPool(5);
+		assertThat(bulkheadRegistry).isNotNull();
+		assertThat(bulkheadProperties).isNotNull();
+
+		Bulkhead bulkhead = bulkheadRegistry.bulkhead(BulkheadReactiveDummyService.BACKEND);
+		assertThat(bulkhead).isNotNull();
+
+		for (int i = 0; i < 5; i++) {
+			es.submit(new Thread(() -> reactiveDummyService.doSomethingFlowable()
+					.subscribe(String::toUpperCase, throwable -> System.out.println("Bulkhead Exception received: " + throwable.getMessage()))));
+		}
+		await()
+				.atMost(1200, TimeUnit.MILLISECONDS)
+				.until(() -> bulkhead.getMetrics().getAvailableConcurrentCalls() == 0);
+
+		await()
+				.atMost(1000, TimeUnit.MILLISECONDS)
+				.until(() -> bulkhead.getMetrics().getAvailableConcurrentCalls() == 2);
+
+		for (int i = 0; i < 5; i++) {
+			es.submit(new Thread(() -> reactiveDummyService.doSomethingFlowable()
+					.subscribe(String::toUpperCase, throwable -> System.out.println("Bulkhead Exception received: " + throwable.getMessage()))));
+		}
+
+		await()
+				.atMost(1000, TimeUnit.MILLISECONDS)
+				.until(() -> bulkhead.getMetrics().getAvailableConcurrentCalls() == 2);
+
+		assertThat(bulkhead.getBulkheadConfig().getMaxWaitTime()).isEqualTo(10);
+		assertThat(bulkhead.getBulkheadConfig().getMaxConcurrentCalls()).isEqualTo(2);
+		commonAssertions();
+
+		es.shutdown();
+	}
+
+
+	/**
+	 * The test verifies that a Bulkhead instance is created and configured properly when the BulkheadReactiveDummyService is invoked and
+	 * that the Bulkhead records permitted and rejected calls.
+	 */
+	@Test
+	@DirtiesContext
+	public void testBulkheadAutoConfigurationReactor() {
+		ExecutorService es = Executors.newFixedThreadPool(5);
+		assertThat(bulkheadRegistry).isNotNull();
+		assertThat(bulkheadProperties).isNotNull();
+
+		Bulkhead bulkhead = bulkheadRegistry.bulkhead(BulkheadReactiveDummyService.BACKEND);
+		assertThat(bulkhead).isNotNull();
+
+		for (int i = 0; i < 5; i++) {
+			es.submit(new Thread(() -> reactiveDummyService.doSomethingFlux()
+					.subscribe(String::toUpperCase, throwable -> System.out.println("Bulkhead Exception received: " + throwable.getMessage()))));
+		}
+		await()
+				.atMost(1200, TimeUnit.MILLISECONDS)
+				.until(() -> bulkhead.getMetrics().getAvailableConcurrentCalls() == 0);
+
+		await()
+				.atMost(1000, TimeUnit.MILLISECONDS)
+				.until(() -> bulkhead.getMetrics().getAvailableConcurrentCalls() == 2);
+
+		for (int i = 0; i < 5; i++) {
+			es.submit(new Thread(() -> reactiveDummyService.doSomethingFlux()
+					.subscribe(String::toUpperCase, throwable -> System.out.println("Bulkhead Exception received: " + throwable.getMessage()))));
+		}
+
+		await()
+				.atMost(1000, TimeUnit.MILLISECONDS)
+				.until(() -> bulkhead.getMetrics().getAvailableConcurrentCalls() == 2);
+
+		commonAssertions();
+		assertThat(bulkhead.getBulkheadConfig().getMaxWaitTime()).isEqualTo(10);
+		assertThat(bulkhead.getBulkheadConfig().getMaxConcurrentCalls()).isEqualTo(2);
+
+		es.shutdown();
+	}
+
+	private void commonAssertions() {
+		// Test Actuator endpoints
+
+		ResponseEntity<BulkheadEndpointResponse> bulkheadList = restTemplate.getForEntity("/actuator/bulkheads", BulkheadEndpointResponse.class);
+		assertThat(bulkheadList.getBody().getBulkheads()).hasSize(2).containsExactly("backendA", "backendB");
+
+		ResponseEntity<BulkheadEventsEndpointResponse> bulkheadEventList = restTemplate.getForEntity("/actuator/bulkheadevents", BulkheadEventsEndpointResponse.class);
+		List<BulkheadEventDTO> bulkheadEvents = bulkheadEventList.getBody().getBulkheadEvents();
+
+		assertThat(bulkheadEvents).isNotEmpty();
+		assertThat(bulkheadEvents.get(bulkheadEvents.size() - 1).getType()).isEqualTo(BulkheadEvent.Type.CALL_FINISHED);
+		assertThat(bulkheadEvents.get(bulkheadEvents.size() - 2).getType()).isEqualTo(BulkheadEvent.Type.CALL_FINISHED);
+		assertThat(bulkheadEvents.get(bulkheadEvents.size() - 3).getType()).isEqualTo(BulkheadEvent.Type.CALL_REJECTED);
+		assertThat(bulkheadEvents.get(bulkheadEvents.size() - 4).getType()).isEqualTo(BulkheadEvent.Type.CALL_REJECTED);
+
+		bulkheadEventList = restTemplate.getForEntity("/actuator/bulkheadevents/backendB", BulkheadEventsEndpointResponse.class);
+		List<BulkheadEventDTO> bulkheadEventsByBackend = bulkheadEventList.getBody().getBulkheadEvents();
+
+		assertThat(bulkheadEventsByBackend).hasSameSizeAs(bulkheadEvents);
+		assertThat(bulkheadEventsByBackend.get(bulkheadEvents.size() - 1).getType()).isEqualTo(BulkheadEvent.Type.CALL_FINISHED);
+		assertThat(bulkheadEventsByBackend).filteredOn(it -> it.getType() == BulkheadEvent.Type.CALL_REJECTED)
+				.isNotEmpty();
+
+		assertThat(bulkheadAspect.getOrder()).isEqualTo(398);
+	}
 }

@@ -12,24 +12,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.resilience4j.circuitbreaker.configure;
+package io.github.resilience4j.utils;
 
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.function.Consumer;
 
 import org.springframework.context.annotation.ConditionContext;
 
 /**
- * common CircuitBreakerAspect util methods
+ * common Aspect util methods
  */
-public class CircuitBreakerAspectUtil {
+public class AspectUtil {
+
+	private AspectUtil() {
+	}
 
 	/**
 	 * @param context           the spring condition context
-	 * @param classToCheck      the class to check in spring class laoder
+	 * @param classToCheck      the class to check in spring class loader
 	 * @param exceptionConsumer the custom exception consumer
 	 * @return true or false if the class is found or not
 	 */
-	static boolean checkClassIfFound(ConditionContext context, String classToCheck, Consumer<Exception> exceptionConsumer) {
+	public static boolean checkClassIfFound(ConditionContext context, String classToCheck, Consumer<Exception> exceptionConsumer) {
 		try {
 			final Class<?> aClass = context.getClassLoader().loadClass(classToCheck);
 			return aClass != null;
@@ -37,5 +43,12 @@ public class CircuitBreakerAspectUtil {
 			exceptionConsumer.accept(e);
 			return false;
 		}
+	}
+
+	@SafeVarargs
+	public static <T> Set<T> newHashSet(T... objs) {
+		Set<T> set = new HashSet<>();
+		Collections.addAll(set, objs);
+		return Collections.unmodifiableSet(set);
 	}
 }
