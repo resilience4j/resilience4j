@@ -20,6 +20,7 @@ package io.github.resilience4j.circuitbreaker.internal;
 
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
+import io.github.resilience4j.core.lang.Nullable;
 
 final class ClosedState extends CircuitBreakerState {
 
@@ -30,7 +31,7 @@ final class ClosedState extends CircuitBreakerState {
         this(stateMachine, null);
     }
 
-    ClosedState(CircuitBreakerStateMachine stateMachine, CircuitBreakerMetrics circuitBreakerMetrics) {
+    ClosedState(CircuitBreakerStateMachine stateMachine, @Nullable CircuitBreakerMetrics circuitBreakerMetrics) {
         super(stateMachine);
         CircuitBreakerConfig circuitBreakerConfig = stateMachine.getCircuitBreakerConfig();
         if(circuitBreakerMetrics == null){

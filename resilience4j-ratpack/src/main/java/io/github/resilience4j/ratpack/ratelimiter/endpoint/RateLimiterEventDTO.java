@@ -16,13 +16,17 @@
 package io.github.resilience4j.ratpack.ratelimiter.endpoint;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import io.github.resilience4j.core.lang.Nullable;
 import io.github.resilience4j.ratelimiter.event.RateLimiterEvent;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class RateLimiterEventDTO {
 
+    @Nullable
     private String rateLimiterName;
+    @Nullable
     private RateLimiterEvent.Type rateLimiterEventType;
+    @Nullable
     private String rateLimiterCreationTime;
 
     public static RateLimiterEventDTO createRateLimiterEventDTO(RateLimiterEvent rateLimiterEvent) {
@@ -33,6 +37,7 @@ public class RateLimiterEventDTO {
         return dto;
     }
 
+    @Nullable
     public String getRateLimiterName() {
         return rateLimiterName;
     }
@@ -41,6 +46,7 @@ public class RateLimiterEventDTO {
         this.rateLimiterName = rateLimiterName;
     }
 
+    @Nullable
     public RateLimiterEvent.Type getRateLimiterEventType() {
         return rateLimiterEventType;
     }
@@ -49,6 +55,7 @@ public class RateLimiterEventDTO {
         this.rateLimiterEventType = rateLimiterEventType;
     }
 
+    @Nullable
     public String getRateLimiterCreationTime() {
         return rateLimiterCreationTime;
     }

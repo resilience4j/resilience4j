@@ -18,13 +18,15 @@
  */
 package io.github.resilience4j.core;
 
+import io.github.resilience4j.core.lang.Nullable;
+
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 public class EventProcessor<T> implements EventPublisher<T> {
 
     protected volatile boolean consumerRegistered;
-    private volatile EventConsumer<T> onEventConsumer;
+    @Nullable private volatile EventConsumer<T> onEventConsumer;
     private ConcurrentMap<Class<? extends T>, EventConsumer<Object>> eventConsumers = new ConcurrentHashMap<>();
 
     public boolean hasConsumers(){
@@ -40,6 +42,7 @@ public class EventProcessor<T> implements EventPublisher<T> {
     @SuppressWarnings("unchecked")
     public <E extends T> boolean processEvent(E event) {
         boolean consumed = false;
+        EventConsumer<T> onEventConsumer = this.onEventConsumer;
         if(onEventConsumer != null){
             onEventConsumer.consumeEvent(event);
             consumed = true;
@@ -55,7 +58,7 @@ public class EventProcessor<T> implements EventPublisher<T> {
     }
 
     @Override
-    public void onEvent(EventConsumer<T> onEventConsumer) {
+    public void onEvent(@Nullable EventConsumer<T> onEventConsumer) {
         consumerRegistered = true;
         this.onEventConsumer = onEventConsumer;
     }

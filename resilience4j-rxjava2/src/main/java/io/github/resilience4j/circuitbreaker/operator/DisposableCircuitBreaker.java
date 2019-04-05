@@ -4,6 +4,7 @@ import io.github.resilience4j.adapter.Permit;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerOpenException;
 import io.github.resilience4j.core.StopWatch;
+import io.github.resilience4j.core.lang.Nullable;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.internal.disposables.DisposableHelper;
 
@@ -18,6 +19,7 @@ import static java.util.Objects.requireNonNull;
  */
 class DisposableCircuitBreaker<T> extends AtomicReference<Disposable> implements Disposable {
     private final CircuitBreaker circuitBreaker;
+    @Nullable
     private StopWatch stopWatch;
     private final AtomicReference<Permit> permitted = new AtomicReference<>(Permit.PENDING);
 

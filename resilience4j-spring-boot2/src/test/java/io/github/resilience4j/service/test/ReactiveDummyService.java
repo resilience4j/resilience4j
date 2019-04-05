@@ -27,7 +27,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 /**
- * reactive web service test using reactor types
+ * reactive web service test using reactor and RxJava 2 types
  */
 public interface ReactiveDummyService {
 	String BACKEND = "backendB";

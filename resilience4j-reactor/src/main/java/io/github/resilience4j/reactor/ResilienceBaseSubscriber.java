@@ -15,6 +15,7 @@
  */
 package io.github.resilience4j.reactor;
 
+import io.github.resilience4j.core.lang.Nullable;
 import org.reactivestreams.Subscription;
 import reactor.core.CoreSubscriber;
 import reactor.core.Disposable;
@@ -37,6 +38,7 @@ public abstract class ResilienceBaseSubscriber<T> implements CoreSubscriber<T>, 
 
     protected final CoreSubscriber<? super T> actual;
 
+    @Nullable
     private volatile Subscription subscription;
 
     private static final AtomicReferenceFieldUpdater<ResilienceBaseSubscriber, Subscription> S =
@@ -52,6 +54,8 @@ public abstract class ResilienceBaseSubscriber<T> implements CoreSubscriber<T>, 
      * Return current {@link Subscription}
      * @return current {@link Subscription}
      */
+
+    @Nullable
     protected Subscription upstream() {
         return subscription;
     }
