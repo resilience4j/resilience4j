@@ -2,7 +2,7 @@
 
 ==== Introduction
 
-This library comes with an in-memory `CircuitBreakerRegistry` based on a `ConcurrentHashMap` which provides thread safety and atomicity guarantees. You can use the CircuitBreakerRegistry to manage (create and retrieve) CircuitBreaker instances. You can create a CircuitBreakerRegistry with a default global `CircuitBreakerConfig` for all of your CircuitBreaker instances as follows.
+Resilience4j comes with an in-memory `CircuitBreakerRegistry` based on a `ConcurrentHashMap` which provides thread safety and atomicity guarantees. You can use the CircuitBreakerRegistry to manage (create and retrieve) CircuitBreaker instances. You can create a CircuitBreakerRegistry with a default global `CircuitBreakerConfig` for all of your CircuitBreaker instances as follows.
 
 ==== Set-Up
 [source,java,indent=0]
@@ -172,11 +172,13 @@ The CircuitBreaker provides an interface to monitor the current metrics.
 [source,java]
 ----
 CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
-// Returns the failure rate in percentage.
+// Returns the current failure rate in percentage.
 float failureRate = metrics.getFailureRate();
 // Returns the current number of buffered calls.
 int bufferedCalls = metrics.getNumberOfBufferedCalls();
 // Returns the current number of failed calls.
 int failedCalls = metrics.getNumberOfFailedCalls();
+// Returns the current number of not permitted calls when the CircuitBreaker is open.
+int failedCalls = metrics.getNumberOfNotPermittedCalls();
 ----
 

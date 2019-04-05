@@ -1,13 +1,12 @@
 package io.github.resilience4j.timelimiter;
 
+import io.vavr.control.Try;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.time.Duration;
 import java.util.concurrent.*;
 import java.util.function.Supplier;
-
-import io.vavr.control.Try;
 
 import static org.assertj.core.api.BDDAssertions.then;
 import static org.mockito.Mockito.mock;
@@ -37,26 +36,26 @@ public class TimeLimiterTest {
     }
 
     @Test
-    public void construction() throws Exception {
+    public void construction() {
         TimeLimiter timeLimiter = TimeLimiter.of(shortConfig);
         then(timeLimiter).isNotNull();
     }
 
     @Test
-    public void defaultConstruction() throws Exception {
+    public void defaultConstruction() {
         TimeLimiter timeLimiter = TimeLimiter.ofDefaults();
         then(timeLimiter).isNotNull();
     }
 
     @Test
-    public void durationConstruction() throws Exception {
+    public void durationConstruction() {
         TimeLimiter timeLimiter = TimeLimiter.of(SHORT_TIMEOUT);
         then(timeLimiter).isNotNull();
         then(timeLimiter.getTimeLimiterConfig().getTimeoutDuration()).isEqualTo(SHORT_TIMEOUT);
     }
 
     @Test
-    public void decorateFutureSupplier() throws Throwable {
+    public void decorateFutureSupplier() {
         when(timeLimiter.getTimeLimiterConfig()).thenReturn(shortConfig);
 
         Future<Integer> future = EXECUTOR_SERVICE.submit(() -> {

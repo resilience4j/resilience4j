@@ -2,6 +2,8 @@
 
 include::addon_guides/springboot.adoc[]
 
+include::addon_guides/springboot2.adoc[]
+
 include::addon_guides/ratpack.adoc[]
 
 include::addon_guides/retrofit.adoc[]

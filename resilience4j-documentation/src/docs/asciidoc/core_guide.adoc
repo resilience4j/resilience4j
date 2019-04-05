@@ -1,6 +1,6 @@
 == Usage Guide
 
-Resilience provides several core modules and add-on modules:
+Resilience provides several core modules:
 
 Core modules:
 
@@ -10,16 +10,6 @@ Core modules:
 * resilience4j-retry: Automatic retrying
 * resilience4j-cache: Response caching
 * resilience4j-timelimiter: Timeout handling
-
-Add-on modules
-
-* resilience4j-metrics: Dropwizard Metrics exporter
-* resilience4j-prometheus: Prometheus Metrics exporter
-* resilience4j-spring-boot: Spring Boot Starter
-* resilience4j-ratpack: Ratpack Starter
-* resilience4j-retrofit: Retrofit Call Adapter Factories
-* resilience4j-vertx: Vertx Future decorator
-* resilience4j-consumer: Circuit Buffer Event consumer
 
 include::core_guides/circuitbreaker.adoc[]
 include::core_guides/ratelimiter.adoc[]
