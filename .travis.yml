@@ -8,6 +8,7 @@ script:
 - "./gradlew clean check"
 after_success:
 - test $TRAVIS_BRANCH = "master" && ./gradlew artifactoryPublish -PbintrayUsername="${BINTRAY_USER}" -PbintrayApiKey="${BINTRAY_KEY}"
+- test $TRAVIS_BRANCH = "master" && ./gradlew publishGhPages
 before_cache:
 - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
 - rm -fr $HOME/.gradle/caches/*/plugin-resolution/
