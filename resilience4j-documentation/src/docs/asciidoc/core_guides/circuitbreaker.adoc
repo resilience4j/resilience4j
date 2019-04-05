@@ -101,7 +101,7 @@ In this example `map` is not invoked, because the CircuitBreaker is OPEN. The ca
 include::../../../../../resilience4j-circuitbreaker/src/test/java/io/github/resilience4j/circuitbreaker/CircuitBreakerTest.java[tags=shouldThrowCircuitBreakerOpenException]
 ----
 
-==== Reset
+===== Reset
 
 The CircuitBreaker supports resetting, returning to its original state while losing all the current metrics.
 
