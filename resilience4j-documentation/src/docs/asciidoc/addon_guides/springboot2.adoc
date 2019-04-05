@@ -192,7 +192,7 @@ The rules for Retry spring annotation usage  :
 Code example of retry and async retry annotation usage in Java Spring component :
 [source,java]
 ----
-@component
+@Component
 @Retry(name = RetryDummyService.BACKEND)
 public class RetryDummyServiceImpl implements RetryDummyService {
 
