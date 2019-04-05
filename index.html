@@ -515,8 +515,8 @@ table.CodeRay td.code>pre{padding:0}
 <h1>Resilience4j User Guide</h1>
 <div class="details">
 <span id="author" class="author">Robert Winkler</span><br>
-<span id="revnumber">version 0.13.2,</span>
-<span id="revdate">2019-03-21</span>
+<span id="revnumber">version 0.14.0,</span>
+<span id="revdate">2019-04-05</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">Table of Contents</div>
@@ -830,12 +830,12 @@ The <strong>groupId</strong> has been changed from <strong>io.github.robwin</str
     jCenter()
 }
 
-compile "io.github.resilience4j:resilience4j-circuitbreaker:0.13.2"
-compile "io.github.resilience4j:resilience4j-ratelimiter:0.13.2"
-compile "io.github.resilience4j:resilience4j-retry:0.13.2"
-compile "io.github.resilience4j:resilience4j-bulkhead:0.13.2"
-compile "io.github.resilience4j:resilience4j-cache:0.13.2"
-compile "io.github.resilience4j:resilience4j-timelimiter:0.13.2"</code></pre>
+compile "io.github.resilience4j:resilience4j-circuitbreaker:0.14.0"
+compile "io.github.resilience4j:resilience4j-ratelimiter:0.14.0"
+compile "io.github.resilience4j:resilience4j-retry:0.14.0"
+compile "io.github.resilience4j:resilience4j-bulkhead:0.14.0"
+compile "io.github.resilience4j:resilience4j-cache:0.14.0"
+compile "io.github.resilience4j:resilience4j-timelimiter:0.14.0"</code></pre>
 </div>
 </div>
 </div>
@@ -870,32 +870,32 @@ compile "io.github.resilience4j:resilience4j-timelimiter:0.13.2"</code></pre>
 <span class="tag">&lt;dependency&gt;</span>
     <span class="tag">&lt;groupId&gt;</span>io.github.resilience4j<span class="tag">&lt;/groupId&gt;</span>
     <span class="tag">&lt;artifactId&gt;</span>resilience4j-circuitbreaker<span class="tag">&lt;/artifactId&gt;</span>
-    <span class="tag">&lt;version&gt;</span>0.13.2<span class="tag">&lt;/version&gt;</span>
+    <span class="tag">&lt;version&gt;</span>0.14.0<span class="tag">&lt;/version&gt;</span>
 <span class="tag">&lt;/dependency&gt;</span>
 <span class="tag">&lt;dependency&gt;</span>
     <span class="tag">&lt;groupId&gt;</span>io.github.resilience4j<span class="tag">&lt;/groupId&gt;</span>
     <span class="tag">&lt;artifactId&gt;</span>resilience4j-ratelimiter<span class="tag">&lt;/artifactId&gt;</span>
-    <span class="tag">&lt;version&gt;</span>0.13.2<span class="tag">&lt;/version&gt;</span>
+    <span class="tag">&lt;version&gt;</span>0.14.0<span class="tag">&lt;/version&gt;</span>
 <span class="tag">&lt;/dependency&gt;</span>
 <span class="tag">&lt;dependency&gt;</span>
     <span class="tag">&lt;groupId&gt;</span>io.github.resilience4j<span class="tag">&lt;/groupId&gt;</span>
     <span class="tag">&lt;artifactId&gt;</span>resilience4j-retry<span class="tag">&lt;/artifactId&gt;</span>
-    <span class="tag">&lt;version&gt;</span>0.13.2<span class="tag">&lt;/version&gt;</span>
+    <span class="tag">&lt;version&gt;</span>0.14.0<span class="tag">&lt;/version&gt;</span>
 <span class="tag">&lt;/dependency&gt;</span>
 <span class="tag">&lt;dependency&gt;</span>
     <span class="tag">&lt;groupId&gt;</span>io.github.resilience4j<span class="tag">&lt;/groupId&gt;</span>
     <span class="tag">&lt;artifactId&gt;</span>resilience4j-bulkhead<span class="tag">&lt;/artifactId&gt;</span>
-    <span class="tag">&lt;version&gt;</span>0.13.2<span class="tag">&lt;/version&gt;</span>
+    <span class="tag">&lt;version&gt;</span>0.14.0<span class="tag">&lt;/version&gt;</span>
 <span class="tag">&lt;/dependency&gt;</span>
 <span class="tag">&lt;dependency&gt;</span>
     <span class="tag">&lt;groupId&gt;</span>io.github.resilience4j<span class="tag">&lt;/groupId&gt;</span>
     <span class="tag">&lt;artifactId&gt;</span>resilience4j-cache<span class="tag">&lt;/artifactId&gt;</span>
-    <span class="tag">&lt;version&gt;</span>0.13.2<span class="tag">&lt;/version&gt;</span>
+    <span class="tag">&lt;version&gt;</span>0.14.0<span class="tag">&lt;/version&gt;</span>
 <span class="tag">&lt;/dependency&gt;</span>
 <span class="tag">&lt;dependency&gt;</span>
     <span class="tag">&lt;groupId&gt;</span>io.github.resilience4j<span class="tag">&lt;/groupId&gt;</span>
     <span class="tag">&lt;artifactId&gt;</span>resilience4j-timelimiter<span class="tag">&lt;/artifactId&gt;</span>
-    <span class="tag">&lt;version&gt;</span>0.13.2<span class="tag">&lt;/version&gt;</span>
+    <span class="tag">&lt;version&gt;</span>0.14.0<span class="tag">&lt;/version&gt;</span>
 <span class="tag">&lt;/dependency&gt;</span></code></pre>
 </div>
 </div>
@@ -1924,11 +1924,7 @@ It is often used by monitoring software to alert someone if a production system 
         <span class="string"><span class="delimiter">&quot;</span><span class="content">resilience4j.retry.backendA.failedCallsWithoutRetry</span><span class="delimiter">&quot;</span></span>,
         <span class="string"><span class="delimiter">&quot;</span><span class="content">resilience4j.retry.backendA.failedCallsWithRetry</span><span class="delimiter">&quot;</span></span>,
         <span class="string"><span class="delimiter">&quot;</span><span class="content">resilience4j.retry.backendA.successCalls</span><span class="delimiter">&quot;</span></span>,
-        <span class="string"><span class="delimiter">&quot;</span><span class="content">resilience4j.retry.backendA.successCallsWithRetry</span><span class="delimiter">&quot;</span></span>,
-        <span class="string"><span class="delimiter">&quot;</span><span class="content">resilience4j.asyncRetry.backendA.failedCallsWithoutRetry</span><span class="delimiter">&quot;</span></span>,
-        <span class="string"><span class="delimiter">&quot;</span><span class="content">resilience4j.asyncRetry.backendB.failedCallsWithRetry</span><span class="delimiter">&quot;</span></span>,
-        <span class="string"><span class="delimiter">&quot;</span><span class="content">resilience4j.asyncRetry.backendB.successCalls</span><span class="delimiter">&quot;</span></span>,
-        <span class="string"><span class="delimiter">&quot;</span><span class="content">resilience4j.asyncRetry.backendB.successCallsWithRetry</span><span class="delimiter">&quot;</span></span>
+        <span class="string"><span class="delimiter">&quot;</span><span class="content">resilience4j.retry.backendA.successCallsWithRetry</span><span class="delimiter">&quot;</span></span>
         ]
 }</code></pre>
 </div>
@@ -2112,11 +2108,7 @@ For example</p>
 <div class="ulist">
 <ul>
 <li>
-<p>You can use the same back-end configuration for both sync and async retry if you use both annotations in for the same backed method level wise only ,<br>
-if you mix annotations between class level and method level on the same back-end class , validation exception will be thrown</p>
-</li>
-<li>
-<p>For <code>AsyncRetry</code> annotation , please make sure the return type is instance of Java <code>CompletionStage</code> otherwise runtime exception will be thrown</p>
+<p>Retry aspect will detect the proper handling based into the method return type for synchronous and asynchronous execution</p>
 </li>
 </ul>
 </div>
@@ -2136,7 +2128,7 @@ if you mix annotations between class level and method level on the same back-end
         }
 }
 
-<span class="annotation">@AsyncRetry</span>(name = RetryDummyService.BACKEND)
+<span class="annotation">@Retry</span>(name = RetryDummyService.BACKEND)
 <span class="annotation">@Override</span>
 <span class="directive">public</span> CompletionStage&lt;<span class="predefined-type">String</span>&gt; doSomethingAsync(<span class="type">boolean</span> throwException) <span class="directive">throws</span> <span class="exception">IOException</span> {
         <span class="keyword">if</span> (throwException) {
@@ -3596,68 +3588,77 @@ metricRegistry.registerAll(RetryMetrics.ofRetry(retry));</code></pre>
 <p>Integration with <a href="https://github.com/prometheus/client_java">Prometheus simple client</a></p>
 </div>
 <div class="paragraph">
-<p>Module provides exporters for <code>CircuitBreaker</code> and <code>RateLimiter</code> metrics.</p>
+<p>Module provides exporters for <code>CircuitBreaker</code>, <code>RateLimiter</code> and <code>Bulkhead</code> metrics.<br>
+Every metric has <code>name</code> label indicating the relation to certain object, object category<br>
+such as <code>bulkhead</code> is inlined to the metric name, so that the combination of metric name + <code>name</code> label<br>
+uniquely identifies metric per backend. For example:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code>resilience4j_bulkhead_available_concurrent_calls{name="Backend1"}
+resilience4j_circuitbreaker_buffered_calls{name="Backend1"}
+resilience4j_ratelimiter_waiting_threads{name=Backend1"}</code></pre>
+</div>
 </div>
 <div class="paragraph">
-<p>For the circuit breaker library exports 2 metrics:</p>
+<p>For every <code>CircuitBreaker</code> the library exports the following metrics:</p>
 </div>
 <div class="olist arabic">
 <ol class="arabic">
 <li>
-<p>By state with default metric name <code>circuit_breaker_states</code> and label <code>state</code>:</p>
+<p><code>resilience4j_circuitbreaker_state</code> - the state of the circuit breaker, possible values:</p>
 <div class="ulist">
 <ul>
 <li>
-<p><code>closed</code></p>
+<p>0 - CLOSED</p>
 </li>
 <li>
-<p><code>open</code></p>
+<p>1 - OPEN</p>
 </li>
 <li>
-<p><code>half_open</code></p>
+<p>2 - HALF_OPEN</p>
 </li>
 </ul>
 </div>
 </li>
 <li>
-<p>By call result with default metric name <code>circuit_breaker_calls</code> and label <code>call_result</code>:</p>
-<div class="ulist">
-<ul>
-<li>
-<p><code>successful</code></p>
+<p><code>resilience4j_circuitbreaker_calls</code> - the number of recorded calls,<br>
+the additional <code>kind</code> label indicates type of calls being recorded, the possible<br>
+<code>kind</code> values are <code>successful</code>, <code>failed</code> or <code>not_permitted</code>.</p>
 </li>
 <li>
-<p><code>failed</code></p>
+<p><code>resilience4j_circuitbreaker_buffered_calls</code> - the number of buffered calls</p>
 </li>
 <li>
-<p><code>not_permitted</code></p>
-</li>
-<li>
-<p><code>buffered</code></p>
-</li>
-<li>
-<p><code>buffered_max</code></p>
-</li>
-</ul>
-</div>
+<p><code>resilience4j_circuitbreaker_max_buffered_calls</code> - the maximum number of buffered calls</p>
 </li>
 </ol>
 </div>
 <div class="paragraph">
-<p>For the rate limiter following metric with default name <code>rate_limiter</code> and label <code>param</code> exported:</p>
+<p>For every <code>RateLimiter</code> the library exports the following metrics:</p>
 </div>
-<div class="ulist">
-<ul>
+<div class="olist arabic">
+<ol class="arabic">
 <li>
-<p><code>available_permissions</code></p>
+<p><code>resilience4j_ratelimiter_available_permissions</code> - the number of available permissions</p>
 </li>
 <li>
-<p><code>waiting_threads</code></p>
+<p><code>resilience4j_ratelimiter_waiting_threads</code> - the number of waiting threads</p>
 </li>
-</ul>
+</ol>
 </div>
 <div class="paragraph">
-<p>The names of the rate limiters and circuit breakers are exposed using label <code>name</code>.</p>
+<p>For every <code>Bulkhead</code> the library exports the following metrics:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><code>resilience4j_bulkhead_available_concurrent_calls</code> - the number of available concurrent calls</p>
+</li>
+<li>
+<p><code>resilience4j_bulkhead_max_allowed_concurrent_calls</code> - the maximum number of allowed concurrent calls</p>
+</li>
+</ol>
 </div>
 <div class="paragraph">
 <p>This module also provides <code>CallMeter</code>&#8201;&#8212;&#8201;a composite metric to measure single call/request metrics such as:<br>
@@ -3694,7 +3695,7 @@ metricRegistry.registerAll(RetryMetrics.ofRetry(retry));</code></pre>
 <span class="directive">final</span> CircuitBreaker boo = circuitBreakerRegistry.circuitBreaker(<span class="string"><span class="delimiter">&quot;</span><span class="content">boo</span><span class="delimiter">&quot;</span></span>);
 
 <span class="comment">// Registering metrics in prometeus CollectorRegistry</span>
-collectorRegistry.register(CircuitBreakerExports.ofCircuitBreakerRegistry(circuitBreakerRegistry));</code></pre>
+collectorRegistry.register(CircuitBreakerMetricsCollector.ofCircuitBreakerRegistry(circuitBreakerRegistry));</code></pre>
 </div>
 </div>
 </div>
@@ -3710,11 +3711,28 @@ collectorRegistry.register(CircuitBreakerExports.ofCircuitBreakerRegistry(circui
 <span class="directive">final</span> RateLimiter boo = rateLimiterRegistry.rateLimiter(<span class="string"><span class="delimiter">&quot;</span><span class="content">boo</span><span class="delimiter">&quot;</span></span>);
 
 <span class="comment">// Registering metrics in prometeus CollectorRegistry</span>
-collectorRegistry.register(RateLimiterExports.ofRateLimiterRegistry(rateLimiterRegistry));</code></pre>
+collectorRegistry.register(RateLimiterMetricsCollector.ofRateLimiterRegistry(rateLimiterRegistry));</code></pre>
+</div>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_bulkhead_6"><a class="anchor" href="#_bulkhead_6"></a>Bulkhead</h5>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="java"><span class="directive">final</span> CollectorRegistry collectorRegistry = CollectorRegistry.defaultRegistry;
+
+<span class="directive">final</span> BulkheadRegistry bulkheadRegistry = BulkheadRegistry.ofDefaults();
+
+<span class="directive">final</span> Bulkhead foo = bulkheadRegistry.bulkhead(<span class="string"><span class="delimiter">&quot;</span><span class="content">foo</span><span class="delimiter">&quot;</span></span>);
+<span class="directive">final</span> Bulkhead boo = bulkheadRegistry.bulkhead(<span class="string"><span class="delimiter">&quot;</span><span class="content">boo</span><span class="delimiter">&quot;</span></span>);
+
+<span class="comment">// Registering metrics in prometeus CollectorRegistry</span>
+collectorRegistry.register(BulkheadMetricsCollector.ofBulkheadRegistry(rateLimiterRegistry));</code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>For both it is possible to use just a collection of breakers and limiters instead of registry.</p>
+<p>Every collector exposes more methods for binding corresponding objects, for example,<br>
+you can use suppliers, collections or even collect metrics for a single object.</p>
 </div>
 </div>
 <div class="sect4">
@@ -3769,7 +3787,7 @@ With this add-on you can easily add your bulkhead, circuit breaker, rate limiter
 <div class="sect3">
 <h4 id="_usage_3"><a class="anchor" href="#_usage_3"></a>4.6.2. Usage</h4>
 <div class="sect4">
-<h5 id="_bulkhead_6"><a class="anchor" href="#_bulkhead_6"></a>Bulkhead</h5>
+<h5 id="_bulkhead_7"><a class="anchor" href="#_bulkhead_7"></a>Bulkhead</h5>
 <div class="listingblock">
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="java"><span class="directive">final</span> BulkheadRegistry bulkheadRegistry = BulkheadRegistry.ofDefaults();
@@ -3778,7 +3796,10 @@ With this add-on you can easily add your bulkhead, circuit breaker, rate limiter
 
 <span class="comment">// Register all bulkheads at once</span>
 BulkheadMetrics bulkheadMetrics = BulkheadMetrics.ofBulkheadRegistry(bulkheadRegistry);
-bulkheadMetrics.bindTo(meterRegistry);</code></pre>
+bulkheadMetrics.bindTo(meterRegistry);
+
+<span class="comment">// Or for tag based metrics</span>
+TaggedBulkheadMetrics.ofBulkheadRegistry(bulkheadRegistry).bindTo(meterRegistry);</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -3794,6 +3815,19 @@ bulkheadMetrics.bindTo(meterRegistry);</code></pre>
 </li>
 </ul>
 </div>
+<div class="paragraph">
+<p>Tag based metrics:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>resilience4j_bulkhead_available_concurrent_calls{name="name of bulkhead"}</code> - number of available concurrent calls</p>
+</li>
+<li>
+<p><code>resilience4j_bulkhead_max_allowed_concurrent_calls{name="name of bulkhead"}</code> - maximum number of allowed concurrent calls</p>
+</li>
+</ul>
+</div>
 </div>
 <div class="sect4">
 <h5 id="_circuitbreaker_10"><a class="anchor" href="#_circuitbreaker_10"></a>CircuitBreaker</h5>
@@ -3805,7 +3839,10 @@ bulkheadMetrics.bindTo(meterRegistry);</code></pre>
 
 <span class="comment">// Register all circuit breakers at once</span>
 CircuitBreakerMetrics circuitBreakerMetrics = CircuitBreakerMetrics.ofCircuitBreakerRegistry(circuitBreakerRegistry);
-circuitBreakerMetrics.bindTo(meterRegistry);</code></pre>
+circuitBreakerMetrics.bindTo(meterRegistry);
+
+<span class="comment">// Or for tag based metrics</span>
+TaggedCircuitBreakerMetrics.ofCircuitBreakerRegistry(circuitBreakerRegistry).bindTo(meterRegistry);</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -3833,6 +3870,38 @@ circuitBreakerMetrics.bindTo(meterRegistry);</code></pre>
 </li>
 </ul>
 </div>
+<div class="paragraph">
+<p>Tag based metrics:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>resilience4j_circuitbreaker_state{name="name of circuitbreaker"}</code> - the state of the circuit breaker where 0-CLOSED, 1-OPEN, 2-HALF-OPEN</p>
+</li>
+<li>
+<p><code>resilience4j_circuitbreaker_calls{name="name of circuitbreaker", kind="one of the values below"}</code> - the number of calls of a certain kind</p>
+<div class="ulist">
+<ul>
+<li>
+<p><code>successful</code> - indicates successful calls</p>
+</li>
+<li>
+<p><code>failed</code> - indicates failed calls</p>
+</li>
+<li>
+<p><code>not_permitted</code> - indicates not permitted calls</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p><code>resilience4j_circuitbreaker_buffered_calls{name="name of circuitbreaker"}</code> - the number of buffered calls</p>
+</li>
+<li>
+<p><code>resilience4j_circuitbreaker_max_buffered_calls{name="name of circuitbreaker"}</code> - the maximum number of buffered calls</p>
+</li>
+</ul>
+</div>
 </div>
 <div class="sect4">
 <h5 id="_ratelimiter_10"><a class="anchor" href="#_ratelimiter_10"></a>RateLimiter</h5>
@@ -3843,7 +3912,10 @@ circuitBreakerMetrics.bindTo(meterRegistry);</code></pre>
 
 <span class="comment">// Register rate limiters at once</span>
 RateLimiterMetrics rateLimiterMetrics = RateLimiterMetrics.ofRateLimiterRegistry(rateLimiterRegistry);
-rateLimiterMetrics.bindTo(meterRegistry);</code></pre>
+rateLimiterMetrics.bindTo(meterRegistry);
+
+<span class="comment">// Or for tag based metrics</span>
+TaggedRateLimiterMetrics.ofRateLimiterRegistry(rateLimiterRegistry).bindTo(meterRegistry);</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -3859,6 +3931,19 @@ rateLimiterMetrics.bindTo(meterRegistry);</code></pre>
 </li>
 </ul>
 </div>
+<div class="paragraph">
+<p>Tag based metrics:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>resilience4j_ratelimiter_available_permissions{name="name of ratelimiter"}</code> - the number of available permissions</p>
+</li>
+<li>
+<p><code>resilience4j_ratelimiter_waiting_threads{name="name of ratelimiter"}</code> - the number of threads waiting for permission</p>
+</li>
+</ul>
+</div>
 </div>
 <div class="sect4">
 <h5 id="_retry_9"><a class="anchor" href="#_retry_9"></a>Retry</h5>
@@ -3870,7 +3955,10 @@ rateLimiterMetrics.bindTo(meterRegistry);</code></pre>
 
 <span class="comment">// Register all retries at once</span>
 RetryMetrics retryMetrics = RetryMetrics.ofRetryRegistry(retryRegistry);
-retryMetrics.bindTo(meterRegistry);</code></pre>
+retryMetrics.bindTo(meterRegistry);
+
+<span class="comment">// Or for tag baed metrics</span>
+TaggedRetryMetrics.ofRetryRegistry(retryRegistry).bindTo(meterRegistry);</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -3891,6 +3979,35 @@ retryMetrics.bindTo(meterRegistry);</code></pre>
 <p><code>failed_calls_with_retry</code> - the number of failed calls after all retry attempts <code>[long]</code></p>
 </li>
 </ul>
+</div>
+<div class="paragraph">
+<p>Tag based metrics:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>resilience4j_retry_calls{name="retry name", kind="one of the values below"}</code> - the number of calls of a certain kind</p>
+<div class="ulist">
+<ul>
+<li>
+<p><code>successful_without_retry</code> - indicates successful calls without retry</p>
+</li>
+<li>
+<p><code>successful_with_retry</code> - indicates successful calls with retry</p>
+</li>
+<li>
+<p><code>failed_without_retry</code> - indicates failed calls without retry</p>
+</li>
+<li>
+<p><code>failed_with_retry</code> - indicates failed calls with retry</p>
+</li>
+</ul>
+</div>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>Note the same set of metrics is exposed for async retry, metric name is <code>resilience4j_async_retry_calls</code>.</p>
 </div>
 </div>
 </div>
@@ -4051,8 +4168,8 @@ So you can easily restrict not only network calls but your local in-memory opera
 </div>
 <div id="footer">
 <div id="footer-text">
-Version 0.13.2<br>
-Last updated 2017-08-31 08:20:51 +02:00
+Version 0.14.0<br>
+Last updated 2019-04-01 14:07:20 +02:00
 </div>
 </div>
 </body>
