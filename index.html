@@ -545,8 +545,7 @@ table.CodeRay td.code>pre{padding:0}
 <li><a href="#_introduction_2">3.1.1. Introduction</a></li>
 <li><a href="#_set_up">3.1.2. Set-Up</a></li>
 <li><a href="#_examples">3.1.3. Examples</a></li>
-<li><a href="#_reset">3.1.4. Reset</a></li>
-<li><a href="#_monitoring">3.1.5. Monitoring</a></li>
+<li><a href="#_monitoring">3.1.4. Monitoring</a></li>
 </ul>
 </li>
 <li><a href="#_ratelimiter">3.2. RateLimiter</a>
@@ -590,23 +589,25 @@ table.CodeRay td.code>pre{padding:0}
 <li><a href="#_spring_boot_starter">4.1. Spring Boot Starter</a>
 <ul class="sectlevel3">
 <li><a href="#_gradle_2">4.1.1. Gradle</a></li>
-<li><a href="#_monitoring_4">4.1.2. Monitoring</a></li>
-<li><a href="#_retry_2">4.1.3. Retry</a></li>
-<li><a href="#_circuitbreaker_2">4.1.4. CircuitBreaker</a></li>
-<li><a href="#_ratelimiter_2">4.1.5. RateLimiter</a></li>
-<li><a href="#_configuration">4.1.6. Configuration</a></li>
-<li><a href="#_event_monitoring">4.1.7. Event Monitoring</a></li>
+<li><a href="#_supported_types_by_spring_boot_starter_resilience_aspects">4.1.2. Supported Types by Spring boot starter resilience aspects</a></li>
+<li><a href="#_monitoring_4">4.1.3. Monitoring</a></li>
+<li><a href="#_retry_2">4.1.4. Retry</a></li>
+<li><a href="#_circuitbreaker_2">4.1.5. CircuitBreaker</a></li>
+<li><a href="#_ratelimiter_2">4.1.6. RateLimiter</a></li>
+<li><a href="#_configuration">4.1.7. Configuration</a></li>
+<li><a href="#_event_monitoring">4.1.8. Event Monitoring</a></li>
 </ul>
 </li>
-<li><a href="#_spring_boot_starter_2">4.2. Spring Boot Starter</a>
+<li><a href="#_spring_boot_2_starter">4.2. Spring Boot 2 Starter</a>
 <ul class="sectlevel3">
 <li><a href="#_gradle_3">4.2.1. Gradle</a></li>
-<li><a href="#_monitoring_5">4.2.2. Monitoring</a></li>
-<li><a href="#_retry_5">4.2.3. Retry</a></li>
-<li><a href="#_circuitbreaker_5">4.2.4. CircuitBreaker</a></li>
-<li><a href="#_ratelimiter_5">4.2.5. RateLimiter</a></li>
-<li><a href="#_configuration_2">4.2.6. Configuration</a></li>
-<li><a href="#_event_monitoring_2">4.2.7. Event Monitoring</a></li>
+<li><a href="#_supported_types_by_spring_boot_starter_resilience_aspects_2">4.2.2. Supported Types by Spring boot starter resilience aspects</a></li>
+<li><a href="#_monitoring_5">4.2.3. Monitoring</a></li>
+<li><a href="#_retry_5">4.2.4. Retry</a></li>
+<li><a href="#_circuitbreaker_5">4.2.5. CircuitBreaker</a></li>
+<li><a href="#_ratelimiter_5">4.2.6. RateLimiter</a></li>
+<li><a href="#_configuration_2">4.2.7. Configuration</a></li>
+<li><a href="#_event_monitoring_2">4.2.8. Event Monitoring</a></li>
 </ul>
 </li>
 <li><a href="#_ratpack_starter">4.3. Ratpack Starter</a>
@@ -1084,15 +1085,15 @@ assertThat(result.failed().get()).isInstanceOf(CircuitBreakerOpenException.class
 </div>
 </div>
 </div>
-</div>
-<div class="sect3">
-<h4 id="_reset"><a class="anchor" href="#_reset"></a>3.1.4. Reset</h4>
+<div class="sect4">
+<h5 id="_reset"><a class="anchor" href="#_reset"></a>Reset</h5>
 <div class="paragraph">
 <p>The CircuitBreaker supports resetting, returning to its original state while losing all the current metrics.</p>
 </div>
 <div class="listingblock">
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="java">circuitBreaker.reset();</code></pre>
+</div>
 </div>
 </div>
 <div class="sect4">
@@ -1199,7 +1200,7 @@ circuitBreaker.getEventPublisher().onEvent(ringBuffer);
 </div>
 </div>
 <div class="sect3">
-<h4 id="_monitoring"><a class="anchor" href="#_monitoring"></a>3.1.5. Monitoring</h4>
+<h4 id="_monitoring"><a class="anchor" href="#_monitoring"></a>3.1.4. Monitoring</h4>
 <div class="paragraph">
 <p>The CircuitBreaker provides an interface to monitor the current metrics.</p>
 </div>
@@ -1675,6 +1676,19 @@ assertThat(result.get()).isEqualTo(<span class="string"><span class="delimiter">
 </div>
 </div>
 <div class="sect4">
+<h5 id="_retry_and_reactor"><a class="anchor" href="#_retry_and_reactor"></a>Retry and Reactor</h5>
+<div class="paragraph">
+<p>The following example shows how to decorate a Flux or Mono by using the custom Reactor Operator.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="java">Retry retry = Retry.ofDefaults(<span class="string"><span class="delimiter">&quot;</span><span class="content">backendName</span><span class="delimiter">&quot;</span></span>);
+Mono.fromCallable(backendService::doSomething)
+    .compose(RetryOperator.of(retry))</code></pre>
+</div>
+</div>
+</div>
+<div class="sect4">
 <h5 id="_consume_emitted_retryevents"><a class="anchor" href="#_consume_emitted_retryevents"></a>Consume emitted RetryEvents</h5>
 <div class="paragraph">
 <p>The Retry emits a stream of RetryEvents. An event can be a failure which signals that even all retries have failed or success if a retry was successful.</p>
@@ -1829,14 +1843,20 @@ dependencies {
 </div>
 </div>
 <div class="sect3">
-<h4 id="_monitoring_4"><a class="anchor" href="#_monitoring_4"></a>4.1.2. Monitoring</h4>
+<h4 id="_supported_types_by_spring_boot_starter_resilience_aspects"><a class="anchor" href="#_supported_types_by_spring_boot_starter_resilience_aspects"></a>4.1.2. Supported Types by Spring boot starter resilience aspects</h4>
+<div class="paragraph">
+<p>Rate limiter , Retry , Circuit breaker and Bulkhead now support Synchronous return types ,CompletableFutures , RxJava2 types and Reactor types .</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_monitoring_4"><a class="anchor" href="#_monitoring_4"></a>4.1.3. Monitoring</h4>
 <div class="paragraph">
 <p>Spring Boot Actuator health information can be used to check the status of your running application.<br>
 It is often used by monitoring software to alert someone if a production system has serious issues.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="_retry_2"><a class="anchor" href="#_retry_2"></a>4.1.3. Retry</h4>
+<h4 id="_retry_2"><a class="anchor" href="#_retry_2"></a>4.1.4. Retry</h4>
 <div class="paragraph">
 <p>When you enable retry, metrics are automatically published on the metrics endpoint.</p>
 </div>
@@ -1861,7 +1881,7 @@ and you have same metrics exposed there , check circuit breaker below for more i
 </div>
 </div>
 <div class="sect3">
-<h4 id="_circuitbreaker_2"><a class="anchor" href="#_circuitbreaker_2"></a>4.1.4. CircuitBreaker</h4>
+<h4 id="_circuitbreaker_2"><a class="anchor" href="#_circuitbreaker_2"></a>4.1.5. CircuitBreaker</h4>
 <div class="paragraph">
 <p>This demo publishes the status and metrics of all CircuitBreakers via a custom <code>CircuitBreakerHealthIndicator</code>.<br>
 A closed CircuitBreaker state is mapped to UP, an open state to DOWN and a half-open state to UNKNOWN.</p>
@@ -1944,7 +1964,7 @@ resilience4j_circuitbreaker_states{name="backendA",state="half_open",} 0.0</code
 </div>
 </div>
 <div class="sect3">
-<h4 id="_ratelimiter_2"><a class="anchor" href="#_ratelimiter_2"></a>4.1.5. RateLimiter</h4>
+<h4 id="_ratelimiter_2"><a class="anchor" href="#_ratelimiter_2"></a>4.1.6. RateLimiter</h4>
 <div class="paragraph">
 <p>This demo publishes the status and metrics of all RateLimiter via a custom <code>RateLimiterHealthIndicator</code>.<br>
 RateLimiterHealthIndicator changes its state DOWN only if there is some permission waiting threads<br>
@@ -1982,7 +2002,7 @@ For example:</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="_configuration"><a class="anchor" href="#_configuration"></a>4.1.6. Configuration</h4>
+<h4 id="_configuration"><a class="anchor" href="#_configuration"></a>4.1.7. Configuration</h4>
 <div class="sect4">
 <h5 id="_retry_3"><a class="anchor" href="#_retry_3"></a>Retry</h5>
 <div class="paragraph">
@@ -2034,7 +2054,7 @@ For example</p>
 <div class="ulist">
 <ul>
 <li>
-<p>Retry aspect will detect the proper handling based into the method return type for synchronous and asynchronous execution</p>
+<p>Retry aspect will detect the proper handling based into the method return type for synchronous , asynchronous execution(CompletableFuture) , RxJava2 and Reactor</p>
 </li>
 </ul>
 </div>
@@ -2044,9 +2064,10 @@ For example</p>
 <div class="listingblock">
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="java"><span class="annotation">@Component</span>
+<span class="annotation">@Retry</span>(name = RetryDummyService.BACKEND)
 <span class="directive">public</span> <span class="type">class</span> <span class="class">RetryDummyServiceImpl</span> <span class="directive">implements</span> RetryDummyService {
 
-<span class="annotation">@Retry</span>(name = RetryDummyService.BACKEND)
+
 <span class="annotation">@Override</span>
 <span class="directive">public</span> <span class="type">void</span> doSomething(<span class="type">boolean</span> throwBackendTrouble) <span class="directive">throws</span> <span class="exception">IOException</span> {
         <span class="keyword">if</span> (throwBackendTrouble) {
@@ -2054,13 +2075,33 @@ For example</p>
         }
 }
 
-<span class="annotation">@Retry</span>(name = RetryDummyService.BACKEND)
+
 <span class="annotation">@Override</span>
 <span class="directive">public</span> CompletionStage&lt;<span class="predefined-type">String</span>&gt; doSomethingAsync(<span class="type">boolean</span> throwException) <span class="directive">throws</span> <span class="exception">IOException</span> {
+    <span class="keyword">if</span> (throwException) {
+            CompletableFuture&lt;<span class="predefined-type">String</span>&gt; promise = <span class="keyword">new</span> CompletableFuture&lt;&gt;();
+            promise.completeExceptionally(<span class="keyword">new</span> <span class="exception">IOException</span>(<span class="string"><span class="delimiter">&quot;</span><span class="content">Test Message</span><span class="delimiter">&quot;</span></span>));
+            <span class="keyword">return</span> promise;
+    } <span class="keyword">else</span> {
+            <span class="keyword">return</span> CompletableFuture.supplyAsync(() -&gt; <span class="string"><span class="delimiter">&quot;</span><span class="content">test</span><span class="delimiter">&quot;</span></span>);
+    }
+}
+
+<span class="annotation">@Override</span>
+<span class="directive">public</span> Flux&lt;<span class="predefined-type">String</span>&gt; doSomethingFlux(<span class="type">boolean</span> throwException) {
         <span class="keyword">if</span> (throwException) {
-                <span class="keyword">throw</span> <span class="keyword">new</span> <span class="exception">IOException</span>(<span class="string"><span class="delimiter">&quot;</span><span class="content">Test Message</span><span class="delimiter">&quot;</span></span>);
-        } <span class="keyword">else</span> {
-                <span class="keyword">return</span> CompletableFuture.supplyAsync(() -&gt; <span class="string"><span class="delimiter">&quot;</span><span class="content">test</span><span class="delimiter">&quot;</span></span>);
+                <span class="keyword">return</span> Flux.error(<span class="keyword">new</span> <span class="exception">IllegalArgumentException</span>(<span class="string"><span class="delimiter">&quot;</span><span class="content">FailedFlux</span><span class="delimiter">&quot;</span></span>));
+        }
+                <span class="keyword">return</span> Flux.fromArray(<span class="predefined-type">Arrays</span>.array(<span class="string"><span class="delimiter">&quot;</span><span class="content">test</span><span class="delimiter">&quot;</span></span>, <span class="string"><span class="delimiter">&quot;</span><span class="content">test2</span><span class="delimiter">&quot;</span></span>));
+        }
+}
+
+<span class="annotation">@Override</span>
+<span class="directive">public</span> Flowable&lt;<span class="predefined-type">String</span>&gt; doSomethingFlowable(<span class="type">boolean</span> throwException) {
+        <span class="keyword">if</span> (throwException) {
+                <span class="keyword">return</span> Flowable.error(<span class="keyword">new</span> <span class="exception">IllegalArgumentException</span>(<span class="string"><span class="delimiter">&quot;</span><span class="content">Failed</span><span class="delimiter">&quot;</span></span>));
+        }
+            <span class="keyword">return</span> Flowable.just(<span class="string"><span class="delimiter">&quot;</span><span class="content">testMaybe</span><span class="delimiter">&quot;</span></span>);
         }
 }
 
@@ -2151,7 +2192,7 @@ Please be careful changing of <code>CircuitBreaker</code>/<code>RateLimiter</cod
 </div>
 </div>
 <div class="sect3">
-<h4 id="_event_monitoring"><a class="anchor" href="#_event_monitoring"></a>4.1.7. Event Monitoring</h4>
+<h4 id="_event_monitoring"><a class="anchor" href="#_event_monitoring"></a>4.1.8. Event Monitoring</h4>
 <div class="sect4">
 <h5 id="_retry_4"><a class="anchor" href="#_retry_4"></a>Retry</h5>
 <div class="paragraph">
@@ -2454,7 +2495,7 @@ so for detailed documentation please refer to previous section:</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_spring_boot_starter_2"><a class="anchor" href="#_spring_boot_starter_2"></a>4.2. Spring Boot Starter</h3>
+<h3 id="_spring_boot_2_starter"><a class="anchor" href="#_spring_boot_2_starter"></a>4.2. Spring Boot 2 Starter</h3>
 <div class="sect3">
 <h4 id="_gradle_3"><a class="anchor" href="#_gradle_3"></a>4.2.1. Gradle</h4>
 <div class="paragraph">
@@ -2475,14 +2516,20 @@ dependencies {
 </div>
 </div>
 <div class="sect3">
-<h4 id="_monitoring_5"><a class="anchor" href="#_monitoring_5"></a>4.2.2. Monitoring</h4>
+<h4 id="_supported_types_by_spring_boot_starter_resilience_aspects_2"><a class="anchor" href="#_supported_types_by_spring_boot_starter_resilience_aspects_2"></a>4.2.2. Supported Types by Spring boot starter resilience aspects</h4>
+<div class="paragraph">
+<p>Rate limiter , Retry , Circuit breaker and Bulkhead now support Synchronous return types ,CompletableFutures , RxJava2 types and Reactor types .</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_monitoring_5"><a class="anchor" href="#_monitoring_5"></a>4.2.3. Monitoring</h4>
 <div class="paragraph">
 <p>Spring Boot Actuator health information can be used to check the status of your running application.<br>
 It is often used by monitoring software to alert someone if a production system has serious issues.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="_retry_5"><a class="anchor" href="#_retry_5"></a>4.2.3. Retry</h4>
+<h4 id="_retry_5"><a class="anchor" href="#_retry_5"></a>4.2.4. Retry</h4>
 <div class="paragraph">
 <p>When you enable retry, metrics are automatically published on the metrics endpoint.</p>
 </div>
@@ -2507,7 +2554,7 @@ and you have same metrics exposed there , check circuit breaker below for more i
 </div>
 </div>
 <div class="sect3">
-<h4 id="_circuitbreaker_5"><a class="anchor" href="#_circuitbreaker_5"></a>4.2.4. CircuitBreaker</h4>
+<h4 id="_circuitbreaker_5"><a class="anchor" href="#_circuitbreaker_5"></a>4.2.5. CircuitBreaker</h4>
 <div class="paragraph">
 <p>This demo publishes the status and metrics of all CircuitBreakers via a custom <code>CircuitBreakerHealthIndicator</code>.<br>
 A closed CircuitBreaker state is mapped to UP, an open state to DOWN and a half-open state to UNKNOWN.</p>
@@ -2592,7 +2639,7 @@ resilience4j_circuitbreaker_states{name="backendA",state="half_open",} 0.0</code
 </div>
 </div>
 <div class="sect3">
-<h4 id="_ratelimiter_5"><a class="anchor" href="#_ratelimiter_5"></a>4.2.5. RateLimiter</h4>
+<h4 id="_ratelimiter_5"><a class="anchor" href="#_ratelimiter_5"></a>4.2.6. RateLimiter</h4>
 <div class="paragraph">
 <p>This demo publishes the status and metrics of all RateLimiter via a custom <code>RateLimiterHealthIndicator</code>.<br>
 RateLimiterHealthIndicator changes its state DOWN only if there is some permission waiting threads<br>
@@ -2629,7 +2676,7 @@ For example:</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="_configuration_2"><a class="anchor" href="#_configuration_2"></a>4.2.6. Configuration</h4>
+<h4 id="_configuration_2"><a class="anchor" href="#_configuration_2"></a>4.2.7. Configuration</h4>
 <div class="sect4">
 <h5 id="_retry_6"><a class="anchor" href="#_retry_6"></a>Retry</h5>
 <div class="paragraph">
@@ -2678,7 +2725,7 @@ For example</p>
 <div class="ulist">
 <ul>
 <li>
-<p>Retry aspect will detect the proper handling based into the method return type for synchronous and asynchronous execution</p>
+<p>Retry aspect will detect the proper handling based into the method return type for synchronous , asynchronous execution(CompletableFuture) , RxJava2 and Reactor</p>
 </li>
 </ul>
 </div>
@@ -2687,10 +2734,11 @@ For example</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="CodeRay highlight"><code data-lang="java"><span class="annotation">@component</span>
+<pre class="CodeRay highlight"><code data-lang="java"><span class="annotation">@Component</span>
+<span class="annotation">@Retry</span>(name = RetryDummyService.BACKEND)
 <span class="directive">public</span> <span class="type">class</span> <span class="class">RetryDummyServiceImpl</span> <span class="directive">implements</span> RetryDummyService {
 
-<span class="annotation">@Retry</span>(name = RetryDummyService.BACKEND)
+
 <span class="annotation">@Override</span>
 <span class="directive">public</span> <span class="type">void</span> doSomething(<span class="type">boolean</span> throwBackendTrouble) <span class="directive">throws</span> <span class="exception">IOException</span> {
         <span class="keyword">if</span> (throwBackendTrouble) {
@@ -2698,13 +2746,33 @@ For example</p>
         }
 }
 
-<span class="annotation">@Retry</span>(name = RetryDummyService.BACKEND)
+
 <span class="annotation">@Override</span>
 <span class="directive">public</span> CompletionStage&lt;<span class="predefined-type">String</span>&gt; doSomethingAsync(<span class="type">boolean</span> throwException) <span class="directive">throws</span> <span class="exception">IOException</span> {
+    <span class="keyword">if</span> (throwException) {
+            CompletableFuture&lt;<span class="predefined-type">String</span>&gt; promise = <span class="keyword">new</span> CompletableFuture&lt;&gt;();
+            promise.completeExceptionally(<span class="keyword">new</span> <span class="exception">IOException</span>(<span class="string"><span class="delimiter">&quot;</span><span class="content">Test Message</span><span class="delimiter">&quot;</span></span>));
+            <span class="keyword">return</span> promise;
+    } <span class="keyword">else</span> {
+            <span class="keyword">return</span> CompletableFuture.supplyAsync(() -&gt; <span class="string"><span class="delimiter">&quot;</span><span class="content">test</span><span class="delimiter">&quot;</span></span>);
+    }
+}
+
+<span class="annotation">@Override</span>
+<span class="directive">public</span> Flux&lt;<span class="predefined-type">String</span>&gt; doSomethingFlux(<span class="type">boolean</span> throwException) {
         <span class="keyword">if</span> (throwException) {
-                <span class="keyword">throw</span> <span class="keyword">new</span> <span class="exception">IOException</span>(<span class="string"><span class="delimiter">&quot;</span><span class="content">Test Message</span><span class="delimiter">&quot;</span></span>);
-        } <span class="keyword">else</span> {
-                <span class="keyword">return</span> CompletableFuture.supplyAsync(() -&gt; <span class="string"><span class="delimiter">&quot;</span><span class="content">test</span><span class="delimiter">&quot;</span></span>);
+                <span class="keyword">return</span> Flux.error(<span class="keyword">new</span> <span class="exception">IllegalArgumentException</span>(<span class="string"><span class="delimiter">&quot;</span><span class="content">FailedFlux</span><span class="delimiter">&quot;</span></span>));
+        }
+                <span class="keyword">return</span> Flux.fromArray(<span class="predefined-type">Arrays</span>.array(<span class="string"><span class="delimiter">&quot;</span><span class="content">test</span><span class="delimiter">&quot;</span></span>, <span class="string"><span class="delimiter">&quot;</span><span class="content">test2</span><span class="delimiter">&quot;</span></span>));
+        }
+}
+
+<span class="annotation">@Override</span>
+<span class="directive">public</span> Flowable&lt;<span class="predefined-type">String</span>&gt; doSomethingFlowable(<span class="type">boolean</span> throwException) {
+        <span class="keyword">if</span> (throwException) {
+                <span class="keyword">return</span> Flowable.error(<span class="keyword">new</span> <span class="exception">IllegalArgumentException</span>(<span class="string"><span class="delimiter">&quot;</span><span class="content">Failed</span><span class="delimiter">&quot;</span></span>));
+        }
+            <span class="keyword">return</span> Flowable.just(<span class="string"><span class="delimiter">&quot;</span><span class="content">testMaybe</span><span class="delimiter">&quot;</span></span>);
         }
 }
 
@@ -2795,7 +2863,7 @@ Please be careful changing of <code>CircuitBreaker</code>/<code>RateLimiter</cod
 </div>
 </div>
 <div class="sect3">
-<h4 id="_event_monitoring_2"><a class="anchor" href="#_event_monitoring_2"></a>4.2.7. Event Monitoring</h4>
+<h4 id="_event_monitoring_2"><a class="anchor" href="#_event_monitoring_2"></a>4.2.8. Event Monitoring</h4>
 <div class="sect4">
 <h5 id="_retry_7"><a class="anchor" href="#_retry_7"></a>Retry</h5>
 <div class="paragraph">
@@ -4543,7 +4611,7 @@ TaggedRetryMetrics.ofRetryRegistry(retryRegistry).bindTo(meterRegistry);</code><
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="java"><span class="directive">static</span> &lt;T&gt; Supplier&lt;T&gt; decorateSupplier(CircuitBreaker circuitBreaker, Supplier&lt;T&gt; supplier){
     <span class="keyword">return</span> () -&gt; {
-        CircuitBreakerUtils.obtainPermission(circuitBreaker);
+        circuitBreaker.obtainPermission();
         <span class="type">long</span> start = <span class="predefined-type">System</span>.nanoTime();
         <span class="keyword">try</span> {
             T returnValue = supplier.get();
@@ -4678,7 +4746,7 @@ So you can easily restrict not only network calls but your local in-memory opera
 <div id="footer">
 <div id="footer-text">
 Version 0.14.0<br>
-Last updated 2019-04-01 14:07:20 +02:00
+Last updated 2019-04-05 13:07:16 +00:00
 </div>
 </div>
 </body>
