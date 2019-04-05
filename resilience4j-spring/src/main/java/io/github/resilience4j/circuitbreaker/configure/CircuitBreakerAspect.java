@@ -15,12 +15,11 @@
  */
 package io.github.resilience4j.circuitbreaker.configure;
 
-import java.lang.reflect.Method;
-import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionStage;
-
+import io.github.resilience4j.circuitbreaker.CircuitBreakerOpenException;
+import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.core.lang.Nullable;
+import io.github.resilience4j.utils.AnnotationExtractor;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -31,10 +30,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.Ordered;
 
-import io.github.resilience4j.circuitbreaker.CircuitBreakerOpenException;
-import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
-import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
-import io.github.resilience4j.utils.AnnotationExtractor;
+import java.lang.reflect.Method;
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
 
 /**
  * This Spring AOP aspect intercepts all methods which are annotated with a {@link CircuitBreaker} annotation.
@@ -83,7 +82,7 @@ public class CircuitBreakerAspect implements Ordered {
 		if (CompletionStage.class.isAssignableFrom(returnType)) {
 			return handleJoinPointCompletableFuture(proceedingJoinPoint, circuitBreaker);
 		}
-		return defaultHandling(proceedingJoinPoint, circuitBreaker, methodName);
+		return defaultHandling(proceedingJoinPoint, circuitBreaker);
 	}
 
 	private io.github.resilience4j.circuitbreaker.CircuitBreaker getOrCreateCircuitBreaker(String methodName, String backend) {
@@ -116,7 +115,7 @@ public class CircuitBreakerAspect implements Ordered {
 
 		final CompletableFuture promise = new CompletableFuture<>();
 		long start = System.nanoTime();
-		if (!circuitBreaker.isCallPermitted()) {
+		if (!circuitBreaker.obtainPermission()) {
 			promise.completeExceptionally(
 					new CircuitBreakerOpenException(
 							String.format("CircuitBreaker '%s' is open", circuitBreaker.getName())));
@@ -143,7 +142,7 @@ public class CircuitBreakerAspect implements Ordered {
 	/**
 	 * the default Java types handling for the circuit breaker AOP
 	 */
-	private Object defaultHandling(ProceedingJoinPoint proceedingJoinPoint, io.github.resilience4j.circuitbreaker.CircuitBreaker circuitBreaker, String methodName) throws Throwable {
+	private Object defaultHandling(ProceedingJoinPoint proceedingJoinPoint, io.github.resilience4j.circuitbreaker.CircuitBreaker circuitBreaker) throws Throwable {
 		return circuitBreaker.executeCheckedSupplier(proceedingJoinPoint::proceed);
 	}
 
