@@ -7,8 +7,7 @@ before_install:
 script:
 - "./gradlew clean check"
 after_success:
-- "./gradlew coberturaReport coveralls > /dev/null"
-- ./gradlew artifactoryPublish -PbintrayUsername="${BINTRAY_USER}" -PbintrayApiKey="${BINTRAY_KEY}"
+- test $TRAVIS_BRANCH = "master" && ./gradlew artifactoryPublish -PbintrayUsername="${BINTRAY_USER}" -PbintrayApiKey="${BINTRAY_KEY}"
 before_cache:
 - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
 - rm -fr $HOME/.gradle/caches/*/plugin-resolution/
