@@ -1,4 +1,4 @@
-=== Spring Boot Starter
+=== Spring Boot 2 Starter
 
 ==== Gradle
 
