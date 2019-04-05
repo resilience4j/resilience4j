@@ -12,7 +12,7 @@ The CircuitBreaker does not know anything about the backend's state by itself, b
 ----
 static <T> Supplier<T> decorateSupplier(CircuitBreaker circuitBreaker, Supplier<T> supplier){
     return () -> {
-        CircuitBreakerUtils.obtainPermission(circuitBreaker);
+        circuitBreaker.obtainPermission();
         long start = System.nanoTime();
         try {
             T returnValue = supplier.get();
