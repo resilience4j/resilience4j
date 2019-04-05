@@ -9,11 +9,11 @@ import io.prometheus.client.spring.boot.EnableSpringBootMetricsCollector;
 /**
  * @author bstorozhuk
  */
-@SpringBootApplication(scanBasePackages = "io.github.resilience4j")
+@SpringBootApplication
 @EnableSpringBootMetricsCollector
 @EnablePrometheusEndpoint
 public class TestApplication {
-    public static void main(String[] args) {
-        SpringApplication.run(TestApplication.class, args);
-    }
+	public static void main(String[] args) {
+		SpringApplication.run(TestApplication.class, args);
+	}
 }

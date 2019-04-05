@@ -180,12 +180,12 @@ public class CircuitBreakerAutoConfigurationTest {
 		assertThat(circuitBreakerProperties).isNotNull();
 
 		try {
-			reactiveDummyService.doSomethingFlux(true).subscribe(String::toUpperCase, Throwable::printStackTrace);
+			reactiveDummyService.doSomethingFlux(true).subscribe(String::toUpperCase, throwable -> System.out.println("Exception received:" + throwable.getMessage()));
 		} catch (IOException ex) {
 			// Do nothing. The IOException is recorded by the CircuitBreaker as part of the recordFailurePredicate as a failure.
 		}
 		// The invocation is recorded by the CircuitBreaker as a success.
-		reactiveDummyService.doSomethingFlux(false).subscribe(String::toUpperCase, Throwable::printStackTrace);
+		reactiveDummyService.doSomethingFlux(false).subscribe(String::toUpperCase, throwable -> System.out.println("Exception received:" + throwable.getMessage()));
 
 		CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker(ReactiveDummyService.BACKEND);
 		assertThat(circuitBreaker).isNotNull();
