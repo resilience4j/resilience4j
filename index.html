@@ -598,50 +598,61 @@ table.CodeRay td.code>pre{padding:0}
 <li><a href="#_event_monitoring">4.1.7. Event Monitoring</a></li>
 </ul>
 </li>
-<li><a href="#_ratpack_starter">4.2. Ratpack Starter</a>
+<li><a href="#_spring_boot_starter_2">4.2. Spring Boot Starter</a>
 <ul class="sectlevel3">
 <li><a href="#_gradle_3">4.2.1. Gradle</a></li>
-<li><a href="#_basic_usage">4.2.2. Basic Usage</a></li>
-<li><a href="#_handlers">4.2.3. Handlers</a></li>
-<li><a href="#_promises">4.2.4. Promises</a></li>
-<li><a href="#_guice_aop">4.2.5. Guice AOP</a></li>
-<li><a href="#_functional_style">4.2.6. Functional style</a></li>
-<li><a href="#_adding_bulkheads_circuitbreakers_ratelimiters_and_retries">4.2.7. Adding Bulkheads, CircuitBreakers, RateLimiters, and Retries</a></li>
-<li><a href="#_metrics">4.2.8. Metrics</a></li>
-<li><a href="#_event_monitoring_2">4.2.9. Event Monitoring</a></li>
+<li><a href="#_monitoring_5">4.2.2. Monitoring</a></li>
+<li><a href="#_retry_5">4.2.3. Retry</a></li>
+<li><a href="#_circuitbreaker_5">4.2.4. CircuitBreaker</a></li>
+<li><a href="#_ratelimiter_5">4.2.5. RateLimiter</a></li>
+<li><a href="#_configuration_2">4.2.6. Configuration</a></li>
+<li><a href="#_event_monitoring_2">4.2.7. Event Monitoring</a></li>
 </ul>
 </li>
-<li><a href="#_retrofit">4.3. Retrofit</a>
+<li><a href="#_ratpack_starter">4.3. Ratpack Starter</a>
 <ul class="sectlevel3">
-<li><a href="#_circuit_breaking">4.3.1. Circuit Breaking</a></li>
-<li><a href="#_rate_limiting">4.3.2. Rate Limiting</a></li>
+<li><a href="#_gradle_4">4.3.1. Gradle</a></li>
+<li><a href="#_basic_usage">4.3.2. Basic Usage</a></li>
+<li><a href="#_handlers">4.3.3. Handlers</a></li>
+<li><a href="#_promises">4.3.4. Promises</a></li>
+<li><a href="#_guice_aop">4.3.5. Guice AOP</a></li>
+<li><a href="#_functional_style">4.3.6. Functional style</a></li>
+<li><a href="#_adding_bulkheads_circuitbreakers_ratelimiters_and_retries">4.3.7. Adding Bulkheads, CircuitBreakers, RateLimiters, and Retries</a></li>
+<li><a href="#_metrics">4.3.8. Metrics</a></li>
+<li><a href="#_event_monitoring_3">4.3.9. Event Monitoring</a></li>
 </ul>
 </li>
-<li><a href="#_dropwizard_metrics_exporter">4.4. Dropwizard Metrics exporter</a>
+<li><a href="#_retrofit">4.4. Retrofit</a>
 <ul class="sectlevel3">
-<li><a href="#_introduction_6">4.4.1. Introduction</a></li>
-<li><a href="#_usage">4.4.2. Usage</a></li>
+<li><a href="#_circuit_breaking">4.4.1. Circuit Breaking</a></li>
+<li><a href="#_rate_limiting">4.4.2. Rate Limiting</a></li>
 </ul>
 </li>
-<li><a href="#_prometheus_metrics_integration">4.5. Prometheus Metrics Integration</a>
+<li><a href="#_dropwizard_metrics_exporter">4.5. Dropwizard Metrics exporter</a>
 <ul class="sectlevel3">
-<li><a href="#_introduction_7">4.5.1. Introduction</a></li>
-<li><a href="#_dashboard_example">4.5.2. Dashboard Example</a></li>
-<li><a href="#_usage_2">4.5.3. Usage</a></li>
+<li><a href="#_introduction_6">4.5.1. Introduction</a></li>
+<li><a href="#_usage">4.5.2. Usage</a></li>
 </ul>
 </li>
-<li><a href="#_micrometer_metrics_exporter">4.6. Micrometer Metrics exporter</a>
+<li><a href="#_prometheus_metrics_integration">4.6. Prometheus Metrics Integration</a>
 <ul class="sectlevel3">
-<li><a href="#_introduction_8">4.6.1. Introduction</a></li>
-<li><a href="#_usage_3">4.6.2. Usage</a></li>
+<li><a href="#_introduction_7">4.6.1. Introduction</a></li>
+<li><a href="#_dashboard_example">4.6.2. Dashboard Example</a></li>
+<li><a href="#_usage_2">4.6.3. Usage</a></li>
+</ul>
+</li>
+<li><a href="#_micrometer_metrics_exporter">4.7. Micrometer Metrics exporter</a>
+<ul class="sectlevel3">
+<li><a href="#_introduction_8">4.7.1. Introduction</a></li>
+<li><a href="#_usage_3">4.7.2. Usage</a></li>
 </ul>
 </li>
 </ul>
 </li>
 <li><a href="#_implementation_details">5. Implementation details</a>
 <ul class="sectlevel2">
-<li><a href="#_circuitbreaker_11">5.1. CircuitBreaker</a></li>
-<li><a href="#_ratelimiter_11">5.2. RateLimiter</a></li>
+<li><a href="#_circuitbreaker_14">5.1. CircuitBreaker</a></li>
+<li><a href="#_ratelimiter_14">5.2. RateLimiter</a></li>
 </ul>
 </li>
 <li><a href="#_license">6. License</a></li>
@@ -690,10 +701,10 @@ With Resilience4j you don&#8217;t have to go all-in, you can pick what you need.
 <div class="ulist">
 <ul>
 <li>
-<p>resilience4j-reactor: Spring Reactor adapter</p>
+<p>resilience4j-reactor: Custom Spring Reactor operator</p>
 </li>
 <li>
-<p>resilience4j-rxjava2: RxJava2 adapter</p>
+<p>resilience4j-rxjava2: Custom RxJava2 operator</p>
 </li>
 <li>
 <p>resilience4j-micrometer: Micrometer Metrics exporter</p>
@@ -708,10 +719,16 @@ With Resilience4j you don&#8217;t have to go all-in, you can pick what you need.
 <p>resilience4j-spring-boot: Spring Boot Starter</p>
 </li>
 <li>
+<p>resilience4j-spring-boot2: Spring Boot 2 Starter</p>
+</li>
+<li>
 <p>resilience4j-ratpack: Ratpack Starter</p>
 </li>
 <li>
-<p>resilience4j-retrofit: Retrofit Call Adapter Factories</p>
+<p>resilience4j-retrofit: Retrofit adapter</p>
+</li>
+<li>
+<p>resilience4j-feign: Feign adapter</p>
 </li>
 <li>
 <p>resilience4j-vertx: Vertx Future decorator</p>
@@ -751,74 +768,6 @@ With Resilience4j you don&#8217;t have to go all-in, you can pick what you need.
 <div class="paragraph">
 <p>The projects requires JDK 8. The project is published in JCenter and Maven Central.<br>
 If you use Gradle or Maven, you can include Resilience4j modules as follows.</p>
-</div>
-<div class="admonitionblock warning">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-warning" title="Warning"></i>
-</td>
-<td class="content">
-The <strong>groupId</strong> has been changed from <strong>io.github.robwin</strong> to <strong>io.github.resilience4j</strong>
-</td>
-</tr>
-</table>
-</div>
-<div class="paragraph">
-<p>Resilience provides several core modules and add-on modules:</p>
-</div>
-<div class="paragraph">
-<p>Core modules:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p>resilience4j-circuitbreaker: Circuit breaking</p>
-</li>
-<li>
-<p>resilience4j-ratelimiter: Rate limiting</p>
-</li>
-<li>
-<p>resilience4j-bulkhead: Bulkheading</p>
-</li>
-<li>
-<p>resilience4j-retry: Automatic retrying</p>
-</li>
-<li>
-<p>resilience4j-cache: Response caching</p>
-</li>
-<li>
-<p>resilience4j-timelimiter: Timeout handling</p>
-</li>
-</ul>
-</div>
-<div class="paragraph">
-<p>Add-on modules</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p>resilience4j-metrics: Dropwizard Metrics exporter</p>
-</li>
-<li>
-<p>resilience4j-prometheus: Prometheus Metrics exporter</p>
-</li>
-<li>
-<p>resilience4j-spring-boot: Spring Boot Starter</p>
-</li>
-<li>
-<p>resilience4j-ratpack: Ratpack Starter</p>
-</li>
-<li>
-<p>resilience4j-retrofit: Retrofit Call Adapter Factories</p>
-</li>
-<li>
-<p>resilience4j-vertx: Vertx Future decorator</p>
-</li>
-<li>
-<p>resilience4j-consumer: Circular Buffer Event consumer</p>
-</li>
-</ul>
 </div>
 <div class="sect2">
 <h3 id="_gradle"><a class="anchor" href="#_gradle"></a>2.1. Gradle</h3>
@@ -921,7 +870,7 @@ compile "io.github.resilience4j:resilience4j-timelimiter:0.14.0"</code></pre>
 <h2 id="_usage_guide"><a class="anchor" href="#_usage_guide"></a>3. Usage Guide</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>Resilience provides several core modules and add-on modules:</p>
+<p>Resilience provides several core modules:</p>
 </div>
 <div class="paragraph">
 <p>Core modules:</p>
@@ -948,40 +897,12 @@ compile "io.github.resilience4j:resilience4j-timelimiter:0.14.0"</code></pre>
 </li>
 </ul>
 </div>
-<div class="paragraph">
-<p>Add-on modules</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p>resilience4j-metrics: Dropwizard Metrics exporter</p>
-</li>
-<li>
-<p>resilience4j-prometheus: Prometheus Metrics exporter</p>
-</li>
-<li>
-<p>resilience4j-spring-boot: Spring Boot Starter</p>
-</li>
-<li>
-<p>resilience4j-ratpack: Ratpack Starter</p>
-</li>
-<li>
-<p>resilience4j-retrofit: Retrofit Call Adapter Factories</p>
-</li>
-<li>
-<p>resilience4j-vertx: Vertx Future decorator</p>
-</li>
-<li>
-<p>resilience4j-consumer: Circuit Buffer Event consumer</p>
-</li>
-</ul>
-</div>
 <div class="sect2">
 <h3 id="_circuitbreaker"><a class="anchor" href="#_circuitbreaker"></a>3.1. CircuitBreaker</h3>
 <div class="sect3">
 <h4 id="_introduction_2"><a class="anchor" href="#_introduction_2"></a>3.1.1. Introduction</h4>
 <div class="paragraph">
-<p>This library comes with an in-memory <code>CircuitBreakerRegistry</code> based on a <code>ConcurrentHashMap</code> which provides thread safety and atomicity guarantees. You can use the CircuitBreakerRegistry to manage (create and retrieve) CircuitBreaker instances. You can create a CircuitBreakerRegistry with a default global <code>CircuitBreakerConfig</code> for all of your CircuitBreaker instances as follows.</p>
+<p>Resilience4j comes with an in-memory <code>CircuitBreakerRegistry</code> based on a <code>ConcurrentHashMap</code> which provides thread safety and atomicity guarantees. You can use the CircuitBreakerRegistry to manage (create and retrieve) CircuitBreaker instances. You can create a CircuitBreakerRegistry with a default global <code>CircuitBreakerConfig</code> for all of your CircuitBreaker instances as follows.</p>
 </div>
 </div>
 <div class="sect3">
@@ -1285,12 +1206,14 @@ circuitBreaker.getEventPublisher().onEvent(ringBuffer);
 <div class="listingblock">
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="java">CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
-<span class="comment">// Returns the failure rate in percentage.</span>
+<span class="comment">// Returns the current failure rate in percentage.</span>
 <span class="type">float</span> failureRate = metrics.getFailureRate();
 <span class="comment">// Returns the current number of buffered calls.</span>
 <span class="type">int</span> bufferedCalls = metrics.getNumberOfBufferedCalls();
 <span class="comment">// Returns the current number of failed calls.</span>
-<span class="type">int</span> failedCalls = metrics.getNumberOfFailedCalls();</code></pre>
+<span class="type">int</span> failedCalls = metrics.getNumberOfFailedCalls();
+<span class="comment">// Returns the current number of not permitted calls when the CircuitBreaker is open.</span>
+<span class="type">int</span> failedCalls = metrics.getNumberOfNotPermittedCalls();</code></pre>
 </div>
 </div>
 </div>
@@ -1842,12 +1765,13 @@ an exception is thrown upstream and TimeLimiter, if configured, will attempt to 
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="CodeRay highlight"><code data-lang="java"><span class="predefined-type">ExecutorService</span> executorService = <span class="predefined-type">Executors</span>.newSingleThreadExecutor();
+<pre class="CodeRay highlight"><code data-lang="java"><span class="comment">// Run your call to BackendService.doSomething() asynchronously</span>
+Supplier&lt;CompletableFuture&lt;<span class="predefined-type">Integer</span>&gt;&gt; futureSupplier = () -&gt; CompletableFuture.supplyAsync(backendService::doSomething);
 
-<span class="comment">// Wrap your call to BackendService.doSomething() in a future provided by your executor</span>
-Supplier&lt;<span class="predefined-type">Future</span>&lt;<span class="predefined-type">Integer</span>&gt;&gt; futureSupplier = () -&gt; executorService.submit(backendService::doSomething)
+<span class="comment">// Either execute the future</span>
+<span class="predefined-type">Integer</span> result = timeLimiter.executeFutureSupplier(futureSupplier);
 
-<span class="comment">// Decorate your supplier so that the future can be retrieved and executed upon</span>
+<span class="comment">// Or decorate your supplier so that the future can be retrieved and executed upon</span>
 <span class="predefined-type">Callable</span> restrictedCall = TimeLimiter
     .decorateFutureSupplier(timeLimiter, futureSupplier);
 
@@ -1859,11 +1783,13 @@ Try.of(restrictedCall.call)
 <div class="sect4">
 <h5 id="_timelimiter_and_circuitbreaker"><a class="anchor" href="#_timelimiter_and_circuitbreaker"></a>TimeLimiter and CircuitBreaker</h5>
 <div class="paragraph">
-<p>The following example shows how to apply a timelimit to a circuit breaker callable.</p>
+<p>The following example shows how to apply a time limit to a circuit breaker callable.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="CodeRay highlight"><code data-lang="java"><span class="predefined-type">Callable</span> restrictedCall = TimeLimiter
+<pre class="CodeRay highlight"><code data-lang="java">Supplier&lt;CompletableFuture&lt;<span class="predefined-type">Integer</span>&gt;&gt; futureSupplier = () -&gt; CompletableFuture.supplyAsync(backendService::doSomething);
+
+<span class="predefined-type">Callable</span> restrictedCall = TimeLimiter
     .decorateFutureSupplier(timeLimiter, futureSupplier);
 
 <span class="comment">// Decorate the restricted callable with a CircuitBreaker</span>
@@ -2117,7 +2043,7 @@ For example</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="CodeRay highlight"><code data-lang="java"><span class="annotation">@component</span>
+<pre class="CodeRay highlight"><code data-lang="java"><span class="annotation">@Component</span>
 <span class="directive">public</span> <span class="type">class</span> <span class="class">RetryDummyServiceImpl</span> <span class="directive">implements</span> RetryDummyService {
 
 <span class="annotation">@Retry</span>(name = RetryDummyService.BACKEND)
@@ -2528,12 +2454,595 @@ so for detailed documentation please refer to previous section:</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_ratpack_starter"><a class="anchor" href="#_ratpack_starter"></a>4.2. Ratpack Starter</h3>
+<h3 id="_spring_boot_starter_2"><a class="anchor" href="#_spring_boot_starter_2"></a>4.2. Spring Boot Starter</h3>
+<div class="sect3">
+<h4 id="_gradle_3"><a class="anchor" href="#_gradle_3"></a>4.2.1. Gradle</h4>
+<div class="paragraph">
+<p>Add the Spring Boot 2 Starter of Resilience4j to your compile dependency:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code>repositories {
+	maven { url 'http://oss.jfrog.org/artifactory/oss-snapshot-local/' }
+	mavenCentral()
+}
+
+
+dependencies {
+	compile('io.github.resilience4j:resilience4j-spring-boot2:{release-version}')
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_monitoring_5"><a class="anchor" href="#_monitoring_5"></a>4.2.2. Monitoring</h4>
+<div class="paragraph">
+<p>Spring Boot Actuator health information can be used to check the status of your running application.<br>
+It is often used by monitoring software to alert someone if a production system has serious issues.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_retry_5"><a class="anchor" href="#_retry_5"></a>4.2.3. Retry</h4>
+<div class="paragraph">
+<p>When you enable retry, metrics are automatically published on the metrics endpoint.</p>
+</div>
+<div class="paragraph">
+<p>For example:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="json">{
+    <span class="key"><span class="delimiter">&quot;</span><span class="content">names</span><span class="delimiter">&quot;</span></span>: [
+        <span class="string"><span class="delimiter">&quot;</span><span class="content">resilience4j.retry.backendA.failedCallsWithoutRetry</span><span class="delimiter">&quot;</span></span>,
+        <span class="string"><span class="delimiter">&quot;</span><span class="content">resilience4j.retry.backendA.failedCallsWithRetry</span><span class="delimiter">&quot;</span></span>,
+        <span class="string"><span class="delimiter">&quot;</span><span class="content">resilience4j.retry.backendA.successCalls</span><span class="delimiter">&quot;</span></span>,
+        <span class="string"><span class="delimiter">&quot;</span><span class="content">resilience4j.retry.backendA.successCallsWithRetry</span><span class="delimiter">&quot;</span></span>
+        ]
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>When you want to publish Retry/AsyncRetry endpoints on the Prometheus endpoint, you have to add the dependency <code>io.micrometer:micrometer-registry-prometheus</code>.<br>
+and you have same metrics exposed there , check circuit breaker below for more information about the example.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_circuitbreaker_5"><a class="anchor" href="#_circuitbreaker_5"></a>4.2.4. CircuitBreaker</h4>
+<div class="paragraph">
+<p>This demo publishes the status and metrics of all CircuitBreakers via a custom <code>CircuitBreakerHealthIndicator</code>.<br>
+A closed CircuitBreaker state is mapped to UP, an open state to DOWN and a half-open state to UNKNOWN.</p>
+</div>
+<div class="paragraph">
+<p>For example:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="json">{
+  <span class="key"><span class="delimiter">&quot;</span><span class="content">status</span><span class="delimiter">&quot;</span></span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">UP</span><span class="delimiter">&quot;</span></span>,
+  <span class="key"><span class="delimiter">&quot;</span><span class="content">backendACircuitBreaker</span><span class="delimiter">&quot;</span></span>: {
+    <span class="key"><span class="delimiter">&quot;</span><span class="content">status</span><span class="delimiter">&quot;</span></span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">DOWN</span><span class="delimiter">&quot;</span></span>,
+    <span class="key"><span class="delimiter">&quot;</span><span class="content">failureRate</span><span class="delimiter">&quot;</span></span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">60.0%</span><span class="delimiter">&quot;</span></span>,
+    <span class="key"><span class="delimiter">&quot;</span><span class="content">failureRateThreshold</span><span class="delimiter">&quot;</span></span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">50.0%</span><span class="delimiter">&quot;</span></span>,
+    <span class="key"><span class="delimiter">&quot;</span><span class="content">maxBufferedCalls</span><span class="delimiter">&quot;</span></span>: <span class="integer">5</span>,
+    <span class="key"><span class="delimiter">&quot;</span><span class="content">bufferedCalls</span><span class="delimiter">&quot;</span></span>: <span class="integer">5</span>,
+    <span class="key"><span class="delimiter">&quot;</span><span class="content">failedCalls</span><span class="delimiter">&quot;</span></span>: <span class="integer">3</span>,
+    <span class="key"><span class="delimiter">&quot;</span><span class="content">notPermittedCalls</span><span class="delimiter">&quot;</span></span>: <span class="integer">0</span>
+  },
+  <span class="key"><span class="delimiter">&quot;</span><span class="content">backendBCircuitBreaker</span><span class="delimiter">&quot;</span></span>: {
+    <span class="key"><span class="delimiter">&quot;</span><span class="content">status</span><span class="delimiter">&quot;</span></span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">UP</span><span class="delimiter">&quot;</span></span>,
+    <span class="key"><span class="delimiter">&quot;</span><span class="content">failureRate</span><span class="delimiter">&quot;</span></span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">0.0%</span><span class="delimiter">&quot;</span></span>,
+    <span class="key"><span class="delimiter">&quot;</span><span class="content">failureRateThreshold</span><span class="delimiter">&quot;</span></span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">50.0%</span><span class="delimiter">&quot;</span></span>,
+    <span class="key"><span class="delimiter">&quot;</span><span class="content">maxBufferedCalls</span><span class="delimiter">&quot;</span></span>: <span class="integer">10</span>,
+    <span class="key"><span class="delimiter">&quot;</span><span class="content">bufferedCalls</span><span class="delimiter">&quot;</span></span>: <span class="integer">10</span>,
+    <span class="key"><span class="delimiter">&quot;</span><span class="content">failedCalls</span><span class="delimiter">&quot;</span></span>: <span class="integer">0</span>,
+    <span class="key"><span class="delimiter">&quot;</span><span class="content">notPermittedCalls</span><span class="delimiter">&quot;</span></span>: <span class="integer">0</span>
+  }
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Metrics are automatically published on the Metrics endpoint.<br>
+For example:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="json">{
+    <span class="key"><span class="delimiter">&quot;</span><span class="content">names</span><span class="delimiter">&quot;</span></span>: [
+        <span class="string"><span class="delimiter">&quot;</span><span class="content">resilience4j.circuitbreaker.backendA.successful</span><span class="delimiter">&quot;</span></span>,
+        <span class="string"><span class="delimiter">&quot;</span><span class="content">resilience4j.circuitbreaker.backendA.failed</span><span class="delimiter">&quot;</span></span>,
+        <span class="string"><span class="delimiter">&quot;</span><span class="content">resilience4j.circuitbreaker.backendA.buffered</span><span class="delimiter">&quot;</span></span>,
+        <span class="string"><span class="delimiter">&quot;</span><span class="content">resilience4j.circuitbreaker.backendA.buffered_max</span><span class="delimiter">&quot;</span></span>,
+        <span class="string"><span class="delimiter">&quot;</span><span class="content">resilience4j.circuitbreaker.backendA.not_permitted</span><span class="delimiter">&quot;</span></span>,
+        <span class="string"><span class="delimiter">&quot;</span><span class="content">resilience4j.circuitbreaker.backendB.successful</span><span class="delimiter">&quot;</span></span>,
+        <span class="string"><span class="delimiter">&quot;</span><span class="content">resilience4j.circuitbreaker.backendB.failed</span><span class="delimiter">&quot;</span></span>,
+        <span class="string"><span class="delimiter">&quot;</span><span class="content">resilience4j.circuitbreaker.backendB.buffered</span><span class="delimiter">&quot;</span></span>,
+        <span class="string"><span class="delimiter">&quot;</span><span class="content">resilience4j.circuitbreaker.backendB.buffered_max</span><span class="delimiter">&quot;</span></span>,
+        <span class="string"><span class="delimiter">&quot;</span><span class="content">resilience4j.circuitbreaker.backendB.not_permitted</span><span class="delimiter">&quot;</span></span>
+        ]
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>When you want to publish CircuitBreaker endpoints on the Prometheus endpoint, you have to add the dependency <code>io.micrometer:micrometer-registry-prometheus</code>.<br>
+For example:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code># HELP resilience4j_circuitbreaker_calls Circuit Breaker Call Stats
+# TYPE resilience4j_circuitbreaker_calls gauge
+resilience4j_circuitbreaker_calls{name="backendB",call_result="successful",} 0.0
+resilience4j_circuitbreaker_calls{name="backendB",call_result="failed",} 0.0
+resilience4j_circuitbreaker_calls{name="backendB",call_result="not_permitted",} 0.0
+resilience4j_circuitbreaker_calls{name="backendB",call_result="buffered",} 0.0
+resilience4j_circuitbreaker_calls{name="backendB",call_result="buffered_max",} 10.0
+resilience4j_circuitbreaker_calls{name="backendA",call_result="successful",} 0.0
+resilience4j_circuitbreaker_calls{name="backendA",call_result="failed",} 0.0
+resilience4j_circuitbreaker_calls{name="backendA",call_result="not_permitted",} 0.0
+resilience4j_circuitbreaker_calls{name="backendA",call_result="buffered",} 0.0
+resilience4j_circuitbreaker_calls{name="backendA",call_result="buffered_max",} 5.0
+# HELP resilience4j_circuitbreaker_states Circuit Breaker States
+# TYPE resilience4j_circuitbreaker_states gauge
+resilience4j_circuitbreaker_states{name="backendB",state="closed",} 1.0
+resilience4j_circuitbreaker_states{name="backendB",state="open",} 0.0
+resilience4j_circuitbreaker_states{name="backendB",state="half_open",} 0.0
+resilience4j_circuitbreaker_states{name="backendA",state="closed",} 1.0
+resilience4j_circuitbreaker_states{name="backendA",state="open",} 0.0
+resilience4j_circuitbreaker_states{name="backendA",state="half_open",} 0.0</code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_ratelimiter_5"><a class="anchor" href="#_ratelimiter_5"></a>4.2.5. RateLimiter</h4>
+<div class="paragraph">
+<p>This demo publishes the status and metrics of all RateLimiter via a custom <code>RateLimiterHealthIndicator</code>.<br>
+RateLimiterHealthIndicator changes its state DOWN only if there is some permission waiting threads<br>
+and they won&#8217;t be able to unblock until timeout.</p>
+</div>
+<div class="paragraph">
+<p>For example:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="json">{
+  <span class="key"><span class="delimiter">&quot;</span><span class="content">status</span><span class="delimiter">&quot;</span></span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">UP</span><span class="delimiter">&quot;</span></span>,
+  <span class="key"><span class="delimiter">&quot;</span><span class="content">backendARateLimiter</span><span class="delimiter">&quot;</span></span>: {
+    <span class="key"><span class="delimiter">&quot;</span><span class="content">status</span><span class="delimiter">&quot;</span></span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">UP</span><span class="delimiter">&quot;</span></span>,
+    <span class="key"><span class="delimiter">&quot;</span><span class="content">availablePermissions</span><span class="delimiter">&quot;</span></span>: <span class="integer">10</span>,
+    <span class="key"><span class="delimiter">&quot;</span><span class="content">numberOfWaitingThreads</span><span class="delimiter">&quot;</span></span>: <span class="integer">0</span>
+  }
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Metrics are automatically published on the Metrics endpoint.<br>
+For example:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="json">{
+    <span class="key"><span class="delimiter">&quot;</span><span class="content">resilience4j.ratelimiter.backendA.available_permissions</span><span class="delimiter">&quot;</span></span>: <span class="integer">10</span>,
+    <span class="key"><span class="delimiter">&quot;</span><span class="content">resilience4j.ratelimiter.backendA.number_of_waiting_threads</span><span class="delimiter">&quot;</span></span>: <span class="integer">0</span>,
+    <span class="key"><span class="delimiter">&quot;</span><span class="content">resilience4j.ratelimiter.backendB.available_permissions</span><span class="delimiter">&quot;</span></span>: <span class="integer">6</span>,
+    <span class="key"><span class="delimiter">&quot;</span><span class="content">resilience4j.ratelimiter.backendB.number_of_waiting_threads</span><span class="delimiter">&quot;</span></span>: <span class="integer">0</span>
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_configuration_2"><a class="anchor" href="#_configuration_2"></a>4.2.6. Configuration</h4>
+<div class="sect4">
+<h5 id="_retry_6"><a class="anchor" href="#_retry_6"></a>Retry</h5>
+<div class="paragraph">
+<p>You can configure your Retries in Spring Boot&#8217;s <code>application.yml</code> config file.<br>
+For example</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="yaml"><span class="key">resilience4j.retry</span>:
+  <span class="key">retryAspectOrder</span>: <span class="string"><span class="content">399</span></span>
+  <span class="key">backends</span>:
+    <span class="key">retryBackendA</span>:
+      <span class="key">maxRetryAttempts</span>: <span class="string"><span class="content">3</span></span>
+      <span class="key">waitDuration</span>: <span class="string"><span class="content">600</span></span>
+      <span class="key">eventConsumerBufferSize</span>: <span class="string"><span class="content">100</span></span>
+      <span class="key">enableExponentialBackoff</span>: <span class="string"><span class="content">false</span></span>
+      <span class="key">exponentialBackoffMultiplier</span>: <span class="string"><span class="content">2</span></span>
+      <span class="key">enableRandomizedWait</span>: <span class="string"><span class="content">false</span></span>
+      <span class="key">randomizedWaitFactor</span>: <span class="string"><span class="content">2</span></span>
+      <span class="key">retryExceptionPredicate</span>: <span class="string"><span class="content">io.github.resilience4j.circuitbreaker.RecordFailurePredicate</span></span>
+      <span class="key">retryExceptions</span>:
+      - <span class="string"><span class="content">java.io.IOException</span></span>
+      <span class="key">ignoreExceptions</span>:
+      - <span class="string"><span class="content">io.github.resilience4j.circuitbreaker.IgnoredException</span></span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The rules for Retry configuration :</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>enableRandomizedWait and enableExponentialBackoff is false by default.</p>
+</li>
+<li>
+<p>You can not enable both enableRandomizedWait and enableExponentialBackoff , validation exception will be thrown if it happen.</p>
+</li>
+<li>
+<p>If exponentialBackoffMultiplier is not provided if enableExponentialBackoff is enabled , default ExponentialBackoff will be used , same story for enableRandomizedWait.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>The rules for Retry spring annotation usage  :</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Retry aspect will detect the proper handling based into the method return type for synchronous and asynchronous execution</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>Code example of retry and async retry annotation usage in Java Spring component :</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="java"><span class="annotation">@component</span>
+<span class="directive">public</span> <span class="type">class</span> <span class="class">RetryDummyServiceImpl</span> <span class="directive">implements</span> RetryDummyService {
+
+<span class="annotation">@Retry</span>(name = RetryDummyService.BACKEND)
+<span class="annotation">@Override</span>
+<span class="directive">public</span> <span class="type">void</span> doSomething(<span class="type">boolean</span> throwBackendTrouble) <span class="directive">throws</span> <span class="exception">IOException</span> {
+        <span class="keyword">if</span> (throwBackendTrouble) {
+                <span class="keyword">throw</span> <span class="keyword">new</span> <span class="exception">IOException</span>(<span class="string"><span class="delimiter">&quot;</span><span class="content">Test Message</span><span class="delimiter">&quot;</span></span>);
+        }
+}
+
+<span class="annotation">@Retry</span>(name = RetryDummyService.BACKEND)
+<span class="annotation">@Override</span>
+<span class="directive">public</span> CompletionStage&lt;<span class="predefined-type">String</span>&gt; doSomethingAsync(<span class="type">boolean</span> throwException) <span class="directive">throws</span> <span class="exception">IOException</span> {
+        <span class="keyword">if</span> (throwException) {
+                <span class="keyword">throw</span> <span class="keyword">new</span> <span class="exception">IOException</span>(<span class="string"><span class="delimiter">&quot;</span><span class="content">Test Message</span><span class="delimiter">&quot;</span></span>);
+        } <span class="keyword">else</span> {
+                <span class="keyword">return</span> CompletableFuture.supplyAsync(() -&gt; <span class="string"><span class="delimiter">&quot;</span><span class="content">test</span><span class="delimiter">&quot;</span></span>);
+        }
+}
+
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_circuitbreaker_6"><a class="anchor" href="#_circuitbreaker_6"></a>CircuitBreaker</h5>
+<div class="paragraph">
+<p>You can configure your CircuitBreakers in Spring Boot&#8217;s <code>application.yml</code> config file.<br>
+For example</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="yaml"><span class="key">resilience4j.circuitbreaker</span>:
+    <span class="key">backends</span>:
+        <span class="key">backendA</span>:
+            <span class="key">ringBufferSizeInClosedState</span>: <span class="string"><span class="content">5</span></span>
+            <span class="key">ringBufferSizeInHalfOpenState</span>: <span class="string"><span class="content">3</span></span>
+            <span class="key">waitInterval</span>: <span class="string"><span class="content">5000</span></span>
+            <span class="key">failureRateThreshold</span>: <span class="string"><span class="content">50</span></span>
+            <span class="key">eventConsumerBufferSize</span>: <span class="string"><span class="content">10</span></span>
+            <span class="key">registerHealthIndicator</span>: <span class="string"><span class="content">true</span></span>
+            <span class="key">recordFailurePredicate</span>: <span class="string"><span class="content">com.foo.FooRecordFailurePredicate</span></span>
+            <span class="key">recordExceptions</span>:
+                - <span class="string"><span class="content">org.springframework.web.client.HttpServerErrorException</span></span>
+            <span class="key">ignoreExceptions</span>:
+                - <span class="string"><span class="content">org.springframework.web.client.HttpClientErrorException</span></span>
+        <span class="key">backendB</span>:
+            <span class="key">ringBufferSizeInClosedState</span>: <span class="string"><span class="content">10</span></span>
+            <span class="key">ringBufferSizeInHalfOpenState</span>: <span class="string"><span class="content">5</span></span>
+            <span class="key">waitInterval</span>: <span class="string"><span class="content">5000</span></span>
+            <span class="key">failureRateThreshold</span>: <span class="string"><span class="content">50</span></span>
+            <span class="key">eventConsumerBufferSize</span>: <span class="string"><span class="content">10</span></span>
+            <span class="key">registerHealthIndicator</span>: <span class="string"><span class="content">true</span></span>
+            <span class="key">recordFailurePredicate</span>: <span class="string"><span class="content">com.foo.FooRecordFailurePredicate</span></span>
+            <span class="key">recordExceptions</span>:
+                - <span class="string"><span class="content">org.springframework.web.client.HttpServerErrorException</span></span>
+            <span class="key">ignoreExceptions</span>:
+                - <span class="string"><span class="content">org.springframework.web.client.HttpClientErrorException</span></span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_ratelimiter_6"><a class="anchor" href="#_ratelimiter_6"></a>RateLimiter</h5>
+<div class="paragraph">
+<p>You can configure your CircuitBreakers in Spring Boot&#8217;s <code>application.yml</code> config file.<br>
+For example</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="yaml"><span class="key">resilience4j.ratelimiter</span>:
+    <span class="key">limiters</span>:
+        <span class="key">backendA</span>:
+            <span class="key">limitForPeriod</span>: <span class="string"><span class="content">10</span></span>
+            <span class="key">limitRefreshPeriodInMillis</span>: <span class="string"><span class="content">1000</span></span>
+            <span class="key">timeoutInMillis</span>: <span class="string"><span class="content">0</span></span>
+            <span class="key">subscribeForEvents</span>: <span class="string"><span class="content">true</span></span>
+            <span class="key">registerHealthIndicator</span>: <span class="string"><span class="content">true</span></span>
+            <span class="key">eventConsumerBufferSize</span>: <span class="string"><span class="content">100</span></span>
+        <span class="key">backendB</span>:
+            <span class="key">limitForPeriod</span>: <span class="string"><span class="content">6</span></span>
+            <span class="key">limitRefreshPeriodInMillis</span>: <span class="string"><span class="content">500</span></span>
+            <span class="key">timeoutInMillis</span>: <span class="string"><span class="content">3000</span></span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_explicit_ordering_for_circuitbreaker_and_ratelimiter_aspects_2"><a class="anchor" href="#_explicit_ordering_for_circuitbreaker_and_ratelimiter_aspects_2"></a>Explicit ordering for CircuitBreaker and RateLimiter aspects</h5>
+<div class="paragraph">
+<p>You can adjust <code>RateLimiterProperties.rateLimiterAspectOrder</code> and <code>CircuitBreakerProperties.circuitBreakerAspectOrder</code><br>
+and explicitly define <code>CircuitBreaker</code> and <code>RateLimiter</code> execution sequence.<br>
+By default <code>CircuitBreaker</code> will be executed BEFORE <code>RateLimiter</code>.</p>
+</div>
+<div class="admonitionblock warning">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-warning" title="Warning"></i>
+</td>
+<td class="content">
+Please be careful changing of <code>CircuitBreaker</code>/<code>RateLimiter</code> ordering can drastically change application behavior.
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_event_monitoring_2"><a class="anchor" href="#_event_monitoring_2"></a>4.2.7. Event Monitoring</h4>
+<div class="sect4">
+<h5 id="_retry_7"><a class="anchor" href="#_retry_7"></a>Retry</h5>
+<div class="paragraph">
+<p>The emitted Retry events are stored in a separate circular event consumer buffers. The size of a event consumer buffer can be configured per Retry in the application.yml file (eventConsumerBufferSize).<br>
+The demo adds a custom Spring Boot Actuator endpoint which can be used to monitor the emitted events of your Retries.<br>
+The endpoint <code>/actuator/retries</code> lists the names of all Retries instances.<br>
+For example:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>{
+  "retries": [
+    "retryBackendA",
+    "retryBackendA"
+  ]
+}</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The endpoint <code>/actuator/retriesevents</code> lists the latest 100 emitted events of all Retries instances.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>{
+  "retryEvents": [
+    {
+      "retryName": "retryBackendC",
+      "type": "RETRY",
+      "creationTime": "2019-03-11T17:32:49.648+01:00[Europe/Brussels]",
+      "errorMessage": "java.io.IOException: Test Message",
+      "numberOfAttempts": 1
+    },
+    {
+      "retryName": "retryBackendA",
+      "type": "RETRY",
+      "creationTime": "2019-03-11T17:32:50.259+01:00[Europe/Brussels]",
+      "errorMessage": "java.io.IOException: Test Message",
+      "numberOfAttempts": 2
+    },
+    {
+      "retryName": "retryBackendA",
+      "type": "ERROR",
+      "creationTime": "2019-03-11T17:32:50.866+01:00[Europe/Brussels]",
+      "errorMessage": "java.io.IOException: Test Message",
+      "numberOfAttempts": 3
+    }
+  ]
+}</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The endpoint <code>/actuator/retryevents/{retryrName}</code> lists the latest emitted events of a specific Retry.<br>
+For example <code>/actuator/retryevents/retryBackendA</code>:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>{
+  "retryEvents": [
+    {
+      "retryName": "retryBackendA",
+      "type": "RETRY",
+      "creationTime": "2019-03-11T17:32:49.648+01:00[Europe/Brussels]",
+      "errorMessage": "java.io.IOException: Test Message",
+      "numberOfAttempts": 1
+    },
+    {
+      "retryName": "retryBackendA",
+      "type": "RETRY",
+      "creationTime": "2019-03-11T17:32:50.259+01:00[Europe/Brussels]",
+      "errorMessage": "java.io.IOException: Test Message",
+      "numberOfAttempts": 2
+    },
+    {
+      "retryName": "retryBackendA",
+      "type": "ERROR",
+      "creationTime": "2019-03-11T17:32:50.866+01:00[Europe/Brussels]",
+      "errorMessage": "java.io.IOException: Test Message",
+      "numberOfAttempts": 3
+    }
+  ]
+}</pre>
+</div>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_circuitbreaker_7"><a class="anchor" href="#_circuitbreaker_7"></a>CircuitBreaker</h5>
+<div class="paragraph">
+<p>The emitted CircuitBreaker events are stored in a separate circular event consumer buffers. The size of a event consumer buffer can be configured per CircuitBreaker in the application.yml file (eventConsumerBufferSize).<br>
+The demo adds a custom Spring Boot Actuator endpoint which can be used to monitor the emitted events of your CircuitBreakers.<br>
+The endpoint <code>/actuator/circuitbreakers</code> lists the names of all CircuitBreaker instances.<br>
+For example:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>{
+    "circuitBreakers": [
+      "backendA",
+      "backendB"
+    ]
+}</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The endpoint <code>/management/circuitbreaker-events</code> lists the latest 100 emitted events of all CircuitBreaker instances.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>{
+"circuitBreakerEvents":[
+  {
+    "circuitBreakerName": "backendA",
+    "type": "ERROR",
+    "creationTime": "2017-01-10T15:39:17.117+01:00[Europe/Berlin]",
+    "errorMessage": "org.springframework.web.client.HttpServerErrorException: 500 This is a remote exception",
+    "durationInMs": 0
+  },
+  {
+    "circuitBreakerName": "backendA",
+    "type": "SUCCESS",
+    "creationTime": "2017-01-10T15:39:20.518+01:00[Europe/Berlin]",
+    "durationInMs": 0
+  },
+  {
+    "circuitBreakerName": "backendB",
+    "type": "ERROR",
+    "creationTime": "2017-01-10T15:41:31.159+01:00[Europe/Berlin]",
+    "errorMessage": "org.springframework.web.client.HttpServerErrorException: 500 This is a remote exception",
+    "durationInMs": 0
+  },
+  {
+    "circuitBreakerName": "backendB",
+    "type": "SUCCESS",
+    "creationTime": "2017-01-10T15:41:33.526+01:00[Europe/Berlin]",
+    "durationInMs": 0
+  }
+]
+}</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The endpoint <code>/management/circuitbreaker/events/{circuitBreakerName}</code> lists the latest emitted events of a specific CircuitBreaker.<br>
+For example <code>/management/circuitbreaker/events/backendA</code>:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>{
+"circuitBreakerEvents":[
+  {
+    "circuitBreakerName": "backendA",
+    "type": "ERROR",
+    "creationTime": "2017-01-10T15:39:17.117+01:00[Europe/Berlin]",
+    "errorMessage": "org.springframework.web.client.HttpServerErrorException: 500 This is a remote exception",
+    "durationInMs": 0
+  },
+  {
+    "circuitBreakerName": "backendA",
+    "type": "SUCCESS",
+    "creationTime": "2017-01-10T15:39:20.518+01:00[Europe/Berlin]",
+    "durationInMs": 0
+  },
+  {
+    "circuitBreakerName": "backendA",
+    "type": "STATE_TRANSITION",
+    "creationTime": "2017-01-10T15:39:22.341+01:00[Europe/Berlin]",
+    "stateTransition": "CLOSED_TO_OPEN"
+  },
+  {
+    "circuitBreakerName": "backendA",
+    "type": "NOT_PERMITTED",
+    "creationTime": "2017-01-10T15:39:22.780+01:00[Europe/Berlin]"
+  }
+]
+}</pre>
+</div>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_ratelimiter_7"><a class="anchor" href="#_ratelimiter_7"></a>RateLimiter</h5>
+<div class="admonitionblock warning">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-warning" title="Warning"></i>
+</td>
+<td class="content">
+Unlike the CircuitBreaker events, RateLimiter events require explicit subscription.<br>
+Use property resilience4j.ratelimiter.limiters.{yourBackendName}.registerHealthIndicator=true
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>There are literally the same endpoints implemented for RateLimiter,<br>
+so for detailed documentation please refer to previous section:</p>
+</div>
+<div class="paragraph">
+<p>List of available endpoints:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>/ratelimiters</code></p>
+</li>
+<li>
+<p><code>/ratelimiter-events</code></p>
+</li>
+<li>
+<p><code>/ratelimiter-events/{rateLimiterName}</code></p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>Example of response:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>{
+  "eventsList": [
+    {
+      "rateLimiterName": "backendA",
+      "rateLimiterEventType": "SUCCESSFUL_ACQUIRE",
+      "rateLimiterCreationTime": "2017-05-05T21:29:40.463+03:00[Europe/Uzhgorod]"
+    },
+    {
+      "rateLimiterName": "backendA",
+      "rateLimiterEventType": "SUCCESSFUL_ACQUIRE",
+      "rateLimiterCreationTime": "2017-05-05T21:29:40.469+03:00[Europe/Uzhgorod]"
+    },
+    {
+      "rateLimiterName": "backendA",
+      "rateLimiterEventType": "FAILED_ACQUIRE",
+      "rateLimiterCreationTime": "2017-05-05T21:29:41.268+03:00[Europe/Uzhgorod]"
+    }
+  ]
+}</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_ratpack_starter"><a class="anchor" href="#_ratpack_starter"></a>4.3. Ratpack Starter</h3>
 <div class="paragraph">
 <p>This add-on provides integration with <a href="https://ratpack.io">Ratpack</a> libraries.</p>
 </div>
 <div class="sect3">
-<h4 id="_gradle_3"><a class="anchor" href="#_gradle_3"></a>4.2.1. Gradle</h4>
+<h4 id="_gradle_4"><a class="anchor" href="#_gradle_4"></a>4.3.1. Gradle</h4>
 <div class="paragraph">
 <p>Add the Ratpack Starter of Resilience4j to your compile dependency:</p>
 </div>
@@ -2552,7 +3061,7 @@ dependencies {
 </div>
 </div>
 <div class="sect3">
-<h4 id="_basic_usage"><a class="anchor" href="#_basic_usage"></a>4.2.2. Basic Usage</h4>
+<h4 id="_basic_usage"><a class="anchor" href="#_basic_usage"></a>4.3.2. Basic Usage</h4>
 <div class="paragraph">
 <p>Installing the <code>Resilience4jModule</code> module provides a <code>BulkheadRegistry</code> <code>CircuitBreakerRegistry</code>, <code>RateLimiterRegistry</code>,<br>
 and <code>RetryRegistry</code> with the default configurations. It also install the Guice method interceptors<br>
@@ -2590,7 +3099,7 @@ will be used.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="_handlers"><a class="anchor" href="#_handlers"></a>4.2.3. Handlers</h4>
+<h4 id="_handlers"><a class="anchor" href="#_handlers"></a>4.3.3. Handlers</h4>
 <div class="paragraph">
 <p>You can rate limit an endpoint by defining a <code>RateLimiterHandler</code> for the endpoint.</p>
 </div>
@@ -2640,7 +3149,7 @@ will be used.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="_promises"><a class="anchor" href="#_promises"></a>4.2.4. Promises</h4>
+<h4 id="_promises"><a class="anchor" href="#_promises"></a>4.3.4. Promises</h4>
 <div class="paragraph">
 <p>Ratpack promises provide the means by which an application can become fully non-blocking and asynchronous.<br>
 Resilience4j provides transformers that can be applied to Promises. This is ideal when promising a value<br>
@@ -2661,7 +3170,7 @@ that is coming from some sort of I/O source.</p>
 </div>
 </div>
 <div class="sect4">
-<h5 id="_circuitbreaker_5"><a class="anchor" href="#_circuitbreaker_5"></a>CircuitBreaker</h5>
+<h5 id="_circuitbreaker_8"><a class="anchor" href="#_circuitbreaker_8"></a>CircuitBreaker</h5>
 <div class="paragraph">
 <p>You can easily apply a CircuitBreaker to any Ratpack Promise, given an existing <code>CircuitBreaker</code> instance called <code>circuitBreaker</code>.</p>
 </div>
@@ -2693,7 +3202,7 @@ the <code>circuitBreaker</code>.</p>
 </div>
 </div>
 <div class="sect4">
-<h5 id="_retry_5"><a class="anchor" href="#_retry_5"></a>Retry</h5>
+<h5 id="_retry_8"><a class="anchor" href="#_retry_8"></a>Retry</h5>
 <div class="paragraph">
 <p>You can easily apply a Retry to any Ratpack Promise, given an existing <code>Retry</code> instance called <code>retry</code>.</p>
 </div>
@@ -2707,7 +3216,7 @@ the <code>circuitBreaker</code>.</p>
 </div>
 </div>
 <div class="sect4">
-<h5 id="_ratelimiter_5"><a class="anchor" href="#_ratelimiter_5"></a>RateLimiter</h5>
+<h5 id="_ratelimiter_8"><a class="anchor" href="#_ratelimiter_8"></a>RateLimiter</h5>
 <div class="paragraph">
 <p>You can easily apply a RateLimiter to any Ratpack Promise, given an existing <code>RateLimiter</code> instance called <code>rateLimiter</code>.</p>
 </div>
@@ -2722,7 +3231,7 @@ the <code>circuitBreaker</code>.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="_guice_aop"><a class="anchor" href="#_guice_aop"></a>4.2.5. Guice AOP</h4>
+<h4 id="_guice_aop"><a class="anchor" href="#_guice_aop"></a>4.3.5. Guice AOP</h4>
 <div class="paragraph">
 <p>Guice provides method interception capabilities. Here are provided some annotations which support<br>
 methods returning types:</p>
@@ -2771,7 +3280,7 @@ a fallback value that is returned when the bulkhead identified by <code>name</co
 </div>
 </div>
 <div class="sect4">
-<h5 id="_circuitbreaker_6"><a class="anchor" href="#_circuitbreaker_6"></a>CircuitBreaker</h5>
+<h5 id="_circuitbreaker_9"><a class="anchor" href="#_circuitbreaker_9"></a>CircuitBreaker</h5>
 <div class="paragraph">
 <p>The demo shows how to use the <code>CircuitBreaker</code> annotation to make your Ratpack application more fault tolerant.<br>
 You can either annotate a class in order to protect all public methods or just some specific methods.<br>
@@ -2792,7 +3301,7 @@ a fallback value that is returned when the circuit breaker identified by <code>n
 </div>
 </div>
 <div class="sect4">
-<h5 id="_retry_6"><a class="anchor" href="#_retry_6"></a>Retry</h5>
+<h5 id="_retry_9"><a class="anchor" href="#_retry_9"></a>Retry</h5>
 <div class="paragraph">
 <p>The demo shows how to use the <code>Retry</code> annotation to make your Ratpack application more fault tolerant.<br>
 You can either annotate a class in order to protect all public methods or just some specific methods.<br>
@@ -2814,7 +3323,7 @@ a fallback value that is returned when the retry identified by <code>name</code>
 </div>
 </div>
 <div class="sect4">
-<h5 id="_ratelimiter_6"><a class="anchor" href="#_ratelimiter_6"></a>RateLimiter</h5>
+<h5 id="_ratelimiter_9"><a class="anchor" href="#_ratelimiter_9"></a>RateLimiter</h5>
 <div class="paragraph">
 <p>The demo shows how to use the <code>RateLimiter</code> annotation to make your Ratpack application more fault tolerant.<br>
 You can either annotate a class in order to protect all public methods or just some specific methods.<br>
@@ -2836,7 +3345,7 @@ a fallback value that is returned when the rate limiter rate limit identified by
 </div>
 </div>
 <div class="sect3">
-<h4 id="_functional_style"><a class="anchor" href="#_functional_style"></a>4.2.6. Functional style</h4>
+<h4 id="_functional_style"><a class="anchor" href="#_functional_style"></a>4.3.6. Functional style</h4>
 <div class="paragraph">
 <p>You can still use a functional programming style for Bulkhead, CircuitBreaker, Retry, and RateLimiter. For example:</p>
 </div>
@@ -2861,7 +3370,7 @@ a fallback value that is returned when the rate limiter rate limit identified by
 </div>
 </div>
 <div class="sect3">
-<h4 id="_adding_bulkheads_circuitbreakers_ratelimiters_and_retries"><a class="anchor" href="#_adding_bulkheads_circuitbreakers_ratelimiters_and_retries"></a>4.2.7. Adding Bulkheads, CircuitBreakers, RateLimiters, and Retries</h4>
+<h4 id="_adding_bulkheads_circuitbreakers_ratelimiters_and_retries"><a class="anchor" href="#_adding_bulkheads_circuitbreakers_ratelimiters_and_retries"></a>4.3.7. Adding Bulkheads, CircuitBreakers, RateLimiters, and Retries</h4>
 <div class="paragraph">
 <p>These can be defined in the module configuration or in an external configuration.<br>
 Note that the module only provide default registries, which you can replace by<br>
@@ -2969,7 +3478,7 @@ The below example will record everything exception <code>java.io.IOException</co
 </div>
 </div>
 <div class="sect3">
-<h4 id="_metrics"><a class="anchor" href="#_metrics"></a>4.2.8. Metrics</h4>
+<h4 id="_metrics"><a class="anchor" href="#_metrics"></a>4.3.8. Metrics</h4>
 <div class="paragraph">
 <p>Both dropwizard and prometheus metrics can be auto configured and enabled for all registered<br>
 bulkhead instances, circuitbreaker instances, ratelimiter instances, and retry instances.</p>
@@ -3018,7 +3527,7 @@ bind a CollectorRegistry instance.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="_event_monitoring_2"><a class="anchor" href="#_event_monitoring_2"></a>4.2.9. Event Monitoring</h4>
+<h4 id="_event_monitoring_3"><a class="anchor" href="#_event_monitoring_3"></a>4.3.9. Event Monitoring</h4>
 <div class="sect4">
 <h5 id="_bulkhead_4"><a class="anchor" href="#_bulkhead_4"></a>Bulkhead</h5>
 <div class="paragraph">
@@ -3078,7 +3587,7 @@ so for detailed documentation please refer to previous sections.</p>
 </div>
 </div>
 <div class="sect4">
-<h5 id="_circuitbreaker_7"><a class="anchor" href="#_circuitbreaker_7"></a>CircuitBreaker</h5>
+<h5 id="_circuitbreaker_10"><a class="anchor" href="#_circuitbreaker_10"></a>CircuitBreaker</h5>
 <div class="paragraph">
 <p>The emitted CircuitBreaker events are stored in a separate circular event consumer buffers. The size of a event consumer buffer can be configured per CircuitBreaker in the application.yml file (eventConsumerBufferSize).<br>
 The demo adds a custom Ratpack actuator endpoint which can be used to monitor the emitted events of your CircuitBreakers.<br>
@@ -3222,7 +3731,7 @@ Event types can be:</p>
 </div>
 </div>
 <div class="sect4">
-<h5 id="_ratelimiter_7"><a class="anchor" href="#_ratelimiter_7"></a>RateLimiter</h5>
+<h5 id="_ratelimiter_10"><a class="anchor" href="#_ratelimiter_10"></a>RateLimiter</h5>
 <div class="paragraph">
 <p>These are the same endpoints as implemented for CircuitBreaker,<br>
 so for detailed documentation please refer to previous section.</p>
@@ -3280,7 +3789,7 @@ so for detailed documentation please refer to previous section.</p>
 </div>
 </div>
 <div class="sect4">
-<h5 id="_retry_7"><a class="anchor" href="#_retry_7"></a>Retry</h5>
+<h5 id="_retry_10"><a class="anchor" href="#_retry_10"></a>Retry</h5>
 <div class="paragraph">
 <p>These are the same endpoints as implemented for CircuitBreaker,<br>
 so for detailed documentation please refer to previous sections.</p>
@@ -3343,12 +3852,12 @@ so for detailed documentation please refer to previous sections.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_retrofit"><a class="anchor" href="#_retrofit"></a>4.3. Retrofit</h3>
+<h3 id="_retrofit"><a class="anchor" href="#_retrofit"></a>4.4. Retrofit</h3>
 <div class="paragraph">
 <p><a href="https://square.github.io/retrofit/">Retrofit</a> client circuit breaking &amp; rate limiting.</p>
 </div>
 <div class="sect3">
-<h4 id="_circuit_breaking"><a class="anchor" href="#_circuit_breaking"></a>4.3.1. Circuit Breaking</h4>
+<h4 id="_circuit_breaking"><a class="anchor" href="#_circuit_breaking"></a>4.4.1. Circuit Breaking</h4>
 <div class="paragraph">
 <p>Circuit breaking http client calls is based upon the <code>CircuitBreaker</code> instance provided to a <code>CircuitBreakerCallAdaptor</code>.</p>
 </div>
@@ -3412,7 +3921,7 @@ Retrofit retrofit = <span class="keyword">new</span> Retrofit.Builder()
 </div>
 </div>
 <div class="sect3">
-<h4 id="_rate_limiting"><a class="anchor" href="#_rate_limiting"></a>4.3.2. Rate Limiting</h4>
+<h4 id="_rate_limiting"><a class="anchor" href="#_rate_limiting"></a>4.4.2. Rate Limiting</h4>
 <div class="paragraph">
 <p>Rate limiting of http client calls is based upon the configuration passed to the RateLimiterCallAdaptor.</p>
 </div>
@@ -3432,16 +3941,16 @@ Retrofit retrofit = <span class="keyword">new</span> Retrofit.Builder()
 </div>
 </div>
 <div class="sect2">
-<h3 id="_dropwizard_metrics_exporter"><a class="anchor" href="#_dropwizard_metrics_exporter"></a>4.4. Dropwizard Metrics exporter</h3>
+<h3 id="_dropwizard_metrics_exporter"><a class="anchor" href="#_dropwizard_metrics_exporter"></a>4.5. Dropwizard Metrics exporter</h3>
 <div class="sect3">
-<h4 id="_introduction_6"><a class="anchor" href="#_introduction_6"></a>4.4.1. Introduction</h4>
+<h4 id="_introduction_6"><a class="anchor" href="#_introduction_6"></a>4.5.1. Introduction</h4>
 <div class="paragraph">
 <p>Integration with <a href="http://metrics.dropwizard.io">Dropwizard Metrics</a>.<br>
 With this add-on you can easily add your bulkhead, circuit breaker, rate limiter, retry metrics in your Dropwizard <code>MetricRegistry</code>.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="_usage"><a class="anchor" href="#_usage"></a>4.4.2. Usage</h4>
+<h4 id="_usage"><a class="anchor" href="#_usage"></a>4.5.2. Usage</h4>
 <div class="sect4">
 <h5 id="_bulkhead_5"><a class="anchor" href="#_bulkhead_5"></a>Bulkhead</h5>
 <div class="listingblock">
@@ -3473,7 +3982,7 @@ collectorRegistry.registerAll(BulkheadMetrics.ofBulkhead(foo));</code></pre>
 </div>
 </div>
 <div class="sect4">
-<h5 id="_circuitbreaker_8"><a class="anchor" href="#_circuitbreaker_8"></a>CircuitBreaker</h5>
+<h5 id="_circuitbreaker_11"><a class="anchor" href="#_circuitbreaker_11"></a>CircuitBreaker</h5>
 <div class="listingblock">
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="java"><span class="directive">final</span> MetricRegistry collectorRegistry = <span class="keyword">new</span> MetricRegistry();
@@ -3517,7 +4026,7 @@ collectorRegistry.registerAll(CircuitBreakerMetrics.ofCircuitBreaker(foo));
 </div>
 </div>
 <div class="sect4">
-<h5 id="_ratelimiter_8"><a class="anchor" href="#_ratelimiter_8"></a>RateLimiter</h5>
+<h5 id="_ratelimiter_11"><a class="anchor" href="#_ratelimiter_11"></a>RateLimiter</h5>
 <div class="listingblock">
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="java"><span class="directive">final</span> MetricRegistry metricRegistry = <span class="keyword">new</span> MetricRegistry();
@@ -3545,7 +4054,7 @@ metricRegistry.registerAll(RateLimiterMetrics.ofRateLimiter(rateLimiter));</code
 </div>
 </div>
 <div class="sect4">
-<h5 id="_retry_8"><a class="anchor" href="#_retry_8"></a>Retry</h5>
+<h5 id="_retry_11"><a class="anchor" href="#_retry_11"></a>Retry</h5>
 <div class="listingblock">
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="java"><span class="directive">final</span> MetricRegistry metricRegistry = <span class="keyword">new</span> MetricRegistry();
@@ -3581,9 +4090,9 @@ metricRegistry.registerAll(RetryMetrics.ofRetry(retry));</code></pre>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_prometheus_metrics_integration"><a class="anchor" href="#_prometheus_metrics_integration"></a>4.5. Prometheus Metrics Integration</h3>
+<h3 id="_prometheus_metrics_integration"><a class="anchor" href="#_prometheus_metrics_integration"></a>4.6. Prometheus Metrics Integration</h3>
 <div class="sect3">
-<h4 id="_introduction_7"><a class="anchor" href="#_introduction_7"></a>4.5.1. Introduction</h4>
+<h4 id="_introduction_7"><a class="anchor" href="#_introduction_7"></a>4.6.1. Introduction</h4>
 <div class="paragraph">
 <p>Integration with <a href="https://github.com/prometheus/client_java">Prometheus simple client</a></p>
 </div>
@@ -3674,7 +4183,7 @@ the additional <code>kind</code> label indicates type of calls being recorded, t
 </div>
 </div>
 <div class="sect3">
-<h4 id="_dashboard_example"><a class="anchor" href="#_dashboard_example"></a>4.5.2. Dashboard Example</h4>
+<h4 id="_dashboard_example"><a class="anchor" href="#_dashboard_example"></a>4.6.2. Dashboard Example</h4>
 <div class="imageblock">
 <div class="content">
 <img src="images/prometheus-dashboard.png" alt="Circuit Breaker Dashboard Example">
@@ -3682,9 +4191,9 @@ the additional <code>kind</code> label indicates type of calls being recorded, t
 </div>
 </div>
 <div class="sect3">
-<h4 id="_usage_2"><a class="anchor" href="#_usage_2"></a>4.5.3. Usage</h4>
+<h4 id="_usage_2"><a class="anchor" href="#_usage_2"></a>4.6.3. Usage</h4>
 <div class="sect4">
-<h5 id="_circuitbreaker_9"><a class="anchor" href="#_circuitbreaker_9"></a>CircuitBreaker</h5>
+<h5 id="_circuitbreaker_12"><a class="anchor" href="#_circuitbreaker_12"></a>CircuitBreaker</h5>
 <div class="listingblock">
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="java"><span class="directive">final</span> CollectorRegistry collectorRegistry = CollectorRegistry.defaultRegistry;
@@ -3700,7 +4209,7 @@ collectorRegistry.register(CircuitBreakerMetricsCollector.ofCircuitBreakerRegist
 </div>
 </div>
 <div class="sect4">
-<h5 id="_ratelimiter_9"><a class="anchor" href="#_ratelimiter_9"></a>RateLimiter</h5>
+<h5 id="_ratelimiter_12"><a class="anchor" href="#_ratelimiter_12"></a>RateLimiter</h5>
 <div class="listingblock">
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="java"><span class="directive">final</span> CollectorRegistry collectorRegistry = CollectorRegistry.defaultRegistry;
@@ -3776,16 +4285,16 @@ CallMeter.decorateCompletionStageSupplier(
 </div>
 </div>
 <div class="sect2">
-<h3 id="_micrometer_metrics_exporter"><a class="anchor" href="#_micrometer_metrics_exporter"></a>4.6. Micrometer Metrics exporter</h3>
+<h3 id="_micrometer_metrics_exporter"><a class="anchor" href="#_micrometer_metrics_exporter"></a>4.7. Micrometer Metrics exporter</h3>
 <div class="sect3">
-<h4 id="_introduction_8"><a class="anchor" href="#_introduction_8"></a>4.6.1. Introduction</h4>
+<h4 id="_introduction_8"><a class="anchor" href="#_introduction_8"></a>4.7.1. Introduction</h4>
 <div class="paragraph">
 <p>Integration with <a href="http://micrometer.io/">Micrometer</a>.<br>
 With this add-on you can easily add your bulkhead, circuit breaker, rate limiter, retry metrics in Micrometer <code>MeterRegistry</code>.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="_usage_3"><a class="anchor" href="#_usage_3"></a>4.6.2. Usage</h4>
+<h4 id="_usage_3"><a class="anchor" href="#_usage_3"></a>4.7.2. Usage</h4>
 <div class="sect4">
 <h5 id="_bulkhead_7"><a class="anchor" href="#_bulkhead_7"></a>Bulkhead</h5>
 <div class="listingblock">
@@ -3830,7 +4339,7 @@ TaggedBulkheadMetrics.ofBulkheadRegistry(bulkheadRegistry).bindTo(meterRegistry)
 </div>
 </div>
 <div class="sect4">
-<h5 id="_circuitbreaker_10"><a class="anchor" href="#_circuitbreaker_10"></a>CircuitBreaker</h5>
+<h5 id="_circuitbreaker_13"><a class="anchor" href="#_circuitbreaker_13"></a>CircuitBreaker</h5>
 <div class="listingblock">
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="java"><span class="directive">final</span> CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
@@ -3904,7 +4413,7 @@ TaggedCircuitBreakerMetrics.ofCircuitBreakerRegistry(circuitBreakerRegistry).bin
 </div>
 </div>
 <div class="sect4">
-<h5 id="_ratelimiter_10"><a class="anchor" href="#_ratelimiter_10"></a>RateLimiter</h5>
+<h5 id="_ratelimiter_13"><a class="anchor" href="#_ratelimiter_13"></a>RateLimiter</h5>
 <div class="listingblock">
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="java"><span class="directive">final</span> RateLimiterRegistry rateLimiterRegistry = RateLimiterRegistry.ofDefaults();
@@ -3946,7 +4455,7 @@ TaggedRateLimiterMetrics.ofRateLimiterRegistry(rateLimiterRegistry).bindTo(meter
 </div>
 </div>
 <div class="sect4">
-<h5 id="_retry_9"><a class="anchor" href="#_retry_9"></a>Retry</h5>
+<h5 id="_retry_12"><a class="anchor" href="#_retry_12"></a>Retry</h5>
 <div class="listingblock">
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="java"><span class="directive">final</span> MetricRegistry metricRegistry = <span class="keyword">new</span> MetricRegistry();
@@ -4018,7 +4527,7 @@ TaggedRetryMetrics.ofRetryRegistry(retryRegistry).bindTo(meterRegistry);</code><
 <h2 id="_implementation_details"><a class="anchor" href="#_implementation_details"></a>5. Implementation details</h2>
 <div class="sectionbody">
 <div class="sect2">
-<h3 id="_circuitbreaker_11"><a class="anchor" href="#_circuitbreaker_11"></a>5.1. CircuitBreaker</h3>
+<h3 id="_circuitbreaker_14"><a class="anchor" href="#_circuitbreaker_14"></a>5.1. CircuitBreaker</h3>
 <div class="paragraph">
 <p>The CircuitBreaker is implemented via a finite state machine with three normal states: <code>CLOSED</code>, <code>OPEN</code> and <code>HALF_OPEN</code> and two special states <code>DISABLED</code> and <code>FORCED_OPEN</code>.</p>
 </div>
@@ -4034,7 +4543,7 @@ TaggedRetryMetrics.ofRetryRegistry(retryRegistry).bindTo(meterRegistry);</code><
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="java"><span class="directive">static</span> &lt;T&gt; Supplier&lt;T&gt; decorateSupplier(CircuitBreaker circuitBreaker, Supplier&lt;T&gt; supplier){
     <span class="keyword">return</span> () -&gt; {
-        CircuitBreakerUtils.isCallPermitted(circuitBreaker);
+        CircuitBreakerUtils.obtainPermission(circuitBreaker);
         <span class="type">long</span> start = <span class="predefined-type">System</span>.nanoTime();
         <span class="keyword">try</span> {
             T returnValue = supplier.get();
@@ -4052,7 +4561,7 @@ TaggedRetryMetrics.ofRetryRegistry(retryRegistry).bindTo(meterRegistry);</code><
 </div>
 <div class="paragraph">
 <p>The state of the CircuitBreaker changes from <code>CLOSED</code> to <code>OPEN</code> when the failure rate is above a (configurable) threshold.<br>
-Then, all access to the backend is blocked for a (configurable) time duration. <code>CircuitBreaker::isCallPermitted()</code> throws a <code>CircuitBreakerOpenException</code>, if the CircuitBreaker is <code>OPEN</code>.</p>
+Then, all access to the backend is blocked for a (configurable) time duration. <code>CircuitBreaker::obtainPermission()</code> throws a <code>CircuitBreakerOpenException</code>, if the CircuitBreaker is <code>OPEN</code>.</p>
 </div>
 <div class="paragraph">
 <p>The CircuitBreaker uses a Ring Bit Buffer in the <code>CLOSED</code> state to store the success or failure statuses of the calls. A successful call is stored as a <code>0</code> bit and a failed call is stored as a <code>1</code> bit. The Ring Bit Buffer has a (configurable) fixed-size. The Ring Bit Buffer uses internally a <a href="https://docs.oracle.com/javase/8/docs/api/java/util/BitSet.html">BitSet</a> like data structure to store the bits which is saving memory compared to a boolean array. The BitSet uses a long[] array to store the bits. That means the BitSet only needs an array of 16 long (64-bit) values to store the status of 1024 calls.</p>
@@ -4107,7 +4616,7 @@ circuitBreaker.getEventStream()
 </div>
 </div>
 <div class="sect2">
-<h3 id="_ratelimiter_11"><a class="anchor" href="#_ratelimiter_11"></a>5.2. RateLimiter</h3>
+<h3 id="_ratelimiter_14"><a class="anchor" href="#_ratelimiter_14"></a>5.2. RateLimiter</h3>
 <div class="paragraph">
 <p>Conceptually <code>RateLimiter</code> splits all nanoseconds from the start of epoch into cycles.<br>
 Each cycle has duration configured by <code>RateLimiterConfig.limitRefreshPeriod</code>.<br>
