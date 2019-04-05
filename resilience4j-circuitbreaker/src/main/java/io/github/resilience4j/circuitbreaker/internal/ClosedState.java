@@ -48,8 +48,16 @@ final class ClosedState extends CircuitBreakerState {
      * @return always true, because the CircuitBreaker is closed.
      */
     @Override
-    boolean isCallPermitted() {
+    boolean obtainPermission() {
         return true;
+    }
+
+    /**
+     * Does not throw an exception, because the CircuitBreaker is closed.
+     */
+    @Override
+    void tryObtainPermission() {
+        // noOp
     }
 
     @Override

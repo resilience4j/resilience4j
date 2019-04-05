@@ -150,12 +150,12 @@ public abstract class ResilienceBaseSubscriber<T> implements CoreSubscriber<T>, 
     /**
      * @return true if call is permitted, false otherwise
      */
-    protected abstract boolean isCallPermitted();
+    protected abstract boolean obtainPermission();
 
     protected boolean acquireCallPermit() {
         boolean callPermitted = false;
         if (permitted.compareAndSet(Permit.PENDING, Permit.ACQUIRED)) {
-            callPermitted = isCallPermitted();
+            callPermitted = obtainPermission();
             if (!callPermitted) {
                 permitted.set(Permit.REJECTED);
             } else {

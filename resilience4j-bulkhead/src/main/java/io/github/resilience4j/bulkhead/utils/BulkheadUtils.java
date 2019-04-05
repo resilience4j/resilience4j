@@ -21,11 +21,12 @@ package io.github.resilience4j.bulkhead.utils;
 import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.bulkhead.BulkheadFullException;
 
+@Deprecated
 public final class BulkheadUtils {
 
     public static void isCallPermitted(Bulkhead bulkhead) {
-        if(!bulkhead.isCallPermitted()) {
-            throw new BulkheadFullException(String.format("Bulkhead '%s' is full", bulkhead.getName()));
+        if(!bulkhead.obtainPermission()) {
+            throw new BulkheadFullException(bulkhead);
         }
     }
 }

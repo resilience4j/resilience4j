@@ -125,7 +125,7 @@ public class CircuitBreakerEventPublisherTest {
 
         circuitBreaker.onError(1000, new IOException("BAM!"));
         circuitBreaker.onError(1000, new IOException("BAM!"));
-        circuitBreaker.isCallPermitted();
+        circuitBreaker.obtainPermission();
 
 
         then(logger).should(times(1)).info("NOT_PERMITTED");
@@ -145,7 +145,7 @@ public class CircuitBreakerEventPublisherTest {
         //And we execute other calls that should generate events
         circuitBreaker.onError(1000, new IOException("BAM!"));
         circuitBreaker.onError(1000, new IOException("BAM!"));
-        circuitBreaker.isCallPermitted();
+        circuitBreaker.obtainPermission();
         circuitBreaker.onSuccess(0);
         circuitBreaker.onError(1000, new IOException("BAM!"));
 

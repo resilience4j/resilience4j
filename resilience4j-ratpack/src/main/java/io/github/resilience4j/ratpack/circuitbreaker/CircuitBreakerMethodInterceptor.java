@@ -75,7 +75,7 @@ public class CircuitBreakerMethodInterceptor implements MethodInterceptor {
             return result;
         } else if (CompletionStage.class.isAssignableFrom(returnType)) {
             final CompletableFuture promise = new CompletableFuture<>();
-            if (breaker.isCallPermitted()) {
+            if (breaker.obtainPermission()) {
                 CompletionStage<?> result = (CompletionStage<?>) proceed(invocation, breaker, recoveryFunction);
                 if (result != null) {
                     long start = System.nanoTime();

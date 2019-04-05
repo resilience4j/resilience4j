@@ -78,7 +78,7 @@ final class CircuitBreakerSubscriber<T> extends AtomicReference<Subscription> im
     private boolean acquireCallPermit() {
         boolean callPermitted = false;
         if (permitted.compareAndSet(Permit.PENDING, Permit.ACQUIRED)) {
-            callPermitted = circuitBreaker.isCallPermitted();
+            callPermitted = circuitBreaker.obtainPermission();
             if (!callPermitted) {
                 permitted.set(Permit.REJECTED);
             } else {

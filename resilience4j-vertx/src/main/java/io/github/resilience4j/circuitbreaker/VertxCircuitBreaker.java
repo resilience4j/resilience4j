@@ -18,11 +18,9 @@
  */
 package io.github.resilience4j.circuitbreaker;
 
-import java.time.Duration;
-import java.util.function.Supplier;
-
-import io.github.resilience4j.core.StopWatch;
 import io.vertx.core.Future;
+
+import java.util.function.Supplier;
 
 /**
  * CircuitBreaker decorators for Vert.x
@@ -53,7 +51,7 @@ public interface VertxCircuitBreaker {
         return () -> {
             final Future<T> future = Future.future();
 
-            if (!circuitBreaker.isCallPermitted()) {
+            if (!circuitBreaker.obtainPermission()) {
                 future.fail(
                         new CircuitBreakerOpenException(
                                 String.format("CircuitBreaker '%s' is open", circuitBreaker.getName())));

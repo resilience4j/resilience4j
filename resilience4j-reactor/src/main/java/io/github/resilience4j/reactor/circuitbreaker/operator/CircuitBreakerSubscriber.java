@@ -88,8 +88,8 @@ class CircuitBreakerSubscriber<T> extends ResilienceBaseSubscriber<T> {
     }
 
     @Override
-    protected boolean isCallPermitted() {
-        return circuitBreaker.isCallPermitted();
+    protected boolean obtainPermission() {
+        return circuitBreaker.obtainPermission();
     }
 
     @Override

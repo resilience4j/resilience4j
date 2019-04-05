@@ -61,7 +61,7 @@ class RateLimiterSubscriber<T> extends ResilienceBaseSubscriber<T> {
     }
 
     @Override
-    protected boolean isCallPermitted() {
+    protected boolean obtainPermission() {
         return rateLimiter.getPermission(rateLimiter.getRateLimiterConfig().getTimeoutDuration());
     }
 

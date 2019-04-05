@@ -19,11 +19,13 @@
 package io.github.resilience4j.circuitbreaker.internal;
 
 
-import static io.github.resilience4j.circuitbreaker.CircuitBreaker.State.CLOSED;
-import static io.github.resilience4j.circuitbreaker.CircuitBreaker.State.DISABLED;
-import static io.github.resilience4j.circuitbreaker.CircuitBreaker.State.FORCED_OPEN;
-import static io.github.resilience4j.circuitbreaker.CircuitBreaker.State.HALF_OPEN;
-import static io.github.resilience4j.circuitbreaker.CircuitBreaker.State.OPEN;
+import io.github.resilience4j.circuitbreaker.CircuitBreaker;
+import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
+import io.github.resilience4j.circuitbreaker.event.*;
+import io.github.resilience4j.core.EventConsumer;
+import io.github.resilience4j.core.EventProcessor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
 import java.util.concurrent.CompletionException;
@@ -32,20 +34,7 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import io.github.resilience4j.circuitbreaker.CircuitBreaker;
-import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
-import io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent;
-import io.github.resilience4j.circuitbreaker.event.CircuitBreakerOnCallNotPermittedEvent;
-import io.github.resilience4j.circuitbreaker.event.CircuitBreakerOnErrorEvent;
-import io.github.resilience4j.circuitbreaker.event.CircuitBreakerOnIgnoredErrorEvent;
-import io.github.resilience4j.circuitbreaker.event.CircuitBreakerOnResetEvent;
-import io.github.resilience4j.circuitbreaker.event.CircuitBreakerOnStateTransitionEvent;
-import io.github.resilience4j.circuitbreaker.event.CircuitBreakerOnSuccessEvent;
-import io.github.resilience4j.core.EventConsumer;
-import io.github.resilience4j.core.EventProcessor;
+import static io.github.resilience4j.circuitbreaker.CircuitBreaker.State.*;
 
 /**
  * A CircuitBreaker finite state machine.
@@ -98,11 +87,26 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
      */
     @Override
     public boolean isCallPermitted() {
-        boolean callPermitted = stateReference.get().isCallPermitted();
+        return obtainPermission();
+    }
+
+    @Override
+    public boolean obtainPermission() {
+        boolean callPermitted = stateReference.get().obtainPermission();
         if (!callPermitted) {
             publishCallNotPermittedEvent();
         }
         return callPermitted;
+    }
+
+    @Override
+    public void tryObtainPermission() {
+        try {
+            stateReference.get().tryObtainPermission();
+        } catch(Exception e) {
+            publishCallNotPermittedEvent();
+            throw e;
+        }
     }
 
     @Override

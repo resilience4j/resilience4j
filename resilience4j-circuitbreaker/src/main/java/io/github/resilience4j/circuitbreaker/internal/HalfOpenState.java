@@ -18,6 +18,7 @@
  */
 package io.github.resilience4j.circuitbreaker.internal;
 
+import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 
@@ -47,8 +48,15 @@ final class HalfOpenState extends CircuitBreakerState {
      * @return true, if test request counter is not zero.
      */
     @Override
-    boolean isCallPermitted() {
+    boolean obtainPermission() {
         return testRequestCounter.getAndDecrement() > 0;
+    }
+
+    @Override
+    void tryObtainPermission() {
+        if(!obtainPermission()){
+            throw new CallNotPermittedException(stateMachine);
+        }
     }
 
     @Override

@@ -45,8 +45,8 @@ public class TaggedBulkheadMetricsTest {
         bulkhead = bulkheadRegistry.bulkhead("backendA");
 
         // record some basic stats
-        bulkhead.isCallPermitted();
-        bulkhead.isCallPermitted();
+        bulkhead.obtainPermission();
+        bulkhead.obtainPermission();
 
         TaggedBulkheadMetrics.ofBulkheadRegistry(bulkheadRegistry).bindTo(meterRegistry);
     }

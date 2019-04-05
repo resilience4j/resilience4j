@@ -76,7 +76,7 @@ public class BulkheadMethodInterceptor implements MethodInterceptor {
             }
             return result;
         } else if (CompletionStage.class.isAssignableFrom(returnType)) {
-            if (bulkhead.isCallPermitted()) {
+            if (bulkhead.obtainPermission()) {
                 return ((CompletionStage<?>) invocation.proceed()).handle((o, throwable) -> {
                     bulkhead.onComplete();
                     if (throwable != null) {
@@ -104,7 +104,7 @@ public class BulkheadMethodInterceptor implements MethodInterceptor {
     }
 
     private Object handleOther(MethodInvocation invocation, io.github.resilience4j.bulkhead.Bulkhead bulkhead, RecoveryFunction<?> recoveryFunction) throws Throwable {
-        boolean permission = bulkhead.isCallPermitted();
+        boolean permission = bulkhead.obtainPermission();
 
         if (!permission) {
             Throwable t = new BulkheadFullException(String.format("Bulkhead '%s' is full", bulkhead.getName()));

@@ -1,15 +1,15 @@
 package io.github.resilience4j.circuitbreaker.operator;
 
-import static java.util.Objects.requireNonNull;
-
-import java.util.concurrent.atomic.AtomicReference;
-
 import io.github.resilience4j.adapter.Permit;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerOpenException;
 import io.github.resilience4j.core.StopWatch;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.internal.disposables.DisposableHelper;
+
+import java.util.concurrent.atomic.AtomicReference;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * A disposable circuit-breaker.
@@ -120,7 +120,7 @@ class DisposableCircuitBreaker<T> extends AtomicReference<Disposable> implements
     private boolean acquireCallPermit() {
         boolean callPermitted = false;
         if (permitted.compareAndSet(Permit.PENDING, Permit.ACQUIRED)) {
-            callPermitted = circuitBreaker.isCallPermitted();
+            callPermitted = circuitBreaker.obtainPermission();
             if (!callPermitted) {
                 permitted.set(Permit.REJECTED);
             } else {

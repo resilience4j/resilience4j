@@ -21,6 +21,7 @@ package io.github.resilience4j.bulkhead.internal;
 
 import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.bulkhead.BulkheadConfig;
+import io.github.resilience4j.bulkhead.BulkheadFullException;
 import io.github.resilience4j.bulkhead.event.BulkheadEvent;
 import io.github.resilience4j.bulkhead.event.BulkheadOnCallFinishedEvent;
 import io.github.resilience4j.bulkhead.event.BulkheadOnCallPermittedEvent;
@@ -101,7 +102,11 @@ public class SemaphoreBulkhead implements Bulkhead {
      */
     @Override
     public boolean isCallPermitted() {
+        return obtainPermission();
+    }
 
+    @Override
+    public boolean obtainPermission() {
         boolean callPermitted = tryEnterBulkhead();
 
         publishBulkheadEvent(
@@ -110,6 +115,13 @@ public class SemaphoreBulkhead implements Bulkhead {
         );
 
         return callPermitted;
+    }
+
+    @Override
+    public void tryObtainPermission() {
+        if(!obtainPermission()) {
+            throw new BulkheadFullException(this);
+        }
     }
 
     /**
@@ -186,7 +198,7 @@ public class SemaphoreBulkhead implements Bulkhead {
 
     boolean tryEnterBulkhead() {
 
-        boolean callPermitted = false;
+        boolean callPermitted;
         long timeout = config.getMaxWaitTime();
 
         if (timeout == 0) {

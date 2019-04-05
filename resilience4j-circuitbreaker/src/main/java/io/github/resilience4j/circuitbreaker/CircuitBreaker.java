@@ -18,22 +18,10 @@
  */
 package io.github.resilience4j.circuitbreaker;
 
-import io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent;
-import io.github.resilience4j.circuitbreaker.event.CircuitBreakerOnCallNotPermittedEvent;
-import io.github.resilience4j.circuitbreaker.event.CircuitBreakerOnErrorEvent;
-import io.github.resilience4j.circuitbreaker.event.CircuitBreakerOnIgnoredErrorEvent;
-import io.github.resilience4j.circuitbreaker.event.CircuitBreakerOnResetEvent;
-import io.github.resilience4j.circuitbreaker.event.CircuitBreakerOnStateTransitionEvent;
-import io.github.resilience4j.circuitbreaker.event.CircuitBreakerOnSuccessEvent;
+import io.github.resilience4j.circuitbreaker.event.*;
 import io.github.resilience4j.circuitbreaker.internal.CircuitBreakerStateMachine;
-import io.github.resilience4j.circuitbreaker.utils.CircuitBreakerUtils;
 import io.github.resilience4j.core.EventConsumer;
-import io.vavr.CheckedConsumer;
-import io.vavr.CheckedFunction0;
-import io.vavr.CheckedFunction1;
-import io.vavr.CheckedRunnable;
-import io.vavr.Tuple;
-import io.vavr.Tuple2;
+import io.vavr.*;
 
 import java.util.Arrays;
 import java.util.Map;
@@ -52,23 +40,39 @@ import java.util.stream.Collectors;
  * The CircuitBreaker is implemented via a finite state machine with three states: CLOSED, OPEN and HALF_OPEN.
  * The CircuitBreaker does not know anything about the backend's state by itself, but uses the information provided by the decorators via
  * {@link CircuitBreaker#onSuccess} and {@link CircuitBreaker#onError} events.
- * Before communicating with the backend, the the permission to do so must be obtained via the method {@link CircuitBreaker#isCallPermitted()}.
+ * Before communicating with the backend, the the permission to do so must be obtained via the method {@link CircuitBreaker#obtainPermission()} ()}.
  *
  * The state of the CircuitBreaker changes from CLOSED to OPEN when the failure rate is above a (configurable) threshold.
- * Then, all access to the backend is blocked for a (configurable) time duration. {@link CircuitBreaker#isCallPermitted} throws a {@link CircuitBreakerOpenException}, if the CircuitBreaker is OPEN.
+ * Then, all access to the backend is blocked for a (configurable) time duration. No further calls are permitted.
  *
- * After the time duration has elapsed, the CircuitBreaker state changes from OPEN to HALF_OPEN and allows calls to see if the backend is still unavailable or has become available again.
+ * After the time duration has elapsed, the CircuitBreaker state changes from OPEN to HALF_OPEN and allows a number of calls to see if the backend is still unavailable or has become available again.
  * If the failure rate is above the configured threshold, the state changes back to OPEN. If the failure rate is below or equal to the threshold, the state changes back to CLOSED.
  */
-@SuppressWarnings("ALL")
 public interface CircuitBreaker {
 
     /**
-     * Requests permission to call this circuitBreaker's backend.
+     * Attempts to obtain a permission to execute a call.
+     * @deprecated Use obtainPermission instead.
      *
-     * @return boolean whether a call should be permitted
+     * @return true when a call is permitted
      */
+    @Deprecated
     boolean isCallPermitted();
+
+    /**
+     * Attempts to obtain a permission to execute a call.
+     *
+     * @return true when a call is permitted
+     */
+    boolean obtainPermission();
+
+    /**
+     * Attempts to obtain a permission to execute a call.
+     *
+     * @throws CircuitBreakerOpenException when CircuitBreaker is OPEN or FORCED_OPEN
+     * @throws CallNotPermittedException when CircuitBreaker is HALF_OPEN and no further test calls are permitted
+     */
+    void tryObtainPermission();
 
     /**
      * Records a failed call.
@@ -244,7 +248,7 @@ public interface CircuitBreaker {
          * @param order
          * @param allowPublish
          */
-        private State(int order, boolean allowPublish){
+        State(int order, boolean allowPublish){
             this.order = order;
             this.allowPublish = allowPublish;
         }
@@ -396,7 +400,7 @@ public interface CircuitBreaker {
      */
     static <T> CheckedFunction0<T> decorateCheckedSupplier(CircuitBreaker circuitBreaker, CheckedFunction0<T> supplier){
         return () -> {
-            CircuitBreakerUtils.isCallPermitted(circuitBreaker);
+            circuitBreaker.tryObtainPermission();
             long start = System.nanoTime();
             try {
                 T returnValue = supplier.apply();
@@ -429,7 +433,7 @@ public interface CircuitBreaker {
 
             final CompletableFuture<T> promise = new CompletableFuture<>();
 
-            if (!circuitBreaker.isCallPermitted()) {
+            if (!circuitBreaker.obtainPermission()) {
                 promise.completeExceptionally(
                         new CircuitBreakerOpenException(
                                 String.format("CircuitBreaker '%s' is open", circuitBreaker.getName())));
@@ -465,7 +469,7 @@ public interface CircuitBreaker {
      */
     static CheckedRunnable decorateCheckedRunnable(CircuitBreaker circuitBreaker, CheckedRunnable runnable){
         return () -> {
-            CircuitBreakerUtils.isCallPermitted(circuitBreaker);
+            circuitBreaker.tryObtainPermission();
             long start = System.nanoTime();
             try{
                 runnable.run();
@@ -491,7 +495,7 @@ public interface CircuitBreaker {
      */
     static <T> Callable<T> decorateCallable(CircuitBreaker circuitBreaker, Callable<T> callable){
         return () -> {
-            CircuitBreakerUtils.isCallPermitted(circuitBreaker);
+            circuitBreaker.tryObtainPermission();
             long start = System.nanoTime();
             try {
                 T returnValue = callable.call();
@@ -518,7 +522,7 @@ public interface CircuitBreaker {
      */
     static <T> Supplier<T> decorateSupplier(CircuitBreaker circuitBreaker, Supplier<T> supplier){
         return () -> {
-            CircuitBreakerUtils.isCallPermitted(circuitBreaker);
+            circuitBreaker.tryObtainPermission();
             long start = System.nanoTime();
             try {
                 T returnValue = supplier.get();
@@ -545,7 +549,7 @@ public interface CircuitBreaker {
      */
     static <T> Consumer<T> decorateConsumer(CircuitBreaker circuitBreaker, Consumer<T> consumer){
         return (t) -> {
-            CircuitBreakerUtils.isCallPermitted(circuitBreaker);
+            circuitBreaker.tryObtainPermission();
             long start = System.nanoTime();
             try {
                 consumer.accept(t);
@@ -571,7 +575,7 @@ public interface CircuitBreaker {
      */
     static <T> CheckedConsumer<T> decorateCheckedConsumer(CircuitBreaker circuitBreaker, CheckedConsumer<T> consumer){
         return (t) -> {
-            CircuitBreakerUtils.isCallPermitted(circuitBreaker);
+            circuitBreaker.tryObtainPermission();
             long start = System.nanoTime();
             try {
                 consumer.accept(t);
@@ -596,7 +600,7 @@ public interface CircuitBreaker {
      */
     static Runnable decorateRunnable(CircuitBreaker circuitBreaker, Runnable runnable){
         return () -> {
-            CircuitBreakerUtils.isCallPermitted(circuitBreaker);
+            circuitBreaker.tryObtainPermission();
             long start = System.nanoTime();
             try{
                 runnable.run();
@@ -622,7 +626,7 @@ public interface CircuitBreaker {
      */
     static <T, R> Function<T, R> decorateFunction(CircuitBreaker circuitBreaker, Function<T, R> function){
         return (T t) -> {
-            CircuitBreakerUtils.isCallPermitted(circuitBreaker);
+            circuitBreaker.tryObtainPermission();
             long start = System.nanoTime();
             try{
                 R returnValue = function.apply(t);
@@ -649,7 +653,7 @@ public interface CircuitBreaker {
      */
     static <T, R> CheckedFunction1<T, R> decorateCheckedFunction(CircuitBreaker circuitBreaker, CheckedFunction1<T, R> function){
         return (T t) -> {
-            CircuitBreakerUtils.isCallPermitted(circuitBreaker);
+            circuitBreaker.tryObtainPermission();
             long start = System.nanoTime();
             try{
                 R returnValue = function.apply(t);

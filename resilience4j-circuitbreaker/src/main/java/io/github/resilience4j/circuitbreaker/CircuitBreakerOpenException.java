@@ -24,6 +24,15 @@ package io.github.resilience4j.circuitbreaker;
 public class CircuitBreakerOpenException extends RuntimeException {
 
     /**
+     * The constructor with a CircuitBreaker.
+     *
+     * @param circuitBreaker the CircuitBreaker.
+     */
+    public CircuitBreakerOpenException(CircuitBreaker circuitBreaker) {
+        super(String.format("CircuitBreaker '%s' is OPEN and does not permit further calls", circuitBreaker.getName()));
+    }
+
+    /**
      * The constructor with a message.
      *
      * @param message The message.

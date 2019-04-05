@@ -62,12 +62,12 @@ public class SemaphoreBulkheadTest {
     @Test
     public void testBulkhead() throws InterruptedException {
 
-        bulkhead.isCallPermitted();
-        bulkhead.isCallPermitted();
+        bulkhead.obtainPermission();
+        bulkhead.obtainPermission();
 
         assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(0);
 
-        bulkhead.isCallPermitted();
+        bulkhead.obtainPermission();
         bulkhead.onComplete();
 
         assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
@@ -76,7 +76,7 @@ public class SemaphoreBulkheadTest {
 
         assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(2);
 
-        bulkhead.isCallPermitted();
+        bulkhead.obtainPermission();
 
         testSubscriber.assertValueCount(6)
                       .assertValues(CALL_PERMITTED, CALL_PERMITTED, CALL_REJECTED, CALL_FINISHED, CALL_FINISHED, CALL_PERMITTED);
@@ -145,7 +145,7 @@ public class SemaphoreBulkheadTest {
                 .build();
 
         SemaphoreBulkhead bulkhead = new SemaphoreBulkhead("test", config);
-        bulkhead.isCallPermitted(); // consume the permit
+        bulkhead.obtainPermission(); // consume the permit
 
         // when
         boolean entered = bulkhead.tryEnterBulkhead();
@@ -164,7 +164,7 @@ public class SemaphoreBulkheadTest {
                 .build();
 
         final SemaphoreBulkhead bulkhead = new SemaphoreBulkhead("test", config);
-        bulkhead.isCallPermitted(); // consume the permit
+        bulkhead.obtainPermission(); // consume the permit
         AtomicBoolean entered = new AtomicBoolean(true);
 
         Thread t = new Thread(
@@ -263,7 +263,7 @@ public class SemaphoreBulkheadTest {
         AtomicBoolean bulkheadThreadTrigger = new AtomicBoolean(true);
         assertThat(bulkhead.getBulkheadConfig().getMaxConcurrentCalls()).isEqualTo(1);
         Thread bulkheadThread = new Thread(() -> {
-            bulkhead.isCallPermitted();
+            bulkhead.obtainPermission();
             while (bulkheadThreadTrigger.get()) {
                 Thread.yield();
             }
@@ -328,12 +328,12 @@ public class SemaphoreBulkheadTest {
                 .build();
         SemaphoreBulkhead bulkhead = new SemaphoreBulkhead("test", originalConfig);
         assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
-        bulkhead.isCallPermitted();
+        bulkhead.obtainPermission();
         assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(0);
 
         assertThat(bulkhead.getBulkheadConfig().getMaxConcurrentCalls()).isEqualTo(1);
         Thread bulkheadThread = new Thread(() -> {
-            bulkhead.isCallPermitted();
+            bulkhead.obtainPermission();
             bulkhead.onComplete();
         });
         bulkheadThread.setDaemon(true);
@@ -364,12 +364,12 @@ public class SemaphoreBulkheadTest {
                 .build();
         SemaphoreBulkhead bulkhead = new SemaphoreBulkhead("test", originalConfig);
         assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
-        bulkhead.isCallPermitted();
+        bulkhead.obtainPermission();
         assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(0);
 
         assertThat(bulkhead.getBulkheadConfig().getMaxConcurrentCalls()).isEqualTo(1);
         Thread bulkheadThread = new Thread(() -> {
-            bulkhead.isCallPermitted();
+            bulkhead.obtainPermission();
             bulkhead.onComplete();
         });
         bulkheadThread.setDaemon(true);
@@ -406,7 +406,7 @@ public class SemaphoreBulkheadTest {
         AtomicBoolean bulkheadThreadTrigger = new AtomicBoolean(true);
         assertThat(bulkhead.getBulkheadConfig().getMaxConcurrentCalls()).isEqualTo(3);
         Thread bulkheadThread = new Thread(() -> {
-            bulkhead.isCallPermitted();
+            bulkhead.obtainPermission();
             while (bulkheadThreadTrigger.get()) {
                 Thread.yield();
             }

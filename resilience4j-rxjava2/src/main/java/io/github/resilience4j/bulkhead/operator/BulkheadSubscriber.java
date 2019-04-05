@@ -1,16 +1,16 @@
 package io.github.resilience4j.bulkhead.operator;
 
-import static io.reactivex.internal.subscriptions.SubscriptionHelper.CANCELLED;
-import static java.util.Objects.requireNonNull;
-
-import java.util.concurrent.atomic.AtomicReference;
-
 import io.github.resilience4j.adapter.Permit;
 import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.bulkhead.BulkheadFullException;
 import io.reactivex.internal.subscriptions.SubscriptionHelper;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
+
+import java.util.concurrent.atomic.AtomicReference;
+
+import static io.reactivex.internal.subscriptions.SubscriptionHelper.CANCELLED;
+import static java.util.Objects.requireNonNull;
 
 /**
  * A RxJava {@link Subscriber} to wrap another subscriber in a bulkhead.
@@ -78,7 +78,7 @@ final class BulkheadSubscriber<T> extends AtomicReference<Subscription> implemen
     private boolean acquireCallPermit() {
         boolean callPermitted = false;
         if (permitted.compareAndSet(Permit.PENDING, Permit.ACQUIRED)) {
-            callPermitted = bulkhead.isCallPermitted();
+            callPermitted = bulkhead.obtainPermission();
             if (!callPermitted) {
                 permitted.set(Permit.REJECTED);
             }

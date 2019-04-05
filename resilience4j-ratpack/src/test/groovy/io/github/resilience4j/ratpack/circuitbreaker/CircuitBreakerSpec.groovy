@@ -157,7 +157,7 @@ class CircuitBreakerSpec extends Specification {
         then:
         actual.body.text == expectedText
         actual.statusCode == 200
-        breaker.callPermitted
+        breaker.obtainPermission()
         breaker.state == io.github.resilience4j.circuitbreaker.CircuitBreaker.State.CLOSED
 
         when:
@@ -166,7 +166,7 @@ class CircuitBreakerSpec extends Specification {
 
         then:
         actual.statusCode == 500
-        !breaker.callPermitted
+        !breaker.obtainPermission()
         breaker.state == io.github.resilience4j.circuitbreaker.CircuitBreaker.State.OPEN
 
         when:
@@ -176,7 +176,7 @@ class CircuitBreakerSpec extends Specification {
         then:
         actual.body.text == "recovered"
         actual.statusCode == 200
-        !breaker.callPermitted
+        !breaker.obtainPermission()
         breaker.state == io.github.resilience4j.circuitbreaker.CircuitBreaker.State.OPEN
 
         where:
