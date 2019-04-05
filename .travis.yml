@@ -8,10 +8,18 @@ script:
 - "./gradlew clean check"
 after_success:
 - test $TRAVIS_BRANCH = "master" && ./gradlew artifactoryPublish -PbintrayUsername="${BINTRAY_USER}" -PbintrayApiKey="${BINTRAY_KEY}"
-- test $TRAVIS_BRANCH = "master" && ./gradlew publishGhPages
+- test $TRAVIS_BRANCH = "master" && ./gradlew asciidoctor
 before_cache:
 - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
 - rm -fr $HOME/.gradle/caches/*/plugin-resolution/
+deploy:
+  provider: pages
+  skip_cleanup: true
+  github_token: $GITHUB_TOKEN  # Set in the settings page of your repository, as a secure variable
+  keep_history: true
+  local_dir: resilience4j-documentation/build/asciidoc/html5
+  on:
+    branch: master
 #cache:
 #  directories:
 #  - "$HOME/.gradle/caches/"
