@@ -24,7 +24,7 @@ apply plugin: 'com.github.kt3k.coveralls'
 apply from: "${rootDir}/libraries.gradle"
 
 ext {
-    releaseVersion = '0.14.0'
+    releaseVersion = '0.14.1'
 }
 
 allprojects {
@@ -114,7 +114,7 @@ tasks.coveralls {
 }
 
 task wrapper(type: Wrapper) {
-    gradleVersion = '3.2'
+    gradleVersion = '4.10.2'
 }
 
 
