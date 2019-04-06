@@ -15,26 +15,18 @@
  */
 package io.github.resilience4j.ratelimiter.configure;
 
-import static io.github.resilience4j.utils.AspectUtil.newHashSet;
-
-import java.util.Set;
-
+import io.github.resilience4j.circuitbreaker.configure.CircuitBreakerAspect;
+import io.github.resilience4j.ratelimiter.RateLimiter;
+import io.github.resilience4j.ratelimiter.operator.RateLimiterOperator;
+import io.github.resilience4j.utils.RecoveryUtils;
+import io.reactivex.*;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import io.github.resilience4j.circuitbreaker.configure.CircuitBreakerAspect;
-import io.github.resilience4j.ratelimiter.RateLimiter;
-import io.github.resilience4j.ratelimiter.operator.RateLimiterOperator;
-import io.reactivex.Completable;
-import io.reactivex.CompletableSource;
-import io.reactivex.Flowable;
-import io.reactivex.Maybe;
-import io.reactivex.MaybeSource;
-import io.reactivex.Observable;
-import io.reactivex.ObservableSource;
-import io.reactivex.Single;
-import io.reactivex.SingleSource;
+import java.util.Set;
+
+import static io.github.resilience4j.utils.AspectUtil.newHashSet;
 
 /**
  * the Rx RateLimiter logic support for the spring AOP
@@ -64,29 +56,34 @@ public class RxJava2RateLimterAspectExt implements RateLimiterAspectExt {
 	 */
 	@SuppressWarnings("unchecked")
 	@Override
-	public Object handle(ProceedingJoinPoint proceedingJoinPoint, RateLimiter rateLimiter, String methodName) throws Throwable {
+	public Object handle(ProceedingJoinPoint proceedingJoinPoint, RateLimiter rateLimiter, String recoveryMethodName, String methodName) throws Throwable {
 		RateLimiterOperator<?> rateLimiterOperator = RateLimiterOperator.of(rateLimiter);
 		Object returnValue = proceedingJoinPoint.proceed();
-		return executeRxJava2Aspect(rateLimiterOperator, returnValue);
+		return executeRxJava2Aspect(rateLimiterOperator, proceedingJoinPoint, recoveryMethodName, returnValue);
 	}
 
 	@SuppressWarnings("unchecked")
-	private Object executeRxJava2Aspect(RateLimiterOperator rateLimiterOperator, Object returnValue) {
+	private Object executeRxJava2Aspect(RateLimiterOperator rateLimiterOperator, ProceedingJoinPoint proceedingJoinPoint, String recoveryMethodName, Object returnValue) {
 		if (returnValue instanceof ObservableSource) {
 			Observable<?> observable = (Observable) returnValue;
-			return observable.lift(rateLimiterOperator);
+			return observable.lift(rateLimiterOperator)
+					.onErrorResumeNext(RecoveryUtils.rxJava2OnErrorResumeNext(recoveryMethodName, proceedingJoinPoint.getArgs(), proceedingJoinPoint.getThis(), Observable::error));
 		} else if (returnValue instanceof SingleSource) {
 			Single<?> single = (Single) returnValue;
-			return single.lift(rateLimiterOperator);
+			return single.lift(rateLimiterOperator)
+					.onErrorResumeNext(RecoveryUtils.rxJava2OnErrorResumeNext(recoveryMethodName, proceedingJoinPoint.getArgs(), proceedingJoinPoint.getThis(), Single::error));
 		} else if (returnValue instanceof CompletableSource) {
 			Completable completable = (Completable) returnValue;
-			return completable.lift(rateLimiterOperator);
+			return completable.lift(rateLimiterOperator)
+					.onErrorResumeNext(RecoveryUtils.rxJava2OnErrorResumeNext(recoveryMethodName, proceedingJoinPoint.getArgs(), proceedingJoinPoint.getThis(), Completable::error));
 		} else if (returnValue instanceof MaybeSource) {
 			Maybe<?> maybe = (Maybe) returnValue;
-			return maybe.lift(rateLimiterOperator);
+			return maybe.lift(rateLimiterOperator)
+					.onErrorResumeNext(RecoveryUtils.rxJava2OnErrorResumeNext(recoveryMethodName, proceedingJoinPoint.getArgs(), proceedingJoinPoint.getThis(), Maybe::error));
 		} else if (returnValue instanceof Flowable) {
 			Flowable<?> flowable = (Flowable) returnValue;
-			return flowable.lift(rateLimiterOperator);
+			return flowable.lift(rateLimiterOperator)
+					.onErrorResumeNext(RecoveryUtils.rxJava2OnErrorResumeNext(recoveryMethodName, proceedingJoinPoint.getArgs(), proceedingJoinPoint.getThis(), Flowable::error));
 		} else {
 			logger.error("Unsupported type for Rate limiter RxJava2 {}", returnValue.getClass().getTypeName());
 			throw new IllegalArgumentException("Not Supported type for the Rate limiter in RxJava2 :" + returnValue.getClass().getName());

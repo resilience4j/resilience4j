@@ -15,12 +15,12 @@
  */
 package io.github.resilience4j.bulkhead.configure;
 
+import io.github.resilience4j.bulkhead.Bulkhead;
+import io.github.resilience4j.reactor.bulkhead.operator.BulkheadOperator;
+import io.github.resilience4j.utils.RecoveryUtils;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import io.github.resilience4j.bulkhead.Bulkhead;
-import io.github.resilience4j.reactor.bulkhead.operator.BulkheadOperator;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
@@ -55,14 +55,16 @@ public class ReactorBulkheadAspectExt implements BulkheadAspectExt {
 	 */
 	@SuppressWarnings("unchecked")
 	@Override
-	public Object handle(ProceedingJoinPoint proceedingJoinPoint, Bulkhead bulkhead, String methodName) throws Throwable {
+	public Object handle(ProceedingJoinPoint proceedingJoinPoint, Bulkhead bulkhead, String recoveryMethodName, String methodName) throws Throwable {
 		Object returnValue = proceedingJoinPoint.proceed();
 		if (Flux.class.isAssignableFrom(returnValue.getClass())) {
-			Flux<?> fluxReturnValue = (Flux<?>) returnValue;
-			return fluxReturnValue.transform(BulkheadOperator.of(bulkhead, Schedulers.immediate()));
+			Flux fluxReturnValue = (Flux) returnValue;
+			return fluxReturnValue.transform(BulkheadOperator.of(bulkhead, Schedulers.immediate()))
+					.onErrorResume(RecoveryUtils.reactorOnErrorResume(recoveryMethodName, proceedingJoinPoint.getArgs(), proceedingJoinPoint.getThis(), Flux::error));
 		} else if (Mono.class.isAssignableFrom(returnValue.getClass())) {
-			Mono<?> monoReturnValue = (Mono<?>) returnValue;
-			return monoReturnValue.transform(BulkheadOperator.of(bulkhead, Schedulers.immediate()));
+			Mono monoReturnValue = (Mono) returnValue;
+			return monoReturnValue.transform(BulkheadOperator.of(bulkhead, Schedulers.immediate()))
+					.onErrorResume(RecoveryUtils.reactorOnErrorResume(recoveryMethodName, proceedingJoinPoint.getArgs(), proceedingJoinPoint.getThis(), Mono::error));
 		} else {
 			logger.error("Unsupported type for Reactor BulkHead {}", returnValue.getClass().getTypeName());
 			throw new IllegalArgumentException("Not Supported type for the BulkHead in Reactor :" + returnValue.getClass().getName());

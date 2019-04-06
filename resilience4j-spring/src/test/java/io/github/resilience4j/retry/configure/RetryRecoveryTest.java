@@ -13,69 +13,70 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.resilience4j.circuitbreaker.configure;
+package io.github.resilience4j.retry.configure;
 
-import io.github.resilience4j.RecoveryTestService;
 import io.github.resilience4j.TestApplication;
+import io.github.resilience4j.TestDummyService;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import java.util.concurrent.TimeUnit;
 
-import static org.assertj.core.api.Java6Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @RunWith(SpringJUnit4ClassRunner.class)
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-        classes = TestApplication.class)
-public class CircuitBreakerAspectTest {
+@SpringBootTest(classes = TestApplication.class)
+public class RetryRecoveryTest {
     @Autowired
-    RecoveryTestService recoveryTestService;
+    @Qualifier("retryDummyService")
+    TestDummyService testDummyService;
 
     @Test
     public void testRecovery() {
-        assertThat(recoveryTestService.circuitBreaker()).isEqualTo("recovered");
+        assertThat(testDummyService.sync()).isEqualTo("recovered");
     }
 
     @Test
     public void testAsyncRecovery() throws Exception {
-        assertThat(recoveryTestService.asyncCircuitBreaker().toCompletableFuture().get(5, TimeUnit.SECONDS)).isEqualTo("recovered");
+        assertThat(testDummyService.async().toCompletableFuture().get(5, TimeUnit.SECONDS)).isEqualTo("recovered");
     }
 
     @Test
     public void testMonoRecovery() {
-        assertThat(recoveryTestService.circuitBreakerMono("test").block()).isEqualTo("test");
+        assertThat(testDummyService.mono("test").block()).isEqualTo("test");
     }
 
     @Test
     public void testFluxRecovery() {
-        assertThat(recoveryTestService.circuitBreakerFlux().blockFirst()).isEqualTo("recovered");
+        assertThat(testDummyService.flux().blockFirst()).isEqualTo("recovered");
     }
 
     @Test
     public void testObservableRecovery() {
-        assertThat(recoveryTestService.circuitBreakerObservable().blockingFirst()).isEqualTo("recovered");
+        assertThat(testDummyService.observable().blockingFirst()).isEqualTo("recovered");
     }
 
     @Test
     public void testSingleRecovery() {
-        assertThat(recoveryTestService.circuitBreakerSingle().blockingGet()).isEqualTo("recovered");
+        assertThat(testDummyService.single().blockingGet()).isEqualTo("recovered");
     }
 
     @Test
     public void testCompletableRecovery() {
-        assertThat(recoveryTestService.circuitBreakerCompletable().blockingGet()).isNull();
+        assertThat(testDummyService.completable().blockingGet()).isNull();
     }
 
     @Test
     public void testMaybeRecovery() {
-        assertThat(recoveryTestService.circuitBreakerMaybe().blockingGet()).isEqualTo("recovered");
+        assertThat(testDummyService.maybe().blockingGet()).isEqualTo("recovered");
     }
 
     @Test
     public void testFlowableRecovery() {
-        assertThat(recoveryTestService.circuitBreakerFlowable().blockingFirst()).isEqualTo("recovered");
+        assertThat(testDummyService.flowable().blockingFirst()).isEqualTo("recovered");
     }
 }

@@ -83,7 +83,7 @@ public class CircuitBreakerAspect implements Ordered {
 		if (CompletionStage.class.isAssignableFrom(returnType)) {
 			return handleJoinPointCompletableFuture(proceedingJoinPoint, circuitBreaker, backendMonitored.recovery());
 		}
-		return defaultHandling(proceedingJoinPoint, circuitBreaker, methodName);
+		return defaultHandling(proceedingJoinPoint, circuitBreaker, backendMonitored.recovery(), methodName);
 	}
 
 	private io.github.resilience4j.circuitbreaker.CircuitBreaker getOrCreateCircuitBreaker(String methodName, String backend) {
@@ -144,8 +144,12 @@ public class CircuitBreakerAspect implements Ordered {
 	/**
 	 * the default Java types handling for the circuit breaker AOP
 	 */
-	private Object defaultHandling(ProceedingJoinPoint proceedingJoinPoint, io.github.resilience4j.circuitbreaker.CircuitBreaker circuitBreaker, String methodName) throws Throwable {
-		return circuitBreaker.executeCheckedSupplier(proceedingJoinPoint::proceed);
+	private Object defaultHandling(ProceedingJoinPoint proceedingJoinPoint, io.github.resilience4j.circuitbreaker.CircuitBreaker circuitBreaker, String recoveryMethodName, String methodName) throws Throwable {
+		try {
+			return circuitBreaker.executeCheckedSupplier(proceedingJoinPoint::proceed);
+		} catch (Throwable throwable) {
+			return RecoveryUtils.invoke(recoveryMethodName, proceedingJoinPoint.getArgs(), throwable, proceedingJoinPoint.getThis());
+		}
 	}
 
 	@Override

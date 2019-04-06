@@ -15,12 +15,12 @@
  */
 package io.github.resilience4j.ratelimiter.configure;
 
+import io.github.resilience4j.ratelimiter.RateLimiter;
+import io.github.resilience4j.reactor.ratelimiter.operator.RateLimiterOperator;
+import io.github.resilience4j.utils.RecoveryUtils;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import io.github.resilience4j.ratelimiter.RateLimiter;
-import io.github.resilience4j.reactor.ratelimiter.operator.RateLimiterOperator;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
@@ -55,14 +55,16 @@ public class ReactorRateLimiterAspectExt implements RateLimiterAspectExt {
 	 */
 	@SuppressWarnings("unchecked")
 	@Override
-	public Object handle(ProceedingJoinPoint proceedingJoinPoint, RateLimiter rateLimiter, String methodName) throws Throwable {
+	public Object handle(ProceedingJoinPoint proceedingJoinPoint, RateLimiter rateLimiter, String recoveryMethodName, String methodName) throws Throwable {
 		Object returnValue = proceedingJoinPoint.proceed();
 		if (Flux.class.isAssignableFrom(returnValue.getClass())) {
-			Flux<?> fluxReturnValue = (Flux<?>) returnValue;
-			return fluxReturnValue.transform(RateLimiterOperator.of(rateLimiter, Schedulers.immediate()));
+			Flux fluxReturnValue = (Flux) returnValue;
+			return fluxReturnValue.transform(RateLimiterOperator.of(rateLimiter, Schedulers.immediate()))
+					.onErrorResume(RecoveryUtils.reactorOnErrorResume(recoveryMethodName, proceedingJoinPoint.getArgs(), proceedingJoinPoint.getThis(), Flux::error));
 		} else if (Mono.class.isAssignableFrom(returnValue.getClass())) {
-			Mono<?> monoReturnValue = (Mono<?>) returnValue;
-			return monoReturnValue.transform(RateLimiterOperator.of(rateLimiter, Schedulers.immediate()));
+			Mono monoReturnValue = (Mono) returnValue;
+			return monoReturnValue.transform(RateLimiterOperator.of(rateLimiter, Schedulers.immediate()))
+					.onErrorResume(RecoveryUtils.reactorOnErrorResume(recoveryMethodName, proceedingJoinPoint.getArgs(), proceedingJoinPoint.getThis(), Mono::error));
 		} else {
 			logger.error("Unsupported type for Reactor rateLimiter {}", returnValue.getClass().getTypeName());
 			throw new IllegalArgumentException("Not Supported type for the rateLimiter in Reactor :" + returnValue.getClass().getName());

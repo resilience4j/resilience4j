@@ -19,6 +19,7 @@ import io.github.resilience4j.ratelimiter.RateLimiterConfig;
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
 import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
 import io.github.resilience4j.utils.AnnotationExtractor;
+import io.github.resilience4j.utils.RecoveryUtils;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -78,12 +79,12 @@ public class RateLimiterAspect implements Ordered {
 		if (rateLimiterAspectExtList != null && !rateLimiterAspectExtList.isEmpty()) {
 			for (RateLimiterAspectExt rateLimiterAspectExt : rateLimiterAspectExtList) {
 				if (rateLimiterAspectExt.canHandleReturnType(returnType)) {
-					return rateLimiterAspectExt.handle(proceedingJoinPoint, rateLimiter, methodName);
+					return rateLimiterAspectExt.handle(proceedingJoinPoint, rateLimiter, targetService.recovery(), methodName);
 				}
 			}
 		}
 		if (CompletionStage.class.isAssignableFrom(returnType)) {
-			return handleJoinPointCompletableFuture(proceedingJoinPoint, rateLimiter, methodName);
+			return handleJoinPointCompletableFuture(proceedingJoinPoint, rateLimiter, targetService.recovery(), methodName);
 		}
 		return handleJoinPoint(proceedingJoinPoint, rateLimiter, targetService.recovery(), methodName);
 	}
@@ -115,7 +116,12 @@ public class RateLimiterAspect implements Ordered {
 		if (logger.isDebugEnabled()) {
 			logger.debug("Rate limiter invocation for method {} ", methodName);
 		}
-		return rateLimiter.executeCheckedSupplier(proceedingJoinPoint::proceed);
+
+		try {
+			return rateLimiter.executeCheckedSupplier(proceedingJoinPoint::proceed);
+		} catch (Throwable throwable) {
+			return RecoveryUtils.invoke(recoveryMethodName, proceedingJoinPoint.getArgs(), throwable, proceedingJoinPoint.getThis());
+		}
 	}
 
 	/**
@@ -127,9 +133,9 @@ public class RateLimiterAspect implements Ordered {
 	 * @return CompletionStage
 	 * @throws Throwable
 	 */
-	private Object handleJoinPointCompletableFuture(ProceedingJoinPoint proceedingJoinPoint, io.github.resilience4j.ratelimiter.RateLimiter rateLimiter, String methodName) {
+	private Object handleJoinPointCompletableFuture(ProceedingJoinPoint proceedingJoinPoint, io.github.resilience4j.ratelimiter.RateLimiter rateLimiter, String recoveryMethodName, String methodName) {
 
-		return io.github.resilience4j.ratelimiter.RateLimiter.decorateCompletionStage(rateLimiter, () -> {
+		CompletionStage<?> completionStage = io.github.resilience4j.ratelimiter.RateLimiter.decorateCompletionStage(rateLimiter, () -> {
 			try {
 				return (CompletionStage<?>) proceedingJoinPoint.proceed();
 			} catch (Throwable throwable) {
@@ -137,6 +143,8 @@ public class RateLimiterAspect implements Ordered {
 				throw new CompletionException(throwable);
 			}
 		}).get();
+
+		return RecoveryUtils.decorateCompletionStage(recoveryMethodName, proceedingJoinPoint.getArgs(), proceedingJoinPoint.getThis(), completionStage);
 	}
 
 

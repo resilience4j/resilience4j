@@ -24,5 +24,5 @@ public interface BulkheadAspectExt {
 
 	boolean canHandleReturnType(Class returnType);
 
-	Object handle(ProceedingJoinPoint proceedingJoinPoint, io.github.resilience4j.bulkhead.Bulkhead bulkhead, String methodName) throws Throwable;
+	Object handle(ProceedingJoinPoint proceedingJoinPoint, io.github.resilience4j.bulkhead.Bulkhead bulkhead, String recoveryMethodName, String methodName) throws Throwable;
 }

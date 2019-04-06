@@ -18,6 +18,7 @@ package io.github.resilience4j.bulkhead.configure;
 import io.github.resilience4j.bulkhead.BulkheadRegistry;
 import io.github.resilience4j.bulkhead.annotation.Bulkhead;
 import io.github.resilience4j.utils.AnnotationExtractor;
+import io.github.resilience4j.utils.RecoveryUtils;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -70,14 +71,14 @@ public class BulkheadAspect implements Ordered {
 		if (bulkheadAspectExts != null && !bulkheadAspectExts.isEmpty()) {
 			for (BulkheadAspectExt bulkHeadAspectExt : bulkheadAspectExts) {
 				if (bulkHeadAspectExt.canHandleReturnType(returnType)) {
-					return bulkHeadAspectExt.handle(proceedingJoinPoint, bulkhead, methodName);
+					return bulkHeadAspectExt.handle(proceedingJoinPoint, bulkhead, backendMonitored.recovery(), methodName);
 				}
 			}
 		}
 		if (CompletionStage.class.isAssignableFrom(returnType)) {
-			return handleJoinPointCompletableFuture(proceedingJoinPoint, bulkhead, methodName);
+			return handleJoinPointCompletableFuture(proceedingJoinPoint, bulkhead, backendMonitored.recovery(), methodName);
 		}
-		return handleJoinPoint(proceedingJoinPoint, bulkhead, methodName);
+		return handleJoinPoint(proceedingJoinPoint, bulkhead, backendMonitored.recovery(), methodName);
 	}
 
 	private io.github.resilience4j.bulkhead.Bulkhead getOrCreateBulkhead(String methodName, String backend) {
@@ -101,11 +102,16 @@ public class BulkheadAspect implements Ordered {
 		return AnnotationExtractor.extract(proceedingJoinPoint.getTarget().getClass(), Bulkhead.class);
 	}
 
-	private Object handleJoinPoint(ProceedingJoinPoint proceedingJoinPoint, io.github.resilience4j.bulkhead.Bulkhead bulkhead, String methodName) throws Throwable {
+	private Object handleJoinPoint(ProceedingJoinPoint proceedingJoinPoint, io.github.resilience4j.bulkhead.Bulkhead bulkhead, String recoveryMethodName, String methodName) throws Throwable {
 		if (logger.isDebugEnabled()) {
 			logger.debug("bulkhead method invocation for method {}", methodName);
 		}
-		return bulkhead.executeCheckedSupplier(proceedingJoinPoint::proceed);
+
+		try {
+			return bulkhead.executeCheckedSupplier(proceedingJoinPoint::proceed);
+		} catch (Throwable throwable) {
+			return RecoveryUtils.invoke(recoveryMethodName, proceedingJoinPoint.getArgs(), throwable, proceedingJoinPoint.getThis());
+		}
 	}
 
 	/**
@@ -117,9 +123,9 @@ public class BulkheadAspect implements Ordered {
 	 * @return CompletionStage
 	 * @throws Throwable
 	 */
-	private Object handleJoinPointCompletableFuture(ProceedingJoinPoint proceedingJoinPoint, io.github.resilience4j.bulkhead.Bulkhead bulkhead, String methodName) throws Throwable {
+	private Object handleJoinPointCompletableFuture(ProceedingJoinPoint proceedingJoinPoint, io.github.resilience4j.bulkhead.Bulkhead bulkhead, String recoveryMethodName, String methodName) throws Throwable {
 
-        return bulkhead.executeCompletionStage(() -> {
+        CompletionStage<?> completionStage = bulkhead.executeCompletionStage(() -> {
             try {
                 return (CompletionStage<?>) proceedingJoinPoint.proceed();
             } catch (Throwable throwable) {
@@ -127,6 +133,8 @@ public class BulkheadAspect implements Ordered {
                 throw new CompletionException(throwable);
             }
         });
+
+        return RecoveryUtils.decorateCompletionStage(recoveryMethodName, proceedingJoinPoint.getArgs(), proceedingJoinPoint.getThis(), completionStage);
 	}
 
 	@Override

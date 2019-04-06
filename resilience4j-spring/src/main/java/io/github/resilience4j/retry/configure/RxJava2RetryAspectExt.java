@@ -15,26 +15,18 @@
  */
 package io.github.resilience4j.retry.configure;
 
-import static io.github.resilience4j.utils.AspectUtil.newHashSet;
-
-import java.util.Set;
-
+import io.github.resilience4j.circuitbreaker.configure.CircuitBreakerAspect;
+import io.github.resilience4j.retry.Retry;
+import io.github.resilience4j.retry.transformer.RetryTransformer;
+import io.github.resilience4j.utils.RecoveryUtils;
+import io.reactivex.*;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import io.github.resilience4j.circuitbreaker.configure.CircuitBreakerAspect;
-import io.github.resilience4j.retry.Retry;
-import io.github.resilience4j.retry.transformer.RetryTransformer;
-import io.reactivex.Completable;
-import io.reactivex.CompletableSource;
-import io.reactivex.Flowable;
-import io.reactivex.Maybe;
-import io.reactivex.MaybeSource;
-import io.reactivex.Observable;
-import io.reactivex.ObservableSource;
-import io.reactivex.Single;
-import io.reactivex.SingleSource;
+import java.util.Set;
+
+import static io.github.resilience4j.utils.AspectUtil.newHashSet;
 
 /**
  * the Rx Retry logic support for the spring AOP
@@ -64,29 +56,34 @@ public class RxJava2RetryAspectExt implements RetryAspectExt {
 	 */
 	@SuppressWarnings("unchecked")
 	@Override
-	public Object handle(ProceedingJoinPoint proceedingJoinPoint, Retry retry, String methodName) throws Throwable {
+	public Object handle(ProceedingJoinPoint proceedingJoinPoint, Retry retry, String recoveryMethodName, String methodName) throws Throwable {
 		RetryTransformer<?> retryTransformer = RetryTransformer.of(retry);
 		Object returnValue = proceedingJoinPoint.proceed();
-		return executeRxJava2Aspect(retryTransformer, returnValue);
+		return executeRxJava2Aspect(retryTransformer, proceedingJoinPoint, recoveryMethodName, returnValue);
 	}
 
 	@SuppressWarnings("unchecked")
-	private Object executeRxJava2Aspect(RetryTransformer retryTransformer, Object returnValue) {
+	private Object executeRxJava2Aspect(RetryTransformer retryTransformer, ProceedingJoinPoint proceedingJoinPoint, String recoveryMethodName, Object returnValue) {
 		if (returnValue instanceof ObservableSource) {
 			Observable<?> observable = (Observable<?>) returnValue;
-			return observable.compose(retryTransformer);
+			return observable.compose(retryTransformer)
+					.onErrorResumeNext(RecoveryUtils.rxJava2OnErrorResumeNext(recoveryMethodName, proceedingJoinPoint.getArgs(), proceedingJoinPoint.getThis(), Observable::error));
 		} else if (returnValue instanceof SingleSource) {
 			Single<?> single = (Single) returnValue;
-			return single.compose(retryTransformer);
+			return single.compose(retryTransformer)
+					.onErrorResumeNext(RecoveryUtils.rxJava2OnErrorResumeNext(recoveryMethodName, proceedingJoinPoint.getArgs(), proceedingJoinPoint.getThis(), Single::error));
 		} else if (returnValue instanceof CompletableSource) {
 			Completable completable = (Completable) returnValue;
-			return completable.compose(retryTransformer);
+			return completable.compose(retryTransformer)
+					.onErrorResumeNext(RecoveryUtils.rxJava2OnErrorResumeNext(recoveryMethodName, proceedingJoinPoint.getArgs(), proceedingJoinPoint.getThis(), Completable::error));
 		} else if (returnValue instanceof MaybeSource) {
 			Maybe<?> maybe = (Maybe) returnValue;
-			return maybe.compose(retryTransformer);
+			return maybe.compose(retryTransformer)
+					.onErrorResumeNext(RecoveryUtils.rxJava2OnErrorResumeNext(recoveryMethodName, proceedingJoinPoint.getArgs(), proceedingJoinPoint.getThis(), Maybe::error));
 		} else if (returnValue instanceof Flowable) {
 			Flowable<?> flowable = (Flowable) returnValue;
-			return flowable.compose(retryTransformer);
+			return flowable.compose(retryTransformer)
+					.onErrorResumeNext(RecoveryUtils.rxJava2OnErrorResumeNext(recoveryMethodName, proceedingJoinPoint.getArgs(), proceedingJoinPoint.getThis(), Flowable::error));
 		} else {
 			logger.error("Unsupported type for retry RxJava2 {}", returnValue.getClass().getTypeName());
 			throw new IllegalArgumentException("Not Supported type for the Retry in RxJava2 :" + returnValue.getClass().getName());

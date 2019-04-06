@@ -15,9 +15,8 @@
  */
 package io.github.resilience4j.ratelimiter.configure;
 
-import org.aspectj.lang.ProceedingJoinPoint;
-
 import io.github.resilience4j.ratelimiter.RateLimiter;
+import org.aspectj.lang.ProceedingJoinPoint;
 
 /**
  * RateLimiter aspect extension support interface type if you want to support new types
@@ -26,5 +25,5 @@ public interface RateLimiterAspectExt {
 
 	boolean canHandleReturnType(Class returnType);
 
-	Object handle(ProceedingJoinPoint proceedingJoinPoint, RateLimiter rateLimiter, String methodName) throws Throwable;
+	Object handle(ProceedingJoinPoint proceedingJoinPoint, RateLimiter rateLimiter, String recoveryMethodName, String methodName) throws Throwable;
 }

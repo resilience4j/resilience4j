@@ -18,7 +18,6 @@ package io.github.resilience4j.retry.configure;
 import io.github.resilience4j.retry.RetryRegistry;
 import io.github.resilience4j.retry.annotation.Retry;
 import io.github.resilience4j.utils.RecoveryUtils;
-import io.vavr.CheckedFunction0;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -80,7 +79,7 @@ public class RetryAspect implements Ordered {
 		if (retryAspectExtList != null && !retryAspectExtList.isEmpty()) {
 			for (RetryAspectExt retryAspectExt : retryAspectExtList) {
 				if (retryAspectExt.canHandleReturnType(returnType)) {
-					return retryAspectExt.handle(proceedingJoinPoint, retry, methodName);
+					return retryAspectExt.handle(proceedingJoinPoint, retry, backendMonitored.recovery(), methodName);
 				}
 			}
 		}
@@ -138,14 +137,9 @@ public class RetryAspect implements Ordered {
 		if (logger.isDebugEnabled()) {
 			logger.debug("retry invocation of method {} ", methodName);
 		}
-		final CheckedFunction0<Object> objectCheckedFunction0 = io.github.resilience4j.retry.Retry.decorateCheckedSupplier(retry, proceedingJoinPoint::proceed);
 		try {
-			return objectCheckedFunction0.apply();
+			return io.github.resilience4j.retry.Retry.decorateCheckedSupplier(retry, proceedingJoinPoint::proceed).apply();
 		} catch (Throwable throwable) {
-			if (recoveryMethodName.isEmpty()) {
-				throw throwable;
-			}
-
 			return RecoveryUtils.invoke(recoveryMethodName, proceedingJoinPoint.getArgs(), throwable, proceedingJoinPoint.getThis());
 		}
 	}
