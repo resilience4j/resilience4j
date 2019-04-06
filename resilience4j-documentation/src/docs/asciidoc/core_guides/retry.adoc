@@ -63,6 +63,17 @@ Observable.fromCallable(backendService::doSomething)
     .compose(RetryTransformer.of(retry))
 ----
 
+===== Retry and Reactor
+
+The following example shows how to decorate a Flux or Mono by using the custom Reactor Operator.
+
+[source,java]
+----
+Retry retry = Retry.ofDefaults("backendName");
+Mono.fromCallable(backendService::doSomething)
+    .compose(RetryOperator.of(retry))
+----
+
 ===== Consume emitted RetryEvents
 
 The Retry emits a stream of RetryEvents. An event can be a failure which signals that even all retries have failed or success if a retry was successful.

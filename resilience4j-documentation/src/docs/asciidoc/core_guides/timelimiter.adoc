@@ -31,12 +31,13 @@ an exception is thrown upstream and TimeLimiter, if configured, will attempt to 
 
 [source,java]
 ----
-ExecutorService executorService = Executors.newSingleThreadExecutor();
+// Run your call to BackendService.doSomething() asynchronously
+Supplier<CompletableFuture<Integer>> futureSupplier = () -> CompletableFuture.supplyAsync(backendService::doSomething);
 
-// Wrap your call to BackendService.doSomething() in a future provided by your executor
-Supplier<Future<Integer>> futureSupplier = () -> executorService.submit(backendService::doSomething)
+// Either execute the future
+Integer result = timeLimiter.executeFutureSupplier(futureSupplier);
 
-// Decorate your supplier so that the future can be retrieved and executed upon
+// Or decorate your supplier so that the future can be retrieved and executed upon
 Callable restrictedCall = TimeLimiter
     .decorateFutureSupplier(timeLimiter, futureSupplier);
 
@@ -46,10 +47,12 @@ Try.of(restrictedCall.call)
 
 ===== TimeLimiter and CircuitBreaker
 
-The following example shows how to apply a timelimit to a circuit breaker callable.
+The following example shows how to apply a time limit to a circuit breaker callable.
 
 [source,java]
 ----
+Supplier<CompletableFuture<Integer>> futureSupplier = () -> CompletableFuture.supplyAsync(backendService::doSomething);
+
 Callable restrictedCall = TimeLimiter
     .decorateFutureSupplier(timeLimiter, futureSupplier);
 

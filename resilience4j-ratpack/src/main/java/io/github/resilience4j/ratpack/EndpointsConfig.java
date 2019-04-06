@@ -16,6 +16,7 @@
 
 package io.github.resilience4j.ratpack;
 
+import io.github.resilience4j.core.lang.Nullable;
 import ratpack.func.Function;
 
 import static ratpack.util.Exceptions.uncheck;
@@ -81,6 +82,7 @@ public class EndpointsConfig {
 
     public static class EndpointConfig {
         private boolean enabled = true;
+        @Nullable
         private String path;
         private int eventConsumerBufferSize = 100;
 
@@ -100,6 +102,7 @@ public class EndpointsConfig {
             return this;
         }
 
+        @Nullable
         public String getPath() {
             return path;
         }

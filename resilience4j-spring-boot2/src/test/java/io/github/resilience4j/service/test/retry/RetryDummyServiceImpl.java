@@ -1,4 +1,4 @@
-package io.github.resilience4j.service.test;
+package io.github.resilience4j.service.test.retry;
 
 
 import java.io.IOException;
@@ -25,7 +25,9 @@ public class RetryDummyServiceImpl implements RetryDummyService {
 	@Override
 	public CompletionStage<String> doSomethingAsync(boolean throwException) throws IOException {
 		if (throwException) {
-			throw new IOException("Test Message");
+			CompletableFuture<String> promise = new CompletableFuture<>();
+			promise.completeExceptionally(new IOException("Test Message"));
+			return promise;
 		} else {
 			return CompletableFuture.supplyAsync(() -> "test");
 		}

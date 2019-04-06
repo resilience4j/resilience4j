@@ -26,9 +26,11 @@ import org.aspectj.lang.annotation.Pointcut;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.Ordered;
 
 import java.lang.reflect.Method;
+import java.util.List;
 import java.util.concurrent.*;
 
 /**
@@ -43,14 +45,17 @@ public class RetryAspect implements Ordered {
 	private final static ScheduledExecutorService retryExecutorService = Executors.newScheduledThreadPool(Runtime.getRuntime().availableProcessors());
 	private final RetryConfigurationProperties retryConfigurationProperties;
 	private final RetryRegistry retryRegistry;
+	private final List<RetryAspectExt> retryAspectExtList;
 
 	/**
 	 * @param retryConfigurationProperties spring retry config properties
 	 * @param retryRegistry                retry definition registry
+	 * @param retryAspectExtList
 	 */
-	public RetryAspect(RetryConfigurationProperties retryConfigurationProperties, RetryRegistry retryRegistry) {
+	public RetryAspect(RetryConfigurationProperties retryConfigurationProperties, RetryRegistry retryRegistry, @Autowired(required = false) List<RetryAspectExt> retryAspectExtList) {
 		this.retryConfigurationProperties = retryConfigurationProperties;
 		this.retryRegistry = retryRegistry;
+		this.retryAspectExtList = retryAspectExtList;
 		cleanup();
 
 	}
@@ -68,11 +73,18 @@ public class RetryAspect implements Ordered {
 		}
 		String backend = backendMonitored.name();
 		io.github.resilience4j.retry.Retry retry = getOrCreateRetry(methodName, backend);
-		if (method.getReturnType().isAssignableFrom(CompletionStage.class) || method.getReturnType().isAssignableFrom(CompletableFuture.class)) {
-			return handleAsyncJoinPoint(proceedingJoinPoint, retry, backendMonitored.recovery(), methodName);
-		} else {
-			return handleSyncJoinPoint(proceedingJoinPoint, retry, backendMonitored.recovery(), methodName);
+		Class<?> returnType = method.getReturnType();
+		if (CompletionStage.class.isAssignableFrom(returnType)) {
+			return handleJoinPointCompletableFuture(proceedingJoinPoint, retry, backendMonitored.recovery(), methodName);
 		}
+		if (retryAspectExtList != null && !retryAspectExtList.isEmpty()) {
+			for (RetryAspectExt retryAspectExt : retryAspectExtList) {
+				if (retryAspectExt.canHandleReturnType(returnType)) {
+					return retryAspectExt.handle(proceedingJoinPoint, retry, methodName);
+				}
+			}
+		}
+		return handleDefaultJoinPoint(proceedingJoinPoint, retry, backendMonitored.recovery(), methodName);
 	}
 
 	/**
@@ -122,7 +134,7 @@ public class RetryAspect implements Ordered {
 	 * @throws Throwable
 	 */
 	@SuppressWarnings("unchecked")
-	private Object handleSyncJoinPoint(ProceedingJoinPoint proceedingJoinPoint, io.github.resilience4j.retry.Retry retry, String recoveryMethodName, String methodName) throws Throwable {
+	private Object handleDefaultJoinPoint(ProceedingJoinPoint proceedingJoinPoint, io.github.resilience4j.retry.Retry retry, String recoveryMethodName, String methodName) throws Throwable {
 		if (logger.isDebugEnabled()) {
 			logger.debug("retry invocation of method {} ", methodName);
 		}
@@ -146,7 +158,7 @@ public class RetryAspect implements Ordered {
 	 * @throws Throwable
 	 */
 	@SuppressWarnings("unchecked")
-	private Object handleAsyncJoinPoint(ProceedingJoinPoint proceedingJoinPoint, io.github.resilience4j.retry.Retry retry, String recoveryMethodName, String methodName) throws Throwable {
+	private Object handleJoinPointCompletableFuture(ProceedingJoinPoint proceedingJoinPoint, io.github.resilience4j.retry.Retry retry, String recoveryMethodName, String methodName) throws Throwable {
 		if (logger.isDebugEnabled()) {
 			logger.debug("async retry invocation of method {} ", methodName);
 		}

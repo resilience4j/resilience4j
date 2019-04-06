@@ -48,7 +48,7 @@ public class InMemoryRateLimiterRegistry implements RateLimiterRegistry {
 
     public InMemoryRateLimiterRegistry(final RateLimiterConfig defaultRateLimiterConfig) {
         this.defaultRateLimiterConfig = requireNonNull(defaultRateLimiterConfig, CONFIG_MUST_NOT_BE_NULL);
-        rateLimiters = new ConcurrentHashMap<>();
+        this.rateLimiters = new ConcurrentHashMap<>();
     }
 
     /**

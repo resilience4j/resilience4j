@@ -16,12 +16,14 @@
 
 package io.github.resilience4j.ratpack.internal;
 
+import io.github.resilience4j.core.lang.Nullable;
 import ratpack.exec.Downstream;
 import ratpack.exec.Upstream;
 import ratpack.func.Function;
 
 public abstract class AbstractTransformer<T> implements Function<Upstream<? extends T>, Upstream<T>> {
 
+    @Nullable
     protected Function<Throwable, ? extends T> recoverer;
 
     protected void handleRecovery(Downstream<? super T> down, Throwable throwable) {

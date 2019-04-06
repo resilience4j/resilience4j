@@ -16,14 +16,18 @@
 package io.github.resilience4j.ratpack.bulkhead.endpoint;
 
 import io.github.resilience4j.bulkhead.event.BulkheadEvent;
+import io.github.resilience4j.core.lang.Nullable;
 
 /**
  * DTO to class for publishing bulkhead events.
  */
 public class BulkheadEventDTO {
 
+    @Nullable
     private String bulkheadName;
+    @Nullable
     private BulkheadEvent.Type type;
+    @Nullable
     private String creationTime;
 
     BulkheadEventDTO() {
@@ -39,6 +43,7 @@ public class BulkheadEventDTO {
         return new BulkheadEventDTO(bulkheadEvent.getBulkheadName(), bulkheadEvent.getEventType(), bulkheadEvent.getCreationTime().toString());
     }
 
+    @Nullable
     public String getBulkheadName() {
         return bulkheadName;
     }
@@ -47,6 +52,7 @@ public class BulkheadEventDTO {
         this.bulkheadName = bulkheadName;
     }
 
+    @Nullable
     public BulkheadEvent.Type getType() {
         return type;
     }
@@ -55,6 +61,7 @@ public class BulkheadEventDTO {
         this.type = type;
     }
 
+    @Nullable
     public String getCreationTime() {
         return creationTime;
     }

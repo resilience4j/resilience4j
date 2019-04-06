@@ -15,17 +15,26 @@
  */
 package io.github.resilience4j.circuitbreaker.configure;
 
-import io.github.resilience4j.circuitbreaker.CircuitBreaker;
-import io.github.resilience4j.circuitbreaker.operator.CircuitBreakerOperator;
+import static io.github.resilience4j.utils.AspectUtil.newHashSet;
+
+import java.util.Set;
+
 import io.github.resilience4j.utils.RecoveryUtils;
-import io.reactivex.*;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
+import io.github.resilience4j.circuitbreaker.CircuitBreaker;
+import io.github.resilience4j.circuitbreaker.operator.CircuitBreakerOperator;
+import io.reactivex.Completable;
+import io.reactivex.CompletableSource;
+import io.reactivex.Flowable;
+import io.reactivex.Maybe;
+import io.reactivex.MaybeSource;
+import io.reactivex.Observable;
+import io.reactivex.ObservableSource;
+import io.reactivex.Single;
+import io.reactivex.SingleSource;
 
 /**
  * the Rx circuit breaker logic support for the spring AOP
@@ -35,13 +44,6 @@ public class RxJava2CircuitBreakerAspectExt implements CircuitBreakerAspectExt {
 
 	private static final Logger logger = LoggerFactory.getLogger(CircuitBreakerAspect.class);
 	private final Set<Class> rxSupportedTypes = newHashSet(ObservableSource.class, SingleSource.class, CompletableSource.class, MaybeSource.class, Flowable.class);
-
-	@SafeVarargs
-	private static <T> Set<T> newHashSet(T... objs) {
-		Set<T> set = new HashSet<>();
-		Collections.addAll(set, objs);
-		return Collections.unmodifiableSet(set);
-	}
 
 	/**
 	 * @param returnType the AOP method return type class
@@ -64,39 +66,30 @@ public class RxJava2CircuitBreakerAspectExt implements CircuitBreakerAspectExt {
 	@Override
 	public Object handle(ProceedingJoinPoint proceedingJoinPoint, CircuitBreaker circuitBreaker, String recoveryMethodName, String methodName) throws Throwable {
 		CircuitBreakerOperator circuitBreakerOperator = CircuitBreakerOperator.of(circuitBreaker);
-		long start = System.nanoTime();
-		Object returnValue;
-		try {
-			returnValue = proceedingJoinPoint.proceed();
-		} catch (Exception e) {
-			long durationInNanos = System.nanoTime() - start;
-			circuitBreaker.onError(durationInNanos, e);
-			logger.error("Exception has been thrown during RxJava2 circuit breaker invoke {}", e.getCause());
-			throw e;
-		}
+		Object returnValue = proceedingJoinPoint.proceed();
 		if (returnValue instanceof ObservableSource) {
-			Observable observable = (Observable) returnValue;
+			Observable<?> observable = (Observable) returnValue;
 			return observable.lift(circuitBreakerOperator)
-					.onErrorResumeNext(RecoveryUtils.rxJava2OnErrorResumeNext(recoveryMethodName, proceedingJoinPoint.getArgs(), proceedingJoinPoint.getThis(), Observable::error));
+                    .onErrorResumeNext(RecoveryUtils.rxJava2OnErrorResumeNext(recoveryMethodName, proceedingJoinPoint.getArgs(), proceedingJoinPoint.getThis(), Observable::error));
 		} else if (returnValue instanceof SingleSource) {
-			Single single = (Single) returnValue;
+			Single<?> single = (Single) returnValue;
 			return single.lift(circuitBreakerOperator)
-					.onErrorResumeNext(RecoveryUtils.rxJava2OnErrorResumeNext(recoveryMethodName, proceedingJoinPoint.getArgs(), proceedingJoinPoint.getThis(), Single::error));
+                    .onErrorResumeNext(RecoveryUtils.rxJava2OnErrorResumeNext(recoveryMethodName, proceedingJoinPoint.getArgs(), proceedingJoinPoint.getThis(), Single::error));
 		} else if (returnValue instanceof CompletableSource) {
 			Completable completable = (Completable) returnValue;
 			return completable.lift(circuitBreakerOperator)
 					.onErrorResumeNext(RecoveryUtils.rxJava2OnErrorResumeNext(recoveryMethodName, proceedingJoinPoint.getArgs(), proceedingJoinPoint.getThis(), Completable::error));
 		} else if (returnValue instanceof MaybeSource) {
-			Maybe maybe = (Maybe) returnValue;
+			Maybe<?> maybe = (Maybe) returnValue;
 			return maybe.lift(circuitBreakerOperator)
-					.onErrorResumeNext(RecoveryUtils.rxJava2OnErrorResumeNext(recoveryMethodName, proceedingJoinPoint.getArgs(), proceedingJoinPoint.getThis(), Maybe::error));
+                    .onErrorResumeNext(RecoveryUtils.rxJava2OnErrorResumeNext(recoveryMethodName, proceedingJoinPoint.getArgs(), proceedingJoinPoint.getThis(), Maybe::error));
 		} else if (returnValue instanceof Flowable) {
-			Flowable flowable = (Flowable) returnValue;
+			Flowable<?> flowable = (Flowable) returnValue;
 			return flowable.lift(circuitBreakerOperator)
-					.onErrorResumeNext(RecoveryUtils.rxJava2OnErrorResumeNext(recoveryMethodName, proceedingJoinPoint.getArgs(), proceedingJoinPoint.getThis(), Flowable::error));
+                    .onErrorResumeNext(RecoveryUtils.rxJava2OnErrorResumeNext(recoveryMethodName, proceedingJoinPoint.getArgs(), proceedingJoinPoint.getThis(), Flowable::error));
 		} else {
-			logger.error("Unsupported type for RxJava2 circuit breaker {}", returnValue.getClass().getTypeName());
-			throw new IllegalArgumentException("Not Supported type for the circuit breaker in web flux :" + returnValue.getClass().getName());
+			logger.error("Unsupported type for RxJava2 circuit breaker return type {} for method {}", returnValue.getClass().getTypeName(), methodName);
+			throw new IllegalArgumentException("Not Supported type for the circuit breaker in RxJava2:" + returnValue.getClass().getName());
 		}
 	}
 }
