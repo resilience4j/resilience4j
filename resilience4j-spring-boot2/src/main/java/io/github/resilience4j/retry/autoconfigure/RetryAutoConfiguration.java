@@ -16,7 +16,7 @@
 package io.github.resilience4j.retry.autoconfigure;
 
 import io.github.resilience4j.consumer.EventConsumerRegistry;
-import io.github.resilience4j.recovery.RecoveryConfiguration;
+import io.github.resilience4j.recovery.configure.RecoveryConfiguration;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryRegistry;
 import io.github.resilience4j.retry.configure.RetryConfiguration;

@@ -15,7 +15,7 @@
  */
 package io.github.resilience4j.ratelimiter.autoconfigure;
 
-import io.github.resilience4j.recovery.RecoveryConfiguration;
+import io.github.resilience4j.recovery.configure.RecoveryConfiguration;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.boot.actuate.autoconfigure.endpoint.EndpointAutoConfiguration;
 import org.springframework.boot.actuate.autoconfigure.endpoint.condition.ConditionalOnEnabledEndpoint;

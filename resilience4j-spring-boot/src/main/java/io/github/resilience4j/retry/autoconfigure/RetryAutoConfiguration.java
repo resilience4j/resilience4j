@@ -15,7 +15,7 @@
  */
 package io.github.resilience4j.retry.autoconfigure;
 
-import io.github.resilience4j.recovery.RecoveryConfiguration;
+import io.github.resilience4j.recovery.configure.RecoveryConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;

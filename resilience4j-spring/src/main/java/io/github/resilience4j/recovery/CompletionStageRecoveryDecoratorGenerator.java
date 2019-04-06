@@ -15,21 +15,22 @@
  */
 package io.github.resilience4j.recovery;
 
-import io.vavr.CheckedFunction0;
-import io.vavr.CheckedFunction1;
-
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 
-public class CompletionStageRecoveryApplier implements RecoveryApplier {
+/**
+ * recovery decorator for {@link CompletionStage}
+ */
+public class CompletionStageRecoveryDecoratorGenerator implements RecoveryDecoratorGenerator {
 
     @Override
     public boolean supports(Class target) {
         return CompletionStage.class.isAssignableFrom(target);
     }
 
+    @SuppressWarnings("unchecked")
     @Override
-    public CheckedFunction1<CheckedFunction0<Object>, Object> get(String recoveryMethodName, Object[] args, Object target) {
+    public RecoveryDecorator get(String recoveryMethodName, Object[] args, Object target) {
         return (supplier) -> {
             CompletionStage completionStage = (CompletionStage) supplier.apply();
 

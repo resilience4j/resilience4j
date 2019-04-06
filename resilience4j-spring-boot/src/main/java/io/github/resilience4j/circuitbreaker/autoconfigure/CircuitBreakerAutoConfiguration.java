@@ -15,7 +15,7 @@
  */
 package io.github.resilience4j.circuitbreaker.autoconfigure;
 
-import io.github.resilience4j.recovery.RecoveryConfiguration;
+import io.github.resilience4j.recovery.configure.RecoveryConfiguration;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.boot.actuate.autoconfigure.EndpointAutoConfiguration;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;

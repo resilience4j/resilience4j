@@ -15,20 +15,25 @@
  */
 package io.github.resilience4j.recovery;
 
-import io.vavr.CheckedFunction0;
-import io.vavr.CheckedFunction1;
 import org.springframework.util.ReflectionUtils;
+import org.springframework.util.StringUtils;
 
 import java.lang.reflect.Method;
 import java.util.Arrays;
 
-public interface RecoveryApplier {
+public interface RecoveryDecoratorGenerator {
     boolean supports(Class target);
 
-    CheckedFunction1<CheckedFunction0<Object>, Object> get(String recoveryMethodName, Object[] args, Object target);
+    /**
+     * @param recoveryMethodName recovery method name.
+     * @param args parameters passed to the original method.
+     * @param target class object that defines recovery method.
+     * @return
+     */
+    RecoveryDecorator get(String recoveryMethodName, Object[] args, Object target);
 
     default Object invoke(String recoveryMethodName, Object[] args, Throwable throwable, Object target) throws Throwable {
-        if (noRecoveryMethod(recoveryMethodName)) {
+        if (StringUtils.isEmpty(recoveryMethodName)) {
             throw throwable;
         }
 
@@ -50,9 +55,5 @@ public interface RecoveryApplier {
         } else {
             return recovery.invoke(target, throwable);
         }
-    }
-
-    default boolean noRecoveryMethod(String recoveryMethodName) {
-        return recoveryMethodName == null || recoveryMethodName.isEmpty();
     }
 }

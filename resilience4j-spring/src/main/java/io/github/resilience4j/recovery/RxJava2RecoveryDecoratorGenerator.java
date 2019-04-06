@@ -16,24 +16,26 @@
 package io.github.resilience4j.recovery;
 
 import io.reactivex.*;
-import io.vavr.CheckedFunction0;
-import io.vavr.CheckedFunction1;
 
 import java.util.Set;
 import java.util.function.Function;
 
 import static io.github.resilience4j.utils.AspectUtil.newHashSet;
 
-public class RxJava2RecoveryApplier implements RecoveryApplier {
+/**
+ * recovery decorator for {@link ObservableSource}, {@link SingleSource}, {@link CompletableSource}, {@link MaybeSource} and {@link Flowable}.
+ */
+public class RxJava2RecoveryDecoratorGenerator implements RecoveryDecoratorGenerator {
     private static final Set<Class> RX_SUPPORTED_TYPES = newHashSet(ObservableSource.class, SingleSource.class, CompletableSource.class, MaybeSource.class, Flowable.class);
 
+    @SuppressWarnings("unchecked")
     @Override
     public boolean supports(Class target) {
         return RX_SUPPORTED_TYPES.stream().anyMatch(it -> it.isAssignableFrom(target));
     }
 
     @Override
-    public CheckedFunction1<CheckedFunction0<Object>, Object> get(String recoveryMethodName, Object[] args, Object target) {
+    public RecoveryDecorator get(String recoveryMethodName, Object[] args, Object target) {
         return (supplier) -> {
             Object request = supplier.apply();
 
@@ -58,6 +60,7 @@ public class RxJava2RecoveryApplier implements RecoveryApplier {
         };
     }
 
+    @SuppressWarnings("unchecked")
     private <T> io.reactivex.functions.Function<Throwable, T> rxJava2OnErrorResumeNext(String recoveryMethodName, Object[] args, Object target, Function<? super Throwable, ? extends T> errorFunction) {
         return (throwable) -> {
             try {

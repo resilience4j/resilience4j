@@ -23,7 +23,7 @@ import io.github.resilience4j.ratelimiter.event.RateLimiterEvent;
 import io.github.resilience4j.ratelimiter.monitoring.endpoint.RateLimiterEndpoint;
 import io.github.resilience4j.ratelimiter.monitoring.endpoint.RateLimiterEventsEndpoint;
 import io.github.resilience4j.ratelimiter.monitoring.health.RateLimiterHealthIndicator;
-import io.github.resilience4j.recovery.RecoveryConfiguration;
+import io.github.resilience4j.recovery.configure.RecoveryConfiguration;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.boot.actuate.autoconfigure.EndpointAutoConfiguration;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;

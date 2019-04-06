@@ -15,10 +15,10 @@
  */
 package io.github.resilience4j.recovery;
 
-import io.vavr.CheckedFunction0;
-import io.vavr.CheckedFunction1;
-
-public class DefaultRecoveryApplier implements RecoveryApplier {
+/**
+ *  default recovery decorator. it catches throwable and invoke the recovery method.
+ */
+public class DefaultRecoveryDecoratorGenerator implements RecoveryDecoratorGenerator {
 
     @Override
     public boolean supports(Class target) {
@@ -26,7 +26,7 @@ public class DefaultRecoveryApplier implements RecoveryApplier {
     }
 
     @Override
-    public CheckedFunction1<CheckedFunction0<Object>, Object> get(String recoveryMethodName, Object[] args, Object target) {
+    public RecoveryDecorator get(String recoveryMethodName, Object[] args, Object target) {
         return (supplier) ->{
             try {
                 return supplier.apply();

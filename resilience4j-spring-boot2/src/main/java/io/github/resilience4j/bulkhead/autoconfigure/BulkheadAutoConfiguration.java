@@ -22,7 +22,7 @@ import io.github.resilience4j.bulkhead.event.BulkheadEvent;
 import io.github.resilience4j.bulkhead.monitoring.endpoint.BulkheadEndpoint;
 import io.github.resilience4j.bulkhead.monitoring.endpoint.BulkheadEventsEndpoint;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
-import io.github.resilience4j.recovery.RecoveryConfiguration;
+import io.github.resilience4j.recovery.configure.RecoveryConfiguration;
 import org.springframework.boot.actuate.autoconfigure.endpoint.EndpointAutoConfiguration;
 import org.springframework.boot.actuate.autoconfigure.endpoint.condition.ConditionalOnEnabledEndpoint;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;

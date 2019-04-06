@@ -79,7 +79,7 @@ public class RateLimiterAspect implements Ordered {
 		Class<?> returnType = method.getReturnType();
         io.github.resilience4j.ratelimiter.RateLimiter rateLimiter = getOrCreateRateLimiter(methodName, name);
 
-        return recovery.from(targetService.recovery(), proceedingJoinPoint.getArgs(), returnType, proceedingJoinPoint.getThis())
+        return recovery.decorator(targetService.recovery(), proceedingJoinPoint.getArgs(), returnType, proceedingJoinPoint.getThis())
                 .apply(() -> {
                     if (rateLimiterAspectExtList != null && !rateLimiterAspectExtList.isEmpty()) {
                         for (RateLimiterAspectExt rateLimiterAspectExt : rateLimiterAspectExtList) {

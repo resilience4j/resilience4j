@@ -15,8 +15,6 @@
  */
 package io.github.resilience4j.recovery;
 
-import io.vavr.CheckedFunction0;
-import io.vavr.CheckedFunction1;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -26,16 +24,21 @@ import java.util.function.Function;
 
 import static io.github.resilience4j.utils.AspectUtil.newHashSet;
 
-public class ReactorRecoveryApplier implements RecoveryApplier {
+/**
+ * recovery decorator for {@link Flux} and {@link Mono}
+ */
+public class ReactorRecoveryDecoratorGenerator implements RecoveryDecoratorGenerator {
     private static final Set<Class> REACTORS_SUPPORTED_TYPES = newHashSet(Mono.class, Flux.class);
 
+    @SuppressWarnings("unchecked")
     @Override
     public boolean supports(Class target) {
         return REACTORS_SUPPORTED_TYPES.stream().anyMatch(it -> it.isAssignableFrom(target));
     }
 
+    @SuppressWarnings("unchecked")
     @Override
-    public CheckedFunction1<CheckedFunction0<Object>, Object> get(String recoveryMethodName, Object[] args, Object target) {
+    public RecoveryDecorator get(String recoveryMethodName, Object[] args, Object target) {
         return (supplier) -> {
             Object returnValue = supplier.apply();
             if (Flux.class.isAssignableFrom(returnValue.getClass())) {
@@ -50,6 +53,7 @@ public class ReactorRecoveryApplier implements RecoveryApplier {
         };
     }
 
+    @SuppressWarnings("unchecked")
     private <T> Function<? super Throwable, ? extends Publisher<? extends T>> reactorOnErrorResume(String recoveryMethodName, Object[] args, Object target, Function<? super Throwable, ? extends Publisher<? extends T>> errorFunction) {
         return (throwable) -> {
             try {

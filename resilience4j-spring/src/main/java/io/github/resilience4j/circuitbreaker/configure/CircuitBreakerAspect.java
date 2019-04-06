@@ -76,7 +76,7 @@ public class CircuitBreakerAspect implements Ordered {
 		io.github.resilience4j.circuitbreaker.CircuitBreaker circuitBreaker = getOrCreateCircuitBreaker(methodName, backend);
 		Class<?> returnType = method.getReturnType();
 
-        return recovery.from(backendMonitored.recovery(), proceedingJoinPoint.getArgs(), returnType, proceedingJoinPoint.getThis())
+        return recovery.decorator(backendMonitored.recovery(), proceedingJoinPoint.getArgs(), returnType, proceedingJoinPoint.getThis())
                 .apply(() -> {
                     if (circuitBreakerAspectExtList != null && !circuitBreakerAspectExtList.isEmpty()) {
                         for (CircuitBreakerAspectExt circuitBreakerAspectExt : circuitBreakerAspectExtList) {

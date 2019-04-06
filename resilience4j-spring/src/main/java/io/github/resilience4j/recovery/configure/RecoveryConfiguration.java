@@ -13,8 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.resilience4j.recovery;
+package io.github.resilience4j.recovery.configure;
 
+import io.github.resilience4j.recovery.*;
 import io.github.resilience4j.utils.ReactorOnClasspathCondition;
 import io.github.resilience4j.utils.RxJava2OnClasspathCondition;
 import org.springframework.context.annotation.Bean;
@@ -32,23 +33,23 @@ public class RecoveryConfiguration {
 
 	@Bean
 	@Conditional(value = {RxJava2OnClasspathCondition.class})
-	public RecoveryApplier rxJava2RecoveryApplier() {
-		return new RxJava2RecoveryApplier();
+	public RecoveryDecoratorGenerator rxJava2RecoveryDecoratorGenerator() {
+		return new RxJava2RecoveryDecoratorGenerator();
 	}
 
 	@Bean
 	@Conditional(value = {ReactorOnClasspathCondition.class})
-	public RecoveryApplier reactorRecoveryApplier() {
-		return new ReactorRecoveryApplier();
+	public RecoveryDecoratorGenerator reactorRecoveryDecoratorGenerator() {
+		return new ReactorRecoveryDecoratorGenerator();
 	}
 
 	@Bean
-	public RecoveryApplier completionStageRecoveryApplier() {
-		return new CompletionStageRecoveryApplier();
+	public RecoveryDecoratorGenerator completionStageRecoveryDecoratorGenerator() {
+		return new CompletionStageRecoveryDecoratorGenerator();
 	}
 
 	@Bean
-	public Recovery recovery(List<RecoveryApplier> recoveryApplier) {
-		return new Recovery(recoveryApplier);
+	public Recovery recovery(List<RecoveryDecoratorGenerator> recoveryDecoratorGenerator) {
+		return new Recovery(recoveryDecoratorGenerator);
 	}
 }

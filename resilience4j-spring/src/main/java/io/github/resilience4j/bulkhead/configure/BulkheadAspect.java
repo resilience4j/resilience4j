@@ -71,7 +71,7 @@ public class BulkheadAspect implements Ordered {
 		io.github.resilience4j.bulkhead.Bulkhead bulkhead = getOrCreateBulkhead(methodName, backend);
 		Class<?> returnType = method.getReturnType();
 
-		return recovery.from(backendMonitored.recovery(), proceedingJoinPoint.getArgs(), returnType, proceedingJoinPoint.getThis())
+		return recovery.decorator(backendMonitored.recovery(), proceedingJoinPoint.getArgs(), returnType, proceedingJoinPoint.getThis())
                 .apply(()-> {
                     if (bulkheadAspectExts != null && !bulkheadAspectExts.isEmpty()) {
                         for (BulkheadAspectExt bulkHeadAspectExt : bulkheadAspectExts) {
