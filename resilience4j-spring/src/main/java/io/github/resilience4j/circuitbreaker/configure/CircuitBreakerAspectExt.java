@@ -24,5 +24,5 @@ public interface CircuitBreakerAspectExt {
 
 	boolean canHandleReturnType(Class returnType);
 
-	Object handle(ProceedingJoinPoint proceedingJoinPoint, io.github.resilience4j.circuitbreaker.CircuitBreaker circuitBreaker, String recoveryMethodName, String methodName) throws Throwable;
+	Object handle(ProceedingJoinPoint proceedingJoinPoint, io.github.resilience4j.circuitbreaker.CircuitBreaker circuitBreaker, String methodName) throws Throwable;
 }

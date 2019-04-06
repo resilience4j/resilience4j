@@ -18,7 +18,6 @@ package io.github.resilience4j.bulkhead.configure;
 import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.bulkhead.operator.BulkheadOperator;
 import io.github.resilience4j.circuitbreaker.configure.CircuitBreakerAspect;
-import io.github.resilience4j.utils.RecoveryUtils;
 import io.reactivex.*;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.slf4j.Logger;
@@ -56,34 +55,30 @@ public class RxJava2BulkheadAspectExt implements BulkheadAspectExt {
 	 */
 	@SuppressWarnings("unchecked")
 	@Override
-	public Object handle(ProceedingJoinPoint proceedingJoinPoint, Bulkhead bulkhead, String recoveryMethodName, String methodName) throws Throwable {
+	public Object handle(ProceedingJoinPoint proceedingJoinPoint, Bulkhead bulkhead, String methodName) throws Throwable {
 		BulkheadOperator<?> bulkheadOperator = BulkheadOperator.of(bulkhead);
 		Object returnValue = proceedingJoinPoint.proceed();
-		return executeRxJava2Aspect(bulkheadOperator, proceedingJoinPoint, recoveryMethodName, returnValue);
+
+		return executeRxJava2Aspect(bulkheadOperator, returnValue);
 	}
 
 	@SuppressWarnings("unchecked")
-	private Object executeRxJava2Aspect(BulkheadOperator bulkheadOperator, ProceedingJoinPoint proceedingJoinPoint, String recoveryMethodName, Object returnValue) {
+	private Object executeRxJava2Aspect(BulkheadOperator bulkheadOperator, Object returnValue) {
 		if (returnValue instanceof ObservableSource) {
 			Observable<?> observable = (Observable<?>) returnValue;
-			return observable.lift(bulkheadOperator)
-					.onErrorResumeNext(RecoveryUtils.rxJava2OnErrorResumeNext(recoveryMethodName, proceedingJoinPoint.getArgs(), proceedingJoinPoint.getThis(), Observable::error));
+			return observable.lift(bulkheadOperator);
 		} else if (returnValue instanceof SingleSource) {
 			Single<?> single = (Single) returnValue;
-			return single.lift(bulkheadOperator)
-					.onErrorResumeNext(RecoveryUtils.rxJava2OnErrorResumeNext(recoveryMethodName, proceedingJoinPoint.getArgs(), proceedingJoinPoint.getThis(), Single::error));
+			return single.lift(bulkheadOperator);
 		} else if (returnValue instanceof CompletableSource) {
 			Completable completable = (Completable) returnValue;
-			return completable.lift(bulkheadOperator)
-					.onErrorResumeNext(RecoveryUtils.rxJava2OnErrorResumeNext(recoveryMethodName, proceedingJoinPoint.getArgs(), proceedingJoinPoint.getThis(), Completable::error));
+			return completable.lift(bulkheadOperator);
 		} else if (returnValue instanceof MaybeSource) {
 			Maybe<?> maybe = (Maybe) returnValue;
-			return maybe.lift(bulkheadOperator)
-					.onErrorResumeNext(RecoveryUtils.rxJava2OnErrorResumeNext(recoveryMethodName, proceedingJoinPoint.getArgs(), proceedingJoinPoint.getThis(), Maybe::error));
+			return maybe.lift(bulkheadOperator);
 		} else if (returnValue instanceof Flowable) {
 			Flowable<?> flowable = (Flowable) returnValue;
-			return flowable.lift(bulkheadOperator)
-					.onErrorResumeNext(RecoveryUtils.rxJava2OnErrorResumeNext(recoveryMethodName, proceedingJoinPoint.getArgs(), proceedingJoinPoint.getThis(), Flowable::error));
+			return flowable.lift(bulkheadOperator);
 		} else {
 			logger.error("Unsupported type for BulkHead RxJava2 {}", returnValue.getClass().getTypeName());
 			throw new IllegalArgumentException("Not Supported type for the BulkHead in RxJava2 :" + returnValue.getClass().getName());

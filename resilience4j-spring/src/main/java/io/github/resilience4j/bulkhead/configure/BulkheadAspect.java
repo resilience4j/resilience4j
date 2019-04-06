@@ -17,8 +17,8 @@ package io.github.resilience4j.bulkhead.configure;
 
 import io.github.resilience4j.bulkhead.BulkheadRegistry;
 import io.github.resilience4j.bulkhead.annotation.Bulkhead;
+import io.github.resilience4j.recovery.Recovery;
 import io.github.resilience4j.utils.AnnotationExtractor;
-import io.github.resilience4j.utils.RecoveryUtils;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -47,11 +47,13 @@ public class BulkheadAspect implements Ordered {
 	private final BulkheadConfigurationProperties bulkheadConfigurationProperties;
 	private final BulkheadRegistry bulkheadRegistry;
 	private final List<BulkheadAspectExt> bulkheadAspectExts;
+	private final Recovery recovery;
 
-	public BulkheadAspect(BulkheadConfigurationProperties backendMonitorPropertiesRegistry, BulkheadRegistry bulkheadRegistry, @Autowired(required = false) List<BulkheadAspectExt> bulkheadAspectExts) {
+	public BulkheadAspect(BulkheadConfigurationProperties backendMonitorPropertiesRegistry, BulkheadRegistry bulkheadRegistry, @Autowired(required = false) List<BulkheadAspectExt> bulkheadAspectExts, Recovery recovery) {
 		this.bulkheadConfigurationProperties = backendMonitorPropertiesRegistry;
 		this.bulkheadRegistry = bulkheadRegistry;
 		this.bulkheadAspectExts = bulkheadAspectExts;
+		this.recovery = recovery;
 	}
 
 	@Pointcut(value = "@within(Bulkhead) || @annotation(Bulkhead)", argNames = "Bulkhead")
@@ -68,17 +70,22 @@ public class BulkheadAspect implements Ordered {
 		String backend = backendMonitored.name();
 		io.github.resilience4j.bulkhead.Bulkhead bulkhead = getOrCreateBulkhead(methodName, backend);
 		Class<?> returnType = method.getReturnType();
-		if (bulkheadAspectExts != null && !bulkheadAspectExts.isEmpty()) {
-			for (BulkheadAspectExt bulkHeadAspectExt : bulkheadAspectExts) {
-				if (bulkHeadAspectExt.canHandleReturnType(returnType)) {
-					return bulkHeadAspectExt.handle(proceedingJoinPoint, bulkhead, backendMonitored.recovery(), methodName);
-				}
-			}
-		}
-		if (CompletionStage.class.isAssignableFrom(returnType)) {
-			return handleJoinPointCompletableFuture(proceedingJoinPoint, bulkhead, backendMonitored.recovery(), methodName);
-		}
-		return handleJoinPoint(proceedingJoinPoint, bulkhead, backendMonitored.recovery(), methodName);
+
+		return recovery.from(backendMonitored.recovery(), proceedingJoinPoint.getArgs(), returnType, proceedingJoinPoint.getThis())
+                .apply(()-> {
+                    if (bulkheadAspectExts != null && !bulkheadAspectExts.isEmpty()) {
+                        for (BulkheadAspectExt bulkHeadAspectExt : bulkheadAspectExts) {
+                            if (bulkHeadAspectExt.canHandleReturnType(returnType)) {
+                                return bulkHeadAspectExt.handle(proceedingJoinPoint, bulkhead, methodName);
+                            }
+                        }
+                    }
+                    if (CompletionStage.class.isAssignableFrom(returnType)) {
+                        return handleJoinPointCompletableFuture(proceedingJoinPoint, bulkhead, methodName);
+                    }
+                    return handleJoinPoint(proceedingJoinPoint, bulkhead, methodName);
+
+                });
 	}
 
 	private io.github.resilience4j.bulkhead.Bulkhead getOrCreateBulkhead(String methodName, String backend) {
@@ -102,16 +109,12 @@ public class BulkheadAspect implements Ordered {
 		return AnnotationExtractor.extract(proceedingJoinPoint.getTarget().getClass(), Bulkhead.class);
 	}
 
-	private Object handleJoinPoint(ProceedingJoinPoint proceedingJoinPoint, io.github.resilience4j.bulkhead.Bulkhead bulkhead, String recoveryMethodName, String methodName) throws Throwable {
+	private Object handleJoinPoint(ProceedingJoinPoint proceedingJoinPoint, io.github.resilience4j.bulkhead.Bulkhead bulkhead, String methodName) throws Throwable {
 		if (logger.isDebugEnabled()) {
 			logger.debug("bulkhead method invocation for method {}", methodName);
 		}
 
-		try {
-			return bulkhead.executeCheckedSupplier(proceedingJoinPoint::proceed);
-		} catch (Throwable throwable) {
-			return RecoveryUtils.invoke(recoveryMethodName, proceedingJoinPoint.getArgs(), throwable, proceedingJoinPoint.getThis());
-		}
+        return bulkhead.executeCheckedSupplier(proceedingJoinPoint::proceed);
 	}
 
 	/**
@@ -123,9 +126,9 @@ public class BulkheadAspect implements Ordered {
 	 * @return CompletionStage
 	 * @throws Throwable
 	 */
-	private Object handleJoinPointCompletableFuture(ProceedingJoinPoint proceedingJoinPoint, io.github.resilience4j.bulkhead.Bulkhead bulkhead, String recoveryMethodName, String methodName) throws Throwable {
+	private Object handleJoinPointCompletableFuture(ProceedingJoinPoint proceedingJoinPoint, io.github.resilience4j.bulkhead.Bulkhead bulkhead, String methodName) throws Throwable {
 
-        CompletionStage<?> completionStage = bulkhead.executeCompletionStage(() -> {
+        return bulkhead.executeCompletionStage(() -> {
             try {
                 return (CompletionStage<?>) proceedingJoinPoint.proceed();
             } catch (Throwable throwable) {
@@ -133,8 +136,6 @@ public class BulkheadAspect implements Ordered {
                 throw new CompletionException(throwable);
             }
         });
-
-        return RecoveryUtils.decorateCompletionStage(recoveryMethodName, proceedingJoinPoint.getArgs(), proceedingJoinPoint.getThis(), completionStage);
 	}
 
 	@Override

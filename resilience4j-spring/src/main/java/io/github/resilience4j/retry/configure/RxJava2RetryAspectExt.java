@@ -18,7 +18,6 @@ package io.github.resilience4j.retry.configure;
 import io.github.resilience4j.circuitbreaker.configure.CircuitBreakerAspect;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.transformer.RetryTransformer;
-import io.github.resilience4j.utils.RecoveryUtils;
 import io.reactivex.*;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.slf4j.Logger;
@@ -56,34 +55,30 @@ public class RxJava2RetryAspectExt implements RetryAspectExt {
 	 */
 	@SuppressWarnings("unchecked")
 	@Override
-	public Object handle(ProceedingJoinPoint proceedingJoinPoint, Retry retry, String recoveryMethodName, String methodName) throws Throwable {
+	public Object handle(ProceedingJoinPoint proceedingJoinPoint, Retry retry, String methodName) throws Throwable {
 		RetryTransformer<?> retryTransformer = RetryTransformer.of(retry);
 		Object returnValue = proceedingJoinPoint.proceed();
-		return executeRxJava2Aspect(retryTransformer, proceedingJoinPoint, recoveryMethodName, returnValue);
+
+		return executeRxJava2Aspect(retryTransformer, returnValue);
 	}
 
 	@SuppressWarnings("unchecked")
-	private Object executeRxJava2Aspect(RetryTransformer retryTransformer, ProceedingJoinPoint proceedingJoinPoint, String recoveryMethodName, Object returnValue) {
+	private Object executeRxJava2Aspect(RetryTransformer retryTransformer, Object returnValue) {
 		if (returnValue instanceof ObservableSource) {
 			Observable<?> observable = (Observable<?>) returnValue;
-			return observable.compose(retryTransformer)
-					.onErrorResumeNext(RecoveryUtils.rxJava2OnErrorResumeNext(recoveryMethodName, proceedingJoinPoint.getArgs(), proceedingJoinPoint.getThis(), Observable::error));
+			return observable.compose(retryTransformer);
 		} else if (returnValue instanceof SingleSource) {
 			Single<?> single = (Single) returnValue;
-			return single.compose(retryTransformer)
-					.onErrorResumeNext(RecoveryUtils.rxJava2OnErrorResumeNext(recoveryMethodName, proceedingJoinPoint.getArgs(), proceedingJoinPoint.getThis(), Single::error));
+			return single.compose(retryTransformer);
 		} else if (returnValue instanceof CompletableSource) {
 			Completable completable = (Completable) returnValue;
-			return completable.compose(retryTransformer)
-					.onErrorResumeNext(RecoveryUtils.rxJava2OnErrorResumeNext(recoveryMethodName, proceedingJoinPoint.getArgs(), proceedingJoinPoint.getThis(), Completable::error));
+			return completable.compose(retryTransformer);
 		} else if (returnValue instanceof MaybeSource) {
 			Maybe<?> maybe = (Maybe) returnValue;
-			return maybe.compose(retryTransformer)
-					.onErrorResumeNext(RecoveryUtils.rxJava2OnErrorResumeNext(recoveryMethodName, proceedingJoinPoint.getArgs(), proceedingJoinPoint.getThis(), Maybe::error));
+			return maybe.compose(retryTransformer);
 		} else if (returnValue instanceof Flowable) {
 			Flowable<?> flowable = (Flowable) returnValue;
-			return flowable.compose(retryTransformer)
-					.onErrorResumeNext(RecoveryUtils.rxJava2OnErrorResumeNext(recoveryMethodName, proceedingJoinPoint.getArgs(), proceedingJoinPoint.getThis(), Flowable::error));
+			return flowable.compose(retryTransformer);
 		} else {
 			logger.error("Unsupported type for retry RxJava2 {}", returnValue.getClass().getTypeName());
 			throw new IllegalArgumentException("Not Supported type for the Retry in RxJava2 :" + returnValue.getClass().getName());

@@ -25,5 +25,5 @@ public interface RateLimiterAspectExt {
 
 	boolean canHandleReturnType(Class returnType);
 
-	Object handle(ProceedingJoinPoint proceedingJoinPoint, RateLimiter rateLimiter, String recoveryMethodName, String methodName) throws Throwable;
+	Object handle(ProceedingJoinPoint proceedingJoinPoint, RateLimiter rateLimiter, String methodName) throws Throwable;
 }

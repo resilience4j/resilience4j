@@ -15,26 +15,16 @@
  */
 package io.github.resilience4j.circuitbreaker.configure;
 
-import static io.github.resilience4j.utils.AspectUtil.newHashSet;
-
-import java.util.Set;
-
-import io.github.resilience4j.utils.RecoveryUtils;
+import io.github.resilience4j.circuitbreaker.CircuitBreaker;
+import io.github.resilience4j.circuitbreaker.operator.CircuitBreakerOperator;
+import io.reactivex.*;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import io.github.resilience4j.circuitbreaker.CircuitBreaker;
-import io.github.resilience4j.circuitbreaker.operator.CircuitBreakerOperator;
-import io.reactivex.Completable;
-import io.reactivex.CompletableSource;
-import io.reactivex.Flowable;
-import io.reactivex.Maybe;
-import io.reactivex.MaybeSource;
-import io.reactivex.Observable;
-import io.reactivex.ObservableSource;
-import io.reactivex.Single;
-import io.reactivex.SingleSource;
+import java.util.Set;
+
+import static io.github.resilience4j.utils.AspectUtil.newHashSet;
 
 /**
  * the Rx circuit breaker logic support for the spring AOP
@@ -64,29 +54,30 @@ public class RxJava2CircuitBreakerAspectExt implements CircuitBreakerAspectExt {
 	 */
 	@SuppressWarnings("unchecked")
 	@Override
-	public Object handle(ProceedingJoinPoint proceedingJoinPoint, CircuitBreaker circuitBreaker, String recoveryMethodName, String methodName) throws Throwable {
+	public Object handle(ProceedingJoinPoint proceedingJoinPoint, CircuitBreaker circuitBreaker, String methodName) throws Throwable {
 		CircuitBreakerOperator circuitBreakerOperator = CircuitBreakerOperator.of(circuitBreaker);
 		Object returnValue = proceedingJoinPoint.proceed();
+
+		return executeRxJava2Aspect(circuitBreakerOperator, returnValue, methodName);
+	}
+
+	@SuppressWarnings("unchecked")
+	private Object executeRxJava2Aspect(CircuitBreakerOperator circuitBreakerOperator, Object returnValue, String methodName) {
 		if (returnValue instanceof ObservableSource) {
 			Observable<?> observable = (Observable) returnValue;
-			return observable.lift(circuitBreakerOperator)
-                    .onErrorResumeNext(RecoveryUtils.rxJava2OnErrorResumeNext(recoveryMethodName, proceedingJoinPoint.getArgs(), proceedingJoinPoint.getThis(), Observable::error));
+			return observable.lift(circuitBreakerOperator);
 		} else if (returnValue instanceof SingleSource) {
 			Single<?> single = (Single) returnValue;
-			return single.lift(circuitBreakerOperator)
-                    .onErrorResumeNext(RecoveryUtils.rxJava2OnErrorResumeNext(recoveryMethodName, proceedingJoinPoint.getArgs(), proceedingJoinPoint.getThis(), Single::error));
+			return single.lift(circuitBreakerOperator);
 		} else if (returnValue instanceof CompletableSource) {
 			Completable completable = (Completable) returnValue;
-			return completable.lift(circuitBreakerOperator)
-					.onErrorResumeNext(RecoveryUtils.rxJava2OnErrorResumeNext(recoveryMethodName, proceedingJoinPoint.getArgs(), proceedingJoinPoint.getThis(), Completable::error));
+			return completable.lift(circuitBreakerOperator);
 		} else if (returnValue instanceof MaybeSource) {
 			Maybe<?> maybe = (Maybe) returnValue;
-			return maybe.lift(circuitBreakerOperator)
-                    .onErrorResumeNext(RecoveryUtils.rxJava2OnErrorResumeNext(recoveryMethodName, proceedingJoinPoint.getArgs(), proceedingJoinPoint.getThis(), Maybe::error));
+			return maybe.lift(circuitBreakerOperator);
 		} else if (returnValue instanceof Flowable) {
 			Flowable<?> flowable = (Flowable) returnValue;
-			return flowable.lift(circuitBreakerOperator)
-                    .onErrorResumeNext(RecoveryUtils.rxJava2OnErrorResumeNext(recoveryMethodName, proceedingJoinPoint.getArgs(), proceedingJoinPoint.getThis(), Flowable::error));
+			return flowable.lift(circuitBreakerOperator);
 		} else {
 			logger.error("Unsupported type for RxJava2 circuit breaker return type {} for method {}", returnValue.getClass().getTypeName(), methodName);
 			throw new IllegalArgumentException("Not Supported type for the circuit breaker in RxJava2:" + returnValue.getClass().getName());
