@@ -42,6 +42,8 @@ import io.vavr.CheckedConsumer;
 import io.vavr.CheckedFunction0;
 import io.vavr.CheckedFunction1;
 import io.vavr.CheckedRunnable;
+import io.vavr.Function1;
+import io.vavr.Function2;
 import io.vavr.Tuple;
 import io.vavr.Tuple2;
 
@@ -407,6 +409,19 @@ public interface CircuitBreaker {
      * @return a supplier which is decorated by a CircuitBreaker.
      */
     static <T> CheckedFunction0<T> decorateCheckedSupplier(CircuitBreaker circuitBreaker, CheckedFunction0<T> supplier){
+        return decorateCheckedSupplier(circuitBreaker, supplier, CircuitBreakerResultPredicates.defaultPredicate2());
+    }
+
+    /**
+     * Returns a supplier which is decorated by a CircuitBreaker.
+     *
+     * @param circuitBreaker the CircuitBreaker
+     * @param supplier the original supplier
+     * @param resultPredicate result predicate by duration and return object function.
+     * @param <T> the type of results supplied by this supplier
+     * @return a supplier which is decorated by a CircuitBreaker.
+     */
+    static <T> CheckedFunction0<T> decorateCheckedSupplier(CircuitBreaker circuitBreaker, CheckedFunction0<T> supplier, Function2<Long, T, Boolean> resultPredicate){
         return () -> {
             CircuitBreakerUtils.isCallPermitted(circuitBreaker);
             long start = System.nanoTime();
@@ -414,7 +429,11 @@ public interface CircuitBreaker {
                 T returnValue = supplier.apply();
 
                 long durationInNanos = System.nanoTime() - start;
-                circuitBreaker.onSuccess(durationInNanos);
+                if (resultPredicate.apply(durationInNanos, returnValue)) {
+                    circuitBreaker.onSuccess(durationInNanos);
+                } else {
+                    circuitBreaker.onError(durationInNanos, new CircuitBreakerErrorOnResultException());
+                }
                 return returnValue;
             } catch (Exception exception) {
                 // Do not handle java.lang.Error
@@ -434,11 +453,27 @@ public interface CircuitBreaker {
      * @return a supplier which is decorated by a CircuitBreaker.
      */
     static <T> Supplier<CompletionStage<T>> decorateCompletionStage(
-        CircuitBreaker circuitBreaker,
-        Supplier<CompletionStage<T>> supplier
+            CircuitBreaker circuitBreaker,
+            Supplier<CompletionStage<T>> supplier
+    ) {
+        return decorateCompletionStage(circuitBreaker, supplier, CircuitBreakerResultPredicates.defaultPredicate2());
+    }
+
+    /**
+     * Returns a supplier which is decorated by a CircuitBreaker.
+     *
+     * @param circuitBreaker the CircuitBreaker
+     * @param supplier the original supplier
+     * @param resultPredicate result predicate by duration and return object function.
+     * @param <T> the type of the returned CompletionStage's result
+     * @return a supplier which is decorated by a CircuitBreaker.
+     */
+    static <T> Supplier<CompletionStage<T>> decorateCompletionStage(
+            CircuitBreaker circuitBreaker,
+            Supplier<CompletionStage<T>> supplier,
+            Function2<Long, T, Boolean> resultPredicate
     ) {
         return () -> {
-
             final CompletableFuture<T> promise = new CompletableFuture<>();
 
             if (!circuitBreaker.isCallPermitted()) {
@@ -451,7 +486,11 @@ public interface CircuitBreaker {
                 supplier.get().whenComplete((result, throwable) -> {
                     long durationInNanos = System.nanoTime() - start;
                     if (result != null) {
-                        circuitBreaker.onSuccess(durationInNanos);
+                        if (resultPredicate.apply(durationInNanos, result)) {
+                            circuitBreaker.onSuccess(durationInNanos);
+                        } else {
+                            circuitBreaker.onError(durationInNanos, new CircuitBreakerErrorOnResultException());
+                        }
                         promise.complete(result);
                     } else if (throwable instanceof Exception) {
                         circuitBreaker.onError(durationInNanos, throwable);
@@ -476,13 +515,30 @@ public interface CircuitBreaker {
      * @return a runnable which is decorated by a CircuitBreaker.
      */
     static CheckedRunnable decorateCheckedRunnable(CircuitBreaker circuitBreaker, CheckedRunnable runnable){
+        return decorateCheckedRunnable(circuitBreaker, runnable, CircuitBreakerResultPredicates.defaultPredicate1());
+    }
+
+    /**
+     * Returns a runnable which is decorated by a CircuitBreaker.
+     *
+     * @param circuitBreaker the CircuitBreaker
+     * @param runnable the original runnable
+     * @param resultPredicate result predicate by duration function.
+     *
+     * @return a runnable which is decorated by a CircuitBreaker.
+     */
+    static CheckedRunnable decorateCheckedRunnable(CircuitBreaker circuitBreaker, CheckedRunnable runnable, Function1<Long, Boolean> resultPredicate){
         return () -> {
             CircuitBreakerUtils.isCallPermitted(circuitBreaker);
             long start = System.nanoTime();
             try{
                 runnable.run();
                 long durationInNanos = System.nanoTime() - start;
-                circuitBreaker.onSuccess(durationInNanos);
+                if (resultPredicate.apply(durationInNanos)) {
+                    circuitBreaker.onSuccess(durationInNanos);
+                } else {
+                    circuitBreaker.onError(durationInNanos, new CircuitBreakerErrorOnResultException());
+                }
             } catch (Exception exception){
                 // Do not handle java.lang.Error
                 long durationInNanos = System.nanoTime() - start;
@@ -502,13 +558,32 @@ public interface CircuitBreaker {
      * @return a supplier which is decorated by a CircuitBreaker.
      */
     static <T> Callable<T> decorateCallable(CircuitBreaker circuitBreaker, Callable<T> callable){
+        return decorateCallable(circuitBreaker, callable, CircuitBreakerResultPredicates.defaultPredicate2());
+    }
+
+    /**
+     * Returns a callable which is decorated by a CircuitBreaker.
+     *
+     * @param circuitBreaker the CircuitBreaker
+     * @param callable the original Callable
+     * @param resultPredicate result predicate by duration and return object function.
+     * @param <T> the result type of callable
+     *
+     * @return a supplier which is decorated by a CircuitBreaker.
+     */
+    static <T> Callable<T> decorateCallable(CircuitBreaker circuitBreaker, Callable<T> callable, Function2<Long, T, Boolean> resultPredicate){
         return () -> {
             CircuitBreakerUtils.isCallPermitted(circuitBreaker);
             long start = System.nanoTime();
             try {
                 T returnValue = callable.call();
                 long durationInNanos = System.nanoTime() - start;
-                circuitBreaker.onSuccess(durationInNanos);
+
+                if (resultPredicate.apply(durationInNanos, returnValue)) {
+                    circuitBreaker.onSuccess(durationInNanos);
+                } else {
+                    circuitBreaker.onError(durationInNanos, new CircuitBreakerErrorOnResultException());
+                }
                 return returnValue;
             } catch (Exception exception) {
                 // Do not handle java.lang.Error
@@ -529,13 +604,32 @@ public interface CircuitBreaker {
      * @return a supplier which is decorated by a CircuitBreaker.
      */
     static <T> Supplier<T> decorateSupplier(CircuitBreaker circuitBreaker, Supplier<T> supplier){
+        return decorateSupplier(circuitBreaker, supplier, CircuitBreakerResultPredicates.defaultPredicate2());
+    }
+
+    /**
+     * Returns a supplier which is decorated by a CircuitBreaker.
+     *
+     * @param circuitBreaker the CircuitBreaker
+     * @param supplier the original supplier
+     * @param resultPredicate result predicate by duration and return object function.
+     * @param <T> the type of results supplied by this supplier
+     *
+     * @return a supplier which is decorated by a CircuitBreaker.
+     */
+    static <T> Supplier<T> decorateSupplier(CircuitBreaker circuitBreaker, Supplier<T> supplier, Function2<Long, T, Boolean> resultPredicate){
         return () -> {
             CircuitBreakerUtils.isCallPermitted(circuitBreaker);
             long start = System.nanoTime();
             try {
                 T returnValue = supplier.get();
                 long durationInNanos = System.nanoTime() - start;
-                circuitBreaker.onSuccess(durationInNanos);
+
+                if (resultPredicate.apply(durationInNanos, returnValue)) {
+                    circuitBreaker.onSuccess(durationInNanos);
+                } else {
+                    circuitBreaker.onError(durationInNanos, new CircuitBreakerErrorOnResultException());
+                }
                 return returnValue;
             } catch (Exception exception) {
                 // Do not handle java.lang.Error
@@ -556,13 +650,32 @@ public interface CircuitBreaker {
      * @return a consumer which is decorated by a CircuitBreaker.
      */
     static <T> Consumer<T> decorateConsumer(CircuitBreaker circuitBreaker, Consumer<T> consumer){
+        return decorateConsumer(circuitBreaker, consumer, CircuitBreakerResultPredicates.defaultPredicate1());
+    }
+
+    /**
+     * Returns a consumer which is decorated by a CircuitBreaker.
+
+     * @param circuitBreaker the CircuitBreaker
+     * @param consumer the original consumer
+     * @param resultPredicate result predicate by duration function.
+     * @param <T> the type of the input to the consumer
+     *
+     * @return a consumer which is decorated by a CircuitBreaker.
+     */
+    static <T> Consumer<T> decorateConsumer(CircuitBreaker circuitBreaker, Consumer<T> consumer, Function1<Long, Boolean> resultPredicate){
         return (t) -> {
             CircuitBreakerUtils.isCallPermitted(circuitBreaker);
             long start = System.nanoTime();
             try {
                 consumer.accept(t);
                 long durationInNanos = System.nanoTime() - start;
-                circuitBreaker.onSuccess(durationInNanos);
+
+                if (resultPredicate.apply(durationInNanos)) {
+                    circuitBreaker.onSuccess(durationInNanos);
+                } else {
+                    circuitBreaker.onError(durationInNanos, new CircuitBreakerErrorOnResultException());
+                }
             } catch (Exception exception) {
                 // Do not handle java.lang.Error
                 long durationInNanos = System.nanoTime() - start;
@@ -582,13 +695,32 @@ public interface CircuitBreaker {
      * @return a consumer which is decorated by a CircuitBreaker.
      */
     static <T> CheckedConsumer<T> decorateCheckedConsumer(CircuitBreaker circuitBreaker, CheckedConsumer<T> consumer){
+        return decorateCheckedConsumer(circuitBreaker, consumer, CircuitBreakerResultPredicates.defaultPredicate1());
+    }
+
+    /**
+     * Returns a consumer which is decorated by a CircuitBreaker.
+
+     * @param circuitBreaker the CircuitBreaker
+     * @param consumer the original consumer
+     * @param resultPredicate result predicate by duration function.
+     * @param <T> the type of the input to the consumer
+     *
+     * @return a consumer which is decorated by a CircuitBreaker.
+     */
+    static <T> CheckedConsumer<T> decorateCheckedConsumer(CircuitBreaker circuitBreaker, CheckedConsumer<T> consumer, Function1<Long, Boolean> resultPredicate){
         return (t) -> {
             CircuitBreakerUtils.isCallPermitted(circuitBreaker);
             long start = System.nanoTime();
             try {
                 consumer.accept(t);
                 long durationInNanos = System.nanoTime() - start;
-                circuitBreaker.onSuccess(durationInNanos);
+
+                if (resultPredicate.apply(durationInNanos)) {
+                    circuitBreaker.onSuccess(durationInNanos);
+                } else {
+                    circuitBreaker.onError(durationInNanos, new CircuitBreakerErrorOnResultException());
+                }
             } catch (Exception exception) {
                 // Do not handle java.lang.Error
                 long durationInNanos = System.nanoTime() - start;
@@ -607,13 +739,31 @@ public interface CircuitBreaker {
      * @return a runnable which is decorated by a CircuitBreaker.
      */
     static Runnable decorateRunnable(CircuitBreaker circuitBreaker, Runnable runnable){
+        return decorateRunnable(circuitBreaker, runnable, CircuitBreakerResultPredicates.defaultPredicate1());
+    }
+
+    /**
+     * Returns a runnable which is decorated by a CircuitBreaker.
+     *
+     * @param circuitBreaker the CircuitBreaker
+     * @param runnable the original runnable
+     * @param resultPredicate result predicate by duration function.
+     *
+     * @return a runnable which is decorated by a CircuitBreaker.
+     */
+    static Runnable decorateRunnable(CircuitBreaker circuitBreaker, Runnable runnable, Function1<Long, Boolean> resultPredicate){
         return () -> {
             CircuitBreakerUtils.isCallPermitted(circuitBreaker);
             long start = System.nanoTime();
             try{
                 runnable.run();
                 long durationInNanos = System.nanoTime() - start;
-                circuitBreaker.onSuccess(durationInNanos);
+
+                if (resultPredicate.apply(durationInNanos)) {
+                    circuitBreaker.onSuccess(durationInNanos);
+                } else {
+                    circuitBreaker.onError(durationInNanos, new CircuitBreakerErrorOnResultException());
+                }
             } catch (Exception exception){
                 // Do not handle java.lang.Error
                 long durationInNanos = System.nanoTime() - start;
@@ -633,13 +783,33 @@ public interface CircuitBreaker {
      * @return a function which is decorated by a CircuitBreaker.
      */
     static <T, R> Function<T, R> decorateFunction(CircuitBreaker circuitBreaker, Function<T, R> function){
+        return decorateFunction(circuitBreaker, function, CircuitBreakerResultPredicates.defaultPredicate2());
+    }
+
+    /**
+     * Returns a function which is decorated by a CircuitBreaker.
+
+     * @param circuitBreaker the CircuitBreaker
+     * @param function the original function
+     * @param resultPredicate result predicate by duration and return object function.
+     * @param <T> the type of the input to the function
+     * @param <R> the type of the result of the function
+     * @return a function which is decorated by a CircuitBreaker.
+     */
+    static <T, R> Function<T, R> decorateFunction(CircuitBreaker circuitBreaker, Function<T, R> function, Function2<Long, R, Boolean> resultPredicate){
         return (T t) -> {
             CircuitBreakerUtils.isCallPermitted(circuitBreaker);
             long start = System.nanoTime();
             try{
                 R returnValue = function.apply(t);
                 long durationInNanos = System.nanoTime() - start;
-                circuitBreaker.onSuccess(durationInNanos);
+
+                if (resultPredicate.apply(durationInNanos, returnValue)) {
+                    circuitBreaker.onSuccess(durationInNanos);
+                } else {
+                    circuitBreaker.onError(durationInNanos, new CircuitBreakerErrorOnResultException());
+                }
+
                 return returnValue;
             } catch (Exception exception){
                 // Do not handle java.lang.Error
@@ -660,13 +830,33 @@ public interface CircuitBreaker {
      * @return a function which is decorated by a CircuitBreaker.
      */
     static <T, R> CheckedFunction1<T, R> decorateCheckedFunction(CircuitBreaker circuitBreaker, CheckedFunction1<T, R> function){
+        return decorateCheckedFunction(circuitBreaker, function, CircuitBreakerResultPredicates.defaultPredicate2());
+    }
+
+    /**
+     * Returns a function which is decorated by a CircuitBreaker.
+     *
+     * @param circuitBreaker the CircuitBreaker
+     * @param function the original function
+     * @param resultPredicate result predicate by duration and return object function.
+     * @param <T> the type of the input to the function
+     * @param <R> the type of the result of the function
+     * @return a function which is decorated by a CircuitBreaker.
+     */
+    static <T, R> CheckedFunction1<T, R> decorateCheckedFunction(CircuitBreaker circuitBreaker, CheckedFunction1<T, R> function, Function2<Long, R, Boolean> resultPredicate){
         return (T t) -> {
             CircuitBreakerUtils.isCallPermitted(circuitBreaker);
             long start = System.nanoTime();
             try{
                 R returnValue = function.apply(t);
                 long durationInNanos = System.nanoTime() - start;
-                circuitBreaker.onSuccess(durationInNanos);
+
+                if (resultPredicate.apply(durationInNanos, returnValue)) {
+                    circuitBreaker.onSuccess(durationInNanos);
+                } else {
+                    circuitBreaker.onError(durationInNanos, new CircuitBreakerErrorOnResultException());
+                }
+
                 return returnValue;
             } catch (Exception exception){
                 // Do not handle java.lang.Error
