@@ -181,16 +181,40 @@ public interface CircuitBreaker {
     }
 
     /**
+     * Decorates and executes the decorated Supplier.
+     *
+     * @param supplier the original Supplier
+     * @param resultPredicate result predicate by duration and return object function.
+     * @param <T> the type of results supplied by this supplier
+     * @return the result of the decorated Supplier.
+     */
+    default <T> T executeSupplier(Supplier<T> supplier, Function2<Long, T, Boolean> resultPredicate){
+        return decorateSupplier(this, supplier, resultPredicate).get();
+    }
+
+    /**
      * Decorates and executes the decorated Callable.
      *
      * @param callable the original Callable
-     *
-     * @return the result of the decorated Callable.
      * @param <T> the result type of callable
+     * @return the result of the decorated Callable.
      * @throws Exception if unable to compute a result
      */
     default <T> T executeCallable(Callable<T> callable) throws Exception{
         return decorateCallable(this, callable).call();
+    }
+
+    /**
+     * Decorates and executes the decorated Callable.
+     *
+     * @param callable the original Callable
+     * @param resultPredicate result predicate by duration and return object function.
+     * @param <T> the result type of callable
+     * @return the result of the decorated Callable.
+     * @throws Exception if unable to compute a result
+     */
+    default <T> T executeCallable(Callable<T> callable, Function2<Long, T, Boolean> resultPredicate) throws Exception{
+        return decorateCallable(this, callable, resultPredicate).call();
     }
 
     /**
@@ -200,6 +224,16 @@ public interface CircuitBreaker {
      */
     default void executeRunnable(Runnable runnable){
         decorateRunnable(this, runnable).run();
+    }
+
+    /**
+     * Decorates and executes the decorated Runnable.
+     *
+     * @param runnable the original Runnable
+     * @param resultPredicate result predicate by duration function.
+     */
+    default void executeRunnable(Runnable runnable, Function1<Long, Boolean> resultPredicate){
+        decorateRunnable(this, runnable, resultPredicate).run();
     }
 
     /**
@@ -214,6 +248,18 @@ public interface CircuitBreaker {
     }
 
     /**
+     * Decorates and executes the decorated CompletionStage.
+     *
+     * @param supplier the original CompletionStage
+     * @param resultPredicate result predicate by duration and return object function.
+     * @param <T> the type of results supplied by this supplier
+     * @return the decorated CompletionStage.
+     */
+    default <T> CompletionStage<T> executeCompletionStage(Supplier<CompletionStage<T>> supplier, Function2<Long, T, Boolean> resultPredicate){
+        return decorateCompletionStage(this, supplier, resultPredicate).get();
+    }
+
+    /**
      * Decorates and executes the decorated Supplier.
      *
      * @param checkedSupplier the original Supplier
@@ -223,6 +269,19 @@ public interface CircuitBreaker {
      */
     default <T> T executeCheckedSupplier(CheckedFunction0<T> checkedSupplier) throws Throwable {
         return decorateCheckedSupplier(this, checkedSupplier).apply();
+    }
+
+    /**
+     * Decorates and executes the decorated Supplier.
+     *
+     * @param checkedSupplier the original Supplier
+     * @param resultPredicate result predicate by duration and return object function.
+     * @param <T>             the type of results supplied by this supplier
+     * @return the result of the decorated Supplier.
+     * @throws Throwable if something goes wrong applying this function to the given arguments
+     */
+    default <T> T executeCheckedSupplier(CheckedFunction0<T> checkedSupplier, Function2<Long, T, Boolean> resultPredicate) throws Throwable {
+        return decorateCheckedSupplier(this, checkedSupplier, resultPredicate).apply();
     }
 
     /**
