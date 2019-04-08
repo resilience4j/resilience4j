@@ -147,7 +147,7 @@ public interface ThreadPoolBulkhead {
 	 *
 	 * @return an EventPublisher
 	 */
-	EventPublisher getEventPublisher();
+	ThreadPoolBulkheadEventPublisher getEventPublisher();
 
 	/**
 	 * Decorates and executes the decorated Supplier.
@@ -230,12 +230,12 @@ public interface ThreadPoolBulkhead {
 	/**
 	 * An EventPublisher which can be used to register event consumers.
 	 */
-	interface EventPublisher extends io.github.resilience4j.core.EventPublisher<BulkheadEvent> {
+	interface ThreadPoolBulkheadEventPublisher extends io.github.resilience4j.core.EventPublisher<BulkheadEvent> {
 
-		EventPublisher onCallRejected(EventConsumer<BulkheadOnCallRejectedEvent> eventConsumer);
+		ThreadPoolBulkheadEventPublisher onCallRejected(EventConsumer<BulkheadOnCallRejectedEvent> eventConsumer);
 
-		EventPublisher onCallPermitted(EventConsumer<BulkheadOnCallPermittedEvent> eventConsumer);
+		ThreadPoolBulkheadEventPublisher onCallPermitted(EventConsumer<BulkheadOnCallPermittedEvent> eventConsumer);
 
-		EventPublisher onCallFinished(EventConsumer<BulkheadOnCallFinishedEvent> eventConsumer);
+		ThreadPoolBulkheadEventPublisher onCallFinished(EventConsumer<BulkheadOnCallFinishedEvent> eventConsumer);
 	}
 }

@@ -24,11 +24,15 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.BDDMockito;
 import org.slf4j.Logger;
+
+import com.jayway.awaitility.Awaitility;
+import com.jayway.awaitility.Duration;
 
 import io.github.resilience4j.test.HelloWorldService;
 
@@ -50,12 +54,13 @@ public class ThreadPoolBulkheadEventPublisherTest {
 		bulkhead = ThreadPoolBulkhead.of("test", config);
 
 		logger = mock(Logger.class);
+		Awaitility.reset();
 	}
 
 	@Test
 	public void shouldReturnTheSameConsumer() {
-		ThreadPoolBulkhead.EventPublisher eventPublisher = bulkhead.getEventPublisher();
-		ThreadPoolBulkhead.EventPublisher eventPublisher2 = bulkhead.getEventPublisher();
+		ThreadPoolBulkhead.ThreadPoolBulkheadEventPublisher eventPublisher = bulkhead.getEventPublisher();
+		ThreadPoolBulkhead.ThreadPoolBulkheadEventPublisher eventPublisher2 = bulkhead.getEventPublisher();
 
 		assertThat(eventPublisher).isEqualTo(eventPublisher2);
 	}
@@ -80,11 +85,8 @@ public class ThreadPoolBulkheadEventPublisherTest {
 		new Thread(() -> {
 			try {
 				bulkhead.executeRunnable(() -> {
-					try {
-						Thread.sleep(200);
-					} catch (InterruptedException e) {
-						e.printStackTrace();
-					}
+					final AtomicInteger counter = new AtomicInteger(0);
+					Awaitility.waitAtMost(Duration.TWO_HUNDRED_MILLISECONDS).until(() -> counter.incrementAndGet() >= 2);
 				});
 			} catch (Exception e) {
 				exception.initCause(e);
@@ -105,7 +107,9 @@ public class ThreadPoolBulkheadEventPublisherTest {
 				exception.initCause(e);
 			}
 		}).start();
-		Thread.sleep(500);
+
+		final AtomicInteger counter = new AtomicInteger(0);
+		Awaitility.waitAtMost(Duration.FIVE_HUNDRED_MILLISECONDS).until(() -> counter.incrementAndGet() >= 2);
 		// Then
 		assertThat(exception).hasCauseInstanceOf(BulkheadFullException.class);
 		then(logger).should(times(1)).info("CALL_REJECTED");

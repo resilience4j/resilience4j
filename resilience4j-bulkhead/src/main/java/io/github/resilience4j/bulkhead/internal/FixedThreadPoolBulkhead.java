@@ -171,7 +171,7 @@ public class FixedThreadPoolBulkhead implements ThreadPoolBulkhead {
 	 * {@inheritDoc}
 	 */
 	@Override
-	public EventPublisher getEventPublisher() {
+	public ThreadPoolBulkheadEventPublisher getEventPublisher() {
 		return eventProcessor;
 	}
 
@@ -202,22 +202,22 @@ public class FixedThreadPoolBulkhead implements ThreadPoolBulkhead {
 		}));
 	}
 
-	private class BulkheadEventProcessor extends EventProcessor<BulkheadEvent> implements EventPublisher, EventConsumer<BulkheadEvent> {
+	private class BulkheadEventProcessor extends EventProcessor<BulkheadEvent> implements ThreadPoolBulkheadEventPublisher, EventConsumer<BulkheadEvent> {
 
 		@Override
-		public EventPublisher onCallPermitted(EventConsumer<BulkheadOnCallPermittedEvent> onCallPermittedEventConsumer) {
+		public ThreadPoolBulkheadEventPublisher onCallPermitted(EventConsumer<BulkheadOnCallPermittedEvent> onCallPermittedEventConsumer) {
 			registerConsumer(BulkheadOnCallPermittedEvent.class, onCallPermittedEventConsumer);
 			return this;
 		}
 
 		@Override
-		public EventPublisher onCallRejected(EventConsumer<BulkheadOnCallRejectedEvent> onCallRejectedEventConsumer) {
+		public ThreadPoolBulkheadEventPublisher onCallRejected(EventConsumer<BulkheadOnCallRejectedEvent> onCallRejectedEventConsumer) {
 			registerConsumer(BulkheadOnCallRejectedEvent.class, onCallRejectedEventConsumer);
 			return this;
 		}
 
 		@Override
-		public EventPublisher onCallFinished(EventConsumer<BulkheadOnCallFinishedEvent> onCallFinishedEventConsumer) {
+		public ThreadPoolBulkheadEventPublisher onCallFinished(EventConsumer<BulkheadOnCallFinishedEvent> onCallFinishedEventConsumer) {
 			registerConsumer(BulkheadOnCallFinishedEvent.class, onCallFinishedEventConsumer);
 			return this;
 		}

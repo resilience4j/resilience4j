@@ -23,11 +23,15 @@ import static org.mockito.Mockito.times;
 
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.BDDMockito;
 import org.mockito.Mockito;
+
+import com.jayway.awaitility.Awaitility;
+import com.jayway.awaitility.Duration;
 
 import io.github.resilience4j.test.HelloWorldService;
 
@@ -38,6 +42,7 @@ public class ThreadPoolBulkheadTest {
 
 	@Before
 	public void setUp() {
+		Awaitility.reset();
 		helloWorldService = Mockito.mock(HelloWorldService.class);
 		config = ThreadPoolBulkheadConfig.custom()
 				.maxThreadPoolSize(1)
@@ -57,12 +62,9 @@ public class ThreadPoolBulkheadTest {
 		// When
 		new Thread(() -> {
 			try {
+				final AtomicInteger counter = new AtomicInteger(0);
 				bulkhead.executeRunnable(() -> {
-					try {
-						Thread.sleep(200);
-					} catch (InterruptedException e) {
-						e.printStackTrace();
-					}
+					Awaitility.waitAtMost(Duration.TWO_HUNDRED_MILLISECONDS).until(() -> counter.incrementAndGet() > 1);
 				});
 			} catch (Exception e) {
 				exception.initCause(e);
@@ -82,7 +84,8 @@ public class ThreadPoolBulkheadTest {
 				exception.initCause(e);
 			}
 		}).start();
-		Thread.sleep(500);
+		final AtomicInteger counter = new AtomicInteger(0);
+		Awaitility.waitAtMost(Duration.FIVE_HUNDRED_MILLISECONDS).until(() -> counter.incrementAndGet() >= 2);
 		// Then
 		assertThat(exception.getCause().getMessage()).contains("ThreadPoolBulkhead 'testSupplier' is full");
 	}
@@ -100,11 +103,8 @@ public class ThreadPoolBulkheadTest {
 		new Thread(() -> {
 			try {
 				bulkhead.executeRunnable(() -> {
-					try {
-						Thread.sleep(200);
-					} catch (InterruptedException e) {
-						e.printStackTrace();
-					}
+					final AtomicInteger counter = new AtomicInteger(0);
+					Awaitility.waitAtMost(Duration.TWO_HUNDRED_MILLISECONDS).until(() -> counter.incrementAndGet() >= 2);
 				});
 			} catch (Exception e) {
 				exception.initCause(e);
@@ -125,8 +125,10 @@ public class ThreadPoolBulkheadTest {
 				exception.initCause(e);
 			}
 		}).start();
-		Thread.sleep(500);
+		final AtomicInteger counter = new AtomicInteger(0);
+		Awaitility.waitAtMost(Duration.FIVE_HUNDRED_MILLISECONDS).until(() -> counter.incrementAndGet() >= 2);
 		// Then
+
 		assertThat(exception).hasCauseInstanceOf(BulkheadFullException.class);
 	}
 
