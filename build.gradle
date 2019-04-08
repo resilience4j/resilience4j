@@ -7,8 +7,8 @@ buildscript {
         }
     }
     dependencies {
-        classpath 'net.saliman:gradle-cobertura-plugin:2.3.2'
-        classpath 'org.kt3k.gradle.plugin:coveralls-gradle-plugin:2.7.1'
+        classpath 'net.saliman:gradle-cobertura-plugin:2.6.1'
+        classpath 'org.kt3k.gradle.plugin:coveralls-gradle-plugin:2.8.2'
         classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.8.4'
         classpath 'me.champeau.gradle:jmh-gradle-plugin:0.3.1'
         classpath "org.asciidoctor:asciidoctor-gradle-plugin:1.5.3"
@@ -20,15 +20,17 @@ buildscript {
 }
 
 apply plugin: 'idea'
-apply plugin: 'com.github.kt3k.coveralls'
+//apply plugin: 'com.github.kt3k.coveralls'
 apply from: "${rootDir}/libraries.gradle"
+//apply plugin: 'jacoco'
 
 ext {
     releaseVersion = '0.14.1'
 }
 
 allprojects {
-    apply plugin: 'net.saliman.cobertura'
+   // apply plugin: 'net.saliman.cobertura'
+    apply plugin: 'jacoco'
     apply plugin: 'me.champeau.gradle.jmh'
     apply plugin: 'com.jfrog.artifactory'
 
@@ -57,6 +59,7 @@ configure(project.coreProjects) {
     apply plugin: 'com.jfrog.bintray'
     apply from: "${rootDir}/publishing.gradle"
     apply plugin: 'nebula.optional-base'
+    apply plugin: 'jacoco'
 
     dependencies {
         compile ( libraries.vavr)
@@ -86,10 +89,21 @@ configure(project.coreProjects) {
         options.compilerArgs += ["-Xlint:unchecked", "-parameters"]
 
     }
-
-    cobertura {
-        coverageIgnoreTrivial = true
-        coverageExcludes = ['.*io.github.resilience4j.bulkhead.internal.*']
+    jacocoTestReport {
+        additionalSourceDirs = files(sourceSets.main.allSource.srcDirs)
+        sourceDirectories = files(sourceSets.main.allSource.srcDirs)
+        classDirectories =  files(sourceSets.main.output)
+        reports {
+            html.enabled = true
+            xml.enabled = true
+            csv.enabled = false
+        }
+        afterEvaluate {
+            classDirectories = files(classDirectories.files.collect {
+                fileTree(dir: it,
+                        exclude: ['.*io.github.resilience4j.bulkhead.internal.*'])
+            })
+        }
     }
 
     jmh {
@@ -97,26 +111,39 @@ configure(project.coreProjects) {
         jmhVersion = '1.17'
     }
 }
+task jacocoRootTestReport(type: JacocoReport) {
 
-def files = subprojects.collect { new File(it.projectDir, '/build/cobertura/cobertura.ser') }
-cobertura {
-    coverageFormats = ['html', 'xml']
-    coverageSourceDirs = subprojects.sourceSets.main.allSource.srcDirs.flatten()
-    coverageMergeDatafiles = files
+    sourceSets sourceSets.main
+
+    def jacocoTestFiles = ["$buildDir/jacoco/test.exec"]
+    subprojects.each { p ->
+        def coverageFileLocation = "$p.buildDir/jacoco/test.exec"
+        if (new File(coverageFileLocation).exists()) {
+            jacocoTestFiles << coverageFileLocation
+        }
+    }
+
+    logger.info('Aggregating next JaCoCo Coverage Files: {}', jacocoTestFiles)
+    executionData files(jacocoTestFiles)
+
+    reports {
+        xml.enabled false
+        csv.enabled false
+        html.enabled true
+    }
 }
+
+
+tasks.check.dependsOn tasks.jacocoTestReport
+rootProject.tasks.jacocoTestReport.dependsOn tasks.test
 
 test {
     dependsOn(subprojects.test) // required by cobertura to aggregate report
 }
 
-tasks.coveralls {
-    dependsOn 'check'
-}
-
 task wrapper(type: Wrapper) {
     gradleVersion = '4.10.2'
 }
-
 
 artifactory {
     contextUrl = 'https://oss.jfrog.org'
