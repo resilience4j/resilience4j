@@ -16,6 +16,7 @@
 package io.github.resilience4j.recovery;
 
 import io.reactivex.*;
+import io.vavr.CheckedFunction0;
 
 import java.util.Set;
 import java.util.function.Function;
@@ -25,7 +26,7 @@ import static io.github.resilience4j.utils.AspectUtil.newHashSet;
 /**
  * recovery decorator for {@link ObservableSource}, {@link SingleSource}, {@link CompletableSource}, {@link MaybeSource} and {@link Flowable}.
  */
-public class RxJava2RecoveryDecoratorGenerator implements RecoveryDecoratorGenerator {
+public class RxJava2RecoveryDecorator implements RecoveryDecorator {
     private static final Set<Class> RX_SUPPORTED_TYPES = newHashSet(ObservableSource.class, SingleSource.class, CompletableSource.class, MaybeSource.class, Flowable.class);
 
     @SuppressWarnings("unchecked")
@@ -35,36 +36,34 @@ public class RxJava2RecoveryDecoratorGenerator implements RecoveryDecoratorGener
     }
 
     @Override
-    public RecoveryDecorator get(String recoveryMethodName, Object[] args, Object target) {
-        return (supplier) -> {
-            Object request = supplier.apply();
-
+    public CheckedFunction0<Object> decorate(RecoveryMethod recoveryMethod, CheckedFunction0<Object> supplier) {
+        return supplier.andThen(request -> {
             if (request instanceof ObservableSource) {
                 Observable<?> observable = (Observable<?>) request;
-                return observable.onErrorResumeNext(rxJava2OnErrorResumeNext(recoveryMethodName, args, target, Observable::error));
+                return observable.onErrorResumeNext(rxJava2OnErrorResumeNext(recoveryMethod, Observable::error));
             } else if (request instanceof SingleSource) {
                 Single<?> single = (Single) request;
-                return single.onErrorResumeNext(rxJava2OnErrorResumeNext(recoveryMethodName, args, target, Single::error));
+                return single.onErrorResumeNext(rxJava2OnErrorResumeNext(recoveryMethod, Single::error));
             } else if (request instanceof CompletableSource) {
                 Completable completable = (Completable) request;
-                return completable.onErrorResumeNext(rxJava2OnErrorResumeNext(recoveryMethodName, args, target, Completable::error));
+                return completable.onErrorResumeNext(rxJava2OnErrorResumeNext(recoveryMethod, Completable::error));
             } else if (request instanceof MaybeSource) {
                 Maybe<?> maybe = (Maybe) request;
-                return maybe.onErrorResumeNext(rxJava2OnErrorResumeNext(recoveryMethodName, args, target, Maybe::error));
+                return maybe.onErrorResumeNext(rxJava2OnErrorResumeNext(recoveryMethod, Maybe::error));
             } else if (request instanceof Flowable) {
                 Flowable<?> flowable = (Flowable) request;
-                return flowable.onErrorResumeNext(rxJava2OnErrorResumeNext(recoveryMethodName, args, target, Flowable::error));
+                return flowable.onErrorResumeNext(rxJava2OnErrorResumeNext(recoveryMethod, Flowable::error));
             } else {
                 return request;
             }
-        };
+        });
     }
 
     @SuppressWarnings("unchecked")
-    private <T> io.reactivex.functions.Function<Throwable, T> rxJava2OnErrorResumeNext(String recoveryMethodName, Object[] args, Object target, Function<? super Throwable, ? extends T> errorFunction) {
+    private <T> io.reactivex.functions.Function<Throwable, T> rxJava2OnErrorResumeNext(RecoveryMethod recoveryMethod, Function<? super Throwable, ? extends T> errorFunction) {
         return (throwable) -> {
             try {
-                return (T) invoke(recoveryMethodName, args, throwable, target);
+                return (T) recoveryMethod.recover(throwable);
             } catch (Throwable recoverThrowable) {
                 return (T) errorFunction.apply(recoverThrowable);
             }

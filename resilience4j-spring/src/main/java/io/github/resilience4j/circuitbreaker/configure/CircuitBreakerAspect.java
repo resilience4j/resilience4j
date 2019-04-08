@@ -19,8 +19,9 @@ import io.github.resilience4j.circuitbreaker.CircuitBreakerOpenException;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.core.lang.Nullable;
+import io.github.resilience4j.recovery.RecoveryDecorators;
+import io.github.resilience4j.recovery.RecoveryMethod;
 import io.github.resilience4j.utils.AnnotationExtractor;
-import io.github.resilience4j.recovery.Recovery;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -49,13 +50,13 @@ public class CircuitBreakerAspect implements Ordered {
 	private final CircuitBreakerConfigurationProperties circuitBreakerProperties;
 	private final CircuitBreakerRegistry circuitBreakerRegistry;
 	private final List<CircuitBreakerAspectExt> circuitBreakerAspectExtList;
-	private final Recovery recovery;
+	private final RecoveryDecorators recoveryDecorators;
 
-	public CircuitBreakerAspect(CircuitBreakerConfigurationProperties backendMonitorPropertiesRegistry, CircuitBreakerRegistry circuitBreakerRegistry, @Autowired(required = false) List<CircuitBreakerAspectExt> circuitBreakerAspectExtList, Recovery recovery) {
+	public CircuitBreakerAspect(CircuitBreakerConfigurationProperties backendMonitorPropertiesRegistry, CircuitBreakerRegistry circuitBreakerRegistry, @Autowired(required = false) List<CircuitBreakerAspectExt> circuitBreakerAspectExtList, RecoveryDecorators recoveryDecorators) {
 		this.circuitBreakerProperties = backendMonitorPropertiesRegistry;
 		this.circuitBreakerRegistry = circuitBreakerRegistry;
 		this.circuitBreakerAspectExtList = circuitBreakerAspectExtList;
-		this.recovery = recovery;
+		this.recoveryDecorators = recoveryDecorators;
 	}
 
 	@Pointcut(value = "@within(circuitBreaker) || @annotation(circuitBreaker)", argNames = "circuitBreaker")
@@ -75,9 +76,9 @@ public class CircuitBreakerAspect implements Ordered {
         String backend = backendMonitored.name();
 		io.github.resilience4j.circuitbreaker.CircuitBreaker circuitBreaker = getOrCreateCircuitBreaker(methodName, backend);
 		Class<?> returnType = method.getReturnType();
-
-        return recovery.decorator(backendMonitored.recovery(), proceedingJoinPoint.getArgs(), returnType, proceedingJoinPoint.getThis())
-                .apply(() -> {
+		RecoveryMethod recoveryMethod = new RecoveryMethod(backendMonitored.recovery(), proceedingJoinPoint.getArgs(), returnType, proceedingJoinPoint.getThis());
+        return recoveryDecorators.decorate(recoveryMethod,
+				() -> {
                     if (circuitBreakerAspectExtList != null && !circuitBreakerAspectExtList.isEmpty()) {
                         for (CircuitBreakerAspectExt circuitBreakerAspectExt : circuitBreakerAspectExtList) {
                             if (circuitBreakerAspectExt.canHandleReturnType(returnType)) {
@@ -89,7 +90,7 @@ public class CircuitBreakerAspect implements Ordered {
                         return handleJoinPointCompletableFuture(proceedingJoinPoint, circuitBreaker);
                     }
                     return defaultHandling(proceedingJoinPoint, circuitBreaker);
-                });
+                }).apply();
 	}
 
 	private io.github.resilience4j.circuitbreaker.CircuitBreaker getOrCreateCircuitBreaker(String methodName, String backend) {

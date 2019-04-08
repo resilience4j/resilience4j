@@ -16,24 +16,25 @@
 package io.github.resilience4j.recovery;
 
 import org.springframework.util.ReflectionUtils;
-import org.springframework.util.StringUtils;
 
 import java.lang.reflect.Method;
 import java.util.Arrays;
 
-public interface RecoveryDecoratorGenerator {
-    boolean supports(Class target);
+public class RecoveryMethod {
+    private final String recoveryMethodName;
+    private final Object[] args;
+    private final Object target;
+    private final Class<?> returnType;
 
-    /**
-     * @param recoveryMethodName recovery method name.
-     * @param args parameters passed to the original method.
-     * @param target class object that defines recovery method.
-     * @return
-     */
-    RecoveryDecorator get(String recoveryMethodName, Object[] args, Object target);
+    public RecoveryMethod(String recoveryMethodName, Object[] args, Class<?> returnType,  Object target) {
+        this.recoveryMethodName = recoveryMethodName;
+        this.args = args;
+        this.returnType = returnType;
+        this.target = target;
+    }
 
-    default Object invoke(String recoveryMethodName, Object[] args, Throwable throwable, Object target) throws Throwable {
-        if (StringUtils.isEmpty(recoveryMethodName)) {
+    public Object recover(Throwable throwable) throws Throwable {
+        if (undefined()) {
             throw throwable;
         }
 
@@ -55,5 +56,13 @@ public interface RecoveryDecoratorGenerator {
         } else {
             return recovery.invoke(target, throwable);
         }
+    }
+
+    public boolean undefined() {
+        return recoveryMethodName == null || recoveryMethodName.isEmpty();
+    }
+
+    public Class<?> getReturnType() {
+        return returnType;
     }
 }

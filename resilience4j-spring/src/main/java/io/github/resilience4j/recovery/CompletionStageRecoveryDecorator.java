@@ -15,13 +15,15 @@
  */
 package io.github.resilience4j.recovery;
 
+import io.vavr.CheckedFunction0;
+
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 
 /**
  * recovery decorator for {@link CompletionStage}
  */
-public class CompletionStageRecoveryDecoratorGenerator implements RecoveryDecoratorGenerator {
+public class CompletionStageRecoveryDecorator implements RecoveryDecorator {
 
     @Override
     public boolean supports(Class target) {
@@ -30,16 +32,16 @@ public class CompletionStageRecoveryDecoratorGenerator implements RecoveryDecora
 
     @SuppressWarnings("unchecked")
     @Override
-    public RecoveryDecorator get(String recoveryMethodName, Object[] args, Object target) {
-        return (supplier) -> {
-            CompletionStage completionStage = (CompletionStage) supplier.apply();
+    public CheckedFunction0<Object> decorate(RecoveryMethod recoveryMethod, CheckedFunction0<Object> supplier) {
+        return supplier.andThen(request -> {
+            CompletionStage completionStage = (CompletionStage) request;
 
             CompletableFuture promise = new CompletableFuture();
 
             completionStage.whenComplete((result, throwable) -> {
                 if (throwable != null) {
                     try {
-                        promise.complete(invoke(recoveryMethodName, args, (Throwable) throwable, target));
+                        promise.complete(recoveryMethod.recover((Throwable) throwable));
                     } catch (Throwable recoveryThrowable) {
                         promise.completeExceptionally(recoveryThrowable);
                     }
@@ -49,6 +51,6 @@ public class CompletionStageRecoveryDecoratorGenerator implements RecoveryDecora
             });
 
             return promise;
-        };
+        });
     }
 }

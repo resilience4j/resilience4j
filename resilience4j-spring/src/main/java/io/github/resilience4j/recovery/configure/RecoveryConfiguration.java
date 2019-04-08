@@ -26,30 +26,30 @@ import java.util.List;
 
 /**
  * {@link Configuration
- * Configuration} for {@link Recovery}.
+ * Configuration} for {@link RecoveryDecorators}.
  */
 @Configuration
 public class RecoveryConfiguration {
 
 	@Bean
 	@Conditional(value = {RxJava2OnClasspathCondition.class})
-	public RecoveryDecoratorGenerator rxJava2RecoveryDecoratorGenerator() {
-		return new RxJava2RecoveryDecoratorGenerator();
+	public RecoveryDecorator rxJava2RecoveryDecorator() {
+		return new RxJava2RecoveryDecorator();
 	}
 
 	@Bean
 	@Conditional(value = {ReactorOnClasspathCondition.class})
-	public RecoveryDecoratorGenerator reactorRecoveryDecoratorGenerator() {
-		return new ReactorRecoveryDecoratorGenerator();
+	public RecoveryDecorator reactorRecoveryDecorator() {
+		return new ReactorRecoveryDecorator();
 	}
 
 	@Bean
-	public RecoveryDecoratorGenerator completionStageRecoveryDecoratorGenerator() {
-		return new CompletionStageRecoveryDecoratorGenerator();
+	public RecoveryDecorator completionStageRecoveryDecorator() {
+		return new CompletionStageRecoveryDecorator();
 	}
 
 	@Bean
-	public Recovery recovery(List<RecoveryDecoratorGenerator> recoveryDecoratorGenerator) {
-		return new Recovery(recoveryDecoratorGenerator);
+	public RecoveryDecorators recovery(List<RecoveryDecorator> recoveryDecorator) {
+		return new RecoveryDecorators(recoveryDecorator);
 	}
 }

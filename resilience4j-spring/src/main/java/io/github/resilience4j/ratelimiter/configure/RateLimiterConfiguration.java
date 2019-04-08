@@ -19,7 +19,7 @@ import static io.github.resilience4j.ratelimiter.configure.RateLimiterConfigurat
 
 import java.util.List;
 
-import io.github.resilience4j.recovery.Recovery;
+import io.github.resilience4j.recovery.RecoveryDecorators;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -64,8 +64,8 @@ public class RateLimiterConfiguration {
 	}
 
 	@Bean
-	public RateLimiterAspect rateLimiterAspect(RateLimiterConfigurationProperties rateLimiterProperties, RateLimiterRegistry rateLimiterRegistry, @Autowired(required = false) List<RateLimiterAspectExt> rateLimiterAspectExtList, Recovery recovery) {
-		return new RateLimiterAspect(rateLimiterRegistry, rateLimiterProperties, rateLimiterAspectExtList, recovery);
+	public RateLimiterAspect rateLimiterAspect(RateLimiterConfigurationProperties rateLimiterProperties, RateLimiterRegistry rateLimiterRegistry, @Autowired(required = false) List<RateLimiterAspectExt> rateLimiterAspectExtList, RecoveryDecorators recoveryDecorators) {
+		return new RateLimiterAspect(rateLimiterRegistry, rateLimiterProperties, rateLimiterAspectExtList, recoveryDecorators);
 	}
 
 	@Bean

@@ -15,10 +15,12 @@
  */
 package io.github.resilience4j.recovery;
 
+import io.vavr.CheckedFunction0;
+
 /**
  *  default recovery decorator. it catches throwable and invoke the recovery method.
  */
-public class DefaultRecoveryDecoratorGenerator implements RecoveryDecoratorGenerator {
+public class DefaultRecoveryDecorator implements RecoveryDecorator {
 
     @Override
     public boolean supports(Class target) {
@@ -26,12 +28,12 @@ public class DefaultRecoveryDecoratorGenerator implements RecoveryDecoratorGener
     }
 
     @Override
-    public RecoveryDecorator get(String recoveryMethodName, Object[] args, Object target) {
-        return (supplier) ->{
+    public CheckedFunction0<Object> decorate(RecoveryMethod recoveryMethod, CheckedFunction0<Object> supplier) {
+        return () -> {
             try {
                 return supplier.apply();
             } catch (Throwable throwable) {
-                return invoke(recoveryMethodName, args, throwable, target);
+                return recoveryMethod.recover(throwable);
             }
         };
     }

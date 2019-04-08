@@ -15,6 +15,7 @@
  */
 package io.github.resilience4j.recovery;
 
+import io.vavr.CheckedFunction0;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -27,7 +28,7 @@ import static io.github.resilience4j.utils.AspectUtil.newHashSet;
 /**
  * recovery decorator for {@link Flux} and {@link Mono}
  */
-public class ReactorRecoveryDecoratorGenerator implements RecoveryDecoratorGenerator {
+public class ReactorRecoveryDecorator implements RecoveryDecorator {
     private static final Set<Class> REACTORS_SUPPORTED_TYPES = newHashSet(Mono.class, Flux.class);
 
     @SuppressWarnings("unchecked")
@@ -38,26 +39,25 @@ public class ReactorRecoveryDecoratorGenerator implements RecoveryDecoratorGener
 
     @SuppressWarnings("unchecked")
     @Override
-    public RecoveryDecorator get(String recoveryMethodName, Object[] args, Object target) {
-        return (supplier) -> {
-            Object returnValue = supplier.apply();
+    public CheckedFunction0<Object> decorate(RecoveryMethod recoveryMethod, CheckedFunction0<Object> supplier) {
+        return supplier.andThen(returnValue -> {
             if (Flux.class.isAssignableFrom(returnValue.getClass())) {
                 Flux fluxReturnValue = (Flux) returnValue;
-                return fluxReturnValue.onErrorResume(reactorOnErrorResume(recoveryMethodName, args, target, Flux::error));
+                return fluxReturnValue.onErrorResume(reactorOnErrorResume(recoveryMethod, Flux::error));
             } else if (Mono.class.isAssignableFrom(returnValue.getClass())) {
                 Mono monoReturnValue = (Mono) returnValue;
-                return monoReturnValue.onErrorResume(reactorOnErrorResume(recoveryMethodName, args, target, Mono::error));
+                return monoReturnValue.onErrorResume(reactorOnErrorResume(recoveryMethod, Mono::error));
             } else {
                 return returnValue;
             }
-        };
+        });
     }
 
     @SuppressWarnings("unchecked")
-    private <T> Function<? super Throwable, ? extends Publisher<? extends T>> reactorOnErrorResume(String recoveryMethodName, Object[] args, Object target, Function<? super Throwable, ? extends Publisher<? extends T>> errorFunction) {
+    private <T> Function<? super Throwable, ? extends Publisher<? extends T>> reactorOnErrorResume(RecoveryMethod recoveryMethod, Function<? super Throwable, ? extends Publisher<? extends T>> errorFunction) {
         return (throwable) -> {
             try {
-                return (Publisher<? extends T>) invoke(recoveryMethodName, args, throwable, target);
+                return (Publisher<? extends T>) recoveryMethod.recover(throwable);
             } catch (Throwable recoverThrowable) {
                 return errorFunction.apply(recoverThrowable);
             }

@@ -17,7 +17,7 @@ package io.github.resilience4j.retry.configure;
 
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
-import io.github.resilience4j.recovery.Recovery;
+import io.github.resilience4j.recovery.RecoveryDecorators;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryConfig;
 import io.github.resilience4j.retry.RetryRegistry;
@@ -65,8 +65,8 @@ public class RetryConfiguration {
 	@Bean
 	public RetryAspect retryAspect(RetryConfigurationProperties retryConfigurationProperties,
 								   RetryRegistry retryRegistry, @Autowired(required = false) List<RetryAspectExt> retryAspectExtList,
-								   Recovery recovery) {
-		return new RetryAspect(retryConfigurationProperties, retryRegistry, retryAspectExtList, recovery);
+								   RecoveryDecorators recoveryDecorators) {
+		return new RetryAspect(retryConfigurationProperties, retryRegistry, retryAspectExtList, recoveryDecorators);
 	}
 
 	@Bean

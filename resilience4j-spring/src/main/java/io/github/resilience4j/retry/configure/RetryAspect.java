@@ -15,7 +15,8 @@
  */
 package io.github.resilience4j.retry.configure;
 
-import io.github.resilience4j.recovery.Recovery;
+import io.github.resilience4j.recovery.RecoveryDecorators;
+import io.github.resilience4j.recovery.RecoveryMethod;
 import io.github.resilience4j.retry.RetryRegistry;
 import io.github.resilience4j.retry.annotation.Retry;
 import org.aspectj.lang.ProceedingJoinPoint;
@@ -45,18 +46,18 @@ public class RetryAspect implements Ordered {
 	private final RetryConfigurationProperties retryConfigurationProperties;
 	private final RetryRegistry retryRegistry;
 	private final List<RetryAspectExt> retryAspectExtList;
-	private final Recovery recovery;
+	private final RecoveryDecorators recoveryDecorators;
 
 	/**
 	 * @param retryConfigurationProperties spring retry config properties
 	 * @param retryRegistry                retry definition registry
 	 * @param retryAspectExtList
 	 */
-	public RetryAspect(RetryConfigurationProperties retryConfigurationProperties, RetryRegistry retryRegistry, @Autowired(required = false) List<RetryAspectExt> retryAspectExtList, Recovery recovery) {
+	public RetryAspect(RetryConfigurationProperties retryConfigurationProperties, RetryRegistry retryRegistry, @Autowired(required = false) List<RetryAspectExt> retryAspectExtList, RecoveryDecorators recoveryDecorators) {
 		this.retryConfigurationProperties = retryConfigurationProperties;
 		this.retryRegistry = retryRegistry;
 		this.retryAspectExtList = retryAspectExtList;
-		this.recovery = recovery;
+		this.recoveryDecorators = recoveryDecorators;
 		cleanup();
 
 	}
@@ -75,9 +76,9 @@ public class RetryAspect implements Ordered {
 		String backend = backendMonitored.name();
 		io.github.resilience4j.retry.Retry retry = getOrCreateRetry(methodName, backend);
 		Class<?> returnType = method.getReturnType();
-
-        return recovery.decorator(backendMonitored.recovery(), proceedingJoinPoint.getArgs(), returnType, proceedingJoinPoint.getThis())
-                .apply(() -> {
+        RecoveryMethod recoveryMethod = new RecoveryMethod(backendMonitored.recovery(), proceedingJoinPoint.getArgs(), returnType, proceedingJoinPoint.getThis());
+        return recoveryDecorators.decorate(recoveryMethod,
+                () -> {
                     if (CompletionStage.class.isAssignableFrom(returnType)) {
                         return handleJoinPointCompletableFuture(proceedingJoinPoint, retry, methodName);
                     }
@@ -89,7 +90,7 @@ public class RetryAspect implements Ordered {
                         }
                     }
                     return handleDefaultJoinPoint(proceedingJoinPoint, retry, methodName);
-                });
+                }).apply();
 	}
 
 	/**

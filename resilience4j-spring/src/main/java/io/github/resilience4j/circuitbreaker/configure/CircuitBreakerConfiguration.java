@@ -21,7 +21,7 @@ import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent;
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
-import io.github.resilience4j.recovery.Recovery;
+import io.github.resilience4j.recovery.RecoveryDecorators;
 import io.github.resilience4j.utils.ReactorOnClasspathCondition;
 import io.github.resilience4j.utils.RxJava2OnClasspathCondition;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -55,8 +55,8 @@ public class CircuitBreakerConfiguration {
 	@Bean
 	public CircuitBreakerAspect circuitBreakerAspect(CircuitBreakerConfigurationProperties circuitBreakerProperties,
 													 CircuitBreakerRegistry circuitBreakerRegistry, @Autowired(required = false) List<CircuitBreakerAspectExt> circuitBreakerAspectExtList,
-													 Recovery recovery) {
-		return new CircuitBreakerAspect(circuitBreakerProperties, circuitBreakerRegistry, circuitBreakerAspectExtList, recovery);
+													 RecoveryDecorators recoveryDecorators) {
+		return new CircuitBreakerAspect(circuitBreakerProperties, circuitBreakerRegistry, circuitBreakerAspectExtList, recoveryDecorators);
 	}
 
 

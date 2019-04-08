@@ -17,7 +17,7 @@ package io.github.resilience4j.bulkhead.configure;
 
 import java.util.List;
 
-import io.github.resilience4j.recovery.Recovery;
+import io.github.resilience4j.recovery.RecoveryDecorators;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Conditional;
@@ -56,8 +56,8 @@ public class BulkheadConfiguration {
 	@Bean
 	public BulkheadAspect bulkheadAspect(BulkheadConfigurationProperties bulkheadConfigurationProperties,
 										 BulkheadRegistry bulkheadRegistry, @Autowired(required = false) List<BulkheadAspectExt> bulkHeadAspectExtList,
-										 Recovery recovery) {
-		return new BulkheadAspect(bulkheadConfigurationProperties, bulkheadRegistry, bulkHeadAspectExtList, recovery);
+										 RecoveryDecorators recoveryDecorators) {
+		return new BulkheadAspect(bulkheadConfigurationProperties, bulkheadRegistry, bulkHeadAspectExtList, recoveryDecorators);
 	}
 
 	@Bean
