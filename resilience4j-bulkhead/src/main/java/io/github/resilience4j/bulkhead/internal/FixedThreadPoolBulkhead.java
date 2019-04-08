@@ -51,7 +51,7 @@ public class FixedThreadPoolBulkhead implements ThreadPoolBulkhead {
 	private final ThreadPoolExecutor executorService;
 	private final FixedThreadPoolBulkhead.BulkheadMetrics metrics;
 	private final FixedThreadPoolBulkhead.BulkheadEventProcessor eventProcessor;
-	private volatile ThreadPoolBulkheadConfig config;
+	private final ThreadPoolBulkheadConfig config;
 
 	/**
 	 * Creates a bulkhead using a configuration supplied
