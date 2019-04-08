@@ -516,7 +516,7 @@ table.CodeRay td.code>pre{padding:0}
 <div class="details">
 <span id="author" class="author">Robert Winkler</span><br>
 <span id="revnumber">version 0.14.1,</span>
-<span id="revdate">2019-04-06</span>
+<span id="revdate">2019-04-08</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">Table of Contents</div>
@@ -936,6 +936,12 @@ compile "io.github.resilience4j:resilience4j-timelimiter:0.14.1"</code></pre>
 <li>
 <p>a custom Predicate which evaluates if an exception should be recorded as a failure and thus increase the failure rate</p>
 </li>
+<li>
+<p>a list of exceptions which should increase failure count</p>
+</li>
+<li>
+<p>a list of exceptions which should be ignored and not increase failure count</p>
+</li>
 </ul>
 </div>
 <div class="listingblock">
@@ -946,6 +952,8 @@ CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom()
     .waitDurationInOpenState(<span class="predefined-type">Duration</span>.ofMillis(<span class="integer">1000</span>))
     .ringBufferSizeInHalfOpenState(<span class="integer">2</span>)
     .ringBufferSizeInClosedState(<span class="integer">2</span>)
+    .recordExceptions(<span class="exception">IOException</span>.class, <span class="exception">TimeoutException</span>.class)
+    .ignoreExceptions(BusinessException.class, OtherBusinessException.class)
     .build();
 
 <span class="comment">// Create a CircuitBreakerRegistry with a custom global configuration</span>
@@ -1097,9 +1105,42 @@ assertThat(result.failed().get()).isInstanceOf(CircuitBreakerOpenException.class
 </div>
 </div>
 <div class="sect4">
-<h5 id="_recover_from_an_exception"><a class="anchor" href="#_recover_from_an_exception"></a>Recover from an exception</h5>
+<h5 id="_recover_from_an_exception_before_call"><a class="anchor" href="#_recover_from_an_exception_before_call"></a>Recover from an exception before call</h5>
 <div class="paragraph">
-<p>If you want to recover from any exception, you can chain the method <code>Try.recover()</code>. The recovery method is only invoked, if <code>Try.of()</code> returns a <code>Failure&lt;Throwable&gt;</code> Monad.</p>
+<p>If you want to recover from an exception before the CircuitBreaker records it as a failure, you can do the following:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="java">Supplier&lt;<span class="predefined-type">String</span>&gt; supplier = () -&gt; {
+            <span class="keyword">throw</span> <span class="keyword">new</span> <span class="exception">RuntimeException</span>(<span class="string"><span class="delimiter">&quot;</span><span class="content">BAM!</span><span class="delimiter">&quot;</span></span>);
+        };
+Supplier&lt;<span class="predefined-type">String</span>&gt; supplierWithRecovery = SupplierUtils.recover(supplier, (exception) -&gt; <span class="string"><span class="delimiter">&quot;</span><span class="content">Hello Recovery</span><span class="delimiter">&quot;</span></span>);
+<span class="predefined-type">String</span> result = circuitBreaker.executeSupplier(supplierWithRecovery);
+assertThat(result).isEqualTo(<span class="string"><span class="delimiter">&quot;</span><span class="content">Hello Recovery</span><span class="delimiter">&quot;</span></span>);</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><code>SupplierUtils</code> and <code>CallableUtils</code> contain other methods like <code>andThen</code> which can take can be used to chain functions:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="java">Supplier&lt;<span class="predefined-type">String</span>&gt; supplierWithResultAndExceptionHandler = SupplierUtils.andThen(supplier, (result, exception) -&gt; <span class="string"><span class="delimiter">&quot;</span><span class="content">Hello Recovery</span><span class="delimiter">&quot;</span></span>);
+
+Supplier&lt;HttpResponse&gt; supplier = () -&gt; httpClient.doRemoteCall();
+Supplier&lt;<span class="predefined-type">String</span>&gt; supplierWithResultHandling = SupplierUtils.andThen(supplier, result -&gt; {
+    <span class="keyword">if</span> (result.getStatusCode() == <span class="integer">400</span>) {
+       <span class="keyword">throw</span> <span class="keyword">new</span> ClientException();
+    } <span class="keyword">else</span> <span class="keyword">if</span> (result.getStatusCode() == <span class="integer">500</span>) {
+       <span class="keyword">throw</span> <span class="keyword">new</span> <span class="exception">ServerException</span>();
+    });
+HttpResponse httpResponse = circuitBreaker.executeSupplier(supplierWithResultHandling);</code></pre>
+</div>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_recover_from_an_exception_after_call"><a class="anchor" href="#_recover_from_an_exception_after_call"></a>Recover from an exception after call</h5>
+<div class="paragraph">
+<p>If you want to recover from an exception after the CircuitBreaker recorded it as a failure, you can chain the method <code>Try.recover()</code>. The recovery method is only invoked, if <code>Try.of()</code> returns a <code>Failure&lt;Throwable&gt;</code> Monad.</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -1123,7 +1164,7 @@ assertThat(result.get()).isEqualTo(<span class="string"><span class="delimiter">
 <div class="sect4">
 <h5 id="_customize_the_exception_handler"><a class="anchor" href="#_customize_the_exception_handler"></a>Customize the exception handler</h5>
 <div class="paragraph">
-<p>The default exception handler counts all type of exceptions as failures and triggers the CircuitBreaker. If you want to use a custom exception handler, you have to implement the functional interface <code>Predicate</code> which has a method <code>test</code>. The Predicate must return true if the exception should count as a failure, otherwise it must return false.<br>
+<p>The default exception predicate counts all type of exceptions as failures and triggers the CircuitBreaker. If you want to use a custom exception predicate, you have to implement the functional interface <code>Predicate</code> which has a method <code>test</code>. The Predicate must return true if the exception should count as a failure, otherwise it must return false.<br>
 The following example shows how to ignore an <code>IOException</code>, but all other exception types still count as failures.</p>
 </div>
 <div class="listingblock">
@@ -4746,7 +4787,7 @@ So you can easily restrict not only network calls but your local in-memory opera
 <div id="footer">
 <div id="footer-text">
 Version 0.14.1<br>
-Last updated 2019-04-06 11:52:55 +00:00
+Last updated 2019-04-08 15:20:11 +00:00
 </div>
 </div>
 </body>
