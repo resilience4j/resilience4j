@@ -7,8 +7,6 @@ buildscript {
         }
     }
     dependencies {
-        classpath 'net.saliman:gradle-cobertura-plugin:2.6.1'
-        classpath 'org.kt3k.gradle.plugin:coveralls-gradle-plugin:2.8.2'
         classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.8.4'
         classpath 'me.champeau.gradle:jmh-gradle-plugin:0.3.1'
         classpath "org.asciidoctor:asciidoctor-gradle-plugin:1.5.3"
@@ -29,7 +27,6 @@ ext {
 }
 
 allprojects {
-   // apply plugin: 'net.saliman.cobertura'
     apply plugin: 'jacoco'
     apply plugin: 'me.champeau.gradle.jmh'
     apply plugin: 'com.jfrog.artifactory'
@@ -135,7 +132,7 @@ task jacocoRootReport(type: org.gradle.testing.jacoco.tasks.JacocoReport) {
 sonarqube {
     properties {
         property "sonar.projectName", "Resilience4j"
-        property "sonar.projectKey", "Resilience4j"
+        property "sonar.projectKey", "resilience4j"
 
 
         property "sonar.links.homepage","https://github.com/resilience4j/resilience4j"
@@ -149,7 +146,7 @@ sonarqube {
         property "sonar.java.binaries","build"
         property "sonar.java.test.binaries","build"
         property "sonar.binaries","build"
-        property "sonar.jacoco.reportPaths","build/reports/jacoco/test"
+//        property "sonar.jacoco.reportPaths","build/reports/jacoco/test"
 
         property "sonar.language","java"
 
