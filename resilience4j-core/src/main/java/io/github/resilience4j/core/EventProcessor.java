@@ -25,8 +25,8 @@ import java.util.concurrent.ConcurrentMap;
 
 public class EventProcessor<T> implements EventPublisher<T> {
 
-    protected volatile boolean consumerRegistered;
-    @Nullable private volatile EventConsumer<T> onEventConsumer;
+    private boolean consumerRegistered;
+    @Nullable private EventConsumer<T> onEventConsumer;
     private ConcurrentMap<Class<? extends T>, EventConsumer<Object>> eventConsumers = new ConcurrentHashMap<>();
 
     public boolean hasConsumers(){
@@ -34,7 +34,7 @@ public class EventProcessor<T> implements EventPublisher<T> {
     }
 
     @SuppressWarnings("unchecked")
-    public <E extends T> void registerConsumer(Class<? extends E> eventType, EventConsumer<E> eventConsumer){
+    public synchronized <E extends T> void registerConsumer(Class<? extends E> eventType, EventConsumer<E> eventConsumer){
         consumerRegistered = true;
         eventConsumers.put(eventType, (EventConsumer<Object>) eventConsumer);
     }
@@ -58,7 +58,7 @@ public class EventProcessor<T> implements EventPublisher<T> {
     }
 
     @Override
-    public void onEvent(@Nullable EventConsumer<T> onEventConsumer) {
+    public synchronized void onEvent(@Nullable EventConsumer<T> onEventConsumer) {
         consumerRegistered = true;
         this.onEventConsumer = onEventConsumer;
     }
