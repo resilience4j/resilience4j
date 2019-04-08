@@ -72,7 +72,7 @@ public class SupplierUtils {
                 T result = supplier.get();
                 return resultHandler.apply(result);
             }catch (Exception exception){
-                return exceptionHandler.apply( exception);
+                return exceptionHandler.apply(exception);
             }
         };
     }

@@ -57,7 +57,7 @@ public class CallableUtils {
                 T result = callable.call();
                 return resultHandler.apply(result);
             }catch (Exception exception){
-                return exceptionHandler.apply( exception);
+                return exceptionHandler.apply(exception);
             }
         };
     }
