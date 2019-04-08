@@ -131,9 +131,10 @@ task jacocoRootReport(type: org.gradle.testing.jacoco.tasks.JacocoReport) {
 }
 sonarqube {
     properties {
-        property "sonar.projectName", "Resilience4j"
-        property "sonar.projectKey", "resilience4j"
-
+        property "sonar.projectName", "resilience4j"
+        property "sonar.projectKey", "resilience4j_resilience4j"
+        property "sonar.modules", "resilience4j-core,resilience4j-feign,resilience4j-metrics,resilience4j-micrometer,resilience4j-prometheus,resilience4j-retry,resilience4j-spring,resilience4j-timelimiter,resilience4j-bulkhead,resilience4j-circuitbreaker,resilience4j-ratelimiter,resilience4j-cache,resilience4j-circularbuffer,resilience4j-consumer,resilience4j-spring-boot,resilience4j-spring-boot2,resilience4j-reactor,resilience4j-rxjava2"
+        property "sonar.projectVersion","0.15.0-SNAPSHOTS"
 
         property "sonar.links.homepage","https://github.com/resilience4j/resilience4j"
         property "sonar.links.ci","https://travis-ci.org/resilience4j/resilience4j"
