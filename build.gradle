@@ -39,23 +39,6 @@ allprojects {
         jcenter()
         mavenCentral()
     }
-
-    jacocoTestReport {
-        additionalSourceDirs = files(sourceSets.main.allSource.srcDirs)
-        sourceDirectories = files(sourceSets.main.allSource.srcDirs)
-        classDirectories =  files(sourceSets.main.output)
-        reports {
-            html.enabled = true
-            xml.enabled = true
-            csv.enabled = false
-        }
-        afterEvaluate {
-            classDirectories = files(classDirectories.files.collect {
-                fileTree(dir: it,
-                        exclude: ['.*io.github.resilience4j.bulkhead.internal.*'])
-            })
-        }
-    }
 }
 artifactoryPublish.skip=true // apply to all projects except the root
 
@@ -109,26 +92,7 @@ configure(project.coreProjects) {
         jmhVersion = '1.17'
     }
 }
-task jacocoRootReport(type: org.gradle.testing.jacoco.tasks.JacocoReport) {
-    dependsOn = subprojects.test
-    additionalSourceDirs = files(subprojects.sourceSets.main.allSource.srcDirs)
-    sourceDirectories = files(subprojects.sourceSets.main.allSource.srcDirs)
-    classDirectories = files(subprojects.sourceSets.main.output)
-    executionData = files(subprojects.jacocoTestReport.executionData)
-    reports {
-        html.enabled = true
-        xml.enabled = true
-        csv.enabled = false
-    }
-    onlyIf = {
-        true
-    }
-    doFirst {
-        executionData = files(executionData.findAll {
-            it.exists()
-        })
-    }
-}
+
 sonarqube {
     properties {
         property "sonar.projectName", "resilience4j"
@@ -155,11 +119,27 @@ sonarqube {
         property "sonar.sourceEncoding","UTF-8"
     }
 }
+def allTestCoverageFile = "$buildDir/jacoco/allTestCoverage.exec"
 
+task jacocoMergeTest(type: JacocoMerge) {
+    destinationFile = file(allTestCoverageFile)
+    executionData = project.fileTree(dir: '.', include:'**/build/jacoco/test.exec')
+}
 
+task jacocoMerge(dependsOn: ['jacocoMergeTest']) {
+    // used to run the other merge tasks
+}
+
+subprojects {
+    sonarqube {
+        properties {
+            property "sonar.jacoco.reportPaths", allTestCoverageFile
+        }
+    }
+}
 
 tasks.check.dependsOn tasks.jacocoTestReport
-rootProject.tasks.jacocoTestReport.dependsOn tasks.test
+
 
 test {
     dependsOn(subprojects.test) // required by cobertura to aggregate report
@@ -167,11 +147,6 @@ test {
 
 task wrapper(type: Wrapper) {
     gradleVersion = '4.10.2'
-}
-
-jacoco {
-    toolVersion = "0.8.2"
-    reportsDir = file("$buildDir/reports")
 }
 
 artifactory {
