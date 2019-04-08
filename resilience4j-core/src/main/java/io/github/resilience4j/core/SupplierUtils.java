@@ -10,12 +10,24 @@ public class SupplierUtils {
 
     /**
      * Returns a composed function that first applies the Supplier and then applies
+     * the resultHandler.
+     *
+     * @param <T> return type of callable
+     * @param <R> return type of handler
+     * @param resultHandler the function applied after supplier
+     * @return a function composed of supplier and resultHandler
+     */
+    public static <T, R> Supplier<R> andThen(Supplier<T> supplier, Function<T, R> resultHandler){
+        return () -> resultHandler.apply(supplier.get());
+    }
+
+    /**
+     * Returns a composed function that first applies the Supplier and then applies
      * {@linkplain BiFunction} {@code after} to the result.
      *
      * @param <T> return type of after
      * @param handler the function applied after supplier
      * @return a function composed of supplier and handler
-     * @throws NullPointerException if after is null
      */
     public static <T, R> Supplier<R> andThen(Supplier<T> supplier, BiFunction<T, Exception, R> handler){
         return () -> {
@@ -34,7 +46,6 @@ public class SupplierUtils {
      * @param <T> return type of after
      * @param exceptionHandler the exception handler
      * @return a function composed of supplier and exceptionHandler
-     * @throws NullPointerException if after is null
      */
     public static <T> Supplier<T> recover(Supplier<T> supplier, Function<Exception, T> exceptionHandler){
         return () -> {
@@ -54,7 +65,6 @@ public class SupplierUtils {
      * @param resultHandler the function applied after Supplier was successful
      * @param exceptionHandler the function applied after Supplier has failed
      * @return a function composed of supplier and handler
-     * @throws NullPointerException if after is null
      */
     public static <T, R> Supplier<R> andThen(Supplier<T> supplier, Function<T, R> resultHandler, Function<Exception, R> exceptionHandler){
         return () -> {

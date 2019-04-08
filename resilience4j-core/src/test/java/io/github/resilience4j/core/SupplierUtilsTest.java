@@ -10,6 +10,19 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class SupplierUtilsTest {
 
     @Test
+    public void shouldChainSupplierAndResultHandler() {
+
+        Supplier<String> supplier = () -> "BLA";
+        //When
+        Supplier<String> supplierWithRecovery = SupplierUtils.andThen(supplier, result -> "Bla");
+
+        String result = supplierWithRecovery.get();
+
+        //Then
+        assertThat(result).isEqualTo("Bla");
+    }
+
+    @Test
     public void shouldChainSupplierAndRecoverWithHandler() {
 
         Supplier<String> supplier = () -> {

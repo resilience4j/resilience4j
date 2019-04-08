@@ -11,15 +11,29 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class CallableUtilsTest {
 
     @Test
+    public void shouldChainCallableAndResultHandler() throws Exception {
+
+        Callable<String> supplier = () -> "BLA";
+        //When
+        Callable<String> callableWithRecovery = CallableUtils.andThen(supplier, result -> "Bla");
+
+        String result = callableWithRecovery.call();
+
+        //Then
+        assertThat(result).isEqualTo("Bla");
+    }
+
+
+    @Test
     public void shouldChainCallableAndRecoverFromException() throws Exception {
 
         Callable<String> callable = () -> {
             throw new IOException("BAM!");
         };
         //When
-        Callable<String> supplierWithRecovery = CallableUtils.andThen(callable, (result, ex) -> "Bla");
+        Callable<String> callableWithRecovery = CallableUtils.andThen(callable, (result, ex) -> "Bla");
 
-        String result = supplierWithRecovery.call();
+        String result = callableWithRecovery.call();
 
         //Then
         assertThat(result).isEqualTo("Bla");
@@ -32,9 +46,9 @@ public class CallableUtilsTest {
             throw new IOException("BAM!");
         };
         //When
-        Callable<String> supplierWithRecovery = CallableUtils.andThen(callable, (result) -> result, ex -> "Bla");
+        Callable<String> callableWithRecovery = CallableUtils.andThen(callable, (result) -> result, ex -> "Bla");
 
-        String result = supplierWithRecovery.call();
+        String result = callableWithRecovery.call();
 
         //Then
         assertThat(result).isEqualTo("Bla");
@@ -47,9 +61,9 @@ public class CallableUtilsTest {
             throw new IOException("BAM!");
         };
         //When
-        Callable<String> supplierWithRecovery = CallableUtils.recover(callable, (ex) -> "Bla");
+        Callable<String> callableWithRecovery = CallableUtils.recover(callable, (ex) -> "Bla");
 
-        String result = supplierWithRecovery.call();
+        String result = callableWithRecovery.call();
 
         //Then
         assertThat(result).isEqualTo("Bla");
@@ -62,10 +76,10 @@ public class CallableUtilsTest {
             throw new IOException("BAM!");
         };
         //When
-        Callable<String> supplierWithRecovery = CallableUtils.recover(callable, (ex) -> {
+        Callable<String> callableWithRecovery = CallableUtils.recover(callable, (ex) -> {
             throw new WebServiceException();
         });
 
-        supplierWithRecovery.call();
+        callableWithRecovery.call();
     }
 }

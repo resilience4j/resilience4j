@@ -10,13 +10,25 @@ public class CallableUtils {
 
     /**
      * Returns a composed function that first applies the Callable and then applies
+     * the resultHandler.
+     *
+     * @param <T> return type of callable
+     * @param <R> return type of handler
+     * @param resultHandler the function applied after callable
+     * @return a function composed of supplier and resultHandler
+     */
+    public static <T, R> Callable<R> andThen(Callable<T> callable, Function<T, R> resultHandler){
+        return () -> resultHandler.apply(callable.call());
+    }
+
+    /**
+     * Returns a composed function that first applies the Callable and then applies
      * {@linkplain BiFunction} {@code after} to the result.
      *
      * @param <T> return type of callable
      * @param <R> return type of handler
      * @param handler the function applied after callable
      * @return a function composed of supplier and handler
-     * @throws NullPointerException if after is null
      */
     public static <T, R> Callable<R> andThen(Callable<T> callable, BiFunction<T, Exception, R> handler){
         return () -> {
@@ -38,7 +50,6 @@ public class CallableUtils {
      * @param resultHandler the function applied after callable was successful
      * @param exceptionHandler the function applied after callable has failed
      * @return a function composed of supplier and handler
-     * @throws NullPointerException if after is null
      */
     public static <T, R> Callable<R> andThen(Callable<T> callable, Function<T, R> resultHandler, Function<Exception, R> exceptionHandler){
         return () -> {
@@ -57,7 +68,6 @@ public class CallableUtils {
      * @param <T> return type of after
      * @param exceptionHandler the exception handler
      * @return a function composed of callable and exceptionHandler
-     * @throws NullPointerException if after is null
      */
     public static <T> Callable<T> recover(Callable<T> callable, Function<Exception, T> exceptionHandler){
         return () -> {
