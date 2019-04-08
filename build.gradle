@@ -127,9 +127,9 @@ task jacocoRootTestReport(type: JacocoReport) {
     executionData files(jacocoTestFiles)
 
     reports {
-        xml.enabled false
+        xml.enabled true
         csv.enabled false
-        html.enabled true
+        html.enabled false
     }
 }
 
@@ -143,6 +143,11 @@ test {
 
 task wrapper(type: Wrapper) {
     gradleVersion = '4.10.2'
+}
+
+jacoco {
+    toolVersion = "0.8.2"
+    reportsDir = file("$buildDir/reports")
 }
 
 artifactory {
