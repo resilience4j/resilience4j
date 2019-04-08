@@ -15,8 +15,6 @@
  */
 package io.github.resilience4j.bulkhead.autoconfigure;
 
-import io.github.resilience4j.bulkhead.BulkheadRegistry;
-import io.github.resilience4j.micrometer.BulkheadMetrics;
 import org.springframework.boot.actuate.autoconfigure.metrics.MetricsAutoConfiguration;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -24,17 +22,33 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import io.github.resilience4j.bulkhead.BulkheadRegistry;
+import io.github.resilience4j.micrometer.BulkheadMetrics;
+import io.github.resilience4j.micrometer.tagged.TaggedBulkheadMetrics;
+
 /**
  * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration
  * Auto-configuration} for resilience4j-metrics.
  */
 @Configuration
 @ConditionalOnClass(MetricsAutoConfiguration.class)
-@AutoConfigureAfter(value = {BulkheadMetricsAutoConfiguration.class, MetricsAutoConfiguration.class})
+@AutoConfigureAfter(value = {MetricsAutoConfiguration.class})
+@ConditionalOnProperty(value = "resilience4j.bulkhead.metrics.enabled", matchIfMissing = true)
 public class BulkheadMetricsAutoConfiguration {
+
     @Bean
-    @ConditionalOnProperty(value = "resilience4j.bulkhead.metrics.enabled", matchIfMissing = true)
-    public BulkheadMetrics registerBulkheadMetrics(BulkheadRegistry bulkheadRegistry){
+    @ConditionalOnProperty(value = "resilience4j.bulkhead.metrics.use_legacy_binder", havingValue = "true")
+    public BulkheadMetrics registerLegacyBulkheadMetrics(BulkheadRegistry bulkheadRegistry) {
         return BulkheadMetrics.ofBulkheadRegistry(bulkheadRegistry);
+    }
+
+    @Bean
+    @ConditionalOnProperty(
+        value = "resilience4j.bulkhead.metrics.use_legacy_binder",
+        havingValue = "false",
+        matchIfMissing = true
+    )
+    public TaggedBulkheadMetrics registerBulkheadMetrics(BulkheadRegistry bulkheadRegistry) {
+        return TaggedBulkheadMetrics.ofBulkheadRegistry(bulkheadRegistry);
     }
 }

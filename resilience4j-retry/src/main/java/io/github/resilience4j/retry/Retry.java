@@ -19,6 +19,10 @@
 package io.github.resilience4j.retry;
 
 import java.util.concurrent.Callable;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -39,312 +43,376 @@ import io.vavr.CheckedRunnable;
  */
 public interface Retry {
 
-    /**
-     * Returns the ID of this Retry.
-     *
-     * @return the ID of this Retry
-     */
-    String getName();
+	/**
+	 * Creates a Retry with a custom Retry configuration.
+	 *
+	 * @param name        the ID of the Retry
+	 * @param retryConfig a custom Retry configuration
+	 * @return a Retry with a custom Retry configuration.
+	 */
+	static Retry of(String name, RetryConfig retryConfig) {
+		return new RetryImpl(name, retryConfig);
+	}
 
-    /**
-     * Creates a retry Context.
-     *
-     * @return the retry Context
-     */
-    Retry.Context context();
+	/**
+	 * Creates a Retry with a custom Retry configuration.
+	 *
+	 * @param name                the ID of the Retry
+	 * @param retryConfigSupplier a supplier of a custom Retry configuration
+	 * @return a Retry with a custom Retry configuration.
+	 */
+	static Retry of(String name, Supplier<RetryConfig> retryConfigSupplier) {
+		return new RetryImpl(name, retryConfigSupplier.get());
+	}
 
-    /**
-     * Returns the RetryConfig of this Retry.
-     *
-     * @return the RetryConfig of this Retry
-     */
-    RetryConfig getRetryConfig();
+	/**
+	 * Creates a Retry with default configuration.
+	 *
+	 * @param name the ID of the Retry
+	 * @return a Retry with default configuration
+	 */
+	static Retry ofDefaults(String name) {
+		return new RetryImpl(name, RetryConfig.ofDefaults());
+	}
 
-    /**
-     * Returns an EventPublisher can be used to register event consumers.
-     *
-     * @return an EventPublisher
-     */
-    EventPublisher getEventPublisher();
+	/**
+	 * Decorates CompletionStageSupplier with Retry
+	 *
+	 * @param retry     the retry context
+	 * @param scheduler execution service to use to schedule retries
+	 * @param supplier  completion stage supplier
+	 * @param <T>       type of completion stage result
+	 * @return decorated supplier
+	 */
+	static <T> Supplier<CompletionStage<T>> decorateCompletionStage(
+			Retry retry,
+			ScheduledExecutorService scheduler,
+			Supplier<CompletionStage<T>> supplier
+	) {
+		return () -> {
 
-    /**
-     * Creates a Retry with a custom Retry configuration.
-     *
-     * @param name the ID of the Retry
-     * @param retryConfig a custom Retry configuration
-     *
-     * @return a Retry with a custom Retry configuration.
-     */
-    static Retry of(String name, RetryConfig retryConfig){
-        return new RetryImpl(name, retryConfig);
-    }
+			final CompletableFuture<T> promise = new CompletableFuture<>();
+			final Runnable block = new AsyncRetryBlock<>(scheduler, retry.asyncContext(), supplier, promise);
+			block.run();
 
-    /**
-     * Creates a Retry with a custom Retry configuration.
-     *
-     * @param name the ID of the Retry
-     * @param retryConfigSupplier a supplier of a custom Retry configuration
-     *
-     * @return a Retry with a custom Retry configuration.
-     */
-    static Retry of(String name, Supplier<RetryConfig> retryConfigSupplier){
-        return new RetryImpl(name, retryConfigSupplier.get());
-    }
+			return promise;
+		};
+	}
 
-    /**
-     * Creates a Retry with default configuration.
-     *
-     * @param name the ID of the Retry
-     * @return a Retry with default configuration
-     */
-    static Retry ofDefaults(String name){
-        return new RetryImpl(name, RetryConfig.ofDefaults());
-    }
+	/**
+	 * Creates a retryable supplier.
+	 *
+	 * @param retry    the retry context
+	 * @param supplier the original function
+	 * @param <T>      the type of results supplied by this supplier
+	 * @return a retryable function
+	 */
+	static <T> CheckedFunction0<T> decorateCheckedSupplier(Retry retry, CheckedFunction0<T> supplier) {
+		return () -> {
+			Retry.Context<T> context = retry.context();
+			do try {
+				T result = supplier.apply();
+				final boolean validationOfResult = context.onResult(result);
+				if (!validationOfResult) {
+					context.onSuccess();
+					return result;
+				}
+			} catch (Exception exception) {
+				context.onError(exception);
+			} while (true);
+		};
+	}
 
-    /**
-     * Decorates and executes the decorated Supplier.
-     *
-     * @param supplier the original Supplier
-     * @param <T> the type of results supplied by this supplier
-     * @return the result of the decorated Supplier.
-     */
-    default <T> T executeSupplier(Supplier<T> supplier){
-        return decorateSupplier(this, supplier).get();
-    }
+	/**
+	 * Creates a retryable runnable.
+	 *
+	 * @param retry    the retry context
+	 * @param runnable the original runnable
+	 * @return a retryable runnable
+	 */
+	static CheckedRunnable decorateCheckedRunnable(Retry retry, CheckedRunnable runnable) {
+		return () -> {
+			Retry.Context context = retry.context();
+			do try {
+				runnable.run();
+				context.onSuccess();
+				break;
+			} catch (Exception exception) {
+				context.onError(exception);
+			} while (true);
+		};
+	}
 
-    /**
-     * Decorates and executes the decorated Callable.
-     *
-     * @param callable the original Callable
-     *
-     * @return the result of the decorated Callable.
-     * @param <T> the result type of callable
-     * @throws Exception if unable to compute a result
-     */
-    default <T> T executeCallable(Callable<T> callable) throws Exception{
-        return decorateCallable(this, callable).call();
-    }
+	/**
+	 * Creates a retryable function.
+	 *
+	 * @param retry    the retry context
+	 * @param function the original function
+	 * @param <T>      the type of the input to the function
+	 * @param <R>      the result type of the function
+	 * @return a retryable function
+	 */
+	static <T, R> CheckedFunction1<T, R> decorateCheckedFunction(Retry retry, CheckedFunction1<T, R> function) {
+		return (T t) -> {
+			Retry.Context<R> context = retry.context();
+			do try {
+				R result = function.apply(t);
+				final boolean validationOfResult = context.onResult(result);
+				if (!validationOfResult) {
+					context.onSuccess();
+					return result;
+				}
+			} catch (Exception exception) {
+				context.onError(exception);
+			} while (true);
+		};
+	}
 
-    /**
-     * Decorates and executes the decorated Runnable.
-     *
-     * @param runnable the original Runnable
-     */
-    default void executeRunnable(Runnable runnable){
-        decorateRunnable(this, runnable).run();
-    }
+	/**
+	 * Creates a retryable supplier.
+	 *
+	 * @param retry    the retry context
+	 * @param supplier the original function
+	 * @param <T>      the type of results supplied by this supplier
+	 * @return a retryable function
+	 */
+	static <T> Supplier<T> decorateSupplier(Retry retry, Supplier<T> supplier) {
+		return () -> {
+			Retry.Context<T> context = retry.context();
+			do try {
+				T result = supplier.get();
+				final boolean validationOfResult = context.onResult(result);
+				if (!validationOfResult) {
+					context.onSuccess();
+					return result;
+				}
+			} catch (RuntimeException runtimeException) {
+				context.onRuntimeError(runtimeException);
+			} while (true);
+		};
+	}
 
-    /**
-     * Creates a retryable supplier.
-     *
-     * @param retry the retry context
-     * @param supplier the original function
-     * @param <T> the type of results supplied by this supplier
-     *
-     * @return a retryable function
-     */
-    static <T> CheckedFunction0<T> decorateCheckedSupplier(Retry retry, CheckedFunction0<T> supplier){
-        return () -> {
-	        @SuppressWarnings("unchecked")
-	        Retry.Context<T> context = retry.context();
-            do try {
-                T result = supplier.apply();
-	            final boolean validationOfResult = context.onResult(result);
-	            if (!validationOfResult) {
-		            context.onSuccess();
-		            return result;
-	            }
-            } catch (Exception exception) {
-                context.onError(exception);
-            } while (true);
-        };
-    }
+	/**
+	 * Creates a retryable callable.
+	 *
+	 * @param retry    the retry context
+	 * @param supplier the original function
+	 * @param <T>      the type of results supplied by this supplier
+	 * @return a retryable function
+	 */
+	static <T> Callable<T> decorateCallable(Retry retry, Callable<T> supplier) {
+		return () -> {
+			Retry.Context<T> context = retry.context();
+			do try {
+				T result = supplier.call();
+				final boolean validationOfResult = context.onResult(result);
+				if (!validationOfResult) {
+					context.onSuccess();
+					return result;
+				}
+			} catch (Exception exception) {
+				context.onError(exception);
+			} while (true);
+		};
+	}
 
-    /**
-     * Creates a retryable runnable.
-     *
-     * @param retry the retry context
-     * @param runnable the original runnable
-     *
-     * @return a retryable runnable
-     */
-    static CheckedRunnable decorateCheckedRunnable(Retry retry, CheckedRunnable runnable){
-        return () -> {
-            Retry.Context context = retry.context();
-            do try {
-                runnable.run();
-                context.onSuccess();
-                break;
-            } catch (Exception exception) {
-                context.onError(exception);
-            } while (true);
-        };
-    }
+	/**
+	 * Creates a retryable runnable.
+	 *
+	 * @param retry    the retry context
+	 * @param runnable the original runnable
+	 * @return a retryable runnable
+	 */
+	static Runnable decorateRunnable(Retry retry, Runnable runnable) {
+		return () -> {
+			Retry.Context context = retry.context();
+			do try {
+				runnable.run();
+				context.onSuccess();
+				break;
+			} catch (RuntimeException runtimeException) {
+				context.onRuntimeError(runtimeException);
+			} while (true);
+		};
+	}
 
-    /**
-     * Creates a retryable function.
-     *
-     * @param retry the retry context
-     * @param function the original function
-     * @param <T> the type of the input to the function
-     * @param <R> the result type of the function
-     *
-     * @return a retryable function
-     */
-    static <T, R> CheckedFunction1<T, R> decorateCheckedFunction(Retry retry, CheckedFunction1<T, R> function){
-        return (T t) -> {
-	        @SuppressWarnings("unchecked")
-	        Retry.Context<R> context = retry.context();
-            do try {
-	            R result = function.apply(t);
-	            final boolean validationOfResult = context.onResult(result);
-	            if (!validationOfResult) {
-		            context.onSuccess();
-		            return result;
-	            }
-            } catch (Exception exception) {
-                context.onError(exception);
-            } while (true);
-        };
-    }
+	/**
+	 * Creates a retryable function.
+	 *
+	 * @param retry    the retry context
+	 * @param function the original function
+	 * @param <T>      the type of the input to the function
+	 * @param <R>      the result type of the function
+	 * @return a retryable function
+	 */
+	static <T, R> Function<T, R> decorateFunction(Retry retry, Function<T, R> function) {
+		return (T t) -> {
+			Retry.Context<R> context = retry.context();
+			do try {
+				R result = function.apply(t);
+				final boolean validationOfResult = context.onResult(result);
+				if (!validationOfResult) {
+					context.onSuccess();
+					return result;
+				}
+			} catch (RuntimeException runtimeException) {
+				context.onRuntimeError(runtimeException);
+			} while (true);
+		};
+	}
 
-    /**
-     * Creates a retryable supplier.
-     *
-     * @param retry the retry context
-     * @param supplier the original function
-     * @param <T> the type of results supplied by this supplier
-     *
-     * @return a retryable function
-     */
-    static <T> Supplier<T> decorateSupplier(Retry retry, Supplier<T> supplier){
-        return () -> {
-	        @SuppressWarnings("unchecked")
-	        Retry.Context<T> context = retry.context();
-            do try {
-	            T result = supplier.get();
-	            final boolean validationOfResult = context.onResult(result);
-	            if (!validationOfResult) {
-		            context.onSuccess();
-		            return result;
-	            }
-            } catch (RuntimeException runtimeException) {
-                context.onRuntimeError(runtimeException);
-            } while (true);
-        };
-    }
+	/**
+	 * Returns the ID of this Retry.
+	 *
+	 * @return the ID of this Retry
+	 */
+	String getName();
 
-    /**
-     * Creates a retryable callable.
-     *
-     * @param retry the retry context
-     * @param supplier the original function
-     * @param <T> the type of results supplied by this supplier
-     *
-     * @return a retryable function
-     */
-    static <T> Callable<T> decorateCallable(Retry retry, Callable<T> supplier){
-        return () -> {
-	        @SuppressWarnings("unchecked")
-	        Retry.Context<T> context = retry.context();
-            do try {
-	            T result = supplier.call();
-	            final boolean validationOfResult = context.onResult(result);
-	            if (!validationOfResult) {
-		            context.onSuccess();
-		            return result;
-	            }
-            } catch (RuntimeException runtimeException) {
-                context.onRuntimeError(runtimeException);
-            } while (true);
-        };
-    }
+	/**
+	 * Creates a retry Context.
+	 *
+	 * @return the retry Context
+	 */
+	<T> Retry.Context<T> context();
 
-    /**
-     * Creates a retryable runnable.
-     *
-     * @param retry the retry context
-     * @param runnable the original runnable
-     *
-     * @return a retryable runnable
-     */
-    static Runnable decorateRunnable(Retry retry, Runnable runnable){
-        return () -> {
-            Retry.Context context = retry.context();
-            do try {
-                runnable.run();
-                context.onSuccess();
-                break;
-            } catch (RuntimeException runtimeException) {
-                context.onRuntimeError(runtimeException);
-            } while (true);
-        };
-    }
+	/**
+	 * Creates a async retry Context.
+	 *
+	 * @return the async retry Context
+	 */
+	<T> Retry.AsyncContext<T> asyncContext();
 
-    /**
-     * Creates a retryable function.
-     *
-     * @param retry the retry context
-     * @param function the original function
-     * @param <T> the type of the input to the function
-     * @param <R> the result type of the function
-     *
-     * @return a retryable function
-     */
-    static <T, R> Function<T, R> decorateFunction(Retry retry, Function<T, R> function){
-        return (T t) -> {
-	        @SuppressWarnings("unchecked")
-	        Retry.Context<R> context = retry.context();
-            do try {
-	            R result = function.apply(t);
-	            final boolean validationOfResult = context.onResult(result);
-	            if (!validationOfResult) {
-		            context.onSuccess();
-		            return result;
-	            }
-            } catch (RuntimeException runtimeException) {
-                context.onRuntimeError(runtimeException);
-            } while (true);
-        };
-    }
+	/**
+	 * Returns the RetryConfig of this Retry.
+	 *
+	 * @return the RetryConfig of this Retry
+	 */
+	RetryConfig getRetryConfig();
 
-    /**
-     * Get the Metrics of this RateLimiter.
-     *
-     * @return the Metrics of this RateLimiter
-     */
-    Metrics getMetrics();
+	/**
+	 * Returns an EventPublisher can be used to register event consumers.
+	 *
+	 * @return an EventPublisher
+	 */
+	EventPublisher getEventPublisher();
 
-    interface Metrics {
+	/**
+	 * Decorates and executes the decorated Supplier.
+	 *
+	 * @param checkedSupplier the original Supplier
+	 * @param <T>      the type of results supplied by this supplier
+	 * @return the result of the decorated Supplier.
+	 * @throws Throwable if something goes wrong applying this function to the given arguments
+	 */
+	default <T> T executeCheckedSupplier(CheckedFunction0<T> checkedSupplier) throws Throwable {
+		return decorateCheckedSupplier(this, checkedSupplier).apply();
+	}
 
-        /**
-         * Returns the number of successful calls without a retry attempt.
-         *
-         * @return the number of successful calls without a retry attempt
-         */
-        long getNumberOfSuccessfulCallsWithoutRetryAttempt();
+	/**
+	 * Decorates and executes the decorated Supplier.
+	 *
+	 * @param supplier the original Supplier
+	 * @param <T>      the type of results supplied by this supplier
+	 * @return the result of the decorated Supplier.
+	 */
+	default <T> T executeSupplier(Supplier<T> supplier) {
+		return decorateSupplier(this, supplier).get();
+	}
 
-        /**
-         * Returns the number of failed calls without a retry attempt.
-         *
-         * @return the number of failed calls without a retry attempt
-         */
-        long getNumberOfFailedCallsWithoutRetryAttempt();
+	/**
+	 * Decorates and executes the decorated Callable.
+	 *
+	 * @param callable the original Callable
+	 * @param <T>      the result type of callable
+	 * @return the result of the decorated Callable.
+	 * @throws Exception if unable to compute a result
+	 */
+	default <T> T executeCallable(Callable<T> callable) throws Exception {
+		return decorateCallable(this, callable).call();
+	}
 
-        /**
-         * Returns the number of successful calls after a retry attempt.
-         *
-         * @return the number of successful calls after a retry attempt
-         */
-        long getNumberOfSuccessfulCallsWithRetryAttempt();
+	/**
+	 * Decorates and executes the decorated Runnable.
+	 *
+	 * @param runnable the original Runnable
+	 */
+	default void executeRunnable(Runnable runnable) {
+		decorateRunnable(this, runnable).run();
+	}
 
-        /**
-         * Returns the number of failed calls after all retry attempts.
-         *
-         * @return the number of failed calls after all retry attempts
-         */
-        long getNumberOfFailedCallsWithRetryAttempt();
-    }
+	/**
+	 * Decorates and executes the decorated CompletionStage.
+	 *
+	 * @param scheduler execution service to use to schedule retries
+	 * @param supplier  the original CompletionStage
+	 * @param <T>       the type of results supplied by this supplier
+	 * @return the decorated CompletionStage.
+	 */
+	default <T> CompletionStage<T> executeCompletionStage(ScheduledExecutorService scheduler, Supplier<CompletionStage<T>> supplier) {
+		return decorateCompletionStage(this, scheduler, supplier).get();
+	}
+
+	/**
+	 * Get the Metrics of this RateLimiter.
+	 *
+	 * @return the Metrics of this RateLimiter
+	 */
+	Metrics getMetrics();
+
+	interface Metrics {
+
+		/**
+		 * Returns the number of successful calls without a retry attempt.
+		 *
+		 * @return the number of successful calls without a retry attempt
+		 */
+		long getNumberOfSuccessfulCallsWithoutRetryAttempt();
+
+		/**
+		 * Returns the number of failed calls without a retry attempt.
+		 *
+		 * @return the number of failed calls without a retry attempt
+		 */
+		long getNumberOfFailedCallsWithoutRetryAttempt();
+
+		/**
+		 * Returns the number of successful calls after a retry attempt.
+		 *
+		 * @return the number of successful calls after a retry attempt
+		 */
+		long getNumberOfSuccessfulCallsWithRetryAttempt();
+
+		/**
+		 * Returns the number of failed calls after all retry attempts.
+		 *
+		 * @return the number of failed calls after all retry attempts
+		 */
+		long getNumberOfFailedCallsWithRetryAttempt();
+	}
+
+	interface AsyncContext<T> {
+
+		/**
+		 * Records a successful call.
+		 */
+		void onSuccess();
+
+		/**
+		 * Records an failed call.
+		 *
+		 * @param throwable the exception to handle
+		 * @return delay in milliseconds until the next try
+		 */
+		long onError(Throwable throwable);
+
+		/**
+		 * check the result call.
+		 *
+		 * @param result the  result to validate
+		 * @return delay in milliseconds until the next try if the result match the predicate
+		 */
+		long onResult(T result);
+	}
 
 	/**
 	 * the retry context which will be used during the retry iteration to decide what can be done on error , result, on runtime error
@@ -353,10 +421,10 @@ public interface Retry {
 	 */
 	interface Context<T> {
 
-        /**
-         *  Records a successful call.
-         */
-        void onSuccess();
+		/**
+		 * Records a successful call.
+		 */
+		void onSuccess();
 
 		/**
 		 * @param result the returned result from the called logic
@@ -364,35 +432,92 @@ public interface Retry {
 		 */
 		boolean onResult(T result);
 
-        /**
-         * Handles a checked exception
-         *
-         * @param exception the exception to handle
-         * @throws Throwable the exception
-         */
-        void onError(Exception exception) throws Throwable;
+		/**
+		 * Handles a checked exception
+		 *
+		 * @param exception the exception to handle
+		 * @throws Exception when retry count has exceeded
+		 */
+		void onError(Exception exception) throws Exception;
 
-        /**
-         * Handles a runtime exception
-         *
-         * @param runtimeException the exception to handle
-         */
-        void onRuntimeError(RuntimeException runtimeException);
-    }
+		/**
+		 * Handles a runtime exception
+		 *
+		 * @param runtimeException the exception to handle
+         * @throws RuntimeException when retry count has exceeded
+		 */
+		void onRuntimeError(RuntimeException runtimeException);
+	}
 
-    /**
-     * An EventPublisher which subscribes to the reactive stream of RetryEvents and
-     * can be used to register event consumers.
-     */
-    interface EventPublisher extends io.github.resilience4j.core.EventPublisher<RetryEvent>{
+	/**
+	 * An EventPublisher which subscribes to the reactive stream of RetryEvents and
+	 * can be used to register event consumers.
+	 */
+	interface EventPublisher extends io.github.resilience4j.core.EventPublisher<RetryEvent> {
 
-        EventPublisher onRetry(EventConsumer<RetryOnRetryEvent> eventConsumer);
+		EventPublisher onRetry(EventConsumer<RetryOnRetryEvent> eventConsumer);
 
-        EventPublisher onSuccess(EventConsumer<RetryOnSuccessEvent> eventConsumer);
+		EventPublisher onSuccess(EventConsumer<RetryOnSuccessEvent> eventConsumer);
 
-        EventPublisher onError(EventConsumer<RetryOnErrorEvent> eventConsumer);
+		EventPublisher onError(EventConsumer<RetryOnErrorEvent> eventConsumer);
 
-        EventPublisher onIgnoredError(EventConsumer<RetryOnIgnoredErrorEvent> eventConsumer);
+		EventPublisher onIgnoredError(EventConsumer<RetryOnIgnoredErrorEvent> eventConsumer);
 
-    }
+	}
+
+	class AsyncRetryBlock<T> implements Runnable {
+		private final ScheduledExecutorService scheduler;
+		private final Retry.AsyncContext<T> retryContext;
+		private final Supplier<CompletionStage<T>> supplier;
+		private final CompletableFuture<T> promise;
+
+		AsyncRetryBlock(
+				ScheduledExecutorService scheduler,
+				Retry.AsyncContext<T> retryContext,
+				Supplier<CompletionStage<T>> supplier,
+				CompletableFuture<T> promise
+		) {
+			this.scheduler = scheduler;
+			this.retryContext = retryContext;
+			this.supplier = supplier;
+			this.promise = promise;
+		}
+
+		@Override
+		public void run() {
+			final CompletionStage<T> stage = supplier.get();
+
+			stage.whenComplete((result, t) -> {
+				if (result != null) {
+					onResult(result);
+				} else if (t instanceof Exception) {
+					onError((Exception) t);
+				} else{
+					// Do not handle java.lang.Error
+					promise.completeExceptionally(t);
+				}
+			});
+		}
+
+		private void onError(Exception t) {
+			final long delay = retryContext.onError(t);
+
+			if (delay < 1) {
+				promise.completeExceptionally(t);
+			} else {
+				scheduler.schedule(this, delay, TimeUnit.MILLISECONDS);
+			}
+		}
+
+		private void onResult(T result) {
+			final long delay = retryContext.onResult(result);
+
+			if (delay < 1) {
+				promise.complete(result);
+				retryContext.onSuccess();
+			} else {
+				scheduler.schedule(this, delay, TimeUnit.MILLISECONDS);
+			}
+		}
+	}
 }

@@ -1,18 +1,27 @@
+/*
+ *
+ *  Copyright 2016 Robert Winkler
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *         http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
+ *
+ */
 package io.github.resilience4j.retry.internal;
 
-import static io.github.resilience4j.retry.utils.AsyncUtils.awaitResult;
-import static java.util.concurrent.CompletableFuture.completedFuture;
-
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionStage;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeoutException;
-import java.util.function.Supplier;
-
-import javax.xml.ws.WebServiceException;
-
+import io.github.resilience4j.retry.AsyncRetry;
+import io.github.resilience4j.retry.RetryConfig;
+import io.github.resilience4j.test.AsyncHelloWorldService;
+import io.vavr.control.Try;
 import org.assertj.core.api.Assertions;
 import org.junit.Assert;
 import org.junit.Before;
@@ -20,10 +29,15 @@ import org.junit.Test;
 import org.mockito.BDDMockito;
 import org.mockito.Mockito;
 
-import io.github.resilience4j.retry.AsyncRetry;
-import io.github.resilience4j.retry.RetryConfig;
-import io.github.resilience4j.test.AsyncHelloWorldService;
-import io.vavr.control.Try;
+import javax.xml.ws.WebServiceException;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.function.Supplier;
+
+import static io.github.resilience4j.retry.utils.AsyncUtils.awaitResult;
+import static java.util.concurrent.CompletableFuture.completedFuture;
 
 public class AsyncRetryTest {
 
@@ -36,7 +50,7 @@ public class AsyncRetryTest {
 	}
 
 	@Test
-	public void shouldNotRetry() throws InterruptedException, ExecutionException, TimeoutException {
+	public void shouldNotRetry() {
 		// Given the HelloWorldService returns Hello world
 		BDDMockito.given(helloWorldService.returnHelloWorld())
 				.willReturn(completedFuture("Hello world"));
@@ -56,7 +70,7 @@ public class AsyncRetryTest {
 	}
 
 	@Test
-	public void shouldNotRetryWithThatResult() throws InterruptedException, ExecutionException, TimeoutException {
+	public void shouldNotRetryWithThatResult(){
 		// Given the HelloWorldService returns Hello world
 		BDDMockito.given(helloWorldService.returnHelloWorld())
 				.willReturn(completedFuture("Hello world"));
@@ -90,27 +104,18 @@ public class AsyncRetryTest {
 		shouldCompleteFutureAfterAttemptsInCaseOfRetyOnResultAtAsyncStage(2, "Hello world");
 	}
 
-	@Test
-	public void shouldRetryInCaseOfExceptionAtSyncStage() {
+	@Test(expected = IllegalArgumentException.class)
+	public void shouldRethrowExceptionInCaseOfExceptionAtSyncStage() {
 		// Given the HelloWorldService throws an exception
 		BDDMockito.given(helloWorldService.returnHelloWorld())
-				.willThrow(new WebServiceException("BAM!"))
-				.willReturn(completedFuture("Hello world"));
+				.willThrow(new IllegalArgumentException("BAM!"));
 
 		// Create a Retry with default configuration
-		AsyncRetry retryContext = AsyncRetry.ofDefaults("id");
+		AsyncRetry retry = AsyncRetry.ofDefaults("id");
 		// Decorate the invocation of the HelloWorldService
-		Supplier<CompletionStage<String>> supplier = AsyncRetry.decorateCompletionStage(
-				retryContext,
+		retry.executeCompletionStage(
 				scheduler,
 				() -> helloWorldService.returnHelloWorld());
-
-		// When
-		String result = awaitResult(supplier.get());
-
-		// Then the helloWorldService should be invoked 2 times
-		BDDMockito.then(helloWorldService).should(Mockito.times(2)).returnHelloWorld();
-		Assertions.assertThat(result).isEqualTo("Hello world");
 	}
 
 	@Test
@@ -137,21 +142,6 @@ public class AsyncRetryTest {
 		// Then the helloWorldService should be invoked 2 times
 		BDDMockito.then(helloWorldService).should(Mockito.times(2)).returnHelloWorld();
 		Assertions.assertThat(result).isEqualTo("Hello world");
-	}
-
-	@Test
-	public void shouldCompleteFutureAfterOneAttemptInCaseOfExceptionAtSyncStage() {
-		shouldCompleteFutureAfterAttemptsInCaseOfExceptionAtSyncStage(1);
-	}
-
-	@Test
-	public void shouldCompleteFutureAfterTwoAttemptsInCaseOfExceptionAtSyncStage() {
-		shouldCompleteFutureAfterAttemptsInCaseOfExceptionAtSyncStage(2);
-	}
-
-	@Test
-	public void shouldCompleteFutureAfterThreeAttemptsInCaseOfExceptionAtSyncStage() {
-		shouldCompleteFutureAfterAttemptsInCaseOfExceptionAtSyncStage(3);
 	}
 
 	private void shouldCompleteFutureAfterAttemptsInCaseOfExceptionAtSyncStage(int noOfAttempts) {

@@ -1,5 +1,7 @@
 package io.github.resilience4j.retry.event;
 
+import io.github.resilience4j.core.lang.Nullable;
+
 import java.time.Duration;
 
 /**
@@ -9,7 +11,7 @@ public class RetryOnRetryEvent extends AbstractRetryEvent {
 
     private final Duration waitInterval;
 
-    public RetryOnRetryEvent(String name, int numberOfAttempts, Throwable lastThrowable, long waitInterval) {
+    public RetryOnRetryEvent(String name, int numberOfAttempts, @Nullable Throwable lastThrowable, long waitInterval) {
         super(name, numberOfAttempts, lastThrowable);
         this.waitInterval = Duration.ofMillis(waitInterval);
     }
@@ -25,6 +27,6 @@ public class RetryOnRetryEvent extends AbstractRetryEvent {
                              getName(),
                              waitInterval,
                              getNumberOfRetryAttempts(),
-                             getLastThrowable().toString());
+                             getLastThrowable() != null ? getLastThrowable().toString() : "null");
     }
 }

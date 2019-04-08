@@ -67,10 +67,10 @@ public class BulkheadOperator<T> implements Function<Publisher<T>, Publisher<T>>
     public Publisher<T> apply(Publisher<T> publisher) {
         if (publisher instanceof Mono) {
             return MonoResilience
-                    .onAssembly(new MonoBulkhead<T>((Mono<? extends T>) publisher, bulkhead, scheduler));
+                    .onAssembly(new MonoBulkhead<>((Mono<? extends T>) publisher, bulkhead, scheduler));
         } else if (publisher instanceof Flux) {
             return FluxResilience
-                    .onAssembly(new FluxBulkhead<T>((Flux<? extends T>) publisher, bulkhead, scheduler));
+                    .onAssembly(new FluxBulkhead<>((Flux<? extends T>) publisher, bulkhead, scheduler));
         }
 
         throw new IllegalStateException("Publisher of type <" + publisher.getClass().getSimpleName()

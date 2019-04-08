@@ -31,6 +31,7 @@ import io.github.resilience4j.bulkhead.event.BulkheadOnCallPermittedEvent;
 import io.github.resilience4j.bulkhead.event.BulkheadOnCallRejectedEvent;
 import io.github.resilience4j.core.EventConsumer;
 import io.github.resilience4j.core.EventProcessor;
+import io.github.resilience4j.core.lang.Nullable;
 
 /**
  * A Bulkhead implementation based on a semaphore.
@@ -50,7 +51,7 @@ public class SemaphoreBulkhead implements Bulkhead {
      * @param name           the name of this bulkhead
      * @param bulkheadConfig custom bulkhead configuration
      */
-    public SemaphoreBulkhead(String name, BulkheadConfig bulkheadConfig) {
+    public SemaphoreBulkhead(String name, @Nullable BulkheadConfig bulkheadConfig) {
         this.name = name;
         this.config = bulkheadConfig != null ? bulkheadConfig
                 : BulkheadConfig.ofDefaults();

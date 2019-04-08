@@ -17,7 +17,6 @@ package io.github.resilience4j.retry.autoconfigure;
 
 import org.springframework.boot.actuate.autoconfigure.MetricRepositoryAutoConfiguration;
 import org.springframework.boot.actuate.autoconfigure.MetricsDropwizardAutoConfiguration;
-import org.springframework.boot.actuate.metrics.repository.MetricRepository;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -26,9 +25,7 @@ import org.springframework.context.annotation.Configuration;
 
 import com.codahale.metrics.MetricRegistry;
 
-import io.github.resilience4j.metrics.AsyncRetryMetrics;
 import io.github.resilience4j.metrics.RetryMetrics;
-import io.github.resilience4j.retry.AsyncRetryRegistry;
 import io.github.resilience4j.retry.RetryRegistry;
 
 /**
@@ -37,7 +34,7 @@ import io.github.resilience4j.retry.RetryRegistry;
  */
 
 @Configuration
-@ConditionalOnClass(MetricRepository.class)
+@ConditionalOnClass(MetricRegistry.class)
 @AutoConfigureAfter(value = {RetryAutoConfiguration.class, MetricsDropwizardAutoConfiguration.class})
 @AutoConfigureBefore(MetricRepositoryAutoConfiguration.class)
 public class RetryMetricsAutoConfiguration {
@@ -45,13 +42,6 @@ public class RetryMetricsAutoConfiguration {
 	@Bean
 	public RetryMetrics registerRetryMetrics(RetryRegistry retryRegistry, MetricRegistry metricRegistry) {
 		RetryMetrics retryMetrics = RetryMetrics.ofRetryRegistry(retryRegistry);
-		metricRegistry.registerAll(retryMetrics);
-		return retryMetrics;
-	}
-
-	@Bean
-	public AsyncRetryMetrics asyncRetryMetrics(AsyncRetryRegistry asyncRetryRegistry, MetricRegistry metricRegistry) {
-		AsyncRetryMetrics retryMetrics = AsyncRetryMetrics.ofAsyncRetryRegistry(asyncRetryRegistry);
 		metricRegistry.registerAll(retryMetrics);
 		return retryMetrics;
 	}

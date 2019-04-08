@@ -23,59 +23,60 @@ import io.vavr.collection.Seq;
 
 /**
  * The {@link AsyncRetryRegistry} is a factory to create AsyncRetry instances which stores all AsyncRetry instances in a registry.
+ * * @deprecated replaced by {@link RetryRegistry}
  */
+@Deprecated
 public interface AsyncRetryRegistry {
 
-    /**
-     * Returns all managed {@link AsyncRetry} instances.
-     *
-     * @return all managed {@link AsyncRetry} instances.
-     */
-    Seq<AsyncRetry> getAllRetries();
+	/**
+	 * Creates an AsyncRetryRegistry with a custom Retry configuration.
+	 *
+	 * @param retryConfig a custom Retry configuration
+	 * @return an AsyncRetryRegistry with a custom Retry configuration.
+	 */
+	static AsyncRetryRegistry of(RetryConfig retryConfig) {
+		return new InMemoryAsyncRetryRegistry(retryConfig);
+	}
 
-    /**
-     * Returns a managed {@link AsyncRetry} or creates a new one with the default Retry configuration.
-     *
-     * @param name the name of the AsyncRetry
-     * @return The {@link AsyncRetry}
-     */
-    AsyncRetry retry(String name);
+	/**
+	 * Creates an AsyncRetryRegistry with a default Retry configuration.
+	 *
+	 * @return an AsyncRetryRegistry with a default Retry configuration.
+	 */
+	static AsyncRetryRegistry ofDefaults() {
+		return new InMemoryAsyncRetryRegistry();
+	}
 
-    /**
-     * Returns a managed {@link AsyncRetry} or creates a new one with a custom Retry configuration.
-     *
-     * @param name        the name of the AsyncRetry
-     * @param retryConfig a custom Retry configuration
-     * @return The {@link AsyncRetry}
-     */
-    AsyncRetry retry(String name, RetryConfig retryConfig);
+	/**
+	 * Returns all managed {@link AsyncRetry} instances.
+	 *
+	 * @return all managed {@link AsyncRetry} instances.
+	 */
+	Seq<AsyncRetry> getAllRetries();
 
-    /**
-     * Returns a managed {@link AsyncRetry} or creates a new one with a custom Retry configuration.
-     *
-     * @param name                the name of the AsyncRetry
-     * @param retryConfigSupplier a supplier of a custom Retry configuration
-     * @return The {@link AsyncRetry}
-     */
-    AsyncRetry retry(String name, Supplier<RetryConfig> retryConfigSupplier);
+	/**
+	 * Returns a managed {@link AsyncRetry} or creates a new one with the default Retry configuration.
+	 *
+	 * @param name the name of the AsyncRetry
+	 * @return The {@link AsyncRetry}
+	 */
+	AsyncRetry retry(String name);
 
+	/**
+	 * Returns a managed {@link AsyncRetry} or creates a new one with a custom Retry configuration.
+	 *
+	 * @param name        the name of the AsyncRetry
+	 * @param retryConfig a custom Retry configuration
+	 * @return The {@link AsyncRetry}
+	 */
+	AsyncRetry retry(String name, RetryConfig retryConfig);
 
-    /**
-     * Creates an AsyncRetryRegistry with a custom Retry configuration.
-     *
-     * @param retryConfig a custom Retry configuration
-     * @return an AsyncRetryRegistry with a custom Retry configuration.
-     */
-    static AsyncRetryRegistry of(RetryConfig retryConfig) {
-        return new InMemoryAsyncRetryRegistry(retryConfig);
-    }
-
-    /**
-     * Creates an AsyncRetryRegistry with a default Retry configuration.
-     *
-     * @return an AsyncRetryRegistry with a default Retry configuration.
-     */
-    static AsyncRetryRegistry ofDefaults() {
-        return new InMemoryAsyncRetryRegistry();
-    }
+	/**
+	 * Returns a managed {@link AsyncRetry} or creates a new one with a custom Retry configuration.
+	 *
+	 * @param name                the name of the AsyncRetry
+	 * @param retryConfigSupplier a supplier of a custom Retry configuration
+	 * @return The {@link AsyncRetry}
+	 */
+	AsyncRetry retry(String name, Supplier<RetryConfig> retryConfigSupplier);
 }

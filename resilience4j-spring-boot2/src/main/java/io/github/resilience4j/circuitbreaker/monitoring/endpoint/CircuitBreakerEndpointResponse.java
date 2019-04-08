@@ -1,8 +1,11 @@
 package io.github.resilience4j.circuitbreaker.monitoring.endpoint;
 
+import io.github.resilience4j.core.lang.Nullable;
+
 import java.util.List;
 
 public class CircuitBreakerEndpointResponse {
+    @Nullable
     private List<String> circuitBreakers;
 
     public CircuitBreakerEndpointResponse(){
@@ -12,6 +15,7 @@ public class CircuitBreakerEndpointResponse {
         this.circuitBreakers = circuitBreakers;
     }
 
+    @Nullable
     public List<String> getCircuitBreakers() {
         return circuitBreakers;
     }

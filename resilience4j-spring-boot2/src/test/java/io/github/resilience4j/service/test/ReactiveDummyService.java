@@ -18,11 +18,16 @@ package io.github.resilience4j.service.test;
 
 import java.io.IOException;
 
+import io.reactivex.Completable;
+import io.reactivex.Flowable;
+import io.reactivex.Maybe;
+import io.reactivex.Observable;
+import io.reactivex.Single;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 /**
- * reactive web service test using reactor types
+ * reactive web service test using reactor and RxJava 2 types
  */
 public interface ReactiveDummyService {
 	String BACKEND = "backendB";
@@ -30,4 +35,14 @@ public interface ReactiveDummyService {
 	Flux<String> doSomethingFlux(boolean throwException) throws IOException;
 
 	Mono<String> doSomethingMono(boolean throwException) throws IOException;
+
+	Flowable<String> doSomethingFlowable(boolean throwException) throws IOException;
+
+	Maybe<String> doSomethingMaybe(boolean throwException) throws IOException;
+
+	Single<String> doSomethingSingle(boolean throwException) throws IOException;
+
+	Completable doSomethingCompletable(boolean throwException) throws IOException;
+
+	Observable<String> doSomethingObservable(boolean throwException) throws IOException;
 }

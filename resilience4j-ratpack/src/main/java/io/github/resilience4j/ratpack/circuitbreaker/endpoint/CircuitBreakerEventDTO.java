@@ -18,15 +18,22 @@ package io.github.resilience4j.ratpack.circuitbreaker.endpoint;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent;
+import io.github.resilience4j.core.lang.Nullable;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class CircuitBreakerEventDTO {
 
+    @Nullable
     private String circuitBreakerName;
+    @Nullable
     private CircuitBreakerEvent.Type type;
+    @Nullable
     private String creationTime;
+    @Nullable
     private String errorMessage;
+    @Nullable
     private Long durationInMs;
+    @Nullable
     private CircuitBreaker.StateTransition stateTransition;
 
     CircuitBreakerEventDTO() {
@@ -35,9 +42,9 @@ public class CircuitBreakerEventDTO {
     CircuitBreakerEventDTO(String circuitBreakerName,
                            CircuitBreakerEvent.Type type,
                            String creationTime,
-                           String errorMessage,
-                           Long durationInMs,
-                           CircuitBreaker.StateTransition stateTransition) {
+                           @Nullable String errorMessage,
+                           @Nullable Long durationInMs,
+                           @Nullable CircuitBreaker.StateTransition stateTransition) {
         this.circuitBreakerName = circuitBreakerName;
         this.type = type;
         this.creationTime = creationTime;
@@ -46,6 +53,7 @@ public class CircuitBreakerEventDTO {
         this.stateTransition = stateTransition;
     }
 
+    @Nullable
     public String getCircuitBreakerName() {
         return circuitBreakerName;
     }
@@ -54,6 +62,7 @@ public class CircuitBreakerEventDTO {
         this.circuitBreakerName = circuitBreakerName;
     }
 
+    @Nullable
     public CircuitBreakerEvent.Type getType() {
         return type;
     }
@@ -62,6 +71,7 @@ public class CircuitBreakerEventDTO {
         this.type = type;
     }
 
+    @Nullable
     public String getCreationTime() {
         return creationTime;
     }
@@ -70,6 +80,7 @@ public class CircuitBreakerEventDTO {
         this.creationTime = creationTime;
     }
 
+    @Nullable
     public String getErrorMessage() {
         return errorMessage;
     }
@@ -78,6 +89,7 @@ public class CircuitBreakerEventDTO {
         this.errorMessage = errorMessage;
     }
 
+    @Nullable
     public Long getDurationInMs() {
         return durationInMs;
     }
@@ -86,6 +98,7 @@ public class CircuitBreakerEventDTO {
         this.durationInMs = durationInMs;
     }
 
+    @Nullable
     public CircuitBreaker.StateTransition getStateTransition() {
         return stateTransition;
     }

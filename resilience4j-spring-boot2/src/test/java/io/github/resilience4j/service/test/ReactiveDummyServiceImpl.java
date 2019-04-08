@@ -20,16 +20,20 @@ import java.io.IOException;
 import org.assertj.core.util.Arrays;
 import org.springframework.stereotype.Component;
 
-import io.github.resilience4j.circuitbreaker.annotation.ApiType;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
+import io.reactivex.Completable;
+import io.reactivex.Flowable;
+import io.reactivex.Maybe;
+import io.reactivex.Observable;
+import io.reactivex.Single;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 /**
- * reactive test service for web flux API type for the circuit brealer annotation AOP processing
+ * reactive test service for Reactor and RxJava API type for the circuit breaker annotation AOP processing
  */
-@CircuitBreaker(name = ReactiveDummyService.BACKEND, type = ApiType.WEBFLUX)
+@CircuitBreaker(name = ReactiveDummyService.BACKEND)
 @RateLimiter(name = ReactiveDummyService.BACKEND)
 @Component
 public class ReactiveDummyServiceImpl implements ReactiveDummyService {
@@ -46,10 +50,50 @@ public class ReactiveDummyServiceImpl implements ReactiveDummyService {
 	@Override
 	public Mono<String> doSomethingMono(boolean throwException) throws IOException {
 		if (throwException) {
-			return Mono.error(new IllegalArgumentException("FailedFlux"));
+			return Mono.error(new IllegalArgumentException("Failed"));
 		}
 
 		return Mono.just("testMono");
+	}
+
+	@Override
+	public Flowable<String> doSomethingFlowable(boolean throwException) throws IOException {
+		if (throwException) {
+			return Flowable.error(new IllegalArgumentException("Failed"));
+		}
+		return Flowable.just("testMaybe");
+	}
+
+	@Override
+	public Maybe<String> doSomethingMaybe(boolean throwException) throws IOException {
+		if (throwException) {
+			return Maybe.error(new IllegalArgumentException("Failed"));
+		}
+		return Maybe.just("testMaybe");
+	}
+
+	@Override
+	public Single<String> doSomethingSingle(boolean throwException) throws IOException {
+		if (throwException) {
+			return Single.error(new IllegalArgumentException("Failed"));
+		}
+		return Single.just("testSingle");
+	}
+
+	@Override
+	public Completable doSomethingCompletable(boolean throwException) throws IOException {
+		if (throwException) {
+			return Completable.error(new IllegalArgumentException("Failed"));
+		}
+		return Completable.complete();
+	}
+
+	@Override
+	public Observable<String> doSomethingObservable(boolean throwException) throws IOException {
+		if (throwException) {
+			return Observable.error(new IllegalArgumentException("Failed"));
+		}
+		return Observable.just("testObservable");
 	}
 
 }

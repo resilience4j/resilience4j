@@ -47,20 +47,20 @@ public class AsyncRetryEventPublisherTest {
 
     private AsyncHelloWorldService helloWorldService;
     private Logger logger;
-    private AsyncRetry retry;
+    private Retry retry;
     private ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
 
     @Before
     public void setUp(){
         helloWorldService = mock(AsyncHelloWorldService.class);
         logger = mock(Logger.class);
-        retry = AsyncRetry.ofDefaults("testName");
+        retry = Retry.ofDefaults("testName");
     }
 
     @Test
     public void shouldReturnTheSameConsumer() {
-        AsyncRetry.EventPublisher eventPublisher = retry.getEventPublisher();
-        AsyncRetry.EventPublisher eventPublisher2 = retry.getEventPublisher();
+        Retry.EventPublisher eventPublisher = retry.getEventPublisher();
+        Retry.EventPublisher eventPublisher2 = retry.getEventPublisher();
 
         assertThat(eventPublisher).isEqualTo(eventPublisher2);
     }
@@ -130,29 +130,6 @@ public class AsyncRetryEventPublisherTest {
 
         then(logger).should(times(1)).info("ERROR");
         then(helloWorldService).should(times(3)).returnHelloWorld();
-    }
-
-    @Test
-    public void shouldConsumeIgnoredErrorEvent() {
-        given(helloWorldService.returnHelloWorld())
-                .willThrow(new WebServiceException("BAM!"));
-
-        RetryConfig retryConfig = RetryConfig.custom()
-                .retryOnException(throwable -> Match(throwable).of(
-                        Case($(instanceOf(WebServiceException.class)), false),
-                        Case($(), true)))
-                .build();
-        retry = AsyncRetry.of("testName", retryConfig);
-
-        retry.getEventPublisher()
-            .onIgnoredError(event ->
-                    logger.info(event.getEventType().toString()));
-
-        Try.of(() -> awaitResult(retry.executeCompletionStage(scheduler,
-                () -> helloWorldService.returnHelloWorld())));
-
-        then(logger).should(times(1)).info("IGNORED_ERROR");
-        then(helloWorldService).should(times(1)).returnHelloWorld();
     }
 
 }
