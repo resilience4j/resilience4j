@@ -42,6 +42,23 @@ allprojects {
         jcenter()
         mavenCentral()
     }
+
+    jacocoTestReport {
+        additionalSourceDirs = files(sourceSets.main.allSource.srcDirs)
+        sourceDirectories = files(sourceSets.main.allSource.srcDirs)
+        classDirectories =  files(sourceSets.main.output)
+        reports {
+            html.enabled = true
+            xml.enabled = true
+            csv.enabled = false
+        }
+        afterEvaluate {
+            classDirectories = files(classDirectories.files.collect {
+                fileTree(dir: it,
+                        exclude: ['.*io.github.resilience4j.bulkhead.internal.*'])
+            })
+        }
+    }
 }
 artifactoryPublish.skip=true // apply to all projects except the root
 
@@ -88,22 +105,6 @@ configure(project.coreProjects) {
         options.encoding = 'UTF-8'
         options.compilerArgs += ["-Xlint:unchecked", "-parameters"]
 
-    }
-    jacocoTestReport {
-        additionalSourceDirs = files(sourceSets.main.allSource.srcDirs)
-        sourceDirectories = files(sourceSets.main.allSource.srcDirs)
-        classDirectories =  files(sourceSets.main.output)
-        reports {
-            html.enabled = true
-            xml.enabled = true
-            csv.enabled = false
-        }
-        afterEvaluate {
-            classDirectories = files(classDirectories.files.collect {
-                fileTree(dir: it,
-                        exclude: ['.*io.github.resilience4j.bulkhead.internal.*'])
-            })
-        }
     }
 
     jmh {
