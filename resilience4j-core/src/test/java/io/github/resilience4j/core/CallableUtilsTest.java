@@ -11,7 +11,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class CallableUtilsTest {
 
     @Test
-    public void shouldChainSupplierAndRecoverFromException() throws Exception {
+    public void shouldChainCallableAndRecoverFromException() throws Exception {
 
         Callable<String> callable = () -> {
             throw new IOException("BAM!");
@@ -26,7 +26,7 @@ public class CallableUtilsTest {
     }
 
     @Test
-    public void shouldChainSupplierAndRecoverWithErrorHandler() throws Exception {
+    public void shouldChainCallableAndRecoverWithErrorHandler() throws Exception {
 
         Callable<String> callable = () -> {
             throw new IOException("BAM!");
@@ -41,7 +41,7 @@ public class CallableUtilsTest {
     }
 
     @Test
-    public void shouldRecoverSupplierFromException() throws Exception {
+    public void shouldRecoverCallableFromException() throws Exception {
 
         Callable<String> callable = () -> {
             throw new IOException("BAM!");
