@@ -18,11 +18,11 @@ buildscript {
         classpath "com.netflix.nebula:gradle-extra-configurations-plugin:4.0.1"
     }
 }
-
+plugins {
+    id "org.sonarqube" version "2.7"
+}
 apply plugin: 'idea'
-//apply plugin: 'com.github.kt3k.coveralls'
 apply from: "${rootDir}/libraries.gradle"
-//apply plugin: 'jacoco'
 
 ext {
     releaseVersion = '0.14.1'
@@ -112,27 +112,52 @@ configure(project.coreProjects) {
         jmhVersion = '1.17'
     }
 }
-task jacocoRootTestReport(type: JacocoReport) {
-
-    sourceSets sourceSets.main
-
-    def jacocoTestFiles = ["$buildDir/jacoco/test.exec"]
-    subprojects.each { p ->
-        def coverageFileLocation = "$p.buildDir/jacoco/test.exec"
-        if (new File(coverageFileLocation).exists()) {
-            jacocoTestFiles << coverageFileLocation
-        }
-    }
-
-    logger.info('Aggregating next JaCoCo Coverage Files: {}', jacocoTestFiles)
-    executionData files(jacocoTestFiles)
-
+task jacocoRootReport(type: org.gradle.testing.jacoco.tasks.JacocoReport) {
+    dependsOn = subprojects.test
+    additionalSourceDirs = files(subprojects.sourceSets.main.allSource.srcDirs)
+    sourceDirectories = files(subprojects.sourceSets.main.allSource.srcDirs)
+    classDirectories = files(subprojects.sourceSets.main.output)
+    executionData = files(subprojects.jacocoTestReport.executionData)
     reports {
-        xml.enabled true
-        csv.enabled false
-        html.enabled false
+        html.enabled = true
+        xml.enabled = true
+        csv.enabled = false
+    }
+    onlyIf = {
+        true
+    }
+    doFirst {
+        executionData = files(executionData.findAll {
+            it.exists()
+        })
     }
 }
+sonarqube {
+    properties {
+        property "sonar.projectName", "Resilience4j"
+        property "sonar.projectKey", "Resilience4j"
+
+
+        property "sonar.links.homepage","https://github.com/resilience4j/resilience4j"
+        property "sonar.links.ci","https://travis-ci.org/resilience4j/resilience4j"
+        property "sonar.links.scm","https://github.com/resilience4j/resilience4j"
+        property "sonar.links.issue","https://github.com/resilience4j/resilience4j/issues"
+
+        property "sonar.java.source","1.8"
+        property "sonar.sources","src/main/java"
+        property "sonar.tests","src/test/java"
+        property "sonar.java.binaries","build"
+        property "sonar.java.test.binaries","build"
+        property "sonar.binaries","build"
+        property "sonar.jacoco.reportPaths","build/reports/jacoco/test"
+
+        property "sonar.language","java"
+
+
+        property "sonar.sourceEncoding","UTF-8"
+    }
+}
+
 
 
 tasks.check.dependsOn tasks.jacocoTestReport
