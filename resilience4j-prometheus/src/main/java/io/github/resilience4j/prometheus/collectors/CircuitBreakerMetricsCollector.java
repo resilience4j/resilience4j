@@ -91,8 +91,8 @@ public class CircuitBreakerMetricsCollector extends Collector {
     public List<MetricFamilySamples> collect() {
         GaugeMetricFamily stateFamily = new GaugeMetricFamily(
             names.getStateMetricName(),
-            "The state of the circuit breaker: 0 - CLOSED, 1 - OPEN, 2 - HALF_OPEN",
-            LabelNames.NAME
+            "The state of the circuit breaker:",
+            LabelNames.NAME_AND_STATE
         );
         GaugeMetricFamily callsFamily = new GaugeMetricFamily(
             names.getCallsMetricName(),
@@ -110,10 +110,14 @@ public class CircuitBreakerMetricsCollector extends Collector {
             LabelNames.NAME
         );
 
+        final CircuitBreaker.State[] states = CircuitBreaker.State.values();
         for (CircuitBreaker circuitBreaker : supplier.get()) {
             List<String> nameLabel = singletonList(circuitBreaker.getName());
 
-            stateFamily.addMetric(nameLabel, circuitBreaker.getState().getOrder());
+            for (CircuitBreaker.State state : states) {
+                stateFamily.addMetric(asList(circuitBreaker.getName(), state.name().toLowerCase()),
+                        circuitBreaker.getState() == state ? 1 : 0);
+            }
 
             Metrics metrics = circuitBreaker.getMetrics();
             callsFamily.addMetric(asList(circuitBreaker.getName(), "successful"), metrics.getNumberOfSuccessfulCalls());

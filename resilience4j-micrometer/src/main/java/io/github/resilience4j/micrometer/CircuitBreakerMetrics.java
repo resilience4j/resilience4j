@@ -71,10 +71,15 @@ public class CircuitBreakerMetrics implements MeterBinder {
 
     @Override
     public void bindTo(MeterRegistry registry) {
+        final CircuitBreaker.State[] states = CircuitBreaker.State.values();
         for (CircuitBreaker circuitBreaker : circuitBreakers) {
             final String name = circuitBreaker.getName();
-            Gauge.builder(getName(prefix, name, STATE), circuitBreaker, (cb) -> cb.getState().getOrder())
-                    .register(registry);
+            for (CircuitBreaker.State state : states) {
+                Gauge.builder(getName(prefix, name, STATE), circuitBreaker, (cb) -> cb.getState() == state ? 1 : 0)
+                        .tag("state", state.name().toLowerCase())
+                        .register(registry);
+            }
+
             Gauge.builder(getName(prefix, name, BUFFERED_MAX), circuitBreaker, (cb) -> cb.getMetrics().getMaxNumberOfBufferedCalls())
                     .register(registry);
             Gauge.builder(getName(prefix, name, BUFFERED), circuitBreaker, (cb) -> cb.getMetrics().getNumberOfBufferedCalls())
