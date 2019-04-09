@@ -23,9 +23,12 @@ import io.github.resilience4j.bulkhead.BulkheadFullException;
 
 public final class BulkheadUtils {
 
-    public static void isCallPermitted(Bulkhead bulkhead) {
-        if(!bulkhead.isCallPermitted()) {
-            throw new BulkheadFullException(String.format("Bulkhead '%s' is full", bulkhead.getName()));
-        }
-    }
+	private BulkheadUtils() {
+	}
+
+	public static void isCallPermitted(Bulkhead bulkhead) {
+		if (!bulkhead.isCallPermitted()) {
+			throw new BulkheadFullException(String.format("Bulkhead '%s' is full", bulkhead.getName()));
+		}
+	}
 }
