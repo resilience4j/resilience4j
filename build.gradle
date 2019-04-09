@@ -7,8 +7,6 @@ buildscript {
         }
     }
     dependencies {
-        classpath 'net.saliman:gradle-cobertura-plugin:2.3.2'
-        classpath 'org.kt3k.gradle.plugin:coveralls-gradle-plugin:2.7.1'
         classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.8.4'
         classpath 'me.champeau.gradle:jmh-gradle-plugin:0.3.1'
         classpath "org.asciidoctor:asciidoctor-gradle-plugin:1.5.3"
@@ -18,9 +16,10 @@ buildscript {
         classpath "com.netflix.nebula:gradle-extra-configurations-plugin:4.0.1"
     }
 }
-
+plugins {
+    id "org.sonarqube" version "2.7"
+}
 apply plugin: 'idea'
-apply plugin: 'com.github.kt3k.coveralls'
 apply from: "${rootDir}/libraries.gradle"
 
 ext {
@@ -28,7 +27,7 @@ ext {
 }
 
 allprojects {
-    apply plugin: 'net.saliman.cobertura'
+    apply plugin: 'jacoco'
     apply plugin: 'me.champeau.gradle.jmh'
     apply plugin: 'com.jfrog.artifactory'
 
@@ -57,6 +56,7 @@ configure(project.coreProjects) {
     apply plugin: 'com.jfrog.bintray'
     apply from: "${rootDir}/publishing.gradle"
     apply plugin: 'nebula.optional-base'
+    apply plugin: 'jacoco'
 
     dependencies {
         compile ( libraries.vavr)
@@ -87,36 +87,67 @@ configure(project.coreProjects) {
 
     }
 
-    cobertura {
-        coverageIgnoreTrivial = true
-        coverageExcludes = ['.*io.github.resilience4j.bulkhead.internal.*']
-    }
-
     jmh {
         duplicateClassesStrategy = 'warn'
         jmhVersion = '1.17'
     }
 }
 
-def files = subprojects.collect { new File(it.projectDir, '/build/cobertura/cobertura.ser') }
-cobertura {
-    coverageFormats = ['html', 'xml']
-    coverageSourceDirs = subprojects.sourceSets.main.allSource.srcDirs.flatten()
-    coverageMergeDatafiles = files
+sonarqube {
+    properties {
+        property "sonar.projectName", "resilience4j"
+        property "sonar.projectKey", "resilience4j_resilience4j"
+        property "sonar.modules", "resilience4j-core,resilience4j-feign,resilience4j-metrics,resilience4j-micrometer,resilience4j-prometheus,resilience4j-retry,resilience4j-spring,resilience4j-timelimiter,resilience4j-bulkhead,resilience4j-circuitbreaker,resilience4j-ratelimiter,resilience4j-cache,resilience4j-circularbuffer,resilience4j-consumer,resilience4j-spring-boot,resilience4j-spring-boot2,resilience4j-reactor,resilience4j-rxjava2"
+        property "sonar.projectVersion","0.15.0-SNAPSHOTS"
+
+        property "sonar.links.homepage","https://github.com/resilience4j/resilience4j"
+        property "sonar.links.ci","https://travis-ci.org/resilience4j/resilience4j"
+        property "sonar.links.scm","https://github.com/resilience4j/resilience4j"
+        property "sonar.links.issue","https://github.com/resilience4j/resilience4j/issues"
+
+        property "sonar.java.source","1.8"
+        property "sonar.sources","src/main/java"
+        property "sonar.tests","src/test/java"
+        property "sonar.java.binaries","build"
+        property "sonar.java.test.binaries","build"
+        property "sonar.binaries","build"
+//        property "sonar.jacoco.reportPaths","build/reports/jacoco/test"
+
+        property "sonar.language","java"
+
+
+        property "sonar.sourceEncoding","UTF-8"
+    }
 }
+def allTestCoverageFile = "$buildDir/jacoco/allTestCoverage.exec"
+
+task jacocoMergeTest(type: JacocoMerge) {
+    destinationFile = file(allTestCoverageFile)
+    executionData = project.fileTree(dir: '.', include:'**/build/jacoco/test.exec')
+}
+
+task jacocoMerge(dependsOn: ['jacocoMergeTest']) {
+    // used to run the other merge tasks
+}
+
+subprojects {
+    sonarqube {
+        properties {
+            property "sonar.jacoco.reportPaths", allTestCoverageFile
+        }
+    }
+}
+
+tasks.check.dependsOn tasks.jacocoTestReport
+
 
 test {
     dependsOn(subprojects.test) // required by cobertura to aggregate report
 }
 
-tasks.coveralls {
-    dependsOn 'check'
-}
-
 task wrapper(type: Wrapper) {
     gradleVersion = '4.10.2'
 }
-
 
 artifactory {
     contextUrl = 'https://oss.jfrog.org'

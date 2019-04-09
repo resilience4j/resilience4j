@@ -6,7 +6,7 @@ before_install:
 - chmod +x gradlew
 script:
 - "./gradlew clean check"
-- sonar-scanner
+- "./gradlew sonarqube"
 after_success:
 - test $TRAVIS_BRANCH = "master" && ./gradlew artifactoryPublish -PbintrayUsername="${BINTRAY_USER}" -PbintrayApiKey="${BINTRAY_KEY}"
 - test $TRAVIS_BRANCH = "master" && ./gradlew asciidoctor
