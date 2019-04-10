@@ -52,7 +52,7 @@ To highlight a few differences to Netflix Hystrix:
 
 == Spring Boot demo
 
-Setup and usage in Spring Boot is demonstrated https://github.com/RobWin/resilience4j-spring-boot-demo[here].
+Setup and usage in Spring Boot 2 is demonstrated https://github.com/RobWin/resilience4j-spring-boot2-demo[here].
 
 == Usage examples
 
