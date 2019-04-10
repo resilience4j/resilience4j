@@ -15,9 +15,16 @@
  */
 package io.github.resilience4j.retry.configure;
 
+import java.util.List;
+
+import io.github.resilience4j.recovery.RecoveryDecorators;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Conditional;
+import org.springframework.context.annotation.Configuration;
+
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
-import io.github.resilience4j.recovery.RecoveryDecorators;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryConfig;
 import io.github.resilience4j.retry.RetryRegistry;
@@ -25,12 +32,6 @@ import io.github.resilience4j.retry.event.RetryEvent;
 import io.github.resilience4j.retry.internal.InMemoryRetryRegistry;
 import io.github.resilience4j.utils.ReactorOnClasspathCondition;
 import io.github.resilience4j.utils.RxJava2OnClasspathCondition;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Conditional;
-import org.springframework.context.annotation.Configuration;
-
-import java.util.List;
 
 /**
  * {@link Configuration
