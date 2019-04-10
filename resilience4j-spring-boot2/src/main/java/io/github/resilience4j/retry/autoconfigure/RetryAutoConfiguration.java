@@ -15,20 +15,21 @@
  */
 package io.github.resilience4j.retry.autoconfigure;
 
-import io.github.resilience4j.consumer.EventConsumerRegistry;
 import io.github.resilience4j.recovery.configure.RecoveryConfiguration;
-import io.github.resilience4j.retry.Retry;
-import io.github.resilience4j.retry.RetryRegistry;
-import io.github.resilience4j.retry.configure.RetryConfiguration;
-import io.github.resilience4j.retry.event.RetryEvent;
-import io.github.resilience4j.retry.monitoring.endpoint.RetryEndpoint;
-import io.github.resilience4j.retry.monitoring.endpoint.RetryEventsEndpoint;
 import org.springframework.boot.actuate.autoconfigure.endpoint.condition.ConditionalOnEnabledEndpoint;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
+
+import io.github.resilience4j.consumer.EventConsumerRegistry;
+import io.github.resilience4j.retry.Retry;
+import io.github.resilience4j.retry.RetryRegistry;
+import io.github.resilience4j.retry.configure.RetryConfiguration;
+import io.github.resilience4j.retry.event.RetryEvent;
+import io.github.resilience4j.retry.monitoring.endpoint.RetryEndpoint;
+import io.github.resilience4j.retry.monitoring.endpoint.RetryEventsEndpoint;
 
 
 /**

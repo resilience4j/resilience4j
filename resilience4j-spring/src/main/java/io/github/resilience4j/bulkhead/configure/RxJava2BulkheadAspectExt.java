@@ -15,17 +15,26 @@
  */
 package io.github.resilience4j.bulkhead.configure;
 
-import io.github.resilience4j.bulkhead.Bulkhead;
-import io.github.resilience4j.bulkhead.operator.BulkheadOperator;
-import io.github.resilience4j.circuitbreaker.configure.CircuitBreakerAspect;
-import io.reactivex.*;
+import static io.github.resilience4j.utils.AspectUtil.newHashSet;
+
+import java.util.Set;
+
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Set;
-
-import static io.github.resilience4j.utils.AspectUtil.newHashSet;
+import io.github.resilience4j.bulkhead.Bulkhead;
+import io.github.resilience4j.bulkhead.operator.BulkheadOperator;
+import io.github.resilience4j.circuitbreaker.configure.CircuitBreakerAspect;
+import io.reactivex.Completable;
+import io.reactivex.CompletableSource;
+import io.reactivex.Flowable;
+import io.reactivex.Maybe;
+import io.reactivex.MaybeSource;
+import io.reactivex.Observable;
+import io.reactivex.ObservableSource;
+import io.reactivex.Single;
+import io.reactivex.SingleSource;
 
 /**
  * the Rx bulkhead logic support for the spring AOP
@@ -57,7 +66,6 @@ public class RxJava2BulkheadAspectExt implements BulkheadAspectExt {
 	public Object handle(ProceedingJoinPoint proceedingJoinPoint, Bulkhead bulkhead, String methodName) throws Throwable {
 		BulkheadOperator<?> bulkheadOperator = BulkheadOperator.of(bulkhead);
 		Object returnValue = proceedingJoinPoint.proceed();
-
 		return executeRxJava2Aspect(bulkheadOperator, returnValue);
 	}
 

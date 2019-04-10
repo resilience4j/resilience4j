@@ -15,8 +15,9 @@
  */
 package io.github.resilience4j.ratelimiter.configure;
 
-import io.github.resilience4j.ratelimiter.RateLimiter;
 import org.aspectj.lang.ProceedingJoinPoint;
+
+import io.github.resilience4j.ratelimiter.RateLimiter;
 
 /**
  * RateLimiter aspect extension support interface type if you want to support new types
