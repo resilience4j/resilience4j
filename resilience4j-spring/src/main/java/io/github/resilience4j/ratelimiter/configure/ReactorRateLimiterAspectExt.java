@@ -15,11 +15,12 @@
  */
 package io.github.resilience4j.ratelimiter.configure;
 
-import io.github.resilience4j.ratelimiter.RateLimiter;
-import io.github.resilience4j.reactor.ratelimiter.operator.RateLimiterOperator;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import io.github.resilience4j.ratelimiter.RateLimiter;
+import io.github.resilience4j.reactor.ratelimiter.operator.RateLimiterOperator;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
@@ -36,7 +37,6 @@ public class ReactorRateLimiterAspectExt implements RateLimiterAspectExt {
 	 * @param returnType the AOP method return type class
 	 * @return boolean if the method has Reactor return type
 	 */
-	@SuppressWarnings("unchecked")
 	@Override
 	public boolean canHandleReturnType(Class returnType) {
 		return (Flux.class.isAssignableFrom(returnType)) || (Mono.class.isAssignableFrom(returnType));

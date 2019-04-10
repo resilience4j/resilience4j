@@ -15,11 +15,12 @@
  */
 package io.github.resilience4j.bulkhead.configure;
 
-import io.github.resilience4j.bulkhead.Bulkhead;
-import io.github.resilience4j.reactor.bulkhead.operator.BulkheadOperator;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import io.github.resilience4j.bulkhead.Bulkhead;
+import io.github.resilience4j.reactor.bulkhead.operator.BulkheadOperator;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
@@ -36,7 +37,6 @@ public class ReactorBulkheadAspectExt implements BulkheadAspectExt {
 	 * @param returnType the AOP method return type class
 	 * @return boolean if the method has Reactor return type
 	 */
-	@SuppressWarnings("unchecked")
 	@Override
 	public boolean canHandleReturnType(Class returnType) {
 		return (Flux.class.isAssignableFrom(returnType)) || (Mono.class.isAssignableFrom(returnType));

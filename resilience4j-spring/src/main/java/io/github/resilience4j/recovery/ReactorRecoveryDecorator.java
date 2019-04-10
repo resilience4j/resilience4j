@@ -29,9 +29,8 @@ import static io.github.resilience4j.utils.AspectUtil.newHashSet;
  * recovery decorator for {@link Flux} and {@link Mono}
  */
 public class ReactorRecoveryDecorator implements RecoveryDecorator {
-    private static final Set<Class> REACTORS_SUPPORTED_TYPES = newHashSet(Mono.class, Flux.class);
+    private static final Set<Class<?>> REACTORS_SUPPORTED_TYPES = newHashSet(Mono.class, Flux.class);
 
-    @SuppressWarnings("unchecked")
     @Override
     public boolean supports(Class<?> target) {
         return REACTORS_SUPPORTED_TYPES.stream().anyMatch(it -> it.isAssignableFrom(target));

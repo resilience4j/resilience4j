@@ -15,17 +15,26 @@
  */
 package io.github.resilience4j.ratelimiter.configure;
 
-import io.github.resilience4j.circuitbreaker.configure.CircuitBreakerAspect;
-import io.github.resilience4j.ratelimiter.RateLimiter;
-import io.github.resilience4j.ratelimiter.operator.RateLimiterOperator;
-import io.reactivex.*;
+import static io.github.resilience4j.utils.AspectUtil.newHashSet;
+
+import java.util.Set;
+
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Set;
-
-import static io.github.resilience4j.utils.AspectUtil.newHashSet;
+import io.github.resilience4j.circuitbreaker.configure.CircuitBreakerAspect;
+import io.github.resilience4j.ratelimiter.RateLimiter;
+import io.github.resilience4j.ratelimiter.operator.RateLimiterOperator;
+import io.reactivex.Completable;
+import io.reactivex.CompletableSource;
+import io.reactivex.Flowable;
+import io.reactivex.Maybe;
+import io.reactivex.MaybeSource;
+import io.reactivex.Observable;
+import io.reactivex.ObservableSource;
+import io.reactivex.Single;
+import io.reactivex.SingleSource;
 
 /**
  * the Rx RateLimiter logic support for the spring AOP
@@ -53,12 +62,10 @@ public class RxJava2RateLimterAspectExt implements RateLimiterAspectExt {
 	 * @return the result object
 	 * @throws Throwable exception in case of faulty flow
 	 */
-	@SuppressWarnings("unchecked")
 	@Override
 	public Object handle(ProceedingJoinPoint proceedingJoinPoint, RateLimiter rateLimiter, String methodName) throws Throwable {
 		RateLimiterOperator<?> rateLimiterOperator = RateLimiterOperator.of(rateLimiter);
 		Object returnValue = proceedingJoinPoint.proceed();
-
 		return executeRxJava2Aspect(rateLimiterOperator, returnValue);
 	}
 

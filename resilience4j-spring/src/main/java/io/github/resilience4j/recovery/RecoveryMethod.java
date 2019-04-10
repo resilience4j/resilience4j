@@ -16,6 +16,7 @@
 package io.github.resilience4j.recovery;
 
 import org.springframework.util.ReflectionUtils;
+import org.springframework.util.StringUtils;
 
 import java.lang.reflect.Method;
 import java.util.Arrays;
@@ -32,7 +33,7 @@ public class RecoveryMethod {
         Method recovery = ReflectionUtils.findMethod(target.getClass(), recoveryMethodName, recoveryParams);
 
         if (recovery == null) {
-            throw new NoSuchMethodException(String.format("%s.%s", target.getClass(), recoveryMethodName));
+            throw new NoSuchMethodException(String.format("%s.%s(%s)", target.getClass(), recoveryMethodName, StringUtils.arrayToDelimitedString(recoveryParams, ",")));
         }
 
         Class<?> originalReturnType = originalMethod.getReturnType();

@@ -53,7 +53,6 @@ public class RxJava2BulkheadAspectExt implements BulkheadAspectExt {
 	 * @return the result object
 	 * @throws Throwable exception in case of faulty flow
 	 */
-	@SuppressWarnings("unchecked")
 	@Override
 	public Object handle(ProceedingJoinPoint proceedingJoinPoint, Bulkhead bulkhead, String methodName) throws Throwable {
 		BulkheadOperator<?> bulkheadOperator = BulkheadOperator.of(bulkhead);

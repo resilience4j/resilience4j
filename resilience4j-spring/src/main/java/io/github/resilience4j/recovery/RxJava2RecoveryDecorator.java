@@ -27,9 +27,8 @@ import static io.github.resilience4j.utils.AspectUtil.newHashSet;
  * recovery decorator for {@link ObservableSource}, {@link SingleSource}, {@link CompletableSource}, {@link MaybeSource} and {@link Flowable}.
  */
 public class RxJava2RecoveryDecorator implements RecoveryDecorator {
-    private static final Set<Class> RX_SUPPORTED_TYPES = newHashSet(ObservableSource.class, SingleSource.class, CompletableSource.class, MaybeSource.class, Flowable.class);
+    private static final Set<Class<?>> RX_SUPPORTED_TYPES = newHashSet(ObservableSource.class, SingleSource.class, CompletableSource.class, MaybeSource.class, Flowable.class);
 
-    @SuppressWarnings("unchecked")
     @Override
     public boolean supports(Class<?> target) {
         return RX_SUPPORTED_TYPES.stream().anyMatch(it -> it.isAssignableFrom(target));
