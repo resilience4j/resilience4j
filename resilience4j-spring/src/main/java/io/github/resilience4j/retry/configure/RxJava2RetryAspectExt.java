@@ -15,17 +15,26 @@
  */
 package io.github.resilience4j.retry.configure;
 
-import io.github.resilience4j.circuitbreaker.configure.CircuitBreakerAspect;
-import io.github.resilience4j.retry.Retry;
-import io.github.resilience4j.retry.transformer.RetryTransformer;
-import io.reactivex.*;
+import static io.github.resilience4j.utils.AspectUtil.newHashSet;
+
+import java.util.Set;
+
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Set;
-
-import static io.github.resilience4j.utils.AspectUtil.newHashSet;
+import io.github.resilience4j.circuitbreaker.configure.CircuitBreakerAspect;
+import io.github.resilience4j.retry.Retry;
+import io.github.resilience4j.retry.transformer.RetryTransformer;
+import io.reactivex.Completable;
+import io.reactivex.CompletableSource;
+import io.reactivex.Flowable;
+import io.reactivex.Maybe;
+import io.reactivex.MaybeSource;
+import io.reactivex.Observable;
+import io.reactivex.ObservableSource;
+import io.reactivex.Single;
+import io.reactivex.SingleSource;
 
 /**
  * the Rx Retry logic support for the spring AOP
@@ -58,7 +67,6 @@ public class RxJava2RetryAspectExt implements RetryAspectExt {
 	public Object handle(ProceedingJoinPoint proceedingJoinPoint, Retry retry, String methodName) throws Throwable {
 		RetryTransformer<?> retryTransformer = RetryTransformer.of(retry);
 		Object returnValue = proceedingJoinPoint.proceed();
-
 		return executeRxJava2Aspect(retryTransformer, returnValue);
 	}
 

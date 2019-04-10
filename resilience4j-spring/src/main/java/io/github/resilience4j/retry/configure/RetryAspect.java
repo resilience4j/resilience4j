@@ -28,6 +28,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.Ordered;
+import org.springframework.util.StringUtils;
 
 import java.lang.reflect.Method;
 import java.util.List;
@@ -76,21 +77,26 @@ public class RetryAspect implements Ordered {
 		String backend = backendMonitored.name();
 		io.github.resilience4j.retry.Retry retry = getOrCreateRetry(methodName, backend);
 		Class<?> returnType = method.getReturnType();
-        RecoveryMethod recoveryMethod = new RecoveryMethod(backendMonitored.recovery(), proceedingJoinPoint.getArgs(), returnType, proceedingJoinPoint.getThis());
-        return recoveryDecorators.decorate(recoveryMethod,
-                () -> {
-                    if (CompletionStage.class.isAssignableFrom(returnType)) {
-                        return handleJoinPointCompletableFuture(proceedingJoinPoint, retry, methodName);
-                    }
-                    if (retryAspectExtList != null && !retryAspectExtList.isEmpty()) {
-                        for (RetryAspectExt retryAspectExt : retryAspectExtList) {
-                            if (retryAspectExt.canHandleReturnType(returnType)) {
-                                return retryAspectExt.handle(proceedingJoinPoint, retry, methodName);
-                            }
-                        }
-                    }
-                    return handleDefaultJoinPoint(proceedingJoinPoint, retry, methodName);
-                }).apply();
+		if (StringUtils.isEmpty(backendMonitored.recovery())) {
+			return proceed(proceedingJoinPoint, methodName, retry, returnType);
+		}
+
+        RecoveryMethod recoveryMethod = new RecoveryMethod(backendMonitored.recovery(), method, proceedingJoinPoint.getArgs(), proceedingJoinPoint.getThis());
+		return recoveryDecorators.decorate(recoveryMethod, () -> proceed(proceedingJoinPoint, methodName, retry, returnType)).apply();
+	}
+
+	private Object proceed(ProceedingJoinPoint proceedingJoinPoint, String methodName, io.github.resilience4j.retry.Retry retry, Class<?> returnType) throws Throwable {
+		if (CompletionStage.class.isAssignableFrom(returnType)) {
+			return handleJoinPointCompletableFuture(proceedingJoinPoint, retry, methodName);
+		}
+		if (retryAspectExtList != null && !retryAspectExtList.isEmpty()) {
+			for (RetryAspectExt retryAspectExt : retryAspectExtList) {
+				if (retryAspectExt.canHandleReturnType(returnType)) {
+					return retryAspectExt.handle(proceedingJoinPoint, retry, methodName);
+				}
+			}
+		}
+		return handleDefaultJoinPoint(proceedingJoinPoint, retry, methodName);
 	}
 
 	/**

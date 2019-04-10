@@ -28,13 +28,12 @@ public class RecoveryDecorators {
     }
 
     public CheckedFunction0<Object> decorate(RecoveryMethod recoveryMethod, CheckedFunction0<Object> supplier) {
-        if (recoveryMethod.undefined()) {
-            return supplier;
-        }
-
-        return recoveryDecorator.stream().filter(it -> it.supports(recoveryMethod.getReturnType()))
+        return get(recoveryMethod.getReturnType())
+                .decorate(recoveryMethod, supplier);
+    }
+    public RecoveryDecorator get(Class<?> returnType) {
+        return recoveryDecorator.stream().filter(it -> it.supports(returnType))
                 .findFirst()
-                .map(it -> it.decorate(recoveryMethod, supplier))
-                .orElseGet(() -> defaultRecoveryDecorator.decorate(recoveryMethod, supplier));
+                .orElse(defaultRecoveryDecorator);
     }
 }

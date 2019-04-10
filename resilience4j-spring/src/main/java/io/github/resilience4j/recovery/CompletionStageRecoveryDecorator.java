@@ -26,7 +26,7 @@ import java.util.concurrent.CompletionStage;
 public class CompletionStageRecoveryDecorator implements RecoveryDecorator {
 
     @Override
-    public boolean supports(Class target) {
+    public boolean supports(Class<?> target) {
         return CompletionStage.class.isAssignableFrom(target);
     }
 
@@ -41,7 +41,14 @@ public class CompletionStageRecoveryDecorator implements RecoveryDecorator {
             completionStage.whenComplete((result, throwable) -> {
                 if (throwable != null) {
                     try {
-                        promise.complete(recoveryMethod.recover((Throwable) throwable));
+                        ((CompletionStage) recoveryMethod.recover((Throwable) throwable))
+                                .whenComplete((recoveryResult, recoveryThrowable) -> {
+                                    if (recoveryThrowable != null) {
+                                        promise.completeExceptionally((Throwable) recoveryThrowable);
+                                    } else {
+                                        promise.complete(recoveryResult);
+                                    }
+                                });
                     } catch (Throwable recoveryThrowable) {
                         promise.completeExceptionally(recoveryThrowable);
                     }

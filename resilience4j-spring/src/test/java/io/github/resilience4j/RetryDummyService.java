@@ -17,7 +17,7 @@ public class RetryDummyService implements TestDummyService {
     }
 
     @Override
-    @Retry(name = BACKEND, recovery = "recovery")
+    @Retry(name = BACKEND, recovery = "completionStageRecovery")
     public CompletionStage<String> async() {
         return asyncError();
     }

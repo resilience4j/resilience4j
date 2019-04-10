@@ -23,7 +23,7 @@ import io.vavr.CheckedFunction0;
 public class DefaultRecoveryDecorator implements RecoveryDecorator {
 
     @Override
-    public boolean supports(Class target) {
+    public boolean supports(Class<?> target) {
         return true;
     }
 

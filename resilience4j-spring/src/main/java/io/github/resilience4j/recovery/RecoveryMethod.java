@@ -21,33 +21,31 @@ import java.lang.reflect.Method;
 import java.util.Arrays;
 
 public class RecoveryMethod {
-    private final String recoveryMethodName;
+    private final Method recovery;
     private final Object[] args;
     private final Object target;
-    private final Class<?> returnType;
 
-    public RecoveryMethod(String recoveryMethodName, Object[] args, Class<?> returnType,  Object target) {
-        this.recoveryMethodName = recoveryMethodName;
+    public RecoveryMethod(String recoveryMethodName, Method originalMethod, Object[] args, Object target) throws NoSuchMethodException, ClassCastException {
+        Class[] params = originalMethod.getParameterTypes();
+        Class[] recoveryParams = Arrays.copyOf(params, params.length + 1);
+        recoveryParams[params.length] = Throwable.class;
+        Method recovery = ReflectionUtils.findMethod(target.getClass(), recoveryMethodName, recoveryParams);
+
+        if (recovery == null) {
+            throw new NoSuchMethodException(String.format("%s.%s", target.getClass(), recoveryMethodName));
+        }
+
+        Class<?> originalReturnType = originalMethod.getReturnType();
+        if (!originalReturnType.isAssignableFrom(recovery.getReturnType())) {
+            throw new ClassCastException(String.format("recovery return type not matched (expected: %s, actual :%s)", originalReturnType.getName(), recovery.getReturnType().getName()));
+        }
+
+        this.recovery = recovery;
         this.args = args;
-        this.returnType = returnType;
         this.target = target;
     }
 
     public Object recover(Throwable throwable) throws Throwable {
-        if (undefined()) {
-            throw throwable;
-        }
-
-        Class[] params = new Class[args.length + 1];
-
-        for (int i = 0; i < args.length; i++) {
-            params[i] = args[i].getClass();
-        }
-
-        params[args.length] = Throwable.class;
-
-        Method recovery = ReflectionUtils.findMethod(target.getClass(), recoveryMethodName, params);
-
         if (args.length != 0) {
             Object[] newArgs = Arrays.copyOf(args, args.length + 1);
             newArgs[args.length] = throwable;
@@ -58,11 +56,7 @@ public class RecoveryMethod {
         }
     }
 
-    public boolean undefined() {
-        return recoveryMethodName == null || recoveryMethodName.isEmpty();
-    }
-
     public Class<?> getReturnType() {
-        return returnType;
+        return recovery.getReturnType();
     }
 }

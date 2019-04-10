@@ -33,7 +33,7 @@ public class ReactorRecoveryDecorator implements RecoveryDecorator {
 
     @SuppressWarnings("unchecked")
     @Override
-    public boolean supports(Class target) {
+    public boolean supports(Class<?> target) {
         return REACTORS_SUPPORTED_TYPES.stream().anyMatch(it -> it.isAssignableFrom(target));
     }
 

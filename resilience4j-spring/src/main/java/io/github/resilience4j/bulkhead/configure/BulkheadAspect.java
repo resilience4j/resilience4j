@@ -29,6 +29,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.Ordered;
+import org.springframework.util.StringUtils;
 
 import java.lang.reflect.Method;
 import java.util.List;
@@ -71,22 +72,27 @@ public class BulkheadAspect implements Ordered {
 		String backend = backendMonitored.name();
 		io.github.resilience4j.bulkhead.Bulkhead bulkhead = getOrCreateBulkhead(methodName, backend);
 		Class<?> returnType = method.getReturnType();
-		RecoveryMethod recoveryMethod = new RecoveryMethod(backendMonitored.recovery(), proceedingJoinPoint.getArgs(), returnType, proceedingJoinPoint.getThis());
-		return recoveryDecorators.decorate(recoveryMethod,
-				()-> {
-                    if (bulkheadAspectExts != null && !bulkheadAspectExts.isEmpty()) {
-                        for (BulkheadAspectExt bulkHeadAspectExt : bulkheadAspectExts) {
-                            if (bulkHeadAspectExt.canHandleReturnType(returnType)) {
-                                return bulkHeadAspectExt.handle(proceedingJoinPoint, bulkhead, methodName);
-                            }
-                        }
-                    }
-                    if (CompletionStage.class.isAssignableFrom(returnType)) {
-                        return handleJoinPointCompletableFuture(proceedingJoinPoint, bulkhead, methodName);
-                    }
-                    return handleJoinPoint(proceedingJoinPoint, bulkhead, methodName);
 
-                }).apply();
+		if (StringUtils.isEmpty(backendMonitored.recovery())) {
+			return proceed(proceedingJoinPoint, methodName, bulkhead, returnType);
+		}
+
+		RecoveryMethod recoveryMethod = new RecoveryMethod(backendMonitored.recovery(), method, proceedingJoinPoint.getArgs(), proceedingJoinPoint.getThis());
+		return recoveryDecorators.decorate(recoveryMethod, () -> proceed(proceedingJoinPoint, methodName, bulkhead, returnType)).apply();
+	}
+
+	private Object proceed(ProceedingJoinPoint proceedingJoinPoint, String methodName, io.github.resilience4j.bulkhead.Bulkhead bulkhead, Class<?> returnType) throws Throwable {
+		if (bulkheadAspectExts != null && !bulkheadAspectExts.isEmpty()) {
+			for (BulkheadAspectExt bulkHeadAspectExt : bulkheadAspectExts) {
+				if (bulkHeadAspectExt.canHandleReturnType(returnType)) {
+					return bulkHeadAspectExt.handle(proceedingJoinPoint, bulkhead, methodName);
+				}
+			}
+		}
+		if (CompletionStage.class.isAssignableFrom(returnType)) {
+			return handleJoinPointCompletableFuture(proceedingJoinPoint, bulkhead, methodName);
+		}
+		return handleJoinPoint(proceedingJoinPoint, bulkhead, methodName);
 	}
 
 	private io.github.resilience4j.bulkhead.Bulkhead getOrCreateBulkhead(String methodName, String backend) {

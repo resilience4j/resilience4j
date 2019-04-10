@@ -15,10 +15,11 @@
  */
 package io.github.resilience4j.retry.configure;
 
-import io.github.resilience4j.reactor.retry.RetryOperator;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import io.github.resilience4j.reactor.retry.RetryOperator;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 

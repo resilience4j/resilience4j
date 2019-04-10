@@ -18,7 +18,7 @@ package io.github.resilience4j.recovery;
 import io.vavr.CheckedFunction0;
 
 public interface RecoveryDecorator {
-    boolean supports(Class target);
+    boolean supports(Class<?> target);
 
     /**
      * @param recoveryMethod recovery method.

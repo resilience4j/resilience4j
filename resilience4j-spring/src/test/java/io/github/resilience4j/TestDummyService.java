@@ -78,6 +78,10 @@ public interface TestDummyService {
         return "recovered";
     }
 
+    default CompletionStage<String> completionStageRecovery(Throwable throwable) {
+        return CompletableFuture.supplyAsync(() -> "recovered");
+    }
+
     default Flux<String> fluxRecovery(Throwable throwable) {
         return Flux.just("recovered");
     }

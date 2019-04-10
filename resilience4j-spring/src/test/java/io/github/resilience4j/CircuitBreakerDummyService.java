@@ -17,7 +17,7 @@ public class CircuitBreakerDummyService implements TestDummyService {
     }
 
     @Override
-    @CircuitBreaker(name = BACKEND, recovery = "recovery")
+    @CircuitBreaker(name = BACKEND, recovery = "completionStageRecovery")
     public CompletionStage<String> async() {
         return asyncError();
     }

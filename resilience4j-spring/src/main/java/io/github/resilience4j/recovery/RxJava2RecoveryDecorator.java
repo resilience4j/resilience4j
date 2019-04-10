@@ -31,7 +31,7 @@ public class RxJava2RecoveryDecorator implements RecoveryDecorator {
 
     @SuppressWarnings("unchecked")
     @Override
-    public boolean supports(Class target) {
+    public boolean supports(Class<?> target) {
         return RX_SUPPORTED_TYPES.stream().anyMatch(it -> it.isAssignableFrom(target));
     }
 

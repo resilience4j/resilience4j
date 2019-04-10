@@ -17,7 +17,7 @@ public class RateLimiterDummyService implements TestDummyService {
     }
 
     @Override
-    @RateLimiter(name = BACKEND, recovery = "recovery")
+    @RateLimiter(name = BACKEND, recovery = "completionStageRecovery")
     public CompletionStage<String> async() {
         return asyncError();
     }
