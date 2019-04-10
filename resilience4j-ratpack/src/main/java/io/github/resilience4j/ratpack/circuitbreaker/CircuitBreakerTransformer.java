@@ -15,8 +15,8 @@
  */
 package io.github.resilience4j.ratpack.circuitbreaker;
 
+import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
-import io.github.resilience4j.circuitbreaker.CircuitBreakerOpenException;
 import io.github.resilience4j.ratpack.internal.AbstractTransformer;
 import ratpack.exec.Downstream;
 import ratpack.exec.Upstream;
@@ -57,7 +57,7 @@ public class CircuitBreakerTransformer<T> extends AbstractTransformer<T> {
     public Upstream<T> apply(Upstream<? extends T> upstream) throws Exception {
         return down -> {
             long start;
-            if (circuitBreaker.obtainPermission()) {
+            if (circuitBreaker.tryObtainPermission()) {
                 start = System.nanoTime();
                 upstream.connect(new Downstream<T>() {
 
@@ -81,7 +81,7 @@ public class CircuitBreakerTransformer<T> extends AbstractTransformer<T> {
                     }
                 });
             } else {
-                Throwable t = new CircuitBreakerOpenException(String.format("CircuitBreaker '%s' is open", circuitBreaker.getName()));
+                Throwable t = new CallNotPermittedException(circuitBreaker);
                 handleRecovery(down, t);
             }
         };

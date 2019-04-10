@@ -87,11 +87,11 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
      */
     @Override
     public boolean isCallPermitted() {
-        return obtainPermission();
+        return tryObtainPermission();
     }
 
     @Override
-    public boolean obtainPermission() {
+    public boolean tryObtainPermission() {
         boolean callPermitted = stateReference.get().obtainPermission();
         if (!callPermitted) {
             publishCallNotPermittedEvent();
@@ -100,7 +100,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
     }
 
     @Override
-    public void tryObtainPermission() {
+    public void obtainPermission() {
         try {
             stateReference.get().tryObtainPermission();
         } catch(Exception e) {

@@ -94,31 +94,31 @@ public class CircuitBreakerAutoTransitionStateMachineTest {
     public void testAutoTransition() throws InterruptedException {
         // A ring buffer with size 5 is used in closed state
         // Initially the CircuitBreakers are closed
-        this.assertAllGroupACircuitBreakers(CircuitBreaker::obtainPermission, true);
+        this.assertAllGroupACircuitBreakers(CircuitBreaker::tryObtainPermission, true);
         this.assertAllGroupACircuitBreakers(CircuitBreaker::getState, CircuitBreaker.State.CLOSED);
         assertThatAllGroupAMetricsAreReset();
 
         // Call 1 is a failure
         circuitBreakersGroupA.forEach(cb -> cb.onError(0, new RuntimeException())); // Should create a CircuitBreakerOnErrorEvent (1)
-        this.assertAllGroupACircuitBreakers(CircuitBreaker::obtainPermission, true);
+        this.assertAllGroupACircuitBreakers(CircuitBreaker::tryObtainPermission, true);
         this.assertAllGroupACircuitBreakers(CircuitBreaker::getState, CircuitBreaker.State.CLOSED);
         this.assertAllGroupAMetricsEqualTo(-1f, null, 1, null, 1, 0L);
 
         // Call 2 is a failure
         circuitBreakersGroupA.forEach(cb -> cb.onError(0, new RuntimeException())); // Should create a CircuitBreakerOnErrorEvent (2)
-        this.assertAllGroupACircuitBreakers(CircuitBreaker::obtainPermission, true);
+        this.assertAllGroupACircuitBreakers(CircuitBreaker::tryObtainPermission, true);
         this.assertAllGroupACircuitBreakers(CircuitBreaker::getState, CircuitBreaker.State.CLOSED);
         this.assertAllGroupAMetricsEqualTo(-1f, null, 2, null, 2, 0L);
 
         // Call 3 is a failure
         circuitBreakersGroupA.forEach(cb -> cb.onError(0, new RuntimeException())); // Should create a CircuitBreakerOnErrorEvent (3)
-        this.assertAllGroupACircuitBreakers(CircuitBreaker::obtainPermission, true);
+        this.assertAllGroupACircuitBreakers(CircuitBreaker::tryObtainPermission, true);
         this.assertAllGroupACircuitBreakers(CircuitBreaker::getState, CircuitBreaker.State.CLOSED);
         this.assertAllGroupAMetricsEqualTo(-1f, null, 3, null, 3, 0L);
 
         // Call 4 is a success
         circuitBreakersGroupA.forEach(cb -> cb.onSuccess(0)); // Should create a CircuitBreakerOnSuccessEvent (4)
-        this.assertAllGroupACircuitBreakers(CircuitBreaker::obtainPermission, true);
+        this.assertAllGroupACircuitBreakers(CircuitBreaker::tryObtainPermission, true);
         this.assertAllGroupACircuitBreakers(CircuitBreaker::getState, CircuitBreaker.State.CLOSED);
         this.assertAllGroupAMetricsEqualTo(-1f, null, 4, null, 3, 0L);
 
@@ -134,31 +134,31 @@ public class CircuitBreakerAutoTransitionStateMachineTest {
         sleep(50);
 
         // Initially the CircuitBreakers are closed
-        this.assertAllGroupBCircuitBreakers(CircuitBreaker::obtainPermission, true);
+        this.assertAllGroupBCircuitBreakers(CircuitBreaker::tryObtainPermission, true);
         this.assertAllGroupBCircuitBreakers(CircuitBreaker::getState, CircuitBreaker.State.CLOSED);
         assertThatAllGroupBMetricsAreReset();
 
         // Call 1 is a failure
         circuitBreakersGroupB.forEach(cb -> cb.onError(0, new RuntimeException())); // Should create a CircuitBreakerOnErrorEvent (1)
-        this.assertAllGroupBCircuitBreakers(CircuitBreaker::obtainPermission, true);
+        this.assertAllGroupBCircuitBreakers(CircuitBreaker::tryObtainPermission, true);
         this.assertAllGroupBCircuitBreakers(CircuitBreaker::getState, CircuitBreaker.State.CLOSED);
         this.assertAllGroupBMetricsEqualTo(-1f, null, 1, null, 1, 0L);
 
         // Call 2 is a failure
         circuitBreakersGroupB.forEach(cb -> cb.onError(0, new RuntimeException())); // Should create a CircuitBreakerOnErrorEvent (2)
-        this.assertAllGroupBCircuitBreakers(CircuitBreaker::obtainPermission, true);
+        this.assertAllGroupBCircuitBreakers(CircuitBreaker::tryObtainPermission, true);
         this.assertAllGroupBCircuitBreakers(CircuitBreaker::getState, CircuitBreaker.State.CLOSED);
         this.assertAllGroupBMetricsEqualTo(-1f, null, 2, null, 2, 0L);
 
         // Call 3 is a failure
         circuitBreakersGroupB.forEach(cb -> cb.onError(0, new RuntimeException())); // Should create a CircuitBreakerOnErrorEvent (3)
-        this.assertAllGroupBCircuitBreakers(CircuitBreaker::obtainPermission, true);
+        this.assertAllGroupBCircuitBreakers(CircuitBreaker::tryObtainPermission, true);
         this.assertAllGroupBCircuitBreakers(CircuitBreaker::getState, CircuitBreaker.State.CLOSED);
         this.assertAllGroupBMetricsEqualTo(-1f, null, 3, null, 3, 0L);
 
         // Call 4 is a success
         circuitBreakersGroupB.forEach(cb -> cb.onSuccess(0)); // Should create a CircuitBreakerOnSuccessEvent (4)
-        this.assertAllGroupBCircuitBreakers(CircuitBreaker::obtainPermission, true);
+        this.assertAllGroupBCircuitBreakers(CircuitBreaker::tryObtainPermission, true);
         this.assertAllGroupBCircuitBreakers(CircuitBreaker::getState, CircuitBreaker.State.CLOSED);
         this.assertAllGroupBMetricsEqualTo(-1f, null, 4, null, 3, 0L);
 
@@ -175,15 +175,15 @@ public class CircuitBreakerAutoTransitionStateMachineTest {
 
         // The CircuitBreakers in group A are still open, because the wait duration of 2 seconds is not elapsed
         this.assertAllGroupACircuitBreakers(CircuitBreaker::getState, CircuitBreaker.State.OPEN);
-        this.assertAllGroupACircuitBreakers(CircuitBreaker::obtainPermission, false);  // Should create a CircuitBreakerOnCallNotPermittedEvent (7)
-        this.assertAllGroupACircuitBreakers(CircuitBreaker::obtainPermission, false);  // Should create a CircuitBreakerOnCallNotPermittedEvent (8)
+        this.assertAllGroupACircuitBreakers(CircuitBreaker::tryObtainPermission, false);  // Should create a CircuitBreakerOnCallNotPermittedEvent (7)
+        this.assertAllGroupACircuitBreakers(CircuitBreaker::tryObtainPermission, false);  // Should create a CircuitBreakerOnCallNotPermittedEvent (8)
         // Two calls are tried, but not permitted, because the CircuitBreakers are open
         this.assertAllGroupACircuitBreakers((CircuitBreaker cb) -> cb.getMetrics().getNumberOfNotPermittedCalls(), 2L);
 
         // The CircuitBreakers in group B are still open, because the wait duration of 1 second is not elapsed
         this.assertAllGroupBCircuitBreakers(CircuitBreaker::getState, CircuitBreaker.State.OPEN);
-        this.assertAllGroupBCircuitBreakers(CircuitBreaker::obtainPermission, false);  // Should create a CircuitBreakerOnCallNotPermittedEvent (7)
-        this.assertAllGroupBCircuitBreakers(CircuitBreaker::obtainPermission, false);  // Should create a CircuitBreakerOnCallNotPermittedEvent (8)
+        this.assertAllGroupBCircuitBreakers(CircuitBreaker::tryObtainPermission, false);  // Should create a CircuitBreakerOnCallNotPermittedEvent (7)
+        this.assertAllGroupBCircuitBreakers(CircuitBreaker::tryObtainPermission, false);  // Should create a CircuitBreakerOnCallNotPermittedEvent (8)
         // Two calls are tried, but not permitted, because the CircuitBreakers are open
         this.assertAllGroupBCircuitBreakers((CircuitBreaker cb) -> cb.getMetrics().getNumberOfNotPermittedCalls(), 2L);
 
@@ -191,8 +191,8 @@ public class CircuitBreakerAutoTransitionStateMachineTest {
 
         // The CircuitBreakers in group A are still open, because the wait duration of 2 seconds is not elapsed
         this.assertAllGroupACircuitBreakers(CircuitBreaker::getState, CircuitBreaker.State.OPEN);
-        this.assertAllGroupACircuitBreakers(CircuitBreaker::obtainPermission, false);  // Should create a CircuitBreakerOnCallNotPermittedEvent (9)
-        this.assertAllGroupACircuitBreakers(CircuitBreaker::obtainPermission, false);  // Should create a CircuitBreakerOnCallNotPermittedEvent (10)
+        this.assertAllGroupACircuitBreakers(CircuitBreaker::tryObtainPermission, false);  // Should create a CircuitBreakerOnCallNotPermittedEvent (9)
+        this.assertAllGroupACircuitBreakers(CircuitBreaker::tryObtainPermission, false);  // Should create a CircuitBreakerOnCallNotPermittedEvent (10)
         // Two calls are tried, but not permitted, because the CircuitBreakers are open
         this.assertAllGroupACircuitBreakers((CircuitBreaker cb) -> cb.getMetrics().getNumberOfNotPermittedCalls(), 4L);
 

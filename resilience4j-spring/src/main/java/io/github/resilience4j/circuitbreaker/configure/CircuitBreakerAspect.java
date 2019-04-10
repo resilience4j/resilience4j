@@ -15,7 +15,7 @@
  */
 package io.github.resilience4j.circuitbreaker.configure;
 
-import io.github.resilience4j.circuitbreaker.CircuitBreakerOpenException;
+import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.core.lang.Nullable;
@@ -115,25 +115,30 @@ public class CircuitBreakerAspect implements Ordered {
 
 		final CompletableFuture promise = new CompletableFuture<>();
 		long start = System.nanoTime();
-		if (!circuitBreaker.obtainPermission()) {
+		if (!circuitBreaker.tryObtainPermission()) {
 			promise.completeExceptionally(
-					new CircuitBreakerOpenException(
-							String.format("CircuitBreaker '%s' is open", circuitBreaker.getName())));
+					new CallNotPermittedException(circuitBreaker));
 
 		} else {
-			CompletionStage<?> result = (CompletionStage<?>) proceedingJoinPoint.proceed();
-			if (result != null) {
-				result.whenComplete((v, t) -> {
-					long durationInNanos = System.nanoTime() - start;
-					if (t != null) {
-						circuitBreaker.onError(durationInNanos, t);
-						promise.completeExceptionally(t);
+			try {
+				CompletionStage<?> result = (CompletionStage<?>) proceedingJoinPoint.proceed();
+				if (result != null) {
+					result.whenComplete((v, t) -> {
+						long durationInNanos = System.nanoTime() - start;
+						if (t != null) {
+							circuitBreaker.onError(durationInNanos, t);
+							promise.completeExceptionally(t);
 
-					} else {
-						circuitBreaker.onSuccess(durationInNanos);
-						promise.complete(v);
-					}
-				});
+						} else {
+							circuitBreaker.onSuccess(durationInNanos);
+							promise.complete(v);
+						}
+					});
+				}
+			}catch (Exception exception){
+				long durationInNanos = System.nanoTime() - start;
+				circuitBreaker.onError(durationInNanos, exception);
+				promise.completeExceptionally(exception);
 			}
 		}
 		return promise;

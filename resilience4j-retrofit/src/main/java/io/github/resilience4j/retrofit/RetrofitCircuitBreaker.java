@@ -20,7 +20,6 @@ package io.github.resilience4j.retrofit;
 
 import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
-import io.github.resilience4j.circuitbreaker.CircuitBreakerOpenException;
 import io.github.resilience4j.core.StopWatch;
 import io.github.resilience4j.retrofit.internal.DecoratedCall;
 import retrofit2.Call;
@@ -55,8 +54,8 @@ public interface RetrofitCircuitBreaker {
             @Override
             public void enqueue(final Callback<T> callback) {
                 try {
-                    circuitBreaker.tryObtainPermission();
-                } catch (CircuitBreakerOpenException | CallNotPermittedException exception) {
+                    circuitBreaker.obtainPermission();
+                } catch (CallNotPermittedException exception) {
                     callback.onFailure(call, exception);
                     return;
                 }
@@ -84,7 +83,7 @@ public interface RetrofitCircuitBreaker {
 
             @Override
             public Response<T> execute() throws IOException {
-                circuitBreaker.tryObtainPermission();
+                circuitBreaker.obtainPermission();
                 final StopWatch stopWatch = StopWatch.start(circuitBreaker.getName());
                 try {
                     final Response<T> response = call.execute();

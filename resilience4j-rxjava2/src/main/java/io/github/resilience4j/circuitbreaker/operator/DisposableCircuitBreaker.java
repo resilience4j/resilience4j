@@ -1,8 +1,8 @@
 package io.github.resilience4j.circuitbreaker.operator;
 
 import io.github.resilience4j.adapter.Permit;
+import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
-import io.github.resilience4j.circuitbreaker.CircuitBreakerOpenException;
 import io.github.resilience4j.core.StopWatch;
 import io.github.resilience4j.core.lang.Nullable;
 import io.reactivex.disposables.Disposable;
@@ -122,7 +122,7 @@ class DisposableCircuitBreaker<T> extends AtomicReference<Disposable> implements
     private boolean acquireCallPermit() {
         boolean callPermitted = false;
         if (permitted.compareAndSet(Permit.PENDING, Permit.ACQUIRED)) {
-            callPermitted = circuitBreaker.obtainPermission();
+            callPermitted = circuitBreaker.tryObtainPermission();
             if (!callPermitted) {
                 permitted.set(Permit.REJECTED);
             } else {
@@ -137,7 +137,7 @@ class DisposableCircuitBreaker<T> extends AtomicReference<Disposable> implements
     }
 
     private Exception circuitBreakerOpenException() {
-        return new CircuitBreakerOpenException(String.format("CircuitBreaker '%s' is open", circuitBreaker.getName()));
+        return new CallNotPermittedException(circuitBreaker);
     }
 
     private void markFailure(Throwable e) {

@@ -75,7 +75,7 @@ public class StateTransitionMetricsTest {
 
         await().atMost(1500, TimeUnit.MILLISECONDS)
                 .until(() -> {
-                    circuitBreaker.obtainPermission();
+                    circuitBreaker.tryObtainPermission();
                     return circuitBreaker.getState().equals(CircuitBreaker.State.HALF_OPEN);
                 });
 

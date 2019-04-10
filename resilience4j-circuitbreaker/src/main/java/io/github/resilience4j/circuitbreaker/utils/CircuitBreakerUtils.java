@@ -20,7 +20,6 @@ package io.github.resilience4j.circuitbreaker.utils;
 
 import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
-import io.github.resilience4j.circuitbreaker.CircuitBreakerOpenException;
 
 @Deprecated
 public final class CircuitBreakerUtils {
@@ -28,12 +27,8 @@ public final class CircuitBreakerUtils {
     private CircuitBreakerUtils(){}
 
     public static void isCallPermitted(CircuitBreaker circuitBreaker) {
-        if(!circuitBreaker.obtainPermission()) {
-            if (circuitBreaker.getState().equals(CircuitBreaker.State.OPEN)) {
-                throw new CircuitBreakerOpenException(circuitBreaker);
-            } else {
-                throw new CallNotPermittedException(circuitBreaker);
-            }
+        if(!circuitBreaker.tryObtainPermission()) {
+            throw new CallNotPermittedException(circuitBreaker);
         }
     }
 }

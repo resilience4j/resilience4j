@@ -49,7 +49,11 @@ final class HalfOpenState extends CircuitBreakerState {
      */
     @Override
     boolean obtainPermission() {
-        return testRequestCounter.getAndDecrement() > 0;
+        if (testRequestCounter.getAndDecrement() > 0) {
+            return true;
+        }
+        circuitBreakerMetrics.onCallNotPermitted();
+        return false;
     }
 
     @Override

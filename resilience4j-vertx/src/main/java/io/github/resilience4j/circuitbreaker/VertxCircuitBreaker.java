@@ -51,10 +51,8 @@ public interface VertxCircuitBreaker {
         return () -> {
             final Future<T> future = Future.future();
 
-            if (!circuitBreaker.obtainPermission()) {
-                future.fail(
-                        new CircuitBreakerOpenException(
-                                String.format("CircuitBreaker '%s' is open", circuitBreaker.getName())));
+            if (!circuitBreaker.tryObtainPermission()) {
+                future.fail(new CallNotPermittedException(circuitBreaker));
 
             } else {
                 long start = System.nanoTime();

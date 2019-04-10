@@ -111,7 +111,7 @@ public class Resilience4jFeignCircuitBreakerTest {
         assertThat(exceptionThrown)
                 .describedAs("CircuitBreakerOpenException thrown")
                 .isTrue();
-        assertThat(circuitBreaker.obtainPermission())
+        assertThat(circuitBreaker.tryObtainPermission())
                 .describedAs("CircuitBreaker Closed")
                 .isFalse();
     }
@@ -139,7 +139,7 @@ public class Resilience4jFeignCircuitBreakerTest {
         assertThat(exceptionThrown)
                 .describedAs("CircuitBreakerOpenException thrown")
                 .isFalse();
-        assertThat(circuitBreaker.obtainPermission())
+        assertThat(circuitBreaker.tryObtainPermission())
                 .describedAs("CircuitBreaker Closed")
                 .isTrue();
     }
