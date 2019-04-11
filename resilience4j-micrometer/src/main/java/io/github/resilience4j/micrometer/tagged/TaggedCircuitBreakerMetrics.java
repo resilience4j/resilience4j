@@ -21,6 +21,7 @@ import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.micrometer.CircuitBreakerMetrics;
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Timer;
 import io.micrometer.core.instrument.binder.MeterBinder;
 
 import static java.util.Objects.requireNonNull;
@@ -86,6 +87,16 @@ public class TaggedCircuitBreakerMetrics implements MeterBinder {
             Gauge.builder(names.getMaxBufferedCallsMetricName(), circuitBreaker, (cb) -> cb.getMetrics().getMaxNumberOfBufferedCalls())
                     .tag(TagNames.NAME, circuitBreaker.getName())
                     .register(registry);
+
+            Timer callTimer = Timer.builder(names.responseTimesMetricName)
+                    .tag(TagNames.NAME, circuitBreaker.getName())
+                    .publishPercentiles(0.80, 0.90, 0.95, 0.98)
+                    .publishPercentileHistogram()
+                    .register(registry);
+
+            circuitBreaker.getEventPublisher()
+                    .onSuccess(event -> callTimer.record(event.getElapsedDuration()))
+                    .onError(event -> callTimer.record(event.getElapsedDuration()));
         }
     }
 
@@ -96,6 +107,7 @@ public class TaggedCircuitBreakerMetrics implements MeterBinder {
         public static final String DEFAULT_CIRCUIT_BREAKER_STATE_METRIC_NAME = "resilience4j_circuitbreaker_state";
         public static final String DEFAULT_CIRCUIT_BREAKER_BUFFERED_CALLS = "resilience4j_circuitbreaker_buffered_calls";
         public static final String DEFAULT_CIRCUIT_BREAKER_MAX_BUFFERED_CALLS = "resilience4j_circuitbreaker_max_buffered_calls";
+        public static final String DEFAULT_CIRCUIT_BREAKER_RESPONSE_TIMES = "resilience4j_circuitbreaker_respone_times";
 
         /**
          * Returns a builder for creating custom metric names.
@@ -114,6 +126,7 @@ public class TaggedCircuitBreakerMetrics implements MeterBinder {
         private String stateMetricName = DEFAULT_CIRCUIT_BREAKER_STATE_METRIC_NAME;
         private String bufferedCallsMetricName = DEFAULT_CIRCUIT_BREAKER_BUFFERED_CALLS;
         private String maxBufferedCallsMetricName = DEFAULT_CIRCUIT_BREAKER_MAX_BUFFERED_CALLS;
+        private String responseTimesMetricName = DEFAULT_CIRCUIT_BREAKER_RESPONSE_TIMES;
 
         private MetricNames() {}
 
@@ -135,6 +148,11 @@ public class TaggedCircuitBreakerMetrics implements MeterBinder {
         /** Returns the metric name for state, defaults to {@value DEFAULT_CIRCUIT_BREAKER_STATE_METRIC_NAME}. */
         public String getStateMetricName() {
             return stateMetricName;
+        }
+
+        /** Returns the metric name for state, defaults to {@value DEFAULT_CIRCUIT_BREAKER_RESPONSE_TIMES}. */
+        public String getResponseTimesMetricName() {
+            return responseTimesMetricName;
         }
 
         /** Helps building custom instance of {@link MetricNames}. */
@@ -162,6 +180,12 @@ public class TaggedCircuitBreakerMetrics implements MeterBinder {
             /** Overrides the default metric name {@value MetricNames#DEFAULT_CIRCUIT_BREAKER_MAX_BUFFERED_CALLS} with a given one. */
             public Builder maxBufferedCallsMetricName(String maxBufferedCallsMetricName) {
                 metricNames.maxBufferedCallsMetricName = requireNonNull(maxBufferedCallsMetricName);
+                return this;
+            }
+
+            /** Overrides the default metric name {@value MetricNames#DEFAULT_CIRCUIT_BREAKER_RESPONSE_TIMES} with a given one. */
+            public Builder responseTimesMetricName(String responseTimesMetricName) {
+                metricNames.responseTimesMetricName = requireNonNull(responseTimesMetricName);
                 return this;
             }
 
