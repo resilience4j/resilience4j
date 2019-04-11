@@ -57,7 +57,6 @@ ext {
             // Spring Boot addon
             spring_4_core: "org.springframework:spring-core:${spring4Version}",
             spring_4_context: "org.springframework:spring-context:${spring4Version}",
-            spring_reactor: "io.projectreactor:reactor-core:${reactorVersion}",
             spring_boot_aop: "org.springframework.boot:spring-boot-starter-aop:${springBootVersion}",
             spring_boot_actuator: "org.springframework.boot:spring-boot-starter-actuator:${springBootVersion}",
             spring_boot_web: "org.springframework.boot:spring-boot-starter-web:${springBootVersion}",
