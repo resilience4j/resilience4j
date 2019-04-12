@@ -15,12 +15,13 @@
  */
 package io.github.resilience4j.ratelimiter.configure;
 
+import io.github.resilience4j.core.lang.Nullable;
 import io.github.resilience4j.ratelimiter.RateLimiterConfig;
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
 import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
+import io.github.resilience4j.utils.AnnotationExtractor;
 import io.github.resilience4j.recovery.RecoveryDecorators;
 import io.github.resilience4j.recovery.RecoveryMethod;
-import io.github.resilience4j.utils.AnnotationExtractor;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -49,7 +50,7 @@ public class RateLimiterAspect implements Ordered {
 	private static final Logger logger = LoggerFactory.getLogger(RateLimiterAspect.class);
 	private final RateLimiterRegistry rateLimiterRegistry;
 	private final RateLimiterConfigurationProperties properties;
-	private final List<RateLimiterAspectExt> rateLimiterAspectExtList;
+	private final @Nullable List<RateLimiterAspectExt> rateLimiterAspectExtList;
 	private final RecoveryDecorators recoveryDecorators;
 
 	public RateLimiterAspect(RateLimiterRegistry rateLimiterRegistry, RateLimiterConfigurationProperties properties, @Autowired(required = false) List<RateLimiterAspectExt> rateLimiterAspectExtList, RecoveryDecorators recoveryDecorators) {
@@ -70,7 +71,7 @@ public class RateLimiterAspect implements Ordered {
 	}
 
 	@Around(value = "matchAnnotatedClassOrMethod(limitedService)", argNames = "proceedingJoinPoint, limitedService")
-	public Object rateLimiterAroundAdvice(ProceedingJoinPoint proceedingJoinPoint, RateLimiter limitedService) throws Throwable {
+	public Object rateLimiterAroundAdvice(ProceedingJoinPoint proceedingJoinPoint, @Nullable RateLimiter limitedService) throws Throwable {
 		RateLimiter targetService = limitedService;
 		Method method = ((MethodSignature) proceedingJoinPoint.getSignature()).getMethod();
 		String methodName = method.getDeclaringClass().getName() + "#" + method.getName();
@@ -117,6 +118,7 @@ public class RateLimiterAspect implements Ordered {
 		return rateLimiter;
 	}
 
+	@Nullable
 	private RateLimiter getRateLimiterAnnotation(ProceedingJoinPoint proceedingJoinPoint) {
 		return AnnotationExtractor.extract(proceedingJoinPoint.getTarget().getClass(), RateLimiter.class);
 	}
@@ -128,8 +130,7 @@ public class RateLimiterAspect implements Ordered {
 		if (logger.isDebugEnabled()) {
 			logger.debug("Rate limiter invocation for method {} ", methodName);
 		}
-
-        return rateLimiter.executeCheckedSupplier(proceedingJoinPoint::proceed);
+		return rateLimiter.executeCheckedSupplier(proceedingJoinPoint::proceed);
 	}
 
 	/**

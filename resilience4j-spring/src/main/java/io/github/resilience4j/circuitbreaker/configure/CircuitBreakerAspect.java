@@ -19,9 +19,9 @@ import io.github.resilience4j.circuitbreaker.CircuitBreakerOpenException;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.core.lang.Nullable;
+import io.github.resilience4j.utils.AnnotationExtractor;
 import io.github.resilience4j.recovery.RecoveryDecorators;
 import io.github.resilience4j.recovery.RecoveryMethod;
-import io.github.resilience4j.utils.AnnotationExtractor;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -50,7 +50,7 @@ public class CircuitBreakerAspect implements Ordered {
 
 	private final CircuitBreakerConfigurationProperties circuitBreakerProperties;
 	private final CircuitBreakerRegistry circuitBreakerRegistry;
-	private final List<CircuitBreakerAspectExt> circuitBreakerAspectExtList;
+	private final @Nullable List<CircuitBreakerAspectExt> circuitBreakerAspectExtList;
 	private final RecoveryDecorators recoveryDecorators;
 
 	public CircuitBreakerAspect(CircuitBreakerConfigurationProperties backendMonitorPropertiesRegistry, CircuitBreakerRegistry circuitBreakerRegistry, @Autowired(required = false) List<CircuitBreakerAspectExt> circuitBreakerAspectExtList, RecoveryDecorators recoveryDecorators) {
@@ -151,7 +151,6 @@ public class CircuitBreakerAspect implements Ordered {
 				});
 			}
 		}
-
 		return promise;
 	}
 

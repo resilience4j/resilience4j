@@ -15,10 +15,13 @@
  */
 package io.github.resilience4j.retry.configure;
 
+import io.github.resilience4j.core.lang.Nullable;
 import io.github.resilience4j.recovery.RecoveryDecorators;
 import io.github.resilience4j.recovery.RecoveryMethod;
 import io.github.resilience4j.retry.RetryRegistry;
 import io.github.resilience4j.retry.annotation.Retry;
+import io.github.resilience4j.utils.AnnotationExtractor;
+import io.vavr.CheckedFunction0;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -46,7 +49,7 @@ public class RetryAspect implements Ordered {
 	private final static ScheduledExecutorService retryExecutorService = Executors.newScheduledThreadPool(Runtime.getRuntime().availableProcessors());
 	private final RetryConfigurationProperties retryConfigurationProperties;
 	private final RetryRegistry retryRegistry;
-	private final List<RetryAspectExt> retryAspectExtList;
+	private final @Nullable List<RetryAspectExt> retryAspectExtList;
 	private final RecoveryDecorators recoveryDecorators;
 
 	/**
@@ -68,7 +71,7 @@ public class RetryAspect implements Ordered {
 	}
 
 	@Around(value = "matchAnnotatedClassOrMethod(backendMonitored)", argNames = "proceedingJoinPoint, backendMonitored")
-	public Object retryAroundAdvice(ProceedingJoinPoint proceedingJoinPoint, Retry backendMonitored) throws Throwable {
+	public Object retryAroundAdvice(ProceedingJoinPoint proceedingJoinPoint, @Nullable Retry backendMonitored) throws Throwable {
 		Method method = ((MethodSignature) proceedingJoinPoint.getSignature()).getMethod();
 		String methodName = method.getDeclaringClass().getName() + "#" + method.getName();
 		if (backendMonitored == null) {
@@ -122,23 +125,9 @@ public class RetryAspect implements Ordered {
 	 * @param proceedingJoinPoint the aspect joint point
 	 * @return the retry annotation
 	 */
+	@Nullable
 	private Retry getBackendMonitoredAnnotation(ProceedingJoinPoint proceedingJoinPoint) {
-		if (logger.isDebugEnabled()) {
-			logger.debug("circuitBreaker parameter is null");
-		}
-		Retry retry = null;
-		Class<?> targetClass = proceedingJoinPoint.getTarget().getClass();
-		if (targetClass.isAnnotationPresent(Retry.class)) {
-			retry = targetClass.getAnnotation(Retry.class);
-			if (retry == null && logger.isDebugEnabled()) {
-				logger.debug("TargetClass has no annotation 'Retry'");
-				retry = targetClass.getDeclaredAnnotation(Retry.class);
-				if (retry == null && logger.isDebugEnabled()) {
-					logger.debug("TargetClass has no declared annotation 'Retry'");
-				}
-			}
-		}
-		return retry;
+		return AnnotationExtractor.extract(proceedingJoinPoint.getTarget().getClass(), Retry.class);
 	}
 
 	/**
@@ -148,12 +137,12 @@ public class RetryAspect implements Ordered {
 	 * @return the result object if any
 	 * @throws Throwable
 	 */
-	@SuppressWarnings("unchecked")
 	private Object handleDefaultJoinPoint(ProceedingJoinPoint proceedingJoinPoint, io.github.resilience4j.retry.Retry retry, String methodName) throws Throwable {
 		if (logger.isDebugEnabled()) {
 			logger.debug("retry invocation of method {} ", methodName);
 		}
-        return io.github.resilience4j.retry.Retry.decorateCheckedSupplier(retry, proceedingJoinPoint::proceed).apply();
+		final CheckedFunction0<Object> objectCheckedFunction0 = io.github.resilience4j.retry.Retry.decorateCheckedSupplier(retry, proceedingJoinPoint::proceed);
+		return objectCheckedFunction0.apply();
 	}
 
 	/**
