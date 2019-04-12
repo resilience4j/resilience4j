@@ -5,12 +5,23 @@ jdk:
 - oraclejdk11
 before_install:
 - chmod +x gradlew
-script:
-- "./gradlew clean check"
-- "./gradlew sonarqube"
-after_success:
-- test $TRAVIS_BRANCH = "master" && ./gradlew artifactoryPublish -PbintrayUsername="${BINTRAY_USER}" -PbintrayApiKey="${BINTRAY_KEY}"
-- test $TRAVIS_BRANCH = "master" && ./gradlew asciidoctor
+stages:
+  - test
+  - quality
+  - name: publish
+    if: branch = master
+  - name: documentation
+    if: branch = master
+jobs:
+  include:
+    - stage: test
+      script: ./gradlew clean check
+    - stage: quality
+      script: ./gradlew sonarqube
+    - stage: publish
+      script: ./gradlew artifactoryPublish -PbintrayUsername="${BINTRAY_USER}" -PbintrayApiKey="${BINTRAY_KEY}"
+    - stage: documentation
+      script: ./gradlew asciidoctor
 before_cache:
 - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
 - rm -fr $HOME/.gradle/caches/*/plugin-resolution/
