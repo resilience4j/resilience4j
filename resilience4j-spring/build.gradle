@@ -1,7 +1,7 @@
 dependencies {
     compileOnly(libraries.aspectj)
     compileOnly(libraries.hibernate_validator)
-    compileOnly(libraries.spring_4_core, libraries.spring_4_context)
+    compileOnly(libraries.spring_core, libraries.spring_context)
     compile project(':resilience4j-annotations')
     compile project(':resilience4j-consumer')
     compile project(':resilience4j-circuitbreaker')
