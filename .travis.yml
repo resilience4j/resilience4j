@@ -8,18 +8,18 @@ before_install:
 stages:
   - test
   - quality
-  - name: publish
-    if: branch = master
-  - name: documentation
-    if: branch = master
+  - publish
+  - documentation
 jobs:
   include:
     - stage: quality
       script: ./gradlew sonarqube
     - stage: publish
       script: ./gradlew artifactoryPublish -PbintrayUsername="${BINTRAY_USER}" -PbintrayApiKey="${BINTRAY_KEY}"
+      if: branch = master
     - stage: documentation
       script: ./gradlew asciidoctor
+      if: branch = master
 before_cache:
 - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
 - rm -fr $HOME/.gradle/caches/*/plugin-resolution/
