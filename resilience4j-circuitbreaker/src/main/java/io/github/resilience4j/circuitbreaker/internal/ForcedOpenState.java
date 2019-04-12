@@ -46,9 +46,8 @@ final class ForcedOpenState extends CircuitBreakerState {
 
     @Override
     void tryObtainPermission() {
-        if(!obtainPermission()){
-            throw new CallNotPermittedException(stateMachine);
-        }
+        circuitBreakerMetrics.onCallNotPermitted();
+        throw new CallNotPermittedException(stateMachine);
     }
 
     /**
