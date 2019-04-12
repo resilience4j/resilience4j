@@ -99,6 +99,10 @@ public class RecoveryMethod {
     }
 
     private Object invoke(Method recovery, Throwable throwable) throws IllegalAccessException, InvocationTargetException {
+        if (!recovery.isAccessible()) {
+            ReflectionUtils.makeAccessible(recovery);
+        }
+
         if (args.length != 0) {
             Object[] newArgs = Arrays.copyOf(args, args.length + 1);
             newArgs[args.length] = throwable;
@@ -113,9 +117,6 @@ public class RecoveryMethod {
         Map<Class<?>, Method> methods = new HashMap<>();
 
         ReflectionUtils.doWithMethods(targetClass, method -> {
-            if (!method.isAccessible()) {
-                ReflectionUtils.makeAccessible(method);
-            }
             Class<?>[] recoveryParams = method.getParameterTypes();
             methods.put(recoveryParams[recoveryParams.length - 1], method);
         }, method -> {
