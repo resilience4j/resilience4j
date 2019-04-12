@@ -74,6 +74,9 @@ public class RetryAspect implements Ordered {
 		if (backendMonitored == null) {
 			backendMonitored = getBackendMonitoredAnnotation(proceedingJoinPoint);
 		}
+		if(backendMonitored == null) { //because annotations wasn't found
+			return proceedingJoinPoint.proceed();
+		}
 		String backend = backendMonitored.name();
 		io.github.resilience4j.retry.Retry retry = getOrCreateRetry(methodName, backend);
 		Class<?> returnType = method.getReturnType();
@@ -165,7 +168,6 @@ public class RetryAspect implements Ordered {
 		if (logger.isDebugEnabled()) {
 			logger.debug("async retry invocation of method {} ", methodName);
 		}
-
 		return io.github.resilience4j.retry.Retry.decorateCompletionStage(retry, retryExecutorService, () -> {
 			try {
 				return (CompletionStage<Object>) proceedingJoinPoint.proceed();
@@ -174,6 +176,7 @@ public class RetryAspect implements Ordered {
 			}
 		}).get();
 	}
+
 
 	@Override
 	public int getOrder() {

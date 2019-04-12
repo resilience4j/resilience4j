@@ -3,7 +3,7 @@
 :hardbreaks:
 :icons:
 
-image:https://travis-ci.org/resilience4j/resilience4j.svg?branch=master["Build Status", link="https://travis-ci.org/resilience4j/resilience4j"] image:https://coveralls.io/repos/github/resilience4j/resilience4j/badge.svg?branch=master&k=1["Coverage Status", link="https://coveralls.io/github/resilience4j/resilience4j?branch=master"] image:https://api.codacy.com/project/badge/Grade/f0295918d02b45d0928d5adc95f6eba1["Codacy code quality", link="https://www.codacy.com/app/robwin/resilience4j?utm_source=github.com&utm_medium=referral&utm_content=resilience4j/resilience4j&utm_campaign=Badge_Grade"] image:https://api.bintray.com/packages/resilience4j/Maven/resilience4j/images/download.svg[link="https://bintray.com/resilience4j/Maven/resilience4j/_latestVersion"] image:http://img.shields.io/badge/license-ASF2-blue.svg["Apache License 2", link="http://www.apache.org/licenses/LICENSE-2.0.txt"]
+image:https://travis-ci.org/resilience4j/resilience4j.svg?branch=master["Build Status", link="https://travis-ci.org/resilience4j/resilience4j"] image:https://sonarcloud.io/api/project_badges/measure?project=resilience4j_resilience4j&metric=alert_status["Quality Gate", link="https://sonarcloud.io/dashboard?id=resilience4j_resilience4j"] image:https://sonarcloud.io/api/project_badges/measure?project=resilience4j_resilience4j&metric=coverage["Coverage", link="https://sonarcloud.io/dashboard?id=resilience4j_resilience4j"] image:https://api.bintray.com/packages/resilience4j/Maven/resilience4j/images/download.svg[link="https://bintray.com/resilience4j/Maven/resilience4j/_latestVersion"] image:http://img.shields.io/badge/license-ASF2-blue.svg["Apache License 2", link="http://www.apache.org/licenses/LICENSE-2.0.txt"]
 
 == Introduction
 
