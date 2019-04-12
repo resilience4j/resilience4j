@@ -6,6 +6,7 @@ jdk:
 before_install:
 - chmod +x gradlew
 stages:
+  - test
   - quality
   - name: publish
     if: branch = master
@@ -13,6 +14,7 @@ stages:
     if: branch = master
 jobs:
   include:
+    - stage: test
     - stage: quality
       script: ./gradlew sonarqube
     - stage: publish
