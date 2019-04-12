@@ -1,18 +1,15 @@
 package io.github.resilience4j.circuitbreaker.operator;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-
-import java.io.IOException;
-
-import io.github.resilience4j.circuitbreaker.CircuitBreakerOpenException;
+import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import io.reactivex.Flowable;
 import org.junit.Test;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
+
+import java.io.IOException;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
 
 /**
  * Unit test for {@link CircuitBreakerSubscriber}.
@@ -50,7 +47,7 @@ public class CircuitBreakerSubscriberTest extends CircuitBreakerAssertions {
             .lift(CircuitBreakerOperator.of(circuitBreaker))
             .test()
             .assertSubscribed()
-            .assertError(CircuitBreakerOpenException.class)
+            .assertError(CallNotPermittedException.class)
             .assertNotComplete();
 
         assertNoRegisteredCall();

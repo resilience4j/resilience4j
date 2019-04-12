@@ -1,6 +1,7 @@
 package io.github.resilience4j.circuitbreaker.operator;
 
 import io.github.resilience4j.adapter.Permit;
+import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.core.StopWatch;
 import io.github.resilience4j.core.lang.Nullable;
@@ -8,7 +9,6 @@ import io.reactivex.internal.subscriptions.SubscriptionHelper;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
 
-import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static io.reactivex.internal.subscriptions.SubscriptionHelper.CANCELLED;
@@ -39,7 +39,7 @@ final class CircuitBreakerSubscriber<T> extends AtomicReference<Subscription> im
             } else {
                 cancel();
                 childSubscriber.onSubscribe(this);
-                childSubscriber.onError(new RejectedExecutionException(circuitBreaker.getName()));
+                childSubscriber.onError(new CallNotPermittedException(circuitBreaker.getName()));
             }
         }
     }

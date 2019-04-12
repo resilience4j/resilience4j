@@ -18,31 +18,25 @@
  */
 package io.github.resilience4j.bulkhead.internal;
 
-import static com.jayway.awaitility.Awaitility.await;
-import static io.github.resilience4j.bulkhead.BulkheadConfig.DEFAULT_MAX_CONCURRENT_CALLS;
-import static io.github.resilience4j.bulkhead.event.BulkheadEvent.Type.CALL_FINISHED;
-import static io.github.resilience4j.bulkhead.event.BulkheadEvent.Type.CALL_PERMITTED;
-import static io.github.resilience4j.bulkhead.event.BulkheadEvent.Type.CALL_REJECTED;
-import static java.lang.Thread.State.BLOCKED;
-import static java.lang.Thread.State.RUNNABLE;
-import static java.lang.Thread.State.TERMINATED;
-import static java.lang.Thread.State.TIMED_WAITING;
-import static java.lang.Thread.State.WAITING;
-import static java.util.concurrent.TimeUnit.SECONDS;
-import static org.assertj.core.api.Assertions.assertThat;
-
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.Supplier;
-
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
-
 import io.github.resilience4j.adapter.RxJava2Adapter;
 import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.bulkhead.BulkheadConfig;
 import io.github.resilience4j.bulkhead.event.BulkheadEvent;
 import io.reactivex.subscribers.TestSubscriber;
+import org.junit.Before;
+import org.junit.Ignore;
+import org.junit.Test;
+
+import java.util.concurrent.Callable;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Supplier;
+
+import static com.jayway.awaitility.Awaitility.await;
+import static io.github.resilience4j.bulkhead.BulkheadConfig.DEFAULT_MAX_CONCURRENT_CALLS;
+import static io.github.resilience4j.bulkhead.event.BulkheadEvent.Type.*;
+import static java.lang.Thread.State.*;
+import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class SemaphoreBulkheadTest {
 
@@ -71,12 +65,12 @@ public class SemaphoreBulkheadTest {
 	@Test
 	public void testBulkhead() throws InterruptedException {
 
-		bulkhead.isCallPermitted();
-		bulkhead.isCallPermitted();
+		bulkhead.obtainPermission();
+		bulkhead.obtainPermission();
 
 		assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(0);
 
-		bulkhead.isCallPermitted();
+		bulkhead.obtainPermission();
 		bulkhead.onComplete();
 
 		assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
@@ -85,7 +79,7 @@ public class SemaphoreBulkheadTest {
 
 		assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(2);
 
-		bulkhead.isCallPermitted();
+		bulkhead.obtainPermission();
 
 		testSubscriber.assertValueCount(6)
 				.assertValues(CALL_PERMITTED, CALL_PERMITTED, CALL_REJECTED, CALL_FINISHED, CALL_FINISHED, CALL_PERMITTED);
@@ -155,7 +149,7 @@ public class SemaphoreBulkheadTest {
 				.build();
 
 		SemaphoreBulkhead bulkhead = new SemaphoreBulkhead("test", config);
-		bulkhead.isCallPermitted(); // consume the permit
+		bulkhead.obtainPermission(); // consume the permit
 
 		// when
 		boolean entered = bulkhead.tryEnterBulkhead();
@@ -175,7 +169,7 @@ public class SemaphoreBulkheadTest {
 				.build();
 
 		final SemaphoreBulkhead bulkhead = new SemaphoreBulkhead("test", config);
-		bulkhead.isCallPermitted(); // consume the permit
+		bulkhead.obtainPermission(); // consume the permit
 		AtomicBoolean entered = new AtomicBoolean(true);
 
 		Thread t = new Thread(
@@ -274,7 +268,7 @@ public class SemaphoreBulkheadTest {
 		AtomicBoolean bulkheadThreadTrigger = new AtomicBoolean(true);
 		assertThat(bulkhead.getBulkheadConfig().getMaxConcurrentCalls()).isEqualTo(1);
 		Thread bulkheadThread = new Thread(() -> {
-			bulkhead.isCallPermitted();
+			bulkhead.obtainPermission();
 			while (bulkheadThreadTrigger.get()) {
 				Thread.yield();
 			}
@@ -339,12 +333,12 @@ public class SemaphoreBulkheadTest {
 				.build();
 		SemaphoreBulkhead bulkhead = new SemaphoreBulkhead("test", originalConfig);
 		assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
-		bulkhead.isCallPermitted();
+		bulkhead.obtainPermission();
 		assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(0);
 
 		assertThat(bulkhead.getBulkheadConfig().getMaxConcurrentCalls()).isEqualTo(1);
 		Thread bulkheadThread = new Thread(() -> {
-			bulkhead.isCallPermitted();
+			bulkhead.obtainPermission();
 			bulkhead.onComplete();
 		});
 		bulkheadThread.setDaemon(true);
@@ -375,19 +369,20 @@ public class SemaphoreBulkheadTest {
 				.build();
 		SemaphoreBulkhead bulkhead = new SemaphoreBulkhead("test", originalConfig);
 		assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
-		bulkhead.isCallPermitted();
+		bulkhead.obtainPermission();
 		assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(0);
 
 		assertThat(bulkhead.getBulkheadConfig().getMaxConcurrentCalls()).isEqualTo(1);
 		Thread bulkheadThread = new Thread(() -> {
-			bulkhead.isCallPermitted();
+			bulkhead.obtainPermission();
 			bulkhead.onComplete();
 		});
 		bulkheadThread.setDaemon(true);
 		bulkheadThread.start();
 
+		Callable<Boolean> booleanCallable = () -> bulkheadThread.getState().equals(TIMED_WAITING);
 		await().atMost(1, SECONDS)
-				.until(() -> bulkheadThread.getState().equals(TIMED_WAITING));
+				.until(booleanCallable);
 		assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(0);
 
 		BulkheadConfig newConfig = BulkheadConfig.custom()
@@ -400,7 +395,7 @@ public class SemaphoreBulkheadTest {
 
 		// previously blocked thread is still waiting
 		await().atMost(1, SECONDS)
-				.until(() -> bulkheadThread.getState().equals(TIMED_WAITING));
+				.until(booleanCallable);
 	}
 
 	@SuppressWarnings("Duplicates")
@@ -417,7 +412,7 @@ public class SemaphoreBulkheadTest {
 		AtomicBoolean bulkheadThreadTrigger = new AtomicBoolean(true);
 		assertThat(bulkhead.getBulkheadConfig().getMaxConcurrentCalls()).isEqualTo(3);
 		Thread bulkheadThread = new Thread(() -> {
-			bulkhead.isCallPermitted();
+			bulkhead.obtainPermission();
 			while (bulkheadThreadTrigger.get()) {
 				Thread.yield();
 			}
