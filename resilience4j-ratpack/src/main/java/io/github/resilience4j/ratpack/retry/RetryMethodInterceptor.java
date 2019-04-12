@@ -49,9 +49,6 @@ public class RetryMethodInterceptor implements MethodInterceptor {
         }
         io.github.resilience4j.retry.Retry retry = registry.retry(annotation.name());
         RecoveryFunction<?> recoveryFunction = annotation.recovery().newInstance();
-        if (registry == null) {
-            registry = RetryRegistry.ofDefaults();
-        }
         Class<?> returnType = invocation.getMethod().getReturnType();
         if (Promise.class.isAssignableFrom(returnType)) {
             Promise<?> result = (Promise<?>) proceed(invocation, retry, recoveryFunction);
