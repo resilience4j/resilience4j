@@ -15,12 +15,11 @@
  */
 package io.github.resilience4j.circuitbreaker.configure;
 
-import java.lang.reflect.Method;
-import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionStage;
-
+import io.github.resilience4j.circuitbreaker.CircuitBreakerOpenException;
+import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.core.lang.Nullable;
+import io.github.resilience4j.utils.AnnotationExtractor;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -31,10 +30,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.Ordered;
 
-import io.github.resilience4j.circuitbreaker.CircuitBreakerOpenException;
-import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
-import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
-import io.github.resilience4j.utils.AnnotationExtractor;
+import java.lang.reflect.Method;
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
 
 /**
  * This Spring AOP aspect intercepts all methods which are annotated with a {@link CircuitBreaker} annotation.
@@ -48,7 +47,7 @@ public class CircuitBreakerAspect implements Ordered {
 
 	private final CircuitBreakerConfigurationProperties circuitBreakerProperties;
 	private final CircuitBreakerRegistry circuitBreakerRegistry;
-	private final List<CircuitBreakerAspectExt> circuitBreakerAspectExtList;
+	private final @Nullable List<CircuitBreakerAspectExt> circuitBreakerAspectExtList;
 
 	public CircuitBreakerAspect(CircuitBreakerConfigurationProperties backendMonitorPropertiesRegistry, CircuitBreakerRegistry circuitBreakerRegistry, @Autowired(required = false) List<CircuitBreakerAspectExt> circuitBreakerAspectExtList) {
 		this.circuitBreakerProperties = backendMonitorPropertiesRegistry;

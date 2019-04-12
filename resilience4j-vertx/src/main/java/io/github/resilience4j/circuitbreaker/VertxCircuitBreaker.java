@@ -18,11 +18,9 @@
  */
 package io.github.resilience4j.circuitbreaker;
 
-import java.time.Duration;
-import java.util.function.Supplier;
-
-import io.github.resilience4j.core.StopWatch;
 import io.vertx.core.Future;
+
+import java.util.function.Supplier;
 
 /**
  * CircuitBreaker decorators for Vert.x
@@ -71,10 +69,10 @@ public interface VertxCircuitBreaker {
                             future.complete(result.result());
                         }
                     });
-                } catch (Throwable throwable) {
+                } catch (Exception exception) {
                     long durationInNanos = System.nanoTime() - start;
-                    circuitBreaker.onError(durationInNanos, throwable);
-                    future.fail(throwable);
+                    circuitBreaker.onError(durationInNanos, exception);
+                    future.fail(exception);
                 }
             }
             return future;
