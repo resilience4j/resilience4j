@@ -58,6 +58,7 @@ configure(project.coreProjects) {
         testCompile ( libraries.powermock_api_mockito)
         testCompile ( libraries.powermock_module_junit4)
         testCompile ( libraries.awaitility)
+        testCompile ( libraries.jaxws)
     }
 
     tasks.withType(JavaCompile) {

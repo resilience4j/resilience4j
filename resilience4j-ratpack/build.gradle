@@ -1,6 +1,7 @@
 apply plugin: 'groovy'
 
 dependencies {
+    implementation ( libraries.groovy )
     compileOnly ( libraries.ratpack )
     compile project(':resilience4j-bulkhead')
     compile project(':resilience4j-circuitbreaker')

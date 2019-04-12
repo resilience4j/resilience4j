@@ -15,14 +15,10 @@
  */
 package io.github.resilience4j.retry.configure;
 
-import java.lang.reflect.Method;
-import java.util.List;
-import java.util.concurrent.CompletionException;
-import java.util.concurrent.CompletionStage;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
-
+import io.github.resilience4j.core.lang.Nullable;
+import io.github.resilience4j.retry.RetryRegistry;
+import io.github.resilience4j.retry.annotation.Retry;
+import io.vavr.CheckedFunction0;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -33,9 +29,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.Ordered;
 
-import io.github.resilience4j.retry.RetryRegistry;
-import io.github.resilience4j.retry.annotation.Retry;
-import io.vavr.CheckedFunction0;
+import java.lang.reflect.Method;
+import java.util.List;
+import java.util.concurrent.*;
 
 /**
  * This Spring AOP aspect intercepts all methods which are annotated with a {@link Retry} annotation.
@@ -69,11 +65,14 @@ public class RetryAspect implements Ordered {
 	}
 
 	@Around(value = "matchAnnotatedClassOrMethod(backendMonitored)", argNames = "proceedingJoinPoint, backendMonitored")
-	public Object retryAroundAdvice(ProceedingJoinPoint proceedingJoinPoint, Retry backendMonitored) throws Throwable {
+	public Object retryAroundAdvice(ProceedingJoinPoint proceedingJoinPoint, @Nullable Retry backendMonitored) throws Throwable {
 		Method method = ((MethodSignature) proceedingJoinPoint.getSignature()).getMethod();
 		String methodName = method.getDeclaringClass().getName() + "#" + method.getName();
 		if (backendMonitored == null) {
 			backendMonitored = getBackendMonitoredAnnotation(proceedingJoinPoint);
+		}
+		if(backendMonitored == null) { //because annotations wasn't found
+			return proceedingJoinPoint.proceed();
 		}
 		String backend = backendMonitored.name();
 		io.github.resilience4j.retry.Retry retry = getOrCreateRetry(methodName, backend);
