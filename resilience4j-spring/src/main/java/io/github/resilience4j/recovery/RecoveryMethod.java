@@ -76,6 +76,15 @@ public class RecoveryMethod {
      * @throws Throwable if throwable is unrecoverable, throwable will be thrown
      */
     public Object recover(Throwable thrown) throws Throwable {
+        if (recoveryMethods.size() == 1) {
+            Map.Entry<Class<?>, Method> entry = recoveryMethods.entrySet().iterator().next();
+            if (entry.getKey().isAssignableFrom(thrown.getClass())) {
+                return invoke(entry.getValue(), thrown);
+            } else {
+                throw thrown;
+            }
+        }
+
         Method recovery = null;
 
         for (Class<?> thrownClass = thrown.getClass(); recovery == null && thrownClass != Object.class; thrownClass = thrownClass.getSuperclass()) {
