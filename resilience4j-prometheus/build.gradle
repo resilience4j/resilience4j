@@ -6,4 +6,5 @@ dependencies {
     testCompile project(':resilience4j-circuitbreaker')
     testCompile project(':resilience4j-ratelimiter')
     testCompile project(':resilience4j-bulkhead')
+    testCompile (libraries.prometheus_simpleclient)
 }
