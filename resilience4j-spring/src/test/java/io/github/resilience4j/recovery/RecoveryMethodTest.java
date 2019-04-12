@@ -34,12 +34,12 @@ public class RecoveryMethodTest {
     }
 
     @Test
-    public void recoverIllegalArgumentExceptionTest() throws Throwable {
+    public void recoverClosestSuperclassExceptionTest() throws Throwable {
         RecoveryMethodTest target = new RecoveryMethodTest();
         Method testMethod = target.getClass().getMethod("testMethod", String.class);
         RecoveryMethod recoveryMethod = new RecoveryMethod("recovery", testMethod, new Object[]{"test"}, target);
 
-        assertThat(recoveryMethod.recover(new IllegalArgumentException("err"))).isEqualTo("recovered-IllegalArgumentException");
+        assertThat(recoveryMethod.recover(new NumberFormatException("err"))).isEqualTo("recovered-IllegalArgumentException");
     }
 
     @Test

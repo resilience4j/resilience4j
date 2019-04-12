@@ -17,12 +17,15 @@ package io.github.resilience4j.recovery;
 
 import io.vavr.CheckedFunction0;
 
+/**
+ * interface of RecoveryDecorator
+ */
 public interface RecoveryDecorator {
     boolean supports(Class<?> target);
 
     /**
      * @param recoveryMethod recovery method.
-     * @param supplier target function should be decorated.
+     * @param supplier       target function should be decorated.
      * @return decorated function
      */
     CheckedFunction0<Object> decorate(RecoveryMethod recoveryMethod, CheckedFunction0<Object> supplier);

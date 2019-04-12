@@ -19,6 +19,9 @@ import io.vavr.CheckedFunction0;
 
 import java.util.List;
 
+/**
+ * {@link RecoveryDecorator} resolver
+ */
 public class RecoveryDecorators {
     private final List<RecoveryDecorator> recoveryDecorator;
     private final RecoveryDecorator defaultRecoveryDecorator = new DefaultRecoveryDecorator();
@@ -27,6 +30,13 @@ public class RecoveryDecorators {
         this.recoveryDecorator = recoveryDecorator;
     }
 
+    /**
+     * find a {@link RecoveryDecorator} by return type of the {@link RecoveryMethod} and decorate supplier
+     *
+     * @param recoveryMethod recovery method that handles supplier's exception
+     * @param supplier       original function
+     * @return a function which is decorated by a {@link RecoveryMethod}
+     */
     public CheckedFunction0<Object> decorate(RecoveryMethod recoveryMethod, CheckedFunction0<Object> supplier) {
         return get(recoveryMethod.getReturnType())
                 .decorate(recoveryMethod, supplier);
