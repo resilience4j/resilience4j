@@ -31,7 +31,8 @@ public class RecoveryDecorators {
         return get(recoveryMethod.getReturnType())
                 .decorate(recoveryMethod, supplier);
     }
-    public RecoveryDecorator get(Class<?> returnType) {
+
+    private RecoveryDecorator get(Class<?> returnType) {
         return recoveryDecorator.stream().filter(it -> it.supports(returnType))
                 .findFirst()
                 .orElse(defaultRecoveryDecorator);

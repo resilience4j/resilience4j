@@ -77,7 +77,7 @@ public class BulkheadAspect implements Ordered {
 			return proceed(proceedingJoinPoint, methodName, bulkhead, returnType);
 		}
 
-		RecoveryMethod recoveryMethod = new RecoveryMethod(backendMonitored.recovery(), method, proceedingJoinPoint.getArgs(), proceedingJoinPoint.getThis());
+		RecoveryMethod recoveryMethod = new RecoveryMethod(backendMonitored.recovery(), method, proceedingJoinPoint.getArgs(), proceedingJoinPoint.getTarget());
 		return recoveryDecorators.decorate(recoveryMethod, () -> proceed(proceedingJoinPoint, methodName, bulkhead, returnType)).apply();
 	}
 

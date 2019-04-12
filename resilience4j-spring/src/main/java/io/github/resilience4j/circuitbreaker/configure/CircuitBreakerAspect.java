@@ -82,7 +82,7 @@ public class CircuitBreakerAspect implements Ordered {
 			return proceed(proceedingJoinPoint, methodName, circuitBreaker, returnType);
 		}
 
-		RecoveryMethod recoveryMethod = new RecoveryMethod(backendMonitored.recovery(), method, proceedingJoinPoint.getArgs(), proceedingJoinPoint.getThis());
+		RecoveryMethod recoveryMethod = new RecoveryMethod(backendMonitored.recovery(), method, proceedingJoinPoint.getArgs(), proceedingJoinPoint.getTarget());
         return recoveryDecorators.decorate(recoveryMethod, () -> proceed(proceedingJoinPoint, methodName, circuitBreaker, returnType)).apply();
 	}
 

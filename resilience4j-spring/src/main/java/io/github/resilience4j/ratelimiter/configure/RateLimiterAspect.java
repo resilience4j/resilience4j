@@ -84,7 +84,7 @@ public class RateLimiterAspect implements Ordered {
 			return proceed(proceedingJoinPoint, methodName, returnType, rateLimiter);
 		}
 
-		RecoveryMethod recoveryMethod = new RecoveryMethod(targetService.recovery(), method, proceedingJoinPoint.getArgs(), proceedingJoinPoint.getThis());
+		RecoveryMethod recoveryMethod = new RecoveryMethod(targetService.recovery(), method, proceedingJoinPoint.getArgs(), proceedingJoinPoint.getTarget());
         return recoveryDecorators.decorate(recoveryMethod, () -> proceed(proceedingJoinPoint, methodName, returnType, rateLimiter)).apply();
 	}
 

@@ -74,7 +74,7 @@ public interface TestDummyService {
         return Flowable.error(new RuntimeException("Test"));
     }
 
-    default String recovery(Throwable throwable) {
+    default String recovery(RuntimeException throwable) {
         return "recovered";
     }
 

@@ -81,7 +81,7 @@ public class RetryAspect implements Ordered {
 			return proceed(proceedingJoinPoint, methodName, retry, returnType);
 		}
 
-        RecoveryMethod recoveryMethod = new RecoveryMethod(backendMonitored.recovery(), method, proceedingJoinPoint.getArgs(), proceedingJoinPoint.getThis());
+        RecoveryMethod recoveryMethod = new RecoveryMethod(backendMonitored.recovery(), method, proceedingJoinPoint.getArgs(), proceedingJoinPoint.getTarget());
 		return recoveryDecorators.decorate(recoveryMethod, () -> proceed(proceedingJoinPoint, methodName, retry, returnType)).apply();
 	}
 

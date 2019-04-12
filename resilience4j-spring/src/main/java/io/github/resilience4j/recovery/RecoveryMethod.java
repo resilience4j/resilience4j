@@ -18,35 +18,73 @@ package io.github.resilience4j.recovery;
 import org.springframework.util.ReflectionUtils;
 import org.springframework.util.StringUtils;
 
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 public class RecoveryMethod {
-    private final Method recovery;
+    private final Map<Class<?>, Method> recoveryMethods;
     private final Object[] args;
     private final Object target;
+    private final Class<?> returnType;
 
-    public RecoveryMethod(String recoveryMethodName, Method originalMethod, Object[] args, Object target) throws NoSuchMethodException, ClassCastException {
-        Class[] params = originalMethod.getParameterTypes();
-        Class[] recoveryParams = Arrays.copyOf(params, params.length + 1);
-        recoveryParams[params.length] = Throwable.class;
-        Method recovery = ReflectionUtils.findMethod(target.getClass(), recoveryMethodName, recoveryParams);
-
-        if (recovery == null) {
-            throw new NoSuchMethodException(String.format("%s.%s(%s)", target.getClass(), recoveryMethodName, StringUtils.arrayToDelimitedString(recoveryParams, ",")));
-        }
-
+    public RecoveryMethod(String recoveryMethodName, Method originalMethod, Object[] args, Object target) throws NoSuchMethodException {
+        Class<?>[] params = originalMethod.getParameterTypes();
         Class<?> originalReturnType = originalMethod.getReturnType();
-        if (!originalReturnType.isAssignableFrom(recovery.getReturnType())) {
-            throw new ClassCastException(String.format("recovery return type not matched (expected: %s, actual :%s)", originalReturnType.getName(), recovery.getReturnType().getName()));
+
+        Map<Class<?>, Method> methods = new HashMap<>();
+
+        ReflectionUtils.doWithMethods(target.getClass(), method -> {
+            if (!method.isAccessible()) {
+                ReflectionUtils.makeAccessible(method);
+            }
+            Class<?>[] recoveryParams = method.getParameterTypes();
+            methods.put(recoveryParams[recoveryParams.length - 1], method);
+        }, method -> {
+            if (!method.getName().equals(recoveryMethodName) || method.getParameterCount() != params.length + 1) {
+                return false;
+            }
+            if (!originalReturnType.isAssignableFrom(method.getReturnType())) {
+                return false;
+            }
+
+            Class[] targetParams = method.getParameterTypes();
+            for (int i = 0; i < params.length; i++) {
+                if (params[i] != targetParams[i]) {
+                    return false;
+                }
+            }
+
+            return Throwable.class.isAssignableFrom(targetParams[params.length]);
+        });
+
+        if (methods.isEmpty()) {
+            throw new NoSuchMethodException(String.format("%s %s.%s(%s,%s)", originalReturnType, target.getClass(), recoveryMethodName, StringUtils.arrayToDelimitedString(params, ","), Throwable.class));
         }
 
-        this.recovery = recovery;
+        this.recoveryMethods = methods;
         this.args = args;
         this.target = target;
+        this.returnType = originalReturnType;
     }
 
-    public Object recover(Throwable throwable) throws Throwable {
+    public Object recover(Throwable thrown) throws Throwable {
+        Method recovery = null;
+
+        for (Class<?> thrownClass = thrown.getClass(); recovery == null && thrownClass != Object.class; thrownClass = thrownClass.getSuperclass()) {
+            recovery = recoveryMethods.get(thrownClass);
+        }
+
+        if (recovery == null) {
+            throw thrown;
+        }
+
+        return invoke(recovery, thrown);
+    }
+
+    private Object invoke(Method recovery, Throwable throwable) throws IllegalAccessException, InvocationTargetException {
         if (args.length != 0) {
             Object[] newArgs = Arrays.copyOf(args, args.length + 1);
             newArgs[args.length] = throwable;
@@ -58,6 +96,6 @@ public class RecoveryMethod {
     }
 
     public Class<?> getReturnType() {
-        return recovery.getReturnType();
+        return returnType;
     }
 }

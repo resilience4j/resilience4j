@@ -75,9 +75,4 @@ public class TestApplication {
     public RetryConfigurationProperties retryConfigurationProperties() {
         return new RetryConfigurationProperties();
     }
-
-    @Bean
-    public AsyncRetryRegistry asyncRetryRegistry() {
-        return AsyncRetryRegistry.ofDefaults();
-    }
 }

@@ -15,44 +15,89 @@
  */
 package io.github.resilience4j.recovery;
 
-import io.github.resilience4j.BulkheadDummyService;
 import org.junit.Test;
-import reactor.core.publisher.Mono;
 
 import java.lang.reflect.Method;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Java6Assertions.assertThatThrownBy;
 
+@SuppressWarnings({"WeakerAccess", "unused"})
 public class RecoveryMethodTest {
     @Test
-    public void recoverTest() throws Throwable {
-        BulkheadDummyService bulkheadDummyService = new BulkheadDummyService();
-        Method monoMethod = bulkheadDummyService.getClass().getMethod("mono", String.class);
-        RecoveryMethod recoveryMethod = new RecoveryMethod("monoRecovery", monoMethod, new Object[]{"test"}, bulkheadDummyService);
+    public void recoverRuntimeExceptionTest() throws Throwable {
+        RecoveryMethodTest target = new RecoveryMethodTest();
+        Method testMethod = target.getClass().getMethod("testMethod", String.class);
+        RecoveryMethod recoveryMethod = new RecoveryMethod("recovery", testMethod, new Object[]{"test"}, target);
 
-        Mono<String> recovered = (Mono<String>) recoveryMethod.recover(new RuntimeException("err"));
-
-        assertThat(recovered.block()).isEqualTo("test");
+        assertThat(recoveryMethod.recover(new RuntimeException("err"))).isEqualTo("recovered-RuntimeException");
     }
 
     @Test
-    public void mismatchReturnType_shouldThrowClassCastException() throws Exception {
-        BulkheadDummyService bulkheadDummyService = new BulkheadDummyService();
-        Method observableMethod = bulkheadDummyService.getClass().getMethod("observable");
+    public void recoverIllegalArgumentExceptionTest() throws Throwable {
+        RecoveryMethodTest target = new RecoveryMethodTest();
+        Method testMethod = target.getClass().getMethod("testMethod", String.class);
+        RecoveryMethod recoveryMethod = new RecoveryMethod("recovery", testMethod, new Object[]{"test"}, target);
 
-        assertThatThrownBy(() -> new RecoveryMethod("flowableRecovery", observableMethod, new Object[0], bulkheadDummyService))
-                .isInstanceOf(ClassCastException.class)
-                .hasMessage("recovery return type not matched (expected: io.reactivex.Observable, actual :io.reactivex.Flowable)");
+        assertThat(recoveryMethod.recover(new IllegalArgumentException("err"))).isEqualTo("recovered-IllegalArgumentException");
     }
 
     @Test
-    public void notFoundRecoveryMethod_shouldThrowsNoSuchMethodException() throws Exception {
-        BulkheadDummyService bulkheadDummyService = new BulkheadDummyService();
-        Method monoMethod = bulkheadDummyService.getClass().getMethod("mono", String.class);
-        assertThatThrownBy(() -> new RecoveryMethod("noMethod", monoMethod, new Object[]{"test"}, bulkheadDummyService))
+    public void shouldThrowUnrecoverableThrowable() throws Throwable {
+        RecoveryMethodTest target = new RecoveryMethodTest();
+        Method testMethod = target.getClass().getMethod("testMethod", String.class);
+        RecoveryMethod recoveryMethod = new RecoveryMethod("recovery", testMethod, new Object[]{"test"}, target);
+
+        Throwable unrecoverableThrown = new Throwable("err");
+        assertThatThrownBy(() -> recoveryMethod.recover(unrecoverableThrown)).isEqualTo(unrecoverableThrown);
+    }
+
+    @Test
+    public void shouldCallPrivateRecoveryMethod() throws Throwable {
+        RecoveryMethodTest target = new RecoveryMethodTest();
+        Method testMethod = target.getClass().getMethod("testMethod", String.class);
+        RecoveryMethod recoveryMethod = new RecoveryMethod("privateRecovery", testMethod, new Object[]{"test"}, target);
+
+        assertThat(recoveryMethod.recover(new RuntimeException("err"))).isEqualTo("recovered-privateMethod");
+    }
+
+    @Test
+    public void mismatchReturnType_shouldThrowNoSuchMethodException() throws Throwable {
+        RecoveryMethodTest target = new RecoveryMethodTest();
+        Method testMethod = target.getClass().getMethod("testMethod", String.class);
+
+        assertThatThrownBy(() -> new RecoveryMethod("returnMismatchRecovery", testMethod, new Object[]{"test"}, target))
                 .isInstanceOf(NoSuchMethodException.class)
-                .hasMessage("class io.github.resilience4j.BulkheadDummyService.noMethod(class java.lang.String,class java.lang.Throwable)");
+                .hasMessage("class java.lang.String class io.github.resilience4j.recovery.RecoveryMethodTest.returnMismatchRecovery(class java.lang.String,class java.lang.Throwable)");
+    }
 
+    @Test
+    public void notFoundRecoveryMethod_shouldThrowsNoSuchMethodException() throws Throwable {
+        RecoveryMethodTest target = new RecoveryMethodTest();
+        Method testMethod = target.getClass().getMethod("testMethod", String.class);
+
+        assertThatThrownBy(() -> new RecoveryMethod("noMethod", testMethod, new Object[]{"test"}, target))
+                .isInstanceOf(NoSuchMethodException.class)
+                .hasMessage("class java.lang.String class io.github.resilience4j.recovery.RecoveryMethodTest.noMethod(class java.lang.String,class java.lang.Throwable)");
+    }
+
+    public String testMethod(String parameter) {
+        return null;
+    }
+
+    public String recovery(String parameter, RuntimeException exception) {
+        return "recovered-RuntimeException";
+    }
+
+    public String recovery(String parameter, IllegalArgumentException exception) {
+        return "recovered-IllegalArgumentException";
+    }
+
+    public Object returnMismatchRecovery(String parameter, RuntimeException exception) {
+        return "recovered";
+    }
+
+    private String privateRecovery(String parameter, RuntimeException exception) {
+        return "recovered-privateMethod";
     }
 }
