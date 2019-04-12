@@ -13,3 +13,4 @@ dependencies {
     testCompile project(':resilience4j-circuitbreaker')
     testCompile (libraries.micrometer)
 }
+ext.moduleName='io.github.resilience4j.micrometer'
