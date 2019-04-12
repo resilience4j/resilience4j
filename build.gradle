@@ -115,10 +115,6 @@ test {
     dependsOn(subprojects.test) // required by cobertura to aggregate report
 }
 
-task wrapper(type: Wrapper) {
-    gradleVersion = '5.3.1'
-}
-
 artifactory {
     contextUrl = 'https://oss.jfrog.org'
     resolve {
