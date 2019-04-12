@@ -1,23 +1,9 @@
-buildscript {
-    repositories {
-        jcenter()
-        mavenCentral()
-        maven {
-            url "https://plugins.gradle.org/m2/"
-        }
-    }
-    dependencies {
-        classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.8.4'
-        classpath 'me.champeau.gradle:jmh-gradle-plugin:0.3.1'
-        classpath "org.asciidoctor:asciidoctor-gradle-plugin:1.5.3"
-        classpath "org.ajoberstar:gradle-git:1.3.2"
-        classpath "org.jfrog.buildinfo:build-info-extractor-gradle:4.4.17"
-        classpath 'com.github.erizo.gradle:jcstress-gradle-plugin:0.8.0'
-        classpath "com.netflix.nebula:gradle-extra-configurations-plugin:4.0.1"
-    }
-}
 plugins {
     id "org.sonarqube" version "2.7"
+    id "com.jfrog.bintray" version "1.8.4"
+    id "me.champeau.gradle.jmh" version "0.4.8"
+    id 'org.asciidoctor.jvm.convert' version '2.0.0'
+    id "com.jfrog.artifactory" version "4.9.5"
 }
 apply plugin: 'idea'
 apply from: "${rootDir}/libraries.gradle"
@@ -55,7 +41,6 @@ configure(project.coreProjects) {
     apply plugin: 'maven-publish'
     apply plugin: 'com.jfrog.bintray'
     apply from: "${rootDir}/publishing.gradle"
-    apply plugin: 'nebula.optional-base'
     apply plugin: 'jacoco'
 
     dependencies {
@@ -63,7 +48,7 @@ configure(project.coreProjects) {
         compile ( libraries.slf4j)
         
         // JSR-305 only used for non-required meta-annotations
-        compile "com.google.code.findbugs:jsr305:3.0.2", optional
+        compileOnly "com.google.code.findbugs:jsr305:3.0.2"
 
         testCompile ( libraries.junit)
         testCompile ( libraries.assertj)
@@ -73,9 +58,6 @@ configure(project.coreProjects) {
         testCompile ( libraries.powermock_api_mockito)
         testCompile ( libraries.powermock_module_junit4)
         testCompile ( libraries.awaitility)
-
-        jmh "org.openjdk.jmh:jmh-core:1.18"
-        jmh "org.openjdk.jmh:jmh-generator-annprocess:1.18"
     }
 
     tasks.withType(JavaCompile) {
@@ -89,7 +71,6 @@ configure(project.coreProjects) {
 
     jmh {
         duplicateClassesStrategy = 'warn'
-        jmhVersion = '1.17'
     }
 }
 
@@ -97,26 +78,15 @@ sonarqube {
     properties {
         property "sonar.projectName", "resilience4j"
         property "sonar.projectKey", "resilience4j_resilience4j"
-        property "sonar.modules", "resilience4j-core,resilience4j-feign,resilience4j-metrics,resilience4j-micrometer,resilience4j-prometheus,resilience4j-retry,resilience4j-spring,resilience4j-timelimiter,resilience4j-bulkhead,resilience4j-circuitbreaker,resilience4j-ratelimiter,resilience4j-cache,resilience4j-circularbuffer,resilience4j-consumer,resilience4j-spring-boot,resilience4j-spring-boot2,resilience4j-reactor,resilience4j-rxjava2"
-        property "sonar.projectVersion","0.15.0-SNAPSHOTS"
 
         property "sonar.links.homepage","https://github.com/resilience4j/resilience4j"
         property "sonar.links.ci","https://travis-ci.org/resilience4j/resilience4j"
         property "sonar.links.scm","https://github.com/resilience4j/resilience4j"
         property "sonar.links.issue","https://github.com/resilience4j/resilience4j/issues"
 
-        property "sonar.java.source","1.8"
-        property "sonar.sources","src/main/java"
-        property "sonar.tests","src/test/java"
-        property "sonar.java.binaries","build"
-        property "sonar.java.test.binaries","build"
-        property "sonar.binaries","build"
 //        property "sonar.jacoco.reportPaths","build/reports/jacoco/test"
 
         property "sonar.language","java"
-
-
-        property "sonar.sourceEncoding","UTF-8"
     }
 }
 def allTestCoverageFile = "$buildDir/jacoco/allTestCoverage.exec"
@@ -146,7 +116,7 @@ test {
 }
 
 task wrapper(type: Wrapper) {
-    gradleVersion = '4.10.2'
+    gradleVersion = '5.3.1'
 }
 
 artifactory {
