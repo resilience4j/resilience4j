@@ -8,3 +8,4 @@ dependencies {
     testCompile project(':resilience4j-bulkhead')
     testCompile (libraries.prometheus_simpleclient)
 }
+ext.moduleName='io.github.resilience4j.prometheus'

@@ -106,6 +106,17 @@ subprojects {
             property "sonar.jacoco.reportPaths", allTestCoverageFile
         }
     }
+    afterEvaluate {
+        // exclude subprojects that don't produce a jar file.
+        if(!project.name.equals('resilience4j-bom') && !project.name.equals('resilience4j-documentation') && !project.name.equals('resilience4j-test')) {
+            jar {
+                inputs.property('moduleName', moduleName)
+                manifest.attributes(
+                    'Automatic-Module-Name': moduleName
+                )
+            }
+        }
+    }
 }
 
 tasks.check.dependsOn tasks.jacocoTestReport
