@@ -17,3 +17,4 @@ dependencies {
     testCompile project(':resilience4j-prometheus')
     testCompile project(':resilience4j-metrics')
 }
+ext.moduleName='io.github.resilience4j.spring'

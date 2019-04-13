@@ -26,3 +26,4 @@ dependencies {
 }
 
 compileJava.dependsOn(processResources)
+ext.moduleName='io.github.resilience4j.springboot2'

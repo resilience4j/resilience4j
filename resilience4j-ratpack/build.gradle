@@ -19,3 +19,4 @@ dependencies {
     testCompile project(':resilience4j-metrics')
     testCompile ( libraries.ratpack )
 }
+ext.moduleName='io.github.resilience4j.ratpack'

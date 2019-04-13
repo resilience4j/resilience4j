@@ -14,3 +14,4 @@ dependencies {
     testCompile (libraries.assertj)
     testCompile (libraries.reactive_streams_tck)
 }
+ext.moduleName='io.github.resilience4j.reactor'

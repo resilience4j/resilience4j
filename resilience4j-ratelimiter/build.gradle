@@ -1,3 +1,4 @@
 dependencies {
     compile project(':resilience4j-core')
 }
+ext.moduleName='io.github.resilience4j.ratelimiter'

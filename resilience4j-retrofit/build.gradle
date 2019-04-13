@@ -6,3 +6,4 @@ dependencies {
     testCompile ( libraries.retrofit_wiremock )
     testCompile ( libraries.retrofit )
 }
+ext.moduleName='io.github.resilience4j.retrofit'
