@@ -19,6 +19,7 @@ deploy:
   local_dir: resilience4j-documentation/build/asciidoc/html5
   on:
     branch: master
+    condition: $PUBLISH = true
 before_cache:
 - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
 - rm -fr $HOME/.gradle/caches/*/plugin-resolution/
