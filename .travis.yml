@@ -1,14 +1,16 @@
 language: java
 sudo: false
-jdk:
-  - oraclejdk8
-  - oraclejdk11
+matrix:
+  include:
+    - jdk: oraclejdk8
+      env: PUBLISH=true
+    - jdk: openjdk11
 before_install:
   - chmod +x gradlew
 after_success:
   - test -n $SONAR_TOKEN && ./gradlew sonarqube
-  - test $TRAVIS_BRANCH = "master" && test -n $BINTRAY_USER && ./gradlew artifactoryPublish -PbintrayUsername="${BINTRAY_USER}" -PbintrayApiKey="${BINTRAY_KEY}"
-  - test $TRAVIS_BRANCH = "master" && test -n $GITHUB_TOKEN && ./gradlew asciidoctor
+  - test $TRAVIS_BRANCH = "master" && test -n $BINTRAY_USER && test -n $PUBLISH && ./gradlew artifactoryPublish -PbintrayUsername="${BINTRAY_USER}" -PbintrayApiKey="${BINTRAY_KEY}"
+  - test $TRAVIS_BRANCH = "master" && test -n $GITHUB_TOKEN && test -n $PUBLISH && ./gradlew asciidoctor
 deploy:
   provider: pages
   skip_cleanup: true
