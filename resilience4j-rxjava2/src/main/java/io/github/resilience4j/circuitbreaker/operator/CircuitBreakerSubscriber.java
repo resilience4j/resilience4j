@@ -20,8 +20,8 @@ import static java.util.Objects.requireNonNull;
  * @param <T> the value type of the upstream and downstream
  */
 final class CircuitBreakerSubscriber<T> extends AtomicReference<Subscription> implements Subscriber<T>, Subscription {
-    private final CircuitBreaker circuitBreaker;
-    private final Subscriber<? super T> childSubscriber;
+    private final transient CircuitBreaker circuitBreaker;
+    private final transient Subscriber<? super T> childSubscriber;
     private final AtomicReference<Permit> permitted = new AtomicReference<>(Permit.PENDING);
     @Nullable
     private StopWatch stopWatch;

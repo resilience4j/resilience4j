@@ -1,10 +1,10 @@
 package io.github.resilience4j.bulkhead.operator;
 
-import static java.util.Objects.requireNonNull;
-
 import io.github.resilience4j.bulkhead.Bulkhead;
 import io.reactivex.MaybeObserver;
 import io.reactivex.disposables.Disposable;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * A RxJava {@link MaybeObserver} to wrap another observer in a bulkhead.
@@ -12,7 +12,7 @@ import io.reactivex.disposables.Disposable;
  * @param <T> the value type of the upstream and downstream
  */
 final class BulkheadMaybeObserver<T> extends DisposableBulkhead<T> implements MaybeObserver<T> {
-    private final MaybeObserver<? super T> childObserver;
+    private final transient MaybeObserver<? super T> childObserver;
 
     BulkheadMaybeObserver(Bulkhead bulkhead, MaybeObserver<? super T> childObserver) {
         super(bulkhead);

@@ -20,8 +20,8 @@ import static java.util.Objects.requireNonNull;
  * @param <T> the value type of the upstream and downstream
  */
 final class RateLimiterSubscriber<T> extends AtomicReference<Subscription> implements Subscriber<T>, Subscription {
-    private final RateLimiter rateLimiter;
-    private final Subscriber<? super T> childSubscriber;
+    private final transient RateLimiter rateLimiter;
+    private final transient Subscriber<? super T> childSubscriber;
     private final AtomicReference<Permit> permitted = new AtomicReference<>(Permit.PENDING);
     private final AtomicBoolean firstEvent = new AtomicBoolean(true);
 

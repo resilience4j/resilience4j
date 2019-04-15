@@ -238,7 +238,7 @@ public interface RateLimiter {
 	 * @throws RequestNotPermitted   if waiting time elapsed before a permit was acquired.
 	 * @throws IllegalStateException if thread was interrupted during permission wait
 	 */
-	static void waitForPermission(final RateLimiter rateLimiter) throws IllegalStateException, RequestNotPermitted {
+	static void waitForPermission(final RateLimiter rateLimiter) {
 		RateLimiterConfig rateLimiterConfig = rateLimiter.getRateLimiterConfig();
 		Duration timeoutDuration = rateLimiterConfig.getTimeoutDuration();
 		boolean permission = rateLimiter.getPermission(timeoutDuration);

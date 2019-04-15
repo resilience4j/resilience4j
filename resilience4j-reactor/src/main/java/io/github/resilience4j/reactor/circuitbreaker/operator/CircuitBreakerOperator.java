@@ -22,14 +22,14 @@ import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.util.function.Function;
+import java.util.function.UnaryOperator;
 
 /**
  * A Reactor operator which wraps a reactive type in a circuit breaker.
  *
  * @param <T> the value type of the upstream and downstream
  */
-public class CircuitBreakerOperator<T> implements Function<Publisher<T>, Publisher<T>> {
+public class CircuitBreakerOperator<T> implements UnaryOperator<Publisher<T>> {
 
     private final CircuitBreaker circuitBreaker;
 
