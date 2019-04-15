@@ -15,14 +15,10 @@
  */
 package io.github.resilience4j.retry.configure;
 
-import java.lang.reflect.Method;
-import java.util.List;
-import java.util.concurrent.CompletionException;
-import java.util.concurrent.CompletionStage;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
-
+import io.github.resilience4j.core.lang.Nullable;
+import io.github.resilience4j.retry.RetryRegistry;
+import io.github.resilience4j.retry.annotation.Retry;
+import io.github.resilience4j.utils.AnnotationExtractor;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -33,9 +29,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.Ordered;
 
-import io.github.resilience4j.retry.RetryRegistry;
-import io.github.resilience4j.retry.annotation.Retry;
-import io.vavr.CheckedFunction0;
+import java.lang.reflect.Method;
+import java.util.List;
+import java.util.concurrent.*;
 
 /**
  * This Spring AOP aspect intercepts all methods which are annotated with a {@link Retry} annotation.
@@ -49,7 +45,7 @@ public class RetryAspect implements Ordered {
 	private final static ScheduledExecutorService retryExecutorService = Executors.newScheduledThreadPool(Runtime.getRuntime().availableProcessors());
 	private final RetryConfigurationProperties retryConfigurationProperties;
 	private final RetryRegistry retryRegistry;
-	private final List<RetryAspectExt> retryAspectExtList;
+	private final @Nullable List<RetryAspectExt> retryAspectExtList;
 
 	/**
 	 * @param retryConfigurationProperties spring retry config properties
@@ -69,17 +65,20 @@ public class RetryAspect implements Ordered {
 	}
 
 	@Around(value = "matchAnnotatedClassOrMethod(backendMonitored)", argNames = "proceedingJoinPoint, backendMonitored")
-	public Object retryAroundAdvice(ProceedingJoinPoint proceedingJoinPoint, Retry backendMonitored) throws Throwable {
+	public Object retryAroundAdvice(ProceedingJoinPoint proceedingJoinPoint, @Nullable Retry backendMonitored) throws Throwable {
 		Method method = ((MethodSignature) proceedingJoinPoint.getSignature()).getMethod();
 		String methodName = method.getDeclaringClass().getName() + "#" + method.getName();
 		if (backendMonitored == null) {
 			backendMonitored = getBackendMonitoredAnnotation(proceedingJoinPoint);
 		}
+		if(backendMonitored == null) { //because annotations wasn't found
+			return proceedingJoinPoint.proceed();
+		}
 		String backend = backendMonitored.name();
 		io.github.resilience4j.retry.Retry retry = getOrCreateRetry(methodName, backend);
 		Class<?> returnType = method.getReturnType();
 		if (CompletionStage.class.isAssignableFrom(returnType)) {
-			return handleJoinPointCompletableFuture(proceedingJoinPoint, retry, methodName);
+			return handleJoinPointCompletableFuture(proceedingJoinPoint, retry);
 		}
 		if (retryAspectExtList != null && !retryAspectExtList.isEmpty()) {
 			for (RetryAspectExt retryAspectExt : retryAspectExtList) {
@@ -88,7 +87,7 @@ public class RetryAspect implements Ordered {
 				}
 			}
 		}
-		return handleDefaultJoinPoint(proceedingJoinPoint, retry, methodName);
+		return handleDefaultJoinPoint(proceedingJoinPoint, retry);
 	}
 
 	/**
@@ -111,59 +110,35 @@ public class RetryAspect implements Ordered {
 	 * @param proceedingJoinPoint the aspect joint point
 	 * @return the retry annotation
 	 */
+	@Nullable
 	private Retry getBackendMonitoredAnnotation(ProceedingJoinPoint proceedingJoinPoint) {
-		if (logger.isDebugEnabled()) {
-			logger.debug("circuitBreaker parameter is null");
-		}
-		Retry retry = null;
-		Class<?> targetClass = proceedingJoinPoint.getTarget().getClass();
-		if (targetClass.isAnnotationPresent(Retry.class)) {
-			retry = targetClass.getAnnotation(Retry.class);
-			if (retry == null && logger.isDebugEnabled()) {
-				logger.debug("TargetClass has no annotation 'Retry'");
-				retry = targetClass.getDeclaredAnnotation(Retry.class);
-				if (retry == null && logger.isDebugEnabled()) {
-					logger.debug("TargetClass has no declared annotation 'Retry'");
-				}
-			}
-		}
-		return retry;
+		return AnnotationExtractor.extract(proceedingJoinPoint.getTarget().getClass(), Retry.class);
 	}
 
 	/**
 	 * @param proceedingJoinPoint the AOP logic joint point
 	 * @param retry               the configured sync retry
-	 * @param methodName          the retry method name
 	 * @return the result object if any
 	 * @throws Throwable
 	 */
-	private Object handleDefaultJoinPoint(ProceedingJoinPoint proceedingJoinPoint, io.github.resilience4j.retry.Retry retry, String methodName) throws Throwable {
-		if (logger.isDebugEnabled()) {
-			logger.debug("retry invocation of method {} ", methodName);
-		}
-		final CheckedFunction0<Object> objectCheckedFunction0 = io.github.resilience4j.retry.Retry.decorateCheckedSupplier(retry, proceedingJoinPoint::proceed);
-		return objectCheckedFunction0.apply();
+	private Object handleDefaultJoinPoint(ProceedingJoinPoint proceedingJoinPoint, io.github.resilience4j.retry.Retry retry) throws Throwable {
+		return retry.executeCheckedSupplier(proceedingJoinPoint::proceed);
 	}
 
 	/**
 	 * @param proceedingJoinPoint the AOP logic joint point
 	 * @param retry               the configured async retry
-	 * @param methodName          the retry method name
 	 * @return the result object if any
-	 * @throws Throwable
 	 */
 	@SuppressWarnings("unchecked")
-	private Object handleJoinPointCompletableFuture(ProceedingJoinPoint proceedingJoinPoint, io.github.resilience4j.retry.Retry retry, String methodName) throws Throwable {
-		if (logger.isDebugEnabled()) {
-			logger.debug("async retry invocation of method {} ", methodName);
-		}
-		return io.github.resilience4j.retry.Retry.decorateCompletionStage(retry, retryExecutorService, () -> {
+	private Object handleJoinPointCompletableFuture(ProceedingJoinPoint proceedingJoinPoint, io.github.resilience4j.retry.Retry retry) {
+		return retry.executeCompletionStage(retryExecutorService, () -> {
 			try {
 				return (CompletionStage<Object>) proceedingJoinPoint.proceed();
 			} catch (Throwable throwable) {
 				throw new CompletionException(throwable);
 			}
-		}).get();
+		});
 	}
 
 

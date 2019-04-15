@@ -19,10 +19,6 @@
 package io.github.resilience4j.circuitbreaker;
 
 import io.github.resilience4j.test.HelloWorldService;
-import io.micrometer.core.instrument.Timer;
-import io.micrometer.core.instrument.distribution.HistogramSnapshot;
-import io.micrometer.core.instrument.distribution.ValueAtPercentile;
-import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import io.vavr.CheckedConsumer;
 import io.vavr.CheckedFunction0;
 import io.vavr.CheckedFunction1;
@@ -37,9 +33,10 @@ import javax.xml.ws.WebServiceException;
 import java.io.IOException;
 import java.net.SocketTimeoutException;
 import java.time.Duration;
-import java.util.Arrays;
-import java.util.List;
-import java.util.concurrent.*;
+import java.util.concurrent.Callable;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
+import java.util.concurrent.ExecutionException;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;

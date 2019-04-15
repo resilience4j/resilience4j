@@ -15,11 +15,10 @@
  */
 package io.github.resilience4j.bulkhead.configure;
 
-import java.lang.reflect.Method;
-import java.util.List;
-import java.util.concurrent.CompletionException;
-import java.util.concurrent.CompletionStage;
-
+import io.github.resilience4j.bulkhead.BulkheadRegistry;
+import io.github.resilience4j.bulkhead.annotation.Bulkhead;
+import io.github.resilience4j.core.lang.Nullable;
+import io.github.resilience4j.utils.AnnotationExtractor;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -30,9 +29,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.Ordered;
 
-import io.github.resilience4j.bulkhead.BulkheadRegistry;
-import io.github.resilience4j.bulkhead.annotation.Bulkhead;
-import io.github.resilience4j.utils.AnnotationExtractor;
+import java.lang.reflect.Method;
+import java.util.List;
+import java.util.concurrent.CompletionException;
+import java.util.concurrent.CompletionStage;
 
 /**
  * This Spring AOP aspect intercepts all methods which are annotated with a {@link Bulkhead} annotation.
@@ -46,7 +46,7 @@ public class BulkheadAspect implements Ordered {
 
 	private final BulkheadConfigurationProperties bulkheadConfigurationProperties;
 	private final BulkheadRegistry bulkheadRegistry;
-	private final List<BulkheadAspectExt> bulkheadAspectExts;
+	private final @Nullable List<BulkheadAspectExt> bulkheadAspectExts;
 
 	public BulkheadAspect(BulkheadConfigurationProperties backendMonitorPropertiesRegistry, BulkheadRegistry bulkheadRegistry, @Autowired(required = false) List<BulkheadAspectExt> bulkheadAspectExts) {
 		this.bulkheadConfigurationProperties = backendMonitorPropertiesRegistry;
@@ -59,11 +59,14 @@ public class BulkheadAspect implements Ordered {
 	}
 
 	@Around(value = "matchAnnotatedClassOrMethod(backendMonitored)", argNames = "proceedingJoinPoint, backendMonitored")
-	public Object bulkheadAroundAdvice(ProceedingJoinPoint proceedingJoinPoint, Bulkhead backendMonitored) throws Throwable {
+	public Object bulkheadAroundAdvice(ProceedingJoinPoint proceedingJoinPoint, @Nullable Bulkhead backendMonitored) throws Throwable {
 		Method method = ((MethodSignature) proceedingJoinPoint.getSignature()).getMethod();
 		String methodName = method.getDeclaringClass().getName() + "#" + method.getName();
 		if (backendMonitored == null) {
 			backendMonitored = getBackendMonitoredAnnotation(proceedingJoinPoint);
+		}
+		if(backendMonitored == null) { //because annotations wasn't found
+			return proceedingJoinPoint.proceed();
 		}
 		String backend = backendMonitored.name();
 		io.github.resilience4j.bulkhead.Bulkhead bulkhead = getOrCreateBulkhead(methodName, backend);
@@ -76,9 +79,9 @@ public class BulkheadAspect implements Ordered {
 			}
 		}
 		if (CompletionStage.class.isAssignableFrom(returnType)) {
-			return handleJoinPointCompletableFuture(proceedingJoinPoint, bulkhead, methodName);
+			return handleJoinPointCompletableFuture(proceedingJoinPoint, bulkhead);
 		}
-		return handleJoinPoint(proceedingJoinPoint, bulkhead, methodName);
+		return handleJoinPoint(proceedingJoinPoint, bulkhead);
 	}
 
 	private io.github.resilience4j.bulkhead.Bulkhead getOrCreateBulkhead(String methodName, String backend) {
@@ -94,6 +97,7 @@ public class BulkheadAspect implements Ordered {
 		return bulkhead;
 	}
 
+	@Nullable
 	private Bulkhead getBackendMonitoredAnnotation(ProceedingJoinPoint proceedingJoinPoint) {
 		if (logger.isDebugEnabled()) {
 			logger.debug("bulkhead parameter is null");
@@ -102,10 +106,7 @@ public class BulkheadAspect implements Ordered {
 		return AnnotationExtractor.extract(proceedingJoinPoint.getTarget().getClass(), Bulkhead.class);
 	}
 
-	private Object handleJoinPoint(ProceedingJoinPoint proceedingJoinPoint, io.github.resilience4j.bulkhead.Bulkhead bulkhead, String methodName) throws Throwable {
-		if (logger.isDebugEnabled()) {
-			logger.debug("bulkhead method invocation for method {}", methodName);
-		}
+	private Object handleJoinPoint(ProceedingJoinPoint proceedingJoinPoint, io.github.resilience4j.bulkhead.Bulkhead bulkhead) throws Throwable {
 		return bulkhead.executeCheckedSupplier(proceedingJoinPoint::proceed);
 	}
 
@@ -114,17 +115,13 @@ public class BulkheadAspect implements Ordered {
 	 *
 	 * @param proceedingJoinPoint AOPJoinPoint
 	 * @param bulkhead            configured bulkhead
-	 * @param methodName          bulkhead method name
 	 * @return CompletionStage
-	 * @throws Throwable
 	 */
-	private Object handleJoinPointCompletableFuture(ProceedingJoinPoint proceedingJoinPoint, io.github.resilience4j.bulkhead.Bulkhead bulkhead, String methodName) throws Throwable {
-
+	private Object handleJoinPointCompletableFuture(ProceedingJoinPoint proceedingJoinPoint, io.github.resilience4j.bulkhead.Bulkhead bulkhead) {
 		return bulkhead.executeCompletionStage(() -> {
 			try {
 				return (CompletionStage<?>) proceedingJoinPoint.proceed();
 			} catch (Throwable throwable) {
-				logger.error("Exception being thrown during bulkhead invocation {} ", methodName, throwable.getCause());
 				throw new CompletionException(throwable);
 			}
 		});

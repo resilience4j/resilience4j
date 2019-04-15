@@ -1,18 +1,16 @@
 language: java
 sudo: false
-jdk:
-- oraclejdk8
+matrix:
+  include:
+    - jdk: oraclejdk8
+      env: PUBLISH=true
+    - jdk: openjdk11
 before_install:
-- chmod +x gradlew
-script:
-- "./gradlew clean check"
-- sonar-scanner
+  - chmod +x gradlew
 after_success:
-- test $TRAVIS_BRANCH = "master" && ./gradlew artifactoryPublish -PbintrayUsername="${BINTRAY_USER}" -PbintrayApiKey="${BINTRAY_KEY}"
-- test $TRAVIS_BRANCH = "master" && ./gradlew asciidoctor
-before_cache:
-- rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
-- rm -fr $HOME/.gradle/caches/*/plugin-resolution/
+  - test -n $SONAR_TOKEN && ./gradlew sonarqube
+  - test $TRAVIS_BRANCH = "master" && test -n $BINTRAY_USER && test -n $PUBLISH && ./gradlew artifactoryPublish -PbintrayUsername="${BINTRAY_USER}" -PbintrayApiKey="${BINTRAY_KEY}"
+  - test $TRAVIS_BRANCH = "master" && test -n $GITHUB_TOKEN && test -n $PUBLISH && ./gradlew asciidoctor
 deploy:
   provider: pages
   skip_cleanup: true
@@ -21,6 +19,11 @@ deploy:
   local_dir: resilience4j-documentation/build/asciidoc/html5
   on:
     branch: master
+    condition: $PUBLISH = true
+before_cache:
+- rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
+- rm -fr $HOME/.gradle/caches/*/plugin-resolution/
+
 addons:
   sonarcloud:
     organization: "resilience4j" # the key of the org you chose at step #3

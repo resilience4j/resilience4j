@@ -18,6 +18,8 @@ As an alternative you can provide your own custom global `CircuitBreakerConfig`.
 * the size of the ring buffer when the CircuitBreaker is closed
 * a custom CircuitBreakerEventListener which handles CircuitBreaker events
 * a custom Predicate which evaluates if an exception should be recorded as a failure and thus increase the failure rate
+* a list of exceptions which should increase failure count
+* a list of exceptions which should be ignored and not increase failure count
 
 [source,java,indent=0]
 ----
@@ -27,6 +29,8 @@ CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom()
     .waitDurationInOpenState(Duration.ofMillis(1000))
     .ringBufferSizeInHalfOpenState(2)
     .ringBufferSizeInClosedState(2)
+    .recordExceptions(IOException.class, TimeoutException.class)
+    .ignoreExceptions(BusinessException.class, OtherBusinessException.class)
     .build();
 
 // Create a CircuitBreakerRegistry with a custom global configuration
@@ -110,9 +114,39 @@ The CircuitBreaker supports resetting, returning to its original state while los
 circuitBreaker.reset();
 ----
 
-===== Recover from an exception
+===== Recover from an exception before call
 
-If you want to recover from any exception, you can chain the method `Try.recover()`. The recovery method is only invoked, if `Try.of()` returns a `Failure<Throwable>` Monad.
+If you want to recover from an exception before the CircuitBreaker records it as a failure, you can do the following:
+
+[source,java,indent=0]
+----
+Supplier<String> supplier = () -> {
+            throw new RuntimeException("BAM!");
+        };
+Supplier<String> supplierWithRecovery = SupplierUtils.recover(supplier, (exception) -> "Hello Recovery");
+String result = circuitBreaker.executeSupplier(supplierWithRecovery);
+assertThat(result).isEqualTo("Hello Recovery");
+----
+
+`SupplierUtils` and `CallableUtils` contain other methods like `andThen` which can take can be used to chain functions:
+
+[source,java,indent=0]
+----
+Supplier<String> supplierWithResultAndExceptionHandler = SupplierUtils.andThen(supplier, (result, exception) -> "Hello Recovery");
+
+Supplier<HttpResponse> supplier = () -> httpClient.doRemoteCall();
+Supplier<String> supplierWithResultHandling = SupplierUtils.andThen(supplier, result -> {
+    if (result.getStatusCode() == 400) {
+       throw new ClientException();
+    } else if (result.getStatusCode() == 500) {
+       throw new ServerException();
+    });
+HttpResponse httpResponse = circuitBreaker.executeSupplier(supplierWithResultHandling);
+----
+
+===== Recover from an exception after call
+
+If you want to recover from an exception after the CircuitBreaker recorded it as a failure, you can chain the method `Try.recover()`. The recovery method is only invoked, if `Try.of()` returns a `Failure<Throwable>` Monad.
 
 [source,java,indent=0]
 ----
@@ -120,7 +154,8 @@ include::../../../../../resilience4j-circuitbreaker/src/test/java/io/github/resi
 ----
 
 ===== Customize the exception handler
-The default exception handler counts all type of exceptions as failures and triggers the CircuitBreaker. If you want to use a custom exception handler, you have to implement the functional interface `Predicate` which has a method `test`. The Predicate must return true if the exception should count as a failure, otherwise it must return false.
+
+The default exception predicate counts all type of exceptions as failures and triggers the CircuitBreaker. If you want to use a custom exception predicate, you have to implement the functional interface `Predicate` which has a method `test`. The Predicate must return true if the exception should count as a failure, otherwise it must return false.
 The following example shows how to ignore an `IOException`, but all other exception types still count as failures.
 
 [source,java,indent=0]
@@ -129,7 +164,6 @@ include::../../../../../resilience4j-circuitbreaker/src/test/java/io/github/resi
 ----
 
 ===== Consume emitted CircuitBreakerEvents
-
 
 A `CircuitBreakerEvent` can be a state transition, a circuit breaker reset, a successful call, a recorded error or an ignored error. All events contains additional information like event creation time and processing duration of the call. If you want to consume events, you have to register an event consumer.
 

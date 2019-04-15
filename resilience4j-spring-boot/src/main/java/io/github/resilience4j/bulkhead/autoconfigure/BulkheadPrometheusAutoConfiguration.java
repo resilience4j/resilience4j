@@ -30,7 +30,7 @@ import org.springframework.context.annotation.Configuration;
  */
 @Configuration
 @AutoConfigureAfter(value = BulkheadAutoConfiguration.class)
-@ConditionalOnClass(BulkheadExports.class)
+@ConditionalOnClass(BulkheadMetricsCollector.class)
 public class BulkheadPrometheusAutoConfiguration {
 
     @Bean

@@ -1,5 +1,3 @@
-apply plugin: 'me.champeau.gradle.jmh'
-
 dependencies {
     compile project(':resilience4j-core')
     compile project(':resilience4j-ratelimiter')
@@ -13,3 +11,4 @@ dependencies {
     compile project(':resilience4j-timelimiter')
     testCompile project(':resilience4j-test')
 }
+ext.moduleName='io.github.resilience4j.all'

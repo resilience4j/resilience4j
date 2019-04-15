@@ -21,12 +21,13 @@ import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent;
 import io.github.resilience4j.consumer.CircularEventConsumer;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
+import io.vavr.collection.List;
 import io.vavr.collection.Seq;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import reactor.core.publisher.Flux;
@@ -37,7 +38,7 @@ import static io.github.resilience4j.adapter.ReactorAdapter.toFlux;
 
 
 @Controller
-@RequestMapping(value = "circuitbreaker/", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+@RequestMapping(value = "circuitbreaker/")
 public class CircuitBreakerEventsEndpoint {
 
     private static final String MEDIA_TYPE_TEXT_EVENT_STREAM = "text/event-stream";
@@ -50,7 +51,7 @@ public class CircuitBreakerEventsEndpoint {
         this.circuitBreakerRegistry = circuitBreakerRegistry;
     }
 
-    @RequestMapping(value = "events", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value = "events", produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
     public CircuitBreakerEventsEndpointResponse getAllCircuitBreakerEvents() {
         return new CircuitBreakerEventsEndpointResponse(eventConsumerRegistry.getAllEventConsumer()
@@ -59,22 +60,22 @@ public class CircuitBreakerEventsEndpoint {
                 .map(CircuitBreakerEventDTOFactory::createCircuitBreakerEventDTO).toJavaList());
     }
 
-    @RequestMapping(value = "stream/events", produces = MEDIA_TYPE_TEXT_EVENT_STREAM)
+    @GetMapping(value = "stream/events", produces = MEDIA_TYPE_TEXT_EVENT_STREAM)
     public SseEmitter getAllCircuitBreakerEventsStream() {
         Seq<Flux<CircuitBreakerEvent>> eventStreams = circuitBreakerRegistry.getAllCircuitBreakers()
                 .map(circuitBreaker -> toFlux(circuitBreaker.getEventPublisher()));
         return CircuitBreakerEventEmitter.createSseEmitter(Flux.merge(eventStreams));
     }
 
-    @RequestMapping(value = "events/{circuitBreakerName}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value = "events/{circuitBreakerName}", produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
     public CircuitBreakerEventsEndpointResponse getEventsFilteredByCircuitBreakerName(@PathVariable("circuitBreakerName") String circuitBreakerName) {
-        return new CircuitBreakerEventsEndpointResponse(eventConsumerRegistry.getEventConsumer(circuitBreakerName).getBufferedEvents()
+        return new CircuitBreakerEventsEndpointResponse(getCircuitBreakerEvents(circuitBreakerName)
                 .filter(event -> event.getCircuitBreakerName().equals(circuitBreakerName))
                 .map(CircuitBreakerEventDTOFactory::createCircuitBreakerEventDTO).toJavaList());
     }
 
-    @RequestMapping(value = "stream/events/{circuitBreakerName}", produces = MEDIA_TYPE_TEXT_EVENT_STREAM)
+    @GetMapping(value = "stream/events/{circuitBreakerName}", produces = MEDIA_TYPE_TEXT_EVENT_STREAM)
     public SseEmitter getEventsStreamFilteredByCircuitBreakerName(@PathVariable("circuitBreakerName") String circuitBreakerName) {
         CircuitBreaker circuitBreaker = circuitBreakerRegistry.getAllCircuitBreakers()
                 .find(cb -> cb.getName().equals(circuitBreakerName))
@@ -83,17 +84,16 @@ public class CircuitBreakerEventsEndpoint {
         return CircuitBreakerEventEmitter.createSseEmitter(toFlux(circuitBreaker.getEventPublisher()));
     }
 
-    @RequestMapping(value = "events/{circuitBreakerName}/{eventType}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value = "events/{circuitBreakerName}/{eventType}", produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
     public CircuitBreakerEventsEndpointResponse getEventsFilteredByCircuitBreakerNameAndEventType(@PathVariable("circuitBreakerName") String circuitBreakerName,
                                                 @PathVariable("eventType") String eventType) {
-        return new CircuitBreakerEventsEndpointResponse(eventConsumerRegistry.getEventConsumer(circuitBreakerName).getBufferedEvents()
-                .filter(event -> event.getCircuitBreakerName().equals(circuitBreakerName))
+        return new CircuitBreakerEventsEndpointResponse(getCircuitBreakerEvents(circuitBreakerName)
                 .filter(event -> event.getEventType() == CircuitBreakerEvent.Type.valueOf(eventType.toUpperCase()))
                 .map(CircuitBreakerEventDTOFactory::createCircuitBreakerEventDTO).toJavaList());
     }
 
-    @RequestMapping(value = "stream/events/{circuitBreakerName}/{eventType}", produces = MEDIA_TYPE_TEXT_EVENT_STREAM)
+    @GetMapping(value = "stream/events/{circuitBreakerName}/{eventType}", produces = MEDIA_TYPE_TEXT_EVENT_STREAM)
     public SseEmitter getEventsStreamFilteredByCircuitBreakerNameAndEventType(@PathVariable("circuitBreakerName") String circuitBreakerName,
                                                                         @PathVariable("eventType") String eventType) {
         CircuitBreaker circuitBreaker = circuitBreakerRegistry.getAllCircuitBreakers()
@@ -105,4 +105,14 @@ public class CircuitBreakerEventsEndpoint {
         return CircuitBreakerEventEmitter.createSseEmitter(eventStream);
     }
 
+
+    private List<CircuitBreakerEvent> getCircuitBreakerEvents(String circuitBreakerName) {
+        CircularEventConsumer<CircuitBreakerEvent> eventConsumer = eventConsumerRegistry.getEventConsumer(circuitBreakerName);
+        if(eventConsumer != null){
+            return eventConsumer.getBufferedEvents()
+                    .filter(event -> event.getCircuitBreakerName().equals(circuitBreakerName));
+        }else{
+            return List.empty();
+        }
+    }
 }

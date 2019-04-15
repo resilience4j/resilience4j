@@ -1,26 +1,11 @@
-buildscript {
-    repositories {
-        jcenter()
-        mavenCentral()
-        maven {
-            url "https://plugins.gradle.org/m2/"
-        }
-    }
-    dependencies {
-        classpath 'net.saliman:gradle-cobertura-plugin:2.3.2'
-        classpath 'org.kt3k.gradle.plugin:coveralls-gradle-plugin:2.7.1'
-        classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.8.4'
-        classpath 'me.champeau.gradle:jmh-gradle-plugin:0.3.1'
-        classpath "org.asciidoctor:asciidoctor-gradle-plugin:1.5.3"
-        classpath "org.ajoberstar:gradle-git:1.3.2"
-        classpath "org.jfrog.buildinfo:build-info-extractor-gradle:4.4.17"
-        classpath 'com.github.erizo.gradle:jcstress-gradle-plugin:0.8.0'
-        classpath "com.netflix.nebula:gradle-extra-configurations-plugin:4.0.1"
-    }
+plugins {
+    id "org.sonarqube" version "2.7"
+    id "com.jfrog.bintray" version "1.8.4"
+    id "me.champeau.gradle.jmh" version "0.4.8"
+    id 'org.asciidoctor.convert' version '1.6.0'
+    id "com.jfrog.artifactory" version "4.9.5"
 }
-
 apply plugin: 'idea'
-apply plugin: 'com.github.kt3k.coveralls'
 apply from: "${rootDir}/libraries.gradle"
 
 ext {
@@ -28,7 +13,7 @@ ext {
 }
 
 allprojects {
-    apply plugin: 'net.saliman.cobertura'
+    apply plugin: 'jacoco'
     apply plugin: 'me.champeau.gradle.jmh'
     apply plugin: 'com.jfrog.artifactory'
 
@@ -56,14 +41,14 @@ configure(project.coreProjects) {
     apply plugin: 'maven-publish'
     apply plugin: 'com.jfrog.bintray'
     apply from: "${rootDir}/publishing.gradle"
-    apply plugin: 'nebula.optional-base'
+    apply plugin: 'jacoco'
 
     dependencies {
         compile ( libraries.vavr)
         compile ( libraries.slf4j)
         
         // JSR-305 only used for non-required meta-annotations
-        compile "com.google.code.findbugs:jsr305:3.0.2", optional
+        compileOnly "com.google.code.findbugs:jsr305:3.0.2"
 
         testCompile ( libraries.junit)
         testCompile ( libraries.assertj)
@@ -73,9 +58,7 @@ configure(project.coreProjects) {
         testCompile ( libraries.powermock_api_mockito)
         testCompile ( libraries.powermock_module_junit4)
         testCompile ( libraries.awaitility)
-
-        jmh "org.openjdk.jmh:jmh-core:1.18"
-        jmh "org.openjdk.jmh:jmh-generator-annprocess:1.18"
+        testCompile ( libraries.jaxws)
     }
 
     tasks.withType(JavaCompile) {
@@ -87,36 +70,62 @@ configure(project.coreProjects) {
 
     }
 
-    cobertura {
-        coverageIgnoreTrivial = true
-        coverageExcludes = ['.*io.github.resilience4j.bulkhead.internal.*']
-    }
-
     jmh {
         duplicateClassesStrategy = 'warn'
-        jmhVersion = '1.17'
     }
 }
 
-def files = subprojects.collect { new File(it.projectDir, '/build/cobertura/cobertura.ser') }
-cobertura {
-    coverageFormats = ['html', 'xml']
-    coverageSourceDirs = subprojects.sourceSets.main.allSource.srcDirs.flatten()
-    coverageMergeDatafiles = files
+sonarqube {
+    properties {
+        property "sonar.projectName", "resilience4j"
+        property "sonar.projectKey", "resilience4j_resilience4j"
+
+        property "sonar.links.homepage","https://github.com/resilience4j/resilience4j"
+        property "sonar.links.ci","https://travis-ci.org/resilience4j/resilience4j"
+        property "sonar.links.scm","https://github.com/resilience4j/resilience4j"
+        property "sonar.links.issue","https://github.com/resilience4j/resilience4j/issues"
+
+//        property "sonar.jacoco.reportPaths","build/reports/jacoco/test"
+
+        property "sonar.language","java"
+    }
 }
+def allTestCoverageFile = "$buildDir/jacoco/allTestCoverage.exec"
+
+task jacocoMergeTest(type: JacocoMerge) {
+    destinationFile = file(allTestCoverageFile)
+    executionData = project.fileTree(dir: '.', include:'**/build/jacoco/test.exec')
+}
+
+task jacocoMerge(dependsOn: ['jacocoMergeTest']) {
+    // used to run the other merge tasks
+}
+
+subprojects {
+    sonarqube {
+        properties {
+            property "sonar.jacoco.reportPaths", allTestCoverageFile
+        }
+    }
+    afterEvaluate {
+        // exclude subprojects that don't produce a jar file.
+        if(!project.name.equals('resilience4j-bom') && !project.name.equals('resilience4j-documentation') && !project.name.equals('resilience4j-test')) {
+            jar {
+                inputs.property('moduleName', moduleName)
+                manifest.attributes(
+                    'Automatic-Module-Name': moduleName
+                )
+            }
+        }
+    }
+}
+
+tasks.check.dependsOn tasks.jacocoTestReport
+
 
 test {
     dependsOn(subprojects.test) // required by cobertura to aggregate report
 }
-
-tasks.coveralls {
-    dependsOn 'check'
-}
-
-task wrapper(type: Wrapper) {
-    gradleVersion = '4.10.2'
-}
-
 
 artifactory {
     contextUrl = 'https://oss.jfrog.org'
