@@ -19,7 +19,7 @@ ext {
     springBootVersion = '1.5.20.RELEASE'
     springBoot2Version = '2.1.4.RELEASE'
     ratpackVersion = '1.6.0'
-    spockVersion = '1.3-RC1-groovy-2.4'
+    spockVersion = '1.3-groovy-2.5'
     retrofitVersion = '2.5.0'
     feignVersion = '10.2.0'
     prometheusSimpleClientVersion = '0.6.0'
@@ -103,7 +103,12 @@ ext {
 
             // Prometheus addon
             prometheus_simpleclient: "io.prometheus:simpleclient_common:${prometheusSimpleClientVersion}",
-            prometheus_spring_boot: "io.prometheus:simpleclient_spring_boot:${prometheusSimpleClientVersion}"
+            prometheus_spring_boot: "io.prometheus:simpleclient_spring_boot:${prometheusSimpleClientVersion}",
+
+            jaxws: "com.sun.xml.ws:jaxws-ri:2.3.2",
+
+            // Groovy
+            groovy: "org.codehaus.groovy:groovy-all:2.5.6"
     ]
 
 }
