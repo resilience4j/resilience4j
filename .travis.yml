@@ -1,32 +1,22 @@
 language: java
 sudo: false
 jdk:
-- oraclejdk8
-- oraclejdk11
+  - oraclejdk8
+  - oraclejdk11
 before_install:
-- chmod +x gradlew
-stages:
-  - test
-  - quality
-  - publish
-  - documentation
-jobs:
-  include:
-    - stage: quality
-      script: ./gradlew sonarqube -x test
-      if: env(SONAR_TOKEN) IS present
-    - stage: publish
-      script: ./gradlew artifactoryPublish -PbintrayUsername="${BINTRAY_USER}" -PbintrayApiKey="${BINTRAY_KEY}"
-      if: branch = master
-    - stage: documentation
-      script: ./gradlew asciidoctor
-      if: branch = master
-      deploy:
-        provider: pages
-        skip_cleanup: true
-        github_token: $GITHUB_TOKEN  # Set in the settings page of your repository, as a secure variable
-        keep_history: true
-        local_dir: resilience4j-documentation/build/asciidoc/html5
+  - chmod +x gradlew
+after_success:
+  - test -n $SONAR_TOKEN && ./gradlew sonarqube
+  - test $TRAVIS_BRANCH = "master" && test -n $BINTRAY_USER && ./gradlew artifactoryPublish -PbintrayUsername="${BINTRAY_USER}" -PbintrayApiKey="${BINTRAY_KEY}"
+  - test $TRAVIS_BRANCH = "master" && test -n $GITHUB_TOKEN && ./gradlew asciidoctor
+deploy:
+  provider: pages
+  skip_cleanup: true
+  github_token: $GITHUB_TOKEN  # Set in the settings page of your repository, as a secure variable
+  keep_history: true
+  local_dir: resilience4j-documentation/build/asciidoc/html5
+  on:
+    branch: master
 before_cache:
 - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
 - rm -fr $HOME/.gradle/caches/*/plugin-resolution/
