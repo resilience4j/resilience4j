@@ -58,7 +58,7 @@ public class MonoBulkheadTest {
 
     @Test
     public void shouldEmitErrorWithBulkheadFullException() {
-        bulkhead.obtainPermission();
+        bulkhead.tryObtainPermission();
 
         StepVerifier.create(
                 Mono.just("Event")
@@ -72,7 +72,7 @@ public class MonoBulkheadTest {
 
     @Test
     public void shouldEmitBulkheadFullExceptionEvenWhenErrorDuringSubscribe() {
-        bulkhead.obtainPermission();
+        bulkhead.tryObtainPermission();
 
         StepVerifier.create(
                 Mono.error(new IOException("BAM!"))
@@ -86,7 +86,7 @@ public class MonoBulkheadTest {
 
     @Test
     public void shouldEmitBulkheadFullExceptionEvenWhenErrorNotOnSubscribe() {
-        bulkhead.obtainPermission();
+        bulkhead.tryObtainPermission();
 
         StepVerifier.create(
                 Mono.error(new IOException("BAM!")).delayElement(Duration.ofMillis(1))

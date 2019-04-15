@@ -45,7 +45,7 @@ public class BulkheadSubscriberTest {
 
     @Test
     public void shouldEmitErrorWithBulkheadFullException() {
-        bulkhead.obtainPermission();
+        bulkhead.tryObtainPermission();
 
         Flowable.fromArray("Event 1", "Event 2")
             .lift(BulkheadOperator.of(bulkhead))
@@ -115,7 +115,7 @@ public class BulkheadSubscriberTest {
         Subscription subscription = mock(Subscription.class);
         Subscriber childObserver = mock(Subscriber.class);
         Subscriber decoratedObserver = BulkheadOperator.of(bulkhead).apply(childObserver);
-        bulkhead.obtainPermission();
+        bulkhead.tryObtainPermission();
         assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(0);
         decoratedObserver.onSubscribe(subscription);
 

@@ -25,7 +25,7 @@ import io.github.resilience4j.bulkhead.BulkheadFullException;
 public final class BulkheadUtils {
 
     public static void isCallPermitted(Bulkhead bulkhead) {
-        if(!bulkhead.obtainPermission()) {
+        if(!bulkhead.tryObtainPermission()) {
             throw new BulkheadFullException(bulkhead);
         }
     }

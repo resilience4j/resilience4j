@@ -47,7 +47,7 @@ public class BulkheadSingleObserverTest {
 
     @Test
     public void shouldEmitErrorWithBulkheadFullException() {
-        bulkhead.obtainPermission();
+        bulkhead.tryObtainPermission();
 
         Single.just(1)
             .lift(BulkheadOperator.of(bulkhead))
@@ -99,7 +99,7 @@ public class BulkheadSingleObserverTest {
         Disposable disposable = mock(Disposable.class);
         SingleObserver childObserver = mock(SingleObserver.class);
         SingleObserver decoratedObserver = BulkheadOperator.of(bulkhead).apply(childObserver);
-        bulkhead.obtainPermission();
+        bulkhead.tryObtainPermission();
         assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(0);
         decoratedObserver.onSubscribe(disposable);
 

@@ -45,7 +45,7 @@ public class BulkheadObserverTest {
 
     @Test
     public void shouldEmitErrorWithBulkheadFullException() {
-        bulkhead.obtainPermission();
+        bulkhead.tryObtainPermission();
 
         Observable.fromArray("Event 1", "Event 2")
             .lift(BulkheadOperator.of(bulkhead))
@@ -116,7 +116,7 @@ public class BulkheadObserverTest {
         Disposable disposable = mock(Disposable.class);
         Observer childObserver = mock(Observer.class);
         Observer decoratedObserver = BulkheadOperator.of(bulkhead).apply(childObserver);
-        bulkhead.obtainPermission();
+        bulkhead.tryObtainPermission();
         assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(0);
         decoratedObserver.onSubscribe(disposable);
 
