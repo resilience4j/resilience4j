@@ -13,7 +13,8 @@ stages:
 jobs:
   include:
     - stage: quality
-      script: ./gradlew sonarqube
+      script: ./gradlew sonarqube -x test
+      if: env(SONAR_TOKEN) IS present
     - stage: publish
       script: ./gradlew artifactoryPublish -PbintrayUsername="${BINTRAY_USER}" -PbintrayApiKey="${BINTRAY_KEY}"
       if: branch = master
