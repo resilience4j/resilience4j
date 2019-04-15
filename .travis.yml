@@ -2,14 +2,25 @@ language: java
 sudo: false
 jdk:
 - oraclejdk8
+- oraclejdk11
 before_install:
 - chmod +x gradlew
-script:
-- "./gradlew clean check"
-- "./gradlew sonarqube"
-after_success:
-- test $TRAVIS_BRANCH = "master" && ./gradlew artifactoryPublish -PbintrayUsername="${BINTRAY_USER}" -PbintrayApiKey="${BINTRAY_KEY}"
-- test $TRAVIS_BRANCH = "master" && ./gradlew asciidoctor
+stages:
+  - test
+  - quality
+  - publish
+  - documentation
+jobs:
+  include:
+    - stage: quality
+      script: ./gradlew sonarqube -x test
+      if: env(SONAR_TOKEN) IS present
+    - stage: publish
+      script: ./gradlew artifactoryPublish -PbintrayUsername="${BINTRAY_USER}" -PbintrayApiKey="${BINTRAY_KEY}"
+      if: branch = master
+    - stage: documentation
+      script: ./gradlew asciidoctor
+      if: branch = master
 before_cache:
 - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
 - rm -fr $HOME/.gradle/caches/*/plugin-resolution/

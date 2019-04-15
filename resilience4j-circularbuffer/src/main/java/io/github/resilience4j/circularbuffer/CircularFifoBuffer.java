@@ -34,16 +34,16 @@ public interface CircularFifoBuffer<T> {
     int size();
 
     /**
-     * Returns <tt>true</tt> if this {@link CircularFifoBuffer} contains no elements.
+     * Returns <code>true</code> if this {@link CircularFifoBuffer} contains no elements.
      *
-     * @return <tt>true</tt> if this {@link CircularFifoBuffer} contains no elements
+     * @return <code>true</code> if this {@link CircularFifoBuffer} contains no elements
      */
     boolean isEmpty();
 
     /**
-     * Returns <tt>true</tt> if this {@link CircularFifoBuffer} is full.
+     * Returns <code>true</code> if this {@link CircularFifoBuffer} is full.
      *
-     * @return <tt>true</tt> if this {@link CircularFifoBuffer} is full
+     * @return <code>true</code> if this {@link CircularFifoBuffer} is full
      */
     boolean isFull();
 
