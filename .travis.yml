@@ -21,17 +21,16 @@ jobs:
     - stage: documentation
       script: ./gradlew asciidoctor
       if: branch = master
+      deploy:
+        provider: pages
+        skip_cleanup: true
+        github_token: $GITHUB_TOKEN  # Set in the settings page of your repository, as a secure variable
+        keep_history: true
+        local_dir: resilience4j-documentation/build/asciidoc/html5
 before_cache:
 - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
 - rm -fr $HOME/.gradle/caches/*/plugin-resolution/
-deploy:
-  provider: pages
-  skip_cleanup: true
-  github_token: $GITHUB_TOKEN  # Set in the settings page of your repository, as a secure variable
-  keep_history: true
-  local_dir: resilience4j-documentation/build/asciidoc/html5
-  on:
-    branch: master
+
 addons:
   sonarcloud:
     organization: "resilience4j" # the key of the org you chose at step #3
