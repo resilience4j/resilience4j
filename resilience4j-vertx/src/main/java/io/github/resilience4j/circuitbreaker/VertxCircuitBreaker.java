@@ -67,10 +67,10 @@ public interface VertxCircuitBreaker {
                             future.complete(result.result());
                         }
                     });
-                } catch (Throwable throwable) {
+                } catch (Exception exception) {
                     long durationInNanos = System.nanoTime() - start;
-                    circuitBreaker.onError(durationInNanos, throwable);
-                    future.fail(throwable);
+                    circuitBreaker.onError(durationInNanos, exception);
+                    future.fail(exception);
                 }
             }
             return future;

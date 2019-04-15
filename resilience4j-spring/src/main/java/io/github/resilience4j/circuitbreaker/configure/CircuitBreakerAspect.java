@@ -15,7 +15,6 @@
  */
 package io.github.resilience4j.circuitbreaker.configure;
 
-import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.core.lang.Nullable;
@@ -32,7 +31,7 @@ import org.springframework.core.Ordered;
 
 import java.lang.reflect.Method;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.CompletionStage;
 
 /**
@@ -47,7 +46,7 @@ public class CircuitBreakerAspect implements Ordered {
 
 	private final CircuitBreakerConfigurationProperties circuitBreakerProperties;
 	private final CircuitBreakerRegistry circuitBreakerRegistry;
-	private final List<CircuitBreakerAspectExt> circuitBreakerAspectExtList;
+	private final @Nullable List<CircuitBreakerAspectExt> circuitBreakerAspectExtList;
 
 	public CircuitBreakerAspect(CircuitBreakerConfigurationProperties backendMonitorPropertiesRegistry, CircuitBreakerRegistry circuitBreakerRegistry, @Autowired(required = false) List<CircuitBreakerAspectExt> circuitBreakerAspectExtList) {
 		this.circuitBreakerProperties = backendMonitorPropertiesRegistry;
@@ -103,45 +102,20 @@ public class CircuitBreakerAspect implements Ordered {
 		if (logger.isDebugEnabled()) {
 			logger.debug("circuitBreaker parameter is null");
 		}
-
 		return AnnotationExtractor.extract(proceedingJoinPoint.getTarget().getClass(), CircuitBreaker.class);
 	}
 
 	/**
 	 * handle the CompletionStage return types AOP based into configured circuit-breaker
 	 */
-	@SuppressWarnings("unchecked")
-	private Object handleJoinPointCompletableFuture(ProceedingJoinPoint proceedingJoinPoint, io.github.resilience4j.circuitbreaker.CircuitBreaker circuitBreaker) throws Throwable {
-
-		final CompletableFuture promise = new CompletableFuture<>();
-		long start = System.nanoTime();
-		if (!circuitBreaker.tryObtainPermission()) {
-			promise.completeExceptionally(
-					new CallNotPermittedException(circuitBreaker));
-
-		} else {
+	private Object handleJoinPointCompletableFuture(ProceedingJoinPoint proceedingJoinPoint, io.github.resilience4j.circuitbreaker.CircuitBreaker circuitBreaker) {
+		return circuitBreaker.executeCompletionStage(() -> {
 			try {
-				CompletionStage<?> result = (CompletionStage<?>) proceedingJoinPoint.proceed();
-				if (result != null) {
-					result.whenComplete((v, t) -> {
-						long durationInNanos = System.nanoTime() - start;
-						if (t != null) {
-							circuitBreaker.onError(durationInNanos, t);
-							promise.completeExceptionally(t);
-
-						} else {
-							circuitBreaker.onSuccess(durationInNanos);
-							promise.complete(v);
-						}
-					});
-				}
-			}catch (Exception exception){
-				long durationInNanos = System.nanoTime() - start;
-				circuitBreaker.onError(durationInNanos, exception);
-				promise.completeExceptionally(exception);
+				return (CompletionStage<?>) proceedingJoinPoint.proceed();
+			} catch (Throwable throwable) {
+				throw new CompletionException(throwable);
 			}
-		}
-		return promise;
+		});
 	}
 
 	/**

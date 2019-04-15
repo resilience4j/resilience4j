@@ -4,3 +4,4 @@ dependencies {
     testCompile ( libraries.vertx_unit)
     testCompile ( libraries.vertx)
 }
+ext.moduleName='io.github.resilience4j.vertx'

@@ -4,3 +4,4 @@ dependencies {
     testCompile project(':resilience4j-rxjava2')
     testCompile ( libraries.rxjava2)
 }
+ext.moduleName='io.github.resilience4j.cache'

@@ -16,66 +16,61 @@
 package io.github.resilience4j.retry.monitoring.endpoint;
 
 
-import java.util.Comparator;
-
-import org.springframework.http.MediaType;
-import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.ResponseBody;
-
 import io.github.resilience4j.consumer.CircularEventConsumer;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
 import io.github.resilience4j.retry.event.RetryEvent;
 import io.vavr.collection.List;
+import org.springframework.http.MediaType;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.Comparator;
 
 
 /**
  * rest api endpoint to retrieve retry events
  */
 @Controller
-@RequestMapping(value = "retries/", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+@RequestMapping(value = "retries/")
 public class RetryEventsEndpoint {
 
-	private final EventConsumerRegistry<RetryEvent> syncRetryEventConsumerRegistry;
+	private final EventConsumerRegistry<RetryEvent> eventConsumerRegistry;
 
 	public RetryEventsEndpoint(EventConsumerRegistry<RetryEvent> eventConsumerRegistry) {
-		this.syncRetryEventConsumerRegistry = eventConsumerRegistry;
+		this.eventConsumerRegistry = eventConsumerRegistry;
 	}
 
-	@RequestMapping(value = "events", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+	@GetMapping(value = "events", produces = MediaType.APPLICATION_JSON_VALUE)
 	@ResponseBody
 	public RetryEventsEndpointResponse getAllRetryEvenets() {
-		return new RetryEventsEndpointResponse(syncRetryEventConsumerRegistry.getAllEventConsumer()
+		return new RetryEventsEndpointResponse(eventConsumerRegistry.getAllEventConsumer()
 				.flatMap(CircularEventConsumer::getBufferedEvents)
 				.sorted(Comparator.comparing(RetryEvent::getCreationTime))
 				.map(RetryEventDTOFactory::createRetryEventDTO).toJavaList());
 	}
 
-	@RequestMapping(value = "events/{name}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+	@GetMapping(value = "events/{name}",  produces = MediaType.APPLICATION_JSON_VALUE)
 	@ResponseBody
 	public RetryEventsEndpointResponse getEventsFilteredByRetryrName(@PathVariable("name") String name) {
-		return new RetryEventsEndpointResponse(getRetryEventCircularEventConsumer(name)
-				.filter(event -> event.getName().equals(name))
+		return new RetryEventsEndpointResponse(getRetryEvents(name)
 				.map(RetryEventDTOFactory::createRetryEventDTO).toJavaList());
 
 	}
 
-	@RequestMapping(value = "events/{name}/{eventType}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+	@GetMapping(value = "events/{name}/{eventType}", produces = MediaType.APPLICATION_JSON_VALUE)
 	@ResponseBody
 	public RetryEventsEndpointResponse getEventsFilteredByRetryNameAndEventType(@PathVariable("name") String name,
 	                                                                            @PathVariable("eventType") String eventType) {
-		return new RetryEventsEndpointResponse(getRetryEventCircularEventConsumer(name)
-				.filter(event -> event.getName().equals(name))
+		return new RetryEventsEndpointResponse(getRetryEvents(name)
 				.filter(event -> event.getEventType() == RetryEvent.Type.valueOf(eventType.toUpperCase()))
 				.map(RetryEventDTOFactory::createRetryEventDTO).toJavaList());
 	}
 
-	private List<RetryEvent> getRetryEventCircularEventConsumer(String name) {
-		final CircularEventConsumer<RetryEvent> syncEvents = syncRetryEventConsumerRegistry.getEventConsumer(name);
+	private List<RetryEvent> getRetryEvents(String name) {
+		final CircularEventConsumer<RetryEvent> syncEvents = eventConsumerRegistry.getEventConsumer(name);
 		if (syncEvents != null) {
-			return syncEvents.getBufferedEvents();
+			return syncEvents.getBufferedEvents()
+					.filter(event -> event.getName().equals(name));
 		} else {
 			return List.empty();
 		}

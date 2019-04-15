@@ -15,11 +15,11 @@
  */
 package io.github.resilience4j.ratelimiter.configure;
 
-import java.lang.reflect.Method;
-import java.util.List;
-import java.util.concurrent.CompletionException;
-import java.util.concurrent.CompletionStage;
-
+import io.github.resilience4j.core.lang.Nullable;
+import io.github.resilience4j.ratelimiter.RateLimiterConfig;
+import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
+import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
+import io.github.resilience4j.utils.AnnotationExtractor;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -30,10 +30,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.Ordered;
 
-import io.github.resilience4j.ratelimiter.RateLimiterConfig;
-import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
-import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
-import io.github.resilience4j.utils.AnnotationExtractor;
+import java.lang.reflect.Method;
+import java.util.List;
+import java.util.concurrent.CompletionException;
+import java.util.concurrent.CompletionStage;
 
 /**
  * This Spring AOP aspect intercepts all methods which are annotated with a {@link RateLimiter} annotation.
@@ -47,7 +47,7 @@ public class RateLimiterAspect implements Ordered {
 	private static final Logger logger = LoggerFactory.getLogger(RateLimiterAspect.class);
 	private final RateLimiterRegistry rateLimiterRegistry;
 	private final RateLimiterConfigurationProperties properties;
-	private final List<RateLimiterAspectExt> rateLimiterAspectExtList;
+	private final @Nullable List<RateLimiterAspectExt> rateLimiterAspectExtList;
 
 	public RateLimiterAspect(RateLimiterRegistry rateLimiterRegistry, RateLimiterConfigurationProperties properties, @Autowired(required = false) List<RateLimiterAspectExt> rateLimiterAspectExtList) {
 		this.rateLimiterRegistry = rateLimiterRegistry;
@@ -66,7 +66,7 @@ public class RateLimiterAspect implements Ordered {
 	}
 
 	@Around(value = "matchAnnotatedClassOrMethod(limitedService)", argNames = "proceedingJoinPoint, limitedService")
-	public Object rateLimiterAroundAdvice(ProceedingJoinPoint proceedingJoinPoint, RateLimiter limitedService) throws Throwable {
+	public Object rateLimiterAroundAdvice(ProceedingJoinPoint proceedingJoinPoint, @Nullable RateLimiter limitedService) throws Throwable {
 		RateLimiter targetService = limitedService;
 		Method method = ((MethodSignature) proceedingJoinPoint.getSignature()).getMethod();
 		String methodName = method.getDeclaringClass().getName() + "#" + method.getName();
@@ -84,9 +84,9 @@ public class RateLimiterAspect implements Ordered {
 			}
 		}
 		if (CompletionStage.class.isAssignableFrom(returnType)) {
-			return handleJoinPointCompletableFuture(proceedingJoinPoint, rateLimiter, methodName);
+			return handleJoinPointCompletableFuture(proceedingJoinPoint, rateLimiter);
 		}
-		return handleJoinPoint(proceedingJoinPoint, rateLimiter, methodName);
+		return handleJoinPoint(proceedingJoinPoint, rateLimiter);
 	}
 
 	private io.github.resilience4j.ratelimiter.RateLimiter getOrCreateRateLimiter(String methodName, String name) {
@@ -104,16 +104,14 @@ public class RateLimiterAspect implements Ordered {
 		return rateLimiter;
 	}
 
+	@Nullable
 	private RateLimiter getRateLimiterAnnotation(ProceedingJoinPoint proceedingJoinPoint) {
 		return AnnotationExtractor.extract(proceedingJoinPoint.getTarget().getClass(), RateLimiter.class);
 	}
 
 	private Object handleJoinPoint(ProceedingJoinPoint proceedingJoinPoint,
-	                               io.github.resilience4j.ratelimiter.RateLimiter rateLimiter, String methodName)
+								   io.github.resilience4j.ratelimiter.RateLimiter rateLimiter)
 			throws Throwable {
-		if (logger.isDebugEnabled()) {
-			logger.debug("Rate limiter invocation for method {} ", methodName);
-		}
 		return rateLimiter.executeCheckedSupplier(proceedingJoinPoint::proceed);
 	}
 
@@ -122,20 +120,16 @@ public class RateLimiterAspect implements Ordered {
 	 *
 	 * @param proceedingJoinPoint AOPJoinPoint
 	 * @param rateLimiter         configured rate limiter
-	 * @param methodName          bulkhead method name
 	 * @return CompletionStage
-	 * @throws Throwable
 	 */
-	private Object handleJoinPointCompletableFuture(ProceedingJoinPoint proceedingJoinPoint, io.github.resilience4j.ratelimiter.RateLimiter rateLimiter, String methodName) {
-
-		return io.github.resilience4j.ratelimiter.RateLimiter.decorateCompletionStage(rateLimiter, () -> {
+	private Object handleJoinPointCompletableFuture(ProceedingJoinPoint proceedingJoinPoint, io.github.resilience4j.ratelimiter.RateLimiter rateLimiter) {
+		return rateLimiter.executeCompletionStage(() -> {
 			try {
 				return (CompletionStage<?>) proceedingJoinPoint.proceed();
 			} catch (Throwable throwable) {
-				logger.error("Exception being thrown during RateLimiter invocation {} ", methodName, throwable.getCause());
 				throw new CompletionException(throwable);
 			}
-		}).get();
+		});
 	}
 
 
