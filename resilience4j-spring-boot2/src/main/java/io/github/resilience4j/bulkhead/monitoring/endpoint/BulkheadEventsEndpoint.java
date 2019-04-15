@@ -64,8 +64,12 @@ public class BulkheadEventsEndpoint {
     }
 
     private List<BulkheadEvent> getBulkheadEvent(String bulkheadName) {
-        return eventConsumerRegistry.getEventConsumer(bulkheadName)
-                .getBufferedEvents()
-                .filter(event -> event.getBulkheadName().equals(bulkheadName));
+        CircularEventConsumer<BulkheadEvent> eventConsumer = eventConsumerRegistry.getEventConsumer(bulkheadName);
+        if(eventConsumer != null){
+            return eventConsumer.getBufferedEvents()
+                    .filter(event -> event.getBulkheadName().equals(bulkheadName));
+        }else{
+            return List.empty();
+        }
     }
 }

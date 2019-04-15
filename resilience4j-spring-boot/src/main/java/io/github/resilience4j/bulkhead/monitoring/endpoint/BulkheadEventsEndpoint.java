@@ -24,10 +24,7 @@ import io.vavr.collection.List;
 import io.vavr.collection.Seq;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import reactor.core.publisher.Flux;
 
@@ -36,7 +33,7 @@ import java.util.Comparator;
 import static io.github.resilience4j.adapter.ReactorAdapter.toFlux;
 
 @Controller
-@RequestMapping(value = "bulkhead/", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+@RequestMapping(value = "bulkhead/")
 public class BulkheadEventsEndpoint {
 
     private static final String MEDIA_TYPE_TEXT_EVENT_STREAM = "text/event-stream";
@@ -49,7 +46,7 @@ public class BulkheadEventsEndpoint {
         this.bulkheadRegistry = bulkheadRegistry;
     }
 
-    @RequestMapping(value = "events", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value = "events", produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
     public BulkheadEventsEndpointResponse getAllBulkheadEvents() {
         java.util.List<BulkheadEventDTO> response = eventConsumerRegistry.getAllEventConsumer()
@@ -61,7 +58,7 @@ public class BulkheadEventsEndpoint {
         return new BulkheadEventsEndpointResponse(response);
     }
 
-    @RequestMapping(value = "stream/events", produces = MEDIA_TYPE_TEXT_EVENT_STREAM)
+    @GetMapping(value = "stream/events", produces = MEDIA_TYPE_TEXT_EVENT_STREAM)
     public SseEmitter getBulkheadEventsStream() {
         Seq<Flux<BulkheadEvent>> eventStreams = bulkheadRegistry.getAllBulkheads()
                 .map(bulkhead -> toFlux(bulkhead.getEventPublisher()));
@@ -69,7 +66,7 @@ public class BulkheadEventsEndpoint {
         return BulkheadEventEmitter.createSseEmitter(Flux.merge(eventStreams));
     }
 
-    @RequestMapping(value = "events/{bulkheadName}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value = "events/{bulkheadName}", produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
     public BulkheadEventsEndpointResponse getEventsFilteredByBulkheadName(@PathVariable("bulkheadName") String bulkheadName) {
         java.util.List<BulkheadEventDTO> response = getBulkheadEvent(bulkheadName)
@@ -79,14 +76,14 @@ public class BulkheadEventsEndpoint {
         return new BulkheadEventsEndpointResponse(response);
     }
 
-    @RequestMapping(value = "stream/events/{bulkheadName}", produces = MEDIA_TYPE_TEXT_EVENT_STREAM)
+    @GetMapping(value = "stream/events/{bulkheadName}", produces = MEDIA_TYPE_TEXT_EVENT_STREAM)
     public SseEmitter getEventsStreamFilteredByBulkheadName(@PathVariable("bulkheadName") String bulkheadName) {
         Bulkhead bulkhead = getBulkhead(bulkheadName);
 
         return BulkheadEventEmitter.createSseEmitter(toFlux(bulkhead.getEventPublisher()));
     }
 
-    @RequestMapping(value = "events/{bulkheadName}/{eventType}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value = "events/{bulkheadName}/{eventType}", produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
     public BulkheadEventsEndpointResponse getEventsFilteredByBulkheadNameAndEventType(@PathVariable("bulkheadName") String bulkheadName,
                                                                                             @PathVariable("eventType") String eventType) {
@@ -98,7 +95,7 @@ public class BulkheadEventsEndpoint {
         return new BulkheadEventsEndpointResponse(response);
     }
 
-    @RequestMapping(value = "stream/events/{bulkheadName}/{eventType}", produces = MEDIA_TYPE_TEXT_EVENT_STREAM)
+    @GetMapping(value = "stream/events/{bulkheadName}/{eventType}", produces = MEDIA_TYPE_TEXT_EVENT_STREAM)
     public SseEmitter getEventsStreamFilteredByBulkHeadNameAndEventType(@PathVariable("bulkheadName") String bulkheadName,
                                                                         @PathVariable("eventType") String eventType) {
         Bulkhead bulkhead = getBulkhead(bulkheadName);
@@ -116,8 +113,12 @@ public class BulkheadEventsEndpoint {
     }
 
     private List<BulkheadEvent> getBulkheadEvent(String bulkheadName) {
-        return eventConsumerRegistry.getEventConsumer(bulkheadName)
-                .getBufferedEvents()
-                .filter(event -> event.getBulkheadName().equals(bulkheadName));
+        CircularEventConsumer<BulkheadEvent> eventConsumer = eventConsumerRegistry.getEventConsumer(bulkheadName);
+        if(eventConsumer != null){
+            return eventConsumer.getBufferedEvents()
+                    .filter(event -> event.getBulkheadName().equals(bulkheadName));
+        }else{
+            return List.empty();
+        }
     }
 }
