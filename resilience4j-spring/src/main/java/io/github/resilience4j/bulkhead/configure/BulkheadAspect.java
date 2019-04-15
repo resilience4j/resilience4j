@@ -79,9 +79,9 @@ public class BulkheadAspect implements Ordered {
 			}
 		}
 		if (CompletionStage.class.isAssignableFrom(returnType)) {
-			return handleJoinPointCompletableFuture(proceedingJoinPoint, bulkhead, methodName);
+			return handleJoinPointCompletableFuture(proceedingJoinPoint, bulkhead);
 		}
-		return handleJoinPoint(proceedingJoinPoint, bulkhead, methodName);
+		return handleJoinPoint(proceedingJoinPoint, bulkhead);
 	}
 
 	private io.github.resilience4j.bulkhead.Bulkhead getOrCreateBulkhead(String methodName, String backend) {
@@ -106,10 +106,7 @@ public class BulkheadAspect implements Ordered {
 		return AnnotationExtractor.extract(proceedingJoinPoint.getTarget().getClass(), Bulkhead.class);
 	}
 
-	private Object handleJoinPoint(ProceedingJoinPoint proceedingJoinPoint, io.github.resilience4j.bulkhead.Bulkhead bulkhead, String methodName) throws Throwable {
-		if (logger.isDebugEnabled()) {
-			logger.debug("bulkhead method invocation for method {}", methodName);
-		}
+	private Object handleJoinPoint(ProceedingJoinPoint proceedingJoinPoint, io.github.resilience4j.bulkhead.Bulkhead bulkhead) throws Throwable {
 		return bulkhead.executeCheckedSupplier(proceedingJoinPoint::proceed);
 	}
 
@@ -118,17 +115,13 @@ public class BulkheadAspect implements Ordered {
 	 *
 	 * @param proceedingJoinPoint AOPJoinPoint
 	 * @param bulkhead            configured bulkhead
-	 * @param methodName          bulkhead method name
 	 * @return CompletionStage
-	 * @throws Throwable
 	 */
-	private Object handleJoinPointCompletableFuture(ProceedingJoinPoint proceedingJoinPoint, io.github.resilience4j.bulkhead.Bulkhead bulkhead, String methodName) throws Throwable {
-
+	private Object handleJoinPointCompletableFuture(ProceedingJoinPoint proceedingJoinPoint, io.github.resilience4j.bulkhead.Bulkhead bulkhead) {
 		return bulkhead.executeCompletionStage(() -> {
 			try {
 				return (CompletionStage<?>) proceedingJoinPoint.proceed();
 			} catch (Throwable throwable) {
-				logger.error("Exception being thrown during bulkhead invocation {} ", methodName, throwable.getCause());
 				throw new CompletionException(throwable);
 			}
 		});

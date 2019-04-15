@@ -84,9 +84,9 @@ public class RateLimiterAspect implements Ordered {
 			}
 		}
 		if (CompletionStage.class.isAssignableFrom(returnType)) {
-			return handleJoinPointCompletableFuture(proceedingJoinPoint, rateLimiter, methodName);
+			return handleJoinPointCompletableFuture(proceedingJoinPoint, rateLimiter);
 		}
-		return handleJoinPoint(proceedingJoinPoint, rateLimiter, methodName);
+		return handleJoinPoint(proceedingJoinPoint, rateLimiter);
 	}
 
 	private io.github.resilience4j.ratelimiter.RateLimiter getOrCreateRateLimiter(String methodName, String name) {
@@ -110,11 +110,8 @@ public class RateLimiterAspect implements Ordered {
 	}
 
 	private Object handleJoinPoint(ProceedingJoinPoint proceedingJoinPoint,
-	                               io.github.resilience4j.ratelimiter.RateLimiter rateLimiter, String methodName)
+								   io.github.resilience4j.ratelimiter.RateLimiter rateLimiter)
 			throws Throwable {
-		if (logger.isDebugEnabled()) {
-			logger.debug("Rate limiter invocation for method {} ", methodName);
-		}
 		return rateLimiter.executeCheckedSupplier(proceedingJoinPoint::proceed);
 	}
 
@@ -123,20 +120,16 @@ public class RateLimiterAspect implements Ordered {
 	 *
 	 * @param proceedingJoinPoint AOPJoinPoint
 	 * @param rateLimiter         configured rate limiter
-	 * @param methodName          bulkhead method name
 	 * @return CompletionStage
-	 * @throws Throwable
 	 */
-	private Object handleJoinPointCompletableFuture(ProceedingJoinPoint proceedingJoinPoint, io.github.resilience4j.ratelimiter.RateLimiter rateLimiter, String methodName) {
-
-		return io.github.resilience4j.ratelimiter.RateLimiter.decorateCompletionStage(rateLimiter, () -> {
+	private Object handleJoinPointCompletableFuture(ProceedingJoinPoint proceedingJoinPoint, io.github.resilience4j.ratelimiter.RateLimiter rateLimiter) {
+		return rateLimiter.executeCompletionStage(() -> {
 			try {
 				return (CompletionStage<?>) proceedingJoinPoint.proceed();
 			} catch (Throwable throwable) {
-				logger.error("Exception being thrown during RateLimiter invocation {} ", methodName, throwable.getCause());
 				throw new CompletionException(throwable);
 			}
-		}).get();
+		});
 	}
 
 
