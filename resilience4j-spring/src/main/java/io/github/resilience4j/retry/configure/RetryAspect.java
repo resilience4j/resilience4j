@@ -19,7 +19,6 @@ import io.github.resilience4j.core.lang.Nullable;
 import io.github.resilience4j.retry.RetryRegistry;
 import io.github.resilience4j.retry.annotation.Retry;
 import io.github.resilience4j.utils.AnnotationExtractor;
-import io.vavr.CheckedFunction0;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -79,7 +78,7 @@ public class RetryAspect implements Ordered {
 		io.github.resilience4j.retry.Retry retry = getOrCreateRetry(methodName, backend);
 		Class<?> returnType = method.getReturnType();
 		if (CompletionStage.class.isAssignableFrom(returnType)) {
-			return handleJoinPointCompletableFuture(proceedingJoinPoint, retry, methodName);
+			return handleJoinPointCompletableFuture(proceedingJoinPoint, retry);
 		}
 		if (retryAspectExtList != null && !retryAspectExtList.isEmpty()) {
 			for (RetryAspectExt retryAspectExt : retryAspectExtList) {
@@ -88,7 +87,7 @@ public class RetryAspect implements Ordered {
 				}
 			}
 		}
-		return handleDefaultJoinPoint(proceedingJoinPoint, retry, methodName);
+		return handleDefaultJoinPoint(proceedingJoinPoint, retry);
 	}
 
 	/**
@@ -119,37 +118,27 @@ public class RetryAspect implements Ordered {
 	/**
 	 * @param proceedingJoinPoint the AOP logic joint point
 	 * @param retry               the configured sync retry
-	 * @param methodName          the retry method name
 	 * @return the result object if any
 	 * @throws Throwable
 	 */
-	private Object handleDefaultJoinPoint(ProceedingJoinPoint proceedingJoinPoint, io.github.resilience4j.retry.Retry retry, String methodName) throws Throwable {
-		if (logger.isDebugEnabled()) {
-			logger.debug("retry invocation of method {} ", methodName);
-		}
-		final CheckedFunction0<Object> objectCheckedFunction0 = io.github.resilience4j.retry.Retry.decorateCheckedSupplier(retry, proceedingJoinPoint::proceed);
-		return objectCheckedFunction0.apply();
+	private Object handleDefaultJoinPoint(ProceedingJoinPoint proceedingJoinPoint, io.github.resilience4j.retry.Retry retry) throws Throwable {
+		return retry.executeCheckedSupplier(proceedingJoinPoint::proceed);
 	}
 
 	/**
 	 * @param proceedingJoinPoint the AOP logic joint point
 	 * @param retry               the configured async retry
-	 * @param methodName          the retry method name
 	 * @return the result object if any
-	 * @throws Throwable
 	 */
 	@SuppressWarnings("unchecked")
-	private Object handleJoinPointCompletableFuture(ProceedingJoinPoint proceedingJoinPoint, io.github.resilience4j.retry.Retry retry, String methodName) throws Throwable {
-		if (logger.isDebugEnabled()) {
-			logger.debug("async retry invocation of method {} ", methodName);
-		}
-		return io.github.resilience4j.retry.Retry.decorateCompletionStage(retry, retryExecutorService, () -> {
+	private Object handleJoinPointCompletableFuture(ProceedingJoinPoint proceedingJoinPoint, io.github.resilience4j.retry.Retry retry) {
+		return retry.executeCompletionStage(retryExecutorService, () -> {
 			try {
 				return (CompletionStage<Object>) proceedingJoinPoint.proceed();
 			} catch (Throwable throwable) {
 				throw new CompletionException(throwable);
 			}
-		}).get();
+		});
 	}
 
 
