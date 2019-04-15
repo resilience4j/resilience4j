@@ -1,10 +1,10 @@
 package io.github.resilience4j.circuitbreaker.operator;
 
-import static java.util.Objects.requireNonNull;
-
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.reactivex.MaybeObserver;
 import io.reactivex.disposables.Disposable;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * A RxJava {@link MaybeObserver} to protect another observer by a CircuitBreaker.
@@ -12,7 +12,7 @@ import io.reactivex.disposables.Disposable;
  * @param <T> the value type of the upstream and downstream
  */
 final class CircuitBreakerMaybeObserver<T> extends DisposableCircuitBreaker<T> implements MaybeObserver<T> {
-    private final MaybeObserver<? super T> childObserver;
+    private final transient MaybeObserver<? super T> childObserver;
 
     CircuitBreakerMaybeObserver(CircuitBreaker circuitBreaker, MaybeObserver<? super T> childObserver) {
         super(circuitBreaker);
