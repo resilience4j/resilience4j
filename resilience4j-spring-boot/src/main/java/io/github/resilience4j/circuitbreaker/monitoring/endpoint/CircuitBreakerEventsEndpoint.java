@@ -16,7 +16,6 @@
 package io.github.resilience4j.circuitbreaker.monitoring.endpoint;
 
 
-import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent;
 import io.github.resilience4j.consumer.CircularEventConsumer;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
@@ -36,12 +35,9 @@ import java.util.Comparator;
 public class CircuitBreakerEventsEndpoint {
 
     private final EventConsumerRegistry<CircuitBreakerEvent> eventConsumerRegistry;
-    private final CircuitBreakerRegistry circuitBreakerRegistry;
 
-    public CircuitBreakerEventsEndpoint(EventConsumerRegistry<CircuitBreakerEvent> eventConsumerRegistry,
-                                        CircuitBreakerRegistry circuitBreakerRegistry) {
+    public CircuitBreakerEventsEndpoint(EventConsumerRegistry<CircuitBreakerEvent> eventConsumerRegistry) {
         this.eventConsumerRegistry = eventConsumerRegistry;
-        this.circuitBreakerRegistry = circuitBreakerRegistry;
     }
 
     @GetMapping(value = "events", produces = MediaType.APPLICATION_JSON_VALUE)

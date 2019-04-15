@@ -17,7 +17,6 @@ package io.github.resilience4j.ratelimiter.monitoring.endpoint;
 
 import io.github.resilience4j.consumer.CircularEventConsumer;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
-import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
 import io.github.resilience4j.ratelimiter.event.RateLimiterEvent;
 import io.github.resilience4j.ratelimiter.monitoring.model.RateLimiterEventDTO;
 import io.github.resilience4j.ratelimiter.monitoring.model.RateLimiterEventsEndpointResponse;
@@ -35,12 +34,9 @@ import java.util.List;
 @RequestMapping(value = "ratelimiter/")
 public class RateLimiterEventsEndpoint {
     private final EventConsumerRegistry<RateLimiterEvent> eventsConsumerRegistry;
-    private final RateLimiterRegistry rateLimiterRegistry;
 
-    public RateLimiterEventsEndpoint(EventConsumerRegistry<RateLimiterEvent> eventsConsumerRegistry,
-                                     RateLimiterRegistry rateLimiterRegistry) {
+    public RateLimiterEventsEndpoint(EventConsumerRegistry<RateLimiterEvent> eventsConsumerRegistry) {
         this.eventsConsumerRegistry = eventsConsumerRegistry;
-        this.rateLimiterRegistry = rateLimiterRegistry;
     }
 
 

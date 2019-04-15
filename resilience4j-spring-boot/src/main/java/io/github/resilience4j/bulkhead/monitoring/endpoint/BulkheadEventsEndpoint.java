@@ -15,8 +15,6 @@
  */
 package io.github.resilience4j.bulkhead.monitoring.endpoint;
 
-import io.github.resilience4j.bulkhead.Bulkhead;
-import io.github.resilience4j.bulkhead.BulkheadRegistry;
 import io.github.resilience4j.bulkhead.event.BulkheadEvent;
 import io.github.resilience4j.consumer.CircularEventConsumer;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
@@ -34,14 +32,10 @@ import java.util.Comparator;
 @RequestMapping(value = "bulkhead/")
 public class BulkheadEventsEndpoint {
 
-    private static final String MEDIA_TYPE_TEXT_EVENT_STREAM = "text/event-stream";
     private final EventConsumerRegistry<BulkheadEvent> eventConsumerRegistry;
-    private final BulkheadRegistry bulkheadRegistry;
 
-    public BulkheadEventsEndpoint(EventConsumerRegistry<BulkheadEvent> eventConsumerRegistry,
-                                  BulkheadRegistry bulkheadRegistry) {
+    public BulkheadEventsEndpoint(EventConsumerRegistry<BulkheadEvent> eventConsumerRegistry) {
         this.eventConsumerRegistry = eventConsumerRegistry;
-        this.bulkheadRegistry = bulkheadRegistry;
     }
 
     @GetMapping(value = "events", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -76,13 +70,6 @@ public class BulkheadEventsEndpoint {
                 .toJavaList();
 
         return new BulkheadEventsEndpointResponse(response);
-    }
-
-    private Bulkhead getBulkhead(String bulkheadName) {
-        return bulkheadRegistry.getAllBulkheads()
-                .find(it -> it.getName().equals(bulkheadName))
-                .getOrElseThrow(() ->
-                        new IllegalArgumentException(String.format("bulkhead with name %s not found", bulkheadName)));
     }
 
     private List<BulkheadEvent> getBulkheadEvent(String bulkheadName) {
