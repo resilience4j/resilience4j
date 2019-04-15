@@ -58,6 +58,7 @@ configure(project.coreProjects) {
         testCompile ( libraries.powermock_api_mockito)
         testCompile ( libraries.powermock_module_junit4)
         testCompile ( libraries.awaitility)
+        testCompile ( libraries.jaxws)
     }
 
     tasks.withType(JavaCompile) {
@@ -104,6 +105,17 @@ subprojects {
     sonarqube {
         properties {
             property "sonar.jacoco.reportPaths", allTestCoverageFile
+        }
+    }
+    afterEvaluate {
+        // exclude subprojects that don't produce a jar file.
+        if(!project.name.equals('resilience4j-bom') && !project.name.equals('resilience4j-documentation') && !project.name.equals('resilience4j-test')) {
+            jar {
+                inputs.property('moduleName', moduleName)
+                manifest.attributes(
+                    'Automatic-Module-Name': moduleName
+                )
+            }
         }
     }
 }

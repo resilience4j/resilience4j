@@ -24,3 +24,4 @@ dependencies {
     testCompile project(':resilience4j-reactor')
     testCompile project(':resilience4j-rxjava2')
 }
+ext.moduleName='io.github.resilience4j.spring'

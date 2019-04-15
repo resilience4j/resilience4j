@@ -5,3 +5,4 @@ dependencies {
     testCompile ( libraries.feign_wiremock )
     testCompile ( libraries.feign )
 }
+ext.moduleName='io.github.resilience4j.feign'

@@ -1,3 +1,4 @@
 dependencies {
     
 }
+ext.moduleName='io.github.resilience4j.timelimiter'
