@@ -688,9 +688,14 @@ class Resilience4jModuleSpec extends Specification {
         def families = collectorRegistry.metricFamilySamples().collect { it.name }.sort()
 
         then:
-        families == ['resilience4j_circuitbreaker_calls',
-                     'resilience4j_circuitbreaker_states',
-                     'resilience4j_ratelimiter'].sort()
+        families == ['resilience4j_bulkhead_available_concurrent_calls',
+                     'resilience4j_bulkhead_max_allowed_concurrent_calls',
+                     'resilience4j_circuitbreaker_buffered_calls',
+                     'resilience4j_circuitbreaker_max_buffered_calls',
+                     'resilience4j_circuitbreaker_calls',
+                     'resilience4j_circuitbreaker_state',
+                     'resilience4j_ratelimiter_available_permissions',
+                     'resilience4j_ratelimiter_waiting_threads'].sort()
     }
 
     static class Something {
