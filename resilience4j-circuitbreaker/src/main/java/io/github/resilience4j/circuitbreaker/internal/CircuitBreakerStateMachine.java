@@ -27,6 +27,7 @@ import io.github.resilience4j.core.EventProcessor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.Clock;
 import java.time.Duration;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.atomic.AtomicReference;
@@ -47,6 +48,22 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
     private final AtomicReference<CircuitBreakerState> stateReference;
     private final CircuitBreakerConfig circuitBreakerConfig;
     private final CircuitBreakerEventProcessor eventProcessor;
+    private Clock clock;
+
+    /**
+     * Creates a circuitBreaker.
+     *
+     * @param name                 the name of the CircuitBreaker
+     * @param circuitBreakerConfig The CircuitBreaker configuration.
+     * @param clock A Clock which can be mocked in tests.
+     */
+    CircuitBreakerStateMachine(String name, CircuitBreakerConfig circuitBreakerConfig, Clock clock) {
+        this.name = name;
+        this.circuitBreakerConfig = circuitBreakerConfig;
+        this.stateReference = new AtomicReference<>(new ClosedState(this));
+        this.eventProcessor = new CircuitBreakerEventProcessor();
+        this.clock = clock;
+    }
 
     /**
      * Creates a circuitBreaker.
@@ -55,10 +72,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
      * @param circuitBreakerConfig The CircuitBreaker configuration.
      */
     public CircuitBreakerStateMachine(String name, CircuitBreakerConfig circuitBreakerConfig) {
-        this.name = name;
-        this.circuitBreakerConfig = circuitBreakerConfig;
-        this.stateReference = new AtomicReference<>(new ClosedState(this));
-        this.eventProcessor = new CircuitBreakerEventProcessor();
+       this(name, circuitBreakerConfig, Clock.systemUTC());
     }
 
     /**
@@ -122,8 +136,6 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
         publishSuccessEvent(durationInNanos);
         stateReference.get().onSuccess();
     }
-
-
 
     /**
      * Get the state of this CircuitBreaker.
@@ -272,6 +284,10 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
     @Override
     public EventPublisher getEventPublisher() {
         return eventProcessor;
+    }
+
+    Clock getClock() {
+        return clock;
     }
 
     private class CircuitBreakerEventProcessor extends EventProcessor<CircuitBreakerEvent> implements EventConsumer<CircuitBreakerEvent>, EventPublisher {
