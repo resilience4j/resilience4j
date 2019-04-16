@@ -15,17 +15,9 @@
  */
 package io.github.resilience4j.circuitbreaker.autoconfigure;
 
-import io.github.resilience4j.circuitbreaker.CircuitBreaker;
-import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
-import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
-import io.github.resilience4j.circuitbreaker.configure.*;
-import io.github.resilience4j.circuitbreaker.configure.CircuitBreakerConfigurationProperties.BackendProperties;
-import io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent;
-import io.github.resilience4j.circuitbreaker.monitoring.health.CircuitBreakerHealthIndicator;
-import io.github.resilience4j.consumer.EventConsumerRegistry;
+import java.util.List;
+import java.util.Map;
 
-import io.github.resilience4j.utils.ReactorOnClasspathCondition;
-import io.github.resilience4j.utils.RxJava2OnClasspathCondition;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
@@ -37,8 +29,21 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
 
-import java.util.List;
-import java.util.Map;
+import io.github.resilience4j.circuitbreaker.CircuitBreaker;
+import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
+import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
+import io.github.resilience4j.circuitbreaker.configure.CircuitBreakerAspect;
+import io.github.resilience4j.circuitbreaker.configure.CircuitBreakerAspectExt;
+import io.github.resilience4j.circuitbreaker.configure.CircuitBreakerConfiguration;
+import io.github.resilience4j.circuitbreaker.configure.CircuitBreakerConfigurationProperties;
+import io.github.resilience4j.circuitbreaker.configure.CircuitBreakerConfigurationProperties.BackendProperties;
+import io.github.resilience4j.circuitbreaker.configure.ReactorCircuitBreakerAspectExt;
+import io.github.resilience4j.circuitbreaker.configure.RxJava2CircuitBreakerAspectExt;
+import io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent;
+import io.github.resilience4j.circuitbreaker.monitoring.health.CircuitBreakerHealthIndicator;
+import io.github.resilience4j.consumer.EventConsumerRegistry;
+import io.github.resilience4j.utils.ReactorOnClasspathCondition;
+import io.github.resilience4j.utils.RxJava2OnClasspathCondition;
 
 @Configuration
 public class CircuitBreakerConfigurationOnMissingBean implements ApplicationContextAware {
@@ -108,25 +113,24 @@ public class CircuitBreakerConfigurationOnMissingBean implements ApplicationCont
     private void createHeathIndicatorForCircuitBreaker(CircuitBreaker circuitBreaker, CircuitBreakerConfig circuitBreakerConfig) {
         BackendProperties backendProperties = circuitBreakerProperties.findCircuitBreakerBackend(circuitBreaker, circuitBreakerConfig);
 
-        if(backendProperties != null && backendProperties.getRegisterHealthIndicator()) {
+        if (backendProperties != null && backendProperties.getRegisterHealthIndicator()) {
             CircuitBreakerHealthIndicator healthIndicator = new CircuitBreakerHealthIndicator(circuitBreaker);
             String circuitBreakerName = circuitBreaker.getName() + "CircuitBreaker";
             beanFactory.registerSingleton(
                     circuitBreakerName + "HealthIndicator",
                     healthIndicator
             );
-
             // To support health indicators created after the health registry was created, look up to see if it's in
             // the application context. If it is, save it off so we don't need to search for it again, then register
             // the new health indicator with the registry.
-            if(applicationContext != null && healthIndicatorRegistry == null) {
+            if (applicationContext != null && healthIndicatorRegistry == null) {
                 Map<String, HealthIndicatorRegistry> healthRegistryBeans = applicationContext.getBeansOfType(HealthIndicatorRegistry.class);
-                if(healthRegistryBeans.size() > 0) {
+                if (healthRegistryBeans.size() > 0) {
                     healthIndicatorRegistry = healthRegistryBeans.values().iterator().next();
                 }
             }
 
-            if(healthIndicatorRegistry != null && healthIndicatorRegistry.get(circuitBreakerName) == null) {
+            if (healthIndicatorRegistry != null && healthIndicatorRegistry.get(circuitBreakerName) == null) {
                 healthIndicatorRegistry.register(circuitBreakerName, healthIndicator);
             }
         }
