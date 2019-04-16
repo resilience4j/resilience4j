@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Slawomir Kowalski
+ * Copyright 2019 Mahmoud Romeh
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -48,91 +48,91 @@ import io.github.resilience4j.utils.RxJava2OnClasspathCondition;
 @Configuration
 public class CircuitBreakerConfigurationOnMissingBean implements ApplicationContextAware {
 
-    private final CircuitBreakerConfiguration circuitBreakerConfiguration;
-    private final ConfigurableBeanFactory beanFactory;
-    private final CircuitBreakerConfigurationProperties circuitBreakerProperties;
-    private ApplicationContext applicationContext;
-    private HealthIndicatorRegistry healthIndicatorRegistry;
+	private final CircuitBreakerConfiguration circuitBreakerConfiguration;
+	private final ConfigurableBeanFactory beanFactory;
+	private final CircuitBreakerConfigurationProperties circuitBreakerProperties;
+	private ApplicationContext applicationContext;
+	private HealthIndicatorRegistry healthIndicatorRegistry;
 
-    public CircuitBreakerConfigurationOnMissingBean(CircuitBreakerConfigurationProperties circuitBreakerProperties,
-                                                    ConfigurableBeanFactory beanFactory) {
-        this.beanFactory = beanFactory;
-        this.circuitBreakerProperties = circuitBreakerProperties;
-        this.circuitBreakerConfiguration = new CircuitBreakerConfiguration(circuitBreakerProperties);
-    }
+	public CircuitBreakerConfigurationOnMissingBean(CircuitBreakerConfigurationProperties circuitBreakerProperties,
+	                                                ConfigurableBeanFactory beanFactory) {
+		this.beanFactory = beanFactory;
+		this.circuitBreakerProperties = circuitBreakerProperties;
+		this.circuitBreakerConfiguration = new CircuitBreakerConfiguration(circuitBreakerProperties);
+	}
 
-    @Override
-    public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
-        this.applicationContext = applicationContext;
-    }
+	@Override
+	public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
+		this.applicationContext = applicationContext;
+	}
 
-    @Bean
-    @ConditionalOnMissingBean
-    public CircuitBreakerRegistry circuitBreakerRegistry(EventConsumerRegistry<CircuitBreakerEvent> eventConsumerRegistry) {
-        CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
+	@Bean
+	@ConditionalOnMissingBean
+	public CircuitBreakerRegistry circuitBreakerRegistry(EventConsumerRegistry<CircuitBreakerEvent> eventConsumerRegistry) {
+		CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
 
-        // Register the event consumers
-        circuitBreakerConfiguration.registerPostCreationEventConsumer(circuitBreakerRegistry, eventConsumerRegistry);
-        // Register a consumer to hook up any health indicators for circuit breakers after creation. This will catch ones that get
-        // created beyond initially configured backends.
-        circuitBreakerRegistry.registerPostCreationConsumer(this::createHeathIndicatorForCircuitBreaker);
+		// Register the event consumers
+		circuitBreakerConfiguration.registerPostCreationEventConsumer(circuitBreakerRegistry, eventConsumerRegistry);
+		// Register a consumer to hook up any health indicators for circuit breakers after creation. This will catch ones that get
+		// created beyond initially configured backends.
+		circuitBreakerRegistry.registerPostCreationConsumer(this::createHeathIndicatorForCircuitBreaker);
 
-        // Initialize backends that were initially configured.
-        circuitBreakerConfiguration.initializeBackends(circuitBreakerRegistry);
+		// Initialize backends that were initially configured.
+		circuitBreakerConfiguration.initializeBackends(circuitBreakerRegistry);
 
-        return circuitBreakerRegistry;
-    }
+		return circuitBreakerRegistry;
+	}
 
-    @Bean
-    @ConditionalOnMissingBean
-    public CircuitBreakerAspect circuitBreakerAspect(CircuitBreakerRegistry circuitBreakerRegistry,
-                                                     @Autowired(required = false) List<CircuitBreakerAspectExt> circuitBreakerAspectExtList) {
-        return circuitBreakerConfiguration.circuitBreakerAspect(circuitBreakerRegistry, circuitBreakerAspectExtList);
-    }
+	@Bean
+	@ConditionalOnMissingBean
+	public CircuitBreakerAspect circuitBreakerAspect(CircuitBreakerRegistry circuitBreakerRegistry,
+	                                                 @Autowired(required = false) List<CircuitBreakerAspectExt> circuitBreakerAspectExtList) {
+		return circuitBreakerConfiguration.circuitBreakerAspect(circuitBreakerRegistry, circuitBreakerAspectExtList);
+	}
 
-    @Bean
-    @Conditional(value = {RxJava2OnClasspathCondition.class})
-    @ConditionalOnMissingBean
-    public RxJava2CircuitBreakerAspectExt rxJava2CircuitBreakerAspect() {
-        return circuitBreakerConfiguration.rxJava2CircuitBreakerAspect();
-    }
+	@Bean
+	@Conditional(value = {RxJava2OnClasspathCondition.class})
+	@ConditionalOnMissingBean
+	public RxJava2CircuitBreakerAspectExt rxJava2CircuitBreakerAspect() {
+		return circuitBreakerConfiguration.rxJava2CircuitBreakerAspect();
+	}
 
-    @Bean
-    @Conditional(value = {ReactorOnClasspathCondition.class})
-    @ConditionalOnMissingBean
-    public ReactorCircuitBreakerAspectExt reactorCircuitBreakerAspect() {
-        return circuitBreakerConfiguration.reactorCircuitBreakerAspect();
-    }
+	@Bean
+	@Conditional(value = {ReactorOnClasspathCondition.class})
+	@ConditionalOnMissingBean
+	public ReactorCircuitBreakerAspectExt reactorCircuitBreakerAspect() {
+		return circuitBreakerConfiguration.reactorCircuitBreakerAspect();
+	}
 
-    @Bean
-    @ConditionalOnMissingBean(value = CircuitBreakerEvent.class, parameterizedContainer = EventConsumerRegistry.class)
-    public EventConsumerRegistry<CircuitBreakerEvent> eventConsumerRegistry() {
-        return circuitBreakerConfiguration.eventConsumerRegistry();
-    }
+	@Bean
+	@ConditionalOnMissingBean(value = CircuitBreakerEvent.class, parameterizedContainer = EventConsumerRegistry.class)
+	public EventConsumerRegistry<CircuitBreakerEvent> eventConsumerRegistry() {
+		return circuitBreakerConfiguration.eventConsumerRegistry();
+	}
 
-    private void createHeathIndicatorForCircuitBreaker(CircuitBreaker circuitBreaker, CircuitBreakerConfig circuitBreakerConfig) {
-        BackendProperties backendProperties = circuitBreakerProperties.findCircuitBreakerBackend(circuitBreaker, circuitBreakerConfig);
+	private void createHeathIndicatorForCircuitBreaker(CircuitBreaker circuitBreaker, CircuitBreakerConfig circuitBreakerConfig) {
+		BackendProperties backendProperties = circuitBreakerProperties.findCircuitBreakerBackend(circuitBreaker, circuitBreakerConfig);
 
-        if (backendProperties != null && backendProperties.getRegisterHealthIndicator()) {
-            CircuitBreakerHealthIndicator healthIndicator = new CircuitBreakerHealthIndicator(circuitBreaker);
-            String circuitBreakerName = circuitBreaker.getName() + "CircuitBreaker";
-            beanFactory.registerSingleton(
-                    circuitBreakerName + "HealthIndicator",
-                    healthIndicator
-            );
-            // To support health indicators created after the health registry was created, look up to see if it's in
-            // the application context. If it is, save it off so we don't need to search for it again, then register
-            // the new health indicator with the registry.
-            if (applicationContext != null && healthIndicatorRegistry == null) {
-                Map<String, HealthIndicatorRegistry> healthRegistryBeans = applicationContext.getBeansOfType(HealthIndicatorRegistry.class);
-                if (healthRegistryBeans.size() > 0) {
-                    healthIndicatorRegistry = healthRegistryBeans.values().iterator().next();
-                }
-            }
+		if (backendProperties != null && backendProperties.getRegisterHealthIndicator()) {
+			CircuitBreakerHealthIndicator healthIndicator = new CircuitBreakerHealthIndicator(circuitBreaker);
+			String circuitBreakerName = circuitBreaker.getName() + "CircuitBreaker";
+			beanFactory.registerSingleton(
+					circuitBreakerName + "HealthIndicator",
+					healthIndicator
+			);
+			// To support health indicators created after the health registry was created, look up to see if it's in
+			// the application context. If it is, save it off so we don't need to search for it again, then register
+			// the new health indicator with the registry.
+			if (applicationContext != null && healthIndicatorRegistry == null) {
+				Map<String, HealthIndicatorRegistry> healthRegistryBeans = applicationContext.getBeansOfType(HealthIndicatorRegistry.class);
+				if (healthRegistryBeans.size() > 0) {
+					healthIndicatorRegistry = healthRegistryBeans.values().iterator().next();
+				}
+			}
 
-            if (healthIndicatorRegistry != null && healthIndicatorRegistry.get(circuitBreakerName) == null) {
-                healthIndicatorRegistry.register(circuitBreakerName, healthIndicator);
-            }
-        }
-    }
+			if (healthIndicatorRegistry != null && healthIndicatorRegistry.get(circuitBreakerName) == null) {
+				healthIndicatorRegistry.register(circuitBreakerName, healthIndicator);
+			}
+		}
+	}
 }

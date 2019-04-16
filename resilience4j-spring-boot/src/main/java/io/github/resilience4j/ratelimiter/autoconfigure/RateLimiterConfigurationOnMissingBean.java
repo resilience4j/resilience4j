@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Slawomir Kowalski
+ * Copyright 2019 Mahmoud Romeh
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,6 @@ package io.github.resilience4j.ratelimiter.autoconfigure;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Conditional;
@@ -47,9 +46,8 @@ public class RateLimiterConfigurationOnMissingBean {
     @Bean
     @ConditionalOnMissingBean
     public RateLimiterRegistry rateLimiterRegistry(RateLimiterConfigurationProperties rateLimiterProperties,
-                                                   EventConsumerRegistry<RateLimiterEvent> rateLimiterEventsConsumerRegistry,
-                                                   ConfigurableBeanFactory beanFactory) {
-        return rateLimiterConfiguration.rateLimiterRegistry(rateLimiterProperties, rateLimiterEventsConsumerRegistry, beanFactory);
+                                                   EventConsumerRegistry<RateLimiterEvent> rateLimiterEventsConsumerRegistry) {
+        return rateLimiterConfiguration.rateLimiterRegistry(rateLimiterProperties, rateLimiterEventsConsumerRegistry);
     }
 
     @Bean

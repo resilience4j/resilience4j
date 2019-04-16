@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Slawomir Kowalski
+ * Copyright 2019 Mahmoud Romeh
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,17 +15,8 @@
  */
 package io.github.resilience4j.circuitbreaker.autoconfigure;
 
-import io.github.resilience4j.circuitbreaker.CircuitBreaker;
-import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
-import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
-import io.github.resilience4j.circuitbreaker.configure.*;
-import io.github.resilience4j.circuitbreaker.configure.CircuitBreakerConfigurationProperties.BackendProperties;
-import io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent;
-import io.github.resilience4j.circuitbreaker.monitoring.health.CircuitBreakerHealthIndicator;
-import io.github.resilience4j.consumer.EventConsumerRegistry;
+import java.util.List;
 
-import io.github.resilience4j.utils.ReactorOnClasspathCondition;
-import io.github.resilience4j.utils.RxJava2OnClasspathCondition;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -33,7 +24,21 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
 
-import java.util.List;
+import io.github.resilience4j.circuitbreaker.CircuitBreaker;
+import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
+import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
+import io.github.resilience4j.circuitbreaker.configure.CircuitBreakerAspect;
+import io.github.resilience4j.circuitbreaker.configure.CircuitBreakerAspectExt;
+import io.github.resilience4j.circuitbreaker.configure.CircuitBreakerConfiguration;
+import io.github.resilience4j.circuitbreaker.configure.CircuitBreakerConfigurationProperties;
+import io.github.resilience4j.circuitbreaker.configure.CircuitBreakerConfigurationProperties.BackendProperties;
+import io.github.resilience4j.circuitbreaker.configure.ReactorCircuitBreakerAspectExt;
+import io.github.resilience4j.circuitbreaker.configure.RxJava2CircuitBreakerAspectExt;
+import io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent;
+import io.github.resilience4j.circuitbreaker.monitoring.health.CircuitBreakerHealthIndicator;
+import io.github.resilience4j.consumer.EventConsumerRegistry;
+import io.github.resilience4j.utils.ReactorOnClasspathCondition;
+import io.github.resilience4j.utils.RxJava2OnClasspathCondition;
 
 @Configuration
 public class CircuitBreakerConfigurationOnMissingBean {
@@ -95,7 +100,7 @@ public class CircuitBreakerConfigurationOnMissingBean {
     private void createHeathIndicatorForCircuitBreaker(CircuitBreaker circuitBreaker, CircuitBreakerConfig circuitBreakerConfig) {
         BackendProperties backendProperties = circuitBreakerProperties.findCircuitBreakerBackend(circuitBreaker, circuitBreakerConfig);
 
-        if(backendProperties != null && backendProperties.getRegisterHealthIndicator()) {
+        if (backendProperties != null && backendProperties.getRegisterHealthIndicator()) {
             CircuitBreakerHealthIndicator healthIndicator = new CircuitBreakerHealthIndicator(circuitBreaker);
             beanFactory.registerSingleton(
                     circuitBreaker.getName() + "CircuitBreakerHealthIndicator",
