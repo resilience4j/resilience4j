@@ -16,7 +16,7 @@ import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 
 /**
- * test custom init of circuit breaker registery
+ * test custom init of circuit breaker registry
  */
 @RunWith(MockitoJUnitRunner.class)
 public class CircuitBreakerConfigurationTest {
