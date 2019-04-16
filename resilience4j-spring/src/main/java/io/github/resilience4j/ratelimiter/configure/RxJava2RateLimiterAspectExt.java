@@ -40,7 +40,7 @@ import io.reactivex.SingleSource;
  * the Rx RateLimiter logic support for the spring AOP
  * conditional on the presence of Rx classes on the spring class loader
  */
-public class RxJava2RateLimterAspectExt implements RateLimiterAspectExt {
+public class RxJava2RateLimiterAspectExt implements RateLimiterAspectExt {
 
 	private static final Logger logger = LoggerFactory.getLogger(CircuitBreakerAspect.class);
 	private final Set<Class> rxSupportedTypes = newHashSet(ObservableSource.class, SingleSource.class, CompletableSource.class, MaybeSource.class, Flowable.class);

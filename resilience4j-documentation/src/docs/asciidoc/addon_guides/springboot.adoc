@@ -237,6 +237,18 @@ public Flowable<String> doSomethingFlowable(boolean throwException) {
 
 }
 ----
+
+Beyond the config file configuration, the Spring Bean configuration is now using @ConditionalOnMissingBean to allow for overriding default behavior.
+These Beans can be overridden in your application's Spring Bean configuration:
+
+* RetryRegistry
+* RetryAspect
+* RxJava2RetryAspectExt
+* ReactorRetryAspectExt
+
+Note that in Spring Boot 1.x, EventConsumerRegistry<RetryEvent> cannot be overridden because of limitations of the @ConditionalOnMissingBean implementation.
+To override this, go to at least Spring Boot 2.1.x.
+
 ===== CircuitBreaker
 You can configure your CircuitBreakers in Spring Boot's `application.yml` config file.
 For example
@@ -297,6 +309,8 @@ These Beans can be overridden in your application's Spring Bean configuration:
 
 * CircuitBreakerRegistry
 * CircuitBreakerAspect
+* RxJava2CircuitBreakerAspectExt
+* ReactorCircuitBreakerAspectExt
 
 Note that in Spring Boot 1.x, EventConsumerRegistry<CircuitBreakerEvent> cannot be overridden because of limitations of the @ConditionalOnMissingBean implementation.
 To override this, go to at least Spring Boot 2.1.x.
