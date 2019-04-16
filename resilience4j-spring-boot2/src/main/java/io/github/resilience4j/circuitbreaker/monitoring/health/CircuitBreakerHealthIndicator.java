@@ -16,13 +16,13 @@
 package io.github.resilience4j.circuitbreaker.monitoring.health;
 
 
+import java.util.Optional;
+
 import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.HealthIndicator;
 
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
-
-import java.util.Optional;
 
 /**
  * A Spring Boot health indicators which adds the state of a CircuitBreaker and it's metrics to the health endpoints
@@ -36,7 +36,7 @@ public class CircuitBreakerHealthIndicator implements HealthIndicator {
     private static final String NOT_PERMITTED = "notPermittedCalls";
     private static final String MAX_BUFFERED_CALLS = "maxBufferedCalls";
     private static final String STATE = "state";
-    private CircuitBreaker circuitBreaker;
+    private final CircuitBreaker circuitBreaker;
 
     public CircuitBreakerHealthIndicator(CircuitBreaker circuitBreaker) {
         this.circuitBreaker = circuitBreaker;

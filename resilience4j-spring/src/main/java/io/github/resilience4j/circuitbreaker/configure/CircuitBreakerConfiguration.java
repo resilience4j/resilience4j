@@ -48,7 +48,7 @@ public class CircuitBreakerConfiguration {
 	@Bean
 	public CircuitBreakerRegistry circuitBreakerRegistry(EventConsumerRegistry<CircuitBreakerEvent> eventConsumerRegistry) {
 		CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
-		registerPostCreationEventConsumer(circuitBreakerRegistry, eventConsumerRegistry);registerPostCreationEventConsumer(circuitBreakerRegistry, eventConsumerRegistry);
+		registerPostCreationEventConsumer(circuitBreakerRegistry, eventConsumerRegistry);
 		initializeBackends(circuitBreakerRegistry);
 		return circuitBreakerRegistry;
 	}

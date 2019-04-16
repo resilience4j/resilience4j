@@ -22,9 +22,9 @@ import io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent;
 import io.github.resilience4j.core.lang.Nullable;
 
 class CircuitBreakerEventDTOBuilder {
-    private String circuitBreakerName;
-    private CircuitBreakerEvent.Type type;
-    private String creationTime;
+    private final String circuitBreakerName;
+    private final CircuitBreakerEvent.Type type;
+    private final String creationTime;
     @Nullable
     private String throwable = null;
     @Nullable

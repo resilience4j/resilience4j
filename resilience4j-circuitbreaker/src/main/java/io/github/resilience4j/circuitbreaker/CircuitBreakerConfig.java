@@ -18,12 +18,12 @@
  */
 package io.github.resilience4j.circuitbreaker;
 
-import io.github.resilience4j.core.lang.Nullable;
-
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.Optional;
 import java.util.function.Predicate;
+
+import io.github.resilience4j.core.lang.Nullable;
 
 
 /**
@@ -72,7 +72,8 @@ public class CircuitBreakerConfig {
     public boolean isAutomaticTransitionFromOpenToHalfOpenEnabled() {
         return automaticTransitionFromOpenToHalfOpenEnabled;
     }
-    
+
+    @Nullable
     public String getConfigurationName() {
     	return configurationName;
     }
@@ -107,6 +108,7 @@ public class CircuitBreakerConfig {
         private int ringBufferSizeInClosedState = DEFAULT_RING_BUFFER_SIZE_IN_CLOSED_STATE;
         private Duration waitDurationInOpenState = Duration.ofSeconds(DEFAULT_WAIT_DURATION_IN_OPEN_STATE);
         private boolean automaticTransitionFromOpenToHalfOpenEnabled = false;
+        @Nullable
         private String configurationName;
 
         /**

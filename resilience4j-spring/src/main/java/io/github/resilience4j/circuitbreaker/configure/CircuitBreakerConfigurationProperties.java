@@ -15,22 +15,23 @@ package io.github.resilience4j.circuitbreaker.configure;
  * limitations under the License.
  */
 
-import io.github.resilience4j.circuitbreaker.CircuitBreaker;
-import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
-import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.Builder;
-
-import io.github.resilience4j.core.lang.Nullable;
-import org.hibernate.validator.constraints.time.DurationMin;
-import org.springframework.beans.BeanUtils;
-import org.springframework.util.StringUtils;
-
-import javax.validation.constraints.Max;
-import javax.validation.constraints.Min;
-import javax.validation.constraints.NotNull;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Predicate;
+
+import javax.validation.constraints.Max;
+import javax.validation.constraints.Min;
+import javax.validation.constraints.NotNull;
+
+import org.hibernate.validator.constraints.time.DurationMin;
+import org.springframework.beans.BeanUtils;
+import org.springframework.util.StringUtils;
+
+import io.github.resilience4j.circuitbreaker.CircuitBreaker;
+import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
+import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.Builder;
+import io.github.resilience4j.core.lang.Nullable;
 
 public class CircuitBreakerConfigurationProperties {
     // This property gives you control over CircuitBreaker aspect application order.
@@ -135,15 +136,16 @@ public class CircuitBreakerConfigurationProperties {
         return sharedConfigs;
     }
 
+    @Nullable
     public BackendProperties findCircuitBreakerBackend(CircuitBreaker circuitBreaker, CircuitBreakerConfig circuitBreakerConfig) {
-    	BackendProperties backendProperties = backends.getOrDefault(circuitBreaker.getName(), null);
+        BackendProperties backendProperties = backends.getOrDefault(circuitBreaker.getName(), null);
 
-    	if(circuitBreakerConfig.getConfigurationName() != null
-    			&& sharedConfigs.containsKey(circuitBreakerConfig.getConfigurationName())) {
-    		backendProperties = sharedConfigs.get(circuitBreakerConfig.getConfigurationName());
-    	}
+        if(circuitBreakerConfig.getConfigurationName() != null
+                && sharedConfigs.containsKey(circuitBreakerConfig.getConfigurationName())) {
+            backendProperties = sharedConfigs.get(circuitBreakerConfig.getConfigurationName());
+        }
 
-    	return backendProperties;
+        return backendProperties;
     }
 
     /**

@@ -18,12 +18,6 @@
  */
 package io.github.resilience4j.circuitbreaker.internal;
 
-import io.github.resilience4j.circuitbreaker.CircuitBreaker;
-import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
-import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
-import io.vavr.collection.Array;
-import io.vavr.collection.Seq;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -32,12 +26,19 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.function.BiConsumer;
 import java.util.function.Supplier;
 
+import io.github.resilience4j.circuitbreaker.CircuitBreaker;
+import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
+import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
+import io.vavr.collection.Array;
+import io.vavr.collection.Seq;
+
 /**
  * Backend circuitBreaker manager.
  * Constructs backend circuitBreakers according to configuration values.
  */
 public final class InMemoryCircuitBreakerRegistry implements CircuitBreakerRegistry {
 
+    private static final String NAME_MUST_NOT_BE_NULL = "Name must not be null";
     private final CircuitBreakerConfig defaultCircuitBreakerConfig;
 
     /**
@@ -80,8 +81,8 @@ public final class InMemoryCircuitBreakerRegistry implements CircuitBreakerRegis
      */
     @Override
     public CircuitBreaker circuitBreaker(String name) {
-        return circuitBreakers.computeIfAbsent(Objects.requireNonNull(name, "Name must not be null"), 
-        		(k) -> postCreateCircuitBreaker(CircuitBreaker.of(name, defaultCircuitBreakerConfig), defaultCircuitBreakerConfig));
+        return circuitBreakers.computeIfAbsent(Objects.requireNonNull(name, NAME_MUST_NOT_BE_NULL),
+                k -> postCreateCircuitBreaker(CircuitBreaker.of(name, defaultCircuitBreakerConfig), defaultCircuitBreakerConfig));
     }
 
     /**
@@ -89,14 +90,14 @@ public final class InMemoryCircuitBreakerRegistry implements CircuitBreakerRegis
      */
     @Override
     public CircuitBreaker circuitBreaker(String name, CircuitBreakerConfig customCircuitBreakerConfig) {
-        return circuitBreakers.computeIfAbsent(Objects.requireNonNull(name, "Name must not be null"), 
-        		(k) ->  postCreateCircuitBreaker(CircuitBreaker.of(name, customCircuitBreakerConfig), customCircuitBreakerConfig));
+        return circuitBreakers.computeIfAbsent(Objects.requireNonNull(name, NAME_MUST_NOT_BE_NULL),
+                k -> postCreateCircuitBreaker(CircuitBreaker.of(name, customCircuitBreakerConfig), customCircuitBreakerConfig));
     }
 
     @Override
     public CircuitBreaker circuitBreaker(String name, Supplier<CircuitBreakerConfig> circuitBreakerConfigSupplier) {
-        return circuitBreakers.computeIfAbsent(Objects.requireNonNull(name, "Name must not be null"), 
-        		(k) -> {
+        return circuitBreakers.computeIfAbsent(Objects.requireNonNull(name, NAME_MUST_NOT_BE_NULL),
+                k -> {
         			CircuitBreakerConfig config = circuitBreakerConfigSupplier.get();
         			return postCreateCircuitBreaker(CircuitBreaker.of(name, config), config);
         		});
