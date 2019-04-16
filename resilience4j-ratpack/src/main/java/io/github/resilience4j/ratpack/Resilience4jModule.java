@@ -35,8 +35,9 @@ import io.github.resilience4j.metrics.BulkheadMetrics;
 import io.github.resilience4j.metrics.CircuitBreakerMetrics;
 import io.github.resilience4j.metrics.RateLimiterMetrics;
 import io.github.resilience4j.metrics.RetryMetrics;
-import io.github.resilience4j.prometheus.CircuitBreakerExports;
-import io.github.resilience4j.prometheus.RateLimiterExports;
+import io.github.resilience4j.prometheus.collectors.BulkheadMetricsCollector;
+import io.github.resilience4j.prometheus.collectors.CircuitBreakerMetricsCollector;
+import io.github.resilience4j.prometheus.collectors.RateLimiterMetricsCollector;
 import io.github.resilience4j.ratelimiter.RateLimiterConfig;
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
 import io.github.resilience4j.ratelimiter.event.RateLimiterEvent;
@@ -164,7 +165,7 @@ public class Resilience4jModule extends ConfigurableModule<Resilience4jConfig> {
         }
 
         @Override
-        public void onStart(StartEvent event) throws Exception {
+        public void onStart(StartEvent event) {
 
             EndpointsConfig endpointsConfig = event.getRegistry().get(Resilience4jConfig.class).getEndpoints();
 
@@ -268,10 +269,12 @@ public class Resilience4jModule extends ConfigurableModule<Resilience4jConfig> {
             // prometheus
             if (config.isPrometheus() && injector.getExistingBinding(Key.get(CollectorRegistry.class)) != null) {
                 CollectorRegistry collectorRegistry = injector.getInstance(CollectorRegistry.class);
-                CircuitBreakerExports circuitBreakerExports = CircuitBreakerExports.ofCircuitBreakerRegistry(circuitBreakerRegistry);
-                RateLimiterExports rateLimiterExports = RateLimiterExports.ofRateLimiterRegistry(rateLimiterRegistry);
-                circuitBreakerExports.register(collectorRegistry);
-                rateLimiterExports.register(collectorRegistry);
+                CircuitBreakerMetricsCollector circuitBreakerMetricsCollector = CircuitBreakerMetricsCollector.ofCircuitBreakerRegistry(circuitBreakerRegistry);
+                RateLimiterMetricsCollector rateLimiterMetricsCollector = RateLimiterMetricsCollector.ofRateLimiterRegistry(rateLimiterRegistry);
+                BulkheadMetricsCollector bulkheadMetricsCollector = BulkheadMetricsCollector.ofBulkheadRegistry(bulkheadRegistry);
+                circuitBreakerMetricsCollector.register(collectorRegistry);
+                rateLimiterMetricsCollector.register(collectorRegistry);
+                bulkheadMetricsCollector.register(collectorRegistry);
             }
 
         }

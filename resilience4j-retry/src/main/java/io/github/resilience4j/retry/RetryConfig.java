@@ -19,6 +19,8 @@
 package io.github.resilience4j.retry;
 
 
+import io.github.resilience4j.core.lang.Nullable;
+
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.Optional;
@@ -33,6 +35,7 @@ public class RetryConfig {
 	public static final Predicate<Throwable> DEFAULT_RECORD_FAILURE_PREDICATE = (throwable) -> true;
 
 	private int maxAttempts = DEFAULT_MAX_ATTEMPTS;
+	@Nullable
 	private Predicate resultPredicate;
 	private IntervalFunction intervalFunction = DEFAULT_INTERVAL_FUNCTION;
 	// The default exception predicate retries all exceptions.
@@ -64,6 +67,7 @@ public class RetryConfig {
 	 * @return the resultPredicate
 	 */
 	@SuppressWarnings("unchecked")
+	@Nullable
 	public <T> Predicate<T> getResultPredicate() {
 		return resultPredicate;
 	}
@@ -88,8 +92,10 @@ public class RetryConfig {
 	}
 
 	public static class Builder<T> {
+		@Nullable
 		private Predicate<Throwable> retryExceptionPredicate;
-		private Predicate<Throwable> exceptionPredicate;
+		private Predicate<Throwable> exceptionPredicate = DEFAULT_RECORD_FAILURE_PREDICATE;
+		@Nullable
 		private Predicate<T> resultPredicate;
 		private IntervalFunction intervalFunction = IntervalFunction.ofDefaults();
 		@SuppressWarnings("unchecked")
@@ -169,7 +175,7 @@ public class RetryConfig {
 		 */
 		@SuppressWarnings("unchecked")
 		@SafeVarargs
-		public final Builder<T> retryExceptions(Class<? extends Throwable>... errorClasses) {
+		public final Builder<T> retryExceptions(@Nullable Class<? extends Throwable>... errorClasses) {
 			this.retryExceptions = errorClasses != null ? errorClasses : new Class[0];
 			return this;
 		}
@@ -195,7 +201,7 @@ public class RetryConfig {
 		 */
 		@SuppressWarnings("unchecked")
 		@SafeVarargs
-		public final Builder<T> ignoreExceptions(Class<? extends Throwable>... errorClasses) {
+		public final Builder<T> ignoreExceptions(@Nullable Class<? extends Throwable>... errorClasses) {
 			this.ignoreExceptions = errorClasses != null ? errorClasses : new Class[0];
 			return this;
 		}

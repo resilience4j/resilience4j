@@ -34,7 +34,7 @@ import io.github.resilience4j.metrics.BulkheadMetrics;
  */
 @Configuration
 @ConditionalOnClass(MetricRegistry.class)
-@AutoConfigureAfter(value = {BulkheadMetricsAutoConfiguration.class, MetricsDropwizardAutoConfiguration.class})
+@AutoConfigureAfter(value = {MetricsDropwizardAutoConfiguration.class})
 @AutoConfigureBefore(MetricRepositoryAutoConfiguration.class)
 public class BulkheadMetricsAutoConfiguration {
 	@Bean

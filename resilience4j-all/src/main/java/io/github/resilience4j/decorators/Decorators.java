@@ -1,11 +1,5 @@
 package io.github.resilience4j.decorators;
 
-import java.util.concurrent.CompletionStage;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.function.Consumer;
-import java.util.function.Function;
-import java.util.function.Supplier;
-
 import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.cache.Cache;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
@@ -15,6 +9,12 @@ import io.github.resilience4j.retry.Retry;
 import io.vavr.CheckedFunction0;
 import io.vavr.CheckedFunction1;
 import io.vavr.CheckedRunnable;
+
+import java.util.concurrent.CompletionStage;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.Supplier;
 
 /**
  * A Decorator builder which can be used to apply multiple decorators to a (Checked-)Supplier, (Checked-)Function,
@@ -294,12 +294,9 @@ public interface Decorators {
 		}
 
 		/**
-		 * @param retryContext
-		 * @param scheduler
-		 * @return the decorated CompletionStage
 		 * @deprecated replaced by {@link #withRetry(Retry retryContext, ScheduledExecutorService scheduler)}
 		 */
-		@Deprecated
+		@Deprecated()
 		public DecorateCompletionStage<T> withRetry(AsyncRetry retryContext, ScheduledExecutorService scheduler) {
 			stageSupplier = AsyncRetry.decorateCompletionStage(retryContext, scheduler, stageSupplier);
 			return this;

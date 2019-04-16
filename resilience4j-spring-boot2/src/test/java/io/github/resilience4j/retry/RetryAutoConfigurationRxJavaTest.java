@@ -41,7 +41,6 @@ import io.github.resilience4j.service.test.retry.ReactiveRetryDummyService;
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
 		classes = TestApplication.class)
-@DirtiesContext
 public class RetryAutoConfigurationRxJavaTest {
 
 	@Autowired
@@ -64,18 +63,19 @@ public class RetryAutoConfigurationRxJavaTest {
 	 * that the Retry logic is properly handled
 	 */
 	@Test
+	@DirtiesContext
 	public void testRetryAutoConfigurationRxJava2() throws IOException {
 		assertThat(retryRegistry).isNotNull();
 		assertThat(retryProperties).isNotNull();
 
 		try {
-			retryDummyService.doSomethingFlowable(true).subscribe(String::toUpperCase, throwable -> System.out.println("Exception received:" + throwable.getMessage()));
+			retryDummyService.doSomethingFlowable(true).blockingSubscribe(String::toUpperCase, throwable -> System.out.println("Exception received:" + throwable.getMessage()));
 		} catch (RetryExceptionWrapper ex) {
 			assertThat(ex.getCause()).hasCauseInstanceOf(IllegalArgumentException.class);
 			// Do nothing. The IOException is recorded by the retry as it is one of failure exceptions
 		}
 		// The invocation is recorded by the CircuitBreaker as a success.
-		retryDummyService.doSomethingFlowable(false).subscribe(String::toUpperCase, throwable -> System.out.println("Exception received:" + throwable.getMessage()));
+		retryDummyService.doSomethingFlowable(false).blockingSubscribe(String::toUpperCase, throwable -> System.out.println("Exception received:" + throwable.getMessage()));
 		;
 
 		Retry retry = retryRegistry.retry(BACKEND_C);

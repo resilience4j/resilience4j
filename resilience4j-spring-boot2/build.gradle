@@ -1,20 +1,29 @@
 dependencies {
-    compile(libraries.spring_boot2_aop)
-    compile(libraries.spring_boot2_actuator)
-    compile(libraries.hibernate_validator)
+    compileOnly(libraries.spring_boot2_aop)
+    compileOnly(libraries.spring_boot2_actuator)
+    compileOnly(libraries.hibernate_validator)
     compileOnly(libraries.spring_boot2_config_processor)
     compileOnly(libraries.spring_boot2_autoconfigure_processor)
+
     compile project(':resilience4j-annotations')
     compile project(':resilience4j-spring')
     compile project(':resilience4j-micrometer')
     compile project(':resilience4j-circuitbreaker')
     compile project(':resilience4j-ratelimiter')
     compile project(':resilience4j-consumer')
+
     testCompile(libraries.spring_boot2_test)
+    testCompile(libraries.spring_boot2_aop)
+    testCompile(libraries.spring_boot2_actuator)
     testCompile(libraries.micrometer_prometheus)
     testCompile(libraries.spring_boot2_web)
     testCompile project(':resilience4j-reactor')
     testCompile project(':resilience4j-rxjava2')
+    testCompile(libraries.rxjava2)
+    testCompile(libraries.reactor)
+    testCompile(libraries.metrics)
+    testCompile(libraries.spring_boot2_actuator)
 }
 
 compileJava.dependsOn(processResources)
+ext.moduleName='io.github.resilience4j.springboot2'

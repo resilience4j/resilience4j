@@ -18,6 +18,8 @@
  */
 package io.github.resilience4j.circuitbreaker;
 
+import io.github.resilience4j.core.lang.Nullable;
+
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.Optional;
@@ -94,8 +96,8 @@ public class CircuitBreakerConfig {
     }
 
     public static class Builder {
-        private Predicate<Throwable> recordFailurePredicate;
-        private Predicate<Throwable> errorRecordingPredicate;
+        @Nullable private Predicate<Throwable> recordFailurePredicate;
+        @Nullable private Predicate<Throwable> errorRecordingPredicate;
         @SuppressWarnings("unchecked")
         private Class<? extends Throwable>[] recordExceptions = new Class[0];
         @SuppressWarnings("unchecked")
@@ -267,7 +269,9 @@ public class CircuitBreakerConfig {
             config.failureRateThreshold = failureRateThreshold;
             config.ringBufferSizeInClosedState = ringBufferSizeInClosedState;
             config.ringBufferSizeInHalfOpenState = ringBufferSizeInHalfOpenState;
-            config.recordFailurePredicate = errorRecordingPredicate;
+            if(errorRecordingPredicate != null) {
+                config.recordFailurePredicate = errorRecordingPredicate;
+            }
             config.automaticTransitionFromOpenToHalfOpenEnabled = automaticTransitionFromOpenToHalfOpenEnabled;
             config.configurationName = configurationName;
             return config;

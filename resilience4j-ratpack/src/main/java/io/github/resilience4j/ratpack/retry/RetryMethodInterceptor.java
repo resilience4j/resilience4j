@@ -16,6 +16,7 @@
 package io.github.resilience4j.ratpack.retry;
 
 import com.google.inject.Inject;
+import io.github.resilience4j.core.lang.Nullable;
 import io.github.resilience4j.ratpack.recovery.RecoveryFunction;
 import io.github.resilience4j.retry.RetryRegistry;
 import org.aopalliance.intercept.MethodInterceptor;
@@ -35,20 +36,19 @@ import java.util.concurrent.CompletionStage;
 public class RetryMethodInterceptor implements MethodInterceptor {
 
     @Inject(optional = true)
+    @Nullable
     private RetryRegistry registry;
 
     @SuppressWarnings("unchecked")
+    @Nullable
     @Override
     public Object invoke(MethodInvocation invocation) throws Throwable {
         Retry annotation = invocation.getMethod().getAnnotation(Retry.class);
-        io.github.resilience4j.retry.Retry retry = registry.retry(annotation.name());
-        if (retry == null) {
-            return invocation.proceed();
-        }
-        RecoveryFunction<?> recoveryFunction = annotation.recovery().newInstance();
-        if (registry == null) {
+        if(registry == null) {
             registry = RetryRegistry.ofDefaults();
         }
+        io.github.resilience4j.retry.Retry retry = registry.retry(annotation.name());
+        RecoveryFunction<?> recoveryFunction = annotation.recovery().newInstance();
         Class<?> returnType = invocation.getMethod().getReturnType();
         if (Promise.class.isAssignableFrom(returnType)) {
             Promise<?> result = (Promise<?>) proceed(invocation, retry, recoveryFunction);
@@ -93,6 +93,7 @@ public class RetryMethodInterceptor implements MethodInterceptor {
     }
 
     @SuppressWarnings("unchecked")
+
     private CompletionStage<?> executeCompletionStage(MethodInvocation invocation, CompletionStage<?> stage, io.github.resilience4j.retry.Retry.Context context, RecoveryFunction<?> recoveryFunction) {
         final CompletableFuture promise = new CompletableFuture();
         stage.whenComplete((v, t) -> {
@@ -118,6 +119,7 @@ public class RetryMethodInterceptor implements MethodInterceptor {
         return promise;
     }
 
+    @Nullable
     private Object proceed(MethodInvocation invocation, io.github.resilience4j.retry.Retry retry, RecoveryFunction<?> recoveryFunction) throws Throwable {
         io.github.resilience4j.retry.Retry.Context context = retry.context();
         try {

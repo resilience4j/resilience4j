@@ -15,6 +15,7 @@
  */
 package io.github.resilience4j.consumer;
 
+import io.github.resilience4j.core.lang.Nullable;
 import io.vavr.collection.Seq;
 
 
@@ -35,6 +36,7 @@ public interface EventConsumerRegistry<T> {
      * @param id the id of the EventConsumer
      * @return the EventConsumer to which the specified id is mapped
      */
+    @Nullable
     CircularEventConsumer<T> getEventConsumer(String id);
 
     /**

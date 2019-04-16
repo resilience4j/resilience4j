@@ -15,20 +15,19 @@
  */
 package io.github.resilience4j.reactor.retry;
 
-import java.util.function.Consumer;
-import java.util.function.Function;
-
-import org.reactivestreams.Publisher;
-
 import io.github.resilience4j.retry.Retry;
+import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+
+import java.util.function.Consumer;
+import java.util.function.UnaryOperator;
 
 /**
  * A Reactor Retry operator which wraps a reactive type in a Retry.
  * @param <T> the value type of the upstream and downstream
  */
-public class RetryOperator<T> implements Function<Publisher<T>, Publisher<T>> {
+public class RetryOperator<T> implements UnaryOperator<Publisher<T>> {
 
 	private final Retry retry;
 
@@ -50,15 +49,13 @@ public class RetryOperator<T> implements Function<Publisher<T>, Publisher<T>> {
 	@Override
 	public Publisher<T> apply(Publisher<T> publisher) {
 		if (publisher instanceof Mono) {
-			//noinspection unchecked
-			Context<T> context = new Context<T>(retry.context());
+			Context<T> context = new Context<>(retry.context());
 			Mono<T> upstream = (Mono<T>) publisher;
 			return upstream.doOnNext(context::throwExceptionToForceRetryOnResult)
 					.retryWhen(errors -> errors.doOnNext(throwingConsumerWrapper(context::onError)))
 					.doOnSuccess(t -> context.onComplete());
 		} else if (publisher instanceof Flux) {
-			//noinspection unchecked
-			Context<T> context = new Context<T>(retry.context());
+			Context<T> context = new Context<>(retry.context());
 			Flux<T> upstream = (Flux<T>) publisher;
 			return upstream.doOnNext(context::throwExceptionToForceRetryOnResult)
 					.retryWhen(errors -> errors.doOnNext(throwingConsumerWrapper(context::onError)))

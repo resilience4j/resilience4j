@@ -72,12 +72,12 @@ public class CircuitBreakerAutoConfigurationRxJava2Test {
 		assertThat(circuitBreakerProperties).isNotNull();
 
 		try {
-			reactiveDummyService.doSomethingFlowable(true).blockingSubscribe(String::toUpperCase, Throwable::getCause);
+			reactiveDummyService.doSomethingFlowable(true).blockingSubscribe(String::toUpperCase, throwable -> System.out.println("Exception received:" + throwable.getMessage()));
 		} catch (Exception ex) {
 			// Do nothing. The IOException is recorded by the CircuitBreaker as part of the recordFailurePredicate as a failure.
 		}
 		// The invocation is recorded by the CircuitBreaker as a success.
-		reactiveDummyService.doSomethingFlowable(false).blockingSubscribe(String::toUpperCase, Throwable::getCause);
+		reactiveDummyService.doSomethingFlowable(false).blockingSubscribe(String::toUpperCase, throwable -> System.out.println("Exception received:" + throwable.getMessage()));
 
 		CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker(ReactiveDummyService.BACKEND);
 		assertThat(circuitBreaker).isNotNull();

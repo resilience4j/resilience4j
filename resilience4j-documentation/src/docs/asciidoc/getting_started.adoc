@@ -3,29 +3,6 @@
 The projects requires JDK 8. The project is published in JCenter and Maven Central.
 If you use Gradle or Maven, you can include Resilience4j modules as follows.
 
-WARNING: The *groupId* has been changed from *io.github.robwin* to *io.github.resilience4j*
-
-Resilience provides several core modules and add-on modules:
-
-Core modules:
-
-* resilience4j-circuitbreaker: Circuit breaking
-* resilience4j-ratelimiter: Rate limiting
-* resilience4j-bulkhead: Bulkheading
-* resilience4j-retry: Automatic retrying
-* resilience4j-cache: Response caching
-* resilience4j-timelimiter: Timeout handling
-
-Add-on modules
-
-* resilience4j-metrics: Dropwizard Metrics exporter
-* resilience4j-prometheus: Prometheus Metrics exporter
-* resilience4j-spring-boot: Spring Boot Starter
-* resilience4j-ratpack: Ratpack Starter
-* resilience4j-retrofit: Retrofit Call Adapter Factories
-* resilience4j-vertx: Vertx Future decorator
-* resilience4j-consumer: Circular Buffer Event consumer
-
 === Gradle
 
 ==== Release

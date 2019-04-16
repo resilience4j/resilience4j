@@ -19,6 +19,7 @@ import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.Builder;
 
+import io.github.resilience4j.core.lang.Nullable;
 import org.hibernate.validator.constraints.time.DurationMin;
 import org.springframework.beans.BeanUtils;
 import org.springframework.util.StringUtils;
@@ -55,7 +56,7 @@ public class CircuitBreakerConfigurationProperties {
     	}
     	return backendProperties;
     }
-    
+
     private BackendProperties getSharedConfigProperties(String sharedConfig) {
         return sharedConfigs.get(sharedConfig);
     }
@@ -63,7 +64,7 @@ public class CircuitBreakerConfigurationProperties {
     public CircuitBreakerConfig createCircuitBreakerConfig(String backend) {
         return createCircuitBreakerConfig(getBackendProperties(backend));
     }
-    
+
     public CircuitBreakerConfig createCircuitBreakerConfigFromShared(String sharedConfig) {
         BackendProperties backendProperties = getSharedConfigProperties(sharedConfig);
         if(StringUtils.isEmpty(backendProperties.getSharedConfigName())) {
@@ -76,7 +77,7 @@ public class CircuitBreakerConfigurationProperties {
         return buildCircuitBreakerConfig(backendProperties).build();
     }
 
-    public Builder buildCircuitBreakerConfig(BackendProperties properties) {
+    public Builder buildCircuitBreakerConfig(@Nullable BackendProperties properties) {
         if (properties == null) {
             return new Builder();
         }
@@ -114,11 +115,11 @@ public class CircuitBreakerConfigurationProperties {
         if (properties.automaticTransitionFromOpenToHalfOpenEnabled) {
             builder.enableAutomaticTransitionFromOpenToHalfOpen();
         }
-        
+
         if(properties.sharedConfigName != null) {
         	builder.configurationName(properties.sharedConfigName);
         }
-        
+
         return builder;
     }
 
@@ -129,19 +130,19 @@ public class CircuitBreakerConfigurationProperties {
     public Map<String, BackendProperties> getBackends() {
         return backends;
     }
-    
+
     public Map<String, BackendProperties> getSharedConfigs() {
         return sharedConfigs;
     }
-    
+
     public BackendProperties findCircuitBreakerBackend(CircuitBreaker circuitBreaker, CircuitBreakerConfig circuitBreakerConfig) {
     	BackendProperties backendProperties = backends.getOrDefault(circuitBreaker.getName(), null);
-    	
-    	if(circuitBreakerConfig.getConfigurationName() != null 
+
+    	if(circuitBreakerConfig.getConfigurationName() != null
     			&& sharedConfigs.containsKey(circuitBreakerConfig.getConfigurationName())) {
     		backendProperties = sharedConfigs.get(circuitBreakerConfig.getConfigurationName());
     	}
-    	
+
     	return backendProperties;
     }
 
@@ -151,16 +152,20 @@ public class CircuitBreakerConfigurationProperties {
     public static class BackendProperties {
 
         @DurationMin(seconds = 1)
+        @Nullable
         private Duration waitDurationInOpenState;
 
         @Min(1)
         @Max(100)
+        @Nullable
         private Integer failureRateThreshold;
 
         @Min(1)
+        @Nullable
         private Integer ringBufferSizeInClosedState;
 
         @Min(1)
+        @Nullable
         private Integer ringBufferSizeInHalfOpenState;
 
         @NotNull
@@ -172,14 +177,17 @@ public class CircuitBreakerConfigurationProperties {
         @NotNull
         private Boolean registerHealthIndicator = true;
 
+        @Nullable
         private Class<Predicate<Throwable>> recordFailurePredicate;
 
+        @Nullable
         private Class<? extends Throwable>[] recordExceptions;
 
+        @Nullable
         private Class<? extends Throwable>[] ignoreExceptions;
-        
+
         private String sharedConfigName;
-        
+
         /**
          * Sets the wait duration in seconds the CircuitBreaker should stay open, before it switches to half closed.
          *
@@ -195,6 +203,7 @@ public class CircuitBreakerConfigurationProperties {
          *
          * @return the failure rate threshold
          */
+        @Nullable
         public Integer getFailureRateThreshold() {
             return failureRateThreshold;
         }
@@ -213,6 +222,7 @@ public class CircuitBreakerConfigurationProperties {
          *
          * @return the wait duration
          */
+        @Nullable
         public Duration getWaitDurationInOpenState() {
             return waitDurationInOpenState;
         }
@@ -231,6 +241,7 @@ public class CircuitBreakerConfigurationProperties {
          *
          * @return the ring buffer size
          */
+        @Nullable
         public Integer getRingBufferSizeInClosedState() {
             return ringBufferSizeInClosedState;
         }
@@ -249,6 +260,7 @@ public class CircuitBreakerConfigurationProperties {
          *
          * @return the ring buffer size
          */
+        @Nullable
         public Integer getRingBufferSizeInHalfOpenState() {
             return ringBufferSizeInHalfOpenState;
         }
@@ -296,6 +308,7 @@ public class CircuitBreakerConfigurationProperties {
             this.registerHealthIndicator = registerHealthIndicator;
         }
 
+        @Nullable
         public Class<Predicate<Throwable>> getRecordFailurePredicate() {
             return recordFailurePredicate;
         }
@@ -304,6 +317,7 @@ public class CircuitBreakerConfigurationProperties {
             this.recordFailurePredicate = recordFailurePredicate;
         }
 
+        @Nullable
         public Class<? extends Throwable>[] getRecordExceptions() {
             return recordExceptions;
         }
@@ -312,6 +326,7 @@ public class CircuitBreakerConfigurationProperties {
             this.recordExceptions = recordExceptions;
         }
 
+        @Nullable
         public Class<? extends Throwable>[] getIgnoreExceptions() {
             return ignoreExceptions;
         }
@@ -323,7 +338,7 @@ public class CircuitBreakerConfigurationProperties {
         /**
          * Gets the shared configuration name. If this is set, the configuration builder will use the the shared
          * configuration backend over this one.
-         * 
+         *
          * @return The shared configuration name.
          */
         public String getSharedConfigName() {

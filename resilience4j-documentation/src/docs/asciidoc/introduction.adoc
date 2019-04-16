@@ -16,14 +16,16 @@ Core modules:
 
 Add-on modules
 
-* resilience4j-reactor: Spring Reactor adapter
-* resilience4j-rxjava2: RxJava2 adapter
+* resilience4j-reactor: Custom Spring Reactor operator
+* resilience4j-rxjava2: Custom RxJava2 operator
 * resilience4j-micrometer: Micrometer Metrics exporter
 * resilience4j-metrics: Dropwizard Metrics exporter
 * resilience4j-prometheus: Prometheus Metrics exporter
 * resilience4j-spring-boot: Spring Boot Starter
+* resilience4j-spring-boot2: Spring Boot 2 Starter
 * resilience4j-ratpack: Ratpack Starter
-* resilience4j-retrofit: Retrofit Call Adapter Factories
+* resilience4j-retrofit: Retrofit adapter
+* resilience4j-feign: Feign adapter
 * resilience4j-vertx: Vertx Future decorator
 * resilience4j-consumer: Circular Buffer Event consumer
 

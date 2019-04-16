@@ -19,33 +19,23 @@
 package io.github.resilience4j.circuitbreaker.internal;
 
 
-import static io.github.resilience4j.circuitbreaker.CircuitBreaker.State.CLOSED;
-import static io.github.resilience4j.circuitbreaker.CircuitBreaker.State.DISABLED;
-import static io.github.resilience4j.circuitbreaker.CircuitBreaker.State.FORCED_OPEN;
-import static io.github.resilience4j.circuitbreaker.CircuitBreaker.State.HALF_OPEN;
-import static io.github.resilience4j.circuitbreaker.CircuitBreaker.State.OPEN;
-
-import java.time.Duration;
-import java.util.concurrent.CompletionException;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Function;
-import java.util.function.Predicate;
-import java.util.function.Supplier;
-
+import io.github.resilience4j.circuitbreaker.CircuitBreaker;
+import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
+import io.github.resilience4j.circuitbreaker.event.*;
+import io.github.resilience4j.core.EventConsumer;
+import io.github.resilience4j.core.EventProcessor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import io.github.resilience4j.circuitbreaker.CircuitBreaker;
-import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
-import io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent;
-import io.github.resilience4j.circuitbreaker.event.CircuitBreakerOnCallNotPermittedEvent;
-import io.github.resilience4j.circuitbreaker.event.CircuitBreakerOnErrorEvent;
-import io.github.resilience4j.circuitbreaker.event.CircuitBreakerOnIgnoredErrorEvent;
-import io.github.resilience4j.circuitbreaker.event.CircuitBreakerOnResetEvent;
-import io.github.resilience4j.circuitbreaker.event.CircuitBreakerOnStateTransitionEvent;
-import io.github.resilience4j.circuitbreaker.event.CircuitBreakerOnSuccessEvent;
-import io.github.resilience4j.core.EventConsumer;
-import io.github.resilience4j.core.EventProcessor;
+import java.time.Clock;
+import java.time.Duration;
+import java.util.concurrent.CompletionException;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Predicate;
+import java.util.function.Supplier;
+import java.util.function.UnaryOperator;
+
+import static io.github.resilience4j.circuitbreaker.CircuitBreaker.State.*;
 
 /**
  * A CircuitBreaker finite state machine.
@@ -58,6 +48,22 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
     private final AtomicReference<CircuitBreakerState> stateReference;
     private final CircuitBreakerConfig circuitBreakerConfig;
     private final CircuitBreakerEventProcessor eventProcessor;
+    private Clock clock;
+
+    /**
+     * Creates a circuitBreaker.
+     *
+     * @param name                 the name of the CircuitBreaker
+     * @param circuitBreakerConfig The CircuitBreaker configuration.
+     * @param clock A Clock which can be mocked in tests.
+     */
+    CircuitBreakerStateMachine(String name, CircuitBreakerConfig circuitBreakerConfig, Clock clock) {
+        this.name = name;
+        this.circuitBreakerConfig = circuitBreakerConfig;
+        this.stateReference = new AtomicReference<>(new ClosedState(this));
+        this.eventProcessor = new CircuitBreakerEventProcessor();
+        this.clock = clock;
+    }
 
     /**
      * Creates a circuitBreaker.
@@ -66,10 +72,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
      * @param circuitBreakerConfig The CircuitBreaker configuration.
      */
     public CircuitBreakerStateMachine(String name, CircuitBreakerConfig circuitBreakerConfig) {
-        this.name = name;
-        this.circuitBreakerConfig = circuitBreakerConfig;
-        this.stateReference = new AtomicReference<>(new ClosedState(this));
-        this.eventProcessor = new CircuitBreakerEventProcessor();
+       this(name, circuitBreakerConfig, Clock.systemUTC());
     }
 
     /**
@@ -134,8 +137,6 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
         stateReference.get().onSuccess();
     }
 
-
-
     /**
      * Get the state of this CircuitBreaker.
      *
@@ -189,7 +190,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
         publishResetEvent();
     }
 
-    private void stateTransition(State newState, Function<CircuitBreakerState, CircuitBreakerState> newStateGenerator) {
+    private void stateTransition(State newState, UnaryOperator<CircuitBreakerState> newStateGenerator) {
         CircuitBreakerState previousState = stateReference.getAndUpdate(currentState -> {
             if (currentState.getState() == newState) {
                 return currentState;
@@ -283,6 +284,10 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
     @Override
     public EventPublisher getEventPublisher() {
         return eventProcessor;
+    }
+
+    Clock getClock() {
+        return clock;
     }
 
     private class CircuitBreakerEventProcessor extends EventProcessor<CircuitBreakerEvent> implements EventConsumer<CircuitBreakerEvent>, EventPublisher {

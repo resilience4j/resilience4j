@@ -18,14 +18,6 @@
  */
 package io.github.resilience4j.ratelimiter;
 
-import java.time.Duration;
-import java.util.concurrent.Callable;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionStage;
-import java.util.function.Consumer;
-import java.util.function.Function;
-import java.util.function.Supplier;
-
 import io.github.resilience4j.core.EventConsumer;
 import io.github.resilience4j.ratelimiter.event.RateLimiterEvent;
 import io.github.resilience4j.ratelimiter.event.RateLimiterOnFailureEvent;
@@ -34,6 +26,14 @@ import io.github.resilience4j.ratelimiter.internal.AtomicRateLimiter;
 import io.vavr.CheckedFunction0;
 import io.vavr.CheckedFunction1;
 import io.vavr.CheckedRunnable;
+
+import java.time.Duration;
+import java.util.concurrent.Callable;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
+import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.Supplier;
 
 /**
  * A RateLimiter instance is thread-safe can be used to decorate multiple requests.
@@ -73,6 +73,17 @@ public interface RateLimiter {
 	 */
 	static RateLimiter ofDefaults(String name) {
 		return new AtomicRateLimiter(name, RateLimiterConfig.ofDefaults());
+	}
+
+	/**
+	 * Decorates and executes the decorated CompletionStage.
+	 *
+	 * @param supplier the original CompletionStage
+	 * @param <T> the type of results supplied by this supplier
+	 * @return the decorated CompletionStage.
+	 */
+	default <T> CompletionStage<T> executeCompletionStage(Supplier<CompletionStage<T>> supplier){
+		return decorateCompletionStage(this, supplier).get();
 	}
 
 	/**
@@ -227,7 +238,7 @@ public interface RateLimiter {
 	 * @throws RequestNotPermitted   if waiting time elapsed before a permit was acquired.
 	 * @throws IllegalStateException if thread was interrupted during permission wait
 	 */
-	static void waitForPermission(final RateLimiter rateLimiter) throws IllegalStateException, RequestNotPermitted {
+	static void waitForPermission(final RateLimiter rateLimiter) {
 		RateLimiterConfig rateLimiterConfig = rateLimiter.getRateLimiterConfig();
 		Duration timeoutDuration = rateLimiterConfig.getTimeoutDuration();
 		boolean permission = rateLimiter.getPermission(timeoutDuration);
