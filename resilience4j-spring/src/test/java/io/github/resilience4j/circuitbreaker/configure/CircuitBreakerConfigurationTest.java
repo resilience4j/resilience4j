@@ -33,27 +33,9 @@ public class CircuitBreakerConfigurationTest {
 		when(circuitBreakerConfigurationProperties.createCircuitBreakerConfig(anyString())).thenReturn(CircuitBreakerConfig.ofDefaults());
 
 		CircuitBreakerConfiguration circuitBreakerConfiguration = new CircuitBreakerConfiguration(circuitBreakerConfigurationProperties);
-		CircuitBreakerRegistry circuitBreakerRegistry = circuitBreakerConfiguration.circuitBreakerRegistry(new DefaultEventConsumerRegistry());
+		CircuitBreakerRegistry circuitBreakerRegistry = circuitBreakerConfiguration.circuitBreakerRegistry(new DefaultEventConsumerRegistry<>());
 		assertThat(circuitBreakerRegistry.getAllCircuitBreakers().size()).isEqualTo(1);
 		assertThat(circuitBreakerRegistry.circuitBreaker("testBackend")).isNotNull();
-
-	}
-
-	@Test
-	public void testCircuitBreakerSharedFindConfig() {
-		CircuitBreakerConfigurationProperties circuitBreakerConfigurationProperties = new CircuitBreakerConfigurationProperties();
-		CircuitBreakerConfigurationProperties.BackendProperties backendPropertiesShared = new CircuitBreakerConfigurationProperties.BackendProperties();
-		backendPropertiesShared.setFailureRateThreshold(3);
-		backendPropertiesShared.setSharedConfigName("sharedConfigDefault");
-		circuitBreakerConfigurationProperties.createCircuitBreakerConfigFromShared("sharedConfig");
-		/*when(circuitBreakerConfigurationProperties.getBackends()).thenReturn(Collections.emptyMap());
-		when(circuitBreakerConfigurationProperties.getSharedConfigs()).thenReturn(Collections.singletonMap("sharedConfig", backendPropertiesShared));
-		when(circuitBreakerConfigurationProperties.findCircuitBreakerBackend(any(),any())).thenCallRealMethod();*/
-		CircuitBreakerConfiguration circuitBreakerConfiguration = new CircuitBreakerConfiguration(circuitBreakerConfigurationProperties);
-		CircuitBreakerRegistry circuitBreakerRegistry = circuitBreakerConfiguration.circuitBreakerRegistry(new DefaultEventConsumerRegistry());
-
-		assertThat(circuitBreakerConfigurationProperties.findCircuitBreakerBackend(circuitBreakerRegistry.circuitBreaker("sharedConfig"), CircuitBreakerConfig.custom()
-				.configurationName("sharedConfigDefault").build())).isNotNull();
 
 	}
 

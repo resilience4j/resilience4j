@@ -38,9 +38,9 @@ import io.github.resilience4j.consumer.EventConsumerRegistry;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(classes = {
-		CircuitBreakerConfigurationOnMissingBeanTest.ConfigWithOverrides.class
+		CircuitBreakerConfigurationSpringTest.ConfigWithOverrides.class
 })
-public class CircuitBreakerConfigurationOnMissingBeanTest {
+public class CircuitBreakerConfigurationSpringTest {
 
 	@Autowired
 	private ConfigWithOverrides configWithOverrides;
