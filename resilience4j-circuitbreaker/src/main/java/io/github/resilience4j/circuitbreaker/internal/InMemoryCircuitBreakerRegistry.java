@@ -45,7 +45,7 @@ public final class InMemoryCircuitBreakerRegistry implements CircuitBreakerRegis
      * The circuitBreakers, indexed by name of the backend.
      */
     private final ConcurrentMap<String, CircuitBreaker> circuitBreakers;
-    
+
     /**
      * The list of consumer functions to execute after a circuit breaker is created.
      */
@@ -98,16 +98,14 @@ public final class InMemoryCircuitBreakerRegistry implements CircuitBreakerRegis
     public CircuitBreaker circuitBreaker(String name, Supplier<CircuitBreakerConfig> circuitBreakerConfigSupplier) {
         return circuitBreakers.computeIfAbsent(Objects.requireNonNull(name, NAME_MUST_NOT_BE_NULL),
                 k -> {
-        			CircuitBreakerConfig config = circuitBreakerConfigSupplier.get();
-        			return postCreateCircuitBreaker(CircuitBreaker.of(name, config), config);
-        		});
+                    CircuitBreakerConfig config = circuitBreakerConfigSupplier.get();
+                    return postCreateCircuitBreaker(CircuitBreaker.of(name, config), config);
+                });
     }
-    
+
     private CircuitBreaker postCreateCircuitBreaker(CircuitBreaker createdCircuitBreaker, CircuitBreakerConfig circuitBreakerConfig) {
-        if(postCreationConsumers != null) {
-            postCreationConsumers.forEach(consumer -> {
-                consumer.accept(createdCircuitBreaker, circuitBreakerConfig);
-            });
+        if (!postCreationConsumers.isEmpty()) {
+            postCreationConsumers.forEach(consumer -> consumer.accept(createdCircuitBreaker, circuitBreakerConfig));
         }
         return createdCircuitBreaker;
     }

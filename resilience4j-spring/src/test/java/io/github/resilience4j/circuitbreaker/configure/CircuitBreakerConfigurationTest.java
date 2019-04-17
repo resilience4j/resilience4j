@@ -32,14 +32,21 @@ public class CircuitBreakerConfigurationTest {
 		when(circuitBreakerConfigurationProperties.getBackends()).thenReturn(Collections.singletonMap("testBackend", backendProperties));
 		when(circuitBreakerConfigurationProperties.createCircuitBreakerConfig(anyString())).thenReturn(CircuitBreakerConfig.ofDefaults());
 
-
 		CircuitBreakerConfiguration circuitBreakerConfiguration = new CircuitBreakerConfiguration(circuitBreakerConfigurationProperties);
-
 		CircuitBreakerRegistry circuitBreakerRegistry = circuitBreakerConfiguration.circuitBreakerRegistry(new DefaultEventConsumerRegistry());
-
 		assertThat(circuitBreakerRegistry.getAllCircuitBreakers().size()).isEqualTo(1);
 		assertThat(circuitBreakerRegistry.circuitBreaker("testBackend")).isNotNull();
 
+	}
+
+	@Test
+	public void testCircuitBreakerSharedConfig() {
+		CircuitBreakerConfigurationProperties properties = new CircuitBreakerConfigurationProperties();
+
+		assertThat(properties.createCircuitBreakerConfig("sharedConfig")).isNotNull();
+		assertThat(properties.createCircuitBreakerConfigFromShared("backend")).isNotNull();
+		assertThat(properties.getBackends().size()).isEqualTo(0);
+		assertThat(properties.getSharedConfigs().size()).isEqualTo(0);
 
 	}
 

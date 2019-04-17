@@ -50,14 +50,16 @@ public class CircuitBreakerConfigurationProperties {
         this.circuitBreakerAspectOrder = circuitBreakerAspectOrder;
     }
 
+    @Nullable
     private BackendProperties getBackendProperties(String backend) {
-    	BackendProperties backendProperties = backends.get(backend);
-        if(!StringUtils.isEmpty(backendProperties.getSharedConfigName())) {
-    		return getSharedConfigProperties(backendProperties.getSharedConfigName());
-    	}
-    	return backendProperties;
+        BackendProperties backendProperties = backends.get(backend);
+        if (backendProperties != null && !StringUtils.isEmpty(backendProperties.getSharedConfigName())) {
+            return getSharedConfigProperties(backendProperties.getSharedConfigName());
+        }
+        return backendProperties;
     }
 
+    @Nullable
     private BackendProperties getSharedConfigProperties(String sharedConfig) {
         return sharedConfigs.get(sharedConfig);
     }
@@ -68,13 +70,13 @@ public class CircuitBreakerConfigurationProperties {
 
     public CircuitBreakerConfig createCircuitBreakerConfigFromShared(String sharedConfig) {
         BackendProperties backendProperties = getSharedConfigProperties(sharedConfig);
-        if(StringUtils.isEmpty(backendProperties.getSharedConfigName())) {
+        if (backendProperties != null && StringUtils.isEmpty(backendProperties.getSharedConfigName())) {
             return buildCircuitBreakerConfig(backendProperties).configurationName(sharedConfig).build();
         }
         return createCircuitBreakerConfig(getSharedConfigProperties(sharedConfig));
     }
 
-    private CircuitBreakerConfig createCircuitBreakerConfig(BackendProperties backendProperties) {
+    private CircuitBreakerConfig createCircuitBreakerConfig(@Nullable BackendProperties backendProperties) {
         return buildCircuitBreakerConfig(backendProperties).build();
     }
 
@@ -117,8 +119,8 @@ public class CircuitBreakerConfigurationProperties {
             builder.enableAutomaticTransitionFromOpenToHalfOpen();
         }
 
-        if(properties.sharedConfigName != null) {
-        	builder.configurationName(properties.sharedConfigName);
+        if (properties.sharedConfigName != null) {
+            builder.configurationName(properties.sharedConfigName);
         }
 
         return builder;
@@ -140,7 +142,7 @@ public class CircuitBreakerConfigurationProperties {
     public BackendProperties findCircuitBreakerBackend(CircuitBreaker circuitBreaker, CircuitBreakerConfig circuitBreakerConfig) {
         BackendProperties backendProperties = backends.getOrDefault(circuitBreaker.getName(), null);
 
-        if(circuitBreakerConfig.getConfigurationName() != null
+        if (circuitBreakerConfig.getConfigurationName() != null
                 && sharedConfigs.containsKey(circuitBreakerConfig.getConfigurationName())) {
             backendProperties = sharedConfigs.get(circuitBreakerConfig.getConfigurationName());
         }
@@ -188,6 +190,7 @@ public class CircuitBreakerConfigurationProperties {
         @Nullable
         private Class<? extends Throwable>[] ignoreExceptions;
 
+        @Nullable
         private String sharedConfigName;
 
         /**
@@ -343,6 +346,7 @@ public class CircuitBreakerConfigurationProperties {
          *
          * @return The shared configuration name.
          */
+        @Nullable
         public String getSharedConfigName() {
             return sharedConfigName;
         }
