@@ -26,6 +26,7 @@ import javax.validation.constraints.NotNull;
 
 import org.hibernate.validator.constraints.time.DurationMin;
 import org.springframework.beans.BeanUtils;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.util.StringUtils;
 
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
@@ -33,6 +34,7 @@ import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.Builder;
 import io.github.resilience4j.core.lang.Nullable;
 
+@Configuration
 public class CircuitBreakerConfigurationProperties {
     // This property gives you control over CircuitBreaker aspect application order.
     // By default CircuitBreaker will be executed BEFORE RateLimiter.

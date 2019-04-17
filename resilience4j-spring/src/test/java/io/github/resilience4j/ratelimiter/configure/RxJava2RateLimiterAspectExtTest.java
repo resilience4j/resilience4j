@@ -26,7 +26,10 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
 import io.github.resilience4j.ratelimiter.RateLimiter;
+import io.reactivex.Completable;
 import io.reactivex.Flowable;
+import io.reactivex.Maybe;
+import io.reactivex.Observable;
 import io.reactivex.Single;
 
 /**
@@ -56,5 +59,16 @@ public class RxJava2RateLimiterAspectExtTest {
 
 		when(proceedingJoinPoint.proceed()).thenReturn(Flowable.just("Test"));
 		assertThat(rxJava2RateLimiterAspectExt.handle(proceedingJoinPoint, rateLimiter, "testMethod")).isNotNull();
+
+		when(proceedingJoinPoint.proceed()).thenReturn(Completable.complete());
+		assertThat(rxJava2RateLimiterAspectExt.handle(proceedingJoinPoint, rateLimiter, "testMethod")).isNotNull();
+
+		when(proceedingJoinPoint.proceed()).thenReturn(Maybe.just("Test"));
+		assertThat(rxJava2RateLimiterAspectExt.handle(proceedingJoinPoint, rateLimiter, "testMethod")).isNotNull();
+
+		when(proceedingJoinPoint.proceed()).thenReturn(Observable.just("Test"));
+		assertThat(rxJava2RateLimiterAspectExt.handle(proceedingJoinPoint, rateLimiter, "testMethod")).isNotNull();
+
+
 	}
 }
