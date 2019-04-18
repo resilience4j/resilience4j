@@ -108,27 +108,26 @@ public class RecoveryMethod {
     }
 
     private Object invoke(Method recovery, Throwable throwable) throws IllegalAccessException, InvocationTargetException {
-        Object response;
         boolean accessible = recovery.isAccessible();
-        if (!accessible) {
-            ReflectionUtils.makeAccessible(recovery);
+        try {
+            if (!accessible) {
+                ReflectionUtils.makeAccessible(recovery);
+            }
+
+            if (args.length != 0) {
+                Object[] newArgs = Arrays.copyOf(args, args.length + 1);
+                newArgs[args.length] = throwable;
+
+                return recovery.invoke(target, newArgs);
+
+            } else {
+                return recovery.invoke(target, throwable);
+            }
+        } finally {
+            if (!accessible) {
+                recovery.setAccessible(false);
+            }
         }
-
-        if (args.length != 0) {
-            Object[] newArgs = Arrays.copyOf(args, args.length + 1);
-            newArgs[args.length] = throwable;
-
-            response = recovery.invoke(target, newArgs);
-
-        } else {
-            response = recovery.invoke(target, throwable);
-        }
-
-        if (!accessible) {
-            recovery.setAccessible(false);
-        }
-
-        return response;
     }
 
     private static Map<Class<?>, Method> extractMethods(String recoveryMethodName, Class<?>[] params, Class<?> originalReturnType, Class<?> targetClass) {
