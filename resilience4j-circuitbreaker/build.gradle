@@ -3,5 +3,6 @@ dependencies {
     testCompile project(':resilience4j-test')
     jmh project(':resilience4j-rxjava2')
     testCompile ( libraries.rxjava2 )
+    testCompile ( libraries.mock_lock )
 }
 ext.moduleName='io.github.resilience4j.circuitbreaker'

@@ -18,6 +18,12 @@
  */
 package io.github.resilience4j.circuitbreaker;
 
+import io.github.resilience4j.circuitbreaker.event.*;
+import io.github.resilience4j.circuitbreaker.internal.CircuitBreakerStateMachine;
+import io.github.resilience4j.circuitbreaker.utils.CircuitBreakerUtils;
+import io.github.resilience4j.core.EventConsumer;
+import io.vavr.*;
+
 import java.util.Arrays;
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -27,23 +33,6 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
-
-import io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent;
-import io.github.resilience4j.circuitbreaker.event.CircuitBreakerOnCallNotPermittedEvent;
-import io.github.resilience4j.circuitbreaker.event.CircuitBreakerOnErrorEvent;
-import io.github.resilience4j.circuitbreaker.event.CircuitBreakerOnIgnoredErrorEvent;
-import io.github.resilience4j.circuitbreaker.event.CircuitBreakerOnResetEvent;
-import io.github.resilience4j.circuitbreaker.event.CircuitBreakerOnStateTransitionEvent;
-import io.github.resilience4j.circuitbreaker.event.CircuitBreakerOnSuccessEvent;
-import io.github.resilience4j.circuitbreaker.internal.CircuitBreakerStateMachine;
-import io.github.resilience4j.circuitbreaker.utils.CircuitBreakerUtils;
-import io.github.resilience4j.core.EventConsumer;
-import io.vavr.CheckedConsumer;
-import io.vavr.CheckedFunction0;
-import io.vavr.CheckedFunction1;
-import io.vavr.CheckedRunnable;
-import io.vavr.Tuple;
-import io.vavr.Tuple2;
 
 /**
  * A CircuitBreaker instance is thread-safe can be used to decorate multiple requests.
@@ -125,7 +114,7 @@ public interface CircuitBreaker {
     void transitionToDisabledState();
 
     /**
-     * Transitions the state machine to a FORCED_OPEN state,  stopping state transition, metrics and event publishing.
+     * Transitions the state machine to a FORCED_OPEN state, stopping state transition, metrics and event publishing.
      *
      * Should only be used, when you want to disable the circuit breaker allowing no call to pass.
      * To recover from this state you must force a new state transition

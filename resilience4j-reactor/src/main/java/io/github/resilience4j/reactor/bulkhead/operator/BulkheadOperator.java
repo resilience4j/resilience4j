@@ -24,14 +24,14 @@ import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Scheduler;
 import reactor.core.scheduler.Schedulers;
 
-import java.util.function.Function;
+import java.util.function.UnaryOperator;
 
 /**
  * A Reactor operator which wraps a reactive type in a bulkhead.
  *
  * @param <T> the value type of the upstream and downstream
  */
-public class BulkheadOperator<T> implements Function<Publisher<T>, Publisher<T>> {
+public class BulkheadOperator<T> implements UnaryOperator<Publisher<T>> {
     private final Bulkhead bulkhead;
     private final Scheduler scheduler;
 

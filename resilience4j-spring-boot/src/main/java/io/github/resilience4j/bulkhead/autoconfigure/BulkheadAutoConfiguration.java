@@ -49,7 +49,7 @@ public class BulkheadAutoConfiguration {
     }
 
 	@Bean
-	public BulkheadEventsEndpoint bulkheadEventsEndpoint(EventConsumerRegistry<BulkheadEvent> eventConsumerRegistry, BulkheadRegistry bulkheadRegistry) {
-		return new BulkheadEventsEndpoint(eventConsumerRegistry, bulkheadRegistry);
+	public BulkheadEventsEndpoint bulkheadEventsEndpoint(EventConsumerRegistry<BulkheadEvent> eventConsumerRegistry) {
+		return new BulkheadEventsEndpoint(eventConsumerRegistry);
 	}
 }

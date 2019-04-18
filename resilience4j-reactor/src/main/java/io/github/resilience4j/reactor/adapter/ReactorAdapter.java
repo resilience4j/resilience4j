@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Dan Maas
+ * Copyright 2017 Robert Winkler
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.resilience4j.ratpack.adapter;
+package io.github.resilience4j.reactor.adapter;
 
 
 import io.github.resilience4j.core.EventPublisher;
@@ -21,6 +21,8 @@ import reactor.core.publisher.DirectProcessor;
 import reactor.core.publisher.Flux;
 
 public class ReactorAdapter {
+
+    private ReactorAdapter(){}
 
     /**
      * Converts the EventPublisher into a Flux.

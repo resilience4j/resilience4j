@@ -15,6 +15,14 @@
  */
 package io.github.resilience4j.circuitbreaker.autoconfigure;
 
+import io.github.resilience4j.circuitbreaker.CircuitBreaker;
+import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
+import io.github.resilience4j.circuitbreaker.configure.CircuitBreakerConfiguration;
+import io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent;
+import io.github.resilience4j.circuitbreaker.monitoring.endpoint.CircuitBreakerEndpoint;
+import io.github.resilience4j.circuitbreaker.monitoring.endpoint.CircuitBreakerEventsEndpoint;
+import io.github.resilience4j.circuitbreaker.monitoring.health.CircuitBreakerHealthIndicator;
+import io.github.resilience4j.consumer.EventConsumerRegistry;
 import io.github.resilience4j.recovery.configure.RecoveryConfiguration;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.boot.actuate.autoconfigure.EndpointAutoConfiguration;
@@ -26,15 +34,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 
 import javax.annotation.PostConstruct;
-
-import io.github.resilience4j.circuitbreaker.CircuitBreaker;
-import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
-import io.github.resilience4j.circuitbreaker.configure.CircuitBreakerConfiguration;
-import io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent;
-import io.github.resilience4j.circuitbreaker.monitoring.endpoint.CircuitBreakerEndpoint;
-import io.github.resilience4j.circuitbreaker.monitoring.endpoint.CircuitBreakerEventsEndpoint;
-import io.github.resilience4j.circuitbreaker.monitoring.health.CircuitBreakerHealthIndicator;
-import io.github.resilience4j.consumer.EventConsumerRegistry;
 
 /**
  * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration
@@ -63,8 +62,8 @@ public class CircuitBreakerAutoConfiguration {
     }
 
     @Bean
-    public CircuitBreakerEventsEndpoint circuitBreakerEventsEndpoint(EventConsumerRegistry<CircuitBreakerEvent> eventConsumerRegistry, CircuitBreakerRegistry circuitBreakerRegistry) {
-        return new CircuitBreakerEventsEndpoint(eventConsumerRegistry, circuitBreakerRegistry);
+    public CircuitBreakerEventsEndpoint circuitBreakerEventsEndpoint(EventConsumerRegistry<CircuitBreakerEvent> eventConsumerRegistry) {
+        return new CircuitBreakerEventsEndpoint(eventConsumerRegistry);
     }
 
     @PostConstruct
