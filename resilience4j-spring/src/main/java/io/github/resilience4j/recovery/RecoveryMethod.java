@@ -15,6 +15,7 @@
  */
 package io.github.resilience4j.recovery;
 
+import io.github.resilience4j.core.lang.Nullable;
 import org.springframework.util.ReflectionUtils;
 import org.springframework.util.StringUtils;
 
@@ -75,6 +76,7 @@ public class RecoveryMethod {
      * @return recovered value
      * @throws Throwable if throwable is unrecoverable, throwable will be thrown
      */
+    @Nullable
     public Object recover(Throwable thrown) throws Throwable {
         if (recoveryMethods.size() == 1) {
             Map.Entry<Class<?>, Method> entry = recoveryMethods.entrySet().iterator().next();
