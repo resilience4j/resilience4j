@@ -86,7 +86,7 @@ class CircuitBreakerSubscriber<T> extends ResilienceBaseSubscriber<T> {
 
     @Override
     protected void hookOnPermitAcquired() {
-        stopWatch = StopWatch.start(circuitBreaker.getName());
+        stopWatch = StopWatch.start();
     }
 
     @Override
@@ -102,13 +102,13 @@ class CircuitBreakerSubscriber<T> extends ResilienceBaseSubscriber<T> {
 
     private void markFailure(Throwable e) {
         if (wasCallPermitted()) {
-            circuitBreaker.onError(stopWatch.stop().getProcessingDuration().toNanos(), e);
+            circuitBreaker.onError(stopWatch != null ? stopWatch.stop().toNanos() : 0, e);
         }
     }
 
     private void markSuccess() {
         if (wasCallPermitted()) {
-            circuitBreaker.onSuccess(stopWatch.stop().getProcessingDuration().toNanos());
+            circuitBreaker.onSuccess(stopWatch != null ? stopWatch.stop().toNanos() : 0);
         }
     }
 }

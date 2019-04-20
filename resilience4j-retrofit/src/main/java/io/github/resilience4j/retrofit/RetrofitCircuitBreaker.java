@@ -61,22 +61,22 @@ public interface RetrofitCircuitBreaker {
                     return;
                 }
 
-                final StopWatch stopWatch = StopWatch.start(circuitBreaker.getName());
+                final StopWatch stopWatch = StopWatch.start();
                 call.enqueue(new Callback<T>() {
                     @Override
                     public void onResponse(final Call<T> call, final Response<T> response) {
                         if (responseSuccess.test(response)) {
-                            circuitBreaker.onSuccess(stopWatch.stop().getProcessingDuration().toNanos());
+                            circuitBreaker.onSuccess(stopWatch.stop().toNanos());
                         } else {
                             final Throwable throwable = new Throwable("Response error: HTTP " + response.code() + " - " + response.message());
-                            circuitBreaker.onError(stopWatch.stop().getProcessingDuration().toNanos(), throwable);
+                            circuitBreaker.onError(stopWatch.stop().toNanos(), throwable);
                         }
                         callback.onResponse(call, response);
                     }
 
                     @Override
                     public void onFailure(final Call<T> call, final Throwable t) {
-                        circuitBreaker.onError(stopWatch.stop().getProcessingDuration().toNanos(), t);
+                        circuitBreaker.onError(stopWatch.stop().toNanos(), t);
                         callback.onFailure(call, t);
                     }
                 });
@@ -85,20 +85,20 @@ public interface RetrofitCircuitBreaker {
             @Override
             public Response<T> execute() throws IOException {
                 CircuitBreakerUtils.isCallPermitted(circuitBreaker);
-                final StopWatch stopWatch = StopWatch.start(circuitBreaker.getName());
+                final StopWatch stopWatch = StopWatch.start();
                 try {
                     final Response<T> response = call.execute();
 
                     if (responseSuccess.test(response)) {
-                        circuitBreaker.onSuccess(stopWatch.stop().getProcessingDuration().toNanos());
+                        circuitBreaker.onSuccess(stopWatch.stop().toNanos());
                     } else {
                         final Throwable throwable = new Throwable("Response error: HTTP " + response.code() + " - " + response.message());
-                        circuitBreaker.onError(stopWatch.stop().getProcessingDuration().toNanos(), throwable);
+                        circuitBreaker.onError(stopWatch.stop().toNanos(), throwable);
                     }
 
                     return response;
                 } catch (Throwable throwable) {
-                    circuitBreaker.onError(stopWatch.stop().getProcessingDuration().toNanos(), throwable);
+                    circuitBreaker.onError(stopWatch.stop().toNanos(), throwable);
                     throw throwable;
                 }
             }

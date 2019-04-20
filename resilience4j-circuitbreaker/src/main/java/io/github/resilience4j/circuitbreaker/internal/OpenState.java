@@ -23,6 +23,8 @@ import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 final class OpenState extends CircuitBreakerState {
 
@@ -30,7 +32,7 @@ final class OpenState extends CircuitBreakerState {
     private final CircuitBreakerMetrics circuitBreakerMetrics;
     private final Clock clock;
 
-    OpenState(CircuitBreakerStateMachine stateMachine, CircuitBreakerMetrics circuitBreakerMetrics) {
+    OpenState(CircuitBreakerStateMachine stateMachine, CircuitBreakerMetrics circuitBreakerMetrics, SchedulerFactory schedulerFactory) {
         super(stateMachine);
         final Duration waitDurationInOpenState = stateMachine.getCircuitBreakerConfig().getWaitDurationInOpenState();
         this.clock = stateMachine.getClock();
@@ -38,7 +40,8 @@ final class OpenState extends CircuitBreakerState {
         this.circuitBreakerMetrics = circuitBreakerMetrics;
 
         if (stateMachine.getCircuitBreakerConfig().isAutomaticTransitionFromOpenToHalfOpenEnabled()) {
-            AutoTransitioner.scheduleAutoTransition(stateMachine::transitionToHalfOpenState, waitDurationInOpenState);
+            ScheduledExecutorService scheduledExecutorService = schedulerFactory.getScheduler();
+            scheduledExecutorService.schedule(stateMachine::transitionToHalfOpenState, waitDurationInOpenState.toMillis(), TimeUnit.MILLISECONDS);
         }
     }
 

@@ -84,7 +84,7 @@ final class CircuitBreakerSubscriber<T> extends AtomicReference<Subscription> im
             if (!callPermitted) {
                 permitted.set(Permit.REJECTED);
             } else {
-                stopWatch = StopWatch.start(circuitBreaker.getName());
+                stopWatch = StopWatch.start();
             }
         }
         return callPermitted;
@@ -100,13 +100,13 @@ final class CircuitBreakerSubscriber<T> extends AtomicReference<Subscription> im
 
     private void markFailure(Throwable e) {
         if (wasCallPermitted()) {
-            circuitBreaker.onError(stopWatch.stop().getProcessingDuration().toNanos(), e);
+            circuitBreaker.onError(stopWatch.stop().toNanos(), e);
         }
     }
 
     private void markSuccess() {
         if (wasCallPermitted()) {
-            circuitBreaker.onSuccess(stopWatch.stop().getProcessingDuration().toNanos());
+            circuitBreaker.onSuccess(stopWatch.stop().toNanos());
         }
     }
 

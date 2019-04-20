@@ -49,6 +49,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
     private final CircuitBreakerConfig circuitBreakerConfig;
     private final CircuitBreakerEventProcessor eventProcessor;
     private Clock clock;
+    private SchedulerFactory schedulerFactory;
 
     /**
      * Creates a circuitBreaker.
@@ -56,13 +57,36 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
      * @param name                 the name of the CircuitBreaker
      * @param circuitBreakerConfig The CircuitBreaker configuration.
      * @param clock A Clock which can be mocked in tests.
+     * @param schedulerFactory A SchedulerFactory which can be mocked in tests.
      */
-    CircuitBreakerStateMachine(String name, CircuitBreakerConfig circuitBreakerConfig, Clock clock) {
+    CircuitBreakerStateMachine(String name, CircuitBreakerConfig circuitBreakerConfig, Clock clock, SchedulerFactory schedulerFactory) {
         this.name = name;
         this.circuitBreakerConfig = circuitBreakerConfig;
         this.stateReference = new AtomicReference<>(new ClosedState(this));
         this.eventProcessor = new CircuitBreakerEventProcessor();
         this.clock = clock;
+        this.schedulerFactory = schedulerFactory;
+    }
+
+    /**
+     * Creates a circuitBreaker.
+     *
+     * @param name                 the name of the CircuitBreaker
+     * @param circuitBreakerConfig The CircuitBreaker configuration.
+     * @param schedulerFactory A SchedulerFactory which can be mocked in tests.
+     */
+    public CircuitBreakerStateMachine(String name, CircuitBreakerConfig circuitBreakerConfig, SchedulerFactory schedulerFactory) {
+        this(name, circuitBreakerConfig, Clock.systemUTC(), schedulerFactory);
+    }
+
+    /**
+     * Creates a circuitBreaker.
+     *
+     * @param name                 the name of the CircuitBreaker
+     * @param circuitBreakerConfig The CircuitBreaker configuration.
+     */
+    public CircuitBreakerStateMachine(String name, CircuitBreakerConfig circuitBreakerConfig, Clock clock) {
+        this(name, circuitBreakerConfig, clock, SchedulerFactory.getInstance());
     }
 
     /**
@@ -220,7 +244,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
 
     @Override
     public void transitionToOpenState() {
-        stateTransition(OPEN, currentState -> new OpenState(this, currentState.getMetrics()));
+        stateTransition(OPEN, currentState -> new OpenState(this, currentState.getMetrics(), schedulerFactory));
     }
 
     @Override
