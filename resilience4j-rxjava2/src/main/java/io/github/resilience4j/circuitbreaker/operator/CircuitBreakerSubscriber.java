@@ -24,7 +24,7 @@ final class CircuitBreakerSubscriber<T> extends AtomicReference<Subscription> im
     private final transient Subscriber<? super T> childSubscriber;
     private final AtomicReference<Permit> permitted = new AtomicReference<>(Permit.PENDING);
     @Nullable
-    private StopWatch stopWatch;
+    private transient StopWatch stopWatch;
 
     CircuitBreakerSubscriber(CircuitBreaker circuitBreaker, Subscriber<? super T> childSubscriber) {
         this.circuitBreaker = requireNonNull(circuitBreaker);
@@ -100,13 +100,13 @@ final class CircuitBreakerSubscriber<T> extends AtomicReference<Subscription> im
 
     private void markFailure(Throwable e) {
         if (wasCallPermitted()) {
-            circuitBreaker.onError(stopWatch.stop().toNanos(), e);
+            circuitBreaker.onError(stopWatch != null ? stopWatch.stop().toNanos() : 0, e);
         }
     }
 
     private void markSuccess() {
         if (wasCallPermitted()) {
-            circuitBreaker.onSuccess(stopWatch.stop().toNanos());
+            circuitBreaker.onSuccess(stopWatch != null ? stopWatch.stop().toNanos() : 0);
         }
     }
 
