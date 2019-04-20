@@ -126,7 +126,7 @@ class DisposableCircuitBreaker<T> extends AtomicReference<Disposable> implements
             if (!callPermitted) {
                 permitted.set(Permit.REJECTED);
             } else {
-                stopWatch = StopWatch.start(circuitBreaker.getName());
+                stopWatch = StopWatch.start();
             }
         }
         return callPermitted;
@@ -142,13 +142,13 @@ class DisposableCircuitBreaker<T> extends AtomicReference<Disposable> implements
 
     private void markFailure(Throwable e) {
         if (wasCallPermitted()) {
-            circuitBreaker.onError(stopWatch.stop().getProcessingDuration().toNanos(), e);
+            circuitBreaker.onError(stopWatch != null ? stopWatch.stop().toNanos() : 0, e);
         }
     }
 
     private void markSuccess() {
         if (wasCallPermitted()) {
-            circuitBreaker.onSuccess(stopWatch.stop().getProcessingDuration().toNanos());
+            circuitBreaker.onSuccess(stopWatch != null ? stopWatch.stop().toNanos() : 0);
         }
     }
 

@@ -16,26 +16,19 @@
  */
 package io.github.resilience4j.feign;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
-import static com.github.tomakehurst.wiremock.client.WireMock.get;
-import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
-import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
-import static com.github.tomakehurst.wiremock.client.WireMock.verify;
-import static java.time.Duration.ofMillis;
-import static java.time.Duration.ofSeconds;
-
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
-
 import feign.FeignException;
 import io.github.resilience4j.feign.test.TestService;
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RateLimiterConfig;
 import io.github.resilience4j.ratelimiter.RequestNotPermitted;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+
+import static com.github.tomakehurst.wiremock.client.WireMock.*;
+import static java.time.Duration.ofMillis;
+import static java.time.Duration.ofSeconds;
 
 /**
  * Tests the integration of the {@link Resilience4jFeign} with {@link RateLimiter}
@@ -70,7 +63,7 @@ public class Resilience4jRateLimiterTest {
     }
 
     @Test(expected = RequestNotPermitted.class)
-    public void testRatelimterLimiting() throws Exception {
+    public void testRateLimiterLimiting() {
         setupStub(200);
 
         testService.greeting();
@@ -80,7 +73,7 @@ public class Resilience4jRateLimiterTest {
     }
 
     @Test(expected = RequestNotPermitted.class)
-    public void testRatelimterNotLimiting() throws Exception {
+    public void testRateLimiterNotLimiting() throws Exception {
         setupStub(200);
 
         testService.greeting();
@@ -93,7 +86,7 @@ public class Resilience4jRateLimiterTest {
     }
 
     @Test(expected = FeignException.class)
-    public void testFailedHttpCall() throws Exception {
+    public void testFailedHttpCall() {
         setupStub(400);
 
         testService.greeting();

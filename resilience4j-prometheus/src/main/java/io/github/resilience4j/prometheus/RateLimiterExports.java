@@ -18,14 +18,14 @@
  */
 package io.github.resilience4j.prometheus;
 
-import java.util.List;
-import java.util.function.Supplier;
-
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
 import io.prometheus.client.Collector;
 import io.prometheus.client.GaugeMetricFamily;
 import io.vavr.collection.Array;
+
+import java.util.List;
+import java.util.function.Supplier;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
@@ -72,7 +72,7 @@ public class RateLimiterExports extends Collector {
      * @param rateLimiterRegistry the registry of rate limiters
      */
     public static RateLimiterExports ofRateLimiterRegistry(RateLimiterRegistry rateLimiterRegistry) {
-        return new RateLimiterExports(rateLimiterRegistry.getAllRateLimiters());
+        return new RateLimiterExports(rateLimiterRegistry);
     }
 
     /**
