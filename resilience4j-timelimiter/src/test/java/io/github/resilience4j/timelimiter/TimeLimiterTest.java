@@ -1,7 +1,7 @@
 package io.github.resilience4j.timelimiter;
 
 import io.vavr.control.Try;
-import org.junit.Before;
+import org.assertj.core.api.Assertions;
 import org.junit.Test;
 
 import java.time.Duration;
@@ -9,110 +9,71 @@ import java.util.concurrent.*;
 import java.util.function.Supplier;
 
 import static org.assertj.core.api.BDDAssertions.then;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 public class TimeLimiterTest {
 
-    private static final Duration SHORT_TIMEOUT = Duration.ofNanos(1);
-    private static final Duration LONG_TIMEOUT = Duration.ofSeconds(15);
-    private static final Duration SLEEP_DURATION = Duration.ofSeconds(5);
-
-    private static final ExecutorService EXECUTOR_SERVICE = Executors.newSingleThreadExecutor();
-
-    private TimeLimiterConfig shortConfig;
-    private TimeLimiterConfig longConfig;
-    private TimeLimiter timeLimiter;
-
-    @Before
-    public void init() {
-        shortConfig = TimeLimiterConfig.custom()
-                .timeoutDuration(SHORT_TIMEOUT)
-                .build();
-        longConfig = TimeLimiterConfig.custom()
-                .timeoutDuration(LONG_TIMEOUT)
-                .build();
-        timeLimiter = mock(TimeLimiter.class);
-    }
-
     @Test
-    public void construction() {
-        TimeLimiter timeLimiter = TimeLimiter.of(shortConfig);
+    public void shouldReturnCorrectTimeoutDuration() {
+        Duration timeoutDuration = Duration.ofSeconds(1);
+        TimeLimiter timeLimiter = TimeLimiter.of(timeoutDuration);
         then(timeLimiter).isNotNull();
+        then(timeLimiter.getTimeLimiterConfig().getTimeoutDuration()).isEqualTo(timeoutDuration);
     }
 
     @Test
-    public void defaultConstruction() {
-        TimeLimiter timeLimiter = TimeLimiter.ofDefaults();
-        then(timeLimiter).isNotNull();
-    }
+    public void shouldThrowTimeoutExceptionAndInvokeCancel() throws InterruptedException, ExecutionException, TimeoutException {
+        Duration timeoutDuration = Duration.ofSeconds(1);
+        TimeLimiter timeLimiter = TimeLimiter.of(timeoutDuration);
 
-    @Test
-    public void durationConstruction() {
-        TimeLimiter timeLimiter = TimeLimiter.of(SHORT_TIMEOUT);
-        then(timeLimiter).isNotNull();
-        then(timeLimiter.getTimeLimiterConfig().getTimeoutDuration()).isEqualTo(SHORT_TIMEOUT);
-    }
+        @SuppressWarnings("unchecked")
+        Future<Integer> mockFuture = (Future<Integer>) mock(Future.class);
 
-    @Test
-    public void decorateFutureSupplier() {
-        when(timeLimiter.getTimeLimiterConfig()).thenReturn(shortConfig);
+        Supplier<Future<Integer>> supplier = () -> mockFuture;
+        when(mockFuture.get(timeoutDuration.toMillis(), TimeUnit.MILLISECONDS)).thenThrow(new TimeoutException());
 
-        Future<Integer> future = EXECUTOR_SERVICE.submit(() -> {
-                    Thread.sleep(SLEEP_DURATION.toMillis());
-                    return 1;
-                }
-        );
-
-        Supplier<Future<Integer>> supplier = () -> future;
         Callable<Integer> decorated = TimeLimiter.decorateFutureSupplier(timeLimiter, supplier);
+        Try<Integer> decoratedResult = Try.ofCallable(decorated);
 
-        Try decoratedResult = Try.success(decorated).mapTry(Callable::call);
         then(decoratedResult.isFailure()).isTrue();
         then(decoratedResult.getCause()).isInstanceOf(TimeoutException.class);
-        then(future.isCancelled()).isTrue();
 
-        when(timeLimiter.getTimeLimiterConfig())
-                .thenReturn(longConfig);
-
-        Future<Integer> secondFuture = EXECUTOR_SERVICE.submit(() -> {
-                    Thread.sleep(SLEEP_DURATION.toMillis());
-                    return 1;
-                }
-        );
-
-        supplier = () -> secondFuture;
-
-        decorated = TimeLimiter.decorateFutureSupplier(timeLimiter, supplier);
-
-        Try secondResult = Try.success(decorated).mapTry(Callable::call);
-        then(secondResult.isSuccess()).isTrue();
+        verify(mockFuture).cancel(true);
     }
 
     @Test
-    public void executeFutureSupplier() throws Throwable {
-        Future<Integer> future = EXECUTOR_SERVICE.submit(() -> {
-                    Thread.sleep(SLEEP_DURATION.toMillis());
-                    return 1;
-                }
-        );
+    public void shouldThrowTimeoutExceptionAndNotInvokeCancel() throws InterruptedException, ExecutionException, TimeoutException {
+        Duration timeoutDuration = Duration.ofSeconds(1);
+        TimeLimiter timeLimiter = TimeLimiter.of(TimeLimiterConfig.custom().timeoutDuration(timeoutDuration)
+                .cancelRunningFuture(false).build());
 
-        Supplier<Future<Integer>> supplier = () -> future;
+        @SuppressWarnings("unchecked")
+        Future<Integer> mockFuture = (Future<Integer>) mock(Future.class);
 
-        Try decoratedResult = Try.of(() -> TimeLimiter.of(shortConfig).executeFutureSupplier(supplier));
+        Supplier<Future<Integer>> supplier = () -> mockFuture;
+        when(mockFuture.get(timeoutDuration.toMillis(), TimeUnit.MILLISECONDS)).thenThrow(new TimeoutException());
+
+        Callable<Integer> decorated = TimeLimiter.decorateFutureSupplier(timeLimiter, supplier);
+        Try<Integer> decoratedResult = Try.ofCallable(decorated);
+
         then(decoratedResult.isFailure()).isTrue();
         then(decoratedResult.getCause()).isInstanceOf(TimeoutException.class);
-        then(future.isCancelled()).isTrue();
 
-        Future<Integer> secondFuture = EXECUTOR_SERVICE.submit(() -> {
-                    Thread.sleep(SLEEP_DURATION.toMillis());
-                    return 1;
-                }
-        );
+        verify(mockFuture, times(0)).cancel(true);
+    }
 
-        Supplier<Future<Integer>> secondSupplier = () -> secondFuture;
+    @Test
+    public void shouldReturnResult() throws Exception {
+        Duration timeoutDuration = Duration.ofSeconds(1);
+        TimeLimiter timeLimiter = TimeLimiter.of(timeoutDuration);
 
-        Try secondResult = Try.of(() -> TimeLimiter.of(longConfig).executeFutureSupplier(secondSupplier));
-        then(secondResult.isSuccess()).isTrue();
+        @SuppressWarnings("unchecked")
+        Future<Integer> mockFuture = (Future<Integer>) mock(Future.class);
+
+        Supplier<Future<Integer>> supplier = () -> mockFuture;
+        when(mockFuture.get(timeoutDuration.toMillis(), TimeUnit.MILLISECONDS)).thenReturn(42);
+
+        Integer result = timeLimiter.executeFutureSupplier(supplier);
+        Assertions.assertThat(result).isEqualTo(42);
     }
 }
