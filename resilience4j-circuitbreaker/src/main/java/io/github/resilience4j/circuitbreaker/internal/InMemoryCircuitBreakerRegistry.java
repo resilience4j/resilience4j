@@ -21,6 +21,7 @@ package io.github.resilience4j.circuitbreaker.internal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -40,6 +41,7 @@ import io.vavr.collection.Seq;
 public final class InMemoryCircuitBreakerRegistry implements CircuitBreakerRegistry {
 
 	private static final String NAME_MUST_NOT_BE_NULL = "Name must not be null";
+	private static final String DEFAULT_CONFIG = "default";
 	private final CircuitBreakerConfig defaultCircuitBreakerConfig;
 
 	/**
@@ -53,12 +55,20 @@ public final class InMemoryCircuitBreakerRegistry implements CircuitBreakerRegis
 	private final List<Consumer<CircuitBreaker>> postCreationConsumers;
 
 	/**
+	 * The map of shared circuit breaker configuration by name
+	 */
+	private final ConcurrentMap<String, CircuitBreakerConfig> sharedCircuitBreakerConfiguration;
+
+
+	/**
 	 * The constructor with default circuitBreaker properties.
 	 */
 	public InMemoryCircuitBreakerRegistry() {
 		this.defaultCircuitBreakerConfig = CircuitBreakerConfig.ofDefaults();
 		this.circuitBreakers = new ConcurrentHashMap<>();
 		this.postCreationConsumers = new CopyOnWriteArrayList<>();
+		this.sharedCircuitBreakerConfiguration = new ConcurrentHashMap<>();
+		this.sharedCircuitBreakerConfiguration.put(DEFAULT_CONFIG, defaultCircuitBreakerConfig);
 	}
 
 	/**
@@ -70,6 +80,19 @@ public final class InMemoryCircuitBreakerRegistry implements CircuitBreakerRegis
 		this.defaultCircuitBreakerConfig = Objects.requireNonNull(defaultCircuitBreakerConfig, "CircuitBreakerConfig must not be null");
 		this.circuitBreakers = new ConcurrentHashMap<>();
 		this.postCreationConsumers = new ArrayList<>();
+		this.sharedCircuitBreakerConfiguration = new ConcurrentHashMap<>();
+		this.sharedCircuitBreakerConfiguration.put(DEFAULT_CONFIG, defaultCircuitBreakerConfig);
+	}
+
+	@Override
+	public void addCircuitBreakerConfig(String configName, CircuitBreakerConfig circuitBreakerConfig) {
+		this.sharedCircuitBreakerConfiguration.put(configName, circuitBreakerConfig);
+	}
+
+	@Override
+	public CircuitBreakerConfig getCircuitBreakerConfigByName(String configName) {
+		return Optional.ofNullable(this.sharedCircuitBreakerConfiguration.get(configName)).
+				orElseThrow(() -> new IllegalArgumentException("The circuit breaker configuration is not found for this name "));
 	}
 
 	@Override

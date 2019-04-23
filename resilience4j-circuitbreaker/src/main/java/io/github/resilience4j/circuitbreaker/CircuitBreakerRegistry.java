@@ -30,6 +30,20 @@ import io.vavr.collection.Seq;
  */
 public interface CircuitBreakerRegistry {
 
+
+	/**
+	 * @param configName           the circuit breaker configuration name
+	 * @param circuitBreakerConfig the circuit breaker configuration
+	 */
+	void addCircuitBreakerConfig(String configName, CircuitBreakerConfig circuitBreakerConfig);
+
+
+	/**
+	 * @param configName the circuit breaker configuration name
+	 * @return the circuit breaker configuration if any
+	 */
+	CircuitBreakerConfig getCircuitBreakerConfigByName(String configName);
+
 	/**
 	 * Returns all managed {@link CircuitBreaker} instances.
 	 *
@@ -97,4 +111,5 @@ public interface CircuitBreakerRegistry {
 	static CircuitBreakerRegistry ofDefaults() {
 		return new InMemoryCircuitBreakerRegistry();
 	}
+
 }
