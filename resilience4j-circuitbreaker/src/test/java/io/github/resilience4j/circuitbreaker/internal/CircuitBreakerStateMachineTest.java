@@ -19,6 +19,7 @@
 package io.github.resilience4j.circuitbreaker.internal;
 
 import com.statemachinesystems.mockclock.MockClock;
+import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import org.junit.Before;
@@ -27,6 +28,7 @@ import org.junit.Test;
 import java.time.Duration;
 import java.time.ZoneId;
 
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.BDDAssertions.assertThat;
 
 public class CircuitBreakerStateMachineTest {
@@ -49,6 +51,47 @@ public class CircuitBreakerStateMachineTest {
     @Test
     public void shouldReturnTheCorrectName() {
         assertThat(circuitBreaker.getName()).isEqualTo("testName");
+    }
+
+    @Test()
+    public void shouldThrowCallNotPermittedExceptionWhenStateIsOpen() {
+        circuitBreaker.transitionToOpenState();
+        assertThatThrownBy(circuitBreaker::obtainPermission).isInstanceOf(CallNotPermittedException.class);
+        assertThat(circuitBreaker.getMetrics().getNumberOfNotPermittedCalls()).isEqualTo(1);
+    }
+
+    @Test
+    public void shouldThrowCallNotPermittedExceptionWhenNotFurtherTestCallsArePermitted() {
+        circuitBreaker.transitionToOpenState();
+        circuitBreaker.transitionToHalfOpenState();
+        circuitBreaker.tryObtainPermission();
+        circuitBreaker.tryObtainPermission();
+        circuitBreaker.tryObtainPermission();
+        circuitBreaker.tryObtainPermission();
+        assertThatThrownBy(circuitBreaker::obtainPermission).isInstanceOf(CallNotPermittedException.class);
+        assertThat(circuitBreaker.getMetrics().getNumberOfNotPermittedCalls()).isEqualTo(1);
+    }
+
+    @Test
+    public void shouldOnlyAllowFourTestRequests() {
+        assertThatMetricsAreReset();
+        circuitBreaker.transitionToOpenState();
+        circuitBreaker.transitionToHalfOpenState();
+        assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.HALF_OPEN);
+        assertThat(circuitBreaker.tryObtainPermission()).isEqualTo(true);
+        assertThat(circuitBreaker.tryObtainPermission()).isEqualTo(true);
+        assertThat(circuitBreaker.tryObtainPermission()).isEqualTo(true);
+        circuitBreaker.tryObtainPermission();
+        assertThat(circuitBreaker.tryObtainPermission()).isEqualTo(false);
+        assertThat(circuitBreaker.tryObtainPermission()).isEqualTo(false);
+        circuitBreaker.transitionToOpenState();
+        circuitBreaker.transitionToHalfOpenState();
+        assertThat(circuitBreaker.tryObtainPermission()).isEqualTo(true);
+        assertThat(circuitBreaker.tryObtainPermission()).isEqualTo(true);
+        assertThat(circuitBreaker.tryObtainPermission()).isEqualTo(true);
+        circuitBreaker.tryObtainPermission();
+        assertThat(circuitBreaker.tryObtainPermission()).isEqualTo(false);
+        assertThat(circuitBreaker.tryObtainPermission()).isEqualTo(false);
     }
 
     @Test

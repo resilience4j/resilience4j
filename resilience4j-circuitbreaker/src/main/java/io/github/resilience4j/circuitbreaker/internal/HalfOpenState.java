@@ -48,7 +48,7 @@ final class HalfOpenState extends CircuitBreakerState {
      * @return true, if test request counter is not zero.
      */
     @Override
-    boolean obtainPermission() {
+    boolean tryObtainPermission() {
         if (testRequestCounter.getAndDecrement() > 0) {
             return true;
         }
@@ -57,8 +57,8 @@ final class HalfOpenState extends CircuitBreakerState {
     }
 
     @Override
-    void tryObtainPermission() {
-        if(!obtainPermission()){
+    void obtainPermission() {
+        if(!tryObtainPermission()){
             throw new CallNotPermittedException(stateMachine);
         }
     }

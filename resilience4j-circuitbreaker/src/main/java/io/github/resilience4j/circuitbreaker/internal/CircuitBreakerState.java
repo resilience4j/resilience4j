@@ -32,9 +32,9 @@ abstract class CircuitBreakerState{
         this.stateMachine = stateMachine;
     }
 
-    abstract boolean obtainPermission();
+    abstract boolean tryObtainPermission();
 
-    abstract void tryObtainPermission();
+    abstract void obtainPermission();
 
     abstract void onError(Throwable throwable);
 

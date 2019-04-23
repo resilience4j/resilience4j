@@ -53,7 +53,7 @@ final class OpenState extends CircuitBreakerState {
      * @return false, if the wait duration has not elapsed. true, if the wait duration has elapsed.
      */
     @Override
-    boolean obtainPermission() {
+    boolean tryObtainPermission() {
         // Thread-safe
         if (clock.instant().isAfter(retryAfterWaitDuration)) {
             stateMachine.transitionToHalfOpenState();
@@ -64,14 +64,14 @@ final class OpenState extends CircuitBreakerState {
     }
 
     @Override
-    void tryObtainPermission() {
-        if(!obtainPermission()){
+    void obtainPermission() {
+        if(!tryObtainPermission()){
             throw new CallNotPermittedException(stateMachine);
         }
     }
 
     /**
-     * Should never be called when obtainPermission returns false.
+     * Should never be called when tryObtainPermission returns false.
      */
     @Override
     void onError(Throwable throwable) {
@@ -82,7 +82,7 @@ final class OpenState extends CircuitBreakerState {
     }
 
     /**
-     * Should never be called when obtainPermission returns false.
+     * Should never be called when tryObtainPermission returns false.
      */
     @Override
     void onSuccess() {
