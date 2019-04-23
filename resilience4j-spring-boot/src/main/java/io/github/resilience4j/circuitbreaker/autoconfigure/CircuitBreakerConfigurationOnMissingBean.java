@@ -16,28 +16,31 @@
 package io.github.resilience4j.circuitbreaker.autoconfigure;
 
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
-import io.github.resilience4j.circuitbreaker.configure.CircuitBreakerConfiguration;
 import io.github.resilience4j.circuitbreaker.configure.CircuitBreakerConfigurationProperties;
 import io.github.resilience4j.circuitbreaker.configure.CircuitBreakerConfigurationProperties.BackendProperties;
+import io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent;
 import io.github.resilience4j.circuitbreaker.monitoring.health.CircuitBreakerHealthIndicator;
+import io.github.resilience4j.consumer.EventConsumerRegistry;
 import io.github.resilience4j.springboot.common.circuitbreaker.autoconfigure.AbstractCircuitBreakerConfigurationOnMissingBean;
 
 @Configuration
 public class CircuitBreakerConfigurationOnMissingBean extends AbstractCircuitBreakerConfigurationOnMissingBean {
 
-	private final CircuitBreakerConfiguration circuitBreakerConfiguration;
 	private final ConfigurableBeanFactory beanFactory;
-	private final CircuitBreakerConfigurationProperties circuitBreakerProperties;
 
 	public CircuitBreakerConfigurationOnMissingBean(CircuitBreakerConfigurationProperties circuitBreakerProperties,
 	                                                ConfigurableBeanFactory beanFactory) {
 		super(circuitBreakerProperties);
 		this.beanFactory = beanFactory;
-		this.circuitBreakerProperties = circuitBreakerProperties;
-		this.circuitBreakerConfiguration = new CircuitBreakerConfiguration(circuitBreakerProperties);
+	}
+
+	@Bean
+	public EventConsumerRegistry<CircuitBreakerEvent> eventConsumerRegistry() {
+		return circuitBreakerConfiguration.eventConsumerRegistry();
 	}
 
 	protected void createHeathIndicatorForCircuitBreaker(CircuitBreaker circuitBreaker) {
