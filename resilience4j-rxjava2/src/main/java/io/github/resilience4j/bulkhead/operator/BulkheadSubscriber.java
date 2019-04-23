@@ -18,8 +18,8 @@ import static java.util.Objects.requireNonNull;
  * @param <T> the value type of the upstream and downstream
  */
 final class BulkheadSubscriber<T> extends AtomicReference<Subscription> implements Subscriber<T>, Subscription {
-    private final Bulkhead bulkhead;
-    private final Subscriber<? super T> childSubscriber;
+    private final transient Bulkhead bulkhead;
+    private final transient Subscriber<? super T> childSubscriber;
     private final AtomicReference<Permit> permitted = new AtomicReference<>(Permit.PENDING);
 
     BulkheadSubscriber(Bulkhead bulkhead, Subscriber<? super T> childSubscriber) {

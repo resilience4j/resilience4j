@@ -41,9 +41,6 @@ public abstract class AbstractRateLimiterEvent implements RateLimiterEvent {
     }
 
     @Override
-    public abstract Type getEventType();
-
-    @Override
     public String toString() {
         return "RateLimiterEvent{" +
             "type=" + getEventType() +

@@ -20,11 +20,11 @@ import static java.util.Objects.requireNonNull;
  * @param <T> the value type of the upstream and downstream
  */
 final class CircuitBreakerSubscriber<T> extends AtomicReference<Subscription> implements Subscriber<T>, Subscription {
-    private final CircuitBreaker circuitBreaker;
-    private final Subscriber<? super T> childSubscriber;
+    private final transient CircuitBreaker circuitBreaker;
+    private final transient Subscriber<? super T> childSubscriber;
     private final AtomicReference<Permit> permitted = new AtomicReference<>(Permit.PENDING);
     @Nullable
-    private StopWatch stopWatch;
+    private transient StopWatch stopWatch;
 
     CircuitBreakerSubscriber(CircuitBreaker circuitBreaker, Subscriber<? super T> childSubscriber) {
         this.circuitBreaker = requireNonNull(circuitBreaker);
@@ -84,7 +84,7 @@ final class CircuitBreakerSubscriber<T> extends AtomicReference<Subscription> im
             if (!callPermitted) {
                 permitted.set(Permit.REJECTED);
             } else {
-                stopWatch = StopWatch.start(circuitBreaker.getName());
+                stopWatch = StopWatch.start();
             }
         }
         return callPermitted;
@@ -100,13 +100,13 @@ final class CircuitBreakerSubscriber<T> extends AtomicReference<Subscription> im
 
     private void markFailure(Throwable e) {
         if (wasCallPermitted()) {
-            circuitBreaker.onError(stopWatch.stop().getProcessingDuration().toNanos(), e);
+            circuitBreaker.onError(stopWatch != null ? stopWatch.stop().toNanos() : 0, e);
         }
     }
 
     private void markSuccess() {
         if (wasCallPermitted()) {
-            circuitBreaker.onSuccess(stopWatch.stop().getProcessingDuration().toNanos());
+            circuitBreaker.onSuccess(stopWatch != null ? stopWatch.stop().toNanos() : 0);
         }
     }
 

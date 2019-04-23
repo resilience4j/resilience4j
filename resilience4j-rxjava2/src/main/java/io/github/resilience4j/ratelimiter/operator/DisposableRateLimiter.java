@@ -1,14 +1,14 @@
 package io.github.resilience4j.ratelimiter.operator;
 
-import static java.util.Objects.requireNonNull;
-
-import java.util.concurrent.atomic.AtomicReference;
-
 import io.github.resilience4j.adapter.Permit;
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RequestNotPermitted;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.internal.disposables.DisposableHelper;
+
+import java.util.concurrent.atomic.AtomicReference;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * A disposable rate limiter acting as a base class for rate limiter operators.
@@ -16,7 +16,7 @@ import io.reactivex.internal.disposables.DisposableHelper;
  * @param <T> the type of the emitted event
  */
 abstract class DisposableRateLimiter<T> extends AtomicReference<Disposable> implements Disposable {
-    private final RateLimiter rateLimiter;
+    private final transient RateLimiter rateLimiter;
     private final AtomicReference<Permit> permitted = new AtomicReference<>(Permit.PENDING);
 
     DisposableRateLimiter(RateLimiter rateLimiter) {

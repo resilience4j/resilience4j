@@ -1,12 +1,12 @@
 package io.github.resilience4j.ratelimiter.operator;
 
-import static java.util.Objects.requireNonNull;
-
-import java.util.concurrent.atomic.AtomicBoolean;
-
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.reactivex.Observer;
 import io.reactivex.disposables.Disposable;
+
+import java.util.concurrent.atomic.AtomicBoolean;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * A RxJava {@link Observer} to protect another observer by a {@link RateLimiter}.
@@ -15,7 +15,7 @@ import io.reactivex.disposables.Disposable;
  * @param <T> the value type of the upstream and downstream
  */
 final class RateLimiterObserver<T> extends DisposableRateLimiter<T> implements Observer<T> {
-    private final Observer<? super T> childObserver;
+    private final transient Observer<? super T> childObserver;
     private final AtomicBoolean firstEvent = new AtomicBoolean(true);
 
     RateLimiterObserver(RateLimiter rateLimiter, Observer<? super T> childObserver) {

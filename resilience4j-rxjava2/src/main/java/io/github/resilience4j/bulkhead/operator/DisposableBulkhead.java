@@ -16,7 +16,7 @@ import static java.util.Objects.requireNonNull;
  * @param <T> the type of the emitted event
  */
 abstract class DisposableBulkhead<T> extends AtomicReference<Disposable> implements Disposable {
-    private final Bulkhead bulkhead;
+    private final transient Bulkhead bulkhead;
     private final AtomicReference<Permit> permitted = new AtomicReference<>(Permit.PENDING);
 
     DisposableBulkhead(Bulkhead bulkhead) {

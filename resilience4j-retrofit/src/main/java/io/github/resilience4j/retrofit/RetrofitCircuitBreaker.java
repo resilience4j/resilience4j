@@ -18,8 +18,9 @@
  */
 package io.github.resilience4j.retrofit;
 
-import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
+import io.github.resilience4j.circuitbreaker.CircuitBreakerOpenException;
+import io.github.resilience4j.circuitbreaker.utils.CircuitBreakerUtils;
 import io.github.resilience4j.core.StopWatch;
 import io.github.resilience4j.retrofit.internal.DecoratedCall;
 import retrofit2.Call;
@@ -54,28 +55,28 @@ public interface RetrofitCircuitBreaker {
             @Override
             public void enqueue(final Callback<T> callback) {
                 try {
-                    circuitBreaker.obtainPermission();
-                } catch (CallNotPermittedException exception) {
-                    callback.onFailure(call, exception);
+                    CircuitBreakerUtils.isCallPermitted(circuitBreaker);
+                } catch (CircuitBreakerOpenException cb) {
+                    callback.onFailure(call, cb);
                     return;
                 }
 
-                final StopWatch stopWatch = StopWatch.start(circuitBreaker.getName());
+                final StopWatch stopWatch = StopWatch.start();
                 call.enqueue(new Callback<T>() {
                     @Override
                     public void onResponse(final Call<T> call, final Response<T> response) {
                         if (responseSuccess.test(response)) {
-                            circuitBreaker.onSuccess(stopWatch.stop().getProcessingDuration().toNanos());
+                            circuitBreaker.onSuccess(stopWatch.stop().toNanos());
                         } else {
                             final Throwable throwable = new Throwable("Response error: HTTP " + response.code() + " - " + response.message());
-                            circuitBreaker.onError(stopWatch.stop().getProcessingDuration().toNanos(), throwable);
+                            circuitBreaker.onError(stopWatch.stop().toNanos(), throwable);
                         }
                         callback.onResponse(call, response);
                     }
 
                     @Override
                     public void onFailure(final Call<T> call, final Throwable t) {
-                        circuitBreaker.onError(stopWatch.stop().getProcessingDuration().toNanos(), t);
+                        circuitBreaker.onError(stopWatch.stop().toNanos(), t);
                         callback.onFailure(call, t);
                     }
                 });
@@ -83,21 +84,21 @@ public interface RetrofitCircuitBreaker {
 
             @Override
             public Response<T> execute() throws IOException {
-                circuitBreaker.obtainPermission();
-                final StopWatch stopWatch = StopWatch.start(circuitBreaker.getName());
+                CircuitBreakerUtils.isCallPermitted(circuitBreaker);
+                final StopWatch stopWatch = StopWatch.start();
                 try {
                     final Response<T> response = call.execute();
 
                     if (responseSuccess.test(response)) {
-                        circuitBreaker.onSuccess(stopWatch.stop().getProcessingDuration().toNanos());
+                        circuitBreaker.onSuccess(stopWatch.stop().toNanos());
                     } else {
                         final Throwable throwable = new Throwable("Response error: HTTP " + response.code() + " - " + response.message());
-                        circuitBreaker.onError(stopWatch.stop().getProcessingDuration().toNanos(), throwable);
+                        circuitBreaker.onError(stopWatch.stop().toNanos(), throwable);
                     }
 
                     return response;
                 } catch (Throwable throwable) {
-                    circuitBreaker.onError(stopWatch.stop().getProcessingDuration().toNanos(), throwable);
+                    circuitBreaker.onError(stopWatch.stop().toNanos(), throwable);
                     throw throwable;
                 }
             }

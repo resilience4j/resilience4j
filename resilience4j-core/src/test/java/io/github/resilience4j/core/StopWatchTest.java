@@ -18,23 +18,30 @@
  */
 package io.github.resilience4j.core;
 
-import org.assertj.core.api.Assertions;
+import com.statemachinesystems.mockclock.MockClock;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
+import java.time.ZoneId;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class StopWatchTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(StopWatchTest.class);
 
     @Test
-    public void testStopWatch() throws InterruptedException {
-        StopWatch watch = StopWatch.start("id");
-        Thread.sleep(100);
-        Duration duration = watch.stop().getProcessingDuration();
+    public void testStopWatch() {
+        MockClock mockClock = MockClock.at(2019, 1, 1, 12, 0, 0, ZoneId.of("UTC"));
+
+        StopWatch watch = new StopWatch(mockClock);
+
+        mockClock.advanceBy(Duration.ofSeconds(5));
+
+        Duration duration = watch.stop();
         LOG.info(watch.toString());
-        Assertions.assertThat(duration.toMillis()).isGreaterThanOrEqualTo(90).isLessThan(110);
+        assertThat(duration.getSeconds()).isEqualTo(5);
     }
 }

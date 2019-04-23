@@ -18,10 +18,6 @@
  */
 package io.github.resilience4j.prometheus;
 
-import org.junit.Test;
-
-import java.util.function.Supplier;
-
 import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.bulkhead.BulkheadConfig;
 import io.github.resilience4j.bulkhead.BulkheadRegistry;
@@ -31,6 +27,9 @@ import io.vavr.Tuple;
 import io.vavr.collection.HashMap;
 import io.vavr.collection.HashSet;
 import io.vavr.collection.Map;
+import org.junit.Test;
+
+import java.util.function.Supplier;
 
 import static java.util.Collections.singleton;
 import static java.util.Collections.singletonList;
@@ -67,13 +66,13 @@ public class BulkheadExportsTest {
     public void testConstructors() {
         final BulkheadRegistry registry = new InMemoryBulkheadRegistry(BulkheadConfig.ofDefaults());
 
-        BulkheadExports.ofIterable("boo_bulkheads", singleton(Bulkhead.ofDefaults("foo")));
-        BulkheadExports.ofBulkheadRegistry("boo_bulkheads", registry);
-        BulkheadExports.ofSupplier("boo_bulkheads", () -> singleton(Bulkhead.ofDefaults("foo")));
+        assertThat(BulkheadExports.ofIterable("boo_bulkheads", singleton(Bulkhead.ofDefaults("foo")))).isNotNull();
+        assertThat(BulkheadExports.ofBulkheadRegistry("boo_bulkheads", registry)).isNotNull();
+        assertThat(BulkheadExports.ofSupplier("boo_bulkheads", () -> singleton(Bulkhead.ofDefaults("foo")))).isNotNull();
 
-        BulkheadExports.ofIterable(singleton(Bulkhead.ofDefaults("foo")));
-        BulkheadExports.ofBulkheadRegistry(registry);
-        BulkheadExports.ofSupplier(() -> singleton(Bulkhead.ofDefaults("foo")));
+        assertThat(BulkheadExports.ofIterable(singleton(Bulkhead.ofDefaults("foo")))).isNotNull();
+        assertThat(BulkheadExports.ofBulkheadRegistry(registry)).isNotNull();
+        assertThat(BulkheadExports.ofSupplier(() -> singleton(Bulkhead.ofDefaults("foo")))).isNotNull();
     }
 
     @Test(expected = NullPointerException.class)

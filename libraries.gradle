@@ -37,7 +37,7 @@ ext {
             reactor: "io.projectreactor:reactor-core:${reactorVersion}",
 
             // testCompile
-            junit:           "junit:junit:${junitVersion}",
+            junit: "junit:junit:${junitVersion}",
             assertj: "org.assertj:assertj-core:${assertjVersion}",
             logback: "ch.qos.logback:logback-classic:${logbackVersion}",
             mockito: "org.mockito:mockito-core:${mockitoVersion}",
@@ -47,6 +47,7 @@ ext {
             awaitility: "com.jayway.awaitility:awaitility:${awaitilityVersion}",
             reactor_test: "io.projectreactor:reactor-test:${reactorVersion}",
             reactive_streams_tck: "org.reactivestreams:reactive-streams-tck:${reactiveStreamsVersion}",
+            mock_clock: "com.statemachinesystems:mock-clock:1.0",
 
             // Vert.x addon
             vertx: "io.vertx:vertx-core:${vertxVersion}",

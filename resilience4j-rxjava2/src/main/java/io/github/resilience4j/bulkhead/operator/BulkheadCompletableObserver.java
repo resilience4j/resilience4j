@@ -1,16 +1,16 @@
 package io.github.resilience4j.bulkhead.operator;
 
-import static java.util.Objects.requireNonNull;
-
 import io.github.resilience4j.bulkhead.Bulkhead;
 import io.reactivex.CompletableObserver;
 import io.reactivex.disposables.Disposable;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * A RxJava {@link CompletableObserver} to wrap another observer in a bulkhead.
  */
 final class BulkheadCompletableObserver extends DisposableBulkhead implements CompletableObserver {
-    private final CompletableObserver childObserver;
+    private final transient CompletableObserver childObserver;
 
     BulkheadCompletableObserver(Bulkhead bulkhead, CompletableObserver childObserver) {
         super(bulkhead);

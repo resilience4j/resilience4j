@@ -18,9 +18,9 @@ import static java.util.Objects.requireNonNull;
  * @param <T> the type of the emitted event
  */
 class DisposableCircuitBreaker<T> extends AtomicReference<Disposable> implements Disposable {
-    private final CircuitBreaker circuitBreaker;
+    private final transient CircuitBreaker circuitBreaker;
     @Nullable
-    private StopWatch stopWatch;
+    private transient StopWatch stopWatch;
     private final AtomicReference<Permit> permitted = new AtomicReference<>(Permit.PENDING);
 
     DisposableCircuitBreaker(CircuitBreaker circuitBreaker) {
@@ -126,7 +126,7 @@ class DisposableCircuitBreaker<T> extends AtomicReference<Disposable> implements
             if (!callPermitted) {
                 permitted.set(Permit.REJECTED);
             } else {
-                stopWatch = StopWatch.start(circuitBreaker.getName());
+                stopWatch = StopWatch.start();
             }
         }
         return callPermitted;
@@ -142,13 +142,13 @@ class DisposableCircuitBreaker<T> extends AtomicReference<Disposable> implements
 
     private void markFailure(Throwable e) {
         if (wasCallPermitted()) {
-            circuitBreaker.onError(stopWatch.stop().getProcessingDuration().toNanos(), e);
+            circuitBreaker.onError(stopWatch != null ? stopWatch.stop().toNanos() : 0, e);
         }
     }
 
     private void markSuccess() {
         if (wasCallPermitted()) {
-            circuitBreaker.onSuccess(stopWatch.stop().getProcessingDuration().toNanos());
+            circuitBreaker.onSuccess(stopWatch != null ? stopWatch.stop().toNanos() : 0);
         }
     }
 

@@ -19,7 +19,7 @@ package io.github.resilience4j.ratpack.retry.endpoint;
 import io.github.resilience4j.consumer.CircularEventConsumer;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
 import io.github.resilience4j.ratpack.Resilience4jConfig;
-import io.github.resilience4j.ratpack.adapter.ReactorAdapter;
+import io.github.resilience4j.reactor.adapter.ReactorAdapter;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryRegistry;
 import io.github.resilience4j.retry.event.RetryEvent;
@@ -39,7 +39,6 @@ import java.util.List;
 /**
  * Provides event and stream event endpoints for circuitbreaker events.
  */
-// TODO test
 public class RetryChain implements Action<Chain> {
 
     private final EventConsumerRegistry<RetryEvent> eventConsumerRegistry;

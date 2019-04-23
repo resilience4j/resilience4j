@@ -18,9 +18,6 @@
  */
 package io.github.resilience4j.prometheus;
 
-import java.util.List;
-import java.util.function.Supplier;
-
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.prometheus.client.Collector;
@@ -28,6 +25,9 @@ import io.prometheus.client.GaugeMetricFamily;
 import io.vavr.Tuple;
 import io.vavr.Tuple2;
 import io.vavr.collection.Array;
+
+import java.util.List;
+import java.util.function.Supplier;
 
 import static java.util.Arrays.asList;
 import static java.util.Objects.requireNonNull;
@@ -79,7 +79,7 @@ public class CircuitBreakerExports extends Collector {
      * @param circuitBreakerRegistry the registry of circuit breakers
      */
     public static CircuitBreakerExports ofCircuitBreakerRegistry(CircuitBreakerRegistry circuitBreakerRegistry) {
-        return new CircuitBreakerExports(circuitBreakerRegistry.getAllCircuitBreakers());
+        return new CircuitBreakerExports(circuitBreakerRegistry);
     }
     /**
      * Creates a new instance of {@link CircuitBreakerExports} with default metrics names prefix and

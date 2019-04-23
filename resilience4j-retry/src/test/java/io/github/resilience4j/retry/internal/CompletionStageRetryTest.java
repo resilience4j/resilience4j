@@ -39,7 +39,7 @@ import java.util.function.Supplier;
 import static io.github.resilience4j.retry.utils.AsyncUtils.awaitResult;
 import static java.util.concurrent.CompletableFuture.completedFuture;
 
-public class CompletationStageRetryTest {
+public class CompletionStageRetryTest {
 
 	private AsyncHelloWorldService helloWorldService;
 	private ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
@@ -90,8 +90,6 @@ public class CompletationStageRetryTest {
 		// Then the helloWorldService should be invoked 1 time
 		BDDMockito.then(helloWorldService).should(Mockito.times(1)).returnHelloWorld();
 		Assertions.assertThat(result).isEqualTo("Hello world");
-		// for code quality scan , it does not not recognize assertJ do not why
-		Assert.assertEquals(result, "Hello world");
 	}
 
 	@Test
