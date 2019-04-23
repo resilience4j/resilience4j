@@ -283,13 +283,13 @@ resilience4j.circuitbreaker:
                 - org.springframework.web.client.HttpClientErrorException
 ----
 
-You can also share configuration for your CircuitBreakers in Spring Boot's `application.yml` config file.
+You can also override/partial-override/share default configuration for your CircuitBreakers in Spring Boot's `application.yml` config file.
 For example
 
 [source,yaml]
 ----
 resilience4j.circuitbreaker:
-    sharedConfigs:
+    configs:
         default:
             ringBufferSizeInClosedState: 100
             ringBufferSizeInHalfOpenState: 10
@@ -299,9 +299,9 @@ resilience4j.circuitbreaker:
             registerHealthIndicator: true
     backends:
         backendA:
-            sharedConfigName: default
+            baseConfig: default
         backendB:
-            sharedConfigName: default
+            baseConfig: default
 ----
 
 Beyond the config file configuration, the Spring Bean configuration is now using @ConditionalOnMissingBean to allow for overriding default behavior.

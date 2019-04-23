@@ -33,336 +33,348 @@ import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.Builder;
 import io.github.resilience4j.core.lang.Nullable;
+import io.github.resilience4j.utils.CommonUtils;
 
 @Configuration
 public class CircuitBreakerConfigurationProperties {
-    // This property gives you control over CircuitBreaker aspect application order.
-    // By default CircuitBreaker will be executed BEFORE RateLimiter.
-    // By adjusting RateLimiterProperties.rateLimiterAspectOrder and CircuitBreakerProperties.circuitBreakerAspectOrder
-    // you explicitly define aspects CircuitBreaker and RateLimiter execution sequence.
-    private int circuitBreakerAspectOrder = Integer.MAX_VALUE - 1;
-    private Map<String, BackendProperties> backends = new HashMap<>();
-    private Map<String, BackendProperties> sharedConfigs = new HashMap<>();
+	// This property gives you control over CircuitBreaker aspect application order.
+	// By default CircuitBreaker will be executed BEFORE RateLimiter.
+	// By adjusting RateLimiterProperties.rateLimiterAspectOrder and CircuitBreakerProperties.circuitBreakerAspectOrder
+	// you explicitly define aspects CircuitBreaker and RateLimiter execution sequence.
+	private static final String DEFAULT_CONFIG_KEY = "default";
+	private int circuitBreakerAspectOrder = Integer.MAX_VALUE - 1;
+	private Map<String, BackendProperties> backends = new HashMap<>();
+	private Map<String, BackendProperties> configs = new HashMap<>();
 
-    public int getCircuitBreakerAspectOrder() {
-        return circuitBreakerAspectOrder;
-    }
+	public int getCircuitBreakerAspectOrder() {
+		return circuitBreakerAspectOrder;
+	}
 
-    public void setCircuitBreakerAspectOrder(int circuitBreakerAspectOrder) {
-        this.circuitBreakerAspectOrder = circuitBreakerAspectOrder;
-    }
+	public void setCircuitBreakerAspectOrder(int circuitBreakerAspectOrder) {
+		this.circuitBreakerAspectOrder = circuitBreakerAspectOrder;
+	}
 
-    @Nullable
-    private BackendProperties getBackendProperties(String backend) {
-        BackendProperties backendProperties = backends.get(backend);
-        if (backendProperties != null && !StringUtils.isEmpty(backendProperties.getSharedConfigName())) {
-            return getSharedConfigProperties(backendProperties.getSharedConfigName());
-        }
-        return backendProperties;
-    }
+	@Nullable
+	private BackendProperties getBackendProperties(String backend) {
+		BackendProperties backendProperties = backends.get(backend);
+		if (backendProperties != null && !StringUtils.isEmpty(backendProperties.getBaseConfig())) {
+			return CommonUtils.mergeProperties(backendProperties, getConfigProperties(backendProperties.getBaseConfig()));
 
-    @Nullable
-    private BackendProperties getSharedConfigProperties(String sharedConfig) {
-        return sharedConfigs.get(sharedConfig);
-    }
+		}
+		return backendProperties;
+	}
 
-    public CircuitBreakerConfig createCircuitBreakerConfig(String backend) {
-        return createCircuitBreakerConfig(getBackendProperties(backend));
-    }
+	private BackendProperties getConfigProperties(String sharedConfig) {
+		return configs.getOrDefault(sharedConfig, configs.computeIfAbsent(DEFAULT_CONFIG_KEY, key -> CommonUtils.getDefaultProperties()));
+	}
 
-    public CircuitBreakerConfig createCircuitBreakerConfigFromShared(String sharedConfig) {
-        BackendProperties backendProperties = getSharedConfigProperties(sharedConfig);
-        if (backendProperties != null && StringUtils.isEmpty(backendProperties.getSharedConfigName())) {
-            return buildCircuitBreakerConfig(backendProperties).configurationName(sharedConfig).build();
-        }
-        return createCircuitBreakerConfig(getSharedConfigProperties(sharedConfig));
-    }
+	public CircuitBreakerConfig createCircuitBreakerConfig(String backend) {
+		return createCircuitBreakerConfig(getBackendProperties(backend));
+	}
 
-    private CircuitBreakerConfig createCircuitBreakerConfig(@Nullable BackendProperties backendProperties) {
-        return buildCircuitBreakerConfig(backendProperties).build();
-    }
+	public CircuitBreakerConfig createCircuitBreakerConfigFrom(String baseConfigName) {
+		BackendProperties backendProperties = getConfigProperties(baseConfigName);
+		if (!StringUtils.isEmpty(backendProperties.getBaseConfig())) {
+			return buildCircuitBreakerConfig(backendProperties).configurationName(baseConfigName).build();
+		}
+		return createCircuitBreakerConfig(getConfigProperties(baseConfigName));
+	}
 
-    public Builder buildCircuitBreakerConfig(@Nullable BackendProperties properties) {
-        if (properties == null) {
-            return new Builder();
-        }
+	private CircuitBreakerConfig createCircuitBreakerConfig(@Nullable BackendProperties backendProperties) {
+		return buildCircuitBreakerConfig(backendProperties).build();
+	}
 
-        Builder builder = CircuitBreakerConfig.custom();
+	public Builder buildCircuitBreakerConfig(@Nullable BackendProperties properties) {
+		if (properties == null) {
+			return new Builder();
+		}
 
-        if (properties.getWaitDurationInOpenState() != null) {
-            builder.waitDurationInOpenState(properties.getWaitDurationInOpenState());
-        }
+		Builder builder = CircuitBreakerConfig.custom();
 
-        if (properties.getFailureRateThreshold() != null) {
-            builder.failureRateThreshold(properties.getFailureRateThreshold());
-        }
+		if (properties.getWaitDurationInOpenState() != null) {
+			builder.waitDurationInOpenState(properties.getWaitDurationInOpenState());
+		}
 
-        if (properties.getRingBufferSizeInClosedState() != null) {
-            builder.ringBufferSizeInClosedState(properties.getRingBufferSizeInClosedState());
-        }
+		if (properties.getFailureRateThreshold() != null) {
+			builder.failureRateThreshold(properties.getFailureRateThreshold());
+		}
 
-        if (properties.getRingBufferSizeInHalfOpenState() != null) {
-            builder.ringBufferSizeInHalfOpenState(properties.getRingBufferSizeInHalfOpenState());
-        }
+		if (properties.getRingBufferSizeInClosedState() != null) {
+			builder.ringBufferSizeInClosedState(properties.getRingBufferSizeInClosedState());
+		}
 
-        if (properties.recordFailurePredicate != null) {
-            buildRecordFailurePredicate(properties, builder);
-        }
+		if (properties.getRingBufferSizeInHalfOpenState() != null) {
+			builder.ringBufferSizeInHalfOpenState(properties.getRingBufferSizeInHalfOpenState());
+		}
 
-        if (properties.recordExceptions != null) {
-            builder.recordExceptions(properties.recordExceptions);
-        }
+		if (properties.recordFailurePredicate != null) {
+			buildRecordFailurePredicate(properties, builder);
+		}
 
-        if (properties.ignoreExceptions != null) {
-            builder.ignoreExceptions(properties.ignoreExceptions);
-        }
+		if (properties.recordExceptions != null) {
+			builder.recordExceptions(properties.recordExceptions);
+		}
 
-        if (properties.automaticTransitionFromOpenToHalfOpenEnabled) {
-            builder.enableAutomaticTransitionFromOpenToHalfOpen();
-        }
+		if (properties.ignoreExceptions != null) {
+			builder.ignoreExceptions(properties.ignoreExceptions);
+		}
 
-        if (properties.sharedConfigName != null) {
-            builder.configurationName(properties.sharedConfigName);
-        }
+		if (properties.automaticTransitionFromOpenToHalfOpenEnabled) {
+			builder.enableAutomaticTransitionFromOpenToHalfOpen();
+		}
 
-        return builder;
-    }
+		if (properties.baseConfig != null) {
+			builder.configurationName(properties.baseConfig);
+		}
 
-    protected void buildRecordFailurePredicate(BackendProperties properties, Builder builder) {
-        builder.recordFailure(BeanUtils.instantiateClass(properties.getRecordFailurePredicate()));
-    }
+		return builder;
+	}
 
-    public Map<String, BackendProperties> getBackends() {
-        return backends;
-    }
+	protected void buildRecordFailurePredicate(BackendProperties properties, Builder builder) {
+		builder.recordFailure(BeanUtils.instantiateClass(properties.getRecordFailurePredicate()));
+	}
 
-    public Map<String, BackendProperties> getSharedConfigs() {
-        return sharedConfigs;
-    }
+	public Map<String, BackendProperties> getBackends() {
+		return backends;
+	}
 
-    @Nullable
-    public BackendProperties findCircuitBreakerBackend(CircuitBreaker circuitBreaker, CircuitBreakerConfig circuitBreakerConfig) {
-        BackendProperties backendProperties = backends.getOrDefault(circuitBreaker.getName(), null);
+	public Map<String, BackendProperties> getConfigs() {
+		return configs;
+	}
 
-        if (circuitBreakerConfig.getConfigurationName() != null
-                && sharedConfigs.containsKey(circuitBreakerConfig.getConfigurationName())) {
-            backendProperties = sharedConfigs.get(circuitBreakerConfig.getConfigurationName());
-        }
+	@Nullable
+	public BackendProperties findCircuitBreakerBackend(CircuitBreaker circuitBreaker, CircuitBreakerConfig circuitBreakerConfig) {
+		BackendProperties backendProperties = backends.getOrDefault(circuitBreaker.getName(), null);
 
-        return backendProperties;
-    }
+		if (circuitBreakerConfig.getConfigurationName() != null
+				&& configs.containsKey(circuitBreakerConfig.getConfigurationName())) {
+			backendProperties = configs.get(circuitBreakerConfig.getConfigurationName());
+		}
 
-    /**
-     * Class storing property values for configuring {@link io.github.resilience4j.circuitbreaker.CircuitBreaker} instances.
-     */
-    public static class BackendProperties {
+		return backendProperties;
+	}
 
-        @DurationMin(seconds = 1)
-        @Nullable
-        private Duration waitDurationInOpenState;
+	/**
+	 * Class storing property values for configuring {@link io.github.resilience4j.circuitbreaker.CircuitBreaker} instances.
+	 */
+	public static class BackendProperties {
 
-        @Min(1)
-        @Max(100)
-        @Nullable
-        private Integer failureRateThreshold;
+		@DurationMin(seconds = 1)
+		@Nullable
+		private Duration waitDurationInOpenState;
 
-        @Min(1)
-        @Nullable
-        private Integer ringBufferSizeInClosedState;
+		@Min(1)
+		@Max(100)
+		@Nullable
+		private Integer failureRateThreshold;
 
-        @Min(1)
-        @Nullable
-        private Integer ringBufferSizeInHalfOpenState;
+		@Min(1)
+		@Nullable
+		private Integer ringBufferSizeInClosedState;
 
-        @NotNull
-        private Boolean automaticTransitionFromOpenToHalfOpenEnabled = false;
+		@Min(1)
+		@Nullable
+		private Integer ringBufferSizeInHalfOpenState;
 
-        @Min(1)
-        private Integer eventConsumerBufferSize = 100;
+		@NotNull
+		private Boolean automaticTransitionFromOpenToHalfOpenEnabled = false;
 
-        @NotNull
-        private Boolean registerHealthIndicator = true;
+		@Min(1)
+		private Integer eventConsumerBufferSize = 100;
 
-        @Nullable
-        private Class<Predicate<Throwable>> recordFailurePredicate;
+		@NotNull
+		private Boolean registerHealthIndicator = true;
 
-        @Nullable
-        private Class<? extends Throwable>[] recordExceptions;
+		@Nullable
+		private Class<Predicate<Throwable>> recordFailurePredicate;
 
-        @Nullable
-        private Class<? extends Throwable>[] ignoreExceptions;
+		@Nullable
+		private Class<? extends Throwable>[] recordExceptions;
 
-        @Nullable
-        private String sharedConfigName;
+		@Nullable
+		private Class<? extends Throwable>[] ignoreExceptions;
 
-        /**
-         * Sets the wait duration in seconds the CircuitBreaker should stay open, before it switches to half closed.
-         *
-         * @param waitInterval the wait duration
-         */
-        @Deprecated
-        public void setWaitInterval(Integer waitInterval) {
-            this.waitDurationInOpenState = Duration.ofMillis(waitInterval);
-        }
+		@Nullable
+		private String baseConfig;
 
-        /**
-         * Returns the failure rate threshold for the circuit breaker as percentage.
-         *
-         * @return the failure rate threshold
-         */
-        @Nullable
-        public Integer getFailureRateThreshold() {
-            return failureRateThreshold;
-        }
+		/**
+		 * Sets the wait duration in seconds the CircuitBreaker should stay open, before it switches to half closed.
+		 *
+		 * @param waitInterval the wait duration
+		 */
+		@Deprecated
+		public void setWaitInterval(Integer waitInterval) {
+			this.waitDurationInOpenState = Duration.ofMillis(waitInterval);
+		}
 
-        /**
-         * Sets the failure rate threshold for the circuit breaker as percentage.
-         *
-         * @param failureRateThreshold the failure rate threshold
-         */
-        public void setFailureRateThreshold(Integer failureRateThreshold) {
-            this.failureRateThreshold = failureRateThreshold;
-        }
+		/**
+		 * get the wait duration in seconds the CircuitBreaker should stay open, before it switches to half closed.
+		 *
+		 * @return waitInterval the wait duration
+		 */
+		@Deprecated
+		public Duration getWaitInterval() {
+			return waitDurationInOpenState;
+		}
 
-        /**
-         * Returns the wait duration the CircuitBreaker will stay open, before it switches to half closed.
-         *
-         * @return the wait duration
-         */
-        @Nullable
-        public Duration getWaitDurationInOpenState() {
-            return waitDurationInOpenState;
-        }
+		/**
+		 * Returns the failure rate threshold for the circuit breaker as percentage.
+		 *
+		 * @return the failure rate threshold
+		 */
+		@Nullable
+		public Integer getFailureRateThreshold() {
+			return failureRateThreshold;
+		}
 
-        /**
-         * Sets the wait duration the CircuitBreaker should stay open, before it switches to half closed.
-         *
-         * @param waitDurationInOpenState the wait duration
-         */
-        public void setWaitDurationInOpenState(Duration waitDurationInOpenState) {
-            this.waitDurationInOpenState = waitDurationInOpenState;
-        }
+		/**
+		 * Sets the failure rate threshold for the circuit breaker as percentage.
+		 *
+		 * @param failureRateThreshold the failure rate threshold
+		 */
+		public void setFailureRateThreshold(Integer failureRateThreshold) {
+			this.failureRateThreshold = failureRateThreshold;
+		}
 
-        /**
-         * Returns the ring buffer size for the circuit breaker while in closed state.
-         *
-         * @return the ring buffer size
-         */
-        @Nullable
-        public Integer getRingBufferSizeInClosedState() {
-            return ringBufferSizeInClosedState;
-        }
+		/**
+		 * Returns the wait duration the CircuitBreaker will stay open, before it switches to half closed.
+		 *
+		 * @return the wait duration
+		 */
+		@Nullable
+		public Duration getWaitDurationInOpenState() {
+			return waitDurationInOpenState;
+		}
 
-        /**
-         * Sets the ring buffer size for the circuit breaker while in closed state.
-         *
-         * @param ringBufferSizeInClosedState the ring buffer size
-         */
-        public void setRingBufferSizeInClosedState(Integer ringBufferSizeInClosedState) {
-            this.ringBufferSizeInClosedState = ringBufferSizeInClosedState;
-        }
+		/**
+		 * Sets the wait duration the CircuitBreaker should stay open, before it switches to half closed.
+		 *
+		 * @param waitDurationInOpenState the wait duration
+		 */
+		public void setWaitDurationInOpenState(Duration waitDurationInOpenState) {
+			this.waitDurationInOpenState = waitDurationInOpenState;
+		}
 
-        /**
-         * Returns the ring buffer size for the circuit breaker while in half open state.
-         *
-         * @return the ring buffer size
-         */
-        @Nullable
-        public Integer getRingBufferSizeInHalfOpenState() {
-            return ringBufferSizeInHalfOpenState;
-        }
+		/**
+		 * Returns the ring buffer size for the circuit breaker while in closed state.
+		 *
+		 * @return the ring buffer size
+		 */
+		@Nullable
+		public Integer getRingBufferSizeInClosedState() {
+			return ringBufferSizeInClosedState;
+		}
 
-        /**
-         * Sets the ring buffer size for the circuit breaker while in half open state.
-         *
-         * @param ringBufferSizeInHalfOpenState the ring buffer size
-         */
-        public void setRingBufferSizeInHalfOpenState(Integer ringBufferSizeInHalfOpenState) {
-            this.ringBufferSizeInHalfOpenState = ringBufferSizeInHalfOpenState;
-        }
+		/**
+		 * Sets the ring buffer size for the circuit breaker while in closed state.
+		 *
+		 * @param ringBufferSizeInClosedState the ring buffer size
+		 */
+		public void setRingBufferSizeInClosedState(Integer ringBufferSizeInClosedState) {
+			this.ringBufferSizeInClosedState = ringBufferSizeInClosedState;
+		}
 
-        /**
-         * Returns if we should automaticly transition to half open after the timer has run out.
-         *
-         * @return automaticTransitionFromOpenToHalfOpenEnabled if we should automaticly go to half open or not
-         */
-        public Boolean getAutomaticTransitionFromOpenToHalfOpenEnabled() {
-            return this.automaticTransitionFromOpenToHalfOpenEnabled;
-        }
+		/**
+		 * Returns the ring buffer size for the circuit breaker while in half open state.
+		 *
+		 * @return the ring buffer size
+		 */
+		@Nullable
+		public Integer getRingBufferSizeInHalfOpenState() {
+			return ringBufferSizeInHalfOpenState;
+		}
 
-        /**
-         * Sets if we should automatically transition to half open after the timer has run out.
-         *
-         * @param automaticTransitionFromOpenToHalfOpenEnabled The flag for automatic transition to half open after the timer has run out.
-         */
-        public void setAutomaticTransitionFromOpenToHalfOpenEnabled(Boolean automaticTransitionFromOpenToHalfOpenEnabled) {
-            this.automaticTransitionFromOpenToHalfOpenEnabled = automaticTransitionFromOpenToHalfOpenEnabled;
-        }
+		/**
+		 * Sets the ring buffer size for the circuit breaker while in half open state.
+		 *
+		 * @param ringBufferSizeInHalfOpenState the ring buffer size
+		 */
+		public void setRingBufferSizeInHalfOpenState(Integer ringBufferSizeInHalfOpenState) {
+			this.ringBufferSizeInHalfOpenState = ringBufferSizeInHalfOpenState;
+		}
 
-        public Integer getEventConsumerBufferSize() {
-            return eventConsumerBufferSize;
-        }
+		/**
+		 * Returns if we should automaticly transition to half open after the timer has run out.
+		 *
+		 * @return automaticTransitionFromOpenToHalfOpenEnabled if we should automaticly go to half open or not
+		 */
+		public Boolean getAutomaticTransitionFromOpenToHalfOpenEnabled() {
+			return this.automaticTransitionFromOpenToHalfOpenEnabled;
+		}
 
-        public void setEventConsumerBufferSize(Integer eventConsumerBufferSize) {
-            this.eventConsumerBufferSize = eventConsumerBufferSize;
-        }
+		/**
+		 * Sets if we should automatically transition to half open after the timer has run out.
+		 *
+		 * @param automaticTransitionFromOpenToHalfOpenEnabled The flag for automatic transition to half open after the timer has run out.
+		 */
+		public void setAutomaticTransitionFromOpenToHalfOpenEnabled(Boolean automaticTransitionFromOpenToHalfOpenEnabled) {
+			this.automaticTransitionFromOpenToHalfOpenEnabled = automaticTransitionFromOpenToHalfOpenEnabled;
+		}
 
-        public Boolean getRegisterHealthIndicator() {
-            return registerHealthIndicator;
-        }
+		public Integer getEventConsumerBufferSize() {
+			return eventConsumerBufferSize;
+		}
 
-        public void setRegisterHealthIndicator(Boolean registerHealthIndicator) {
-            this.registerHealthIndicator = registerHealthIndicator;
-        }
+		public void setEventConsumerBufferSize(Integer eventConsumerBufferSize) {
+			this.eventConsumerBufferSize = eventConsumerBufferSize;
+		}
 
-        @Nullable
-        public Class<Predicate<Throwable>> getRecordFailurePredicate() {
-            return recordFailurePredicate;
-        }
+		public Boolean getRegisterHealthIndicator() {
+			return registerHealthIndicator;
+		}
 
-        public void setRecordFailurePredicate(Class<Predicate<Throwable>> recordFailurePredicate) {
-            this.recordFailurePredicate = recordFailurePredicate;
-        }
+		public void setRegisterHealthIndicator(Boolean registerHealthIndicator) {
+			this.registerHealthIndicator = registerHealthIndicator;
+		}
 
-        @Nullable
-        public Class<? extends Throwable>[] getRecordExceptions() {
-            return recordExceptions;
-        }
+		@Nullable
+		public Class<Predicate<Throwable>> getRecordFailurePredicate() {
+			return recordFailurePredicate;
+		}
 
-        public void setRecordExceptions(Class<? extends Throwable>[] recordExceptions) {
-            this.recordExceptions = recordExceptions;
-        }
+		public void setRecordFailurePredicate(Class<Predicate<Throwable>> recordFailurePredicate) {
+			this.recordFailurePredicate = recordFailurePredicate;
+		}
 
-        @Nullable
-        public Class<? extends Throwable>[] getIgnoreExceptions() {
-            return ignoreExceptions;
-        }
+		@Nullable
+		public Class<? extends Throwable>[] getRecordExceptions() {
+			return recordExceptions;
+		}
 
-        public void setIgnoreExceptions(Class<? extends Throwable>[] ignoreExceptions) {
-            this.ignoreExceptions = ignoreExceptions;
-        }
+		public void setRecordExceptions(Class<? extends Throwable>[] recordExceptions) {
+			this.recordExceptions = recordExceptions;
+		}
 
-        /**
-         * Gets the shared configuration name. If this is set, the configuration builder will use the the shared
-         * configuration backend over this one.
-         *
-         * @return The shared configuration name.
-         */
-        @Nullable
-        public String getSharedConfigName() {
-            return sharedConfigName;
-        }
+		@Nullable
+		public Class<? extends Throwable>[] getIgnoreExceptions() {
+			return ignoreExceptions;
+		}
 
-        /**
-         * Sets the shared configuration name. If this is set, the configuration builder will use the the shared
-         * configuration backend over this one.
-         *
-         * @param sharedConfigName The shared configuration name.
-         */
-        public void setSharedConfigName(String sharedConfigName) {
-            this.sharedConfigName = sharedConfigName;
-        }
+		public void setIgnoreExceptions(Class<? extends Throwable>[] ignoreExceptions) {
+			this.ignoreExceptions = ignoreExceptions;
+		}
 
-    }
+		/**
+		 * Gets the shared configuration name. If this is set, the configuration builder will use the the shared
+		 * configuration backend over this one.
+		 *
+		 * @return The shared configuration name.
+		 */
+		@Nullable
+		public String getBaseConfig() {
+			return baseConfig;
+		}
+
+		/**
+		 * Sets the shared configuration name. If this is set, the configuration builder will use the the shared
+		 * configuration backend over this one.
+		 *
+		 * @param baseConfig The shared configuration name.
+		 */
+		public void setBaseConfig(String baseConfig) {
+			this.baseConfig = baseConfig;
+		}
+
+	}
 
 }

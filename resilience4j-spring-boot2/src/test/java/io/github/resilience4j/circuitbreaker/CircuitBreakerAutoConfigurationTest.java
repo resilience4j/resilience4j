@@ -16,6 +16,7 @@
 package io.github.resilience4j.circuitbreaker;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
 import java.time.Duration;
@@ -42,7 +43,6 @@ import io.github.resilience4j.service.test.DummyService;
 import io.github.resilience4j.service.test.ReactiveDummyService;
 import io.github.resilience4j.service.test.TestApplication;
 
-import static org.junit.Assert.assertEquals;
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
 		classes = {TestApplication.class, CircuitBreakerAutoConfigurationTest.AdditionalConfiguration.class})
@@ -68,13 +68,14 @@ public class CircuitBreakerAutoConfigurationTest {
 
 	@Configuration
 	public static class AdditionalConfiguration {
-	
+
 		// Shows that a circuit breaker can be created in code and still use the shared configuration.
 		@Bean
 		public CircuitBreaker otherCircuitBreaker(CircuitBreakerRegistry registry, CircuitBreakerProperties properties) {
-			return registry.circuitBreaker("backendSharedC", properties.createCircuitBreakerConfigFromShared("default"));
+			return registry.circuitBreaker("backendSharedC", properties.createCircuitBreakerConfigFrom("default"));
 		}
 	}
+
 	/**
 	 * The test verifies that a CircuitBreaker instance is created and configured properly when the DummyService is invoked and
 	 * that the CircuitBreaker records successful and failed calls.
@@ -135,12 +136,12 @@ public class CircuitBreakerAutoConfigurationTest {
 
 		// expect aspect configured as defined in application.yml
 		assertThat(circuitBreakerAspect.getOrder()).isEqualTo(400);
-		
+
 		// expect all shared configs share the same values and are from the application.yml file
 		CircuitBreaker sharedA = circuitBreakerRegistry.circuitBreaker("backendSharedA");
 		CircuitBreaker sharedB = circuitBreakerRegistry.circuitBreaker("backendSharedB");
 		CircuitBreaker sharedC = circuitBreakerRegistry.circuitBreaker("backendSharedC");
-		assertThat(sharedA.getCircuitBreakerConfig().getRingBufferSizeInClosedState()).isEqualTo(100);
+		assertThat(sharedA.getCircuitBreakerConfig().getRingBufferSizeInClosedState()).isEqualTo(6);
 		assertThat(sharedA.getCircuitBreakerConfig().getRingBufferSizeInHalfOpenState()).isEqualTo(10);
 		assertThat(sharedA.getCircuitBreakerConfig().getFailureRateThreshold()).isEqualTo(60f);
 		assertThat(sharedA.getCircuitBreakerConfig().getWaitDurationInOpenState()).isEqualByComparingTo(Duration.ofSeconds(10L));

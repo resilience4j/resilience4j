@@ -52,10 +52,10 @@ public class CircuitBreakerConfigurationSpringTest {
 		assertNotNull(configWithOverrides.circuitBreakerAspect);
 		assertNotNull(configWithOverrides.circuitEventConsumerBreakerRegistry);
 		assertNotNull(configWithOverrides.circuitBreakerConfigurationProperties);
-		assertTrue(configWithOverrides.circuitBreakerConfigurationProperties.getSharedConfigs().size() == 1);
+		assertTrue(configWithOverrides.circuitBreakerConfigurationProperties.getConfigs().size() == 1);
 		final CircuitBreakerConfigurationProperties.BackendProperties circuitBreakerBackend = configWithOverrides.circuitBreakerConfigurationProperties
 				.findCircuitBreakerBackend(CircuitBreaker.ofDefaults("testBackEndForShared"), CircuitBreakerConfig.custom().configurationName("sharedBackend").build());
-		assertTrue(circuitBreakerBackend.getSharedConfigName().equals("sharedConfig"));
+		assertTrue(circuitBreakerBackend.getBaseConfig().equals("sharedConfig"));
 		assertTrue(circuitBreakerBackend.getFailureRateThreshold() == 3);
 
 	}
@@ -101,9 +101,9 @@ public class CircuitBreakerConfigurationSpringTest {
 
 			CircuitBreakerConfigurationPropertiesTest() {
 				BackendProperties backendProperties = new BackendProperties();
-				backendProperties.setSharedConfigName("sharedConfig");
+				backendProperties.setBaseConfig("sharedConfig");
 				backendProperties.setFailureRateThreshold(3);
-				getSharedConfigs().put("sharedBackend", backendProperties);
+				getConfigs().put("sharedBackend", backendProperties);
 			}
 
 		}

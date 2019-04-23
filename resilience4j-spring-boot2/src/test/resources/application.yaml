@@ -28,7 +28,7 @@ resilience4j.retry:
 
 resilience4j.circuitbreaker:
   circuitBreakerAspectOrder: 400
-  sharedConfigs:
+  configs:
     default:
       ringBufferSizeInClosedState: 100
       ringBufferSizeInHalfOpenState: 10
@@ -56,9 +56,10 @@ resilience4j.circuitbreaker:
       eventConsumerBufferSize: 10
       registerHealthIndicator: false
     backendSharedA:
-      sharedConfigName: default
+      baseConfig: default
+      ringBufferSizeInClosedState: 6
     backendSharedB:
-      sharedConfigName: default
+      baseConfig: default
 
 resilience4j.ratelimiter:
   rateLimiterAspectOrder: 401

@@ -30,7 +30,6 @@ import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
 
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
-import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.circuitbreaker.configure.CircuitBreakerAspect;
 import io.github.resilience4j.circuitbreaker.configure.CircuitBreakerAspectExt;
@@ -110,8 +109,8 @@ public class CircuitBreakerConfigurationOnMissingBean implements ApplicationCont
 		return circuitBreakerConfiguration.eventConsumerRegistry();
 	}
 
-	private void createHeathIndicatorForCircuitBreaker(CircuitBreaker circuitBreaker, CircuitBreakerConfig circuitBreakerConfig) {
-		BackendProperties backendProperties = circuitBreakerProperties.findCircuitBreakerBackend(circuitBreaker, circuitBreakerConfig);
+	private void createHeathIndicatorForCircuitBreaker(CircuitBreaker circuitBreaker) {
+		BackendProperties backendProperties = circuitBreakerProperties.findCircuitBreakerBackend(circuitBreaker, circuitBreaker.getCircuitBreakerConfig());
 
 		if (backendProperties != null && backendProperties.getRegisterHealthIndicator()) {
 			CircuitBreakerHealthIndicator healthIndicator = new CircuitBreakerHealthIndicator(circuitBreaker);

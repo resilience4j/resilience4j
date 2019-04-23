@@ -42,11 +42,10 @@ public class CircuitBreakerConfigurationTest {
 	@Test
 	public void testCircuitBreakerSharedConfig() {
 		CircuitBreakerConfigurationProperties properties = new CircuitBreakerConfigurationProperties();
-
 		assertThat(properties.createCircuitBreakerConfig("backend")).isNotNull();
-		assertThat(properties.createCircuitBreakerConfigFromShared("sharedConfig")).isNotNull();
+		assertThat(properties.createCircuitBreakerConfigFrom("sharedConfig")).isNotNull();
 		assertThat(properties.getBackends().size()).isEqualTo(0);
-		assertThat(properties.getSharedConfigs().size()).isEqualTo(0);
+		assertThat(properties.getConfigs().size()).isEqualTo(1);
 
 	}
 
