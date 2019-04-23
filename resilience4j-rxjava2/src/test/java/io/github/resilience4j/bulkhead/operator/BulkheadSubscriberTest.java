@@ -1,14 +1,5 @@
 package io.github.resilience4j.bulkhead.operator;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-
-import java.io.IOException;
-
 import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.bulkhead.BulkheadConfig;
 import io.github.resilience4j.bulkhead.BulkheadFullException;
@@ -16,6 +7,12 @@ import io.reactivex.Flowable;
 import org.junit.Test;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
+
+import java.io.IOException;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
 
 /**
  * Unit test for {@link BulkheadSubscriber} using {@link BulkheadOperator}.
@@ -48,7 +45,7 @@ public class BulkheadSubscriberTest {
 
     @Test
     public void shouldEmitErrorWithBulkheadFullException() {
-        bulkhead.isCallPermitted();
+        bulkhead.tryObtainPermission();
 
         Flowable.fromArray("Event 1", "Event 2")
             .lift(BulkheadOperator.of(bulkhead))
@@ -118,7 +115,7 @@ public class BulkheadSubscriberTest {
         Subscription subscription = mock(Subscription.class);
         Subscriber childObserver = mock(Subscriber.class);
         Subscriber decoratedObserver = BulkheadOperator.of(bulkhead).apply(childObserver);
-        bulkhead.isCallPermitted();
+        bulkhead.tryObtainPermission();
         assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(0);
         decoratedObserver.onSubscribe(subscription);
 

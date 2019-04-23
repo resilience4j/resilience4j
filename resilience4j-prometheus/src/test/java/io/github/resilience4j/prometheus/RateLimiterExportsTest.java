@@ -18,10 +18,6 @@
  */
 package io.github.resilience4j.prometheus;
 
-import org.junit.Test;
-
-import java.util.function.Supplier;
-
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RateLimiterConfig;
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
@@ -31,6 +27,9 @@ import io.vavr.Tuple;
 import io.vavr.collection.HashMap;
 import io.vavr.collection.HashSet;
 import io.vavr.collection.Map;
+import org.junit.Test;
+
+import java.util.function.Supplier;
 
 import static java.util.Collections.singleton;
 import static java.util.Collections.singletonList;
@@ -73,13 +72,13 @@ public class RateLimiterExportsTest {
     public void testConstructors() {
         final RateLimiterRegistry registry = new InMemoryRateLimiterRegistry(RateLimiterConfig.ofDefaults());
 
-        RateLimiterExports.ofIterable("boo_limiters", singleton(RateLimiter.ofDefaults("foo")));
-        RateLimiterExports.ofRateLimiterRegistry("boo_limiters", registry);
-        RateLimiterExports.ofSupplier("boo_limiters", () -> singleton(RateLimiter.ofDefaults("foo")));
+        assertThat(RateLimiterExports.ofIterable("boo_limiters", singleton(RateLimiter.ofDefaults("foo")))).isNotNull();
+        assertThat(RateLimiterExports.ofRateLimiterRegistry("boo_limiters", registry)).isNotNull();
+        assertThat(RateLimiterExports.ofSupplier("boo_limiters", () -> singleton(RateLimiter.ofDefaults("foo")))).isNotNull();
 
-        RateLimiterExports.ofIterable(singleton(RateLimiter.ofDefaults("foo")));
-        RateLimiterExports.ofRateLimiterRegistry(registry);
-        RateLimiterExports.ofSupplier(() -> singleton(RateLimiter.ofDefaults("foo")));
+        assertThat(RateLimiterExports.ofIterable(singleton(RateLimiter.ofDefaults("foo")))).isNotNull();
+        assertThat(RateLimiterExports.ofRateLimiterRegistry(registry)).isNotNull();
+        assertThat(RateLimiterExports.ofSupplier(() -> singleton(RateLimiter.ofDefaults("foo")))).isNotNull();
     }
 
     @Test(expected = NullPointerException.class)

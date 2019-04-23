@@ -16,7 +16,7 @@
 package io.github.resilience4j.ratpack.circuitbreaker;
 
 import com.google.inject.Inject;
-import io.github.resilience4j.circuitbreaker.CircuitBreakerOpenException;
+import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.core.lang.Nullable;
 import io.github.resilience4j.ratpack.recovery.RecoveryFunction;
@@ -75,7 +75,7 @@ public class CircuitBreakerMethodInterceptor implements MethodInterceptor {
             return result;
         } else if (CompletionStage.class.isAssignableFrom(returnType)) {
             final CompletableFuture promise = new CompletableFuture<>();
-            if (breaker.isCallPermitted()) {
+            if (breaker.tryObtainPermission()) {
                 CompletionStage<?> result = (CompletionStage<?>) proceed(invocation, breaker, recoveryFunction);
                 if (result != null) {
                     long start = System.nanoTime();
@@ -95,7 +95,7 @@ public class CircuitBreakerMethodInterceptor implements MethodInterceptor {
                     });
                 }
             } else {
-                Throwable t = new CircuitBreakerOpenException(String.format("CircuitBreaker '%s' is open", breaker.getName()));
+                Throwable t = new CallNotPermittedException(breaker);
                 try {
                     promise.complete(recoveryFunction.apply((Throwable) t));
                 } catch (Throwable t2) {

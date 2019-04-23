@@ -20,6 +20,7 @@ package io.github.resilience4j.circuitbreaker.internal;
 
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
+import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 
 final class ForcedOpenState extends CircuitBreakerState {
 
@@ -38,13 +39,19 @@ final class ForcedOpenState extends CircuitBreakerState {
      * @return always false, since the FORCED_OPEN state always denies calls.
      */
     @Override
-    boolean isCallPermitted() {
+    boolean tryObtainPermission() {
         circuitBreakerMetrics.onCallNotPermitted();
         return false;
     }
 
+    @Override
+    void obtainPermission() {
+        circuitBreakerMetrics.onCallNotPermitted();
+        throw new CallNotPermittedException(stateMachine);
+    }
+
     /**
-     * Should never be called when isCallPermitted returns false.
+     * Should never be called when tryObtainPermission returns false.
      */
     @Override
     void onError(Throwable throwable) {
@@ -52,7 +59,7 @@ final class ForcedOpenState extends CircuitBreakerState {
     }
 
     /**
-     * Should never be called when isCallPermitted returns false.
+     * Should never be called when tryObtainPermission returns false.
      */
     @Override
     void onSuccess() {

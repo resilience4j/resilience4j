@@ -173,7 +173,7 @@ public class CircuitBreakerAutoConfigurationTest {
 		}
 		// The invocation is recorded by the CircuitBreaker as a success.
 		final CompletableFuture<String> stringCompletionStage = dummyService.doSomethingAsync(false);
-		assertThat(stringCompletionStage.get().equals("Test result"));
+		assertThat(stringCompletionStage.get()).isEqualTo("Test result");
 
 		CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker(DummyService.BACKEND);
 		assertThat(circuitBreaker).isNotNull();
