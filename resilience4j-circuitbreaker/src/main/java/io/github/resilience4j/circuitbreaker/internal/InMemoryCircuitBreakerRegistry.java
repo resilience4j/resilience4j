@@ -85,17 +85,6 @@ public final class InMemoryCircuitBreakerRegistry implements CircuitBreakerRegis
 	}
 
 	@Override
-	public void addCircuitBreakerConfig(String configName, CircuitBreakerConfig circuitBreakerConfig) {
-		this.sharedCircuitBreakerConfiguration.put(configName, circuitBreakerConfig);
-	}
-
-	@Override
-	public CircuitBreakerConfig getCircuitBreakerConfigByName(String configName) {
-		return Optional.ofNullable(this.sharedCircuitBreakerConfiguration.get(configName)).
-				orElseThrow(() -> new IllegalArgumentException("The circuit breaker configuration is not found for this name "));
-	}
-
-	@Override
 	public Seq<CircuitBreaker> getAllCircuitBreakers() {
 		return Array.ofAll(circuitBreakers.values());
 	}
@@ -125,6 +114,19 @@ public final class InMemoryCircuitBreakerRegistry implements CircuitBreakerRegis
 					CircuitBreakerConfig config = circuitBreakerConfigSupplier.get();
 					return postCreateCircuitBreaker(CircuitBreaker.of(name, config));
 				});
+	}
+
+	@Override
+	public void addConfiguration(String configName, CircuitBreakerConfig configuration) {
+		if (configName.equals(DEFAULT_CONFIG)) {
+			throw new IllegalArgumentException("you can use default as a configuration name as it is preserved for default configuration");
+		}
+		this.sharedCircuitBreakerConfiguration.put(configName, configuration);
+	}
+
+	@Override
+	public Optional<CircuitBreakerConfig> getConfigurationByName(String configName) {
+		return Optional.ofNullable(this.sharedCircuitBreakerConfiguration.get(configName));
 	}
 
 	@Override

@@ -48,22 +48,28 @@ public class InMemoryCircuitBreakerRegistryTest {
 	@Test
 	public void testAddCircuitBreakerRegistry() {
 		CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
-		circuitBreakerRegistry.addCircuitBreakerConfig("testConfig", CircuitBreakerConfig.ofDefaults());
-		assertThat(circuitBreakerRegistry.getCircuitBreakerConfigByName("testConfig")).isNotNull();
+		circuitBreakerRegistry.addConfiguration("testConfig", CircuitBreakerConfig.ofDefaults());
+		assertThat(circuitBreakerRegistry.getConfigurationByName("testConfig")).isNotNull();
+	}
+
+	@Test
+	public void testGetNotFoundCircuitBreakerRegistry() {
+		CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
+		assertThat(circuitBreakerRegistry.getConfigurationByName("testNotFound")).isEmpty();
 	}
 
 	@Test(expected = IllegalArgumentException.class)
-	public void testGetNotFoundCircuitBreakerRegistry() {
+	public void testUpdateDefaultCircuitBreakerRegistry() {
 		CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
-		circuitBreakerRegistry.getCircuitBreakerConfigByName("testNotFound");
+		circuitBreakerRegistry.addConfiguration("default", CircuitBreakerConfig.custom().build());
 	}
 
 	@Test
 	public void testCreateCircuitBreakerWithSharedConfiguration() {
 		CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
-		circuitBreakerRegistry.addCircuitBreakerConfig("testConfig", CircuitBreakerConfig.ofDefaults());
+		circuitBreakerRegistry.addConfiguration("testConfig", CircuitBreakerConfig.ofDefaults());
 		final CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("circuitBreaker",
-				circuitBreakerRegistry.getCircuitBreakerConfigByName("testConfig"));
+				circuitBreakerRegistry.getConfigurationByName("testConfig").get());
 		assertThat(circuitBreaker).isNotNull();
 	}
 

@@ -19,31 +19,16 @@
 package io.github.resilience4j.circuitbreaker;
 
 
-import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import io.github.resilience4j.circuitbreaker.internal.InMemoryCircuitBreakerRegistry;
+import io.github.resilience4j.core.Registry;
 import io.vavr.collection.Seq;
 
 /**
  * The {@link CircuitBreakerRegistry} is a factory to create CircuitBreaker instances which stores all CircuitBreaker instances in a registry.
  */
-public interface CircuitBreakerRegistry {
-
-
-	/**
-	 * @param configName           the circuit breaker configuration name
-	 * @param circuitBreakerConfig the circuit breaker configuration
-	 */
-	void addCircuitBreakerConfig(String configName, CircuitBreakerConfig circuitBreakerConfig);
-
-
-	/**
-	 * @param configName the circuit breaker configuration name
-	 * @return the circuit breaker configuration if any
-	 */
-	CircuitBreakerConfig getCircuitBreakerConfigByName(String configName);
-
+public interface CircuitBreakerRegistry extends Registry<CircuitBreaker, CircuitBreakerConfig> {
 	/**
 	 * Returns all managed {@link CircuitBreaker} instances.
 	 *
@@ -76,22 +61,6 @@ public interface CircuitBreakerRegistry {
 	 * @return The {@link CircuitBreaker}
 	 */
 	CircuitBreaker circuitBreaker(String name, Supplier<CircuitBreakerConfig> circuitBreakerConfigSupplier);
-
-	/**
-	 * Allows for configuring some functionality to be executed when a new CircuitBreaker is created.
-	 *
-	 * @param postCreationConsumer A consumer function to execute for a CircuitBreaker that was created.
-	 */
-	void registerPostCreationConsumer(Consumer<CircuitBreaker> postCreationConsumer);
-
-
-	/**
-	 * Allows for configuring some functionality to be executed when a new CircuitBreaker is created.
-	 *
-	 * @param postCreationConsumer A consumer function to execute for a CircuitBreaker that was created.
-	 */
-	void unregisterPostCreationConsumer(Consumer<CircuitBreaker> postCreationConsumer);
-
 
 	/**
 	 * Creates a CircuitBreakerRegistry with a custom CircuitBreaker configuration.
