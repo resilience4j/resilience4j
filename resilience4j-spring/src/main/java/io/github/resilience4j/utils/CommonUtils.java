@@ -31,6 +31,8 @@ import io.github.resilience4j.circuitbreaker.configure.CircuitBreakerConfigurati
 public class CommonUtils {
 
 
+	private CommonUtils(){}
+
 	/**
 	 * @param source source entity
 	 * @param target target entity

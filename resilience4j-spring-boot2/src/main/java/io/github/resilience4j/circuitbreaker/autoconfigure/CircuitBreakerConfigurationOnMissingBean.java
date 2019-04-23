@@ -27,7 +27,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
-import io.github.resilience4j.circuitbreaker.configure.CircuitBreakerConfiguration;
 import io.github.resilience4j.circuitbreaker.configure.CircuitBreakerConfigurationProperties;
 import io.github.resilience4j.circuitbreaker.configure.CircuitBreakerConfigurationProperties.BackendProperties;
 import io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent;
@@ -38,9 +37,7 @@ import io.github.resilience4j.springboot.common.circuitbreaker.autoconfigure.Abs
 @Configuration
 public class CircuitBreakerConfigurationOnMissingBean extends AbstractCircuitBreakerConfigurationOnMissingBean implements ApplicationContextAware {
 
-	private final CircuitBreakerConfiguration circuitBreakerConfiguration;
 	private final ConfigurableBeanFactory beanFactory;
-	private final CircuitBreakerConfigurationProperties circuitBreakerProperties;
 	private ApplicationContext applicationContext;
 	private HealthIndicatorRegistry healthIndicatorRegistry;
 
@@ -48,12 +45,10 @@ public class CircuitBreakerConfigurationOnMissingBean extends AbstractCircuitBre
 	                                                ConfigurableBeanFactory beanFactory) {
 		super(circuitBreakerProperties);
 		this.beanFactory = beanFactory;
-		this.circuitBreakerProperties = circuitBreakerProperties;
-		this.circuitBreakerConfiguration = new CircuitBreakerConfiguration(circuitBreakerProperties);
 	}
 
 	@Override
-	public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
+	public void setApplicationContext(ApplicationContext applicationContext){
 		this.applicationContext = applicationContext;
 	}
 

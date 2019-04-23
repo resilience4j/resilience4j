@@ -39,8 +39,8 @@ import io.github.resilience4j.utils.RxJava2OnClasspathCondition;
 @Configuration
 public abstract class AbstractCircuitBreakerConfigurationOnMissingBean {
 
-	private final CircuitBreakerConfiguration circuitBreakerConfiguration;
-	private final CircuitBreakerConfigurationProperties circuitBreakerProperties;
+	protected final CircuitBreakerConfiguration circuitBreakerConfiguration;
+	protected final CircuitBreakerConfigurationProperties circuitBreakerProperties;
 
 	public AbstractCircuitBreakerConfigurationOnMissingBean(CircuitBreakerConfigurationProperties circuitBreakerProperties) {
 		this.circuitBreakerProperties = circuitBreakerProperties;
@@ -86,12 +86,5 @@ public abstract class AbstractCircuitBreakerConfigurationOnMissingBean {
 	public ReactorCircuitBreakerAspectExt reactorCircuitBreakerAspect() {
 		return circuitBreakerConfiguration.reactorCircuitBreakerAspect();
 	}
-
-	@Bean
-	@ConditionalOnMissingBean(value = CircuitBreakerEvent.class, parameterizedContainer = EventConsumerRegistry.class)
-	public EventConsumerRegistry<CircuitBreakerEvent> eventConsumerRegistry() {
-		return circuitBreakerConfiguration.eventConsumerRegistry();
-	}
-
 
 }
