@@ -51,7 +51,7 @@ final class ForcedOpenState extends CircuitBreakerState {
     }
 
     /**
-     * Should never be called when tryObtainPermission returns false.
+     * Should never be called when obtainPermission returns false.
      */
     @Override
     void onError(Throwable throwable) {
@@ -59,7 +59,7 @@ final class ForcedOpenState extends CircuitBreakerState {
     }
 
     /**
-     * Should never be called when tryObtainPermission returns false.
+     * Should never be called when obtainPermission returns false.
      */
     @Override
     void onSuccess() {

@@ -71,22 +71,22 @@ final class OpenState extends CircuitBreakerState {
     }
 
     /**
-     * Should never be called when tryObtainPermission returns false.
+     * Should never be called when obtainPermission returns false.
      */
     @Override
     void onError(Throwable throwable) {
-        // Could be called when Thread 1 invokes tryObtainPermission when the state is CLOSED, but in the meantime another
+        // Could be called when Thread 1 invokes obtainPermission when the state is CLOSED, but in the meantime another
         // Thread 2 calls onError and the state changes from CLOSED to OPEN before Thread 1 calls onError.
         // But the onError event should still be recorded, even if it happened after the state transition.
         circuitBreakerMetrics.onError();
     }
 
     /**
-     * Should never be called when tryObtainPermission returns false.
+     * Should never be called when obtainPermission returns false.
      */
     @Override
     void onSuccess() {
-        // Could be called when Thread 1 invokes tryObtainPermission when the state is CLOSED, but in the meantime another
+        // Could be called when Thread 1 invokes obtainPermission when the state is CLOSED, but in the meantime another
         // Thread 2 calls onError and the state changes from CLOSED to OPEN before Thread 1 calls onSuccess.
         // But the onSuccess event should still be recorded, even if it happened after the state transition.
         circuitBreakerMetrics.onSuccess();
