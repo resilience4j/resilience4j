@@ -15,64 +15,20 @@
  */
 package io.github.resilience4j.ratelimiter.autoconfigure;
 
-import java.util.List;
-
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
 
 import io.github.resilience4j.consumer.EventConsumerRegistry;
-import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
-import io.github.resilience4j.ratelimiter.configure.RateLimiterAspect;
-import io.github.resilience4j.ratelimiter.configure.RateLimiterAspectExt;
-import io.github.resilience4j.ratelimiter.configure.RateLimiterConfiguration;
-import io.github.resilience4j.ratelimiter.configure.RateLimiterConfigurationProperties;
-import io.github.resilience4j.ratelimiter.configure.ReactorRateLimiterAspectExt;
-import io.github.resilience4j.ratelimiter.configure.RxJava2RateLimiterAspectExt;
 import io.github.resilience4j.ratelimiter.event.RateLimiterEvent;
-import io.github.resilience4j.utils.ReactorOnClasspathCondition;
-import io.github.resilience4j.utils.RxJava2OnClasspathCondition;
+import io.github.resilience4j.springboot.common.ratelimiter.autoconfigure.AbstractRateLimiterConfigurationOnMissingBean;
 
 @Configuration
-public class RateLimiterConfigurationOnMissingBean {
-    private final RateLimiterConfiguration rateLimiterConfiguration;
+public class RateLimiterConfigurationOnMissingBean extends AbstractRateLimiterConfigurationOnMissingBean {
 
-    public RateLimiterConfigurationOnMissingBean() {
-        this.rateLimiterConfiguration = new RateLimiterConfiguration();
-    }
-
-    @Bean
-    @ConditionalOnMissingBean
-    public RateLimiterRegistry rateLimiterRegistry(RateLimiterConfigurationProperties rateLimiterProperties,
-                                                   EventConsumerRegistry<RateLimiterEvent> rateLimiterEventsConsumerRegistry) {
-        return rateLimiterConfiguration.rateLimiterRegistry(rateLimiterProperties, rateLimiterEventsConsumerRegistry);
-    }
-
-    @Bean
-    @ConditionalOnMissingBean
-    public RateLimiterAspect rateLimiterAspect(RateLimiterConfigurationProperties rateLimiterProperties, RateLimiterRegistry rateLimiterRegistry, @Autowired(required = false) List<RateLimiterAspectExt> rateLimiterAspectExtList) {
-        return rateLimiterConfiguration.rateLimiterAspect(rateLimiterProperties, rateLimiterRegistry, rateLimiterAspectExtList);
-    }
-
-    @Bean
-    @Conditional(value = {RxJava2OnClasspathCondition.class})
-    @ConditionalOnMissingBean
-    public RxJava2RateLimiterAspectExt rxJava2RateLimterAspectExt() {
-        return rateLimiterConfiguration.rxJava2RateLimterAspectExt();
-    }
-
-    @Bean
-    @Conditional(value = {ReactorOnClasspathCondition.class})
-    @ConditionalOnMissingBean
-    public ReactorRateLimiterAspectExt reactorRateLimiterAspectExt() {
-        return rateLimiterConfiguration.reactorRateLimiterAspectExt();
-    }
-
-    @Bean
-    @ConditionalOnMissingBean(value = RateLimiterEvent.class, parameterizedContainer = EventConsumerRegistry.class)
-    public EventConsumerRegistry<RateLimiterEvent> rateLimiterEventsConsumerRegistry() {
-        return rateLimiterConfiguration.rateLimiterEventsConsumerRegistry();
-    }
+	@Bean
+	@ConditionalOnMissingBean(value = RateLimiterEvent.class, parameterizedContainer = EventConsumerRegistry.class)
+	public EventConsumerRegistry<RateLimiterEvent> rateLimiterEventsConsumerRegistry() {
+		return rateLimiterConfiguration.rateLimiterEventsConsumerRegistry();
+	}
 }

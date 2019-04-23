@@ -197,7 +197,10 @@ public class CircuitBreakerConfigurationProperties {
 		@Nullable
 		private String baseConfig;
 
+
 		/**
+		 * @deprecated
+		 *  @since (1.0.14) use instead {@link #setWaitDurationInOpenState(Duration)} ()}
 		 * Sets the wait duration in seconds the CircuitBreaker should stay open, before it switches to half closed.
 		 *
 		 * @param waitInterval the wait duration
@@ -208,6 +211,9 @@ public class CircuitBreakerConfigurationProperties {
 		}
 
 		/**
+		 * @deprecated
+		 * @since (1.0.14) use instead {@link #getWaitDurationInOpenState()}
+		 *
 		 * get the wait duration in seconds the CircuitBreaker should stay open, before it switches to half closed.
 		 *
 		 * @return waitInterval the wait duration
