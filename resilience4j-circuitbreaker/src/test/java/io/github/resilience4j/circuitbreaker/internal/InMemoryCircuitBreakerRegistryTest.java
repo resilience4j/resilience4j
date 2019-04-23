@@ -7,6 +7,7 @@ import static org.mockito.Mockito.times;
 
 import java.util.function.Consumer;
 
+import org.assertj.core.api.Assertions;
 import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -58,10 +59,12 @@ public class InMemoryCircuitBreakerRegistryTest {
 		assertThat(circuitBreakerRegistry.getConfigurationByName("testNotFound")).isEmpty();
 	}
 
-	@Test(expected = IllegalArgumentException.class)
+	@Test
 	public void testUpdateDefaultCircuitBreakerRegistry() {
 		CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
-		circuitBreakerRegistry.addConfiguration("default", CircuitBreakerConfig.custom().build());
+		Assertions.assertThatThrownBy(() -> circuitBreakerRegistry.addConfiguration("default", CircuitBreakerConfig.custom().build()))
+				.isExactlyInstanceOf(IllegalArgumentException.class).hasMessageStartingWith("you can not use 'default'");
+
 	}
 
 	@Test

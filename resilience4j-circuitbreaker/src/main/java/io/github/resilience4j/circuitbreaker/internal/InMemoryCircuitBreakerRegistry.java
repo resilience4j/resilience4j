@@ -119,7 +119,7 @@ public final class InMemoryCircuitBreakerRegistry implements CircuitBreakerRegis
 	@Override
 	public void addConfiguration(String configName, CircuitBreakerConfig configuration) {
 		if (configName.equals(DEFAULT_CONFIG)) {
-			throw new IllegalArgumentException("you can use default as a configuration name as it is preserved for default configuration");
+			throw new IllegalArgumentException("you can not use 'default' as a configuration name as it is preserved for default configuration");
 		}
 		this.sharedCircuitBreakerConfiguration.put(configName, configuration);
 	}
