@@ -18,6 +18,7 @@
  */
 package io.github.resilience4j.circuitbreaker.internal;
 
+import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 
 import java.time.Clock;
@@ -52,7 +53,7 @@ final class OpenState extends CircuitBreakerState {
      * @return false, if the wait duration has not elapsed. true, if the wait duration has elapsed.
      */
     @Override
-    boolean isCallPermitted() {
+    boolean tryObtainPermission() {
         // Thread-safe
         if (clock.instant().isAfter(retryAfterWaitDuration)) {
             stateMachine.transitionToHalfOpenState();
@@ -62,23 +63,30 @@ final class OpenState extends CircuitBreakerState {
         return false;
     }
 
+    @Override
+    void obtainPermission() {
+        if(!tryObtainPermission()){
+            throw new CallNotPermittedException(stateMachine);
+        }
+    }
+
     /**
-     * Should never be called when isCallPermitted returns false.
+     * Should never be called when tryObtainPermission returns false.
      */
     @Override
     void onError(Throwable throwable) {
-        // Could be called when Thread 1 invokes isCallPermitted when the state is CLOSED, but in the meantime another
+        // Could be called when Thread 1 invokes obtainPermission when the state is CLOSED, but in the meantime another
         // Thread 2 calls onError and the state changes from CLOSED to OPEN before Thread 1 calls onError.
         // But the onError event should still be recorded, even if it happened after the state transition.
         circuitBreakerMetrics.onError();
     }
 
     /**
-     * Should never be called when isCallPermitted returns false.
+     * Should never be called when tryObtainPermission returns false.
      */
     @Override
     void onSuccess() {
-        // Could be called when Thread 1 invokes isCallPermitted when the state is CLOSED, but in the meantime another
+        // Could be called when Thread 1 invokes obtainPermission when the state is CLOSED, but in the meantime another
         // Thread 2 calls onError and the state changes from CLOSED to OPEN before Thread 1 calls onSuccess.
         // But the onSuccess event should still be recorded, even if it happened after the state transition.
         circuitBreakerMetrics.onSuccess();

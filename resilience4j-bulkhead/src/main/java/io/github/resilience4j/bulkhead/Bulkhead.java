@@ -18,24 +18,23 @@
  */
 package io.github.resilience4j.bulkhead;
 
+import io.github.resilience4j.bulkhead.event.BulkheadEvent;
+import io.github.resilience4j.bulkhead.event.BulkheadOnCallFinishedEvent;
+import io.github.resilience4j.bulkhead.event.BulkheadOnCallPermittedEvent;
+import io.github.resilience4j.bulkhead.event.BulkheadOnCallRejectedEvent;
+import io.github.resilience4j.bulkhead.internal.SemaphoreBulkhead;
+import io.github.resilience4j.core.EventConsumer;
+import io.vavr.CheckedConsumer;
+import io.vavr.CheckedFunction0;
+import io.vavr.CheckedFunction1;
+import io.vavr.CheckedRunnable;
+
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
-
-import io.github.resilience4j.bulkhead.event.BulkheadEvent;
-import io.github.resilience4j.bulkhead.event.BulkheadOnCallFinishedEvent;
-import io.github.resilience4j.bulkhead.event.BulkheadOnCallPermittedEvent;
-import io.github.resilience4j.bulkhead.event.BulkheadOnCallRejectedEvent;
-import io.github.resilience4j.bulkhead.internal.SemaphoreBulkhead;
-import io.github.resilience4j.bulkhead.utils.BulkheadUtils;
-import io.github.resilience4j.core.EventConsumer;
-import io.vavr.CheckedConsumer;
-import io.vavr.CheckedFunction0;
-import io.vavr.CheckedFunction1;
-import io.vavr.CheckedRunnable;
 
 /**
  *  A Bulkhead instance is thread-safe can be used to decorate multiple requests.
@@ -45,7 +44,7 @@ import io.vavr.CheckedRunnable;
  * underlying concurrency/io model can be used to shed load, and, where it makes sense, limit resource use (i.e. limit amount of
  * threads/actors involved in a particular flow, etc).
  *
- * In order to execute an operation protected by this bulkhead, a permission must be obtained by calling {@link Bulkhead#isCallPermitted()}
+ * In order to execute an operation protected by this bulkhead, a permission must be obtained by calling {@link Bulkhead#tryObtainPermission()} ()}
  * If the bulkhead is full, no additional operations will be permitted to execute until space is available.
  *
  * Once the operation is complete, regardless of the result, client needs to call {@link Bulkhead#onComplete()} in order to maintain
@@ -62,11 +61,27 @@ public interface Bulkhead {
     void changeConfig(BulkheadConfig newConfig);
 
     /**
-     * Attempts to acquire a permit, which allows an call to be executed.
+     * Attempts to obtain a permission to execute a call.
+     * @deprecated Use {@link Bulkhead#tryObtainPermission()}. instead.
+     *
+     * @return boolean whether a call is permitted
+     */
+    @Deprecated
+    boolean isCallPermitted();
+
+    /**
+     * Attempts to obtain a permission to execute a call.
      *
      * @return boolean whether a call should be executed
      */
-    boolean isCallPermitted();
+    boolean tryObtainPermission();
+
+    /**
+     * Attempts to obtain a permission to execute a call.
+     *
+     * @throws BulkheadFullException when the Bulkhead is full and no further calls are permitted.
+     */
+    void obtainPermission();
 
     /**
      * Records a completed call.
@@ -167,7 +182,7 @@ public interface Bulkhead {
      */
     static <T> CheckedFunction0<T> decorateCheckedSupplier(Bulkhead bulkhead, CheckedFunction0<T> supplier){
         return () -> {
-            BulkheadUtils.isCallPermitted(bulkhead);
+            bulkhead.obtainPermission();
             try {
                 return supplier.apply();
             }
@@ -190,8 +205,8 @@ public interface Bulkhead {
 
             final CompletableFuture<T> promise = new CompletableFuture<>();
 
-            if (!bulkhead.isCallPermitted()) {
-                promise.completeExceptionally(new BulkheadFullException(String.format("Bulkhead '%s' is open", bulkhead.getName())));
+            if (!bulkhead.tryObtainPermission()) {
+                promise.completeExceptionally(new BulkheadFullException(bulkhead));
             }
             else {
                 try {
@@ -228,7 +243,7 @@ public interface Bulkhead {
      */
     static CheckedRunnable decorateCheckedRunnable(Bulkhead bulkhead, CheckedRunnable runnable){
         return () -> {
-            BulkheadUtils.isCallPermitted(bulkhead);
+            bulkhead.obtainPermission();
             try{
                 runnable.run();
             }
@@ -249,7 +264,7 @@ public interface Bulkhead {
      */
     static <T> Callable<T> decorateCallable(Bulkhead bulkhead, Callable<T> callable){
         return () -> {
-            BulkheadUtils.isCallPermitted(bulkhead);
+            bulkhead.obtainPermission();
             try {
                 return callable.call();
             }
@@ -270,7 +285,7 @@ public interface Bulkhead {
      */
     static <T> Supplier<T> decorateSupplier(Bulkhead bulkhead, Supplier<T> supplier){
         return () -> {
-            BulkheadUtils.isCallPermitted(bulkhead);
+            bulkhead.obtainPermission();
             try {
                 return supplier.get();
             }
@@ -291,7 +306,7 @@ public interface Bulkhead {
      */
     static <T> Consumer<T> decorateConsumer(Bulkhead bulkhead, Consumer<T> consumer){
         return (t) -> {
-            BulkheadUtils.isCallPermitted(bulkhead);
+            bulkhead.obtainPermission();
             try {
                 consumer.accept(t);
             }
@@ -312,7 +327,7 @@ public interface Bulkhead {
      */
     static <T> CheckedConsumer<T> decorateCheckedConsumer(Bulkhead bulkhead, CheckedConsumer<T> consumer){
         return (t) -> {
-            BulkheadUtils.isCallPermitted(bulkhead);
+            bulkhead.obtainPermission();
             try {
                 consumer.accept(t);
             }
@@ -332,7 +347,7 @@ public interface Bulkhead {
      */
     static Runnable decorateRunnable(Bulkhead bulkhead, Runnable runnable){
         return () -> {
-            BulkheadUtils.isCallPermitted(bulkhead);
+            bulkhead.obtainPermission();
             try{
                 runnable.run();
             }
@@ -353,7 +368,7 @@ public interface Bulkhead {
      */
     static <T, R> Function<T, R> decorateFunction(Bulkhead bulkhead, Function<T, R> function){
         return (T t) -> {
-            BulkheadUtils.isCallPermitted(bulkhead);
+            bulkhead.obtainPermission();
             try{
                 return function.apply(t);
             }
@@ -374,7 +389,7 @@ public interface Bulkhead {
      */
     static <T, R> CheckedFunction1<T, R> decorateCheckedFunction(Bulkhead bulkhead, CheckedFunction1<T, R> function){
         return (T t) -> {
-            BulkheadUtils.isCallPermitted(bulkhead);
+            bulkhead.obtainPermission();
             try{
                 return function.apply(t);
             }

@@ -19,15 +19,6 @@
 package io.github.resilience4j.bulkhead.internal;
 
 
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.Callable;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionException;
-import java.util.concurrent.RejectedExecutionException;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
-import java.util.function.Supplier;
-
 import io.github.resilience4j.bulkhead.BulkheadFullException;
 import io.github.resilience4j.bulkhead.ThreadPoolBulkhead;
 import io.github.resilience4j.bulkhead.ThreadPoolBulkheadConfig;
@@ -37,6 +28,10 @@ import io.github.resilience4j.bulkhead.event.BulkheadOnCallPermittedEvent;
 import io.github.resilience4j.bulkhead.event.BulkheadOnCallRejectedEvent;
 import io.github.resilience4j.core.EventConsumer;
 import io.github.resilience4j.core.EventProcessor;
+import io.github.resilience4j.core.lang.Nullable;
+
+import java.util.concurrent.*;
+import java.util.function.Supplier;
 
 /**
  * A Bulkhead implementation based on a fixed ThreadPoolExecutor.
@@ -59,7 +54,7 @@ public class FixedThreadPoolBulkhead implements ThreadPoolBulkhead {
 	 * @param name           the name of this bulkhead
 	 * @param bulkheadConfig custom bulkhead configuration
 	 */
-	public FixedThreadPoolBulkhead(String name, ThreadPoolBulkheadConfig bulkheadConfig) {
+	public FixedThreadPoolBulkhead(String name, @Nullable ThreadPoolBulkheadConfig bulkheadConfig) {
 		this.name = name;
 		this.config = bulkheadConfig != null ? bulkheadConfig
 				: ThreadPoolBulkheadConfig.ofDefaults();
