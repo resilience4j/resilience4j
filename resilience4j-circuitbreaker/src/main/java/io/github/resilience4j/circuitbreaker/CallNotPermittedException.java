@@ -19,18 +19,17 @@
 package io.github.resilience4j.circuitbreaker;
 
 /**
- * A {@link CircuitBreakerOpenException} signals that the CircuitBreaker is OPEN.
- * @deprecated use {@link CallNotPermittedException} instead
+ * A {@link CallNotPermittedException} signals that the CircuitBreaker is HALF_OPEN or OPEN
+ * and a call is not permitted to be executed.
  */
-@Deprecated
-public class CircuitBreakerOpenException extends RuntimeException {
+public class CallNotPermittedException extends CircuitBreakerOpenException {
 
     /**
      * The constructor with a CircuitBreaker.
      *
      * @param circuitBreaker the CircuitBreaker.
      */
-    public CircuitBreakerOpenException(CircuitBreaker circuitBreaker) {
+    public CallNotPermittedException(CircuitBreaker circuitBreaker) {
         super(String.format("CircuitBreaker '%s' is %s and does not permit further calls", circuitBreaker.getName(), circuitBreaker.getState()));
     }
 
@@ -39,7 +38,7 @@ public class CircuitBreakerOpenException extends RuntimeException {
      *
      * @param message The message.
      */
-    public CircuitBreakerOpenException(String message) {
+    public CallNotPermittedException(String message) {
         super(message);
     }
 }

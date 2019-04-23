@@ -38,9 +38,18 @@ final class DisabledState extends CircuitBreakerState {
      * @return always true, because the CircuitBreaker is disabled.
      */
     @Override
-    boolean isCallPermitted() {
+    boolean tryObtainPermission() {
         return true;
     }
+
+    /**
+     * Does not throw an exception, because the CircuitBreaker is disabled.
+     */
+    @Override
+    void obtainPermission() {
+        // noOp
+    }
+
 
     @Override
     void onError(Throwable throwable) {

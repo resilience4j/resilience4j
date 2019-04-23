@@ -67,8 +67,8 @@ class BulkheadChainSpec extends Specification {
         and: "some bulkhead events"
         ['test1', 'test2'].each {
             bulkheadRegistry.bulkhead(it).with {
-                isCallPermitted()
-                isCallPermitted()
+                tryObtainPermission()
+                tryObtainPermission()
                 onComplete()
             }
         }
@@ -146,8 +146,8 @@ class BulkheadChainSpec extends Specification {
         when: "we get all bulkhead events"
         ['test1', 'test2'].each {
             bulkheadRegistry.bulkhead(it).with {
-                isCallPermitted()
-                isCallPermitted()
+                tryObtainPermission()
+                tryObtainPermission()
                 onComplete()
             }
         }
@@ -219,8 +219,8 @@ class BulkheadChainSpec extends Specification {
         and: "some bulkhead events"
         ['test1', 'test2'].each {
             bulkheadRegistry.bulkhead(it).with {
-                isCallPermitted()
-                isCallPermitted()
+                tryObtainPermission()
+                tryObtainPermission()
                 onComplete()
             }
         }

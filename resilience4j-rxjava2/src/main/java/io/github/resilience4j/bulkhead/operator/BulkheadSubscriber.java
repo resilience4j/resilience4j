@@ -78,7 +78,7 @@ final class BulkheadSubscriber<T> extends AtomicReference<Subscription> implemen
     private boolean acquireCallPermit() {
         boolean callPermitted = false;
         if (permitted.compareAndSet(Permit.PENDING, Permit.ACQUIRED)) {
-            callPermitted = bulkhead.isCallPermitted();
+            callPermitted = bulkhead.tryObtainPermission();
             if (!callPermitted) {
                 permitted.set(Permit.REJECTED);
             }
