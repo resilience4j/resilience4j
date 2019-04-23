@@ -31,7 +31,7 @@ public class CircuitBreakerOpenException extends RuntimeException {
      * @param circuitBreaker the CircuitBreaker.
      */
     public CircuitBreakerOpenException(CircuitBreaker circuitBreaker) {
-        super(String.format("CircuitBreaker '%s' is OPEN and does not permit further calls", circuitBreaker.getName()));
+        super(String.format("CircuitBreaker '%s' is %s and does not permit further calls", circuitBreaker.getName(), circuitBreaker.getState()));
     }
 
     /**

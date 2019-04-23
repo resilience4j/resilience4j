@@ -60,6 +60,13 @@ public class CircuitBreakerStateMachineTest {
         assertThat(circuitBreaker.getMetrics().getNumberOfNotPermittedCalls()).isEqualTo(1);
     }
 
+    @Test()
+    public void shouldThrowCallNotPermittedExceptionWhenStateIsForcedOpen() {
+        circuitBreaker.transitionToForcedOpenState();
+        assertThatThrownBy(circuitBreaker::obtainPermission).isInstanceOf(CallNotPermittedException.class);
+        assertThat(circuitBreaker.getMetrics().getNumberOfNotPermittedCalls()).isEqualTo(1);
+    }
+
     @Test
     public void shouldThrowCallNotPermittedExceptionWhenNotFurtherTestCallsArePermitted() {
         circuitBreaker.transitionToOpenState();
@@ -266,6 +273,9 @@ public class CircuitBreakerStateMachineTest {
         circuitBreaker.onError(0, new RuntimeException()); // Should not create a CircuitBreakerOnErrorEvent
 
         assertThat(circuitBreaker.tryObtainPermission()).isEqualTo(true);
+        circuitBreaker.onError(0, new RuntimeException()); // Should not create a CircuitBreakerOnErrorEvent
+
+        circuitBreaker.obtainPermission();
         circuitBreaker.onError(0, new RuntimeException()); // Should not create a CircuitBreakerOnErrorEvent
 
         assertThatMetricsAreReset();
