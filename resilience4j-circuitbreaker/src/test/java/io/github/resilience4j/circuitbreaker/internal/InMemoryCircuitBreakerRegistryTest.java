@@ -5,6 +5,8 @@ import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.function.Consumer;
 
 import org.assertj.core.api.Assertions;
@@ -50,13 +52,13 @@ public class InMemoryCircuitBreakerRegistryTest {
 	public void testAddCircuitBreakerRegistry() {
 		CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
 		circuitBreakerRegistry.addConfiguration("testConfig", CircuitBreakerConfig.ofDefaults());
-		assertThat(circuitBreakerRegistry.getConfigurationByName("testConfig")).isNotNull();
+		assertThat(circuitBreakerRegistry.getConfiguration("testConfig")).isNotNull();
 	}
 
 	@Test
 	public void testGetNotFoundCircuitBreakerRegistry() {
-		CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
-		assertThat(circuitBreakerRegistry.getConfigurationByName("testNotFound")).isEmpty();
+		InMemoryCircuitBreakerRegistry circuitBreakerRegistry = (InMemoryCircuitBreakerRegistry) CircuitBreakerRegistry.ofDefaults();
+		assertThat(circuitBreakerRegistry.getConfiguration("testNotFound")).isEmpty();
 	}
 
 	@Test
@@ -72,7 +74,19 @@ public class InMemoryCircuitBreakerRegistryTest {
 		CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
 		circuitBreakerRegistry.addConfiguration("testConfig", CircuitBreakerConfig.ofDefaults());
 		final CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("circuitBreaker",
-				circuitBreakerRegistry.getConfigurationByName("testConfig").get());
+				circuitBreakerRegistry.getConfiguration("testConfig").get());
+		assertThat(circuitBreaker).isNotNull();
+	}
+
+
+	@Test
+	public void testCreateCircuitBreakerWitMapConstructor() {
+		Map<String, CircuitBreakerConfig> map = new HashMap<>();
+		map.put("testBreaker", CircuitBreakerConfig.ofDefaults());
+		CircuitBreakerRegistry circuitBreakerRegistry = new InMemoryCircuitBreakerRegistry(map);
+		circuitBreakerRegistry.addConfiguration("testConfig", CircuitBreakerConfig.ofDefaults());
+		final CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("circuitBreaker",
+				circuitBreakerRegistry.getConfiguration("testConfig").get());
 		assertThat(circuitBreaker).isNotNull();
 	}
 

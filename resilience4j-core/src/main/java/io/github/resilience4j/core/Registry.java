@@ -37,7 +37,7 @@ public interface Registry<Target, Config> {
 	 * @param configName the configuration name
 	 * @return the found configuration if any
 	 */
-	Optional<Config> getConfigurationByName(String configName);
+	Optional<Config> getConfiguration(String configName);
 
 
 	/**
