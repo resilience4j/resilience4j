@@ -220,7 +220,7 @@ public class CircuitBreakerConfigurationProperties {
 		 */
 		@Deprecated
 		public Duration getWaitInterval() {
-			return waitDurationInOpenState;
+			return getWaitDurationInOpenState();
 		}
 
 		/**
