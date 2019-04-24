@@ -529,7 +529,7 @@ table.CodeRay td.code>pre{padding:0}
 <div class="details">
 <span id="author" class="author">Robert Winkler</span><br>
 <span id="revnumber">version 0.15.0-SNAPSHOT,</span>
-<span id="revdate">2019-04-23</span>
+<span id="revdate">2019-04-24</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">Table of Contents</div>
@@ -2162,6 +2162,30 @@ For example</p>
 }</code></pre>
 </div>
 </div>
+<div class="paragraph">
+<p>Beyond the config file configuration, the Spring Bean configuration is now using @ConditionalOnMissingBean to allow for overriding default behavior.<br>
+These Beans can be overridden in your application&#8217;s Spring Bean configuration:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>RetryRegistry</p>
+</li>
+<li>
+<p>RetryAspect</p>
+</li>
+<li>
+<p>RxJava2RetryAspectExt</p>
+</li>
+<li>
+<p>ReactorRetryAspectExt</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>Note that in Spring Boot 1.x, EventConsumerRegistry&lt;RetryEvent&gt; cannot be overridden because of limitations of the @ConditionalOnMissingBean implementation.<br>
+To override this, go to at least Spring Boot 2.1.x.</p>
+</div>
 </div>
 <div class="sect4">
 <h5 id="_circuitbreaker_3"><a class="anchor" href="#_circuitbreaker_3"></a><a class="link" href="#_circuitbreaker_3">CircuitBreaker</a></h5>
@@ -2199,6 +2223,52 @@ For example</p>
                 - <span class="string"><span class="content">org.springframework.web.client.HttpClientErrorException</span></span></code></pre>
 </div>
 </div>
+<div class="paragraph">
+<p>You can also override/partial-override/share default configuration for your CircuitBreakers in Spring Boot&#8217;s <code>application.yml</code> config file.<br>
+For example</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="yaml"><span class="key">resilience4j.circuitbreaker</span>:
+    <span class="key">configs</span>:
+        <span class="key">default</span>:
+            <span class="key">ringBufferSizeInClosedState</span>: <span class="string"><span class="content">100</span></span>
+            <span class="key">ringBufferSizeInHalfOpenState</span>: <span class="string"><span class="content">10</span></span>
+            <span class="key">waitInterval</span>: <span class="string"><span class="content">10000</span></span>
+            <span class="key">failureRateThreshold</span>: <span class="string"><span class="content">60</span></span>
+            <span class="key">eventConsumerBufferSize</span>: <span class="string"><span class="content">10</span></span>
+            <span class="key">registerHealthIndicator</span>: <span class="string"><span class="content">true</span></span>
+    <span class="key">backends</span>:
+        <span class="key">backendA</span>:
+            <span class="key">baseConfig</span>: <span class="string"><span class="content">default</span></span>
+        <span class="key">backendB</span>:
+            <span class="key">baseConfig</span>: <span class="string"><span class="content">default</span></span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Beyond the config file configuration, the Spring Bean configuration is now using @ConditionalOnMissingBean to allow for overriding default behavior.<br>
+These Beans can be overridden in your application&#8217;s Spring Bean configuration:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>CircuitBreakerRegistry</p>
+</li>
+<li>
+<p>CircuitBreakerAspect</p>
+</li>
+<li>
+<p>RxJava2CircuitBreakerAspectExt</p>
+</li>
+<li>
+<p>ReactorCircuitBreakerAspectExt</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>Note that in Spring Boot 1.x, EventConsumerRegistry&lt;CircuitBreakerEvent&gt; cannot be overridden because of limitations of the @ConditionalOnMissingBean implementation.<br>
+To override this, go to at least Spring Boot 2.1.x.</p>
+</div>
 </div>
 <div class="sect4">
 <h5 id="_ratelimiter_3"><a class="anchor" href="#_ratelimiter_3"></a><a class="link" href="#_ratelimiter_3">RateLimiter</a></h5>
@@ -2222,6 +2292,24 @@ For example</p>
             <span class="key">limitRefreshPeriodInMillis</span>: <span class="string"><span class="content">500</span></span>
             <span class="key">timeoutInMillis</span>: <span class="string"><span class="content">3000</span></span></code></pre>
 </div>
+</div>
+<div class="paragraph">
+<p>Beyond the config file configuration, the Spring Bean configuration is now using @ConditionalOnMissingBean to allow for overriding default behavior.<br>
+These Beans can be overridden in your application&#8217;s Spring Bean configuration:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>RateLimiterRegistry</p>
+</li>
+<li>
+<p>RateLimiterAspect</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>Note that in Spring Boot 1.x, EventConsumerRegistry&lt;RateLimiterEvent&gt; cannot be overridden because of limitations of the @ConditionalOnMissingBean implementation.<br>
+To override this, go to at least Spring Boot 2.1.x.</p>
 </div>
 </div>
 <div class="sect4">
@@ -2833,6 +2921,33 @@ For example</p>
 }</code></pre>
 </div>
 </div>
+<div class="paragraph">
+<p>Beyond the config file configuration, the Spring Bean configuration is now using @ConditionalOnMissingBean to allow for overriding default behavior.<br>
+These Beans can be overridden in your application&#8217;s Spring Bean configuration:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>RetryRegistry</p>
+</li>
+<li>
+<p>RetryAspect</p>
+</li>
+<li>
+<p>EventConsumerRegistry&lt;RetryEvent&gt;</p>
+</li>
+<li>
+<p>RxJava2RetryAspectExt</p>
+</li>
+<li>
+<p>ReactorRetryAspectExt</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>Note that in Spring Boot 1.x, EventConsumerRegistry&lt;RetryEvent&gt; cannot be overridden because of limitations of the @ConditionalOnMissingBean implementation.<br>
+To override this, go to at least Spring Boot 2.1.x.</p>
+</div>
 </div>
 <div class="sect4">
 <h5 id="_circuitbreaker_6"><a class="anchor" href="#_circuitbreaker_6"></a><a class="link" href="#_circuitbreaker_6">CircuitBreaker</a></h5>
@@ -2870,6 +2985,51 @@ For example</p>
                 - <span class="string"><span class="content">org.springframework.web.client.HttpClientErrorException</span></span></code></pre>
 </div>
 </div>
+<div class="paragraph">
+<p>You can also override/partial-override/share default configuration for your CircuitBreakers in Spring Boot&#8217;s <code>application.yml</code> config file.<br>
+For example</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="yaml"><span class="key">resilience4j.circuitbreaker</span>:
+    <span class="key">configs</span>:
+        <span class="key">default</span>:
+            <span class="key">ringBufferSizeInClosedState</span>: <span class="string"><span class="content">100</span></span>
+            <span class="key">ringBufferSizeInHalfOpenState</span>: <span class="string"><span class="content">10</span></span>
+            <span class="key">waitInterval</span>: <span class="string"><span class="content">10000</span></span>
+            <span class="key">failureRateThreshold</span>: <span class="string"><span class="content">60</span></span>
+            <span class="key">eventConsumerBufferSize</span>: <span class="string"><span class="content">10</span></span>
+            <span class="key">registerHealthIndicator</span>: <span class="string"><span class="content">true</span></span>
+    <span class="key">backends</span>:
+        <span class="key">backendA</span>:
+            <span class="key">baseConfig</span>: <span class="string"><span class="content">default</span></span>
+        <span class="key">backendB</span>:
+            <span class="key">baseConfig</span>: <span class="string"><span class="content">default</span></span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Beyond the config file configuration, the Spring Bean configuration is now using @ConditionalOnMissingBean to allow for overriding default behavior.<br>
+These Beans can be overridden in your application&#8217;s Spring Bean configuration:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>CircuitBreakerRegistry</p>
+</li>
+<li>
+<p>CircuitBreakerAspect</p>
+</li>
+<li>
+<p>RxJava2CircuitBreakerAspectExt</p>
+</li>
+<li>
+<p>ReactorCircuitBreakerAspectExt</p>
+</li>
+<li>
+<p>EventConsumerRegistry&lt;CircuitBreakerEvent&gt;</p>
+</li>
+</ul>
+</div>
 </div>
 <div class="sect4">
 <h5 id="_ratelimiter_6"><a class="anchor" href="#_ratelimiter_6"></a><a class="link" href="#_ratelimiter_6">RateLimiter</a></h5>
@@ -2893,6 +3053,29 @@ For example</p>
             <span class="key">limitRefreshPeriodInMillis</span>: <span class="string"><span class="content">500</span></span>
             <span class="key">timeoutInMillis</span>: <span class="string"><span class="content">3000</span></span></code></pre>
 </div>
+</div>
+<div class="paragraph">
+<p>Beyond the config file configuration, the Spring Bean configuration is now using @ConditionalOnMissingBean to allow for overriding default behavior.<br>
+These Beans can be overridden in your application&#8217;s Spring Bean configuration:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>RateLimiterRegistry</p>
+</li>
+<li>
+<p>RateLimiterAspect</p>
+</li>
+<li>
+<p>EventConsumerRegistry&lt;RateLimiterEvent&gt;</p>
+</li>
+<li>
+<p>RxJava2RateLimiterAspectExt</p>
+</li>
+<li>
+<p>ReactorRateLimiterAspectExt</p>
+</li>
+</ul>
 </div>
 </div>
 <div class="sect4">
@@ -4800,7 +4983,7 @@ So you can easily restrict not only network calls but your local in-memory opera
 <div id="footer">
 <div id="footer-text">
 Version 0.15.0-SNAPSHOT<br>
-Last updated 2019-04-23 12:21:49 UTC
+Last updated 2019-04-24 11:15:56 UTC
 </div>
 </div>
 </body>
