@@ -20,6 +20,7 @@ import org.springframework.boot.actuate.autoconfigure.MetricsDropwizardAutoConfi
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -40,6 +41,7 @@ import io.github.resilience4j.retry.RetryRegistry;
 public class RetryMetricsAutoConfiguration {
 
 	@Bean
+	@ConditionalOnMissingBean
 	public RetryMetrics registerRetryMetrics(RetryRegistry retryRegistry, MetricRegistry metricRegistry) {
 		RetryMetrics retryMetrics = RetryMetrics.ofRetryRegistry(retryRegistry);
 		metricRegistry.registerAll(retryMetrics);

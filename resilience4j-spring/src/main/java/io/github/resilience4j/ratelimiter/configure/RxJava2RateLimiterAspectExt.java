@@ -23,7 +23,6 @@ import org.aspectj.lang.ProceedingJoinPoint;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import io.github.resilience4j.circuitbreaker.configure.CircuitBreakerAspect;
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.operator.RateLimiterOperator;
 import io.reactivex.Completable;
@@ -40,9 +39,9 @@ import io.reactivex.SingleSource;
  * the Rx RateLimiter logic support for the spring AOP
  * conditional on the presence of Rx classes on the spring class loader
  */
-public class RxJava2RateLimterAspectExt implements RateLimiterAspectExt {
+public class RxJava2RateLimiterAspectExt implements RateLimiterAspectExt {
 
-	private static final Logger logger = LoggerFactory.getLogger(CircuitBreakerAspect.class);
+	private static final Logger logger = LoggerFactory.getLogger(RxJava2RateLimiterAspectExt.class);
 	private final Set<Class> rxSupportedTypes = newHashSet(ObservableSource.class, SingleSource.class, CompletableSource.class, MaybeSource.class, Flowable.class);
 
 	/**

@@ -25,3 +25,5 @@ include 'resilience4j-rxjava2'
 include 'resilience4j-reactor'
 include 'resilience4j-micrometer'
 include 'resilience4j-bom'
+include 'resilience4j-spring-boot-common'
+

@@ -25,7 +25,6 @@ import org.springframework.context.annotation.Import;
 
 import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.bulkhead.BulkheadRegistry;
-import io.github.resilience4j.bulkhead.configure.BulkheadConfiguration;
 import io.github.resilience4j.bulkhead.event.BulkheadEvent;
 import io.github.resilience4j.bulkhead.monitoring.endpoint.BulkheadEndpoint;
 import io.github.resilience4j.bulkhead.monitoring.endpoint.BulkheadEventsEndpoint;
@@ -38,14 +37,14 @@ import io.github.resilience4j.consumer.EventConsumerRegistry;
 @Configuration
 @ConditionalOnClass(Bulkhead.class)
 @EnableConfigurationProperties(BulkheadProperties.class)
-@Import(BulkheadConfiguration.class)
+@Import(BulkheadConfigurationOnMissingBean.class)
 @AutoConfigureBefore(EndpointAutoConfiguration.class)
 public class BulkheadAutoConfiguration {
 
-    @Bean
-    public BulkheadEndpoint bulkheadEndpoint(BulkheadRegistry bulkheadRegistry) {
-        return new BulkheadEndpoint(bulkheadRegistry);
-    }
+	@Bean
+	public BulkheadEndpoint bulkheadEndpoint(BulkheadRegistry bulkheadRegistry) {
+		return new BulkheadEndpoint(bulkheadRegistry);
+	}
 
 	@Bean
 	public BulkheadEventsEndpoint bulkheadEventsEndpoint(EventConsumerRegistry<BulkheadEvent> eventConsumerRegistry) {

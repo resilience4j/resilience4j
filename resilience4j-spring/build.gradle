@@ -7,8 +7,8 @@ dependencies {
     compile project(':resilience4j-circuitbreaker')
     compileOnly project(':resilience4j-reactor')
     compileOnly project(':resilience4j-rxjava2')
-    compileOnly (libraries.rxjava2)
-    compileOnly (libraries.reactor)
+    compileOnly(libraries.rxjava2)
+    compileOnly(libraries.reactor)
     compile project(':resilience4j-ratelimiter')
     compile project(':resilience4j-retry')
     compile project(':resilience4j-bulkhead')
@@ -16,5 +16,12 @@ dependencies {
     compileOnly project(':resilience4j-metrics')
     testCompile project(':resilience4j-prometheus')
     testCompile project(':resilience4j-metrics')
+    testCompile(libraries.aspectj)
+    testCompile(libraries.rxjava2)
+    testCompile(libraries.reactor)
+    testCompile project(':resilience4j-reactor')
+    testCompile project(':resilience4j-rxjava2')
+    testCompile(libraries.spring_context)
+    testCompile(libraries.spring_test)
 }
-ext.moduleName='io.github.resilience4j.spring'
+ext.moduleName = 'io.github.resilience4j.spring'

@@ -17,6 +17,7 @@ public class AnnotationExtractor {
      *
      * @param targetClass target class
      * @param annotationClass annotation class
+     * @param <T> The annotation type.
      * @return annotation
      */
     @Nullable

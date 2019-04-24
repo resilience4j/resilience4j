@@ -37,6 +37,7 @@ public class TaggedCircuitBreakerMetrics implements MeterBinder {
      *
      * @param metricNames custom metric names
      * @param registry the source of circuit breakers
+     * @return The {@link TaggedCircuitBreakerMetrics} instance.
      */
     public static TaggedCircuitBreakerMetrics ofCircuitBreakerRegistry(MetricNames metricNames, CircuitBreakerRegistry registry) {
         return new TaggedCircuitBreakerMetrics(metricNames, registry.getAllCircuitBreakers());
@@ -46,6 +47,7 @@ public class TaggedCircuitBreakerMetrics implements MeterBinder {
      * Creates a new binder that uses given {@code registry} as source of circuit breakers.
      *
      * @param registry the source of circuit breakers
+     * @return The {@link TaggedCircuitBreakerMetrics} instance.
      */
     public static TaggedCircuitBreakerMetrics ofCircuitBreakerRegistry(CircuitBreakerRegistry registry) {
         return ofCircuitBreakerRegistry(MetricNames.ofDefaults(), registry);
@@ -100,12 +102,15 @@ public class TaggedCircuitBreakerMetrics implements MeterBinder {
         /**
          * Returns a builder for creating custom metric names.
          * Note that names have default values, so only desired metrics can be renamed.
+         * @return The builder.
          */
         public static Builder custom() {
             return new Builder();
         }
 
-        /** Returns default metric names. */
+        /** Returns default metric names.
+         * @return The default {@link MetricNames} instance.
+         */
         public static MetricNames ofDefaults() {
             return new MetricNames();
         }
@@ -117,22 +122,30 @@ public class TaggedCircuitBreakerMetrics implements MeterBinder {
 
         private MetricNames() {}
 
-        /** Returns the metric name for circuit breaker calls, defaults to {@value DEFAULT_CIRCUIT_BREAKER_STATE_METRIC_NAME}. */
+        /** Returns the metric name for circuit breaker calls, defaults to {@value DEFAULT_CIRCUIT_BREAKER_STATE_METRIC_NAME}.
+         * @return The circuit breaker calls metric name.
+         */
         public String getCallsMetricName() {
             return callsMetricName;
         }
 
-        /** Returns the metric name for currently buffered calls, defaults to {@value DEFAULT_CIRCUIT_BREAKER_STATE_METRIC_NAME}. */
+        /** Returns the metric name for currently buffered calls, defaults to {@value DEFAULT_CIRCUIT_BREAKER_STATE_METRIC_NAME}.
+         * @return The buffered calls metric name.
+         */
         public String getBufferedCallsMetricName() {
             return bufferedCallsMetricName;
         }
 
-        /** Returns the metric name for max buffered calls, defaults to {@value DEFAULT_CIRCUIT_BREAKER_STATE_METRIC_NAME}. */
+        /** Returns the metric name for max buffered calls, defaults to {@value DEFAULT_CIRCUIT_BREAKER_STATE_METRIC_NAME}.
+         * @return The max buffered calls metric name.
+         */
         public String getMaxBufferedCallsMetricName() {
             return maxBufferedCallsMetricName;
         }
 
-        /** Returns the metric name for state, defaults to {@value DEFAULT_CIRCUIT_BREAKER_STATE_METRIC_NAME}. */
+        /** Returns the metric name for state, defaults to {@value DEFAULT_CIRCUIT_BREAKER_STATE_METRIC_NAME}.
+         * @return The state metric name.
+         */
         public String getStateMetricName() {
             return stateMetricName;
         }
@@ -141,31 +154,44 @@ public class TaggedCircuitBreakerMetrics implements MeterBinder {
         public static class Builder {
             private final MetricNames metricNames = new MetricNames();
 
-            /** Overrides the default metric name {@value MetricNames#DEFAULT_CIRCUIT_BREAKER_CALLS_METRIC_NAME} with a given one. */
+            /** Overrides the default metric name {@value MetricNames#DEFAULT_CIRCUIT_BREAKER_CALLS_METRIC_NAME} with a given one.
+             * @param callsMetricName The calls metric name.
+             * @return The builder.*/
             public Builder callsMetricName(String callsMetricName) {
                 metricNames.callsMetricName = requireNonNull(callsMetricName);
                 return this;
             }
 
-            /** Overrides the default metric name {@value MetricNames#DEFAULT_CIRCUIT_BREAKER_STATE_METRIC_NAME} with a given one. */
+            /** Overrides the default metric name {@value MetricNames#DEFAULT_CIRCUIT_BREAKER_STATE_METRIC_NAME} with a given one.
+             * @param stateMetricName The state metric name.
+             * @return The builder.
+             */
             public Builder stateMetricName(String stateMetricName) {
                 metricNames.stateMetricName = requireNonNull(stateMetricName);
                 return this;
             }
 
-            /** Overrides the default metric name {@value MetricNames#DEFAULT_CIRCUIT_BREAKER_BUFFERED_CALLS} with a given one. */
+            /** Overrides the default metric name {@value MetricNames#DEFAULT_CIRCUIT_BREAKER_BUFFERED_CALLS} with a given one.
+             * @param bufferedCallsMetricName The bufferd calls metric name.
+             * @return The builder.
+             */
             public Builder bufferedCallsMetricName(String bufferedCallsMetricName) {
                 metricNames.bufferedCallsMetricName = requireNonNull(bufferedCallsMetricName);
                 return this;
             }
 
-            /** Overrides the default metric name {@value MetricNames#DEFAULT_CIRCUIT_BREAKER_MAX_BUFFERED_CALLS} with a given one. */
+            /** Overrides the default metric name {@value MetricNames#DEFAULT_CIRCUIT_BREAKER_MAX_BUFFERED_CALLS} with a given one.
+             * @param maxBufferedCallsMetricName The max buffered calls metric name.
+             * @return The builder.
+             */
             public Builder maxBufferedCallsMetricName(String maxBufferedCallsMetricName) {
                 metricNames.maxBufferedCallsMetricName = requireNonNull(maxBufferedCallsMetricName);
                 return this;
             }
 
-            /** Builds {@link MetricNames} instance. */
+            /** Builds {@link MetricNames} instance.
+             * @return The built {@link MetricNames} instance.
+             */
             public MetricNames build() {
                 return metricNames;
             }

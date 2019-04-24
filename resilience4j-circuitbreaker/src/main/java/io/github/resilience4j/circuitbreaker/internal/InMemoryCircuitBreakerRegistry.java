@@ -18,74 +18,92 @@
  */
 package io.github.resilience4j.circuitbreaker.internal;
 
-import io.github.resilience4j.circuitbreaker.CircuitBreaker;
-import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
-import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
-import io.vavr.collection.Array;
-import io.vavr.collection.Seq;
-
+import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.function.Supplier;
 
+import io.github.resilience4j.circuitbreaker.CircuitBreaker;
+import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
+import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
+import io.github.resilience4j.core.AbstractRegistry;
+import io.vavr.collection.Array;
+import io.vavr.collection.Seq;
+
 /**
  * Backend circuitBreaker manager.
  * Constructs backend circuitBreakers according to configuration values.
  */
-public final class InMemoryCircuitBreakerRegistry implements CircuitBreakerRegistry {
+public final class InMemoryCircuitBreakerRegistry extends AbstractRegistry<CircuitBreaker, CircuitBreakerConfig> implements CircuitBreakerRegistry {
 
-    private final CircuitBreakerConfig defaultCircuitBreakerConfig;
+	private static final String NAME_MUST_NOT_BE_NULL = "Name must not be null";
+	private final CircuitBreakerConfig defaultCircuitBreakerConfig;
+	/**
+	 * The circuitBreakers, indexed by name of the backend.
+	 */
+	private final ConcurrentMap<String, CircuitBreaker> circuitBreakers;
 
-    /**
-     * The circuitBreakers, indexed by name of the backend.
-     */
-    private final ConcurrentMap<String, CircuitBreaker> circuitBreakers;
 
-    /**
-     * The constructor with default circuitBreaker properties.
-     */
-    public InMemoryCircuitBreakerRegistry() {
-        this.defaultCircuitBreakerConfig = CircuitBreakerConfig.ofDefaults();
-        this.circuitBreakers = new ConcurrentHashMap<>();
-    }
+	/**
+	 * The constructor with default circuitBreaker properties.
+	 */
+	public InMemoryCircuitBreakerRegistry() {
+		this(CircuitBreakerConfig.ofDefaults());
+	}
 
-    /**
-     * The constructor with custom default circuitBreaker properties.
-     *
-     * @param defaultCircuitBreakerConfig The BackendMonitor service properties.
-     */
-    public InMemoryCircuitBreakerRegistry(CircuitBreakerConfig defaultCircuitBreakerConfig) {
-        this.defaultCircuitBreakerConfig = Objects.requireNonNull(defaultCircuitBreakerConfig, "CircuitBreakerConfig must not be null");
-        this.circuitBreakers = new ConcurrentHashMap<>();
-    }
+	public InMemoryCircuitBreakerRegistry(Map<String, CircuitBreakerConfig> configs) {
+		this(configs.getOrDefault(DEFAULT_CONFIG, CircuitBreakerConfig.ofDefaults()));
+		this.configurations.putAll(configs);
+	}
 
-    @Override
-    public Seq<CircuitBreaker> getAllCircuitBreakers() {
-        return Array.ofAll(circuitBreakers.values());
-    }
+	/**
+	 * The constructor with custom default circuitBreaker properties.
+	 *
+	 * @param defaultCircuitBreakerConfig The BackendMonitor service properties.
+	 */
+	public InMemoryCircuitBreakerRegistry(CircuitBreakerConfig defaultCircuitBreakerConfig) {
+		super();
+		this.defaultCircuitBreakerConfig = Objects.requireNonNull(defaultCircuitBreakerConfig, "CircuitBreakerConfig must not be null");
+		this.circuitBreakers = new ConcurrentHashMap<>();
+		this.configurations.put(DEFAULT_CONFIG, defaultCircuitBreakerConfig);
+	}
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public CircuitBreaker circuitBreaker(String name) {
-        return circuitBreakers.computeIfAbsent(Objects.requireNonNull(name, "Name must not be null"), (k) -> CircuitBreaker.of(name,
-                defaultCircuitBreakerConfig));
-    }
+	@Override
+	public Seq<CircuitBreaker> getAllCircuitBreakers() {
+		return Array.ofAll(circuitBreakers.values());
+	}
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public CircuitBreaker circuitBreaker(String name, CircuitBreakerConfig customCircuitBreakerConfig) {
-        return circuitBreakers.computeIfAbsent(Objects.requireNonNull(name, "Name must not be null"), (k) -> CircuitBreaker.of(name,
-                customCircuitBreakerConfig));
-    }
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public CircuitBreaker circuitBreaker(String name) {
+		return circuitBreakers.computeIfAbsent(Objects.requireNonNull(name, NAME_MUST_NOT_BE_NULL),
+				k -> notifyPostCreationConsumers(CircuitBreaker.of(name, defaultCircuitBreakerConfig)));
+	}
 
-    @Override
-    public CircuitBreaker circuitBreaker(String name, Supplier<CircuitBreakerConfig> circuitBreakerConfigSupplier) {
-        return circuitBreakers.computeIfAbsent(Objects.requireNonNull(name, "Name must not be null"), (k) -> CircuitBreaker.of(name,
-                circuitBreakerConfigSupplier.get()));
-    }
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public CircuitBreaker circuitBreaker(String name, CircuitBreakerConfig customCircuitBreakerConfig) {
+		return circuitBreakers.computeIfAbsent(Objects.requireNonNull(name, NAME_MUST_NOT_BE_NULL),
+				k -> notifyPostCreationConsumers(CircuitBreaker.of(name, customCircuitBreakerConfig)));
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public CircuitBreaker circuitBreaker(String name, Supplier<CircuitBreakerConfig> circuitBreakerConfigSupplier) {
+		return circuitBreakers.computeIfAbsent(Objects.requireNonNull(name, NAME_MUST_NOT_BE_NULL),
+				k -> {
+					CircuitBreakerConfig config = circuitBreakerConfigSupplier.get();
+					return notifyPostCreationConsumers(CircuitBreaker.of(name, config));
+				});
+	}
+
+
+
 }

@@ -20,6 +20,7 @@ import org.springframework.boot.actuate.autoconfigure.MetricsDropwizardAutoConfi
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -38,6 +39,7 @@ import io.github.resilience4j.metrics.BulkheadMetrics;
 @AutoConfigureBefore(MetricRepositoryAutoConfiguration.class)
 public class BulkheadMetricsAutoConfiguration {
 	@Bean
+	@ConditionalOnMissingBean
 	public BulkheadMetrics registerBulkheadMetrics(BulkheadRegistry bulkheadRegistry, MetricRegistry metricRegistry) {
 		BulkheadMetrics bulkheadMetrics = BulkheadMetrics.ofBulkheadRegistry(bulkheadRegistry);
 		metricRegistry.registerAll(bulkheadMetrics);

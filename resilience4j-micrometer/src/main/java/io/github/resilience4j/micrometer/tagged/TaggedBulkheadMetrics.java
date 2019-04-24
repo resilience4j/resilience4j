@@ -36,6 +36,7 @@ public class TaggedBulkheadMetrics implements MeterBinder {
      * Creates a new binder that uses given {@code registry} as source of bulkheads.
      *
      * @param registry the source of bulkheads
+     * @return The {@link TaggedBulkheadMetrics} instance.
      */
     public static TaggedBulkheadMetrics ofBulkheadRegistry(BulkheadRegistry registry) {
         return new TaggedBulkheadMetrics(MetricNames.ofDefaults(), registry.getAllBulkheads());
@@ -47,6 +48,7 @@ public class TaggedBulkheadMetrics implements MeterBinder {
      *
      * @param names custom names of the metrics
      * @param registry the source of bulkheads
+     * @return The {@link TaggedBulkheadMetrics} instance.
      */
     public static TaggedBulkheadMetrics ofBulkheadRegistry(MetricNames names, BulkheadRegistry registry) {
         return new TaggedBulkheadMetrics(names, registry.getAllBulkheads());
@@ -81,12 +83,15 @@ public class TaggedBulkheadMetrics implements MeterBinder {
         /**
          * Returns a builder for creating custom metric names.
          * Note that names have default values, so only desired metrics can be renamed.
+         * @return The builder.
          */
         public static Builder custom() {
             return new Builder();
         }
 
-        /** Returns default metric names. */
+        /** Returns default metric names.
+         * @return The default {@link MetricNames} instance.
+         */
         public static MetricNames ofDefaults() {
             return new MetricNames();
         }
@@ -99,6 +104,7 @@ public class TaggedBulkheadMetrics implements MeterBinder {
         /**
          * Returns the metric name for bulkhead concurrent calls,
          * defaults to {@value DEFAULT_BULKHEAD_AVAILABLE_CONCURRENT_CALLS_METRIC_NAME}.
+         * @return The available concurrent calls metric name.
          */
         public String getAvailableConcurrentCallsMetricName() {
             return availableConcurrentCallsMetricName;
@@ -107,6 +113,7 @@ public class TaggedBulkheadMetrics implements MeterBinder {
         /**
          * Returns the metric name for bulkhead max available concurrent calls,
          * defaults to {@value DEFAULT_BULKHEAD_MAX_ALLOWED_CONCURRENT_CALLS_METRIC_NAME}.
+         * @return The max allowed concurrent calls metric name.
          */
         public String getMaxAllowedConcurrentCallsMetricName() {
             return maxAllowedConcurrentCallsMetricName;
@@ -117,19 +124,27 @@ public class TaggedBulkheadMetrics implements MeterBinder {
 
             private final MetricNames metricNames = new MetricNames();
 
-            /** Overrides the default metric name {@value MetricNames#DEFAULT_BULKHEAD_AVAILABLE_CONCURRENT_CALLS_METRIC_NAME} with a given one. */
+            /** Overrides the default metric name {@value MetricNames#DEFAULT_BULKHEAD_AVAILABLE_CONCURRENT_CALLS_METRIC_NAME} with a given one.
+             * @param availableConcurrentCallsMetricNames The available concurrent calls metric name.
+             * @return The builder.
+             */
             public Builder availableConcurrentCallsMetricName(String availableConcurrentCallsMetricNames) {
                 metricNames.availableConcurrentCallsMetricName = requireNonNull(availableConcurrentCallsMetricNames);
                 return this;
             }
 
-            /** Overrides the default metric name {@value MetricNames#DEFAULT_BULKHEAD_MAX_ALLOWED_CONCURRENT_CALLS_METRIC_NAME} with a given one. */
+            /** Overrides the default metric name {@value MetricNames#DEFAULT_BULKHEAD_MAX_ALLOWED_CONCURRENT_CALLS_METRIC_NAME} with a given one.
+             * @param maxAllowedConcurrentCallsMetricName The max allowed concurrent calls metric name.
+             * @return The builder.
+             */
             public Builder maxAllowedConcurrentCallsMetricName(String maxAllowedConcurrentCallsMetricName) {
                 metricNames.maxAllowedConcurrentCallsMetricName = requireNonNull(maxAllowedConcurrentCallsMetricName);
                 return this;
             }
 
-            /** Builds {@link MetricNames} instance. */
+            /** Builds {@link MetricNames} instance.
+             * @return The built {@link MetricNames} instance.
+             */
             public MetricNames build() {
                 return metricNames;
             }

@@ -38,6 +38,7 @@ public class TaggedRateLimiterMetrics implements MeterBinder {
      * Creates a new binder that uses given {@code registry} as source of retries.
      *
      * @param registry the source of retries
+     * @return The {@link TaggedRateLimiterMetrics} instance.
      */
     public static TaggedRateLimiterMetrics ofRateLimiterRegistry(RateLimiterRegistry registry) {
         return new TaggedRateLimiterMetrics(MetricNames.ofDefaults(), registry.getAllRateLimiters());
@@ -48,6 +49,7 @@ public class TaggedRateLimiterMetrics implements MeterBinder {
      *
      * @param names custom metric names
      * @param registry the source of rate limiters
+     * @return The {@link TaggedRateLimiterMetrics} instance.
      */
     public static TaggedRateLimiterMetrics ofRateLimiterRegistry(MetricNames names, RateLimiterRegistry registry) {
         return new TaggedRateLimiterMetrics(names, registry.getAllRateLimiters());
@@ -82,12 +84,15 @@ public class TaggedRateLimiterMetrics implements MeterBinder {
         /**
          * Returns a builder for creating custom metric names.
          * Note that names have default values, so only desired metrics can be renamed.
+         * @return The builder.
          */
         public static Builder custom() {
             return new Builder();
         }
 
-        /** Returns default metric names. */
+        /** Returns default metric names.
+         * @return The default {@link MetricNames} instance.
+         */
         public static MetricNames ofDefaults() {
             return new MetricNames();
         }
@@ -95,12 +100,16 @@ public class TaggedRateLimiterMetrics implements MeterBinder {
         private String availablePermissionsMetricName = DEFAULT_AVAILABLE_PERMISSIONS_METRIC_NAME;
         private String waitingThreadsMetricName = DEFAULT_WAITING_THREADS_METRIC_NAME;
 
-        /** Returns the metric name for available permissions, defaults to {@value DEFAULT_AVAILABLE_PERMISSIONS_METRIC_NAME}. */
+        /** Returns the metric name for available permissions, defaults to {@value DEFAULT_AVAILABLE_PERMISSIONS_METRIC_NAME}.
+         * @return The available permissions metric name.
+         */
         public String getAvailablePermissionsMetricName() {
             return availablePermissionsMetricName;
         }
 
-        /** Returns the metric name for waiting threads, defaults to {@value DEFAULT_WAITING_THREADS_METRIC_NAME}. */
+        /** Returns the metric name for waiting threads, defaults to {@value DEFAULT_WAITING_THREADS_METRIC_NAME}.
+         * @return The waiting threads metric name.
+         */
         public String getWaitingThreadsMetricName() {
             return waitingThreadsMetricName;
         }
@@ -110,19 +119,27 @@ public class TaggedRateLimiterMetrics implements MeterBinder {
 
             private final MetricNames metricNames = new MetricNames();
 
-            /** Overrides the default metric name {@value MetricNames#DEFAULT_AVAILABLE_PERMISSIONS_METRIC_NAME} with a given one. */
+            /** Overrides the default metric name {@value MetricNames#DEFAULT_AVAILABLE_PERMISSIONS_METRIC_NAME} with a given one.
+             * @param availablePermissionsMetricName The available permissions metric name.
+             * @return The builder.
+             */
             public Builder availablePermissionsMetricName(String availablePermissionsMetricName) {
                 metricNames.availablePermissionsMetricName = requireNonNull(availablePermissionsMetricName);
                 return this;
             }
 
-            /** Overrides the default metric name {@value MetricNames#DEFAULT_WAITING_THREADS_METRIC_NAME} with a given one. */
+            /** Overrides the default metric name {@value MetricNames#DEFAULT_WAITING_THREADS_METRIC_NAME} with a given one.
+             * @param waitingThreadsMetricName The waiting threads metric name.
+             * @return The builder.
+             */
             public Builder waitingThreadsMetricName(String waitingThreadsMetricName) {
                 metricNames.waitingThreadsMetricName = requireNonNull(waitingThreadsMetricName);
                 return this;
             }
 
-            /** Builds {@link MetricNames} instance. */
+            /** Builds {@link MetricNames} instance.
+             * @return The built {@link MetricNames} instance.
+             */
             public MetricNames build() {
                 return metricNames;
             }
