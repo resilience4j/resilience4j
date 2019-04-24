@@ -16,6 +16,7 @@ import org.slf4j.Logger;
 
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
+import io.github.resilience4j.circuitbreaker.CircuitBreakerConfigurationNotFound;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 
 
@@ -88,6 +89,24 @@ public class InMemoryCircuitBreakerRegistryTest {
 		final CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("circuitBreaker",
 				circuitBreakerRegistry.getConfiguration("testConfig").get());
 		assertThat(circuitBreaker).isNotNull();
+	}
+
+	@Test
+	public void testCreateCircuitBreakerWithConfigName() {
+		CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
+		circuitBreakerRegistry.addConfiguration("testConfig", CircuitBreakerConfig.custom().ringBufferSizeInClosedState(5).build());
+		final CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("circuitBreaker",
+				"testConfig");
+		assertThat(circuitBreaker).isNotNull();
+		assertThat(circuitBreaker.getCircuitBreakerConfig().getRingBufferSizeInClosedState()).isEqualTo(5);
+	}
+
+	@Test
+	public void testCreateCircuitBreakerWithConfigNameNotFound() {
+		CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
+		Assertions.assertThatThrownBy(() -> circuitBreakerRegistry.circuitBreaker("circuitBreaker",
+				"testConfig")).isInstanceOf(CircuitBreakerConfigurationNotFound.class);
+
 	}
 
 

@@ -26,6 +26,7 @@ import java.util.function.Supplier;
 
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
+import io.github.resilience4j.circuitbreaker.CircuitBreakerConfigurationNotFound;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.core.AbstractRegistry;
 import io.vavr.collection.Array;
@@ -92,6 +93,13 @@ public final class InMemoryCircuitBreakerRegistry extends AbstractRegistry<Circu
 				k -> notifyPostCreationConsumers(CircuitBreaker.of(name, customCircuitBreakerConfig)));
 	}
 
+	@Override
+	public CircuitBreaker circuitBreaker(String name, String configName) {
+		return circuitBreakers.computeIfAbsent(Objects.requireNonNull(name, NAME_MUST_NOT_BE_NULL),
+				k -> notifyPostCreationConsumers(CircuitBreaker.of(name, getConfiguration(configName)
+						.orElseThrow(() -> new CircuitBreakerConfigurationNotFound(String.format("Configuration with name '%s' is not found ", configName))))));
+	}
+
 	/**
 	 * {@inheritDoc}
 	 */
@@ -103,7 +111,6 @@ public final class InMemoryCircuitBreakerRegistry extends AbstractRegistry<Circu
 					return notifyPostCreationConsumers(CircuitBreaker.of(name, config));
 				});
 	}
-
 
 
 }
