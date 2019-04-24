@@ -138,6 +138,24 @@ public class SemaphoreBulkheadTest {
 	}
 
 	@Test
+	public void testZeroMaxConcurrentCalls() {
+
+		// given
+		BulkheadConfig config = BulkheadConfig.custom()
+				.maxConcurrentCalls(0)
+				.maxWaitTime(0)
+				.build();
+
+		SemaphoreBulkhead bulkhead = new SemaphoreBulkhead("test", config);
+
+		// when
+		boolean entered = bulkhead.tryObtainPermission();
+
+		// then
+		assertThat(entered).isFalse();
+	}
+
+	@Test
 	public void testEntryTimeout() {
 
 		// given
