@@ -8,7 +8,7 @@ dependencies {
     compileOnly(libraries.spring_boot_config_processor)
     compileOnly(libraries.spring_boot_autoconfigure_processor)
 
-    compile project(':resilience4j-springboot-common')
+    compile project(':resilience4j-spring-boot-common')
     compileOnly project(':resilience4j-prometheus')
     compileOnly project(':resilience4j-metrics')
 
