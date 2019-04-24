@@ -18,10 +18,10 @@
  */
 package io.github.resilience4j.circuitbreaker;
 
+import static org.assertj.core.api.BDDAssertions.assertThat;
+
 import org.junit.Before;
 import org.junit.Test;
-
-import static org.assertj.core.api.BDDAssertions.assertThat;
 
 
 public class CircuitBreakerRegistryTest {
@@ -56,4 +56,15 @@ public class CircuitBreakerRegistryTest {
 
         assertThat(circuitBreakerRegistry.getAllCircuitBreakers()).hasSize(2);
     }
+
+
+	@Test
+	public void testCreateWithDefaultConfiguration() {
+		CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.of(CircuitBreakerConfig.ofDefaults());
+		CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("testName");
+		CircuitBreaker circuitBreaker2 = circuitBreakerRegistry.circuitBreaker("otherTestName");
+		assertThat(circuitBreaker).isNotSameAs(circuitBreaker2);
+
+		assertThat(circuitBreakerRegistry.getAllCircuitBreakers()).hasSize(2);
+	}
 }

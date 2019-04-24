@@ -22,7 +22,6 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
@@ -48,8 +47,7 @@ public class RateLimiterConfiguration {
 
 	@Bean
 	public RateLimiterRegistry rateLimiterRegistry(RateLimiterConfigurationProperties rateLimiterProperties,
-	                                               EventConsumerRegistry<RateLimiterEvent> rateLimiterEventsConsumerRegistry,
-	                                               ConfigurableBeanFactory beanFactory) {
+	                                               EventConsumerRegistry<RateLimiterEvent> rateLimiterEventsConsumerRegistry) {
 		RateLimiterRegistry rateLimiterRegistry = RateLimiterRegistry.of(RateLimiterConfig.ofDefaults());
 		rateLimiterProperties.getLimiters().forEach(
 				(name, properties) -> {
@@ -69,8 +67,8 @@ public class RateLimiterConfiguration {
 
 	@Bean
 	@Conditional(value = {RxJava2OnClasspathCondition.class})
-	public RxJava2RateLimterAspectExt rxJava2RateLimterAspectExt() {
-		return new RxJava2RateLimterAspectExt();
+	public RxJava2RateLimiterAspectExt rxJava2RateLimterAspectExt() {
+		return new RxJava2RateLimiterAspectExt();
 	}
 
 	@Bean
@@ -83,6 +81,8 @@ public class RateLimiterConfiguration {
 	 * The EventConsumerRegistry is used to manage EventConsumer instances.
 	 * The EventConsumerRegistry is used by the RateLimiterHealthIndicator to show the latest RateLimiterEvents events
 	 * for each RateLimiter instance.
+	 *
+	 * @return The EventConsumerRegistry of RateLimiterEvent bean.
 	 */
 	@Bean
 	public EventConsumerRegistry<RateLimiterEvent> rateLimiterEventsConsumerRegistry() {

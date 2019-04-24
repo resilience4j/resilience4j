@@ -23,6 +23,8 @@ import io.github.resilience4j.ratelimiter.monitoring.model.RateLimiterEventDTO;
 import io.github.resilience4j.ratelimiter.monitoring.model.RateLimiterEventsEndpointResponse;
 import io.github.resilience4j.service.test.DummyService;
 import io.github.resilience4j.service.test.TestApplication;
+import io.prometheus.client.CollectorRegistry;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -60,6 +62,12 @@ public class RateLimiterAutoConfigurationTest {
 
     @Autowired
     private TestRestTemplate restTemplate;
+
+    @BeforeClass
+    public static void setUp() {
+        // Need to clear this static registry out since multiple tests register collectors that could collide.
+        CollectorRegistry.defaultRegistry.clear();
+    }
 
     /**
      * The test verifies that a RateLimiter instance is created and configured properly when the DummyService is invoked and

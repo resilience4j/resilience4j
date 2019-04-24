@@ -237,6 +237,18 @@ public Flowable<String> doSomethingFlowable(boolean throwException) {
 
 }
 ----
+
+Beyond the config file configuration, the Spring Bean configuration is now using @ConditionalOnMissingBean to allow for overriding default behavior.
+These Beans can be overridden in your application's Spring Bean configuration:
+
+* RetryRegistry
+* RetryAspect
+* RxJava2RetryAspectExt
+* ReactorRetryAspectExt
+
+Note that in Spring Boot 1.x, EventConsumerRegistry<RetryEvent> cannot be overridden because of limitations of the @ConditionalOnMissingBean implementation.
+To override this, go to at least Spring Boot 2.1.x.
+
 ===== CircuitBreaker
 You can configure your CircuitBreakers in Spring Boot's `application.yml` config file.
 For example
@@ -271,6 +283,38 @@ resilience4j.circuitbreaker:
                 - org.springframework.web.client.HttpClientErrorException
 ----
 
+You can also override/partial-override/share default configuration for your CircuitBreakers in Spring Boot's `application.yml` config file.
+For example
+
+[source,yaml]
+----
+resilience4j.circuitbreaker:
+    configs:
+        default:
+            ringBufferSizeInClosedState: 100
+            ringBufferSizeInHalfOpenState: 10
+            waitInterval: 10000
+            failureRateThreshold: 60
+            eventConsumerBufferSize: 10
+            registerHealthIndicator: true
+    backends:
+        backendA:
+            baseConfig: default
+        backendB:
+            baseConfig: default
+----
+
+Beyond the config file configuration, the Spring Bean configuration is now using @ConditionalOnMissingBean to allow for overriding default behavior.
+These Beans can be overridden in your application's Spring Bean configuration:
+
+* CircuitBreakerRegistry
+* CircuitBreakerAspect
+* RxJava2CircuitBreakerAspectExt
+* ReactorCircuitBreakerAspectExt
+
+Note that in Spring Boot 1.x, EventConsumerRegistry<CircuitBreakerEvent> cannot be overridden because of limitations of the @ConditionalOnMissingBean implementation.
+To override this, go to at least Spring Boot 2.1.x.
+
 ===== RateLimiter
 You can configure your CircuitBreakers in Spring Boot's `application.yml` config file.
 For example
@@ -291,6 +335,15 @@ resilience4j.ratelimiter:
             limitRefreshPeriodInMillis: 500
             timeoutInMillis: 3000
 ----
+
+Beyond the config file configuration, the Spring Bean configuration is now using @ConditionalOnMissingBean to allow for overriding default behavior.
+These Beans can be overridden in your application's Spring Bean configuration:
+
+* RateLimiterRegistry
+* RateLimiterAspect
+
+Note that in Spring Boot 1.x, EventConsumerRegistry<RateLimiterEvent> cannot be overridden because of limitations of the @ConditionalOnMissingBean implementation.
+To override this, go to at least Spring Boot 2.1.x.
 
 ===== Explicit ordering for CircuitBreaker and RateLimiter aspects
 You can adjust `RateLimiterProperties.rateLimiterAspectOrder` and `CircuitBreakerProperties.circuitBreakerAspectOrder`

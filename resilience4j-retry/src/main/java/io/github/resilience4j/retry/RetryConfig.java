@@ -63,6 +63,7 @@ public class RetryConfig {
 	 * Return the Predicate which evaluates if an result should be retried.
 	 * The Predicate must return true if the result should  be retried, otherwise it must return false.
 	 *
+	 * @param <T> The type of result.
 	 * @return the resultPredicate
 	 */
 	@SuppressWarnings("unchecked")
@@ -74,6 +75,7 @@ public class RetryConfig {
 	/**
 	 * Returns a builder to create a custom RetryConfig.
 	 *
+	 * @param <T> The type being built.
 	 * @return a {@link Builder}
 	 */
 	public static <T> Builder<T> custom() {
@@ -171,6 +173,7 @@ public class RetryConfig {
 		 * For a more sophisticated exception management use the
 		 * @see #retryOnException(Predicate) method
 		 */
+		@SuppressWarnings("unchecked")
 		@SafeVarargs
 		public final Builder<T> retryExceptions(@Nullable Class<? extends Throwable>... errorClasses) {
 			this.retryExceptions = errorClasses != null ? errorClasses : new Class[0];
@@ -196,6 +199,7 @@ public class RetryConfig {
 		 * For a more sophisticated exception management use the
 		 * @see #retryOnException(Predicate) method
 		 */
+		@SuppressWarnings("unchecked")
 		@SafeVarargs
 		public final Builder<T> ignoreExceptions(@Nullable Class<? extends Throwable>... errorClasses) {
 			this.ignoreExceptions = errorClasses != null ? errorClasses : new Class[0];

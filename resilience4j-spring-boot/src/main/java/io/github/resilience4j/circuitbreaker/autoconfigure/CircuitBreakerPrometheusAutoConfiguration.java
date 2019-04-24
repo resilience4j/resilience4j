@@ -20,6 +20,7 @@ import io.github.resilience4j.prometheus.CircuitBreakerExports;
 import io.github.resilience4j.prometheus.collectors.CircuitBreakerMetricsCollector;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -34,6 +35,7 @@ import org.springframework.context.annotation.Configuration;
 public class CircuitBreakerPrometheusAutoConfiguration {
 
     @Bean
+    @ConditionalOnMissingBean
     @ConditionalOnProperty(value = "resilience4j.circuitbreaker.metrics.use_legacy_collector", havingValue = "true")
     public CircuitBreakerExports legacyCircuitBreakerPrometheusCollector(CircuitBreakerRegistry circuitBreakerRegistry) {
         CircuitBreakerExports collector = CircuitBreakerExports.ofCircuitBreakerRegistry(circuitBreakerRegistry);
@@ -42,6 +44,7 @@ public class CircuitBreakerPrometheusAutoConfiguration {
     }
 
     @Bean
+    @ConditionalOnMissingBean
     @ConditionalOnProperty(
         value = "resilience4j.circuitbreaker.metrics.use_legacy_collector",
         havingValue = "false",

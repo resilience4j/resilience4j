@@ -41,7 +41,7 @@ import io.reactivex.SingleSource;
  */
 public class RxJava2CircuitBreakerAspectExt implements CircuitBreakerAspectExt {
 
-	private static final Logger logger = LoggerFactory.getLogger(CircuitBreakerAspect.class);
+	private static final Logger logger = LoggerFactory.getLogger(RxJava2CircuitBreakerAspectExt.class);
 	private final Set<Class> rxSupportedTypes = newHashSet(ObservableSource.class, SingleSource.class, CompletableSource.class, MaybeSource.class, Flowable.class);
 
 	/**

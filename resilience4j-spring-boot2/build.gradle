@@ -5,12 +5,7 @@ dependencies {
     compileOnly(libraries.spring_boot2_config_processor)
     compileOnly(libraries.spring_boot2_autoconfigure_processor)
 
-    compile project(':resilience4j-annotations')
-    compile project(':resilience4j-spring')
-    compile project(':resilience4j-micrometer')
-    compile project(':resilience4j-circuitbreaker')
-    compile project(':resilience4j-ratelimiter')
-    compile project(':resilience4j-consumer')
+    compile project(':resilience4j-spring-boot-common')
 
     testCompile(libraries.spring_boot2_test)
     testCompile(libraries.spring_boot2_aop)

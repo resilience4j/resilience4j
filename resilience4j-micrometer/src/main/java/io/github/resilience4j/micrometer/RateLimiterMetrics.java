@@ -46,6 +46,7 @@ public class RateLimiterMetrics implements MeterBinder {
      * a {@link RateLimiterRegistry} as a source.
      *
      * @param rateLimiterRegistry the registry of rate limiters
+     * @return The RateLimiterMetrics {@link RateLimiterMetrics}.
      */
     public static RateLimiterMetrics ofRateLimiterRegistry(RateLimiterRegistry rateLimiterRegistry) {
         return new RateLimiterMetrics(rateLimiterRegistry.getAllRateLimiters());

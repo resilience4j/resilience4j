@@ -46,6 +46,7 @@ public class BulkheadMetrics implements MeterBinder {
      * a {@link BulkheadRegistry} as a source.
      *
      * @param bulkheadRegistry the registry of bulkheads
+     * @return The BulkheadMetrics {@link BulkheadMetrics}.
      */
     public static BulkheadMetrics ofBulkheadRegistry(BulkheadRegistry bulkheadRegistry) {
         return new BulkheadMetrics(bulkheadRegistry.getAllBulkheads());

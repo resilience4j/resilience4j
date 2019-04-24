@@ -89,6 +89,7 @@ public class RetryConfigurationProperties {
 	 * @param properties the configured spring backend properties
 	 * @return retry config builder instance
 	 */
+	@SuppressWarnings("unchecked")
 	public RetryConfig.Builder buildRetryConfig(BackendProperties properties) {
 		if (properties == null) {
 			return new RetryConfig.Builder();
