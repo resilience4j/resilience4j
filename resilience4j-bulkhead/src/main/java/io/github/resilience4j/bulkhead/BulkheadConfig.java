@@ -69,8 +69,8 @@ public class BulkheadConfig {
 		 * @return the BulkheadConfig.Builder
 		 */
 		public Builder maxConcurrentCalls(int maxConcurrentCalls) {
-			if (maxConcurrentCalls < 1) {
-				throw new IllegalArgumentException("maxConcurrentCalls must be a positive integer value >= 1");
+			if (maxConcurrentCalls < 0) {
+				throw new IllegalArgumentException("maxConcurrentCalls must be an integer value >= 0");
 			}
 			config.maxConcurrentCalls = maxConcurrentCalls;
 			return this;
