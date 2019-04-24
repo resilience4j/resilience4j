@@ -16,18 +16,18 @@
  *
  *
  */
-package io.github.resilience4j.circuitbreaker;
+package io.github.resilience4j.core;
 
 /**
  * configuration not found exception
  */
-public class CircuitBreakerConfigurationNotFound extends RuntimeException {
+public class ConfigurationNotFoundException extends RuntimeException {
 	/**
 	 * The constructor with a message.
 	 *
 	 * @param message The message.
 	 */
-	public CircuitBreakerConfigurationNotFound(String message) {
+	public ConfigurationNotFoundException(String message) {
 		super(message);
 	}
 }

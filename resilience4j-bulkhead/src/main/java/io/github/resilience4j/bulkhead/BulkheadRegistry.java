@@ -64,10 +64,13 @@ public interface BulkheadRegistry extends Registry<Bulkhead, BulkheadConfig> {
 	Bulkhead bulkhead(String name, Supplier<BulkheadConfig> bulkheadConfigSupplier);
 
 	/**
+	 * @deprecated
+	 * @since (0.15.0)
 	 * Returns a default BulkheadConfig instance this registry is using.
 	 *
 	 * @return BulkheadConfig instance
 	 */
+	@Deprecated
 	BulkheadConfig getDefaultBulkheadConfig();
 
 	/**

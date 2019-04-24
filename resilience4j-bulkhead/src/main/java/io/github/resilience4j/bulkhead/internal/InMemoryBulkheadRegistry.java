@@ -49,6 +49,7 @@ public final class InMemoryBulkheadRegistry extends AbstractRegistry<Bulkhead, B
 	 * @param bulkheadConfig custom bulkhead config to use
 	 */
 	public InMemoryBulkheadRegistry(BulkheadConfig bulkheadConfig) {
+		super();
 		this.defaultBulkheadConfig = bulkheadConfig;
 		this.bulkheads = new ConcurrentHashMap<>();
 	}

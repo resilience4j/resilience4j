@@ -1,6 +1,6 @@
 package io.github.resilience4j.core;
 
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
@@ -27,7 +27,8 @@ public class AbstractRegistryTest {
 		TestRegistry testRegistry = new TestRegistry();
 		testRegistry.registerPostCreationConsumer(consumer1);
 		testRegistry.addConfiguration("test", "test");
-		assertEquals(testRegistry.getConfiguration("test").get(), "test");
+		assertThat(testRegistry.getConfiguration("test").get()).isEqualTo("test");
+		assertThat(testRegistry.getDefaultConfig()).isEqualTo("default");
 		testRegistry.notifyPostCreationConsumers("test");
 		then(LOGGER).should(times(1)).info("invoking the post consumer1");
 		testRegistry.unregisterPostCreationConsumer(consumer1);
@@ -36,6 +37,13 @@ public class AbstractRegistryTest {
 	}
 
 	class TestRegistry extends AbstractRegistry<String, String> {
+
+		public TestRegistry() {
+			super();
+			String defaults = "default";
+			this.configurations.put(DEFAULT_CONFIG, defaults);
+
+		}
 	}
 
 }

@@ -48,8 +48,10 @@ public class InMemoryRateLimiterRegistry extends AbstractRegistry<RateLimiter, R
 	private final Map<String, RateLimiter> rateLimiters;
 
 	public InMemoryRateLimiterRegistry(final RateLimiterConfig defaultRateLimiterConfig) {
+		super();
 		this.defaultRateLimiterConfig = requireNonNull(defaultRateLimiterConfig, CONFIG_MUST_NOT_BE_NULL);
 		this.rateLimiters = new ConcurrentHashMap<>();
+		this.configurations.put(DEFAULT_CONFIG, defaultRateLimiterConfig);
 	}
 
 	/**

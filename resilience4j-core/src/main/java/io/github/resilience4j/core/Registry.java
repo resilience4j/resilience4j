@@ -56,4 +56,10 @@ public interface Registry<Target, Config> {
 	void unregisterPostCreationConsumer(Consumer<Target> postCreationConsumer);
 
 
+	/**
+	 * @return the default configuration of the target
+	 */
+	Config getDefaultConfig();
+
+
 }

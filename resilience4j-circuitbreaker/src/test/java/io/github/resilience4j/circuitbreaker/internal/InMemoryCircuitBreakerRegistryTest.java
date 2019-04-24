@@ -16,8 +16,8 @@ import org.slf4j.Logger;
 
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
-import io.github.resilience4j.circuitbreaker.CircuitBreakerConfigurationNotFound;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
+import io.github.resilience4j.core.ConfigurationNotFoundException;
 
 
 public class InMemoryCircuitBreakerRegistryTest {
@@ -105,7 +105,7 @@ public class InMemoryCircuitBreakerRegistryTest {
 	public void testCreateCircuitBreakerWithConfigNameNotFound() {
 		CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
 		Assertions.assertThatThrownBy(() -> circuitBreakerRegistry.circuitBreaker("circuitBreaker",
-				"testConfig")).isInstanceOf(CircuitBreakerConfigurationNotFound.class);
+				"testConfig")).isInstanceOf(ConfigurationNotFoundException.class);
 
 	}
 

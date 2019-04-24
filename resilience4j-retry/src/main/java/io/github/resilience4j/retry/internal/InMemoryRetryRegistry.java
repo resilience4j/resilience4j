@@ -44,8 +44,7 @@ public final class InMemoryRetryRegistry extends AbstractRegistry<Retry, RetryCo
 	 * The constructor with default retry properties.
 	 */
 	public InMemoryRetryRegistry() {
-		this.defaultRetryConfig = RetryConfig.ofDefaults();
-		this.retries = new ConcurrentHashMap<>();
+		this(RetryConfig.ofDefaults());
 	}
 
 	/**
@@ -54,8 +53,10 @@ public final class InMemoryRetryRegistry extends AbstractRegistry<Retry, RetryCo
 	 * @param defaultRetryConfig The BackendMonitor service properties.
 	 */
 	public InMemoryRetryRegistry(RetryConfig defaultRetryConfig) {
+		super();
 		this.defaultRetryConfig = Objects.requireNonNull(defaultRetryConfig, "RetryConfig must not be null");
 		this.retries = new ConcurrentHashMap<>();
+		this.configurations.put(DEFAULT_CONFIG, defaultRetryConfig);
 	}
 
 	@Override
