@@ -15,67 +15,85 @@
  */
 package io.github.resilience4j.retry;
 
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+
+import java.time.Duration;
+import java.util.function.Consumer;
+
 import org.assertj.core.api.Assertions;
 import org.junit.Before;
 import org.junit.Test;
-
-import java.time.Duration;
+import org.mockito.BDDMockito;
+import org.slf4j.Logger;
 
 
 public class RetryRegistryTest {
 
-    private RetryRegistry retryRegistry;
+	private RetryRegistry retryRegistry;
+	private Logger LOGGER;
+	private Consumer<Retry> post_consumer = circuitBreaker -> LOGGER.info("invoking the post consumer1");
 
-    @Before
-    public void setUp() {
-        retryRegistry = RetryRegistry.ofDefaults();
-    }
+	@Before
+	public void setUp() {
+		LOGGER = mock(Logger.class);
+		retryRegistry = RetryRegistry.ofDefaults();
+		retryRegistry.registerPostCreationConsumer(post_consumer);
+	}
 
-    @Test
-    public void shouldReturnTheCorrectName() {
-        Retry retry = retryRegistry.retry("testName");
-        Assertions.assertThat(retry).isNotNull();
-        Assertions.assertThat(retry.getName()).isEqualTo("testName");
-    }
+	@Test
+	public void shouldReturnTheCorrectName() {
+		Retry retry = retryRegistry.retry("testName");
+		Assertions.assertThat(retry).isNotNull();
+		Assertions.assertThat(retry.getName()).isEqualTo("testName");
+		BDDMockito.then(LOGGER).should(times(1)).info("invoking the post consumer1");
+	}
 
-    @Test
-    public void shouldBeTheSameRetry() {
-        Retry retry = retryRegistry.retry("testName");
-        Retry retry2 = retryRegistry.retry("testName");
-        Assertions.assertThat(retry).isSameAs(retry2);
-        Assertions.assertThat(retryRegistry.getAllRetries()).hasSize(1);
-    }
+	@Test
+	public void shouldBeTheSameRetry() {
+		Retry retry = retryRegistry.retry("testName");
+		Retry retry2 = retryRegistry.retry("testName");
+		Assertions.assertThat(retry).isSameAs(retry2);
+		Assertions.assertThat(retryRegistry.getAllRetries()).hasSize(1);
+		BDDMockito.then(LOGGER).should(times(1)).info("invoking the post consumer1");
+	}
 
-    @Test
-    public void shouldBeNotTheSameRetry() {
-        Retry retry = retryRegistry.retry("testName");
-        Retry retry2 = retryRegistry.retry("otherTestName");
-        Assertions.assertThat(retry).isNotSameAs(retry2);
-        Assertions.assertThat(retryRegistry.getAllRetries()).hasSize(2);
-    }
+	@Test
+	public void shouldBeNotTheSameRetry() {
 
-    @Test
-    public void canBuildRetryFromRegistryWithConfig() {
-        RetryConfig config = RetryConfig.custom().maxAttempts(1000).waitDuration(Duration.ofSeconds(300)).build();
-        Retry retry = retryRegistry.retry("testName", config);
-        Assertions.assertThat(retry).isNotNull();
-        Assertions.assertThat(retryRegistry.getAllRetries()).hasSize(1);
-    }
+		Retry retry = retryRegistry.retry("testName");
+		Retry retry2 = retryRegistry.retry("otherTestName");
+		Assertions.assertThat(retry).isNotSameAs(retry2);
+		Assertions.assertThat(retryRegistry.getAllRetries()).hasSize(2);
+		BDDMockito.then(LOGGER).should(times(2)).info("invoking the post consumer1");
+	}
 
-    @Test
-    public void canBuildRetryFromRegistryWithConfigSupplier() {
-        RetryConfig config = RetryConfig.custom().maxAttempts(1000).waitDuration(Duration.ofSeconds(300)).build();
-        Retry retry = retryRegistry.retry("testName", () -> config);
-        Assertions.assertThat(retry).isNotNull();
-        Assertions.assertThat(retryRegistry.getAllRetries()).hasSize(1);
-    }
+	@Test
+	public void canBuildRetryFromRegistryWithConfig() {
+		RetryConfig config = RetryConfig.custom().maxAttempts(1000).waitDuration(Duration.ofSeconds(300)).build();
+		Retry retry = retryRegistry.retry("testName", config);
+		Assertions.assertThat(retry).isNotNull();
+		Assertions.assertThat(retryRegistry.getAllRetries()).hasSize(1);
+		BDDMockito.then(LOGGER).should(times(1)).info("invoking the post consumer1");
+	}
 
-    @Test
-    public void canBuildRetryRegistryWithConfig() {
-        RetryConfig config = RetryConfig.custom().maxAttempts(1000).waitDuration(Duration.ofSeconds(300)).build();
-        retryRegistry = RetryRegistry.of(config);
-        Retry retry = retryRegistry.retry("testName", () -> config);
-        Assertions.assertThat(retry).isNotNull();
-        Assertions.assertThat(retryRegistry.getAllRetries()).hasSize(1);
-    }
+	@Test
+	public void canBuildRetryFromRegistryWithConfigSupplier() {
+		RetryConfig config = RetryConfig.custom().maxAttempts(1000).waitDuration(Duration.ofSeconds(300)).build();
+		Retry retry = retryRegistry.retry("testName", () -> config);
+		Assertions.assertThat(retry).isNotNull();
+		Assertions.assertThat(retryRegistry.getAllRetries()).hasSize(1);
+		BDDMockito.then(LOGGER).should(times(1)).info("invoking the post consumer1");
+	}
+
+	@Test
+	public void canBuildRetryRegistryWithConfig() {
+		RetryConfig config = RetryConfig.custom().maxAttempts(1000).waitDuration(Duration.ofSeconds(300)).build();
+		retryRegistry = RetryRegistry.of(config);
+		retryRegistry.registerPostCreationConsumer(post_consumer);
+		Retry retry = retryRegistry.retry("testName", () -> config);
+		Assertions.assertThat(retry).isNotNull();
+		Assertions.assertThat(retryRegistry.getAllRetries()).hasSize(1);
+		BDDMockito.then(LOGGER).should(times(1)).info("invoking the post consumer1");
+	}
 }

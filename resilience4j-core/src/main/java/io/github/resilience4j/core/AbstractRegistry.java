@@ -68,6 +68,11 @@ public class AbstractRegistry<Target, Config> implements Registry<Target, Config
 		postCreationConsumers.remove(postCreationConsumer);
 	}
 
+	@Override
+	public Config getDefaultConfig() {
+		return configurations.get(DEFAULT_CONFIG);
+	}
+
 	protected Target notifyPostCreationConsumers(Target target) {
 		if (!postCreationConsumers.isEmpty()) {
 			postCreationConsumers.forEach(consumer -> consumer.accept(target));

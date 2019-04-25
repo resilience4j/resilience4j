@@ -18,15 +18,16 @@
  */
 package io.github.resilience4j.ratelimiter;
 
+import java.util.function.Supplier;
+
+import io.github.resilience4j.core.Registry;
 import io.github.resilience4j.ratelimiter.internal.InMemoryRateLimiterRegistry;
 import io.vavr.collection.Seq;
-
-import java.util.function.Supplier;
 
 /**
  * Manages all RateLimiter instances.
  */
-public interface RateLimiterRegistry {
+public interface RateLimiterRegistry extends Registry<RateLimiter, RateLimiterConfig> {
 
     /**
      * Returns all managed {@link RateLimiter} instances.
