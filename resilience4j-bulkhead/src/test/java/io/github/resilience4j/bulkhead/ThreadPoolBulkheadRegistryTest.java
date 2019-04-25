@@ -18,10 +18,15 @@
  */
 package io.github.resilience4j.bulkhead;
 
-import static org.assertj.core.api.BDDAssertions.assertThat;
-
+import io.github.resilience4j.core.ConfigurationNotFoundException;
 import org.junit.Before;
 import org.junit.Test;
+
+import java.util.HashMap;
+import java.util.Map;
+
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.BDDAssertions.assertThat;
 
 
 public class ThreadPoolBulkheadRegistryTest {
@@ -48,7 +53,7 @@ public class ThreadPoolBulkheadRegistryTest {
 		ThreadPoolBulkheadRegistry registry = ThreadPoolBulkheadRegistry.of(config);
 
 		// when
-		ThreadPoolBulkheadConfig bulkheadConfig = registry.getDefaultBulkheadConfig();
+		ThreadPoolBulkheadConfig bulkheadConfig = registry.getDefaultConfig();
 
 		// then
 		assertThat(bulkheadConfig).isSameAs(config);
@@ -82,6 +87,37 @@ public class ThreadPoolBulkheadRegistryTest {
 
 		assertThat(bulkhead1).isNotSameAs(bulkhead2);
 		assertThat(registry.getAllBulkheads()).hasSize(2);
+	}
+
+	@Test
+	public void testCreateWithConfigurationMap() {
+		Map<String, ThreadPoolBulkheadConfig> configs = new HashMap<>();
+		configs.put("default", ThreadPoolBulkheadConfig.ofDefaults());
+		configs.put("custom", ThreadPoolBulkheadConfig.ofDefaults());
+
+		ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry = ThreadPoolBulkheadRegistry.of(configs);
+
+		assertThat(threadPoolBulkheadRegistry.getDefaultConfig()).isNotNull();
+		assertThat(threadPoolBulkheadRegistry.getConfiguration("custom")).isNotNull();
+	}
+
+	@Test
+	public void testCreateWithConfigurationMapWithoutDefaultConfig() {
+		Map<String, ThreadPoolBulkheadConfig> configs = new HashMap<>();
+		configs.put("custom", ThreadPoolBulkheadConfig.ofDefaults());
+
+		ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry = ThreadPoolBulkheadRegistry.of(configs);
+
+		assertThat(threadPoolBulkheadRegistry.getDefaultConfig()).isNotNull();
+		assertThat(threadPoolBulkheadRegistry.getConfiguration("custom")).isNotNull();
+	}
+
+	@Test
+	public void testWithNotExistingConfig() {
+		ThreadPoolBulkheadRegistry retryRegistry = ThreadPoolBulkheadRegistry.ofDefaults();
+
+		assertThatThrownBy(() -> retryRegistry.bulkhead("test", "doesNotExist"))
+				.isInstanceOf(ConfigurationNotFoundException.class);
 	}
 
 }

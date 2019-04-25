@@ -92,6 +92,6 @@ public final class InMemoryRetryRegistry extends AbstractRegistry<Retry, RetryCo
 	@Override
 	public Retry retry(String name, String configName) {
 		return computeIfAbsent(name, () -> Retry.of(name, getConfiguration(configName)
-				.orElseThrow(() -> new ConfigurationNotFoundException(String.format("Configuration with name '%s' is not found ", configName)))));
+				.orElseThrow(() -> new ConfigurationNotFoundException(configName))));
 	}
 }

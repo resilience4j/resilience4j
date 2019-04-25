@@ -95,7 +95,7 @@ public final class InMemoryThreadPoolBulkheadRegistry extends AbstractRegistry<T
 	@Override
 	public ThreadPoolBulkhead bulkhead(String name, String configName) {
 		return computeIfAbsent(name, () -> ThreadPoolBulkhead.of(name, getConfiguration(configName)
-				.orElseThrow(() -> new ConfigurationNotFoundException(String.format("Configuration with name '%s' is not found ", configName)))));
+				.orElseThrow(() -> new ConfigurationNotFoundException(configName))));
 	}
 
 	/**

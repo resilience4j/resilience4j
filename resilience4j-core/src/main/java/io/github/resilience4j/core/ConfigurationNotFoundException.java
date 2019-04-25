@@ -23,11 +23,10 @@ package io.github.resilience4j.core;
  */
 public class ConfigurationNotFoundException extends RuntimeException {
 	/**
-	 * The constructor with a message.
 	 *
-	 * @param message The message.
+	 * @param configName The config name.
 	 */
-	public ConfigurationNotFoundException(String message) {
-		super(message);
+	public ConfigurationNotFoundException(String configName) {
+		super(String.format("Configuration with name '%s' does not exist", configName));
 	}
 }

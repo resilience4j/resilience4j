@@ -95,7 +95,7 @@ public final class InMemoryBulkheadRegistry extends AbstractRegistry<Bulkhead, B
 	@Override
 	public Bulkhead bulkhead(String name, String configName) {
 		return computeIfAbsent(name, () -> Bulkhead.of(name, getConfiguration(configName)
-				.orElseThrow(() -> new ConfigurationNotFoundException(String.format("Configuration with name '%s' is not found ", configName)))));
+				.orElseThrow(() -> new ConfigurationNotFoundException(configName))));
 	}
 
 	@Override

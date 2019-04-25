@@ -95,6 +95,6 @@ public class InMemoryRateLimiterRegistry extends AbstractRegistry<RateLimiter, R
 	@Override
 	public RateLimiter rateLimiter(String name, String configName) {
 		return computeIfAbsent(name, () -> RateLimiter.of(name, getConfiguration(configName)
-				.orElseThrow(() -> new ConfigurationNotFoundException(String.format("Configuration with name '%s' is not found ", configName)))));
+				.orElseThrow(() -> new ConfigurationNotFoundException(configName))));
 	}
 }

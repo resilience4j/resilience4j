@@ -87,7 +87,7 @@ public final class InMemoryCircuitBreakerRegistry extends AbstractRegistry<Circu
 	@Override
 	public CircuitBreaker circuitBreaker(String name, String configName) {
 		return computeIfAbsent(name, () -> CircuitBreaker.of(name, getConfiguration(configName)
-						.orElseThrow(() -> new ConfigurationNotFoundException(String.format("Configuration with name '%s' is not found ", configName)))));
+						.orElseThrow(() -> new ConfigurationNotFoundException(configName))));
 	}
 
 	/**

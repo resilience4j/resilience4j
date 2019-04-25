@@ -18,16 +18,18 @@
  */
 package io.github.resilience4j.bulkhead;
 
-import static org.assertj.core.api.BDDAssertions.assertThat;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
-
-import java.util.function.Consumer;
-
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.BDDMockito;
 import org.slf4j.Logger;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.function.Consumer;
+
+import static org.assertj.core.api.BDDAssertions.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 
 
 public class BulkheadRegistryTest {
@@ -55,7 +57,7 @@ public class BulkheadRegistryTest {
 		// give
 		BulkheadRegistry registry = BulkheadRegistry.of(config);
 		// when
-		BulkheadConfig bulkheadConfig = registry.getDefaultBulkheadConfig();
+		BulkheadConfig bulkheadConfig = registry.getDefaultConfig();
 		// then
 		assertThat(bulkheadConfig).isSameAs(config);
 	}
@@ -92,6 +94,29 @@ public class BulkheadRegistryTest {
 		assertThat(bulkhead1).isNotSameAs(bulkhead2);
 		assertThat(registry.getAllBulkheads()).hasSize(2);
 		BDDMockito.then(LOGGER).should(times(2)).info("invoking the post consumer1");
+	}
+
+	@Test
+	public void testCreateWithConfigurationMap() {
+		Map<String, BulkheadConfig> configs = new HashMap<>();
+		configs.put("default", BulkheadConfig.ofDefaults());
+		configs.put("custom", BulkheadConfig.ofDefaults());
+
+		BulkheadRegistry bulkheadRegistry = BulkheadRegistry.of(configs);
+
+		assertThat(bulkheadRegistry.getDefaultConfig()).isNotNull();
+		assertThat(bulkheadRegistry.getConfiguration("custom")).isNotNull();
+	}
+
+	@Test
+	public void testCreateWithConfigurationMapWithoutDefaultConfig() {
+		Map<String, BulkheadConfig> configs = new HashMap<>();
+		configs.put("custom", BulkheadConfig.ofDefaults());
+
+		BulkheadRegistry bulkheadRegistry = BulkheadRegistry.of(configs);
+
+		assertThat(bulkheadRegistry.getDefaultConfig()).isNotNull();
+		assertThat(bulkheadRegistry.getConfiguration("custom")).isNotNull();
 	}
 
 }
