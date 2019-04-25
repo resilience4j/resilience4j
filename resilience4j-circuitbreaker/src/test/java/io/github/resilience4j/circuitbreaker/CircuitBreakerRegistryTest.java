@@ -18,10 +18,14 @@
  */
 package io.github.resilience4j.circuitbreaker;
 
-import static org.assertj.core.api.BDDAssertions.assertThat;
-
 import org.junit.Before;
 import org.junit.Test;
+
+import java.util.HashMap;
+import java.util.Map;
+
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.BDDAssertions.assertThat;
 
 
 public class CircuitBreakerRegistryTest {
@@ -59,12 +63,40 @@ public class CircuitBreakerRegistryTest {
 
 
 	@Test
-	public void testCreateWithDefaultConfiguration() {
-		CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.of(CircuitBreakerConfig.ofDefaults());
-		CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("testName");
-		CircuitBreaker circuitBreaker2 = circuitBreakerRegistry.circuitBreaker("otherTestName");
-		assertThat(circuitBreaker).isNotSameAs(circuitBreaker2);
+    public void testCreateWithDefaultConfiguration() {
+        CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.of(CircuitBreakerConfig.ofDefaults());
+        CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("testName");
+        CircuitBreaker circuitBreaker2 = circuitBreakerRegistry.circuitBreaker("otherTestName");
+        assertThat(circuitBreaker).isNotSameAs(circuitBreaker2);
 
-		assertThat(circuitBreakerRegistry.getAllCircuitBreakers()).hasSize(2);
-	}
+        assertThat(circuitBreakerRegistry.getAllCircuitBreakers()).hasSize(2);
+    }
+
+    @Test
+    public void testCreateWithConfigurationMap() {
+        Map<String, CircuitBreakerConfig> configs = new HashMap<>();
+        configs.put("default", CircuitBreakerConfig.ofDefaults());
+        configs.put("custom", CircuitBreakerConfig.ofDefaults());
+
+        CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.of(configs);
+
+        assertThat(circuitBreakerRegistry.getDefaultConfig()).isNotNull();
+        assertThat(circuitBreakerRegistry.getConfiguration("custom")).isNotNull();
+    }
+
+    @Test
+    public void testCreateWithConfigurationMapWithoutDefaultConfig() {
+        Map<String, CircuitBreakerConfig> configs = new HashMap<>();
+        configs.put("custom", CircuitBreakerConfig.ofDefaults());
+
+        CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.of(configs);
+
+        assertThat(circuitBreakerRegistry.getDefaultConfig()).isNotNull();
+        assertThat(circuitBreakerRegistry.getConfiguration("custom")).isNotNull();
+    }
+
+    @Test
+    public void testCreateWithNullConfig() {
+        assertThatThrownBy(() -> CircuitBreakerRegistry.of((CircuitBreakerConfig)null)).isInstanceOf(NullPointerException.class).hasMessage("Config must not be null");
+    }
 }

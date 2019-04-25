@@ -18,17 +18,9 @@
  */
 package io.github.resilience4j.ratelimiter.internal;
 
-import static org.assertj.core.api.BDDAssertions.then;
-import static org.assertj.core.api.Java6Assertions.assertThat;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
-import java.time.Duration;
-import java.util.function.Consumer;
-import java.util.function.Supplier;
-
+import io.github.resilience4j.ratelimiter.RateLimiter;
+import io.github.resilience4j.ratelimiter.RateLimiterConfig;
+import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -36,9 +28,13 @@ import org.junit.rules.ExpectedException;
 import org.mockito.BDDMockito;
 import org.slf4j.Logger;
 
-import io.github.resilience4j.ratelimiter.RateLimiter;
-import io.github.resilience4j.ratelimiter.RateLimiterConfig;
-import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
+import java.time.Duration;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
+
+import static org.assertj.core.api.BDDAssertions.then;
+import static org.assertj.core.api.Java6Assertions.assertThat;
+import static org.mockito.Mockito.*;
 
 public class InMemoryRateLimiterRegistryTest {
 
@@ -97,7 +93,7 @@ public class InMemoryRateLimiterRegistryTest {
 	public void rateLimiterConfigIsNull() throws Exception {
 		exception.expect(NullPointerException.class);
 		exception.expectMessage(CONFIG_MUST_NOT_BE_NULL);
-		new InMemoryRateLimiterRegistry(null);
+		new InMemoryRateLimiterRegistry((RateLimiterConfig)null);
 	}
 
 	@Test

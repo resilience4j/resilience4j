@@ -15,17 +15,22 @@
  */
 package io.github.resilience4j.retry;
 
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
-
-import java.time.Duration;
-import java.util.function.Consumer;
-
+import io.github.resilience4j.core.ConfigurationNotFoundException;
 import org.assertj.core.api.Assertions;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.BDDMockito;
 import org.slf4j.Logger;
+
+import java.time.Duration;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.function.Consumer;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 
 
 public class RetryRegistryTest {
@@ -39,6 +44,11 @@ public class RetryRegistryTest {
 		LOGGER = mock(Logger.class);
 		retryRegistry = RetryRegistry.ofDefaults();
 		retryRegistry.registerPostCreationConsumer(post_consumer);
+	}
+
+	@Test
+	public void testCreateWithNullConfig() {
+		assertThatThrownBy(() -> RetryRegistry.of((RetryConfig) null)).isInstanceOf(NullPointerException.class).hasMessage("Config must not be null");
 	}
 
 	@Test
@@ -95,5 +105,45 @@ public class RetryRegistryTest {
 		Assertions.assertThat(retry).isNotNull();
 		Assertions.assertThat(retryRegistry.getAllRetries()).hasSize(1);
 		BDDMockito.then(LOGGER).should(times(1)).info("invoking the post consumer1");
+	}
+
+	@Test
+	public void testCreateWithConfigurationMap() {
+		Map<String, RetryConfig> configs = new HashMap<>();
+		configs.put("default", RetryConfig.ofDefaults());
+		configs.put("custom", RetryConfig.ofDefaults());
+
+		RetryRegistry retryRegistry = RetryRegistry.of(configs);
+
+		assertThat(retryRegistry.getDefaultConfig()).isNotNull();
+		assertThat(retryRegistry.getConfiguration("custom")).isNotNull();
+	}
+
+	@Test
+	public void testCreateWithConfigurationMapWithoutDefaultConfig() {
+		Map<String, RetryConfig> configs = new HashMap<>();
+		configs.put("custom", RetryConfig.ofDefaults());
+
+		RetryRegistry retryRegistry = RetryRegistry.of(configs);
+
+		assertThat(retryRegistry.getDefaultConfig()).isNotNull();
+		assertThat(retryRegistry.getConfiguration("custom")).isNotNull();
+	}
+
+	@Test
+	public void testWithNotExistingConfig() {
+		RetryRegistry retryRegistry = RetryRegistry.ofDefaults();
+
+		assertThatThrownBy(() -> retryRegistry.retry("test", "doesNotExist"))
+				.isInstanceOf(ConfigurationNotFoundException.class);
+	}
+
+	@Test
+	public void testAddConfiguration() {
+		RetryRegistry retryRegistry = RetryRegistry.ofDefaults();
+		retryRegistry.addConfiguration("custom", RetryConfig.custom().build());
+
+		assertThat(retryRegistry.getDefaultConfig()).isNotNull();
+		assertThat(retryRegistry.getConfiguration("custom")).isNotNull();
 	}
 }

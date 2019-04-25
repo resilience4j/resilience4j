@@ -43,7 +43,7 @@ import static java.util.concurrent.Executors.newSingleThreadScheduledExecutor;
 public class SemaphoreBasedRateLimiter implements RateLimiter {
 
     private static final String NAME_MUST_NOT_BE_NULL = "Name must not be null";
-    private static final String CONFIG_MUST_NOT_BE_NULL = "RateLimiterConfig must not be null";
+    private static final String CONFIG_MUST_NOT_BE_NULL = "Config must not be null";
 
     private final String name;
     private final AtomicReference<RateLimiterConfig> rateLimiterConfig;

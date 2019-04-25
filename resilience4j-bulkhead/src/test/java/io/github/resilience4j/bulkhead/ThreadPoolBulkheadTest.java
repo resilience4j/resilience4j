@@ -18,22 +18,21 @@
  */
 package io.github.resilience4j.bulkhead;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.times;
-
-import java.util.concurrent.CompletionStage;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.atomic.AtomicInteger;
-
+import com.jayway.awaitility.Awaitility;
+import com.jayway.awaitility.Duration;
+import io.github.resilience4j.test.HelloWorldService;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.BDDMockito;
 import org.mockito.Mockito;
 
-import com.jayway.awaitility.Awaitility;
-import com.jayway.awaitility.Duration;
+import java.util.concurrent.CompletionStage;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.atomic.AtomicInteger;
 
-import io.github.resilience4j.test.HelloWorldService;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.times;
 
 public class ThreadPoolBulkheadTest {
 
@@ -150,5 +149,9 @@ public class ThreadPoolBulkheadTest {
 		BDDMockito.then(helloWorldService).should(times(1)).returnHelloWorld();
 	}
 
+	@Test
+	public void testCreateWithNullConfig() {
+		assertThatThrownBy(() -> ThreadPoolBulkhead.of("test", (ThreadPoolBulkheadConfig) null)).isInstanceOf(NullPointerException.class).hasMessage("Config must not be null");
+	}
 
 }

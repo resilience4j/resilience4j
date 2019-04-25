@@ -16,11 +16,12 @@
 package io.github.resilience4j.retry;
 
 
-import java.util.function.Supplier;
-
 import io.github.resilience4j.core.Registry;
 import io.github.resilience4j.retry.internal.InMemoryRetryRegistry;
 import io.vavr.collection.Seq;
+
+import java.util.Map;
+import java.util.function.Supplier;
 
 /**
  * The {@link RetryRegistry} is a factory to create Retry instances which stores all Retry instances in a registry.
@@ -46,10 +47,10 @@ public interface RetryRegistry extends Registry<Retry, RetryConfig> {
 	 * Returns a managed {@link Retry} or creates a new one with a custom Retry configuration.
 	 *
 	 * @param name        the name of the Retry
-	 * @param retryConfig a custom Retry configuration
+	 * @param config a custom Retry configuration
 	 * @return The {@link Retry}
 	 */
-	Retry retry(String name, RetryConfig retryConfig);
+	Retry retry(String name, RetryConfig config);
 
 	/**
 	 * Returns a managed {@link Retry} or creates a new one with a custom Retry configuration.
@@ -59,6 +60,15 @@ public interface RetryRegistry extends Registry<Retry, RetryConfig> {
 	 * @return The {@link Retry}
 	 */
 	Retry retry(String name, Supplier<RetryConfig> retryConfigSupplier);
+
+	/**
+	 * Returns a managed {@link Retry} or creates a new one with a custom Retry configuration.
+	 *
+	 * @param name       the name of the Retry
+	 * @param configName a custom Retry configuration name
+	 * @return The {@link Retry}
+	 */
+	Retry retry(String name, String configName);
 
 
 	/**
@@ -78,5 +88,15 @@ public interface RetryRegistry extends Registry<Retry, RetryConfig> {
 	 */
 	static RetryRegistry ofDefaults() {
 		return new InMemoryRetryRegistry();
+	}
+
+	/**
+	 * Creates a RetryRegistry with a Map of shared Retry configurations.
+	 *
+	 * @param configs a Map of shared Retry configurations
+	 * @return a RetryRegistry with a Map of shared Retry configurations.
+	 */
+	static RetryRegistry of(Map<String, RetryConfig> configs) {
+		return new InMemoryRetryRegistry(configs);
 	}
 }
