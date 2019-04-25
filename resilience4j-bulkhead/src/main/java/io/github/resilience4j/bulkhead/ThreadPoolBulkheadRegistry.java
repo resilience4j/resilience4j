@@ -19,15 +19,17 @@
 package io.github.resilience4j.bulkhead;
 
 
-import java.util.function.Supplier;
-
 import io.github.resilience4j.bulkhead.internal.InMemoryThreadPoolBulkheadRegistry;
+import io.github.resilience4j.core.Registry;
 import io.vavr.collection.Seq;
+
+import java.util.Map;
+import java.util.function.Supplier;
 
 /**
  * The {@link ThreadPoolBulkheadRegistry} is a factory to create ThreadPoolBulkhead instances which stores all bulkhead instances in a registry.
  */
-public interface ThreadPoolBulkheadRegistry {
+public interface ThreadPoolBulkheadRegistry  extends Registry<ThreadPoolBulkhead, ThreadPoolBulkheadConfig> {
 
 	/**
 	 * Creates a BulkheadRegistry with a custom Bulkhead configuration.
@@ -49,6 +51,16 @@ public interface ThreadPoolBulkheadRegistry {
 	}
 
 	/**
+	 * Creates a ThreadPoolBulkheadRegistry with a Map of shared ThreadPoolBulkhead configurations.
+	 *
+	 * @param configs a Map of shared Bulkhead configurations
+	 * @return a ThreadPoolBulkheadRegistry with a Map of shared ThreadPoolBulkhead configurations.
+	 */
+	static ThreadPoolBulkheadRegistry of(Map<String, ThreadPoolBulkheadConfig> configs) {
+		return new InMemoryThreadPoolBulkheadRegistry(configs);
+	}
+
+	/**
 	 * Returns all managed {@link ThreadPoolBulkhead} instances.
 	 *
 	 * @return all managed {@link ThreadPoolBulkhead} instances.
@@ -64,16 +76,16 @@ public interface ThreadPoolBulkheadRegistry {
 	ThreadPoolBulkhead bulkhead(String name);
 
 	/**
-	 * Returns a managed {@link ThreadPoolBulkhead} or creates a new one with a custom BulkheadConfig configuration.
+	 * Returns a managed {@link ThreadPoolBulkhead} or creates a new one with a custom ThreadPoolBulkhead configuration.
 	 *
 	 * @param name           the name of the ThreadPoolBulkhead
-	 * @param bulkheadConfig a custom ThreadPoolBulkheadConfig configuration
+	 * @param config a custom ThreadPoolBulkheadConfig configuration
 	 * @return The {@link ThreadPoolBulkhead}
 	 */
-	ThreadPoolBulkhead bulkhead(String name, ThreadPoolBulkheadConfig bulkheadConfig);
+	ThreadPoolBulkhead bulkhead(String name, ThreadPoolBulkheadConfig config);
 
 	/**
-	 * Returns a managed {@link ThreadPoolBulkhead} or creates a new one with a custom BulkheadConfig configuration.
+	 * Returns a managed {@link ThreadPoolBulkhead} or creates a new one with a custom ThreadPoolBulkhead configuration.
 	 *
 	 * @param name                   the name of the ThreadPoolBulkhead
 	 * @param bulkheadConfigSupplier a custom ThreadPoolBulkhead configuration supplier
@@ -82,10 +94,22 @@ public interface ThreadPoolBulkheadRegistry {
 	ThreadPoolBulkhead bulkhead(String name, Supplier<ThreadPoolBulkheadConfig> bulkheadConfigSupplier);
 
 	/**
+	 * Returns a managed {@link ThreadPoolBulkhead} or creates a new one with a custom ThreadPoolBulkhead configuration.
+	 *
+	 * @param name       the name of the ThreadPoolBulkhead
+	 * @param configName a custom CircuitBreaker ThreadPoolBulkhead name
+	 * @return The {@link ThreadPoolBulkhead}
+	 */
+	ThreadPoolBulkhead bulkhead(String name, String configName);
+
+	/**
+	 * @deprecated Use {@link ThreadPoolBulkheadRegistry#getDefaultConfig()} instead
+	 * @since (0.15.0)
 	 * Returns a default ThreadPoolBulkheadConfig instance this registry is using.
 	 *
 	 * @return ThreadPoolBulkheadConfig instance
 	 */
+	@Deprecated
 	ThreadPoolBulkheadConfig getDefaultBulkheadConfig();
 
 }

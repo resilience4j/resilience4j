@@ -29,6 +29,7 @@ import org.slf4j.LoggerFactory;
 
 import java.time.Clock;
 import java.time.Duration;
+import java.util.Objects;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Predicate;
@@ -61,7 +62,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
      */
     CircuitBreakerStateMachine(String name, CircuitBreakerConfig circuitBreakerConfig, Clock clock, SchedulerFactory schedulerFactory) {
         this.name = name;
-        this.circuitBreakerConfig = circuitBreakerConfig;
+        this.circuitBreakerConfig = Objects.requireNonNull(circuitBreakerConfig, "Config must not be null");
         this.stateReference = new AtomicReference<>(new ClosedState(this));
         this.eventProcessor = new CircuitBreakerEventProcessor();
         this.clock = clock;

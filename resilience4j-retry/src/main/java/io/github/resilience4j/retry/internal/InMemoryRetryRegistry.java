@@ -15,17 +15,17 @@
  */
 package io.github.resilience4j.retry.internal;
 
-import java.util.Objects;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-import java.util.function.Supplier;
-
 import io.github.resilience4j.core.AbstractRegistry;
+import io.github.resilience4j.core.ConfigurationNotFoundException;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryConfig;
 import io.github.resilience4j.retry.RetryRegistry;
 import io.vavr.collection.Array;
 import io.vavr.collection.Seq;
+
+import java.util.Map;
+import java.util.Objects;
+import java.util.function.Supplier;
 
 /**
  * Backend retry manager.
@@ -33,35 +33,33 @@ import io.vavr.collection.Seq;
  */
 public final class InMemoryRetryRegistry extends AbstractRegistry<Retry, RetryConfig> implements RetryRegistry {
 
-	private final RetryConfig defaultRetryConfig;
-
 	/**
-	 * The retries, indexed by name of the backend.
-	 */
-	private final ConcurrentMap<String, Retry> retries;
-
-	/**
-	 * The constructor with default retry properties.
+	 * The constructor with default default.
 	 */
 	public InMemoryRetryRegistry() {
 		this(RetryConfig.ofDefaults());
 	}
 
-	/**
-	 * The constructor with custom default retry properties.
-	 *
-	 * @param defaultRetryConfig The BackendMonitor service properties.
-	 */
-	public InMemoryRetryRegistry(RetryConfig defaultRetryConfig) {
-		super();
-		this.defaultRetryConfig = Objects.requireNonNull(defaultRetryConfig, "RetryConfig must not be null");
-		this.retries = new ConcurrentHashMap<>();
-		this.configurations.put(DEFAULT_CONFIG, defaultRetryConfig);
+	public InMemoryRetryRegistry(Map<String, RetryConfig> configs) {
+		this(configs.getOrDefault(DEFAULT_CONFIG, RetryConfig.ofDefaults()));
+		this.configurations.putAll(configs);
 	}
 
+	/**
+	 * The constructor with custom default config.
+	 *
+	 * @param defaultConfig The default config.
+	 */
+	public InMemoryRetryRegistry(RetryConfig defaultConfig) {
+		super(defaultConfig);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	public Seq<Retry> getAllRetries() {
-		return Array.ofAll(retries.values());
+		return Array.ofAll(targetMap.values());
 	}
 
 	/**
@@ -69,22 +67,31 @@ public final class InMemoryRetryRegistry extends AbstractRegistry<Retry, RetryCo
 	 */
 	@Override
 	public Retry retry(String name) {
-		return retries.computeIfAbsent(Objects.requireNonNull(name, "Name must not be null"), k -> notifyPostCreationConsumers(Retry.of(name,
-				defaultRetryConfig)));
+		return retry(name, getDefaultConfig());
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
 	@Override
-	public Retry retry(String name, RetryConfig customRetryConfig) {
-		return retries.computeIfAbsent(Objects.requireNonNull(name, "Name must not be null"), k -> notifyPostCreationConsumers(Retry.of(name,
-				customRetryConfig)));
+	public Retry retry(String name, RetryConfig config) {
+		return computeIfAbsent(name, () -> Retry.of(name, Objects.requireNonNull(config, CONFIG_MUST_NOT_BE_NULL)));
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	public Retry retry(String name, Supplier<RetryConfig> retryConfigSupplier) {
-		return retries.computeIfAbsent(Objects.requireNonNull(name, "Name must not be null"), k -> notifyPostCreationConsumers(Retry.of(name,
-				retryConfigSupplier.get())));
+		return computeIfAbsent(name, () -> Retry.of(name, Objects.requireNonNull(Objects.requireNonNull(retryConfigSupplier, SUPPLIER_MUST_NOT_BE_NULL).get(), CONFIG_MUST_NOT_BE_NULL)));
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public Retry retry(String name, String configName) {
+		return computeIfAbsent(name, () -> Retry.of(name, getConfiguration(configName)
+				.orElseThrow(() -> new ConfigurationNotFoundException(configName))));
 	}
 }

@@ -19,11 +19,12 @@
 package io.github.resilience4j.bulkhead;
 
 
-import java.util.function.Supplier;
-
 import io.github.resilience4j.bulkhead.internal.InMemoryBulkheadRegistry;
 import io.github.resilience4j.core.Registry;
 import io.vavr.collection.Seq;
+
+import java.util.Map;
+import java.util.function.Supplier;
 
 /**
  * The {@link BulkheadRegistry} is a factory to create Bulkhead instances which stores all bulkhead instances in a registry.
@@ -49,13 +50,13 @@ public interface BulkheadRegistry extends Registry<Bulkhead, BulkheadConfig> {
 	 * Returns a managed {@link Bulkhead} or creates a new one with a custom BulkheadConfig configuration.
 	 *
 	 * @param name           the name of the Bulkhead
-	 * @param bulkheadConfig a custom Bulkhead configuration
+	 * @param config a custom Bulkhead configuration
 	 * @return The {@link Bulkhead}
 	 */
-	Bulkhead bulkhead(String name, BulkheadConfig bulkheadConfig);
+	Bulkhead bulkhead(String name, BulkheadConfig config);
 
 	/**
-	 * Returns a managed {@link Bulkhead} or creates a new one with a custom BulkheadConfig configuration.
+	 * Returns a managed {@link Bulkhead} or creates a new one with a custom Bulkhead configuration.
 	 *
 	 * @param name                   the name of the Bulkhead
 	 * @param bulkheadConfigSupplier a custom Bulkhead configuration supplier
@@ -64,7 +65,16 @@ public interface BulkheadRegistry extends Registry<Bulkhead, BulkheadConfig> {
 	Bulkhead bulkhead(String name, Supplier<BulkheadConfig> bulkheadConfigSupplier);
 
 	/**
-	 * @deprecated
+	 * Returns a managed {@link Bulkhead} or creates a new one with a custom Bulkhead configuration.
+	 *
+	 * @param name       the name of the Bulkhead
+	 * @param configName a custom Bulkhead configuration name
+	 * @return The {@link Bulkhead}
+	 */
+	Bulkhead bulkhead(String name, String configName);
+
+	/**
+	 * @deprecated Use {@link BulkheadRegistry#getDefaultConfig()} instead
 	 * @since (0.15.0)
 	 * Returns a default BulkheadConfig instance this registry is using.
 	 *
@@ -81,6 +91,16 @@ public interface BulkheadRegistry extends Registry<Bulkhead, BulkheadConfig> {
 	 */
 	static BulkheadRegistry of(BulkheadConfig bulkheadConfig) {
 		return new InMemoryBulkheadRegistry(bulkheadConfig);
+	}
+
+	/**
+	 * Creates a BulkheadRegistry with a Map of shared Bulkhead configurations.
+	 *
+	 * @param configs a Map of shared Bulkhead configurations
+	 * @return a RetryRegistry with a Map of shared Bulkhead configurations.
+	 */
+	static BulkheadRegistry of(Map<String, BulkheadConfig> configs) {
+		return new InMemoryBulkheadRegistry(configs);
 	}
 
 	/**

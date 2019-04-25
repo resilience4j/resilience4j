@@ -1,15 +1,15 @@
 package io.github.resilience4j.core;
 
+import org.junit.Before;
+import org.junit.Test;
+import org.slf4j.Logger;
+
+import java.util.function.Consumer;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
-
-import java.util.function.Consumer;
-
-import org.junit.Before;
-import org.junit.Test;
-import org.slf4j.Logger;
 
 
 public class AbstractRegistryTest {
@@ -39,9 +39,8 @@ public class AbstractRegistryTest {
 	class TestRegistry extends AbstractRegistry<String, String> {
 
 		public TestRegistry() {
-			super();
-			String defaults = "default";
-			this.configurations.put(DEFAULT_CONFIG, defaults);
+			super( "default");
+			this.configurations.put(DEFAULT_CONFIG, "default");
 
 		}
 	}
