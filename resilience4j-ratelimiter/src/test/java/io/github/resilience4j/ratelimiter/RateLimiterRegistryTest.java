@@ -36,10 +36,19 @@ public class RateLimiterRegistryTest {
     }
 
     @Test
-    public void testWithNotExistingConfig() {
-        RateLimiterRegistry retryRegistry = RateLimiterRegistry.ofDefaults();
+    public void testAddConfiguration() {
+        RateLimiterRegistry rateLimiterRegistry = RateLimiterRegistry.ofDefaults();
+        rateLimiterRegistry.addConfiguration("custom", RateLimiterConfig.custom().build());
 
-        assertThatThrownBy(() -> retryRegistry.rateLimiter("test", "doesNotExist"))
+        assertThat(rateLimiterRegistry.getDefaultConfig()).isNotNull();
+        assertThat(rateLimiterRegistry.getConfiguration("custom")).isNotNull();
+    }
+
+    @Test
+    public void testWithNotExistingConfig() {
+        RateLimiterRegistry rateLimiterRegistry = RateLimiterRegistry.ofDefaults();
+
+        assertThatThrownBy(() -> rateLimiterRegistry.rateLimiter("test", "doesNotExist"))
                 .isInstanceOf(ConfigurationNotFoundException.class);
     }
 }

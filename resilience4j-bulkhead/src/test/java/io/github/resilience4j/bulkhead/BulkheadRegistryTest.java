@@ -119,4 +119,13 @@ public class BulkheadRegistryTest {
 		assertThat(bulkheadRegistry.getConfiguration("custom")).isNotNull();
 	}
 
+	@Test
+	public void testAddConfiguration() {
+		BulkheadRegistry bulkheadRegistry = BulkheadRegistry.ofDefaults();
+		bulkheadRegistry.addConfiguration("custom", BulkheadConfig.custom().build());
+
+		assertThat(bulkheadRegistry.getDefaultConfig()).isNotNull();
+		assertThat(bulkheadRegistry.getConfiguration("custom")).isNotNull();
+	}
+
 }

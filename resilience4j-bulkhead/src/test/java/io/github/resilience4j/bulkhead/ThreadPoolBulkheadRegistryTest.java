@@ -114,10 +114,19 @@ public class ThreadPoolBulkheadRegistryTest {
 
 	@Test
 	public void testWithNotExistingConfig() {
-		ThreadPoolBulkheadRegistry retryRegistry = ThreadPoolBulkheadRegistry.ofDefaults();
+		ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry = ThreadPoolBulkheadRegistry.ofDefaults();
 
-		assertThatThrownBy(() -> retryRegistry.bulkhead("test", "doesNotExist"))
+		assertThatThrownBy(() -> threadPoolBulkheadRegistry.bulkhead("test", "doesNotExist"))
 				.isInstanceOf(ConfigurationNotFoundException.class);
+	}
+
+	@Test
+	public void testAddConfiguration() {
+		ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry = ThreadPoolBulkheadRegistry.ofDefaults();
+		threadPoolBulkheadRegistry.addConfiguration("custom", ThreadPoolBulkheadConfig.custom().build());
+
+		assertThat(threadPoolBulkheadRegistry.getDefaultConfig()).isNotNull();
+		assertThat(threadPoolBulkheadRegistry.getConfiguration("custom")).isNotNull();
 	}
 
 }

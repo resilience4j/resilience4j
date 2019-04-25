@@ -137,4 +137,13 @@ public class RetryRegistryTest {
 		assertThatThrownBy(() -> retryRegistry.retry("test", "doesNotExist"))
 				.isInstanceOf(ConfigurationNotFoundException.class);
 	}
+
+	@Test
+	public void testAddConfiguration() {
+		RetryRegistry retryRegistry = RetryRegistry.ofDefaults();
+		retryRegistry.addConfiguration("custom", RetryConfig.custom().build());
+
+		assertThat(retryRegistry.getDefaultConfig()).isNotNull();
+		assertThat(retryRegistry.getConfiguration("custom")).isNotNull();
+	}
 }
