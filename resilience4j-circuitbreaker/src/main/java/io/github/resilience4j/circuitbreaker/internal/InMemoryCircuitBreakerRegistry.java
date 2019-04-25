@@ -18,12 +18,6 @@
  */
 package io.github.resilience4j.circuitbreaker.internal;
 
-import java.util.Map;
-import java.util.Objects;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-import java.util.function.Supplier;
-
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
@@ -32,22 +26,17 @@ import io.github.resilience4j.core.ConfigurationNotFoundException;
 import io.vavr.collection.Array;
 import io.vavr.collection.Seq;
 
+import java.util.Map;
+import java.util.function.Supplier;
+
 /**
  * Backend circuitBreaker manager.
  * Constructs backend circuitBreakers according to configuration values.
  */
 public final class InMemoryCircuitBreakerRegistry extends AbstractRegistry<CircuitBreaker, CircuitBreakerConfig> implements CircuitBreakerRegistry {
 
-	private static final String NAME_MUST_NOT_BE_NULL = "Name must not be null";
-	private final CircuitBreakerConfig defaultCircuitBreakerConfig;
 	/**
-	 * The circuitBreakers, indexed by name of the backend.
-	 */
-	private final ConcurrentMap<String, CircuitBreaker> circuitBreakers;
-
-
-	/**
-	 * The constructor with default circuitBreaker properties.
+	 * The constructor with default default.
 	 */
 	public InMemoryCircuitBreakerRegistry() {
 		this(CircuitBreakerConfig.ofDefaults());
@@ -59,20 +48,20 @@ public final class InMemoryCircuitBreakerRegistry extends AbstractRegistry<Circu
 	}
 
 	/**
-	 * The constructor with custom default circuitBreaker properties.
+	 * The constructor with custom default config.
 	 *
-	 * @param defaultCircuitBreakerConfig The BackendMonitor service properties.
+	 * @param defaultConfig The default config.
 	 */
-	public InMemoryCircuitBreakerRegistry(CircuitBreakerConfig defaultCircuitBreakerConfig) {
-		super();
-		this.defaultCircuitBreakerConfig = Objects.requireNonNull(defaultCircuitBreakerConfig, "CircuitBreakerConfig must not be null");
-		this.circuitBreakers = new ConcurrentHashMap<>();
-		this.configurations.put(DEFAULT_CONFIG, defaultCircuitBreakerConfig);
+	public InMemoryCircuitBreakerRegistry(CircuitBreakerConfig defaultConfig) {
+		super(defaultConfig);
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	public Seq<CircuitBreaker> getAllCircuitBreakers() {
-		return Array.ofAll(circuitBreakers.values());
+		return Array.ofAll(targetMap.values());
 	}
 
 	/**
@@ -80,24 +69,24 @@ public final class InMemoryCircuitBreakerRegistry extends AbstractRegistry<Circu
 	 */
 	@Override
 	public CircuitBreaker circuitBreaker(String name) {
-		return circuitBreakers.computeIfAbsent(Objects.requireNonNull(name, NAME_MUST_NOT_BE_NULL),
-				k -> notifyPostCreationConsumers(CircuitBreaker.of(name, defaultCircuitBreakerConfig)));
+		return circuitBreaker(name, getDefaultConfig());
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
 	@Override
-	public CircuitBreaker circuitBreaker(String name, CircuitBreakerConfig customCircuitBreakerConfig) {
-		return circuitBreakers.computeIfAbsent(Objects.requireNonNull(name, NAME_MUST_NOT_BE_NULL),
-				k -> notifyPostCreationConsumers(CircuitBreaker.of(name, customCircuitBreakerConfig)));
+	public CircuitBreaker circuitBreaker(String name, CircuitBreakerConfig circuitBreakerConfig) {
+		return computeIfAbsent(name, () -> CircuitBreaker.of(name, circuitBreakerConfig));
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	public CircuitBreaker circuitBreaker(String name, String configName) {
-		return circuitBreakers.computeIfAbsent(Objects.requireNonNull(name, NAME_MUST_NOT_BE_NULL),
-				k -> notifyPostCreationConsumers(CircuitBreaker.of(name, getConfiguration(configName)
-						.orElseThrow(() -> new ConfigurationNotFoundException(String.format("Configuration with name '%s' is not found ", configName))))));
+		return computeIfAbsent(name, () -> CircuitBreaker.of(name, getConfiguration(configName)
+						.orElseThrow(() -> new ConfigurationNotFoundException(String.format("Configuration with name '%s' is not found ", configName)))));
 	}
 
 	/**
@@ -105,11 +94,7 @@ public final class InMemoryCircuitBreakerRegistry extends AbstractRegistry<Circu
 	 */
 	@Override
 	public CircuitBreaker circuitBreaker(String name, Supplier<CircuitBreakerConfig> circuitBreakerConfigSupplier) {
-		return circuitBreakers.computeIfAbsent(Objects.requireNonNull(name, NAME_MUST_NOT_BE_NULL),
-				k -> {
-					CircuitBreakerConfig config = circuitBreakerConfigSupplier.get();
-					return notifyPostCreationConsumers(CircuitBreaker.of(name, config));
-				});
+		return computeIfAbsent(name, () -> CircuitBreaker.of(name, circuitBreakerConfigSupplier.get()));
 	}
 
 

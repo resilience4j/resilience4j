@@ -18,18 +18,15 @@
  */
 package io.github.resilience4j.ratelimiter.internal;
 
-import static java.util.Objects.requireNonNull;
-
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Supplier;
-
 import io.github.resilience4j.core.AbstractRegistry;
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RateLimiterConfig;
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
 import io.vavr.collection.Array;
 import io.vavr.collection.Seq;
+
+import java.util.Map;
+import java.util.function.Supplier;
 
 /**
  * Backend RateLimiter manager.
@@ -41,17 +38,25 @@ public class InMemoryRateLimiterRegistry extends AbstractRegistry<RateLimiter, R
 	private static final String CONFIG_MUST_NOT_BE_NULL = "Config must not be null";
 	private static final String SUPPLIER_MUST_NOT_BE_NULL = "Supplier must not be null";
 
-	private final RateLimiterConfig defaultRateLimiterConfig;
 	/**
-	 * The RateLimiters, indexed by name of the backend.
+	 * The constructor with default default.
 	 */
-	private final Map<String, RateLimiter> rateLimiters;
+	public InMemoryRateLimiterRegistry() {
+		this(RateLimiterConfig.ofDefaults());
+	}
 
-	public InMemoryRateLimiterRegistry(final RateLimiterConfig defaultRateLimiterConfig) {
-		super();
-		this.defaultRateLimiterConfig = requireNonNull(defaultRateLimiterConfig, CONFIG_MUST_NOT_BE_NULL);
-		this.rateLimiters = new ConcurrentHashMap<>();
-		this.configurations.put(DEFAULT_CONFIG, defaultRateLimiterConfig);
+	public InMemoryRateLimiterRegistry(Map<String, RateLimiterConfig> configs) {
+		this(configs.getOrDefault(DEFAULT_CONFIG, RateLimiterConfig.ofDefaults()));
+		this.configurations.putAll(configs);
+	}
+
+	/**
+	 * The constructor with custom default config.
+	 *
+	 * @param defaultConfig The default config.
+	 */
+	public InMemoryRateLimiterRegistry(RateLimiterConfig defaultConfig) {
+		super(defaultConfig);
 	}
 
 	/**
@@ -59,7 +64,7 @@ public class InMemoryRateLimiterRegistry extends AbstractRegistry<RateLimiter, R
 	 */
 	@Override
 	public Seq<RateLimiter> getAllRateLimiters() {
-		return Array.ofAll(rateLimiters.values());
+		return Array.ofAll(targetMap.values());
 	}
 
 	/**
@@ -67,7 +72,7 @@ public class InMemoryRateLimiterRegistry extends AbstractRegistry<RateLimiter, R
 	 */
 	@Override
 	public RateLimiter rateLimiter(final String name) {
-		return rateLimiter(name, defaultRateLimiterConfig);
+		return rateLimiter(name, getDefaultConfig());
 	}
 
 	/**
@@ -75,12 +80,7 @@ public class InMemoryRateLimiterRegistry extends AbstractRegistry<RateLimiter, R
 	 */
 	@Override
 	public RateLimiter rateLimiter(final String name, final RateLimiterConfig rateLimiterConfig) {
-		requireNonNull(name, NAME_MUST_NOT_BE_NULL);
-		requireNonNull(rateLimiterConfig, CONFIG_MUST_NOT_BE_NULL);
-		return rateLimiters.computeIfAbsent(
-				name,
-				limitName -> notifyPostCreationConsumers(new AtomicRateLimiter(name, rateLimiterConfig))
-		);
+		return computeIfAbsent(name, () -> new AtomicRateLimiter(name, rateLimiterConfig));
 	}
 
 	/**
@@ -88,17 +88,6 @@ public class InMemoryRateLimiterRegistry extends AbstractRegistry<RateLimiter, R
 	 */
 	@Override
 	public RateLimiter rateLimiter(final String name, final Supplier<RateLimiterConfig> rateLimiterConfigSupplier) {
-		requireNonNull(name, NAME_MUST_NOT_BE_NULL);
-		requireNonNull(rateLimiterConfigSupplier, SUPPLIER_MUST_NOT_BE_NULL);
-		return rateLimiters.computeIfAbsent(
-				name,
-				limitName -> {
-					RateLimiterConfig rateLimiterConfig = rateLimiterConfigSupplier.get();
-					requireNonNull(rateLimiterConfig, CONFIG_MUST_NOT_BE_NULL);
-					AtomicRateLimiter atomicRateLimiter = new AtomicRateLimiter(limitName, rateLimiterConfig);
-					notifyPostCreationConsumers(atomicRateLimiter);
-					return atomicRateLimiter;
-				}
-		);
+		return computeIfAbsent(name, () -> new AtomicRateLimiter(name, rateLimiterConfigSupplier.get()));
 	}
 }

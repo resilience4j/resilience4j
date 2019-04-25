@@ -19,11 +19,12 @@
 package io.github.resilience4j.circuitbreaker;
 
 
-import java.util.function.Supplier;
-
 import io.github.resilience4j.circuitbreaker.internal.InMemoryCircuitBreakerRegistry;
 import io.github.resilience4j.core.Registry;
 import io.vavr.collection.Seq;
+
+import java.util.Map;
+import java.util.function.Supplier;
 
 /**
  * The {@link CircuitBreakerRegistry} is a factory to create CircuitBreaker instances which stores all CircuitBreaker instances in a registry.
@@ -73,13 +74,23 @@ public interface CircuitBreakerRegistry extends Registry<CircuitBreaker, Circuit
 	CircuitBreaker circuitBreaker(String name, Supplier<CircuitBreakerConfig> circuitBreakerConfigSupplier);
 
 	/**
-	 * Creates a CircuitBreakerRegistry with a custom CircuitBreaker configuration.
+	 * Creates a CircuitBreakerRegistry with a custom default CircuitBreaker configuration.
 	 *
-	 * @param circuitBreakerConfig a custom CircuitBreaker configuration
+	 * @param circuitBreakerConfig a custom default CircuitBreaker configuration
 	 * @return a CircuitBreakerRegistry with a custom CircuitBreaker configuration.
 	 */
 	static CircuitBreakerRegistry of(CircuitBreakerConfig circuitBreakerConfig) {
 		return new InMemoryCircuitBreakerRegistry(circuitBreakerConfig);
+	}
+
+	/**
+	 * Creates a CircuitBreakerRegistry with a Map of shared CircuitBreaker configurations.
+	 *
+	 * @param configs a Map of shared CircuitBreaker configurations
+	 * @return a CircuitBreakerRegistry with a Map of shared CircuitBreaker configurations.
+	 */
+	static CircuitBreakerRegistry of(Map<String, CircuitBreakerConfig> configs) {
+		return new InMemoryCircuitBreakerRegistry(configs);
 	}
 
 	/**

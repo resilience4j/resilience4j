@@ -19,30 +19,45 @@
 package io.github.resilience4j.core;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 /**
  * Abstract registry to be shared with all resilience4j registries
  */
 public class AbstractRegistry<Target, Config> implements Registry<Target, Config> {
 	protected static final String DEFAULT_CONFIG = "default";
+	private static final String NAME_MUST_NOT_BE_NULL = "Name must not be null";
+
 	/**
 	 * The list of consumer functions to execute after a target is created.
 	 */
-	protected final List<Consumer<Target>> postCreationConsumers;
+	private final List<Consumer<Target>> postCreationConsumers;
 
 	/**
-	 * The map of shared  configuration by name
+	 * The map of targets by name
+	 */
+	protected final ConcurrentMap<String, Target> targetMap;
+
+	/**
+	 * The map of shared configuration by name
 	 */
 	protected final ConcurrentMap<String, Config> configurations;
 
-	public AbstractRegistry() {
+	public AbstractRegistry(Config defaultConfig) {
 		this.postCreationConsumers = new CopyOnWriteArrayList<>();
 		this.configurations = new ConcurrentHashMap<>();
+		this.targetMap = new ConcurrentHashMap<>();
+		this.configurations.put(DEFAULT_CONFIG, Objects.requireNonNull(defaultConfig, "Default config must not be null"));
+	}
+
+	protected Target computeIfAbsent(String name, Supplier<Target> supplier){
+		return targetMap.computeIfAbsent(Objects.requireNonNull(name, NAME_MUST_NOT_BE_NULL), k -> notifyPostCreationConsumers(supplier.get()));
 	}
 
 	@Override

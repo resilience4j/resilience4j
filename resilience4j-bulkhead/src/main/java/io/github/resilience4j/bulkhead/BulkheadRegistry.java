@@ -19,11 +19,11 @@
 package io.github.resilience4j.bulkhead;
 
 
-import java.util.function.Supplier;
-
 import io.github.resilience4j.bulkhead.internal.InMemoryBulkheadRegistry;
 import io.github.resilience4j.core.Registry;
 import io.vavr.collection.Seq;
+
+import java.util.function.Supplier;
 
 /**
  * The {@link BulkheadRegistry} is a factory to create Bulkhead instances which stores all bulkhead instances in a registry.
@@ -64,7 +64,7 @@ public interface BulkheadRegistry extends Registry<Bulkhead, BulkheadConfig> {
 	Bulkhead bulkhead(String name, Supplier<BulkheadConfig> bulkheadConfigSupplier);
 
 	/**
-	 * @deprecated
+	 * @deprecated Use {@link BulkheadRegistry#getDefaultConfig()} instead
 	 * @since (0.15.0)
 	 * Returns a default BulkheadConfig instance this registry is using.
 	 *

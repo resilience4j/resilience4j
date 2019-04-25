@@ -19,15 +19,16 @@
 package io.github.resilience4j.bulkhead;
 
 
-import java.util.function.Supplier;
-
 import io.github.resilience4j.bulkhead.internal.InMemoryThreadPoolBulkheadRegistry;
+import io.github.resilience4j.core.Registry;
 import io.vavr.collection.Seq;
+
+import java.util.function.Supplier;
 
 /**
  * The {@link ThreadPoolBulkheadRegistry} is a factory to create ThreadPoolBulkhead instances which stores all bulkhead instances in a registry.
  */
-public interface ThreadPoolBulkheadRegistry {
+public interface ThreadPoolBulkheadRegistry  extends Registry<ThreadPoolBulkhead, ThreadPoolBulkheadConfig> {
 
 	/**
 	 * Creates a BulkheadRegistry with a custom Bulkhead configuration.
@@ -82,10 +83,13 @@ public interface ThreadPoolBulkheadRegistry {
 	ThreadPoolBulkhead bulkhead(String name, Supplier<ThreadPoolBulkheadConfig> bulkheadConfigSupplier);
 
 	/**
+	 * @deprecated Use {@link ThreadPoolBulkheadRegistry#getDefaultConfig()} instead
+	 * @since (0.15.0)
 	 * Returns a default ThreadPoolBulkheadConfig instance this registry is using.
 	 *
 	 * @return ThreadPoolBulkheadConfig instance
 	 */
+	@Deprecated
 	ThreadPoolBulkheadConfig getDefaultBulkheadConfig();
 
 }
