@@ -18,10 +18,11 @@
  */
 package io.github.resilience4j.circuitbreaker;
 
-import static org.assertj.core.api.BDDAssertions.assertThat;
-
 import org.junit.Before;
 import org.junit.Test;
+
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.BDDAssertions.assertThat;
 
 
 public class CircuitBreakerRegistryTest {
@@ -67,4 +68,9 @@ public class CircuitBreakerRegistryTest {
 
 		assertThat(circuitBreakerRegistry.getAllCircuitBreakers()).hasSize(2);
 	}
+
+    @Test
+    public void testCreateWithNullConfig() {
+        assertThatThrownBy(() -> CircuitBreakerRegistry.of((CircuitBreakerConfig)null)).isInstanceOf(NullPointerException.class).hasMessage("Config must not be null");
+    }
 }

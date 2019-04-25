@@ -20,6 +20,7 @@ import io.github.resilience4j.core.Registry;
 import io.github.resilience4j.retry.internal.InMemoryRetryRegistry;
 import io.vavr.collection.Seq;
 
+import java.util.Map;
 import java.util.function.Supplier;
 
 /**
@@ -87,5 +88,15 @@ public interface RetryRegistry extends Registry<Retry, RetryConfig> {
 	 */
 	static RetryRegistry ofDefaults() {
 		return new InMemoryRetryRegistry();
+	}
+
+	/**
+	 * Creates a RetryRegistry with a Map of shared Retry configurations.
+	 *
+	 * @param configs a Map of shared Retry configurations
+	 * @return a RetryRegistry with a Map of shared Retry configurations.
+	 */
+	static RetryRegistry of(Map<String, RetryConfig> configs) {
+		return new InMemoryRetryRegistry(configs);
 	}
 }

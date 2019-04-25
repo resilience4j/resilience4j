@@ -859,4 +859,9 @@ public class CircuitBreakerTest {
         assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(0);
     }
 
+    @Test
+    public void testCreateWithNullConfig() {
+        assertThatThrownBy(() -> CircuitBreaker.of("test", (CircuitBreakerConfig)null)).isInstanceOf(NullPointerException.class).hasMessage("Config must not be null");
+    }
+
 }

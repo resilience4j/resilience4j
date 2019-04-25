@@ -15,17 +15,18 @@
  */
 package io.github.resilience4j.retry;
 
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
-
-import java.time.Duration;
-import java.util.function.Consumer;
-
 import org.assertj.core.api.Assertions;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.BDDMockito;
 import org.slf4j.Logger;
+
+import java.time.Duration;
+import java.util.function.Consumer;
+
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 
 
 public class RetryRegistryTest {
@@ -39,6 +40,11 @@ public class RetryRegistryTest {
 		LOGGER = mock(Logger.class);
 		retryRegistry = RetryRegistry.ofDefaults();
 		retryRegistry.registerPostCreationConsumer(post_consumer);
+	}
+
+	@Test
+	public void testCreateWithNullConfig() {
+		assertThatThrownBy(() -> RetryRegistry.of((RetryConfig) null)).isInstanceOf(NullPointerException.class).hasMessage("Config must not be null");
 	}
 
 	@Test

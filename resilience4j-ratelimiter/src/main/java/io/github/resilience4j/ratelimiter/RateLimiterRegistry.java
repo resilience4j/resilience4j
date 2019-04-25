@@ -22,6 +22,7 @@ import io.github.resilience4j.core.Registry;
 import io.github.resilience4j.ratelimiter.internal.InMemoryRateLimiterRegistry;
 import io.vavr.collection.Seq;
 
+import java.util.Map;
 import java.util.function.Supplier;
 
 /**
@@ -71,18 +72,32 @@ public interface RateLimiterRegistry extends Registry<RateLimiter, RateLimiterCo
      */
     RateLimiter rateLimiter(String name, String configName);
 
-
-
+    /**
+     * Creates a RateLimiterRegistry with a custom RateLimiter configuration.
+     *
+     * @param defaultRateLimiterConfig a custom RateLimiter configuration
+     * @return a RateLimiterRegistry instance backed by a custom RateLimiter configuration
+     */
     static RateLimiterRegistry of(RateLimiterConfig defaultRateLimiterConfig) {
         return new InMemoryRateLimiterRegistry(defaultRateLimiterConfig);
     }
 
     /**
-     * Returns a managed {@link RateLimiterConfig} or creates a new one with a default RateLimiterConfig configuration.
+     * Returns a managed {@link RateLimiterConfig} or creates a new one with a default RateLimiter configuration.
      *
      * @return The {@link RateLimiterConfig}
      */
     static RateLimiterRegistry ofDefaults() {
         return new InMemoryRateLimiterRegistry(RateLimiterConfig.ofDefaults());
+    }
+
+    /**
+     * Creates a ThreadPoolBulkheadRegistry with a Map of shared RateLimiter configurations.
+     *
+     * @param configs a Map of shared RateLimiter configurations
+     * @return a ThreadPoolBulkheadRegistry with a Map of shared RateLimiter configurations.
+     */
+    static RateLimiterRegistry of(Map<String, RateLimiterConfig> configs) {
+        return new InMemoryRateLimiterRegistry(configs);
     }
 }

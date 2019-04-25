@@ -23,6 +23,7 @@ import io.github.resilience4j.bulkhead.internal.InMemoryBulkheadRegistry;
 import io.github.resilience4j.core.Registry;
 import io.vavr.collection.Seq;
 
+import java.util.Map;
 import java.util.function.Supplier;
 
 /**
@@ -90,6 +91,16 @@ public interface BulkheadRegistry extends Registry<Bulkhead, BulkheadConfig> {
 	 */
 	static BulkheadRegistry of(BulkheadConfig bulkheadConfig) {
 		return new InMemoryBulkheadRegistry(bulkheadConfig);
+	}
+
+	/**
+	 * Creates a BulkheadRegistry with a Map of shared Bulkhead configurations.
+	 *
+	 * @param configs a Map of shared Bulkhead configurations
+	 * @return a RetryRegistry with a Map of shared Bulkhead configurations.
+	 */
+	static BulkheadRegistry of(Map<String, BulkheadConfig> configs) {
+		return new InMemoryBulkheadRegistry(configs);
 	}
 
 	/**

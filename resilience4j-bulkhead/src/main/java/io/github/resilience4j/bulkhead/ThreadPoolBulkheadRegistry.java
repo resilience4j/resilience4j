@@ -23,6 +23,7 @@ import io.github.resilience4j.bulkhead.internal.InMemoryThreadPoolBulkheadRegist
 import io.github.resilience4j.core.Registry;
 import io.vavr.collection.Seq;
 
+import java.util.Map;
 import java.util.function.Supplier;
 
 /**
@@ -47,6 +48,16 @@ public interface ThreadPoolBulkheadRegistry  extends Registry<ThreadPoolBulkhead
 	 */
 	static ThreadPoolBulkheadRegistry ofDefaults() {
 		return new InMemoryThreadPoolBulkheadRegistry(ThreadPoolBulkheadConfig.ofDefaults());
+	}
+
+	/**
+	 * Creates a ThreadPoolBulkheadRegistry with a Map of shared ThreadPoolBulkhead configurations.
+	 *
+	 * @param configs a Map of shared Bulkhead configurations
+	 * @return a ThreadPoolBulkheadRegistry with a Map of shared ThreadPoolBulkhead configurations.
+	 */
+	static ThreadPoolBulkheadRegistry of(Map<String, ThreadPoolBulkheadConfig> configs) {
+		return new InMemoryThreadPoolBulkheadRegistry(configs);
 	}
 
 	/**
