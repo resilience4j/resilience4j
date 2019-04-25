@@ -18,11 +18,11 @@
  */
 package io.github.resilience4j.ratelimiter;
 
-import java.util.function.Supplier;
-
 import io.github.resilience4j.core.Registry;
 import io.github.resilience4j.ratelimiter.internal.InMemoryRateLimiterRegistry;
 import io.vavr.collection.Seq;
+
+import java.util.function.Supplier;
 
 /**
  * Manages all RateLimiter instances.
@@ -61,6 +61,17 @@ public interface RateLimiterRegistry extends Registry<RateLimiter, RateLimiterCo
      * @return The {@link RateLimiterConfig}
      */
     RateLimiter rateLimiter(String name, Supplier<RateLimiterConfig> rateLimiterConfigSupplier);
+
+    /**
+     * Returns a managed {@link RateLimiter} or creates a new one with a custom RateLimiter configuration.
+     *
+     * @param name       the name of the RateLimiter
+     * @param configName a custom RateLimiter configuration name
+     * @return The {@link RateLimiter}
+     */
+    RateLimiter rateLimiter(String name, String configName);
+
+
 
     static RateLimiterRegistry of(RateLimiterConfig defaultRateLimiterConfig) {
         return new InMemoryRateLimiterRegistry(defaultRateLimiterConfig);

@@ -65,7 +65,7 @@ public interface ThreadPoolBulkheadRegistry  extends Registry<ThreadPoolBulkhead
 	ThreadPoolBulkhead bulkhead(String name);
 
 	/**
-	 * Returns a managed {@link ThreadPoolBulkhead} or creates a new one with a custom BulkheadConfig configuration.
+	 * Returns a managed {@link ThreadPoolBulkhead} or creates a new one with a custom ThreadPoolBulkhead configuration.
 	 *
 	 * @param name           the name of the ThreadPoolBulkhead
 	 * @param bulkheadConfig a custom ThreadPoolBulkheadConfig configuration
@@ -74,13 +74,22 @@ public interface ThreadPoolBulkheadRegistry  extends Registry<ThreadPoolBulkhead
 	ThreadPoolBulkhead bulkhead(String name, ThreadPoolBulkheadConfig bulkheadConfig);
 
 	/**
-	 * Returns a managed {@link ThreadPoolBulkhead} or creates a new one with a custom BulkheadConfig configuration.
+	 * Returns a managed {@link ThreadPoolBulkhead} or creates a new one with a custom ThreadPoolBulkhead configuration.
 	 *
 	 * @param name                   the name of the ThreadPoolBulkhead
 	 * @param bulkheadConfigSupplier a custom ThreadPoolBulkhead configuration supplier
 	 * @return The {@link ThreadPoolBulkhead}
 	 */
 	ThreadPoolBulkhead bulkhead(String name, Supplier<ThreadPoolBulkheadConfig> bulkheadConfigSupplier);
+
+	/**
+	 * Returns a managed {@link ThreadPoolBulkhead} or creates a new one with a custom ThreadPoolBulkhead configuration.
+	 *
+	 * @param name       the name of the ThreadPoolBulkhead
+	 * @param configName a custom CircuitBreaker ThreadPoolBulkhead name
+	 * @return The {@link ThreadPoolBulkhead}
+	 */
+	ThreadPoolBulkhead bulkhead(String name, String configName);
 
 	/**
 	 * @deprecated Use {@link ThreadPoolBulkheadRegistry#getDefaultConfig()} instead

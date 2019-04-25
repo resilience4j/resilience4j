@@ -55,13 +55,22 @@ public interface BulkheadRegistry extends Registry<Bulkhead, BulkheadConfig> {
 	Bulkhead bulkhead(String name, BulkheadConfig bulkheadConfig);
 
 	/**
-	 * Returns a managed {@link Bulkhead} or creates a new one with a custom BulkheadConfig configuration.
+	 * Returns a managed {@link Bulkhead} or creates a new one with a custom Bulkhead configuration.
 	 *
 	 * @param name                   the name of the Bulkhead
 	 * @param bulkheadConfigSupplier a custom Bulkhead configuration supplier
 	 * @return The {@link Bulkhead}
 	 */
 	Bulkhead bulkhead(String name, Supplier<BulkheadConfig> bulkheadConfigSupplier);
+
+	/**
+	 * Returns a managed {@link Bulkhead} or creates a new one with a custom Bulkhead configuration.
+	 *
+	 * @param name       the name of the Bulkhead
+	 * @param configName a custom Bulkhead configuration name
+	 * @return The {@link Bulkhead}
+	 */
+	Bulkhead bulkhead(String name, String configName);
 
 	/**
 	 * @deprecated Use {@link BulkheadRegistry#getDefaultConfig()} instead

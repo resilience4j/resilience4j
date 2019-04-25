@@ -19,6 +19,7 @@
 package io.github.resilience4j.ratelimiter.internal;
 
 import io.github.resilience4j.core.AbstractRegistry;
+import io.github.resilience4j.core.ConfigurationNotFoundException;
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RateLimiterConfig;
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
@@ -33,10 +34,6 @@ import java.util.function.Supplier;
  * Constructs backend RateLimiters according to configuration values.
  */
 public class InMemoryRateLimiterRegistry extends AbstractRegistry<RateLimiter, RateLimiterConfig> implements RateLimiterRegistry {
-
-	private static final String NAME_MUST_NOT_BE_NULL = "Name must not be null";
-	private static final String CONFIG_MUST_NOT_BE_NULL = "Config must not be null";
-	private static final String SUPPLIER_MUST_NOT_BE_NULL = "Supplier must not be null";
 
 	/**
 	 * The constructor with default default.
@@ -89,5 +86,14 @@ public class InMemoryRateLimiterRegistry extends AbstractRegistry<RateLimiter, R
 	@Override
 	public RateLimiter rateLimiter(final String name, final Supplier<RateLimiterConfig> rateLimiterConfigSupplier) {
 		return computeIfAbsent(name, () -> new AtomicRateLimiter(name, rateLimiterConfigSupplier.get()));
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public RateLimiter rateLimiter(String name, String configName) {
+		return computeIfAbsent(name, () -> RateLimiter.of(name, getConfiguration(configName)
+				.orElseThrow(() -> new ConfigurationNotFoundException(String.format("Configuration with name '%s' is not found ", configName)))));
 	}
 }

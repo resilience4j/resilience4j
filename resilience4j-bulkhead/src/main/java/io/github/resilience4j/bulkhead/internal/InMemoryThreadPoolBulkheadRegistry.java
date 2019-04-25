@@ -22,6 +22,7 @@ import io.github.resilience4j.bulkhead.ThreadPoolBulkhead;
 import io.github.resilience4j.bulkhead.ThreadPoolBulkheadConfig;
 import io.github.resilience4j.bulkhead.ThreadPoolBulkheadRegistry;
 import io.github.resilience4j.core.AbstractRegistry;
+import io.github.resilience4j.core.ConfigurationNotFoundException;
 import io.vavr.collection.Array;
 import io.vavr.collection.Seq;
 
@@ -55,26 +56,50 @@ public final class InMemoryThreadPoolBulkheadRegistry extends AbstractRegistry<T
 		super(defaultConfig);
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	public Seq<ThreadPoolBulkhead> getAllBulkheads() {
 		return Array.ofAll(targetMap.values());
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	public ThreadPoolBulkhead bulkhead(String name) {
 		return bulkhead(name, getDefaultConfig());
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	public ThreadPoolBulkhead bulkhead(String name, ThreadPoolBulkheadConfig bulkheadConfig) {
 		return computeIfAbsent(name, () -> ThreadPoolBulkhead.of(name, bulkheadConfig));
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	public ThreadPoolBulkhead bulkhead(String name, Supplier<ThreadPoolBulkheadConfig> bulkheadConfigSupplier) {
 		return computeIfAbsent(name, () -> ThreadPoolBulkhead.of(name, bulkheadConfigSupplier.get()));
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public ThreadPoolBulkhead bulkhead(String name, String configName) {
+		return computeIfAbsent(name, () -> ThreadPoolBulkhead.of(name, getConfiguration(configName)
+				.orElseThrow(() -> new ConfigurationNotFoundException(String.format("Configuration with name '%s' is not found ", configName)))));
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	public ThreadPoolBulkheadConfig getDefaultBulkheadConfig() {
 		return getDefaultConfig();

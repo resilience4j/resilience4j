@@ -16,6 +16,7 @@
 package io.github.resilience4j.retry.internal;
 
 import io.github.resilience4j.core.AbstractRegistry;
+import io.github.resilience4j.core.ConfigurationNotFoundException;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryConfig;
 import io.github.resilience4j.retry.RetryRegistry;
@@ -52,6 +53,9 @@ public final class InMemoryRetryRegistry extends AbstractRegistry<Retry, RetryCo
 		super(defaultConfig);
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	public Seq<Retry> getAllRetries() {
 		return Array.ofAll(targetMap.values());
@@ -73,8 +77,20 @@ public final class InMemoryRetryRegistry extends AbstractRegistry<Retry, RetryCo
 		return computeIfAbsent(name, () -> Retry.of(name, retryConfig));
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	public Retry retry(String name, Supplier<RetryConfig> retryConfigSupplier) {
 		return computeIfAbsent(name, () -> Retry.of(name, retryConfigSupplier.get()));
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public Retry retry(String name, String configName) {
+		return computeIfAbsent(name, () -> Retry.of(name, getConfiguration(configName)
+				.orElseThrow(() -> new ConfigurationNotFoundException(String.format("Configuration with name '%s' is not found ", configName)))));
 	}
 }

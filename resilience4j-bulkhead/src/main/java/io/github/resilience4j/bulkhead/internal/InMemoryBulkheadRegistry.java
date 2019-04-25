@@ -22,6 +22,7 @@ import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.bulkhead.BulkheadConfig;
 import io.github.resilience4j.bulkhead.BulkheadRegistry;
 import io.github.resilience4j.core.AbstractRegistry;
+import io.github.resilience4j.core.ConfigurationNotFoundException;
 import io.vavr.collection.Array;
 import io.vavr.collection.Seq;
 
@@ -55,24 +56,45 @@ public final class InMemoryBulkheadRegistry extends AbstractRegistry<Bulkhead, B
 		super(defaultConfig);
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	public Seq<Bulkhead> getAllBulkheads() {
 		return Array.ofAll(targetMap.values());
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	public Bulkhead bulkhead(String name) {
 		return bulkhead(name, getDefaultConfig());
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	public Bulkhead bulkhead(String name, BulkheadConfig bulkheadConfig) {
 		return computeIfAbsent(name, () -> Bulkhead.of(name, bulkheadConfig));
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	public Bulkhead bulkhead(String name, Supplier<BulkheadConfig> bulkheadConfigSupplier) {
 		return computeIfAbsent(name, () -> Bulkhead.of(name, bulkheadConfigSupplier.get()));
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public Bulkhead bulkhead(String name, String configName) {
+		return computeIfAbsent(name, () -> Bulkhead.of(name, getConfiguration(configName)
+				.orElseThrow(() -> new ConfigurationNotFoundException(String.format("Configuration with name '%s' is not found ", configName)))));
 	}
 
 	@Override
