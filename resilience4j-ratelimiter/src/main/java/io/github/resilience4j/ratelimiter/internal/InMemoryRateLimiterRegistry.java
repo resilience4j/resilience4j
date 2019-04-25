@@ -27,6 +27,7 @@ import io.vavr.collection.Array;
 import io.vavr.collection.Seq;
 
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.Supplier;
 
 /**
@@ -76,8 +77,8 @@ public class InMemoryRateLimiterRegistry extends AbstractRegistry<RateLimiter, R
 	 * {@inheritDoc}
 	 */
 	@Override
-	public RateLimiter rateLimiter(final String name, final RateLimiterConfig rateLimiterConfig) {
-		return computeIfAbsent(name, () -> new AtomicRateLimiter(name, rateLimiterConfig));
+	public RateLimiter rateLimiter(final String name, final RateLimiterConfig config) {
+		return computeIfAbsent(name, () -> new AtomicRateLimiter(name, Objects.requireNonNull(config, CONFIG_MUST_NOT_BE_NULL)));
 	}
 
 	/**
@@ -85,7 +86,7 @@ public class InMemoryRateLimiterRegistry extends AbstractRegistry<RateLimiter, R
 	 */
 	@Override
 	public RateLimiter rateLimiter(final String name, final Supplier<RateLimiterConfig> rateLimiterConfigSupplier) {
-		return computeIfAbsent(name, () -> new AtomicRateLimiter(name, rateLimiterConfigSupplier.get()));
+		return computeIfAbsent(name, () -> new AtomicRateLimiter(name, Objects.requireNonNull(Objects.requireNonNull(rateLimiterConfigSupplier, SUPPLIER_MUST_NOT_BE_NULL).get(), CONFIG_MUST_NOT_BE_NULL)));
 	}
 
 	/**

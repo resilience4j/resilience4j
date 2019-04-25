@@ -27,6 +27,7 @@ import io.vavr.collection.Array;
 import io.vavr.collection.Seq;
 
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.Supplier;
 
 /**
@@ -76,8 +77,8 @@ public final class InMemoryCircuitBreakerRegistry extends AbstractRegistry<Circu
 	 * {@inheritDoc}
 	 */
 	@Override
-	public CircuitBreaker circuitBreaker(String name, CircuitBreakerConfig circuitBreakerConfig) {
-		return computeIfAbsent(name, () -> CircuitBreaker.of(name, circuitBreakerConfig));
+	public CircuitBreaker circuitBreaker(String name, CircuitBreakerConfig config) {
+		return computeIfAbsent(name, () -> CircuitBreaker.of(name, Objects.requireNonNull(config, CONFIG_MUST_NOT_BE_NULL)));
 	}
 
 	/**
@@ -94,7 +95,7 @@ public final class InMemoryCircuitBreakerRegistry extends AbstractRegistry<Circu
 	 */
 	@Override
 	public CircuitBreaker circuitBreaker(String name, Supplier<CircuitBreakerConfig> circuitBreakerConfigSupplier) {
-		return computeIfAbsent(name, () -> CircuitBreaker.of(name, circuitBreakerConfigSupplier.get()));
+		return computeIfAbsent(name, () -> CircuitBreaker.of(name, Objects.requireNonNull(Objects.requireNonNull(circuitBreakerConfigSupplier, SUPPLIER_MUST_NOT_BE_NULL).get(), CONFIG_MUST_NOT_BE_NULL)));
 	}
 
 

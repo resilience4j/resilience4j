@@ -27,6 +27,7 @@ import io.vavr.collection.Array;
 import io.vavr.collection.Seq;
 
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.Supplier;
 
 /**
@@ -76,8 +77,8 @@ public final class InMemoryThreadPoolBulkheadRegistry extends AbstractRegistry<T
 	 * {@inheritDoc}
 	 */
 	@Override
-	public ThreadPoolBulkhead bulkhead(String name, ThreadPoolBulkheadConfig bulkheadConfig) {
-		return computeIfAbsent(name, () -> ThreadPoolBulkhead.of(name, bulkheadConfig));
+	public ThreadPoolBulkhead bulkhead(String name, ThreadPoolBulkheadConfig config) {
+		return computeIfAbsent(name, () -> ThreadPoolBulkhead.of(name, Objects.requireNonNull(config, CONFIG_MUST_NOT_BE_NULL)));
 	}
 
 	/**
@@ -85,7 +86,7 @@ public final class InMemoryThreadPoolBulkheadRegistry extends AbstractRegistry<T
 	 */
 	@Override
 	public ThreadPoolBulkhead bulkhead(String name, Supplier<ThreadPoolBulkheadConfig> bulkheadConfigSupplier) {
-		return computeIfAbsent(name, () -> ThreadPoolBulkhead.of(name, bulkheadConfigSupplier.get()));
+		return computeIfAbsent(name, () -> ThreadPoolBulkhead.of(name, Objects.requireNonNull(Objects.requireNonNull(bulkheadConfigSupplier, SUPPLIER_MUST_NOT_BE_NULL).get(), CONFIG_MUST_NOT_BE_NULL)));
 	}
 
 	/**

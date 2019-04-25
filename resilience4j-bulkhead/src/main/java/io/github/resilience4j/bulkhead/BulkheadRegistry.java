@@ -49,10 +49,10 @@ public interface BulkheadRegistry extends Registry<Bulkhead, BulkheadConfig> {
 	 * Returns a managed {@link Bulkhead} or creates a new one with a custom BulkheadConfig configuration.
 	 *
 	 * @param name           the name of the Bulkhead
-	 * @param bulkheadConfig a custom Bulkhead configuration
+	 * @param config a custom Bulkhead configuration
 	 * @return The {@link Bulkhead}
 	 */
-	Bulkhead bulkhead(String name, BulkheadConfig bulkheadConfig);
+	Bulkhead bulkhead(String name, BulkheadConfig config);
 
 	/**
 	 * Returns a managed {@link Bulkhead} or creates a new one with a custom Bulkhead configuration.

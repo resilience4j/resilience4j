@@ -46,10 +46,10 @@ public interface RetryRegistry extends Registry<Retry, RetryConfig> {
 	 * Returns a managed {@link Retry} or creates a new one with a custom Retry configuration.
 	 *
 	 * @param name        the name of the Retry
-	 * @param retryConfig a custom Retry configuration
+	 * @param config a custom Retry configuration
 	 * @return The {@link Retry}
 	 */
-	Retry retry(String name, RetryConfig retryConfig);
+	Retry retry(String name, RetryConfig config);
 
 	/**
 	 * Returns a managed {@link Retry} or creates a new one with a custom Retry configuration.

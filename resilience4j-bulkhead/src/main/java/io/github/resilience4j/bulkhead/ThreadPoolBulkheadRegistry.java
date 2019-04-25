@@ -68,10 +68,10 @@ public interface ThreadPoolBulkheadRegistry  extends Registry<ThreadPoolBulkhead
 	 * Returns a managed {@link ThreadPoolBulkhead} or creates a new one with a custom ThreadPoolBulkhead configuration.
 	 *
 	 * @param name           the name of the ThreadPoolBulkhead
-	 * @param bulkheadConfig a custom ThreadPoolBulkheadConfig configuration
+	 * @param config a custom ThreadPoolBulkheadConfig configuration
 	 * @return The {@link ThreadPoolBulkhead}
 	 */
-	ThreadPoolBulkhead bulkhead(String name, ThreadPoolBulkheadConfig bulkheadConfig);
+	ThreadPoolBulkhead bulkhead(String name, ThreadPoolBulkheadConfig config);
 
 	/**
 	 * Returns a managed {@link ThreadPoolBulkhead} or creates a new one with a custom ThreadPoolBulkhead configuration.

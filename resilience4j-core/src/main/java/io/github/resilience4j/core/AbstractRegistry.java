@@ -33,6 +33,8 @@ import java.util.function.Supplier;
 public class AbstractRegistry<Target, Config> implements Registry<Target, Config> {
 	protected static final String DEFAULT_CONFIG = "default";
 	private static final String NAME_MUST_NOT_BE_NULL = "Name must not be null";
+	protected static final String CONFIG_MUST_NOT_BE_NULL = "Config must not be null";
+	protected static final String SUPPLIER_MUST_NOT_BE_NULL = "Supplier must not be null";
 
 	/**
 	 * The list of consumer functions to execute after a target is created.
@@ -53,7 +55,7 @@ public class AbstractRegistry<Target, Config> implements Registry<Target, Config
 		this.postCreationConsumers = new CopyOnWriteArrayList<>();
 		this.configurations = new ConcurrentHashMap<>();
 		this.targetMap = new ConcurrentHashMap<>();
-		this.configurations.put(DEFAULT_CONFIG, Objects.requireNonNull(defaultConfig, "Default config must not be null"));
+		this.configurations.put(DEFAULT_CONFIG, Objects.requireNonNull(defaultConfig, CONFIG_MUST_NOT_BE_NULL));
 	}
 
 	protected Target computeIfAbsent(String name, Supplier<Target> supplier){

@@ -24,6 +24,7 @@ import io.vavr.collection.Array;
 import io.vavr.collection.Seq;
 
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.Supplier;
 
 /**
@@ -73,8 +74,8 @@ public final class InMemoryRetryRegistry extends AbstractRegistry<Retry, RetryCo
 	 * {@inheritDoc}
 	 */
 	@Override
-	public Retry retry(String name, RetryConfig retryConfig) {
-		return computeIfAbsent(name, () -> Retry.of(name, retryConfig));
+	public Retry retry(String name, RetryConfig config) {
+		return computeIfAbsent(name, () -> Retry.of(name, Objects.requireNonNull(config, CONFIG_MUST_NOT_BE_NULL)));
 	}
 
 	/**
@@ -82,7 +83,7 @@ public final class InMemoryRetryRegistry extends AbstractRegistry<Retry, RetryCo
 	 */
 	@Override
 	public Retry retry(String name, Supplier<RetryConfig> retryConfigSupplier) {
-		return computeIfAbsent(name, () -> Retry.of(name, retryConfigSupplier.get()));
+		return computeIfAbsent(name, () -> Retry.of(name, Objects.requireNonNull(Objects.requireNonNull(retryConfigSupplier, SUPPLIER_MUST_NOT_BE_NULL).get(), CONFIG_MUST_NOT_BE_NULL)));
 	}
 
 	/**

@@ -27,6 +27,7 @@ import io.vavr.collection.Array;
 import io.vavr.collection.Seq;
 
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.Supplier;
 
 /**
@@ -76,8 +77,8 @@ public final class InMemoryBulkheadRegistry extends AbstractRegistry<Bulkhead, B
 	 * {@inheritDoc}
 	 */
 	@Override
-	public Bulkhead bulkhead(String name, BulkheadConfig bulkheadConfig) {
-		return computeIfAbsent(name, () -> Bulkhead.of(name, bulkheadConfig));
+	public Bulkhead bulkhead(String name, BulkheadConfig config) {
+		return computeIfAbsent(name, () -> Bulkhead.of(name, Objects.requireNonNull(config, CONFIG_MUST_NOT_BE_NULL)));
 	}
 
 	/**
@@ -85,7 +86,7 @@ public final class InMemoryBulkheadRegistry extends AbstractRegistry<Bulkhead, B
 	 */
 	@Override
 	public Bulkhead bulkhead(String name, Supplier<BulkheadConfig> bulkheadConfigSupplier) {
-		return computeIfAbsent(name, () -> Bulkhead.of(name, bulkheadConfigSupplier.get()));
+		return computeIfAbsent(name, () -> Bulkhead.of(name, Objects.requireNonNull(Objects.requireNonNull(bulkheadConfigSupplier, SUPPLIER_MUST_NOT_BE_NULL).get(), CONFIG_MUST_NOT_BE_NULL)));
 	}
 
 	/**
