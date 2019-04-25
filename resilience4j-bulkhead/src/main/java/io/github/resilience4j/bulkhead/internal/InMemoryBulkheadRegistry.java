@@ -18,68 +18,70 @@
  */
 package io.github.resilience4j.bulkhead.internal;
 
-import io.github.resilience4j.bulkhead.Bulkhead;
-import io.github.resilience4j.bulkhead.BulkheadConfig;
-import io.github.resilience4j.bulkhead.BulkheadRegistry;
-import io.vavr.collection.Array;
-import io.vavr.collection.Seq;
-
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.function.Supplier;
 
+import io.github.resilience4j.bulkhead.Bulkhead;
+import io.github.resilience4j.bulkhead.BulkheadConfig;
+import io.github.resilience4j.bulkhead.BulkheadRegistry;
+import io.github.resilience4j.core.AbstractRegistry;
+import io.vavr.collection.Array;
+import io.vavr.collection.Seq;
+
 /**
  * Bulkhead instance manager;
  * Constructs/returns bulkhead instances.
  */
-public final class InMemoryBulkheadRegistry implements BulkheadRegistry {
+public final class InMemoryBulkheadRegistry extends AbstractRegistry<Bulkhead, BulkheadConfig> implements BulkheadRegistry {
 
-    private final BulkheadConfig defaultBulkheadConfig;
+	private final BulkheadConfig defaultBulkheadConfig;
 
-    /**
-     * The bulkheads, indexed by name
-     */
-    private final ConcurrentMap<String, Bulkhead> bulkheads;
+	/**
+	 * The bulkheads, indexed by name
+	 */
+	private final ConcurrentMap<String, Bulkhead> bulkheads;
 
-    /**
-     * The constructor with custom default bulkhead config
-     *
-     * @param bulkheadConfig custom bulkhead config to use
-     */
-    public InMemoryBulkheadRegistry(BulkheadConfig bulkheadConfig) {
-        this.defaultBulkheadConfig = bulkheadConfig;
-        this.bulkheads = new ConcurrentHashMap<>();
-    }
+	/**
+	 * The constructor with custom default bulkhead config
+	 *
+	 * @param bulkheadConfig custom bulkhead config to use
+	 */
+	public InMemoryBulkheadRegistry(BulkheadConfig bulkheadConfig) {
+		super();
+		this.defaultBulkheadConfig = bulkheadConfig;
+		this.bulkheads = new ConcurrentHashMap<>();
+	}
 
-    @Override
-    public Seq<Bulkhead> getAllBulkheads() {
-        return Array.ofAll(bulkheads.values());
-    }
+	@Override
+	public Seq<Bulkhead> getAllBulkheads() {
+		return Array.ofAll(bulkheads.values());
+	}
 
-    @Override
-    public Bulkhead bulkhead(String name) {
-        return bulkhead(name, defaultBulkheadConfig);
-    }
+	@Override
+	public Bulkhead bulkhead(String name) {
+		return bulkhead(name, defaultBulkheadConfig);
+	}
 
-    @Override
-    public Bulkhead bulkhead(String name, BulkheadConfig bulkheadConfig) {
-        return bulkheads.computeIfAbsent(
-                Objects.requireNonNull(name, "Name must not be null"),
-                k -> Bulkhead.of(name, bulkheadConfig)
-        );
-    }
+	@Override
+	public Bulkhead bulkhead(String name, BulkheadConfig bulkheadConfig) {
+		return bulkheads.computeIfAbsent(
+				Objects.requireNonNull(name, "Name must not be null"),
+				k -> notifyPostCreationConsumers(Bulkhead.of(name, bulkheadConfig))
+		);
+	}
 
-    @Override
-    public Bulkhead bulkhead(String name, Supplier<BulkheadConfig> bulkheadConfigSupplier) {
-        return bulkheads.computeIfAbsent(
-                Objects.requireNonNull(name, "Name must not be null"),
-                k -> Bulkhead.of(name, bulkheadConfigSupplier.get())
-        );
-    }
+	@Override
+	public Bulkhead bulkhead(String name, Supplier<BulkheadConfig> bulkheadConfigSupplier) {
+		return bulkheads.computeIfAbsent(
+				Objects.requireNonNull(name, "Name must not be null"),
+				k -> notifyPostCreationConsumers(Bulkhead.of(name, bulkheadConfigSupplier.get()))
+		);
+	}
 
-    @Override
-    public BulkheadConfig getDefaultBulkheadConfig() {
-        return defaultBulkheadConfig;
-    }
+	@Override
+	public BulkheadConfig getDefaultBulkheadConfig() {
+		return defaultBulkheadConfig;
+	}
 }

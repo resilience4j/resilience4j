@@ -18,72 +18,80 @@
  */
 package io.github.resilience4j.bulkhead;
 
+import static org.assertj.core.api.BDDAssertions.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+
+import java.util.function.Consumer;
+
 import org.junit.Before;
 import org.junit.Test;
-
-import static org.assertj.core.api.BDDAssertions.assertThat;
+import org.mockito.BDDMockito;
+import org.slf4j.Logger;
 
 
 public class BulkheadRegistryTest {
 
-    private BulkheadConfig config;
-    private BulkheadRegistry registry;
+	private BulkheadConfig config;
+	private BulkheadRegistry registry;
+	private Logger LOGGER;
+	private Consumer<Bulkhead> post_consumer = circuitBreaker -> LOGGER.info("invoking the post consumer1");
 
-    @Before
-    public void setUp() {
+	@Before
+	public void setUp() {
+		LOGGER = mock(Logger.class);
+		// registry with default config
+		registry = BulkheadRegistry.ofDefaults();
+		registry.registerPostCreationConsumer(post_consumer);
+		// registry with custom config
+		config = BulkheadConfig.custom()
+				.maxConcurrentCalls(100)
+				.maxWaitTime(50)
+				.build();
+	}
 
-        // registry with default config
-        registry = BulkheadRegistry.ofDefaults();
+	@Test
+	public void shouldReturnCustomConfig() {
+		// give
+		BulkheadRegistry registry = BulkheadRegistry.of(config);
+		// when
+		BulkheadConfig bulkheadConfig = registry.getDefaultBulkheadConfig();
+		// then
+		assertThat(bulkheadConfig).isSameAs(config);
+	}
 
-        // registry with custom config
-        config = BulkheadConfig.custom()
-                               .maxConcurrentCalls(100)
-                               .maxWaitTime(50)
-                               .build();
-    }
+	@Test
+	public void shouldReturnTheCorrectName() {
 
-    @Test
-    public void shouldReturnCustomConfig() {
+		Bulkhead bulkhead = registry.bulkhead("test");
 
-        // give
-        BulkheadRegistry registry = BulkheadRegistry.of(config);
+		assertThat(bulkhead).isNotNull();
+		assertThat(bulkhead.getName()).isEqualTo("test");
+		assertThat(bulkhead.getBulkheadConfig().getMaxConcurrentCalls()).isEqualTo(25);
+		assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(25);
+		BDDMockito.then(LOGGER).should(times(1)).info("invoking the post consumer1");
+	}
 
-        // when
-        BulkheadConfig bulkheadConfig = registry.getDefaultBulkheadConfig();
+	@Test
+	public void shouldBeTheSameInstance() {
 
-        // then
-        assertThat(bulkheadConfig).isSameAs(config);
-    }
+		Bulkhead bulkhead1 = registry.bulkhead("test", config);
+		Bulkhead bulkhead2 = registry.bulkhead("test", config);
 
-    @Test
-    public void shouldReturnTheCorrectName() {
+		assertThat(bulkhead1).isSameAs(bulkhead2);
+		assertThat(registry.getAllBulkheads()).hasSize(1);
+		BDDMockito.then(LOGGER).should(times(1)).info("invoking the post consumer1");
+	}
 
-        Bulkhead bulkhead = registry.bulkhead("test");
+	@Test
+	public void shouldBeNotTheSameInstance() {
 
-        assertThat(bulkhead).isNotNull();
-        assertThat(bulkhead.getName()).isEqualTo("test");
-        assertThat(bulkhead.getBulkheadConfig().getMaxConcurrentCalls()).isEqualTo(25);
-        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(25);
-    }
+		Bulkhead bulkhead1 = registry.bulkhead("test1");
+		Bulkhead bulkhead2 = registry.bulkhead("test2");
 
-    @Test
-    public void shouldBeTheSameInstance() {
-
-        Bulkhead bulkhead1 = registry.bulkhead("test", config);
-        Bulkhead bulkhead2 = registry.bulkhead("test", config);
-
-        assertThat(bulkhead1).isSameAs(bulkhead2);
-        assertThat(registry.getAllBulkheads()).hasSize(1);
-    }
-
-    @Test
-    public void shouldBeNotTheSameInstance() {
-
-        Bulkhead bulkhead1 = registry.bulkhead("test1");
-        Bulkhead bulkhead2 = registry.bulkhead("test2");
-
-        assertThat(bulkhead1).isNotSameAs(bulkhead2);
-        assertThat(registry.getAllBulkheads()).hasSize(2);
-    }
+		assertThat(bulkhead1).isNotSameAs(bulkhead2);
+		assertThat(registry.getAllBulkheads()).hasSize(2);
+		BDDMockito.then(LOGGER).should(times(2)).info("invoking the post consumer1");
+	}
 
 }

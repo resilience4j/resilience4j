@@ -53,6 +53,16 @@ public interface CircuitBreakerRegistry extends Registry<CircuitBreaker, Circuit
 	 */
 	CircuitBreaker circuitBreaker(String name, CircuitBreakerConfig circuitBreakerConfig);
 
+
+	/**
+	 * Returns a managed {@link CircuitBreaker} or creates a new one with a custom CircuitBreaker configuration.
+	 *
+	 * @param name       the name of the CircuitBreaker
+	 * @param configName a custom CircuitBreaker configuration name
+	 * @return The {@link CircuitBreaker}
+	 */
+	CircuitBreaker circuitBreaker(String name, String configName);
+
 	/**
 	 * Returns a managed {@link CircuitBreaker} or creates a new one with a custom CircuitBreaker configuration.
 	 *
