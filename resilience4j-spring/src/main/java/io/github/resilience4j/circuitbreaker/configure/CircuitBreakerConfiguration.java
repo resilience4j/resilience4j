@@ -98,7 +98,7 @@ public class CircuitBreakerConfiguration {
 
 		circuitBreakerProperties.getBackends().forEach(
 				(name, properties) -> {
-					CircuitBreakerConfig circuitBreakerConfig = circuitBreakerProperties.createCircuitBreakerConfig(properties);
+					CircuitBreakerConfig circuitBreakerConfig = circuitBreakerProperties.createCircuitBreakerConfig(name);
 					circuitBreakerRegistry.circuitBreaker(name, circuitBreakerConfig);
 				}
 		);

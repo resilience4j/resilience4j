@@ -28,7 +28,7 @@ public class CircuitBreakerConfigurationTest {
 		CircuitBreakerConfigurationProperties.BackendProperties backendProperties = new CircuitBreakerConfigurationProperties.BackendProperties();
 		backendProperties.setFailureRateThreshold(3);
 		when(circuitBreakerConfigurationProperties.getBackends()).thenReturn(Collections.singletonMap("testBackend", backendProperties));
-		when(circuitBreakerConfigurationProperties.createCircuitBreakerConfig(backendProperties)).thenReturn(CircuitBreakerConfig.ofDefaults());
+		when(circuitBreakerConfigurationProperties.createCircuitBreakerConfig("testBackend")).thenReturn(CircuitBreakerConfig.ofDefaults());
 
 		CircuitBreakerConfiguration circuitBreakerConfiguration = new CircuitBreakerConfiguration(circuitBreakerConfigurationProperties);
 		CircuitBreakerRegistry circuitBreakerRegistry = circuitBreakerConfiguration.circuitBreakerRegistry(new DefaultEventConsumerRegistry<>());
