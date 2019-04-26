@@ -30,6 +30,8 @@ import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
 
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * {@link org.springframework.context.annotation.Configuration
@@ -46,8 +48,12 @@ public class CircuitBreakerConfiguration {
 
 	@Bean
 	public CircuitBreakerRegistry circuitBreakerRegistry(EventConsumerRegistry<CircuitBreakerEvent> eventConsumerRegistry) {
-		CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
-		registerPostCreationEventConsumer(circuitBreakerRegistry, eventConsumerRegistry);
+        Map<String, CircuitBreakerConfig> configs = circuitBreakerProperties.getConfigs()
+                .entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey,
+                        entry -> circuitBreakerProperties.createCircuitBreakerConfig(entry.getValue())));
+
+        CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.of(configs);
+		registerEventConsumer(circuitBreakerRegistry, eventConsumerRegistry);
 		initializeBackends(circuitBreakerRegistry);
 		return circuitBreakerRegistry;
 	}
@@ -92,7 +98,7 @@ public class CircuitBreakerConfiguration {
 
 		circuitBreakerProperties.getBackends().forEach(
 				(name, properties) -> {
-					CircuitBreakerConfig circuitBreakerConfig = circuitBreakerProperties.createCircuitBreakerConfig(name);
+					CircuitBreakerConfig circuitBreakerConfig = circuitBreakerProperties.createCircuitBreakerConfig(properties);
 					circuitBreakerRegistry.circuitBreaker(name, circuitBreakerConfig);
 				}
 		);
@@ -105,8 +111,8 @@ public class CircuitBreakerConfiguration {
 	 * @param circuitBreakerRegistry The circuit breaker registry.
 	 * @param eventConsumerRegistry  The event consumer registry.
 	 */
-	public void registerPostCreationEventConsumer(CircuitBreakerRegistry circuitBreakerRegistry,
-	                                              EventConsumerRegistry<CircuitBreakerEvent> eventConsumerRegistry) {
+	public void registerEventConsumer(CircuitBreakerRegistry circuitBreakerRegistry,
+									  EventConsumerRegistry<CircuitBreakerEvent> eventConsumerRegistry) {
 		final EventConsumerRegister eventConsumerRegister = new EventConsumerRegister(eventConsumerRegistry);
 		circuitBreakerRegistry.getEventPublisher().onEntryAdded(event -> eventConsumerRegister.registerEventConsumer(event.getAddedEntry()));
 	}

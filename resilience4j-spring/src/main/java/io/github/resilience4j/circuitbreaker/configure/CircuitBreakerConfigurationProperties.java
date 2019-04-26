@@ -15,25 +15,23 @@ package io.github.resilience4j.circuitbreaker.configure;
  * limitations under the License.
  */
 
-import java.time.Duration;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.function.Predicate;
-
-import javax.validation.constraints.Max;
-import javax.validation.constraints.Min;
-import javax.validation.constraints.NotNull;
-
-import org.hibernate.validator.constraints.time.DurationMin;
-import org.springframework.beans.BeanUtils;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.util.StringUtils;
-
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.Builder;
 import io.github.resilience4j.core.lang.Nullable;
 import io.github.resilience4j.utils.CommonUtils;
+import org.hibernate.validator.constraints.time.DurationMin;
+import org.springframework.beans.BeanUtils;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.util.StringUtils;
+
+import javax.validation.constraints.Max;
+import javax.validation.constraints.Min;
+import javax.validation.constraints.NotNull;
+import java.time.Duration;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.function.Predicate;
 
 @Configuration
 public class CircuitBreakerConfigurationProperties {
@@ -80,7 +78,7 @@ public class CircuitBreakerConfigurationProperties {
 		return createCircuitBreakerConfig(getConfigProperties(baseConfigName));
 	}
 
-	private CircuitBreakerConfig createCircuitBreakerConfig(@Nullable BackendProperties backendProperties) {
+	public CircuitBreakerConfig createCircuitBreakerConfig(@Nullable BackendProperties backendProperties) {
 		return buildCircuitBreakerConfig(backendProperties).build();
 	}
 

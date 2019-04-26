@@ -16,6 +16,7 @@
 package io.github.resilience4j.springboot.common.circuitbreaker.autoconfigure;
 
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
+import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.circuitbreaker.configure.*;
 import io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent;
@@ -29,6 +30,8 @@ import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
 
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Configuration
 public abstract class AbstractCircuitBreakerConfigurationOnMissingBean {
@@ -44,13 +47,17 @@ public abstract class AbstractCircuitBreakerConfigurationOnMissingBean {
 	@Bean
 	@ConditionalOnMissingBean
 	public CircuitBreakerRegistry circuitBreakerRegistry(EventConsumerRegistry<CircuitBreakerEvent> eventConsumerRegistry) {
-		CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
+        Map<String, CircuitBreakerConfig> configs = circuitBreakerProperties.getConfigs()
+                .entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey,
+                        entry -> circuitBreakerProperties.createCircuitBreakerConfig(entry.getValue())));
+
+        CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.of(configs);
 
 		// Register the event consumers
-		circuitBreakerConfiguration.registerPostCreationEventConsumer(circuitBreakerRegistry, eventConsumerRegistry);
+		circuitBreakerConfiguration.registerEventConsumer(circuitBreakerRegistry, eventConsumerRegistry);
 		// Register a consumer to hook up any health indicators for circuit breakers after creation. This will catch ones that get
 		// created beyond initially configured backends.
-		circuitBreakerRegistry.getEventPublisher().onEntryAdded(event -> createHeathIndicatorForCircuitBreaker(event.getAddedEntry()));
+		circuitBreakerRegistry.getEventPublisher().onEntryAdded(event -> createHealthIndicatorForCircuitBreaker(event.getAddedEntry()));
 
 		// Initialize backends that were initially configured.
 		circuitBreakerConfiguration.initializeBackends(circuitBreakerRegistry);
@@ -58,7 +65,7 @@ public abstract class AbstractCircuitBreakerConfigurationOnMissingBean {
 		return circuitBreakerRegistry;
 	}
 
-	protected abstract void createHeathIndicatorForCircuitBreaker(CircuitBreaker circuitBreaker);
+	protected abstract void createHealthIndicatorForCircuitBreaker(CircuitBreaker circuitBreaker);
 
 	@Bean
 	@ConditionalOnMissingBean

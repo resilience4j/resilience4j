@@ -15,9 +15,13 @@
  */
 package io.github.resilience4j.circuitbreaker.autoconfigure;
 
-import java.util.Map;
-
-import org.springframework.beans.BeansException;
+import io.github.resilience4j.circuitbreaker.CircuitBreaker;
+import io.github.resilience4j.circuitbreaker.configure.CircuitBreakerConfigurationProperties;
+import io.github.resilience4j.circuitbreaker.configure.CircuitBreakerConfigurationProperties.BackendProperties;
+import io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent;
+import io.github.resilience4j.circuitbreaker.monitoring.health.CircuitBreakerHealthIndicator;
+import io.github.resilience4j.consumer.EventConsumerRegistry;
+import io.github.resilience4j.springboot.common.circuitbreaker.autoconfigure.AbstractCircuitBreakerConfigurationOnMissingBean;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.boot.actuate.health.HealthIndicatorRegistry;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -26,13 +30,7 @@ import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import io.github.resilience4j.circuitbreaker.CircuitBreaker;
-import io.github.resilience4j.circuitbreaker.configure.CircuitBreakerConfigurationProperties;
-import io.github.resilience4j.circuitbreaker.configure.CircuitBreakerConfigurationProperties.BackendProperties;
-import io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent;
-import io.github.resilience4j.circuitbreaker.monitoring.health.CircuitBreakerHealthIndicator;
-import io.github.resilience4j.consumer.EventConsumerRegistry;
-import io.github.resilience4j.springboot.common.circuitbreaker.autoconfigure.AbstractCircuitBreakerConfigurationOnMissingBean;
+import java.util.Map;
 
 @Configuration
 public class CircuitBreakerConfigurationOnMissingBean extends AbstractCircuitBreakerConfigurationOnMissingBean implements ApplicationContextAware {
@@ -59,7 +57,7 @@ public class CircuitBreakerConfigurationOnMissingBean extends AbstractCircuitBre
 	}
 
 	@Override
-	protected void createHeathIndicatorForCircuitBreaker(CircuitBreaker circuitBreaker) {
+	protected void createHealthIndicatorForCircuitBreaker(CircuitBreaker circuitBreaker) {
 		BackendProperties backendProperties = circuitBreakerProperties.findCircuitBreakerBackend(circuitBreaker, circuitBreaker.getCircuitBreakerConfig());
 
 		if (backendProperties != null && backendProperties.getRegisterHealthIndicator()) {
