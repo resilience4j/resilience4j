@@ -15,14 +15,7 @@
  */
 package io.github.resilience4j.micrometer;
 
-import static io.github.resilience4j.micrometer.MetricUtils.getName;
-import static io.github.resilience4j.retry.utils.MetricNames.DEFAULT_PREFIX;
-import static io.github.resilience4j.retry.utils.MetricNames.FAILED_CALLS_WITHOUT_RETRY;
-import static io.github.resilience4j.retry.utils.MetricNames.FAILED_CALLS_WITH_RETRY;
-import static io.github.resilience4j.retry.utils.MetricNames.SUCCESSFUL_CALLS_WITHOUT_RETRY;
-import static io.github.resilience4j.retry.utils.MetricNames.SUCCESSFUL_CALLS_WITH_RETRY;
-import static java.util.Objects.requireNonNull;
-
+import io.github.resilience4j.micrometer.tagged.TaggedRetryMetrics;
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryRegistry;
@@ -30,6 +23,14 @@ import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.binder.MeterBinder;
 
+import static io.github.resilience4j.micrometer.MetricUtils.getName;
+import static io.github.resilience4j.retry.utils.MetricNames.*;
+import static java.util.Objects.requireNonNull;
+
+/**
+ * @deprecated Use {@link TaggedRetryMetrics} instead
+ */
+@Deprecated
 public class RetryMetrics implements MeterBinder {
 
     private final Iterable<Retry> retries;

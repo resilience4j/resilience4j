@@ -17,6 +17,7 @@ package io.github.resilience4j.micrometer;
 
 import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.bulkhead.BulkheadRegistry;
+import io.github.resilience4j.micrometer.tagged.TaggedBulkheadMetrics;
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.binder.MeterBinder;
@@ -27,6 +28,10 @@ import static io.github.resilience4j.bulkhead.utils.MetricNames.MAX_ALLOWED_CONC
 import static io.github.resilience4j.micrometer.MetricUtils.getName;
 import static java.util.Objects.requireNonNull;
 
+/**
+ * @deprecated Use {@link TaggedBulkheadMetrics} instead
+ */
+@Deprecated
 public class BulkheadMetrics implements MeterBinder {
 
     private final Iterable<Bulkhead> bulkheads;

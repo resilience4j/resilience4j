@@ -39,7 +39,8 @@ public class EventProcessorTest {
     @Test
     public void testOnEventConsumer(){
         EventProcessor<Number> eventProcessor = new EventProcessor<>();
-        eventProcessor.onEvent(event -> logger.info(event.toString()));
+        EventConsumer<Number> eventConsumer = event -> logger.info(event.toString());
+        eventProcessor.onEvent(eventConsumer);
 
         boolean consumed = eventProcessor.processEvent(1);
 
@@ -48,9 +49,10 @@ public class EventProcessorTest {
     }
 
     @Test
-    public void testRegisterConsumer() throws InterruptedException {
+    public void testRegisterConsumer() {
         EventProcessor<Number> eventProcessor = new EventProcessor<>();
-        eventProcessor.registerConsumer(Integer.class, event -> logger.info(event.toString()));
+        EventConsumer<Integer> eventConsumer = event -> logger.info(event.toString());
+        eventProcessor.registerConsumer(Integer.class.getSimpleName(), eventConsumer);
 
         boolean consumed = eventProcessor.processEvent(1);
 
@@ -59,9 +61,10 @@ public class EventProcessorTest {
     }
 
     @Test
-    public void testOnEventAndRegisterConsumer() throws InterruptedException {
+    public void testOnEventAndRegisterConsumer() {
         EventProcessor<Number> eventProcessor = new EventProcessor<>();
-        eventProcessor.registerConsumer(Integer.class, event -> logger.info(event.toString()));
+        EventConsumer<Integer> eventConsumer = event -> logger.info(event.toString());
+        eventProcessor.registerConsumer(Integer.class.getSimpleName(), eventConsumer);
         eventProcessor.onEvent(event -> logger.info(event.toString()));
 
         boolean consumed = eventProcessor.processEvent(1);
@@ -71,7 +74,7 @@ public class EventProcessorTest {
     }
 
     @Test
-    public void testNoConsumers() throws InterruptedException {
+    public void testNoConsumers() {
         EventProcessor<Number> eventProcessor = new EventProcessor<>();
         boolean consumed = eventProcessor.processEvent(1);
 

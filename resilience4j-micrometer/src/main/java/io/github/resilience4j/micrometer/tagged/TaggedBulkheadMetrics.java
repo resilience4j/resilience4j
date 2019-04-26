@@ -20,8 +20,12 @@ import io.github.resilience4j.bulkhead.Bulkhead.Metrics;
 import io.github.resilience4j.bulkhead.BulkheadRegistry;
 import io.github.resilience4j.micrometer.BulkheadMetrics;
 import io.micrometer.core.instrument.Gauge;
+import io.micrometer.core.instrument.Meter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.binder.MeterBinder;
+
+import java.util.HashSet;
+import java.util.Set;
 
 import static java.util.Objects.requireNonNull;
 
@@ -30,16 +34,16 @@ import static java.util.Objects.requireNonNull;
  * The main difference from {@link BulkheadMetrics} is that this binder uses tags
  * to distinguish between metrics.
  */
-public class TaggedBulkheadMetrics implements MeterBinder {
+public class TaggedBulkheadMetrics extends AbstractMetrics implements MeterBinder {
 
     /**
      * Creates a new binder that uses given {@code registry} as source of bulkheads.
      *
-     * @param registry the source of bulkheads
+     * @param bulkheadRegistry the source of bulkheads
      * @return The {@link TaggedBulkheadMetrics} instance.
      */
-    public static TaggedBulkheadMetrics ofBulkheadRegistry(BulkheadRegistry registry) {
-        return new TaggedBulkheadMetrics(MetricNames.ofDefaults(), registry.getAllBulkheads());
+    public static TaggedBulkheadMetrics ofBulkheadRegistry(BulkheadRegistry bulkheadRegistry) {
+        return new TaggedBulkheadMetrics(MetricNames.ofDefaults(), bulkheadRegistry);
     }
 
     /**
@@ -47,31 +51,46 @@ public class TaggedBulkheadMetrics implements MeterBinder {
      * using given {@code registry} as source of bulkheads.
      *
      * @param names custom names of the metrics
-     * @param registry the source of bulkheads
+     * @param bulkheadRegistry the source of bulkheads
      * @return The {@link TaggedBulkheadMetrics} instance.
      */
-    public static TaggedBulkheadMetrics ofBulkheadRegistry(MetricNames names, BulkheadRegistry registry) {
-        return new TaggedBulkheadMetrics(names, registry.getAllBulkheads());
+    public static TaggedBulkheadMetrics ofBulkheadRegistry(MetricNames names, BulkheadRegistry bulkheadRegistry) {
+        return new TaggedBulkheadMetrics(names, bulkheadRegistry);
     }
 
     private final MetricNames names;
-    private final Iterable<? extends Bulkhead> bulkheads;
+    private final BulkheadRegistry bulkheadRegistry;
 
-    private TaggedBulkheadMetrics(MetricNames names, Iterable<? extends Bulkhead> bulkheads) {
+    private TaggedBulkheadMetrics(MetricNames names, BulkheadRegistry bulkheadRegistry) {
+        super();
         this.names = requireNonNull(names);
-        this.bulkheads = requireNonNull(bulkheads);
+        this.bulkheadRegistry = requireNonNull(bulkheadRegistry);
     }
 
     @Override
     public void bindTo(MeterRegistry registry) {
-        for (Bulkhead bulkhead : bulkheads) {
-            Gauge.builder(names.getAvailableConcurrentCallsMetricName(), bulkhead, (bh) -> bh.getMetrics().getAvailableConcurrentCalls())
-                    .tag(TagNames.NAME, bulkhead.getName())
-                    .register(registry);
-            Gauge.builder(names.getMaxAllowedConcurrentCallsMetricName(), bulkhead, (bh) -> bh.getMetrics().getMaxAllowedConcurrentCalls())
-                    .tag(TagNames.NAME, bulkhead.getName())
-                    .register(registry);
+        for (Bulkhead bulkhead : bulkheadRegistry.getAllBulkheads()) {
+            addMetrics(registry, bulkhead);
         }
+        bulkheadRegistry.getEventPublisher().onEntryAdded(event -> addMetrics(registry, event.getAddedEntry()));
+        bulkheadRegistry.getEventPublisher().onEntryRemoved(event -> removeMetrics(registry, event.getRemovedEntry().getName()));
+        bulkheadRegistry.getEventPublisher().onEntryReplaced(event -> {
+            removeMetrics(registry, event.getOldEntry().getName());
+            addMetrics(registry, event.getNewEntry());
+        });
+    }
+
+    private void addMetrics(MeterRegistry registry, Bulkhead bulkhead) {
+        Set<Meter.Id> idSet = new HashSet<>();
+
+        idSet.add(Gauge.builder(names.getAvailableConcurrentCallsMetricName(), bulkhead, (bh) -> bh.getMetrics().getAvailableConcurrentCalls())
+                .tag(TagNames.NAME, bulkhead.getName())
+                .register(registry).getId());
+        idSet.add(Gauge.builder(names.getMaxAllowedConcurrentCallsMetricName(), bulkhead, (bh) -> bh.getMetrics().getMaxAllowedConcurrentCalls())
+                .tag(TagNames.NAME, bulkhead.getName())
+                .register(registry).getId());
+
+        meterIdMap.put(bulkhead.getName(), idSet);
     }
 
     /** Defines possible configuration for metric names. */

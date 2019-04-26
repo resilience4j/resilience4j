@@ -18,7 +18,7 @@
  */
 package io.github.resilience4j.ratelimiter.internal;
 
-import io.github.resilience4j.core.AbstractRegistry;
+import io.github.resilience4j.core.registry.AbstractRegistry;
 import io.github.resilience4j.core.ConfigurationNotFoundException;
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RateLimiterConfig;
@@ -62,7 +62,7 @@ public class InMemoryRateLimiterRegistry extends AbstractRegistry<RateLimiter, R
 	 */
 	@Override
 	public Seq<RateLimiter> getAllRateLimiters() {
-		return Array.ofAll(targetMap.values());
+		return Array.ofAll(entryMap.values());
 	}
 
 	/**

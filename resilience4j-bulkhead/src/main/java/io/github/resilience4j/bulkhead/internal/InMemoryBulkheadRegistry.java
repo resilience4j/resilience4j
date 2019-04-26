@@ -21,7 +21,7 @@ package io.github.resilience4j.bulkhead.internal;
 import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.bulkhead.BulkheadConfig;
 import io.github.resilience4j.bulkhead.BulkheadRegistry;
-import io.github.resilience4j.core.AbstractRegistry;
+import io.github.resilience4j.core.registry.AbstractRegistry;
 import io.github.resilience4j.core.ConfigurationNotFoundException;
 import io.vavr.collection.Array;
 import io.vavr.collection.Seq;
@@ -62,7 +62,7 @@ public final class InMemoryBulkheadRegistry extends AbstractRegistry<Bulkhead, B
 	 */
 	@Override
 	public Seq<Bulkhead> getAllBulkheads() {
-		return Array.ofAll(targetMap.values());
+		return Array.ofAll(entryMap.values());
 	}
 
 	/**

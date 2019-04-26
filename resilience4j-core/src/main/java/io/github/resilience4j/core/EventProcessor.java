@@ -27,19 +27,18 @@ public class EventProcessor<T> implements EventPublisher<T> {
 
     private boolean consumerRegistered;
     @Nullable private EventConsumer<T> onEventConsumer;
-    private ConcurrentMap<Class<? extends T>, EventConsumer<Object>> eventConsumers = new ConcurrentHashMap<>();
+    private ConcurrentMap<String, EventConsumer<T>> eventConsumers = new ConcurrentHashMap<>();
 
     public boolean hasConsumers(){
         return consumerRegistered;
     }
 
     @SuppressWarnings("unchecked")
-    public synchronized <E extends T> void registerConsumer(Class<? extends E> eventType, EventConsumer<E> eventConsumer){
+    public synchronized void registerConsumer(String className, EventConsumer<? extends T> eventConsumer){
         consumerRegistered = true;
-        eventConsumers.put(eventType, (EventConsumer<Object>) eventConsumer);
+        eventConsumers.put(className, (EventConsumer<T>) eventConsumer);
     }
 
-    @SuppressWarnings("unchecked")
     public <E extends T> boolean processEvent(E event) {
         boolean consumed = false;
         EventConsumer<T> onEventConsumer = this.onEventConsumer;
@@ -48,7 +47,7 @@ public class EventProcessor<T> implements EventPublisher<T> {
             consumed = true;
         }
         if(!eventConsumers.isEmpty()){
-            EventConsumer<T> eventConsumer = (EventConsumer<T>) eventConsumers.get(event.getClass());
+            EventConsumer<T> eventConsumer = eventConsumers.get(event.getClass().getSimpleName());
             if(eventConsumer != null){
                 eventConsumer.consumeEvent(event);
                 consumed = true;
