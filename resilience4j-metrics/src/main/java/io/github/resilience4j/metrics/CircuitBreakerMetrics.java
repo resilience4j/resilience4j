@@ -48,7 +48,7 @@ public class CircuitBreakerMetrics implements MetricSet {
         requireNonNull(circuitBreakers);
         circuitBreakers.forEach((CircuitBreaker circuitBreaker) -> {
                 String name = circuitBreaker.getName();
-            //state as an integer
+                //state as an integer
                 metricRegistry.register(name(prefix, name, STATE),
                       (Gauge<Integer>)()-> circuitBreaker.getState().getOrder());
                 metricRegistry.register(name(prefix, name, SUCCESSFUL),
@@ -61,6 +61,8 @@ public class CircuitBreakerMetrics implements MetricSet {
                     (Gauge<Integer>) () -> circuitBreaker.getMetrics().getNumberOfBufferedCalls());
                 metricRegistry.register(name(prefix, name, BUFFERED_MAX),
                     (Gauge<Integer>) () -> circuitBreaker.getMetrics().getMaxNumberOfBufferedCalls());
+                metricRegistry.register(name(prefix, name, FAILURE_RATE),
+                    (Gauge<Float>) () -> circuitBreaker.getMetrics().getFailureRate());
             }
         );
     }
