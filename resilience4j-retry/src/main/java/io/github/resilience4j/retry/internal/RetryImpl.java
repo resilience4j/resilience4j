@@ -18,6 +18,16 @@
  */
 package io.github.resilience4j.retry.internal;
 
+import io.github.resilience4j.core.EventConsumer;
+import io.github.resilience4j.core.EventProcessor;
+import io.github.resilience4j.core.lang.Nullable;
+import io.github.resilience4j.retry.Retry;
+import io.github.resilience4j.retry.RetryConfig;
+import io.github.resilience4j.retry.event.*;
+import io.vavr.CheckedConsumer;
+import io.vavr.control.Option;
+import io.vavr.control.Try;
+
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
@@ -25,20 +35,6 @@ import java.util.concurrent.atomic.LongAdder;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
-
-import io.github.resilience4j.core.EventConsumer;
-import io.github.resilience4j.core.EventProcessor;
-import io.github.resilience4j.core.lang.Nullable;
-import io.github.resilience4j.retry.Retry;
-import io.github.resilience4j.retry.RetryConfig;
-import io.github.resilience4j.retry.event.RetryEvent;
-import io.github.resilience4j.retry.event.RetryOnErrorEvent;
-import io.github.resilience4j.retry.event.RetryOnIgnoredErrorEvent;
-import io.github.resilience4j.retry.event.RetryOnRetryEvent;
-import io.github.resilience4j.retry.event.RetryOnSuccessEvent;
-import io.vavr.CheckedConsumer;
-import io.vavr.control.Option;
-import io.vavr.control.Try;
 
 public class RetryImpl<T> implements Retry {
 
@@ -308,25 +304,25 @@ public class RetryImpl<T> implements Retry {
 
 		@Override
 		public EventPublisher onRetry(EventConsumer<RetryOnRetryEvent> onRetryEventConsumer) {
-			registerConsumer(RetryOnRetryEvent.class, onRetryEventConsumer);
+			registerConsumer(RetryOnRetryEvent.class.getSimpleName(), onRetryEventConsumer);
 			return this;
 		}
 
 		@Override
 		public EventPublisher onSuccess(EventConsumer<RetryOnSuccessEvent> onSuccessEventConsumer) {
-			registerConsumer(RetryOnSuccessEvent.class, onSuccessEventConsumer);
+			registerConsumer(RetryOnSuccessEvent.class.getSimpleName(), onSuccessEventConsumer);
 			return this;
 		}
 
 		@Override
 		public EventPublisher onError(EventConsumer<RetryOnErrorEvent> onErrorEventConsumer) {
-			registerConsumer(RetryOnErrorEvent.class, onErrorEventConsumer);
+			registerConsumer(RetryOnErrorEvent.class.getSimpleName(), onErrorEventConsumer);
 			return this;
 		}
 
 		@Override
 		public EventPublisher onIgnoredError(EventConsumer<RetryOnIgnoredErrorEvent> onIgnoredErrorEventConsumer) {
-			registerConsumer(RetryOnIgnoredErrorEvent.class, onIgnoredErrorEventConsumer);
+			registerConsumer(RetryOnIgnoredErrorEvent.class.getSimpleName(), onIgnoredErrorEventConsumer);
 			return this;
 		}
 	}

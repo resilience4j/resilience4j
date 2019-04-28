@@ -204,19 +204,19 @@ public class FixedThreadPoolBulkhead implements ThreadPoolBulkhead {
 
 		@Override
 		public ThreadPoolBulkheadEventPublisher onCallPermitted(EventConsumer<BulkheadOnCallPermittedEvent> onCallPermittedEventConsumer) {
-			registerConsumer(BulkheadOnCallPermittedEvent.class, onCallPermittedEventConsumer);
+			registerConsumer(BulkheadOnCallPermittedEvent.class.getSimpleName(), onCallPermittedEventConsumer);
 			return this;
 		}
 
 		@Override
 		public ThreadPoolBulkheadEventPublisher onCallRejected(EventConsumer<BulkheadOnCallRejectedEvent> onCallRejectedEventConsumer) {
-			registerConsumer(BulkheadOnCallRejectedEvent.class, onCallRejectedEventConsumer);
+			registerConsumer(BulkheadOnCallRejectedEvent.class.getSimpleName(), onCallRejectedEventConsumer);
 			return this;
 		}
 
 		@Override
 		public ThreadPoolBulkheadEventPublisher onCallFinished(EventConsumer<BulkheadOnCallFinishedEvent> onCallFinishedEventConsumer) {
-			registerConsumer(BulkheadOnCallFinishedEvent.class, onCallFinishedEventConsumer);
+			registerConsumer(BulkheadOnCallFinishedEvent.class.getSimpleName(), onCallFinishedEventConsumer);
 			return this;
 		}
 

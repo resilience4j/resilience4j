@@ -43,7 +43,7 @@ public class CircuitBreakerConfigurationOnMissingBean extends AbstractCircuitBre
 		return circuitBreakerConfiguration.eventConsumerRegistry();
 	}
 
-	protected void createHeathIndicatorForCircuitBreaker(CircuitBreaker circuitBreaker) {
+	protected void createHealthIndicatorForCircuitBreaker(CircuitBreaker circuitBreaker) {
 		BackendProperties backendProperties = circuitBreakerProperties.findCircuitBreakerBackend(circuitBreaker, circuitBreaker.getCircuitBreakerConfig());
 
 		if (backendProperties != null && backendProperties.getRegisterHealthIndicator()) {

@@ -20,16 +20,13 @@ package io.github.resilience4j.bulkhead;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.BDDMockito;
 import org.slf4j.Logger;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.function.Consumer;
 
 import static org.assertj.core.api.BDDAssertions.assertThat;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
 
 
 public class BulkheadRegistryTest {
@@ -37,14 +34,12 @@ public class BulkheadRegistryTest {
 	private BulkheadConfig config;
 	private BulkheadRegistry registry;
 	private Logger LOGGER;
-	private Consumer<Bulkhead> post_consumer = circuitBreaker -> LOGGER.info("invoking the post consumer1");
 
 	@Before
 	public void setUp() {
 		LOGGER = mock(Logger.class);
 		// registry with default config
 		registry = BulkheadRegistry.ofDefaults();
-		registry.registerPostCreationConsumer(post_consumer);
 		// registry with custom config
 		config = BulkheadConfig.custom()
 				.maxConcurrentCalls(100)
@@ -71,7 +66,6 @@ public class BulkheadRegistryTest {
 		assertThat(bulkhead.getName()).isEqualTo("test");
 		assertThat(bulkhead.getBulkheadConfig().getMaxConcurrentCalls()).isEqualTo(25);
 		assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(25);
-		BDDMockito.then(LOGGER).should(times(1)).info("invoking the post consumer1");
 	}
 
 	@Test
@@ -82,7 +76,6 @@ public class BulkheadRegistryTest {
 
 		assertThat(bulkhead1).isSameAs(bulkhead2);
 		assertThat(registry.getAllBulkheads()).hasSize(1);
-		BDDMockito.then(LOGGER).should(times(1)).info("invoking the post consumer1");
 	}
 
 	@Test
@@ -93,7 +86,6 @@ public class BulkheadRegistryTest {
 
 		assertThat(bulkhead1).isNotSameAs(bulkhead2);
 		assertThat(registry.getAllBulkheads()).hasSize(2);
-		BDDMockito.then(LOGGER).should(times(2)).info("invoking the post consumer1");
 	}
 
 	@Test

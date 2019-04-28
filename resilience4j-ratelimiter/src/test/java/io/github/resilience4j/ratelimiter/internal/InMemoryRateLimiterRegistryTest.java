@@ -25,11 +25,8 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-import org.mockito.BDDMockito;
-import org.slf4j.Logger;
 
 import java.time.Duration;
-import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import static org.assertj.core.api.BDDAssertions.then;
@@ -46,12 +43,10 @@ public class InMemoryRateLimiterRegistryTest {
 	@Rule
 	public ExpectedException exception = ExpectedException.none();
 	private RateLimiterConfig config;
-	private Logger LOGGER;
 
 
 	@Before
 	public void init() {
-		LOGGER = mock(Logger.class);
 		config = RateLimiterConfig.custom()
 				.timeoutDuration(TIMEOUT)
 				.limitRefreshPeriod(REFRESH_PERIOD)
@@ -145,36 +140,6 @@ public class InMemoryRateLimiterRegistryTest {
 
 		assertThat(registry.getAllRateLimiters().size()).isEqualTo(1);
 		assertThat(registry.getAllRateLimiters().get(0).getName()).isEqualTo("foo");
-	}
-
-	@Test
-	public void rateLimiterTestPostConsumer() {
-		RateLimiterRegistry registry = new InMemoryRateLimiterRegistry(config);
-		Consumer<RateLimiter> consumer1 = circuitBreaker -> LOGGER.info("invoking the post consumer1");
-		registry.registerPostCreationConsumer(consumer1);
-		registry.rateLimiter("foo");
-		BDDMockito.then(LOGGER).should(times(1)).info("invoking the post consumer1");
-
-	}
-
-	@Test
-	public void rateLimiterTestPostConsumerWithCustomConfigSypplier() {
-		RateLimiterRegistry registry = new InMemoryRateLimiterRegistry(config);
-		Consumer<RateLimiter> consumer1 = circuitBreaker -> LOGGER.info("invoking the post consumer1");
-		registry.registerPostCreationConsumer(consumer1);
-		registry.rateLimiter("foo", () -> RateLimiterConfig.custom().build());
-		BDDMockito.then(LOGGER).should(times(1)).info("invoking the post consumer1");
-
-	}
-
-	@Test
-	public void rateLimiterTestPostConsumerWithCustomConfig() {
-		RateLimiterRegistry registry = new InMemoryRateLimiterRegistry(config);
-		Consumer<RateLimiter> consumer1 = circuitBreaker -> LOGGER.info("invoking the post consumer1");
-		registry.registerPostCreationConsumer(consumer1);
-		registry.rateLimiter("foo", RateLimiterConfig.custom().build());
-		BDDMockito.then(LOGGER).should(times(1)).info("invoking the post consumer1");
-
 	}
 
 }

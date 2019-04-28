@@ -15,26 +15,23 @@
  */
 package io.github.resilience4j.springboot.common.circuitbreaker.autoconfigure;
 
-import java.util.List;
-
+import io.github.resilience4j.circuitbreaker.CircuitBreaker;
+import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
+import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
+import io.github.resilience4j.circuitbreaker.configure.*;
+import io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent;
+import io.github.resilience4j.consumer.EventConsumerRegistry;
+import io.github.resilience4j.utils.ReactorOnClasspathCondition;
+import io.github.resilience4j.utils.RxJava2OnClasspathCondition;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
 
-import io.github.resilience4j.circuitbreaker.CircuitBreaker;
-import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
-import io.github.resilience4j.circuitbreaker.configure.CircuitBreakerAspect;
-import io.github.resilience4j.circuitbreaker.configure.CircuitBreakerAspectExt;
-import io.github.resilience4j.circuitbreaker.configure.CircuitBreakerConfiguration;
-import io.github.resilience4j.circuitbreaker.configure.CircuitBreakerConfigurationProperties;
-import io.github.resilience4j.circuitbreaker.configure.ReactorCircuitBreakerAspectExt;
-import io.github.resilience4j.circuitbreaker.configure.RxJava2CircuitBreakerAspectExt;
-import io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent;
-import io.github.resilience4j.consumer.EventConsumerRegistry;
-import io.github.resilience4j.utils.ReactorOnClasspathCondition;
-import io.github.resilience4j.utils.RxJava2OnClasspathCondition;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Configuration
 public abstract class AbstractCircuitBreakerConfigurationOnMissingBean {
@@ -50,13 +47,17 @@ public abstract class AbstractCircuitBreakerConfigurationOnMissingBean {
 	@Bean
 	@ConditionalOnMissingBean
 	public CircuitBreakerRegistry circuitBreakerRegistry(EventConsumerRegistry<CircuitBreakerEvent> eventConsumerRegistry) {
-		CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
+        Map<String, CircuitBreakerConfig> configs = circuitBreakerProperties.getConfigs()
+                .entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey,
+                        entry -> circuitBreakerProperties.createCircuitBreakerConfig(entry.getValue())));
+
+        CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.of(configs);
 
 		// Register the event consumers
-		circuitBreakerConfiguration.registerPostCreationEventConsumer(circuitBreakerRegistry, eventConsumerRegistry);
+		circuitBreakerConfiguration.registerEventConsumer(circuitBreakerRegistry, eventConsumerRegistry);
 		// Register a consumer to hook up any health indicators for circuit breakers after creation. This will catch ones that get
 		// created beyond initially configured backends.
-		circuitBreakerRegistry.registerPostCreationConsumer(this::createHeathIndicatorForCircuitBreaker);
+		circuitBreakerRegistry.getEventPublisher().onEntryAdded(event -> createHealthIndicatorForCircuitBreaker(event.getAddedEntry()));
 
 		// Initialize backends that were initially configured.
 		circuitBreakerConfiguration.initializeBackends(circuitBreakerRegistry);
@@ -64,7 +65,7 @@ public abstract class AbstractCircuitBreakerConfigurationOnMissingBean {
 		return circuitBreakerRegistry;
 	}
 
-	protected abstract void createHeathIndicatorForCircuitBreaker(CircuitBreaker circuitBreaker);
+	protected abstract void createHealthIndicatorForCircuitBreaker(CircuitBreaker circuitBreaker);
 
 	@Bean
 	@ConditionalOnMissingBean

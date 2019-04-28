@@ -34,13 +34,13 @@ public class RateLimiterEventProcessor extends io.github.resilience4j.core.Event
 
     @Override
     public RateLimiter.EventPublisher onSuccess(EventConsumer<RateLimiterOnSuccessEvent> onSuccessEventConsumer) {
-        registerConsumer(RateLimiterOnSuccessEvent.class, onSuccessEventConsumer);
+        registerConsumer(RateLimiterOnSuccessEvent.class.getSimpleName(), onSuccessEventConsumer);
         return this;
     }
 
     @Override
     public RateLimiter.EventPublisher onFailure(EventConsumer<RateLimiterOnFailureEvent> onOnFailureEventConsumer) {
-        registerConsumer(RateLimiterOnFailureEvent.class, onOnFailureEventConsumer);
+        registerConsumer(RateLimiterOnFailureEvent.class.getSimpleName(), onOnFailureEventConsumer);
         return this;
     }
 }
