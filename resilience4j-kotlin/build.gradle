@@ -7,8 +7,10 @@ dependencies {
     implementation(libraries.kotlin_coroutines)
 
     compileOnly(project(':resilience4j-circuitbreaker'))
+    compileOnly(project(':resilience4j-ratelimiter'))
     
     testImplementation(project(':resilience4j-circuitbreaker'))
+    testImplementation(project(':resilience4j-ratelimiter'))
 }
 
 compileKotlin {
