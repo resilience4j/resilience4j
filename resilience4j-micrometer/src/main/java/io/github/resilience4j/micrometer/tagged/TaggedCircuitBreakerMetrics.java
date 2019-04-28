@@ -90,6 +90,9 @@ public class TaggedCircuitBreakerMetrics extends AbstractMetrics implements Mete
         idSet.add(Gauge.builder(names.getMaxBufferedCallsMetricName(), circuitBreaker, (cb) -> cb.getMetrics().getMaxNumberOfBufferedCalls())
                 .tag(TagNames.NAME, circuitBreaker.getName())
                 .register(registry).getId());
+        idSet.add(Gauge.builder(names.getFailureRateMetricName(), circuitBreaker, (cb) -> cb.getMetrics().getFailureRate())
+                .tag(TagNames.NAME, circuitBreaker.getName())
+                .register(registry).getId());
 
         meterIdMap.put(circuitBreaker.getName(), idSet);
     }
@@ -114,6 +117,7 @@ public class TaggedCircuitBreakerMetrics extends AbstractMetrics implements Mete
         public static final String DEFAULT_CIRCUIT_BREAKER_STATE_METRIC_NAME = "resilience4j_circuitbreaker_state";
         public static final String DEFAULT_CIRCUIT_BREAKER_BUFFERED_CALLS = "resilience4j_circuitbreaker_buffered_calls";
         public static final String DEFAULT_CIRCUIT_BREAKER_MAX_BUFFERED_CALLS = "resilience4j_circuitbreaker_max_buffered_calls";
+        public static final String DEFAULT_CIRCUIT_BREAKER_FAILURE_RATE = "resilience4j_circuitbreaker_failure_rate";
 
         /**
          * Returns a builder for creating custom metric names.
@@ -135,6 +139,7 @@ public class TaggedCircuitBreakerMetrics extends AbstractMetrics implements Mete
         private String stateMetricName = DEFAULT_CIRCUIT_BREAKER_STATE_METRIC_NAME;
         private String bufferedCallsMetricName = DEFAULT_CIRCUIT_BREAKER_BUFFERED_CALLS;
         private String maxBufferedCallsMetricName = DEFAULT_CIRCUIT_BREAKER_MAX_BUFFERED_CALLS;
+        private String failureRateMetricName = DEFAULT_CIRCUIT_BREAKER_FAILURE_RATE;
 
         private MetricNames() {}
 
@@ -164,6 +169,13 @@ public class TaggedCircuitBreakerMetrics extends AbstractMetrics implements Mete
          */
         public String getStateMetricName() {
             return stateMetricName;
+        }
+
+        /** Returns the metric name for failure rate, defaults to {@value DEFAULT_CIRCUIT_BREAKER_FAILURE_RATE}.
+         * @return The failure rate metric name.
+         */
+        public String getFailureRateMetricName() {
+            return failureRateMetricName;
         }
 
         /** Helps building custom instance of {@link MetricNames}. */
@@ -202,6 +214,15 @@ public class TaggedCircuitBreakerMetrics extends AbstractMetrics implements Mete
              */
             public Builder maxBufferedCallsMetricName(String maxBufferedCallsMetricName) {
                 metricNames.maxBufferedCallsMetricName = requireNonNull(maxBufferedCallsMetricName);
+                return this;
+            }
+
+            /** Overrides the default metric name {@value MetricNames#DEFAULT_CIRCUIT_BREAKER_FAILURE_RATE} with a given one.
+             * @param failureRateMetricName The failure rate metric name.
+             * @return The builder.
+             */
+            public Builder failureRateMetricName(String failureRateMetricName) {
+                metricNames.failureRateMetricName = requireNonNull(failureRateMetricName);
                 return this;
             }
 
