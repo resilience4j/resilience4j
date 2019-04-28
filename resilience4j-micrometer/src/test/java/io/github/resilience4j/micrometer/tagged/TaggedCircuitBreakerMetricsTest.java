@@ -59,11 +59,11 @@ public class TaggedCircuitBreakerMetricsTest {
         newCircuitBreaker.onSuccess(0);
 
         assertThat(taggedCircuitBreakerMetrics.meterIdMap).containsKeys("backendA", "backendB");
-        assertThat(taggedCircuitBreakerMetrics.meterIdMap.get("backendA")).hasSize(6);
-        assertThat(taggedCircuitBreakerMetrics.meterIdMap.get("backendB")).hasSize(6);
+        assertThat(taggedCircuitBreakerMetrics.meterIdMap.get("backendA")).hasSize(7);
+        assertThat(taggedCircuitBreakerMetrics.meterIdMap.get("backendB")).hasSize(7);
 
         List<Meter> meters = meterRegistry.getMeters();
-        assertThat(meters).hasSize(12);
+        assertThat(meters).hasSize(14);
 
         Collection<Gauge> gauges = meterRegistry.get(DEFAULT_CIRCUIT_BREAKER_CALLS_METRIC_NAME).gauges();
 
@@ -75,7 +75,7 @@ public class TaggedCircuitBreakerMetricsTest {
     @Test
     public void shouldRemovedMetricsForRemovedRetry() {
         List<Meter> meters = meterRegistry.getMeters();
-        assertThat(meters).hasSize(6);
+        assertThat(meters).hasSize(7);
 
         assertThat(taggedCircuitBreakerMetrics.meterIdMap).containsKeys("backendA");
         circuitBreakerRegistry.remove("backendA");
@@ -109,7 +109,7 @@ public class TaggedCircuitBreakerMetricsTest {
     @Test
     public void notPermittedCallsGaugeReportsCorrespondingValue() {
         List<Meter> meters = meterRegistry.getMeters();
-        assertThat(meters).hasSize(6);
+        assertThat(meters).hasSize(7);
 
         Collection<Gauge> gauges = meterRegistry.get(DEFAULT_CIRCUIT_BREAKER_CALLS_METRIC_NAME).gauges();
 
@@ -154,6 +154,15 @@ public class TaggedCircuitBreakerMetricsTest {
     }
 
     @Test
+    public void failureRateGaugeReportsCorrespondingValue() {
+        Gauge failureRate = meterRegistry.get(DEFAULT_CIRCUIT_BREAKER_FAILURE_RATE).gauge();
+
+        assertThat(failureRate).isNotNull();
+        assertThat(failureRate.value()).isEqualTo((circuitBreaker.getMetrics().getFailureRate()));
+        assertThat(failureRate.getId().getTag(TagNames.NAME)).isEqualTo(circuitBreaker.getName());
+    }
+
+    @Test
     public void stateGaugeReportsCorrespondingValue() {
         Gauge state = meterRegistry.get(DEFAULT_CIRCUIT_BREAKER_STATE_METRIC_NAME).gauge();
 
@@ -172,6 +181,7 @@ public class TaggedCircuitBreakerMetricsTest {
                         .stateMetricName("custom_state")
                         .bufferedCallsMetricName("custom_buffered_calls")
                         .maxBufferedCallsMetricName("custom_max_buffered_calls")
+                        .failureRateMetricName("custom_failure_rate")
                         .build(),
                 circuitBreakerRegistry
         ).bindTo(meterRegistry);
@@ -186,7 +196,8 @@ public class TaggedCircuitBreakerMetricsTest {
                 "custom_calls",
                 "custom_state",
                 "custom_buffered_calls",
-                "custom_max_buffered_calls"
+                "custom_max_buffered_calls",
+                "custom_failure_rate"
         ));
     }
 
