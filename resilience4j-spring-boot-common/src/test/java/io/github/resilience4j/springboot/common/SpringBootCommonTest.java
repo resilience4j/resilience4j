@@ -1,11 +1,5 @@
 package io.github.resilience4j.springboot.common;
 
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
-
-import java.util.Collections;
-
-import org.junit.Test;
-
 import io.github.resilience4j.bulkhead.BulkheadRegistry;
 import io.github.resilience4j.bulkhead.configure.BulkheadConfigurationProperties;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
@@ -20,6 +14,11 @@ import io.github.resilience4j.springboot.common.bulkhead.autoconfigure.AbstractB
 import io.github.resilience4j.springboot.common.circuitbreaker.autoconfigure.AbstractCircuitBreakerConfigurationOnMissingBean;
 import io.github.resilience4j.springboot.common.ratelimiter.autoconfigure.AbstractRateLimiterConfigurationOnMissingBean;
 import io.github.resilience4j.springboot.common.retry.autoconfigure.AbstractRetryConfigurationOnMissingBean;
+import org.junit.Test;
+
+import java.util.Collections;
+
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 /**
  * @author romeh
@@ -74,7 +73,7 @@ public class SpringBootCommonTest {
 		}
 
 		@Override
-		protected void createHeathIndicatorForCircuitBreaker(CircuitBreaker circuitBreaker) {
+		protected void createHealthIndicatorForCircuitBreaker(CircuitBreaker circuitBreaker) {
 
 		}
 	}

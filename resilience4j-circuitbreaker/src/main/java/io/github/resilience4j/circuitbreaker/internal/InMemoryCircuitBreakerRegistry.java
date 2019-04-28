@@ -21,7 +21,7 @@ package io.github.resilience4j.circuitbreaker.internal;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
-import io.github.resilience4j.core.AbstractRegistry;
+import io.github.resilience4j.core.registry.AbstractRegistry;
 import io.github.resilience4j.core.ConfigurationNotFoundException;
 import io.vavr.collection.Array;
 import io.vavr.collection.Seq;
@@ -62,7 +62,7 @@ public final class InMemoryCircuitBreakerRegistry extends AbstractRegistry<Circu
 	 */
 	@Override
 	public Seq<CircuitBreaker> getAllCircuitBreakers() {
-		return Array.ofAll(targetMap.values());
+		return Array.ofAll(entryMap.values());
 	}
 
 	/**

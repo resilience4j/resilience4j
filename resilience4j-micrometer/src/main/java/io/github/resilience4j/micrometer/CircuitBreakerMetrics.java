@@ -17,6 +17,7 @@ package io.github.resilience4j.micrometer;
 
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
+import io.github.resilience4j.micrometer.tagged.TaggedCircuitBreakerMetrics;
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.binder.MeterBinder;
@@ -25,6 +26,10 @@ import static io.github.resilience4j.circuitbreaker.utils.MetricNames.*;
 import static io.github.resilience4j.micrometer.MetricUtils.getName;
 import static java.util.Objects.requireNonNull;
 
+/**
+ * @deprecated Use {@link TaggedCircuitBreakerMetrics} instead
+ */
+@Deprecated
 public class CircuitBreakerMetrics implements MeterBinder {
 
     private final Iterable<CircuitBreaker> circuitBreakers;

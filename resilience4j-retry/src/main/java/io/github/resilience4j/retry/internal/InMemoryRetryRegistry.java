@@ -15,7 +15,7 @@
  */
 package io.github.resilience4j.retry.internal;
 
-import io.github.resilience4j.core.AbstractRegistry;
+import io.github.resilience4j.core.registry.AbstractRegistry;
 import io.github.resilience4j.core.ConfigurationNotFoundException;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryConfig;
@@ -59,7 +59,7 @@ public final class InMemoryRetryRegistry extends AbstractRegistry<Retry, RetryCo
 	 */
 	@Override
 	public Seq<Retry> getAllRetries() {
-		return Array.ofAll(targetMap.values());
+		return Array.ofAll(entryMap.values());
 	}
 
 	/**

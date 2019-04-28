@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright 2017: Robert Winkler
+ *  Copyright 2018: Clint Checketts
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -16,7 +16,9 @@
  *
  *
  */
-package io.github.resilience4j.core;
+@NonNullApi
+@NonNullFields
+package io.github.resilience4j.micrometer.tagged;
 
-public interface Event {
-}
+import io.github.resilience4j.core.lang.NonNullApi;
+import io.github.resilience4j.core.lang.NonNullFields;

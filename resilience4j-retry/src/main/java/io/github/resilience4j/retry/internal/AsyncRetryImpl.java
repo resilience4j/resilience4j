@@ -18,6 +18,13 @@
  */
 package io.github.resilience4j.retry.internal;
 
+import io.github.resilience4j.core.EventConsumer;
+import io.github.resilience4j.core.EventProcessor;
+import io.github.resilience4j.core.lang.Nullable;
+import io.github.resilience4j.retry.AsyncRetry;
+import io.github.resilience4j.retry.RetryConfig;
+import io.github.resilience4j.retry.event.*;
+
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
@@ -25,17 +32,6 @@ import java.util.concurrent.atomic.LongAdder;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
-
-import io.github.resilience4j.core.EventConsumer;
-import io.github.resilience4j.core.EventProcessor;
-import io.github.resilience4j.core.lang.Nullable;
-import io.github.resilience4j.retry.AsyncRetry;
-import io.github.resilience4j.retry.RetryConfig;
-import io.github.resilience4j.retry.event.RetryEvent;
-import io.github.resilience4j.retry.event.RetryOnErrorEvent;
-import io.github.resilience4j.retry.event.RetryOnIgnoredErrorEvent;
-import io.github.resilience4j.retry.event.RetryOnRetryEvent;
-import io.github.resilience4j.retry.event.RetryOnSuccessEvent;
 
 // * @deprecated replaced by @see io.github.resilience4j.retry.Retry#decorateCompletionStage()
 @Deprecated
@@ -204,25 +200,25 @@ public class AsyncRetryImpl<T> implements AsyncRetry {
 
 		@Override
 		public EventPublisher onRetry(EventConsumer<RetryOnRetryEvent> onRetryEventConsumer) {
-			registerConsumer(RetryOnRetryEvent.class, onRetryEventConsumer);
+			registerConsumer(RetryOnRetryEvent.class.getSimpleName(), onRetryEventConsumer);
 			return this;
 		}
 
 		@Override
 		public AsyncRetry.EventPublisher onSuccess(EventConsumer<RetryOnSuccessEvent> onSuccessEventConsumer) {
-			registerConsumer(RetryOnSuccessEvent.class, onSuccessEventConsumer);
+			registerConsumer(RetryOnSuccessEvent.class.getSimpleName(), onSuccessEventConsumer);
 			return this;
 		}
 
 		@Override
 		public AsyncRetry.EventPublisher onError(EventConsumer<RetryOnErrorEvent> onErrorEventConsumer) {
-			registerConsumer(RetryOnErrorEvent.class, onErrorEventConsumer);
+			registerConsumer(RetryOnErrorEvent.class.getSimpleName(), onErrorEventConsumer);
 			return this;
 		}
 
 		@Override
 		public AsyncRetry.EventPublisher onIgnoredError(EventConsumer<RetryOnIgnoredErrorEvent> onIgnoredErrorEventConsumer) {
-			registerConsumer(RetryOnIgnoredErrorEvent.class, onIgnoredErrorEventConsumer);
+			registerConsumer(RetryOnIgnoredErrorEvent.class.getSimpleName(), onIgnoredErrorEventConsumer);
 			return this;
 		}
 	}
