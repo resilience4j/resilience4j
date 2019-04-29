@@ -18,8 +18,6 @@ package io.github.resilience4j.ratelimiter.monitoring.endpoint;
 import io.github.resilience4j.consumer.CircularEventConsumer;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
 import io.github.resilience4j.ratelimiter.event.RateLimiterEvent;
-import io.github.resilience4j.ratelimiter.monitoring.model.RateLimiterEventDTO;
-import io.github.resilience4j.ratelimiter.monitoring.model.RateLimiterEventsEndpointResponse;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;

@@ -18,12 +18,12 @@
  */
 package io.github.resilience4j.circuitbreaker;
 
+import io.github.resilience4j.core.lang.Nullable;
+
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.Optional;
 import java.util.function.Predicate;
-
-import io.github.resilience4j.core.lang.Nullable;
 
 
 /**
@@ -44,7 +44,6 @@ public class CircuitBreakerConfig {
     // The default exception predicate counts all exceptions as failures.
     private Predicate<Throwable> recordFailurePredicate = DEFAULT_RECORD_FAILURE_PREDICATE;
     private boolean automaticTransitionFromOpenToHalfOpenEnabled = false;
-    private String configurationName;
 
     private CircuitBreakerConfig() {
     }
@@ -56,6 +55,15 @@ public class CircuitBreakerConfig {
      */
     public static Builder custom() {
         return new Builder();
+    }
+
+    /**
+     * Returns a builder to create a custom CircuitBreakerConfig based on another CircuitBreakerConfig.
+     *
+     * @return a {@link Builder}
+     */
+    public static Builder from(CircuitBreakerConfig baseConfig) {
+        return new Builder(baseConfig);
     }
 
     /**
@@ -91,11 +99,6 @@ public class CircuitBreakerConfig {
         return automaticTransitionFromOpenToHalfOpenEnabled;
     }
 
-    @Nullable
-    public String getConfigurationName() {
-        return configurationName;
-    }
-
     public static class Builder {
         @Nullable
         private Predicate<Throwable> recordFailurePredicate;
@@ -110,8 +113,19 @@ public class CircuitBreakerConfig {
         private int ringBufferSizeInClosedState = DEFAULT_RING_BUFFER_SIZE_IN_CLOSED_STATE;
         private Duration waitDurationInOpenState = Duration.ofSeconds(DEFAULT_WAIT_DURATION_IN_OPEN_STATE);
         private boolean automaticTransitionFromOpenToHalfOpenEnabled = false;
-        @Nullable
-        private String configurationName;
+
+        public Builder(CircuitBreakerConfig baseConfig) {
+            this.waitDurationInOpenState = baseConfig.getWaitDurationInOpenState();
+            this.ringBufferSizeInHalfOpenState = baseConfig.getRingBufferSizeInHalfOpenState();
+            this.ringBufferSizeInClosedState = baseConfig.getRingBufferSizeInClosedState();
+            this.failureRateThreshold = baseConfig.getFailureRateThreshold();
+            this.recordFailurePredicate = baseConfig.getRecordFailurePredicate();
+            this.automaticTransitionFromOpenToHalfOpenEnabled = baseConfig.automaticTransitionFromOpenToHalfOpenEnabled;
+        }
+
+        public Builder() {
+
+        }
 
         static Predicate<Throwable> makePredicate(Class<? extends Throwable> exClass) {
 
@@ -256,13 +270,12 @@ public class CircuitBreakerConfig {
         }
 
         /**
-         * A name for referencing the configuration. This is not required, but can be used for referencing configurations if set.
+         * Enables automatic transition from OPEN to HALF_OPEN state once the waitDurationInOpenState has passed.
          *
-         * @param configurationName A name for referencing the configuration.
-         * @return The CircuitBreakerConfig.Builder
+         * @return the CircuitBreakerConfig.Builder
          */
-        public Builder configurationName(String configurationName) {
-            this.configurationName = configurationName;
+        public Builder automaticTransitionFromOpenToHalfOpenEnabled(boolean enableAutomaticTransitionFromOpenToHalfOpen) {
+            this.automaticTransitionFromOpenToHalfOpenEnabled = enableAutomaticTransitionFromOpenToHalfOpen;
             return this;
         }
 
@@ -282,7 +295,6 @@ public class CircuitBreakerConfig {
                 config.recordFailurePredicate = errorRecordingPredicate;
             }
             config.automaticTransitionFromOpenToHalfOpenEnabled = automaticTransitionFromOpenToHalfOpenEnabled;
-            config.configurationName = configurationName;
             return config;
         }
 

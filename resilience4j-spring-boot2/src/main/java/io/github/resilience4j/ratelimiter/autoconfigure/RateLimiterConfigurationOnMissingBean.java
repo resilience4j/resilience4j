@@ -15,13 +15,11 @@
  */
 package io.github.resilience4j.ratelimiter.autoconfigure;
 
+import io.github.resilience4j.consumer.EventConsumerRegistry;
+import io.github.resilience4j.ratelimiter.event.RateLimiterEvent;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-
-import io.github.resilience4j.consumer.EventConsumerRegistry;
-import io.github.resilience4j.ratelimiter.event.RateLimiterEvent;
-import io.github.resilience4j.springboot.common.ratelimiter.autoconfigure.AbstractRateLimiterConfigurationOnMissingBean;
 
 @Configuration
 public class RateLimiterConfigurationOnMissingBean extends AbstractRateLimiterConfigurationOnMissingBean {
