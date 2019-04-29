@@ -19,6 +19,8 @@ import io.github.resilience4j.bulkhead.event.BulkheadEvent;
 
 class BulkheadEventDTOFactory {
 
+    private BulkheadEventDTOFactory() {}
+
     static BulkheadEventDTO createBulkheadEventDTOFactory(BulkheadEvent event){
         switch(event.getEventType()) {
             case CALL_PERMITTED:

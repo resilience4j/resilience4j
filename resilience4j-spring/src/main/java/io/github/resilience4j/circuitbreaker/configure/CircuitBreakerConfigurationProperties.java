@@ -1,4 +1,3 @@
-package io.github.resilience4j.circuitbreaker.configure;
 /*
  * Copyright 2017 Robert Winkler
  *
@@ -14,6 +13,8 @@ package io.github.resilience4j.circuitbreaker.configure;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package io.github.resilience4j.circuitbreaker.configure;
+
 
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.Builder;

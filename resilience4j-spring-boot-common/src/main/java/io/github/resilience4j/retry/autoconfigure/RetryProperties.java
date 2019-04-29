@@ -1,4 +1,3 @@
-package io.github.resilience4j.retry.autoconfigure;
 /*
  * Copyright 2019 Mahmoud Romeh
  *
@@ -14,6 +13,7 @@ package io.github.resilience4j.retry.autoconfigure;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package io.github.resilience4j.retry.autoconfigure;
 
 import io.github.resilience4j.retry.configure.RetryConfigurationProperties;
 import org.springframework.boot.context.properties.ConfigurationProperties;

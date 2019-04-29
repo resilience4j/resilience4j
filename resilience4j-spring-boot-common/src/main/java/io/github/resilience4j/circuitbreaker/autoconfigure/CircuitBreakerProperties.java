@@ -1,5 +1,6 @@
+package io.github.resilience4j.circuitbreaker.autoconfigure;
 /*
- * Copyright 2017 Bohdan Storozhuk
+ * Copyright 2017 Robert Winkler
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,11 +14,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.resilience4j.ratelimiter.autoconfigure;
 
-import io.github.resilience4j.ratelimiter.configure.RateLimiterConfigurationProperties;
+import io.github.resilience4j.circuitbreaker.configure.CircuitBreakerConfigurationProperties;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
-@ConfigurationProperties(prefix = "resilience4j.ratelimiter")
-public class RateLimiterProperties extends RateLimiterConfigurationProperties {
+@ConfigurationProperties(prefix = "resilience4j.circuitbreaker")
+public class CircuitBreakerProperties extends CircuitBreakerConfigurationProperties {
 }
