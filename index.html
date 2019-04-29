@@ -529,7 +529,7 @@ table.CodeRay td.code>pre{padding:0}
 <div class="details">
 <span id="author" class="author">Robert Winkler</span><br>
 <span id="revnumber">version 0.15.0-SNAPSHOT,</span>
-<span id="revdate">2019-04-28</span>
+<span id="revdate">2019-04-29</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">Table of Contents</div>
@@ -977,6 +977,25 @@ CircuitBreaker circuitBreaker2 = circuitBreakerRegistry.circuitBreaker(<span cla
 
 <span class="comment">// Get a CircuitBreaker from the CircuitBreakerRegistry with a custom configuration</span>
 CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker(<span class="string"><span class="delimiter">&quot;</span><span class="content">uniqueName</span><span class="delimiter">&quot;</span></span>, circuitBreakerConfig);</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>You can register event consumer on a CircuitBreakerRegistry and take actions whenever a CircuitBreaker is created, replaced or deleted.<br>
+For example, you can register a global event consumer to every newly created CircuitBreaker as follows:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
+    circuitBreakerRegistry.getEventPublisher()
+        .onEntryAdded(entryAddedEvent -&gt; {
+            CircuitBreaker addedCircuitBreaker =  entryAddedEvent.getAddedEntry();
+            LOG.info("CircuitBreaker {} added", addedCircuitBreaker.getName());
+            addedCircuitBreaker.getEventPublisher().onEvent(circuitBreakerEvent -&gt; LOG.info(circuitBreakerEvent.toString()));
+        })
+        .onEntryRemoved(entryRemovedEvent -&gt; {
+            CircuitBreaker removedCircuitBreaker =  entryRemovedEvent.getRemovedEntry();
+            LOG.info("CircuitBreaker {} removed", removedCircuitBreaker.getName());
+        });</pre>
 </div>
 </div>
 <div class="paragraph">
@@ -4983,7 +5002,7 @@ So you can easily restrict not only network calls but your local in-memory opera
 <div id="footer">
 <div id="footer-text">
 Version 0.15.0-SNAPSHOT<br>
-Last updated 2019-04-28 18:24:10 UTC
+Last updated 2019-04-29 17:40:23 UTC
 </div>
 </div>
 </body>
