@@ -18,8 +18,12 @@
  */
 package io.github.resilience4j.core;
 
+import io.github.resilience4j.core.registry.EntryAddedEvent;
+import io.github.resilience4j.core.registry.EntryRemovedEvent;
+import io.github.resilience4j.core.registry.EntryReplacedEvent;
+import io.github.resilience4j.core.registry.RegistryEvent;
+
 import java.util.Optional;
-import java.util.function.Consumer;
 
 /**
  * root resilience4j registry to be used by resilience types registries for common functionality
@@ -27,33 +31,59 @@ import java.util.function.Consumer;
 public interface Registry<Target, Config> {
 
 	/**
+	 * Adds a configuration to the registry
+	 *
 	 * @param configName    the configuration name
 	 * @param configuration the added configuration
 	 */
 	void addConfiguration(String configName, Config configuration);
 
+	/**
+	 * Remove an entry from the Registry
+	 *
+	 * @param name    the  name
+	 */
+	Optional<Target> remove(String name);
 
 	/**
+	 * Replace an existing entry in the Registry by a new one.
+	 *
+	 * @param name    the existing name
+	 * @param newEntry    a new entry
+	 */
+	Optional<Target> replace(String name, Target newEntry);
+
+	/**
+	 * Get a configuration by name
+	 *
 	 * @param configName the configuration name
 	 * @return the found configuration if any
 	 */
 	Optional<Config> getConfiguration(String configName);
 
+	/**
+	 * Get the default configuration
+	 *
+	 * @return the default configuration
+	 */
+	Config getDefaultConfig();
 
 	/**
-	 * Allows for configuring some functionality to be executed when a new target is created.
+	 * Returns an EventPublisher which can be used to register event consumers.
 	 *
-	 * @param postCreationConsumer A consumer function to execute for a target that was created.
+	 * @return an EventPublisher
 	 */
-	void registerPostCreationConsumer(Consumer<Target> postCreationConsumer);
-
+	EventPublisher<Target> getEventPublisher();
 
 	/**
-	 * Allows for configuring some functionality to be executed when a new target is created.
-	 *
-	 * @param postCreationConsumer A consumer function to execute for a target that was created.
+	 * An EventPublisher can be used to register event consumers.
 	 */
-	void unregisterPostCreationConsumer(Consumer<Target> postCreationConsumer);
+	interface EventPublisher<Target> extends io.github.resilience4j.core.EventPublisher<RegistryEvent> {
 
+		EventPublisher onEntryAdded(EventConsumer<EntryAddedEvent<Target>> eventConsumer);
 
+		EventPublisher onEntryRemoved(EventConsumer<EntryRemovedEvent<Target>> eventConsumer);
+
+		EventPublisher onEntryReplaced(EventConsumer<EntryReplacedEvent<Target>> eventConsumer);
+	}
 }

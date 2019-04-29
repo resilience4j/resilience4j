@@ -34,10 +34,14 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
+import static java.util.Objects.requireNonNull;
+
 /**
  * A Bulkhead implementation based on a semaphore.
  */
 public class SemaphoreBulkhead implements Bulkhead {
+
+    private static final String CONFIG_MUST_NOT_BE_NULL = "Config must not be null";
 
     private final String name;
     private final Semaphore semaphore;
@@ -54,8 +58,7 @@ public class SemaphoreBulkhead implements Bulkhead {
      */
     public SemaphoreBulkhead(String name, @Nullable BulkheadConfig bulkheadConfig) {
         this.name = name;
-        this.config = bulkheadConfig != null ? bulkheadConfig
-                : BulkheadConfig.ofDefaults();
+        this.config = requireNonNull(bulkheadConfig, CONFIG_MUST_NOT_BE_NULL);
         // init semaphore
         this.semaphore = new Semaphore(this.config.getMaxConcurrentCalls(), true);
 
@@ -170,19 +173,19 @@ public class SemaphoreBulkhead implements Bulkhead {
 
         @Override
         public EventPublisher onCallPermitted(EventConsumer<BulkheadOnCallPermittedEvent> onCallPermittedEventConsumer) {
-            registerConsumer(BulkheadOnCallPermittedEvent.class, onCallPermittedEventConsumer);
+            registerConsumer(BulkheadOnCallPermittedEvent.class.getSimpleName(), onCallPermittedEventConsumer);
             return this;
         }
 
         @Override
         public EventPublisher onCallRejected(EventConsumer<BulkheadOnCallRejectedEvent> onCallRejectedEventConsumer) {
-            registerConsumer(BulkheadOnCallRejectedEvent.class, onCallRejectedEventConsumer);
+            registerConsumer(BulkheadOnCallRejectedEvent.class.getSimpleName(), onCallRejectedEventConsumer);
             return this;
         }
 
         @Override
         public EventPublisher onCallFinished(EventConsumer<BulkheadOnCallFinishedEvent> onCallFinishedEventConsumer) {
-            registerConsumer(BulkheadOnCallFinishedEvent.class, onCallFinishedEventConsumer);
+            registerConsumer(BulkheadOnCallFinishedEvent.class.getSimpleName(), onCallFinishedEventConsumer);
             return this;
         }
 

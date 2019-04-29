@@ -49,7 +49,7 @@ public class SemaphoreBasedRateLimiterImplTest {
     private static final int LIMIT = 2;
     private static final Duration TIMEOUT = Duration.ofSeconds(5);
     private static final Duration REFRESH_PERIOD = Duration.ofMillis(100);
-    private static final String CONFIG_MUST_NOT_BE_NULL = "RateLimiterConfig must not be null";
+    private static final String CONFIG_MUST_NOT_BE_NULL = "Config must not be null";
     private static final String NAME_MUST_NOT_BE_NULL = "Name must not be null";
     private static final Object O = new Object();
     @Rule

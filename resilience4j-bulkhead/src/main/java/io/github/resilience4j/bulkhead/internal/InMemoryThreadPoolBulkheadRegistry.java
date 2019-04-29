@@ -18,68 +18,91 @@
  */
 package io.github.resilience4j.bulkhead.internal;
 
-import java.util.Objects;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-import java.util.function.Supplier;
-
 import io.github.resilience4j.bulkhead.ThreadPoolBulkhead;
 import io.github.resilience4j.bulkhead.ThreadPoolBulkheadConfig;
 import io.github.resilience4j.bulkhead.ThreadPoolBulkheadRegistry;
+import io.github.resilience4j.core.registry.AbstractRegistry;
+import io.github.resilience4j.core.ConfigurationNotFoundException;
 import io.vavr.collection.Array;
 import io.vavr.collection.Seq;
+
+import java.util.Map;
+import java.util.Objects;
+import java.util.function.Supplier;
 
 /**
  * Thread pool Bulkhead instance manager;
  * Constructs/returns thread pool bulkhead instances.
  */
-public final class InMemoryThreadPoolBulkheadRegistry implements ThreadPoolBulkheadRegistry {
-
-	private final ThreadPoolBulkheadConfig defaultBulkheadConfig;
+public final class InMemoryThreadPoolBulkheadRegistry extends AbstractRegistry<ThreadPoolBulkhead, ThreadPoolBulkheadConfig> implements ThreadPoolBulkheadRegistry {
 
 	/**
-	 * The bulkheads, indexed by name
+	 * The constructor with default default.
 	 */
-	private final ConcurrentMap<String, ThreadPoolBulkhead> bulkheads;
-
-	/**
-	 * The constructor with custom default bulkhead config
-	 *
-	 * @param bulkheadConfig custom bulkhead config to use
-	 */
-	public InMemoryThreadPoolBulkheadRegistry(ThreadPoolBulkheadConfig bulkheadConfig) {
-		this.defaultBulkheadConfig = bulkheadConfig;
-		this.bulkheads = new ConcurrentHashMap<>();
+	public InMemoryThreadPoolBulkheadRegistry() {
+		this(ThreadPoolBulkheadConfig.ofDefaults());
 	}
 
+	public InMemoryThreadPoolBulkheadRegistry(Map<String, ThreadPoolBulkheadConfig> configs) {
+		this(configs.getOrDefault(DEFAULT_CONFIG, ThreadPoolBulkheadConfig.ofDefaults()));
+		this.configurations.putAll(configs);
+	}
+
+	/**
+	 * The constructor with custom default config.
+	 *
+	 * @param defaultConfig The default config.
+	 */
+	public InMemoryThreadPoolBulkheadRegistry(ThreadPoolBulkheadConfig defaultConfig) {
+		super(defaultConfig);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	public Seq<ThreadPoolBulkhead> getAllBulkheads() {
-		return Array.ofAll(bulkheads.values());
+		return Array.ofAll(entryMap.values());
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	public ThreadPoolBulkhead bulkhead(String name) {
-		return bulkhead(name, defaultBulkheadConfig);
+		return bulkhead(name, getDefaultConfig());
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
-	public ThreadPoolBulkhead bulkhead(String name, ThreadPoolBulkheadConfig bulkheadConfig) {
-		return bulkheads.computeIfAbsent(
-				Objects.requireNonNull(name, "Name must not be null"),
-				k -> ThreadPoolBulkhead.of(name, bulkheadConfig)
-		);
+	public ThreadPoolBulkhead bulkhead(String name, ThreadPoolBulkheadConfig config) {
+		return computeIfAbsent(name, () -> ThreadPoolBulkhead.of(name, Objects.requireNonNull(config, CONFIG_MUST_NOT_BE_NULL)));
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	public ThreadPoolBulkhead bulkhead(String name, Supplier<ThreadPoolBulkheadConfig> bulkheadConfigSupplier) {
-		return bulkheads.computeIfAbsent(
-				Objects.requireNonNull(name, "Name must not be null"),
-				k -> ThreadPoolBulkhead.of(name, bulkheadConfigSupplier.get())
-		);
+		return computeIfAbsent(name, () -> ThreadPoolBulkhead.of(name, Objects.requireNonNull(Objects.requireNonNull(bulkheadConfigSupplier, SUPPLIER_MUST_NOT_BE_NULL).get(), CONFIG_MUST_NOT_BE_NULL)));
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public ThreadPoolBulkhead bulkhead(String name, String configName) {
+		return computeIfAbsent(name, () -> ThreadPoolBulkhead.of(name, getConfiguration(configName)
+				.orElseThrow(() -> new ConfigurationNotFoundException(configName))));
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	public ThreadPoolBulkheadConfig getDefaultBulkheadConfig() {
-		return defaultBulkheadConfig;
+		return getDefaultConfig();
 	}
 }

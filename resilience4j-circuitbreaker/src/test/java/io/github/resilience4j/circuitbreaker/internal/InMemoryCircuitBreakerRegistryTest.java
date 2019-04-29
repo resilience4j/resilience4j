@@ -1,22 +1,19 @@
 package io.github.resilience4j.circuitbreaker.internal;
 
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
-import static org.mockito.BDDMockito.then;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
-
-import java.util.HashMap;
-import java.util.Map;
-import java.util.function.Consumer;
-
+import io.github.resilience4j.circuitbreaker.CircuitBreaker;
+import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
+import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
+import io.github.resilience4j.core.ConfigurationNotFoundException;
 import org.assertj.core.api.Assertions;
 import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
 
-import io.github.resilience4j.circuitbreaker.CircuitBreaker;
-import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
-import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
+import java.util.HashMap;
+import java.util.Map;
+
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.mockito.Mockito.mock;
 
 
 public class InMemoryCircuitBreakerRegistryTest {
@@ -26,26 +23,6 @@ public class InMemoryCircuitBreakerRegistryTest {
 	@Before
 	public void setUp() {
 		LOGGER = mock(Logger.class);
-	}
-
-	@Test
-	public void testPostConsumerBeingCalled() {
-		CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
-		Consumer<CircuitBreaker> consumer1 = circuitBreaker -> LOGGER.info("invoking the post consumer1");
-		Consumer<CircuitBreaker> consumer2 = circuitBreaker -> LOGGER.info("invoking the post consumer2");
-
-		circuitBreakerRegistry.registerPostCreationConsumer(consumer1);
-
-		circuitBreakerRegistry.circuitBreaker("testCircuitBreaker");
-		circuitBreakerRegistry.circuitBreaker("testCircuitBreaker2", CircuitBreakerConfig.ofDefaults());
-		circuitBreakerRegistry.circuitBreaker("testCircuitBreaker3", CircuitBreakerConfig::ofDefaults);
-
-		then(LOGGER).should(times(3)).info("invoking the post consumer1");
-
-		circuitBreakerRegistry.registerPostCreationConsumer(consumer2);
-		circuitBreakerRegistry.unregisterPostCreationConsumer(consumer1);
-		circuitBreakerRegistry.circuitBreaker("testCircuitBreaker4");
-		then(LOGGER).should(times(1)).info("invoking the post consumer2");
 	}
 
 	@Test
@@ -88,6 +65,24 @@ public class InMemoryCircuitBreakerRegistryTest {
 		final CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("circuitBreaker",
 				circuitBreakerRegistry.getConfiguration("testConfig").get());
 		assertThat(circuitBreaker).isNotNull();
+	}
+
+	@Test
+	public void testCreateCircuitBreakerWithConfigName() {
+		CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
+		circuitBreakerRegistry.addConfiguration("testConfig", CircuitBreakerConfig.custom().ringBufferSizeInClosedState(5).build());
+		final CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("circuitBreaker",
+				"testConfig");
+		assertThat(circuitBreaker).isNotNull();
+		assertThat(circuitBreaker.getCircuitBreakerConfig().getRingBufferSizeInClosedState()).isEqualTo(5);
+	}
+
+	@Test
+	public void testCreateCircuitBreakerWithConfigNameNotFound() {
+		CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
+		Assertions.assertThatThrownBy(() -> circuitBreakerRegistry.circuitBreaker("circuitBreaker",
+				"testConfig")).isInstanceOf(ConfigurationNotFoundException.class);
+
 	}
 
 

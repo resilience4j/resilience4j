@@ -35,6 +35,7 @@ import static io.github.resilience4j.bulkhead.event.BulkheadEvent.Type.*;
 import static java.lang.Thread.State.*;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 public class SemaphoreBulkheadTest {
 
@@ -100,11 +101,7 @@ public class SemaphoreBulkheadTest {
 		Supplier<BulkheadConfig> configSupplier = () -> null;
 
 		// when
-		Bulkhead bulkhead = Bulkhead.of("test", configSupplier);
-
-		// then
-		assertThat(bulkhead).isNotNull();
-		assertThat(bulkhead.getBulkheadConfig()).isNotNull();
+		assertThatThrownBy(() -> Bulkhead.of("test", configSupplier)).isInstanceOf(NullPointerException.class).hasMessage("Config must not be null");
 	}
 
 	@Test
@@ -135,6 +132,24 @@ public class SemaphoreBulkheadTest {
 
 		// then
 		assertThat(entered).isTrue();
+	}
+
+	@Test
+	public void testZeroMaxConcurrentCalls() {
+
+		// given
+		BulkheadConfig config = BulkheadConfig.custom()
+				.maxConcurrentCalls(0)
+				.maxWaitTime(0)
+				.build();
+
+		SemaphoreBulkhead bulkhead = new SemaphoreBulkhead("test", config);
+
+		// when
+		boolean entered = bulkhead.tryObtainPermission();
+
+		// then
+		assertThat(entered).isFalse();
 	}
 
 	@Test

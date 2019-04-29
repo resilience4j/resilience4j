@@ -4,7 +4,8 @@
 
 Add the Spring Boot 2 Starter of Resilience4j to your compile dependency:
 
-```
+[source,groovy, subs="attributes"]
+----
 repositories {
 	maven { url 'http://oss.jfrog.org/artifactory/oss-snapshot-local/' }
 	mavenCentral()
@@ -14,7 +15,8 @@ repositories {
 dependencies {
 	compile('io.github.resilience4j:resilience4j-spring-boot2:{release-version}')
 }
-```
+----
+
 ==== Supported Types by Spring boot starter resilience aspects
 
 Rate limiter , Retry , Circuit breaker and Bulkhead now support Synchronous return types ,CompletableFutures , RxJava2 types and Reactor types .

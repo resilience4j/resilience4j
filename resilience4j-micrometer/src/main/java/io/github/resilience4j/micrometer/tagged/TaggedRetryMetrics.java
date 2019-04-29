@@ -19,8 +19,12 @@ import io.github.resilience4j.micrometer.RetryMetrics;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryRegistry;
 import io.micrometer.core.instrument.Gauge;
+import io.micrometer.core.instrument.Meter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.binder.MeterBinder;
+
+import java.util.HashSet;
+import java.util.Set;
 
 import static io.github.resilience4j.retry.Retry.Metrics;
 import static java.util.Objects.requireNonNull;
@@ -30,57 +34,72 @@ import static java.util.Objects.requireNonNull;
  * The main difference from {@link RetryMetrics} is that this binder uses tags
  * to distinguish between metrics.
  */
-public class TaggedRetryMetrics implements MeterBinder {
+public class TaggedRetryMetrics extends AbstractMetrics implements MeterBinder {
 
     /**
      * Creates a new binder that uses given {@code registry} as source of retries.
      *
-     * @param registry the source of retries
+     * @param retryRegistry the source of retries
      * @return The {@link TaggedRetryMetrics} instance.
      */
-    public static TaggedRetryMetrics ofRetryRegistry(RetryRegistry registry) {
-        return new TaggedRetryMetrics(MetricNames.ofDefaults(), registry.getAllRetries());
+    public static TaggedRetryMetrics ofRetryRegistry(RetryRegistry retryRegistry) {
+        return new TaggedRetryMetrics(MetricNames.ofDefaults(), retryRegistry);
     }
 
     /**
      * Creates a new binder that uses given {@code registry} as source of retries.
      *
      * @param names custom metric names
-     * @param registry the source of retries
+     * @param retryRegistry the source of retries
      * @return The {@link TaggedRetryMetrics} instance.
      */
-    public static TaggedRetryMetrics ofRetryRegistry(MetricNames names, RetryRegistry registry) {
-        return new TaggedRetryMetrics(names, registry.getAllRetries());
+    public static TaggedRetryMetrics ofRetryRegistry(MetricNames names, RetryRegistry retryRegistry) {
+        return new TaggedRetryMetrics(names, retryRegistry);
     }
 
     private final MetricNames names;
-    private final Iterable<? extends Retry> retries;
+    private final RetryRegistry retryRegistry;
 
-    private TaggedRetryMetrics(MetricNames names, Iterable<? extends Retry> retries) {
+    private TaggedRetryMetrics(MetricNames names, RetryRegistry retryRegistry) {
+        super();
         this.names = requireNonNull(names);
-        this.retries = requireNonNull(retries);
+        this.retryRegistry = requireNonNull(retryRegistry);
     }
 
     @Override
     public void bindTo(MeterRegistry registry) {
-        for (Retry retry : retries) {
-            Gauge.builder(names.getCallsMetricName(), retry, (rt) -> rt.getMetrics().getNumberOfSuccessfulCallsWithoutRetryAttempt())
-                    .tag(TagNames.NAME, retry.getName())
-                    .tag(TagNames.KIND, "successful_without_retry")
-                    .register(registry);
-            Gauge.builder(names.getCallsMetricName(), retry, (rt) -> rt.getMetrics().getNumberOfSuccessfulCallsWithRetryAttempt())
-                    .tag(TagNames.NAME, retry.getName())
-                    .tag(TagNames.KIND, "successful_with_retry")
-                    .register(registry);
-            Gauge.builder(names.getCallsMetricName(), retry, (rt) -> rt.getMetrics().getNumberOfFailedCallsWithoutRetryAttempt())
-                    .tag(TagNames.NAME, retry.getName())
-                    .tag(TagNames.KIND, "failed_without_retry")
-                    .register(registry);
-            Gauge.builder(names.getCallsMetricName(), retry, (rt) -> rt.getMetrics().getNumberOfFailedCallsWithRetryAttempt())
-                    .tag(TagNames.NAME, retry.getName())
-                    .tag(TagNames.KIND, "failed_with_retry")
-                    .register(registry);
+        for (Retry retry : retryRegistry.getAllRetries()) {
+            addMetrics(registry, retry);
         }
+        retryRegistry.getEventPublisher().onEntryAdded(event -> addMetrics(registry, event.getAddedEntry()));
+        retryRegistry.getEventPublisher().onEntryRemoved(event -> removeMetrics(registry, event.getRemovedEntry().getName()));
+        retryRegistry.getEventPublisher().onEntryReplaced(event -> {
+            removeMetrics(registry, event.getOldEntry().getName());
+            addMetrics(registry, event.getNewEntry());
+        });
+    }
+
+    private void addMetrics(MeterRegistry registry, Retry retry) {
+        Set<Meter.Id> idSet = new HashSet<>();
+
+        idSet.add(Gauge.builder(names.getCallsMetricName(), retry, (rt) -> rt.getMetrics().getNumberOfSuccessfulCallsWithoutRetryAttempt())
+                .tag(TagNames.NAME, retry.getName())
+                .tag(TagNames.KIND, "successful_without_retry")
+                .register(registry).getId());
+        idSet.add(Gauge.builder(names.getCallsMetricName(), retry, (rt) -> rt.getMetrics().getNumberOfSuccessfulCallsWithRetryAttempt())
+                .tag(TagNames.NAME, retry.getName())
+                .tag(TagNames.KIND, "successful_with_retry")
+                .register(registry).getId());
+        idSet.add(Gauge.builder(names.getCallsMetricName(), retry, (rt) -> rt.getMetrics().getNumberOfFailedCallsWithoutRetryAttempt())
+                .tag(TagNames.NAME, retry.getName())
+                .tag(TagNames.KIND, "failed_without_retry")
+                .register(registry).getId());
+        idSet.add(Gauge.builder(names.getCallsMetricName(), retry, (rt) -> rt.getMetrics().getNumberOfFailedCallsWithRetryAttempt())
+                .tag(TagNames.NAME, retry.getName())
+                .tag(TagNames.KIND, "failed_with_retry")
+                .register(registry).getId());
+
+        meterIdMap.put(retry.getName(), idSet);
     }
 
     /** Defines possible configuration for metric names. */

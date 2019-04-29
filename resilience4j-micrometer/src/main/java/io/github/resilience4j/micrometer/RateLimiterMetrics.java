@@ -15,6 +15,7 @@
  */
 package io.github.resilience4j.micrometer;
 
+import io.github.resilience4j.micrometer.tagged.TaggedRateLimiterMetrics;
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
 import io.micrometer.core.instrument.Gauge;
@@ -27,6 +28,10 @@ import static io.github.resilience4j.ratelimiter.utils.MetricNames.AVAILABLE_PER
 import static io.github.resilience4j.ratelimiter.utils.MetricNames.WAITING_THREADS;
 import static java.util.Objects.requireNonNull;
 
+/**
+ * @deprecated Use {@link TaggedRateLimiterMetrics} instead
+ */
+@Deprecated
 public class RateLimiterMetrics implements MeterBinder {
 
     private final Iterable<RateLimiter> rateLimiters;

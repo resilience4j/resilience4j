@@ -4,7 +4,8 @@
 
 Add the Spring Boot Starter of Resilience4j to your compile dependency:
 
-```
+[source,groovy, subs="attributes"]
+----
 repositories {
 	maven { url 'http://oss.jfrog.org/artifactory/oss-snapshot-local/' }
 	mavenCentral()
@@ -14,7 +15,7 @@ repositories {
 dependencies {
 	compile('io.github.resilience4j:resilience4j-spring-boot:{release-version}')
 }
-```
+----
 
 ==== Supported Types by Spring boot starter resilience aspects
 

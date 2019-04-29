@@ -15,67 +15,119 @@
  */
 package io.github.resilience4j.retry;
 
+import io.github.resilience4j.core.ConfigurationNotFoundException;
 import org.assertj.core.api.Assertions;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.time.Duration;
+import java.util.HashMap;
+import java.util.Map;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 
 public class RetryRegistryTest {
 
-    private RetryRegistry retryRegistry;
+	private RetryRegistry retryRegistry;
 
-    @Before
-    public void setUp() {
-        retryRegistry = RetryRegistry.ofDefaults();
-    }
+	@Before
+	public void setUp() {
+		retryRegistry = RetryRegistry.ofDefaults();
+	}
 
-    @Test
-    public void shouldReturnTheCorrectName() {
-        Retry retry = retryRegistry.retry("testName");
-        Assertions.assertThat(retry).isNotNull();
-        Assertions.assertThat(retry.getName()).isEqualTo("testName");
-    }
+	@Test
+	public void testCreateWithNullConfig() {
+		assertThatThrownBy(() -> RetryRegistry.of((RetryConfig) null)).isInstanceOf(NullPointerException.class).hasMessage("Config must not be null");
+	}
 
-    @Test
-    public void shouldBeTheSameRetry() {
-        Retry retry = retryRegistry.retry("testName");
-        Retry retry2 = retryRegistry.retry("testName");
-        Assertions.assertThat(retry).isSameAs(retry2);
-        Assertions.assertThat(retryRegistry.getAllRetries()).hasSize(1);
-    }
+	@Test
+	public void shouldReturnTheCorrectName() {
+		Retry retry = retryRegistry.retry("testName");
+		Assertions.assertThat(retry).isNotNull();
+		Assertions.assertThat(retry.getName()).isEqualTo("testName");
+	}
 
-    @Test
-    public void shouldBeNotTheSameRetry() {
-        Retry retry = retryRegistry.retry("testName");
-        Retry retry2 = retryRegistry.retry("otherTestName");
-        Assertions.assertThat(retry).isNotSameAs(retry2);
-        Assertions.assertThat(retryRegistry.getAllRetries()).hasSize(2);
-    }
+	@Test
+	public void shouldBeTheSameRetry() {
+		Retry retry = retryRegistry.retry("testName");
+		Retry retry2 = retryRegistry.retry("testName");
+		Assertions.assertThat(retry).isSameAs(retry2);
+		Assertions.assertThat(retryRegistry.getAllRetries()).hasSize(1);
+	}
 
-    @Test
-    public void canBuildRetryFromRegistryWithConfig() {
-        RetryConfig config = RetryConfig.custom().maxAttempts(1000).waitDuration(Duration.ofSeconds(300)).build();
-        Retry retry = retryRegistry.retry("testName", config);
-        Assertions.assertThat(retry).isNotNull();
-        Assertions.assertThat(retryRegistry.getAllRetries()).hasSize(1);
-    }
+	@Test
+	public void shouldBeNotTheSameRetry() {
 
-    @Test
-    public void canBuildRetryFromRegistryWithConfigSupplier() {
-        RetryConfig config = RetryConfig.custom().maxAttempts(1000).waitDuration(Duration.ofSeconds(300)).build();
-        Retry retry = retryRegistry.retry("testName", () -> config);
-        Assertions.assertThat(retry).isNotNull();
-        Assertions.assertThat(retryRegistry.getAllRetries()).hasSize(1);
-    }
+		Retry retry = retryRegistry.retry("testName");
+		Retry retry2 = retryRegistry.retry("otherTestName");
+		Assertions.assertThat(retry).isNotSameAs(retry2);
+		Assertions.assertThat(retryRegistry.getAllRetries()).hasSize(2);
+	}
 
-    @Test
-    public void canBuildRetryRegistryWithConfig() {
-        RetryConfig config = RetryConfig.custom().maxAttempts(1000).waitDuration(Duration.ofSeconds(300)).build();
-        retryRegistry = RetryRegistry.of(config);
-        Retry retry = retryRegistry.retry("testName", () -> config);
-        Assertions.assertThat(retry).isNotNull();
-        Assertions.assertThat(retryRegistry.getAllRetries()).hasSize(1);
-    }
+	@Test
+	public void canBuildRetryFromRegistryWithConfig() {
+		RetryConfig config = RetryConfig.custom().maxAttempts(1000).waitDuration(Duration.ofSeconds(300)).build();
+		Retry retry = retryRegistry.retry("testName", config);
+		Assertions.assertThat(retry).isNotNull();
+		Assertions.assertThat(retryRegistry.getAllRetries()).hasSize(1);
+	}
+
+	@Test
+	public void canBuildRetryFromRegistryWithConfigSupplier() {
+		RetryConfig config = RetryConfig.custom().maxAttempts(1000).waitDuration(Duration.ofSeconds(300)).build();
+		Retry retry = retryRegistry.retry("testName", () -> config);
+		Assertions.assertThat(retry).isNotNull();
+		Assertions.assertThat(retryRegistry.getAllRetries()).hasSize(1);
+	}
+
+	@Test
+	public void canBuildRetryRegistryWithConfig() {
+		RetryConfig config = RetryConfig.custom().maxAttempts(1000).waitDuration(Duration.ofSeconds(300)).build();
+		retryRegistry = RetryRegistry.of(config);
+		Retry retry = retryRegistry.retry("testName", () -> config);
+		Assertions.assertThat(retry).isNotNull();
+		Assertions.assertThat(retryRegistry.getAllRetries()).hasSize(1);
+	}
+
+	@Test
+	public void testCreateWithConfigurationMap() {
+		Map<String, RetryConfig> configs = new HashMap<>();
+		configs.put("default", RetryConfig.ofDefaults());
+		configs.put("custom", RetryConfig.ofDefaults());
+
+		RetryRegistry retryRegistry = RetryRegistry.of(configs);
+
+		assertThat(retryRegistry.getDefaultConfig()).isNotNull();
+		assertThat(retryRegistry.getConfiguration("custom")).isNotNull();
+	}
+
+	@Test
+	public void testCreateWithConfigurationMapWithoutDefaultConfig() {
+		Map<String, RetryConfig> configs = new HashMap<>();
+		configs.put("custom", RetryConfig.ofDefaults());
+
+		RetryRegistry retryRegistry = RetryRegistry.of(configs);
+
+		assertThat(retryRegistry.getDefaultConfig()).isNotNull();
+		assertThat(retryRegistry.getConfiguration("custom")).isNotNull();
+	}
+
+	@Test
+	public void testWithNotExistingConfig() {
+		RetryRegistry retryRegistry = RetryRegistry.ofDefaults();
+
+		assertThatThrownBy(() -> retryRegistry.retry("test", "doesNotExist"))
+				.isInstanceOf(ConfigurationNotFoundException.class);
+	}
+
+	@Test
+	public void testAddConfiguration() {
+		RetryRegistry retryRegistry = RetryRegistry.ofDefaults();
+		retryRegistry.addConfiguration("custom", RetryConfig.custom().build());
+
+		assertThat(retryRegistry.getDefaultConfig()).isNotNull();
+		assertThat(retryRegistry.getConfiguration("custom")).isNotNull();
+	}
 }

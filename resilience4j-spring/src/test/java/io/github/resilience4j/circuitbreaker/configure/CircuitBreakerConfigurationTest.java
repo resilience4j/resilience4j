@@ -1,19 +1,17 @@
 package io.github.resilience4j.circuitbreaker.configure;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.when;
-
-import java.util.Collections;
-
+import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
+import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
+import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
-import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
-import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
-import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
+import java.util.Collections;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.when;
 
 /**
  * test custom init of circuit breaker registry
@@ -30,7 +28,7 @@ public class CircuitBreakerConfigurationTest {
 		CircuitBreakerConfigurationProperties.BackendProperties backendProperties = new CircuitBreakerConfigurationProperties.BackendProperties();
 		backendProperties.setFailureRateThreshold(3);
 		when(circuitBreakerConfigurationProperties.getBackends()).thenReturn(Collections.singletonMap("testBackend", backendProperties));
-		when(circuitBreakerConfigurationProperties.createCircuitBreakerConfig(anyString())).thenReturn(CircuitBreakerConfig.ofDefaults());
+		when(circuitBreakerConfigurationProperties.createCircuitBreakerConfig("testBackend")).thenReturn(CircuitBreakerConfig.ofDefaults());
 
 		CircuitBreakerConfiguration circuitBreakerConfiguration = new CircuitBreakerConfiguration(circuitBreakerConfigurationProperties);
 		CircuitBreakerRegistry circuitBreakerRegistry = circuitBreakerConfiguration.circuitBreakerRegistry(new DefaultEventConsumerRegistry<>());

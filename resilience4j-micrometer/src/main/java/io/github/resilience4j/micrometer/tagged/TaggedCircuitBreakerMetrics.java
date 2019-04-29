@@ -20,8 +20,12 @@ import io.github.resilience4j.circuitbreaker.CircuitBreaker.Metrics;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.micrometer.CircuitBreakerMetrics;
 import io.micrometer.core.instrument.Gauge;
+import io.micrometer.core.instrument.Meter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.binder.MeterBinder;
+
+import java.util.HashSet;
+import java.util.Set;
 
 import static java.util.Objects.requireNonNull;
 
@@ -30,65 +34,80 @@ import static java.util.Objects.requireNonNull;
  * The main difference from {@link CircuitBreakerMetrics} is that this binder uses tags
  * to distinguish between circuit breaker instances.
  */
-public class TaggedCircuitBreakerMetrics implements MeterBinder {
+public class TaggedCircuitBreakerMetrics extends AbstractMetrics implements MeterBinder {
+
+    /**
+     * Creates a new binder that uses given {@code registry} as source of circuit breakers.
+     *
+     * @param circuitBreakerRegistry the source of circuit breakers
+     * @return The {@link TaggedCircuitBreakerMetrics} instance.
+     */
+    public static TaggedCircuitBreakerMetrics ofCircuitBreakerRegistry(CircuitBreakerRegistry circuitBreakerRegistry) {
+        return new TaggedCircuitBreakerMetrics(MetricNames.ofDefaults(), circuitBreakerRegistry);
+    }
 
     /**
      * Creates a new binder that uses given {@code registry} as source of circuit breakers.
      *
      * @param metricNames custom metric names
-     * @param registry the source of circuit breakers
+     * @param circuitBreakerRegistry the source of circuit breakers
      * @return The {@link TaggedCircuitBreakerMetrics} instance.
      */
-    public static TaggedCircuitBreakerMetrics ofCircuitBreakerRegistry(MetricNames metricNames, CircuitBreakerRegistry registry) {
-        return new TaggedCircuitBreakerMetrics(metricNames, registry.getAllCircuitBreakers());
-    }
-
-    /**
-     * Creates a new binder that uses given {@code registry} as source of circuit breakers.
-     *
-     * @param registry the source of circuit breakers
-     * @return The {@link TaggedCircuitBreakerMetrics} instance.
-     */
-    public static TaggedCircuitBreakerMetrics ofCircuitBreakerRegistry(CircuitBreakerRegistry registry) {
-        return ofCircuitBreakerRegistry(MetricNames.ofDefaults(), registry);
+    public static TaggedCircuitBreakerMetrics ofCircuitBreakerRegistry(MetricNames metricNames, CircuitBreakerRegistry circuitBreakerRegistry) {
+        return new TaggedCircuitBreakerMetrics(metricNames, circuitBreakerRegistry);
     }
 
     private final MetricNames names;
-    private final Iterable<? extends CircuitBreaker> circuitBreakers;
+    private final CircuitBreakerRegistry circuitBreakerRegistry;
 
-    private TaggedCircuitBreakerMetrics(MetricNames names, Iterable<? extends CircuitBreaker> circuitBreakers) {
+    private TaggedCircuitBreakerMetrics(MetricNames names, CircuitBreakerRegistry circuitBreakerRegistry) {
+        super();
         this.names = requireNonNull(names);
-        this.circuitBreakers = requireNonNull(circuitBreakers);
+        this.circuitBreakerRegistry = requireNonNull(circuitBreakerRegistry);
+    }
+
+    private void addMetrics(MeterRegistry registry, CircuitBreaker circuitBreaker) {
+        Set<Meter.Id> idSet = new HashSet<>();
+
+        idSet.add(Gauge.builder(names.getStateMetricName(), circuitBreaker, (cb) -> cb.getState().getOrder())
+                .tag(TagNames.NAME, circuitBreaker.getName())
+                .register(registry).getId());
+        idSet.add(Gauge.builder(names.getCallsMetricName(), circuitBreaker, (cb) -> cb.getMetrics().getNumberOfFailedCalls())
+                .tag(TagNames.NAME, circuitBreaker.getName())
+                .tag(TagNames.KIND, "failed")
+                .register(registry).getId());
+        idSet.add(Gauge.builder(names.getCallsMetricName(), circuitBreaker, (cb) -> cb.getMetrics().getNumberOfNotPermittedCalls())
+                .tag(TagNames.NAME, circuitBreaker.getName())
+                .tag(TagNames.KIND, "not_permitted")
+                .register(registry).getId());
+        idSet.add(Gauge.builder(names.getCallsMetricName(), circuitBreaker, (cb) -> cb.getMetrics().getNumberOfSuccessfulCalls())
+                .tag(TagNames.NAME, circuitBreaker.getName())
+                .tag(TagNames.KIND, "successful")
+                .register(registry).getId());
+        idSet.add(Gauge.builder(names.getBufferedCallsMetricName(), circuitBreaker, (cb) -> cb.getMetrics().getNumberOfBufferedCalls())
+                .tag(TagNames.NAME, circuitBreaker.getName())
+                .register(registry).getId());
+        idSet.add(Gauge.builder(names.getMaxBufferedCallsMetricName(), circuitBreaker, (cb) -> cb.getMetrics().getMaxNumberOfBufferedCalls())
+                .tag(TagNames.NAME, circuitBreaker.getName())
+                .register(registry).getId());
+        idSet.add(Gauge.builder(names.getFailureRateMetricName(), circuitBreaker, (cb) -> cb.getMetrics().getFailureRate())
+                .tag(TagNames.NAME, circuitBreaker.getName())
+                .register(registry).getId());
+
+        meterIdMap.put(circuitBreaker.getName(), idSet);
     }
 
     @Override
     public void bindTo(MeterRegistry registry) {
-        for (CircuitBreaker circuitBreaker : circuitBreakers) {
-            Gauge.builder(names.getStateMetricName(), circuitBreaker, (cb) -> cb.getState().getOrder())
-                    .tag(TagNames.NAME, circuitBreaker.getName())
-                    .register(registry);
-
-            Gauge.builder(names.getCallsMetricName(), circuitBreaker, (cb) -> cb.getMetrics().getNumberOfFailedCalls())
-                    .tag(TagNames.NAME, circuitBreaker.getName())
-                    .tag(TagNames.KIND, "failed")
-                    .register(registry);
-            Gauge.builder(names.getCallsMetricName(), circuitBreaker, (cb) -> cb.getMetrics().getNumberOfNotPermittedCalls())
-                    .tag(TagNames.NAME, circuitBreaker.getName())
-                    .tag(TagNames.KIND, "not_permitted")
-                    .register(registry);
-            Gauge.builder(names.getCallsMetricName(), circuitBreaker, (cb) -> cb.getMetrics().getNumberOfSuccessfulCalls())
-                    .tag(TagNames.NAME, circuitBreaker.getName())
-                    .tag(TagNames.KIND, "successful")
-                    .register(registry);
-
-            Gauge.builder(names.getBufferedCallsMetricName(), circuitBreaker, (cb) -> cb.getMetrics().getNumberOfBufferedCalls())
-                    .tag(TagNames.NAME, circuitBreaker.getName())
-                    .register(registry);
-
-            Gauge.builder(names.getMaxBufferedCallsMetricName(), circuitBreaker, (cb) -> cb.getMetrics().getMaxNumberOfBufferedCalls())
-                    .tag(TagNames.NAME, circuitBreaker.getName())
-                    .register(registry);
+        for (CircuitBreaker circuitBreaker : circuitBreakerRegistry.getAllCircuitBreakers()) {
+            addMetrics(registry, circuitBreaker);
         }
+        circuitBreakerRegistry.getEventPublisher().onEntryAdded(event -> addMetrics(registry, event.getAddedEntry()));
+        circuitBreakerRegistry.getEventPublisher().onEntryRemoved(event -> removeMetrics(registry, event.getRemovedEntry().getName()));
+        circuitBreakerRegistry.getEventPublisher().onEntryReplaced(event -> {
+            removeMetrics(registry, event.getOldEntry().getName());
+            addMetrics(registry, event.getNewEntry());
+        });
     }
 
     /** Defines possible configuration for metric names. */
@@ -98,6 +117,7 @@ public class TaggedCircuitBreakerMetrics implements MeterBinder {
         public static final String DEFAULT_CIRCUIT_BREAKER_STATE_METRIC_NAME = "resilience4j_circuitbreaker_state";
         public static final String DEFAULT_CIRCUIT_BREAKER_BUFFERED_CALLS = "resilience4j_circuitbreaker_buffered_calls";
         public static final String DEFAULT_CIRCUIT_BREAKER_MAX_BUFFERED_CALLS = "resilience4j_circuitbreaker_max_buffered_calls";
+        public static final String DEFAULT_CIRCUIT_BREAKER_FAILURE_RATE = "resilience4j_circuitbreaker_failure_rate";
 
         /**
          * Returns a builder for creating custom metric names.
@@ -119,6 +139,7 @@ public class TaggedCircuitBreakerMetrics implements MeterBinder {
         private String stateMetricName = DEFAULT_CIRCUIT_BREAKER_STATE_METRIC_NAME;
         private String bufferedCallsMetricName = DEFAULT_CIRCUIT_BREAKER_BUFFERED_CALLS;
         private String maxBufferedCallsMetricName = DEFAULT_CIRCUIT_BREAKER_MAX_BUFFERED_CALLS;
+        private String failureRateMetricName = DEFAULT_CIRCUIT_BREAKER_FAILURE_RATE;
 
         private MetricNames() {}
 
@@ -148,6 +169,13 @@ public class TaggedCircuitBreakerMetrics implements MeterBinder {
          */
         public String getStateMetricName() {
             return stateMetricName;
+        }
+
+        /** Returns the metric name for failure rate, defaults to {@value DEFAULT_CIRCUIT_BREAKER_FAILURE_RATE}.
+         * @return The failure rate metric name.
+         */
+        public String getFailureRateMetricName() {
+            return failureRateMetricName;
         }
 
         /** Helps building custom instance of {@link MetricNames}. */
@@ -186,6 +214,15 @@ public class TaggedCircuitBreakerMetrics implements MeterBinder {
              */
             public Builder maxBufferedCallsMetricName(String maxBufferedCallsMetricName) {
                 metricNames.maxBufferedCallsMetricName = requireNonNull(maxBufferedCallsMetricName);
+                return this;
+            }
+
+            /** Overrides the default metric name {@value MetricNames#DEFAULT_CIRCUIT_BREAKER_FAILURE_RATE} with a given one.
+             * @param failureRateMetricName The failure rate metric name.
+             * @return The builder.
+             */
+            public Builder failureRateMetricName(String failureRateMetricName) {
+                metricNames.failureRateMetricName = requireNonNull(failureRateMetricName);
                 return this;
             }
 
