@@ -43,6 +43,23 @@ CircuitBreaker circuitBreaker2 = circuitBreakerRegistry.circuitBreaker("otherNam
 CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("uniqueName", circuitBreakerConfig);
 ----
 
+You can register event consumer on a CircuitBreakerRegistry and take actions whenever a CircuitBreaker is created, replaced or deleted.
+For example, you can register a global event consumer to every newly created CircuitBreaker as follows:
+
+----
+CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
+    circuitBreakerRegistry.getEventPublisher()
+        .onEntryAdded(entryAddedEvent -> {
+            CircuitBreaker addedCircuitBreaker =  entryAddedEvent.getAddedEntry();
+            LOG.info("CircuitBreaker {} added", addedCircuitBreaker.getName());
+            addedCircuitBreaker.getEventPublisher().onEvent(circuitBreakerEvent -> LOG.info(circuitBreakerEvent.toString()));
+        })
+        .onEntryRemoved(entryRemovedEvent -> {
+            CircuitBreaker removedCircuitBreaker =  entryRemovedEvent.getRemovedEntry();
+            LOG.info("CircuitBreaker {} removed", removedCircuitBreaker.getName());
+        });
+----
+
 If you don't want to use the CircuitBreakerRegistry to manage CircuitBreaker instances, you can also create instances directly:
 
 [source,java,indent=0]

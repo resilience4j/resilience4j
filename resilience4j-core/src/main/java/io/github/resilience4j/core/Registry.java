@@ -80,10 +80,10 @@ public interface Registry<Target, Config> {
 	 */
 	interface EventPublisher<Target> extends io.github.resilience4j.core.EventPublisher<RegistryEvent> {
 
-		EventPublisher onEntryAdded(EventConsumer<EntryAddedEvent<Target>> eventConsumer);
+		EventPublisher<Target> onEntryAdded(EventConsumer<EntryAddedEvent<Target>> eventConsumer);
 
-		EventPublisher onEntryRemoved(EventConsumer<EntryRemovedEvent<Target>> eventConsumer);
+		EventPublisher<Target> onEntryRemoved(EventConsumer<EntryRemovedEvent<Target>> eventConsumer);
 
-		EventPublisher onEntryReplaced(EventConsumer<EntryReplacedEvent<Target>> eventConsumer);
+		EventPublisher<Target> onEntryReplaced(EventConsumer<EntryReplacedEvent<Target>> eventConsumer);
 	}
 }

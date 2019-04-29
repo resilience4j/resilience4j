@@ -18,13 +18,13 @@
  */
 package io.github.resilience4j.circuitbreaker;
 
-import static org.assertj.core.api.BDDAssertions.then;
-import static org.assertj.core.api.Java6Assertions.assertThat;
+import org.junit.Test;
 
 import java.time.Duration;
 import java.util.function.Predicate;
 
-import org.junit.Test;
+import static org.assertj.core.api.BDDAssertions.then;
+import static org.assertj.core.api.Java6Assertions.assertThat;
 
 public class CircuitBreakerConfigTest {
 
@@ -165,23 +165,6 @@ public class CircuitBreakerConfigTest {
     }
 
     @Test
-    public void shouldUseSharedConfiguration() {
-        CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom().configurationName("sharedConfig")
-                .recordExceptions(RuntimeException.class, ExtendsExtendsException.class)
-                .ignoreExceptions(ExtendsException.class, ExtendsRuntimeException.class)
-                .build();
-        final Predicate<? super Throwable> failurePredicate = circuitBreakerConfig.getRecordFailurePredicate();
-        then(failurePredicate.test(new Exception())).isEqualTo(false); // not explicitly included
-        then(failurePredicate.test(new ExtendsError())).isEqualTo(false); // not explicitly included
-        then(failurePredicate.test(new ExtendsException())).isEqualTo(false);  // explicitly excluded
-        then(failurePredicate.test(new ExtendsException2())).isEqualTo(false); // not explicitly included
-        then(failurePredicate.test(new RuntimeException())).isEqualTo(true); // explicitly included
-        then(failurePredicate.test(new ExtendsRuntimeException())).isEqualTo(false); // explicitly excluded
-        then(failurePredicate.test(new ExtendsExtendsException())).isEqualTo(false); // inherits excluded from ExtendsException
-        then(circuitBreakerConfig.getConfigurationName()).isEqualTo("sharedConfig");
-    }
-
-    @Test
     public void shouldUseBothRecordToBuildPredicate() {
         CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom()
                 .recordFailure(TEST_PREDICATE) //1
@@ -225,5 +208,22 @@ public class CircuitBreakerConfigTest {
         assertThat(config1.getRingBufferSizeInClosedState()).isEqualTo(5);
     }
 
+    @Test
+    public void shouldUseBaseConfigAndOverwriteProperties() {
+        CircuitBreakerConfig baseConfig = CircuitBreakerConfig.custom()
+                .waitDurationInOpenState(Duration.ofSeconds(100))
+                .ringBufferSizeInClosedState(1000)
+                .ringBufferSizeInHalfOpenState(100)
+                .failureRateThreshold(20f).build();
+
+        CircuitBreakerConfig extendedConfig = CircuitBreakerConfig.from(baseConfig)
+                .waitDurationInOpenState(Duration.ofSeconds(20))
+                .build();
+
+        then(extendedConfig.getFailureRateThreshold()).isEqualTo(20f);
+        then(extendedConfig.getWaitDurationInOpenState()).isEqualTo(Duration.ofSeconds(20));
+        then(extendedConfig.getRingBufferSizeInClosedState()).isEqualTo(1000);
+        then(extendedConfig.getRingBufferSizeInHalfOpenState()).isEqualTo(100);
+    }
 
 }
