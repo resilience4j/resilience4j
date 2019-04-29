@@ -15,15 +15,13 @@ package io.github.resilience4j.circuitbreaker.configure;
  * limitations under the License.
  */
 
-import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.Builder;
+import io.github.resilience4j.core.ConfigurationNotFoundException;
 import io.github.resilience4j.core.lang.Nullable;
-import io.github.resilience4j.utils.CommonUtils;
 import org.hibernate.validator.constraints.time.DurationMin;
 import org.springframework.beans.BeanUtils;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.util.StringUtils;
 
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
@@ -31,6 +29,7 @@ import javax.validation.constraints.NotNull;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Predicate;
 
 @Configuration
@@ -39,7 +38,6 @@ public class CircuitBreakerConfigurationProperties {
 	// By default CircuitBreaker will be executed BEFORE RateLimiter.
 	// By adjusting RateLimiterProperties.rateLimiterAspectOrder and CircuitBreakerProperties.circuitBreakerAspectOrder
 	// you explicitly define aspects CircuitBreaker and RateLimiter execution sequence.
-	private static final String DEFAULT_CONFIG_KEY = "default";
 	private int circuitBreakerAspectOrder = Integer.MAX_VALUE - 1;
 	private Map<String, BackendProperties> backends = new HashMap<>();
 	private Map<String, BackendProperties> configs = new HashMap<>();
@@ -52,42 +50,27 @@ public class CircuitBreakerConfigurationProperties {
 		this.circuitBreakerAspectOrder = circuitBreakerAspectOrder;
 	}
 
-	@Nullable
-	private BackendProperties getBackendProperties(String backend) {
-		BackendProperties backendProperties = backends.get(backend);
-		if (backendProperties != null && !StringUtils.isEmpty(backendProperties.getBaseConfig())) {
-			return CommonUtils.mergeProperties(backendProperties, getConfigProperties(backendProperties.getBaseConfig()));
+	public Optional<BackendProperties> findCircuitBreakerProperties(String name) {
+		return Optional.ofNullable(backends.get(name));
+	}
 
+	public CircuitBreakerConfig createCircuitBreakerConfig(BackendProperties backendProperties) {
+		if(backendProperties.getBaseConfig() != null){
+			BackendProperties baseProperties = configs.get(backendProperties.getBaseConfig());
+			if(baseProperties == null){
+				throw new ConfigurationNotFoundException(backendProperties.getBaseConfig());
+			}
+			return buildConfigFromBaseConfig(backendProperties, baseProperties);
 		}
-		return backendProperties;
+		return buildConfig(CircuitBreakerConfig.custom(), backendProperties);
 	}
 
-	private BackendProperties getConfigProperties(String sharedConfig) {
-		return configs.getOrDefault(sharedConfig, configs.computeIfAbsent(DEFAULT_CONFIG_KEY, key -> CommonUtils.getDefaultProperties()));
+	private CircuitBreakerConfig buildConfigFromBaseConfig(BackendProperties backendProperties, BackendProperties baseProperties) {
+		CircuitBreakerConfig baseConfig = buildConfig(CircuitBreakerConfig.custom(), baseProperties);
+		return buildConfig(CircuitBreakerConfig.from(baseConfig), backendProperties);
 	}
 
-	public CircuitBreakerConfig createCircuitBreakerConfig(String backend) {
-		return createCircuitBreakerConfig(getBackendProperties(backend));
-	}
-
-	public CircuitBreakerConfig createCircuitBreakerConfigFrom(String baseConfigName) {
-		BackendProperties backendProperties = getConfigProperties(baseConfigName);
-		if (!StringUtils.isEmpty(backendProperties.getBaseConfig())) {
-			return buildCircuitBreakerConfig(backendProperties).configurationName(baseConfigName).build();
-		}
-		return createCircuitBreakerConfig(getConfigProperties(baseConfigName));
-	}
-
-	public CircuitBreakerConfig createCircuitBreakerConfig(@Nullable BackendProperties backendProperties) {
-		return buildCircuitBreakerConfig(backendProperties).build();
-	}
-
-	public Builder buildCircuitBreakerConfig(@Nullable BackendProperties properties) {
-		if (properties == null) {
-			return new Builder();
-		}
-
-		Builder builder = CircuitBreakerConfig.custom();
+	private CircuitBreakerConfig buildConfig(Builder builder, BackendProperties properties) {
 
 		if (properties.getWaitDurationInOpenState() != null) {
 			builder.waitDurationInOpenState(properties.getWaitDurationInOpenState());
@@ -117,15 +100,9 @@ public class CircuitBreakerConfigurationProperties {
 			builder.ignoreExceptions(properties.ignoreExceptions);
 		}
 
-		if (properties.automaticTransitionFromOpenToHalfOpenEnabled) {
-			builder.enableAutomaticTransitionFromOpenToHalfOpen();
-		}
+		builder.automaticTransitionFromOpenToHalfOpenEnabled(properties.automaticTransitionFromOpenToHalfOpenEnabled);
 
-		if (properties.baseConfig != null) {
-			builder.configurationName(properties.baseConfig);
-		}
-
-		return builder;
+		return builder.build();
 	}
 
 	protected void buildRecordFailurePredicate(BackendProperties properties, Builder builder) {
@@ -138,18 +115,6 @@ public class CircuitBreakerConfigurationProperties {
 
 	public Map<String, BackendProperties> getConfigs() {
 		return configs;
-	}
-
-	@Nullable
-	public BackendProperties findCircuitBreakerBackend(CircuitBreaker circuitBreaker, CircuitBreakerConfig circuitBreakerConfig) {
-		BackendProperties backendProperties = backends.getOrDefault(circuitBreaker.getName(), null);
-
-		if (circuitBreakerConfig.getConfigurationName() != null
-				&& configs.containsKey(circuitBreakerConfig.getConfigurationName())) {
-			backendProperties = configs.get(circuitBreakerConfig.getConfigurationName());
-		}
-
-		return backendProperties;
 	}
 
 	/**
