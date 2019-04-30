@@ -21,11 +21,17 @@ package io.github.resilience4j.circuitbreaker.utils;
 import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 
-@Deprecated
 public final class CircuitBreakerUtils {
 
     private CircuitBreakerUtils(){}
 
+    /**
+     * @deprecated
+     * Use {@link CircuitBreaker#obtainPermission()} instead
+     *
+     * @since 0.15.0
+     */
+    @Deprecated
     public static void isCallPermitted(CircuitBreaker circuitBreaker) {
         if(!circuitBreaker.tryObtainPermission()) {
             throw new CallNotPermittedException(circuitBreaker);

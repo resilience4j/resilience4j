@@ -98,8 +98,8 @@ public class CircuitBreakerMethodInterceptor implements MethodInterceptor {
                 Throwable t = new CallNotPermittedException(breaker);
                 try {
                     promise.complete(recoveryFunction.apply((Throwable) t));
-                } catch (Throwable t2) {
-                    promise.completeExceptionally(t2);
+                } catch (Exception exception) {
+                    promise.completeExceptionally(exception);
                 }
             }
             return promise;
