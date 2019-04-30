@@ -94,8 +94,8 @@ public class BulkheadMethodInterceptor implements MethodInterceptor {
                 Throwable t = new BulkheadFullException(String.format("Bulkhead '%s' is full", bulkhead.getName()));
                 try {
                     promise.complete(recoveryFunction.apply(t));
-                } catch (Throwable t2) {
-                    promise.completeExceptionally(t2);
+                } catch (Exception exception) {
+                    promise.completeExceptionally(exception);
                 }
                 return promise;
             }

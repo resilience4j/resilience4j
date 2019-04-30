@@ -18,12 +18,12 @@
  */
 package io.github.resilience4j.core.registry;
 
-public class EntryReplacedEvent<Target> extends AbstractRegistryEvent {
+public class EntryReplacedEvent<ENTRY> extends AbstractRegistryEvent {
 
-    private final Target oldEntry;
-    private final Target newEntry;
+    private final ENTRY oldEntry;
+    private final ENTRY newEntry;
 
-    EntryReplacedEvent(Target oldEntry, Target newEntry){
+    EntryReplacedEvent(ENTRY oldEntry, ENTRY newEntry){
         super();
         this.oldEntry = oldEntry;
         this.newEntry = newEntry;
@@ -40,7 +40,7 @@ public class EntryReplacedEvent<Target> extends AbstractRegistryEvent {
      * @return the old entry
      */
 
-    public Target getOldEntry() {
+    public ENTRY getOldEntry() {
         return oldEntry;
     }
 
@@ -49,7 +49,7 @@ public class EntryReplacedEvent<Target> extends AbstractRegistryEvent {
      *
      * @return the new entry
      */
-    public Target getNewEntry() {
+    public ENTRY getNewEntry() {
         return newEntry;
     }
 }

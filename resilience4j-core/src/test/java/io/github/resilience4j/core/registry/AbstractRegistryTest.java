@@ -8,6 +8,7 @@ import java.util.Optional;
 
 import static io.github.resilience4j.core.registry.RegistryEvent.Type;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 
 public class AbstractRegistryTest {
@@ -18,6 +19,14 @@ public class AbstractRegistryTest {
 		testRegistry.addConfiguration("custom", "test");
 		assertThat(testRegistry.getConfiguration("custom").get()).isEqualTo("test");
 		assertThat(testRegistry.getDefaultConfig()).isEqualTo("default");
+	}
+
+	@Test
+	public void shouldNotAllowToOverwriteDefaultConfiguration() {
+		TestRegistry testRegistry = new TestRegistry();
+
+		assertThatThrownBy(() ->testRegistry.addConfiguration("default", "test") )
+			.isInstanceOf(IllegalArgumentException.class);
 	}
 
 	@Test

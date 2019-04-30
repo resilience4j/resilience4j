@@ -82,19 +82,19 @@ public class TaggedRetryMetrics extends AbstractMetrics implements MeterBinder {
     private void addMetrics(MeterRegistry registry, Retry retry) {
         Set<Meter.Id> idSet = new HashSet<>();
 
-        idSet.add(Gauge.builder(names.getCallsMetricName(), retry, (rt) -> rt.getMetrics().getNumberOfSuccessfulCallsWithoutRetryAttempt())
+        idSet.add(Gauge.builder(names.getCallsMetricName(), retry, rt -> rt.getMetrics().getNumberOfSuccessfulCallsWithoutRetryAttempt())
                 .tag(TagNames.NAME, retry.getName())
                 .tag(TagNames.KIND, "successful_without_retry")
                 .register(registry).getId());
-        idSet.add(Gauge.builder(names.getCallsMetricName(), retry, (rt) -> rt.getMetrics().getNumberOfSuccessfulCallsWithRetryAttempt())
+        idSet.add(Gauge.builder(names.getCallsMetricName(), retry, rt -> rt.getMetrics().getNumberOfSuccessfulCallsWithRetryAttempt())
                 .tag(TagNames.NAME, retry.getName())
                 .tag(TagNames.KIND, "successful_with_retry")
                 .register(registry).getId());
-        idSet.add(Gauge.builder(names.getCallsMetricName(), retry, (rt) -> rt.getMetrics().getNumberOfFailedCallsWithoutRetryAttempt())
+        idSet.add(Gauge.builder(names.getCallsMetricName(), retry, rt -> rt.getMetrics().getNumberOfFailedCallsWithoutRetryAttempt())
                 .tag(TagNames.NAME, retry.getName())
                 .tag(TagNames.KIND, "failed_without_retry")
                 .register(registry).getId());
-        idSet.add(Gauge.builder(names.getCallsMetricName(), retry, (rt) -> rt.getMetrics().getNumberOfFailedCallsWithRetryAttempt())
+        idSet.add(Gauge.builder(names.getCallsMetricName(), retry, rt -> rt.getMetrics().getNumberOfFailedCallsWithRetryAttempt())
                 .tag(TagNames.NAME, retry.getName())
                 .tag(TagNames.KIND, "failed_with_retry")
                 .register(registry).getId());

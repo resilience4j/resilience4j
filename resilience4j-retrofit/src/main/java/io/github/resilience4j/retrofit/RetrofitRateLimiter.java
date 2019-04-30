@@ -44,9 +44,6 @@ import java.io.IOException;
  */
 public interface RetrofitRateLimiter {
 
-    int ERROR_CODE = 429;
-    String ERROR_MESSAGE = "Too many requests for the client";
-
     /**
      * Decorate {@link Call}s allow {@link CircuitBreaker} functionality.
      *
@@ -89,7 +86,7 @@ public interface RetrofitRateLimiter {
             }
 
             private Response<T> tooManyRequestsError() {
-                return Response.error(ERROR_CODE, ResponseBody.create(MediaType.parse("text/plain"), ERROR_MESSAGE));
+                return Response.error(429, ResponseBody.create(MediaType.parse("text/plain"), "Too many requests for the client"));
             }
         };
     }

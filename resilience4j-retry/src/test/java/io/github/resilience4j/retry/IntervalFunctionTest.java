@@ -2,10 +2,11 @@ package io.github.resilience4j.retry;
 
 import io.vavr.collection.List;
 import io.vavr.control.Try;
-import org.assertj.core.api.Assertions;
 import org.junit.Test;
 
 import java.time.Duration;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class IntervalFunctionTest {
 
@@ -33,8 +34,8 @@ public class IntervalFunctionTest {
         );
 
         // Then
-        Assertions.assertThat(tries.forAll(Try::isFailure)).isTrue();
-        Assertions.assertThat(tries.map(Try::getCause).forAll(t -> t instanceof IllegalArgumentException)).isTrue();
+        assertThat(tries.forAll(Try::isFailure)).isTrue();
+        assertThat(tries.map(Try::getCause).forAll(t -> t instanceof IllegalArgumentException)).isTrue();
     }
 
     @Test
@@ -58,6 +59,7 @@ public class IntervalFunctionTest {
         positiveIntervals.forEach(IntervalFunction::ofExponentialRandomBackoff);
 
         // Then should pass
+        assertThat(true).isTrue();
     }
 
     @Test
@@ -74,8 +76,8 @@ public class IntervalFunctionTest {
         final List<Try> tries = fns.map(fn -> Try.of(() -> fn.apply(0)));
 
         // Then
-        Assertions.assertThat(tries.forAll(Try::isFailure)).isTrue();
-        Assertions.assertThat(tries.map(Try::getCause).forAll(t -> t instanceof IllegalArgumentException)).isTrue();
+        assertThat(tries.forAll(Try::isFailure)).isTrue();
+        assertThat(tries.map(Try::getCause).forAll(t -> t instanceof IllegalArgumentException)).isTrue();
     }
 
     @Test
@@ -93,8 +95,8 @@ public class IntervalFunctionTest {
         final List<Try> tries2 = fns.map(fn -> Try.of(() -> fn.apply(2)));
 
         // Then
-        Assertions.assertThat(tries1.forAll(Try::isFailure)).isFalse();
-        Assertions.assertThat(tries2.forAll(Try::isFailure)).isFalse();
+        assertThat(tries1.forAll(Try::isFailure)).isFalse();
+        assertThat(tries2.forAll(Try::isFailure)).isFalse();
     }
 
     @Test
@@ -113,8 +115,8 @@ public class IntervalFunctionTest {
         );
 
         // Then
-        Assertions.assertThat(tries.forAll(Try::isFailure)).isTrue();
-        Assertions.assertThat(tries.map(Try::getCause).forAll(t -> t instanceof IllegalArgumentException)).isTrue();
+        assertThat(tries.forAll(Try::isFailure)).isTrue();
+        assertThat(tries.map(Try::getCause).forAll(t -> t instanceof IllegalArgumentException)).isTrue();
     }
 
     @Test
@@ -129,6 +131,8 @@ public class IntervalFunctionTest {
         // When
         correctFactors.forEach(v -> IntervalFunction.ofRandomized(duration, v));
         correctFactors.forEach(v -> IntervalFunction.ofExponentialRandomBackoff(duration, multiplier, v));
+
+        assertThat(true).isTrue();
     }
 
     @Test
@@ -146,8 +150,8 @@ public class IntervalFunctionTest {
         );
 
         // Then
-        Assertions.assertThat(tries.forAll(Try::isFailure)).isTrue();
-        Assertions.assertThat(tries.map(Try::getCause).forAll(t -> t instanceof IllegalArgumentException)).isTrue();
+        assertThat(tries.forAll(Try::isFailure)).isTrue();
+        assertThat(tries.map(Try::getCause).forAll(t -> t instanceof IllegalArgumentException)).isTrue();
     }
 
     @Test
@@ -160,6 +164,8 @@ public class IntervalFunctionTest {
         // When
         IntervalFunction.ofExponentialBackoff(duration, greaterThanOneMultiplier);
         IntervalFunction.ofExponentialRandomBackoff(duration, greaterThanOneMultiplier);
+
+        assertThat(true).isTrue();
     }
 
     @Test
@@ -171,7 +177,7 @@ public class IntervalFunctionTest {
             final long delay = f.apply(i);
 
             // Then
-            Assertions.assertThat(delay).isGreaterThanOrEqualTo(50).isLessThanOrEqualTo(150);
+            assertThat(delay).isGreaterThanOrEqualTo(50).isLessThanOrEqualTo(150);
         }
     }
 
@@ -186,7 +192,7 @@ public class IntervalFunctionTest {
             final long v = f.apply(i);
 
             // Then
-            Assertions.assertThat(v).isGreaterThan(prevV);
+            assertThat(v).isGreaterThan(prevV);
 
             prevV = v;
         }
@@ -203,7 +209,7 @@ public class IntervalFunctionTest {
             final long v = f.apply(i);
 
             // Then
-            Assertions.assertThat(v)
+            assertThat(v)
                     .isGreaterThanOrEqualTo( (long)(expectedV * 0.5) - 1)
                     .isLessThanOrEqualTo((long)(expectedV * 1.5) + 1);
 
