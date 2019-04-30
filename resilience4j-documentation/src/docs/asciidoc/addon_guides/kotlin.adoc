@@ -4,7 +4,7 @@
 
 Integration for https://kotlinlang.org/[Kotlin] coroutines that enables executing and decorating `suspend` functions with the various resilience aspects provided by the core modules.
 
-Extension functions that accept Kotlin suspend functions are provided for rate limiter, retry, circuit breaker and time limiter.  No extensions for bulkheads or caches are currently provided.
+Extension functions that accept Kotlin suspend functions are provided for rate limiter, retry, circuit breaker, time limiter, and semaphore-based bulkheads.  No extensions for thread pool bulkheads or caches are currently provided.
 
 ==== Gradle
 
@@ -49,7 +49,13 @@ The suspend functions suspend where usage of the normal methods would block.  Fo
 
 No changes are made to the coroutine context of the given suspend functions.
 
-===== Circuit Breakers
+===== Bulkhead
+
+Decorating a suspend function with a `Bulkhead` does not add any additional suspension points.  If `maxWaitTime` is non-zero, the call will *block* until the max wait time is reached or permission is obtained.  For this reason, it is not recommended to use this extension function with Bulkheads with non-zero max wait times.
+
+No extension functions for thread-pool based bulkheads are provided.
+
+===== Circuit Breaker
 
 Decorating a suspend function with a `CircuitBreaker` does not add any additional suspension points.
 
