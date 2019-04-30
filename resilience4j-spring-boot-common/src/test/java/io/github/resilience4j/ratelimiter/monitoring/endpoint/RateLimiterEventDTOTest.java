@@ -18,6 +18,7 @@ public class RateLimiterEventDTOTest {
 
         assertThat(eventDTO.getRateLimiterName()).isEqualTo("name");
         assertThat(eventDTO.getType()).isEqualTo(FAILED_ACQUIRE);
+        assertThat(eventDTO.getCreationTime()).isNotNull();
     }
 
     @Test
@@ -28,5 +29,6 @@ public class RateLimiterEventDTOTest {
 
         assertThat(eventDTO.getRateLimiterName()).isEqualTo("name");
         assertThat(eventDTO.getType()).isEqualTo(SUCCESSFUL_ACQUIRE);
+        assertThat(eventDTO.getCreationTime()).isNotNull();
     }
 }

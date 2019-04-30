@@ -573,18 +573,18 @@ Example of response:
   "eventsList": [
     {
       "rateLimiterName": "backendA",
-      "rateLimiterEventType": "SUCCESSFUL_ACQUIRE",
-      "rateLimiterCreationTime": "2017-05-05T21:29:40.463+03:00[Europe/Uzhgorod]"
+      "type": "SUCCESSFUL_ACQUIRE",
+      "creationTime": "2017-05-05T21:29:40.463+03:00[Europe/Uzhgorod]"
     },
     {
       "rateLimiterName": "backendA",
-      "rateLimiterEventType": "SUCCESSFUL_ACQUIRE",
-      "rateLimiterCreationTime": "2017-05-05T21:29:40.469+03:00[Europe/Uzhgorod]"
+      "type": "SUCCESSFUL_ACQUIRE",
+      "creationTime": "2017-05-05T21:29:40.469+03:00[Europe/Uzhgorod]"
     },
     {
       "rateLimiterName": "backendA",
-      "rateLimiterEventType": "FAILED_ACQUIRE",
-      "rateLimiterCreationTime": "2017-05-05T21:29:41.268+03:00[Europe/Uzhgorod]"
+      "type": "FAILED_ACQUIRE",
+      "creationTime": "2017-05-05T21:29:41.268+03:00[Europe/Uzhgorod]"
     }
   ]
 }
