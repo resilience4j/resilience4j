@@ -42,6 +42,7 @@ class CircuitBreakerEventDTOFactory {
             case IGNORED_ERROR:
                 CircuitBreakerOnIgnoredErrorEvent onIgnoredErrorEvent = (CircuitBreakerOnIgnoredErrorEvent) event;
                 return newCircuitBreakerEventDTOBuilder(onIgnoredErrorEvent).setThrowable(onIgnoredErrorEvent.getThrowable())
+                        .setDuration(onIgnoredErrorEvent.getElapsedDuration())
                         .build();
             case NOT_PERMITTED:
                 CircuitBreakerOnCallNotPermittedEvent onCallNotPermittedEvent = (CircuitBreakerOnCallNotPermittedEvent) event;

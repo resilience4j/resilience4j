@@ -44,7 +44,7 @@ public class RateLimiterEventDTO {
     }
 
     @Nullable
-    public RateLimiterEvent.Type getRateLimiterEventType() {
+    public RateLimiterEvent.Type getType() {
         return rateLimiterEventType;
     }
 
