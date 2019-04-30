@@ -34,6 +34,7 @@ class RetryEventDTOFactory {
 			case SUCCESS:
 				RetryOnSuccessEvent onSuccessEvent = (RetryOnSuccessEvent) event;
 				return newRetryEventDTOBuilder(onSuccessEvent).numberOfAttempts(onSuccessEvent.getNumberOfRetryAttempts())
+						.throwable(onSuccessEvent.getLastThrowable())
 						.build();
 			case RETRY:
 				RetryOnRetryEvent onStateTransitionEvent = (RetryOnRetryEvent) event;
