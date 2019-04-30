@@ -110,7 +110,7 @@ public class RateLimiterAutoConfigurationTest {
         List<RateLimiterEventDTO> eventsList = rateLimiterEventList.getBody().getEventsList();
         assertThat(eventsList).isNotEmpty();
         RateLimiterEventDTO lastEvent = eventsList.get(eventsList.size() - 1);
-        assertThat(lastEvent.getRateLimiterEventType()).isEqualTo(RateLimiterEvent.Type.FAILED_ACQUIRE);
+        assertThat(lastEvent.getType()).isEqualTo(RateLimiterEvent.Type.FAILED_ACQUIRE);
 
         await()
             .atMost(2, TimeUnit.SECONDS)
