@@ -42,7 +42,7 @@ public class InMemoryCircuitBreakerRegistryTest {
 	public void testUpdateDefaultCircuitBreakerRegistry() {
 		CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
 		Assertions.assertThatThrownBy(() -> circuitBreakerRegistry.addConfiguration("default", CircuitBreakerConfig.custom().build()))
-				.isExactlyInstanceOf(IllegalArgumentException.class).hasMessageStartingWith("you can not use 'default'");
+				.isExactlyInstanceOf(IllegalArgumentException.class);
 
 	}
 
