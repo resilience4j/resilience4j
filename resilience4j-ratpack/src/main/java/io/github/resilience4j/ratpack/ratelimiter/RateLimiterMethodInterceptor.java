@@ -90,8 +90,8 @@ public class RateLimiterMethodInterceptor implements MethodInterceptor {
                 Throwable t = new RequestNotPermitted("Request not permitted for limiter: " + rateLimiter.getName());
                 try {
                     promise.complete(recoveryFunction.apply(t));
-                } catch (Throwable t2) {
-                    promise.completeExceptionally(t2);
+                } catch (Exception exception) {
+                    promise.completeExceptionally(exception);
                 }
                 return promise;
             }

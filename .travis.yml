@@ -4,7 +4,7 @@ matrix:
   include:
     - jdk: oraclejdk8
       env: PUBLISH=true
-    - jdk: openjdk11
+    #- jdk: openjdk11
 before_install:
   - chmod +x gradlew
 after_success:

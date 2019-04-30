@@ -83,10 +83,10 @@ public class TaggedRateLimiterMetrics extends AbstractMetrics implements MeterBi
     private void addMetrics(MeterRegistry registry, RateLimiter rateLimiter) {
         Set<Meter.Id> idSet = new HashSet<>();
 
-        idSet.add(Gauge.builder(names.getAvailablePermissionsMetricName(), rateLimiter, (rl) -> rl.getMetrics().getAvailablePermissions())
+        idSet.add(Gauge.builder(names.getAvailablePermissionsMetricName(), rateLimiter, rl -> rl.getMetrics().getAvailablePermissions())
                 .tag(TagNames.NAME, rateLimiter.getName())
                 .register(registry).getId());
-        idSet.add(Gauge.builder(names.getWaitingThreadsMetricName(), rateLimiter, (rl) -> rl.getMetrics().getNumberOfWaitingThreads())
+        idSet.add(Gauge.builder(names.getWaitingThreadsMetricName(), rateLimiter, rl -> rl.getMetrics().getNumberOfWaitingThreads())
                 .tag(TagNames.NAME, rateLimiter.getName())
                 .register(registry).getId());
 

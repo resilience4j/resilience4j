@@ -69,28 +69,28 @@ public class TaggedCircuitBreakerMetrics extends AbstractMetrics implements Mete
     private void addMetrics(MeterRegistry registry, CircuitBreaker circuitBreaker) {
         Set<Meter.Id> idSet = new HashSet<>();
 
-        idSet.add(Gauge.builder(names.getStateMetricName(), circuitBreaker, (cb) -> cb.getState().getOrder())
+        idSet.add(Gauge.builder(names.getStateMetricName(), circuitBreaker, cb -> cb.getState().getOrder())
                 .tag(TagNames.NAME, circuitBreaker.getName())
                 .register(registry).getId());
-        idSet.add(Gauge.builder(names.getCallsMetricName(), circuitBreaker, (cb) -> cb.getMetrics().getNumberOfFailedCalls())
+        idSet.add(Gauge.builder(names.getCallsMetricName(), circuitBreaker, cb -> cb.getMetrics().getNumberOfFailedCalls())
                 .tag(TagNames.NAME, circuitBreaker.getName())
                 .tag(TagNames.KIND, "failed")
                 .register(registry).getId());
-        idSet.add(Gauge.builder(names.getCallsMetricName(), circuitBreaker, (cb) -> cb.getMetrics().getNumberOfNotPermittedCalls())
+        idSet.add(Gauge.builder(names.getCallsMetricName(), circuitBreaker, cb -> cb.getMetrics().getNumberOfNotPermittedCalls())
                 .tag(TagNames.NAME, circuitBreaker.getName())
                 .tag(TagNames.KIND, "not_permitted")
                 .register(registry).getId());
-        idSet.add(Gauge.builder(names.getCallsMetricName(), circuitBreaker, (cb) -> cb.getMetrics().getNumberOfSuccessfulCalls())
+        idSet.add(Gauge.builder(names.getCallsMetricName(), circuitBreaker, cb -> cb.getMetrics().getNumberOfSuccessfulCalls())
                 .tag(TagNames.NAME, circuitBreaker.getName())
                 .tag(TagNames.KIND, "successful")
                 .register(registry).getId());
-        idSet.add(Gauge.builder(names.getBufferedCallsMetricName(), circuitBreaker, (cb) -> cb.getMetrics().getNumberOfBufferedCalls())
+        idSet.add(Gauge.builder(names.getBufferedCallsMetricName(), circuitBreaker, cb -> cb.getMetrics().getNumberOfBufferedCalls())
                 .tag(TagNames.NAME, circuitBreaker.getName())
                 .register(registry).getId());
-        idSet.add(Gauge.builder(names.getMaxBufferedCallsMetricName(), circuitBreaker, (cb) -> cb.getMetrics().getMaxNumberOfBufferedCalls())
+        idSet.add(Gauge.builder(names.getMaxBufferedCallsMetricName(), circuitBreaker, cb -> cb.getMetrics().getMaxNumberOfBufferedCalls())
                 .tag(TagNames.NAME, circuitBreaker.getName())
                 .register(registry).getId());
-        idSet.add(Gauge.builder(names.getFailureRateMetricName(), circuitBreaker, (cb) -> cb.getMetrics().getFailureRate())
+        idSet.add(Gauge.builder(names.getFailureRateMetricName(), circuitBreaker, cb -> cb.getMetrics().getFailureRate())
                 .tag(TagNames.NAME, circuitBreaker.getName())
                 .register(registry).getId());
 

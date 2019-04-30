@@ -83,10 +83,10 @@ public class TaggedBulkheadMetrics extends AbstractMetrics implements MeterBinde
     private void addMetrics(MeterRegistry registry, Bulkhead bulkhead) {
         Set<Meter.Id> idSet = new HashSet<>();
 
-        idSet.add(Gauge.builder(names.getAvailableConcurrentCallsMetricName(), bulkhead, (bh) -> bh.getMetrics().getAvailableConcurrentCalls())
+        idSet.add(Gauge.builder(names.getAvailableConcurrentCallsMetricName(), bulkhead, bh -> bh.getMetrics().getAvailableConcurrentCalls())
                 .tag(TagNames.NAME, bulkhead.getName())
                 .register(registry).getId());
-        idSet.add(Gauge.builder(names.getMaxAllowedConcurrentCallsMetricName(), bulkhead, (bh) -> bh.getMetrics().getMaxAllowedConcurrentCalls())
+        idSet.add(Gauge.builder(names.getMaxAllowedConcurrentCallsMetricName(), bulkhead, bh -> bh.getMetrics().getMaxAllowedConcurrentCalls())
                 .tag(TagNames.NAME, bulkhead.getName())
                 .register(registry).getId());
 

@@ -18,8 +18,6 @@ package io.github.resilience4j.ratelimiter.monitoring.endpoint;
 import io.github.resilience4j.consumer.CircularEventConsumer;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
 import io.github.resilience4j.ratelimiter.event.RateLimiterEvent;
-import io.github.resilience4j.ratelimiter.monitoring.model.RateLimiterEventDTO;
-import io.github.resilience4j.ratelimiter.monitoring.model.RateLimiterEventsEndpointResponse;
 import io.vavr.collection.List;
 import org.springframework.boot.actuate.endpoint.annotation.Endpoint;
 import org.springframework.boot.actuate.endpoint.annotation.ReadOperation;
