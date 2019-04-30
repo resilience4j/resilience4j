@@ -23,14 +23,14 @@ import io.github.resilience4j.ratelimiter.event.RateLimiterEvent;
 public class RateLimiterEventDTO {
 
     @Nullable private String rateLimiterName;
-    @Nullable private RateLimiterEvent.Type rateLimiterEventType;
-    @Nullable private String rateLimiterCreationTime;
+    @Nullable private RateLimiterEvent.Type type;
+    @Nullable private String creationTime;
 
     public static RateLimiterEventDTO createRateLimiterEventDTO(RateLimiterEvent rateLimiterEvent) {
         RateLimiterEventDTO dto = new RateLimiterEventDTO();
         dto.setRateLimiterName(rateLimiterEvent.getRateLimiterName());
-        dto.setRateLimiterEventType(rateLimiterEvent.getEventType());
-        dto.setRateLimiterCreationTime(rateLimiterEvent.getCreationTime().toString());
+        dto.setType(rateLimiterEvent.getEventType());
+        dto.setCreationTime(rateLimiterEvent.getCreationTime().toString());
         return dto;
     }
 
@@ -45,19 +45,19 @@ public class RateLimiterEventDTO {
 
     @Nullable
     public RateLimiterEvent.Type getType() {
-        return rateLimiterEventType;
+        return type;
     }
 
-    public void setRateLimiterEventType(@Nullable RateLimiterEvent.Type rateLimiterEventType) {
-        this.rateLimiterEventType = rateLimiterEventType;
+    public void setType(@Nullable RateLimiterEvent.Type rateLimiterEventType) {
+        this.type = rateLimiterEventType;
     }
 
     @Nullable
-    public String getRateLimiterCreationTime() {
-        return rateLimiterCreationTime;
+    public String getCreationTime() {
+        return creationTime;
     }
 
-    public void setRateLimiterCreationTime(@Nullable String rateLimiterCreationTime) {
-        this.rateLimiterCreationTime = rateLimiterCreationTime;
+    public void setCreationTime(@Nullable String creationTime) {
+        this.creationTime = creationTime;
     }
 }
