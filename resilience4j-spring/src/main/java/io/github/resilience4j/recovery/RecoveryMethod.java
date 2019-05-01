@@ -16,6 +16,7 @@
 package io.github.resilience4j.recovery;
 
 import io.github.resilience4j.core.lang.Nullable;
+import org.springframework.util.ConcurrentReferenceHashMap;
 import org.springframework.util.ReflectionUtils;
 import org.springframework.util.StringUtils;
 
@@ -39,6 +40,7 @@ import java.util.Map;
  * </pre>
  */
 public class RecoveryMethod {
+    private static final Map<MethodMeta, Map<Class<?>, Method>> RECOVERY_METHODS_CACHE = new ConcurrentReferenceHashMap<>();
     private final Map<Class<?>, Method> recoveryMethods;
     private final Object[] args;
     private final Object target;
@@ -133,7 +135,12 @@ public class RecoveryMethod {
     }
 
     private static Map<Class<?>, Method> extractMethods(String recoveryMethodName, Class<?>[] params, Class<?> originalReturnType, Class<?> targetClass) {
-        Map<Class<?>, Method> methods = new HashMap<>();
+        MethodMeta methodMeta = new MethodMeta(recoveryMethodName, params, originalReturnType, targetClass);
+        Map<Class<?>, Method> methods = RECOVERY_METHODS_CACHE.getOrDefault(methodMeta, new HashMap<>());
+
+        if (!methods.isEmpty()) {
+            return methods;
+        }
 
         ReflectionUtils.doWithMethods(targetClass, method -> {
             Class<?>[] recoveryParams = method.getParameterTypes();
@@ -156,6 +163,37 @@ public class RecoveryMethod {
             return Throwable.class.isAssignableFrom(targetParams[params.length]);
         });
 
+        RECOVERY_METHODS_CACHE.putIfAbsent(methodMeta, methods);
         return methods;
+    }
+
+    private static class MethodMeta {
+        final String recoveryMethodName;
+        final Class<?>[] params;
+        final Class<?> returnType;
+        final Class<?> targetClass;
+
+        MethodMeta(String recoveryMethodName, Class<?>[] params, Class<?> returnType, Class<?> targetClass) {
+            this.recoveryMethodName = recoveryMethodName;
+            this.params = params;
+            this.returnType = returnType;
+            this.targetClass = targetClass;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            MethodMeta that = (MethodMeta) o;
+            return targetClass.equals(that.targetClass) &&
+                    recoveryMethodName.equals(that.recoveryMethodName) &&
+                    returnType.equals(that.returnType) &&
+                    Arrays.equals(params, that.params);
+        }
+
+        @Override
+        public int hashCode() {
+           return targetClass.getName().hashCode() ^ recoveryMethodName.hashCode();
+        }
     }
 }
