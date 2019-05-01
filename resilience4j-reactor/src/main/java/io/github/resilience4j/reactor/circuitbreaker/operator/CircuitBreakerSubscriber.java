@@ -21,6 +21,7 @@ import io.github.resilience4j.core.StopWatch;
 import io.github.resilience4j.core.lang.Nullable;
 import io.github.resilience4j.reactor.ResilienceBaseSubscriber;
 import org.reactivestreams.Subscriber;
+import org.reactivestreams.Subscription;
 import reactor.core.CoreSubscriber;
 
 import java.util.concurrent.atomic.AtomicIntegerFieldUpdater;
@@ -81,6 +82,17 @@ class CircuitBreakerSubscriber<T> extends ResilienceBaseSubscriber<T> {
         markFailure(t);
         if (wasCallPermitted()) {
             actual.onError(t);
+        }
+    }
+
+    @Override
+    protected void hookOnCancel() {
+        if (SUCCESS_SIGNALED.compareAndSet(this, 0, 1)) {
+            markSuccess();
+        }
+
+        if (wasCallPermitted() && actual instanceof Subscription) {
+            ((Subscription) actual).cancel();
         }
     }
 
