@@ -59,8 +59,8 @@ class BulkheadSubscriber<T> extends ResilienceBaseSubscriber<T> {
     }
 
     @Override
-    protected boolean isCallPermitted() {
-        return bulkhead.isCallPermitted();
+    protected boolean obtainPermission() {
+        return bulkhead.tryObtainPermission();
     }
 
     @Override

@@ -15,17 +15,13 @@
  */
 package io.github.resilience4j.retry;
 
-import static io.github.resilience4j.service.test.retry.ReactiveRetryDummyService.BACKEND_C;
-import static io.github.resilience4j.service.test.retry.RetryDummyService.RETRY_BACKEND_A;
-import static io.github.resilience4j.service.test.retry.RetryDummyService.RETRY_BACKEND_B;
-import static org.assertj.core.api.Assertions.assertThat;
-
-import java.io.IOException;
-import java.util.concurrent.CompletionStage;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
-
+import io.github.resilience4j.circuitbreaker.IgnoredException;
+import io.github.resilience4j.retry.autoconfigure.RetryProperties;
+import io.github.resilience4j.retry.configure.RetryAspect;
+import io.github.resilience4j.retry.monitoring.endpoint.RetryEndpointResponse;
+import io.github.resilience4j.retry.monitoring.endpoint.RetryEventsEndpointResponse;
+import io.github.resilience4j.service.test.TestApplication;
+import io.github.resilience4j.service.test.retry.RetryDummyService;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,13 +31,16 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import io.github.resilience4j.circuitbreaker.IgnoredException;
-import io.github.resilience4j.retry.autoconfigure.RetryProperties;
-import io.github.resilience4j.retry.configure.RetryAspect;
-import io.github.resilience4j.retry.monitoring.endpoint.RetryEndpointResponse;
-import io.github.resilience4j.retry.monitoring.endpoint.RetryEventsEndpointResponse;
-import io.github.resilience4j.service.test.TestApplication;
-import io.github.resilience4j.service.test.retry.RetryDummyService;
+import java.io.IOException;
+import java.util.concurrent.CompletionStage;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+
+import static io.github.resilience4j.service.test.retry.ReactiveRetryDummyService.BACKEND_C;
+import static io.github.resilience4j.service.test.retry.RetryDummyService.RETRY_BACKEND_A;
+import static io.github.resilience4j.service.test.retry.RetryDummyService.RETRY_BACKEND_B;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,

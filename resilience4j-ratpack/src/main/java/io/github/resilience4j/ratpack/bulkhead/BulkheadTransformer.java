@@ -58,7 +58,7 @@ public class BulkheadTransformer<T> extends AbstractTransformer<T> {
     @Override
     public Upstream<T> apply(Upstream<? extends T> upstream) throws Exception {
         return down -> {
-            if (bulkhead.isCallPermitted()) {
+            if (bulkhead.tryObtainPermission()) {
                 // do not allow permits to leak
                 upstream.connect(new Downstream<T>() {
 

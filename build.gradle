@@ -79,14 +79,10 @@ sonarqube {
     properties {
         property "sonar.projectName", "resilience4j"
         property "sonar.projectKey", "resilience4j_resilience4j"
-
         property "sonar.links.homepage","https://github.com/resilience4j/resilience4j"
         property "sonar.links.ci","https://travis-ci.org/resilience4j/resilience4j"
         property "sonar.links.scm","https://github.com/resilience4j/resilience4j"
         property "sonar.links.issue","https://github.com/resilience4j/resilience4j/issues"
-
-//        property "sonar.jacoco.reportPaths","build/reports/jacoco/test"
-
         property "sonar.language","java"
     }
 }
@@ -108,8 +104,9 @@ subprojects {
         }
     }
     afterEvaluate {
-        // exclude subprojects that don't produce a jar file.
-        if(!project.name.equals('resilience4j-bom') && !project.name.equals('resilience4j-documentation') && !project.name.equals('resilience4j-test')) {
+        // exclude subprojects that don't produce a jar file or by design.
+        if(!project.name.equals('resilience4j-bom') && !project.name.equals('resilience4j-documentation')
+                && !project.name.equals('resilience4j-test') && !project.name.equals('resilience4j-spring-boot-common')) {
             jar {
                 inputs.property('moduleName', moduleName)
                 manifest.attributes(

@@ -21,65 +21,85 @@ package io.github.resilience4j.bulkhead.internal;
 import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.bulkhead.BulkheadConfig;
 import io.github.resilience4j.bulkhead.BulkheadRegistry;
+import io.github.resilience4j.core.registry.AbstractRegistry;
+import io.github.resilience4j.core.ConfigurationNotFoundException;
 import io.vavr.collection.Array;
 import io.vavr.collection.Seq;
 
+import java.util.Map;
 import java.util.Objects;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 import java.util.function.Supplier;
 
 /**
  * Bulkhead instance manager;
  * Constructs/returns bulkhead instances.
  */
-public final class InMemoryBulkheadRegistry implements BulkheadRegistry {
+public final class InMemoryBulkheadRegistry extends AbstractRegistry<Bulkhead, BulkheadConfig> implements BulkheadRegistry {
 
-    private final BulkheadConfig defaultBulkheadConfig;
+	/**
+	 * The constructor with default default.
+	 */
+	public InMemoryBulkheadRegistry() {
+		this(BulkheadConfig.ofDefaults());
+	}
 
-    /**
-     * The bulkheads, indexed by name
-     */
-    private final ConcurrentMap<String, Bulkhead> bulkheads;
+	public InMemoryBulkheadRegistry(Map<String, BulkheadConfig> configs) {
+		this(configs.getOrDefault(DEFAULT_CONFIG, BulkheadConfig.ofDefaults()));
+		this.configurations.putAll(configs);
+	}
 
-    /**
-     * The constructor with custom default bulkhead config
-     *
-     * @param bulkheadConfig custom bulkhead config to use
-     */
-    public InMemoryBulkheadRegistry(BulkheadConfig bulkheadConfig) {
-        this.defaultBulkheadConfig = bulkheadConfig;
-        this.bulkheads = new ConcurrentHashMap<>();
-    }
+	/**
+	 * The constructor with custom default config.
+	 *
+	 * @param defaultConfig The default config.
+	 */
+	public InMemoryBulkheadRegistry(BulkheadConfig defaultConfig) {
+		super(defaultConfig);
+	}
 
-    @Override
-    public Seq<Bulkhead> getAllBulkheads() {
-        return Array.ofAll(bulkheads.values());
-    }
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public Seq<Bulkhead> getAllBulkheads() {
+		return Array.ofAll(entryMap.values());
+	}
 
-    @Override
-    public Bulkhead bulkhead(String name) {
-        return bulkhead(name, defaultBulkheadConfig);
-    }
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public Bulkhead bulkhead(String name) {
+		return bulkhead(name, getDefaultConfig());
+	}
 
-    @Override
-    public Bulkhead bulkhead(String name, BulkheadConfig bulkheadConfig) {
-        return bulkheads.computeIfAbsent(
-                Objects.requireNonNull(name, "Name must not be null"),
-                k -> Bulkhead.of(name, bulkheadConfig)
-        );
-    }
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public Bulkhead bulkhead(String name, BulkheadConfig config) {
+		return computeIfAbsent(name, () -> Bulkhead.of(name, Objects.requireNonNull(config, CONFIG_MUST_NOT_BE_NULL)));
+	}
 
-    @Override
-    public Bulkhead bulkhead(String name, Supplier<BulkheadConfig> bulkheadConfigSupplier) {
-        return bulkheads.computeIfAbsent(
-                Objects.requireNonNull(name, "Name must not be null"),
-                k -> Bulkhead.of(name, bulkheadConfigSupplier.get())
-        );
-    }
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public Bulkhead bulkhead(String name, Supplier<BulkheadConfig> bulkheadConfigSupplier) {
+		return computeIfAbsent(name, () -> Bulkhead.of(name, Objects.requireNonNull(Objects.requireNonNull(bulkheadConfigSupplier, SUPPLIER_MUST_NOT_BE_NULL).get(), CONFIG_MUST_NOT_BE_NULL)));
+	}
 
-    @Override
-    public BulkheadConfig getDefaultBulkheadConfig() {
-        return defaultBulkheadConfig;
-    }
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public Bulkhead bulkhead(String name, String configName) {
+		return computeIfAbsent(name, () -> Bulkhead.of(name, getConfiguration(configName)
+				.orElseThrow(() -> new ConfigurationNotFoundException(configName))));
+	}
+
+	@Override
+	public BulkheadConfig getDefaultBulkheadConfig() {
+		return getDefaultConfig();
+	}
 }

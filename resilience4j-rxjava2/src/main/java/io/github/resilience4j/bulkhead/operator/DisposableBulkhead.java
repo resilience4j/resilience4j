@@ -124,7 +124,7 @@ abstract class DisposableBulkhead<T> extends AtomicReference<Disposable> impleme
     private boolean acquireCallPermit() {
         boolean callPermitted = false;
         if (permitted.compareAndSet(Permit.PENDING, Permit.ACQUIRED)) {
-            callPermitted = bulkhead.isCallPermitted();
+            callPermitted = bulkhead.tryObtainPermission();
             if (!callPermitted) {
                 permitted.set(Permit.REJECTED);
             }

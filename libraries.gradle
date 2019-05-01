@@ -47,7 +47,7 @@ ext {
             awaitility: "com.jayway.awaitility:awaitility:${awaitilityVersion}",
             reactor_test: "io.projectreactor:reactor-test:${reactorVersion}",
             reactive_streams_tck: "org.reactivestreams:reactive-streams-tck:${reactiveStreamsVersion}",
-            mock_lock: "com.statemachinesystems:mock-clock:1.0",
+            mock_clock: "com.statemachinesystems:mock-clock:1.0",
 
             // Vert.x addon
             vertx: "io.vertx:vertx-core:${vertxVersion}",
@@ -55,7 +55,8 @@ ext {
 
             // Aspectj for Spring addon
             aspectj: "org.aspectj:aspectjrt:${aspectjVersion}",
-
+            // spring test
+            spring_test:  "org.springframework:spring-test:${springVersion}",
             // Spring Boot addon
             spring_core: "org.springframework:spring-core:${springVersion}",
             spring_context: "org.springframework:spring-context:${springVersion}",

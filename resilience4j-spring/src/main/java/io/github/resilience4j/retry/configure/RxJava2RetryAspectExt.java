@@ -23,7 +23,6 @@ import org.aspectj.lang.ProceedingJoinPoint;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import io.github.resilience4j.circuitbreaker.configure.CircuitBreakerAspect;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.transformer.RetryTransformer;
 import io.reactivex.Completable;
@@ -42,7 +41,7 @@ import io.reactivex.SingleSource;
  */
 public class RxJava2RetryAspectExt implements RetryAspectExt {
 
-	private static final Logger logger = LoggerFactory.getLogger(CircuitBreakerAspect.class);
+	private static final Logger logger = LoggerFactory.getLogger(RxJava2RetryAspectExt.class);
 	private final Set<Class> rxSupportedTypes = newHashSet(ObservableSource.class, SingleSource.class, CompletableSource.class, MaybeSource.class, Flowable.class);
 
 	/**

@@ -18,14 +18,14 @@
  */
 package io.github.resilience4j.prometheus;
 
-import java.util.List;
-import java.util.function.Supplier;
-
 import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.bulkhead.BulkheadRegistry;
 import io.prometheus.client.Collector;
 import io.prometheus.client.GaugeMetricFamily;
 import io.vavr.collection.Array;
+
+import java.util.List;
+import java.util.function.Supplier;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
@@ -72,7 +72,7 @@ public class BulkheadExports extends Collector {
      * @param bulkheadRegistry the registry of bulkheads
      */
     public static BulkheadExports ofBulkheadRegistry(BulkheadRegistry bulkheadRegistry) {
-        return new BulkheadExports(bulkheadRegistry.getAllBulkheads());
+        return new BulkheadExports(bulkheadRegistry);
     }
 
     /**

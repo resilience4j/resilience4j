@@ -59,7 +59,7 @@ public class FluxBulkheadTest {
 
     @Test
     public void shouldEmitErrorWithBulkheadFullException() {
-        bulkhead.isCallPermitted();
+        bulkhead.tryObtainPermission();
 
         StepVerifier.create(
                 Flux.just("Event")
@@ -73,7 +73,7 @@ public class FluxBulkheadTest {
 
     @Test
     public void shouldEmitBulkheadFullExceptionEvenWhenErrorDuringSubscribe() {
-        bulkhead.isCallPermitted();
+        bulkhead.tryObtainPermission();
 
         StepVerifier.create(
                 Flux.error(new IOException("BAM!"))
@@ -87,7 +87,7 @@ public class FluxBulkheadTest {
 
     @Test
     public void shouldEmitBulkheadFullExceptionEvenWhenErrorNotOnSubscribe() {
-        bulkhead.isCallPermitted();
+        bulkhead.tryObtainPermission();
 
         StepVerifier.create(
                 Flux.error(new IOException("BAM!"), true)

@@ -21,14 +21,21 @@ package io.github.resilience4j.bulkhead.utils;
 import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.bulkhead.BulkheadFullException;
 
+
 public final class BulkheadUtils {
 
-	private BulkheadUtils() {
-	}
+    private BulkheadUtils(){}
 
-	public static void isCallPermitted(Bulkhead bulkhead) {
-		if (!bulkhead.isCallPermitted()) {
-			throw new BulkheadFullException(String.format("Bulkhead '%s' is full", bulkhead.getName()));
-		}
-	}
+    /**
+     * @deprecated
+     * Use {@link Bulkhead#obtainPermission()} instead
+     *
+     * @since 0.15.0
+     */
+    @Deprecated
+    public static void isCallPermitted(Bulkhead bulkhead) {
+        if(!bulkhead.tryObtainPermission()) {
+            throw new BulkheadFullException(bulkhead);
+        }
+    }
 }

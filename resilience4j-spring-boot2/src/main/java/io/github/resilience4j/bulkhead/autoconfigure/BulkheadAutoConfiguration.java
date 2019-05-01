@@ -15,13 +15,6 @@
  */
 package io.github.resilience4j.bulkhead.autoconfigure;
 
-import io.github.resilience4j.bulkhead.Bulkhead;
-import io.github.resilience4j.bulkhead.BulkheadRegistry;
-import io.github.resilience4j.bulkhead.configure.BulkheadConfiguration;
-import io.github.resilience4j.bulkhead.event.BulkheadEvent;
-import io.github.resilience4j.bulkhead.monitoring.endpoint.BulkheadEndpoint;
-import io.github.resilience4j.bulkhead.monitoring.endpoint.BulkheadEventsEndpoint;
-import io.github.resilience4j.consumer.EventConsumerRegistry;
 import io.github.resilience4j.recovery.configure.RecoveryConfiguration;
 import org.springframework.boot.actuate.autoconfigure.endpoint.EndpointAutoConfiguration;
 import org.springframework.boot.actuate.autoconfigure.endpoint.condition.ConditionalOnEnabledEndpoint;
@@ -32,6 +25,13 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 
+import io.github.resilience4j.bulkhead.Bulkhead;
+import io.github.resilience4j.bulkhead.BulkheadRegistry;
+import io.github.resilience4j.bulkhead.event.BulkheadEvent;
+import io.github.resilience4j.bulkhead.monitoring.endpoint.BulkheadEndpoint;
+import io.github.resilience4j.bulkhead.monitoring.endpoint.BulkheadEventsEndpoint;
+import io.github.resilience4j.consumer.EventConsumerRegistry;
+
 /**
  * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration
  * Auto-configuration} for resilience4j-bulkhead.
@@ -39,18 +39,18 @@ import org.springframework.context.annotation.Import;
 @Configuration
 @ConditionalOnClass(Bulkhead.class)
 @EnableConfigurationProperties(BulkheadProperties.class)
-@Import({BulkheadConfiguration.class, RecoveryConfiguration.class})
+@Import({BulkheadConfigurationOnMissingBean.class,  RecoveryConfiguration.class})
 @AutoConfigureBefore(EndpointAutoConfiguration.class)
 public class BulkheadAutoConfiguration {
-    @Bean
-    @ConditionalOnEnabledEndpoint
-    public BulkheadEndpoint bulkheadEndpoint(BulkheadRegistry bulkheadRegistry) {
-        return new BulkheadEndpoint(bulkheadRegistry);
-    }
+	@Bean
+	@ConditionalOnEnabledEndpoint
+	public BulkheadEndpoint bulkheadEndpoint(BulkheadRegistry bulkheadRegistry) {
+		return new BulkheadEndpoint(bulkheadRegistry);
+	}
 
-    @Bean
-    @ConditionalOnEnabledEndpoint
-    public BulkheadEventsEndpoint bulkheadEventsEndpoint(EventConsumerRegistry<BulkheadEvent> eventConsumerRegistry) {
-        return new BulkheadEventsEndpoint(eventConsumerRegistry);
-    }
+	@Bean
+	@ConditionalOnEnabledEndpoint
+	public BulkheadEventsEndpoint bulkheadEventsEndpoint(EventConsumerRegistry<BulkheadEvent> eventConsumerRegistry) {
+		return new BulkheadEventsEndpoint(eventConsumerRegistry);
+	}
 }

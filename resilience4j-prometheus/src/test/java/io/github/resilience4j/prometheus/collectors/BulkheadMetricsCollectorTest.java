@@ -35,8 +35,8 @@ public class BulkheadMetricsCollectorTest {
         registry = new CollectorRegistry();
         bulkhead = Bulkhead.ofDefaults("backendA");
         // record some basic stats
-        bulkhead.isCallPermitted();
-        bulkhead.isCallPermitted();
+        bulkhead.tryObtainPermission();
+        bulkhead.tryObtainPermission();
 
         BulkheadMetricsCollector.ofBulkhead(bulkhead).register(registry);
     }

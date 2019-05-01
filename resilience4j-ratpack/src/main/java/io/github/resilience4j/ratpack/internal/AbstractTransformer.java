@@ -33,8 +33,8 @@ public abstract class AbstractTransformer<T> implements Function<Upstream<? exte
             } else {
                 down.error(throwable);
             }
-        } catch (Throwable t) {
-            down.error(t);
+        } catch (Exception ex) {
+            down.error(ex);
         }
     }
 }
