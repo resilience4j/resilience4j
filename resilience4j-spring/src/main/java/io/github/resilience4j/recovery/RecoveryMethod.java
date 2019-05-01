@@ -136,11 +136,13 @@ public class RecoveryMethod {
 
     private static Map<Class<?>, Method> extractMethods(String recoveryMethodName, Class<?>[] params, Class<?> originalReturnType, Class<?> targetClass) {
         MethodMeta methodMeta = new MethodMeta(recoveryMethodName, params, originalReturnType, targetClass);
-        Map<Class<?>, Method> methods = RECOVERY_METHODS_CACHE.getOrDefault(methodMeta, new HashMap<>());
+        Map<Class<?>, Method> cachedMethods = RECOVERY_METHODS_CACHE.get(methodMeta);
 
-        if (!methods.isEmpty()) {
-            return methods;
+        if (cachedMethods != null) {
+            return cachedMethods;
         }
+
+        Map<Class<?>, Method> methods = new HashMap<>();
 
         ReflectionUtils.doWithMethods(targetClass, method -> {
             Class<?>[] recoveryParams = method.getParameterTypes();
