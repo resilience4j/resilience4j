@@ -19,7 +19,7 @@ import io.github.resilience4j.circuitbreaker.autoconfigure.CircuitBreakerAutoCon
 import io.github.resilience4j.micrometer.RateLimiterMetrics;
 import io.github.resilience4j.micrometer.tagged.TaggedRateLimiterMetrics;
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
-import io.micrometer.spring.autoconfigure.CompositeMeterRegistryAutoConfiguration;
+import io.micrometer.spring.autoconfigure.MetricsAutoConfiguration;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -32,8 +32,8 @@ import org.springframework.context.annotation.Configuration;
  * Auto-configuration} for resilience4j-metrics.
  */
 @Configuration
-@ConditionalOnClass(CompositeMeterRegistryAutoConfiguration.class)
-@AutoConfigureAfter(value = {CircuitBreakerAutoConfiguration.class, CompositeMeterRegistryAutoConfiguration.class})
+@ConditionalOnClass(MetricsAutoConfiguration.class)
+@AutoConfigureAfter(value = {CircuitBreakerAutoConfiguration.class, MetricsAutoConfiguration.class})
 @ConditionalOnProperty(value = "resilience4j.ratelimiter.metrics.enabled", matchIfMissing = true)
 public class RateLimiterMicrometerAutoConfiguration {
 

@@ -18,7 +18,7 @@ package io.github.resilience4j.retry.autoconfigure;
 import io.github.resilience4j.micrometer.RetryMetrics;
 import io.github.resilience4j.micrometer.tagged.TaggedRetryMetrics;
 import io.github.resilience4j.retry.RetryRegistry;
-import io.micrometer.spring.autoconfigure.CompositeMeterRegistryAutoConfiguration;
+import io.micrometer.spring.autoconfigure.MetricsAutoConfiguration;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -31,8 +31,8 @@ import org.springframework.context.annotation.Configuration;
  * Auto-configuration} for resilience4j-metrics.
  */
 @Configuration
-@ConditionalOnClass(CompositeMeterRegistryAutoConfiguration.class)
-@AutoConfigureAfter(value = {RetryAutoConfiguration.class, CompositeMeterRegistryAutoConfiguration.class})
+@ConditionalOnClass(MetricsAutoConfiguration.class)
+@AutoConfigureAfter(value = {RetryAutoConfiguration.class, MetricsAutoConfiguration.class})
 @ConditionalOnProperty(value = "resilience4j.retry.metrics.enabled", matchIfMissing = true)
 public class RetryMicrometerAutoConfiguration {
 

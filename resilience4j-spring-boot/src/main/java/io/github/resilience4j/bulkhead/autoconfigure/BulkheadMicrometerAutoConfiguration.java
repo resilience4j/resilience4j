@@ -18,7 +18,7 @@ package io.github.resilience4j.bulkhead.autoconfigure;
 import io.github.resilience4j.bulkhead.BulkheadRegistry;
 import io.github.resilience4j.micrometer.BulkheadMetrics;
 import io.github.resilience4j.micrometer.tagged.TaggedBulkheadMetrics;
-import io.micrometer.spring.autoconfigure.CompositeMeterRegistryAutoConfiguration;
+import io.micrometer.spring.autoconfigure.MetricsAutoConfiguration;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -31,8 +31,8 @@ import org.springframework.context.annotation.Configuration;
  * Auto-configuration} for resilience4j-metrics.
  */
 @Configuration
-@ConditionalOnClass(CompositeMeterRegistryAutoConfiguration.class)
-@AutoConfigureAfter(value = {CompositeMeterRegistryAutoConfiguration.class})
+@ConditionalOnClass(MetricsAutoConfiguration.class)
+@AutoConfigureAfter(value = {MetricsAutoConfiguration.class})
 @ConditionalOnProperty(value = "resilience4j.bulkhead.metrics.enabled", matchIfMissing = true)
 public class BulkheadMicrometerAutoConfiguration {
 
