@@ -15,10 +15,14 @@
  */
 package io.github.resilience4j.retry.configure;
 
-import io.github.resilience4j.core.lang.Nullable;
-import io.github.resilience4j.retry.RetryRegistry;
-import io.github.resilience4j.retry.annotation.Retry;
-import io.github.resilience4j.utils.AnnotationExtractor;
+import java.lang.reflect.Method;
+import java.util.List;
+import java.util.concurrent.CompletionException;
+import java.util.concurrent.CompletionStage;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -29,9 +33,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.Ordered;
 
-import java.lang.reflect.Method;
-import java.util.List;
-import java.util.concurrent.*;
+import io.github.resilience4j.core.lang.Nullable;
+import io.github.resilience4j.retry.RetryRegistry;
+import io.github.resilience4j.retry.annotation.Retry;
+import io.github.resilience4j.utils.AnnotationExtractor;
 
 /**
  * This Spring AOP aspect intercepts all methods which are annotated with a {@link Retry} annotation.
@@ -96,8 +101,7 @@ public class RetryAspect implements Ordered {
 	 * @return the configured retry
 	 */
 	private io.github.resilience4j.retry.Retry getOrCreateRetry(String methodName, String backend) {
-		io.github.resilience4j.retry.Retry retry = retryRegistry.retry(backend,
-				() -> retryConfigurationProperties.createRetryConfig(backend));
+		io.github.resilience4j.retry.Retry retry = retryRegistry.retry(backend);
 
 		if (logger.isDebugEnabled()) {
 			logger.debug("Created or retrieved retry '{}' with max attempts rate '{}'  for method: '{}'",
