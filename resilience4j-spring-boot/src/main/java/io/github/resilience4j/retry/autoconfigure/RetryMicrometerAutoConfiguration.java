@@ -15,13 +15,11 @@
  */
 package io.github.resilience4j.retry.autoconfigure;
 
-import com.codahale.metrics.MetricRegistry;
-import io.github.resilience4j.metrics.RetryMetrics;
+import io.github.resilience4j.micrometer.RetryMetrics;
+import io.github.resilience4j.micrometer.tagged.TaggedRetryMetrics;
 import io.github.resilience4j.retry.RetryRegistry;
-import org.springframework.boot.actuate.autoconfigure.MetricRepositoryAutoConfiguration;
-import org.springframework.boot.actuate.autoconfigure.MetricsDropwizardAutoConfiguration;
+import io.micrometer.spring.autoconfigure.CompositeMeterRegistryAutoConfiguration;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
-import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -32,20 +30,27 @@ import org.springframework.context.annotation.Configuration;
  * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration
  * Auto-configuration} for resilience4j-metrics.
  */
-
 @Configuration
-@ConditionalOnClass(MetricRegistry.class)
-@AutoConfigureAfter(value = {RetryAutoConfiguration.class, MetricsDropwizardAutoConfiguration.class})
-@AutoConfigureBefore(MetricRepositoryAutoConfiguration.class)
+@ConditionalOnClass(CompositeMeterRegistryAutoConfiguration.class)
+@AutoConfigureAfter(value = {RetryAutoConfiguration.class, CompositeMeterRegistryAutoConfiguration.class})
 @ConditionalOnProperty(value = "resilience4j.retry.metrics.enabled", matchIfMissing = true)
-public class RetryMetricsAutoConfiguration {
+public class RetryMicrometerAutoConfiguration {
 
 	@Bean
 	@ConditionalOnMissingBean
-	public RetryMetrics registerRetryMetrics(RetryRegistry retryRegistry, MetricRegistry metricRegistry) {
-		RetryMetrics retryMetrics = RetryMetrics.ofRetryRegistry(retryRegistry);
-		metricRegistry.registerAll(retryMetrics);
-		return retryMetrics;
+	@ConditionalOnProperty(value = "resilience4j.retry.metrics.use_legacy_binder", havingValue = "true")
+	public RetryMetrics registerLegacyRetryMetrics(RetryRegistry retryRegistry) {
+		return RetryMetrics.ofRetryRegistry(retryRegistry);
 	}
 
+	@Bean
+	@ConditionalOnMissingBean
+	@ConditionalOnProperty(
+			value = "resilience4j.retry.metrics.use_legacy_binder",
+			havingValue = "false",
+			matchIfMissing = true
+	)
+	public TaggedRetryMetrics registerRetryMetrics(RetryRegistry retryRegistry) {
+		return TaggedRetryMetrics.ofRetryRegistry(retryRegistry);
+	}
 }

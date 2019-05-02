@@ -16,8 +16,9 @@
 package io.github.resilience4j.circuitbreaker.autoconfigure;
 
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
-import io.github.resilience4j.prometheus.CircuitBreakerExports;
-import io.github.resilience4j.prometheus.collectors.CircuitBreakerMetricsCollector;
+import io.github.resilience4j.micrometer.CircuitBreakerMetrics;
+import io.github.resilience4j.micrometer.tagged.TaggedCircuitBreakerMetrics;
+import io.micrometer.spring.autoconfigure.CompositeMeterRegistryAutoConfiguration;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -30,30 +31,26 @@ import org.springframework.context.annotation.Configuration;
  * Auto-configuration} for resilience4j-metrics.
  */
 @Configuration
-@AutoConfigureAfter(value = CircuitBreakerAutoConfiguration.class)
-@ConditionalOnClass(CircuitBreakerMetricsCollector.class)
+@ConditionalOnClass(CompositeMeterRegistryAutoConfiguration.class)
+@AutoConfigureAfter(value = {CircuitBreakerAutoConfiguration.class, CompositeMeterRegistryAutoConfiguration.class})
 @ConditionalOnProperty(value = "resilience4j.circuitbreaker.metrics.enabled", matchIfMissing = true)
-public class CircuitBreakerPrometheusAutoConfiguration {
+public class CircuitBreakerMicrometerAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
-    @ConditionalOnProperty(value = "resilience4j.circuitbreaker.metrics.use_legacy_collector", havingValue = "true")
-    public CircuitBreakerExports legacyCircuitBreakerPrometheusCollector(CircuitBreakerRegistry circuitBreakerRegistry) {
-        CircuitBreakerExports collector = CircuitBreakerExports.ofCircuitBreakerRegistry(circuitBreakerRegistry);
-        collector.register();
-        return collector;
+    @ConditionalOnProperty(value = "resilience4j.circuitbreaker.metrics.use_legacy_binder", havingValue = "true")
+    public CircuitBreakerMetrics registerLegacyCircuitBreakerMetrics(CircuitBreakerRegistry circuitBreakerRegistry) {
+        return CircuitBreakerMetrics.ofCircuitBreakerRegistry(circuitBreakerRegistry);
     }
 
     @Bean
     @ConditionalOnMissingBean
     @ConditionalOnProperty(
-        value = "resilience4j.circuitbreaker.metrics.use_legacy_collector",
+        value = "resilience4j.circuitbreaker.metrics.use_legacy_binder",
         havingValue = "false",
         matchIfMissing = true
     )
-    public CircuitBreakerMetricsCollector circuitBreakerPrometheusCollector(CircuitBreakerRegistry circuitBreakerRegistry) {
-        CircuitBreakerMetricsCollector collector = CircuitBreakerMetricsCollector.ofCircuitBreakerRegistry(circuitBreakerRegistry);
-        collector.register();
-        return collector;
+    public TaggedCircuitBreakerMetrics registerCircuitBreakerMetrics(CircuitBreakerRegistry circuitBreakerRegistry) {
+        return TaggedCircuitBreakerMetrics.ofCircuitBreakerRegistry(circuitBreakerRegistry);
     }
 }
