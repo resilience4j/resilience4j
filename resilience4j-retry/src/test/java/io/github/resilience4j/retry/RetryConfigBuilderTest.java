@@ -18,14 +18,14 @@
  */
 package io.github.resilience4j.retry;
 
-import org.assertj.core.api.Assertions;
-import org.junit.Test;
+import static org.assertj.core.api.BDDAssertions.then;
+import static org.assertj.core.api.Java6Assertions.assertThat;
 
 import java.time.Duration;
 import java.util.function.Predicate;
 
-import static org.assertj.core.api.BDDAssertions.then;
-import static org.assertj.core.api.Java6Assertions.assertThat;
+import org.assertj.core.api.Assertions;
+import org.junit.Test;
 
 public class RetryConfigBuilderTest {
     private static final Predicate<Throwable> TEST_PREDICATE = e -> "test".equals(e.getMessage());
@@ -50,6 +50,18 @@ public class RetryConfigBuilderTest {
         RetryConfig config = RetryConfig.custom().waitDuration(Duration.ofMillis(10)).build();
         Assertions.assertThat(config).isNotNull();
     }
+
+    @Test
+    public void testCreateFromConfigurationWithNoPredicateCalculations() {
+        RetryConfig config = RetryConfig
+                .from(RetryConfig.custom().retryOnException(e -> e instanceof IllegalArgumentException)
+                        .build()).enableRetryExceptionPredicate(false).build();
+        assertThat(config).isNotNull();
+        assertThat(config.getExceptionPredicate().test(new IllegalArgumentException())).isTrue();
+        assertThat(config.getExceptionPredicate().test(new IllegalStateException())).isFalse();
+
+    }
+
 
     @Test
     public void waitIntervalOverTenMillisShouldSucceed() {
