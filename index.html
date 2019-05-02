@@ -1688,11 +1688,7 @@ in remainingBulkheadDepth = metrics.getAvailableConcurrentCalls()</code></pre>
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="java"><span class="comment">// Create a Retry context with a default global configuration</span>
 <span class="comment">// (maxAttempts = 3, waitDurationInOpenState = 500[ms])</span>
-RetryConfig config = RetryConfig.custom()
-    .maxAttempts(<span class="integer">3</span>)
-    .waitDuration(<span class="predefined-type">Duration</span>.ofMillis(<span class="integer">500</span>))
-    .build();
-Retry retry = Retry.of(<span class="string"><span class="delimiter">&quot;</span><span class="content">id</span><span class="delimiter">&quot;</span></span>, config);</code></pre>
+Retry retry = Retry.ofDefaults(<span class="string"><span class="delimiter">&quot;</span><span class="content">id</span><span class="delimiter">&quot;</span></span>);</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -1703,9 +1699,10 @@ Retry retry = Retry.of(<span class="string"><span class="delimiter">&quot;</span
 <pre class="CodeRay highlight"><code data-lang="java">RetryConfig config = RetryConfig.custom()
     .maxAttempts(<span class="integer">2</span>)
     .waitDuration(<span class="predefined-type">Duration</span>.ofMillis(<span class="integer">100</span>))
-    .retryOnException(throwable -&gt; API.Match(throwable).of(
-            API.Case(<span class="error">$</span>(Predicates.instanceOf(WebServiceException.class)), <span class="predefined-constant">true</span>),
-            API.Case(<span class="error">$</span>(), <span class="predefined-constant">false</span>)))
+    .retryOnResult(response -&gt; response.getStatus() == <span class="integer">500</span>)
+    .retryOnException(e -&gt; e <span class="keyword">instanceof</span> WebServiceException)
+    .retryExceptions(<span class="exception">IOException</span>.class, <span class="exception">TimeoutException</span>.class)
+    .ignoreExceptions(BunsinessException.class, OtherBunsinessException.class)
     .build();</code></pre>
 </div>
 </div>
@@ -5002,7 +4999,7 @@ So you can easily restrict not only network calls but your local in-memory opera
 <div id="footer">
 <div id="footer-text">
 Version 0.15.0-SNAPSHOT<br>
-Last updated 2019-05-02 17:35:20 UTC
+Last updated 2019-05-02 18:51:45 UTC
 </div>
 </div>
 </body>
