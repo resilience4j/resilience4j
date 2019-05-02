@@ -24,7 +24,10 @@ import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 
 import org.springframework.beans.BeanUtils;
+import org.springframework.util.StringUtils;
 
+import io.github.resilience4j.core.ConfigurationNotFoundException;
+import io.github.resilience4j.core.lang.Nullable;
 import io.github.resilience4j.retry.IntervalFunction;
 import io.github.resilience4j.retry.RetryConfig;
 
@@ -33,6 +36,7 @@ import io.github.resilience4j.retry.RetryConfig;
  */
 public class RetryConfigurationProperties {
 	private final Map<String, BackendProperties> backends = new HashMap<>();
+	private Map<String, BackendProperties> configs = new HashMap<>();
 	/*  This property gives you control over Retry aspect application order.
 		By default Retry will be executed BEFORE Circuit breaker, rateLimiter and bulkhead.
 		By adjusting each aspect order from ConfigurationProperties
@@ -70,18 +74,38 @@ public class RetryConfigurationProperties {
 	}
 
 	/**
+	 * @return common configuration for retry backend
+	 */
+	public Map<String, BackendProperties> getConfigs() {
+		return configs;
+	}
+
+	/**
 	 * @param backendProperties the retry backend spring properties
 	 * @return the retry configuration
 	 */
-	private RetryConfig createRetryConfig(BackendProperties backendProperties) {
-		return buildRetryConfig(backendProperties).build();
+	public RetryConfig createRetryConfig(BackendProperties backendProperties) {
+		if (!StringUtils.isEmpty(backendProperties.getBaseConfig())) {
+			BackendProperties baseProperties = configs.get(backendProperties.getBaseConfig());
+			if (baseProperties == null) {
+				throw new ConfigurationNotFoundException(backendProperties.getBaseConfig());
+			}
+			return buildConfigFromBaseConfig(baseProperties, backendProperties);
+		}
+		return buildRetryConfig(RetryConfig.custom(), backendProperties);
+	}
+
+	private RetryConfig buildConfigFromBaseConfig(BackendProperties baseProperties, BackendProperties backendProperties) {
+		RetryConfig baseConfig = buildRetryConfig(RetryConfig.custom(), baseProperties);
+		return buildRetryConfig(RetryConfig.from(baseConfig), backendProperties);
 	}
 
 	/**
 	 * @param backend retry backend name
 	 * @return the configured spring backend properties
 	 */
-	private BackendProperties getBackendProperties(String backend) {
+	@Nullable
+	public BackendProperties getBackendProperties(String backend) {
 		return backends.get(backend);
 	}
 
@@ -90,12 +114,10 @@ public class RetryConfigurationProperties {
 	 * @return retry config builder instance
 	 */
 	@SuppressWarnings("unchecked")
-	public RetryConfig.Builder buildRetryConfig(BackendProperties properties) {
+	private RetryConfig buildRetryConfig(RetryConfig.Builder builder, BackendProperties properties) {
 		if (properties == null) {
-			return new RetryConfig.Builder();
+			return builder.build();
 		}
-
-		RetryConfig.Builder<Object> builder = RetryConfig.custom();
 
 		if (properties.enableExponentialBackoff && properties.enableRandomizedWait) {
 			throw new IllegalStateException("you can not enable Exponential backoff policy and randomized delay at the same time , please enable only one of them");
@@ -103,7 +125,7 @@ public class RetryConfigurationProperties {
 
 		configureRetryIntervalFunction(properties, builder);
 
-		if (properties.getMaxRetryAttempts() != 0) {
+		if (properties.getMaxRetryAttempts() != null && properties.getMaxRetryAttempts() != 0) {
 			builder.maxAttempts(properties.getMaxRetryAttempts());
 		}
 
@@ -124,7 +146,7 @@ public class RetryConfigurationProperties {
 		}
 
 
-		return builder;
+		return builder.build();
 	}
 
 	/**
@@ -134,7 +156,7 @@ public class RetryConfigurationProperties {
 	 * @param builder    the retry config builder
 	 */
 	private void configureRetryIntervalFunction(BackendProperties properties, RetryConfig.Builder<Object> builder) {
-		if (properties.getWaitDuration() != 0) {
+		if (properties.getWaitDuration() != null && properties.getWaitDuration() != 0) {
 			long waitDuration = properties.getWaitDuration();
 			if (properties.getEnableExponentialBackoff()) {
 				if (properties.getExponentialBackoffMultiplier() != 0) {
@@ -209,6 +231,9 @@ public class RetryConfigurationProperties {
 		 * randomized delay factor value
 		 */
 		private double randomizedWaitFactor;
+
+		@Nullable
+		private String baseConfig;
 
 		public Long getWaitDuration() {
 			return waitDuration;
@@ -296,6 +321,27 @@ public class RetryConfigurationProperties {
 
 		public void setRandomizedWaitFactor(double randomizedWaitFactor) {
 			this.randomizedWaitFactor = randomizedWaitFactor;
+		}
+
+		/**
+		 * Gets the shared configuration name. If this is set, the configuration builder will use the the shared
+		 * configuration backend over this one.
+		 *
+		 * @return The shared configuration name.
+		 */
+		@Nullable
+		public String getBaseConfig() {
+			return baseConfig;
+		}
+
+		/**
+		 * Sets the shared configuration name. If this is set, the configuration builder will use the the shared
+		 * configuration backend over this one.
+		 *
+		 * @param baseConfig The shared configuration name.
+		 */
+		public void setBaseConfig(String baseConfig) {
+			this.baseConfig = baseConfig;
 		}
 
 	}

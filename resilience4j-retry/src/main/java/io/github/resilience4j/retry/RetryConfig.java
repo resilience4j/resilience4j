@@ -19,13 +19,13 @@
 package io.github.resilience4j.retry;
 
 
-import io.github.resilience4j.core.lang.Nullable;
-
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Predicate;
+
+import io.github.resilience4j.core.lang.Nullable;
 
 public class RetryConfig {
 
@@ -82,6 +82,11 @@ public class RetryConfig {
 		return new Builder<>();
 	}
 
+
+	public static <T> Builder<T> from(RetryConfig retryConfig) {
+		return new Builder<>(retryConfig);
+	}
+
 	/**
 	 * Creates a default Retry configuration.
 	 *
@@ -103,6 +108,16 @@ public class RetryConfig {
 		@SuppressWarnings("unchecked")
 		private Class<? extends Throwable>[] ignoreExceptions = new Class[0];
 		private int maxAttempts = DEFAULT_MAX_ATTEMPTS;
+
+		public Builder() {
+		}
+
+		public Builder(RetryConfig retryConfig) {
+			this.exceptionPredicate = retryConfig.exceptionPredicate;
+			this.maxAttempts = retryConfig.maxAttempts;
+			this.intervalFunction = retryConfig.intervalFunction;
+			this.resultPredicate = retryConfig.resultPredicate;
+		}
 
 		public Builder<T> maxAttempts(int maxAttempts) {
 			if (maxAttempts < 1) {
