@@ -1,22 +1,19 @@
 resilience4j.retry:
   retryAspectOrder: 399
+  configs:
+    default:
+      maxRetryAttempts: 3
+      waitDuration: 100
+      retryExceptionPredicate: io.github.resilience4j.circuitbreaker.RecordFailurePredicate
+      retryExceptions:
+        - java.io.IOException
+      ignoreExceptions:
+        - io.github.resilience4j.circuitbreaker.IgnoredException
   backends:
     retryBackendA:
-      maxRetryAttempts: 3
-      waitDuration: 100
-      retryExceptionPredicate: io.github.resilience4j.circuitbreaker.RecordFailurePredicate
-      retryExceptions:
-      - java.io.IOException
-      ignoreExceptions:
-      - io.github.resilience4j.circuitbreaker.IgnoredException
+      baseConfig: default
     retryBackendB:
-      maxRetryAttempts: 3
-      waitDuration: 100
-      retryExceptionPredicate: io.github.resilience4j.circuitbreaker.RecordFailurePredicate
-      retryExceptions:
-      - java.io.IOException
-      ignoreExceptions:
-      - io.github.resilience4j.circuitbreaker.IgnoredException
+      baseConfig: default
     retryBackendC:
       maxRetryAttempts: 3
       waitDuration: 100
@@ -63,11 +60,16 @@ resilience4j.circuitbreaker:
 
 resilience4j.ratelimiter:
   rateLimiterAspectOrder: 401
-  limiters:
-    backendA:
+  configs:
+    default:
       limitForPeriod: 10
       limitRefreshPeriodInMillis: 1000
       timeoutInMillis: 0
+      subscribeForEvents: true
+      registerHealthIndicator: true
+  limiters:
+    backendA:
+      baseConfig: default
       subscribeForEvents: true
       registerHealthIndicator: true
     backendB:
@@ -77,12 +79,15 @@ resilience4j.ratelimiter:
 
 resilience4j.bulkhead:
   bulkheadAspectOrder: 398
+  configs:
+    default:
+      maxWaitTime: 10
+      maxConcurrentCall: 2
   backends:
     backendA:
       maxConcurrentCall: 1
     backendB:
-      maxWaitTime: 10
-      maxConcurrentCall: 2
+      baseConfig: default
 
 management.security.enabled: false
 management.endpoints.web.exposure.include: '*'
