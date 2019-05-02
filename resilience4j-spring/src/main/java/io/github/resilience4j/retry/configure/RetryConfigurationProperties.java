@@ -115,6 +115,7 @@ public class RetryConfigurationProperties {
 	 */
 	@SuppressWarnings("unchecked")
 	private RetryConfig buildRetryConfig(RetryConfig.Builder builder, BackendProperties properties) {
+		boolean enableRetryExceptionPredicate = false;
 		if (properties == null) {
 			return builder.build();
 		}
@@ -130,14 +131,17 @@ public class RetryConfigurationProperties {
 		}
 
 		if (properties.getRetryExceptionPredicate() != null) {
+			enableRetryExceptionPredicate = true;
 			builder.retryOnException(BeanUtils.instantiateClass(properties.getRetryExceptionPredicate()));
 		}
 
 		if (properties.getIgnoreExceptions() != null) {
+			enableRetryExceptionPredicate = true;
 			builder.ignoreExceptions(properties.getIgnoreExceptions());
 		}
 
 		if (properties.getRetryExceptions() != null) {
+			enableRetryExceptionPredicate = true;
 			builder.retryExceptions(properties.getRetryExceptions());
 		}
 
@@ -145,6 +149,9 @@ public class RetryConfigurationProperties {
 			builder.retryOnResult(BeanUtils.instantiateClass(properties.getResultPredicate()));
 		}
 
+		if (!enableRetryExceptionPredicate) {
+			builder.enableRetryExceptionPredicate(false);
+		}
 
 		return builder.build();
 	}
@@ -202,11 +209,13 @@ public class RetryConfigurationProperties {
 		 * list of retry exception classes
 		 */
 		@SuppressWarnings("unchecked")
+		@Nullable
 		private Class<? extends Throwable>[] retryExceptions;
 		/*
 		 * list of retry ignored exception classes
 		 */
 		@SuppressWarnings("unchecked")
+		@Nullable
 		private Class<? extends Throwable>[] ignoreExceptions;
 		/*
 		 * event buffer size for generated retry events

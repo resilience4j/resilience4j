@@ -108,6 +108,8 @@ public class RetryConfig {
 		@SuppressWarnings("unchecked")
 		private Class<? extends Throwable>[] ignoreExceptions = new Class[0];
 		private int maxAttempts = DEFAULT_MAX_ATTEMPTS;
+		// by default it is enabled
+		private boolean enableRetryExceptionPredicate = true;
 
 		public Builder() {
 		}
@@ -174,6 +176,20 @@ public class RetryConfig {
 
 
 		/**
+		 * it is ued when you merge shared configuration with Retry specific backend configuration to cover the following :
+		 * 1- if retry specific configuration has no ignore or retry exception neither retry exception predicate , do not recalculate the predicate to avoid losing the shared one if any
+		 * 2- otherwise do the calculation
+		 *
+		 * @param enableRetryExceptionPredicate enable or disable result predicate exception
+		 * @return the RetryConfig.Builder
+		 */
+		public Builder<T> enableRetryExceptionPredicate(boolean enableRetryExceptionPredicate) {
+			this.enableRetryExceptionPredicate = enableRetryExceptionPredicate;
+			return this;
+		}
+
+
+		/**
 		 * Configures a list of error classes that are recorded as a failure and thus increase the failure rate.
 		 * Any exception matching or inheriting from one of the list will be retried, unless ignored via
 		 *
@@ -222,7 +238,9 @@ public class RetryConfig {
 		}
 
 		public RetryConfig build() {
-			buildExceptionPredicate();
+			if (enableRetryExceptionPredicate){
+				buildExceptionPredicate();
+			}
 			RetryConfig config = new RetryConfig();
 			config.intervalFunction = intervalFunction;
 			config.maxAttempts = maxAttempts;
