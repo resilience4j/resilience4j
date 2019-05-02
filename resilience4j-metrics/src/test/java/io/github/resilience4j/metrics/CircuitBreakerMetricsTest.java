@@ -44,7 +44,7 @@ public class CircuitBreakerMetricsTest {
     }
 
     @Test
-    public void shouldRegisterMetrics() throws Throwable {
+    public void shouldRegisterMetrics() {
         //Given
         CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
         CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("testName");
