@@ -83,8 +83,8 @@ public class RetryConfig {
 	}
 
 
-	public static <T> Builder<T> from(RetryConfig retryConfig) {
-		return new Builder<>(retryConfig);
+	public static <T> Builder<T> from(RetryConfig baseConfig) {
+		return new Builder<>(baseConfig);
 	}
 
 	/**

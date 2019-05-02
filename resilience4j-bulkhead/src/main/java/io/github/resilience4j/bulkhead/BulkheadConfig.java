@@ -46,8 +46,8 @@ public class BulkheadConfig {
 	 *
 	 * @return a {@link Builder}
 	 */
-	public static Builder from(BulkheadConfig bulkheadConfig) {
-		return new Builder(bulkheadConfig);
+	public static Builder from(BulkheadConfig baseConfig) {
+		return new Builder(baseConfig);
 	}
 
 	/**
