@@ -18,6 +18,7 @@ public class BulkheadEventDTOFactoryTest {
 
         assertThat(eventDTO.getBulkheadName()).isEqualTo("name");
         assertThat(eventDTO.getType()).isEqualTo(CALL_FINISHED);
+        assertThat(eventDTO.getCreationTime()).isNotNull();
     }
 
     @Test
@@ -28,6 +29,7 @@ public class BulkheadEventDTOFactoryTest {
 
         assertThat(eventDTO.getBulkheadName()).isEqualTo("name");
         assertThat(eventDTO.getType()).isEqualTo(CALL_PERMITTED);
+        assertThat(eventDTO.getCreationTime()).isNotNull();
     }
 
     @Test
@@ -38,6 +40,7 @@ public class BulkheadEventDTOFactoryTest {
 
         assertThat(eventDTO.getBulkheadName()).isEqualTo("name");
         assertThat(eventDTO.getType()).isEqualTo(CALL_REJECTED);
+        assertThat(eventDTO.getCreationTime()).isNotNull();
     }
 }
 

@@ -15,9 +15,11 @@
  */
 package io.github.resilience4j.ratelimiter.autoconfigure;
 
-import io.github.resilience4j.prometheus.RateLimiterExports;
-import io.github.resilience4j.prometheus.collectors.RateLimiterMetricsCollector;
+import io.github.resilience4j.circuitbreaker.autoconfigure.CircuitBreakerAutoConfiguration;
+import io.github.resilience4j.micrometer.RateLimiterMetrics;
+import io.github.resilience4j.micrometer.tagged.TaggedRateLimiterMetrics;
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
+import io.micrometer.spring.autoconfigure.MetricsAutoConfiguration;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -30,30 +32,26 @@ import org.springframework.context.annotation.Configuration;
  * Auto-configuration} for resilience4j-metrics.
  */
 @Configuration
-@AutoConfigureAfter(value = RateLimiterAutoConfiguration.class)
-@ConditionalOnClass(RateLimiterMetricsCollector.class)
+@ConditionalOnClass(MetricsAutoConfiguration.class)
+@AutoConfigureAfter(value = {CircuitBreakerAutoConfiguration.class, MetricsAutoConfiguration.class})
 @ConditionalOnProperty(value = "resilience4j.ratelimiter.metrics.enabled", matchIfMissing = true)
-public class RateLimiterPrometheusAutoConfiguration {
+public class RateLimiterMicrometerAutoConfiguration {
 
-    @ConditionalOnProperty(value = "resilience4j.ratelimiter.metrics.use_legacy_collector", havingValue = "true")
     @Bean
     @ConditionalOnMissingBean
-    public RateLimiterExports legacyRateLimiterPrometheusCollector(RateLimiterRegistry rateLimiterRegistry){
-        RateLimiterExports collector = RateLimiterExports.ofRateLimiterRegistry(rateLimiterRegistry);
-        collector.register();
-        return collector;
+    @ConditionalOnProperty(value = "resilience4j.ratelimiter.metrics.use_legacy_binder", havingValue = "true")
+    public RateLimiterMetrics registerLegacyRateLimiterMetrics(RateLimiterRegistry rateLimiterRegistry) {
+        return RateLimiterMetrics.ofRateLimiterRegistry(rateLimiterRegistry);
     }
 
     @Bean
     @ConditionalOnMissingBean
     @ConditionalOnProperty(
-        value = "resilience4j.ratelimiter.metrics.use_legacy_collector",
+        value = "resilience4j.ratelimiter.metrics.use_legacy_binder",
         havingValue = "false",
         matchIfMissing = true
     )
-    public RateLimiterMetricsCollector rateLimiterPrometheusCollector(RateLimiterRegistry rateLimiterRegistry) {
-        RateLimiterMetricsCollector collector = RateLimiterMetricsCollector.ofRateLimiterRegistry(rateLimiterRegistry);
-        collector.register();
-        return collector;
+    public TaggedRateLimiterMetrics registerRateLimiterMetrics(RateLimiterRegistry rateLimiterRegistry) {
+        return TaggedRateLimiterMetrics.ofRateLimiterRegistry(rateLimiterRegistry);
     }
 }
