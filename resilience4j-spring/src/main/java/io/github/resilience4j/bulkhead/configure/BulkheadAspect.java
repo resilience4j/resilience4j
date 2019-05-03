@@ -15,13 +15,13 @@
  */
 package io.github.resilience4j.bulkhead.configure;
 
-import io.github.resilience4j.bulkhead.BulkheadRegistry;
-import io.github.resilience4j.bulkhead.annotation.Bulkhead;
-import io.github.resilience4j.core.lang.Nullable;
-import io.github.resilience4j.utils.AnnotationExtractor;
+import java.lang.reflect.Method;
+import java.util.List;
+import java.util.concurrent.CompletionException;
+import java.util.concurrent.CompletionStage;
+
 import io.github.resilience4j.recovery.RecoveryDecorators;
 import io.github.resilience4j.recovery.RecoveryMethod;
-import io.github.resilience4j.utils.AnnotationExtractor;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -33,10 +33,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.Ordered;
 import org.springframework.util.StringUtils;
 
-import java.lang.reflect.Method;
-import java.util.List;
-import java.util.concurrent.CompletionException;
-import java.util.concurrent.CompletionStage;
+import io.github.resilience4j.bulkhead.BulkheadRegistry;
+import io.github.resilience4j.bulkhead.annotation.Bulkhead;
+import io.github.resilience4j.core.lang.Nullable;
+import io.github.resilience4j.utils.AnnotationExtractor;
 
 /**
  * This Spring AOP aspect intercepts all methods which are annotated with a {@link Bulkhead} annotation.
@@ -101,8 +101,7 @@ public class BulkheadAspect implements Ordered {
 	}
 
 	private io.github.resilience4j.bulkhead.Bulkhead getOrCreateBulkhead(String methodName, String backend) {
-		io.github.resilience4j.bulkhead.Bulkhead bulkhead = bulkheadRegistry.bulkhead(backend,
-				() -> bulkheadConfigurationProperties.createBulkheadConfig(backend));
+		io.github.resilience4j.bulkhead.Bulkhead bulkhead = bulkheadRegistry.bulkhead(backend);
 
 		if (logger.isDebugEnabled()) {
 			logger.debug("Created or retrieved bulkhead '{}' with max concurrent call '{}' and max wait time '{}' for method: '{}'",

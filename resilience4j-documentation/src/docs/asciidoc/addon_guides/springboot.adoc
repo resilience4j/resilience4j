@@ -2,7 +2,8 @@
 
 ==== Gradle
 
-Add the Spring Boot Starter of Resilience4j to your compile dependency:
+Add the Spring Boot Starter of Resilience4j to your compile dependency.
+You also need Spring Boot Actuator and Spring Boot AOP.
 
 [source,groovy, subs="attributes"]
 ----
@@ -14,40 +15,22 @@ repositories {
 
 dependencies {
 	compile('io.github.resilience4j:resilience4j-spring-boot:{release-version}')
+    compile('org.springframework.boot:spring-boot-starter-actuator')
+    compile('org.springframework.boot:spring-boot-starter-aop')
 }
 ----
 
 ==== Supported Types by Spring boot starter resilience aspects
 
-Rate limiter , Retry , Circuit breaker and Bulkhead now support Synchronous return types ,CompletableFutures , RxJava2 types and Reactor types .
+RateLimiter, Retry, CircuitBreaker and Bulkhead annotations support synchronous return types, asynchronous types like CompletableFutures and reactive types like RxJava2 and Reactor.
 
 ==== Monitoring
 
 Spring Boot Actuator health information can be used to check the status of your running application.
 It is often used by monitoring software to alert someone if a production system has serious issues.
 
-==== Retry
-When you enable retry, metrics are automatically published on the metrics endpoint.
-
-For example:
-
-[source,json]
-----
-{
-    "names": [
-        "resilience4j.retry.backendA.failedCallsWithoutRetry",
-        "resilience4j.retry.backendA.failedCallsWithRetry",
-        "resilience4j.retry.backendA.successCalls",
-        "resilience4j.retry.backendA.successCallsWithRetry"
-        ]
-}
-----
-
-When you want to publish Retry/AsyncRetry endpoints on the Prometheus endpoint, you have to add the dependency `io.micrometer:micrometer-registry-prometheus`.
-and you have same metrics exposed there , check circuit breaker below for more information about the example.
-
 ==== CircuitBreaker
-This demo publishes the status and metrics of all CircuitBreakers via a custom `CircuitBreakerHealthIndicator`.
+The starter publishes the status and metrics of all CircuitBreakers via a custom `CircuitBreakerHealthIndicator`.
 A closed CircuitBreaker state is mapped to UP, an open state to DOWN and a half-open state to UNKNOWN.
 
 For example:
@@ -123,8 +106,28 @@ resilience4j_circuitbreaker_states{name="backendA",state="open",} 0.0
 resilience4j_circuitbreaker_states{name="backendA",state="half_open",} 0.0
 ----
 
+==== Retry
+When you enable retry, metrics are automatically published on the metrics endpoint.
+
+For example:
+
+[source,json]
+----
+{
+    "names": [
+        "resilience4j.retry.backendA.failedCallsWithoutRetry",
+        "resilience4j.retry.backendA.failedCallsWithRetry",
+        "resilience4j.retry.backendA.successCalls",
+        "resilience4j.retry.backendA.successCallsWithRetry"
+        ]
+}
+----
+
+When you want to publish Retry/AsyncRetry endpoints on the Prometheus endpoint, you have to add the dependency `io.micrometer:micrometer-registry-prometheus`.
+and you have same metrics exposed there , check circuit breaker below for more information about the example.
+
 ==== RateLimiter
-This demo publishes the status and metrics of all RateLimiter via a custom `RateLimiterHealthIndicator`.
+The starter publishes the status and metrics of all RateLimiter via a custom `RateLimiterHealthIndicator`.
 RateLimiterHealthIndicator changes its state DOWN only if there is some permission waiting threads
 and they won't be able to unblock until timeout.
 

@@ -15,6 +15,7 @@
  */
 package io.github.resilience4j.ratelimiter.autoconfigure;
 
+import com.codahale.metrics.MetricRegistry;
 import io.github.resilience4j.metrics.RateLimiterMetrics;
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
 import org.springframework.boot.actuate.autoconfigure.MetricRepositoryAutoConfiguration;
@@ -23,10 +24,9 @@ import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-
-import com.codahale.metrics.MetricRegistry;
 
 /**
  * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration
@@ -36,6 +36,7 @@ import com.codahale.metrics.MetricRegistry;
 @ConditionalOnClass(MetricRegistry.class)
 @AutoConfigureAfter(value = {RateLimiterAutoConfiguration.class, MetricsDropwizardAutoConfiguration.class})
 @AutoConfigureBefore(MetricRepositoryAutoConfiguration.class)
+@ConditionalOnProperty(value = "resilience4j.ratelimiter.metrics.enabled", matchIfMissing = true)
 public class RateLimiterMetricsAutoConfiguration {
 
 	@Bean

@@ -99,6 +99,7 @@ ext {
             // Micrometers addon
             micrometer: "io.micrometer:micrometer-core:${micrometerVersion}",
             micrometer_prometheus: "io.micrometer:micrometer-registry-prometheus:${micrometerVersion}",
+            micrometer_spring_legacy: "io.micrometer:micrometer-spring-legacy:${micrometerVersion}",
 
             // CircuitBreaker documentation
             metrics_healthcheck: "io.dropwizard.metrics:metrics-healthchecks:${metricsVersion}",
