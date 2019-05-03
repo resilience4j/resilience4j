@@ -55,7 +55,7 @@ public class RateLimiterConfigurationSpringTest {
 	}
 
 	@Configuration
-	@ComponentScan("io.github.resilience4j.ratelimiter")
+	@ComponentScan({"io.github.resilience4j.ratelimiter","io.github.resilience4j.recovery"})
 	public static class ConfigWithOverrides {
 
 		private RateLimiterRegistry rateLimiterRegistry;

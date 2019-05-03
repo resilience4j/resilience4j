@@ -27,6 +27,9 @@ import org.springframework.context.annotation.Configuration;
 
 import java.util.List;
 
+/**
+ * {@link Configuration} for {@link RecoveryDecorators}.
+ */
 @Configuration
 public class RecoveryConfigurationOnMissingBean {
 	private final RecoveryConfiguration recoveryConfiguration;

@@ -55,7 +55,7 @@ public class BulkHeadConfigurationSpringTest {
 	}
 
 	@Configuration
-	@ComponentScan("io.github.resilience4j.bulkhead")
+	@ComponentScan({"io.github.resilience4j.bulkhead","io.github.resilience4j.recovery"})
 	public static class ConfigWithOverrides {
 
 		private BulkheadRegistry bulkheadRegistry;

@@ -21,6 +21,7 @@ import io.github.resilience4j.circuitbreaker.configure.*;
 import io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
 import io.github.resilience4j.recovery.RecoveryDecorators;
+import io.github.resilience4j.recovery.autoconfigure.RecoveryConfigurationOnMissingBean;
 import io.github.resilience4j.utils.ReactorOnClasspathCondition;
 import io.github.resilience4j.utils.RxJava2OnClasspathCondition;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,10 +29,12 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 
 import java.util.List;
 
 @Configuration
+@Import(RecoveryConfigurationOnMissingBean.class)
 public abstract class AbstractCircuitBreakerConfigurationOnMissingBean {
 
 	protected final CircuitBreakerConfiguration circuitBreakerConfiguration;

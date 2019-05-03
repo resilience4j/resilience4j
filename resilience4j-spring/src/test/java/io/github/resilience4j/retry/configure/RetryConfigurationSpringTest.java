@@ -55,7 +55,7 @@ public class RetryConfigurationSpringTest {
 	}
 
 	@Configuration
-	@ComponentScan("io.github.resilience4j.retry")
+	@ComponentScan({"io.github.resilience4j.retry","io.github.resilience4j.recovery"})
 	public static class ConfigWithOverrides {
 
 		private RetryRegistry retryRegistry;
