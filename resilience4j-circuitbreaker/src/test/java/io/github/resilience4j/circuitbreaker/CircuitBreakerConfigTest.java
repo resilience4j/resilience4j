@@ -61,7 +61,7 @@ public class CircuitBreakerConfigTest {
     }
 
     @Test
-    public void testCreateFromConfigurationWithNoPredicateCalculations() {
+    public void shouldCreateFromConfigurationWithNoPredicateCalculations() {
         CircuitBreakerConfig config = CircuitBreakerConfig
                 .from(CircuitBreakerConfig.custom().recordFailure(e -> e instanceof IllegalArgumentException)
                         .build()).enableFailurePredicate(false).build();
@@ -70,6 +70,16 @@ public class CircuitBreakerConfigTest {
         assertThat(config.getRecordFailurePredicate().test(new IllegalStateException())).isFalse();
 
     }
+
+	@Test
+	public void shouldUseRecordFailureOnly() {
+		CircuitBreakerConfig config = CircuitBreakerConfig.custom().recordFailure(e -> e instanceof IllegalArgumentException)
+				.build();
+		assertThat(config).isNotNull();
+		assertThat(config.getRecordFailurePredicate().test(new IllegalArgumentException())).isTrue();
+		assertThat(config.getRecordFailurePredicate().test(new IllegalStateException())).isFalse();
+
+	}
 
     @Test
     public void shouldSetDefaultSettings() {
