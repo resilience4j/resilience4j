@@ -16,22 +16,24 @@
 package io.github.resilience4j.circuitbreaker.configure;
 
 
-import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
-import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.Builder;
-import io.github.resilience4j.core.ConfigurationNotFoundException;
-import io.github.resilience4j.core.lang.Nullable;
-import org.hibernate.validator.constraints.time.DurationMin;
-import org.springframework.beans.BeanUtils;
-import org.springframework.context.annotation.Configuration;
-
-import javax.validation.constraints.Max;
-import javax.validation.constraints.Min;
-import javax.validation.constraints.NotNull;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Predicate;
+
+import javax.validation.constraints.Max;
+import javax.validation.constraints.Min;
+import javax.validation.constraints.NotNull;
+
+import org.hibernate.validator.constraints.time.DurationMin;
+import org.springframework.beans.BeanUtils;
+import org.springframework.context.annotation.Configuration;
+
+import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
+import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.Builder;
+import io.github.resilience4j.core.ConfigurationNotFoundException;
+import io.github.resilience4j.core.lang.Nullable;
 
 @Configuration
 public class CircuitBreakerConfigurationProperties {
@@ -72,6 +74,7 @@ public class CircuitBreakerConfigurationProperties {
 	}
 
 	private CircuitBreakerConfig buildConfig(Builder builder, BackendProperties properties) {
+		boolean enableFailurePredicate = false;
 
 		if (properties.getWaitDurationInOpenState() != null) {
 			builder.waitDurationInOpenState(properties.getWaitDurationInOpenState());
@@ -90,15 +93,22 @@ public class CircuitBreakerConfigurationProperties {
 		}
 
 		if (properties.recordFailurePredicate != null) {
+			enableFailurePredicate = true;
 			buildRecordFailurePredicate(properties, builder);
 		}
 
 		if (properties.recordExceptions != null) {
+			enableFailurePredicate = true;
 			builder.recordExceptions(properties.recordExceptions);
 		}
 
 		if (properties.ignoreExceptions != null) {
+			enableFailurePredicate = true;
 			builder.ignoreExceptions(properties.ignoreExceptions);
+		}
+
+		if (!enableFailurePredicate) {
+			builder.enableFailurePredicate(false);
 		}
 
 		builder.automaticTransitionFromOpenToHalfOpenEnabled(properties.automaticTransitionFromOpenToHalfOpenEnabled);

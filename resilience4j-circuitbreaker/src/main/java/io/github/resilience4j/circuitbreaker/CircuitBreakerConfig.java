@@ -18,12 +18,12 @@
  */
 package io.github.resilience4j.circuitbreaker;
 
-import io.github.resilience4j.core.lang.Nullable;
-
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.Optional;
 import java.util.function.Predicate;
+
+import io.github.resilience4j.core.lang.Nullable;
 
 
 /**
@@ -113,6 +113,8 @@ public class CircuitBreakerConfig {
         private int ringBufferSizeInClosedState = DEFAULT_RING_BUFFER_SIZE_IN_CLOSED_STATE;
         private Duration waitDurationInOpenState = Duration.ofSeconds(DEFAULT_WAIT_DURATION_IN_OPEN_STATE);
         private boolean automaticTransitionFromOpenToHalfOpenEnabled = false;
+	    // by default it is enabled
+	    private boolean enableFailurePredicate = true;
 
         public Builder(CircuitBreakerConfig baseConfig) {
             this.waitDurationInOpenState = baseConfig.getWaitDurationInOpenState();
@@ -279,21 +281,38 @@ public class CircuitBreakerConfig {
             return this;
         }
 
+	    /**
+	     * It is ued when you merge shared configuration with circuit breaker specific backend configuration to cover the following :
+	     * 1- If a circuit breaker specific configuration has no recordExceptions or failureExceptions neither recordFailure predicates , do not recalculate the predicate to avoid losing the shared one if any
+	     * 2- otherwise do the calculation
+	     *
+	     * @param enableFailurePredicate enable or disable result predicate exception
+	     * @return the CircuitBreakerConfig.Builder
+	     */
+	    public Builder enableFailurePredicate(boolean enableFailurePredicate) {
+		    this.enableFailurePredicate = enableFailurePredicate;
+		    return this;
+	    }
+
         /**
          * Builds a CircuitBreakerConfig
          *
          * @return the CircuitBreakerConfig
          */
         public CircuitBreakerConfig build() {
-            buildErrorRecordingPredicate();
+	        if (enableFailurePredicate) {
+		        buildErrorRecordingPredicate();
+	        }
             CircuitBreakerConfig config = new CircuitBreakerConfig();
             config.waitDurationInOpenState = waitDurationInOpenState;
             config.failureRateThreshold = failureRateThreshold;
             config.ringBufferSizeInClosedState = ringBufferSizeInClosedState;
             config.ringBufferSizeInHalfOpenState = ringBufferSizeInHalfOpenState;
-            if (errorRecordingPredicate != null) {
-                config.recordFailurePredicate = errorRecordingPredicate;
-            }
+	        if (errorRecordingPredicate != null) {
+		        config.recordFailurePredicate = errorRecordingPredicate;
+	        } else if (recordFailurePredicate != null) {
+		        config.recordFailurePredicate = recordFailurePredicate;
+	        }
             config.automaticTransitionFromOpenToHalfOpenEnabled = automaticTransitionFromOpenToHalfOpenEnabled;
             return config;
         }

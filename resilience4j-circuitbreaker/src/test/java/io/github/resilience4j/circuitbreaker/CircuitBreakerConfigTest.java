@@ -18,13 +18,13 @@
  */
 package io.github.resilience4j.circuitbreaker;
 
-import org.junit.Test;
+import static org.assertj.core.api.BDDAssertions.then;
+import static org.assertj.core.api.Java6Assertions.assertThat;
 
 import java.time.Duration;
 import java.util.function.Predicate;
 
-import static org.assertj.core.api.BDDAssertions.then;
-import static org.assertj.core.api.Java6Assertions.assertThat;
+import org.junit.Test;
 
 public class CircuitBreakerConfigTest {
 
@@ -58,6 +58,17 @@ public class CircuitBreakerConfigTest {
     @Test(expected = IllegalArgumentException.class)
     public void failureRateThresholdAboveHundredShouldFail() {
         CircuitBreakerConfig.custom().failureRateThreshold(101).build();
+    }
+
+    @Test
+    public void testCreateFromConfigurationWithNoPredicateCalculations() {
+        CircuitBreakerConfig config = CircuitBreakerConfig
+                .from(CircuitBreakerConfig.custom().recordFailure(e -> e instanceof IllegalArgumentException)
+                        .build()).enableFailurePredicate(false).build();
+        assertThat(config).isNotNull();
+        assertThat(config.getRecordFailurePredicate().test(new IllegalArgumentException())).isTrue();
+        assertThat(config.getRecordFailurePredicate().test(new IllegalStateException())).isFalse();
+
     }
 
     @Test
