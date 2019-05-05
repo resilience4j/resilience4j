@@ -19,13 +19,13 @@
 package io.github.resilience4j.retry;
 
 
-import io.github.resilience4j.core.lang.Nullable;
-
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Predicate;
+
+import io.github.resilience4j.core.lang.Nullable;
 
 public class RetryConfig {
 
@@ -63,6 +63,7 @@ public class RetryConfig {
 	 * Return the Predicate which evaluates if an result should be retried.
 	 * The Predicate must return true if the result should  be retried, otherwise it must return false.
 	 *
+	 * @param <T> The type of result.
 	 * @return the resultPredicate
 	 */
 	@SuppressWarnings("unchecked")
@@ -74,10 +75,16 @@ public class RetryConfig {
 	/**
 	 * Returns a builder to create a custom RetryConfig.
 	 *
+	 * @param <T> The type being built.
 	 * @return a {@link Builder}
 	 */
 	public static <T> Builder<T> custom() {
 		return new Builder<>();
+	}
+
+
+	public static <T> Builder<T> from(RetryConfig baseConfig) {
+		return new Builder<>(baseConfig);
 	}
 
 	/**
@@ -101,6 +108,18 @@ public class RetryConfig {
 		@SuppressWarnings("unchecked")
 		private Class<? extends Throwable>[] ignoreExceptions = new Class[0];
 		private int maxAttempts = DEFAULT_MAX_ATTEMPTS;
+		// by default it is enabled
+		private boolean enableRetryExceptionPredicate = true;
+
+		public Builder() {
+		}
+
+		public Builder(RetryConfig retryConfig) {
+			this.exceptionPredicate = retryConfig.exceptionPredicate;
+			this.maxAttempts = retryConfig.maxAttempts;
+			this.intervalFunction = retryConfig.intervalFunction;
+			this.resultPredicate = retryConfig.resultPredicate;
+		}
 
 		public Builder<T> maxAttempts(int maxAttempts) {
 			if (maxAttempts < 1) {
@@ -157,6 +176,20 @@ public class RetryConfig {
 
 
 		/**
+		 * it is ued when you merge shared configuration with Retry specific backend configuration to cover the following :
+		 * 1- if retry specific configuration has no ignore or retry exception neither retry exception predicate , do not recalculate the predicate to avoid losing the shared one if any
+		 * 2- otherwise do the calculation
+		 *
+		 * @param enableRetryExceptionPredicate enable or disable result predicate exception
+		 * @return the RetryConfig.Builder
+		 */
+		public Builder<T> enableRetryExceptionPredicate(boolean enableRetryExceptionPredicate) {
+			this.enableRetryExceptionPredicate = enableRetryExceptionPredicate;
+			return this;
+		}
+
+
+		/**
 		 * Configures a list of error classes that are recorded as a failure and thus increase the failure rate.
 		 * Any exception matching or inheriting from one of the list will be retried, unless ignored via
 		 *
@@ -171,6 +204,7 @@ public class RetryConfig {
 		 * For a more sophisticated exception management use the
 		 * @see #retryOnException(Predicate) method
 		 */
+		@SuppressWarnings("unchecked")
 		@SafeVarargs
 		public final Builder<T> retryExceptions(@Nullable Class<? extends Throwable>... errorClasses) {
 			this.retryExceptions = errorClasses != null ? errorClasses : new Class[0];
@@ -196,6 +230,7 @@ public class RetryConfig {
 		 * For a more sophisticated exception management use the
 		 * @see #retryOnException(Predicate) method
 		 */
+		@SuppressWarnings("unchecked")
 		@SafeVarargs
 		public final Builder<T> ignoreExceptions(@Nullable Class<? extends Throwable>... errorClasses) {
 			this.ignoreExceptions = errorClasses != null ? errorClasses : new Class[0];
@@ -203,7 +238,9 @@ public class RetryConfig {
 		}
 
 		public RetryConfig build() {
-			buildExceptionPredicate();
+			if (enableRetryExceptionPredicate){
+				buildExceptionPredicate();
+			}
 			RetryConfig config = new RetryConfig();
 			config.intervalFunction = intervalFunction;
 			config.maxAttempts = maxAttempts;

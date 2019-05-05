@@ -1,14 +1,14 @@
 package io.github.resilience4j.bulkhead.operator;
 
-import static java.util.Objects.requireNonNull;
-
-import java.util.concurrent.atomic.AtomicReference;
-
 import io.github.resilience4j.adapter.Permit;
 import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.bulkhead.BulkheadFullException;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.internal.disposables.DisposableHelper;
+
+import java.util.concurrent.atomic.AtomicReference;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * A disposable bulkhead acting as a base class for bulkhead operators.
@@ -16,7 +16,7 @@ import io.reactivex.internal.disposables.DisposableHelper;
  * @param <T> the type of the emitted event
  */
 abstract class DisposableBulkhead<T> extends AtomicReference<Disposable> implements Disposable {
-    private final Bulkhead bulkhead;
+    private final transient Bulkhead bulkhead;
     private final AtomicReference<Permit> permitted = new AtomicReference<>(Permit.PENDING);
 
     DisposableBulkhead(Bulkhead bulkhead) {
@@ -124,7 +124,7 @@ abstract class DisposableBulkhead<T> extends AtomicReference<Disposable> impleme
     private boolean acquireCallPermit() {
         boolean callPermitted = false;
         if (permitted.compareAndSet(Permit.PENDING, Permit.ACQUIRED)) {
-            callPermitted = bulkhead.isCallPermitted();
+            callPermitted = bulkhead.tryObtainPermission();
             if (!callPermitted) {
                 permitted.set(Permit.REJECTED);
             }

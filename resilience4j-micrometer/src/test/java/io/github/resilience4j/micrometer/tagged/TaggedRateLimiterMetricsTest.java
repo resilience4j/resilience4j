@@ -16,19 +16,19 @@
 package io.github.resilience4j.micrometer.tagged;
 
 import io.github.resilience4j.ratelimiter.RateLimiter;
+import io.github.resilience4j.ratelimiter.RateLimiterConfig;
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.Meter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
-
 import org.junit.Before;
 import org.junit.Test;
 
-import java.util.Arrays;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
+import static io.github.resilience4j.micrometer.tagged.MetricsTestHelper.findGaugeByNamesTag;
 import static io.github.resilience4j.micrometer.tagged.TaggedRateLimiterMetrics.MetricNames.DEFAULT_AVAILABLE_PERMISSIONS_METRIC_NAME;
 import static io.github.resilience4j.micrometer.tagged.TaggedRateLimiterMetrics.MetricNames.DEFAULT_WAITING_THREADS_METRIC_NAME;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -37,14 +37,68 @@ public class TaggedRateLimiterMetricsTest {
 
     private MeterRegistry meterRegistry;
     private RateLimiter rateLimiter;
+    private RateLimiterRegistry rateLimiterRegistry;
+    private TaggedRateLimiterMetrics taggedRateLimiterMetrics;
 
     @Before
     public void setUp() {
         meterRegistry = new SimpleMeterRegistry();
-        RateLimiterRegistry rateLimiterRegistry = RateLimiterRegistry.ofDefaults();
+        rateLimiterRegistry = RateLimiterRegistry.ofDefaults();
 
         rateLimiter = rateLimiterRegistry.rateLimiter("backendA");
-        TaggedRateLimiterMetrics.ofRateLimiterRegistry(rateLimiterRegistry).bindTo(meterRegistry);
+        taggedRateLimiterMetrics = TaggedRateLimiterMetrics.ofRateLimiterRegistry(rateLimiterRegistry);
+        taggedRateLimiterMetrics.bindTo(meterRegistry);
+    }
+
+    @Test
+    public void shouldAddMetricsForANewlyCreatedRateLimiter() {
+        RateLimiter newRateLimiter = rateLimiterRegistry.rateLimiter("backendB");
+
+        assertThat(taggedRateLimiterMetrics.meterIdMap).containsKeys("backendA", "backendB");
+        assertThat(taggedRateLimiterMetrics.meterIdMap.get("backendA")).hasSize(2);
+        assertThat(taggedRateLimiterMetrics.meterIdMap.get("backendB")).hasSize(2);
+
+        List<Meter> meters = meterRegistry.getMeters();
+        assertThat(meters).hasSize(4);
+
+        Collection<Gauge> gauges = meterRegistry.get(DEFAULT_AVAILABLE_PERMISSIONS_METRIC_NAME).gauges();
+
+        Optional<Gauge> successful = findGaugeByNamesTag(gauges, newRateLimiter.getName());
+        assertThat(successful).isPresent();
+        assertThat(successful.get().value()).isEqualTo(newRateLimiter.getMetrics().getAvailablePermissions());
+    }
+
+    @Test
+    public void shouldRemovedMetricsForRemovedRetry() {
+        List<Meter> meters = meterRegistry.getMeters();
+        assertThat(meters).hasSize(2);
+
+        assertThat(taggedRateLimiterMetrics.meterIdMap).containsKeys("backendA");
+        rateLimiterRegistry.remove("backendA");
+
+        assertThat(taggedRateLimiterMetrics.meterIdMap).isEmpty();
+
+        meters = meterRegistry.getMeters();
+        assertThat(meters).isEmpty();
+    }
+
+    @Test
+    public void shouldReplaceMetrics() {
+        Gauge availablePermissions = meterRegistry.get(DEFAULT_AVAILABLE_PERMISSIONS_METRIC_NAME).gauge();
+
+        assertThat(availablePermissions).isNotNull();
+        assertThat(availablePermissions.value()).isEqualTo(rateLimiter.getMetrics().getAvailablePermissions());
+        assertThat(availablePermissions.getId().getTag(TagNames.NAME)).isEqualTo(rateLimiter.getName());
+
+        RateLimiter newRateLimiter = RateLimiter.of(rateLimiter.getName(), RateLimiterConfig.custom().limitForPeriod(1000).build());
+
+        rateLimiterRegistry.replace(rateLimiter.getName(), newRateLimiter);
+
+        availablePermissions = meterRegistry.get(DEFAULT_AVAILABLE_PERMISSIONS_METRIC_NAME).gauge();
+
+        assertThat(availablePermissions).isNotNull();
+        assertThat(availablePermissions.value()).isEqualTo(newRateLimiter.getMetrics().getAvailablePermissions());
+        assertThat(availablePermissions.getId().getTag(TagNames.NAME)).isEqualTo(newRateLimiter.getName());
     }
 
     @Test

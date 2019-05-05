@@ -35,4 +35,10 @@ final class MetricsTestHelper {
                 .filter(g -> name.equals(g.getId().getTag(TagNames.NAME)))
                 .findAny();
     }
+
+    static Optional<Gauge> findGaugeByNamesTag(Collection<Gauge> gauges, String name) {
+        return gauges.stream()
+                .filter(g -> name.equals(g.getId().getTag(TagNames.NAME)))
+                .findAny();
+    }
 }

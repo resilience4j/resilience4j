@@ -20,10 +20,13 @@ import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RateLimiter.Metrics;
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
 import io.micrometer.core.instrument.Gauge;
+import io.micrometer.core.instrument.Meter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.binder.MeterBinder;
 
+import java.util.HashSet;
 import java.util.Objects;
+import java.util.Set;
 
 import static java.util.Objects.requireNonNull;
 
@@ -32,45 +35,62 @@ import static java.util.Objects.requireNonNull;
  * The main difference from {@link RateLimiterMetrics} is that this binder uses tags
  * to distinguish between metrics.
  */
-public class TaggedRateLimiterMetrics implements MeterBinder {
+public class TaggedRateLimiterMetrics extends AbstractMetrics implements MeterBinder {
 
     /**
      * Creates a new binder that uses given {@code registry} as source of retries.
      *
-     * @param registry the source of retries
+     * @param rateLimiterRegistry the source of retries
+     * @return The {@link TaggedRateLimiterMetrics} instance.
      */
-    public static TaggedRateLimiterMetrics ofRateLimiterRegistry(RateLimiterRegistry registry) {
-        return new TaggedRateLimiterMetrics(MetricNames.ofDefaults(), registry.getAllRateLimiters());
+    public static TaggedRateLimiterMetrics ofRateLimiterRegistry(RateLimiterRegistry rateLimiterRegistry) {
+        return new TaggedRateLimiterMetrics(MetricNames.ofDefaults(), rateLimiterRegistry);
     }
 
     /**
      * Creates a new binder that uses given {@code registry} as source of retries.
      *
      * @param names custom metric names
-     * @param registry the source of rate limiters
+     * @param rateLimiterRegistry the source of rate limiters
+     * @return The {@link TaggedRateLimiterMetrics} instance.
      */
-    public static TaggedRateLimiterMetrics ofRateLimiterRegistry(MetricNames names, RateLimiterRegistry registry) {
-        return new TaggedRateLimiterMetrics(names, registry.getAllRateLimiters());
+    public static TaggedRateLimiterMetrics ofRateLimiterRegistry(MetricNames names, RateLimiterRegistry rateLimiterRegistry) {
+        return new TaggedRateLimiterMetrics(names, rateLimiterRegistry);
     }
 
     private final MetricNames names;
-    private final Iterable<? extends RateLimiter> rateLimiters;
+    private final RateLimiterRegistry rateLimiterRegistry;
 
-    private TaggedRateLimiterMetrics(MetricNames names, Iterable<? extends RateLimiter> rateLimiters) {
+    private TaggedRateLimiterMetrics(MetricNames names, RateLimiterRegistry rateLimiterRegistry) {
+        super();
         this.names = Objects.requireNonNull(names);
-        this.rateLimiters = Objects.requireNonNull(rateLimiters);
+        this.rateLimiterRegistry = Objects.requireNonNull(rateLimiterRegistry);
     }
 
     @Override
     public void bindTo(MeterRegistry registry) {
-        for (RateLimiter rateLimiter : rateLimiters) {
-            Gauge.builder(names.getAvailablePermissionsMetricName(), rateLimiter, (rl) -> rl.getMetrics().getAvailablePermissions())
-                    .tag(TagNames.NAME, rateLimiter.getName())
-                    .register(registry);
-            Gauge.builder(names.getWaitingThreadsMetricName(), rateLimiter, (rl) -> rl.getMetrics().getNumberOfWaitingThreads())
-                    .tag(TagNames.NAME, rateLimiter.getName())
-                    .register(registry);
+        for (RateLimiter rateLimiter : rateLimiterRegistry.getAllRateLimiters()) {
+            addMetrics(registry, rateLimiter);
         }
+        rateLimiterRegistry.getEventPublisher().onEntryAdded(event -> addMetrics(registry, event.getAddedEntry()));
+        rateLimiterRegistry.getEventPublisher().onEntryRemoved(event -> removeMetrics(registry, event.getRemovedEntry().getName()));
+        rateLimiterRegistry.getEventPublisher().onEntryReplaced(event -> {
+            removeMetrics(registry, event.getOldEntry().getName());
+            addMetrics(registry, event.getNewEntry());
+        });
+    }
+
+    private void addMetrics(MeterRegistry registry, RateLimiter rateLimiter) {
+        Set<Meter.Id> idSet = new HashSet<>();
+
+        idSet.add(Gauge.builder(names.getAvailablePermissionsMetricName(), rateLimiter, rl -> rl.getMetrics().getAvailablePermissions())
+                .tag(TagNames.NAME, rateLimiter.getName())
+                .register(registry).getId());
+        idSet.add(Gauge.builder(names.getWaitingThreadsMetricName(), rateLimiter, rl -> rl.getMetrics().getNumberOfWaitingThreads())
+                .tag(TagNames.NAME, rateLimiter.getName())
+                .register(registry).getId());
+
+        meterIdMap.put(rateLimiter.getName(), idSet);
     }
 
     /** Defines possible configuration for metric names. */
@@ -82,12 +102,15 @@ public class TaggedRateLimiterMetrics implements MeterBinder {
         /**
          * Returns a builder for creating custom metric names.
          * Note that names have default values, so only desired metrics can be renamed.
+         * @return The builder.
          */
         public static Builder custom() {
             return new Builder();
         }
 
-        /** Returns default metric names. */
+        /** Returns default metric names.
+         * @return The default {@link MetricNames} instance.
+         */
         public static MetricNames ofDefaults() {
             return new MetricNames();
         }
@@ -95,12 +118,16 @@ public class TaggedRateLimiterMetrics implements MeterBinder {
         private String availablePermissionsMetricName = DEFAULT_AVAILABLE_PERMISSIONS_METRIC_NAME;
         private String waitingThreadsMetricName = DEFAULT_WAITING_THREADS_METRIC_NAME;
 
-        /** Returns the metric name for available permissions, defaults to {@value DEFAULT_AVAILABLE_PERMISSIONS_METRIC_NAME}. */
+        /** Returns the metric name for available permissions, defaults to {@value DEFAULT_AVAILABLE_PERMISSIONS_METRIC_NAME}.
+         * @return The available permissions metric name.
+         */
         public String getAvailablePermissionsMetricName() {
             return availablePermissionsMetricName;
         }
 
-        /** Returns the metric name for waiting threads, defaults to {@value DEFAULT_WAITING_THREADS_METRIC_NAME}. */
+        /** Returns the metric name for waiting threads, defaults to {@value DEFAULT_WAITING_THREADS_METRIC_NAME}.
+         * @return The waiting threads metric name.
+         */
         public String getWaitingThreadsMetricName() {
             return waitingThreadsMetricName;
         }
@@ -110,19 +137,27 @@ public class TaggedRateLimiterMetrics implements MeterBinder {
 
             private final MetricNames metricNames = new MetricNames();
 
-            /** Overrides the default metric name {@value MetricNames#DEFAULT_AVAILABLE_PERMISSIONS_METRIC_NAME} with a given one. */
+            /** Overrides the default metric name {@value MetricNames#DEFAULT_AVAILABLE_PERMISSIONS_METRIC_NAME} with a given one.
+             * @param availablePermissionsMetricName The available permissions metric name.
+             * @return The builder.
+             */
             public Builder availablePermissionsMetricName(String availablePermissionsMetricName) {
                 metricNames.availablePermissionsMetricName = requireNonNull(availablePermissionsMetricName);
                 return this;
             }
 
-            /** Overrides the default metric name {@value MetricNames#DEFAULT_WAITING_THREADS_METRIC_NAME} with a given one. */
+            /** Overrides the default metric name {@value MetricNames#DEFAULT_WAITING_THREADS_METRIC_NAME} with a given one.
+             * @param waitingThreadsMetricName The waiting threads metric name.
+             * @return The builder.
+             */
             public Builder waitingThreadsMetricName(String waitingThreadsMetricName) {
                 metricNames.waitingThreadsMetricName = requireNonNull(waitingThreadsMetricName);
                 return this;
             }
 
-            /** Builds {@link MetricNames} instance. */
+            /** Builds {@link MetricNames} instance.
+             * @return The built {@link MetricNames} instance.
+             */
             public MetricNames build() {
                 return metricNames;
             }

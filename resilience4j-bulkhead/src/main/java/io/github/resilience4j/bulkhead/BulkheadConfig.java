@@ -42,6 +42,15 @@ public class BulkheadConfig {
 	}
 
 	/**
+	 * Returns a builder to create a custom BulkheadConfig.
+	 *
+	 * @return a {@link Builder}
+	 */
+	public static Builder from(BulkheadConfig baseConfig) {
+		return new Builder(baseConfig);
+	}
+
+	/**
 	 * Creates a default Bulkhead configuration.
 	 *
 	 * @return a default Bulkhead configuration.
@@ -62,6 +71,13 @@ public class BulkheadConfig {
 
 		private BulkheadConfig config = new BulkheadConfig();
 
+		public Builder() {
+		}
+
+		public Builder(BulkheadConfig bulkheadConfig) {
+			this.config = bulkheadConfig;
+		}
+
 		/**
 		 * Configures the max amount of concurrent calls the bulkhead will support.
 		 *
@@ -69,8 +85,8 @@ public class BulkheadConfig {
 		 * @return the BulkheadConfig.Builder
 		 */
 		public Builder maxConcurrentCalls(int maxConcurrentCalls) {
-			if (maxConcurrentCalls < 1) {
-				throw new IllegalArgumentException("maxConcurrentCalls must be a positive integer value >= 1");
+			if (maxConcurrentCalls < 0) {
+				throw new IllegalArgumentException("maxConcurrentCalls must be an integer value >= 0");
 			}
 			config.maxConcurrentCalls = maxConcurrentCalls;
 			return this;

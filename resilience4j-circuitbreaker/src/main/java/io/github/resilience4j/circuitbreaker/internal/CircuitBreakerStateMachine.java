@@ -27,7 +27,9 @@ import io.github.resilience4j.core.EventProcessor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.Clock;
 import java.time.Duration;
+import java.util.Objects;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Predicate;
@@ -47,6 +49,46 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
     private final AtomicReference<CircuitBreakerState> stateReference;
     private final CircuitBreakerConfig circuitBreakerConfig;
     private final CircuitBreakerEventProcessor eventProcessor;
+    private Clock clock;
+    private SchedulerFactory schedulerFactory;
+
+    /**
+     * Creates a circuitBreaker.
+     *
+     * @param name                 the name of the CircuitBreaker
+     * @param circuitBreakerConfig The CircuitBreaker configuration.
+     * @param clock A Clock which can be mocked in tests.
+     * @param schedulerFactory A SchedulerFactory which can be mocked in tests.
+     */
+    CircuitBreakerStateMachine(String name, CircuitBreakerConfig circuitBreakerConfig, Clock clock, SchedulerFactory schedulerFactory) {
+        this.name = name;
+        this.circuitBreakerConfig = Objects.requireNonNull(circuitBreakerConfig, "Config must not be null");
+        this.stateReference = new AtomicReference<>(new ClosedState(this));
+        this.eventProcessor = new CircuitBreakerEventProcessor();
+        this.clock = clock;
+        this.schedulerFactory = schedulerFactory;
+    }
+
+    /**
+     * Creates a circuitBreaker.
+     *
+     * @param name                 the name of the CircuitBreaker
+     * @param circuitBreakerConfig The CircuitBreaker configuration.
+     * @param schedulerFactory A SchedulerFactory which can be mocked in tests.
+     */
+    public CircuitBreakerStateMachine(String name, CircuitBreakerConfig circuitBreakerConfig, SchedulerFactory schedulerFactory) {
+        this(name, circuitBreakerConfig, Clock.systemUTC(), schedulerFactory);
+    }
+
+    /**
+     * Creates a circuitBreaker.
+     *
+     * @param name                 the name of the CircuitBreaker
+     * @param circuitBreakerConfig The CircuitBreaker configuration.
+     */
+    public CircuitBreakerStateMachine(String name, CircuitBreakerConfig circuitBreakerConfig, Clock clock) {
+        this(name, circuitBreakerConfig, clock, SchedulerFactory.getInstance());
+    }
 
     /**
      * Creates a circuitBreaker.
@@ -55,10 +97,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
      * @param circuitBreakerConfig The CircuitBreaker configuration.
      */
     public CircuitBreakerStateMachine(String name, CircuitBreakerConfig circuitBreakerConfig) {
-        this.name = name;
-        this.circuitBreakerConfig = circuitBreakerConfig;
-        this.stateReference = new AtomicReference<>(new ClosedState(this));
-        this.eventProcessor = new CircuitBreakerEventProcessor();
+       this(name, circuitBreakerConfig, Clock.systemUTC());
     }
 
     /**
@@ -87,11 +126,26 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
      */
     @Override
     public boolean isCallPermitted() {
-        boolean callPermitted = stateReference.get().isCallPermitted();
+        return tryObtainPermission();
+    }
+
+    @Override
+    public boolean tryObtainPermission() {
+        boolean callPermitted = stateReference.get().tryObtainPermission();
         if (!callPermitted) {
             publishCallNotPermittedEvent();
         }
         return callPermitted;
+    }
+
+    @Override
+    public void obtainPermission() {
+        try {
+            stateReference.get().obtainPermission();
+        } catch(Exception e) {
+            publishCallNotPermittedEvent();
+            throw e;
+        }
     }
 
     @Override
@@ -122,8 +176,6 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
         publishSuccessEvent(durationInNanos);
         stateReference.get().onSuccess();
     }
-
-
 
     /**
      * Get the state of this CircuitBreaker.
@@ -208,7 +260,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
 
     @Override
     public void transitionToOpenState() {
-        stateTransition(OPEN, currentState -> new OpenState(this, currentState.getMetrics()));
+        stateTransition(OPEN, currentState -> new OpenState(this, currentState.getMetrics(), schedulerFactory));
     }
 
     @Override
@@ -274,40 +326,44 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
         return eventProcessor;
     }
 
+    Clock getClock() {
+        return clock;
+    }
+
     private class CircuitBreakerEventProcessor extends EventProcessor<CircuitBreakerEvent> implements EventConsumer<CircuitBreakerEvent>, EventPublisher {
         @Override
         public EventPublisher onSuccess(EventConsumer<CircuitBreakerOnSuccessEvent> onSuccessEventConsumer) {
-            registerConsumer(CircuitBreakerOnSuccessEvent.class, onSuccessEventConsumer);
+            registerConsumer(CircuitBreakerOnSuccessEvent.class.getSimpleName(), onSuccessEventConsumer);
             return this;
         }
 
         @Override
         public EventPublisher onError(EventConsumer<CircuitBreakerOnErrorEvent> onErrorEventConsumer) {
-            registerConsumer(CircuitBreakerOnErrorEvent.class, onErrorEventConsumer);
+            registerConsumer(CircuitBreakerOnErrorEvent.class.getSimpleName(), onErrorEventConsumer);
             return this;
         }
 
         @Override
         public EventPublisher onStateTransition(EventConsumer<CircuitBreakerOnStateTransitionEvent> onStateTransitionEventConsumer) {
-            registerConsumer(CircuitBreakerOnStateTransitionEvent.class, onStateTransitionEventConsumer);
+            registerConsumer(CircuitBreakerOnStateTransitionEvent.class.getSimpleName(), onStateTransitionEventConsumer);
             return this;
         }
 
         @Override
         public EventPublisher onReset(EventConsumer<CircuitBreakerOnResetEvent> onResetEventConsumer) {
-            registerConsumer(CircuitBreakerOnResetEvent.class, onResetEventConsumer);
+            registerConsumer(CircuitBreakerOnResetEvent.class.getSimpleName(), onResetEventConsumer);
             return this;
         }
 
         @Override
         public EventPublisher onIgnoredError(EventConsumer<CircuitBreakerOnIgnoredErrorEvent> onIgnoredErrorEventConsumer) {
-            registerConsumer(CircuitBreakerOnIgnoredErrorEvent.class, onIgnoredErrorEventConsumer);
+            registerConsumer(CircuitBreakerOnIgnoredErrorEvent.class.getSimpleName(), onIgnoredErrorEventConsumer);
             return this;
         }
 
         @Override
         public EventPublisher onCallNotPermitted(EventConsumer<CircuitBreakerOnCallNotPermittedEvent> onCallNotPermittedEventConsumer) {
-            registerConsumer(CircuitBreakerOnCallNotPermittedEvent.class, onCallNotPermittedEventConsumer);
+            registerConsumer(CircuitBreakerOnCallNotPermittedEvent.class.getSimpleName(), onCallNotPermittedEventConsumer);
             return this;
         }
 

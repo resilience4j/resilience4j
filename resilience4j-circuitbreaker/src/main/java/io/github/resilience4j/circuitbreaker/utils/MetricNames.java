@@ -8,5 +8,6 @@ public class MetricNames {
     public static final String BUFFERED = "buffered";
     public static final String BUFFERED_MAX = "buffered_max";
     public static final String STATE = "state";
+    public static final String FAILURE_RATE = "failure_rate";
     public static final String DURATION = "duration";
 }

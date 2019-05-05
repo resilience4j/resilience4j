@@ -25,7 +25,6 @@ import org.slf4j.LoggerFactory;
 
 import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.bulkhead.operator.BulkheadOperator;
-import io.github.resilience4j.circuitbreaker.configure.CircuitBreakerAspect;
 import io.reactivex.Completable;
 import io.reactivex.CompletableSource;
 import io.reactivex.Flowable;
@@ -42,7 +41,7 @@ import io.reactivex.SingleSource;
  */
 public class RxJava2BulkheadAspectExt implements BulkheadAspectExt {
 
-	private static final Logger logger = LoggerFactory.getLogger(CircuitBreakerAspect.class);
+	private static final Logger logger = LoggerFactory.getLogger(RxJava2BulkheadAspectExt.class);
 	private final Set<Class> rxSupportedTypes = newHashSet(ObservableSource.class, SingleSource.class, CompletableSource.class, MaybeSource.class, Flowable.class);
 
 	/**

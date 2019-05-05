@@ -37,7 +37,7 @@ ext {
             reactor: "io.projectreactor:reactor-core:${reactorVersion}",
 
             // testCompile
-            junit:           "junit:junit:${junitVersion}",
+            junit: "junit:junit:${junitVersion}",
             assertj: "org.assertj:assertj-core:${assertjVersion}",
             logback: "ch.qos.logback:logback-classic:${logbackVersion}",
             mockito: "org.mockito:mockito-core:${mockitoVersion}",
@@ -47,6 +47,7 @@ ext {
             awaitility: "com.jayway.awaitility:awaitility:${awaitilityVersion}",
             reactor_test: "io.projectreactor:reactor-test:${reactorVersion}",
             reactive_streams_tck: "org.reactivestreams:reactive-streams-tck:${reactiveStreamsVersion}",
+            mock_clock: "com.statemachinesystems:mock-clock:1.0",
 
             // Vert.x addon
             vertx: "io.vertx:vertx-core:${vertxVersion}",
@@ -54,7 +55,8 @@ ext {
 
             // Aspectj for Spring addon
             aspectj: "org.aspectj:aspectjrt:${aspectjVersion}",
-
+            // spring test
+            spring_test:  "org.springframework:spring-test:${springVersion}",
             // Spring Boot addon
             spring_core: "org.springframework:spring-core:${springVersion}",
             spring_context: "org.springframework:spring-context:${springVersion}",
@@ -97,6 +99,7 @@ ext {
             // Micrometers addon
             micrometer: "io.micrometer:micrometer-core:${micrometerVersion}",
             micrometer_prometheus: "io.micrometer:micrometer-registry-prometheus:${micrometerVersion}",
+            micrometer_spring_legacy: "io.micrometer:micrometer-spring-legacy:${micrometerVersion}",
 
             // CircuitBreaker documentation
             metrics_healthcheck: "io.dropwizard.metrics:metrics-healthchecks:${metricsVersion}",

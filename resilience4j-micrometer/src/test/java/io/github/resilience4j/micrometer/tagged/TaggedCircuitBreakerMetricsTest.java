@@ -16,22 +16,16 @@
 package io.github.resilience4j.micrometer.tagged;
 
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
+import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.Meter;
 import io.micrometer.core.instrument.MeterRegistry;
-import io.micrometer.core.instrument.Timer;
-import io.micrometer.core.instrument.distribution.HistogramSnapshot;
-import io.micrometer.core.instrument.distribution.ValueAtPercentile;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.junit.Before;
 import org.junit.Test;
-import reactor.core.publisher.Flux;
-import reactor.test.StepVerifier;
 
-import java.time.Duration;
 import java.util.*;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import static io.github.resilience4j.micrometer.tagged.MetricsTestHelper.findGaugeByKindAndNameTags;
@@ -42,68 +36,81 @@ public class TaggedCircuitBreakerMetricsTest {
 
     private MeterRegistry meterRegistry;
     private CircuitBreaker circuitBreaker;
+    private CircuitBreakerRegistry circuitBreakerRegistry;
+    private TaggedCircuitBreakerMetrics taggedCircuitBreakerMetrics;
 
     @Before
     public void setUp() {
         meterRegistry = new SimpleMeterRegistry();
-        CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
+        circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
 
         circuitBreaker = circuitBreakerRegistry.circuitBreaker("backendA");
-        TaggedCircuitBreakerMetrics.ofCircuitBreakerRegistry(circuitBreakerRegistry).bindTo(meterRegistry);
         // record some basic stats
-        circuitBreaker.onError(Duration.ofSeconds(10).toNanos(), new RuntimeException("oops"));
-        circuitBreaker.onSuccess(Duration.ofSeconds(2).toNanos());
+        circuitBreaker.onError(0, new RuntimeException("oops"));
+        circuitBreaker.onSuccess(0);
+
+        taggedCircuitBreakerMetrics = TaggedCircuitBreakerMetrics.ofCircuitBreakerRegistry(circuitBreakerRegistry);
+        taggedCircuitBreakerMetrics.bindTo(meterRegistry);
     }
 
     @Test
-    public void shouldOpenCircuitBreakerOnThreshold(){
+    public void shouldAddMetricsForANewlyCreatedCircuitBreaker() {
+        CircuitBreaker newCircuitBreaker = circuitBreakerRegistry.circuitBreaker("backendB");
+        newCircuitBreaker.onSuccess(0);
 
-        circuitBreaker.onSuccess(Duration.ofSeconds(1).toNanos());
-        circuitBreaker.onSuccess(Duration.ofSeconds(1).toNanos());
-        circuitBreaker.onSuccess(Duration.ofSeconds(2).toNanos());
-        circuitBreaker.onSuccess(Duration.ofSeconds(1).toNanos());
-        circuitBreaker.onSuccess(Duration.ofSeconds(4).toNanos());
-        circuitBreaker.onSuccess(Duration.ofSeconds(1).toNanos());
-        circuitBreaker.onSuccess(Duration.ofSeconds(5).toNanos());
-        circuitBreaker.onSuccess(Duration.ofSeconds(1).toNanos());
-        circuitBreaker.onSuccess(Duration.ofSeconds(8).toNanos());
-        circuitBreaker.onSuccess(Duration.ofSeconds(8).toNanos());
+        assertThat(taggedCircuitBreakerMetrics.meterIdMap).containsKeys("backendA", "backendB");
+        assertThat(taggedCircuitBreakerMetrics.meterIdMap.get("backendA")).hasSize(7);
+        assertThat(taggedCircuitBreakerMetrics.meterIdMap.get("backendB")).hasSize(7);
 
+        List<Meter> meters = meterRegistry.getMeters();
+        assertThat(meters).hasSize(14);
 
-        Timer timer = meterRegistry.get(DEFAULT_CIRCUIT_BREAKER_RESPONSE_TIMES).timer();
-        Flux<Double> percentileFlux = Flux.interval(Duration.ofSeconds(2))
-                .map(v -> {
-                    HistogramSnapshot histogramSnapshot = timer.takeSnapshot();
-                    List<ValueAtPercentile> valueAtPercentiles = Arrays.asList(histogramSnapshot.percentileValues());
-                    ValueAtPercentile percentile = valueAtPercentiles.stream().filter(valueAtPercentile -> valueAtPercentile.percentile() == 0.95).findAny().get();
-                    return percentile.value(TimeUnit.MILLISECONDS);
-                })
-                .log()
-                .filter(percentile -> percentile >= 8)
-                .log();
+        Collection<Gauge> gauges = meterRegistry.get(DEFAULT_CIRCUIT_BREAKER_CALLS_METRIC_NAME).gauges();
 
-        percentileFlux.subscribe(percentile -> circuitBreaker.transitionToOpenState());
-
-        StepVerifier.create(percentileFlux)
-                .expectNextCount(1)
-                .expectNext(2D)
-                .verifyComplete();
-
+        Optional<Gauge> successful = findGaugeByKindAndNameTags(gauges, "successful", newCircuitBreaker.getName());
+        assertThat(successful).isPresent();
+        assertThat(successful.get().value()).isEqualTo(newCircuitBreaker.getMetrics().getNumberOfSuccessfulCalls());
     }
 
     @Test
-    public void responseTimesTimerReportsCorrespondingValue() {
-        Timer timer = meterRegistry.get(DEFAULT_CIRCUIT_BREAKER_RESPONSE_TIMES).timer();
+    public void shouldRemovedMetricsForRemovedRetry() {
+        List<Meter> meters = meterRegistry.getMeters();
+        assertThat(meters).hasSize(7);
 
-        assertThat(timer).isNotNull();
-        assertThat(timer.count()).isEqualTo((circuitBreaker.getMetrics().getNumberOfBufferedCalls()));
-        ValueAtPercentile[] valueAtPercentiles = timer.takeSnapshot().percentileValues();
-        assertThat(valueAtPercentiles).hasSize(4);
+        assertThat(taggedCircuitBreakerMetrics.meterIdMap).containsKeys("backendA");
+        circuitBreakerRegistry.remove("backendA");
+
+        assertThat(taggedCircuitBreakerMetrics.meterIdMap).isEmpty();
+
+        meters = meterRegistry.getMeters();
+        assertThat(meters).isEmpty();
     }
 
+    @Test
+    public void shouldReplaceMetrics() {
+        Gauge maxBuffered = meterRegistry.get(DEFAULT_CIRCUIT_BREAKER_MAX_BUFFERED_CALLS).gauge();
+
+        assertThat(maxBuffered).isNotNull();
+        assertThat(maxBuffered.value()).isEqualTo((circuitBreaker.getMetrics().getMaxNumberOfBufferedCalls()));
+        assertThat(maxBuffered.getId().getTag(TagNames.NAME)).isEqualTo(circuitBreaker.getName());
+
+        CircuitBreaker newCircuitBreaker = CircuitBreaker.of(circuitBreaker.getName(), CircuitBreakerConfig.custom()
+                .ringBufferSizeInClosedState(1000).build());
+
+        circuitBreakerRegistry.replace(circuitBreaker.getName(), newCircuitBreaker);
+
+        maxBuffered = meterRegistry.get(DEFAULT_CIRCUIT_BREAKER_MAX_BUFFERED_CALLS).gauge();
+
+        assertThat(maxBuffered).isNotNull();
+        assertThat(maxBuffered.value()).isEqualTo(newCircuitBreaker.getMetrics().getMaxNumberOfBufferedCalls());
+        assertThat(maxBuffered.getId().getTag(TagNames.NAME)).isEqualTo(newCircuitBreaker.getName());
+    }
 
     @Test
     public void notPermittedCallsGaugeReportsCorrespondingValue() {
+        List<Meter> meters = meterRegistry.getMeters();
+        assertThat(meters).hasSize(7);
+
         Collection<Gauge> gauges = meterRegistry.get(DEFAULT_CIRCUIT_BREAKER_CALLS_METRIC_NAME).gauges();
 
         Optional<Gauge> notPermitted = findGaugeByKindAndNameTags(gauges, "not_permitted", circuitBreaker.getName());
@@ -147,6 +154,15 @@ public class TaggedCircuitBreakerMetricsTest {
     }
 
     @Test
+    public void failureRateGaugeReportsCorrespondingValue() {
+        Gauge failureRate = meterRegistry.get(DEFAULT_CIRCUIT_BREAKER_FAILURE_RATE).gauge();
+
+        assertThat(failureRate).isNotNull();
+        assertThat(failureRate.value()).isEqualTo((circuitBreaker.getMetrics().getFailureRate()));
+        assertThat(failureRate.getId().getTag(TagNames.NAME)).isEqualTo(circuitBreaker.getName());
+    }
+
+    @Test
     public void stateGaugeReportsCorrespondingValue() {
         Gauge state = meterRegistry.get(DEFAULT_CIRCUIT_BREAKER_STATE_METRIC_NAME).gauge();
 
@@ -165,7 +181,7 @@ public class TaggedCircuitBreakerMetricsTest {
                         .stateMetricName("custom_state")
                         .bufferedCallsMetricName("custom_buffered_calls")
                         .maxBufferedCallsMetricName("custom_max_buffered_calls")
-                        .responseTimesMetricName("custom_response_times")
+                        .failureRateMetricName("custom_failure_rate")
                         .build(),
                 circuitBreakerRegistry
         ).bindTo(meterRegistry);
@@ -181,8 +197,7 @@ public class TaggedCircuitBreakerMetricsTest {
                 "custom_state",
                 "custom_buffered_calls",
                 "custom_max_buffered_calls",
-                "custom_response_times",
-                "custom_response_times.percentile"
+                "custom_failure_rate"
         ));
     }
 

@@ -18,41 +18,28 @@
  */
 package io.github.resilience4j.core;
 
+import java.time.Clock;
 import java.time.Duration;
+import java.time.Instant;
 
 /**
  * A simple {@link StopWatch} to measure the processing duration of a call.
  */
 public class StopWatch {
 
-    private final String id;
-    private final long startTime;
-    private long elapsedTime;
+    private final Instant startTime;
+    private Clock clock;
 
-    private StopWatch(String id){
-        this.id = id;
-        this.startTime = System.nanoTime();
+    StopWatch(Clock clock){
+        this.clock = clock;
+        this.startTime = clock.instant();
     }
 
-    public static StopWatch start(String id) {
-        return new StopWatch(id);
+    public static StopWatch start() {
+        return new StopWatch(Clock.systemUTC());
     }
 
-    public StopWatch stop() {
-        this.elapsedTime = System.nanoTime() - startTime;
-        return this;
-    }
-
-    public Duration getProcessingDuration() {
-        return Duration.ofNanos(elapsedTime);
-    }
-
-    public String getId() {
-        return id;
-    }
-
-    @Override
-    public String toString(){
-        return String.format("Watch: '%s' Elapsed duration [ms]: '%s'", id, getProcessingDuration().toMillis());
+    public Duration stop() {
+        return Duration.between(startTime, clock.instant());
     }
 }

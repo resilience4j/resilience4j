@@ -17,7 +17,6 @@ package io.github.resilience4j.ratelimiter.monitoring.endpoint;
 
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
-import io.github.resilience4j.ratelimiter.monitoring.model.RateLimiterEndpointResponse;
 
 import org.springframework.boot.actuate.endpoint.AbstractEndpoint;
 import org.springframework.boot.actuate.endpoint.Endpoint;

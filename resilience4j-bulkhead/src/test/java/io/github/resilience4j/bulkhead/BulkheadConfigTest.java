@@ -43,6 +43,22 @@ public class BulkheadConfigTest {
         assertThat(config.getMaxWaitTime()).isEqualTo(maxWait);
     }
 
+    @Test
+    public void testBuildWithZeroMaxCurrentCalls() {
+
+        // given
+        int maxConcurrent = 0;
+
+        // when
+        BulkheadConfig config = BulkheadConfig.custom()
+                .maxConcurrentCalls(maxConcurrent)
+                .build();
+
+        // then
+        assertThat(config).isNotNull();
+        assertThat(config.getMaxConcurrentCalls()).isEqualTo(maxConcurrent);
+    }
+
     @Test(expected = IllegalArgumentException.class)
     public void testBuildWithIllegalMaxConcurrent() {
 

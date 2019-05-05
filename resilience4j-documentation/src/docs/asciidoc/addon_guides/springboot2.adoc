@@ -2,9 +2,11 @@
 
 ==== Gradle
 
-Add the Spring Boot 2 Starter of Resilience4j to your compile dependency:
+Add the Spring Boot 2 Starter of Resilience4j to your compile dependency.
+You also need Spring Boot Actuator and Spring Boot AOP.
 
-```
+[source,groovy, subs="attributes"]
+----
 repositories {
 	maven { url 'http://oss.jfrog.org/artifactory/oss-snapshot-local/' }
 	mavenCentral()
@@ -13,39 +15,22 @@ repositories {
 
 dependencies {
 	compile('io.github.resilience4j:resilience4j-spring-boot2:{release-version}')
+    compile('org.springframework.boot:spring-boot-starter-actuator')
+    compile('org.springframework.boot:spring-boot-starter-aop')
 }
-```
+----
+
 ==== Supported Types by Spring boot starter resilience aspects
 
-Rate limiter , Retry , Circuit breaker and Bulkhead now support Synchronous return types ,CompletableFutures , RxJava2 types and Reactor types .
+RateLimiter, Retry, CircuitBreaker and Bulkhead annotations support synchronous return types, asynchronous types like CompletableFutures and reactive types like RxJava2 and Reactor.
 
 ==== Monitoring
 
 Spring Boot Actuator health information can be used to check the status of your running application.
 It is often used by monitoring software to alert someone if a production system has serious issues.
 
-==== Retry
-When you enable retry, metrics are automatically published on the metrics endpoint.
-
-For example:
-
-[source,json]
-----
-{
-    "names": [
-        "resilience4j.retry.backendA.failedCallsWithoutRetry",
-        "resilience4j.retry.backendA.failedCallsWithRetry",
-        "resilience4j.retry.backendA.successCalls",
-        "resilience4j.retry.backendA.successCallsWithRetry"
-        ]
-}
-----
-
-When you want to publish Retry/AsyncRetry endpoints on the Prometheus endpoint, you have to add the dependency `io.micrometer:micrometer-registry-prometheus`.
-and you have same metrics exposed there , check circuit breaker below for more information about the example.
-
 ==== CircuitBreaker
-This demo publishes the status and metrics of all CircuitBreakers via a custom `CircuitBreakerHealthIndicator`.
+The starter publishes the status and metrics of all CircuitBreakers via a custom `CircuitBreakerHealthIndicator`.
 A closed CircuitBreaker state is mapped to UP, an open state to DOWN and a half-open state to UNKNOWN.
 
 For example:
@@ -76,55 +61,176 @@ For example:
 ----
 
 Metrics are automatically published on the Metrics endpoint.
+To retrieve the names of the available metrics, make a GET request to `/actuator/metrics`.
+Please see https://docs.spring.io/spring-boot/docs/current/actuator-api/html/#metrics[Actuator Metrics documentation] for more details.
+
 For example:
 
 [source,json]
 ----
 {
     "names": [
-        "resilience4j.circuitbreaker.backendA.successful",
-        "resilience4j.circuitbreaker.backendA.failed",
-        "resilience4j.circuitbreaker.backendA.buffered",
-        "resilience4j.circuitbreaker.backendA.buffered_max",
-        "resilience4j.circuitbreaker.backendA.not_permitted",
-        "resilience4j.circuitbreaker.backendB.successful",
-        "resilience4j.circuitbreaker.backendB.failed",
-        "resilience4j.circuitbreaker.backendB.buffered",
-        "resilience4j.circuitbreaker.backendB.buffered_max",
-        "resilience4j.circuitbreaker.backendB.not_permitted"
+        "resilience4j_circuitbreaker_calls",
+        "resilience4j_circuitbreaker_max_buffered_calls",
+        "resilience4j_circuitbreaker_buffered_calls",
+        "resilience4j_circuitbreaker_state",
+        "resilience4j_circuitbreaker_failure_rate"
         ]
 }
 ----
 
+To retrieve a metric, make a GET request to `/actuator/metrics/{metric.name}`.
+For example: `/actuator/metrics/resilience4j_circuitbreaker_calls`
+
+[source,json]
+----
+{
+    "name": "resilience4j_circuitbreaker_calls",
+    "measurements": [
+        {
+            "statistic": "VALUE",
+            "value": 3
+        }
+    ],
+    "availableTags": [
+        {
+            "tag": "kind",
+            "values": [
+                "not_permitted",
+                "successful",
+                "failed"
+            ]
+        },
+        {
+            "tag": "name",
+            "values": [
+                "backendB",
+                "backendA"
+            ]
+        }
+    ]
+}
+----
+
 When you want to publish CircuitBreaker endpoints on the Prometheus endpoint, you have to add the dependency `io.micrometer:micrometer-registry-prometheus`.
-For example:
+To retrieve metrics, make a GET request to `/actuator/prometheus`.
 
 [source]
 ----
-# HELP resilience4j_circuitbreaker_calls Circuit Breaker Call Stats
-# TYPE resilience4j_circuitbreaker_calls gauge
-resilience4j_circuitbreaker_calls{name="backendB",call_result="successful",} 0.0
-resilience4j_circuitbreaker_calls{name="backendB",call_result="failed",} 0.0
-resilience4j_circuitbreaker_calls{name="backendB",call_result="not_permitted",} 0.0
-resilience4j_circuitbreaker_calls{name="backendB",call_result="buffered",} 0.0
-resilience4j_circuitbreaker_calls{name="backendB",call_result="buffered_max",} 10.0
-resilience4j_circuitbreaker_calls{name="backendA",call_result="successful",} 0.0
-resilience4j_circuitbreaker_calls{name="backendA",call_result="failed",} 0.0
-resilience4j_circuitbreaker_calls{name="backendA",call_result="not_permitted",} 0.0
-resilience4j_circuitbreaker_calls{name="backendA",call_result="buffered",} 0.0
-resilience4j_circuitbreaker_calls{name="backendA",call_result="buffered_max",} 5.0
-# HELP resilience4j_circuitbreaker_states Circuit Breaker States
-# TYPE resilience4j_circuitbreaker_states gauge
-resilience4j_circuitbreaker_states{name="backendB",state="closed",} 1.0
-resilience4j_circuitbreaker_states{name="backendB",state="open",} 0.0
-resilience4j_circuitbreaker_states{name="backendB",state="half_open",} 0.0
-resilience4j_circuitbreaker_states{name="backendA",state="closed",} 1.0
-resilience4j_circuitbreaker_states{name="backendA",state="open",} 0.0
-resilience4j_circuitbreaker_states{name="backendA",state="half_open",} 0.0
+resilience4j_circuitbreaker_calls{kind="not_permitted",name="backendA",} 0.0
+resilience4j_circuitbreaker_calls{kind="not_permitted",name="backendB",} 0.0
+resilience4j_circuitbreaker_calls{kind="successful",name="backendA",} 5.0
+resilience4j_circuitbreaker_calls{kind="successful",name="backendB",} 8.0
+resilience4j_circuitbreaker_calls{kind="failed",name="backendB",} 2.0
+resilience4j_circuitbreaker_calls{kind="failed",name="backendA",} 5.0
+
+resilience4j_circuitbreaker_state{name="backendA",} 0.0
+resilience4j_circuitbreaker_state{name="backendB",} 0.0
+
+resilience4j_circuitbreaker_failure_rate{name="backendA",} 50.0
+resilience4j_circuitbreaker_failure_rate{name="backendB",} 20.0
+
+resilience4j_circuitbreaker_max_buffered_calls{name="backendA",} 10.0
+resilience4j_circuitbreaker_max_buffered_calls{name="backendB",} 10.0
+
+resilience4j_circuitbreaker_buffered_calls{name="backendA",} 10.0
+resilience4j_circuitbreaker_buffered_calls{name="backendB",} 10.0
+----
+
+==== Retry
+Metrics are automatically published on the metrics endpoint.
+
+For example:
+
+[source,json]
+----
+{
+    "names": [
+        "resilience4j_retry_calls"
+        ]
+}
+----
+
+To retrieve the metric, make a GET request to `/actuator/metrics/{metric.name}`.
+For example: `/actuator/metrics/resilience4j_retry_calls`
+
+[source,json]
+----
+{
+    "name": "resilience4j_retry_calls",
+    "measurements": [
+        {
+            "statistic": "VALUE",
+            "value": 7
+        }
+    ],
+    "availableTags": [
+        {
+            "tag": "kind",
+            "values": [
+                "successful_without_retry",
+                "successful_with_retry",
+                "failed_with_retry",
+                "failed_without_retry"
+            ]
+        },
+        {
+            "tag": "name",
+            "values": [
+                "backendB",
+                "backendA"
+            ]
+        }
+    ]
+}
+----
+
+When you want to publish Retry/AsyncRetry endpoints on the Prometheus endpoint, you have to add the dependency `io.micrometer:micrometer-registry-prometheus`.
+and you have same metrics exposed there , check circuit breaker below for more information about the example.
+
+==== Bulkhead
+
+Metrics are automatically published on the Metrics endpoint.
+
+For example:
+
+[source,json]
+----
+{
+    "names": [
+        "resilience4j_bulkhead_available_concurrent_calls",
+        "resilience4j_bulkhead_max_allowed_concurrent_calls"
+        ]
+}
+----
+
+To retrieve the metric, make a GET request to `/actuator/metrics/{metric.name}`.
+For example: `/actuator/metrics/resilience4j_bulkhead_available_concurrent_calls`
+
+[source,json]
+----
+{
+    "name": "resilience4j_bulkhead_available_concurrent_calls",
+    "measurements": [
+        {
+            "statistic": "VALUE",
+            "value": 3
+        }
+    ],
+    "availableTags": [
+        {
+            "tag": "name",
+            "values": [
+                "backendB",
+                "backendA"
+            ]
+        }
+    ]
+}
 ----
 
 ==== RateLimiter
-This demo publishes the status and metrics of all RateLimiter via a custom `RateLimiterHealthIndicator`.
+The starter the status and metrics of all RateLimiter via a custom `RateLimiterHealthIndicator`.
 RateLimiterHealthIndicator changes its state DOWN only if there is some permission waiting threads
 and they won't be able to unblock until timeout.
 
@@ -148,10 +254,34 @@ For example:
 [source,json]
 ----
 {
-    "resilience4j.ratelimiter.backendA.available_permissions": 10,
-    "resilience4j.ratelimiter.backendA.number_of_waiting_threads": 0,
-    "resilience4j.ratelimiter.backendB.available_permissions": 6,
-    "resilience4j.ratelimiter.backendB.number_of_waiting_threads": 0
+    "names": [
+        "resilience4j_ratelimiter_available_permissions",
+        "resilience4j_ratelimiter_waiting_threads"
+        ]
+}
+----
+
+To retrieve the metric, make a GET request to `/actuator/metrics/{metric.name}`.
+For example: `/actuator/metrics/resilience4j_ratelimiter_available_permissions`
+
+[source,json]
+----
+{
+    "name": "resilience4j_ratelimiter_available_permissions",
+    "measurements": [
+        {
+            "statistic": "VALUE",
+            "value": 50
+        }
+    ],
+    "availableTags": [
+        {
+            "tag": "name",
+            "values": [
+                "backendA"
+            ]
+        }
+    ]
 }
 ----
 
@@ -237,6 +367,18 @@ public Flowable<String> doSomethingFlowable(boolean throwException) {
 }
 ----
 
+Beyond the config file configuration, the Spring Bean configuration is now using @ConditionalOnMissingBean to allow for overriding default behavior.
+These Beans can be overridden in your application's Spring Bean configuration:
+
+* RetryRegistry
+* RetryAspect
+* EventConsumerRegistry<RetryEvent>
+* RxJava2RetryAspectExt
+* ReactorRetryAspectExt
+
+Note that in Spring Boot 1.x, EventConsumerRegistry<RetryEvent> cannot be overridden because of limitations of the @ConditionalOnMissingBean implementation.
+To override this, go to at least Spring Boot 2.1.x.
+
 ===== CircuitBreaker
 You can configure your CircuitBreakers in Spring Boot's `application.yml` config file.
 For example
@@ -271,6 +413,36 @@ resilience4j.circuitbreaker:
                 - org.springframework.web.client.HttpClientErrorException
 ----
 
+You can also override/partial-override/share default configuration for your CircuitBreakers in Spring Boot's `application.yml` config file.
+For example
+
+[source,yaml]
+----
+resilience4j.circuitbreaker:
+    configs:
+        default:
+            ringBufferSizeInClosedState: 100
+            ringBufferSizeInHalfOpenState: 10
+            waitInterval: 10000
+            failureRateThreshold: 60
+            eventConsumerBufferSize: 10
+            registerHealthIndicator: true
+    backends:
+        backendA:
+            baseConfig: default
+        backendB:
+            baseConfig: default
+----
+
+Beyond the config file configuration, the Spring Bean configuration is now using @ConditionalOnMissingBean to allow for overriding default behavior.
+These Beans can be overridden in your application's Spring Bean configuration:
+
+* CircuitBreakerRegistry
+* CircuitBreakerAspect
+* RxJava2CircuitBreakerAspectExt
+* ReactorCircuitBreakerAspectExt
+* EventConsumerRegistry<CircuitBreakerEvent>
+
 ===== RateLimiter
 You can configure your CircuitBreakers in Spring Boot's `application.yml` config file.
 For example
@@ -291,6 +463,16 @@ resilience4j.ratelimiter:
             limitRefreshPeriodInMillis: 500
             timeoutInMillis: 3000
 ----
+
+Beyond the config file configuration, the Spring Bean configuration is now using @ConditionalOnMissingBean to allow for overriding default behavior.
+These Beans can be overridden in your application's Spring Bean configuration:
+
+* RateLimiterRegistry
+* RateLimiterAspect
+* EventConsumerRegistry<RateLimiterEvent>
+* RxJava2RateLimiterAspectExt
+* ReactorRateLimiterAspectExt
+
 
 ===== Explicit ordering for CircuitBreaker and RateLimiter aspects
 You can adjust `RateLimiterProperties.rateLimiterAspectOrder` and `CircuitBreakerProperties.circuitBreakerAspectOrder`
@@ -481,18 +663,18 @@ Example of response:
   "eventsList": [
     {
       "rateLimiterName": "backendA",
-      "rateLimiterEventType": "SUCCESSFUL_ACQUIRE",
-      "rateLimiterCreationTime": "2017-05-05T21:29:40.463+03:00[Europe/Uzhgorod]"
+      "type": "SUCCESSFUL_ACQUIRE",
+      "creationTime": "2017-05-05T21:29:40.463+03:00[Europe/Uzhgorod]"
     },
     {
       "rateLimiterName": "backendA",
-      "rateLimiterEventType": "SUCCESSFUL_ACQUIRE",
-      "rateLimiterCreationTime": "2017-05-05T21:29:40.469+03:00[Europe/Uzhgorod]"
+      "type": "SUCCESSFUL_ACQUIRE",
+      "creationTime": "2017-05-05T21:29:40.469+03:00[Europe/Uzhgorod]"
     },
     {
       "rateLimiterName": "backendA",
-      "rateLimiterEventType": "FAILED_ACQUIRE",
-      "rateLimiterCreationTime": "2017-05-05T21:29:41.268+03:00[Europe/Uzhgorod]"
+      "type": "FAILED_ACQUIRE",
+      "creationTime": "2017-05-05T21:29:41.268+03:00[Europe/Uzhgorod]"
     }
   ]
 }

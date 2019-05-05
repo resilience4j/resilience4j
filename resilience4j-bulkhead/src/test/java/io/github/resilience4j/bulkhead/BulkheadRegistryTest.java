@@ -20,70 +20,104 @@ package io.github.resilience4j.bulkhead;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.slf4j.Logger;
+
+import java.util.HashMap;
+import java.util.Map;
 
 import static org.assertj.core.api.BDDAssertions.assertThat;
+import static org.mockito.Mockito.mock;
 
 
 public class BulkheadRegistryTest {
 
-    private BulkheadConfig config;
-    private BulkheadRegistry registry;
+	private BulkheadConfig config;
+	private BulkheadRegistry registry;
+	private Logger LOGGER;
 
-    @Before
-    public void setUp() {
+	@Before
+	public void setUp() {
+		LOGGER = mock(Logger.class);
+		// registry with default config
+		registry = BulkheadRegistry.ofDefaults();
+		// registry with custom config
+		config = BulkheadConfig.custom()
+				.maxConcurrentCalls(100)
+				.maxWaitTime(50)
+				.build();
+	}
 
-        // registry with default config
-        registry = BulkheadRegistry.ofDefaults();
+	@Test
+	public void shouldReturnCustomConfig() {
+		// give
+		BulkheadRegistry registry = BulkheadRegistry.of(config);
+		// when
+		BulkheadConfig bulkheadConfig = registry.getDefaultConfig();
+		// then
+		assertThat(bulkheadConfig).isSameAs(config);
+	}
 
-        // registry with custom config
-        config = BulkheadConfig.custom()
-                               .maxConcurrentCalls(100)
-                               .maxWaitTime(50)
-                               .build();
-    }
+	@Test
+	public void shouldReturnTheCorrectName() {
 
-    @Test
-    public void shouldReturnCustomConfig() {
+		Bulkhead bulkhead = registry.bulkhead("test");
 
-        // give
-        BulkheadRegistry registry = BulkheadRegistry.of(config);
+		assertThat(bulkhead).isNotNull();
+		assertThat(bulkhead.getName()).isEqualTo("test");
+		assertThat(bulkhead.getBulkheadConfig().getMaxConcurrentCalls()).isEqualTo(25);
+		assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(25);
+	}
 
-        // when
-        BulkheadConfig bulkheadConfig = registry.getDefaultBulkheadConfig();
+	@Test
+	public void shouldBeTheSameInstance() {
 
-        // then
-        assertThat(bulkheadConfig).isSameAs(config);
-    }
+		Bulkhead bulkhead1 = registry.bulkhead("test", config);
+		Bulkhead bulkhead2 = registry.bulkhead("test", config);
 
-    @Test
-    public void shouldReturnTheCorrectName() {
+		assertThat(bulkhead1).isSameAs(bulkhead2);
+		assertThat(registry.getAllBulkheads()).hasSize(1);
+	}
 
-        Bulkhead bulkhead = registry.bulkhead("test");
+	@Test
+	public void shouldBeNotTheSameInstance() {
 
-        assertThat(bulkhead).isNotNull();
-        assertThat(bulkhead.getName()).isEqualTo("test");
-        assertThat(bulkhead.getBulkheadConfig().getMaxConcurrentCalls()).isEqualTo(25);
-        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(25);
-    }
+		Bulkhead bulkhead1 = registry.bulkhead("test1");
+		Bulkhead bulkhead2 = registry.bulkhead("test2");
 
-    @Test
-    public void shouldBeTheSameInstance() {
+		assertThat(bulkhead1).isNotSameAs(bulkhead2);
+		assertThat(registry.getAllBulkheads()).hasSize(2);
+	}
 
-        Bulkhead bulkhead1 = registry.bulkhead("test", config);
-        Bulkhead bulkhead2 = registry.bulkhead("test", config);
+	@Test
+	public void testCreateWithConfigurationMap() {
+		Map<String, BulkheadConfig> configs = new HashMap<>();
+		configs.put("default", BulkheadConfig.ofDefaults());
+		configs.put("custom", BulkheadConfig.ofDefaults());
 
-        assertThat(bulkhead1).isSameAs(bulkhead2);
-        assertThat(registry.getAllBulkheads()).hasSize(1);
-    }
+		BulkheadRegistry bulkheadRegistry = BulkheadRegistry.of(configs);
 
-    @Test
-    public void shouldBeNotTheSameInstance() {
+		assertThat(bulkheadRegistry.getDefaultConfig()).isNotNull();
+		assertThat(bulkheadRegistry.getConfiguration("custom")).isNotNull();
+	}
 
-        Bulkhead bulkhead1 = registry.bulkhead("test1");
-        Bulkhead bulkhead2 = registry.bulkhead("test2");
+	@Test
+	public void testCreateWithConfigurationMapWithoutDefaultConfig() {
+		Map<String, BulkheadConfig> configs = new HashMap<>();
+		configs.put("custom", BulkheadConfig.ofDefaults());
 
-        assertThat(bulkhead1).isNotSameAs(bulkhead2);
-        assertThat(registry.getAllBulkheads()).hasSize(2);
-    }
+		BulkheadRegistry bulkheadRegistry = BulkheadRegistry.of(configs);
+
+		assertThat(bulkheadRegistry.getDefaultConfig()).isNotNull();
+		assertThat(bulkheadRegistry.getConfiguration("custom")).isNotNull();
+	}
+
+	@Test
+	public void testAddConfiguration() {
+		BulkheadRegistry bulkheadRegistry = BulkheadRegistry.ofDefaults();
+		bulkheadRegistry.addConfiguration("custom", BulkheadConfig.custom().build());
+
+		assertThat(bulkheadRegistry.getDefaultConfig()).isNotNull();
+		assertThat(bulkheadRegistry.getConfiguration("custom")).isNotNull();
+	}
 
 }

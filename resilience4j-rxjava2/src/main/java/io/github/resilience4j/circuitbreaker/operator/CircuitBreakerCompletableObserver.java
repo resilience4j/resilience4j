@@ -8,7 +8,7 @@ import io.reactivex.disposables.Disposable;
  * A RxJava {@link CompletableObserver} to protect another observer by a CircuitBreaker.
  */
 final class CircuitBreakerCompletableObserver extends DisposableCircuitBreaker implements CompletableObserver {
-    private final CompletableObserver childObserver;
+    private final transient CompletableObserver childObserver;
 
     CircuitBreakerCompletableObserver(CircuitBreaker circuitBreaker, CompletableObserver childObserver) {
         super(circuitBreaker);

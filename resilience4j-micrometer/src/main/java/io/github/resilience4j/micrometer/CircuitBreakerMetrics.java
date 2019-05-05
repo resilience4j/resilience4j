@@ -17,6 +17,7 @@ package io.github.resilience4j.micrometer;
 
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
+import io.github.resilience4j.micrometer.tagged.TaggedCircuitBreakerMetrics;
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.binder.MeterBinder;
@@ -25,6 +26,10 @@ import static io.github.resilience4j.circuitbreaker.utils.MetricNames.*;
 import static io.github.resilience4j.micrometer.MetricUtils.getName;
 import static java.util.Objects.requireNonNull;
 
+/**
+ * @deprecated Use {@link TaggedCircuitBreakerMetrics} instead
+ */
+@Deprecated
 public class CircuitBreakerMetrics implements MeterBinder {
 
     private final Iterable<CircuitBreaker> circuitBreakers;
@@ -44,6 +49,7 @@ public class CircuitBreakerMetrics implements MeterBinder {
      * a {@link CircuitBreakerRegistry} as a source.
      *
      * @param circuitBreakerRegistry the registry of circuit breakers
+     * @return The CircuitBreakerMetrics {@link CircuitBreakerMetrics}.
      */
     public static CircuitBreakerMetrics ofCircuitBreakerRegistry(CircuitBreakerRegistry circuitBreakerRegistry) {
         return new CircuitBreakerMetrics(circuitBreakerRegistry.getAllCircuitBreakers());
@@ -54,6 +60,7 @@ public class CircuitBreakerMetrics implements MeterBinder {
      * an {@link Iterable} of circuit breakers as a source.
      *
      * @param circuitBreakers the circuit breakers
+     * @return The CircuitBreakerMetrics {@link CircuitBreakerMetrics}.
      */
     public static CircuitBreakerMetrics ofIterable(Iterable<CircuitBreaker> circuitBreakers) {
         return new CircuitBreakerMetrics(circuitBreakers);
@@ -63,7 +70,9 @@ public class CircuitBreakerMetrics implements MeterBinder {
      * Creates a new instance CircuitBreakerMetrics {@link CircuitBreakerMetrics} with
      * an {@link Iterable} of circuit breakers as a source.
      *
-     * @param circuitBreakers the circuit breakers
+     * @param prefix The prefix.
+     * @param circuitBreakers the circuit
+     * @return The CircuitBreakerMetrics {@link CircuitBreakerMetrics}.
      */
     public static CircuitBreakerMetrics ofIterable(String prefix, Iterable<CircuitBreaker> circuitBreakers) {
         return new CircuitBreakerMetrics(circuitBreakers, prefix);

@@ -4,56 +4,7 @@
 
 Integration with https://github.com/prometheus/client_java[Prometheus simple client]
 
-Module provides exporters for `CircuitBreaker`, `RateLimiter` and `Bulkhead` metrics.
-Every metric has `name` label indicating the relation to certain object, object category
-such as `bulkhead` is inlined to the metric name, so that the combination of metric name + `name` label
-uniquely identifies metric per backend. For example:
-
-```
-resilience4j_bulkhead_available_concurrent_calls{name="Backend1"}
-resilience4j_circuitbreaker_buffered_calls{name="Backend1"}
-resilience4j_ratelimiter_waiting_threads{name=Backend1"}
-```
-
-For every `CircuitBreaker` the library exports the following metrics:
-
-1. `resilience4j_circuitbreaker_state` - the state of the circuit breaker, possible values:
-
-    - 0 - CLOSED
-    - 1 - OPEN
-    - 2 - HALF_OPEN
-
-2. `resilience4j_circuitbreaker_calls` - the number of recorded calls,
-the additional `kind` label indicates type of calls being recorded, the possible
-`kind` values are `successful`, `failed` or `not_permitted`.
-
-3. `resilience4j_circuitbreaker_buffered_calls` - the number of buffered calls
-
-4. `resilience4j_circuitbreaker_max_buffered_calls` - the maximum number of buffered calls
-
-For every `RateLimiter` the library exports the following metrics:
-
-1. `resilience4j_ratelimiter_available_permissions` - the number of available permissions
-2. `resilience4j_ratelimiter_waiting_threads` - the number of waiting threads
-
-For every `Bulkhead` the library exports the following metrics:
-
-1. `resilience4j_bulkhead_available_concurrent_calls` - the number of available concurrent calls
-2. `resilience4j_bulkhead_max_allowed_concurrent_calls` - the maximum number of allowed concurrent calls
-
-
-This module also provides `CallMeter` -- a composite metric to measure single call/request metrics such as:
-    - execution time distribution,
-    - number of attempts and
-    - number of failures.
-
-It is implemented in Prometheus simple client's style, supports labels and produces histogram and counter metrics.
-
-Usage examples provided bellow in this section.
-
-==== Dashboard Example
-
-image::images/prometheus-dashboard.png[Circuit Breaker Dashboard Example]
+This add-on provides Prometheus collectors for `CircuitBreaker`, `RateLimiter` and `Bulkhead` metrics.
 
 ==== Usage
 
@@ -101,43 +52,3 @@ final Bulkhead boo = bulkheadRegistry.bulkhead("boo");
 // Registering metrics in prometeus CollectorRegistry
 collectorRegistry.register(BulkheadMetricsCollector.ofBulkheadRegistry(rateLimiterRegistry));
 --
-
-Every collector exposes more methods for binding corresponding objects, for example,
-you can use suppliers, collections or even collect metrics for a single object.
-
-===== Call Meter
-
-Simple example without labels
-
-[source,java]
---
-final CollectorRegistry registry = new CollectorRegistry();
-
-final CallMeter meter = CallMeter.of("foo_call", "Foo call help", registry);
-
-CallMeter.decorateCompletionStageSupplier(meter, () -> supplyAsync(() -> { /* ... */ }));
---
-
-Advanced example with labels
-
-[source,java]
---
-final CollectorRegistry registry = new CollectorRegistry();
-
-final CallMeter meter = CallMeter
-        .builder()
-        .name("foo_call")
-        .help("Foo call help")
-        .labelNames("label_1")
-        .build()
-        .register(registry);
-
-meter.labels("boo").executeRunnable(() -> { /* ... */ });
-
-CallMeter.decorateCompletionStageSupplier(
-    meter.labels("baz"),
-    () -> supplyAsync(() -> { /* ... */ })
-);
-
---
-

@@ -48,8 +48,8 @@ public class CircuitBreakerAspect implements Ordered {
 	private final CircuitBreakerRegistry circuitBreakerRegistry;
 	private final @Nullable List<CircuitBreakerAspectExt> circuitBreakerAspectExtList;
 
-	public CircuitBreakerAspect(CircuitBreakerConfigurationProperties backendMonitorPropertiesRegistry, CircuitBreakerRegistry circuitBreakerRegistry, @Autowired(required = false) List<CircuitBreakerAspectExt> circuitBreakerAspectExtList) {
-		this.circuitBreakerProperties = backendMonitorPropertiesRegistry;
+	public CircuitBreakerAspect(CircuitBreakerConfigurationProperties circuitBreakerProperties, CircuitBreakerRegistry circuitBreakerRegistry, @Autowired(required = false) List<CircuitBreakerAspectExt> circuitBreakerAspectExtList) {
+		this.circuitBreakerProperties = circuitBreakerProperties;
 		this.circuitBreakerRegistry = circuitBreakerRegistry;
 		this.circuitBreakerAspectExtList = circuitBreakerAspectExtList;
 	}
@@ -85,11 +85,10 @@ public class CircuitBreakerAspect implements Ordered {
 	}
 
 	private io.github.resilience4j.circuitbreaker.CircuitBreaker getOrCreateCircuitBreaker(String methodName, String backend) {
-		io.github.resilience4j.circuitbreaker.CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker(backend,
-				() -> circuitBreakerProperties.createCircuitBreakerConfig(backend));
+		io.github.resilience4j.circuitbreaker.CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker(backend);
 
 		if (logger.isDebugEnabled()) {
-			logger.debug("Created or retrieved circuit breaker '{}' with failure rate '{}' and wait interval'{}' for method: '{}'",
+			logger.debug("Created or retrieved circuit breaker '{}' with failure rate '{}' and wait interval '{}' for method: '{}'",
 					backend, circuitBreaker.getCircuitBreakerConfig().getFailureRateThreshold(),
 					circuitBreaker.getCircuitBreakerConfig().getWaitDurationInOpenState(), methodName);
 		}

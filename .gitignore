@@ -4,3 +4,8 @@
 build
 classes
 */out
+.classpath
+.project
+.settings
+*/bin
+*.orig

@@ -21,14 +21,10 @@ import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.Meter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
-
 import org.junit.Before;
 import org.junit.Test;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static io.github.resilience4j.micrometer.tagged.MetricsTestHelper.findGaugeByKindAndNameTags;
@@ -39,17 +35,52 @@ public class TaggedRetryMetricsTest {
 
     private MeterRegistry meterRegistry;
     private Retry retry;
+    private RetryRegistry retryRegistry;
+    private TaggedRetryMetrics taggedRetryMetrics;
 
     @Before
     public void setUp() {
         meterRegistry = new SimpleMeterRegistry();
-        RetryRegistry retryRegistry = RetryRegistry.ofDefaults();
+        retryRegistry = RetryRegistry.ofDefaults();
 
         retry = retryRegistry.retry("backendA");
         // record some basic stats
         retry.executeRunnable(() -> {});
 
-        TaggedRetryMetrics.ofRetryRegistry(retryRegistry).bindTo(meterRegistry);
+        taggedRetryMetrics = TaggedRetryMetrics.ofRetryRegistry(retryRegistry);
+        taggedRetryMetrics.bindTo(meterRegistry);
+    }
+
+    @Test
+    public void shouldAddMetricsForANewlyCreatedRetry() {
+        Retry newRetry = retryRegistry.retry("backendB");
+
+        assertThat(taggedRetryMetrics.meterIdMap).containsKeys("backendA", "backendB");
+        assertThat(taggedRetryMetrics.meterIdMap.get("backendA")).hasSize(4);
+        assertThat(taggedRetryMetrics.meterIdMap.get("backendB")).hasSize(4);
+
+        List<Meter> meters = meterRegistry.getMeters();
+        assertThat(meters).hasSize(8);
+
+        Collection<Gauge> gauges = meterRegistry.get(DEFAULT_RETRY_CALLS).gauges();
+
+        Optional<Gauge> successfulWithoutRetry = findGaugeByKindAndNameTags(gauges, "successful_without_retry", newRetry.getName());
+        assertThat(successfulWithoutRetry).isPresent();
+        assertThat(successfulWithoutRetry.get().value()).isEqualTo(newRetry.getMetrics().getNumberOfSuccessfulCallsWithoutRetryAttempt());
+    }
+
+    @Test
+    public void shouldRemovedMetricsForRemovedRetry() {
+        List<Meter> meters = meterRegistry.getMeters();
+        assertThat(meters).hasSize(4);
+
+        assertThat(taggedRetryMetrics.meterIdMap).containsKeys("backendA");
+        retryRegistry.remove("backendA");
+
+        assertThat(taggedRetryMetrics.meterIdMap).isEmpty();
+
+        meters = meterRegistry.getMeters();
+        assertThat(meters).isEmpty();
     }
 
     @Test

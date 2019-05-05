@@ -18,6 +18,7 @@ package io.github.resilience4j.ratpack.circuitbreaker;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import static io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.*;
@@ -150,7 +151,7 @@ public class CircuitBreakerConfig {
                         return null;
                     }
                 })
-                .filter(c -> c != null)
+                .filter(Objects::nonNull)
                 .collect(Collectors.toList());
     }
 

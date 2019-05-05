@@ -15,123 +15,167 @@
  */
 package io.github.resilience4j.bulkhead.configure;
 
-import io.github.resilience4j.bulkhead.Bulkhead;
-import io.github.resilience4j.bulkhead.BulkheadConfig;
+import static io.github.resilience4j.bulkhead.BulkheadConfig.Builder;
 
-import javax.validation.constraints.Min;
 import java.util.HashMap;
 import java.util.Map;
 
-import static io.github.resilience4j.bulkhead.BulkheadConfig.Builder;
-import static io.github.resilience4j.bulkhead.BulkheadConfig.custom;
+import javax.validation.constraints.Min;
+
+import org.springframework.util.StringUtils;
+
+import io.github.resilience4j.bulkhead.Bulkhead;
+import io.github.resilience4j.bulkhead.BulkheadConfig;
+import io.github.resilience4j.core.ConfigurationNotFoundException;
+import io.github.resilience4j.core.lang.Nullable;
 
 public class BulkheadConfigurationProperties {
-    /*
-    This property gives you control over Bulkhead aspect application order.
-    By default Bulkhead will be executed BEFORE CircuitBreaker and RateLimiter.
-    By adjusting each aspect order from ConfigurationProperties
-    you explicitly define aspects execution sequence.
-    */
-    private int bulkheadAspectOrder = Integer.MAX_VALUE - 2;
-    private Map<String, BackendProperties> backends = new HashMap<>();
+	/*
+	This property gives you control over Bulkhead aspect application order.
+	By default Bulkhead will be executed BEFORE CircuitBreaker and RateLimiter.
+	By adjusting each aspect order from ConfigurationProperties
+	you explicitly define aspects execution sequence.
+	*/
+	private int bulkheadAspectOrder = Integer.MAX_VALUE - 2;
+	private Map<String, BackendProperties> backends = new HashMap<>();
+	private Map<String, BackendProperties> configs = new HashMap<>();
 
-    public int getBulkheadAspectOrder() {
-        return bulkheadAspectOrder;
-    }
+	public int getBulkheadAspectOrder() {
+		return bulkheadAspectOrder;
+	}
 
-    public void setBulkheadAspectOrder(int bulkheadAspectOrder) {
-        this.bulkheadAspectOrder = bulkheadAspectOrder;
-    }
+	public void setBulkheadAspectOrder(int bulkheadAspectOrder) {
+		this.bulkheadAspectOrder = bulkheadAspectOrder;
+	}
 
-    private BackendProperties getBackendProperties(String backend) {
-        return backends.get(backend);
-    }
+	@Nullable
+	public BackendProperties getBackendProperties(String backend) {
+		return backends.get(backend);
+	}
 
-    public BulkheadConfig createBulkheadConfig(String backend) {
-        return createBulkheadConfig(getBackendProperties(backend));
-    }
+	public BulkheadConfig createBulkheadConfig(String backend) {
+		return createBulkheadConfig(getBackendProperties(backend));
+	}
 
-    private BulkheadConfig createBulkheadConfig(BackendProperties backendProperties) {
-        return buildBulkheadConfig(backendProperties).build();
-    }
+	public BulkheadConfig createBulkheadConfig(BackendProperties backendProperties) {
+		if (!StringUtils.isEmpty(backendProperties.getBaseConfig())) {
+			BackendProperties baseProperties = configs.get(backendProperties.getBaseConfig());
+			if (baseProperties == null) {
+				throw new ConfigurationNotFoundException(backendProperties.getBaseConfig());
+			}
+			return buildConfigFromBaseConfig(baseProperties, backendProperties);
+		}
+		return buildBulkheadConfig(BulkheadConfig.custom(), backendProperties);
+	}
 
-    public Builder buildBulkheadConfig(BackendProperties properties) {
-        if (properties == null) {
-            return new Builder();
-        }
+	private BulkheadConfig buildConfigFromBaseConfig(BackendProperties baseProperties, BackendProperties backendProperties) {
+		BulkheadConfig baseConfig = buildBulkheadConfig(BulkheadConfig.custom(), baseProperties);
+		return buildBulkheadConfig(BulkheadConfig.from(baseConfig), backendProperties);
+	}
 
-        Builder builder = custom();
+	public BulkheadConfig buildBulkheadConfig(Builder builder, BackendProperties properties) {
+		if (properties == null) {
+			return BulkheadConfig.custom().build();
+		}
 
-        if (properties.getMaxConcurrentCall() != null) {
-            builder.maxConcurrentCalls(properties.getMaxConcurrentCall());
-        }
+		if (properties.getMaxConcurrentCall() != null) {
+			builder.maxConcurrentCalls(properties.getMaxConcurrentCall());
+		}
 
-        if (properties.getMaxWaitTime() != null) {
-            builder.maxWaitTime(properties.getMaxWaitTime());
-        }
+		if (properties.getMaxWaitTime() != null) {
+			builder.maxWaitTime(properties.getMaxWaitTime());
+		}
 
-        return builder;
-    }
+		return builder.build();
+	}
 
-    public Map<String, BackendProperties> getBackends() {
-        return backends;
-    }
+	public Map<String, BackendProperties> getBackends() {
+		return backends;
+	}
 
-    /**
-     * Class storing property values for configuring {@link Bulkhead} instances.
-     */
-    public static class BackendProperties {
-        @Min(1)
-        private Integer maxConcurrentCall;
+	public Map<String, BackendProperties> getConfigs() {
+		return configs;
+	}
 
-        @Min(0)
-        private Long maxWaitTime;
+	/**
+	 * Class storing property values for configuring {@link Bulkhead} instances.
+	 */
+	public static class BackendProperties {
+		@Min(1)
+		private Integer maxConcurrentCall;
 
-        @Min(1)
-        private Integer eventConsumerBufferSize = 100;
+		@Min(0)
+		private Long maxWaitTime;
 
-        /**
-         * Returns the max concurrent call of the bulkhead.
-         *
-         * @return the max concurrent call
-         */
-        public Integer getMaxConcurrentCall() {
-            return maxConcurrentCall;
-        }
+		@Min(1)
+		private Integer eventConsumerBufferSize = 100;
 
-        /**
-         * Sets the max concurrent call of the bulkhead.
-         *
-         * @param maxConcurrentCall the max concurrent call
-         */
-        public void setMaxConcurrentCall(Integer maxConcurrentCall) {
-            this.maxConcurrentCall = maxConcurrentCall;
-        }
+		@Nullable
+		private String baseConfig;
 
-        /**
-         * Returns the max wait time for the bulkhead in milliseconds.
-         *
-         * @return the failure rate threshold
-         */
-        public Long getMaxWaitTime() {
-            return maxWaitTime;
-        }
+		/**
+		 * Returns the max concurrent call of the bulkhead.
+		 *
+		 * @return the max concurrent call
+		 */
+		public Integer getMaxConcurrentCall() {
+			return maxConcurrentCall;
+		}
 
-        /**
-         * Sets the max wait time for the bulkhead in milliseconds.
-         *
-         * @param maxWaitTime the max wait time
-         */
-        public void setMaxWaitTime(Long maxWaitTime) {
-            this.maxWaitTime = maxWaitTime;
-        }
+		/**
+		 * Sets the max concurrent call of the bulkhead.
+		 *
+		 * @param maxConcurrentCall the max concurrent call
+		 */
+		public void setMaxConcurrentCall(Integer maxConcurrentCall) {
+			this.maxConcurrentCall = maxConcurrentCall;
+		}
 
-        public Integer getEventConsumerBufferSize() {
-            return eventConsumerBufferSize;
-        }
+		/**
+		 * Returns the max wait time for the bulkhead in milliseconds.
+		 *
+		 * @return the failure rate threshold
+		 */
+		public Long getMaxWaitTime() {
+			return maxWaitTime;
+		}
 
-        public void setEventConsumerBufferSize(Integer eventConsumerBufferSize) {
-            this.eventConsumerBufferSize = eventConsumerBufferSize;
-        }
-    }
+		/**
+		 * Sets the max wait time for the bulkhead in milliseconds.
+		 *
+		 * @param maxWaitTime the max wait time
+		 */
+		public void setMaxWaitTime(Long maxWaitTime) {
+			this.maxWaitTime = maxWaitTime;
+		}
+
+		public Integer getEventConsumerBufferSize() {
+			return eventConsumerBufferSize;
+		}
+
+		public void setEventConsumerBufferSize(Integer eventConsumerBufferSize) {
+			this.eventConsumerBufferSize = eventConsumerBufferSize;
+		}
+
+		/**
+		 * Gets the shared configuration name. If this is set, the configuration builder will use the the shared
+		 * configuration backend over this one.
+		 *
+		 * @return The shared configuration name.
+		 */
+		@Nullable
+		public String getBaseConfig() {
+			return baseConfig;
+		}
+
+		/**
+		 * Sets the shared configuration name. If this is set, the configuration builder will use the the shared
+		 * configuration backend over this one.
+		 *
+		 * @param baseConfig The shared configuration name.
+		 */
+		public void setBaseConfig(String baseConfig) {
+			this.baseConfig = baseConfig;
+		}
+	}
 }

@@ -18,9 +18,9 @@ package io.github.resilience4j.ratelimiter;
 import io.github.resilience4j.ratelimiter.autoconfigure.RateLimiterProperties;
 import io.github.resilience4j.ratelimiter.configure.RateLimiterAspect;
 import io.github.resilience4j.ratelimiter.event.RateLimiterEvent;
-import io.github.resilience4j.ratelimiter.monitoring.model.RateLimiterEndpointResponse;
-import io.github.resilience4j.ratelimiter.monitoring.model.RateLimiterEventDTO;
-import io.github.resilience4j.ratelimiter.monitoring.model.RateLimiterEventsEndpointResponse;
+import io.github.resilience4j.ratelimiter.monitoring.endpoint.RateLimiterEndpointResponse;
+import io.github.resilience4j.ratelimiter.monitoring.endpoint.RateLimiterEventDTO;
+import io.github.resilience4j.ratelimiter.monitoring.endpoint.RateLimiterEventsEndpointResponse;
 import io.github.resilience4j.service.test.DummyService;
 import io.github.resilience4j.service.test.TestApplication;
 import org.junit.Test;
@@ -110,7 +110,7 @@ public class RateLimiterAutoConfigurationTest {
         List<RateLimiterEventDTO> eventsList = rateLimiterEventList.getBody().getEventsList();
         assertThat(eventsList).isNotEmpty();
         RateLimiterEventDTO lastEvent = eventsList.get(eventsList.size() - 1);
-        assertThat(lastEvent.getRateLimiterEventType()).isEqualTo(RateLimiterEvent.Type.FAILED_ACQUIRE);
+        assertThat(lastEvent.getType()).isEqualTo(RateLimiterEvent.Type.FAILED_ACQUIRE);
 
         await()
             .atMost(2, TimeUnit.SECONDS)

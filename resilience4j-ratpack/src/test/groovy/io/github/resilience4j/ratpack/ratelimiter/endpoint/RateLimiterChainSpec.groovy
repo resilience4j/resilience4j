@@ -92,7 +92,7 @@ class RateLimiterChainSpec extends Specification {
 
         then: "it works"
         dto.rateLimiterEvents.size() == 12
-        dto.rateLimiterEvents.get(11).rateLimiterEventType == RateLimiterEvent.Type.FAILED_ACQUIRE
+        dto.rateLimiterEvents.get(11).type == RateLimiterEvent.Type.FAILED_ACQUIRE
 
         when: "we get events for a single rate limiter"
         actual = client.get('ratelimiter/events/test1')
@@ -100,7 +100,7 @@ class RateLimiterChainSpec extends Specification {
 
         then: "it works"
         dto.rateLimiterEvents.size() == 6
-        dto.rateLimiterEvents.get(5).rateLimiterEventType == RateLimiterEvent.Type.FAILED_ACQUIRE
+        dto.rateLimiterEvents.get(5).type == RateLimiterEvent.Type.FAILED_ACQUIRE
 
         when: "we get events for a single rate limiter by type"
         actual = client.get('ratelimiter/events/test1/failed_acquire')
@@ -108,7 +108,7 @@ class RateLimiterChainSpec extends Specification {
 
         then: "it works"
         dto.rateLimiterEvents.size() == 1
-        dto.rateLimiterEvents.get(0).rateLimiterEventType == RateLimiterEvent.Type.FAILED_ACQUIRE
+        dto.rateLimiterEvents.get(0).type == RateLimiterEvent.Type.FAILED_ACQUIRE
 
         when: "we get events for a single circuit breaker by success type"
         actual = client.get('ratelimiter/events/test1/successful_acquire')
@@ -117,7 +117,7 @@ class RateLimiterChainSpec extends Specification {
         then: "it works"
         dto.rateLimiterEvents.size() == 5
         (0..4).each { i ->
-            assert dto.rateLimiterEvents.get(i).rateLimiterEventType == RateLimiterEvent.Type.SUCCESSFUL_ACQUIRE
+            assert dto.rateLimiterEvents.get(i).type == RateLimiterEvent.Type.SUCCESSFUL_ACQUIRE
         }
 
         and:

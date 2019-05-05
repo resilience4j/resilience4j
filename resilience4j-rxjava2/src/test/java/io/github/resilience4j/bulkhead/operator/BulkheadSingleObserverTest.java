@@ -1,14 +1,5 @@
 package io.github.resilience4j.bulkhead.operator;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-
-import java.io.IOException;
-import java.util.Arrays;
-
 import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.bulkhead.BulkheadConfig;
 import io.github.resilience4j.bulkhead.BulkheadFullException;
@@ -17,6 +8,13 @@ import io.reactivex.Single;
 import io.reactivex.SingleObserver;
 import io.reactivex.disposables.Disposable;
 import org.junit.Test;
+
+import java.io.IOException;
+import java.util.Arrays;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
 
 /**
  * Unit test for {@link BulkheadSingleObserver} using {@link BulkheadOperator}.
@@ -49,7 +47,7 @@ public class BulkheadSingleObserverTest {
 
     @Test
     public void shouldEmitErrorWithBulkheadFullException() {
-        bulkhead.isCallPermitted();
+        bulkhead.tryObtainPermission();
 
         Single.just(1)
             .lift(BulkheadOperator.of(bulkhead))
@@ -101,7 +99,7 @@ public class BulkheadSingleObserverTest {
         Disposable disposable = mock(Disposable.class);
         SingleObserver childObserver = mock(SingleObserver.class);
         SingleObserver decoratedObserver = BulkheadOperator.of(bulkhead).apply(childObserver);
-        bulkhead.isCallPermitted();
+        bulkhead.tryObtainPermission();
         assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(0);
         decoratedObserver.onSubscribe(disposable);
 

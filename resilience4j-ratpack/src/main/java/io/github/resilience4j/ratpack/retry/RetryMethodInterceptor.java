@@ -107,8 +107,8 @@ public class RetryMethodInterceptor implements MethodInterceptor {
                     try {
                         Object result = recoveryFunction.apply(t);
                         promise.complete(result);
-                    } catch (Throwable t3) {
-                        promise.completeExceptionally(t3);
+                    } catch (Exception exception) {
+                        promise.completeExceptionally(exception);
                     }
                 }
             } else {
@@ -138,8 +138,8 @@ public class RetryMethodInterceptor implements MethodInterceptor {
                 } catch (Exception e1) {
                     try {
                         context.onError(e1);
-                    } catch (Throwable t) {
-                        return recoveryFunction.apply(t);
+                    } catch (Exception e2) {
+                        return recoveryFunction.apply(e2);
                     }
                 }
             }
