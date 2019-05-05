@@ -16,19 +16,19 @@
 package io.github.resilience4j.micrometer.tagged;
 
 import io.github.resilience4j.bulkhead.Bulkhead;
+import io.github.resilience4j.bulkhead.BulkheadConfig;
 import io.github.resilience4j.bulkhead.BulkheadRegistry;
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.Meter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
-
 import org.junit.Before;
 import org.junit.Test;
 
-import java.util.Arrays;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
+import static io.github.resilience4j.micrometer.tagged.MetricsTestHelper.findGaugeByNamesTag;
 import static io.github.resilience4j.micrometer.tagged.TaggedBulkheadMetrics.MetricNames.DEFAULT_BULKHEAD_AVAILABLE_CONCURRENT_CALLS_METRIC_NAME;
 import static io.github.resilience4j.micrometer.tagged.TaggedBulkheadMetrics.MetricNames.DEFAULT_BULKHEAD_MAX_ALLOWED_CONCURRENT_CALLS_METRIC_NAME;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -37,18 +37,74 @@ public class TaggedBulkheadMetricsTest {
 
     private MeterRegistry meterRegistry;
     private Bulkhead bulkhead;
+    private BulkheadRegistry bulkheadRegistry;
+    private TaggedBulkheadMetrics taggedBulkheadMetrics;
 
     @Before
     public void setUp() {
         meterRegistry = new SimpleMeterRegistry();
-        BulkheadRegistry bulkheadRegistry = BulkheadRegistry.ofDefaults();
+        bulkheadRegistry = BulkheadRegistry.ofDefaults();
         bulkhead = bulkheadRegistry.bulkhead("backendA");
 
         // record some basic stats
-        bulkhead.isCallPermitted();
-        bulkhead.isCallPermitted();
+        bulkhead.tryObtainPermission();
+        bulkhead.tryObtainPermission();
 
-        TaggedBulkheadMetrics.ofBulkheadRegistry(bulkheadRegistry).bindTo(meterRegistry);
+        taggedBulkheadMetrics = TaggedBulkheadMetrics.ofBulkheadRegistry(bulkheadRegistry);
+        taggedBulkheadMetrics.bindTo(meterRegistry);
+    }
+
+    @Test
+    public void shouldAddMetricsForANewlyCreatedRetry() {
+        Bulkhead newBulkhead = bulkheadRegistry.bulkhead("backendB");
+
+        assertThat(taggedBulkheadMetrics.meterIdMap).containsKeys("backendA", "backendB");
+        assertThat(taggedBulkheadMetrics.meterIdMap.get("backendA")).hasSize(2);
+        assertThat(taggedBulkheadMetrics.meterIdMap.get("backendB")).hasSize(2);
+
+        List<Meter> meters = meterRegistry.getMeters();
+        assertThat(meters).hasSize(4);
+
+        Collection<Gauge> gauges = meterRegistry.get(DEFAULT_BULKHEAD_MAX_ALLOWED_CONCURRENT_CALLS_METRIC_NAME).gauges();
+
+        Optional<Gauge> successful = findGaugeByNamesTag(gauges, newBulkhead.getName());
+        assertThat(successful).isPresent();
+        assertThat(successful.get().value()).isEqualTo(newBulkhead.getMetrics().getMaxAllowedConcurrentCalls());
+    }
+
+    @Test
+    public void shouldRemovedMetricsForRemovedRetry() {
+        List<Meter> meters = meterRegistry.getMeters();
+        assertThat(meters).hasSize(2);
+
+        assertThat(taggedBulkheadMetrics.meterIdMap).containsKeys("backendA");
+        bulkheadRegistry.remove("backendA");
+
+        assertThat(taggedBulkheadMetrics.meterIdMap).isEmpty();
+
+        meters = meterRegistry.getMeters();
+        assertThat(meters).isEmpty();
+    }
+
+    @Test
+    public void shouldReplaceMetrics() {
+        Collection<Gauge> gauges = meterRegistry.get(DEFAULT_BULKHEAD_MAX_ALLOWED_CONCURRENT_CALLS_METRIC_NAME).gauges();
+
+        Optional<Gauge> successful = findGaugeByNamesTag(gauges, bulkhead.getName());
+        assertThat(successful).isPresent();
+        assertThat(successful.get().value()).isEqualTo(bulkhead.getMetrics().getMaxAllowedConcurrentCalls());
+
+        Bulkhead newBulkhead = Bulkhead.of(bulkhead.getName(), BulkheadConfig.custom()
+                .maxConcurrentCalls(100).build());
+
+        bulkheadRegistry.replace(bulkhead.getName(), newBulkhead);
+
+        gauges = meterRegistry.get(DEFAULT_BULKHEAD_MAX_ALLOWED_CONCURRENT_CALLS_METRIC_NAME).gauges();
+
+        successful = findGaugeByNamesTag(gauges, newBulkhead.getName());
+        assertThat(successful).isPresent();
+        assertThat(successful.get().value()).isEqualTo(newBulkhead.getMetrics().getMaxAllowedConcurrentCalls());
+
     }
 
     @Test

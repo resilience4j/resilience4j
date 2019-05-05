@@ -54,7 +54,7 @@ public class RetryTransformer<T> extends AbstractTransformer<T> {
     }
 
     @Override
-    public Upstream<T> apply(Upstream<? extends T> upstream) throws Exception {
+    public Upstream<T> apply(Upstream<? extends T> upstream) {
         return down -> {
             Retry.Context context = retry.context();
             Downstream<T> downstream = new Downstream<T>() {
@@ -70,15 +70,15 @@ public class RetryTransformer<T> extends AbstractTransformer<T> {
                     try {
                         context.onError((Exception) throwable);
                         upstream.connect(this);
-                    } catch (Throwable t) {
+                    } catch (Exception ex1) {
                         if (recoverer != null) {
                             try {
-                                down.success(recoverer.apply(t));
-                            } catch (Throwable t2) {
-                                down.error(t2);
+                                down.success(recoverer.apply(ex1));
+                            } catch (Exception ex2) {
+                                down.error(ex2);
                             }
                         } else {
-                            down.error(t);
+                            down.error(ex1);
                         }
                     }
                 }

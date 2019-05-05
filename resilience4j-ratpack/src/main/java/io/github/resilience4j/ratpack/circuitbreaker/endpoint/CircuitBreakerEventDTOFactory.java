@@ -19,6 +19,8 @@ import io.github.resilience4j.circuitbreaker.event.*;
 
 class CircuitBreakerEventDTOFactory {
 
+    private CircuitBreakerEventDTOFactory(){}
+
     static CircuitBreakerEventDTO createCircuitBreakerEventDTO(CircuitBreakerEvent event){
         switch(event.getEventType()) {
             case ERROR:

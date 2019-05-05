@@ -2,9 +2,11 @@
 
 ==== Gradle
 
-Add the Spring Boot Starter of Resilience4j to your compile dependency:
+Add the Spring Boot Starter of Resilience4j to your compile dependency.
+You also need Spring Boot Actuator and Spring Boot AOP.
 
-```
+[source,groovy, subs="attributes"]
+----
 repositories {
 	maven { url 'http://oss.jfrog.org/artifactory/oss-snapshot-local/' }
 	mavenCentral()
@@ -13,40 +15,22 @@ repositories {
 
 dependencies {
 	compile('io.github.resilience4j:resilience4j-spring-boot:{release-version}')
+    compile('org.springframework.boot:spring-boot-starter-actuator')
+    compile('org.springframework.boot:spring-boot-starter-aop')
 }
-```
+----
 
 ==== Supported Types by Spring boot starter resilience aspects
 
-Rate limiter , Retry , Circuit breaker and Bulkhead now support Synchronous return types ,CompletableFutures , RxJava2 types and Reactor types .
+RateLimiter, Retry, CircuitBreaker and Bulkhead annotations support synchronous return types, asynchronous types like CompletableFutures and reactive types like RxJava2 and Reactor.
 
 ==== Monitoring
 
 Spring Boot Actuator health information can be used to check the status of your running application.
 It is often used by monitoring software to alert someone if a production system has serious issues.
 
-==== Retry
-When you enable retry, metrics are automatically published on the metrics endpoint.
-
-For example:
-
-[source,json]
-----
-{
-    "names": [
-        "resilience4j.retry.backendA.failedCallsWithoutRetry",
-        "resilience4j.retry.backendA.failedCallsWithRetry",
-        "resilience4j.retry.backendA.successCalls",
-        "resilience4j.retry.backendA.successCallsWithRetry"
-        ]
-}
-----
-
-When you want to publish Retry/AsyncRetry endpoints on the Prometheus endpoint, you have to add the dependency `io.micrometer:micrometer-registry-prometheus`.
-and you have same metrics exposed there , check circuit breaker below for more information about the example.
-
 ==== CircuitBreaker
-This demo publishes the status and metrics of all CircuitBreakers via a custom `CircuitBreakerHealthIndicator`.
+The starter publishes the status and metrics of all CircuitBreakers via a custom `CircuitBreakerHealthIndicator`.
 A closed CircuitBreaker state is mapped to UP, an open state to DOWN and a half-open state to UNKNOWN.
 
 For example:
@@ -122,8 +106,28 @@ resilience4j_circuitbreaker_states{name="backendA",state="open",} 0.0
 resilience4j_circuitbreaker_states{name="backendA",state="half_open",} 0.0
 ----
 
+==== Retry
+When you enable retry, metrics are automatically published on the metrics endpoint.
+
+For example:
+
+[source,json]
+----
+{
+    "names": [
+        "resilience4j.retry.backendA.failedCallsWithoutRetry",
+        "resilience4j.retry.backendA.failedCallsWithRetry",
+        "resilience4j.retry.backendA.successCalls",
+        "resilience4j.retry.backendA.successCallsWithRetry"
+        ]
+}
+----
+
+When you want to publish Retry/AsyncRetry endpoints on the Prometheus endpoint, you have to add the dependency `io.micrometer:micrometer-registry-prometheus`.
+and you have same metrics exposed there , check circuit breaker below for more information about the example.
+
 ==== RateLimiter
-This demo publishes the status and metrics of all RateLimiter via a custom `RateLimiterHealthIndicator`.
+The starter publishes the status and metrics of all RateLimiter via a custom `RateLimiterHealthIndicator`.
 RateLimiterHealthIndicator changes its state DOWN only if there is some permission waiting threads
 and they won't be able to unblock until timeout.
 
@@ -237,6 +241,18 @@ public Flowable<String> doSomethingFlowable(boolean throwException) {
 
 }
 ----
+
+Beyond the config file configuration, the Spring Bean configuration is now using @ConditionalOnMissingBean to allow for overriding default behavior.
+These Beans can be overridden in your application's Spring Bean configuration:
+
+* RetryRegistry
+* RetryAspect
+* RxJava2RetryAspectExt
+* ReactorRetryAspectExt
+
+Note that in Spring Boot 1.x, EventConsumerRegistry<RetryEvent> cannot be overridden because of limitations of the @ConditionalOnMissingBean implementation.
+To override this, go to at least Spring Boot 2.1.x.
+
 ===== CircuitBreaker
 You can configure your CircuitBreakers in Spring Boot's `application.yml` config file.
 For example
@@ -271,6 +287,38 @@ resilience4j.circuitbreaker:
                 - org.springframework.web.client.HttpClientErrorException
 ----
 
+You can also override/partial-override/share default configuration for your CircuitBreakers in Spring Boot's `application.yml` config file.
+For example
+
+[source,yaml]
+----
+resilience4j.circuitbreaker:
+    configs:
+        default:
+            ringBufferSizeInClosedState: 100
+            ringBufferSizeInHalfOpenState: 10
+            waitInterval: 10000
+            failureRateThreshold: 60
+            eventConsumerBufferSize: 10
+            registerHealthIndicator: true
+    backends:
+        backendA:
+            baseConfig: default
+        backendB:
+            baseConfig: default
+----
+
+Beyond the config file configuration, the Spring Bean configuration is now using @ConditionalOnMissingBean to allow for overriding default behavior.
+These Beans can be overridden in your application's Spring Bean configuration:
+
+* CircuitBreakerRegistry
+* CircuitBreakerAspect
+* RxJava2CircuitBreakerAspectExt
+* ReactorCircuitBreakerAspectExt
+
+Note that in Spring Boot 1.x, EventConsumerRegistry<CircuitBreakerEvent> cannot be overridden because of limitations of the @ConditionalOnMissingBean implementation.
+To override this, go to at least Spring Boot 2.1.x.
+
 ===== RateLimiter
 You can configure your CircuitBreakers in Spring Boot's `application.yml` config file.
 For example
@@ -291,6 +339,15 @@ resilience4j.ratelimiter:
             limitRefreshPeriodInMillis: 500
             timeoutInMillis: 3000
 ----
+
+Beyond the config file configuration, the Spring Bean configuration is now using @ConditionalOnMissingBean to allow for overriding default behavior.
+These Beans can be overridden in your application's Spring Bean configuration:
+
+* RateLimiterRegistry
+* RateLimiterAspect
+
+Note that in Spring Boot 1.x, EventConsumerRegistry<RateLimiterEvent> cannot be overridden because of limitations of the @ConditionalOnMissingBean implementation.
+To override this, go to at least Spring Boot 2.1.x.
 
 ===== Explicit ordering for CircuitBreaker and RateLimiter aspects
 You can adjust `RateLimiterProperties.rateLimiterAspectOrder` and `CircuitBreakerProperties.circuitBreakerAspectOrder`
@@ -519,18 +576,18 @@ Example of response:
   "eventsList": [
     {
       "rateLimiterName": "backendA",
-      "rateLimiterEventType": "SUCCESSFUL_ACQUIRE",
-      "rateLimiterCreationTime": "2017-05-05T21:29:40.463+03:00[Europe/Uzhgorod]"
+      "type": "SUCCESSFUL_ACQUIRE",
+      "creationTime": "2017-05-05T21:29:40.463+03:00[Europe/Uzhgorod]"
     },
     {
       "rateLimiterName": "backendA",
-      "rateLimiterEventType": "SUCCESSFUL_ACQUIRE",
-      "rateLimiterCreationTime": "2017-05-05T21:29:40.469+03:00[Europe/Uzhgorod]"
+      "type": "SUCCESSFUL_ACQUIRE",
+      "creationTime": "2017-05-05T21:29:40.469+03:00[Europe/Uzhgorod]"
     },
     {
       "rateLimiterName": "backendA",
-      "rateLimiterEventType": "FAILED_ACQUIRE",
-      "rateLimiterCreationTime": "2017-05-05T21:29:41.268+03:00[Europe/Uzhgorod]"
+      "type": "FAILED_ACQUIRE",
+      "creationTime": "2017-05-05T21:29:41.268+03:00[Europe/Uzhgorod]"
     }
   ]
 }

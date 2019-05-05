@@ -15,18 +15,18 @@
  */
 package io.github.resilience4j.retry.autoconfigure;
 
+import com.codahale.metrics.MetricRegistry;
+import io.github.resilience4j.metrics.RetryMetrics;
+import io.github.resilience4j.retry.RetryRegistry;
 import org.springframework.boot.actuate.autoconfigure.MetricRepositoryAutoConfiguration;
 import org.springframework.boot.actuate.autoconfigure.MetricsDropwizardAutoConfiguration;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-
-import com.codahale.metrics.MetricRegistry;
-
-import io.github.resilience4j.metrics.RetryMetrics;
-import io.github.resilience4j.retry.RetryRegistry;
 
 /**
  * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration
@@ -37,9 +37,11 @@ import io.github.resilience4j.retry.RetryRegistry;
 @ConditionalOnClass(MetricRegistry.class)
 @AutoConfigureAfter(value = {RetryAutoConfiguration.class, MetricsDropwizardAutoConfiguration.class})
 @AutoConfigureBefore(MetricRepositoryAutoConfiguration.class)
+@ConditionalOnProperty(value = "resilience4j.retry.metrics.enabled", matchIfMissing = true)
 public class RetryMetricsAutoConfiguration {
 
 	@Bean
+	@ConditionalOnMissingBean
 	public RetryMetrics registerRetryMetrics(RetryRegistry retryRegistry, MetricRegistry metricRegistry) {
 		RetryMetrics retryMetrics = RetryMetrics.ofRetryRegistry(retryRegistry);
 		metricRegistry.registerAll(retryMetrics);

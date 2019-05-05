@@ -24,7 +24,7 @@ import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Scheduler;
 import reactor.core.scheduler.Schedulers;
 
-import java.util.function.Function;
+import java.util.function.UnaryOperator;
 
 
 /**
@@ -32,7 +32,7 @@ import java.util.function.Function;
  *
  * @param <T> the value type of the upstream and downstream
  */
-public class RateLimiterOperator<T> implements Function<Publisher<T>, Publisher<T>> {
+public class RateLimiterOperator<T> implements UnaryOperator<Publisher<T>> {
     private final RateLimiter rateLimiter;
     private final Scheduler scheduler;
 

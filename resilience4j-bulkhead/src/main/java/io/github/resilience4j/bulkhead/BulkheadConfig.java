@@ -23,83 +23,100 @@ package io.github.resilience4j.bulkhead;
  */
 public class BulkheadConfig {
 
-    public static final int DEFAULT_MAX_CONCURRENT_CALLS = 25;
-    public static final long DEFAULT_MAX_WAIT_TIME = 0L;
+	public static final int DEFAULT_MAX_CONCURRENT_CALLS = 25;
+	public static final long DEFAULT_MAX_WAIT_TIME = 0L;
 
-    private int maxConcurrentCalls = DEFAULT_MAX_CONCURRENT_CALLS;
-    private long maxWaitTime = DEFAULT_MAX_WAIT_TIME;
+	private int maxConcurrentCalls = DEFAULT_MAX_CONCURRENT_CALLS;
+	private long maxWaitTime = DEFAULT_MAX_WAIT_TIME;
 
-    private BulkheadConfig() { }
+	private BulkheadConfig() {
+	}
 
-    public int getMaxConcurrentCalls() {
-        return maxConcurrentCalls;
-    }
+	/**
+	 * Returns a builder to create a custom BulkheadConfig.
+	 *
+	 * @return a {@link Builder}
+	 */
+	public static Builder custom() {
+		return new Builder();
+	}
 
-    public long getMaxWaitTime() {
-        return maxWaitTime;
-    }
+	/**
+	 * Returns a builder to create a custom BulkheadConfig.
+	 *
+	 * @return a {@link Builder}
+	 */
+	public static Builder from(BulkheadConfig baseConfig) {
+		return new Builder(baseConfig);
+	}
 
-    /**
-     * Returns a builder to create a custom BulkheadConfig.
-     *
-     * @return a {@link Builder}
-     */
-    public static Builder custom(){
-        return new Builder();
-    }
+	/**
+	 * Creates a default Bulkhead configuration.
+	 *
+	 * @return a default Bulkhead configuration.
+	 */
+	public static BulkheadConfig ofDefaults() {
+		return new Builder().build();
+	}
 
-    /**
-     * Creates a default Bulkhead configuration.
-     *
-     * @return a default Bulkhead configuration.
-     */
-    public static BulkheadConfig ofDefaults() {
-        return new Builder().build();
-    }
+	public int getMaxConcurrentCalls() {
+		return maxConcurrentCalls;
+	}
 
-    public static class Builder {
+	public long getMaxWaitTime() {
+		return maxWaitTime;
+	}
 
-        private BulkheadConfig config = new BulkheadConfig();
+	public static class Builder {
 
-        /**
-         * Configures the max amount of concurrent calls the bulkhead will support.
-         *
-         * @param maxConcurrentCalls max concurrent calls
-         * @return the BulkheadConfig.Builder
-         */
-        public Builder maxConcurrentCalls(int maxConcurrentCalls) {
-            if (maxConcurrentCalls < 1) {
-                throw new IllegalArgumentException("maxConcurrentCalls must be a positive integer value >= 1");
-            }
-            config.maxConcurrentCalls = maxConcurrentCalls;
-            return this;
-        }
+		private BulkheadConfig config = new BulkheadConfig();
 
-        /**
-         * Configures a maximum amount of time in ms the calling thread will wait to enter the bulkhead. If bulkhead has space available, entry
-         * is guaranteed and immediate. If bulkhead is full, calling threads will contest for space, if it becomes available. maxWaitTime can be set to 0.
-         *
-         * Note: for threads running on an event-loop or equivalent (rx computation pool, etc), setting maxWaitTime to 0 is highly recommended. Blocking
-         * an event-loop thread will most likely have a negative effect on application throughput.
-         *
-         * @param maxWaitTime maximum wait time for bulkhead entry
-         * @return the BulkheadConfig.Builder
-         */
-        public Builder maxWaitTime(long maxWaitTime) {
-            if (maxWaitTime < 0) {
-                throw new IllegalArgumentException("maxWaitTime must be a positive integer value >= 0");
-            }
-            config.maxWaitTime = maxWaitTime;
-            return this;
-        }
+		public Builder() {
+		}
 
-        /**
-         * Builds a BulkheadConfig
-         *
-         * @return the BulkheadConfig
-         */
-        public BulkheadConfig build() {
-            return config;
-        }
-    }
+		public Builder(BulkheadConfig bulkheadConfig) {
+			this.config = bulkheadConfig;
+		}
+
+		/**
+		 * Configures the max amount of concurrent calls the bulkhead will support.
+		 *
+		 * @param maxConcurrentCalls max concurrent calls
+		 * @return the BulkheadConfig.Builder
+		 */
+		public Builder maxConcurrentCalls(int maxConcurrentCalls) {
+			if (maxConcurrentCalls < 0) {
+				throw new IllegalArgumentException("maxConcurrentCalls must be an integer value >= 0");
+			}
+			config.maxConcurrentCalls = maxConcurrentCalls;
+			return this;
+		}
+
+		/**
+		 * Configures a maximum amount of time in ms the calling thread will wait to enter the bulkhead. If bulkhead has space available, entry
+		 * is guaranteed and immediate. If bulkhead is full, calling threads will contest for space, if it becomes available. maxWaitTime can be set to 0.
+		 * <p>
+		 * Note: for threads running on an event-loop or equivalent (rx computation pool, etc), setting maxWaitTime to 0 is highly recommended. Blocking
+		 * an event-loop thread will most likely have a negative effect on application throughput.
+		 *
+		 * @param maxWaitTime maximum wait time for bulkhead entry
+		 * @return the BulkheadConfig.Builder
+		 */
+		public Builder maxWaitTime(long maxWaitTime) {
+			if (maxWaitTime < 0) {
+				throw new IllegalArgumentException("maxWaitTime must be a positive integer value >= 0");
+			}
+			config.maxWaitTime = maxWaitTime;
+			return this;
+		}
+
+		/**
+		 * Builds a BulkheadConfig
+		 *
+		 * @return the BulkheadConfig
+		 */
+		public BulkheadConfig build() {
+			return config;
+		}
+	}
 }

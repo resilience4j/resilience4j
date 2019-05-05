@@ -1,13 +1,15 @@
 apply plugin: 'groovy'
 
 dependencies {
-    compile ( libraries.ratpack )
+    implementation ( libraries.groovy )
+    compileOnly ( libraries.ratpack )
     compile project(':resilience4j-bulkhead')
     compile project(':resilience4j-circuitbreaker')
     compile project(':resilience4j-ratelimiter')
     compile project(':resilience4j-retry')
     compile project(':resilience4j-consumer')
     compile project(':resilience4j-reactor')
+    compile ( libraries.reactor )
     compileOnly ( libraries.ratpack_metrics )
     compileOnly project(':resilience4j-prometheus')
     compileOnly project(':resilience4j-metrics')
@@ -16,4 +18,6 @@ dependencies {
     testCompile ( libraries.ratpack_metrics )
     testCompile project(':resilience4j-prometheus')
     testCompile project(':resilience4j-metrics')
+    testCompile ( libraries.ratpack )
 }
+ext.moduleName='io.github.resilience4j.ratpack'

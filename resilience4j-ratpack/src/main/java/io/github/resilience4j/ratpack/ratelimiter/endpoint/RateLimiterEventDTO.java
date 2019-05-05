@@ -25,15 +25,15 @@ public class RateLimiterEventDTO {
     @Nullable
     private String rateLimiterName;
     @Nullable
-    private RateLimiterEvent.Type rateLimiterEventType;
+    private RateLimiterEvent.Type type;
     @Nullable
-    private String rateLimiterCreationTime;
+    private String creationTime;
 
     public static RateLimiterEventDTO createRateLimiterEventDTO(RateLimiterEvent rateLimiterEvent) {
         RateLimiterEventDTO dto = new RateLimiterEventDTO();
         dto.setRateLimiterName(rateLimiterEvent.getRateLimiterName());
-        dto.setRateLimiterEventType(rateLimiterEvent.getEventType());
-        dto.setRateLimiterCreationTime(rateLimiterEvent.getCreationTime().toString());
+        dto.setType(rateLimiterEvent.getEventType());
+        dto.setCreationTime(rateLimiterEvent.getCreationTime().toString());
         return dto;
     }
 
@@ -47,20 +47,20 @@ public class RateLimiterEventDTO {
     }
 
     @Nullable
-    public RateLimiterEvent.Type getRateLimiterEventType() {
-        return rateLimiterEventType;
+    public RateLimiterEvent.Type getType() {
+        return type;
     }
 
-    public void setRateLimiterEventType(RateLimiterEvent.Type rateLimiterEventType) {
-        this.rateLimiterEventType = rateLimiterEventType;
+    public void setType(RateLimiterEvent.Type type) {
+        this.type = type;
     }
 
     @Nullable
-    public String getRateLimiterCreationTime() {
-        return rateLimiterCreationTime;
+    public String getCreationTime() {
+        return creationTime;
     }
 
-    public void setRateLimiterCreationTime(String rateLimiterCreationTime) {
-        this.rateLimiterCreationTime = rateLimiterCreationTime;
+    public void setCreationTime(String creationTime) {
+        this.creationTime = creationTime;
     }
 }

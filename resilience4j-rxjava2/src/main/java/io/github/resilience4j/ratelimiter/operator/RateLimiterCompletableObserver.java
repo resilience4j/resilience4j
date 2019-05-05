@@ -9,7 +9,7 @@ import io.reactivex.disposables.Disposable;
  * Consumes one permit when subscribed.
  */
 final class RateLimiterCompletableObserver extends DisposableRateLimiter implements CompletableObserver {
-    private final CompletableObserver childObserver;
+    private final transient CompletableObserver childObserver;
 
     RateLimiterCompletableObserver(RateLimiter rateLimiter, CompletableObserver childObserver) {
         super(rateLimiter);

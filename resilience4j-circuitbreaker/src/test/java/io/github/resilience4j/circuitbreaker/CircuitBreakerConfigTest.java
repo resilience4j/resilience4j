@@ -60,7 +60,7 @@ public class CircuitBreakerConfigTest {
         CircuitBreakerConfig.custom().failureRateThreshold(101).build();
     }
 
-    @Test()
+    @Test
     public void shouldSetDefaultSettings() {
         CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.ofDefaults();
         then(circuitBreakerConfig.getFailureRateThreshold()).isEqualTo(CircuitBreakerConfig.DEFAULT_MAX_FAILURE_THRESHOLD);
@@ -70,37 +70,37 @@ public class CircuitBreakerConfigTest {
         then(circuitBreakerConfig.getRecordFailurePredicate()).isNotNull();
     }
 
-    @Test()
+    @Test
     public void shouldSetFailureRateThreshold() {
         CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom().failureRateThreshold(25).build();
         then(circuitBreakerConfig.getFailureRateThreshold()).isEqualTo(25);
     }
 
-    @Test()
+    @Test
     public void shouldSetLowFailureRateThreshold() {
         CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom().failureRateThreshold(0.001f).build();
         then(circuitBreakerConfig.getFailureRateThreshold()).isEqualTo(0.001f);
     }
 
-    @Test()
+    @Test
     public void shouldSetRingBufferSizeInClosedState() {
         CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom().ringBufferSizeInClosedState(1000).build();
         then(circuitBreakerConfig.getRingBufferSizeInClosedState()).isEqualTo(1000);
     }
 
-    @Test()
+    @Test
     public void shouldSetRingBufferSizeInHalfOpenState() {
         CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom().ringBufferSizeInHalfOpenState(100).build();
         then(circuitBreakerConfig.getRingBufferSizeInHalfOpenState()).isEqualTo(100);
     }
 
-    @Test()
+    @Test
     public void shouldSetWaitInterval() {
         CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom().waitDurationInOpenState(Duration.ofSeconds(1)).build();
         then(circuitBreakerConfig.getWaitDurationInOpenState().getSeconds()).isEqualTo(1);
     }
 
-    @Test()
+    @Test
     public void shouldUseRecordFailureThrowablePredicate() {
         CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom()
                 .recordFailure(TEST_PREDICATE).build();
@@ -120,7 +120,7 @@ public class CircuitBreakerConfigTest {
     private static class ExtendsException2 extends Exception {}
     private static class ExtendsError extends Error {}
 
-    @Test()
+    @Test
     public void shouldUseIgnoreExceptionToBuildPredicate() {
         CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom()
                 .ignoreExceptions(RuntimeException.class, ExtendsExtendsException.class).build();
@@ -134,7 +134,7 @@ public class CircuitBreakerConfigTest {
         then(failurePredicate.test(new ExtendsExtendsException())).isEqualTo(false); // explicitly excluded
     }
 
-   @Test()
+    @Test
     public void shouldUseRecordExceptionToBuildPredicate() {
         CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom()
                 .recordExceptions(RuntimeException.class, ExtendsExtendsException.class).build();
@@ -148,7 +148,7 @@ public class CircuitBreakerConfigTest {
         then(failurePredicate.test(new ExtendsExtendsException())).isEqualTo(true); // explicitly included
     }
 
-   @Test()
+    @Test
     public void shouldUseIgnoreExceptionOverRecordToBuildPredicate() {
         CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom()
                 .recordExceptions(RuntimeException.class, ExtendsExtendsException.class)
@@ -164,7 +164,7 @@ public class CircuitBreakerConfigTest {
         then(failurePredicate.test(new ExtendsExtendsException())).isEqualTo(false); // inherits excluded from ExtendsException
     }
 
-   @Test()
+    @Test
     public void shouldUseBothRecordToBuildPredicate() {
         CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom()
                 .recordFailure(TEST_PREDICATE) //1
@@ -183,7 +183,7 @@ public class CircuitBreakerConfigTest {
         then(failurePredicate.test(new ExtendsExtendsException())).isEqualTo(false); // inherits excluded from ExtendsException by 3
     }
 
-    @Test()
+    @Test
     public void builderMakePredicateShouldBuildPredicateAcceptingChildClass() {
         final Predicate<Throwable> predicate = CircuitBreakerConfig.Builder.makePredicate(RuntimeException.class);
         then(predicate.test(new RuntimeException())).isEqualTo(true);
@@ -197,7 +197,7 @@ public class CircuitBreakerConfigTest {
 
     }
 
-    @Test()
+    @Test
     public void shouldBuilderCreateConfigEveryTime() {
         final CircuitBreakerConfig.Builder builder =  CircuitBreakerConfig.custom();
         builder.ringBufferSizeInClosedState(5);
@@ -208,5 +208,22 @@ public class CircuitBreakerConfigTest {
         assertThat(config1.getRingBufferSizeInClosedState()).isEqualTo(5);
     }
 
+    @Test
+    public void shouldUseBaseConfigAndOverwriteProperties() {
+        CircuitBreakerConfig baseConfig = CircuitBreakerConfig.custom()
+                .waitDurationInOpenState(Duration.ofSeconds(100))
+                .ringBufferSizeInClosedState(1000)
+                .ringBufferSizeInHalfOpenState(100)
+                .failureRateThreshold(20f).build();
+
+        CircuitBreakerConfig extendedConfig = CircuitBreakerConfig.from(baseConfig)
+                .waitDurationInOpenState(Duration.ofSeconds(20))
+                .build();
+
+        then(extendedConfig.getFailureRateThreshold()).isEqualTo(20f);
+        then(extendedConfig.getWaitDurationInOpenState()).isEqualTo(Duration.ofSeconds(20));
+        then(extendedConfig.getRingBufferSizeInClosedState()).isEqualTo(1000);
+        then(extendedConfig.getRingBufferSizeInHalfOpenState()).isEqualTo(100);
+    }
 
 }

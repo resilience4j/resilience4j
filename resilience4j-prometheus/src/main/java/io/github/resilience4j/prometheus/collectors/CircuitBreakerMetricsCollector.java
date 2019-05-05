@@ -109,8 +109,15 @@ public class CircuitBreakerMetricsCollector extends Collector {
             "The maximum number of buffered calls",
             LabelNames.NAME
         );
+      
+      GaugeMetricFamily failureRateFamily = new GaugeMetricFamily(
+                names.getFailureRateMetricName(),
+                "The failure rate",
+                LabelNames.NAME
+        );
 
         final CircuitBreaker.State[] states = CircuitBreaker.State.values();
+      
         for (CircuitBreaker circuitBreaker : supplier.get()) {
             List<String> nameLabel = singletonList(circuitBreaker.getName());
 
@@ -126,9 +133,11 @@ public class CircuitBreakerMetricsCollector extends Collector {
 
             bufferedCallsFamily.addMetric(nameLabel, metrics.getNumberOfBufferedCalls());
             maxBufferedCallsFamily.addMetric(nameLabel, metrics.getMaxNumberOfBufferedCalls());
+
+            failureRateFamily.addMetric(nameLabel, metrics.getFailureRate());
         }
 
-        return asList(stateFamily, callsFamily, bufferedCallsFamily, maxBufferedCallsFamily);
+        return asList(stateFamily, callsFamily, bufferedCallsFamily, maxBufferedCallsFamily, failureRateFamily);
     }
 
     /** Defines possible configuration for metric names. */
@@ -138,6 +147,7 @@ public class CircuitBreakerMetricsCollector extends Collector {
         public static final String DEFAULT_CIRCUIT_BREAKER_STATE_METRIC_NAME = "resilience4j_circuitbreaker_state";
         public static final String DEFAULT_CIRCUIT_BREAKER_BUFFERED_CALLS = "resilience4j_circuitbreaker_buffered_calls";
         public static final String DEFAULT_CIRCUIT_BREAKER_MAX_BUFFERED_CALLS = "resilience4j_circuitbreaker_max_buffered_calls";
+        public static final String DEFAULT_CIRCUIT_BREAKER_FAILURE_RATE = "resilience4j_circuitbreaker_failure_rate";
 
         /**
          * Returns a builder for creating custom metric names.
@@ -156,6 +166,7 @@ public class CircuitBreakerMetricsCollector extends Collector {
         private String stateMetricName = DEFAULT_CIRCUIT_BREAKER_STATE_METRIC_NAME;
         private String bufferedCallsMetricName = DEFAULT_CIRCUIT_BREAKER_BUFFERED_CALLS;
         private String maxBufferedCallsMetricName = DEFAULT_CIRCUIT_BREAKER_MAX_BUFFERED_CALLS;
+        private String failureRateMetricName = DEFAULT_CIRCUIT_BREAKER_FAILURE_RATE;
 
         private MetricNames() {}
 
@@ -172,6 +183,11 @@ public class CircuitBreakerMetricsCollector extends Collector {
         /** Returns the metric name for max buffered calls, defaults to {@value DEFAULT_CIRCUIT_BREAKER_STATE_METRIC_NAME}. */
         public String getMaxBufferedCallsMetricName() {
             return maxBufferedCallsMetricName;
+        }
+
+        /** Returns the metric name for failure rate, defaults to {@value DEFAULT_CIRCUIT_BREAKER_FAILURE_RATE}. */
+        public String getFailureRateMetricName() {
+            return failureRateMetricName;
         }
 
         /** Returns the metric name for state, defaults to {@value DEFAULT_CIRCUIT_BREAKER_STATE_METRIC_NAME}. */
@@ -204,6 +220,12 @@ public class CircuitBreakerMetricsCollector extends Collector {
             /** Overrides the default metric name {@value MetricNames#DEFAULT_CIRCUIT_BREAKER_MAX_BUFFERED_CALLS} with a given one. */
             public Builder maxBufferedCallsMetricName(String maxBufferedCallsMetricName) {
                 metricNames.maxBufferedCallsMetricName = requireNonNull(maxBufferedCallsMetricName);
+                return this;
+            }
+
+            /** Overrides the default metric name {@value MetricNames#DEFAULT_CIRCUIT_BREAKER_FAILURE_RATE} with a given one. */
+            public Builder failureRateMetricName(String failureRateMetricName) {
+                metricNames.failureRateMetricName = requireNonNull(failureRateMetricName);
                 return this;
             }
 

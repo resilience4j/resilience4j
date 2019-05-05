@@ -1,22 +1,31 @@
 dependencies {
-    compile(libraries.spring_boot_aop)
-    compile(libraries.spring_boot_actuator)
-    compile(libraries.spring_boot_web)
-    compile(libraries.spring_reactor)
-    compile(libraries.hibernate_validator)
-    compileOnly(libraries.spring_boot_config_processor)
-    compileOnly(libraries.spring_boot_autoconfigure_processor)
-    compile project(':resilience4j-annotations')
-    compile project(':resilience4j-spring')
-    compile project(':resilience4j-circuitbreaker')
-    compile project(':resilience4j-ratelimiter')
-    compile project(':resilience4j-consumer')
+    compile project(':resilience4j-spring-boot-common')
+
     compileOnly project(':resilience4j-prometheus')
     compileOnly project(':resilience4j-metrics')
+    compileOnly project(':resilience4j-micrometer')
+
+    compileOnly(libraries.spring_boot_aop)
+    compileOnly(libraries.spring_boot_actuator)
+    compileOnly(libraries.spring_boot_web)
+    compileOnly(libraries.reactor)
+    compileOnly(libraries.metrics)
+    compileOnly(libraries.micrometer_spring_legacy)
+    compileOnly(libraries.hibernate_validator)
+    compileOnly(libraries.spring_boot_config_processor)
+    compileOnly(libraries.spring_boot_autoconfigure_processor)
+    
     testCompile(libraries.spring_boot_test)
+    testCompile(libraries.spring_boot_aop)
+    testCompile(libraries.spring_boot_actuator)
+    testCompile(libraries.spring_boot_web)    
+    testCompile(libraries.reactor)
+    testCompile(libraries.metrics)
+    testCompile(libraries.hibernate_validator)
     testCompile project(':resilience4j-prometheus')
     testCompile project(':resilience4j-metrics')
     testCompile(libraries.prometheus_spring_boot)
 }
 
 compileJava.dependsOn(processResources)
+ext.moduleName='io.github.resilience4j.springboot'

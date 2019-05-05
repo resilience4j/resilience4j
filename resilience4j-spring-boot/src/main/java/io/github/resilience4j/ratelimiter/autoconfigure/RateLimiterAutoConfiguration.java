@@ -29,7 +29,6 @@ import org.springframework.context.annotation.Import;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
-import io.github.resilience4j.ratelimiter.configure.RateLimiterConfiguration;
 import io.github.resilience4j.ratelimiter.event.RateLimiterEvent;
 import io.github.resilience4j.ratelimiter.monitoring.endpoint.RateLimiterEndpoint;
 import io.github.resilience4j.ratelimiter.monitoring.endpoint.RateLimiterEventsEndpoint;
@@ -42,7 +41,7 @@ import io.github.resilience4j.ratelimiter.monitoring.health.RateLimiterHealthInd
 @Configuration
 @ConditionalOnClass(RateLimiter.class)
 @EnableConfigurationProperties(RateLimiterProperties.class)
-@Import(RateLimiterConfiguration.class)
+@Import(RateLimiterConfigurationOnMissingBean.class)
 @AutoConfigureBefore(EndpointAutoConfiguration.class)
 public class RateLimiterAutoConfiguration {
     private final RateLimiterProperties rateLimiterProperties;
@@ -61,8 +60,8 @@ public class RateLimiterAutoConfiguration {
     }
 
     @Bean
-    public RateLimiterEventsEndpoint rateLimiterEventsEndpoint(EventConsumerRegistry<RateLimiterEvent> eventsConsumerRegistry, RateLimiterRegistry rateLimiterRegistry) {
-        return new RateLimiterEventsEndpoint(eventsConsumerRegistry, rateLimiterRegistry);
+    public RateLimiterEventsEndpoint rateLimiterEventsEndpoint(EventConsumerRegistry<RateLimiterEvent> eventsConsumerRegistry) {
+        return new RateLimiterEventsEndpoint(eventsConsumerRegistry);
     }
 
     @PostConstruct

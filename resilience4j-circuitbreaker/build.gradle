@@ -1,8 +1,7 @@
-apply plugin: 'jcstress'
-
 dependencies {
     compile project(':resilience4j-core')
     testCompile project(':resilience4j-test')
     jmh project(':resilience4j-rxjava2')
-    jcstress project(':resilience4j-rxjava2')
+    testCompile ( libraries.mock_clock )
 }
+ext.moduleName='io.github.resilience4j.circuitbreaker'

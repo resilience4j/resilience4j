@@ -22,7 +22,7 @@ import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
 import io.github.resilience4j.ratelimiter.event.RateLimiterEvent;
 import io.github.resilience4j.ratpack.Resilience4jConfig;
-import io.github.resilience4j.ratpack.adapter.ReactorAdapter;
+import io.github.resilience4j.reactor.adapter.ReactorAdapter;
 import io.vavr.collection.Seq;
 import ratpack.exec.Promise;
 import ratpack.func.Action;

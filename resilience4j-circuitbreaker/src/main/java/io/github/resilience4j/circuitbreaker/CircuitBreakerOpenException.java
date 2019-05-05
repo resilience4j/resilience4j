@@ -20,8 +20,19 @@ package io.github.resilience4j.circuitbreaker;
 
 /**
  * A {@link CircuitBreakerOpenException} signals that the CircuitBreaker is OPEN.
+ * @deprecated use {@link CallNotPermittedException} instead
  */
+@Deprecated
 public class CircuitBreakerOpenException extends RuntimeException {
+
+    /**
+     * The constructor with a CircuitBreaker.
+     *
+     * @param circuitBreaker the CircuitBreaker.
+     */
+    public CircuitBreakerOpenException(CircuitBreaker circuitBreaker) {
+        super(String.format("CircuitBreaker '%s' is %s and does not permit further calls", circuitBreaker.getName(), circuitBreaker.getState()));
+    }
 
     /**
      * The constructor with a message.

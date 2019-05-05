@@ -18,10 +18,6 @@
  */
 package io.github.resilience4j.prometheus;
 
-import org.junit.Test;
-
-import java.util.function.Supplier;
-
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerOpenException;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
@@ -31,6 +27,9 @@ import io.vavr.Tuple;
 import io.vavr.collection.HashMap;
 import io.vavr.collection.HashSet;
 import io.vavr.collection.Map;
+import org.junit.Test;
+
+import java.util.function.Supplier;
 
 import static java.util.Collections.singleton;
 import static java.util.Collections.singletonList;
@@ -176,13 +175,13 @@ public class CircuitBreakerExportsTest {
     public void testConstructors() {
         final CircuitBreakerRegistry registry = new InMemoryCircuitBreakerRegistry();
 
-        CircuitBreakerExports.ofIterable("boo_breakers", singleton(CircuitBreaker.ofDefaults("foo")));
-        CircuitBreakerExports.ofCircuitBreakerRegistry("boo_breakers", registry);
-        CircuitBreakerExports.ofSupplier("boo_breakers", () -> singleton(CircuitBreaker.ofDefaults("foo")));
+        assertThat(CircuitBreakerExports.ofIterable("boo_breakers", singleton(CircuitBreaker.ofDefaults("foo")))).isNotNull();
+        assertThat(CircuitBreakerExports.ofCircuitBreakerRegistry("boo_breakers", registry)).isNotNull();
+        assertThat(CircuitBreakerExports.ofSupplier("boo_breakers", () -> singleton(CircuitBreaker.ofDefaults("foo")))).isNotNull();
 
-        CircuitBreakerExports.ofIterable(singleton(CircuitBreaker.ofDefaults("foo")));
-        CircuitBreakerExports.ofCircuitBreakerRegistry(registry);
-        CircuitBreakerExports.ofSupplier(() -> singleton(CircuitBreaker.ofDefaults("foo")));
+        assertThat(CircuitBreakerExports.ofIterable(singleton(CircuitBreaker.ofDefaults("foo")))).isNotNull();
+        assertThat(CircuitBreakerExports.ofCircuitBreakerRegistry(registry)).isNotNull();
+        assertThat(CircuitBreakerExports.ofSupplier(() -> singleton(CircuitBreaker.ofDefaults("foo")))).isNotNull();
     }
 
     @Test(expected = NullPointerException.class)

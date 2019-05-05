@@ -18,13 +18,17 @@
  */
 package io.github.resilience4j.circuitbreaker.internal;
 
+import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
+
+import java.util.concurrent.atomic.AtomicInteger;
 
 final class HalfOpenState extends CircuitBreakerState {
 
     private CircuitBreakerMetrics circuitBreakerMetrics;
     private final float failureRateThreshold;
+    private final AtomicInteger testRequestCounter;
 
     HalfOpenState(CircuitBreakerStateMachine stateMachine) {
         super(stateMachine);
@@ -32,16 +36,31 @@ final class HalfOpenState extends CircuitBreakerState {
         this.circuitBreakerMetrics = new CircuitBreakerMetrics(
                 circuitBreakerConfig.getRingBufferSizeInHalfOpenState());
         this.failureRateThreshold = stateMachine.getCircuitBreakerConfig().getFailureRateThreshold();
+        this.testRequestCounter = new AtomicInteger(circuitBreakerConfig.getRingBufferSizeInHalfOpenState());
     }
 
     /**
-     * Returns always true, because the CircuitBreaker is half open.
+     * Checks if test request is allowed.
      *
-     * @return always true, because the CircuitBreaker is half open.
+     * Returns true, if test request counter is not zero.
+     * Returns false, if test request counter is zero.
+     *
+     * @return true, if test request counter is not zero.
      */
     @Override
-    boolean isCallPermitted() {
-        return true;
+    boolean tryObtainPermission() {
+        if (testRequestCounter.getAndDecrement() > 0) {
+            return true;
+        }
+        circuitBreakerMetrics.onCallNotPermitted();
+        return false;
+    }
+
+    @Override
+    void obtainPermission() {
+        if(!tryObtainPermission()){
+            throw new CallNotPermittedException(stateMachine);
+        }
     }
 
     @Override

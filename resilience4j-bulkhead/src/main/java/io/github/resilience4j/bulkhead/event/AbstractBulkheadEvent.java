@@ -20,7 +20,7 @@ package io.github.resilience4j.bulkhead.event;
 
 import java.time.ZonedDateTime;
 
-abstract class AbstractBulkheadEvent implements io.github.resilience4j.bulkhead.event.BulkheadEvent {
+abstract class AbstractBulkheadEvent implements BulkheadEvent {
 
     private final String bulkheadName;
     private final ZonedDateTime creationTime;

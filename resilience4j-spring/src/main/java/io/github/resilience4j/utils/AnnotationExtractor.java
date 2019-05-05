@@ -1,5 +1,6 @@
 package io.github.resilience4j.utils;
 
+import io.github.resilience4j.core.lang.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,8 +17,10 @@ public class AnnotationExtractor {
      *
      * @param targetClass target class
      * @param annotationClass annotation class
+     * @param <T> The annotation type.
      * @return annotation
      */
+    @Nullable
     public static <T extends Annotation> T extract(Class<?> targetClass, Class<T> annotationClass) {
         T annotation = null;
         if (targetClass.isAnnotationPresent(annotationClass)) {
@@ -30,7 +33,6 @@ public class AnnotationExtractor {
                 }
             }
         }
-
         return annotation;
     }
 }

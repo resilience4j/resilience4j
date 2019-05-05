@@ -127,19 +127,19 @@ public class CacheImpl<K, V>  implements Cache<K,V> {
 
         @Override
         public EventPublisher onCacheHit(EventConsumer<CacheOnHitEvent> eventConsumer) {
-            registerConsumer(CacheOnHitEvent.class, eventConsumer);
+            registerConsumer(CacheOnHitEvent.class.getSimpleName(), eventConsumer);
             return this;
         }
 
         @Override
         public EventPublisher onCacheMiss(EventConsumer<CacheOnMissEvent> eventConsumer) {
-            registerConsumer(CacheOnMissEvent.class, eventConsumer);
+            registerConsumer(CacheOnMissEvent.class.getSimpleName(), eventConsumer);
             return this;
         }
 
         @Override
         public EventPublisher onError(EventConsumer<CacheOnErrorEvent> eventConsumer) {
-            registerConsumer(CacheOnErrorEvent.class, eventConsumer);
+            registerConsumer(CacheOnErrorEvent.class.getSimpleName(), eventConsumer);
             return this;
         }
 

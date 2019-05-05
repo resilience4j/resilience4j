@@ -17,6 +17,7 @@ package io.github.resilience4j.prometheus.collectors;
 
 import static io.github.resilience4j.prometheus.collectors.CircuitBreakerMetricsCollector.MetricNames.DEFAULT_CIRCUIT_BREAKER_BUFFERED_CALLS;
 import static io.github.resilience4j.prometheus.collectors.CircuitBreakerMetricsCollector.MetricNames.DEFAULT_CIRCUIT_BREAKER_CALLS_METRIC_NAME;
+import static io.github.resilience4j.prometheus.collectors.CircuitBreakerMetricsCollector.MetricNames.DEFAULT_CIRCUIT_BREAKER_FAILURE_RATE;
 import static io.github.resilience4j.prometheus.collectors.CircuitBreakerMetricsCollector.MetricNames.DEFAULT_CIRCUIT_BREAKER_MAX_BUFFERED_CALLS;
 import static io.github.resilience4j.prometheus.collectors.CircuitBreakerMetricsCollector.MetricNames.DEFAULT_CIRCUIT_BREAKER_STATE_METRIC_NAME;
 import static java.util.Collections.singletonList;
@@ -112,6 +113,17 @@ public class CircuitBreakerMetricsCollectorTest {
     }
 
     @Test
+    public void failureRateReportsCorrespondingValue() {
+        Double failureRate = registry.getSampleValue(
+                DEFAULT_CIRCUIT_BREAKER_FAILURE_RATE,
+                new String[]{"name"},
+                new String[]{circuitBreaker.getName()}
+        );
+
+        assertThat(failureRate.floatValue()).isEqualTo(circuitBreaker.getMetrics().getFailureRate());
+    }
+
+    @Test
     public void customMetricNamesOverrideDefaultOnes() {
         CollectorRegistry registry = new CollectorRegistry();
 
@@ -121,6 +133,7 @@ public class CircuitBreakerMetricsCollectorTest {
                 .stateMetricName("custom_state")
                 .maxBufferedCallsMetricName("custom_max_buffered_calls")
                 .bufferedCallsMetricName("custom_buffered_calls")
+                .failureRateMetricName("custom_failure_rate")
                 .build(),
             () -> singletonList(CircuitBreaker.ofDefaults("backendA"))
         ).register(registry);

@@ -15,8 +15,8 @@
  */
 package io.github.resilience4j.reactor.circuitbreaker.operator;
 
+import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
-import io.github.resilience4j.circuitbreaker.CircuitBreakerOpenException;
 import io.github.resilience4j.core.StopWatch;
 import io.github.resilience4j.core.lang.Nullable;
 import io.github.resilience4j.reactor.ResilienceBaseSubscriber;
@@ -86,29 +86,28 @@ class CircuitBreakerSubscriber<T> extends ResilienceBaseSubscriber<T> {
 
     @Override
     protected void hookOnPermitAcquired() {
-        stopWatch = StopWatch.start(circuitBreaker.getName());
+        stopWatch = StopWatch.start();
     }
 
     @Override
-    protected boolean isCallPermitted() {
-        return circuitBreaker.isCallPermitted();
+    protected boolean obtainPermission() {
+        return circuitBreaker.tryObtainPermission();
     }
 
     @Override
     protected Throwable getThrowable() {
-        return new CircuitBreakerOpenException(
-                String.format("CircuitBreaker '%s' is open", circuitBreaker.getName()));
+        return new CallNotPermittedException(circuitBreaker);
     }
 
     private void markFailure(Throwable e) {
         if (wasCallPermitted()) {
-            circuitBreaker.onError(stopWatch.stop().getProcessingDuration().toNanos(), e);
+            circuitBreaker.onError(stopWatch != null ? stopWatch.stop().toNanos() : 0, e);
         }
     }
 
     private void markSuccess() {
         if (wasCallPermitted()) {
-            circuitBreaker.onSuccess(stopWatch.stop().getProcessingDuration().toNanos());
+            circuitBreaker.onSuccess(stopWatch != null ? stopWatch.stop().toNanos() : 0);
         }
     }
 }
