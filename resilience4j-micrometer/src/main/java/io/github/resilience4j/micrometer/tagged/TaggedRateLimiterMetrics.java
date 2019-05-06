@@ -15,7 +15,6 @@
  */
 package io.github.resilience4j.micrometer.tagged;
 
-import io.github.resilience4j.micrometer.RateLimiterMetrics;
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RateLimiter.Metrics;
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
@@ -32,8 +31,6 @@ import static java.util.Objects.requireNonNull;
 
 /**
  * A micrometer binder that is used to register retry exposed {@link Metrics metrics}.
- * The main difference from {@link RateLimiterMetrics} is that this binder uses tags
- * to distinguish between metrics.
  */
 public class TaggedRateLimiterMetrics extends AbstractMetrics implements MeterBinder {
 
@@ -96,8 +93,8 @@ public class TaggedRateLimiterMetrics extends AbstractMetrics implements MeterBi
     /** Defines possible configuration for metric names. */
     public static class MetricNames {
 
-        public static final String DEFAULT_AVAILABLE_PERMISSIONS_METRIC_NAME = "resilience4j_ratelimiter_available_permissions";
-        public static final String DEFAULT_WAITING_THREADS_METRIC_NAME = "resilience4j_ratelimiter_waiting_threads";
+        public static final String DEFAULT_AVAILABLE_PERMISSIONS_METRIC_NAME = "resilience4j.ratelimiter.available.permissions";
+        public static final String DEFAULT_WAITING_THREADS_METRIC_NAME = "resilience4j.ratelimiter.waiting_threads";
 
         /**
          * Returns a builder for creating custom metric names.

@@ -18,7 +18,6 @@ package io.github.resilience4j.micrometer.tagged;
 import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.bulkhead.Bulkhead.Metrics;
 import io.github.resilience4j.bulkhead.BulkheadRegistry;
-import io.github.resilience4j.micrometer.BulkheadMetrics;
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.Meter;
 import io.micrometer.core.instrument.MeterRegistry;
@@ -31,8 +30,6 @@ import static java.util.Objects.requireNonNull;
 
 /**
  * A micrometer binder that is used to register bulkhead exposed {@link Metrics metrics}.
- * The main difference from {@link BulkheadMetrics} is that this binder uses tags
- * to distinguish between metrics.
  */
 public class TaggedBulkheadMetrics extends AbstractMetrics implements MeterBinder {
 
@@ -96,8 +93,8 @@ public class TaggedBulkheadMetrics extends AbstractMetrics implements MeterBinde
     /** Defines possible configuration for metric names. */
     public static class MetricNames {
 
-        public static final String DEFAULT_BULKHEAD_AVAILABLE_CONCURRENT_CALLS_METRIC_NAME = "resilience4j_bulkhead_available_concurrent_calls";
-        public static final String DEFAULT_BULKHEAD_MAX_ALLOWED_CONCURRENT_CALLS_METRIC_NAME = "resilience4j_bulkhead_max_allowed_concurrent_calls";
+        public static final String DEFAULT_BULKHEAD_AVAILABLE_CONCURRENT_CALLS_METRIC_NAME = "resilience4j.bulkhead.available.concurrent_calls";
+        public static final String DEFAULT_BULKHEAD_MAX_ALLOWED_CONCURRENT_CALLS_METRIC_NAME = "resilience4j.bulkhead.max_allowed.concurrent.calls";
 
         /**
          * Returns a builder for creating custom metric names.

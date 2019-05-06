@@ -16,7 +16,6 @@
 package io.github.resilience4j.ratelimiter.autoconfigure;
 
 import io.github.resilience4j.circuitbreaker.autoconfigure.CircuitBreakerAutoConfiguration;
-import io.github.resilience4j.micrometer.RateLimiterMetrics;
 import io.github.resilience4j.micrometer.tagged.TaggedRateLimiterMetrics;
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
 import io.micrometer.spring.autoconfigure.MetricsAutoConfiguration;
@@ -39,18 +38,6 @@ public class RateLimiterMicrometerAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
-    @ConditionalOnProperty(value = "resilience4j.ratelimiter.metrics.use_legacy_binder", havingValue = "true")
-    public RateLimiterMetrics registerLegacyRateLimiterMetrics(RateLimiterRegistry rateLimiterRegistry) {
-        return RateLimiterMetrics.ofRateLimiterRegistry(rateLimiterRegistry);
-    }
-
-    @Bean
-    @ConditionalOnMissingBean
-    @ConditionalOnProperty(
-        value = "resilience4j.ratelimiter.metrics.use_legacy_binder",
-        havingValue = "false",
-        matchIfMissing = true
-    )
     public TaggedRateLimiterMetrics registerRateLimiterMetrics(RateLimiterRegistry rateLimiterRegistry) {
         return TaggedRateLimiterMetrics.ofRateLimiterRegistry(rateLimiterRegistry);
     }

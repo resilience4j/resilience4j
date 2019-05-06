@@ -15,7 +15,6 @@
  */
 package io.github.resilience4j.micrometer.tagged;
 
-import io.github.resilience4j.micrometer.RetryMetrics;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryRegistry;
 import io.micrometer.core.instrument.Gauge;
@@ -31,8 +30,6 @@ import static java.util.Objects.requireNonNull;
 
 /**
  * A micrometer binder that is used to register retry exposed {@link Metrics metrics}.
- * The main difference from {@link RetryMetrics} is that this binder uses tags
- * to distinguish between metrics.
  */
 public class TaggedRetryMetrics extends AbstractMetrics implements MeterBinder {
 
@@ -105,7 +102,7 @@ public class TaggedRetryMetrics extends AbstractMetrics implements MeterBinder {
     /** Defines possible configuration for metric names. */
     public static class MetricNames {
 
-        public static final String DEFAULT_RETRY_CALLS = "resilience4j_retry_calls";
+        public static final String DEFAULT_RETRY_CALLS = "resilience4j.retry.calls";
 
         /**
          * Returns a builder for creating custom metric names.

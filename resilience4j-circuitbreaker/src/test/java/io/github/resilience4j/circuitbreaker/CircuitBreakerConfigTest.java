@@ -214,6 +214,7 @@ public class CircuitBreakerConfigTest {
                 .waitDurationInOpenState(Duration.ofSeconds(100))
                 .ringBufferSizeInClosedState(1000)
                 .ringBufferSizeInHalfOpenState(100)
+                .automaticTransitionFromOpenToHalfOpenEnabled(true)
                 .failureRateThreshold(20f).build();
 
         CircuitBreakerConfig extendedConfig = CircuitBreakerConfig.from(baseConfig)
@@ -224,6 +225,7 @@ public class CircuitBreakerConfigTest {
         then(extendedConfig.getWaitDurationInOpenState()).isEqualTo(Duration.ofSeconds(20));
         then(extendedConfig.getRingBufferSizeInClosedState()).isEqualTo(1000);
         then(extendedConfig.getRingBufferSizeInHalfOpenState()).isEqualTo(100);
+        then(extendedConfig.isAutomaticTransitionFromOpenToHalfOpenEnabled()).isTrue();
     }
 
 }

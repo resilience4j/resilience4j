@@ -18,7 +18,6 @@ package io.github.resilience4j.micrometer.tagged;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker.Metrics;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
-import io.github.resilience4j.micrometer.CircuitBreakerMetrics;
 import io.micrometer.core.instrument.*;
 import io.micrometer.core.instrument.binder.MeterBinder;
 
@@ -29,8 +28,6 @@ import static java.util.Objects.requireNonNull;
 
 /**
  * A micrometer binder that is used to register circuit breaker exposed {@link Metrics metrics}.
- * The main difference from {@link CircuitBreakerMetrics} is that this binder uses tags
- * to distinguish between circuit breaker instances.
  */
 public class TaggedCircuitBreakerMetrics extends AbstractMetrics implements MeterBinder {
 
