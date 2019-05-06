@@ -93,8 +93,10 @@ public class TaggedRateLimiterMetrics extends AbstractMetrics implements MeterBi
     /** Defines possible configuration for metric names. */
     public static class MetricNames {
 
-        public static final String DEFAULT_AVAILABLE_PERMISSIONS_METRIC_NAME = "resilience4j.ratelimiter.available.permissions";
-        public static final String DEFAULT_WAITING_THREADS_METRIC_NAME = "resilience4j.ratelimiter.waiting_threads";
+        private static final String DEFAULT_PREFIX = "resilience4j.ratelimiter";
+
+        public static final String DEFAULT_AVAILABLE_PERMISSIONS_METRIC_NAME = DEFAULT_PREFIX + ".available.permissions";
+        public static final String DEFAULT_WAITING_THREADS_METRIC_NAME = DEFAULT_PREFIX + ".waiting_threads";
 
         /**
          * Returns a builder for creating custom metric names.

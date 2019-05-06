@@ -93,8 +93,10 @@ public class TaggedBulkheadMetrics extends AbstractMetrics implements MeterBinde
     /** Defines possible configuration for metric names. */
     public static class MetricNames {
 
-        public static final String DEFAULT_BULKHEAD_AVAILABLE_CONCURRENT_CALLS_METRIC_NAME = "resilience4j.bulkhead.available.concurrent_calls";
-        public static final String DEFAULT_BULKHEAD_MAX_ALLOWED_CONCURRENT_CALLS_METRIC_NAME = "resilience4j.bulkhead.max_allowed.concurrent.calls";
+        private static final String DEFAULT_PREFIX = "resilience4j.bulkhead";
+
+        public static final String DEFAULT_BULKHEAD_AVAILABLE_CONCURRENT_CALLS_METRIC_NAME = DEFAULT_PREFIX + ".available.concurrent_calls";
+        public static final String DEFAULT_BULKHEAD_MAX_ALLOWED_CONCURRENT_CALLS_METRIC_NAME = DEFAULT_PREFIX + ".max_allowed.concurrent.calls";
 
         /**
          * Returns a builder for creating custom metric names.

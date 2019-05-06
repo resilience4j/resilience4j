@@ -110,7 +110,7 @@ public class CircuitBreakerMetricsCollector extends Collector {
             LabelNames.NAME
         );
       
-      GaugeMetricFamily failureRateFamily = new GaugeMetricFamily(
+        GaugeMetricFamily failureRateFamily = new GaugeMetricFamily(
                 names.getFailureRateMetricName(),
                 "The failure rate",
                 LabelNames.NAME

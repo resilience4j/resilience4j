@@ -184,20 +184,6 @@ public class CircuitBreakerConfigTest {
     }
 
     @Test
-    public void builderMakePredicateShouldBuildPredicateAcceptingChildClass() {
-        final Predicate<Throwable> predicate = CircuitBreakerConfig.Builder.makePredicate(RuntimeException.class);
-        then(predicate.test(new RuntimeException())).isEqualTo(true);
-        then(predicate.test(new Exception())).isEqualTo(false);
-        then(predicate.test(new Throwable())).isEqualTo(false);
-        then(predicate.test(new IllegalArgumentException())).isEqualTo(true);
-        then(predicate.test(new RuntimeException() {
-        })).isEqualTo(true);
-        then(predicate.test(new Exception() {
-        })).isEqualTo(false);
-
-    }
-
-    @Test
     public void shouldBuilderCreateConfigEveryTime() {
         final CircuitBreakerConfig.Builder builder =  CircuitBreakerConfig.custom();
         builder.ringBufferSizeInClosedState(5);
