@@ -15,21 +15,19 @@ package io.github.resilience4j.retry.configure;
  * limitations under the License.
  */
 
-import java.time.Duration;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.function.Predicate;
-
-import javax.validation.constraints.Min;
-import javax.validation.constraints.NotNull;
-
-import org.springframework.beans.BeanUtils;
-import org.springframework.util.StringUtils;
-
 import io.github.resilience4j.core.ConfigurationNotFoundException;
 import io.github.resilience4j.core.lang.Nullable;
 import io.github.resilience4j.retry.IntervalFunction;
 import io.github.resilience4j.retry.RetryConfig;
+import org.springframework.beans.BeanUtils;
+import org.springframework.util.StringUtils;
+
+import javax.validation.constraints.Min;
+import javax.validation.constraints.NotNull;
+import java.time.Duration;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.function.Predicate;
 
 /**
  * Main spring properties for retry configuration
@@ -115,7 +113,6 @@ public class RetryConfigurationProperties {
 	 */
 	@SuppressWarnings("unchecked")
 	private RetryConfig buildRetryConfig(RetryConfig.Builder builder, BackendProperties properties) {
-		boolean enableRetryExceptionPredicate = false;
 		if (properties == null) {
 			return builder.build();
 		}
@@ -131,26 +128,19 @@ public class RetryConfigurationProperties {
 		}
 
 		if (properties.getRetryExceptionPredicate() != null) {
-			enableRetryExceptionPredicate = true;
 			builder.retryOnException(BeanUtils.instantiateClass(properties.getRetryExceptionPredicate()));
 		}
 
 		if (properties.getIgnoreExceptions() != null) {
-			enableRetryExceptionPredicate = true;
 			builder.ignoreExceptions(properties.getIgnoreExceptions());
 		}
 
 		if (properties.getRetryExceptions() != null) {
-			enableRetryExceptionPredicate = true;
 			builder.retryExceptions(properties.getRetryExceptions());
 		}
 
 		if (properties.getResultPredicate() != null) {
 			builder.retryOnResult(BeanUtils.instantiateClass(properties.getResultPredicate()));
-		}
-
-		if (!enableRetryExceptionPredicate) {
-			builder.enableRetryExceptionPredicate(false);
 		}
 
 		return builder.build();
@@ -191,19 +181,23 @@ public class RetryConfigurationProperties {
 		 * wait long value for the next try
 		 */
 		@Min(100)
+		@Nullable
 		private Long waitDuration;
 		/*
 		 * max retry attempts value
 		 */
 		@Min(1)
+		@Nullable
 		private Integer maxRetryAttempts;
 		/*
 		 * retry exception predicate class to be used to evaluate the exception to retry or not
 		 */
+		@Nullable
 		private Class<? extends Predicate<Throwable>> retryExceptionPredicate;
 		/*
 		 * retry resultPredicate predicate class to be used to evaluate the result to retry or not
 		 */
+		@Nullable
 		private Class<? extends Predicate> resultPredicate;
 		/*
 		 * list of retry exception classes
@@ -244,6 +238,7 @@ public class RetryConfigurationProperties {
 		@Nullable
 		private String baseConfig;
 
+		@Nullable
 		public Long getWaitDuration() {
 			return waitDuration;
 		}
@@ -252,6 +247,7 @@ public class RetryConfigurationProperties {
 			this.waitDuration = waitDuration;
 		}
 
+		@Nullable
 		public Integer getMaxRetryAttempts() {
 			return maxRetryAttempts;
 		}
@@ -260,6 +256,7 @@ public class RetryConfigurationProperties {
 			this.maxRetryAttempts = maxRetryAttempts;
 		}
 
+		@Nullable
 		public Class<? extends Predicate<Throwable>> getRetryExceptionPredicate() {
 			return retryExceptionPredicate;
 		}
@@ -268,6 +265,7 @@ public class RetryConfigurationProperties {
 			this.retryExceptionPredicate = retryExceptionPredicate;
 		}
 
+		@Nullable
 		public Class<? extends Predicate> getResultPredicate() {
 			return resultPredicate;
 		}
@@ -276,6 +274,7 @@ public class RetryConfigurationProperties {
 			this.resultPredicate = resultPredicate;
 		}
 
+		@Nullable
 		public Class<? extends Throwable>[] getRetryExceptions() {
 			return retryExceptions;
 		}
@@ -284,6 +283,7 @@ public class RetryConfigurationProperties {
 			this.retryExceptions = retryExceptions;
 		}
 
+		@Nullable
 		public Class<? extends Throwable>[] getIgnoreExceptions() {
 			return ignoreExceptions;
 		}
@@ -292,6 +292,7 @@ public class RetryConfigurationProperties {
 			this.ignoreExceptions = ignoreExceptions;
 		}
 
+		@Nullable
 		public Integer getEventConsumerBufferSize() {
 			return eventConsumerBufferSize;
 		}
@@ -308,6 +309,7 @@ public class RetryConfigurationProperties {
 			this.enableExponentialBackoff = enableExponentialBackoff;
 		}
 
+		@Nullable
 		public double getExponentialBackoffMultiplier() {
 			return exponentialBackoffMultiplier;
 		}
@@ -316,6 +318,7 @@ public class RetryConfigurationProperties {
 			this.exponentialBackoffMultiplier = exponentialBackoffMultiplier;
 		}
 
+		@Nullable
 		public Boolean getEnableRandomizedWait() {
 			return enableRandomizedWait;
 		}
@@ -324,6 +327,7 @@ public class RetryConfigurationProperties {
 			this.enableRandomizedWait = enableRandomizedWait;
 		}
 
+		@Nullable
 		public double getRandomizedWaitFactor() {
 			return randomizedWaitFactor;
 		}
