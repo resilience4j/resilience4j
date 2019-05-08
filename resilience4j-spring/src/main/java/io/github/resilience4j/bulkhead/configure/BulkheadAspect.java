@@ -20,6 +20,8 @@ import java.util.List;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.CompletionStage;
 
+import io.github.resilience4j.recovery.RecoveryDecorators;
+import io.github.resilience4j.recovery.RecoveryMethod;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -29,6 +31,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.Ordered;
+import org.springframework.util.StringUtils;
 
 import io.github.resilience4j.bulkhead.BulkheadRegistry;
 import io.github.resilience4j.bulkhead.annotation.Bulkhead;
@@ -48,11 +51,13 @@ public class BulkheadAspect implements Ordered {
 	private final BulkheadConfigurationProperties bulkheadConfigurationProperties;
 	private final BulkheadRegistry bulkheadRegistry;
 	private final @Nullable List<BulkheadAspectExt> bulkheadAspectExts;
+	private final RecoveryDecorators recoveryDecorators;
 
-	public BulkheadAspect(BulkheadConfigurationProperties backendMonitorPropertiesRegistry, BulkheadRegistry bulkheadRegistry, @Autowired(required = false) List<BulkheadAspectExt> bulkheadAspectExts) {
+	public BulkheadAspect(BulkheadConfigurationProperties backendMonitorPropertiesRegistry, BulkheadRegistry bulkheadRegistry, @Autowired(required = false) List<BulkheadAspectExt> bulkheadAspectExts, RecoveryDecorators recoveryDecorators) {
 		this.bulkheadConfigurationProperties = backendMonitorPropertiesRegistry;
 		this.bulkheadRegistry = bulkheadRegistry;
 		this.bulkheadAspectExts = bulkheadAspectExts;
+		this.recoveryDecorators = recoveryDecorators;
 	}
 
 	@Pointcut(value = "@within(Bulkhead) || @annotation(Bulkhead)", argNames = "Bulkhead")
@@ -72,6 +77,16 @@ public class BulkheadAspect implements Ordered {
 		String backend = backendMonitored.name();
 		io.github.resilience4j.bulkhead.Bulkhead bulkhead = getOrCreateBulkhead(methodName, backend);
 		Class<?> returnType = method.getReturnType();
+
+		if (StringUtils.isEmpty(backendMonitored.recovery())) {
+			return proceed(proceedingJoinPoint, methodName, bulkhead, returnType);
+		}
+
+		RecoveryMethod recoveryMethod = new RecoveryMethod(backendMonitored.recovery(), method, proceedingJoinPoint.getArgs(), proceedingJoinPoint.getTarget());
+		return recoveryDecorators.decorate(recoveryMethod, () -> proceed(proceedingJoinPoint, methodName, bulkhead, returnType)).apply();
+	}
+
+	private Object proceed(ProceedingJoinPoint proceedingJoinPoint, String methodName, io.github.resilience4j.bulkhead.Bulkhead bulkhead, Class<?> returnType) throws Throwable {
 		if (bulkheadAspectExts != null && !bulkheadAspectExts.isEmpty()) {
 			for (BulkheadAspectExt bulkHeadAspectExt : bulkheadAspectExts) {
 				if (bulkHeadAspectExt.canHandleReturnType(returnType)) {

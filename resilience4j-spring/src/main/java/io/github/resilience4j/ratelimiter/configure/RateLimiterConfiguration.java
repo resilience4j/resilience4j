@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import io.github.resilience4j.recovery.RecoveryDecorators;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Conditional;
@@ -85,8 +86,8 @@ public class RateLimiterConfiguration {
 	}
 
 	@Bean
-	public RateLimiterAspect rateLimiterAspect(RateLimiterConfigurationProperties rateLimiterProperties, RateLimiterRegistry rateLimiterRegistry, @Autowired(required = false) List<RateLimiterAspectExt> rateLimiterAspectExtList) {
-		return new RateLimiterAspect(rateLimiterRegistry, rateLimiterProperties, rateLimiterAspectExtList);
+	public RateLimiterAspect rateLimiterAspect(RateLimiterConfigurationProperties rateLimiterProperties, RateLimiterRegistry rateLimiterRegistry, @Autowired(required = false) List<RateLimiterAspectExt> rateLimiterAspectExtList, RecoveryDecorators recoveryDecorators) {
+		return new RateLimiterAspect(rateLimiterRegistry, rateLimiterProperties, rateLimiterAspectExtList, recoveryDecorators);
 	}
 
 	@Bean
