@@ -15,12 +15,12 @@
  */
 package io.github.resilience4j.recovery;
 
-import org.junit.Test;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Java6Assertions.assertThatThrownBy;
 
 import java.lang.reflect.Method;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Java6Assertions.assertThatThrownBy;
+import org.junit.Test;
 
 @SuppressWarnings({"WeakerAccess", "unused"})
 public class RecoveryMethodTest {
@@ -28,7 +28,7 @@ public class RecoveryMethodTest {
     public void recoverRuntimeExceptionTest() throws Throwable {
         RecoveryMethodTest target = new RecoveryMethodTest();
         Method testMethod = target.getClass().getMethod("testMethod", String.class);
-        RecoveryMethod recoveryMethod = new RecoveryMethod("recovery", testMethod, new Object[]{"test"}, target);
+	    RecoveryMethod recoveryMethod = new RecoveryMethod("fallbackMethod", testMethod, new Object[]{"test"}, target);
 
         assertThat(recoveryMethod.recover(new RuntimeException("err"))).isEqualTo("recovered-RuntimeException");
     }
@@ -37,7 +37,7 @@ public class RecoveryMethodTest {
     public void recoverClosestSuperclassExceptionTest() throws Throwable {
         RecoveryMethodTest target = new RecoveryMethodTest();
         Method testMethod = target.getClass().getMethod("testMethod", String.class);
-        RecoveryMethod recoveryMethod = new RecoveryMethod("recovery", testMethod, new Object[]{"test"}, target);
+	    RecoveryMethod recoveryMethod = new RecoveryMethod("fallbackMethod", testMethod, new Object[]{"test"}, target);
 
         assertThat(recoveryMethod.recover(new NumberFormatException("err"))).isEqualTo("recovered-IllegalArgumentException");
     }
@@ -46,7 +46,7 @@ public class RecoveryMethodTest {
     public void shouldThrowUnrecoverableThrowable() throws Throwable {
         RecoveryMethodTest target = new RecoveryMethodTest();
         Method testMethod = target.getClass().getMethod("testMethod", String.class);
-        RecoveryMethod recoveryMethod = new RecoveryMethod("recovery", testMethod, new Object[]{"test"}, target);
+	    RecoveryMethod recoveryMethod = new RecoveryMethod("fallbackMethod", testMethod, new Object[]{"test"}, target);
 
         Throwable unrecoverableThrown = new Throwable("err");
         assertThatThrownBy(() -> recoveryMethod.recover(unrecoverableThrown)).isEqualTo(unrecoverableThrown);
@@ -85,11 +85,11 @@ public class RecoveryMethodTest {
         return null;
     }
 
-    public String recovery(String parameter, RuntimeException exception) {
+	public String fallbackMethod(String parameter, RuntimeException exception) {
         return "recovered-RuntimeException";
     }
 
-    public String recovery(String parameter, IllegalArgumentException exception) {
+	public String fallbackMethod(String parameter, IllegalArgumentException exception) {
         return "recovered-IllegalArgumentException";
     }
 

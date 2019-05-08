@@ -318,8 +318,38 @@ The rules for Retry configuration :
 The rules for Retry spring annotation usage  :
 
     - Retry aspect will detect the proper handling based into the method return type for synchronous , asynchronous execution(CompletableFuture) , RxJava2 and Reactor
+    - Fallback support is enabled by defining name of fallback method in @Retry
+[source,java]
+----
+            @Retry(name = BACKEND, fallbackMethod = "fallback")
+            public String sync(String param1) {
+                return "test";
+            }
 
-Code example of retry and async retry annotation usage in Java Spring component :
+            private String fallback(String param1, IllegalStateException e) {
+                return "test";
+            }
+----
+    - Its important to remember that Retry method and its fallback method should be placed in the same class and have same method signature (optional parameter for failed execution exception).
+    - If there are multiple fallbackMethod methods, one of the methods that has most closest superclass parameter of thrown object will be invoked, for example:
+[source,java]
+----
+            @Retry(name = BACKEND, fallbackMethod = "fallback")
+            public String sync(String param1) {
+                return "test";
+            }
+
+            private String fallback(String param1, IllegalArgumentException e) {
+                return "test";
+            }
+
+            private String fallback(String param1, RuntimeException e) {
+                 return "test";
+            }
+----
+and if you try to recover from  NumberFormatException, the method with signature String fallback(String parameter, IllegalArgumentException exception)} will be invoked.
+
+Code example of Sync, Async, Reactive retry annotation usage in Java Spring component :
 [source,java]
 ----
 @Component
@@ -443,6 +473,39 @@ These Beans can be overridden in your application's Spring Bean configuration:
 * ReactorCircuitBreakerAspectExt
 * EventConsumerRegistry<CircuitBreakerEvent>
 
+
+The rules for CircuitBreaker spring annotation usage  :
+
+    - CircuitBreaker aspect with fallback support will detect the proper handling based into the method return type for synchronous , asynchronous execution(CompletableFuture) , RxJava2 and Reactor
+    - Fallback support is enabled by defining name of fallback method in @CircuitBreaker
+
+[source,java]
+----
+    @CircuitBreaker(name = BACKEND, fallbackMethod = "fallback")
+    public String sync() {
+        return "test";
+    }
+----
+
+    - Its important to remember that CircuitBreaker method and its fallback method should be placed in the same class and have same method signature (optional parameter for failed execution exception).
+    - If there are multiple fallbackMethod methods, one of the methods that has most closest superclass parameter of thrown object will be invoked, for example:
+[source,java]
+----
+                @CircuitBreaker(name = BACKEND, fallbackMethod = "fallback")
+                public String sync(String param1) {
+                    return "test";
+                }
+
+                private String fallback(String param1, IllegalArgumentException e) {
+                    return "test";
+                }
+
+                private String fallback(String param1, RuntimeException e) {
+                     return "test";
+                }
+----
+and if you try to recover from  NumberFormatException, the method with signature String fallback(String parameter, IllegalArgumentException exception) will be invoked.
+
 ===== RateLimiter
 You can configure your CircuitBreakers in Spring Boot's `application.yml` config file.
 For example
@@ -473,6 +536,37 @@ These Beans can be overridden in your application's Spring Bean configuration:
 * RxJava2RateLimiterAspectExt
 * ReactorRateLimiterAspectExt
 
+The rules for RateLimiter spring annotation usage  :
+
+    - RateLimiter aspect with fallback support will detect the proper handling based into the method return type for synchronous , asynchronous execution(CompletableFuture) , RxJava2 and Reactor
+    - Fallback support is enabled by defining name of fallback method in @RateLimiter
+
+[source,java]
+----
+    @RateLimiter(name = BACKEND, fallbackMethod = "fallback")
+    public String sync() {
+        return "test";
+    }
+----
+
+    - Its important to remember that RateLimiter method and its fallback method should be placed in the same class and have same method signature (optional parameter for failed execution exception).
+    - If there are multiple fallbackMethod methods, one of the methods that has most closest superclass parameter of thrown object will be invoked, for example:
+[source,java]
+----
+                @RateLimiter(name = BACKEND, fallbackMethod = "fallback")
+                public String sync(String param1) {
+                    return "test";
+                }
+
+                private String fallback(String param1, IllegalArgumentException e) {
+                    return "test";
+                }
+
+                private String fallback(String param1, RuntimeException e) {
+                     return "test";
+                }
+----
+and if you try to recover from  NumberFormatException, the method with signature String fallback(String parameter, IllegalArgumentException exception) will be invoked.
 
 ===== Explicit ordering for CircuitBreaker and RateLimiter aspects
 You can adjust `RateLimiterProperties.rateLimiterAspectOrder` and `CircuitBreakerProperties.circuitBreakerAspectOrder`

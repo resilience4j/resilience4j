@@ -18,7 +18,7 @@ package io.github.resilience4j.recovery;
 import io.vavr.CheckedFunction0;
 
 /**
- *  default recovery decorator. it catches throwable and invoke the recovery method.
+ *  default fallbackMethod decorator. it catches throwable and invoke the fallbackMethod method.
  */
 public class DefaultRecoveryDecorator implements RecoveryDecorator {
 

@@ -15,9 +15,9 @@
  */
 package io.github.resilience4j.recovery;
 
-import io.vavr.CheckedFunction0;
-
 import java.util.List;
+
+import io.vavr.CheckedFunction0;
 
 /**
  * {@link RecoveryDecorator} resolver
@@ -33,7 +33,7 @@ public class RecoveryDecorators {
     /**
      * find a {@link RecoveryDecorator} by return type of the {@link RecoveryMethod} and decorate supplier
      *
-     * @param recoveryMethod recovery method that handles supplier's exception
+     * @param recoveryMethod fallbackMethod method that handles supplier's exception
      * @param supplier       original function
      * @return a function which is decorated by a {@link RecoveryMethod}
      */

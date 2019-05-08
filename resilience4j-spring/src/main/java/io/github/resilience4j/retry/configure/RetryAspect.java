@@ -23,8 +23,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-import io.github.resilience4j.recovery.RecoveryDecorators;
-import io.github.resilience4j.recovery.RecoveryMethod;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -37,6 +35,8 @@ import org.springframework.core.Ordered;
 import org.springframework.util.StringUtils;
 
 import io.github.resilience4j.core.lang.Nullable;
+import io.github.resilience4j.recovery.RecoveryDecorators;
+import io.github.resilience4j.recovery.RecoveryMethod;
 import io.github.resilience4j.retry.RetryRegistry;
 import io.github.resilience4j.retry.annotation.Retry;
 import io.github.resilience4j.utils.AnnotationExtractor;
@@ -87,11 +87,11 @@ public class RetryAspect implements Ordered {
 		String backend = backendMonitored.name();
 		io.github.resilience4j.retry.Retry retry = getOrCreateRetry(methodName, backend);
 		Class<?> returnType = method.getReturnType();
-		if (StringUtils.isEmpty(backendMonitored.recovery())) {
+		if (StringUtils.isEmpty(backendMonitored.fallbackMethod())) {
 			return proceed(proceedingJoinPoint, methodName, retry, returnType);
 		}
 
-        RecoveryMethod recoveryMethod = new RecoveryMethod(backendMonitored.recovery(), method, proceedingJoinPoint.getArgs(), proceedingJoinPoint.getTarget());
+		RecoveryMethod recoveryMethod = new RecoveryMethod(backendMonitored.fallbackMethod(), method, proceedingJoinPoint.getArgs(), proceedingJoinPoint.getTarget());
 		return recoveryDecorators.decorate(recoveryMethod, () -> proceed(proceedingJoinPoint, methodName, retry, returnType)).apply();
 	}
 

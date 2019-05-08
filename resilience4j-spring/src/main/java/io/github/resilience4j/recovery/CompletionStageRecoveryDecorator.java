@@ -15,13 +15,13 @@
  */
 package io.github.resilience4j.recovery;
 
-import io.vavr.CheckedFunction0;
-
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 
+import io.vavr.CheckedFunction0;
+
 /**
- * recovery decorator for {@link CompletionStage}
+ * fallbackMethod decorator for {@link CompletionStage}
  */
 public class CompletionStageRecoveryDecorator implements RecoveryDecorator {
 

@@ -24,7 +24,7 @@ public interface RecoveryDecorator {
     boolean supports(Class<?> target);
 
     /**
-     * @param recoveryMethod recovery method.
+     * @param recoveryMethod fallbackMethod method.
      * @param supplier       target function should be decorated.
      * @return decorated function
      */

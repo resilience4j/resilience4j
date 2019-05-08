@@ -193,6 +193,19 @@ The rules for Retry configuration :
 The rules for Retry spring annotation usage  :
 
     - Retry aspect will detect the proper handling based into the method return type for synchronous , asynchronous execution(CompletableFuture) , RxJava2 and Reactor
+    - Fallback support is enabled by defining name of fallback method in @Retry
+[source,java]
+----
+        @Retry(name = BACKEND, fallbackMethod = "fallback")
+        public String sync(String param1) {
+            return "test";
+        }
+
+        private String fallback(String param1, IllegalStateException e) {
+            return "test";
+        }
+----
+    - Its important to remember that Retry method and its fallback method should be placed in the same class and have same method signature (optional parameter for failed execution exception).
 
 Code example of retry and async retry annotation usage in Java Spring component :
 [source,java]
@@ -319,6 +332,21 @@ These Beans can be overridden in your application's Spring Bean configuration:
 Note that in Spring Boot 1.x, EventConsumerRegistry<CircuitBreakerEvent> cannot be overridden because of limitations of the @ConditionalOnMissingBean implementation.
 To override this, go to at least Spring Boot 2.1.x.
 
+The rules for CircuitBreaker spring annotation usage  :
+
+    - CircuitBreaker aspect with fallback support will detect the proper handling based into the method return type for synchronous , asynchronous execution(CompletableFuture) , RxJava2 and Reactor
+    - Fallback support is enabled by defining name of fallback method in @CircuitBreaker
+
+[source,java]
+----
+    @CircuitBreaker(name = BACKEND, fallbackMethod = "fallback")
+    public String sync() {
+        return "test";
+    }
+----
+
+    - Its important to remember that CircuitBreaker method and its fallback method should be placed in the same class and have same method signature (optional parameter for failed execution exception).
+
 ===== RateLimiter
 You can configure your CircuitBreakers in Spring Boot's `application.yml` config file.
 For example
@@ -348,6 +376,21 @@ These Beans can be overridden in your application's Spring Bean configuration:
 
 Note that in Spring Boot 1.x, EventConsumerRegistry<RateLimiterEvent> cannot be overridden because of limitations of the @ConditionalOnMissingBean implementation.
 To override this, go to at least Spring Boot 2.1.x.
+
+The rules for RateLimiter spring annotation usage  :
+
+    - RateLimiter aspect with fallback support will detect the proper handling based into the method return type for synchronous , asynchronous execution(CompletableFuture) , RxJava2 and Reactor
+    - Fallback support is enabled by defining name of fallback method in @RateLimiter
+
+[source,java]
+----
+    @RateLimiter(name = BACKEND, fallbackMethod = "fallback")
+    public String sync() {
+        return "test";
+    }
+----
+
+    - Its important to remember that RateLimiter method and its fallback method should be placed in the same class and have same method signature (optional parameter for failed execution exception).
 
 ===== Explicit ordering for CircuitBreaker and RateLimiter aspects
 You can adjust `RateLimiterProperties.rateLimiterAspectOrder` and `CircuitBreakerProperties.circuitBreakerAspectOrder`

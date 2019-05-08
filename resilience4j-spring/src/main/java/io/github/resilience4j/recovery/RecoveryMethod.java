@@ -15,28 +15,29 @@
  */
 package io.github.resilience4j.recovery;
 
-import io.github.resilience4j.core.lang.Nullable;
-import org.springframework.util.ConcurrentReferenceHashMap;
-import org.springframework.util.ReflectionUtils;
-import org.springframework.util.StringUtils;
-
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.springframework.util.ConcurrentReferenceHashMap;
+import org.springframework.util.ReflectionUtils;
+import org.springframework.util.StringUtils;
+
+import io.github.resilience4j.core.lang.Nullable;
+
 /**
- * Reflection utility for invoking recovery method. Recovery method should have same return type and parameter types of original method but the last additional parameter.
+ * Reflection utility for invoking fallbackMethod method. Recovery method should have same return type and parameter types of original method but the last additional parameter.
  * The last additional parameter should be a subclass of {@link Throwable}. When {@link RecoveryMethod#recover(Throwable)} is invoked, {@link Throwable} will be passed to that last parameter.
- * If there are multiple recovery method, one of the methods that has most closest superclass parameter of thrown object will be invoked.
+ * If there are multiple fallbackMethod method, one of the methods that has most closest superclass parameter of thrown object will be invoked.
  * <pre>
- * For example, there are two recovery methods
+ * For example, there are two fallbackMethod methods
  * {@code
- * String recovery(String parameter, RuntimeException exception)
- * String recovery(String parameter, IllegalArgumentException exception)
+ * String fallbackMethod(String parameter, RuntimeException exception)
+ * String fallbackMethod(String parameter, IllegalArgumentException exception)
  * }
- * and if try to recover from {@link NumberFormatException}, {@code String recovery(String parameter, IllegalArgumentException exception)} will be invoked.
+ * and if try to recover from {@link NumberFormatException}, {@code String fallbackMethod(String parameter, IllegalArgumentException exception)} will be invoked.
  * </pre>
  */
 public class RecoveryMethod {
@@ -47,13 +48,13 @@ public class RecoveryMethod {
     private final Class<?> returnType;
 
     /**
-     * create a recovery method.
+     * create a fallbackMethod method.
      *
-     * @param recoveryMethodName recovery method name
-     * @param originalMethod     will be used for checking return type and parameter types of the recovery method
-     * @param args               arguments those were passed to the original method. They will be passed to the recovery method.
-     * @param target             target object the recovery method will be invoked
-     * @throws NoSuchMethodException will be thrown, if recovery method is not found
+     * @param recoveryMethodName fallbackMethod method name
+     * @param originalMethod     will be used for checking return type and parameter types of the fallbackMethod method
+     * @param args               arguments those were passed to the original method. They will be passed to the fallbackMethod method.
+     * @param target             target object the fallbackMethod method will be invoked
+     * @throws NoSuchMethodException will be thrown, if fallbackMethod method is not found
      */
     public RecoveryMethod(String recoveryMethodName, Method originalMethod, Object[] args, Object target) throws NoSuchMethodException {
         Class<?>[] params = originalMethod.getParameterTypes();
@@ -103,9 +104,9 @@ public class RecoveryMethod {
     }
 
     /**
-     * get return type of recovery method
+     * get return type of fallbackMethod method
      *
-     * @return return type of recovery method
+     * @return return type of fallbackMethod method
      */
     public Class<?> getReturnType() {
         return returnType;
