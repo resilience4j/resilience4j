@@ -15,57 +15,83 @@
  */
 package io.github.resilience4j.prometheus.collectors;
 
-import static io.github.resilience4j.prometheus.collectors.CircuitBreakerMetricsCollector.MetricNames.DEFAULT_CIRCUIT_BREAKER_BUFFERED_CALLS;
-import static io.github.resilience4j.prometheus.collectors.CircuitBreakerMetricsCollector.MetricNames.DEFAULT_CIRCUIT_BREAKER_CALLS_METRIC_NAME;
-import static io.github.resilience4j.prometheus.collectors.CircuitBreakerMetricsCollector.MetricNames.DEFAULT_CIRCUIT_BREAKER_FAILURE_RATE;
-import static io.github.resilience4j.prometheus.collectors.CircuitBreakerMetricsCollector.MetricNames.DEFAULT_CIRCUIT_BREAKER_MAX_BUFFERED_CALLS;
-import static io.github.resilience4j.prometheus.collectors.CircuitBreakerMetricsCollector.MetricNames.DEFAULT_CIRCUIT_BREAKER_STATE_METRIC_NAME;
-import static java.util.Collections.singletonList;
-import static org.assertj.core.api.Assertions.assertThat;
-
+import io.github.resilience4j.circuitbreaker.CircuitBreaker;
+import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
+import io.prometheus.client.CollectorRegistry;
 import org.junit.Before;
 import org.junit.Test;
 
-import io.github.resilience4j.circuitbreaker.CircuitBreaker;
-import io.prometheus.client.CollectorRegistry;
+import static io.github.resilience4j.prometheus.collectors.CircuitBreakerMetricsCollector.MetricNames.*;
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class CircuitBreakerMetricsCollectorTest {
 
     CollectorRegistry registry;
     CircuitBreaker circuitBreaker;
+    CircuitBreakerRegistry circuitBreakerRegistry;
 
     @Before
     public void setup() {
         registry = new CollectorRegistry();
-        circuitBreaker = CircuitBreaker.ofDefaults("backendA");
+        circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
+        circuitBreaker = circuitBreakerRegistry.circuitBreaker("backendA");
+
+        CircuitBreakerMetricsCollector.ofCircuitBreakerRegistry(circuitBreakerRegistry).register(registry);
+
         // record some basic stats
         circuitBreaker.onSuccess(0);
         circuitBreaker.onError(0, new RuntimeException("oops"));
         circuitBreaker.transitionToOpenState();
-
-        CircuitBreakerMetricsCollector.ofCircuitBreaker(circuitBreaker).register(registry);
     }
 
     @Test
     public void stateReportsCorrespondingValue() {
         double state = registry.getSampleValue(
-            DEFAULT_CIRCUIT_BREAKER_STATE_METRIC_NAME,
+                DEFAULT_CIRCUIT_BREAKER_STATE,
             new String[]{"name", "state"},
             new String[]{circuitBreaker.getName(), circuitBreaker.getState().name().toLowerCase()}
         );
 
-        assertThat(state).isEqualTo(circuitBreaker.getState().getOrder());
+        assertThat(state).isEqualTo(1);
     }
 
     @Test
-    public void bufferedCallsReportsCorrespondingValue() {
-        double bufferedCalls = registry.getSampleValue(
-            DEFAULT_CIRCUIT_BREAKER_BUFFERED_CALLS,
-            new String[]{"name"},
-            new String[]{circuitBreaker.getName()}
+    public void shouldRemoveCircuitBreakerMetrics() {
+        double state = registry.getSampleValue(
+                DEFAULT_CIRCUIT_BREAKER_STATE,
+                new String[]{"name", "state"},
+                new String[]{circuitBreaker.getName(), circuitBreaker.getState().name().toLowerCase()}
         );
 
-        assertThat(bufferedCalls).isEqualTo(circuitBreaker.getMetrics().getNumberOfBufferedCalls());
+        assertThat(state).isEqualTo(1);
+
+        circuitBreakerRegistry.remove(circuitBreaker.getName());
+
+        assertThat(registry.getSampleValue(
+                DEFAULT_CIRCUIT_BREAKER_STATE,
+                new String[]{"name", "state"},
+                new String[]{circuitBreaker.getName(), circuitBreaker.getState().name().toLowerCase()}
+        )).isNull();
+    }
+
+    @Test
+    public void shouldReportNewlyAddedCircuitBreaker() {
+        String name = "newBackend";
+        assertThat(registry.getSampleValue(
+                DEFAULT_CIRCUIT_BREAKER_STATE,
+                new String[]{"name", "state"},
+                new String[]{name, circuitBreaker.getState().name().toLowerCase()}
+        )).isNull();
+
+        circuitBreakerRegistry.circuitBreaker(name);
+
+        double state = registry.getSampleValue(
+                DEFAULT_CIRCUIT_BREAKER_STATE,
+                new String[]{"name", "state"},
+                new String[]{circuitBreaker.getName(), circuitBreaker.getState().name().toLowerCase()}
+        );
+
+        assertThat(state).isEqualTo(1);
     }
 
     @Test
@@ -80,9 +106,9 @@ public class CircuitBreakerMetricsCollectorTest {
     }
 
     @Test
-    public void successfulCallsReportsCorrespondingValue() {
+    public void successfulBufferedCallsReportsCorrespondingValue() {
         double successfulCalls = registry.getSampleValue(
-            DEFAULT_CIRCUIT_BREAKER_CALLS_METRIC_NAME,
+            DEFAULT_CIRCUIT_BREAKER_BUFFERED_CALLS,
             new String[]{"name", "kind"},
             new String[]{circuitBreaker.getName(), "successful"}
         );
@@ -91,9 +117,9 @@ public class CircuitBreakerMetricsCollectorTest {
     }
 
     @Test
-    public void failedCallsReportsCorrespondingValue() {
+    public void failedBufferedCallsReportsCorrespondingValue() {
         double failedCalls = registry.getSampleValue(
-            DEFAULT_CIRCUIT_BREAKER_CALLS_METRIC_NAME,
+            DEFAULT_CIRCUIT_BREAKER_BUFFERED_CALLS,
             new String[]{"name", "kind"},
             new String[]{circuitBreaker.getName(), "failed"}
         );
@@ -102,11 +128,34 @@ public class CircuitBreakerMetricsCollectorTest {
     }
 
     @Test
-    public void notPermittedCallsReportsCorrespondingValue() {
+    public void successfulCallsBucketReportsCorrespondingValue() {
+        double successfulCalls = registry.getSampleValue(
+                DEFAULT_CIRCUIT_BREAKER_CALLS + "_bucket",
+                new String[]{"name", "kind", "le"},
+                new String[]{circuitBreaker.getName(), "successful", "0.1"}
+        );
+
+        assertThat(successfulCalls).isEqualTo(circuitBreaker.getMetrics().getNumberOfSuccessfulCalls());
+    }
+
+    @Test
+    public void failedCallsBucketReportsCorrespondingValue() {
+        double failedCalls = registry.getSampleValue(
+                DEFAULT_CIRCUIT_BREAKER_CALLS + "_bucket",
+                new String[]{"name", "kind", "le"},
+                new String[]{circuitBreaker.getName(), "failed", "0.1"}
+        );
+
+        assertThat(failedCalls).isEqualTo(circuitBreaker.getMetrics().getNumberOfFailedCalls());
+    }
+
+    @Test
+    public void notPermittedCallsBucketReportsCorrespondingValue() {
+        assertThat(circuitBreaker.tryObtainPermission()).isFalse();
         double notPermitted = registry.getSampleValue(
-            DEFAULT_CIRCUIT_BREAKER_CALLS_METRIC_NAME,
-            new String[]{"name", "kind"},
-            new String[]{circuitBreaker.getName(), "not_permitted"}
+                DEFAULT_CIRCUIT_BREAKER_CALLS + "_bucket",
+            new String[]{"name", "kind", "le"},
+            new String[]{circuitBreaker.getName(), "not_permitted", "0.1"}
         );
 
         assertThat(notPermitted).isEqualTo(circuitBreaker.getMetrics().getNumberOfNotPermittedCalls());
@@ -127,7 +176,7 @@ public class CircuitBreakerMetricsCollectorTest {
     public void customMetricNamesOverrideDefaultOnes() {
         CollectorRegistry registry = new CollectorRegistry();
 
-        CircuitBreakerMetricsCollector.ofSupplier(
+        CircuitBreakerMetricsCollector.ofCircuitBreakerRegistry(
             CircuitBreakerMetricsCollector.MetricNames.custom()
                 .callsMetricName("custom_calls")
                 .stateMetricName("custom_state")
@@ -135,23 +184,17 @@ public class CircuitBreakerMetricsCollectorTest {
                 .bufferedCallsMetricName("custom_buffered_calls")
                 .failureRateMetricName("custom_failure_rate")
                 .build(),
-            () -> singletonList(CircuitBreaker.ofDefaults("backendA"))
-        ).register(registry);
+            circuitBreakerRegistry).register(registry);
 
         assertThat(registry.getSampleValue(
-            "custom_calls",
+            "custom_buffered_calls",
             new String[]{"name", "kind"},
             new String[]{"backendA", "successful"}
         )).isNotNull();
         assertThat(registry.getSampleValue(
-            "custom_calls",
+            "custom_buffered_calls",
             new String[]{"name", "kind"},
             new String[]{"backendA", "failed"}
-        )).isNotNull();
-        assertThat(registry.getSampleValue(
-            "custom_calls",
-            new String[]{"name", "kind"},
-            new String[]{"backendA", "not_permitted"}
         )).isNotNull();
         assertThat(registry.getSampleValue(
             "custom_state",
@@ -160,11 +203,6 @@ public class CircuitBreakerMetricsCollectorTest {
         )).isNotNull();
         assertThat(registry.getSampleValue(
             "custom_max_buffered_calls",
-            new String[]{"name"},
-            new String[]{"backendA"}
-        )).isNotNull();
-        assertThat(registry.getSampleValue(
-            "custom_buffered_calls",
             new String[]{"name"},
             new String[]{"backendA"}
         )).isNotNull();

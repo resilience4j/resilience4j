@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Yevhenii Voievodin
+ * Copyright 2019 Yevhenii Voievodin, Robert Winkler
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,8 +34,8 @@ public class TaggedCircuitBreakerMetrics extends AbstractMetrics implements Mete
     private static final String KIND_STATE = "state";
     private static final String KIND_FAILED = "failed";
     private static final String KIND_SUCCESSFUL = "successful";
-    public static final String KIND_IGNORED = "ignored";
-    public static final String KIND_NOT_PERMITTED = "not_permitted";
+    private static final String KIND_IGNORED = "ignored";
+    private static final String KIND_NOT_PERMITTED = "not_permitted";
 
     /**
      * Creates a new binder that uses given {@code registry} as source of circuit breakers.
@@ -183,21 +183,21 @@ public class TaggedCircuitBreakerMetrics extends AbstractMetrics implements Mete
 
         private MetricNames() {}
 
-        /** Returns the metric name for circuit breaker calls, defaults to {@value DEFAULT_CIRCUIT_BREAKER_STATE}.
+        /** Returns the metric name for circuit breaker calls, defaults to {@value DEFAULT_CIRCUIT_BREAKER_CALLS}.
          * @return The circuit breaker calls metric name.
          */
         public String getCallsMetricName() {
             return callsMetricName;
         }
 
-        /** Returns the metric name for currently buffered calls, defaults to {@value DEFAULT_CIRCUIT_BREAKER_STATE}.
+        /** Returns the metric name for currently buffered calls, defaults to {@value DEFAULT_CIRCUIT_BREAKER_BUFFERED_CALLS}.
          * @return The buffered calls metric name.
          */
         public String getBufferedCallsMetricName() {
             return bufferedCallsMetricName;
         }
 
-        /** Returns the metric name for max buffered calls, defaults to {@value DEFAULT_CIRCUIT_BREAKER_STATE}.
+        /** Returns the metric name for max buffered calls, defaults to {@value DEFAULT_CIRCUIT_BREAKER_MAX_BUFFERED_CALLS}.
          * @return The max buffered calls metric name.
          */
         public String getMaxBufferedCallsMetricName() {

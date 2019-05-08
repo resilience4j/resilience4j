@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Yevhenii Voievodin
+ * Copyright 2019 Yevhenii Voievodin, Robert Winkler
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,7 +23,6 @@ import io.prometheus.client.GaugeMetricFamily;
 
 import java.util.List;
 import java.util.Objects;
-import java.util.function.Supplier;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
@@ -37,54 +36,27 @@ public class BulkheadMetricsCollector extends Collector {
      * using given {@code supplier} as source of bulkheads.
      *
      * @param names    the custom metric names
-     * @param supplier the supplier of bulkheads, note that supplier will be called one every {@link #collect()}
+     * @param bulkheadRegistry the source of bulkheads
      */
-    public static BulkheadMetricsCollector ofSupplier(MetricNames names, Supplier<? extends Iterable<? extends Bulkhead>> supplier) {
-        return new BulkheadMetricsCollector(names, supplier);
-    }
-
-    /**
-     * Creates a new collector using given {@code supplier} as source of bulkheads.
-     *
-     * @param supplier the supplier of bulkheads, note that supplier will be called one very {@link #collect()}
-     */
-    public static BulkheadMetricsCollector ofSupplier(Supplier<? extends Iterable<? extends Bulkhead>> supplier) {
-        return new BulkheadMetricsCollector(MetricNames.ofDefaults(), supplier);
+    public static BulkheadMetricsCollector ofBulkheadRegistry(BulkheadMetricsCollector.MetricNames names, BulkheadRegistry bulkheadRegistry) {
+        return new BulkheadMetricsCollector(names, bulkheadRegistry);
     }
 
     /**
      * Creates a new collector using given {@code registry} as source of bulkheads.
      *
-     * @param registry the source of bulkheads
+     * @param bulkheadRegistry the source of bulkheads
      */
-    public static BulkheadMetricsCollector ofBulkheadRegistry(BulkheadRegistry registry) {
-        return new BulkheadMetricsCollector(MetricNames.ofDefaults(), registry::getAllBulkheads);
-    }
-
-    /**
-     * Creates a new collector using given {@code bulkheads} iterable as source of bulkheads.
-     *
-     * @param bulkheads the source of bulkheads
-     */
-    public static BulkheadMetricsCollector ofIterable(Iterable<? extends Bulkhead> bulkheads) {
-        return new BulkheadMetricsCollector(MetricNames.ofDefaults(), () -> bulkheads);
-    }
-
-    /**
-     * Creates a new collector for a given {@code bulkhead}.
-     *
-     * @param bulkhead the bulkhead to collect metrics for
-     */
-    public static BulkheadMetricsCollector ofBulkhead(Bulkhead bulkhead) {
-        return ofIterable(singletonList(bulkhead));
+    public static BulkheadMetricsCollector ofBulkheadRegistry(BulkheadRegistry bulkheadRegistry) {
+        return new BulkheadMetricsCollector(BulkheadMetricsCollector.MetricNames.ofDefaults(), bulkheadRegistry);
     }
 
     private final MetricNames names;
-    private final Supplier<? extends Iterable<? extends Bulkhead>> bulkheadsSupplier;
+    private final BulkheadRegistry bulkheadRegistry;
 
-    private BulkheadMetricsCollector(MetricNames names, Supplier<? extends Iterable<? extends Bulkhead>> bulkheadsSupplier) {
+    private BulkheadMetricsCollector(MetricNames names, BulkheadRegistry bulkheadRegistry) {
         this.names = Objects.requireNonNull(names);
-        this.bulkheadsSupplier = Objects.requireNonNull(bulkheadsSupplier);
+        this.bulkheadRegistry = Objects.requireNonNull(bulkheadRegistry);
     }
 
     @Override
@@ -100,7 +72,7 @@ public class BulkheadMetricsCollector extends Collector {
             LabelNames.NAME
         );
 
-        for (Bulkhead bulkhead: bulkheadsSupplier.get()) {
+        for (Bulkhead bulkhead: bulkheadRegistry.getAllBulkheads()) {
             List<String> labelValues = singletonList(bulkhead.getName());
             availableCallsFamily.addMetric(labelValues, bulkhead.getMetrics().getAvailableConcurrentCalls());
             maxAllowedCallsFamily.addMetric(labelValues, bulkhead.getMetrics().getMaxAllowedConcurrentCalls());

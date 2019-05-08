@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Yevhenii Voievodin
+ * Copyright 2019 Yevhenii Voievodin, Robert Winkler
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -81,9 +81,11 @@ public class TaggedRateLimiterMetrics extends AbstractMetrics implements MeterBi
         Set<Meter.Id> idSet = new HashSet<>();
 
         idSet.add(Gauge.builder(names.getAvailablePermissionsMetricName(), rateLimiter, rl -> rl.getMetrics().getAvailablePermissions())
+                .description("The number of available permissions")
                 .tag(TagNames.NAME, rateLimiter.getName())
                 .register(registry).getId());
         idSet.add(Gauge.builder(names.getWaitingThreadsMetricName(), rateLimiter, rl -> rl.getMetrics().getNumberOfWaitingThreads())
+                .description("The number of waiting threads")
                 .tag(TagNames.NAME, rateLimiter.getName())
                 .register(registry).getId());
 

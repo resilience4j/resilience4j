@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Yevhenii Voievodin
+ * Copyright 2019 Yevhenii Voievodin, Robert Winkler
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -81,9 +81,11 @@ public class TaggedBulkheadMetrics extends AbstractMetrics implements MeterBinde
         Set<Meter.Id> idSet = new HashSet<>();
 
         idSet.add(Gauge.builder(names.getAvailableConcurrentCallsMetricName(), bulkhead, bh -> bh.getMetrics().getAvailableConcurrentCalls())
+                .description("The number of available permissions")
                 .tag(TagNames.NAME, bulkhead.getName())
                 .register(registry).getId());
         idSet.add(Gauge.builder(names.getMaxAllowedConcurrentCallsMetricName(), bulkhead, bh -> bh.getMetrics().getMaxAllowedConcurrentCalls())
+                .description("The maximum number available permissions")
                 .tag(TagNames.NAME, bulkhead.getName())
                 .register(registry).getId());
 
