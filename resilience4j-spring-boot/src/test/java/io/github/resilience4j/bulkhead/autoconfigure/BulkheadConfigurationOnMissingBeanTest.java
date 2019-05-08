@@ -22,6 +22,7 @@ import static org.junit.Assert.assertNotEquals;
 import java.lang.reflect.Method;
 import java.util.List;
 
+import io.github.resilience4j.recovery.RecoveryDecorators;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -104,8 +105,9 @@ public class BulkheadConfigurationOnMissingBeanTest {
 
 		@Bean
 		public BulkheadAspect bulkheadAspect(BulkheadRegistry bulkheadRegistry,
-		                                     @Autowired(required = false) List<BulkheadAspectExt> bulkheadAspectExts) {
-			bulkheadAspect = new BulkheadAspect(new BulkheadProperties(), bulkheadRegistry, bulkheadAspectExts);
+											 @Autowired(required = false) List<BulkheadAspectExt> bulkheadAspectExts,
+											 RecoveryDecorators recoveryDecorators) {
+			bulkheadAspect = new BulkheadAspect(new BulkheadProperties(), bulkheadRegistry, bulkheadAspectExts, recoveryDecorators);
 			return bulkheadAspect;
 		}
 

@@ -18,7 +18,10 @@ package io.github.resilience4j.circuitbreaker.configure;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.core.lang.Nullable;
+import io.github.resilience4j.recovery.RecoveryDecorators;
 import io.github.resilience4j.utils.AnnotationExtractor;
+import io.github.resilience4j.recovery.RecoveryDecorators;
+import io.github.resilience4j.recovery.RecoveryMethod;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -28,6 +31,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.Ordered;
+import org.springframework.util.StringUtils;
 
 import java.lang.reflect.Method;
 import java.util.List;
@@ -47,11 +51,13 @@ public class CircuitBreakerAspect implements Ordered {
 	private final CircuitBreakerConfigurationProperties circuitBreakerProperties;
 	private final CircuitBreakerRegistry circuitBreakerRegistry;
 	private final @Nullable List<CircuitBreakerAspectExt> circuitBreakerAspectExtList;
+	private final RecoveryDecorators recoveryDecorators;
 
-	public CircuitBreakerAspect(CircuitBreakerConfigurationProperties circuitBreakerProperties, CircuitBreakerRegistry circuitBreakerRegistry, @Autowired(required = false) List<CircuitBreakerAspectExt> circuitBreakerAspectExtList) {
+	public CircuitBreakerAspect(CircuitBreakerConfigurationProperties circuitBreakerProperties, CircuitBreakerRegistry circuitBreakerRegistry, @Autowired(required = false) List<CircuitBreakerAspectExt> circuitBreakerAspectExtList, RecoveryDecorators recoveryDecorators) {
 		this.circuitBreakerProperties = circuitBreakerProperties;
 		this.circuitBreakerRegistry = circuitBreakerRegistry;
 		this.circuitBreakerAspectExtList = circuitBreakerAspectExtList;
+		this.recoveryDecorators = recoveryDecorators;
 	}
 
 	@Pointcut(value = "@within(circuitBreaker) || @annotation(circuitBreaker)", argNames = "circuitBreaker")
@@ -71,6 +77,16 @@ public class CircuitBreakerAspect implements Ordered {
         String backend = backendMonitored.name();
 		io.github.resilience4j.circuitbreaker.CircuitBreaker circuitBreaker = getOrCreateCircuitBreaker(methodName, backend);
 		Class<?> returnType = method.getReturnType();
+
+		if (StringUtils.isEmpty(backendMonitored.recovery())) {
+			return proceed(proceedingJoinPoint, methodName, circuitBreaker, returnType);
+		}
+
+		RecoveryMethod recoveryMethod = new RecoveryMethod(backendMonitored.recovery(), method, proceedingJoinPoint.getArgs(), proceedingJoinPoint.getTarget());
+        return recoveryDecorators.decorate(recoveryMethod, () -> proceed(proceedingJoinPoint, methodName, circuitBreaker, returnType)).apply();
+	}
+
+	private Object proceed(ProceedingJoinPoint proceedingJoinPoint, String methodName, io.github.resilience4j.circuitbreaker.CircuitBreaker circuitBreaker, Class<?> returnType) throws Throwable {
 		if (circuitBreakerAspectExtList != null && !circuitBreakerAspectExtList.isEmpty()) {
 			for (CircuitBreakerAspectExt circuitBreakerAspectExt : circuitBreakerAspectExtList) {
 				if (circuitBreakerAspectExt.canHandleReturnType(returnType)) {

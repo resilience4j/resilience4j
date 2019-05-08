@@ -12,4 +12,11 @@ public @interface Bulkhead {
      * @return the name of the bulkhead
      */
     String name();
+
+    /**
+     * recovery method name.
+     *
+     * @return recovery method name.
+     */
+    String recovery() default "";
 }

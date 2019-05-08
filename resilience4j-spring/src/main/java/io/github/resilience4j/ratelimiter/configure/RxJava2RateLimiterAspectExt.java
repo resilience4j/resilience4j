@@ -61,7 +61,6 @@ public class RxJava2RateLimiterAspectExt implements RateLimiterAspectExt {
 	 * @return the result object
 	 * @throws Throwable exception in case of faulty flow
 	 */
-	@SuppressWarnings("unchecked")
 	@Override
 	public Object handle(ProceedingJoinPoint proceedingJoinPoint, RateLimiter rateLimiter, String methodName) throws Throwable {
 		RateLimiterOperator<?> rateLimiterOperator = RateLimiterOperator.of(rateLimiter);

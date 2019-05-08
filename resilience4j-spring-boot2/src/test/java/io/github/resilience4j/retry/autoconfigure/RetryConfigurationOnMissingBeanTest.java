@@ -19,6 +19,7 @@ import static org.junit.Assert.assertEquals;
 
 import java.util.List;
 
+import io.github.resilience4j.recovery.RecoveryDecorators;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -89,8 +90,9 @@ public class RetryConfigurationOnMissingBeanTest {
 
 		@Bean
 		public RetryAspect retryAspect(RetryRegistry retryRegistry,
-		                               @Autowired(required = false) List<RetryAspectExt> retryAspectExts) {
-			this.retryAspect = new RetryAspect(new RetryProperties(), retryRegistry, retryAspectExts);
+									   @Autowired(required = false) List<RetryAspectExt> retryAspectExts,
+									   RecoveryDecorators recoveryDecorators) {
+			this.retryAspect = new RetryAspect(new RetryProperties(), retryRegistry, retryAspectExts, recoveryDecorators);
 			return retryAspect;
 		}
 

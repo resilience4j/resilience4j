@@ -15,6 +15,7 @@
  */
 package io.github.resilience4j.bulkhead.autoconfigure;
 
+import io.github.resilience4j.recovery.autoconfigure.RecoveryConfigurationOnMissingBean;
 import org.springframework.boot.actuate.autoconfigure.endpoint.EndpointAutoConfiguration;
 import org.springframework.boot.actuate.autoconfigure.endpoint.condition.ConditionalOnEnabledEndpoint;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
@@ -38,7 +39,7 @@ import io.github.resilience4j.consumer.EventConsumerRegistry;
 @Configuration
 @ConditionalOnClass(Bulkhead.class)
 @EnableConfigurationProperties(BulkheadProperties.class)
-@Import(BulkheadConfigurationOnMissingBean.class)
+@Import({BulkheadConfigurationOnMissingBean.class,  RecoveryConfigurationOnMissingBean.class})
 @AutoConfigureBefore(EndpointAutoConfiguration.class)
 public class BulkheadAutoConfiguration {
 	@Bean

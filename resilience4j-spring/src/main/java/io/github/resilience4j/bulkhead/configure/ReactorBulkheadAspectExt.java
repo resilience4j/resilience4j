@@ -37,7 +37,6 @@ public class ReactorBulkheadAspectExt implements BulkheadAspectExt {
 	 * @param returnType the AOP method return type class
 	 * @return boolean if the method has Reactor return type
 	 */
-	@SuppressWarnings("unchecked")
 	@Override
 	public boolean canHandleReturnType(Class returnType) {
 		return (Flux.class.isAssignableFrom(returnType)) || (Mono.class.isAssignableFrom(returnType));
@@ -53,7 +52,6 @@ public class ReactorBulkheadAspectExt implements BulkheadAspectExt {
 	 * @return the result object
 	 * @throws Throwable exception in case of faulty flow
 	 */
-	@SuppressWarnings("unchecked")
 	@Override
 	public Object handle(ProceedingJoinPoint proceedingJoinPoint, Bulkhead bulkhead, String methodName) throws Throwable {
 		Object returnValue = proceedingJoinPoint.proceed();

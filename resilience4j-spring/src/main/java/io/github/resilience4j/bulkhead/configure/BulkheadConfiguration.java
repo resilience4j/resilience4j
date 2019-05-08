@@ -20,6 +20,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import io.github.resilience4j.recovery.RecoveryDecorators;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Conditional;
@@ -89,8 +90,9 @@ public class BulkheadConfiguration {
 
 	@Bean
 	public BulkheadAspect bulkheadAspect(BulkheadConfigurationProperties bulkheadConfigurationProperties,
-	                                     BulkheadRegistry bulkheadRegistry, @Autowired(required = false) List<BulkheadAspectExt> bulkHeadAspectExtList) {
-		return new BulkheadAspect(bulkheadConfigurationProperties, bulkheadRegistry, bulkHeadAspectExtList);
+										 BulkheadRegistry bulkheadRegistry, @Autowired(required = false) List<BulkheadAspectExt> bulkHeadAspectExtList,
+										 RecoveryDecorators recoveryDecorators) {
+		return new BulkheadAspect(bulkheadConfigurationProperties, bulkheadRegistry, bulkHeadAspectExtList, recoveryDecorators);
 	}
 
 	@Bean
