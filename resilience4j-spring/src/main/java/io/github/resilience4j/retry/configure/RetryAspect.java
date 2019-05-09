@@ -35,8 +35,8 @@ import org.springframework.core.Ordered;
 import org.springframework.util.StringUtils;
 
 import io.github.resilience4j.core.lang.Nullable;
-import io.github.resilience4j.recovery.FallbackDecorators;
-import io.github.resilience4j.recovery.FallbackMethod;
+import io.github.resilience4j.fallback.FallbackDecorators;
+import io.github.resilience4j.fallback.FallbackMethod;
 import io.github.resilience4j.retry.RetryRegistry;
 import io.github.resilience4j.retry.annotation.Retry;
 import io.github.resilience4j.utils.AnnotationExtractor;

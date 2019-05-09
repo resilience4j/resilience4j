@@ -20,6 +20,7 @@ import static org.assertj.core.api.Java6Assertions.assertThatThrownBy;
 
 import java.lang.reflect.Method;
 
+import io.github.resilience4j.fallback.FallbackMethod;
 import org.junit.Test;
 
 @SuppressWarnings({"WeakerAccess", "unused"})

@@ -22,9 +22,9 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
 
-import io.github.resilience4j.recovery.FallbackDecorator;
-import io.github.resilience4j.recovery.FallbackDecorators;
-import io.github.resilience4j.recovery.configure.FallbackConfiguration;
+import io.github.resilience4j.fallback.FallbackDecorator;
+import io.github.resilience4j.fallback.FallbackDecorators;
+import io.github.resilience4j.fallback.configure.FallbackConfiguration;
 import io.github.resilience4j.utils.ReactorOnClasspathCondition;
 import io.github.resilience4j.utils.RxJava2OnClasspathCondition;
 

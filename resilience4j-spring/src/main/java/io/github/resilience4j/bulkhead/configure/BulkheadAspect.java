@@ -34,8 +34,8 @@ import org.springframework.util.StringUtils;
 import io.github.resilience4j.bulkhead.BulkheadRegistry;
 import io.github.resilience4j.bulkhead.annotation.Bulkhead;
 import io.github.resilience4j.core.lang.Nullable;
-import io.github.resilience4j.recovery.FallbackDecorators;
-import io.github.resilience4j.recovery.FallbackMethod;
+import io.github.resilience4j.fallback.FallbackDecorators;
+import io.github.resilience4j.fallback.FallbackMethod;
 import io.github.resilience4j.utils.AnnotationExtractor;
 
 /**
