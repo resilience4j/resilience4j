@@ -2129,6 +2129,28 @@ For example</p>
 <li>
 <p>Retry aspect will detect the proper handling based into the method return type for synchronous , asynchronous execution(CompletableFuture) , RxJava2 and Reactor</p>
 </li>
+<li>
+<p>Fallback support is enabled by defining name of fallback method in @Retry</p>
+</li>
+</ul>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>        @Retry(name = BACKEND, fallbackMethod = "fallback")
+        public String sync(String param1) {
+            return "test";
+        }
+
+        private String fallback(String param1, IllegalStateException e) {
+            return "test";
+        }</pre>
+</div>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Its important to remember that Retry method and its fallback method should be placed in the same class and have same method signature (optional parameter for failed execution exception).</p>
+</li>
 </ul>
 </div>
 <div class="paragraph">
@@ -2288,6 +2310,34 @@ These Beans can be overridden in your application&#8217;s Spring Bean configurat
 <p>Note that in Spring Boot 1.x, EventConsumerRegistry&lt;CircuitBreakerEvent&gt; cannot be overridden because of limitations of the @ConditionalOnMissingBean implementation.<br>
 To override this, go to at least Spring Boot 2.1.x.</p>
 </div>
+<div class="paragraph">
+<p>The rules for CircuitBreaker spring annotation usage  :</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>CircuitBreaker aspect with fallback support will detect the proper handling based into the method return type for synchronous , asynchronous execution(CompletableFuture) , RxJava2 and Reactor</p>
+</li>
+<li>
+<p>Fallback support is enabled by defining name of fallback method in @CircuitBreaker</p>
+</li>
+</ul>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="java">    <span class="annotation">@CircuitBreaker</span>(name = BACKEND, fallbackMethod = <span class="string"><span class="delimiter">&quot;</span><span class="content">fallback</span><span class="delimiter">&quot;</span></span>)
+    <span class="directive">public</span> <span class="predefined-type">String</span> sync() {
+        <span class="keyword">return</span> <span class="string"><span class="delimiter">&quot;</span><span class="content">test</span><span class="delimiter">&quot;</span></span>;
+    }</code></pre>
+</div>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Its important to remember that CircuitBreaker method and its fallback method should be placed in the same class and have same method signature (optional parameter for failed execution exception).</p>
+</li>
+</ul>
+</div>
 </div>
 <div class="sect4">
 <h5 id="_ratelimiter_3"><a class="anchor" href="#_ratelimiter_3"></a><a class="link" href="#_ratelimiter_3">RateLimiter</a></h5>
@@ -2329,6 +2379,34 @@ These Beans can be overridden in your application&#8217;s Spring Bean configurat
 <div class="paragraph">
 <p>Note that in Spring Boot 1.x, EventConsumerRegistry&lt;RateLimiterEvent&gt; cannot be overridden because of limitations of the @ConditionalOnMissingBean implementation.<br>
 To override this, go to at least Spring Boot 2.1.x.</p>
+</div>
+<div class="paragraph">
+<p>The rules for RateLimiter spring annotation usage  :</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>RateLimiter aspect with fallback support will detect the proper handling based into the method return type for synchronous , asynchronous execution(CompletableFuture) , RxJava2 and Reactor</p>
+</li>
+<li>
+<p>Fallback support is enabled by defining name of fallback method in @RateLimiter</p>
+</li>
+</ul>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="java">    <span class="annotation">@RateLimiter</span>(name = BACKEND, fallbackMethod = <span class="string"><span class="delimiter">&quot;</span><span class="content">fallback</span><span class="delimiter">&quot;</span></span>)
+    <span class="directive">public</span> <span class="predefined-type">String</span> sync() {
+        <span class="keyword">return</span> <span class="string"><span class="delimiter">&quot;</span><span class="content">test</span><span class="delimiter">&quot;</span></span>;
+    }</code></pre>
+</div>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Its important to remember that RateLimiter method and its fallback method should be placed in the same class and have same method signature (optional parameter for failed execution exception).</p>
+</li>
+</ul>
 </div>
 </div>
 <div class="sect4">
@@ -3024,10 +3102,54 @@ For example</p>
 <li>
 <p>Retry aspect will detect the proper handling based into the method return type for synchronous , asynchronous execution(CompletableFuture) , RxJava2 and Reactor</p>
 </li>
+<li>
+<p>Fallback support is enabled by defining name of fallback method in @Retry</p>
+</li>
 </ul>
 </div>
+<div class="listingblock">
+<div class="content">
+<pre>            @Retry(name = BACKEND, fallbackMethod = "fallback")
+            public String sync(String param1) {
+                return "test";
+            }
+
+            private String fallback(String param1, IllegalStateException e) {
+                return "test";
+            }</pre>
+</div>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Its important to remember that Retry method and its fallback method should be placed in the same class and have same method signature (optional parameter for failed execution exception).</p>
+</li>
+<li>
+<p>If there are multiple fallbackMethod methods, one of the methods that has most closest superclass parameter of thrown object will be invoked, for example:</p>
+</li>
+</ul>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>            @Retry(name = BACKEND, fallbackMethod = "fallback")
+            public String sync(String param1) {
+                return "test";
+            }
+
+            private String fallback(String param1, IllegalArgumentException e) {
+                return "test";
+            }
+
+            private String fallback(String param1, RuntimeException e) {
+                 return "test";
+            }</pre>
+</div>
+</div>
 <div class="paragraph">
-<p>Code example of retry and async retry annotation usage in Java Spring component :</p>
+<p>and if you try to recover from  NumberFormatException, the method with signature String fallback(String parameter, IllegalArgumentException exception)} will be invoked.</p>
+</div>
+<div class="paragraph">
+<p>Code example of Sync, Async, Reactive retry annotation usage in Java Spring component :</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -3185,6 +3307,56 @@ These Beans can be overridden in your application&#8217;s Spring Bean configurat
 </li>
 </ul>
 </div>
+<div class="paragraph">
+<p>The rules for CircuitBreaker spring annotation usage  :</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>CircuitBreaker aspect with fallback support will detect the proper handling based into the method return type for synchronous , asynchronous execution(CompletableFuture) , RxJava2 and Reactor</p>
+</li>
+<li>
+<p>Fallback support is enabled by defining name of fallback method in @CircuitBreaker</p>
+</li>
+</ul>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="java">    <span class="annotation">@CircuitBreaker</span>(name = BACKEND, fallbackMethod = <span class="string"><span class="delimiter">&quot;</span><span class="content">fallback</span><span class="delimiter">&quot;</span></span>)
+    <span class="directive">public</span> <span class="predefined-type">String</span> sync() {
+        <span class="keyword">return</span> <span class="string"><span class="delimiter">&quot;</span><span class="content">test</span><span class="delimiter">&quot;</span></span>;
+    }</code></pre>
+</div>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Its important to remember that CircuitBreaker method and its fallback method should be placed in the same class and have same method signature (optional parameter for failed execution exception).</p>
+</li>
+<li>
+<p>If there are multiple fallbackMethod methods, one of the methods that has most closest superclass parameter of thrown object will be invoked, for example:</p>
+</li>
+</ul>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>                @CircuitBreaker(name = BACKEND, fallbackMethod = "fallback")
+                public String sync(String param1) {
+                    return "test";
+                }
+
+                private String fallback(String param1, IllegalArgumentException e) {
+                    return "test";
+                }
+
+                private String fallback(String param1, RuntimeException e) {
+                     return "test";
+                }</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>and if you try to recover from  NumberFormatException, the method with signature String fallback(String parameter, IllegalArgumentException exception) will be invoked.</p>
+</div>
 </div>
 <div class="sect4">
 <h5 id="_ratelimiter_6"><a class="anchor" href="#_ratelimiter_6"></a><a class="link" href="#_ratelimiter_6">RateLimiter</a></h5>
@@ -3231,6 +3403,56 @@ These Beans can be overridden in your application&#8217;s Spring Bean configurat
 <p>ReactorRateLimiterAspectExt</p>
 </li>
 </ul>
+</div>
+<div class="paragraph">
+<p>The rules for RateLimiter spring annotation usage  :</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>RateLimiter aspect with fallback support will detect the proper handling based into the method return type for synchronous , asynchronous execution(CompletableFuture) , RxJava2 and Reactor</p>
+</li>
+<li>
+<p>Fallback support is enabled by defining name of fallback method in @RateLimiter</p>
+</li>
+</ul>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="java">    <span class="annotation">@RateLimiter</span>(name = BACKEND, fallbackMethod = <span class="string"><span class="delimiter">&quot;</span><span class="content">fallback</span><span class="delimiter">&quot;</span></span>)
+    <span class="directive">public</span> <span class="predefined-type">String</span> sync() {
+        <span class="keyword">return</span> <span class="string"><span class="delimiter">&quot;</span><span class="content">test</span><span class="delimiter">&quot;</span></span>;
+    }</code></pre>
+</div>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Its important to remember that RateLimiter method and its fallback method should be placed in the same class and have same method signature (optional parameter for failed execution exception).</p>
+</li>
+<li>
+<p>If there are multiple fallbackMethod methods, one of the methods that has most closest superclass parameter of thrown object will be invoked, for example:</p>
+</li>
+</ul>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>                @RateLimiter(name = BACKEND, fallbackMethod = "fallback")
+                public String sync(String param1) {
+                    return "test";
+                }
+
+                private String fallback(String param1, IllegalArgumentException e) {
+                    return "test";
+                }
+
+                private String fallback(String param1, RuntimeException e) {
+                     return "test";
+                }</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>and if you try to recover from  NumberFormatException, the method with signature String fallback(String parameter, IllegalArgumentException exception) will be invoked.</p>
 </div>
 </div>
 <div class="sect4">
@@ -4920,7 +5142,7 @@ So you can easily restrict not only network calls but your local in-memory opera
 <div id="footer">
 <div id="footer-text">
 Version 0.15.0-SNAPSHOT<br>
-Last updated 2019-05-09 13:01:40 UTC
+Last updated 2019-05-09 17:39:37 UTC
 </div>
 </div>
 </body>
