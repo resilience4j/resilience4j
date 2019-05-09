@@ -243,17 +243,17 @@ public class RetryConfig {
 			config.retryOnResultPredicate = retryOnResultPredicate;
 			config.retryExceptions = retryExceptions;
 			config.ignoreExceptions = ignoreExceptions;
-			config.exceptionPredicate = buildExceptionPredicate();
+			config.exceptionPredicate = createExceptionPredicate();
 			return config;
 		}
 
-		private Predicate<Throwable> buildExceptionPredicate() {
-			return getRetryPredicate()
+		private Predicate<Throwable> createExceptionPredicate() {
+			return createRetryOnExceptionPredicate()
 					.and(PredicateCreator.createIgnoreExceptionsPredicate(ignoreExceptions)
 							.orElse(DEFAULT_RECORD_FAILURE_PREDICATE));
 		}
 
-		private Predicate<Throwable> getRetryPredicate() {
+		private Predicate<Throwable> createRetryOnExceptionPredicate() {
 			return PredicateCreator.createRecordExceptionsPredicate(retryExceptions)
 					.map(predicate -> retryOnExceptionPredicate != null ? predicate.or(retryOnExceptionPredicate) : predicate)
 					.orElseGet(() -> retryOnExceptionPredicate != null ? retryOnExceptionPredicate : DEFAULT_RECORD_FAILURE_PREDICATE);

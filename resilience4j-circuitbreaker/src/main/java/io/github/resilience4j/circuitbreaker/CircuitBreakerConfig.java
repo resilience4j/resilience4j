@@ -292,17 +292,17 @@ public class CircuitBreakerConfig {
             config.recordExceptions = recordExceptions;
             config.ignoreExceptions = ignoreExceptions;
             config.automaticTransitionFromOpenToHalfOpenEnabled = automaticTransitionFromOpenToHalfOpenEnabled;
-            config.recordFailurePredicate = buildExceptionPredicate();
+            config.recordFailurePredicate = createRecordFailurePredicate();
             return config;
         }
 
-        private Predicate<Throwable> buildExceptionPredicate() {
-            return getRetryPredicate()
+        private Predicate<Throwable> createRecordFailurePredicate() {
+            return createRecordExceptionPredicate()
                     .and(PredicateCreator.createIgnoreExceptionsPredicate(ignoreExceptions)
                             .orElse(DEFAULT_RECORD_FAILURE_PREDICATE));
         }
 
-        private Predicate<Throwable> getRetryPredicate() {
+        private Predicate<Throwable> createRecordExceptionPredicate() {
             return PredicateCreator.createRecordExceptionsPredicate(recordExceptions)
                     .map(predicate -> recordFailurePredicate != null ? predicate.or(recordFailurePredicate) : predicate)
                     .orElseGet(() -> recordFailurePredicate != null ? recordFailurePredicate : DEFAULT_RECORD_FAILURE_PREDICATE);
