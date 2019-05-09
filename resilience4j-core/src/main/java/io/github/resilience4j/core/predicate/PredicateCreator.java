@@ -6,6 +6,8 @@ import java.util.function.Predicate;
 
 public class PredicateCreator {
 
+    private PredicateCreator() {}
+
     @SafeVarargs
     public static Optional<Predicate<Throwable>> createRecordExceptionsPredicate(Class<? extends Throwable> ...recordExceptions) {
         return exceptionPredicate(recordExceptions);
@@ -24,9 +26,7 @@ public class PredicateCreator {
                 .reduce(Predicate::or);
     }
 
-
-
-    static private Predicate<Throwable> makePredicate(Class<? extends Throwable> exClass) {
+    private static Predicate<Throwable> makePredicate(Class<? extends Throwable> exClass) {
         return (Throwable e) -> exClass.isAssignableFrom(e.getClass());
     }
 }
