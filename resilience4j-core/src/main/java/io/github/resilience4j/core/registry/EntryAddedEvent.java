@@ -19,11 +19,11 @@
 package io.github.resilience4j.core.registry;
 
 
-public class EntryAddedEvent<ENTRY> extends AbstractRegistryEvent {
+public class EntryAddedEvent<E> extends AbstractRegistryEvent {
 
-    private ENTRY addedEntry;
+    private E addedEntry;
 
-    EntryAddedEvent(ENTRY addedEntry){
+    EntryAddedEvent(E addedEntry){
         this.addedEntry = addedEntry;
     }
 
@@ -32,7 +32,7 @@ public class EntryAddedEvent<ENTRY> extends AbstractRegistryEvent {
         return Type.ADDED;
     }
 
-    public ENTRY getAddedEntry() {
+    public E getAddedEntry() {
         return addedEntry;
     }
 }

@@ -72,7 +72,7 @@ public class TaggedCircuitBreakerMetrics extends AbstractMetrics implements Mete
 
         final CircuitBreaker.State[] states = CircuitBreaker.State.values();
         for (CircuitBreaker.State state : states) {
-            idSet.add(Gauge.builder(names.getStateMetricName(), circuitBreaker, (cb) -> cb.getState() == state ? 1 : 0)
+            idSet.add(Gauge.builder(names.getStateMetricName(), circuitBreaker, cb -> cb.getState() == state ? 1 : 0)
                     .description("The states of the circuit breaker")
                     .tag(TagNames.NAME, circuitBreaker.getName())
                     .tag(KIND_STATE, state.name().toLowerCase())

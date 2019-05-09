@@ -16,6 +16,7 @@
 package io.github.resilience4j.micrometer.tagged;
 
 import io.github.resilience4j.retry.Retry;
+import io.github.resilience4j.retry.RetryConfig;
 import io.github.resilience4j.retry.RetryRegistry;
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.Meter;
@@ -81,6 +82,24 @@ public class TaggedRetryMetricsTest {
 
         meters = meterRegistry.getMeters();
         assertThat(meters).isEmpty();
+    }
+
+    @Test
+    public void shouldReplaceMetrics() {
+        Collection<Gauge> gauges = meterRegistry.get(DEFAULT_RETRY_CALLS).gauges();
+        Optional<Gauge> successfulWithoutRetry = findGaugeByKindAndNameTags(gauges, "successful_without_retry", retry.getName());
+        assertThat(successfulWithoutRetry).isPresent();
+        assertThat(successfulWithoutRetry.get().value()).isEqualTo(retry.getMetrics().getNumberOfSuccessfulCallsWithoutRetryAttempt());
+
+
+        Retry newRetry = Retry.of(retry.getName(), RetryConfig.custom().maxAttempts(1).build());
+
+        retryRegistry.replace(retry.getName(), newRetry);
+
+        gauges = meterRegistry.get(DEFAULT_RETRY_CALLS).gauges();
+        successfulWithoutRetry = findGaugeByKindAndNameTags(gauges, "successful_without_retry", newRetry.getName());
+        assertThat(successfulWithoutRetry).isPresent();
+        assertThat(successfulWithoutRetry.get().value()).isEqualTo(newRetry.getMetrics().getNumberOfSuccessfulCallsWithoutRetryAttempt());
     }
 
     @Test
