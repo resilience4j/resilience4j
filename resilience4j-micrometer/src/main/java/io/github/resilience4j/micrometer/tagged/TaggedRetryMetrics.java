@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Yevhenii Voievodin
+ * Copyright 2019 Yevhenii Voievodin, Robert Winkler
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,7 +15,6 @@
  */
 package io.github.resilience4j.micrometer.tagged;
 
-import io.github.resilience4j.micrometer.RetryMetrics;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryRegistry;
 import io.micrometer.core.instrument.Gauge;
@@ -31,8 +30,6 @@ import static java.util.Objects.requireNonNull;
 
 /**
  * A micrometer binder that is used to register retry exposed {@link Metrics metrics}.
- * The main difference from {@link RetryMetrics} is that this binder uses tags
- * to distinguish between metrics.
  */
 public class TaggedRetryMetrics extends AbstractMetrics implements MeterBinder {
 
@@ -83,18 +80,22 @@ public class TaggedRetryMetrics extends AbstractMetrics implements MeterBinder {
         Set<Meter.Id> idSet = new HashSet<>();
 
         idSet.add(Gauge.builder(names.getCallsMetricName(), retry, rt -> rt.getMetrics().getNumberOfSuccessfulCallsWithoutRetryAttempt())
+                .description("The number of successful calls without a retry attempt")
                 .tag(TagNames.NAME, retry.getName())
                 .tag(TagNames.KIND, "successful_without_retry")
                 .register(registry).getId());
         idSet.add(Gauge.builder(names.getCallsMetricName(), retry, rt -> rt.getMetrics().getNumberOfSuccessfulCallsWithRetryAttempt())
+                .description("The number of successful calls after a retry attempt")
                 .tag(TagNames.NAME, retry.getName())
                 .tag(TagNames.KIND, "successful_with_retry")
                 .register(registry).getId());
         idSet.add(Gauge.builder(names.getCallsMetricName(), retry, rt -> rt.getMetrics().getNumberOfFailedCallsWithoutRetryAttempt())
+                .description("The number of failed calls without a retry attempt")
                 .tag(TagNames.NAME, retry.getName())
                 .tag(TagNames.KIND, "failed_without_retry")
                 .register(registry).getId());
         idSet.add(Gauge.builder(names.getCallsMetricName(), retry, rt -> rt.getMetrics().getNumberOfFailedCallsWithRetryAttempt())
+                .description("The number of failed calls after a retry attempt")
                 .tag(TagNames.NAME, retry.getName())
                 .tag(TagNames.KIND, "failed_with_retry")
                 .register(registry).getId());
@@ -105,7 +106,7 @@ public class TaggedRetryMetrics extends AbstractMetrics implements MeterBinder {
     /** Defines possible configuration for metric names. */
     public static class MetricNames {
 
-        public static final String DEFAULT_RETRY_CALLS = "resilience4j_retry_calls";
+        public static final String DEFAULT_RETRY_CALLS = "resilience4j.retry.calls";
 
         /**
          * Returns a builder for creating custom metric names.

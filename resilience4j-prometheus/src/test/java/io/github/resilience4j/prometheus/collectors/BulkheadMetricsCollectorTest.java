@@ -16,29 +16,30 @@
 package io.github.resilience4j.prometheus.collectors;
 
 import io.github.resilience4j.bulkhead.Bulkhead;
+import io.github.resilience4j.bulkhead.BulkheadRegistry;
 import io.prometheus.client.CollectorRegistry;
 import org.junit.Before;
 import org.junit.Test;
 
 import static io.github.resilience4j.prometheus.collectors.BulkheadMetricsCollector.MetricNames.DEFAULT_BULKHEAD_AVAILABLE_CONCURRENT_CALLS_METRIC_NAME;
 import static io.github.resilience4j.prometheus.collectors.BulkheadMetricsCollector.MetricNames.DEFAULT_BULKHEAD_MAX_ALLOWED_CONCURRENT_CALLS_METRIC_NAME;
-import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class BulkheadMetricsCollectorTest {
 
     CollectorRegistry registry;
     Bulkhead bulkhead;
+    BulkheadRegistry bulkheadRegistry;
 
     @Before
     public void setup() {
         registry = new CollectorRegistry();
-        bulkhead = Bulkhead.ofDefaults("backendA");
+        bulkheadRegistry = BulkheadRegistry.ofDefaults();
+        bulkhead = bulkheadRegistry.bulkhead("backendA");
+        BulkheadMetricsCollector.ofBulkheadRegistry(bulkheadRegistry).register(registry);
         // record some basic stats
         bulkhead.tryObtainPermission();
         bulkhead.tryObtainPermission();
-
-        BulkheadMetricsCollector.ofBulkhead(bulkhead).register(registry);
     }
 
     @Test
@@ -67,13 +68,12 @@ public class BulkheadMetricsCollectorTest {
     public void customMetricNamesOverrideDefaultOnes() {
         CollectorRegistry registry = new CollectorRegistry();
 
-        BulkheadMetricsCollector.ofSupplier(
+        BulkheadMetricsCollector.ofBulkheadRegistry(
             BulkheadMetricsCollector.MetricNames.custom()
                 .availableConcurrentCallsMetricName("custom_available_calls")
                 .maxAllowedConcurrentCallsMetricName("custom_max_allowed_calls")
                 .build(),
-            () -> singletonList(Bulkhead.ofDefaults("backendA"))
-        ).register(registry);
+                bulkheadRegistry ).register(registry);
 
         assertThat(registry.getSampleValue(
             "custom_available_calls",

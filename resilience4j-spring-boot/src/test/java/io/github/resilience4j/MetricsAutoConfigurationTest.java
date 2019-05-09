@@ -15,9 +15,6 @@
  */
 package io.github.resilience4j;
 
-import io.github.resilience4j.prometheus.BulkheadExports;
-import io.github.resilience4j.prometheus.CircuitBreakerExports;
-import io.github.resilience4j.prometheus.RateLimiterExports;
 import io.github.resilience4j.prometheus.collectors.BulkheadMetricsCollector;
 import io.github.resilience4j.prometheus.collectors.CircuitBreakerMetricsCollector;
 import io.github.resilience4j.prometheus.collectors.RateLimiterMetricsCollector;
@@ -35,15 +32,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class MetricsAutoConfigurationTest {
 
     @Autowired(required = false)
-    CircuitBreakerExports circuitBreakerExports;
-
-    @Autowired(required = false)
-    BulkheadExports bulkheadExports;
-
-    @Autowired(required = false)
-    RateLimiterExports rateLimiterExports;
-
-    @Autowired(required = false)
     CircuitBreakerMetricsCollector circuitBreakerMetricsCollector;
 
     @Autowired(required = false)
@@ -51,21 +39,6 @@ public class MetricsAutoConfigurationTest {
 
     @Autowired(required = false)
     RateLimiterMetricsCollector rateLimiterMetricsCollector;
-
-    @Test
-    public void legacyCircuitBreakerCollectorIsNotBound() {
-        assertThat(circuitBreakerExports).isNull();
-    }
-
-    @Test
-    public void legacyBulkheadCollectorIsNotBound() {
-        assertThat(bulkheadExports).isNull();
-    }
-
-    @Test
-    public void legacyRateLimiterCollectorIsNotBound() {
-        assertThat(bulkheadExports).isNull();
-    }
 
     @Test
     public void newCircuitBreakerCollectorIsBound() {

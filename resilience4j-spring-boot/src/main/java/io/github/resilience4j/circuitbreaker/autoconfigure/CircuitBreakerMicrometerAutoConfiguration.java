@@ -16,7 +16,6 @@
 package io.github.resilience4j.circuitbreaker.autoconfigure;
 
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
-import io.github.resilience4j.micrometer.CircuitBreakerMetrics;
 import io.github.resilience4j.micrometer.tagged.TaggedCircuitBreakerMetrics;
 import io.micrometer.spring.autoconfigure.MetricsAutoConfiguration;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
@@ -38,18 +37,6 @@ public class CircuitBreakerMicrometerAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
-    @ConditionalOnProperty(value = "resilience4j.circuitbreaker.metrics.use_legacy_binder", havingValue = "true")
-    public CircuitBreakerMetrics registerLegacyCircuitBreakerMetrics(CircuitBreakerRegistry circuitBreakerRegistry) {
-        return CircuitBreakerMetrics.ofCircuitBreakerRegistry(circuitBreakerRegistry);
-    }
-
-    @Bean
-    @ConditionalOnMissingBean
-    @ConditionalOnProperty(
-        value = "resilience4j.circuitbreaker.metrics.use_legacy_binder",
-        havingValue = "false",
-        matchIfMissing = true
-    )
     public TaggedCircuitBreakerMetrics registerCircuitBreakerMetrics(CircuitBreakerRegistry circuitBreakerRegistry) {
         return TaggedCircuitBreakerMetrics.ofCircuitBreakerRegistry(circuitBreakerRegistry);
     }

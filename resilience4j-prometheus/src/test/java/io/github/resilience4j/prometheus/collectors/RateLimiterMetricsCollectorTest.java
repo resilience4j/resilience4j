@@ -16,26 +16,28 @@
 package io.github.resilience4j.prometheus.collectors;
 
 import io.github.resilience4j.ratelimiter.RateLimiter;
+import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
 import io.prometheus.client.CollectorRegistry;
 import org.junit.Before;
 import org.junit.Test;
 
 import static io.github.resilience4j.prometheus.collectors.RateLimiterMetricsCollector.MetricNames.DEFAULT_AVAILABLE_PERMISSIONS_METRIC_NAME;
 import static io.github.resilience4j.prometheus.collectors.RateLimiterMetricsCollector.MetricNames.DEFAULT_WAITING_THREADS_METRIC_NAME;
-import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class RateLimiterMetricsCollectorTest {
 
     CollectorRegistry registry;
     RateLimiter rateLimiter;
+    RateLimiterRegistry rateLimiterRegistry;
 
     @Before
     public void setup() {
         registry = new CollectorRegistry();
-        rateLimiter = RateLimiter.ofDefaults("backendA");
+        rateLimiterRegistry = RateLimiterRegistry.ofDefaults();
+        rateLimiter = rateLimiterRegistry.rateLimiter("backendA");
 
-        RateLimiterMetricsCollector.ofRateLimiter(rateLimiter).register(registry);
+        RateLimiterMetricsCollector.ofRateLimiterRegistry(rateLimiterRegistry).register(registry);
     }
 
     @Test
@@ -64,13 +66,12 @@ public class RateLimiterMetricsCollectorTest {
     public void customMetricNamesOverrideDefaultOnes() {
         CollectorRegistry registry = new CollectorRegistry();
 
-        RateLimiterMetricsCollector.ofSupplier(
+        RateLimiterMetricsCollector.ofRateLimiterRegistry(
             RateLimiterMetricsCollector.MetricNames.custom()
                 .availablePermissionsMetricName("custom_available_permissions")
                 .waitingThreadsMetricName("custom_waiting_threads")
                 .build(),
-            () -> singletonList(RateLimiter.ofDefaults("backendA"))
-        ).register(registry);
+                rateLimiterRegistry).register(registry);
 
         assertThat(registry.getSampleValue(
             "custom_available_permissions",

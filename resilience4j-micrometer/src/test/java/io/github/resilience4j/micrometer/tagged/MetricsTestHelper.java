@@ -15,7 +15,9 @@
  */
 package io.github.resilience4j.micrometer.tagged;
 
+import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.Gauge;
+import io.micrometer.core.instrument.Timer;
 
 import java.util.Collection;
 import java.util.Optional;
@@ -23,6 +25,20 @@ import java.util.Optional;
 final class MetricsTestHelper {
     static Optional<Gauge> findGaugeByKindAndNameTags(Collection<Gauge> gauges, String kind, String name) {
         return gauges.stream()
+                .filter(g -> kind.equals(g.getId().getTag(TagNames.KIND)))
+                .filter(g -> name.equals(g.getId().getTag(TagNames.NAME)))
+                .findAny();
+    }
+
+    static Optional<Timer> findTimerByKindAndNameTags(Collection<Timer> timers, String kind, String name) {
+        return timers.stream()
+                .filter(g -> kind.equals(g.getId().getTag(TagNames.KIND)))
+                .filter(g -> name.equals(g.getId().getTag(TagNames.NAME)))
+                .findAny();
+    }
+
+    static Optional<Counter> findCounterByKindAndNameTags(Collection<Counter> counters, String kind, String name) {
+        return counters.stream()
                 .filter(g -> kind.equals(g.getId().getTag(TagNames.KIND)))
                 .filter(g -> name.equals(g.getId().getTag(TagNames.NAME)))
                 .findAny();
