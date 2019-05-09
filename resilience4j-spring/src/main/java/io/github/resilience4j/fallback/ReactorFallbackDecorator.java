@@ -13,18 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.resilience4j.recovery;
+package io.github.resilience4j.fallback;
 
-import static io.github.resilience4j.utils.AspectUtil.newHashSet;
+import io.vavr.CheckedFunction0;
+import org.reactivestreams.Publisher;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import java.util.Set;
 import java.util.function.Function;
 
-import org.reactivestreams.Publisher;
-
-import io.vavr.CheckedFunction0;
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
+import static io.github.resilience4j.utils.AspectUtil.newHashSet;
 
 /**
  * fallbackMethod decorator for {@link Flux} and {@link Mono}
@@ -55,7 +54,7 @@ public class ReactorFallbackDecorator implements FallbackDecorator {
 
     @SuppressWarnings("unchecked")
     private <T> Function<? super Throwable, ? extends Publisher<? extends T>> reactorOnErrorResume(FallbackMethod recoveryMethod, Function<? super Throwable, ? extends Publisher<? extends T>> errorFunction) {
-        return (throwable) -> {
+        return throwable -> {
             try {
                 return (Publisher<? extends T>) recoveryMethod.recover(throwable);
             } catch (Throwable recoverThrowable) {

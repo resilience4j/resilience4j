@@ -13,23 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.resilience4j.recovery;
+package io.github.resilience4j.fallback;
 
-import static io.github.resilience4j.utils.AspectUtil.newHashSet;
+import io.reactivex.*;
+import io.vavr.CheckedFunction0;
 
 import java.util.Set;
 import java.util.function.Function;
 
-import io.reactivex.Completable;
-import io.reactivex.CompletableSource;
-import io.reactivex.Flowable;
-import io.reactivex.Maybe;
-import io.reactivex.MaybeSource;
-import io.reactivex.Observable;
-import io.reactivex.ObservableSource;
-import io.reactivex.Single;
-import io.reactivex.SingleSource;
-import io.vavr.CheckedFunction0;
+import static io.github.resilience4j.utils.AspectUtil.newHashSet;
 
 /**
  * fallbackMethod decorator for {@link ObservableSource}, {@link SingleSource}, {@link CompletableSource}, {@link MaybeSource} and {@link Flowable}.
@@ -68,7 +60,7 @@ public class RxJava2FallbackDecorator implements FallbackDecorator {
 
     @SuppressWarnings("unchecked")
     private <T> io.reactivex.functions.Function<Throwable, T> rxJava2OnErrorResumeNext(FallbackMethod recoveryMethod, Function<? super Throwable, ? extends T> errorFunction) {
-        return (throwable) -> {
+        return throwable -> {
             try {
                 return (T) recoveryMethod.recover(throwable);
             } catch (Throwable recoverThrowable) {

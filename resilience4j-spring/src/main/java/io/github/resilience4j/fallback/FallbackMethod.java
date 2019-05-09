@@ -13,7 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.resilience4j.recovery;
+package io.github.resilience4j.fallback;
+
+import io.github.resilience4j.core.lang.Nullable;
+import org.springframework.util.ConcurrentReferenceHashMap;
+import org.springframework.util.ReflectionUtils;
+import org.springframework.util.StringUtils;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -21,18 +26,12 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.springframework.util.ConcurrentReferenceHashMap;
-import org.springframework.util.ReflectionUtils;
-import org.springframework.util.StringUtils;
-
-import io.github.resilience4j.core.lang.Nullable;
-
 /**
- * Reflection utility for invoking fallbackMethod method. Recovery method should have same return type and parameter types of original method but the last additional parameter.
+ * Reflection utility for invoking a fallback method. A fallback method should have the same return type and parameter types of original method but the last additional parameter.
  * The last additional parameter should be a subclass of {@link Throwable}. When {@link FallbackMethod#recover(Throwable)} is invoked, {@link Throwable} will be passed to that last parameter.
- * If there are multiple fallbackMethod method, one of the methods that has most closest superclass parameter of thrown object will be invoked.
+ * If there are multiple fallback methods, one of the methods that has most closest superclass parameter of thrown object will be invoked.
  * <pre>
- * For example, there are two fallbackMethod methods
+ * For example, there are two fallback methods
  * {@code
  * String fallbackMethod(String parameter, RuntimeException exception)
  * String fallbackMethod(String parameter, IllegalArgumentException exception)

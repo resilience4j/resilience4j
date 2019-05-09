@@ -23,7 +23,7 @@ import io.github.resilience4j.ratelimiter.configure.RateLimiterAspectExt;
 import io.github.resilience4j.ratelimiter.configure.RateLimiterConfiguration;
 import io.github.resilience4j.ratelimiter.configure.RateLimiterConfigurationProperties;
 import io.github.resilience4j.ratelimiter.event.RateLimiterEvent;
-import io.github.resilience4j.recovery.FallbackDecorators;
+import io.github.resilience4j.fallback.FallbackDecorators;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(classes = {

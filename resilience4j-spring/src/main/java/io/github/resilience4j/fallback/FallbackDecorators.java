@@ -13,11 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.resilience4j.recovery;
-
-import java.util.List;
+package io.github.resilience4j.fallback;
 
 import io.vavr.CheckedFunction0;
+
+import java.util.List;
 
 /**
  * {@link FallbackDecorator} resolver

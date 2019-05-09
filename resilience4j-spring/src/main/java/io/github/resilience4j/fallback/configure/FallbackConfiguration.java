@@ -13,21 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.resilience4j.recovery.configure;
+package io.github.resilience4j.fallback.configure;
 
-import java.util.List;
-
+import io.github.resilience4j.fallback.*;
+import io.github.resilience4j.utils.ReactorOnClasspathCondition;
+import io.github.resilience4j.utils.RxJava2OnClasspathCondition;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
 
-import io.github.resilience4j.recovery.CompletionStageFallbackDecorator;
-import io.github.resilience4j.recovery.FallbackDecorator;
-import io.github.resilience4j.recovery.FallbackDecorators;
-import io.github.resilience4j.recovery.ReactorFallbackDecorator;
-import io.github.resilience4j.recovery.RxJava2FallbackDecorator;
-import io.github.resilience4j.utils.ReactorOnClasspathCondition;
-import io.github.resilience4j.utils.RxJava2OnClasspathCondition;
+import java.util.List;
 
 /**
  * {@link Configuration} for {@link FallbackDecorators}.

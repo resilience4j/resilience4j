@@ -15,8 +15,15 @@
  */
 package io.github.resilience4j.circuitbreaker.autoconfigure;
 
-import java.util.List;
-
+import io.github.resilience4j.circuitbreaker.CircuitBreaker;
+import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
+import io.github.resilience4j.circuitbreaker.configure.*;
+import io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent;
+import io.github.resilience4j.consumer.EventConsumerRegistry;
+import io.github.resilience4j.fallback.FallbackDecorators;
+import io.github.resilience4j.recovery.autoconfigure.FallbackConfigurationOnMissingBean;
+import io.github.resilience4j.utils.ReactorOnClasspathCondition;
+import io.github.resilience4j.utils.RxJava2OnClasspathCondition;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
@@ -24,20 +31,7 @@ import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 
-import io.github.resilience4j.circuitbreaker.CircuitBreaker;
-import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
-import io.github.resilience4j.circuitbreaker.configure.CircuitBreakerAspect;
-import io.github.resilience4j.circuitbreaker.configure.CircuitBreakerAspectExt;
-import io.github.resilience4j.circuitbreaker.configure.CircuitBreakerConfiguration;
-import io.github.resilience4j.circuitbreaker.configure.CircuitBreakerConfigurationProperties;
-import io.github.resilience4j.circuitbreaker.configure.ReactorCircuitBreakerAspectExt;
-import io.github.resilience4j.circuitbreaker.configure.RxJava2CircuitBreakerAspectExt;
-import io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent;
-import io.github.resilience4j.consumer.EventConsumerRegistry;
-import io.github.resilience4j.recovery.FallbackDecorators;
-import io.github.resilience4j.recovery.autoconfigure.FallbackConfigurationOnMissingBean;
-import io.github.resilience4j.utils.ReactorOnClasspathCondition;
-import io.github.resilience4j.utils.RxJava2OnClasspathCondition;
+import java.util.List;
 
 @Configuration
 @Import(FallbackConfigurationOnMissingBean.class)
