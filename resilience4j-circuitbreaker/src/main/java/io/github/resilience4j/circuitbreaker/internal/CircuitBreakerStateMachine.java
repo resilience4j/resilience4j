@@ -19,18 +19,24 @@
 package io.github.resilience4j.circuitbreaker.internal;
 
 
+import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.circuitbreaker.event.*;
 import io.github.resilience4j.core.EventConsumer;
 import io.github.resilience4j.core.EventProcessor;
+import io.github.resilience4j.core.lang.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Clock;
 import java.time.Duration;
+import java.time.Instant;
 import java.util.Objects;
 import java.util.concurrent.CompletionException;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -49,8 +55,8 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
     private final AtomicReference<CircuitBreakerState> stateReference;
     private final CircuitBreakerConfig circuitBreakerConfig;
     private final CircuitBreakerEventProcessor eventProcessor;
-    private Clock clock;
-    private SchedulerFactory schedulerFactory;
+    private final Clock clock;
+    private final SchedulerFactory schedulerFactory;
 
     /**
      * Creates a circuitBreaker.
@@ -60,10 +66,10 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
      * @param clock A Clock which can be mocked in tests.
      * @param schedulerFactory A SchedulerFactory which can be mocked in tests.
      */
-    CircuitBreakerStateMachine(String name, CircuitBreakerConfig circuitBreakerConfig, Clock clock, SchedulerFactory schedulerFactory) {
+    private CircuitBreakerStateMachine(String name, CircuitBreakerConfig circuitBreakerConfig, Clock clock, SchedulerFactory schedulerFactory) {
         this.name = name;
         this.circuitBreakerConfig = Objects.requireNonNull(circuitBreakerConfig, "Config must not be null");
-        this.stateReference = new AtomicReference<>(new ClosedState(this));
+        this.stateReference = new AtomicReference<>(new ClosedState());
         this.eventProcessor = new CircuitBreakerEventProcessor();
         this.clock = clock;
         this.schedulerFactory = schedulerFactory;
@@ -197,7 +203,6 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
         return this.name;
     }
 
-
     /**
      * Get the config of this CircuitBreaker.
      *
@@ -223,7 +228,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
 
     @Override
     public void reset() {
-        CircuitBreakerState previousState = stateReference.getAndUpdate(currentState -> new ClosedState(this));
+        CircuitBreakerState previousState = stateReference.getAndUpdate(currentState -> new ClosedState());
         if (previousState.getState() != CLOSED) {
             publishStateTransitionEvent(StateTransition.transitionBetween(previousState.getState(), CLOSED));
         }
@@ -242,37 +247,35 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
         }
     }
 
-
     @Override
     public void transitionToDisabledState() {
-        stateTransition(DISABLED, currentState -> new DisabledState(this));
+        stateTransition(DISABLED, currentState -> new DisabledState());
     }
 
     @Override
     public void transitionToForcedOpenState() {
-        stateTransition(FORCED_OPEN, currentState -> new ForcedOpenState(this));
+        stateTransition(FORCED_OPEN, currentState -> new ForcedOpenState());
     }
 
     @Override
     public void transitionToClosedState() {
-        stateTransition(CLOSED, currentState -> new ClosedState(this, currentState.getMetrics()));
+        stateTransition(CLOSED, currentState -> new ClosedState(currentState.getMetrics()));
     }
 
     @Override
     public void transitionToOpenState() {
-        stateTransition(OPEN, currentState -> new OpenState(this, currentState.getMetrics(), schedulerFactory));
+        stateTransition(OPEN, currentState -> new OpenState(currentState.getMetrics()));
     }
 
     @Override
     public void transitionToHalfOpenState() {
-        stateTransition(HALF_OPEN, currentState -> new HalfOpenState(this));
+        stateTransition(HALF_OPEN, currentState -> new HalfOpenState());
     }
 
 
     private boolean shouldPublishEvents(CircuitBreakerEvent event) {
         return stateReference.get().shouldPublishEvents(event);
     }
-
 
     private void publishEventIfPossible(CircuitBreakerEvent event) {
         if(shouldPublishEvents(event)) {
@@ -326,10 +329,6 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
         return eventProcessor;
     }
 
-    Clock getClock() {
-        return clock;
-    }
-
     private class CircuitBreakerEventProcessor extends EventProcessor<CircuitBreakerEvent> implements EventConsumer<CircuitBreakerEvent>, EventPublisher {
         @Override
         public EventPublisher onSuccess(EventConsumer<CircuitBreakerOnSuccessEvent> onSuccessEventConsumer) {
@@ -370,6 +369,376 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
         @Override
         public void consumeEvent(CircuitBreakerEvent event) {
             super.processEvent(event);
+        }
+    }
+
+    private class ClosedState extends CircuitBreakerState {
+
+        private final CircuitBreakerMetrics circuitBreakerMetrics;
+        private final float failureRateThreshold;
+
+        ClosedState() {
+            this(null);
+        }
+
+        ClosedState(@Nullable CircuitBreakerMetrics circuitBreakerMetrics) {
+            if(circuitBreakerMetrics == null){
+                this.circuitBreakerMetrics = new CircuitBreakerMetrics(circuitBreakerConfig.getRingBufferSizeInClosedState());
+            }else{
+                this.circuitBreakerMetrics = circuitBreakerMetrics.copy(circuitBreakerConfig.getRingBufferSizeInClosedState());
+            }
+            this.failureRateThreshold = circuitBreakerConfig.getFailureRateThreshold();
+        }
+
+        /**
+         * Returns always true, because the CircuitBreaker is closed.
+         *
+         * @return always true, because the CircuitBreaker is closed.
+         */
+        @Override
+        boolean tryObtainPermission() {
+            return true;
+        }
+
+        /**
+         * Does not throw an exception, because the CircuitBreaker is closed.
+         */
+        @Override
+        void obtainPermission() {
+            // noOp
+        }
+
+        @Override
+        void onError(Throwable throwable) {
+            // CircuitBreakerMetrics is thread-safe
+            checkFailureRate(circuitBreakerMetrics.onError());
+        }
+
+        @Override
+        void onSuccess() {
+            // CircuitBreakerMetrics is thread-safe
+            checkFailureRate(circuitBreakerMetrics.onSuccess());
+        }
+
+        /**
+         * Checks if the current failure rate is above the threshold.
+         * If the failure rate is above the threshold, transitions the state machine to OPEN state.
+         *
+         * @param currentFailureRate the current failure rate
+         */
+        private void checkFailureRate(float currentFailureRate) {
+            if (currentFailureRate >= failureRateThreshold) {
+                // Transition the state machine to OPEN state, because the failure rate is above the threshold
+                transitionToOpenState();
+            }
+        }
+
+        /**
+         * Get the state of the CircuitBreaker
+         */
+        @Override
+        CircuitBreaker.State getState() {
+            return CircuitBreaker.State.CLOSED;
+        }
+        /**
+         *
+         * Get metrics of the CircuitBreaker
+         */
+        @Override
+        CircuitBreakerMetrics getMetrics() {
+            return circuitBreakerMetrics;
+        }
+    }
+
+    private class OpenState extends CircuitBreakerState {
+
+        private final Instant retryAfterWaitDuration;
+        private final CircuitBreakerMetrics circuitBreakerMetrics;
+
+        OpenState(CircuitBreakerMetrics circuitBreakerMetrics) {
+            final Duration waitDurationInOpenState = circuitBreakerConfig.getWaitDurationInOpenState();
+            this.retryAfterWaitDuration = clock.instant().plus(waitDurationInOpenState);
+            this.circuitBreakerMetrics = circuitBreakerMetrics;
+
+            if (circuitBreakerConfig.isAutomaticTransitionFromOpenToHalfOpenEnabled()) {
+                ScheduledExecutorService scheduledExecutorService = schedulerFactory.getScheduler();
+                scheduledExecutorService.schedule(CircuitBreakerStateMachine.this::transitionToHalfOpenState, waitDurationInOpenState.toMillis(), TimeUnit.MILLISECONDS);
+            }
+        }
+
+        /**
+         * Returns false, if the wait duration has not elapsed.
+         * Returns true, if the wait duration has elapsed and transitions the state machine to HALF_OPEN state.
+         *
+         * @return false, if the wait duration has not elapsed. true, if the wait duration has elapsed.
+         */
+        @Override
+        boolean tryObtainPermission() {
+            // Thread-safe
+            if (clock.instant().isAfter(retryAfterWaitDuration)) {
+                transitionToHalfOpenState();
+                return true;
+            }
+            circuitBreakerMetrics.onCallNotPermitted();
+            return false;
+        }
+
+        @Override
+        void obtainPermission() {
+            if(!tryObtainPermission()){
+                throw new CallNotPermittedException(CircuitBreakerStateMachine.this);
+            }
+        }
+
+        /**
+         * Should never be called when tryObtainPermission returns false.
+         */
+        @Override
+        void onError(Throwable throwable) {
+            // Could be called when Thread 1 invokes obtainPermission when the state is CLOSED, but in the meantime another
+            // Thread 2 calls onError and the state changes from CLOSED to OPEN before Thread 1 calls onError.
+            // But the onError event should still be recorded, even if it happened after the state transition.
+            circuitBreakerMetrics.onError();
+        }
+
+        /**
+         * Should never be called when tryObtainPermission returns false.
+         */
+        @Override
+        void onSuccess() {
+            // Could be called when Thread 1 invokes obtainPermission when the state is CLOSED, but in the meantime another
+            // Thread 2 calls onError and the state changes from CLOSED to OPEN before Thread 1 calls onSuccess.
+            // But the onSuccess event should still be recorded, even if it happened after the state transition.
+            circuitBreakerMetrics.onSuccess();
+        }
+
+        /**
+         * Get the state of the CircuitBreaker
+         */
+        @Override
+        CircuitBreaker.State getState() {
+            return CircuitBreaker.State.OPEN;
+        }
+
+        @Override
+        CircuitBreakerMetrics getMetrics() {
+            return circuitBreakerMetrics;
+        }
+    }
+
+    private class DisabledState extends CircuitBreakerState {
+
+        private final CircuitBreakerMetrics circuitBreakerMetrics;
+
+        DisabledState() {
+            final int size = circuitBreakerConfig.getRingBufferSizeInClosedState();
+            this.circuitBreakerMetrics = new CircuitBreakerMetrics(size);
+        }
+
+        /**
+         * Returns always true, because the CircuitBreaker is disabled.
+         *
+         * @return always true, because the CircuitBreaker is disabled.
+         */
+        @Override
+        boolean tryObtainPermission() {
+            return true;
+        }
+
+        /**
+         * Does not throw an exception, because the CircuitBreaker is disabled.
+         */
+        @Override
+        void obtainPermission() {
+            // noOp
+        }
+
+
+        @Override
+        void onError(Throwable throwable) {
+            // noOp
+        }
+
+        @Override
+        void onSuccess() {
+            // noOp
+        }
+
+        /**
+         * Get the state of the CircuitBreaker
+         */
+        @Override
+        CircuitBreaker.State getState() {
+            return CircuitBreaker.State.DISABLED;
+        }
+        /**
+         *
+         * Get metricsof the CircuitBreaker
+         */
+        @Override
+        CircuitBreakerMetrics getMetrics() {
+            return circuitBreakerMetrics;
+        }
+    }
+
+    private class ForcedOpenState extends CircuitBreakerState {
+
+        private final CircuitBreakerMetrics circuitBreakerMetrics;
+
+        ForcedOpenState() {
+            final int size = circuitBreakerConfig.getRingBufferSizeInHalfOpenState();
+            this.circuitBreakerMetrics = new CircuitBreakerMetrics(size);
+        }
+
+        /**
+         * Returns always false, and records the rejected call.
+         *
+         * @return always false, since the FORCED_OPEN state always denies calls.
+         */
+        @Override
+        boolean tryObtainPermission() {
+            circuitBreakerMetrics.onCallNotPermitted();
+            return false;
+        }
+
+        @Override
+        void obtainPermission() {
+            circuitBreakerMetrics.onCallNotPermitted();
+            throw new CallNotPermittedException(CircuitBreakerStateMachine.this);
+        }
+
+        /**
+         * Should never be called when tryObtainPermission returns false.
+         */
+        @Override
+        void onError(Throwable throwable) {
+            // noOp
+        }
+
+        /**
+         * Should never be called when tryObtainPermission returns false.
+         */
+        @Override
+        void onSuccess() {
+            // noOp
+        }
+
+        /**
+         * Get the state of the CircuitBreaker
+         */
+        @Override
+        CircuitBreaker.State getState() {
+            return CircuitBreaker.State.FORCED_OPEN;
+        }
+
+        @Override
+        CircuitBreakerMetrics getMetrics() {
+            return circuitBreakerMetrics;
+        }
+    }
+
+    private class HalfOpenState extends CircuitBreakerState {
+
+        private CircuitBreakerMetrics circuitBreakerMetrics;
+        private final float failureRateThreshold;
+        private final AtomicInteger testRequestCounter;
+
+        HalfOpenState() {
+            this.circuitBreakerMetrics = new CircuitBreakerMetrics(
+                    circuitBreakerConfig.getRingBufferSizeInHalfOpenState());
+            this.failureRateThreshold = circuitBreakerConfig.getFailureRateThreshold();
+            this.testRequestCounter = new AtomicInteger(circuitBreakerConfig.getRingBufferSizeInHalfOpenState());
+        }
+
+        /**
+         * Checks if test request is allowed.
+         *
+         * Returns true, if test request counter is not zero.
+         * Returns false, if test request counter is zero.
+         *
+         * @return true, if test request counter is not zero.
+         */
+        @Override
+        boolean tryObtainPermission() {
+            if (testRequestCounter.getAndDecrement() > 0) {
+                return true;
+            }
+            circuitBreakerMetrics.onCallNotPermitted();
+            return false;
+        }
+
+        @Override
+        void obtainPermission() {
+            if(!tryObtainPermission()){
+                throw new CallNotPermittedException(CircuitBreakerStateMachine.this);
+            }
+        }
+
+        @Override
+        void onError(Throwable throwable) {
+            // CircuitBreakerMetrics is thread-safe
+            checkFailureRate(circuitBreakerMetrics.onError());
+        }
+
+        @Override
+        void onSuccess() {
+            // CircuitBreakerMetrics is thread-safe
+            checkFailureRate(circuitBreakerMetrics.onSuccess());
+        }
+
+        /**
+         * Checks if the current failure rate is above or below the threshold.
+         * If the failure rate is above the threshold, transition the state machine to OPEN state.
+         * If the failure rate is below the threshold, transition the state machine to CLOSED state.
+         *
+         * @param currentFailureRate the current failure rate
+         */
+        private void checkFailureRate(float currentFailureRate) {
+            if(currentFailureRate != -1){
+                if(currentFailureRate >= failureRateThreshold) {
+                    transitionToOpenState();
+                }else{
+                    transitionToClosedState();
+                }
+            }
+        }
+
+        /**
+         * Get the state of the CircuitBreaker
+         */
+        @Override
+        CircuitBreaker.State getState() {
+            return CircuitBreaker.State.HALF_OPEN;
+        }
+
+        @Override
+        CircuitBreakerMetrics getMetrics() {
+            return circuitBreakerMetrics;
+        }
+    }
+
+    private abstract class CircuitBreakerState{
+
+        CircuitBreakerState(){}
+
+        abstract boolean tryObtainPermission();
+
+        abstract void obtainPermission();
+
+        abstract void onError(Throwable throwable);
+
+        abstract void onSuccess();
+
+        abstract CircuitBreaker.State getState();
+
+        abstract CircuitBreakerMetrics getMetrics();
+
+        /**
+         * Should the CircuitBreaker in this state publish events
+         * @return a boolean signaling if the events should be published
+         */
+        boolean shouldPublishEvents(CircuitBreakerEvent event){
+            return event.getEventType().forcePublish || getState().allowPublish;
         }
     }
 }
