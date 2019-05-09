@@ -40,9 +40,9 @@ public @interface RateLimiter {
     String name();
 
     /**
-     * recovery method name.
+     * fallbackMethod method name.
      *
-     * @return recovery method name.
+     * @return fallbackMethod method name.
      */
-    String recovery() default "";
+    String fallbackMethod() default "";
 }

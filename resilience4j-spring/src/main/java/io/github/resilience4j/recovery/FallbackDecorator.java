@@ -18,23 +18,15 @@ package io.github.resilience4j.recovery;
 import io.vavr.CheckedFunction0;
 
 /**
- *  default recovery decorator. it catches throwable and invoke the recovery method.
+ * interface of FallbackDecorator
  */
-public class DefaultRecoveryDecorator implements RecoveryDecorator {
+public interface FallbackDecorator {
+    boolean supports(Class<?> target);
 
-    @Override
-    public boolean supports(Class<?> target) {
-        return true;
-    }
-
-    @Override
-    public CheckedFunction0<Object> decorate(RecoveryMethod recoveryMethod, CheckedFunction0<Object> supplier) {
-        return () -> {
-            try {
-                return supplier.apply();
-            } catch (Throwable throwable) {
-                return recoveryMethod.recover(throwable);
-            }
-        };
-    }
+    /**
+     * @param recoveryMethod fallbackMethod method.
+     * @param supplier       target function should be decorated.
+     * @return decorated function
+     */
+    CheckedFunction0<Object> decorate(FallbackMethod recoveryMethod, CheckedFunction0<Object> supplier);
 }

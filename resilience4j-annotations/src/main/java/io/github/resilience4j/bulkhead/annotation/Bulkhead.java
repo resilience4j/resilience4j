@@ -1,6 +1,10 @@
 package io.github.resilience4j.bulkhead.annotation;
 
-import java.lang.annotation.*;
+import java.lang.annotation.Documented;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 @Retention(value = RetentionPolicy.RUNTIME)
 @Target(value = {ElementType.METHOD, ElementType.TYPE})
@@ -14,9 +18,9 @@ public @interface Bulkhead {
     String name();
 
     /**
-     * recovery method name.
+     * fallbackMethod method name.
      *
-     * @return recovery method name.
+     * @return fallbackMethod method name.
      */
-    String recovery() default "";
+    String fallbackMethod() default "";
 }
