@@ -20,7 +20,6 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.List;
 
-import io.github.resilience4j.recovery.RecoveryDecorators;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,6 +31,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
+import io.github.resilience4j.recovery.FallbackDecorators;
 import io.github.resilience4j.retry.RetryRegistry;
 import io.github.resilience4j.retry.event.RetryEvent;
 
@@ -75,8 +75,8 @@ public class RetryConfigurationSpringTest {
 		@Bean
 		public RetryAspect retryAspect(RetryRegistry retryRegistry,
 									   @Autowired(required = false) List<RetryAspectExt> retryAspectExts,
-									   RecoveryDecorators recoveryDecorators) {
-			retryAspect = new RetryAspect(retryConfigurationProperties(), retryRegistry, retryAspectExts, recoveryDecorators);
+									   FallbackDecorators fallbackDecorators) {
+			retryAspect = new RetryAspect(retryConfigurationProperties(), retryRegistry, retryAspectExts, fallbackDecorators);
 			return retryAspect;
 		}
 

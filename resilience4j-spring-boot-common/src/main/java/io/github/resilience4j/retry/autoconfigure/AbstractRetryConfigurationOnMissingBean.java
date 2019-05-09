@@ -15,14 +15,8 @@
  */
 package io.github.resilience4j.retry.autoconfigure;
 
-import io.github.resilience4j.consumer.EventConsumerRegistry;
-import io.github.resilience4j.recovery.RecoveryDecorators;
-import io.github.resilience4j.recovery.autoconfigure.RecoveryConfigurationOnMissingBean;
-import io.github.resilience4j.retry.RetryRegistry;
-import io.github.resilience4j.retry.configure.*;
-import io.github.resilience4j.retry.event.RetryEvent;
-import io.github.resilience4j.utils.ReactorOnClasspathCondition;
-import io.github.resilience4j.utils.RxJava2OnClasspathCondition;
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
@@ -30,14 +24,26 @@ import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 
-import java.util.List;
+import io.github.resilience4j.consumer.EventConsumerRegistry;
+import io.github.resilience4j.recovery.FallbackDecorators;
+import io.github.resilience4j.recovery.autoconfigure.FallbackConfigurationOnMissingBean;
+import io.github.resilience4j.retry.RetryRegistry;
+import io.github.resilience4j.retry.configure.ReactorRetryAspectExt;
+import io.github.resilience4j.retry.configure.RetryAspect;
+import io.github.resilience4j.retry.configure.RetryAspectExt;
+import io.github.resilience4j.retry.configure.RetryConfiguration;
+import io.github.resilience4j.retry.configure.RetryConfigurationProperties;
+import io.github.resilience4j.retry.configure.RxJava2RetryAspectExt;
+import io.github.resilience4j.retry.event.RetryEvent;
+import io.github.resilience4j.utils.ReactorOnClasspathCondition;
+import io.github.resilience4j.utils.RxJava2OnClasspathCondition;
 
 /**
  * {@link Configuration
  * Configuration} for resilience4j-retry.
  */
 @Configuration
-@Import(RecoveryConfigurationOnMissingBean.class)
+@Import(FallbackConfigurationOnMissingBean.class)
 public abstract class AbstractRetryConfigurationOnMissingBean {
 
 	protected final RetryConfiguration retryConfiguration;
@@ -66,8 +72,8 @@ public abstract class AbstractRetryConfigurationOnMissingBean {
 	@ConditionalOnMissingBean
 	public RetryAspect retryAspect(RetryConfigurationProperties retryConfigurationProperties,
 								   RetryRegistry retryRegistry, @Autowired(required = false) List<RetryAspectExt> retryAspectExtList,
-								   RecoveryDecorators recoveryDecorators) {
-		return retryConfiguration.retryAspect(retryConfigurationProperties, retryRegistry, retryAspectExtList, recoveryDecorators);
+								   FallbackDecorators fallbackDecorators) {
+		return retryConfiguration.retryAspect(retryConfigurationProperties, retryRegistry, retryAspectExtList, fallbackDecorators);
 	}
 
 	@Bean

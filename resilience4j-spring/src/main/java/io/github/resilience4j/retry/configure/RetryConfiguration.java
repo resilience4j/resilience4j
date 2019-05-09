@@ -20,7 +20,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import io.github.resilience4j.recovery.RecoveryDecorators;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Conditional;
@@ -28,6 +27,7 @@ import org.springframework.context.annotation.Configuration;
 
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
+import io.github.resilience4j.recovery.FallbackDecorators;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryConfig;
 import io.github.resilience4j.retry.RetryRegistry;
@@ -97,8 +97,8 @@ public class RetryConfiguration {
 	@Bean
 	public RetryAspect retryAspect(RetryConfigurationProperties retryConfigurationProperties,
 								   RetryRegistry retryRegistry, @Autowired(required = false) List<RetryAspectExt> retryAspectExtList,
-								   RecoveryDecorators recoveryDecorators) {
-		return new RetryAspect(retryConfigurationProperties, retryRegistry, retryAspectExtList, recoveryDecorators);
+								   FallbackDecorators fallbackDecorators) {
+		return new RetryAspect(retryConfigurationProperties, retryRegistry, retryAspectExtList, fallbackDecorators);
 	}
 
 	@Bean

@@ -15,34 +15,34 @@
  */
 package io.github.resilience4j.recovery;
 
-import io.vavr.CheckedFunction0;
-
 import java.util.List;
 
-/**
- * {@link RecoveryDecorator} resolver
- */
-public class RecoveryDecorators {
-    private final List<RecoveryDecorator> recoveryDecorator;
-    private final RecoveryDecorator defaultRecoveryDecorator = new DefaultRecoveryDecorator();
+import io.vavr.CheckedFunction0;
 
-    public RecoveryDecorators(List<RecoveryDecorator> recoveryDecorator) {
+/**
+ * {@link FallbackDecorator} resolver
+ */
+public class FallbackDecorators {
+    private final List<FallbackDecorator> recoveryDecorator;
+    private final FallbackDecorator defaultRecoveryDecorator = new DefaultFallbackDecorator();
+
+    public FallbackDecorators(List<FallbackDecorator> recoveryDecorator) {
         this.recoveryDecorator = recoveryDecorator;
     }
 
     /**
-     * find a {@link RecoveryDecorator} by return type of the {@link RecoveryMethod} and decorate supplier
+     * find a {@link FallbackDecorator} by return type of the {@link FallbackMethod} and decorate supplier
      *
-     * @param recoveryMethod recovery method that handles supplier's exception
+     * @param recoveryMethod fallbackMethod method that handles supplier's exception
      * @param supplier       original function
-     * @return a function which is decorated by a {@link RecoveryMethod}
+     * @return a function which is decorated by a {@link FallbackMethod}
      */
-    public CheckedFunction0<Object> decorate(RecoveryMethod recoveryMethod, CheckedFunction0<Object> supplier) {
+    public CheckedFunction0<Object> decorate(FallbackMethod recoveryMethod, CheckedFunction0<Object> supplier) {
         return get(recoveryMethod.getReturnType())
                 .decorate(recoveryMethod, supplier);
     }
 
-    private RecoveryDecorator get(Class<?> returnType) {
+    private FallbackDecorator get(Class<?> returnType) {
         return recoveryDecorator.stream().filter(it -> it.supports(returnType))
                 .findFirst()
                 .orElse(defaultRecoveryDecorator);

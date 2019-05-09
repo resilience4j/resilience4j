@@ -15,18 +15,26 @@
  */
 package io.github.resilience4j.recovery;
 
-import io.reactivex.*;
-import io.vavr.CheckedFunction0;
+import static io.github.resilience4j.utils.AspectUtil.newHashSet;
 
 import java.util.Set;
 import java.util.function.Function;
 
-import static io.github.resilience4j.utils.AspectUtil.newHashSet;
+import io.reactivex.Completable;
+import io.reactivex.CompletableSource;
+import io.reactivex.Flowable;
+import io.reactivex.Maybe;
+import io.reactivex.MaybeSource;
+import io.reactivex.Observable;
+import io.reactivex.ObservableSource;
+import io.reactivex.Single;
+import io.reactivex.SingleSource;
+import io.vavr.CheckedFunction0;
 
 /**
- * recovery decorator for {@link ObservableSource}, {@link SingleSource}, {@link CompletableSource}, {@link MaybeSource} and {@link Flowable}.
+ * fallbackMethod decorator for {@link ObservableSource}, {@link SingleSource}, {@link CompletableSource}, {@link MaybeSource} and {@link Flowable}.
  */
-public class RxJava2RecoveryDecorator implements RecoveryDecorator {
+public class RxJava2FallbackDecorator implements FallbackDecorator {
     private static final Set<Class<?>> RX_SUPPORTED_TYPES = newHashSet(ObservableSource.class, SingleSource.class, CompletableSource.class, MaybeSource.class, Flowable.class);
 
     @Override
@@ -35,7 +43,7 @@ public class RxJava2RecoveryDecorator implements RecoveryDecorator {
     }
 
     @Override
-    public CheckedFunction0<Object> decorate(RecoveryMethod recoveryMethod, CheckedFunction0<Object> supplier) {
+    public CheckedFunction0<Object> decorate(FallbackMethod recoveryMethod, CheckedFunction0<Object> supplier) {
         return supplier.andThen(request -> {
             if (request instanceof ObservableSource) {
                 Observable<?> observable = (Observable<?>) request;
@@ -59,7 +67,7 @@ public class RxJava2RecoveryDecorator implements RecoveryDecorator {
     }
 
     @SuppressWarnings("unchecked")
-    private <T> io.reactivex.functions.Function<Throwable, T> rxJava2OnErrorResumeNext(RecoveryMethod recoveryMethod, Function<? super Throwable, ? extends T> errorFunction) {
+    private <T> io.reactivex.functions.Function<Throwable, T> rxJava2OnErrorResumeNext(FallbackMethod recoveryMethod, Function<? super Throwable, ? extends T> errorFunction) {
         return (throwable) -> {
             try {
                 return (T) recoveryMethod.recover(throwable);

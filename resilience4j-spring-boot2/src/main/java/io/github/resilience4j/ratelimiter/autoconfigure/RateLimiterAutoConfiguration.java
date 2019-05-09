@@ -17,7 +17,6 @@ package io.github.resilience4j.ratelimiter.autoconfigure;
 
 import javax.annotation.PostConstruct;
 
-import io.github.resilience4j.recovery.autoconfigure.RecoveryConfigurationOnMissingBean;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.boot.actuate.autoconfigure.endpoint.EndpointAutoConfiguration;
 import org.springframework.boot.actuate.autoconfigure.endpoint.condition.ConditionalOnEnabledEndpoint;
@@ -35,6 +34,7 @@ import io.github.resilience4j.ratelimiter.event.RateLimiterEvent;
 import io.github.resilience4j.ratelimiter.monitoring.endpoint.RateLimiterEndpoint;
 import io.github.resilience4j.ratelimiter.monitoring.endpoint.RateLimiterEventsEndpoint;
 import io.github.resilience4j.ratelimiter.monitoring.health.RateLimiterHealthIndicator;
+import io.github.resilience4j.recovery.autoconfigure.FallbackConfigurationOnMissingBean;
 
 /**
  * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration
@@ -43,7 +43,7 @@ import io.github.resilience4j.ratelimiter.monitoring.health.RateLimiterHealthInd
 @Configuration
 @ConditionalOnClass(RateLimiter.class)
 @EnableConfigurationProperties(RateLimiterProperties.class)
-@Import({RateLimiterConfigurationOnMissingBean.class, RecoveryConfigurationOnMissingBean.class})
+@Import({RateLimiterConfigurationOnMissingBean.class, FallbackConfigurationOnMissingBean.class})
 @AutoConfigureBefore(EndpointAutoConfiguration.class)
 public class RateLimiterAutoConfiguration {
     private final RateLimiterProperties rateLimiterProperties;

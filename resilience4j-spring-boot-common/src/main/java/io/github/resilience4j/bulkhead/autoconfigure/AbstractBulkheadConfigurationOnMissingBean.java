@@ -15,14 +15,8 @@
  */
 package io.github.resilience4j.bulkhead.autoconfigure;
 
-import io.github.resilience4j.bulkhead.BulkheadRegistry;
-import io.github.resilience4j.bulkhead.configure.*;
-import io.github.resilience4j.bulkhead.event.BulkheadEvent;
-import io.github.resilience4j.consumer.EventConsumerRegistry;
-import io.github.resilience4j.recovery.RecoveryDecorators;
-import io.github.resilience4j.recovery.autoconfigure.RecoveryConfigurationOnMissingBean;
-import io.github.resilience4j.utils.ReactorOnClasspathCondition;
-import io.github.resilience4j.utils.RxJava2OnClasspathCondition;
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
@@ -30,14 +24,26 @@ import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 
-import java.util.List;
+import io.github.resilience4j.bulkhead.BulkheadRegistry;
+import io.github.resilience4j.bulkhead.configure.BulkheadAspect;
+import io.github.resilience4j.bulkhead.configure.BulkheadAspectExt;
+import io.github.resilience4j.bulkhead.configure.BulkheadConfiguration;
+import io.github.resilience4j.bulkhead.configure.BulkheadConfigurationProperties;
+import io.github.resilience4j.bulkhead.configure.ReactorBulkheadAspectExt;
+import io.github.resilience4j.bulkhead.configure.RxJava2BulkheadAspectExt;
+import io.github.resilience4j.bulkhead.event.BulkheadEvent;
+import io.github.resilience4j.consumer.EventConsumerRegistry;
+import io.github.resilience4j.recovery.FallbackDecorators;
+import io.github.resilience4j.recovery.autoconfigure.FallbackConfigurationOnMissingBean;
+import io.github.resilience4j.utils.ReactorOnClasspathCondition;
+import io.github.resilience4j.utils.RxJava2OnClasspathCondition;
 
 /**
  * {@link Configuration
  * Configuration} for resilience4j-bulkhead.
  */
 @Configuration
-@Import(RecoveryConfigurationOnMissingBean.class)
+@Import(FallbackConfigurationOnMissingBean.class)
 public abstract class AbstractBulkheadConfigurationOnMissingBean {
 
 	protected final BulkheadConfiguration bulkheadConfiguration;
@@ -57,8 +63,8 @@ public abstract class AbstractBulkheadConfigurationOnMissingBean {
 	@ConditionalOnMissingBean
 	public BulkheadAspect bulkheadAspect(BulkheadConfigurationProperties bulkheadConfigurationProperties,
 										 BulkheadRegistry bulkheadRegistry, @Autowired(required = false) List<BulkheadAspectExt> bulkHeadAspectExtList,
-										 RecoveryDecorators recoveryDecorators) {
-		return bulkheadConfiguration.bulkheadAspect(bulkheadConfigurationProperties, bulkheadRegistry, bulkHeadAspectExtList, recoveryDecorators);
+										 FallbackDecorators fallbackDecorators) {
+		return bulkheadConfiguration.bulkheadAspect(bulkheadConfigurationProperties, bulkheadRegistry, bulkHeadAspectExtList, fallbackDecorators);
 	}
 
 	@Bean

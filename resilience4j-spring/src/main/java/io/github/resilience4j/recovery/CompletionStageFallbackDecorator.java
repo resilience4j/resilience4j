@@ -15,15 +15,15 @@
  */
 package io.github.resilience4j.recovery;
 
-import io.vavr.CheckedFunction0;
-
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 
+import io.vavr.CheckedFunction0;
+
 /**
- * recovery decorator for {@link CompletionStage}
+ * fallbackMethod decorator for {@link CompletionStage}
  */
-public class CompletionStageRecoveryDecorator implements RecoveryDecorator {
+public class CompletionStageFallbackDecorator implements FallbackDecorator {
 
     @Override
     public boolean supports(Class<?> target) {
@@ -32,7 +32,7 @@ public class CompletionStageRecoveryDecorator implements RecoveryDecorator {
 
     @SuppressWarnings("unchecked")
     @Override
-    public CheckedFunction0<Object> decorate(RecoveryMethod recoveryMethod, CheckedFunction0<Object> supplier) {
+    public CheckedFunction0<Object> decorate(FallbackMethod recoveryMethod, CheckedFunction0<Object> supplier) {
         return supplier.andThen(request -> {
             CompletionStage completionStage = (CompletionStage) request;
 

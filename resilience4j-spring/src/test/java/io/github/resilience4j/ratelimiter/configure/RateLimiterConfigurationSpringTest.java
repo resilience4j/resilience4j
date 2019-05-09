@@ -20,7 +20,6 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.List;
 
-import io.github.resilience4j.recovery.RecoveryDecorators;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,6 +33,7 @@ import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
 import io.github.resilience4j.ratelimiter.event.RateLimiterEvent;
+import io.github.resilience4j.recovery.FallbackDecorators;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(classes = {
@@ -75,7 +75,7 @@ public class RateLimiterConfigurationSpringTest {
 		@Bean
 		public RateLimiterAspect rateLimiterAspect(RateLimiterRegistry rateLimiterRegistry,
 												   @Autowired(required = false) List<RateLimiterAspectExt> rateLimiterAspectExts,
-												   RecoveryDecorators recoveryDecorators) {
+												   FallbackDecorators recoveryDecorators) {
 			rateLimiterAspect = new RateLimiterAspect(rateLimiterRegistry, rateLimiterConfigurationProperties(), rateLimiterAspectExts, recoveryDecorators);
 			return rateLimiterAspect;
 		}

@@ -15,7 +15,6 @@
  */
 package io.github.resilience4j.circuitbreaker.autoconfigure;
 
-import io.github.resilience4j.recovery.autoconfigure.RecoveryConfigurationOnMissingBean;
 import org.springframework.boot.actuate.autoconfigure.endpoint.EndpointAutoConfiguration;
 import org.springframework.boot.actuate.autoconfigure.endpoint.condition.ConditionalOnEnabledEndpoint;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
@@ -31,6 +30,7 @@ import io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent;
 import io.github.resilience4j.circuitbreaker.monitoring.endpoint.CircuitBreakerEndpoint;
 import io.github.resilience4j.circuitbreaker.monitoring.endpoint.CircuitBreakerEventsEndpoint;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
+import io.github.resilience4j.recovery.autoconfigure.FallbackConfigurationOnMissingBean;
 
 
 /**
@@ -40,7 +40,7 @@ import io.github.resilience4j.consumer.EventConsumerRegistry;
 @Configuration
 @ConditionalOnClass(CircuitBreaker.class)
 @EnableConfigurationProperties(CircuitBreakerProperties.class)
-@Import({CircuitBreakerConfigurationOnMissingBean.class,  RecoveryConfigurationOnMissingBean.class})
+@Import({CircuitBreakerConfigurationOnMissingBean.class,  FallbackConfigurationOnMissingBean.class})
 @AutoConfigureBefore(EndpointAutoConfiguration.class)
 public class CircuitBreakerAutoConfiguration {
 

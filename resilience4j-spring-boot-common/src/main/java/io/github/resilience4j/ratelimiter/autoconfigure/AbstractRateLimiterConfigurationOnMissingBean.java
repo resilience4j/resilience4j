@@ -15,14 +15,8 @@
  */
 package io.github.resilience4j.ratelimiter.autoconfigure;
 
-import io.github.resilience4j.consumer.EventConsumerRegistry;
-import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
-import io.github.resilience4j.ratelimiter.configure.*;
-import io.github.resilience4j.ratelimiter.event.RateLimiterEvent;
-import io.github.resilience4j.recovery.RecoveryDecorators;
-import io.github.resilience4j.recovery.autoconfigure.RecoveryConfigurationOnMissingBean;
-import io.github.resilience4j.utils.ReactorOnClasspathCondition;
-import io.github.resilience4j.utils.RxJava2OnClasspathCondition;
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
@@ -30,10 +24,22 @@ import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 
-import java.util.List;
+import io.github.resilience4j.consumer.EventConsumerRegistry;
+import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
+import io.github.resilience4j.ratelimiter.configure.RateLimiterAspect;
+import io.github.resilience4j.ratelimiter.configure.RateLimiterAspectExt;
+import io.github.resilience4j.ratelimiter.configure.RateLimiterConfiguration;
+import io.github.resilience4j.ratelimiter.configure.RateLimiterConfigurationProperties;
+import io.github.resilience4j.ratelimiter.configure.ReactorRateLimiterAspectExt;
+import io.github.resilience4j.ratelimiter.configure.RxJava2RateLimiterAspectExt;
+import io.github.resilience4j.ratelimiter.event.RateLimiterEvent;
+import io.github.resilience4j.recovery.FallbackDecorators;
+import io.github.resilience4j.recovery.autoconfigure.FallbackConfigurationOnMissingBean;
+import io.github.resilience4j.utils.ReactorOnClasspathCondition;
+import io.github.resilience4j.utils.RxJava2OnClasspathCondition;
 
 @Configuration
-@Import(RecoveryConfigurationOnMissingBean.class)
+@Import(FallbackConfigurationOnMissingBean.class)
 public abstract class AbstractRateLimiterConfigurationOnMissingBean {
 	protected final RateLimiterConfiguration rateLimiterConfiguration;
 
@@ -50,8 +56,8 @@ public abstract class AbstractRateLimiterConfigurationOnMissingBean {
 
 	@Bean
 	@ConditionalOnMissingBean
-	public RateLimiterAspect rateLimiterAspect(RateLimiterConfigurationProperties rateLimiterProperties, RateLimiterRegistry rateLimiterRegistry, @Autowired(required = false) List<RateLimiterAspectExt> rateLimiterAspectExtList, RecoveryDecorators recoveryDecorators) {
-		return rateLimiterConfiguration.rateLimiterAspect(rateLimiterProperties, rateLimiterRegistry, rateLimiterAspectExtList, recoveryDecorators);
+	public RateLimiterAspect rateLimiterAspect(RateLimiterConfigurationProperties rateLimiterProperties, RateLimiterRegistry rateLimiterRegistry, @Autowired(required = false) List<RateLimiterAspectExt> rateLimiterAspectExtList, FallbackDecorators fallbackDecorators) {
+		return rateLimiterConfiguration.rateLimiterAspect(rateLimiterProperties, rateLimiterRegistry, rateLimiterAspectExtList, fallbackDecorators);
 	}
 
 	@Bean
