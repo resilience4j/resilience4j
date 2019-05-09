@@ -23,6 +23,8 @@ import io.github.resilience4j.circuitbreaker.configure.CircuitBreakerConfigurati
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
 import io.github.resilience4j.ratelimiter.configure.RateLimiterConfigurationProperties;
+import io.github.resilience4j.recovery.CompletionStageRecoveryDecorator;
+import io.github.resilience4j.recovery.RecoveryDecorators;
 import io.github.resilience4j.retry.RetryRegistry;
 import io.github.resilience4j.retry.configure.RetryConfigurationProperties;
 import io.github.resilience4j.bulkhead.autoconfigure.AbstractBulkheadConfigurationOnMissingBean;
@@ -31,6 +33,7 @@ import io.github.resilience4j.ratelimiter.autoconfigure.AbstractRateLimiterConfi
 import io.github.resilience4j.retry.autoconfigure.AbstractRetryConfigurationOnMissingBean;
 import org.junit.Test;
 
+import java.util.Arrays;
 import java.util.Collections;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
@@ -46,7 +49,7 @@ public class SpringBootCommonTest {
 		assertThat(bulkheadConfigurationOnMissingBean.bulkheadRegistry(new BulkheadConfigurationProperties(), new DefaultEventConsumerRegistry<>())).isNotNull();
 		assertThat(bulkheadConfigurationOnMissingBean.reactorBulkHeadAspectExt()).isNotNull();
 		assertThat(bulkheadConfigurationOnMissingBean.rxJava2BulkHeadAspectExt()).isNotNull();
-		assertThat(bulkheadConfigurationOnMissingBean.bulkheadAspect(new BulkheadConfigurationProperties(), BulkheadRegistry.ofDefaults(), Collections.emptyList()));
+		assertThat(bulkheadConfigurationOnMissingBean.bulkheadAspect(new BulkheadConfigurationProperties(), BulkheadRegistry.ofDefaults(), Collections.emptyList(), new RecoveryDecorators(Arrays.asList(new CompletionStageRecoveryDecorator()))));
 	}
 
 	@Test
@@ -55,7 +58,7 @@ public class SpringBootCommonTest {
 		assertThat(circuitBreakerConfig.reactorCircuitBreakerAspect()).isNotNull();
 		assertThat(circuitBreakerConfig.rxJava2CircuitBreakerAspect()).isNotNull();
 		assertThat(circuitBreakerConfig.circuitBreakerRegistry(new DefaultEventConsumerRegistry<>())).isNotNull();
-		assertThat(circuitBreakerConfig.circuitBreakerAspect(CircuitBreakerRegistry.ofDefaults(), Collections.emptyList()));
+		assertThat(circuitBreakerConfig.circuitBreakerAspect(CircuitBreakerRegistry.ofDefaults(), Collections.emptyList(), new RecoveryDecorators(Arrays.asList(new CompletionStageRecoveryDecorator()))));
 	}
 
 	@Test
@@ -64,7 +67,7 @@ public class SpringBootCommonTest {
 		assertThat(retryConfigurationOnMissingBean.reactorRetryAspectExt()).isNotNull();
 		assertThat(retryConfigurationOnMissingBean.rxJava2RetryAspectExt()).isNotNull();
 		assertThat(retryConfigurationOnMissingBean.retryRegistry(new RetryConfigurationProperties(), new DefaultEventConsumerRegistry<>())).isNotNull();
-		assertThat(retryConfigurationOnMissingBean.retryAspect(new RetryConfigurationProperties(), RetryRegistry.ofDefaults(), Collections.emptyList()));
+		assertThat(retryConfigurationOnMissingBean.retryAspect(new RetryConfigurationProperties(), RetryRegistry.ofDefaults(), Collections.emptyList(), new RecoveryDecorators(Arrays.asList(new CompletionStageRecoveryDecorator()))));
 	}
 
 	@Test
@@ -73,7 +76,7 @@ public class SpringBootCommonTest {
 		assertThat(rateLimiterConfigurationOnMissingBean.reactorRateLimiterAspectExt()).isNotNull();
 		assertThat(rateLimiterConfigurationOnMissingBean.rxJava2RateLimterAspectExt()).isNotNull();
 		assertThat(rateLimiterConfigurationOnMissingBean.rateLimiterRegistry(new RateLimiterConfigurationProperties(), new DefaultEventConsumerRegistry<>())).isNotNull();
-		assertThat(rateLimiterConfigurationOnMissingBean.rateLimiterAspect(new RateLimiterConfigurationProperties(), RateLimiterRegistry.ofDefaults(), Collections.emptyList()));
+		assertThat(rateLimiterConfigurationOnMissingBean.rateLimiterAspect(new RateLimiterConfigurationProperties(), RateLimiterRegistry.ofDefaults(), Collections.emptyList(), new RecoveryDecorators(Arrays.asList(new CompletionStageRecoveryDecorator()))));
 	}
 
 

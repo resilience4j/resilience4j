@@ -15,10 +15,16 @@
  */
 package io.github.resilience4j.retry.configure;
 
-import io.github.resilience4j.core.lang.Nullable;
-import io.github.resilience4j.retry.RetryRegistry;
-import io.github.resilience4j.retry.annotation.Retry;
-import io.github.resilience4j.utils.AnnotationExtractor;
+import java.lang.reflect.Method;
+import java.util.List;
+import java.util.concurrent.CompletionException;
+import java.util.concurrent.CompletionStage;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+
+import io.github.resilience4j.recovery.RecoveryDecorators;
+import io.github.resilience4j.recovery.RecoveryMethod;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -28,10 +34,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.Ordered;
+import org.springframework.util.StringUtils;
 
-import java.lang.reflect.Method;
-import java.util.List;
-import java.util.concurrent.*;
+import io.github.resilience4j.core.lang.Nullable;
+import io.github.resilience4j.retry.RetryRegistry;
+import io.github.resilience4j.retry.annotation.Retry;
+import io.github.resilience4j.utils.AnnotationExtractor;
 
 /**
  * This Spring AOP aspect intercepts all methods which are annotated with a {@link Retry} annotation.
@@ -46,16 +54,18 @@ public class RetryAspect implements Ordered {
 	private final RetryConfigurationProperties retryConfigurationProperties;
 	private final RetryRegistry retryRegistry;
 	private final @Nullable List<RetryAspectExt> retryAspectExtList;
+	private final RecoveryDecorators recoveryDecorators;
 
 	/**
 	 * @param retryConfigurationProperties spring retry config properties
 	 * @param retryRegistry                retry definition registry
 	 * @param retryAspectExtList
 	 */
-	public RetryAspect(RetryConfigurationProperties retryConfigurationProperties, RetryRegistry retryRegistry, @Autowired(required = false) List<RetryAspectExt> retryAspectExtList) {
+	public RetryAspect(RetryConfigurationProperties retryConfigurationProperties, RetryRegistry retryRegistry, @Autowired(required = false) List<RetryAspectExt> retryAspectExtList, RecoveryDecorators recoveryDecorators) {
 		this.retryConfigurationProperties = retryConfigurationProperties;
 		this.retryRegistry = retryRegistry;
 		this.retryAspectExtList = retryAspectExtList;
+		this.recoveryDecorators = recoveryDecorators;
 		cleanup();
 
 	}
@@ -77,6 +87,15 @@ public class RetryAspect implements Ordered {
 		String backend = backendMonitored.name();
 		io.github.resilience4j.retry.Retry retry = getOrCreateRetry(methodName, backend);
 		Class<?> returnType = method.getReturnType();
+		if (StringUtils.isEmpty(backendMonitored.recovery())) {
+			return proceed(proceedingJoinPoint, methodName, retry, returnType);
+		}
+
+        RecoveryMethod recoveryMethod = new RecoveryMethod(backendMonitored.recovery(), method, proceedingJoinPoint.getArgs(), proceedingJoinPoint.getTarget());
+		return recoveryDecorators.decorate(recoveryMethod, () -> proceed(proceedingJoinPoint, methodName, retry, returnType)).apply();
+	}
+
+	private Object proceed(ProceedingJoinPoint proceedingJoinPoint, String methodName, io.github.resilience4j.retry.Retry retry, Class<?> returnType) throws Throwable {
 		if (CompletionStage.class.isAssignableFrom(returnType)) {
 			return handleJoinPointCompletableFuture(proceedingJoinPoint, retry);
 		}

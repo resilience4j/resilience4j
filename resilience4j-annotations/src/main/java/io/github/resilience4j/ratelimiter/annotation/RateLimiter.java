@@ -38,4 +38,11 @@ public @interface RateLimiter {
      * @return the name of the limiter
      */
     String name();
+
+    /**
+     * recovery method name.
+     *
+     * @return recovery method name.
+     */
+    String recovery() default "";
 }

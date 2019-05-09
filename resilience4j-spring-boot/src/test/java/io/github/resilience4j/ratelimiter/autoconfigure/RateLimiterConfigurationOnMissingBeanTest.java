@@ -22,6 +22,7 @@ import static org.junit.Assert.assertNotEquals;
 import java.lang.reflect.Method;
 import java.util.List;
 
+import io.github.resilience4j.recovery.RecoveryDecorators;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -105,8 +106,8 @@ public class RateLimiterConfigurationOnMissingBeanTest {
         }
 
         @Bean
-        public RateLimiterAspect rateLimiterAspect(RateLimiterRegistry rateLimiterRegistry, @Autowired(required = false) List<RateLimiterAspectExt> rateLimiterAspectExtList) {
-            rateLimiterAspect = new RateLimiterAspect(rateLimiterRegistry, new RateLimiterConfigurationProperties(), rateLimiterAspectExtList);
+        public RateLimiterAspect rateLimiterAspect(RateLimiterRegistry rateLimiterRegistry, @Autowired(required = false) List<RateLimiterAspectExt> rateLimiterAspectExtList, RecoveryDecorators recoveryDecorators) {
+            rateLimiterAspect = new RateLimiterAspect(rateLimiterRegistry, new RateLimiterConfigurationProperties(), rateLimiterAspectExtList, recoveryDecorators);
             return rateLimiterAspect;
         }
 

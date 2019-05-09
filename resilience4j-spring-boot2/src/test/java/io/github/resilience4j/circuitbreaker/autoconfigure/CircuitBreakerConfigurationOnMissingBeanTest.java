@@ -4,6 +4,7 @@ import static org.junit.Assert.assertEquals;
 
 import java.util.List;
 
+import io.github.resilience4j.recovery.RecoveryDecorators;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -74,8 +75,9 @@ public class CircuitBreakerConfigurationOnMissingBeanTest {
 
         @Bean
         public CircuitBreakerAspect circuitBreakerAspect(CircuitBreakerRegistry circuitBreakerRegistry,
-                                                         @Autowired(required = false) List<CircuitBreakerAspectExt> circuitBreakerAspectExtList) {
-            circuitBreakerAspect = new CircuitBreakerAspect(new CircuitBreakerProperties(), circuitBreakerRegistry, circuitBreakerAspectExtList);
+                                                         @Autowired(required = false) List<CircuitBreakerAspectExt> circuitBreakerAspectExtList,
+                                                         RecoveryDecorators recoveryDecorators) {
+            circuitBreakerAspect = new CircuitBreakerAspect(new CircuitBreakerProperties(), circuitBreakerRegistry, circuitBreakerAspectExtList, recoveryDecorators);
             return circuitBreakerAspect;
         }
 

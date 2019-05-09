@@ -20,6 +20,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.List;
 
+import io.github.resilience4j.recovery.RecoveryDecorators;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -54,7 +55,7 @@ public class RateLimiterConfigurationSpringTest {
 	}
 
 	@Configuration
-	@ComponentScan("io.github.resilience4j.ratelimiter")
+	@ComponentScan({"io.github.resilience4j.ratelimiter","io.github.resilience4j.recovery"})
 	public static class ConfigWithOverrides {
 
 		private RateLimiterRegistry rateLimiterRegistry;
@@ -73,8 +74,9 @@ public class RateLimiterConfigurationSpringTest {
 
 		@Bean
 		public RateLimiterAspect rateLimiterAspect(RateLimiterRegistry rateLimiterRegistry,
-		                                           @Autowired(required = false) List<RateLimiterAspectExt> rateLimiterAspectExts) {
-			rateLimiterAspect = new RateLimiterAspect(rateLimiterRegistry, rateLimiterConfigurationProperties(), rateLimiterAspectExts);
+												   @Autowired(required = false) List<RateLimiterAspectExt> rateLimiterAspectExts,
+												   RecoveryDecorators recoveryDecorators) {
+			rateLimiterAspect = new RateLimiterAspect(rateLimiterRegistry, rateLimiterConfigurationProperties(), rateLimiterAspectExts, recoveryDecorators);
 			return rateLimiterAspect;
 		}
 

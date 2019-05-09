@@ -20,6 +20,8 @@ import io.github.resilience4j.ratelimiter.RateLimiterConfig;
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
 import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
 import io.github.resilience4j.utils.AnnotationExtractor;
+import io.github.resilience4j.recovery.RecoveryDecorators;
+import io.github.resilience4j.recovery.RecoveryMethod;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -29,6 +31,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.Ordered;
+import org.springframework.util.StringUtils;
 
 import java.lang.reflect.Method;
 import java.util.List;
@@ -48,11 +51,13 @@ public class RateLimiterAspect implements Ordered {
 	private final RateLimiterRegistry rateLimiterRegistry;
 	private final RateLimiterConfigurationProperties properties;
 	private final @Nullable List<RateLimiterAspectExt> rateLimiterAspectExtList;
+	private final RecoveryDecorators recoveryDecorators;
 
-	public RateLimiterAspect(RateLimiterRegistry rateLimiterRegistry, RateLimiterConfigurationProperties properties, @Autowired(required = false) List<RateLimiterAspectExt> rateLimiterAspectExtList) {
+	public RateLimiterAspect(RateLimiterRegistry rateLimiterRegistry, RateLimiterConfigurationProperties properties, @Autowired(required = false) List<RateLimiterAspectExt> rateLimiterAspectExtList, RecoveryDecorators recoveryDecorators) {
 		this.rateLimiterRegistry = rateLimiterRegistry;
 		this.properties = properties;
 		this.rateLimiterAspectExtList = rateLimiterAspectExtList;
+		this.recoveryDecorators = recoveryDecorators;
 	}
 
 	/**
@@ -75,7 +80,16 @@ public class RateLimiterAspect implements Ordered {
 		}
 		String name = targetService.name();
 		Class<?> returnType = method.getReturnType();
-		io.github.resilience4j.ratelimiter.RateLimiter rateLimiter = getOrCreateRateLimiter(methodName, name);
+        io.github.resilience4j.ratelimiter.RateLimiter rateLimiter = getOrCreateRateLimiter(methodName, name);
+        if (StringUtils.isEmpty(targetService.recovery())) {
+			return proceed(proceedingJoinPoint, methodName, returnType, rateLimiter);
+		}
+
+		RecoveryMethod recoveryMethod = new RecoveryMethod(targetService.recovery(), method, proceedingJoinPoint.getArgs(), proceedingJoinPoint.getTarget());
+        return recoveryDecorators.decorate(recoveryMethod, () -> proceed(proceedingJoinPoint, methodName, returnType, rateLimiter)).apply();
+	}
+
+	private Object proceed(ProceedingJoinPoint proceedingJoinPoint, String methodName, Class<?> returnType, io.github.resilience4j.ratelimiter.RateLimiter rateLimiter) throws Throwable {
 		if (rateLimiterAspectExtList != null && !rateLimiterAspectExtList.isEmpty()) {
 			for (RateLimiterAspectExt rateLimiterAspectExt : rateLimiterAspectExtList) {
 				if (rateLimiterAspectExt.canHandleReturnType(returnType)) {

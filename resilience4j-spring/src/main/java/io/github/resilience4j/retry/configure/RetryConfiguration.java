@@ -20,6 +20,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import io.github.resilience4j.recovery.RecoveryDecorators;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Conditional;
@@ -95,8 +96,9 @@ public class RetryConfiguration {
 	 */
 	@Bean
 	public RetryAspect retryAspect(RetryConfigurationProperties retryConfigurationProperties,
-	                               RetryRegistry retryRegistry, @Autowired(required = false) List<RetryAspectExt> retryAspectExtList) {
-		return new RetryAspect(retryConfigurationProperties, retryRegistry, retryAspectExtList);
+								   RetryRegistry retryRegistry, @Autowired(required = false) List<RetryAspectExt> retryAspectExtList,
+								   RecoveryDecorators recoveryDecorators) {
+		return new RetryAspect(retryConfigurationProperties, retryRegistry, retryAspectExtList, recoveryDecorators);
 	}
 
 	@Bean

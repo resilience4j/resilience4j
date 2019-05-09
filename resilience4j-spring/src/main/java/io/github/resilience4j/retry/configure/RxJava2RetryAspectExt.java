@@ -61,7 +61,6 @@ public class RxJava2RetryAspectExt implements RetryAspectExt {
 	 * @return the result object
 	 * @throws Throwable exception in case of faulty flow
 	 */
-	@SuppressWarnings("unchecked")
 	@Override
 	public Object handle(ProceedingJoinPoint proceedingJoinPoint, Retry retry, String methodName) throws Throwable {
 		RetryTransformer<?> retryTransformer = RetryTransformer.of(retry);
