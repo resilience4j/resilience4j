@@ -23,6 +23,7 @@ import io.prometheus.client.CollectorRegistry;
 import io.prometheus.client.GaugeMetricFamily;
 import io.prometheus.client.Histogram;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -36,6 +37,8 @@ public class CircuitBreakerMetricsCollector extends Collector {
     private static final String KIND_SUCCESSFUL = "successful";
     private static final String KIND_IGNORED = "ignored";
     private static final String KIND_NOT_PERMITTED = "not_permitted";
+
+    private static final List<String> NAME_AND_STATE = Arrays.asList("name", "state");
 
     /**
      * Creates a new collector with custom metric names and
@@ -95,7 +98,7 @@ public class CircuitBreakerMetricsCollector extends Collector {
         GaugeMetricFamily stateFamily = new GaugeMetricFamily(
                 names.getStateMetricName(),
                 "The state of the circuit breaker:",
-                LabelNames.NAME_AND_STATE
+                NAME_AND_STATE
         );
         GaugeMetricFamily bufferedCallsFamily = new GaugeMetricFamily(
                 names.getBufferedCallsMetricName(),

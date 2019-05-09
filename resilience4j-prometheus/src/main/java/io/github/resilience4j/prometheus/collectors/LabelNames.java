@@ -26,7 +26,6 @@ public final class LabelNames {
 
     public static final List<String> NAME = Collections.singletonList("name");
     public static final List<String> NAME_AND_KIND = Arrays.asList("name", "kind");
-    public static final List<String> NAME_AND_STATE = Arrays.asList("name", "state");
 
 
 }
