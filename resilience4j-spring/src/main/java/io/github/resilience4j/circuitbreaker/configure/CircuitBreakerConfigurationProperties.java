@@ -101,7 +101,9 @@ public class CircuitBreakerConfigurationProperties {
 			builder.ignoreExceptions(properties.ignoreExceptions);
 		}
 
-		builder.automaticTransitionFromOpenToHalfOpenEnabled(properties.automaticTransitionFromOpenToHalfOpenEnabled);
+		if (properties.automaticTransitionFromOpenToHalfOpenEnabled != null) {
+			builder.automaticTransitionFromOpenToHalfOpenEnabled(properties.automaticTransitionFromOpenToHalfOpenEnabled);
+		}
 
 		return builder.build();
 	}
@@ -140,8 +142,8 @@ public class CircuitBreakerConfigurationProperties {
 		@Nullable
 		private Integer ringBufferSizeInHalfOpenState;
 
-		@NotNull
-		private Boolean automaticTransitionFromOpenToHalfOpenEnabled = false;
+		@Nullable
+		private Boolean automaticTransitionFromOpenToHalfOpenEnabled;
 
 		@Min(1)
 		private Integer eventConsumerBufferSize = 100;

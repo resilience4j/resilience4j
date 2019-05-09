@@ -184,20 +184,6 @@ public class CircuitBreakerConfigTest {
     }
 
     @Test
-    public void builderMakePredicateShouldBuildPredicateAcceptingChildClass() {
-        final Predicate<Throwable> predicate = CircuitBreakerConfig.Builder.makePredicate(RuntimeException.class);
-        then(predicate.test(new RuntimeException())).isEqualTo(true);
-        then(predicate.test(new Exception())).isEqualTo(false);
-        then(predicate.test(new Throwable())).isEqualTo(false);
-        then(predicate.test(new IllegalArgumentException())).isEqualTo(true);
-        then(predicate.test(new RuntimeException() {
-        })).isEqualTo(true);
-        then(predicate.test(new Exception() {
-        })).isEqualTo(false);
-
-    }
-
-    @Test
     public void shouldBuilderCreateConfigEveryTime() {
         final CircuitBreakerConfig.Builder builder =  CircuitBreakerConfig.custom();
         builder.ringBufferSizeInClosedState(5);
@@ -214,6 +200,7 @@ public class CircuitBreakerConfigTest {
                 .waitDurationInOpenState(Duration.ofSeconds(100))
                 .ringBufferSizeInClosedState(1000)
                 .ringBufferSizeInHalfOpenState(100)
+                .automaticTransitionFromOpenToHalfOpenEnabled(true)
                 .failureRateThreshold(20f).build();
 
         CircuitBreakerConfig extendedConfig = CircuitBreakerConfig.from(baseConfig)
@@ -224,6 +211,7 @@ public class CircuitBreakerConfigTest {
         then(extendedConfig.getWaitDurationInOpenState()).isEqualTo(Duration.ofSeconds(20));
         then(extendedConfig.getRingBufferSizeInClosedState()).isEqualTo(1000);
         then(extendedConfig.getRingBufferSizeInHalfOpenState()).isEqualTo(100);
+        then(extendedConfig.isAutomaticTransitionFromOpenToHalfOpenEnabled()).isTrue();
     }
 
 }

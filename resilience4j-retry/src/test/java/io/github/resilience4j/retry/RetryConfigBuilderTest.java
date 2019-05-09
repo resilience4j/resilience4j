@@ -18,14 +18,14 @@
  */
 package io.github.resilience4j.retry;
 
-import static org.assertj.core.api.BDDAssertions.then;
-import static org.assertj.core.api.Java6Assertions.assertThat;
+import org.assertj.core.api.Assertions;
+import org.junit.Test;
 
 import java.time.Duration;
 import java.util.function.Predicate;
 
-import org.assertj.core.api.Assertions;
-import org.junit.Test;
+import static org.assertj.core.api.BDDAssertions.then;
+import static org.assertj.core.api.Java6Assertions.assertThat;
 
 public class RetryConfigBuilderTest {
     private static final Predicate<Throwable> TEST_PREDICATE = e -> "test".equals(e.getMessage());
@@ -55,11 +55,10 @@ public class RetryConfigBuilderTest {
     public void testCreateFromConfigurationWithNoPredicateCalculations() {
         RetryConfig config = RetryConfig
                 .from(RetryConfig.custom().retryOnException(e -> e instanceof IllegalArgumentException)
-                        .build()).enableRetryExceptionPredicate(false).build();
+                        .build()).build();
         assertThat(config).isNotNull();
         assertThat(config.getExceptionPredicate().test(new IllegalArgumentException())).isTrue();
         assertThat(config.getExceptionPredicate().test(new IllegalStateException())).isFalse();
-
     }
 
 
@@ -139,20 +138,6 @@ public class RetryConfigBuilderTest {
         then(failurePredicate.test(new RuntimeException())).isEqualTo(true); // explicitly included by 2
         then(failurePredicate.test(new ExtendsRuntimeException())).isEqualTo(false); // explicitly excluded by 3
         then(failurePredicate.test(new ExtendsExtendsException())).isEqualTo(false); // inherits excluded from ExtendsException by 3
-    }
-
-    @Test()
-    public void builderMakePredicateShouldBuildPredicateAcceptingChildClass() {
-        final Predicate<Throwable> predicate = RetryConfig.Builder.makePredicate(RuntimeException.class);
-        then(predicate.test(new RuntimeException())).isEqualTo(true);
-        then(predicate.test(new Exception())).isEqualTo(false);
-        then(predicate.test(new Throwable())).isEqualTo(false);
-        then(predicate.test(new IllegalArgumentException())).isEqualTo(true);
-        then(predicate.test(new RuntimeException() {
-        })).isEqualTo(true);
-        then(predicate.test(new Exception() {
-        })).isEqualTo(false);
-
     }
 
     @Test()

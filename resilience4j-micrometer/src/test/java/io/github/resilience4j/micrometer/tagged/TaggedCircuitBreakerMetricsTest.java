@@ -18,6 +18,7 @@ package io.github.resilience4j.micrometer.tagged;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
+import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.Meter;
 import io.micrometer.core.instrument.MeterRegistry;
@@ -28,6 +29,7 @@ import org.junit.Test;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static io.github.resilience4j.micrometer.tagged.MetricsTestHelper.findCounterByKindAndNameTags;
 import static io.github.resilience4j.micrometer.tagged.MetricsTestHelper.findGaugeByKindAndNameTags;
 import static io.github.resilience4j.micrometer.tagged.TaggedCircuitBreakerMetrics.MetricNames.*;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -59,13 +61,13 @@ public class TaggedCircuitBreakerMetricsTest {
         newCircuitBreaker.onSuccess(0);
 
         assertThat(taggedCircuitBreakerMetrics.meterIdMap).containsKeys("backendA", "backendB");
-        assertThat(taggedCircuitBreakerMetrics.meterIdMap.get("backendA")).hasSize(7);
-        assertThat(taggedCircuitBreakerMetrics.meterIdMap.get("backendB")).hasSize(7);
+        assertThat(taggedCircuitBreakerMetrics.meterIdMap.get("backendA")).hasSize(13);
+        assertThat(taggedCircuitBreakerMetrics.meterIdMap.get("backendB")).hasSize(13);
 
         List<Meter> meters = meterRegistry.getMeters();
-        assertThat(meters).hasSize(14);
+        assertThat(meters).hasSize(26);
 
-        Collection<Gauge> gauges = meterRegistry.get(DEFAULT_CIRCUIT_BREAKER_CALLS_METRIC_NAME).gauges();
+        Collection<Gauge> gauges = meterRegistry.get(DEFAULT_CIRCUIT_BREAKER_BUFFERED_CALLS).gauges();
 
         Optional<Gauge> successful = findGaugeByKindAndNameTags(gauges, "successful", newCircuitBreaker.getName());
         assertThat(successful).isPresent();
@@ -75,7 +77,7 @@ public class TaggedCircuitBreakerMetricsTest {
     @Test
     public void shouldRemovedMetricsForRemovedRetry() {
         List<Meter> meters = meterRegistry.getMeters();
-        assertThat(meters).hasSize(7);
+        assertThat(meters).hasSize(13);
 
         assertThat(taggedCircuitBreakerMetrics.meterIdMap).containsKeys("backendA");
         circuitBreakerRegistry.remove("backendA");
@@ -107,20 +109,20 @@ public class TaggedCircuitBreakerMetricsTest {
     }
 
     @Test
-    public void notPermittedCallsGaugeReportsCorrespondingValue() {
+    public void notPermittedCallsCounterReportsCorrespondingValue() {
         List<Meter> meters = meterRegistry.getMeters();
-        assertThat(meters).hasSize(7);
+        assertThat(meters).hasSize(13);
 
-        Collection<Gauge> gauges = meterRegistry.get(DEFAULT_CIRCUIT_BREAKER_CALLS_METRIC_NAME).gauges();
+        Collection<Counter> counters = meterRegistry.get(DEFAULT_CIRCUIT_BREAKER_CALLS).counters();
 
-        Optional<Gauge> notPermitted = findGaugeByKindAndNameTags(gauges, "not_permitted", circuitBreaker.getName());
+        Optional<Counter> notPermitted = findCounterByKindAndNameTags(counters, "not_permitted", circuitBreaker.getName());
         assertThat(notPermitted).isPresent();
-        assertThat(notPermitted.get().value()).isEqualTo(circuitBreaker.getMetrics().getNumberOfNotPermittedCalls());
+        assertThat(notPermitted.get().count()).isEqualTo(circuitBreaker.getMetrics().getNumberOfNotPermittedCalls());
     }
 
     @Test
     public void failedCallsGaugeReportsCorrespondingValue() {
-        Collection<Gauge> gauges = meterRegistry.get(DEFAULT_CIRCUIT_BREAKER_CALLS_METRIC_NAME).gauges();
+        Collection<Gauge> gauges = meterRegistry.get(DEFAULT_CIRCUIT_BREAKER_BUFFERED_CALLS).gauges();
 
         Optional<Gauge> failed = findGaugeByKindAndNameTags(gauges, "failed", circuitBreaker.getName());
         assertThat(failed).isPresent();
@@ -129,19 +131,11 @@ public class TaggedCircuitBreakerMetricsTest {
 
     @Test
     public void successfulCallsGaugeReportsCorrespondingValue() {
-        Collection<Gauge> gauges = meterRegistry.get(DEFAULT_CIRCUIT_BREAKER_CALLS_METRIC_NAME).gauges();
+        Collection<Gauge> gauges = meterRegistry.get(DEFAULT_CIRCUIT_BREAKER_BUFFERED_CALLS).gauges();
 
         Optional<Gauge> successful = findGaugeByKindAndNameTags(gauges, "successful", circuitBreaker.getName());
         assertThat(successful).isPresent();
         assertThat(successful.get().value()).isEqualTo((circuitBreaker.getMetrics().getNumberOfSuccessfulCalls()));
-    }
-
-    @Test
-    public void bufferedCallsGaugeReportsCorrespondingValue() {
-        Gauge bufferedCalls = meterRegistry.get(DEFAULT_CIRCUIT_BREAKER_BUFFERED_CALLS).gauge();
-
-        assertThat(bufferedCalls).isNotNull();
-        assertThat(bufferedCalls.value()).isEqualTo((circuitBreaker.getMetrics().getNumberOfBufferedCalls()));
     }
 
     @Test
@@ -164,7 +158,7 @@ public class TaggedCircuitBreakerMetricsTest {
 
     @Test
     public void stateGaugeReportsCorrespondingValue() {
-        Gauge state = meterRegistry.get(DEFAULT_CIRCUIT_BREAKER_STATE_METRIC_NAME).gauge();
+        Gauge state = meterRegistry.get(DEFAULT_CIRCUIT_BREAKER_STATE).gauge();
 
         assertThat(state.value()).isEqualTo(circuitBreaker.getState().getOrder());
         assertThat(state.getId().getTag(TagNames.NAME)).isEqualTo(circuitBreaker.getName());

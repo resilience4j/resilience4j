@@ -15,7 +15,6 @@
  */
 package io.github.resilience4j.retry.autoconfigure;
 
-import io.github.resilience4j.micrometer.RetryMetrics;
 import io.github.resilience4j.micrometer.tagged.TaggedRetryMetrics;
 import io.github.resilience4j.retry.RetryRegistry;
 import io.micrometer.spring.autoconfigure.MetricsAutoConfiguration;
@@ -38,18 +37,6 @@ public class RetryMicrometerAutoConfiguration {
 
 	@Bean
 	@ConditionalOnMissingBean
-	@ConditionalOnProperty(value = "resilience4j.retry.metrics.use_legacy_binder", havingValue = "true")
-	public RetryMetrics registerLegacyRetryMetrics(RetryRegistry retryRegistry) {
-		return RetryMetrics.ofRetryRegistry(retryRegistry);
-	}
-
-	@Bean
-	@ConditionalOnMissingBean
-	@ConditionalOnProperty(
-			value = "resilience4j.retry.metrics.use_legacy_binder",
-			havingValue = "false",
-			matchIfMissing = true
-	)
 	public TaggedRetryMetrics registerRetryMetrics(RetryRegistry retryRegistry) {
 		return TaggedRetryMetrics.ofRetryRegistry(retryRegistry);
 	}

@@ -15,7 +15,6 @@
  */
 package io.github.resilience4j.ratelimiter.autoconfigure;
 
-import io.github.resilience4j.prometheus.RateLimiterExports;
 import io.github.resilience4j.prometheus.collectors.RateLimiterMetricsCollector;
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
@@ -35,22 +34,8 @@ import org.springframework.context.annotation.Configuration;
 @ConditionalOnProperty(value = "resilience4j.ratelimiter.metrics.enabled", matchIfMissing = true)
 public class RateLimiterPrometheusAutoConfiguration {
 
-    @ConditionalOnProperty(value = "resilience4j.ratelimiter.metrics.use_legacy_collector", havingValue = "true")
     @Bean
     @ConditionalOnMissingBean
-    public RateLimiterExports legacyRateLimiterPrometheusCollector(RateLimiterRegistry rateLimiterRegistry){
-        RateLimiterExports collector = RateLimiterExports.ofRateLimiterRegistry(rateLimiterRegistry);
-        collector.register();
-        return collector;
-    }
-
-    @Bean
-    @ConditionalOnMissingBean
-    @ConditionalOnProperty(
-        value = "resilience4j.ratelimiter.metrics.use_legacy_collector",
-        havingValue = "false",
-        matchIfMissing = true
-    )
     public RateLimiterMetricsCollector rateLimiterPrometheusCollector(RateLimiterRegistry rateLimiterRegistry) {
         RateLimiterMetricsCollector collector = RateLimiterMetricsCollector.ofRateLimiterRegistry(rateLimiterRegistry);
         collector.register();

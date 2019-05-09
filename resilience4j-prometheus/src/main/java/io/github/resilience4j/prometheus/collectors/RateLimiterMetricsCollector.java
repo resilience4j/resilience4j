@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Yevhenii Voievodin
+ * Copyright 2019 Yevhenii Voievodin, Robert Winkler
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,15 +20,14 @@ import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
 import io.prometheus.client.Collector;
 import io.prometheus.client.GaugeMetricFamily;
 
-import java.util.Arrays;
 import java.util.List;
-import java.util.function.Supplier;
 
 import static io.github.resilience4j.ratelimiter.RateLimiter.Metrics;
+import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static java.util.Objects.requireNonNull;
 
-/** Collects rate limiter exposed {@link Metrics}. */
+/** Collects RateLimiter exposed {@link Metrics}. */
 public class RateLimiterMetricsCollector extends Collector  {
 
     /**
@@ -36,54 +35,27 @@ public class RateLimiterMetricsCollector extends Collector  {
      * using given {@code supplier} as source of rate limiters.
      *
      * @param names    the custom metric names
-     * @param supplier the supplier of rate limiters, note that supplier will be called one every {@link #collect()}
+     * @param rateLimiterRegistry the source of rate limiters
      */
-    public static RateLimiterMetricsCollector ofSupplier(MetricNames names, Supplier<? extends Iterable<? extends RateLimiter>> supplier) {
-        return new RateLimiterMetricsCollector(names, supplier);
-    }
-
-    /**
-     * Creates a new collector using given {@code supplier} as source of rate limiters.
-     *
-     * @param supplier the supplier of rate limiters, note that supplier will be called one very {@link #collect()}
-     */
-    public static RateLimiterMetricsCollector ofSupplier(Supplier<? extends Iterable<? extends RateLimiter>> supplier) {
-        return new RateLimiterMetricsCollector(MetricNames.ofDefaults(), supplier);
+    public static RateLimiterMetricsCollector ofRateLimiterRegistry(RateLimiterMetricsCollector.MetricNames names, RateLimiterRegistry rateLimiterRegistry) {
+        return new RateLimiterMetricsCollector(names, rateLimiterRegistry);
     }
 
     /**
      * Creates a new collector using given {@code registry} as source of rate limiters.
      *
-     * @param registry the source of rate limiters
+     * @param rateLimiterRegistry the source of rate limiters
      */
-    public static RateLimiterMetricsCollector ofRateLimiterRegistry(RateLimiterRegistry registry) {
-        return new RateLimiterMetricsCollector(MetricNames.ofDefaults(), registry::getAllRateLimiters);
-    }
-
-    /**
-     * Creates a new collector for given {@code rateLimiters}.
-     *
-     * @param rateLimiters the rate limiters to collect metrics for
-     */
-    public static RateLimiterMetricsCollector ofIterable(Iterable<? extends RateLimiter> rateLimiters) {
-        return new RateLimiterMetricsCollector(MetricNames.ofDefaults(), () -> rateLimiters);
-    }
-
-    /**
-     * Creates a new collector for a given {@code rateLimiter}.
-     *
-     * @param rateLimiter the rate limiter to collect metrics for
-     */
-    public static RateLimiterMetricsCollector ofRateLimiter(RateLimiter rateLimiter) {
-        return ofIterable(singletonList(rateLimiter));
+    public static RateLimiterMetricsCollector ofRateLimiterRegistry(RateLimiterRegistry rateLimiterRegistry) {
+        return new RateLimiterMetricsCollector(RateLimiterMetricsCollector.MetricNames.ofDefaults(), rateLimiterRegistry);
     }
 
     private final MetricNames names;
-    private final Supplier<? extends Iterable<? extends RateLimiter>> supplier;
+    private final RateLimiterRegistry rateLimiterRegistry;
 
-    private RateLimiterMetricsCollector(MetricNames names, Supplier<? extends Iterable<? extends RateLimiter>> supplier) {
+    private RateLimiterMetricsCollector(MetricNames names, RateLimiterRegistry rateLimiterRegistry) {
         this.names = requireNonNull(names);
-        this.supplier = requireNonNull(supplier);
+        this.rateLimiterRegistry = requireNonNull(rateLimiterRegistry);
     }
 
     @Override
@@ -99,13 +71,13 @@ public class RateLimiterMetricsCollector extends Collector  {
             LabelNames.NAME
         );
 
-        for (RateLimiter rateLimiter : supplier.get()) {
+        for (RateLimiter rateLimiter : rateLimiterRegistry.getAllRateLimiters()) {
             List<String> nameLabel = singletonList(rateLimiter.getName());
             availablePermissionsFamily.addMetric(nameLabel, rateLimiter.getMetrics().getAvailablePermissions());
             waitingThreadsFamily.addMetric(nameLabel, rateLimiter.getMetrics().getNumberOfWaitingThreads());
         }
 
-        return Arrays.asList(availablePermissionsFamily, waitingThreadsFamily);
+        return asList(availablePermissionsFamily, waitingThreadsFamily);
     }
 
     /** Defines possible configuration for metric names. */
