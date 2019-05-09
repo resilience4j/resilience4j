@@ -30,8 +30,8 @@ public class RetryConfig {
 
 	private static final int DEFAULT_MAX_ATTEMPTS = 3;
 	public static final long DEFAULT_WAIT_DURATION = 500;
-	private static final IntervalFunction DEFAULT_INTERVAL_FUNCTION = (numOfAttempts) -> DEFAULT_WAIT_DURATION;
-	private static final Predicate<Throwable> DEFAULT_RECORD_FAILURE_PREDICATE = (throwable) -> true;
+	private static final IntervalFunction DEFAULT_INTERVAL_FUNCTION = numOfAttempts -> DEFAULT_WAIT_DURATION;
+	private static final Predicate<Throwable> DEFAULT_RECORD_FAILURE_PREDICATE = throwable -> true;
 
 	@SuppressWarnings("unchecked")
 	private Class<? extends Throwable>[] retryExceptions = new Class[0];

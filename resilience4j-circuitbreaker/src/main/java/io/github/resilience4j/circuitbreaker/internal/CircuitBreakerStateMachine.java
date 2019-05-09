@@ -372,7 +372,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
         }
     }
 
-    private class ClosedState extends CircuitBreakerState {
+    private class ClosedState implements CircuitBreakerState {
 
         private final CircuitBreakerMetrics circuitBreakerMetrics;
         private final float failureRateThreshold;
@@ -396,7 +396,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
          * @return always true, because the CircuitBreaker is closed.
          */
         @Override
-        boolean tryObtainPermission() {
+        public boolean tryObtainPermission() {
             return true;
         }
 
@@ -404,18 +404,18 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
          * Does not throw an exception, because the CircuitBreaker is closed.
          */
         @Override
-        void obtainPermission() {
+        public void obtainPermission() {
             // noOp
         }
 
         @Override
-        void onError(Throwable throwable) {
+        public void onError(Throwable throwable) {
             // CircuitBreakerMetrics is thread-safe
             checkFailureRate(circuitBreakerMetrics.onError());
         }
 
         @Override
-        void onSuccess() {
+        public void onSuccess() {
             // CircuitBreakerMetrics is thread-safe
             checkFailureRate(circuitBreakerMetrics.onSuccess());
         }
@@ -437,7 +437,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
          * Get the state of the CircuitBreaker
          */
         @Override
-        CircuitBreaker.State getState() {
+        public CircuitBreaker.State getState() {
             return CircuitBreaker.State.CLOSED;
         }
         /**
@@ -445,12 +445,12 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
          * Get metrics of the CircuitBreaker
          */
         @Override
-        CircuitBreakerMetrics getMetrics() {
+        public CircuitBreakerMetrics getMetrics() {
             return circuitBreakerMetrics;
         }
     }
 
-    private class OpenState extends CircuitBreakerState {
+    private class OpenState implements CircuitBreakerState {
 
         private final Instant retryAfterWaitDuration;
         private final CircuitBreakerMetrics circuitBreakerMetrics;
@@ -473,7 +473,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
          * @return false, if the wait duration has not elapsed. true, if the wait duration has elapsed.
          */
         @Override
-        boolean tryObtainPermission() {
+        public boolean tryObtainPermission() {
             // Thread-safe
             if (clock.instant().isAfter(retryAfterWaitDuration)) {
                 transitionToHalfOpenState();
@@ -484,7 +484,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
         }
 
         @Override
-        void obtainPermission() {
+        public void obtainPermission() {
             if(!tryObtainPermission()){
                 throw new CallNotPermittedException(CircuitBreakerStateMachine.this);
             }
@@ -494,7 +494,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
          * Should never be called when tryObtainPermission returns false.
          */
         @Override
-        void onError(Throwable throwable) {
+        public void onError(Throwable throwable) {
             // Could be called when Thread 1 invokes obtainPermission when the state is CLOSED, but in the meantime another
             // Thread 2 calls onError and the state changes from CLOSED to OPEN before Thread 1 calls onError.
             // But the onError event should still be recorded, even if it happened after the state transition.
@@ -505,7 +505,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
          * Should never be called when tryObtainPermission returns false.
          */
         @Override
-        void onSuccess() {
+        public void onSuccess() {
             // Could be called when Thread 1 invokes obtainPermission when the state is CLOSED, but in the meantime another
             // Thread 2 calls onError and the state changes from CLOSED to OPEN before Thread 1 calls onSuccess.
             // But the onSuccess event should still be recorded, even if it happened after the state transition.
@@ -516,17 +516,17 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
          * Get the state of the CircuitBreaker
          */
         @Override
-        CircuitBreaker.State getState() {
+        public CircuitBreaker.State getState() {
             return CircuitBreaker.State.OPEN;
         }
 
         @Override
-        CircuitBreakerMetrics getMetrics() {
+        public CircuitBreakerMetrics getMetrics() {
             return circuitBreakerMetrics;
         }
     }
 
-    private class DisabledState extends CircuitBreakerState {
+    private class DisabledState implements CircuitBreakerState {
 
         private final CircuitBreakerMetrics circuitBreakerMetrics;
 
@@ -541,7 +541,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
          * @return always true, because the CircuitBreaker is disabled.
          */
         @Override
-        boolean tryObtainPermission() {
+        public boolean tryObtainPermission() {
             return true;
         }
 
@@ -549,18 +549,18 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
          * Does not throw an exception, because the CircuitBreaker is disabled.
          */
         @Override
-        void obtainPermission() {
+        public void obtainPermission() {
             // noOp
         }
 
 
         @Override
-        void onError(Throwable throwable) {
+        public void onError(Throwable throwable) {
             // noOp
         }
 
         @Override
-        void onSuccess() {
+        public void onSuccess() {
             // noOp
         }
 
@@ -568,7 +568,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
          * Get the state of the CircuitBreaker
          */
         @Override
-        CircuitBreaker.State getState() {
+        public CircuitBreaker.State getState() {
             return CircuitBreaker.State.DISABLED;
         }
         /**
@@ -576,12 +576,12 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
          * Get metricsof the CircuitBreaker
          */
         @Override
-        CircuitBreakerMetrics getMetrics() {
+        public CircuitBreakerMetrics getMetrics() {
             return circuitBreakerMetrics;
         }
     }
 
-    private class ForcedOpenState extends CircuitBreakerState {
+    private class ForcedOpenState implements CircuitBreakerState {
 
         private final CircuitBreakerMetrics circuitBreakerMetrics;
 
@@ -596,13 +596,13 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
          * @return always false, since the FORCED_OPEN state always denies calls.
          */
         @Override
-        boolean tryObtainPermission() {
+        public boolean tryObtainPermission() {
             circuitBreakerMetrics.onCallNotPermitted();
             return false;
         }
 
         @Override
-        void obtainPermission() {
+        public void obtainPermission() {
             circuitBreakerMetrics.onCallNotPermitted();
             throw new CallNotPermittedException(CircuitBreakerStateMachine.this);
         }
@@ -611,7 +611,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
          * Should never be called when tryObtainPermission returns false.
          */
         @Override
-        void onError(Throwable throwable) {
+        public void onError(Throwable throwable) {
             // noOp
         }
 
@@ -619,7 +619,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
          * Should never be called when tryObtainPermission returns false.
          */
         @Override
-        void onSuccess() {
+        public void onSuccess() {
             // noOp
         }
 
@@ -627,17 +627,17 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
          * Get the state of the CircuitBreaker
          */
         @Override
-        CircuitBreaker.State getState() {
+        public CircuitBreaker.State getState() {
             return CircuitBreaker.State.FORCED_OPEN;
         }
 
         @Override
-        CircuitBreakerMetrics getMetrics() {
+        public CircuitBreakerMetrics getMetrics() {
             return circuitBreakerMetrics;
         }
     }
 
-    private class HalfOpenState extends CircuitBreakerState {
+    private class HalfOpenState implements CircuitBreakerState {
 
         private CircuitBreakerMetrics circuitBreakerMetrics;
         private final float failureRateThreshold;
@@ -659,7 +659,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
          * @return true, if test request counter is not zero.
          */
         @Override
-        boolean tryObtainPermission() {
+        public boolean tryObtainPermission() {
             if (testRequestCounter.getAndDecrement() > 0) {
                 return true;
             }
@@ -668,20 +668,20 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
         }
 
         @Override
-        void obtainPermission() {
+        public void obtainPermission() {
             if(!tryObtainPermission()){
                 throw new CallNotPermittedException(CircuitBreakerStateMachine.this);
             }
         }
 
         @Override
-        void onError(Throwable throwable) {
+        public void onError(Throwable throwable) {
             // CircuitBreakerMetrics is thread-safe
             checkFailureRate(circuitBreakerMetrics.onError());
         }
 
         @Override
-        void onSuccess() {
+        public void onSuccess() {
             // CircuitBreakerMetrics is thread-safe
             checkFailureRate(circuitBreakerMetrics.onSuccess());
         }
@@ -707,37 +707,35 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
          * Get the state of the CircuitBreaker
          */
         @Override
-        CircuitBreaker.State getState() {
+        public CircuitBreaker.State getState() {
             return CircuitBreaker.State.HALF_OPEN;
         }
 
         @Override
-        CircuitBreakerMetrics getMetrics() {
+        public CircuitBreakerMetrics getMetrics() {
             return circuitBreakerMetrics;
         }
     }
 
-    private abstract class CircuitBreakerState{
+    private interface CircuitBreakerState{
 
-        CircuitBreakerState(){}
+        boolean tryObtainPermission();
 
-        abstract boolean tryObtainPermission();
+        void obtainPermission();
 
-        abstract void obtainPermission();
+        void onError(Throwable throwable);
 
-        abstract void onError(Throwable throwable);
+        void onSuccess();
 
-        abstract void onSuccess();
+        CircuitBreaker.State getState();
 
-        abstract CircuitBreaker.State getState();
-
-        abstract CircuitBreakerMetrics getMetrics();
+        CircuitBreakerMetrics getMetrics();
 
         /**
          * Should the CircuitBreaker in this state publish events
          * @return a boolean signaling if the events should be published
          */
-        boolean shouldPublishEvents(CircuitBreakerEvent event){
+        default boolean shouldPublishEvents(CircuitBreakerEvent event){
             return event.getEventType().forcePublish || getState().allowPublish;
         }
     }
