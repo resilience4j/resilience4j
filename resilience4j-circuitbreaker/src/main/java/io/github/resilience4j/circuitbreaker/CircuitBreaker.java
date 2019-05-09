@@ -313,14 +313,8 @@ public interface CircuitBreaker {
 
         private final State toState;
 
-        private static final Map<Tuple2<State, State>, StateTransition> STATE_TRANSITION_MAP =
-                Arrays
-                        .stream(StateTransition.values())
+        private static final Map<Tuple2<State, State>, StateTransition> STATE_TRANSITION_MAP = Arrays.stream(StateTransition.values())
                         .collect(Collectors.toMap(v -> Tuple.of(v.fromState, v.toState), Function.identity()));
-
-        private boolean matches(State fromState, State toState) {
-            return this.fromState == fromState && this.toState == toState;
-        }
 
         public static StateTransition transitionBetween(State fromState, State toState){
             final StateTransition stateTransition = STATE_TRANSITION_MAP.get(Tuple.of(fromState, toState));
@@ -379,16 +373,16 @@ public interface CircuitBreaker {
         float getFailureRate();
 
         /**
-         * Returns the current number of buffered calls.
+         * Returns the current total number of buffered calls in the ring buffer.
          *
-         * @return he current number of buffered calls
+         * @return he current total number of buffered calls in the ring buffer
          */
         int getNumberOfBufferedCalls();
 
         /**
-         * Returns the current number of failed calls.
+         * Returns the current number of failed buffered calls in the ring buffer.
          *
-         * @return the current number of failed calls
+         * @return the current number of failed buffered calls in the ring buffer
          */
         int getNumberOfFailedCalls();
 
@@ -403,16 +397,16 @@ public interface CircuitBreaker {
         long getNumberOfNotPermittedCalls();
 
         /**
-         * Returns the maximum number of buffered calls.
+         * Returns the maximum number of buffered calls in the ring buffer.
          *
-         * @return the maximum number of buffered calls
+         * @return the maximum number of buffered calls in the ring buffer
          */
         int getMaxNumberOfBufferedCalls();
 
         /**
-         * Returns the current number of successful calls.
+         * Returns the current number of successful buffered calls in the ring buffer.
          *
-         * @return the current number of successful calls
+         * @return the current number of successful buffered calls in the ring buffer
          */
         int getNumberOfSuccessfulCalls();
     }
