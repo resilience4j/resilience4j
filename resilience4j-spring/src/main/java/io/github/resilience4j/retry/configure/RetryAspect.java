@@ -35,8 +35,8 @@ import org.springframework.core.Ordered;
 import org.springframework.util.StringUtils;
 
 import io.github.resilience4j.core.lang.Nullable;
-import io.github.resilience4j.recovery.RecoveryDecorators;
-import io.github.resilience4j.recovery.RecoveryMethod;
+import io.github.resilience4j.recovery.FallbackDecorators;
+import io.github.resilience4j.recovery.FallbackMethod;
 import io.github.resilience4j.retry.RetryRegistry;
 import io.github.resilience4j.retry.annotation.Retry;
 import io.github.resilience4j.utils.AnnotationExtractor;
@@ -54,18 +54,18 @@ public class RetryAspect implements Ordered {
 	private final RetryConfigurationProperties retryConfigurationProperties;
 	private final RetryRegistry retryRegistry;
 	private final @Nullable List<RetryAspectExt> retryAspectExtList;
-	private final RecoveryDecorators recoveryDecorators;
+	private final FallbackDecorators fallbackDecorators;
 
 	/**
 	 * @param retryConfigurationProperties spring retry config properties
 	 * @param retryRegistry                retry definition registry
 	 * @param retryAspectExtList
 	 */
-	public RetryAspect(RetryConfigurationProperties retryConfigurationProperties, RetryRegistry retryRegistry, @Autowired(required = false) List<RetryAspectExt> retryAspectExtList, RecoveryDecorators recoveryDecorators) {
+	public RetryAspect(RetryConfigurationProperties retryConfigurationProperties, RetryRegistry retryRegistry, @Autowired(required = false) List<RetryAspectExt> retryAspectExtList, FallbackDecorators fallbackDecorators) {
 		this.retryConfigurationProperties = retryConfigurationProperties;
 		this.retryRegistry = retryRegistry;
 		this.retryAspectExtList = retryAspectExtList;
-		this.recoveryDecorators = recoveryDecorators;
+		this.fallbackDecorators = fallbackDecorators;
 		cleanup();
 
 	}
@@ -91,8 +91,8 @@ public class RetryAspect implements Ordered {
 			return proceed(proceedingJoinPoint, methodName, retry, returnType);
 		}
 
-		RecoveryMethod recoveryMethod = new RecoveryMethod(backendMonitored.fallbackMethod(), method, proceedingJoinPoint.getArgs(), proceedingJoinPoint.getTarget());
-		return recoveryDecorators.decorate(recoveryMethod, () -> proceed(proceedingJoinPoint, methodName, retry, returnType)).apply();
+		FallbackMethod fallbackMethod = new FallbackMethod(backendMonitored.fallbackMethod(), method, proceedingJoinPoint.getArgs(), proceedingJoinPoint.getTarget());
+		return fallbackDecorators.decorate(fallbackMethod, () -> proceed(proceedingJoinPoint, methodName, retry, returnType)).apply();
 	}
 
 	private Object proceed(ProceedingJoinPoint proceedingJoinPoint, String methodName, io.github.resilience4j.retry.Retry retry, Class<?> returnType) throws Throwable {

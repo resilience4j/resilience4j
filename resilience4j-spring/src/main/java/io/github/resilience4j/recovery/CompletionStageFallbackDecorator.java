@@ -23,7 +23,7 @@ import io.vavr.CheckedFunction0;
 /**
  * fallbackMethod decorator for {@link CompletionStage}
  */
-public class CompletionStageRecoveryDecorator implements RecoveryDecorator {
+public class CompletionStageFallbackDecorator implements FallbackDecorator {
 
     @Override
     public boolean supports(Class<?> target) {
@@ -32,7 +32,7 @@ public class CompletionStageRecoveryDecorator implements RecoveryDecorator {
 
     @SuppressWarnings("unchecked")
     @Override
-    public CheckedFunction0<Object> decorate(RecoveryMethod recoveryMethod, CheckedFunction0<Object> supplier) {
+    public CheckedFunction0<Object> decorate(FallbackMethod recoveryMethod, CheckedFunction0<Object> supplier) {
         return supplier.andThen(request -> {
             CompletionStage completionStage = (CompletionStage) request;
 

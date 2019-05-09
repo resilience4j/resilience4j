@@ -34,8 +34,8 @@ import org.springframework.util.StringUtils;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.core.lang.Nullable;
-import io.github.resilience4j.recovery.RecoveryDecorators;
-import io.github.resilience4j.recovery.RecoveryMethod;
+import io.github.resilience4j.recovery.FallbackDecorators;
+import io.github.resilience4j.recovery.FallbackMethod;
 import io.github.resilience4j.utils.AnnotationExtractor;
 
 /**
@@ -51,13 +51,13 @@ public class CircuitBreakerAspect implements Ordered {
 	private final CircuitBreakerConfigurationProperties circuitBreakerProperties;
 	private final CircuitBreakerRegistry circuitBreakerRegistry;
 	private final @Nullable List<CircuitBreakerAspectExt> circuitBreakerAspectExtList;
-	private final RecoveryDecorators recoveryDecorators;
+	private final FallbackDecorators fallbackDecorators;
 
-	public CircuitBreakerAspect(CircuitBreakerConfigurationProperties circuitBreakerProperties, CircuitBreakerRegistry circuitBreakerRegistry, @Autowired(required = false) List<CircuitBreakerAspectExt> circuitBreakerAspectExtList, RecoveryDecorators recoveryDecorators) {
+	public CircuitBreakerAspect(CircuitBreakerConfigurationProperties circuitBreakerProperties, CircuitBreakerRegistry circuitBreakerRegistry, @Autowired(required = false) List<CircuitBreakerAspectExt> circuitBreakerAspectExtList, FallbackDecorators fallbackDecorators) {
 		this.circuitBreakerProperties = circuitBreakerProperties;
 		this.circuitBreakerRegistry = circuitBreakerRegistry;
 		this.circuitBreakerAspectExtList = circuitBreakerAspectExtList;
-		this.recoveryDecorators = recoveryDecorators;
+		this.fallbackDecorators = fallbackDecorators;
 	}
 
 	@Pointcut(value = "@within(circuitBreaker) || @annotation(circuitBreaker)", argNames = "circuitBreaker")
@@ -82,8 +82,8 @@ public class CircuitBreakerAspect implements Ordered {
 			return proceed(proceedingJoinPoint, methodName, circuitBreaker, returnType);
 		}
 
-		RecoveryMethod recoveryMethod = new RecoveryMethod(backendMonitored.fallbackMethod(), method, proceedingJoinPoint.getArgs(), proceedingJoinPoint.getTarget());
-        return recoveryDecorators.decorate(recoveryMethod, () -> proceed(proceedingJoinPoint, methodName, circuitBreaker, returnType)).apply();
+		FallbackMethod fallbackMethod = new FallbackMethod(backendMonitored.fallbackMethod(), method, proceedingJoinPoint.getArgs(), proceedingJoinPoint.getTarget());
+        return fallbackDecorators.decorate(fallbackMethod, () -> proceed(proceedingJoinPoint, methodName, circuitBreaker, returnType)).apply();
 	}
 
 	private Object proceed(ProceedingJoinPoint proceedingJoinPoint, String methodName, io.github.resilience4j.circuitbreaker.CircuitBreaker circuitBreaker, Class<?> returnType) throws Throwable {

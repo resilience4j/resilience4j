@@ -20,29 +20,29 @@ import java.util.List;
 import io.vavr.CheckedFunction0;
 
 /**
- * {@link RecoveryDecorator} resolver
+ * {@link FallbackDecorator} resolver
  */
-public class RecoveryDecorators {
-    private final List<RecoveryDecorator> recoveryDecorator;
-    private final RecoveryDecorator defaultRecoveryDecorator = new DefaultRecoveryDecorator();
+public class FallbackDecorators {
+    private final List<FallbackDecorator> recoveryDecorator;
+    private final FallbackDecorator defaultRecoveryDecorator = new DefaultFallbackDecorator();
 
-    public RecoveryDecorators(List<RecoveryDecorator> recoveryDecorator) {
+    public FallbackDecorators(List<FallbackDecorator> recoveryDecorator) {
         this.recoveryDecorator = recoveryDecorator;
     }
 
     /**
-     * find a {@link RecoveryDecorator} by return type of the {@link RecoveryMethod} and decorate supplier
+     * find a {@link FallbackDecorator} by return type of the {@link FallbackMethod} and decorate supplier
      *
      * @param recoveryMethod fallbackMethod method that handles supplier's exception
      * @param supplier       original function
-     * @return a function which is decorated by a {@link RecoveryMethod}
+     * @return a function which is decorated by a {@link FallbackMethod}
      */
-    public CheckedFunction0<Object> decorate(RecoveryMethod recoveryMethod, CheckedFunction0<Object> supplier) {
+    public CheckedFunction0<Object> decorate(FallbackMethod recoveryMethod, CheckedFunction0<Object> supplier) {
         return get(recoveryMethod.getReturnType())
                 .decorate(recoveryMethod, supplier);
     }
 
-    private RecoveryDecorator get(Class<?> returnType) {
+    private FallbackDecorator get(Class<?> returnType) {
         return recoveryDecorator.stream().filter(it -> it.supports(returnType))
                 .findFirst()
                 .orElse(defaultRecoveryDecorator);

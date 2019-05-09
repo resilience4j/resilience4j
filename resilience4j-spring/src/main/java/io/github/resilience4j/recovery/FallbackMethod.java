@@ -29,7 +29,7 @@ import io.github.resilience4j.core.lang.Nullable;
 
 /**
  * Reflection utility for invoking fallbackMethod method. Recovery method should have same return type and parameter types of original method but the last additional parameter.
- * The last additional parameter should be a subclass of {@link Throwable}. When {@link RecoveryMethod#recover(Throwable)} is invoked, {@link Throwable} will be passed to that last parameter.
+ * The last additional parameter should be a subclass of {@link Throwable}. When {@link FallbackMethod#recover(Throwable)} is invoked, {@link Throwable} will be passed to that last parameter.
  * If there are multiple fallbackMethod method, one of the methods that has most closest superclass parameter of thrown object will be invoked.
  * <pre>
  * For example, there are two fallbackMethod methods
@@ -40,7 +40,7 @@ import io.github.resilience4j.core.lang.Nullable;
  * and if try to recover from {@link NumberFormatException}, {@code String fallbackMethod(String parameter, IllegalArgumentException exception)} will be invoked.
  * </pre>
  */
-public class RecoveryMethod {
+public class FallbackMethod {
     private static final Map<MethodMeta, Map<Class<?>, Method>> RECOVERY_METHODS_CACHE = new ConcurrentReferenceHashMap<>();
     private final Map<Class<?>, Method> recoveryMethods;
     private final Object[] args;
@@ -56,7 +56,7 @@ public class RecoveryMethod {
      * @param target             target object the fallbackMethod method will be invoked
      * @throws NoSuchMethodException will be thrown, if fallbackMethod method is not found
      */
-    public RecoveryMethod(String recoveryMethodName, Method originalMethod, Object[] args, Object target) throws NoSuchMethodException {
+    public FallbackMethod(String recoveryMethodName, Method originalMethod, Object[] args, Object target) throws NoSuchMethodException {
         Class<?>[] params = originalMethod.getParameterTypes();
         Class<?> originalReturnType = originalMethod.getReturnType();
 

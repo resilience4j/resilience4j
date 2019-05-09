@@ -29,7 +29,7 @@ import reactor.core.publisher.Mono;
 /**
  * fallbackMethod decorator for {@link Flux} and {@link Mono}
  */
-public class ReactorRecoveryDecorator implements RecoveryDecorator {
+public class ReactorFallbackDecorator implements FallbackDecorator {
     private static final Set<Class<?>> REACTORS_SUPPORTED_TYPES = newHashSet(Mono.class, Flux.class);
 
     @Override
@@ -39,7 +39,7 @@ public class ReactorRecoveryDecorator implements RecoveryDecorator {
 
     @SuppressWarnings("unchecked")
     @Override
-    public CheckedFunction0<Object> decorate(RecoveryMethod recoveryMethod, CheckedFunction0<Object> supplier) {
+    public CheckedFunction0<Object> decorate(FallbackMethod recoveryMethod, CheckedFunction0<Object> supplier) {
         return supplier.andThen(returnValue -> {
             if (Flux.class.isAssignableFrom(returnValue.getClass())) {
                 Flux fluxReturnValue = (Flux) returnValue;
@@ -54,7 +54,7 @@ public class ReactorRecoveryDecorator implements RecoveryDecorator {
     }
 
     @SuppressWarnings("unchecked")
-    private <T> Function<? super Throwable, ? extends Publisher<? extends T>> reactorOnErrorResume(RecoveryMethod recoveryMethod, Function<? super Throwable, ? extends Publisher<? extends T>> errorFunction) {
+    private <T> Function<? super Throwable, ? extends Publisher<? extends T>> reactorOnErrorResume(FallbackMethod recoveryMethod, Function<? super Throwable, ? extends Publisher<? extends T>> errorFunction) {
         return (throwable) -> {
             try {
                 return (Publisher<? extends T>) recoveryMethod.recover(throwable);

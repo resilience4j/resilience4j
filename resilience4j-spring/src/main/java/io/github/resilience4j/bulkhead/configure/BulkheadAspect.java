@@ -34,8 +34,8 @@ import org.springframework.util.StringUtils;
 import io.github.resilience4j.bulkhead.BulkheadRegistry;
 import io.github.resilience4j.bulkhead.annotation.Bulkhead;
 import io.github.resilience4j.core.lang.Nullable;
-import io.github.resilience4j.recovery.RecoveryDecorators;
-import io.github.resilience4j.recovery.RecoveryMethod;
+import io.github.resilience4j.recovery.FallbackDecorators;
+import io.github.resilience4j.recovery.FallbackMethod;
 import io.github.resilience4j.utils.AnnotationExtractor;
 
 /**
@@ -50,14 +50,15 @@ public class BulkheadAspect implements Ordered {
 
 	private final BulkheadConfigurationProperties bulkheadConfigurationProperties;
 	private final BulkheadRegistry bulkheadRegistry;
-	private final @Nullable List<BulkheadAspectExt> bulkheadAspectExts;
-	private final RecoveryDecorators recoveryDecorators;
+	private final @Nullable
+	List<BulkheadAspectExt> bulkheadAspectExts;
+	private final FallbackDecorators fallbackDecorators;
 
-	public BulkheadAspect(BulkheadConfigurationProperties backendMonitorPropertiesRegistry, BulkheadRegistry bulkheadRegistry, @Autowired(required = false) List<BulkheadAspectExt> bulkheadAspectExts, RecoveryDecorators recoveryDecorators) {
+	public BulkheadAspect(BulkheadConfigurationProperties backendMonitorPropertiesRegistry, BulkheadRegistry bulkheadRegistry, @Autowired(required = false) List<BulkheadAspectExt> bulkheadAspectExts, FallbackDecorators fallbackDecorators) {
 		this.bulkheadConfigurationProperties = backendMonitorPropertiesRegistry;
 		this.bulkheadRegistry = bulkheadRegistry;
 		this.bulkheadAspectExts = bulkheadAspectExts;
-		this.recoveryDecorators = recoveryDecorators;
+		this.fallbackDecorators = fallbackDecorators;
 	}
 
 	@Pointcut(value = "@within(Bulkhead) || @annotation(Bulkhead)", argNames = "Bulkhead")
@@ -71,7 +72,7 @@ public class BulkheadAspect implements Ordered {
 		if (backendMonitored == null) {
 			backendMonitored = getBackendMonitoredAnnotation(proceedingJoinPoint);
 		}
-		if(backendMonitored == null) { //because annotations wasn't found
+		if (backendMonitored == null) { //because annotations wasn't found
 			return proceedingJoinPoint.proceed();
 		}
 		String backend = backendMonitored.name();
@@ -82,8 +83,8 @@ public class BulkheadAspect implements Ordered {
 			return proceed(proceedingJoinPoint, methodName, bulkhead, returnType);
 		}
 
-		RecoveryMethod recoveryMethod = new RecoveryMethod(backendMonitored.fallbackMethod(), method, proceedingJoinPoint.getArgs(), proceedingJoinPoint.getTarget());
-		return recoveryDecorators.decorate(recoveryMethod, () -> proceed(proceedingJoinPoint, methodName, bulkhead, returnType)).apply();
+		FallbackMethod fallbackMethod = new FallbackMethod(backendMonitored.fallbackMethod(), method, proceedingJoinPoint.getArgs(), proceedingJoinPoint.getTarget());
+		return fallbackDecorators.decorate(fallbackMethod, () -> proceed(proceedingJoinPoint, methodName, bulkhead, returnType)).apply();
 	}
 
 	private Object proceed(ProceedingJoinPoint proceedingJoinPoint, String methodName, io.github.resilience4j.bulkhead.Bulkhead bulkhead, Class<?> returnType) throws Throwable {

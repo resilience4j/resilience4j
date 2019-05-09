@@ -19,7 +19,6 @@ import static org.junit.Assert.assertEquals;
 
 import java.util.List;
 
-import io.github.resilience4j.recovery.RecoveryDecorators;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,6 +36,7 @@ import io.github.resilience4j.bulkhead.configure.BulkheadConfiguration;
 import io.github.resilience4j.bulkhead.event.BulkheadEvent;
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
+import io.github.resilience4j.recovery.FallbackDecorators;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(classes = {
@@ -91,8 +91,8 @@ public class BulkheadConfigurationOnMissingBeanTest {
 		@Bean
 		public BulkheadAspect bulkheadAspect(BulkheadRegistry bulkheadRegistry,
 											 @Autowired(required = false) List<BulkheadAspectExt> bulkheadAspectExts,
-											 RecoveryDecorators recoveryDecorators) {
-			bulkheadAspect = new BulkheadAspect(new BulkheadProperties(), bulkheadRegistry, bulkheadAspectExts, recoveryDecorators);
+											 FallbackDecorators fallbackDecorators) {
+			bulkheadAspect = new BulkheadAspect(new BulkheadProperties(), bulkheadRegistry, bulkheadAspectExts, fallbackDecorators);
 			return bulkheadAspect;
 		}
 

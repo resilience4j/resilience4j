@@ -15,52 +15,53 @@
  */
 package io.github.resilience4j.recovery.autoconfigure;
 
-import io.github.resilience4j.recovery.RecoveryDecorator;
-import io.github.resilience4j.recovery.RecoveryDecorators;
-import io.github.resilience4j.recovery.configure.RecoveryConfiguration;
-import io.github.resilience4j.utils.ReactorOnClasspathCondition;
-import io.github.resilience4j.utils.RxJava2OnClasspathCondition;
+import java.util.List;
+
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
 
-import java.util.List;
+import io.github.resilience4j.recovery.FallbackDecorator;
+import io.github.resilience4j.recovery.FallbackDecorators;
+import io.github.resilience4j.recovery.configure.FallbackConfiguration;
+import io.github.resilience4j.utils.ReactorOnClasspathCondition;
+import io.github.resilience4j.utils.RxJava2OnClasspathCondition;
 
 /**
- * {@link Configuration} for {@link RecoveryDecorators}.
+ * {@link Configuration} for {@link FallbackDecorators}.
  */
 @Configuration
-public class RecoveryConfigurationOnMissingBean {
-	private final RecoveryConfiguration recoveryConfiguration;
+public class FallbackConfigurationOnMissingBean {
+	private final FallbackConfiguration fallbackConfiguration;
 
-	public RecoveryConfigurationOnMissingBean() {
-		this.recoveryConfiguration = new RecoveryConfiguration();
+	public FallbackConfigurationOnMissingBean() {
+		this.fallbackConfiguration = new FallbackConfiguration();
 	}
 
 	@Bean
 	@ConditionalOnMissingBean
-	public RecoveryDecorators recoveryDecorators(List<RecoveryDecorator> recoveryDecorator) {
-		return recoveryConfiguration.recoveryDecorators(recoveryDecorator);
+	public FallbackDecorators fallbackDecorators(List<FallbackDecorator> fallbackDecorators) {
+		return fallbackConfiguration.fallbackDecorators(fallbackDecorators);
 	}
 
 	@Bean
 	@Conditional(value = {RxJava2OnClasspathCondition.class})
 	@ConditionalOnMissingBean
-	public RecoveryDecorator rxJava2RecoveryDecorator() {
-		return recoveryConfiguration.rxJava2RecoveryDecorator();
+	public FallbackDecorator rxJava2FallbackDecorator() {
+		return fallbackConfiguration.rxJava2FallbackDecorator();
 	}
 
 	@Bean
 	@Conditional(value = {ReactorOnClasspathCondition.class})
 	@ConditionalOnMissingBean
-	public RecoveryDecorator reactorRecoveryDecorator() {
-		return recoveryConfiguration.reactorRecoveryDecorator();
+	public FallbackDecorator reactorFallbackDecorator() {
+		return fallbackConfiguration.reactorFallbackDecorator();
 	}
 
 	@Bean
 	@ConditionalOnMissingBean
-	public RecoveryDecorator completionStageRecoveryDecorator() {
-		return recoveryConfiguration.completionStageRecoveryDecorator();
+	public FallbackDecorator completionStageFallbackDecorator() {
+		return fallbackConfiguration.completionStageFallbackDecorator();
 	}
 }

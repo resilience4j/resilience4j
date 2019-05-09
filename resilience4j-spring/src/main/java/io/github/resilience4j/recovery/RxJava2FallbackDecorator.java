@@ -34,7 +34,7 @@ import io.vavr.CheckedFunction0;
 /**
  * fallbackMethod decorator for {@link ObservableSource}, {@link SingleSource}, {@link CompletableSource}, {@link MaybeSource} and {@link Flowable}.
  */
-public class RxJava2RecoveryDecorator implements RecoveryDecorator {
+public class RxJava2FallbackDecorator implements FallbackDecorator {
     private static final Set<Class<?>> RX_SUPPORTED_TYPES = newHashSet(ObservableSource.class, SingleSource.class, CompletableSource.class, MaybeSource.class, Flowable.class);
 
     @Override
@@ -43,7 +43,7 @@ public class RxJava2RecoveryDecorator implements RecoveryDecorator {
     }
 
     @Override
-    public CheckedFunction0<Object> decorate(RecoveryMethod recoveryMethod, CheckedFunction0<Object> supplier) {
+    public CheckedFunction0<Object> decorate(FallbackMethod recoveryMethod, CheckedFunction0<Object> supplier) {
         return supplier.andThen(request -> {
             if (request instanceof ObservableSource) {
                 Observable<?> observable = (Observable<?>) request;
@@ -67,7 +67,7 @@ public class RxJava2RecoveryDecorator implements RecoveryDecorator {
     }
 
     @SuppressWarnings("unchecked")
-    private <T> io.reactivex.functions.Function<Throwable, T> rxJava2OnErrorResumeNext(RecoveryMethod recoveryMethod, Function<? super Throwable, ? extends T> errorFunction) {
+    private <T> io.reactivex.functions.Function<Throwable, T> rxJava2OnErrorResumeNext(FallbackMethod recoveryMethod, Function<? super Throwable, ? extends T> errorFunction) {
         return (throwable) -> {
             try {
                 return (T) recoveryMethod.recover(throwable);
