@@ -22,19 +22,16 @@ import reactor.core.publisher.MonoOperator;
 import reactor.core.scheduler.Scheduler;
 
 public class MonoRateLimiter<T> extends MonoOperator<T, T> {
-    private final RateLimiter rateLimiter;
-    private final Scheduler scheduler;
+    private final SubscriptionRateLimiter<T> subscriptionRateLimiter;
 
     public MonoRateLimiter(Mono<? extends T> source, RateLimiter rateLimiter,
                            Scheduler scheduler) {
         super(source);
-        this.rateLimiter = rateLimiter;
-        this.scheduler = scheduler;
+        this.subscriptionRateLimiter = new SubscriptionRateLimiter<T>(source, rateLimiter, scheduler);
     }
 
     @Override
     public void subscribe(CoreSubscriber<? super T> actual) {
-        source.publishOn(scheduler)
-                .subscribe(new RateLimiterSubscriber<>(rateLimiter, actual));
+        subscriptionRateLimiter.subscribe(actual);
     }
 }

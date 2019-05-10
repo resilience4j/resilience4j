@@ -15,16 +15,16 @@
  */
 package io.github.resilience4j.reactor.ratelimiter.operator;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RateLimiterConfig;
 
 import java.time.Duration;
 import java.util.stream.IntStream;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 public class RateLimiterAssertions {
-    private static final int LIMIT_FOR_PERIOD = 5;
+    protected static final int LIMIT_FOR_PERIOD = 5;
 
     protected final RateLimiter rateLimiter = RateLimiter.of("test",
             RateLimiterConfig.custom().limitForPeriod(LIMIT_FOR_PERIOD).timeoutDuration(Duration.ZERO).limitRefreshPeriod(Duration.ofSeconds(10)).build());

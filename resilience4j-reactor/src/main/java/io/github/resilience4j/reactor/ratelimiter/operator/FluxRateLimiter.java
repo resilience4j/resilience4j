@@ -23,20 +23,19 @@ import reactor.core.scheduler.Scheduler;
 
 public class FluxRateLimiter<T> extends FluxOperator<T, T> {
 
-    private final RateLimiter rateLimiter;
-    private final Scheduler scheduler;
+    private final SubscriptionRateLimiter<T> subscriptionRateLimiter;
 
     public FluxRateLimiter(Flux<? extends T> source, RateLimiter rateLimiter,
                            Scheduler scheduler) {
         super(source);
-        this.rateLimiter = rateLimiter;
-        this.scheduler = scheduler;
+        this.subscriptionRateLimiter = new SubscriptionRateLimiter<>(source, rateLimiter, scheduler);
     }
 
     @Override
     public void subscribe(CoreSubscriber<? super T> actual) {
-        source.publishOn(scheduler)
-                .subscribe(new RateLimiterSubscriber<>(rateLimiter, actual));
+        subscriptionRateLimiter.subscribe(actual);
     }
+
+
 
 }
