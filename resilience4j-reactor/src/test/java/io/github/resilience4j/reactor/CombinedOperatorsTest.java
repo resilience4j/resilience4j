@@ -1,16 +1,10 @@
 package io.github.resilience4j.reactor;
 
-import java.io.IOException;
-import java.time.Duration;
-import java.time.temporal.ChronoUnit;
-
-import org.junit.Test;
-
 import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.bulkhead.BulkheadConfig;
+import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
-import io.github.resilience4j.circuitbreaker.CircuitBreakerOpenException;
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RateLimiterConfig;
 import io.github.resilience4j.reactor.bulkhead.operator.BulkheadOperator;
@@ -19,10 +13,15 @@ import io.github.resilience4j.reactor.ratelimiter.operator.RateLimiterOperator;
 import io.github.resilience4j.reactor.retry.RetryOperator;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryConfig;
+import org.junit.Test;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 import reactor.test.StepVerifier;
+
+import java.io.IOException;
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
 
 public class CombinedOperatorsTest {
 
@@ -110,7 +109,7 @@ public class CombinedOperatorsTest {
                         .transform(CircuitBreakerOperator.of(circuitBreaker))
                         .transform(BulkheadOperator.of(bulkhead, Schedulers.immediate()))
                         .transform(RateLimiterOperator.of(rateLimiter, Schedulers.immediate()))
-        ).expectError(CircuitBreakerOpenException.class)
+        ).expectError(CallNotPermittedException.class)
                 .verify(Duration.ofSeconds(1));
     }
 
@@ -122,7 +121,7 @@ public class CombinedOperatorsTest {
                         .transform(CircuitBreakerOperator.of(circuitBreaker))
                         .transform(BulkheadOperator.of(bulkhead, Schedulers.immediate()))
                         .transform(RateLimiterOperator.of(rateLimiter, Schedulers.immediate()))
-        ).expectError(CircuitBreakerOpenException.class)
+        ).expectError(CallNotPermittedException.class)
                 .verify(Duration.ofSeconds(1));
     }
 }
