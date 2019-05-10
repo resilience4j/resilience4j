@@ -15,7 +15,7 @@
  */
 package io.github.resilience4j.reactor.circuitbreaker.operator;
 
-import io.github.resilience4j.circuitbreaker.CircuitBreakerOpenException;
+import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import org.junit.Test;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -66,7 +66,7 @@ public class MonoCircuitBreakerTest extends CircuitBreakerAssertions {
         StepVerifier.create(
                 Mono.error(new IOException("BAM!")).delayElement(Duration.ofMillis(1))
                         .transform(CircuitBreakerOperator.of(circuitBreaker)))
-                .expectError(CircuitBreakerOpenException.class)
+                .expectError(CallNotPermittedException.class)
                 .verify(Duration.ofSeconds(1));
 
         assertNoRegisteredCall();
@@ -78,7 +78,7 @@ public class MonoCircuitBreakerTest extends CircuitBreakerAssertions {
         StepVerifier.create(
                 Mono.error(new IOException("BAM!"))
                         .transform(CircuitBreakerOperator.of(circuitBreaker)))
-                .expectError(CircuitBreakerOpenException.class)
+                .expectError(CallNotPermittedException.class)
                 .verify(Duration.ofSeconds(1));
 
         assertNoRegisteredCall();
@@ -90,7 +90,7 @@ public class MonoCircuitBreakerTest extends CircuitBreakerAssertions {
         StepVerifier.create(
                 Mono.just("Event")
                         .transform(CircuitBreakerOperator.of(circuitBreaker)))
-                .expectError(CircuitBreakerOpenException.class)
+                .expectError(CallNotPermittedException.class)
                 .verify(Duration.ofSeconds(1));
 
         assertNoRegisteredCall();

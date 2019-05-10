@@ -183,9 +183,7 @@ public abstract class ResilienceBaseSubscriber<T> implements CoreSubscriber<T>, 
                 if (acquireCallPermit()) {
                     actual.onSubscribe(this);
                 } else {
-                    cancel();
-                    actual.onSubscribe(this);
-                    actual.onError(getThrowable());
+                    Operators.error(actual, Operators.onOperatorError(s, getThrowable(), actual.currentContext()));
                 }
             }
             catch (Throwable throwable) {

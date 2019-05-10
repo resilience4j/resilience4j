@@ -15,7 +15,7 @@
  */
 package io.github.resilience4j.reactor.circuitbreaker.operator;
 
-import io.github.resilience4j.circuitbreaker.CircuitBreakerOpenException;
+import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import org.junit.Test;
 import reactor.core.publisher.Flux;
 import reactor.test.StepVerifier;
@@ -65,7 +65,7 @@ public class FluxCircuitBreakerTest extends CircuitBreakerAssertions {
         StepVerifier.create(
                 Flux.just("Event 1", "Event 2")
                         .transform(CircuitBreakerOperator.of(circuitBreaker)))
-                .expectError(CircuitBreakerOpenException.class)
+                .expectError(CallNotPermittedException.class)
                 .verify(Duration.ofSeconds(1));
 
         assertNoRegisteredCall();
@@ -77,7 +77,7 @@ public class FluxCircuitBreakerTest extends CircuitBreakerAssertions {
         StepVerifier.create(
                 Flux.error(new IOException("BAM!"), true)
                         .transform(CircuitBreakerOperator.of(circuitBreaker)))
-                .expectError(CircuitBreakerOpenException.class)
+                .expectError(CallNotPermittedException.class)
                 .verify(Duration.ofSeconds(1));
 
         assertNoRegisteredCall();
@@ -89,7 +89,7 @@ public class FluxCircuitBreakerTest extends CircuitBreakerAssertions {
         StepVerifier.create(
                 Flux.error(new IOException("BAM!"))
                         .transform(CircuitBreakerOperator.of(circuitBreaker)))
-                .expectError(CircuitBreakerOpenException.class)
+                .expectError(CallNotPermittedException.class)
                 .verify(Duration.ofSeconds(1));
 
         assertNoRegisteredCall();
