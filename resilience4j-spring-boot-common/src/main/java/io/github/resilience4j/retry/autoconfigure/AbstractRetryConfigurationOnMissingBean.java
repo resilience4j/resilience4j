@@ -26,7 +26,7 @@ import org.springframework.context.annotation.Import;
 
 import io.github.resilience4j.consumer.EventConsumerRegistry;
 import io.github.resilience4j.fallback.FallbackDecorators;
-import io.github.resilience4j.recovery.autoconfigure.FallbackConfigurationOnMissingBean;
+import io.github.resilience4j.fallback.autoconfigure.FallbackConfigurationOnMissingBean;
 import io.github.resilience4j.retry.RetryRegistry;
 import io.github.resilience4j.retry.configure.ReactorRetryAspectExt;
 import io.github.resilience4j.retry.configure.RetryAspect;

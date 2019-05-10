@@ -34,7 +34,7 @@ import io.github.resilience4j.ratelimiter.configure.ReactorRateLimiterAspectExt;
 import io.github.resilience4j.ratelimiter.configure.RxJava2RateLimiterAspectExt;
 import io.github.resilience4j.ratelimiter.event.RateLimiterEvent;
 import io.github.resilience4j.fallback.FallbackDecorators;
-import io.github.resilience4j.recovery.autoconfigure.FallbackConfigurationOnMissingBean;
+import io.github.resilience4j.fallback.autoconfigure.FallbackConfigurationOnMissingBean;
 import io.github.resilience4j.utils.ReactorOnClasspathCondition;
 import io.github.resilience4j.utils.RxJava2OnClasspathCondition;
 

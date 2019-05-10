@@ -13,15 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.resilience4j.recovery;
+package io.github.resilience4j.fallback;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Java6Assertions.assertThatThrownBy;
+import org.junit.Test;
 
 import java.lang.reflect.Method;
 
-import io.github.resilience4j.fallback.FallbackMethod;
-import org.junit.Test;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Java6Assertions.assertThatThrownBy;
 
 @SuppressWarnings({"WeakerAccess", "unused"})
 public class FallbackMethodTest {
@@ -69,7 +68,7 @@ public class FallbackMethodTest {
 
         assertThatThrownBy(() -> new FallbackMethod("returnMismatchRecovery", testMethod, new Object[]{"test"}, target))
                 .isInstanceOf(NoSuchMethodException.class)
-                .hasMessage("class java.lang.String class io.github.resilience4j.recovery.FallbackMethodTest.returnMismatchRecovery(class java.lang.String,class java.lang.Throwable)");
+                .hasMessage("class java.lang.String class io.github.resilience4j.fallback.FallbackMethodTest.returnMismatchRecovery(class java.lang.String,class java.lang.Throwable)");
     }
 
     @Test
@@ -79,7 +78,7 @@ public class FallbackMethodTest {
 
         assertThatThrownBy(() -> new FallbackMethod("noMethod", testMethod, new Object[]{"test"}, target))
                 .isInstanceOf(NoSuchMethodException.class)
-                .hasMessage("class java.lang.String class io.github.resilience4j.recovery.FallbackMethodTest.noMethod(class java.lang.String,class java.lang.Throwable)");
+                .hasMessage("class java.lang.String class io.github.resilience4j.fallback.FallbackMethodTest.noMethod(class java.lang.String,class java.lang.Throwable)");
     }
 
     public String testMethod(String parameter) {

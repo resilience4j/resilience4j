@@ -30,7 +30,7 @@ import io.github.resilience4j.bulkhead.event.BulkheadEvent;
 import io.github.resilience4j.bulkhead.monitoring.endpoint.BulkheadEndpoint;
 import io.github.resilience4j.bulkhead.monitoring.endpoint.BulkheadEventsEndpoint;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
-import io.github.resilience4j.recovery.autoconfigure.FallbackConfigurationOnMissingBean;
+import io.github.resilience4j.fallback.autoconfigure.FallbackConfigurationOnMissingBean;
 
 /**
  * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration

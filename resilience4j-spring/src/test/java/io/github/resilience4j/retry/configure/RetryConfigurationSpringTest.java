@@ -15,25 +15,25 @@
  */
 package io.github.resilience4j.retry.configure;
 
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-
-import java.util.List;
-
+import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
+import io.github.resilience4j.consumer.EventConsumerRegistry;
+import io.github.resilience4j.fallback.FallbackDecorators;
+import io.github.resilience4j.fallback.configure.FallbackConfiguration;
+import io.github.resilience4j.retry.RetryRegistry;
+import io.github.resilience4j.retry.event.RetryEvent;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
-import io.github.resilience4j.consumer.EventConsumerRegistry;
-import io.github.resilience4j.fallback.FallbackDecorators;
-import io.github.resilience4j.retry.RetryRegistry;
-import io.github.resilience4j.retry.event.RetryEvent;
+import java.util.List;
+
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(classes = {
@@ -55,7 +55,7 @@ public class RetryConfigurationSpringTest {
 	}
 
 	@Configuration
-	@ComponentScan({"io.github.resilience4j.retry","io.github.resilience4j.recovery"})
+	@Import(FallbackConfiguration.class)
 	public static class ConfigWithOverrides {
 
 		private RetryRegistry retryRegistry;
