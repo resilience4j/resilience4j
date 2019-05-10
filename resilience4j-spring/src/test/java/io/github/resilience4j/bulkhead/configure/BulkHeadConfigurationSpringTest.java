@@ -43,7 +43,6 @@ public class BulkHeadConfigurationSpringTest {
 	@Autowired
 	private ConfigWithOverrides configWithOverrides;
 
-
 	@Test
 	public void testAllCircuitBreakerConfigurationBeansOverridden() {
 		assertNotNull(configWithOverrides.bulkheadRegistry);
@@ -54,7 +53,7 @@ public class BulkHeadConfigurationSpringTest {
 	}
 
 	@Configuration
-	@ComponentScan({"io.github.resilience4j.bulkhead","io.github.resilience4j.recovery"})
+	@ComponentScan({"io.github.resilience4j.bulkhead","io.github.resilience4j.fallback"})
 	public static class ConfigWithOverrides {
 
 		private BulkheadRegistry bulkheadRegistry;
