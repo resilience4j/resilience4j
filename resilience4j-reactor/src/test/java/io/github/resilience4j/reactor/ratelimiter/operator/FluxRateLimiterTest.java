@@ -16,6 +16,7 @@
 package io.github.resilience4j.reactor.ratelimiter.operator;
 
 import io.github.resilience4j.ratelimiter.RateLimiter;
+import io.github.resilience4j.ratelimiter.RateLimiterConfig;
 import io.github.resilience4j.ratelimiter.RequestNotPermitted;
 import org.junit.Test;
 import reactor.core.publisher.Flux;
@@ -25,11 +26,15 @@ import java.io.IOException;
 import java.time.Duration;
 
 import static io.github.resilience4j.reactor.ratelimiter.operator.MockRateLimiter.CANT_GET_PERMIT;
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class FluxRateLimiterTest extends RateLimiterAssertions {
 
     @Test
     public void shouldEmitEvent() {
+        rateLimiter = RateLimiter.of("test",
+                RateLimiterConfig.custom().limitForPeriod(LIMIT_FOR_PERIOD).timeoutDuration(Duration.ofSeconds(5)).limitRefreshPeriod(Duration.ofSeconds(5)).build());
+
         StepVerifier.create(
                 Flux.just("Event 1", "Event 2")
                         .transform(RateLimiterOperator.of(rateLimiter)))
@@ -38,24 +43,24 @@ public class FluxRateLimiterTest extends RateLimiterAssertions {
                 .verifyComplete();
 
         StepVerifier.create(
-                Flux.just("Event 1", "Event 2", "Event 3")
+                Flux.just("Event 1", "Event 2")
                         .transform(RateLimiterOperator.of(rateLimiter)))
                 .expectNext("Event 1")
                 .expectNext("Event 2")
-                .expectNext("Event 3")
                 .verifyComplete();
 
-        assertUsedPermits(2);
+        RateLimiter.Metrics metrics = rateLimiter.getMetrics();
+        assertThat(metrics.getAvailablePermissions()).isLessThanOrEqualTo(LIMIT_FOR_PERIOD - 4);
+        assertThat(metrics.getNumberOfWaitingThreads()).isEqualTo(0);
     }
 
     @Test
     public void shouldBeRateLimited() {
         for (int i = 0; i < LIMIT_FOR_PERIOD; i++) {
             StepVerifier.create(
-                    Flux.just("Event 1", "Event 2")
-                            .transform(RateLimiterOperator.of(rateLimiter)))
+                    Flux.just("Event 1")
+                            .transform(RateLimiterOperator.of(rateLimiter)), 1)
                     .expectNext("Event 1")
-                    .expectNext("Event 2")
                     .verifyComplete();
         }
 
@@ -88,20 +93,6 @@ public class FluxRateLimiterTest extends RateLimiterAssertions {
         StepVerifier.create(
                 Flux.just("Event")
                         .transform(RateLimiterOperator.of(mock)))
-                .expectSubscription()
-                .expectError(RequestNotPermitted.class)
-                .verify(Duration.ofSeconds(1));
-
-        assertNoPermitLeft();
-    }
-
-    @Test
-    public void shouldEmitRequestNotPermittedExceptionEvenWhenErrorDuringSubscribe() {
-        saturateRateLimiter();
-
-        StepVerifier.create(
-                Flux.error(new IOException("BAM!"))
-                        .transform(RateLimiterOperator.of(rateLimiter)))
                 .expectSubscription()
                 .expectError(RequestNotPermitted.class)
                 .verify(Duration.ofSeconds(1));

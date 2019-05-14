@@ -17,6 +17,7 @@ package io.github.resilience4j.reactor.ratelimiter.operator;
 
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RateLimiterConfig;
+import org.junit.Before;
 
 import java.time.Duration;
 import java.util.stream.IntStream;
@@ -26,8 +27,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class RateLimiterAssertions {
     protected static final int LIMIT_FOR_PERIOD = 5;
 
-    protected final RateLimiter rateLimiter = RateLimiter.of("test",
-            RateLimiterConfig.custom().limitForPeriod(LIMIT_FOR_PERIOD).timeoutDuration(Duration.ZERO).limitRefreshPeriod(Duration.ofSeconds(10)).build());
+    protected RateLimiter rateLimiter;
 
     protected void assertUsedPermits(int used) {
         RateLimiter.Metrics metrics = rateLimiter.getMetrics();
@@ -47,4 +47,10 @@ public class RateLimiterAssertions {
         IntStream.range(0, 5).forEach(i -> assertThat(rateLimiter.getPermission(Duration.ofMillis(50))).isTrue());
     }
 
+    @Before
+    public void setUp() {
+        rateLimiter = RateLimiter.of("test",
+                RateLimiterConfig.custom().limitForPeriod(LIMIT_FOR_PERIOD).timeoutDuration(Duration.ZERO).limitRefreshPeriod(Duration.ofSeconds(10)).build());
+
+    }
 }
