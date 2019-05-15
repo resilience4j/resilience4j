@@ -236,7 +236,7 @@ class BulkheadSpec extends Specification {
         'normal'  | 'bulkhead normal exception'
     }
 
-    def "test rate limit a method via annotation with fallback - path=#path"() {
+    def "test rate limit a method via annotation with recovery - path=#path"() {
         given:
         BulkheadRegistry registry = BulkheadRegistry.of(buildConfig())
         def latch = new CountDownLatch(1)
@@ -309,6 +309,148 @@ class BulkheadSpec extends Specification {
         ]
     }
 
+    def "test rate limit a method via annotation with fallback method - path=#path"() {
+        given:
+        BulkheadRegistry registry = BulkheadRegistry.of(buildConfig())
+        def latch = new CountDownLatch(1)
+        def blockLatch = new CountDownLatch(1)
+        app = ratpack {
+            bindings {
+                bindInstance(BulkheadRegistry, registry)
+                bind(Something)
+                module(Resilience4jModule)
+            }
+            handlers {
+                get('promise') { Something something ->
+                    something.bulkheadPromiseFallbackMethod(latch, blockLatch).then {
+                        render it
+                    }
+                }
+                get('Flux') { Something something ->
+                    something.bulkheadFluxFallbackMethod(latch, blockLatch).subscribe {
+                        render it
+                    }
+                }
+                get('Mono') { Something something ->
+                    something.bulkheadMonoFallbackMethod(latch, blockLatch).subscribe({
+                        render it
+                    } as Consumer<Void>)
+                }
+                get('stage') { Something something ->
+                    render something.bulkheadStageFallbackMethod(latch, blockLatch).toCompletableFuture().get()
+                }
+                get('normal') { Something something ->
+                    render something.bulkheadNormalFallbackMethod(latch, blockLatch)
+                }
+            }
+        }
+        client = testHttpClient(app)
+
+        when:
+        def blockedResponse = executor.submit({
+            client.get(path)
+        } as Callable<ReceivedResponse>)
+
+        and:
+        assert blockLatch.await(30, TimeUnit.SECONDS)
+        def rejectedResponse = executor.submit({
+            client.get(path)
+        } as Callable<ReceivedResponse>)
+
+        and:
+        rejectedResponse.get(5, TimeUnit.SECONDS)
+        latch.countDown() // unblock blocked response
+        def permittedResponse = executor.submit({
+            client.get(path)
+        } as Callable<ReceivedResponse>)
+
+        then:
+        blockedResponse.get().body.text == "recovered"
+        blockedResponse.get().statusCode == 200
+        rejectedResponse.get().body.text == "recovered"
+        rejectedResponse.get().statusCode == 200
+        permittedResponse.get().body.text == "recovered"
+        permittedResponse.get().statusCode == 200
+
+        where:
+        path << [
+                'promise',
+                'Flux',
+                'Mono',
+                'stage',
+                'normal'
+        ]
+    }
+
+    def "test rate limit a method via annotation with fallback async method - path=#path"() {
+        given:
+        BulkheadRegistry registry = BulkheadRegistry.of(buildConfig())
+        def latch = new CountDownLatch(1)
+        def blockLatch = new CountDownLatch(1)
+        app = ratpack {
+            bindings {
+                bindInstance(BulkheadRegistry, registry)
+                bind(Something)
+                module(Resilience4jModule)
+            }
+            handlers {
+                get('promise') { Something something ->
+                    something.bulkheadPromiseFallbackPromiseMethod(latch, blockLatch).then {
+                        render it
+                    }
+                }
+                get('Flux') { Something something ->
+                    something.bulkheadFluxFallbackFluxMethod(latch, blockLatch).subscribe {
+                        render it
+                    }
+                }
+                get('Mono') { Something something ->
+                    something.bulkheadMonoFallbackMonoMethod(latch, blockLatch).subscribe({
+                        render it
+                    } as Consumer<String>)
+                }
+                get('stage') { Something something ->
+                    render something.bulkheadStageFallbackStageMethod(latch, blockLatch).toCompletableFuture().get()
+                }
+            }
+        }
+        client = testHttpClient(app)
+
+        when:
+        def blockedResponse = executor.submit({
+            client.get(path)
+        } as Callable<ReceivedResponse>)
+
+        and:
+        assert blockLatch.await(30, TimeUnit.SECONDS)
+        def rejectedResponse = executor.submit({
+            client.get(path)
+        } as Callable<ReceivedResponse>)
+
+        and:
+        rejectedResponse.get(5, TimeUnit.SECONDS)
+        latch.countDown() // unblock blocked response
+        def permittedResponse = executor.submit({
+            client.get(path)
+        } as Callable<ReceivedResponse>)
+
+        then:
+        blockedResponse.get().body.text == "recovered"
+        blockedResponse.get().statusCode == 200
+        rejectedResponse.get().body.text == "recovered"
+        rejectedResponse.get().statusCode == 200
+        permittedResponse.get().body.text == "recovered"
+        permittedResponse.get().statusCode == 200
+
+        where:
+        path << [
+                'promise',
+                'Flux',
+                'Mono',
+                'stage'
+        ]
+    }
+
     // 1 concurrent call
     def buildConfig() {
         io.github.resilience4j.bulkhead.BulkheadConfig.custom()
@@ -322,14 +464,14 @@ class BulkheadSpec extends Specification {
 
         @Bulkhead(name = "test")
         Promise<String> simpleBulkheadPromise() {
-            Promise.async {
+            Promise.<String>async {
                 it.success("bulkhead promise")
             }
         }
 
         @Bulkhead(name = "test")
         Promise<String> bulkheadPromise(CountDownLatch latch, CountDownLatch blockLatch) {
-            Promise.async {
+            Promise.<String>async {
                 blockLatch.countDown()
                 assert latch.await(30, TimeUnit.SECONDS): "Timeout - test failure"
                 it.success("bulkhead promise")
@@ -372,7 +514,7 @@ class BulkheadSpec extends Specification {
 
         @Bulkhead(name = "test")
         Promise<String> bulkheadPromiseException(CountDownLatch latch, CountDownLatch blockLatch) {
-            Promise.async {
+            Promise.<String>async {
                 blockLatch.countDown()
                 assert latch.await(30, TimeUnit.SECONDS): "Timeout - test failure"
                 it.error(new Exception("bulkhead promise exception"))
@@ -419,7 +561,7 @@ class BulkheadSpec extends Specification {
 
         @Bulkhead(name = "test", recovery = MyRecoveryFunction)
         Promise<String> bulkheadPromiseFallback(CountDownLatch latch, CountDownLatch blockLatch) {
-            Promise.async {
+            Promise.<String>async {
                 blockLatch.countDown()
                 assert latch.await(30, TimeUnit.SECONDS): "Timeout - test failure"
                 it.error(new Exception("bulkhead promise exception"))
@@ -446,7 +588,7 @@ class BulkheadSpec extends Specification {
 
         @Bulkhead(name = "test", recovery = MyRecoveryFunction)
         CompletionStage<Void> bulkheadStageFallback(CountDownLatch latch, CountDownLatch blockLatch) {
-            CompletableFuture.supplyAsync {
+            CompletableFuture.<Void>supplyAsync {
                 blockLatch.countDown()
                 assert latch.await(30, TimeUnit.SECONDS): "Timeout - test failure"
                 throw new Exception('bulkhead stage exception')
@@ -458,6 +600,109 @@ class BulkheadSpec extends Specification {
             blockLatch.countDown()
             assert latch.await(30, TimeUnit.SECONDS): "Timeout - test failure"
             throw new Exception("bulkhead normal exception")
+        }
+
+        @Bulkhead(name = "test", fallbackMethod = "fallback")
+        Promise<String> bulkheadPromiseFallbackMethod(CountDownLatch latch, CountDownLatch blockLatch) {
+            Promise.<String>async {
+                blockLatch.countDown()
+                assert latch.await(30, TimeUnit.SECONDS): "Timeout - test failure"
+                it.error(new Exception("bulkhead promise exception"))
+            }
+        }
+
+        @Bulkhead(name = "test", fallbackMethod = "fallback")
+        Flux<Void> bulkheadFluxFallbackMethod(CountDownLatch latch, CountDownLatch blockLatch) {
+            Flux.just("bulkhead Flux").map({
+                blockLatch.countDown()
+                assert latch.await(30, TimeUnit.SECONDS): "Timeout - test failure"
+                throw new Exception("bulkhead Flux exception")
+            } as Function<String, Void>)
+        }
+
+        @Bulkhead(name = "test", fallbackMethod = "fallback")
+        Mono<Void> bulkheadMonoFallbackMethod(CountDownLatch latch, CountDownLatch blockLatch) {
+            Mono.just("bulkhead Mono").map({
+                blockLatch.countDown()
+                assert latch.await(30, TimeUnit.SECONDS): "Timeout - test failure"
+                throw new Exception("bulkhead Mono exception")
+            } as Function<String, Void>)
+        }
+
+        @Bulkhead(name = "test", fallbackMethod = "fallback")
+        CompletionStage<Void> bulkheadStageFallbackMethod(CountDownLatch latch, CountDownLatch blockLatch) {
+            CompletableFuture.supplyAsync {
+                blockLatch.countDown()
+                assert latch.await(30, TimeUnit.SECONDS): "Timeout - test failure"
+                throw new Exception('bulkhead stage exception')
+            }
+        }
+
+        @Bulkhead(name = "test", fallbackMethod = "fallback")
+        String bulkheadNormalFallbackMethod(CountDownLatch latch, CountDownLatch blockLatch) {
+            blockLatch.countDown()
+            assert latch.await(30, TimeUnit.SECONDS): "Timeout - test failure"
+            throw new Exception("bulkhead normal exception")
+        }
+
+        @Bulkhead(name = "test", fallbackMethod = "fallbackPromise")
+        Promise<String> bulkheadPromiseFallbackPromiseMethod(CountDownLatch latch, CountDownLatch blockLatch) {
+            Promise.<String>async {
+                blockLatch.countDown()
+                assert latch.await(30, TimeUnit.SECONDS): "Timeout - test failure"
+                it.error(new Exception("bulkhead promise exception"))
+            }
+        }
+
+        @Bulkhead(name = "test", fallbackMethod = "fallbackFlux")
+        Flux<String> bulkheadFluxFallbackFluxMethod(CountDownLatch latch, CountDownLatch blockLatch) {
+            Flux.just("bulkhead Flux").map({
+                blockLatch.countDown()
+                assert latch.await(30, TimeUnit.SECONDS): "Timeout - test failure"
+                throw new Exception("bulkhead Flux exception")
+            } as Function<String, String>)
+        }
+
+        @Bulkhead(name = "test", fallbackMethod = "fallbackMono")
+        Mono<String> bulkheadMonoFallbackMonoMethod(CountDownLatch latch, CountDownLatch blockLatch) {
+            Mono.just("bulkhead Mono").map({
+                blockLatch.countDown()
+                assert latch.await(30, TimeUnit.SECONDS): "Timeout - test failure"
+                throw new Exception("bulkhead Mono exception")
+            } as Function<String, String>)
+        }
+
+        @Bulkhead(name = "test", fallbackMethod = "fallbackStage")
+        CompletionStage<String> bulkheadStageFallbackStageMethod(CountDownLatch latch, CountDownLatch blockLatch) {
+            CompletableFuture.supplyAsync {
+                blockLatch.countDown()
+                assert latch.await(30, TimeUnit.SECONDS): "Timeout - test failure"
+                throw new Exception('bulkhead stage exception')
+            }
+        }
+
+        // TODO these should be tested out
+
+        String fallback(CountDownLatch latch, CountDownLatch blockLatch, Throwable throwable) {
+            "recovered"
+        }
+
+        Promise<String> fallbackPromise(CountDownLatch latch, CountDownLatch blockLatch, Throwable throwable) {
+            Promise.value("recovered")
+        }
+
+        CompletionStage<String> fallbackStage(CountDownLatch latch, CountDownLatch blockLatch, Throwable throwable) {
+            def future = new CompletableFuture<String>()
+            future.complete("recovered")
+            return future
+        }
+
+        Flux<String> fallbackFlux(CountDownLatch latch, CountDownLatch blockLatch, Throwable throwable) {
+            Flux.just("recovered")
+        }
+
+        Mono<String> fallbackMono(CountDownLatch latch, CountDownLatch blockLatch, Throwable throwable) {
+            Mono.just("recovered")
         }
     }
 

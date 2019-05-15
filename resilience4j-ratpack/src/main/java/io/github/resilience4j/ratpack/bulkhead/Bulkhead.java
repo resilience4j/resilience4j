@@ -17,6 +17,7 @@ package io.github.resilience4j.ratpack.bulkhead;
 
 import io.github.resilience4j.ratpack.recovery.DefaultRecoveryFunction;
 import io.github.resilience4j.ratpack.recovery.RecoveryFunction;
+import ratpack.exec.Promise;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
@@ -53,4 +54,25 @@ public @interface Bulkhead {
      * @return the function
      */
     Class<? extends RecoveryFunction> recovery() default DefaultRecoveryFunction.class;
+
+    /**
+     * The method name that returns a recovery value. The default is a noop.
+     *
+     * The method parameter signature must match either:
+     *
+     * 1) The method parameter signature on the annotated method or
+     * 2) The method parameter signature with a matching exception type as the last parameter on the annotated method
+     *
+     * The return value can be a {@link Promise}, {@link java.util.concurrent.CompletionStage},
+     * {@link reactor.core.publisher.Flux}, {@link reactor.core.publisher.Mono}, or an object value.
+     * Other reactive types are not supported.
+     *
+     * If the return value is one of the reactive types listed above, it must match the return value type of the
+     * annotated method.
+     *
+     * This argument takes precedence over the {@link Bulkhead#recovery()} argument.
+     *
+     * @return the method name
+     */
+    String fallbackMethod() default "";
 }
