@@ -246,7 +246,7 @@ public interface RateLimiter {
 			throw new IllegalStateException("Thread was interrupted during permission wait");
 		}
 		if (!permission) {
-			throw new RequestNotPermitted("Request not permitted for limiter: " + rateLimiter.getName());
+			throw new RequestNotPermitted(rateLimiter);
 		}
 	}
 

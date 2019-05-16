@@ -87,7 +87,7 @@ public class RateLimiterMethodInterceptor implements MethodInterceptor {
                 return proceed(invocation, rateLimiter, recoveryFunction);
             } else {
                 final CompletableFuture promise = new CompletableFuture<>();
-                Throwable t = new RequestNotPermitted("Request not permitted for limiter: " + rateLimiter.getName());
+                Throwable t = new RequestNotPermitted(rateLimiter);
                 try {
                     promise.complete(recoveryFunction.apply(t));
                 } catch (Exception exception) {
@@ -119,7 +119,7 @@ public class RateLimiterMethodInterceptor implements MethodInterceptor {
             throw new IllegalStateException("Thread was interrupted during permission wait");
         }
         if (!permission) {
-            Throwable t = new RequestNotPermitted("Request not permitted for limiter: " + rateLimiter.getName());
+            Throwable t = new RequestNotPermitted(rateLimiter);
             return recoveryFunction.apply(t);
         }
         return invocation.proceed();

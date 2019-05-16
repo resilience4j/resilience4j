@@ -81,7 +81,7 @@ public class BulkheadTransformer<T> extends AbstractTransformer<T> {
                     }
                 });
             } else {
-                Throwable t = new BulkheadFullException(String.format("Bulkhead '%s' is full", bulkhead.getName()));
+                Throwable t = new BulkheadFullException(bulkhead);
                 handleRecovery(down, t);
             }
         };

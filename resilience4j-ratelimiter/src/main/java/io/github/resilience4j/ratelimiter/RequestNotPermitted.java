@@ -32,13 +32,4 @@ public class RequestNotPermitted extends RuntimeException {
     public RequestNotPermitted(RateLimiter rateLimiter) {
         super(String.format("RateLimiter '%s' does not permit further calls", rateLimiter.getName()));
     }
-
-    /**
-     * The constructor with a message.
-     *
-     * @param message The message.
-     */
-    public RequestNotPermitted(final String message) {
-        super(message);
-    }
 }

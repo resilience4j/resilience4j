@@ -44,7 +44,7 @@ public class RateLimiterHandler implements Handler {
             throw new IllegalStateException("Thread was interrupted during permission wait");
         }
         if (!permission) {
-            Throwable t = new RequestNotPermitted("Request not permitted for limiter: " + rateLimiter.getName());
+            Throwable t = new RequestNotPermitted(rateLimiter);
             ctx.error(t);
         } else {
             ctx.next();

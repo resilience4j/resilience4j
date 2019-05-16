@@ -90,7 +90,7 @@ public class BulkheadMethodInterceptor implements MethodInterceptor {
                 });
             } else {
                 final CompletableFuture promise = new CompletableFuture<>();
-                Throwable t = new BulkheadFullException(String.format("Bulkhead '%s' is full", bulkhead.getName()));
+                Throwable t = new BulkheadFullException(bulkhead);
                 try {
                     promise.complete(recoveryFunction.apply(t));
                 } catch (Exception exception) {
@@ -106,7 +106,7 @@ public class BulkheadMethodInterceptor implements MethodInterceptor {
         boolean permission = bulkhead.tryAcquirePermission();
 
         if (!permission) {
-            Throwable t = new BulkheadFullException(String.format("Bulkhead '%s' is full", bulkhead.getName()));
+            Throwable t = new BulkheadFullException(bulkhead);
             return recoveryFunction.apply(t);
         }
 

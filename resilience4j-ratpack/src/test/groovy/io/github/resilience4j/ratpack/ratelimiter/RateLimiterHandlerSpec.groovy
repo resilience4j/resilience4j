@@ -71,14 +71,14 @@ class RateLimiterHandlerSpec extends Specification {
         }
 
         then:
-        actual.body.text.contains('io.github.resilience4j.ratelimiter.RequestNotPermitted: Request not permitted for limiter: test')
+        actual.body.text.contains('io.github.resilience4j.ratelimiter.RequestNotPermitted: RateLimiter \'test\' does not permit further calls')
         actual.statusCode == 500
 
         when:
         actual = client.get('a')
 
         then:
-        actual.body.text.contains('io.github.resilience4j.ratelimiter.RequestNotPermitted: Request not permitted for limiter: test')
+        actual.body.text.contains('io.github.resilience4j.ratelimiter.RequestNotPermitted: RateLimiter \'test\' does not permit further calls')
         actual.statusCode == 500
     }
 
@@ -114,7 +114,7 @@ class RateLimiterHandlerSpec extends Specification {
         }
 
         then:
-        actual.body.text.contains('io.github.resilience4j.ratelimiter.RequestNotPermitted: Request not permitted for limiter: test')
+        actual.body.text.contains('io.github.resilience4j.ratelimiter.RequestNotPermitted: RateLimiter \'test\' does not permit further calls')
         actual.statusCode == 500
 
         when:
