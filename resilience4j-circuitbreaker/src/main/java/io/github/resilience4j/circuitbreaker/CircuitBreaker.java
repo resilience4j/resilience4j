@@ -40,7 +40,7 @@ import java.util.stream.Collectors;
  * The CircuitBreaker is implemented via a finite state machine with five states: CLOSED, OPEN, HALF_OPEN, DISABLED AND FORCED_OPEN.
  * The CircuitBreaker does not know anything about the backend's state by itself, but uses the information provided by the decorators via
  * {@link CircuitBreaker#onSuccess} and {@link CircuitBreaker#onError} events.
- * Before communicating with the backend, the permission to do so must be obtained via the method {@link CircuitBreaker#tryObtainPermission()}.
+ * Before communicating with the backend, the permission to do so must be obtained via the method {@link CircuitBreaker#tryAcquirePermission()}.
  *
  * The state of the CircuitBreaker changes from CLOSED to OPEN when the failure rate is above a (configurable) threshold.
  * Then, all access to the backend is rejected for a (configurable) time duration. No further calls are permitted.
@@ -52,7 +52,8 @@ public interface CircuitBreaker {
 
     /**
      * Attempts to obtain a permission to execute a call.
-     * @deprecated Use {@link CircuitBreaker#tryObtainPermission()}. instead.
+     * @deprecated Use {@link CircuitBreaker#tryAcquirePermission()} ()} instead.
+     * @since 0.15.0
      *
      * @return true when a call is permitted
      */
@@ -60,34 +61,45 @@ public interface CircuitBreaker {
     boolean isCallPermitted();
 
     /**
-     * Obtain a permission to execute a call. If a call not not permitted, the number
-     * of permitted calls is increased.
+     * Acquires a permission to execute a call, only if one is available at the time of invocation.
+     * If a call is not permitted, the number of not permitted calls is increased.
      *
      * Returns false when the state is OPEN or FORCED_OPEN.
      * Returns true when the state is CLOSED or DISABLED.
      * Returns true when the state is HALF_OPEN and further test calls are allowed.
      * Returns false when the state is HALF_OPEN and the number of test calls has been reached.
-     * If the state is HALF_OPEN, the number of allowed test calls is decreased. Make sure to call onSuccess or onError
-     * after the call is finished.
+     * If the state is HALF_OPEN, the number of allowed test calls is decreased. Important: Make sure to call onSuccess or onError
+     * after the call is finished. If the call is cancelled before it is invoked, you have to release the permission again.
      *
-     * @return true when a call is permitted
+     * @return {@code true} if a permission was acquired and {@code true} otherwise
      */
-    boolean tryObtainPermission();
+    boolean tryAcquirePermission();
 
     /**
-     * Obtain a permission to execute a call. If a call not not permitted, the number
-     * of permitted calls is increased.
+     * Releases a permission.
+     *
+     * Should only be used when a permission was acquired but not used. Otherwise use
+     * {@link CircuitBreaker#onSuccess(long)} or {@link CircuitBreaker#onError(long, Throwable)}
+     * to signal a completed or failed call.
+     *
+     * If the state is HALF_OPEN, the number of allowed test calls is increased by one.
+     */
+    void releasePermission();
+
+    /**
+     * Try to obtain a permission to execute a call. If a call is not permitted, the number
+     * of not permitted calls is increased.
      *
      * Throws a CallNotPermittedException when the state is OPEN or FORCED_OPEN.
      * Returns when the state is CLOSED or DISABLED.
      * Returns when the state is HALF_OPEN and further test calls are allowed.
      * Throws a CallNotPermittedException when the state is HALF_OPEN and the number of test calls has been reached.
-     * If the state is HALF_OPEN, the number of allowed test calls is decreased. Make sure to call onSuccess or onError
-     * after the call is finished.
+     * If the state is HALF_OPEN, the number of allowed test calls is decreased. Important: Make sure to call onSuccess or onError
+     * after the call is finished. If the call is cancelled before it is invoked, you have to release the permission again.
      *
      * @throws CallNotPermittedException when CircuitBreaker is OPEN or HALF_OPEN and no further test calls are permitted.
      */
-    void obtainPermission();
+    void acquirePermission();
 
     /**
      * Records a failed call.
@@ -105,7 +117,6 @@ public interface CircuitBreaker {
       * This method must be invoked when a call was successful.
       */
     void onSuccess(long durationInNanos);
-
 
     /**
      * Returns the circuit breaker to its original closed state, losing statistics.
@@ -241,6 +252,7 @@ public interface CircuitBreaker {
     default <T> T executeCheckedSupplier(CheckedFunction0<T> checkedSupplier) throws Throwable {
         return decorateCheckedSupplier(this, checkedSupplier).apply();
     }
+
 
     /**
      * States of the CircuitBreaker state machine.
@@ -421,7 +433,7 @@ public interface CircuitBreaker {
      */
     static <T> CheckedFunction0<T> decorateCheckedSupplier(CircuitBreaker circuitBreaker, CheckedFunction0<T> supplier){
         return () -> {
-            circuitBreaker.obtainPermission();
+            circuitBreaker.acquirePermission();
             long start = System.nanoTime();
             try {
                 T returnValue = supplier.apply();
@@ -454,7 +466,7 @@ public interface CircuitBreaker {
 
             final CompletableFuture<T> promise = new CompletableFuture<>();
 
-            if (!circuitBreaker.tryObtainPermission()) {
+            if (!circuitBreaker.tryAcquirePermission()) {
                 promise.completeExceptionally(
                         new CallNotPermittedException(circuitBreaker));
 
@@ -495,7 +507,7 @@ public interface CircuitBreaker {
      */
     static CheckedRunnable decorateCheckedRunnable(CircuitBreaker circuitBreaker, CheckedRunnable runnable){
         return () -> {
-            circuitBreaker.obtainPermission();
+            circuitBreaker.acquirePermission();
             long start = System.nanoTime();
             try{
                 runnable.run();
@@ -521,7 +533,7 @@ public interface CircuitBreaker {
      */
     static <T> Callable<T> decorateCallable(CircuitBreaker circuitBreaker, Callable<T> callable){
         return () -> {
-            circuitBreaker.obtainPermission();
+            circuitBreaker.acquirePermission();
             long start = System.nanoTime();
             try {
                 T returnValue = callable.call();
@@ -548,7 +560,7 @@ public interface CircuitBreaker {
      */
     static <T> Supplier<T> decorateSupplier(CircuitBreaker circuitBreaker, Supplier<T> supplier){
         return () -> {
-            circuitBreaker.obtainPermission();
+            circuitBreaker.acquirePermission();
             long start = System.nanoTime();
             try {
                 T returnValue = supplier.get();
@@ -575,7 +587,7 @@ public interface CircuitBreaker {
      */
     static <T> Consumer<T> decorateConsumer(CircuitBreaker circuitBreaker, Consumer<T> consumer){
         return (t) -> {
-            circuitBreaker.obtainPermission();
+            circuitBreaker.acquirePermission();
             long start = System.nanoTime();
             try {
                 consumer.accept(t);
@@ -601,7 +613,7 @@ public interface CircuitBreaker {
      */
     static <T> CheckedConsumer<T> decorateCheckedConsumer(CircuitBreaker circuitBreaker, CheckedConsumer<T> consumer){
         return (t) -> {
-            circuitBreaker.obtainPermission();
+            circuitBreaker.acquirePermission();
             long start = System.nanoTime();
             try {
                 consumer.accept(t);
@@ -626,7 +638,7 @@ public interface CircuitBreaker {
      */
     static Runnable decorateRunnable(CircuitBreaker circuitBreaker, Runnable runnable){
         return () -> {
-            circuitBreaker.obtainPermission();
+            circuitBreaker.acquirePermission();
             long start = System.nanoTime();
             try{
                 runnable.run();
@@ -652,7 +664,7 @@ public interface CircuitBreaker {
      */
     static <T, R> Function<T, R> decorateFunction(CircuitBreaker circuitBreaker, Function<T, R> function){
         return (T t) -> {
-            circuitBreaker.obtainPermission();
+            circuitBreaker.acquirePermission();
             long start = System.nanoTime();
             try{
                 R returnValue = function.apply(t);
@@ -679,7 +691,7 @@ public interface CircuitBreaker {
      */
     static <T, R> CheckedFunction1<T, R> decorateCheckedFunction(CircuitBreaker circuitBreaker, CheckedFunction1<T, R> function){
         return (T t) -> {
-            circuitBreaker.obtainPermission();
+            circuitBreaker.acquirePermission();
             long start = System.nanoTime();
             try{
                 R returnValue = function.apply(t);

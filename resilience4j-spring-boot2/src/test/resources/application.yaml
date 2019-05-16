@@ -73,7 +73,7 @@ resilience4j.ratelimiter:
       subscribeForEvents: true
       registerHealthIndicator: true
     backendB:
-      limitForPeriod: 6
+      limitForPeriod: 100
       limitRefreshPeriodInMillis: 500
       timeoutInMillis: 3000
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Julien Hoarau
+ * Copyright 2018 Julien Hoarau, Robert Winkler
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,21 +15,28 @@
  */
 package io.github.resilience4j.reactor.circuitbreaker.operator;
 
+import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import reactor.core.CoreSubscriber;
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.MonoOperator;
+import reactor.core.publisher.Operators;
 
-public class MonoCircuitBreaker<T> extends MonoOperator<T, T> {
+class MonoCircuitBreaker<T> extends MonoOperator<T, T> {
+
     private CircuitBreaker circuitBreaker;
 
-    public MonoCircuitBreaker(Mono<? extends T> source, CircuitBreaker circuitBreaker) {
+    MonoCircuitBreaker(Mono<? extends T> source, CircuitBreaker circuitBreaker) {
         super(source);
         this.circuitBreaker = circuitBreaker;
     }
 
     @Override
     public void subscribe(CoreSubscriber<? super T> actual) {
-        source.subscribe(new CircuitBreakerSubscriber<>(circuitBreaker, actual, true));
+        if(circuitBreaker.tryAcquirePermission()){
+            source.subscribe(new CircuitBreakerSubscriber<>(circuitBreaker, actual, true));
+        }else{
+            Operators.error(actual, new CallNotPermittedException(circuitBreaker));
+        }
     }
 }

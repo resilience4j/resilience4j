@@ -86,7 +86,7 @@ public class ThreadPoolBulkheadTest {
 		final AtomicInteger counter = new AtomicInteger(0);
 		Awaitility.waitAtMost(Duration.FIVE_HUNDRED_MILLISECONDS).until(() -> counter.incrementAndGet() >= 2);
 		// Then
-		assertThat(exception.getCause().getMessage()).contains("ThreadPoolBulkhead 'testSupplier' is full");
+		assertThat(exception.getCause().getMessage()).contains("Bulkhead 'testSupplier' is full and does not permit further calls");
 	}
 
 

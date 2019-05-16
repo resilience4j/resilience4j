@@ -84,7 +84,7 @@ class RateLimiterChainSpec extends Specification {
         ['test1', 'test2'].each {
             def r = rateLimiterRegistry.rateLimiter(it)
             (0..5).each {
-                r.getPermission(Duration.ZERO)
+                r.acquirePermission(Duration.ZERO)
             }
         }
         actual = client.get('ratelimiter/events')
@@ -157,7 +157,7 @@ class RateLimiterChainSpec extends Specification {
         when: "we get all rate limiter events"
         ['test1', 'test2'].each {
             def r = rateLimiterRegistry.rateLimiter(it)
-            r.getPermission(Duration.ZERO)
+            r.acquirePermission(Duration.ZERO)
         }
         def actual = ExecHarness.yieldSingle {
             streamer.requestStream(new URI("http://$app.server.bindHost:$app.server.bindPort/ratelimiter/stream/events")) {
@@ -228,7 +228,7 @@ class RateLimiterChainSpec extends Specification {
         ['test1', 'test2'].each {
             def r = rateLimiterRegistry.rateLimiter(it)
             (0..5).each {
-                r.getPermission(Duration.ZERO)
+                r.acquirePermission(Duration.ZERO)
             }
         }
         def actual = client.get('ratelimiter/events')

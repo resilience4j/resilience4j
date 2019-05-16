@@ -85,7 +85,7 @@ The following example shows how to decorate an Observable by using the custom Rx
 ----
 Bulkhead bulkhead = Bulkhead.ofDefaults("backendName");
 Observable.fromCallable(backendService::doSomething)
-          .lift(BulkheadOperator.of(bulkhead));
+          .compose(BulkheadOperator.of(bulkhead));
 ----
 
 Other reactive types (Flowable, Single, Maybe and Completable) are also supported.
@@ -98,7 +98,7 @@ The following example shows how to decorate a Mono by using the custom Reactor o
 ----
 Bulkhead bulkhead = Bulkhead.ofDefaults("backendName");
 Mono.fromCallable(backendService::doSomething)
-          .transform(BulkheadOperator.of(bulkhead));
+          .compose(BulkheadOperator.of(bulkhead));
 ----
 
 Flux is also supported.

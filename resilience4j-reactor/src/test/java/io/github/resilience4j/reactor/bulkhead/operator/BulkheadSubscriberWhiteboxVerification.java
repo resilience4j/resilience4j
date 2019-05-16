@@ -31,7 +31,7 @@ public class BulkheadSubscriberWhiteboxVerification extends
 
     @Override
     public Subscriber<Integer> createSubscriber(WhiteboxSubscriberProbe<Integer> probe) {
-        return new io.github.resilience4j.reactor.bulkhead.operator.BulkheadSubscriber<Integer>(Bulkhead.ofDefaults("verification"), MonoProcessor.create()) {
+        return new io.github.resilience4j.reactor.bulkhead.operator.BulkheadSubscriber<Integer>(Bulkhead.ofDefaults("verification"), MonoProcessor.create(), true) {
             @Override
             public void hookOnSubscribe(Subscription subscription) {
                 super.hookOnSubscribe(subscription);
