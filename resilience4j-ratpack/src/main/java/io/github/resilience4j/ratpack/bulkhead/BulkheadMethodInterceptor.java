@@ -27,7 +27,6 @@ import ratpack.exec.Promise;
 import ratpack.util.Exceptions;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
@@ -64,19 +63,19 @@ public class BulkheadMethodInterceptor implements MethodInterceptor {
         } else if (Flux.class.isAssignableFrom(returnType)) {
             Flux<?> result = (Flux<?>) invocation.proceed();
             if (result != null) {
-                BulkheadOperator operator = BulkheadOperator.of(bulkhead, Schedulers.immediate());
+                BulkheadOperator operator = BulkheadOperator.of(bulkhead);
                 result = recoveryFunction.onErrorResume(result.transform(operator));
             }
             return result;
         } else if (Mono.class.isAssignableFrom(returnType)) {
             Mono<?> result = (Mono<?>) invocation.proceed();
             if (result != null) {
-                BulkheadOperator operator = BulkheadOperator.of(bulkhead, Schedulers.immediate());
+                BulkheadOperator operator = BulkheadOperator.of(bulkhead);
                 result = recoveryFunction.onErrorResume(result.transform(operator));
             }
             return result;
         } else if (CompletionStage.class.isAssignableFrom(returnType)) {
-            if (bulkhead.tryObtainPermission()) {
+            if (bulkhead.tryAcquirePermission()) {
                 return ((CompletionStage<?>) invocation.proceed()).handle((o, throwable) -> {
                     bulkhead.onComplete();
                     if (throwable != null) {
@@ -91,7 +90,7 @@ public class BulkheadMethodInterceptor implements MethodInterceptor {
                 });
             } else {
                 final CompletableFuture promise = new CompletableFuture<>();
-                Throwable t = new BulkheadFullException(String.format("Bulkhead '%s' is full", bulkhead.getName()));
+                Throwable t = new BulkheadFullException(bulkhead);
                 try {
                     promise.complete(recoveryFunction.apply(t));
                 } catch (Exception exception) {
@@ -104,10 +103,10 @@ public class BulkheadMethodInterceptor implements MethodInterceptor {
     }
 
     private Object handleOther(MethodInvocation invocation, io.github.resilience4j.bulkhead.Bulkhead bulkhead, RecoveryFunction<?> recoveryFunction) throws Throwable {
-        boolean permission = bulkhead.tryObtainPermission();
+        boolean permission = bulkhead.tryAcquirePermission();
 
         if (!permission) {
-            Throwable t = new BulkheadFullException(String.format("Bulkhead '%s' is full", bulkhead.getName()));
+            Throwable t = new BulkheadFullException(bulkhead);
             return recoveryFunction.apply(t);
         }
 

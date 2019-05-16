@@ -121,7 +121,7 @@ The following example shows how to decorate an Observable by using the custom Rx
 ----
 CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testName");
 Observable.fromCallable(backendService::doSomething)
-    .lift(CircuitBreakerOperator.of(circuitBreaker))
+    .compose(CircuitBreakerOperator.of(circuitBreaker))
 ----
 
 
@@ -135,7 +135,7 @@ The following example shows how to decorate a Mono by using the custom Reactor o
 ----
 CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testName");
 Mono.fromCallable(backendService::doSomething)
-    .transform(CircuitBreakerOperator.of(circuitBreaker))
+    .compose(CircuitBreakerOperator.of(circuitBreaker))
 ----
 
 

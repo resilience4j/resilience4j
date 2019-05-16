@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright 2016 Robert Winkler
+ *  Copyright 2019 Robert Winkler
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -17,7 +17,6 @@
  *
  */
 package io.github.resilience4j.circuitbreaker.internal;
-
 
 import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
@@ -132,12 +131,12 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
      */
     @Override
     public boolean isCallPermitted() {
-        return tryObtainPermission();
+        return tryAcquirePermission();
     }
 
     @Override
-    public boolean tryObtainPermission() {
-        boolean callPermitted = stateReference.get().tryObtainPermission();
+    public boolean tryAcquirePermission() {
+        boolean callPermitted = stateReference.get().tryAcquirePermission();
         if (!callPermitted) {
             publishCallNotPermittedEvent();
         }
@@ -145,9 +144,14 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
     }
 
     @Override
-    public void obtainPermission() {
+    public void releasePermission() {
+        stateReference.get().releasePermission();
+    }
+
+    @Override
+    public void acquirePermission() {
         try {
-            stateReference.get().obtainPermission();
+            stateReference.get().acquirePermission();
         } catch(Exception e) {
             publishCallNotPermittedEvent();
             throw e;
@@ -396,7 +400,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
          * @return always true, because the CircuitBreaker is closed.
          */
         @Override
-        public boolean tryObtainPermission() {
+        public boolean tryAcquirePermission() {
             return true;
         }
 
@@ -404,7 +408,12 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
          * Does not throw an exception, because the CircuitBreaker is closed.
          */
         @Override
-        public void obtainPermission() {
+        public void acquirePermission() {
+            // noOp
+        }
+
+        @Override
+        public void releasePermission() {
             // noOp
         }
 
@@ -473,7 +482,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
          * @return false, if the wait duration has not elapsed. true, if the wait duration has elapsed.
          */
         @Override
-        public boolean tryObtainPermission() {
+        public boolean tryAcquirePermission() {
             // Thread-safe
             if (clock.instant().isAfter(retryAfterWaitDuration)) {
                 transitionToHalfOpenState();
@@ -484,29 +493,34 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
         }
 
         @Override
-        public void obtainPermission() {
-            if(!tryObtainPermission()){
+        public void acquirePermission() {
+            if(!tryAcquirePermission()){
                 throw new CallNotPermittedException(CircuitBreakerStateMachine.this);
             }
         }
 
+        @Override
+        public void releasePermission() {
+            // noOp
+        }
+
         /**
-         * Should never be called when tryObtainPermission returns false.
+         * Should never be called when tryAcquirePermission returns false.
          */
         @Override
         public void onError(Throwable throwable) {
-            // Could be called when Thread 1 invokes obtainPermission when the state is CLOSED, but in the meantime another
+            // Could be called when Thread 1 invokes acquirePermission when the state is CLOSED, but in the meantime another
             // Thread 2 calls onError and the state changes from CLOSED to OPEN before Thread 1 calls onError.
             // But the onError event should still be recorded, even if it happened after the state transition.
             circuitBreakerMetrics.onError();
         }
 
         /**
-         * Should never be called when tryObtainPermission returns false.
+         * Should never be called when tryAcquirePermission returns false.
          */
         @Override
         public void onSuccess() {
-            // Could be called when Thread 1 invokes obtainPermission when the state is CLOSED, but in the meantime another
+            // Could be called when Thread 1 invokes acquirePermission when the state is CLOSED, but in the meantime another
             // Thread 2 calls onError and the state changes from CLOSED to OPEN before Thread 1 calls onSuccess.
             // But the onSuccess event should still be recorded, even if it happened after the state transition.
             circuitBreakerMetrics.onSuccess();
@@ -541,7 +555,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
          * @return always true, because the CircuitBreaker is disabled.
          */
         @Override
-        public boolean tryObtainPermission() {
+        public boolean tryAcquirePermission() {
             return true;
         }
 
@@ -549,7 +563,12 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
          * Does not throw an exception, because the CircuitBreaker is disabled.
          */
         @Override
-        public void obtainPermission() {
+        public void acquirePermission() {
+            // noOp
+        }
+
+        @Override
+        public void releasePermission() {
             // noOp
         }
 
@@ -596,19 +615,24 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
          * @return always false, since the FORCED_OPEN state always denies calls.
          */
         @Override
-        public boolean tryObtainPermission() {
+        public boolean tryAcquirePermission() {
             circuitBreakerMetrics.onCallNotPermitted();
             return false;
         }
 
         @Override
-        public void obtainPermission() {
+        public void acquirePermission() {
             circuitBreakerMetrics.onCallNotPermitted();
             throw new CallNotPermittedException(CircuitBreakerStateMachine.this);
         }
 
+        @Override
+        public void releasePermission() {
+            // noOp
+        }
+
         /**
-         * Should never be called when tryObtainPermission returns false.
+         * Should never be called when tryAcquirePermission returns false.
          */
         @Override
         public void onError(Throwable throwable) {
@@ -616,7 +640,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
         }
 
         /**
-         * Should never be called when tryObtainPermission returns false.
+         * Should never be called when tryAcquirePermission returns false.
          */
         @Override
         public void onSuccess() {
@@ -659,8 +683,8 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
          * @return true, if test request counter is not zero.
          */
         @Override
-        public boolean tryObtainPermission() {
-            if (testRequestCounter.getAndDecrement() > 0) {
+        public boolean tryAcquirePermission() {
+            if (testRequestCounter.getAndUpdate(current -> current == 0 ? current : --current) > 0) {
                 return true;
             }
             circuitBreakerMetrics.onCallNotPermitted();
@@ -668,10 +692,15 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
         }
 
         @Override
-        public void obtainPermission() {
-            if(!tryObtainPermission()){
+        public void acquirePermission() {
+            if(!tryAcquirePermission()){
                 throw new CallNotPermittedException(CircuitBreakerStateMachine.this);
             }
+        }
+
+        @Override
+        public void releasePermission() {
+            testRequestCounter.incrementAndGet();
         }
 
         @Override
@@ -719,9 +748,11 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
 
     private interface CircuitBreakerState{
 
-        boolean tryObtainPermission();
+        boolean tryAcquirePermission();
 
-        void obtainPermission();
+        void acquirePermission();
+
+        void releasePermission();
 
         void onError(Throwable throwable);
 

@@ -38,8 +38,8 @@ public class BulkheadMetricsCollectorTest {
         bulkhead = bulkheadRegistry.bulkhead("backendA");
         BulkheadMetricsCollector.ofBulkheadRegistry(bulkheadRegistry).register(registry);
         // record some basic stats
-        bulkhead.tryObtainPermission();
-        bulkhead.tryObtainPermission();
+        bulkhead.tryAcquirePermission();
+        bulkhead.tryAcquirePermission();
     }
 
     @Test

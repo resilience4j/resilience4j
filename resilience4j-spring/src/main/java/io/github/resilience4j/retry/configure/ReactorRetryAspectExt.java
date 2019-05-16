@@ -57,10 +57,10 @@ public class ReactorRetryAspectExt implements RetryAspectExt {
 		Object returnValue = proceedingJoinPoint.proceed();
 		if (Flux.class.isAssignableFrom(returnValue.getClass())) {
 			Flux<?> fluxReturnValue = (Flux<?>) returnValue;
-			return fluxReturnValue.transform(RetryOperator.of(retry));
+			return fluxReturnValue.compose(RetryOperator.of(retry));
 		} else if (Mono.class.isAssignableFrom(returnValue.getClass())) {
 			Mono<?> monoReturnValue = (Mono<?>) returnValue;
-			return monoReturnValue.transform(RetryOperator.of(retry));
+			return monoReturnValue.compose(RetryOperator.of(retry));
 		} else {
 			logger.error("Unsupported type for Reactor retry {}", returnValue.getClass().getTypeName());
 			throw new IllegalArgumentException("Not Supported type for the retry in Reactor :" + returnValue.getClass().getName());

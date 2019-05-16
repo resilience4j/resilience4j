@@ -16,25 +16,23 @@
 
 package io.github.resilience4j.reactor.retry;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.BDDMockito.given;
-
-import java.io.IOException;
-import java.time.Duration;
-
-import javax.xml.ws.WebServiceException;
-
+import io.github.resilience4j.retry.Retry;
+import io.github.resilience4j.retry.RetryConfig;
+import io.github.resilience4j.test.HelloWorldService;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.BDDMockito;
 import org.mockito.Mockito;
-
-import io.github.resilience4j.retry.Retry;
-import io.github.resilience4j.retry.RetryConfig;
-import io.github.resilience4j.test.HelloWorldService;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
+
+import javax.xml.ws.WebServiceException;
+import java.io.IOException;
+import java.time.Duration;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.BDDMockito.given;
 
 
 public class RetryOperatorTest {
@@ -60,8 +58,8 @@ public class RetryOperatorTest {
 				.willReturn("Hello world");
 
 		//When
-		Mono.fromCallable(helloWorldService::returnHelloWorld).transform(retryOperator).block(Duration.ofMillis(100));
-		Mono.fromCallable(helloWorldService::returnHelloWorld).transform(retryOperator).block(Duration.ofMillis(100));
+		Mono.fromCallable(helloWorldService::returnHelloWorld).compose(retryOperator).block(Duration.ofMillis(100));
+		Mono.fromCallable(helloWorldService::returnHelloWorld).compose(retryOperator).block(Duration.ofMillis(100));
 		//Then
 		BDDMockito.then(helloWorldService).should(Mockito.times(4)).returnHelloWorld();
 		Retry.Metrics metrics = retry.getMetrics();
@@ -78,13 +76,13 @@ public class RetryOperatorTest {
 		//Given
 		RetryConfig config = RetryConfig.ofDefaults();
 		Retry retry = Retry.of("testName", config);
-		RetryOperator<String> retryTransformer = RetryOperator.of(retry);
+		RetryOperator<String> retryOperator = RetryOperator.of(retry);
 
 		given(helloWorldService.returnHelloWorld())
 				.willThrow(new StackOverflowError("BAM!"));
 		//When
 		StepVerifier.create(Mono.fromCallable(helloWorldService::returnHelloWorld)
-				.compose(retryTransformer))
+				.compose(retryOperator))
 				.expectSubscription()
 				.expectError(StackOverflowError.class)
 				.verify(Duration.ofSeconds(1));
@@ -102,14 +100,14 @@ public class RetryOperatorTest {
 		//Given
 		RetryConfig config = RetryConfig.ofDefaults();
 		Retry retry = Retry.of("testName", config);
-		RetryOperator<String> retryTransformer = RetryOperator.of(retry);
+		RetryOperator<String> retryOperator = RetryOperator.of(retry);
 
 		given(helloWorldService.returnHelloWorld())
 				.willThrow(new Error("BAM!"));
 
 		//When
 		StepVerifier.create(Mono.fromCallable(helloWorldService::returnHelloWorld)
-				.compose(retryTransformer))
+				.compose(retryOperator))
 				.expectSubscription()
 				.expectError(Error.class)
 				.verify(Duration.ofSeconds(1));
@@ -127,20 +125,20 @@ public class RetryOperatorTest {
 		//Given
 		RetryConfig config = RetryConfig.ofDefaults();
 		Retry retry = Retry.of("testName", config);
-		RetryOperator<String> retryTransformer = RetryOperator.of(retry);
+		RetryOperator<String> retryOperator = RetryOperator.of(retry);
 
 		given(helloWorldService.returnHelloWorld())
 				.willThrow(new WebServiceException("BAM!"));
 
 		//When
 		StepVerifier.create(Mono.fromCallable(helloWorldService::returnHelloWorld)
-				.compose(retryTransformer))
+				.compose(retryOperator))
 				.expectSubscription()
 				.expectError(RetryExceptionWrapper.class)
 				.verify(Duration.ofSeconds(1));
 
 		StepVerifier.create(Mono.fromCallable(helloWorldService::returnHelloWorld)
-				.compose(retryTransformer))
+				.compose(retryOperator))
 				.expectSubscription()
 				.expectError(RetryExceptionWrapper.class)
 				.verify(Duration.ofSeconds(1));

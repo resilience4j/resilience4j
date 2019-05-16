@@ -51,7 +51,7 @@ public interface VertxCircuitBreaker {
         return () -> {
             final Future<T> future = Future.future();
 
-            if (!circuitBreaker.tryObtainPermission()) {
+            if (!circuitBreaker.tryAcquirePermission()) {
                 future.fail(new CallNotPermittedException(circuitBreaker));
 
             } else {

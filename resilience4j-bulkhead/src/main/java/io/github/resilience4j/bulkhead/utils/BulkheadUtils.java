@@ -28,13 +28,13 @@ public final class BulkheadUtils {
 
     /**
      * @deprecated
-     * Use {@link Bulkhead#obtainPermission()} instead
+     * Use {@link Bulkhead#acquirePermission()} instead
      *
      * @since 0.15.0
      */
     @Deprecated
     public static void isCallPermitted(Bulkhead bulkhead) {
-        if(!bulkhead.tryObtainPermission()) {
+        if(!bulkhead.tryAcquirePermission()) {
             throw new BulkheadFullException(bulkhead);
         }
     }

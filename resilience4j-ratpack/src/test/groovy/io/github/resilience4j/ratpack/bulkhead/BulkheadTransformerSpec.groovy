@@ -182,7 +182,7 @@ class BulkheadTransformerSpec extends Specification {
         with(denied) {
             error
             throwable instanceof BulkheadFullException
-            throwable.message == "Bulkhead 'test' is full"
+            throwable.message == "Bulkhead 'test' is full and does not permit further calls"
         }
 
         and:

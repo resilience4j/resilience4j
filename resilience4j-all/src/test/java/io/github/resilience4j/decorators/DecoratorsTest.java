@@ -313,7 +313,7 @@ public class DecoratorsTest {
 
     private void alignTime(RateLimiter rateLimiter) {
         RateLimiter.Metrics metrics = rateLimiter.getMetrics();
-        while (rateLimiter.getPermission(Duration.ZERO)) {
+        while (rateLimiter.acquirePermission(Duration.ZERO)) {
             state = !state;
         }
         // Wait to the start of the next cycle in spin loop
