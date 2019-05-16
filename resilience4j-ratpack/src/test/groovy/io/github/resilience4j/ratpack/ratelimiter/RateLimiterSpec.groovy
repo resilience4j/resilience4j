@@ -71,7 +71,7 @@ class RateLimiterSpec extends Specification {
         actual.statusCode == 200
     }
 
-    def "test rate limit a method via annotation"() {
+    def "test rate limit a method via annotation - #path"() {
         given:
         RateLimiterRegistry registry = RateLimiterRegistry.of(buildConfig())
         app = ratpack {
@@ -87,14 +87,14 @@ class RateLimiterSpec extends Specification {
                         render it
                     }
                 }
-                get('Flux') { Something something ->
+                get('flux') { Something something ->
                     something.rateLimiterFlux().subscribe {
                         render it
                     } {
                         response.status(500).send(it.toString())
                     }
                 }
-                get('Mono') { Something something ->
+                get('mono') { Something something ->
                     something.rateLimiterMono().subscribe{
                         render it
                     } {
@@ -124,13 +124,13 @@ class RateLimiterSpec extends Specification {
         where:
         path         | rateLimiterName
         'promise'    | 'test'
-        'Flux'       | 'test'
-        'Mono'       | 'test'
+        'flux'       | 'test'
+        'mono'       | 'test'
         'stage'      | 'test'
         'normal'     | 'test'
     }
 
-    def "test rate limit a method via annotation with exception"() {
+    def "test rate limit a method via annotation with exception - #path"() {
         given:
         RateLimiterRegistry registry = RateLimiterRegistry.of(buildConfig())
         app = ratpack {
@@ -146,14 +146,14 @@ class RateLimiterSpec extends Specification {
                         render it
                     }
                 }
-                get('Flux') { Something something ->
+                get('flux') { Something something ->
                     something.rateLimiterFluxException().subscribe {
                         render it
                     } {
                         response.status(500).send(it.toString())
                     }
                 }
-                get('Mono') { Something something ->
+                get('mono') { Something something ->
                     something.rateLimiterMonoException().subscribe{
                         render it
                     } {
@@ -183,13 +183,68 @@ class RateLimiterSpec extends Specification {
         where:
         path      | rateLimiterName
         'promise' | 'test'
-        'Flux'    | 'test'
-        'Mono'    | 'test'
+        'flux'    | 'test'
+        'mono'    | 'test'
         'stage'   | 'test'
         'normal'  | 'test'
     }
 
-    def "test rate limit a method via annotation with fallback"() {
+    def "test rate limit a method via annotation with recovery - #path"() {
+        given:
+        RateLimiterRegistry registry = RateLimiterRegistry.of(buildConfig())
+        app = ratpack {
+            bindings {
+                bindInstance(CircuitBreakerRegistry, CircuitBreakerRegistry.ofDefaults())
+                bindInstance(RateLimiterRegistry, registry)
+                bind(Something)
+                module(Resilience4jModule)
+            }
+            handlers {
+                get('promise') { Something something ->
+                    something.rateLimiterPromiseRecovery().then {
+                        render it
+                    }
+                }
+                get('flux') { Something something ->
+                    something.rateLimiterFluxRecovery().subscribe {
+                        render it
+                    }
+                }
+                get('mono') { Something something ->
+                    something.rateLimiterMonoRecovery().subscribe {
+                        render it
+                    }
+                }
+                get('stage') { Something something ->
+                    render something.rateLimiterStageRecovery().toCompletableFuture().get()
+                }
+                get('normal') { Something something ->
+                    render something.rateLimiterNormalRecovery()
+                }
+            }
+        }
+        client = testHttpClient(app)
+
+        when:
+        def actual = null
+        for (int i = 0; i <= 10; i++) {
+            actual = get(path)
+        }
+
+        then:
+        actual.body.text.contains('recovered')
+        actual.statusCode == 200
+
+        where:
+        path      | rateLimiterName
+        'promise' | 'test'
+        'flux'    | 'test'
+        'mono'    | 'test'
+        'stage'   | 'test'
+        'normal'  | 'test'
+    }
+
+    def "test rate limit a method via annotation with fallback - #path"() {
         given:
         RateLimiterRegistry registry = RateLimiterRegistry.of(buildConfig())
         app = ratpack {
@@ -205,12 +260,12 @@ class RateLimiterSpec extends Specification {
                         render it
                     }
                 }
-                get('Flux') { Something something ->
+                get('flux') { Something something ->
                     something.rateLimiterFluxFallback().subscribe {
                         render it
                     }
                 }
-                get('Mono') { Something something ->
+                get('mono') { Something something ->
                     something.rateLimiterMonoFallback().subscribe {
                         render it
                     }
@@ -238,10 +293,61 @@ class RateLimiterSpec extends Specification {
         where:
         path      | rateLimiterName
         'promise' | 'test'
-        'Flux'    | 'test'
-        'Mono'    | 'test'
+        'flux'    | 'test'
+        'mono'    | 'test'
         'stage'   | 'test'
         'normal'  | 'test'
+    }
+
+    def "test rate limit a method via annotation with async fallback - #path"() {
+        given:
+        RateLimiterRegistry registry = RateLimiterRegistry.of(buildConfig())
+        app = ratpack {
+            bindings {
+                bindInstance(CircuitBreakerRegistry, CircuitBreakerRegistry.ofDefaults())
+                bindInstance(RateLimiterRegistry, registry)
+                bind(Something)
+                module(Resilience4jModule)
+            }
+            handlers {
+                get('promise') { Something something ->
+                    something.rateLimiterPromiseFallbackPromise().then {
+                        render it
+                    }
+                }
+                get('flux') { Something something ->
+                    something.rateLimiterFluxFallbackFlux().subscribe {
+                        render it
+                    }
+                }
+                get('mono') { Something something ->
+                    something.rateLimiterMonoFallbackMono().subscribe {
+                        render it
+                    }
+                }
+                get('stage') { Something something ->
+                    render something.rateLimiterStageFallbackStage().toCompletableFuture().get()
+                }
+            }
+        }
+        client = testHttpClient(app)
+
+        when:
+        def actual = null
+        for (int i = 0; i <= 10; i++) {
+            actual = get(path)
+        }
+
+        then:
+        actual.body.text.contains('recovered')
+        actual.statusCode == 200
+
+        where:
+        path      | rateLimiterName
+        'promise' | 'test'
+        'flux'    | 'test'
+        'mono'    | 'test'
+        'stage'   | 'test'
     }
 
     // 10 events / 1 minute
@@ -310,30 +416,101 @@ class RateLimiterSpec extends Specification {
         }
 
         @RateLimiter(name = "test", recovery = MyRecoveryFunction)
-        Promise<String> rateLimiterPromiseFallback() {
+        Promise<String> rateLimiterPromiseRecovery() {
             Promise.async {
                 it.error(new Exception("rateLimiter promise exception"))
             }
         }
 
         @RateLimiter(name = "test", recovery = MyRecoveryFunction)
-        Flux<Void> rateLimiterFluxFallback() {
+        Flux<Void> rateLimiterFluxRecovery() {
             Flux.just("rateLimiter Flux").map({ throw new Exception("bad") } as Function<String, Void>)
         }
 
         @RateLimiter(name = "test", recovery = MyRecoveryFunction)
-        Mono<Void> rateLimiterMonoFallback() {
+        Mono<Void> rateLimiterMonoRecovery() {
             Mono.just("rateLimiter Mono").map({ throw new Exception("bad") } as Function<String, Void>)
         }
 
         @RateLimiter(name = "test", recovery = MyRecoveryFunction)
-        CompletionStage<Void> rateLimiterStageFallback() {
+        CompletionStage<Void> rateLimiterStageRecovery() {
             CompletableFuture.supplyAsync { throw new Exception('rateLimiter stage exception') }
         }
 
         @RateLimiter(name = "test", recovery = MyRecoveryFunction)
+        String rateLimiterNormalRecovery() {
+            throw new Exception("rateLimiter normal exception")
+        }
+
+        @RateLimiter(name = "test", fallbackMethod = "fallback")
+        Promise<String> rateLimiterPromiseFallback() {
+            Promise.<String>async {
+                it.error(new Exception("rateLimiter promise exception"))
+            }
+        }
+
+        @RateLimiter(name = "test", fallbackMethod = "fallback")
+        Flux<String> rateLimiterFluxFallback() {
+            Flux.just("rateLimiter Flux").map({ throw new Exception("bad") } as Function<String, String>)
+        }
+
+        @RateLimiter(name = "test", fallbackMethod = "fallback")
+        Mono<String> rateLimiterMonoFallback() {
+            Mono.just("rateLimiter Mono").map({ throw new Exception("bad") } as Function<String, String>)
+        }
+
+        @RateLimiter(name = "test", fallbackMethod = "fallback")
+        CompletionStage<String> rateLimiterStageFallback() {
+            CompletableFuture.<String>supplyAsync { throw new Exception('rateLimiter stage exception') }
+        }
+
+        @RateLimiter(name = "test", fallbackMethod = "fallback")
         String rateLimiterNormalFallback() {
             throw new Exception("rateLimiter normal exception")
+        }
+
+        @RateLimiter(name = "test", fallbackMethod = "fallbackPromise")
+        Promise<String> rateLimiterPromiseFallbackPromise() {
+            Promise.<String>async {
+                it.error(new Exception("rateLimiter promise exception"))
+            }
+        }
+
+        @RateLimiter(name = "test", fallbackMethod = "fallbackFlux")
+        Flux<String> rateLimiterFluxFallbackFlux() {
+            Flux.just("rateLimiter Flux").map({ throw new Exception("bad") } as Function<String, String>)
+        }
+
+        @RateLimiter(name = "test", fallbackMethod = "fallbackMono")
+        Mono<String> rateLimiterMonoFallbackMono() {
+            Mono.just("rateLimiter Mono").map({ throw new Exception("bad") } as Function<String, String>)
+        }
+
+        @RateLimiter(name = "test", fallbackMethod = "fallbackStage")
+        CompletionStage<String> rateLimiterStageFallbackStage() {
+            CompletableFuture.<String>supplyAsync { throw new Exception('rateLimiter stage exception') }
+        }
+
+        Promise<String> fallbackPromise(Throwable throwable) {
+            Promise.value("recovered")
+        }
+
+        CompletionStage<String> fallbackStage(Throwable throwable) {
+            def future = new CompletableFuture<String>()
+            future.complete("recovered")
+            return future
+        }
+
+        Flux<String> fallbackFlux(Throwable throwable) {
+            Flux.just("recovered")
+        }
+
+        Mono<String> fallbackMono(Throwable throwable) {
+            Mono.just("recovered")
+        }
+
+        String fallback(Throwable t) throws Exception {
+            "recovered"
         }
     }
 

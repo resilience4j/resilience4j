@@ -21,6 +21,7 @@ import io.github.resilience4j.core.lang.Nullable;
 import io.github.resilience4j.ratelimiter.RateLimiterConfig;
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
 import io.github.resilience4j.ratelimiter.RequestNotPermitted;
+import io.github.resilience4j.ratpack.internal.AbstractMethodInterceptor;
 import io.github.resilience4j.ratpack.recovery.RecoveryFunction;
 import io.github.resilience4j.reactor.ratelimiter.operator.RateLimiterOperator;
 import org.aopalliance.intercept.MethodInterceptor;
@@ -31,6 +32,7 @@ import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
 import java.time.Duration;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 
@@ -39,7 +41,7 @@ import java.util.concurrent.CompletionStage;
  * handle methods that return a Promise only. It will add a transform to the promise with the circuit breaker and
  * fallback found in the annotation.
  */
-public class RateLimiterMethodInterceptor implements MethodInterceptor {
+public class RateLimiterMethodInterceptor extends AbstractMethodInterceptor {
 
     @Inject(optional = true)
     @Nullable
@@ -50,53 +52,58 @@ public class RateLimiterMethodInterceptor implements MethodInterceptor {
     @Override
     public Object invoke(MethodInvocation invocation) throws Throwable {
         RateLimiter annotation = invocation.getMethod().getAnnotation(RateLimiter.class);
-        RecoveryFunction<?> recoveryFunction = annotation.recovery().newInstance();
+        final RecoveryFunction<?> fallbackMethod = Optional
+                .ofNullable(createRecoveryFunction(invocation, annotation.fallbackMethod()))
+                .orElse(annotation.recovery().getDeclaredConstructor().newInstance());
         if (registry == null) {
             registry = RateLimiterRegistry.ofDefaults();
         }
         io.github.resilience4j.ratelimiter.RateLimiter rateLimiter = registry.rateLimiter(annotation.name());
-        if (rateLimiter == null) {
-            return invocation.proceed();
-        }
         Class<?> returnType = invocation.getMethod().getReturnType();
         if (Promise.class.isAssignableFrom(returnType)) {
-            Promise<?> result = (Promise<?>) proceed(invocation, rateLimiter, recoveryFunction);
+            Promise<?> result = (Promise<?>) proceed(invocation, rateLimiter, fallbackMethod);
             if (result != null) {
-                RateLimiterTransformer transformer = RateLimiterTransformer.of(rateLimiter).recover(recoveryFunction);
+                RateLimiterTransformer transformer = RateLimiterTransformer.of(rateLimiter).recover(fallbackMethod);
                 result = result.transform(transformer);
             }
             return result;
         } else if (Flux.class.isAssignableFrom(returnType)) {
-            Flux<?> result = (Flux<?>) proceed(invocation, rateLimiter, recoveryFunction);
+            Flux<?> result = (Flux<?>) proceed(invocation, rateLimiter, fallbackMethod);
             if (result != null) {
                 RateLimiterOperator operator = RateLimiterOperator.of(rateLimiter, Schedulers.immediate());
-                result = recoveryFunction.onErrorResume(result.transform(operator));
+                result = fallbackMethod.onErrorResume(result.transform(operator));
             }
             return result;
         } else if (Mono.class.isAssignableFrom(returnType)) {
-            Mono<?> result = (Mono<?>) proceed(invocation, rateLimiter, recoveryFunction);
+            Mono<?> result = (Mono<?>) proceed(invocation, rateLimiter, fallbackMethod);
             if (result != null) {
                 RateLimiterOperator operator = RateLimiterOperator.of(rateLimiter, Schedulers.immediate());
-                result = recoveryFunction.onErrorResume(result.transform(operator));
+                result = fallbackMethod.onErrorResume(result.transform(operator));
             }
             return result;
         } else if (CompletionStage.class.isAssignableFrom(returnType)) {
             RateLimiterConfig rateLimiterConfig = rateLimiter.getRateLimiterConfig();
             Duration timeoutDuration = rateLimiterConfig.getTimeoutDuration();
             if (rateLimiter.acquirePermission(timeoutDuration)) {
-                return proceed(invocation, rateLimiter, recoveryFunction);
+                return proceed(invocation, rateLimiter, fallbackMethod);
             } else {
                 final CompletableFuture promise = new CompletableFuture<>();
                 Throwable t = new RequestNotPermitted(rateLimiter);
                 try {
-                    promise.complete(recoveryFunction.apply(t));
+                    Object maybeFuture = fallbackMethod.apply(t);
+                    if (maybeFuture instanceof CompletionStage) {
+                        ((CompletionStage) maybeFuture).whenComplete((v1, t1) -> promise.complete(v1));
+                    } else {
+                        promise.complete(maybeFuture);
+                    }
                 } catch (Exception exception) {
                     promise.completeExceptionally(exception);
                 }
                 return promise;
             }
+        } else {
+            return handleProceedWithException(invocation, rateLimiter, fallbackMethod);
         }
-        return handleProceedWithException(invocation, rateLimiter, recoveryFunction);
     }
 
     @Nullable
