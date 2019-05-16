@@ -15,7 +15,7 @@
  */
 package io.github.resilience4j.ratelimiter.operator;
 
-import io.github.resilience4j.ResilienceBaseSubscriber;
+import io.github.resilience4j.AbstractSubscriber;
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RequestNotPermitted;
 import io.reactivex.Flowable;
@@ -48,7 +48,7 @@ class FlowableRateLimiter<T> extends Flowable<T> {
         }
     }
 
-    class RateLimiterSubscriber extends ResilienceBaseSubscriber<T> {
+    class RateLimiterSubscriber extends AbstractSubscriber<T> {
 
         RateLimiterSubscriber(Subscriber<? super T> downstreamSubscriber) {
             super(downstreamSubscriber);
@@ -56,22 +56,17 @@ class FlowableRateLimiter<T> extends Flowable<T> {
 
         @Override
         public void hookOnError(Throwable t) {
-            downstreamSubscriber.onError(t);
+            // NoOp
         }
 
         @Override
         public void hookOnComplete() {
-            downstreamSubscriber.onComplete();
+            // NoOp
         }
 
         @Override
         public void hookOnCancel() {
-            // Release permission in RateLimiter?
-        }
-
-        @Override
-        public void hookOnNext(T value) {
-            downstreamSubscriber.onNext(value);
+            // NoOp
         }
     }
 

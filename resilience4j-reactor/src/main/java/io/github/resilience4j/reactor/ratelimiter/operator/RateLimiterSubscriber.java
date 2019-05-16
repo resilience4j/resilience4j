@@ -15,7 +15,7 @@
  */
 package io.github.resilience4j.reactor.ratelimiter.operator;
 
-import io.github.resilience4j.reactor.ResilienceBaseSubscriber;
+import io.github.resilience4j.reactor.AbstractSubscriber;
 import org.reactivestreams.Subscriber;
 import reactor.core.CoreSubscriber;
 
@@ -24,7 +24,7 @@ import reactor.core.CoreSubscriber;
  *
  * @param <T> the value type of the upstream and downstream
  */
-class RateLimiterSubscriber<T> extends ResilienceBaseSubscriber<T> {
+class RateLimiterSubscriber<T> extends AbstractSubscriber<T> {
 
     protected RateLimiterSubscriber(CoreSubscriber<? super T> downstreamSubscriber) {
         super(downstreamSubscriber);

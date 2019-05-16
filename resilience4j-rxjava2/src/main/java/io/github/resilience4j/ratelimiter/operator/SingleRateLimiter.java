@@ -15,6 +15,7 @@
  */
 package io.github.resilience4j.ratelimiter.operator;
 
+import io.github.resilience4j.AbstractSingleObserver;
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RequestNotPermitted;
 import io.reactivex.Single;
@@ -22,8 +23,6 @@ import io.reactivex.SingleObserver;
 import io.reactivex.internal.disposables.EmptyDisposable;
 
 import java.time.Duration;
-
-import static java.util.Objects.requireNonNull;
 
 class SingleRateLimiter<T> extends Single<T> {
 
@@ -45,34 +44,25 @@ class SingleRateLimiter<T> extends Single<T> {
         }
     }
 
-    class RateLimiterSingleObserver extends BaseRateLimiterObserver implements SingleObserver<T> {
-
-        private final SingleObserver<? super T> downstreamObserver;
+    class RateLimiterSingleObserver extends AbstractSingleObserver<T> {
 
         RateLimiterSingleObserver(SingleObserver<? super T> downstreamObserver) {
-            super(rateLimiter);
-            this.downstreamObserver = requireNonNull(downstreamObserver);
+            super(downstreamObserver);
         }
 
         @Override
-        protected void hookOnSubscribe() {
-            downstreamObserver.onSubscribe(this);
+        protected void hookOnError(Throwable e) {
+            // NoOp
         }
 
         @Override
-        public void onSuccess(T value) {
-            whenNotCompleted(() -> {
-                super.onSuccess();
-                downstreamObserver.onSuccess(value);
-            });
+        protected void hookOnSuccess() {
+            // NoOp
         }
 
         @Override
-        public void onError(Throwable e) {
-            whenNotCompleted(() -> {
-                super.onError(e);
-                downstreamObserver.onError(e);
-            });
+        protected void hookOnCancel() {
+            // NoOp
         }
     }
 }

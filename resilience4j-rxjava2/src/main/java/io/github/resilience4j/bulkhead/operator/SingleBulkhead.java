@@ -15,13 +15,12 @@
  */
 package io.github.resilience4j.bulkhead.operator;
 
+import io.github.resilience4j.AbstractSingleObserver;
 import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.bulkhead.BulkheadFullException;
 import io.reactivex.Single;
 import io.reactivex.SingleObserver;
 import io.reactivex.internal.disposables.EmptyDisposable;
-
-import static java.util.Objects.requireNonNull;
 
 class SingleBulkhead<T> extends Single<T> {
 
@@ -43,34 +42,25 @@ class SingleBulkhead<T> extends Single<T> {
         }
     }
 
-    class BulkheadSingleObserver extends BaseBulkheadObserver implements SingleObserver<T> {
-
-        private final SingleObserver<? super T> downstreamObserver;
+    class BulkheadSingleObserver extends AbstractSingleObserver<T> {
 
         BulkheadSingleObserver(SingleObserver<? super T> downstreamObserver) {
-            super(bulkhead);
-            this.downstreamObserver = requireNonNull(downstreamObserver);
+            super(downstreamObserver);
         }
 
         @Override
-        protected void hookOnSubscribe() {
-            downstreamObserver.onSubscribe(this);
+        protected void hookOnError(Throwable e) {
+            bulkhead.onComplete();
         }
 
         @Override
-        public void onSuccess(T value) {
-            whenNotCompleted(() -> {
-                super.onSuccess();
-                downstreamObserver.onSuccess(value);
-            });
+        protected void hookOnSuccess() {
+            bulkhead.onComplete();
         }
 
         @Override
-        public void onError(Throwable e) {
-            whenNotCompleted(() -> {
-                super.onError(e);
-                downstreamObserver.onError(e);
-            });
+        protected void hookOnCancel() {
+            bulkhead.releasePermission();
         }
     }
 }

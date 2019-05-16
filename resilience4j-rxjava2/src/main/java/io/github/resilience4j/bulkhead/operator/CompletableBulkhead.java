@@ -15,6 +15,7 @@
  */
 package io.github.resilience4j.bulkhead.operator;
 
+import io.github.resilience4j.AbstractCompletableObserver;
 import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.bulkhead.BulkheadFullException;
 import io.reactivex.Completable;
@@ -41,34 +42,25 @@ class CompletableBulkhead extends Completable {
         }
     }
 
-    class BulkheadCompletableObserver extends BaseBulkheadObserver implements CompletableObserver {
-
-        private final CompletableObserver downstreamObserver;
+    class BulkheadCompletableObserver extends AbstractCompletableObserver {
 
         BulkheadCompletableObserver(CompletableObserver downstreamObserver) {
-            super(bulkhead);
-            this.downstreamObserver = downstreamObserver;
+            super(downstreamObserver);
         }
 
         @Override
-        protected void hookOnSubscribe() {
-            downstreamObserver.onSubscribe(this);
+        protected void hookOnComplete() {
+            bulkhead.onComplete();
         }
 
         @Override
-        public void onError(Throwable e) {
-            whenNotCompleted(() -> {
-                super.onError(e);
-                downstreamObserver.onError(e);
-            });
+        protected void hookOnError(Throwable e) {
+            bulkhead.onComplete();
         }
 
         @Override
-        public void onComplete() {
-            whenNotCompleted(() -> {
-                super.onSuccess();
-                downstreamObserver.onComplete();
-            });
+        protected void hookOnCancel() {
+            bulkhead.releasePermission();
         }
     }
 

@@ -16,7 +16,7 @@
 package io.github.resilience4j.reactor.bulkhead.operator;
 
 import io.github.resilience4j.bulkhead.Bulkhead;
-import io.github.resilience4j.reactor.ResilienceBaseSubscriber;
+import io.github.resilience4j.reactor.AbstractSubscriber;
 import org.reactivestreams.Subscriber;
 import reactor.core.CoreSubscriber;
 
@@ -29,7 +29,7 @@ import static java.util.Objects.requireNonNull;
  *
  * @param <T> the value type of the upstream and downstream
  */
-class BulkheadSubscriber<T> extends ResilienceBaseSubscriber<T> {
+class BulkheadSubscriber<T> extends AbstractSubscriber<T> {
 
     private final Bulkhead bulkhead;
     private final boolean singleProducer;

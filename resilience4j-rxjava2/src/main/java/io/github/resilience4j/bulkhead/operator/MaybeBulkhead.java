@@ -15,13 +15,12 @@
  */
 package io.github.resilience4j.bulkhead.operator;
 
+import io.github.resilience4j.AbstractMaybeObserver;
 import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.bulkhead.BulkheadFullException;
 import io.reactivex.Maybe;
 import io.reactivex.MaybeObserver;
 import io.reactivex.internal.disposables.EmptyDisposable;
-
-import static java.util.Objects.requireNonNull;
 
 class MaybeBulkhead<T> extends Maybe<T> {
 
@@ -43,42 +42,30 @@ class MaybeBulkhead<T> extends Maybe<T> {
         }
     }
 
-    class BulkheadMaybeObserver extends BaseBulkheadObserver implements MaybeObserver<T> {
+    class BulkheadMaybeObserver extends AbstractMaybeObserver<T> {
 
-        private final MaybeObserver<? super T> downstreamObserver;
-
-        BulkheadMaybeObserver(MaybeObserver<? super T> childObserver) {
-            super(bulkhead);
-            this.downstreamObserver = requireNonNull(childObserver);
+        BulkheadMaybeObserver(MaybeObserver<? super T> downstreamObserver) {
+            super(downstreamObserver);
         }
 
         @Override
-        protected void hookOnSubscribe() {
-            downstreamObserver.onSubscribe(this);
+        protected void hookOnComplete() {
+            bulkhead.onComplete();
         }
 
         @Override
-        public void onSuccess(T value) {
-            whenNotDisposed(() -> {
-                super.onSuccess();
-                downstreamObserver.onSuccess(value);
-            });
+        protected void hookOnError(Throwable e) {
+            bulkhead.onComplete();
         }
 
         @Override
-        public void onError(Throwable e) {
-            whenNotCompleted(() -> {
-                super.onError(e);
-                downstreamObserver.onError(e);
-            });
+        protected void hookOnSuccess() {
+            bulkhead.onComplete();
         }
 
         @Override
-        public void onComplete() {
-            whenNotCompleted(() -> {
-                super.onSuccess();
-                downstreamObserver.onComplete();
-            });
+        protected void hookOnCancel() {
+            bulkhead.releasePermission();
         }
     }
 }

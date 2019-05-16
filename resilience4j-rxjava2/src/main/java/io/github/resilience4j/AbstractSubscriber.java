@@ -25,12 +25,12 @@ import java.util.concurrent.atomic.AtomicReference;
 import static io.reactivex.internal.subscriptions.SubscriptionHelper.CANCELLED;
 import static java.util.Objects.requireNonNull;
 
-public abstract class ResilienceBaseSubscriber<T> implements Subscriber<T>, Subscription, Disposable {
+public abstract class AbstractSubscriber<T> implements Subscriber<T>, Subscription, Disposable {
 
     protected final Subscriber<? super T> downstreamSubscriber;
     private final AtomicReference<Subscription> subscription = new AtomicReference<>();
 
-    protected ResilienceBaseSubscriber(Subscriber<? super T> downstreamSubscriber) {
+    protected AbstractSubscriber(Subscriber<? super T> downstreamSubscriber) {
         this.downstreamSubscriber = requireNonNull(downstreamSubscriber);
     }
 
@@ -44,17 +44,16 @@ public abstract class ResilienceBaseSubscriber<T> implements Subscriber<T>, Subs
     @Override
     public void onNext(T value) {
         if(!isDisposed()){
-            hookOnNext(value);
+            downstreamSubscriber.onNext(value);
         }
 
     }
-
-    protected abstract void hookOnNext(T value);
 
     @Override
     public void onError(Throwable t) {
         if (SubscriptionHelper.cancel(subscription)) {
             hookOnError(t);
+            downstreamSubscriber.onError(t);
         }
     }
 
@@ -64,6 +63,7 @@ public abstract class ResilienceBaseSubscriber<T> implements Subscriber<T>, Subs
     public void onComplete() {
         if (SubscriptionHelper.cancel(subscription)) {
             hookOnComplete();
+            downstreamSubscriber.onComplete();
         }
     }
 

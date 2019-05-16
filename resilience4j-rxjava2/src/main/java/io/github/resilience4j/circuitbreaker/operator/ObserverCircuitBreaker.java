@@ -15,13 +15,13 @@
  */
 package io.github.resilience4j.circuitbreaker.operator;
 
+import io.github.resilience4j.AbstractObserver;
 import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
+import io.github.resilience4j.core.StopWatch;
 import io.reactivex.Observable;
 import io.reactivex.Observer;
 import io.reactivex.internal.disposables.EmptyDisposable;
-
-import static java.util.Objects.requireNonNull;
 
 class ObserverCircuitBreaker<T> extends Observable<T> {
 
@@ -42,39 +42,28 @@ class ObserverCircuitBreaker<T> extends Observable<T> {
             downstream.onError(new CallNotPermittedException(circuitBreaker));
         }
     }
-    class CircuitBreakerObserver extends BaseCircuitBreakerObserver implements Observer<T> {
+    class CircuitBreakerObserver extends AbstractObserver<T> {
 
-        private final Observer<? super T> downstreamObserver;
+        private final StopWatch stopWatch;
 
         CircuitBreakerObserver(Observer<? super T> downstreamObserver) {
-            super(circuitBreaker);
-            this.downstreamObserver = requireNonNull(downstreamObserver);
+            super(downstreamObserver);
+            this.stopWatch = StopWatch.start();
         }
 
         @Override
-        protected void hookOnSubscribe() {
-            downstreamObserver.onSubscribe(this);
+        protected void hookOnError(Throwable e) {
+            circuitBreaker.onError(stopWatch.stop().toNanos(), e);
         }
 
         @Override
-        public void onNext(T item) {
-            whenNotDisposed(() -> downstreamObserver.onNext(item));
+        protected void hookOnComplete() {
+            circuitBreaker.onSuccess(stopWatch.stop().toNanos());
         }
 
         @Override
-        public void onError(Throwable e) {
-            whenNotCompleted(() -> {
-                super.onError(e);
-                downstreamObserver.onError(e);
-            });
-        }
-
-        @Override
-        public void onComplete() {
-            whenNotCompleted(() -> {
-                super.onSuccess();
-                downstreamObserver.onComplete();
-            });
+        protected void hookOnCancel() {
+            circuitBreaker.releasePermission();
         }
     }
 

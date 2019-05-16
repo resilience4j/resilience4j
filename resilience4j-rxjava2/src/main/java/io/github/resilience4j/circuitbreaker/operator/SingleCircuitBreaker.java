@@ -15,13 +15,13 @@
  */
 package io.github.resilience4j.circuitbreaker.operator;
 
+import io.github.resilience4j.AbstractSingleObserver;
 import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
+import io.github.resilience4j.core.StopWatch;
 import io.reactivex.Single;
 import io.reactivex.SingleObserver;
 import io.reactivex.internal.disposables.EmptyDisposable;
-
-import static java.util.Objects.requireNonNull;
 
 class SingleCircuitBreaker<T> extends Single<T> {
 
@@ -43,34 +43,28 @@ class SingleCircuitBreaker<T> extends Single<T> {
         }
     }
 
-    class CircuitBreakerSingleObserver extends BaseCircuitBreakerObserver implements SingleObserver<T> {
+    class CircuitBreakerSingleObserver extends AbstractSingleObserver<T> {
 
-        private final SingleObserver<? super T> downstreamObserver;
+        private final StopWatch stopWatch;
 
         CircuitBreakerSingleObserver(SingleObserver<? super T> downstreamObserver) {
-            super(circuitBreaker);
-            this.downstreamObserver = requireNonNull(downstreamObserver);
+            super(downstreamObserver);
+            this.stopWatch = StopWatch.start();
         }
 
         @Override
-        protected void hookOnSubscribe() {
-            downstreamObserver.onSubscribe(this);
+        protected void hookOnError(Throwable e) {
+            circuitBreaker.onError(stopWatch.stop().toNanos(), e);
         }
 
         @Override
-        public void onSuccess(T value) {
-            whenNotCompleted(() -> {
-                super.onSuccess();
-                downstreamObserver.onSuccess(value);
-            });
+        protected void hookOnSuccess() {
+            circuitBreaker.onSuccess(stopWatch.stop().toNanos());
         }
 
         @Override
-        public void onError(Throwable e) {
-            whenNotCompleted(() -> {
-                super.onError(e);
-                downstreamObserver.onError(e);
-            });
+        protected void hookOnCancel() {
+            circuitBreaker.releasePermission();
         }
     }
 }

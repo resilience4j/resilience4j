@@ -17,7 +17,7 @@ package io.github.resilience4j.reactor.circuitbreaker.operator;
 
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.core.StopWatch;
-import io.github.resilience4j.reactor.ResilienceBaseSubscriber;
+import io.github.resilience4j.reactor.AbstractSubscriber;
 import org.reactivestreams.Subscriber;
 import reactor.core.CoreSubscriber;
 
@@ -30,7 +30,7 @@ import static java.util.Objects.requireNonNull;
  *
  * @param <T> the value type of the upstream and downstream
  */
-class CircuitBreakerSubscriber<T> extends ResilienceBaseSubscriber<T> {
+class CircuitBreakerSubscriber<T> extends AbstractSubscriber<T> {
 
     private final CircuitBreaker circuitBreaker;
 

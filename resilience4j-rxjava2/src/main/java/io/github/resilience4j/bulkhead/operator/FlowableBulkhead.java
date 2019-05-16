@@ -15,7 +15,7 @@
  */
 package io.github.resilience4j.bulkhead.operator;
 
-import io.github.resilience4j.ResilienceBaseSubscriber;
+import io.github.resilience4j.AbstractSubscriber;
 import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.bulkhead.BulkheadFullException;
 import io.reactivex.Flowable;
@@ -47,7 +47,7 @@ class FlowableBulkhead<T> extends Flowable<T> {
         }
     }
 
-    class BulkheadSubscriber extends ResilienceBaseSubscriber<T> {
+    class BulkheadSubscriber extends AbstractSubscriber<T> {
 
         BulkheadSubscriber(Subscriber<? super T> downstreamSubscriber) {
             super(downstreamSubscriber);
@@ -56,23 +56,16 @@ class FlowableBulkhead<T> extends Flowable<T> {
         @Override
         public void hookOnError(Throwable t) {
             bulkhead.onComplete();
-            downstreamSubscriber.onError(t);
         }
 
         @Override
         public void hookOnComplete() {
             bulkhead.onComplete();
-            downstreamSubscriber.onComplete();
         }
 
         @Override
         public void hookOnCancel() {
             bulkhead.releasePermission();
-        }
-
-        @Override
-        public void hookOnNext(T value) {
-            downstreamSubscriber.onNext(value);
         }
     }
 
