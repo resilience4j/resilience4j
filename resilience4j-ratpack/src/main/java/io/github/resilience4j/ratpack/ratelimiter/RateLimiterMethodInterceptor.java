@@ -21,7 +21,9 @@ import io.github.resilience4j.core.lang.Nullable;
 import io.github.resilience4j.ratelimiter.RateLimiterConfig;
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
 import io.github.resilience4j.ratelimiter.RequestNotPermitted;
+import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
 import io.github.resilience4j.ratpack.internal.AbstractMethodInterceptor;
+import io.github.resilience4j.ratpack.recovery.DefaultRecoveryFunction;
 import io.github.resilience4j.ratpack.recovery.RecoveryFunction;
 import io.github.resilience4j.reactor.ratelimiter.operator.RateLimiterOperator;
 import org.aopalliance.intercept.MethodInterceptor;
@@ -40,6 +42,28 @@ import java.util.concurrent.CompletionStage;
  * A {@link MethodInterceptor} to handle all methods annotated with {@link RateLimiter}. It will
  * handle methods that return a Promise only. It will add a transform to the promise with the circuit breaker and
  * fallback found in the annotation.
+ *
+ * Given a method like this:
+ * <pre><code>
+ *     {@literal @}RateLimiter(name = "myService")
+ *     public String fancyName(String name) {
+ *         return "Sir Captain " + name;
+ *     }
+ * </code></pre>
+ * each time the {@code #fancyName(String)} method is invoked, the method's execution will pass through a
+ * a {@link io.github.resilience4j.ratelimiter.RateLimiter} according to the given config.
+ *
+ * The fallbackMethod signature must match either:
+ *
+ * 1) The method parameter signature on the annotated method or
+ * 2) The method parameter signature with a matching exception type as the last parameter on the annotated method
+ *
+ * The return value can be a {@link Promise}, {@link java.util.concurrent.CompletionStage},
+ * {@link reactor.core.publisher.Flux}, {@link reactor.core.publisher.Mono}, or an object value.
+ * Other reactive types are not supported.
+ *
+ * If the return value is one of the reactive types listed above, it must match the return value type of the
+ * annotated method.
  */
 public class RateLimiterMethodInterceptor extends AbstractMethodInterceptor {
 
@@ -54,7 +78,7 @@ public class RateLimiterMethodInterceptor extends AbstractMethodInterceptor {
         RateLimiter annotation = invocation.getMethod().getAnnotation(RateLimiter.class);
         final RecoveryFunction<?> fallbackMethod = Optional
                 .ofNullable(createRecoveryFunction(invocation, annotation.fallbackMethod()))
-                .orElse(annotation.recovery().getDeclaredConstructor().newInstance());
+                .orElse(new DefaultRecoveryFunction<>());
         if (registry == null) {
             registry = RateLimiterRegistry.ofDefaults();
         }
@@ -89,16 +113,7 @@ public class RateLimiterMethodInterceptor extends AbstractMethodInterceptor {
             } else {
                 final CompletableFuture promise = new CompletableFuture<>();
                 Throwable t = new RequestNotPermitted(rateLimiter);
-                try {
-                    Object maybeFuture = fallbackMethod.apply(t);
-                    if (maybeFuture instanceof CompletionStage) {
-                        ((CompletionStage) maybeFuture).whenComplete((v1, t1) -> promise.complete(v1));
-                    } else {
-                        promise.complete(maybeFuture);
-                    }
-                } catch (Exception exception) {
-                    promise.completeExceptionally(exception);
-                }
+                completeFailedFuture(t, fallbackMethod, promise);
                 return promise;
             }
         } else {

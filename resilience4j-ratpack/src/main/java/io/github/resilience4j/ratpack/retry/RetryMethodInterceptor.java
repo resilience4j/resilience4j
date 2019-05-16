@@ -18,8 +18,10 @@ package io.github.resilience4j.ratpack.retry;
 import com.google.inject.Inject;
 import io.github.resilience4j.core.lang.Nullable;
 import io.github.resilience4j.ratpack.internal.AbstractMethodInterceptor;
+import io.github.resilience4j.ratpack.recovery.DefaultRecoveryFunction;
 import io.github.resilience4j.ratpack.recovery.RecoveryFunction;
 import io.github.resilience4j.retry.RetryRegistry;
+import io.github.resilience4j.retry.annotation.Retry;
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
 import ratpack.exec.Promise;
@@ -34,6 +36,28 @@ import java.util.concurrent.CompletionStage;
  * A {@link MethodInterceptor} to handle all methods annotated with {@link Retry}. It will
  * handle methods that return a Promise, CompletionStage, or value. It will execute the retry and
  * the fallback found in the annotation.
+ *
+ * Given a method like this:
+ * <pre><code>
+ *     {@literal @}RateLimiter(name = "myService")
+ *     public String fancyName(String name) {
+ *         return "Sir Captain " + name;
+ *     }
+ * </code></pre>
+ * each time the {@code #fancyName(String)} method is invoked, the method's execution will pass through a
+ * a {@link io.github.resilience4j.retry.Retry} according to the given config.
+ *
+ * The method parameter signature must match either:
+ *
+ * 1) The method parameter signature on the annotated method or
+ * 2) The method parameter signature with a matching exception type as the last parameter on the annotated method
+ *
+ * The return value can be a {@link Promise}, {@link java.util.concurrent.CompletionStage},
+ * {@link reactor.core.publisher.Flux}, {@link reactor.core.publisher.Mono}, or an object value.
+ * Other reactive types are not supported.
+ *
+ * If the return value is one of the reactive types listed above, it must match the return value type of the
+ * annotated method.
  */
 public class RetryMethodInterceptor extends AbstractMethodInterceptor {
 
@@ -52,7 +76,7 @@ public class RetryMethodInterceptor extends AbstractMethodInterceptor {
         io.github.resilience4j.retry.Retry retry = registry.retry(annotation.name());
         final RecoveryFunction<?> fallbackMethod = Optional
                 .ofNullable(createRecoveryFunction(invocation, annotation.fallbackMethod()))
-                .orElse(annotation.recovery().getDeclaredConstructor().newInstance());
+                .orElse(new DefaultRecoveryFunction<>());
         Class<?> returnType = invocation.getMethod().getReturnType();
         if (Promise.class.isAssignableFrom(returnType)) {
             Promise<?> result = (Promise<?>) proceed(invocation, retry, fallbackMethod);
@@ -108,16 +132,7 @@ public class RetryMethodInterceptor extends AbstractMethodInterceptor {
                     CompletableFuture temp = executeCompletionStage(invocation, next, context, recoveryFunction).toCompletableFuture();
                     promise.complete(temp.join());
                 } catch (Throwable t2) {
-                    try {
-                        Object maybeFuture = recoveryFunction.apply(t);
-                        if (maybeFuture instanceof CompletionStage) {
-                            ((CompletionStage) maybeFuture).whenComplete((v1, t1) -> promise.complete(v1));
-                        } else {
-                            promise.complete(maybeFuture);
-                        }
-                    } catch (Exception exception) {
-                        promise.completeExceptionally(exception);
-                    }
+                    completeFailedFuture(t2, recoveryFunction, promise);
                 }
             } else {
                 context.onSuccess();

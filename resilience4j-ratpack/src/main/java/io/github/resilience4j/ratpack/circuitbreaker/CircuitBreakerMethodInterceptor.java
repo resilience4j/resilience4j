@@ -18,8 +18,10 @@ package io.github.resilience4j.ratpack.circuitbreaker;
 import com.google.inject.Inject;
 import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.core.lang.Nullable;
 import io.github.resilience4j.ratpack.internal.AbstractMethodInterceptor;
+import io.github.resilience4j.ratpack.recovery.DefaultRecoveryFunction;
 import io.github.resilience4j.ratpack.recovery.RecoveryFunction;
 import io.github.resilience4j.reactor.circuitbreaker.operator.CircuitBreakerOperator;
 import org.aopalliance.intercept.MethodInterceptor;
@@ -36,6 +38,28 @@ import java.util.concurrent.CompletionStage;
  * A {@link MethodInterceptor} to handle all methods annotated with {@link CircuitBreaker}. It will
  * handle methods that return a Promise, Observable, Flowable, CompletionStage, or value. It will execute the circuit breaker and
  * the fallback found in the annotation.
+ *
+ * Given a method like this:
+ * <pre><code>
+ *     {@literal @}CircuitBreaker(name = "myService")
+ *     public String fancyName(String name) {
+ *         return "Sir Captain " + name;
+ *     }
+ * </code></pre>
+ * each time the {@code #fancyName(String)} method is invoked, the method's execution will pass through a
+ * a {@link io.github.resilience4j.circuitbreaker.CircuitBreaker} according to the given config.
+ *
+ * The fallbackMethod parameter signature must match either:
+ *
+ * 1) The method parameter signature on the annotated method or
+ * 2) The method parameter signature with a matching exception type as the last parameter on the annotated method
+ *
+ * The return value can be a {@link Promise}, {@link java.util.concurrent.CompletionStage},
+ * {@link reactor.core.publisher.Flux}, {@link reactor.core.publisher.Mono}, or an object value.
+ * Other reactive types are not supported.
+ *
+ * If the return value is one of the reactive types listed above, it must match the return value type of the
+ * annotated method.
  */
 public class CircuitBreakerMethodInterceptor extends AbstractMethodInterceptor {
 
@@ -50,7 +74,7 @@ public class CircuitBreakerMethodInterceptor extends AbstractMethodInterceptor {
         CircuitBreaker annotation = invocation.getMethod().getAnnotation(CircuitBreaker.class);
         final RecoveryFunction<?> fallbackMethod = Optional
                 .ofNullable(createRecoveryFunction(invocation, annotation.fallbackMethod()))
-                .orElse(annotation.recovery().getDeclaredConstructor().newInstance());
+                .orElse(new DefaultRecoveryFunction<>());
         if (registry == null) {
             registry = CircuitBreakerRegistry.ofDefaults();
         }
@@ -87,16 +111,7 @@ public class CircuitBreakerMethodInterceptor extends AbstractMethodInterceptor {
                         long durationInNanos = System.nanoTime() - start;
                         if (t != null) {
                             breaker.onError(durationInNanos, t);
-                            try {
-                                Object maybeFuture = fallbackMethod.apply((Throwable) t);
-                                if (maybeFuture instanceof CompletionStage) {
-                                    ((CompletionStage)maybeFuture).whenComplete((v1, t1) -> promise.complete(v1));
-                                } else {
-                                    promise.complete(maybeFuture);
-                                }
-                            } catch (Exception e) {
-                                promise.completeExceptionally(e);
-                            }
+                            completeFailedFuture(t, fallbackMethod, promise);
                         } else {
                             breaker.onSuccess(durationInNanos);
                             promise.complete(v);
@@ -105,16 +120,7 @@ public class CircuitBreakerMethodInterceptor extends AbstractMethodInterceptor {
                 }
             } else {
                 Throwable t = new CallNotPermittedException(breaker);
-                try {
-                    Object maybeFuture = fallbackMethod.apply(t);
-                    if (maybeFuture instanceof CompletionStage) {
-                        ((CompletionStage)maybeFuture).whenComplete((v1, t1) -> promise.complete(v1));
-                    } else {
-                        promise.complete(maybeFuture);
-                    }
-                } catch (Exception exception) {
-                    promise.completeExceptionally(exception);
-                }
+                completeFailedFuture(t, fallbackMethod, promise);
             }
             return promise;
         } else {

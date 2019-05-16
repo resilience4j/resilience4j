@@ -10,8 +10,24 @@ import org.aopalliance.intercept.MethodInvocation;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.StringJoiner;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
 
 public abstract class AbstractMethodInterceptor implements MethodInterceptor {
+
+    @SuppressWarnings("unchecked")
+    protected void completeFailedFuture(Throwable throwable, RecoveryFunction<?> fallbackMethod, CompletableFuture promise) {
+        try {
+            Object maybeFuture = fallbackMethod.apply(throwable);
+            if (maybeFuture instanceof CompletionStage) {
+                ((CompletionStage) maybeFuture).whenComplete((v1, t1) -> promise.complete(v1));
+            } else {
+                promise.complete(maybeFuture);
+            }
+        } catch (Exception e) {
+            promise.completeExceptionally(e);
+        }
+    }
 
     @Nullable
     protected RecoveryFunction<?> createRecoveryFunction(MethodInvocation invocation, String fallback) {

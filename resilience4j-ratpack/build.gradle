@@ -3,6 +3,7 @@ apply plugin: 'groovy'
 dependencies {
     implementation ( libraries.groovy )
     compileOnly ( libraries.ratpack )
+    compile project(':resilience4j-annotations')
     compile project(':resilience4j-bulkhead')
     compile project(':resilience4j-circuitbreaker')
     compile project(':resilience4j-ratelimiter')

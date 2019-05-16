@@ -19,8 +19,8 @@ package io.github.resilience4j.ratpack.ratelimiter
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry
 import io.github.resilience4j.ratelimiter.RateLimiterConfig
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry
+import io.github.resilience4j.ratelimiter.annotation.RateLimiter
 import io.github.resilience4j.ratpack.Resilience4jModule
-import io.github.resilience4j.ratpack.recovery.RecoveryFunction
 import ratpack.exec.Promise
 import ratpack.test.embed.EmbeddedApp
 import ratpack.test.http.TestHttpClient
@@ -189,61 +189,6 @@ class RateLimiterSpec extends Specification {
         'normal'  | 'test'
     }
 
-    def "test rate limit a method via annotation with recovery - #path"() {
-        given:
-        RateLimiterRegistry registry = RateLimiterRegistry.of(buildConfig())
-        app = ratpack {
-            bindings {
-                bindInstance(CircuitBreakerRegistry, CircuitBreakerRegistry.ofDefaults())
-                bindInstance(RateLimiterRegistry, registry)
-                bind(Something)
-                module(Resilience4jModule)
-            }
-            handlers {
-                get('promise') { Something something ->
-                    something.rateLimiterPromiseRecovery().then {
-                        render it
-                    }
-                }
-                get('flux') { Something something ->
-                    something.rateLimiterFluxRecovery().subscribe {
-                        render it
-                    }
-                }
-                get('mono') { Something something ->
-                    something.rateLimiterMonoRecovery().subscribe {
-                        render it
-                    }
-                }
-                get('stage') { Something something ->
-                    render something.rateLimiterStageRecovery().toCompletableFuture().get()
-                }
-                get('normal') { Something something ->
-                    render something.rateLimiterNormalRecovery()
-                }
-            }
-        }
-        client = testHttpClient(app)
-
-        when:
-        def actual = null
-        for (int i = 0; i <= 10; i++) {
-            actual = get(path)
-        }
-
-        then:
-        actual.body.text.contains('recovered')
-        actual.statusCode == 200
-
-        where:
-        path      | rateLimiterName
-        'promise' | 'test'
-        'flux'    | 'test'
-        'mono'    | 'test'
-        'stage'   | 'test'
-        'normal'  | 'test'
-    }
-
     def "test rate limit a method via annotation with fallback - #path"() {
         given:
         RateLimiterRegistry registry = RateLimiterRegistry.of(buildConfig())
@@ -363,7 +308,7 @@ class RateLimiterSpec extends Specification {
 
         @RateLimiter(name = "test")
         Promise<String> rateLimiterPromise() {
-            Promise.async {
+            Promise.<String>async {
                 it.success("rateLimiter promise")
             }
         }
@@ -390,7 +335,7 @@ class RateLimiterSpec extends Specification {
 
         @RateLimiter(name = "test")
         Promise<String> rateLimiterPromiseException() {
-            Promise.async {
+            Promise.<String>async {
                 it.error(new Exception("rateLimiter promise exception"))
             }
         }
@@ -412,33 +357,6 @@ class RateLimiterSpec extends Specification {
 
         @RateLimiter(name = "test")
         String rateLimiterNormalException() {
-            throw new Exception("rateLimiter normal exception")
-        }
-
-        @RateLimiter(name = "test", recovery = MyRecoveryFunction)
-        Promise<String> rateLimiterPromiseRecovery() {
-            Promise.async {
-                it.error(new Exception("rateLimiter promise exception"))
-            }
-        }
-
-        @RateLimiter(name = "test", recovery = MyRecoveryFunction)
-        Flux<Void> rateLimiterFluxRecovery() {
-            Flux.just("rateLimiter Flux").map({ throw new Exception("bad") } as Function<String, Void>)
-        }
-
-        @RateLimiter(name = "test", recovery = MyRecoveryFunction)
-        Mono<Void> rateLimiterMonoRecovery() {
-            Mono.just("rateLimiter Mono").map({ throw new Exception("bad") } as Function<String, Void>)
-        }
-
-        @RateLimiter(name = "test", recovery = MyRecoveryFunction)
-        CompletionStage<Void> rateLimiterStageRecovery() {
-            CompletableFuture.supplyAsync { throw new Exception('rateLimiter stage exception') }
-        }
-
-        @RateLimiter(name = "test", recovery = MyRecoveryFunction)
-        String rateLimiterNormalRecovery() {
             throw new Exception("rateLimiter normal exception")
         }
 
@@ -510,13 +428,6 @@ class RateLimiterSpec extends Specification {
         }
 
         String fallback(Throwable t) throws Exception {
-            "recovered"
-        }
-    }
-
-    static class MyRecoveryFunction implements RecoveryFunction<String> {
-        @Override
-        String apply(Throwable t) throws Exception {
             "recovered"
         }
     }
