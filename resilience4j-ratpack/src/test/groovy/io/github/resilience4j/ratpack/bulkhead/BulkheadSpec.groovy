@@ -681,8 +681,6 @@ class BulkheadSpec extends Specification {
             }
         }
 
-        // TODO these should be tested out
-
         String fallback(CountDownLatch latch, CountDownLatch blockLatch, Throwable throwable) {
             "recovered"
         }
