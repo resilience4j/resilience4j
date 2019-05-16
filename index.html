@@ -529,7 +529,7 @@ table.CodeRay td.code>pre{padding:0}
 <div class="details">
 <span id="author" class="author">Robert Winkler</span><br>
 <span id="revnumber">version 0.15.0-SNAPSHOT,</span>
-<span id="revdate">2019-05-12</span>
+<span id="revdate">2019-05-16</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">Table of Contents</div>
@@ -1068,7 +1068,7 @@ assertThat(result.get()).isEqualTo(<span class="string"><span class="delimiter">
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="java">CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults(<span class="string"><span class="delimiter">&quot;</span><span class="content">backendName</span><span class="delimiter">&quot;</span></span>);
 <span class="predefined-type">Observable</span>.fromCallable(backendService::doSomething)
-    .lift(CircuitBreakerOperator.of(circuitBreaker))</code></pre>
+    .compose(CircuitBreakerOperator.of(circuitBreaker))</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -1084,7 +1084,7 @@ assertThat(result.get()).isEqualTo(<span class="string"><span class="delimiter">
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="java">CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults(<span class="string"><span class="delimiter">&quot;</span><span class="content">backendName</span><span class="delimiter">&quot;</span></span>);
 Mono.fromCallable(backendService::doSomething)
-    .transform(CircuitBreakerOperator.of(circuitBreaker))</code></pre>
+    .compose(CircuitBreakerOperator.of(circuitBreaker))</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -1386,7 +1386,7 @@ New limit won&#8217;t affect current period permissions and will apply only from
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="java">RateLimiter rateLimiter = RateLimiter.ofDefaults(<span class="string"><span class="delimiter">&quot;</span><span class="content">backendName</span><span class="delimiter">&quot;</span></span>);
 <span class="predefined-type">Observable</span>.fromCallable(backendService::doSomething)
-    .lift(RateLimiterOperator.of(rateLimiter))</code></pre>
+    .compose(RateLimiterOperator.of(rateLimiter))</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -1402,7 +1402,7 @@ New limit won&#8217;t affect current period permissions and will apply only from
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="java">RateLimiter rateLimiter = RateLimiter.ofDefaults(<span class="string"><span class="delimiter">&quot;</span><span class="content">backendName</span><span class="delimiter">&quot;</span></span>);
 Mono.fromCallable(backendService::doSomething)
-    .transform(RateLimiterOperator.of(rateLimiter))</code></pre>
+    .compose(RateLimiterOperator.of(rateLimiter))</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -1602,7 +1602,7 @@ NOTE! New <code>maxWaitTime</code> duration won&#8217;t affect threads that are 
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="java">Bulkhead bulkhead = Bulkhead.ofDefaults(<span class="string"><span class="delimiter">&quot;</span><span class="content">backendName</span><span class="delimiter">&quot;</span></span>);
 <span class="predefined-type">Observable</span>.fromCallable(backendService::doSomething)
-          .lift(BulkheadOperator.of(bulkhead));</code></pre>
+          .compose(BulkheadOperator.of(bulkhead));</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -1618,7 +1618,7 @@ NOTE! New <code>maxWaitTime</code> duration won&#8217;t affect threads that are 
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="java">Bulkhead bulkhead = Bulkhead.ofDefaults(<span class="string"><span class="delimiter">&quot;</span><span class="content">backendName</span><span class="delimiter">&quot;</span></span>);
 Mono.fromCallable(backendService::doSomething)
-          .transform(BulkheadOperator.of(bulkhead));</code></pre>
+          .compose(BulkheadOperator.of(bulkhead));</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -1635,8 +1635,8 @@ Mono.fromCallable(backendService::doSomething)
 <pre class="CodeRay highlight"><code data-lang="java"><span class="comment">// Given</span>
 BulkheadConfig config = BulkheadConfig.custom().maxConcurrentCalls(<span class="integer">2</span>).build();
 Bulkhead bulkhead = Bulkhead.of(<span class="string"><span class="delimiter">&quot;</span><span class="content">test</span><span class="delimiter">&quot;</span></span>, config);
-bulkhead.tryObtainPermission();
-bulkhead.tryObtainPermission();
+bulkhead.tryAcquirePermission();
+bulkhead.tryAcquirePermission();
 
 <span class="comment">// When</span>
 CheckedRunnable checkedRunnable = Bulkhead.decorateCheckedRunnable(bulkhead, () -&gt; {<span class="keyword">throw</span> <span class="keyword">new</span> <span class="exception">RuntimeException</span>(<span class="string"><span class="delimiter">&quot;</span><span class="content">BAM!</span><span class="delimiter">&quot;</span></span>);});
@@ -5007,7 +5007,7 @@ TaggedRetryMetrics.ofRetryRegistry(retryRegistry).bindTo(meterRegistry);</code><
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="java"><span class="directive">static</span> &lt;T&gt; Supplier&lt;T&gt; decorateSupplier(CircuitBreaker circuitBreaker, Supplier&lt;T&gt; supplier){
     <span class="keyword">return</span> () -&gt; {
-        circuitBreaker.obtainPermission();
+        circuitBreaker.acquirePermission();
         <span class="type">long</span> start = <span class="predefined-type">System</span>.nanoTime();
         <span class="keyword">try</span> {
             T returnValue = supplier.get();
@@ -5025,7 +5025,7 @@ TaggedRetryMetrics.ofRetryRegistry(retryRegistry).bindTo(meterRegistry);</code><
 </div>
 <div class="paragraph">
 <p>The state of the CircuitBreaker changes from <code>CLOSED</code> to <code>OPEN</code> when the failure rate is above a (configurable) threshold.<br>
-Then, all access to the backend is blocked for a (configurable) time duration. <code>CircuitBreaker::obtainPermission()</code> throws a <code>CircuitBreakerOpenException</code>, if the CircuitBreaker is <code>OPEN</code>.</p>
+Then, all access to the backend is blocked for a (configurable) time duration. <code>CircuitBreaker::acquirePermission()</code> throws a <code>CircuitBreakerOpenException</code>, if the CircuitBreaker is <code>OPEN</code>.</p>
 </div>
 <div class="paragraph">
 <p>The CircuitBreaker uses a Ring Bit Buffer in the <code>CLOSED</code> state to store the success or failure statuses of the calls. A successful call is stored as a <code>0</code> bit and a failed call is stored as a <code>1</code> bit. The Ring Bit Buffer has a (configurable) fixed-size. The Ring Bit Buffer uses internally a <a href="https://docs.oracle.com/javase/8/docs/api/java/util/BitSet.html">BitSet</a> like data structure to store the bits which is saving memory compared to a boolean array. The BitSet uses a long[] array to store the bits. That means the BitSet only needs an array of 16 long (64-bit) values to store the status of 1024 calls.</p>
@@ -5142,7 +5142,7 @@ So you can easily restrict not only network calls but your local in-memory opera
 <div id="footer">
 <div id="footer-text">
 Version 0.15.0-SNAPSHOT<br>
-Last updated 2019-05-12 10:57:46 UTC
+Last updated 2019-05-16 12:36:27 UTC
 </div>
 </div>
 </body>
