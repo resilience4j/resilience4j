@@ -95,7 +95,7 @@ The following example shows how to decorate an Observable by using the custom Rx
 ----
 CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("backendName");
 Observable.fromCallable(backendService::doSomething)
-    .lift(CircuitBreakerOperator.of(circuitBreaker))
+    .compose(CircuitBreakerOperator.of(circuitBreaker))
 ----
 
 Other reactive types (Flowable, Single, Maybe and Completable) are also supported.
@@ -108,7 +108,7 @@ The following example shows how to decorate a Mono by using the custom Reactor o
 ----
 CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("backendName");
 Mono.fromCallable(backendService::doSomething)
-    .transform(CircuitBreakerOperator.of(circuitBreaker))
+    .compose(CircuitBreakerOperator.of(circuitBreaker))
 ----
 
 Flux is also supported.

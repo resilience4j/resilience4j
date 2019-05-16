@@ -25,6 +25,15 @@ package io.github.resilience4j.ratelimiter;
 public class RequestNotPermitted extends RuntimeException {
 
     /**
+     * The constructor with a RateLimiter.
+     *
+     * @param rateLimiter the RateLimiter.
+     */
+    public RequestNotPermitted(RateLimiter rateLimiter) {
+        super(String.format("RateLimiter '%s' does not permit further calls", rateLimiter.getName()));
+    }
+
+    /**
      * The constructor with a message.
      *
      * @param message The message.

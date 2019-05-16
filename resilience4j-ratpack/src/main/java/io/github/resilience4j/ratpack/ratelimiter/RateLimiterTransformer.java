@@ -61,7 +61,7 @@ public class RateLimiterTransformer<T> extends AbstractTransformer<T> {
         return down -> {
             RateLimiterConfig rateLimiterConfig = rateLimiter.getRateLimiterConfig();
             Duration timeoutDuration = rateLimiterConfig.getTimeoutDuration();
-            boolean permission = rateLimiter.getPermission(timeoutDuration);
+            boolean permission = rateLimiter.acquirePermission(timeoutDuration);
             if (Thread.interrupted()) {
                 throw new IllegalStateException("Thread was interrupted during permission wait");
             }

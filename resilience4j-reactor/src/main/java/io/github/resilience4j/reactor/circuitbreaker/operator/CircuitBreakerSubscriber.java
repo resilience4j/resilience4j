@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Julien Hoarau
+ * Copyright 2018 Julien Hoarau, Robert Winkler
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,10 +15,8 @@
  */
 package io.github.resilience4j.reactor.circuitbreaker.operator;
 
-import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.core.StopWatch;
-import io.github.resilience4j.core.lang.Nullable;
 import io.github.resilience4j.reactor.ResilienceBaseSubscriber;
 import org.reactivestreams.Subscriber;
 import reactor.core.CoreSubscriber;
@@ -35,8 +33,8 @@ import static java.util.Objects.requireNonNull;
 class CircuitBreakerSubscriber<T> extends ResilienceBaseSubscriber<T> {
 
     private final CircuitBreaker circuitBreaker;
-    @Nullable
-    private StopWatch stopWatch;
+
+    private final StopWatch stopWatch;
     private final boolean singleProducer;
 
     @SuppressWarnings("PMD")
@@ -44,70 +42,43 @@ class CircuitBreakerSubscriber<T> extends ResilienceBaseSubscriber<T> {
     private static final AtomicIntegerFieldUpdater<CircuitBreakerSubscriber> SUCCESS_SIGNALED =
             AtomicIntegerFieldUpdater.newUpdater(CircuitBreakerSubscriber.class, "successSignaled");
 
-    public CircuitBreakerSubscriber(CircuitBreaker circuitBreaker,
-                                    CoreSubscriber<? super T> actual,
-                                    boolean singleProducer) {
-        super(actual);
+    protected CircuitBreakerSubscriber(CircuitBreaker circuitBreaker,
+                                       CoreSubscriber<? super T> downstreamSubscriber,
+                                       boolean singleProducer) {
+        super(downstreamSubscriber);
         this.circuitBreaker = requireNonNull(circuitBreaker);
         this.singleProducer = singleProducer;
+        this.stopWatch = StopWatch.start();
     }
 
     @Override
     protected void hookOnNext(T value) {
         if (singleProducer && SUCCESS_SIGNALED.compareAndSet(this, 0, 1)) {
-            markSuccess();
+            circuitBreaker.onSuccess(stopWatch.stop().toNanos());
         }
 
-        if (notCancelled() && wasCallPermitted()) {
-            actual.onNext(value);
-        }
+        downstreamSubscriber.onNext(value);
     }
 
     @Override
     protected void hookOnComplete() {
         if (SUCCESS_SIGNALED.compareAndSet(this, 0, 1)) {
-            markSuccess();
+            circuitBreaker.onSuccess(stopWatch.stop().toNanos());
         }
 
-        if (wasCallPermitted()) {
-            actual.onComplete();
+        downstreamSubscriber.onComplete();
+    }
+
+    @Override
+    public void hookOnCancel() {
+        if (successSignaled == 0) {
+            circuitBreaker.releasePermission();
         }
     }
 
     @Override
-    protected void hookOnError(Throwable t) {
-        requireNonNull(t);
-
-        markFailure(t);
-        if (wasCallPermitted()) {
-            actual.onError(t);
-        }
-    }
-
-    @Override
-    protected void hookOnPermitAcquired() {
-        stopWatch = StopWatch.start();
-    }
-
-    @Override
-    protected boolean obtainPermission() {
-        return circuitBreaker.tryObtainPermission();
-    }
-
-    @Override
-    protected Throwable getThrowable() {
-        return new CallNotPermittedException(circuitBreaker);
-    }
-
-    private void markFailure(Throwable e) {
-        if (wasCallPermitted()) {
-            circuitBreaker.onError(stopWatch != null ? stopWatch.stop().toNanos() : 0, e);
-        }
-    }
-
-    private void markSuccess() {
-        if (wasCallPermitted()) {
-            circuitBreaker.onSuccess(stopWatch != null ? stopWatch.stop().toNanos() : 0);
-        }
+    protected void hookOnError(Throwable e) {
+        circuitBreaker.onError(stopWatch.stop().toNanos(), e);
+        downstreamSubscriber.onError(e);
     }
 }

@@ -2,32 +2,38 @@ package io.github.resilience4j.circuitbreaker.operator;
 
 import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import io.reactivex.Observable;
-import io.reactivex.Observer;
-import io.reactivex.disposables.Disposable;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.util.concurrent.TimeUnit;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
 
 /**
- * Unit test for {@link CircuitBreakerObserver}.
+ * Unit test for {@link ObserverCircuitBreaker}.
  */
 @SuppressWarnings("unchecked")
-public class CircuitBreakerObserverTest extends CircuitBreakerAssertions {
+public class ObserverCircuitBreakerTest extends BaseCircuitBreakerTest {
     @Test
-    public void shouldEmitAllEvents() {
-        Observable.fromArray("Event 1", "Event 2")
+    public void shouldSubscribeToObservableJust() {
+        given(circuitBreaker.tryAcquirePermission()).willReturn(true);
+
+        Observable.just("Event 1", "Event 2")
             .compose(CircuitBreakerOperator.of(circuitBreaker))
             .test()
             .assertResult("Event 1", "Event 2");
 
-        assertSingleSuccessfulCall();
+        verify(circuitBreaker, times(1)).onSuccess(anyLong());
+        verify(circuitBreaker, never()).onError(anyLong(), any(Throwable.class));
     }
 
     @Test
     public void shouldPropagateError() {
+        given(circuitBreaker.tryAcquirePermission()).willReturn(true);
+
         Observable.error(new IOException("BAM!"))
             .compose(CircuitBreakerOperator.of(circuitBreaker))
             .test()
@@ -35,88 +41,37 @@ public class CircuitBreakerObserverTest extends CircuitBreakerAssertions {
             .assertError(IOException.class)
             .assertNotComplete();
 
-        assertSingleFailedCall();
+        verify(circuitBreaker, times(1)).onError(anyLong(), any(IOException.class));
+        verify(circuitBreaker, never()).onSuccess(anyLong());
     }
 
     @Test
     public void shouldEmitErrorWithCallNotPermittedException() {
-        circuitBreaker.transitionToOpenState();
+        given(circuitBreaker.tryAcquirePermission()).willReturn(false);
 
-        Observable.fromArray("Event 1", "Event 2")
+        Observable.just("Event 1", "Event 2")
             .compose(CircuitBreakerOperator.of(circuitBreaker))
             .test()
             .assertSubscribed()
             .assertError(CallNotPermittedException.class)
             .assertNotComplete();
 
-        assertNoRegisteredCall();
+        verify(circuitBreaker, never()).onSuccess(anyLong());
+        verify(circuitBreaker, never()).onError(anyLong(), any(Throwable.class));
     }
 
     @Test
-    public void shouldHonorDisposedWhenCallingOnNext() throws Exception {
-        // Given
-        Disposable disposable = mock(Disposable.class);
-        Observer childObserver = mock(Observer.class);
-        Observer decoratedObserver = CircuitBreakerOperator.of(circuitBreaker).apply(childObserver);
-        decoratedObserver.onSubscribe(disposable);
+    public void shouldReleasePermissionOnCancel() {
+        given(circuitBreaker.tryAcquirePermission()).willReturn(true);
 
-        // When
-        decoratedObserver.onNext("one");
-        ((Disposable) decoratedObserver).dispose();
-        decoratedObserver.onNext("two");
+        Observable.just(1)
+                .delay(1, TimeUnit.DAYS)
+                .compose(CircuitBreakerOperator.of(circuitBreaker))
+                .test()
+                .cancel();
 
-        // Then
-        verify(childObserver, times(1)).onNext("one");
-        assertNoRegisteredCall();
-    }
-
-    @Test
-    public void shouldHonorDisposedWhenCallingOnComplete() throws Exception {
-        // Given
-        Disposable disposable = mock(Disposable.class);
-        Observer childObserver = mock(Observer.class);
-        Observer decoratedObserver = CircuitBreakerOperator.of(circuitBreaker).apply(childObserver);
-        decoratedObserver.onSubscribe(disposable);
-
-        // When
-        ((Disposable) decoratedObserver).dispose();
-        decoratedObserver.onComplete();
-
-        // Then
-        verify(childObserver, never()).onComplete();
-        assertSingleSuccessfulCall();
-    }
-
-    @Test
-    public void shouldHonorDisposedWhenCallingOnError() throws Exception {
-        // Given
-        Disposable disposable = mock(Disposable.class);
-        Observer childObserver = mock(Observer.class);
-        Observer decoratedObserver = CircuitBreakerOperator.of(circuitBreaker).apply(childObserver);
-        decoratedObserver.onSubscribe(disposable);
-
-        // When
-        ((Disposable) decoratedObserver).dispose();
-        decoratedObserver.onError(new IllegalStateException());
-
-        // Then
-        verify(childObserver, never()).onError(any());
-        assertSingleFailedCall();
-    }
-
-    @Test
-    public void shouldNotAffectCircuitBreakerWhenWasDisposedAfterNotPermittedSubscribe() throws Exception {
-        // Given
-        Disposable disposable = mock(Disposable.class);
-        Observer childObserver = mock(Observer.class);
-        Observer decoratedObserver = CircuitBreakerOperator.of(circuitBreaker).apply(childObserver);
-        circuitBreaker.transitionToOpenState();
-        decoratedObserver.onSubscribe(disposable);
-
-        // When
-        ((Disposable) decoratedObserver).dispose();
-
-        // Then
-        assertNoRegisteredCall();
+        verify(circuitBreaker, times(1)).releasePermission();
+        verify(circuitBreaker, never()).onError(anyLong(), any(Throwable.class));
+        verify(circuitBreaker, never()).onSuccess(anyLong());
     }
 }

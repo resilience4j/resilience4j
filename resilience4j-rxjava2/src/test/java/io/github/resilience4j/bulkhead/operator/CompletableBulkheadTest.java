@@ -9,13 +9,14 @@ import org.mockito.Mockito;
 
 import java.io.IOException;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.*;
 
 /**
  * Unit test for {@link CompletableBulkhead} using {@link BulkheadOperator}.
  */
-@SuppressWarnings("unchecked")
-public class BulkheadCompletableObserverTest {
+
+public class CompletableBulkheadTest {
 
     private Bulkhead bulkhead;
 
@@ -26,17 +27,21 @@ public class BulkheadCompletableObserverTest {
 
     @Test
     public void shouldComplete() {
+        given(bulkhead.tryAcquirePermission()).willReturn(true);
+
         Completable.complete()
             .compose(BulkheadOperator.of(bulkhead))
             .test()
             .assertSubscribed()
             .assertComplete();
 
-        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
+        verify(bulkhead, times(1)).onComplete();
     }
 
     @Test
     public void shouldPropagateError() {
+        given(bulkhead.tryAcquirePermission()).willReturn(true);
+
         Completable.error(new IOException("BAM!"))
             .compose(BulkheadOperator.of(bulkhead))
             .test()
@@ -44,12 +49,12 @@ public class BulkheadCompletableObserverTest {
             .assertError(IOException.class)
             .assertNotComplete();
 
-        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
+        verify(bulkhead, times(1)).onComplete();
     }
 
     @Test
     public void shouldEmitErrorWithBulkheadFullException() {
-        bulkhead.tryAcquirePermission();
+        given(bulkhead.tryAcquirePermission()).willReturn(false);
 
         Completable.complete()
             .compose(BulkheadOperator.of(bulkhead))
@@ -58,6 +63,6 @@ public class BulkheadCompletableObserverTest {
             .assertError(BulkheadFullException.class)
             .assertNotComplete();
 
-        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(0);
+        verify(bulkhead, never()).onComplete();
     }
 }

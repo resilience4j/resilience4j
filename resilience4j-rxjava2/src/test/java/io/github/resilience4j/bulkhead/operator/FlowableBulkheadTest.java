@@ -9,13 +9,14 @@ import org.mockito.Mockito;
 
 import java.io.IOException;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.*;
 
 /**
  * Unit test for {@link FlowableBulkhead} using {@link BulkheadOperator}.
  */
-@SuppressWarnings("unchecked")
-public class BulkheadSubscriberTest {
+
+public class FlowableBulkheadTest {
 
     private Bulkhead bulkhead;
 
@@ -26,16 +27,20 @@ public class BulkheadSubscriberTest {
 
     @Test
     public void shouldEmitAllEvents() {
+        given(bulkhead.tryAcquirePermission()).willReturn(true);
+
         Flowable.fromArray("Event 1", "Event 2")
             .compose(BulkheadOperator.of(bulkhead))
             .test()
             .assertResult("Event 1", "Event 2");
 
-        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
+        verify(bulkhead, times(1)).onComplete();
     }
 
     @Test
     public void shouldPropagateError() {
+        given(bulkhead.tryAcquirePermission()).willReturn(true);
+
         Flowable.error(new IOException("BAM!"))
             .compose(BulkheadOperator.of(bulkhead))
             .test()
@@ -43,12 +48,12 @@ public class BulkheadSubscriberTest {
             .assertError(IOException.class)
             .assertNotComplete();
 
-        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
+        verify(bulkhead, times(1)).onComplete();
     }
 
     @Test
     public void shouldEmitErrorWithBulkheadFullException() {
-        bulkhead.tryAcquirePermission();
+        given(bulkhead.tryAcquirePermission()).willReturn(false);
 
         Flowable.fromArray("Event 1", "Event 2")
             .compose(BulkheadOperator.of(bulkhead))
@@ -57,6 +62,6 @@ public class BulkheadSubscriberTest {
             .assertError(BulkheadFullException.class)
             .assertNotComplete();
 
-        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(0);
+        verify(bulkhead, never()).onComplete();
     }
 }

@@ -15,8 +15,11 @@
  */
 package io.github.resilience4j.reactor.ratelimiter.operator;
 
+import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RequestNotPermitted;
+import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mockito;
 import reactor.core.publisher.Flux;
 import reactor.core.scheduler.Schedulers;
 import reactor.test.StepVerifier;
@@ -24,71 +27,63 @@ import reactor.test.StepVerifier;
 import java.io.IOException;
 import java.time.Duration;
 
-public class FluxRateLimiterTest extends RateLimiterAssertions {
+import static org.mockito.BDDMockito.given;
+
+public class FluxRateLimiterTest {
+
+    private RateLimiter rateLimiter;
+
+    @Before
+    public void setUp(){
+        rateLimiter = Mockito.mock(RateLimiter.class);
+    }
 
     @Test
     public void shouldEmitEvent() {
+        given(rateLimiter.acquirePermission(Duration.ZERO)).willReturn(true);
+
         StepVerifier.create(
                 Flux.just("Event 1", "Event 2")
-                        .transform(RateLimiterOperator.of(rateLimiter)))
+                        .compose(RateLimiterOperator.of(rateLimiter)))
                 .expectNext("Event 1")
                 .expectNext("Event 2")
                 .verifyComplete();
-
-        assertUsedPermits(2);
     }
 
     @Test
     public void shouldPropagateError() {
+        given(rateLimiter.acquirePermission(Duration.ZERO)).willReturn(true);
+
         StepVerifier.create(
                 Flux.error(new IOException("BAM!"))
-                        .transform(RateLimiterOperator.of(rateLimiter)))
+                        .compose(RateLimiterOperator.of(rateLimiter)))
                 .expectSubscription()
                 .expectError(IOException.class)
                 .verify(Duration.ofSeconds(1));
 
-        assertSinglePermitUsed();
     }
 
     @Test
     public void shouldEmitRequestNotPermittedException() {
-        saturateRateLimiter();
+        given(rateLimiter.acquirePermission(Duration.ZERO)).willReturn(false);
 
         StepVerifier.create(
                 Flux.just("Event")
-                        .transform(RateLimiterOperator.of(rateLimiter, Schedulers.immediate())))
+                        .compose(RateLimiterOperator.of(rateLimiter, Schedulers.immediate())))
                 .expectSubscription()
                 .expectError(RequestNotPermitted.class)
                 .verify(Duration.ofSeconds(1));
-
-        assertNoPermitLeft();
     }
 
     @Test
     public void shouldEmitRequestNotPermittedExceptionEvenWhenErrorDuringSubscribe() {
-        saturateRateLimiter();
+        given(rateLimiter.acquirePermission(Duration.ZERO)).willReturn(false);
 
         StepVerifier.create(
                 Flux.error(new IOException("BAM!"))
-                        .transform(RateLimiterOperator.of(rateLimiter)))
+                        .compose(RateLimiterOperator.of(rateLimiter)))
                 .expectSubscription()
                 .expectError(RequestNotPermitted.class)
                 .verify(Duration.ofSeconds(1));
-
-        assertNoPermitLeft();
-    }
-
-    @Test
-    public void shouldEmitRequestNotPermittedExceptionEvenWhenErrorNotOnSubscribe() {
-        saturateRateLimiter();
-
-        StepVerifier.create(
-                Flux.error(new IOException("BAM!"), true)
-                        .transform(RateLimiterOperator.of(rateLimiter)))
-                .expectSubscription()
-                .expectError(RequestNotPermitted.class)
-                .verify(Duration.ofSeconds(1));
-
-        assertNoPermitLeft();
     }
 }

@@ -16,16 +16,13 @@
  */
 package io.github.resilience4j.feign;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-
-import org.junit.Test;
-
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.ratelimiter.RateLimiter;
+import org.junit.Test;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.*;
 
 public class FeignDecoratorsTest {
 
@@ -69,6 +66,6 @@ public class FeignDecoratorsTest {
         assertThat(result)
                 .describedAs("Returned result is correct")
                 .isEqualTo("test01");
-        verify(rateLimiter, times(1)).getPermission(any());
+        verify(rateLimiter, times(1)).acquirePermission(any());
     }
 }

@@ -13,61 +13,59 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.resilience4j.bulkhead.operator;
+package io.github.resilience4j.ratelimiter.operator;
 
 import io.github.resilience4j.ResilienceBaseSubscriber;
-import io.github.resilience4j.bulkhead.Bulkhead;
-import io.github.resilience4j.bulkhead.BulkheadFullException;
+import io.github.resilience4j.ratelimiter.RateLimiter;
+import io.github.resilience4j.ratelimiter.RequestNotPermitted;
 import io.reactivex.Flowable;
 import io.reactivex.internal.subscriptions.EmptySubscription;
 import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscriber;
 
+import java.time.Duration;
 import java.util.Objects;
 
 import static java.util.Objects.requireNonNull;
 
-class FlowableBulkhead<T> extends Flowable<T> {
+class FlowableRateLimiter<T> extends Flowable<T> {
 
-    private final Bulkhead bulkhead;
+    private final RateLimiter rateLimiter;
     private final Publisher<T> upstream;
 
-    FlowableBulkhead(Publisher<T> upstream, Bulkhead bulkhead) {
-        this.bulkhead = requireNonNull(bulkhead);
+    FlowableRateLimiter(Publisher<T> upstream, RateLimiter rateLimiter) {
+        this.rateLimiter = requireNonNull(rateLimiter);
         this.upstream = Objects.requireNonNull(upstream, "source is null");
     }
 
     @Override
     protected void subscribeActual(Subscriber<? super T> downstream) {
-        if(bulkhead.tryAcquirePermission()){
-            upstream.subscribe(new BulkheadSubscriber(downstream));
+        if(rateLimiter.acquirePermission(Duration.ZERO)){
+            upstream.subscribe(new RateLimiterSubscriber(downstream));
         }else{
             downstream.onSubscribe(EmptySubscription.INSTANCE);
-            downstream.onError(new BulkheadFullException(bulkhead.getName()));
+            downstream.onError(new RequestNotPermitted(rateLimiter));
         }
     }
 
-    class BulkheadSubscriber extends ResilienceBaseSubscriber<T> {
+    class RateLimiterSubscriber extends ResilienceBaseSubscriber<T> {
 
-        BulkheadSubscriber(Subscriber<? super T> downstreamSubscriber) {
+        RateLimiterSubscriber(Subscriber<? super T> downstreamSubscriber) {
             super(downstreamSubscriber);
         }
 
         @Override
         public void hookOnError(Throwable t) {
-            bulkhead.onComplete();
             downstreamSubscriber.onError(t);
         }
 
         @Override
         public void hookOnComplete() {
-            bulkhead.onComplete();
             downstreamSubscriber.onComplete();
         }
 
         @Override
         public void hookOnCancel() {
-            bulkhead.releasePermission();
         }
 
         @Override

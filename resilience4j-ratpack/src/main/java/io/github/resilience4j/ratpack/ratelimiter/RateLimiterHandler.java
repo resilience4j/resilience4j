@@ -39,7 +39,7 @@ public class RateLimiterHandler implements Handler {
     @Override
     public void handle(Context ctx) throws Exception {
         Duration timeoutDuration = rateLimiter.getRateLimiterConfig().getTimeoutDuration();
-        boolean permission = rateLimiter.getPermission(timeoutDuration);
+        boolean permission = rateLimiter.acquirePermission(timeoutDuration);
         if (Thread.interrupted()) {
             throw new IllegalStateException("Thread was interrupted during permission wait");
         }

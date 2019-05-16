@@ -16,29 +16,21 @@
 package io.github.resilience4j.reactor.circuitbreaker.operator;
 
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
-
-import static org.assertj.core.api.Assertions.assertThat;
+import io.github.resilience4j.test.HelloWorldService;
+import org.junit.Before;
+import org.mockito.Mockito;
 
 /**
  * Helper class to test and assert circuit breakers.
  */
-class CircuitBreakerAssertions {
+class BaseCircuitBreakerTest {
 
-    protected void assertSingleSuccessfulCall(CircuitBreaker circuitBreaker) {
-        assertThat(circuitBreaker.getMetrics().getNumberOfBufferedCalls()).isEqualTo(1);
-        assertThat(circuitBreaker.getMetrics().getNumberOfSuccessfulCalls()).isEqualTo(1);
-        assertThat(circuitBreaker.getMetrics().getNumberOfFailedCalls()).isEqualTo(0);
-    }
+    CircuitBreaker circuitBreaker;
+    HelloWorldService helloWorldService;
 
-    protected void assertSingleFailedCall(CircuitBreaker circuitBreaker) {
-        assertThat(circuitBreaker.getMetrics().getNumberOfBufferedCalls()).isEqualTo(1);
-        assertThat(circuitBreaker.getMetrics().getNumberOfSuccessfulCalls()).isEqualTo(0);
-        assertThat(circuitBreaker.getMetrics().getNumberOfFailedCalls()).isEqualTo(1);
-    }
-
-    protected void assertNoRegisteredCall(CircuitBreaker circuitBreaker) {
-        assertThat(circuitBreaker.getMetrics().getNumberOfBufferedCalls()).isEqualTo(0);
-        assertThat(circuitBreaker.getMetrics().getNumberOfSuccessfulCalls()).isEqualTo(0);
-        assertThat(circuitBreaker.getMetrics().getNumberOfFailedCalls()).isEqualTo(0);
+    @Before
+    public void setUp(){
+        circuitBreaker = Mockito.mock(CircuitBreaker.class);
+        circuitBreaker = Mockito.mock(CircuitBreaker.class);
     }
 }

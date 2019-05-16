@@ -72,19 +72,19 @@ public class RxJava2RateLimiterAspectExt implements RateLimiterAspectExt {
 	private Object executeRxJava2Aspect(RateLimiterOperator rateLimiterOperator, Object returnValue) {
 		if (returnValue instanceof ObservableSource) {
 			Observable<?> observable = (Observable) returnValue;
-			return observable.lift(rateLimiterOperator);
+			return observable.compose(rateLimiterOperator);
 		} else if (returnValue instanceof SingleSource) {
 			Single<?> single = (Single) returnValue;
-			return single.lift(rateLimiterOperator);
+			return single.compose(rateLimiterOperator);
 		} else if (returnValue instanceof CompletableSource) {
 			Completable completable = (Completable) returnValue;
-			return completable.lift(rateLimiterOperator);
+			return completable.compose(rateLimiterOperator);
 		} else if (returnValue instanceof MaybeSource) {
 			Maybe<?> maybe = (Maybe) returnValue;
-			return maybe.lift(rateLimiterOperator);
+			return maybe.compose(rateLimiterOperator);
 		} else if (returnValue instanceof Flowable) {
 			Flowable<?> flowable = (Flowable) returnValue;
-			return flowable.lift(rateLimiterOperator);
+			return flowable.compose(rateLimiterOperator);
 		} else {
 			logger.error("Unsupported type for Rate limiter RxJava2 {}", returnValue.getClass().getTypeName());
 			throw new IllegalArgumentException("Not Supported type for the Rate limiter in RxJava2 :" + returnValue.getClass().getName());

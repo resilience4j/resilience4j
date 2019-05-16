@@ -1,91 +1,61 @@
 package io.github.resilience4j.ratelimiter.operator;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-
-import java.io.IOException;
-
+import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RequestNotPermitted;
 import io.reactivex.Completable;
-import io.reactivex.CompletableObserver;
-import io.reactivex.disposables.Disposable;
+import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mockito;
+
+import java.io.IOException;
+import java.time.Duration;
+
+import static org.mockito.BDDMockito.given;
 
 /**
- * Unit test for {@link RateLimiterCompletableObserver}.
+ * Unit test for {@link CompletableRateLimiter}.
  */
 @SuppressWarnings("unchecked")
-public class RateLimiterCompletableObserverTest extends RateLimiterAssertions {
+public class CompletableRateLimiterTest {
+
+    private RateLimiter rateLimiter;
+
+    @Before
+    public void setUp(){
+        rateLimiter = Mockito.mock(RateLimiter.class);
+    }
 
     @Test
     public void shouldEmitCompleted() {
+        given(rateLimiter.acquirePermission(Duration.ZERO)).willReturn(true);
+
         Completable.complete()
-            .lift(RateLimiterOperator.of(rateLimiter))
+            .compose(RateLimiterOperator.of(rateLimiter))
             .test()
             .assertComplete();
-
-        assertSinglePermitUsed();
     }
 
     @Test
     public void shouldPropagateError() {
+        given(rateLimiter.acquirePermission(Duration.ZERO)).willReturn(true);
+
         Completable.error(new IOException("BAM!"))
-            .lift(RateLimiterOperator.of(rateLimiter))
+            .compose(RateLimiterOperator.of(rateLimiter))
             .test()
             .assertSubscribed()
             .assertError(IOException.class)
             .assertNotComplete();
-
-        assertSinglePermitUsed();
     }
 
     @Test
     public void shouldEmitErrorWithRequestNotPermittedException() {
-        saturateRateLimiter();
+        given(rateLimiter.acquirePermission(Duration.ZERO)).willReturn(false);
 
         Completable.complete()
-            .lift(RateLimiterOperator.of(rateLimiter))
+            .compose(RateLimiterOperator.of(rateLimiter))
             .test()
             .assertSubscribed()
             .assertError(RequestNotPermitted.class)
             .assertNotComplete();
-
-        assertNoPermitLeft();
-    }
-
-    @Test
-    public void shouldHonorDisposedWhenCallingOnComplete() throws Exception {
-        // Given
-        Disposable disposable = mock(Disposable.class);
-        CompletableObserver childObserver = mock(CompletableObserver.class);
-        CompletableObserver decoratedObserver = RateLimiterOperator.of(rateLimiter).apply(childObserver);
-        decoratedObserver.onSubscribe(disposable);
-
-        // When
-        ((Disposable) decoratedObserver).dispose();
-        decoratedObserver.onComplete();
-
-        // Then
-        verify(childObserver, never()).onComplete();
-        assertSinglePermitUsed();
-    }
-
-    @Test
-    public void shouldHonorDisposedWhenCallingOnError() throws Exception {
-        // Given
-        Disposable disposable = mock(Disposable.class);
-        CompletableObserver childObserver = mock(CompletableObserver.class);
-        CompletableObserver decoratedObserver = RateLimiterOperator.of(rateLimiter).apply(childObserver);
-        decoratedObserver.onSubscribe(disposable);
-
-        // When
-        ((Disposable) decoratedObserver).dispose();
-        decoratedObserver.onError(new IllegalStateException());
-
-        // Then
-        verify(childObserver, never()).onError(any());
-        assertSinglePermitUsed();
     }
 }

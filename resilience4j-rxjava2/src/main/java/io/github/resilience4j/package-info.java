@@ -18,7 +18,7 @@
  */
 @NonNullApi
 @NonNullFields
-package io.github.resilience4j.reactor;
+package io.github.resilience4j;
 
 import io.github.resilience4j.core.lang.NonNullApi;
 import io.github.resilience4j.core.lang.NonNullFields;

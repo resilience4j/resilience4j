@@ -65,19 +65,19 @@ public class RxJava2CircuitBreakerAspectExt implements CircuitBreakerAspectExt {
 	private Object executeRxJava2Aspect(CircuitBreakerOperator circuitBreakerOperator, Object returnValue, String methodName) {
 		if (returnValue instanceof ObservableSource) {
 			Observable<?> observable = (Observable) returnValue;
-			return observable.lift(circuitBreakerOperator);
+			return observable.compose(circuitBreakerOperator);
 		} else if (returnValue instanceof SingleSource) {
 			Single<?> single = (Single) returnValue;
-			return single.lift(circuitBreakerOperator);
+			return single.compose(circuitBreakerOperator);
 		} else if (returnValue instanceof CompletableSource) {
 			Completable completable = (Completable) returnValue;
-			return completable.lift(circuitBreakerOperator);
+			return completable.compose(circuitBreakerOperator);
 		} else if (returnValue instanceof MaybeSource) {
 			Maybe<?> maybe = (Maybe) returnValue;
-			return maybe.lift(circuitBreakerOperator);
+			return maybe.compose(circuitBreakerOperator);
 		} else if (returnValue instanceof Flowable) {
 			Flowable<?> flowable = (Flowable) returnValue;
-			return flowable.lift(circuitBreakerOperator);
+			return flowable.compose(circuitBreakerOperator);
 		} else {
 			logger.error("Unsupported type for RxJava2 circuit breaker return type {} for method {}", returnValue.getClass().getTypeName(), methodName);
 			throw new IllegalArgumentException("Not Supported type for the circuit breaker in RxJava2:" + returnValue.getClass().getName());

@@ -86,7 +86,7 @@ public class BulkheadEventPublisherTest {
                 .onCallRejected(event ->
                         logger.info(event.getEventType().toString()));
 
-        bulkhead.tryObtainPermission();
+        bulkhead.tryAcquirePermission();
 
         Try.ofSupplier(Bulkhead.decorateSupplier(bulkhead,helloWorldService::returnHelloWorld));
 

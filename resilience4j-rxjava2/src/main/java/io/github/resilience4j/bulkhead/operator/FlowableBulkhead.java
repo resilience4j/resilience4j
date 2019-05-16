@@ -13,12 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.resilience4j.circuitbreaker.operator;
+package io.github.resilience4j.bulkhead.operator;
 
 import io.github.resilience4j.ResilienceBaseSubscriber;
-import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
-import io.github.resilience4j.circuitbreaker.CircuitBreaker;
-import io.github.resilience4j.core.StopWatch;
+import io.github.resilience4j.bulkhead.Bulkhead;
+import io.github.resilience4j.bulkhead.BulkheadFullException;
 import io.reactivex.Flowable;
 import io.reactivex.internal.subscriptions.EmptySubscription;
 import org.reactivestreams.Publisher;
@@ -28,50 +27,47 @@ import java.util.Objects;
 
 import static java.util.Objects.requireNonNull;
 
-class FlowableCircuitBreaker<T> extends Flowable<T> {
+class FlowableBulkhead<T> extends Flowable<T> {
 
-    private final CircuitBreaker circuitBreaker;
+    private final Bulkhead bulkhead;
     private final Publisher<T> upstream;
 
-    FlowableCircuitBreaker(Publisher<T> upstream, CircuitBreaker circuitBreaker) {
-        this.circuitBreaker = requireNonNull(circuitBreaker);
+    FlowableBulkhead(Publisher<T> upstream, Bulkhead bulkhead) {
+        this.bulkhead = requireNonNull(bulkhead);
         this.upstream = Objects.requireNonNull(upstream, "source is null");
     }
 
     @Override
     protected void subscribeActual(Subscriber<? super T> downstream) {
-        if(circuitBreaker.tryAcquirePermission()){
-            upstream.subscribe(new CircuitBreakerSubscriber(downstream));
+        if(bulkhead.tryAcquirePermission()){
+            upstream.subscribe(new BulkheadSubscriber(downstream));
         }else{
             downstream.onSubscribe(EmptySubscription.INSTANCE);
-            downstream.onError(new CallNotPermittedException(circuitBreaker.getName()));
+            downstream.onError(new BulkheadFullException(bulkhead));
         }
     }
 
-    class CircuitBreakerSubscriber extends ResilienceBaseSubscriber<T> {
+    class BulkheadSubscriber extends ResilienceBaseSubscriber<T> {
 
-        private final StopWatch stopWatch;
-
-        CircuitBreakerSubscriber(Subscriber<? super T> downstreamSubscriber) {
+        BulkheadSubscriber(Subscriber<? super T> downstreamSubscriber) {
             super(downstreamSubscriber);
-            stopWatch = StopWatch.start();
         }
 
         @Override
         public void hookOnError(Throwable t) {
-            circuitBreaker.onError(stopWatch.stop().toNanos(), t);
+            bulkhead.onComplete();
             downstreamSubscriber.onError(t);
         }
 
         @Override
         public void hookOnComplete() {
-            circuitBreaker.onSuccess(stopWatch.stop().toNanos());
+            bulkhead.onComplete();
             downstreamSubscriber.onComplete();
         }
 
         @Override
         public void hookOnCancel() {
-            circuitBreaker.releasePermission();
+            bulkhead.releasePermission();
         }
 
         @Override

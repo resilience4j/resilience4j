@@ -132,7 +132,12 @@ public class SemaphoreBasedRateLimiter implements RateLimiter {
      * {@inheritDoc}
      */
     @Override
-    public boolean getPermission(final Duration timeoutDuration) {
+    public boolean getPermission(Duration timeoutDuration) {
+        return acquirePermission(timeoutDuration);
+    }
+
+    @Override
+    public boolean acquirePermission(Duration timeoutDuration) {
         try {
             boolean success = semaphore.tryAcquire(timeoutDuration.toNanos(), TimeUnit.NANOSECONDS);
             publishRateLimiterEvent(success);

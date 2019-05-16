@@ -16,99 +16,94 @@
 package io.github.resilience4j.reactor.bulkhead.operator;
 
 import io.github.resilience4j.bulkhead.Bulkhead;
-import io.github.resilience4j.bulkhead.BulkheadConfig;
 import io.github.resilience4j.bulkhead.BulkheadFullException;
+import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mockito;
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
 import reactor.test.StepVerifier;
 
 import java.io.IOException;
 import java.time.Duration;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.*;
 
 public class MonoBulkheadTest {
 
-    private Bulkhead bulkhead = Bulkhead
-            .of("test", BulkheadConfig.custom().maxConcurrentCalls(1).maxWaitTime(0).build());
+    private Bulkhead bulkhead;
+
+    @Before
+    public void setUp(){
+        bulkhead = Mockito.mock(Bulkhead.class);
+    }
 
     @Test
     public void shouldEmitEvent() {
+        given(bulkhead.tryAcquirePermission()).willReturn(true);
+
         StepVerifier.create(
                 Mono.just("Event")
-                        .transform(BulkheadOperator.of(bulkhead)))
+                        .compose(BulkheadOperator.of(bulkhead)))
                 .expectNext("Event")
                 .verifyComplete();
 
-        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
+        verify(bulkhead, times(1)).onComplete();
     }
 
     @Test
     public void shouldPropagateError() {
+        given(bulkhead.tryAcquirePermission()).willReturn(true);
+
         StepVerifier.create(
                 Mono.error(new IOException("BAM!"))
-                        .transform(BulkheadOperator.of(bulkhead)))
+                        .compose(BulkheadOperator.of(bulkhead)))
                 .expectSubscription()
                 .expectError(IOException.class)
                 .verify(Duration.ofSeconds(1));
 
-        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
+        verify(bulkhead, times(1)).onComplete();
     }
 
     @Test
     public void shouldEmitErrorWithBulkheadFullException() {
-        bulkhead.tryObtainPermission();
+        given(bulkhead.tryAcquirePermission()).willReturn(false);
 
         StepVerifier.create(
                 Mono.just("Event")
-                        .transform(BulkheadOperator.of(bulkhead)))
+                        .compose(BulkheadOperator.of(bulkhead)))
                 .expectSubscription()
                 .expectError(BulkheadFullException.class)
                 .verify(Duration.ofSeconds(1));
 
-        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(0);
+        verify(bulkhead, never()).onComplete();
     }
 
     @Test
     public void shouldEmitBulkheadFullExceptionEvenWhenErrorDuringSubscribe() {
-        bulkhead.tryObtainPermission();
+        given(bulkhead.tryAcquirePermission()).willReturn(false);
 
         StepVerifier.create(
                 Mono.error(new IOException("BAM!"))
-                        .transform(BulkheadOperator.of(bulkhead, Schedulers.immediate())))
+                        .compose(BulkheadOperator.of(bulkhead)))
                 .expectSubscription()
                 .expectError(BulkheadFullException.class)
                 .verify(Duration.ofSeconds(1));
-
-        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(0);
-    }
-
-    @Test
-    public void shouldEmitBulkheadFullExceptionEvenWhenErrorNotOnSubscribe() {
-        bulkhead.tryObtainPermission();
-
-        StepVerifier.create(
-                Mono.error(new IOException("BAM!")).delayElement(Duration.ofMillis(1))
-                        .transform(BulkheadOperator.of(bulkhead, Schedulers.immediate())))
-                .expectSubscription()
-                .expectError(BulkheadFullException.class)
-                .verify(Duration.ofSeconds(1));
-
-        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(0);
     }
 
     @Test
     public void shouldReleaseBulkheadSemaphoreOnCancel() {
-        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
+        given(bulkhead.tryAcquirePermission()).willReturn(true);
+
         StepVerifier.create(
                 Mono.just("Event")
-                        .transform(BulkheadOperator.of(bulkhead)))
+                        .delayElement(Duration.ofHours(1))
+                        .compose(BulkheadOperator.of(bulkhead)))
                 .expectSubscription()
-                .expectNext("Event")
                 .thenCancel()
                 .verify();
-        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
+
+        verify(bulkhead, times(1)).releasePermission();
     }
 
 }

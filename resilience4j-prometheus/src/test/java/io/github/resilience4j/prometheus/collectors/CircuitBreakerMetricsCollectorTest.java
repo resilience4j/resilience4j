@@ -151,7 +151,7 @@ public class CircuitBreakerMetricsCollectorTest {
 
     @Test
     public void notPermittedCallsBucketReportsCorrespondingValue() {
-        assertThat(circuitBreaker.tryObtainPermission()).isFalse();
+        assertThat(circuitBreaker.tryAcquirePermission()).isFalse();
         double notPermitted = registry.getSampleValue(
                 DEFAULT_CIRCUIT_BREAKER_CALLS + "_bucket",
             new String[]{"name", "kind", "le"},

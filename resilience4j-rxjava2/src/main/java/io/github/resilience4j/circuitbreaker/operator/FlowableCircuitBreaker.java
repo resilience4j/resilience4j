@@ -19,7 +19,6 @@ import io.github.resilience4j.ResilienceBaseSubscriber;
 import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.core.StopWatch;
-import io.github.resilience4j.core.lang.Nullable;
 import io.reactivex.Flowable;
 import io.reactivex.internal.subscriptions.EmptySubscription;
 import org.reactivestreams.Publisher;
@@ -29,12 +28,12 @@ import java.util.Objects;
 
 import static java.util.Objects.requireNonNull;
 
-class FlowableCircuitBreakerOperator<T> extends Flowable<T> {
+class FlowableCircuitBreaker<T> extends Flowable<T> {
 
     private final CircuitBreaker circuitBreaker;
     private final Publisher<T> upstream;
 
-    FlowableCircuitBreakerOperator(Publisher<T> upstream, CircuitBreaker circuitBreaker) {
+    FlowableCircuitBreaker(Publisher<T> upstream, CircuitBreaker circuitBreaker) {
         this.circuitBreaker = requireNonNull(circuitBreaker);
         this.upstream = Objects.requireNonNull(upstream, "source is null");
     }
@@ -45,14 +44,13 @@ class FlowableCircuitBreakerOperator<T> extends Flowable<T> {
             upstream.subscribe(new CircuitBreakerSubscriber(downstream));
         }else{
             downstream.onSubscribe(EmptySubscription.INSTANCE);
-            downstream.onError(new CallNotPermittedException(circuitBreaker.getName()));
+            downstream.onError(new CallNotPermittedException(circuitBreaker));
         }
     }
 
     class CircuitBreakerSubscriber extends ResilienceBaseSubscriber<T> {
 
-        @Nullable
-        private transient StopWatch stopWatch;
+        private final StopWatch stopWatch;
 
         CircuitBreakerSubscriber(Subscriber<? super T> downstreamSubscriber) {
             super(downstreamSubscriber);
@@ -61,13 +59,13 @@ class FlowableCircuitBreakerOperator<T> extends Flowable<T> {
 
         @Override
         public void hookOnError(Throwable t) {
-            circuitBreaker.onError(stopWatch != null ? stopWatch.stop().toNanos() : 0, t);
+            circuitBreaker.onError(stopWatch.stop().toNanos(), t);
             downstreamSubscriber.onError(t);
         }
 
         @Override
         public void hookOnComplete() {
-            circuitBreaker.onSuccess(stopWatch != null ? stopWatch.stop().toNanos() : 0);
+            circuitBreaker.onSuccess(stopWatch.stop().toNanos());
             downstreamSubscriber.onComplete();
         }
 

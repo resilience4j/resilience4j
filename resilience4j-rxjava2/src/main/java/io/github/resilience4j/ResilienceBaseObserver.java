@@ -1,69 +1,53 @@
+/*
+ * Copyright 2019 Robert Winkler
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package io.github.resilience4j;
 
-import io.github.resilience4j.adapter.Permit;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.internal.disposables.DisposableHelper;
 
 import java.util.concurrent.atomic.AtomicReference;
 
-public abstract class ResilienceBaseDisposable extends AtomicReference<Disposable> implements Disposable {
+public abstract class ResilienceBaseObserver implements Disposable {
 
-    private final AtomicReference<Permit> permitted = new AtomicReference<>(Permit.PENDING);
+    private final AtomicReference<Disposable> subscription = new AtomicReference<>();
+
+    public void onSubscribe(Disposable disposable) {
+        if(DisposableHelper.setOnce(this.subscription, disposable)){
+            hookOnSubscribe();
+        }
+    }
+
+    protected abstract void hookOnSubscribe();
 
     @Override
     public void dispose() {
-        if (DisposableHelper.dispose(this)) {
-            hookOnDispose();
+        if(DisposableHelper.dispose(subscription)){
+            hookOnCancel();
         }
     }
 
-    protected void hookOnDispose() {
-
-    }
+    protected abstract void hookOnCancel();
 
     @Override
     public boolean isDisposed() {
-        return DisposableHelper.isDisposed(get());
+        return DisposableHelper.isDisposed(subscription.get());
     }
 
-    protected final void onSubscribeWithPermit(Disposable disposable) {
-        if (DisposableHelper.setOnce(this, disposable)) {
-            if (acquireCallPermit()) {
-                hookOn
-            } else {
-                disposable.dispose();
-                onSubscribeInner(this);
-                permittedOnError(bulkheadFullException());
-            }
-        }
-    }
-
-    /**
-     * Optional hook executed when permit call is acquired.
-     */
-    protected void hookOnPermitAcquired() {
-        //NO-OP
-    }
-
-    /**
-     * @return true if call is permitted, false otherwise
-     */
-    protected abstract boolean obtainPermission();
-
-    private boolean acquireCallPermit() {
-        boolean callPermitted = false;
-        if (permitted.compareAndSet(Permit.PENDING, Permit.ACQUIRED)) {
-            callPermitted = obtainPermission();
-            if (!callPermitted) {
-                permitted.set(Permit.REJECTED);
-            } else {
-                hookOnPermitAcquired();
-            }
-        }
-        return callPermitted;
-    }
-
-    protected boolean wasCallPermitted() {
-        return permitted.get() == Permit.ACQUIRED;
+    @Override
+    public String toString() {
+        return getClass().getSimpleName();
     }
 }

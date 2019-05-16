@@ -74,7 +74,7 @@ The following example shows how to decorate an Observable by using the custom Rx
 ----
 RateLimiter rateLimiter = RateLimiter.ofDefaults("backendName");
 Observable.fromCallable(backendService::doSomething)
-    .lift(RateLimiterOperator.of(rateLimiter))
+    .compose(RateLimiterOperator.of(rateLimiter))
 ----
 
 Other reactive types (Flowable, Single, Maybe and Completable) are also supported.
@@ -87,7 +87,7 @@ The following example shows how to decorate a Mono by using the custom Reactor o
 ----
 RateLimiter rateLimiter = RateLimiter.ofDefaults("backendName");
 Mono.fromCallable(backendService::doSomething)
-    .transform(RateLimiterOperator.of(rateLimiter))
+    .compose(RateLimiterOperator.of(rateLimiter))
 ----
 
 Flux is also supported.

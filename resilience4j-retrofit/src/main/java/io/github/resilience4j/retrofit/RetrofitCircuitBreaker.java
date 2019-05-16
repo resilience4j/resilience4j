@@ -54,7 +54,7 @@ public interface RetrofitCircuitBreaker {
             @Override
             public void enqueue(final Callback<T> callback) {
                 try {
-                    circuitBreaker.obtainPermission();
+                    circuitBreaker.acquirePermission();
                 } catch (CallNotPermittedException cb) {
                     callback.onFailure(call, cb);
                     return;
@@ -83,7 +83,7 @@ public interface RetrofitCircuitBreaker {
 
             @Override
             public Response<T> execute() throws IOException {
-                circuitBreaker.obtainPermission();
+                circuitBreaker.acquirePermission();
                 final StopWatch stopWatch = StopWatch.start();
                 try {
                     final Response<T> response = call.execute();

@@ -11,13 +11,13 @@ import org.mockito.Mockito;
 import java.io.IOException;
 import java.util.Arrays;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.*;
 
 /**
  * Unit test for {@link SingleBulkhead} using {@link BulkheadOperator}.
  */
-@SuppressWarnings("unchecked")
-public class BulkheadSingleObserverTest {
+public class SingleBulkheadTest {
     
     private Bulkhead bulkhead;
 
@@ -28,16 +28,20 @@ public class BulkheadSingleObserverTest {
 
     @Test
     public void shouldEmitAllEvents() {
+        given(bulkhead.tryAcquirePermission()).willReturn(true);
+
         Single.just(1)
             .compose(BulkheadOperator.of(bulkhead))
             .test()
             .assertResult(1);
 
-        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
+        verify(bulkhead, times(1)).onComplete();
     }
 
     @Test
     public void shouldPropagateError() {
+        given(bulkhead.tryAcquirePermission()).willReturn(true);
+
         Single.error(new IOException("BAM!"))
             .compose(BulkheadOperator.of(bulkhead))
             .test()
@@ -45,12 +49,12 @@ public class BulkheadSingleObserverTest {
             .assertError(IOException.class)
             .assertNotComplete();
 
-        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
+        verify(bulkhead, times(1)).onComplete();
     }
 
     @Test
     public void shouldEmitErrorWithBulkheadFullException() {
-        bulkhead.tryAcquirePermission();
+        given(bulkhead.tryAcquirePermission()).willReturn(false);
 
         Single.just(1)
             .compose(BulkheadOperator.of(bulkhead))
@@ -59,11 +63,13 @@ public class BulkheadSingleObserverTest {
             .assertError(BulkheadFullException.class)
             .assertNotComplete();
 
-        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(0);
+        verify(bulkhead, never()).onComplete();
     }
 
     @Test
     public void shouldReleaseBulkheadOnlyOnce() {
+        given(bulkhead.tryAcquirePermission()).willReturn(true);
+
         Single.just(Arrays.asList(1, 2, 3))
             .compose(BulkheadOperator.of(bulkhead))
             .flatMapObservable(Observable::fromIterable)
@@ -71,6 +77,6 @@ public class BulkheadSingleObserverTest {
             .test()
             .assertResult(1, 2);
 
-        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
+        verify(bulkhead, times(1)).onComplete();
     }
 }

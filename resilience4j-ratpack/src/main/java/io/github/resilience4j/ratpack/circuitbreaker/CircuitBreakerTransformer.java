@@ -57,7 +57,7 @@ public class CircuitBreakerTransformer<T> extends AbstractTransformer<T> {
     public Upstream<T> apply(Upstream<? extends T> upstream) throws Exception {
         return down -> {
             long start;
-            if (circuitBreaker.tryObtainPermission()) {
+            if (circuitBreaker.tryAcquirePermission()) {
                 start = System.nanoTime();
                 upstream.connect(new Downstream<T>() {
 

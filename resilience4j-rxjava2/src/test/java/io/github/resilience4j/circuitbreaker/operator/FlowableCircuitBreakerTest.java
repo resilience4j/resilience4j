@@ -3,32 +3,37 @@ package io.github.resilience4j.circuitbreaker.operator;
 import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import io.reactivex.Flowable;
 import org.junit.Test;
-import org.reactivestreams.Subscriber;
-import org.reactivestreams.Subscription;
 
 import java.io.IOException;
+import java.util.concurrent.TimeUnit;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
 
 /**
- * Unit test for {@link CircuitBreakerSubscriber}.
+ * Unit test for {@link FlowableCircuitBreaker}.
  */
-@SuppressWarnings("unchecked")
-public class CircuitBreakerSubscriberTest extends CircuitBreakerAssertions {
+public class FlowableCircuitBreakerTest extends BaseCircuitBreakerTest {
 
     @Test
-    public void shouldEmitAllEvents() {
+    public void shouldSubscribeToFlowableJust() {
+        given(circuitBreaker.tryAcquirePermission()).willReturn(true);
+
         Flowable.just("Event 1", "Event 2")
             .compose(CircuitBreakerOperator.of(circuitBreaker))
             .test()
             .assertResult("Event 1", "Event 2");
 
-        assertSingleSuccessfulCall();
+        verify(circuitBreaker, times(1)).onSuccess(anyLong());
+        verify(circuitBreaker, never()).onError(anyLong(), any(Throwable.class));
     }
 
     @Test
     public void shouldPropagateError() {
+        given(circuitBreaker.tryAcquirePermission()).willReturn(true);
+
         Flowable.error(new IOException("BAM!"))
             .compose(CircuitBreakerOperator.of(circuitBreaker))
             .test()
@@ -36,88 +41,37 @@ public class CircuitBreakerSubscriberTest extends CircuitBreakerAssertions {
             .assertError(IOException.class)
             .assertNotComplete();
 
-        assertSingleFailedCall();
+        verify(circuitBreaker, times(1)).onError(anyLong(), any(IOException.class));
+        verify(circuitBreaker, never()).onSuccess(anyLong());
     }
 
     @Test
     public void shouldEmitErrorWithCallNotPermittedException() {
-        circuitBreaker.transitionToOpenState();
+        given(circuitBreaker.tryAcquirePermission()).willReturn(false);
 
-        Flowable.fromArray("Event 1", "Event 2")
+        Flowable.just("Event 1", "Event 2")
             .compose(CircuitBreakerOperator.of(circuitBreaker))
             .test()
             .assertSubscribed()
             .assertError(CallNotPermittedException.class)
             .assertNotComplete();
 
-        assertNoRegisteredCall();
+        verify(circuitBreaker, never()).onSuccess(anyLong());
+        verify(circuitBreaker, never()).onError(anyLong(), any(Throwable.class));
     }
 
     @Test
-    public void shouldHonorDisposedWhenCallingOnNext() throws Exception {
-        // Given
-        Subscription subscription = mock(Subscription.class);
-        Subscriber childSubscriber = mock(Subscriber.class);
-        Subscriber decoratedSubscriber = CircuitBreakerOperator.of(circuitBreaker).apply(childSubscriber);
-        decoratedSubscriber.onSubscribe(subscription);
+    public void shouldReleasePermissionOnCancel() {
+        given(circuitBreaker.tryAcquirePermission()).willReturn(true);
 
-        // When
-        decoratedSubscriber.onNext("one");
-        ((Subscription) decoratedSubscriber).cancel();
-        decoratedSubscriber.onNext("two");
+        Flowable.just(1)
+                .delay(1, TimeUnit.DAYS)
+                .compose(CircuitBreakerOperator.of(circuitBreaker))
+                .test()
+                .cancel();
 
-        // Then
-        verify(childSubscriber, times(1)).onNext(any());
-        assertNoRegisteredCall();
-    }
-
-    @Test
-    public void shouldHonorDisposedWhenCallingOnComplete() throws Exception {
-        // Given
-        Subscription subscription = mock(Subscription.class);
-        Subscriber childSubscriber = mock(Subscriber.class);
-        Subscriber decoratedSubscriber = CircuitBreakerOperator.of(circuitBreaker).apply(childSubscriber);
-        decoratedSubscriber.onSubscribe(subscription);
-
-        // When
-        ((Subscription) decoratedSubscriber).cancel();
-        decoratedSubscriber.onComplete();
-
-        // Then
-        verify(childSubscriber, never()).onComplete();
-        assertSingleSuccessfulCall();
-    }
-
-    @Test
-    public void shouldHonorDisposedWhenCallingOnError() throws Exception {
-        // Given
-        Subscription subscription = mock(Subscription.class);
-        Subscriber childSubscriber = mock(Subscriber.class);
-        Subscriber decoratedSubscriber = CircuitBreakerOperator.of(circuitBreaker).apply(childSubscriber);
-        decoratedSubscriber.onSubscribe(subscription);
-
-        // When
-        ((Subscription) decoratedSubscriber).cancel();
-        decoratedSubscriber.onError(new IllegalStateException());
-
-        // Then
-        verify(childSubscriber, never()).onError(any());
-        assertSingleFailedCall();
-    }
-
-    @Test
-    public void shouldNotAffectCircuitBreakerWhenWasCancelledAfterNotPermittedSubscribe() throws Exception {
-        // Given
-        Subscription subscription = mock(Subscription.class);
-        Subscriber childObserver = mock(Subscriber.class);
-        Subscriber decoratedObserver = CircuitBreakerOperator.of(circuitBreaker).apply(childObserver);
-        circuitBreaker.transitionToOpenState();
-        decoratedObserver.onSubscribe(subscription);
-
-        // When
-        ((Subscription) decoratedObserver).cancel();
-
-        // Then
-        assertNoRegisteredCall();
+        verify(circuitBreaker, times(1)).releasePermission();
+        verify(circuitBreaker, never()).onError(anyLong(), any(Throwable.class));
+        verify(circuitBreaker, never()).onSuccess(anyLong());
     }
 }

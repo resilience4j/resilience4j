@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Julien Hoarau
+ * Copyright 2018 Julien Hoarau, Robert Winkler
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,17 +16,21 @@
 package io.github.resilience4j.reactor.ratelimiter.operator;
 
 import io.github.resilience4j.ratelimiter.RateLimiter;
+import io.github.resilience4j.ratelimiter.RequestNotPermitted;
 import reactor.core.CoreSubscriber;
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.MonoOperator;
+import reactor.core.publisher.Operators;
 import reactor.core.scheduler.Scheduler;
 
-public class MonoRateLimiter<T> extends MonoOperator<T, T> {
+import java.time.Duration;
+
+class MonoRateLimiter<T> extends MonoOperator<T, T> {
     private final RateLimiter rateLimiter;
     private final Scheduler scheduler;
 
-    public MonoRateLimiter(Mono<? extends T> source, RateLimiter rateLimiter,
-                           Scheduler scheduler) {
+    MonoRateLimiter(Mono<? extends T> source, RateLimiter rateLimiter,
+                    Scheduler scheduler) {
         super(source);
         this.rateLimiter = rateLimiter;
         this.scheduler = scheduler;
@@ -34,7 +38,11 @@ public class MonoRateLimiter<T> extends MonoOperator<T, T> {
 
     @Override
     public void subscribe(CoreSubscriber<? super T> actual) {
-        source.publishOn(scheduler)
-                .subscribe(new RateLimiterSubscriber<>(rateLimiter, actual));
+        if(rateLimiter.acquirePermission(Duration.ZERO)){
+            source.publishOn(scheduler)
+                    .subscribe(new RateLimiterSubscriber<>(actual));
+        }else{
+            Operators.error(actual, new RequestNotPermitted(rateLimiter));
+        }
     }
 }
