@@ -59,18 +59,18 @@ class SingleCircuitBreaker<T> extends Single<T> {
 
         @Override
         public void onSuccess(T value) {
-            if (!isDisposed()) {
+            whenNotCompleted(() -> {
                 super.onSuccess();
                 downstreamObserver.onSuccess(value);
-            }
+            });
         }
 
         @Override
         public void onError(Throwable e) {
-            if (!isDisposed()) {
+            whenNotCompleted(() -> {
                 super.onError(e);
                 downstreamObserver.onError(e);
-            }
+            });
         }
     }
 }

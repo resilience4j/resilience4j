@@ -59,18 +59,18 @@ class CompletableRateLimiter extends Completable {
 
         @Override
         public void onError(Throwable e) {
-            if (!isDisposed()) {
+            whenNotCompleted(() -> {
                 super.onError(e);
                 downstreamObserver.onError(e);
-            }
+            });
         }
 
         @Override
         public void onComplete() {
-            if (!isDisposed()) {
+            whenNotCompleted(() -> {
                 super.onSuccess();
                 downstreamObserver.onComplete();
-            }
+            });
         }
     }
 
