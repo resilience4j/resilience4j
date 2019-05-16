@@ -49,7 +49,7 @@ public interface Decorators {
 		return new DecorateCompletionStage<>(stageSupplier);
 	}
 
-	public static <T> DecorateConsumer<T> ofConsumer(Consumer<T> consumer) {
+	static <T> DecorateConsumer<T> ofConsumer(Consumer<T> consumer) {
 		return new DecorateConsumer<>(consumer);
 	}
 
