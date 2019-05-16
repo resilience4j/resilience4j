@@ -15,6 +15,7 @@
  */
 package io.github.resilience4j.ratelimiter.operator;
 
+import io.github.resilience4j.AbstractObserver;
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RequestNotPermitted;
 import io.reactivex.Observable;
@@ -22,8 +23,6 @@ import io.reactivex.Observer;
 import io.reactivex.internal.disposables.EmptyDisposable;
 
 import java.time.Duration;
-
-import static java.util.Objects.requireNonNull;
 
 class ObserverRateLimiter<T> extends Observable<T> {
 
@@ -44,39 +43,26 @@ class ObserverRateLimiter<T> extends Observable<T> {
             downstream.onError(new RequestNotPermitted(rateLimiter));
         }
     }
-    class RateLimiterObserver extends BaseRateLimiterObserver implements Observer<T> {
 
-        private final Observer<? super T> downstreamObserver;
+    class RateLimiterObserver extends AbstractObserver<T> {
 
         RateLimiterObserver(Observer<? super T> downstreamObserver) {
-            super(rateLimiter);
-            this.downstreamObserver = requireNonNull(downstreamObserver);
+            super(downstreamObserver);
         }
 
         @Override
-        protected void hookOnSubscribe() {
-            downstreamObserver.onSubscribe(this);
+        protected void hookOnError(Throwable e) {
+            // NoOp
         }
 
         @Override
-        public void onNext(T item) {
-            whenNotDisposed(() -> downstreamObserver.onNext(item));
+        protected void hookOnComplete() {
+            // NoOp
         }
 
         @Override
-        public void onError(Throwable e) {
-            whenNotCompleted(() -> {
-                super.onError(e);
-                downstreamObserver.onError(e);
-            });
-        }
-
-        @Override
-        public void onComplete() {
-            whenNotCompleted(() -> {
-                super.onSuccess();
-                downstreamObserver.onComplete();
-            });
+        protected void hookOnCancel() {
+            // NoOp
         }
     }
 

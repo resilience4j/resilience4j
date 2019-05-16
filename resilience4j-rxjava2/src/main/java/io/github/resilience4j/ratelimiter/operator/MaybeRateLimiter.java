@@ -15,6 +15,7 @@
  */
 package io.github.resilience4j.ratelimiter.operator;
 
+import io.github.resilience4j.AbstractMaybeObserver;
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RequestNotPermitted;
 import io.reactivex.Maybe;
@@ -22,8 +23,6 @@ import io.reactivex.MaybeObserver;
 import io.reactivex.internal.disposables.EmptyDisposable;
 
 import java.time.Duration;
-
-import static java.util.Objects.requireNonNull;
 
 class MaybeRateLimiter<T> extends Maybe<T> {
 
@@ -45,42 +44,30 @@ class MaybeRateLimiter<T> extends Maybe<T> {
         }
     }
 
-    class RateLimiterMaybeObserver extends BaseRateLimiterObserver implements MaybeObserver<T> {
+    class RateLimiterMaybeObserver extends AbstractMaybeObserver<T> {
 
-        private final MaybeObserver<? super T> downstreamObserver;
-
-        RateLimiterMaybeObserver(MaybeObserver<? super T> childObserver) {
-            super(rateLimiter);
-            this.downstreamObserver = requireNonNull(childObserver);
+        RateLimiterMaybeObserver(MaybeObserver<? super T> downstreamObserver) {
+            super(downstreamObserver);
         }
 
         @Override
-        protected void hookOnSubscribe() {
-            downstreamObserver.onSubscribe(this);
+        protected void hookOnComplete() {
+            // NoOp
         }
 
         @Override
-        public void onSuccess(T value) {
-            whenNotCompleted(() -> {
-                super.onSuccess();
-                downstreamObserver.onSuccess(value);
-            });
+        protected void hookOnError(Throwable e) {
+            // NoOp
         }
 
         @Override
-        public void onError(Throwable e) {
-            whenNotCompleted(() -> {
-                super.onError(e);
-                downstreamObserver.onError(e);
-            });
+        protected void hookOnSuccess() {
+            // NoOp
         }
 
         @Override
-        public void onComplete() {
-            whenNotCompleted(() -> {
-                super.onSuccess();
-                downstreamObserver.onComplete();
-            });
+        protected void hookOnCancel() {
+            // NoOp
         }
     }
 }

@@ -24,11 +24,11 @@ import reactor.core.publisher.BaseSubscriber;
  *
  * @param <T>
  */
-public abstract class ResilienceBaseSubscriber<T> extends BaseSubscriber<T> {
+public abstract class AbstractSubscriber<T> extends BaseSubscriber<T> {
 
     protected final CoreSubscriber<? super T> downstreamSubscriber;
 
-    protected ResilienceBaseSubscriber(CoreSubscriber<? super T> downstreamSubscriber) {
+    protected AbstractSubscriber(CoreSubscriber<? super T> downstreamSubscriber) {
         this.downstreamSubscriber = downstreamSubscriber;
     }
 

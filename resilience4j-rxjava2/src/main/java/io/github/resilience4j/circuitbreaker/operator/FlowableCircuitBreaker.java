@@ -15,7 +15,7 @@
  */
 package io.github.resilience4j.circuitbreaker.operator;
 
-import io.github.resilience4j.ResilienceBaseSubscriber;
+import io.github.resilience4j.AbstractSubscriber;
 import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.core.StopWatch;
@@ -48,7 +48,7 @@ class FlowableCircuitBreaker<T> extends Flowable<T> {
         }
     }
 
-    class CircuitBreakerSubscriber extends ResilienceBaseSubscriber<T> {
+    class CircuitBreakerSubscriber extends AbstractSubscriber<T> {
 
         private final StopWatch stopWatch;
 
@@ -60,23 +60,16 @@ class FlowableCircuitBreaker<T> extends Flowable<T> {
         @Override
         public void hookOnError(Throwable t) {
             circuitBreaker.onError(stopWatch.stop().toNanos(), t);
-            downstreamSubscriber.onError(t);
         }
 
         @Override
         public void hookOnComplete() {
             circuitBreaker.onSuccess(stopWatch.stop().toNanos());
-            downstreamSubscriber.onComplete();
         }
 
         @Override
         public void hookOnCancel() {
             circuitBreaker.releasePermission();
-        }
-
-        @Override
-        public void hookOnNext(T value) {
-            downstreamSubscriber.onNext(value);
         }
     }
 

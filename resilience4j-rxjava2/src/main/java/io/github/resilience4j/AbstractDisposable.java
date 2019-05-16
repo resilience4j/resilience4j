@@ -20,7 +20,7 @@ import io.reactivex.internal.disposables.DisposableHelper;
 
 import java.util.concurrent.atomic.AtomicReference;
 
-public abstract class ResilienceBaseObserver implements Disposable {
+public abstract class AbstractDisposable implements Disposable {
 
     private final AtomicReference<Disposable> subscription = new AtomicReference<>();
 
@@ -39,13 +39,13 @@ public abstract class ResilienceBaseObserver implements Disposable {
         }
     }
 
-    protected void whenNotDisposed(Runnable runnable){
+    void whenNotDisposed(Runnable runnable){
         if (!isDisposed()) {
             runnable.run();
         }
     }
 
-    protected void whenNotCompleted(Runnable runnable){
+    void whenNotCompleted(Runnable runnable){
         if (DisposableHelper.dispose(subscription)) {
             runnable.run();
         }

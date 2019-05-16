@@ -15,13 +15,12 @@
  */
 package io.github.resilience4j.bulkhead.operator;
 
+import io.github.resilience4j.AbstractObserver;
 import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.bulkhead.BulkheadFullException;
 import io.reactivex.Observable;
 import io.reactivex.Observer;
 import io.reactivex.internal.disposables.EmptyDisposable;
-
-import static java.util.Objects.requireNonNull;
 
 class ObserverBulkhead<T> extends Observable<T> {
 
@@ -42,39 +41,25 @@ class ObserverBulkhead<T> extends Observable<T> {
             downstream.onError(new BulkheadFullException(bulkhead));
         }
     }
-    class BulkheadObserver extends BaseBulkheadObserver implements Observer<T> {
-
-        private final Observer<? super T> downstreamObserver;
+    class BulkheadObserver extends AbstractObserver<T> {
 
         BulkheadObserver(Observer<? super T> downstreamObserver) {
-            super(bulkhead);
-            this.downstreamObserver = requireNonNull(downstreamObserver);
+            super(downstreamObserver);
         }
 
         @Override
-        protected void hookOnSubscribe() {
-            downstreamObserver.onSubscribe(this);
+        protected void hookOnError(Throwable e) {
+            bulkhead.onComplete();
         }
 
         @Override
-        public void onNext(T item) {
-            whenNotDisposed(() -> downstreamObserver.onNext(item));
+        protected void hookOnComplete() {
+            bulkhead.onComplete();
         }
 
         @Override
-        public void onError(Throwable e) {
-            whenNotCompleted(() -> {
-                super.onError(e);
-                downstreamObserver.onError(e);
-            });
-        }
-
-        @Override
-        public void onComplete() {
-            whenNotCompleted(() -> {
-                super.onSuccess();
-                downstreamObserver.onComplete();
-            });
+        protected void hookOnCancel() {
+            bulkhead.releasePermission();
         }
     }
 

@@ -15,6 +15,7 @@
  */
 package io.github.resilience4j.ratelimiter.operator;
 
+import io.github.resilience4j.AbstractCompletableObserver;
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RequestNotPermitted;
 import io.reactivex.Completable;
@@ -43,34 +44,25 @@ class CompletableRateLimiter extends Completable {
         }
     }
 
-    class RateLimiterCompletableObserver extends BaseRateLimiterObserver implements CompletableObserver {
-
-        private final CompletableObserver downstreamObserver;
+    class RateLimiterCompletableObserver extends AbstractCompletableObserver {
 
         RateLimiterCompletableObserver(CompletableObserver downstreamObserver) {
-            super(rateLimiter);
-            this.downstreamObserver = downstreamObserver;
+            super(downstreamObserver);
         }
 
         @Override
-        protected void hookOnSubscribe() {
-            downstreamObserver.onSubscribe(this);
+        protected void hookOnComplete() {
+            // NoOp
         }
 
         @Override
-        public void onError(Throwable e) {
-            whenNotCompleted(() -> {
-                super.onError(e);
-                downstreamObserver.onError(e);
-            });
+        protected void hookOnError(Throwable e) {
+            // NoOp
         }
 
         @Override
-        public void onComplete() {
-            whenNotCompleted(() -> {
-                super.onSuccess();
-                downstreamObserver.onComplete();
-            });
+        protected void hookOnCancel() {
+            // NoOp
         }
     }
 

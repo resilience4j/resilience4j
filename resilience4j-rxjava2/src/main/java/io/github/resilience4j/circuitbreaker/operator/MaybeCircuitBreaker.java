@@ -15,13 +15,13 @@
  */
 package io.github.resilience4j.circuitbreaker.operator;
 
+import io.github.resilience4j.AbstractMaybeObserver;
 import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
+import io.github.resilience4j.core.StopWatch;
 import io.reactivex.Maybe;
 import io.reactivex.MaybeObserver;
 import io.reactivex.internal.disposables.EmptyDisposable;
-
-import static java.util.Objects.requireNonNull;
 
 class MaybeCircuitBreaker<T> extends Maybe<T> {
 
@@ -43,42 +43,33 @@ class MaybeCircuitBreaker<T> extends Maybe<T> {
         }
     }
 
-    class CircuitBreakerMaybeObserver extends BaseCircuitBreakerObserver implements MaybeObserver<T> {
+    class CircuitBreakerMaybeObserver extends AbstractMaybeObserver<T> {
 
-        private final MaybeObserver<? super T> downstreamObserver;
+        private final StopWatch stopWatch;
 
-        CircuitBreakerMaybeObserver(MaybeObserver<? super T> childObserver) {
-            super(circuitBreaker);
-            this.downstreamObserver = requireNonNull(childObserver);
+        CircuitBreakerMaybeObserver(MaybeObserver<? super T> downstreamObserver) {
+            super(downstreamObserver);
+            this.stopWatch = StopWatch.start();
         }
 
         @Override
-        protected void hookOnSubscribe() {
-            downstreamObserver.onSubscribe(this);
+        protected void hookOnComplete() {
+            circuitBreaker.onSuccess(stopWatch.stop().toNanos());
         }
 
         @Override
-        public void onSuccess(T value) {
-            if (!isDisposed()) {
-                super.onSuccess();
-                downstreamObserver.onSuccess(value);
-            }
+        protected void hookOnError(Throwable e) {
+            circuitBreaker.onError(stopWatch.stop().toNanos(), e);
         }
 
         @Override
-        public void onError(Throwable e) {
-            whenNotCompleted(() -> {
-                super.onError(e);
-                downstreamObserver.onError(e);
-            });
+        protected void hookOnSuccess() {
+            circuitBreaker.onSuccess(stopWatch.stop().toNanos());
         }
 
         @Override
-        public void onComplete() {
-            whenNotCompleted(() -> {
-                super.onSuccess();
-                downstreamObserver.onComplete();
-            });
+        protected void hookOnCancel() {
+            circuitBreaker.releasePermission();
         }
     }
 }
