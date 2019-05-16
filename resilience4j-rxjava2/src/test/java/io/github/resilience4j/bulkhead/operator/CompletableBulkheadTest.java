@@ -15,7 +15,6 @@ import static org.mockito.Mockito.*;
 /**
  * Unit test for {@link CompletableBulkhead} using {@link BulkheadOperator}.
  */
-
 public class CompletableBulkheadTest {
 
     private Bulkhead bulkhead;

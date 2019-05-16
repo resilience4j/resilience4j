@@ -15,7 +15,6 @@ import static org.mockito.BDDMockito.given;
 /**
  * Unit test for {@link FlowableRateLimiter}.
  */
-@SuppressWarnings("unchecked")
 public class FlowableRateLimiterTest {
 
     private RateLimiter rateLimiter;

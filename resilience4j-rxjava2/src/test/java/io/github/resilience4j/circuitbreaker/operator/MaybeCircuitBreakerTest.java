@@ -15,7 +15,6 @@ import static org.mockito.Mockito.*;
 /**
  * Unit test for {@link MaybeCircuitBreaker}.
  */
-@SuppressWarnings("unchecked")
 public class MaybeCircuitBreakerTest extends BaseCircuitBreakerTest {
     @Test
     public void shouldSubscribeToMaybeJust() {

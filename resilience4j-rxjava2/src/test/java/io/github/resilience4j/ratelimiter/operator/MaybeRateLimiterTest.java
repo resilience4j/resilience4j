@@ -15,7 +15,6 @@ import static org.mockito.BDDMockito.given;
 /**
  * Unit test for {@link MaybeRateLimiter}.
  */
-@SuppressWarnings("unchecked")
 public class MaybeRateLimiterTest {
 
     private RateLimiter rateLimiter;

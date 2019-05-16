@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright 2016 Robert Winkler
+ *  Copyright 2019 Robert Winkler
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -17,7 +17,6 @@
  *
  */
 package io.github.resilience4j.circuitbreaker.internal;
-
 
 import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
@@ -685,7 +684,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
          */
         @Override
         public boolean tryAcquirePermission() {
-            if (testRequestCounter.getAndDecrement() > 0) {
+            if (testRequestCounter.getAndUpdate(current -> current == 0 ? current : --current) > 0) {
                 return true;
             }
             circuitBreakerMetrics.onCallNotPermitted();

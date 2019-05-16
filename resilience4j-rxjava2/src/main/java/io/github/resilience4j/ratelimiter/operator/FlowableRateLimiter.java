@@ -66,6 +66,7 @@ class FlowableRateLimiter<T> extends Flowable<T> {
 
         @Override
         public void hookOnCancel() {
+            // Release permission in RateLimiter?
         }
 
         @Override

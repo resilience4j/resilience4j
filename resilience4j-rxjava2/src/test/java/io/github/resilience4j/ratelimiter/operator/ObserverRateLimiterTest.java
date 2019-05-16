@@ -15,7 +15,6 @@ import static org.mockito.BDDMockito.given;
 /**
  * Unit test for {@link ObserverRateLimiter}.
  */
-@SuppressWarnings("unchecked")
 public class ObserverRateLimiterTest {
 
     private RateLimiter rateLimiter;

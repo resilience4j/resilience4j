@@ -40,5 +40,6 @@ abstract class BaseRateLimiterObserver extends ResilienceBaseObserver {
 
     @Override
     public void hookOnCancel() {
+        // Release permission in RateLimiter?
     }
 }

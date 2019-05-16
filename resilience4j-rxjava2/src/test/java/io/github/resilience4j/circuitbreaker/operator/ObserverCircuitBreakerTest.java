@@ -15,7 +15,6 @@ import static org.mockito.Mockito.*;
 /**
  * Unit test for {@link ObserverCircuitBreaker}.
  */
-@SuppressWarnings("unchecked")
 public class ObserverCircuitBreakerTest extends BaseCircuitBreakerTest {
     @Test
     public void shouldSubscribeToObservableJust() {

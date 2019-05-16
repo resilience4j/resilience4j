@@ -32,7 +32,9 @@ class RateLimiterSubscriber<T> extends ResilienceBaseSubscriber<T> {
 
     @Override
     public void hookOnNext(T t) {
-        downstreamSubscriber.onNext(t);
+        if (!isDisposed()) {
+            downstreamSubscriber.onNext(t);
+        }
     }
 
     @Override

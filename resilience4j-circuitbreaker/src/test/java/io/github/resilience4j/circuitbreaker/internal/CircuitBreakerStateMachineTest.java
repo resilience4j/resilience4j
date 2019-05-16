@@ -67,6 +67,21 @@ public class CircuitBreakerStateMachineTest {
         assertThat(circuitBreaker.getMetrics().getNumberOfNotPermittedCalls()).isEqualTo(1);
     }
 
+    @Test()
+    public void shouldIncreaseCounterOnReleasePermission() {
+        circuitBreaker.transitionToOpenState();
+        circuitBreaker.transitionToHalfOpenState();
+        assertThat(circuitBreaker.tryAcquirePermission()).isEqualTo(true);
+        assertThat(circuitBreaker.tryAcquirePermission()).isEqualTo(true);
+        assertThat(circuitBreaker.tryAcquirePermission()).isEqualTo(true);
+        assertThat(circuitBreaker.tryAcquirePermission()).isEqualTo(true);
+        assertThat(circuitBreaker.tryAcquirePermission()).isEqualTo(false);
+        assertThat(circuitBreaker.tryAcquirePermission()).isEqualTo(false);
+
+        circuitBreaker.releasePermission();
+        assertThat(circuitBreaker.tryAcquirePermission()).isEqualTo(true);
+    }
+
     @Test
     public void shouldThrowCallNotPermittedExceptionWhenNotFurtherTestCallsArePermitted() {
         circuitBreaker.transitionToOpenState();

@@ -43,14 +43,17 @@ public abstract class ResilienceBaseSubscriber<T> implements Subscriber<T>, Subs
 
     @Override
     public void onNext(T value) {
-        hookOnNext(value);
+        if(!isDisposed()){
+            hookOnNext(value);
+        }
+
     }
 
     protected abstract void hookOnNext(T value);
 
     @Override
     public void onError(Throwable t) {
-        if (subscription.getAndSet(CANCELLED) != CANCELLED) {
+        if (SubscriptionHelper.cancel(subscription)) {
             hookOnError(t);
         }
     }
@@ -59,7 +62,7 @@ public abstract class ResilienceBaseSubscriber<T> implements Subscriber<T>, Subs
 
     @Override
     public void onComplete() {
-        if (subscription.getAndSet(CANCELLED) != CANCELLED) {
+        if (SubscriptionHelper.cancel(subscription)) {
             hookOnComplete();
         }
     }

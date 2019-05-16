@@ -53,11 +53,13 @@ class CircuitBreakerSubscriber<T> extends ResilienceBaseSubscriber<T> {
 
     @Override
     protected void hookOnNext(T value) {
-        if (singleProducer && SUCCESS_SIGNALED.compareAndSet(this, 0, 1)) {
-            circuitBreaker.onSuccess(stopWatch.stop().toNanos());
-        }
+        if (!isDisposed()) {
+            if (singleProducer && SUCCESS_SIGNALED.compareAndSet(this, 0, 1)) {
+                circuitBreaker.onSuccess(stopWatch.stop().toNanos());
+            }
 
-        downstreamSubscriber.onNext(value);
+            downstreamSubscriber.onNext(value);
+        }
     }
 
     @Override

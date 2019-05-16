@@ -39,6 +39,18 @@ public abstract class ResilienceBaseObserver implements Disposable {
         }
     }
 
+    protected void whenNotDisposed(Runnable runnable){
+        if (!isDisposed()) {
+            runnable.run();
+        }
+    }
+
+    protected void whenNotCompleted(Runnable runnable){
+        if (DisposableHelper.dispose(subscription)) {
+            runnable.run();
+        }
+    }
+
     protected abstract void hookOnCancel();
 
     @Override

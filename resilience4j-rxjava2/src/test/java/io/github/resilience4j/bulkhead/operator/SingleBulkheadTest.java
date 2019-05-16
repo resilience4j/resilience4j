@@ -10,6 +10,7 @@ import org.mockito.Mockito;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.concurrent.TimeUnit;
 
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
@@ -78,5 +79,19 @@ public class SingleBulkheadTest {
             .assertResult(1, 2);
 
         verify(bulkhead, times(1)).onComplete();
+    }
+
+    @Test
+    public void shouldReleasePermissionOnCancel() {
+        given(bulkhead.tryAcquirePermission()).willReturn(true);
+
+        Single.just(1)
+                .delay(1, TimeUnit.DAYS)
+                .compose(BulkheadOperator.of(bulkhead))
+                .test()
+                .cancel();
+
+        verify(bulkhead, times(1)).releasePermission();
+        verify(bulkhead, never()).onComplete();
     }
 }

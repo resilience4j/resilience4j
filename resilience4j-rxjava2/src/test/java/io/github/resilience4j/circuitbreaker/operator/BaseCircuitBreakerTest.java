@@ -8,7 +8,7 @@ import org.mockito.Mockito;
 /**
  * Helper class to test and assert circuit breakers.
  */
-class BaseCircuitBreakerTest {
+abstract class BaseCircuitBreakerTest {
 
     CircuitBreaker circuitBreaker;
     HelloWorldService helloWorldService;

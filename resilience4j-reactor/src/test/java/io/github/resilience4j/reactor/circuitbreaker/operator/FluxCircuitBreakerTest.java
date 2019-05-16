@@ -21,6 +21,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 import java.io.IOException;
@@ -39,7 +40,7 @@ public class FluxCircuitBreakerTest {
     }
 
     @Test
-    public void shouldSubscribeTFluxJust() {
+    public void shouldSubscribeToFluxJust() {
         given(circuitBreaker.tryAcquirePermission()).willReturn(true);
 
         StepVerifier.create(
@@ -79,6 +80,20 @@ public class FluxCircuitBreakerTest {
 
         verify(circuitBreaker, times(1)).onError(anyLong(), any(IOException.class));
         verify(circuitBreaker, never()).onSuccess(anyLong());
+    }
+
+    @Test
+    public void shouldSubscribeToMonoJustTwice(){
+        given(circuitBreaker.tryAcquirePermission()).willReturn(true);
+
+        StepVerifier.create(Flux.just("Event 1", "Event 2")
+                .flatMap(value -> Mono.just("Bla " + value).compose(CircuitBreakerOperator.of(circuitBreaker))))
+                .expectNext("Bla Event 1")
+                .expectNext("Bla Event 2")
+                .verifyComplete();
+
+        verify(circuitBreaker, times(2)).onSuccess(anyLong());
+        verify(circuitBreaker, never()).onError(anyLong(), any(Throwable.class));
     }
 
     @Test

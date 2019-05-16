@@ -49,10 +49,12 @@ class BulkheadSubscriber<T> extends ResilienceBaseSubscriber<T> {
 
     @Override
     public void hookOnNext(T t) {
-        if (singleProducer && SUCCESS_SIGNALED.compareAndSet(this, 0, 1)) {
-            bulkhead.onComplete();
+        if (!isDisposed()) {
+            if (singleProducer && SUCCESS_SIGNALED.compareAndSet(this, 0, 1)) {
+                bulkhead.onComplete();
+            }
+            downstreamSubscriber.onNext(t);
         }
-        downstreamSubscriber.onNext(t);
     }
 
     @Override
