@@ -3927,18 +3927,112 @@ methods returning types:</p>
 <p>CompletionStage</p>
 </li>
 <li>
-<p>object values</p>
+<p>Object</p>
 </li>
 <li>
-<p>Observable</p>
+<p>Flux</p>
 </li>
 <li>
-<p>Flowable</p>
-</li>
-<li>
-<p>Single</p>
+<p>Mono</p>
 </li>
 </ul>
+</div>
+<div class="sect4">
+<h5 id="_a_note_about_fallback_methods"><a class="anchor" href="#_a_note_about_fallback_methods"></a><a class="link" href="#_a_note_about_fallback_methods">A Note About Fallback Methods</a></h5>
+<div class="paragraph">
+<p>The <code>fallbackMethod</code> parameter signature for the annotations listed in the next sections must match either:</p>
+</div>
+<div class="paragraph">
+<p>1) The method parameter signature on the annotated method or<br>
+2) The method parameter signature with a matching exception type as the last parameter on the annotated method</p>
+</div>
+<div class="paragraph">
+<p>The return value can be a <a href="https://ratpack.io/manual/current/api/ratpack/exec/Promise.html">Promise</a>,<br>
+<a href="https://docs.oracle.com/javase/8/docs/api/java/util/concurrent/CompletionStage.html">CompletionStage</a>,<br>
+<a href="https://projectreactor.io/docs/core/release/api/reactor/core/publisher/Flux.html">Flux</a>,<br>
+<a href="https://projectreactor.io/docs/core/release/api/reactor/core/publisher/Mono.html">Mono</a>, or any non-reactive object type.<br>
+Other reactive types are not supported.</p>
+</div>
+<div class="paragraph">
+<p>If the return value is one of the reactive types listed above, it must match the return value type of the annotated method.</p>
+</div>
+<div class="sect5">
+<h6 id="_examples_6"><a class="anchor" href="#_examples_6"></a><a class="link" href="#_examples_6">Examples</a></h6>
+<div class="paragraph">
+<p>Fallback for a no-params method</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="java"><span class="predefined-type">String</span> fallback() {
+    <span class="string"><span class="delimiter">&quot;</span><span class="content">recovered</span><span class="delimiter">&quot;</span></span>
+}
+
+OR
+
+<span class="predefined-type">String</span> fallback(<span class="predefined-type">Throwable</span> throwable) {
+    <span class="string"><span class="delimiter">&quot;</span><span class="content">recovered</span><span class="delimiter">&quot;</span></span>
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Fallback for a method with a single <code>String</code> parameter</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="java"><span class="predefined-type">String</span> fallback(<span class="predefined-type">String</span> s) {
+    <span class="string"><span class="delimiter">&quot;</span><span class="content">recovered</span><span class="delimiter">&quot;</span></span>
+}
+
+OR
+
+<span class="predefined-type">String</span> fallback(<span class="predefined-type">String</span> s, <span class="predefined-type">Throwable</span> throwable) {
+    <span class="string"><span class="delimiter">&quot;</span><span class="content">recovered</span><span class="delimiter">&quot;</span></span>
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><code>Promise</code> fallback</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="java">Promise&lt;<span class="predefined-type">String</span>&gt; fallback(<span class="predefined-type">String</span> s, <span class="predefined-type">Throwable</span> throwable) {
+    Promise.value(<span class="string"><span class="delimiter">&quot;</span><span class="content">recovered</span><span class="delimiter">&quot;</span></span>)
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><code>CompletionStage</code> fallback</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="java">CompletionStage&lt;<span class="predefined-type">String</span>&gt; fallback(<span class="predefined-type">String</span> s, <span class="predefined-type">Throwable</span> throwable) {
+    def future = <span class="keyword">new</span> CompletableFuture&lt;<span class="predefined-type">String</span>&gt;()
+    future.complete(<span class="string"><span class="delimiter">&quot;</span><span class="content">recovered</span><span class="delimiter">&quot;</span></span>)
+    <span class="keyword">return</span> future
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><code>Flux</code> fallback</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="java">Flux&lt;<span class="predefined-type">String</span>&gt; fallback(<span class="predefined-type">String</span> s, <span class="predefined-type">Throwable</span> throwable) {
+    Flux.just(<span class="string"><span class="delimiter">&quot;</span><span class="content">recovered</span><span class="delimiter">&quot;</span></span>)
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><code>Mono</code> fallback</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="java">Mono&lt;<span class="predefined-type">String</span>&gt; fallback(<span class="predefined-type">String</span> s, <span class="predefined-type">Throwable</span> throwable) {
+    Mono.just(<span class="string"><span class="delimiter">&quot;</span><span class="content">recovered</span><span class="delimiter">&quot;</span></span>)
+}</code></pre>
+</div>
+</div>
+</div>
 </div>
 <div class="sect4">
 <h5 id="_bulkhead_4"><a class="anchor" href="#_bulkhead_4"></a><a class="link" href="#_bulkhead_4">Bulkhead</a></h5>
@@ -3949,7 +4043,7 @@ For example:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="CodeRay highlight"><code data-lang="java"><span class="annotation">@Bulkhead</span>(name = <span class="string"><span class="delimiter">&quot;</span><span class="content">backendA</span><span class="delimiter">&quot;</span></span>, recovery = MyRecoveryFunction.class)
+<pre class="CodeRay highlight"><code data-lang="java"><span class="annotation">@Bulkhead</span>(name = <span class="string"><span class="delimiter">&quot;</span><span class="content">backendA</span><span class="delimiter">&quot;</span></span>, fallbackMethod = <span class="string"><span class="delimiter">&quot;</span><span class="content">fallback</span><span class="delimiter">&quot;</span></span>)
 <span class="annotation">@Singleton</span>
 <span class="directive">public</span> <span class="type">class</span> <span class="class">BackendAConnector</span> <span class="directive">implements</span> Connector {
     ...
@@ -3957,7 +4051,7 @@ For example:</p>
 </div>
 </div>
 <div class="paragraph">
-<p>Where <code>MyRecoveryFunction</code> is implements <code>io.github.resilience4j.ratpack.RecoveryFunction</code> and provides<br>
+<p>Where <code>fallbackMethod</code> is a method in the same class that provides<br>
 a fallback value that is returned when the bulkhead identified by <code>name</code> is full or call ends in exception.</p>
 </div>
 </div>
@@ -3970,7 +4064,7 @@ For example:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="CodeRay highlight"><code data-lang="java"><span class="annotation">@CircuitBreaker</span>(name = <span class="string"><span class="delimiter">&quot;</span><span class="content">backendA</span><span class="delimiter">&quot;</span></span>, recovery = MyRecoveryFunction.class)
+<pre class="CodeRay highlight"><code data-lang="java"><span class="annotation">@CircuitBreaker</span>(name = <span class="string"><span class="delimiter">&quot;</span><span class="content">backendA</span><span class="delimiter">&quot;</span></span>, fallbackMethod = <span class="string"><span class="delimiter">&quot;</span><span class="content">fallback</span><span class="delimiter">&quot;</span></span>)
 <span class="annotation">@Singleton</span>
 <span class="directive">public</span> <span class="type">class</span> <span class="class">BackendAConnector</span> <span class="directive">implements</span> Connector {
     ...
@@ -3978,7 +4072,7 @@ For example:</p>
 </div>
 </div>
 <div class="paragraph">
-<p>Where <code>MyRecoveryFunction</code> is implements <code>io.github.resilience4j.ratpack.RecoveryFunction</code> and provides<br>
+<p>Where <code>fallbackMethod</code> is a method in the same class that provides<br>
 a fallback value that is returned when the circuit breaker identified by <code>name</code> is open.</p>
 </div>
 </div>
@@ -3992,7 +4086,7 @@ For example:<br>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="CodeRay highlight"><code data-lang="java"><span class="annotation">@Retry</span>(name = <span class="string"><span class="delimiter">&quot;</span><span class="content">backendA</span><span class="delimiter">&quot;</span></span>, recovery = MyRecoveryFunction.class)
+<pre class="CodeRay highlight"><code data-lang="java"><span class="annotation">@Retry</span>(name = <span class="string"><span class="delimiter">&quot;</span><span class="content">backendA</span><span class="delimiter">&quot;</span></span>, fallbackMethod = <span class="string"><span class="delimiter">&quot;</span><span class="content">fallback</span><span class="delimiter">&quot;</span></span>)
 <span class="annotation">@Singleton</span>
 <span class="directive">public</span> <span class="type">class</span> <span class="class">BackendAConnector</span> <span class="directive">implements</span> Connector {
     ...
@@ -4000,7 +4094,7 @@ For example:<br>
 </div>
 </div>
 <div class="paragraph">
-<p>Where <code>MyRecoveryFunction</code> is implements <code>io.github.resilience4j.ratpack.RecoveryFunction</code> and provides<br>
+<p>Where <code>fallbackMethod</code> is a method in the same class that provides<br>
 a fallback value that is returned when the retry identified by <code>name</code> is has exceeded it&#8217;s max calls.</p>
 </div>
 </div>
@@ -4013,7 +4107,7 @@ For example:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="CodeRay highlight"><code data-lang="java"><span class="annotation">@RateLimiter</span>(name = <span class="string"><span class="delimiter">&quot;</span><span class="content">backendA</span><span class="delimiter">&quot;</span></span>, recovery = MyRecoveryFunction.class)
+<pre class="CodeRay highlight"><code data-lang="java"><span class="annotation">@RateLimiter</span>(name = <span class="string"><span class="delimiter">&quot;</span><span class="content">backendA</span><span class="delimiter">&quot;</span></span>, fallbackMethod = <span class="string"><span class="delimiter">&quot;</span><span class="content">fallback</span><span class="delimiter">&quot;</span></span>)
 <span class="annotation">@Singleton</span>
 <span class="directive">public</span> <span class="type">class</span> <span class="class">BackendAConnector</span> <span class="directive">implements</span> Connector {
     ...
@@ -4021,7 +4115,7 @@ For example:</p>
 </div>
 </div>
 <div class="paragraph">
-<p>Where <code>MyRecoveryFunction</code> is implements <code>io.github.resilience4j.ratpack.RecoveryFunction</code> and provides<br>
+<p>Where <code>fallbackMethod</code> is a method in the same class that provides<br>
 a fallback value that is returned when the rate limiter rate limit identified by <code>name</code> is exceeded.</p>
 </div>
 </div>
@@ -5142,7 +5236,7 @@ So you can easily restrict not only network calls but your local in-memory opera
 <div id="footer">
 <div id="footer-text">
 Version 0.15.0-SNAPSHOT<br>
-Last updated 2019-05-17 13:27:56 UTC
+Last updated 2019-05-17 16:38:35 UTC
 </div>
 </div>
 </body>
