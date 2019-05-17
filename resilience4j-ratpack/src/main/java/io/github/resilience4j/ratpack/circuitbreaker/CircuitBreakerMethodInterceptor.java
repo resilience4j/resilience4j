@@ -36,8 +36,9 @@ import java.util.concurrent.CompletionStage;
 
 /**
  * A {@link MethodInterceptor} to handle all methods annotated with {@link CircuitBreaker}. It will
- * handle methods that return a Promise, Observable, Flowable, CompletionStage, or value. It will execute the circuit breaker and
- * the fallback found in the annotation.
+ * handle methods that return a {@link Promise}, {@link reactor.core.publisher.Flux}, {@link reactor.core.publisher.Mono}, {@link java.util.concurrent.CompletionStage}, or value.
+ *
+ * The CircuitBreakerRegistry is used to retrieve an instance of a CircuitBreaker for a specific name.
  *
  * Given a method like this:
  * <pre><code>

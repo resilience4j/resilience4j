@@ -38,8 +38,24 @@ import java.util.concurrent.*;
 
 /**
  * This Spring AOP aspect intercepts all methods which are annotated with a {@link Retry} annotation.
- * The aspect protects an annotated method with a Retry. The RetryRegistry is used to retrieve an instance of a Retry for
- * a specific name.
+ * The aspect will handle methods that return a RxJava2 reactive type, Spring Reactor reactive type, CompletionStage type, or value type.
+ *
+ * The RetryRegistry is used to retrieve an instance of a Retry for a specific name.
+ *
+ * Given a method like this:
+ * <pre><code>
+ *     {@literal @}Retry(name = "myService")
+ *     public String fancyName(String name) {
+ *         return "Sir Captain " + name;
+ *     }
+ * </code></pre>
+ * each time the {@code #fancyName(String)} method is invoked, the method's execution will pass through a
+ * a {@link io.github.resilience4j.retry.Retry} according to the given config.
+ *
+ * The fallbackMethod parameter signature must match either:
+ *
+ * 1) The method parameter signature on the annotated method or
+ * 2) The method parameter signature with a matching exception type as the last parameter on the annotated method
  */
 @Aspect
 public class RetryAspect implements Ordered {
@@ -70,24 +86,25 @@ public class RetryAspect implements Ordered {
 	public void matchAnnotatedClassOrMethod(Retry retry) {
 	}
 
-	@Around(value = "matchAnnotatedClassOrMethod(backendMonitored)", argNames = "proceedingJoinPoint, backendMonitored")
-	public Object retryAroundAdvice(ProceedingJoinPoint proceedingJoinPoint, @Nullable Retry backendMonitored) throws Throwable {
+	@Around(value = "matchAnnotatedClassOrMethod(retryAnnotation)", argNames = "proceedingJoinPoint, retryAnnotation")
+	public Object retryAroundAdvice(ProceedingJoinPoint proceedingJoinPoint, @Nullable Retry retryAnnotation) throws Throwable {
 		Method method = ((MethodSignature) proceedingJoinPoint.getSignature()).getMethod();
 		String methodName = method.getDeclaringClass().getName() + "#" + method.getName();
-		if (backendMonitored == null) {
-			backendMonitored = getBackendMonitoredAnnotation(proceedingJoinPoint);
+		if (retryAnnotation == null) {
+			retryAnnotation = getRetryAnnotation(proceedingJoinPoint);
 		}
-		if(backendMonitored == null) { //because annotations wasn't found
+		if(retryAnnotation == null) { //because annotations wasn't found
 			return proceedingJoinPoint.proceed();
 		}
-		String backend = backendMonitored.name();
+		String backend = retryAnnotation.name();
 		io.github.resilience4j.retry.Retry retry = getOrCreateRetry(methodName, backend);
 		Class<?> returnType = method.getReturnType();
-		if (StringUtils.isEmpty(backendMonitored.fallbackMethod())) {
+
+		if (StringUtils.isEmpty(retryAnnotation.fallbackMethod())) {
 			return proceed(proceedingJoinPoint, methodName, retry, returnType);
 		}
 
-		FallbackMethod fallbackMethod = new FallbackMethod(backendMonitored.fallbackMethod(), method, proceedingJoinPoint.getArgs(), proceedingJoinPoint.getTarget());
+		FallbackMethod fallbackMethod = new FallbackMethod(retryAnnotation.fallbackMethod(), method, proceedingJoinPoint.getArgs(), proceedingJoinPoint.getTarget());
 		return fallbackDecorators.decorate(fallbackMethod, () -> proceed(proceedingJoinPoint, methodName, retry, returnType)).apply();
 	}
 
@@ -125,7 +142,7 @@ public class RetryAspect implements Ordered {
 	 * @return the retry annotation
 	 */
 	@Nullable
-	private Retry getBackendMonitoredAnnotation(ProceedingJoinPoint proceedingJoinPoint) {
+	private Retry getRetryAnnotation(ProceedingJoinPoint proceedingJoinPoint) {
 		return AnnotationExtractor.extract(proceedingJoinPoint.getTarget().getClass(), Retry.class);
 	}
 

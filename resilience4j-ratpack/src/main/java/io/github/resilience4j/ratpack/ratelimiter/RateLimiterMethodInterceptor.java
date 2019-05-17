@@ -40,8 +40,7 @@ import java.util.concurrent.CompletionStage;
 
 /**
  * A {@link MethodInterceptor} to handle all methods annotated with {@link RateLimiter}. It will
- * handle methods that return a Promise only. It will add a transform to the promise with the circuit breaker and
- * fallback found in the annotation.
+ * handle methods that return a {@link Promise}, {@link reactor.core.publisher.Flux}, {@link reactor.core.publisher.Mono}, {@link java.util.concurrent.CompletionStage}, or value.
  *
  * Given a method like this:
  * <pre><code>
