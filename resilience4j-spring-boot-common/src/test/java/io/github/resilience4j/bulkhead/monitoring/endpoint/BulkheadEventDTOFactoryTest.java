@@ -14,7 +14,7 @@ public class BulkheadEventDTOFactoryTest {
     public void shouldMapBulkheadOnCallFinishedEvent(){
         BulkheadOnCallFinishedEvent event = new BulkheadOnCallFinishedEvent("name");
 
-        BulkheadEventDTO eventDTO = BulkheadEventDTOFactory.createBulkheadEventDTOFactory(event);
+        BulkheadEventDTO eventDTO = BulkheadEventDTOFactory.createBulkheadEventDTO(event);
 
         assertThat(eventDTO.getBulkheadName()).isEqualTo("name");
         assertThat(eventDTO.getType()).isEqualTo(CALL_FINISHED);
@@ -25,7 +25,7 @@ public class BulkheadEventDTOFactoryTest {
     public void shouldMapBulkheadOnCallPermittedEvent(){
         BulkheadOnCallPermittedEvent event = new BulkheadOnCallPermittedEvent("name");
 
-        BulkheadEventDTO eventDTO = BulkheadEventDTOFactory.createBulkheadEventDTOFactory(event);
+        BulkheadEventDTO eventDTO = BulkheadEventDTOFactory.createBulkheadEventDTO(event);
 
         assertThat(eventDTO.getBulkheadName()).isEqualTo("name");
         assertThat(eventDTO.getType()).isEqualTo(CALL_PERMITTED);
@@ -36,7 +36,7 @@ public class BulkheadEventDTOFactoryTest {
     public void shouldMapBulkheadOnCallRejectedEvent(){
         BulkheadOnCallRejectedEvent event = new BulkheadOnCallRejectedEvent("name");
 
-        BulkheadEventDTO eventDTO = BulkheadEventDTOFactory.createBulkheadEventDTOFactory(event);
+        BulkheadEventDTO eventDTO = BulkheadEventDTOFactory.createBulkheadEventDTO(event);
 
         assertThat(eventDTO.getBulkheadName()).isEqualTo("name");
         assertThat(eventDTO.getType()).isEqualTo(CALL_REJECTED);

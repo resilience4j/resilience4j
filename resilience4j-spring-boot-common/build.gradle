@@ -1,5 +1,6 @@
 dependencies {
     compile project(':resilience4j-spring')
+    compile project(':resilience4j-framework-common')
     
     compileOnly(libraries.spring_boot2_aop)
     compileOnly(libraries.spring_boot2_config_processor)
