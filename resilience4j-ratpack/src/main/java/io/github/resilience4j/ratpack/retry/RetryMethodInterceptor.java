@@ -17,14 +17,18 @@ package io.github.resilience4j.ratpack.retry;
 
 import com.google.inject.Inject;
 import io.github.resilience4j.core.lang.Nullable;
+import io.github.resilience4j.ratpack.internal.AbstractMethodInterceptor;
+import io.github.resilience4j.ratpack.recovery.DefaultRecoveryFunction;
 import io.github.resilience4j.ratpack.recovery.RecoveryFunction;
 import io.github.resilience4j.retry.RetryRegistry;
+import io.github.resilience4j.retry.annotation.Retry;
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
 import ratpack.exec.Promise;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 
@@ -32,8 +36,30 @@ import java.util.concurrent.CompletionStage;
  * A {@link MethodInterceptor} to handle all methods annotated with {@link Retry}. It will
  * handle methods that return a Promise, CompletionStage, or value. It will execute the retry and
  * the fallback found in the annotation.
+ *
+ * Given a method like this:
+ * <pre><code>
+ *     {@literal @}RateLimiter(name = "myService")
+ *     public String fancyName(String name) {
+ *         return "Sir Captain " + name;
+ *     }
+ * </code></pre>
+ * each time the {@code #fancyName(String)} method is invoked, the method's execution will pass through a
+ * a {@link io.github.resilience4j.retry.Retry} according to the given config.
+ *
+ * The method parameter signature must match either:
+ *
+ * 1) The method parameter signature on the annotated method or
+ * 2) The method parameter signature with a matching exception type as the last parameter on the annotated method
+ *
+ * The return value can be a {@link Promise}, {@link java.util.concurrent.CompletionStage},
+ * {@link reactor.core.publisher.Flux}, {@link reactor.core.publisher.Mono}, or an object value.
+ * Other reactive types are not supported.
+ *
+ * If the return value is one of the reactive types listed above, it must match the return value type of the
+ * annotated method.
  */
-public class RetryMethodInterceptor implements MethodInterceptor {
+public class RetryMethodInterceptor extends AbstractMethodInterceptor {
 
     @Inject(optional = true)
     @Nullable
@@ -48,19 +74,21 @@ public class RetryMethodInterceptor implements MethodInterceptor {
             registry = RetryRegistry.ofDefaults();
         }
         io.github.resilience4j.retry.Retry retry = registry.retry(annotation.name());
-        RecoveryFunction<?> recoveryFunction = annotation.recovery().newInstance();
+        final RecoveryFunction<?> fallbackMethod = Optional
+                .ofNullable(createRecoveryFunction(invocation, annotation.fallbackMethod()))
+                .orElse(new DefaultRecoveryFunction<>());
         Class<?> returnType = invocation.getMethod().getReturnType();
         if (Promise.class.isAssignableFrom(returnType)) {
-            Promise<?> result = (Promise<?>) proceed(invocation, retry, recoveryFunction);
+            Promise<?> result = (Promise<?>) proceed(invocation, retry, fallbackMethod);
             if (result != null) {
-                RetryTransformer transformer = RetryTransformer.of(retry).recover(recoveryFunction);
+                RetryTransformer transformer = RetryTransformer.of(retry).recover(fallbackMethod);
                 result = result.transform(transformer);
             }
             return result;
         } else if (Flux.class.isAssignableFrom(returnType)) {
-            Flux<?> result = (Flux<?>) proceed(invocation, retry, recoveryFunction);
+            Flux<?> result = (Flux<?>) proceed(invocation, retry, fallbackMethod);
             if (result != null) {
-                RetryTransformer transformer = RetryTransformer.of(retry).recover(recoveryFunction);
+                RetryTransformer transformer = RetryTransformer.of(retry).recover(fallbackMethod);
                 final Flux<?> temp = result;
                 Promise<?> promise = Promise.async(f -> temp.collectList().subscribe(f::success, f::error)).transform(transformer);
                 Flux next = Flux.create(subscriber ->
@@ -69,31 +97,31 @@ public class RetryMethodInterceptor implements MethodInterceptor {
                             subscriber.complete();
                         })
                 );
-                result = recoveryFunction.onErrorResume(next);
+                result = fallbackMethod.onErrorResume(next);
             }
             return result;
         } else if (Mono.class.isAssignableFrom(returnType)) {
-            Mono<?> result = (Mono<?>) proceed(invocation, retry, recoveryFunction);
+            Mono<?> result = (Mono<?>) proceed(invocation, retry, fallbackMethod);
             if (result != null) {
-                RetryTransformer transformer = RetryTransformer.of(retry).recover(recoveryFunction);
+                RetryTransformer transformer = RetryTransformer.of(retry).recover(fallbackMethod);
                 final Mono<?> temp = result;
                 Promise<?> promise = Promise.async(f -> temp.subscribe(f::success, f::error)).transform(transformer);
                 Mono next = Mono.create(subscriber ->
                         promise.onError(subscriber::error).then(subscriber::success)
                 );
-                result = recoveryFunction.onErrorResume(next);
+                result = fallbackMethod.onErrorResume(next);
             }
             return result;
         }
         else if (CompletionStage.class.isAssignableFrom(returnType)) {
-            CompletionStage stage = (CompletionStage) proceed(invocation, retry, recoveryFunction);
-            return executeCompletionStage(invocation, stage, retry.context(), recoveryFunction);
+            CompletionStage stage = (CompletionStage) proceed(invocation, retry, fallbackMethod);
+            return executeCompletionStage(invocation, stage, retry.context(), fallbackMethod);
+        } else {
+            return proceed(invocation, retry, fallbackMethod);
         }
-        return proceed(invocation, retry, recoveryFunction);
     }
 
     @SuppressWarnings("unchecked")
-
     private CompletionStage<?> executeCompletionStage(MethodInvocation invocation, CompletionStage<?> stage, io.github.resilience4j.retry.Retry.Context context, RecoveryFunction<?> recoveryFunction) {
         final CompletableFuture promise = new CompletableFuture();
         stage.whenComplete((v, t) -> {
@@ -104,12 +132,7 @@ public class RetryMethodInterceptor implements MethodInterceptor {
                     CompletableFuture temp = executeCompletionStage(invocation, next, context, recoveryFunction).toCompletableFuture();
                     promise.complete(temp.join());
                 } catch (Throwable t2) {
-                    try {
-                        Object result = recoveryFunction.apply(t);
-                        promise.complete(result);
-                    } catch (Exception exception) {
-                        promise.completeExceptionally(exception);
-                    }
+                    completeFailedFuture(t2, recoveryFunction, promise);
                 }
             } else {
                 context.onSuccess();
