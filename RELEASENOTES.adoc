@@ -212,4 +212,13 @@ NOTE: Breaking changes:
 * Updated Retrofit from 2.3.0 to 2.5.0
 * Updated Spring Reactor from 3.0.7.RELEASE to 3.2.6.RELEASE
 
-
+== Version 0.15.0
+* Issue #309: Added fallbackMethod support to annotations for Spring and Ratpack
+* Issue #268: Added a functionality to add configurations to registries and reuse them.
+* Issue #398: Added an event publisher to all registries which allows to execute code when entries are created, deleted or replaced.
+* Issue #273: Added a remove method to all registries
+* Issue #282: Added a replace method to all registries
+* Issue #291: Added support to overwrite all resilience4j beans in Spring Boot.
+* Issue #417: Allow to fully close a bulkhead
+* Issue #311, #336, #357, #361: Refactored resilience4j-reactor and resilience4j-rxJava2 so that they try to acquire a permission before the subscriptions happens.
+* Issue #343: CircuitBreaker only allows a configurable number of concurrent calls when in half-open state and rejects all further calls.
