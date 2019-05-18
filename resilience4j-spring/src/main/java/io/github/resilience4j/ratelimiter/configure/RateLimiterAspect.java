@@ -15,13 +15,11 @@
  */
 package io.github.resilience4j.ratelimiter.configure;
 
-import io.github.resilience4j.core.lang.Nullable;
-import io.github.resilience4j.fallback.FallbackDecorators;
-import io.github.resilience4j.fallback.FallbackMethod;
-import io.github.resilience4j.ratelimiter.RateLimiterConfig;
-import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
-import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
-import io.github.resilience4j.utils.AnnotationExtractor;
+import java.lang.reflect.Method;
+import java.util.List;
+import java.util.concurrent.CompletionException;
+import java.util.concurrent.CompletionStage;
+
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -33,10 +31,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.Ordered;
 import org.springframework.util.StringUtils;
 
-import java.lang.reflect.Method;
-import java.util.List;
-import java.util.concurrent.CompletionException;
-import java.util.concurrent.CompletionStage;
+import io.github.resilience4j.core.lang.Nullable;
+import io.github.resilience4j.fallback.FallbackDecorators;
+import io.github.resilience4j.fallback.FallbackMethod;
+import io.github.resilience4j.ratelimiter.RateLimiterConfig;
+import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
+import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
+import io.github.resilience4j.utils.AnnotationExtractor;
 
 /**
  * This Spring AOP aspect intercepts all methods which are annotated with a {@link RateLimiter} annotation.
@@ -104,7 +105,10 @@ public class RateLimiterAspect implements Ordered {
 			return proceed(proceedingJoinPoint, methodName, returnType, rateLimiter);
 		}
 
-		FallbackMethod fallbackMethod = new FallbackMethod(rateLimiterAnnotation.fallbackMethod(), method, proceedingJoinPoint.getArgs(), proceedingJoinPoint.getTarget());
+		FallbackMethod fallbackMethod = FallbackMethod.builder().recoveryMethodName(rateLimiterAnnotation.fallbackMethod())
+				.originalMethod(method).originalMethodArgs(proceedingJoinPoint.getArgs())
+				.targetObject(proceedingJoinPoint.getTarget()).build();
+
         return fallbackDecorators.decorate(fallbackMethod, () -> proceed(proceedingJoinPoint, methodName, returnType, rateLimiter)).apply();
 	}
 
