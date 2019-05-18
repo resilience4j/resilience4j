@@ -528,7 +528,7 @@ table.CodeRay td.code>pre{padding:0}
 <h1>Resilience4j User Guide</h1>
 <div class="details">
 <span id="author" class="author">Robert Winkler</span><br>
-<span id="revnumber">version 0.15.0-SNAPSHOT,</span>
+<span id="revnumber">version 0.16.0-SNAPSHOT,</span>
 <span id="revdate">2019-05-18</span>
 </div>
 <div id="toc" class="toc2">
@@ -793,12 +793,12 @@ If you use Gradle or Maven, you can include Resilience4j modules as follows.</p>
     jCenter()
 }
 
-compile "io.github.resilience4j:resilience4j-circuitbreaker:0.14.1"
-compile "io.github.resilience4j:resilience4j-ratelimiter:0.14.1"
-compile "io.github.resilience4j:resilience4j-retry:0.14.1"
-compile "io.github.resilience4j:resilience4j-bulkhead:0.14.1"
-compile "io.github.resilience4j:resilience4j-cache:0.14.1"
-compile "io.github.resilience4j:resilience4j-timelimiter:0.14.1"</code></pre>
+compile "io.github.resilience4j:resilience4j-circuitbreaker:0.15.0"
+compile "io.github.resilience4j:resilience4j-ratelimiter:0.15.0"
+compile "io.github.resilience4j:resilience4j-retry:0.15.0"
+compile "io.github.resilience4j:resilience4j-bulkhead:0.15.0"
+compile "io.github.resilience4j:resilience4j-cache:0.15.0"
+compile "io.github.resilience4j:resilience4j-timelimiter:0.15.0"</code></pre>
 </div>
 </div>
 </div>
@@ -833,32 +833,32 @@ compile "io.github.resilience4j:resilience4j-timelimiter:0.14.1"</code></pre>
 <span class="tag">&lt;dependency&gt;</span>
     <span class="tag">&lt;groupId&gt;</span>io.github.resilience4j<span class="tag">&lt;/groupId&gt;</span>
     <span class="tag">&lt;artifactId&gt;</span>resilience4j-circuitbreaker<span class="tag">&lt;/artifactId&gt;</span>
-    <span class="tag">&lt;version&gt;</span>0.14.1<span class="tag">&lt;/version&gt;</span>
+    <span class="tag">&lt;version&gt;</span>0.15.0<span class="tag">&lt;/version&gt;</span>
 <span class="tag">&lt;/dependency&gt;</span>
 <span class="tag">&lt;dependency&gt;</span>
     <span class="tag">&lt;groupId&gt;</span>io.github.resilience4j<span class="tag">&lt;/groupId&gt;</span>
     <span class="tag">&lt;artifactId&gt;</span>resilience4j-ratelimiter<span class="tag">&lt;/artifactId&gt;</span>
-    <span class="tag">&lt;version&gt;</span>0.14.1<span class="tag">&lt;/version&gt;</span>
+    <span class="tag">&lt;version&gt;</span>0.15.0<span class="tag">&lt;/version&gt;</span>
 <span class="tag">&lt;/dependency&gt;</span>
 <span class="tag">&lt;dependency&gt;</span>
     <span class="tag">&lt;groupId&gt;</span>io.github.resilience4j<span class="tag">&lt;/groupId&gt;</span>
     <span class="tag">&lt;artifactId&gt;</span>resilience4j-retry<span class="tag">&lt;/artifactId&gt;</span>
-    <span class="tag">&lt;version&gt;</span>0.14.1<span class="tag">&lt;/version&gt;</span>
+    <span class="tag">&lt;version&gt;</span>0.15.0<span class="tag">&lt;/version&gt;</span>
 <span class="tag">&lt;/dependency&gt;</span>
 <span class="tag">&lt;dependency&gt;</span>
     <span class="tag">&lt;groupId&gt;</span>io.github.resilience4j<span class="tag">&lt;/groupId&gt;</span>
     <span class="tag">&lt;artifactId&gt;</span>resilience4j-bulkhead<span class="tag">&lt;/artifactId&gt;</span>
-    <span class="tag">&lt;version&gt;</span>0.14.1<span class="tag">&lt;/version&gt;</span>
+    <span class="tag">&lt;version&gt;</span>0.15.0<span class="tag">&lt;/version&gt;</span>
 <span class="tag">&lt;/dependency&gt;</span>
 <span class="tag">&lt;dependency&gt;</span>
     <span class="tag">&lt;groupId&gt;</span>io.github.resilience4j<span class="tag">&lt;/groupId&gt;</span>
     <span class="tag">&lt;artifactId&gt;</span>resilience4j-cache<span class="tag">&lt;/artifactId&gt;</span>
-    <span class="tag">&lt;version&gt;</span>0.14.1<span class="tag">&lt;/version&gt;</span>
+    <span class="tag">&lt;version&gt;</span>0.15.0<span class="tag">&lt;/version&gt;</span>
 <span class="tag">&lt;/dependency&gt;</span>
 <span class="tag">&lt;dependency&gt;</span>
     <span class="tag">&lt;groupId&gt;</span>io.github.resilience4j<span class="tag">&lt;/groupId&gt;</span>
     <span class="tag">&lt;artifactId&gt;</span>resilience4j-timelimiter<span class="tag">&lt;/artifactId&gt;</span>
-    <span class="tag">&lt;version&gt;</span>0.14.1<span class="tag">&lt;/version&gt;</span>
+    <span class="tag">&lt;version&gt;</span>0.15.0<span class="tag">&lt;/version&gt;</span>
 <span class="tag">&lt;/dependency&gt;</span></code></pre>
 </div>
 </div>
@@ -1908,7 +1908,7 @@ You also need Spring Boot Actuator and Spring Boot AOP.</p>
 
 
 dependencies {
-	compile('io.github.resilience4j:resilience4j-spring-boot:0.14.1')
+	compile('io.github.resilience4j:resilience4j-spring-boot:0.15.0')
     compile('org.springframework.boot:spring-boot-starter-actuator')
     compile('org.springframework.boot:spring-boot-starter-aop')
 }</code></pre>
@@ -2750,7 +2750,7 @@ You also need Spring Boot Actuator and Spring Boot AOP.</p>
 
 
 dependencies {
-	compile('io.github.resilience4j:resilience4j-spring-boot2:0.14.1')
+	compile('io.github.resilience4j:resilience4j-spring-boot2:0.15.0')
     compile('org.springframework.boot:spring-boot-starter-actuator')
     compile('org.springframework.boot:spring-boot-starter-aop')
 }</code></pre>
@@ -2816,23 +2816,23 @@ Please see <a href="https://docs.spring.io/spring-boot/docs/current/actuator-api
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="json">{
     <span class="key"><span class="delimiter">&quot;</span><span class="content">names</span><span class="delimiter">&quot;</span></span>: [
-        <span class="string"><span class="delimiter">&quot;</span><span class="content">resilience4j_circuitbreaker_calls</span><span class="delimiter">&quot;</span></span>,
-        <span class="string"><span class="delimiter">&quot;</span><span class="content">resilience4j_circuitbreaker_max_buffered_calls</span><span class="delimiter">&quot;</span></span>,
-        <span class="string"><span class="delimiter">&quot;</span><span class="content">resilience4j_circuitbreaker_buffered_calls</span><span class="delimiter">&quot;</span></span>,
-        <span class="string"><span class="delimiter">&quot;</span><span class="content">resilience4j_circuitbreaker_state</span><span class="delimiter">&quot;</span></span>,
-        <span class="string"><span class="delimiter">&quot;</span><span class="content">resilience4j_circuitbreaker_failure_rate</span><span class="delimiter">&quot;</span></span>
+        <span class="string"><span class="delimiter">&quot;</span><span class="content">resilience4j.circuitbreaker.calls</span><span class="delimiter">&quot;</span></span>,
+        <span class="string"><span class="delimiter">&quot;</span><span class="content">resilience4j.circuitbreaker.max.buffered.calls</span><span class="delimiter">&quot;</span></span>,
+        <span class="string"><span class="delimiter">&quot;</span><span class="content">resilience4j.circuitbreaker.buffered.calls</span><span class="delimiter">&quot;</span></span>,
+        <span class="string"><span class="delimiter">&quot;</span><span class="content">resilience4j.circuitbreaker.state</span><span class="delimiter">&quot;</span></span>,
+        <span class="string"><span class="delimiter">&quot;</span><span class="content">resilience4j.circuitbreaker.failure.rate</span><span class="delimiter">&quot;</span></span>
         ]
 }</code></pre>
 </div>
 </div>
 <div class="paragraph">
 <p>To retrieve a metric, make a GET request to <code>/actuator/metrics/{metric.name}</code>.<br>
-For example: <code>/actuator/metrics/resilience4j_circuitbreaker_calls</code></p>
+For example: <code>/actuator/metrics/resilience4j.circuitbreaker.calls</code></p>
 </div>
 <div class="listingblock">
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="json">{
-    <span class="key"><span class="delimiter">&quot;</span><span class="content">name</span><span class="delimiter">&quot;</span></span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">resilience4j_circuitbreaker_calls</span><span class="delimiter">&quot;</span></span>,
+    <span class="key"><span class="delimiter">&quot;</span><span class="content">name</span><span class="delimiter">&quot;</span></span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">resilience4j.circuitbreaker.calls</span><span class="delimiter">&quot;</span></span>,
     <span class="key"><span class="delimiter">&quot;</span><span class="content">measurements</span><span class="delimiter">&quot;</span></span>: [
         {
             <span class="key"><span class="delimiter">&quot;</span><span class="content">statistic</span><span class="delimiter">&quot;</span></span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">VALUE</span><span class="delimiter">&quot;</span></span>,
@@ -2898,19 +2898,19 @@ resilience4j_circuitbreaker_buffered_calls{name="backendB",} 10.0</code></pre>
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="json">{
     <span class="key"><span class="delimiter">&quot;</span><span class="content">names</span><span class="delimiter">&quot;</span></span>: [
-        <span class="string"><span class="delimiter">&quot;</span><span class="content">resilience4j_retry_calls</span><span class="delimiter">&quot;</span></span>
+        <span class="string"><span class="delimiter">&quot;</span><span class="content">resilience4j.retry.calls</span><span class="delimiter">&quot;</span></span>
         ]
 }</code></pre>
 </div>
 </div>
 <div class="paragraph">
 <p>To retrieve the metric, make a GET request to <code>/actuator/metrics/{metric.name}</code>.<br>
-For example: <code>/actuator/metrics/resilience4j_retry_calls</code></p>
+For example: <code>/actuator/metrics/resilience4j.retry.calls</code></p>
 </div>
 <div class="listingblock">
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="json">{
-    <span class="key"><span class="delimiter">&quot;</span><span class="content">name</span><span class="delimiter">&quot;</span></span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">resilience4j_retry_calls</span><span class="delimiter">&quot;</span></span>,
+    <span class="key"><span class="delimiter">&quot;</span><span class="content">name</span><span class="delimiter">&quot;</span></span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">resilience4j.retry.calls</span><span class="delimiter">&quot;</span></span>,
     <span class="key"><span class="delimiter">&quot;</span><span class="content">measurements</span><span class="delimiter">&quot;</span></span>: [
         {
             <span class="key"><span class="delimiter">&quot;</span><span class="content">statistic</span><span class="delimiter">&quot;</span></span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">VALUE</span><span class="delimiter">&quot;</span></span>,
@@ -2921,10 +2921,10 @@ For example: <code>/actuator/metrics/resilience4j_retry_calls</code></p>
         {
             <span class="key"><span class="delimiter">&quot;</span><span class="content">tag</span><span class="delimiter">&quot;</span></span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">kind</span><span class="delimiter">&quot;</span></span>,
             <span class="key"><span class="delimiter">&quot;</span><span class="content">values</span><span class="delimiter">&quot;</span></span>: [
-                <span class="string"><span class="delimiter">&quot;</span><span class="content">successful_without_retry</span><span class="delimiter">&quot;</span></span>,
-                <span class="string"><span class="delimiter">&quot;</span><span class="content">successful_with_retry</span><span class="delimiter">&quot;</span></span>,
-                <span class="string"><span class="delimiter">&quot;</span><span class="content">failed_with_retry</span><span class="delimiter">&quot;</span></span>,
-                <span class="string"><span class="delimiter">&quot;</span><span class="content">failed_without_retry</span><span class="delimiter">&quot;</span></span>
+                <span class="string"><span class="delimiter">&quot;</span><span class="content">successful.without.retry</span><span class="delimiter">&quot;</span></span>,
+                <span class="string"><span class="delimiter">&quot;</span><span class="content">successful.with.retry</span><span class="delimiter">&quot;</span></span>,
+                <span class="string"><span class="delimiter">&quot;</span><span class="content">failed.with.retry</span><span class="delimiter">&quot;</span></span>,
+                <span class="string"><span class="delimiter">&quot;</span><span class="content">failed.without.retry</span><span class="delimiter">&quot;</span></span>
             ]
         },
         {
@@ -2955,20 +2955,20 @@ and you have same metrics exposed there , check circuit breaker below for more i
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="json">{
     <span class="key"><span class="delimiter">&quot;</span><span class="content">names</span><span class="delimiter">&quot;</span></span>: [
-        <span class="string"><span class="delimiter">&quot;</span><span class="content">resilience4j_bulkhead_available_concurrent_calls</span><span class="delimiter">&quot;</span></span>,
-        <span class="string"><span class="delimiter">&quot;</span><span class="content">resilience4j_bulkhead_max_allowed_concurrent_calls</span><span class="delimiter">&quot;</span></span>
+        <span class="string"><span class="delimiter">&quot;</span><span class="content">resilience4j.bulkhead.available.concurrent.calls</span><span class="delimiter">&quot;</span></span>,
+        <span class="string"><span class="delimiter">&quot;</span><span class="content">resilience4j.bulkhead.max.allowed.concurrent.calls</span><span class="delimiter">&quot;</span></span>
         ]
 }</code></pre>
 </div>
 </div>
 <div class="paragraph">
 <p>To retrieve the metric, make a GET request to <code>/actuator/metrics/{metric.name}</code>.<br>
-For example: <code>/actuator/metrics/resilience4j_bulkhead_available_concurrent_calls</code></p>
+For example: <code>/actuator/metrics/resilience4j.bulkhead.available.concurrent.calls</code></p>
 </div>
 <div class="listingblock">
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="json">{
-    <span class="key"><span class="delimiter">&quot;</span><span class="content">name</span><span class="delimiter">&quot;</span></span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">resilience4j_bulkhead_available_concurrent_calls</span><span class="delimiter">&quot;</span></span>,
+    <span class="key"><span class="delimiter">&quot;</span><span class="content">name</span><span class="delimiter">&quot;</span></span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">resilience4j.bulkhead.available.concurrent.calls</span><span class="delimiter">&quot;</span></span>,
     <span class="key"><span class="delimiter">&quot;</span><span class="content">measurements</span><span class="delimiter">&quot;</span></span>: [
         {
             <span class="key"><span class="delimiter">&quot;</span><span class="content">statistic</span><span class="delimiter">&quot;</span></span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">VALUE</span><span class="delimiter">&quot;</span></span>,
@@ -3018,20 +3018,20 @@ For example:</p>
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="json">{
     <span class="key"><span class="delimiter">&quot;</span><span class="content">names</span><span class="delimiter">&quot;</span></span>: [
-        <span class="string"><span class="delimiter">&quot;</span><span class="content">resilience4j_ratelimiter_available_permissions</span><span class="delimiter">&quot;</span></span>,
-        <span class="string"><span class="delimiter">&quot;</span><span class="content">resilience4j_ratelimiter_waiting_threads</span><span class="delimiter">&quot;</span></span>
+        <span class="string"><span class="delimiter">&quot;</span><span class="content">resilience4j.ratelimiter.available.permissions</span><span class="delimiter">&quot;</span></span>,
+        <span class="string"><span class="delimiter">&quot;</span><span class="content">resilience4j.ratelimiter.waiting.threads</span><span class="delimiter">&quot;</span></span>
         ]
 }</code></pre>
 </div>
 </div>
 <div class="paragraph">
 <p>To retrieve the metric, make a GET request to <code>/actuator/metrics/{metric.name}</code>.<br>
-For example: <code>/actuator/metrics/resilience4j_ratelimiter_available_permissions</code></p>
+For example: <code>/actuator/metrics/resilience4j.ratelimiter.available.permissions</code></p>
 </div>
 <div class="listingblock">
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="json">{
-    <span class="key"><span class="delimiter">&quot;</span><span class="content">name</span><span class="delimiter">&quot;</span></span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">resilience4j_ratelimiter_available_permissions</span><span class="delimiter">&quot;</span></span>,
+    <span class="key"><span class="delimiter">&quot;</span><span class="content">name</span><span class="delimiter">&quot;</span></span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">resilience4j_ratelimiter.available.permissions</span><span class="delimiter">&quot;</span></span>,
     <span class="key"><span class="delimiter">&quot;</span><span class="content">measurements</span><span class="delimiter">&quot;</span></span>: [
         {
             <span class="key"><span class="delimiter">&quot;</span><span class="content">statistic</span><span class="delimiter">&quot;</span></span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">VALUE</span><span class="delimiter">&quot;</span></span>,
@@ -5235,8 +5235,8 @@ So you can easily restrict not only network calls but your local in-memory opera
 </div>
 <div id="footer">
 <div id="footer-text">
-Version 0.15.0-SNAPSHOT<br>
-Last updated 2019-05-18 07:29:17 UTC
+Version 0.16.0-SNAPSHOT<br>
+Last updated 2019-05-18 07:47:45 UTC
 </div>
 </div>
 </body>
