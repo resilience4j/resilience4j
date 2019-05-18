@@ -36,6 +36,8 @@ public class RateLimiterOperator<T> implements FlowableTransformer<T, T>, Single
      * Creates a RateLimiterOperator.
      *
      * @param rateLimiter the RateLimiter
+     * @param <T> the value type
+     *
      * @return a RateLimiterOperator
      */
     public static <T> RateLimiterOperator<T> of(RateLimiter rateLimiter) {

@@ -36,6 +36,8 @@ public class BulkheadOperator<T> implements FlowableTransformer<T, T>, SingleTra
      * Creates a BulkheadOperator.
      *
      * @param bulkhead the Bulkhead
+     *
+     * @param <T> the value type
      * @return a BulkheadOperator
      */
     public static <T> BulkheadOperator<T> of(Bulkhead bulkhead) {

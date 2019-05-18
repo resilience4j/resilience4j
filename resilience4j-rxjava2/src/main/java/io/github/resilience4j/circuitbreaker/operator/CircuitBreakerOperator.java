@@ -36,6 +36,8 @@ public class CircuitBreakerOperator<T> implements FlowableTransformer<T, T>, Sin
      * Creates a CircuitBreakerOperator.
      *
      * @param circuitBreaker the CircuitBreaker
+     * @param <T> the value type
+     *
      * @return a CircuitBreakerOperator
      */
     public static <T> CircuitBreakerOperator<T> of(CircuitBreaker circuitBreaker) {
