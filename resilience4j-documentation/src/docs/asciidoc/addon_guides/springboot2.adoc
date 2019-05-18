@@ -70,22 +70,22 @@ For example:
 ----
 {
     "names": [
-        "resilience4j_circuitbreaker_calls",
-        "resilience4j_circuitbreaker_max_buffered_calls",
-        "resilience4j_circuitbreaker_buffered_calls",
-        "resilience4j_circuitbreaker_state",
-        "resilience4j_circuitbreaker_failure_rate"
+        "resilience4j.circuitbreaker.calls",
+        "resilience4j.circuitbreaker.max.buffered.calls",
+        "resilience4j.circuitbreaker.buffered.calls",
+        "resilience4j.circuitbreaker.state",
+        "resilience4j.circuitbreaker.failure.rate"
         ]
 }
 ----
 
 To retrieve a metric, make a GET request to `/actuator/metrics/{metric.name}`.
-For example: `/actuator/metrics/resilience4j_circuitbreaker_calls`
+For example: `/actuator/metrics/resilience4j.circuitbreaker.calls`
 
 [source,json]
 ----
 {
-    "name": "resilience4j_circuitbreaker_calls",
+    "name": "resilience4j.circuitbreaker.calls",
     "measurements": [
         {
             "statistic": "VALUE",
@@ -146,18 +146,18 @@ For example:
 ----
 {
     "names": [
-        "resilience4j_retry_calls"
+        "resilience4j.retry.calls"
         ]
 }
 ----
 
 To retrieve the metric, make a GET request to `/actuator/metrics/{metric.name}`.
-For example: `/actuator/metrics/resilience4j_retry_calls`
+For example: `/actuator/metrics/resilience4j.retry.calls`
 
 [source,json]
 ----
 {
-    "name": "resilience4j_retry_calls",
+    "name": "resilience4j.retry.calls",
     "measurements": [
         {
             "statistic": "VALUE",
@@ -168,10 +168,10 @@ For example: `/actuator/metrics/resilience4j_retry_calls`
         {
             "tag": "kind",
             "values": [
-                "successful_without_retry",
-                "successful_with_retry",
-                "failed_with_retry",
-                "failed_without_retry"
+                "successful.without.retry",
+                "successful.with.retry",
+                "failed.with.retry",
+                "failed.without.retry"
             ]
         },
         {
@@ -198,19 +198,19 @@ For example:
 ----
 {
     "names": [
-        "resilience4j_bulkhead_available_concurrent_calls",
-        "resilience4j_bulkhead_max_allowed_concurrent_calls"
+        "resilience4j.bulkhead.available.concurrent.calls",
+        "resilience4j.bulkhead.max.allowed.concurrent.calls"
         ]
 }
 ----
 
 To retrieve the metric, make a GET request to `/actuator/metrics/{metric.name}`.
-For example: `/actuator/metrics/resilience4j_bulkhead_available_concurrent_calls`
+For example: `/actuator/metrics/resilience4j.bulkhead.available.concurrent.calls`
 
 [source,json]
 ----
 {
-    "name": "resilience4j_bulkhead_available_concurrent_calls",
+    "name": "resilience4j.bulkhead.available.concurrent.calls",
     "measurements": [
         {
             "statistic": "VALUE",
@@ -255,19 +255,19 @@ For example:
 ----
 {
     "names": [
-        "resilience4j_ratelimiter_available_permissions",
-        "resilience4j_ratelimiter_waiting_threads"
+        "resilience4j.ratelimiter.available.permissions",
+        "resilience4j.ratelimiter.waiting.threads"
         ]
 }
 ----
 
 To retrieve the metric, make a GET request to `/actuator/metrics/{metric.name}`.
-For example: `/actuator/metrics/resilience4j_ratelimiter_available_permissions`
+For example: `/actuator/metrics/resilience4j.ratelimiter.available.permissions`
 
 [source,json]
 ----
 {
-    "name": "resilience4j_ratelimiter_available_permissions",
+    "name": "resilience4j_ratelimiter.available.permissions",
     "measurements": [
         {
             "statistic": "VALUE",
