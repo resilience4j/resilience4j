@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Kyuhyen Hwang
+ * Copyright 2019 Kyuhyen Hwang, Mahmoud Romeh
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,28 +15,29 @@
  */
 package io.github.resilience4j.fallback;
 
-import io.github.resilience4j.core.lang.Nullable;
-import org.springframework.util.ConcurrentReferenceHashMap;
-import org.springframework.util.ReflectionUtils;
-import org.springframework.util.StringUtils;
-
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.springframework.util.ConcurrentReferenceHashMap;
+import org.springframework.util.ReflectionUtils;
+import org.springframework.util.StringUtils;
+
+import io.github.resilience4j.core.lang.Nullable;
+
 /**
- * Reflection utility for invoking a fallback method. A fallback method should have the same return type and parameter types of original method but the last additional parameter.
- * The last additional parameter should be a subclass of {@link Throwable}. When {@link FallbackMethod#recover(Throwable)} is invoked, {@link Throwable} will be passed to that last parameter.
- * If there are multiple fallback methods, one of the methods that has most closest superclass parameter of thrown object will be invoked.
+ * Reflection utility for invoking a fallback method. Fallback method should have same return type and parameter types of original method but the last additional parameter.
+ * The last additional parameter should be a subclass of {@link Throwable}. When {@link FallbackMethod#fallback(Throwable)} is invoked, {@link Throwable} will be passed to that last parameter.
+ * If there are multiple fallback method, one of the methods that has most closest superclass parameter of thrown object will be invoked.
  * <pre>
  * For example, there are two fallback methods
  * {@code
  * String fallbackMethod(String parameter, RuntimeException exception)
  * String fallbackMethod(String parameter, IllegalArgumentException exception)
  * }
- * and if try to recover from {@link NumberFormatException}, {@code String fallbackMethod(String parameter, IllegalArgumentException exception)} will be invoked.
+ * and if try to fallback from {@link NumberFormatException}, {@code String fallbackMethod(String parameter, IllegalArgumentException exception)} will be invoked.
  * </pre>
  */
 public class FallbackMethod {
@@ -49,37 +50,49 @@ public class FallbackMethod {
     /**
      * create a fallbackMethod method.
      *
-     * @param recoveryMethodName fallbackMethod method name
-     * @param originalMethod     will be used for checking return type and parameter types of the fallbackMethod method
-     * @param args               arguments those were passed to the original method. They will be passed to the fallbackMethod method.
-     * @param target             target object the fallbackMethod method will be invoked
-     * @throws NoSuchMethodException will be thrown, if fallbackMethod method is not found
+     * @param recoveryMethods          configured and found recovery methods for this invocation
+     * @param originalMethodReturnType the return type of the original source method
+     * @param args                     arguments those were passed to the original method. They will be passed to the fallbackMethod method.
+     * @param target                   target object the fallbackMethod method will be invoked
      */
-    public FallbackMethod(String recoveryMethodName, Method originalMethod, Object[] args, Object target) throws NoSuchMethodException {
-        Class<?>[] params = originalMethod.getParameterTypes();
-        Class<?> originalReturnType = originalMethod.getReturnType();
+    private FallbackMethod(Map<Class<?>, Method> recoveryMethods, Class<?> originalMethodReturnType, Object[] args, Object target) {
 
-        Map<Class<?>, Method> methods = extractMethods(recoveryMethodName, params, originalReturnType, target.getClass());
-
-        if (methods.isEmpty()) {
-            throw new NoSuchMethodException(String.format("%s %s.%s(%s,%s)", originalReturnType, target.getClass(), recoveryMethodName, StringUtils.arrayToDelimitedString(params, ","), Throwable.class));
-        }
-
-        this.recoveryMethods = methods;
+        this.recoveryMethods = recoveryMethods;
         this.args = args;
         this.target = target;
-        this.returnType = originalReturnType;
+        this.returnType = originalMethodReturnType;
     }
 
     /**
-     * try to recover from {@link Throwable}
+     * @param fallbackMethodName the configured recovery method name
+     * @param originalMethod the original method which has fallback method configured
+     * @param args the original method arguments
+     * @param target the target class that own the original method and recovery method
+     * @return FallbackMethod instance
+     */
+    public static FallbackMethod create(String fallbackMethodName, Method originalMethod, Object[] args, Object target) throws NoSuchMethodException {
+
+        Class<?>[] params = originalMethod.getParameterTypes();
+        Class<?> originalReturnType = originalMethod.getReturnType();
+
+        Map<Class<?>, Method> methods = extractMethods(fallbackMethodName, params, originalReturnType, target.getClass());
+
+        if (methods.isEmpty()) {
+            throw new NoSuchMethodException(String.format("%s %s.%s(%s,%s)", originalReturnType, target.getClass(), fallbackMethodName, StringUtils.arrayToDelimitedString(params, ","), Throwable.class));
+        }
+        return new FallbackMethod(methods, originalReturnType, args, target);
+
+    }
+
+    /**
+     * try to fallback from {@link Throwable}
      *
-     * @param thrown {@link Throwable} that should be recover
+     * @param thrown {@link Throwable} that should be fallback
      * @return recovered value
      * @throws Throwable if throwable is unrecoverable, throwable will be thrown
      */
     @Nullable
-    public Object recover(Throwable thrown) throws Throwable {
+    public Object fallback(Throwable thrown) throws Throwable {
         if (recoveryMethods.size() == 1) {
             Map.Entry<Class<?>, Method> entry = recoveryMethods.entrySet().iterator().next();
             if (entry.getKey().isAssignableFrom(thrown.getClass())) {
@@ -111,31 +124,48 @@ public class FallbackMethod {
         return returnType;
     }
 
-    private Object invoke(Method recovery, Throwable throwable) throws IllegalAccessException, InvocationTargetException {
-        boolean accessible = recovery.isAccessible();
+    /**
+     * invoke the fallback method logic
+     *
+     * @param fallback  fallback method
+     * @param throwable the thrown exception
+     * @return the result object if any
+     * @throws IllegalAccessException
+     * @throws InvocationTargetException
+     */
+    private Object invoke(Method fallback, Throwable throwable) throws IllegalAccessException, InvocationTargetException {
+        boolean accessible = fallback.isAccessible();
         try {
             if (!accessible) {
-                ReflectionUtils.makeAccessible(recovery);
+                ReflectionUtils.makeAccessible(fallback);
             }
-
             if (args.length != 0) {
+                if (args.length == 1 && Throwable.class.isAssignableFrom(fallback.getParameterTypes()[0])) {
+                    return fallback.invoke(target, throwable);
+                }
                 Object[] newArgs = Arrays.copyOf(args, args.length + 1);
                 newArgs[args.length] = throwable;
 
-                return recovery.invoke(target, newArgs);
+                return fallback.invoke(target, newArgs);
 
             } else {
-                return recovery.invoke(target, throwable);
+                return fallback.invoke(target, throwable);
             }
         } finally {
             if (!accessible) {
-                recovery.setAccessible(false);
+                fallback.setAccessible(false);
             }
         }
     }
-
-    private static Map<Class<?>, Method> extractMethods(String recoveryMethodName, Class<?>[] params, Class<?> originalReturnType, Class<?> targetClass) {
-        MethodMeta methodMeta = new MethodMeta(recoveryMethodName, params, originalReturnType, targetClass);
+    /**
+     * @param fallbackMethodName fallback method name
+     * @param params             original method parameters
+     * @param originalReturnType original method return type
+     * @param targetClass        the owner class
+     * @return Map<Class < ?>, Method>  map of all configure fallback methods for the original method that match the fallback method name
+     */
+    private static Map<Class<?>, Method> extractMethods(String fallbackMethodName, Class<?>[] params, Class<?> originalReturnType, Class<?> targetClass) {
+        MethodMeta methodMeta = new MethodMeta(fallbackMethodName, params, originalReturnType, targetClass);
         Map<Class<?>, Method> cachedMethods = RECOVERY_METHODS_CACHE.get(methodMeta);
 
         if (cachedMethods != null) {
@@ -146,29 +176,42 @@ public class FallbackMethod {
 
         ReflectionUtils.doWithMethods(targetClass, method -> {
             Class<?>[] recoveryParams = method.getParameterTypes();
+            if (methods.get(recoveryParams[recoveryParams.length - 1]) != null) {
+                throw new IllegalStateException("You have more that one fallback method that cover the same exception type " + recoveryParams[recoveryParams.length - 1].getName());
+            }
             methods.put(recoveryParams[recoveryParams.length - 1], method);
         }, method -> {
-            if (!method.getName().equals(recoveryMethodName) || method.getParameterCount() != params.length + 1) {
-                return false;
-            }
-            if (!originalReturnType.isAssignableFrom(method.getReturnType())) {
-                return false;
-            }
-
-            Class[] targetParams = method.getParameterTypes();
-            for (int i = 0; i < params.length; i++) {
-                if (params[i] != targetParams[i]) {
+            if (method.getParameterCount() == 1) {
+                if (!method.getName().equals(fallbackMethodName) || !originalReturnType.isAssignableFrom(method.getReturnType())) {
                     return false;
                 }
+                return Throwable.class.isAssignableFrom(method.getParameterTypes()[0]);
+            } else {
+                if (!method.getName().equals(fallbackMethodName) || method.getParameterCount() != params.length + 1) {
+                    return false;
+                }
+                if (!originalReturnType.isAssignableFrom(method.getReturnType())) {
+                    return false;
+                }
+
+                Class[] targetParams = method.getParameterTypes();
+                for (int i = 0; i < params.length; i++) {
+                    if (params[i] != targetParams[i]) {
+                        return false;
+                    }
+                }
+                return Throwable.class.isAssignableFrom(targetParams[params.length]);
             }
 
-            return Throwable.class.isAssignableFrom(targetParams[params.length]);
         });
 
         RECOVERY_METHODS_CACHE.putIfAbsent(methodMeta, methods);
         return methods;
     }
 
+    /**
+     * fallback method cache lookup key
+     */
     private static class MethodMeta {
         final String recoveryMethodName;
         final Class<?>[] params;
@@ -195,7 +238,7 @@ public class FallbackMethod {
 
         @Override
         public int hashCode() {
-           return targetClass.getName().hashCode() ^ recoveryMethodName.hashCode();
+            return targetClass.getName().hashCode() ^ recoveryMethodName.hashCode();
         }
     }
 }
