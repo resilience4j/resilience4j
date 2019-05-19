@@ -38,7 +38,7 @@ public class BulkheadEventsEndpoint {
         java.util.List<BulkheadEventDTO> response = eventConsumerRegistry.getAllEventConsumer()
                 .flatMap(CircularEventConsumer::getBufferedEvents)
                 .sorted(Comparator.comparing(BulkheadEvent::getCreationTime))
-                .map(BulkheadEventDTOFactory::createBulkheadEventDTOFactory)
+                .map(BulkheadEventDTOFactory::createBulkheadEventDTO)
                 .toJavaList();
 
         return new BulkheadEventsEndpointResponse(response);
@@ -47,7 +47,7 @@ public class BulkheadEventsEndpoint {
     @ReadOperation
     public BulkheadEventsEndpointResponse getEventsFilteredByBulkheadName(@Selector String bulkheadName) {
         java.util.List<BulkheadEventDTO> response = getBulkheadEvent(bulkheadName)
-                .map(BulkheadEventDTOFactory::createBulkheadEventDTOFactory)
+                .map(BulkheadEventDTOFactory::createBulkheadEventDTO)
                 .toJavaList();
 
         return new BulkheadEventsEndpointResponse(response);
@@ -57,7 +57,7 @@ public class BulkheadEventsEndpoint {
     public BulkheadEventsEndpointResponse getEventsFilteredByBulkheadNameAndEventType(@Selector String bulkheadName, @Selector String eventType) {
         java.util.List<BulkheadEventDTO> response = getBulkheadEvent(bulkheadName)
                 .filter(event -> event.getEventType() == BulkheadEvent.Type.valueOf(eventType.toUpperCase()))
-                .map(BulkheadEventDTOFactory::createBulkheadEventDTOFactory)
+                .map(BulkheadEventDTOFactory::createBulkheadEventDTO)
                 .toJavaList();
 
         return new BulkheadEventsEndpointResponse(response);
