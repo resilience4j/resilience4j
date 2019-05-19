@@ -98,10 +98,7 @@ public class BulkheadAspect implements Ordered {
 		if (StringUtils.isEmpty(bulkheadAnnotation.fallbackMethod())) {
 			return proceed(proceedingJoinPoint, methodName, bulkhead, returnType);
 		}
-
-		FallbackMethod fallbackMethod = FallbackMethod.builder().recoveryMethodName(bulkheadAnnotation.fallbackMethod())
-				.originalMethod(method).originalMethodArgs(proceedingJoinPoint.getArgs())
-				.targetObject(proceedingJoinPoint.getTarget()).build();
+		FallbackMethod fallbackMethod = FallbackMethod.create(bulkheadAnnotation.fallbackMethod(), method, proceedingJoinPoint.getArgs(), proceedingJoinPoint.getTarget());
 		return fallbackDecorators.decorate(fallbackMethod, () -> proceed(proceedingJoinPoint, methodName, bulkhead, returnType)).apply();
 	}
 

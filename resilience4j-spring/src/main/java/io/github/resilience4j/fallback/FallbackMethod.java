@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Kyuhyen Hwang, Mahmoud Romih
+ * Copyright 2019 Kyuhyen Hwang, Mahmoud Romeh
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,11 +28,11 @@ import org.springframework.util.StringUtils;
 import io.github.resilience4j.core.lang.Nullable;
 
 /**
- * Reflection utility for invoking fallbackMethod method. Recovery method should have same return type and parameter types of original method but the last additional parameter.
+ * Reflection utility for invoking a fallback method. Fallback method should have same return type and parameter types of original method but the last additional parameter.
  * The last additional parameter should be a subclass of {@link Throwable}. When {@link FallbackMethod#fallback(Throwable)} is invoked, {@link Throwable} will be passed to that last parameter.
  * If there are multiple fallbackMethod method, one of the methods that has most closest superclass parameter of thrown object will be invoked.
  * <pre>
- * For example, there are two fallbackMethod methods
+ * For example, there are two fallback methods
  * {@code
  * String fallbackMethod(String parameter, RuntimeException exception)
  * String fallbackMethod(String parameter, IllegalArgumentException exception)
@@ -64,10 +64,24 @@ public class FallbackMethod {
     }
 
     /**
-     * @return FallbackMethod builder
+     * @param fallbackMethodName the configured recovery method name
+     * @param originalMethod the original method which has fallback method configured
+     * @param args the original method arguments
+     * @param target the target class that own the original method and recovery method
+     * @return FallbackMethod instance
      */
-    public static Builder builder() {
-        return new Builder();
+    public static FallbackMethod create(String fallbackMethodName, Method originalMethod, Object[] args, Object target) throws NoSuchMethodException {
+
+        Class<?>[] params = originalMethod.getParameterTypes();
+        Class<?> originalReturnType = originalMethod.getReturnType();
+
+        Map<Class<?>, Method> methods = extractMethods(fallbackMethodName, params, originalReturnType, target.getClass());
+
+        if (methods.isEmpty()) {
+            throw new NoSuchMethodException(String.format("%s %s.%s(%s,%s)", originalReturnType, target.getClass(), fallbackMethodName, StringUtils.arrayToDelimitedString(params, ","), Throwable.class));
+        }
+        return new FallbackMethod(methods, originalReturnType, args, target);
+
     }
 
     /**
@@ -143,69 +157,6 @@ public class FallbackMethod {
             }
         }
     }
-
-    /**
-     * the FallbackMethod builder class
-     */
-    public static class Builder {
-        private String recoveryMethodName;
-        private Method originalMethod;
-        private Object[] args;
-        private Object target;
-
-        /**
-         * @param recoveryMethodName the configured recovery method name
-         * @return Builder of FallbackMethod
-         */
-        public Builder recoveryMethodName(String recoveryMethodName) {
-            this.recoveryMethodName = recoveryMethodName;
-            return this;
-        }
-
-        /**
-         * @param originalMethod the original method which has fallback method configured
-         * @return Builder of FallbackMethod
-         */
-        public Builder originalMethod(Method originalMethod) {
-            this.originalMethod = originalMethod;
-            return this;
-        }
-
-        /**
-         * @param args the original method arguments
-         * @return Builder of FallbackMethod
-         */
-        public Builder originalMethodArgs(Object[] args) {
-            this.args = args;
-            return this;
-        }
-
-        /**
-         * @param target the target class that own the original method and recovery method
-         * @return Builder of FallbackMethod
-         */
-        public Builder targetObject(Object target) {
-            this.target = target;
-            return this;
-        }
-
-        /**
-         * @return FallbackMethod if any
-         * @throws NoSuchMethodException will be thrown, if fallbackMethod method is not found
-         */
-        public FallbackMethod build() throws NoSuchMethodException {
-            Class<?>[] params = originalMethod.getParameterTypes();
-            Class<?> originalReturnType = originalMethod.getReturnType();
-
-            Map<Class<?>, Method> methods = extractMethods(recoveryMethodName, params, originalReturnType, target.getClass());
-
-            if (methods.isEmpty()) {
-                throw new NoSuchMethodException(String.format("%s %s.%s(%s,%s)", originalReturnType, target.getClass(), recoveryMethodName, StringUtils.arrayToDelimitedString(params, ","), Throwable.class));
-            }
-            return new FallbackMethod(methods, originalReturnType, args, target);
-        }
-    }
-
     /**
      * @param fallbackMethodName fallback method name
      * @param params             original method parameters

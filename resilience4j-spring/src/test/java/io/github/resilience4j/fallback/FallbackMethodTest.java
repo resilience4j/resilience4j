@@ -28,10 +28,7 @@ public class FallbackMethodTest {
     public void recoverRuntimeExceptionTest() throws Throwable {
         FallbackMethodTest target = new FallbackMethodTest();
         Method testMethod = target.getClass().getMethod("testMethod", String.class);
-        FallbackMethod recoveryMethod = FallbackMethod.builder()
-                .recoveryMethodName("fallbackMethod").originalMethod(testMethod)
-                .originalMethodArgs(new Object[]{"test"}).targetObject(target).build();
-
+        FallbackMethod recoveryMethod = FallbackMethod.create("fallbackMethod", testMethod, new Object[]{"test"}, target);
         assertThat(recoveryMethod.fallback(new RuntimeException("err"))).isEqualTo("recovered-RuntimeException");
     }
 
@@ -39,10 +36,7 @@ public class FallbackMethodTest {
     public void recoverGlobalExceptionWithSameMethodReturnType() throws Throwable {
         FallbackMethodTest target = new FallbackMethodTest();
         Method testMethod = target.getClass().getMethod("testMethod", String.class);
-        FallbackMethod recoveryMethod = FallbackMethod.builder()
-                .recoveryMethodName("fallbackMethod").originalMethod(testMethod)
-                .originalMethodArgs(new Object[]{"test"}).targetObject(target).build();
-
+        FallbackMethod recoveryMethod = FallbackMethod.create("fallbackMethod", testMethod, new Object[]{"test"}, target);
         assertThat(recoveryMethod.fallback(new IllegalStateException("err"))).isEqualTo("recovered-IllegalStateException");
     }
 
@@ -50,9 +44,7 @@ public class FallbackMethodTest {
     public void recoverClosestSuperclassExceptionTest() throws Throwable {
         FallbackMethodTest target = new FallbackMethodTest();
         Method testMethod = target.getClass().getMethod("testMethod", String.class);
-        FallbackMethod recoveryMethod = FallbackMethod.builder()
-                .recoveryMethodName("fallbackMethod").originalMethod(testMethod)
-                .originalMethodArgs(new Object[]{"test"}).targetObject(target).build();
+        FallbackMethod recoveryMethod = FallbackMethod.create("fallbackMethod", testMethod, new Object[]{"test"}, target);
         assertThat(recoveryMethod.fallback(new NumberFormatException("err"))).isEqualTo("recovered-IllegalArgumentException");
     }
 
@@ -60,9 +52,7 @@ public class FallbackMethodTest {
     public void shouldThrowUnrecoverableThrowable() throws Throwable {
         FallbackMethodTest target = new FallbackMethodTest();
         Method testMethod = target.getClass().getMethod("testMethod", String.class);
-        FallbackMethod recoveryMethod = FallbackMethod.builder()
-                .recoveryMethodName("fallbackMethod").originalMethod(testMethod)
-                .originalMethodArgs(new Object[]{"test"}).targetObject(target).build();
+        FallbackMethod recoveryMethod = FallbackMethod.create("fallbackMethod", testMethod, new Object[]{"test"}, target);
         Throwable unrecoverableThrown = new Throwable("err");
         assertThatThrownBy(() -> recoveryMethod.fallback(unrecoverableThrown)).isEqualTo(unrecoverableThrown);
     }
@@ -71,9 +61,7 @@ public class FallbackMethodTest {
     public void shouldCallPrivateRecoveryMethod() throws Throwable {
         FallbackMethodTest target = new FallbackMethodTest();
         Method testMethod = target.getClass().getMethod("testMethod", String.class);
-        FallbackMethod recoveryMethod = FallbackMethod.builder()
-                .recoveryMethodName("privateRecovery").originalMethod(testMethod)
-                .originalMethodArgs(new Object[]{"test"}).targetObject(target).build();
+        FallbackMethod recoveryMethod = FallbackMethod.create("privateRecovery", testMethod, new Object[]{"test"}, target);
         assertThat(recoveryMethod.fallback(new RuntimeException("err"))).isEqualTo("recovered-privateMethod");
     }
 
@@ -81,9 +69,8 @@ public class FallbackMethodTest {
     public void mismatchReturnType_shouldThrowNoSuchMethodException() throws Throwable {
         FallbackMethodTest target = new FallbackMethodTest();
         Method testMethod = target.getClass().getMethod("testMethod", String.class);
-        assertThatThrownBy(() -> FallbackMethod.builder()
-                .recoveryMethodName("duplicateException").originalMethod(testMethod)
-                .originalMethodArgs(new Object[]{"test"}).targetObject(target).build())
+
+        assertThatThrownBy(() -> FallbackMethod.create("duplicateException", testMethod, new Object[]{"test"}, target))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessage("You have more that one fallback method that cover the same exception type java.lang.IllegalArgumentException");
     }
@@ -92,9 +79,7 @@ public class FallbackMethodTest {
     public void shouldFailIf2FallBackMethodsHandleSameException() throws Throwable {
         FallbackMethodTest target = new FallbackMethodTest();
         Method testMethod = target.getClass().getMethod("testMethod", String.class);
-        assertThatThrownBy(() -> FallbackMethod.builder()
-                .recoveryMethodName("returnMismatchRecovery").originalMethod(testMethod)
-                .originalMethodArgs(new Object[]{"test"}).targetObject(target).build())
+        assertThatThrownBy(() -> FallbackMethod.create("returnMismatchRecovery", testMethod, new Object[]{"test"}, target))
                 .isInstanceOf(NoSuchMethodException.class)
                 .hasMessage("class java.lang.String class io.github.resilience4j.fallback.FallbackMethodTest.returnMismatchRecovery(class java.lang.String,class java.lang.Throwable)");
     }
@@ -103,10 +88,7 @@ public class FallbackMethodTest {
     public void notFoundRecoveryMethod_shouldThrowsNoSuchMethodException() throws Throwable {
         FallbackMethodTest target = new FallbackMethodTest();
         Method testMethod = target.getClass().getMethod("testMethod", String.class);
-
-        assertThatThrownBy(() -> FallbackMethod.builder()
-                .recoveryMethodName("noMethod").originalMethod(testMethod)
-                .originalMethodArgs(new Object[]{"test"}).targetObject(target).build())
+        assertThatThrownBy(() -> FallbackMethod.create("noMethod", testMethod, new Object[]{"test"}, target))
                 .isInstanceOf(NoSuchMethodException.class)
                 .hasMessage("class java.lang.String class io.github.resilience4j.fallback.FallbackMethodTest.noMethod(class java.lang.String,class java.lang.Throwable)");
     }

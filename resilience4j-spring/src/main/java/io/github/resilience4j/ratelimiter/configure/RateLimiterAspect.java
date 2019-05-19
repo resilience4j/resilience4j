@@ -104,11 +104,7 @@ public class RateLimiterAspect implements Ordered {
 		if (StringUtils.isEmpty(rateLimiterAnnotation.fallbackMethod())) {
 			return proceed(proceedingJoinPoint, methodName, returnType, rateLimiter);
 		}
-
-		FallbackMethod fallbackMethod = FallbackMethod.builder().recoveryMethodName(rateLimiterAnnotation.fallbackMethod())
-				.originalMethod(method).originalMethodArgs(proceedingJoinPoint.getArgs())
-				.targetObject(proceedingJoinPoint.getTarget()).build();
-
+		FallbackMethod fallbackMethod = FallbackMethod.create(rateLimiterAnnotation.fallbackMethod(), method, proceedingJoinPoint.getArgs(), proceedingJoinPoint.getTarget());
         return fallbackDecorators.decorate(fallbackMethod, () -> proceed(proceedingJoinPoint, methodName, returnType, rateLimiter)).apply();
 	}
 
