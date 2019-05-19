@@ -177,7 +177,7 @@ public class RetryConfig {
 
 		/**
 		 * Configures a Predicate which evaluates if an exception should be retried.
-		 * The Predicate must return true if the exception should count be retried, otherwise it must return false.
+		 * The Predicate must return true if the exception should be retried, otherwise it must return false.
 		 *
 		 * @param predicate the Predicate which evaluates if an exception should be retried or not.
 		 * @return the RetryConfig.Builder
@@ -188,7 +188,7 @@ public class RetryConfig {
 		}
 
 		/**
-		 * Configures a list of error classes that are recorded as a failure and thus increase the failure rate.
+		 * Configures a list of error classes that are recorded as a failure and thus are retried.
 		 * Any exception matching or inheriting from one of the list will be retried, unless ignored via
 		 *
 		 * @param errorClasses the error classes that are retried

@@ -117,7 +117,7 @@ public class ThreadPoolBulkheadConfig {
 		}
 
 		/**
-		 * when the number of threads is greater than
+		 * When the number of threads is greater than
 		 * the core, this is the maximum time that excess idle threads
 		 * will wait for new tasks before terminating.
 		 *
