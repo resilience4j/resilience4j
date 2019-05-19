@@ -28,7 +28,7 @@ import java.util.function.UnaryOperator;
 
 /**
  * A RateLimiter operator which checks if a downstream subscriber/observer can acquire a permission to subscribe to an upstream Publisher.
- * Otherwise throws a {@link RequestNotPermitted} if the CircuitBreaker is OPEN.
+ * Otherwise emits a {@link RequestNotPermitted} if the rate limit is exceeded.
  *
  * @param <T> the value type
  */

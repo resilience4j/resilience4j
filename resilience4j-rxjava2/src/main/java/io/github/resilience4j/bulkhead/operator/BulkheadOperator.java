@@ -24,7 +24,7 @@ import static java.util.Objects.requireNonNull;
 
 /**
  * A Bulkhead operator which checks if a subscriber/observer can acquire a permission to subscribe to an upstream Publisher.
- * Otherwise throws a {@link BulkheadFullException}.
+ * Otherwise emits a {@link BulkheadFullException}, if the Bulkhead is full.
  *
  * @param <T> the value type
  */
