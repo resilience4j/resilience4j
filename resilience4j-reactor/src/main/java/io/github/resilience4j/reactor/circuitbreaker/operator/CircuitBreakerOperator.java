@@ -25,7 +25,7 @@ import java.util.function.UnaryOperator;
 
 /**
  * A CircuitBreaker operator which checks if a downstream subscriber/observer can acquire a permission to subscribe to an upstream Publisher.
- * Otherwise throws a {@link CallNotPermittedException} if the CircuitBreaker is OPEN.
+ * Otherwise emits a {@link CallNotPermittedException} if the CircuitBreaker is OPEN.
  *
  * @param <T> the value type
  */
