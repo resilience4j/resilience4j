@@ -30,7 +30,7 @@ import io.github.resilience4j.core.lang.Nullable;
 /**
  * Reflection utility for invoking a fallback method. Fallback method should have same return type and parameter types of original method but the last additional parameter.
  * The last additional parameter should be a subclass of {@link Throwable}. When {@link FallbackMethod#fallback(Throwable)} is invoked, {@link Throwable} will be passed to that last parameter.
- * If there are multiple fallbackMethod method, one of the methods that has most closest superclass parameter of thrown object will be invoked.
+ * If there are multiple fallback method, one of the methods that has most closest superclass parameter of thrown object will be invoked.
  * <pre>
  * For example, there are two fallback methods
  * {@code
