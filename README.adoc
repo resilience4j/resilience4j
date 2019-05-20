@@ -70,6 +70,7 @@ Setup and usage in Spring Boot 2 is demonstrated https://github.com/RobWin/resil
 * <<circuitbreaker>>
 * <<ratelimiter>>
 * <<bulkhead>>
+* <<threadpoolbulkhead>>
 * <<events>>
 
 [[circuitbreaker]]
@@ -133,7 +134,7 @@ Mono.fromCallable(backendService::doSomething)
 ----
 
 
-NOTE: Resilience4j also provides Reactor operators for `RateLimiter` and `Bulkhead`. Find out more in our *https://resilience4j.readme.io/docs/getting-started-1[User Guide]*
+NOTE: Resilience4j also provides Reactor operators for `RateLimiter`, `Bulkhead` and `Retry`. Find out more in our *https://resilience4j.readme.io/docs/getting-started-1[User Guide]*
 
 [[ratelimiter]]
 === RateLimiter
@@ -171,10 +172,35 @@ The following example shows how to decorate a lambda expression with a Bulkhead.
 
 [source,java]
 ----
-Bulkhead bulkhead = Bulkhead.ofDefaults("backendName");
+// Create a custom Bulkhead configuration
+BulkheadConfig config = BulkheadConfig.custom()
+    .maxConcurrentCalls(150)
+    .maxWaitTime(100)
+    .build();
+
+Bulkhead bulkhead = Bulkhead.of("backendName", config);
 
 Supplier<String> supplier = Bulkhead
     .decorateSupplier(bulkhead, backendService::doSomething);
+----
+
+[[threadpoolbulkhead]]
+=== ThreadPoolBulkhead
+The following example shows how to execute a lambda expression with a ThreadPoolBulkhead which uses a bounded queue and a fixed thread pool.
+
+[source,java]
+----
+// Create a custom Bulkhead configuration
+ThreadPoolBulkheadConfig config = ThreadPoolBulkheadConfig.custom()
+    .maxThreadPoolSize(10)
+    .coreThreadPoolSize(2)
+    .queueCapacity(20)
+    .build();
+
+ThreadPoolBulkhead bulkhead = ThreadPoolBulkhead.of("backendName", config);
+
+CompletionStage<String> supplier = ThreadPoolBulkhead
+    .executeSupplier(bulkhead, backendService::doSomething);
 ----
 
 [[events]]
