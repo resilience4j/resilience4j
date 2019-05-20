@@ -106,6 +106,7 @@ String result = Try.ofSupplier(decoratedSupplier)
 // When you don't want to decorate your lambda expression,
 // but just execute it and protect the call by a CircuitBreaker.
 String result = circuitBreaker.executeSupplier(backendService::doSomething);
+----
 
 === CircuitBreaker and RxJava2
 
