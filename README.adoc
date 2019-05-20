@@ -7,9 +7,9 @@ image:https://travis-ci.org/resilience4j/resilience4j.svg?branch=master["Build S
 
 == Introduction
 
-Resilience4j is a lightweight fault tolerance library inspired by https://github.com/Netflix/Hystrix[Netflix Hystrix], but designed for Java 8 and functional programming. Lightweight, because the library only uses http://www.vavr.io/[Vavr (formerly Javaslang)], which does not have any other external library dependencies. Netflix Hystrix, in contrast, has a compile dependency to https://github.com/Netflix/archaius[Archaius] which has many more external library dependencies such as Guava and Apache Commons Configuration.
-Resilience4j provides higher-order functions (decorators) to enhance any functional interface, lambda expression or method reference with a Circuit Breaker, Rate Limiter, Retry or Bulkhead. You can stack more than one decorator on any functional interface, lambda expression or method reference. The advantage is that you have the choice to select the decorators you need and nothing else.
+Resilience4j is a lightweight fault tolerance library inspired by https://github.com/Netflix/Hystrix[Netflix Hystrix], but designed for Java 8 and functional programming. Lightweight, because the library only uses http://www.vavr.io/[Vavr], which does not have any other external library dependencies. Netflix Hystrix, in contrast, has a compile dependency to https://github.com/Netflix/archaius[Archaius] which has many more external library dependencies such as Guava and Apache Commons Configuration.
 
+Resilience4j provides higher-order functions (decorators) to enhance any functional interface, lambda expression or method reference with a Circuit Breaker, Rate Limiter, Retry or Bulkhead. You can stack more than one decorator on any functional interface, lambda expression or method reference. The advantage is that you have the choice to select the decorators you need and nothing else.
 
 [source,java]
 ----
@@ -32,7 +32,7 @@ With Resilience4j you don’t have to go all-in, you can pick what you need.
 
 ==  Documentation
 
-Setup and usage is described in our *https://resilience4j.readme.io/[User Guide]*.
+Setup and usage is described in our *https://resilience4j.readme.io/docs[User Guide]*.
 
 == Overview
 
@@ -109,7 +109,7 @@ String result = Try.ofSupplier(decoratedSupplier)
 // but just execute it and protect the call by a CircuitBreaker.
 String result = circuitBreaker.executeSupplier(backendService::doSomething);
 
-=== CircuitBreaker and RxJava
+=== CircuitBreaker and RxJava2
 
 The following example shows how to decorate an Observable by using the custom RxJava operator.
 
@@ -120,8 +120,7 @@ Observable.fromCallable(backendService::doSomething)
     .compose(CircuitBreakerOperator.of(circuitBreaker))
 ----
 
-
-NOTE: Resilience4j also provides RxJava operators for `RateLimiter`, `Bulkhead` and `Retry`. Find out more in our *https://resilience4j.readme.io/[User Guide]*
+NOTE: Resilience4j also provides RxJava operators for `RateLimiter`, `Bulkhead` and `Retry`. Find out more in our *https://resilience4j.readme.io/docs/getting-started-2[User Guide]*
 
 === CircuitBreaker and Reactor
 
@@ -135,8 +134,7 @@ Mono.fromCallable(backendService::doSomething)
 ----
 
 
-NOTE: Resilience4j also provides Reactor operators for `RateLimiter` and `Bulkhead`. Find out more in our *https://resilience4j.readme.io/[User Guide]*
-
+NOTE: Resilience4j also provides Reactor operators for `RateLimiter` and `Bulkhead`. Find out more in our *https://resilience4j.readme.io/docs/getting-started-1[User Guide]*
 
 [[ratelimiter]]
 === RateLimiter
