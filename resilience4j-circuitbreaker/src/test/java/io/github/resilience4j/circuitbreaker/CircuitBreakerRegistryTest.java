@@ -85,6 +85,18 @@ public class CircuitBreakerRegistryTest {
     }
 
     @Test
+    public void testAddConfiguration() {
+        CircuitBreakerConfig config = CircuitBreakerConfig.ofDefaults();
+        CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
+        circuitBreakerRegistry.addConfiguration("someSharedConfig", config);
+
+        CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("name", "someSharedConfig");
+
+        assertThat(circuitBreakerRegistry.getConfiguration("someSharedConfig")).isNotNull();
+        assertThat(circuitBreaker.getCircuitBreakerConfig()).isEqualTo(config);
+    }
+
+    @Test
     public void testCreateWithConfigurationMapWithoutDefaultConfig() {
         Map<String, CircuitBreakerConfig> configs = new HashMap<>();
         configs.put("custom", CircuitBreakerConfig.ofDefaults());
