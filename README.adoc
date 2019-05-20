@@ -63,7 +63,7 @@ Add-on modules
 
 == Spring Boot demo
 
-Setup and usage in Spring Boot 2 is demonstrated https://github.com/RobWin/resilience4j-spring-boot2-demo[here].
+Setup and usage in Spring Boot 2 is demonstrated https://github.com/resilience4j/resilience4j-spring-boot2-demo[here].
 
 == Usage examples
 
