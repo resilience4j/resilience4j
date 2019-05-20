@@ -25,7 +25,7 @@ String result = Try.ofSupplier(decoratedSupplier)
 
 // When you don't want to decorate your lambda expression,
 // but just execute it and protect the call by a CircuitBreaker.
-String result = circuitBreaker.executeSupplier(backendService::doSomething);
+String result = circuitBreaker.executeSupplier(supplier);
 ----
 
 With Resilience4j you don’t have to go all-in, you can pick what you need.
@@ -44,11 +44,11 @@ Core modules:
 * resilience4j-ratelimiter: Rate limiting
 * resilience4j-bulkhead: Bulkheading
 * resilience4j-retry: Automatic retrying (sync and async)
-* resilience4j-cache: Response caching
-* resilience4j-timelimiter: Timeout handling
 
 Add-on modules
 
+* resilience4j-cache: Response caching
+* resilience4j-timelimiter: Timeout handling
 * resilience4j-reactor: Custom Spring Reactor operator
 * resilience4j-rxjava2: Custom RxJava2 operator
 * resilience4j-micrometer: Micrometer Metrics exporter
@@ -70,8 +70,6 @@ Setup and usage in Spring Boot 2 is demonstrated https://github.com/RobWin/resil
 * <<circuitbreaker>>
 * <<ratelimiter>>
 * <<bulkhead>>
-* <<cache>>
-* <<metrics>>
 * <<events>>
 
 [[circuitbreaker]]
