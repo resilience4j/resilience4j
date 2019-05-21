@@ -21,27 +21,22 @@ import reactor.core.CoreSubscriber;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.FluxOperator;
 import reactor.core.publisher.Operators;
-import reactor.core.scheduler.Scheduler;
 
 import java.time.Duration;
 
 class FluxRateLimiter<T> extends FluxOperator<T, T> {
 
     private final RateLimiter rateLimiter;
-    private final Scheduler scheduler;
 
-    FluxRateLimiter(Flux<? extends T> source, RateLimiter rateLimiter,
-                    Scheduler scheduler) {
+    FluxRateLimiter(Flux<? extends T> source, RateLimiter rateLimiter) {
         super(source);
         this.rateLimiter = rateLimiter;
-        this.scheduler = scheduler;
     }
 
     @Override
     public void subscribe(CoreSubscriber<? super T> actual) {
         if(rateLimiter.acquirePermission(Duration.ZERO)){
-            source.publishOn(scheduler)
-                    .subscribe(new RateLimiterSubscriber<>(actual));
+            source.subscribe(new RateLimiterSubscriber<>(actual));
         }else{
             Operators.error(actual, new RequestNotPermitted(rateLimiter));
         }

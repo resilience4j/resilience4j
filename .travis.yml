@@ -10,16 +10,6 @@ before_install:
 after_success:
   - test -n $SONAR_TOKEN && ./gradlew sonarqube
   - test $TRAVIS_BRANCH = "master" && test -n $BINTRAY_USER && test -n $PUBLISH && ./gradlew artifactoryPublish -PbintrayUsername="${BINTRAY_USER}" -PbintrayApiKey="${BINTRAY_KEY}"
-  - test $TRAVIS_BRANCH = "master" && test -n $GITHUB_TOKEN && test -n $PUBLISH && ./gradlew asciidoctor
-deploy:
-  provider: pages
-  skip_cleanup: true
-  github_token: $GITHUB_TOKEN  # Set in the settings page of your repository, as a secure variable
-  keep_history: true
-  local_dir: resilience4j-documentation/build/asciidoc/html5
-  on:
-    branch: master
-    condition: $PUBLISH = true
 before_cache:
 - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
 - rm -fr $HOME/.gradle/caches/*/plugin-resolution/
