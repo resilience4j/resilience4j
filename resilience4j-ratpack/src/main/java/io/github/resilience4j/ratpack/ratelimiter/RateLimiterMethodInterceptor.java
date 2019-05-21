@@ -31,7 +31,6 @@ import org.aopalliance.intercept.MethodInvocation;
 import ratpack.exec.Promise;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
 
 import java.time.Duration;
 import java.util.Optional;
@@ -93,14 +92,14 @@ public class RateLimiterMethodInterceptor extends AbstractMethodInterceptor {
         } else if (Flux.class.isAssignableFrom(returnType)) {
             Flux<?> result = (Flux<?>) proceed(invocation, rateLimiter, fallbackMethod);
             if (result != null) {
-                RateLimiterOperator operator = RateLimiterOperator.of(rateLimiter, Schedulers.immediate());
+                RateLimiterOperator operator = RateLimiterOperator.of(rateLimiter);
                 result = fallbackMethod.onErrorResume(result.transform(operator));
             }
             return result;
         } else if (Mono.class.isAssignableFrom(returnType)) {
             Mono<?> result = (Mono<?>) proceed(invocation, rateLimiter, fallbackMethod);
             if (result != null) {
-                RateLimiterOperator operator = RateLimiterOperator.of(rateLimiter, Schedulers.immediate());
+                RateLimiterOperator operator = RateLimiterOperator.of(rateLimiter);
                 result = fallbackMethod.onErrorResume(result.transform(operator));
             }
             return result;

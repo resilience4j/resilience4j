@@ -33,7 +33,7 @@ public class DefaultFallbackDecorator implements FallbackDecorator {
             try {
                 return supplier.apply();
             } catch (Throwable throwable) {
-                return recoveryMethod.recover(throwable);
+                return recoveryMethod.fallback(throwable);
             }
         };
     }

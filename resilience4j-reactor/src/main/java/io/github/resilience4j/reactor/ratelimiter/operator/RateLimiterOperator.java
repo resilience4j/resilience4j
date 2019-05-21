@@ -20,25 +20,21 @@ import io.github.resilience4j.ratelimiter.RequestNotPermitted;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Scheduler;
-import reactor.core.scheduler.Schedulers;
 
 import java.util.function.UnaryOperator;
 
 
 /**
  * A RateLimiter operator which checks if a downstream subscriber/observer can acquire a permission to subscribe to an upstream Publisher.
- * Otherwise throws a {@link RequestNotPermitted} if the CircuitBreaker is OPEN.
+ * Otherwise emits a {@link RequestNotPermitted} if the rate limit is exceeded.
  *
  * @param <T> the value type
  */
 public class RateLimiterOperator<T> implements UnaryOperator<Publisher<T>> {
     private final RateLimiter rateLimiter;
-    private final Scheduler scheduler;
 
-    private RateLimiterOperator(RateLimiter rateLimiter, Scheduler scheduler) {
+    private RateLimiterOperator(RateLimiter rateLimiter) {
         this.rateLimiter = rateLimiter;
-        this.scheduler = scheduler;
     }
 
     /**
@@ -49,27 +45,15 @@ public class RateLimiterOperator<T> implements UnaryOperator<Publisher<T>> {
      * @return a RateLimiterOperator
      */
     public static <T> RateLimiterOperator<T> of(RateLimiter rateLimiter) {
-        return of(rateLimiter, Schedulers.parallel());
-    }
-
-    /**
-     * Creates a RateLimiterOperator.
-     *
-     * @param <T>         the value type of the upstream and downstream
-     * @param rateLimiter the Rate limiter
-     * @param scheduler   the {@link Scheduler} where to publish
-     * @return a RateLimiterOperator
-     */
-    public static <T> RateLimiterOperator<T> of(RateLimiter rateLimiter, Scheduler scheduler) {
-        return new RateLimiterOperator<>(rateLimiter, scheduler);
+        return new RateLimiterOperator<>(rateLimiter);
     }
 
     @Override
     public Publisher<T> apply(Publisher<T> publisher) {
         if (publisher instanceof Mono) {
-            return new MonoRateLimiter<>((Mono<? extends T>) publisher, rateLimiter, scheduler);
+            return new MonoRateLimiter<>((Mono<? extends T>) publisher, rateLimiter);
         } else if (publisher instanceof Flux) {
-            return new FluxRateLimiter<>((Flux<? extends T>) publisher, rateLimiter, scheduler);
+            return new FluxRateLimiter<>((Flux<? extends T>) publisher, rateLimiter);
         }
 
         throw new IllegalStateException("Publisher of type <" + publisher.getClass().getSimpleName()

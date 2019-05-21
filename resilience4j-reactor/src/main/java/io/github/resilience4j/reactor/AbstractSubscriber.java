@@ -18,6 +18,7 @@ package io.github.resilience4j.reactor;
 import org.reactivestreams.Subscription;
 import reactor.core.CoreSubscriber;
 import reactor.core.publisher.BaseSubscriber;
+import reactor.util.context.Context;
 
 /**
  * Heavily inspired by {@link reactor.core.publisher.BaseSubscriber}
@@ -40,6 +41,11 @@ public abstract class AbstractSubscriber<T> extends BaseSubscriber<T> {
     @Override
     protected void hookOnSubscribe(Subscription subscription){
         downstreamSubscriber.onSubscribe(this);
+    }
+
+    @Override
+    public Context currentContext() {
+        return downstreamSubscriber.currentContext();
     }
 
     @Override

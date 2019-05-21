@@ -85,7 +85,7 @@ public class TaggedBulkheadMetrics extends AbstractMetrics implements MeterBinde
                 .tag(TagNames.NAME, bulkhead.getName())
                 .register(registry).getId());
         idSet.add(Gauge.builder(names.getMaxAllowedConcurrentCallsMetricName(), bulkhead, bh -> bh.getMetrics().getMaxAllowedConcurrentCalls())
-                .description("The maximum number available permissions")
+                .description("The maximum number of available permissions")
                 .tag(TagNames.NAME, bulkhead.getName())
                 .register(registry).getId());
 

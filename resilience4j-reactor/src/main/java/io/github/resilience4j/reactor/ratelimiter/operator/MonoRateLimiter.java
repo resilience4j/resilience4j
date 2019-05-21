@@ -21,26 +21,21 @@ import reactor.core.CoreSubscriber;
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.MonoOperator;
 import reactor.core.publisher.Operators;
-import reactor.core.scheduler.Scheduler;
 
 import java.time.Duration;
 
 class MonoRateLimiter<T> extends MonoOperator<T, T> {
     private final RateLimiter rateLimiter;
-    private final Scheduler scheduler;
 
-    MonoRateLimiter(Mono<? extends T> source, RateLimiter rateLimiter,
-                    Scheduler scheduler) {
+    MonoRateLimiter(Mono<? extends T> source, RateLimiter rateLimiter) {
         super(source);
         this.rateLimiter = rateLimiter;
-        this.scheduler = scheduler;
     }
 
     @Override
     public void subscribe(CoreSubscriber<? super T> actual) {
         if(rateLimiter.acquirePermission(Duration.ZERO)){
-            source.publishOn(scheduler)
-                    .subscribe(new RateLimiterSubscriber<>(actual));
+            source.subscribe(new RateLimiterSubscriber<>(actual));
         }else{
             Operators.error(actual, new RequestNotPermitted(rateLimiter));
         }

@@ -15,15 +15,16 @@
  */
 package io.github.resilience4j.fallback;
 
-import io.vavr.CheckedFunction0;
-import org.reactivestreams.Publisher;
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
+import static io.github.resilience4j.utils.AspectUtil.newHashSet;
 
 import java.util.Set;
 import java.util.function.Function;
 
-import static io.github.resilience4j.utils.AspectUtil.newHashSet;
+import org.reactivestreams.Publisher;
+
+import io.vavr.CheckedFunction0;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 /**
  * fallbackMethod decorator for {@link Flux} and {@link Mono}
@@ -38,14 +39,14 @@ public class ReactorFallbackDecorator implements FallbackDecorator {
 
     @SuppressWarnings("unchecked")
     @Override
-    public CheckedFunction0<Object> decorate(FallbackMethod recoveryMethod, CheckedFunction0<Object> supplier) {
+    public CheckedFunction0<Object> decorate(FallbackMethod fallbackMethod, CheckedFunction0<Object> supplier) {
         return supplier.andThen(returnValue -> {
             if (Flux.class.isAssignableFrom(returnValue.getClass())) {
                 Flux fluxReturnValue = (Flux) returnValue;
-                return fluxReturnValue.onErrorResume(reactorOnErrorResume(recoveryMethod, Flux::error));
+                return fluxReturnValue.onErrorResume(reactorOnErrorResume(fallbackMethod, Flux::error));
             } else if (Mono.class.isAssignableFrom(returnValue.getClass())) {
                 Mono monoReturnValue = (Mono) returnValue;
-                return monoReturnValue.onErrorResume(reactorOnErrorResume(recoveryMethod, Mono::error));
+                return monoReturnValue.onErrorResume(reactorOnErrorResume(fallbackMethod, Mono::error));
             } else {
                 return returnValue;
             }
@@ -56,7 +57,7 @@ public class ReactorFallbackDecorator implements FallbackDecorator {
     private <T> Function<? super Throwable, ? extends Publisher<? extends T>> reactorOnErrorResume(FallbackMethod recoveryMethod, Function<? super Throwable, ? extends Publisher<? extends T>> errorFunction) {
         return throwable -> {
             try {
-                return (Publisher<? extends T>) recoveryMethod.recover(throwable);
+                return (Publisher<? extends T>) recoveryMethod.fallback(throwable);
             } catch (Throwable recoverThrowable) {
                 return errorFunction.apply(recoverThrowable);
             }

@@ -21,7 +21,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
 import reactor.test.StepVerifier;
 
 import java.io.IOException;
@@ -79,7 +78,7 @@ public class MonoRateLimiterTest {
 
         StepVerifier.create(
                 Mono.error(new IOException("BAM!"))
-                        .compose(RateLimiterOperator.of(rateLimiter, Schedulers.immediate())))
+                        .compose(RateLimiterOperator.of(rateLimiter)))
                 .expectError(RequestNotPermitted.class)
                 .verify(Duration.ofSeconds(1));
     }

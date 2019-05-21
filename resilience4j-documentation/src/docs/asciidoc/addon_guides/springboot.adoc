@@ -616,7 +616,7 @@ List of available endpoints:
 Example of response:
 ----
 {
-  "eventsList": [
+  "rateLimiterEvents": [
     {
       "rateLimiterName": "backendA",
       "type": "SUCCESSFUL_ACQUIRE",
