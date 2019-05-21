@@ -455,9 +455,8 @@ class Resilience4jModuleSpec extends Specification {
             bindings {
                 bindInstance(BulkheadRegistry, bulkheadRegistry)
                 module(Resilience4jModule) {
-                    it.bulkhead('test') {
-                        it.defaults(true)
-                    }.bulkhead('test2') {
+                    it.bulkhead('test')
+                      .bulkhead('test2') {
                         it.maxConcurrentCalls(100)
                                 .maxWaitTime(1000)
                     }
@@ -559,8 +558,8 @@ class Resilience4jModuleSpec extends Specification {
         def test1 = bulkheadRegistry.bulkhead('test1')
         test1.name == 'test1'
         test1.bulkheadConfig.with {
-            assert maxConcurrentCalls == 25
-            assert maxWaitTime == 0
+            assert maxConcurrentCalls == 50
+            assert maxWaitTime == 750
             it
         }
         def test2 = bulkheadRegistry.bulkhead('test2')

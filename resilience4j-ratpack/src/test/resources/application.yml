@@ -40,9 +40,15 @@ resilience4j:
         test2:
             maxAttempts: 3
             waitDurationInMillis: 1000
-    bulkheads:
-        test1:
-            defaults: true
-        test2:
-            maxConcurrentCalls: 100
-            maxWaitTime: 1000
+    bulkhead:
+        configs:
+            default:
+                maxConcurrentCalls: 50
+                maxWaitTime: 500
+        backends:
+            test1:
+                baseConfig: default
+                maxWaitTime: 750
+            test2:
+                maxConcurrentCalls: 100
+                maxWaitTime: 1000

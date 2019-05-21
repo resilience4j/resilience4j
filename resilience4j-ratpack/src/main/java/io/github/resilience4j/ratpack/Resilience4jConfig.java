@@ -16,7 +16,7 @@
 
 package io.github.resilience4j.ratpack;
 
-import io.github.resilience4j.ratpack.bulkhead.BulkheadConfig;
+import io.github.resilience4j.ratpack.bulkhead.BulkheadConfigurationProperties;
 import io.github.resilience4j.ratpack.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.ratpack.ratelimiter.RateLimiterConfig;
 import io.github.resilience4j.ratpack.retry.RetryConfig;
@@ -31,7 +31,7 @@ public class Resilience4jConfig {
     private Map<String, CircuitBreakerConfig> circuitBreakers = new HashMap<>();
     private Map<String, RateLimiterConfig> rateLimiters = new HashMap<>();
     private Map<String, RetryConfig> retries = new HashMap<>();
-    private Map<String, BulkheadConfig> bulkheads = new HashMap<>();
+    private BulkheadConfigurationProperties bulkhead = new BulkheadConfigurationProperties();
     private boolean metrics = false;
     private boolean prometheus = false;
     private EndpointsConfig endpoints = new EndpointsConfig();
@@ -66,10 +66,14 @@ public class Resilience4jConfig {
         }
     }
 
-    public Resilience4jConfig bulkhead(String name, Function<? super BulkheadConfig, ? extends BulkheadConfig> configure) {
+    public Resilience4jConfig bulkhead(String name) {
+        return bulkhead(name, config -> config);
+    }
+
+    public Resilience4jConfig bulkhead(String name, Function<? super BulkheadConfigurationProperties.BulkheadConfig, ? extends BulkheadConfigurationProperties.BulkheadConfig> configure) {
         try {
-            BulkheadConfig finalConfig = configure.apply(new BulkheadConfig());
-            bulkheads.put(name, finalConfig);
+            BulkheadConfigurationProperties.BulkheadConfig finalConfig = configure.apply(new BulkheadConfigurationProperties.BulkheadConfig());
+            bulkhead.getBackends().put(name, finalConfig);
             return this;
         } catch (Exception e) {
             throw uncheck(e);
@@ -107,8 +111,8 @@ public class Resilience4jConfig {
         return retries;
     }
 
-    public Map<String, BulkheadConfig> getBulkheads() {
-        return bulkheads;
+    public BulkheadConfigurationProperties getBulkhead() {
+        return bulkhead;
     }
 
     public boolean isMetrics() {

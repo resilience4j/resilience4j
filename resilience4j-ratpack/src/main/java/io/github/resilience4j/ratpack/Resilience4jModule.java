@@ -23,7 +23,6 @@ import com.google.inject.TypeLiteral;
 import com.google.inject.matcher.Matchers;
 import com.google.inject.multibindings.Multibinder;
 import com.google.inject.multibindings.OptionalBinder;
-import io.github.resilience4j.bulkhead.BulkheadConfig;
 import io.github.resilience4j.bulkhead.BulkheadRegistry;
 import io.github.resilience4j.bulkhead.annotation.Bulkhead;
 import io.github.resilience4j.bulkhead.event.BulkheadEvent;
@@ -44,6 +43,7 @@ import io.github.resilience4j.ratelimiter.RateLimiterConfig;
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
 import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
 import io.github.resilience4j.ratelimiter.event.RateLimiterEvent;
+import io.github.resilience4j.ratpack.bulkhead.BulkheadConfigurationProperties;
 import io.github.resilience4j.ratpack.bulkhead.BulkheadMethodInterceptor;
 import io.github.resilience4j.ratpack.bulkhead.monitoring.endpoint.BulkheadChain;
 import io.github.resilience4j.ratpack.circuitbreaker.CircuitBreakerMethodInterceptor;
@@ -238,16 +238,9 @@ public class Resilience4jModule extends ConfigurableModule<Resilience4jConfig> {
             BulkheadRegistry bulkheadRegistry = injector.getInstance(BulkheadRegistry.class);
             EventConsumerRegistry<BulkheadEvent> bConsumerRegistry = injector.getInstance(Key.get(new TypeLiteral<EventConsumerRegistry<BulkheadEvent>>() {
             }));
-            config.getBulkheads().forEach((name, bulkheadConfig) -> {
-                io.github.resilience4j.bulkhead.Bulkhead bulkhead;
-                if (bulkheadConfig.getDefaults()) {
-                    bulkhead = bulkheadRegistry.bulkhead(name);
-                } else {
-                    bulkhead = bulkheadRegistry.bulkhead(name, BulkheadConfig.custom()
-                            .maxConcurrentCalls(bulkheadConfig.getMaxConcurrentCalls())
-                            .maxWaitTime(bulkheadConfig.getMaxWaitTime())
-                            .build());
-                }
+            BulkheadConfigurationProperties configurations = config.getBulkhead();
+            configurations.getBackends().forEach((name, bulkheadConfig) -> {
+                io.github.resilience4j.bulkhead.Bulkhead bulkhead = bulkheadRegistry.bulkhead(name, configurations.createBulkheadConfig(bulkheadConfig));
                 if (endpointsConfig.getBulkheads().isEnabled()) {
                     bulkhead.getEventPublisher().onEvent(bConsumerRegistry.createEventConsumer(name, endpointsConfig.getBulkheads().getEventConsumerBufferSize()));
                 }
