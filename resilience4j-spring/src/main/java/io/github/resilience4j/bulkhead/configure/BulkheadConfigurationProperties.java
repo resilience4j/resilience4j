@@ -26,6 +26,8 @@ import org.springframework.util.StringUtils;
 
 import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.bulkhead.BulkheadConfig;
+import io.github.resilience4j.bulkhead.ThreadPoolBulkheadConfig;
+import io.github.resilience4j.bulkhead.configure.threadpool.ThreadPoolProperties;
 import io.github.resilience4j.core.ConfigurationNotFoundException;
 import io.github.resilience4j.core.lang.Nullable;
 
@@ -97,6 +99,38 @@ public class BulkheadConfigurationProperties {
 		return configs;
 	}
 
+	// Thread pool bulkhead section
+	public ThreadPoolBulkheadConfig createThreadPoolBulkheadConfig(String backend) {
+		return createThreadPoolBulkheadConfig(getBackendProperties(backend));
+	}
+
+	public ThreadPoolBulkheadConfig createThreadPoolBulkheadConfig(BackendProperties backendProperties) {
+		if (!StringUtils.isEmpty(backendProperties.getBaseConfig())) {
+			BackendProperties baseProperties = configs.get(backendProperties.getBaseConfig());
+			if (baseProperties == null) {
+				throw new ConfigurationNotFoundException(backendProperties.getBaseConfig());
+			}
+			return buildThreadPoolConfigFromBaseConfig(baseProperties, backendProperties);
+		}
+		return buildThreadPoolBulkheadConfig(ThreadPoolBulkheadConfig.custom(), backendProperties);
+	}
+
+	private ThreadPoolBulkheadConfig buildThreadPoolConfigFromBaseConfig(BackendProperties baseProperties, BackendProperties backendProperties) {
+		ThreadPoolBulkheadConfig baseConfig = buildThreadPoolBulkheadConfig(ThreadPoolBulkheadConfig.custom(), baseProperties);
+		return buildThreadPoolBulkheadConfig(ThreadPoolBulkheadConfig.from(baseConfig), backendProperties);
+	}
+
+	public ThreadPoolBulkheadConfig buildThreadPoolBulkheadConfig(ThreadPoolBulkheadConfig.Builder builder, BackendProperties properties) {
+		if (properties == null) {
+			return ThreadPoolBulkheadConfig.custom().build();
+		}
+		return builder.coreThreadPoolSize(properties.threadPoolProperties.getCoreThreadPoolSize())
+				.keepAliveTime(properties.threadPoolProperties.getKeepAliveTime())
+				.maxThreadPoolSize(properties.threadPoolProperties.getMaxThreadPoolSize())
+				.queueCapacity(properties.threadPoolProperties.getQueueCapacity()).build();
+	}
+
+
 	/**
 	 * Class storing property values for configuring {@link Bulkhead} instances.
 	 */
@@ -112,6 +146,20 @@ public class BulkheadConfigurationProperties {
 
 		@Nullable
 		private String baseConfig;
+
+
+		@Nullable
+		private ThreadPoolProperties threadPoolProperties;
+
+
+		@Nullable
+		public ThreadPoolProperties getThreadPoolProperties() {
+			return threadPoolProperties;
+		}
+
+		public void setThreadPoolProperties(@Nullable ThreadPoolProperties threadPoolProperties) {
+			this.threadPoolProperties = threadPoolProperties;
+		}
 
 		/**
 		 * Returns the max concurrent call of the bulkhead.

@@ -15,98 +15,115 @@
  */
 package io.github.resilience4j;
 
-import io.reactivex.*;
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
-
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 
+import io.reactivex.Completable;
+import io.reactivex.Flowable;
+import io.reactivex.Maybe;
+import io.reactivex.Observable;
+import io.reactivex.Single;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+
 public interface TestDummyService {
-    String BACKEND = "backendA";
+	String BACKEND = "backendA";
+	String BACKEND_B = "backendB";
 
-    String sync();
-    CompletionStage<String> async();
-    Flux<String> flux();
-    Mono<String> mono(String parameter);
-    Observable<String> observable();
-    Single<String> single();
-    Completable completable();
-    Maybe<String> maybe();
-    Flowable<String> flowable();
+	String sync();
 
-    default String syncError() {
-        throw new RuntimeException("Test");
-    }
+	CompletionStage<String> asyncThreadPool();
 
-    default CompletionStage<String> asyncError() {
-        CompletableFuture<String> future = new CompletableFuture<>();
-        future.completeExceptionally(new RuntimeException("Test"));
+	CompletionStage<String> asyncThreadPoolSuccess();
 
-        return future;
-    }
+	CompletionStage<String> async();
 
-    default Flux<String> fluxError() {
-        return Flux.error(new RuntimeException("Test"));
-    }
+	Flux<String> flux();
 
-    default Mono<String> monoError(String parameter) {
-        return Mono.error(new RuntimeException("Test"));
-    }
+	Mono<String> mono(String parameter);
 
-    default Observable<String> observableError() {
-        return Observable.error(new RuntimeException("Test"));
-    }
+	Observable<String> observable();
 
-    default Single<String> singleError() {
-        return Single.error(new RuntimeException("Test"));
-    }
+	Single<String> single();
 
-    default Completable completableError() {
-        return Completable.error(new RuntimeException("Test"));
-    }
+	Completable completable();
 
-    default Maybe<String> maybeError() {
-        return Maybe.error(new RuntimeException("Test"));
-    }
+	Maybe<String> maybe();
 
-    default Flowable<String> flowableError() {
-        return Flowable.error(new RuntimeException("Test"));
-    }
+	Flowable<String> flowable();
 
-    default String recovery(RuntimeException throwable) {
-        return "recovered";
-    }
+	default String syncError() {
+		throw new RuntimeException("Test");
+	}
 
-    default CompletionStage<String> completionStageRecovery(Throwable throwable) {
-        return CompletableFuture.supplyAsync(() -> "recovered");
-    }
+	default CompletionStage<String> asyncError() {
+		CompletableFuture<String> future = new CompletableFuture<>();
+		future.completeExceptionally(new RuntimeException("Test"));
 
-    default Flux<String> fluxRecovery(Throwable throwable) {
-        return Flux.just("recovered");
-    }
+		return future;
+	}
 
-    default Mono<String> monoRecovery(String parameter, Throwable throwable) {
-        return Mono.just(parameter);
-    }
+	default Flux<String> fluxError() {
+		return Flux.error(new RuntimeException("Test"));
+	}
 
-    default Observable<String> observableRecovery(Throwable throwable) {
-        return Observable.just("recovered");
-    }
+	default Mono<String> monoError(String parameter) {
+		return Mono.error(new RuntimeException("Test"));
+	}
 
-    default Single<String> singleRecovery(Throwable throwable) {
-        return Single.just("recovered");
-    }
+	default Observable<String> observableError() {
+		return Observable.error(new RuntimeException("Test"));
+	}
 
-    default Completable completableRecovery(Throwable throwable) {
-        return Completable.complete();
-    }
+	default Single<String> singleError() {
+		return Single.error(new RuntimeException("Test"));
+	}
 
-    default Maybe<String> maybeRecovery(Throwable throwable) {
-        return Maybe.just("recovered");
-    }
+	default Completable completableError() {
+		return Completable.error(new RuntimeException("Test"));
+	}
 
-    default Flowable<String> flowableRecovery(Throwable throwable) {
-        return Flowable.just("recovered");
-    }
+	default Maybe<String> maybeError() {
+		return Maybe.error(new RuntimeException("Test"));
+	}
+
+	default Flowable<String> flowableError() {
+		return Flowable.error(new RuntimeException("Test"));
+	}
+
+	default String recovery(RuntimeException throwable) {
+		return "recovered";
+	}
+
+	default CompletionStage<String> completionStageRecovery(Throwable throwable) {
+		return CompletableFuture.supplyAsync(() -> "recovered");
+	}
+
+	default Flux<String> fluxRecovery(Throwable throwable) {
+		return Flux.just("recovered");
+	}
+
+	default Mono<String> monoRecovery(String parameter, Throwable throwable) {
+		return Mono.just(parameter);
+	}
+
+	default Observable<String> observableRecovery(Throwable throwable) {
+		return Observable.just("recovered");
+	}
+
+	default Single<String> singleRecovery(Throwable throwable) {
+		return Single.just("recovered");
+	}
+
+	default Completable completableRecovery(Throwable throwable) {
+		return Completable.complete();
+	}
+
+	default Maybe<String> maybeRecovery(Throwable throwable) {
+		return Maybe.just("recovered");
+	}
+
+	default Flowable<String> flowableRecovery(Throwable throwable) {
+		return Flowable.just("recovered");
+	}
 }

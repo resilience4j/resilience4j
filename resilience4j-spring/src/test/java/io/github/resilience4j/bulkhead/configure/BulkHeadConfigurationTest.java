@@ -9,6 +9,10 @@ import org.mockito.junit.MockitoJUnitRunner;
 
 import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.bulkhead.BulkheadRegistry;
+import io.github.resilience4j.bulkhead.ThreadPoolBulkhead;
+import io.github.resilience4j.bulkhead.ThreadPoolBulkheadRegistry;
+import io.github.resilience4j.bulkhead.configure.threadpool.ThreadPoolBulkheadConfiguration;
+import io.github.resilience4j.bulkhead.configure.threadpool.ThreadPoolProperties;
 import io.github.resilience4j.bulkhead.event.BulkheadEvent;
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.core.ConfigurationNotFoundException;
@@ -18,6 +22,42 @@ import io.github.resilience4j.core.ConfigurationNotFoundException;
  */
 @RunWith(MockitoJUnitRunner.class)
 public class BulkHeadConfigurationTest {
+
+	@Test
+	public void tesFixedThreadPoolBulkHeadRegistry() {
+		//Given
+		BulkheadConfigurationProperties.BackendProperties backendProperties1 = new BulkheadConfigurationProperties.BackendProperties();
+		ThreadPoolProperties threadPoolProperties = new ThreadPoolProperties();
+		threadPoolProperties.setCoreThreadPoolSize(1);
+		backendProperties1.setThreadPoolProperties(threadPoolProperties);
+
+		BulkheadConfigurationProperties.BackendProperties backendProperties2 = new BulkheadConfigurationProperties.BackendProperties();
+		ThreadPoolProperties threadPoolProperties2 = new ThreadPoolProperties();
+		threadPoolProperties2.setCoreThreadPoolSize(2);
+		backendProperties2.setThreadPoolProperties(threadPoolProperties2);
+
+		BulkheadConfigurationProperties bulkheadConfigurationProperties = new BulkheadConfigurationProperties();
+		bulkheadConfigurationProperties.getBackends().put("backend1", backendProperties1);
+		bulkheadConfigurationProperties.getBackends().put("backend2", backendProperties2);
+
+		ThreadPoolBulkheadConfiguration threadPoolBulkheadConfiguration = new ThreadPoolBulkheadConfiguration();
+		DefaultEventConsumerRegistry<BulkheadEvent> eventConsumerRegistry = new DefaultEventConsumerRegistry<>();
+
+		//When
+		ThreadPoolBulkheadRegistry bulkheadRegistry = threadPoolBulkheadConfiguration.threadPoolBulkheadRegistry(bulkheadConfigurationProperties, eventConsumerRegistry);
+
+		//Then
+		assertThat(bulkheadRegistry.getAllBulkheads().size()).isEqualTo(2);
+		ThreadPoolBulkhead bulkhead1 = bulkheadRegistry.bulkhead("backend1");
+		assertThat(bulkhead1).isNotNull();
+		assertThat(bulkhead1.getBulkheadConfig().getCoreThreadPoolSize()).isEqualTo(1);
+
+		ThreadPoolBulkhead bulkhead2 = bulkheadRegistry.bulkhead("backend2");
+		assertThat(bulkhead2).isNotNull();
+		assertThat(bulkhead2.getBulkheadConfig().getCoreThreadPoolSize()).isEqualTo(2);
+
+		assertThat(eventConsumerRegistry.getAllEventConsumer()).hasSize(2);
+	}
 
 	@Test
 	public void testBulkHeadRegistry() {

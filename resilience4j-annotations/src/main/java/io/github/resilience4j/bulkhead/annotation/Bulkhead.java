@@ -10,17 +10,22 @@ import java.lang.annotation.Target;
 @Target(value = {ElementType.METHOD, ElementType.TYPE})
 @Documented
 public @interface Bulkhead {
-    /**
-     * Name of the bulkhead.
-     *
-     * @return the name of the bulkhead
-     */
-    String name();
+	/**
+	 * Name of the bulkhead.
+	 *
+	 * @return the name of the bulkhead
+	 */
+	String name();
 
-    /**
-     * fallbackMethod method name.
-     *
-     * @return fallbackMethod method name.
-     */
-    String fallbackMethod() default "";
+	/**
+	 * fallbackMethod method name.
+	 *
+	 * @return fallbackMethod method name.
+	 */
+	String fallbackMethod() default "";
+
+	/**
+	 * @return the bulkhead implementation type (SEMAPHORE or THREADPOOL)
+	 */
+	Type type() default Type.SEMAPHORE;
 }

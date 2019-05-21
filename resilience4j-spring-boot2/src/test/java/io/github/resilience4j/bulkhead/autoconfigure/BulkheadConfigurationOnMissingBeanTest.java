@@ -30,6 +30,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import io.github.resilience4j.TestUtils;
 import io.github.resilience4j.bulkhead.BulkheadRegistry;
+import io.github.resilience4j.bulkhead.ThreadPoolBulkheadRegistry;
 import io.github.resilience4j.bulkhead.configure.BulkheadAspect;
 import io.github.resilience4j.bulkhead.configure.BulkheadAspectExt;
 import io.github.resilience4j.bulkhead.configure.BulkheadConfiguration;
@@ -89,10 +90,10 @@ public class BulkheadConfigurationOnMissingBeanTest {
 		}
 
 		@Bean
-		public BulkheadAspect bulkheadAspect(BulkheadRegistry bulkheadRegistry,
-											 @Autowired(required = false) List<BulkheadAspectExt> bulkheadAspectExts,
-											 FallbackDecorators fallbackDecorators) {
-			bulkheadAspect = new BulkheadAspect(new BulkheadProperties(), bulkheadRegistry, bulkheadAspectExts, fallbackDecorators);
+		public BulkheadAspect bulkheadAspect(BulkheadRegistry bulkheadRegistry, ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry,
+		                                     @Autowired(required = false) List<BulkheadAspectExt> bulkheadAspectExts,
+		                                     FallbackDecorators fallbackDecorators) {
+			bulkheadAspect = new BulkheadAspect(new BulkheadProperties(), threadPoolBulkheadRegistry, bulkheadRegistry, bulkheadAspectExts, fallbackDecorators);
 			return bulkheadAspect;
 		}
 
