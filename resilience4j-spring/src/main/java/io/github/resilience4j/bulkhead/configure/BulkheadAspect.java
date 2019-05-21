@@ -115,7 +115,7 @@ public class BulkheadAspect implements Ordered {
 	}
 
 	private Object executeFallBack(ProceedingJoinPoint proceedingJoinPoint, String fallBackMethod, Method method, CheckedFunction0<Object> bulkhead) throws Throwable {
-		FallbackMethod fallbackMethod = new FallbackMethod(fallBackMethod, method, proceedingJoinPoint.getArgs(), proceedingJoinPoint.getTarget());
+		FallbackMethod fallbackMethod = FallbackMethod.create(fallBackMethod, method, proceedingJoinPoint.getArgs(), proceedingJoinPoint.getTarget());
 		return fallbackDecorators.decorate(fallbackMethod, bulkhead).apply();
 	}
 

@@ -88,6 +88,12 @@ resilience4j.bulkhead:
       maxConcurrentCall: 1
     backendB:
       baseConfig: default
+    backendC:
+      threadPoolProperties:
+        maxThreadPoolSize: 1
+        coreThreadPoolSize: 1
+        queueCapacity: 1
+
 
 management.security.enabled: false
 management.endpoints.web.exposure.include: '*'
