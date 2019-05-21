@@ -21,7 +21,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
 import reactor.core.publisher.Flux;
-import reactor.core.scheduler.Schedulers;
 import reactor.test.StepVerifier;
 
 import java.io.IOException;
@@ -69,7 +68,7 @@ public class FluxRateLimiterTest {
 
         StepVerifier.create(
                 Flux.just("Event")
-                        .compose(RateLimiterOperator.of(rateLimiter, Schedulers.immediate())))
+                        .compose(RateLimiterOperator.of(rateLimiter)))
                 .expectSubscription()
                 .expectError(RequestNotPermitted.class)
                 .verify(Duration.ofSeconds(1));

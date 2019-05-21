@@ -16,7 +16,6 @@ import io.github.resilience4j.retry.RetryConfig;
 import org.junit.Test;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
 import reactor.test.StepVerifier;
 
 import java.io.IOException;
@@ -108,7 +107,7 @@ public class CombinedOperatorsTest {
                 Flux.error(new IOException("BAM!"))
                         .compose(CircuitBreakerOperator.of(circuitBreaker))
                         .compose(BulkheadOperator.of(bulkhead))
-                        .compose(RateLimiterOperator.of(rateLimiter, Schedulers.immediate()))
+                        .compose(RateLimiterOperator.of(rateLimiter))
         ).expectError(CallNotPermittedException.class)
                 .verify(Duration.ofSeconds(1));
     }
@@ -120,7 +119,7 @@ public class CombinedOperatorsTest {
                 Flux.error(new IOException("BAM!"), true)
                         .compose(CircuitBreakerOperator.of(circuitBreaker))
                         .compose(BulkheadOperator.of(bulkhead))
-                        .compose(RateLimiterOperator.of(rateLimiter, Schedulers.immediate()))
+                        .compose(RateLimiterOperator.of(rateLimiter))
         ).expectError(CallNotPermittedException.class)
                 .verify(Duration.ofSeconds(1));
     }
