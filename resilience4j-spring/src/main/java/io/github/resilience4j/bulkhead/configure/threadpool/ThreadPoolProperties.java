@@ -1,22 +1,14 @@
 package io.github.resilience4j.bulkhead.configure.threadpool;
 
-import javax.validation.constraints.Min;
-
-import io.github.resilience4j.bulkhead.ThreadPoolBulkheadConfig;
-
 /**
  * common spring configuration properties fir {@link io.github.resilience4j.bulkhead.ThreadPoolBulkhead}
  */
 public class ThreadPoolProperties {
 
-	@Min(1)
-	private int maxThreadPoolSize = ThreadPoolBulkheadConfig.DEFAULT_MAX_THREAD_POOL_SIZE;
-	@Min(1)
-	private int coreThreadPoolSize = ThreadPoolBulkheadConfig.DEFAULT_CORE_THREAD_POOL_SIZE;
-	@Min(1)
-	private int queueCapacity = ThreadPoolBulkheadConfig.DEFAULT_QUEUE_CAPACITY;
-	@Min(1)
-	private long keepAliveTime = ThreadPoolBulkheadConfig.DEFAULT_KEEP_ALIVE_TIME;
+	private int maxThreadPoolSize;
+	private int coreThreadPoolSize;
+	private int queueCapacity;
+	private long keepAliveTime;
 
 	public int getMaxThreadPoolSize() {
 		return maxThreadPoolSize;
@@ -49,5 +41,5 @@ public class ThreadPoolProperties {
 	public void setKeepAliveTime(long keepAliveTime) {
 		this.keepAliveTime = keepAliveTime;
 	}
-	
+
 }

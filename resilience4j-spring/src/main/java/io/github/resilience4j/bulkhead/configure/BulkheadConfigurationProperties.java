@@ -124,10 +124,19 @@ public class BulkheadConfigurationProperties {
 		if (properties == null) {
 			return ThreadPoolBulkheadConfig.custom().build();
 		}
-		return builder.coreThreadPoolSize(properties.threadPoolProperties.getCoreThreadPoolSize())
-				.keepAliveTime(properties.threadPoolProperties.getKeepAliveTime())
-				.maxThreadPoolSize(properties.threadPoolProperties.getMaxThreadPoolSize())
-				.queueCapacity(properties.threadPoolProperties.getQueueCapacity()).build();
+		if (properties.getThreadPoolProperties().getQueueCapacity() > 0) {
+			builder.queueCapacity(properties.getThreadPoolProperties().getQueueCapacity());
+		}
+		if (properties.getThreadPoolProperties().getCoreThreadPoolSize() > 0) {
+			builder.coreThreadPoolSize(properties.getThreadPoolProperties().getCoreThreadPoolSize());
+		}
+		if (properties.getThreadPoolProperties().getMaxThreadPoolSize() > 0) {
+			builder.maxThreadPoolSize(properties.getThreadPoolProperties().getMaxThreadPoolSize());
+		}
+		if (properties.getThreadPoolProperties().getKeepAliveTime() > 0) {
+			builder.keepAliveTime(properties.getThreadPoolProperties().getKeepAliveTime());
+		}
+		return builder.build();
 	}
 
 
