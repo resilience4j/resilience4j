@@ -16,17 +16,29 @@ resilience4j:
             enabled: true
             path: bulkhead
             eventConsumerBufferSize: 100
-    circuitBreakers:
-        test1:
-            defaults: true
-        test2:
-            ringBufferSizeInClosedState: 200
-            ringBufferSizeInHalfOpenState: 20
-            waitIntervalInMillis: 5000
-            failureRateThreshold: 60
-            automaticTransitionFromOpenToHalfOpen: true
-            recordExceptions:
-                - io.github.resilience4j.ratpack.Resilience4jModuleSpec$DummyException1
+    circuitBreaker:
+        configs:
+            default:
+                ringBufferSizeInClosedState: 200
+                ringBufferSizeInHalfOpenState: 20
+                waitDurationInOpenStateMillis: 1000
+                failureRateThreshold: 60
+                automaticTransitionFromOpenToHalfOpenEnabled: true
+                recordExceptions:
+                    - io.github.resilience4j.ratpack.Resilience4jModuleSpec$DummyException1
+                    - io.github.resilience4j.ratpack.Resilience4jModuleSpec$DummyException2
+        backends:
+            test1:
+                baseConfig: default
+                ringBufferSizeInClosedState: 100
+            test2:
+                ringBufferSizeInClosedState: 200
+                ringBufferSizeInHalfOpenState: 20
+                waitDurationInOpenStateMillis: 5000
+                failureRateThreshold: 60
+                automaticTransitionFromOpenToHalfOpenEnabled: true
+                recordExceptions:
+                    - io.github.resilience4j.ratpack.Resilience4jModuleSpec$DummyException1
     rateLimiters:
         test1:
             defaults: true

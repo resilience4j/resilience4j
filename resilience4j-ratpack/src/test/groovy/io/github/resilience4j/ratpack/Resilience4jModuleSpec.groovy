@@ -52,15 +52,14 @@ class Resilience4jModuleSpec extends Specification {
             bindings {
                 bindInstance(CircuitBreakerRegistry, circuitBreakerRegistry)
                 module(Resilience4jModule) {
-                    it.circuitBreaker('test') {
-                        it.defaults(true)
-                    }.circuitBreaker('test2') {
+                    it.circuitBreaker('test')
+                      .circuitBreaker('test2') {
                         it.failureRateThreshold(50)
-                                .waitIntervalInMillis(5000)
+                                .waitDurationInOpenStateMillis(5000)
                                 .ringBufferSizeInClosedState(200)
                                 .ringBufferSizeInHalfOpenState(20)
                                 .failureRateThreshold(60)
-                                .automaticTransitionFromOpenToHalfOpen(true)
+                                .automaticTransitionFromOpenToHalfOpenEnabled(true)
                     }
                 }
             }
@@ -168,10 +167,10 @@ class Resilience4jModuleSpec extends Specification {
         test1.name == 'test1'
         test1.circuitBreakerConfig.with {
             assert ringBufferSizeInClosedState == 100
-            assert ringBufferSizeInHalfOpenState == 10
-            assert waitDurationInOpenState == Duration.ofMinutes(1)
-            assert failureRateThreshold == 50
-            assert !automaticTransitionFromOpenToHalfOpenEnabled
+            assert ringBufferSizeInHalfOpenState == 20
+            assert waitDurationInOpenState == Duration.ofMillis(1000)
+            assert failureRateThreshold == 60
+            assert automaticTransitionFromOpenToHalfOpenEnabled
             assert recordFailurePredicate.test(new DummyException1("test"))
             assert recordFailurePredicate.test(new DummyException2("test"))
             it
