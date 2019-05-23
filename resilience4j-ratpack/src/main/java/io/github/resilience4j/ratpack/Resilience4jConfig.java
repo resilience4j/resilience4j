@@ -18,7 +18,7 @@ package io.github.resilience4j.ratpack;
 
 import io.github.resilience4j.ratpack.bulkhead.BulkheadConfigurationProperties;
 import io.github.resilience4j.ratpack.circuitbreaker.CircuitBreakerConfigurationProperties;
-import io.github.resilience4j.ratpack.ratelimiter.RateLimiterConfig;
+import io.github.resilience4j.ratpack.ratelimiter.RateLimiterConfigurationProperties;
 import io.github.resilience4j.ratpack.retry.RetryConfig;
 import ratpack.func.Function;
 
@@ -29,7 +29,7 @@ import static ratpack.util.Exceptions.uncheck;
 
 public class Resilience4jConfig {
     private CircuitBreakerConfigurationProperties circuitBreaker = new CircuitBreakerConfigurationProperties();
-    private Map<String, RateLimiterConfig> rateLimiters = new HashMap<>();
+    private RateLimiterConfigurationProperties rateLimiter = new RateLimiterConfigurationProperties();
     private Map<String, RetryConfig> retries = new HashMap<>();
     private BulkheadConfigurationProperties bulkhead = new BulkheadConfigurationProperties();
     private boolean metrics = false;
@@ -50,10 +50,14 @@ public class Resilience4jConfig {
         }
     }
 
-    public Resilience4jConfig rateLimiter(String name, Function<? super RateLimiterConfig, ? extends RateLimiterConfig> configure) {
+    public Resilience4jConfig rateLimiter(String name) {
+        return rateLimiter(name, config -> config);
+    }
+
+    public Resilience4jConfig rateLimiter(String name, Function<? super RateLimiterConfigurationProperties.BackendConfig, ? extends RateLimiterConfigurationProperties.BackendConfig> configure) {
         try {
-            RateLimiterConfig finalConfig = configure.apply(new RateLimiterConfig());
-            rateLimiters.put(name, finalConfig);
+            RateLimiterConfigurationProperties.BackendConfig finalConfig = configure.apply(new RateLimiterConfigurationProperties.BackendConfig());
+            rateLimiter.getBackends().put(name, finalConfig);
             return this;
         } catch (Exception e) {
             throw uncheck(e);
@@ -107,8 +111,8 @@ public class Resilience4jConfig {
         return circuitBreaker;
     }
 
-    public Map<String, RateLimiterConfig> getRateLimiters() {
-        return rateLimiters;
+    public RateLimiterConfigurationProperties getRateLimiter() {
+        return rateLimiter;
     }
 
     public Map<String, RetryConfig> getRetries() {

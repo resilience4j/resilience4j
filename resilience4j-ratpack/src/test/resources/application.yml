@@ -39,13 +39,20 @@ resilience4j:
                 automaticTransitionFromOpenToHalfOpenEnabled: true
                 recordExceptions:
                     - io.github.resilience4j.ratpack.Resilience4jModuleSpec$DummyException1
-    rateLimiters:
-        test1:
-            defaults: true
-        test2:
-            limitForPeriod: 100
-            limitRefreshPeriodInNanos: 900
-            timeoutInMillis: 10
+    rateLimiter:
+        configs:
+            default:
+                limitForPeriod: 100
+                limitRefreshPeriodInNanos: 900
+                timeoutInMillis: 10
+        backends:
+            test1:
+                baseConfig: default
+                limitForPeriod: 150
+            test2:
+                limitForPeriod: 100
+                limitRefreshPeriodInNanos: 900
+                timeoutInMillis: 10
     retries:
         test1:
             defaults: true

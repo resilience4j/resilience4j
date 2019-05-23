@@ -199,9 +199,8 @@ class Resilience4jModuleSpec extends Specification {
             bindings {
                 bindInstance(RateLimiterRegistry, rateLimiterRegistry)
                 module(Resilience4jModule) {
-                    it.rateLimiter('test') {
-                        it.defaults(true)
-                    }.rateLimiter('test2') {
+                    it.rateLimiter('test')
+                      .rateLimiter('test2') {
                         it.limitForPeriod(100)
                                 .limitRefreshPeriodInNanos(900)
                                 .timeoutInMillis(10)
@@ -306,9 +305,9 @@ class Resilience4jModuleSpec extends Specification {
         def test1 = rateLimiterRegistry.rateLimiter('test1')
         test1.name == 'test1'
         test1.rateLimiterConfig.with {
-            assert limitForPeriod == 50
-            assert limitRefreshPeriod == Duration.ofNanos(500)
-            assert timeoutDuration == Duration.ofSeconds(5)
+            assert limitForPeriod == 150
+            assert limitRefreshPeriod == Duration.ofNanos(900)
+            assert timeoutDuration == Duration.ofMillis(10)
             it
         }
         def test2 = rateLimiterRegistry.rateLimiter('test2')
