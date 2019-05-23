@@ -19,18 +19,15 @@ package io.github.resilience4j.ratpack;
 import io.github.resilience4j.ratpack.bulkhead.BulkheadConfigurationProperties;
 import io.github.resilience4j.ratpack.circuitbreaker.CircuitBreakerConfigurationProperties;
 import io.github.resilience4j.ratpack.ratelimiter.RateLimiterConfigurationProperties;
-import io.github.resilience4j.ratpack.retry.RetryConfig;
+import io.github.resilience4j.ratpack.retry.RetryConfigurationProperties;
 import ratpack.func.Function;
-
-import java.util.HashMap;
-import java.util.Map;
 
 import static ratpack.util.Exceptions.uncheck;
 
 public class Resilience4jConfig {
     private CircuitBreakerConfigurationProperties circuitBreaker = new CircuitBreakerConfigurationProperties();
     private RateLimiterConfigurationProperties rateLimiter = new RateLimiterConfigurationProperties();
-    private Map<String, RetryConfig> retries = new HashMap<>();
+    private RetryConfigurationProperties retry = new RetryConfigurationProperties();
     private BulkheadConfigurationProperties bulkhead = new BulkheadConfigurationProperties();
     private boolean metrics = false;
     private boolean prometheus = false;
@@ -64,10 +61,14 @@ public class Resilience4jConfig {
         }
     }
 
-    public Resilience4jConfig retry(String name, Function<? super RetryConfig, ? extends RetryConfig> configure) {
+    public Resilience4jConfig retry(String name) {
+        return retry(name, config -> config);
+    }
+
+    public Resilience4jConfig retry(String name, Function<? super RetryConfigurationProperties.BackendConfig, ? extends RetryConfigurationProperties.BackendConfig> configure) {
         try {
-            RetryConfig finalConfig = configure.apply(new RetryConfig());
-            retries.put(name, finalConfig);
+            RetryConfigurationProperties.BackendConfig finalConfig = configure.apply(new RetryConfigurationProperties.BackendConfig());
+            retry.getBackends().put(name, finalConfig);
             return this;
         } catch (Exception e) {
             throw uncheck(e);
@@ -115,8 +116,8 @@ public class Resilience4jConfig {
         return rateLimiter;
     }
 
-    public Map<String, RetryConfig> getRetries() {
-        return retries;
+    public RetryConfigurationProperties getRetry() {
+        return retry;
     }
 
     public BulkheadConfigurationProperties getBulkhead() {

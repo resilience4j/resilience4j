@@ -53,12 +53,18 @@ resilience4j:
                 limitForPeriod: 100
                 limitRefreshPeriodInNanos: 900
                 timeoutInMillis: 10
-    retries:
-        test1:
-            defaults: true
-        test2:
-            maxAttempts: 3
-            waitDurationInMillis: 1000
+    retry:
+        configs:
+            default:
+                maxRetryAttempts: 3
+                waitDurationInMillis: 1000
+        backends:
+            test1:
+                baseConfig: default
+                maxRetryAttempts: 4
+            test2:
+                maxRetryAttempts: 3
+                waitDurationInMillis: 1000
     bulkhead:
         configs:
             default:

@@ -50,9 +50,9 @@ import io.github.resilience4j.ratpack.circuitbreaker.monitoring.endpoint.Circuit
 import io.github.resilience4j.ratpack.ratelimiter.RateLimiterConfigurationProperties;
 import io.github.resilience4j.ratpack.ratelimiter.RateLimiterMethodInterceptor;
 import io.github.resilience4j.ratpack.ratelimiter.monitoring.endpoint.RateLimiterChain;
+import io.github.resilience4j.ratpack.retry.RetryConfigurationProperties;
 import io.github.resilience4j.ratpack.retry.RetryMethodInterceptor;
 import io.github.resilience4j.ratpack.retry.monitoring.endpoint.RetryChain;
-import io.github.resilience4j.retry.RetryConfig;
 import io.github.resilience4j.retry.RetryRegistry;
 import io.github.resilience4j.retry.annotation.Retry;
 import io.github.resilience4j.retry.event.RetryEvent;
@@ -65,7 +65,6 @@ import ratpack.service.Service;
 import ratpack.service.StartEvent;
 
 import javax.inject.Inject;
-import java.time.Duration;
 
 /**
  * This module registers class and method interceptors for bulkheads, circuit breakers, rate limiters, and retries.
@@ -199,16 +198,10 @@ public class Resilience4jModule extends ConfigurableModule<Resilience4jConfig> {
             RetryRegistry retryRegistry = injector.getInstance(RetryRegistry.class);
             EventConsumerRegistry<RetryEvent> rConsumerRegistry = injector.getInstance(Key.get(new TypeLiteral<EventConsumerRegistry<RetryEvent>>() {
             }));
-            config.getRetries().forEach((name, retryConfig) -> {
-                io.github.resilience4j.retry.Retry retry;
-                if (retryConfig.getDefaults()) {
-                    retry = retryRegistry.retry(name);
-                } else {
-                    retry = retryRegistry.retry(name, RetryConfig.custom()
-                            .maxAttempts(retryConfig.getMaxAttempts())
-                            .waitDuration(Duration.ofMillis(retryConfig.getWaitDurationInMillis()))
-                            .build());
-                }
+            RetryConfigurationProperties retryConfigurations = config.getRetry();
+            retryConfigurations.getBackends().forEach((name, retryConfig) -> {
+                io.github.resilience4j.retry.Retry retry =
+                        retryRegistry.retry(name, retryConfigurations.createRetryConfig(retryConfig));
                 if (endpointsConfig.getRetries().isEnabled()) {
                     retry.getEventPublisher().onEvent(rConsumerRegistry.createEventConsumer(name, endpointsConfig.getRetries().getEventConsumerBufferSize()));
                 }

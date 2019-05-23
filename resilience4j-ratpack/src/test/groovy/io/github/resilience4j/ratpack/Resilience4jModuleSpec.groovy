@@ -330,11 +330,10 @@ class Resilience4jModuleSpec extends Specification {
             bindings {
                 bindInstance(RetryRegistry, retryRegistry)
                 module(Resilience4jModule) {
-                    it.retry('test') {
-                        it.defaults(true)
-                    }.retry('test2') {
-                        it.maxAttempts(3)
-                                .waitDurationInMillis(1000)
+                    it.retry('test')
+                      .retry('test2') {
+                        it.maxRetryAttempts(3)
+                                .waitDurationMillis(1000)
                     }
                 }
             }
@@ -432,7 +431,7 @@ class Resilience4jModuleSpec extends Specification {
         def test1 = retryRegistry.retry('test1')
         test1.name == 'test1'
         test1.retryConfig.with {
-            assert maxAttempts == 3
+            assert maxAttempts == 4
             it
         }
         def test2 = retryRegistry.retry('test2')

@@ -20,12 +20,12 @@ import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.Builder;
 import io.github.resilience4j.core.ConfigurationNotFoundException;
 import io.github.resilience4j.core.lang.Nullable;
+import io.github.resilience4j.ratpack.internal.ClassUtils;
 import org.hibernate.validator.constraints.time.DurationMin;
 
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
-import java.lang.reflect.Constructor;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
@@ -96,13 +96,9 @@ public class CircuitBreakerConfigurationProperties {
 
 	protected void buildRecordFailurePredicate(BackendConfig properties, Builder builder) {
 		if (properties.getRecordFailurePredicate() != null) {
-			try {
-				Constructor<Predicate<Throwable>> c = properties.getRecordFailurePredicate().getConstructor();
-				if (c != null) {
-					builder.recordFailure(c.newInstance());
-				}
-			} catch (Exception e) {
-				throw new RuntimeException("Unable to create recordFailurePredicate " + properties.getRecordFailurePredicate().getName());
+			Predicate<Throwable> predicate = ClassUtils.instantiatePredicateClass(properties.getRecordFailurePredicate());
+			if (predicate != null) {
+				builder.recordFailure(predicate);
 			}
 		}
 	}
