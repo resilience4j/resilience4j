@@ -17,6 +17,7 @@ package io.github.resilience4j.bulkhead.monitoring.endpoint;
 
 import java.util.List;
 
+import io.github.resilience4j.common.bulkhead.monitoring.endpoint.BulkheadEndpointResponse;
 import org.springframework.boot.actuate.endpoint.AbstractEndpoint;
 import org.springframework.boot.actuate.endpoint.Endpoint;
 import org.springframework.boot.context.properties.ConfigurationProperties;

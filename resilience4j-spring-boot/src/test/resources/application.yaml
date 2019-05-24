@@ -71,10 +71,10 @@ resilience4j.bulkhead:
   bulkheadAspectOrder: 398
   backends:
     backendA:
-      maxConcurrentCall: 1
+      maxConcurrentCalls: 1
     backendB:
       maxWaitTime: 10
-      maxConcurrentCall: 2
+      maxConcurrentCalls: 2
 
 management.security.enabled: false
 management.endpoint.health.show-details: always

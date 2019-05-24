@@ -18,6 +18,7 @@ package io.github.resilience4j.ratpack.circuitbreaker;
 
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.Builder;
+import io.github.resilience4j.common.bulkhead.configuration.BulkheadConfigurationProperties;
 import io.github.resilience4j.core.ConfigurationNotFoundException;
 import io.github.resilience4j.core.lang.Nullable;
 import io.github.resilience4j.ratpack.internal.ClassUtils;
@@ -34,16 +35,16 @@ import java.util.function.Predicate;
 
 public class CircuitBreakerConfigurationProperties {
 
-	private Map<String, BackendConfig> backends = new HashMap<>();
-	private Map<String, BackendConfig> configs = new HashMap<>();
+	private Map<String, BackendProperties> backends = new HashMap<>();
+	private Map<String, BackendProperties> configs = new HashMap<>();
 
-	public Optional<BackendConfig> findCircuitBreakerProperties(String name) {
+	public Optional<BackendProperties> findCircuitBreakerProperties(String name) {
 		return Optional.ofNullable(backends.get(name));
 	}
 
-	public CircuitBreakerConfig createCircuitBreakerConfig(BackendConfig backendProperties) {
+	public CircuitBreakerConfig createCircuitBreakerConfig(BackendProperties backendProperties) {
 		if(backendProperties.getBaseConfig() != null){
-			BackendConfig baseProperties = configs.get(backendProperties.getBaseConfig());
+			BackendProperties baseProperties = configs.get(backendProperties.getBaseConfig());
 			if(baseProperties == null){
 				throw new ConfigurationNotFoundException(backendProperties.getBaseConfig());
 			}
@@ -52,12 +53,12 @@ public class CircuitBreakerConfigurationProperties {
 		return buildConfig(CircuitBreakerConfig.custom(), backendProperties);
 	}
 
-	private CircuitBreakerConfig buildConfigFromBaseConfig(BackendConfig backendProperties, BackendConfig baseProperties) {
+	private CircuitBreakerConfig buildConfigFromBaseConfig(BackendProperties backendProperties, BackendProperties baseProperties) {
 		CircuitBreakerConfig baseConfig = buildConfig(CircuitBreakerConfig.custom(), baseProperties);
 		return buildConfig(CircuitBreakerConfig.from(baseConfig), backendProperties);
 	}
 
-	private CircuitBreakerConfig buildConfig(Builder builder, BackendConfig properties) {
+	private CircuitBreakerConfig buildConfig(Builder builder, BackendProperties properties) {
 
 		if (properties.getWaitDurationInOpenStateMillis() != null) {
 			builder.waitDurationInOpenState(Duration.ofMillis(properties.getWaitDurationInOpenStateMillis()));
@@ -94,7 +95,7 @@ public class CircuitBreakerConfigurationProperties {
 		return builder.build();
 	}
 
-	protected void buildRecordFailurePredicate(BackendConfig properties, Builder builder) {
+	protected void buildRecordFailurePredicate(BackendProperties properties, Builder builder) {
 		if (properties.getRecordFailurePredicate() != null) {
 			Predicate<Throwable> predicate = ClassUtils.instantiatePredicateClass(properties.getRecordFailurePredicate());
 			if (predicate != null) {
@@ -103,18 +104,23 @@ public class CircuitBreakerConfigurationProperties {
 		}
 	}
 
-	public Map<String, BackendConfig> getBackends() {
+	@Nullable
+	public BackendProperties getBackendProperties(String backend) {
+		return backends.get(backend);
+	}
+
+	public Map<String, BackendProperties> getBackends() {
 		return backends;
 	}
 
-	public Map<String, BackendConfig> getConfigs() {
+	public Map<String, BackendProperties> getConfigs() {
 		return configs;
 	}
 
 	/**
 	 * Class storing property values for configuring {@link io.github.resilience4j.circuitbreaker.CircuitBreaker} instances.
 	 */
-	public static class BackendConfig {
+	public static class BackendProperties {
 
 		@DurationMin(seconds = 1)
 		@Nullable
@@ -170,7 +176,7 @@ public class CircuitBreakerConfigurationProperties {
 		 *
 		 * @param failureRateThreshold the failure rate threshold
 		 */
-		public BackendConfig failureRateThreshold(Integer failureRateThreshold) {
+		public BackendProperties failureRateThreshold(Integer failureRateThreshold) {
 			this.failureRateThreshold = failureRateThreshold;
 			return this;
 		}
@@ -190,7 +196,7 @@ public class CircuitBreakerConfigurationProperties {
 		 *
 		 * @param waitDurationInOpenStateMillis the wait duration
 		 */
-		public BackendConfig waitDurationInOpenStateMillis(Integer waitDurationInOpenStateMillis) {
+		public BackendProperties waitDurationInOpenStateMillis(Integer waitDurationInOpenStateMillis) {
 			this.waitDurationInOpenStateMillis = waitDurationInOpenStateMillis;
 			return this;
 		}
@@ -210,7 +216,7 @@ public class CircuitBreakerConfigurationProperties {
 		 *
 		 * @param ringBufferSizeInClosedState the ring buffer size
 		 */
-		public BackendConfig ringBufferSizeInClosedState(Integer ringBufferSizeInClosedState) {
+		public BackendProperties ringBufferSizeInClosedState(Integer ringBufferSizeInClosedState) {
 			this.ringBufferSizeInClosedState = ringBufferSizeInClosedState;
 			return this;
 		}
@@ -230,7 +236,7 @@ public class CircuitBreakerConfigurationProperties {
 		 *
 		 * @param ringBufferSizeInHalfOpenState the ring buffer size
 		 */
-		public BackendConfig ringBufferSizeInHalfOpenState(Integer ringBufferSizeInHalfOpenState) {
+		public BackendProperties ringBufferSizeInHalfOpenState(Integer ringBufferSizeInHalfOpenState) {
 			this.ringBufferSizeInHalfOpenState = ringBufferSizeInHalfOpenState;
 			return this;
 		}
@@ -249,7 +255,7 @@ public class CircuitBreakerConfigurationProperties {
 		 *
 		 * @param automaticTransitionFromOpenToHalfOpenEnabled The flag for automatic transition to half open after the timer has run out.
 		 */
-		public BackendConfig automaticTransitionFromOpenToHalfOpenEnabled(Boolean automaticTransitionFromOpenToHalfOpenEnabled) {
+		public BackendProperties automaticTransitionFromOpenToHalfOpenEnabled(Boolean automaticTransitionFromOpenToHalfOpenEnabled) {
 			this.automaticTransitionFromOpenToHalfOpenEnabled = automaticTransitionFromOpenToHalfOpenEnabled;
 			return this;
 		}
@@ -258,7 +264,7 @@ public class CircuitBreakerConfigurationProperties {
 			return eventConsumerBufferSize;
 		}
 
-		public BackendConfig eventConsumerBufferSize(Integer eventConsumerBufferSize) {
+		public BackendProperties eventConsumerBufferSize(Integer eventConsumerBufferSize) {
 			this.eventConsumerBufferSize = eventConsumerBufferSize;
 			return this;
 		}
@@ -267,7 +273,7 @@ public class CircuitBreakerConfigurationProperties {
 			return registerHealthIndicator;
 		}
 
-		public BackendConfig registerHealthIndicator(Boolean registerHealthIndicator) {
+		public BackendProperties registerHealthIndicator(Boolean registerHealthIndicator) {
 			this.registerHealthIndicator = registerHealthIndicator;
 			return this;
 		}
@@ -277,7 +283,7 @@ public class CircuitBreakerConfigurationProperties {
 			return recordFailurePredicate;
 		}
 
-		public BackendConfig recordFailurePredicate(Class<Predicate<Throwable>> recordFailurePredicate) {
+		public BackendProperties recordFailurePredicate(Class<Predicate<Throwable>> recordFailurePredicate) {
 			this.recordFailurePredicate = recordFailurePredicate;
 			return this;
 		}
@@ -287,7 +293,7 @@ public class CircuitBreakerConfigurationProperties {
 			return recordExceptions;
 		}
 
-		public BackendConfig recordExceptions(Class<? extends Throwable>[] recordExceptions) {
+		public BackendProperties recordExceptions(Class<? extends Throwable>[] recordExceptions) {
 			this.recordExceptions = recordExceptions;
 			return this;
 		}
@@ -297,7 +303,7 @@ public class CircuitBreakerConfigurationProperties {
 			return ignoreExceptions;
 		}
 
-		public BackendConfig ignoreExceptions(Class<? extends Throwable>[] ignoreExceptions) {
+		public BackendProperties ignoreExceptions(Class<? extends Throwable>[] ignoreExceptions) {
 			this.ignoreExceptions = ignoreExceptions;
 			return this;
 		}
@@ -319,7 +325,7 @@ public class CircuitBreakerConfigurationProperties {
 		 *
 		 * @param baseConfig The shared configuration name.
 		 */
-		public BackendConfig baseConfig(String baseConfig) {
+		public BackendProperties baseConfig(String baseConfig) {
 			this.baseConfig = baseConfig;
 			return this;
 		}

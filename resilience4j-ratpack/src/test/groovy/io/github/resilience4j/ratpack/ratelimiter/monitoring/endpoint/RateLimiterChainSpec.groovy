@@ -19,7 +19,7 @@ package io.github.resilience4j.ratpack.ratelimiter.monitoring.endpoint
 import com.fasterxml.jackson.databind.ObjectMapper
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry
 import io.github.resilience4j.ratelimiter.event.RateLimiterEvent
-import io.github.resilience4j.ratelimiter.monitoring.endpoint.RateLimiterEventsEndpointResponse
+import io.github.resilience4j.common.ratelimiter.monitoring.endpoint.RateLimiterEventsEndpointResponse
 import io.github.resilience4j.ratpack.Resilience4jModule
 import ratpack.http.client.HttpClient
 import ratpack.test.embed.EmbeddedApp

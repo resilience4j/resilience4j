@@ -82,10 +82,10 @@ resilience4j.bulkhead:
   configs:
     default:
       maxWaitTime: 10
-      maxConcurrentCall: 2
+      maxConcurrentCalls: 2
   backends:
     backendA:
-      maxConcurrentCall: 1
+      maxConcurrentCalls: 1
     backendB:
       baseConfig: default
 

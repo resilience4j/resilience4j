@@ -126,10 +126,10 @@ public class BulkHeadConfigurationTest {
 	public void testBulkHeadRegistry() {
 		//Given
 		BulkheadConfigurationProperties.BackendProperties backendProperties1 = new BulkheadConfigurationProperties.BackendProperties();
-		backendProperties1.setMaxConcurrentCall(3);
+		backendProperties1.setMaxConcurrentCalls(3);
 
 		BulkheadConfigurationProperties.BackendProperties backendProperties2 = new BulkheadConfigurationProperties.BackendProperties();
-		backendProperties2.setMaxConcurrentCall(2);
+		backendProperties2.setMaxConcurrentCalls(2);
 
 		BulkheadConfigurationProperties bulkheadConfigurationProperties = new BulkheadConfigurationProperties();
 		bulkheadConfigurationProperties.getBackends().put("backend1", backendProperties1);
@@ -158,11 +158,11 @@ public class BulkHeadConfigurationTest {
 	public void testCreateBulkHeadRegistryWithSharedConfigs() {
 		//Given
 		BulkheadConfigurationProperties.BackendProperties defaultProperties = new BulkheadConfigurationProperties.BackendProperties();
-		defaultProperties.setMaxConcurrentCall(3);
+		defaultProperties.setMaxConcurrentCalls(3);
 		defaultProperties.setMaxWaitTime(50L);
 
 		BulkheadConfigurationProperties.BackendProperties sharedProperties = new BulkheadConfigurationProperties.BackendProperties();
-		sharedProperties.setMaxConcurrentCall(2);
+		sharedProperties.setMaxConcurrentCalls(2);
 		sharedProperties.setMaxWaitTime(100L);
 
 		BulkheadConfigurationProperties.BackendProperties backendWithDefaultConfig = new BulkheadConfigurationProperties.BackendProperties();

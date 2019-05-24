@@ -34,8 +34,8 @@ import java.util.function.Predicate;
  */
 public class RetryConfigurationProperties {
 
-	private final Map<String, BackendConfig> backends = new HashMap<>();
-	private Map<String, BackendConfig> configs = new HashMap<>();
+	private final Map<String, BackendProperties> backends = new HashMap<>();
+	private Map<String, BackendProperties> configs = new HashMap<>();
 
 	/**
 	 * @param backend backend name
@@ -46,46 +46,46 @@ public class RetryConfigurationProperties {
 	}
 
 	/**
+	 * @param backend retry backend name
+	 * @return the configured spring backend properties
+	 */
+	@Nullable
+	public BackendProperties getBackendProperties(String backend) {
+		return backends.get(backend);
+	}
+
+	/**
 	 * @return the configured retry backend properties
 	 */
-	public Map<String, BackendConfig> getBackends() {
+	public Map<String, BackendProperties> getBackends() {
 		return backends;
 	}
 
 	/**
 	 * @return common configuration for retry backend
 	 */
-	public Map<String, BackendConfig> getConfigs() {
+	public Map<String, BackendProperties> getConfigs() {
 		return configs;
 	}
 
 	/**
-	 * @param backendConfig the retry backend spring properties
+	 * @param backendProperties the retry backend spring properties
 	 * @return the retry configuration
 	 */
-	public RetryConfig createRetryConfig(BackendConfig backendConfig) {
-		if (!Strings.isNullOrEmpty(backendConfig.getBaseConfig())) {
-			BackendConfig baseProperties = configs.get(backendConfig.getBaseConfig());
+	public RetryConfig createRetryConfig(BackendProperties backendProperties) {
+		if (!Strings.isNullOrEmpty(backendProperties.getBaseConfig())) {
+			BackendProperties baseProperties = configs.get(backendProperties.getBaseConfig());
 			if (baseProperties == null) {
-				throw new ConfigurationNotFoundException(backendConfig.getBaseConfig());
+				throw new ConfigurationNotFoundException(backendProperties.getBaseConfig());
 			}
-			return buildConfigFromBaseConfig(baseProperties, backendConfig);
+			return buildConfigFromBaseConfig(baseProperties, backendProperties);
 		}
-		return buildRetryConfig(RetryConfig.custom(), backendConfig);
+		return buildRetryConfig(RetryConfig.custom(), backendProperties);
 	}
 
-	private RetryConfig buildConfigFromBaseConfig(BackendConfig baseProperties, BackendConfig backendConfig) {
+	private RetryConfig buildConfigFromBaseConfig(BackendProperties baseProperties, BackendProperties backendProperties) {
 		RetryConfig baseConfig = buildRetryConfig(RetryConfig.custom(), baseProperties);
-		return buildRetryConfig(RetryConfig.from(baseConfig), backendConfig);
-	}
-
-	/**
-	 * @param backend retry backend name
-	 * @return the configured spring backend properties
-	 */
-	@Nullable
-	public BackendConfig getBackendProperties(String backend) {
-		return backends.get(backend);
+		return buildRetryConfig(RetryConfig.from(baseConfig), backendProperties);
 	}
 
 	/**
@@ -93,7 +93,7 @@ public class RetryConfigurationProperties {
 	 * @return retry config builder instance
 	 */
 	@SuppressWarnings("unchecked")
-	private RetryConfig buildRetryConfig(RetryConfig.Builder builder, BackendConfig properties) {
+	private RetryConfig buildRetryConfig(RetryConfig.Builder builder, BackendProperties properties) {
 		if (properties == null) {
 			return builder.build();
 		}
@@ -143,7 +143,7 @@ public class RetryConfigurationProperties {
 	 * @param properties the backend retry properties
 	 * @param builder    the retry config builder
 	 */
-	private void configureRetryIntervalFunction(BackendConfig properties, RetryConfig.Builder<Object> builder) {
+	private void configureRetryIntervalFunction(BackendProperties properties, RetryConfig.Builder<Object> builder) {
 		if (properties.getWaitDurationMillis() != null && properties.getWaitDurationMillis() != 0) {
 			long waitDuration = properties.getWaitDurationMillis();
 			if (properties.getEnableExponentialBackoff()) {
@@ -167,7 +167,7 @@ public class RetryConfigurationProperties {
 	/**
 	 * Class storing property values for configuring {@link io.github.resilience4j.retry.Retry} instances.
 	 */
-	public static class BackendConfig {
+	public static class BackendProperties {
 		/*
 		 * wait long value for the next try
 		 */
@@ -234,7 +234,7 @@ public class RetryConfigurationProperties {
 			return waitDurationMillis;
 		}
 
-		public BackendConfig waitDurationMillis(Long waitDurationMillis) {
+		public BackendProperties waitDurationMillis(Long waitDurationMillis) {
 			this.waitDurationMillis = waitDurationMillis;
 			return this;
 		}
@@ -244,7 +244,7 @@ public class RetryConfigurationProperties {
 			return maxRetryAttempts;
 		}
 
-		public BackendConfig maxRetryAttempts(Integer maxRetryAttempts) {
+		public BackendProperties maxRetryAttempts(Integer maxRetryAttempts) {
 			this.maxRetryAttempts = maxRetryAttempts;
 			return this;
 		}
@@ -254,7 +254,7 @@ public class RetryConfigurationProperties {
 			return retryExceptionPredicate;
 		}
 
-		public BackendConfig retryExceptionPredicate(Class<? extends Predicate<Throwable>> retryExceptionPredicate) {
+		public BackendProperties retryExceptionPredicate(Class<? extends Predicate<Throwable>> retryExceptionPredicate) {
 			this.retryExceptionPredicate = retryExceptionPredicate;
 			return this;
 		}
@@ -264,7 +264,7 @@ public class RetryConfigurationProperties {
 			return resultPredicate;
 		}
 
-		public BackendConfig resultPredicate(Class<? extends Predicate> resultPredicate) {
+		public BackendProperties resultPredicate(Class<? extends Predicate> resultPredicate) {
 			this.resultPredicate = resultPredicate;
 			return this;
 		}
@@ -274,7 +274,7 @@ public class RetryConfigurationProperties {
 			return retryExceptions;
 		}
 
-		public BackendConfig retryExceptions(Class<? extends Throwable>[] retryExceptions) {
+		public BackendProperties retryExceptions(Class<? extends Throwable>[] retryExceptions) {
 			this.retryExceptions = retryExceptions;
 			return this;
 		}
@@ -284,7 +284,7 @@ public class RetryConfigurationProperties {
 			return ignoreExceptions;
 		}
 
-		public BackendConfig ignoreExceptions(Class<? extends Throwable>[] ignoreExceptions) {
+		public BackendProperties ignoreExceptions(Class<? extends Throwable>[] ignoreExceptions) {
 			this.ignoreExceptions = ignoreExceptions;
 			return this;
 		}
@@ -294,7 +294,7 @@ public class RetryConfigurationProperties {
 			return eventConsumerBufferSize;
 		}
 
-		public BackendConfig eventConsumerBufferSize(Integer eventConsumerBufferSize) {
+		public BackendProperties eventConsumerBufferSize(Integer eventConsumerBufferSize) {
 			this.eventConsumerBufferSize = eventConsumerBufferSize;
 			return this;
 		}
@@ -303,7 +303,7 @@ public class RetryConfigurationProperties {
 			return enableExponentialBackoff;
 		}
 
-		public BackendConfig enableExponentialBackoff(Boolean enableExponentialBackoff) {
+		public BackendProperties enableExponentialBackoff(Boolean enableExponentialBackoff) {
 			this.enableExponentialBackoff = enableExponentialBackoff;
 			return this;
 		}
@@ -313,7 +313,7 @@ public class RetryConfigurationProperties {
 			return exponentialBackoffMultiplier;
 		}
 
-		public BackendConfig exponentialBackoffMultiplier(double exponentialBackoffMultiplier) {
+		public BackendProperties exponentialBackoffMultiplier(double exponentialBackoffMultiplier) {
 			this.exponentialBackoffMultiplier = exponentialBackoffMultiplier;
 			return this;
 		}
@@ -332,7 +332,7 @@ public class RetryConfigurationProperties {
 			return randomizedWaitFactor;
 		}
 
-		public BackendConfig randomizedWaitFactor(double randomizedWaitFactor) {
+		public BackendProperties randomizedWaitFactor(double randomizedWaitFactor) {
 			this.randomizedWaitFactor = randomizedWaitFactor;
 			return this;
 		}
@@ -354,7 +354,7 @@ public class RetryConfigurationProperties {
 		 *
 		 * @param baseConfig The shared configuration name.
 		 */
-		public BackendConfig baseConfig(String baseConfig) {
+		public BackendProperties baseConfig(String baseConfig) {
 			this.baseConfig = baseConfig;
 			return this;
 		}

@@ -16,6 +16,9 @@
 package io.github.resilience4j.bulkhead.monitoring.endpoint;
 
 import io.github.resilience4j.bulkhead.event.BulkheadEvent;
+import io.github.resilience4j.common.bulkhead.monitoring.endpoint.BulkheadEventDTO;
+import io.github.resilience4j.common.bulkhead.monitoring.endpoint.BulkheadEventDTOFactory;
+import io.github.resilience4j.common.bulkhead.monitoring.endpoint.BulkheadEventsEndpointResponse;
 import io.github.resilience4j.consumer.CircularEventConsumer;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
 import io.vavr.collection.List;

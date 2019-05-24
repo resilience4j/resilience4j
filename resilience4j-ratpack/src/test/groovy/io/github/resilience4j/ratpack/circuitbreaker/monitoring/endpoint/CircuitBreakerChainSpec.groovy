@@ -18,7 +18,7 @@ package io.github.resilience4j.ratpack.circuitbreaker.monitoring.endpoint
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry
-import io.github.resilience4j.circuitbreaker.monitoring.endpoint.CircuitBreakerEventsEndpointResponse
+import io.github.resilience4j.common.circuitbreaker.monitoring.endpoint.CircuitBreakerEventsEndpointResponse
 import io.github.resilience4j.ratpack.Resilience4jModule
 import io.github.resilience4j.ratpack.circuitbreaker.monitoring.endpoint.states.CircuitBreakerStatesEndpointResponse
 import ratpack.http.client.HttpClient

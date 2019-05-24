@@ -454,8 +454,8 @@ class Resilience4jModuleSpec extends Specification {
                 module(Resilience4jModule) {
                     it.bulkhead('test')
                       .bulkhead('test2') {
-                        it.maxConcurrentCalls(100)
-                                .maxWaitTime(1000)
+                        it.setMaxConcurrentCalls(100)
+                                .setMaxWaitTime(1000)
                     }
                 }
             }

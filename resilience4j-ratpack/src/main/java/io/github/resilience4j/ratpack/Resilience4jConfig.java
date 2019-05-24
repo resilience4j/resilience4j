@@ -16,7 +16,7 @@
 
 package io.github.resilience4j.ratpack;
 
-import io.github.resilience4j.ratpack.bulkhead.BulkheadConfigurationProperties;
+import io.github.resilience4j.common.bulkhead.configuration.BulkheadConfigurationProperties;
 import io.github.resilience4j.ratpack.circuitbreaker.CircuitBreakerConfigurationProperties;
 import io.github.resilience4j.ratpack.ratelimiter.RateLimiterConfigurationProperties;
 import io.github.resilience4j.ratpack.retry.RetryConfigurationProperties;
@@ -25,10 +25,10 @@ import ratpack.func.Function;
 import static ratpack.util.Exceptions.uncheck;
 
 public class Resilience4jConfig {
+    private BulkheadConfigurationProperties bulkhead = new BulkheadConfigurationProperties();
     private CircuitBreakerConfigurationProperties circuitBreaker = new CircuitBreakerConfigurationProperties();
     private RateLimiterConfigurationProperties rateLimiter = new RateLimiterConfigurationProperties();
     private RetryConfigurationProperties retry = new RetryConfigurationProperties();
-    private BulkheadConfigurationProperties bulkhead = new BulkheadConfigurationProperties();
     private boolean metrics = false;
     private boolean prometheus = false;
     private EndpointsConfig endpoints = new EndpointsConfig();
@@ -37,9 +37,9 @@ public class Resilience4jConfig {
         return circuitBreaker(name, config -> config);
     }
 
-    public Resilience4jConfig circuitBreaker(String name, Function<? super CircuitBreakerConfigurationProperties.BackendConfig, ? extends CircuitBreakerConfigurationProperties.BackendConfig> configure) {
+    public Resilience4jConfig circuitBreaker(String name, Function<? super CircuitBreakerConfigurationProperties.BackendProperties, ? extends CircuitBreakerConfigurationProperties.BackendProperties> configure) {
         try {
-            CircuitBreakerConfigurationProperties.BackendConfig finalConfig = configure.apply(new CircuitBreakerConfigurationProperties.BackendConfig());
+            CircuitBreakerConfigurationProperties.BackendProperties finalConfig = configure.apply(new CircuitBreakerConfigurationProperties.BackendProperties());
             circuitBreaker.getBackends().put(name, finalConfig);
             return this;
         } catch (Exception e) {
@@ -51,9 +51,9 @@ public class Resilience4jConfig {
         return rateLimiter(name, config -> config);
     }
 
-    public Resilience4jConfig rateLimiter(String name, Function<? super RateLimiterConfigurationProperties.BackendConfig, ? extends RateLimiterConfigurationProperties.BackendConfig> configure) {
+    public Resilience4jConfig rateLimiter(String name, Function<? super RateLimiterConfigurationProperties.BackendProperties, ? extends RateLimiterConfigurationProperties.BackendProperties> configure) {
         try {
-            RateLimiterConfigurationProperties.BackendConfig finalConfig = configure.apply(new RateLimiterConfigurationProperties.BackendConfig());
+            RateLimiterConfigurationProperties.BackendProperties finalConfig = configure.apply(new RateLimiterConfigurationProperties.BackendProperties());
             rateLimiter.getBackends().put(name, finalConfig);
             return this;
         } catch (Exception e) {
@@ -65,9 +65,9 @@ public class Resilience4jConfig {
         return retry(name, config -> config);
     }
 
-    public Resilience4jConfig retry(String name, Function<? super RetryConfigurationProperties.BackendConfig, ? extends RetryConfigurationProperties.BackendConfig> configure) {
+    public Resilience4jConfig retry(String name, Function<? super RetryConfigurationProperties.BackendProperties, ? extends RetryConfigurationProperties.BackendProperties> configure) {
         try {
-            RetryConfigurationProperties.BackendConfig finalConfig = configure.apply(new RetryConfigurationProperties.BackendConfig());
+            RetryConfigurationProperties.BackendProperties finalConfig = configure.apply(new RetryConfigurationProperties.BackendProperties());
             retry.getBackends().put(name, finalConfig);
             return this;
         } catch (Exception e) {
@@ -79,9 +79,9 @@ public class Resilience4jConfig {
         return bulkhead(name, config -> config);
     }
 
-    public Resilience4jConfig bulkhead(String name, Function<? super BulkheadConfigurationProperties.BackendConfig, ? extends BulkheadConfigurationProperties.BackendConfig> configure) {
+    public Resilience4jConfig bulkhead(String name, Function<? super BulkheadConfigurationProperties.BackendProperties, ? extends BulkheadConfigurationProperties.BackendProperties> configure) {
         try {
-            BulkheadConfigurationProperties.BackendConfig finalConfig = configure.apply(new BulkheadConfigurationProperties.BackendConfig());
+            BulkheadConfigurationProperties.BackendProperties finalConfig = configure.apply(new BulkheadConfigurationProperties.BackendProperties());
             bulkhead.getBackends().put(name, finalConfig);
             return this;
         } catch (Exception e) {

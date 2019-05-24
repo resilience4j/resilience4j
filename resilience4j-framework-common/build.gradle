@@ -4,6 +4,8 @@ dependencies {
     compile project(':resilience4j-ratelimiter')
     compile project(':resilience4j-retry')
     compile project(':resilience4j-bulkhead')
+    
+    compile libraries.validationApi
 }
 
 ext.moduleName='io.github.resilience4j.framework-common'
