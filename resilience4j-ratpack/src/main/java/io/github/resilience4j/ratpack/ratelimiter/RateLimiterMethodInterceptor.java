@@ -18,7 +18,6 @@ package io.github.resilience4j.ratpack.ratelimiter;
 
 import com.google.inject.Inject;
 import io.github.resilience4j.core.lang.Nullable;
-import io.github.resilience4j.ratelimiter.RateLimiterConfig;
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
 import io.github.resilience4j.ratelimiter.RequestNotPermitted;
 import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
@@ -32,7 +31,6 @@ import ratpack.exec.Promise;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.time.Duration;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
@@ -104,9 +102,7 @@ public class RateLimiterMethodInterceptor extends AbstractMethodInterceptor {
             }
             return result;
         } else if (CompletionStage.class.isAssignableFrom(returnType)) {
-            RateLimiterConfig rateLimiterConfig = rateLimiter.getRateLimiterConfig();
-            Duration timeoutDuration = rateLimiterConfig.getTimeoutDuration();
-            if (rateLimiter.acquirePermission(timeoutDuration)) {
+            if (rateLimiter.acquirePermission()) {
                 return proceed(invocation, rateLimiter, fallbackMethod);
             } else {
                 final CompletableFuture promise = new CompletableFuture<>();
@@ -132,9 +128,7 @@ public class RateLimiterMethodInterceptor extends AbstractMethodInterceptor {
 
     @Nullable
     private Object handleProceedWithException(MethodInvocation invocation, io.github.resilience4j.ratelimiter.RateLimiter rateLimiter, RecoveryFunction<?> recoveryFunction) throws Throwable {
-        RateLimiterConfig rateLimiterConfig = rateLimiter.getRateLimiterConfig();
-        Duration timeoutDuration = rateLimiterConfig.getTimeoutDuration();
-        boolean permission = rateLimiter.acquirePermission(timeoutDuration);
+        boolean permission = rateLimiter.acquirePermission();
         if (Thread.interrupted()) {
             throw new IllegalStateException("Thread was interrupted during permission wait");
         }

@@ -20,6 +20,7 @@ import io.github.resilience4j.ratelimiter.RequestNotPermitted;
 import reactor.core.CoreSubscriber;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.FluxOperator;
+import reactor.core.publisher.Mono;
 import reactor.core.publisher.Operators;
 
 import java.time.Duration;
@@ -35,8 +36,14 @@ class FluxRateLimiter<T> extends FluxOperator<T, T> {
 
     @Override
     public void subscribe(CoreSubscriber<? super T> actual) {
-        if(rateLimiter.acquirePermission(Duration.ZERO)){
-            source.subscribe(new RateLimiterSubscriber<>(actual));
+        long waitDuration = rateLimiter.reservePermission();
+        if(waitDuration >= 0){
+            if(waitDuration > 0){
+                Mono.delay(Duration.ofNanos(waitDuration))
+                    .subscribe((w) -> source.subscribe(new RateLimiterSubscriber<>(actual)));
+            }else{
+                source.subscribe(new RateLimiterSubscriber<>(actual));
+            }
         }else{
             Operators.error(actual, new RequestNotPermitted(rateLimiter));
         }

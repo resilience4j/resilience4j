@@ -83,15 +83,15 @@ public class AtomicRateLimiterTest {
             System.out.print('.'); // wait for current cycle to pass
         }
 
-        boolean firstPermission = rawLimiter.acquirePermission(Duration.ZERO);
+        boolean firstPermission = rawLimiter.acquirePermission();
         long nanosToWait = rawDetailedMetrics.getNanosToWait();
         long startTime = System.nanoTime();
         while(System.nanoTime() - startTime < nanosToWait) {
             System.out.print('*'); // wait for permission renewal
         }
 
-        boolean secondPermission = rawLimiter.acquirePermission(Duration.ZERO);
-        boolean firstNoPermission = rawLimiter.acquirePermission(Duration.ZERO);
+        boolean secondPermission = rawLimiter.acquirePermission();
+        boolean firstNoPermission = rawLimiter.acquirePermission();
         long secondCycle = rawDetailedMetrics.getCycle();
 
         rawLimiter.changeLimitForPeriod(PERMISSIONS_RER_CYCLE * 2);
@@ -100,9 +100,9 @@ public class AtomicRateLimiterTest {
         while(System.nanoTime() - startTime < nanosToWait) {
             System.out.print('^'); // wait for permission renewal
         }
-        boolean thirdPermission = rawLimiter.acquirePermission(Duration.ZERO);
-        boolean fourthPermission = rawLimiter.acquirePermission(Duration.ZERO);
-        boolean secondNoPermission = rawLimiter.acquirePermission(Duration.ZERO);
+        boolean thirdPermission = rawLimiter.acquirePermission();
+        boolean fourthPermission = rawLimiter.acquirePermission();
+        boolean secondNoPermission = rawLimiter.acquirePermission();
         long thirdCycle = rawDetailedMetrics.getCycle();
 
 
@@ -128,15 +128,15 @@ public class AtomicRateLimiterTest {
             System.out.print('.'); // wait for current cycle to pass
         }
 
-        long firstPermission = rawLimiter.reservePermission(Duration.ZERO);
+        long firstPermission = rawLimiter.reservePermission();
         long nanosToWait = rawDetailedMetrics.getNanosToWait();
         long startTime = System.nanoTime();
         while(System.nanoTime() - startTime < nanosToWait) {
             System.out.print('*'); // wait for permission renewal
         }
 
-        long secondPermission = rawLimiter.reservePermission(Duration.ZERO);
-        long firstNoPermission = rawLimiter.reservePermission(Duration.ZERO);
+        long secondPermission = rawLimiter.reservePermission();
+        long firstNoPermission = rawLimiter.reservePermission();
         long secondCycle = rawDetailedMetrics.getCycle();
 
         rawLimiter.changeLimitForPeriod(PERMISSIONS_RER_CYCLE * 2);
@@ -145,9 +145,9 @@ public class AtomicRateLimiterTest {
         while(System.nanoTime() - startTime < nanosToWait) {
             System.out.print('^'); // wait for permission renewal
         }
-        long thirdPermission = rawLimiter.reservePermission(Duration.ZERO);
-        long fourthPermission = rawLimiter.reservePermission(Duration.ZERO);
-        long secondNoPermission = rawLimiter.reservePermission(Duration.ZERO);
+        long thirdPermission = rawLimiter.reservePermission();
+        long fourthPermission = rawLimiter.reservePermission();
+        long secondNoPermission = rawLimiter.reservePermission();
         long thirdCycle = rawDetailedMetrics.getCycle();
 
 
@@ -174,21 +174,21 @@ public class AtomicRateLimiterTest {
     @Test
     public void acquireAndRefreshWithEventPublishing() throws Exception {
         setTimeOnNanos(CYCLE_IN_NANOS);
-        boolean permission = rateLimiter.acquirePermission(Duration.ZERO);
+        boolean permission = rateLimiter.acquirePermission();
         then(permission).isTrue();
         then(metrics.getAvailablePermissions()).isEqualTo(0);
         then(metrics.getNanosToWait()).isEqualTo(CYCLE_IN_NANOS);
-        boolean secondPermission = rateLimiter.acquirePermission(Duration.ZERO);
+        boolean secondPermission = rateLimiter.acquirePermission();
         then(secondPermission).isFalse();
         then(metrics.getAvailablePermissions()).isEqualTo(0);
         then(metrics.getNanosToWait()).isEqualTo(CYCLE_IN_NANOS);
 
         setTimeOnNanos(CYCLE_IN_NANOS * 2);
-        boolean thirdPermission = rateLimiter.acquirePermission(Duration.ZERO);
+        boolean thirdPermission = rateLimiter.acquirePermission();
         then(thirdPermission).isTrue();
         then(metrics.getAvailablePermissions()).isEqualTo(0);
         then(metrics.getNanosToWait()).isEqualTo(CYCLE_IN_NANOS);
-        boolean fourthPermission = rateLimiter.acquirePermission(Duration.ZERO);
+        boolean fourthPermission = rateLimiter.acquirePermission();
         then(fourthPermission).isFalse();
         then(metrics.getAvailablePermissions()).isEqualTo(0);
         then(metrics.getNanosToWait()).isEqualTo(CYCLE_IN_NANOS);
@@ -197,7 +197,7 @@ public class AtomicRateLimiterTest {
     @Test
     public void reserveAndRefresh() throws Exception {
         setTimeOnNanos(CYCLE_IN_NANOS);
-        boolean permission = rateLimiter.acquirePermission(Duration.ZERO);
+        boolean permission = rateLimiter.acquirePermission();
         then(permission).isTrue();
         then(metrics.getAvailablePermissions()).isEqualTo(0);
         then(metrics.getNanosToWait()).isEqualTo(CYCLE_IN_NANOS);
@@ -227,7 +227,7 @@ public class AtomicRateLimiterTest {
     @Test
     public void reserveFewThenSkipCyclesBeforeRefreshNonBlocking() throws Exception {
         setTimeOnNanos(CYCLE_IN_NANOS);
-        long permission = rateLimiter.reservePermission(Duration.ZERO);
+        long permission = rateLimiter.reservePermission();
         then(permission).isZero();
         then(metrics.getAvailablePermissions()).isEqualTo(0);
         then(metrics.getNanosToWait()).isEqualTo(CYCLE_IN_NANOS);
@@ -258,7 +258,7 @@ public class AtomicRateLimiterTest {
     @Test
     public void reserveFewThenSkipCyclesBeforeRefresh() throws Exception {
         setTimeOnNanos(CYCLE_IN_NANOS);
-        boolean permission = rateLimiter.acquirePermission(Duration.ZERO);
+        boolean permission = rateLimiter.acquirePermission();
         then(permission).isTrue();
         then(metrics.getAvailablePermissions()).isEqualTo(0);
         then(metrics.getNanosToWait()).isEqualTo(CYCLE_IN_NANOS);
@@ -304,7 +304,7 @@ public class AtomicRateLimiterTest {
     @Test
     public void rejectedByTimeout() throws Exception {
         setTimeOnNanos(CYCLE_IN_NANOS);
-        boolean permission = rateLimiter.acquirePermission(Duration.ZERO);
+        boolean permission = rateLimiter.acquirePermission();
         then(permission).isTrue();
         then(metrics.getAvailablePermissions()).isEqualTo(0);
         then(metrics.getNanosToWait()).isEqualTo(CYCLE_IN_NANOS);
@@ -335,7 +335,7 @@ public class AtomicRateLimiterTest {
     @Test
     public void rejectedByTimeoutNonBlocking() throws Exception {
         setTimeOnNanos(CYCLE_IN_NANOS);
-        long permission = rateLimiter.reservePermission(Duration.ZERO);
+        long permission = rateLimiter.reservePermission();
         then(permission).isZero();
         then(metrics.getAvailablePermissions()).isEqualTo(0);
         then(metrics.getNanosToWait()).isEqualTo(CYCLE_IN_NANOS);
@@ -356,7 +356,7 @@ public class AtomicRateLimiterTest {
     @Test
     public void waitingThreadIsInterrupted() throws Exception {
         setTimeOnNanos(CYCLE_IN_NANOS);
-        boolean permission = rateLimiter.acquirePermission(Duration.ZERO);
+        boolean permission = rateLimiter.acquirePermission();
         then(permission).isTrue();
         then(metrics.getAvailablePermissions()).isEqualTo(0);
         then(metrics.getNanosToWait()).isEqualTo(CYCLE_IN_NANOS);
@@ -393,7 +393,7 @@ public class AtomicRateLimiterTest {
     @Test
     public void changePermissionsLimitBetweenCycles() throws Exception {
         setTimeOnNanos(CYCLE_IN_NANOS);
-        boolean permission = rateLimiter.acquirePermission(Duration.ZERO);
+        boolean permission = rateLimiter.acquirePermission();
         then(permission).isTrue();
         then(metrics.getAvailablePermissions()).isEqualTo(0);
         then(metrics.getNanosToWait()).isEqualTo(CYCLE_IN_NANOS);
