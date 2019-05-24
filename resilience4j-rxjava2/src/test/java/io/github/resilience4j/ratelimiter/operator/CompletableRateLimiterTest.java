@@ -9,6 +9,7 @@ import org.mockito.Mockito;
 
 import java.io.IOException;
 import java.time.Duration;
+import java.util.concurrent.TimeUnit;
 
 import static org.mockito.BDDMockito.given;
 
@@ -26,7 +27,7 @@ public class CompletableRateLimiterTest {
 
     @Test
     public void shouldEmitCompleted() {
-        given(rateLimiter.acquirePermission(Duration.ZERO)).willReturn(true);
+        given(rateLimiter.reservePermission()).willReturn(Duration.ofSeconds(0).toNanos());
 
         Completable.complete()
             .compose(RateLimiterOperator.of(rateLimiter))
@@ -35,8 +36,18 @@ public class CompletableRateLimiterTest {
     }
 
     @Test
+    public void shouldDelaySubscription() {
+        given(rateLimiter.reservePermission()).willReturn(Duration.ofSeconds(1).toNanos());
+
+        Completable.complete()
+                .compose(RateLimiterOperator.of(rateLimiter))
+                .test()
+                .awaitTerminalEvent(2, TimeUnit.SECONDS);
+    }
+
+    @Test
     public void shouldPropagateError() {
-        given(rateLimiter.acquirePermission(Duration.ZERO)).willReturn(true);
+        given(rateLimiter.reservePermission()).willReturn(Duration.ofSeconds(0).toNanos());
 
         Completable.error(new IOException("BAM!"))
             .compose(RateLimiterOperator.of(rateLimiter))
@@ -48,7 +59,7 @@ public class CompletableRateLimiterTest {
 
     @Test
     public void shouldEmitErrorWithRequestNotPermittedException() {
-        given(rateLimiter.acquirePermission(Duration.ZERO)).willReturn(false);
+        given(rateLimiter.reservePermission()).willReturn(-1L);
 
         Completable.complete()
             .compose(RateLimiterOperator.of(rateLimiter))

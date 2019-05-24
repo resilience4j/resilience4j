@@ -274,15 +274,8 @@ public interface RateLimiter {
 	boolean getPermission(Duration timeoutDuration);
 
 	/**
-	 * Acquires a permission from this rate limiter, blocking until one is available, or the thread is interrupted.
-	 *
-	 * <p>If the current thread is {@linkplain Thread#interrupt interrupted}
-	 * while waiting for a permit then it won't throw {@linkplain InterruptedException},
-	 * but its interrupt status will be set.
-	 *
-	 * @param timeoutDuration the maximum time to wait
-	 * @return {@code true} if a permit was acquired and {@code false}
-	 * if waiting timeoutDuration elapsed before a permit was acquired
+	 * @deprecated Use {@link RateLimiter#acquirePermission()} instead.
+	 * @since 0.16.0
 	 */
 	@Deprecated
 	boolean acquirePermission(Duration timeoutDuration);
@@ -301,12 +294,8 @@ public interface RateLimiter {
 	boolean acquirePermission();
 
 	/**
-	 * Reserves a permission from this rate limiter and returns nanoseconds you should wait for it.
-	 * If returned long is negative, it means that you failed to reserve permission,
-	 * possibly your {@code timeoutDuration} is less then time to wait for permission.
-	 *
-	 * @param timeoutDuration the maximum time you want to wait.
-	 * @return {@code long} amount of nanoseconds you should wait for reserved permission. if negative, it means you failed to reserve.
+	 * @deprecated Use {@link RateLimiter#reservePermission()} instead.
+	 * @since 0.16.0
 	 */
 	@Deprecated
 	long reservePermission(Duration timeoutDuration);

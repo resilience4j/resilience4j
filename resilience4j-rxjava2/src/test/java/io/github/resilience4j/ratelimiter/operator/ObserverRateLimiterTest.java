@@ -9,6 +9,7 @@ import org.mockito.Mockito;
 
 import java.io.IOException;
 import java.time.Duration;
+import java.util.concurrent.TimeUnit;
 
 import static org.mockito.BDDMockito.given;
 
@@ -26,7 +27,7 @@ public class ObserverRateLimiterTest {
 
     @Test
     public void shouldEmitSingleEventWithSinglePermit() {
-        given(rateLimiter.acquirePermission(Duration.ZERO)).willReturn(true);
+        given(rateLimiter.reservePermission()).willReturn(Duration.ofSeconds(0).toNanos());
 
         Observable.just(1)
             .compose(RateLimiterOperator.of(rateLimiter))
@@ -35,8 +36,18 @@ public class ObserverRateLimiterTest {
     }
 
     @Test
+    public void shouldDelaySubscription() {
+        given(rateLimiter.reservePermission()).willReturn(Duration.ofSeconds(1).toNanos());
+
+        Observable.just(1)
+                .compose(RateLimiterOperator.of(rateLimiter))
+                .test()
+                .awaitTerminalEvent(2, TimeUnit.SECONDS);
+    }
+
+    @Test
     public void shouldEmitAllEvents() {
-        given(rateLimiter.acquirePermission(Duration.ZERO)).willReturn(true);
+        given(rateLimiter.reservePermission()).willReturn(Duration.ofSeconds(0).toNanos());
 
         Observable.fromArray(1, 2)
             .compose(RateLimiterOperator.of(rateLimiter))
@@ -46,7 +57,7 @@ public class ObserverRateLimiterTest {
 
     @Test
     public void shouldPropagateError() {
-        given(rateLimiter.acquirePermission(Duration.ZERO)).willReturn(true);
+        given(rateLimiter.reservePermission()).willReturn(Duration.ofSeconds(0).toNanos());
 
         Observable.error(new IOException("BAM!"))
             .compose(RateLimiterOperator.of(rateLimiter))
@@ -58,7 +69,7 @@ public class ObserverRateLimiterTest {
 
     @Test
     public void shouldEmitErrorWithRequestNotPermittedException() {
-        given(rateLimiter.acquirePermission(Duration.ZERO)).willReturn(false);
+        given(rateLimiter.reservePermission()).willReturn(-1L);
 
         Observable.just(1)
             .compose(RateLimiterOperator.of(rateLimiter))
