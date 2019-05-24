@@ -71,7 +71,7 @@ public interface CircuitBreaker {
      * If the state is HALF_OPEN, the number of allowed test calls is decreased. Important: Make sure to call onSuccess or onError
      * after the call is finished. If the call is cancelled before it is invoked, you have to release the permission again.
      *
-     * @return {@code true} if a permission was acquired and {@code true} otherwise
+     * @return {@code true} if a permission was acquired and {@code false} otherwise
      */
     boolean tryAcquirePermission();
 
