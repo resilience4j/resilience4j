@@ -64,7 +64,7 @@ public interface Bulkhead {
      * Attempts to obtain a permission to execute a call.
      * @deprecated Use {@link Bulkhead#tryAcquirePermission()} ()}. instead.
      *
-     * @return {@code true} if a permission was acquired and {@code true} otherwise
+     * @return {@code true} if a permission was acquired and {@code false} otherwise
      */
     @Deprecated
     boolean isCallPermitted();
@@ -72,7 +72,7 @@ public interface Bulkhead {
     /**
      * Acquires a permission to execute a call, only if one is available at the time of invocation.
      *
-     * @return {@code true} if a permission was acquired and {@code true} otherwise
+     * @return {@code true} if a permission was acquired and {@code false} otherwise
      */
     boolean tryAcquirePermission();
 
