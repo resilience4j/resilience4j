@@ -200,7 +200,6 @@ ThreadPoolBulkheadConfig config = ThreadPoolBulkheadConfig.custom()
 ThreadPoolBulkhead bulkhead = ThreadPoolBulkhead.of("backendName", config);
 
 // Decorate or execute immediately a lambda expression with a ThreadPoolBulkhead.
-
 Supplier<CompletionStage<String>> supplier = ThreadPoolBulkhead
     .decorateSupplier(bulkhead, backendService::doSomething);
 
