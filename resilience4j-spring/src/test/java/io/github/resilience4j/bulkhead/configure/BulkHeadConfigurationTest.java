@@ -4,8 +4,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.junit.MockitoJUnitRunner;
 
 import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.bulkhead.BulkheadRegistry;
@@ -21,7 +19,6 @@ import io.github.resilience4j.core.ConfigurationNotFoundException;
 /**
  * test custom init of bulkhead configuration
  */
-@RunWith(MockitoJUnitRunner.class)
 public class BulkHeadConfigurationTest {
 
 	@Test
