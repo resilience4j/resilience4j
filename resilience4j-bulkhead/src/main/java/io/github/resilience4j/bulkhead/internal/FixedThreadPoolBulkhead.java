@@ -64,7 +64,8 @@ public class FixedThreadPoolBulkhead implements ThreadPoolBulkhead {
 		// init thread pool executor
 		this.executorService = new ThreadPoolExecutor(config.getCoreThreadPoolSize(), config.getMaxThreadPoolSize(),
 				config.getKeepAliveTime(), TimeUnit.MILLISECONDS,
-				new ArrayBlockingQueue<>(config.getQueueCapacity()));
+				new ArrayBlockingQueue<>(config.getQueueCapacity()),
+				new NamingThreadFactory(name));
 		// adding prover jvm executor shutdown
 		cleanup();
 		this.metrics = new FixedThreadPoolBulkhead.BulkheadMetrics();
