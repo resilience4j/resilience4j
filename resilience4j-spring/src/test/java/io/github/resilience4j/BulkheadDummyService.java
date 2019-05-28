@@ -6,7 +6,6 @@ import java.util.concurrent.CompletionStage;
 import org.springframework.stereotype.Component;
 
 import io.github.resilience4j.bulkhead.annotation.Bulkhead;
-import io.github.resilience4j.bulkhead.annotation.Type;
 import io.reactivex.Completable;
 import io.reactivex.Flowable;
 import io.reactivex.Maybe;
@@ -30,13 +29,13 @@ public class BulkheadDummyService implements TestDummyService {
 	}
 
 	@Override
-	@Bulkhead(name = BACKEND_B, type = Type.THREADPOOL, fallbackMethod = "completionStageRecovery")
+	@Bulkhead(name = BACKEND_B, type = Bulkhead.Type.THREADPOOL, fallbackMethod = "completionStageRecovery")
 	public CompletionStage<String> asyncThreadPool() {
 		return asyncError();
 	}
 
 	@Override
-	@Bulkhead(name = BACKEND_B, type = Type.THREADPOOL)
+	@Bulkhead(name = BACKEND_B, type = Bulkhead.Type.THREADPOOL)
 	public CompletionStage<String> asyncThreadPoolSuccess() {
 		return CompletableFuture.completedFuture("finished");
 	}

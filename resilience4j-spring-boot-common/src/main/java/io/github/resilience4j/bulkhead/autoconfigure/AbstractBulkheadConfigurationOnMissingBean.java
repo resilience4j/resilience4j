@@ -33,6 +33,7 @@ import io.github.resilience4j.bulkhead.configure.BulkheadConfigurationProperties
 import io.github.resilience4j.bulkhead.configure.ReactorBulkheadAspectExt;
 import io.github.resilience4j.bulkhead.configure.RxJava2BulkheadAspectExt;
 import io.github.resilience4j.bulkhead.configure.threadpool.ThreadPoolBulkheadConfiguration;
+import io.github.resilience4j.bulkhead.configure.threadpool.ThreadPoolBulkheadConfigurationProperties;
 import io.github.resilience4j.bulkhead.event.BulkheadEvent;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
 import io.github.resilience4j.fallback.FallbackDecorators;
@@ -88,10 +89,10 @@ public abstract class AbstractBulkheadConfigurationOnMissingBean {
 
 	@Bean
 	@ConditionalOnMissingBean
-	public ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry(BulkheadConfigurationProperties bulkheadConfigurationProperties,
+	public ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry(ThreadPoolBulkheadConfigurationProperties threadPoolBulkheadConfigurationProperties,
 	                                                             EventConsumerRegistry<BulkheadEvent> bulkheadEventConsumerRegistry) {
 
-		return threadPoolBulkheadConfiguration.threadPoolBulkheadRegistry(bulkheadConfigurationProperties, bulkheadEventConsumerRegistry);
+		return threadPoolBulkheadConfiguration.threadPoolBulkheadRegistry(threadPoolBulkheadConfigurationProperties, bulkheadEventConsumerRegistry);
 	}
 
 }

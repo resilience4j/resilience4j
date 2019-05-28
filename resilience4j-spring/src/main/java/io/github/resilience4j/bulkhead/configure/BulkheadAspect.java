@@ -35,7 +35,6 @@ import io.github.resilience4j.bulkhead.BulkheadRegistry;
 import io.github.resilience4j.bulkhead.ThreadPoolBulkhead;
 import io.github.resilience4j.bulkhead.ThreadPoolBulkheadRegistry;
 import io.github.resilience4j.bulkhead.annotation.Bulkhead;
-import io.github.resilience4j.bulkhead.annotation.Type;
 import io.github.resilience4j.core.lang.Nullable;
 import io.github.resilience4j.fallback.FallbackDecorators;
 import io.github.resilience4j.fallback.FallbackMethod;
@@ -99,7 +98,7 @@ public class BulkheadAspect implements Ordered {
 		}
 		Class<?> returnType = method.getReturnType();
 		String backend = bulkheadAnnotation.name();
-		if (bulkheadAnnotation.type() == Type.THREADPOOL) {
+		if (bulkheadAnnotation.type() == Bulkhead.Type.THREADPOOL) {
 			if (StringUtils.isEmpty(bulkheadAnnotation.fallbackMethod())) {
 				return proceedInThreadPoolBulkhead(proceedingJoinPoint, methodName, returnType, backend);
 			}

@@ -33,6 +33,7 @@ import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import io.github.resilience4j.bulkhead.autoconfigure.BulkheadProperties;
+import io.github.resilience4j.bulkhead.autoconfigure.ThreadPoolBulkheadProperties;
 import io.github.resilience4j.bulkhead.configure.BulkheadAspect;
 import io.github.resilience4j.bulkhead.event.BulkheadEvent;
 import io.github.resilience4j.bulkhead.monitoring.endpoint.BulkheadEndpointResponse;
@@ -55,6 +56,9 @@ public class BulkheadAutoConfigurationTest {
 
 	@Autowired
 	private BulkheadProperties bulkheadProperties;
+
+	@Autowired
+	private ThreadPoolBulkheadProperties threadPoolBulkheadProperties;
 
 	@Autowired
 	private BulkheadAspect bulkheadAspect;
@@ -80,7 +84,7 @@ public class BulkheadAutoConfigurationTest {
 		ExecutorService es = Executors.newFixedThreadPool(5);
 
 		assertThat(threadPoolBulkheadRegistry).isNotNull();
-		assertThat(bulkheadProperties).isNotNull();
+		assertThat(threadPoolBulkheadProperties).isNotNull();
 
 		ThreadPoolBulkhead bulkhead = threadPoolBulkheadRegistry.bulkhead(BulkheadDummyService.BACKEND_C);
 		assertThat(bulkhead).isNotNull();

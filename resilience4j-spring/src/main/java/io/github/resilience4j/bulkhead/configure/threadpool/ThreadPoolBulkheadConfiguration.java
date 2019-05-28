@@ -25,7 +25,6 @@ import org.springframework.context.annotation.Configuration;
 import io.github.resilience4j.bulkhead.ThreadPoolBulkhead;
 import io.github.resilience4j.bulkhead.ThreadPoolBulkheadConfig;
 import io.github.resilience4j.bulkhead.ThreadPoolBulkheadRegistry;
-import io.github.resilience4j.bulkhead.configure.BulkheadConfigurationProperties;
 import io.github.resilience4j.bulkhead.event.BulkheadEvent;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
 
@@ -42,7 +41,7 @@ public class ThreadPoolBulkheadConfiguration {
 	 * @return the ThreadPoolBulkheadRegistry with all needed setup in place
 	 */
 	@Bean
-	public ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry(BulkheadConfigurationProperties bulkheadConfigurationProperties,
+	public ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry(ThreadPoolBulkheadConfigurationProperties bulkheadConfigurationProperties,
 	                                                             EventConsumerRegistry<BulkheadEvent> bulkheadEventConsumerRegistry) {
 		ThreadPoolBulkheadRegistry bulkheadRegistry = createBulkheadRegistry(bulkheadConfigurationProperties);
 		registerEventConsumer(bulkheadRegistry, bulkheadEventConsumerRegistry, bulkheadConfigurationProperties);
@@ -61,7 +60,7 @@ public class ThreadPoolBulkheadConfiguration {
 	 * @param bulkheadConfigurationProperties The bulkhead configuration properties.
 	 * @return a ThreadPoolBulkheadRegistry
 	 */
-	private ThreadPoolBulkheadRegistry createBulkheadRegistry(BulkheadConfigurationProperties bulkheadConfigurationProperties) {
+	private ThreadPoolBulkheadRegistry createBulkheadRegistry(ThreadPoolBulkheadConfigurationProperties bulkheadConfigurationProperties) {
 		Map<String, ThreadPoolBulkheadConfig> configs = bulkheadConfigurationProperties.getConfigs()
 				.entrySet().stream().filter(stringBackendPropertiesEntry -> stringBackendPropertiesEntry.getValue().getThreadPoolProperties() != null)
 				.collect(Collectors.toMap(Map.Entry::getKey, entry -> bulkheadConfigurationProperties.createThreadPoolBulkheadConfig(entry.getValue())));
@@ -76,13 +75,13 @@ public class ThreadPoolBulkheadConfiguration {
 	 * @param eventConsumerRegistry The event consumer registry.
 	 */
 	private void registerEventConsumer(ThreadPoolBulkheadRegistry bulkheadRegistry,
-	                                   EventConsumerRegistry<BulkheadEvent> eventConsumerRegistry, BulkheadConfigurationProperties bulkheadConfigurationProperties) {
+	                                   EventConsumerRegistry<BulkheadEvent> eventConsumerRegistry, ThreadPoolBulkheadConfigurationProperties bulkheadConfigurationProperties) {
 		bulkheadRegistry.getEventPublisher().onEntryAdded(event -> registerEventConsumer(eventConsumerRegistry, event.getAddedEntry(), bulkheadConfigurationProperties));
 	}
 
-	private void registerEventConsumer(EventConsumerRegistry<BulkheadEvent> eventConsumerRegistry, ThreadPoolBulkhead bulkHead, BulkheadConfigurationProperties bulkheadConfigurationProperties) {
+	private void registerEventConsumer(EventConsumerRegistry<BulkheadEvent> eventConsumerRegistry, ThreadPoolBulkhead bulkHead, ThreadPoolBulkheadConfigurationProperties bulkheadConfigurationProperties) {
 		int eventConsumerBufferSize = Optional.ofNullable(bulkheadConfigurationProperties.getBackendProperties(bulkHead.getName()))
-				.map(BulkheadConfigurationProperties.BackendProperties::getEventConsumerBufferSize)
+				.map(ThreadPoolBulkheadConfigurationProperties.BackendProperties::getEventConsumerBufferSize)
 				.orElse(100);
 		bulkHead.getEventPublisher().onEvent(eventConsumerRegistry.createEventConsumer(bulkHead.getName(), eventConsumerBufferSize));
 	}

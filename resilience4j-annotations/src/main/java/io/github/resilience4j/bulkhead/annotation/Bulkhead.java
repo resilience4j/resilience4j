@@ -28,4 +28,14 @@ public @interface Bulkhead {
 	 * @return the bulkhead implementation type (SEMAPHORE or THREADPOOL)
 	 */
 	Type type() default Type.SEMAPHORE;
+
+	/**
+	 * bulkhead implementation types
+	 * <p>
+	 * SEMAPHORE will invoke semaphore based bulkhead implementation
+	 * THREADPOOL will invoke Thread pool based bulkhead implementation
+	 */
+	enum Type {
+		SEMAPHORE, THREADPOOL
+	}
 }
