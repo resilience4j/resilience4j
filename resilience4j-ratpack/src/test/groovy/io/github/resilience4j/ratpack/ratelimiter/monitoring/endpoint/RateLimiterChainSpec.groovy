@@ -57,9 +57,9 @@ class RateLimiterChainSpec extends Specification {
                 bindInstance(RateLimiterRegistry, rateLimiterRegistry)
                 module(Resilience4jModule) {
                     it.rateLimiter('test1') {
-                        it.limitForPeriod(5).limitRefreshPeriodInNanos(1000000000).timeoutInMillis(0)
+                        it.setLimitForPeriod(5).setLimitRefreshPeriodInNanos(1000000000).setTimeoutInMillis(0)
                     }.rateLimiter('test2') {
-                        it.limitForPeriod(5).limitRefreshPeriodInNanos(1000000000).timeoutInMillis(0)
+                        it.setLimitForPeriod(5).setLimitRefreshPeriodInNanos(1000000000).setTimeoutInMillis(0)
                     }
                 }
             }
@@ -141,9 +141,9 @@ class RateLimiterChainSpec extends Specification {
                 bindInstance(RateLimiterRegistry, rateLimiterRegistry)
                 module(Resilience4jModule) {
                     it.rateLimiter('test1') {
-                        it.limitForPeriod(5).limitRefreshPeriodInNanos(1000000000).timeoutInMillis(0)
+                        it.setLimitForPeriod(5).setLimitRefreshPeriodInNanos(1000000000).setTimeoutInMillis(0)
                     }.rateLimiter('test2') {
-                        it.limitForPeriod(5).limitRefreshPeriodInNanos(1000000000).timeoutInMillis(0)
+                        it.setLimitForPeriod(5).setLimitRefreshPeriodInNanos(1000000000).setTimeoutInMillis(0)
                     }
                 }
             }
@@ -211,9 +211,9 @@ class RateLimiterChainSpec extends Specification {
                 bindInstance(RateLimiterRegistry, rateLimiterRegistry)
                 module(Resilience4jModule) {
                     it.rateLimiter('test1') {
-                        it.limitForPeriod(5).limitRefreshPeriodInNanos(1000000000).timeoutInMillis(0)
+                        it.setLimitForPeriod(5).setLimitRefreshPeriodInNanos(1000000000).setTimeoutInMillis(0)
                     }.rateLimiter('test2') {
-                        it.limitForPeriod(5).limitRefreshPeriodInNanos(1000000000).timeoutInMillis(0)
+                        it.setLimitForPeriod(5).setLimitRefreshPeriodInNanos(1000000000).setTimeoutInMillis(0)
                     }.endpoints {
                         it.rateLimiters {
                             it.enabled(false)

@@ -1,19 +1,18 @@
 package io.github.resilience4j.ratelimiter.configure;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-
-import java.time.Duration;
-
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.junit.MockitoJUnitRunner;
-
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.core.ConfigurationNotFoundException;
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
 import io.github.resilience4j.ratelimiter.event.RateLimiterEvent;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.junit.MockitoJUnitRunner;
+
+import java.time.Duration;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
  * test custom init of rate limiter configuration
@@ -24,17 +23,17 @@ public class RateLimiterConfigurationTest {
 	@Test
 	public void testRateLimiterRegistry() {
 		//Given
-		RateLimiterConfigurationProperties.LimiterProperties backendProperties1 = new RateLimiterConfigurationProperties.LimiterProperties();
+		RateLimiterConfigurationProperties.BackendProperties backendProperties1 = new RateLimiterConfigurationProperties.BackendProperties();
 		backendProperties1.setLimitForPeriod(2);
 		backendProperties1.setSubscribeForEvents(true);
 
-		RateLimiterConfigurationProperties.LimiterProperties backendProperties2 = new RateLimiterConfigurationProperties.LimiterProperties();
+		RateLimiterConfigurationProperties.BackendProperties backendProperties2 = new RateLimiterConfigurationProperties.BackendProperties();
 		backendProperties2.setLimitForPeriod(4);
 		backendProperties2.setSubscribeForEvents(true);
 
 		RateLimiterConfigurationProperties rateLimiterConfigurationProperties = new RateLimiterConfigurationProperties();
-		rateLimiterConfigurationProperties.getLimiters().put("backend1", backendProperties1);
-		rateLimiterConfigurationProperties.getLimiters().put("backend2", backendProperties2);
+		rateLimiterConfigurationProperties.getBackends().put("backend1", backendProperties1);
+		rateLimiterConfigurationProperties.getBackends().put("backend2", backendProperties2);
 
 		RateLimiterConfiguration rateLimiterConfiguration = new RateLimiterConfiguration();
 		DefaultEventConsumerRegistry<RateLimiterEvent> eventConsumerRegistry = new DefaultEventConsumerRegistry<>();
@@ -58,22 +57,22 @@ public class RateLimiterConfigurationTest {
 	@Test
 	public void testCreateRateLimiterRegistryWithSharedConfigs() {
 		//Given
-		RateLimiterConfigurationProperties.LimiterProperties defaultProperties = new RateLimiterConfigurationProperties.LimiterProperties();
+		RateLimiterConfigurationProperties.BackendProperties defaultProperties = new RateLimiterConfigurationProperties.BackendProperties();
 		defaultProperties.setLimitForPeriod(3);
-		defaultProperties.setLimitRefreshPeriodInMillis(5);
+		defaultProperties.setLimitRefreshPeriodInNanos(5000000);
 		defaultProperties.setSubscribeForEvents(true);
 
-		RateLimiterConfigurationProperties.LimiterProperties sharedProperties = new RateLimiterConfigurationProperties.LimiterProperties();
+		RateLimiterConfigurationProperties.BackendProperties sharedProperties = new RateLimiterConfigurationProperties.BackendProperties();
 		sharedProperties.setLimitForPeriod(2);
-		sharedProperties.setLimitRefreshPeriodInMillis(6);
+		sharedProperties.setLimitRefreshPeriodInNanos(6000000);
 		sharedProperties.setSubscribeForEvents(true);
 
-		RateLimiterConfigurationProperties.LimiterProperties backendWithDefaultConfig = new RateLimiterConfigurationProperties.LimiterProperties();
+		RateLimiterConfigurationProperties.BackendProperties backendWithDefaultConfig = new RateLimiterConfigurationProperties.BackendProperties();
 		backendWithDefaultConfig.setBaseConfig("default");
 		backendWithDefaultConfig.setLimitForPeriod(200);
 		backendWithDefaultConfig.setSubscribeForEvents(true);
 
-		RateLimiterConfigurationProperties.LimiterProperties backendWithSharedConfig = new RateLimiterConfigurationProperties.LimiterProperties();
+		RateLimiterConfigurationProperties.BackendProperties backendWithSharedConfig = new RateLimiterConfigurationProperties.BackendProperties();
 		backendWithSharedConfig.setBaseConfig("sharedConfig");
 		backendWithSharedConfig.setLimitForPeriod(300);
 		backendWithSharedConfig.setSubscribeForEvents(true);
@@ -82,8 +81,8 @@ public class RateLimiterConfigurationTest {
 		rateLimiterConfigurationProperties.getConfigs().put("default", defaultProperties);
 		rateLimiterConfigurationProperties.getConfigs().put("sharedConfig", sharedProperties);
 
-		rateLimiterConfigurationProperties.getLimiters().put("backendWithDefaultConfig", backendWithDefaultConfig);
-		rateLimiterConfigurationProperties.getLimiters().put("backendWithSharedConfig", backendWithSharedConfig);
+		rateLimiterConfigurationProperties.getBackends().put("backendWithDefaultConfig", backendWithDefaultConfig);
+		rateLimiterConfigurationProperties.getBackends().put("backendWithSharedConfig", backendWithSharedConfig);
 
 		RateLimiterConfiguration rateLimiterConfiguration = new RateLimiterConfiguration();
 		DefaultEventConsumerRegistry<RateLimiterEvent> eventConsumerRegistry = new DefaultEventConsumerRegistry<>();
@@ -118,9 +117,9 @@ public class RateLimiterConfigurationTest {
 	public void testCreateRateLimiterRegistryWithUnknownConfig() {
 		RateLimiterConfigurationProperties rateLimiterConfigurationProperties = new RateLimiterConfigurationProperties();
 
-		RateLimiterConfigurationProperties.LimiterProperties backendProperties = new RateLimiterConfigurationProperties.LimiterProperties();
+		RateLimiterConfigurationProperties.BackendProperties backendProperties = new RateLimiterConfigurationProperties.BackendProperties();
 		backendProperties.setBaseConfig("unknownConfig");
-		rateLimiterConfigurationProperties.getLimiters().put("backend", backendProperties);
+		rateLimiterConfigurationProperties.getBackends().put("backend", backendProperties);
 
 		RateLimiterConfiguration rateLimiterConfiguration = new RateLimiterConfiguration();
 		DefaultEventConsumerRegistry<RateLimiterEvent> eventConsumerRegistry = new DefaultEventConsumerRegistry<>();

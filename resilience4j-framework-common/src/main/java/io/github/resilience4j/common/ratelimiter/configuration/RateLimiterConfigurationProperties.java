@@ -13,10 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.resilience4j.ratpack.ratelimiter;
+package io.github.resilience4j.common.ratelimiter.configuration;
 
-import com.google.common.base.Strings;
 import io.github.resilience4j.core.ConfigurationNotFoundException;
+import io.github.resilience4j.core.StringUtils;
 import io.github.resilience4j.core.lang.Nullable;
 import io.github.resilience4j.ratelimiter.RateLimiterConfig;
 
@@ -33,7 +33,7 @@ public class RateLimiterConfigurationProperties {
 		if (backendProperties == null) {
 			return RateLimiterConfig.ofDefaults();
 		}
-		if (!Strings.isNullOrEmpty(backendProperties.getBaseConfig())) {
+		if (!StringUtils.isNullOrEmpty(backendProperties.getBaseConfig())) {
 			BackendProperties baseProperties = configs.get(backendProperties.baseConfig);
 			if (baseProperties == null) {
 				throw new ConfigurationNotFoundException(backendProperties.getBaseConfig());
@@ -124,7 +124,7 @@ public class RateLimiterConfigurationProperties {
 		 *
 		 * @param limitForPeriod the permissions limit for refresh period
 		 */
-		public BackendProperties limitForPeriod(Integer limitForPeriod) {
+		public BackendProperties setLimitForPeriod(Integer limitForPeriod) {
 			this.limitForPeriod = limitForPeriod;
 			return this;
 		}
@@ -150,7 +150,7 @@ public class RateLimiterConfigurationProperties {
 		 *
 		 * @param limitRefreshPeriodInNanos the period of limit refresh
 		 */
-		public BackendProperties limitRefreshPeriodInNanos(Integer limitRefreshPeriodInNanos) {
+		public BackendProperties setLimitRefreshPeriodInNanos(Integer limitRefreshPeriodInNanos) {
 			this.limitRefreshPeriodInNanos = limitRefreshPeriodInNanos;
 			return this;
 		}
@@ -172,7 +172,7 @@ public class RateLimiterConfigurationProperties {
 		 *
 		 * @param timeoutInMillis wait for permission duration
 		 */
-		public BackendProperties timeoutInMillis(Integer timeoutInMillis) {
+		public BackendProperties setTimeoutInMillis(Integer timeoutInMillis) {
 			this.timeoutInMillis = timeoutInMillis;
 			return this;
 		}
@@ -181,7 +181,7 @@ public class RateLimiterConfigurationProperties {
 			return subscribeForEvents;
 		}
 
-		public BackendProperties subscribeForEvents(Boolean subscribeForEvents) {
+		public BackendProperties setSubscribeForEvents(Boolean subscribeForEvents) {
 			this.subscribeForEvents = subscribeForEvents;
 			return this;
 		}
@@ -190,7 +190,7 @@ public class RateLimiterConfigurationProperties {
 			return eventConsumerBufferSize;
 		}
 
-		public BackendProperties eventConsumerBufferSize(Integer eventConsumerBufferSize) {
+		public BackendProperties setEventConsumerBufferSize(Integer eventConsumerBufferSize) {
 			this.eventConsumerBufferSize = eventConsumerBufferSize;
 			return this;
 		}
@@ -199,7 +199,7 @@ public class RateLimiterConfigurationProperties {
 			return registerHealthIndicator;
 		}
 
-		public BackendProperties registerHealthIndicator(Boolean registerHealthIndicator) {
+		public BackendProperties setRegisterHealthIndicator(Boolean registerHealthIndicator) {
 			this.registerHealthIndicator = registerHealthIndicator;
 			return this;
 		}
@@ -221,7 +221,7 @@ public class RateLimiterConfigurationProperties {
 		 *
 		 * @param baseConfig The shared configuration name.
 		 */
-		public BackendProperties baseConfig(String baseConfig) {
+		public BackendProperties setBaseConfig(String baseConfig) {
 			this.baseConfig = baseConfig;
 			return this;
 		}
