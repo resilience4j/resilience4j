@@ -13,15 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.resilience4j.ratpack.circuitbreaker;
+package io.github.resilience4j.common.circuitbreaker.configuration;
 
 
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.Builder;
-import io.github.resilience4j.common.bulkhead.configuration.BulkheadConfigurationProperties;
+import io.github.resilience4j.core.ClassUtils;
 import io.github.resilience4j.core.ConfigurationNotFoundException;
 import io.github.resilience4j.core.lang.Nullable;
-import io.github.resilience4j.ratpack.internal.ClassUtils;
 import org.hibernate.validator.constraints.time.DurationMin;
 
 import javax.validation.constraints.Max;
@@ -95,7 +94,7 @@ public class CircuitBreakerConfigurationProperties {
 		return builder.build();
 	}
 
-	protected void buildRecordFailurePredicate(BackendProperties properties, Builder builder) {
+	private void buildRecordFailurePredicate(BackendProperties properties, Builder builder) {
 		if (properties.getRecordFailurePredicate() != null) {
 			Predicate<Throwable> predicate = ClassUtils.instantiatePredicateClass(properties.getRecordFailurePredicate());
 			if (predicate != null) {
@@ -176,7 +175,7 @@ public class CircuitBreakerConfigurationProperties {
 		 *
 		 * @param failureRateThreshold the failure rate threshold
 		 */
-		public BackendProperties failureRateThreshold(Integer failureRateThreshold) {
+		public BackendProperties setFailureRateThreshold(Integer failureRateThreshold) {
 			this.failureRateThreshold = failureRateThreshold;
 			return this;
 		}
@@ -196,7 +195,7 @@ public class CircuitBreakerConfigurationProperties {
 		 *
 		 * @param waitDurationInOpenStateMillis the wait duration
 		 */
-		public BackendProperties waitDurationInOpenStateMillis(Integer waitDurationInOpenStateMillis) {
+		public BackendProperties setWaitDurationInOpenStateMillis(Integer waitDurationInOpenStateMillis) {
 			this.waitDurationInOpenStateMillis = waitDurationInOpenStateMillis;
 			return this;
 		}
@@ -216,7 +215,7 @@ public class CircuitBreakerConfigurationProperties {
 		 *
 		 * @param ringBufferSizeInClosedState the ring buffer size
 		 */
-		public BackendProperties ringBufferSizeInClosedState(Integer ringBufferSizeInClosedState) {
+		public BackendProperties setRingBufferSizeInClosedState(Integer ringBufferSizeInClosedState) {
 			this.ringBufferSizeInClosedState = ringBufferSizeInClosedState;
 			return this;
 		}
@@ -236,7 +235,7 @@ public class CircuitBreakerConfigurationProperties {
 		 *
 		 * @param ringBufferSizeInHalfOpenState the ring buffer size
 		 */
-		public BackendProperties ringBufferSizeInHalfOpenState(Integer ringBufferSizeInHalfOpenState) {
+		public BackendProperties setRingBufferSizeInHalfOpenState(Integer ringBufferSizeInHalfOpenState) {
 			this.ringBufferSizeInHalfOpenState = ringBufferSizeInHalfOpenState;
 			return this;
 		}
@@ -244,7 +243,7 @@ public class CircuitBreakerConfigurationProperties {
 		/**
 		 * Returns if we should automaticly transition to half open after the timer has run out.
 		 *
-		 * @return automaticTransitionFromOpenToHalfOpenEnabled if we should automaticly go to half open or not
+		 * @return setAutomaticTransitionFromOpenToHalfOpenEnabled if we should automaticly go to half open or not
 		 */
 		public Boolean getAutomaticTransitionFromOpenToHalfOpenEnabled() {
 			return this.automaticTransitionFromOpenToHalfOpenEnabled;
@@ -255,7 +254,7 @@ public class CircuitBreakerConfigurationProperties {
 		 *
 		 * @param automaticTransitionFromOpenToHalfOpenEnabled The flag for automatic transition to half open after the timer has run out.
 		 */
-		public BackendProperties automaticTransitionFromOpenToHalfOpenEnabled(Boolean automaticTransitionFromOpenToHalfOpenEnabled) {
+		public BackendProperties setAutomaticTransitionFromOpenToHalfOpenEnabled(Boolean automaticTransitionFromOpenToHalfOpenEnabled) {
 			this.automaticTransitionFromOpenToHalfOpenEnabled = automaticTransitionFromOpenToHalfOpenEnabled;
 			return this;
 		}
@@ -264,7 +263,7 @@ public class CircuitBreakerConfigurationProperties {
 			return eventConsumerBufferSize;
 		}
 
-		public BackendProperties eventConsumerBufferSize(Integer eventConsumerBufferSize) {
+		public BackendProperties setEventConsumerBufferSize(Integer eventConsumerBufferSize) {
 			this.eventConsumerBufferSize = eventConsumerBufferSize;
 			return this;
 		}
@@ -273,7 +272,7 @@ public class CircuitBreakerConfigurationProperties {
 			return registerHealthIndicator;
 		}
 
-		public BackendProperties registerHealthIndicator(Boolean registerHealthIndicator) {
+		public BackendProperties setRegisterHealthIndicator(Boolean registerHealthIndicator) {
 			this.registerHealthIndicator = registerHealthIndicator;
 			return this;
 		}
@@ -283,7 +282,7 @@ public class CircuitBreakerConfigurationProperties {
 			return recordFailurePredicate;
 		}
 
-		public BackendProperties recordFailurePredicate(Class<Predicate<Throwable>> recordFailurePredicate) {
+		public BackendProperties setRecordFailurePredicate(Class<Predicate<Throwable>> recordFailurePredicate) {
 			this.recordFailurePredicate = recordFailurePredicate;
 			return this;
 		}
@@ -293,7 +292,7 @@ public class CircuitBreakerConfigurationProperties {
 			return recordExceptions;
 		}
 
-		public BackendProperties recordExceptions(Class<? extends Throwable>[] recordExceptions) {
+		public BackendProperties setRecordExceptions(Class<? extends Throwable>[] recordExceptions) {
 			this.recordExceptions = recordExceptions;
 			return this;
 		}
@@ -303,7 +302,7 @@ public class CircuitBreakerConfigurationProperties {
 			return ignoreExceptions;
 		}
 
-		public BackendProperties ignoreExceptions(Class<? extends Throwable>[] ignoreExceptions) {
+		public BackendProperties setIgnoreExceptions(Class<? extends Throwable>[] ignoreExceptions) {
 			this.ignoreExceptions = ignoreExceptions;
 			return this;
 		}
@@ -325,7 +324,7 @@ public class CircuitBreakerConfigurationProperties {
 		 *
 		 * @param baseConfig The shared configuration name.
 		 */
-		public BackendProperties baseConfig(String baseConfig) {
+		public BackendProperties setBaseConfig(String baseConfig) {
 			this.baseConfig = baseConfig;
 			return this;
 		}

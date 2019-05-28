@@ -54,12 +54,12 @@ class Resilience4jModuleSpec extends Specification {
                 module(Resilience4jModule) {
                     it.circuitBreaker('test')
                       .circuitBreaker('test2') {
-                        it.failureRateThreshold(50)
-                                .waitDurationInOpenStateMillis(5000)
-                                .ringBufferSizeInClosedState(200)
-                                .ringBufferSizeInHalfOpenState(20)
-                                .failureRateThreshold(60)
-                                .automaticTransitionFromOpenToHalfOpenEnabled(true)
+                        it.setFailureRateThreshold(50)
+                                .setWaitDurationInOpenStateMillis(5000)
+                                .setRingBufferSizeInClosedState(200)
+                                .setRingBufferSizeInHalfOpenState(20)
+                                .setFailureRateThreshold(60)
+                                .setAutomaticTransitionFromOpenToHalfOpenEnabled(true)
                     }
                 }
             }

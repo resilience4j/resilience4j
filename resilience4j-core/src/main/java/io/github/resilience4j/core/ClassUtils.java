@@ -1,4 +1,4 @@
-package io.github.resilience4j.ratpack.internal;
+package io.github.resilience4j.core;
 
 import io.github.resilience4j.core.lang.Nullable;
 
@@ -8,7 +8,8 @@ import java.util.function.Predicate;
 public class ClassUtils {
 
     @Nullable
-    public static Predicate instantiatePredicateClass(Class<? extends Predicate> clazz) {
+    @SuppressWarnings("unchecked")
+    public static <T> Predicate<T> instantiatePredicateClass(Class<? extends Predicate<T>> clazz) {
         try {
             Constructor<? extends Predicate> c = clazz.getConstructor();
             if (c != null) {

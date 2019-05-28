@@ -76,7 +76,7 @@ public class CircuitBreakerAutoConfigurationTest {
 		try {
 			dummyService.doSomething(true);
 		} catch (IOException ex) {
-			// Do nothing. The IOException is recorded by the CircuitBreaker as part of the recordFailurePredicate as a failure.
+			// Do nothing. The IOException is recorded by the CircuitBreaker as part of the setRecordFailurePredicate as a failure.
 		}
 		// The invocation is recorded by the CircuitBreaker as a success.
 		dummyService.doSomething(false);
@@ -113,8 +113,8 @@ public class CircuitBreakerAutoConfigurationTest {
 		assertThat(healthResponse.getBody()).doesNotContain("backendBCircuitBreaker");
 		assertThat(healthResponse.getBody()).doesNotContain("dynamicBackend");
 
-		// Verify that an exception for which recordFailurePredicate returns false and it is not included in
-		// recordExceptions evaluates to false.
+		// Verify that an exception for which setRecordFailurePredicate returns false and it is not included in
+		// setRecordExceptions evaluates to false.
 		assertThat(circuitBreaker.getCircuitBreakerConfig().getRecordFailurePredicate().test(new Exception())).isFalse();
 
 		assertThat(circuitBreakerAspect.getOrder()).isEqualTo(400);
@@ -123,7 +123,7 @@ public class CircuitBreakerAutoConfigurationTest {
 		CircuitBreaker sharedA = circuitBreakerRegistry.circuitBreaker("backendSharedA");
 		CircuitBreaker sharedB = circuitBreakerRegistry.circuitBreaker("backendSharedB");
 
-		Duration defaultWaitDuration = Duration.ofSeconds(10L);
+		Duration defaultWaitDuration = Duration.ofSeconds(60L);
 		float defaultFailureRate = 60f;
 		int defaultRingBufferSizeInHalfOpenState = 10;
 		int defaultRingBufferSizeInClosedState = 100;

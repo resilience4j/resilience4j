@@ -16,9 +16,9 @@ package io.github.resilience4j.ratpack.retry;
  */
 
 import com.google.common.base.Strings;
+import io.github.resilience4j.core.ClassUtils;
 import io.github.resilience4j.core.ConfigurationNotFoundException;
 import io.github.resilience4j.core.lang.Nullable;
-import io.github.resilience4j.ratpack.internal.ClassUtils;
 import io.github.resilience4j.retry.IntervalFunction;
 import io.github.resilience4j.retry.RetryConfig;
 
@@ -127,7 +127,7 @@ public class RetryConfigurationProperties {
 
 		if (properties.getResultPredicate() != null) {
 			if (properties.getResultPredicate() != null) {
-				Predicate predicate = ClassUtils.instantiatePredicateClass(properties.getResultPredicate());
+				Predicate<Object> predicate = ClassUtils.instantiatePredicateClass(properties.getResultPredicate());
 				if (predicate != null) {
 					builder.retryOnResult(predicate);
 				}
@@ -189,7 +189,7 @@ public class RetryConfigurationProperties {
 		 * retry resultPredicate predicate class to be used to evaluate the result to retry or not
 		 */
 		@Nullable
-		private Class<? extends Predicate> resultPredicate;
+		private Class<? extends Predicate<Object>> resultPredicate;
 		/*
 		 * list of retry exception classes
 		 */
@@ -260,11 +260,11 @@ public class RetryConfigurationProperties {
 		}
 
 		@Nullable
-		public Class<? extends Predicate> getResultPredicate() {
+		public Class<? extends Predicate<Object>> getResultPredicate() {
 			return resultPredicate;
 		}
 
-		public BackendProperties resultPredicate(Class<? extends Predicate> resultPredicate) {
+		public BackendProperties resultPredicate(Class<? extends Predicate<Object>> resultPredicate) {
 			this.resultPredicate = resultPredicate;
 			return this;
 		}
