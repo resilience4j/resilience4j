@@ -1,4 +1,4 @@
-package io.github.resilience4j.ratpack.retry;
+package io.github.resilience4j.common.retry.configuration;
 /*
  * Copyright 2019 Dan Maas
  *
@@ -15,9 +15,9 @@ package io.github.resilience4j.ratpack.retry;
  * limitations under the License.
  */
 
-import com.google.common.base.Strings;
 import io.github.resilience4j.core.ClassUtils;
 import io.github.resilience4j.core.ConfigurationNotFoundException;
+import io.github.resilience4j.core.StringUtils;
 import io.github.resilience4j.core.lang.Nullable;
 import io.github.resilience4j.retry.IntervalFunction;
 import io.github.resilience4j.retry.RetryConfig;
@@ -73,7 +73,7 @@ public class RetryConfigurationProperties {
 	 * @return the retry configuration
 	 */
 	public RetryConfig createRetryConfig(BackendProperties backendProperties) {
-		if (!Strings.isNullOrEmpty(backendProperties.getBaseConfig())) {
+		if (!StringUtils.isNullOrEmpty(backendProperties.getBaseConfig())) {
 			BackendProperties baseProperties = configs.get(backendProperties.getBaseConfig());
 			if (baseProperties == null) {
 				throw new ConfigurationNotFoundException(backendProperties.getBaseConfig());
@@ -186,7 +186,7 @@ public class RetryConfigurationProperties {
 		@Nullable
 		private Class<? extends Predicate<Throwable>> retryExceptionPredicate;
 		/*
-		 * retry resultPredicate predicate class to be used to evaluate the result to retry or not
+		 * retry setResultPredicate predicate class to be used to evaluate the result to retry or not
 		 */
 		@Nullable
 		private Class<? extends Predicate<Object>> resultPredicate;
@@ -234,7 +234,7 @@ public class RetryConfigurationProperties {
 			return waitDurationMillis;
 		}
 
-		public BackendProperties waitDurationMillis(Long waitDurationMillis) {
+		public BackendProperties setWaitDurationMillis(Long waitDurationMillis) {
 			this.waitDurationMillis = waitDurationMillis;
 			return this;
 		}
@@ -244,7 +244,7 @@ public class RetryConfigurationProperties {
 			return maxRetryAttempts;
 		}
 
-		public BackendProperties maxRetryAttempts(Integer maxRetryAttempts) {
+		public BackendProperties setMaxRetryAttempts(Integer maxRetryAttempts) {
 			this.maxRetryAttempts = maxRetryAttempts;
 			return this;
 		}
@@ -254,7 +254,7 @@ public class RetryConfigurationProperties {
 			return retryExceptionPredicate;
 		}
 
-		public BackendProperties retryExceptionPredicate(Class<? extends Predicate<Throwable>> retryExceptionPredicate) {
+		public BackendProperties setRetryExceptionPredicate(Class<? extends Predicate<Throwable>> retryExceptionPredicate) {
 			this.retryExceptionPredicate = retryExceptionPredicate;
 			return this;
 		}
@@ -264,7 +264,7 @@ public class RetryConfigurationProperties {
 			return resultPredicate;
 		}
 
-		public BackendProperties resultPredicate(Class<? extends Predicate<Object>> resultPredicate) {
+		public BackendProperties setResultPredicate(Class<? extends Predicate<Object>> resultPredicate) {
 			this.resultPredicate = resultPredicate;
 			return this;
 		}
@@ -274,7 +274,7 @@ public class RetryConfigurationProperties {
 			return retryExceptions;
 		}
 
-		public BackendProperties retryExceptions(Class<? extends Throwable>[] retryExceptions) {
+		public BackendProperties setRetryExceptions(Class<? extends Throwable>[] retryExceptions) {
 			this.retryExceptions = retryExceptions;
 			return this;
 		}
@@ -284,7 +284,7 @@ public class RetryConfigurationProperties {
 			return ignoreExceptions;
 		}
 
-		public BackendProperties ignoreExceptions(Class<? extends Throwable>[] ignoreExceptions) {
+		public BackendProperties setIgnoreExceptions(Class<? extends Throwable>[] ignoreExceptions) {
 			this.ignoreExceptions = ignoreExceptions;
 			return this;
 		}
@@ -294,7 +294,7 @@ public class RetryConfigurationProperties {
 			return eventConsumerBufferSize;
 		}
 
-		public BackendProperties eventConsumerBufferSize(Integer eventConsumerBufferSize) {
+		public BackendProperties setEventConsumerBufferSize(Integer eventConsumerBufferSize) {
 			this.eventConsumerBufferSize = eventConsumerBufferSize;
 			return this;
 		}
@@ -303,7 +303,7 @@ public class RetryConfigurationProperties {
 			return enableExponentialBackoff;
 		}
 
-		public BackendProperties enableExponentialBackoff(Boolean enableExponentialBackoff) {
+		public BackendProperties setEnableExponentialBackoff(Boolean enableExponentialBackoff) {
 			this.enableExponentialBackoff = enableExponentialBackoff;
 			return this;
 		}
@@ -313,7 +313,7 @@ public class RetryConfigurationProperties {
 			return exponentialBackoffMultiplier;
 		}
 
-		public BackendProperties exponentialBackoffMultiplier(double exponentialBackoffMultiplier) {
+		public BackendProperties setExponentialBackoffMultiplier(double exponentialBackoffMultiplier) {
 			this.exponentialBackoffMultiplier = exponentialBackoffMultiplier;
 			return this;
 		}
@@ -323,8 +323,9 @@ public class RetryConfigurationProperties {
 			return enableRandomizedWait;
 		}
 
-		public void setEnableRandomizedWait(Boolean enableRandomizedWait) {
+		public BackendProperties setEnableRandomizedWait(Boolean enableRandomizedWait) {
 			this.enableRandomizedWait = enableRandomizedWait;
+			return this;
 		}
 
 		@Nullable
@@ -332,7 +333,7 @@ public class RetryConfigurationProperties {
 			return randomizedWaitFactor;
 		}
 
-		public BackendProperties randomizedWaitFactor(double randomizedWaitFactor) {
+		public BackendProperties setRandomizedWaitFactor(double randomizedWaitFactor) {
 			this.randomizedWaitFactor = randomizedWaitFactor;
 			return this;
 		}
@@ -354,7 +355,7 @@ public class RetryConfigurationProperties {
 		 *
 		 * @param baseConfig The shared configuration name.
 		 */
-		public BackendProperties baseConfig(String baseConfig) {
+		public BackendProperties setBaseConfig(String baseConfig) {
 			this.baseConfig = baseConfig;
 			return this;
 		}

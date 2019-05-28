@@ -332,8 +332,8 @@ class Resilience4jModuleSpec extends Specification {
                 module(Resilience4jModule) {
                     it.retry('test')
                       .retry('test2') {
-                        it.maxRetryAttempts(3)
-                                .waitDurationMillis(1000)
+                        it.setMaxRetryAttempts(3)
+                                .setWaitDurationMillis(1000)
                     }
                 }
             }

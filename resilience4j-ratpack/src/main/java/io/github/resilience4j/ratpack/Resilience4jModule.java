@@ -32,6 +32,7 @@ import io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent;
 import io.github.resilience4j.common.bulkhead.configuration.BulkheadConfigurationProperties;
 import io.github.resilience4j.common.circuitbreaker.configuration.CircuitBreakerConfigurationProperties;
 import io.github.resilience4j.common.ratelimiter.configuration.RateLimiterConfigurationProperties;
+import io.github.resilience4j.common.retry.configuration.RetryConfigurationProperties;
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
 import io.github.resilience4j.metrics.BulkheadMetrics;
@@ -50,7 +51,6 @@ import io.github.resilience4j.ratpack.circuitbreaker.CircuitBreakerMethodInterce
 import io.github.resilience4j.ratpack.circuitbreaker.monitoring.endpoint.CircuitBreakerChain;
 import io.github.resilience4j.ratpack.ratelimiter.RateLimiterMethodInterceptor;
 import io.github.resilience4j.ratpack.ratelimiter.monitoring.endpoint.RateLimiterChain;
-import io.github.resilience4j.ratpack.retry.RetryConfigurationProperties;
 import io.github.resilience4j.ratpack.retry.RetryMethodInterceptor;
 import io.github.resilience4j.ratpack.retry.monitoring.endpoint.RetryChain;
 import io.github.resilience4j.retry.RetryRegistry;

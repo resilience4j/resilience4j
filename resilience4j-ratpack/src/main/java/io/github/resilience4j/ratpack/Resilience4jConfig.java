@@ -19,7 +19,7 @@ package io.github.resilience4j.ratpack;
 import io.github.resilience4j.common.bulkhead.configuration.BulkheadConfigurationProperties;
 import io.github.resilience4j.common.circuitbreaker.configuration.CircuitBreakerConfigurationProperties;
 import io.github.resilience4j.common.ratelimiter.configuration.RateLimiterConfigurationProperties;
-import io.github.resilience4j.ratpack.retry.RetryConfigurationProperties;
+import io.github.resilience4j.common.retry.configuration.RetryConfigurationProperties;
 import ratpack.func.Function;
 
 import static ratpack.util.Exceptions.uncheck;

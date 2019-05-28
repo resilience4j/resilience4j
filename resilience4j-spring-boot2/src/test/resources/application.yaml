@@ -3,7 +3,7 @@ resilience4j.retry:
   configs:
     default:
       maxRetryAttempts: 3
-      waitDuration: 100
+      waitDurationMillis: 100
       retryExceptionPredicate: io.github.resilience4j.circuitbreaker.RecordFailurePredicate
       retryExceptions:
         - java.io.IOException
@@ -16,7 +16,7 @@ resilience4j.retry:
       baseConfig: default
     retryBackendC:
       maxRetryAttempts: 3
-      waitDuration: 100
+      waitDurationMillis: 100
       retryExceptionPredicate: io.github.resilience4j.circuitbreaker.RecordFailurePredicate
       retryExceptions:
         - java.lang.IllegalArgumentException
