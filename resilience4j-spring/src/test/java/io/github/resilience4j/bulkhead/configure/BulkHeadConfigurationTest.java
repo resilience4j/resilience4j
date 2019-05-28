@@ -99,31 +99,26 @@ public class BulkHeadConfigurationTest {
 		//When
 		try {
 			ThreadPoolBulkheadRegistry bulkheadRegistry = threadPoolBulkheadConfiguration.threadPoolBulkheadRegistry(bulkheadConfigurationProperties, eventConsumerRegistry);
-
 			//Then
 			assertThat(bulkheadRegistry.getAllBulkheads().size()).isEqualTo(2);
-
 			// Should get default config and core number
 			ThreadPoolBulkhead bulkhead1 = bulkheadRegistry.bulkhead("backendWithDefaultConfig");
 			assertThat(bulkhead1).isNotNull();
 			assertThat(bulkhead1.getBulkheadConfig().getCoreThreadPoolSize()).isEqualTo(3);
 			assertThat(bulkhead1.getBulkheadConfig().getQueueCapacity()).isEqualTo(1);
-
 			// Should get shared config and overwrite core number
 			ThreadPoolBulkhead bulkhead2 = bulkheadRegistry.bulkhead("backendWithSharedConfig");
 			assertThat(bulkhead2).isNotNull();
 			assertThat(bulkhead2.getBulkheadConfig().getCoreThreadPoolSize()).isEqualTo(4);
 			assertThat(bulkhead2.getBulkheadConfig().getQueueCapacity()).isEqualTo(2);
-
 			// Unknown backend should get default config of Registry
 			ThreadPoolBulkhead bulkhead3 = bulkheadRegistry.bulkhead("unknownBackend");
 			assertThat(bulkhead3).isNotNull();
 			assertThat(bulkhead3.getBulkheadConfig().getCoreThreadPoolSize()).isEqualTo(1);
-
 			assertThat(eventConsumerRegistry.getAllEventConsumer()).hasSize(3);
 		} catch (Exception e) {
-			System.out.println("exception :" + e.getMessage());
-			System.out.println(e);
+			System.out.println("exception in testCreateThreadPoolBulkHeadRegistryWithSharedConfigs():" + e.getMessage());
+			throw e;
 		}
 	}
 
