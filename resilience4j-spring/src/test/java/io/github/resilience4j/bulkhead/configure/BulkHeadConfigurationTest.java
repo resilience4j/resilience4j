@@ -117,7 +117,7 @@ public class BulkHeadConfigurationTest {
 			assertThat(bulkhead3.getBulkheadConfig().getCoreThreadPoolSize()).isEqualTo(1);
 			assertThat(eventConsumerRegistry.getAllEventConsumer()).hasSize(3);
 		} catch (Exception e) {
-			System.out.println("exception in testCreateThreadPoolBulkHeadRegistryWithSharedConfigs():" + e.getMessage());
+			System.out.println("exception in testCreateThreadPoolBulkHeadRegistryWithSharedConfigs():" + e);
 			throw e;
 		}
 	}
