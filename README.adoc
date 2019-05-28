@@ -186,11 +186,11 @@ Supplier<String> supplier = Bulkhead
 
 [[threadpoolbulkhead]]
 === ThreadPoolBulkhead
-The following example shows how to execute a lambda expression with a ThreadPoolBulkhead which uses a bounded queue and a fixed thread pool.
+The following example shows how to use a lambda expression with a ThreadPoolBulkhead which uses a bounded queue and a fixed thread pool.
 
 [source,java]
 ----
-// Create a custom Bulkhead configuration
+// Create a custom ThreadPoolBulkhead configuration
 ThreadPoolBulkheadConfig config = ThreadPoolBulkheadConfig.custom()
     .maxThreadPoolSize(10)
     .coreThreadPoolSize(2)
@@ -199,8 +199,12 @@ ThreadPoolBulkheadConfig config = ThreadPoolBulkheadConfig.custom()
 
 ThreadPoolBulkhead bulkhead = ThreadPoolBulkhead.of("backendName", config);
 
-CompletionStage<String> supplier = ThreadPoolBulkhead
-    .executeSupplier(bulkhead, backendService::doSomething);
+// Decorate or execute immediately a lambda expression with a ThreadPoolBulkhead.
+Supplier<CompletionStage<String>> supplier = ThreadPoolBulkhead
+    .decorateSupplier(bulkhead, backendService::doSomething);
+
+CompletionStage<String> execution = bulkhead
+    .executeSupplier(backendService::doSomething);
 ----
 
 [[events]]
