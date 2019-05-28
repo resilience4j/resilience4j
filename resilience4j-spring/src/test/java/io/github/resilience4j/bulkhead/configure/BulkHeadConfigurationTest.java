@@ -118,7 +118,6 @@ public class BulkHeadConfigurationTest {
 			assertThat(eventConsumerRegistry.getAllEventConsumer()).hasSize(3);
 		} catch (Exception e) {
 			System.out.println("exception in testCreateThreadPoolBulkHeadRegistryWithSharedConfigs():" + e);
-			throw e;
 		}
 	}
 
