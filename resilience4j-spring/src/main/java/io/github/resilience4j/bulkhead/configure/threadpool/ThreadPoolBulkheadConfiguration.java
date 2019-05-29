@@ -45,12 +45,7 @@ public class ThreadPoolBulkheadConfiguration {
 	                                                             EventConsumerRegistry<BulkheadEvent> bulkheadEventConsumerRegistry) {
 		ThreadPoolBulkheadRegistry bulkheadRegistry = createBulkheadRegistry(bulkheadConfigurationProperties);
 		registerEventConsumer(bulkheadRegistry, bulkheadEventConsumerRegistry, bulkheadConfigurationProperties);
-		bulkheadConfigurationProperties.getBackends().forEach((name, properties) -> {
-					if (properties.getThreadPoolProperties() != null) {
-						bulkheadRegistry.bulkhead(name, bulkheadConfigurationProperties.createThreadPoolBulkheadConfig(name));
-					}
-				}
-		);
+		bulkheadConfigurationProperties.getBackends().forEach((name, properties) -> bulkheadRegistry.bulkhead(name, bulkheadConfigurationProperties.createThreadPoolBulkheadConfig(name)));
 		return bulkheadRegistry;
 	}
 
@@ -62,7 +57,8 @@ public class ThreadPoolBulkheadConfiguration {
 	 */
 	private ThreadPoolBulkheadRegistry createBulkheadRegistry(ThreadPoolBulkheadConfigurationProperties bulkheadConfigurationProperties) {
 		Map<String, ThreadPoolBulkheadConfig> configs = bulkheadConfigurationProperties.getConfigs()
-				.entrySet().stream().filter(stringBackendPropertiesEntry -> stringBackendPropertiesEntry.getValue().getThreadPoolProperties() != null)
+				.entrySet()
+				.stream()
 				.collect(Collectors.toMap(Map.Entry::getKey, entry -> bulkheadConfigurationProperties.createThreadPoolBulkheadConfig(entry.getValue())));
 
 		return ThreadPoolBulkheadRegistry.of(configs);
@@ -83,6 +79,6 @@ public class ThreadPoolBulkheadConfiguration {
 		int eventConsumerBufferSize = Optional.ofNullable(bulkheadConfigurationProperties.getBackendProperties(bulkHead.getName()))
 				.map(ThreadPoolBulkheadConfigurationProperties.BackendProperties::getEventConsumerBufferSize)
 				.orElse(100);
-		bulkHead.getEventPublisher().onEvent(eventConsumerRegistry.createEventConsumer(bulkHead.getName(), eventConsumerBufferSize));
+		bulkHead.getEventPublisher().onEvent(eventConsumerRegistry.createEventConsumer(String.join("-", ThreadPoolBulkhead.class.getSimpleName(), bulkHead.getName()), eventConsumerBufferSize));
 	}
 }

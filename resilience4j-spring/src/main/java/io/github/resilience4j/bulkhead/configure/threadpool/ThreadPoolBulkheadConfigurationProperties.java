@@ -70,17 +70,19 @@ public class ThreadPoolBulkheadConfigurationProperties {
 		if (properties == null) {
 			return ThreadPoolBulkheadConfig.custom().build();
 		}
-		if (properties.getThreadPoolProperties().getQueueCapacity() > 0) {
-			builder.queueCapacity(properties.getThreadPoolProperties().getQueueCapacity());
-		}
-		if (properties.getThreadPoolProperties().getCoreThreadPoolSize() > 0) {
-			builder.coreThreadPoolSize(properties.getThreadPoolProperties().getCoreThreadPoolSize());
-		}
-		if (properties.getThreadPoolProperties().getMaxThreadPoolSize() > 0) {
-			builder.maxThreadPoolSize(properties.getThreadPoolProperties().getMaxThreadPoolSize());
-		}
-		if (properties.getThreadPoolProperties().getKeepAliveTime() > 0) {
-			builder.keepAliveTime(properties.getThreadPoolProperties().getKeepAliveTime());
+		if (properties.getThreadPoolProperties() != null) {
+			if (properties.getThreadPoolProperties().getQueueCapacity() > 0) {
+				builder.queueCapacity(properties.getThreadPoolProperties().getQueueCapacity());
+			}
+			if (properties.getThreadPoolProperties().getCoreThreadPoolSize() > 0) {
+				builder.coreThreadPoolSize(properties.getThreadPoolProperties().getCoreThreadPoolSize());
+			}
+			if (properties.getThreadPoolProperties().getMaxThreadPoolSize() > 0) {
+				builder.maxThreadPoolSize(properties.getThreadPoolProperties().getMaxThreadPoolSize());
+			}
+			if (properties.getThreadPoolProperties().getKeepAliveTime() > 0) {
+				builder.keepAliveTime(properties.getThreadPoolProperties().getKeepAliveTime());
+			}
 		}
 		return builder.build();
 	}
