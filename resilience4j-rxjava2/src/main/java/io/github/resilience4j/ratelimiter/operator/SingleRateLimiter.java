@@ -18,11 +18,12 @@ package io.github.resilience4j.ratelimiter.operator;
 import io.github.resilience4j.AbstractSingleObserver;
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RequestNotPermitted;
+import io.reactivex.Completable;
 import io.reactivex.Single;
 import io.reactivex.SingleObserver;
 import io.reactivex.internal.disposables.EmptyDisposable;
 
-import java.time.Duration;
+import java.util.concurrent.TimeUnit;
 
 class SingleRateLimiter<T> extends Single<T> {
 
@@ -36,8 +37,14 @@ class SingleRateLimiter<T> extends Single<T> {
 
     @Override
     protected void subscribeActual(SingleObserver<? super T> downstream) {
-        if(rateLimiter.acquirePermission(Duration.ZERO)){
-            upstream.subscribe(new RateLimiterSingleObserver(downstream));
+        long waitDuration = rateLimiter.reservePermission();
+        if(waitDuration >= 0){
+            if(waitDuration > 0){
+                Completable.timer(waitDuration, TimeUnit.NANOSECONDS)
+                    .subscribe(() -> upstream.subscribe(new RateLimiterSingleObserver(downstream)));
+            }else{
+                upstream.subscribe(new RateLimiterSingleObserver(downstream));
+            }
         }else{
             downstream.onSubscribe(EmptyDisposable.INSTANCE);
             downstream.onError(new RequestNotPermitted(rateLimiter));
