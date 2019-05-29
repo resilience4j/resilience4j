@@ -51,7 +51,6 @@ public class AtomicRateLimiter implements RateLimiter {
     private final AtomicReference<State> state;
     private final RateLimiterEventProcessor eventProcessor;
 
-
     public AtomicRateLimiter(String name, RateLimiterConfig rateLimiterConfig) {
         this.name = name;
 
@@ -112,6 +111,11 @@ public class AtomicRateLimiter implements RateLimiter {
         return result;
     }
 
+    @Override
+    public boolean acquirePermission() {
+        return acquirePermission(state.get().config.getTimeoutDuration());
+    }
+
     /**
      * {@inheritDoc}
      */
@@ -134,6 +138,11 @@ public class AtomicRateLimiter implements RateLimiter {
 
         publishRateLimiterEvent(false);
         return -1;
+    }
+
+    @Override
+    public long reservePermission() {
+        return reservePermission(state.get().config.getTimeoutDuration());
     }
 
     /**

@@ -22,7 +22,7 @@ import io.reactivex.Completable;
 import io.reactivex.CompletableObserver;
 import io.reactivex.internal.disposables.EmptyDisposable;
 
-import java.time.Duration;
+import java.util.concurrent.TimeUnit;
 
 class CompletableRateLimiter extends Completable {
 
@@ -36,8 +36,14 @@ class CompletableRateLimiter extends Completable {
 
     @Override
     protected void subscribeActual(CompletableObserver downstream) {
-        if(rateLimiter.acquirePermission(Duration.ZERO)){
-            upstream.subscribe(new RateLimiterCompletableObserver(downstream));
+        long waitDuration = rateLimiter.reservePermission();
+        if(waitDuration >= 0){
+            if(waitDuration > 0){
+                Completable.timer(waitDuration, TimeUnit.NANOSECONDS)
+                        .subscribe(() -> upstream.subscribe(new RateLimiterCompletableObserver(downstream)));
+            }else{
+                upstream.subscribe(new RateLimiterCompletableObserver(downstream));
+            }
         }else{
             downstream.onSubscribe(EmptyDisposable.INSTANCE);
             downstream.onError(new RequestNotPermitted(rateLimiter));
