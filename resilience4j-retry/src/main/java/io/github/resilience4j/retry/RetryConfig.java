@@ -20,26 +20,34 @@ package io.github.resilience4j.retry;
 
 
 import io.github.resilience4j.core.lang.Nullable;
+import io.github.resilience4j.core.predicate.PredicateCreator;
 
 import java.time.Duration;
-import java.util.Arrays;
-import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
 public class RetryConfig {
 
-	public static final int DEFAULT_MAX_ATTEMPTS = 3;
+	private static final int DEFAULT_MAX_ATTEMPTS = 3;
 	public static final long DEFAULT_WAIT_DURATION = 500;
-	public static final IntervalFunction DEFAULT_INTERVAL_FUNCTION = (numOfAttempts) -> DEFAULT_WAIT_DURATION;
-	public static final Predicate<Throwable> DEFAULT_RECORD_FAILURE_PREDICATE = (throwable) -> true;
+	private static final IntervalFunction DEFAULT_INTERVAL_FUNCTION = numOfAttempts -> DEFAULT_WAIT_DURATION;
+	private static final Predicate<Throwable> DEFAULT_RECORD_FAILURE_PREDICATE = throwable -> true;
+
+	@SuppressWarnings("unchecked")
+	private Class<? extends Throwable>[] retryExceptions = new Class[0];
+	@SuppressWarnings("unchecked")
+	private Class<? extends Throwable>[] ignoreExceptions = new Class[0];
+
+	@Nullable
+	private Predicate<Throwable> retryOnExceptionPredicate;
+	@Nullable
+	private Predicate retryOnResultPredicate;
 
 	private int maxAttempts = DEFAULT_MAX_ATTEMPTS;
-	@Nullable
-	private Predicate resultPredicate;
 	private IntervalFunction intervalFunction = DEFAULT_INTERVAL_FUNCTION;
-	// The default exception predicate retries all exceptions.
-	private Predicate<Throwable> exceptionPredicate = DEFAULT_RECORD_FAILURE_PREDICATE;
+
+	// The final exception predicate
+	private Predicate<Throwable> exceptionPredicate;
 
 	private RetryConfig() {
 	}
@@ -64,12 +72,12 @@ public class RetryConfig {
 	 * The Predicate must return true if the result should  be retried, otherwise it must return false.
 	 *
 	 * @param <T> The type of result.
-	 * @return the resultPredicate
+	 * @return the result predicate
 	 */
 	@SuppressWarnings("unchecked")
 	@Nullable
 	public <T> Predicate<T> getResultPredicate() {
-		return resultPredicate;
+		return retryOnResultPredicate;
 	}
 
 	/**
@@ -82,6 +90,13 @@ public class RetryConfig {
 		return new Builder<>();
 	}
 
+
+	public static <T> Builder<T> from(RetryConfig baseConfig) {
+		return new Builder<>(baseConfig);
+	}
+
+
+
 	/**
 	 * Creates a default Retry configuration.
 	 *
@@ -92,17 +107,32 @@ public class RetryConfig {
 	}
 
 	public static class Builder<T> {
-		@Nullable
-		private Predicate<Throwable> retryExceptionPredicate;
-		private Predicate<Throwable> exceptionPredicate = DEFAULT_RECORD_FAILURE_PREDICATE;
-		@Nullable
-		private Predicate<T> resultPredicate;
+		private int maxAttempts = DEFAULT_MAX_ATTEMPTS;
 		private IntervalFunction intervalFunction = IntervalFunction.ofDefaults();
+
+		@Nullable
+		private Predicate<Throwable> retryOnExceptionPredicate;
+		@Nullable
+		private Predicate<T> retryOnResultPredicate;
+
 		@SuppressWarnings("unchecked")
 		private Class<? extends Throwable>[] retryExceptions = new Class[0];
 		@SuppressWarnings("unchecked")
 		private Class<? extends Throwable>[] ignoreExceptions = new Class[0];
-		private int maxAttempts = DEFAULT_MAX_ATTEMPTS;
+
+
+		public Builder() {
+		}
+
+		@SuppressWarnings("unchecked")
+		public Builder(RetryConfig baseConfig) {
+			this.maxAttempts = baseConfig.maxAttempts;
+			this.intervalFunction = baseConfig.intervalFunction;
+			this.retryOnExceptionPredicate = baseConfig.retryOnExceptionPredicate;
+			this.retryOnResultPredicate = baseConfig.retryOnResultPredicate;
+			this.retryExceptions = baseConfig.retryExceptions;
+			this.ignoreExceptions = baseConfig.ignoreExceptions;
+		}
 
 		public Builder<T> maxAttempts(int maxAttempts) {
 			if (maxAttempts < 1) {
@@ -128,7 +158,7 @@ public class RetryConfig {
 		 * @return the RetryConfig.Builder
 		 */
 		public Builder<T> retryOnResult(Predicate<T> predicate) {
-			this.resultPredicate = predicate;
+			this.retryOnResultPredicate = predicate;
 			return this;
 		}
 
@@ -147,19 +177,18 @@ public class RetryConfig {
 
 		/**
 		 * Configures a Predicate which evaluates if an exception should be retried.
-		 * The Predicate must return true if the exception should count be retried, otherwise it must return false.
+		 * The Predicate must return true if the exception should be retried, otherwise it must return false.
 		 *
 		 * @param predicate the Predicate which evaluates if an exception should be retried or not.
 		 * @return the RetryConfig.Builder
 		 */
 		public Builder<T> retryOnException(Predicate<Throwable> predicate) {
-			this.retryExceptionPredicate = predicate;
+			this.retryOnExceptionPredicate = predicate;
 			return this;
 		}
 
-
 		/**
-		 * Configures a list of error classes that are recorded as a failure and thus increase the failure rate.
+		 * Configures a list of error classes that are recorded as a failure and thus are retried.
 		 * Any exception matching or inheriting from one of the list will be retried, unless ignored via
 		 *
 		 * @param errorClasses the error classes that are retried
@@ -207,45 +236,27 @@ public class RetryConfig {
 		}
 
 		public RetryConfig build() {
-			buildExceptionPredicate();
 			RetryConfig config = new RetryConfig();
 			config.intervalFunction = intervalFunction;
 			config.maxAttempts = maxAttempts;
-			config.exceptionPredicate = exceptionPredicate;
-			config.resultPredicate = resultPredicate;
+			config.retryOnExceptionPredicate = retryOnExceptionPredicate;
+			config.retryOnResultPredicate = retryOnResultPredicate;
+			config.retryExceptions = retryExceptions;
+			config.ignoreExceptions = ignoreExceptions;
+			config.exceptionPredicate = createExceptionPredicate();
 			return config;
 		}
 
-		private void buildExceptionPredicate() {
-			this.exceptionPredicate =
-					getRetryPredicate()
-							.and(buildIgnoreExceptionsPredicate()
-									.orElse(DEFAULT_RECORD_FAILURE_PREDICATE));
+		private Predicate<Throwable> createExceptionPredicate() {
+			return createRetryOnExceptionPredicate()
+					.and(PredicateCreator.createIgnoreExceptionsPredicate(ignoreExceptions)
+							.orElse(DEFAULT_RECORD_FAILURE_PREDICATE));
 		}
 
-		private Predicate<Throwable> getRetryPredicate() {
-			return buildRetryExceptionsPredicate()
-					.map(predicate -> retryExceptionPredicate != null ? predicate.or(retryExceptionPredicate) : predicate)
-					.orElseGet(() -> retryExceptionPredicate != null ? retryExceptionPredicate : DEFAULT_RECORD_FAILURE_PREDICATE);
-		}
-
-		private Optional<Predicate<Throwable>> buildRetryExceptionsPredicate() {
-			return Arrays.stream(retryExceptions)
-					.distinct()
-					.map(Builder::makePredicate)
-					.reduce(Predicate::or);
-		}
-
-		private Optional<Predicate<Throwable>> buildIgnoreExceptionsPredicate() {
-			return Arrays.stream(ignoreExceptions)
-					.distinct()
-					.map(Builder::makePredicate)
-					.reduce(Predicate::or)
-					.map(Predicate::negate);
-		}
-
-		static Predicate<Throwable> makePredicate(Class<? extends Throwable> exClass) {
-			return (Throwable e) -> exClass.isAssignableFrom(e.getClass());
+		private Predicate<Throwable> createRetryOnExceptionPredicate() {
+			return PredicateCreator.createRecordExceptionsPredicate(retryExceptions)
+					.map(predicate -> retryOnExceptionPredicate != null ? predicate.or(retryOnExceptionPredicate) : predicate)
+					.orElseGet(() -> retryOnExceptionPredicate != null ? retryOnExceptionPredicate : DEFAULT_RECORD_FAILURE_PREDICATE);
 		}
 	}
 }

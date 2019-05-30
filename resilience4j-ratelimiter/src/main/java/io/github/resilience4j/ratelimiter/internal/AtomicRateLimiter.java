@@ -51,7 +51,6 @@ public class AtomicRateLimiter implements RateLimiter {
     private final AtomicReference<State> state;
     private final RateLimiterEventProcessor eventProcessor;
 
-
     public AtomicRateLimiter(String name, RateLimiterConfig rateLimiterConfig) {
         this.name = name;
 
@@ -99,12 +98,22 @@ public class AtomicRateLimiter implements RateLimiter {
      * {@inheritDoc}
      */
     @Override
-    public boolean getPermission(final Duration timeoutDuration) {
+    public boolean getPermission(Duration timeoutDuration) {
+        return acquirePermission(timeoutDuration);
+    }
+
+    @Override
+    public boolean acquirePermission(Duration timeoutDuration) {
         long timeoutInNanos = timeoutDuration.toNanos();
         State modifiedState = updateStateWithBackOff(timeoutInNanos);
         boolean result = waitForPermissionIfNecessary(timeoutInNanos, modifiedState.nanosToWait);
         publishRateLimiterEvent(result);
         return result;
+    }
+
+    @Override
+    public boolean acquirePermission() {
+        return acquirePermission(state.get().config.getTimeoutDuration());
     }
 
     /**
@@ -129,6 +138,11 @@ public class AtomicRateLimiter implements RateLimiter {
 
         publishRateLimiterEvent(false);
         return -1;
+    }
+
+    @Override
+    public long reservePermission() {
+        return reservePermission(state.get().config.getTimeoutDuration());
     }
 
     /**
@@ -357,14 +371,14 @@ public class AtomicRateLimiter implements RateLimiter {
      * <p>{@link AtomicRateLimiter.State} represents immutable state of {@link AtomicRateLimiter} where:
      * <ul>
      * <li>activeCycle - {@link AtomicRateLimiter} cycle number that was used
-     * by the last {@link AtomicRateLimiter#getPermission(Duration)} call.</li>
+     * by the last {@link AtomicRateLimiter#acquirePermission(Duration)} call.</li>
      * <p>
      * <li>activePermissions - count of available permissions after
-     * the last {@link AtomicRateLimiter#getPermission(Duration)} call.
+     * the last {@link AtomicRateLimiter#acquirePermission(Duration)} call.
      * Can be negative if some permissions where reserved.</li>
      * <p>
      * <li>nanosToWait - count of nanoseconds to wait for permission for
-     * the last {@link AtomicRateLimiter#getPermission(Duration)} call.</li>
+     * the last {@link AtomicRateLimiter#acquirePermission(Duration)} call.</li>
      * </ul>
      */
     private static class State {

@@ -64,7 +64,8 @@ public class FixedThreadPoolBulkhead implements ThreadPoolBulkhead {
 		// init thread pool executor
 		this.executorService = new ThreadPoolExecutor(config.getCoreThreadPoolSize(), config.getMaxThreadPoolSize(),
 				config.getKeepAliveTime(), TimeUnit.MILLISECONDS,
-				new ArrayBlockingQueue<>(config.getQueueCapacity()));
+				new ArrayBlockingQueue<>(config.getQueueCapacity()),
+				new NamingThreadFactory(name));
 		// adding prover jvm executor shutdown
 		cleanup();
 		this.metrics = new FixedThreadPoolBulkhead.BulkheadMetrics();
@@ -116,7 +117,7 @@ public class FixedThreadPoolBulkhead implements ThreadPoolBulkhead {
 			});
 		} catch (RejectedExecutionException rejected) {
 			publishBulkheadEvent(() -> new BulkheadOnCallRejectedEvent(name));
-			throw new BulkheadFullException(String.format("ThreadPoolBulkhead '%s' is full", name));
+			throw new BulkheadFullException(this);
 		}
 		return promise;
 	}
@@ -137,7 +138,7 @@ public class FixedThreadPoolBulkhead implements ThreadPoolBulkhead {
 			}, executorService).whenComplete((voidResult, throwable) -> publishBulkheadEvent(() -> new BulkheadOnCallFinishedEvent(name)));
 		} catch (RejectedExecutionException rejected) {
 			publishBulkheadEvent(() -> new BulkheadOnCallRejectedEvent(name));
-			throw new BulkheadFullException(String.format("ThreadPoolBulkhead '%s' is full", name));
+			throw new BulkheadFullException(this);
 		}
 	}
 

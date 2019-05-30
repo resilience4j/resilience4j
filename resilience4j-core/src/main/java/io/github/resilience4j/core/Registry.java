@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright 2019 Mahmoud romeh
+ *  Copyright 2019 Mahmoud Romeh, Robert Winkler
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -28,7 +28,7 @@ import java.util.Optional;
 /**
  * root resilience4j registry to be used by resilience types registries for common functionality
  */
-public interface Registry<Target, Config> {
+public interface Registry<E, C> {
 
 	/**
 	 * Adds a configuration to the registry
@@ -36,14 +36,14 @@ public interface Registry<Target, Config> {
 	 * @param configName    the configuration name
 	 * @param configuration the added configuration
 	 */
-	void addConfiguration(String configName, Config configuration);
+	void addConfiguration(String configName, C configuration);
 
 	/**
 	 * Remove an entry from the Registry
 	 *
 	 * @param name    the  name
 	 */
-	Optional<Target> remove(String name);
+	Optional<E> remove(String name);
 
 	/**
 	 * Replace an existing entry in the Registry by a new one.
@@ -51,7 +51,7 @@ public interface Registry<Target, Config> {
 	 * @param name    the existing name
 	 * @param newEntry    a new entry
 	 */
-	Optional<Target> replace(String name, Target newEntry);
+	Optional<E> replace(String name, E newEntry);
 
 	/**
 	 * Get a configuration by name
@@ -59,31 +59,31 @@ public interface Registry<Target, Config> {
 	 * @param configName the configuration name
 	 * @return the found configuration if any
 	 */
-	Optional<Config> getConfiguration(String configName);
+	Optional<C> getConfiguration(String configName);
 
 	/**
 	 * Get the default configuration
 	 *
 	 * @return the default configuration
 	 */
-	Config getDefaultConfig();
+	C getDefaultConfig();
 
 	/**
 	 * Returns an EventPublisher which can be used to register event consumers.
 	 *
 	 * @return an EventPublisher
 	 */
-	EventPublisher<Target> getEventPublisher();
+	EventPublisher<E> getEventPublisher();
 
 	/**
 	 * An EventPublisher can be used to register event consumers.
 	 */
-	interface EventPublisher<Target> extends io.github.resilience4j.core.EventPublisher<RegistryEvent> {
+	interface EventPublisher<E> extends io.github.resilience4j.core.EventPublisher<RegistryEvent> {
 
-		EventPublisher onEntryAdded(EventConsumer<EntryAddedEvent<Target>> eventConsumer);
+		EventPublisher<E> onEntryAdded(EventConsumer<EntryAddedEvent<E>> eventConsumer);
 
-		EventPublisher onEntryRemoved(EventConsumer<EntryRemovedEvent<Target>> eventConsumer);
+		EventPublisher<E> onEntryRemoved(EventConsumer<EntryRemovedEvent<E>> eventConsumer);
 
-		EventPublisher onEntryReplaced(EventConsumer<EntryReplacedEvent<Target>> eventConsumer);
+		EventPublisher<E> onEntryReplaced(EventConsumer<EntryReplacedEvent<E>> eventConsumer);
 	}
 }

@@ -23,6 +23,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 
 import io.github.resilience4j.consumer.EventConsumerRegistry;
+import io.github.resilience4j.fallback.autoconfigure.FallbackConfigurationOnMissingBean;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryRegistry;
 import io.github.resilience4j.retry.event.RetryEvent;
@@ -37,7 +38,7 @@ import io.github.resilience4j.retry.monitoring.endpoint.RetryEventsEndpoint;
 @Configuration
 @ConditionalOnClass(Retry.class)
 @EnableConfigurationProperties(RetryProperties.class)
-@Import(RetryConfigurationOnMissingBean.class)
+@Import({RetryConfigurationOnMissingBean.class, FallbackConfigurationOnMissingBean.class})
 public class RetryAutoConfiguration {
 	@Bean
 	@ConditionalOnEnabledEndpoint

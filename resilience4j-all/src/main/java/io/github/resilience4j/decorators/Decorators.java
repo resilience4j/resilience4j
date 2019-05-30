@@ -4,7 +4,6 @@ import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.cache.Cache;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.ratelimiter.RateLimiter;
-import io.github.resilience4j.retry.AsyncRetry;
 import io.github.resilience4j.retry.Retry;
 import io.vavr.CheckedFunction0;
 import io.vavr.CheckedFunction1;
@@ -50,7 +49,7 @@ public interface Decorators {
 		return new DecorateCompletionStage<>(stageSupplier);
 	}
 
-	public static <T> DecorateConsumer<T> ofConsumer(Consumer<T> consumer) {
+	static <T> DecorateConsumer<T> ofConsumer(Consumer<T> consumer) {
 		return new DecorateConsumer<>(consumer);
 	}
 
@@ -290,15 +289,6 @@ public interface Decorators {
 
 		public DecorateCompletionStage<T> withCircuitBreaker(CircuitBreaker circuitBreaker) {
 			stageSupplier = CircuitBreaker.decorateCompletionStage(circuitBreaker, stageSupplier);
-			return this;
-		}
-
-		/**
-		 * @deprecated replaced by {@link #withRetry(Retry retryContext, ScheduledExecutorService scheduler)}
-		 */
-		@Deprecated()
-		public DecorateCompletionStage<T> withRetry(AsyncRetry retryContext, ScheduledExecutorService scheduler) {
-			stageSupplier = AsyncRetry.decorateCompletionStage(retryContext, scheduler, stageSupplier);
 			return this;
 		}
 

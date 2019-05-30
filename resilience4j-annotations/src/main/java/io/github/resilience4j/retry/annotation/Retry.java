@@ -38,4 +38,11 @@ public @interface Retry {
 	 * @return the name of the sync retry.
 	 */
 	String name();
+
+	/**
+	 * fallbackMethod method name.
+	 *
+	 * @return fallbackMethod method name.
+	 */
+	String fallbackMethod() default "";
 }

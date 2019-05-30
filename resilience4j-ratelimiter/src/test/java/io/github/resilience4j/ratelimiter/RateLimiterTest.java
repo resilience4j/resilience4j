@@ -18,30 +18,13 @@
  */
 package io.github.resilience4j.ratelimiter;
 
-import static com.jayway.awaitility.Awaitility.await;
-import static org.assertj.core.api.BDDAssertions.then;
-import static org.hamcrest.CoreMatchers.equalTo;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-import static io.vavr.API.$;
-import static io.vavr.API.Case;
-import static io.vavr.API.Match;
-import static io.vavr.Predicates.instanceOf;
-import static java.util.concurrent.CompletableFuture.supplyAsync;
-
-import org.junit.Before;
-import org.junit.Test;
-import org.mockito.BDDMockito;
-
 import io.vavr.CheckedFunction0;
 import io.vavr.CheckedFunction1;
 import io.vavr.CheckedRunnable;
 import io.vavr.control.Try;
+import org.junit.Before;
+import org.junit.Test;
+import org.mockito.BDDMockito;
 
 import java.time.Duration;
 import java.util.concurrent.CompletableFuture;
@@ -54,6 +37,15 @@ import java.util.concurrent.locks.LockSupport;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
+
+import static com.jayway.awaitility.Awaitility.await;
+import static io.vavr.API.*;
+import static io.vavr.Predicates.instanceOf;
+import static java.util.concurrent.CompletableFuture.supplyAsync;
+import static org.assertj.core.api.BDDAssertions.then;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
 
 
 @SuppressWarnings("unchecked")
@@ -83,7 +75,7 @@ public class RateLimiterTest {
         CheckedFunction0 supplier = mock(CheckedFunction0.class);
         CheckedFunction0 decorated = RateLimiter.decorateCheckedSupplier(limit, supplier);
 
-        when(limit.getPermission(config.getTimeoutDuration()))
+        when(limit.acquirePermission())
             .thenReturn(false);
 
         Try decoratedSupplierResult = Try.of(decorated);
@@ -91,7 +83,7 @@ public class RateLimiterTest {
         then(decoratedSupplierResult.getCause()).isInstanceOf(RequestNotPermitted.class);
         verify(supplier, never()).apply();
 
-        when(limit.getPermission(config.getTimeoutDuration()))
+        when(limit.acquirePermission())
             .thenReturn(true);
         Try secondSupplierResult = Try.of(decorated);
         then(secondSupplierResult.isSuccess()).isTrue();
@@ -103,7 +95,7 @@ public class RateLimiterTest {
         CheckedRunnable runnable = mock(CheckedRunnable.class);
         CheckedRunnable decorated = RateLimiter.decorateCheckedRunnable(limit, runnable);
 
-        when(limit.getPermission(config.getTimeoutDuration()))
+        when(limit.acquirePermission())
             .thenReturn(false);
 
         Try decoratedRunnableResult = Try.run(decorated);
@@ -111,7 +103,7 @@ public class RateLimiterTest {
         then(decoratedRunnableResult.getCause()).isInstanceOf(RequestNotPermitted.class);
         verify(runnable, never()).run();
 
-        when(limit.getPermission(config.getTimeoutDuration()))
+        when(limit.acquirePermission())
             .thenReturn(true);
         Try secondRunnableResult = Try.run(decorated);
         then(secondRunnableResult.isSuccess()).isTrue();
@@ -123,7 +115,7 @@ public class RateLimiterTest {
         CheckedFunction1<Integer, String> function = mock(CheckedFunction1.class);
         CheckedFunction1<Integer, String> decorated = RateLimiter.decorateCheckedFunction(limit, function);
 
-        when(limit.getPermission(config.getTimeoutDuration()))
+        when(limit.acquirePermission())
             .thenReturn(false);
 
         Try<String> decoratedFunctionResult = Try.success(1).mapTry(decorated);
@@ -131,7 +123,7 @@ public class RateLimiterTest {
         then(decoratedFunctionResult.getCause()).isInstanceOf(RequestNotPermitted.class);
         verify(function, never()).apply(any());
 
-        when(limit.getPermission(config.getTimeoutDuration()))
+        when(limit.acquirePermission())
             .thenReturn(true);
         Try secondFunctionResult = Try.success(1).mapTry(decorated);
         then(secondFunctionResult.isSuccess()).isTrue();
@@ -143,7 +135,7 @@ public class RateLimiterTest {
         Supplier supplier = mock(Supplier.class);
         Supplier decorated = RateLimiter.decorateSupplier(limit, supplier);
 
-        when(limit.getPermission(config.getTimeoutDuration()))
+        when(limit.acquirePermission())
             .thenReturn(false);
 
         Try decoratedSupplierResult = Try.success(decorated).map(Supplier::get);
@@ -151,7 +143,7 @@ public class RateLimiterTest {
         then(decoratedSupplierResult.getCause()).isInstanceOf(RequestNotPermitted.class);
         verify(supplier, never()).get();
 
-        when(limit.getPermission(config.getTimeoutDuration()))
+        when(limit.acquirePermission())
             .thenReturn(true);
         Try secondSupplierResult = Try.success(decorated).map(Supplier::get);
         then(secondSupplierResult.isSuccess()).isTrue();
@@ -163,7 +155,7 @@ public class RateLimiterTest {
         Consumer<Integer> consumer = mock(Consumer.class);
         Consumer<Integer> decorated = RateLimiter.decorateConsumer(limit, consumer);
 
-        when(limit.getPermission(config.getTimeoutDuration()))
+        when(limit.acquirePermission())
             .thenReturn(false);
 
         Try<Integer> decoratedConsumerResult = Try.success(1).andThen(decorated);
@@ -171,7 +163,7 @@ public class RateLimiterTest {
         then(decoratedConsumerResult.getCause()).isInstanceOf(RequestNotPermitted.class);
         verify(consumer, never()).accept(any());
 
-        when(limit.getPermission(config.getTimeoutDuration()))
+        when(limit.acquirePermission())
             .thenReturn(true);
         Try secondConsumerResult = Try.success(1).andThen(decorated);
         then(secondConsumerResult.isSuccess()).isTrue();
@@ -183,7 +175,7 @@ public class RateLimiterTest {
         Runnable runnable = mock(Runnable.class);
         Runnable decorated = RateLimiter.decorateRunnable(limit, runnable);
 
-        when(limit.getPermission(config.getTimeoutDuration()))
+        when(limit.acquirePermission())
             .thenReturn(false);
 
         Try decoratedRunnableResult = Try.success(decorated).andThen(Runnable::run);
@@ -191,7 +183,7 @@ public class RateLimiterTest {
         then(decoratedRunnableResult.getCause()).isInstanceOf(RequestNotPermitted.class);
         verify(runnable, never()).run();
 
-        when(limit.getPermission(config.getTimeoutDuration()))
+        when(limit.acquirePermission())
             .thenReturn(true);
         Try secondRunnableResult = Try.success(decorated).andThen(Runnable::run);
         then(secondRunnableResult.isSuccess()).isTrue();
@@ -203,7 +195,7 @@ public class RateLimiterTest {
         Function<Integer, String> function = mock(Function.class);
         Function<Integer, String> decorated = RateLimiter.decorateFunction(limit, function);
 
-        when(limit.getPermission(config.getTimeoutDuration()))
+        when(limit.acquirePermission())
             .thenReturn(false);
 
         Try<String> decoratedFunctionResult = Try.success(1).map(decorated);
@@ -211,7 +203,7 @@ public class RateLimiterTest {
         then(decoratedFunctionResult.getCause()).isInstanceOf(RequestNotPermitted.class);
         verify(function, never()).apply(any());
 
-        when(limit.getPermission(config.getTimeoutDuration()))
+        when(limit.acquirePermission())
             .thenReturn(true);
         Try secondFunctionResult = Try.success(1).map(decorated);
         then(secondFunctionResult.isSuccess()).isTrue();
@@ -226,7 +218,7 @@ public class RateLimiterTest {
 
         Supplier<CompletionStage<String>> decorated = RateLimiter.decorateCompletionStage(limit, completionStage);
 
-        when(limit.getPermission(config.getTimeoutDuration()))
+        when(limit.acquirePermission())
             .thenReturn(false);
 
         AtomicReference<Throwable> error = new AtomicReference<>(null);
@@ -240,7 +232,7 @@ public class RateLimiterTest {
         then(error.get()).isExactlyInstanceOf(RequestNotPermitted.class);
         verify(supplier, never()).get();
 
-        when(limit.getPermission(config.getTimeoutDuration()))
+        when(limit.acquirePermission())
             .thenReturn(true);
 
         AtomicReference<Throwable> shouldBeEmpty = new AtomicReference<>(null);
@@ -256,25 +248,25 @@ public class RateLimiterTest {
 
     @Test
     public void waitForPermissionWithOne() throws Exception {
-        when(limit.getPermission(config.getTimeoutDuration()))
+        when(limit.acquirePermission())
             .thenReturn(true);
         RateLimiter.waitForPermission(limit);
         verify(limit, times(1))
-            .getPermission(config.getTimeoutDuration());
+            .acquirePermission();
     }
 
     @Test(expected = RequestNotPermitted.class)
     public void waitForPermissionWithoutOne() throws Exception {
-        when(limit.getPermission(config.getTimeoutDuration()))
+        when(limit.acquirePermission())
             .thenReturn(false);
         RateLimiter.waitForPermission(limit);
         verify(limit, times(1))
-            .getPermission(config.getTimeoutDuration());
+            .acquirePermission();
     }
 
     @Test
     public void waitForPermissionWithInterruption() throws Exception {
-        when(limit.getPermission(config.getTimeoutDuration()))
+        when(limit.acquirePermission())
             .then(invocation -> {
                 LockSupport.parkNanos(5_000_000_000L);
                 return null;

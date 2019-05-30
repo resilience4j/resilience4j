@@ -16,6 +16,9 @@
 package io.github.resilience4j.retry.configure;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -24,11 +27,11 @@ import org.springframework.context.annotation.Configuration;
 
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
+import io.github.resilience4j.fallback.FallbackDecorators;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryConfig;
 import io.github.resilience4j.retry.RetryRegistry;
 import io.github.resilience4j.retry.event.RetryEvent;
-import io.github.resilience4j.retry.internal.InMemoryRetryRegistry;
 import io.github.resilience4j.utils.ReactorOnClasspathCondition;
 import io.github.resilience4j.utils.RxJava2OnClasspathCondition;
 
@@ -46,15 +49,44 @@ public class RetryConfiguration {
 	 */
 	@Bean
 	public RetryRegistry retryRegistry(RetryConfigurationProperties retryConfigurationProperties, EventConsumerRegistry<RetryEvent> retryEventConsumerRegistry) {
-		RetryRegistry retryRegistry = new InMemoryRetryRegistry();
-		retryConfigurationProperties.getBackends().forEach(
-				(name, properties) -> {
-					RetryConfig retryConfig = retryConfigurationProperties.createRetryConfig(name);
-					Retry retry = retryRegistry.retry(name, retryConfig);
-					retry.getEventPublisher().onEvent(retryEventConsumerRegistry.createEventConsumer(name, properties.getEventConsumerBufferSize()));
-				}
-		);
+
+		RetryRegistry retryRegistry = createRetryRegistry(retryConfigurationProperties);
+		registerEventConsumer(retryRegistry, retryEventConsumerRegistry, retryConfigurationProperties);
+		retryConfigurationProperties.getBackends().forEach((name, properties) -> retryRegistry.retry(name, retryConfigurationProperties.createRetryConfig(name)));
 		return retryRegistry;
+	}
+
+
+	/**
+	 * Initializes a retry registry.
+	 *
+	 * @param retryConfigurationProperties The retry configuration properties.
+	 * @return a RetryRegistry
+	 */
+	private RetryRegistry createRetryRegistry(RetryConfigurationProperties retryConfigurationProperties) {
+		Map<String, RetryConfig> configs = retryConfigurationProperties.getConfigs()
+				.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey,
+						entry -> retryConfigurationProperties.createRetryConfig(entry.getValue())));
+
+		return RetryRegistry.of(configs);
+	}
+
+	/**
+	 * Registers the post creation consumer function that registers the consumer events to the retries.
+	 *
+	 * @param retryRegistry         The retry registry.
+	 * @param eventConsumerRegistry The event consumer registry.
+	 */
+	private void registerEventConsumer(RetryRegistry retryRegistry,
+	                                   EventConsumerRegistry<RetryEvent> eventConsumerRegistry, RetryConfigurationProperties retryConfigurationProperties) {
+		retryRegistry.getEventPublisher().onEntryAdded(event -> registerEventConsumer(eventConsumerRegistry, event.getAddedEntry(), retryConfigurationProperties));
+	}
+
+	private void registerEventConsumer(EventConsumerRegistry<RetryEvent> eventConsumerRegistry, Retry retry, RetryConfigurationProperties retryConfigurationProperties) {
+		int eventConsumerBufferSize = Optional.ofNullable(retryConfigurationProperties.getBackendProperties(retry.getName()))
+				.map(RetryConfigurationProperties.BackendProperties::getEventConsumerBufferSize)
+				.orElse(100);
+		retry.getEventPublisher().onEvent(eventConsumerRegistry.createEventConsumer(retry.getName(), eventConsumerBufferSize));
 	}
 
 	/**
@@ -64,8 +96,9 @@ public class RetryConfiguration {
 	 */
 	@Bean
 	public RetryAspect retryAspect(RetryConfigurationProperties retryConfigurationProperties,
-	                               RetryRegistry retryRegistry, @Autowired(required = false) List<RetryAspectExt> retryAspectExtList) {
-		return new RetryAspect(retryConfigurationProperties, retryRegistry, retryAspectExtList);
+								   RetryRegistry retryRegistry, @Autowired(required = false) List<RetryAspectExt> retryAspectExtList,
+								   FallbackDecorators fallbackDecorators) {
+		return new RetryAspect(retryConfigurationProperties, retryRegistry, retryAspectExtList, fallbackDecorators);
 	}
 
 	@Bean

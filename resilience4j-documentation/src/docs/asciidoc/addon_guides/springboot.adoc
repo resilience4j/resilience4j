@@ -2,7 +2,8 @@
 
 ==== Gradle
 
-Add the Spring Boot Starter of Resilience4j to your compile dependency:
+Add the Spring Boot Starter of Resilience4j to your compile dependency.
+You also need Spring Boot Actuator and Spring Boot AOP.
 
 [source,groovy, subs="attributes"]
 ----
@@ -14,40 +15,22 @@ repositories {
 
 dependencies {
 	compile('io.github.resilience4j:resilience4j-spring-boot:{release-version}')
+    compile('org.springframework.boot:spring-boot-starter-actuator')
+    compile('org.springframework.boot:spring-boot-starter-aop')
 }
 ----
 
 ==== Supported Types by Spring boot starter resilience aspects
 
-Rate limiter , Retry , Circuit breaker and Bulkhead now support Synchronous return types ,CompletableFutures , RxJava2 types and Reactor types .
+RateLimiter, Retry, CircuitBreaker and Bulkhead annotations support synchronous return types, asynchronous types like CompletableFutures and reactive types like RxJava2 and Reactor.
 
 ==== Monitoring
 
 Spring Boot Actuator health information can be used to check the status of your running application.
 It is often used by monitoring software to alert someone if a production system has serious issues.
 
-==== Retry
-When you enable retry, metrics are automatically published on the metrics endpoint.
-
-For example:
-
-[source,json]
-----
-{
-    "names": [
-        "resilience4j.retry.backendA.failedCallsWithoutRetry",
-        "resilience4j.retry.backendA.failedCallsWithRetry",
-        "resilience4j.retry.backendA.successCalls",
-        "resilience4j.retry.backendA.successCallsWithRetry"
-        ]
-}
-----
-
-When you want to publish Retry/AsyncRetry endpoints on the Prometheus endpoint, you have to add the dependency `io.micrometer:micrometer-registry-prometheus`.
-and you have same metrics exposed there , check circuit breaker below for more information about the example.
-
 ==== CircuitBreaker
-This demo publishes the status and metrics of all CircuitBreakers via a custom `CircuitBreakerHealthIndicator`.
+The starter publishes the status and metrics of all CircuitBreakers via a custom `CircuitBreakerHealthIndicator`.
 A closed CircuitBreaker state is mapped to UP, an open state to DOWN and a half-open state to UNKNOWN.
 
 For example:
@@ -123,8 +106,28 @@ resilience4j_circuitbreaker_states{name="backendA",state="open",} 0.0
 resilience4j_circuitbreaker_states{name="backendA",state="half_open",} 0.0
 ----
 
+==== Retry
+When you enable retry, metrics are automatically published on the metrics endpoint.
+
+For example:
+
+[source,json]
+----
+{
+    "names": [
+        "resilience4j.retry.backendA.failedCallsWithoutRetry",
+        "resilience4j.retry.backendA.failedCallsWithRetry",
+        "resilience4j.retry.backendA.successCalls",
+        "resilience4j.retry.backendA.successCallsWithRetry"
+        ]
+}
+----
+
+When you want to publish Retry/AsyncRetry endpoints on the Prometheus endpoint, you have to add the dependency `io.micrometer:micrometer-registry-prometheus`.
+and you have same metrics exposed there , check circuit breaker below for more information about the example.
+
 ==== RateLimiter
-This demo publishes the status and metrics of all RateLimiter via a custom `RateLimiterHealthIndicator`.
+The starter publishes the status and metrics of all RateLimiter via a custom `RateLimiterHealthIndicator`.
 RateLimiterHealthIndicator changes its state DOWN only if there is some permission waiting threads
 and they won't be able to unblock until timeout.
 
@@ -190,6 +193,19 @@ The rules for Retry configuration :
 The rules for Retry spring annotation usage  :
 
     - Retry aspect will detect the proper handling based into the method return type for synchronous , asynchronous execution(CompletableFuture) , RxJava2 and Reactor
+    - Fallback support is enabled by defining name of fallback method in @Retry
+[source,java]
+----
+        @Retry(name = BACKEND, fallbackMethod = "fallback")
+        public String sync(String param1) {
+            return "test";
+        }
+
+        private String fallback(String param1, IllegalStateException e) {
+            return "test";
+        }
+----
+    - Its important to remember that Retry method and its fallback method should be placed in the same class and have same method signature (optional parameter for failed execution exception).
 
 Code example of retry and async retry annotation usage in Java Spring component :
 [source,java]
@@ -316,6 +332,21 @@ These Beans can be overridden in your application's Spring Bean configuration:
 Note that in Spring Boot 1.x, EventConsumerRegistry<CircuitBreakerEvent> cannot be overridden because of limitations of the @ConditionalOnMissingBean implementation.
 To override this, go to at least Spring Boot 2.1.x.
 
+The rules for CircuitBreaker spring annotation usage  :
+
+    - CircuitBreaker aspect with fallback support will detect the proper handling based into the method return type for synchronous , asynchronous execution(CompletableFuture) , RxJava2 and Reactor
+    - Fallback support is enabled by defining name of fallback method in @CircuitBreaker
+
+[source,java]
+----
+    @CircuitBreaker(name = BACKEND, fallbackMethod = "fallback")
+    public String sync() {
+        return "test";
+    }
+----
+
+    - Its important to remember that CircuitBreaker method and its fallback method should be placed in the same class and have same method signature (optional parameter for failed execution exception).
+
 ===== RateLimiter
 You can configure your CircuitBreakers in Spring Boot's `application.yml` config file.
 For example
@@ -345,6 +376,21 @@ These Beans can be overridden in your application's Spring Bean configuration:
 
 Note that in Spring Boot 1.x, EventConsumerRegistry<RateLimiterEvent> cannot be overridden because of limitations of the @ConditionalOnMissingBean implementation.
 To override this, go to at least Spring Boot 2.1.x.
+
+The rules for RateLimiter spring annotation usage  :
+
+    - RateLimiter aspect with fallback support will detect the proper handling based into the method return type for synchronous , asynchronous execution(CompletableFuture) , RxJava2 and Reactor
+    - Fallback support is enabled by defining name of fallback method in @RateLimiter
+
+[source,java]
+----
+    @RateLimiter(name = BACKEND, fallbackMethod = "fallback")
+    public String sync() {
+        return "test";
+    }
+----
+
+    - Its important to remember that RateLimiter method and its fallback method should be placed in the same class and have same method signature (optional parameter for failed execution exception).
 
 ===== Explicit ordering for CircuitBreaker and RateLimiter aspects
 You can adjust `RateLimiterProperties.rateLimiterAspectOrder` and `CircuitBreakerProperties.circuitBreakerAspectOrder`
@@ -570,21 +616,21 @@ List of available endpoints:
 Example of response:
 ----
 {
-  "eventsList": [
+  "rateLimiterEvents": [
     {
       "rateLimiterName": "backendA",
-      "rateLimiterEventType": "SUCCESSFUL_ACQUIRE",
-      "rateLimiterCreationTime": "2017-05-05T21:29:40.463+03:00[Europe/Uzhgorod]"
+      "type": "SUCCESSFUL_ACQUIRE",
+      "creationTime": "2017-05-05T21:29:40.463+03:00[Europe/Uzhgorod]"
     },
     {
       "rateLimiterName": "backendA",
-      "rateLimiterEventType": "SUCCESSFUL_ACQUIRE",
-      "rateLimiterCreationTime": "2017-05-05T21:29:40.469+03:00[Europe/Uzhgorod]"
+      "type": "SUCCESSFUL_ACQUIRE",
+      "creationTime": "2017-05-05T21:29:40.469+03:00[Europe/Uzhgorod]"
     },
     {
       "rateLimiterName": "backendA",
-      "rateLimiterEventType": "FAILED_ACQUIRE",
-      "rateLimiterCreationTime": "2017-05-05T21:29:41.268+03:00[Europe/Uzhgorod]"
+      "type": "FAILED_ACQUIRE",
+      "creationTime": "2017-05-05T21:29:41.268+03:00[Europe/Uzhgorod]"
     }
   ]
 }

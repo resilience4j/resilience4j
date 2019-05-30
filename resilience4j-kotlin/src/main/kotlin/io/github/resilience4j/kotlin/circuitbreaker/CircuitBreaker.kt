@@ -24,7 +24,7 @@ import io.github.resilience4j.circuitbreaker.CircuitBreaker
  * Decorates and executes the given suspend function [block].
  */
 suspend fun <T> CircuitBreaker.executeSuspendFunction(block: suspend () -> T): T {
-    obtainPermission()
+    acquirePermission()
     val start = System.nanoTime()
     try {
         val result = block()

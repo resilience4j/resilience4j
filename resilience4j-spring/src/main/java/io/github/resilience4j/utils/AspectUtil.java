@@ -14,12 +14,14 @@
  */
 package io.github.resilience4j.utils;
 
+import org.springframework.context.annotation.ConditionContext;
+
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.function.Consumer;
 
-import org.springframework.context.annotation.ConditionContext;
+import static java.util.Objects.requireNonNull;
 
 /**
  * common Aspect util methods
@@ -35,9 +37,9 @@ public class AspectUtil {
 	 * @param exceptionConsumer the custom exception consumer
 	 * @return true or false if the class is found or not
 	 */
-	public static boolean checkClassIfFound(ConditionContext context, String classToCheck, Consumer<Exception> exceptionConsumer) {
+	static boolean checkClassIfFound(ConditionContext context, String classToCheck, Consumer<Exception> exceptionConsumer) {
 		try {
-			final Class<?> aClass = context.getClassLoader().loadClass(classToCheck);
+			final Class<?> aClass = requireNonNull(context.getClassLoader(), "context must not be null").loadClass(classToCheck);
 			return aClass != null;
 		} catch (ClassNotFoundException e) {
 			exceptionConsumer.accept(e);

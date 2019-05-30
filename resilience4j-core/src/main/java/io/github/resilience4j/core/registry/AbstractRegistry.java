@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright 2019 Mahmoud Romeh
+ *  Copyright 2019 Mahmoud Romeh, Robert Winkler
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -31,92 +31,86 @@ import java.util.function.Supplier;
 /**
  * Abstract registry to be shared with all resilience4j registries
  */
-public class AbstractRegistry<Target, Config> implements Registry<Target, Config> {
+public class AbstractRegistry<E, C> implements Registry<E, C> {
 	protected static final String DEFAULT_CONFIG = "default";
 	private static final String NAME_MUST_NOT_BE_NULL = "Name must not be null";
 	protected static final String CONFIG_MUST_NOT_BE_NULL = "Config must not be null";
 	protected static final String SUPPLIER_MUST_NOT_BE_NULL = "Supplier must not be null";
 
-	/**
-	 * The map of targets by name
-	 */
-	protected final ConcurrentMap<String, Target> entryMap;
+	protected final ConcurrentMap<String, E> entryMap;
 
-	/**
-	 * The map of shared configuration by name
-	 */
-	protected final ConcurrentMap<String, Config> configurations;
+	protected final ConcurrentMap<String, C> configurations;
 
 	private final RegistryEventProcessor eventProcessor;
 
-	public AbstractRegistry(Config defaultConfig) {
+	public AbstractRegistry(C defaultConfig) {
 		this.configurations = new ConcurrentHashMap<>();
 		this.entryMap = new ConcurrentHashMap<>();
 		this.eventProcessor = new RegistryEventProcessor();
 		this.configurations.put(DEFAULT_CONFIG, Objects.requireNonNull(defaultConfig, CONFIG_MUST_NOT_BE_NULL));
 	}
 
-	protected Target computeIfAbsent(String name, Supplier<Target> supplier){
+	protected E computeIfAbsent(String name, Supplier<E> supplier){
 		return entryMap.computeIfAbsent(Objects.requireNonNull(name, NAME_MUST_NOT_BE_NULL), k -> {
-			Target entry = supplier.get();
+			E entry = supplier.get();
 			eventProcessor.processEvent(new EntryAddedEvent<>(entry));
 			return entry;
 		});
 	}
 
 	@Override
-	public Optional<Target> remove(String name){
-		Optional<Target> removedEntry = Optional.ofNullable(entryMap.remove(name));
+	public Optional<E> remove(String name){
+		Optional<E> removedEntry = Optional.ofNullable(entryMap.remove(name));
 		removedEntry.ifPresent(entry -> eventProcessor.processEvent(new EntryRemovedEvent<>(entry)));
 		return removedEntry;
 	}
 
 	@Override
-	public Optional<Target> replace(String name, Target newEntry){
-		Optional<Target> replacedEntry = Optional.ofNullable(entryMap.replace(name, newEntry));
+	public Optional<E> replace(String name, E newEntry){
+		Optional<E> replacedEntry = Optional.ofNullable(entryMap.replace(name, newEntry));
 		replacedEntry.ifPresent(oldEntry -> eventProcessor.processEvent(new EntryReplacedEvent<>(oldEntry, newEntry)));
 		return replacedEntry;
 	}
 
 	@Override
-	public void addConfiguration(String configName, Config configuration) {
+	public void addConfiguration(String configName, C configuration) {
 		if (configName.equals(DEFAULT_CONFIG)) {
-			throw new IllegalArgumentException("you can not use 'default' as a configuration name as it is preserved for default configuration");
+			throw new IllegalArgumentException("You cannot use 'default' as a configuration name as it is preserved for default configuration");
 		}
 		this.configurations.put(configName, configuration);
 	}
 
 	@Override
-	public Optional<Config> getConfiguration(String configName) {
+	public Optional<C> getConfiguration(String configName) {
 		return Optional.ofNullable(this.configurations.get(configName));
 	}
 
 	@Override
-	public Config getDefaultConfig() {
+	public C getDefaultConfig() {
 		return configurations.get(DEFAULT_CONFIG);
 	}
 
 	@Override
-	public EventPublisher<Target> getEventPublisher() {
+	public EventPublisher<E> getEventPublisher() {
 		return eventProcessor;
 	}
 
-	private class RegistryEventProcessor extends EventProcessor<RegistryEvent> implements EventConsumer<RegistryEvent>, EventPublisher<Target> {
+	private class RegistryEventProcessor extends EventProcessor<RegistryEvent> implements EventConsumer<RegistryEvent>, EventPublisher<E> {
 
 		@Override
-		public EventPublisher onEntryAdded(EventConsumer<EntryAddedEvent<Target>> onSuccessEventConsumer) {
+		public EventPublisher<E> onEntryAdded(EventConsumer<EntryAddedEvent<E>> onSuccessEventConsumer) {
 			registerConsumer(EntryAddedEvent.class.getSimpleName(), onSuccessEventConsumer);
 			return this;
 		}
 
 		@Override
-		public EventPublisher onEntryRemoved(EventConsumer<EntryRemovedEvent<Target>> onErrorEventConsumer) {
+		public EventPublisher<E> onEntryRemoved(EventConsumer<EntryRemovedEvent<E>> onErrorEventConsumer) {
 			registerConsumer(EntryRemovedEvent.class.getSimpleName(), onErrorEventConsumer);
 			return this;
 		}
 
 		@Override
-		public EventPublisher onEntryReplaced(EventConsumer<EntryReplacedEvent<Target>> onStateTransitionEventConsumer) {
+		public EventPublisher<E> onEntryReplaced(EventConsumer<EntryReplacedEvent<E>> onStateTransitionEventConsumer) {
 			registerConsumer(EntryReplacedEvent.class.getSimpleName(), onStateTransitionEventConsumer);
 			return this;
 		}

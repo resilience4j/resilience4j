@@ -41,6 +41,7 @@ import io.github.resilience4j.ratelimiter.configure.RateLimiterAspectExt;
 import io.github.resilience4j.ratelimiter.configure.RateLimiterConfiguration;
 import io.github.resilience4j.ratelimiter.configure.RateLimiterConfigurationProperties;
 import io.github.resilience4j.ratelimiter.event.RateLimiterEvent;
+import io.github.resilience4j.fallback.FallbackDecorators;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(classes = {
@@ -105,8 +106,8 @@ public class RateLimiterConfigurationOnMissingBeanTest {
         }
 
         @Bean
-        public RateLimiterAspect rateLimiterAspect(RateLimiterRegistry rateLimiterRegistry, @Autowired(required = false) List<RateLimiterAspectExt> rateLimiterAspectExtList) {
-            rateLimiterAspect = new RateLimiterAspect(rateLimiterRegistry, new RateLimiterConfigurationProperties(), rateLimiterAspectExtList);
+        public RateLimiterAspect rateLimiterAspect(RateLimiterRegistry rateLimiterRegistry, @Autowired(required = false) List<RateLimiterAspectExt> rateLimiterAspectExtList, FallbackDecorators fallbackDecorators) {
+            rateLimiterAspect = new RateLimiterAspect(rateLimiterRegistry, new RateLimiterConfigurationProperties(), rateLimiterAspectExtList, fallbackDecorators);
             return rateLimiterAspect;
         }
 

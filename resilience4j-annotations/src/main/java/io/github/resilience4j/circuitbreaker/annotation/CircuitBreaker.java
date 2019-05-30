@@ -39,4 +39,11 @@ public @interface CircuitBreaker {
 	 * @return the name of the circuit breaker
 	 */
 	String name();
+
+	/**
+	 * fallbackMethod method name.
+	 *
+	 * @return fallbackMethod method name.
+	 */
+	String fallbackMethod() default "";
 }

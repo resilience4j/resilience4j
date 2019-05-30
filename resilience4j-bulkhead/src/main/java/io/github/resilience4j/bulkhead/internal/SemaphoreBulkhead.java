@@ -106,11 +106,11 @@ public class SemaphoreBulkhead implements Bulkhead {
      */
     @Override
     public boolean isCallPermitted() {
-        return tryObtainPermission();
+        return tryAcquirePermission();
     }
 
     @Override
-    public boolean tryObtainPermission() {
+    public boolean tryAcquirePermission() {
         boolean callPermitted = tryEnterBulkhead();
 
         publishBulkheadEvent(
@@ -122,10 +122,15 @@ public class SemaphoreBulkhead implements Bulkhead {
     }
 
     @Override
-    public void obtainPermission() {
-        if(!tryObtainPermission()) {
+    public void acquirePermission() {
+        if(!tryAcquirePermission()) {
             throw new BulkheadFullException(this);
         }
+    }
+
+    @Override
+    public void releasePermission() {
+        semaphore.release();
     }
 
     /**

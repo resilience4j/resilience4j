@@ -15,47 +15,86 @@
  */
 package io.github.resilience4j.bulkhead.configure;
 
-import java.util.List;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Conditional;
-import org.springframework.context.annotation.Configuration;
-
 import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.bulkhead.BulkheadConfig;
 import io.github.resilience4j.bulkhead.BulkheadRegistry;
 import io.github.resilience4j.bulkhead.event.BulkheadEvent;
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
+import io.github.resilience4j.fallback.FallbackDecorators;
+import io.github.resilience4j.fallback.configure.FallbackConfiguration;
 import io.github.resilience4j.utils.ReactorOnClasspathCondition;
 import io.github.resilience4j.utils.RxJava2OnClasspathCondition;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Conditional;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
+
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * {@link Configuration
  * Configuration} for resilience4j-bulkhead.
  */
 @Configuration
+@Import(FallbackConfiguration.class)
 public class BulkheadConfiguration {
 
+	/**
+	 * @param bulkheadConfigurationProperties bulk head spring configuration properties
+	 * @param bulkheadEventConsumerRegistry   the bulk head event consumer registry
+	 * @return the BulkheadRegistry with all needed setup in place
+	 */
 	@Bean
 	public BulkheadRegistry bulkheadRegistry(BulkheadConfigurationProperties bulkheadConfigurationProperties,
 	                                         EventConsumerRegistry<BulkheadEvent> bulkheadEventConsumerRegistry) {
-		BulkheadRegistry bulkheadRegistry = BulkheadRegistry.ofDefaults();
-		bulkheadConfigurationProperties.getBackends().forEach(
-				(name, properties) -> {
-					BulkheadConfig bulkheadConfig = bulkheadConfigurationProperties.createBulkheadConfig(name);
-					Bulkhead bulkhead = bulkheadRegistry.bulkhead(name, bulkheadConfig);
-					bulkhead.getEventPublisher().onEvent(bulkheadEventConsumerRegistry.createEventConsumer(name, properties.getEventConsumerBufferSize()));
-				}
-		);
+		BulkheadRegistry bulkheadRegistry = createBulkheadRegistry(bulkheadConfigurationProperties);
+		registerEventConsumer(bulkheadRegistry, bulkheadEventConsumerRegistry, bulkheadConfigurationProperties);
+		bulkheadConfigurationProperties.getBackends().forEach((name, properties) -> bulkheadRegistry.bulkhead(name, bulkheadConfigurationProperties.createBulkheadConfig(name)));
 		return bulkheadRegistry;
+	}
+
+	/**
+	 * Initializes a bulkhead registry.
+	 *
+	 * @param bulkheadConfigurationProperties The bulkhead configuration properties.
+	 * @return a BulkheadRegistry
+	 */
+	private BulkheadRegistry createBulkheadRegistry(BulkheadConfigurationProperties bulkheadConfigurationProperties) {
+		Map<String, BulkheadConfig> configs = bulkheadConfigurationProperties.getConfigs()
+				.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey,
+						entry -> bulkheadConfigurationProperties.createBulkheadConfig(entry.getValue())));
+
+		return BulkheadRegistry.of(configs);
+	}
+
+	/**
+	 * Registers the post creation consumer function that registers the consumer events to the bulkheads.
+	 *
+	 * @param bulkheadRegistry      The BulkHead registry.
+	 * @param eventConsumerRegistry The event consumer registry.
+	 */
+	private void registerEventConsumer(BulkheadRegistry bulkheadRegistry,
+	                                   EventConsumerRegistry<BulkheadEvent> eventConsumerRegistry, BulkheadConfigurationProperties bulkheadConfigurationProperties) {
+		bulkheadRegistry.getEventPublisher().onEntryAdded(event -> registerEventConsumer(eventConsumerRegistry, event.getAddedEntry(), bulkheadConfigurationProperties));
+	}
+
+	private void registerEventConsumer(EventConsumerRegistry<BulkheadEvent> eventConsumerRegistry, Bulkhead bulkHead, BulkheadConfigurationProperties bulkheadConfigurationProperties) {
+		int eventConsumerBufferSize = Optional.ofNullable(bulkheadConfigurationProperties.getBackendProperties(bulkHead.getName()))
+				.map(BulkheadConfigurationProperties.BackendProperties::getEventConsumerBufferSize)
+				.orElse(100);
+		bulkHead.getEventPublisher().onEvent(eventConsumerRegistry.createEventConsumer(bulkHead.getName(), eventConsumerBufferSize));
 	}
 
 	@Bean
 	public BulkheadAspect bulkheadAspect(BulkheadConfigurationProperties bulkheadConfigurationProperties,
-	                                     BulkheadRegistry bulkheadRegistry, @Autowired(required = false) List<BulkheadAspectExt> bulkHeadAspectExtList) {
-		return new BulkheadAspect(bulkheadConfigurationProperties, bulkheadRegistry, bulkHeadAspectExtList);
+										 BulkheadRegistry bulkheadRegistry, @Autowired(required = false) List<BulkheadAspectExt> bulkHeadAspectExtList,
+										 FallbackDecorators fallbackDecorators) {
+		return new BulkheadAspect(bulkheadConfigurationProperties, bulkheadRegistry, bulkHeadAspectExtList, fallbackDecorators);
 	}
 
 	@Bean

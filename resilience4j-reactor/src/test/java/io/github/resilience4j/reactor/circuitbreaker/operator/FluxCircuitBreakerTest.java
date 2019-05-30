@@ -15,83 +15,143 @@
  */
 package io.github.resilience4j.reactor.circuitbreaker.operator;
 
-import io.github.resilience4j.circuitbreaker.CircuitBreakerOpenException;
+import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
+import io.github.resilience4j.circuitbreaker.CircuitBreaker;
+import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mockito;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 import java.io.IOException;
 import java.time.Duration;
 
-public class FluxCircuitBreakerTest extends CircuitBreakerAssertions {
+import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.*;
+
+public class FluxCircuitBreakerTest {
+
+    private CircuitBreaker circuitBreaker;
+
+    @Before
+    public void setUp(){
+        circuitBreaker = Mockito.mock(CircuitBreaker.class);
+    }
 
     @Test
-    public void shouldEmitEvent() {
+    public void shouldSubscribeToFluxJust() {
+        given(circuitBreaker.tryAcquirePermission()).willReturn(true);
+
         StepVerifier.create(
                 Flux.just("Event 1", "Event 2")
-                        .transform(CircuitBreakerOperator.of(circuitBreaker)))
+                        .compose(CircuitBreakerOperator.of(circuitBreaker)))
                 .expectNext("Event 1")
                 .expectNext("Event 2")
                 .verifyComplete();
 
-        assertSingleSuccessfulCall();
+        verify(circuitBreaker, times(1)).onSuccess(anyLong());
+        verify(circuitBreaker, never()).onError(anyLong(), any(Throwable.class));
     }
 
     @Test
     public void shouldPropagateError() {
+        given(circuitBreaker.tryAcquirePermission()).willReturn(true);
+
         StepVerifier.create(
                 Flux.error(new IOException("BAM!"))
-                        .transform(CircuitBreakerOperator.of(circuitBreaker)))
+                        .compose(CircuitBreakerOperator.of(circuitBreaker)))
                 .expectError(IOException.class)
                 .verify(Duration.ofSeconds(1));
 
-        assertSingleFailedCall();
+        verify(circuitBreaker, times(1)).onError(anyLong(), any(IOException.class));
+        verify(circuitBreaker, never()).onSuccess(anyLong());
     }
 
     @Test
     public void shouldPropagateErrorWhenErrorNotOnSubscribe() {
+        given(circuitBreaker.tryAcquirePermission()).willReturn(true);
+
         StepVerifier.create(
                 Flux.error(new IOException("BAM!"), true)
-                        .transform(CircuitBreakerOperator.of(circuitBreaker)))
+                        .compose(CircuitBreakerOperator.of(circuitBreaker)))
                 .expectError(IOException.class)
                 .verify(Duration.ofSeconds(1));
 
-        assertSingleFailedCall();
+        verify(circuitBreaker, times(1)).onError(anyLong(), any(IOException.class));
+        verify(circuitBreaker, never()).onSuccess(anyLong());
+    }
+
+    @Test
+    public void shouldSubscribeToMonoJustTwice(){
+        given(circuitBreaker.tryAcquirePermission()).willReturn(true);
+
+        StepVerifier.create(Flux.just("Event 1", "Event 2")
+                .flatMap(value -> Mono.just("Bla " + value).compose(CircuitBreakerOperator.of(circuitBreaker))))
+                .expectNext("Bla Event 1")
+                .expectNext("Bla Event 2")
+                .verifyComplete();
+
+        verify(circuitBreaker, times(2)).onSuccess(anyLong());
+        verify(circuitBreaker, never()).onError(anyLong(), any(Throwable.class));
     }
 
     @Test
     public void shouldEmitErrorWithCircuitBreakerOpenException() {
-        circuitBreaker.transitionToOpenState();
+        given(circuitBreaker.tryAcquirePermission()).willReturn(false);
+
         StepVerifier.create(
                 Flux.just("Event 1", "Event 2")
-                        .transform(CircuitBreakerOperator.of(circuitBreaker)))
-                .expectError(CircuitBreakerOpenException.class)
+                        .compose(CircuitBreakerOperator.of(circuitBreaker)))
+                .expectError(CallNotPermittedException.class)
                 .verify(Duration.ofSeconds(1));
 
-        assertNoRegisteredCall();
+        verify(circuitBreaker, never()).onError(anyLong(), any(Throwable.class));
+        verify(circuitBreaker, never()).onSuccess(anyLong());
     }
 
     @Test
     public void shouldEmitCircuitBreakerOpenExceptionEvenWhenErrorNotOnSubscribe() {
-        circuitBreaker.transitionToOpenState();
+        given(circuitBreaker.tryAcquirePermission()).willReturn(false);
+
         StepVerifier.create(
                 Flux.error(new IOException("BAM!"), true)
-                        .transform(CircuitBreakerOperator.of(circuitBreaker)))
-                .expectError(CircuitBreakerOpenException.class)
+                        .compose(CircuitBreakerOperator.of(circuitBreaker)))
+                .expectError(CallNotPermittedException.class)
                 .verify(Duration.ofSeconds(1));
 
-        assertNoRegisteredCall();
+        verify(circuitBreaker, never()).onError(anyLong(), any(Throwable.class));
+        verify(circuitBreaker, never()).onSuccess(anyLong());
     }
 
     @Test
     public void shouldEmitCircuitBreakerOpenExceptionEvenWhenErrorDuringSubscribe() {
-        circuitBreaker.transitionToOpenState();
+        given(circuitBreaker.tryAcquirePermission()).willReturn(false);
+
         StepVerifier.create(
                 Flux.error(new IOException("BAM!"))
-                        .transform(CircuitBreakerOperator.of(circuitBreaker)))
-                .expectError(CircuitBreakerOpenException.class)
+                        .compose(CircuitBreakerOperator.of(circuitBreaker)))
+                .expectError(CallNotPermittedException.class)
                 .verify(Duration.ofSeconds(1));
 
-        assertNoRegisteredCall();
+        verify(circuitBreaker, never()).onError(anyLong(), any(Throwable.class));
+        verify(circuitBreaker, never()).onSuccess(anyLong());
+    }
+
+    @Test
+    public void shouldReleasePermissionOnCancel() {
+        given(circuitBreaker.tryAcquirePermission()).willReturn(true);
+
+        StepVerifier.create(
+                Flux.just("Event")
+                        .delayElements(Duration.ofDays(1))
+                        .compose(CircuitBreakerOperator.of(circuitBreaker)))
+                .expectSubscription()
+                .thenCancel()
+                .verify();
+
+        verify(circuitBreaker, times(1)).releasePermission();
+        verify(circuitBreaker, never()).onError(anyLong(), any(Throwable.class));
+        verify(circuitBreaker, never()).onSuccess(anyLong());
     }
 }

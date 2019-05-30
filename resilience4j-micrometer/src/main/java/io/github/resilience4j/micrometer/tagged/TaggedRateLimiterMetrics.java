@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Yevhenii Voievodin
+ * Copyright 2019 Yevhenii Voievodin, Robert Winkler
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,7 +15,6 @@
  */
 package io.github.resilience4j.micrometer.tagged;
 
-import io.github.resilience4j.micrometer.RateLimiterMetrics;
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RateLimiter.Metrics;
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
@@ -32,8 +31,6 @@ import static java.util.Objects.requireNonNull;
 
 /**
  * A micrometer binder that is used to register retry exposed {@link Metrics metrics}.
- * The main difference from {@link RateLimiterMetrics} is that this binder uses tags
- * to distinguish between metrics.
  */
 public class TaggedRateLimiterMetrics extends AbstractMetrics implements MeterBinder {
 
@@ -83,10 +80,12 @@ public class TaggedRateLimiterMetrics extends AbstractMetrics implements MeterBi
     private void addMetrics(MeterRegistry registry, RateLimiter rateLimiter) {
         Set<Meter.Id> idSet = new HashSet<>();
 
-        idSet.add(Gauge.builder(names.getAvailablePermissionsMetricName(), rateLimiter, (rl) -> rl.getMetrics().getAvailablePermissions())
+        idSet.add(Gauge.builder(names.getAvailablePermissionsMetricName(), rateLimiter, rl -> rl.getMetrics().getAvailablePermissions())
+                .description("The number of available permissions")
                 .tag(TagNames.NAME, rateLimiter.getName())
                 .register(registry).getId());
-        idSet.add(Gauge.builder(names.getWaitingThreadsMetricName(), rateLimiter, (rl) -> rl.getMetrics().getNumberOfWaitingThreads())
+        idSet.add(Gauge.builder(names.getWaitingThreadsMetricName(), rateLimiter, rl -> rl.getMetrics().getNumberOfWaitingThreads())
+                .description("The number of waiting threads")
                 .tag(TagNames.NAME, rateLimiter.getName())
                 .register(registry).getId());
 
@@ -96,8 +95,10 @@ public class TaggedRateLimiterMetrics extends AbstractMetrics implements MeterBi
     /** Defines possible configuration for metric names. */
     public static class MetricNames {
 
-        public static final String DEFAULT_AVAILABLE_PERMISSIONS_METRIC_NAME = "resilience4j_ratelimiter_available_permissions";
-        public static final String DEFAULT_WAITING_THREADS_METRIC_NAME = "resilience4j_ratelimiter_waiting_threads";
+        private static final String DEFAULT_PREFIX = "resilience4j.ratelimiter";
+
+        public static final String DEFAULT_AVAILABLE_PERMISSIONS_METRIC_NAME = DEFAULT_PREFIX + ".available.permissions";
+        public static final String DEFAULT_WAITING_THREADS_METRIC_NAME = DEFAULT_PREFIX + ".waiting_threads";
 
         /**
          * Returns a builder for creating custom metric names.

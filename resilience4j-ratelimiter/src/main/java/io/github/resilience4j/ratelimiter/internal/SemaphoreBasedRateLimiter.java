@@ -37,8 +37,7 @@ import static java.util.concurrent.Executors.newSingleThreadScheduledExecutor;
 
 /**
  * A RateLimiter implementation that consists of {@link Semaphore}
- * and scheduler that will refresh permissions
- * after each {@link RateLimiterConfig#limitRefreshPeriod}.
+ * and scheduler that will refresh permissions after each {@link RateLimiterConfig#getLimitRefreshPeriod()}.
  */
 public class SemaphoreBasedRateLimiter implements RateLimiter {
 
@@ -132,7 +131,12 @@ public class SemaphoreBasedRateLimiter implements RateLimiter {
      * {@inheritDoc}
      */
     @Override
-    public boolean getPermission(final Duration timeoutDuration) {
+    public boolean getPermission(Duration timeoutDuration) {
+        return acquirePermission(timeoutDuration);
+    }
+
+    @Override
+    public boolean acquirePermission(Duration timeoutDuration) {
         try {
             boolean success = semaphore.tryAcquire(timeoutDuration.toNanos(), TimeUnit.NANOSECONDS);
             publishRateLimiterEvent(success);
@@ -144,6 +148,11 @@ public class SemaphoreBasedRateLimiter implements RateLimiter {
         }
     }
 
+    @Override
+    public boolean acquirePermission() {
+        return acquirePermission(rateLimiterConfig.get().getTimeoutDuration());
+    }
+
     /**
      * {@inheritDoc}
      * SemaphoreBasedRateLimiter is totally blocking by it's nature. So this non-blocking API isn't supported.
@@ -151,6 +160,16 @@ public class SemaphoreBasedRateLimiter implements RateLimiter {
      */
     @Override
     public long reservePermission(Duration timeoutDuration) {
+        return -1;
+    }
+
+    /**
+     * {@inheritDoc}
+     * SemaphoreBasedRateLimiter is totally blocking by it's nature. So this non-blocking API isn't supported.
+     * It will return negative numbers all the time.
+     */
+    @Override
+    public long reservePermission() {
         return -1;
     }
 

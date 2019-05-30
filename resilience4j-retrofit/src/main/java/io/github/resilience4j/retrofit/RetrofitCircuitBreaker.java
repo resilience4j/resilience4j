@@ -18,9 +18,8 @@
  */
 package io.github.resilience4j.retrofit;
 
+import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
-import io.github.resilience4j.circuitbreaker.CircuitBreakerOpenException;
-import io.github.resilience4j.circuitbreaker.utils.CircuitBreakerUtils;
 import io.github.resilience4j.core.StopWatch;
 import io.github.resilience4j.retrofit.internal.DecoratedCall;
 import retrofit2.Call;
@@ -55,8 +54,8 @@ public interface RetrofitCircuitBreaker {
             @Override
             public void enqueue(final Callback<T> callback) {
                 try {
-                    CircuitBreakerUtils.isCallPermitted(circuitBreaker);
-                } catch (CircuitBreakerOpenException cb) {
+                    circuitBreaker.acquirePermission();
+                } catch (CallNotPermittedException cb) {
                     callback.onFailure(call, cb);
                     return;
                 }
@@ -84,7 +83,7 @@ public interface RetrofitCircuitBreaker {
 
             @Override
             public Response<T> execute() throws IOException {
-                CircuitBreakerUtils.isCallPermitted(circuitBreaker);
+                circuitBreaker.acquirePermission();
                 final StopWatch stopWatch = StopWatch.start();
                 try {
                     final Response<T> response = call.execute();
@@ -97,9 +96,9 @@ public interface RetrofitCircuitBreaker {
                     }
 
                     return response;
-                } catch (Throwable throwable) {
-                    circuitBreaker.onError(stopWatch.stop().toNanos(), throwable);
-                    throw throwable;
+                } catch (Exception exception) {
+                    circuitBreaker.onError(stopWatch.stop().toNanos(), exception);
+                    throw exception;
                 }
             }
         };

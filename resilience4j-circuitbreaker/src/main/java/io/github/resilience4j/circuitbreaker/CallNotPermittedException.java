@@ -32,15 +32,6 @@ public class CallNotPermittedException extends CircuitBreakerOpenException {
     public CallNotPermittedException(CircuitBreaker circuitBreaker) {
         super(String.format("CircuitBreaker '%s' is %s and does not permit further calls", circuitBreaker.getName(), circuitBreaker.getState()));
     }
-
-    /**
-     * The constructor with a message.
-     *
-     * @param message The message.
-     */
-    public CallNotPermittedException(String message) {
-        super(message);
-    }
 }
 
 

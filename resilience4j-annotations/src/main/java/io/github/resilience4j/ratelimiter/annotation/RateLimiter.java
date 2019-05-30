@@ -38,4 +38,11 @@ public @interface RateLimiter {
      * @return the name of the limiter
      */
     String name();
+
+    /**
+     * fallbackMethod method name.
+     *
+     * @return fallbackMethod method name.
+     */
+    String fallbackMethod() default "";
 }

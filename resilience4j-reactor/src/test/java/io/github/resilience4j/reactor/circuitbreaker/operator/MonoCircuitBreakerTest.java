@@ -15,8 +15,12 @@
  */
 package io.github.resilience4j.reactor.circuitbreaker.operator;
 
-import io.github.resilience4j.circuitbreaker.CircuitBreakerOpenException;
+import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
+import io.github.resilience4j.circuitbreaker.CircuitBreaker;
+import io.github.resilience4j.test.HelloWorldService;
+import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mockito;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
@@ -25,86 +29,173 @@ import java.time.Duration;
 import java.util.concurrent.ExecutionException;
 
 import static org.junit.Assert.fail;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.then;
+import static org.mockito.Mockito.*;
 
-public class MonoCircuitBreakerTest extends CircuitBreakerAssertions {
+public class MonoCircuitBreakerTest  {
 
-    @Test
-    public void shouldEmitEvent() {
-        StepVerifier.create(
-                Mono.just("Event")
-                        .transform(CircuitBreakerOperator.of(circuitBreaker)))
-                .expectNext("Event")
-                .verifyComplete();
+    private CircuitBreaker circuitBreaker;
+    private HelloWorldService helloWorldService;
 
-        assertSingleSuccessfulCall();
+    @Before
+    public void setUp(){
+        circuitBreaker = Mockito.mock(CircuitBreaker.class);
+        helloWorldService = Mockito.mock(HelloWorldService.class);
     }
 
     @Test
-    public void shouldEmptyMonoShouldBeSuccessful() {
+    public void shouldSubscribeToMonoJust() {
+        given(circuitBreaker.tryAcquirePermission()).willReturn(true);
+        given(helloWorldService.returnHelloWorld()).willReturn("Hello World");
+
         StepVerifier.create(
-                Mono.empty()
-                        .transform(CircuitBreakerOperator.of(circuitBreaker)))
+                Mono.just(helloWorldService.returnHelloWorld())
+                        .compose(CircuitBreakerOperator.of(circuitBreaker)))
+                .expectNext("Hello World")
                 .verifyComplete();
 
-        assertSingleSuccessfulCall();
+        then(helloWorldService).should(Mockito.times(1)).returnHelloWorld();
+        verify(circuitBreaker, times(1)).onSuccess(anyLong());
+        verify(circuitBreaker, never()).onError(anyLong(), any(Throwable.class));
+    }
+
+    @Test
+    public void shouldSubscribeToMonoFromCallable() {
+        given(circuitBreaker.tryAcquirePermission()).willReturn(true);
+        given(helloWorldService.returnHelloWorld()).willReturn("Hello World");
+
+        StepVerifier.create(
+                Mono.fromCallable(() -> helloWorldService.returnHelloWorld())
+                        .compose(CircuitBreakerOperator.of(circuitBreaker)))
+                .expectNext("Hello World")
+                .verifyComplete();
+
+        then(helloWorldService).should(Mockito.times(1)).returnHelloWorld();
+        verify(circuitBreaker, times(1)).onSuccess(anyLong());
+        verify(circuitBreaker, never()).onError(anyLong(), any(Throwable.class));
+    }
+
+    @Test
+    public void shouldSubscribeToMonoFromCallableMultipleTimes() {
+        given(circuitBreaker.tryAcquirePermission()).willReturn(true);
+        given(helloWorldService.returnHelloWorld()).willReturn("Hello World");
+
+        StepVerifier.create(
+                Mono.fromCallable(() -> helloWorldService.returnHelloWorld())
+                        .compose(CircuitBreakerOperator.of(circuitBreaker))
+                        .repeat(2))
+                .expectNext("Hello World")
+                .expectNext("Hello World")
+                .expectNext("Hello World")
+                .verifyComplete();
+
+        then(helloWorldService).should(Mockito.times(3)).returnHelloWorld();
+        verify(circuitBreaker, times(3)).onSuccess(anyLong());
+        verify(circuitBreaker, never()).onError(anyLong(), any(Throwable.class));
+    }
+
+    @Test
+    public void emptyMonoShouldBeSuccessful() {
+        given(circuitBreaker.tryAcquirePermission()).willReturn(true);
+
+        StepVerifier.create(
+                Mono.empty()
+                        .compose(CircuitBreakerOperator.of(circuitBreaker)))
+                .verifyComplete();
+
+        verify(circuitBreaker, times(1)).onSuccess(anyLong());
+        verify(circuitBreaker, never()).onError(anyLong(), any(Throwable.class));
     }
 
     @Test
     public void shouldPropagateError() {
+        given(circuitBreaker.tryAcquirePermission()).willReturn(true);
+
         StepVerifier.create(
                 Mono.error(new IOException("BAM!"))
-                        .transform(CircuitBreakerOperator.of(circuitBreaker)))
+                        .compose(CircuitBreakerOperator.of(circuitBreaker)))
                 .expectError(IOException.class)
                 .verify(Duration.ofSeconds(1));
 
-        assertSingleFailedCall();
+        verify(circuitBreaker, times(1)).onError(anyLong(), any(IOException.class));
+        verify(circuitBreaker, never()).onSuccess(anyLong());
     }
 
     @Test
-    public void shouldEmitCircuitBreakerOpenExceptionEvenWhenErrorNotOnSubscribe() {
-        circuitBreaker.transitionToForcedOpenState();
-        StepVerifier.create(
-                Mono.error(new IOException("BAM!")).delayElement(Duration.ofMillis(1))
-                        .transform(CircuitBreakerOperator.of(circuitBreaker)))
-                .expectError(CircuitBreakerOpenException.class)
-                .verify(Duration.ofSeconds(1));
+    public void shouldEmitCallNotPermittedExceptionEvenWhenErrorDuringSubscribe() {
+        given(circuitBreaker.tryAcquirePermission()).willReturn(false);
 
-        assertNoRegisteredCall();
-    }
-
-    @Test
-    public void shouldEmitCircuitBreakerOpenExceptionEvenWhenErrorDuringSubscribe() {
-        circuitBreaker.transitionToForcedOpenState();
         StepVerifier.create(
                 Mono.error(new IOException("BAM!"))
-                        .transform(CircuitBreakerOperator.of(circuitBreaker)))
-                .expectError(CircuitBreakerOpenException.class)
+                        .compose(CircuitBreakerOperator.of(circuitBreaker)))
+                .expectError(CallNotPermittedException.class)
                 .verify(Duration.ofSeconds(1));
 
-        assertNoRegisteredCall();
+        verify(circuitBreaker, never()).onError(anyLong(), any(Throwable.class));
+        verify(circuitBreaker, never()).onSuccess(anyLong());
     }
 
     @Test
     public void shouldEmitErrorWithCircuitBreakerOpenException() {
-        circuitBreaker.transitionToOpenState();
+        given(circuitBreaker.tryAcquirePermission()).willReturn(false);
+
         StepVerifier.create(
                 Mono.just("Event")
-                        .transform(CircuitBreakerOperator.of(circuitBreaker)))
-                .expectError(CircuitBreakerOpenException.class)
+                        .compose(CircuitBreakerOperator.of(circuitBreaker)))
+                .expectError(CallNotPermittedException.class)
                 .verify(Duration.ofSeconds(1));
 
-        assertNoRegisteredCall();
+        verify(circuitBreaker, never()).onError(anyLong(), any(Throwable.class));
+        verify(circuitBreaker, never()).onSuccess(anyLong());
+    }
+
+    @Test
+    public void shouldReleasePermissionOnCancel() {
+        given(circuitBreaker.tryAcquirePermission()).willReturn(true);
+
+        StepVerifier.create(
+                Mono.just("Event")
+                        .delayElement(Duration.ofDays(1))
+                        .compose(CircuitBreakerOperator.of(circuitBreaker)))
+                    .expectSubscription()
+                    .thenCancel()
+                    .verify();
+
+        verify(circuitBreaker, times(1)).releasePermission();
+        verify(circuitBreaker, never()).onError(anyLong(), any(Throwable.class));
+        verify(circuitBreaker, never()).onSuccess(anyLong());
+    }
+
+    @Test
+    public void shouldNotSubscribeToMonoFromCallable() {
+        given(circuitBreaker.tryAcquirePermission()).willReturn(false);
+        given(helloWorldService.returnHelloWorld()).willReturn("Hello World");
+
+        StepVerifier.create(
+                Mono.fromCallable(() -> helloWorldService.returnHelloWorld())
+                        .flatMap(Mono::just)
+                        .compose(CircuitBreakerOperator.of(circuitBreaker)))
+                .expectError(CallNotPermittedException.class)
+                .verify();
+
+        then(helloWorldService).should(never()).returnHelloWorld();
+        verify(circuitBreaker, never()).onSuccess(anyLong());
+        verify(circuitBreaker, never()).onError(anyLong(), any(Throwable.class));
     }
 
     @Test
     public void shouldRecordSuccessWhenUsingToFuture() {
+        given(circuitBreaker.tryAcquirePermission()).willReturn(true);
+
         try {
             Mono.just("Event")
-                    .transform(CircuitBreakerOperator.of(circuitBreaker))
+                    .compose(CircuitBreakerOperator.of(circuitBreaker))
                     .toFuture()
                     .get();
 
-            assertSingleSuccessfulCall();
         } catch (InterruptedException | ExecutionException e) {
             fail();
         }

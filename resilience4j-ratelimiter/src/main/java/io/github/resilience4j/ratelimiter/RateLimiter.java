@@ -38,7 +38,7 @@ import java.util.function.Supplier;
 /**
  * A RateLimiter instance is thread-safe can be used to decorate multiple requests.
  * <p>
- * A RateLimiter distributes permits at a configurable rate. {@link #getPermission} blocks if necessary
+ * A RateLimiter distributes permits at a configurable rate. {@link #acquirePermission(Duration)} blocks if necessary
  * until a permit is available, and then takes it. Once acquired, permits need not be released.
  */
 public interface RateLimiter {
@@ -239,14 +239,12 @@ public interface RateLimiter {
 	 * @throws IllegalStateException if thread was interrupted during permission wait
 	 */
 	static void waitForPermission(final RateLimiter rateLimiter) {
-		RateLimiterConfig rateLimiterConfig = rateLimiter.getRateLimiterConfig();
-		Duration timeoutDuration = rateLimiterConfig.getTimeoutDuration();
-		boolean permission = rateLimiter.getPermission(timeoutDuration);
+		boolean permission = rateLimiter.acquirePermission();
 		if (Thread.interrupted()) {
 			throw new IllegalStateException("Thread was interrupted during permission wait");
 		}
 		if (!permission) {
-			throw new RequestNotPermitted("Request not permitted for limiter: " + rateLimiter.getName());
+			throw new RequestNotPermitted(rateLimiter);
 		}
 	}
 
@@ -269,27 +267,47 @@ public interface RateLimiter {
 	void changeLimitForPeriod(int limitForPeriod);
 
 	/**
-	 * Acquires a permission from this rate limiter, blocking until one is
-	 * available.
+	 * @deprecated Use {@link RateLimiter#acquirePermission(Duration)} instead.
+	 * @since 0.15.0
+	 */
+	@Deprecated
+	boolean getPermission(Duration timeoutDuration);
+
+	/**
+	 * @deprecated Use {@link RateLimiter#acquirePermission()} instead.
+	 * @since 0.16.0
+	 */
+	@Deprecated
+	boolean acquirePermission(Duration timeoutDuration);
+
+	/**
+	 * Acquires a permission from this rate limiter, blocking until one is available, or the thread is interrupted.
+	 * Maximum wait time is {@link RateLimiterConfig#getTimeoutDuration()}
+	 *
 	 * <p>If the current thread is {@linkplain Thread#interrupt interrupted}
 	 * while waiting for a permit then it won't throw {@linkplain InterruptedException},
 	 * but its interrupt status will be set.
 	 *
-	 * @param timeoutDuration the maximum time to wait
 	 * @return {@code true} if a permit was acquired and {@code false}
 	 * if waiting timeoutDuration elapsed before a permit was acquired
 	 */
-	boolean getPermission(Duration timeoutDuration);
+	boolean acquirePermission();
+
+	/**
+	 * @deprecated Use {@link RateLimiter#reservePermission()} instead.
+	 * @since 0.16.0
+	 */
+	@Deprecated
+	long reservePermission(Duration timeoutDuration);
 
 	/**
 	 * Reserves a permission from this rate limiter and returns nanoseconds you should wait for it.
 	 * If returned long is negative, it means that you failed to reserve permission,
-	 * possibly your {@code timeoutDuration} is less then time to wait for permission.
+	 * possibly your  {@link RateLimiterConfig#getTimeoutDuration()} is less then time to wait for permission.
 	 *
-	 * @param timeoutDuration the maximum time you want to wait.
 	 * @return {@code long} amount of nanoseconds you should wait for reserved permission. if negative, it means you failed to reserve.
 	 */
-	long reservePermission(Duration timeoutDuration);
+	long reservePermission();
 
 	/**
 	 * Get the name of this RateLimiter

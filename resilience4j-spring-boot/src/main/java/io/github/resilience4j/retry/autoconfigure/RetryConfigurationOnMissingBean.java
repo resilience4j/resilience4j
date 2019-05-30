@@ -21,7 +21,6 @@ import org.springframework.context.annotation.Configuration;
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
 import io.github.resilience4j.retry.event.RetryEvent;
-import io.github.resilience4j.springboot.common.retry.autoconfigure.AbstractRetryConfigurationOnMissingBean;
 
 /**
  * {@link Configuration

@@ -52,6 +52,17 @@ public class RetryConfigBuilderTest {
     }
 
     @Test
+    public void testCreateFromConfigurationWithNoPredicateCalculations() {
+        RetryConfig config = RetryConfig
+                .from(RetryConfig.custom().retryOnException(e -> e instanceof IllegalArgumentException)
+                        .build()).build();
+        assertThat(config).isNotNull();
+        assertThat(config.getExceptionPredicate().test(new IllegalArgumentException())).isTrue();
+        assertThat(config.getExceptionPredicate().test(new IllegalStateException())).isFalse();
+    }
+
+
+    @Test
     public void waitIntervalOverTenMillisShouldSucceed() {
         RetryConfig config = RetryConfig.custom().waitDuration(Duration.ofSeconds(10)).build();
         Assertions.assertThat(config).isNotNull();
@@ -127,20 +138,6 @@ public class RetryConfigBuilderTest {
         then(failurePredicate.test(new RuntimeException())).isEqualTo(true); // explicitly included by 2
         then(failurePredicate.test(new ExtendsRuntimeException())).isEqualTo(false); // explicitly excluded by 3
         then(failurePredicate.test(new ExtendsExtendsException())).isEqualTo(false); // inherits excluded from ExtendsException by 3
-    }
-
-    @Test()
-    public void builderMakePredicateShouldBuildPredicateAcceptingChildClass() {
-        final Predicate<Throwable> predicate = RetryConfig.Builder.makePredicate(RuntimeException.class);
-        then(predicate.test(new RuntimeException())).isEqualTo(true);
-        then(predicate.test(new Exception())).isEqualTo(false);
-        then(predicate.test(new Throwable())).isEqualTo(false);
-        then(predicate.test(new IllegalArgumentException())).isEqualTo(true);
-        then(predicate.test(new RuntimeException() {
-        })).isEqualTo(true);
-        then(predicate.test(new Exception() {
-        })).isEqualTo(false);
-
     }
 
     @Test()

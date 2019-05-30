@@ -15,10 +15,11 @@
  */
 package io.github.resilience4j.bulkhead.configure;
 
-import io.github.resilience4j.bulkhead.BulkheadRegistry;
-import io.github.resilience4j.bulkhead.annotation.Bulkhead;
-import io.github.resilience4j.core.lang.Nullable;
-import io.github.resilience4j.utils.AnnotationExtractor;
+import java.lang.reflect.Method;
+import java.util.List;
+import java.util.concurrent.CompletionException;
+import java.util.concurrent.CompletionStage;
+
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -28,16 +29,35 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.Ordered;
+import org.springframework.util.StringUtils;
 
-import java.lang.reflect.Method;
-import java.util.List;
-import java.util.concurrent.CompletionException;
-import java.util.concurrent.CompletionStage;
+import io.github.resilience4j.bulkhead.BulkheadRegistry;
+import io.github.resilience4j.bulkhead.annotation.Bulkhead;
+import io.github.resilience4j.core.lang.Nullable;
+import io.github.resilience4j.fallback.FallbackDecorators;
+import io.github.resilience4j.fallback.FallbackMethod;
+import io.github.resilience4j.utils.AnnotationExtractor;
 
 /**
  * This Spring AOP aspect intercepts all methods which are annotated with a {@link Bulkhead} annotation.
- * The aspect protects an annotated method with a Bulkhead. The BulkheadRegistry is used to retrieve an instance of a Bulkhead for
- * a specific name.
+ * The aspect will handle methods that return a RxJava2 reactive type, Spring Reactor reactive type, CompletionStage type, or value type.
+ *
+ * The BulkheadRegistry is used to retrieve an instance of a Bulkhead for a specific name.
+ *
+ * Given a method like this:
+ * <pre><code>
+ *     {@literal @}Bulkhead(name = "myService")
+ *     public String fancyName(String name) {
+ *         return "Sir Captain " + name;
+ *     }
+ * </code></pre>
+ * each time the {@code #fancyName(String)} method is invoked, the method's execution will pass through a
+ * a {@link io.github.resilience4j.bulkhead.Bulkhead} according to the given config.
+ *
+ * The fallbackMethod parameter signature must match either:
+ *
+ * 1) The method parameter signature on the annotated method or
+ * 2) The method parameter signature with a matching exception type as the last parameter on the annotated method
  */
 @Aspect
 public class BulkheadAspect implements Ordered {
@@ -46,31 +66,43 @@ public class BulkheadAspect implements Ordered {
 
 	private final BulkheadConfigurationProperties bulkheadConfigurationProperties;
 	private final BulkheadRegistry bulkheadRegistry;
-	private final @Nullable List<BulkheadAspectExt> bulkheadAspectExts;
+	private final @Nullable
+	List<BulkheadAspectExt> bulkheadAspectExts;
+	private final FallbackDecorators fallbackDecorators;
 
-	public BulkheadAspect(BulkheadConfigurationProperties backendMonitorPropertiesRegistry, BulkheadRegistry bulkheadRegistry, @Autowired(required = false) List<BulkheadAspectExt> bulkheadAspectExts) {
+	public BulkheadAspect(BulkheadConfigurationProperties backendMonitorPropertiesRegistry, BulkheadRegistry bulkheadRegistry, @Autowired(required = false) List<BulkheadAspectExt> bulkheadAspectExts, FallbackDecorators fallbackDecorators) {
 		this.bulkheadConfigurationProperties = backendMonitorPropertiesRegistry;
 		this.bulkheadRegistry = bulkheadRegistry;
 		this.bulkheadAspectExts = bulkheadAspectExts;
+		this.fallbackDecorators = fallbackDecorators;
 	}
 
 	@Pointcut(value = "@within(Bulkhead) || @annotation(Bulkhead)", argNames = "Bulkhead")
 	public void matchAnnotatedClassOrMethod(Bulkhead Bulkhead) {
 	}
 
-	@Around(value = "matchAnnotatedClassOrMethod(backendMonitored)", argNames = "proceedingJoinPoint, backendMonitored")
-	public Object bulkheadAroundAdvice(ProceedingJoinPoint proceedingJoinPoint, @Nullable Bulkhead backendMonitored) throws Throwable {
+	@Around(value = "matchAnnotatedClassOrMethod(bulkheadAnnotation)", argNames = "proceedingJoinPoint, bulkheadAnnotation")
+	public Object bulkheadAroundAdvice(ProceedingJoinPoint proceedingJoinPoint, @Nullable Bulkhead bulkheadAnnotation) throws Throwable {
 		Method method = ((MethodSignature) proceedingJoinPoint.getSignature()).getMethod();
 		String methodName = method.getDeclaringClass().getName() + "#" + method.getName();
-		if (backendMonitored == null) {
-			backendMonitored = getBackendMonitoredAnnotation(proceedingJoinPoint);
+		if (bulkheadAnnotation == null) {
+			bulkheadAnnotation = geBulkheadAnnotation(proceedingJoinPoint);
 		}
-		if(backendMonitored == null) { //because annotations wasn't found
+		if (bulkheadAnnotation == null) { //because annotations wasn't found
 			return proceedingJoinPoint.proceed();
 		}
-		String backend = backendMonitored.name();
+		String backend = bulkheadAnnotation.name();
 		io.github.resilience4j.bulkhead.Bulkhead bulkhead = getOrCreateBulkhead(methodName, backend);
 		Class<?> returnType = method.getReturnType();
+
+		if (StringUtils.isEmpty(bulkheadAnnotation.fallbackMethod())) {
+			return proceed(proceedingJoinPoint, methodName, bulkhead, returnType);
+		}
+		FallbackMethod fallbackMethod = FallbackMethod.create(bulkheadAnnotation.fallbackMethod(), method, proceedingJoinPoint.getArgs(), proceedingJoinPoint.getTarget());
+		return fallbackDecorators.decorate(fallbackMethod, () -> proceed(proceedingJoinPoint, methodName, bulkhead, returnType)).apply();
+	}
+
+	private Object proceed(ProceedingJoinPoint proceedingJoinPoint, String methodName, io.github.resilience4j.bulkhead.Bulkhead bulkhead, Class<?> returnType) throws Throwable {
 		if (bulkheadAspectExts != null && !bulkheadAspectExts.isEmpty()) {
 			for (BulkheadAspectExt bulkHeadAspectExt : bulkheadAspectExts) {
 				if (bulkHeadAspectExt.canHandleReturnType(returnType)) {
@@ -85,8 +117,7 @@ public class BulkheadAspect implements Ordered {
 	}
 
 	private io.github.resilience4j.bulkhead.Bulkhead getOrCreateBulkhead(String methodName, String backend) {
-		io.github.resilience4j.bulkhead.Bulkhead bulkhead = bulkheadRegistry.bulkhead(backend,
-				() -> bulkheadConfigurationProperties.createBulkheadConfig(backend));
+		io.github.resilience4j.bulkhead.Bulkhead bulkhead = bulkheadRegistry.bulkhead(backend);
 
 		if (logger.isDebugEnabled()) {
 			logger.debug("Created or retrieved bulkhead '{}' with max concurrent call '{}' and max wait time '{}' for method: '{}'",
@@ -98,7 +129,7 @@ public class BulkheadAspect implements Ordered {
 	}
 
 	@Nullable
-	private Bulkhead getBackendMonitoredAnnotation(ProceedingJoinPoint proceedingJoinPoint) {
+	private Bulkhead geBulkheadAnnotation(ProceedingJoinPoint proceedingJoinPoint) {
 		if (logger.isDebugEnabled()) {
 			logger.debug("bulkhead parameter is null");
 		}

@@ -15,25 +15,16 @@
  */
 package io.github.resilience4j.circuitbreaker.configure;
 
-import static io.github.resilience4j.utils.AspectUtil.newHashSet;
-
-import java.util.Set;
-
+import io.github.resilience4j.circuitbreaker.CircuitBreaker;
+import io.github.resilience4j.circuitbreaker.operator.CircuitBreakerOperator;
+import io.reactivex.*;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import io.github.resilience4j.circuitbreaker.CircuitBreaker;
-import io.github.resilience4j.circuitbreaker.operator.CircuitBreakerOperator;
-import io.reactivex.Completable;
-import io.reactivex.CompletableSource;
-import io.reactivex.Flowable;
-import io.reactivex.Maybe;
-import io.reactivex.MaybeSource;
-import io.reactivex.Observable;
-import io.reactivex.ObservableSource;
-import io.reactivex.Single;
-import io.reactivex.SingleSource;
+import java.util.Set;
+
+import static io.github.resilience4j.utils.AspectUtil.newHashSet;
 
 /**
  * the Rx circuit breaker logic support for the spring AOP
@@ -66,21 +57,27 @@ public class RxJava2CircuitBreakerAspectExt implements CircuitBreakerAspectExt {
 	public Object handle(ProceedingJoinPoint proceedingJoinPoint, CircuitBreaker circuitBreaker, String methodName) throws Throwable {
 		CircuitBreakerOperator circuitBreakerOperator = CircuitBreakerOperator.of(circuitBreaker);
 		Object returnValue = proceedingJoinPoint.proceed();
+
+		return executeRxJava2Aspect(circuitBreakerOperator, returnValue, methodName);
+	}
+
+	@SuppressWarnings("unchecked")
+	private Object executeRxJava2Aspect(CircuitBreakerOperator circuitBreakerOperator, Object returnValue, String methodName) {
 		if (returnValue instanceof ObservableSource) {
 			Observable<?> observable = (Observable) returnValue;
-			return observable.lift(circuitBreakerOperator);
+			return observable.compose(circuitBreakerOperator);
 		} else if (returnValue instanceof SingleSource) {
 			Single<?> single = (Single) returnValue;
-			return single.lift(circuitBreakerOperator);
+			return single.compose(circuitBreakerOperator);
 		} else if (returnValue instanceof CompletableSource) {
 			Completable completable = (Completable) returnValue;
-			return completable.lift(circuitBreakerOperator);
+			return completable.compose(circuitBreakerOperator);
 		} else if (returnValue instanceof MaybeSource) {
 			Maybe<?> maybe = (Maybe) returnValue;
-			return maybe.lift(circuitBreakerOperator);
+			return maybe.compose(circuitBreakerOperator);
 		} else if (returnValue instanceof Flowable) {
 			Flowable<?> flowable = (Flowable) returnValue;
-			return flowable.lift(circuitBreakerOperator);
+			return flowable.compose(circuitBreakerOperator);
 		} else {
 			logger.error("Unsupported type for RxJava2 circuit breaker return type {} for method {}", returnValue.getClass().getTypeName(), methodName);
 			throw new IllegalArgumentException("Not Supported type for the circuit breaker in RxJava2:" + returnValue.getClass().getName());

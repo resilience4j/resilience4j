@@ -21,6 +21,7 @@ import io.github.resilience4j.circuitbreaker.configure.CircuitBreakerConfigurati
 import io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent;
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
+import io.github.resilience4j.fallback.FallbackDecorators;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(classes = {
@@ -74,8 +75,9 @@ public class CircuitBreakerConfigurationOnMissingBeanTest {
 
         @Bean
         public CircuitBreakerAspect circuitBreakerAspect(CircuitBreakerRegistry circuitBreakerRegistry,
-                                                         @Autowired(required = false) List<CircuitBreakerAspectExt> circuitBreakerAspectExtList) {
-            circuitBreakerAspect = new CircuitBreakerAspect(new CircuitBreakerProperties(), circuitBreakerRegistry, circuitBreakerAspectExtList);
+                                                         @Autowired(required = false) List<CircuitBreakerAspectExt> circuitBreakerAspectExtList,
+                                                         FallbackDecorators recoveryDecorators) {
+            circuitBreakerAspect = new CircuitBreakerAspect(new CircuitBreakerProperties(), circuitBreakerRegistry, circuitBreakerAspectExtList, recoveryDecorators);
             return circuitBreakerAspect;
         }
 

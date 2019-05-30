@@ -36,6 +36,7 @@ import io.github.resilience4j.bulkhead.configure.BulkheadConfiguration;
 import io.github.resilience4j.bulkhead.event.BulkheadEvent;
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
+import io.github.resilience4j.fallback.FallbackDecorators;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(classes = {
@@ -89,8 +90,9 @@ public class BulkheadConfigurationOnMissingBeanTest {
 
 		@Bean
 		public BulkheadAspect bulkheadAspect(BulkheadRegistry bulkheadRegistry,
-		                                     @Autowired(required = false) List<BulkheadAspectExt> bulkheadAspectExts) {
-			bulkheadAspect = new BulkheadAspect(new BulkheadProperties(), bulkheadRegistry, bulkheadAspectExts);
+											 @Autowired(required = false) List<BulkheadAspectExt> bulkheadAspectExts,
+											 FallbackDecorators fallbackDecorators) {
+			bulkheadAspect = new BulkheadAspect(new BulkheadProperties(), bulkheadRegistry, bulkheadAspectExts, fallbackDecorators);
 			return bulkheadAspect;
 		}
 

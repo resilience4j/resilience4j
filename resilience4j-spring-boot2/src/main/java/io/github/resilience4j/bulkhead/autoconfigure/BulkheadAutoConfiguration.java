@@ -30,6 +30,7 @@ import io.github.resilience4j.bulkhead.event.BulkheadEvent;
 import io.github.resilience4j.bulkhead.monitoring.endpoint.BulkheadEndpoint;
 import io.github.resilience4j.bulkhead.monitoring.endpoint.BulkheadEventsEndpoint;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
+import io.github.resilience4j.fallback.autoconfigure.FallbackConfigurationOnMissingBean;
 
 /**
  * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration
@@ -38,7 +39,7 @@ import io.github.resilience4j.consumer.EventConsumerRegistry;
 @Configuration
 @ConditionalOnClass(Bulkhead.class)
 @EnableConfigurationProperties(BulkheadProperties.class)
-@Import(BulkheadConfigurationOnMissingBean.class)
+@Import({BulkheadConfigurationOnMissingBean.class,  FallbackConfigurationOnMissingBean.class})
 @AutoConfigureBefore(EndpointAutoConfiguration.class)
 public class BulkheadAutoConfiguration {
 	@Bean

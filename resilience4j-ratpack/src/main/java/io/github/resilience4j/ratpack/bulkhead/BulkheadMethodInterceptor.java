@@ -18,26 +18,50 @@ package io.github.resilience4j.ratpack.bulkhead;
 import com.google.inject.Inject;
 import io.github.resilience4j.bulkhead.BulkheadFullException;
 import io.github.resilience4j.bulkhead.BulkheadRegistry;
+import io.github.resilience4j.bulkhead.annotation.Bulkhead;
 import io.github.resilience4j.core.lang.Nullable;
+import io.github.resilience4j.ratpack.internal.AbstractMethodInterceptor;
+import io.github.resilience4j.ratpack.recovery.DefaultRecoveryFunction;
 import io.github.resilience4j.ratpack.recovery.RecoveryFunction;
 import io.github.resilience4j.reactor.bulkhead.operator.BulkheadOperator;
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
 import ratpack.exec.Promise;
-import ratpack.util.Exceptions;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
 
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 
 /**
  * A {@link MethodInterceptor} to handle all methods annotated with {@link Bulkhead}. It will
- * handle methods that return a Promise only. It will add a transform to the promise with the bulkhead and
- * fallback found in the annotation.
+ *  handle methods that return a {@link Promise}, {@link reactor.core.publisher.Flux}, {@link reactor.core.publisher.Mono}, {@link java.util.concurrent.CompletionStage}, or value.
+ *
+ * Given a method like this:
+ * <pre><code>
+ *     {@literal @}Bulkhead(name = "myService")
+ *     public String fancyName(String name) {
+ *         return "Sir Captain " + name;
+ *     }
+ * </code></pre>
+ * each time the {@code #fancyName(String)} method is invoked, the method's execution will pass through a
+ * a {@link io.github.resilience4j.bulkhead.Bulkhead} (concurrent limiting) according to the given policy.
+ *
+ * The fallbackMethod parameter signature must match either:
+ *
+ * 1) The method parameter signature on the annotated method or
+ * 2) The method parameter signature with a matching exception type as the last parameter on the annotated method
+ *
+ * The return value can be a {@link Promise}, {@link java.util.concurrent.CompletionStage},
+ * {@link reactor.core.publisher.Flux}, {@link reactor.core.publisher.Mono}, or an object value.
+ * Other reactive types are not supported.
+ *
+ * If the return value is one of the reactive types listed above, it must match the return value type of the
+ * annotated method.
  */
-public class BulkheadMethodInterceptor implements MethodInterceptor {
+
+public class BulkheadMethodInterceptor extends AbstractMethodInterceptor {
 
     @Inject(optional = true)
     @Nullable
@@ -48,7 +72,9 @@ public class BulkheadMethodInterceptor implements MethodInterceptor {
     @Override
     public Object invoke(MethodInvocation invocation) throws Throwable {
         Bulkhead annotation = invocation.getMethod().getAnnotation(Bulkhead.class);
-        RecoveryFunction<?> recoveryFunction = annotation.recovery().newInstance();
+        final RecoveryFunction<?> fallbackMethod = Optional
+                .ofNullable(createRecoveryFunction(invocation, annotation.fallbackMethod()))
+                .orElse(new DefaultRecoveryFunction<>());
         if (registry == null) {
             registry = BulkheadRegistry.ofDefaults();
         }
@@ -57,70 +83,60 @@ public class BulkheadMethodInterceptor implements MethodInterceptor {
         if (Promise.class.isAssignableFrom(returnType)) {
             Promise<?> result = (Promise<?>) invocation.proceed();
             if (result != null) {
-                BulkheadTransformer transformer = BulkheadTransformer.of(bulkhead).recover(recoveryFunction);
+                BulkheadTransformer transformer = BulkheadTransformer.of(bulkhead).recover(fallbackMethod);
                 result = result.transform(transformer);
             }
             return result;
         } else if (Flux.class.isAssignableFrom(returnType)) {
             Flux<?> result = (Flux<?>) invocation.proceed();
             if (result != null) {
-                BulkheadOperator operator = BulkheadOperator.of(bulkhead, Schedulers.immediate());
-                result = recoveryFunction.onErrorResume(result.transform(operator));
+                BulkheadOperator operator = BulkheadOperator.of(bulkhead);
+                result = fallbackMethod.onErrorResume(result.transform(operator));
             }
             return result;
         } else if (Mono.class.isAssignableFrom(returnType)) {
             Mono<?> result = (Mono<?>) invocation.proceed();
             if (result != null) {
-                BulkheadOperator operator = BulkheadOperator.of(bulkhead, Schedulers.immediate());
-                result = recoveryFunction.onErrorResume(result.transform(operator));
+                BulkheadOperator operator = BulkheadOperator.of(bulkhead);
+                result = fallbackMethod.onErrorResume(result.transform(operator));
             }
             return result;
         } else if (CompletionStage.class.isAssignableFrom(returnType)) {
-            if (bulkhead.tryObtainPermission()) {
-                return ((CompletionStage<?>) invocation.proceed()).handle((o, throwable) -> {
-                    bulkhead.onComplete();
-                    if (throwable != null) {
-                        try {
-                            return recoveryFunction.apply(throwable);
-                        } catch (Exception e) {
-                            throw Exceptions.uncheck(throwable);
+            final CompletableFuture promise = new CompletableFuture<>();
+            if (bulkhead.tryAcquirePermission()) {
+                CompletionStage<?> result = (CompletionStage<?>) invocation.proceed();
+                if (result != null) {
+                    result.whenComplete((value, throwable) -> {
+                        bulkhead.onComplete();
+                        if (throwable != null) {
+                            completeFailedFuture(throwable, fallbackMethod, promise);
+                        } else {
+                            promise.complete(value);
                         }
-                    } else {
-                        return o;
-                    }
-                });
-            } else {
-                final CompletableFuture promise = new CompletableFuture<>();
-                Throwable t = new BulkheadFullException(String.format("Bulkhead '%s' is full", bulkhead.getName()));
-                try {
-                    promise.complete(recoveryFunction.apply(t));
-                } catch (Throwable t2) {
-                    promise.completeExceptionally(t2);
+                    });
                 }
-                return promise;
+            } else {
+                Throwable t = new BulkheadFullException(bulkhead);
+                completeFailedFuture(t, fallbackMethod, promise);
+            }
+            return promise;
+        } else {
+            boolean permission = bulkhead.tryAcquirePermission();
+            if (!permission) {
+                Throwable t = new BulkheadFullException(bulkhead);
+                return fallbackMethod.apply(t);
+            }
+            try {
+                if (Thread.interrupted()) {
+                    throw new IllegalStateException("Thread was interrupted during permission wait");
+                }
+                return invocation.proceed();
+            } catch (Exception e) {
+                return fallbackMethod.apply(e);
+            } finally {
+                bulkhead.onComplete();
             }
         }
-        return handleOther(invocation, bulkhead, recoveryFunction);
     }
 
-    private Object handleOther(MethodInvocation invocation, io.github.resilience4j.bulkhead.Bulkhead bulkhead, RecoveryFunction<?> recoveryFunction) throws Throwable {
-        boolean permission = bulkhead.tryObtainPermission();
-
-        if (!permission) {
-            Throwable t = new BulkheadFullException(String.format("Bulkhead '%s' is full", bulkhead.getName()));
-            return recoveryFunction.apply(t);
-        }
-
-        try {
-            if (Thread.interrupted()) {
-                throw new IllegalStateException("Thread was interrupted during permission wait");
-            }
-
-            return invocation.proceed();
-        } catch (Exception e) {
-            return recoveryFunction.apply(e);
-        } finally {
-            bulkhead.onComplete();
-        }
-    }
 }

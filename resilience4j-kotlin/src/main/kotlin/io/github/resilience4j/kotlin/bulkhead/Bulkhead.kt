@@ -28,7 +28,7 @@ import io.github.resilience4j.bulkhead.BulkheadConfig
  * For this reason, it is not recommended to use this extension function with Bulkheads with non-zero max wait times.
  */
 suspend fun <T> Bulkhead.executeSuspendFunction(block: suspend () -> T): T {
-    obtainPermission()
+    acquirePermission()
     return try {
         block()
     } finally {

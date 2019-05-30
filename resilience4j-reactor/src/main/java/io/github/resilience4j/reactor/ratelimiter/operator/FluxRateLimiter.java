@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Julien Hoarau
+ * Copyright 2018 Julien Hoarau, Robert Winkler
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,27 +16,37 @@
 package io.github.resilience4j.reactor.ratelimiter.operator;
 
 import io.github.resilience4j.ratelimiter.RateLimiter;
+import io.github.resilience4j.ratelimiter.RequestNotPermitted;
 import reactor.core.CoreSubscriber;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.FluxOperator;
-import reactor.core.scheduler.Scheduler;
+import reactor.core.publisher.Mono;
+import reactor.core.publisher.Operators;
 
-public class FluxRateLimiter<T> extends FluxOperator<T, T> {
+import java.time.Duration;
+
+class FluxRateLimiter<T> extends FluxOperator<T, T> {
 
     private final RateLimiter rateLimiter;
-    private final Scheduler scheduler;
 
-    public FluxRateLimiter(Flux<? extends T> source, RateLimiter rateLimiter,
-                           Scheduler scheduler) {
+    FluxRateLimiter(Flux<? extends T> source, RateLimiter rateLimiter) {
         super(source);
         this.rateLimiter = rateLimiter;
-        this.scheduler = scheduler;
     }
 
     @Override
     public void subscribe(CoreSubscriber<? super T> actual) {
-        source.publishOn(scheduler)
-                .subscribe(new RateLimiterSubscriber<>(rateLimiter, actual));
+        long waitDuration = rateLimiter.reservePermission();
+        if(waitDuration >= 0){
+            if(waitDuration > 0){
+                Mono.delay(Duration.ofNanos(waitDuration))
+                        .subscribe(delay -> source.subscribe(new RateLimiterSubscriber<>(actual)));
+            }else{
+                source.subscribe(new RateLimiterSubscriber<>(actual));
+            }
+        }else{
+            Operators.error(actual, new RequestNotPermitted(rateLimiter));
+        }
     }
 
 }

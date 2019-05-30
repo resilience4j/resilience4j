@@ -16,7 +16,6 @@
 package io.github.resilience4j.circuitbreaker.autoconfigure;
 
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
-import io.github.resilience4j.prometheus.CircuitBreakerExports;
 import io.github.resilience4j.prometheus.collectors.CircuitBreakerMetricsCollector;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -32,24 +31,11 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 @AutoConfigureAfter(value = CircuitBreakerAutoConfiguration.class)
 @ConditionalOnClass(CircuitBreakerMetricsCollector.class)
+@ConditionalOnProperty(value = "resilience4j.circuitbreaker.metrics.enabled", matchIfMissing = true)
 public class CircuitBreakerPrometheusAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
-    @ConditionalOnProperty(value = "resilience4j.circuitbreaker.metrics.use_legacy_collector", havingValue = "true")
-    public CircuitBreakerExports legacyCircuitBreakerPrometheusCollector(CircuitBreakerRegistry circuitBreakerRegistry) {
-        CircuitBreakerExports collector = CircuitBreakerExports.ofCircuitBreakerRegistry(circuitBreakerRegistry);
-        collector.register();
-        return collector;
-    }
-
-    @Bean
-    @ConditionalOnMissingBean
-    @ConditionalOnProperty(
-        value = "resilience4j.circuitbreaker.metrics.use_legacy_collector",
-        havingValue = "false",
-        matchIfMissing = true
-    )
     public CircuitBreakerMetricsCollector circuitBreakerPrometheusCollector(CircuitBreakerRegistry circuitBreakerRegistry) {
         CircuitBreakerMetricsCollector collector = CircuitBreakerMetricsCollector.ofCircuitBreakerRegistry(circuitBreakerRegistry);
         collector.register();

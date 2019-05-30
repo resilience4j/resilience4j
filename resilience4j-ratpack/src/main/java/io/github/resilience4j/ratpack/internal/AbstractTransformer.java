@@ -18,6 +18,7 @@ package io.github.resilience4j.ratpack.internal;
 
 import io.github.resilience4j.core.lang.Nullable;
 import ratpack.exec.Downstream;
+import ratpack.exec.Promise;
 import ratpack.exec.Upstream;
 import ratpack.func.Function;
 
@@ -29,12 +30,19 @@ public abstract class AbstractTransformer<T> implements Function<Upstream<? exte
     protected void handleRecovery(Downstream<? super T> down, Throwable throwable) {
         try {
             if (recoverer != null) {
-                down.success(recoverer.apply(throwable));
+                T result = recoverer.apply(throwable);
+                if (result instanceof Promise) {
+                    ((Promise)result)
+                            .onError((t) -> down.error((Throwable)t))
+                            .then((r) -> down.success((T)r));
+                } else {
+                    down.success(result);
+                }
             } else {
                 down.error(throwable);
             }
-        } catch (Throwable t) {
-            down.error(t);
+        } catch (Exception ex) {
+            down.error(ex);
         }
     }
 }

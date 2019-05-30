@@ -29,6 +29,7 @@ import org.mockito.Mockito;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Supplier;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -86,7 +87,7 @@ public class ThreadPoolBulkheadTest {
 		final AtomicInteger counter = new AtomicInteger(0);
 		Awaitility.waitAtMost(Duration.FIVE_HUNDRED_MILLISECONDS).until(() -> counter.incrementAndGet() >= 2);
 		// Then
-		assertThat(exception.getCause().getMessage()).contains("ThreadPoolBulkhead 'testSupplier' is full");
+		assertThat(exception.getCause().getMessage()).contains("Bulkhead 'testSupplier' is full and does not permit further calls");
 	}
 
 
@@ -151,7 +152,23 @@ public class ThreadPoolBulkheadTest {
 
 	@Test
 	public void testCreateWithNullConfig() {
-		assertThatThrownBy(() -> ThreadPoolBulkhead.of("test", (ThreadPoolBulkheadConfig) null)).isInstanceOf(NullPointerException.class).hasMessage("Config must not be null");
+		assertThatThrownBy(() -> ThreadPoolBulkhead.of("test", (ThreadPoolBulkheadConfig) null))
+				.isInstanceOf(NullPointerException.class)
+				.hasMessage("Config must not be null");
+	}
+
+	@Test
+	public void testCreateThreadsUsingNameForPrefix() throws ExecutionException, InterruptedException {
+
+		// Given
+		ThreadPoolBulkhead bulkhead = ThreadPoolBulkhead.of("TEST", config);
+		Supplier<String> getThreadName = () -> Thread.currentThread().getName();
+
+		// When
+		CompletionStage<String> result = bulkhead.executeSupplier(getThreadName);
+
+		// Then
+		assertThat(result.toCompletableFuture().get()).isEqualTo("bulkhead-TEST-1");
 	}
 
 }

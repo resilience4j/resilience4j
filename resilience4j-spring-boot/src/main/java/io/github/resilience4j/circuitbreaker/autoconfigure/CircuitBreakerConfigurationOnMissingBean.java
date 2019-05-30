@@ -15,17 +15,14 @@
  */
 package io.github.resilience4j.circuitbreaker.autoconfigure;
 
-import org.springframework.beans.factory.config.ConfigurableBeanFactory;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.configure.CircuitBreakerConfigurationProperties;
-import io.github.resilience4j.circuitbreaker.configure.CircuitBreakerConfigurationProperties.BackendProperties;
 import io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent;
 import io.github.resilience4j.circuitbreaker.monitoring.health.CircuitBreakerHealthIndicator;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
-import io.github.resilience4j.springboot.common.circuitbreaker.autoconfigure.AbstractCircuitBreakerConfigurationOnMissingBean;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class CircuitBreakerConfigurationOnMissingBean extends AbstractCircuitBreakerConfigurationOnMissingBean {
@@ -43,10 +40,12 @@ public class CircuitBreakerConfigurationOnMissingBean extends AbstractCircuitBre
 		return circuitBreakerConfiguration.eventConsumerRegistry();
 	}
 
-	protected void createHealthIndicatorForCircuitBreaker(CircuitBreaker circuitBreaker) {
-		BackendProperties backendProperties = circuitBreakerProperties.findCircuitBreakerBackend(circuitBreaker, circuitBreaker.getCircuitBreakerConfig());
+	protected void createHealthIndicatorForCircuitBreaker(CircuitBreaker circuitBreaker, CircuitBreakerConfigurationProperties circuitBreakerProperties) {
+		boolean registerHealthIndicator = circuitBreakerProperties.findCircuitBreakerProperties(circuitBreaker.getName())
+				.map(CircuitBreakerConfigurationProperties.BackendProperties::getRegisterHealthIndicator)
+				.orElse(true);
 
-		if (backendProperties != null && backendProperties.getRegisterHealthIndicator()) {
+		if(registerHealthIndicator){
 			CircuitBreakerHealthIndicator healthIndicator = new CircuitBreakerHealthIndicator(circuitBreaker);
 			beanFactory.registerSingleton(
 					circuitBreaker.getName() + "CircuitBreakerHealthIndicator",

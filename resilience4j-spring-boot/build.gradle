@@ -1,17 +1,20 @@
 dependencies {
+    compile project(':resilience4j-spring-boot-common')
+
+    compileOnly project(':resilience4j-prometheus')
+    compileOnly project(':resilience4j-metrics')
+    compileOnly project(':resilience4j-micrometer')
+
     compileOnly(libraries.spring_boot_aop)
     compileOnly(libraries.spring_boot_actuator)
     compileOnly(libraries.spring_boot_web)
     compileOnly(libraries.reactor)
     compileOnly(libraries.metrics)
+    compileOnly(libraries.micrometer_spring_legacy)
     compileOnly(libraries.hibernate_validator)
     compileOnly(libraries.spring_boot_config_processor)
     compileOnly(libraries.spring_boot_autoconfigure_processor)
-
-    compile project(':resilience4j-spring-boot-common')
-    compileOnly project(':resilience4j-prometheus')
-    compileOnly project(':resilience4j-metrics')
-
+    
     testCompile(libraries.spring_boot_test)
     testCompile(libraries.spring_boot_aop)
     testCompile(libraries.spring_boot_actuator)

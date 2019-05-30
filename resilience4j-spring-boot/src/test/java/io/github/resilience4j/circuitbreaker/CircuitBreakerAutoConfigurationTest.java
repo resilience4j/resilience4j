@@ -29,33 +29,18 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.http.ResponseEntity;
-import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import java.io.IOException;
 import java.time.Duration;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
 		classes = TestApplication.class)
-@ContextConfiguration(classes = CircuitBreakerAutoConfigurationTest.AdditionalConfiguration.class)
 public class CircuitBreakerAutoConfigurationTest {
-
-	@Configuration
-	public static class AdditionalConfiguration {
-
-		// Shows that a circuit breaker can be created in code and still use the shared configuration.
-		@Bean
-		public CircuitBreaker otherCircuitBreaker(CircuitBreakerRegistry registry, CircuitBreakerProperties properties) {
-			return registry.circuitBreaker("backendSharedC", properties.createCircuitBreakerConfigFrom("default"));
-		}
-	}
 
 	@Autowired
 	CircuitBreakerRegistry circuitBreakerRegistry;
@@ -107,10 +92,13 @@ public class CircuitBreakerAutoConfigurationTest {
 		assertThat(circuitBreaker.getCircuitBreakerConfig().getRingBufferSizeInHalfOpenState()).isEqualTo(2);
 		assertThat(circuitBreaker.getCircuitBreakerConfig().getFailureRateThreshold()).isEqualTo(70f);
 
+		// Create CircuitBreaker dynamically with default config
+		CircuitBreaker dynamicCircuitBreaker = circuitBreakerRegistry.circuitBreaker("dynamicBackend");
+
 		// Test Actuator endpoints
 
 		ResponseEntity<CircuitBreakerEndpointResponse> circuitBreakerList = restTemplate.getForEntity("/circuitbreaker", CircuitBreakerEndpointResponse.class);
-		assertThat(circuitBreakerList.getBody().getCircuitBreakers()).hasSize(5).containsExactly("backendA", "backendB", "backendSharedA", "backendSharedB", "backendSharedC");
+		assertThat(circuitBreakerList.getBody().getCircuitBreakers()).hasSize(5).containsExactly("backendA", "backendB", "backendSharedA", "backendSharedB", "dynamicBackend");
 
 		ResponseEntity<CircuitBreakerEventsEndpointResponse> circuitBreakerEventList = restTemplate.getForEntity("/circuitbreaker/events", CircuitBreakerEventsEndpointResponse.class);
 		assertThat(circuitBreakerEventList.getBody().getCircuitBreakerEvents()).hasSize(2);
@@ -123,6 +111,7 @@ public class CircuitBreakerAutoConfigurationTest {
 		assertThat(healthResponse.getBody()).isNotNull();
 		assertThat(healthResponse.getBody()).contains("backendACircuitBreaker");
 		assertThat(healthResponse.getBody()).doesNotContain("backendBCircuitBreaker");
+		assertThat(healthResponse.getBody()).doesNotContain("dynamicBackend");
 
 		// Verify that an exception for which recordFailurePredicate returns false and it is not included in
 		// recordExceptions evaluates to false.
@@ -133,18 +122,25 @@ public class CircuitBreakerAutoConfigurationTest {
 		// expect all shared configs share the same values and are from the application.yml file
 		CircuitBreaker sharedA = circuitBreakerRegistry.circuitBreaker("backendSharedA");
 		CircuitBreaker sharedB = circuitBreakerRegistry.circuitBreaker("backendSharedB");
-		CircuitBreaker sharedC = circuitBreakerRegistry.circuitBreaker("backendSharedC");
+
+		Duration defaultWaitDuration = Duration.ofSeconds(10L);
+		float defaultFailureRate = 60f;
+		int defaultRingBufferSizeInHalfOpenState = 10;
+		int defaultRingBufferSizeInClosedState = 100;
+
 		assertThat(sharedA.getCircuitBreakerConfig().getRingBufferSizeInClosedState()).isEqualTo(6);
-		assertThat(sharedA.getCircuitBreakerConfig().getRingBufferSizeInHalfOpenState()).isEqualTo(10);
-		assertThat(sharedA.getCircuitBreakerConfig().getFailureRateThreshold()).isEqualTo(60f);
-		assertThat(sharedA.getCircuitBreakerConfig().getWaitDurationInOpenState()).isEqualByComparingTo(Duration.ofSeconds(10L));
-		assertEquals(sharedA.getCircuitBreakerConfig().getRingBufferSizeInClosedState(), sharedB.getCircuitBreakerConfig().getRingBufferSizeInClosedState());
-		assertEquals(sharedA.getCircuitBreakerConfig().getRingBufferSizeInHalfOpenState(), sharedB.getCircuitBreakerConfig().getRingBufferSizeInHalfOpenState());
-		assertThat(sharedB.getCircuitBreakerConfig().getFailureRateThreshold()).isEqualTo(60f);
-		assertEquals(sharedA.getCircuitBreakerConfig().getWaitDurationInOpenState(), sharedB.getCircuitBreakerConfig().getWaitDurationInOpenState());
-		assertEquals(sharedA.getCircuitBreakerConfig().getRingBufferSizeInClosedState(), sharedC.getCircuitBreakerConfig().getRingBufferSizeInClosedState());
-		assertEquals(sharedA.getCircuitBreakerConfig().getRingBufferSizeInHalfOpenState(), sharedC.getCircuitBreakerConfig().getRingBufferSizeInHalfOpenState());
-		assertThat(sharedC.getCircuitBreakerConfig().getFailureRateThreshold()).isEqualTo(60f);
-		assertEquals(sharedA.getCircuitBreakerConfig().getWaitDurationInOpenState(), sharedC.getCircuitBreakerConfig().getWaitDurationInOpenState());
+		assertThat(sharedA.getCircuitBreakerConfig().getRingBufferSizeInHalfOpenState()).isEqualTo(defaultRingBufferSizeInHalfOpenState);
+		assertThat(sharedA.getCircuitBreakerConfig().getFailureRateThreshold()).isEqualTo(defaultFailureRate);
+		assertThat(sharedA.getCircuitBreakerConfig().getWaitDurationInOpenState()).isEqualTo(defaultWaitDuration);
+
+		assertThat(sharedB.getCircuitBreakerConfig().getRingBufferSizeInClosedState()).isEqualTo(defaultRingBufferSizeInClosedState);
+		assertThat(sharedB.getCircuitBreakerConfig().getRingBufferSizeInHalfOpenState()).isEqualTo(defaultRingBufferSizeInHalfOpenState);
+		assertThat(sharedB.getCircuitBreakerConfig().getFailureRateThreshold()).isEqualTo(defaultFailureRate);
+		assertThat(sharedB.getCircuitBreakerConfig().getWaitDurationInOpenState()).isEqualTo(defaultWaitDuration);
+
+		assertThat(dynamicCircuitBreaker.getCircuitBreakerConfig().getRingBufferSizeInClosedState()).isEqualTo(defaultRingBufferSizeInClosedState);
+		assertThat(dynamicCircuitBreaker.getCircuitBreakerConfig().getRingBufferSizeInHalfOpenState()).isEqualTo(defaultRingBufferSizeInHalfOpenState);
+		assertThat(dynamicCircuitBreaker.getCircuitBreakerConfig().getFailureRateThreshold()).isEqualTo(defaultFailureRate);
+		assertThat(dynamicCircuitBreaker.getCircuitBreakerConfig().getWaitDurationInOpenState()).isEqualTo(defaultWaitDuration);
 	}
 }

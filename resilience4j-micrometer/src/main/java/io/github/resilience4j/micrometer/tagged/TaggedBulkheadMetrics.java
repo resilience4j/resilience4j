@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Yevhenii Voievodin
+ * Copyright 2019 Yevhenii Voievodin, Robert Winkler
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,6 @@ package io.github.resilience4j.micrometer.tagged;
 import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.bulkhead.Bulkhead.Metrics;
 import io.github.resilience4j.bulkhead.BulkheadRegistry;
-import io.github.resilience4j.micrometer.BulkheadMetrics;
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.Meter;
 import io.micrometer.core.instrument.MeterRegistry;
@@ -31,8 +30,6 @@ import static java.util.Objects.requireNonNull;
 
 /**
  * A micrometer binder that is used to register bulkhead exposed {@link Metrics metrics}.
- * The main difference from {@link BulkheadMetrics} is that this binder uses tags
- * to distinguish between metrics.
  */
 public class TaggedBulkheadMetrics extends AbstractMetrics implements MeterBinder {
 
@@ -83,10 +80,12 @@ public class TaggedBulkheadMetrics extends AbstractMetrics implements MeterBinde
     private void addMetrics(MeterRegistry registry, Bulkhead bulkhead) {
         Set<Meter.Id> idSet = new HashSet<>();
 
-        idSet.add(Gauge.builder(names.getAvailableConcurrentCallsMetricName(), bulkhead, (bh) -> bh.getMetrics().getAvailableConcurrentCalls())
+        idSet.add(Gauge.builder(names.getAvailableConcurrentCallsMetricName(), bulkhead, bh -> bh.getMetrics().getAvailableConcurrentCalls())
+                .description("The number of available permissions")
                 .tag(TagNames.NAME, bulkhead.getName())
                 .register(registry).getId());
-        idSet.add(Gauge.builder(names.getMaxAllowedConcurrentCallsMetricName(), bulkhead, (bh) -> bh.getMetrics().getMaxAllowedConcurrentCalls())
+        idSet.add(Gauge.builder(names.getMaxAllowedConcurrentCallsMetricName(), bulkhead, bh -> bh.getMetrics().getMaxAllowedConcurrentCalls())
+                .description("The maximum number of available permissions")
                 .tag(TagNames.NAME, bulkhead.getName())
                 .register(registry).getId());
 
@@ -96,8 +95,10 @@ public class TaggedBulkheadMetrics extends AbstractMetrics implements MeterBinde
     /** Defines possible configuration for metric names. */
     public static class MetricNames {
 
-        public static final String DEFAULT_BULKHEAD_AVAILABLE_CONCURRENT_CALLS_METRIC_NAME = "resilience4j_bulkhead_available_concurrent_calls";
-        public static final String DEFAULT_BULKHEAD_MAX_ALLOWED_CONCURRENT_CALLS_METRIC_NAME = "resilience4j_bulkhead_max_allowed_concurrent_calls";
+        private static final String DEFAULT_PREFIX = "resilience4j.bulkhead";
+
+        public static final String DEFAULT_BULKHEAD_AVAILABLE_CONCURRENT_CALLS_METRIC_NAME = DEFAULT_PREFIX + ".available.concurrent_calls";
+        public static final String DEFAULT_BULKHEAD_MAX_ALLOWED_CONCURRENT_CALLS_METRIC_NAME = DEFAULT_PREFIX + ".max_allowed.concurrent.calls";
 
         /**
          * Returns a builder for creating custom metric names.

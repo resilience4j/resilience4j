@@ -15,25 +15,16 @@
  */
 package io.github.resilience4j.bulkhead.configure;
 
-import static io.github.resilience4j.utils.AspectUtil.newHashSet;
-
-import java.util.Set;
-
+import io.github.resilience4j.bulkhead.Bulkhead;
+import io.github.resilience4j.bulkhead.operator.BulkheadOperator;
+import io.reactivex.*;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import io.github.resilience4j.bulkhead.Bulkhead;
-import io.github.resilience4j.bulkhead.operator.BulkheadOperator;
-import io.reactivex.Completable;
-import io.reactivex.CompletableSource;
-import io.reactivex.Flowable;
-import io.reactivex.Maybe;
-import io.reactivex.MaybeSource;
-import io.reactivex.Observable;
-import io.reactivex.ObservableSource;
-import io.reactivex.Single;
-import io.reactivex.SingleSource;
+import java.util.Set;
+
+import static io.github.resilience4j.utils.AspectUtil.newHashSet;
 
 /**
  * the Rx bulkhead logic support for the spring AOP
@@ -61,7 +52,6 @@ public class RxJava2BulkheadAspectExt implements BulkheadAspectExt {
 	 * @return the result object
 	 * @throws Throwable exception in case of faulty flow
 	 */
-	@SuppressWarnings("unchecked")
 	@Override
 	public Object handle(ProceedingJoinPoint proceedingJoinPoint, Bulkhead bulkhead, String methodName) throws Throwable {
 		BulkheadOperator<?> bulkheadOperator = BulkheadOperator.of(bulkhead);
@@ -73,19 +63,19 @@ public class RxJava2BulkheadAspectExt implements BulkheadAspectExt {
 	private Object executeRxJava2Aspect(BulkheadOperator bulkheadOperator, Object returnValue) {
 		if (returnValue instanceof ObservableSource) {
 			Observable<?> observable = (Observable<?>) returnValue;
-			return observable.lift(bulkheadOperator);
+			return observable.compose(bulkheadOperator);
 		} else if (returnValue instanceof SingleSource) {
 			Single<?> single = (Single) returnValue;
-			return single.lift(bulkheadOperator);
+			return single.compose(bulkheadOperator);
 		} else if (returnValue instanceof CompletableSource) {
 			Completable completable = (Completable) returnValue;
-			return completable.lift(bulkheadOperator);
+			return completable.compose(bulkheadOperator);
 		} else if (returnValue instanceof MaybeSource) {
 			Maybe<?> maybe = (Maybe) returnValue;
-			return maybe.lift(bulkheadOperator);
+			return maybe.compose(bulkheadOperator);
 		} else if (returnValue instanceof Flowable) {
 			Flowable<?> flowable = (Flowable) returnValue;
-			return flowable.lift(bulkheadOperator);
+			return flowable.compose(bulkheadOperator);
 		} else {
 			logger.error("Unsupported type for BulkHead RxJava2 {}", returnValue.getClass().getTypeName());
 			throw new IllegalArgumentException("Not Supported type for the BulkHead in RxJava2 :" + returnValue.getClass().getName());

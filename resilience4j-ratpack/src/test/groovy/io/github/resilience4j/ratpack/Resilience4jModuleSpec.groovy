@@ -20,8 +20,8 @@ import com.codahale.metrics.SharedMetricRegistries
 import com.codahale.metrics.annotation.Timed
 import io.github.resilience4j.bulkhead.BulkheadRegistry
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry
-import io.github.resilience4j.ratpack.circuitbreaker.CircuitBreaker
 import io.github.resilience4j.retry.RetryRegistry
 import io.prometheus.client.CollectorRegistry
 import ratpack.dropwizard.metrics.DropwizardMetricsModule

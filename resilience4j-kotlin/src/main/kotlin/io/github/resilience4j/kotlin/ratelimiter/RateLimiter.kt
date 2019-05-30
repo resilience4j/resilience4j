@@ -30,8 +30,8 @@ import java.util.concurrent.TimeUnit
  * If [RateLimiterConfig.timeoutDuration] is non-zero, the returned function suspends until a permission is available.
  */
 suspend fun <T> RateLimiter.executeSuspendFunction(block: suspend () -> T): T {
-    val waitTimeNs = reservePermission(rateLimiterConfig.timeoutDuration)
-    if (waitTimeNs < 0) throw RequestNotPermitted("Request not permitted for limiter: $name")
+    val waitTimeNs = reservePermission()
+    if (waitTimeNs < 0) throw RequestNotPermitted(this)
     delay(TimeUnit.NANOSECONDS.toMillis(waitTimeNs))
     return block()
 }
