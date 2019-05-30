@@ -59,6 +59,11 @@ public class AbstractRegistry<E, C> implements Registry<E, C> {
 	}
 
 	@Override
+	public Optional<E> find(String name){
+		return Optional.ofNullable(entryMap.get(name));
+	}
+
+	@Override
 	public Optional<E> remove(String name){
 		Optional<E> removedEntry = Optional.ofNullable(entryMap.remove(name));
 		removedEntry.ifPresent(entry -> eventProcessor.processEvent(new EntryRemovedEvent<>(entry)));
