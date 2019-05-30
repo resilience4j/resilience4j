@@ -27,6 +27,7 @@ ext {
     micrometerVersion = '1.1.4'
     hibernateValidatorVersion = '6.0.16.Final'
     wiremockVersion = '2.22.0'
+    kotlinCoroutinesVersion = '1.2.0'
 
     libraries = [
             // compile
@@ -111,7 +112,11 @@ ext {
             jaxws: "com.sun.xml.ws:jaxws-ri:2.3.2",
 
             // Groovy
-            groovy: "org.codehaus.groovy:groovy-all:2.5.6"
+            groovy: "org.codehaus.groovy:groovy-all:2.5.6",
+
+            // Kotlin addon
+            kotlin_stdlib: "org.jetbrains.kotlin:kotlin-stdlib-jdk8",
+            kotlin_coroutines: "org.jetbrains.kotlinx:kotlinx-coroutines-core:${kotlinCoroutinesVersion}"
     ]
 
 }

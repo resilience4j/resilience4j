@@ -59,7 +59,9 @@ Add-on modules
 * resilience4j-ratpack: Ratpack Starter
 * resilience4j-retrofit: Retrofit adapter
 * resilience4j-feign: Feign adapter
+* resilience4j-vertx: Vertx Future decorator
 * resilience4j-consumer: Circular Buffer Event consumer
+* resilience4j-kotlin: Kotlin coroutines support
 
 == Spring Boot demo
 
