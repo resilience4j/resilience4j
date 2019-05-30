@@ -13,3 +13,5 @@ include::addon_guides/dropwizard.adoc[]
 include::addon_guides/prometheus.adoc[]
 
 include::addon_guides/micrometer.adoc[]
+
+include::addon_guides/kotlin.adoc[]
