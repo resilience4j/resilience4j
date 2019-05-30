@@ -31,7 +31,7 @@ public class CircuitBreakerSubscriberWhiteboxVerification extends
 
     @Override
     public Subscriber<Integer> createSubscriber(WhiteboxSubscriberProbe<Integer> probe) {
-        return new CircuitBreakerSubscriber<Integer>(CircuitBreaker.ofDefaults("verification"), MonoProcessor.create()) {
+        return new CircuitBreakerSubscriber<Integer>(CircuitBreaker.ofDefaults("verification"), MonoProcessor.create(), false) {
 
             @Override
             protected void hookOnSubscribe(Subscription subscription) {

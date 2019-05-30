@@ -18,36 +18,49 @@
  */
 package io.github.resilience4j.core;
 
+import io.github.resilience4j.core.lang.Nullable;
+
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public class EventProcessor<T> implements EventPublisher<T> {
 
-    protected volatile boolean consumerRegistered;
-    private volatile EventConsumer<T> onEventConsumer;
-    private ConcurrentMap<Class<? extends T>, EventConsumer<Object>> eventConsumers = new ConcurrentHashMap<>();
+    private boolean consumerRegistered;
+    List<EventConsumer<T>> onEventConsumers = new CopyOnWriteArrayList<>();
+    ConcurrentMap<String, List<EventConsumer<T>>> eventConsumerMap = new ConcurrentHashMap<>();
 
     public boolean hasConsumers(){
         return consumerRegistered;
     }
 
     @SuppressWarnings("unchecked")
-    public <E extends T> void registerConsumer(Class<? extends E> eventType, EventConsumer<E> eventConsumer){
-        consumerRegistered = true;
-        eventConsumers.put(eventType, (EventConsumer<Object>) eventConsumer);
+    public synchronized void registerConsumer(String className, EventConsumer<? extends T> eventConsumer){
+        this.consumerRegistered = true;
+        this.eventConsumerMap.compute(className, (k, consumers) -> {
+            if(consumers == null){
+                consumers = new ArrayList<>();
+                consumers.add((EventConsumer<T>) eventConsumer);
+                return consumers;
+            }else{
+                consumers.add((EventConsumer<T>) eventConsumer);
+                return consumers;
+            }
+        });
     }
 
-    @SuppressWarnings("unchecked")
     public <E extends T> boolean processEvent(E event) {
         boolean consumed = false;
-        if(onEventConsumer != null){
-            onEventConsumer.consumeEvent(event);
+        if(!onEventConsumers.isEmpty()){
+            onEventConsumers.forEach(onEventConsumer -> onEventConsumer.consumeEvent(event));
             consumed = true;
         }
-        if(!eventConsumers.isEmpty()){
-            EventConsumer<T> eventConsumer = (EventConsumer<T>) eventConsumers.get(event.getClass());
-            if(eventConsumer != null){
-                eventConsumer.consumeEvent(event);
+        if(!eventConsumerMap.isEmpty()){
+            List<EventConsumer<T>> eventConsumers = this.eventConsumerMap.get(event.getClass().getSimpleName());
+            if(eventConsumers != null && !eventConsumers.isEmpty()){
+                eventConsumers.forEach(consumer -> consumer.consumeEvent(event));
                 consumed = true;
             }
         }
@@ -55,8 +68,8 @@ public class EventProcessor<T> implements EventPublisher<T> {
     }
 
     @Override
-    public void onEvent(EventConsumer<T> onEventConsumer) {
-        consumerRegistered = true;
-        this.onEventConsumer = onEventConsumer;
+    public synchronized void onEvent(@Nullable EventConsumer<T> onEventConsumer) {
+        this.consumerRegistered = true;
+        this.onEventConsumers.add(onEventConsumer);
     }
 }

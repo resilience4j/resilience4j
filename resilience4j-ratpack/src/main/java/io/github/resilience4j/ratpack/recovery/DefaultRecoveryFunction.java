@@ -15,9 +15,12 @@
  */
 package io.github.resilience4j.ratpack.recovery;
 
+import io.github.resilience4j.core.lang.Nullable;
+
 public class DefaultRecoveryFunction<O> implements RecoveryFunction<O> {
     @Override
-    public O apply(Throwable t) throws Exception {
+    @Nullable
+    public O apply(@Nullable Throwable t) throws Exception {
         Exception exception = (Exception)t;
         if (exception != null) {
             throw exception;

@@ -16,29 +16,26 @@
 
 package io.github.resilience4j.retry.transformer;
 
+import org.reactivestreams.Publisher;
+
 import io.github.resilience4j.retry.Retry;
-import io.reactivex.BackpressureStrategy;
+import io.reactivex.Completable;
+import io.reactivex.CompletableSource;
+import io.reactivex.CompletableTransformer;
 import io.reactivex.Flowable;
 import io.reactivex.FlowableTransformer;
+import io.reactivex.Maybe;
+import io.reactivex.MaybeSource;
+import io.reactivex.MaybeTransformer;
 import io.reactivex.Observable;
 import io.reactivex.ObservableSource;
 import io.reactivex.ObservableTransformer;
 import io.reactivex.Single;
 import io.reactivex.SingleSource;
 import io.reactivex.SingleTransformer;
-import io.reactivex.internal.subscriptions.SubscriptionArbiter;
-import org.reactivestreams.Publisher;
-import org.reactivestreams.Subscriber;
-import org.reactivestreams.Subscription;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import java.util.concurrent.atomic.AtomicInteger;
-
-public class RetryTransformer<T> implements FlowableTransformer<T, T>, ObservableTransformer<T, T>, SingleTransformer<T, T> {
-
-    private static final Logger LOG = LoggerFactory.getLogger(RetryTransformer.class);
-
+public class RetryTransformer<T> implements FlowableTransformer<T, T>, ObservableTransformer<T, T>,
+        SingleTransformer<T, T>, CompletableTransformer, MaybeTransformer<T, T> {
     private final Retry retry;
 
     private RetryTransformer(Retry retry) {
@@ -58,118 +55,81 @@ public class RetryTransformer<T> implements FlowableTransformer<T, T>, Observabl
 
     @Override
     public Publisher<T> apply(Flowable<T> upstream) {
-        return Flowable.fromPublisher(downstream -> {
-            SubscriptionArbiter sa = new SubscriptionArbiter();
-            downstream.onSubscribe(sa);
-            RetrySubscriber<T> repeatSubscriber = new RetrySubscriber<>(downstream, retry.getRetryConfig().getMaxAttempts(), sa, upstream, retry);
-            upstream.subscribe(repeatSubscriber);
-        });
+        Context<T> context = new Context<>(retry.context());
+        return upstream.doOnNext(context::throwExceptionToForceRetryOnResult)
+                .retryWhen(errors -> errors.doOnNext(context::onError))
+                .doOnComplete(context::onComplete);
     }
 
     @Override
     public ObservableSource<T> apply(Observable<T> upstream) {
-        return Observable.fromPublisher(downstream -> {
-            Flowable<T> flowable = upstream.toFlowable(BackpressureStrategy.BUFFER);
-            SubscriptionArbiter sa = new SubscriptionArbiter();
-            downstream.onSubscribe(sa);
-            RetrySubscriber<T> retrySubscriber = new RetrySubscriber<>(downstream, retry.getRetryConfig().getMaxAttempts(), sa, flowable, retry);
-            flowable.subscribe(retrySubscriber);
-        });
+        Context<T> context = new Context<>(retry.context());
+        return upstream.doOnNext(context::throwExceptionToForceRetryOnResult)
+                .retryWhen(errors -> errors.doOnNext(context::onError))
+                .doOnComplete(context::onComplete);
     }
 
     @Override
     public SingleSource<T> apply(Single<T> upstream) {
-        return Single.fromPublisher(downstream -> {
-            Flowable<T> flowable = upstream.toFlowable();
-            SubscriptionArbiter sa = new SubscriptionArbiter();
-            downstream.onSubscribe(sa);
-            RetrySubscriber<T> retrySubscriber = new RetrySubscriber<>(downstream, retry.getRetryConfig().getMaxAttempts(), sa, flowable, retry);
-            flowable.subscribe(retrySubscriber);
-        });
+        Context<T> context = new Context<>(retry.context());
+        return upstream.doOnSuccess(context::throwExceptionToForceRetryOnResult)
+                .retryWhen(errors -> errors.doOnNext(context::onError))
+                .doOnSuccess(t -> context.onComplete());
     }
 
-    static final class RetrySubscriber<T> extends AtomicInteger implements Subscriber<T> {
+    @Override
+    public CompletableSource apply(Completable upstream) {
+        Context<T> context = new Context<>(retry.context());
+        return upstream.retryWhen(errors -> errors.doOnNext(context::onError))
+                .doOnComplete(context::onComplete);
+    }
 
-        private final Subscriber<? super T> actual;
-        private final SubscriptionArbiter sa;
-        private final Publisher<? extends T> source;
-        private final Retry.Context context;
-        private long remaining;
-        RetrySubscriber(Subscriber<? super T> actual, long count,
-                         SubscriptionArbiter sa, Publisher<? extends T> source,
-                         Retry retry) {
-            this.actual = actual;
-            this.sa = sa;
-            this.source = source;
-            this.context = retry.context();
-            this.remaining = count;
+    @Override
+    public MaybeSource<T> apply(Maybe<T> upstream) {
+        Context<T> context = new Context<>(retry.context());
+        return upstream.doOnSuccess(context::throwExceptionToForceRetryOnResult)
+                .retryWhen(errors -> errors.doOnNext(context::onError))
+                .doOnSuccess(t -> context.onComplete())
+                .doOnComplete(context::onComplete);
+    }
+
+    private static class Context<T> {
+        private final Retry.Context<T> context;
+
+        Context(Retry.Context<T> context) {
+            this.context = context;
         }
 
-        @Override
-        public void onSubscribe(Subscription s) {
-            if (LOG.isDebugEnabled()) {
-                LOG.info("onSubscribe");
-            }
-            sa.setSubscription(s);
+        void onComplete() {
+            this.context.onSuccess();
         }
 
-        @Override
-        public void onNext(T t) {
-            if (LOG.isDebugEnabled()) {
-                LOG.info("onNext");
-            }
-            context.onSuccess();
-            actual.onNext(t);
-            sa.produced(1L);
+        void throwExceptionToForceRetryOnResult(T value) {
+            if (context.onResult(value))
+                throw new RetryDueToResultException();
         }
-        @Override
-        public void onError(Throwable t) {
-            if (LOG.isDebugEnabled()) {
-                LOG.info("onError");
+
+        void onError(Throwable throwable) throws Exception {
+            if (throwable instanceof RetryDueToResultException) return;
+	        // Filter Error to not retry on it
+            if (throwable instanceof Error) {
+                throw (Error) throwable;
             }
-            long r = remaining;
-            if (r != Long.MAX_VALUE) {
-                remaining = r - 1;
-            }
-            if (r == 0) {
-                actual.onError(t);
-            } else {
-                try {
-                    context.onError((Exception) t);
-                    subscribeNext();
-                } catch (Throwable t2) {
-                    actual.onError(t2);
-                }
+            try {
+                context.onError(castToException(throwable));
+            } catch (Throwable t) {
+                throw castToException(t);
             }
         }
 
-        @Override
-        public void onComplete() {
-            if (LOG.isDebugEnabled()) {
-                LOG.info("onComplete");
-            }
-            actual.onComplete();
+        private Exception castToException(Throwable throwable) {
+            return throwable instanceof Exception ? (Exception) throwable : new Exception(throwable);
         }
 
-        /**
-         * Subscribes to the source again via trampolining.
-         */
-        private void subscribeNext() {
-            if (getAndIncrement() == 0) {
-                int missed = 1;
-                for (;;) {
-                    if (sa.isCancelled()) {
-                        return;
-                    }
-                    source.subscribe(this);
-
-                    missed = addAndGet(-missed);
-                    if (missed == 0) {
-                        break;
-                    }
-                }
+        private static class RetryDueToResultException extends RuntimeException {
+            RetryDueToResultException() {
+                super("retry due to retryOnResult predicate");
             }
         }
     }
-
 }

@@ -17,15 +17,15 @@ package io.github.resilience4j.ratpack.bulkhead;
 
 import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.bulkhead.BulkheadFullException;
+import io.github.resilience4j.ratpack.internal.AbstractTransformer;
 import ratpack.exec.Downstream;
 import ratpack.exec.Upstream;
 import ratpack.func.Function;
 
 
-public class BulkheadTransformer <T> implements Function<Upstream<? extends T>, Upstream<T>> {
+public class BulkheadTransformer<T> extends AbstractTransformer<T> {
 
     private final Bulkhead bulkhead;
-    private Function<Throwable, ? extends T> recover;
 
     private BulkheadTransformer(Bulkhead bulkhead) {
         this.bulkhead = bulkhead;
@@ -47,18 +47,18 @@ public class BulkheadTransformer <T> implements Function<Upstream<? extends T>, 
     /**
      * Set a recovery function that will execute when the rateLimiter limit is exceeded.
      *
-     * @param recover the recovery function
+     * @param recoverer the recovery function
      * @return the transformer
      */
-    public BulkheadTransformer<T> recover(Function<Throwable, ? extends T> recover) {
-        this.recover = recover;
+    public BulkheadTransformer<T> recover(Function<Throwable, ? extends T> recoverer) {
+        this.recoverer = recoverer;
         return this;
     }
 
     @Override
     public Upstream<T> apply(Upstream<? extends T> upstream) throws Exception {
         return down -> {
-            if (bulkhead.isCallPermitted()) {
+            if (bulkhead.tryAcquirePermission()) {
                 // do not allow permits to leak
                 upstream.connect(new Downstream<T>() {
 
@@ -71,15 +71,7 @@ public class BulkheadTransformer <T> implements Function<Upstream<? extends T>, 
                     @Override
                     public void error(Throwable throwable) {
                         bulkhead.onComplete();
-                        try {
-                            if (recover != null) {
-                                down.success(recover.apply(throwable));
-                            } else {
-                                down.error(throwable);
-                            }
-                        } catch (Throwable t) {
-                            down.error(t);
-                        }
+                        handleRecovery(down, throwable);
                     }
 
                     @Override
@@ -89,16 +81,8 @@ public class BulkheadTransformer <T> implements Function<Upstream<? extends T>, 
                     }
                 });
             } else {
-                Throwable t = new BulkheadFullException(String.format("Bulkhead '%s' is full", bulkhead.getName()));
-                if (recover != null) {
-                    try {
-                        down.success(recover.apply(t));
-                    } catch (Throwable t2) {
-                        down.error(t2);
-                    }
-                } else {
-                    down.error(t);
-                }
+                Throwable t = new BulkheadFullException(bulkhead);
+                handleRecovery(down, t);
             }
         };
     }

@@ -53,6 +53,7 @@ public class RateLimiterConfig {
     /**
      * Returns a builder to create a custom RateLimiterConfig using specified config as prototype
      *
+     * @param prototype A {@link RateLimiterConfig} prototype.
      * @return a {@link RateLimiterConfig.Builder}
      */
     public static Builder from(RateLimiterConfig prototype) {

@@ -59,7 +59,8 @@ bintray {
         desc =  project.description
         licenses = ['Apache-2.0']
         version {
-            vcsTag = project.version
+            name = project.version
+            vcsTag = "v${project.version}"
             gpg {
                 sign = true //Determines whether to GPG sign the files. The default is false
                 //Optional. The passphrase for GPG signing'
@@ -82,7 +83,7 @@ publishing {
                 def devs = ['RobWin': 'Robert Winkler',
                             'storozhukBM': 'Bogdan Storozhuk',
                             'drmaas': 'Dan Maas',
-                            'goldobin': 'Oleksandr Goldobin']
+                            'Romeh': 'Mahmoud Romeh']
                 def root = asNode()
 
                 root.dependencies.'*'.findAll() {

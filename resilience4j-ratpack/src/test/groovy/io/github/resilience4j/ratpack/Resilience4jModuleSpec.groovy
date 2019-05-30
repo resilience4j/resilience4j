@@ -20,8 +20,8 @@ import com.codahale.metrics.SharedMetricRegistries
 import com.codahale.metrics.annotation.Timed
 import io.github.resilience4j.bulkhead.BulkheadRegistry
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry
-import io.github.resilience4j.ratpack.circuitbreaker.CircuitBreaker
 import io.github.resilience4j.retry.RetryRegistry
 import io.prometheus.client.CollectorRegistry
 import ratpack.dropwizard.metrics.DropwizardMetricsModule
@@ -59,6 +59,8 @@ class Resilience4jModuleSpec extends Specification {
                                 .waitIntervalInMillis(5000)
                                 .ringBufferSizeInClosedState(200)
                                 .ringBufferSizeInHalfOpenState(20)
+                                .failureRateThreshold(60)
+                                .automaticTransitionFromOpenToHalfOpen(true)
                     }
                 }
             }
@@ -86,6 +88,7 @@ class Resilience4jModuleSpec extends Specification {
             assert ringBufferSizeInHalfOpenState == 10
             assert waitDurationInOpenState == Duration.ofMinutes(1)
             assert failureRateThreshold == 50
+            assert !automaticTransitionFromOpenToHalfOpenEnabled
             it
         }
         def test2 = circuitBreakerRegistry.circuitBreaker('test2')
@@ -94,7 +97,9 @@ class Resilience4jModuleSpec extends Specification {
             assert ringBufferSizeInClosedState == 200
             assert ringBufferSizeInHalfOpenState == 20
             assert waitDurationInOpenState == Duration.ofMillis(5000)
-            assert failureRateThreshold == 50
+            assert failureRateThreshold == 60
+            assert automaticTransitionFromOpenToHalfOpenEnabled
+            assert recordFailurePredicate.test(new Exception())
             it
         }
     }
@@ -166,6 +171,9 @@ class Resilience4jModuleSpec extends Specification {
             assert ringBufferSizeInHalfOpenState == 10
             assert waitDurationInOpenState == Duration.ofMinutes(1)
             assert failureRateThreshold == 50
+            assert !automaticTransitionFromOpenToHalfOpenEnabled
+            assert recordFailurePredicate.test(new DummyException1("test"))
+            assert recordFailurePredicate.test(new DummyException2("test"))
             it
         }
         def test2 = circuitBreakerRegistry.circuitBreaker('test2')
@@ -174,7 +182,10 @@ class Resilience4jModuleSpec extends Specification {
             assert ringBufferSizeInClosedState == 200
             assert ringBufferSizeInHalfOpenState == 20
             assert waitDurationInOpenState == Duration.ofMillis(5000)
-            assert failureRateThreshold == 50
+            assert failureRateThreshold == 60
+            assert automaticTransitionFromOpenToHalfOpenEnabled
+            assert recordFailurePredicate.test(new DummyException1("test"))
+            assert !recordFailurePredicate.test(new DummyException2("test"))
             it
         }
     }
@@ -616,20 +627,22 @@ class Resilience4jModuleSpec extends Specification {
         timer.count == 3
 
         and:
-        registry.gauges.size() == 13
+        registry.gauges.size() == 15
         registry.gauges.keySet() == ['resilience4j.circuitbreaker.test.state',
                                      'resilience4j.circuitbreaker.test.buffered',
                                      'resilience4j.circuitbreaker.test.buffered_max',
                                      'resilience4j.circuitbreaker.test.failed',
                                      'resilience4j.circuitbreaker.test.not_permitted',
                                      'resilience4j.circuitbreaker.test.successful',
+                                     'resilience4j.circuitbreaker.test.failure_rate',
                                      'resilience4j.ratelimiter.test.available_permissions',
                                      'resilience4j.ratelimiter.test.number_of_waiting_threads',
                                      'resilience4j.retry.test.successful_calls_without_retry',
                                      'resilience4j.retry.test.successful_calls_with_retry',
                                      'resilience4j.retry.test.failed_calls_without_retry',
                                      'resilience4j.retry.test.failed_calls_with_retry',
-                                     'resilience4j.bulkhead.test.available_concurrent_calls'].toSet()
+                                     'resilience4j.bulkhead.test.available_concurrent_calls',
+                                     'resilience4j.bulkhead.test.max_allowed_concurrent_calls'].toSet()
     }
 
     def "test prometheus"() {
@@ -676,9 +689,15 @@ class Resilience4jModuleSpec extends Specification {
         def families = collectorRegistry.metricFamilySamples().collect { it.name }.sort()
 
         then:
-        families == ['resilience4j_circuitbreaker_calls',
-                     'resilience4j_circuitbreaker_states',
-                     'resilience4j_ratelimiter'].sort()
+        families == ['resilience4j_bulkhead_available_concurrent_calls',
+                     'resilience4j_bulkhead_max_allowed_concurrent_calls',
+                     'resilience4j_circuitbreaker_buffered_calls',
+                     'resilience4j_circuitbreaker_max_buffered_calls',
+                     'resilience4j_circuitbreaker_calls',
+                     'resilience4j_circuitbreaker_state',
+                     'resilience4j_circuitbreaker_failure_rate',
+                     'resilience4j_ratelimiter_available_permissions',
+                     'resilience4j_ratelimiter_waiting_threads'].sort()
     }
 
     static class Something {
@@ -687,6 +706,18 @@ class Resilience4jModuleSpec extends Specification {
         @CircuitBreaker(name = "test")
         String name() {
             "dan"
+        }
+    }
+
+    static class DummyException1 extends Exception {
+        DummyException1(String message) {
+            super(message)
+        }
+    }
+
+    static class DummyException2 extends Exception {
+        DummyException2(String message) {
+            super(message)
         }
     }
 }

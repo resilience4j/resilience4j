@@ -66,7 +66,7 @@ public class DecoratedCall<T> implements Call<T> {
 
     @Override
     public Call<T> clone() {
-        return call.clone();
+        return new DecoratedCall<>(call.clone());
     }
 
     @Override

@@ -23,7 +23,10 @@ resilience4j:
             ringBufferSizeInClosedState: 200
             ringBufferSizeInHalfOpenState: 20
             waitIntervalInMillis: 5000
-            failureRateThreshold: 50
+            failureRateThreshold: 60
+            automaticTransitionFromOpenToHalfOpen: true
+            recordExceptions:
+                - io.github.resilience4j.ratpack.Resilience4jModuleSpec$DummyException1
     rateLimiters:
         test1:
             defaults: true

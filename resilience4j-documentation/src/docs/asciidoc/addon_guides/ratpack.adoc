@@ -36,9 +36,18 @@ public class MyModule extends AbstractModule {
 
     @Override
     protected void configure() {
-        CircuitBreakerConfig config = CircuitBreakerConfig.custom();
-        bind(CircuitBreakerRegistry.class).toInstance(CircuitBreakerRegistry.of(config);
-        install(Resilience4jModule.class);
+        CircuitBreakerConfig config = CircuitBreakerConfig.custom().build();
+        bind(CircuitBreakerRegistry.class).toInstance(CircuitBreakerRegistry.of(config));
+        Resilience4jModule module = new Resilience4jModule();
+        module.configure(c -> {
+            c.circuitBreaker("test", circuitBreakerConfig ->
+                circuitBreakerConfig
+                        .defaults(false)
+                        .automaticTransitionFromOpenToHalfOpen(false)
+                        .failureRateThreshold(25)
+            );
+        });
+        install(new Resilience4jModule());
     }
 }
 ----
@@ -51,40 +60,40 @@ This will only rate limit the `/` endpoint.
 [source,groovy]
 ----
 ratpack {
-            bindings {
-                bindInstance(RateLimiterRegistry, RateLimiterRegistry.ofDefaults())
-                module(Resilience4jModule)
-            }
-            handlers {
-                get(new RateLimiterHandler(registry, 'test'))
-                get {
-                    render 'success'
-                }
-                get('a') {
-                    render 'success'
-                }
-            }
+    bindings {
+        bindInstance(RateLimiterRegistry, RateLimiterRegistry.ofDefaults())
+        module(Resilience4jModule)
+    }
+    handlers {
+        get(new RateLimiterHandler(registry, 'test'))
+        get {
+            render 'success'
         }
+        get('a') {
+            render 'success'
+        }
+    }
+}
 ----
 
 This will rate limit all endpoints against the same `RateLimiter`.
 [source,groovy]
 ----
 ratpack {
-            bindings {
-                bindInstance(RateLimiterRegistry, RateLimiterRegistry.ofDefaults())
-                module(Resilience4jModule)
-            }
-            handlers {
-                all(new RateLimiterHandler(registry, 'test'))
-                get {
-                    render 'success'
-                }
-                get('a') {
-                    render 'success'
-                }
-            }
+    bindings {
+        bindInstance(RateLimiterRegistry, RateLimiterRegistry.ofDefaults())
+        module(Resilience4jModule)
+    }
+    handlers {
+        all(new RateLimiterHandler(registry, 'test'))
+        get {
+            render 'success'
         }
+        get('a') {
+            render 'success'
+        }
+    }
+}
 ----
 
 ==== Promises
@@ -95,7 +104,7 @@ that is coming from some sort of I/O source.
 
 ===== Bulkhead
 
-You can easily apply a Bulkhead to any Ratpack Promise.
+You can easily apply a Bulkhead to any Ratpack Promise, given an existing `Bulkhead` instance called `bulkhead`.
 
 [source,java]
 ----
@@ -107,7 +116,7 @@ public Promise<String> methodWhichReturnsAPromise() {
 
 ===== CircuitBreaker
 
-You can easily apply a CircuitBreaker to any Ratpack Promise.
+You can easily apply a CircuitBreaker to any Ratpack Promise, given an existing `CircuitBreaker` instance called `circuitBreaker`.
 
 [source,java]
 ----
@@ -117,9 +126,26 @@ public Promise<String> methodWhichReturnsAPromise() {
 }
 ----
 
+You can also specify in-line which exception conditions should be recorded as a failure. In this example when
+`MyException` is thrown, it will be recorded as a circuitbreaker failure. Other exceptions will be ignored by
+the `circuitBreaker`.
+
+[source,java]
+----
+public Promise<String> methodWhichReturnsAPromise() {
+    return backendBConnector.methodWhichReturnsAPromise()
+            .transform(
+                CircuitBreakerTransformer
+                    .of(circuitBreaker)
+                    .recover(t -> "recovered")
+                    .recordFailurePredicate(e -> e instanceof MyException)
+            );
+}
+----
+
 ===== Retry
 
-You can easily apply a Retry to any Ratpack Promise.
+You can easily apply a Retry to any Ratpack Promise, given an existing `Retry` instance called `retry`.
 
 [source,java]
 ----
@@ -131,7 +157,7 @@ public Promise<String> methodWhichReturnsAPromise() {
 
 ===== RateLimiter
 
-You can easily apply a RateLimiter to any Ratpack Promise.
+You can easily apply a RateLimiter to any Ratpack Promise, given an existing `RateLimiter` instance called `rateLimiter`.
 
 [source,java]
 ----
@@ -148,10 +174,88 @@ methods returning types:
 
 * Promise
 * CompletionStage
-* object values
-* Observable
-* Flowable
-* Single
+* Object
+* Flux
+* Mono
+
+===== A Note About Fallback Methods
+
+The `fallbackMethod` parameter signature for the annotations listed in the next sections must match either:
+
+1) The method parameter signature on the annotated method or
+2) The method parameter signature with a matching exception type as the last parameter on the annotated method
+
+The return value can be a https://ratpack.io/manual/current/api/ratpack/exec/Promise.html[Promise],
+https://docs.oracle.com/javase/8/docs/api/java/util/concurrent/CompletionStage.html[CompletionStage],
+https://projectreactor.io/docs/core/release/api/reactor/core/publisher/Flux.html[Flux],
+https://projectreactor.io/docs/core/release/api/reactor/core/publisher/Mono.html[Mono], or any non-reactive object type.
+Other reactive types are not supported.
+
+If the return value is one of the reactive types listed above, it must match the return value type of the annotated method.
+
+====== Examples
+
+Fallback for a no-params method
+[source,java]
+----
+String fallback() {
+    "recovered"
+}
+
+OR
+
+String fallback(Throwable throwable) {
+    "recovered"
+}
+----
+
+Fallback for a method with a single `String` parameter
+[source,java]
+----
+String fallback(String s) {
+    "recovered"
+}
+
+OR
+
+String fallback(String s, Throwable throwable) {
+    "recovered"
+}
+----
+
+`Promise` fallback
+[source,java]
+----
+Promise<String> fallback(String s, Throwable throwable) {
+    Promise.value("recovered")
+}
+----
+
+`CompletionStage` fallback
+[source,java]
+----
+CompletionStage<String> fallback(String s, Throwable throwable) {
+    def future = new CompletableFuture<String>()
+    future.complete("recovered")
+    return future
+}
+----
+
+`Flux` fallback
+[source,java]
+----
+Flux<String> fallback(String s, Throwable throwable) {
+    Flux.just("recovered")
+}
+----
+
+`Mono` fallback
+[source,java]
+----
+Mono<String> fallback(String s, Throwable throwable) {
+    Mono.just("recovered")
+}
+----
 
 ===== Bulkhead
 The demo shows how to use the `Bulkhead` annotation to have your Ratpack application limiting number of method calls.
@@ -160,13 +264,13 @@ For example:
 
 [source,java]
 ----
-@Bulkhead(name = "backendA", recovery = MyRecoveryFunction.class)
+@Bulkhead(name = "backendA", fallbackMethod = "fallback")
 @Singleton
 public class BackendAConnector implements Connector {
     ...
 }
 ----
-Where `MyRecoveryFunction` is implements `io.github.resilience4j.ratpack.RecoveryFunction` and provides
+Where `fallbackMethod` is a method in the same class that provides
 a fallback value that is returned when the bulkhead identified by `name` is full or call ends in exception.
 
 
@@ -177,13 +281,13 @@ For example:
 
 [source,java]
 ----
-@CircuitBreaker(name = "backendA", recovery = MyRecoveryFunction.class)
+@CircuitBreaker(name = "backendA", fallbackMethod = "fallback")
 @Singleton
 public class BackendAConnector implements Connector {
     ...
 }
 ----
-Where `MyRecoveryFunction` is implements `io.github.resilience4j.ratpack.RecoveryFunction` and provides
+Where `fallbackMethod` is a method in the same class that provides
 a fallback value that is returned when the circuit breaker identified by `name` is open.
 
 ===== Retry
@@ -193,13 +297,13 @@ For example:
 `
 [source,java]
 ----
-@Retry(name = "backendA", recovery = MyRecoveryFunction.class)
+@Retry(name = "backendA", fallbackMethod = "fallback")
 @Singleton
 public class BackendAConnector implements Connector {
     ...
 }
 ----
-Where `MyRecoveryFunction` is implements `io.github.resilience4j.ratpack.RecoveryFunction` and provides
+Where `fallbackMethod` is a method in the same class that provides
 a fallback value that is returned when the retry identified by `name` is has exceeded it's max calls.
 
 ===== RateLimiter
@@ -209,13 +313,13 @@ For example:
 
 [source,java]
 ----
-@RateLimiter(name = "backendA", recovery = MyRecoveryFunction.class)
+@RateLimiter(name = "backendA", fallbackMethod = "fallback")
 @Singleton
 public class BackendAConnector implements Connector {
     ...
 }
 ----
-Where `MyRecoveryFunction` is implements `io.github.resilience4j.ratpack.RecoveryFunction` and provides
+Where `fallbackMethod` is a method in the same class that provides
 a fallback value that is returned when the rate limiter rate limit identified by `name` is exceeded.
 
 ==== Functional style
@@ -306,6 +410,9 @@ ratpack {
 }
 ----
 
+Note that `recordFailurePredicate` cannot be specified via `yaml` configuration. Instead specify `recordExceptions` and `ignoreExceptions`.
+The below example will record everything exception `java.io.IOException`.
+
 [source,yaml]
 ----
 resilience4j:
@@ -323,6 +430,8 @@ resilience4j:
             ringBufferSizeInHalfOpenState: 20
             waitInterval: 5000
             failureRateThreshold: 50
+            recordExceptions: java.lang.Exception
+            ignoreExceptions: java.io.IOException
     rateLimiters:
         test1:
             defaults: true
@@ -557,18 +666,18 @@ Example of response:
   "rateLimiterEvents": [
     {
       "rateLimiterName": "backendA",
-      "rateLimiterEventType": "SUCCESSFUL_ACQUIRE",
-      "rateLimiterCreationTime": "2017-05-05T21:29:40.463+03:00[Europe/Uzhgorod]"
+      "type": "SUCCESSFUL_ACQUIRE",
+      "creationTime": "2017-05-05T21:29:40.463+03:00[Europe/Uzhgorod]"
     },
     {
       "rateLimiterName": "backendA",
-      "rateLimiterEventType": "SUCCESSFUL_ACQUIRE",
-      "rateLimiterCreationTime": "2017-05-05T21:29:40.469+03:00[Europe/Uzhgorod]"
+      "type": "SUCCESSFUL_ACQUIRE",
+      "creationTime": "2017-05-05T21:29:40.469+03:00[Europe/Uzhgorod]"
     },
     {
       "rateLimiterName": "backendA",
-      "rateLimiterEventType": "FAILED_ACQUIRE",
-      "rateLimiterCreationTime": "2017-05-05T21:29:41.268+03:00[Europe/Uzhgorod]"
+      "type": "FAILED_ACQUIRE",
+      "creationTime": "2017-05-05T21:29:41.268+03:00[Europe/Uzhgorod]"
     }
   ]
 }

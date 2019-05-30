@@ -4,43 +4,7 @@
 
 Integration with https://github.com/prometheus/client_java[Prometheus simple client]
 
-Module provides exporters for `CircuitBreaker` and `RateLimiter` metrics.
-
-For the circuit breaker library exports 2 metrics:
-
-1. By state with default metric name `circuit_breaker_states` and label `state`:
-
-    - `closed`
-    - `open`
-    - `half_open`
-
-2. By call result with default metric name `circuit_breaker_calls` and label `call_result`:
-
-    - `successful`
-    - `failed`
-    - `not_permitted`
-    - `buffered`
-    - `buffered_max`
-
-For the rate limiter following metric with default name `rate_limiter` and label `param` exported:
-
-- `available_permissions`
-- `waiting_threads`
-
-The names of the rate limiters and circuit breakers are exposed using label `name`.
-
-This module also provides `CallMeter` -- a composite metric to measure single call/request metrics such as:
-    - execution time distribution,
-    - number of attempts and
-    - number of failures.
-
-It is implemented in Prometheus simple client's style, supports labels and produces histogram and counter metrics.
-
-Usage examples provided bellow in this section.
-
-==== Dashboard Example
-
-image::images/prometheus-dashboard.png[Circuit Breaker Dashboard Example]
+This add-on provides Prometheus collectors for `CircuitBreaker`, `RateLimiter` and `Bulkhead` metrics.
 
 ==== Usage
 
@@ -56,7 +20,7 @@ final CircuitBreaker foo = circuitBreakerRegistry.circuitBreaker("foo");
 final CircuitBreaker boo = circuitBreakerRegistry.circuitBreaker("boo");
 
 // Registering metrics in prometeus CollectorRegistry
-collectorRegistry.register(CircuitBreakerExports.ofCircuitBreakerRegistry(circuitBreakerRegistry));
+collectorRegistry.register(CircuitBreakerMetricsCollector.ofCircuitBreakerRegistry(circuitBreakerRegistry));
 --
 
 ===== RateLimiter
@@ -71,44 +35,20 @@ final RateLimiter foo = rateLimiterRegistry.rateLimiter("foo");
 final RateLimiter boo = rateLimiterRegistry.rateLimiter("boo");
 
 // Registering metrics in prometeus CollectorRegistry
-collectorRegistry.register(RateLimiterExports.ofRateLimiterRegistry(rateLimiterRegistry));
+collectorRegistry.register(RateLimiterMetricsCollector.ofRateLimiterRegistry(rateLimiterRegistry));
 --
 
-For both it is possible to use just a collection of breakers and limiters instead of registry.
-
-===== Call Meter
-
-Simple example without labels
+===== Bulkhead
 
 [source,java]
 --
-final CollectorRegistry registry = new CollectorRegistry();
+final CollectorRegistry collectorRegistry = CollectorRegistry.defaultRegistry;
 
-final CallMeter meter = CallMeter.of("foo_call", "Foo call help", registry);
+final BulkheadRegistry bulkheadRegistry = BulkheadRegistry.ofDefaults();
 
-CallMeter.decorateCompletionStageSupplier(meter, () -> supplyAsync(() -> { /* ... */ }));
+final Bulkhead foo = bulkheadRegistry.bulkhead("foo");
+final Bulkhead boo = bulkheadRegistry.bulkhead("boo");
+
+// Registering metrics in prometeus CollectorRegistry
+collectorRegistry.register(BulkheadMetricsCollector.ofBulkheadRegistry(rateLimiterRegistry));
 --
-
-Advanced example with labels
-
-[source,java]
---
-final CollectorRegistry registry = new CollectorRegistry();
-
-final CallMeter meter = CallMeter
-        .builder()
-        .name("foo_call")
-        .help("Foo call help")
-        .labelNames("label_1")
-        .build()
-        .register(registry);
-
-meter.labels("boo").executeRunnable(() -> { /* ... */ });
-
-CallMeter.decorateCompletionStageSupplier(
-    meter.labels("baz"),
-    () -> supplyAsync(() -> { /* ... */ })
-);
-
---
-

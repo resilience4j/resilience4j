@@ -16,86 +16,103 @@
 package io.github.resilience4j.ratpack.circuitbreaker;
 
 import com.google.inject.Inject;
-import io.github.resilience4j.circuitbreaker.CircuitBreakerOpenException;
+import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
-import io.github.resilience4j.circuitbreaker.operator.CircuitBreakerOperator;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.github.resilience4j.core.lang.Nullable;
+import io.github.resilience4j.ratpack.internal.AbstractMethodInterceptor;
+import io.github.resilience4j.ratpack.recovery.DefaultRecoveryFunction;
 import io.github.resilience4j.ratpack.recovery.RecoveryFunction;
-import io.reactivex.Flowable;
-import io.reactivex.Observable;
-import io.reactivex.Single;
+import io.github.resilience4j.reactor.circuitbreaker.operator.CircuitBreakerOperator;
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
 import ratpack.exec.Promise;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 
 /**
  * A {@link MethodInterceptor} to handle all methods annotated with {@link CircuitBreaker}. It will
- * handle methods that return a Promise, Observable, Flowable, CompletionStage, or value. It will execute the circuit breaker and
- * the fallback found in the annotation.
+ * handle methods that return a {@link Promise}, {@link reactor.core.publisher.Flux}, {@link reactor.core.publisher.Mono}, {@link java.util.concurrent.CompletionStage}, or value.
+ *
+ * The CircuitBreakerRegistry is used to retrieve an instance of a CircuitBreaker for a specific name.
+ *
+ * Given a method like this:
+ * <pre><code>
+ *     {@literal @}CircuitBreaker(name = "myService")
+ *     public String fancyName(String name) {
+ *         return "Sir Captain " + name;
+ *     }
+ * </code></pre>
+ * each time the {@code #fancyName(String)} method is invoked, the method's execution will pass through a
+ * a {@link io.github.resilience4j.circuitbreaker.CircuitBreaker} according to the given config.
+ *
+ * The fallbackMethod parameter signature must match either:
+ *
+ * 1) The method parameter signature on the annotated method or
+ * 2) The method parameter signature with a matching exception type as the last parameter on the annotated method
+ *
+ * The return value can be a {@link Promise}, {@link java.util.concurrent.CompletionStage},
+ * {@link reactor.core.publisher.Flux}, {@link reactor.core.publisher.Mono}, or an object value.
+ * Other reactive types are not supported.
+ *
+ * If the return value is one of the reactive types listed above, it must match the return value type of the
+ * annotated method.
  */
-public class CircuitBreakerMethodInterceptor implements MethodInterceptor {
+public class CircuitBreakerMethodInterceptor extends AbstractMethodInterceptor {
 
     @Inject(optional = true)
+    @Nullable
     private CircuitBreakerRegistry registry;
 
     @SuppressWarnings("unchecked")
+    @Nullable
     @Override
     public Object invoke(MethodInvocation invocation) throws Throwable {
         CircuitBreaker annotation = invocation.getMethod().getAnnotation(CircuitBreaker.class);
-        RecoveryFunction<?> recoveryFunction = annotation.recovery().newInstance();
+        final RecoveryFunction<?> fallbackMethod = Optional
+                .ofNullable(createRecoveryFunction(invocation, annotation.fallbackMethod()))
+                .orElse(new DefaultRecoveryFunction<>());
         if (registry == null) {
             registry = CircuitBreakerRegistry.ofDefaults();
         }
         io.github.resilience4j.circuitbreaker.CircuitBreaker breaker = registry.circuitBreaker(annotation.name());
-        if (breaker == null) {
-            return invocation.proceed();
-        }
         Class<?> returnType = invocation.getMethod().getReturnType();
         if (Promise.class.isAssignableFrom(returnType)) {
-            Promise<?> result = (Promise<?>) proceed(invocation, breaker, recoveryFunction);
+            Promise<?> result = (Promise<?>) proceed(invocation, breaker);
             if (result != null) {
-                CircuitBreakerTransformer transformer = CircuitBreakerTransformer.of(breaker).recover(recoveryFunction);
+                CircuitBreakerTransformer transformer = CircuitBreakerTransformer.of(breaker).recover(fallbackMethod);
                 result = result.transform(transformer);
             }
             return result;
-        } else if (Observable.class.isAssignableFrom(returnType)) {
-            Observable<?> result = (Observable<?>) proceed(invocation, breaker, recoveryFunction);
+        } else if (Flux.class.isAssignableFrom(returnType)) {
+            Flux<?> result = (Flux<?>) proceed(invocation, breaker);
             if (result != null) {
                 CircuitBreakerOperator operator = CircuitBreakerOperator.of(breaker);
-                result = result.lift(operator).onErrorReturn(t -> recoveryFunction.apply((Throwable) t));
+                result = fallbackMethod.onErrorResume(result.transform(operator));
             }
             return result;
-        } else if (Flowable.class.isAssignableFrom(returnType)) {
-            Flowable<?> result = (Flowable<?>) proceed(invocation, breaker, recoveryFunction);
+        } else if (Mono.class.isAssignableFrom(returnType)) {
+            Mono<?> result = (Mono<?>) proceed(invocation, breaker);
             if (result != null) {
                 CircuitBreakerOperator operator = CircuitBreakerOperator.of(breaker);
-                result = result.lift(operator).onErrorReturn(t -> recoveryFunction.apply((Throwable) t));
-            }
-            return result;
-        } else if (Single.class.isAssignableFrom(returnType)) {
-            Single<?> result = (Single<?>) proceed(invocation, breaker, recoveryFunction);
-            if (result != null) {
-                CircuitBreakerOperator operator = CircuitBreakerOperator.of(breaker);
-                result = result.lift(operator).onErrorReturn(t -> recoveryFunction.apply((Throwable) t));
+                result = fallbackMethod.onErrorResume(result.transform(operator));
             }
             return result;
         } else if (CompletionStage.class.isAssignableFrom(returnType)) {
             final CompletableFuture promise = new CompletableFuture<>();
-            if (breaker.isCallPermitted()) {
-                CompletionStage<?> result = (CompletionStage<?>) proceed(invocation, breaker, recoveryFunction);
+            if (breaker.tryAcquirePermission()) {
+                CompletionStage<?> result = (CompletionStage<?>) proceed(invocation, breaker);
                 if (result != null) {
                     long start = System.nanoTime();
                     result.whenComplete((v, t) -> {
                         long durationInNanos = System.nanoTime() - start;
                         if (t != null) {
                             breaker.onError(durationInNanos, t);
-                            try {
-                                promise.complete(recoveryFunction.apply((Throwable) t));
-                            } catch (Exception e) {
-                                promise.completeExceptionally(e);
-                            }
+                            completeFailedFuture(t, fallbackMethod, promise);
                         } else {
                             breaker.onSuccess(durationInNanos);
                             promise.complete(v);
@@ -103,19 +120,22 @@ public class CircuitBreakerMethodInterceptor implements MethodInterceptor {
                     });
                 }
             } else {
-                Throwable t = new CircuitBreakerOpenException(String.format("CircuitBreaker '%s' is open", breaker.getName()));
-                try {
-                    promise.complete(recoveryFunction.apply((Throwable) t));
-                } catch (Throwable t2) {
-                    promise.completeExceptionally(t2);
-                }
+                Throwable t = new CallNotPermittedException(breaker);
+                completeFailedFuture(t, fallbackMethod, promise);
             }
             return promise;
+        } else {
+            try {
+                return proceed(invocation, breaker);
+            } catch (Throwable throwable) {
+                return fallbackMethod.apply(throwable);
+            }
         }
-        return proceed(invocation, breaker, recoveryFunction);
     }
 
-    private Object proceed(MethodInvocation invocation, io.github.resilience4j.circuitbreaker.CircuitBreaker breaker, RecoveryFunction<?> recoveryFunction) throws Throwable {
+    @Nullable
+    private Object proceed(MethodInvocation invocation, io.github.resilience4j.circuitbreaker.CircuitBreaker breaker) throws Throwable {
+        Class<?> returnType = invocation.getMethod().getReturnType();
         Object result;
         long start = System.nanoTime();
         try {
@@ -123,7 +143,19 @@ public class CircuitBreakerMethodInterceptor implements MethodInterceptor {
         } catch (Exception e) {
             long durationInNanos = System.nanoTime() - start;
             breaker.onError(durationInNanos, e);
-            return recoveryFunction.apply(e);
+            if (Promise.class.isAssignableFrom(returnType)) {
+                return Promise.error(e);
+            } else if (Flux.class.isAssignableFrom(returnType)) {
+                return Flux.error(e);
+            } else if (Mono.class.isAssignableFrom(returnType)) {
+                return Mono.error(e);
+            } else if (CompletionStage.class.isAssignableFrom(returnType)) {
+                CompletableFuture<?> future = new CompletableFuture<>();
+                future.completeExceptionally(e);
+                return future;
+            } else {
+                throw e;
+            }
         }
         return result;
     }

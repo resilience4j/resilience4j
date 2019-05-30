@@ -15,50 +15,71 @@
  */
 package io.github.resilience4j.reactor.ratelimiter.operator;
 
+import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RequestNotPermitted;
+import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mockito;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 import java.io.IOException;
 import java.time.Duration;
 
-public class MonoRateLimiterTest extends RateLimiterAssertions {
+import static org.mockito.BDDMockito.given;
+
+public class MonoRateLimiterTest {
+
+    private RateLimiter rateLimiter;
+
+    @Before
+    public void setUp(){
+        rateLimiter = Mockito.mock(RateLimiter.class);
+    }
 
     @Test
     public void shouldEmitEvent() {
+        given(rateLimiter.acquirePermission(Duration.ZERO)).willReturn(true);
+
         StepVerifier.create(
                 Mono.just("Event")
-                        .transform(RateLimiterOperator.of(rateLimiter)))
+                        .compose(RateLimiterOperator.of(rateLimiter)))
                 .expectNext("Event")
                 .verifyComplete();
-
-        assertSinglePermitUsed();
     }
 
     @Test
     public void shouldPropagateError() {
+        given(rateLimiter.acquirePermission(Duration.ZERO)).willReturn(true);
+
         StepVerifier.create(
                 Mono.error(new IOException("BAM!"))
-                        .transform(RateLimiterOperator.of(rateLimiter)))
+                        .compose(RateLimiterOperator.of(rateLimiter)))
                 .expectSubscription()
                 .expectError(IOException.class)
                 .verify(Duration.ofSeconds(1));
-
-        assertSinglePermitUsed();
     }
 
     @Test
     public void shouldEmitErrorWithBulkheadFullException() {
-        saturateRateLimiter();
+        given(rateLimiter.acquirePermission(Duration.ZERO)).willReturn(false);
 
         StepVerifier.create(
                 Mono.just("Event")
-                        .transform(RateLimiterOperator.of(rateLimiter)))
+                        .compose(RateLimiterOperator.of(rateLimiter)))
                 .expectSubscription()
                 .expectError(RequestNotPermitted.class)
                 .verify(Duration.ofSeconds(1));
+    }
 
-        assertNoPermitLeft();
+    @Test
+    public void shouldEmitRequestNotPermittedExceptionEvenWhenErrorDuringSubscribe() {
+        given(rateLimiter.acquirePermission(Duration.ZERO)).willReturn(false);
+
+        StepVerifier.create(
+                Mono.error(new IOException("BAM!"))
+                        .compose(RateLimiterOperator.of(rateLimiter)))
+                .expectError(RequestNotPermitted.class)
+                .verify(Duration.ofSeconds(1));
     }
 }

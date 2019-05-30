@@ -21,21 +21,27 @@ package io.github.resilience4j.bulkhead.internal;
 
 import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.bulkhead.BulkheadConfig;
+import io.github.resilience4j.bulkhead.BulkheadFullException;
 import io.github.resilience4j.bulkhead.event.BulkheadEvent;
 import io.github.resilience4j.bulkhead.event.BulkheadOnCallFinishedEvent;
 import io.github.resilience4j.bulkhead.event.BulkheadOnCallPermittedEvent;
 import io.github.resilience4j.bulkhead.event.BulkheadOnCallRejectedEvent;
 import io.github.resilience4j.core.EventConsumer;
 import io.github.resilience4j.core.EventProcessor;
+import io.github.resilience4j.core.lang.Nullable;
 
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
+import static java.util.Objects.requireNonNull;
+
 /**
  * A Bulkhead implementation based on a semaphore.
  */
 public class SemaphoreBulkhead implements Bulkhead {
+
+    private static final String CONFIG_MUST_NOT_BE_NULL = "Config must not be null";
 
     private final String name;
     private final Semaphore semaphore;
@@ -50,10 +56,9 @@ public class SemaphoreBulkhead implements Bulkhead {
      * @param name           the name of this bulkhead
      * @param bulkheadConfig custom bulkhead configuration
      */
-    public SemaphoreBulkhead(String name, BulkheadConfig bulkheadConfig) {
+    public SemaphoreBulkhead(String name, @Nullable BulkheadConfig bulkheadConfig) {
         this.name = name;
-        this.config = bulkheadConfig != null ? bulkheadConfig
-                : BulkheadConfig.ofDefaults();
+        this.config = requireNonNull(bulkheadConfig, CONFIG_MUST_NOT_BE_NULL);
         // init semaphore
         this.semaphore = new Semaphore(this.config.getMaxConcurrentCalls(), true);
 
@@ -101,7 +106,11 @@ public class SemaphoreBulkhead implements Bulkhead {
      */
     @Override
     public boolean isCallPermitted() {
+        return tryAcquirePermission();
+    }
 
+    @Override
+    public boolean tryAcquirePermission() {
         boolean callPermitted = tryEnterBulkhead();
 
         publishBulkheadEvent(
@@ -110,6 +119,18 @@ public class SemaphoreBulkhead implements Bulkhead {
         );
 
         return callPermitted;
+    }
+
+    @Override
+    public void acquirePermission() {
+        if(!tryAcquirePermission()) {
+            throw new BulkheadFullException(this);
+        }
+    }
+
+    @Override
+    public void releasePermission() {
+        semaphore.release();
     }
 
     /**
@@ -157,19 +178,19 @@ public class SemaphoreBulkhead implements Bulkhead {
 
         @Override
         public EventPublisher onCallPermitted(EventConsumer<BulkheadOnCallPermittedEvent> onCallPermittedEventConsumer) {
-            registerConsumer(BulkheadOnCallPermittedEvent.class, onCallPermittedEventConsumer);
+            registerConsumer(BulkheadOnCallPermittedEvent.class.getSimpleName(), onCallPermittedEventConsumer);
             return this;
         }
 
         @Override
         public EventPublisher onCallRejected(EventConsumer<BulkheadOnCallRejectedEvent> onCallRejectedEventConsumer) {
-            registerConsumer(BulkheadOnCallRejectedEvent.class, onCallRejectedEventConsumer);
+            registerConsumer(BulkheadOnCallRejectedEvent.class.getSimpleName(), onCallRejectedEventConsumer);
             return this;
         }
 
         @Override
         public EventPublisher onCallFinished(EventConsumer<BulkheadOnCallFinishedEvent> onCallFinishedEventConsumer) {
-            registerConsumer(BulkheadOnCallFinishedEvent.class, onCallFinishedEventConsumer);
+            registerConsumer(BulkheadOnCallFinishedEvent.class.getSimpleName(), onCallFinishedEventConsumer);
             return this;
         }
 
@@ -186,7 +207,7 @@ public class SemaphoreBulkhead implements Bulkhead {
 
     boolean tryEnterBulkhead() {
 
-        boolean callPermitted = false;
+        boolean callPermitted;
         long timeout = config.getMaxWaitTime();
 
         if (timeout == 0) {
@@ -214,6 +235,11 @@ public class SemaphoreBulkhead implements Bulkhead {
         @Override
         public int getAvailableConcurrentCalls() {
             return semaphore.availablePermits();
+        }
+
+        @Override
+        public int getMaxAllowedConcurrentCalls() {
+            return config.getMaxConcurrentCalls();
         }
     }
 }

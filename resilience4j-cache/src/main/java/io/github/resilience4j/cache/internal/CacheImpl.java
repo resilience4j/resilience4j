@@ -81,7 +81,7 @@ public class CacheImpl<K, V>  implements Cache<K,V> {
                 return result;
             }
         }catch (Exception exception){
-            LOG.warn(String.format("Failed to get a value from Cache %s", getName()), exception);
+            LOG.warn("Failed to get a value from Cache {}", getName(), exception);
             onError(exception);
             return Option.none();
         }
@@ -93,7 +93,7 @@ public class CacheImpl<K, V>  implements Cache<K,V> {
                 cache.put(cacheKey, value);
             }
         } catch (Exception exception){
-            LOG.warn(String.format("Failed to put a value into Cache %s", getName()), exception);
+            LOG.warn("Failed to put a value into Cache {}", getName(), exception);
             onError(exception);
         }
     }
@@ -127,19 +127,19 @@ public class CacheImpl<K, V>  implements Cache<K,V> {
 
         @Override
         public EventPublisher onCacheHit(EventConsumer<CacheOnHitEvent> eventConsumer) {
-            registerConsumer(CacheOnHitEvent.class, eventConsumer);
+            registerConsumer(CacheOnHitEvent.class.getSimpleName(), eventConsumer);
             return this;
         }
 
         @Override
         public EventPublisher onCacheMiss(EventConsumer<CacheOnMissEvent> eventConsumer) {
-            registerConsumer(CacheOnMissEvent.class, eventConsumer);
+            registerConsumer(CacheOnMissEvent.class.getSimpleName(), eventConsumer);
             return this;
         }
 
         @Override
         public EventPublisher onError(EventConsumer<CacheOnErrorEvent> eventConsumer) {
-            registerConsumer(CacheOnErrorEvent.class, eventConsumer);
+            registerConsumer(CacheOnErrorEvent.class.getSimpleName(), eventConsumer);
             return this;
         }
 

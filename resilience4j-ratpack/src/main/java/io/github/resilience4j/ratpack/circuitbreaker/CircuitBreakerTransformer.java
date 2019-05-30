@@ -15,16 +15,15 @@
  */
 package io.github.resilience4j.ratpack.circuitbreaker;
 
+import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
-import io.github.resilience4j.circuitbreaker.CircuitBreakerOpenException;
+import io.github.resilience4j.ratpack.internal.AbstractTransformer;
 import ratpack.exec.Downstream;
 import ratpack.exec.Upstream;
 import ratpack.func.Function;
 
-public class CircuitBreakerTransformer<T> implements Function<Upstream<? extends T>, Upstream<T>> {
-
-    private final CircuitBreaker circuitBreaker;
-    private Function<Throwable, ? extends T> recoverer;
+public class CircuitBreakerTransformer<T> extends AbstractTransformer<T> {
+    private CircuitBreaker circuitBreaker;
 
     private CircuitBreakerTransformer(CircuitBreaker circuitBreaker) {
         this.circuitBreaker = circuitBreaker;
@@ -58,7 +57,7 @@ public class CircuitBreakerTransformer<T> implements Function<Upstream<? extends
     public Upstream<T> apply(Upstream<? extends T> upstream) throws Exception {
         return down -> {
             long start;
-            if (circuitBreaker.isCallPermitted()) {
+            if (circuitBreaker.tryAcquirePermission()) {
                 start = System.nanoTime();
                 upstream.connect(new Downstream<T>() {
 
@@ -73,15 +72,7 @@ public class CircuitBreakerTransformer<T> implements Function<Upstream<? extends
                     public void error(Throwable throwable) {
                         long durationInNanos = System.nanoTime() - start;
                         circuitBreaker.onError(durationInNanos, throwable);
-                        try {
-                            if (recoverer != null) {
-                                down.success(recoverer.apply(throwable));
-                            } else {
-                                down.error(throwable);
-                            }
-                        } catch (Throwable t) {
-                            down.error(t);
-                        }
+                        handleRecovery(down, throwable);
                     }
 
                     @Override
@@ -90,16 +81,8 @@ public class CircuitBreakerTransformer<T> implements Function<Upstream<? extends
                     }
                 });
             } else {
-                Throwable t = new CircuitBreakerOpenException(String.format("CircuitBreaker '%s' is open", circuitBreaker.getName()));
-                if (recoverer != null) {
-                    try {
-                        down.success(recoverer.apply(t));
-                    } catch (Throwable t2) {
-                        down.error(t2);
-                    }
-                } else {
-                    down.error(t);
-                }
+                Throwable t = new CallNotPermittedException(circuitBreaker);
+                handleRecovery(down, t);
             }
         };
     }

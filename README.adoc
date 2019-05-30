@@ -3,16 +3,36 @@
 :hardbreaks:
 :icons:
 
-image:https://travis-ci.org/resilience4j/resilience4j.svg?branch=master["Build Status", link="https://travis-ci.org/resilience4j/resilience4j"] image:https://coveralls.io/repos/github/resilience4j/resilience4j/badge.svg?branch=master&k=1["Coverage Status", link="https://coveralls.io/github/resilience4j/resilience4j?branch=master"] image:https://api.codacy.com/project/badge/Grade/f0295918d02b45d0928d5adc95f6eba1["Codacy code quality", link="https://www.codacy.com/app/robwin/resilience4j?utm_source=github.com&utm_medium=referral&utm_content=resilience4j/resilience4j&utm_campaign=Badge_Grade"] image:https://api.bintray.com/packages/resilience4j/Maven/resilience4j/images/download.svg[link="https://bintray.com/resilience4j/Maven/resilience4j/_latestVersion"] image:http://img.shields.io/badge/license-ASF2-blue.svg["Apache License 2", link="http://www.apache.org/licenses/LICENSE-2.0.txt"]
+image:https://travis-ci.org/resilience4j/resilience4j.svg?branch=master["Build Status", link="https://travis-ci.org/resilience4j/resilience4j"] image:https://sonarcloud.io/api/project_badges/measure?project=resilience4j_resilience4j&metric=alert_status["Quality Gate", link="https://sonarcloud.io/dashboard?id=resilience4j_resilience4j"] image:https://sonarcloud.io/api/project_badges/measure?project=resilience4j_resilience4j&metric=coverage["Coverage", link="https://sonarcloud.io/dashboard?id=resilience4j_resilience4j"] image:https://api.bintray.com/packages/resilience4j/Maven/resilience4j/images/download.svg[link="https://bintray.com/resilience4j/Maven/resilience4j/_latestVersion"] image:http://img.shields.io/badge/license-ASF2-blue.svg["Apache License 2", link="http://www.apache.org/licenses/LICENSE-2.0.txt"]
 
 == Introduction
 
-Resilience4j is a lightweight fault tolerance library inspired by https://github.com/Netflix/Hystrix[Netflix Hystrix], but designed for Java 8 and functional programming. Lightweight, because the library only uses http://www.vavr.io/[Vavr (formerly Javaslang)], which does not have any other external library dependencies. Netflix Hystrix, in contrast, has a compile dependency to https://github.com/Netflix/archaius[Archaius] which has many more external library dependencies such as Guava and Apache Commons Configuration.
-With Resilience4j you don't have to go all-in, you can pick what you need.
+Resilience4j is a lightweight fault tolerance library inspired by https://github.com/Netflix/Hystrix[Netflix Hystrix], but designed for Java 8 and functional programming. Lightweight, because the library only uses http://www.vavr.io/[Vavr], which does not have any other external library dependencies. Netflix Hystrix, in contrast, has a compile dependency to https://github.com/Netflix/archaius[Archaius] which has many more external library dependencies such as Guava and Apache Commons Configuration.
+
+Resilience4j provides higher-order functions (decorators) to enhance any functional interface, lambda expression or method reference with a Circuit Breaker, Rate Limiter, Retry or Bulkhead. You can stack more than one decorator on any functional interface, lambda expression or method reference. The advantage is that you have the choice to select the decorators you need and nothing else.
+
+[source,java]
+----
+Supplier<String> supplier = () -> backendService.doSomething(param1, param2);
+
+Supplier<String> decoratedSupplier = Decorators.ofSupplier(supplier)
+  .withRetry(Retry.ofDefaults("name"))
+  .withCircuitBreaker(CircuitBreaker.ofDefaults("name"))
+  .withBulkhead(Bulkhead.ofDefaults("name"));
+
+String result = Try.ofSupplier(decoratedSupplier)
+  .recover(throwable -> "Hello from Recovery").get();
+
+// When you don't want to decorate your lambda expression,
+// but just execute it and protect the call by a CircuitBreaker.
+String result = circuitBreaker.executeSupplier(supplier);
+----
+
+With Resilience4j you don’t have to go all-in, you can pick what you need.
 
 ==  Documentation
 
-Setup and usage is described in our *http://resilience4j.github.io/resilience4j/[User Guide]*.
+Setup and usage is described in our *https://resilience4j.readme.io/docs[User Guide]*.
 
 == Overview
 
@@ -24,37 +44,33 @@ Core modules:
 * resilience4j-ratelimiter: Rate limiting
 * resilience4j-bulkhead: Bulkheading
 * resilience4j-retry: Automatic retrying (sync and async)
-* resilience4j-cache: Response caching
 
 Add-on modules
 
+* resilience4j-cache: Response caching
+* resilience4j-timelimiter: Timeout handling
+* resilience4j-reactor: Custom Spring Reactor operator
+* resilience4j-rxjava2: Custom RxJava2 operator
+* resilience4j-micrometer: Micrometer Metrics exporter
 * resilience4j-metrics: Dropwizard Metrics exporter
 * resilience4j-prometheus: Prometheus Metrics exporter
 * resilience4j-spring-boot: Spring Boot Starter
+* resilience4j-spring-boot2: Spring Boot 2 Starter
 * resilience4j-ratpack: Ratpack Starter
-* resilience4j-retrofit: Retrofit Call Adapter Factories
-* resilience4j-vertx: Vertx Future decorator
+* resilience4j-retrofit: Retrofit adapter
+* resilience4j-feign: Feign adapter
 * resilience4j-consumer: Circular Buffer Event consumer
-
-To highlight a few differences to Netflix Hystrix:
-
-* In Hystrix calls to external systems have to be wrapped in a HystrixCommand. This library, in contrast, provides higher-order functions (decorators) to enhance any functional interface, lambda expression or method reference with a http://martinfowler.com/bliki/CircuitBreaker.html[Circuit Breaker], Rate Limiter or Bulkhead. Furthermore, the library provides decorators to retry failed calls or cache call results. You can stack more than one decorator on any functional interface, lambda expression or method reference. That means, you can combine a Bulkhead, RateLimiter and Retry decorator with a CircuitBreaker decorator. The advantage is that you have the choice to select the decorator you need and nothing else. Any decorated function can be executed synchronously or asynchronously by using a CompletableFuture or RxJava.
-* Hystrix, by default, stores execution results in 10 1-second window buckets. If a 1-second window bucket is passed, a new bucket is created and the oldest is dropped. This library stores execution results in Ring Bit Buffer without a statistical rolling time window. A successful call is stored as a 0 bit and a failed call is stored as a 1 bit. The Ring Bit Buffer has a configurable fixed-size and stores the bits in a long[] array which is saving memory compared to a boolean array. That means the Ring Bit Buffer only needs an array of 16 long (64-bit) values to store the status of 1024 calls. The advantage is that this CircuitBreaker works out-of-the-box for low and high frequency backend systems, because execution results are not dropped when a time window is passed.
-* Hystrix only performs a single execution when in half-open state to determine whether to close a CircuitBreaker. This library allows to perform a configurable number of executions and compares the result against a configurable threshold to determine whether to close a CircuitBreaker.
-* This library provides custom RxJava operators to decorate any `Observable` or `Flowable` with a Circuit Breaker, Bulkhead or Ratelimiter.
-* Hystrix and this library emit a stream of events which are useful to system operators to monitor metrics about execution outcomes and latency.
 
 == Spring Boot demo
 
-Setup and usage in Spring Boot is demonstrated https://github.com/RobWin/resilience4j-spring-boot-demo[here].
+Setup and usage in Spring Boot 2 is demonstrated https://github.com/resilience4j/resilience4j-spring-boot2-demo[here].
 
 == Usage examples
 
 * <<circuitbreaker>>
 * <<ratelimiter>>
 * <<bulkhead>>
-* <<cache>>
-* <<metrics>>
+* <<threadpoolbulkhead>>
 * <<events>>
 
 [[circuitbreaker]]
@@ -91,23 +107,9 @@ String result = Try.ofSupplier(decoratedSupplier)
 // When you don't want to decorate your lambda expression,
 // but just execute it and protect the call by a CircuitBreaker.
 String result = circuitBreaker.executeSupplier(backendService::doSomething);
-
 ----
 
-The CircuitBreaker provides an interface to monitor metrics.
-
-[source,java]
-----
-CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
-// Returns the failure rate in percentage.
-float failureRate = metrics.getFailureRate();
-// Returns the current number of buffered calls.
-int bufferedCalls = metrics.getNumberOfBufferedCalls();
-// Returns the current number of failed calls.
-int failedCalls = metrics.getNumberOfFailedCalls();
-----
-
-=== CircuitBreaker and RxJava
+=== CircuitBreaker and RxJava2
 
 The following example shows how to decorate an Observable by using the custom RxJava operator.
 
@@ -115,11 +117,10 @@ The following example shows how to decorate an Observable by using the custom Rx
 ----
 CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testName");
 Observable.fromCallable(backendService::doSomething)
-    .lift(CircuitBreakerOperator.of(circuitBreaker))
+    .compose(CircuitBreakerOperator.of(circuitBreaker))
 ----
 
-
-NOTE: Resilience4j also provides RxJava operators for `RateLimiter`, `Bulkhead` and `Retry`. Find out more in our *http://resilience4j.github.io/resilience4j/[User Guide]*
+NOTE: Resilience4j also provides RxJava operators for `RateLimiter`, `Bulkhead` and `Retry`. Find out more in our *https://resilience4j.readme.io/docs/getting-started-2[User Guide]*
 
 === CircuitBreaker and Reactor
 
@@ -129,12 +130,11 @@ The following example shows how to decorate a Mono by using the custom Reactor o
 ----
 CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testName");
 Mono.fromCallable(backendService::doSomething)
-    .transform(CircuitBreakerOperator.of(circuitBreaker))
+    .compose(CircuitBreakerOperator.of(circuitBreaker))
 ----
 
 
-NOTE: Resilience4j also provides Reactor operators for `RateLimiter` and `Bulkhead`. Find out more in our *http://resilience4j.github.io/resilience4j/[User Guide]*
-
+NOTE: Resilience4j also provides Reactor operators for `RateLimiter`, `Bulkhead` and `Retry`. Find out more in our *https://resilience4j.readme.io/docs/getting-started-1[User Guide]*
 
 [[ratelimiter]]
 === RateLimiter
@@ -166,96 +166,45 @@ assertThat(secondTry.isFailure()).isTrue();
 assertThat(secondTry.getCause()).isInstanceOf(RequestNotPermitted.class);
 ----
 
-The RateLimiter provides an interface to monitor the number of available permissions. The AtomicRateLimiter has some enhanced Metrics with some implementation specific details.
-
-[source,java]
-----
-RateLimiter.Metrics metrics = rateLimiter.getMetrics();
-int numberOfThreadsWaitingForPermission = metrics.getNumberOfWaitingThreads();
-// Estimates count of available permissions. Can be negative if some permissions where reserved.
-int availablePermissions = metrics.getAvailablePermissions();
-
-AtomicRateLimiter atomicLimiter;
-// Estimated time duration in nanos to wait for the next permission
-long nanosToWaitForPermission = atomicLimiter.getNanosToWait();
-----
-
-You can also dynamically change some rate limiter configurations. Find out more in our *http://resilience4j.github.io/resilience4j/[User Guide]*
-
-
 [[bulkhead]]
 === Bulkhead
 The following example shows how to decorate a lambda expression with a Bulkhead. A Bulkhead can be used to limit the amount of parallel executions. This bulkhead abstraction should work well across a variety of threading and io models. It is based on a semaphore, and unlike Hystrix, does not provide "shadow" thread pool option.
 
 [source,java]
 ----
-Bulkhead bulkhead = Bulkhead.ofDefaults("backendName");
+// Create a custom Bulkhead configuration
+BulkheadConfig config = BulkheadConfig.custom()
+    .maxConcurrentCalls(150)
+    .maxWaitTime(100)
+    .build();
 
-Supplier<String> supplier = Bulkhead.decorateSupplier(bulkhead, backendService::doSomething);
+Bulkhead bulkhead = Bulkhead.of("backendName", config);
+
+Supplier<String> supplier = Bulkhead
+    .decorateSupplier(bulkhead, backendService::doSomething);
 ----
 
-The Bulkhead provides an interface to monitor the current number of available concurrent calls.
+[[threadpoolbulkhead]]
+=== ThreadPoolBulkhead
+The following example shows how to use a lambda expression with a ThreadPoolBulkhead which uses a bounded queue and a fixed thread pool.
 
 [source,java]
 ----
-int availableConcurrentCalls = bulkhead.getMetrics().getAvailableConcurrentCalls()
-----
+// Create a custom ThreadPoolBulkhead configuration
+ThreadPoolBulkheadConfig config = ThreadPoolBulkheadConfig.custom()
+    .maxThreadPoolSize(10)
+    .coreThreadPoolSize(2)
+    .queueCapacity(20)
+    .build();
 
-You can also dynamically change it's configuration.
+ThreadPoolBulkhead bulkhead = ThreadPoolBulkhead.of("backendName", config);
 
-[[cache]]
-=== Cache
+// Decorate or execute immediately a lambda expression with a ThreadPoolBulkhead.
+Supplier<CompletionStage<String>> supplier = ThreadPoolBulkhead
+    .decorateSupplier(bulkhead, backendService::doSomething);
 
-The following example shows how to decorate a lambda expression with a Cache abstraction. The cache abstraction puts the result of the lambda expression in a cache instance (JCache) and
-tries to retrieve a previous cached result from the cache before it invokes the lambda expression.
-If the cache retrieval from a distributed cache fails, the exception is taken care of and the lambda expression is called.
-
-[source,java]
-----
-// Create a CacheContext by wrapping a JCache instance.
-javax.cache.Cache<String, String> cacheInstance = Caching.getCache("cacheName", String.class, String.class);
-Cache<String, String> cacheContext = Cache.of(cacheInstance);
-
-// Decorate your call to BackendService.doSomething()
-Function<String, String> cachedFunction = Cache.decorateSupplier(cacheContext, backendService::doSomething);
-String value = cachedFunction.apply("testKey");
-----
-
-The Cache provides an interface to monitor cache hits/misses.
-
-[source,java]
-----
-Cache.Metrics metrics = cacheContext.getMetrics();
-long cacheHits = metrics.getNumberOfCacheHits;
-long cacheMisses = metrics.getNumberOfCacheMisses();
-----
-
-
-[[metrics]]
-=== Metrics
-
-The following example shows how to decorate a lambda expression to measure metrics using Dropwizard Metrics.
-The Timer counts the number of total calls, successful calls, failed calls and measures the rate and response time of successful calls.
-
-[source,java]
-----
-// Create a Timer
-Timer timer = Timer.of("backend");
-Supplier<String> supplier = Timer.decorateSupplier(timer, backendService::doSomething);
-----
-
-The Timer provides an interface to monitor metrics.
-
-[source,java]
-----
-// Retrieve Timer metrics
-Timer.Metrics metrics = timer.getMetrics();
-// Returns the number of total calls
-long totalCalls = metrics.getNumberOfTotalCalls();
-// Returns the number of successful calls
-long successfulCalls = metrics.getNumberOfSuccessfulCalls();
-// Returns the number of failed calls
-long failedCalls = metrics.getNumberOfFailedCalls();
+CompletionStage<String> execution = bulkhead
+    .executeSupplier(backendService::doSomething);
 ----
 
 [[events]]
@@ -280,15 +229,6 @@ circuitBreaker.getEventPublisher()
     .onEvent(event -> logger.info(...));
 ----
 
-You could use the `CircularEventConsumer` to store events in a circular buffer with a fixed capacity.
-
-[source,java]
-----
-CircularEventConsumer<CircuitBreakerEvent> ringBuffer = new CircularEventConsumer<>(10);
-circuitBreaker.getEventPublisher().onEvent(ringBuffer);
-List<CircuitBreakerEvent> bufferedEvents = ringBuffer.getBufferedEvents()
-----
-
 You can use RxJava or Spring Reactor Adapters to convert the `EventPublisher` into a Reactive Stream. The advantage of a Reactive Stream is that you can use RxJava's `observeOn` operator to specify a different Scheduler that the CircuitBreaker will use to send notifications to its observers/consumers.
 
 [source,java]
@@ -299,7 +239,7 @@ RxJava2Adapter.toFlowable(circuitBreaker.getEventPublisher())
     .subscribe(event -> logger.info(...))
 ----
 
-NOTE: You can also consume events from `RateLimiter`, `Bulkhead`, `Cache` and `Retry`. Find out more in our *http://resilience4j.github.io/resilience4j/[User Guide]*
+NOTE: You can also consume events from `RateLimiter`, `Bulkhead`, `Cache` and `Retry`. Find out more in our *https://resilience4j.readme.io/[User Guide]*
 
 == Companies who use Resilience4j
 
@@ -307,10 +247,14 @@ NOTE: You can also consume events from `RateLimiter`, `Bulkhead`, `Cache` and `R
 * AOL (In an application with low latency requirements)
 * Netpulse (In system with 40+ integrations)
 * wescale.de (In a B2B integration platform)
+* Topia (In an HR application built with microservices architecture)
+* Auto Trader Group plc (UK’s largest digital automotive marketplace)
+* PlayStation Network (Platform backend)
+
 
 == License
 
-Copyright 2017 Robert Winkler and Bohdan Storozhuk
+Copyright 2019 Robert Winkler, Bohdan Storozhuk, Mahmoud Romeh and Dan Maas
 
 Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at
 

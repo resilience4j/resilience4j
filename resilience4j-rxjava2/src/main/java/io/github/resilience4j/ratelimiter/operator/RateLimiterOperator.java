@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Dan Maas
+ * Copyright 2019 Robert Winkler
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,69 +13,61 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package io.github.resilience4j.ratelimiter.operator;
+
+import io.github.resilience4j.ratelimiter.RateLimiter;
+import io.github.resilience4j.ratelimiter.RequestNotPermitted;
+import io.reactivex.*;
+import org.reactivestreams.Publisher;
 
 import static java.util.Objects.requireNonNull;
 
-import io.github.resilience4j.ratelimiter.RateLimiter;
-import io.reactivex.CompletableObserver;
-import io.reactivex.CompletableOperator;
-import io.reactivex.FlowableOperator;
-import io.reactivex.MaybeObserver;
-import io.reactivex.MaybeOperator;
-import io.reactivex.ObservableOperator;
-import io.reactivex.Observer;
-import io.reactivex.SingleObserver;
-import io.reactivex.SingleOperator;
-import org.reactivestreams.Subscriber;
-
 /**
- * A RxJava operator which wraps a reactive type in a rate limiter.
- * All operators consumes one permit at subscription and one permit per emitted event except the first one.
+ * A RateLimiter operator which checks if a downstream subscriber/observer can acquire a permission to subscribe to an upstream Publisher.
+ * Otherwise emits a {@link RequestNotPermitted} if the rate limit is exceeded.
  *
- * @param <T> the value type of the upstream and downstream
+ * @param <T> the value type
  */
-public class RateLimiterOperator<T> implements ObservableOperator<T, T>, FlowableOperator<T, T>, SingleOperator<T, T>, CompletableOperator, MaybeOperator<T, T> {
-    private final RateLimiter rateLimiter;
+public class RateLimiterOperator<T> implements FlowableTransformer<T, T>, SingleTransformer<T, T>, MaybeTransformer<T, T>, CompletableTransformer, ObservableTransformer<T, T>{
 
-    private RateLimiterOperator(RateLimiter rateLimiter) {
-        this.rateLimiter = requireNonNull(rateLimiter);
-    }
+    private final RateLimiter rateLimiter;
 
     /**
      * Creates a RateLimiterOperator.
      *
      * @param rateLimiter the RateLimiter
-     * @param <T>         the value type of the upstream and downstream
      * @return a RateLimiterOperator
      */
     public static <T> RateLimiterOperator<T> of(RateLimiter rateLimiter) {
         return new RateLimiterOperator<>(rateLimiter);
     }
 
-    @Override
-    public Subscriber<? super T> apply(Subscriber<? super T> childSubscriber) throws Exception {
-        return new RateLimiterSubscriber<>(rateLimiter, childSubscriber);
+    private RateLimiterOperator(RateLimiter rateLimiter) {
+        this.rateLimiter = requireNonNull(rateLimiter);
     }
 
     @Override
-    public Observer<? super T> apply(Observer<? super T> childObserver) throws Exception {
-        return new RateLimiterObserver<>(rateLimiter, childObserver);
+    public Publisher<T> apply(Flowable<T> upstream) {
+        return new FlowableRateLimiter<>(upstream, rateLimiter);
     }
 
     @Override
-    public SingleObserver<? super T> apply(SingleObserver<? super T> childObserver) throws Exception {
-        return new RateLimiterSingleObserver<>(rateLimiter, childObserver);
+    public SingleSource<T> apply(Single<T> upstream) {
+        return new SingleRateLimiter<>(upstream, rateLimiter);
     }
 
     @Override
-    public CompletableObserver apply(CompletableObserver observer) throws Exception {
-        return new RateLimiterCompletableObserver(rateLimiter, observer);
+    public CompletableSource apply(Completable upstream) {
+        return new CompletableRateLimiter(upstream, rateLimiter);
     }
 
     @Override
-    public MaybeObserver<? super T> apply(MaybeObserver<? super T> observer) throws Exception {
-        return new RateLimiterMaybeObserver<>(rateLimiter, observer);
+    public MaybeSource<T> apply(Maybe<T> upstream) {
+        return new MaybeRateLimiter<>(upstream, rateLimiter);
+    }
+
+    @Override
+    public ObservableSource<T> apply(Observable<T> upstream) {
+        return new ObserverRateLimiter<>(upstream, rateLimiter);
     }
 }

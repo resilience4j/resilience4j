@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Julien Hoarau
+ * Copyright 2019 Julien Hoarau, Robert Winkler
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,28 +16,24 @@
 package io.github.resilience4j.reactor.bulkhead.operator;
 
 import io.github.resilience4j.bulkhead.Bulkhead;
-import io.github.resilience4j.reactor.FluxResilience;
-import io.github.resilience4j.reactor.MonoResilience;
+import io.github.resilience4j.bulkhead.BulkheadFullException;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Scheduler;
-import reactor.core.scheduler.Schedulers;
 
-import java.util.function.Function;
+import java.util.function.UnaryOperator;
 
 /**
- * A Reactor operator which wraps a reactive type in a bulkhead.
+ * A Bulkhead operator which checks if a subscriber/observer can acquire a permission to subscribe to an upstream Publisher.
+ * Otherwise emits a {@link BulkheadFullException}, if the Bulkhead is full.
  *
- * @param <T> the value type of the upstream and downstream
+ * @param <T> the value type
  */
-public class BulkheadOperator<T> implements Function<Publisher<T>, Publisher<T>> {
+public class BulkheadOperator<T> implements UnaryOperator<Publisher<T>> {
     private final Bulkhead bulkhead;
-    private final Scheduler scheduler;
 
-    private BulkheadOperator(Bulkhead bulkhead, Scheduler scheduler) {
+    private BulkheadOperator(Bulkhead bulkhead) {
         this.bulkhead = bulkhead;
-        this.scheduler = scheduler;
     }
 
     /**
@@ -48,29 +44,15 @@ public class BulkheadOperator<T> implements Function<Publisher<T>, Publisher<T>>
      * @return a BulkheadOperator
      */
     public static <T> BulkheadOperator<T> of(Bulkhead bulkhead) {
-        return of(bulkhead, Schedulers.parallel());
-    }
-
-    /**
-     * Creates a BulkheadOperator.
-     *
-     * @param <T>       the value type of the upstream and downstream
-     * @param bulkhead  the Bulkhead
-     * @param scheduler the {@link Scheduler} where to publish
-     * @return a BulkheadOperator
-     */
-    public static <T> BulkheadOperator<T> of(Bulkhead bulkhead, Scheduler scheduler) {
-        return new BulkheadOperator<>(bulkhead, scheduler);
+        return new BulkheadOperator<>(bulkhead);
     }
 
     @Override
     public Publisher<T> apply(Publisher<T> publisher) {
         if (publisher instanceof Mono) {
-            return MonoResilience
-                    .onAssembly(new MonoBulkhead<T>((Mono<? extends T>) publisher, bulkhead, scheduler));
+            return new MonoBulkhead<>((Mono<? extends T>) publisher, bulkhead);
         } else if (publisher instanceof Flux) {
-            return FluxResilience
-                    .onAssembly(new FluxBulkhead<T>((Flux<? extends T>) publisher, bulkhead, scheduler));
+            return new FluxBulkhead<>((Flux<? extends T>) publisher, bulkhead);
         }
 
         throw new IllegalStateException("Publisher of type <" + publisher.getClass().getSimpleName()

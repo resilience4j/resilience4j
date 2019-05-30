@@ -16,13 +16,13 @@ final Bulkhead foo = bulkheadRegistry.bulkhead("foo");
 final Bulkhead boo = bulkheadRegistry.bulkhead("boo");
 
 // Register all bulkheads at once
-BulkheadMetrics bulkheadMetrics = BulkheadMetrics.ofBulkheadRegistry(bulkheadRegistry);
-bulkheadMetrics.bindTo(meterRegistry);
+TaggedBulkheadMetrics.ofBulkheadRegistry(bulkheadRegistry).bindTo(meterRegistry);
 --
 
 For each bulkhead this registry will export:
 
-* `available_concurrent_calls` - instantaneous read of the number of currently available concurrent calls `[int]`
+* `resilience4j_bulkhead_available_concurrent_calls{name="name of bulkhead"}` - number of available concurrent calls
+* `resilience4j_bulkhead_max_allowed_concurrent_calls{name="name of bulkhead"}` - maximum number of allowed concurrent calls
 
 ===== CircuitBreaker
 
@@ -33,18 +33,18 @@ final CircuitBreaker foo = circuitBreakerRegistry.circuitBreaker("foo");
 final CircuitBreaker boo = circuitBreakerRegistry.circuitBreaker("boo");
 
 // Register all circuit breakers at once
-CircuitBreakerMetrics circuitBreakerMetrics = CircuitBreakerMetrics.ofCircuitBreakerRegistry(circuitBreakerRegistry);
-circuitBreakerMetrics.bindTo(meterRegistry);
+TaggedCircuitBreakerMetrics.ofCircuitBreakerRegistry(circuitBreakerRegistry).bindTo(meterRegistry);
 --
 
 For each circuit breaker this registry will export:
 
-* `state` - instantaneous read of the current state where 0-CLOSED, 1-OPEN, 2-HALF-OPEN `[int]`
-* `successful` - current number of successful calls `[int]`
-* `failed` - current number of failed calls `[int]`
-* `buffered` - current number of buffered calls `[int]`
-* `buffered_max` - maximum number of buffered calls `[int]`
-* `not_permitted` - current number of not permitted calls `[int]`
+* `resilience4j_circuitbreaker_state{name="name of circuitbreaker"}` - the state of the circuit breaker where 0-CLOSED, 1-OPEN, 2-HALF-OPEN
+* `resilience4j_circuitbreaker_calls{name="name of circuitbreaker", kind="one of the values below"}` - the number of calls of a certain kind
+  - `successful` - indicates successful calls
+  - `failed` - indicates failed calls
+  - `not_permitted` - indicates not permitted calls
+* `resilience4j_circuitbreaker_buffered_calls{name="name of circuitbreaker"}` - the number of buffered calls
+* `resilience4j_circuitbreaker_max_buffered_calls{name="name of circuitbreaker"}` - the maximum number of buffered calls
 
 ===== RateLimiter
 
@@ -54,14 +54,13 @@ final RateLimiterRegistry rateLimiterRegistry = RateLimiterRegistry.ofDefaults()
 final RateLimiter rateLimiter = rateLimiterRegistry.rateLimiter("testLimit");
 
 // Register rate limiters at once
-RateLimiterMetrics rateLimiterMetrics = RateLimiterMetrics.ofRateLimiterRegistry(rateLimiterRegistry);
-rateLimiterMetrics.bindTo(meterRegistry);
+TaggedRateLimiterMetrics.ofRateLimiterRegistry(rateLimiterRegistry).bindTo(meterRegistry);
 --
 
 For each rate limiter this registry will export:
 
-* `available_permissions` - current number of available permissions `[int]`
-* `number_of_waiting_threads` - current number of threads waiting for permission `[int]`
+* `resilience4j_ratelimiter_available_permissions{name="name of ratelimiter"}` - the number of available permissions
+* `resilience4j_ratelimiter_waiting_threads{name="name of ratelimiter"}` - the number of threads waiting for permission
 
 ===== Retry
 
@@ -72,14 +71,15 @@ final RetryRegistry retryRegistry = RetryRegistry.ofDefaults();
 final Retry retry = retryRegistry.retry("testLimit");
 
 // Register all retries at once
-RetryMetrics retryMetrics = RetryMetrics.ofRetryRegistry(retryRegistry);
-retryMetrics.bindTo(meterRegistry);
+TaggedRetryMetrics.ofRetryRegistry(retryRegistry).bindTo(meterRegistry);
 --
 
 For each retry this registry will export:
 
-* `successful_calls_without_retry` - the number of successful calls without a retry attempt `[long]`
-* `successful_calls_with_retry` - the number of successful calls after a retry attempt `[long]`
-* `failed_calls_without_retry` - the number of failed calls without a retry attempt `[long]`
-* `failed_calls_with_retry` - the number of failed calls after all retry attempts `[long]`
+* `resilience4j_retry_calls{name="retry name", kind="one of the values below"}` - the number of calls of a certain kind
+- `successful_without_retry` - indicates successful calls without retry
+- `successful_with_retry` - indicates successful calls with retry
+- `failed_without_retry` - indicates failed calls without retry
+- `failed_with_retry` - indicates failed calls with retry
 
+Note the same set of metrics is exposed for async retry, metric name is `resilience4j_async_retry_calls`.

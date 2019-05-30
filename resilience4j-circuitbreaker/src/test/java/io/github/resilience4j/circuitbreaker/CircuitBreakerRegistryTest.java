@@ -21,6 +21,10 @@ package io.github.resilience4j.circuitbreaker;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.HashMap;
+import java.util.Map;
+
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.BDDAssertions.assertThat;
 
 
@@ -55,5 +59,56 @@ public class CircuitBreakerRegistryTest {
         assertThat(circuitBreaker).isNotSameAs(circuitBreaker2);
 
         assertThat(circuitBreakerRegistry.getAllCircuitBreakers()).hasSize(2);
+    }
+
+
+	@Test
+    public void testCreateWithDefaultConfiguration() {
+        CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.of(CircuitBreakerConfig.ofDefaults());
+        CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("testName");
+        CircuitBreaker circuitBreaker2 = circuitBreakerRegistry.circuitBreaker("otherTestName");
+        assertThat(circuitBreaker).isNotSameAs(circuitBreaker2);
+
+        assertThat(circuitBreakerRegistry.getAllCircuitBreakers()).hasSize(2);
+    }
+
+    @Test
+    public void testCreateWithConfigurationMap() {
+        Map<String, CircuitBreakerConfig> configs = new HashMap<>();
+        configs.put("default", CircuitBreakerConfig.ofDefaults());
+        configs.put("custom", CircuitBreakerConfig.ofDefaults());
+
+        CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.of(configs);
+
+        assertThat(circuitBreakerRegistry.getDefaultConfig()).isNotNull();
+        assertThat(circuitBreakerRegistry.getConfiguration("custom")).isNotNull();
+    }
+
+    @Test
+    public void testAddConfiguration() {
+        CircuitBreakerConfig config = CircuitBreakerConfig.ofDefaults();
+        CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
+        circuitBreakerRegistry.addConfiguration("someSharedConfig", config);
+
+        CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("name", "someSharedConfig");
+
+        assertThat(circuitBreakerRegistry.getConfiguration("someSharedConfig")).isNotNull();
+        assertThat(circuitBreaker.getCircuitBreakerConfig()).isEqualTo(config);
+    }
+
+    @Test
+    public void testCreateWithConfigurationMapWithoutDefaultConfig() {
+        Map<String, CircuitBreakerConfig> configs = new HashMap<>();
+        configs.put("custom", CircuitBreakerConfig.ofDefaults());
+
+        CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.of(configs);
+
+        assertThat(circuitBreakerRegistry.getDefaultConfig()).isNotNull();
+        assertThat(circuitBreakerRegistry.getConfiguration("custom")).isNotNull();
+    }
+
+    @Test
+    public void testCreateWithNullConfig() {
+        assertThatThrownBy(() -> CircuitBreakerRegistry.of((CircuitBreakerConfig)null)).isInstanceOf(NullPointerException.class).hasMessage("Config must not be null");
     }
 }

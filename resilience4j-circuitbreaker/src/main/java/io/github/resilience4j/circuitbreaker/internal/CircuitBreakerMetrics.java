@@ -20,6 +20,7 @@ package io.github.resilience4j.circuitbreaker.internal;
 
 
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
+import io.github.resilience4j.core.lang.Nullable;
 
 import java.util.concurrent.atomic.LongAdder;
 
@@ -33,7 +34,7 @@ class CircuitBreakerMetrics implements CircuitBreaker.Metrics {
         this(ringBufferSize, null);
     }
 
-    CircuitBreakerMetrics(int ringBufferSize, RingBitSet sourceSet) {
+    CircuitBreakerMetrics(int ringBufferSize, @Nullable RingBitSet sourceSet) {
         this.ringBufferSize = ringBufferSize;
         if(sourceSet != null) {
             this.ringBitSet = new RingBitSet(this.ringBufferSize, sourceSet);

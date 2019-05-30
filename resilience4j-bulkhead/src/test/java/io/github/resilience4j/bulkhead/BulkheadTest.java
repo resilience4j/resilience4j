@@ -402,8 +402,8 @@ public class BulkheadTest {
         // Given
         BulkheadConfig config = BulkheadConfig.custom().maxConcurrentCalls(2).build();
         Bulkhead bulkhead = Bulkhead.of("test", config);
-        bulkhead.isCallPermitted();
-        bulkhead.isCallPermitted();
+        bulkhead.tryAcquirePermission();
+        bulkhead.tryAcquirePermission();
 
         // When
         CheckedRunnable checkedRunnable = Bulkhead.decorateCheckedRunnable(bulkhead, () -> {throw new RuntimeException("BAM!");});
@@ -421,7 +421,7 @@ public class BulkheadTest {
         // Given
         BulkheadConfig config = BulkheadConfig.custom().maxConcurrentCalls(2).build();
         Bulkhead bulkhead = Bulkhead.of("test", config);
-        bulkhead.isCallPermitted();
+        bulkhead.tryAcquirePermission();
 
         //v When
         CheckedRunnable checkedRunnable = Bulkhead.decorateCheckedRunnable(bulkhead, () -> {throw new RuntimeException("BAM!");});

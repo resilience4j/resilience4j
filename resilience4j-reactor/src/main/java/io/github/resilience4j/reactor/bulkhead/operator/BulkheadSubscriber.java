@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Julien Hoarau
+ * Copyright 2018 Julien Hoarau, Robert Winkler
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,14 +16,11 @@
 package io.github.resilience4j.reactor.bulkhead.operator;
 
 import io.github.resilience4j.bulkhead.Bulkhead;
-import io.github.resilience4j.bulkhead.BulkheadFullException;
-import io.github.resilience4j.reactor.Permit;
+import io.github.resilience4j.reactor.AbstractSubscriber;
 import org.reactivestreams.Subscriber;
-import org.reactivestreams.Subscription;
 import reactor.core.CoreSubscriber;
-import reactor.core.publisher.BaseSubscriber;
 
-import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.atomic.AtomicIntegerFieldUpdater;
 
 import static java.util.Objects.requireNonNull;
 
@@ -32,75 +29,53 @@ import static java.util.Objects.requireNonNull;
  *
  * @param <T> the value type of the upstream and downstream
  */
-class BulkheadSubscriber<T> extends BaseSubscriber<T> {
+class BulkheadSubscriber<T> extends AbstractSubscriber<T> {
 
-    private final CoreSubscriber<? super T> actual;
     private final Bulkhead bulkhead;
-    private final AtomicReference<Permit> permitted = new AtomicReference<>(Permit.PENDING);
+    private final boolean singleProducer;
 
-    public BulkheadSubscriber(Bulkhead bulkhead,
-                              CoreSubscriber<? super T> actual) {
-        this.actual = actual;
+    @SuppressWarnings("PMD")
+    private volatile int successSignaled = 0;
+    private static final AtomicIntegerFieldUpdater<BulkheadSubscriber> SUCCESS_SIGNALED =
+            AtomicIntegerFieldUpdater.newUpdater(BulkheadSubscriber.class, "successSignaled");
+
+    BulkheadSubscriber(Bulkhead bulkhead,
+                                 CoreSubscriber<? super T> downstreamSubscriber,
+                                 boolean singleProducer) {
+        super(downstreamSubscriber);
         this.bulkhead = requireNonNull(bulkhead);
-    }
-
-    @Override
-    public void hookOnSubscribe(Subscription subscription) {
-        if (acquireCallPermit()) {
-            actual.onSubscribe(this);
-        } else {
-            cancel();
-            actual.onSubscribe(this);
-            actual.onError(new BulkheadFullException(
-                    String.format("Bulkhead '%s' is full", bulkhead.getName())));
-        }
+        this.singleProducer = singleProducer;
     }
 
     @Override
     public void hookOnNext(T t) {
-        if (notCancelled() && wasCallPermitted()) {
-            actual.onNext(t);
+        if (!isDisposed()) {
+            if (singleProducer && SUCCESS_SIGNALED.compareAndSet(this, 0, 1)) {
+                bulkhead.onComplete();
+            }
+            downstreamSubscriber.onNext(t);
         }
+    }
+
+    @Override
+    public void hookOnCancel() {
+        if(successSignaled == 0){
+            bulkhead.releasePermission();
+        }
+
     }
 
     @Override
     public void hookOnError(Throwable t) {
-        if (wasCallPermitted()) {
-            bulkhead.onComplete();
-            actual.onError(t);
-        }
+        bulkhead.onComplete();
+        downstreamSubscriber.onError(t);
     }
 
     @Override
     public void hookOnComplete() {
-        if (wasCallPermitted()) {
-            releaseBulkhead();
-            actual.onComplete();
-        }
-    }
-
-    private boolean acquireCallPermit() {
-        boolean callPermitted = false;
-        if (permitted.compareAndSet(Permit.PENDING, Permit.ACQUIRED)) {
-            callPermitted = bulkhead.isCallPermitted();
-            if (!callPermitted) {
-                permitted.set(Permit.REJECTED);
-            }
-        }
-        return callPermitted;
-    }
-
-    private boolean notCancelled() {
-        return !this.isDisposed();
-    }
-
-    private boolean wasCallPermitted() {
-        return permitted.get() == Permit.ACQUIRED;
-    }
-
-    private void releaseBulkhead() {
-        if (wasCallPermitted()) {
+        if (SUCCESS_SIGNALED.compareAndSet(this, 0, 1)) {
             bulkhead.onComplete();
         }
+        downstreamSubscriber.onComplete();
     }
 }

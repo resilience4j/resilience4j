@@ -19,7 +19,10 @@
 package io.github.resilience4j.circuitbreaker;
 
 import io.github.resilience4j.test.HelloWorldService;
-import io.vavr.*;
+import io.vavr.CheckedConsumer;
+import io.vavr.CheckedFunction0;
+import io.vavr.CheckedFunction1;
+import io.vavr.CheckedRunnable;
 import io.vavr.control.Try;
 import org.junit.Before;
 import org.junit.Test;
@@ -30,17 +33,13 @@ import javax.xml.ws.WebServiceException;
 import java.io.IOException;
 import java.net.SocketTimeoutException;
 import java.time.Duration;
-import java.util.concurrent.Callable;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionStage;
-import java.util.concurrent.ExecutionException;
+import java.util.concurrent.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
 import static io.vavr.API.*;
-import static io.vavr.API.$;
-import static io.vavr.Predicates.*;
+import static io.vavr.Predicates.instanceOf;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -749,7 +748,7 @@ public class CircuitBreakerTest {
     }
 
     @Test
-    public void shouldDecorateCompletionStageAndReturnWithExceptionAtSyncStage() throws ExecutionException, InterruptedException {
+    public void shouldDecorateCompletionStageAndReturnWithExceptionAtSyncStage() {
         // Given
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("backendName");
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
@@ -757,15 +756,15 @@ public class CircuitBreakerTest {
 
         // When
         Supplier<CompletionStage<String>> completionStageSupplier = () -> {
-            throw new WebServiceException("BAM! At sync stage");
+            throw new CompletionException(new RuntimeException("BAM! At sync stage"));
         };
 
         Supplier<CompletionStage<String>> decoratedCompletionStageSupplier =
                 CircuitBreaker.decorateCompletionStage(circuitBreaker, completionStageSupplier);
-        Try<CompletionStage<String>> result = Try.of(decoratedCompletionStageSupplier::get);
 
-        assertThat(result.isFailure()).isEqualTo(true);
-        assertThat(result.failed().get()).isInstanceOf(WebServiceException.class);
+        CompletionStage<String> decoratedCompletionStage = decoratedCompletionStageSupplier.get();
+        assertThatThrownBy(decoratedCompletionStage.toCompletableFuture()::get)
+                .isInstanceOf(ExecutionException.class).hasCause(new RuntimeException("BAM! At sync stage"));
 
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
@@ -773,7 +772,7 @@ public class CircuitBreakerTest {
     }
 
     @Test
-    public void shouldDecorateCompletionStageAndReturnWithExceptionAtAsyncStage() throws ExecutionException, InterruptedException {
+    public void shouldDecorateCompletionStageAndReturnWithExceptionAtAsyncStage() {
         // Given
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("backendName");
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
@@ -799,7 +798,36 @@ public class CircuitBreakerTest {
     }
 
     @Test
-    public void shouldChainDecoratedFunctions() throws ExecutionException, InterruptedException {
+    public void shouldDecorateCompletionStageAndIgnoreWebServiceException() {
+        // Given
+        CircuitBreakerConfig config = CircuitBreakerConfig.custom()
+                .ignoreExceptions(WebServiceException.class)
+                .build();
+
+        CircuitBreaker circuitBreaker = CircuitBreaker.of("backendName", config);
+        assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
+        // Given the HelloWorldService throws an exception
+        BDDMockito.given(helloWorldService.returnHelloWorld()).willThrow(new WebServiceException("BAM! At async stage"));
+
+        // When
+        Supplier<CompletionStage<String>> completionStageSupplier =
+                () -> CompletableFuture.supplyAsync(helloWorldService::returnHelloWorld);
+
+        CompletionStage<String> stringCompletionStage = circuitBreaker.executeCompletionStage(completionStageSupplier);
+
+        // Then the helloWorldService should be invoked 1 time
+        assertThatThrownBy(stringCompletionStage.toCompletableFuture()::get)
+                .isInstanceOf(ExecutionException.class).hasCause(new WebServiceException("BAM! At async stage"));
+        BDDMockito.then(helloWorldService).should(Mockito.times(1)).returnHelloWorld();
+
+        CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
+        // WebServiceException should be ignored
+        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(0);
+        assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(0);
+    }
+
+    @Test
+    public void shouldChainDecoratedFunctions() {
         // tag::shouldChainDecoratedFunctions[]
         // Given
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testName");
@@ -829,6 +857,11 @@ public class CircuitBreakerTest {
         metrics = anotherCircuitBreaker.getMetrics();
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
         assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(0);
+    }
+
+    @Test
+    public void testCreateWithNullConfig() {
+        assertThatThrownBy(() -> CircuitBreaker.of("test", (CircuitBreakerConfig)null)).isInstanceOf(NullPointerException.class).hasMessage("Config must not be null");
     }
 
 }

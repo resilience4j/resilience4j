@@ -1,3 +1,4 @@
 dependencies {
-    compile ( libraries.rxjava2)
+    
 }
+ext.moduleName='io.github.resilience4j.timelimiter'

@@ -80,9 +80,11 @@ public class BulkheadMetricsTest {
         Future<String> future = executorService.submit(() -> bulkhead.executeSupplier(helloWorldService::returnHelloWorld));
 
         // Then metrics are present and show value
-        assertThat(metricRegistry.getMetrics()).hasSize(1);
+        assertThat(metricRegistry.getMetrics()).hasSize(2);
         assertThat(metricRegistry.getGauges().get("resilience4j.bulkhead.testBulkhead.available_concurrent_calls").getValue())
                 .isIn(DEFAULT_MAX_CONCURRENT_CALLS, DEFAULT_MAX_CONCURRENT_CALLS - 1);
+        assertThat(metricRegistry.getGauges().get("resilience4j.bulkhead.testBulkhead.max_allowed_concurrent_calls").getValue())
+                .isEqualTo(DEFAULT_MAX_CONCURRENT_CALLS);
 
         // Then release latch and verify result
         countDownLatch.countDown();
@@ -90,9 +92,11 @@ public class BulkheadMetricsTest {
         BDDMockito.then(helloWorldService).should(times(1)).returnHelloWorld();
 
         // Then check metrics again
-        assertThat(metricRegistry.getMetrics()).hasSize(1);
+        assertThat(metricRegistry.getMetrics()).hasSize(2);
         assertThat(metricRegistry.getGauges().get("resilience4j.bulkhead.testBulkhead.available_concurrent_calls").getValue())
                 .isIn(DEFAULT_MAX_CONCURRENT_CALLS, DEFAULT_MAX_CONCURRENT_CALLS);
+        assertThat(metricRegistry.getGauges().get("resilience4j.bulkhead.testBulkhead.max_allowed_concurrent_calls").getValue())
+                .isEqualTo(DEFAULT_MAX_CONCURRENT_CALLS);
     }
 
     @Test
@@ -118,9 +122,11 @@ public class BulkheadMetricsTest {
         Future<String> future = executorService.submit(() -> bulkhead.executeSupplier(helloWorldService::returnHelloWorld));
 
         // Then metrics are present and show value
-        assertThat(metricRegistry.getMetrics()).hasSize(1);
+        assertThat(metricRegistry.getMetrics()).hasSize(2);
         assertThat(metricRegistry.getGauges().get("testPre.testBulkhead.available_concurrent_calls").getValue())
                 .isIn(DEFAULT_MAX_CONCURRENT_CALLS, DEFAULT_MAX_CONCURRENT_CALLS - 1);
+        assertThat(metricRegistry.getGauges().get("testPre.testBulkhead.max_allowed_concurrent_calls").getValue())
+                .isEqualTo(DEFAULT_MAX_CONCURRENT_CALLS);
 
         // Then release latch and verify result
         countDownLatch.countDown();
@@ -128,8 +134,32 @@ public class BulkheadMetricsTest {
         BDDMockito.then(helloWorldService).should(times(1)).returnHelloWorld();
 
         // Then check metrics again
-        assertThat(metricRegistry.getMetrics()).hasSize(1);
+        assertThat(metricRegistry.getMetrics()).hasSize(2);
         assertThat(metricRegistry.getGauges().get("testPre.testBulkhead.available_concurrent_calls").getValue())
                 .isIn(DEFAULT_MAX_CONCURRENT_CALLS, DEFAULT_MAX_CONCURRENT_CALLS);
+        assertThat(metricRegistry.getGauges().get("testPre.testBulkhead.max_allowed_concurrent_calls").getValue())
+                .isEqualTo(DEFAULT_MAX_CONCURRENT_CALLS);
+    }
+
+    @Test
+    public void bulkheadConfigChangeAffectsTheMaxAllowedConcurrentCallsValue() {
+        // Given
+        BulkheadRegistry bulkheadRegistry = BulkheadRegistry.ofDefaults();
+        Bulkhead bulkhead = bulkheadRegistry.bulkhead("testBulkhead");
+        metricRegistry.registerAll(BulkheadMetrics.ofIterable("testPre", bulkheadRegistry.getAllBulkheads()));
+
+        // Then make sure that configured value is reported as max allowed concurrent calls
+        assertThat(metricRegistry.getGauges().get("testPre.testBulkhead.max_allowed_concurrent_calls").getValue())
+                .isEqualTo(DEFAULT_MAX_CONCURRENT_CALLS);
+
+        // And when the config is changed
+        BulkheadConfig newConfig = BulkheadConfig.custom()
+                .maxConcurrentCalls(DEFAULT_MAX_CONCURRENT_CALLS + 50)
+                .build();
+        bulkhead.changeConfig(newConfig);
+
+        // Then the new config value gets reported
+        assertThat(metricRegistry.getGauges().get("testPre.testBulkhead.max_allowed_concurrent_calls").getValue())
+                .isEqualTo(newConfig.getMaxConcurrentCalls());
     }
 }

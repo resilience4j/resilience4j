@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Julien Hoarau
+ * Copyright 2018 Julien Hoarau, Robert Winkler
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,21 +15,21 @@
  */
 package io.github.resilience4j.reactor.circuitbreaker.operator;
 
+import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
-import io.github.resilience4j.reactor.FluxResilience;
-import io.github.resilience4j.reactor.MonoResilience;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.util.function.Function;
+import java.util.function.UnaryOperator;
 
 /**
- * A Reactor operator which wraps a reactive type in a circuit breaker.
+ * A CircuitBreaker operator which checks if a downstream subscriber/observer can acquire a permission to subscribe to an upstream Publisher.
+ * Otherwise emits a {@link CallNotPermittedException} if the CircuitBreaker is OPEN.
  *
- * @param <T> the value type of the upstream and downstream
+ * @param <T> the value type
  */
-public class CircuitBreakerOperator<T> implements Function<Publisher<T>, Publisher<T>> {
+public class CircuitBreakerOperator<T> implements UnaryOperator<Publisher<T>> {
 
     private final CircuitBreaker circuitBreaker;
 
@@ -51,11 +51,9 @@ public class CircuitBreakerOperator<T> implements Function<Publisher<T>, Publish
     @Override
     public Publisher<T> apply(Publisher<T> publisher) {
         if (publisher instanceof Mono) {
-            return MonoResilience
-                    .onAssembly(new MonoCircuitBreaker<T>((Mono<? extends T>) publisher, circuitBreaker));
+            return new MonoCircuitBreaker<>((Mono<? extends T>) publisher, circuitBreaker);
         } else if (publisher instanceof Flux) {
-            return FluxResilience
-                    .onAssembly(new FluxCircuitBreaker<T>((Flux<? extends T>) publisher, circuitBreaker));
+            return new FluxCircuitBreaker<>((Flux<? extends T>) publisher, circuitBreaker);
         }
 
         throw new IllegalStateException("Publisher of type <" + publisher.getClass().getSimpleName()

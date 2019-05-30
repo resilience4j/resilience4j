@@ -18,16 +18,16 @@ package io.github.resilience4j.ratpack.ratelimiter;
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RateLimiterConfig;
 import io.github.resilience4j.ratelimiter.RequestNotPermitted;
+import io.github.resilience4j.ratpack.internal.AbstractTransformer;
 import ratpack.exec.Downstream;
 import ratpack.exec.Upstream;
 import ratpack.func.Function;
 
 import java.time.Duration;
 
-public class RateLimiterTransformer<T> implements Function<Upstream<? extends T>, Upstream<T>> {
+public class RateLimiterTransformer<T> extends AbstractTransformer<T> {
 
     private final RateLimiter rateLimiter;
-    private Function<Throwable, ? extends T> recover;
 
     private RateLimiterTransformer(RateLimiter rateLimiter) {
         this.rateLimiter = rateLimiter;
@@ -48,11 +48,11 @@ public class RateLimiterTransformer<T> implements Function<Upstream<? extends T>
     /**
      * Set a recovery function that will execute when the rateLimiter limit is exceeded.
      *
-     * @param recover the recovery function
+     * @param recoverer the recovery function
      * @return the transformer
      */
-    public RateLimiterTransformer<T> recover(Function<Throwable, ? extends T> recover) {
-        this.recover = recover;
+    public RateLimiterTransformer<T> recover(Function<Throwable, ? extends T> recoverer) {
+        this.recoverer = recoverer;
         return this;
     }
 
@@ -61,14 +61,14 @@ public class RateLimiterTransformer<T> implements Function<Upstream<? extends T>
         return down -> {
             RateLimiterConfig rateLimiterConfig = rateLimiter.getRateLimiterConfig();
             Duration timeoutDuration = rateLimiterConfig.getTimeoutDuration();
-            boolean permission = rateLimiter.getPermission(timeoutDuration);
+            boolean permission = rateLimiter.acquirePermission(timeoutDuration);
             if (Thread.interrupted()) {
                 throw new IllegalStateException("Thread was interrupted during permission wait");
             }
             if (!permission) {
-                Throwable t = new RequestNotPermitted("Request not permitted for limiter: " + rateLimiter.getName());
-                if (recover != null) {
-                    down.success(recover.apply(t));
+                Throwable t = new RequestNotPermitted(rateLimiter);
+                if (recoverer != null) {
+                    down.success(recoverer.apply(t));
                 } else {
                     down.error(t);
                 }

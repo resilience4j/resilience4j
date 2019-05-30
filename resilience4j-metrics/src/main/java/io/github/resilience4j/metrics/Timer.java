@@ -69,7 +69,7 @@ public interface Timer {
      *
      * @param runnable the original Callable
      */
-    default void executeRunnable(Runnable runnable) throws Exception {
+    default void executeRunnable(Runnable runnable) {
         decorateRunnable(this, runnable).run();
     }
 

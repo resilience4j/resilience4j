@@ -57,9 +57,7 @@ public class CircuitBreakerEventPublisherTest {
         circuitBreaker.getEventPublisher()
                 .onEvent(this::logEventType);
 
-
         circuitBreaker.onSuccess(1000);
-
 
         then(logger).should(times(1)).info("SUCCESS");
     }
@@ -69,9 +67,7 @@ public class CircuitBreakerEventPublisherTest {
         circuitBreaker.getEventPublisher()
                 .onSuccess(this::logEventType);
 
-
         circuitBreaker.onSuccess(1000);
-
 
         then(logger).should(times(1)).info("SUCCESS");
     }
@@ -80,7 +76,6 @@ public class CircuitBreakerEventPublisherTest {
     public void shouldConsumeOnErrorEvent() {
         circuitBreaker.getEventPublisher()
                 .onError(this::logEventType);
-
 
         circuitBreaker.onError(1000, new IOException("BAM!"));
 
@@ -91,7 +86,6 @@ public class CircuitBreakerEventPublisherTest {
     public void shouldConsumeOnResetEvent() {
         circuitBreaker.getEventPublisher()
                 .onReset(this::logEventType);
-
 
         circuitBreaker.reset();
 
@@ -106,10 +100,8 @@ public class CircuitBreakerEventPublisherTest {
         circuitBreaker.getEventPublisher()
                 .onStateTransition(this::logEventType);
 
-
         circuitBreaker.onError(1000, new IOException("BAM!"));
         circuitBreaker.onError(1000, new IOException("BAM!"));
-
 
         then(logger).should(times(1)).info("STATE_TRANSITION");
     }
@@ -122,11 +114,9 @@ public class CircuitBreakerEventPublisherTest {
         circuitBreaker.getEventPublisher()
                 .onCallNotPermitted(this::logEventType);
 
-
         circuitBreaker.onError(1000, new IOException("BAM!"));
         circuitBreaker.onError(1000, new IOException("BAM!"));
-        circuitBreaker.isCallPermitted();
-
+        circuitBreaker.tryAcquirePermission();
 
         then(logger).should(times(1)).info("NOT_PERMITTED");
     }
@@ -145,7 +135,7 @@ public class CircuitBreakerEventPublisherTest {
         //And we execute other calls that should generate events
         circuitBreaker.onError(1000, new IOException("BAM!"));
         circuitBreaker.onError(1000, new IOException("BAM!"));
-        circuitBreaker.isCallPermitted();
+        circuitBreaker.tryAcquirePermission();
         circuitBreaker.onSuccess(0);
         circuitBreaker.onError(1000, new IOException("BAM!"));
 
@@ -172,12 +162,9 @@ public class CircuitBreakerEventPublisherTest {
         circuitBreaker = CircuitBreaker.of("test", circuitBreakerConfig);
 
         circuitBreaker.getEventPublisher()
-                .onIgnoredError(this::logEventType)
-        ;
-
+                .onIgnoredError(this::logEventType);
 
         circuitBreaker.onError(1000, new IOException("BAM!"));
-
 
         then(logger).should(times(1)).info("IGNORED_ERROR");
     }

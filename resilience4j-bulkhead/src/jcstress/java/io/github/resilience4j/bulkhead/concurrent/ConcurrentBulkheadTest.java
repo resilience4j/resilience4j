@@ -63,14 +63,14 @@ public class ConcurrentBulkheadTest {
 
     @Actor
     public void firstActor() {
-        if (bulkhead.isCallPermitted()) {
+        if (bulkhead.acquirePermission()) {
             bulkhead.onComplete();
         }
     }
 
     @Actor
     public void secondActor() {
-        if (bulkhead.isCallPermitted()) {
+        if (bulkhead.acquirePermission()) {
             bulkhead.onComplete();
         }
     }

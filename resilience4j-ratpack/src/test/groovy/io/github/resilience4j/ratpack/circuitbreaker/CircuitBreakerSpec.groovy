@@ -16,21 +16,18 @@
 
 package io.github.resilience4j.ratpack.circuitbreaker
 
+
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker
 import io.github.resilience4j.ratelimiter.RateLimiterConfig
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry
-import io.github.resilience4j.ratpack.recovery.RecoveryFunction
 import io.github.resilience4j.ratpack.Resilience4jModule
-import io.github.resilience4j.ratpack.circuitbreaker.CircuitBreaker
-import io.reactivex.Flowable
-import io.reactivex.Observable
-import io.reactivex.Single
-import io.reactivex.functions.Consumer
-import io.reactivex.functions.Function
 import ratpack.exec.Promise
 import ratpack.test.embed.EmbeddedApp
 import ratpack.test.http.TestHttpClient
+import reactor.core.publisher.Flux
+import reactor.core.publisher.Mono
 import spock.lang.AutoCleanup
 import spock.lang.Specification
 import spock.lang.Unroll
@@ -38,6 +35,8 @@ import spock.lang.Unroll
 import java.time.Duration
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.CompletionStage
+import java.util.function.Consumer
+import java.util.function.Function
 
 import static ratpack.groovy.test.embed.GroovyEmbeddedApp.ratpack
 
@@ -74,7 +73,7 @@ class CircuitBreakerSpec extends Specification {
         actual.body.text == 'breaker promise'
     }
 
-    def "test circuit break a method via annotation with fallback"() {
+    def "test circuit break a method via annotation with fallback - #path"() {
         given:
         CircuitBreakerRegistry registry = CircuitBreakerRegistry.of(buildConfig())
         app = ratpack {
@@ -95,8 +94,13 @@ class CircuitBreakerSpec extends Specification {
                         render it
                     }
                 }
-                get('promiseRecover') { Something something ->
-                    something.breakerPromiseRecovery().then {
+                get('promiseFallback') { Something something ->
+                    something.breakerPromiseFallback().then {
+                        render it
+                    }
+                }
+                get('promiseFallbackParams') { Something something ->
+                    something.breakerPromiseFallbackParams().then {
                         render it
                     }
                 }
@@ -106,8 +110,8 @@ class CircuitBreakerSpec extends Specification {
                 get('stageBad') { Something something ->
                     render something.breakerStageBad().toCompletableFuture().get()
                 }
-                get('stageRecover') { Something something ->
-                    render something.breakerStageRecover().toCompletableFuture().get()
+                get('stageFallback') { Something something ->
+                    render something.breakerStageFallback().toCompletableFuture().get()
                 }
                 get('flow') { Something something ->
                     something.breakerFlow().subscribe {
@@ -119,38 +123,23 @@ class CircuitBreakerSpec extends Specification {
                         render it
                     }
                 }
-                get('flowRecover') { Something something ->
-                    something.breakerFlowRecover().subscribe {
+                get('flowFallback') { Something something ->
+                    something.breakerFlowFallback().subscribe {
                         render it
                     }
                 }
-                get('observe') { Something something ->
-                    something.breakerObserve().subscribe {
-                        render it
-                    }
-                }
-                get('observeBad') { Something something ->
-                    something.breakerObserveBad().subscribe {
-                        render it
-                    }
-                }
-                get('observeRecover') { Something something ->
-                    something.breakerObserveRecover().subscribe {
-                        render it
-                    }
-                }
-                get('single') { Something something ->
-                    something.breakerSingle().subscribe({
+                get('mono') { Something something ->
+                    something.breakerMono().subscribe({
                         render it
                     } as Consumer<String>)
                 }
-                get('singleBad') { Something something ->
-                    something.breakerSingleBad().subscribe({
+                get('monoBad') { Something something ->
+                    something.breakerMonoBad().subscribe({
                         render it
                     } as Consumer<Void>)
                 }
-                get('singleRecover') { Something something ->
-                    something.breakerSingleRecover().subscribe({
+                get('monoFallback') { Something something ->
+                    something.breakerMonoFallback().subscribe({
                         render it
                     } as Consumer<Void>)
                 }
@@ -160,8 +149,8 @@ class CircuitBreakerSpec extends Specification {
                 get('normalBad') { Something something ->
                     render something.breakerNormalBad()
                 }
-                get('normalRecover') { Something something ->
-                    render something.breakerNormalRecover()
+                get('normalFallback') { Something something ->
+                    render something.breakerNormalFallback()
                 }
             }
         }
@@ -174,7 +163,7 @@ class CircuitBreakerSpec extends Specification {
         then:
         actual.body.text == expectedText
         actual.statusCode == 200
-        breaker.callPermitted
+        breaker.tryAcquirePermission()
         breaker.state == io.github.resilience4j.circuitbreaker.CircuitBreaker.State.CLOSED
 
         when:
@@ -183,27 +172,184 @@ class CircuitBreakerSpec extends Specification {
 
         then:
         actual.statusCode == 500
-        !breaker.callPermitted
+        !breaker.tryAcquirePermission()
         breaker.state == io.github.resilience4j.circuitbreaker.CircuitBreaker.State.OPEN
 
         when:
-        get(recoverPath)
-        actual = get(recoverPath)
+        get(fallbackPath)
+        actual = get(fallbackPath)
 
         then:
         actual.body.text == "recovered"
         actual.statusCode == 200
-        !breaker.callPermitted
+        !breaker.tryAcquirePermission()
         breaker.state == io.github.resilience4j.circuitbreaker.CircuitBreaker.State.OPEN
 
         where:
-        path      | badPath      | recoverPath      | breakerName | expectedText
-        'promise' | 'promiseBad' | 'promiseRecover' | 'test'      | 'breaker promise'
-        'stage'   | 'stageBad'   | 'stageRecover'   | 'test'      | 'breaker stage'
-        'flow'    | 'flowBad'    | 'flowRecover'    | 'test'      | 'breaker flow'
-        'observe' | 'observeBad' | 'observeRecover' | 'test'      | 'breaker observe'
-        'single'  | 'singleBad'  | 'singleRecover'  | 'test'      | 'breaker single'
-        'normal'  | 'normalBad'  | 'normalRecover'  | 'test'      | 'breaker normal'
+        path      | badPath      | fallbackPath      | breakerName | expectedText
+        'promise' | 'promiseBad' | 'promiseFallback' | 'test'      | 'breaker promise'
+        'stage'   | 'stageBad'   | 'stageFallback'   | 'test'      | 'breaker stage'
+        'flow'    | 'flowBad'    | 'flowFallback'    | 'test'      | 'breaker flow'
+        'mono'    | 'monoBad'    | 'monoFallback'    | 'test'      | 'breaker mono'
+        'normal'  | 'normalBad'  | 'normalFallback'  | 'test'      | 'breaker normal'
+    }
+
+    def "test circuit break a method via annotation with fallback params"() {
+        given:
+        CircuitBreakerRegistry registry = CircuitBreakerRegistry.of(buildConfig())
+        app = ratpack {
+            bindings {
+                bindInstance(CircuitBreakerRegistry, registry)
+                bindInstance(RateLimiterRegistry, RateLimiterRegistry.of(RateLimiterConfig.ofDefaults()))
+                bind(Something)
+                module(Resilience4jModule)
+            }
+            handlers {
+                get('promiseFallbackParams') { Something something ->
+                    something.breakerPromiseFallbackParams().then {
+                        render it
+                    }
+                }
+            }
+        }
+        client = testHttpClient(app)
+        def breaker = registry.circuitBreaker('test')
+
+        when:
+        get('promiseFallbackParams')
+        def actual = get('promiseFallbackParams')
+
+        then:
+        actual.body.text == "recovered"
+        actual.statusCode == 200
+        !breaker.tryAcquirePermission()
+        breaker.state == io.github.resilience4j.circuitbreaker.CircuitBreaker.State.OPEN
+    }
+
+    def "test circuit break a method via annotation with fallback params returning promise"() {
+        given:
+        CircuitBreakerRegistry registry = CircuitBreakerRegistry.of(buildConfig())
+        app = ratpack {
+            bindings {
+                bindInstance(CircuitBreakerRegistry, registry)
+                bindInstance(RateLimiterRegistry, RateLimiterRegistry.of(RateLimiterConfig.ofDefaults()))
+                bind(Something)
+                module(Resilience4jModule)
+            }
+            handlers {
+                get('promiseFallbackParamsPromise') { Something something ->
+                    something.breakerPromiseFallbackParamsPromise().then {
+                        render it
+                    }
+                }
+            }
+        }
+        client = testHttpClient(app)
+        def breaker = registry.circuitBreaker('test')
+
+        when:
+        get('promiseFallbackParamsPromise')
+        def actual = get('promiseFallbackParamsPromise')
+
+        then:
+        actual.body.text == "recovered"
+        actual.statusCode == 200
+        !breaker.tryAcquirePermission()
+        breaker.state == io.github.resilience4j.circuitbreaker.CircuitBreaker.State.OPEN
+    }
+
+    def "test circuit break a method via annotation with fallback params returning CompletionStage"() {
+        given:
+        CircuitBreakerRegistry registry = CircuitBreakerRegistry.of(buildConfig())
+        app = ratpack {
+            bindings {
+                bindInstance(CircuitBreakerRegistry, registry)
+                bindInstance(RateLimiterRegistry, RateLimiterRegistry.of(RateLimiterConfig.ofDefaults()))
+                bind(Something)
+                module(Resilience4jModule)
+            }
+            handlers {
+                get('promiseFallbackParamsStage') { Something something ->
+                    render something.breakerStageFallbackStage().toCompletableFuture().get()
+                }
+            }
+        }
+        client = testHttpClient(app)
+        def breaker = registry.circuitBreaker('test')
+
+        when:
+        get('promiseFallbackParamsStage')
+        def actual = get('promiseFallbackParamsStage')
+
+        then:
+        actual.body.text == "recovered"
+        actual.statusCode == 200
+        !breaker.tryAcquirePermission()
+        breaker.state == io.github.resilience4j.circuitbreaker.CircuitBreaker.State.OPEN
+    }
+
+    def "test circuit break a method via annotation with fallback params returning Flux"() {
+        given:
+        CircuitBreakerRegistry registry = CircuitBreakerRegistry.of(buildConfig())
+        app = ratpack {
+            bindings {
+                bindInstance(CircuitBreakerRegistry, registry)
+                bindInstance(RateLimiterRegistry, RateLimiterRegistry.of(RateLimiterConfig.ofDefaults()))
+                bind(Something)
+                module(Resilience4jModule)
+            }
+            handlers {
+                get('promiseFallbackParamsFlow') { Something something ->
+                    something.breakerFlowFallbackFlow("q").subscribe {
+                        render it
+                    }
+                }
+            }
+        }
+        client = testHttpClient(app)
+        def breaker = registry.circuitBreaker('test')
+
+        when:
+        get('promiseFallbackParamsFlow')
+        def actual = get('promiseFallbackParamsFlow')
+
+        then:
+        actual.body.text == "recovered"
+        actual.statusCode == 200
+        !breaker.tryAcquirePermission()
+        breaker.state == io.github.resilience4j.circuitbreaker.CircuitBreaker.State.OPEN
+    }
+
+    def "test circuit break a method via annotation with fallback params returning Mono"() {
+        given:
+        CircuitBreakerRegistry registry = CircuitBreakerRegistry.of(buildConfig())
+        app = ratpack {
+            bindings {
+                bindInstance(CircuitBreakerRegistry, registry)
+                bindInstance(RateLimiterRegistry, RateLimiterRegistry.of(RateLimiterConfig.ofDefaults()))
+                bind(Something)
+                module(Resilience4jModule)
+            }
+            handlers {
+                get('promiseFallbackParamsMono') { Something something ->
+                    something.breakerMonoFallbackMono("q").subscribe {
+                        render it
+                    }
+                }
+            }
+        }
+        client = testHttpClient(app)
+        def breaker = registry.circuitBreaker('test')
+
+        when:
+        get('promiseFallbackParamsMono')
+        def actual = get('promiseFallbackParamsMono')
+
+        then:
+        actual.body.text == "recovered"
+        actual.statusCode == 200
+        !breaker.tryAcquirePermission()
+        breaker.state == io.github.resilience4j.circuitbreaker.CircuitBreaker.State.OPEN
     }
 
     def buildConfig() {
@@ -219,22 +365,36 @@ class CircuitBreakerSpec extends Specification {
 
         @CircuitBreaker(name = "test")
         Promise<String> breakerPromise() {
-            Promise.async {
+            Promise.<String> async {
                 it.success("breaker promise")
             }
         }
 
         @CircuitBreaker(name = "test")
         Promise<String> breakerPromiseBad() {
-            Promise.async {
+            Promise.<String> async {
                 it.error(new Exception("breaker promise bad"))
             }
         }
 
-        @CircuitBreaker(name = "test", recovery = MyRecoveryFunction)
-        Promise<String> breakerPromiseRecovery() {
-            Promise.async {
+        @CircuitBreaker(name = "test", fallbackMethod = "fallback")
+        Promise<String> breakerPromiseFallback() {
+            Promise.<String> async {
                 it.error(new Exception("breaker promise bad"))
+            }
+        }
+
+        @CircuitBreaker(name = "test", fallbackMethod = "fallbackParams")
+        Promise<String> breakerPromiseFallbackParams(String s) {
+            Promise.<String> async {
+                it.error(new Exception("$s breaker promise bad"))
+            }
+        }
+
+        @CircuitBreaker(name = "test", fallbackMethod = "fallbackParamsPromise")
+        Promise<String> breakerPromiseFallbackParamsPromise(String s) {
+            Promise.<String> async {
+                it.error(new Exception("$s breaker promise bad"))
             }
         }
 
@@ -248,54 +408,54 @@ class CircuitBreakerSpec extends Specification {
             CompletableFuture.supplyAsync { throw new RuntimeException("bad") }
         }
 
-        @CircuitBreaker(name = "test", recovery = MyRecoveryFunction)
-        CompletionStage<Void> breakerStageRecover() {
+        @CircuitBreaker(name = "test", fallbackMethod = "fallbackParams")
+        CompletionStage<String> breakerStageFallback(String s) {
+            CompletableFuture.supplyAsync { throw new RuntimeException("$s bad") }
+        }
+
+        @CircuitBreaker(name = "test", fallbackMethod = "fallbackParamsStage")
+        CompletionStage<Void> breakerStageFallbackStage() {
             CompletableFuture.supplyAsync { throw new RuntimeException("bad") }
         }
 
         @CircuitBreaker(name = "test")
-        Flowable<String> breakerFlow() {
-            Flowable.just("breaker flow")
+        Flux<String> breakerFlow() {
+            Flux.just("breaker flow")
         }
 
         @CircuitBreaker(name = "test")
-        Flowable<Void> breakerFlowBad() {
-            Flowable.just("breaker flow").map({ throw new Exception("bad") } as Function<String, Void>)
+        Flux<Void> breakerFlowBad() {
+            Flux.just("breaker flow").map({ throw new Exception("bad") } as Function<String, Void>)
         }
 
-        @CircuitBreaker(name = "test", recovery = MyRecoveryFunction)
-        Flowable<Void> breakerFlowRecover() {
-            Flowable.just("breaker flow").map({ throw new Exception("bad") } as Function<String, Void>)
+        @CircuitBreaker(name = "test", fallbackMethod = "fallback")
+        Flux<Void> breakerFlowFallback() {
+            Flux.just("breaker flow").map({ throw new Exception("bad") } as Function<String, Void>)
         }
 
-        @CircuitBreaker(name = "test")
-        Observable<String> breakerObserve() {
-            Observable.just("breaker observe")
-        }
-
-        @CircuitBreaker(name = "test")
-        Observable<Void> breakerObserveBad() {
-            Observable.just("breaker observe").map({ throw new Exception("bad") } as Function<String, Void>)
-        }
-
-        @CircuitBreaker(name = "test", recovery = MyRecoveryFunction)
-        Observable<Void> breakerObserveRecover() {
-            Observable.just("breaker observe").map({ throw new Exception("bad") } as Function<String, Void>)
+        @CircuitBreaker(name = "test", fallbackMethod = "fallbackParamsFlux")
+        Flux<String> breakerFlowFallbackFlow(String s) {
+            Flux.just("breaker flow").map({ throw new Exception("$s bad") } as Function<String, String>)
         }
 
         @CircuitBreaker(name = "test")
-        Single<String> breakerSingle() {
-            Single.just("breaker single")
+        Mono<String> breakerMono() {
+            Mono.just("breaker mono")
         }
 
         @CircuitBreaker(name = "test")
-        Single<Void> breakerSingleBad() {
-            Single.just("breaker single").map({ throw new Exception("bad") } as Function<String, Void>)
+        Mono<Void> breakerMonoBad() {
+            Mono.just("breaker mono").map({ throw new Exception("bad") } as Function<String, Void>)
         }
 
-        @CircuitBreaker(name = "test", recovery = MyRecoveryFunction)
-        Single<Void> breakerSingleRecover() {
-            Single.just("breaker single").map({ throw new Exception("bad") } as Function<String, Void>)
+        @CircuitBreaker(name = "test", fallbackMethod = "fallback")
+        Mono<Void> breakerMonoFallback() {
+            Mono.just("breaker mono").map({ throw new Exception("bad") } as Function<String, Void>)
+        }
+
+        @CircuitBreaker(name = "test", fallbackMethod = "fallbackParamsMono")
+        Mono<String> breakerMonoFallbackMono(String s) {
+            Mono.just("breaker flow").map({ throw new Exception("$s bad") } as Function<String, String>)
         }
 
         @CircuitBreaker(name = "test")
@@ -308,16 +468,35 @@ class CircuitBreakerSpec extends Specification {
             throw new Exception("bad")
         }
 
-        @CircuitBreaker(name = "test", recovery = MyRecoveryFunction)
-        String breakerNormalRecover() {
+        @CircuitBreaker(name = "test", fallbackMethod = "fallback")
+        String breakerNormalFallback() {
             throw new Exception("bad")
         }
-    }
 
-    static class MyRecoveryFunction implements RecoveryFunction<String> {
-        @Override
-        String apply(Throwable t) throws Exception {
+        String fallback(Throwable throwable) {
             "recovered"
+        }
+
+        String fallbackParams(String s, Throwable throwable) {
+            "recovered"
+        }
+
+        Promise<String> fallbackParamsPromise(String s, Throwable throwable) {
+            Promise.value("recovered")
+        }
+
+        CompletionStage<String> fallbackParamsStage(Throwable throwable) {
+            def future = new CompletableFuture<String>()
+            future.complete("recovered")
+            return future
+        }
+
+        Flux<String> fallbackParamsFlux(String s, Throwable throwable) {
+            Flux.just("recovered")
+        }
+
+        Mono<String> fallbackParamsMono(String s, Throwable throwable) {
+            Mono.just("recovered")
         }
     }
 

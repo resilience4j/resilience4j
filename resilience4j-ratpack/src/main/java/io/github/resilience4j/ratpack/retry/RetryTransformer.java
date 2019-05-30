@@ -15,15 +15,16 @@
  */
 package io.github.resilience4j.ratpack.retry;
 
+import io.github.resilience4j.core.lang.Nullable;
+import io.github.resilience4j.ratpack.internal.AbstractTransformer;
 import io.github.resilience4j.retry.Retry;
 import ratpack.exec.Downstream;
 import ratpack.exec.Upstream;
 import ratpack.func.Function;
 
-public class RetryTransformer<T> implements Function<Upstream<? extends T>, Upstream<T>> {
+public class RetryTransformer<T> extends AbstractTransformer<T> {
 
     private final Retry retry;
-    private Function<Throwable, ? extends T> recoverer;
 
     private RetryTransformer(Retry retry) {
         this.retry = retry;
@@ -47,13 +48,13 @@ public class RetryTransformer<T> implements Function<Upstream<? extends T>, Upst
      * @param recoverer the recovery function
      * @return the transformer
      */
-    public RetryTransformer<T> recover(Function<Throwable, ? extends T> recoverer) {
+    public RetryTransformer<T> recover(@Nullable Function<Throwable, ? extends T> recoverer) {
         this.recoverer = recoverer;
         return this;
     }
 
     @Override
-    public Upstream<T> apply(Upstream<? extends T> upstream) throws Exception {
+    public Upstream<T> apply(Upstream<? extends T> upstream) {
         return down -> {
             Retry.Context context = retry.context();
             Downstream<T> downstream = new Downstream<T>() {
@@ -69,15 +70,15 @@ public class RetryTransformer<T> implements Function<Upstream<? extends T>, Upst
                     try {
                         context.onError((Exception) throwable);
                         upstream.connect(this);
-                    } catch (Throwable t) {
+                    } catch (Exception ex1) {
                         if (recoverer != null) {
                             try {
-                                down.success(recoverer.apply(t));
-                            } catch (Throwable t2) {
-                                down.error(t2);
+                                down.success(recoverer.apply(ex1));
+                            } catch (Exception ex2) {
+                                down.error(ex2);
                             }
                         } else {
-                            down.error(t);
+                            down.error(ex1);
                         }
                     }
                 }
