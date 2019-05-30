@@ -19,9 +19,9 @@ resilience4j.retry:
       waitDuration: 100
       retryExceptionPredicate: io.github.resilience4j.circuitbreaker.RecordFailurePredicate
       retryExceptions:
-      - java.lang.IllegalArgumentException
+        - java.lang.IllegalArgumentException
       ignoreExceptions:
-      - io.github.resilience4j.circuitbreaker.IgnoredException
+        - io.github.resilience4j.circuitbreaker.IgnoredException
 
 resilience4j.circuitbreaker:
   circuitBreakerAspectOrder: 400
@@ -42,9 +42,9 @@ resilience4j.circuitbreaker:
       eventConsumerBufferSize: 10
       recordFailurePredicate: io.github.resilience4j.circuitbreaker.RecordFailurePredicate
       recordExceptions:
-      - io.github.resilience4j.circuitbreaker.RecordedException
+        - io.github.resilience4j.circuitbreaker.RecordedException
       ignoreExceptions:
-      - io.github.resilience4j.circuitbreaker.IgnoredException
+        - io.github.resilience4j.circuitbreaker.IgnoredException
     backendB:
       ringBufferSizeInClosedState: 10
       ringBufferSizeInHalfOpenState: 5
@@ -88,6 +88,23 @@ resilience4j.bulkhead:
       maxConcurrentCall: 1
     backendB:
       baseConfig: default
+
+resilience4j.thread-pool-bulkhead":
+  configs:
+    default:
+      threadPoolProperties:
+        maxThreadPoolSize: 4
+        coreThreadPoolSize: 2
+        queueCapacity: 2
+  backends:
+    backendB:
+      baseConfig: default
+    backendC:
+      threadPoolProperties:
+        maxThreadPoolSize: 1
+        coreThreadPoolSize: 1
+        queueCapacity: 1
+
 
 management.security.enabled: false
 management.endpoints.web.exposure.include: '*'
