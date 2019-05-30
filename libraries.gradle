@@ -88,11 +88,12 @@ ext {
             retrofit: "com.squareup.retrofit2:retrofit:${retrofitVersion}",
             retrofit_test: "com.squareup.retrofit2:converter-scalars:${retrofitVersion}",
             retrofit_wiremock: "com.github.tomakehurst:wiremock:${wiremockVersion}",
-            
+            retrofit_rxjava: "com.squareup.retrofit2:adapter-rxjava2:2.3.0",
+
             // Feign addon
             feign: "io.github.openfeign:feign-core:${feignVersion}",
             feign_wiremock: "com.github.tomakehurst:wiremock:${wiremockVersion}",
-            
+
             // Metrics addon
             metrics: "io.dropwizard.metrics:metrics-core:${metricsVersion}",
 
