@@ -4,11 +4,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.junit.MockitoJUnitRunner;
 
 import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.bulkhead.BulkheadRegistry;
+import io.github.resilience4j.bulkhead.ThreadPoolBulkhead;
+import io.github.resilience4j.bulkhead.ThreadPoolBulkheadRegistry;
+import io.github.resilience4j.bulkhead.configure.threadpool.ThreadPoolBulkheadConfiguration;
+import io.github.resilience4j.bulkhead.configure.threadpool.ThreadPoolBulkheadConfigurationProperties;
+import io.github.resilience4j.bulkhead.configure.threadpool.ThreadPoolProperties;
 import io.github.resilience4j.bulkhead.event.BulkheadEvent;
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.core.ConfigurationNotFoundException;
@@ -16,8 +19,108 @@ import io.github.resilience4j.core.ConfigurationNotFoundException;
 /**
  * test custom init of bulkhead configuration
  */
-@RunWith(MockitoJUnitRunner.class)
 public class BulkHeadConfigurationTest {
+
+	@Test
+	public void tesFixedThreadPoolBulkHeadRegistry() {
+		//Given
+		ThreadPoolBulkheadConfigurationProperties.BackendProperties backendProperties1 = new ThreadPoolBulkheadConfigurationProperties.BackendProperties();
+		ThreadPoolProperties threadPoolProperties = new ThreadPoolProperties();
+		threadPoolProperties.setCoreThreadPoolSize(1);
+		backendProperties1.setThreadPoolProperties(threadPoolProperties);
+
+		ThreadPoolBulkheadConfigurationProperties.BackendProperties backendProperties2 = new ThreadPoolBulkheadConfigurationProperties.BackendProperties();
+		ThreadPoolProperties threadPoolProperties2 = new ThreadPoolProperties();
+		threadPoolProperties2.setCoreThreadPoolSize(2);
+		backendProperties2.setThreadPoolProperties(threadPoolProperties2);
+
+		ThreadPoolBulkheadConfigurationProperties bulkheadConfigurationProperties = new ThreadPoolBulkheadConfigurationProperties();
+		bulkheadConfigurationProperties.getBackends().put("backend1", backendProperties1);
+		bulkheadConfigurationProperties.getBackends().put("backend2", backendProperties2);
+
+		ThreadPoolBulkheadConfiguration threadPoolBulkheadConfiguration = new ThreadPoolBulkheadConfiguration();
+		DefaultEventConsumerRegistry<BulkheadEvent> eventConsumerRegistry = new DefaultEventConsumerRegistry<>();
+
+		//When
+		ThreadPoolBulkheadRegistry bulkheadRegistry = threadPoolBulkheadConfiguration.threadPoolBulkheadRegistry(bulkheadConfigurationProperties, eventConsumerRegistry);
+
+		//Then
+		assertThat(bulkheadRegistry.getAllBulkheads().size()).isEqualTo(2);
+		ThreadPoolBulkhead bulkhead1 = bulkheadRegistry.bulkhead("backend1");
+		assertThat(bulkhead1).isNotNull();
+		assertThat(bulkhead1.getBulkheadConfig().getCoreThreadPoolSize()).isEqualTo(1);
+
+		ThreadPoolBulkhead bulkhead2 = bulkheadRegistry.bulkhead("backend2");
+		assertThat(bulkhead2).isNotNull();
+		assertThat(bulkhead2.getBulkheadConfig().getCoreThreadPoolSize()).isEqualTo(2);
+
+		assertThat(eventConsumerRegistry.getAllEventConsumer()).hasSize(2);
+	}
+
+	@Test
+	public void testCreateThreadPoolBulkHeadRegistryWithSharedConfigs() {
+		//Given
+		ThreadPoolBulkheadConfigurationProperties.BackendProperties defaultProperties = new ThreadPoolBulkheadConfigurationProperties.BackendProperties();
+		ThreadPoolProperties threadPoolProperties = new ThreadPoolProperties();
+		threadPoolProperties.setCoreThreadPoolSize(1);
+		threadPoolProperties.setQueueCapacity(1);
+		threadPoolProperties.setKeepAliveTime(5);
+		threadPoolProperties.setMaxThreadPoolSize(10);
+		defaultProperties.setThreadPoolProperties(threadPoolProperties);
+
+		ThreadPoolBulkheadConfigurationProperties.BackendProperties sharedProperties = new ThreadPoolBulkheadConfigurationProperties.BackendProperties();
+		ThreadPoolProperties threadPoolProperties2 = new ThreadPoolProperties();
+		threadPoolProperties2.setCoreThreadPoolSize(2);
+		threadPoolProperties2.setQueueCapacity(2);
+		sharedProperties.setThreadPoolProperties(threadPoolProperties2);
+
+		ThreadPoolBulkheadConfigurationProperties.BackendProperties backendWithDefaultConfig = new ThreadPoolBulkheadConfigurationProperties.BackendProperties();
+		backendWithDefaultConfig.setBaseConfig("default");
+		ThreadPoolProperties threadPoolProperties3 = new ThreadPoolProperties();
+		threadPoolProperties3.setCoreThreadPoolSize(3);
+		backendWithDefaultConfig.setThreadPoolProperties(threadPoolProperties3);
+
+		ThreadPoolBulkheadConfigurationProperties.BackendProperties backendWithSharedConfig = new ThreadPoolBulkheadConfigurationProperties.BackendProperties();
+		backendWithSharedConfig.setBaseConfig("sharedConfig");
+		ThreadPoolProperties threadPoolProperties4 = new ThreadPoolProperties();
+		threadPoolProperties4.setCoreThreadPoolSize(4);
+		backendWithSharedConfig.setThreadPoolProperties(threadPoolProperties4);
+
+		ThreadPoolBulkheadConfigurationProperties bulkheadConfigurationProperties = new ThreadPoolBulkheadConfigurationProperties();
+		bulkheadConfigurationProperties.getConfigs().put("default", defaultProperties);
+		bulkheadConfigurationProperties.getConfigs().put("sharedConfig", sharedProperties);
+
+		bulkheadConfigurationProperties.getBackends().put("backendWithDefaultConfig", backendWithDefaultConfig);
+		bulkheadConfigurationProperties.getBackends().put("backendWithSharedConfig", backendWithSharedConfig);
+
+		ThreadPoolBulkheadConfiguration threadPoolBulkheadConfiguration = new ThreadPoolBulkheadConfiguration();
+		DefaultEventConsumerRegistry<BulkheadEvent> eventConsumerRegistry = new DefaultEventConsumerRegistry<>();
+
+		//When
+		try {
+			ThreadPoolBulkheadRegistry bulkheadRegistry = threadPoolBulkheadConfiguration.threadPoolBulkheadRegistry(bulkheadConfigurationProperties, eventConsumerRegistry);
+			//Then
+			assertThat(bulkheadRegistry.getAllBulkheads().size()).isEqualTo(2);
+			// Should get default config and core number
+			ThreadPoolBulkhead bulkhead1 = bulkheadRegistry.bulkhead("backendWithDefaultConfig");
+			assertThat(bulkhead1).isNotNull();
+			assertThat(bulkhead1.getBulkheadConfig().getCoreThreadPoolSize()).isEqualTo(3);
+			assertThat(bulkhead1.getBulkheadConfig().getQueueCapacity()).isEqualTo(1);
+			// Should get shared config and overwrite core number
+			ThreadPoolBulkhead bulkhead2 = bulkheadRegistry.bulkhead("backendWithSharedConfig");
+			assertThat(bulkhead2).isNotNull();
+			assertThat(bulkhead2.getBulkheadConfig().getCoreThreadPoolSize()).isEqualTo(4);
+			assertThat(bulkhead2.getBulkheadConfig().getQueueCapacity()).isEqualTo(2);
+			// Unknown backend should get default config of Registry
+			ThreadPoolBulkhead bulkhead3 = bulkheadRegistry.bulkhead("unknownBackend");
+			assertThat(bulkhead3).isNotNull();
+			assertThat(bulkhead3.getBulkheadConfig().getCoreThreadPoolSize()).isEqualTo(1);
+			assertThat(eventConsumerRegistry.getAllEventConsumer()).hasSize(3);
+		} catch (Exception e) {
+			System.out.println("exception in testCreateThreadPoolBulkHeadRegistryWithSharedConfigs():" + e);
+		}
+	}
+
 
 	@Test
 	public void testBulkHeadRegistry() {

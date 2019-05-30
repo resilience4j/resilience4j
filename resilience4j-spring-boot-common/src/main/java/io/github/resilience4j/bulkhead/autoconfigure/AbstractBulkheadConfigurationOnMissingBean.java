@@ -15,14 +15,8 @@
  */
 package io.github.resilience4j.bulkhead.autoconfigure;
 
-import io.github.resilience4j.bulkhead.BulkheadRegistry;
-import io.github.resilience4j.bulkhead.configure.*;
-import io.github.resilience4j.bulkhead.event.BulkheadEvent;
-import io.github.resilience4j.consumer.EventConsumerRegistry;
-import io.github.resilience4j.fallback.FallbackDecorators;
-import io.github.resilience4j.fallback.autoconfigure.FallbackConfigurationOnMissingBean;
-import io.github.resilience4j.utils.ReactorOnClasspathCondition;
-import io.github.resilience4j.utils.RxJava2OnClasspathCondition;
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
@@ -30,7 +24,22 @@ import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 
-import java.util.List;
+import io.github.resilience4j.bulkhead.BulkheadRegistry;
+import io.github.resilience4j.bulkhead.ThreadPoolBulkheadRegistry;
+import io.github.resilience4j.bulkhead.configure.BulkheadAspect;
+import io.github.resilience4j.bulkhead.configure.BulkheadAspectExt;
+import io.github.resilience4j.bulkhead.configure.BulkheadConfiguration;
+import io.github.resilience4j.bulkhead.configure.BulkheadConfigurationProperties;
+import io.github.resilience4j.bulkhead.configure.ReactorBulkheadAspectExt;
+import io.github.resilience4j.bulkhead.configure.RxJava2BulkheadAspectExt;
+import io.github.resilience4j.bulkhead.configure.threadpool.ThreadPoolBulkheadConfiguration;
+import io.github.resilience4j.bulkhead.configure.threadpool.ThreadPoolBulkheadConfigurationProperties;
+import io.github.resilience4j.bulkhead.event.BulkheadEvent;
+import io.github.resilience4j.consumer.EventConsumerRegistry;
+import io.github.resilience4j.fallback.FallbackDecorators;
+import io.github.resilience4j.fallback.autoconfigure.FallbackConfigurationOnMissingBean;
+import io.github.resilience4j.utils.ReactorOnClasspathCondition;
+import io.github.resilience4j.utils.RxJava2OnClasspathCondition;
 
 /**
  * {@link Configuration
@@ -41,8 +50,10 @@ import java.util.List;
 public abstract class AbstractBulkheadConfigurationOnMissingBean {
 
 	protected final BulkheadConfiguration bulkheadConfiguration;
+	protected final ThreadPoolBulkheadConfiguration threadPoolBulkheadConfiguration;
 
 	public AbstractBulkheadConfigurationOnMissingBean() {
+		this.threadPoolBulkheadConfiguration = new ThreadPoolBulkheadConfiguration();
 		this.bulkheadConfiguration = new BulkheadConfiguration();
 	}
 
@@ -55,10 +66,10 @@ public abstract class AbstractBulkheadConfigurationOnMissingBean {
 
 	@Bean
 	@ConditionalOnMissingBean
-	public BulkheadAspect bulkheadAspect(BulkheadConfigurationProperties bulkheadConfigurationProperties,
-										 BulkheadRegistry bulkheadRegistry, @Autowired(required = false) List<BulkheadAspectExt> bulkHeadAspectExtList,
-										 FallbackDecorators fallbackDecorators) {
-		return bulkheadConfiguration.bulkheadAspect(bulkheadConfigurationProperties, bulkheadRegistry, bulkHeadAspectExtList, fallbackDecorators);
+	public BulkheadAspect bulkheadAspect(BulkheadConfigurationProperties bulkheadConfigurationProperties, ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry,
+	                                     BulkheadRegistry bulkheadRegistry, @Autowired(required = false) List<BulkheadAspectExt> bulkHeadAspectExtList,
+	                                     FallbackDecorators fallbackDecorators) {
+		return bulkheadConfiguration.bulkheadAspect(bulkheadConfigurationProperties, threadPoolBulkheadRegistry, bulkheadRegistry, bulkHeadAspectExtList, fallbackDecorators);
 	}
 
 	@Bean
@@ -73,6 +84,15 @@ public abstract class AbstractBulkheadConfigurationOnMissingBean {
 	@ConditionalOnMissingBean
 	public ReactorBulkheadAspectExt reactorBulkHeadAspectExt() {
 		return bulkheadConfiguration.reactorBulkHeadAspectExt();
+	}
+
+
+	@Bean
+	@ConditionalOnMissingBean
+	public ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry(ThreadPoolBulkheadConfigurationProperties threadPoolBulkheadConfigurationProperties,
+	                                                             EventConsumerRegistry<BulkheadEvent> bulkheadEventConsumerRegistry) {
+
+		return threadPoolBulkheadConfiguration.threadPoolBulkheadRegistry(threadPoolBulkheadConfigurationProperties, bulkheadEventConsumerRegistry);
 	}
 
 }

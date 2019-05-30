@@ -37,12 +37,21 @@ public class ThreadPoolBulkheadConfig {
 	}
 
 	/**
-	 * Returns a builder to create a custom BulkheadConfig.
+	 * Returns a builder to create a custom ThreadPoolBulkheadConfig.
 	 *
 	 * @return a {@link Builder}
 	 */
 	public static Builder custom() {
 		return new Builder();
+	}
+
+	/**
+	 * Returns a builder to create a custom ThreadPoolBulkheadConfig.
+	 *
+	 * @return a {@link Builder}
+	 */
+	public static Builder from(ThreadPoolBulkheadConfig threadPoolBulkheadConfig) {
+		return new Builder(threadPoolBulkheadConfig);
 	}
 
 	/**
@@ -72,7 +81,16 @@ public class ThreadPoolBulkheadConfig {
 
 	public static class Builder {
 
-		private final ThreadPoolBulkheadConfig config = new ThreadPoolBulkheadConfig();
+		private ThreadPoolBulkheadConfig config;
+
+
+		public Builder(ThreadPoolBulkheadConfig bulkheadConfig) {
+			this.config = bulkheadConfig;
+		}
+
+		public Builder() {
+			config = new ThreadPoolBulkheadConfig();
+		}
 
 		/**
 		 * Configures the max thread pool size.
