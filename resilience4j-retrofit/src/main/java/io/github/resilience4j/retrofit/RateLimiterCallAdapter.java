@@ -24,7 +24,6 @@ import retrofit2.CallAdapter;
 import retrofit2.Retrofit;
 
 import java.lang.annotation.Annotation;
-import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 
 /**
@@ -51,29 +50,19 @@ public final class RateLimiterCallAdapter extends CallAdapter.Factory {
 
     @Override
     public CallAdapter<?, ?> get(Type returnType, Annotation[] annotations, Retrofit retrofit) {
-        if (getRawType(returnType) != Call.class) {
-            return null;
-        }
+        @SuppressWarnings("unchecked")
+        CallAdapter<Object, Object> nextAdapter = (CallAdapter<Object, Object>) retrofit.nextCallAdapter(this, returnType, annotations);
 
-        final Type responseType = getCallResponseType(returnType);
-        return new CallAdapter<Object, Call<?>>() {
+        return new CallAdapter<Object, Object>() {
             @Override
             public Type responseType() {
-                return responseType;
+                return nextAdapter.responseType();
             }
 
             @Override
-            public Call<Object> adapt(Call<Object> call) {
-                return RetrofitRateLimiter.decorateCall(rateLimiter, call);
+            public Object adapt(Call<Object> call) {
+                return nextAdapter.adapt(RetrofitRateLimiter.decorateCall(rateLimiter, call));
             }
         };
     }
-
-    private static Type getCallResponseType(Type returnType) {
-        if (!(returnType instanceof ParameterizedType)) {
-            throw new IllegalArgumentException("Call return type must be parameterized as Call<Foo> or Call<? extends Foo>");
-        }
-        return getParameterUpperBound(0, (ParameterizedType) returnType);
-    }
-
 }

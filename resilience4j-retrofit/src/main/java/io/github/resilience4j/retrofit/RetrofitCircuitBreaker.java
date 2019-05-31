@@ -49,59 +49,75 @@ public interface RetrofitCircuitBreaker {
      * @return Original Call decorated with CircuitBreaker
      */
     static <T> Call<T> decorateCall(final CircuitBreaker circuitBreaker, final Call<T> call, final Predicate<Response> responseSuccess) {
-        return new DecoratedCall<T>(call) {
+        return new CircuitBreakingCall<>(call, circuitBreaker, responseSuccess);
+    }
 
-            @Override
-            public void enqueue(final Callback<T> callback) {
-                try {
-                    circuitBreaker.acquirePermission();
-                } catch (CallNotPermittedException cb) {
-                    callback.onFailure(call, cb);
-                    return;
-                }
+    class CircuitBreakingCall<T> extends DecoratedCall<T> {
+        private final Call<T> call;
+        private final CircuitBreaker circuitBreaker;
+        private final Predicate<Response> responseSuccess;
 
-                final StopWatch stopWatch = StopWatch.start();
-                call.enqueue(new Callback<T>() {
-                    @Override
-                    public void onResponse(final Call<T> call, final Response<T> response) {
-                        if (responseSuccess.test(response)) {
-                            circuitBreaker.onSuccess(stopWatch.stop().toNanos());
-                        } else {
-                            final Throwable throwable = new Throwable("Response error: HTTP " + response.code() + " - " + response.message());
-                            circuitBreaker.onError(stopWatch.stop().toNanos(), throwable);
-                        }
-                        callback.onResponse(call, response);
-                    }
+        public CircuitBreakingCall(Call<T> call, CircuitBreaker circuitBreaker, Predicate<Response> responseSuccess) {
+            super(call);
+            this.call = call;
+            this.circuitBreaker = circuitBreaker;
+            this.responseSuccess = responseSuccess;
+        }
 
-                    @Override
-                    public void onFailure(final Call<T> call, final Throwable t) {
-                        circuitBreaker.onError(stopWatch.stop().toNanos(), t);
-                        callback.onFailure(call, t);
-                    }
-                });
+        @Override
+        public void enqueue(final Callback<T> callback) {
+            try {
+                circuitBreaker.acquirePermission();
+            } catch (CallNotPermittedException cb) {
+                callback.onFailure(call, cb);
+                return;
             }
 
-            @Override
-            public Response<T> execute() throws IOException {
-                circuitBreaker.acquirePermission();
-                final StopWatch stopWatch = StopWatch.start();
-                try {
-                    final Response<T> response = call.execute();
-
+            final StopWatch stopWatch = StopWatch.start();
+            call.enqueue(new Callback<T>() {
+                @Override
+                public void onResponse(final Call<T> call, final Response<T> response) {
                     if (responseSuccess.test(response)) {
                         circuitBreaker.onSuccess(stopWatch.stop().toNanos());
                     } else {
                         final Throwable throwable = new Throwable("Response error: HTTP " + response.code() + " - " + response.message());
                         circuitBreaker.onError(stopWatch.stop().toNanos(), throwable);
                     }
-
-                    return response;
-                } catch (Exception exception) {
-                    circuitBreaker.onError(stopWatch.stop().toNanos(), exception);
-                    throw exception;
+                    callback.onResponse(call, response);
                 }
-            }
-        };
-    }
 
+                @Override
+                public void onFailure(final Call<T> call, final Throwable t) {
+                    circuitBreaker.onError(stopWatch.stop().toNanos(), t);
+                    callback.onFailure(call, t);
+                }
+            });
+        }
+
+        @Override
+        public Response<T> execute() throws IOException {
+            circuitBreaker.acquirePermission();
+            final StopWatch stopWatch = StopWatch.start();
+            try {
+                final Response<T> response = call.execute();
+
+                if (responseSuccess.test(response)) {
+                    circuitBreaker.onSuccess(stopWatch.stop().toNanos());
+                } else {
+                    final Throwable throwable = new Throwable("Response error: HTTP " + response.code() + " - " + response.message());
+                    circuitBreaker.onError(stopWatch.stop().toNanos(), throwable);
+                }
+
+                return response;
+            } catch (Exception exception) {
+                circuitBreaker.onError(stopWatch.stop().toNanos(), exception);
+                throw exception;
+            }
+        }
+
+        @Override
+        public Call<T> clone() {
+            return new CircuitBreakingCall<>(call.clone(), circuitBreaker, responseSuccess);
+        }
+    }
 }
