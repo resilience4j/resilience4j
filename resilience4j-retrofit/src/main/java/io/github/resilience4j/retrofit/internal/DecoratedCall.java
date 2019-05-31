@@ -31,7 +31,7 @@ import java.io.IOException;
  *
  * @param <T> Call parameter type
  */
-public class DecoratedCall<T> implements Call<T> {
+public abstract class DecoratedCall<T> implements Call<T> {
 
     private final Call<T> call;
 
@@ -65,9 +65,7 @@ public class DecoratedCall<T> implements Call<T> {
     }
 
     @Override
-    public Call<T> clone() {
-        return new DecoratedCall<>(call.clone());
-    }
+    public abstract Call<T> clone();
 
     @Override
     public Request request() {
