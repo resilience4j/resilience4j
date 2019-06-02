@@ -104,10 +104,10 @@ public class BulkHeadConfigurationSpringTest {
 		private class BulkheadConfigurationPropertiesTest extends BulkheadConfigurationProperties {
 
 			BulkheadConfigurationPropertiesTest() {
-				BackendProperties backendProperties = new BackendProperties();
-				backendProperties.setBaseConfig("sharedConfig");
-				backendProperties.setMaxConcurrentCalls(3);
-				getConfigs().put("sharedBackend", backendProperties);
+				InstanceProperties instanceProperties = new InstanceProperties();
+				instanceProperties.setBaseConfig("sharedConfig");
+				instanceProperties.setMaxConcurrentCalls(3);
+				getConfigs().put("sharedBackend", instanceProperties);
 			}
 
 		}

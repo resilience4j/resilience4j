@@ -117,7 +117,7 @@ ext {
             groovy: "org.codehaus.groovy:groovy-all:2.5.6",
             
             // validation
-            validationApi: "javax.validation:validation-api:${validationApiVersion}"
+            validationApi: "javax.validation:validation-api:${validationApiVersion}",
 
             // Kotlin addon
             kotlin_stdlib: "org.jetbrains.kotlin:kotlin-stdlib-jdk8",

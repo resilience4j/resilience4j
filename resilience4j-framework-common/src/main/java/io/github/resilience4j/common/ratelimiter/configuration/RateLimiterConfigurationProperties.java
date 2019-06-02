@@ -26,50 +26,50 @@ import java.util.Map;
 
 public class RateLimiterConfigurationProperties {
 
-	private Map<String, BackendProperties> backends = new HashMap<>();
-	private Map<String, BackendProperties> configs = new HashMap<>();
+	private Map<String, InstanceProperties> instances = new HashMap<>();
+	private Map<String, InstanceProperties> configs = new HashMap<>();
 
-	public RateLimiterConfig createRateLimiterConfig(@Nullable BackendProperties backendProperties) {
-		if (backendProperties == null) {
+	public RateLimiterConfig createRateLimiterConfig(@Nullable InstanceProperties instanceProperties) {
+		if (instanceProperties == null) {
 			return RateLimiterConfig.ofDefaults();
 		}
-		if (!StringUtils.isNullOrEmpty(backendProperties.getBaseConfig())) {
-			BackendProperties baseProperties = configs.get(backendProperties.baseConfig);
+		if (StringUtils.isNotEmpty(instanceProperties.getBaseConfig())) {
+			InstanceProperties baseProperties = configs.get(instanceProperties.baseConfig);
 			if (baseProperties == null) {
-				throw new ConfigurationNotFoundException(backendProperties.getBaseConfig());
+				throw new ConfigurationNotFoundException(instanceProperties.getBaseConfig());
 			}
-			return buildConfigFromBaseConfig(baseProperties, backendProperties);
+			return buildConfigFromBaseConfig(baseProperties, instanceProperties);
 		}
-		return buildRateLimiterConfig(RateLimiterConfig.custom(), backendProperties);
+		return buildRateLimiterConfig(RateLimiterConfig.custom(), instanceProperties);
 	}
 
-	private RateLimiterConfig buildConfigFromBaseConfig(BackendProperties baseProperties, BackendProperties backendProperties) {
+	private RateLimiterConfig buildConfigFromBaseConfig(InstanceProperties baseProperties, InstanceProperties instanceProperties) {
 		RateLimiterConfig baseConfig = buildRateLimiterConfig(RateLimiterConfig.custom(), baseProperties);
-		return buildRateLimiterConfig(RateLimiterConfig.from(baseConfig), backendProperties);
+		return buildRateLimiterConfig(RateLimiterConfig.from(baseConfig), instanceProperties);
 	}
 
-	private RateLimiterConfig buildRateLimiterConfig(RateLimiterConfig.Builder builder, @Nullable BackendProperties backendProperties) {
-		if (backendProperties == null) {
+	private RateLimiterConfig buildRateLimiterConfig(RateLimiterConfig.Builder builder, @Nullable InstanceProperties instanceProperties) {
+		if (instanceProperties == null) {
 			return RateLimiterConfig.ofDefaults();
 		}
 
-		if (backendProperties.getLimitForPeriod() != null) {
-			builder.limitForPeriod(backendProperties.getLimitForPeriod());
+		if (instanceProperties.getLimitForPeriod() != null) {
+			builder.limitForPeriod(instanceProperties.getLimitForPeriod());
 		}
 
-		if (backendProperties.getLimitRefreshPeriodInNanos() != null) {
-			builder.limitRefreshPeriod(Duration.ofNanos(backendProperties.getLimitRefreshPeriodInNanos()));
+		if (instanceProperties.getLimitRefreshPeriodInNanos() != null) {
+			builder.limitRefreshPeriod(Duration.ofNanos(instanceProperties.getLimitRefreshPeriodInNanos()));
 		}
 
-		if (backendProperties.getTimeoutInMillis() != null) {
-			builder.timeoutDuration(Duration.ofMillis(backendProperties.getTimeoutInMillis()));
+		if (instanceProperties.getTimeoutInMillis() != null) {
+			builder.timeoutDuration(Duration.ofMillis(instanceProperties.getTimeoutInMillis()));
 		}
 
 		return builder.build();
 	}
 
-	private BackendProperties getLimiterProperties(String limiter) {
-		return backends.get(limiter);
+	private InstanceProperties getLimiterProperties(String limiter) {
+		return instances.get(limiter);
 	}
 
 	public RateLimiterConfig createRateLimiterConfig(String limiter) {
@@ -77,22 +77,29 @@ public class RateLimiterConfigurationProperties {
 	}
 
 	@Nullable
-	public BackendProperties getBackendProperties(String backend) {
-		return backends.get(backend);
+	public InstanceProperties getInstanceProperties(String instance) {
+		return instances.get(instance);
 	}
 
-	public Map<String, BackendProperties> getBackends() {
-		return backends;
+	public Map<String, InstanceProperties> getInstances() {
+		return instances;
 	}
 
-	public Map<String, BackendProperties> getConfigs() {
+	/**
+	 * For backwards compatibility when setting limiters in configuration properties.
+	 */
+	public Map<String, InstanceProperties> getLimiters() {
+		return instances;
+	}
+
+	public Map<String, InstanceProperties> getConfigs() {
 		return configs;
 	}
 
 	/**
 	 * Class storing property values for configuring {@link RateLimiterConfig} instances.
 	 */
-	public static class BackendProperties {
+	public static class InstanceProperties {
 
 		private Integer limitForPeriod;
 		private Integer limitRefreshPeriodInNanos;
@@ -124,7 +131,7 @@ public class RateLimiterConfigurationProperties {
 		 *
 		 * @param limitForPeriod the permissions limit for refresh period
 		 */
-		public BackendProperties setLimitForPeriod(Integer limitForPeriod) {
+		public InstanceProperties setLimitForPeriod(Integer limitForPeriod) {
 			this.limitForPeriod = limitForPeriod;
 			return this;
 		}
@@ -150,7 +157,7 @@ public class RateLimiterConfigurationProperties {
 		 *
 		 * @param limitRefreshPeriodInNanos the period of limit refresh
 		 */
-		public BackendProperties setLimitRefreshPeriodInNanos(Integer limitRefreshPeriodInNanos) {
+		public InstanceProperties setLimitRefreshPeriodInNanos(Integer limitRefreshPeriodInNanos) {
 			this.limitRefreshPeriodInNanos = limitRefreshPeriodInNanos;
 			return this;
 		}
@@ -172,7 +179,7 @@ public class RateLimiterConfigurationProperties {
 		 *
 		 * @param timeoutInMillis wait for permission duration
 		 */
-		public BackendProperties setTimeoutInMillis(Integer timeoutInMillis) {
+		public InstanceProperties setTimeoutInMillis(Integer timeoutInMillis) {
 			this.timeoutInMillis = timeoutInMillis;
 			return this;
 		}
@@ -181,7 +188,7 @@ public class RateLimiterConfigurationProperties {
 			return subscribeForEvents;
 		}
 
-		public BackendProperties setSubscribeForEvents(Boolean subscribeForEvents) {
+		public InstanceProperties setSubscribeForEvents(Boolean subscribeForEvents) {
 			this.subscribeForEvents = subscribeForEvents;
 			return this;
 		}
@@ -190,7 +197,7 @@ public class RateLimiterConfigurationProperties {
 			return eventConsumerBufferSize;
 		}
 
-		public BackendProperties setEventConsumerBufferSize(Integer eventConsumerBufferSize) {
+		public InstanceProperties setEventConsumerBufferSize(Integer eventConsumerBufferSize) {
 			this.eventConsumerBufferSize = eventConsumerBufferSize;
 			return this;
 		}
@@ -199,14 +206,14 @@ public class RateLimiterConfigurationProperties {
 			return registerHealthIndicator;
 		}
 
-		public BackendProperties setRegisterHealthIndicator(Boolean registerHealthIndicator) {
+		public InstanceProperties setRegisterHealthIndicator(Boolean registerHealthIndicator) {
 			this.registerHealthIndicator = registerHealthIndicator;
 			return this;
 		}
 
 		/**
 		 * Gets the shared configuration name. If this is set, the configuration builder will use the the shared
-		 * configuration backend over this one.
+		 * configuration instance over this one.
 		 *
 		 * @return The shared configuration name.
 		 */
@@ -217,11 +224,11 @@ public class RateLimiterConfigurationProperties {
 
 		/**
 		 * Sets the shared configuration name. If this is set, the configuration builder will use the the shared
-		 * configuration backend over this one.
+		 * configuration instance over this one.
 		 *
 		 * @param baseConfig The shared configuration name.
 		 */
-		public BackendProperties setBaseConfig(String baseConfig) {
+		public InstanceProperties setBaseConfig(String baseConfig) {
 			this.baseConfig = baseConfig;
 			return this;
 		}

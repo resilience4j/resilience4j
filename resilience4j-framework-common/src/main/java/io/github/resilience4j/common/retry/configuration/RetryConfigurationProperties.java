@@ -34,8 +34,8 @@ import java.util.function.Predicate;
  */
 public class RetryConfigurationProperties {
 
-	private final Map<String, BackendProperties> backends = new HashMap<>();
-	private Map<String, BackendProperties> configs = new HashMap<>();
+	private final Map<String, InstanceProperties> instances = new HashMap<>();
+	private Map<String, InstanceProperties> configs = new HashMap<>();
 
 	/**
 	 * @param backend backend name
@@ -50,42 +50,49 @@ public class RetryConfigurationProperties {
 	 * @return the configured spring backend properties
 	 */
 	@Nullable
-	public BackendProperties getBackendProperties(String backend) {
-		return backends.get(backend);
+	public InstanceProperties getBackendProperties(String backend) {
+		return instances.get(backend);
 	}
 
 	/**
 	 * @return the configured retry backend properties
 	 */
-	public Map<String, BackendProperties> getBackends() {
-		return backends;
+	public Map<String, InstanceProperties> getInstances() {
+		return instances;
+	}
+
+	/**
+	 * For backwards compatibility when setting backends in configuration properties.
+	 */
+	public Map<String, InstanceProperties> getBackends() {
+		return instances;
 	}
 
 	/**
 	 * @return common configuration for retry backend
 	 */
-	public Map<String, BackendProperties> getConfigs() {
+	public Map<String, InstanceProperties> getConfigs() {
 		return configs;
 	}
 
 	/**
-	 * @param backendProperties the retry backend spring properties
+	 * @param instanceProperties the retry backend spring properties
 	 * @return the retry configuration
 	 */
-	public RetryConfig createRetryConfig(BackendProperties backendProperties) {
-		if (!StringUtils.isNullOrEmpty(backendProperties.getBaseConfig())) {
-			BackendProperties baseProperties = configs.get(backendProperties.getBaseConfig());
+	public RetryConfig createRetryConfig(InstanceProperties instanceProperties) {
+		if (StringUtils.isNotEmpty(instanceProperties.getBaseConfig())) {
+			InstanceProperties baseProperties = configs.get(instanceProperties.getBaseConfig());
 			if (baseProperties == null) {
-				throw new ConfigurationNotFoundException(backendProperties.getBaseConfig());
+				throw new ConfigurationNotFoundException(instanceProperties.getBaseConfig());
 			}
-			return buildConfigFromBaseConfig(baseProperties, backendProperties);
+			return buildConfigFromBaseConfig(baseProperties, instanceProperties);
 		}
-		return buildRetryConfig(RetryConfig.custom(), backendProperties);
+		return buildRetryConfig(RetryConfig.custom(), instanceProperties);
 	}
 
-	private RetryConfig buildConfigFromBaseConfig(BackendProperties baseProperties, BackendProperties backendProperties) {
+	private RetryConfig buildConfigFromBaseConfig(InstanceProperties baseProperties, InstanceProperties instanceProperties) {
 		RetryConfig baseConfig = buildRetryConfig(RetryConfig.custom(), baseProperties);
-		return buildRetryConfig(RetryConfig.from(baseConfig), backendProperties);
+		return buildRetryConfig(RetryConfig.from(baseConfig), instanceProperties);
 	}
 
 	/**
@@ -93,7 +100,7 @@ public class RetryConfigurationProperties {
 	 * @return retry config builder instance
 	 */
 	@SuppressWarnings("unchecked")
-	private RetryConfig buildRetryConfig(RetryConfig.Builder builder, BackendProperties properties) {
+	private RetryConfig buildRetryConfig(RetryConfig.Builder builder, InstanceProperties properties) {
 		if (properties == null) {
 			return builder.build();
 		}
@@ -143,7 +150,7 @@ public class RetryConfigurationProperties {
 	 * @param properties the backend retry properties
 	 * @param builder    the retry config builder
 	 */
-	private void configureRetryIntervalFunction(BackendProperties properties, RetryConfig.Builder<Object> builder) {
+	private void configureRetryIntervalFunction(InstanceProperties properties, RetryConfig.Builder<Object> builder) {
 		if (properties.getWaitDurationMillis() != null && properties.getWaitDurationMillis() != 0) {
 			long waitDuration = properties.getWaitDurationMillis();
 			if (properties.getEnableExponentialBackoff()) {
@@ -167,7 +174,7 @@ public class RetryConfigurationProperties {
 	/**
 	 * Class storing property values for configuring {@link io.github.resilience4j.retry.Retry} instances.
 	 */
-	public static class BackendProperties {
+	public static class InstanceProperties {
 		/*
 		 * wait long value for the next try
 		 */
@@ -234,7 +241,7 @@ public class RetryConfigurationProperties {
 			return waitDurationMillis;
 		}
 
-		public BackendProperties setWaitDurationMillis(Long waitDurationMillis) {
+		public InstanceProperties setWaitDurationMillis(Long waitDurationMillis) {
 			this.waitDurationMillis = waitDurationMillis;
 			return this;
 		}
@@ -244,7 +251,7 @@ public class RetryConfigurationProperties {
 			return maxRetryAttempts;
 		}
 
-		public BackendProperties setMaxRetryAttempts(Integer maxRetryAttempts) {
+		public InstanceProperties setMaxRetryAttempts(Integer maxRetryAttempts) {
 			this.maxRetryAttempts = maxRetryAttempts;
 			return this;
 		}
@@ -254,7 +261,7 @@ public class RetryConfigurationProperties {
 			return retryExceptionPredicate;
 		}
 
-		public BackendProperties setRetryExceptionPredicate(Class<? extends Predicate<Throwable>> retryExceptionPredicate) {
+		public InstanceProperties setRetryExceptionPredicate(Class<? extends Predicate<Throwable>> retryExceptionPredicate) {
 			this.retryExceptionPredicate = retryExceptionPredicate;
 			return this;
 		}
@@ -264,7 +271,7 @@ public class RetryConfigurationProperties {
 			return resultPredicate;
 		}
 
-		public BackendProperties setResultPredicate(Class<? extends Predicate<Object>> resultPredicate) {
+		public InstanceProperties setResultPredicate(Class<? extends Predicate<Object>> resultPredicate) {
 			this.resultPredicate = resultPredicate;
 			return this;
 		}
@@ -274,7 +281,7 @@ public class RetryConfigurationProperties {
 			return retryExceptions;
 		}
 
-		public BackendProperties setRetryExceptions(Class<? extends Throwable>[] retryExceptions) {
+		public InstanceProperties setRetryExceptions(Class<? extends Throwable>[] retryExceptions) {
 			this.retryExceptions = retryExceptions;
 			return this;
 		}
@@ -284,7 +291,7 @@ public class RetryConfigurationProperties {
 			return ignoreExceptions;
 		}
 
-		public BackendProperties setIgnoreExceptions(Class<? extends Throwable>[] ignoreExceptions) {
+		public InstanceProperties setIgnoreExceptions(Class<? extends Throwable>[] ignoreExceptions) {
 			this.ignoreExceptions = ignoreExceptions;
 			return this;
 		}
@@ -294,7 +301,7 @@ public class RetryConfigurationProperties {
 			return eventConsumerBufferSize;
 		}
 
-		public BackendProperties setEventConsumerBufferSize(Integer eventConsumerBufferSize) {
+		public InstanceProperties setEventConsumerBufferSize(Integer eventConsumerBufferSize) {
 			this.eventConsumerBufferSize = eventConsumerBufferSize;
 			return this;
 		}
@@ -303,7 +310,7 @@ public class RetryConfigurationProperties {
 			return enableExponentialBackoff;
 		}
 
-		public BackendProperties setEnableExponentialBackoff(Boolean enableExponentialBackoff) {
+		public InstanceProperties setEnableExponentialBackoff(Boolean enableExponentialBackoff) {
 			this.enableExponentialBackoff = enableExponentialBackoff;
 			return this;
 		}
@@ -313,7 +320,7 @@ public class RetryConfigurationProperties {
 			return exponentialBackoffMultiplier;
 		}
 
-		public BackendProperties setExponentialBackoffMultiplier(double exponentialBackoffMultiplier) {
+		public InstanceProperties setExponentialBackoffMultiplier(double exponentialBackoffMultiplier) {
 			this.exponentialBackoffMultiplier = exponentialBackoffMultiplier;
 			return this;
 		}
@@ -323,7 +330,7 @@ public class RetryConfigurationProperties {
 			return enableRandomizedWait;
 		}
 
-		public BackendProperties setEnableRandomizedWait(Boolean enableRandomizedWait) {
+		public InstanceProperties setEnableRandomizedWait(Boolean enableRandomizedWait) {
 			this.enableRandomizedWait = enableRandomizedWait;
 			return this;
 		}
@@ -333,7 +340,7 @@ public class RetryConfigurationProperties {
 			return randomizedWaitFactor;
 		}
 
-		public BackendProperties setRandomizedWaitFactor(double randomizedWaitFactor) {
+		public InstanceProperties setRandomizedWaitFactor(double randomizedWaitFactor) {
 			this.randomizedWaitFactor = randomizedWaitFactor;
 			return this;
 		}
@@ -355,7 +362,7 @@ public class RetryConfigurationProperties {
 		 *
 		 * @param baseConfig The shared configuration name.
 		 */
-		public BackendProperties setBaseConfig(String baseConfig) {
+		public InstanceProperties setBaseConfig(String baseConfig) {
 			this.baseConfig = baseConfig;
 			return this;
 		}

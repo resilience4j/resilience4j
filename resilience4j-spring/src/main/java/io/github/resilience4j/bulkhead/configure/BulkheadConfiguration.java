@@ -57,7 +57,7 @@ public class BulkheadConfiguration {
 	                                         EventConsumerRegistry<BulkheadEvent> bulkheadEventConsumerRegistry) {
 		BulkheadRegistry bulkheadRegistry = createBulkheadRegistry(bulkheadConfigurationProperties);
 		registerEventConsumer(bulkheadRegistry, bulkheadEventConsumerRegistry, bulkheadConfigurationProperties);
-		bulkheadConfigurationProperties.getBackends().forEach((name, properties) -> bulkheadRegistry.bulkhead(name, bulkheadConfigurationProperties.createBulkheadConfig(properties)));
+		bulkheadConfigurationProperties.getInstances().forEach((name, properties) -> bulkheadRegistry.bulkhead(name, bulkheadConfigurationProperties.createBulkheadConfig(properties)));
 		return bulkheadRegistry;
 	}
 
@@ -88,7 +88,7 @@ public class BulkheadConfiguration {
 
 	private void registerEventConsumer(EventConsumerRegistry<BulkheadEvent> eventConsumerRegistry, Bulkhead bulkHead, BulkheadConfigurationProperties bulkheadConfigurationProperties) {
 		int eventConsumerBufferSize = Optional.ofNullable(bulkheadConfigurationProperties.getBackendProperties(bulkHead.getName()))
-				.map(BulkheadConfigurationProperties.BackendProperties::getEventConsumerBufferSize)
+				.map(io.github.resilience4j.common.bulkhead.configuration.BulkheadConfigurationProperties.InstanceProperties::getEventConsumerBufferSize)
 				.orElse(100);
 		bulkHead.getEventPublisher().onEvent(eventConsumerRegistry.createEventConsumer(bulkHead.getName(), eventConsumerBufferSize));
 	}

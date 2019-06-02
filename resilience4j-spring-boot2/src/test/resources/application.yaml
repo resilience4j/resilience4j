@@ -67,7 +67,7 @@ resilience4j.ratelimiter:
       timeoutInMillis: 0
       subscribeForEvents: true
       registerHealthIndicator: true
-  backends:
+  limiters:
     backendA:
       baseConfig: default
       subscribeForEvents: true

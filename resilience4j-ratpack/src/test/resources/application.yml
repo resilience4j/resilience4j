@@ -45,7 +45,7 @@ resilience4j:
                 limitForPeriod: 100
                 limitRefreshPeriodInNanos: 900
                 timeoutInMillis: 10
-        backends:inue
+        limiters:
             test1:
                 baseConfig: default
                 limitForPeriod: 150

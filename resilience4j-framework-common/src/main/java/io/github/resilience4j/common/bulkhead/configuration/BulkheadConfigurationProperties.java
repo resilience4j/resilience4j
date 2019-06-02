@@ -25,45 +25,52 @@ import java.util.Map;
 
 public class BulkheadConfigurationProperties {
 
-    private Map<String, BackendProperties> backends = new HashMap<>();
-    private Map<String, BackendProperties> configs = new HashMap<>();
+    private Map<String, InstanceProperties> instances = new HashMap<>();
+    private Map<String, InstanceProperties> configs = new HashMap<>();
 
-    public io.github.resilience4j.bulkhead.BulkheadConfig createBulkheadConfig(BackendProperties backendProperties) {
-        if (!StringUtils.isNullOrEmpty(backendProperties.getBaseConfig())) {
-            BackendProperties baseProperties = configs.get(backendProperties.getBaseConfig());
+    public io.github.resilience4j.bulkhead.BulkheadConfig createBulkheadConfig(InstanceProperties instanceProperties) {
+        if (StringUtils.isNotEmpty(instanceProperties.getBaseConfig())) {
+            InstanceProperties baseProperties = configs.get(instanceProperties.getBaseConfig());
             if (baseProperties == null) {
-                throw new ConfigurationNotFoundException(backendProperties.getBaseConfig());
+                throw new ConfigurationNotFoundException(instanceProperties.getBaseConfig());
             }
-            return buildConfigFromBaseConfig(baseProperties, backendProperties);
+            return buildConfigFromBaseConfig(baseProperties, instanceProperties);
         }
-        return buildBulkheadConfig(io.github.resilience4j.bulkhead.BulkheadConfig.custom(), backendProperties);
+        return buildBulkheadConfig(io.github.resilience4j.bulkhead.BulkheadConfig.custom(), instanceProperties);
     }
 
-    private io.github.resilience4j.bulkhead.BulkheadConfig buildConfigFromBaseConfig(BackendProperties baseProperties, BackendProperties backendProperties) {
+    private io.github.resilience4j.bulkhead.BulkheadConfig buildConfigFromBaseConfig(InstanceProperties baseProperties, InstanceProperties instanceProperties) {
         io.github.resilience4j.bulkhead.BulkheadConfig baseConfig = buildBulkheadConfig(io.github.resilience4j.bulkhead.BulkheadConfig.custom(), baseProperties);
-        return buildBulkheadConfig(io.github.resilience4j.bulkhead.BulkheadConfig.from(baseConfig), backendProperties);
+        return buildBulkheadConfig(io.github.resilience4j.bulkhead.BulkheadConfig.from(baseConfig), instanceProperties);
     }
 
-    private io.github.resilience4j.bulkhead.BulkheadConfig buildBulkheadConfig(io.github.resilience4j.bulkhead.BulkheadConfig.Builder builder, BackendProperties backendProperties) {
-        if (backendProperties.getMaxConcurrentCalls() != null) {
-            builder.maxConcurrentCalls(backendProperties.getMaxConcurrentCalls());
+    private io.github.resilience4j.bulkhead.BulkheadConfig buildBulkheadConfig(io.github.resilience4j.bulkhead.BulkheadConfig.Builder builder, InstanceProperties instanceProperties) {
+        if (instanceProperties.getMaxConcurrentCalls() != null) {
+            builder.maxConcurrentCalls(instanceProperties.getMaxConcurrentCalls());
         }
-        if (backendProperties.getMaxWaitTime() != null) {
-            builder.maxWaitTime(backendProperties.getMaxWaitTime());
+        if (instanceProperties.getMaxWaitTime() != null) {
+            builder.maxWaitTime(instanceProperties.getMaxWaitTime());
         }
         return builder.build();
     }
 
     @Nullable
-    public BackendProperties getBackendProperties(String backend) {
-        return backends.get(backend);
+    public InstanceProperties getBackendProperties(String backend) {
+        return instances.get(backend);
     }
 
-    public Map<String, BackendProperties> getBackends() {
-        return backends;
+    public Map<String, InstanceProperties> getInstances() {
+        return instances;
     }
 
-    public Map<String, BackendProperties> getConfigs() {
+    /**
+     * For backwards compatibility when setting backends in configuration properties.
+     */
+    public Map<String, InstanceProperties> getBackends() {
+        return instances;
+    }
+
+    public Map<String, InstanceProperties> getConfigs() {
         return configs;
     }
 
@@ -71,7 +78,7 @@ public class BulkheadConfigurationProperties {
      * Bulkhead config adapter for integration with Ratpack. {@link #maxWaitTime} should
      * almost always be set to 0, so the compute threads would not be blocked upon execution.
      */
-    public static class BackendProperties {
+    public static class InstanceProperties {
 
         @Min(1)
         private Integer maxConcurrentCalls;
@@ -82,22 +89,22 @@ public class BulkheadConfigurationProperties {
         @Min(1)
         private Integer eventConsumerBufferSize = 100;
 
-        public BackendProperties setMaxConcurrentCalls(Integer maxConcurrentCalls) {
+        public InstanceProperties setMaxConcurrentCalls(Integer maxConcurrentCalls) {
             this.maxConcurrentCalls = maxConcurrentCalls;
             return this;
         }
 
-        public BackendProperties setMaxWaitTime(Long maxWaitTime) {
+        public InstanceProperties setMaxWaitTime(Long maxWaitTime) {
             this.maxWaitTime = maxWaitTime;
             return this;
         }
 
-        public BackendProperties setBaseConfig(String baseConfig) {
+        public InstanceProperties setBaseConfig(String baseConfig) {
             this.baseConfig = baseConfig;
             return this;
         }
 
-        public BackendProperties eventConsumerBufferSize(Integer eventConsumerBufferSize) {
+        public InstanceProperties eventConsumerBufferSize(Integer eventConsumerBufferSize) {
             this.eventConsumerBufferSize = eventConsumerBufferSize;
             return this;
         }

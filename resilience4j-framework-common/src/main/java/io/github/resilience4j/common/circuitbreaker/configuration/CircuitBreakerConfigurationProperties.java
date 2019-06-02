@@ -20,6 +20,7 @@ import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.Builder;
 import io.github.resilience4j.core.ClassUtils;
 import io.github.resilience4j.core.ConfigurationNotFoundException;
+import io.github.resilience4j.core.StringUtils;
 import io.github.resilience4j.core.lang.Nullable;
 import org.hibernate.validator.constraints.time.DurationMin;
 
@@ -34,30 +35,30 @@ import java.util.function.Predicate;
 
 public class CircuitBreakerConfigurationProperties {
 
-	private Map<String, BackendProperties> backends = new HashMap<>();
-	private Map<String, BackendProperties> configs = new HashMap<>();
+	private Map<String, InstanceProperties> instances = new HashMap<>();
+	private Map<String, InstanceProperties> configs = new HashMap<>();
 
-	public Optional<BackendProperties> findCircuitBreakerProperties(String name) {
-		return Optional.ofNullable(backends.get(name));
+	public Optional<InstanceProperties> findCircuitBreakerProperties(String name) {
+		return Optional.ofNullable(instances.get(name));
 	}
 
-	public CircuitBreakerConfig createCircuitBreakerConfig(BackendProperties backendProperties) {
-		if(backendProperties.getBaseConfig() != null){
-			BackendProperties baseProperties = configs.get(backendProperties.getBaseConfig());
+	public CircuitBreakerConfig createCircuitBreakerConfig(InstanceProperties instanceProperties) {
+		if (StringUtils.isNotEmpty(instanceProperties.getBaseConfig())) {
+			InstanceProperties baseProperties = configs.get(instanceProperties.getBaseConfig());
 			if(baseProperties == null){
-				throw new ConfigurationNotFoundException(backendProperties.getBaseConfig());
+				throw new ConfigurationNotFoundException(instanceProperties.getBaseConfig());
 			}
-			return buildConfigFromBaseConfig(backendProperties, baseProperties);
+			return buildConfigFromBaseConfig(instanceProperties, baseProperties);
 		}
-		return buildConfig(CircuitBreakerConfig.custom(), backendProperties);
+		return buildConfig(CircuitBreakerConfig.custom(), instanceProperties);
 	}
 
-	private CircuitBreakerConfig buildConfigFromBaseConfig(BackendProperties backendProperties, BackendProperties baseProperties) {
+	private CircuitBreakerConfig buildConfigFromBaseConfig(InstanceProperties instanceProperties, InstanceProperties baseProperties) {
 		CircuitBreakerConfig baseConfig = buildConfig(CircuitBreakerConfig.custom(), baseProperties);
-		return buildConfig(CircuitBreakerConfig.from(baseConfig), backendProperties);
+		return buildConfig(CircuitBreakerConfig.from(baseConfig), instanceProperties);
 	}
 
-	private CircuitBreakerConfig buildConfig(Builder builder, BackendProperties properties) {
+	private CircuitBreakerConfig buildConfig(Builder builder, InstanceProperties properties) {
 
 		if (properties.getWaitDurationInOpenStateMillis() != null) {
 			builder.waitDurationInOpenState(Duration.ofMillis(properties.getWaitDurationInOpenStateMillis()));
@@ -94,7 +95,7 @@ public class CircuitBreakerConfigurationProperties {
 		return builder.build();
 	}
 
-	private void buildRecordFailurePredicate(BackendProperties properties, Builder builder) {
+	private void buildRecordFailurePredicate(InstanceProperties properties, Builder builder) {
 		if (properties.getRecordFailurePredicate() != null) {
 			Predicate<Throwable> predicate = ClassUtils.instantiatePredicateClass(properties.getRecordFailurePredicate());
 			if (predicate != null) {
@@ -104,22 +105,29 @@ public class CircuitBreakerConfigurationProperties {
 	}
 
 	@Nullable
-	public BackendProperties getBackendProperties(String backend) {
-		return backends.get(backend);
+	public InstanceProperties getBackendProperties(String backend) {
+		return instances.get(backend);
 	}
 
-	public Map<String, BackendProperties> getBackends() {
-		return backends;
+	public Map<String, InstanceProperties> getInstances() {
+		return instances;
 	}
 
-	public Map<String, BackendProperties> getConfigs() {
+	/**
+	 * For backwards compatibility when setting backends in configuration properties.
+	 */
+	public Map<String, InstanceProperties> getBackends() {
+		return instances;
+	}
+
+	public Map<String, InstanceProperties> getConfigs() {
 		return configs;
 	}
 
 	/**
 	 * Class storing property values for configuring {@link io.github.resilience4j.circuitbreaker.CircuitBreaker} instances.
 	 */
-	public static class BackendProperties {
+	public static class InstanceProperties {
 
 		@DurationMin(seconds = 1)
 		@Nullable
@@ -175,7 +183,7 @@ public class CircuitBreakerConfigurationProperties {
 		 *
 		 * @param failureRateThreshold the failure rate threshold
 		 */
-		public BackendProperties setFailureRateThreshold(Integer failureRateThreshold) {
+		public InstanceProperties setFailureRateThreshold(Integer failureRateThreshold) {
 			this.failureRateThreshold = failureRateThreshold;
 			return this;
 		}
@@ -195,7 +203,7 @@ public class CircuitBreakerConfigurationProperties {
 		 *
 		 * @param waitDurationInOpenStateMillis the wait duration
 		 */
-		public BackendProperties setWaitDurationInOpenStateMillis(Integer waitDurationInOpenStateMillis) {
+		public InstanceProperties setWaitDurationInOpenStateMillis(Integer waitDurationInOpenStateMillis) {
 			this.waitDurationInOpenStateMillis = waitDurationInOpenStateMillis;
 			return this;
 		}
@@ -215,7 +223,7 @@ public class CircuitBreakerConfigurationProperties {
 		 *
 		 * @param ringBufferSizeInClosedState the ring buffer size
 		 */
-		public BackendProperties setRingBufferSizeInClosedState(Integer ringBufferSizeInClosedState) {
+		public InstanceProperties setRingBufferSizeInClosedState(Integer ringBufferSizeInClosedState) {
 			this.ringBufferSizeInClosedState = ringBufferSizeInClosedState;
 			return this;
 		}
@@ -235,7 +243,7 @@ public class CircuitBreakerConfigurationProperties {
 		 *
 		 * @param ringBufferSizeInHalfOpenState the ring buffer size
 		 */
-		public BackendProperties setRingBufferSizeInHalfOpenState(Integer ringBufferSizeInHalfOpenState) {
+		public InstanceProperties setRingBufferSizeInHalfOpenState(Integer ringBufferSizeInHalfOpenState) {
 			this.ringBufferSizeInHalfOpenState = ringBufferSizeInHalfOpenState;
 			return this;
 		}
@@ -254,7 +262,7 @@ public class CircuitBreakerConfigurationProperties {
 		 *
 		 * @param automaticTransitionFromOpenToHalfOpenEnabled The flag for automatic transition to half open after the timer has run out.
 		 */
-		public BackendProperties setAutomaticTransitionFromOpenToHalfOpenEnabled(Boolean automaticTransitionFromOpenToHalfOpenEnabled) {
+		public InstanceProperties setAutomaticTransitionFromOpenToHalfOpenEnabled(Boolean automaticTransitionFromOpenToHalfOpenEnabled) {
 			this.automaticTransitionFromOpenToHalfOpenEnabled = automaticTransitionFromOpenToHalfOpenEnabled;
 			return this;
 		}
@@ -263,7 +271,7 @@ public class CircuitBreakerConfigurationProperties {
 			return eventConsumerBufferSize;
 		}
 
-		public BackendProperties setEventConsumerBufferSize(Integer eventConsumerBufferSize) {
+		public InstanceProperties setEventConsumerBufferSize(Integer eventConsumerBufferSize) {
 			this.eventConsumerBufferSize = eventConsumerBufferSize;
 			return this;
 		}
@@ -272,7 +280,7 @@ public class CircuitBreakerConfigurationProperties {
 			return registerHealthIndicator;
 		}
 
-		public BackendProperties setRegisterHealthIndicator(Boolean registerHealthIndicator) {
+		public InstanceProperties setRegisterHealthIndicator(Boolean registerHealthIndicator) {
 			this.registerHealthIndicator = registerHealthIndicator;
 			return this;
 		}
@@ -282,7 +290,7 @@ public class CircuitBreakerConfigurationProperties {
 			return recordFailurePredicate;
 		}
 
-		public BackendProperties setRecordFailurePredicate(Class<Predicate<Throwable>> recordFailurePredicate) {
+		public InstanceProperties setRecordFailurePredicate(Class<Predicate<Throwable>> recordFailurePredicate) {
 			this.recordFailurePredicate = recordFailurePredicate;
 			return this;
 		}
@@ -292,7 +300,7 @@ public class CircuitBreakerConfigurationProperties {
 			return recordExceptions;
 		}
 
-		public BackendProperties setRecordExceptions(Class<? extends Throwable>[] recordExceptions) {
+		public InstanceProperties setRecordExceptions(Class<? extends Throwable>[] recordExceptions) {
 			this.recordExceptions = recordExceptions;
 			return this;
 		}
@@ -302,7 +310,7 @@ public class CircuitBreakerConfigurationProperties {
 			return ignoreExceptions;
 		}
 
-		public BackendProperties setIgnoreExceptions(Class<? extends Throwable>[] ignoreExceptions) {
+		public InstanceProperties setIgnoreExceptions(Class<? extends Throwable>[] ignoreExceptions) {
 			this.ignoreExceptions = ignoreExceptions;
 			return this;
 		}
@@ -324,7 +332,7 @@ public class CircuitBreakerConfigurationProperties {
 		 *
 		 * @param baseConfig The shared configuration name.
 		 */
-		public BackendProperties setBaseConfig(String baseConfig) {
+		public InstanceProperties setBaseConfig(String baseConfig) {
 			this.baseConfig = baseConfig;
 			return this;
 		}

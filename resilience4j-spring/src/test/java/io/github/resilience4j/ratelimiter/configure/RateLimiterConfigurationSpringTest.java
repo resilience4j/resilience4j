@@ -94,10 +94,10 @@ public class RateLimiterConfigurationSpringTest {
 		private class RateLimiterConfigurationPropertiesTest extends RateLimiterConfigurationProperties {
 
 			RateLimiterConfigurationPropertiesTest() {
-				RateLimiterConfigurationProperties.BackendProperties backendProperties = new RateLimiterConfigurationProperties.BackendProperties();
-				backendProperties.setBaseConfig("sharedConfig");
-				backendProperties.setLimitForPeriod(3);
-				getConfigs().put("sharedBackend", backendProperties);
+				InstanceProperties instanceProperties = new InstanceProperties();
+				instanceProperties.setBaseConfig("sharedConfig");
+				instanceProperties.setLimitForPeriod(3);
+				getConfigs().put("sharedBackend", instanceProperties);
 			}
 
 		}

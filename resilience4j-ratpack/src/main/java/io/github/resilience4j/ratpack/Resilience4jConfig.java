@@ -37,10 +37,10 @@ public class Resilience4jConfig {
         return circuitBreaker(name, config -> config);
     }
 
-    public Resilience4jConfig circuitBreaker(String name, Function<? super CircuitBreakerConfigurationProperties.BackendProperties, ? extends CircuitBreakerConfigurationProperties.BackendProperties> configure) {
+    public Resilience4jConfig circuitBreaker(String name, Function<? super CircuitBreakerConfigurationProperties.InstanceProperties, ? extends CircuitBreakerConfigurationProperties.InstanceProperties> configure) {
         try {
-            CircuitBreakerConfigurationProperties.BackendProperties finalConfig = configure.apply(new CircuitBreakerConfigurationProperties.BackendProperties());
-            circuitBreaker.getBackends().put(name, finalConfig);
+            CircuitBreakerConfigurationProperties.InstanceProperties finalConfig = configure.apply(new CircuitBreakerConfigurationProperties.InstanceProperties());
+            circuitBreaker.getInstances().put(name, finalConfig);
             return this;
         } catch (Exception e) {
             throw uncheck(e);
@@ -51,10 +51,10 @@ public class Resilience4jConfig {
         return rateLimiter(name, config -> config);
     }
 
-    public Resilience4jConfig rateLimiter(String name, Function<? super RateLimiterConfigurationProperties.BackendProperties, ? extends RateLimiterConfigurationProperties.BackendProperties> configure) {
+    public Resilience4jConfig rateLimiter(String name, Function<? super RateLimiterConfigurationProperties.InstanceProperties, ? extends RateLimiterConfigurationProperties.InstanceProperties> configure) {
         try {
-            RateLimiterConfigurationProperties.BackendProperties finalConfig = configure.apply(new RateLimiterConfigurationProperties.BackendProperties());
-            rateLimiter.getBackends().put(name, finalConfig);
+            RateLimiterConfigurationProperties.InstanceProperties finalConfig = configure.apply(new RateLimiterConfigurationProperties.InstanceProperties());
+            rateLimiter.getInstances().put(name, finalConfig);
             return this;
         } catch (Exception e) {
             throw uncheck(e);
@@ -65,10 +65,10 @@ public class Resilience4jConfig {
         return retry(name, config -> config);
     }
 
-    public Resilience4jConfig retry(String name, Function<? super RetryConfigurationProperties.BackendProperties, ? extends RetryConfigurationProperties.BackendProperties> configure) {
+    public Resilience4jConfig retry(String name, Function<? super RetryConfigurationProperties.InstanceProperties, ? extends RetryConfigurationProperties.InstanceProperties> configure) {
         try {
-            RetryConfigurationProperties.BackendProperties finalConfig = configure.apply(new RetryConfigurationProperties.BackendProperties());
-            retry.getBackends().put(name, finalConfig);
+            RetryConfigurationProperties.InstanceProperties finalConfig = configure.apply(new RetryConfigurationProperties.InstanceProperties());
+            retry.getInstances().put(name, finalConfig);
             return this;
         } catch (Exception e) {
             throw uncheck(e);
@@ -79,10 +79,10 @@ public class Resilience4jConfig {
         return bulkhead(name, config -> config);
     }
 
-    public Resilience4jConfig bulkhead(String name, Function<? super BulkheadConfigurationProperties.BackendProperties, ? extends BulkheadConfigurationProperties.BackendProperties> configure) {
+    public Resilience4jConfig bulkhead(String name, Function<? super BulkheadConfigurationProperties.InstanceProperties, ? extends BulkheadConfigurationProperties.InstanceProperties> configure) {
         try {
-            BulkheadConfigurationProperties.BackendProperties finalConfig = configure.apply(new BulkheadConfigurationProperties.BackendProperties());
-            bulkhead.getBackends().put(name, finalConfig);
+            BulkheadConfigurationProperties.InstanceProperties finalConfig = configure.apply(new BulkheadConfigurationProperties.InstanceProperties());
+            bulkhead.getInstances().put(name, finalConfig);
             return this;
         } catch (Exception e) {
             throw uncheck(e);

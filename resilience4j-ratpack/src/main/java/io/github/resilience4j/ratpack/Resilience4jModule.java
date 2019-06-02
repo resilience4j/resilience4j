@@ -173,7 +173,7 @@ public class Resilience4jModule extends ConfigurableModule<Resilience4jConfig> {
             EventConsumerRegistry<CircuitBreakerEvent> cbConsumerRegistry = injector.getInstance(Key.get(new TypeLiteral<EventConsumerRegistry<CircuitBreakerEvent>>() {
             }));
             CircuitBreakerConfigurationProperties circuitBreakerConfigurations = config.getCircuitBreaker();
-            circuitBreakerConfigurations.getBackends().forEach((name, circuitBreakerConfig) -> {
+            circuitBreakerConfigurations.getInstances().forEach((name, circuitBreakerConfig) -> {
                 io.github.resilience4j.circuitbreaker.CircuitBreaker circuitBreaker =
                         circuitBreakerRegistry.circuitBreaker(name, circuitBreakerConfigurations.createCircuitBreakerConfig(circuitBreakerConfig));
                 if (endpointsConfig.getCircuitBreakers().isEnabled()) {
@@ -186,7 +186,7 @@ public class Resilience4jModule extends ConfigurableModule<Resilience4jConfig> {
             EventConsumerRegistry<RateLimiterEvent> rlConsumerRegistry = injector.getInstance(Key.get(new TypeLiteral<EventConsumerRegistry<RateLimiterEvent>>() {
             }));
             RateLimiterConfigurationProperties rateLimiterConfigurations = config.getRateLimiter();
-            rateLimiterConfigurations.getBackends().forEach((name, rateLimiterConfig) -> {
+            rateLimiterConfigurations.getInstances().forEach((name, rateLimiterConfig) -> {
                 io.github.resilience4j.ratelimiter.RateLimiter rateLimiter =
                         rateLimiterRegistry.rateLimiter(name, rateLimiterConfigurations.createRateLimiterConfig(rateLimiterConfig));
                 if (endpointsConfig.getRateLimiters().isEnabled()) {
@@ -199,7 +199,7 @@ public class Resilience4jModule extends ConfigurableModule<Resilience4jConfig> {
             EventConsumerRegistry<RetryEvent> rConsumerRegistry = injector.getInstance(Key.get(new TypeLiteral<EventConsumerRegistry<RetryEvent>>() {
             }));
             RetryConfigurationProperties retryConfigurations = config.getRetry();
-            retryConfigurations.getBackends().forEach((name, retryConfig) -> {
+            retryConfigurations.getInstances().forEach((name, retryConfig) -> {
                 io.github.resilience4j.retry.Retry retry =
                         retryRegistry.retry(name, retryConfigurations.createRetryConfig(retryConfig));
                 if (endpointsConfig.getRetries().isEnabled()) {
@@ -212,7 +212,7 @@ public class Resilience4jModule extends ConfigurableModule<Resilience4jConfig> {
             EventConsumerRegistry<BulkheadEvent> bConsumerRegistry = injector.getInstance(Key.get(new TypeLiteral<EventConsumerRegistry<BulkheadEvent>>() {
             }));
             BulkheadConfigurationProperties bulkheadConfigurations= config.getBulkhead();
-            bulkheadConfigurations.getBackends().forEach((name, bulkheadConfig) -> {
+            bulkheadConfigurations.getInstances().forEach((name, bulkheadConfig) -> {
                 io.github.resilience4j.bulkhead.Bulkhead bulkhead =
                         bulkheadRegistry.bulkhead(name, bulkheadConfigurations.createBulkheadConfig(bulkheadConfig));
                 if (endpointsConfig.getBulkheads().isEnabled()) {

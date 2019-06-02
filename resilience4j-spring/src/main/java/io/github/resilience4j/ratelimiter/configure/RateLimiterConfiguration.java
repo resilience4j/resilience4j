@@ -46,7 +46,7 @@ public class RateLimiterConfiguration {
 	                                               EventConsumerRegistry<RateLimiterEvent> rateLimiterEventsConsumerRegistry) {
 		RateLimiterRegistry rateLimiterRegistry = createRateLimiterRegistry(rateLimiterProperties);
 		registerEventConsumer(rateLimiterRegistry, rateLimiterEventsConsumerRegistry, rateLimiterProperties);
-		rateLimiterProperties.getBackends().forEach(
+		rateLimiterProperties.getInstances().forEach(
 				(name, properties) -> rateLimiterRegistry.rateLimiter(name, rateLimiterProperties.createRateLimiterConfig(properties))
 		);
 		return rateLimiterRegistry;
@@ -78,7 +78,7 @@ public class RateLimiterConfiguration {
 	}
 
 	private void registerEventConsumer(EventConsumerRegistry<RateLimiterEvent> eventConsumerRegistry, RateLimiter rateLimiter, RateLimiterConfigurationProperties rateLimiterConfigurationProperties) {
-		final RateLimiterConfigurationProperties.BackendProperties limiterProperties = rateLimiterConfigurationProperties.getBackends().get(rateLimiter.getName());
+		final io.github.resilience4j.common.ratelimiter.configuration.RateLimiterConfigurationProperties.InstanceProperties limiterProperties = rateLimiterConfigurationProperties.getInstances().get(rateLimiter.getName());
 		if (limiterProperties != null && limiterProperties.getSubscribeForEvents()) {
 			rateLimiter.getEventPublisher().onEvent(eventConsumerRegistry.createEventConsumer(rateLimiter.getName(), limiterProperties.getEventConsumerBufferSize() != 0 ? limiterProperties.getEventConsumerBufferSize() : 100));
 		}

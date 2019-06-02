@@ -69,7 +69,7 @@ public class RateLimiterAutoConfiguration {
 
     @PostConstruct
     public void configureHealthIndicators() {
-        rateLimiterProperties.getBackends().forEach(
+        rateLimiterProperties.getInstances().forEach(
                 (name, properties) -> {
                     if (properties.getRegisterHealthIndicator()) {
                         createHealthIndicatorForLimiter(name);

@@ -18,7 +18,7 @@ public class ClassUtils {
                 return null;
             }
         } catch (Exception e) {
-            throw new RuntimeException("Unable to create instance of class: " + clazz.getName());
+            throw new InstantiationException("Unable to create instance of class: " + clazz.getName(), e);
         }
     }
 }

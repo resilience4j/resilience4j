@@ -23,17 +23,17 @@ public class RateLimiterConfigurationTest {
 	@Test
 	public void testRateLimiterRegistry() {
 		//Given
-		RateLimiterConfigurationProperties.BackendProperties backendProperties1 = new RateLimiterConfigurationProperties.BackendProperties();
-		backendProperties1.setLimitForPeriod(2);
-		backendProperties1.setSubscribeForEvents(true);
+		io.github.resilience4j.common.ratelimiter.configuration.RateLimiterConfigurationProperties.InstanceProperties instanceProperties1 = new io.github.resilience4j.common.ratelimiter.configuration.RateLimiterConfigurationProperties.InstanceProperties();
+		instanceProperties1.setLimitForPeriod(2);
+		instanceProperties1.setSubscribeForEvents(true);
 
-		RateLimiterConfigurationProperties.BackendProperties backendProperties2 = new RateLimiterConfigurationProperties.BackendProperties();
-		backendProperties2.setLimitForPeriod(4);
-		backendProperties2.setSubscribeForEvents(true);
+		io.github.resilience4j.common.ratelimiter.configuration.RateLimiterConfigurationProperties.InstanceProperties instanceProperties2 = new io.github.resilience4j.common.ratelimiter.configuration.RateLimiterConfigurationProperties.InstanceProperties();
+		instanceProperties2.setLimitForPeriod(4);
+		instanceProperties2.setSubscribeForEvents(true);
 
 		RateLimiterConfigurationProperties rateLimiterConfigurationProperties = new RateLimiterConfigurationProperties();
-		rateLimiterConfigurationProperties.getBackends().put("backend1", backendProperties1);
-		rateLimiterConfigurationProperties.getBackends().put("backend2", backendProperties2);
+		rateLimiterConfigurationProperties.getInstances().put("backend1", instanceProperties1);
+		rateLimiterConfigurationProperties.getInstances().put("backend2", instanceProperties2);
 
 		RateLimiterConfiguration rateLimiterConfiguration = new RateLimiterConfiguration();
 		DefaultEventConsumerRegistry<RateLimiterEvent> eventConsumerRegistry = new DefaultEventConsumerRegistry<>();
@@ -57,22 +57,22 @@ public class RateLimiterConfigurationTest {
 	@Test
 	public void testCreateRateLimiterRegistryWithSharedConfigs() {
 		//Given
-		RateLimiterConfigurationProperties.BackendProperties defaultProperties = new RateLimiterConfigurationProperties.BackendProperties();
+		io.github.resilience4j.common.ratelimiter.configuration.RateLimiterConfigurationProperties.InstanceProperties defaultProperties = new io.github.resilience4j.common.ratelimiter.configuration.RateLimiterConfigurationProperties.InstanceProperties();
 		defaultProperties.setLimitForPeriod(3);
 		defaultProperties.setLimitRefreshPeriodInNanos(5000000);
 		defaultProperties.setSubscribeForEvents(true);
 
-		RateLimiterConfigurationProperties.BackendProperties sharedProperties = new RateLimiterConfigurationProperties.BackendProperties();
+		io.github.resilience4j.common.ratelimiter.configuration.RateLimiterConfigurationProperties.InstanceProperties sharedProperties = new io.github.resilience4j.common.ratelimiter.configuration.RateLimiterConfigurationProperties.InstanceProperties();
 		sharedProperties.setLimitForPeriod(2);
 		sharedProperties.setLimitRefreshPeriodInNanos(6000000);
 		sharedProperties.setSubscribeForEvents(true);
 
-		RateLimiterConfigurationProperties.BackendProperties backendWithDefaultConfig = new RateLimiterConfigurationProperties.BackendProperties();
+		io.github.resilience4j.common.ratelimiter.configuration.RateLimiterConfigurationProperties.InstanceProperties backendWithDefaultConfig = new io.github.resilience4j.common.ratelimiter.configuration.RateLimiterConfigurationProperties.InstanceProperties();
 		backendWithDefaultConfig.setBaseConfig("default");
 		backendWithDefaultConfig.setLimitForPeriod(200);
 		backendWithDefaultConfig.setSubscribeForEvents(true);
 
-		RateLimiterConfigurationProperties.BackendProperties backendWithSharedConfig = new RateLimiterConfigurationProperties.BackendProperties();
+		io.github.resilience4j.common.ratelimiter.configuration.RateLimiterConfigurationProperties.InstanceProperties backendWithSharedConfig = new io.github.resilience4j.common.ratelimiter.configuration.RateLimiterConfigurationProperties.InstanceProperties();
 		backendWithSharedConfig.setBaseConfig("sharedConfig");
 		backendWithSharedConfig.setLimitForPeriod(300);
 		backendWithSharedConfig.setSubscribeForEvents(true);
@@ -81,8 +81,8 @@ public class RateLimiterConfigurationTest {
 		rateLimiterConfigurationProperties.getConfigs().put("default", defaultProperties);
 		rateLimiterConfigurationProperties.getConfigs().put("sharedConfig", sharedProperties);
 
-		rateLimiterConfigurationProperties.getBackends().put("backendWithDefaultConfig", backendWithDefaultConfig);
-		rateLimiterConfigurationProperties.getBackends().put("backendWithSharedConfig", backendWithSharedConfig);
+		rateLimiterConfigurationProperties.getInstances().put("backendWithDefaultConfig", backendWithDefaultConfig);
+		rateLimiterConfigurationProperties.getInstances().put("backendWithSharedConfig", backendWithSharedConfig);
 
 		RateLimiterConfiguration rateLimiterConfiguration = new RateLimiterConfiguration();
 		DefaultEventConsumerRegistry<RateLimiterEvent> eventConsumerRegistry = new DefaultEventConsumerRegistry<>();
@@ -117,9 +117,9 @@ public class RateLimiterConfigurationTest {
 	public void testCreateRateLimiterRegistryWithUnknownConfig() {
 		RateLimiterConfigurationProperties rateLimiterConfigurationProperties = new RateLimiterConfigurationProperties();
 
-		RateLimiterConfigurationProperties.BackendProperties backendProperties = new RateLimiterConfigurationProperties.BackendProperties();
-		backendProperties.setBaseConfig("unknownConfig");
-		rateLimiterConfigurationProperties.getBackends().put("backend", backendProperties);
+		io.github.resilience4j.common.ratelimiter.configuration.RateLimiterConfigurationProperties.InstanceProperties instanceProperties = new io.github.resilience4j.common.ratelimiter.configuration.RateLimiterConfigurationProperties.InstanceProperties();
+		instanceProperties.setBaseConfig("unknownConfig");
+		rateLimiterConfigurationProperties.getInstances().put("backend", instanceProperties);
 
 		RateLimiterConfiguration rateLimiterConfiguration = new RateLimiterConfiguration();
 		DefaultEventConsumerRegistry<RateLimiterEvent> eventConsumerRegistry = new DefaultEventConsumerRegistry<>();

@@ -55,7 +55,7 @@ resilience4j.circuitbreaker:
 
 resilience4j.ratelimiter:
   rateLimiterAspectOrder: 401
-  backends:
+  limiters:
     backendA:
       limitForPeriod: 10
       limitRefreshPeriodInNanos: 1000000000
