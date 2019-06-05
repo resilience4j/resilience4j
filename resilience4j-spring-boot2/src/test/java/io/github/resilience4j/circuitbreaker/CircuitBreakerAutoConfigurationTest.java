@@ -17,8 +17,8 @@ package io.github.resilience4j.circuitbreaker;
 
 import io.github.resilience4j.circuitbreaker.autoconfigure.CircuitBreakerProperties;
 import io.github.resilience4j.circuitbreaker.configure.CircuitBreakerAspect;
-import io.github.resilience4j.circuitbreaker.monitoring.endpoint.CircuitBreakerEndpointResponse;
-import io.github.resilience4j.circuitbreaker.monitoring.endpoint.CircuitBreakerEventsEndpointResponse;
+import io.github.resilience4j.common.circuitbreaker.monitoring.endpoint.CircuitBreakerEndpointResponse;
+import io.github.resilience4j.common.circuitbreaker.monitoring.endpoint.CircuitBreakerEventsEndpointResponse;
 import io.github.resilience4j.service.test.DummyService;
 import io.github.resilience4j.service.test.ReactiveDummyService;
 import io.github.resilience4j.service.test.TestApplication;
@@ -75,7 +75,7 @@ public class CircuitBreakerAutoConfigurationTest {
 		try {
 			dummyService.doSomething(true);
 		} catch (IOException ex) {
-			// Do nothing. The IOException is recorded by the CircuitBreaker as part of the recordFailurePredicate as a failure.
+			// Do nothing. The IOException is recorded by the CircuitBreaker as part of the setRecordFailurePredicate as a failure.
 		}
 		// The invocation is recorded by the CircuitBreaker as a success.
 		dummyService.doSomething(false);
@@ -91,7 +91,7 @@ public class CircuitBreakerAutoConfigurationTest {
 		assertThat(circuitBreaker.getCircuitBreakerConfig().getRingBufferSizeInClosedState()).isEqualTo(6);
 		assertThat(circuitBreaker.getCircuitBreakerConfig().getRingBufferSizeInHalfOpenState()).isEqualTo(2);
 		assertThat(circuitBreaker.getCircuitBreakerConfig().getFailureRateThreshold()).isEqualTo(70f);
-		assertThat(circuitBreaker.getCircuitBreakerConfig().getWaitDurationInOpenState()).isEqualByComparingTo(Duration.ofSeconds(5L));
+		assertThat(circuitBreaker.getCircuitBreakerConfig().getWaitDurationInOpenState()).isEqualByComparingTo(Duration.ofSeconds(60L));
 
 		// Create CircuitBreaker dynamically with default config
 		CircuitBreaker dynamicCircuitBreaker = circuitBreakerRegistry.circuitBreaker("dynamicBackend");
@@ -119,8 +119,8 @@ public class CircuitBreakerAutoConfigurationTest {
 		assertThat(circuitBreaker.getCircuitBreakerConfig().getRecordFailurePredicate().test(new RecordedException())).isTrue();
 		assertThat(circuitBreaker.getCircuitBreakerConfig().getRecordFailurePredicate().test(new IgnoredException())).isFalse();
 
-		// Verify that an exception for which recordFailurePredicate returns false and it is not included in
-		// recordExceptions evaluates to false.
+		// Verify that an exception for which setRecordFailurePredicate returns false and it is not included in
+		// setRecordExceptions evaluates to false.
 		assertThat(circuitBreaker.getCircuitBreakerConfig().getRecordFailurePredicate().test(new Exception())).isFalse();
 
 		// expect aspect configured as defined in application.yml
@@ -130,7 +130,7 @@ public class CircuitBreakerAutoConfigurationTest {
 		CircuitBreaker sharedA = circuitBreakerRegistry.circuitBreaker("backendSharedA");
 		CircuitBreaker sharedB = circuitBreakerRegistry.circuitBreaker("backendSharedB");
 
-		Duration defaultWaitDuration = Duration.ofSeconds(10L);
+		Duration defaultWaitDuration = Duration.ofSeconds(60L);
 		float defaultFailureRate = 60f;
 		int defaultRingBufferSizeInHalfOpenState = 10;
 		int defaultRingBufferSizeInClosedState = 100;
@@ -165,7 +165,7 @@ public class CircuitBreakerAutoConfigurationTest {
 		try {
 			dummyService.doSomethingAsync(true);
 		} catch (IOException ex) {
-			// Do nothing. The IOException is recorded by the CircuitBreaker as part of the recordFailurePredicate as a failure.
+			// Do nothing. The IOException is recorded by the CircuitBreaker as part of the setRecordFailurePredicate as a failure.
 		}
 		// The invocation is recorded by the CircuitBreaker as a success.
 		final CompletableFuture<String> stringCompletionStage = dummyService.doSomethingAsync(false);
@@ -213,7 +213,7 @@ public class CircuitBreakerAutoConfigurationTest {
 		try {
 			reactiveDummyService.doSomethingFlux(true).subscribe(String::toUpperCase, throwable -> System.out.println("Exception received:" + throwable.getMessage()));
 		} catch (IOException ex) {
-			// Do nothing. The IOException is recorded by the CircuitBreaker as part of the recordFailurePredicate as a failure.
+			// Do nothing. The IOException is recorded by the CircuitBreaker as part of the setRecordFailurePredicate as a failure.
 		}
 		// The invocation is recorded by the CircuitBreaker as a success.
 		reactiveDummyService.doSomethingFlux(false).subscribe(String::toUpperCase, throwable -> System.out.println("Exception received:" + throwable.getMessage()));
@@ -226,7 +226,7 @@ public class CircuitBreakerAutoConfigurationTest {
 		assertThat(circuitBreaker.getCircuitBreakerConfig().getRingBufferSizeInClosedState()).isEqualTo(10);
 		assertThat(circuitBreaker.getCircuitBreakerConfig().getRingBufferSizeInHalfOpenState()).isEqualTo(5);
 		assertThat(circuitBreaker.getCircuitBreakerConfig().getFailureRateThreshold()).isEqualTo(50f);
-		assertThat(circuitBreaker.getCircuitBreakerConfig().getWaitDurationInOpenState()).isEqualByComparingTo(Duration.ofSeconds(5L));
+		assertThat(circuitBreaker.getCircuitBreakerConfig().getWaitDurationInOpenState()).isEqualByComparingTo(Duration.ofSeconds(60L));
 
 		// expect circuitbreakers actuator endpoint contains all circuitbreakers
 		ResponseEntity<CircuitBreakerEndpointResponse> circuitBreakerList = restTemplate.getForEntity("/actuator/circuitbreakers", CircuitBreakerEndpointResponse.class);

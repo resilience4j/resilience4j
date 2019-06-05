@@ -16,33 +16,64 @@ resilience4j:
             enabled: true
             path: bulkhead
             eventConsumerBufferSize: 100
-    circuitBreakers:
-        test1:
-            defaults: true
-        test2:
-            ringBufferSizeInClosedState: 200
-            ringBufferSizeInHalfOpenState: 20
-            waitIntervalInMillis: 5000
-            failureRateThreshold: 60
-            automaticTransitionFromOpenToHalfOpen: true
-            recordExceptions:
-                - io.github.resilience4j.ratpack.Resilience4jModuleSpec$DummyException1
-    rateLimiters:
-        test1:
-            defaults: true
-        test2:
-            limitForPeriod: 100
-            limitRefreshPeriodInNanos: 900
-            timeoutInMillis: 10
-    retries:
-        test1:
-            defaults: true
-        test2:
-            maxAttempts: 3
-            waitDurationInMillis: 1000
-    bulkheads:
-        test1:
-            defaults: true
-        test2:
-            maxConcurrentCalls: 100
-            maxWaitTime: 1000
+    circuitBreaker:
+        configs:
+            default:
+                ringBufferSizeInClosedState: 200
+                ringBufferSizeInHalfOpenState: 20
+                waitDurationInOpenStateMillis: 1000
+                failureRateThreshold: 60
+                automaticTransitionFromOpenToHalfOpenEnabled: true
+                recordExceptions:
+                    - io.github.resilience4j.ratpack.Resilience4jModuleSpec$DummyException1
+                    - io.github.resilience4j.ratpack.Resilience4jModuleSpec$DummyException2
+        backends:
+            test1:
+                baseConfig: default
+                ringBufferSizeInClosedState: 100
+            test2:
+                ringBufferSizeInClosedState: 200
+                ringBufferSizeInHalfOpenState: 20
+                waitDurationInOpenStateMillis: 5000
+                failureRateThreshold: 60
+                automaticTransitionFromOpenToHalfOpenEnabled: true
+                recordExceptions:
+                    - io.github.resilience4j.ratpack.Resilience4jModuleSpec$DummyException1
+    rateLimiter:
+        configs:
+            default:
+                limitForPeriod: 100
+                limitRefreshPeriodInNanos: 900
+                timeoutInMillis: 10
+        limiters:
+            test1:
+                baseConfig: default
+                limitForPeriod: 150
+            test2:
+                limitForPeriod: 100
+                limitRefreshPeriodInNanos: 900
+                timeoutInMillis: 10
+    retry:
+        configs:
+            default:
+                maxRetryAttempts: 3
+                waitDurationInMillis: 1000
+        backends:
+            test1:
+                baseConfig: default
+                maxRetryAttempts: 4
+            test2:
+                maxRetryAttempts: 3
+                waitDurationInMillis: 1000
+    bulkhead:
+        configs:
+            default:
+                maxConcurrentCalls: 50
+                maxWaitTime: 500
+        backends:
+            test1:
+                baseConfig: default
+                maxWaitTime: 750
+            test2:
+                maxConcurrentCalls: 100
+                maxWaitTime: 1000

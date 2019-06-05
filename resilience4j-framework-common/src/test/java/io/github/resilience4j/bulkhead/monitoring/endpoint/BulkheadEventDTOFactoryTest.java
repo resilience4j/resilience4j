@@ -3,6 +3,8 @@ package io.github.resilience4j.bulkhead.monitoring.endpoint;
 import io.github.resilience4j.bulkhead.event.BulkheadOnCallFinishedEvent;
 import io.github.resilience4j.bulkhead.event.BulkheadOnCallPermittedEvent;
 import io.github.resilience4j.bulkhead.event.BulkheadOnCallRejectedEvent;
+import io.github.resilience4j.common.bulkhead.monitoring.endpoint.BulkheadEventDTO;
+import io.github.resilience4j.common.bulkhead.monitoring.endpoint.BulkheadEventDTOFactory;
 import org.junit.Test;
 
 import static io.github.resilience4j.bulkhead.event.BulkheadEvent.Type.*;

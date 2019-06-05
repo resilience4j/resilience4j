@@ -27,6 +27,7 @@ ext {
     micrometerVersion = '1.1.4'
     hibernateValidatorVersion = '6.0.16.Final'
     wiremockVersion = '2.22.0'
+    validationApiVersion = '2.0.1.Final'
     kotlinCoroutinesVersion = '1.2.0'
 
     libraries = [
@@ -114,6 +115,9 @@ ext {
 
             // Groovy
             groovy: "org.codehaus.groovy:groovy-all:2.5.6",
+            
+            // validation
+            validationApi: "javax.validation:validation-api:${validationApiVersion}",
 
             // Kotlin addon
             kotlin_stdlib: "org.jetbrains.kotlin:kotlin-stdlib-jdk8",

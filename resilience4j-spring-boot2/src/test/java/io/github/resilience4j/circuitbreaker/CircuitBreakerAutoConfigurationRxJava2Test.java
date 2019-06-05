@@ -17,8 +17,8 @@ package io.github.resilience4j.circuitbreaker;
 
 import io.github.resilience4j.circuitbreaker.autoconfigure.CircuitBreakerProperties;
 import io.github.resilience4j.circuitbreaker.configure.CircuitBreakerAspect;
-import io.github.resilience4j.circuitbreaker.monitoring.endpoint.CircuitBreakerEndpointResponse;
-import io.github.resilience4j.circuitbreaker.monitoring.endpoint.CircuitBreakerEventsEndpointResponse;
+import io.github.resilience4j.common.circuitbreaker.monitoring.endpoint.CircuitBreakerEndpointResponse;
+import io.github.resilience4j.common.circuitbreaker.monitoring.endpoint.CircuitBreakerEventsEndpointResponse;
 import io.github.resilience4j.service.test.DummyService;
 import io.github.resilience4j.service.test.ReactiveDummyService;
 import io.github.resilience4j.service.test.TestApplication;
@@ -73,7 +73,7 @@ public class CircuitBreakerAutoConfigurationRxJava2Test {
 		try {
 			reactiveDummyService.doSomethingFlowable(true).blockingSubscribe(String::toUpperCase, throwable -> System.out.println("Exception received:" + throwable.getMessage()));
 		} catch (Exception ex) {
-			// Do nothing. The IOException is recorded by the CircuitBreaker as part of the recordFailurePredicate as a failure.
+			// Do nothing. The IOException is recorded by the CircuitBreaker as part of the setRecordFailurePredicate as a failure.
 		}
 		// The invocation is recorded by the CircuitBreaker as a success.
 		reactiveDummyService.doSomethingFlowable(false).blockingSubscribe(String::toUpperCase, throwable -> System.out.println("Exception received:" + throwable.getMessage()));
@@ -106,7 +106,7 @@ public class CircuitBreakerAutoConfigurationRxJava2Test {
 		try {
 			reactiveDummyService.doSomethingObservable(true).blockingSubscribe(String::toUpperCase, Throwable::getCause);
 		} catch (IOException ex) {
-			// Do nothing. The IOException is recorded by the CircuitBreaker as part of the recordFailurePredicate as a failure.
+			// Do nothing. The IOException is recorded by the CircuitBreaker as part of the setRecordFailurePredicate as a failure.
 		}
 		// The invocation is recorded by the CircuitBreaker as a success.
 		reactiveDummyService.doSomethingObservable(false).blockingSubscribe(String::toUpperCase, Throwable::getCause);
@@ -119,7 +119,7 @@ public class CircuitBreakerAutoConfigurationRxJava2Test {
 		try {
 			reactiveDummyService.doSomethingMaybe(true).blockingGet("goo");
 		} catch (Exception ex) {
-			// Do nothing. The IOException is recorded by the CircuitBreaker as part of the recordFailurePredicate as a failure.
+			// Do nothing. The IOException is recorded by the CircuitBreaker as part of the setRecordFailurePredicate as a failure.
 		}
 		// The invocation is recorded by the CircuitBreaker as a success.
 		reactiveDummyService.doSomethingMaybe(false).blockingGet();
@@ -132,7 +132,7 @@ public class CircuitBreakerAutoConfigurationRxJava2Test {
 		try {
 			reactiveDummyService.doSomethingSingle(true).blockingGet();
 		} catch (Exception ex) {
-			// Do nothing. The IOException is recorded by the CircuitBreaker as part of the recordFailurePredicate as a failure.
+			// Do nothing. The IOException is recorded by the CircuitBreaker as part of the setRecordFailurePredicate as a failure.
 		}
 		// The invocation is recorded by the CircuitBreaker as a success.
 		reactiveDummyService.doSomethingSingle(false).blockingGet();
@@ -146,7 +146,7 @@ public class CircuitBreakerAutoConfigurationRxJava2Test {
 		try {
 			reactiveDummyService.doSomethingCompletable(true).blockingAwait();
 		} catch (Exception ex) {
-			// Do nothing. The IOException is recorded by the CircuitBreaker as part of the recordFailurePredicate as a failure.
+			// Do nothing. The IOException is recorded by the CircuitBreaker as part of the setRecordFailurePredicate as a failure.
 		}
 		// The invocation is recorded by the CircuitBreaker as a success.
 		reactiveDummyService.doSomethingCompletable(false).blockingAwait();

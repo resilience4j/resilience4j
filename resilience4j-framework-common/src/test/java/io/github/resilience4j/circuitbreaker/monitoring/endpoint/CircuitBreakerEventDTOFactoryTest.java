@@ -1,6 +1,8 @@
 package io.github.resilience4j.circuitbreaker.monitoring.endpoint;
 
 import io.github.resilience4j.circuitbreaker.event.*;
+import io.github.resilience4j.common.circuitbreaker.monitoring.endpoint.CircuitBreakerEventDTO;
+import io.github.resilience4j.common.circuitbreaker.monitoring.endpoint.CircuitBreakerEventDTOFactory;
 import org.junit.Test;
 
 import java.io.IOException;

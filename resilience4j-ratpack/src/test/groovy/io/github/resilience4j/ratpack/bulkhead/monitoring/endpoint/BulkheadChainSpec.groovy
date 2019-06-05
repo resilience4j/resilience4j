@@ -17,7 +17,7 @@ package io.github.resilience4j.ratpack.bulkhead.monitoring.endpoint
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import io.github.resilience4j.bulkhead.BulkheadRegistry
-import io.github.resilience4j.bulkhead.monitoring.endpoint.BulkheadEventsEndpointResponse
+import io.github.resilience4j.common.bulkhead.monitoring.endpoint.BulkheadEventsEndpointResponse
 import io.github.resilience4j.ratpack.Resilience4jModule
 import ratpack.http.client.HttpClient
 import ratpack.test.embed.EmbeddedApp
@@ -50,9 +50,9 @@ class BulkheadChainSpec extends Specification {
                 bindInstance(BulkheadRegistry, bulkheadRegistry)
                 module(Resilience4jModule) {
                     it.bulkhead('test1') {
-                        it.maxConcurrentCalls(10).maxWaitTime(0)
+                        it.setMaxConcurrentCalls(10).setMaxWaitTime(0)
                     }.bulkhead('test2') {
-                        it.maxConcurrentCalls(20).maxWaitTime(0)
+                        it.setMaxConcurrentCalls(20).setMaxWaitTime(0)
                     }
                 }
             }
@@ -130,9 +130,9 @@ class BulkheadChainSpec extends Specification {
                 bindInstance(BulkheadRegistry, bulkheadRegistry)
                 module(Resilience4jModule) {
                     it.bulkhead('test1') {
-                        it.maxConcurrentCalls(10).maxWaitTime(9)
+                        it.setMaxConcurrentCalls(10).setMaxWaitTime(9)
                     }.bulkhead('test2') {
-                        it.maxConcurrentCalls(20).maxWaitTime(0)
+                        it.setMaxConcurrentCalls(20).setMaxWaitTime(0)
                     }
                 }
             }
@@ -203,9 +203,9 @@ class BulkheadChainSpec extends Specification {
                 bindInstance(BulkheadRegistry, bulkheadRegistry)
                 module(Resilience4jModule) {
                     it.bulkhead('test1') {
-                        it.maxConcurrentCalls(10).maxWaitTime(0)
+                        it.setMaxConcurrentCalls(10).setMaxWaitTime(0)
                     }.bulkhead('test2') {
-                        it.maxConcurrentCalls(20).maxWaitTime(0)
+                        it.setMaxConcurrentCalls(20).setMaxWaitTime(0)
                     }.endpoints {
                         it.bulkheads {
                             it.enabled(false)

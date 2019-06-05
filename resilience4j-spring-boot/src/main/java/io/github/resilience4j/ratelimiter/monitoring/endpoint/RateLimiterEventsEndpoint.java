@@ -15,6 +15,8 @@
  */
 package io.github.resilience4j.ratelimiter.monitoring.endpoint;
 
+import io.github.resilience4j.common.ratelimiter.monitoring.endpoint.RateLimiterEventDTO;
+import io.github.resilience4j.common.ratelimiter.monitoring.endpoint.RateLimiterEventsEndpointResponse;
 import io.github.resilience4j.consumer.CircularEventConsumer;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
 import io.github.resilience4j.ratelimiter.event.RateLimiterEvent;
