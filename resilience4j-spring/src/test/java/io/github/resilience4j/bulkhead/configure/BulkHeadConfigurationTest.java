@@ -125,15 +125,15 @@ public class BulkHeadConfigurationTest {
 	@Test
 	public void testBulkHeadRegistry() {
 		//Given
-		BulkheadConfigurationProperties.BackendProperties backendProperties1 = new BulkheadConfigurationProperties.BackendProperties();
-		backendProperties1.setMaxConcurrentCall(3);
+		io.github.resilience4j.common.bulkhead.configuration.BulkheadConfigurationProperties.InstanceProperties instanceProperties1 = new io.github.resilience4j.common.bulkhead.configuration.BulkheadConfigurationProperties.InstanceProperties();
+		instanceProperties1.setMaxConcurrentCalls(3);
 
-		BulkheadConfigurationProperties.BackendProperties backendProperties2 = new BulkheadConfigurationProperties.BackendProperties();
-		backendProperties2.setMaxConcurrentCall(2);
+		io.github.resilience4j.common.bulkhead.configuration.BulkheadConfigurationProperties.InstanceProperties instanceProperties2 = new io.github.resilience4j.common.bulkhead.configuration.BulkheadConfigurationProperties.InstanceProperties();
+		instanceProperties2.setMaxConcurrentCalls(2);
 
 		BulkheadConfigurationProperties bulkheadConfigurationProperties = new BulkheadConfigurationProperties();
-		bulkheadConfigurationProperties.getBackends().put("backend1", backendProperties1);
-		bulkheadConfigurationProperties.getBackends().put("backend2", backendProperties2);
+		bulkheadConfigurationProperties.getInstances().put("backend1", instanceProperties1);
+		bulkheadConfigurationProperties.getInstances().put("backend2", instanceProperties2);
 
 		BulkheadConfiguration bulkheadConfiguration = new BulkheadConfiguration();
 		DefaultEventConsumerRegistry<BulkheadEvent> eventConsumerRegistry = new DefaultEventConsumerRegistry<>();
@@ -157,19 +157,19 @@ public class BulkHeadConfigurationTest {
 	@Test
 	public void testCreateBulkHeadRegistryWithSharedConfigs() {
 		//Given
-		BulkheadConfigurationProperties.BackendProperties defaultProperties = new BulkheadConfigurationProperties.BackendProperties();
-		defaultProperties.setMaxConcurrentCall(3);
+		io.github.resilience4j.common.bulkhead.configuration.BulkheadConfigurationProperties.InstanceProperties defaultProperties = new io.github.resilience4j.common.bulkhead.configuration.BulkheadConfigurationProperties.InstanceProperties();
+		defaultProperties.setMaxConcurrentCalls(3);
 		defaultProperties.setMaxWaitTime(50L);
 
-		BulkheadConfigurationProperties.BackendProperties sharedProperties = new BulkheadConfigurationProperties.BackendProperties();
-		sharedProperties.setMaxConcurrentCall(2);
+		io.github.resilience4j.common.bulkhead.configuration.BulkheadConfigurationProperties.InstanceProperties sharedProperties = new io.github.resilience4j.common.bulkhead.configuration.BulkheadConfigurationProperties.InstanceProperties();
+		sharedProperties.setMaxConcurrentCalls(2);
 		sharedProperties.setMaxWaitTime(100L);
 
-		BulkheadConfigurationProperties.BackendProperties backendWithDefaultConfig = new BulkheadConfigurationProperties.BackendProperties();
+		io.github.resilience4j.common.bulkhead.configuration.BulkheadConfigurationProperties.InstanceProperties backendWithDefaultConfig = new io.github.resilience4j.common.bulkhead.configuration.BulkheadConfigurationProperties.InstanceProperties();
 		backendWithDefaultConfig.setBaseConfig("default");
 		backendWithDefaultConfig.setMaxWaitTime(200L);
 
-		BulkheadConfigurationProperties.BackendProperties backendWithSharedConfig = new BulkheadConfigurationProperties.BackendProperties();
+		io.github.resilience4j.common.bulkhead.configuration.BulkheadConfigurationProperties.InstanceProperties backendWithSharedConfig = new io.github.resilience4j.common.bulkhead.configuration.BulkheadConfigurationProperties.InstanceProperties();
 		backendWithSharedConfig.setBaseConfig("sharedConfig");
 		backendWithSharedConfig.setMaxWaitTime(300L);
 
@@ -177,8 +177,8 @@ public class BulkHeadConfigurationTest {
 		bulkheadConfigurationProperties.getConfigs().put("default", defaultProperties);
 		bulkheadConfigurationProperties.getConfigs().put("sharedConfig", sharedProperties);
 
-		bulkheadConfigurationProperties.getBackends().put("backendWithDefaultConfig", backendWithDefaultConfig);
-		bulkheadConfigurationProperties.getBackends().put("backendWithSharedConfig", backendWithSharedConfig);
+		bulkheadConfigurationProperties.getInstances().put("backendWithDefaultConfig", backendWithDefaultConfig);
+		bulkheadConfigurationProperties.getInstances().put("backendWithSharedConfig", backendWithSharedConfig);
 
 		BulkheadConfiguration bulkheadConfiguration = new BulkheadConfiguration();
 		DefaultEventConsumerRegistry<BulkheadEvent> eventConsumerRegistry = new DefaultEventConsumerRegistry<>();
@@ -213,9 +213,9 @@ public class BulkHeadConfigurationTest {
 	public void testCreateBulkHeadRegistryWithUnknownConfig() {
 		BulkheadConfigurationProperties bulkheadConfigurationProperties = new BulkheadConfigurationProperties();
 
-		BulkheadConfigurationProperties.BackendProperties backendProperties = new BulkheadConfigurationProperties.BackendProperties();
-		backendProperties.setBaseConfig("unknownConfig");
-		bulkheadConfigurationProperties.getBackends().put("backend", backendProperties);
+		io.github.resilience4j.common.bulkhead.configuration.BulkheadConfigurationProperties.InstanceProperties instanceProperties = new io.github.resilience4j.common.bulkhead.configuration.BulkheadConfigurationProperties.InstanceProperties();
+		instanceProperties.setBaseConfig("unknownConfig");
+		bulkheadConfigurationProperties.getInstances().put("backend", instanceProperties);
 
 		BulkheadConfiguration bulkheadConfiguration = new BulkheadConfiguration();
 		DefaultEventConsumerRegistry<BulkheadEvent> eventConsumerRegistry = new DefaultEventConsumerRegistry<>();

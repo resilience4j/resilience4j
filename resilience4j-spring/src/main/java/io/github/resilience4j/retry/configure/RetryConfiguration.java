@@ -52,7 +52,7 @@ public class RetryConfiguration {
 
 		RetryRegistry retryRegistry = createRetryRegistry(retryConfigurationProperties);
 		registerEventConsumer(retryRegistry, retryEventConsumerRegistry, retryConfigurationProperties);
-		retryConfigurationProperties.getBackends().forEach((name, properties) -> retryRegistry.retry(name, retryConfigurationProperties.createRetryConfig(name)));
+		retryConfigurationProperties.getInstances().forEach((name, properties) -> retryRegistry.retry(name, retryConfigurationProperties.createRetryConfig(name)));
 		return retryRegistry;
 	}
 
@@ -84,7 +84,7 @@ public class RetryConfiguration {
 
 	private void registerEventConsumer(EventConsumerRegistry<RetryEvent> eventConsumerRegistry, Retry retry, RetryConfigurationProperties retryConfigurationProperties) {
 		int eventConsumerBufferSize = Optional.ofNullable(retryConfigurationProperties.getBackendProperties(retry.getName()))
-				.map(RetryConfigurationProperties.BackendProperties::getEventConsumerBufferSize)
+				.map(io.github.resilience4j.common.retry.configuration.RetryConfigurationProperties.InstanceProperties::getEventConsumerBufferSize)
 				.orElse(100);
 		retry.getEventPublisher().onEvent(eventConsumerRegistry.createEventConsumer(retry.getName(), eventConsumerBufferSize));
 	}

@@ -108,7 +108,7 @@ public class CircuitBreakerConfiguration {
 	 * @param circuitBreakerRegistry The circuit breaker registry.
 	 */
 	public void initCircuitBreakerRegistry(CircuitBreakerRegistry circuitBreakerRegistry) {
-		circuitBreakerProperties.getBackends().forEach(
+		circuitBreakerProperties.getInstances().forEach(
 				(name, properties) -> circuitBreakerRegistry.circuitBreaker(name, circuitBreakerProperties.createCircuitBreakerConfig(properties))
 		);
 	}
@@ -126,7 +126,7 @@ public class CircuitBreakerConfiguration {
 
 	private void registerEventConsumer(EventConsumerRegistry<CircuitBreakerEvent> eventConsumerRegistry, CircuitBreaker circuitBreaker) {
 		int eventConsumerBufferSize = circuitBreakerProperties.findCircuitBreakerProperties(circuitBreaker.getName())
-				.map(CircuitBreakerConfigurationProperties.BackendProperties::getEventConsumerBufferSize)
+				.map(io.github.resilience4j.common.circuitbreaker.configuration.CircuitBreakerConfigurationProperties.InstanceProperties::getEventConsumerBufferSize)
 				.orElse(100);
 		circuitBreaker.getEventPublisher().onEvent(eventConsumerRegistry.createEventConsumer(circuitBreaker.getName(), eventConsumerBufferSize));
 	}

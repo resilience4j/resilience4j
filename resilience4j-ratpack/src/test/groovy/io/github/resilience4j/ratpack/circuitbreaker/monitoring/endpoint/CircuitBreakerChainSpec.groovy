@@ -18,7 +18,7 @@ package io.github.resilience4j.ratpack.circuitbreaker.monitoring.endpoint
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry
-import io.github.resilience4j.circuitbreaker.monitoring.endpoint.CircuitBreakerEventsEndpointResponse
+import io.github.resilience4j.common.circuitbreaker.monitoring.endpoint.CircuitBreakerEventsEndpointResponse
 import io.github.resilience4j.ratpack.Resilience4jModule
 import io.github.resilience4j.ratpack.circuitbreaker.monitoring.endpoint.states.CircuitBreakerStatesEndpointResponse
 import ratpack.http.client.HttpClient
@@ -54,9 +54,9 @@ class CircuitBreakerChainSpec extends Specification {
                 bindInstance(CircuitBreakerRegistry, circuitBreakerRegistry)
                 module(Resilience4jModule) {
                     it.circuitBreaker('test1') {
-                        it.failureRateThreshold(75).waitIntervalInMillis(5000)
+                        it.setFailureRateThreshold(75).setWaitDurationInOpenStateMillis(5000)
                     }.circuitBreaker('test2') {
-                        it.failureRateThreshold(25).waitIntervalInMillis(5000)
+                        it.setFailureRateThreshold(25).setWaitDurationInOpenStateMillis(5000)
                     }
                 }
             }
@@ -115,9 +115,9 @@ class CircuitBreakerChainSpec extends Specification {
                 bindInstance(CircuitBreakerRegistry, circuitBreakerRegistry)
                 module(Resilience4jModule) {
                     it.circuitBreaker('test1') {
-                        it.failureRateThreshold(75).waitIntervalInMillis(5000)
+                        it.setFailureRateThreshold(75).setWaitDurationInOpenStateMillis(5000)
                     }.circuitBreaker('test2') {
-                        it.failureRateThreshold(25).waitIntervalInMillis(5000)
+                        it.setFailureRateThreshold(25).setWaitDurationInOpenStateMillis(5000)
                     }
                 }
             }
@@ -186,9 +186,9 @@ class CircuitBreakerChainSpec extends Specification {
                 bindInstance(CircuitBreakerRegistry, circuitBreakerRegistry)
                 module(Resilience4jModule) {
                     it.circuitBreaker('test1') {
-                        it.failureRateThreshold(75).waitIntervalInMillis(5000)
+                        it.setFailureRateThreshold(75).setWaitDurationInOpenStateMillis(5000)
                     }.circuitBreaker('test2') {
-                        it.failureRateThreshold(25).waitIntervalInMillis(5000)
+                        it.setFailureRateThreshold(25).setWaitDurationInOpenStateMillis(5000)
                     }
                 }
             }
@@ -257,9 +257,9 @@ class CircuitBreakerChainSpec extends Specification {
                 bindInstance(CircuitBreakerRegistry, circuitBreakerRegistry)
                 module(Resilience4jModule) {
                     it.circuitBreaker('test1') {
-                        it.failureRateThreshold(75).waitIntervalInMillis(5000)
+                        it.setFailureRateThreshold(75).setWaitDurationInOpenStateMillis(5000)
                     }.circuitBreaker('test2') {
-                        it.failureRateThreshold(25).waitIntervalInMillis(5000)
+                        it.setFailureRateThreshold(25).setWaitDurationInOpenStateMillis(5000)
                     }.endpoints {
                         it.circuitBreakers {
                             it.enabled(false)

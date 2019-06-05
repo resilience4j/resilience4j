@@ -15,17 +15,19 @@
  */
 package io.github.resilience4j.bulkhead.monitoring.endpoint;
 
-import java.util.Comparator;
-
+import io.github.resilience4j.bulkhead.ThreadPoolBulkhead;
+import io.github.resilience4j.bulkhead.event.BulkheadEvent;
+import io.github.resilience4j.common.bulkhead.monitoring.endpoint.BulkheadEventDTO;
+import io.github.resilience4j.common.bulkhead.monitoring.endpoint.BulkheadEventDTOFactory;
+import io.github.resilience4j.common.bulkhead.monitoring.endpoint.BulkheadEventsEndpointResponse;
+import io.github.resilience4j.consumer.CircularEventConsumer;
+import io.github.resilience4j.consumer.EventConsumerRegistry;
+import io.vavr.collection.List;
 import org.springframework.boot.actuate.endpoint.annotation.Endpoint;
 import org.springframework.boot.actuate.endpoint.annotation.ReadOperation;
 import org.springframework.boot.actuate.endpoint.annotation.Selector;
 
-import io.github.resilience4j.bulkhead.ThreadPoolBulkhead;
-import io.github.resilience4j.bulkhead.event.BulkheadEvent;
-import io.github.resilience4j.consumer.CircularEventConsumer;
-import io.github.resilience4j.consumer.EventConsumerRegistry;
-import io.vavr.collection.List;
+import java.util.Comparator;
 
 @Endpoint(id = "bulkheadevents")
 public class BulkheadEventsEndpoint {

@@ -16,6 +16,8 @@
 package io.github.resilience4j.retry.monitoring.endpoint;
 
 
+import io.github.resilience4j.common.retry.monitoring.endpoint.RetryEventDTOFactory;
+import io.github.resilience4j.common.retry.monitoring.endpoint.RetryEventsEndpointResponse;
 import io.github.resilience4j.consumer.CircularEventConsumer;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
 import io.github.resilience4j.retry.event.RetryEvent;

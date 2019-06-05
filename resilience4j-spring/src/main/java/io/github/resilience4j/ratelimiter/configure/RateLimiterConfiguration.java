@@ -16,24 +16,23 @@
 package io.github.resilience4j.ratelimiter.configure;
 
 
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
-
+import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
+import io.github.resilience4j.consumer.EventConsumerRegistry;
+import io.github.resilience4j.fallback.FallbackDecorators;
+import io.github.resilience4j.ratelimiter.RateLimiter;
+import io.github.resilience4j.ratelimiter.RateLimiterConfig;
+import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
+import io.github.resilience4j.ratelimiter.event.RateLimiterEvent;
+import io.github.resilience4j.utils.ReactorOnClasspathCondition;
+import io.github.resilience4j.utils.RxJava2OnClasspathCondition;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
 
-import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
-import io.github.resilience4j.consumer.EventConsumerRegistry;
-import io.github.resilience4j.ratelimiter.RateLimiter;
-import io.github.resilience4j.ratelimiter.RateLimiterConfig;
-import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
-import io.github.resilience4j.ratelimiter.event.RateLimiterEvent;
-import io.github.resilience4j.fallback.FallbackDecorators;
-import io.github.resilience4j.utils.ReactorOnClasspathCondition;
-import io.github.resilience4j.utils.RxJava2OnClasspathCondition;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * {@link org.springframework.context.annotation.Configuration
@@ -47,7 +46,7 @@ public class RateLimiterConfiguration {
 	                                               EventConsumerRegistry<RateLimiterEvent> rateLimiterEventsConsumerRegistry) {
 		RateLimiterRegistry rateLimiterRegistry = createRateLimiterRegistry(rateLimiterProperties);
 		registerEventConsumer(rateLimiterRegistry, rateLimiterEventsConsumerRegistry, rateLimiterProperties);
-		rateLimiterProperties.getLimiters().forEach(
+		rateLimiterProperties.getInstances().forEach(
 				(name, properties) -> rateLimiterRegistry.rateLimiter(name, rateLimiterProperties.createRateLimiterConfig(properties))
 		);
 		return rateLimiterRegistry;
@@ -79,7 +78,7 @@ public class RateLimiterConfiguration {
 	}
 
 	private void registerEventConsumer(EventConsumerRegistry<RateLimiterEvent> eventConsumerRegistry, RateLimiter rateLimiter, RateLimiterConfigurationProperties rateLimiterConfigurationProperties) {
-		final RateLimiterConfigurationProperties.LimiterProperties limiterProperties = rateLimiterConfigurationProperties.getLimiters().get(rateLimiter.getName());
+		final io.github.resilience4j.common.ratelimiter.configuration.RateLimiterConfigurationProperties.InstanceProperties limiterProperties = rateLimiterConfigurationProperties.getInstances().get(rateLimiter.getName());
 		if (limiterProperties != null && limiterProperties.getSubscribeForEvents()) {
 			rateLimiter.getEventPublisher().onEvent(eventConsumerRegistry.createEventConsumer(rateLimiter.getName(), limiterProperties.getEventConsumerBufferSize() != 0 ? limiterProperties.getEventConsumerBufferSize() : 100));
 		}

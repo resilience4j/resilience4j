@@ -21,7 +21,7 @@ import io.github.resilience4j.ratpack.Resilience4jModule
 import io.github.resilience4j.retry.Retry
 import io.github.resilience4j.retry.RetryRegistry
 import io.github.resilience4j.retry.event.RetryEvent
-import io.github.resilience4j.retry.monitoring.endpoint.RetryEventsEndpointResponse
+import io.github.resilience4j.common.retry.monitoring.endpoint.RetryEventsEndpointResponse
 import io.vavr.CheckedFunction0
 import io.vavr.control.Try
 import ratpack.http.client.HttpClient
@@ -56,9 +56,9 @@ class RetryChainSpec extends Specification {
                 bindInstance(RetryRegistry, retryRegistry)
                 module(Resilience4jModule) {
                     it.retry('test1') {
-                        it.maxAttempts(3).waitDurationInMillis(100)
+                        it.setMaxRetryAttempts(3).setWaitDurationMillis(100)
                     }.retry('test2') {
-                        it.maxAttempts(3).waitDurationInMillis(100)
+                        it.setMaxRetryAttempts(3).setWaitDurationMillis(100)
                     }
                 }
             }
@@ -138,9 +138,9 @@ class RetryChainSpec extends Specification {
                 bindInstance(RetryRegistry, retryRegistry)
                 module(Resilience4jModule) {
                     it.retry('test1') {
-                        it.maxAttempts(3).waitDurationInMillis(100)
+                        it.setMaxRetryAttempts(3).setWaitDurationMillis(100)
                     }.retry('test2') {
-                        it.maxAttempts(3).waitDurationInMillis(100)
+                        it.setMaxRetryAttempts(3).setWaitDurationMillis(100)
                     }
                 }
             }
@@ -209,9 +209,9 @@ class RetryChainSpec extends Specification {
                 bindInstance(RetryRegistry, retryRegistry)
                 module(Resilience4jModule) {
                     it.retry('test1') {
-                        it.maxAttempts(3).waitDurationInMillis(100)
+                        it.setMaxRetryAttempts(3).setWaitDurationMillis(100)
                     }.retry('test2') {
-                        it.maxAttempts(3).waitDurationInMillis(100)
+                        it.setMaxRetryAttempts(3).setWaitDurationMillis(100)
                     }.endpoints {
                         it.retries {
                             it.enabled(false)

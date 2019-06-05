@@ -3,7 +3,7 @@ resilience4j.retry:
   backends:
     retryBackendA:
       maxRetryAttempts: 3
-      waitDuration: 600
+      waitDurationMillis: 600
       retryExceptionPredicate: io.github.resilience4j.circuitbreaker.RecordFailurePredicate
       retryExceptions:
       - java.io.IOException
@@ -11,7 +11,7 @@ resilience4j.retry:
       - io.github.resilience4j.circuitbreaker.IgnoredException
     retryBackendB:
       maxRetryAttempts: 3
-      waitDuration: 600
+      waitDurationMillis: 600
       retryExceptionPredicate: io.github.resilience4j.circuitbreaker.RecordFailurePredicate
       retryExceptions:
       - java.io.IOException
@@ -58,23 +58,23 @@ resilience4j.ratelimiter:
   limiters:
     backendA:
       limitForPeriod: 10
-      limitRefreshPeriodInMillis: 1000
+      limitRefreshPeriodInNanos: 1000000000
       timeoutInMillis: 0
       subscribeForEvents: true
       registerHealthIndicator: true
     backendB:
       limitForPeriod: 100
-      limitRefreshPeriodInMillis: 500
+      limitRefreshPeriodInNanos: 500000000
       timeoutInMillis: 3000
 
 resilience4j.bulkhead:
   bulkheadAspectOrder: 398
   backends:
     backendA:
-      maxConcurrentCall: 1
+      maxConcurrentCalls: 1
     backendB:
       maxWaitTime: 10
-      maxConcurrentCall: 2
+      maxConcurrentCalls: 2
 
 management.security.enabled: false
 management.endpoint.health.show-details: always

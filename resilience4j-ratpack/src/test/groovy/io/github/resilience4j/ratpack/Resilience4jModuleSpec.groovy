@@ -52,15 +52,14 @@ class Resilience4jModuleSpec extends Specification {
             bindings {
                 bindInstance(CircuitBreakerRegistry, circuitBreakerRegistry)
                 module(Resilience4jModule) {
-                    it.circuitBreaker('test') {
-                        it.defaults(true)
-                    }.circuitBreaker('test2') {
-                        it.failureRateThreshold(50)
-                                .waitIntervalInMillis(5000)
-                                .ringBufferSizeInClosedState(200)
-                                .ringBufferSizeInHalfOpenState(20)
-                                .failureRateThreshold(60)
-                                .automaticTransitionFromOpenToHalfOpen(true)
+                    it.circuitBreaker('test')
+                      .circuitBreaker('test2') {
+                        it.setFailureRateThreshold(50)
+                                .setWaitDurationInOpenStateMillis(5000)
+                                .setRingBufferSizeInClosedState(200)
+                                .setRingBufferSizeInHalfOpenState(20)
+                                .setFailureRateThreshold(60)
+                                .setAutomaticTransitionFromOpenToHalfOpenEnabled(true)
                     }
                 }
             }
@@ -168,10 +167,10 @@ class Resilience4jModuleSpec extends Specification {
         test1.name == 'test1'
         test1.circuitBreakerConfig.with {
             assert ringBufferSizeInClosedState == 100
-            assert ringBufferSizeInHalfOpenState == 10
-            assert waitDurationInOpenState == Duration.ofMinutes(1)
-            assert failureRateThreshold == 50
-            assert !automaticTransitionFromOpenToHalfOpenEnabled
+            assert ringBufferSizeInHalfOpenState == 20
+            assert waitDurationInOpenState == Duration.ofMillis(1000)
+            assert failureRateThreshold == 60
+            assert automaticTransitionFromOpenToHalfOpenEnabled
             assert recordFailurePredicate.test(new DummyException1("test"))
             assert recordFailurePredicate.test(new DummyException2("test"))
             it
@@ -200,12 +199,11 @@ class Resilience4jModuleSpec extends Specification {
             bindings {
                 bindInstance(RateLimiterRegistry, rateLimiterRegistry)
                 module(Resilience4jModule) {
-                    it.rateLimiter('test') {
-                        it.defaults(true)
-                    }.rateLimiter('test2') {
-                        it.limitForPeriod(100)
-                                .limitRefreshPeriodInNanos(900)
-                                .timeoutInMillis(10)
+                    it.rateLimiter('test')
+                      .rateLimiter('test2') {
+                        it.setLimitForPeriod(100)
+                                .setLimitRefreshPeriodInNanos(900)
+                                .setTimeoutInMillis(10)
                     }
                 }
             }
@@ -307,9 +305,9 @@ class Resilience4jModuleSpec extends Specification {
         def test1 = rateLimiterRegistry.rateLimiter('test1')
         test1.name == 'test1'
         test1.rateLimiterConfig.with {
-            assert limitForPeriod == 50
-            assert limitRefreshPeriod == Duration.ofNanos(500)
-            assert timeoutDuration == Duration.ofSeconds(5)
+            assert limitForPeriod == 150
+            assert limitRefreshPeriod == Duration.ofNanos(900)
+            assert timeoutDuration == Duration.ofMillis(10)
             it
         }
         def test2 = rateLimiterRegistry.rateLimiter('test2')
@@ -332,11 +330,10 @@ class Resilience4jModuleSpec extends Specification {
             bindings {
                 bindInstance(RetryRegistry, retryRegistry)
                 module(Resilience4jModule) {
-                    it.retry('test') {
-                        it.defaults(true)
-                    }.retry('test2') {
-                        it.maxAttempts(3)
-                                .waitDurationInMillis(1000)
+                    it.retry('test')
+                      .retry('test2') {
+                        it.setMaxRetryAttempts(3)
+                                .setWaitDurationMillis(1000)
                     }
                 }
             }
@@ -434,7 +431,7 @@ class Resilience4jModuleSpec extends Specification {
         def test1 = retryRegistry.retry('test1')
         test1.name == 'test1'
         test1.retryConfig.with {
-            assert maxAttempts == 3
+            assert maxAttempts == 4
             it
         }
         def test2 = retryRegistry.retry('test2')
@@ -455,11 +452,10 @@ class Resilience4jModuleSpec extends Specification {
             bindings {
                 bindInstance(BulkheadRegistry, bulkheadRegistry)
                 module(Resilience4jModule) {
-                    it.bulkhead('test') {
-                        it.defaults(true)
-                    }.bulkhead('test2') {
-                        it.maxConcurrentCalls(100)
-                                .maxWaitTime(1000)
+                    it.bulkhead('test')
+                      .bulkhead('test2') {
+                        it.setMaxConcurrentCalls(100)
+                                .setMaxWaitTime(1000)
                     }
                 }
             }
@@ -559,8 +555,8 @@ class Resilience4jModuleSpec extends Specification {
         def test1 = bulkheadRegistry.bulkhead('test1')
         test1.name == 'test1'
         test1.bulkheadConfig.with {
-            assert maxConcurrentCalls == 25
-            assert maxWaitTime == 0
+            assert maxConcurrentCalls == 50
+            assert maxWaitTime == 750
             it
         }
         def test2 = bulkheadRegistry.bulkhead('test2')
