@@ -1,6 +1,6 @@
 /*
  *
- * Copyright 2018
+ * Copyright 2019
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -19,6 +19,7 @@ package io.github.resilience4j.feign;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Function;
 import java.util.function.Predicate;
 
 import feign.InvocationHandlerFactory.MethodHandler;
@@ -108,7 +109,20 @@ public class FeignDecorators implements FeignDecorator {
          * @return the builder
          */
         public Builder withFallback(Object fallback) {
-            decorators.add(new FallbackDecorator<Object>(fallback));
+            decorators.add(new FallbackDecorator<>(new DefaultFallbackHandler<>(fallback)));
+            return this;
+        }
+
+        /**
+         * Adds a fallback factory to the decorator chain. A factory can consume the exception thrown on error.
+         * Multiple fallbacks can be applied with the next fallback being called when the previous one fails.
+         *
+         * @param fallbackFactory must match the feign interface, i.e. the interface specified when calling
+         *        {@link Resilience4jFeign.Builder#target(Class, String)}.
+         * @return the builder
+         */
+        public Builder withFallbackFactory(Function<Exception, ?> fallbackFactory) {
+            decorators.add(new FallbackDecorator<>(new FallbackFactory<>(fallbackFactory)));
             return this;
         }
 
@@ -123,7 +137,22 @@ public class FeignDecorators implements FeignDecorator {
          * @return the builder
          */
         public Builder withFallback(Object fallback, Class<? extends Exception> filter) {
-            decorators.add(new FallbackDecorator<Object>(fallback, filter));
+            decorators.add(new FallbackDecorator<>(new DefaultFallbackHandler<>(fallback), filter));
+            return this;
+        }
+
+        /**
+         * Adds a fallback factory to the decorator chain. A factory can consume the exception thrown on error.
+         * Multiple fallbacks can be applied with the next fallback being called when the previous one fails.
+         *
+         * @param fallbackFactory must match the feign interface, i.e. the interface specified when calling
+         *        {@link Resilience4jFeign.Builder#target(Class, String)}.
+         * @param filter only {@link Exception}s matching the specified {@link Exception} will
+         *        trigger the fallback.
+         * @return the builder
+         */
+        public Builder withFallbackFactory(Function<Exception, ?> fallbackFactory, Class<? extends Exception> filter) {
+            decorators.add(new FallbackDecorator<>(new FallbackFactory<>(fallbackFactory), filter));
             return this;
         }
 
@@ -137,7 +166,21 @@ public class FeignDecorators implements FeignDecorator {
          * @return the builder
          */
         public Builder withFallback(Object fallback, Predicate<Exception> filter) {
-            decorators.add(new FallbackDecorator<Object>(fallback, filter));
+            decorators.add(new FallbackDecorator<>(new DefaultFallbackHandler<>(fallback), filter));
+            return this;
+        }
+
+        /**
+         * Adds a fallback to the decorator chain. A factory can consume the exception thrown on error.
+         * Multiple fallbacks can be applied with the next fallback being called when the previous one fails.
+         *
+         * @param fallbackFactory must match the feign interface, i.e. the interface specified when calling
+         *        {@link Resilience4jFeign.Builder#target(Class, String)}.
+         * @param filter the filter must return <code>true</code> for the fallback to be called.
+         * @return the builder
+         */
+        public Builder withFallbackFactory(Function<Exception, ?> fallbackFactory, Predicate<Exception> filter) {
+            decorators.add(new FallbackDecorator<>(new FallbackFactory<>(fallbackFactory), filter));
             return this;
         }
 
