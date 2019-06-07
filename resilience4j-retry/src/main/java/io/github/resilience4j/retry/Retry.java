@@ -479,14 +479,15 @@ public interface Retry {
 		public void run() {
 			final CompletionStage<T> stage = supplier.get();
 
-			stage.whenComplete((result, t) -> {
-				if (result != null) {
+			stage.whenComplete((result, throwable) -> {
+				if(throwable != null){
+					if(throwable instanceof Exception){
+						onError((Exception) throwable);
+					}else{
+						promise.completeExceptionally(throwable);
+					}
+				}else{
 					onResult(result);
-				} else if (t instanceof Exception) {
-					onError((Exception) t);
-				} else{
-					// Do not handle java.lang.Error
-					promise.completeExceptionally(t);
 				}
 			});
 		}
