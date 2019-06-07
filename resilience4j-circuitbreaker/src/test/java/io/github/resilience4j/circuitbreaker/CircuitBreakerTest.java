@@ -748,6 +748,27 @@ public class CircuitBreakerTest {
     }
 
     @Test
+    public void shouldExecuteVoidCompletionStageAndReturnWithSuccess() throws ExecutionException, InterruptedException {
+        // Given
+        CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("backendName");
+        assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
+
+        // When
+
+        CompletionStage<Void> decoratedCompletionStage = circuitBreaker
+                .executeCompletionStage(() -> CompletableFuture.runAsync(helloWorldService::sayHelloWorld));
+
+        decoratedCompletionStage.toCompletableFuture().get();
+
+        // Then the helloWorldService should be invoked 1 time
+        BDDMockito.then(helloWorldService).should(Mockito.times(1)).sayHelloWorld();
+
+        CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
+        assertThat(metrics.getNumberOfSuccessfulCalls()).isEqualTo(1);
+        assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(0);
+    }
+
+    @Test
     public void shouldDecorateCompletionStageAndReturnWithExceptionAtSyncStage() {
         // Given
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("backendName");

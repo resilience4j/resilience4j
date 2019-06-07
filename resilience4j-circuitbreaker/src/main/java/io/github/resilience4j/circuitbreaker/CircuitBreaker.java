@@ -475,15 +475,16 @@ public interface CircuitBreaker {
                 try {
                     supplier.get().whenComplete((result, throwable) -> {
                         long durationInNanos = System.nanoTime() - start;
-                        if (result != null) {
+                        if(throwable != null){
+                            if(throwable instanceof Exception){
+                                circuitBreaker.onError(durationInNanos, throwable);
+                                promise.completeExceptionally(throwable);
+                            }else{
+                                promise.completeExceptionally(throwable);
+                            }
+                        }else{
                             circuitBreaker.onSuccess(durationInNanos);
                             promise.complete(result);
-                        } else if (throwable instanceof Exception) {
-                            circuitBreaker.onError(durationInNanos, throwable);
-                            promise.completeExceptionally(throwable);
-                        } else {
-                            // Do not handle java.lang.Error
-                            promise.completeExceptionally(throwable);
                         }
                     });
                 }catch (Exception exception){

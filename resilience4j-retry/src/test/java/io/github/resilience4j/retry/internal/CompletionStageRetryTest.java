@@ -70,6 +70,25 @@ public class CompletionStageRetryTest {
 	}
 
 	@Test
+	public void shouldNotRetryWhenReturnVoid() {
+		BDDMockito.given(helloWorldService.sayHelloWorld())
+				.willReturn(completedFuture(null));
+
+		// Create a Retry with default configuration
+		Retry retryContext = Retry.ofDefaults("id");
+		// Decorate the invocation of the HelloWorldService
+		Supplier<CompletionStage<Void>> supplier = Retry.decorateCompletionStage(
+				retryContext,
+				scheduler,
+				() -> helloWorldService.sayHelloWorld());
+
+		// When
+		awaitResult(supplier);
+		// Then the helloWorldService should be invoked 1 time
+		BDDMockito.then(helloWorldService).should(Mockito.times(1)).sayHelloWorld();
+	}
+
+	@Test
 	public void shouldNotRetryWithThatResult(){
 		// Given the HelloWorldService returns Hello world
 		BDDMockito.given(helloWorldService.returnHelloWorld())
