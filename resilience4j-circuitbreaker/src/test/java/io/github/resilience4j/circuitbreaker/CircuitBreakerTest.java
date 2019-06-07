@@ -748,6 +748,27 @@ public class CircuitBreakerTest {
     }
 
     @Test
+    public void shouldExecuteVoidCompletionStageAndReturnWithSuccess() throws ExecutionException, InterruptedException {
+        // Given
+        CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("backendName");
+        assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
+
+        // When
+
+        CompletionStage<Void> decoratedCompletionStage = circuitBreaker
+                .executeCompletionStage(() -> CompletableFuture.runAsync(helloWorldService::sayHelloWorld));
+
+        decoratedCompletionStage.toCompletableFuture().get();
+
+        // Then the helloWorldService should be invoked 1 time
+        BDDMockito.then(helloWorldService).should(Mockito.times(1)).sayHelloWorld();
+
+        CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
+        assertThat(metrics.getNumberOfSuccessfulCalls()).isEqualTo(1);
+        assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(0);
+    }
+
+    @Test
     public void shouldDecorateCompletionStageAndReturnWithExceptionAtSyncStage() {
         // Given
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("backendName");
@@ -862,6 +883,28 @@ public class CircuitBreakerTest {
     @Test
     public void testCreateWithNullConfig() {
         assertThatThrownBy(() -> CircuitBreaker.of("test", (CircuitBreakerConfig)null)).isInstanceOf(NullPointerException.class).hasMessage("Config must not be null");
+    }
+
+    @Test
+    public void shouldNotMeasureErrorsAsFailures() {
+        // Given
+        CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testName");
+        CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
+        // Given the HelloWorldService throws an exception
+        BDDMockito.given(helloWorldService.returnHelloWorld()).willThrow(new StackOverflowError("BAM!"));
+
+        //When
+        Supplier<String> supplier = CircuitBreaker.decorateSupplier(circuitBreaker, helloWorldService::returnHelloWorld);
+
+        assertThatThrownBy(supplier::get).isInstanceOf(StackOverflowError.class);
+
+        //Then
+        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(0);
+        assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(0);
+        assertThat(metrics.getNumberOfSuccessfulCalls()).isEqualTo(0);
+        // Then the helloWorldService should be invoked 1 time
+        BDDMockito.then(helloWorldService).should(Mockito.times(1)).returnHelloWorld();
+
     }
 
 }
