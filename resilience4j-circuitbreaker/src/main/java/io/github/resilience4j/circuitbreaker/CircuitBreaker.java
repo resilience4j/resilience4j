@@ -478,10 +478,8 @@ public interface CircuitBreaker {
                         if(throwable != null){
                             if(throwable instanceof Exception){
                                 circuitBreaker.onError(durationInNanos, throwable);
-                                promise.completeExceptionally(throwable);
-                            }else{
-                                promise.completeExceptionally(throwable);
                             }
+                            promise.completeExceptionally(throwable);
                         }else{
                             circuitBreaker.onSuccess(durationInNanos);
                             promise.complete(result);
