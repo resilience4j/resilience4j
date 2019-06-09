@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 lespinsideg
+ * Copyright 2019 Dan Maas
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,36 +13,41 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.resilience4j.bulkhead.configure.threadpool;
-
-import java.util.HashMap;
-import java.util.Map;
-
-import javax.validation.constraints.Min;
-
-import org.springframework.util.StringUtils;
+package io.github.resilience4j.common.bulkhead.configuration;
 
 import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.bulkhead.ThreadPoolBulkheadConfig;
 import io.github.resilience4j.core.ConfigurationNotFoundException;
+import io.github.resilience4j.core.StringUtils;
 import io.github.resilience4j.core.lang.Nullable;
+
+import javax.validation.constraints.Min;
+import java.util.HashMap;
+import java.util.Map;
 
 public class ThreadPoolBulkheadConfigurationProperties {
 
-	private Map<String, BackendProperties> backends = new HashMap<>();
-	private Map<String, BackendProperties> configs = new HashMap<>();
+	private Map<String, InstanceProperties> instances = new HashMap<>();
+	private Map<String, InstanceProperties> configs = new HashMap<>();
 
-	public Map<String, BackendProperties> getBackends() {
-		return backends;
+	public Map<String, InstanceProperties> getInstances() {
+		return instances;
 	}
 
-	public Map<String, BackendProperties> getConfigs() {
+	/**
+	 * For backwards compatibility when setting backends in configuration properties.
+	 */
+	public Map<String, InstanceProperties> getBackends() {
+		return instances;
+	}
+
+	public Map<String, InstanceProperties> getConfigs() {
 		return configs;
 	}
 
 	@Nullable
-	public BackendProperties getBackendProperties(String backend) {
-		return backends.get(backend);
+	public InstanceProperties getBackendProperties(String backend) {
+		return instances.get(backend);
 	}
 
 	// Thread pool bulkhead section
@@ -50,23 +55,23 @@ public class ThreadPoolBulkheadConfigurationProperties {
 		return createThreadPoolBulkheadConfig(getBackendProperties(backend));
 	}
 
-	public ThreadPoolBulkheadConfig createThreadPoolBulkheadConfig(BackendProperties backendProperties) {
-		if (!StringUtils.isEmpty(backendProperties.getBaseConfig())) {
-			BackendProperties baseProperties = configs.get(backendProperties.getBaseConfig());
+	public ThreadPoolBulkheadConfig createThreadPoolBulkheadConfig(InstanceProperties instanceProperties) {
+		if (StringUtils.isNotEmpty(instanceProperties.getBaseConfig())) {
+			InstanceProperties baseProperties = configs.get(instanceProperties.getBaseConfig());
 			if (baseProperties == null) {
-				throw new ConfigurationNotFoundException(backendProperties.getBaseConfig());
+				throw new ConfigurationNotFoundException(instanceProperties.getBaseConfig());
 			}
-			return buildThreadPoolConfigFromBaseConfig(baseProperties, backendProperties);
+			return buildThreadPoolConfigFromBaseConfig(baseProperties, instanceProperties);
 		}
-		return buildThreadPoolBulkheadConfig(ThreadPoolBulkheadConfig.custom(), backendProperties);
+		return buildThreadPoolBulkheadConfig(ThreadPoolBulkheadConfig.custom(), instanceProperties);
 	}
 
-	private ThreadPoolBulkheadConfig buildThreadPoolConfigFromBaseConfig(BackendProperties baseProperties, BackendProperties backendProperties) {
+	private ThreadPoolBulkheadConfig buildThreadPoolConfigFromBaseConfig(InstanceProperties baseProperties, InstanceProperties instanceProperties) {
 		ThreadPoolBulkheadConfig baseConfig = buildThreadPoolBulkheadConfig(ThreadPoolBulkheadConfig.custom(), baseProperties);
-		return buildThreadPoolBulkheadConfig(ThreadPoolBulkheadConfig.from(baseConfig), backendProperties);
+		return buildThreadPoolBulkheadConfig(ThreadPoolBulkheadConfig.from(baseConfig), instanceProperties);
 	}
 
-	public ThreadPoolBulkheadConfig buildThreadPoolBulkheadConfig(ThreadPoolBulkheadConfig.Builder builder, BackendProperties properties) {
+	public ThreadPoolBulkheadConfig buildThreadPoolBulkheadConfig(ThreadPoolBulkheadConfig.Builder builder, InstanceProperties properties) {
 		if (properties == null) {
 			return ThreadPoolBulkheadConfig.custom().build();
 		}
@@ -91,7 +96,7 @@ public class ThreadPoolBulkheadConfigurationProperties {
 	/**
 	 * Class storing property values for configuring {@link Bulkhead} instances.
 	 */
-	public static class BackendProperties {
+	public static class InstanceProperties {
 
 		@Min(1)
 		private Integer eventConsumerBufferSize = 100;

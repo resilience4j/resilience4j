@@ -15,15 +15,6 @@
  */
 package io.github.resilience4j.bulkhead.autoconfigure;
 
-import java.util.List;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Conditional;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Import;
-
 import io.github.resilience4j.bulkhead.BulkheadRegistry;
 import io.github.resilience4j.bulkhead.ThreadPoolBulkheadRegistry;
 import io.github.resilience4j.bulkhead.configure.BulkheadAspect;
@@ -33,13 +24,21 @@ import io.github.resilience4j.bulkhead.configure.BulkheadConfigurationProperties
 import io.github.resilience4j.bulkhead.configure.ReactorBulkheadAspectExt;
 import io.github.resilience4j.bulkhead.configure.RxJava2BulkheadAspectExt;
 import io.github.resilience4j.bulkhead.configure.threadpool.ThreadPoolBulkheadConfiguration;
-import io.github.resilience4j.bulkhead.configure.threadpool.ThreadPoolBulkheadConfigurationProperties;
 import io.github.resilience4j.bulkhead.event.BulkheadEvent;
+import io.github.resilience4j.common.bulkhead.configuration.ThreadPoolBulkheadConfigurationProperties;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
 import io.github.resilience4j.fallback.FallbackDecorators;
 import io.github.resilience4j.fallback.autoconfigure.FallbackConfigurationOnMissingBean;
 import io.github.resilience4j.utils.ReactorOnClasspathCondition;
 import io.github.resilience4j.utils.RxJava2OnClasspathCondition;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Conditional;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
+
+import java.util.List;
 
 /**
  * {@link Configuration
@@ -90,7 +89,7 @@ public abstract class AbstractBulkheadConfigurationOnMissingBean {
 	@Bean
 	@ConditionalOnMissingBean
 	public ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry(ThreadPoolBulkheadConfigurationProperties threadPoolBulkheadConfigurationProperties,
-	                                                             EventConsumerRegistry<BulkheadEvent> bulkheadEventConsumerRegistry) {
+																 EventConsumerRegistry<BulkheadEvent> bulkheadEventConsumerRegistry) {
 
 		return threadPoolBulkheadConfiguration.threadPoolBulkheadRegistry(threadPoolBulkheadConfigurationProperties, bulkheadEventConsumerRegistry);
 	}
