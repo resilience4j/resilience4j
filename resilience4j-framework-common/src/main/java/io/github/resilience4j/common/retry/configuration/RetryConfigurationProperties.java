@@ -296,7 +296,6 @@ public class RetryConfigurationProperties {
 			return this;
 		}
 
-		@Nullable
 		public Integer getEventConsumerBufferSize() {
 			return eventConsumerBufferSize;
 		}

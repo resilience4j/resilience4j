@@ -15,22 +15,15 @@
  */
 package io.github.resilience4j;
 
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
-
-import java.util.Arrays;
-import java.util.Collections;
-
-import org.junit.Test;
-
 import io.github.resilience4j.bulkhead.BulkheadRegistry;
 import io.github.resilience4j.bulkhead.ThreadPoolBulkheadRegistry;
 import io.github.resilience4j.bulkhead.autoconfigure.AbstractBulkheadConfigurationOnMissingBean;
 import io.github.resilience4j.bulkhead.configure.BulkheadConfigurationProperties;
-import io.github.resilience4j.bulkhead.configure.threadpool.ThreadPoolBulkheadConfigurationProperties;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.circuitbreaker.autoconfigure.AbstractCircuitBreakerConfigurationOnMissingBean;
 import io.github.resilience4j.circuitbreaker.configure.CircuitBreakerConfigurationProperties;
+import io.github.resilience4j.common.bulkhead.configuration.ThreadPoolBulkheadConfigurationProperties;
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.fallback.CompletionStageFallbackDecorator;
 import io.github.resilience4j.fallback.FallbackDecorators;
@@ -40,6 +33,12 @@ import io.github.resilience4j.ratelimiter.configure.RateLimiterConfigurationProp
 import io.github.resilience4j.retry.RetryRegistry;
 import io.github.resilience4j.retry.autoconfigure.AbstractRetryConfigurationOnMissingBean;
 import io.github.resilience4j.retry.configure.RetryConfigurationProperties;
+import org.junit.Test;
+
+import java.util.Arrays;
+import java.util.Collections;
+
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 /**
  * @author romeh

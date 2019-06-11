@@ -1,4 +1,4 @@
-package io.github.resilience4j.bulkhead.configure.threadpool;
+package io.github.resilience4j.common.bulkhead.configuration;
 
 /**
  * common spring configuration properties fir {@link io.github.resilience4j.bulkhead.ThreadPoolBulkhead}

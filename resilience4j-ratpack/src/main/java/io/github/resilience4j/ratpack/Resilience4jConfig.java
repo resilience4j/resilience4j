@@ -17,6 +17,7 @@
 package io.github.resilience4j.ratpack;
 
 import io.github.resilience4j.common.bulkhead.configuration.BulkheadConfigurationProperties;
+import io.github.resilience4j.common.bulkhead.configuration.ThreadPoolBulkheadConfigurationProperties;
 import io.github.resilience4j.common.circuitbreaker.configuration.CircuitBreakerConfigurationProperties;
 import io.github.resilience4j.common.ratelimiter.configuration.RateLimiterConfigurationProperties;
 import io.github.resilience4j.common.retry.configuration.RetryConfigurationProperties;
@@ -26,6 +27,8 @@ import static ratpack.util.Exceptions.uncheck;
 
 public class Resilience4jConfig {
     private BulkheadConfigurationProperties bulkhead = new BulkheadConfigurationProperties();
+    // ratpack does not have the ability to name things with "-", so we must use threadPoolBulkhead instead of thread-pool-bulkhead
+    private ThreadPoolBulkheadConfigurationProperties threadPoolBulkhead = new ThreadPoolBulkheadConfigurationProperties();
     private CircuitBreakerConfigurationProperties circuitBreaker = new CircuitBreakerConfigurationProperties();
     private RateLimiterConfigurationProperties rateLimiter = new RateLimiterConfigurationProperties();
     private RetryConfigurationProperties retry = new RetryConfigurationProperties();
@@ -89,6 +92,20 @@ public class Resilience4jConfig {
         }
     }
 
+    public Resilience4jConfig threadPoolBulkhead(String name) {
+        return threadPoolBulkhead(name, config -> config);
+    }
+
+    public Resilience4jConfig threadPoolBulkhead(String name, Function<? super ThreadPoolBulkheadConfigurationProperties.InstanceProperties, ? extends ThreadPoolBulkheadConfigurationProperties.InstanceProperties> configure) {
+        try {
+            ThreadPoolBulkheadConfigurationProperties.InstanceProperties finalConfig = configure.apply(new ThreadPoolBulkheadConfigurationProperties.InstanceProperties());
+            threadPoolBulkhead.getInstances().put(name, finalConfig);
+            return this;
+        } catch (Exception e) {
+            throw uncheck(e);
+        }
+    }
+
     public Resilience4jConfig metrics(boolean metrics) {
         this.metrics = metrics;
         return this;
@@ -122,6 +139,10 @@ public class Resilience4jConfig {
 
     public BulkheadConfigurationProperties getBulkhead() {
         return bulkhead;
+    }
+
+    public ThreadPoolBulkheadConfigurationProperties getThreadPoolBulkhead() {
+        return threadPoolBulkhead;
     }
 
     public boolean isMetrics() {

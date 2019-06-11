@@ -27,6 +27,7 @@ public class EndpointsConfig {
     private EndpointConfig rateLimiters = new EndpointConfig("ratelimiter");
     private EndpointConfig retries = new EndpointConfig("retry");
     private EndpointConfig bulkheads = new EndpointConfig("bulkhead");
+    private EndpointConfig threadPoolBulkheads = new EndpointConfig("threadPoolBulkhead");
 
     public EndpointConfig getCircuitBreakers() {
         return circuitBreakers;
@@ -80,11 +81,23 @@ public class EndpointsConfig {
         }
     }
 
+    public EndpointConfig getThreadPoolBulkheads() {
+        return threadPoolBulkheads;
+    }
+
+    public EndpointsConfig threadPoolBulkheads(Function<? super EndpointConfig, ? extends EndpointConfig> configure) {
+        try {
+            threadPoolBulkheads = configure.apply(new EndpointConfig("threadPoolBulkhead"));
+            return this;
+        } catch (Exception e) {
+            throw uncheck(e);
+        }
+    }
+
     public static class EndpointConfig {
         private boolean enabled = true;
         @Nullable
         private String path;
-        private int eventConsumerBufferSize = 100;
 
         public EndpointConfig() {
         }
@@ -112,13 +125,5 @@ public class EndpointsConfig {
             return this;
         }
 
-        public int getEventConsumerBufferSize() {
-            return eventConsumerBufferSize;
-        }
-
-        public EndpointConfig eventConsumerBufferSize(int eventConsumerBufferSize) {
-            this.eventConsumerBufferSize = eventConsumerBufferSize;
-            return this;
-        }
     }
 }

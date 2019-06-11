@@ -15,18 +15,18 @@
  */
 package io.github.resilience4j.bulkhead.configure.threadpool;
 
-import java.util.Map;
-import java.util.Optional;
-import java.util.stream.Collectors;
-
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-
 import io.github.resilience4j.bulkhead.ThreadPoolBulkhead;
 import io.github.resilience4j.bulkhead.ThreadPoolBulkheadConfig;
 import io.github.resilience4j.bulkhead.ThreadPoolBulkheadRegistry;
 import io.github.resilience4j.bulkhead.event.BulkheadEvent;
+import io.github.resilience4j.common.bulkhead.configuration.ThreadPoolBulkheadConfigurationProperties;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * {@link Configuration
@@ -42,7 +42,7 @@ public class ThreadPoolBulkheadConfiguration {
 	 */
 	@Bean
 	public ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry(ThreadPoolBulkheadConfigurationProperties bulkheadConfigurationProperties,
-	                                                             EventConsumerRegistry<BulkheadEvent> bulkheadEventConsumerRegistry) {
+																 EventConsumerRegistry<BulkheadEvent> bulkheadEventConsumerRegistry) {
 		ThreadPoolBulkheadRegistry bulkheadRegistry = createBulkheadRegistry(bulkheadConfigurationProperties);
 		registerEventConsumer(bulkheadRegistry, bulkheadEventConsumerRegistry, bulkheadConfigurationProperties);
 		bulkheadConfigurationProperties.getBackends().forEach((name, properties) -> bulkheadRegistry.bulkhead(name, bulkheadConfigurationProperties.createThreadPoolBulkheadConfig(name)));
@@ -77,7 +77,7 @@ public class ThreadPoolBulkheadConfiguration {
 
 	private void registerEventConsumer(EventConsumerRegistry<BulkheadEvent> eventConsumerRegistry, ThreadPoolBulkhead bulkHead, ThreadPoolBulkheadConfigurationProperties bulkheadConfigurationProperties) {
 		int eventConsumerBufferSize = Optional.ofNullable(bulkheadConfigurationProperties.getBackendProperties(bulkHead.getName()))
-				.map(ThreadPoolBulkheadConfigurationProperties.BackendProperties::getEventConsumerBufferSize)
+				.map(ThreadPoolBulkheadConfigurationProperties.InstanceProperties::getEventConsumerBufferSize)
 				.orElse(100);
 		bulkHead.getEventPublisher().onEvent(eventConsumerRegistry.createEventConsumer(String.join("-", ThreadPoolBulkhead.class.getSimpleName(), bulkHead.getName()), eventConsumerBufferSize));
 	}
