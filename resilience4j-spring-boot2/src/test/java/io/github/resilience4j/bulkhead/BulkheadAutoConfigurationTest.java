@@ -28,6 +28,7 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.core.Ordered;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
@@ -119,7 +120,7 @@ public class BulkheadAutoConfigurationTest {
 		assertThat(bulkheadEventsByBackend.stream().filter(it -> it.getType() == BulkheadEvent.Type.CALL_PERMITTED).count() == 2);
 		assertThat(bulkheadEventsByBackend.stream().filter(it -> it.getType() == BulkheadEvent.Type.CALL_FINISHED).count() == 1);
 
-		assertThat(bulkheadAspect.getOrder()).isEqualTo(398);
+		assertThat(bulkheadAspect.getOrder()).isEqualTo(Ordered.LOWEST_PRECEDENCE);
 
 		es.shutdown();
 	}
@@ -182,7 +183,7 @@ public class BulkheadAutoConfigurationTest {
 		assertThat(bulkheadEventsByBackend).filteredOn(it -> it.getType() == BulkheadEvent.Type.CALL_REJECTED)
 				.isNotEmpty();
 
-		assertThat(bulkheadAspect.getOrder()).isEqualTo(398);
+		assertThat(bulkheadAspect.getOrder()).isEqualTo(Ordered.LOWEST_PRECEDENCE);
 
 		es.shutdown();
 	}
@@ -295,6 +296,6 @@ public class BulkheadAutoConfigurationTest {
 		assertThat(bulkheadEventsByBackend).filteredOn(it -> it.getType() == BulkheadEvent.Type.CALL_REJECTED)
 				.isNotEmpty();
 
-		assertThat(bulkheadAspect.getOrder()).isEqualTo(398);
+		assertThat(bulkheadAspect.getOrder()).isEqualTo(Ordered.LOWEST_PRECEDENCE);
 	}
 }
