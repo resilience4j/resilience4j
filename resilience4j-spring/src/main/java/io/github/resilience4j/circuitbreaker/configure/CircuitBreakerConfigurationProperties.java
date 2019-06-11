@@ -17,21 +17,26 @@ package io.github.resilience4j.circuitbreaker.configure;
 
 
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.Ordered;
 
 @Configuration
 public class CircuitBreakerConfigurationProperties extends io.github.resilience4j.common.circuitbreaker.configuration.CircuitBreakerConfigurationProperties {
-	// This property gives you control over CircuitBreaker aspect application order.
-	// By default CircuitBreaker will be executed BEFORE RateLimiter.
-	// By adjusting RateLimiterProperties.rateLimiterAspectOrder and CircuitBreakerProperties.circuitBreakerAspectOrder
-	// you explicitly define aspects CircuitBreaker and RateLimiter execution sequence.
-	private int circuitBreakerAspectOrder = Integer.MAX_VALUE - 1;
+	private int circuitBreakerAspectOrder = Ordered.LOWEST_PRECEDENCE - 2;
 
+	/**
+	 * @deprecated As of release 0.16.0 as we set an implicit spring aspect order now which is retry then circuit breaker then rate limiter then bulkhead
+	 */
+	@Deprecated
 	public int getCircuitBreakerAspectOrder() {
 		return circuitBreakerAspectOrder;
 	}
 
+	/**
+	 * @deprecated As of release 0.16.0 as we set an implicit spring aspect order now which is retry then circuit breaker then rate limiter then bulkhead
+	 */
+	@Deprecated
 	public void setCircuitBreakerAspectOrder(int circuitBreakerAspectOrder) {
-		this.circuitBreakerAspectOrder = circuitBreakerAspectOrder;
+		// NO-OP
 	}
 
 

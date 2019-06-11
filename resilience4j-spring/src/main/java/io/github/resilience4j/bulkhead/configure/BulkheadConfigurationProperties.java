@@ -15,21 +15,25 @@
  */
 package io.github.resilience4j.bulkhead.configure;
 
-public class BulkheadConfigurationProperties extends io.github.resilience4j.common.bulkhead.configuration.BulkheadConfigurationProperties {
-	/*
-	This property gives you control over Bulkhead aspect application order.
-	By default Bulkhead will be executed BEFORE CircuitBreaker and RateLimiter.
-	By adjusting each aspect order from ConfigurationProperties
-	you explicitly define aspects execution sequence.
-	*/
-	private int bulkheadAspectOrder = Integer.MAX_VALUE - 2;
+import org.springframework.core.Ordered;
 
+public class BulkheadConfigurationProperties extends io.github.resilience4j.common.bulkhead.configuration.BulkheadConfigurationProperties {
+	private int bulkheadAspectOrder = Ordered.LOWEST_PRECEDENCE;
+
+	/**
+	 * @deprecated As of release 0.16.0 as we set an implicit spring aspect order now which is retry then circuit breaker then rate limiter then bulkhead
+	 */
+	@Deprecated
 	public int getBulkheadAspectOrder() {
 		return bulkheadAspectOrder;
 	}
 
+	/**
+	 * @deprecated As of release 0.16.0 as we set an implicit spring aspect order now which is retry then circuit breaker then rate limiter then bulkhead
+	 */
+	@Deprecated
 	public void setBulkheadAspectOrder(int bulkheadAspectOrder) {
-		this.bulkheadAspectOrder = bulkheadAspectOrder;
+		// NO-OP
 	}
 
 }

@@ -15,29 +15,28 @@ package io.github.resilience4j.retry.configure;
  * limitations under the License.
  */
 
+import org.springframework.core.Ordered;
+
 /**
  * Main spring properties for retry configuration
  */
 public class RetryConfigurationProperties extends io.github.resilience4j.common.retry.configuration.RetryConfigurationProperties {
-	/*  This property gives you control over Retry aspect application order.
-		By default Retry will be executed BEFORE Circuit breaker, rateLimiter and bulkhead.
-		By adjusting each aspect order from ConfigurationProperties
-		you explicitly define aspects execution sequence.
-	*/
-	private int retryAspectOrder = Integer.MAX_VALUE - 3;
+	private int retryAspectOrder = Ordered.LOWEST_PRECEDENCE - 3;
 
 	/**
-	 * @return spring aspect apply order
+	 * @deprecated As of release 0.16.0 as we set an implicit spring aspect order now which is retry then circuit breaker then rate limiter then bulkhead
 	 */
+	@Deprecated
 	public int getRetryAspectOrder() {
 		return retryAspectOrder;
 	}
 
 	/**
-	 * @param retryAspectOrder spring the aspect apply order
+	 * @deprecated As of release 0.16.0 as we set an implicit spring aspect order now which is retry then circuit breaker then rate limiter then bulkhead
 	 */
+	@Deprecated
 	public void setRetryAspectOrder(int retryAspectOrder) {
-		this.retryAspectOrder = retryAspectOrder;
+		// NO-OP
 	}
 
 }
