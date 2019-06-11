@@ -104,7 +104,7 @@ public class BulkheadConfigurationProperties {
             return this;
         }
 
-        public InstanceProperties eventConsumerBufferSize(Integer eventConsumerBufferSize) {
+        public InstanceProperties setEventConsumerBufferSize(Integer eventConsumerBufferSize) {
             this.eventConsumerBufferSize = eventConsumerBufferSize;
             return this;
         }

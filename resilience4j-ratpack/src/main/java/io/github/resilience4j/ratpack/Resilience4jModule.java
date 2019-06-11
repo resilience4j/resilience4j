@@ -24,12 +24,14 @@ import com.google.inject.matcher.Matchers;
 import com.google.inject.multibindings.Multibinder;
 import com.google.inject.multibindings.OptionalBinder;
 import io.github.resilience4j.bulkhead.BulkheadRegistry;
+import io.github.resilience4j.bulkhead.ThreadPoolBulkheadRegistry;
 import io.github.resilience4j.bulkhead.annotation.Bulkhead;
 import io.github.resilience4j.bulkhead.event.BulkheadEvent;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent;
 import io.github.resilience4j.common.bulkhead.configuration.BulkheadConfigurationProperties;
+import io.github.resilience4j.common.bulkhead.configuration.ThreadPoolBulkheadConfigurationProperties;
 import io.github.resilience4j.common.circuitbreaker.configuration.CircuitBreakerConfigurationProperties;
 import io.github.resilience4j.common.ratelimiter.configuration.RateLimiterConfigurationProperties;
 import io.github.resilience4j.common.retry.configuration.RetryConfigurationProperties;
@@ -39,9 +41,11 @@ import io.github.resilience4j.metrics.BulkheadMetrics;
 import io.github.resilience4j.metrics.CircuitBreakerMetrics;
 import io.github.resilience4j.metrics.RateLimiterMetrics;
 import io.github.resilience4j.metrics.RetryMetrics;
+import io.github.resilience4j.metrics.ThreadPoolBulkheadMetrics;
 import io.github.resilience4j.prometheus.collectors.BulkheadMetricsCollector;
 import io.github.resilience4j.prometheus.collectors.CircuitBreakerMetricsCollector;
 import io.github.resilience4j.prometheus.collectors.RateLimiterMetricsCollector;
+import io.github.resilience4j.prometheus.collectors.ThreadPoolBulkheadMetricsCollector;
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
 import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
 import io.github.resilience4j.ratelimiter.event.RateLimiterEvent;
@@ -102,6 +106,7 @@ public class Resilience4jModule extends ConfigurableModule<Resilience4jConfig> {
         OptionalBinder.newOptionalBinder(binder(), RateLimiterRegistry.class).setDefault().toInstance(RateLimiterRegistry.ofDefaults());
         OptionalBinder.newOptionalBinder(binder(), RetryRegistry.class).setDefault().toInstance(RetryRegistry.ofDefaults());
         OptionalBinder.newOptionalBinder(binder(), BulkheadRegistry.class).setDefault().toInstance(BulkheadRegistry.ofDefaults());
+        OptionalBinder.newOptionalBinder(binder(), ThreadPoolBulkheadRegistry.class).setDefault().toInstance(ThreadPoolBulkheadRegistry.ofDefaults());
 
         // event consumers
         bind(new TypeLiteral<EventConsumerRegistry<CircuitBreakerEvent>>() {}).toInstance(new DefaultEventConsumerRegistry<>());
@@ -177,7 +182,7 @@ public class Resilience4jModule extends ConfigurableModule<Resilience4jConfig> {
                 io.github.resilience4j.circuitbreaker.CircuitBreaker circuitBreaker =
                         circuitBreakerRegistry.circuitBreaker(name, circuitBreakerConfigurations.createCircuitBreakerConfig(circuitBreakerConfig));
                 if (endpointsConfig.getCircuitBreakers().isEnabled()) {
-                    circuitBreaker.getEventPublisher().onEvent(cbConsumerRegistry.createEventConsumer(name, endpointsConfig.getCircuitBreakers().getEventConsumerBufferSize()));
+                    circuitBreaker.getEventPublisher().onEvent(cbConsumerRegistry.createEventConsumer(name, circuitBreakerConfig.getEventConsumerBufferSize()));
                 }
             });
 
@@ -190,7 +195,7 @@ public class Resilience4jModule extends ConfigurableModule<Resilience4jConfig> {
                 io.github.resilience4j.ratelimiter.RateLimiter rateLimiter =
                         rateLimiterRegistry.rateLimiter(name, rateLimiterConfigurations.createRateLimiterConfig(rateLimiterConfig));
                 if (endpointsConfig.getRateLimiters().isEnabled()) {
-                    rateLimiter.getEventPublisher().onEvent(rlConsumerRegistry.createEventConsumer(name, endpointsConfig.getRateLimiters().getEventConsumerBufferSize()));
+                    rateLimiter.getEventPublisher().onEvent(rlConsumerRegistry.createEventConsumer(name, rateLimiterConfig.getEventConsumerBufferSize()));
                 }
             });
 
@@ -203,7 +208,7 @@ public class Resilience4jModule extends ConfigurableModule<Resilience4jConfig> {
                 io.github.resilience4j.retry.Retry retry =
                         retryRegistry.retry(name, retryConfigurations.createRetryConfig(retryConfig));
                 if (endpointsConfig.getRetries().isEnabled()) {
-                    retry.getEventPublisher().onEvent(rConsumerRegistry.createEventConsumer(name, endpointsConfig.getRetries().getEventConsumerBufferSize()));
+                    retry.getEventPublisher().onEvent(rConsumerRegistry.createEventConsumer(name, retryConfig.getEventConsumerBufferSize()));
                 }
             });
 
@@ -216,7 +221,18 @@ public class Resilience4jModule extends ConfigurableModule<Resilience4jConfig> {
                 io.github.resilience4j.bulkhead.Bulkhead bulkhead =
                         bulkheadRegistry.bulkhead(name, bulkheadConfigurations.createBulkheadConfig(bulkheadConfig));
                 if (endpointsConfig.getBulkheads().isEnabled()) {
-                    bulkhead.getEventPublisher().onEvent(bConsumerRegistry.createEventConsumer(name, endpointsConfig.getBulkheads().getEventConsumerBufferSize()));
+                    bulkhead.getEventPublisher().onEvent(bConsumerRegistry.createEventConsumer(name, bulkheadConfig.getEventConsumerBufferSize()));
+                }
+            });
+
+            // build thread pool bulkheads
+            ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry = injector.getInstance(ThreadPoolBulkheadRegistry.class);
+            ThreadPoolBulkheadConfigurationProperties threadPoolBulkheadConfigurations = config.getThreadPoolBulkhead();
+            threadPoolBulkheadConfigurations.getInstances().forEach((name, bulkheadConfig) -> {
+                io.github.resilience4j.bulkhead.ThreadPoolBulkhead bulkhead =
+                        threadPoolBulkheadRegistry.bulkhead(name, threadPoolBulkheadConfigurations.createThreadPoolBulkheadConfig(bulkheadConfig));
+                if (endpointsConfig.getThreadPoolBulkheads().isEnabled()) {
+                    bulkhead.getEventPublisher().onEvent(bConsumerRegistry.createEventConsumer(name, bulkheadConfig.getEventConsumerBufferSize()));
                 }
             });
 
@@ -227,10 +243,12 @@ public class Resilience4jModule extends ConfigurableModule<Resilience4jConfig> {
                 RateLimiterMetrics rateLimiterMetrics = RateLimiterMetrics.ofRateLimiterRegistry(rateLimiterRegistry);
                 RetryMetrics retryMetrics = RetryMetrics.ofRetryRegistry(retryRegistry);
                 BulkheadMetrics bulkheadMetrics = BulkheadMetrics.ofBulkheadRegistry(bulkheadRegistry);
+                ThreadPoolBulkheadMetrics threadPoolBulkheadMetrics = ThreadPoolBulkheadMetrics.ofBulkheadRegistry(threadPoolBulkheadRegistry);
                 metricRegistry.registerAll(circuitBreakerMetrics);
                 metricRegistry.registerAll(rateLimiterMetrics);
                 metricRegistry.registerAll(retryMetrics);
                 metricRegistry.registerAll(bulkheadMetrics);
+                metricRegistry.registerAll(threadPoolBulkheadMetrics);
             }
 
             // prometheus
@@ -239,9 +257,11 @@ public class Resilience4jModule extends ConfigurableModule<Resilience4jConfig> {
                 CircuitBreakerMetricsCollector circuitBreakerMetricsCollector = CircuitBreakerMetricsCollector.ofCircuitBreakerRegistry(circuitBreakerRegistry);
                 RateLimiterMetricsCollector rateLimiterMetricsCollector = RateLimiterMetricsCollector.ofRateLimiterRegistry(rateLimiterRegistry);
                 BulkheadMetricsCollector bulkheadMetricsCollector = BulkheadMetricsCollector.ofBulkheadRegistry(bulkheadRegistry);
+                ThreadPoolBulkheadMetricsCollector threadPoolBulkheadMetricsCollector = ThreadPoolBulkheadMetricsCollector.ofBulkheadRegistry(threadPoolBulkheadRegistry);
                 circuitBreakerMetricsCollector.register(collectorRegistry);
                 rateLimiterMetricsCollector.register(collectorRegistry);
                 bulkheadMetricsCollector.register(collectorRegistry);
+                threadPoolBulkheadMetricsCollector.register(collectorRegistry);
             }
 
         }

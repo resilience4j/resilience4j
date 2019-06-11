@@ -20,6 +20,7 @@ import io.github.resilience4j.core.StringUtils;
 import io.github.resilience4j.core.lang.Nullable;
 import io.github.resilience4j.ratelimiter.RateLimiterConfig;
 
+import javax.validation.constraints.Min;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
@@ -106,6 +107,7 @@ public class RateLimiterConfigurationProperties {
 		private Integer timeoutInMillis;
 		private Boolean subscribeForEvents = false;
 		private Boolean registerHealthIndicator = false;
+		@Min(1)
 		private Integer eventConsumerBufferSize = 100;
 		@Nullable
 		private String baseConfig;

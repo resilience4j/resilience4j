@@ -666,7 +666,7 @@ public class CircuitBreakerTest {
         // Then the call fails, because CircuitBreaker is OPEN
         assertThat(result.isFailure()).isTrue();
         // Exception is CircuitBreakerOpenException
-        assertThat(result.failed().get()).isInstanceOf(CircuitBreakerOpenException.class);
+        assertThat(result.failed().get()).isInstanceOf(CallNotPermittedException.class);
         // end::shouldThrowCircuitBreakerOpenException[]
 
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();

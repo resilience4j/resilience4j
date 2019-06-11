@@ -15,12 +15,12 @@
  */
 package io.github.resilience4j.ratelimiter;
 
-import io.github.resilience4j.ratelimiter.autoconfigure.RateLimiterProperties;
-import io.github.resilience4j.ratelimiter.configure.RateLimiterAspect;
-import io.github.resilience4j.ratelimiter.event.RateLimiterEvent;
 import io.github.resilience4j.common.ratelimiter.monitoring.endpoint.RateLimiterEndpointResponse;
 import io.github.resilience4j.common.ratelimiter.monitoring.endpoint.RateLimiterEventDTO;
 import io.github.resilience4j.common.ratelimiter.monitoring.endpoint.RateLimiterEventsEndpointResponse;
+import io.github.resilience4j.ratelimiter.autoconfigure.RateLimiterProperties;
+import io.github.resilience4j.ratelimiter.configure.RateLimiterAspect;
+import io.github.resilience4j.ratelimiter.event.RateLimiterEvent;
 import io.github.resilience4j.service.test.DummyService;
 import io.github.resilience4j.service.test.TestApplication;
 import io.prometheus.client.CollectorRegistry;
@@ -80,7 +80,7 @@ public class RateLimiterAutoConfigurationTest {
 
         RateLimiter rateLimiter = rateLimiterRegistry.rateLimiter(DummyService.BACKEND);
         assertThat(rateLimiter).isNotNull();
-        rateLimiter.acquirePermission(Duration.ZERO);
+        rateLimiter.acquirePermission();
         await()
             .atMost(2, TimeUnit.SECONDS)
             .until(() -> rateLimiter.getMetrics().getAvailablePermissions() == 10);
