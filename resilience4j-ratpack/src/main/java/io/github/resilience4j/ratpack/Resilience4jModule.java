@@ -15,6 +15,8 @@
  */
 package io.github.resilience4j.ratpack;
 
+import javax.inject.Inject;
+
 import com.codahale.metrics.MetricRegistry;
 import com.google.inject.Injector;
 import com.google.inject.Key;
@@ -23,6 +25,7 @@ import com.google.inject.TypeLiteral;
 import com.google.inject.matcher.Matchers;
 import com.google.inject.multibindings.Multibinder;
 import com.google.inject.multibindings.OptionalBinder;
+
 import io.github.resilience4j.bulkhead.BulkheadRegistry;
 import io.github.resilience4j.bulkhead.ThreadPoolBulkheadRegistry;
 import io.github.resilience4j.bulkhead.annotation.Bulkhead;
@@ -67,8 +70,6 @@ import ratpack.handling.HandlerDecorator;
 import ratpack.handling.Handlers;
 import ratpack.service.Service;
 import ratpack.service.StartEvent;
-
-import javax.inject.Inject;
 
 /**
  * This module registers class and method interceptors for bulkheads, circuit breakers, rate limiters, and retries.
@@ -182,7 +183,7 @@ public class Resilience4jModule extends ConfigurableModule<Resilience4jConfig> {
                 io.github.resilience4j.circuitbreaker.CircuitBreaker circuitBreaker =
                         circuitBreakerRegistry.circuitBreaker(name, circuitBreakerConfigurations.createCircuitBreakerConfig(circuitBreakerConfig));
                 if (endpointsConfig.getCircuitBreakers().isEnabled()) {
-                    circuitBreaker.getEventPublisher().onEvent(cbConsumerRegistry.createEventConsumer(name, circuitBreakerConfig.getEventConsumerBufferSize()));
+	                circuitBreaker.getEventPublisher().onEvent(cbConsumerRegistry.createEventConsumer(name, circuitBreakerConfig.getEventConsumerBufferSize() != null ? circuitBreakerConfig.getEventConsumerBufferSize() : 100));
                 }
             });
 
@@ -195,7 +196,7 @@ public class Resilience4jModule extends ConfigurableModule<Resilience4jConfig> {
                 io.github.resilience4j.ratelimiter.RateLimiter rateLimiter =
                         rateLimiterRegistry.rateLimiter(name, rateLimiterConfigurations.createRateLimiterConfig(rateLimiterConfig));
                 if (endpointsConfig.getRateLimiters().isEnabled()) {
-                    rateLimiter.getEventPublisher().onEvent(rlConsumerRegistry.createEventConsumer(name, rateLimiterConfig.getEventConsumerBufferSize()));
+	                rateLimiter.getEventPublisher().onEvent(rlConsumerRegistry.createEventConsumer(name, rateLimiterConfig.getEventConsumerBufferSize() != null ? rateLimiterConfig.getEventConsumerBufferSize() : 100));
                 }
             });
 
@@ -208,7 +209,7 @@ public class Resilience4jModule extends ConfigurableModule<Resilience4jConfig> {
                 io.github.resilience4j.retry.Retry retry =
                         retryRegistry.retry(name, retryConfigurations.createRetryConfig(retryConfig));
                 if (endpointsConfig.getRetries().isEnabled()) {
-                    retry.getEventPublisher().onEvent(rConsumerRegistry.createEventConsumer(name, retryConfig.getEventConsumerBufferSize()));
+	                retry.getEventPublisher().onEvent(rConsumerRegistry.createEventConsumer(name, retryConfig.getEventConsumerBufferSize() != null ? retryConfig.getEventConsumerBufferSize() : 100));
                 }
             });
 
@@ -221,7 +222,7 @@ public class Resilience4jModule extends ConfigurableModule<Resilience4jConfig> {
                 io.github.resilience4j.bulkhead.Bulkhead bulkhead =
                         bulkheadRegistry.bulkhead(name, bulkheadConfigurations.createBulkheadConfig(bulkheadConfig));
                 if (endpointsConfig.getBulkheads().isEnabled()) {
-                    bulkhead.getEventPublisher().onEvent(bConsumerRegistry.createEventConsumer(name, bulkheadConfig.getEventConsumerBufferSize()));
+	                bulkhead.getEventPublisher().onEvent(bConsumerRegistry.createEventConsumer(name, bulkheadConfig.getEventConsumerBufferSize() != null ? bulkheadConfig.getEventConsumerBufferSize() : 100));
                 }
             });
 
@@ -232,7 +233,7 @@ public class Resilience4jModule extends ConfigurableModule<Resilience4jConfig> {
                 io.github.resilience4j.bulkhead.ThreadPoolBulkhead bulkhead =
                         threadPoolBulkheadRegistry.bulkhead(name, threadPoolBulkheadConfigurations.createThreadPoolBulkheadConfig(bulkheadConfig));
                 if (endpointsConfig.getThreadPoolBulkheads().isEnabled()) {
-                    bulkhead.getEventPublisher().onEvent(bConsumerRegistry.createEventConsumer(name, bulkheadConfig.getEventConsumerBufferSize()));
+	                bulkhead.getEventPublisher().onEvent(bConsumerRegistry.createEventConsumer(name, bulkheadConfig.getEventConsumerBufferSize() != null ? bulkheadConfig.getEventConsumerBufferSize() : 100));
                 }
             });
 

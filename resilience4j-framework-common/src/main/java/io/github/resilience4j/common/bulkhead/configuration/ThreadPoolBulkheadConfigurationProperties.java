@@ -15,15 +15,16 @@
  */
 package io.github.resilience4j.common.bulkhead.configuration;
 
+import java.util.HashMap;
+import java.util.Map;
+
+import javax.validation.constraints.Min;
+
 import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.bulkhead.ThreadPoolBulkheadConfig;
 import io.github.resilience4j.core.ConfigurationNotFoundException;
 import io.github.resilience4j.core.StringUtils;
 import io.github.resilience4j.core.lang.Nullable;
-
-import javax.validation.constraints.Min;
-import java.util.HashMap;
-import java.util.Map;
 
 public class ThreadPoolBulkheadConfigurationProperties {
 
@@ -99,15 +100,14 @@ public class ThreadPoolBulkheadConfigurationProperties {
 	public static class InstanceProperties {
 
 		@Min(1)
-		private Integer eventConsumerBufferSize = 100;
+		@Nullable
+		private Integer eventConsumerBufferSize;
 
 		@Nullable
 		private String baseConfig;
 
-
 		@Nullable
 		private ThreadPoolProperties threadPoolProperties;
-
 
 		@Nullable
 		public ThreadPoolProperties getThreadPoolProperties() {
