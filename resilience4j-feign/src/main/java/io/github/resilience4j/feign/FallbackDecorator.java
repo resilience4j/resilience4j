@@ -1,6 +1,6 @@
 /*
  *
- * Copyright 2018
+ * Copyright 2019
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -30,20 +30,20 @@ import io.vavr.CheckedFunction1;
  */
 class FallbackDecorator<T> implements FeignDecorator {
 
-    private final T fallback;
-    private Predicate<Exception> filter;
+    private final FallbackHandler<T> fallback;
+    private final Predicate<Exception> filter;
 
     /**
      * Creates a fallback that will be called for every {@link Exception}.
      */
-    public FallbackDecorator(T fallback) {
+    FallbackDecorator(FallbackHandler<T> fallback) {
         this(fallback, ex -> true);
     }
 
     /**
      * Creates a fallback that will only be called for the specified {@link Exception}.
      */
-    public FallbackDecorator(T fallback, Class<? extends Exception> filter) {
+    FallbackDecorator(FallbackHandler<T> fallback, Class<? extends Exception> filter) {
         this(fallback, filter::isInstance);
         requireNonNull(filter, "Filter cannot be null!");
     }
@@ -52,7 +52,7 @@ class FallbackDecorator<T> implements FeignDecorator {
      * Creates a fallback that will only be called if the specified {@link Predicate} returns
      * <code>true</code>.
      */
-    public FallbackDecorator(T fallback, Predicate<Exception> filter) {
+    FallbackDecorator(FallbackHandler<T> fallback, Predicate<Exception> filter) {
         this.fallback = requireNonNull(fallback, "Fallback cannot be null!");
         this.filter = requireNonNull(filter, "Filter cannot be null!");
     }
@@ -68,39 +68,6 @@ class FallbackDecorator<T> implements FeignDecorator {
             Method method,
             MethodHandler methodHandler,
             Target<?> target) {
-        final Method fallbackMethod;
-        validateFallback(method);
-        fallbackMethod = getFallbackMethod(method);
-        return args -> {
-            try {
-                return invocationCall.apply(args);
-            } catch (final Exception exception) {
-                if (filter.test(exception)) {
-                    return fallbackMethod.invoke(fallback, args);
-                }
-                throw exception;
-            }
-        };
+        return fallback.decorate(invocationCall, method, filter);
     }
-
-    private void validateFallback(Method method) {
-        if (fallback.getClass().isAssignableFrom(method.getDeclaringClass())) {
-            throw new IllegalArgumentException("Cannot use the fallback ["
-                    + fallback.getClass() + "] for ["
-                    + method.getDeclaringClass() + "]!");
-        }
-    }
-
-    private Method getFallbackMethod(Method method) {
-        Method fallbackMethod;
-        try {
-            fallbackMethod = fallback.getClass().getMethod(method.getName(), method.getParameterTypes());
-        } catch (NoSuchMethodException | SecurityException e) {
-            throw new IllegalArgumentException("Cannot use the fallback ["
-                    + fallback.getClass() + "] for ["
-                    + method.getDeclaringClass() + "]", e);
-        }
-        return fallbackMethod;
-    }
-
 }
