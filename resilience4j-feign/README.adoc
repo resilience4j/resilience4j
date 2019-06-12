@@ -91,7 +91,35 @@ In this example, the `requestFailedFallback` is called when a `FeignException` i
 All fallbacks must implement the same interface that is declared in the "target" (Resilience4jFeign.Builder#target) method, otherwise an IllegalArgumentException will be thrown.
 Multiple fallbacks can be assigned to handle the same Exception with the next fallback being called when the previous one fails.
 
+A fallback can consume a thrown Exception if needed. This can be useful if the fallback may have different behaviours depending on the Exception, or to simply log the Exception.
+Be aware that such a fallback will be instantiated for every exceptions thrown.
 
+``` java
+        public interface MyService {
+            @RequestLine("GET /greeting")
+            String greeting();
+        }
+
+        public class MyFallback implements MyService {
+            private Exception cause;
+
+            public MyFallback(Exception cause) {
+                this.cause = cause;
+            }
+
+            public String greeting() {
+                if (cause instanceOf FeignException) {
+                    return "Feign Exception";
+                } else {
+                    return "Other exception";
+                }
+            }
+        }
+
+        FeignDecorators decorators = FeignDecorators.builder()
+                                         .withFallbackFactory(MyFallback::new)
+                                         .build();
+```
 
 == License
 
