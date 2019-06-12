@@ -2,6 +2,8 @@ package io.github.resilience4j.common.bulkhead.configuration;
 
 import java.time.Duration;
 
+import static io.github.resilience4j.bulkhead.ThreadPoolBulkheadConfig.DEFAULT_KEEP_ALIVE_TIME;
+
 /**
  * common spring configuration properties fir {@link io.github.resilience4j.bulkhead.ThreadPoolBulkhead}
  */
@@ -40,7 +42,11 @@ public class ThreadPoolProperties {
 	}
 
 	public long getKeepAliveTime() {
-		return keepAliveDuration.toMillis();
+		if (keepAliveDuration != null) {
+			return keepAliveDuration.toMillis();
+		} else {
+			return DEFAULT_KEEP_ALIVE_TIME;
+		}
 	}
 
 	public ThreadPoolProperties setKeepAliveTime(long keepAliveTime) {
