@@ -27,14 +27,14 @@ resilience4j:
                 recordExceptions:
                     - io.github.resilience4j.ratpack.Resilience4jModuleSpec$DummyException1
                     - io.github.resilience4j.ratpack.Resilience4jModuleSpec$DummyException2
-        backends:
+        instances:
             test1:
                 baseConfig: default
                 ringBufferSizeInClosedState: 100
             test2:
                 ringBufferSizeInClosedState: 200
                 ringBufferSizeInHalfOpenState: 20
-                waitDurationInOpenStateMillis: 5000
+                waitDurationInOpenState: PT5S
                 failureRateThreshold: 60
                 automaticTransitionFromOpenToHalfOpenEnabled: true
                 recordExceptions:
@@ -45,35 +45,52 @@ resilience4j:
                 limitForPeriod: 100
                 limitRefreshPeriodInNanos: 900
                 timeoutInMillis: 10
-        limiters:
+        instances:
             test1:
                 baseConfig: default
                 limitForPeriod: 150
             test2:
                 limitForPeriod: 100
-                limitRefreshPeriodInNanos: 900
-                timeoutInMillis: 10
+                limitRefreshPeriod: PT0.0000009S
+                timeout: PT0.010S
     retry:
         configs:
             default:
                 maxRetryAttempts: 3
                 waitDurationInMillis: 1000
-        backends:
+        instances:
             test1:
                 baseConfig: default
                 maxRetryAttempts: 4
             test2:
                 maxRetryAttempts: 3
-                waitDurationInMillis: 1000
+                waitDuration: PT1S
     bulkhead:
         configs:
             default:
                 maxConcurrentCalls: 50
                 maxWaitTime: 500
-        backends:
+        instances:
             test1:
                 baseConfig: default
                 maxWaitTime: 750
             test2:
                 maxConcurrentCalls: 100
-                maxWaitTime: 1000
+                maxWaitDuration: PT1S
+    threadPoolBulkhead:
+        configs:
+            default:
+                threadPoolProperties:
+                    maxThreadPoolSize: 4
+                    coreThreadPoolSize: 2
+                    queueCapacity: 2
+                    keepAliveTime: 1000
+        backends:
+            test1:
+                baseConfig: default
+            test2:
+                threadPoolProperties:
+                    maxThreadPoolSize: 1
+                    coreThreadPoolSize: 1
+                    queueCapacity: 1
+                    keepAliveDuration: PT1S

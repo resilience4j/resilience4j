@@ -19,6 +19,7 @@ package io.github.resilience4j.ratpack
 import com.codahale.metrics.SharedMetricRegistries
 import com.codahale.metrics.annotation.Timed
 import io.github.resilience4j.bulkhead.BulkheadRegistry
+import io.github.resilience4j.bulkhead.ThreadPoolBulkheadRegistry
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry
@@ -55,7 +56,7 @@ class Resilience4jModuleSpec extends Specification {
                     it.circuitBreaker('test')
                       .circuitBreaker('test2') {
                         it.setFailureRateThreshold(50)
-                                .setWaitDurationInOpenStateMillis(5000)
+                                .setWaitDurationInOpenState(Duration.ofMillis(5000))
                                 .setRingBufferSizeInClosedState(200)
                                 .setRingBufferSizeInHalfOpenState(20)
                                 .setFailureRateThreshold(60)
@@ -202,8 +203,8 @@ class Resilience4jModuleSpec extends Specification {
                     it.rateLimiter('test')
                       .rateLimiter('test2') {
                         it.setLimitForPeriod(100)
-                                .setLimitRefreshPeriodInNanos(900)
-                                .setTimeoutInMillis(10)
+                                .setLimitRefreshPeriod(Duration.ofNanos(900))
+                                .setTimeout(Duration.ofMillis(10))
                     }
                 }
             }
@@ -455,7 +456,7 @@ class Resilience4jModuleSpec extends Specification {
                     it.bulkhead('test')
                       .bulkhead('test2') {
                         it.setMaxConcurrentCalls(100)
-                                .setMaxWaitTime(1000)
+                                .setMaxWaitDuration(Duration.ofMillis(1000))
                     }
                 }
             }
@@ -564,6 +565,56 @@ class Resilience4jModuleSpec extends Specification {
         test2.bulkheadConfig.with {
             assert maxConcurrentCalls == 100
             assert maxWaitTime == 1000
+            it
+        }
+    }
+
+    def "test threadpool bulkheads from yaml"() {
+        given:
+        def bulkheadRegistry = ThreadPoolBulkheadRegistry.ofDefaults()
+        app = ratpack {
+            serverConfig {
+                development(false)
+                yaml(getClass().classLoader.getResource('application.yml'))
+                require("/resilience4j", Resilience4jConfig)
+            }
+            bindings {
+                bindInstance(ThreadPoolBulkheadRegistry, bulkheadRegistry)
+                module(Resilience4jModule)
+            }
+            handlers {
+                get {
+                    render 'ok'
+                }
+            }
+        }
+        client = testHttpClient(app)
+
+        when:
+        def actual = client.get()
+
+        then:
+        actual.statusCode == 200
+        actual.body.text == 'ok'
+
+        and:
+        bulkheadRegistry.allBulkheads.size() == 2
+        def test1 = bulkheadRegistry.bulkhead('test1')
+        test1.name == 'test1'
+        test1.bulkheadConfig.with {
+            assert maxThreadPoolSize == 4
+            assert coreThreadPoolSize == 2
+            assert queueCapacity == 2
+            assert keepAliveTime == 1000
+            it
+        }
+        def test2 = bulkheadRegistry.bulkhead('test2')
+        test2.name == 'test2'
+        test2.bulkheadConfig.with {
+            assert maxThreadPoolSize == 1
+            assert coreThreadPoolSize == 1
+            assert queueCapacity == 1
+            assert keepAliveTime == 1000
             it
         }
     }

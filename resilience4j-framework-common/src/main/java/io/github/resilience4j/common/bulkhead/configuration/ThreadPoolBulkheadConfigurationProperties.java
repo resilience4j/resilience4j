@@ -89,6 +89,9 @@ public class ThreadPoolBulkheadConfigurationProperties {
 			if (properties.getThreadPoolProperties().getKeepAliveTime() > 0) {
 				builder.keepAliveTime(properties.getThreadPoolProperties().getKeepAliveTime());
 			}
+			if (properties.getThreadPoolProperties().getKeepAliveDuration() != null && properties.getThreadPoolProperties().getKeepAliveDuration().toMillis() > 0) {
+				builder.keepAliveTime(properties.getThreadPoolProperties().getKeepAliveDuration().toMillis());
+			}
 		}
 		return builder.build();
 	}
@@ -114,16 +117,18 @@ public class ThreadPoolBulkheadConfigurationProperties {
 			return threadPoolProperties;
 		}
 
-		public void setThreadPoolProperties(@Nullable ThreadPoolProperties threadPoolProperties) {
+		public InstanceProperties setThreadPoolProperties(@Nullable ThreadPoolProperties threadPoolProperties) {
 			this.threadPoolProperties = threadPoolProperties;
+			return this;
 		}
 
 		public Integer getEventConsumerBufferSize() {
 			return eventConsumerBufferSize;
 		}
 
-		public void setEventConsumerBufferSize(Integer eventConsumerBufferSize) {
+		public InstanceProperties setEventConsumerBufferSize(Integer eventConsumerBufferSize) {
 			this.eventConsumerBufferSize = eventConsumerBufferSize;
+			return this;
 		}
 
 		/**
