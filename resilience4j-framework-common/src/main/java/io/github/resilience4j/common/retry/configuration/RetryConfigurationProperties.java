@@ -29,6 +29,7 @@ import io.github.resilience4j.core.StringUtils;
 import io.github.resilience4j.core.lang.Nullable;
 import io.github.resilience4j.retry.IntervalFunction;
 import io.github.resilience4j.retry.RetryConfig;
+import org.hibernate.validator.constraints.time.DurationMin;
 
 /**
  * Main spring properties for retry configuration
@@ -172,18 +173,39 @@ public class RetryConfigurationProperties {
 				builder.waitDuration(Duration.ofMillis(properties.getWaitDurationMillis()));
 			}
 		}
+		// these take precedence over deprecated properties. Setting one or the other will still work.
+		if (properties.getWaitDuration() != null && properties.getWaitDuration().toMillis() > 0) {
+			Duration waitDuration = properties.getWaitDuration();
+			if (properties.getEnableExponentialBackoff() != null && properties.getEnableExponentialBackoff()) {
+				if (properties.getExponentialBackoffMultiplier() != 0) {
+					builder.intervalFunction(IntervalFunction.ofExponentialBackoff(waitDuration.toMillis(), properties.getExponentialBackoffMultiplier()));
+				} else {
+					builder.intervalFunction(IntervalFunction.ofExponentialBackoff(properties.getWaitDuration().toMillis()));
+				}
+			} else if (properties.getEnableRandomizedWait() != null && properties.getEnableRandomizedWait()) {
+				if (properties.getRandomizedWaitFactor() != 0) {
+					builder.intervalFunction(IntervalFunction.ofRandomized(waitDuration.toMillis(), properties.getRandomizedWaitFactor()));
+				} else {
+					builder.intervalFunction(IntervalFunction.ofRandomized(waitDuration));
+				}
+			} else {
+				builder.waitDuration(Duration.ofMillis(properties.getWaitDuration().toMillis()));
+			}
+		}
 	}
 
 	/**
 	 * Class storing property values for configuring {@link io.github.resilience4j.retry.Retry} instances.
 	 */
 	public static class InstanceProperties {
+
 		/*
 		 * wait long value for the next try
 		 */
-		@Min(100)
+		@DurationMin(millis = 100)
 		@Nullable
-		private Long waitDurationMillis;
+		private Duration waitDuration;
+
 		/*
 		 * max retry attempts value
 		 */
@@ -241,13 +263,29 @@ public class RetryConfigurationProperties {
 		@Nullable
 		private String baseConfig;
 
+		@Deprecated
 		@Nullable
 		public Long getWaitDurationMillis() {
-			return waitDurationMillis;
+			if (waitDuration != null) {
+				return waitDuration.toMillis();
+			} else {
+				return null;
+			}
 		}
 
+		@Deprecated
 		public InstanceProperties setWaitDurationMillis(Long waitDurationMillis) {
-			this.waitDurationMillis = waitDurationMillis;
+			this.waitDuration = Duration.ofMillis(waitDurationMillis);
+			return this;
+		}
+
+		@Nullable
+		public Duration getWaitDuration() {
+			return waitDuration;
+		}
+
+		public InstanceProperties setWaitDuration(Duration waitDuration) {
+			this.waitDuration = waitDuration;
 			return this;
 		}
 

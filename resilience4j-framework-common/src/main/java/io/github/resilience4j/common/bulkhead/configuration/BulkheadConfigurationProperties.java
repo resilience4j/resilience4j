@@ -15,6 +15,7 @@
  */
 package io.github.resilience4j.common.bulkhead.configuration;
 
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -24,6 +25,7 @@ import io.github.resilience4j.common.utils.ConfigUtils;
 import io.github.resilience4j.core.ConfigurationNotFoundException;
 import io.github.resilience4j.core.StringUtils;
 import io.github.resilience4j.core.lang.Nullable;
+import org.hibernate.validator.constraints.time.DurationMin;
 
 public class BulkheadConfigurationProperties {
 
@@ -54,6 +56,9 @@ public class BulkheadConfigurationProperties {
         if (instanceProperties.getMaxWaitTime() != null) {
             builder.maxWaitTime(instanceProperties.getMaxWaitTime());
         }
+        if (instanceProperties.getMaxWaitDuration() != null) {
+            builder.maxWaitTime(instanceProperties.getMaxWaitDuration().toMillis());
+        }
         return builder.build();
     }
 
@@ -78,15 +83,15 @@ public class BulkheadConfigurationProperties {
     }
 
     /**
-     * Bulkhead config adapter for integration with Ratpack. {@link #maxWaitTime} should
+     * Bulkhead config adapter for integration with Ratpack. {@link #maxWaitDuration} should
      * almost always be set to 0, so the compute threads would not be blocked upon execution.
      */
     public static class InstanceProperties {
 
         @Min(1)
         private Integer maxConcurrentCalls;
-        @Min(0)
-        private Long maxWaitTime;
+        @DurationMin(millis = 0)
+        private Duration maxWaitDuration;
         @Nullable
         private String baseConfig;
         @Min(1)
@@ -98,8 +103,14 @@ public class BulkheadConfigurationProperties {
             return this;
         }
 
+        @Deprecated
         public InstanceProperties setMaxWaitTime(Long maxWaitTime) {
-            this.maxWaitTime = maxWaitTime;
+            this.maxWaitDuration = Duration.ofMillis(maxWaitTime);
+            return this;
+        }
+
+        public InstanceProperties setMaxWaitDuration(Duration maxWaitDuration) {
+            this.maxWaitDuration = maxWaitDuration;
             return this;
         }
 
@@ -117,8 +128,17 @@ public class BulkheadConfigurationProperties {
             return maxConcurrentCalls;
         }
 
+        @Deprecated
         public Long getMaxWaitTime() {
-            return maxWaitTime;
+            if (maxWaitDuration != null) {
+                return maxWaitDuration.toMillis();
+            } else {
+                return null;
+            }
+        }
+
+        public Duration getMaxWaitDuration() {
+            return maxWaitDuration;
         }
 
         public String getBaseConfig() {

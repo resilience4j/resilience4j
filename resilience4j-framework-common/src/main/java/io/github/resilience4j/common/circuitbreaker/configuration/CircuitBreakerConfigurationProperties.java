@@ -70,6 +70,10 @@ public class CircuitBreakerConfigurationProperties {
 			builder.waitDurationInOpenState(Duration.ofMillis(properties.getWaitDurationInOpenStateMillis()));
 		}
 
+		if (properties.getWaitDurationInOpenState() != null) {
+			builder.waitDurationInOpenState(properties.getWaitDurationInOpenState());
+		}
+
 		if (properties.getFailureRateThreshold() != null) {
 			builder.failureRateThreshold(properties.getFailureRateThreshold());
 		}
@@ -137,7 +141,7 @@ public class CircuitBreakerConfigurationProperties {
 
 		@DurationMin(seconds = 1)
 		@Nullable
-		private Integer waitDurationInOpenStateMillis;
+		private Duration waitDurationInOpenState;
 
 		@Min(1)
 		@Max(100)
@@ -200,9 +204,14 @@ public class CircuitBreakerConfigurationProperties {
 		 *
 		 * @return the wait duration
 		 */
+		@Deprecated
 		@Nullable
 		public Integer getWaitDurationInOpenStateMillis() {
-			return waitDurationInOpenStateMillis;
+			if (waitDurationInOpenState != null) {
+				return (int) waitDurationInOpenState.toMillis();
+			} else {
+				return null;
+			}
 		}
 
 		/**
@@ -210,8 +219,29 @@ public class CircuitBreakerConfigurationProperties {
 		 *
 		 * @param waitDurationInOpenStateMillis the wait duration
 		 */
+		@Deprecated
 		public InstanceProperties setWaitDurationInOpenStateMillis(Integer waitDurationInOpenStateMillis) {
-			this.waitDurationInOpenStateMillis = waitDurationInOpenStateMillis;
+			this.waitDurationInOpenState = Duration.ofMillis(waitDurationInOpenStateMillis);
+			return this;
+		}
+
+		/**
+		 * Returns the wait duration the CircuitBreaker will stay open, before it switches to half closed.
+		 *
+		 * @return the wait duration
+		 */
+		@Nullable
+		public Duration getWaitDurationInOpenState() {
+			return waitDurationInOpenState;
+		}
+
+		/**
+		 * Sets the wait duration the CircuitBreaker should stay open, before it switches to half closed.
+		 *
+		 * @param waitDurationInOpenStateMillis the wait duration
+		 */
+		public InstanceProperties setWaitDurationInOpenState(Duration waitDurationInOpenStateMillis) {
+			this.waitDurationInOpenState = waitDurationInOpenStateMillis;
 			return this;
 		}
 

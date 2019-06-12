@@ -65,8 +65,16 @@ public class RateLimiterConfigurationProperties {
 			builder.limitRefreshPeriod(Duration.ofNanos(instanceProperties.getLimitRefreshPeriodInNanos()));
 		}
 
+		if (instanceProperties.getLimitRefreshPeriod() != null) {
+			builder.limitRefreshPeriod(instanceProperties.getLimitRefreshPeriod());
+		}
+
 		if (instanceProperties.getTimeoutInMillis() != null) {
 			builder.timeoutDuration(Duration.ofMillis(instanceProperties.getTimeoutInMillis()));
+		}
+
+		if (instanceProperties.getTimeout() != null) {
+			builder.timeoutDuration(instanceProperties.getTimeout());
 		}
 
 		return builder.build();
@@ -106,8 +114,8 @@ public class RateLimiterConfigurationProperties {
 	public static class InstanceProperties {
 
 		private Integer limitForPeriod;
-		private Integer limitRefreshPeriodInNanos;
-		private Integer timeoutInMillis;
+		private Duration limitRefreshPeriod;
+		private Duration timeout;
 		@Nullable
 		private Boolean subscribeForEvents;
 		@Nullable
@@ -152,9 +160,14 @@ public class RateLimiterConfigurationProperties {
 		 *
 		 * @return the period of limit refresh
 		 */
+		@Deprecated
 		@Nullable
 		public Integer getLimitRefreshPeriodInNanos() {
-			return limitRefreshPeriodInNanos;
+			if (limitRefreshPeriod != null) {
+				return (int) limitRefreshPeriod.toNanos();
+			} else {
+				return null;
+			}
 		}
 
 		/**
@@ -165,8 +178,63 @@ public class RateLimiterConfigurationProperties {
 		 *
 		 * @param limitRefreshPeriodInNanos the period of limit refresh
 		 */
+		@Deprecated
 		public InstanceProperties setLimitRefreshPeriodInNanos(Integer limitRefreshPeriodInNanos) {
-			this.limitRefreshPeriodInNanos = limitRefreshPeriodInNanos;
+			this.limitRefreshPeriod = Duration.ofNanos(limitRefreshPeriodInNanos);
+			return this;
+		}
+
+		/**
+		 * Configures the period of limit refresh.
+		 * After each period rate limiter sets its permissions
+		 * count to {@link RateLimiterConfig#getLimitForPeriod()} value.
+		 * Default value is 500 nanoseconds.
+		 *
+		 * @return the period of limit refresh
+		 */
+		@Nullable
+		public Duration getLimitRefreshPeriod() {
+			return limitRefreshPeriod;
+		}
+
+		/**
+		 * Configures the period of limit refresh.
+		 * After each period rate limiter sets its permissions
+		 * count to {@link RateLimiterConfig#getLimitForPeriod()} value.
+		 * Default value is 500 nanoseconds.
+		 *
+		 * @param limitRefreshPeriod the period of limit refresh
+		 */
+		public InstanceProperties setLimitRefreshPeriod(Duration limitRefreshPeriod) {
+			this.limitRefreshPeriod = limitRefreshPeriod;
+			return this;
+		}
+
+		/**
+		 * Configures the default wait for permission duration.
+		 * Default value is 5 seconds.
+		 *
+		 * @return wait for permission duration
+		 */
+		@Deprecated
+		@Nullable
+		public Integer getTimeoutInMillis() {
+			if (timeout != null) {
+				return (int)timeout.toMillis();
+			} else {
+				return null;
+			}
+		}
+
+		/**
+		 * Configures the default wait for permission duration.
+		 * Default value is 5 seconds.
+		 *
+		 * @param timeoutInMillis wait for permission duration
+		 */
+		@Deprecated
+		public InstanceProperties setTimeoutInMillis(Integer timeoutInMillis) {
+			this.timeout = Duration.ofMillis(timeoutInMillis);
 			return this;
 		}
 
@@ -177,18 +245,18 @@ public class RateLimiterConfigurationProperties {
 		 * @return wait for permission duration
 		 */
 		@Nullable
-		public Integer getTimeoutInMillis() {
-			return timeoutInMillis;
+		public Duration getTimeout() {
+			return timeout;
 		}
 
 		/**
 		 * Configures the default wait for permission duration.
 		 * Default value is 5 seconds.
 		 *
-		 * @param timeoutInMillis wait for permission duration
+		 * @param timeout wait for permission duration
 		 */
-		public InstanceProperties setTimeoutInMillis(Integer timeoutInMillis) {
-			this.timeoutInMillis = timeoutInMillis;
+		public InstanceProperties setTimeout(Duration timeout) {
+			this.timeout = timeout;
 			return this;
 		}
 
