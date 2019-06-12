@@ -18,6 +18,7 @@ package io.github.resilience4j.common.circuitbreaker.configuration;
 
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.Builder;
+import io.github.resilience4j.common.utils.ConfigUtils;
 import io.github.resilience4j.core.ClassUtils;
 import io.github.resilience4j.core.ConfigurationNotFoundException;
 import io.github.resilience4j.core.StringUtils;
@@ -54,6 +55,7 @@ public class CircuitBreakerConfigurationProperties {
 	}
 
 	private CircuitBreakerConfig buildConfigFromBaseConfig(InstanceProperties instanceProperties, InstanceProperties baseProperties) {
+		ConfigUtils.mergePropertiesIfAny(instanceProperties, baseProperties);
 		CircuitBreakerConfig baseConfig = buildConfig(CircuitBreakerConfig.custom(), baseProperties);
 		return buildConfig(CircuitBreakerConfig.from(baseConfig), instanceProperties);
 	}

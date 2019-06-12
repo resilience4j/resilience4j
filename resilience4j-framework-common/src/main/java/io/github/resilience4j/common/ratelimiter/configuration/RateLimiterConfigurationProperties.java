@@ -45,6 +45,7 @@ public class RateLimiterConfigurationProperties {
 	}
 
 	private RateLimiterConfig buildConfigFromBaseConfig(InstanceProperties baseProperties, InstanceProperties instanceProperties) {
+		ConfigUtils.mergePropertiesIfAny(baseProperties, instanceProperties);
 		RateLimiterConfig baseConfig = buildRateLimiterConfig(RateLimiterConfig.custom(), baseProperties);
 		return buildRateLimiterConfig(RateLimiterConfig.from(baseConfig), instanceProperties);
 	}

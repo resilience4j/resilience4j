@@ -40,6 +40,7 @@ public class BulkheadConfigurationProperties {
     }
 
     private io.github.resilience4j.bulkhead.BulkheadConfig buildConfigFromBaseConfig(InstanceProperties baseProperties, InstanceProperties instanceProperties) {
+        ConfigUtils.mergePropertiesIfAny(baseProperties, instanceProperties);
         io.github.resilience4j.bulkhead.BulkheadConfig baseConfig = buildBulkheadConfig(io.github.resilience4j.bulkhead.BulkheadConfig.custom(), baseProperties);
         return buildBulkheadConfig(io.github.resilience4j.bulkhead.BulkheadConfig.from(baseConfig), instanceProperties);
     }

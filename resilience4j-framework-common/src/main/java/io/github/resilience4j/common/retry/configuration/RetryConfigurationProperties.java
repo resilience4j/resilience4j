@@ -92,6 +92,7 @@ public class RetryConfigurationProperties {
 
 	private RetryConfig buildConfigFromBaseConfig(InstanceProperties baseProperties, InstanceProperties instanceProperties) {
 		RetryConfig baseConfig = buildRetryConfig(RetryConfig.custom(), baseProperties);
+		ConfigUtils.mergePropertiesIfAny(baseProperties, instanceProperties);
 		return buildRetryConfig(RetryConfig.from(baseConfig), instanceProperties);
 	}
 
@@ -315,11 +316,11 @@ public class RetryConfigurationProperties {
 		}
 
 		@Nullable
-		public double getExponentialBackoffMultiplier() {
+		public Double getExponentialBackoffMultiplier() {
 			return exponentialBackoffMultiplier;
 		}
 
-		public InstanceProperties setExponentialBackoffMultiplier(double exponentialBackoffMultiplier) {
+		public InstanceProperties setExponentialBackoffMultiplier(Double exponentialBackoffMultiplier) {
 			this.exponentialBackoffMultiplier = exponentialBackoffMultiplier;
 			return this;
 		}
@@ -335,11 +336,11 @@ public class RetryConfigurationProperties {
 		}
 
 		@Nullable
-		public double getRandomizedWaitFactor() {
+		public Double getRandomizedWaitFactor() {
 			return randomizedWaitFactor;
 		}
 
-		public InstanceProperties setRandomizedWaitFactor(double randomizedWaitFactor) {
+		public InstanceProperties setRandomizedWaitFactor(Double randomizedWaitFactor) {
 			this.randomizedWaitFactor = randomizedWaitFactor;
 			return this;
 		}
