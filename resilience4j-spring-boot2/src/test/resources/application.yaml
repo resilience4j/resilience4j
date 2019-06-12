@@ -39,7 +39,7 @@ resilience4j.circuitbreaker:
       ringBufferSizeInHalfOpenState: 2
       waitDurationInOpenState: 5s
       failureRateThreshold: 70
-      eventConsumerBufferSize: 10
+      eventConsumerBufferSize: 20
       recordFailurePredicate: io.github.resilience4j.circuitbreaker.RecordFailurePredicate
       recordExceptions:
         - io.github.resilience4j.circuitbreaker.RecordedException
@@ -50,7 +50,7 @@ resilience4j.circuitbreaker:
       ringBufferSizeInHalfOpenState: 5
       waitDurationInOpenState: 5000
       failureRateThreshold: 50
-      eventConsumerBufferSize: 10
+      eventConsumerBufferSize: 20
       registerHealthIndicator: false
     backendSharedA:
       baseConfig: default
@@ -70,8 +70,6 @@ resilience4j.ratelimiter:
   limiters:
     backendA:
       baseConfig: default
-      subscribeForEvents: true
-      registerHealthIndicator: true
     backendB:
       limitForPeriod: 100
       limitRefreshPeriodInNanos: 500000000

@@ -1,5 +1,10 @@
 package io.github.resilience4j.bulkhead.configure;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
+import org.junit.Test;
+
 import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.bulkhead.BulkheadRegistry;
 import io.github.resilience4j.bulkhead.ThreadPoolBulkhead;
@@ -10,10 +15,6 @@ import io.github.resilience4j.common.bulkhead.configuration.ThreadPoolBulkheadCo
 import io.github.resilience4j.common.bulkhead.configuration.ThreadPoolProperties;
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.core.ConfigurationNotFoundException;
-import org.junit.Test;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
  * test custom init of bulkhead configuration
@@ -126,9 +127,11 @@ public class BulkHeadConfigurationTest {
 		//Given
 		io.github.resilience4j.common.bulkhead.configuration.BulkheadConfigurationProperties.InstanceProperties instanceProperties1 = new io.github.resilience4j.common.bulkhead.configuration.BulkheadConfigurationProperties.InstanceProperties();
 		instanceProperties1.setMaxConcurrentCalls(3);
+		assertThat(instanceProperties1.getEventConsumerBufferSize()).isNull();
 
 		io.github.resilience4j.common.bulkhead.configuration.BulkheadConfigurationProperties.InstanceProperties instanceProperties2 = new io.github.resilience4j.common.bulkhead.configuration.BulkheadConfigurationProperties.InstanceProperties();
 		instanceProperties2.setMaxConcurrentCalls(2);
+		assertThat(instanceProperties2.getEventConsumerBufferSize()).isNull();
 
 		BulkheadConfigurationProperties bulkheadConfigurationProperties = new BulkheadConfigurationProperties();
 		bulkheadConfigurationProperties.getInstances().put("backend1", instanceProperties1);
@@ -159,18 +162,22 @@ public class BulkHeadConfigurationTest {
 		io.github.resilience4j.common.bulkhead.configuration.BulkheadConfigurationProperties.InstanceProperties defaultProperties = new io.github.resilience4j.common.bulkhead.configuration.BulkheadConfigurationProperties.InstanceProperties();
 		defaultProperties.setMaxConcurrentCalls(3);
 		defaultProperties.setMaxWaitTime(50L);
+		assertThat(defaultProperties.getEventConsumerBufferSize()).isNull();
 
 		io.github.resilience4j.common.bulkhead.configuration.BulkheadConfigurationProperties.InstanceProperties sharedProperties = new io.github.resilience4j.common.bulkhead.configuration.BulkheadConfigurationProperties.InstanceProperties();
 		sharedProperties.setMaxConcurrentCalls(2);
 		sharedProperties.setMaxWaitTime(100L);
+		assertThat(sharedProperties.getEventConsumerBufferSize()).isNull();
 
 		io.github.resilience4j.common.bulkhead.configuration.BulkheadConfigurationProperties.InstanceProperties backendWithDefaultConfig = new io.github.resilience4j.common.bulkhead.configuration.BulkheadConfigurationProperties.InstanceProperties();
 		backendWithDefaultConfig.setBaseConfig("default");
 		backendWithDefaultConfig.setMaxWaitTime(200L);
+		assertThat(backendWithDefaultConfig.getEventConsumerBufferSize()).isNull();
 
 		io.github.resilience4j.common.bulkhead.configuration.BulkheadConfigurationProperties.InstanceProperties backendWithSharedConfig = new io.github.resilience4j.common.bulkhead.configuration.BulkheadConfigurationProperties.InstanceProperties();
 		backendWithSharedConfig.setBaseConfig("sharedConfig");
 		backendWithSharedConfig.setMaxWaitTime(300L);
+		assertThat(backendWithSharedConfig.getEventConsumerBufferSize()).isNull();
 
 		BulkheadConfigurationProperties bulkheadConfigurationProperties = new BulkheadConfigurationProperties();
 		bulkheadConfigurationProperties.getConfigs().put("default", defaultProperties);
