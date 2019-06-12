@@ -15,15 +15,17 @@
  */
 package io.github.resilience4j.common.ratelimiter.configuration;
 
+import java.time.Duration;
+import java.util.HashMap;
+import java.util.Map;
+
+import javax.validation.constraints.Min;
+
+import io.github.resilience4j.common.utils.ConfigUtils;
 import io.github.resilience4j.core.ConfigurationNotFoundException;
 import io.github.resilience4j.core.StringUtils;
 import io.github.resilience4j.core.lang.Nullable;
 import io.github.resilience4j.ratelimiter.RateLimiterConfig;
-
-import javax.validation.constraints.Min;
-import java.time.Duration;
-import java.util.HashMap;
-import java.util.Map;
 
 public class RateLimiterConfigurationProperties {
 
@@ -51,8 +53,8 @@ public class RateLimiterConfigurationProperties {
 	}
 
 	private RateLimiterConfig buildRateLimiterConfig(RateLimiterConfig.Builder builder, @Nullable InstanceProperties instanceProperties) {
-		if (instanceProperties == null) {
-			return RateLimiterConfig.ofDefaults();
+		if (instanceProperties == null && builder != null) {
+			return builder.build();
 		}
 
 		if (instanceProperties.getLimitForPeriod() != null) {
@@ -106,10 +108,13 @@ public class RateLimiterConfigurationProperties {
 		private Integer limitForPeriod;
 		private Integer limitRefreshPeriodInNanos;
 		private Integer timeoutInMillis;
-		private Boolean subscribeForEvents = false;
-		private Boolean registerHealthIndicator = false;
+		@Nullable
+		private Boolean subscribeForEvents;
+		@Nullable
+		private Boolean registerHealthIndicator;
 		@Min(1)
-		private Integer eventConsumerBufferSize = 100;
+		@Nullable
+		private Integer eventConsumerBufferSize;
 		@Nullable
 		private String baseConfig;
 

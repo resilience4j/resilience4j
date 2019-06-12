@@ -16,6 +16,17 @@
 package io.github.resilience4j.common.circuitbreaker.configuration;
 
 
+import java.time.Duration;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+import java.util.function.Predicate;
+
+import javax.validation.constraints.Max;
+import javax.validation.constraints.Min;
+
+import org.hibernate.validator.constraints.time.DurationMin;
+
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.Builder;
 import io.github.resilience4j.common.utils.ConfigUtils;
@@ -23,16 +34,6 @@ import io.github.resilience4j.core.ClassUtils;
 import io.github.resilience4j.core.ConfigurationNotFoundException;
 import io.github.resilience4j.core.StringUtils;
 import io.github.resilience4j.core.lang.Nullable;
-import org.hibernate.validator.constraints.time.DurationMin;
-
-import javax.validation.constraints.Max;
-import javax.validation.constraints.Min;
-import javax.validation.constraints.NotNull;
-import java.time.Duration;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
-import java.util.function.Predicate;
 
 public class CircuitBreakerConfigurationProperties {
 
@@ -61,6 +62,9 @@ public class CircuitBreakerConfigurationProperties {
 	}
 
 	private CircuitBreakerConfig buildConfig(Builder builder, InstanceProperties properties) {
+		if (properties == null) {
+			return builder.build();
+		}
 
 		if (properties.getWaitDurationInOpenStateMillis() != null) {
 			builder.waitDurationInOpenState(Duration.ofMillis(properties.getWaitDurationInOpenStateMillis()));
@@ -152,10 +156,11 @@ public class CircuitBreakerConfigurationProperties {
 		private Boolean automaticTransitionFromOpenToHalfOpenEnabled;
 
 		@Min(1)
-		private Integer eventConsumerBufferSize = 100;
+		@Nullable
+		private Integer eventConsumerBufferSize;
 
-		@NotNull
-		private Boolean registerHealthIndicator = true;
+		@Nullable
+		private Boolean registerHealthIndicator;
 
 		@Nullable
 		private Class<Predicate<Throwable>> recordFailurePredicate;

@@ -15,19 +15,20 @@ package io.github.resilience4j.common.retry.configuration;
  * limitations under the License.
  */
 
+import java.time.Duration;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.function.Predicate;
+
+import javax.validation.constraints.Min;
+
+import io.github.resilience4j.common.utils.ConfigUtils;
 import io.github.resilience4j.core.ClassUtils;
 import io.github.resilience4j.core.ConfigurationNotFoundException;
 import io.github.resilience4j.core.StringUtils;
 import io.github.resilience4j.core.lang.Nullable;
 import io.github.resilience4j.retry.IntervalFunction;
 import io.github.resilience4j.retry.RetryConfig;
-
-import javax.validation.constraints.Min;
-import javax.validation.constraints.NotNull;
-import java.time.Duration;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.function.Predicate;
 
 /**
  * Main spring properties for retry configuration
@@ -106,7 +107,8 @@ public class RetryConfigurationProperties {
 			return builder.build();
 		}
 
-		if (properties.enableExponentialBackoff && properties.enableRandomizedWait) {
+		if (properties.enableExponentialBackoff != null && properties.enableExponentialBackoff
+				&& properties.enableRandomizedWait != null && properties.enableRandomizedWait) {
 			throw new IllegalStateException("you can not enable Exponential backoff policy and randomized delay at the same time , please enable only one of them");
 		}
 
@@ -154,14 +156,14 @@ public class RetryConfigurationProperties {
 	private void configureRetryIntervalFunction(InstanceProperties properties, RetryConfig.Builder<Object> builder) {
 		if (properties.getWaitDurationMillis() != null && properties.getWaitDurationMillis() != 0) {
 			long waitDuration = properties.getWaitDurationMillis();
-			if (properties.getEnableExponentialBackoff()) {
-				if (properties.getExponentialBackoffMultiplier() != 0) {
+			if (properties.getEnableExponentialBackoff() != null && properties.getEnableExponentialBackoff()) {
+				if (properties.getExponentialBackoffMultiplier() != null) {
 					builder.intervalFunction(IntervalFunction.ofExponentialBackoff(waitDuration, properties.getExponentialBackoffMultiplier()));
 				} else {
 					builder.intervalFunction(IntervalFunction.ofExponentialBackoff(properties.getWaitDurationMillis()));
 				}
-			} else if (properties.getEnableRandomizedWait()) {
-				if (properties.getRandomizedWaitFactor() != 0) {
+			} else if (properties.getEnableRandomizedWait() != null && properties.getEnableRandomizedWait()) {
+				if (properties.getRandomizedWaitFactor() != null) {
 					builder.intervalFunction(IntervalFunction.ofRandomized(waitDuration, properties.getRandomizedWaitFactor()));
 				} else {
 					builder.intervalFunction(IntervalFunction.ofRandomized(waitDuration));
@@ -214,25 +216,27 @@ public class RetryConfigurationProperties {
 		 * event buffer size for generated retry events
 		 */
 		@Min(1)
-		private Integer eventConsumerBufferSize = 100;
+		@Nullable
+		private Integer eventConsumerBufferSize;
 		/*
 		 * flag to enable Exponential backoff policy or not for retry policy delay
 		 */
-		@NotNull
-		private Boolean enableExponentialBackoff = false;
+		@Nullable
+		private Boolean enableExponentialBackoff;
 		/*
 		 * exponential backoff multiplier value
 		 */
-		private double exponentialBackoffMultiplier;
-		@NotNull
+		private Double exponentialBackoffMultiplier;
+
 		/*
 		 * flag to enable randomized delay  policy or not for retry policy delay
 		 */
-		private Boolean enableRandomizedWait = false;
+		@Nullable
+		private Boolean enableRandomizedWait;
 		/*
 		 * randomized delay factor value
 		 */
-		private double randomizedWaitFactor;
+		private Double randomizedWaitFactor;
 
 		@Nullable
 		private String baseConfig;

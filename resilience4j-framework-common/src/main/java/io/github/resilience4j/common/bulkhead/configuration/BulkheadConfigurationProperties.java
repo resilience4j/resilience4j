@@ -15,13 +15,15 @@
  */
 package io.github.resilience4j.common.bulkhead.configuration;
 
+import java.util.HashMap;
+import java.util.Map;
+
+import javax.validation.constraints.Min;
+
+import io.github.resilience4j.common.utils.ConfigUtils;
 import io.github.resilience4j.core.ConfigurationNotFoundException;
 import io.github.resilience4j.core.StringUtils;
 import io.github.resilience4j.core.lang.Nullable;
-
-import javax.validation.constraints.Min;
-import java.util.HashMap;
-import java.util.Map;
 
 public class BulkheadConfigurationProperties {
 
@@ -88,7 +90,8 @@ public class BulkheadConfigurationProperties {
         @Nullable
         private String baseConfig;
         @Min(1)
-        private Integer eventConsumerBufferSize = 100;
+        @Nullable
+        private Integer eventConsumerBufferSize;
 
         public InstanceProperties setMaxConcurrentCalls(Integer maxConcurrentCalls) {
             this.maxConcurrentCalls = maxConcurrentCalls;
