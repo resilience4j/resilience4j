@@ -15,16 +15,21 @@
  */
 package io.github.resilience4j.circuitbreaker.autoconfigure;
 
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
+
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.configure.CircuitBreakerConfigurationProperties;
 import io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent;
 import io.github.resilience4j.circuitbreaker.monitoring.health.CircuitBreakerHealthIndicator;
+import io.github.resilience4j.common.IntegerToDurationConverter;
+import io.github.resilience4j.common.StringToDurationConverter;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
-import org.springframework.beans.factory.config.ConfigurableBeanFactory;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 
 @Configuration
+@Import({IntegerToDurationConverter.class, StringToDurationConverter.class})
 public class CircuitBreakerConfigurationOnMissingBean extends AbstractCircuitBreakerConfigurationOnMissingBean {
 
 	private final ConfigurableBeanFactory beanFactory;
