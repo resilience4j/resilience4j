@@ -22,6 +22,8 @@ import java.util.function.Predicate;
 
 import javax.validation.constraints.Min;
 
+import org.hibernate.validator.constraints.time.DurationMin;
+
 import io.github.resilience4j.common.utils.ConfigUtils;
 import io.github.resilience4j.core.ClassUtils;
 import io.github.resilience4j.core.ConfigurationNotFoundException;
@@ -81,7 +83,7 @@ public class RetryConfigurationProperties {
 	 * @return the retry configuration
 	 */
 	public RetryConfig createRetryConfig(InstanceProperties instanceProperties) {
-		if (StringUtils.isNotEmpty(instanceProperties.getBaseConfig())) {
+		if (instanceProperties != null && StringUtils.isNotEmpty(instanceProperties.getBaseConfig())) {
 			InstanceProperties baseProperties = configs.get(instanceProperties.getBaseConfig());
 			if (baseProperties == null) {
 				throw new ConfigurationNotFoundException(instanceProperties.getBaseConfig());
@@ -154,22 +156,23 @@ public class RetryConfigurationProperties {
 	 * @param builder    the retry config builder
 	 */
 	private void configureRetryIntervalFunction(InstanceProperties properties, RetryConfig.Builder<Object> builder) {
-		if (properties.getWaitDurationMillis() != null && properties.getWaitDurationMillis() != 0) {
-			long waitDuration = properties.getWaitDurationMillis();
+		// these take precedence over deprecated properties. Setting one or the other will still work.
+		if (properties.getWaitDuration() != null && properties.getWaitDuration().toMillis() > 0) {
+			Duration waitDuration = properties.getWaitDuration();
 			if (properties.getEnableExponentialBackoff() != null && properties.getEnableExponentialBackoff()) {
 				if (properties.getExponentialBackoffMultiplier() != null) {
-					builder.intervalFunction(IntervalFunction.ofExponentialBackoff(waitDuration, properties.getExponentialBackoffMultiplier()));
+					builder.intervalFunction(IntervalFunction.ofExponentialBackoff(waitDuration.toMillis(), properties.getExponentialBackoffMultiplier()));
 				} else {
-					builder.intervalFunction(IntervalFunction.ofExponentialBackoff(properties.getWaitDurationMillis()));
+					builder.intervalFunction(IntervalFunction.ofExponentialBackoff(properties.getWaitDuration().toMillis()));
 				}
 			} else if (properties.getEnableRandomizedWait() != null && properties.getEnableRandomizedWait()) {
 				if (properties.getRandomizedWaitFactor() != null) {
-					builder.intervalFunction(IntervalFunction.ofRandomized(waitDuration, properties.getRandomizedWaitFactor()));
+					builder.intervalFunction(IntervalFunction.ofRandomized(waitDuration.toMillis(), properties.getRandomizedWaitFactor()));
 				} else {
 					builder.intervalFunction(IntervalFunction.ofRandomized(waitDuration));
 				}
 			} else {
-				builder.waitDuration(Duration.ofMillis(properties.getWaitDurationMillis()));
+				builder.waitDuration(Duration.ofMillis(properties.getWaitDuration().toMillis()));
 			}
 		}
 	}
@@ -178,12 +181,14 @@ public class RetryConfigurationProperties {
 	 * Class storing property values for configuring {@link io.github.resilience4j.retry.Retry} instances.
 	 */
 	public static class InstanceProperties {
+
 		/*
 		 * wait long value for the next try
 		 */
-		@Min(100)
+		@DurationMin(millis = 100)
 		@Nullable
-		private Long waitDurationMillis;
+		private Duration waitDuration;
+
 		/*
 		 * max retry attempts value
 		 */
@@ -241,13 +246,38 @@ public class RetryConfigurationProperties {
 		@Nullable
 		private String baseConfig;
 
+		/**
+		 * @return wait duration in milliseconds
+		 * @deprecated As of release 0.16.0 , use {@link #getWaitDuration()} instead
+		 */
+		@Deprecated
 		@Nullable
 		public Long getWaitDurationMillis() {
-			return waitDurationMillis;
+			if (waitDuration != null) {
+				return waitDuration.toMillis();
+			} else {
+				return null;
+			}
 		}
 
+		/**
+		 * @param waitDurationMillis wait time in milliseconds
+		 * @return InstanceProperties
+		 * @deprecated As of release 0.16.0 , use {@link #setWaitDuration(Duration)} instead
+		 */
+		@Deprecated
 		public InstanceProperties setWaitDurationMillis(Long waitDurationMillis) {
-			this.waitDurationMillis = waitDurationMillis;
+			this.waitDuration = Duration.ofMillis(waitDurationMillis);
+			return this;
+		}
+
+		@Nullable
+		public Duration getWaitDuration() {
+			return waitDuration;
+		}
+
+		public InstanceProperties setWaitDuration(Duration waitDuration) {
+			this.waitDuration = waitDuration;
 			return this;
 		}
 
