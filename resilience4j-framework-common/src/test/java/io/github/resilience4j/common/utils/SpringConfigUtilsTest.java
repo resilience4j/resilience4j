@@ -17,6 +17,8 @@ package io.github.resilience4j.common.utils;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.time.Duration;
+
 import org.junit.Test;
 
 /**
@@ -68,7 +70,7 @@ public class SpringConfigUtilsTest {
 	public void testRetrySpringProperties() {
 		io.github.resilience4j.common.retry.configuration.RetryConfigurationProperties.InstanceProperties sharedProperties = new io.github.resilience4j.common.retry.configuration.RetryConfigurationProperties.InstanceProperties();
 		sharedProperties.setMaxRetryAttempts(2);
-		sharedProperties.setWaitDurationMillis(100L);
+		sharedProperties.setWaitDuration(Duration.ofMillis(100));
 		sharedProperties.setEnableRandomizedWait(true);
 		sharedProperties.setExponentialBackoffMultiplier(0.1);
 		sharedProperties.setEnableExponentialBackoff(false);
@@ -76,7 +78,7 @@ public class SpringConfigUtilsTest {
 
 		io.github.resilience4j.common.retry.configuration.RetryConfigurationProperties.InstanceProperties backendWithDefaultConfig = new io.github.resilience4j.common.retry.configuration.RetryConfigurationProperties.InstanceProperties();
 		backendWithDefaultConfig.setBaseConfig("default");
-		backendWithDefaultConfig.setWaitDurationMillis(200L);
+		backendWithDefaultConfig.setWaitDuration(Duration.ofMillis(200L));
 		assertThat(backendWithDefaultConfig.getEnableExponentialBackoff()).isNull();
 		assertThat(backendWithDefaultConfig.getExponentialBackoffMultiplier()).isNull();
 		assertThat(backendWithDefaultConfig.getEnableRandomizedWait()).isNull();
@@ -93,7 +95,7 @@ public class SpringConfigUtilsTest {
 
 		io.github.resilience4j.common.ratelimiter.configuration.RateLimiterConfigurationProperties.InstanceProperties sharedProperties = new io.github.resilience4j.common.ratelimiter.configuration.RateLimiterConfigurationProperties.InstanceProperties();
 		sharedProperties.setLimitForPeriod(2);
-		sharedProperties.setLimitRefreshPeriodInNanos(6000000);
+		sharedProperties.setLimitRefreshPeriod(Duration.ofMillis(6000000));
 		sharedProperties.setSubscribeForEvents(true);
 		sharedProperties.setRegisterHealthIndicator(true);
 		sharedProperties.setEventConsumerBufferSize(200);

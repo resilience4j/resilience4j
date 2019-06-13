@@ -61,10 +61,6 @@ public class RateLimiterConfigurationProperties {
 			builder.limitForPeriod(instanceProperties.getLimitForPeriod());
 		}
 
-		if (instanceProperties.getLimitRefreshPeriodInNanos() != null) {
-			builder.limitRefreshPeriod(Duration.ofNanos(instanceProperties.getLimitRefreshPeriodInNanos()));
-		}
-
 		if (instanceProperties.getLimitRefreshPeriod() != null) {
 			builder.limitRefreshPeriod(instanceProperties.getLimitRefreshPeriod());
 		}

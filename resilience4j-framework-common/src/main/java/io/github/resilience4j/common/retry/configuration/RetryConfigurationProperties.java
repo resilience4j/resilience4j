@@ -83,7 +83,7 @@ public class RetryConfigurationProperties {
 	 * @return the retry configuration
 	 */
 	public RetryConfig createRetryConfig(InstanceProperties instanceProperties) {
-		if (StringUtils.isNotEmpty(instanceProperties.getBaseConfig())) {
+		if (instanceProperties != null && StringUtils.isNotEmpty(instanceProperties.getBaseConfig())) {
 			InstanceProperties baseProperties = configs.get(instanceProperties.getBaseConfig());
 			if (baseProperties == null) {
 				throw new ConfigurationNotFoundException(instanceProperties.getBaseConfig());
@@ -156,7 +156,6 @@ public class RetryConfigurationProperties {
 	 * @param builder    the retry config builder
 	 */
 	private void configureRetryIntervalFunction(InstanceProperties properties, RetryConfig.Builder<Object> builder) {
-		configureRetryIntervalFunctionInMillis(properties, builder);
 		// these take precedence over deprecated properties. Setting one or the other will still work.
 		if (properties.getWaitDuration() != null && properties.getWaitDuration().toMillis() > 0) {
 			Duration waitDuration = properties.getWaitDuration();
@@ -174,34 +173,6 @@ public class RetryConfigurationProperties {
 				}
 			} else {
 				builder.waitDuration(Duration.ofMillis(properties.getWaitDuration().toMillis()));
-			}
-		}
-	}
-
-	/**
-	 * decide which retry delay policy will be configured based into the configured properties
-	 *
-	 * @param properties the backend retry properties
-	 * @param builder    the retry config builder
-	 * @deprecated since 0.16.0
-	 */
-	private void configureRetryIntervalFunctionInMillis(InstanceProperties properties, RetryConfig.Builder<Object> builder) {
-		if (properties.getWaitDurationMillis() != null && properties.getWaitDurationMillis() != 0) {
-			long waitDuration = properties.getWaitDurationMillis();
-			if (properties.getEnableExponentialBackoff() != null && properties.getEnableExponentialBackoff()) {
-				if (properties.getExponentialBackoffMultiplier() != null) {
-					builder.intervalFunction(IntervalFunction.ofExponentialBackoff(waitDuration, properties.getExponentialBackoffMultiplier()));
-				} else {
-					builder.intervalFunction(IntervalFunction.ofExponentialBackoff(properties.getWaitDurationMillis()));
-				}
-			} else if (properties.getEnableRandomizedWait() != null && properties.getEnableRandomizedWait()) {
-				if (properties.getRandomizedWaitFactor() != null) {
-					builder.intervalFunction(IntervalFunction.ofRandomized(waitDuration, properties.getRandomizedWaitFactor()));
-				} else {
-					builder.intervalFunction(IntervalFunction.ofRandomized(waitDuration));
-				}
-			} else {
-				builder.waitDuration(Duration.ofMillis(properties.getWaitDurationMillis()));
 			}
 		}
 	}

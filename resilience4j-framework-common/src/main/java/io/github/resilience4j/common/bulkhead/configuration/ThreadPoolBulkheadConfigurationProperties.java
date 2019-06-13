@@ -57,7 +57,7 @@ public class ThreadPoolBulkheadConfigurationProperties {
 	}
 
 	public ThreadPoolBulkheadConfig createThreadPoolBulkheadConfig(InstanceProperties instanceProperties) {
-		if (StringUtils.isNotEmpty(instanceProperties.getBaseConfig())) {
+		if (instanceProperties != null && StringUtils.isNotEmpty(instanceProperties.getBaseConfig())) {
 			InstanceProperties baseProperties = configs.get(instanceProperties.getBaseConfig());
 			if (baseProperties == null) {
 				throw new ConfigurationNotFoundException(instanceProperties.getBaseConfig());

@@ -24,7 +24,6 @@ import org.springframework.boot.context.properties.ConfigurationPropertiesBindin
 import org.springframework.core.annotation.Order;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
 
 import io.github.resilience4j.core.lang.Nullable;
 
@@ -63,7 +62,7 @@ public class StringToDurationConverter implements Converter<String, Duration> {
 
 	@Override
 	public Duration convert(@Nullable String source) {
-		if (StringUtils.isEmpty(source))
+		if (source == null || "".equals(source))
 			return null;
 		if (!Character.isDigit(source.charAt(0)))
 			return null;

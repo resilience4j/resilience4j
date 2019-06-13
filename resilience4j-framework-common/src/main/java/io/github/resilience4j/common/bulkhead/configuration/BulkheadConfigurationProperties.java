@@ -54,9 +54,6 @@ public class BulkheadConfigurationProperties {
 		if (instanceProperties.getMaxConcurrentCalls() != null) {
 			builder.maxConcurrentCalls(instanceProperties.getMaxConcurrentCalls());
 		}
-		if (instanceProperties.getMaxWaitTime() != null) {
-			builder.maxWaitTime(instanceProperties.getMaxWaitTime());
-		}
 		if (instanceProperties.getMaxWaitDuration() != null) {
 			builder.maxWaitTimeDuration(instanceProperties.getMaxWaitDuration());
 		}

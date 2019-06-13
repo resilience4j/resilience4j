@@ -65,11 +65,6 @@ public class CircuitBreakerConfigurationProperties {
 		if (properties == null) {
 			return builder.build();
 		}
-
-		if (properties.getWaitDurationInOpenStateMillis() != null) {
-			builder.waitDurationInOpenState(Duration.ofMillis(properties.getWaitDurationInOpenStateMillis()));
-		}
-
 		if (properties.getWaitDurationInOpenState() != null) {
 			builder.waitDurationInOpenState(properties.getWaitDurationInOpenState());
 		}
