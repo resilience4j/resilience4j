@@ -17,7 +17,10 @@ package io.github.resilience4j.retry.autoconfigure;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 
+import io.github.resilience4j.common.IntegerToDurationConverter;
+import io.github.resilience4j.common.StringToDurationConverter;
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
 import io.github.resilience4j.retry.event.RetryEvent;
@@ -27,6 +30,7 @@ import io.github.resilience4j.retry.event.RetryEvent;
  * Configuration} for resilience4j-retry.
  */
 @Configuration
+@Import({IntegerToDurationConverter.class, StringToDurationConverter.class})
 public class RetryConfigurationOnMissingBean extends AbstractRetryConfigurationOnMissingBean {
 	/**
 	 * The EventConsumerRegistry is used to manage EventConsumer instances.
