@@ -65,10 +65,6 @@ public class RateLimiterConfigurationProperties {
 			builder.limitRefreshPeriod(instanceProperties.getLimitRefreshPeriod());
 		}
 
-		if (instanceProperties.getTimeoutInMillis() != null) {
-			builder.timeoutDuration(Duration.ofMillis(instanceProperties.getTimeoutInMillis()));
-		}
-
 		if (instanceProperties.getTimeoutDuration() != null) {
 			builder.timeoutDuration(instanceProperties.getTimeoutDuration());
 		}
