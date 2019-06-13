@@ -18,6 +18,8 @@
  */
 package io.github.resilience4j.bulkhead;
 
+import java.time.Duration;
+
 /**
  * A {@link BulkheadConfig} configures a {@link Bulkhead}
  */
@@ -101,12 +103,32 @@ public class BulkheadConfig {
 		 *
 		 * @param maxWaitTime maximum wait time for bulkhead entry
 		 * @return the BulkheadConfig.Builder
+		 * @deprecated since 0.16.0 use {@link #maxWaitTimeDuration(Duration)}
 		 */
+		@Deprecated
 		public Builder maxWaitTime(long maxWaitTime) {
 			if (maxWaitTime < 0) {
 				throw new IllegalArgumentException("maxWaitTime must be a positive integer value >= 0");
 			}
 			config.maxWaitTime = maxWaitTime;
+			return this;
+		}
+
+		/**
+		 * Configures a maximum amount of time which the calling thread will wait to enter the bulkhead. If bulkhead has space available, entry
+		 * is guaranteed and immediate. If bulkhead is full, calling threads will contest for space, if it becomes available. maxWaitTime can be set to 0.
+		 * <p>
+		 * Note: for threads running on an event-loop or equivalent (rx computation pool, etc), setting maxWaitTime to 0 is highly recommended. Blocking
+		 * an event-loop thread will most likely have a negative effect on application throughput.
+		 *
+		 * @param maxWaitTime maximum wait time for bulkhead entry
+		 * @return the BulkheadConfig.Builder
+		 */
+		public Builder maxWaitTimeDuration(Duration maxWaitTime) {
+			if (maxWaitTime.toMillis() < 0) {
+				throw new IllegalArgumentException("maxWaitTime must be a positive integer value >= 0");
+			}
+			config.maxWaitTime = maxWaitTime.toMillis();
 			return this;
 		}
 

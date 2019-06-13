@@ -15,17 +15,22 @@
  */
 package io.github.resilience4j.bulkhead.autoconfigure;
 
-import io.github.resilience4j.bulkhead.event.BulkheadEvent;
-import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
-import io.github.resilience4j.consumer.EventConsumerRegistry;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
+
+import io.github.resilience4j.bulkhead.event.BulkheadEvent;
+import io.github.resilience4j.common.IntegerToDurationConverter;
+import io.github.resilience4j.common.StringToDurationConverter;
+import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
+import io.github.resilience4j.consumer.EventConsumerRegistry;
 
 /**
  * {@link Configuration
  * Configuration} for resilience4j-bulkhead.
  */
 @Configuration
+@Import({IntegerToDurationConverter.class, StringToDurationConverter.class})
 public class BulkheadConfigurationOnMissingBean extends AbstractBulkheadConfigurationOnMissingBean {
 	/**
 	 * The EventConsumerRegistry is used to manage EventConsumer instances.

@@ -47,7 +47,7 @@ public class CircuitBreakerConfigurationProperties {
 	public CircuitBreakerConfig createCircuitBreakerConfig(InstanceProperties instanceProperties) {
 		if (StringUtils.isNotEmpty(instanceProperties.getBaseConfig())) {
 			InstanceProperties baseProperties = configs.get(instanceProperties.getBaseConfig());
-			if(baseProperties == null){
+			if (baseProperties == null) {
 				throw new ConfigurationNotFoundException(instanceProperties.getBaseConfig());
 			}
 			return buildConfigFromBaseConfig(instanceProperties, baseProperties);
@@ -65,9 +65,8 @@ public class CircuitBreakerConfigurationProperties {
 		if (properties == null) {
 			return builder.build();
 		}
-
-		if (properties.getWaitDurationInOpenStateMillis() != null) {
-			builder.waitDurationInOpenState(Duration.ofMillis(properties.getWaitDurationInOpenStateMillis()));
+		if (properties.getWaitDurationInOpenState() != null) {
+			builder.waitDurationInOpenState(properties.getWaitDurationInOpenState());
 		}
 
 		if (properties.getFailureRateThreshold() != null) {
@@ -137,7 +136,7 @@ public class CircuitBreakerConfigurationProperties {
 
 		@DurationMin(seconds = 1)
 		@Nullable
-		private Integer waitDurationInOpenStateMillis;
+		private Duration waitDurationInOpenState;
 
 		@Min(1)
 		@Max(100)
@@ -199,10 +198,38 @@ public class CircuitBreakerConfigurationProperties {
 		 * Returns the wait duration the CircuitBreaker will stay open, before it switches to half closed.
 		 *
 		 * @return the wait duration
+		 * @deprecated As of release 0.16.0 , use {@link #getWaitDurationInOpenState()} instead
 		 */
+		@Deprecated
 		@Nullable
 		public Integer getWaitDurationInOpenStateMillis() {
-			return waitDurationInOpenStateMillis;
+			if (waitDurationInOpenState != null) {
+				return (int) waitDurationInOpenState.toMillis();
+			} else {
+				return null;
+			}
+		}
+
+		/**
+		 * Sets the wait duration the CircuitBreaker should stay open, before it switches to half closed.
+		 *
+		 * @param waitDurationInOpenStateMillis the wait duration
+		 * @deprecated As of release 0.16.0 , use {@link #setWaitDurationInOpenState(Duration)} instead
+		 */
+		@Deprecated
+		public InstanceProperties setWaitDurationInOpenStateMillis(Integer waitDurationInOpenStateMillis) {
+			this.waitDurationInOpenState = Duration.ofMillis(waitDurationInOpenStateMillis);
+			return this;
+		}
+
+		/**
+		 * Returns the wait duration the CircuitBreaker will stay open, before it switches to half closed.
+		 *
+		 * @return the wait duration
+		 */
+		@Nullable
+		public Duration getWaitDurationInOpenState() {
+			return waitDurationInOpenState;
 		}
 
 		/**
@@ -210,8 +237,8 @@ public class CircuitBreakerConfigurationProperties {
 		 *
 		 * @param waitDurationInOpenStateMillis the wait duration
 		 */
-		public InstanceProperties setWaitDurationInOpenStateMillis(Integer waitDurationInOpenStateMillis) {
-			this.waitDurationInOpenStateMillis = waitDurationInOpenStateMillis;
+		public InstanceProperties setWaitDurationInOpenState(Duration waitDurationInOpenStateMillis) {
+			this.waitDurationInOpenState = waitDurationInOpenStateMillis;
 			return this;
 		}
 

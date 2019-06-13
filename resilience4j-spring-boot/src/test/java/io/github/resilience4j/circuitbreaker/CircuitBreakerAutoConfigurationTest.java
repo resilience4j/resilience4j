@@ -125,7 +125,7 @@ public class CircuitBreakerAutoConfigurationTest {
 		CircuitBreaker sharedA = circuitBreakerRegistry.circuitBreaker("backendSharedA");
 		CircuitBreaker sharedB = circuitBreakerRegistry.circuitBreaker("backendSharedB");
 
-		Duration defaultWaitDuration = Duration.ofSeconds(60L);
+		Duration defaultWaitDuration = Duration.ofSeconds(10);
 		float defaultFailureRate = 60f;
 		int defaultRingBufferSizeInHalfOpenState = 10;
 		int defaultRingBufferSizeInClosedState = 100;
