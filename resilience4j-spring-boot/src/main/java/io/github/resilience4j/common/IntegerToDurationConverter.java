@@ -28,7 +28,7 @@ import org.springframework.stereotype.Component;
 import io.micrometer.core.lang.Nullable;
 
 /**
- * @author romeh
+ * Integer to duration spring converter , will convert to milliseconds
  */
 @Component
 @ConfigurationPropertiesBinding

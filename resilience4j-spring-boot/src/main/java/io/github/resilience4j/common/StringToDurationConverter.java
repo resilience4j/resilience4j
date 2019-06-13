@@ -30,7 +30,7 @@ import io.github.resilience4j.core.lang.Nullable;
 
 
 /**
- * @author romeh
+ * String to Duration converter which mimic spring boot 2 logic where it can parse the format properly
  */
 @ConfigurationPropertiesBinding
 @Order(0)
