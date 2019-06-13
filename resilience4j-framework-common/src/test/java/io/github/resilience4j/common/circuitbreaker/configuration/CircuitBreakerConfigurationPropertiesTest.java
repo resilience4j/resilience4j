@@ -23,6 +23,7 @@ import java.time.Duration;
 import org.junit.Test;
 
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
+import io.github.resilience4j.common.RecordFailurePredicate;
 import io.github.resilience4j.core.ConfigurationNotFoundException;
 
 /**
@@ -32,12 +33,23 @@ public class CircuitBreakerConfigurationPropertiesTest {
 	@Test
 	public void testCreateCircuitBreakerRegistry() {
 		//Given
+
+
 		io.github.resilience4j.common.circuitbreaker.configuration.CircuitBreakerConfigurationProperties.InstanceProperties instanceProperties1 = new io.github.resilience4j.common.circuitbreaker.configuration.CircuitBreakerConfigurationProperties.InstanceProperties();
 		instanceProperties1.setRingBufferSizeInClosedState(1000);
 		instanceProperties1.setWaitDurationInOpenState(Duration.ofMillis(100));
+		instanceProperties1.setWaitDurationInOpenStateMillis(100);
 		instanceProperties1.setEventConsumerBufferSize(100);
 		instanceProperties1.setRegisterHealthIndicator(true);
 		instanceProperties1.setRingBufferSizeInClosedState(200);
+		instanceProperties1.setAutomaticTransitionFromOpenToHalfOpenEnabled(false);
+		instanceProperties1.setFailureRateThreshold(10);
+		//noinspection unchecked
+		instanceProperties1.setIgnoreExceptions(new Class[]{IllegalStateException.class});
+		//noinspection unchecked
+		instanceProperties1.setRecordExceptions(new Class[]{IllegalStateException.class});
+		//noinspection unchecked
+		instanceProperties1.setRecordFailurePredicate((Class) RecordFailurePredicate.class);
 
 		io.github.resilience4j.common.circuitbreaker.configuration.CircuitBreakerConfigurationProperties.InstanceProperties instanceProperties2 = new io.github.resilience4j.common.circuitbreaker.configuration.CircuitBreakerConfigurationProperties.InstanceProperties();
 		instanceProperties2.setRingBufferSizeInClosedState(1337);
@@ -53,7 +65,10 @@ public class CircuitBreakerConfigurationPropertiesTest {
 		CircuitBreakerConfig circuitBreaker1 = circuitBreakerConfigurationProperties.createCircuitBreakerConfig(instanceProperties1);
 		assertThat(circuitBreaker1).isNotNull();
 		assertThat(circuitBreaker1.getRingBufferSizeInClosedState()).isEqualTo(200);
-
+		assertThat(circuitBreaker1.getWaitDurationInOpenState()).isEqualTo(Duration.ofMillis(100));
+		final CircuitBreakerConfigurationProperties.InstanceProperties backend1 = circuitBreakerConfigurationProperties.getBackendProperties("backend1");
+		assertThat(backend1.getWaitDurationInOpenStateMillis()).isEqualTo(100);
+		assertThat(circuitBreakerConfigurationProperties.findCircuitBreakerProperties("backend1")).isNotEmpty();
 		CircuitBreakerConfig circuitBreaker2 = circuitBreakerConfigurationProperties.createCircuitBreakerConfig(instanceProperties2);
 		assertThat(circuitBreaker2).isNotNull();
 		assertThat(circuitBreaker2.getRingBufferSizeInClosedState()).isEqualTo(1337);

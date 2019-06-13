@@ -24,6 +24,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.junit.MockitoJUnitRunner;
 
+import io.github.resilience4j.common.RecordFailurePredicate;
 import io.github.resilience4j.core.ConfigurationNotFoundException;
 import io.github.resilience4j.retry.RetryConfig;
 
@@ -38,9 +39,15 @@ public class RetryConfigurationPropertiesTest {
 		instanceProperties1.setEnableExponentialBackoff(false);
 		instanceProperties1.setEnableRandomizedWait(false);
 		instanceProperties1.setEventConsumerBufferSize(100);
+		instanceProperties1.setRetryExceptions(new Class[]{IllegalStateException.class});
+		instanceProperties1.setIgnoreExceptions(new Class[]{IllegalArgumentException.class});
+		instanceProperties1.setRetryExceptionPredicate(RecordFailurePredicate.class);
 
 		io.github.resilience4j.common.retry.configuration.RetryConfigurationProperties.InstanceProperties instanceProperties2 = new io.github.resilience4j.common.retry.configuration.RetryConfigurationProperties.InstanceProperties();
 		instanceProperties2.setMaxRetryAttempts(2);
+		instanceProperties2.setEnableExponentialBackoff(true);
+		instanceProperties2.setExponentialBackoffMultiplier(0.2);
+		instanceProperties2.setWaitDurationMillis(100L);
 
 		RetryConfigurationProperties retryConfigurationProperties = new RetryConfigurationProperties();
 		retryConfigurationProperties.getInstances().put("backend1", instanceProperties1);
@@ -50,6 +57,7 @@ public class RetryConfigurationPropertiesTest {
 		assertThat(retryConfigurationProperties.getInstances().size()).isEqualTo(2);
 		assertThat(retryConfigurationProperties.getBackends().size()).isEqualTo(2);
 		RetryConfigurationProperties.InstanceProperties retry1 = retryConfigurationProperties.getInstances().get("backend1");
+		assertThat(retry1.getWaitDurationMillis()).isEqualTo(1000);
 		assertThat(retry1).isNotNull();
 		assertThat(retry1.getMaxRetryAttempts()).isEqualTo(3);
 
