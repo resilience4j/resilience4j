@@ -17,8 +17,6 @@ package io.github.resilience4j.common;
 
 import java.time.Duration;
 import java.time.format.DateTimeParseException;
-import java.util.Optional;
-import java.util.function.Function;
 
 import org.springframework.boot.context.properties.ConfigurationPropertiesBinding;
 import org.springframework.core.annotation.Order;
@@ -34,40 +32,18 @@ import io.micrometer.core.lang.Nullable;
 @ConfigurationPropertiesBinding
 @Order(0)
 public class IntegerToDurationConverter implements Converter<Integer, Duration> {
-	@Nullable
-	private static Duration simpleParse(@Nullable Integer rawTime) {
-		if (rawTime == null)
-			return null;
-
-		String time = String.valueOf(rawTime);
-		return tryParse(time, "ns", Duration::ofNanos)
-				.orElseGet(() -> tryParse(time, "ms", Duration::ofMillis)
-						.orElseGet(() -> tryParse(time, "s", Duration::ofSeconds)
-								.orElseGet(() -> tryParse(time, "m", Duration::ofMinutes)
-										.orElseGet(() -> tryParse(time, "h", Duration::ofHours)
-												.orElseGet(() -> tryParse(time, "d", Duration::ofDays)
-														.orElse(null))))));
-	}
-
-	private static Optional<Duration> tryParse(String time, String unit, Function<Long, Duration> toDuration) {
-		if (time.endsWith(unit)) {
-			String trim = time.substring(0, time.lastIndexOf(unit)).trim();
-			try {
-				return Optional.of(toDuration.apply(Long.parseLong(trim)));
-			} catch (NumberFormatException ignore) {
-				return Optional.empty();
-			}
-		}
-		return Optional.empty();
-	}
 
 	@Override
 	public Duration convert(@Nullable Integer source) {
-		Duration duration = simpleParse(source);
-		try {
-			return duration == null ? Duration.ofMillis(source) : duration;
-		} catch (DateTimeParseException e) {
-			throw new IllegalArgumentException("Cannot convert '" + source + "' to Duration", e);
+		if (source != null) {
+			try {
+				return Duration.ofMillis(source);
+			} catch (DateTimeParseException e) {
+				throw new IllegalArgumentException("Cannot convert '" + source + "' to Duration", e);
+			}
+		} else {
+			return null;
 		}
+
 	}
 }

@@ -38,12 +38,7 @@ import io.github.resilience4j.core.lang.Nullable;
 public class StringToDurationConverter implements Converter<String, Duration> {
 
 	@Nullable
-	private static Duration simpleParse(@Nullable String rawTime) {
-		if (StringUtils.isEmpty(rawTime))
-			return null;
-		if (!Character.isDigit(rawTime.charAt(0)))
-			return null;
-
+	private static Duration simpleParse(String rawTime) {
 		String time = rawTime.toLowerCase();
 		return tryParse(time, "ns", Duration::ofNanos)
 				.orElseGet(() -> tryParse(time, "ms", Duration::ofMillis)
@@ -68,6 +63,10 @@ public class StringToDurationConverter implements Converter<String, Duration> {
 
 	@Override
 	public Duration convert(@Nullable String source) {
+		if (StringUtils.isEmpty(source))
+			return null;
+		if (!Character.isDigit(source.charAt(0)))
+			return null;
 		Duration duration = simpleParse(source);
 		try {
 			return duration == null ? Duration.parse(source) : duration;
