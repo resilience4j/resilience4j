@@ -18,7 +18,7 @@ package io.github.resilience4j.common;
 import java.time.Duration;
 import java.time.format.DateTimeParseException;
 import java.util.Optional;
-import java.util.function.Function;
+import java.util.function.LongFunction;
 
 import org.springframework.boot.context.properties.ConfigurationPropertiesBinding;
 import org.springframework.core.annotation.Order;
@@ -49,7 +49,7 @@ public class StringToDurationConverter implements Converter<String, Duration> {
 														.orElse(null))))));
 	}
 
-	private static Optional<Duration> tryParse(String time, String unit, Function<Long, Duration> toDuration) {
+	private static Optional<Duration> tryParse(String time, String unit, LongFunction<Duration> toDuration) {
 		if (time.endsWith(unit)) {
 			String trim = time.substring(0, time.lastIndexOf(unit)).trim();
 			try {

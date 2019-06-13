@@ -22,6 +22,8 @@ import java.util.function.Predicate;
 
 import javax.validation.constraints.Min;
 
+import org.hibernate.validator.constraints.time.DurationMin;
+
 import io.github.resilience4j.common.utils.ConfigUtils;
 import io.github.resilience4j.core.ClassUtils;
 import io.github.resilience4j.core.ConfigurationNotFoundException;
@@ -29,7 +31,6 @@ import io.github.resilience4j.core.StringUtils;
 import io.github.resilience4j.core.lang.Nullable;
 import io.github.resilience4j.retry.IntervalFunction;
 import io.github.resilience4j.retry.RetryConfig;
-import org.hibernate.validator.constraints.time.DurationMin;
 
 /**
  * Main spring properties for retry configuration
@@ -155,6 +156,36 @@ public class RetryConfigurationProperties {
 	 * @param builder    the retry config builder
 	 */
 	private void configureRetryIntervalFunction(InstanceProperties properties, RetryConfig.Builder<Object> builder) {
+		configureRetryIntervalFunctionInMillis(properties, builder);
+		// these take precedence over deprecated properties. Setting one or the other will still work.
+		if (properties.getWaitDuration() != null && properties.getWaitDuration().toMillis() > 0) {
+			Duration waitDuration = properties.getWaitDuration();
+			if (properties.getEnableExponentialBackoff() != null && properties.getEnableExponentialBackoff()) {
+				if (properties.getExponentialBackoffMultiplier() != null) {
+					builder.intervalFunction(IntervalFunction.ofExponentialBackoff(waitDuration.toMillis(), properties.getExponentialBackoffMultiplier()));
+				} else {
+					builder.intervalFunction(IntervalFunction.ofExponentialBackoff(properties.getWaitDuration().toMillis()));
+				}
+			} else if (properties.getEnableRandomizedWait() != null && properties.getEnableRandomizedWait()) {
+				if (properties.getRandomizedWaitFactor() != null) {
+					builder.intervalFunction(IntervalFunction.ofRandomized(waitDuration.toMillis(), properties.getRandomizedWaitFactor()));
+				} else {
+					builder.intervalFunction(IntervalFunction.ofRandomized(waitDuration));
+				}
+			} else {
+				builder.waitDuration(Duration.ofMillis(properties.getWaitDuration().toMillis()));
+			}
+		}
+	}
+
+	/**
+	 * decide which retry delay policy will be configured based into the configured properties
+	 *
+	 * @param properties the backend retry properties
+	 * @param builder    the retry config builder
+	 * @deprecated since 0.16.0
+	 */
+	private void configureRetryIntervalFunctionInMillis(InstanceProperties properties, RetryConfig.Builder<Object> builder) {
 		if (properties.getWaitDurationMillis() != null && properties.getWaitDurationMillis() != 0) {
 			long waitDuration = properties.getWaitDurationMillis();
 			if (properties.getEnableExponentialBackoff() != null && properties.getEnableExponentialBackoff()) {
@@ -171,25 +202,6 @@ public class RetryConfigurationProperties {
 				}
 			} else {
 				builder.waitDuration(Duration.ofMillis(properties.getWaitDurationMillis()));
-			}
-		}
-		// these take precedence over deprecated properties. Setting one or the other will still work.
-		if (properties.getWaitDuration() != null && properties.getWaitDuration().toMillis() > 0) {
-			Duration waitDuration = properties.getWaitDuration();
-			if (properties.getEnableExponentialBackoff() != null && properties.getEnableExponentialBackoff()) {
-				if (properties.getExponentialBackoffMultiplier() != 0) {
-					builder.intervalFunction(IntervalFunction.ofExponentialBackoff(waitDuration.toMillis(), properties.getExponentialBackoffMultiplier()));
-				} else {
-					builder.intervalFunction(IntervalFunction.ofExponentialBackoff(properties.getWaitDuration().toMillis()));
-				}
-			} else if (properties.getEnableRandomizedWait() != null && properties.getEnableRandomizedWait()) {
-				if (properties.getRandomizedWaitFactor() != 0) {
-					builder.intervalFunction(IntervalFunction.ofRandomized(waitDuration.toMillis(), properties.getRandomizedWaitFactor()));
-				} else {
-					builder.intervalFunction(IntervalFunction.ofRandomized(waitDuration));
-				}
-			} else {
-				builder.waitDuration(Duration.ofMillis(properties.getWaitDuration().toMillis()));
 			}
 		}
 	}
@@ -263,6 +275,10 @@ public class RetryConfigurationProperties {
 		@Nullable
 		private String baseConfig;
 
+		/**
+		 * @return wait duration in milliseconds
+		 * @deprecated As of release 0.16.0 , use {@link #getWaitDuration()} instead
+		 */
 		@Deprecated
 		@Nullable
 		public Long getWaitDurationMillis() {
@@ -273,6 +289,11 @@ public class RetryConfigurationProperties {
 			}
 		}
 
+		/**
+		 * @param waitDurationMillis wait time in milliseconds
+		 * @return InstanceProperties
+		 * @deprecated As of release 0.16.0 , use {@link #setWaitDuration(Duration)} instead
+		 */
 		@Deprecated
 		public InstanceProperties setWaitDurationMillis(Long waitDurationMillis) {
 			this.waitDuration = Duration.ofMillis(waitDurationMillis);

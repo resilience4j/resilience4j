@@ -52,7 +52,7 @@ resilience4j:
             test2:
                 limitForPeriod: 100
                 limitRefreshPeriod: PT0.0000009S
-                timeout: PT0.010S
+                timeoutDuration: PT0.010S
     retry:
         configs:
             default:

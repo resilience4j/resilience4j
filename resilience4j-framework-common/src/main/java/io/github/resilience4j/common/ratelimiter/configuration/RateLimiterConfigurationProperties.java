@@ -53,7 +53,7 @@ public class RateLimiterConfigurationProperties {
 	}
 
 	private RateLimiterConfig buildRateLimiterConfig(RateLimiterConfig.Builder builder, @Nullable InstanceProperties instanceProperties) {
-		if (instanceProperties == null && builder != null) {
+		if (instanceProperties == null) {
 			return builder.build();
 		}
 
@@ -73,8 +73,8 @@ public class RateLimiterConfigurationProperties {
 			builder.timeoutDuration(Duration.ofMillis(instanceProperties.getTimeoutInMillis()));
 		}
 
-		if (instanceProperties.getTimeout() != null) {
-			builder.timeoutDuration(instanceProperties.getTimeout());
+		if (instanceProperties.getTimeoutDuration() != null) {
+			builder.timeoutDuration(instanceProperties.getTimeoutDuration());
 		}
 
 		return builder.build();
@@ -115,7 +115,7 @@ public class RateLimiterConfigurationProperties {
 
 		private Integer limitForPeriod;
 		private Duration limitRefreshPeriod;
-		private Duration timeout;
+		private Duration timeoutDuration;
 		@Nullable
 		private Boolean subscribeForEvents;
 		@Nullable
@@ -157,7 +157,7 @@ public class RateLimiterConfigurationProperties {
 		 * After each period rate limiter sets its permissions
 		 * count to {@link RateLimiterConfig#getLimitForPeriod()} value.
 		 * Default value is 500 nanoseconds.
-		 *
+		 * @deprecated As of release 0.16.0 , use {@link #getLimitRefreshPeriod()} instead
 		 * @return the period of limit refresh
 		 */
 		@Deprecated
@@ -175,7 +175,7 @@ public class RateLimiterConfigurationProperties {
 		 * After each period rate limiter sets its permissions
 		 * count to {@link RateLimiterConfig#getLimitForPeriod()} value.
 		 * Default value is 500 nanoseconds.
-		 *
+		 * @deprecated As of release 0.16.0 , use {@link #setLimitRefreshPeriod(Duration)} instead
 		 * @param limitRefreshPeriodInNanos the period of limit refresh
 		 */
 		@Deprecated
@@ -213,14 +213,14 @@ public class RateLimiterConfigurationProperties {
 		/**
 		 * Configures the default wait for permission duration.
 		 * Default value is 5 seconds.
-		 *
+		 * @deprecated As of release 0.16.0 , use {@link #getTimeoutDuration()}instead
 		 * @return wait for permission duration
 		 */
 		@Deprecated
 		@Nullable
 		public Integer getTimeoutInMillis() {
-			if (timeout != null) {
-				return (int)timeout.toMillis();
+			if (timeoutDuration != null) {
+				return (int) timeoutDuration.toMillis();
 			} else {
 				return null;
 			}
@@ -229,12 +229,12 @@ public class RateLimiterConfigurationProperties {
 		/**
 		 * Configures the default wait for permission duration.
 		 * Default value is 5 seconds.
-		 *
+		 * @deprecated As of release 0.16.0 , use {@link #setTimeoutDuration(Duration)} instead
 		 * @param timeoutInMillis wait for permission duration
 		 */
 		@Deprecated
 		public InstanceProperties setTimeoutInMillis(Integer timeoutInMillis) {
-			this.timeout = Duration.ofMillis(timeoutInMillis);
+			this.timeoutDuration = Duration.ofMillis(timeoutInMillis);
 			return this;
 		}
 
@@ -245,8 +245,8 @@ public class RateLimiterConfigurationProperties {
 		 * @return wait for permission duration
 		 */
 		@Nullable
-		public Duration getTimeout() {
-			return timeout;
+		public Duration getTimeoutDuration() {
+			return timeoutDuration;
 		}
 
 		/**
@@ -255,8 +255,8 @@ public class RateLimiterConfigurationProperties {
 		 *
 		 * @param timeout wait for permission duration
 		 */
-		public InstanceProperties setTimeout(Duration timeout) {
-			this.timeout = timeout;
+		public InstanceProperties setTimeoutDuration(Duration timeout) {
+			this.timeoutDuration = timeout;
 			return this;
 		}
 

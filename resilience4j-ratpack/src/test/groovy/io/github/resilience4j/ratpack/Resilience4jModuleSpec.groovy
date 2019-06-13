@@ -204,7 +204,7 @@ class Resilience4jModuleSpec extends Specification {
                       .rateLimiter('test2') {
                         it.setLimitForPeriod(100)
                                 .setLimitRefreshPeriod(Duration.ofNanos(900))
-                                .setTimeout(Duration.ofMillis(10))
+                                .setTimeoutDuration(Duration.ofMillis(10))
                     }
                 }
             }

@@ -47,7 +47,7 @@ public class CircuitBreakerConfigurationProperties {
 	public CircuitBreakerConfig createCircuitBreakerConfig(InstanceProperties instanceProperties) {
 		if (StringUtils.isNotEmpty(instanceProperties.getBaseConfig())) {
 			InstanceProperties baseProperties = configs.get(instanceProperties.getBaseConfig());
-			if(baseProperties == null){
+			if (baseProperties == null) {
 				throw new ConfigurationNotFoundException(instanceProperties.getBaseConfig());
 			}
 			return buildConfigFromBaseConfig(instanceProperties, baseProperties);
@@ -203,6 +203,7 @@ public class CircuitBreakerConfigurationProperties {
 		 * Returns the wait duration the CircuitBreaker will stay open, before it switches to half closed.
 		 *
 		 * @return the wait duration
+		 * @deprecated As of release 0.16.0 , use {@link #getWaitDurationInOpenState()} instead
 		 */
 		@Deprecated
 		@Nullable
@@ -218,6 +219,7 @@ public class CircuitBreakerConfigurationProperties {
 		 * Sets the wait duration the CircuitBreaker should stay open, before it switches to half closed.
 		 *
 		 * @param waitDurationInOpenStateMillis the wait duration
+		 * @deprecated As of release 0.16.0 , use {@link #setWaitDurationInOpenState(Duration)} instead
 		 */
 		@Deprecated
 		public InstanceProperties setWaitDurationInOpenStateMillis(Integer waitDurationInOpenStateMillis) {
