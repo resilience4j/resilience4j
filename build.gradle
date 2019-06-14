@@ -83,7 +83,6 @@ sonarqube {
         property "sonar.links.ci","https://travis-ci.org/resilience4j/resilience4j"
         property "sonar.links.scm","https://github.com/resilience4j/resilience4j"
         property "sonar.links.issue","https://github.com/resilience4j/resilience4j/issues"
-        property "sonar.language","java"
     }
 }
 def allTestCoverageFile = "$buildDir/jacoco/allTestCoverage.exec"
