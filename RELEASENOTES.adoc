@@ -226,6 +226,7 @@ NOTE: Breaking changes:
 == Version 0.16.0
 * Issue #325: Added instance methods to decorate functions with a CircuitBreaker
 * Issue #431: Don't prevent using other call adapters in CircuitBreakerCallAdapter
+* Issue #458: Fixed a bug where the reactor context was not available when using circuit breaker
 * Issue #469: Fixed a bug that registerHealthIndicator defined in a default config is not inherited
 * Issue #480: Fixed a bug in the decoration of a CompletionStage, if it's a Runnable which is executed async
 * Issue #486: Added bulkhead configs to resilience4j-ratpack
