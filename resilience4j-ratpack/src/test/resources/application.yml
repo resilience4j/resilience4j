@@ -27,6 +27,15 @@ resilience4j:
                 recordExceptions:
                     - io.github.resilience4j.ratpack.Resilience4jModuleSpec$DummyException1
                     - io.github.resilience4j.ratpack.Resilience4jModuleSpec$DummyException2
+            shared:
+                ringBufferSizeInClosedState: 200
+                ringBufferSizeInHalfOpenState: 20
+                waitDurationInOpenStateMillis: 1000
+                failureRateThreshold: 60
+                automaticTransitionFromOpenToHalfOpenEnabled: true
+                recordExceptions:
+                    - io.github.resilience4j.ratpack.Resilience4jModuleSpec$DummyException1
+                    - io.github.resilience4j.ratpack.Resilience4jModuleSpec$DummyException2
         instances:
             test1:
                 baseConfig: default
@@ -45,6 +54,10 @@ resilience4j:
                 limitForPeriod: 100
                 limitRefreshPeriodInNanos: 900
                 timeoutInMillis: 10
+            shared:
+                limitForPeriod: 100
+                limitRefreshPeriodInNanos: 900
+                timeoutInMillis: 10
         instances:
             test1:
                 baseConfig: default
@@ -56,6 +69,9 @@ resilience4j:
     retry:
         configs:
             default:
+                maxRetryAttempts: 3
+                waitDurationInMillis: 1000
+            shared:
                 maxRetryAttempts: 3
                 waitDurationInMillis: 1000
         instances:
@@ -70,6 +86,9 @@ resilience4j:
             default:
                 maxConcurrentCalls: 50
                 maxWaitTime: 500
+            shared:
+                maxConcurrentCalls: 50
+                maxWaitTime: 500
         instances:
             test1:
                 baseConfig: default
@@ -80,6 +99,12 @@ resilience4j:
     threadPoolBulkhead:
         configs:
             default:
+                threadPoolProperties:
+                    maxThreadPoolSize: 4
+                    coreThreadPoolSize: 2
+                    queueCapacity: 2
+                    keepAliveTime: 1000
+            shared:
                 threadPoolProperties:
                     maxThreadPoolSize: 4
                     coreThreadPoolSize: 2
