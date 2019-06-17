@@ -1,7 +1,6 @@
 apply plugin: 'groovy'
 
 dependencies {
-    implementation ( libraries.groovy )
     compileOnly ( libraries.ratpack )
     compile project(':resilience4j-annotations')
     compile project(':resilience4j-framework-common')
@@ -16,6 +15,7 @@ dependencies {
     compileOnly project(':resilience4j-prometheus')
     compileOnly project(':resilience4j-metrics')
     compileOnly ( libraries.hibernate_validator )
+    testCompile ( libraries.groovy )
     testCompile ( libraries.ratpack_test )
     testCompile ( libraries.spock )
     testCompile ( libraries.ratpack_metrics )

@@ -15,6 +15,7 @@ repositories {
 
 dependencies {
 	compile('io.github.resilience4j:resilience4j-ratpack:{release-version}')
+	compile('io.ratpack:ratpack-guice:{ratpackVersion}')
 }
 ```
 
@@ -502,11 +503,20 @@ resilience4j:
 Both dropwizard and prometheus metrics can be auto configured and enabled for all registered
 bulkhead instances, circuitbreaker instances, ratelimiter instances, and retry instances.
 
-For dropwizard metrics to work, add a compile dependency on resilience4j-metrics and
-bind a MetricRegistry instance.
+For dropwizard metrics to work, add a gradle compile dependency on resilience4j-metrics and ratpack-dropwizard-metrics
+and then bind a MetricRegistry instance.
 
-For prometheus metrics to work, add a compile dependency on resilience4j-prometheus and
+```
+compile('io.github.resilience4j:resilience4j-metrics:{release-version}')
+compile('io.ratpack:ratpack-dropwizard-metrics:${ratpackVersion}')
+```
+
+For prometheus metrics to work, add a gradle compile dependency on resilience4j-prometheus and
 bind a CollectorRegistry instance.
+
+```
+compile('io.github.resilience4j:resilience4j-prometheus:{release-version}')
+```
 
 Enabling Dropwizard Metrics:
 
