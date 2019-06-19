@@ -18,6 +18,7 @@
  */
 package io.github.resilience4j.circuitbreaker;
 
+import io.github.resilience4j.core.IntervalFunction;
 import io.github.resilience4j.core.lang.Nullable;
 import io.github.resilience4j.core.predicate.PredicateCreator;
 
@@ -45,6 +46,7 @@ public class CircuitBreakerConfig {
     private int ringBufferSizeInHalfOpenState = DEFAULT_RING_BUFFER_SIZE_IN_HALF_OPEN_STATE;
     private int ringBufferSizeInClosedState = DEFAULT_RING_BUFFER_SIZE_IN_CLOSED_STATE;
     private Duration waitDurationInOpenState = Duration.ofSeconds(DEFAULT_WAIT_DURATION_IN_OPEN_STATE);
+    private IntervalFunction waitIntervalFunctionInOpenState = null;
     // The default exception predicate counts all exceptions as failures.
     private Predicate<Throwable> recordFailurePredicate = DEFAULT_RECORD_FAILURE_PREDICATE;
     private boolean automaticTransitionFromOpenToHalfOpenEnabled = false;
@@ -87,6 +89,8 @@ public class CircuitBreakerConfig {
         return waitDurationInOpenState;
     }
 
+    public IntervalFunction getWaitIntervalFunctionInOpenState() { return waitIntervalFunctionInOpenState; }
+
     public int getRingBufferSizeInHalfOpenState() {
         return ringBufferSizeInHalfOpenState;
     }
@@ -114,10 +118,12 @@ public class CircuitBreakerConfig {
         private int ringBufferSizeInHalfOpenState = DEFAULT_RING_BUFFER_SIZE_IN_HALF_OPEN_STATE;
         private int ringBufferSizeInClosedState = DEFAULT_RING_BUFFER_SIZE_IN_CLOSED_STATE;
         private Duration waitDurationInOpenState = Duration.ofSeconds(DEFAULT_WAIT_DURATION_IN_OPEN_STATE);
+        private IntervalFunction waitIntervalFunctionInOpenState = null;
         private boolean automaticTransitionFromOpenToHalfOpenEnabled = false;
 
         public Builder(CircuitBreakerConfig baseConfig) {
             this.waitDurationInOpenState = baseConfig.waitDurationInOpenState;
+            this.waitIntervalFunctionInOpenState = baseConfig.waitIntervalFunctionInOpenState;
             this.ringBufferSizeInHalfOpenState = baseConfig.ringBufferSizeInHalfOpenState;
             this.ringBufferSizeInClosedState = baseConfig.ringBufferSizeInClosedState;
             this.failureRateThreshold = baseConfig.failureRateThreshold;
@@ -159,6 +165,16 @@ public class CircuitBreakerConfig {
                 throw new IllegalArgumentException("waitDurationInOpenState must be at least 1[ms]");
             }
             this.waitDurationInOpenState = waitDurationInOpenState;
+            return this;
+        }
+
+        /**
+         * configures the variable wait duration which specifies how long the CircuitBreaker should stay open, before it switches to half open. Useful for exponential back-off
+         * @param waitIntervalFunctionInOpenState Interval function that returns wait time as a function of attempts
+         * @return the CircuitBreakerConfig.Builder
+         */
+        public Builder waitIntervalFunctionInOpenState(IntervalFunction waitIntervalFunctionInOpenState) {
+            this.waitIntervalFunctionInOpenState = waitIntervalFunctionInOpenState;
             return this;
         }
 
@@ -286,6 +302,7 @@ public class CircuitBreakerConfig {
         public CircuitBreakerConfig build() {
             CircuitBreakerConfig config = new CircuitBreakerConfig();
             config.waitDurationInOpenState = waitDurationInOpenState;
+            config.waitIntervalFunctionInOpenState = waitIntervalFunctionInOpenState;
             config.failureRateThreshold = failureRateThreshold;
             config.ringBufferSizeInClosedState = ringBufferSizeInClosedState;
             config.ringBufferSizeInHalfOpenState = ringBufferSizeInHalfOpenState;

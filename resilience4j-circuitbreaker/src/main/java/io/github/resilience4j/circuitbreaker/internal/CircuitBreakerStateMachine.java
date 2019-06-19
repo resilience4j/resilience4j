@@ -18,12 +18,15 @@
  */
 package io.github.resilience4j.circuitbreaker.internal;
 
+import static java.time.temporal.ChronoUnit.MILLIS;
+
 import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.circuitbreaker.event.*;
 import io.github.resilience4j.core.EventConsumer;
 import io.github.resilience4j.core.EventProcessor;
+import io.github.resilience4j.core.IntervalFunction;
 import io.github.resilience4j.core.lang.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,6 +34,7 @@ import org.slf4j.LoggerFactory;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.temporal.TemporalUnit;
 import java.util.Objects;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.ScheduledExecutorService;
@@ -258,7 +262,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
 
     @Override
     public void transitionToForcedOpenState() {
-        stateTransition(FORCED_OPEN, currentState -> new ForcedOpenState());
+        stateTransition(FORCED_OPEN, currentState -> new ForcedOpenState(currentState.attempts() + 1));
     }
 
     @Override
@@ -268,12 +272,12 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
 
     @Override
     public void transitionToOpenState() {
-        stateTransition(OPEN, currentState -> new OpenState(currentState.getMetrics()));
+        stateTransition(OPEN, currentState -> new OpenState(currentState.attempts() + 1, currentState.getMetrics()));
     }
 
     @Override
     public void transitionToHalfOpenState() {
-        stateTransition(HALF_OPEN, currentState -> new HalfOpenState());
+        stateTransition(HALF_OPEN, currentState -> new HalfOpenState(currentState.attempts()));
     }
 
 
@@ -429,6 +433,11 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
             checkFailureRate(circuitBreakerMetrics.onSuccess());
         }
 
+        @Override
+        public int attempts() {
+            return 0;
+        }
+
         /**
          * Checks if the current failure rate is above the threshold.
          * If the failure rate is above the threshold, transitions the state machine to OPEN state.
@@ -461,11 +470,13 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
 
     private class OpenState implements CircuitBreakerState {
 
+        private final int attempts;
         private final Instant retryAfterWaitDuration;
         private final CircuitBreakerMetrics circuitBreakerMetrics;
 
-        OpenState(CircuitBreakerMetrics circuitBreakerMetrics) {
-            final Duration waitDurationInOpenState = circuitBreakerConfig.getWaitDurationInOpenState();
+        OpenState(final int attempts, CircuitBreakerMetrics circuitBreakerMetrics) {
+            this.attempts = attempts;
+            final Duration waitDurationInOpenState = getWaitDuration(attempts);
             this.retryAfterWaitDuration = clock.instant().plus(waitDurationInOpenState);
             this.circuitBreakerMetrics = circuitBreakerMetrics;
 
@@ -473,6 +484,14 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
                 ScheduledExecutorService scheduledExecutorService = schedulerFactory.getScheduler();
                 scheduledExecutorService.schedule(CircuitBreakerStateMachine.this::transitionToHalfOpenState, waitDurationInOpenState.toMillis(), TimeUnit.MILLISECONDS);
             }
+        }
+
+        private Duration getWaitDuration(int attempts) {
+            IntervalFunction intervalFunction = circuitBreakerConfig.getWaitIntervalFunctionInOpenState();
+            if (intervalFunction != null) {
+                return Duration.of(intervalFunction.apply(attempts), MILLIS);
+            }
+            return circuitBreakerConfig.getWaitDurationInOpenState();
         }
 
         /**
@@ -524,6 +543,11 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
             // Thread 2 calls onError and the state changes from CLOSED to OPEN before Thread 1 calls onSuccess.
             // But the onSuccess event should still be recorded, even if it happened after the state transition.
             circuitBreakerMetrics.onSuccess();
+        }
+
+        @Override
+        public int attempts() {
+            return attempts;
         }
 
         /**
@@ -583,6 +607,11 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
             // noOp
         }
 
+        @Override
+        public int attempts() {
+            return 0;
+        }
+
         /**
          * Get the state of the CircuitBreaker
          */
@@ -603,8 +632,10 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
     private class ForcedOpenState implements CircuitBreakerState {
 
         private final CircuitBreakerMetrics circuitBreakerMetrics;
+        private final int attempts;
 
-        ForcedOpenState() {
+        ForcedOpenState(int attempts) {
+            this.attempts = attempts;
             final int size = circuitBreakerConfig.getRingBufferSizeInHalfOpenState();
             this.circuitBreakerMetrics = new CircuitBreakerMetrics(size);
         }
@@ -647,6 +678,11 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
             // noOp
         }
 
+        @Override
+        public int attempts() {
+            return attempts;
+        }
+
         /**
          * Get the state of the CircuitBreaker
          */
@@ -665,13 +701,15 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
 
         private CircuitBreakerMetrics circuitBreakerMetrics;
         private final float failureRateThreshold;
+        private final int attempts;
         private final AtomicInteger testRequestCounter;
 
-        HalfOpenState() {
+        HalfOpenState(int attempts) {
             this.circuitBreakerMetrics = new CircuitBreakerMetrics(
                     circuitBreakerConfig.getRingBufferSizeInHalfOpenState());
             this.failureRateThreshold = circuitBreakerConfig.getFailureRateThreshold();
             this.testRequestCounter = new AtomicInteger(circuitBreakerConfig.getRingBufferSizeInHalfOpenState());
+            this.attempts = attempts;
         }
 
         /**
@@ -713,6 +751,11 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
         public void onSuccess() {
             // CircuitBreakerMetrics is thread-safe
             checkFailureRate(circuitBreakerMetrics.onSuccess());
+        }
+
+        @Override
+        public int attempts() {
+            return attempts;
         }
 
         /**
@@ -757,6 +800,8 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
         void onError(Throwable throwable);
 
         void onSuccess();
+
+        int attempts();
 
         CircuitBreaker.State getState();
 
