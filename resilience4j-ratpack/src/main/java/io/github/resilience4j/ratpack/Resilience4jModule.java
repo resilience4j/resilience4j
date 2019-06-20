@@ -46,6 +46,7 @@ import io.github.resilience4j.metrics.ThreadPoolBulkheadMetrics;
 import io.github.resilience4j.prometheus.collectors.BulkheadMetricsCollector;
 import io.github.resilience4j.prometheus.collectors.CircuitBreakerMetricsCollector;
 import io.github.resilience4j.prometheus.collectors.RateLimiterMetricsCollector;
+import io.github.resilience4j.prometheus.collectors.RetryMetricsCollector;
 import io.github.resilience4j.prometheus.collectors.ThreadPoolBulkheadMetricsCollector;
 import io.github.resilience4j.ratelimiter.RateLimiterConfig;
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
@@ -361,10 +362,12 @@ public class Resilience4jModule extends ConfigurableModule<Resilience4jConfig> {
             if (resilience4jConfig.isPrometheus() && registry.maybeGet(CollectorRegistry.class).isPresent()) {
                 CollectorRegistry collectorRegistry = registry.get(CollectorRegistry.class);
                 CircuitBreakerMetricsCollector circuitBreakerMetricsCollector = CircuitBreakerMetricsCollector.ofCircuitBreakerRegistry(circuitBreakerRegistry);
+                RetryMetricsCollector retryMetricsCollector = RetryMetricsCollector.ofRetryRegistry(retryRegistry);
                 RateLimiterMetricsCollector rateLimiterMetricsCollector = RateLimiterMetricsCollector.ofRateLimiterRegistry(rateLimiterRegistry);
                 BulkheadMetricsCollector bulkheadMetricsCollector = BulkheadMetricsCollector.ofBulkheadRegistry(bulkheadRegistry);
                 ThreadPoolBulkheadMetricsCollector threadPoolBulkheadMetricsCollector = ThreadPoolBulkheadMetricsCollector.ofBulkheadRegistry(threadPoolBulkheadRegistry);
                 circuitBreakerMetricsCollector.register(collectorRegistry);
+                retryMetricsCollector.register(collectorRegistry);
                 rateLimiterMetricsCollector.register(collectorRegistry);
                 bulkheadMetricsCollector.register(collectorRegistry);
                 threadPoolBulkheadMetricsCollector.register(collectorRegistry);
