@@ -30,6 +30,7 @@ import java.util.Map;
 import static com.codahale.metrics.MetricRegistry.name;
 import static io.github.resilience4j.bulkhead.utils.MetricNames.AVAILABLE_QUEUE_CAPACITY;
 import static io.github.resilience4j.bulkhead.utils.MetricNames.CURRENT_THREAD_POOL_SIZE;
+import static io.github.resilience4j.bulkhead.utils.MetricNames.DEFAULT_PREFIX;
 import static io.github.resilience4j.bulkhead.utils.MetricNames.DEFAULT_PREFIX_THREAD_POOL;
 import static java.util.Objects.requireNonNull;
 
@@ -37,24 +38,37 @@ import static java.util.Objects.requireNonNull;
  * An adapter which exports {@link Bulkhead.Metrics} as Dropwizard Metrics Gauges.
  */
 public class ThreadPoolBulkheadMetrics implements MetricSet {
-    private final MetricRegistry metricRegistry = new MetricRegistry();
+    private final MetricRegistry metricRegistry;
 
     private ThreadPoolBulkheadMetrics(Iterable<ThreadPoolBulkhead> bulkheads) {
-        this(DEFAULT_PREFIX_THREAD_POOL, bulkheads);
+        this(DEFAULT_PREFIX_THREAD_POOL, bulkheads, new MetricRegistry());
     }
 
-    private ThreadPoolBulkheadMetrics(String prefix, Iterable<ThreadPoolBulkhead> bulkheads) {
+    private ThreadPoolBulkheadMetrics(String prefix, Iterable<ThreadPoolBulkhead> bulkheads, MetricRegistry metricRegistry) {
         requireNonNull(prefix);
         requireNonNull(bulkheads);
+        requireNonNull(metricRegistry);
+        this.metricRegistry = metricRegistry;
         bulkheads.forEach(bulkhead -> {
-                    String name = bulkhead.getName();
+            String name = bulkhead.getName();
             //number of available concurrent calls as an integer
-                    metricRegistry.register(name(prefix, name, CURRENT_THREAD_POOL_SIZE),
-                            (Gauge<Integer>) () -> bulkhead.getMetrics().getThreadPoolSize());
-                    metricRegistry.register(name(prefix, name, AVAILABLE_QUEUE_CAPACITY),
-                            (Gauge<Integer>) () -> bulkhead.getMetrics().getRemainingQueueCapacity());
-                }
-        );
+            metricRegistry.register(name(prefix, name, CURRENT_THREAD_POOL_SIZE),
+                    (Gauge<Integer>) () -> bulkhead.getMetrics().getThreadPoolSize());
+            metricRegistry.register(name(prefix, name, AVAILABLE_QUEUE_CAPACITY),
+                    (Gauge<Integer>) () -> bulkhead.getMetrics().getRemainingQueueCapacity());
+        });
+    }
+
+    /**
+     * Creates a new instance BulkheadMetrics {@link ThreadPoolBulkheadMetrics} with specified metrics names prefix and
+     * a {@link BulkheadRegistry} as a source.
+     *
+     * @param prefix           the prefix of metrics names
+     * @param bulkheadRegistry the registry of bulkheads
+     * @param metricRegistry   the metric registry
+     */
+    public static ThreadPoolBulkheadMetrics ofBulkheadRegistry(String prefix, ThreadPoolBulkheadRegistry bulkheadRegistry, MetricRegistry metricRegistry) {
+        return new ThreadPoolBulkheadMetrics(prefix, bulkheadRegistry.getAllBulkheads(), metricRegistry);
     }
 
     /**
@@ -65,7 +79,17 @@ public class ThreadPoolBulkheadMetrics implements MetricSet {
      * @param bulkheadRegistry the registry of bulkheads
      */
     public static ThreadPoolBulkheadMetrics ofBulkheadRegistry(String prefix, ThreadPoolBulkheadRegistry bulkheadRegistry) {
-        return new ThreadPoolBulkheadMetrics(prefix, bulkheadRegistry.getAllBulkheads());
+        return new ThreadPoolBulkheadMetrics(prefix, bulkheadRegistry.getAllBulkheads(), new MetricRegistry());
+    }
+
+    /**
+     * Creates a new instance BulkheadMetrics {@link ThreadPoolBulkheadMetrics} with
+     * a {@link BulkheadRegistry} as a source.
+     *
+     * @param bulkheadRegistry the registry of bulkheads
+     */
+    public static ThreadPoolBulkheadMetrics ofBulkheadRegistry(ThreadPoolBulkheadRegistry bulkheadRegistry, MetricRegistry metricRegistry) {
+        return new ThreadPoolBulkheadMetrics(DEFAULT_PREFIX, bulkheadRegistry.getAllBulkheads(), metricRegistry);
     }
 
     /**
@@ -95,7 +119,7 @@ public class ThreadPoolBulkheadMetrics implements MetricSet {
      * @param bulkheads the bulkheads
      */
     public static ThreadPoolBulkheadMetrics ofIterable(String prefix, Iterable<ThreadPoolBulkhead> bulkheads) {
-        return new ThreadPoolBulkheadMetrics(prefix, bulkheads);
+        return new ThreadPoolBulkheadMetrics(prefix, bulkheads, new MetricRegistry());
     }
 
 

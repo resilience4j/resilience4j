@@ -828,6 +828,7 @@ class Resilience4jModuleSpec extends Specification {
                      'resilience4j_circuitbreaker_failure_rate',
                      'resilience4j_ratelimiter_available_permissions',
                      'resilience4j_ratelimiter_waiting_threads',
+                     'resilience4j_retry_calls',
                      'resilience4j_thread_pool_bulkhead_available_queue_capacity',
                      'resilience4j_thread_pool_bulkhead_current_thread_pool_size'].sort()
     }
