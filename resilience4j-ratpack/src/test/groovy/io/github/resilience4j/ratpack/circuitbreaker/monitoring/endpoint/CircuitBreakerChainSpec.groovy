@@ -28,6 +28,8 @@ import ratpack.test.http.TestHttpClient
 import spock.lang.AutoCleanup
 import spock.lang.Specification
 
+import java.time.Duration
+
 import static ratpack.groovy.test.embed.GroovyEmbeddedApp.ratpack
 
 class CircuitBreakerChainSpec extends Specification {
@@ -44,19 +46,16 @@ class CircuitBreakerChainSpec extends Specification {
 
     def "test states"() {
         given: "a ratpack app"
-        def circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults()
-
         app = ratpack {
             serverConfig {
                 development(false)
             }
             bindings {
-                bindInstance(CircuitBreakerRegistry, circuitBreakerRegistry)
                 module(Resilience4jModule) {
                     it.circuitBreaker('test1') {
-                        it.setFailureRateThreshold(75).setWaitDurationInOpenStateMillis(5000)
+                        it.setFailureRateThreshold(75).setWaitDurationInOpenState(Duration.ofMillis(5000))
                     }.circuitBreaker('test2') {
-                        it.setFailureRateThreshold(25).setWaitDurationInOpenStateMillis(5000)
+                        it.setFailureRateThreshold(25).setWaitDurationInOpenState(Duration.ofMillis(5000))
                     }
                 }
             }
@@ -70,6 +69,7 @@ class CircuitBreakerChainSpec extends Specification {
         app.server.start() // override lazy start
 
         and: "some circuit breaker events"
+        def circuitBreakerRegistry = app.server.registry.get().get(CircuitBreakerRegistry)
         ['test1', 'test2'].each {
             def c = circuitBreakerRegistry.circuitBreaker(it)
             c.onSuccess(1000)
@@ -106,18 +106,16 @@ class CircuitBreakerChainSpec extends Specification {
 
     def "test events"() {
         given: "an app"
-        def circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults()
         app = ratpack {
             serverConfig {
                 development(false)
             }
             bindings {
-                bindInstance(CircuitBreakerRegistry, circuitBreakerRegistry)
                 module(Resilience4jModule) {
                     it.circuitBreaker('test1') {
-                        it.setFailureRateThreshold(75).setWaitDurationInOpenStateMillis(5000)
+                        it.setFailureRateThreshold(75).setWaitDurationInOpenState(Duration.ofMillis(5000))
                     }.circuitBreaker('test2') {
-                        it.setFailureRateThreshold(25).setWaitDurationInOpenStateMillis(5000)
+                        it.setFailureRateThreshold(25).setWaitDurationInOpenState(Duration.ofMillis(5000))
                     }
                 }
             }
@@ -131,6 +129,7 @@ class CircuitBreakerChainSpec extends Specification {
         app.server.start() // override lazy start
 
         and: "some circuit breaker events"
+        def circuitBreakerRegistry = app.server.registry.get().get(CircuitBreakerRegistry)
         ['test1', 'test2'].each {
             def c = circuitBreakerRegistry.circuitBreaker(it)
             c.onSuccess(1000)
@@ -177,18 +176,16 @@ class CircuitBreakerChainSpec extends Specification {
 
     def "test stream events"() {
         given: "an app"
-        def circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults()
         app = ratpack {
             serverConfig {
                 development(false)
             }
             bindings {
-                bindInstance(CircuitBreakerRegistry, circuitBreakerRegistry)
                 module(Resilience4jModule) {
                     it.circuitBreaker('test1') {
-                        it.setFailureRateThreshold(75).setWaitDurationInOpenStateMillis(5000)
+                        it.setFailureRateThreshold(75).setWaitDurationInOpenState(Duration.ofMillis(5000))
                     }.circuitBreaker('test2') {
-                        it.setFailureRateThreshold(25).setWaitDurationInOpenStateMillis(5000)
+                        it.setFailureRateThreshold(25).setWaitDurationInOpenState(Duration.ofMillis(5000))
                     }
                 }
             }
@@ -201,6 +198,7 @@ class CircuitBreakerChainSpec extends Specification {
         app.server.start() // override lazy start
 
         when: "we get all circuit breaker events"
+        def circuitBreakerRegistry = app.server.registry.get().get(CircuitBreakerRegistry)
         ['test1', 'test2'].each {
             def c = circuitBreakerRegistry.circuitBreaker(it)
             c.onSuccess(1000)
@@ -248,18 +246,16 @@ class CircuitBreakerChainSpec extends Specification {
 
     def "test disabled"() {
         given: "an app"
-        def circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults()
         app = ratpack {
             serverConfig {
                 development(false)
             }
             bindings {
-                bindInstance(CircuitBreakerRegistry, circuitBreakerRegistry)
                 module(Resilience4jModule) {
                     it.circuitBreaker('test1') {
-                        it.setFailureRateThreshold(75).setWaitDurationInOpenStateMillis(5000)
+                        it.setFailureRateThreshold(75).setWaitDurationInOpenState(Duration.ofMillis(5000))
                     }.circuitBreaker('test2') {
-                        it.setFailureRateThreshold(25).setWaitDurationInOpenStateMillis(5000)
+                        it.setFailureRateThreshold(25).setWaitDurationInOpenState(Duration.ofMillis(5000))
                     }.endpoints {
                         it.circuitBreakers {
                             it.enabled(false)
@@ -272,6 +268,7 @@ class CircuitBreakerChainSpec extends Specification {
         app.server.start() // override lazy start
 
         and: "some circuit breaker events"
+        def circuitBreakerRegistry = app.server.registry.get().get(CircuitBreakerRegistry)
         ['test1', 'test2'].each {
             def c = circuitBreakerRegistry.circuitBreaker(it)
             c.onSuccess(1000)
