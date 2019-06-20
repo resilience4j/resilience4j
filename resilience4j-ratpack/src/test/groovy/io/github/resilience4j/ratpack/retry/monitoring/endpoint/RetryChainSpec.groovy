@@ -17,11 +17,11 @@
 package io.github.resilience4j.ratpack.retry.monitoring.endpoint
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import io.github.resilience4j.common.retry.monitoring.endpoint.RetryEventsEndpointResponse
 import io.github.resilience4j.ratpack.Resilience4jModule
 import io.github.resilience4j.retry.Retry
 import io.github.resilience4j.retry.RetryRegistry
 import io.github.resilience4j.retry.event.RetryEvent
-import io.github.resilience4j.common.retry.monitoring.endpoint.RetryEventsEndpointResponse
 import io.vavr.CheckedFunction0
 import io.vavr.control.Try
 import ratpack.http.client.HttpClient
@@ -30,6 +30,8 @@ import ratpack.test.exec.ExecHarness
 import ratpack.test.http.TestHttpClient
 import spock.lang.AutoCleanup
 import spock.lang.Specification
+
+import java.time.Duration
 
 import static ratpack.groovy.test.embed.GroovyEmbeddedApp.ratpack
 
@@ -47,18 +49,16 @@ class RetryChainSpec extends Specification {
 
     def "test events"() {
         given: "an app"
-        def retryRegistry = RetryRegistry.ofDefaults()
         app = ratpack {
             serverConfig {
                 development(false)
             }
             bindings {
-                bindInstance(RetryRegistry, retryRegistry)
                 module(Resilience4jModule) {
                     it.retry('test1') {
-                        it.setMaxRetryAttempts(3).setWaitDurationMillis(100)
+                        it.setMaxRetryAttempts(3).setWaitDuration(Duration.ofMillis(100))
                     }.retry('test2') {
-                        it.setMaxRetryAttempts(3).setWaitDurationMillis(100)
+                        it.setMaxRetryAttempts(3).setWaitDuration(Duration.ofMillis(100))
                     }
                 }
             }
@@ -73,6 +73,7 @@ class RetryChainSpec extends Specification {
 
         when: "we do a sanity check"
         def actual = client.get()
+        def retryRegistry = app.server.registry.get().get(RetryRegistry)
 
         then: "it works"
         actual.statusCode == 200
@@ -129,18 +130,16 @@ class RetryChainSpec extends Specification {
 
     def "test stream events"() {
         given: "an app"
-        def retryRegistry = RetryRegistry.ofDefaults()
         app = ratpack {
             serverConfig {
                 development(false)
             }
             bindings {
-                bindInstance(RetryRegistry, retryRegistry)
                 module(Resilience4jModule) {
                     it.retry('test1') {
-                        it.setMaxRetryAttempts(3).setWaitDurationMillis(100)
+                        it.setMaxRetryAttempts(3).setWaitDuration(Duration.ofMillis(100))
                     }.retry('test2') {
-                        it.setMaxRetryAttempts(3).setWaitDurationMillis(100)
+                        it.setMaxRetryAttempts(3).setWaitDuration(Duration.ofMillis(100))
                     }
                 }
             }
@@ -154,6 +153,7 @@ class RetryChainSpec extends Specification {
         app.server.start() // override lazy start
 
         when: "we get all retry events"
+        def retryRegistry = app.server.registry.get().get(RetryRegistry)
         ['test1', 'test2'].each {
             def r = retryRegistry.retry(it)
             Try.of(Retry.decorateCheckedSupplier(r, { throw new Exception('derek olk'); 'unreachable' } as CheckedFunction0<String>)).recover { "recovered" }.get()
@@ -200,18 +200,16 @@ class RetryChainSpec extends Specification {
 
     def "test disabled"() {
         given: "an app"
-        def retryRegistry = RetryRegistry.ofDefaults()
         app = ratpack {
             serverConfig {
                 development(false)
             }
             bindings {
-                bindInstance(RetryRegistry, retryRegistry)
                 module(Resilience4jModule) {
                     it.retry('test1') {
-                        it.setMaxRetryAttempts(3).setWaitDurationMillis(100)
+                        it.setMaxRetryAttempts(3).setWaitDuration(Duration.ofMillis(100))
                     }.retry('test2') {
-                        it.setMaxRetryAttempts(3).setWaitDurationMillis(100)
+                        it.setMaxRetryAttempts(3).setWaitDuration(Duration.ofMillis(100))
                     }.endpoints {
                         it.retries {
                             it.enabled(false)
@@ -224,6 +222,7 @@ class RetryChainSpec extends Specification {
         app.server.start() // override lazy start
 
         when: "we get all retry events"
+        def retryRegistry = app.server.registry.get().get(RetryRegistry)
         ['test1', 'test2'].each {
             def r = retryRegistry.retry(it)
             Try.of(Retry.decorateCheckedSupplier(r, {

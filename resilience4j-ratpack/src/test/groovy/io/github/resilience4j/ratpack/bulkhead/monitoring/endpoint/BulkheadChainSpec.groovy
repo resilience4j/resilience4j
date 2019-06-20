@@ -26,6 +26,8 @@ import ratpack.test.http.TestHttpClient
 import spock.lang.AutoCleanup
 import spock.lang.Specification
 
+import java.time.Duration
+
 import static ratpack.groovy.test.embed.GroovyEmbeddedApp.ratpack
 
 class BulkheadChainSpec extends Specification {
@@ -41,18 +43,16 @@ class BulkheadChainSpec extends Specification {
 
     def "test events"() {
         given: "an app"
-        def bulkheadRegistry = BulkheadRegistry.ofDefaults()
         app = ratpack {
             serverConfig {
                 development(false)
             }
             bindings {
-                bindInstance(BulkheadRegistry, bulkheadRegistry)
                 module(Resilience4jModule) {
                     it.bulkhead('test1') {
-                        it.setMaxConcurrentCalls(10).setMaxWaitTime(0)
+                        it.setMaxConcurrentCalls(10).setMaxWaitDuration(Duration.ofMillis(0))
                     }.bulkhead('test2') {
-                        it.setMaxConcurrentCalls(20).setMaxWaitTime(0)
+                        it.setMaxConcurrentCalls(20).setMaxWaitDuration(Duration.ofMillis(0))
                     }
                 }
             }
@@ -66,6 +66,7 @@ class BulkheadChainSpec extends Specification {
         app.server.start() // override lazy start
 
         and: "some bulkhead events"
+        def bulkheadRegistry = app.server.registry.get().get(BulkheadRegistry)
         ['test1', 'test2'].each {
             bulkheadRegistry.bulkhead(it).with {
                 tryAcquirePermission()
@@ -121,18 +122,16 @@ class BulkheadChainSpec extends Specification {
 
     def "test stream events"() {
         given: "an app"
-        def bulkheadRegistry = BulkheadRegistry.ofDefaults()
         app = ratpack {
             serverConfig {
                 development(false)
             }
             bindings {
-                bindInstance(BulkheadRegistry, bulkheadRegistry)
                 module(Resilience4jModule) {
                     it.bulkhead('test1') {
-                        it.setMaxConcurrentCalls(10).setMaxWaitTime(9)
+                        it.setMaxConcurrentCalls(10).setMaxWaitDuration(Duration.ofMillis(9))
                     }.bulkhead('test2') {
-                        it.setMaxConcurrentCalls(20).setMaxWaitTime(0)
+                        it.setMaxConcurrentCalls(10).setMaxWaitDuration(Duration.ofMillis(0))
                     }
                 }
             }
@@ -145,6 +144,7 @@ class BulkheadChainSpec extends Specification {
         app.server.start() // override lazy start
 
         when: "we get all bulkhead events"
+        def bulkheadRegistry = app.server.registry.get().get(BulkheadRegistry)
         ['test1', 'test2'].each {
             bulkheadRegistry.bulkhead(it).with {
                 tryAcquirePermission()
@@ -194,18 +194,16 @@ class BulkheadChainSpec extends Specification {
 
     def "test disabled"() {
         given: "an app"
-        def bulkheadRegistry = BulkheadRegistry.ofDefaults()
         app = ratpack {
             serverConfig {
                 development(false)
             }
             bindings {
-                bindInstance(BulkheadRegistry, bulkheadRegistry)
                 module(Resilience4jModule) {
                     it.bulkhead('test1') {
-                        it.setMaxConcurrentCalls(10).setMaxWaitTime(0)
+                        it.setMaxConcurrentCalls(10).setMaxWaitDuration(Duration.ofMillis(0))
                     }.bulkhead('test2') {
-                        it.setMaxConcurrentCalls(20).setMaxWaitTime(0)
+                        it.setMaxConcurrentCalls(20).setMaxWaitDuration(Duration.ofMillis(0))
                     }.endpoints {
                         it.bulkheads {
                             it.enabled(false)
@@ -218,6 +216,7 @@ class BulkheadChainSpec extends Specification {
         app.server.start() // override lazy start
 
         and: "some bulkhead events"
+        def bulkheadRegistry = app.server.registry.get().get(BulkheadRegistry)
         ['test1', 'test2'].each {
             bulkheadRegistry.bulkhead(it).with {
                 tryAcquirePermission()
