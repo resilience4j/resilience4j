@@ -41,8 +41,6 @@ public class BulkheadMetricsAutoConfiguration {
 	@Bean
 	@ConditionalOnMissingBean
 	public BulkheadMetrics registerBulkheadMetrics(BulkheadRegistry bulkheadRegistry, MetricRegistry metricRegistry) {
-		BulkheadMetrics bulkheadMetrics = BulkheadMetrics.ofBulkheadRegistry(bulkheadRegistry);
-		metricRegistry.registerAll(bulkheadMetrics);
-		return bulkheadMetrics;
+		return BulkheadMetrics.ofBulkheadRegistry(bulkheadRegistry, metricRegistry);
 	}
 }
