@@ -1,17 +1,16 @@
 package io.github.resilience4j.retry.configure;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.junit.MockitoJUnitRunner;
-
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.core.ConfigurationNotFoundException;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryRegistry;
 import io.github.resilience4j.retry.event.RetryEvent;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.junit.MockitoJUnitRunner;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
  * test custom init of retry configuration
@@ -22,15 +21,15 @@ public class RetryConfigurationTest {
 	@Test
 	public void testRetryRegistry() {
 		//Given
-		RetryConfigurationProperties.BackendProperties backendProperties1 = new RetryConfigurationProperties.BackendProperties();
-		backendProperties1.setMaxRetryAttempts(3);
+		io.github.resilience4j.common.retry.configuration.RetryConfigurationProperties.InstanceProperties instanceProperties1 = new io.github.resilience4j.common.retry.configuration.RetryConfigurationProperties.InstanceProperties();
+		instanceProperties1.setMaxRetryAttempts(3);
 
-		RetryConfigurationProperties.BackendProperties backendProperties2 = new RetryConfigurationProperties.BackendProperties();
-		backendProperties2.setMaxRetryAttempts(2);
+		io.github.resilience4j.common.retry.configuration.RetryConfigurationProperties.InstanceProperties instanceProperties2 = new io.github.resilience4j.common.retry.configuration.RetryConfigurationProperties.InstanceProperties();
+		instanceProperties2.setMaxRetryAttempts(2);
 
 		RetryConfigurationProperties retryConfigurationProperties = new RetryConfigurationProperties();
-		retryConfigurationProperties.getBackends().put("backend1", backendProperties1);
-		retryConfigurationProperties.getBackends().put("backend2", backendProperties2);
+		retryConfigurationProperties.getInstances().put("backend1", instanceProperties1);
+		retryConfigurationProperties.getInstances().put("backend2", instanceProperties2);
 
 		RetryConfiguration retryConfiguration = new RetryConfiguration();
 		DefaultEventConsumerRegistry<RetryEvent> eventConsumerRegistry = new DefaultEventConsumerRegistry<>();
@@ -54,28 +53,28 @@ public class RetryConfigurationTest {
 	@Test
 	public void testCreateRetryRegistryWithSharedConfigs() {
 		//Given
-		RetryConfigurationProperties.BackendProperties defaultProperties = new RetryConfigurationProperties.BackendProperties();
+		io.github.resilience4j.common.retry.configuration.RetryConfigurationProperties.InstanceProperties defaultProperties = new io.github.resilience4j.common.retry.configuration.RetryConfigurationProperties.InstanceProperties();
 		defaultProperties.setMaxRetryAttempts(3);
-		defaultProperties.setWaitDuration(50L);
+		defaultProperties.setWaitDurationMillis(50L);
 
-		RetryConfigurationProperties.BackendProperties sharedProperties = new RetryConfigurationProperties.BackendProperties();
+		io.github.resilience4j.common.retry.configuration.RetryConfigurationProperties.InstanceProperties sharedProperties = new io.github.resilience4j.common.retry.configuration.RetryConfigurationProperties.InstanceProperties();
 		sharedProperties.setMaxRetryAttempts(2);
-		sharedProperties.setWaitDuration(100L);
+		sharedProperties.setWaitDurationMillis(100L);
 
-		RetryConfigurationProperties.BackendProperties backendWithDefaultConfig = new RetryConfigurationProperties.BackendProperties();
+		io.github.resilience4j.common.retry.configuration.RetryConfigurationProperties.InstanceProperties backendWithDefaultConfig = new io.github.resilience4j.common.retry.configuration.RetryConfigurationProperties.InstanceProperties();
 		backendWithDefaultConfig.setBaseConfig("default");
-		backendWithDefaultConfig.setWaitDuration(200L);
+		backendWithDefaultConfig.setWaitDurationMillis(200L);
 
-		RetryConfigurationProperties.BackendProperties backendWithSharedConfig = new RetryConfigurationProperties.BackendProperties();
+		io.github.resilience4j.common.retry.configuration.RetryConfigurationProperties.InstanceProperties backendWithSharedConfig = new io.github.resilience4j.common.retry.configuration.RetryConfigurationProperties.InstanceProperties();
 		backendWithSharedConfig.setBaseConfig("sharedConfig");
-		backendWithSharedConfig.setWaitDuration(300L);
+		backendWithSharedConfig.setWaitDurationMillis(300L);
 
 		RetryConfigurationProperties retryConfigurationProperties = new RetryConfigurationProperties();
 		retryConfigurationProperties.getConfigs().put("default", defaultProperties);
 		retryConfigurationProperties.getConfigs().put("sharedConfig", sharedProperties);
 
-		retryConfigurationProperties.getBackends().put("backendWithDefaultConfig", backendWithDefaultConfig);
-		retryConfigurationProperties.getBackends().put("backendWithSharedConfig", backendWithSharedConfig);
+		retryConfigurationProperties.getInstances().put("backendWithDefaultConfig", backendWithDefaultConfig);
+		retryConfigurationProperties.getInstances().put("backendWithSharedConfig", backendWithSharedConfig);
 
 		RetryConfiguration retryConfiguration = new RetryConfiguration();
 		DefaultEventConsumerRegistry<RetryEvent> eventConsumerRegistry = new DefaultEventConsumerRegistry<>();
@@ -110,9 +109,9 @@ public class RetryConfigurationTest {
 	public void testCreateRetryRegistryWithUnknownConfig() {
 		RetryConfigurationProperties retryConfigurationProperties = new RetryConfigurationProperties();
 
-		RetryConfigurationProperties.BackendProperties backendProperties = new RetryConfigurationProperties.BackendProperties();
-		backendProperties.setBaseConfig("unknownConfig");
-		retryConfigurationProperties.getBackends().put("backend", backendProperties);
+		io.github.resilience4j.common.retry.configuration.RetryConfigurationProperties.InstanceProperties instanceProperties = new io.github.resilience4j.common.retry.configuration.RetryConfigurationProperties.InstanceProperties();
+		instanceProperties.setBaseConfig("unknownConfig");
+		retryConfigurationProperties.getInstances().put("backend", instanceProperties);
 
 		RetryConfiguration retryConfiguration = new RetryConfiguration();
 		DefaultEventConsumerRegistry<RetryEvent> eventConsumerRegistry = new DefaultEventConsumerRegistry<>();

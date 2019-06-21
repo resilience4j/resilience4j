@@ -76,6 +76,16 @@ public class AbstractRegistryTest {
 
 	}
 
+	@Test
+	public void shouldOnlyFindRegisteredObjects() {
+		TestRegistry testRegistry = new TestRegistry();
+
+		assertThat(testRegistry.find("test")).isEmpty();
+		testRegistry.entryMap.put("test", "value");
+		assertThat(testRegistry.find("test")).contains("value");
+	}
+
+
 	class TestRegistry extends AbstractRegistry<String, String> {
 
 		public TestRegistry() {

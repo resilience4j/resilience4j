@@ -66,10 +66,10 @@ public class RateLimiterAutoConfiguration {
 
     @PostConstruct
     public void configureHealthIndicators() {
-        rateLimiterProperties.getLimiters().forEach(
+        rateLimiterProperties.getInstances().forEach(
                 (name, properties) -> {
                     RateLimiter rateLimiter = rateLimiterRegistry.rateLimiter(name);
-                    if (properties.getRegisterHealthIndicator()) {
+	                if (properties.getRegisterHealthIndicator() != null && properties.getRegisterHealthIndicator()) {
                         createHealthIndicatorForLimiter(beanFactory, name, rateLimiter);
                     }
                 }

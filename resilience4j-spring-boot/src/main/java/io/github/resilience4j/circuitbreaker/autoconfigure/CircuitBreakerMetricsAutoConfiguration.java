@@ -41,8 +41,6 @@ public class CircuitBreakerMetricsAutoConfiguration {
 	@Bean
     @ConditionalOnMissingBean
 	public CircuitBreakerMetrics registerCircuitBreakerMetrics(CircuitBreakerRegistry circuitBreakerRegistry, MetricRegistry metricRegistry) {
-		CircuitBreakerMetrics circuitBreakerMetrics = CircuitBreakerMetrics.ofCircuitBreakerRegistry(circuitBreakerRegistry);
-		metricRegistry.registerAll(circuitBreakerMetrics);
-		return circuitBreakerMetrics;
+		return CircuitBreakerMetrics.ofCircuitBreakerRegistry(circuitBreakerRegistry, metricRegistry);
 	}
 }

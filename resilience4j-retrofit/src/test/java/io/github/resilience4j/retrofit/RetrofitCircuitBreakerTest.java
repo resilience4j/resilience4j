@@ -19,9 +19,9 @@
 package io.github.resilience4j.retrofit;
 
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
+import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
-import io.github.resilience4j.circuitbreaker.CircuitBreakerOpenException;
 import okhttp3.Dispatcher;
 import okhttp3.OkHttpClient;
 import org.junit.Before;
@@ -29,12 +29,18 @@ import org.junit.Rule;
 import org.junit.Test;
 import retrofit2.Response;
 import retrofit2.Retrofit;
+import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory;
 import retrofit2.converter.scalars.ScalarsConverterFactory;
 
 import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.*;
+import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.get;
+import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
+import static com.github.tomakehurst.wiremock.client.WireMock.verify;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 
@@ -51,10 +57,8 @@ public class RetrofitCircuitBreakerTest {
             .waitDurationInOpenState(Duration.ofMillis(1000))
             .build();
 
-    private CircuitBreaker circuitBreaker = CircuitBreaker.of("test", circuitBreakerConfig);
-
+    private CircuitBreaker circuitBreaker;
     private OkHttpClient client;
-
     private RetrofitService service;
 
     @Before
@@ -70,8 +74,9 @@ public class RetrofitCircuitBreakerTest {
 
         this.service = new Retrofit.Builder()
                 .addCallAdapterFactory(CircuitBreakerCallAdapter.of(circuitBreaker))
+                .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
                 .addConverterFactory(ScalarsConverterFactory.create())
-                .baseUrl("http://localhost:8080/")
+                .baseUrl(wireMockRule.baseUrl())
                 .client(client)
                 .build()
                 .create(RetrofitService.class);
@@ -230,7 +235,7 @@ public class RetrofitCircuitBreakerTest {
         try {
             EnqueueDecorator.enqueue(service.greeting());
             fail("CircuitBreakerOpenException was expected");
-        } catch (CircuitBreakerOpenException ignore) {
+        } catch (CallNotPermittedException ignore) {
 
         }
 
@@ -242,11 +247,69 @@ public class RetrofitCircuitBreakerTest {
     public void shouldThrowOnBadService() {
         BadRetrofitService badService = new Retrofit.Builder()
                 .addCallAdapterFactory(CircuitBreakerCallAdapter.of(circuitBreaker))
-                .baseUrl("http://localhost:8080/")
+                .baseUrl(wireMockRule.baseUrl())
                 .build()
                 .create(BadRetrofitService.class);
 
         badService.greeting();
+    }
+
+    @Test
+    public void shouldDelegateToOtherAdapter() {
+        String body = "this is from rxjava";
+
+        stubFor(get(urlPathEqualTo("/delegated"))
+            .willReturn(aResponse()
+                .withStatus(200)
+                .withHeader("Content-Type", "text/plain")
+                .withBody(body)));
+
+        RetrofitService service = new Retrofit.Builder()
+            .addCallAdapterFactory(CircuitBreakerCallAdapter.of(circuitBreaker))
+            .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
+            .addConverterFactory(ScalarsConverterFactory.create())
+            .baseUrl(wireMockRule.baseUrl())
+            .client(client)
+            .build()
+            .create(RetrofitService.class);
+
+        String resultBody = service.delegated().blockingGet();
+        assertThat(resultBody).isEqualTo(body);
+        verify(1, getRequestedFor(urlPathEqualTo("/delegated")));
+
+        final CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
+        assertThat(metrics.getNumberOfSuccessfulCalls()).isEqualTo(1);
+    }
+
+    @Test
+    public void shouldNotDelegateToOtherAdapterWhenAddedAfterwards() {
+        String body = "this is from rxjava";
+
+        stubFor(get(urlPathEqualTo("/delegated"))
+            .willReturn(aResponse()
+                .withStatus(200)
+                .withHeader("Content-Type", "text/plain")
+                .withBody(body)));
+
+        RetrofitService service = new Retrofit.Builder()
+            .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
+            .addCallAdapterFactory(CircuitBreakerCallAdapter.of(circuitBreaker))
+            .addConverterFactory(ScalarsConverterFactory.create())
+            .baseUrl(wireMockRule.baseUrl())
+            .client(client)
+            .build()
+            .create(RetrofitService.class);
+
+        String resultBody = service.delegated().blockingGet();
+        assertThat(resultBody).isEqualTo(body);
+        verify(1, getRequestedFor(urlPathEqualTo("/delegated")));
+
+        // No metrics should exist because circuit breaker wasn't used
+        final CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
+        assertThat(metrics.getNumberOfSuccessfulCalls()).isEqualTo(0);
+        assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(0);
+        assertThat(metrics.getNumberOfNotPermittedCalls()).isEqualTo(0);
+        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(0);
     }
 
     private void ensureAllRequestsAreExecuted(Duration timeout) throws InterruptedException {

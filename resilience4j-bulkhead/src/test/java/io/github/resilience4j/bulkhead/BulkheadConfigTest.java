@@ -18,11 +18,33 @@
  */
 package io.github.resilience4j.bulkhead;
 
-import org.junit.Test;
-
 import static org.assertj.core.api.Java6Assertions.assertThat;
 
+import java.time.Duration;
+
+import org.junit.Test;
+
 public class BulkheadConfigTest {
+
+
+	@Test
+	public void testBuildCustomWithDuration() {
+
+		// given
+		int maxConcurrent = 66;
+		long maxWait = 555;
+
+		// when
+		BulkheadConfig config = BulkheadConfig.custom()
+				.maxConcurrentCalls(maxConcurrent)
+				.maxWaitTimeDuration(Duration.ofMillis(555))
+				.build();
+
+		// then
+		assertThat(config).isNotNull();
+		assertThat(config.getMaxConcurrentCalls()).isEqualTo(maxConcurrent);
+		assertThat(config.getMaxWaitTime()).isEqualTo(maxWait);
+	}
 
     @Test
     public void testBuildCustom() {
@@ -77,5 +99,13 @@ public class BulkheadConfigTest {
                       .maxWaitTime(-1)
                       .build();
     }
+
+	@Test(expected = IllegalArgumentException.class)
+	public void testBuildWithIllegalMaxWaitDuration() {
+		// when
+		BulkheadConfig.custom()
+				.maxWaitTimeDuration(Duration.ofSeconds(-1))
+				.build();
+	}
 
 }

@@ -39,6 +39,13 @@ public interface Registry<E, C> {
 	void addConfiguration(String configName, C configuration);
 
 	/**
+	 * Find a named entry in the Registry
+	 *
+	 * @param name    the  name
+	 */
+	Optional<E> find(String name);
+
+	/**
 	 * Remove an entry from the Registry
 	 *
 	 * @param name    the  name

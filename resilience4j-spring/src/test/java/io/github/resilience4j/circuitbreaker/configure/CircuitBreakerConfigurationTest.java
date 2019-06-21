@@ -21,15 +21,15 @@ public class CircuitBreakerConfigurationTest {
 	@Test
 	public void testCreateCircuitBreakerRegistry() {
 		//Given
-		CircuitBreakerConfigurationProperties.BackendProperties backendProperties1 = new CircuitBreakerConfigurationProperties.BackendProperties();
-		backendProperties1.setRingBufferSizeInClosedState(1000);
+		io.github.resilience4j.common.circuitbreaker.configuration.CircuitBreakerConfigurationProperties.InstanceProperties instanceProperties1 = new io.github.resilience4j.common.circuitbreaker.configuration.CircuitBreakerConfigurationProperties.InstanceProperties();
+		instanceProperties1.setRingBufferSizeInClosedState(1000);
 
-		CircuitBreakerConfigurationProperties.BackendProperties backendProperties2 = new CircuitBreakerConfigurationProperties.BackendProperties();
-		backendProperties2.setRingBufferSizeInClosedState(1337);
+		io.github.resilience4j.common.circuitbreaker.configuration.CircuitBreakerConfigurationProperties.InstanceProperties instanceProperties2 = new io.github.resilience4j.common.circuitbreaker.configuration.CircuitBreakerConfigurationProperties.InstanceProperties();
+		instanceProperties2.setRingBufferSizeInClosedState(1337);
 
 		CircuitBreakerConfigurationProperties circuitBreakerConfigurationProperties = new CircuitBreakerConfigurationProperties();
-		circuitBreakerConfigurationProperties.getBackends().put("backend1", backendProperties1);
-		circuitBreakerConfigurationProperties.getBackends().put("backend2", backendProperties2);
+		circuitBreakerConfigurationProperties.getInstances().put("backend1", instanceProperties1);
+		circuitBreakerConfigurationProperties.getInstances().put("backend2", instanceProperties2);
 
 		CircuitBreakerConfiguration circuitBreakerConfiguration = new CircuitBreakerConfiguration(circuitBreakerConfigurationProperties);
 		DefaultEventConsumerRegistry<CircuitBreakerEvent> eventConsumerRegistry = new DefaultEventConsumerRegistry<>();
@@ -53,19 +53,19 @@ public class CircuitBreakerConfigurationTest {
 	@Test
 	public void testCreateCircuitBreakerRegistryWithSharedConfigs() {
 		//Given
-		CircuitBreakerConfigurationProperties.BackendProperties defaultProperties = new CircuitBreakerConfigurationProperties.BackendProperties();
+		io.github.resilience4j.common.circuitbreaker.configuration.CircuitBreakerConfigurationProperties.InstanceProperties defaultProperties = new io.github.resilience4j.common.circuitbreaker.configuration.CircuitBreakerConfigurationProperties.InstanceProperties();
 		defaultProperties.setRingBufferSizeInClosedState(1000);
 		defaultProperties.setRingBufferSizeInHalfOpenState(100);
 
-		CircuitBreakerConfigurationProperties.BackendProperties sharedProperties = new CircuitBreakerConfigurationProperties.BackendProperties();
+		io.github.resilience4j.common.circuitbreaker.configuration.CircuitBreakerConfigurationProperties.InstanceProperties sharedProperties = new io.github.resilience4j.common.circuitbreaker.configuration.CircuitBreakerConfigurationProperties.InstanceProperties();
 		sharedProperties.setRingBufferSizeInClosedState(1337);
 		sharedProperties.setRingBufferSizeInHalfOpenState(1000);
 
-		CircuitBreakerConfigurationProperties.BackendProperties backendWithDefaultConfig = new CircuitBreakerConfigurationProperties.BackendProperties();
+		io.github.resilience4j.common.circuitbreaker.configuration.CircuitBreakerConfigurationProperties.InstanceProperties backendWithDefaultConfig = new io.github.resilience4j.common.circuitbreaker.configuration.CircuitBreakerConfigurationProperties.InstanceProperties();
 		backendWithDefaultConfig.setBaseConfig("default");
 		backendWithDefaultConfig.setRingBufferSizeInHalfOpenState(99);
 
-		CircuitBreakerConfigurationProperties.BackendProperties backendWithSharedConfig = new CircuitBreakerConfigurationProperties.BackendProperties();
+		io.github.resilience4j.common.circuitbreaker.configuration.CircuitBreakerConfigurationProperties.InstanceProperties backendWithSharedConfig = new io.github.resilience4j.common.circuitbreaker.configuration.CircuitBreakerConfigurationProperties.InstanceProperties();
 		backendWithSharedConfig.setBaseConfig("sharedConfig");
 		backendWithSharedConfig.setRingBufferSizeInHalfOpenState(999);
 
@@ -73,8 +73,8 @@ public class CircuitBreakerConfigurationTest {
 		circuitBreakerConfigurationProperties.getConfigs().put("default", defaultProperties);
 		circuitBreakerConfigurationProperties.getConfigs().put("sharedConfig", sharedProperties);
 
-		circuitBreakerConfigurationProperties.getBackends().put("backendWithDefaultConfig", backendWithDefaultConfig);
-		circuitBreakerConfigurationProperties.getBackends().put("backendWithSharedConfig", backendWithSharedConfig);
+		circuitBreakerConfigurationProperties.getInstances().put("backendWithDefaultConfig", backendWithDefaultConfig);
+		circuitBreakerConfigurationProperties.getInstances().put("backendWithSharedConfig", backendWithSharedConfig);
 
 		CircuitBreakerConfiguration circuitBreakerConfiguration = new CircuitBreakerConfiguration(circuitBreakerConfigurationProperties);
 		DefaultEventConsumerRegistry<CircuitBreakerEvent> eventConsumerRegistry = new DefaultEventConsumerRegistry<>();
@@ -109,9 +109,9 @@ public class CircuitBreakerConfigurationTest {
 	public void testCreateCircuitBreakerRegistryWithUnknownConfig() {
 		CircuitBreakerConfigurationProperties circuitBreakerConfigurationProperties = new CircuitBreakerConfigurationProperties();
 
-		CircuitBreakerConfigurationProperties.BackendProperties backendProperties = new CircuitBreakerConfigurationProperties.BackendProperties();
-		backendProperties.setBaseConfig("unknownConfig");
-		circuitBreakerConfigurationProperties.getBackends().put("backend", backendProperties);
+		io.github.resilience4j.common.circuitbreaker.configuration.CircuitBreakerConfigurationProperties.InstanceProperties instanceProperties = new io.github.resilience4j.common.circuitbreaker.configuration.CircuitBreakerConfigurationProperties.InstanceProperties();
+		instanceProperties.setBaseConfig("unknownConfig");
+		circuitBreakerConfigurationProperties.getInstances().put("backend", instanceProperties);
 
 		CircuitBreakerConfiguration circuitBreakerConfiguration = new CircuitBreakerConfiguration(circuitBreakerConfigurationProperties);
 		DefaultEventConsumerRegistry<CircuitBreakerEvent> eventConsumerRegistry = new DefaultEventConsumerRegistry<>();

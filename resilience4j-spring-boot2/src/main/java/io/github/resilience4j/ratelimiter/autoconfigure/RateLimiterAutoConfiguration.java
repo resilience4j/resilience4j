@@ -28,13 +28,13 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 
 import io.github.resilience4j.consumer.EventConsumerRegistry;
+import io.github.resilience4j.fallback.autoconfigure.FallbackConfigurationOnMissingBean;
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
 import io.github.resilience4j.ratelimiter.event.RateLimiterEvent;
 import io.github.resilience4j.ratelimiter.monitoring.endpoint.RateLimiterEndpoint;
 import io.github.resilience4j.ratelimiter.monitoring.endpoint.RateLimiterEventsEndpoint;
 import io.github.resilience4j.ratelimiter.monitoring.health.RateLimiterHealthIndicator;
-import io.github.resilience4j.fallback.autoconfigure.FallbackConfigurationOnMissingBean;
 
 /**
  * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration
@@ -70,9 +70,9 @@ public class RateLimiterAutoConfiguration {
 
     @PostConstruct
     public void configureHealthIndicators() {
-        rateLimiterProperties.getLimiters().forEach(
+        rateLimiterProperties.getInstances().forEach(
                 (name, properties) -> {
-                    if (properties.getRegisterHealthIndicator()) {
+	                if (properties.getRegisterHealthIndicator() != null && properties.getRegisterHealthIndicator()) {
                         createHealthIndicatorForLimiter(name);
                     }
                 }

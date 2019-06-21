@@ -19,6 +19,7 @@ import io.github.resilience4j.bulkhead.BulkheadRegistry;
 import io.github.resilience4j.bulkhead.configure.BulkheadConfigurationProperties;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.circuitbreaker.configure.CircuitBreakerConfigurationProperties;
+import io.github.resilience4j.common.bulkhead.configuration.ThreadPoolBulkheadConfigurationProperties;
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
 import io.github.resilience4j.ratelimiter.configure.RateLimiterConfigurationProperties;
 import io.github.resilience4j.retry.RetryRegistry;
@@ -31,47 +32,52 @@ import org.springframework.context.annotation.Configuration;
 @SpringBootApplication
 @Configuration
 public class TestApplication {
-    public static void main(String[] args) {
-        SpringApplication.run(TestApplication.class, args);
-    }
+	public static void main(String[] args) {
+		SpringApplication.run(TestApplication.class, args);
+	}
 
-    @Bean
-    public BulkheadRegistry bulkheadRegistry() {
-        return BulkheadRegistry.ofDefaults();
-    }
+	@Bean
+	public BulkheadRegistry bulkheadRegistry() {
+		return BulkheadRegistry.ofDefaults();
+	}
 
-    @Bean
-    public BulkheadConfigurationProperties bulkheadConfigurationProperties() {
-        return new BulkheadConfigurationProperties();
-    }
+	@Bean
+	public BulkheadConfigurationProperties bulkheadConfigurationProperties() {
+		return new BulkheadConfigurationProperties();
+	}
 
-    @Bean
-    public CircuitBreakerRegistry circuitBreakerRegistry() {
-        return CircuitBreakerRegistry.ofDefaults();
-    }
+	@Bean
+	public ThreadPoolBulkheadConfigurationProperties threadPoolBulkheadConfigurationProperties() {
+		return new ThreadPoolBulkheadConfigurationProperties();
+	}
 
-    @Bean
-    public CircuitBreakerConfigurationProperties circuitBreakerConfigurationProperties() {
-        return new CircuitBreakerConfigurationProperties();
-    }
+	@Bean
+	public CircuitBreakerRegistry circuitBreakerRegistry() {
+		return CircuitBreakerRegistry.ofDefaults();
+	}
 
-    @Bean
-    public RateLimiterRegistry rateLimiterRegistry() {
-        return RateLimiterRegistry.ofDefaults();
-    }
+	@Bean
+	public CircuitBreakerConfigurationProperties circuitBreakerConfigurationProperties() {
+		return new CircuitBreakerConfigurationProperties();
+	}
 
-    @Bean
-    public RateLimiterConfigurationProperties rateLimiterConfigurationProperties() {
-        return new RateLimiterConfigurationProperties();
-    }
+	@Bean
+	public RateLimiterRegistry rateLimiterRegistry() {
+		return RateLimiterRegistry.ofDefaults();
+	}
 
-    @Bean
-    public RetryRegistry retryRegistry() {
-        return RetryRegistry.ofDefaults();
-    }
+	@Bean
+	public RateLimiterConfigurationProperties rateLimiterConfigurationProperties() {
+		return new RateLimiterConfigurationProperties();
+	}
 
-    @Bean
-    public RetryConfigurationProperties retryConfigurationProperties() {
-        return new RetryConfigurationProperties();
-    }
+	@Bean
+	public RetryRegistry retryRegistry() {
+		return RetryRegistry.ofDefaults();
+	}
+
+	@Bean
+	public RetryConfigurationProperties retryConfigurationProperties() {
+		return new RetryConfigurationProperties();
+	}
 }

@@ -16,14 +16,11 @@
 package io.github.resilience4j.ratpack.ratelimiter;
 
 import io.github.resilience4j.ratelimiter.RateLimiter;
-import io.github.resilience4j.ratelimiter.RateLimiterConfig;
 import io.github.resilience4j.ratelimiter.RequestNotPermitted;
 import io.github.resilience4j.ratpack.internal.AbstractTransformer;
 import ratpack.exec.Downstream;
 import ratpack.exec.Upstream;
 import ratpack.func.Function;
-
-import java.time.Duration;
 
 public class RateLimiterTransformer<T> extends AbstractTransformer<T> {
 
@@ -59,9 +56,7 @@ public class RateLimiterTransformer<T> extends AbstractTransformer<T> {
     @Override
     public Upstream<T> apply(Upstream<? extends T> upstream) throws Exception {
         return down -> {
-            RateLimiterConfig rateLimiterConfig = rateLimiter.getRateLimiterConfig();
-            Duration timeoutDuration = rateLimiterConfig.getTimeoutDuration();
-            boolean permission = rateLimiter.acquirePermission(timeoutDuration);
+            boolean permission = rateLimiter.acquirePermission();
             if (Thread.interrupted()) {
                 throw new IllegalStateException("Thread was interrupted during permission wait");
             }

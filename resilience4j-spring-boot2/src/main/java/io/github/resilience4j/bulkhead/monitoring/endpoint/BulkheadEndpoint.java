@@ -17,6 +17,9 @@ package io.github.resilience4j.bulkhead.monitoring.endpoint;
 
 import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.bulkhead.BulkheadRegistry;
+import io.github.resilience4j.bulkhead.ThreadPoolBulkhead;
+import io.github.resilience4j.bulkhead.ThreadPoolBulkheadRegistry;
+import io.github.resilience4j.common.bulkhead.monitoring.endpoint.BulkheadEndpointResponse;
 import org.springframework.boot.actuate.endpoint.annotation.Endpoint;
 import org.springframework.boot.actuate.endpoint.annotation.ReadOperation;
 
@@ -30,15 +33,20 @@ import java.util.List;
 public class BulkheadEndpoint {
 
     private final BulkheadRegistry bulkheadRegistry;
+    private final ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry;
 
-    public BulkheadEndpoint(BulkheadRegistry bulkheadRegistry) {
+    public BulkheadEndpoint(BulkheadRegistry bulkheadRegistry, ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry) {
         this.bulkheadRegistry = bulkheadRegistry;
+        this.threadPoolBulkheadRegistry = threadPoolBulkheadRegistry;
     }
 
     @ReadOperation
     public BulkheadEndpointResponse getAllBulkheads() {
         List<String> bulkheads = bulkheadRegistry.getAllBulkheads()
-                .map(Bulkhead::getName).sorted().toJavaList();
+                .map(Bulkhead::getName)
+                .appendAll(threadPoolBulkheadRegistry
+                        .getAllBulkheads()
+                        .map(ThreadPoolBulkhead::getName)).sorted().toJavaList();
         return new BulkheadEndpointResponse(bulkheads);
     }
 }

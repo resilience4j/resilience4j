@@ -62,7 +62,7 @@ public class CircuitBreakerTest {
         BDDMockito.given(helloWorldService.returnHelloWorld()).willReturn("Hello world");
 
         //When
-        Supplier<String> supplier = CircuitBreaker.decorateSupplier(circuitBreaker, helloWorldService::returnHelloWorld);
+        Supplier<String> supplier = circuitBreaker.decorateSupplier(helloWorldService::returnHelloWorld);
 
         //Then
         assertThat(supplier.get()).isEqualTo("Hello world");
@@ -105,7 +105,7 @@ public class CircuitBreakerTest {
         BDDMockito.given(helloWorldService.returnHelloWorld()).willThrow(new RuntimeException("BAM!"));
 
         //When
-        Supplier<String> supplier = CircuitBreaker.decorateSupplier(circuitBreaker, helloWorldService::returnHelloWorld);
+        Supplier<String> supplier = circuitBreaker.decorateSupplier(helloWorldService::returnHelloWorld);
 
         //Then
         Try<String> result = Try.ofSupplier(supplier);
@@ -129,7 +129,7 @@ public class CircuitBreakerTest {
         BDDMockito.given(helloWorldService.returnHelloWorldWithException()).willReturn("Hello world");
 
         //When
-        CheckedFunction0<String> checkedSupplier = CircuitBreaker.decorateCheckedSupplier(circuitBreaker, helloWorldService::returnHelloWorldWithException);
+        CheckedFunction0<String> checkedSupplier = circuitBreaker.decorateCheckedSupplier(helloWorldService::returnHelloWorldWithException);
 
         //Then
         assertThat(checkedSupplier.apply()).isEqualTo("Hello world");
@@ -152,7 +152,7 @@ public class CircuitBreakerTest {
         BDDMockito.given(helloWorldService.returnHelloWorldWithException()).willThrow(new RuntimeException("BAM!"));
 
         //When
-        CheckedFunction0<String> checkedSupplier = CircuitBreaker.decorateCheckedSupplier(circuitBreaker, helloWorldService::returnHelloWorldWithException);
+        CheckedFunction0<String> checkedSupplier = circuitBreaker.decorateCheckedSupplier(helloWorldService::returnHelloWorldWithException);
 
         //Then
         Try<String> result = Try.of(checkedSupplier);
@@ -176,7 +176,7 @@ public class CircuitBreakerTest {
         BDDMockito.given(helloWorldService.returnHelloWorldWithException()).willReturn("Hello world");
 
         //When
-        Callable<String> callable = CircuitBreaker.decorateCallable(circuitBreaker, helloWorldService::returnHelloWorldWithException);
+        Callable<String> callable = circuitBreaker.decorateCallable(helloWorldService::returnHelloWorldWithException);
 
         //Then
         assertThat(callable.call()).isEqualTo("Hello world");
@@ -219,7 +219,7 @@ public class CircuitBreakerTest {
         BDDMockito.given(helloWorldService.returnHelloWorldWithException()).willThrow(new RuntimeException("BAM!"));
 
         //When
-        Callable<String> callable = CircuitBreaker.decorateCallable(circuitBreaker, helloWorldService::returnHelloWorldWithException);
+        Callable<String> callable = circuitBreaker.decorateCallable(helloWorldService::returnHelloWorldWithException);
 
         //Then
         Try<String> result = Try.of(callable::call);
@@ -241,7 +241,7 @@ public class CircuitBreakerTest {
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(0);
 
         //When
-        CheckedRunnable checkedRunnable = CircuitBreaker.decorateCheckedRunnable(circuitBreaker, helloWorldService::sayHelloWorldWithException);
+        CheckedRunnable checkedRunnable = circuitBreaker.decorateCheckedRunnable(helloWorldService::sayHelloWorldWithException);
 
         //Then
         checkedRunnable.run();
@@ -261,7 +261,7 @@ public class CircuitBreakerTest {
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(0);
 
         //When
-        CheckedRunnable checkedRunnable = CircuitBreaker.decorateCheckedRunnable(circuitBreaker, () -> {
+        CheckedRunnable checkedRunnable = circuitBreaker.decorateCheckedRunnable(() -> {
             throw new RuntimeException("BAM!");
         });
 
@@ -283,7 +283,7 @@ public class CircuitBreakerTest {
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(0);
 
         //When
-        Runnable runnable = CircuitBreaker.decorateRunnable(circuitBreaker, helloWorldService::sayHelloWorld);
+        Runnable runnable = circuitBreaker.decorateRunnable(helloWorldService::sayHelloWorld);
 
         //Then
         runnable.run();
@@ -323,7 +323,7 @@ public class CircuitBreakerTest {
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(0);
 
         //When
-        Runnable runnable = CircuitBreaker.decorateRunnable(circuitBreaker, () -> {
+        Runnable runnable = circuitBreaker.decorateRunnable(() -> {
             throw new RuntimeException("BAM!");
         });
 
@@ -345,7 +345,7 @@ public class CircuitBreakerTest {
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(0);
 
         //When
-        Consumer<String> consumer = CircuitBreaker.decorateConsumer(circuitBreaker, helloWorldService::sayHelloWorldWithName);
+        Consumer<String> consumer = circuitBreaker.decorateConsumer(helloWorldService::sayHelloWorldWithName);
 
         //Then
         consumer.accept("Tom");
@@ -365,7 +365,7 @@ public class CircuitBreakerTest {
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(0);
 
         //When
-        Consumer<String> consumer = CircuitBreaker.decorateConsumer(circuitBreaker, (value) -> {
+        Consumer<String> consumer = circuitBreaker.decorateConsumer((value) -> {
             throw new RuntimeException("BAM!");
         });
 
@@ -387,7 +387,7 @@ public class CircuitBreakerTest {
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(0);
 
         //When
-        CheckedConsumer<String> checkedConsumer = CircuitBreaker.decorateCheckedConsumer(circuitBreaker, helloWorldService::sayHelloWorldWithNameWithException);
+        CheckedConsumer<String> checkedConsumer = circuitBreaker.decorateCheckedConsumer(helloWorldService::sayHelloWorldWithNameWithException);
 
         //Then
         checkedConsumer.accept("Tom");
@@ -407,7 +407,7 @@ public class CircuitBreakerTest {
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(0);
 
         //When
-        CheckedConsumer<String> checkedConsumer = CircuitBreaker.decorateCheckedConsumer(circuitBreaker, (value) -> {
+        CheckedConsumer<String> checkedConsumer = circuitBreaker.decorateCheckedConsumer((value) -> {
             throw new RuntimeException("BAM!");
         });
 
@@ -531,7 +531,7 @@ public class CircuitBreakerTest {
         assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(2);
 
         //When
-        CheckedRunnable checkedRunnable = CircuitBreaker.decorateCheckedRunnable(circuitBreaker, () -> {
+        CheckedRunnable checkedRunnable = circuitBreaker.decorateCheckedRunnable(() -> {
             throw new RuntimeException("BAM!");
         });
         Try result = Try.run(checkedRunnable);
@@ -551,7 +551,7 @@ public class CircuitBreakerTest {
         assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(0);
 
         //When
-        CheckedRunnable checkedRunnable = CircuitBreaker.decorateCheckedRunnable(circuitBreaker, () -> {
+        CheckedRunnable checkedRunnable = circuitBreaker.decorateCheckedRunnable(() -> {
             throw new RuntimeException("BAM!");
         });
         Try result = Try.run(checkedRunnable);
@@ -583,7 +583,7 @@ public class CircuitBreakerTest {
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
 
         //When
-        CheckedRunnable checkedRunnable = CircuitBreaker.decorateCheckedRunnable(circuitBreaker, () -> {
+        CheckedRunnable checkedRunnable = circuitBreaker.decorateCheckedRunnable(() -> {
             throw new SocketTimeoutException("BAM!");
         });
         Try result = Try.run(checkedRunnable);
@@ -607,7 +607,7 @@ public class CircuitBreakerTest {
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testName");
 
         // When I decorate my function and invoke the decorated function
-        CheckedFunction0<String> checkedSupplier = CircuitBreaker.decorateCheckedSupplier(circuitBreaker, () -> {
+        CheckedFunction0<String> checkedSupplier = circuitBreaker.decorateCheckedSupplier(() -> {
             throw new RuntimeException("BAM!");
         });
         Try<String> result = Try.of(checkedSupplier)
@@ -660,13 +660,13 @@ public class CircuitBreakerTest {
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.OPEN);
 
         // When I decorate my function and invoke the decorated function
-        Try<String> result = Try.of(CircuitBreaker.decorateCheckedSupplier(circuitBreaker, () -> "Hello"))
+        Try<String> result = Try.of(circuitBreaker.decorateCheckedSupplier(() -> "Hello"))
                 .map(value -> value + " world");
 
         // Then the call fails, because CircuitBreaker is OPEN
         assertThat(result.isFailure()).isTrue();
         // Exception is CircuitBreakerOpenException
-        assertThat(result.failed().get()).isInstanceOf(CircuitBreakerOpenException.class);
+        assertThat(result.failed().get()).isInstanceOf(CallNotPermittedException.class);
         // end::shouldThrowCircuitBreakerOpenException[]
 
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
@@ -682,8 +682,8 @@ public class CircuitBreakerTest {
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
 
         // When
-        Supplier<String> decoratedSupplier = CircuitBreaker
-                .decorateSupplier(circuitBreaker, () -> "This can be any method which returns: 'Hello");
+        Supplier<String> decoratedSupplier = circuitBreaker
+                .decorateSupplier(() -> "This can be any method which returns: 'Hello");
 
         CompletableFuture<String> future = CompletableFuture.supplyAsync(decoratedSupplier)
                 .thenApply(value -> value + " world'");
@@ -710,7 +710,7 @@ public class CircuitBreakerTest {
                 () -> CompletableFuture.supplyAsync(helloWorldService::returnHelloWorld);
 
         Supplier<CompletionStage<String>> decoratedCompletionStageSupplier =
-                CircuitBreaker.decorateCompletionStage(circuitBreaker, completionStageSupplier);
+                circuitBreaker.decorateCompletionStage(completionStageSupplier);
         CompletionStage<String> decoratedCompletionStage = decoratedCompletionStageSupplier
                 .get()
                 .thenApply(value -> value + " world");
@@ -748,6 +748,27 @@ public class CircuitBreakerTest {
     }
 
     @Test
+    public void shouldExecuteVoidCompletionStageAndReturnWithSuccess() throws ExecutionException, InterruptedException {
+        // Given
+        CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("backendName");
+        assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
+
+        // When
+
+        CompletionStage<Void> decoratedCompletionStage = circuitBreaker
+                .executeCompletionStage(() -> CompletableFuture.runAsync(helloWorldService::sayHelloWorld));
+
+        decoratedCompletionStage.toCompletableFuture().get();
+
+        // Then the helloWorldService should be invoked 1 time
+        BDDMockito.then(helloWorldService).should(Mockito.times(1)).sayHelloWorld();
+
+        CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
+        assertThat(metrics.getNumberOfSuccessfulCalls()).isEqualTo(1);
+        assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(0);
+    }
+
+    @Test
     public void shouldDecorateCompletionStageAndReturnWithExceptionAtSyncStage() {
         // Given
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("backendName");
@@ -760,7 +781,7 @@ public class CircuitBreakerTest {
         };
 
         Supplier<CompletionStage<String>> decoratedCompletionStageSupplier =
-                CircuitBreaker.decorateCompletionStage(circuitBreaker, completionStageSupplier);
+                circuitBreaker.decorateCompletionStage(completionStageSupplier);
 
         CompletionStage<String> decoratedCompletionStage = decoratedCompletionStageSupplier.get();
         assertThatThrownBy(decoratedCompletionStage.toCompletableFuture()::get)
@@ -784,7 +805,7 @@ public class CircuitBreakerTest {
                 () -> CompletableFuture.supplyAsync(helloWorldService::returnHelloWorld);
 
         Supplier<CompletionStage<String>> decoratedCompletionStageSupplier =
-                CircuitBreaker.decorateCompletionStage(circuitBreaker, completionStageSupplier);
+                circuitBreaker.decorateCompletionStage(completionStageSupplier);
         CompletionStage<String> decoratedCompletionStage = decoratedCompletionStageSupplier.get();
 
         // Then the helloWorldService should be invoked 1 time
@@ -862,6 +883,28 @@ public class CircuitBreakerTest {
     @Test
     public void testCreateWithNullConfig() {
         assertThatThrownBy(() -> CircuitBreaker.of("test", (CircuitBreakerConfig)null)).isInstanceOf(NullPointerException.class).hasMessage("Config must not be null");
+    }
+
+    @Test
+    public void shouldNotMeasureErrorsAsFailures() {
+        // Given
+        CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testName");
+        CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
+        // Given the HelloWorldService throws an exception
+        BDDMockito.given(helloWorldService.returnHelloWorld()).willThrow(new StackOverflowError("BAM!"));
+
+        //When
+        Supplier<String> supplier = circuitBreaker.decorateSupplier(helloWorldService::returnHelloWorld);
+
+        assertThatThrownBy(supplier::get).isInstanceOf(StackOverflowError.class);
+
+        //Then
+        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(0);
+        assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(0);
+        assertThat(metrics.getNumberOfSuccessfulCalls()).isEqualTo(0);
+        // Then the helloWorldService should be invoked 1 time
+        BDDMockito.then(helloWorldService).should(Mockito.times(1)).returnHelloWorld();
+
     }
 
 }

@@ -15,13 +15,11 @@
  */
 package io.github.resilience4j.circuitbreaker;
 
-import io.github.resilience4j.circuitbreaker.autoconfigure.CircuitBreakerProperties;
-import io.github.resilience4j.circuitbreaker.configure.CircuitBreakerAspect;
-import io.github.resilience4j.circuitbreaker.monitoring.endpoint.CircuitBreakerEndpointResponse;
-import io.github.resilience4j.circuitbreaker.monitoring.endpoint.CircuitBreakerEventsEndpointResponse;
-import io.github.resilience4j.service.test.DummyService;
-import io.github.resilience4j.service.test.TestApplication;
-import io.prometheus.client.CollectorRegistry;
+import static org.assertj.core.api.Assertions.assertThat;
+
+import java.io.IOException;
+import java.time.Duration;
+
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -29,13 +27,17 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.core.Ordered;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import java.io.IOException;
-import java.time.Duration;
-
-import static org.assertj.core.api.Assertions.assertThat;
+import io.github.resilience4j.circuitbreaker.autoconfigure.CircuitBreakerProperties;
+import io.github.resilience4j.circuitbreaker.configure.CircuitBreakerAspect;
+import io.github.resilience4j.common.circuitbreaker.monitoring.endpoint.CircuitBreakerEndpointResponse;
+import io.github.resilience4j.common.circuitbreaker.monitoring.endpoint.CircuitBreakerEventsEndpointResponse;
+import io.github.resilience4j.service.test.DummyService;
+import io.github.resilience4j.service.test.TestApplication;
+import io.prometheus.client.CollectorRegistry;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
@@ -76,7 +78,7 @@ public class CircuitBreakerAutoConfigurationTest {
 		try {
 			dummyService.doSomething(true);
 		} catch (IOException ex) {
-			// Do nothing. The IOException is recorded by the CircuitBreaker as part of the recordFailurePredicate as a failure.
+			// Do nothing. The IOException is recorded by the CircuitBreaker as part of the setRecordFailurePredicate as a failure.
 		}
 		// The invocation is recorded by the CircuitBreaker as a success.
 		dummyService.doSomething(false);
@@ -113,17 +115,17 @@ public class CircuitBreakerAutoConfigurationTest {
 		assertThat(healthResponse.getBody()).doesNotContain("backendBCircuitBreaker");
 		assertThat(healthResponse.getBody()).doesNotContain("dynamicBackend");
 
-		// Verify that an exception for which recordFailurePredicate returns false and it is not included in
-		// recordExceptions evaluates to false.
+		// Verify that an exception for which setRecordFailurePredicate returns false and it is not included in
+		// setRecordExceptions evaluates to false.
 		assertThat(circuitBreaker.getCircuitBreakerConfig().getRecordFailurePredicate().test(new Exception())).isFalse();
 
-		assertThat(circuitBreakerAspect.getOrder()).isEqualTo(400);
+		assertThat(circuitBreakerAspect.getOrder()).isEqualTo(Ordered.LOWEST_PRECEDENCE - 2);
 
 		// expect all shared configs share the same values and are from the application.yml file
 		CircuitBreaker sharedA = circuitBreakerRegistry.circuitBreaker("backendSharedA");
 		CircuitBreaker sharedB = circuitBreakerRegistry.circuitBreaker("backendSharedB");
 
-		Duration defaultWaitDuration = Duration.ofSeconds(10L);
+		Duration defaultWaitDuration = Duration.ofSeconds(10);
 		float defaultFailureRate = 60f;
 		int defaultRingBufferSizeInHalfOpenState = 10;
 		int defaultRingBufferSizeInClosedState = 100;

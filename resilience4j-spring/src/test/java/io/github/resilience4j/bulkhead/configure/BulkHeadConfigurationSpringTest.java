@@ -15,11 +15,11 @@
  */
 package io.github.resilience4j.bulkhead.configure;
 
-import io.github.resilience4j.bulkhead.BulkheadRegistry;
-import io.github.resilience4j.bulkhead.event.BulkheadEvent;
-import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
-import io.github.resilience4j.consumer.EventConsumerRegistry;
-import io.github.resilience4j.fallback.FallbackDecorators;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
+import java.util.List;
+
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,10 +29,12 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import java.util.List;
-
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import io.github.resilience4j.bulkhead.BulkheadRegistry;
+import io.github.resilience4j.bulkhead.ThreadPoolBulkheadRegistry;
+import io.github.resilience4j.bulkhead.event.BulkheadEvent;
+import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
+import io.github.resilience4j.consumer.EventConsumerRegistry;
+import io.github.resilience4j.fallback.FallbackDecorators;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(classes = {
@@ -49,14 +51,17 @@ public class BulkHeadConfigurationSpringTest {
 		assertNotNull(configWithOverrides.bulkheadAspect);
 		assertNotNull(configWithOverrides.bulkheadConfigurationProperties);
 		assertNotNull(configWithOverrides.bulkheadEventEventConsumerRegistry);
+		assertNotNull(configWithOverrides.threadPoolBulkheadRegistry);
 		assertTrue(configWithOverrides.bulkheadConfigurationProperties.getConfigs().size() == 1);
 	}
 
 	@Configuration
-	@ComponentScan({"io.github.resilience4j.bulkhead","io.github.resilience4j.fallback"})
+	@ComponentScan({"io.github.resilience4j.bulkhead", "io.github.resilience4j.fallback"})
 	public static class ConfigWithOverrides {
 
 		private BulkheadRegistry bulkheadRegistry;
+
+		private ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry;
 
 		private BulkheadAspect bulkheadAspect;
 
@@ -65,16 +70,22 @@ public class BulkHeadConfigurationSpringTest {
 		private BulkheadConfigurationProperties bulkheadConfigurationProperties;
 
 		@Bean
+		public ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry() {
+			threadPoolBulkheadRegistry = ThreadPoolBulkheadRegistry.ofDefaults();
+			return threadPoolBulkheadRegistry;
+		}
+
+		@Bean
 		public BulkheadRegistry bulkheadRegistry() {
 			bulkheadRegistry = BulkheadRegistry.ofDefaults();
 			return bulkheadRegistry;
 		}
 
 		@Bean
-		public BulkheadAspect bulkheadAspect(BulkheadRegistry bulkheadRegistry,
-											 @Autowired(required = false) List<BulkheadAspectExt> bulkheadAspectExts,
-											 FallbackDecorators fallbackDecorators) {
-			bulkheadAspect = new BulkheadAspect(bulkheadConfigurationProperties(), bulkheadRegistry, bulkheadAspectExts, fallbackDecorators);
+		public BulkheadAspect bulkheadAspect(BulkheadRegistry bulkheadRegistry, ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry,
+		                                     @Autowired(required = false) List<BulkheadAspectExt> bulkheadAspectExts,
+		                                     FallbackDecorators fallbackDecorators) {
+			bulkheadAspect = new BulkheadAspect(bulkheadConfigurationProperties(), threadPoolBulkheadRegistry, bulkheadRegistry, bulkheadAspectExts, fallbackDecorators);
 			return bulkheadAspect;
 		}
 
@@ -93,10 +104,10 @@ public class BulkHeadConfigurationSpringTest {
 		private class BulkheadConfigurationPropertiesTest extends BulkheadConfigurationProperties {
 
 			BulkheadConfigurationPropertiesTest() {
-				BackendProperties backendProperties = new BackendProperties();
-				backendProperties.setBaseConfig("sharedConfig");
-				backendProperties.setMaxConcurrentCall(3);
-				getConfigs().put("sharedBackend", backendProperties);
+				InstanceProperties instanceProperties = new InstanceProperties();
+				instanceProperties.setBaseConfig("sharedConfig");
+				instanceProperties.setMaxConcurrentCalls(3);
+				getConfigs().put("sharedBackend", instanceProperties);
 			}
 
 		}

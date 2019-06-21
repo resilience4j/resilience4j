@@ -1,5 +1,7 @@
 package io.github.resilience4j.retry.monitoring.endpoint;
 
+import io.github.resilience4j.common.retry.monitoring.endpoint.RetryEventDTO;
+import io.github.resilience4j.common.retry.monitoring.endpoint.RetryEventDTOFactory;
 import io.github.resilience4j.retry.event.*;
 import org.junit.Test;
 

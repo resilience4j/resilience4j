@@ -17,8 +17,8 @@ package io.github.resilience4j.retry;
 
 import io.github.resilience4j.circuitbreaker.IgnoredException;
 import io.github.resilience4j.retry.autoconfigure.RetryProperties;
-import io.github.resilience4j.retry.monitoring.endpoint.RetryEndpointResponse;
-import io.github.resilience4j.retry.monitoring.endpoint.RetryEventsEndpointResponse;
+import io.github.resilience4j.common.retry.monitoring.endpoint.RetryEndpointResponse;
+import io.github.resilience4j.common.retry.monitoring.endpoint.RetryEventsEndpointResponse;
 import io.github.resilience4j.service.test.RetryDummyService;
 import io.github.resilience4j.service.test.TestApplication;
 import org.junit.Test;

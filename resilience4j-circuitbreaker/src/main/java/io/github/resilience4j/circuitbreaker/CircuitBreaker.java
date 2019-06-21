@@ -209,6 +209,18 @@ public interface CircuitBreaker {
     }
 
     /**
+     * Returns a supplier which is decorated by a CircuitBreaker.
+     *
+     * @param supplier the original supplier
+     * @param <T> the type of results supplied by this supplier
+     *
+     * @return a supplier which is decorated by a CircuitBreaker.
+     */
+    default <T> Supplier<T> decorateSupplier(Supplier<T> supplier){
+        return decorateSupplier(this, supplier);
+    }
+
+    /**
      * Decorates and executes the decorated Callable.
      *
      * @param callable the original Callable
@@ -222,12 +234,35 @@ public interface CircuitBreaker {
     }
 
     /**
+     * Returns a callable which is decorated by a CircuitBreaker.
+     *
+     * @param callable the original Callable
+     * @param <T> the result type of callable
+     *
+     * @return a supplier which is decorated by a CircuitBreaker.
+     */
+    default <T> Callable<T> decorateCallable(Callable<T> callable) {
+        return decorateCallable(this, callable);
+    }
+
+    /**
      * Decorates and executes the decorated Runnable.
      *
      * @param runnable the original Runnable
      */
     default void executeRunnable(Runnable runnable){
         decorateRunnable(this, runnable).run();
+    }
+
+    /**
+     * Returns a runnable which is decorated by a CircuitBreaker.
+     *
+     * @param runnable the original runnable
+     *
+     * @return a runnable which is decorated by a CircuitBreaker.
+     */
+    default Runnable decorateRunnable(Runnable runnable){
+        return decorateRunnable(this, runnable);
     }
 
     /**
@@ -242,6 +277,17 @@ public interface CircuitBreaker {
     }
 
     /**
+     * Returns a supplier which is decorated by a CircuitBreaker.
+     *
+     * @param supplier the original supplier
+     * @param <T> the type of the returned CompletionStage's result
+     * @return a supplier which is decorated by a CircuitBreaker.
+     */
+    default <T> Supplier<CompletionStage<T>> decorateCompletionStage(Supplier<CompletionStage<T>> supplier){
+        return decorateCompletionStage(this, supplier);
+    }
+
+    /**
      * Decorates and executes the decorated Supplier.
      *
      * @param checkedSupplier the original Supplier
@@ -253,6 +299,61 @@ public interface CircuitBreaker {
         return decorateCheckedSupplier(this, checkedSupplier).apply();
     }
 
+    /**
+     * Returns a supplier which is decorated by a CircuitBreaker.
+     *
+     * @param checkedSupplier the original supplier
+     * @param <T> the type of results supplied by this supplier
+     * @return a supplier which is decorated by a CircuitBreaker.
+     */
+    default <T> CheckedFunction0<T> decorateCheckedSupplier(CheckedFunction0<T> checkedSupplier) {
+        return decorateCheckedSupplier(this, checkedSupplier);
+    }
+
+    /**
+     * Returns a runnable which is decorated by a CircuitBreaker.
+     *
+     * @param runnable the original runnable
+     *
+     * @return a runnable which is decorated by a CircuitBreaker.
+     */
+    default CheckedRunnable decorateCheckedRunnable(CheckedRunnable runnable) {
+        return decorateCheckedRunnable(this, runnable);
+    }
+
+    /**
+     * Decorates and executes the decorated Runnable.
+     *
+     * @param runnable the original runnable
+     *
+     */
+    default void executeCheckedRunnable(CheckedRunnable runnable) throws Throwable {
+        decorateCheckedRunnable(this, runnable).run();
+    }
+
+    /**
+     * Returns a consumer which is decorated by a CircuitBreaker.
+
+     * @param consumer the original consumer
+     * @param <T> the type of the input to the consumer
+     *
+     * @return a consumer which is decorated by a CircuitBreaker.
+     */
+    default <T> Consumer<T> decorateConsumer(Consumer<T> consumer){
+        return decorateConsumer(this, consumer);
+    }
+
+    /**
+     * Returns a consumer which is decorated by a CircuitBreaker.
+
+     * @param consumer the original consumer
+     * @param <T> the type of the input to the consumer
+     *
+     * @return a consumer which is decorated by a CircuitBreaker.
+     */
+    default <T> CheckedConsumer<T> decorateCheckedConsumer(CheckedConsumer<T> consumer){
+        return decorateCheckedConsumer(this, consumer);
+    }
 
     /**
      * States of the CircuitBreaker state machine.
@@ -475,15 +576,14 @@ public interface CircuitBreaker {
                 try {
                     supplier.get().whenComplete((result, throwable) -> {
                         long durationInNanos = System.nanoTime() - start;
-                        if (result != null) {
+                        if(throwable != null){
+                            if(throwable instanceof Exception){
+                                circuitBreaker.onError(durationInNanos, throwable);
+                            }
+                            promise.completeExceptionally(throwable);
+                        }else{
                             circuitBreaker.onSuccess(durationInNanos);
                             promise.complete(result);
-                        } else if (throwable instanceof Exception) {
-                            circuitBreaker.onError(durationInNanos, throwable);
-                            promise.completeExceptionally(throwable);
-                        } else {
-                            // Do not handle java.lang.Error
-                            promise.completeExceptionally(throwable);
                         }
                     });
                 }catch (Exception exception){

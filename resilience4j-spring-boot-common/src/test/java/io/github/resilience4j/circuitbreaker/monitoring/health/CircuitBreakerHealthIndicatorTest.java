@@ -47,7 +47,7 @@ public class CircuitBreakerHealthIndicatorTest {
         then(health.getDetails())
                 .contains(
                         entry("failureRate", "0.2%"),
-                        entry("failureRateThreshold", "0.3%"),
+                        entry("setFailureRateThreshold", "0.3%"),
                         entry("bufferedCalls", 100),
                         entry("failedCalls", 20),
                         entry("notPermittedCalls", 0L),

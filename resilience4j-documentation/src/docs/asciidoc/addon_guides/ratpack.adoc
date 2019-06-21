@@ -15,6 +15,7 @@ repositories {
 
 dependencies {
 	compile('io.github.resilience4j:resilience4j-ratpack:{release-version}')
+	compile('io.ratpack:ratpack-guice:{ratpackVersion}')
 }
 ```
 
@@ -42,7 +43,6 @@ public class MyModule extends AbstractModule {
         module.configure(c -> {
             c.circuitBreaker("test", circuitBreakerConfig ->
                 circuitBreakerConfig
-                        .defaults(false)
                         .automaticTransitionFromOpenToHalfOpen(false)
                         .failureRateThreshold(25)
             );
@@ -354,35 +354,38 @@ Module configuration example:
 
 [source,java]
 ----
-public class MyModule extends AbstractModule {
+import java.time.Duration;public class MyModule extends AbstractModule {
 
     @Override
     protected void configure() {
         Resilience4jModule module = new Resilience4jModule();
         module.configure(c -> c
             .bulkhead("test1", b -> b
-                .defaults(true)
-            ).bulkhead("test2", b -> b
-                .maxConcurrentCalls(100)
-                .maxWaitTime(1000)
-            ).circuitBreaker("test1", cb -> cb
-                .defaults(true)
-            ).circuitBreaker("test2", cb -> cb
-                .failureRateThreshold(50)
-                .waitIntervalInMillis(5000)
-                .ringBufferSizeInClosedState(200)
-                .ringBufferSizeInHalfOpenState(20)
-            ).rateLimiter("test1", cb -> cb
-                .defaults(true)
-            ).rateLimiter("test2", cb -> cb
-                .limitForPeriod(100)
-                .limitRefreshPeriodInNanos(500)
-                .timeoutInMillis(10)
-            ).retry("test1", cb -> cb
-                .defaults(true)
-            ).retry("test2", cb -> cb
-                .maxAttempts(3)
-                .waitDurationInMillis(1000)
+                .setMaxConcurrentCalls(100)
+                .setMaxWaitTime(1000)
+            )
+            .threadPoolBulkhead("test2", b -> b
+                .setThreadPoolProperties(new ThreadPoolProperties()
+                    .setMaxThreadPoolSize(2)
+                    .setCoreThreadPoolSize(1)
+                    .setQueueCapacity(2)
+                    .setKeepAliveDuration(Duration.ofSeconds(5))
+                )
+            )
+            .circuitBreaker("test1", cb -> cb
+                .setFailureRateThreshold(50)
+                .setWaitDurationInOpenState(Duration.ofMillis(5000))
+                .setRingBufferSizeInClosedState(200)
+                .setRingBufferSizeInHalfOpenState(20)
+            )
+            .rateLimiter("test1", cb -> cb
+                .setLimitForPeriod(100)
+                .setLimitRefreshPeriod(Duration.ofNanos(500))
+                .setTimeout(Duration.ofMillis(10))
+            )
+            .retry("test1", cb -> cb
+                .setMaxAttempts(3)
+                .setWaitDuration(Duration.ofMillis(1000))
             )
         );
         install(module);
@@ -416,46 +419,104 @@ The below example will record everything exception `java.io.IOException`.
 [source,yaml]
 ----
 resilience4j:
-    bulkheads:
-        test1:
-            defaults: true
-        test2:
-            maxConcurrentCalls: 100
-            maxWaitTime: 1000
-    circuitBreakers:
-        test1:
-            defaults: true
-        test2:
-            ringBufferSizeInClosedState: 200
-            ringBufferSizeInHalfOpenState: 20
-            waitInterval: 5000
-            failureRateThreshold: 50
-            recordExceptions: java.lang.Exception
-            ignoreExceptions: java.io.IOException
-    rateLimiters:
-        test1:
-            defaults: true
-        test2:
-            limitForPeriod: 100
-            limitRefreshPeriodInNanos: 500
-            timeoutInMillis: 10
-    retries:
-        test1:
-            defaults: true
-        test2:
-            maxAttempts: 3
-            waitDurationInMillis: 1000
+    bulkhead:
+        configs:
+            default:
+                maxConcurrentCalls: 50
+                maxWaitTime: 500
+        instances:
+            test1:
+                baseConfig: default
+                maxWaitTime: 750
+            test2:
+                maxConcurrentCalls: 100
+                maxWaitTime: 1000
+    threadPoolBulkhead:
+        configs:
+            default:
+                threadPoolProperties:
+                    maxThreadPoolSize: 4
+                    coreThreadPoolSize: 2
+                    queueCapacity: 2
+                    keepAliveTime: 1000
+        backends:
+            test1:
+                baseConfig: default
+            test2:
+                threadPoolProperties:
+                    maxThreadPoolSize: 1
+                    coreThreadPoolSize: 1
+                    queueCapacity: 1
+                    keepAliveDuration: PT1S
+    circuitBreaker:
+        configs:
+            default:
+                ringBufferSizeInClosedState: 200
+                ringBufferSizeInHalfOpenState: 20
+                waitDurationInOpenState: PT1S
+                failureRateThreshold: 60
+                automaticTransitionFromOpenToHalfOpenEnabled: true
+                recordExceptions:
+                    - io.github.resilience4j.ratpack.Resilience4jModuleSpec$DummyException1
+                    - io.github.resilience4j.ratpack.Resilience4jModuleSpec$DummyException2
+        instances:
+            test1:
+                baseConfig: default
+                ringBufferSizeInClosedState: 100
+            test2:
+                ringBufferSizeInClosedState: 200
+                ringBufferSizeInHalfOpenState: 20
+                waitDurationInOpenState: PT5S
+                failureRateThreshold: 60
+                automaticTransitionFromOpenToHalfOpenEnabled: true
+                recordExceptions:
+                    - io.github.resilience4j.ratpack.Resilience4jModuleSpec$DummyException1
+    rateLimiter:
+        configs:
+            default:
+                limitForPeriod: 100
+                limitRefreshPeriodInNanos: 900
+                timeoutInMillis: 10
+        instances:
+            test1:
+                baseConfig: default
+                limitForPeriod: 150
+            test2:
+                limitForPeriod: 100
+                limitRefreshPeriodInNanos: 900
+                timeoutInMillis: 10
+    retry:
+        configs:
+            default:
+                maxRetryAttempts: 3
+                waitDurationInMillis: 1000
+        instances:
+            test1:
+                baseConfig: default
+                maxRetryAttempts: 4
+            test2:
+                maxRetryAttempts: 3
+                waitDurationInMillis: 1000
 ----
 
 ==== Metrics
 Both dropwizard and prometheus metrics can be auto configured and enabled for all registered
 bulkhead instances, circuitbreaker instances, ratelimiter instances, and retry instances.
 
-For dropwizard metrics to work, add a compile dependency on resilience4j-metrics and
-bind a MetricRegistry instance.
+For dropwizard metrics to work, add a gradle compile dependency on resilience4j-metrics and ratpack-dropwizard-metrics
+and then bind a MetricRegistry instance.
 
-For prometheus metrics to work, add a compile dependency on resilience4j-prometheus and
+```
+compile('io.github.resilience4j:resilience4j-metrics:{release-version}')
+compile('io.ratpack:ratpack-dropwizard-metrics:${ratpackVersion}')
+```
+
+For prometheus metrics to work, add a gradle compile dependency on resilience4j-prometheus and
 bind a CollectorRegistry instance.
+
+```
+compile('io.github.resilience4j:resilience4j-prometheus:{release-version}')
+```
 
 Enabling Dropwizard Metrics:
 

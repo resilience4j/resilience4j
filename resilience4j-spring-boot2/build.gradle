@@ -19,6 +19,7 @@ dependencies {
     testCompile(libraries.reactor)
     testCompile(libraries.metrics)
     testCompile(libraries.spring_boot2_actuator)
+    testCompile project(':resilience4j-micrometer')
 }
 
 compileJava.dependsOn(processResources)

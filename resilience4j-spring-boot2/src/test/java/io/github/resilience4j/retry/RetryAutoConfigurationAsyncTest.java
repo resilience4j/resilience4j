@@ -15,21 +15,10 @@
  */
 package io.github.resilience4j.retry;
 
-import io.github.resilience4j.circuitbreaker.IgnoredException;
-import io.github.resilience4j.retry.autoconfigure.RetryProperties;
-import io.github.resilience4j.retry.configure.RetryAspect;
-import io.github.resilience4j.retry.monitoring.endpoint.RetryEndpointResponse;
-import io.github.resilience4j.retry.monitoring.endpoint.RetryEventsEndpointResponse;
-import io.github.resilience4j.service.test.TestApplication;
-import io.github.resilience4j.service.test.retry.RetryDummyService;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.web.client.TestRestTemplate;
-import org.springframework.http.ResponseEntity;
-import org.springframework.test.annotation.DirtiesContext;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import static io.github.resilience4j.service.test.retry.ReactiveRetryDummyService.BACKEND_C;
+import static io.github.resilience4j.service.test.retry.RetryDummyService.RETRY_BACKEND_A;
+import static io.github.resilience4j.service.test.retry.RetryDummyService.RETRY_BACKEND_B;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.IOException;
 import java.util.concurrent.CompletionStage;
@@ -37,10 +26,23 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import static io.github.resilience4j.service.test.retry.ReactiveRetryDummyService.BACKEND_C;
-import static io.github.resilience4j.service.test.retry.RetryDummyService.RETRY_BACKEND_A;
-import static io.github.resilience4j.service.test.retry.RetryDummyService.RETRY_BACKEND_B;
-import static org.assertj.core.api.Assertions.assertThat;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.core.Ordered;
+import org.springframework.http.ResponseEntity;
+import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+
+import io.github.resilience4j.circuitbreaker.IgnoredException;
+import io.github.resilience4j.common.retry.monitoring.endpoint.RetryEndpointResponse;
+import io.github.resilience4j.common.retry.monitoring.endpoint.RetryEventsEndpointResponse;
+import io.github.resilience4j.retry.autoconfigure.RetryProperties;
+import io.github.resilience4j.retry.configure.RetryAspect;
+import io.github.resilience4j.service.test.TestApplication;
+import io.github.resilience4j.service.test.retry.RetryDummyService;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
@@ -109,8 +111,7 @@ public class RetryAutoConfigurationAsyncTest {
 		assertThat(retry.getMetrics().getNumberOfFailedCallsWithRetryAttempt()).isEqualTo(1);
 		assertThat(retry.getMetrics().getNumberOfSuccessfulCallsWithoutRetryAttempt()).isEqualTo(1);
 		assertThat(retry.getMetrics().getNumberOfSuccessfulCallsWithRetryAttempt()).isEqualTo(0);
-		// expect aspect configured as defined in application.yml
-		assertThat(retryAspect.getOrder()).isEqualTo(399);
+		assertThat(retryAspect.getOrder()).isEqualTo(Ordered.LOWEST_PRECEDENCE - 3);
 	}
 
 

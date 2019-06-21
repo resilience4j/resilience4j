@@ -57,7 +57,7 @@ public class CircuitBreakerConfigurationOnMissingBean extends AbstractCircuitBre
 	@Override
 	protected void createHealthIndicatorForCircuitBreaker(CircuitBreaker circuitBreaker, CircuitBreakerConfigurationProperties circuitBreakerProperties) {
 		boolean registerHealthIndicator = circuitBreakerProperties.findCircuitBreakerProperties(circuitBreaker.getName())
-			.map(CircuitBreakerConfigurationProperties.BackendProperties::getRegisterHealthIndicator)
+			.map(io.github.resilience4j.common.circuitbreaker.configuration.CircuitBreakerConfigurationProperties.InstanceProperties::getRegisterHealthIndicator)
 			.orElse(true);
 
 		if (registerHealthIndicator) {

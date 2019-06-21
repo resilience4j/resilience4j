@@ -29,7 +29,7 @@ import java.util.Optional;
 public class CircuitBreakerHealthIndicator implements HealthIndicator {
 
     private static final String FAILURE_RATE = "failureRate";
-    private static final String FAILURE_RATE_THRESHOLD = "failureRateThreshold";
+    private static final String FAILURE_RATE_THRESHOLD = "setFailureRateThreshold";
     private static final String BUFFERED_CALLS = "bufferedCalls";
     private static final String FAILED_CALLS = "failedCalls";
     private static final String NOT_PERMITTED = "notPermittedCalls";

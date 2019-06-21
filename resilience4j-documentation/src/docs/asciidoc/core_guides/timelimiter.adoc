@@ -41,7 +41,7 @@ Integer result = timeLimiter.executeFutureSupplier(futureSupplier);
 Callable restrictedCall = TimeLimiter
     .decorateFutureSupplier(timeLimiter, futureSupplier);
 
-Try.of(restrictedCall.call)
+Try.of(restrictedCall::call)
     .onFailure(throwable -> LOG.info("A timeout possibly occurred."));
 ----
 

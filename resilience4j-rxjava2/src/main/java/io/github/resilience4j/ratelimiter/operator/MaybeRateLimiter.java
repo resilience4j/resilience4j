@@ -18,11 +18,12 @@ package io.github.resilience4j.ratelimiter.operator;
 import io.github.resilience4j.AbstractMaybeObserver;
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RequestNotPermitted;
+import io.reactivex.Completable;
 import io.reactivex.Maybe;
 import io.reactivex.MaybeObserver;
 import io.reactivex.internal.disposables.EmptyDisposable;
 
-import java.time.Duration;
+import java.util.concurrent.TimeUnit;
 
 class MaybeRateLimiter<T> extends Maybe<T> {
 
@@ -36,8 +37,14 @@ class MaybeRateLimiter<T> extends Maybe<T> {
 
     @Override
     protected void subscribeActual(MaybeObserver<? super T> downstream) {
-        if(rateLimiter.acquirePermission(Duration.ZERO)){
-            upstream.subscribe(new RateLimiterMaybeObserver(downstream));
+        long waitDuration = rateLimiter.reservePermission();
+        if(waitDuration >= 0){
+            if(waitDuration > 0){
+                Completable.timer(waitDuration, TimeUnit.NANOSECONDS)
+                        .subscribe(() -> upstream.subscribe(new RateLimiterMaybeObserver(downstream)));
+            }else{
+                upstream.subscribe(new RateLimiterMaybeObserver(downstream));
+            }
         }else{
             downstream.onSubscribe(EmptyDisposable.INSTANCE);
             downstream.onError(new RequestNotPermitted(rateLimiter));

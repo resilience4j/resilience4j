@@ -1,0 +1,30 @@
+plugins {
+    id 'org.jetbrains.kotlin.jvm' version '1.3.31'
+}
+
+dependencies {
+    implementation(libraries.kotlin_stdlib)
+    implementation(libraries.kotlin_coroutines)
+
+    compileOnly(project(':resilience4j-bulkhead'))
+    compileOnly(project(':resilience4j-circuitbreaker'))
+    compileOnly(project(':resilience4j-ratelimiter'))
+    compileOnly(project(':resilience4j-retry'))
+    compileOnly(project(':resilience4j-timelimiter'))
+    
+    testImplementation(project(':resilience4j-bulkhead'))
+    testImplementation(project(':resilience4j-circuitbreaker'))
+    testImplementation(project(':resilience4j-ratelimiter'))
+    testImplementation(project(':resilience4j-retry'))
+    testImplementation(project(':resilience4j-timelimiter'))
+}
+
+compileKotlin {
+    kotlinOptions.jvmTarget = "1.8"
+}
+
+compileTestKotlin {
+    kotlinOptions.jvmTarget = "1.8"
+}
+
+ext.moduleName='io.github.resilience4j.kotlin'

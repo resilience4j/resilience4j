@@ -3,7 +3,7 @@ resilience4j.retry:
   configs:
     default:
       maxRetryAttempts: 3
-      waitDuration: 100
+      waitDurationMillis: 100
       retryExceptionPredicate: io.github.resilience4j.circuitbreaker.RecordFailurePredicate
       retryExceptions:
         - java.io.IOException
@@ -16,12 +16,12 @@ resilience4j.retry:
       baseConfig: default
     retryBackendC:
       maxRetryAttempts: 3
-      waitDuration: 100
+      waitDurationMillis: 100
       retryExceptionPredicate: io.github.resilience4j.circuitbreaker.RecordFailurePredicate
       retryExceptions:
-      - java.lang.IllegalArgumentException
+        - java.lang.IllegalArgumentException
       ignoreExceptions:
-      - io.github.resilience4j.circuitbreaker.IgnoredException
+        - io.github.resilience4j.circuitbreaker.IgnoredException
 
 resilience4j.circuitbreaker:
   circuitBreakerAspectOrder: 400
@@ -29,7 +29,7 @@ resilience4j.circuitbreaker:
     default:
       ringBufferSizeInClosedState: 100
       ringBufferSizeInHalfOpenState: 10
-      waitDurationInOpenState: 10000
+      waitDurationInOpenState: 10s
       failureRateThreshold: 60
       eventConsumerBufferSize: 10
       registerHealthIndicator: true
@@ -39,18 +39,18 @@ resilience4j.circuitbreaker:
       ringBufferSizeInHalfOpenState: 2
       waitDurationInOpenState: 5s
       failureRateThreshold: 70
-      eventConsumerBufferSize: 10
+      eventConsumerBufferSize: 20
       recordFailurePredicate: io.github.resilience4j.circuitbreaker.RecordFailurePredicate
       recordExceptions:
-      - io.github.resilience4j.circuitbreaker.RecordedException
+        - io.github.resilience4j.circuitbreaker.RecordedException
       ignoreExceptions:
-      - io.github.resilience4j.circuitbreaker.IgnoredException
+        - io.github.resilience4j.circuitbreaker.IgnoredException
     backendB:
       ringBufferSizeInClosedState: 10
       ringBufferSizeInHalfOpenState: 5
       waitDurationInOpenState: 5000
       failureRateThreshold: 50
-      eventConsumerBufferSize: 10
+      eventConsumerBufferSize: 20
       registerHealthIndicator: false
     backendSharedA:
       baseConfig: default
@@ -63,18 +63,16 @@ resilience4j.ratelimiter:
   configs:
     default:
       limitForPeriod: 10
-      limitRefreshPeriodInMillis: 1000
+      limitRefreshPeriodInNanos: 1000000000
       timeoutInMillis: 0
       subscribeForEvents: true
       registerHealthIndicator: true
   limiters:
     backendA:
       baseConfig: default
-      subscribeForEvents: true
-      registerHealthIndicator: true
     backendB:
       limitForPeriod: 100
-      limitRefreshPeriodInMillis: 500
+      limitRefreshPeriodInNanos: 500000000
       timeoutInMillis: 3000
 
 resilience4j.bulkhead:
@@ -82,12 +80,29 @@ resilience4j.bulkhead:
   configs:
     default:
       maxWaitTime: 10
-      maxConcurrentCall: 2
+      maxConcurrentCalls: 2
   backends:
     backendA:
-      maxConcurrentCall: 1
+      maxConcurrentCalls: 1
     backendB:
       baseConfig: default
+
+resilience4j.thread-pool-bulkhead":
+  configs:
+    default:
+      threadPoolProperties:
+        maxThreadPoolSize: 4
+        coreThreadPoolSize: 2
+        queueCapacity: 2
+  backends:
+    backendB:
+      baseConfig: default
+    backendC:
+      threadPoolProperties:
+        maxThreadPoolSize: 1
+        coreThreadPoolSize: 1
+        queueCapacity: 1
+
 
 management.security.enabled: false
 management.endpoints.web.exposure.include: '*'

@@ -27,6 +27,7 @@ Add-on modules
 * resilience4j-retrofit: Retrofit adapter
 * resilience4j-feign: Feign adapter
 * resilience4j-vertx: Vertx Future decorator
+* resilience4j-kotlin: Kotlin coroutines support
 * resilience4j-consumer: Circular Buffer Event consumer
 
 To highlight a few differences to Netflix Hystrix:
