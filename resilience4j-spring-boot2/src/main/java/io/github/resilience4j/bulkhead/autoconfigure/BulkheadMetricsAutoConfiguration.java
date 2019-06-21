@@ -16,6 +16,7 @@
 package io.github.resilience4j.bulkhead.autoconfigure;
 
 import io.github.resilience4j.bulkhead.BulkheadRegistry;
+import io.github.resilience4j.micrometer.tagged.Resilience4JBulkheadMeterBinder;
 import io.github.resilience4j.micrometer.tagged.TaggedBulkheadMetrics;
 import org.springframework.boot.actuate.autoconfigure.metrics.MetricsAutoConfiguration;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
@@ -38,7 +39,7 @@ public class BulkheadMetricsAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
-    public TaggedBulkheadMetrics registerBulkheadMetrics(BulkheadRegistry bulkheadRegistry) {
+    public Resilience4JBulkheadMeterBinder registerBulkheadMetrics(BulkheadRegistry bulkheadRegistry) {
         return TaggedBulkheadMetrics.ofBulkheadRegistry(bulkheadRegistry);
     }
 }

@@ -21,7 +21,6 @@ import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.Meter;
 import io.micrometer.core.instrument.MeterRegistry;
-import io.micrometer.core.instrument.binder.MeterBinder;
 
 import java.util.HashSet;
 import java.util.Objects;
@@ -32,7 +31,7 @@ import static java.util.Objects.requireNonNull;
 /**
  * A micrometer binder that is used to register retry exposed {@link Metrics metrics}.
  */
-public class TaggedRateLimiterMetrics extends AbstractMetrics implements MeterBinder {
+public class TaggedRateLimiterMetrics extends AbstractMetrics implements Resilience4JRateLimiterMeterBinder {
 
     /**
      * Creates a new binder that uses given {@code registry} as source of retries.

@@ -19,7 +19,6 @@ import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker.Metrics;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.micrometer.core.instrument.*;
-import io.micrometer.core.instrument.binder.MeterBinder;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -29,7 +28,7 @@ import static java.util.Objects.requireNonNull;
 /**
  * A micrometer binder that is used to register circuit breaker exposed {@link Metrics metrics}.
  */
-public class TaggedCircuitBreakerMetrics extends AbstractMetrics implements MeterBinder {
+public class TaggedCircuitBreakerMetrics extends AbstractMetrics implements Resilience4JCircuitBreakerMeterBinder {
 
     private static final String KIND_STATE = "state";
     private static final String KIND_FAILED = "failed";

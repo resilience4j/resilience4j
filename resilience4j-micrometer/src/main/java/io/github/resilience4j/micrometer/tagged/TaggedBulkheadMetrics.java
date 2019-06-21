@@ -21,7 +21,6 @@ import io.github.resilience4j.bulkhead.BulkheadRegistry;
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.Meter;
 import io.micrometer.core.instrument.MeterRegistry;
-import io.micrometer.core.instrument.binder.MeterBinder;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -31,7 +30,7 @@ import static java.util.Objects.requireNonNull;
 /**
  * A micrometer binder that is used to register bulkhead exposed {@link Metrics metrics}.
  */
-public class TaggedBulkheadMetrics extends AbstractMetrics implements MeterBinder {
+public class TaggedBulkheadMetrics extends AbstractMetrics implements Resilience4JBulkheadMeterBinder {
 
     /**
      * Creates a new binder that uses given {@code registry} as source of bulkheads.

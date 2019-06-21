@@ -15,6 +15,7 @@
  */
 package io.github.resilience4j.retry.autoconfigure;
 
+import io.github.resilience4j.micrometer.tagged.Resilience4JRetryMeterBinder;
 import io.github.resilience4j.micrometer.tagged.TaggedRetryMetrics;
 import io.github.resilience4j.retry.RetryRegistry;
 import org.springframework.boot.actuate.autoconfigure.metrics.MetricsAutoConfiguration;
@@ -38,7 +39,7 @@ public class RetryMetricsAutoConfiguration {
 
 	@Bean
 	@ConditionalOnMissingBean
-	public TaggedRetryMetrics registerRetryMetrics(RetryRegistry retryRegistry) {
+	public Resilience4JRetryMeterBinder registerRetryMetrics(RetryRegistry retryRegistry) {
 		return TaggedRetryMetrics.ofRetryRegistry(retryRegistry);
 	}
 }
