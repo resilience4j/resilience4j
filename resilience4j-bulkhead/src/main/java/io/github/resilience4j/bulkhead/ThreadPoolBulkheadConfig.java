@@ -18,20 +18,22 @@
  */
 package io.github.resilience4j.bulkhead;
 
+import java.time.Duration;
+
 /**
  * A {@link ThreadPoolBulkheadConfig} configures a {@link Bulkhead}
  */
 public class ThreadPoolBulkheadConfig {
 
 	public static final int DEFAULT_QUEUE_CAPACITY = 100;
-	public static final long DEFAULT_KEEP_ALIVE_TIME = 20L;
+	public static final Duration DEFAULT_KEEP_ALIVE_DURATION = Duration.ofMillis(20);
 	public static final int DEFAULT_CORE_THREAD_POOL_SIZE = Runtime.getRuntime().availableProcessors() > 1 ? Runtime.getRuntime().availableProcessors() - 1 : 1;
 	public static final int DEFAULT_MAX_THREAD_POOL_SIZE = Runtime.getRuntime().availableProcessors();
 
 	private int maxThreadPoolSize = DEFAULT_MAX_THREAD_POOL_SIZE;
 	private int coreThreadPoolSize = DEFAULT_CORE_THREAD_POOL_SIZE;
 	private int queueCapacity = DEFAULT_QUEUE_CAPACITY;
-	private long keepAliveTime = DEFAULT_KEEP_ALIVE_TIME;
+	private Duration keepAliveDuration = DEFAULT_KEEP_ALIVE_DURATION;
 
 	private ThreadPoolBulkheadConfig() {
 	}
@@ -63,8 +65,8 @@ public class ThreadPoolBulkheadConfig {
 		return new Builder().build();
 	}
 
-	public long getKeepAliveTime() {
-		return keepAliveTime;
+	public Duration getKeepAliveDuration() {
+		return keepAliveDuration;
 	}
 
 	public int getQueueCapacity() {
@@ -135,18 +137,18 @@ public class ThreadPoolBulkheadConfig {
 		}
 
 		/**
-		 * when the number of threads is greater than
-		 * the core, this is the maximum time that excess idle threads
+		 * When the number of threads is greater than
+		 * the core, this is the maximum time duration that excess idle threads
 		 * will wait for new tasks before terminating.
 		 *
-		 * @param keepAliveTime maximum wait time for bulkhead thread pool idle thread
+		 * @param keepAliveDuration maximum wait duration for bulkhead thread pool idle thread
 		 * @return the BulkheadConfig.Builder
 		 */
-		public Builder keepAliveTime(long keepAliveTime) {
-			if (keepAliveTime < 0) {
-				throw new IllegalArgumentException("keepAliveTime must be a positive integer value >= 0");
+		public Builder keepAliveDuration(Duration keepAliveDuration) {
+			if (keepAliveDuration.toMillis() < 0) {
+				throw new IllegalArgumentException("keepAliveDuration must be a positive integer value >= 0");
 			}
-			config.keepAliveTime = keepAliveTime;
+			config.keepAliveDuration = keepAliveDuration;
 			return this;
 		}
 

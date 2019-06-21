@@ -501,14 +501,14 @@ class Resilience4jModuleSpec extends Specification {
         test1.name == 'test1'
         test1.bulkheadConfig.with {
             assert maxConcurrentCalls == 25
-            assert maxWaitTime == 0
+            assert maxWaitDuration.toMillis() == 0
             it
         }
         def test2 = bulkheadRegistry.bulkhead('test2')
         test2.name == 'test2'
         test2.bulkheadConfig.with {
             assert maxConcurrentCalls == 100
-            assert maxWaitTime == 1000
+            assert maxWaitDuration.toMillis() == 1000
             it
         }
     }
@@ -575,14 +575,14 @@ class Resilience4jModuleSpec extends Specification {
         test1.name == 'test1'
         test1.bulkheadConfig.with {
             assert maxConcurrentCalls == 50
-            assert maxWaitTime == 750
+            assert maxWaitDuration.toMillis() == 750
             it
         }
         def test2 = bulkheadRegistry.bulkhead('test2')
         test2.name == 'test2'
         test2.bulkheadConfig.with {
             assert maxConcurrentCalls == 100
-            assert maxWaitTime == 1000
+            assert maxWaitDuration.toMillis() == 1000
             it
         }
         // test default
@@ -590,7 +590,7 @@ class Resilience4jModuleSpec extends Specification {
         test3.name == 'test3'
         test3.bulkheadConfig.with {
             assert maxConcurrentCalls == 50
-            assert maxWaitTime == 500
+            assert maxWaitDuration.toMillis() == 500
             it
         }
     }
@@ -630,7 +630,7 @@ class Resilience4jModuleSpec extends Specification {
             assert maxThreadPoolSize == 4
             assert coreThreadPoolSize == 2
             assert queueCapacity == 2
-            assert keepAliveTime == 1000
+            assert keepAliveDuration.toMillis() == 1000
             it
         }
         def test2 = bulkheadRegistry.bulkhead('test2')
@@ -639,7 +639,7 @@ class Resilience4jModuleSpec extends Specification {
             assert maxThreadPoolSize == 1
             assert coreThreadPoolSize == 1
             assert queueCapacity == 1
-            assert keepAliveTime == 1000
+            assert keepAliveDuration.toMillis() == 1000
             it
         }
         // test default
@@ -649,7 +649,7 @@ class Resilience4jModuleSpec extends Specification {
             assert maxThreadPoolSize == 4
             assert coreThreadPoolSize == 2
             assert queueCapacity == 2
-            assert keepAliveTime == 1000
+            assert keepAliveDuration.toMillis() == 1000
             it
         }
     }

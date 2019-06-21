@@ -15,17 +15,16 @@
  */
 package io.github.resilience4j.common.ratelimiter.configuration;
 
-import java.time.Duration;
-import java.util.HashMap;
-import java.util.Map;
-
-import javax.validation.constraints.Min;
-
 import io.github.resilience4j.common.utils.ConfigUtils;
 import io.github.resilience4j.core.ConfigurationNotFoundException;
 import io.github.resilience4j.core.StringUtils;
 import io.github.resilience4j.core.lang.Nullable;
 import io.github.resilience4j.ratelimiter.RateLimiterConfig;
+
+import javax.validation.constraints.Min;
+import java.time.Duration;
+import java.util.HashMap;
+import java.util.Map;
 
 public class RateLimiterConfigurationProperties {
 
@@ -149,38 +148,6 @@ public class RateLimiterConfigurationProperties {
 		 * After each period rate limiter sets its permissions
 		 * count to {@link RateLimiterConfig#getLimitForPeriod()} value.
 		 * Default value is 500 nanoseconds.
-		 * @deprecated As of release 0.16.0 , use {@link #getLimitRefreshPeriod()} instead
-		 * @return the period of limit refresh
-		 */
-		@Deprecated
-		@Nullable
-		public Integer getLimitRefreshPeriodInNanos() {
-			if (limitRefreshPeriod != null) {
-				return (int) limitRefreshPeriod.toNanos();
-			} else {
-				return null;
-			}
-		}
-
-		/**
-		 * Configures the period of limit refresh.
-		 * After each period rate limiter sets its permissions
-		 * count to {@link RateLimiterConfig#getLimitForPeriod()} value.
-		 * Default value is 500 nanoseconds.
-		 * @deprecated As of release 0.16.0 , use {@link #setLimitRefreshPeriod(Duration)} instead
-		 * @param limitRefreshPeriodInNanos the period of limit refresh
-		 */
-		@Deprecated
-		public InstanceProperties setLimitRefreshPeriodInNanos(Integer limitRefreshPeriodInNanos) {
-			this.limitRefreshPeriod = Duration.ofNanos(limitRefreshPeriodInNanos);
-			return this;
-		}
-
-		/**
-		 * Configures the period of limit refresh.
-		 * After each period rate limiter sets its permissions
-		 * count to {@link RateLimiterConfig#getLimitForPeriod()} value.
-		 * Default value is 500 nanoseconds.
 		 *
 		 * @return the period of limit refresh
 		 */
@@ -199,34 +166,6 @@ public class RateLimiterConfigurationProperties {
 		 */
 		public InstanceProperties setLimitRefreshPeriod(Duration limitRefreshPeriod) {
 			this.limitRefreshPeriod = limitRefreshPeriod;
-			return this;
-		}
-
-		/**
-		 * Configures the default wait for permission duration.
-		 * Default value is 5 seconds.
-		 * @deprecated As of release 0.16.0 , use {@link #getTimeoutDuration()}instead
-		 * @return wait for permission duration
-		 */
-		@Deprecated
-		@Nullable
-		public Integer getTimeoutInMillis() {
-			if (timeoutDuration != null) {
-				return (int) timeoutDuration.toMillis();
-			} else {
-				return null;
-			}
-		}
-
-		/**
-		 * Configures the default wait for permission duration.
-		 * Default value is 5 seconds.
-		 * @deprecated As of release 0.16.0 , use {@link #setTimeoutDuration(Duration)} instead
-		 * @param timeoutInMillis wait for permission duration
-		 */
-		@Deprecated
-		public InstanceProperties setTimeoutInMillis(Integer timeoutInMillis) {
-			this.timeoutDuration = Duration.ofMillis(timeoutInMillis);
 			return this;
 		}
 

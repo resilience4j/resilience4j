@@ -16,17 +16,6 @@
 package io.github.resilience4j.common.circuitbreaker.configuration;
 
 
-import java.time.Duration;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
-import java.util.function.Predicate;
-
-import javax.validation.constraints.Max;
-import javax.validation.constraints.Min;
-
-import org.hibernate.validator.constraints.time.DurationMin;
-
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.Builder;
 import io.github.resilience4j.common.utils.ConfigUtils;
@@ -34,6 +23,15 @@ import io.github.resilience4j.core.ClassUtils;
 import io.github.resilience4j.core.ConfigurationNotFoundException;
 import io.github.resilience4j.core.StringUtils;
 import io.github.resilience4j.core.lang.Nullable;
+import org.hibernate.validator.constraints.time.DurationMin;
+
+import javax.validation.constraints.Max;
+import javax.validation.constraints.Min;
+import java.time.Duration;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+import java.util.function.Predicate;
 
 public class CircuitBreakerConfigurationProperties {
 
@@ -191,34 +189,6 @@ public class CircuitBreakerConfigurationProperties {
 		 */
 		public InstanceProperties setFailureRateThreshold(Integer failureRateThreshold) {
 			this.failureRateThreshold = failureRateThreshold;
-			return this;
-		}
-
-		/**
-		 * Returns the wait duration the CircuitBreaker will stay open, before it switches to half closed.
-		 *
-		 * @return the wait duration
-		 * @deprecated As of release 0.16.0 , use {@link #getWaitDurationInOpenState()} instead
-		 */
-		@Deprecated
-		@Nullable
-		public Integer getWaitDurationInOpenStateMillis() {
-			if (waitDurationInOpenState != null) {
-				return (int) waitDurationInOpenState.toMillis();
-			} else {
-				return null;
-			}
-		}
-
-		/**
-		 * Sets the wait duration the CircuitBreaker should stay open, before it switches to half closed.
-		 *
-		 * @param waitDurationInOpenStateMillis the wait duration
-		 * @deprecated As of release 0.16.0 , use {@link #setWaitDurationInOpenState(Duration)} instead
-		 */
-		@Deprecated
-		public InstanceProperties setWaitDurationInOpenStateMillis(Integer waitDurationInOpenStateMillis) {
-			this.waitDurationInOpenState = Duration.ofMillis(waitDurationInOpenStateMillis);
 			return this;
 		}
 

@@ -15,18 +15,17 @@
  */
 package io.github.resilience4j.common.retry.configuration;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-
-import java.time.Duration;
-
+import io.github.resilience4j.common.RecordFailurePredicate;
+import io.github.resilience4j.core.ConfigurationNotFoundException;
+import io.github.resilience4j.retry.RetryConfig;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.junit.MockitoJUnitRunner;
 
-import io.github.resilience4j.common.RecordFailurePredicate;
-import io.github.resilience4j.core.ConfigurationNotFoundException;
-import io.github.resilience4j.retry.RetryConfig;
+import java.time.Duration;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @RunWith(MockitoJUnitRunner.class)
 public class RetryConfigurationPropertiesTest {
@@ -47,7 +46,7 @@ public class RetryConfigurationPropertiesTest {
 		instanceProperties2.setMaxRetryAttempts(2);
 		instanceProperties2.setEnableExponentialBackoff(true);
 		instanceProperties2.setExponentialBackoffMultiplier(1.0);
-		instanceProperties2.setWaitDurationMillis(100L);
+		instanceProperties2.setWaitDuration(Duration.ofMillis(100L));
 
 		RetryConfigurationProperties retryConfigurationProperties = new RetryConfigurationProperties();
 		retryConfigurationProperties.getInstances().put("backend1", instanceProperties1);
@@ -59,7 +58,7 @@ public class RetryConfigurationPropertiesTest {
 		final RetryConfig retry1 = retryConfigurationProperties.createRetryConfig("backend1");
 		final RetryConfig retry2 = retryConfigurationProperties.createRetryConfig("backend2");
 		RetryConfigurationProperties.InstanceProperties instancePropertiesForRetry1 = retryConfigurationProperties.getInstances().get("backend1");
-		assertThat(instancePropertiesForRetry1.getWaitDurationMillis()).isEqualTo(1000);
+		assertThat(instancePropertiesForRetry1.getWaitDuration().toMillis()).isEqualTo(1000);
 		assertThat(retry1).isNotNull();
 		assertThat(retry1.getMaxAttempts()).isEqualTo(3);
 
@@ -83,11 +82,11 @@ public class RetryConfigurationPropertiesTest {
 
 		io.github.resilience4j.common.retry.configuration.RetryConfigurationProperties.InstanceProperties backendWithDefaultConfig = new io.github.resilience4j.common.retry.configuration.RetryConfigurationProperties.InstanceProperties();
 		backendWithDefaultConfig.setBaseConfig("default");
-		backendWithDefaultConfig.setWaitDurationMillis(200L);
+		backendWithDefaultConfig.setWaitDuration(Duration.ofMillis(200L));
 
 		io.github.resilience4j.common.retry.configuration.RetryConfigurationProperties.InstanceProperties backendWithSharedConfig = new io.github.resilience4j.common.retry.configuration.RetryConfigurationProperties.InstanceProperties();
 		backendWithSharedConfig.setBaseConfig("sharedConfig");
-		backendWithSharedConfig.setWaitDurationMillis(300L);
+		backendWithSharedConfig.setWaitDuration(Duration.ofMillis(300L));
 
 		RetryConfigurationProperties retryConfigurationProperties = new RetryConfigurationProperties();
 		retryConfigurationProperties.getConfigs().put("default", defaultProperties);

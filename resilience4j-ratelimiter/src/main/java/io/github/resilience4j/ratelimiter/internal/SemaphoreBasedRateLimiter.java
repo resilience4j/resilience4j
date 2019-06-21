@@ -94,8 +94,8 @@ public class SemaphoreBasedRateLimiter implements RateLimiter {
     private void scheduleLimitRefresh() {
         scheduler.scheduleAtFixedRate(
             this::refreshLimit,
-            this.rateLimiterConfig.get().getLimitRefreshPeriodInNanos(),
-            this.rateLimiterConfig.get().getLimitRefreshPeriodInNanos(),
+            this.rateLimiterConfig.get().getLimitRefreshPeriod().toNanos(),
+            this.rateLimiterConfig.get().getLimitRefreshPeriod().toNanos(),
             TimeUnit.NANOSECONDS
         );
     }
