@@ -208,7 +208,7 @@ public class SemaphoreBulkhead implements Bulkhead {
     boolean tryEnterBulkhead() {
 
         boolean callPermitted;
-        long timeout = config.getMaxWaitTime();
+        long timeout = config.getMaxWaitDuration().toMillis();
 
         if (timeout == 0) {
             callPermitted = semaphore.tryAcquire();

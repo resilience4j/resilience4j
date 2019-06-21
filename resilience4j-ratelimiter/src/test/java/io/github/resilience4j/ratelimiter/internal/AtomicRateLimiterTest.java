@@ -431,38 +431,30 @@ public class AtomicRateLimiterTest {
     public void changeDefaultTimeoutDuration() throws Exception {
         RateLimiterConfig rateLimiterConfig = rateLimiter.getRateLimiterConfig();
         then(rateLimiterConfig.getTimeoutDuration()).isEqualTo(Duration.ZERO);
-        then(rateLimiterConfig.getTimeoutDurationInNanos()).isEqualTo(0L);
         then(rateLimiterConfig.getLimitForPeriod()).isEqualTo(PERMISSIONS_RER_CYCLE);
         then(rateLimiterConfig.getLimitRefreshPeriod()).isEqualTo(Duration.ofNanos(CYCLE_IN_NANOS));
-        then(rateLimiterConfig.getLimitRefreshPeriodInNanos()).isEqualTo(CYCLE_IN_NANOS);
 
         rateLimiter.changeTimeoutDuration(Duration.ofSeconds(1));
         then(rateLimiterConfig != rateLimiter.getRateLimiterConfig()).isTrue();
         rateLimiterConfig = rateLimiter.getRateLimiterConfig();
         then(rateLimiterConfig.getTimeoutDuration()).isEqualTo(Duration.ofSeconds(1));
-        then(rateLimiterConfig.getTimeoutDurationInNanos()).isEqualTo(Duration.ofSeconds(1).toNanos());
         then(rateLimiterConfig.getLimitForPeriod()).isEqualTo(PERMISSIONS_RER_CYCLE);
         then(rateLimiterConfig.getLimitRefreshPeriod()).isEqualTo(Duration.ofNanos(CYCLE_IN_NANOS));
-        then(rateLimiterConfig.getLimitRefreshPeriodInNanos()).isEqualTo(CYCLE_IN_NANOS);
     }
 
     @Test
     public void changeLimitForPeriod() throws Exception {
         RateLimiterConfig rateLimiterConfig = rateLimiter.getRateLimiterConfig();
         then(rateLimiterConfig.getTimeoutDuration()).isEqualTo(Duration.ZERO);
-        then(rateLimiterConfig.getTimeoutDurationInNanos()).isEqualTo(0L);
         then(rateLimiterConfig.getLimitForPeriod()).isEqualTo(PERMISSIONS_RER_CYCLE);
         then(rateLimiterConfig.getLimitRefreshPeriod()).isEqualTo(Duration.ofNanos(CYCLE_IN_NANOS));
-        then(rateLimiterConfig.getLimitRefreshPeriodInNanos()).isEqualTo(CYCLE_IN_NANOS);
 
         rateLimiter.changeLimitForPeriod(35);
         then(rateLimiterConfig != rateLimiter.getRateLimiterConfig()).isTrue();
         rateLimiterConfig = rateLimiter.getRateLimiterConfig();
         then(rateLimiterConfig.getTimeoutDuration()).isEqualTo(Duration.ZERO);
-        then(rateLimiterConfig.getTimeoutDurationInNanos()).isEqualTo(0L);
         then(rateLimiterConfig.getLimitForPeriod()).isEqualTo(35);
         then(rateLimiterConfig.getLimitRefreshPeriod()).isEqualTo(Duration.ofNanos(CYCLE_IN_NANOS));
-        then(rateLimiterConfig.getLimitRefreshPeriodInNanos()).isEqualTo(CYCLE_IN_NANOS);
     }
 
     @Test

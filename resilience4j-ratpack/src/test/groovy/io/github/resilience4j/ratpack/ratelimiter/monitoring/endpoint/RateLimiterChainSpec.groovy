@@ -55,9 +55,9 @@ class RateLimiterChainSpec extends Specification {
             bindings {
                 module(Resilience4jModule) {
                     it.rateLimiter('test1') {
-                        it.setLimitForPeriod(5).setLimitRefreshPeriodInNanos(1000000000).setTimeoutInMillis(0)
+                        it.setLimitForPeriod(5).setLimitRefreshPeriod(Duration.ofNanos(1000000000)).setTimeoutDuration(Duration.ofSeconds(0))
                     }.rateLimiter('test2') {
-                        it.setLimitForPeriod(5).setLimitRefreshPeriodInNanos(1000000000).setTimeoutInMillis(0)
+                        it.setLimitForPeriod(5).setLimitRefreshPeriod(Duration.ofNanos(1000000000)).setTimeoutDuration(Duration.ofSeconds(0))
                     }
                 }
             }

@@ -15,15 +15,6 @@ package io.github.resilience4j.common.retry.configuration;
  * limitations under the License.
  */
 
-import java.time.Duration;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.function.Predicate;
-
-import javax.validation.constraints.Min;
-
-import org.hibernate.validator.constraints.time.DurationMin;
-
 import io.github.resilience4j.common.utils.ConfigUtils;
 import io.github.resilience4j.core.ClassUtils;
 import io.github.resilience4j.core.ConfigurationNotFoundException;
@@ -31,6 +22,13 @@ import io.github.resilience4j.core.StringUtils;
 import io.github.resilience4j.core.lang.Nullable;
 import io.github.resilience4j.retry.IntervalFunction;
 import io.github.resilience4j.retry.RetryConfig;
+import org.hibernate.validator.constraints.time.DurationMin;
+
+import javax.validation.constraints.Min;
+import java.time.Duration;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.function.Predicate;
 
 /**
  * Main spring properties for retry configuration
@@ -245,31 +243,6 @@ public class RetryConfigurationProperties {
 
 		@Nullable
 		private String baseConfig;
-
-		/**
-		 * @return wait duration in milliseconds
-		 * @deprecated As of release 0.16.0 , use {@link #getWaitDuration()} instead
-		 */
-		@Deprecated
-		@Nullable
-		public Long getWaitDurationMillis() {
-			if (waitDuration != null) {
-				return waitDuration.toMillis();
-			} else {
-				return null;
-			}
-		}
-
-		/**
-		 * @param waitDurationMillis wait time in milliseconds
-		 * @return InstanceProperties
-		 * @deprecated As of release 0.16.0 , use {@link #setWaitDuration(Duration)} instead
-		 */
-		@Deprecated
-		public InstanceProperties setWaitDurationMillis(Long waitDurationMillis) {
-			this.waitDuration = Duration.ofMillis(waitDurationMillis);
-			return this;
-		}
 
 		@Nullable
 		public Duration getWaitDuration() {

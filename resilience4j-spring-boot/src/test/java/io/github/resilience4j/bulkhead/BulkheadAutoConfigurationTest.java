@@ -15,15 +15,14 @@
  */
 package io.github.resilience4j.bulkhead;
 
-import static com.jayway.awaitility.Awaitility.await;
-import static org.assertj.core.api.Assertions.assertThat;
-
-import java.util.List;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
-
+import io.github.resilience4j.bulkhead.autoconfigure.BulkheadProperties;
+import io.github.resilience4j.bulkhead.configure.BulkheadAspect;
+import io.github.resilience4j.bulkhead.event.BulkheadEvent;
+import io.github.resilience4j.common.bulkhead.monitoring.endpoint.BulkheadEndpointResponse;
+import io.github.resilience4j.common.bulkhead.monitoring.endpoint.BulkheadEventDTO;
+import io.github.resilience4j.common.bulkhead.monitoring.endpoint.BulkheadEventsEndpointResponse;
+import io.github.resilience4j.service.test.BulkheadDummyService;
+import io.github.resilience4j.service.test.TestApplication;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,14 +32,14 @@ import org.springframework.core.Ordered;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import io.github.resilience4j.bulkhead.autoconfigure.BulkheadProperties;
-import io.github.resilience4j.bulkhead.configure.BulkheadAspect;
-import io.github.resilience4j.bulkhead.event.BulkheadEvent;
-import io.github.resilience4j.common.bulkhead.monitoring.endpoint.BulkheadEndpointResponse;
-import io.github.resilience4j.common.bulkhead.monitoring.endpoint.BulkheadEventDTO;
-import io.github.resilience4j.common.bulkhead.monitoring.endpoint.BulkheadEventsEndpointResponse;
-import io.github.resilience4j.service.test.BulkheadDummyService;
-import io.github.resilience4j.service.test.TestApplication;
+import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+
+import static com.jayway.awaitility.Awaitility.await;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
@@ -85,7 +84,7 @@ public class BulkheadAutoConfigurationTest {
                 .atMost(1, TimeUnit.SECONDS)
                 .until(() -> bulkhead.getMetrics().getAvailableConcurrentCalls() == 0);
 
-        assertThat(bulkhead.getBulkheadConfig().getMaxWaitTime()).isEqualTo(0);
+        assertThat(bulkhead.getBulkheadConfig().getMaxWaitDuration().toMillis()).isEqualTo(0);
         assertThat(bulkhead.getBulkheadConfig().getMaxConcurrentCalls()).isEqualTo(1);
 
         Callable<Boolean> booleanCallable = () -> bulkhead.getMetrics().getAvailableConcurrentCalls() == 1;

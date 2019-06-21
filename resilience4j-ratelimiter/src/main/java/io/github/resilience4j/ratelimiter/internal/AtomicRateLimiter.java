@@ -201,7 +201,7 @@ public class AtomicRateLimiter implements RateLimiter {
      * @return next {@link State}
      */
     private State calculateNextState(final long timeoutInNanos, final State activeState) {
-        long cyclePeriodInNanos = activeState.config.getLimitRefreshPeriodInNanos();
+        long cyclePeriodInNanos = activeState.config.getLimitRefreshPeriod().toNanos();
         int permissionsPerCycle = activeState.config.getLimitForPeriod();
 
         long currentNanos = currentNanoTime();
