@@ -29,7 +29,14 @@ import io.vavr.collection.Array;
 import java.util.Map;
 
 import static com.codahale.metrics.MetricRegistry.name;
-import static io.github.resilience4j.circuitbreaker.utils.MetricNames.*;
+import static io.github.resilience4j.circuitbreaker.utils.MetricNames.BUFFERED;
+import static io.github.resilience4j.circuitbreaker.utils.MetricNames.BUFFERED_MAX;
+import static io.github.resilience4j.circuitbreaker.utils.MetricNames.DEFAULT_PREFIX;
+import static io.github.resilience4j.circuitbreaker.utils.MetricNames.FAILED;
+import static io.github.resilience4j.circuitbreaker.utils.MetricNames.FAILURE_RATE;
+import static io.github.resilience4j.circuitbreaker.utils.MetricNames.NOT_PERMITTED;
+import static io.github.resilience4j.circuitbreaker.utils.MetricNames.STATE;
+import static io.github.resilience4j.circuitbreaker.utils.MetricNames.SUCCESSFUL;
 import static java.util.Objects.requireNonNull;
 
 /**
@@ -37,15 +44,17 @@ import static java.util.Objects.requireNonNull;
  */
 public class CircuitBreakerMetrics implements MetricSet {
 
-    private final MetricRegistry metricRegistry = new MetricRegistry();
+    private final MetricRegistry metricRegistry;
 
     private CircuitBreakerMetrics(Iterable<CircuitBreaker> circuitBreakers) {
-        this(DEFAULT_PREFIX, circuitBreakers);
+        this(DEFAULT_PREFIX, circuitBreakers, new MetricRegistry());
     }
 
-    private CircuitBreakerMetrics(String prefix, Iterable<CircuitBreaker> circuitBreakers) {
+    private CircuitBreakerMetrics(String prefix, Iterable<CircuitBreaker> circuitBreakers, MetricRegistry metricRegistry) {
         requireNonNull(prefix);
         requireNonNull(circuitBreakers);
+        requireNonNull(metricRegistry);
+        this.metricRegistry = metricRegistry;
         circuitBreakers.forEach((CircuitBreaker circuitBreaker) -> {
                 String name = circuitBreaker.getName();
                 //state as an integer
@@ -74,8 +83,29 @@ public class CircuitBreakerMetrics implements MetricSet {
      * @param prefix                 the prefix of metrics names
      * @param circuitBreakerRegistry the registry of circuit breakers
      */
+    public static CircuitBreakerMetrics ofCircuitBreakerRegistry(String prefix, CircuitBreakerRegistry circuitBreakerRegistry, MetricRegistry metricRegistry) {
+        return new CircuitBreakerMetrics(prefix, circuitBreakerRegistry.getAllCircuitBreakers(), metricRegistry);
+    }
+
+    /**
+     * Creates a new instance CircuitBreakerMetrics {@link CircuitBreakerMetrics} with specified metrics names prefix and
+     * a {@link CircuitBreakerRegistry} as a source.
+     *
+     * @param prefix                 the prefix of metrics names
+     * @param circuitBreakerRegistry the registry of circuit breakers
+     */
     public static CircuitBreakerMetrics ofCircuitBreakerRegistry(String prefix, CircuitBreakerRegistry circuitBreakerRegistry) {
-        return new CircuitBreakerMetrics(prefix, circuitBreakerRegistry.getAllCircuitBreakers());
+        return new CircuitBreakerMetrics(prefix, circuitBreakerRegistry.getAllCircuitBreakers(), new MetricRegistry());
+    }
+
+    /**
+     * Creates a new instance CircuitBreakerMetrics {@link CircuitBreakerMetrics} with
+     * a {@link CircuitBreakerRegistry} as a source.
+     *
+     * @param circuitBreakerRegistry the registry of circuit breakers
+     */
+    public static CircuitBreakerMetrics ofCircuitBreakerRegistry(CircuitBreakerRegistry circuitBreakerRegistry, MetricRegistry metricRegistry) {
+        return new CircuitBreakerMetrics(DEFAULT_PREFIX, circuitBreakerRegistry.getAllCircuitBreakers(), metricRegistry);
     }
 
     /**
@@ -105,7 +135,7 @@ public class CircuitBreakerMetrics implements MetricSet {
      * @param circuitBreakers the circuit breakers
      */
     public static CircuitBreakerMetrics ofIterable(String prefix, Iterable<CircuitBreaker> circuitBreakers) {
-        return new CircuitBreakerMetrics(prefix, circuitBreakers);
+        return new CircuitBreakerMetrics(prefix, circuitBreakers, new MetricRegistry());
     }
 
 

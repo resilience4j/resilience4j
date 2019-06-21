@@ -43,9 +43,7 @@ public class RetryMetricsAutoConfiguration {
 	@Bean
 	@ConditionalOnMissingBean
 	public RetryMetrics registerRetryMetrics(RetryRegistry retryRegistry, MetricRegistry metricRegistry) {
-		RetryMetrics retryMetrics = RetryMetrics.ofRetryRegistry(retryRegistry);
-		metricRegistry.registerAll(retryMetrics);
-		return retryMetrics;
+		return RetryMetrics.ofRetryRegistry(retryRegistry, metricRegistry);
 	}
 
 }

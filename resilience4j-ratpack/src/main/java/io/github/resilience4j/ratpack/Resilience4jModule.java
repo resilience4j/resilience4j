@@ -46,6 +46,7 @@ import io.github.resilience4j.metrics.ThreadPoolBulkheadMetrics;
 import io.github.resilience4j.prometheus.collectors.BulkheadMetricsCollector;
 import io.github.resilience4j.prometheus.collectors.CircuitBreakerMetricsCollector;
 import io.github.resilience4j.prometheus.collectors.RateLimiterMetricsCollector;
+import io.github.resilience4j.prometheus.collectors.RetryMetricsCollector;
 import io.github.resilience4j.prometheus.collectors.ThreadPoolBulkheadMetricsCollector;
 import io.github.resilience4j.ratelimiter.RateLimiterConfig;
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
@@ -345,26 +346,23 @@ public class Resilience4jModule extends ConfigurableModule<Resilience4jConfig> {
             // dropwizard metrics
             if (resilience4jConfig.isMetrics() && registry.maybeGet(MetricRegistry.class).isPresent()) {
                 MetricRegistry metricRegistry = registry.get(MetricRegistry.class);
-                CircuitBreakerMetrics circuitBreakerMetrics = CircuitBreakerMetrics.ofCircuitBreakerRegistry(circuitBreakerRegistry);
-                RateLimiterMetrics rateLimiterMetrics = RateLimiterMetrics.ofRateLimiterRegistry(rateLimiterRegistry);
-                RetryMetrics retryMetrics = RetryMetrics.ofRetryRegistry(retryRegistry);
-                BulkheadMetrics bulkheadMetrics = BulkheadMetrics.ofBulkheadRegistry(bulkheadRegistry);
-                ThreadPoolBulkheadMetrics threadPoolBulkheadMetrics = ThreadPoolBulkheadMetrics.ofBulkheadRegistry(threadPoolBulkheadRegistry);
-                metricRegistry.registerAll(circuitBreakerMetrics);
-                metricRegistry.registerAll(rateLimiterMetrics);
-                metricRegistry.registerAll(retryMetrics);
-                metricRegistry.registerAll(bulkheadMetrics);
-                metricRegistry.registerAll(threadPoolBulkheadMetrics);
+                CircuitBreakerMetrics.ofCircuitBreakerRegistry(circuitBreakerRegistry, metricRegistry);
+                RateLimiterMetrics.ofRateLimiterRegistry(rateLimiterRegistry, metricRegistry);
+                RetryMetrics.ofRetryRegistry(retryRegistry, metricRegistry);
+                BulkheadMetrics.ofBulkheadRegistry(bulkheadRegistry, metricRegistry);
+                ThreadPoolBulkheadMetrics.ofBulkheadRegistry(threadPoolBulkheadRegistry, metricRegistry);
             }
 
             // prometheus
             if (resilience4jConfig.isPrometheus() && registry.maybeGet(CollectorRegistry.class).isPresent()) {
                 CollectorRegistry collectorRegistry = registry.get(CollectorRegistry.class);
                 CircuitBreakerMetricsCollector circuitBreakerMetricsCollector = CircuitBreakerMetricsCollector.ofCircuitBreakerRegistry(circuitBreakerRegistry);
+                RetryMetricsCollector retryMetricsCollector = RetryMetricsCollector.ofRetryRegistry(retryRegistry);
                 RateLimiterMetricsCollector rateLimiterMetricsCollector = RateLimiterMetricsCollector.ofRateLimiterRegistry(rateLimiterRegistry);
                 BulkheadMetricsCollector bulkheadMetricsCollector = BulkheadMetricsCollector.ofBulkheadRegistry(bulkheadRegistry);
                 ThreadPoolBulkheadMetricsCollector threadPoolBulkheadMetricsCollector = ThreadPoolBulkheadMetricsCollector.ofBulkheadRegistry(threadPoolBulkheadRegistry);
                 circuitBreakerMetricsCollector.register(collectorRegistry);
+                retryMetricsCollector.register(collectorRegistry);
                 rateLimiterMetricsCollector.register(collectorRegistry);
                 bulkheadMetricsCollector.register(collectorRegistry);
                 threadPoolBulkheadMetricsCollector.register(collectorRegistry);

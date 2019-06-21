@@ -42,8 +42,6 @@ public class RateLimiterMetricsAutoConfiguration {
 	@Bean
 	@ConditionalOnMissingBean
 	public RateLimiterMetrics registerRateLimiterMetrics(RateLimiterRegistry rateLimiterRegistry, MetricRegistry metricRegistry) {
-		RateLimiterMetrics rateLimiterMetrics = RateLimiterMetrics.ofRateLimiterRegistry(rateLimiterRegistry);
-		metricRegistry.registerAll(rateLimiterMetrics);
-		return rateLimiterMetrics;
+		return RateLimiterMetrics.ofRateLimiterRegistry(rateLimiterRegistry, metricRegistry);
 	}
 }
