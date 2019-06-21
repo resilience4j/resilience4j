@@ -18,9 +18,11 @@
  */
 package io.github.resilience4j.bulkhead;
 
-import static org.assertj.core.api.Java6Assertions.assertThat;
-
 import org.junit.Test;
+
+import java.time.Duration;
+
+import static org.assertj.core.api.Java6Assertions.assertThat;
 
 public class ThreadPoolBulkheadConfigTest {
 
@@ -38,14 +40,14 @@ public class ThreadPoolBulkheadConfigTest {
                 .maxThreadPoolSize(maxThreadPoolSize)
                 .coreThreadPoolSize(coreThreadPoolSize)
                 .queueCapacity(queueCapacity)
-                .keepAliveTime(maxWait)
+                .keepAliveDuration(Duration.ofMillis(maxWait))
                 .build();
 
         // then
         assertThat(config).isNotNull();
         assertThat(config.getMaxThreadPoolSize()).isEqualTo(maxThreadPoolSize);
         assertThat(config.getCoreThreadPoolSize()).isEqualTo(coreThreadPoolSize);
-        assertThat(config.getKeepAliveTime()).isEqualTo(maxWait);
+        assertThat(config.getKeepAliveDuration().toMillis()).isEqualTo(maxWait);
         assertThat(config.getQueueCapacity()).isEqualTo(queueCapacity);
     }
 
@@ -62,14 +64,14 @@ public class ThreadPoolBulkheadConfigTest {
 				.maxThreadPoolSize(maxThreadPoolSize)
 				.coreThreadPoolSize(coreThreadPoolSize)
 				.queueCapacity(queueCapacity)
-				.keepAliveTime(maxWait)
+                .keepAliveDuration(Duration.ofMillis(maxWait))
 				.build();
 
 		// then
 		assertThat(config).isNotNull();
 		assertThat(config.getMaxThreadPoolSize()).isEqualTo(maxThreadPoolSize);
 		assertThat(config.getCoreThreadPoolSize()).isEqualTo(coreThreadPoolSize);
-		assertThat(config.getKeepAliveTime()).isEqualTo(maxWait);
+		assertThat(config.getKeepAliveDuration().toMillis()).isEqualTo(maxWait);
 		assertThat(config.getQueueCapacity()).isEqualTo(queueCapacity);
 	}
 
@@ -95,7 +97,7 @@ public class ThreadPoolBulkheadConfigTest {
     public void testBuildWithIllegalMaxWait() {
         // when
         ThreadPoolBulkheadConfig.custom()
-                .keepAliveTime(-1)
+                .keepAliveDuration(Duration.ofMillis(-1))
                 .build();
     }
 

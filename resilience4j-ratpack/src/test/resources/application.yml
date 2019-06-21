@@ -21,7 +21,7 @@ resilience4j:
             default:
                 ringBufferSizeInClosedState: 200
                 ringBufferSizeInHalfOpenState: 20
-                waitDurationInOpenStateMillis: 1000
+                waitDurationInOpenState: PT1S
                 failureRateThreshold: 60
                 automaticTransitionFromOpenToHalfOpenEnabled: true
                 recordExceptions:
@@ -30,7 +30,7 @@ resilience4j:
             shared:
                 ringBufferSizeInClosedState: 200
                 ringBufferSizeInHalfOpenState: 20
-                waitDurationInOpenStateMillis: 1000
+                waitDurationInOpenState: PT1S
                 failureRateThreshold: 60
                 automaticTransitionFromOpenToHalfOpenEnabled: true
                 recordExceptions:
@@ -52,12 +52,12 @@ resilience4j:
         configs:
             default:
                 limitForPeriod: 100
-                limitRefreshPeriodInNanos: 900
-                timeoutInMillis: 10
+                limitRefreshPeriod: PT0.0000009S
+                timeoutDuration: PT0.010S
             shared:
                 limitForPeriod: 100
-                limitRefreshPeriodInNanos: 900
-                timeoutInMillis: 10
+                limitRefreshPeriod: PT0.0000009S
+                timeoutDuration: PT0.010S
         instances:
             test1:
                 baseConfig: default
@@ -70,10 +70,10 @@ resilience4j:
         configs:
             default:
                 maxRetryAttempts: 3
-                waitDurationInMillis: 1000
+                waitDuration: PT1S
             shared:
                 maxRetryAttempts: 3
-                waitDurationInMillis: 1000
+                waitDuration: PT1S
         instances:
             test1:
                 baseConfig: default
@@ -85,37 +85,34 @@ resilience4j:
         configs:
             default:
                 maxConcurrentCalls: 50
-                maxWaitTime: 500
+                maxWaitDuration: PT0.5S
             shared:
                 maxConcurrentCalls: 50
-                maxWaitTime: 500
+                maxWaitDuration: PT0.5S
         instances:
             test1:
                 baseConfig: default
-                maxWaitTime: 750
+                maxWaitDuration: PT0.75S
             test2:
                 maxConcurrentCalls: 100
                 maxWaitDuration: PT1S
     threadPoolBulkhead:
         configs:
             default:
-                threadPoolProperties:
-                    maxThreadPoolSize: 4
-                    coreThreadPoolSize: 2
-                    queueCapacity: 2
-                    keepAliveTime: 1000
+                maxThreadPoolSize: 4
+                coreThreadPoolSize: 2
+                queueCapacity: 2
+                keepAliveDuration: PT1S
             shared:
-                threadPoolProperties:
-                    maxThreadPoolSize: 4
-                    coreThreadPoolSize: 2
-                    queueCapacity: 2
-                    keepAliveTime: 1000
+                maxThreadPoolSize: 4
+                coreThreadPoolSize: 2
+                queueCapacity: 2
+                keepAliveDuration: PT1S
         backends:
             test1:
                 baseConfig: default
             test2:
-                threadPoolProperties:
-                    maxThreadPoolSize: 1
-                    coreThreadPoolSize: 1
-                    queueCapacity: 1
-                    keepAliveDuration: PT1S
+                maxThreadPoolSize: 1
+                coreThreadPoolSize: 1
+                queueCapacity: 1
+                keepAliveDuration: PT1S

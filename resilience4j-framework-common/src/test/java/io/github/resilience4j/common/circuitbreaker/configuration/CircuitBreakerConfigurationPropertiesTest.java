@@ -15,16 +15,15 @@
  */
 package io.github.resilience4j.common.circuitbreaker.configuration;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-
-import java.time.Duration;
-
-import org.junit.Test;
-
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.common.RecordFailurePredicate;
 import io.github.resilience4j.core.ConfigurationNotFoundException;
+import org.junit.Test;
+
+import java.time.Duration;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
  * test custom init of circuit breaker registry
@@ -38,7 +37,6 @@ public class CircuitBreakerConfigurationPropertiesTest {
 		io.github.resilience4j.common.circuitbreaker.configuration.CircuitBreakerConfigurationProperties.InstanceProperties instanceProperties1 = new io.github.resilience4j.common.circuitbreaker.configuration.CircuitBreakerConfigurationProperties.InstanceProperties();
 		instanceProperties1.setRingBufferSizeInClosedState(1000);
 		instanceProperties1.setWaitDurationInOpenState(Duration.ofMillis(100));
-		instanceProperties1.setWaitDurationInOpenStateMillis(100);
 		instanceProperties1.setEventConsumerBufferSize(100);
 		instanceProperties1.setRegisterHealthIndicator(true);
 		instanceProperties1.setRingBufferSizeInClosedState(200);
@@ -67,7 +65,6 @@ public class CircuitBreakerConfigurationPropertiesTest {
 		assertThat(circuitBreaker1.getRingBufferSizeInClosedState()).isEqualTo(200);
 		assertThat(circuitBreaker1.getWaitDurationInOpenState()).isEqualTo(Duration.ofMillis(100));
 		final CircuitBreakerConfigurationProperties.InstanceProperties backend1 = circuitBreakerConfigurationProperties.getBackendProperties("backend1");
-		assertThat(backend1.getWaitDurationInOpenStateMillis()).isEqualTo(100);
 		assertThat(circuitBreakerConfigurationProperties.findCircuitBreakerProperties("backend1")).isNotEmpty();
 		CircuitBreakerConfig circuitBreaker2 = circuitBreakerConfigurationProperties.createCircuitBreakerConfig(instanceProperties2);
 		assertThat(circuitBreaker2).isNotNull();

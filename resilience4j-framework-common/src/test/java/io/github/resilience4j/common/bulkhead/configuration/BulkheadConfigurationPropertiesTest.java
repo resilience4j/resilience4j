@@ -15,16 +15,15 @@
  */
 package io.github.resilience4j.common.bulkhead.configuration;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-
-import java.time.Duration;
-
-import org.junit.Test;
-
 import io.github.resilience4j.bulkhead.BulkheadConfig;
 import io.github.resilience4j.bulkhead.ThreadPoolBulkheadConfig;
 import io.github.resilience4j.core.ConfigurationNotFoundException;
+import org.junit.Test;
+
+import java.time.Duration;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
  * unit test for bulkhead properties
@@ -34,14 +33,10 @@ public class BulkheadConfigurationPropertiesTest {
 	public void tesFixedThreadPoolBulkHeadProperties() {
 		//Given
 		ThreadPoolBulkheadConfigurationProperties.InstanceProperties backendProperties1 = new ThreadPoolBulkheadConfigurationProperties.InstanceProperties();
-		ThreadPoolProperties threadPoolProperties = new ThreadPoolProperties();
-		threadPoolProperties.setCoreThreadPoolSize(1);
-		backendProperties1.setThreadPoolProperties(threadPoolProperties);
+		backendProperties1.setCoreThreadPoolSize(1);
 
 		ThreadPoolBulkheadConfigurationProperties.InstanceProperties backendProperties2 = new ThreadPoolBulkheadConfigurationProperties.InstanceProperties();
-		ThreadPoolProperties threadPoolProperties2 = new ThreadPoolProperties();
-		threadPoolProperties2.setCoreThreadPoolSize(2);
-		backendProperties2.setThreadPoolProperties(threadPoolProperties2);
+		backendProperties2.setCoreThreadPoolSize(2);
 
 		ThreadPoolBulkheadConfigurationProperties bulkheadConfigurationProperties = new ThreadPoolBulkheadConfigurationProperties();
 		bulkheadConfigurationProperties.getBackends().put("backend1", backendProperties1);
@@ -64,30 +59,22 @@ public class BulkheadConfigurationPropertiesTest {
 	public void testCreateThreadPoolBulkHeadPropertiesWithSharedConfigs() {
 		//Given
 		ThreadPoolBulkheadConfigurationProperties.InstanceProperties defaultProperties = new ThreadPoolBulkheadConfigurationProperties.InstanceProperties();
-		ThreadPoolProperties threadPoolProperties = new ThreadPoolProperties();
-		threadPoolProperties.setCoreThreadPoolSize(1);
-		threadPoolProperties.setQueueCapacity(1);
-		threadPoolProperties.setKeepAliveTime(5);
-		threadPoolProperties.setMaxThreadPoolSize(10);
-		defaultProperties.setThreadPoolProperties(threadPoolProperties);
+		defaultProperties.setCoreThreadPoolSize(1);
+		defaultProperties.setQueueCapacity(1);
+		defaultProperties.setKeepAliveDuration(Duration.ofMillis(5));
+		defaultProperties.setMaxThreadPoolSize(10);
 
 		ThreadPoolBulkheadConfigurationProperties.InstanceProperties sharedProperties = new ThreadPoolBulkheadConfigurationProperties.InstanceProperties();
-		ThreadPoolProperties threadPoolProperties2 = new ThreadPoolProperties();
-		threadPoolProperties2.setCoreThreadPoolSize(2);
-		threadPoolProperties2.setQueueCapacity(2);
-		sharedProperties.setThreadPoolProperties(threadPoolProperties2);
+		sharedProperties.setCoreThreadPoolSize(2);
+		sharedProperties.setQueueCapacity(2);
 
 		ThreadPoolBulkheadConfigurationProperties.InstanceProperties backendWithDefaultConfig = new ThreadPoolBulkheadConfigurationProperties.InstanceProperties();
 		backendWithDefaultConfig.setBaseConfig("default");
-		ThreadPoolProperties threadPoolProperties3 = new ThreadPoolProperties();
-		threadPoolProperties3.setCoreThreadPoolSize(3);
-		backendWithDefaultConfig.setThreadPoolProperties(threadPoolProperties3);
+		backendWithDefaultConfig.setCoreThreadPoolSize(3);
 
 		ThreadPoolBulkheadConfigurationProperties.InstanceProperties backendWithSharedConfig = new ThreadPoolBulkheadConfigurationProperties.InstanceProperties();
 		backendWithSharedConfig.setBaseConfig("sharedConfig");
-		ThreadPoolProperties threadPoolProperties4 = new ThreadPoolProperties();
-		threadPoolProperties4.setCoreThreadPoolSize(4);
-		backendWithSharedConfig.setThreadPoolProperties(threadPoolProperties4);
+		backendWithSharedConfig.setCoreThreadPoolSize(4);
 
 		ThreadPoolBulkheadConfigurationProperties bulkheadConfigurationProperties = new ThreadPoolBulkheadConfigurationProperties();
 		bulkheadConfigurationProperties.getConfigs().put("default", defaultProperties);
@@ -155,7 +142,7 @@ public class BulkheadConfigurationPropertiesTest {
 		//Given
 		io.github.resilience4j.common.bulkhead.configuration.BulkheadConfigurationProperties.InstanceProperties defaultProperties = new io.github.resilience4j.common.bulkhead.configuration.BulkheadConfigurationProperties.InstanceProperties();
 		defaultProperties.setMaxConcurrentCalls(3);
-		defaultProperties.setMaxWaitTime(50L);
+		defaultProperties.setMaxWaitDuration(Duration.ofMillis(50));
 		assertThat(defaultProperties.getEventConsumerBufferSize()).isNull();
 
 		io.github.resilience4j.common.bulkhead.configuration.BulkheadConfigurationProperties.InstanceProperties sharedProperties = new io.github.resilience4j.common.bulkhead.configuration.BulkheadConfigurationProperties.InstanceProperties();
@@ -165,12 +152,12 @@ public class BulkheadConfigurationPropertiesTest {
 
 		io.github.resilience4j.common.bulkhead.configuration.BulkheadConfigurationProperties.InstanceProperties backendWithDefaultConfig = new io.github.resilience4j.common.bulkhead.configuration.BulkheadConfigurationProperties.InstanceProperties();
 		backendWithDefaultConfig.setBaseConfig("default");
-		backendWithDefaultConfig.setMaxWaitTime(200L);
+		backendWithDefaultConfig.setMaxWaitDuration(Duration.ofMillis(200L));
 		assertThat(backendWithDefaultConfig.getEventConsumerBufferSize()).isNull();
 
 		io.github.resilience4j.common.bulkhead.configuration.BulkheadConfigurationProperties.InstanceProperties backendWithSharedConfig = new io.github.resilience4j.common.bulkhead.configuration.BulkheadConfigurationProperties.InstanceProperties();
 		backendWithSharedConfig.setBaseConfig("sharedConfig");
-		backendWithSharedConfig.setMaxWaitTime(300L);
+		backendWithSharedConfig.setMaxWaitDuration(Duration.ofMillis(300L));
 		assertThat(backendWithSharedConfig.getEventConsumerBufferSize()).isNull();
 
 		BulkheadConfigurationProperties bulkheadConfigurationProperties = new BulkheadConfigurationProperties();
@@ -188,18 +175,18 @@ public class BulkheadConfigurationPropertiesTest {
 		BulkheadConfig bulkhead1 = bulkheadConfigurationProperties.createBulkheadConfig(backendWithDefaultConfig);
 		assertThat(bulkhead1).isNotNull();
 		assertThat(bulkhead1.getMaxConcurrentCalls()).isEqualTo(3);
-		assertThat(bulkhead1.getMaxWaitTime()).isEqualTo(200L);
+		assertThat(bulkhead1.getMaxWaitDuration().toMillis()).isEqualTo(200L);
 
 		// Should get shared config and overwrite wait time
 		BulkheadConfig bulkhead2 = bulkheadConfigurationProperties.createBulkheadConfig(backendWithSharedConfig);
 		assertThat(bulkhead2).isNotNull();
 		assertThat(bulkhead2.getMaxConcurrentCalls()).isEqualTo(2);
-		assertThat(bulkhead2.getMaxWaitTime()).isEqualTo(300L);
+		assertThat(bulkhead2.getMaxWaitDuration().toMillis()).isEqualTo(300L);
 
 		// Unknown backend should get default config of Registry
 		BulkheadConfig bulkhead3 = bulkheadConfigurationProperties.createBulkheadConfig(new BulkheadConfigurationProperties.InstanceProperties());
 		assertThat(bulkhead3).isNotNull();
-		assertThat(bulkhead3.getMaxWaitTime()).isEqualTo(0L);
+		assertThat(bulkhead3.getMaxWaitDuration().toMillis()).isEqualTo(0L);
 
 	}
 
