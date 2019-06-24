@@ -97,12 +97,4 @@ public final class InMemoryThreadPoolBulkheadRegistry extends AbstractRegistry<T
 		return computeIfAbsent(name, () -> ThreadPoolBulkhead.of(name, getConfiguration(configName)
 				.orElseThrow(() -> new ConfigurationNotFoundException(configName))));
 	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public ThreadPoolBulkheadConfig getDefaultBulkheadConfig() {
-		return getDefaultConfig();
-	}
 }

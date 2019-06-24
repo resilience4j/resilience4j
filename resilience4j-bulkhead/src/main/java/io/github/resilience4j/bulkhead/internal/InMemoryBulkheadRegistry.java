@@ -97,9 +97,4 @@ public final class InMemoryBulkheadRegistry extends AbstractRegistry<Bulkhead, B
 		return computeIfAbsent(name, () -> Bulkhead.of(name, getConfiguration(configName)
 				.orElseThrow(() -> new ConfigurationNotFoundException(configName))));
 	}
-
-	@Override
-	public BulkheadConfig getDefaultBulkheadConfig() {
-		return getDefaultConfig();
-	}
 }
