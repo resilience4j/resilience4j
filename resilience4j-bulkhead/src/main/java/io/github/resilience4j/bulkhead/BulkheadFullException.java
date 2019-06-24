@@ -18,6 +18,8 @@
  */
 package io.github.resilience4j.bulkhead;
 
+import io.github.resilience4j.bulkhead.adaptive.AdaptiveBulkhead;
+
 /**
  * A {@link BulkheadFullException} signals that the bulkhead is full.
  */
