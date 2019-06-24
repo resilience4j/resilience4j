@@ -34,9 +34,11 @@ import io.github.resilience4j.bulkhead.event.BulkheadOnLimitIncreasedEvent;
 import io.github.resilience4j.bulkhead.internal.SemaphoreBulkhead;
 import io.github.resilience4j.core.EventConsumer;
 import io.github.resilience4j.core.EventProcessor;
+import io.github.resilience4j.core.EventPublisher;
+import io.github.resilience4j.core.lang.NonNull;
 import io.github.resilience4j.core.lang.Nullable;
 
-public class AdaptiveBulkheadWithLimiter implements AdaptiveBulkhead {
+public class AdaptiveLimitBulkhead implements AdaptiveBulkhead {
 	private static final String CONFIG_MUST_NOT_BE_NULL = "Config must not be null";
 	// initialization constants
 	private final String name;
@@ -55,11 +57,11 @@ public class AdaptiveBulkheadWithLimiter implements AdaptiveBulkhead {
 	private final AtomicReference<LimitAdapter> limitAdapter;
 
 
-	public AdaptiveBulkheadWithLimiter(String name, AdaptiveBulkheadConfig config) {
+	public AdaptiveLimitBulkhead(@NonNull String name, @NonNull AdaptiveBulkheadConfig config) {
 		this(name, config, null);
 	}
 
-	public AdaptiveBulkheadWithLimiter(String name, AdaptiveBulkheadConfig config, @Nullable LimitAdapter limitAdapter) {
+	public AdaptiveLimitBulkhead(@NonNull String name, @NonNull AdaptiveBulkheadConfig config, @Nullable LimitAdapter limitAdapter) {
 		this.name = name;
 		if (limitAdapter != null) {
 			this.limitAdapter = new AtomicReference<>(limitAdapter);
@@ -76,7 +78,7 @@ public class AdaptiveBulkheadWithLimiter implements AdaptiveBulkhead {
 		bulkhead = new SemaphoreBulkhead(name + "-internal", this.currentConfig);
 		metrics = new InternalMetrics();
 		eventProcessor = new AdaptiveBulkheadEventProcessor();
-		DEFAULT_LIMITER = new AtomicReference<>(new MovingAverageLimitAdapter(adaptationConfig));
+		DEFAULT_LIMITER = new AtomicReference<>(new MovingAverageLimitAdapter(adaptationConfig, this::publishBulkheadEvent));
 	}
 
 
@@ -126,7 +128,7 @@ public class AdaptiveBulkheadWithLimiter implements AdaptiveBulkhead {
 	}
 
 	@Override
-	public EventPublisher getEventPublisher() {
+	public AdaptiveEventPublisher getEventPublisher() {
 		return eventProcessor;
 	}
 
@@ -155,17 +157,17 @@ public class AdaptiveBulkheadWithLimiter implements AdaptiveBulkhead {
 	}
 
 
-	private class AdaptiveBulkheadEventProcessor extends EventProcessor<BulkheadLimit> implements EventPublisher, EventConsumer<BulkheadLimit> {
+	private class AdaptiveBulkheadEventProcessor extends EventProcessor<BulkheadLimit> implements AdaptiveEventPublisher, EventConsumer<BulkheadLimit> {
 
 		@Override
 		public EventPublisher onLimitIncreased(EventConsumer<BulkheadOnLimitDecreasedEvent> eventConsumer) {
-			registerConsumer(BulkheadOnLimitDecreasedEvent.class.getSimpleName(), eventConsumer);
+			registerConsumer(BulkheadOnLimitIncreasedEvent.class.getSimpleName(), eventConsumer);
 			return this;
 		}
 
 		@Override
 		public EventPublisher onLimitDecreased(EventConsumer<BulkheadOnLimitIncreasedEvent> eventConsumer) {
-			registerConsumer(BulkheadOnLimitIncreasedEvent.class.getSimpleName(), eventConsumer);
+			registerConsumer(BulkheadOnLimitDecreasedEvent.class.getSimpleName(), eventConsumer);
 			return this;
 		}
 
@@ -179,4 +181,11 @@ public class AdaptiveBulkheadWithLimiter implements AdaptiveBulkhead {
 	public String toString() {
 		return String.format("AdaptiveBulkhead '%s'", this.name);
 	}
+
+	private void publishBulkheadEvent(BulkheadLimit eventSupplier) {
+		if (eventProcessor.hasConsumers()) {
+			eventProcessor.consumeEvent(eventSupplier);
+		}
+	}
+
 }
