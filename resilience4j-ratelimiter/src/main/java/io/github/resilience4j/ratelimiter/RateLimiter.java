@@ -267,20 +267,6 @@ public interface RateLimiter {
 	void changeLimitForPeriod(int limitForPeriod);
 
 	/**
-	 * @deprecated Use {@link RateLimiter#acquirePermission(Duration)} instead.
-	 * @since 0.15.0
-	 */
-	@Deprecated
-	boolean getPermission(Duration timeoutDuration);
-
-	/**
-	 * @deprecated Use {@link RateLimiter#acquirePermission()} instead.
-	 * @since 0.16.0
-	 */
-	@Deprecated
-	boolean acquirePermission(Duration timeoutDuration);
-
-	/**
 	 * Acquires a permission from this rate limiter, blocking until one is available, or the thread is interrupted.
 	 * Maximum wait time is {@link RateLimiterConfig#getTimeoutDuration()}
 	 *
@@ -292,13 +278,6 @@ public interface RateLimiter {
 	 * if waiting timeoutDuration elapsed before a permit was acquired
 	 */
 	boolean acquirePermission();
-
-	/**
-	 * @deprecated Use {@link RateLimiter#reservePermission()} instead.
-	 * @since 0.16.0
-	 */
-	@Deprecated
-	long reservePermission(Duration timeoutDuration);
 
 	/**
 	 * Reserves a permission from this rate limiter and returns nanoseconds you should wait for it.

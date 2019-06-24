@@ -18,6 +18,11 @@
  */
 package io.github.resilience4j.circuitbreaker;
 
+import io.github.resilience4j.circuitbreaker.test.VertxHelloWorldService;
+import io.vertx.core.Future;
+import io.vertx.core.Vertx;
+import io.vertx.ext.unit.TestContext;
+import io.vertx.ext.unit.junit.VertxUnitRunner;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -26,12 +31,6 @@ import org.mockito.Mockito;
 
 import java.time.Duration;
 import java.util.function.Supplier;
-
-import io.github.resilience4j.circuitbreaker.test.VertxHelloWorldService;
-import io.vertx.core.Future;
-import io.vertx.core.Vertx;
-import io.vertx.ext.unit.TestContext;
-import io.vertx.ext.unit.junit.VertxUnitRunner;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -146,7 +145,7 @@ public class VertxCircuitBreakerTest {
         //Then
         //Then
         assertThat(future.failed()).isTrue();
-        assertThat(future.cause()).isInstanceOf(CircuitBreakerOpenException.class);
+        assertThat(future.cause()).isInstanceOf(CallNotPermittedException.class);
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(2);
         assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(2);
         assertThat(metrics.getNumberOfNotPermittedCalls()).isEqualTo(1);

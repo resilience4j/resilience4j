@@ -538,7 +538,7 @@ public class CircuitBreakerTest {
 
         //Then
         assertThat(result.isFailure()).isTrue();
-        assertThat(result.failed().get()).isInstanceOf(CircuitBreakerOpenException.class);
+        assertThat(result.failed().get()).isInstanceOf(CallNotPermittedException.class);
     }
 
     @Test
@@ -665,7 +665,7 @@ public class CircuitBreakerTest {
 
         // Then the call fails, because CircuitBreaker is OPEN
         assertThat(result.isFailure()).isTrue();
-        // Exception is CircuitBreakerOpenException
+        // Exception is CallNotPermittedException
         assertThat(result.failed().get()).isInstanceOf(CallNotPermittedException.class);
         // end::shouldThrowCircuitBreakerOpenException[]
 

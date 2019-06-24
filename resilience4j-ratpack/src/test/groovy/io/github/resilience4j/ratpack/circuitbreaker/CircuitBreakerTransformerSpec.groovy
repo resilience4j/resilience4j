@@ -15,9 +15,9 @@
  */
 package io.github.resilience4j.ratpack.circuitbreaker
 
+import io.github.resilience4j.circuitbreaker.CallNotPermittedException
 import io.github.resilience4j.circuitbreaker.CircuitBreaker
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig
-import io.github.resilience4j.circuitbreaker.CircuitBreakerOpenException
 import io.github.resilience4j.ratpack.circuitbreaker.CircuitBreakerTransformer
 import ratpack.exec.Blocking
 import ratpack.test.exec.ExecHarness
@@ -179,7 +179,7 @@ class CircuitBreakerTransformerSpec extends Specification {
         then:
         r.value == null
         r.error
-        r.throwable instanceof CircuitBreakerOpenException
+        r.throwable instanceof CallNotPermittedException
         breaker.state == CircuitBreaker.State.OPEN
     }
 

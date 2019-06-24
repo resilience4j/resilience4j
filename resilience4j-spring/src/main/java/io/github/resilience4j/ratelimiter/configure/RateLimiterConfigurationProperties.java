@@ -18,21 +18,11 @@ package io.github.resilience4j.ratelimiter.configure;
 import org.springframework.core.Ordered;
 
 public class RateLimiterConfigurationProperties extends io.github.resilience4j.common.ratelimiter.configuration.RateLimiterConfigurationProperties {
-	private int rateLimiterAspectOrder = Ordered.LOWEST_PRECEDENCE - 1;
 
 	/**
-	 * @deprecated As of release 0.16.0 as we set an implicit spring aspect order now which is retry then circuit breaker then rate limiter then bulkhead
+	 * As of release 0.16.0 as we set an implicit spring aspect order now which is retry then circuit breaker then rate limiter then bulkhead
 	 */
-	@Deprecated
 	public int getRateLimiterAspectOrder() {
-		return rateLimiterAspectOrder;
-	}
-
-	/**
-	 * @deprecated As of release 0.16.0 as we set an implicit spring aspect order now which is retry then circuit breaker then rate limiter then bulkhead
-	 */
-	@Deprecated
-	public void setRateLimiterAspectOrder(int rateLimiterAspectOrder) {
-		// NO-OP
+		return Ordered.LOWEST_PRECEDENCE - 1;
 	}
 }
