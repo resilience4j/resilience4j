@@ -71,7 +71,7 @@ public class AdaptiveBulkheadWithLimiter implements AdaptiveBulkhead {
 		int initialConcurrency = ((int) roundedValue) > 0 ? (int) roundedValue : 1;
 		this.currentConfig = BulkheadConfig.custom()
 				.maxConcurrentCalls(initialConcurrency)
-				.maxWaitTimeDuration(Duration.ofMillis(0))
+				.maxWaitDuration(Duration.ofMillis(0))
 				.build();
 		bulkhead = new SemaphoreBulkhead(name + "-internal", this.currentConfig);
 		metrics = new InternalMetrics();

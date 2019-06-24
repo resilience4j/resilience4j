@@ -109,13 +109,13 @@ public class MovingAverageLimitAdapter implements LimitAdapter {
 		if (averageLatencySeconds < currentMaxLatency) {
 			final BulkheadConfig updatedConfig = BulkheadConfig.custom()
 					.maxConcurrentCalls(bulkhead.getBulkheadConfig().getMaxConcurrentCalls() + 1)
-					.maxWaitTimeDuration(Duration.ofMillis(waitTimeMillis))
+					.maxWaitDuration(Duration.ofMillis(waitTimeMillis))
 					.build();
 			bulkhead.changeConfig(updatedConfig);
 		} else {
 			final BulkheadConfig updatedConfig = BulkheadConfig.custom()
 					.maxConcurrentCalls(max((int) (bulkhead.getBulkheadConfig().getMaxConcurrentCalls() * CONCURRENCY_DROP_MUL), 1))
-					.maxWaitTimeDuration(Duration.ofMillis(waitTimeMillis))
+					.maxWaitDuration(Duration.ofMillis(waitTimeMillis))
 					.build();
 			bulkhead.changeConfig(updatedConfig);
 		}
