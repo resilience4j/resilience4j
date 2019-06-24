@@ -30,7 +30,10 @@ artifactoryPublish.skip=true // apply to all projects except the root
 
 ext {
     coreProjects = subprojects.findAll {
-        p -> !p.name.contains("documentation") && !p.name.endsWith("-bom")
+        p -> !p.name.contains("documentation") && !p.name.endsWith("-bom") && !p.name.endsWith("-demo")
+    }
+    publishProjects = subprojects.findAll {
+        p -> !p.name.endsWith("-demo")
     }
 }
 
@@ -67,7 +70,6 @@ configure(project.coreProjects) {
         options.deprecation = true
         options.encoding = 'UTF-8'
         options.compilerArgs += ["-Xlint:unchecked", "-parameters"]
-
     }
 
     jmh {
@@ -106,7 +108,8 @@ subprojects {
     afterEvaluate {
         // exclude subprojects that don't produce a jar file or by design.
         if(!project.name.equals('resilience4j-bom') && !project.name.equals('resilience4j-documentation')
-                && !project.name.equals('resilience4j-test') && !project.name.equals('resilience4j-spring-boot-common')) {
+                && !project.name.equals('resilience4j-test') && !project.name.equals('resilience4j-spring-boot-common')
+                && !project.name.endsWith('-demo')) {
             jar {
                 inputs.property('moduleName', moduleName)
                 manifest.attributes(
@@ -124,28 +127,30 @@ test {
     dependsOn(subprojects.test) // required by cobertura to aggregate report
 }
 
-artifactory {
-    contextUrl = 'https://oss.jfrog.org'
-    resolve {
-        repository {
-            repoKey = 'libs-release'
-            maven = true
+configure(project.publishProjects) {
+    artifactory {
+        contextUrl = 'https://oss.jfrog.org'
+        resolve {
+            repository {
+                repoKey = 'libs-release'
+                maven = true
+            }
         }
-    }
-    publish {
-        repository {
-            repoKey = 'oss-snapshot-local' //The Artifactory repository key to publish to
-            //when using oss.jfrog.org the credentials are from Bintray. For local build we expect them to be found in
-            //~/.gradle/gradle.properties, otherwise to be set in the build server
-            username = project.hasProperty('bintrayUsername') ? project.bintrayUsername : System.getenv('BINTRAY_USER')
-            password = project.hasProperty('bintrayApiKey') ? project.bintrayApiKey : System.getenv('BINTRAY_KEY')
+        publish {
+            repository {
+                repoKey = 'oss-snapshot-local' //The Artifactory repository key to publish to
+                //when using oss.jfrog.org the credentials are from Bintray. For local build we expect them to be found in
+                //~/.gradle/gradle.properties, otherwise to be set in the build server
+                username = project.hasProperty('bintrayUsername') ? project.bintrayUsername : System.getenv('BINTRAY_USER')
+                password = project.hasProperty('bintrayApiKey') ? project.bintrayApiKey : System.getenv('BINTRAY_KEY')
+            }
+            defaults {
+                publications('mavenJava')
+            }
         }
-        defaults {
-            publications('mavenJava')
+        if (System.properties['https.proxyHost']) {
+            clientConfig.proxy.host = System.properties['https.proxyHost']
+            clientConfig.proxy.port = System.properties['https.proxyPort'].toInteger()
         }
-    }
-    if (System.properties['https.proxyHost']) {
-        clientConfig.proxy.host = System.properties['https.proxyHost']
-        clientConfig.proxy.port = System.properties['https.proxyPort'].toInteger()
     }
 }

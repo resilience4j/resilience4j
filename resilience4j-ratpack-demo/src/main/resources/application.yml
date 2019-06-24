@@ -1,25 +1,22 @@
 resilience4j:
-    metrics: false
+    metrics: true
     endpoints:
         circuitBreakers:
             enabled: true
             path: circuitbreaker
-            eventConsumerBufferSize: 100
         rateLimiters:
             enabled: true
             path: ratelimiter
-            eventConsumerBufferSize: 100
         retries:
             enabled: true
             path: retry
-            eventConsumerBufferSize: 100
         bulkheads:
             enabled: true
             path: bulkhead
-            eventConsumerBufferSize: 100
     circuitBreaker:
         configs:
             default:
+                eventConsumerBufferSize: 100
                 ringBufferSizeInClosedState: 200
                 ringBufferSizeInHalfOpenState: 20
                 waitDurationInOpenStateMillis: 1000
@@ -29,6 +26,7 @@ resilience4j:
                     - resilience4j.ratpack.App$DummyException1
                     - resilience4j.ratpack.App$DummyException2
             shared:
+                eventConsumerBufferSize: 100
                 ringBufferSizeInClosedState: 200
                 ringBufferSizeInHalfOpenState: 20
                 waitDurationInOpenStateMillis: 1000
@@ -42,6 +40,7 @@ resilience4j:
                 baseConfig: default
                 ringBufferSizeInClosedState: 100
             test2:
+                eventConsumerBufferSize: 100
                 ringBufferSizeInClosedState: 200
                 ringBufferSizeInHalfOpenState: 20
                 waitDurationInOpenState: PT5S
@@ -52,10 +51,12 @@ resilience4j:
     rateLimiter:
         configs:
             default:
+                eventConsumerBufferSize: 100
                 limitForPeriod: 100
                 limitRefreshPeriodInNanos: 900
                 timeoutInMillis: 10
             shared:
+                eventConsumerBufferSize: 100
                 limitForPeriod: 100
                 limitRefreshPeriodInNanos: 900
                 timeoutInMillis: 10
@@ -64,15 +65,18 @@ resilience4j:
                 baseConfig: default
                 limitForPeriod: 150
             test2:
+                eventConsumerBufferSize: 100
                 limitForPeriod: 100
                 limitRefreshPeriod: PT0.0000009S
                 timeoutDuration: PT0.010S
     retry:
         configs:
             default:
+                eventConsumerBufferSize: 100
                 maxRetryAttempts: 3
                 waitDurationInMillis: 1000
             shared:
+                eventConsumerBufferSize: 100
                 maxRetryAttempts: 3
                 waitDurationInMillis: 1000
         instances:
@@ -80,14 +84,17 @@ resilience4j:
                 baseConfig: default
                 maxRetryAttempts: 4
             test2:
+                eventConsumerBufferSize: 100
                 maxRetryAttempts: 3
                 waitDuration: PT1S
     bulkhead:
         configs:
             default:
+                eventConsumerBufferSize: 100
                 maxConcurrentCalls: 50
                 maxWaitTime: 500
             shared:
+                eventConsumerBufferSize: 100
                 maxConcurrentCalls: 50
                 maxWaitTime: 500
         instances:
@@ -95,28 +102,29 @@ resilience4j:
                 baseConfig: default
                 maxWaitTime: 750
             test2:
+                eventConsumerBufferSize: 100
                 maxConcurrentCalls: 100
                 maxWaitDuration: PT1S
     threadPoolBulkhead:
         configs:
             default:
-                threadPoolProperties:
-                    maxThreadPoolSize: 4
-                    coreThreadPoolSize: 2
-                    queueCapacity: 2
-                    keepAliveTime: 1000
+                eventConsumerBufferSize: 100
+                maxThreadPoolSize: 4
+                coreThreadPoolSize: 2
+                queueCapacity: 2
+                keepAliveTime: 1000
             shared:
-                threadPoolProperties:
-                    maxThreadPoolSize: 4
-                    coreThreadPoolSize: 2
-                    queueCapacity: 2
-                    keepAliveTime: 1000
-        backends:
+                eventConsumerBufferSize: 100
+                maxThreadPoolSize: 4
+                coreThreadPoolSize: 2
+                queueCapacity: 2
+                keepAliveTime: 1000
+    backends:
             test1:
                 baseConfig: default
             test2:
-                threadPoolProperties:
-                    maxThreadPoolSize: 1
-                    coreThreadPoolSize: 1
-                    queueCapacity: 1
-                    keepAliveDuration: PT1S
+                eventConsumerBufferSize: 100
+                maxThreadPoolSize: 1
+                coreThreadPoolSize: 1
+                queueCapacity: 1
+                keepAliveDuration: PT1S

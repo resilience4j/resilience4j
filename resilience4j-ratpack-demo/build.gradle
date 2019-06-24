@@ -22,17 +22,19 @@ repositories {
 }
 
 dependencies {
-    compile 'io.github.resilience4j:resilience4j-ratpack:0.17.0-SNAPSHOT'
-//    compile 'io.github.resilience4j:resilience4j-metrics:0.17.0-SNAPSHOT'
+    compile project(':resilience4j-ratpack')
+    compile project(':resilience4j-metrics')
     compile 'io.ratpack:ratpack-guice:1.6.1'
-//    compile 'io.ratpack:ratpack-dropwizard-metrics:1.6.1'
+    compile 'io.ratpack:ratpack-dropwizard-metrics:1.6.1'
+    compile 'org.apache.logging.log4j:log4j-slf4j-impl:2.11.2'
     
-    // Use the latest Groovy version for Spock testing
     testImplementation 'org.codehaus.groovy:groovy-all:2.5.6'
-
-    // Use the awesome Spock testing and specification framework even with Java
     testImplementation 'org.spockframework:spock-core:1.2-groovy-2.5'
+    
+    compile 'org.apache.logging.log4j:log4j-slf4j-impl:2.11.2'
 }
 
 // Define the main class for the application
 mainClassName = 'resilience4j.ratpack.App'
+
+ext.moduleName='io.github.resilience4j.ratpackdemo'

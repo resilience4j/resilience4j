@@ -3,7 +3,6 @@ resilience4j:
         circuitBreakers:
             enabled: true
             path: circuitbreaker
-            eventConsumerBufferSize: 100
         rateLimiters:
             enabled: true
             path: ratelimiter
@@ -19,6 +18,7 @@ resilience4j:
     circuitBreaker:
         configs:
             default:
+                eventConsumerBufferSize: 100
                 ringBufferSizeInClosedState: 200
                 ringBufferSizeInHalfOpenState: 20
                 waitDurationInOpenState: PT1S
@@ -28,6 +28,7 @@ resilience4j:
                     - io.github.resilience4j.ratpack.Resilience4jModuleSpec$DummyException1
                     - io.github.resilience4j.ratpack.Resilience4jModuleSpec$DummyException2
             shared:
+                eventConsumerBufferSize: 100
                 ringBufferSizeInClosedState: 200
                 ringBufferSizeInHalfOpenState: 20
                 waitDurationInOpenState: PT1S
@@ -41,6 +42,7 @@ resilience4j:
                 baseConfig: default
                 ringBufferSizeInClosedState: 100
             test2:
+                eventConsumerBufferSize: 100
                 ringBufferSizeInClosedState: 200
                 ringBufferSizeInHalfOpenState: 20
                 waitDurationInOpenState: PT5S
@@ -51,10 +53,12 @@ resilience4j:
     rateLimiter:
         configs:
             default:
+                eventConsumerBufferSize: 100
                 limitForPeriod: 100
                 limitRefreshPeriod: PT0.0000009S
                 timeoutDuration: PT0.010S
             shared:
+                eventConsumerBufferSize: 100
                 limitForPeriod: 100
                 limitRefreshPeriod: PT0.0000009S
                 timeoutDuration: PT0.010S
@@ -63,15 +67,18 @@ resilience4j:
                 baseConfig: default
                 limitForPeriod: 150
             test2:
+                eventConsumerBufferSize: 100
                 limitForPeriod: 100
                 limitRefreshPeriod: PT0.0000009S
                 timeoutDuration: PT0.010S
     retry:
         configs:
             default:
+                eventConsumerBufferSize: 100
                 maxRetryAttempts: 3
                 waitDuration: PT1S
             shared:
+                eventConsumerBufferSize: 100
                 maxRetryAttempts: 3
                 waitDuration: PT1S
         instances:
@@ -79,14 +86,17 @@ resilience4j:
                 baseConfig: default
                 maxRetryAttempts: 4
             test2:
+                eventConsumerBufferSize: 100
                 maxRetryAttempts: 3
                 waitDuration: PT1S
     bulkhead:
         configs:
             default:
+                eventConsumerBufferSize: 100
                 maxConcurrentCalls: 50
                 maxWaitDuration: PT0.5S
             shared:
+                eventConsumerBufferSize: 100
                 maxConcurrentCalls: 50
                 maxWaitDuration: PT0.5S
         instances:
@@ -94,16 +104,19 @@ resilience4j:
                 baseConfig: default
                 maxWaitDuration: PT0.75S
             test2:
+                eventConsumerBufferSize: 100
                 maxConcurrentCalls: 100
                 maxWaitDuration: PT1S
     threadPoolBulkhead:
         configs:
             default:
+                eventConsumerBufferSize: 100
                 maxThreadPoolSize: 4
                 coreThreadPoolSize: 2
                 queueCapacity: 2
                 keepAliveDuration: PT1S
             shared:
+                eventConsumerBufferSize: 100
                 maxThreadPoolSize: 4
                 coreThreadPoolSize: 2
                 queueCapacity: 2
@@ -112,6 +125,7 @@ resilience4j:
             test1:
                 baseConfig: default
             test2:
+                eventConsumerBufferSize: 100
                 maxThreadPoolSize: 1
                 coreThreadPoolSize: 1
                 queueCapacity: 1

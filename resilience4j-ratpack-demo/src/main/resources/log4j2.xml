@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="WARN">
+    <Appenders>
+        <Console name="JSONAppender" target="SYSTEM_OUT">
+            <JSONLayout compact="true" eventEol="true" properties="true"/>
+        </Console>
+        <Async name="AsyncAppender" bufferSize="80">
+            <AppenderRef ref="JSONAppender"/>
+        </Async>
+    </Appenders>
+    <Loggers>
+        <Logger name="AsyncJsonLogger" level="INFO" additivity="false">
+            <AppenderRef ref="AsyncAppender" />
+        </Logger>
+        <Root level="INFO">
+            <AppenderRef ref="AsyncAppender"/>
+        </Root>
+    </Loggers>
+</Configuration>

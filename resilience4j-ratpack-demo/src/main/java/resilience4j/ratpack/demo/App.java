@@ -1,8 +1,9 @@
-package resilience4j.ratpack;
+package resilience4j.ratpack.demo;
 
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.ratpack.Resilience4jConfig;
 import io.github.resilience4j.ratpack.Resilience4jModule;
+import ratpack.dropwizard.metrics.DropwizardMetricsModule;
 import ratpack.guice.Guice;
 import ratpack.server.RatpackServer;
 
@@ -17,7 +18,7 @@ public class App {
                 )
                 .registry(Guice.registry(b -> b
                         .module(Resilience4jModule.class)
-//                        .module(DropwizardMetricsModule.class)
+                        .module(DropwizardMetricsModule.class)
                         .bind(Something.class)
                 ))
                 .handlers(c -> c
@@ -50,8 +51,8 @@ public class App {
         }
 
         @CircuitBreaker(name = "test2")
-        public String c() throws DummyException1 {
-            throw new DummyException1("c");
+        public String c() throws DummyException2 {
+            throw new DummyException2("c");
         }
 
     }
