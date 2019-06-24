@@ -26,10 +26,10 @@ import java.time.Duration;
 public class BulkheadConfig {
 
 	public static final int DEFAULT_MAX_CONCURRENT_CALLS = 25;
-	public static final long DEFAULT_MAX_WAIT_TIME = 0L;
+	public static final Duration DEFAULT_MAX_WAIT_DURATION = Duration.ofSeconds(0);
 
 	private int maxConcurrentCalls = DEFAULT_MAX_CONCURRENT_CALLS;
-	private long maxWaitTime = DEFAULT_MAX_WAIT_TIME;
+	private Duration maxWaitDuration= DEFAULT_MAX_WAIT_DURATION;
 
 	private BulkheadConfig() {
 	}
@@ -65,8 +65,8 @@ public class BulkheadConfig {
 		return maxConcurrentCalls;
 	}
 
-	public long getMaxWaitTime() {
-		return maxWaitTime;
+	public Duration getMaxWaitDuration() {
+		return maxWaitDuration;
 	}
 
 	public static class Builder {
@@ -103,32 +103,32 @@ public class BulkheadConfig {
 		 *
 		 * @param maxWaitTime maximum wait time for bulkhead entry
 		 * @return the BulkheadConfig.Builder
-		 * @deprecated since 0.16.0 use {@link #maxWaitTimeDuration(Duration)}
+		 * @deprecated since 0.16.0 use {@link #maxWaitDuration(Duration)}
 		 */
 		@Deprecated
 		public Builder maxWaitTime(long maxWaitTime) {
 			if (maxWaitTime < 0) {
 				throw new IllegalArgumentException("maxWaitTime must be a positive integer value >= 0");
 			}
-			config.maxWaitTime = maxWaitTime;
+			config.maxWaitDuration = Duration.ofMillis(maxWaitTime);
 			return this;
 		}
 
 		/**
 		 * Configures a maximum amount of time which the calling thread will wait to enter the bulkhead. If bulkhead has space available, entry
-		 * is guaranteed and immediate. If bulkhead is full, calling threads will contest for space, if it becomes available. maxWaitTime can be set to 0.
+		 * is guaranteed and immediate. If bulkhead is full, calling threads will contest for space, if it becomes available. maxWaitDuration can be set to 0.
 		 * <p>
-		 * Note: for threads running on an event-loop or equivalent (rx computation pool, etc), setting maxWaitTime to 0 is highly recommended. Blocking
+		 * Note: for threads running on an event-loop or equivalent (rx computation pool, etc), setting maxWaitDuration to 0 is highly recommended. Blocking
 		 * an event-loop thread will most likely have a negative effect on application throughput.
 		 *
-		 * @param maxWaitTime maximum wait time for bulkhead entry
+		 * @param maxWaitDuration maximum wait time for bulkhead entry
 		 * @return the BulkheadConfig.Builder
 		 */
-		public Builder maxWaitTimeDuration(Duration maxWaitTime) {
-			if (maxWaitTime.toMillis() < 0) {
-				throw new IllegalArgumentException("maxWaitTime must be a positive integer value >= 0");
+		public Builder maxWaitDuration(Duration maxWaitDuration) {
+			if (maxWaitDuration.toMillis() < 0) {
+				throw new IllegalArgumentException("maxWaitDuration must be a positive integer value >= 0");
 			}
-			config.maxWaitTime = maxWaitTime.toMillis();
+			config.maxWaitDuration = maxWaitDuration;
 			return this;
 		}
 

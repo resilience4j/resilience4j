@@ -15,16 +15,16 @@
  */
 package io.github.resilience4j.common.bulkhead.configuration;
 
-import java.util.HashMap;
-import java.util.Map;
-
-import javax.validation.constraints.Min;
-
 import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.bulkhead.ThreadPoolBulkheadConfig;
 import io.github.resilience4j.core.ConfigurationNotFoundException;
 import io.github.resilience4j.core.StringUtils;
 import io.github.resilience4j.core.lang.Nullable;
+
+import javax.validation.constraints.Min;
+import java.time.Duration;
+import java.util.HashMap;
+import java.util.Map;
 
 public class ThreadPoolBulkheadConfigurationProperties {
 
@@ -76,23 +76,20 @@ public class ThreadPoolBulkheadConfigurationProperties {
 		if (properties == null) {
 			return ThreadPoolBulkheadConfig.custom().build();
 		}
-		if (properties.getThreadPoolProperties() != null) {
-			if (properties.getThreadPoolProperties().getQueueCapacity() > 0) {
-				builder.queueCapacity(properties.getThreadPoolProperties().getQueueCapacity());
-			}
-			if (properties.getThreadPoolProperties().getCoreThreadPoolSize() > 0) {
-				builder.coreThreadPoolSize(properties.getThreadPoolProperties().getCoreThreadPoolSize());
-			}
-			if (properties.getThreadPoolProperties().getMaxThreadPoolSize() > 0) {
-				builder.maxThreadPoolSize(properties.getThreadPoolProperties().getMaxThreadPoolSize());
-			}
-			if (properties.getThreadPoolProperties().getKeepAliveTime() > 0) {
-				builder.keepAliveTime(properties.getThreadPoolProperties().getKeepAliveTime());
-			}
-			if (properties.getThreadPoolProperties().getKeepAliveDuration() != null && properties.getThreadPoolProperties().getKeepAliveDuration().toMillis() > 0) {
-				builder.keepAliveTime(properties.getThreadPoolProperties().getKeepAliveDuration().toMillis());
-			}
+
+		if (properties.getQueueCapacity() > 0) {
+			builder.queueCapacity(properties.getQueueCapacity());
 		}
+		if (properties.getCoreThreadPoolSize() > 0) {
+			builder.coreThreadPoolSize(properties.getCoreThreadPoolSize());
+		}
+		if (properties.getMaxThreadPoolSize() > 0) {
+			builder.maxThreadPoolSize(properties.getMaxThreadPoolSize());
+		}
+		if (properties.getKeepAliveDuration() != null) {
+			builder.keepAliveDuration(properties.getKeepAliveDuration());
+		}
+
 		return builder.build();
 	}
 
@@ -109,16 +106,45 @@ public class ThreadPoolBulkheadConfigurationProperties {
 		@Nullable
 		private String baseConfig;
 
-		@Nullable
-		private ThreadPoolProperties threadPoolProperties;
+		private int maxThreadPoolSize;
+		private int coreThreadPoolSize;
+		private int queueCapacity;
+		private Duration keepAliveDuration;
 
-		@Nullable
-		public ThreadPoolProperties getThreadPoolProperties() {
-			return threadPoolProperties;
+		public int getMaxThreadPoolSize() {
+			return maxThreadPoolSize;
 		}
 
-		public InstanceProperties setThreadPoolProperties(@Nullable ThreadPoolProperties threadPoolProperties) {
-			this.threadPoolProperties = threadPoolProperties;
+		public InstanceProperties setMaxThreadPoolSize(int maxThreadPoolSize) {
+			this.maxThreadPoolSize = maxThreadPoolSize;
+			return this;
+		}
+
+		public int getCoreThreadPoolSize() {
+			return coreThreadPoolSize;
+		}
+
+		public InstanceProperties setCoreThreadPoolSize(int coreThreadPoolSize) {
+			this.coreThreadPoolSize = coreThreadPoolSize;
+			return this;
+		}
+
+		public int getQueueCapacity() {
+			return queueCapacity;
+		}
+
+		public InstanceProperties setQueueCapacity(int queueCapacity) {
+			this.queueCapacity = queueCapacity;
+			return this;
+		}
+
+
+		public Duration getKeepAliveDuration() {
+			return keepAliveDuration;
+		}
+
+		public InstanceProperties setKeepAliveDuration(Duration keepAliveDuration) {
+			this.keepAliveDuration = keepAliveDuration;
 			return this;
 		}
 
@@ -148,8 +174,9 @@ public class ThreadPoolBulkheadConfigurationProperties {
 		 *
 		 * @param baseConfig The shared configuration name.
 		 */
-		public void setBaseConfig(String baseConfig) {
+		public InstanceProperties setBaseConfig(String baseConfig) {
 			this.baseConfig = baseConfig;
+			return this;
 		}
 	}
 }

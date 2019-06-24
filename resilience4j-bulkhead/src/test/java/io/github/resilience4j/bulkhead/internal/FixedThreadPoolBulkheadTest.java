@@ -18,13 +18,14 @@
  */
 package io.github.resilience4j.bulkhead.internal;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
+import io.github.resilience4j.bulkhead.ThreadPoolBulkhead;
+import io.github.resilience4j.bulkhead.ThreadPoolBulkheadConfig;
 import org.junit.Before;
 import org.junit.Test;
 
-import io.github.resilience4j.bulkhead.ThreadPoolBulkhead;
-import io.github.resilience4j.bulkhead.ThreadPoolBulkheadConfig;
+import java.time.Duration;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class FixedThreadPoolBulkheadTest {
 
@@ -37,7 +38,7 @@ public class FixedThreadPoolBulkheadTest {
 				.maxThreadPoolSize(2)
 				.coreThreadPoolSize(1)
 				.queueCapacity(10)
-				.keepAliveTime(10)
+				.keepAliveDuration(Duration.ofMillis(10))
 				.build();
 
 		bulkhead = ThreadPoolBulkhead.of("test", config);
@@ -60,7 +61,7 @@ public class FixedThreadPoolBulkheadTest {
 		assertThat(bulkhead.getBulkheadConfig().getMaxThreadPoolSize()).isEqualTo(2);
 		assertThat(bulkhead.getBulkheadConfig().getQueueCapacity()).isEqualTo(10);
 		assertThat(bulkhead.getBulkheadConfig().getCoreThreadPoolSize()).isEqualTo(1);
-		assertThat(bulkhead.getBulkheadConfig().getKeepAliveTime()).isEqualTo(10);
+		assertThat(bulkhead.getBulkheadConfig().getKeepAliveDuration()).isEqualTo(Duration.ofMillis(10));
 	}
 
 	@Test

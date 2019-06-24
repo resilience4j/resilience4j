@@ -15,15 +15,14 @@
  */
 package io.github.resilience4j.common.ratelimiter.configuration;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import io.github.resilience4j.core.ConfigurationNotFoundException;
+import io.github.resilience4j.ratelimiter.RateLimiterConfig;
+import org.junit.Test;
 
 import java.time.Duration;
 
-import org.junit.Test;
-
-import io.github.resilience4j.core.ConfigurationNotFoundException;
-import io.github.resilience4j.ratelimiter.RateLimiterConfig;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
  * test custom init of rate limiter properties
@@ -67,12 +66,12 @@ public class RateLimiterConfigurationPropertiesTest {
 		//Given
 		io.github.resilience4j.common.ratelimiter.configuration.RateLimiterConfigurationProperties.InstanceProperties defaultProperties = new io.github.resilience4j.common.ratelimiter.configuration.RateLimiterConfigurationProperties.InstanceProperties();
 		defaultProperties.setLimitForPeriod(3);
-		defaultProperties.setLimitRefreshPeriodInNanos(5000000);
+		defaultProperties.setLimitRefreshPeriod(Duration.ofNanos(5000000));
 		defaultProperties.setSubscribeForEvents(true);
 
 		io.github.resilience4j.common.ratelimiter.configuration.RateLimiterConfigurationProperties.InstanceProperties sharedProperties = new io.github.resilience4j.common.ratelimiter.configuration.RateLimiterConfigurationProperties.InstanceProperties();
 		sharedProperties.setLimitForPeriod(2);
-		sharedProperties.setLimitRefreshPeriodInNanos(6000000);
+		sharedProperties.setLimitRefreshPeriod(Duration.ofNanos(6000000));
 		sharedProperties.setSubscribeForEvents(true);
 
 		io.github.resilience4j.common.ratelimiter.configuration.RateLimiterConfigurationProperties.InstanceProperties backendWithDefaultConfig = new io.github.resilience4j.common.ratelimiter.configuration.RateLimiterConfigurationProperties.InstanceProperties();

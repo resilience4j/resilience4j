@@ -9,6 +9,8 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.junit.MockitoJUnitRunner;
 
+import java.time.Duration;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -55,19 +57,19 @@ public class RetryConfigurationTest {
 		//Given
 		io.github.resilience4j.common.retry.configuration.RetryConfigurationProperties.InstanceProperties defaultProperties = new io.github.resilience4j.common.retry.configuration.RetryConfigurationProperties.InstanceProperties();
 		defaultProperties.setMaxRetryAttempts(3);
-		defaultProperties.setWaitDurationMillis(50L);
+		defaultProperties.setWaitDuration(Duration.ofMillis(50L));
 
 		io.github.resilience4j.common.retry.configuration.RetryConfigurationProperties.InstanceProperties sharedProperties = new io.github.resilience4j.common.retry.configuration.RetryConfigurationProperties.InstanceProperties();
 		sharedProperties.setMaxRetryAttempts(2);
-		sharedProperties.setWaitDurationMillis(100L);
+		sharedProperties.setWaitDuration(Duration.ofMillis(100L));
 
 		io.github.resilience4j.common.retry.configuration.RetryConfigurationProperties.InstanceProperties backendWithDefaultConfig = new io.github.resilience4j.common.retry.configuration.RetryConfigurationProperties.InstanceProperties();
 		backendWithDefaultConfig.setBaseConfig("default");
-		backendWithDefaultConfig.setWaitDurationMillis(200L);
+		backendWithDefaultConfig.setWaitDuration(Duration.ofMillis(200L));
 
 		io.github.resilience4j.common.retry.configuration.RetryConfigurationProperties.InstanceProperties backendWithSharedConfig = new io.github.resilience4j.common.retry.configuration.RetryConfigurationProperties.InstanceProperties();
 		backendWithSharedConfig.setBaseConfig("sharedConfig");
-		backendWithSharedConfig.setWaitDurationMillis(300L);
+		backendWithSharedConfig.setWaitDuration(Duration.ofMillis(300L));
 
 		RetryConfigurationProperties retryConfigurationProperties = new RetryConfigurationProperties();
 		retryConfigurationProperties.getConfigs().put("default", defaultProperties);

@@ -168,19 +168,15 @@ public class SemaphoreBasedRateLimiterImplTest {
         RateLimiter rateLimiter = new SemaphoreBasedRateLimiter("some", config, scheduledExecutorService);
         RateLimiterConfig rateLimiterConfig = rateLimiter.getRateLimiterConfig();
         then(rateLimiterConfig.getTimeoutDuration()).isEqualTo(TIMEOUT);
-        then(rateLimiterConfig.getTimeoutDurationInNanos()).isEqualTo(TIMEOUT.toNanos());
         then(rateLimiterConfig.getLimitForPeriod()).isEqualTo(LIMIT);
         then(rateLimiterConfig.getLimitRefreshPeriod()).isEqualTo(REFRESH_PERIOD);
-        then(rateLimiterConfig.getLimitRefreshPeriodInNanos()).isEqualTo(REFRESH_PERIOD.toNanos());
 
         rateLimiter.changeTimeoutDuration(Duration.ofSeconds(1));
         then(rateLimiterConfig != rateLimiter.getRateLimiterConfig()).isTrue();
         rateLimiterConfig = rateLimiter.getRateLimiterConfig();
         then(rateLimiterConfig.getTimeoutDuration()).isEqualTo(Duration.ofSeconds(1));
-        then(rateLimiterConfig.getTimeoutDurationInNanos()).isEqualTo(Duration.ofSeconds(1).toNanos());
         then(rateLimiterConfig.getLimitForPeriod()).isEqualTo(LIMIT);
         then(rateLimiterConfig.getLimitRefreshPeriod()).isEqualTo(REFRESH_PERIOD);
-        then(rateLimiterConfig.getLimitRefreshPeriodInNanos()).isEqualTo(REFRESH_PERIOD.toNanos());
     }
 
     @Test
@@ -189,19 +185,15 @@ public class SemaphoreBasedRateLimiterImplTest {
         RateLimiter rateLimiter = new SemaphoreBasedRateLimiter("some", config, scheduledExecutorService);
         RateLimiterConfig rateLimiterConfig = rateLimiter.getRateLimiterConfig();
         then(rateLimiterConfig.getTimeoutDuration()).isEqualTo(TIMEOUT);
-        then(rateLimiterConfig.getTimeoutDurationInNanos()).isEqualTo(TIMEOUT.toNanos());
         then(rateLimiterConfig.getLimitForPeriod()).isEqualTo(LIMIT);
         then(rateLimiterConfig.getLimitRefreshPeriod()).isEqualTo(REFRESH_PERIOD);
-        then(rateLimiterConfig.getLimitRefreshPeriodInNanos()).isEqualTo(REFRESH_PERIOD.toNanos());
 
         rateLimiter.changeLimitForPeriod(LIMIT * 2);
         then(rateLimiterConfig != rateLimiter.getRateLimiterConfig()).isTrue();
         rateLimiterConfig = rateLimiter.getRateLimiterConfig();
         then(rateLimiterConfig.getTimeoutDuration()).isEqualTo(TIMEOUT);
-        then(rateLimiterConfig.getTimeoutDurationInNanos()).isEqualTo(TIMEOUT.toNanos());
         then(rateLimiterConfig.getLimitForPeriod()).isEqualTo(LIMIT * 2);
         then(rateLimiterConfig.getLimitRefreshPeriod()).isEqualTo(REFRESH_PERIOD);
-        then(rateLimiterConfig.getLimitRefreshPeriodInNanos()).isEqualTo(REFRESH_PERIOD.toNanos());
     }
 
     @Test
