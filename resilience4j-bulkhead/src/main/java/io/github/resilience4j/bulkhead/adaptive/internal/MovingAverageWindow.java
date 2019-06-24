@@ -59,7 +59,7 @@ class MovingAverageWindow {
 			// use Bessel's correction to calculate sample standard deviation
 			return (long) Math.sqrt((1.0d / (window.length - 1)) * accumulator);
 		}
-		return Math.sqrt(((accumulator)) / window.length);
+		return Math.sqrt(accumulator / window.length);
 	}
 
 	@Override

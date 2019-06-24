@@ -22,11 +22,11 @@ import java.time.Duration;
 import java.util.Objects;
 
 import io.github.resilience4j.bulkhead.BulkheadConfig;
-import io.github.resilience4j.bulkhead.adaptive.internal.AdaptiveBulkheadWithLimiter;
+import io.github.resilience4j.bulkhead.adaptive.internal.AdaptiveLimitBulkhead;
 import io.github.resilience4j.core.lang.NonNull;
 
 /**
- * A {@link AdaptiveBulkheadConfig} configures a adaptation capabilities of  {@link AdaptiveBulkheadWithLimiter}
+ * A {@link AdaptiveBulkheadConfig} configures a adaptation capabilities of  {@link AdaptiveLimitBulkhead}
  */
 public class AdaptiveBulkheadConfig {
 	private double desirableAverageThroughput = 3; // in req/sec
@@ -226,11 +226,11 @@ public class AdaptiveBulkheadConfig {
 				throw new IllegalArgumentException("maxAcceptableRequestLatency can't be less" +
 						" than desirableOperationLatency");
 			}
-			if (config.windowForAdaptation.toNanos() < (long) (config.desirableAverageThroughput * 15 * 1000_000_000)) {
+			if (config.windowForAdaptation.toNanos() <= (long) (config.desirableAverageThroughput * 15 * 1000_000_000)) {
 				throw new IllegalArgumentException("windowForAdaptation is too small. " +
 						"We wan't be able to make at least 15 measurements during this window.");
 			}
-			if (15 > (config.windowForReconfiguration.toNanos() / config.windowForAdaptation.toNanos())) {
+			if (15 >= (config.windowForReconfiguration.toNanos() / config.windowForAdaptation.toNanos())) {
 				throw new IllegalArgumentException("windowForReconfiguration is too small. " +
 						"windowForReconfiguration should be at least 15 times bigger than windowForAdaptation.");
 			}

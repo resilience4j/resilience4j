@@ -19,9 +19,11 @@
 package io.github.resilience4j.bulkhead.adaptive;
 
 import java.time.Duration;
+import java.util.function.Consumer;
 
 import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.bulkhead.BulkheadConfig;
+import io.github.resilience4j.bulkhead.event.BulkheadLimit;
 import io.github.resilience4j.core.lang.NonNull;
 
 
@@ -50,4 +52,9 @@ public interface LimitAdapter {
 	 * @return average latency in milliseconds
 	 */
 	double getAverageLatencyMillis();
+
+	/**
+	 * @return the BulkheadLimit consumer
+	 */
+	Consumer<BulkheadLimit> bulkheadLimitConsumer();
 }

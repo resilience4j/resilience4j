@@ -29,11 +29,12 @@ import java.util.function.Supplier;
 
 import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.bulkhead.BulkheadFullException;
-import io.github.resilience4j.bulkhead.adaptive.internal.AdaptiveBulkheadWithLimiter;
+import io.github.resilience4j.bulkhead.adaptive.internal.AdaptiveLimitBulkhead;
 import io.github.resilience4j.bulkhead.event.BulkheadLimit;
 import io.github.resilience4j.bulkhead.event.BulkheadOnLimitDecreasedEvent;
 import io.github.resilience4j.bulkhead.event.BulkheadOnLimitIncreasedEvent;
 import io.github.resilience4j.core.EventConsumer;
+import io.github.resilience4j.core.EventPublisher;
 import io.vavr.CheckedConsumer;
 import io.vavr.CheckedFunction0;
 import io.vavr.CheckedFunction1;
@@ -136,12 +137,12 @@ public interface AdaptiveBulkhead {
 	AdaptiveBulkheadMetrics getMetrics();
 
 	/**
-	 * Returns an EventPublisher which subscribes to the reactive stream of BulkheadEvent and
+	 * Returns an EventPublisher which subscribes to the reactive stream of BulkheadEvent/BulkheadLimit events and
 	 * can be used to register event consumers.
 	 *
-	 * @return an EventPublisher
+	 * @return an AdaptiveEventPublisher
 	 */
-	EventPublisher getEventPublisher();
+	AdaptiveEventPublisher getEventPublisher();
 
 	/**
 	 * Decorates and executes the decorated Supplier.
@@ -445,7 +446,7 @@ public interface AdaptiveBulkhead {
 	 * @return a Bulkhead instance
 	 */
 	static AdaptiveBulkhead ofDefaults(String name) {
-		return new AdaptiveBulkheadWithLimiter(name, AdaptiveBulkheadConfig.builder().build());
+		return new AdaptiveLimitBulkhead(name, AdaptiveBulkheadConfig.builder().build());
 	}
 
 
@@ -458,7 +459,7 @@ public interface AdaptiveBulkhead {
 	 * @return a Bulkhead instance
 	 */
 	static AdaptiveBulkhead of(String name, AdaptiveBulkheadConfig config, LimitAdapter limitAdapter) {
-		return new AdaptiveBulkheadWithLimiter(name, config, limitAdapter);
+		return new AdaptiveLimitBulkhead(name, config, limitAdapter);
 	}
 
 	/**
@@ -469,7 +470,7 @@ public interface AdaptiveBulkhead {
 	 * @return a Bulkhead instance
 	 */
 	static AdaptiveBulkhead of(String name, AdaptiveBulkheadConfig config) {
-		return new AdaptiveBulkheadWithLimiter(name, config);
+		return new AdaptiveLimitBulkhead(name, config);
 	}
 
 	/**
@@ -480,7 +481,7 @@ public interface AdaptiveBulkhead {
 	 * @return a Bulkhead instance
 	 */
 	static AdaptiveBulkhead of(String name, Supplier<AdaptiveBulkheadConfig> bulkheadConfigSupplier) {
-		return new AdaptiveBulkheadWithLimiter(name, bulkheadConfigSupplier.get());
+		return new AdaptiveLimitBulkhead(name, bulkheadConfigSupplier.get());
 	}
 
 	interface AdaptiveBulkheadMetrics extends Bulkhead.Metrics {
@@ -499,7 +500,7 @@ public interface AdaptiveBulkhead {
 	/**
 	 * An EventPublisher which can be used to register event consumers.
 	 */
-	interface EventPublisher extends io.github.resilience4j.core.EventPublisher<BulkheadLimit> {
+	interface AdaptiveEventPublisher extends io.github.resilience4j.core.EventPublisher<BulkheadLimit> {
 
 		EventPublisher onLimitIncreased(EventConsumer<BulkheadOnLimitDecreasedEvent> eventConsumer);
 

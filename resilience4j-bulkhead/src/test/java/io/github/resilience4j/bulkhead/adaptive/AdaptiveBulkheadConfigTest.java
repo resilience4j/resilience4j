@@ -15,7 +15,7 @@ public class AdaptiveBulkheadConfigTest {
 	public void testBuildCustom() {
 		AdaptiveBulkheadConfig config = AdaptiveBulkheadConfig.builder().concurrencyDropMultiplier(0.3).desirableAverageThroughput(3)
 				.desirableOperationLatency(150).lowLatencyMultiplier(0.4).maxAcceptableRequestLatency(200)
-				.windowForAdaptation(Duration.ofSeconds(50)).windowForReconfiguration(Duration.ofSeconds(750)).build();
+				.windowForAdaptation(Duration.ofSeconds(50)).windowForReconfiguration(Duration.ofSeconds(900)).build();
 
 		assertThat(config).isNotNull();
 		assertThat(config.getConcurrencyDropMultiplier()).isEqualTo(0.3);
@@ -24,7 +24,7 @@ public class AdaptiveBulkheadConfigTest {
 		assertThat(config.getLowLatencyMultiplier()).isEqualTo(0.4);
 		assertThat(config.getMaxAcceptableRequestLatency()).isEqualTo(200);
 		assertThat(config.getWindowForAdaptation().getSeconds()).isEqualTo(50);
-		assertThat(config.getWindowForReconfiguration().getSeconds()).isEqualTo(750);
+		assertThat(config.getWindowForReconfiguration().getSeconds()).isEqualTo(900);
 
 	}
 
@@ -70,10 +70,10 @@ public class AdaptiveBulkheadConfigTest {
 	public void testEqual() {
 		AdaptiveBulkheadConfig config = AdaptiveBulkheadConfig.builder().concurrencyDropMultiplier(0.3).desirableAverageThroughput(3)
 				.desirableOperationLatency(150).lowLatencyMultiplier(0.4).maxAcceptableRequestLatency(200)
-				.windowForAdaptation(Duration.ofSeconds(50)).windowForReconfiguration(Duration.ofSeconds(750)).build();
+				.windowForAdaptation(Duration.ofSeconds(50)).windowForReconfiguration(Duration.ofSeconds(900)).build();
 		AdaptiveBulkheadConfig config2 = AdaptiveBulkheadConfig.builder().concurrencyDropMultiplier(0.3).desirableAverageThroughput(3)
 				.desirableOperationLatency(150).lowLatencyMultiplier(0.4).maxAcceptableRequestLatency(200)
-				.windowForAdaptation(Duration.ofSeconds(50)).windowForReconfiguration(Duration.ofSeconds(750)).build();
+				.windowForAdaptation(Duration.ofSeconds(50)).windowForReconfiguration(Duration.ofSeconds(900)).build();
 		assertThat(config.equals(config2)).isTrue();
 		assertThat(config.hashCode() == config2.hashCode()).isTrue();
 	}
