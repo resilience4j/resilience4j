@@ -28,6 +28,8 @@ import io.vavr.CheckedConsumer;
 import io.vavr.CheckedFunction0;
 import io.vavr.CheckedFunction1;
 import io.vavr.CheckedRunnable;
+import io.vavr.control.Either;
+import io.vavr.control.Try;
 
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
@@ -134,6 +136,28 @@ public interface Bulkhead {
      */
     default <T> T executeSupplier(Supplier<T> supplier){
         return decorateSupplier(this, supplier).get();
+    }
+
+    /**
+     * Decorates and executes the decorated Supplier.
+     *
+     * @param supplier the original Supplier
+     * @param <T> the type of results supplied by this supplier
+     * @return the result of the decorated Supplier.
+     */
+    default <T> Try<T> executeTrySupplier(Supplier<Try<T>> supplier){
+        return decorateTrySupplier(this, supplier).get();
+    }
+
+    /**
+     * Decorates and executes the decorated Supplier.
+     *
+     * @param supplier the original Supplier
+     * @param <T> the type of results supplied by this supplier
+     * @return the result of the decorated Supplier.
+     */
+    default <T> Either<Exception, T> executeEitherSupplier(Supplier<Either<Exception, T>> supplier){
+        return decorateEitherSupplier(this, supplier).get();
     }
 
     /**
@@ -299,6 +323,54 @@ public interface Bulkhead {
             }
             finally {
                 bulkhead.onComplete();
+            }
+        };
+    }
+
+    /**
+     * Returns a supplier which is decorated by a bulkhead.
+     *
+     * @param bulkhead the bulkhead
+     * @param supplier the original supplier
+     * @param <T> the type of results supplied by this supplier
+     *
+     * @return a supplier which is decorated by a Bulkhead.
+     */
+    static <T> Supplier<Try<T>> decorateTrySupplier(Bulkhead bulkhead, Supplier<Try<T>> supplier){
+        return () -> {
+            if(bulkhead.tryAcquirePermission()){
+                try {
+                    return supplier.get();
+                }
+                finally {
+                    bulkhead.onComplete();
+                }
+            }else{
+                return Try.failure(new BulkheadFullException(bulkhead));
+            }
+        };
+    }
+
+    /**
+     * Returns a supplier which is decorated by a bulkhead.
+     *
+     * @param bulkhead the bulkhead
+     * @param supplier the original supplier
+     * @param <T> the type of results supplied by this supplier
+     *
+     * @return a supplier which is decorated by a Bulkhead.
+     */
+    static <T> Supplier<Either<Exception, T>> decorateEitherSupplier(Bulkhead bulkhead, Supplier<Either<Exception, T>> supplier){
+        return () -> {
+            if(bulkhead.tryAcquirePermission()){
+                try {
+                    return supplier.get();
+                }
+                finally {
+                    bulkhead.onComplete();
+                }
+            }else{
+                return Either.left(new BulkheadFullException(bulkhead));
             }
         };
     }
