@@ -73,6 +73,9 @@ public class CircuitBreakerMethodInterceptor extends AbstractMethodInterceptor {
     @Override
     public Object invoke(MethodInvocation invocation) throws Throwable {
         CircuitBreaker annotation = invocation.getMethod().getAnnotation(CircuitBreaker.class);
+        if (annotation == null) {
+            annotation = invocation.getMethod().getDeclaringClass().getAnnotation(CircuitBreaker.class);
+        }
         final RecoveryFunction<?> fallbackMethod = Optional
                 .ofNullable(createRecoveryFunction(invocation, annotation.fallbackMethod()))
                 .orElse(new DefaultRecoveryFunction<>());

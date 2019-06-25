@@ -69,6 +69,9 @@ public class RetryMethodInterceptor extends AbstractMethodInterceptor {
     @Override
     public Object invoke(MethodInvocation invocation) throws Throwable {
         Retry annotation = invocation.getMethod().getAnnotation(Retry.class);
+        if (annotation == null) {
+            annotation = invocation.getMethod().getDeclaringClass().getAnnotation(Retry.class);
+        }
         if(registry == null) {
             registry = RetryRegistry.ofDefaults();
         }
