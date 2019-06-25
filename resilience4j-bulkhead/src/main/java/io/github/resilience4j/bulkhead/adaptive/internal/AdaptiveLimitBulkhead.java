@@ -45,12 +45,11 @@ public class AdaptiveLimitBulkhead implements AdaptiveBulkhead {
 	private final AdaptiveBulkheadConfig adaptationConfig;
 
 	private final InternalMetrics metrics;
-	// internal bulkhead that is thread safe;
 	private final SemaphoreBulkhead bulkhead;
 	private final AdaptiveBulkheadEventProcessor eventProcessor;
 
 	// current settings and measurements that you can read concurrently to expose metrics
-	private volatile BulkheadConfig currentConfig; // immutable object
+	private BulkheadConfig currentConfig; // immutable object
 	// default limiter
 	private final AtomicReference<MovingAverageLimitAdapter> DEFAULT_LIMITER;
 	@Nullable

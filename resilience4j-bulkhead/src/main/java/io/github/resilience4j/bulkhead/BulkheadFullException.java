@@ -25,13 +25,15 @@ import io.github.resilience4j.bulkhead.adaptive.AdaptiveBulkhead;
  */
 public class BulkheadFullException extends RuntimeException {
 
-    /**
+	public static final String NOT_PERMIT_FURTHER_CALLS = "Bulkhead '%s' is full and does not permit further calls";
+
+	/**
      * The constructor with a message.
      *
      * @param bulkhead the Bulkhead.
      */
     public BulkheadFullException(Bulkhead bulkhead) {
-        super(String.format("Bulkhead '%s' is full and does not permit further calls", bulkhead.getName()));
+	    super(String.format(NOT_PERMIT_FURTHER_CALLS, bulkhead.getName()));
     }
 
     /**
@@ -40,7 +42,7 @@ public class BulkheadFullException extends RuntimeException {
      * @param bulkhead the Bulkhead.
      */
     public BulkheadFullException(ThreadPoolBulkhead bulkhead) {
-        super(String.format("Bulkhead '%s' is full and does not permit further calls", bulkhead.getName()));
+	    super(String.format(NOT_PERMIT_FURTHER_CALLS, bulkhead.getName()));
     }
 
 
@@ -50,7 +52,7 @@ public class BulkheadFullException extends RuntimeException {
 	 * @param bulkhead the AdaptiveLimitBulkhead.
 	 */
 	public BulkheadFullException(AdaptiveBulkhead bulkhead) {
-		super(String.format("Bulkhead '%s' is full and does not permit further calls", bulkhead.getName()));
+		super(String.format(NOT_PERMIT_FURTHER_CALLS, bulkhead.getName()));
 	}
 }
 
