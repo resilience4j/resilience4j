@@ -72,6 +72,9 @@ public class RateLimiterMethodInterceptor extends AbstractMethodInterceptor {
     @Override
     public Object invoke(MethodInvocation invocation) throws Throwable {
         RateLimiter annotation = invocation.getMethod().getAnnotation(RateLimiter.class);
+        if (annotation == null) {
+            annotation = invocation.getMethod().getDeclaringClass().getAnnotation(RateLimiter.class);
+        }
         final RecoveryFunction<?> fallbackMethod = Optional
                 .ofNullable(createRecoveryFunction(invocation, annotation.fallbackMethod()))
                 .orElse(new DefaultRecoveryFunction<>());

@@ -72,6 +72,9 @@ public class BulkheadMethodInterceptor extends AbstractMethodInterceptor {
     @Override
     public Object invoke(MethodInvocation invocation) throws Throwable {
         Bulkhead annotation = invocation.getMethod().getAnnotation(Bulkhead.class);
+        if (annotation == null) {
+            annotation = invocation.getMethod().getDeclaringClass().getAnnotation(Bulkhead.class);
+        }
         final RecoveryFunction<?> fallbackMethod = Optional
                 .ofNullable(createRecoveryFunction(invocation, annotation.fallbackMethod()))
                 .orElse(new DefaultRecoveryFunction<>());
