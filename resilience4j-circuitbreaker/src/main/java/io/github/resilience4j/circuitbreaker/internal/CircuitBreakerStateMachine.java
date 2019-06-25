@@ -124,16 +124,6 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
         this(name, circuitBreakerConfig.get());
     }
 
-    /**
-     * Requests permission to call this backend.
-     *
-     * @return true, if the call is allowed.
-     */
-    @Override
-    public boolean isCallPermitted() {
-        return tryAcquirePermission();
-    }
-
     @Override
     public boolean tryAcquirePermission() {
         boolean callPermitted = stateReference.get().tryAcquirePermission();
