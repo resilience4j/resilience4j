@@ -23,6 +23,7 @@ import io.vavr.CheckedConsumer;
 import io.vavr.CheckedFunction0;
 import io.vavr.CheckedFunction1;
 import io.vavr.CheckedRunnable;
+import io.vavr.control.Either;
 import io.vavr.control.Try;
 import org.junit.Before;
 import org.junit.Test;
@@ -905,6 +906,133 @@ public class CircuitBreakerTest {
         // Then the helloWorldService should be invoked 1 time
         BDDMockito.then(helloWorldService).should(Mockito.times(1)).returnHelloWorld();
 
+    }
+
+    @Test
+    public void shouldExecuteTrySupplierAndReturnWithSuccess() {
+        // Given
+        CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testName");
+        CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
+        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(0);
+        // Given the HelloWorldService returns Hello world
+        BDDMockito.given(helloWorldService.returnTry()).willReturn(Try.success("Hello world"));
+
+        //When
+        Try<String> result = circuitBreaker.executeTrySupplier(helloWorldService::returnTry);
+
+        //Then
+        assertThat(result.get()).isEqualTo("Hello world");
+        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
+        assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(0);
+        assertThat(metrics.getNumberOfSuccessfulCalls()).isEqualTo(1);
+        // Then the helloWorldService should be invoked 1 time
+        BDDMockito.then(helloWorldService).should(Mockito.times(1)).returnTry();
+    }
+
+    @Test
+    public void shouldExecuteEitherSupplierAndReturnWithSuccess() {
+        // Given
+        CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testName");
+        CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
+        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(0);
+        // Given the HelloWorldService returns Hello world
+        BDDMockito.given(helloWorldService.returnEither()).willReturn(Either.right("Hello world"));
+
+        //When
+        Either<Exception, String> result = circuitBreaker.executeEitherSupplier(helloWorldService::returnEither);
+
+        //Then
+        assertThat(result.get()).isEqualTo("Hello world");
+        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
+        assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(0);
+        assertThat(metrics.getNumberOfSuccessfulCalls()).isEqualTo(1);
+        // Then the helloWorldService should be invoked 1 time
+        BDDMockito.then(helloWorldService).should(Mockito.times(1)).returnEither();
+    }
+
+    @Test
+    public void shouldExecuteTrySupplierAndReturnWithFailure() {
+        // Given
+        CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testName");
+        CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
+        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(0);
+        // Given the HelloWorldService returns Hello world
+        BDDMockito.given(helloWorldService.returnTry()).willReturn(Try.failure(new RuntimeException("BAM!")));
+
+        //When
+        Try<String> result = circuitBreaker.executeTrySupplier(helloWorldService::returnTry);
+
+        //Then
+        assertThat(result.isFailure()).isTrue();
+        assertThat(result.failed().get()).isInstanceOf(RuntimeException.class);
+        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
+        assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(1);
+        assertThat(metrics.getNumberOfSuccessfulCalls()).isEqualTo(0);
+        // Then the helloWorldService should be invoked 1 time
+        BDDMockito.then(helloWorldService).should(Mockito.times(1)).returnTry();
+    }
+
+    @Test
+    public void shouldExecuteTrySupplierAndReturnWithCallNotPermittedException() {
+        // Given
+        CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testName");
+        CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
+        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(0);
+        circuitBreaker.transitionToOpenState();
+
+        //When
+        Try<String> result = circuitBreaker.executeTrySupplier(helloWorldService::returnTry);
+
+        //Then
+        assertThat(result.isFailure()).isTrue();
+        assertThat(result.failed().get()).isInstanceOf(CallNotPermittedException.class);
+        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(0);
+        assertThat(metrics.getNumberOfNotPermittedCalls()).isEqualTo(1);
+        // Then the helloWorldService should be invoked 1 time
+        BDDMockito.then(helloWorldService).should(Mockito.never()).returnTry();
+    }
+
+
+    @Test
+    public void shouldExecuteEitherSupplierAndReturnWithFailure() {
+        // Given
+        CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testName");
+        CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
+        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(0);
+        // Given the HelloWorldService returns Hello world
+        BDDMockito.given(helloWorldService.returnEither()).willReturn(Either.left(new RuntimeException("BAM!")));
+
+        //When
+        Either<Exception, String> result = circuitBreaker.executeEitherSupplier(helloWorldService::returnEither);
+
+        //Then
+        assertThat(result.isLeft()).isTrue();
+        assertThat(result.getLeft()).isInstanceOf(RuntimeException.class);
+        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
+        assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(1);
+        assertThat(metrics.getNumberOfSuccessfulCalls()).isEqualTo(0);
+        // Then the helloWorldService should be invoked 1 time
+        BDDMockito.then(helloWorldService).should(Mockito.times(1)).returnEither();
+    }
+
+    @Test
+    public void shouldExecuteEitherSupplierAndReturnWithCallNotPermittedException() {
+        // Given
+        CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testName");
+        CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
+        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(0);
+        circuitBreaker.transitionToOpenState();
+
+        //When
+        Either<Exception, String> result = circuitBreaker.executeEitherSupplier(helloWorldService::returnEither);
+
+        //Then
+        assertThat(result.isLeft()).isTrue();
+        assertThat(result.getLeft()).isInstanceOf(CallNotPermittedException.class);
+        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(0);
+        assertThat(metrics.getNumberOfNotPermittedCalls()).isEqualTo(1);
+        // Then the helloWorldService should be invoked 1 time
+        BDDMockito.then(helloWorldService).should(Mockito.never()).returnEither();
     }
 
 }

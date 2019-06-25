@@ -24,6 +24,8 @@ import io.github.resilience4j.retry.internal.RetryImpl;
 import io.vavr.CheckedFunction0;
 import io.vavr.CheckedFunction1;
 import io.vavr.CheckedRunnable;
+import io.vavr.control.Either;
+import io.vavr.control.Try;
 
 import java.util.concurrent.*;
 import java.util.function.Function;
@@ -185,6 +187,68 @@ public interface Retry {
 	}
 
 	/**
+	 * Creates a retryable supplier.
+	 *
+	 * @param retry    the retry context
+	 * @param supplier the original function
+	 * @param <T>      the type of results supplied by this supplier
+	 * @return a retryable function
+	 */
+	static <T> Supplier<Either<Exception, T>> decorateEitherSupplier(Retry retry, Supplier<Either<Exception, T>> supplier) {
+		return () -> {
+			Retry.Context<T> context = retry.context();
+			do try {
+				Either<Exception, T> result = supplier.get();
+				if(result.isRight()){
+					final boolean validationOfResult = context.onResult(result.get());
+					if (!validationOfResult) {
+						context.onSuccess();
+						return result;
+					}
+				}else{
+					context.onError(result.getLeft());
+				}
+			} catch (Exception exception) {
+				return Either.left(exception);
+			} while (true);
+		};
+	}
+
+	/**
+	 * Creates a retryable supplier.
+	 *
+	 * @param retry    the retry context
+	 * @param supplier the original function
+	 * @param <T>      the type of results supplied by this supplier
+	 * @return a retryable function
+	 */
+	static <T> Supplier<Try<T>> decorateTrySupplier(Retry retry, Supplier<Try<T>> supplier) {
+		return () -> {
+			Retry.Context<T> context = retry.context();
+			do try {
+				Try<T> result = supplier.get();
+				if(result.isSuccess()){
+					final boolean validationOfResult = context.onResult(result.get());
+					if (!validationOfResult) {
+						context.onSuccess();
+						return result;
+					}
+				}else{
+					Throwable cause = result.getCause();
+					if(cause instanceof Exception){
+						context.onError((Exception)result.getCause());
+					}
+					else{
+						return result;
+					}
+				}
+			} catch (Exception exception) {
+				return Try.failure(exception);
+			} while (true);
+		};
+	}
+
+	/**
 	 * Creates a retryable callable.
 	 *
 	 * @param retry    the retry context
@@ -309,6 +373,28 @@ public interface Retry {
 	 */
 	default <T> T executeSupplier(Supplier<T> supplier) {
 		return decorateSupplier(this, supplier).get();
+	}
+
+	/**
+	 * Decorates and executes the decorated Supplier.
+	 *
+	 * @param supplier the original Supplier
+	 * @param <T>      the type of results supplied by this supplier
+	 * @return the result of the decorated Supplier.
+	 */
+	default <T> Either<Exception, T> executeEitherSupplier(Supplier<Either<Exception, T>> supplier) {
+		return decorateEitherSupplier(this, supplier).get();
+	}
+
+	/**
+	 * Decorates and executes the decorated Supplier.
+	 *
+	 * @param supplier the original Supplier
+	 * @param <T>      the type of results supplied by this supplier
+	 * @return the result of the decorated Supplier.
+	 */
+	default <T> Try<T> executeTrySupplier(Supplier<Try<T>> supplier) {
+		return decorateTrySupplier(this, supplier).get();
 	}
 
 	/**

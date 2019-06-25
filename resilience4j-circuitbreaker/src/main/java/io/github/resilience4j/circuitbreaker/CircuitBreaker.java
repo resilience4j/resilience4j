@@ -22,6 +22,8 @@ import io.github.resilience4j.circuitbreaker.event.*;
 import io.github.resilience4j.circuitbreaker.internal.CircuitBreakerStateMachine;
 import io.github.resilience4j.core.EventConsumer;
 import io.vavr.*;
+import io.vavr.control.Either;
+import io.vavr.control.Try;
 
 import java.util.Arrays;
 import java.util.Map;
@@ -218,6 +220,52 @@ public interface CircuitBreaker {
      */
     default <T> Supplier<T> decorateSupplier(Supplier<T> supplier){
         return decorateSupplier(this, supplier);
+    }
+
+    /**
+     * Decorates and executes the decorated Supplier.
+     *
+     * @param supplier the original Supplier
+     * @param <T> the type of results supplied by this supplier
+     * @return the result of the decorated Supplier.
+     */
+    default <T> Either<Exception, T> executeEitherSupplier(Supplier<Either<Exception, T>> supplier){
+        return decorateEitherSupplier(this, supplier).get();
+    }
+
+    /**
+     * Returns a supplier which is decorated by a CircuitBreaker.
+     *
+     * @param supplier the original supplier
+     * @param <T> the type of results supplied by this supplier
+     *
+     * @return a supplier which is decorated by a CircuitBreaker.
+     */
+    default <T> Supplier<Try<T>> decorateTrySupplier(Supplier<Try<T>> supplier){
+        return decorateTrySupplier(this, supplier);
+    }
+
+    /**
+     * Decorates and executes the decorated Supplier.
+     *
+     * @param supplier the original Supplier
+     * @param <T> the type of results supplied by this supplier
+     * @return the result of the decorated Supplier.
+     */
+    default <T> Try<T> executeTrySupplier(Supplier<Try<T>> supplier){
+        return decorateTrySupplier(this, supplier).get();
+    }
+
+    /**
+     * Returns a supplier which is decorated by a CircuitBreaker.
+     *
+     * @param supplier the original supplier
+     * @param <T> the type of results supplied by this supplier
+     *
+     * @return a supplier which is decorated by a CircuitBreaker.
+     */
+    default <T> Supplier<Either<Exception, T>> decorateEitherSupplier(Supplier<Either<Exception, T>> supplier){
+        return decorateEitherSupplier(this, supplier);
     }
 
     /**
@@ -672,6 +720,62 @@ public interface CircuitBreaker {
                 long durationInNanos = System.nanoTime() - start;
                 circuitBreaker.onError(durationInNanos, exception);
                 throw exception;
+            }
+        };
+    }
+
+    /**
+     * Returns a supplier which is decorated by a CircuitBreaker.
+     *
+     * @param circuitBreaker the CircuitBreaker
+     * @param supplier the original supplier
+     * @param <T> the type of results supplied by this supplier
+     *
+     * @return a supplier which is decorated by a CircuitBreaker.
+     */
+    static <T> Supplier<Either<Exception, T>> decorateEitherSupplier(CircuitBreaker circuitBreaker, Supplier<Either<Exception, T>> supplier) {
+        return () -> {
+            if(circuitBreaker.tryAcquirePermission()) {
+                circuitBreaker.acquirePermission();
+                long start = System.nanoTime();
+                Either<Exception, T> result = supplier.get();
+                long durationInNanos = System.nanoTime() - start;
+                if (result.isRight()) {
+                    circuitBreaker.onSuccess(durationInNanos);
+                    return result;
+                } else {
+                    circuitBreaker.onError(durationInNanos, result.getLeft());
+                    return result;
+                }
+            }else{
+                return Either.left(new CallNotPermittedException(circuitBreaker));
+            }
+        };
+    }
+
+    /**
+     * Returns a supplier which is decorated by a CircuitBreaker.
+     *
+     * @param circuitBreaker the CircuitBreaker
+     * @param supplier the original function
+     * @param <T>      the type of results supplied by this supplier
+     * @return a retryable function
+     */
+    static <T> Supplier<Try<T>> decorateTrySupplier(CircuitBreaker circuitBreaker, Supplier<Try<T>> supplier) {
+        return () -> {
+            if(circuitBreaker.tryAcquirePermission()){
+                long start = System.nanoTime();
+                Try<T> result = supplier.get();
+                long durationInNanos = System.nanoTime() - start;
+                if(result.isSuccess()){
+                    circuitBreaker.onSuccess(durationInNanos);
+                    return result;
+                }else{
+                    circuitBreaker.onError(durationInNanos,  result.getCause());
+                    return result;
+                }
+            }else{
+                return Try.failure(new CallNotPermittedException(circuitBreaker));
             }
         };
     }
