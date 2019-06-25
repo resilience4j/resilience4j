@@ -25,6 +25,13 @@ import io.github.resilience4j.bulkhead.adaptive.AdaptiveBulkhead;
  */
 public class BulkheadFullException extends RuntimeException {
 
+    private static final String ERROR_FURTHER_CALLS = "Bulkhead '%s' is full and does not permit further calls";
+    private static final String ERROR_PERMISSION_WAIT = "Bulkhead '%s' is full and thread was interrupted during permission wait";
+
+    private BulkheadFullException(String message, boolean writableStackTrace) {
+        super(message, null, false, writableStackTrace);
+    }
+
     /**
      * Static method to construct a {@link BulkheadFullException} with a Bulkhead.
      *
@@ -36,9 +43,7 @@ public class BulkheadFullException extends RuntimeException {
 
         String message;
         if (Thread.currentThread().isInterrupted()) {
-            message = String
-                .format("Bulkhead '%s' is full and thread was interrupted during permission wait",
-                    bulkhead.getName());
+            message = String.format(ERROR_PERMISSION_WAIT, bulkhead.getName());
         } else {
             message = String.format(NOT_PERMIT_FURTHER_CALLS,
                 bulkhead.getName());
@@ -56,8 +61,7 @@ public class BulkheadFullException extends RuntimeException {
         boolean writableStackTraceEnabled = bulkhead.getBulkheadConfig()
             .isWritableStackTraceEnabled();
 
-        String message = String
-            .format("Bulkhead '%s' is full and does not permit further calls", bulkhead.getName());
+        String message = String.format(ERROR_FURTHER_CALLS, bulkhead.getName());
 
         return new BulkheadFullException(message, writableStackTraceEnabled);
     }
@@ -67,6 +71,6 @@ public class BulkheadFullException extends RuntimeException {
 	 * @param bulkhead the AdaptiveLimitBulkhead.
 	 */
 	public BulkheadFullException(AdaptiveBulkhead bulkhead) {
-		super(String.format("Bulkhead '%s' is full and does not permit further calls", bulkhead.getName()));
+        super(String.format(ERROR_FURTHER_CALLS, bulkhead.getName()));
 	}
 }
