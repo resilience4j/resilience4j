@@ -64,7 +64,7 @@ class MovingAverageLimitAdapter implements LimitAdapter {
 		CONCURRENCY_DROP_MUL = config.getConcurrencyDropMultiplier();
 		currentMaxLatency = min(config.getDesirableOperationLatency() * 1.2d, config.getMaxAcceptableRequestLatency());
 		int adaptationWindowSize = (int) ceil(config.getWindowForAdaptation().getSeconds() * config.getDesirableAverageThroughput());
-		int reconfigurationWindowSize = (int) ceil(config.getWindowForReconfiguration().getSeconds() / config.getWindowForAdaptation().getSeconds());
+		int reconfigurationWindowSize = (int) ceil((double) config.getWindowForReconfiguration().getSeconds() / config.getWindowForAdaptation().getSeconds());
 		long initialLatencyInNanos = (long) (config.getDesirableOperationLatency() * NANO_SCALE);
 		adaptationWindow = new MovingAverageWindow(adaptationWindowSize, initialLatencyInNanos);
 		reconfigurationWindow = new MovingAverageWindow(reconfigurationWindowSize, initialLatencyInNanos);

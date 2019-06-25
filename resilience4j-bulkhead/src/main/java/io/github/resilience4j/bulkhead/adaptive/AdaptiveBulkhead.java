@@ -251,10 +251,10 @@ public interface AdaptiveBulkhead {
 										}
 									}
 							);
-				} catch (Throwable throwable) {
+				} catch (Exception e) {
 					Instant finish = Instant.now();
 					bulkhead.onComplete(Duration.between(start, finish));
-					promise.completeExceptionally(throwable);
+					promise.completeExceptionally(e);
 				}
 			}
 
