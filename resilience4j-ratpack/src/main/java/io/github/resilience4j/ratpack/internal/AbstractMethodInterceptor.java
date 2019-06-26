@@ -6,6 +6,9 @@ import io.github.resilience4j.ratpack.recovery.DefaultRecoveryFunction;
 import io.github.resilience4j.ratpack.recovery.RecoveryFunction;
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
+import ratpack.exec.Promise;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import java.lang.reflect.Method;
 import java.util.Arrays;
@@ -14,6 +17,30 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 
 public abstract class AbstractMethodInterceptor implements MethodInterceptor {
+
+    @Nullable
+    protected Object proceed(MethodInvocation invocation) throws Throwable {
+        Class<?> returnType = invocation.getMethod().getReturnType();
+        Object result;
+        try {
+            result = invocation.proceed();
+        } catch (Exception e) {
+            if (Promise.class.isAssignableFrom(returnType)) {
+                return Promise.error(e);
+            } else if (Flux.class.isAssignableFrom(returnType)) {
+                return Flux.error(e);
+            } else if (Mono.class.isAssignableFrom(returnType)) {
+                return Mono.error(e);
+            } else if (CompletionStage.class.isAssignableFrom(returnType)) {
+                CompletableFuture<?> future = new CompletableFuture<>();
+                future.completeExceptionally(e);
+                return future;
+            } else {
+                throw e;
+            }
+        }
+        return result;
+    }
 
     @SuppressWarnings("unchecked")
     protected void completeFailedFuture(Throwable throwable, RecoveryFunction<?> fallbackMethod, CompletableFuture promise) {
