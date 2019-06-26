@@ -315,12 +315,12 @@ public class RateLimiterTest {
 
     @Test
     public void decorateEitherSupplier() throws Exception {
-        Supplier<Either<Exception, String>> supplier = mock(Supplier.class);
+        Supplier<Either<? extends Exception, String>> supplier = mock(Supplier.class);
         BDDMockito.given(supplier.get()).willReturn(Either.right("Resource"));
 
         when(limit.acquirePermission()).thenReturn(true);
 
-        Either<Exception, String> result = RateLimiter.decorateEitherSupplier(limit, supplier).get();
+        Either<? extends Exception, String> result = RateLimiter.decorateEitherSupplier(limit, supplier).get();
 
         then(result.isRight()).isTrue();
         verify(supplier, times(1)).get();
@@ -341,11 +341,11 @@ public class RateLimiterTest {
 
     @Test
     public void shouldExecuteEitherSupplierAndReturnRequestNotPermitted() throws Exception {
-        Supplier<Either<Exception, String>> supplier = mock(Supplier.class);
+        Supplier<Either<? extends Exception, String>> supplier = mock(Supplier.class);
 
         when(limit.acquirePermission()).thenReturn(false);
 
-        Either<Exception, String> result = RateLimiter.decorateEitherSupplier(limit, supplier).get();
+        Either<? extends Exception, String> result = RateLimiter.decorateEitherSupplier(limit, supplier).get();
 
         then(result.isLeft()).isTrue();
         then(result.getLeft()).isInstanceOf(RequestNotPermitted.class);

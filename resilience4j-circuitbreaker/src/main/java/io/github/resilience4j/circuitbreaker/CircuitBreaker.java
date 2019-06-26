@@ -229,7 +229,7 @@ public interface CircuitBreaker {
      * @param <T> the type of results supplied by this supplier
      * @return the result of the decorated Supplier.
      */
-    default <T> Either<Exception, T> executeEitherSupplier(Supplier<Either<Exception, T>> supplier){
+    default <T> Either<? extends Exception, T> executeEitherSupplier(Supplier<Either<? extends Exception, T>> supplier){
         return decorateEitherSupplier(this, supplier).get();
     }
 
@@ -264,7 +264,7 @@ public interface CircuitBreaker {
      *
      * @return a supplier which is decorated by a CircuitBreaker.
      */
-    default <T> Supplier<Either<Exception, T>> decorateEitherSupplier(Supplier<Either<Exception, T>> supplier){
+    default <T> Supplier<Either<? extends Exception, T>> decorateEitherSupplier(Supplier<Either<? extends Exception, T>> supplier){
         return decorateEitherSupplier(this, supplier);
     }
 
@@ -733,20 +733,19 @@ public interface CircuitBreaker {
      *
      * @return a supplier which is decorated by a CircuitBreaker.
      */
-    static <T> Supplier<Either<Exception, T>> decorateEitherSupplier(CircuitBreaker circuitBreaker, Supplier<Either<Exception, T>> supplier) {
+    static <T> Supplier<Either<? extends Exception, T>> decorateEitherSupplier(CircuitBreaker circuitBreaker, Supplier<Either<? extends Exception, T>> supplier) {
         return () -> {
             if(circuitBreaker.tryAcquirePermission()) {
                 circuitBreaker.acquirePermission();
                 long start = System.nanoTime();
-                Either<Exception, T> result = supplier.get();
+                Either<? extends Exception, T> result = supplier.get();
                 long durationInNanos = System.nanoTime() - start;
                 if (result.isRight()) {
                     circuitBreaker.onSuccess(durationInNanos);
-                    return result;
                 } else {
                     circuitBreaker.onError(durationInNanos, result.getLeft());
-                    return result;
                 }
+                return result;
             }else{
                 return Either.left(new CallNotPermittedException(circuitBreaker));
             }

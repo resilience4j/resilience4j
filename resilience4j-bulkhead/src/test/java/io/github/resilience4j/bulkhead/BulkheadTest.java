@@ -636,7 +636,7 @@ public class BulkheadTest {
         BDDMockito.given(helloWorldService.returnEither()).willReturn(Either.right("Hello world"));
 
         // When
-        Either<Exception, String> result = bulkhead.executeEitherSupplier(helloWorldService::returnEither);
+        Either<? extends Exception, String> result = bulkhead.executeEitherSupplier(helloWorldService::returnEither);
 
         // Then
         assertThat(result.get()).isEqualTo("Hello world");
@@ -648,10 +648,10 @@ public class BulkheadTest {
     public void shouldDecorateEitherSupplierAndReturnWithException() {
         // Given
         Bulkhead bulkhead = Bulkhead.of("test", config);
-        BDDMockito.given(helloWorldService.returnEither()).willReturn(Either.left(new RuntimeException("BAM!")));
+        BDDMockito.given(helloWorldService.returnEither()).willReturn(Either.left(new WebServiceException("BAM!")));
 
         // When
-        Either<Exception, String> result = bulkhead.executeEitherSupplier(helloWorldService::returnEither);
+        Either<? extends Exception, String> result = bulkhead.executeEitherSupplier(helloWorldService::returnEither);
 
         //Then
         assertThat(result.isLeft()).isTrue();
@@ -682,7 +682,7 @@ public class BulkheadTest {
         BDDMockito.given(bulkhead.tryAcquirePermission()).willReturn(false);
 
         // When
-        Either<Exception, String> result = Bulkhead.decorateEitherSupplier(bulkhead, helloWorldService::returnEither).get();
+        Either<? extends Exception, String> result = Bulkhead.decorateEitherSupplier(bulkhead, helloWorldService::returnEither).get();
 
         //Then
         assertThat(result.isLeft()).isTrue();

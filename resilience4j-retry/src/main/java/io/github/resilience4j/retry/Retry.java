@@ -194,11 +194,11 @@ public interface Retry {
 	 * @param <T>      the type of results supplied by this supplier
 	 * @return a retryable function
 	 */
-	static <T> Supplier<Either<Exception, T>> decorateEitherSupplier(Retry retry, Supplier<Either<Exception, T>> supplier) {
+	static <T> Supplier<Either<? extends Exception, T>> decorateEitherSupplier(Retry retry, Supplier<Either<? extends Exception, T>> supplier) {
 		return () -> {
 			Retry.Context<T> context = retry.context();
-			do try {
-				Either<Exception, T> result = supplier.get();
+			do {
+				Either<? extends Exception, T> result = supplier.get();
 				if(result.isRight()){
 					final boolean validationOfResult = context.onResult(result.get());
 					if (!validationOfResult) {
@@ -206,11 +206,13 @@ public interface Retry {
 						return result;
 					}
 				}else{
-					context.onError(result.getLeft());
+					try {
+						context.onError(result.getLeft());
+					} catch (Exception e) {
+						return Either.left(e);
+					}
 				}
-			} catch (Exception exception) {
-				return Either.left(exception);
-			} while (true);
+			}  while (true);
 		};
 	}
 
@@ -225,7 +227,7 @@ public interface Retry {
 	static <T> Supplier<Try<T>> decorateTrySupplier(Retry retry, Supplier<Try<T>> supplier) {
 		return () -> {
 			Retry.Context<T> context = retry.context();
-			do try {
+			do {
 				Try<T> result = supplier.get();
 				if(result.isSuccess()){
 					final boolean validationOfResult = context.onResult(result.get());
@@ -236,14 +238,16 @@ public interface Retry {
 				}else{
 					Throwable cause = result.getCause();
 					if(cause instanceof Exception){
-						context.onError((Exception)result.getCause());
+						try {
+							context.onError((Exception)result.getCause());
+						} catch (Exception e) {
+							return result;
+						}
 					}
 					else{
 						return result;
 					}
 				}
-			} catch (Exception exception) {
-				return Try.failure(exception);
 			} while (true);
 		};
 	}
@@ -382,7 +386,7 @@ public interface Retry {
 	 * @param <T>      the type of results supplied by this supplier
 	 * @return the result of the decorated Supplier.
 	 */
-	default <T> Either<Exception, T> executeEitherSupplier(Supplier<Either<Exception, T>> supplier) {
+	default <T> Either<? extends Exception, T> executeEitherSupplier(Supplier<Either<? extends Exception, T>> supplier) {
 		return decorateEitherSupplier(this, supplier).get();
 	}
 

@@ -136,7 +136,7 @@ public class SupplierRetryTest {
 				.maxAttempts(2).build();
 		Retry retry = Retry.of("id", tryAgain);
 		// Decorate the invocation of the HelloWorldService
-		Either<Exception, String> result = retry.executeEitherSupplier(helloWorldService::returnEither);
+		Either<? extends Exception, String> result = retry.executeEitherSupplier(helloWorldService::returnEither);
 
 		// Then the helloWorldService should be invoked 1 time
 		BDDMockito.then(helloWorldService).should(Mockito.times(1)).returnEither();
@@ -169,7 +169,7 @@ public class SupplierRetryTest {
 				.maxAttempts(2).build();
 		Retry retry = Retry.of("id", tryAgain);
 		// Decorate the invocation of the HelloWorldService
-		Either<Exception, String> result = retry.executeEitherSupplier(helloWorldService::returnEither);
+		Either<? extends Exception, String> result = retry.executeEitherSupplier(helloWorldService::returnEither);
 
 		BDDMockito.then(helloWorldService).should(Mockito.times(2)).returnEither();
 		assertThat(result.get()).isEqualTo("Hello world");
@@ -200,7 +200,7 @@ public class SupplierRetryTest {
 				.maxAttempts(2).build();
 		Retry retry = Retry.of("id", tryAgain);
 		// Decorate the invocation of the HelloWorldService
-		Either<Exception, String> result = retry.executeEitherSupplier(helloWorldService::returnEither);
+		Either<? extends Exception, String> result = retry.executeEitherSupplier(helloWorldService::returnEither);
 
 		BDDMockito.then(helloWorldService).should(Mockito.times(2)).returnEither();
 		assertThat(result.isLeft()).isTrue();
@@ -235,7 +235,7 @@ public class SupplierRetryTest {
 				.maxAttempts(2).build();
 		Retry retry = Retry.of("id", tryAgain);
 		// Decorate the invocation of the HelloWorldService
-		Either<Exception, String> result = retry.executeEitherSupplier(helloWorldService::returnEither);
+		Either<? extends Exception, String> result = retry.executeEitherSupplier(helloWorldService::returnEither);
 
 		// Then the helloWorldService should be invoked 1 time
 		BDDMockito.then(helloWorldService).should(Mockito.times(1)).returnEither();
