@@ -128,11 +128,7 @@ public class CircuitBreakerMethodInterceptor extends AbstractMethodInterceptor {
             }
             return promise;
         } else {
-            try {
-                return proceed(invocation, breaker);
-            } catch (Throwable throwable) {
-                return fallbackMethod.apply(throwable);
-            }
+            return handleProceedWithException(invocation, breaker, fallbackMethod);
         }
     }
 
@@ -163,4 +159,12 @@ public class CircuitBreakerMethodInterceptor extends AbstractMethodInterceptor {
         return result;
     }
 
+    @Nullable
+    private Object handleProceedWithException(MethodInvocation invocation, io.github.resilience4j.circuitbreaker.CircuitBreaker breaker, RecoveryFunction<?> recoveryFunction) throws Throwable {
+        try {
+            return io.github.resilience4j.circuitbreaker.CircuitBreaker.decorateCheckedSupplier(breaker, invocation::proceed).apply();
+        } catch (Throwable throwable) {
+            return recoveryFunction.apply(throwable);
+        }
+    }
 }
