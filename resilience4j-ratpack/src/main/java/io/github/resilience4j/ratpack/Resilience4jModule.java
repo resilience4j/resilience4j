@@ -112,7 +112,7 @@ public class Resilience4jModule extends ConfigurableModule<Resilience4jConfig> {
         // default registries
         OptionalBinder.newOptionalBinder(binder(), CircuitBreakerRegistry.class).setDefault().toProvider(CircuitBreakerRegistryProvider.class).in(Scopes.SINGLETON);
         OptionalBinder.newOptionalBinder(binder(), RateLimiterRegistry.class).setDefault().toProvider(RateLimiterRegistryProvider.class).in(Scopes.SINGLETON);
-        OptionalBinder.newOptionalBinder(binder(), RetryRegistry.class).setDefault().toProvider(RetryRegistryProvider.class);
+        OptionalBinder.newOptionalBinder(binder(), RetryRegistry.class).setDefault().toProvider(RetryRegistryProvider.class).in(Scopes.SINGLETON);
         OptionalBinder.newOptionalBinder(binder(), BulkheadRegistry.class).setDefault().toProvider(BulkheadRegistryProvider.class).in(Scopes.SINGLETON);
         OptionalBinder.newOptionalBinder(binder(), ThreadPoolBulkheadRegistry.class).setDefault().toProvider(ThreadPoolBulkheadRegistryProvider.class).in(Scopes.SINGLETON);
 
