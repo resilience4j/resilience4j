@@ -27,10 +27,10 @@ import static ratpack.util.Exceptions.uncheck;
 
 public class Resilience4jConfig {
     private BulkheadConfigurationProperties bulkhead = new BulkheadConfigurationProperties();
-    // ratpack does not have the ability to name things with "-", so we must use threadPoolBulkhead instead of thread-pool-bulkhead
-    private ThreadPoolBulkheadConfigurationProperties threadPoolBulkhead = new ThreadPoolBulkheadConfigurationProperties();
-    private CircuitBreakerConfigurationProperties circuitBreaker = new CircuitBreakerConfigurationProperties();
-    private RateLimiterConfigurationProperties rateLimiter = new RateLimiterConfigurationProperties();
+    // ratpack does not have the ability to name things with "-", so we must use threadpoolbulkhead instead of thread-pool-bulkhead
+    private ThreadPoolBulkheadConfigurationProperties threadpoolbulkhead = new ThreadPoolBulkheadConfigurationProperties();
+    private CircuitBreakerConfigurationProperties circuitbreaker = new CircuitBreakerConfigurationProperties();
+    private RateLimiterConfigurationProperties ratelimiter = new RateLimiterConfigurationProperties();
     private RetryConfigurationProperties retry = new RetryConfigurationProperties();
     private boolean metrics = false;
     private boolean prometheus = false;
@@ -43,7 +43,7 @@ public class Resilience4jConfig {
     public Resilience4jConfig circuitBreaker(String name, Function<? super CircuitBreakerConfigurationProperties.InstanceProperties, ? extends CircuitBreakerConfigurationProperties.InstanceProperties> configure) {
         try {
             CircuitBreakerConfigurationProperties.InstanceProperties finalConfig = configure.apply(new CircuitBreakerConfigurationProperties.InstanceProperties());
-            circuitBreaker.getInstances().put(name, finalConfig);
+            circuitbreaker.getInstances().put(name, finalConfig);
             return this;
         } catch (Exception e) {
             throw uncheck(e);
@@ -57,7 +57,7 @@ public class Resilience4jConfig {
     public Resilience4jConfig rateLimiter(String name, Function<? super RateLimiterConfigurationProperties.InstanceProperties, ? extends RateLimiterConfigurationProperties.InstanceProperties> configure) {
         try {
             RateLimiterConfigurationProperties.InstanceProperties finalConfig = configure.apply(new RateLimiterConfigurationProperties.InstanceProperties());
-            rateLimiter.getInstances().put(name, finalConfig);
+            ratelimiter.getInstances().put(name, finalConfig);
             return this;
         } catch (Exception e) {
             throw uncheck(e);
@@ -99,7 +99,7 @@ public class Resilience4jConfig {
     public Resilience4jConfig threadPoolBulkhead(String name, Function<? super ThreadPoolBulkheadConfigurationProperties.InstanceProperties, ? extends ThreadPoolBulkheadConfigurationProperties.InstanceProperties> configure) {
         try {
             ThreadPoolBulkheadConfigurationProperties.InstanceProperties finalConfig = configure.apply(new ThreadPoolBulkheadConfigurationProperties.InstanceProperties());
-            threadPoolBulkhead.getInstances().put(name, finalConfig);
+            threadpoolbulkhead.getInstances().put(name, finalConfig);
             return this;
         } catch (Exception e) {
             throw uncheck(e);
@@ -125,12 +125,12 @@ public class Resilience4jConfig {
         }
     }
 
-    public CircuitBreakerConfigurationProperties getCircuitBreaker() {
-        return circuitBreaker;
+    public CircuitBreakerConfigurationProperties getCircuitbreaker() {
+        return circuitbreaker;
     }
 
-    public RateLimiterConfigurationProperties getRateLimiter() {
-        return rateLimiter;
+    public RateLimiterConfigurationProperties getRatelimiter() {
+        return ratelimiter;
     }
 
     public RetryConfigurationProperties getRetry() {
@@ -141,8 +141,8 @@ public class Resilience4jConfig {
         return bulkhead;
     }
 
-    public ThreadPoolBulkheadConfigurationProperties getThreadPoolBulkhead() {
-        return threadPoolBulkhead;
+    public ThreadPoolBulkheadConfigurationProperties getThreadpoolbulkhead() {
+        return threadpoolbulkhead;
     }
 
     public boolean isMetrics() {
