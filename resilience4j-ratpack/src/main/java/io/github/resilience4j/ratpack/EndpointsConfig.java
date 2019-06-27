@@ -23,71 +23,71 @@ import static ratpack.util.Exceptions.uncheck;
 
 public class EndpointsConfig {
 
-    private EndpointConfig circuitBreakers = new EndpointConfig("circuitbreaker");
-    private EndpointConfig rateLimiters = new EndpointConfig("ratelimiter");
-    private EndpointConfig retries = new EndpointConfig("retry");
-    private EndpointConfig bulkheads = new EndpointConfig("bulkhead");
-    private EndpointConfig threadPoolBulkheads = new EndpointConfig("threadPoolBulkhead");
+    private EndpointConfig circuitbreaker = new EndpointConfig("circuitbreaker");
+    private EndpointConfig ratelimiter = new EndpointConfig("ratelimiter");
+    private EndpointConfig retry = new EndpointConfig("retry");
+    private EndpointConfig bulkhead = new EndpointConfig("bulkhead");
+    private EndpointConfig threadpoolbulkhead = new EndpointConfig("threadpoolbulkhead");
 
-    public EndpointConfig getCircuitBreakers() {
-        return circuitBreakers;
+    public EndpointConfig getCircuitbreaker() {
+        return circuitbreaker;
     }
 
     public EndpointsConfig circuitBreakers(Function<? super EndpointConfig, ? extends EndpointConfig> configure) {
         try {
-            circuitBreakers = configure.apply(new EndpointConfig("circuitbreaker"));
+            circuitbreaker = configure.apply(new EndpointConfig("circuitbreaker"));
             return this;
         } catch (Exception e) {
             throw uncheck(e);
         }
     }
 
-    public EndpointConfig getRateLimiters() {
-        return rateLimiters;
+    public EndpointConfig getRatelimiter() {
+        return ratelimiter;
     }
 
     public EndpointsConfig rateLimiters(Function<? super EndpointConfig, ? extends EndpointConfig> configure) {
         try {
-            rateLimiters = configure.apply(new EndpointConfig("ratelimiter"));
+            ratelimiter = configure.apply(new EndpointConfig("ratelimiter"));
             return this;
         } catch (Exception e) {
             throw uncheck(e);
         }
     }
 
-    public EndpointConfig getRetries() {
-        return retries;
+    public EndpointConfig getRetry() {
+        return retry;
     }
 
     public EndpointsConfig retries(Function<? super EndpointConfig, ? extends EndpointConfig> configure) {
         try {
-            retries = configure.apply(new EndpointConfig("retry"));
+            retry = configure.apply(new EndpointConfig("retry"));
             return this;
         } catch (Exception e) {
             throw uncheck(e);
         }
     }
 
-    public EndpointConfig getBulkheads() {
-        return bulkheads;
+    public EndpointConfig getBulkhead() {
+        return bulkhead;
     }
 
     public EndpointsConfig bulkheads(Function<? super EndpointConfig, ? extends EndpointConfig> configure) {
         try {
-            bulkheads = configure.apply(new EndpointConfig("bulkhead"));
+            bulkhead = configure.apply(new EndpointConfig("bulkhead"));
             return this;
         } catch (Exception e) {
             throw uncheck(e);
         }
     }
 
-    public EndpointConfig getThreadPoolBulkheads() {
-        return threadPoolBulkheads;
+    public EndpointConfig getThreadpoolbulkhead() {
+        return threadpoolbulkhead;
     }
 
     public EndpointsConfig threadPoolBulkheads(Function<? super EndpointConfig, ? extends EndpointConfig> configure) {
         try {
-            threadPoolBulkheads = configure.apply(new EndpointConfig("threadPoolBulkhead"));
+            threadpoolbulkhead = configure.apply(new EndpointConfig("threadpoolpulkhead"));
             return this;
         } catch (Exception e) {
             throw uncheck(e);

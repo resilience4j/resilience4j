@@ -56,7 +56,7 @@ public class CircuitBreakerChain implements Action<Chain> {
 
     @Override
     public void execute(Chain chain) throws Exception {
-        String prefix = chain.getRegistry().get(Resilience4jConfig.class).getEndpoints().getCircuitBreakers().getPath();
+        String prefix = chain.getRegistry().get(Resilience4jConfig.class).getEndpoints().getCircuitbreaker().getPath();
         chain.prefix(prefix, chain1 -> {
             chain1.get("states/:name", ctx -> {
                 String circuitBreakerName = ctx.getPathTokens().get("name");
