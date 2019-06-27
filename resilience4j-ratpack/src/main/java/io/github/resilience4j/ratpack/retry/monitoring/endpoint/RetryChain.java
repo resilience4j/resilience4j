@@ -55,7 +55,7 @@ public class RetryChain implements Action<Chain> {
 
     @Override
     public void execute(Chain chain) throws Exception {
-        String prefix = chain.getRegistry().get(Resilience4jConfig.class).getEndpoints().getRetries().getPath();
+        String prefix = chain.getRegistry().get(Resilience4jConfig.class).getEndpoints().getRetry().getPath();
         chain.prefix(prefix, chain1 -> {
             chain1.get("events", ctx ->
                     Promise.<RetryEventsEndpointResponse>async(d -> {
