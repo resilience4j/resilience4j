@@ -75,5 +75,8 @@ public class TimeLimiterTest {
 
         Integer result = timeLimiter.executeFutureSupplier(supplier);
         Assertions.assertThat(result).isEqualTo(42);
+
+        result = timeLimiter.decorateFutureSupplier(supplier).call();
+        Assertions.assertThat(result).isEqualTo(42);
     }
 }
