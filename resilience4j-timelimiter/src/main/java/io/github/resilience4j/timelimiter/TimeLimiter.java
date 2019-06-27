@@ -89,4 +89,16 @@ public interface TimeLimiter {
     default <T, F extends Future<T>> T executeFutureSupplier(Supplier<F> futureSupplier) throws Exception {
         return decorateFutureSupplier(this, futureSupplier).call();
     }
+
+    /**
+     * Creates a Callback that is restricted by a TimeLimiter.
+     *
+     * @param futureSupplier the original future supplier
+     * @param <T> the type of results supplied by the supplier
+     * @param <F> the future type supplied
+     * @return a future supplier which is restricted by a {@link TimeLimiter}.
+     */
+    default <T, F extends Future<T>> Callable<T> decorateFutureSupplier(Supplier<F> futureSupplier) {
+        return decorateFutureSupplier(this, futureSupplier);
+    }
 }
