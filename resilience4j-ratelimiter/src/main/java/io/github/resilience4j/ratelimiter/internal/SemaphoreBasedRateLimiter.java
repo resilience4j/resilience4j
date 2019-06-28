@@ -127,18 +127,10 @@ public class SemaphoreBasedRateLimiter implements RateLimiter {
         rateLimiterConfig.set(newConfig);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
-    public boolean getPermission(Duration timeoutDuration) {
-        return acquirePermission(timeoutDuration);
-    }
-
-    @Override
-    public boolean acquirePermission(Duration timeoutDuration) {
+    public boolean acquirePermission() {
         try {
-            boolean success = semaphore.tryAcquire(timeoutDuration.toNanos(), TimeUnit.NANOSECONDS);
+            boolean success = semaphore.tryAcquire(rateLimiterConfig.get().getTimeoutDuration().toNanos(), TimeUnit.NANOSECONDS);
             publishRateLimiterEvent(success);
             return success;
         } catch (InterruptedException e) {
@@ -146,21 +138,6 @@ public class SemaphoreBasedRateLimiter implements RateLimiter {
             publishRateLimiterEvent(false);
             return false;
         }
-    }
-
-    @Override
-    public boolean acquirePermission() {
-        return acquirePermission(rateLimiterConfig.get().getTimeoutDuration());
-    }
-
-    /**
-     * {@inheritDoc}
-     * SemaphoreBasedRateLimiter is totally blocking by it's nature. So this non-blocking API isn't supported.
-     * It will return negative numbers all the time.
-     */
-    @Override
-    public long reservePermission(Duration timeoutDuration) {
-        return -1;
     }
 
     /**
