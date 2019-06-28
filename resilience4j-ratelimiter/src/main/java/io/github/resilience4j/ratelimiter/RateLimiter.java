@@ -406,7 +406,7 @@ public interface RateLimiter {
 	 * @param <T>      the type of results supplied by this supplier
 	 * @return the result of the decorated Supplier.
 	 */
-	default <T> Either<? extends Exception, T> executeEitherSupplier(Supplier<Either<? extends Exception, T>> supplier) {
+	default <T> Either<Exception, T> executeEitherSupplier(Supplier<Either<? extends Exception, T>> supplier) {
 		return decorateEitherSupplier(this, supplier).get();
 	}
 

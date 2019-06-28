@@ -346,7 +346,7 @@ public class RateLimiterTest {
 
         when(limit.acquirePermission()).thenReturn(false);
 
-        Either<? extends Exception, String> result = RateLimiter.decorateEitherSupplier(limit, supplier::get).get();
+        Either<Exception, String> result = RateLimiter.decorateEitherSupplier(limit, supplier::get).get();
 
         then(result.isLeft()).isTrue();
         then(result.getLeft()).isInstanceOf(RequestNotPermitted.class);
