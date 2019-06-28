@@ -194,11 +194,11 @@ public interface Retry {
 	 * @param <T>      the type of results supplied by this supplier
 	 * @return a retryable function
 	 */
-	static <T> Supplier<Either<? extends Exception, T>> decorateEitherSupplier(Retry retry, Supplier<Either<? extends Exception, T>> supplier) {
+	static <E extends Exception, T> Supplier<Either<E, T>> decorateEitherSupplier(Retry retry, Supplier<Either<E, T>> supplier) {
 		return () -> {
 			Retry.Context<T> context = retry.context();
 			do {
-				Either<? extends Exception, T> result = supplier.get();
+				Either<E, T> result = supplier.get();
 				if(result.isRight()){
 					final boolean validationOfResult = context.onResult(result.get());
 					if (!validationOfResult) {
@@ -206,10 +206,11 @@ public interface Retry {
 						return result;
 					}
 				}else{
+					E exception = result.getLeft();
 					try {
 						context.onError(result.getLeft());
 					} catch (Exception e) {
-						return Either.left(e);
+						return Either.left(exception);
 					}
 				}
 			}  while (true);
@@ -386,7 +387,7 @@ public interface Retry {
 	 * @param <T>      the type of results supplied by this supplier
 	 * @return the result of the decorated Supplier.
 	 */
-	default <T> Either<? extends Exception, T> executeEitherSupplier(Supplier<Either<? extends Exception, T>> supplier) {
+	default <E extends Exception, T> Either<E, T> executeEitherSupplier(Supplier<Either<E, T>> supplier) {
 		return decorateEitherSupplier(this, supplier).get();
 	}
 

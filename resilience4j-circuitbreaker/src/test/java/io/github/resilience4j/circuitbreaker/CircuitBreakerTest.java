@@ -939,7 +939,7 @@ public class CircuitBreakerTest {
         BDDMockito.given(helloWorldService.returnEither()).willReturn(Either.right("Hello world"));
 
         //When
-        Either<? extends Exception, String> result = circuitBreaker.executeEitherSupplier(helloWorldService::returnEither);
+        Either<Exception, String> result = circuitBreaker.executeEitherSupplier(helloWorldService::returnEither);
 
         //Then
         assertThat(result.get()).isEqualTo("Hello world");
@@ -1003,7 +1003,7 @@ public class CircuitBreakerTest {
         BDDMockito.given(helloWorldService.returnEither()).willReturn(Either.left(new WebServiceException("BAM!")));
 
         //When
-        Either<? extends Exception, String> result = circuitBreaker.executeEitherSupplier(helloWorldService::returnEither);
+        Either<Exception, String> result = circuitBreaker.executeEitherSupplier(helloWorldService::returnEither);
 
         //Then
         assertThat(result.isLeft()).isTrue();
@@ -1024,7 +1024,7 @@ public class CircuitBreakerTest {
         circuitBreaker.transitionToOpenState();
 
         //When
-        Either<? extends Exception, String> result = circuitBreaker.executeEitherSupplier(helloWorldService::returnEither);
+        Either<Exception, String> result = circuitBreaker.executeEitherSupplier(helloWorldService::returnEither);
 
         //Then
         assertThat(result.isLeft()).isTrue();

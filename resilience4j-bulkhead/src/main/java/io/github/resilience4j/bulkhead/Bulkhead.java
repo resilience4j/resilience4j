@@ -156,7 +156,7 @@ public interface Bulkhead {
      * @param <T> the type of results supplied by this supplier
      * @return the result of the decorated Supplier.
      */
-    default <T> Either<? extends Exception, T> executeEitherSupplier(Supplier<Either<? extends Exception, T>> supplier){
+    default <T> Either<Exception, T> executeEitherSupplier(Supplier<Either<? extends Exception, T>> supplier){
         return decorateEitherSupplier(this, supplier).get();
     }
 
@@ -360,11 +360,12 @@ public interface Bulkhead {
      *
      * @return a supplier which is decorated by a Bulkhead.
      */
-    static <T> Supplier<Either<? extends Exception, T>> decorateEitherSupplier(Bulkhead bulkhead, Supplier<Either<? extends Exception, T>> supplier){
+    static <T> Supplier<Either<Exception, T>> decorateEitherSupplier(Bulkhead bulkhead, Supplier<Either<? extends Exception, T>> supplier){
         return () -> {
             if(bulkhead.tryAcquirePermission()){
                 try {
-                    return supplier.get();
+                    Either<? extends Exception, T> result = supplier.get();
+                    return Either.narrow(result);
                 }
                 finally {
                     bulkhead.onComplete();

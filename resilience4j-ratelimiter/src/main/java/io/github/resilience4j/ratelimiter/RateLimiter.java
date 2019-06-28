@@ -207,11 +207,11 @@ public interface RateLimiter {
 	 * @param <T>         the type of results supplied supplier
 	 * @return a supplier which is restricted by a RateLimiter.
 	 */
-	static <T> Supplier<Either<? extends Exception, T>> decorateEitherSupplier(RateLimiter rateLimiter, Supplier<Either<? extends Exception, T>> supplier){
+	static <T> Supplier<Either<Exception, T>> decorateEitherSupplier(RateLimiter rateLimiter, Supplier<Either<? extends Exception, T>> supplier){
 		return () -> {
 			try{
 				waitForPermission(rateLimiter);
-				return supplier.get();
+				return Either.narrow(supplier.get());
 			}catch (RequestNotPermitted requestNotPermitted){
 				return Either.left(requestNotPermitted);
 			}
