@@ -69,6 +69,9 @@ public class RetryMethodInterceptor extends AbstractMethodInterceptor {
     @Override
     public Object invoke(MethodInvocation invocation) throws Throwable {
         Retry annotation = invocation.getMethod().getAnnotation(Retry.class);
+        if (annotation == null) {
+            annotation = invocation.getMethod().getDeclaringClass().getAnnotation(Retry.class);
+        }
         if(registry == null) {
             registry = RetryRegistry.ofDefaults();
         }
@@ -78,14 +81,14 @@ public class RetryMethodInterceptor extends AbstractMethodInterceptor {
                 .orElse(new DefaultRecoveryFunction<>());
         Class<?> returnType = invocation.getMethod().getReturnType();
         if (Promise.class.isAssignableFrom(returnType)) {
-            Promise<?> result = (Promise<?>) proceed(invocation, retry, fallbackMethod);
+            Promise<?> result = (Promise<?>) proceed(invocation);
             if (result != null) {
                 RetryTransformer transformer = RetryTransformer.of(retry).recover(fallbackMethod);
                 result = result.transform(transformer);
             }
             return result;
         } else if (Flux.class.isAssignableFrom(returnType)) {
-            Flux<?> result = (Flux<?>) proceed(invocation, retry, fallbackMethod);
+            Flux<?> result = (Flux<?>) proceed(invocation);
             if (result != null) {
                 RetryTransformer transformer = RetryTransformer.of(retry).recover(fallbackMethod);
                 final Flux<?> temp = result;
@@ -100,7 +103,7 @@ public class RetryMethodInterceptor extends AbstractMethodInterceptor {
             }
             return result;
         } else if (Mono.class.isAssignableFrom(returnType)) {
-            Mono<?> result = (Mono<?>) proceed(invocation, retry, fallbackMethod);
+            Mono<?> result = (Mono<?>) proceed(invocation);
             if (result != null) {
                 RetryTransformer transformer = RetryTransformer.of(retry).recover(fallbackMethod);
                 final Mono<?> temp = result;
@@ -113,10 +116,10 @@ public class RetryMethodInterceptor extends AbstractMethodInterceptor {
             return result;
         }
         else if (CompletionStage.class.isAssignableFrom(returnType)) {
-            CompletionStage stage = (CompletionStage) proceed(invocation, retry, fallbackMethod);
+            CompletionStage stage = (CompletionStage) proceed(invocation);
             return executeCompletionStage(invocation, stage, retry.context(), fallbackMethod);
         } else {
-            return proceed(invocation, retry, fallbackMethod);
+            return handleProceedWithException(invocation, retry, fallbackMethod);
         }
     }
 
@@ -142,29 +145,11 @@ public class RetryMethodInterceptor extends AbstractMethodInterceptor {
     }
 
     @Nullable
-    private Object proceed(MethodInvocation invocation, io.github.resilience4j.retry.Retry retry, RecoveryFunction<?> recoveryFunction) throws Throwable {
-        io.github.resilience4j.retry.Retry.Context context = retry.context();
+    private Object handleProceedWithException(MethodInvocation invocation, io.github.resilience4j.retry.Retry retry, RecoveryFunction<?> recoveryFunction) throws Throwable {
         try {
-            Object result = invocation.proceed();
-            context.onSuccess();
-            return result;
-        } catch (Exception e) {
-            // exception thrown, we know a direct value was attempted to be returned
-            Object result;
-            context.onError(e);
-            while (true) {
-                try {
-                    result = invocation.proceed();
-                    context.onSuccess();
-                    return result;
-                } catch (Exception e1) {
-                    try {
-                        context.onError(e1);
-                    } catch (Exception e2) {
-                        return recoveryFunction.apply(e2);
-                    }
-                }
-            }
+            return io.github.resilience4j.retry.Retry.decorateCheckedSupplier(retry, invocation::proceed).apply();
+        } catch (Throwable t) {
+            return recoveryFunction.apply(t);
         }
     }
 

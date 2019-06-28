@@ -73,6 +73,9 @@ public class CircuitBreakerMethodInterceptor extends AbstractMethodInterceptor {
     @Override
     public Object invoke(MethodInvocation invocation) throws Throwable {
         CircuitBreaker annotation = invocation.getMethod().getAnnotation(CircuitBreaker.class);
+        if (annotation == null) {
+            annotation = invocation.getMethod().getDeclaringClass().getAnnotation(CircuitBreaker.class);
+        }
         final RecoveryFunction<?> fallbackMethod = Optional
                 .ofNullable(createRecoveryFunction(invocation, annotation.fallbackMethod()))
                 .orElse(new DefaultRecoveryFunction<>());
@@ -125,11 +128,7 @@ public class CircuitBreakerMethodInterceptor extends AbstractMethodInterceptor {
             }
             return promise;
         } else {
-            try {
-                return proceed(invocation, breaker);
-            } catch (Throwable throwable) {
-                return fallbackMethod.apply(throwable);
-            }
+            return handleProceedWithException(invocation, breaker, fallbackMethod);
         }
     }
 
@@ -160,4 +159,12 @@ public class CircuitBreakerMethodInterceptor extends AbstractMethodInterceptor {
         return result;
     }
 
+    @Nullable
+    private Object handleProceedWithException(MethodInvocation invocation, io.github.resilience4j.circuitbreaker.CircuitBreaker breaker, RecoveryFunction<?> recoveryFunction) throws Throwable {
+        try {
+            return io.github.resilience4j.circuitbreaker.CircuitBreaker.decorateCheckedSupplier(breaker, invocation::proceed).apply();
+        } catch (Throwable throwable) {
+            return recoveryFunction.apply(throwable);
+        }
+    }
 }

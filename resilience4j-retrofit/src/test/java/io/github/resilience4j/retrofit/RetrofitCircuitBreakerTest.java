@@ -234,7 +234,7 @@ public class RetrofitCircuitBreakerTest {
 
         try {
             EnqueueDecorator.enqueue(service.greeting());
-            fail("CircuitBreakerOpenException was expected");
+            fail("CallNotPermittedException was expected");
         } catch (CallNotPermittedException ignore) {
 
         }

@@ -72,6 +72,9 @@ public class RateLimiterMethodInterceptor extends AbstractMethodInterceptor {
     @Override
     public Object invoke(MethodInvocation invocation) throws Throwable {
         RateLimiter annotation = invocation.getMethod().getAnnotation(RateLimiter.class);
+        if (annotation == null) {
+            annotation = invocation.getMethod().getDeclaringClass().getAnnotation(RateLimiter.class);
+        }
         final RecoveryFunction<?> fallbackMethod = Optional
                 .ofNullable(createRecoveryFunction(invocation, annotation.fallbackMethod()))
                 .orElse(new DefaultRecoveryFunction<>());
@@ -81,21 +84,21 @@ public class RateLimiterMethodInterceptor extends AbstractMethodInterceptor {
         io.github.resilience4j.ratelimiter.RateLimiter rateLimiter = registry.rateLimiter(annotation.name());
         Class<?> returnType = invocation.getMethod().getReturnType();
         if (Promise.class.isAssignableFrom(returnType)) {
-            Promise<?> result = (Promise<?>) proceed(invocation, rateLimiter, fallbackMethod);
+            Promise<?> result = (Promise<?>) proceed(invocation);
             if (result != null) {
                 RateLimiterTransformer transformer = RateLimiterTransformer.of(rateLimiter).recover(fallbackMethod);
                 result = result.transform(transformer);
             }
             return result;
         } else if (Flux.class.isAssignableFrom(returnType)) {
-            Flux<?> result = (Flux<?>) proceed(invocation, rateLimiter, fallbackMethod);
+            Flux<?> result = (Flux<?>) proceed(invocation);
             if (result != null) {
                 RateLimiterOperator operator = RateLimiterOperator.of(rateLimiter);
                 result = fallbackMethod.onErrorResume(result.transform(operator));
             }
             return result;
         } else if (Mono.class.isAssignableFrom(returnType)) {
-            Mono<?> result = (Mono<?>) proceed(invocation, rateLimiter, fallbackMethod);
+            Mono<?> result = (Mono<?>) proceed(invocation);
             if (result != null) {
                 RateLimiterOperator operator = RateLimiterOperator.of(rateLimiter);
                 result = fallbackMethod.onErrorResume(result.transform(operator));
@@ -103,7 +106,7 @@ public class RateLimiterMethodInterceptor extends AbstractMethodInterceptor {
             return result;
         } else if (CompletionStage.class.isAssignableFrom(returnType)) {
             if (rateLimiter.acquirePermission()) {
-                return proceed(invocation, rateLimiter, fallbackMethod);
+                return proceed(invocation);
             } else {
                 final CompletableFuture promise = new CompletableFuture<>();
                 Throwable t = new RequestNotPermitted(rateLimiter);
@@ -116,27 +119,12 @@ public class RateLimiterMethodInterceptor extends AbstractMethodInterceptor {
     }
 
     @Nullable
-    private Object proceed(MethodInvocation invocation, io.github.resilience4j.ratelimiter.RateLimiter rateLimiter, RecoveryFunction<?> recoveryFunction) throws Throwable {
-        Object result;
-        try {
-            result = invocation.proceed();
-        } catch (Exception e) {
-            result = handleProceedWithException(invocation, rateLimiter, recoveryFunction);
-        }
-        return result;
-    }
-
-    @Nullable
     private Object handleProceedWithException(MethodInvocation invocation, io.github.resilience4j.ratelimiter.RateLimiter rateLimiter, RecoveryFunction<?> recoveryFunction) throws Throwable {
-        boolean permission = rateLimiter.acquirePermission();
-        if (Thread.interrupted()) {
-            throw new IllegalStateException("Thread was interrupted during permission wait");
-        }
-        if (!permission) {
-            Throwable t = new RequestNotPermitted(rateLimiter);
+        try {
+            return io.github.resilience4j.ratelimiter.RateLimiter.decorateCheckedSupplier(rateLimiter, invocation::proceed).apply();
+        } catch (Throwable t) {
             return recoveryFunction.apply(t);
         }
-        return invocation.proceed();
     }
 
 }

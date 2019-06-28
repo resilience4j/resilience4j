@@ -72,6 +72,9 @@ public class BulkheadMethodInterceptor extends AbstractMethodInterceptor {
     @Override
     public Object invoke(MethodInvocation invocation) throws Throwable {
         Bulkhead annotation = invocation.getMethod().getAnnotation(Bulkhead.class);
+        if (annotation == null) {
+            annotation = invocation.getMethod().getDeclaringClass().getAnnotation(Bulkhead.class);
+        }
         final RecoveryFunction<?> fallbackMethod = Optional
                 .ofNullable(createRecoveryFunction(invocation, annotation.fallbackMethod()))
                 .orElse(new DefaultRecoveryFunction<>());
@@ -81,21 +84,21 @@ public class BulkheadMethodInterceptor extends AbstractMethodInterceptor {
         io.github.resilience4j.bulkhead.Bulkhead bulkhead = registry.bulkhead(annotation.name());
         Class<?> returnType = invocation.getMethod().getReturnType();
         if (Promise.class.isAssignableFrom(returnType)) {
-            Promise<?> result = (Promise<?>) invocation.proceed();
+            Promise<?> result = (Promise<?>) proceed(invocation);
             if (result != null) {
                 BulkheadTransformer transformer = BulkheadTransformer.of(bulkhead).recover(fallbackMethod);
                 result = result.transform(transformer);
             }
             return result;
         } else if (Flux.class.isAssignableFrom(returnType)) {
-            Flux<?> result = (Flux<?>) invocation.proceed();
+            Flux<?> result = (Flux<?>) proceed(invocation);
             if (result != null) {
                 BulkheadOperator operator = BulkheadOperator.of(bulkhead);
                 result = fallbackMethod.onErrorResume(result.transform(operator));
             }
             return result;
         } else if (Mono.class.isAssignableFrom(returnType)) {
-            Mono<?> result = (Mono<?>) invocation.proceed();
+            Mono<?> result = (Mono<?>) proceed(invocation);
             if (result != null) {
                 BulkheadOperator operator = BulkheadOperator.of(bulkhead);
                 result = fallbackMethod.onErrorResume(result.transform(operator));
@@ -104,7 +107,7 @@ public class BulkheadMethodInterceptor extends AbstractMethodInterceptor {
         } else if (CompletionStage.class.isAssignableFrom(returnType)) {
             final CompletableFuture promise = new CompletableFuture<>();
             if (bulkhead.tryAcquirePermission()) {
-                CompletionStage<?> result = (CompletionStage<?>) invocation.proceed();
+                CompletionStage<?> result = (CompletionStage<?>) proceed(invocation);
                 if (result != null) {
                     result.whenComplete((value, throwable) -> {
                         bulkhead.onComplete();
@@ -121,21 +124,17 @@ public class BulkheadMethodInterceptor extends AbstractMethodInterceptor {
             }
             return promise;
         } else {
-            boolean permission = bulkhead.tryAcquirePermission();
-            if (!permission) {
-                Throwable t = new BulkheadFullException(bulkhead);
-                return fallbackMethod.apply(t);
-            }
-            try {
-                if (Thread.interrupted()) {
-                    throw new IllegalStateException("Thread was interrupted during permission wait");
-                }
-                return invocation.proceed();
-            } catch (Exception e) {
-                return fallbackMethod.apply(e);
-            } finally {
-                bulkhead.onComplete();
-            }
+            return handleProceedWithException(invocation, bulkhead, fallbackMethod);
+        }
+    }
+
+
+    @Nullable
+    private Object handleProceedWithException(MethodInvocation invocation, io.github.resilience4j.bulkhead.Bulkhead bulkhead, RecoveryFunction<?> recoveryFunction) throws Throwable {
+        try {
+            return io.github.resilience4j.bulkhead.Bulkhead.decorateCheckedSupplier(bulkhead, invocation::proceed).apply();
+        } catch (Throwable throwable) {
+            return recoveryFunction.apply(throwable);
         }
     }
 

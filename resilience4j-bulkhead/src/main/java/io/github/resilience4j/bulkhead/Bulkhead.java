@@ -63,15 +63,6 @@ public interface Bulkhead {
     void changeConfig(BulkheadConfig newConfig);
 
     /**
-     * Attempts to obtain a permission to execute a call.
-     * @deprecated Use {@link Bulkhead#tryAcquirePermission()} ()}. instead.
-     *
-     * @return {@code true} if a permission was acquired and {@code false} otherwise
-     */
-    @Deprecated
-    boolean isCallPermitted();
-
-    /**
      * Acquires a permission to execute a call, only if one is available at the time of invocation.
      *
      * @return {@code true} if a permission was acquired and {@code false} otherwise

@@ -54,7 +54,7 @@ public class RateLimiterChain implements Action<Chain> {
 
     @Override
     public void execute(Chain chain) throws Exception {
-        String prefix = chain.getRegistry().get(Resilience4jConfig.class).getEndpoints().getRateLimiters().getPath();
+        String prefix = chain.getRegistry().get(Resilience4jConfig.class).getEndpoints().getRatelimiter().getPath();
         chain.prefix(prefix, chain1 -> {
             chain1.get("events", ctx ->
                     Promise.<RateLimiterEventsEndpointResponse>async(d -> {

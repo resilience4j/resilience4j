@@ -25,6 +25,7 @@ import spock.lang.AutoCleanup
 import spock.lang.Shared
 import spock.lang.Specification
 
+import java.time.Duration
 import java.util.concurrent.Callable
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.ExecutorService
@@ -250,7 +251,7 @@ class BulkheadTransformerSpec extends Specification {
     def buildBulkhead() {
         def config = BulkheadConfig.custom()
                 .maxConcurrentCalls(1)
-                .maxWaitTime(0)
+                .maxWaitDuration(Duration.ZERO)
                 .build()
         Bulkhead.of("test", config)
     }

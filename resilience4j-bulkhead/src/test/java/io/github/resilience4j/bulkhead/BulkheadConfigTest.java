@@ -56,7 +56,7 @@ public class BulkheadConfigTest {
         // when
         BulkheadConfig config = BulkheadConfig.custom()
                                               .maxConcurrentCalls(maxConcurrent)
-                                              .maxWaitTime(maxWait)
+                                              .maxWaitDuration(Duration.ofMillis(maxWait))
                                               .build();
 
         // then

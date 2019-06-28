@@ -53,16 +53,6 @@ import java.util.stream.Collectors;
 public interface CircuitBreaker {
 
     /**
-     * Attempts to obtain a permission to execute a call.
-     * @deprecated Use {@link CircuitBreaker#tryAcquirePermission()} ()} instead.
-     * @since 0.15.0
-     *
-     * @return true when a call is permitted
-     */
-    @Deprecated
-    boolean isCallPermitted();
-
-    /**
      * Acquires a permission to execute a call, only if one is available at the time of invocation.
      * If a call is not permitted, the number of not permitted calls is increased.
      *
