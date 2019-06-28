@@ -206,7 +206,7 @@ public class SemaphoreBasedRateLimiterImplTest {
         limit.acquirePermission();
 
         Thread thread = new Thread(() -> {
-            limit.acquirePermission(TIMEOUT);
+            limit.acquirePermission();
             while (true) {
                 Function.identity().apply(1);
             }

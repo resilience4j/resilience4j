@@ -38,7 +38,7 @@ import java.util.function.Supplier;
 /**
  * A RateLimiter instance is thread-safe can be used to decorate multiple requests.
  * <p>
- * A RateLimiter distributes permits at a configurable rate. {@link #acquirePermission(Duration)} blocks if necessary
+ * A RateLimiter distributes permits at a configurable rate. {@link #acquirePermission()} blocks if necessary
  * until a permit is available, and then takes it. Once acquired, permits need not be released.
  */
 public interface RateLimiter {
