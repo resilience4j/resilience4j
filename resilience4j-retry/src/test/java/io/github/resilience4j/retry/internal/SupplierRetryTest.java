@@ -18,25 +18,6 @@
  */
 package io.github.resilience4j.retry.internal;
 
-import static io.github.resilience4j.retry.utils.AsyncUtils.awaitResult;
-import static io.vavr.API.$;
-import static java.util.concurrent.CompletableFuture.completedFuture;
-import static org.assertj.core.api.Assertions.assertThat;
-
-import java.util.concurrent.Callable;
-import java.util.concurrent.CompletionStage;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.function.Supplier;
-
-import javax.xml.ws.WebServiceException;
-
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-import org.mockito.BDDMockito;
-import org.mockito.Mockito;
-
 import io.github.resilience4j.retry.IntervalFunction;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryConfig;
@@ -45,7 +26,25 @@ import io.github.resilience4j.test.HelloWorldService;
 import io.vavr.API;
 import io.vavr.CheckedFunction0;
 import io.vavr.Predicates;
+import io.vavr.control.Either;
 import io.vavr.control.Try;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
+import org.mockito.BDDMockito;
+import org.mockito.Mockito;
+
+import javax.xml.ws.WebServiceException;
+import java.util.concurrent.Callable;
+import java.util.concurrent.CompletionStage;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.function.Supplier;
+
+import static io.github.resilience4j.retry.utils.AsyncUtils.awaitResult;
+import static io.vavr.API.$;
+import static java.util.concurrent.CompletableFuture.completedFuture;
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class SupplierRetryTest {
 	private ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
@@ -110,6 +109,138 @@ public class SupplierRetryTest {
 		// Then the helloWorldService should be invoked 1 time
 		BDDMockito.then(helloWorldService).should(Mockito.times(2)).returnHelloWorld();
 		assertThat(result).isEqualTo("Hello world");
+	}
+
+	@Test
+	public void shouldNotRetryDecoratedTry() {
+		// Given the HelloWorldService returns Hello world
+		BDDMockito.given(helloWorldService.returnTry()).willReturn(Try.success("Hello world"));
+		// Create a Retry with default configuration
+		final RetryConfig tryAgain = RetryConfig.<String>custom()
+				.maxAttempts(2).build();
+		Retry retry = Retry.of("id", tryAgain);
+		// Decorate the invocation of the HelloWorldService
+		Try<String> result = retry.executeTrySupplier(helloWorldService::returnTry);
+
+		// Then the helloWorldService should be invoked 1 time
+		BDDMockito.then(helloWorldService).should(Mockito.times(1)).returnTry();
+		assertThat(result.get()).isEqualTo("Hello world");
+	}
+
+	@Test
+	public void shouldNotRetryDecoratedEither() {
+		// Given the HelloWorldService returns Hello world
+		BDDMockito.given(helloWorldService.returnEither()).willReturn(Either.right("Hello world"));
+		// Create a Retry with default configuration
+		final RetryConfig tryAgain = RetryConfig.<String>custom()
+				.maxAttempts(2).build();
+		Retry retry = Retry.of("id", tryAgain);
+		// Decorate the invocation of the HelloWorldService
+		Either<WebServiceException, String> result = retry.executeEitherSupplier(helloWorldService::returnEither);
+
+		// Then the helloWorldService should be invoked 1 time
+		BDDMockito.then(helloWorldService).should(Mockito.times(1)).returnEither();
+		assertThat(result.get()).isEqualTo("Hello world");
+	}
+
+	@Test
+	public void shouldRetryDecoratedTry() {
+		// Given the HelloWorldService returns Hello world
+		BDDMockito.given(helloWorldService.returnTry()).willReturn(Try.success("Hello world"));
+		// Create a Retry with default configuration
+		final RetryConfig tryAgain = RetryConfig.<String>custom()
+				.retryOnResult(s -> s.contains("Hello world"))
+				.maxAttempts(2).build();
+		Retry retry = Retry.of("id", tryAgain);
+		// Decorate the invocation of the HelloWorldService
+		Try<String> result = retry.executeTrySupplier(helloWorldService::returnTry);
+
+		BDDMockito.then(helloWorldService).should(Mockito.times(2)).returnTry();
+		assertThat(result.get()).isEqualTo("Hello world");
+	}
+
+	@Test
+	public void shouldRetryDecoratedEither() {
+		// Given the HelloWorldService returns Hello world
+		BDDMockito.given(helloWorldService.returnEither()).willReturn(Either.right("Hello world"));
+		// Create a Retry with default configuration
+		final RetryConfig tryAgain = RetryConfig.<String>custom()
+				.retryOnResult(s -> s.contains("Hello world"))
+				.maxAttempts(2).build();
+		Retry retry = Retry.of("id", tryAgain);
+		// Decorate the invocation of the HelloWorldService
+		Either<WebServiceException, String> result = retry.executeEitherSupplier(helloWorldService::returnEither);
+
+		BDDMockito.then(helloWorldService).should(Mockito.times(2)).returnEither();
+		assertThat(result.get()).isEqualTo("Hello world");
+	}
+
+	@Test
+	public void shouldFailToRetryDecoratedTry() {
+		// Given the HelloWorldService returns Hello world
+		BDDMockito.given(helloWorldService.returnTry()).willReturn(Try.failure(new WebServiceException("BAM!")));
+		// Create a Retry with default configuration
+		final RetryConfig tryAgain = RetryConfig.<String>custom()
+				.maxAttempts(2).build();
+		Retry retry = Retry.of("id", tryAgain);
+		// Decorate the invocation of the HelloWorldService
+		Try<String> result = retry.executeTrySupplier(helloWorldService::returnTry);
+
+		BDDMockito.then(helloWorldService).should(Mockito.times(2)).returnTry();
+		assertThat(result.isFailure()).isTrue();
+		assertThat(result.getCause()).isInstanceOf(WebServiceException.class);
+	}
+
+	@Test
+	public void shouldFailToRetryDecoratedEither() {
+		// Given the HelloWorldService returns Hello world
+		BDDMockito.given(helloWorldService.returnEither()).willReturn(Either.left(new WebServiceException("BAM!")));
+		// Create a Retry with default configuration
+		final RetryConfig tryAgain = RetryConfig.<String>custom()
+				.maxAttempts(2).build();
+		Retry retry = Retry.of("id", tryAgain);
+		// Decorate the invocation of the HelloWorldService
+		Either<WebServiceException, String> result = retry.executeEitherSupplier(helloWorldService::returnEither);
+
+		BDDMockito.then(helloWorldService).should(Mockito.times(2)).returnEither();
+		assertThat(result.isLeft()).isTrue();
+		assertThat(result.getLeft()).isInstanceOf(WebServiceException.class);
+	}
+
+	@Test
+	public void shouldIgnoreExceptionOfDecoratedTry() {
+		// Given the HelloWorldService returns Hello world
+		BDDMockito.given(helloWorldService.returnTry()).willReturn(Try.failure(new WebServiceException("BAM!")));
+		// Create a Retry with default configuration
+		final RetryConfig tryAgain = RetryConfig.<String>custom()
+				.ignoreExceptions(WebServiceException.class)
+				.maxAttempts(2).build();
+		Retry retry = Retry.of("id", tryAgain);
+		// Decorate the invocation of the HelloWorldService
+		Try<String> result = retry.executeTrySupplier(helloWorldService::returnTry);
+
+		// Then the helloWorldService should be invoked 1 time
+		BDDMockito.then(helloWorldService).should(Mockito.times(1)).returnTry();
+		assertThat(result.isFailure()).isTrue();
+		assertThat(result.getCause()).isInstanceOf(WebServiceException.class);
+	}
+
+	@Test
+	public void shouldIgnoreExceptionOfDecoratedEither() {
+		// Given the HelloWorldService returns Hello world
+		BDDMockito.given(helloWorldService.returnEither()).willReturn(Either.left(new WebServiceException("BAM!")));
+		// Create a Retry with default configuration
+		final RetryConfig tryAgain = RetryConfig.<String>custom()
+				.ignoreExceptions(WebServiceException.class)
+				.maxAttempts(2).build();
+		Retry retry = Retry.of("id", tryAgain);
+		// Decorate the invocation of the HelloWorldService
+		Either<WebServiceException, String> result = retry.executeEitherSupplier(helloWorldService::returnEither);
+
+		// Then the helloWorldService should be invoked 1 time
+		BDDMockito.then(helloWorldService).should(Mockito.times(1)).returnEither();
+		assertThat(result.isLeft()).isTrue();
+		assertThat(result.getLeft()).isInstanceOf(WebServiceException.class);
 	}
 
 	@Test

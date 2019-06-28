@@ -23,6 +23,7 @@ import io.vavr.CheckedConsumer;
 import io.vavr.CheckedFunction0;
 import io.vavr.CheckedFunction1;
 import io.vavr.CheckedRunnable;
+import io.vavr.control.Either;
 import io.vavr.control.Try;
 import org.junit.Before;
 import org.junit.Test;
@@ -40,6 +41,7 @@ import java.util.function.Supplier;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 
 public class BulkheadTest {
@@ -594,5 +596,99 @@ public class BulkheadTest {
         assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
         // end::shouldInvokeMap[]
     }
+
+    @Test
+    public void shouldDecorateTrySupplierAndReturnWithSuccess() {
+        // Given
+        Bulkhead bulkhead = Bulkhead.of("test", config);
+        BDDMockito.given(helloWorldService.returnTry()).willReturn(Try.success("Hello world"));
+
+        // When
+        Try<String> result = bulkhead.executeTrySupplier(helloWorldService::returnTry);
+
+        // Then
+        assertThat(result.get()).isEqualTo("Hello world");
+        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
+        BDDMockito.then(helloWorldService).should(times(1)).returnTry();
+    }
+
+    @Test
+    public void shouldDecorateTrySupplierAndReturnWithException() {
+        // Given
+        Bulkhead bulkhead = Bulkhead.of("test", config);
+        BDDMockito.given(helloWorldService.returnTry()).willReturn(Try.failure(new RuntimeException("BAM!")));
+
+        // When
+        Try<String> result = bulkhead.executeTrySupplier(helloWorldService::returnTry);
+
+        //Then
+        assertThat(result.isFailure()).isTrue();
+        assertThat(result.failed().get()).isInstanceOf(RuntimeException.class);
+        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
+        BDDMockito.then(helloWorldService).should(times(1)).returnTry();
+    }
+
+    @Test
+    public void shouldDecorateEitherSupplierAndReturnWithSuccess() {
+
+        // Given
+        Bulkhead bulkhead = Bulkhead.of("test", config);
+        BDDMockito.given(helloWorldService.returnEither()).willReturn(Either.right("Hello world"));
+
+        // When
+        Either<Exception, String> result = bulkhead.executeEitherSupplier(helloWorldService::returnEither);
+
+        // Then
+        assertThat(result.get()).isEqualTo("Hello world");
+        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
+        BDDMockito.then(helloWorldService).should(times(1)).returnEither();
+    }
+
+    @Test
+    public void shouldDecorateEitherSupplierAndReturnWithException() {
+        // Given
+        Bulkhead bulkhead = Bulkhead.of("test", config);
+        BDDMockito.given(helloWorldService.returnEither()).willReturn(Either.left(new WebServiceException("BAM!")));
+
+        // When
+        Either<Exception, String> result = bulkhead.executeEitherSupplier(helloWorldService::returnEither);
+
+        //Then
+        assertThat(result.isLeft()).isTrue();
+        assertThat(result.getLeft()).isInstanceOf(RuntimeException.class);
+        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
+        BDDMockito.then(helloWorldService).should(times(1)).returnEither();
+    }
+
+    @Test
+    public void shouldDecorateTrySupplierAndReturnWithBulkheadFullException() {
+        // Given
+        Bulkhead bulkhead = Mockito.mock(Bulkhead.class);
+        BDDMockito.given(bulkhead.tryAcquirePermission()).willReturn(false);
+
+        // When
+        Try<String> result = Bulkhead.decorateTrySupplier(bulkhead, helloWorldService::returnTry).get();
+
+        //Then
+        assertThat(result.isFailure()).isTrue();
+        assertThat(result.getCause()).isInstanceOf(BulkheadFullException.class);
+        BDDMockito.then(helloWorldService).should(never()).returnTry();
+    }
+
+    @Test
+    public void shouldDecorateEitherSupplierAndReturnWithBulkheadFullException() {
+        // Given
+        Bulkhead bulkhead = Mockito.mock(Bulkhead.class);
+        BDDMockito.given(bulkhead.tryAcquirePermission()).willReturn(false);
+
+        // When
+        Either<Exception, String> result = Bulkhead.decorateEitherSupplier(bulkhead, helloWorldService::returnEither).get();
+
+        //Then
+        assertThat(result.isLeft()).isTrue();
+        assertThat(result.getLeft()).isInstanceOf(BulkheadFullException.class);
+        BDDMockito.then(helloWorldService).should(never()).returnEither();
+    }
+
 
 }
