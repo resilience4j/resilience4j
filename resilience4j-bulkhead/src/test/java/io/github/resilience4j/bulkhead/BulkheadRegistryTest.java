@@ -22,6 +22,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
 
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -43,7 +44,7 @@ public class BulkheadRegistryTest {
 		// registry with custom config
 		config = BulkheadConfig.custom()
 				.maxConcurrentCalls(100)
-				.maxWaitTime(50)
+				.maxWaitDuration(Duration.ofMillis(50))
 				.build();
 	}
 

@@ -22,7 +22,7 @@ package io.github.resilience4j.circuitbreaker;
  * A {@link CallNotPermittedException} signals that the CircuitBreaker is HALF_OPEN or OPEN
  * and a call is not permitted to be executed.
  */
-public class CallNotPermittedException extends CircuitBreakerOpenException {
+public class CallNotPermittedException extends RuntimeException {
 
     /**
      * The constructor with a CircuitBreaker.

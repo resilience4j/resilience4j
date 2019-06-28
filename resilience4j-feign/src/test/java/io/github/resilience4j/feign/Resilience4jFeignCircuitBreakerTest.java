@@ -18,9 +18,9 @@ package io.github.resilience4j.feign;
 
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import feign.FeignException;
+import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
-import io.github.resilience4j.circuitbreaker.CircuitBreakerOpenException;
 import io.github.resilience4j.feign.test.TestService;
 import org.junit.Before;
 import org.junit.Rule;
@@ -103,13 +103,13 @@ public class Resilience4jFeignCircuitBreakerTest {
                 testService.greeting();
             } catch (final FeignException ex) {
                 // ignore
-            } catch (final CircuitBreakerOpenException ex) {
+            } catch (final CallNotPermittedException ex) {
                 exceptionThrown = true;
             }
         }
 
         assertThat(exceptionThrown)
-                .describedAs("CircuitBreakerOpenException thrown")
+                .describedAs("CallNotPermittedException thrown")
                 .isTrue();
         assertThat(circuitBreaker.tryAcquirePermission())
                 .describedAs("CircuitBreaker Closed")
@@ -131,13 +131,13 @@ public class Resilience4jFeignCircuitBreakerTest {
                 testService.greeting();
             } catch (final FeignException ex) {
                 // ignore
-            } catch (final CircuitBreakerOpenException ex) {
+            } catch (final CallNotPermittedException ex) {
                 exceptionThrown = true;
             }
         }
 
         assertThat(exceptionThrown)
-                .describedAs("CircuitBreakerOpenException thrown")
+                .describedAs("CallNotPermittedException thrown")
                 .isFalse();
         assertThat(circuitBreaker.tryAcquirePermission())
                 .describedAs("CircuitBreaker Closed")

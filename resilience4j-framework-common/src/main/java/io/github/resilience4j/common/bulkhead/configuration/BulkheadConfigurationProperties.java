@@ -118,19 +118,6 @@ public class BulkheadConfigurationProperties {
 			return maxConcurrentCalls;
 		}
 
-		/**
-		 * @return max wait time in milliseconds
-		 * @deprecated As of release 0.16.0 , use {@link #getMaxWaitDuration} instead
-		 */
-		@Deprecated
-		public Long getMaxWaitTime() {
-			if (maxWaitDuration != null) {
-				return maxWaitDuration.toMillis();
-			} else {
-				return null;
-			}
-		}
-
 		public Duration getMaxWaitDuration() {
 			return maxWaitDuration;
 		}

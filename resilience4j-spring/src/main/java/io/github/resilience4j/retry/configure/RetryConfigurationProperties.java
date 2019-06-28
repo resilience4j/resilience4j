@@ -21,22 +21,12 @@ import org.springframework.core.Ordered;
  * Main spring properties for retry configuration
  */
 public class RetryConfigurationProperties extends io.github.resilience4j.common.retry.configuration.RetryConfigurationProperties {
-	private int retryAspectOrder = Ordered.LOWEST_PRECEDENCE - 3;
 
 	/**
-	 * @deprecated As of release 0.16.0 as we set an implicit spring aspect order now which is retry then circuit breaker then rate limiter then bulkhead
+	 * As of release 0.16.0 as we set an implicit spring aspect order now which is retry then circuit breaker then rate limiter then bulkhead
 	 */
-	@Deprecated
 	public int getRetryAspectOrder() {
-		return retryAspectOrder;
-	}
-
-	/**
-	 * @deprecated As of release 0.16.0 as we set an implicit spring aspect order now which is retry then circuit breaker then rate limiter then bulkhead
-	 */
-	@Deprecated
-	public void setRetryAspectOrder(int retryAspectOrder) {
-		// NO-OP
+		return Ordered.LOWEST_PRECEDENCE - 3;
 	}
 
 }
