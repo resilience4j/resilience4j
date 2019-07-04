@@ -68,10 +68,10 @@ public class PercentileConfig extends AbstractConfig {
 	public static class Builder {
 		private PercentileConfig config = new PercentileConfig();
 
-		public Builder() {
+		private Builder() {
 		}
 
-		public Builder(PercentileConfig bulkheadConfig) {
+		private Builder(PercentileConfig bulkheadConfig) {
 			this.config = bulkheadConfig;
 		}
 

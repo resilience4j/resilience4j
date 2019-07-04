@@ -51,11 +51,11 @@ public class AdaptiveLimitBulkhead implements AdaptiveBulkhead {
 	private final InternalMetrics metrics;
 	private final SemaphoreBulkhead bulkhead;
 	// current settings and measurements that you can read concurrently to expose metrics
-	private BulkheadConfig currentConfig; // immutable object
+	private final BulkheadConfig currentConfig; // immutable object
 	@NonNull
 	private final AtomicReference<? extends LimitAdapter<Bulkhead>> limitAdapter;
 
-	private AdaptiveLimitBulkhead(@NonNull String name, @NonNull AdaptiveBulkheadConfig<?> config, @Nullable LimitAdapter<Bulkhead> limitAdapter, BulkheadConfig bulkheadConfig) {
+	private AdaptiveLimitBulkhead(@NonNull String name, @NonNull AdaptiveBulkheadConfig config, @Nullable LimitAdapter<Bulkhead> limitAdapter, BulkheadConfig bulkheadConfig) {
 		this.name = name;
 		this.limitAdapter = new AtomicReference<>(limitAdapter);
 		this.adaptationConfig = config;
@@ -169,54 +169,57 @@ public class AdaptiveLimitBulkhead implements AdaptiveBulkhead {
 	 */
 	public static class AdaptiveBulkheadFactory {
 		private static final String CONFIG_MUST_NOT_BE_NULL = "Config must not be null";
-		private AdaptiveBulkheadConfig<?> adaptationConfig;
-		// current settings and measurements that you can read concurrently to expose metrics
-		private BulkheadConfig currentConfig; // immutable object
-		@Nullable
-		private LimitAdapter<Bulkhead> limitAdapter;
 
 		private AdaptiveBulkheadFactory() {
 		}
 
-		public AdaptiveLimitBulkhead createAdaptiveLimitBulkhead(@NonNull String name, @NonNull AdaptiveBulkheadConfig<?> config, @NonNull AdaptiveStrategy adaptiveStrategy) {
+		public AdaptiveLimitBulkhead createAdaptiveLimitBulkhead(@NonNull String name, @NonNull AdaptiveBulkheadConfig config, @NonNull AdaptiveStrategy adaptiveStrategy) {
 			return createAdaptiveLimitBulkhead(name, config, null, adaptiveStrategy);
 		}
 
-		public AdaptiveLimitBulkhead createAdaptiveLimitBulkhead(@NonNull String name, @NonNull AdaptiveBulkheadConfig<?> config) {
+		public AdaptiveLimitBulkhead createAdaptiveLimitBulkhead(@NonNull String name, @NonNull AdaptiveBulkheadConfig config) {
 			return createAdaptiveLimitBulkhead(name, config, AdaptiveStrategy.MOVING_AVERAGE);
 		}
 
-		public AdaptiveLimitBulkhead createAdaptiveLimitBulkhead(@NonNull String name, @NonNull AdaptiveBulkheadConfig<?> config, @NonNull LimitAdapter<Bulkhead> limitAdapter) {
+		public AdaptiveLimitBulkhead createAdaptiveLimitBulkhead(@NonNull String name, @NonNull AdaptiveBulkheadConfig config, @NonNull LimitAdapter<Bulkhead> limitAdapter) {
 			return createAdaptiveLimitBulkhead(name, config, limitAdapter, null);
 		}
 
-		public AdaptiveLimitBulkhead createAdaptiveLimitBulkhead(@NonNull String name, @NonNull AdaptiveBulkheadConfig<?> config, @Nullable LimitAdapter<Bulkhead> limitAdapter, @Nullable AdaptiveStrategy adaptiveStrategy) {
-			this.adaptationConfig = requireNonNull(config, CONFIG_MUST_NOT_BE_NULL);
+		public AdaptiveLimitBulkhead createAdaptiveLimitBulkhead(@NonNull String name, @NonNull AdaptiveBulkheadConfig config, @Nullable LimitAdapter<Bulkhead> customLimitAdapter, @Nullable AdaptiveStrategy adaptiveStrategy) {
+			LimitAdapter<Bulkhead> limitAdapter = null;
+			requireNonNull(config, CONFIG_MUST_NOT_BE_NULL);
 			long roundedValue = 0;
-			if (limitAdapter != null) {
-				this.limitAdapter = limitAdapter;
-			} else {
-				this.limitAdapter = null;
+			if (customLimitAdapter != null) {
+				limitAdapter = customLimitAdapter;
 			}
 			if (limitAdapter == null && adaptiveStrategy != null && adaptiveStrategy.equals(AdaptiveStrategy.PERCENTILE)) {
 				@SuppressWarnings("unchecked")
 				AdaptiveBulkheadConfig<PercentileConfig> percentileConfig = (AdaptiveBulkheadConfig<PercentileConfig>) config;
 				roundedValue = round(percentileConfig.getConfiguration().getDesirableAverageThroughput() * percentileConfig.getConfiguration().getDesirableOperationLatency());
-				this.limitAdapter = new PercentileLimitAdapter(percentileConfig, AdaptiveBulkheadFactory::publishBulkheadEvent);
+				limitAdapter = new PercentileLimitAdapter(percentileConfig, AdaptiveBulkheadFactory::publishBulkheadEvent);
 			} else if (limitAdapter == null) {
 				// default to moving average
 				@SuppressWarnings("unchecked")
 				AdaptiveBulkheadConfig<MovingAverageConfig> movingAverageConfig = (AdaptiveBulkheadConfig<MovingAverageConfig>) config;
 				roundedValue = round(movingAverageConfig.getConfiguration().getDesirableAverageThroughput() * movingAverageConfig.getConfiguration().getDesirableOperationLatency());
-				this.limitAdapter = new MovingAverageLimitAdapter(movingAverageConfig, AdaptiveBulkheadFactory::publishBulkheadEvent);
+				limitAdapter = new MovingAverageLimitAdapter(movingAverageConfig, AdaptiveBulkheadFactory::publishBulkheadEvent);
 			}
-			int initialConcurrency = roundedValue != 0 ? ((int) roundedValue) > 0 ? (int) roundedValue : 1 : adaptationConfig.getInitialConcurrency();
-			this.currentConfig = BulkheadConfig.custom()
+
+			int initialConcurrency = calculateConcurrency((int) roundedValue, config);
+			BulkheadConfig currentConfig = BulkheadConfig.custom()
 					.maxConcurrentCalls(initialConcurrency)
 					.maxWaitDuration(Duration.ofMillis(0))
 					.build();
 
-			return new AdaptiveLimitBulkhead(name, config, this.limitAdapter, this.currentConfig);
+			return new AdaptiveLimitBulkhead(name, config, limitAdapter, currentConfig);
+		}
+
+		private int calculateConcurrency(int roundedValue, AdaptiveBulkheadConfig config) {
+			if (roundedValue != 0) {
+				return (roundedValue) > 0 ? roundedValue : 1;
+			} else {
+				return config.getInitialConcurrency();
+			}
 		}
 
 		private static void publishBulkheadEvent(BulkheadLimit eventSupplier) {

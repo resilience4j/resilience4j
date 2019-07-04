@@ -128,7 +128,7 @@ public interface AdaptiveBulkhead {
 	 *
 	 * @return bulkhead config
 	 */
-	AdaptiveBulkheadConfig<?> getBulkheadConfig();
+	AdaptiveBulkheadConfig getBulkheadConfig();
 
 	/**
 	 * Get the Metrics of this Bulkhead.
@@ -467,8 +467,8 @@ public interface AdaptiveBulkhead {
 	 */
 	static <T, R> CheckedFunction1<T, R> decorateCheckedFunction(AdaptiveBulkhead bulkhead, CheckedFunction1<T, R> function) {
 		return (T t) -> {
-			Instant start = null;
 			bulkhead.acquirePermission();
+			Instant start = null;
 			try {
 				start = Instant.now();
 				return function.apply(t);
@@ -486,11 +486,11 @@ public interface AdaptiveBulkhead {
 
 	static void handleError(AdaptiveBulkhead bulkhead, @Nullable Instant start, Exception e) {
 		if (bulkhead.getBulkheadConfig().getAdaptIfError() != null) {
-			if (bulkhead.getBulkheadConfig().getAdaptIfError().test(e)) {
-				if (start != null) {
-					Instant finish = Instant.now();
-					bulkhead.onComplete(Duration.between(start, finish));
-				}
+			//noinspection unchecked
+			if (bulkhead.getBulkheadConfig().getAdaptIfError().test(e) && start != null) {
+				Instant finish = Instant.now();
+				bulkhead.onComplete(Duration.between(start, finish));
+
 			}
 		} else {
 			bulkhead.releasePermission();
@@ -550,7 +550,7 @@ public interface AdaptiveBulkhead {
 	 * @param bulkheadConfigSupplier custom configuration supplier
 	 * @return a Bulkhead instance
 	 */
-	static AdaptiveBulkhead of(String name, Supplier<AdaptiveBulkheadConfig<?>> bulkheadConfigSupplier) {
+	static AdaptiveBulkhead of(String name, Supplier<AdaptiveBulkheadConfig> bulkheadConfigSupplier) {
 		return AdaptiveLimitBulkhead.factory().createAdaptiveLimitBulkhead(name, bulkheadConfigSupplier.get());
 	}
 

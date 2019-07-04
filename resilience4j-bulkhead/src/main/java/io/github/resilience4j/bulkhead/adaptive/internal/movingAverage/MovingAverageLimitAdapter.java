@@ -56,7 +56,7 @@ public class MovingAverageLimitAdapter extends AbstractLimiterAdapter {
 		LOW_LATENCY_MUL = config.getConfiguration().getLowLatencyMultiplier();
 		currentMaxLatency = min(config.getConfiguration().getDesirableOperationLatency() * 1.2d, config.getConfiguration().getMaxAcceptableRequestLatency());
 		int adaptationWindowSize = (int) ceil(config.getConfiguration().getWindowForAdaptation() * config.getConfiguration().getDesirableAverageThroughput());
-		int reconfigurationWindowSize = (int) ceil(config.getConfiguration().getWindowForReconfiguration() / config.getConfiguration().getWindowForAdaptation());
+		int reconfigurationWindowSize = config.getConfiguration().getWindowForReconfiguration() / config.getConfiguration().getWindowForAdaptation();
 		long initialLatencyInNanos = (long) (config.getConfiguration().getDesirableOperationLatency() * NANO_SCALE);
 		adaptationWindow = new MovingAverageWindow(adaptationWindowSize, initialLatencyInNanos);
 		reconfigurationWindow = new MovingAverageWindow(reconfigurationWindowSize, initialLatencyInNanos);

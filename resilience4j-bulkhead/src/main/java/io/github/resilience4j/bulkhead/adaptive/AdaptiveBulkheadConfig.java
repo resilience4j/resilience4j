@@ -22,14 +22,13 @@ import java.util.function.Predicate;
 
 import io.github.resilience4j.bulkhead.adaptive.internal.AdaptiveLimitBulkhead;
 import io.github.resilience4j.bulkhead.adaptive.internal.config.MovingAverageConfig;
-import io.github.resilience4j.core.lang.NonNull;
 import io.github.resilience4j.core.lang.Nullable;
 
 /**
  * A {@link AdaptiveBulkheadConfig} configures a adaptation capabilities of  {@link AdaptiveLimitBulkhead}
  */
 public class AdaptiveBulkheadConfig<T> {
-	@NonNull
+	@Nullable
 	private T config;
 	@Nullable
 	private Predicate<Exception> adaptIfError;
@@ -42,7 +41,7 @@ public class AdaptiveBulkheadConfig<T> {
 		return initialConcurrency;
 	}
 
-	@NonNull
+	@Nullable
 	public T getConfiguration() {
 		return config;
 	}
@@ -51,6 +50,7 @@ public class AdaptiveBulkheadConfig<T> {
 	public Predicate<Exception> getAdaptIfError() {
 		return adaptIfError;
 	}
+
 	/**
 	 * Returns a builder to create a custom AdaptiveBulkheadConfig.
 	 *
@@ -88,7 +88,7 @@ public class AdaptiveBulkheadConfig<T> {
 	}
 
 	public static class Builder<T> {
-		private AdaptiveBulkheadConfig<T> adaptiveBulkheadConfig;
+		private final AdaptiveBulkheadConfig<T> adaptiveBulkheadConfig;
 
 		private Builder() {
 			adaptiveBulkheadConfig = new AdaptiveBulkheadConfig<>();
