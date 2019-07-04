@@ -1,4 +1,4 @@
-package io.github.resilience4j.bulkhead.adaptive.internal;
+package io.github.resilience4j.bulkhead.adaptive.internal.movingAverage;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 

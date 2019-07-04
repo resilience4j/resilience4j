@@ -35,6 +35,7 @@ import io.github.resilience4j.bulkhead.event.BulkheadOnLimitDecreasedEvent;
 import io.github.resilience4j.bulkhead.event.BulkheadOnLimitIncreasedEvent;
 import io.github.resilience4j.core.EventConsumer;
 import io.github.resilience4j.core.EventPublisher;
+import io.github.resilience4j.core.lang.Nullable;
 import io.vavr.CheckedConsumer;
 import io.vavr.CheckedFunction0;
 import io.vavr.CheckedFunction1;
@@ -127,7 +128,7 @@ public interface AdaptiveBulkhead {
 	 *
 	 * @return bulkhead config
 	 */
-	AdaptiveBulkheadConfig getBulkheadConfig();
+	AdaptiveBulkheadConfig<?> getBulkheadConfig();
 
 	/**
 	 * Get the Metrics of this Bulkhead.
@@ -214,9 +215,14 @@ public interface AdaptiveBulkhead {
 			try {
 				start = Instant.now();
 				return supplier.apply();
+			} catch (Exception e) {
+				handleError(bulkhead, start, e);
+				throw e;
 			} finally {
-				Instant finish = Instant.now();
-				bulkhead.onComplete(Duration.between(start, finish));
+				if (start != null) {
+					Instant finish = Instant.now();
+					bulkhead.onComplete(Duration.between(start, finish));
+				}
 			}
 		};
 	}
@@ -252,8 +258,7 @@ public interface AdaptiveBulkhead {
 									}
 							);
 				} catch (Exception e) {
-					Instant finish = Instant.now();
-					bulkhead.onComplete(Duration.between(start, finish));
+					handleError(bulkhead, start, e);
 					promise.completeExceptionally(e);
 				}
 			}
@@ -276,9 +281,14 @@ public interface AdaptiveBulkhead {
 			try {
 				start = Instant.now();
 				runnable.run();
+			} catch (Exception e) {
+				handleError(bulkhead, start, e);
+				throw e;
 			} finally {
-				Instant finish = Instant.now();
-				bulkhead.onComplete(Duration.between(start, finish));
+				if (start != null) {
+					Instant finish = Instant.now();
+					bulkhead.onComplete(Duration.between(start, finish));
+				}
 			}
 		};
 	}
@@ -298,9 +308,14 @@ public interface AdaptiveBulkhead {
 			try {
 				start = Instant.now();
 				return callable.call();
+			} catch (Exception e) {
+				handleError(bulkhead, start, e);
+				throw e;
 			} finally {
-				Instant finish = Instant.now();
-				bulkhead.onComplete(Duration.between(start, finish));
+				if (start != null) {
+					Instant finish = Instant.now();
+					bulkhead.onComplete(Duration.between(start, finish));
+				}
 			}
 		};
 	}
@@ -320,9 +335,14 @@ public interface AdaptiveBulkhead {
 			try {
 				start = Instant.now();
 				return supplier.get();
+			} catch (Exception e) {
+				handleError(bulkhead, start, e);
+				throw e;
 			} finally {
-				Instant finish = Instant.now();
-				bulkhead.onComplete(Duration.between(start, finish));
+				if (start != null) {
+					Instant finish = Instant.now();
+					bulkhead.onComplete(Duration.between(start, finish));
+				}
 			}
 		};
 	}
@@ -342,9 +362,14 @@ public interface AdaptiveBulkhead {
 			try {
 				start = Instant.now();
 				consumer.accept(t);
+			} catch (Exception e) {
+				handleError(bulkhead, start, e);
+				throw e;
 			} finally {
-				Instant finish = Instant.now();
-				bulkhead.onComplete(Duration.between(start, finish));
+				if (start != null) {
+					Instant finish = Instant.now();
+					bulkhead.onComplete(Duration.between(start, finish));
+				}
 			}
 		};
 	}
@@ -365,9 +390,14 @@ public interface AdaptiveBulkhead {
 				start = Instant.now();
 				consumer.accept(t);
 
+			} catch (Exception e) {
+				handleError(bulkhead, start, e);
+				throw e;
 			} finally {
-				Instant finish = Instant.now();
-				bulkhead.onComplete(Duration.between(start, finish));
+				if (start != null) {
+					Instant finish = Instant.now();
+					bulkhead.onComplete(Duration.between(start, finish));
+				}
 			}
 		};
 	}
@@ -386,9 +416,14 @@ public interface AdaptiveBulkhead {
 			try {
 				start = Instant.now();
 				runnable.run();
+			} catch (Exception e) {
+				handleError(bulkhead, start, e);
+				throw e;
 			} finally {
-				Instant finish = Instant.now();
-				bulkhead.onComplete(Duration.between(start, finish));
+				if (start != null) {
+					Instant finish = Instant.now();
+					bulkhead.onComplete(Duration.between(start, finish));
+				}
 			}
 		};
 	}
@@ -409,9 +444,14 @@ public interface AdaptiveBulkhead {
 			try {
 				start = Instant.now();
 				return function.apply(t);
+			} catch (Exception e) {
+				handleError(bulkhead, start, e);
+				throw e;
 			} finally {
-				Instant finish = Instant.now();
-				bulkhead.onComplete(Duration.between(start, finish));
+				if (start != null) {
+					Instant finish = Instant.now();
+					bulkhead.onComplete(Duration.between(start, finish));
+				}
 			}
 		};
 	}
@@ -427,16 +467,32 @@ public interface AdaptiveBulkhead {
 	 */
 	static <T, R> CheckedFunction1<T, R> decorateCheckedFunction(AdaptiveBulkhead bulkhead, CheckedFunction1<T, R> function) {
 		return (T t) -> {
-			bulkhead.acquirePermission();
 			Instant start = null;
+			bulkhead.acquirePermission();
 			try {
 				start = Instant.now();
 				return function.apply(t);
+			} catch (Exception e) {
+				handleError(bulkhead, start, e);
+				throw e;
 			} finally {
-				Instant finish = Instant.now();
-				bulkhead.onComplete(Duration.between(start, finish));
+				if (start != null) {
+					Instant finish = Instant.now();
+					bulkhead.onComplete(Duration.between(start, finish));
+				}
 			}
 		};
+	}
+
+	static void handleError(AdaptiveBulkhead bulkhead, @Nullable Instant start, Exception e) {
+		if (bulkhead.getBulkheadConfig().getAdaptIfError() != null) {
+			if (bulkhead.getBulkheadConfig().getAdaptIfError().test(e)) {
+				if (start != null) {
+					Instant finish = Instant.now();
+					bulkhead.onComplete(Duration.between(start, finish));
+				}
+			}
+		}
 	}
 
 	/**
@@ -446,7 +502,7 @@ public interface AdaptiveBulkhead {
 	 * @return a Bulkhead instance
 	 */
 	static AdaptiveBulkhead ofDefaults(String name) {
-		return new AdaptiveLimitBulkhead(name, AdaptiveBulkheadConfig.builder().build());
+		return AdaptiveLimitBulkhead.factory().createAdaptiveLimitBulkhead(name, AdaptiveBulkheadConfig.ofDefaults());
 	}
 
 
@@ -458,8 +514,8 @@ public interface AdaptiveBulkhead {
 	 * @param limitAdapter the custom limit adopter
 	 * @return a Bulkhead instance
 	 */
-	static AdaptiveBulkhead of(String name, AdaptiveBulkheadConfig config, LimitAdapter limitAdapter) {
-		return new AdaptiveLimitBulkhead(name, config, limitAdapter);
+	static AdaptiveBulkhead of(String name, AdaptiveBulkheadConfig config, LimitAdapter<Bulkhead> limitAdapter) {
+		return AdaptiveLimitBulkhead.factory().createAdaptiveLimitBulkhead(name, config, limitAdapter, null);
 	}
 
 	/**
@@ -470,7 +526,19 @@ public interface AdaptiveBulkhead {
 	 * @return a Bulkhead instance
 	 */
 	static AdaptiveBulkhead of(String name, AdaptiveBulkheadConfig config) {
-		return new AdaptiveLimitBulkhead(name, config);
+		return AdaptiveLimitBulkhead.factory().createAdaptiveLimitBulkhead(name, config);
+	}
+
+	/**
+	 * Creates a bulkhead with a custom configuration
+	 *
+	 * @param name             the name of the bulkhead
+	 * @param config           a custom BulkheadConfig configuration
+	 * @param adaptiveStrategy the adaptive strategy to be used from the default implementation of adaptive concurrency limiters (moving average or percentile)
+	 * @return a Bulkhead instance
+	 */
+	static AdaptiveBulkhead of(String name, AdaptiveBulkheadConfig config, AdaptiveStrategy adaptiveStrategy) {
+		return AdaptiveLimitBulkhead.factory().createAdaptiveLimitBulkhead(name, config, adaptiveStrategy);
 	}
 
 	/**
@@ -480,8 +548,8 @@ public interface AdaptiveBulkhead {
 	 * @param bulkheadConfigSupplier custom configuration supplier
 	 * @return a Bulkhead instance
 	 */
-	static AdaptiveBulkhead of(String name, Supplier<AdaptiveBulkheadConfig> bulkheadConfigSupplier) {
-		return new AdaptiveLimitBulkhead(name, bulkheadConfigSupplier.get());
+	static AdaptiveBulkhead of(String name, Supplier<AdaptiveBulkheadConfig<?>> bulkheadConfigSupplier) {
+		return AdaptiveLimitBulkhead.factory().createAdaptiveLimitBulkhead(name, bulkheadConfigSupplier.get());
 	}
 
 	interface AdaptiveBulkheadMetrics extends Bulkhead.Metrics {

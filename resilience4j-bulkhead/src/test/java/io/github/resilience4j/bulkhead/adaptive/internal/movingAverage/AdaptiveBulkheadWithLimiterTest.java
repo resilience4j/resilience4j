@@ -1,4 +1,4 @@
-package io.github.resilience4j.bulkhead.adaptive.internal;
+package io.github.resilience4j.bulkhead.adaptive.internal.movingAverage;
 
 import java.io.IOException;
 import java.time.Duration;
@@ -19,6 +19,7 @@ import org.knowm.xchart.style.Styler;
 import io.github.resilience4j.adapter.RxJava2Adapter;
 import io.github.resilience4j.bulkhead.adaptive.AdaptiveBulkhead;
 import io.github.resilience4j.bulkhead.adaptive.AdaptiveBulkheadConfig;
+import io.github.resilience4j.bulkhead.adaptive.internal.config.MovingAverageConfig;
 import io.github.resilience4j.bulkhead.event.BulkheadLimit;
 import io.reactivex.subscribers.TestSubscriber;
 
@@ -27,7 +28,7 @@ import io.reactivex.subscribers.TestSubscriber;
  */
 public class AdaptiveBulkheadWithLimiterTest {
 	private AdaptiveBulkhead bulkhead;
-	private AdaptiveBulkheadConfig config;
+	private AdaptiveBulkheadConfig<MovingAverageConfig> config;
 	private TestSubscriber<BulkheadLimit.Type> testSubscriber;
 	// enable if u need to see the graphs of the executions
 	private boolean drawGraphs = false;
@@ -37,11 +38,10 @@ public class AdaptiveBulkheadWithLimiterTest {
 
 	@Before
 	public void setup() {
-		config = AdaptiveBulkheadConfig.builder()
-				.maxAcceptableRequestLatency(1.5)
+		config = AdaptiveBulkheadConfig.<MovingAverageConfig>builder().config(MovingAverageConfig.builder().maxAcceptableRequestLatency(1.5)
 				.desirableAverageThroughput(2)
 				.desirableOperationLatency(1)
-				.build();
+				.build()).build();
 
 		bulkhead = AdaptiveBulkhead.of("test", config);
 		testSubscriber = RxJava2Adapter.toFlowable(bulkhead.getEventPublisher())
@@ -62,8 +62,8 @@ public class AdaptiveBulkheadWithLimiterTest {
 				currentMaxLatency.add(Double.valueOf(bulkhead.eventData().get("currentMaxLatency")));
 				maxConcurrentCalls.add(Double.valueOf(bulkhead.eventData().get("newMaxConcurrentCalls")));
 				time.add((double) count.incrementAndGet() + 1);
-				desiredLatency.add(config.getDesirableOperationLatency());
-				acceptableLatency.add(config.getMaxAcceptableRequestLatency());
+				desiredLatency.add(config.getConfiguration().getDesirableOperationLatency());
+				acceptableLatency.add(config.getConfiguration().getMaxAcceptableRequestLatency());
 			});
 		}
 		// if u like to get the graphs , increase the number of iterations to have better distribution
