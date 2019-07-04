@@ -61,10 +61,10 @@ public class MovingAverageConfig extends AbstractConfig {
 	public static class Builder {
 		private MovingAverageConfig config = new MovingAverageConfig();
 
-		public Builder() {
+		private Builder() {
 		}
 
-		public Builder(MovingAverageConfig bulkheadConfig) {
+		private Builder(MovingAverageConfig bulkheadConfig) {
 			this.config = bulkheadConfig;
 		}
 

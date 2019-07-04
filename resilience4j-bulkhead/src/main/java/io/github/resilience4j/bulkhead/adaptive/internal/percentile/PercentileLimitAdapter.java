@@ -56,7 +56,7 @@ public class PercentileLimitAdapter extends AbstractLimiterAdapter {
 		LOW_LATENCY_MUL = config.getConfiguration().getLowLatencyMultiplier();
 		percentile = config.getConfiguration().getPercentile();
 		int adaptationWindowSize = (int) ceil(config.getConfiguration().getWindowForAdaptation() * config.getConfiguration().getDesirableAverageThroughput());
-		int reconfigurationWindowSize = (int) ceil(config.getConfiguration().getWindowForReconfiguration() / config.getConfiguration().getWindowForAdaptation());
+		int reconfigurationWindowSize = config.getConfiguration().getWindowForReconfiguration() / config.getConfiguration().getWindowForAdaptation();
 		long initialLatencyInNanos = (long) (config.getConfiguration().getDesirableOperationLatency() * NANO_SCALE);
 		adaptationWindow = new PercentileWindow(adaptationWindowSize, initialLatencyInNanos);
 		reconfigurationWindow = new PercentileWindow(reconfigurationWindowSize, initialLatencyInNanos);
