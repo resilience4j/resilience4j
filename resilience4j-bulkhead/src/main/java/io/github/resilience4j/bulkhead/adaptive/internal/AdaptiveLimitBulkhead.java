@@ -191,7 +191,7 @@ public class AdaptiveLimitBulkhead implements AdaptiveBulkhead {
 		}
 
 		public AdaptiveLimitBulkhead createAdaptiveLimitBulkhead(@NonNull String name, @NonNull AdaptiveBulkheadConfig<?> config, @Nullable LimitAdapter<Bulkhead> limitAdapter, @Nullable AdaptiveStrategy adaptiveStrategy) {
-			long roundedValue;
+			long roundedValue = 0;
 			if (limitAdapter != null) {
 				this.limitAdapter = limitAdapter;
 			} else {
@@ -202,7 +202,8 @@ public class AdaptiveLimitBulkhead implements AdaptiveBulkhead {
 				AdaptiveBulkheadConfig<PercentileConfig> percentileConfig = (AdaptiveBulkheadConfig<PercentileConfig>) config;
 				roundedValue = round(percentileConfig.getConfiguration().getDesirableAverageThroughput() * percentileConfig.getConfiguration().getDesirableOperationLatency());
 				this.limitAdapter = new PercentileLimitAdapter(percentileConfig, AdaptiveBulkheadFactory::publishBulkheadEvent);
-			} else {
+			} else if (limitAdapter == null) {
+				// default to moving average
 				@SuppressWarnings("unchecked")
 				AdaptiveBulkheadConfig<MovingAverageConfig> movingAverageConfig = (AdaptiveBulkheadConfig<MovingAverageConfig>) config;
 				roundedValue = round(movingAverageConfig.getConfiguration().getDesirableAverageThroughput() * movingAverageConfig.getConfiguration().getDesirableOperationLatency());
@@ -210,7 +211,7 @@ public class AdaptiveLimitBulkhead implements AdaptiveBulkhead {
 			}
 
 			this.adaptationConfig = requireNonNull(config, CONFIG_MUST_NOT_BE_NULL);
-			int initialConcurrency = ((int) roundedValue) > 0 ? (int) roundedValue : 1;
+			int initialConcurrency = roundedValue != 0 ? ((int) roundedValue) > 0 ? (int) roundedValue : 1 : adaptationConfig.getInitialConcurrency();
 			this.currentConfig = BulkheadConfig.custom()
 					.maxConcurrentCalls(initialConcurrency)
 					.maxWaitDuration(Duration.ofMillis(0))

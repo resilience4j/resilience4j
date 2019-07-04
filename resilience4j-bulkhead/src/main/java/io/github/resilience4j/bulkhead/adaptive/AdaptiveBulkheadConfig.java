@@ -33,6 +33,12 @@ public class AdaptiveBulkheadConfig<T> {
 	private T config;
 	@Nullable
 	private Predicate<Exception> adaptIfError;
+	@Nullable
+	private int initialConcurrency = 1;
+
+	public int getInitialConcurrency() {
+		return initialConcurrency;
+	}
 
 	public void setConfig(@NonNull T config) {
 		this.config = config;
@@ -103,6 +109,11 @@ public class AdaptiveBulkheadConfig<T> {
 
 		public Builder<T> config(T config) {
 			adaptiveBulkheadConfig.config = config;
+			return this;
+		}
+
+		public Builder<T> config(int initialConcurrency) {
+			adaptiveBulkheadConfig.initialConcurrency = initialConcurrency;
 			return this;
 		}
 
