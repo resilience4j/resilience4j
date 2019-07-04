@@ -33,22 +33,24 @@ public class AdaptiveBulkheadConfig<T> {
 	private T config;
 	@Nullable
 	private Predicate<Exception> adaptIfError;
-	@Nullable
 	private int initialConcurrency = 1;
+
+	private AdaptiveBulkheadConfig() {
+	}
 
 	public int getInitialConcurrency() {
 		return initialConcurrency;
 	}
 
-	public void setConfig(@NonNull T config) {
-		this.config = config;
-	}
-
-	public @NonNull
-	T getConfiguration() {
+	@NonNull
+	public T getConfiguration() {
 		return config;
 	}
 
+	@Nullable
+	public Predicate<Exception> getAdaptIfError() {
+		return adaptIfError;
+	}
 	/**
 	 * Returns a builder to create a custom AdaptiveBulkheadConfig.
 	 *
@@ -83,12 +85,6 @@ public class AdaptiveBulkheadConfig<T> {
 	 */
 	public static <T> Builder<T> builder(AdaptiveBulkheadConfig<T> bulkheadConfig) {
 		return new Builder<>(bulkheadConfig);
-	}
-
-
-	@Nullable
-	public Predicate<Exception> getAdaptIfError() {
-		return adaptIfError;
 	}
 
 	public static class Builder<T> {
