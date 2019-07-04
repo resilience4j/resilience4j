@@ -191,6 +191,7 @@ public class AdaptiveLimitBulkhead implements AdaptiveBulkhead {
 		}
 
 		public AdaptiveLimitBulkhead createAdaptiveLimitBulkhead(@NonNull String name, @NonNull AdaptiveBulkheadConfig<?> config, @Nullable LimitAdapter<Bulkhead> limitAdapter, @Nullable AdaptiveStrategy adaptiveStrategy) {
+			this.adaptationConfig = requireNonNull(config, CONFIG_MUST_NOT_BE_NULL);
 			long roundedValue = 0;
 			if (limitAdapter != null) {
 				this.limitAdapter = limitAdapter;
@@ -209,8 +210,6 @@ public class AdaptiveLimitBulkhead implements AdaptiveBulkhead {
 				roundedValue = round(movingAverageConfig.getConfiguration().getDesirableAverageThroughput() * movingAverageConfig.getConfiguration().getDesirableOperationLatency());
 				this.limitAdapter = new MovingAverageLimitAdapter(movingAverageConfig, AdaptiveBulkheadFactory::publishBulkheadEvent);
 			}
-
-			this.adaptationConfig = requireNonNull(config, CONFIG_MUST_NOT_BE_NULL);
 			int initialConcurrency = roundedValue != 0 ? ((int) roundedValue) > 0 ? (int) roundedValue : 1 : adaptationConfig.getInitialConcurrency();
 			this.currentConfig = BulkheadConfig.custom()
 					.maxConcurrentCalls(initialConcurrency)

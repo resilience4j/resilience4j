@@ -32,7 +32,7 @@ import io.vavr.control.Try;
 
 
 public class AdaptiveBulkheadTest {
-	private AdaptiveBulkhead bulkhead;
+	private AdaptiveBulkhead default_bulkhead;
 	private AdaptiveBulkheadConfig<MovingAverageConfig> config;
 	private HelloWorldService helloWorldService;
 
@@ -44,19 +44,19 @@ public class AdaptiveBulkheadTest {
 				.desirableAverageThroughput(2)
 				.desirableOperationLatency(0.1)
 				.build()).build();
-		bulkhead = AdaptiveBulkhead.of("test", config);
+		default_bulkhead = AdaptiveBulkhead.of("test", config);
 	}
 
 	@Test
 	public void shouldReturnTheCorrectName() {
-		assertThat(bulkhead.getName()).isEqualTo("test");
+		assertThat(default_bulkhead.getName()).isEqualTo("test");
 	}
 
 	@Test
 	public void testToString() {
 
 		// when
-		String result = bulkhead.toString();
+		String result = default_bulkhead.toString();
 
 		// then
 		assertThat(result).isEqualTo("AdaptiveBulkhead 'test'");
@@ -64,12 +64,8 @@ public class AdaptiveBulkheadTest {
 
 	@Test
 	public void testCreateWithNullConfig() {
-
-		// given
-		Supplier<AdaptiveBulkheadConfig<MovingAverageConfig>> configSupplier = () -> null;
-
 		// when
-		assertThatThrownBy(() -> AdaptiveBulkhead.of("test", (AdaptiveBulkheadConfig) configSupplier)).isInstanceOf(NullPointerException.class).hasMessage("Config must not be null");
+		assertThatThrownBy(() -> AdaptiveBulkhead.of("test", () -> null)).isInstanceOf(NullPointerException.class).hasMessage("Config must not be null");
 	}
 
 	@Test
