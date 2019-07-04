@@ -492,6 +492,8 @@ public interface AdaptiveBulkhead {
 					bulkhead.onComplete(Duration.between(start, finish));
 				}
 			}
+		} else {
+			bulkhead.releasePermission();
 		}
 	}
 
