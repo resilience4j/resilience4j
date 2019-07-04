@@ -4,7 +4,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.times;
 
-import java.time.Duration;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
@@ -23,6 +22,7 @@ import org.mockito.Mockito;
 import io.github.resilience4j.bulkhead.BulkheadFullException;
 import io.github.resilience4j.bulkhead.adaptive.AdaptiveBulkhead;
 import io.github.resilience4j.bulkhead.adaptive.AdaptiveBulkheadConfig;
+import io.github.resilience4j.bulkhead.adaptive.internal.config.MovingAverageConfig;
 import io.github.resilience4j.test.HelloWorldService;
 import io.vavr.CheckedConsumer;
 import io.vavr.CheckedFunction0;
@@ -33,18 +33,17 @@ import io.vavr.control.Try;
 
 public class AdaptiveBulkheadTest {
 	private AdaptiveBulkhead bulkhead;
-	private AdaptiveBulkheadConfig config;
+	private AdaptiveBulkheadConfig<MovingAverageConfig> config;
 	private HelloWorldService helloWorldService;
 
 	@Before
 	public void setUp() {
 		helloWorldService = Mockito.mock(HelloWorldService.class);
-		config = AdaptiveBulkheadConfig.builder()
-				.maxAcceptableRequestLatency(0.2)
+
+		config = AdaptiveBulkheadConfig.<MovingAverageConfig>builder().config(MovingAverageConfig.builder().maxAcceptableRequestLatency(0.2)
 				.desirableAverageThroughput(2)
 				.desirableOperationLatency(0.1)
-				.build();
-
+				.build()).build();
 		bulkhead = AdaptiveBulkhead.of("test", config);
 	}
 
@@ -67,10 +66,10 @@ public class AdaptiveBulkheadTest {
 	public void testCreateWithNullConfig() {
 
 		// given
-		Supplier<AdaptiveBulkheadConfig> configSupplier = () -> null;
+		Supplier<AdaptiveBulkheadConfig<MovingAverageConfig>> configSupplier = () -> null;
 
 		// when
-		assertThatThrownBy(() -> AdaptiveBulkhead.of("test", configSupplier)).isInstanceOf(NullPointerException.class).hasMessage("Config must not be null");
+		assertThatThrownBy(() -> AdaptiveBulkhead.of("test", (AdaptiveBulkheadConfig) configSupplier)).isInstanceOf(NullPointerException.class).hasMessage("Config must not be null");
 	}
 
 	@Test
@@ -82,7 +81,7 @@ public class AdaptiveBulkheadTest {
 		// then
 		assertThat(bulkhead).isNotNull();
 		assertThat(bulkhead.getBulkheadConfig()).isNotNull();
-		assertThat(bulkhead.getBulkheadConfig().getWindowForAdaptation()).isEqualTo(Duration.ofSeconds(50));
+		assertThat(((AdaptiveBulkheadConfig<MovingAverageConfig>) bulkhead.getBulkheadConfig()).getConfiguration().getWindowForAdaptation()).isEqualTo(50);
 	}
 
 	@Test
@@ -436,11 +435,13 @@ public class AdaptiveBulkheadTest {
 	public void shouldReturnFailureWithBulkheadFullException() {
 		// tag::bulkheadFullException[]
 		// Given
-		AdaptiveBulkheadConfig config = AdaptiveBulkheadConfig.builder()
+
+		AdaptiveBulkheadConfig<MovingAverageConfig> config = AdaptiveBulkheadConfig.<MovingAverageConfig>builder().config(MovingAverageConfig.builder()
 				.maxAcceptableRequestLatency(0.2)
 				.desirableAverageThroughput(2)
 				.desirableOperationLatency(0.1)
-				.build();
+				.build()).build();
+
 		AdaptiveBulkhead bulkhead = AdaptiveBulkhead.of("test", config);
 		bulkhead.tryAcquirePermission();
 		bulkhead.tryAcquirePermission();
@@ -461,11 +462,10 @@ public class AdaptiveBulkheadTest {
 	public void shouldReturnFailureWithRuntimeException() {
 
 		// Given
-		AdaptiveBulkheadConfig config = AdaptiveBulkheadConfig.builder()
-				.maxAcceptableRequestLatency(0.2)
+		AdaptiveBulkheadConfig<MovingAverageConfig> config = AdaptiveBulkheadConfig.<MovingAverageConfig>builder().config(MovingAverageConfig.builder().maxAcceptableRequestLatency(0.2)
 				.desirableAverageThroughput(2)
 				.desirableOperationLatency(0.1)
-				.build();
+				.build()).build();
 		AdaptiveBulkhead bulkhead = AdaptiveBulkhead.of("test", config);
 		bulkhead.tryAcquirePermission();
 

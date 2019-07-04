@@ -24,10 +24,16 @@ import static java.util.Objects.requireNonNull;
 import java.time.Duration;
 import java.util.concurrent.atomic.AtomicReference;
 
+import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.bulkhead.BulkheadConfig;
 import io.github.resilience4j.bulkhead.adaptive.AdaptiveBulkhead;
 import io.github.resilience4j.bulkhead.adaptive.AdaptiveBulkheadConfig;
+import io.github.resilience4j.bulkhead.adaptive.AdaptiveStrategy;
 import io.github.resilience4j.bulkhead.adaptive.LimitAdapter;
+import io.github.resilience4j.bulkhead.adaptive.internal.config.MovingAverageConfig;
+import io.github.resilience4j.bulkhead.adaptive.internal.config.PercentileConfig;
+import io.github.resilience4j.bulkhead.adaptive.internal.movingAverage.MovingAverageLimitAdapter;
+import io.github.resilience4j.bulkhead.adaptive.internal.percentile.PercentileLimitAdapter;
 import io.github.resilience4j.bulkhead.event.BulkheadLimit;
 import io.github.resilience4j.bulkhead.event.BulkheadOnLimitDecreasedEvent;
 import io.github.resilience4j.bulkhead.event.BulkheadOnLimitIncreasedEvent;
@@ -39,47 +45,24 @@ import io.github.resilience4j.core.lang.NonNull;
 import io.github.resilience4j.core.lang.Nullable;
 
 public class AdaptiveLimitBulkhead implements AdaptiveBulkhead {
-	private static final String CONFIG_MUST_NOT_BE_NULL = "Config must not be null";
-	// initialization constants
+	private final static AdaptiveBulkheadEventProcessor eventProcessor = new AdaptiveBulkheadEventProcessor();
 	private final String name;
 	private final AdaptiveBulkheadConfig adaptationConfig;
-
 	private final InternalMetrics metrics;
 	private final SemaphoreBulkhead bulkhead;
-	private final AdaptiveBulkheadEventProcessor eventProcessor;
-
 	// current settings and measurements that you can read concurrently to expose metrics
 	private BulkheadConfig currentConfig; // immutable object
-	// default limiter
-	private final AtomicReference<MovingAverageLimitAdapter> DEFAULT_LIMITER;
-	@Nullable
-	private final AtomicReference<LimitAdapter> limitAdapter;
+	@NonNull
+	private final AtomicReference<? extends LimitAdapter<Bulkhead>> limitAdapter;
 
-
-	public AdaptiveLimitBulkhead(@NonNull String name, @NonNull AdaptiveBulkheadConfig config) {
-		this(name, config, null);
-	}
-
-	public AdaptiveLimitBulkhead(@NonNull String name, @NonNull AdaptiveBulkheadConfig config, @Nullable LimitAdapter limitAdapter) {
+	private AdaptiveLimitBulkhead(@NonNull String name, @NonNull AdaptiveBulkheadConfig<?> config, @Nullable LimitAdapter<Bulkhead> limitAdapter, BulkheadConfig bulkheadConfig) {
 		this.name = name;
-		if (limitAdapter != null) {
-			this.limitAdapter = new AtomicReference<>(limitAdapter);
-		} else {
-			this.limitAdapter = null;
-		}
-		this.adaptationConfig = requireNonNull(config, CONFIG_MUST_NOT_BE_NULL);
-		final long roundedValue = round(config.getDesirableAverageThroughput() * config.getDesirableOperationLatency());
-		int initialConcurrency = ((int) roundedValue) > 0 ? (int) roundedValue : 1;
-		this.currentConfig = BulkheadConfig.custom()
-				.maxConcurrentCalls(initialConcurrency)
-				.maxWaitDuration(Duration.ofMillis(0))
-				.build();
+		this.limitAdapter = new AtomicReference<>(limitAdapter);
+		this.adaptationConfig = config;
+		this.currentConfig = bulkheadConfig;
 		bulkhead = new SemaphoreBulkhead(name + "-internal", this.currentConfig);
 		metrics = new InternalMetrics();
-		eventProcessor = new AdaptiveBulkheadEventProcessor();
-		DEFAULT_LIMITER = new AtomicReference<>(new MovingAverageLimitAdapter(adaptationConfig, this::publishBulkheadEvent));
 	}
-
 
 	@Override
 	public boolean tryAcquirePermission() {
@@ -99,17 +82,11 @@ public class AdaptiveLimitBulkhead implements AdaptiveBulkhead {
 	@Override
 	public void onComplete(Duration callTime) {
 		bulkhead.onComplete();
-		if (limitAdapter != null) {
-			limitAdapter.getAndUpdate(limitAdapter1 -> {
-				limitAdapter1.adaptLimitIfAny(bulkhead, callTime);
-				return limitAdapter1;
-			});
-		} else {
-			DEFAULT_LIMITER.getAndUpdate(limitAdapter1 -> {
-				limitAdapter1.adaptLimitIfAny(bulkhead, callTime);
-				return limitAdapter1;
-			});
-		}
+		limitAdapter.getAndUpdate(limitAdapter1 -> {
+			limitAdapter1.adaptLimitIfAny(bulkhead, callTime);
+			return limitAdapter1;
+		});
+
 	}
 
 	public String getName() {
@@ -136,12 +113,12 @@ public class AdaptiveLimitBulkhead implements AdaptiveBulkhead {
 
 		@Override
 		public double getMaxLatencyMillis() {
-			return limitAdapter != null ? limitAdapter.get().getMaxLatencyMillis() : DEFAULT_LIMITER.get().getMaxLatencyMillis();
+			return limitAdapter.get().getMaxLatencyMillis();
 		}
 
 		@Override
 		public double getAverageLatencyMillis() {
-			return limitAdapter != null ? limitAdapter.get().getAverageLatencyMillis() / 1e6 : DEFAULT_LIMITER.get().getAverageLatencyMillis() / 1e6;
+			return limitAdapter.get().getMeasuredLatencyMillis() / 1e6;
 		}
 
 		@Override
@@ -156,7 +133,7 @@ public class AdaptiveLimitBulkhead implements AdaptiveBulkhead {
 	}
 
 
-	private class AdaptiveBulkheadEventProcessor extends EventProcessor<BulkheadLimit> implements AdaptiveEventPublisher, EventConsumer<BulkheadLimit> {
+	private static class AdaptiveBulkheadEventProcessor extends EventProcessor<BulkheadLimit> implements AdaptiveEventPublisher, EventConsumer<BulkheadLimit> {
 
 		@Override
 		public EventPublisher onLimitIncreased(EventConsumer<BulkheadOnLimitDecreasedEvent> eventConsumer) {
@@ -181,10 +158,74 @@ public class AdaptiveLimitBulkhead implements AdaptiveBulkhead {
 		return String.format("AdaptiveBulkhead '%s'", this.name);
 	}
 
-	private void publishBulkheadEvent(BulkheadLimit eventSupplier) {
-		if (eventProcessor.hasConsumers()) {
-			eventProcessor.consumeEvent(eventSupplier);
-		}
+
+	public static AdaptiveBulkheadFactory factory() {
+		return new AdaptiveBulkheadFactory();
 	}
+
+
+	/**
+	 * the adaptive bulkhead factory class
+	 */
+	public static class AdaptiveBulkheadFactory {
+		private static final String CONFIG_MUST_NOT_BE_NULL = "Config must not be null";
+		private AdaptiveBulkheadConfig<?> adaptationConfig;
+		// current settings and measurements that you can read concurrently to expose metrics
+		private BulkheadConfig currentConfig; // immutable object
+		@Nullable
+		private LimitAdapter<Bulkhead> limitAdapter;
+
+		private AdaptiveBulkheadFactory() {
+		}
+
+		public AdaptiveLimitBulkhead createAdaptiveLimitBulkhead(@NonNull String name, @NonNull AdaptiveBulkheadConfig<?> config, @NonNull AdaptiveStrategy adaptiveStrategy) {
+			return createAdaptiveLimitBulkhead(name, config, null, adaptiveStrategy);
+		}
+
+		public AdaptiveLimitBulkhead createAdaptiveLimitBulkhead(@NonNull String name, @NonNull AdaptiveBulkheadConfig<?> config) {
+			return createAdaptiveLimitBulkhead(name, config, AdaptiveStrategy.MOVING_AVERAGE);
+		}
+
+		public AdaptiveLimitBulkhead createAdaptiveLimitBulkhead(@NonNull String name, @NonNull AdaptiveBulkheadConfig<?> config, @NonNull LimitAdapter<Bulkhead> limitAdapter) {
+			return createAdaptiveLimitBulkhead(name, config, limitAdapter, null);
+		}
+
+		public AdaptiveLimitBulkhead createAdaptiveLimitBulkhead(@NonNull String name, @NonNull AdaptiveBulkheadConfig<?> config, @Nullable LimitAdapter<Bulkhead> limitAdapter, @Nullable AdaptiveStrategy adaptiveStrategy) {
+			long roundedValue;
+			if (limitAdapter != null) {
+				this.limitAdapter = limitAdapter;
+			} else {
+				this.limitAdapter = null;
+			}
+			if (limitAdapter == null && adaptiveStrategy != null && adaptiveStrategy.equals(AdaptiveStrategy.PERCENTILE)) {
+				@SuppressWarnings("unchecked")
+				AdaptiveBulkheadConfig<PercentileConfig> percentileConfig = (AdaptiveBulkheadConfig<PercentileConfig>) config;
+				roundedValue = round(percentileConfig.getConfiguration().getDesirableAverageThroughput() * percentileConfig.getConfiguration().getDesirableOperationLatency());
+				this.limitAdapter = new PercentileLimitAdapter(percentileConfig, AdaptiveBulkheadFactory::publishBulkheadEvent);
+			} else {
+				@SuppressWarnings("unchecked")
+				AdaptiveBulkheadConfig<MovingAverageConfig> movingAverageConfig = (AdaptiveBulkheadConfig<MovingAverageConfig>) config;
+				roundedValue = round(movingAverageConfig.getConfiguration().getDesirableAverageThroughput() * movingAverageConfig.getConfiguration().getDesirableOperationLatency());
+				this.limitAdapter = new MovingAverageLimitAdapter(movingAverageConfig, AdaptiveBulkheadFactory::publishBulkheadEvent);
+			}
+
+			this.adaptationConfig = requireNonNull(config, CONFIG_MUST_NOT_BE_NULL);
+			int initialConcurrency = ((int) roundedValue) > 0 ? (int) roundedValue : 1;
+			this.currentConfig = BulkheadConfig.custom()
+					.maxConcurrentCalls(initialConcurrency)
+					.maxWaitDuration(Duration.ofMillis(0))
+					.build();
+
+			return new AdaptiveLimitBulkhead(name, config, this.limitAdapter, this.currentConfig);
+		}
+
+		private static void publishBulkheadEvent(BulkheadLimit eventSupplier) {
+			if (eventProcessor.hasConsumers()) {
+				eventProcessor.consumeEvent(eventSupplier);
+			}
+		}
+
+	}
+
 
 }

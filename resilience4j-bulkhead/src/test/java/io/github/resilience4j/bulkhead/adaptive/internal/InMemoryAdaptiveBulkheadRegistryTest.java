@@ -13,12 +13,13 @@ import org.slf4j.Logger;
 import io.github.resilience4j.bulkhead.adaptive.AdaptiveBulkhead;
 import io.github.resilience4j.bulkhead.adaptive.AdaptiveBulkheadConfig;
 import io.github.resilience4j.bulkhead.adaptive.AdaptiveBulkheadRegistry;
+import io.github.resilience4j.bulkhead.adaptive.internal.config.MovingAverageConfig;
 
 /**
  * @author romeh
  */
 public class InMemoryAdaptiveBulkheadRegistryTest {
-	private AdaptiveBulkheadConfig config;
+	private AdaptiveBulkheadConfig<MovingAverageConfig> config;
 	private AdaptiveBulkheadRegistry registry;
 	private Logger LOGGER;
 
@@ -28,11 +29,11 @@ public class InMemoryAdaptiveBulkheadRegistryTest {
 		// registry with default config
 		registry = AdaptiveBulkheadRegistry.ofDefaults();
 		// registry with custom config
-		config = AdaptiveBulkheadConfig.builder()
+		config = AdaptiveBulkheadConfig.<MovingAverageConfig>builder().config(MovingAverageConfig.builder()
 				.maxAcceptableRequestLatency(300)
 				.desirableAverageThroughput(1)
 				.desirableOperationLatency(200)
-				.build();
+				.build()).build();
 	}
 
 	@Test
@@ -49,10 +50,9 @@ public class InMemoryAdaptiveBulkheadRegistryTest {
 	public void shouldReturnTheCorrectName() {
 
 		AdaptiveBulkhead bulkhead = registry.bulkhead("test");
-
 		assertThat(bulkhead).isNotNull();
 		assertThat(bulkhead.getName()).isEqualTo("test");
-		assertThat(bulkhead.getBulkheadConfig().getMaxAcceptableRequestLatency()).isEqualTo(0.13);
+		assertThat(((AdaptiveBulkheadConfig<MovingAverageConfig>) bulkhead.getBulkheadConfig()).getConfiguration().getMaxAcceptableRequestLatency()).isEqualTo(0.13);
 		assertThat(bulkhead.getMetrics().getMaxLatencyMillis()).isEqualTo(120);
 	}
 
@@ -102,7 +102,7 @@ public class InMemoryAdaptiveBulkheadRegistryTest {
 	@Test
 	public void testAddConfiguration() {
 		AdaptiveBulkheadRegistry bulkheadRegistry = AdaptiveBulkheadRegistry.ofDefaults();
-		bulkheadRegistry.addConfiguration("custom", AdaptiveBulkheadConfig.builder().build());
+		bulkheadRegistry.addConfiguration("custom", AdaptiveBulkheadConfig.ofDefaults());
 
 		assertThat(bulkheadRegistry.getDefaultConfig()).isNotNull();
 		assertThat(bulkheadRegistry.getConfiguration("custom")).isNotNull();
