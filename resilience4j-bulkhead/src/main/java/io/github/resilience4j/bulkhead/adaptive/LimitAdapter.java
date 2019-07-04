@@ -28,7 +28,7 @@ import io.github.resilience4j.core.lang.NonNull;
 
 
 /**
- * Limit adopter interface for adoptive bullhead {@link AdaptiveBulkhead}
+ * Limit adapter interface for adoptive bullhead {@link AdaptiveBulkhead}
  *
  * @author romeh
  */
