@@ -126,7 +126,7 @@ public class AdaptiveBulkheadTest {
 		//Then
 		assertThat(result.isFailure()).isTrue();
 		assertThat(result.failed().get()).isInstanceOf(RuntimeException.class);
-		assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
+		assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(2);
 		BDDMockito.then(helloWorldService).should(times(1)).returnHelloWorld();
 	}
 
@@ -160,7 +160,7 @@ public class AdaptiveBulkheadTest {
 		// Then
 		assertThat(result.isFailure()).isTrue();
 		assertThat(result.failed().get()).isInstanceOf(RuntimeException.class);
-		assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
+		assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(2);
 		BDDMockito.then(helloWorldService).should(times(1)).returnHelloWorldWithException();
 	}
 
@@ -210,7 +210,7 @@ public class AdaptiveBulkheadTest {
 		// Then
 		assertThat(result.isFailure()).isTrue();
 		assertThat(result.failed().get()).isInstanceOf(RuntimeException.class);
-		assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
+		assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(2);
 		BDDMockito.then(helloWorldService).should(times(1)).returnHelloWorldWithException();
 	}
 
@@ -244,7 +244,7 @@ public class AdaptiveBulkheadTest {
 		// Then
 		assertThat(result.isFailure()).isTrue();
 		assertThat(result.failed().get()).isInstanceOf(RuntimeException.class);
-		assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
+		assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(2);
 	}
 
 	@Test
@@ -291,7 +291,7 @@ public class AdaptiveBulkheadTest {
 		//Then
 		assertThat(result.isFailure()).isTrue();
 		assertThat(result.failed().get()).isInstanceOf(RuntimeException.class);
-		assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
+		assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(2);
 	}
 
 	@Test
@@ -324,7 +324,7 @@ public class AdaptiveBulkheadTest {
 		// Then
 		assertThat(result.isFailure()).isTrue();
 		assertThat(result.failed().get()).isInstanceOf(RuntimeException.class);
-		assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
+		assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(2);
 	}
 
 	@Test
@@ -357,7 +357,7 @@ public class AdaptiveBulkheadTest {
 		// Then
 		assertThat(result.isFailure()).isTrue();
 		assertThat(result.failed().get()).isInstanceOf(RuntimeException.class);
-		assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
+		assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(2);
 	}
 
 	@Test
@@ -390,7 +390,7 @@ public class AdaptiveBulkheadTest {
 		// Then
 		assertThat(result.isFailure()).isTrue();
 		assertThat(result.failed().get()).isInstanceOf(RuntimeException.class);
-		assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
+		assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(2);
 	}
 
 	@Test
@@ -424,7 +424,7 @@ public class AdaptiveBulkheadTest {
 		// Then
 		assertThat(result.isFailure()).isTrue();
 		assertThat(result.failed().get()).isInstanceOf(RuntimeException.class);
-		assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
+		assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(2);
 	}
 
 	@Test
