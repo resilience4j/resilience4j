@@ -3,10 +3,7 @@ package io.github.resilience4j.timelimiter;
 import io.github.resilience4j.timelimiter.internal.TimeLimiterImpl;
 
 import java.time.Duration;
-import java.util.concurrent.Callable;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
+import java.util.concurrent.*;
 import java.util.function.Supplier;
 
 /**
@@ -66,6 +63,15 @@ public interface TimeLimiter {
                     future.cancel(true);
                 }
                 throw e;
+            } catch (ExecutionException e){
+                Throwable t = e.getCause();
+                if (t == null){
+                    throw e;
+                }
+                if (t instanceof Error){
+                    throw (Error) t;
+                }
+                throw (Exception) t;
             }
         };
     }
