@@ -79,4 +79,17 @@ public class TimeLimiterTest {
         result = timeLimiter.decorateFutureSupplier(supplier).call();
         Assertions.assertThat(result).isEqualTo(42);
     }
+
+    @Test
+    public void unwrapExecutionException() {
+        TimeLimiter timeLimiter = TimeLimiter.ofDefaults();
+        ExecutorService executorService = Executors.newSingleThreadExecutor();
+
+        Supplier<Future<Integer>> supplier = () -> executorService.submit(() -> {throw new RuntimeException();});
+        Callable<Integer> decorated = TimeLimiter.decorateFutureSupplier(timeLimiter, supplier);
+
+        Try<Integer> decoratedResult = Try.ofCallable(decorated);
+
+        Assertions.assertThat(decoratedResult.getCause() instanceof RuntimeException).isTrue();
+    }
 }
