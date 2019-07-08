@@ -39,10 +39,11 @@ public class AdaptiveBulkheadWithPercentileLimiterTest {
 
 	@Before
 	public void setup() {
-		config = AdaptiveBulkheadConfig.<PercentileConfig>builder().config(PercentileConfig.builder().maxAcceptableRequestLatency(1.5)
+		config = AdaptiveBulkheadConfig.<PercentileConfig>builder().config(PercentileConfig.builder()
+				.percentile(65)
+				.maxAcceptableRequestLatency(1.5)
 				.desirableAverageThroughput(2)
 				.desirableOperationLatency(1)
-				.percentile(65)
 				.build()).build();
 
 		bulkhead = AdaptiveBulkhead.of("test", config, AdaptiveStrategy.PERCENTILE);
