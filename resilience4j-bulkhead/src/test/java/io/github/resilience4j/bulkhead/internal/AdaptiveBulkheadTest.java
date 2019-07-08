@@ -131,6 +131,28 @@ public class AdaptiveBulkheadTest {
 	}
 
 	@Test
+	public void shouldDecorateSupplierAndReturnWithExceptionAdaptIfError() {
+
+		final AdaptiveBulkheadConfig<MovingAverageConfig> config = AdaptiveBulkheadConfig.<MovingAverageConfig>builder().config(MovingAverageConfig.builder().maxAcceptableRequestLatency(0.2)
+				.desirableAverageThroughput(2)
+				.desirableOperationLatency(0.1)
+				.build()).adaptIfError(e -> e instanceof RuntimeException).build();
+		// Given
+		AdaptiveBulkhead bulkhead = AdaptiveBulkhead.of("test", config);
+		BDDMockito.given(helloWorldService.returnHelloWorld()).willThrow(new RuntimeException("BAM!"));
+
+		// When
+		Supplier<String> supplier = AdaptiveBulkhead.decorateSupplier(bulkhead, helloWorldService::returnHelloWorld);
+		Try<String> result = Try.of(supplier::get);
+
+		//Then
+		assertThat(result.isFailure()).isTrue();
+		assertThat(result.failed().get()).isInstanceOf(RuntimeException.class);
+		assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(2);
+		BDDMockito.then(helloWorldService).should(times(1)).returnHelloWorld();
+	}
+
+	@Test
 	public void shouldDecorateCheckedSupplierAndReturnWithSuccess() throws Throwable {
 
 		// Given
@@ -150,6 +172,28 @@ public class AdaptiveBulkheadTest {
 	public void shouldDecorateCheckedSupplierAndReturnWithException() throws Throwable {
 
 		// Given
+		AdaptiveBulkhead bulkhead = AdaptiveBulkhead.of("test", config);
+		BDDMockito.given(helloWorldService.returnHelloWorldWithException()).willThrow(new RuntimeException("BAM!"));
+
+		// When
+		CheckedFunction0<String> checkedSupplier = AdaptiveBulkhead.decorateCheckedSupplier(bulkhead, helloWorldService::returnHelloWorldWithException);
+		Try<String> result = Try.of(checkedSupplier);
+
+		// Then
+		assertThat(result.isFailure()).isTrue();
+		assertThat(result.failed().get()).isInstanceOf(RuntimeException.class);
+		assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(2);
+		BDDMockito.then(helloWorldService).should(times(1)).returnHelloWorldWithException();
+	}
+
+	@Test
+	public void shouldDecorateCheckedSupplierAndReturnWithExceptionAdaptIfError() throws Throwable {
+
+		// Given
+		final AdaptiveBulkheadConfig<MovingAverageConfig> config = AdaptiveBulkheadConfig.<MovingAverageConfig>builder().config(MovingAverageConfig.builder().maxAcceptableRequestLatency(0.2)
+				.desirableAverageThroughput(2)
+				.desirableOperationLatency(0.1)
+				.build()).adaptIfError(e -> e instanceof RuntimeException).build();
 		AdaptiveBulkhead bulkhead = AdaptiveBulkhead.of("test", config);
 		BDDMockito.given(helloWorldService.returnHelloWorldWithException()).willThrow(new RuntimeException("BAM!"));
 
@@ -214,6 +258,29 @@ public class AdaptiveBulkheadTest {
 		BDDMockito.then(helloWorldService).should(times(1)).returnHelloWorldWithException();
 	}
 
+
+	@Test
+	public void shouldDecorateCallableAndReturnWithExceptionIfError() throws Throwable {
+
+		// Given
+		final AdaptiveBulkheadConfig<MovingAverageConfig> config = AdaptiveBulkheadConfig.<MovingAverageConfig>builder().config(MovingAverageConfig.builder().maxAcceptableRequestLatency(0.2)
+				.desirableAverageThroughput(2)
+				.desirableOperationLatency(0.1)
+				.build()).adaptIfError(e -> e instanceof RuntimeException).build();
+		AdaptiveBulkhead bulkhead = AdaptiveBulkhead.of("test", config);
+		BDDMockito.given(helloWorldService.returnHelloWorldWithException()).willThrow(new RuntimeException("BAM!"));
+
+		// When
+		Callable<String> callable = AdaptiveBulkhead.decorateCallable(bulkhead, helloWorldService::returnHelloWorldWithException);
+		Try<String> result = Try.of(callable::call);
+
+		// Then
+		assertThat(result.isFailure()).isTrue();
+		assertThat(result.failed().get()).isInstanceOf(RuntimeException.class);
+		assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(2);
+		BDDMockito.then(helloWorldService).should(times(1)).returnHelloWorldWithException();
+	}
+
 	@Test
 	public void shouldDecorateCheckedRunnableAndReturnWithSuccess() throws Throwable {
 
@@ -233,6 +300,28 @@ public class AdaptiveBulkheadTest {
 	public void shouldDecorateCheckedRunnableAndReturnWithException() throws Throwable {
 
 		// Given
+		AdaptiveBulkhead bulkhead = AdaptiveBulkhead.of("test", config);
+
+		// When
+		CheckedRunnable checkedRunnable = AdaptiveBulkhead.decorateCheckedRunnable(bulkhead, () -> {
+			throw new RuntimeException("BAM!");
+		});
+		Try<Void> result = Try.run(checkedRunnable);
+
+		// Then
+		assertThat(result.isFailure()).isTrue();
+		assertThat(result.failed().get()).isInstanceOf(RuntimeException.class);
+		assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(2);
+	}
+
+	@Test
+	public void shouldDecorateCheckedRunnableAndReturnWithExceptionAdaptIfError() throws Throwable {
+
+		// Given
+		final AdaptiveBulkheadConfig<MovingAverageConfig> config = AdaptiveBulkheadConfig.<MovingAverageConfig>builder().config(MovingAverageConfig.builder().maxAcceptableRequestLatency(0.2)
+				.desirableAverageThroughput(2)
+				.desirableOperationLatency(0.1)
+				.build()).adaptIfError(e -> e instanceof RuntimeException).build();
 		AdaptiveBulkhead bulkhead = AdaptiveBulkhead.of("test", config);
 
 		// When
@@ -295,7 +384,30 @@ public class AdaptiveBulkheadTest {
 	}
 
 	@Test
-	public void shouldDecorateConsumerAndReturnWithSuccess() throws Throwable {
+	public void shouldDecorateRunnableAndReturnWithExceptionAdaptIfError() {
+
+		// Given
+		final AdaptiveBulkheadConfig<MovingAverageConfig> config = AdaptiveBulkheadConfig.<MovingAverageConfig>builder().config(MovingAverageConfig.builder().maxAcceptableRequestLatency(0.2)
+				.desirableAverageThroughput(2)
+				.desirableOperationLatency(0.1)
+				.build()).adaptIfError(e -> e instanceof RuntimeException).build();
+
+		AdaptiveBulkhead bulkhead = AdaptiveBulkhead.of("test", config);
+
+		// When
+		Runnable runnable = AdaptiveBulkhead.decorateRunnable(bulkhead, () -> {
+			throw new RuntimeException("BAM!");
+		});
+		Try<Void> result = Try.run(runnable::run);
+
+		//Then
+		assertThat(result.isFailure()).isTrue();
+		assertThat(result.failed().get()).isInstanceOf(RuntimeException.class);
+		assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(2);
+	}
+
+	@Test
+	public void shouldDecorateConsumerAndReturnWithSuccess() {
 
 		// Given
 		AdaptiveBulkhead bulkhead = AdaptiveBulkhead.of("test", config);
@@ -310,9 +422,31 @@ public class AdaptiveBulkheadTest {
 	}
 
 	@Test
-	public void shouldDecorateConsumerAndReturnWithException() throws Throwable {
+	public void shouldDecorateConsumerAndReturnWithException() {
 
 		// Given
+		AdaptiveBulkhead bulkhead = AdaptiveBulkhead.of("test", config);
+
+		// When
+		Consumer<String> consumer = AdaptiveBulkhead.decorateConsumer(bulkhead, (value) -> {
+			throw new RuntimeException("BAM!");
+		});
+		Try<Void> result = Try.run(() -> consumer.accept("Tom"));
+
+		// Then
+		assertThat(result.isFailure()).isTrue();
+		assertThat(result.failed().get()).isInstanceOf(RuntimeException.class);
+		assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(2);
+	}
+
+	@Test
+	public void shouldDecorateConsumerAndReturnWithExceptionAdaptIfError() {
+
+		// Given
+		final AdaptiveBulkheadConfig<MovingAverageConfig> config = AdaptiveBulkheadConfig.<MovingAverageConfig>builder().config(MovingAverageConfig.builder().maxAcceptableRequestLatency(0.2)
+				.desirableAverageThroughput(2)
+				.desirableOperationLatency(0.1)
+				.build()).adaptIfError(e -> e instanceof RuntimeException).build();
 		AdaptiveBulkhead bulkhead = AdaptiveBulkhead.of("test", config);
 
 		// When
@@ -343,7 +477,7 @@ public class AdaptiveBulkheadTest {
 	}
 
 	@Test
-	public void shouldDecorateCheckedConsumerAndReturnWithException() throws Throwable {
+	public void shouldDecorateCheckedConsumerAndReturnWithException() {
 
 		// Given
 		AdaptiveBulkhead bulkhead = AdaptiveBulkhead.of("test", config);
@@ -526,6 +660,7 @@ public class AdaptiveBulkheadTest {
 	public void shouldDecorateCompletionStageAndReturnWithExceptionAtSyncStage() throws ExecutionException, InterruptedException {
 
 		// Given
+
 		AdaptiveBulkhead bulkhead = AdaptiveBulkhead.of("test", config);
 
 		// When
@@ -552,6 +687,42 @@ public class AdaptiveBulkheadTest {
 				);
 		assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
 	}
+
+	@Test
+	public void shouldDecorateCompletionStageAndReturnWithExceptionAtSyncStageAdaptIfError() throws ExecutionException, InterruptedException {
+
+		// Given
+		AdaptiveBulkheadConfig<MovingAverageConfig> config = AdaptiveBulkheadConfig.<MovingAverageConfig>builder().config(MovingAverageConfig.builder().maxAcceptableRequestLatency(0.2)
+				.desirableAverageThroughput(2)
+				.desirableOperationLatency(0.1)
+				.build()).build();
+		AdaptiveBulkhead bulkhead = AdaptiveBulkhead.of("test", config);
+
+		// When
+		Supplier<CompletionStage<String>> completionStageSupplier = () -> {
+			throw new WebServiceException("BAM! At sync stage");
+		};
+
+		Supplier<CompletionStage<String>> decoratedCompletionStageSupplier =
+				AdaptiveBulkhead.decorateCompletionStage(bulkhead, completionStageSupplier);
+
+		// NOTE: Try.of does not detect a completion stage that has been completed with failure !
+		Try<CompletionStage<String>> result = Try.of(decoratedCompletionStageSupplier::get);
+
+		// Then the helloWorldService should be invoked 0 times
+		BDDMockito.then(helloWorldService).should(times(0)).returnHelloWorld();
+		assertThat(result.isSuccess()).isTrue();
+		result.get()
+				.exceptionally(
+						error -> {
+							// NOTE: Try.of does not detect a completion stage that has been completed with failure !
+							assertThat(error).isInstanceOf(WebServiceException.class);
+							return null;
+						}
+				);
+		assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
+	}
+
 
 	@Test
 	public void shouldDecorateCompletionStageAndReturnWithExceptionAtAsyncStage() throws ExecutionException, InterruptedException {
