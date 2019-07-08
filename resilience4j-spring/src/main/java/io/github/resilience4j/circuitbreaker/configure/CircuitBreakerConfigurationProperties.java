@@ -27,7 +27,7 @@ public class CircuitBreakerConfigurationProperties extends io.github.resilience4
 	 * user can override it still if he has different use case but bulkhead will be first aspect all the time due to the implicit order we have it for bulkhead
 	 */
 	public int getCircuitBreakerAspectOrder() {
-		return Ordered.LOWEST_PRECEDENCE - 2;
+		return circuitBreakerAspectOrder;
 	}
 
 	/**

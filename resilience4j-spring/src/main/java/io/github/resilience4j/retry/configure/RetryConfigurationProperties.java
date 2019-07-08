@@ -27,7 +27,7 @@ public class RetryConfigurationProperties extends io.github.resilience4j.common.
 	 * but the user can override it still if he has different use case but bulkhead will be first aspect all the time due to the implicit order we have it for bulkhead
 	 */
 	public int getRetryAspectOrder() {
-		return Ordered.LOWEST_PRECEDENCE - 3;
+		return retryAspectOrder;
 	}
 
 	/**

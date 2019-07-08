@@ -24,7 +24,7 @@ public class RateLimiterConfigurationProperties extends io.github.resilience4j.c
 	 * user can override it still if he has different use case but bulkhead will be first aspect all the time due to the implicit order we have it for bulkhead
 	 */
 	public int getRateLimiterAspectOrder() {
-		return Ordered.LOWEST_PRECEDENCE - 1;
+		return rateLimiterAspectOrder;
 	}
 
 	/**
