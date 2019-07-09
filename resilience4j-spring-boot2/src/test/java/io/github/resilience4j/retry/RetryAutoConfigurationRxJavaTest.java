@@ -25,7 +25,6 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
-import org.springframework.core.Ordered;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
@@ -101,7 +100,7 @@ public class RetryAutoConfigurationRxJavaTest {
 		assertThat(retry.getRetryConfig().getExceptionPredicate().test(new IllegalArgumentException())).isTrue();
 		assertThat(retry.getRetryConfig().getExceptionPredicate().test(new IgnoredException())).isFalse();
 
-		assertThat(retryAspect.getOrder()).isEqualTo(Ordered.LOWEST_PRECEDENCE - 3);
+		assertThat(retryAspect.getOrder()).isEqualTo(399);
 
 		assertThat(retry.getMetrics().getNumberOfFailedCallsWithoutRetryAttempt()).isEqualTo(0);
 		assertThat(retry.getMetrics().getNumberOfFailedCallsWithRetryAttempt()).isEqualTo(1);

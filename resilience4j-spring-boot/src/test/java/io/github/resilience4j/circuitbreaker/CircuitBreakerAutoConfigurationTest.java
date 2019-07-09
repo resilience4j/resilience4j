@@ -27,7 +27,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
-import org.springframework.core.Ordered;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
@@ -119,7 +118,7 @@ public class CircuitBreakerAutoConfigurationTest {
 		// setRecordExceptions evaluates to false.
 		assertThat(circuitBreaker.getCircuitBreakerConfig().getRecordFailurePredicate().test(new Exception())).isFalse();
 
-		assertThat(circuitBreakerAspect.getOrder()).isEqualTo(Ordered.LOWEST_PRECEDENCE - 2);
+		assertThat(circuitBreakerAspect.getOrder()).isEqualTo(400);
 
 		// expect all shared configs share the same values and are from the application.yml file
 		CircuitBreaker sharedA = circuitBreakerRegistry.circuitBreaker("backendSharedA");
