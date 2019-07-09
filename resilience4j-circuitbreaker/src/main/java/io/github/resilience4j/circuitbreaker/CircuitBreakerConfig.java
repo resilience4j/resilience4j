@@ -236,7 +236,7 @@ public class CircuitBreakerConfig {
          * Configures a list of error classes that are ignored as a failure and thus do not increase the failure rate.
          * Any exception matching or inheriting from one of the list will not count as a failure, even if marked via
          *
-         * @param errorClasses the error classes that are recorded
+         * @param errorClasses the error classes that are ignored
          * @return the CircuitBreakerConfig.Builder
          * @see #recordExceptions(Class[]) . Ignoring an exception has priority over recording an exception.
          * <p>
