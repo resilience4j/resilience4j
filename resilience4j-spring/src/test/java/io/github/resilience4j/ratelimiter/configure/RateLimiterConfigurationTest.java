@@ -1,18 +1,19 @@
 package io.github.resilience4j.ratelimiter.configure;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
+import java.time.Duration;
+
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.junit.MockitoJUnitRunner;
+
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.core.ConfigurationNotFoundException;
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
 import io.github.resilience4j.ratelimiter.event.RateLimiterEvent;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.junit.MockitoJUnitRunner;
-
-import java.time.Duration;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
  * test custom init of rate limiter configuration
@@ -34,6 +35,7 @@ public class RateLimiterConfigurationTest {
 		RateLimiterConfigurationProperties rateLimiterConfigurationProperties = new RateLimiterConfigurationProperties();
 		rateLimiterConfigurationProperties.getInstances().put("backend1", instanceProperties1);
 		rateLimiterConfigurationProperties.getInstances().put("backend2", instanceProperties2);
+		rateLimiterConfigurationProperties.setRateLimiterAspectOrder(300);
 
 		RateLimiterConfiguration rateLimiterConfiguration = new RateLimiterConfiguration();
 		DefaultEventConsumerRegistry<RateLimiterEvent> eventConsumerRegistry = new DefaultEventConsumerRegistry<>();
@@ -42,6 +44,7 @@ public class RateLimiterConfigurationTest {
 		RateLimiterRegistry rateLimiterRegistry = rateLimiterConfiguration.rateLimiterRegistry(rateLimiterConfigurationProperties, eventConsumerRegistry);
 
 		//Then
+		assertThat(rateLimiterConfigurationProperties.getRateLimiterAspectOrder()).isEqualTo(300);
 		assertThat(rateLimiterRegistry.getAllRateLimiters().size()).isEqualTo(2);
 		RateLimiter rateLimiter = rateLimiterRegistry.rateLimiter("backend1");
 		assertThat(rateLimiter).isNotNull();

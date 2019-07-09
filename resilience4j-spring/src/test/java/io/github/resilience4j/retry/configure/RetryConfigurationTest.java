@@ -1,18 +1,19 @@
 package io.github.resilience4j.retry.configure;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
+import java.time.Duration;
+
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.junit.MockitoJUnitRunner;
+
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.core.ConfigurationNotFoundException;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryRegistry;
 import io.github.resilience4j.retry.event.RetryEvent;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.junit.MockitoJUnitRunner;
-
-import java.time.Duration;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
  * test custom init of retry configuration
@@ -32,6 +33,7 @@ public class RetryConfigurationTest {
 		RetryConfigurationProperties retryConfigurationProperties = new RetryConfigurationProperties();
 		retryConfigurationProperties.getInstances().put("backend1", instanceProperties1);
 		retryConfigurationProperties.getInstances().put("backend2", instanceProperties2);
+		retryConfigurationProperties.setRetryAspectOrder(200);
 
 		RetryConfiguration retryConfiguration = new RetryConfiguration();
 		DefaultEventConsumerRegistry<RetryEvent> eventConsumerRegistry = new DefaultEventConsumerRegistry<>();
@@ -40,6 +42,7 @@ public class RetryConfigurationTest {
 		RetryRegistry retryRegistry = retryConfiguration.retryRegistry(retryConfigurationProperties, eventConsumerRegistry);
 
 		//Then
+		assertThat(retryConfigurationProperties.getRetryAspectOrder()).isEqualTo(200);
 		assertThat(retryRegistry.getAllRetries().size()).isEqualTo(2);
 		Retry retry1 = retryRegistry.retry("backend1");
 		assertThat(retry1).isNotNull();

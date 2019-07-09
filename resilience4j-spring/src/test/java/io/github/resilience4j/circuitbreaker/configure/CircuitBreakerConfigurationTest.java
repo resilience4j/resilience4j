@@ -1,16 +1,17 @@
 package io.github.resilience4j.circuitbreaker.configure;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.junit.MockitoJUnitRunner;
+
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent;
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.core.ConfigurationNotFoundException;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.junit.MockitoJUnitRunner;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
  * test custom init of circuit breaker registry
@@ -28,6 +29,7 @@ public class CircuitBreakerConfigurationTest {
 		instanceProperties2.setRingBufferSizeInClosedState(1337);
 
 		CircuitBreakerConfigurationProperties circuitBreakerConfigurationProperties = new CircuitBreakerConfigurationProperties();
+		circuitBreakerConfigurationProperties.setCircuitBreakerAspectOrder(400);
 		circuitBreakerConfigurationProperties.getInstances().put("backend1", instanceProperties1);
 		circuitBreakerConfigurationProperties.getInstances().put("backend2", instanceProperties2);
 
@@ -38,6 +40,7 @@ public class CircuitBreakerConfigurationTest {
 		CircuitBreakerRegistry circuitBreakerRegistry = circuitBreakerConfiguration.circuitBreakerRegistry(eventConsumerRegistry);
 
 		//Then
+		assertThat(circuitBreakerConfigurationProperties.getCircuitBreakerAspectOrder()).isEqualTo(400);
 		assertThat(circuitBreakerRegistry.getAllCircuitBreakers().size()).isEqualTo(2);
 		CircuitBreaker circuitBreaker1 = circuitBreakerRegistry.circuitBreaker("backend1");
 		assertThat(circuitBreaker1).isNotNull();
