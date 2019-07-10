@@ -19,12 +19,12 @@
 package io.github.resilience4j.retry;
 
 
-import io.github.resilience4j.core.lang.Nullable;
-import io.github.resilience4j.core.predicate.PredicateCreator;
-
 import java.time.Duration;
 import java.util.function.Function;
 import java.util.function.Predicate;
+
+import io.github.resilience4j.core.lang.Nullable;
+import io.github.resilience4j.core.predicate.PredicateCreator;
 
 public class RetryConfig {
 
@@ -143,10 +143,9 @@ public class RetryConfig {
 		}
 
 		public Builder<T> waitDuration(Duration waitDuration) {
-			if (waitDuration.toMillis() < 10) {
-				throw new IllegalArgumentException("waitDurationInOpenState must be at least 10ms");
+			if (waitDuration.toMillis() >= 0) {
+				this.intervalFunction = (x) -> waitDuration.toMillis();
 			}
-			this.intervalFunction = (x) -> waitDuration.toMillis();
 			return this;
 		}
 
