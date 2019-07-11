@@ -18,14 +18,14 @@
  */
 package io.github.resilience4j.retry;
 
-import org.assertj.core.api.Assertions;
-import org.junit.Test;
+import static org.assertj.core.api.BDDAssertions.then;
+import static org.assertj.core.api.Java6Assertions.assertThat;
 
 import java.time.Duration;
 import java.util.function.Predicate;
 
-import static org.assertj.core.api.BDDAssertions.then;
-import static org.assertj.core.api.Java6Assertions.assertThat;
+import org.assertj.core.api.Assertions;
+import org.junit.Test;
 
 public class RetryConfigBuilderTest {
     private static final Predicate<Throwable> TEST_PREDICATE = e -> "test".equals(e.getMessage());
@@ -35,14 +35,21 @@ public class RetryConfigBuilderTest {
         RetryConfig.custom().maxAttempts(0).build();
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void zeroWaitIntervalShouldFail() {
-        RetryConfig.custom().waitDuration(Duration.ofMillis(0)).build();
+    @Test
+    public void zeroWaitInterval() {
+        final RetryConfig config = RetryConfig.custom().waitDuration(Duration.ofMillis(0)).build();
+        assertThat(config.getIntervalFunction().apply(1)).isEqualTo(0);
+    }
+
+    @Test
+    public void waitIntervalUnderTenMillisShouldSucceed() {
+        RetryConfig config = RetryConfig.custom().waitDuration(Duration.ofMillis(5)).build();
+        assertThat(config.getIntervalFunction().apply(1).compareTo(5L));
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void waitIntervalUnderTenMillisShouldFail() {
-        RetryConfig.custom().waitDuration(Duration.ofMillis(5)).build();
+    public void waitIntervalUnderZeroShouldFail() {
+        RetryConfig.custom().waitDuration(Duration.ofMillis(-1)).build();
     }
 
     @Test
