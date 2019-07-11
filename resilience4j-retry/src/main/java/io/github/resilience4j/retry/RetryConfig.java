@@ -145,6 +145,8 @@ public class RetryConfig {
 		public Builder<T> waitDuration(Duration waitDuration) {
 			if (waitDuration.toMillis() >= 0) {
 				this.intervalFunction = (x) -> waitDuration.toMillis();
+			} else {
+				throw new IllegalArgumentException("waitDurationInOpenState must be a positive value");
 			}
 			return this;
 		}

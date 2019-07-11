@@ -42,9 +42,14 @@ public class RetryConfigBuilderTest {
     }
 
     @Test
-    public void waitIntervalUnderTenMillisShouldFail() {
+    public void waitIntervalUnderTenMillisShouldSucceed() {
         RetryConfig config = RetryConfig.custom().waitDuration(Duration.ofMillis(5)).build();
         assertThat(config.getIntervalFunction().apply(1).compareTo(5L));
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void waitIntervalUnderZeroShouldFail() {
+        RetryConfig.custom().waitDuration(Duration.ofMillis(-1)).build();
     }
 
     @Test
