@@ -77,6 +77,7 @@ public class CircuitBreakerTransformer<T> extends AbstractTransformer<T> {
 
                     @Override
                     public void complete() {
+                        circuitBreaker.releasePermission();
                         down.complete();
                     }
                 });
