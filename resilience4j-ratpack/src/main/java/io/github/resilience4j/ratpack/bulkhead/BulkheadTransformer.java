@@ -76,7 +76,7 @@ public class BulkheadTransformer<T> extends AbstractTransformer<T> {
 
                     @Override
                     public void complete() {
-                        bulkhead.onComplete();
+                        bulkhead.releasePermission();
                         down.complete();
                     }
                 });

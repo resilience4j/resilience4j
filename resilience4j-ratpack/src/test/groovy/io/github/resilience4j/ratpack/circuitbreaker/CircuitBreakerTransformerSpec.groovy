@@ -18,8 +18,6 @@ package io.github.resilience4j.ratpack.circuitbreaker
 import io.github.resilience4j.circuitbreaker.CallNotPermittedException
 import io.github.resilience4j.circuitbreaker.CircuitBreaker
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig
-import io.github.resilience4j.retry.Retry
-import io.github.resilience4j.retry.RetryConfig
 import ratpack.exec.Blocking
 import ratpack.exec.Promise
 import ratpack.test.exec.ExecHarness
