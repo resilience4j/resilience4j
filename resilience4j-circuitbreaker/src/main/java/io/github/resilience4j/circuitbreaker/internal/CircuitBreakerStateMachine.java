@@ -167,6 +167,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
             publishCircuitErrorEvent(name, durationInNanos, throwable);
             stateReference.get().onError(throwable);
         } else {
+            releasePermission();
             publishCircuitIgnoredErrorEvent(name, durationInNanos, throwable);
         }
     }
