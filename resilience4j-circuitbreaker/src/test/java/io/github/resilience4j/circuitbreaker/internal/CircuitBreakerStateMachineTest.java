@@ -314,6 +314,38 @@ public class CircuitBreakerStateMachineTest {
         assertCircuitBreakerMetricsEqualTo(-1f, 0, 0, 4, 0, 2L);
     }
 
+    @Test
+    public void shouldReleasePermissionWhenExceptionIgnored() {
+        circuitBreaker.transitionToOpenState();
+        circuitBreaker.transitionToHalfOpenState();
+        assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.HALF_OPEN);
+
+        assertThat(circuitBreaker.tryAcquirePermission()).isEqualTo(true);
+        circuitBreaker.onSuccess(0); // Should create a CircuitBreakerOnSuccessEvent
+        assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.HALF_OPEN);
+        assertCircuitBreakerMetricsEqualTo(-1f, 1, 1, 4, 0, 0L);
+
+        assertThat(circuitBreaker.tryAcquirePermission()).isEqualTo(true);
+        circuitBreaker.onSuccess(0); // Should create a CircuitBreakerOnSuccessEvent
+        assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.HALF_OPEN);
+        assertCircuitBreakerMetricsEqualTo(-1f, 2, 2, 4, 0, 0L);
+
+        assertThat(circuitBreaker.tryAcquirePermission()).isEqualTo(true);
+        circuitBreaker.onSuccess(0); // Should create a CircuitBreakerOnSuccessEvent
+        assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.HALF_OPEN);
+        assertCircuitBreakerMetricsEqualTo(-1f, 3, 3, 4, 0, 0L);
+
+        assertThat(circuitBreaker.tryAcquirePermission()).isEqualTo(true);
+        circuitBreaker.onError(0, new NumberFormatException()); // Should create a CircuitBreakerOnErrorEvent
+        assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.HALF_OPEN);
+        assertCircuitBreakerMetricsEqualTo(-1f, 3, 3, 4, 0, 0L);
+
+        assertThat(circuitBreaker.tryAcquirePermission()).isEqualTo(true);
+        circuitBreaker.onError(0, new RuntimeException()); // Should create a CircuitBreakerOnErrorEvent
+        assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
+        assertCircuitBreakerMetricsEqualTo(-1f, 3, 4, 5, 1, 0L);
+    }
+
     private void assertCircuitBreakerMetricsEqualTo(Float expectedFailureRate, Integer expectedSuccessCalls, Integer expectedBufferedCalls, Integer expectedMaxBufferedCalls, Integer expectedFailedCalls, Long expectedNotPermittedCalls) {
         final CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
         assertThat(metrics.getFailureRate()).isEqualTo(expectedFailureRate);
