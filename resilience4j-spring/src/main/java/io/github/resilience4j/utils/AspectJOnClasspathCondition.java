@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Mahmoud Romeh
+ * Copyright 2019 Robert Winkler
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,7 +31,7 @@ public class AspectJOnClasspathCondition implements Condition {
 	private static final String CLASS_TO_CHECK = "org.aspectj.lang.ProceedingJoinPoint";
 	@Override
 	public boolean matches(ConditionContext context, AnnotatedTypeMetadata metadata) {
-		return AspectUtil.checkClassIfFound(context, CLASS_TO_CHECK, (e) -> logger.info("Reactor related Aspect extensions are not activated because Reactor is not on the classpath."));
+		return AspectUtil.checkClassIfFound(context, CLASS_TO_CHECK, (e) -> logger.info("Aspects are not activated because AspectJ is not on the classpath."));
 	}
 
 }
