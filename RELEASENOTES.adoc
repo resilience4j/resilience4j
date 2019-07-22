@@ -232,3 +232,14 @@ NOTE: Breaking changes:
 * Issue #486: Added bulkhead configs to resilience4j-ratpack
 * Issue #489: Set the proper order of spring aspects to make thread pool spring aspect work properly
 * PR #478: Added a find() method to all registries
+
+== Version 0.17.0
+* Removed all deprecated methods in preparation for v1.0.0
+* Issue #500: Fiex bug where default external configs in Ratpack apps are not honored
+* Issue #506: Fixed bug where resilience4j-ratpack fails to run when Dropwizard metrics in not on classpath
+* Issue #515: Added Aspect ordering feature in resilience4j-spring again
+* Issue #518: Added support for Vavr Try and Either return types
+* Issue #538: Removed minimum waitDuration constraint for retry
+* Issue #544: Fixed bug where CircuitBreaker gets stuck in HALF_OPEN when the last test request throws an ignored exception
+* Issue #530: Improved RxJava2OnClasspathCondition and ReactorOnClasspathCondition
+
