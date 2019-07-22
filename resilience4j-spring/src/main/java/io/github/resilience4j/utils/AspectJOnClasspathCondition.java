@@ -21,10 +21,6 @@ import org.springframework.context.annotation.Condition;
 import org.springframework.context.annotation.ConditionContext;
 import org.springframework.core.type.AnnotatedTypeMetadata;
 
-
-/**
- * the inject Rx java aspect support spring condition check
- */
 public class AspectJOnClasspathCondition implements Condition {
 
 	private static final Logger logger = LoggerFactory.getLogger(AspectJOnClasspathCondition.class);
