@@ -102,13 +102,13 @@ public class BulkheadConfiguration {
 	}
 
 	@Bean
-	@Conditional(value = {RxJava2OnClasspathCondition.class})
+	@Conditional(value = {RxJava2OnClasspathCondition.class, AspectJOnClasspathCondition.class})
 	public RxJava2BulkheadAspectExt rxJava2BulkHeadAspectExt() {
 		return new RxJava2BulkheadAspectExt();
 	}
 
 	@Bean
-	@Conditional(value = {ReactorOnClasspathCondition.class})
+	@Conditional(value = {ReactorOnClasspathCondition.class, AspectJOnClasspathCondition.class})
 	public ReactorBulkheadAspectExt reactorBulkHeadAspectExt() {
 		return new ReactorBulkheadAspectExt();
 	}

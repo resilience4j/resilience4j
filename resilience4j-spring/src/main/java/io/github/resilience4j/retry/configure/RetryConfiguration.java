@@ -103,13 +103,13 @@ public class RetryConfiguration {
 	}
 
 	@Bean
-	@Conditional(value = {RxJava2OnClasspathCondition.class})
+	@Conditional(value = {RxJava2OnClasspathCondition.class, AspectJOnClasspathCondition.class})
 	public RxJava2RetryAspectExt rxJava2RetryAspectExt() {
 		return new RxJava2RetryAspectExt();
 	}
 
 	@Bean
-	@Conditional(value = {ReactorOnClasspathCondition.class})
+	@Conditional(value = {ReactorOnClasspathCondition.class, AspectJOnClasspathCondition.class})
 	public ReactorRetryAspectExt reactorRetryAspectExt() {
 		return new ReactorRetryAspectExt();
 	}

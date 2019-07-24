@@ -56,6 +56,7 @@ public class CircuitBreakerConfiguration {
 	}
 
 	@Bean
+	@Conditional(value = {AspectJOnClasspathCondition.class})
 	public CircuitBreakerAspect circuitBreakerAspect(CircuitBreakerRegistry circuitBreakerRegistry,
 													 @Autowired(required = false) List<CircuitBreakerAspectExt> circuitBreakerAspectExtList,
 													 FallbackDecorators fallbackDecorators) {

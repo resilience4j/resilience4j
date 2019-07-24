@@ -92,13 +92,13 @@ public class RateLimiterConfiguration {
 	}
 
 	@Bean
-	@Conditional(value = {RxJava2OnClasspathCondition.class})
+	@Conditional(value = {RxJava2OnClasspathCondition.class, AspectJOnClasspathCondition.class})
 	public RxJava2RateLimiterAspectExt rxJava2RateLimterAspectExt() {
 		return new RxJava2RateLimiterAspectExt();
 	}
 
 	@Bean
-	@Conditional(value = {ReactorOnClasspathCondition.class})
+	@Conditional(value = {ReactorOnClasspathCondition.class, AspectJOnClasspathCondition.class})
 	public ReactorRateLimiterAspectExt reactorRateLimiterAspectExt() {
 		return new ReactorRateLimiterAspectExt();
 	}
