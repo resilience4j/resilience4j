@@ -17,18 +17,14 @@ package io.github.resilience4j.bulkhead.autoconfigure;
 
 import io.github.resilience4j.bulkhead.BulkheadRegistry;
 import io.github.resilience4j.bulkhead.ThreadPoolBulkheadRegistry;
-import io.github.resilience4j.bulkhead.configure.BulkheadAspect;
-import io.github.resilience4j.bulkhead.configure.BulkheadAspectExt;
-import io.github.resilience4j.bulkhead.configure.BulkheadConfiguration;
-import io.github.resilience4j.bulkhead.configure.BulkheadConfigurationProperties;
-import io.github.resilience4j.bulkhead.configure.ReactorBulkheadAspectExt;
-import io.github.resilience4j.bulkhead.configure.RxJava2BulkheadAspectExt;
+import io.github.resilience4j.bulkhead.configure.*;
 import io.github.resilience4j.bulkhead.configure.threadpool.ThreadPoolBulkheadConfiguration;
 import io.github.resilience4j.bulkhead.event.BulkheadEvent;
 import io.github.resilience4j.common.bulkhead.configuration.ThreadPoolBulkheadConfigurationProperties;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
 import io.github.resilience4j.fallback.FallbackDecorators;
 import io.github.resilience4j.fallback.autoconfigure.FallbackConfigurationOnMissingBean;
+import io.github.resilience4j.utils.AspectJOnClasspathCondition;
 import io.github.resilience4j.utils.ReactorOnClasspathCondition;
 import io.github.resilience4j.utils.RxJava2OnClasspathCondition;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -64,6 +60,7 @@ public abstract class AbstractBulkheadConfigurationOnMissingBean {
 	}
 
 	@Bean
+	@Conditional(value = {AspectJOnClasspathCondition.class})
 	@ConditionalOnMissingBean
 	public BulkheadAspect bulkheadAspect(BulkheadConfigurationProperties bulkheadConfigurationProperties, ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry,
 	                                     BulkheadRegistry bulkheadRegistry, @Autowired(required = false) List<BulkheadAspectExt> bulkHeadAspectExtList,
@@ -72,14 +69,14 @@ public abstract class AbstractBulkheadConfigurationOnMissingBean {
 	}
 
 	@Bean
-	@Conditional(value = {RxJava2OnClasspathCondition.class})
+	@Conditional(value = {RxJava2OnClasspathCondition.class, AspectJOnClasspathCondition.class})
 	@ConditionalOnMissingBean
 	public RxJava2BulkheadAspectExt rxJava2BulkHeadAspectExt() {
 		return bulkheadConfiguration.rxJava2BulkHeadAspectExt();
 	}
 
 	@Bean
-	@Conditional(value = {ReactorOnClasspathCondition.class})
+	@Conditional(value = {ReactorOnClasspathCondition.class, AspectJOnClasspathCondition.class})
 	@ConditionalOnMissingBean
 	public ReactorBulkheadAspectExt reactorBulkHeadAspectExt() {
 		return bulkheadConfiguration.reactorBulkHeadAspectExt();

@@ -22,6 +22,7 @@ import io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
 import io.github.resilience4j.fallback.FallbackDecorators;
 import io.github.resilience4j.fallback.autoconfigure.FallbackConfigurationOnMissingBean;
+import io.github.resilience4j.utils.AspectJOnClasspathCondition;
 import io.github.resilience4j.utils.ReactorOnClasspathCondition;
 import io.github.resilience4j.utils.RxJava2OnClasspathCondition;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -67,6 +68,7 @@ public abstract class AbstractCircuitBreakerConfigurationOnMissingBean {
 
 	@Bean
 	@ConditionalOnMissingBean
+	@Conditional(value = {AspectJOnClasspathCondition.class})
 	public CircuitBreakerAspect circuitBreakerAspect(CircuitBreakerRegistry circuitBreakerRegistry,
 													 @Autowired(required = false) List<CircuitBreakerAspectExt> circuitBreakerAspectExtList,
 													 FallbackDecorators fallbackDecorators) {
@@ -74,14 +76,14 @@ public abstract class AbstractCircuitBreakerConfigurationOnMissingBean {
 	}
 
 	@Bean
-	@Conditional(value = {RxJava2OnClasspathCondition.class})
+	@Conditional(value = {RxJava2OnClasspathCondition.class, AspectJOnClasspathCondition.class})
 	@ConditionalOnMissingBean
 	public RxJava2CircuitBreakerAspectExt rxJava2CircuitBreakerAspect() {
 		return circuitBreakerConfiguration.rxJava2CircuitBreakerAspect();
 	}
 
 	@Bean
-	@Conditional(value = {ReactorOnClasspathCondition.class})
+	@Conditional(value = {ReactorOnClasspathCondition.class, AspectJOnClasspathCondition.class})
 	@ConditionalOnMissingBean
 	public ReactorCircuitBreakerAspectExt reactorCircuitBreakerAspect() {
 		return circuitBreakerConfiguration.reactorCircuitBreakerAspect();
