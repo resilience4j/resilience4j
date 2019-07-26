@@ -19,7 +19,6 @@
 package io.github.resilience4j.retry;
 
 
-import io.github.resilience4j.core.IntervalFunction;
 import io.github.resilience4j.core.lang.Nullable;
 import io.github.resilience4j.core.predicate.PredicateCreator;
 

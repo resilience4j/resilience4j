@@ -1,4 +1,4 @@
-package io.github.resilience4j.core;
+package io.github.resilience4j.retry;
 
 import io.vavr.collection.List;
 import io.vavr.control.Try;
