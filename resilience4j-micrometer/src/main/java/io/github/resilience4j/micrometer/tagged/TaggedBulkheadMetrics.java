@@ -97,8 +97,8 @@ public class TaggedBulkheadMetrics extends AbstractMetrics implements MeterBinde
 
         private static final String DEFAULT_PREFIX = "resilience4j.bulkhead";
 
-        public static final String DEFAULT_BULKHEAD_AVAILABLE_CONCURRENT_CALLS_METRIC_NAME = DEFAULT_PREFIX + ".available.concurrent_calls";
-        public static final String DEFAULT_BULKHEAD_MAX_ALLOWED_CONCURRENT_CALLS_METRIC_NAME = DEFAULT_PREFIX + ".max_allowed.concurrent.calls";
+        public static final String DEFAULT_BULKHEAD_AVAILABLE_CONCURRENT_CALLS_METRIC_NAME = DEFAULT_PREFIX + ".available.concurrent.calls";
+        public static final String DEFAULT_BULKHEAD_MAX_ALLOWED_CONCURRENT_CALLS_METRIC_NAME = DEFAULT_PREFIX + ".max.allowed.concurrent.calls";
 
         /**
          * Returns a builder for creating custom metric names.
@@ -145,11 +145,11 @@ public class TaggedBulkheadMetrics extends AbstractMetrics implements MeterBinde
             private final MetricNames metricNames = new MetricNames();
 
             /** Overrides the default metric name {@value MetricNames#DEFAULT_BULKHEAD_AVAILABLE_CONCURRENT_CALLS_METRIC_NAME} with a given one.
-             * @param availableConcurrentCallsMetricNames The available concurrent calls metric name.
+             * @param availableConcurrentCallsMetricName The available concurrent calls metric name.
              * @return The builder.
              */
-            public Builder availableConcurrentCallsMetricName(String availableConcurrentCallsMetricNames) {
-                metricNames.availableConcurrentCallsMetricName = requireNonNull(availableConcurrentCallsMetricNames);
+            public Builder availableConcurrentCallsMetricName(String availableConcurrentCallsMetricName) {
+                metricNames.availableConcurrentCallsMetricName = requireNonNull(availableConcurrentCallsMetricName);
                 return this;
             }
 
