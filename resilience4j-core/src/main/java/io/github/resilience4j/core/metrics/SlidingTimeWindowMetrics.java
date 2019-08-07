@@ -35,7 +35,7 @@ public class SlidingTimeWindowMetrics implements Metrics {
      *
      * @param timeWindowSizeInSeconds     the window time in seconds
      */
-    public SlidingTimeWindowMetrics(short timeWindowSizeInSeconds) {
+    public SlidingTimeWindowMetrics(int timeWindowSizeInSeconds) {
         this(timeWindowSizeInSeconds, Clock.systemUTC());
     }
 
