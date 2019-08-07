@@ -5,7 +5,7 @@ import java.time.Clock;
 import java.util.concurrent.TimeUnit;
 
 /**
- * A {@link Metrics} implementation backed by a sliding time window that aggregates only the calls made
+ * A {@link Metrics} implementation is backed by a sliding time window that aggregates only the calls made
  * in the last {@code N} seconds.
  *
  * The sliding time window is implemented with a circular array of {@code N} buckets.
