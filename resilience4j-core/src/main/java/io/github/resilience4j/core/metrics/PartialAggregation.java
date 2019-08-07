@@ -8,7 +8,7 @@ public class PartialAggregation extends AbstractAggregation {
         this.epochSecond = epochSecond;
     }
 
-    void resetBucket(long epochSecond) {
+    void reset(long epochSecond) {
         this.epochSecond = epochSecond;
         this.totalDurationInMillis = 0;
         this.numberOfSlowCalls = 0;

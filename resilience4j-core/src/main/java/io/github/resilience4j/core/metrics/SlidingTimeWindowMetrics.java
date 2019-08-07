@@ -9,9 +9,10 @@ import java.util.concurrent.TimeUnit;
  * in the last {@code N} seconds.
  *
  * The sliding time window is implemented with a circular array of {@code N} buckets.
- * If the time window size is 10 seconds, the circular array has always 10 buckets. Every bucket
- * stores the outcome of all calls which happen in a certain epoch second. The head bucket of the circular array stores the call outcomes of the
- * current epoch second. The other buckets stored the call outcomes of the previous {@code N-1} epoch seconds.
+ * If the time window size is 10 seconds, the circular array has always 10 buckets.
+ * Every bucket aggregates the outcome of all calls which happen in a certain epoch second. (Partial aggregation)
+ * The head bucket of the circular array stores the call outcomes of the current epoch second.
+ * The other buckets stored the call outcomes of the previous {@code N-1} epoch seconds.
  *
  * The sliding window does not store call outcomes (tuples) individually, but incrementally updates partial aggregations (bucket) and a total totalAggregation.
  * The total totalAggregation is updated incrementally when a new call outcome is recorded. When the oldest bucket is evicted, the partial totalAggregation of that bucket
@@ -91,7 +92,7 @@ public class SlidingTimeWindowMetrics implements Metrics {
             moveHeadIndexToNextBucket();
             currentBucket = getLatestBucket();
             totalAggregation.removeBucket(currentBucket);
-            currentBucket.resetBucket(currentEpochSecond - secondsToMoveTheWindow);
+            currentBucket.reset(currentEpochSecond - secondsToMoveTheWindow);
         } while(secondsToMoveTheWindow > 0);
         return currentBucket;
     }
