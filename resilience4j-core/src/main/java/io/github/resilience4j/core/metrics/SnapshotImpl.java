@@ -8,12 +8,12 @@ public class SnapshotImpl implements Snapshot {
     private int totalNumberOfCalls;
     private final int timeWindowSizeInSeconds;
 
-    SnapshotImpl(int timeWindowSizeInSeconds, Aggregation aggregation) {
+    SnapshotImpl(int timeWindowSizeInSeconds, TotalAggregation totalAggregation) {
         this.timeWindowSizeInSeconds = timeWindowSizeInSeconds;
-        this.totalDurationInMillis = aggregation.getTotalDurationInMillis();
-        this.totalNumberOfSlowCalls = aggregation.getTotalNumberOfSlowSuccessfulCalls();
-        this.totalNumberOfFailedCalls = aggregation.getTotalNumberOfFailedCalls();
-        this.totalNumberOfCalls = aggregation.getTotalNumberOfCalls();
+        this.totalDurationInMillis = totalAggregation.totalDurationInMillis;
+        this.totalNumberOfSlowCalls = totalAggregation.numberOfSlowCalls;
+        this.totalNumberOfFailedCalls = totalAggregation.numberOfFailedCalls;
+        this.totalNumberOfCalls = totalAggregation.numberOfCalls;
 
     }
 
@@ -23,7 +23,7 @@ public class SnapshotImpl implements Snapshot {
     }
 
     @Override
-    public int getTotalNumberOfSlowSuccessfulCalls() {
+    public int getNumberOfSlowCalls() {
         return totalNumberOfSlowCalls;
     }
 
@@ -36,12 +36,12 @@ public class SnapshotImpl implements Snapshot {
     }
 
     @Override
-    public int getTotalNumberOfSuccessfulCalls() {
+    public int getNumberOfSuccessfulCalls() {
         return totalNumberOfCalls - totalNumberOfFailedCalls;
     }
 
     @Override
-    public int getTotalNumberOfFailedCalls() {
+    public int getNumberOfFailedCalls() {
         return totalNumberOfFailedCalls;
     }
 

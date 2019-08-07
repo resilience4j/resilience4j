@@ -10,11 +10,18 @@ public interface Snapshot {
     long getTotalDurationInMillis();
 
     /**
-     * Returns the total number of successful calls which were slower than a certain threshold.
+     * Returns the average duration of all calls in milliseconds.
      *
-     * @return the total number of successful calls which were slower than a certain threshold
+     * @return the average duration of all calls in milliseconds
      */
-    int getTotalNumberOfSlowSuccessfulCalls();
+    long getAverageDurationInMillis();
+
+    /**
+     * Returns the total number of calls which were slower than a certain threshold.
+     *
+     * @return the total number of calls which were slower than a certain threshold
+     */
+    int getNumberOfSlowCalls();
 
     /**
      * Returns the percentage of calls which were slower than a certain threshold.
@@ -28,14 +35,14 @@ public interface Snapshot {
      *
      * @return the total number of successful calls
      */
-    int getTotalNumberOfSuccessfulCalls();
+    int getNumberOfSuccessfulCalls();
 
     /**
      * Returns the total number of failed calls.
      *
      * @return the total number of failed calls
      */
-    int getTotalNumberOfFailedCalls();
+    int getNumberOfFailedCalls();
 
     /**
      * Returns the total number of all calls.
@@ -57,11 +64,4 @@ public interface Snapshot {
      * @return the failure rate in percentage
      */
     float getFailureRatePercentage();
-
-    /**
-     * Returns the average duration of all calls in milliseconds.
-     *
-     * @return the average duration of all calls in milliseconds
-     */
-    long getAverageDurationInMillis();
 }

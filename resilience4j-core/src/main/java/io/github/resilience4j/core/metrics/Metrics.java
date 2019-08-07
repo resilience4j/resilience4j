@@ -22,7 +22,7 @@ public interface Metrics {
 
     enum Outcome
     {
-        SUCCESS, ERROR, SLOW_SUCCESS
+        SUCCESS, ERROR, SLOW_SUCCESS, SLOW_ERROR
     }
 
 }

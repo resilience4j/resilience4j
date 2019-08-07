@@ -13,19 +13,19 @@ import java.util.concurrent.TimeUnit;
  * stores the outcome of all calls which happen in a certain epoch second. The head bucket of the circular array stores the call outcomes of the
  * current epoch second. The other buckets stored the call outcomes of the previous {@code N-1} epoch seconds.
  *
- * The sliding window does not store call outcomes (tuples) individually, but incrementally updates partial aggregations (bucket) and a total aggregation.
- * The total aggregation is updated incrementally when a new call outcome is recorded. When the oldest bucket is evicted, the partial aggregation of that bucket
- * is subtracted from the total aggregation and the bucket is reset. (Subtract-on-Evict)
+ * The sliding window does not store call outcomes (tuples) individually, but incrementally updates partial aggregations (bucket) and a total totalAggregation.
+ * The total totalAggregation is updated incrementally when a new call outcome is recorded. When the oldest bucket is evicted, the partial totalAggregation of that bucket
+ * is subtracted from the total totalAggregation and the bucket is reset. (Subtract-on-Evict)
  *
  * The time to retrieve a Snapshot is constant 0(1), since the Snapshot is pre-aggregated and is independent of the time window size.
  * The space requirement (memory consumption) of this implementation should be nearly constant O(n), since the call outcomes (tuples) are not stored individually.
- * Only {@code N} partial aggregations and 1 total aggregation are created.
+ * Only {@code N} partial aggregations and 1 total totalAggregation are created.
  */
 public class SlidingTimeWindowMetrics implements Metrics {
 
     private final int timeWindowSizeInSeconds;
-    private final Aggregation aggregation;
-    final Bucket[] buckets;
+    private final TotalAggregation totalAggregation;
+    final PartialAggregation[] buckets;
     private final Clock clock;
     int headBucketIndex;
 
@@ -47,27 +47,27 @@ public class SlidingTimeWindowMetrics implements Metrics {
     public SlidingTimeWindowMetrics(int timeWindowSizeInSeconds, Clock clock) {
         this.clock = clock;
         this.timeWindowSizeInSeconds = timeWindowSizeInSeconds;
-        this.buckets = new Bucket[timeWindowSizeInSeconds];
+        this.buckets = new PartialAggregation[timeWindowSizeInSeconds];
         this.headBucketIndex = 0;
         long epochSecond = clock.instant().getEpochSecond();
         for (int i = 0; i < timeWindowSizeInSeconds; i++)
         {
-            buckets[i] = new Bucket(epochSecond);
+            buckets[i] = new PartialAggregation(epochSecond);
             epochSecond++;
         }
-        this.aggregation = new Aggregation();
+        this.totalAggregation = new TotalAggregation();
     }
 
     @Override
     public synchronized Snapshot record(long duration, TimeUnit durationUnit, Outcome outcome) {
-        aggregation.record(duration, durationUnit, outcome);
+        totalAggregation.record(duration, durationUnit, outcome);
         moveWindowToCurrentEpochSecond(getLatestBucket()).record(duration, durationUnit, outcome);
-        return new SnapshotImpl(timeWindowSizeInSeconds, aggregation);
+        return new SnapshotImpl(timeWindowSizeInSeconds, totalAggregation);
     }
 
     public synchronized Snapshot getSnapshot(){
         moveWindowToCurrentEpochSecond(getLatestBucket());
-        return new SnapshotImpl(timeWindowSizeInSeconds, aggregation);
+        return new SnapshotImpl(timeWindowSizeInSeconds, totalAggregation);
     }
 
     /**
@@ -78,19 +78,19 @@ public class SlidingTimeWindowMetrics implements Metrics {
      * 
      * @param latestBucket the latest bucket of the circular array
      */
-    private Bucket moveWindowToCurrentEpochSecond(Bucket latestBucket) {
+    private PartialAggregation moveWindowToCurrentEpochSecond(PartialAggregation latestBucket) {
         long currentEpochSecond = clock.instant().getEpochSecond();
         long differenceInSeconds = currentEpochSecond - latestBucket.getEpochSecond();
         if(differenceInSeconds == 0){
             return latestBucket;
         }
         long secondsToMoveTheWindow = Math.min(differenceInSeconds, timeWindowSizeInSeconds);
-        Bucket currentBucket;
+        PartialAggregation currentBucket;
         do{
             secondsToMoveTheWindow--;
             moveHeadIndexToNextBucket();
             currentBucket = getLatestBucket();
-            aggregation.removeBucket(currentBucket);
+            totalAggregation.removeBucket(currentBucket);
             currentBucket.resetBucket(currentEpochSecond - secondsToMoveTheWindow);
         } while(secondsToMoveTheWindow > 0);
         return currentBucket;
@@ -101,7 +101,7 @@ public class SlidingTimeWindowMetrics implements Metrics {
      *
      * @return the head bucket of the circular array
      */
-    Bucket getLatestBucket(){
+    PartialAggregation getLatestBucket(){
         return buckets[headBucketIndex];
     }
 
