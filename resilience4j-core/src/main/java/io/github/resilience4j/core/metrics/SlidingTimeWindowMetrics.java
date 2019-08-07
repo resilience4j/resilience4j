@@ -58,18 +58,16 @@ public class SlidingTimeWindowMetrics implements Metrics {
         this.aggregation = new Aggregation();
     }
 
-
-
     @Override
     public synchronized Snapshot record(long duration, TimeUnit durationUnit, Outcome outcome) {
         aggregation.record(duration, durationUnit, outcome);
         moveWindowToCurrentEpochSecond(getLatestBucket()).record(duration, durationUnit, outcome);
-        return new SnapshotImpl(aggregation);
+        return new SnapshotImpl(timeWindowSizeInSeconds, aggregation);
     }
 
     public synchronized Snapshot getSnapshot(){
         moveWindowToCurrentEpochSecond(getLatestBucket());
-        return new SnapshotImpl(aggregation);
+        return new SnapshotImpl(timeWindowSizeInSeconds, aggregation);
     }
 
     /**

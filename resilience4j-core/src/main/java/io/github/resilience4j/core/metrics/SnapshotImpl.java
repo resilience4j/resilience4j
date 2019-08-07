@@ -6,12 +6,15 @@ public class SnapshotImpl implements Snapshot {
     private int totalNumberOfSlowCalls;
     private int totalNumberOfFailedCalls;
     private int totalNumberOfCalls;
+    private final int timeWindowSizeInSeconds;
 
-    SnapshotImpl(Aggregation aggregation) {
+    SnapshotImpl(int timeWindowSizeInSeconds, Aggregation aggregation) {
+        this.timeWindowSizeInSeconds = timeWindowSizeInSeconds;
         this.totalDurationInMillis = aggregation.getTotalDurationInMillis();
         this.totalNumberOfSlowCalls = aggregation.getTotalNumberOfSlowSuccessfulCalls();
         this.totalNumberOfFailedCalls = aggregation.getTotalNumberOfFailedCalls();
         this.totalNumberOfCalls = aggregation.getTotalNumberOfCalls();
+
     }
 
     @Override
@@ -45,6 +48,14 @@ public class SnapshotImpl implements Snapshot {
     @Override
     public int getTotalNumberOfCalls() {
         return totalNumberOfCalls;
+    }
+
+    @Override
+    public float getAverageThroughputPerSecond() {
+        if(totalNumberOfCalls == 0){
+            return 0;
+        }
+        return (float) totalNumberOfCalls / timeWindowSizeInSeconds;
     }
 
     @Override

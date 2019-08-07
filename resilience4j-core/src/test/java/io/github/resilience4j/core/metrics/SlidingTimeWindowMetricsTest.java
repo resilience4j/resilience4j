@@ -98,6 +98,27 @@ public class SlidingTimeWindowMetricsTest {
     }
 
     @Test
+    public void testAverageThroughputPerSecond(){
+        MockClock clock = MockClock.at(2019, 8, 4, 12, 0, 0, ZoneId.of("UTC"));
+        Metrics metrics = new SlidingTimeWindowMetrics(5, clock);
+
+        metrics.record(100, TimeUnit.MILLISECONDS, Metrics.Outcome.SUCCESS);
+        metrics.record(100, TimeUnit.MILLISECONDS, Metrics.Outcome.SUCCESS);
+        metrics.record(100, TimeUnit.MILLISECONDS, Metrics.Outcome.SUCCESS);
+        clock.advanceBySeconds(1);
+        metrics.record(100, TimeUnit.MILLISECONDS, Metrics.Outcome.SUCCESS);
+        metrics.record(100, TimeUnit.MILLISECONDS, Metrics.Outcome.SUCCESS);
+        metrics.record(100, TimeUnit.MILLISECONDS, Metrics.Outcome.SUCCESS);
+        clock.advanceBySeconds(1);
+        metrics.record(100, TimeUnit.MILLISECONDS, Metrics.Outcome.SUCCESS);
+        metrics.record(100, TimeUnit.MILLISECONDS, Metrics.Outcome.SUCCESS);
+
+        Snapshot snapshot = metrics.getSnapshot();
+        assertThat(snapshot.getAverageThroughputPerSecond()).isEqualTo(1.6f);
+
+    }
+
+    @Test
     public void testMoveHeadIndexToNextBucket(){
         MockClock clock = MockClock.at(2019, 8, 4, 12, 0, 0, ZoneId.of("UTC"));
         SlidingTimeWindowMetrics metrics = new SlidingTimeWindowMetrics(3, clock);
