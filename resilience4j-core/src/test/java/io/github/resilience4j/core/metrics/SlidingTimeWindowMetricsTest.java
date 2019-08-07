@@ -114,7 +114,7 @@ public class SlidingTimeWindowMetricsTest {
         metrics.record(100, TimeUnit.MILLISECONDS, Metrics.Outcome.SUCCESS);
 
         Snapshot snapshot = metrics.getSnapshot();
-        assertThat(snapshot.getAverageThroughputPerSecond()).isEqualTo(1.6f);
+        assertThat(snapshot.getAverageNumberOfCallsPerSecond()).isEqualTo(1.6f);
 
     }
 

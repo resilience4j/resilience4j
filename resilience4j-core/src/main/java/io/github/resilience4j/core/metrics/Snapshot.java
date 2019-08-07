@@ -45,11 +45,11 @@ public interface Snapshot {
     int getTotalNumberOfCalls();
 
     /**
-     * Returns the throughput per second.
+     * Returns the average number of calls per second.
      *
-     * @return the the call throughput per second.
+     * @return the average number of calls per second
      */
-    float getAverageThroughputPerSecond();
+    float getAverageNumberOfCallsPerSecond();
 
     /**
      * Returns the failure rate in percentage.

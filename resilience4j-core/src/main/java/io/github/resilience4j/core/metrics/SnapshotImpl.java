@@ -51,7 +51,7 @@ public class SnapshotImpl implements Snapshot {
     }
 
     @Override
-    public float getAverageThroughputPerSecond() {
+    public float getAverageNumberOfCallsPerSecond() {
         if(totalNumberOfCalls == 0){
             return 0;
         }
