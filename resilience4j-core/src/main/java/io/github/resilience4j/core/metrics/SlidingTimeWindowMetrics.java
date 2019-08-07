@@ -8,11 +8,11 @@ import java.util.concurrent.TimeUnit;
  * A {@link Metrics} implementation is backed by a sliding time window that aggregates only the calls made
  * in the last {@code N} seconds.
  *
- * The sliding time window is implemented with a circular array of {@code N} buckets.
- * If the time window size is 10 seconds, the circular array has always 10 buckets.
+ * The sliding time window is implemented with a circular array of {@code N} partial aggregations (buckets).
+ * If the time window size is 10 seconds, the circular array has always 10 partial aggregations (buckets).
  * Every bucket aggregates the outcome of all calls which happen in a certain epoch second. (Partial aggregation)
  * The head bucket of the circular array stores the call outcomes of the current epoch second.
- * The other buckets stored the call outcomes of the previous {@code N-1} epoch seconds.
+ * The other partialAggregations stored the call outcomes of the previous {@code N-1} epoch seconds.
  *
  * The sliding window does not store call outcomes (tuples) individually, but incrementally updates partial aggregations (bucket) and a total totalAggregation.
  * The total totalAggregation is updated incrementally when a new call outcome is recorded. When the oldest bucket is evicted, the partial totalAggregation of that bucket
@@ -26,9 +26,9 @@ public class SlidingTimeWindowMetrics implements Metrics {
 
     private final int timeWindowSizeInSeconds;
     private final TotalAggregation totalAggregation;
-    final PartialAggregation[] buckets;
+    final PartialAggregation[] partialAggregations;
     private final Clock clock;
-    int headBucketIndex;
+    int headIndex;
 
     /**
      * Creates a new {@link SlidingTimeWindowMetrics} with the given window of time.
@@ -48,12 +48,12 @@ public class SlidingTimeWindowMetrics implements Metrics {
     public SlidingTimeWindowMetrics(int timeWindowSizeInSeconds, Clock clock) {
         this.clock = clock;
         this.timeWindowSizeInSeconds = timeWindowSizeInSeconds;
-        this.buckets = new PartialAggregation[timeWindowSizeInSeconds];
-        this.headBucketIndex = 0;
+        this.partialAggregations = new PartialAggregation[timeWindowSizeInSeconds];
+        this.headIndex = 0;
         long epochSecond = clock.instant().getEpochSecond();
         for (int i = 0; i < timeWindowSizeInSeconds; i++)
         {
-            buckets[i] = new PartialAggregation(epochSecond);
+            partialAggregations[i] = new PartialAggregation(epochSecond);
             epochSecond++;
         }
         this.totalAggregation = new TotalAggregation();
@@ -62,12 +62,12 @@ public class SlidingTimeWindowMetrics implements Metrics {
     @Override
     public synchronized Snapshot record(long duration, TimeUnit durationUnit, Outcome outcome) {
         totalAggregation.record(duration, durationUnit, outcome);
-        moveWindowToCurrentEpochSecond(getLatestBucket()).record(duration, durationUnit, outcome);
+        moveWindowToCurrentEpochSecond(getLatestPartialAggregation()).record(duration, durationUnit, outcome);
         return new SnapshotImpl(timeWindowSizeInSeconds, totalAggregation);
     }
 
     public synchronized Snapshot getSnapshot(){
-        moveWindowToCurrentEpochSecond(getLatestBucket());
+        moveWindowToCurrentEpochSecond(getLatestPartialAggregation());
         return new SnapshotImpl(timeWindowSizeInSeconds, totalAggregation);
     }
 
@@ -77,40 +77,40 @@ public class SlidingTimeWindowMetrics implements Metrics {
      * The difference is calculated by subtracting the epoch second from the latest bucket from the current epoch second.
      * If the difference is greater than the time window size, the time window size is used.
      * 
-     * @param latestBucket the latest bucket of the circular array
+     * @param latestPartialAggregation the latest partial aggregation of the circular array
      */
-    private PartialAggregation moveWindowToCurrentEpochSecond(PartialAggregation latestBucket) {
+    private PartialAggregation moveWindowToCurrentEpochSecond(PartialAggregation latestPartialAggregation) {
         long currentEpochSecond = clock.instant().getEpochSecond();
-        long differenceInSeconds = currentEpochSecond - latestBucket.getEpochSecond();
+        long differenceInSeconds = currentEpochSecond - latestPartialAggregation.getEpochSecond();
         if(differenceInSeconds == 0){
-            return latestBucket;
+            return latestPartialAggregation;
         }
         long secondsToMoveTheWindow = Math.min(differenceInSeconds, timeWindowSizeInSeconds);
-        PartialAggregation currentBucket;
+        PartialAggregation currentPartialAggregation;
         do{
             secondsToMoveTheWindow--;
-            moveHeadIndexToNextBucket();
-            currentBucket = getLatestBucket();
-            totalAggregation.removeBucket(currentBucket);
-            currentBucket.reset(currentEpochSecond - secondsToMoveTheWindow);
+            moveHeadIndexByOne();
+            currentPartialAggregation = getLatestPartialAggregation();
+            totalAggregation.removeBucket(currentPartialAggregation);
+            currentPartialAggregation.reset(currentEpochSecond - secondsToMoveTheWindow);
         } while(secondsToMoveTheWindow > 0);
-        return currentBucket;
+        return currentPartialAggregation;
     }
 
     /**
-     * Returns the head bucket of the circular array.
+     * Returns the head partial aggregation of the circular array.
      *
-     * @return the head bucket of the circular array
+     * @return the head partial aggregation of the circular array
      */
-    PartialAggregation getLatestBucket(){
-        return buckets[headBucketIndex];
+    PartialAggregation getLatestPartialAggregation(){
+        return partialAggregations[headIndex];
     }
 
     /**
-     * Moves the headBucketIndex to the next bucket.
+     * Moves the headIndex to the next bucket.
      *
      */
-    void moveHeadIndexToNextBucket(){
-        this.headBucketIndex = (headBucketIndex + 1) % timeWindowSizeInSeconds;
+    void moveHeadIndexByOne(){
+        this.headIndex = (headIndex + 1) % timeWindowSizeInSeconds;
     }
 }
