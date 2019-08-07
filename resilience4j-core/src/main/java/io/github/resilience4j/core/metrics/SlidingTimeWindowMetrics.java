@@ -8,7 +8,7 @@ import java.util.concurrent.TimeUnit;
  * A {@link Metrics} implementation backed by a sliding time window that aggregates only the calls made
  * in the last {@code N} seconds.
  *
- * The sliding time window is implemented with a circular array óf {@code N} buckets.
+ * The sliding time window is implemented with a circular array of {@code N} buckets.
  * If the time window size is 10 seconds, the circular array has always 10 buckets. Every bucket
  * stores the outcome of all calls which happen in a certain epoch second. The head bucket of the circular array stores the call outcomes of the
  * current epoch second. The other buckets stored the call outcomes of the previous {@code N-1} epoch seconds.
