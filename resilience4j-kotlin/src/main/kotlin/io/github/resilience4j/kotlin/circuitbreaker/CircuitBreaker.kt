@@ -19,6 +19,7 @@
 package io.github.resilience4j.kotlin.circuitbreaker
 
 import io.github.resilience4j.circuitbreaker.CircuitBreaker
+import java.util.concurrent.TimeUnit
 
 /**
  * Decorates and executes the given suspend function [block].
@@ -29,11 +30,11 @@ suspend fun <T> CircuitBreaker.executeSuspendFunction(block: suspend () -> T): T
     try {
         val result = block()
         val durationInNanos = System.nanoTime() - start
-        onSuccess(durationInNanos)
+        onSuccess(durationInNanos, TimeUnit.NANOSECONDS)
         return result
     } catch (exception: Exception) {
         val durationInNanos = System.nanoTime() - start
-        onError(durationInNanos, exception)
+        onError(durationInNanos, TimeUnit.NANOSECONDS, exception)
         throw exception
     }
 }

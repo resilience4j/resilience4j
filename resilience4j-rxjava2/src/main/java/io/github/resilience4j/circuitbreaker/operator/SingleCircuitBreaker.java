@@ -18,10 +18,11 @@ package io.github.resilience4j.circuitbreaker.operator;
 import io.github.resilience4j.AbstractSingleObserver;
 import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
-import io.github.resilience4j.core.StopWatch;
 import io.reactivex.Single;
 import io.reactivex.SingleObserver;
 import io.reactivex.internal.disposables.EmptyDisposable;
+
+import java.util.concurrent.TimeUnit;
 
 class SingleCircuitBreaker<T> extends Single<T> {
 
@@ -45,21 +46,21 @@ class SingleCircuitBreaker<T> extends Single<T> {
 
     class CircuitBreakerSingleObserver extends AbstractSingleObserver<T> {
 
-        private final StopWatch stopWatch;
+        private final long start;
 
         CircuitBreakerSingleObserver(SingleObserver<? super T> downstreamObserver) {
             super(downstreamObserver);
-            this.stopWatch = StopWatch.start();
+            this.start = System.nanoTime();
         }
 
         @Override
         protected void hookOnError(Throwable e) {
-            circuitBreaker.onError(stopWatch.stop().toNanos(), e);
+            circuitBreaker.onError(System.nanoTime() - start, TimeUnit.NANOSECONDS, e);
         }
 
         @Override
         protected void hookOnSuccess() {
-            circuitBreaker.onSuccess(stopWatch.stop().toNanos());
+            circuitBreaker.onSuccess(System.nanoTime() - start, TimeUnit.NANOSECONDS);
         }
 
         @Override

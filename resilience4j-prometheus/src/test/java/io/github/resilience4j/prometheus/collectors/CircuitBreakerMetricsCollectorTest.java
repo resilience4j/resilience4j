@@ -21,6 +21,8 @@ import io.prometheus.client.CollectorRegistry;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.concurrent.TimeUnit;
+
 import static io.github.resilience4j.prometheus.collectors.CircuitBreakerMetricsCollector.MetricNames.*;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -39,8 +41,8 @@ public class CircuitBreakerMetricsCollectorTest {
         CircuitBreakerMetricsCollector.ofCircuitBreakerRegistry(circuitBreakerRegistry).register(registry);
 
         // record some basic stats
-        circuitBreaker.onSuccess(0);
-        circuitBreaker.onError(0, new RuntimeException("oops"));
+        circuitBreaker.onSuccess(0, TimeUnit.NANOSECONDS);
+        circuitBreaker.onError(0, TimeUnit.NANOSECONDS, new RuntimeException("oops"));
         circuitBreaker.transitionToOpenState();
     }
 

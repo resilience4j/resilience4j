@@ -27,6 +27,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import static io.github.resilience4j.micrometer.tagged.MetricsTestHelper.findCounterByKindAndNameTags;
@@ -48,8 +49,8 @@ public class TaggedCircuitBreakerMetricsTest {
 
         circuitBreaker = circuitBreakerRegistry.circuitBreaker("backendA");
         // record some basic stats
-        circuitBreaker.onError(0, new RuntimeException("oops"));
-        circuitBreaker.onSuccess(0);
+        circuitBreaker.onError(0, TimeUnit.NANOSECONDS, new RuntimeException("oops"));
+        circuitBreaker.onSuccess(0, TimeUnit.NANOSECONDS);
 
         taggedCircuitBreakerMetrics = TaggedCircuitBreakerMetrics.ofCircuitBreakerRegistry(circuitBreakerRegistry);
         taggedCircuitBreakerMetrics.bindTo(meterRegistry);
@@ -58,7 +59,7 @@ public class TaggedCircuitBreakerMetricsTest {
     @Test
     public void shouldAddMetricsForANewlyCreatedCircuitBreaker() {
         CircuitBreaker newCircuitBreaker = circuitBreakerRegistry.circuitBreaker("backendB");
-        newCircuitBreaker.onSuccess(0);
+        newCircuitBreaker.onSuccess(0, TimeUnit.NANOSECONDS);
 
         assertThat(taggedCircuitBreakerMetrics.meterIdMap).containsKeys("backendA", "backendB");
         assertThat(taggedCircuitBreakerMetrics.meterIdMap.get("backendA")).hasSize(13);

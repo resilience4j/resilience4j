@@ -27,6 +27,7 @@ import org.junit.Test;
 
 import java.time.Duration;
 import java.time.ZoneId;
+import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.BDDAssertions.assertThat;
@@ -126,30 +127,30 @@ public class CircuitBreakerStateMachineTest {
 
         // Call 1 is a failure
         assertThat(circuitBreaker.tryAcquirePermission()).isEqualTo(true);
-        circuitBreaker.onError(0, new RuntimeException()); // Should create a CircuitBreakerOnErrorEvent
+        circuitBreaker.onError(0, TimeUnit.NANOSECONDS, new RuntimeException()); // Should create a CircuitBreakerOnErrorEvent
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
         assertCircuitBreakerMetricsEqualTo(-1f, 0, 1, 5, 1, 0L);
 
         // Call 2 is a failure
         assertThat(circuitBreaker.tryAcquirePermission()).isEqualTo(true);
-        circuitBreaker.onError(0, new RuntimeException()); // Should create a CircuitBreakerOnErrorEvent
+        circuitBreaker.onError(0, TimeUnit.NANOSECONDS, new RuntimeException()); // Should create a CircuitBreakerOnErrorEvent
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
         assertCircuitBreakerMetricsEqualTo(-1f, 0, 2, 5, 2, 0L);
 
         // Call 3 is a failure
         assertThat(circuitBreaker.tryAcquirePermission()).isEqualTo(true);
-        circuitBreaker.onError(0, new RuntimeException()); // Should create a CircuitBreakerOnErrorEvent
+        circuitBreaker.onError(0, TimeUnit.NANOSECONDS, new RuntimeException()); // Should create a CircuitBreakerOnErrorEvent
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
         assertCircuitBreakerMetricsEqualTo(-1f, 0, 3, 5, 3, 0L);
 
         // Call 4 is a success
         assertThat(circuitBreaker.tryAcquirePermission()).isEqualTo(true);
-        circuitBreaker.onSuccess(0); // Should create a CircuitBreakerOnSuccessEvent
+        circuitBreaker.onSuccess(0, TimeUnit.NANOSECONDS); // Should create a CircuitBreakerOnSuccessEvent
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
         assertCircuitBreakerMetricsEqualTo(-1f, 1, 4, 5, 3, 0L);
 
         // Call 5 is a success
-        circuitBreaker.onSuccess(0); // Should create a CircuitBreakerOnSuccessEvent
+        circuitBreaker.onSuccess(0, TimeUnit.NANOSECONDS); // Should create a CircuitBreakerOnSuccessEvent
 
         // The ring buffer is filled and the failure rate is above 50%
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.OPEN); // Should create a CircuitBreakerOnStateTransitionEvent (6)
@@ -200,17 +201,17 @@ public class CircuitBreakerStateMachineTest {
         // A ring buffer with size 3 is used in half open state
         // Call 1 is a failure
         assertThat(circuitBreaker.tryAcquirePermission()).isEqualTo(true);
-        circuitBreaker.onError(0, new RuntimeException()); // Should create a CircuitBreakerOnErrorEvent
+        circuitBreaker.onError(0, TimeUnit.NANOSECONDS, new RuntimeException()); // Should create a CircuitBreakerOnErrorEvent
 
         // Call 2 is a failure
         assertThat(circuitBreaker.tryAcquirePermission()).isEqualTo(true);
-        circuitBreaker.onError(0, new RuntimeException()); // Should create a CircuitBreakerOnErrorEvent
+        circuitBreaker.onError(0, TimeUnit.NANOSECONDS, new RuntimeException()); // Should create a CircuitBreakerOnErrorEvent
         // Call 3 is a success
         assertThat(circuitBreaker.tryAcquirePermission()).isEqualTo(true);
-        circuitBreaker.onSuccess(0); // Should create a CircuitBreakerOnSuccessEvent (12)
+        circuitBreaker.onSuccess(0, TimeUnit.NANOSECONDS); // Should create a CircuitBreakerOnSuccessEvent (12)
         // Call 2 is a failure
         assertThat(circuitBreaker.tryAcquirePermission()).isEqualTo(true);
-        circuitBreaker.onError(0, new RuntimeException()); // Should create a CircuitBreakerOnErrorEvent
+        circuitBreaker.onError(0, TimeUnit.NANOSECONDS, new RuntimeException()); // Should create a CircuitBreakerOnErrorEvent
 
         // The ring buffer is filled and the failure rate is above 50%
         // The state machine transitions back to OPEN state
@@ -229,19 +230,19 @@ public class CircuitBreakerStateMachineTest {
 
         // Call 1 is a failure
         assertThat(circuitBreaker.tryAcquirePermission()).isEqualTo(true);
-        circuitBreaker.onError(0, new RuntimeException()); // Should create a CircuitBreakerOnErrorEvent
+        circuitBreaker.onError(0, TimeUnit.NANOSECONDS, new RuntimeException()); // Should create a CircuitBreakerOnErrorEvent
 
         // Call 2 is a success
         assertThat(circuitBreaker.tryAcquirePermission()).isEqualTo(true);
-        circuitBreaker.onSuccess(0); // Should create a CircuitBreakerOnSuccessEvent
+        circuitBreaker.onSuccess(0, TimeUnit.NANOSECONDS); // Should create a CircuitBreakerOnSuccessEvent
 
         // Call 3 is a success
         assertThat(circuitBreaker.tryAcquirePermission()).isEqualTo(true);
-        circuitBreaker.onSuccess(0); // Should create a CircuitBreakerOnSuccessEvent
+        circuitBreaker.onSuccess(0, TimeUnit.NANOSECONDS); // Should create a CircuitBreakerOnSuccessEvent
 
         // Call 4 is a success
         assertThat(circuitBreaker.tryAcquirePermission()).isEqualTo(true);
-        circuitBreaker.onSuccess(0); // Should create a CircuitBreakerOnSuccessEvent
+        circuitBreaker.onSuccess(0, TimeUnit.NANOSECONDS); // Should create a CircuitBreakerOnSuccessEvent
 
         // The ring buffer is filled and the failure rate is below 50%
         // The state machine transitions back to CLOSED state
@@ -251,7 +252,7 @@ public class CircuitBreakerStateMachineTest {
 
         // // Call 5 is a success and fills the buffer in closed state
         assertThat(circuitBreaker.tryAcquirePermission()).isEqualTo(true);
-        circuitBreaker.onSuccess(0); // Should create a CircuitBreakerOnSuccessEvent
+        circuitBreaker.onSuccess(0, TimeUnit.NANOSECONDS); // Should create a CircuitBreakerOnSuccessEvent
         assertCircuitBreakerMetricsEqualTo(20.0f, 4, 5, 5, 1, 0L);
 
     }
@@ -261,8 +262,8 @@ public class CircuitBreakerStateMachineTest {
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED); // Should create a CircuitBreakerOnStateTransitionEvent (21)
         assertThatMetricsAreReset();
 
-        circuitBreaker.onSuccess(0);
-        circuitBreaker.onError(0, new RuntimeException());
+        circuitBreaker.onSuccess(0, TimeUnit.NANOSECONDS);
+        circuitBreaker.onError(0, TimeUnit.NANOSECONDS, new RuntimeException());
 
         assertCircuitBreakerMetricsEqualTo(-1f, 1, 2, 5, 1, 0L);
 
@@ -279,19 +280,19 @@ public class CircuitBreakerStateMachineTest {
         assertThatMetricsAreReset();
 
         assertThat(circuitBreaker.tryAcquirePermission()).isEqualTo(true);
-        circuitBreaker.onSuccess(0); // Should not create a CircuitBreakerOnSuccessEvent
+        circuitBreaker.onSuccess(0, TimeUnit.NANOSECONDS); // Should not create a CircuitBreakerOnSuccessEvent
 
         assertThat(circuitBreaker.tryAcquirePermission()).isEqualTo(true);
-        circuitBreaker.onError(0, new RuntimeException()); // Should not create a CircuitBreakerOnErrorEvent
+        circuitBreaker.onError(0, TimeUnit.NANOSECONDS, new RuntimeException()); // Should not create a CircuitBreakerOnErrorEvent
 
         assertThat(circuitBreaker.tryAcquirePermission()).isEqualTo(true);
-        circuitBreaker.onError(0, new RuntimeException()); // Should not create a CircuitBreakerOnErrorEvent
+        circuitBreaker.onError(0, TimeUnit.NANOSECONDS, new RuntimeException()); // Should not create a CircuitBreakerOnErrorEvent
 
         assertThat(circuitBreaker.tryAcquirePermission()).isEqualTo(true);
-        circuitBreaker.onError(0, new RuntimeException()); // Should not create a CircuitBreakerOnErrorEvent
+        circuitBreaker.onError(0, TimeUnit.NANOSECONDS, new RuntimeException()); // Should not create a CircuitBreakerOnErrorEvent
 
         circuitBreaker.acquirePermission();
-        circuitBreaker.onError(0, new RuntimeException()); // Should not create a CircuitBreakerOnErrorEvent
+        circuitBreaker.onError(0, TimeUnit.NANOSECONDS, new RuntimeException()); // Should not create a CircuitBreakerOnErrorEvent
 
         assertThatMetricsAreReset();
     }
@@ -321,28 +322,28 @@ public class CircuitBreakerStateMachineTest {
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.HALF_OPEN);
 
         assertThat(circuitBreaker.tryAcquirePermission()).isEqualTo(true);
-        circuitBreaker.onSuccess(0);
+        circuitBreaker.onSuccess(0, TimeUnit.NANOSECONDS);
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.HALF_OPEN);
         assertCircuitBreakerMetricsEqualTo(-1f, 1, 1, 4, 0, 0L);
 
         assertThat(circuitBreaker.tryAcquirePermission()).isEqualTo(true);
-        circuitBreaker.onSuccess(0);
+        circuitBreaker.onSuccess(0, TimeUnit.NANOSECONDS);
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.HALF_OPEN);
         assertCircuitBreakerMetricsEqualTo(-1f, 2, 2, 4, 0, 0L);
 
         assertThat(circuitBreaker.tryAcquirePermission()).isEqualTo(true);
-        circuitBreaker.onSuccess(0); //
+        circuitBreaker.onSuccess(0, TimeUnit.NANOSECONDS); //
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.HALF_OPEN);
         assertCircuitBreakerMetricsEqualTo(-1f, 3, 3, 4, 0, 0L);
 
         assertThat(circuitBreaker.tryAcquirePermission()).isEqualTo(true);
         // Should ignore NumberFormatException and release permission
-        circuitBreaker.onError(0, new NumberFormatException());
+        circuitBreaker.onError(0, TimeUnit.NANOSECONDS, new NumberFormatException());
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.HALF_OPEN);
         assertCircuitBreakerMetricsEqualTo(-1f, 3, 3, 4, 0, 0L);
 
         assertThat(circuitBreaker.tryAcquirePermission()).isEqualTo(true);
-        circuitBreaker.onError(0, new RuntimeException());
+        circuitBreaker.onError(0, TimeUnit.NANOSECONDS, new RuntimeException());
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
         assertCircuitBreakerMetricsEqualTo(-1f, 3, 4, 5, 1, 0L);
     }

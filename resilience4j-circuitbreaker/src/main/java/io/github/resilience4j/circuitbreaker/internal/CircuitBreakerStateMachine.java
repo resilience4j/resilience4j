@@ -149,33 +149,33 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
     }
 
     @Override
-    public void onError(long durationInNanos, Throwable throwable) {
+    public void onError(long duration, TimeUnit durationUnit, Throwable throwable) {
         // Handle the case if the completable future throw CompletionException wrapping the original exception
         // where original exception is the the one to retry not the CompletionException.
         Predicate<Throwable> recordFailurePredicate = circuitBreakerConfig.getRecordFailurePredicate();
         if (throwable instanceof CompletionException) {
             Throwable cause = throwable.getCause();
-            handleThrowable(durationInNanos, recordFailurePredicate, cause);
+            handleThrowable(duration, durationUnit, recordFailurePredicate, cause);
         }else{
-            handleThrowable(durationInNanos, recordFailurePredicate, throwable);
+            handleThrowable(duration, durationUnit, recordFailurePredicate, throwable);
         }
     }
 
-    private void handleThrowable(long durationInNanos, Predicate<Throwable> recordFailurePredicate, Throwable throwable) {
+    private void handleThrowable(long duration, TimeUnit durationUnit, Predicate<Throwable> recordFailurePredicate, Throwable throwable) {
         if (recordFailurePredicate.test(throwable)) {
             LOG.debug("CircuitBreaker '{}' recorded a failure:", name, throwable);
-            publishCircuitErrorEvent(name, durationInNanos, throwable);
-            stateReference.get().onError(throwable);
+            publishCircuitErrorEvent(name, duration, durationUnit, throwable);
+            stateReference.get().onError(duration, durationUnit, throwable);
         } else {
             releasePermission();
-            publishCircuitIgnoredErrorEvent(name, durationInNanos, throwable);
+            publishCircuitIgnoredErrorEvent(name, duration,durationUnit, throwable);
         }
     }
 
     @Override
-    public void onSuccess(long durationInNanos) {
-        publishSuccessEvent(durationInNanos);
-        stateReference.get().onSuccess();
+    public void onSuccess(long duration, TimeUnit durationUnit) {
+        publishSuccessEvent(duration, durationUnit);
+        stateReference.get().onSuccess(duration, durationUnit);
     }
 
     /**
@@ -304,18 +304,18 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
         publishEventIfPossible(event);
     }
 
-    private void publishSuccessEvent(final long durationInNanos) {
-        final CircuitBreakerOnSuccessEvent event = new CircuitBreakerOnSuccessEvent(name, Duration.ofNanos(durationInNanos));
+    private void publishSuccessEvent(final long duration, TimeUnit durationUnit) {
+        final CircuitBreakerOnSuccessEvent event = new CircuitBreakerOnSuccessEvent(name, Duration.ofNanos(durationUnit.toNanos(duration)));
         publishEventIfPossible(event);
     }
 
-    private void publishCircuitErrorEvent(final String name, final long durationInNanos, final Throwable throwable) {
-        final CircuitBreakerOnErrorEvent event = new CircuitBreakerOnErrorEvent(name, Duration.ofNanos(durationInNanos), throwable);
+    private void publishCircuitErrorEvent(final String name, final long duration, TimeUnit durationUnit, final Throwable throwable) {
+        final CircuitBreakerOnErrorEvent event = new CircuitBreakerOnErrorEvent(name, Duration.ofNanos(durationUnit.toNanos(duration)), throwable);
         publishEventIfPossible(event);
     }
 
-    private void publishCircuitIgnoredErrorEvent(String name, long durationInNanos, Throwable throwable) {
-        final CircuitBreakerOnIgnoredErrorEvent event = new CircuitBreakerOnIgnoredErrorEvent(name, Duration.ofNanos(durationInNanos), throwable);
+    private void publishCircuitIgnoredErrorEvent(String name, long duration, TimeUnit durationUnit, Throwable throwable) {
+        final CircuitBreakerOnIgnoredErrorEvent event = new CircuitBreakerOnIgnoredErrorEvent(name, Duration.ofNanos(durationUnit.toNanos(duration)), throwable);
         publishEventIfPossible(event);
     }
 
@@ -409,15 +409,15 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
         }
 
         @Override
-        public void onError(Throwable throwable) {
+        public void onError(long duration, TimeUnit durationUnit, Throwable throwable) {
             // CircuitBreakerMetrics is thread-safe
-            checkFailureRate(circuitBreakerMetrics.onError());
+            checkFailureRate(circuitBreakerMetrics.onError(duration, durationUnit));
         }
 
         @Override
-        public void onSuccess() {
+        public void onSuccess(long duration, TimeUnit durationUnit) {
             // CircuitBreakerMetrics is thread-safe
-            checkFailureRate(circuitBreakerMetrics.onSuccess());
+            checkFailureRate(circuitBreakerMetrics.onSuccess(duration, durationUnit));
         }
 
         /**
@@ -499,22 +499,22 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
          * Should never be called when tryAcquirePermission returns false.
          */
         @Override
-        public void onError(Throwable throwable) {
+        public void onError(long duration, TimeUnit durationUnit, Throwable throwable) {
             // Could be called when Thread 1 invokes acquirePermission when the state is CLOSED, but in the meantime another
             // Thread 2 calls onError and the state changes from CLOSED to OPEN before Thread 1 calls onError.
             // But the onError event should still be recorded, even if it happened after the state transition.
-            circuitBreakerMetrics.onError();
+            circuitBreakerMetrics.onError(duration, durationUnit);
         }
 
         /**
          * Should never be called when tryAcquirePermission returns false.
          */
         @Override
-        public void onSuccess() {
+        public void onSuccess(long duration, TimeUnit durationUnit) {
             // Could be called when Thread 1 invokes acquirePermission when the state is CLOSED, but in the meantime another
             // Thread 2 calls onError and the state changes from CLOSED to OPEN before Thread 1 calls onSuccess.
             // But the onSuccess event should still be recorded, even if it happened after the state transition.
-            circuitBreakerMetrics.onSuccess();
+            circuitBreakerMetrics.onSuccess(duration, durationUnit);
         }
 
         /**
@@ -565,12 +565,12 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
 
 
         @Override
-        public void onError(Throwable throwable) {
+        public void onError(long duration, TimeUnit durationUnit, Throwable throwable) {
             // noOp
         }
 
         @Override
-        public void onSuccess() {
+        public void onSuccess(long duration, TimeUnit durationUnit) {
             // noOp
         }
 
@@ -626,7 +626,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
          * Should never be called when tryAcquirePermission returns false.
          */
         @Override
-        public void onError(Throwable throwable) {
+        public void onError(long duration, TimeUnit durationUnit, Throwable throwable) {
             // noOp
         }
 
@@ -634,7 +634,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
          * Should never be called when tryAcquirePermission returns false.
          */
         @Override
-        public void onSuccess() {
+        public void onSuccess(long duration, TimeUnit durationUnit) {
             // noOp
         }
 
@@ -695,15 +695,15 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
         }
 
         @Override
-        public void onError(Throwable throwable) {
+        public void onError(long duration, TimeUnit durationUnit, Throwable throwable) {
             // CircuitBreakerMetrics is thread-safe
-            checkFailureRate(circuitBreakerMetrics.onError());
+            checkFailureRate(circuitBreakerMetrics.onError(duration, durationUnit));
         }
 
         @Override
-        public void onSuccess() {
+        public void onSuccess(long duration, TimeUnit durationUnit) {
             // CircuitBreakerMetrics is thread-safe
-            checkFailureRate(circuitBreakerMetrics.onSuccess());
+            checkFailureRate(circuitBreakerMetrics.onSuccess(duration, durationUnit));
         }
 
         /**
@@ -745,9 +745,9 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
 
         void releasePermission();
 
-        void onError(Throwable throwable);
+        void onError(long duration, TimeUnit durationUnit, Throwable throwable);
 
-        void onSuccess();
+        void onSuccess(long duration, TimeUnit durationUnit);
 
         CircuitBreaker.State getState();
 

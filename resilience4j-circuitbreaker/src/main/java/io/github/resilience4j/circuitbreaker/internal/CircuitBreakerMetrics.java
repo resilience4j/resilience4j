@@ -21,38 +21,43 @@ package io.github.resilience4j.circuitbreaker.internal;
 
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.core.lang.Nullable;
+import io.github.resilience4j.core.metrics.SlidingWindowMetrics;
+import io.github.resilience4j.core.metrics.Snapshot;
 
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.LongAdder;
+
+import static io.github.resilience4j.core.metrics.Metrics.Outcome;
 
 class CircuitBreakerMetrics implements CircuitBreaker.Metrics {
 
     private final int ringBufferSize;
-    private final RingBitSet ringBitSet;
+    private final SlidingWindowMetrics metrics;
     private final LongAdder numberOfNotPermittedCalls;
 
     CircuitBreakerMetrics(int ringBufferSize) {
         this(ringBufferSize, null);
     }
 
-    CircuitBreakerMetrics(int ringBufferSize, @Nullable RingBitSet sourceSet) {
+    CircuitBreakerMetrics(int ringBufferSize, @Nullable SlidingWindowMetrics sourceMetrics) {
         this.ringBufferSize = ringBufferSize;
-        if(sourceSet != null) {
-            this.ringBitSet = new RingBitSet(this.ringBufferSize, sourceSet);
+        if(sourceMetrics != null) {
+            this.metrics = new SlidingWindowMetrics(this.ringBufferSize, sourceMetrics);
         }else{
-            this.ringBitSet = new RingBitSet(this.ringBufferSize);
+            this.metrics = new SlidingWindowMetrics(this.ringBufferSize);
         }
         this.numberOfNotPermittedCalls = new LongAdder();
     }
 
     /**
-     * Creates a new CircuitBreakerMetrics instance and copies the content of the current RingBitSet
-     * into the new RingBitSet.
+     * Creates a new CircuitBreakerMetrics instance and copies the content of the current sliding window
+     * into the new sliding window.
      *
      * @param targetRingBufferSize the ringBufferSize of the new CircuitBreakerMetrics instances
      * @return a CircuitBreakerMetrics
      */
     public CircuitBreakerMetrics copy(int targetRingBufferSize) {
-        return new CircuitBreakerMetrics(targetRingBufferSize, this.ringBitSet);
+        return new CircuitBreakerMetrics(targetRingBufferSize, this.metrics);
     }
 
     /**
@@ -60,9 +65,9 @@ class CircuitBreakerMetrics implements CircuitBreaker.Metrics {
      *
      * @return the current failure rate  in percentage.
      */
-    float onError() {
-        int currentNumberOfFailedCalls = ringBitSet.setNextBit(true);
-        return getFailureRate(currentNumberOfFailedCalls);
+    float onError(long duration, TimeUnit durationUnit) {
+        Snapshot snapshot = metrics.record(duration, durationUnit, Outcome.ERROR);
+        return getFailureRate(snapshot);
     }
 
     /**
@@ -70,9 +75,9 @@ class CircuitBreakerMetrics implements CircuitBreaker.Metrics {
      *
      * @return the current failure rate in percentage.
      */
-    float onSuccess() {
-        int currentNumberOfFailedCalls = ringBitSet.setNextBit(false);
-        return getFailureRate(currentNumberOfFailedCalls);
+    float onSuccess(long duration, TimeUnit durationUnit) {
+        Snapshot snapshot = metrics.record(duration, durationUnit, Outcome.SUCCESS);
+        return getFailureRate(snapshot);
     }
 
     /**
@@ -87,7 +92,7 @@ class CircuitBreakerMetrics implements CircuitBreaker.Metrics {
      */
     @Override
     public float getFailureRate() {
-        return getFailureRate(getNumberOfFailedCalls());
+        return getFailureRate(metrics.getSnapshot());
     }
 
     /**
@@ -103,7 +108,7 @@ class CircuitBreakerMetrics implements CircuitBreaker.Metrics {
      */
     @Override
     public int getNumberOfSuccessfulCalls() {
-        return getNumberOfBufferedCalls() - getNumberOfFailedCalls();
+        return this.metrics.getSnapshot().getNumberOfSuccessfulCalls();
     }
 
     /**
@@ -111,7 +116,7 @@ class CircuitBreakerMetrics implements CircuitBreaker.Metrics {
      */
     @Override
     public int getNumberOfBufferedCalls() {
-        return this.ringBitSet.length();
+        return this.metrics.getSnapshot().getTotalNumberOfCalls();
     }
 
     /**
@@ -127,13 +132,14 @@ class CircuitBreakerMetrics implements CircuitBreaker.Metrics {
      */
     @Override
     public int getNumberOfFailedCalls() {
-        return this.ringBitSet.cardinality();
+        return this.metrics.getSnapshot().getNumberOfFailedCalls();
     }
 
-    private float getFailureRate(int numberOfFailedCalls) {
-        if (getNumberOfBufferedCalls() < ringBufferSize) {
+    private float getFailureRate(Snapshot snapshot) {
+        int bufferedCalls = snapshot.getTotalNumberOfCalls();
+        if (bufferedCalls < ringBufferSize) {
             return -1.0f;
         }
-        return numberOfFailedCalls * 100.0f / ringBufferSize;
+        return snapshot.getNumberOfFailedCalls() * 100.0f / bufferedCalls;
     }
 }

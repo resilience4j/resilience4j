@@ -20,6 +20,8 @@ package io.github.resilience4j.circuitbreaker.internal;
 
 import org.junit.Test;
 
+import java.util.concurrent.TimeUnit;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class CircuitBreakerMetricsTest {
@@ -29,10 +31,10 @@ public class CircuitBreakerMetricsTest {
         CircuitBreakerMetrics circuitBreakerMetrics = new CircuitBreakerMetrics(10);
         assertThat(circuitBreakerMetrics.getMaxNumberOfBufferedCalls()).isEqualTo(10);
 
-        circuitBreakerMetrics.onSuccess();
-        circuitBreakerMetrics.onSuccess();
-        circuitBreakerMetrics.onError();
-        circuitBreakerMetrics.onError();
+        circuitBreakerMetrics.onSuccess(0, TimeUnit.NANOSECONDS);
+        circuitBreakerMetrics.onSuccess(0, TimeUnit.NANOSECONDS);
+        circuitBreakerMetrics.onError(0, TimeUnit.NANOSECONDS);
+        circuitBreakerMetrics.onError(0, TimeUnit.NANOSECONDS);
         circuitBreakerMetrics.onCallNotPermitted();
         circuitBreakerMetrics.onCallNotPermitted();
 
@@ -44,16 +46,16 @@ public class CircuitBreakerMetricsTest {
         // The failure rate must be -1, because the number of measured calls is below the buffer size of 10
         assertThat(circuitBreakerMetrics.getFailureRate()).isEqualTo(-1);
 
-        circuitBreakerMetrics.onError();
-        circuitBreakerMetrics.onError();
-        circuitBreakerMetrics.onError();
-        circuitBreakerMetrics.onError();
-        circuitBreakerMetrics.onSuccess();
-        circuitBreakerMetrics.onSuccess();
-        circuitBreakerMetrics.onSuccess();
-        circuitBreakerMetrics.onSuccess();
+        circuitBreakerMetrics.onError(0, TimeUnit.NANOSECONDS);
+        circuitBreakerMetrics.onError(0, TimeUnit.NANOSECONDS);
+        circuitBreakerMetrics.onError(0, TimeUnit.NANOSECONDS);
+        circuitBreakerMetrics.onError(0, TimeUnit.NANOSECONDS);
+        circuitBreakerMetrics.onSuccess(0, TimeUnit.NANOSECONDS);
+        circuitBreakerMetrics.onSuccess(0, TimeUnit.NANOSECONDS);
+        circuitBreakerMetrics.onSuccess(0, TimeUnit.NANOSECONDS);
+        circuitBreakerMetrics.onSuccess(0, TimeUnit.NANOSECONDS);
 
-        // 12 calls have been recorded, but only 10 are stored in the RingBitSet. 4 successes and 6 failures.
+        // 12 calls have been recorded, but only 10 are stored in the sliding window. 4 successes and 6 failures.
         // The failure rate must be 60%, because the number of measured calls is above the minimum number of measured calls.
         assertThat(circuitBreakerMetrics.getNumberOfBufferedCalls()).isEqualTo(10);
         assertThat(circuitBreakerMetrics.getNumberOfFailedCalls()).isEqualTo(6);
@@ -66,10 +68,10 @@ public class CircuitBreakerMetricsTest {
         CircuitBreakerMetrics halfOpenCircuitBreakerMetrics = new CircuitBreakerMetrics(10);
         assertThat(halfOpenCircuitBreakerMetrics.getMaxNumberOfBufferedCalls()).isEqualTo(10);
 
-        halfOpenCircuitBreakerMetrics.onSuccess();
-        halfOpenCircuitBreakerMetrics.onSuccess();
-        halfOpenCircuitBreakerMetrics.onError();
-        halfOpenCircuitBreakerMetrics.onError();
+        halfOpenCircuitBreakerMetrics.onSuccess(0, TimeUnit.NANOSECONDS);
+        halfOpenCircuitBreakerMetrics.onSuccess(0, TimeUnit.NANOSECONDS);
+        halfOpenCircuitBreakerMetrics.onError(0, TimeUnit.NANOSECONDS);
+        halfOpenCircuitBreakerMetrics.onError(0, TimeUnit.NANOSECONDS);
 
         assertThat(halfOpenCircuitBreakerMetrics.getNumberOfBufferedCalls()).isEqualTo(4);
         assertThat(halfOpenCircuitBreakerMetrics.getNumberOfFailedCalls()).isEqualTo(2);
