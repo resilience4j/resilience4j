@@ -39,33 +39,6 @@ public class SlidingWindowMetricsTest {
     }
 
     @Test
-    public void testCopyMetrics(){
-        SlidingWindowMetrics source = new SlidingWindowMetrics(3);
-        source.record(10000, TimeUnit.MILLISECONDS, Metrics.Outcome.SLOW_SUCCESS);
-        source.record(10000, TimeUnit.MILLISECONDS, Metrics.Outcome.SLOW_ERROR);
-        source.record(100, TimeUnit.MILLISECONDS, Metrics.Outcome.SUCCESS);
-        Snapshot snapshot = source.getSnapshot();
-        assertThat(snapshot.getTotalNumberOfCalls()).isEqualTo(3);
-        assertThat(snapshot.getNumberOfSuccessfulCalls()).isEqualTo(2);
-        assertThat(snapshot.getNumberOfFailedCalls()).isEqualTo(1);
-        assertThat(snapshot.getNumberOfSlowCalls()).isEqualTo(2);
-        assertThat(snapshot.getTotalDuration().toMillis()).isEqualTo(20100);
-        assertThat(snapshot.getFailureRatePercentage()).isEqualTo(33.333332f);
-
-        SlidingWindowMetrics target = new SlidingWindowMetrics(5, source);
-        target.record(100, TimeUnit.MILLISECONDS, Metrics.Outcome.SUCCESS);
-        target.record(100, TimeUnit.MILLISECONDS, Metrics.Outcome.SUCCESS);
-
-        snapshot = target.getSnapshot();
-        assertThat(snapshot.getTotalNumberOfCalls()).isEqualTo(5);
-        assertThat(snapshot.getNumberOfSuccessfulCalls()).isEqualTo(4);
-        assertThat(snapshot.getNumberOfFailedCalls()).isEqualTo(1);
-        assertThat(snapshot.getNumberOfSlowCalls()).isEqualTo(2);
-        assertThat(snapshot.getTotalDuration().toMillis()).isEqualTo(20300);
-        assertThat(snapshot.getFailureRatePercentage()).isEqualTo(20);
-    }
-
-    @Test
     public void testRecordSuccess(){
         Metrics metrics = new SlidingWindowMetrics(5);
 

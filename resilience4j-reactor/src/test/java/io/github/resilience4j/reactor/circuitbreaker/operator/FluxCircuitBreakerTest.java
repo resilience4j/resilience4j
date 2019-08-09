@@ -51,8 +51,8 @@ public class FluxCircuitBreakerTest {
                 .expectNext("Event 2")
                 .verifyComplete();
 
-        verify(circuitBreaker, times(1)).onSuccess(anyLong(), TimeUnit.NANOSECONDS);
-        verify(circuitBreaker, never()).onError(anyLong(), TimeUnit.NANOSECONDS, any(Throwable.class));
+        verify(circuitBreaker, times(1)).onSuccess(anyLong(), any(TimeUnit.class));
+        verify(circuitBreaker, never()).onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
     }
 
     @Test
@@ -65,8 +65,8 @@ public class FluxCircuitBreakerTest {
                 .expectError(IOException.class)
                 .verify(Duration.ofSeconds(1));
 
-        verify(circuitBreaker, times(1)).onError(anyLong(), TimeUnit.NANOSECONDS, any(IOException.class));
-        verify(circuitBreaker, never()).onSuccess(anyLong(), TimeUnit.NANOSECONDS);
+        verify(circuitBreaker, times(1)).onError(anyLong(), any(TimeUnit.class), any(IOException.class));
+        verify(circuitBreaker, never()).onSuccess(anyLong(), any(TimeUnit.class));
     }
 
     @Test
@@ -79,8 +79,8 @@ public class FluxCircuitBreakerTest {
                 .expectError(IOException.class)
                 .verify(Duration.ofSeconds(1));
 
-        verify(circuitBreaker, times(1)).onError(anyLong(), TimeUnit.NANOSECONDS, any(IOException.class));
-        verify(circuitBreaker, never()).onSuccess(anyLong(), TimeUnit.NANOSECONDS);
+        verify(circuitBreaker, times(1)).onError(anyLong(), any(TimeUnit.class), any(IOException.class));
+        verify(circuitBreaker, never()).onSuccess(anyLong(), any(TimeUnit.class));
     }
 
     @Test
@@ -93,8 +93,8 @@ public class FluxCircuitBreakerTest {
                 .expectNext("Bla Event 2")
                 .verifyComplete();
 
-        verify(circuitBreaker, times(2)).onSuccess(anyLong(), TimeUnit.NANOSECONDS);
-        verify(circuitBreaker, never()).onError(anyLong(), TimeUnit.NANOSECONDS, any(Throwable.class));
+        verify(circuitBreaker, times(2)).onSuccess(anyLong(), any(TimeUnit.class));
+        verify(circuitBreaker, never()).onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
     }
 
     @Test
@@ -107,8 +107,8 @@ public class FluxCircuitBreakerTest {
                 .expectError(CallNotPermittedException.class)
                 .verify(Duration.ofSeconds(1));
 
-        verify(circuitBreaker, never()).onError(anyLong(), TimeUnit.NANOSECONDS, any(Throwable.class));
-        verify(circuitBreaker, never()).onSuccess(anyLong(), TimeUnit.NANOSECONDS);
+        verify(circuitBreaker, never()).onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
+        verify(circuitBreaker, never()).onSuccess(anyLong(), any(TimeUnit.class));
     }
 
     @Test
@@ -121,8 +121,8 @@ public class FluxCircuitBreakerTest {
                 .expectError(CallNotPermittedException.class)
                 .verify(Duration.ofSeconds(1));
 
-        verify(circuitBreaker, never()).onError(anyLong(), TimeUnit.NANOSECONDS, any(Throwable.class));
-        verify(circuitBreaker, never()).onSuccess(anyLong(), TimeUnit.NANOSECONDS);
+        verify(circuitBreaker, never()).onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
+        verify(circuitBreaker, never()).onSuccess(anyLong(), any(TimeUnit.class));
     }
 
     @Test
@@ -135,8 +135,8 @@ public class FluxCircuitBreakerTest {
                 .expectError(CallNotPermittedException.class)
                 .verify(Duration.ofSeconds(1));
 
-        verify(circuitBreaker, never()).onError(anyLong(), TimeUnit.NANOSECONDS, any(Throwable.class));
-        verify(circuitBreaker, never()).onSuccess(anyLong(), TimeUnit.NANOSECONDS);
+        verify(circuitBreaker, never()).onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
+        verify(circuitBreaker, never()).onSuccess(anyLong(), any(TimeUnit.class));
     }
 
     @Test
@@ -152,7 +152,7 @@ public class FluxCircuitBreakerTest {
                 .verify();
 
         verify(circuitBreaker, times(1)).releasePermission();
-        verify(circuitBreaker, never()).onError(anyLong(), TimeUnit.NANOSECONDS, any(Throwable.class));
-        verify(circuitBreaker, never()).onSuccess(anyLong(), TimeUnit.NANOSECONDS);
+        verify(circuitBreaker, never()).onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
+        verify(circuitBreaker, never()).onSuccess(anyLong(), any(TimeUnit.class));
     }
 }

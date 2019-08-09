@@ -24,7 +24,6 @@ import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.circuitbreaker.event.*;
 import io.github.resilience4j.core.EventConsumer;
 import io.github.resilience4j.core.EventProcessor;
-import io.github.resilience4j.core.lang.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -254,7 +253,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
 
     @Override
     public void transitionToClosedState() {
-        stateTransition(CLOSED, currentState -> new ClosedState(currentState.getMetrics()));
+        stateTransition(CLOSED, currentState -> new ClosedState());
     }
 
     @Override
@@ -373,15 +372,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
         private final float failureRateThreshold;
 
         ClosedState() {
-            this(null);
-        }
-
-        ClosedState(@Nullable CircuitBreakerMetrics circuitBreakerMetrics) {
-            if(circuitBreakerMetrics == null){
-                this.circuitBreakerMetrics = new CircuitBreakerMetrics(circuitBreakerConfig.getRingBufferSizeInClosedState());
-            }else{
-                this.circuitBreakerMetrics = circuitBreakerMetrics.copy(circuitBreakerConfig.getRingBufferSizeInClosedState());
-            }
+            this.circuitBreakerMetrics = new CircuitBreakerMetrics(circuitBreakerConfig.getRingBufferSizeInClosedState());
             this.failureRateThreshold = circuitBreakerConfig.getFailureRateThreshold();
         }
 

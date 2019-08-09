@@ -248,12 +248,12 @@ public class CircuitBreakerStateMachineTest {
         // The state machine transitions back to CLOSED state
         assertThat(circuitBreaker.tryAcquirePermission()).isEqualTo(true);
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED); // Should create a CircuitBreakerOnStateTransitionEvent
-        assertCircuitBreakerMetricsEqualTo(-1f, 3, 4, 5, 1, 0L);
+        assertCircuitBreakerMetricsEqualTo(-1f, 0, 0, 5, 0, 0L);
 
         // // Call 5 is a success and fills the buffer in closed state
         assertThat(circuitBreaker.tryAcquirePermission()).isEqualTo(true);
         circuitBreaker.onSuccess(0, TimeUnit.NANOSECONDS); // Should create a CircuitBreakerOnSuccessEvent
-        assertCircuitBreakerMetricsEqualTo(20.0f, 4, 5, 5, 1, 0L);
+        assertCircuitBreakerMetricsEqualTo(-1f, 1, 1, 5, 0, 0L);
 
     }
 
@@ -345,7 +345,7 @@ public class CircuitBreakerStateMachineTest {
         assertThat(circuitBreaker.tryAcquirePermission()).isEqualTo(true);
         circuitBreaker.onError(0, TimeUnit.NANOSECONDS, new RuntimeException());
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
-        assertCircuitBreakerMetricsEqualTo(-1f, 3, 4, 5, 1, 0L);
+        assertCircuitBreakerMetricsEqualTo(-1f, 0, 0, 5, 0, 0L);
     }
 
     private void assertCircuitBreakerMetricsEqualTo(Float expectedFailureRate, Integer expectedSuccessCalls, Integer expectedBufferedCalls, Integer expectedMaxBufferedCalls, Integer expectedFailedCalls, Long expectedNotPermittedCalls) {

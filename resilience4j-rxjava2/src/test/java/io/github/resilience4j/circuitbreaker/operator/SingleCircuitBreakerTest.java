@@ -28,8 +28,8 @@ public class SingleCircuitBreakerTest extends BaseCircuitBreakerTest {
             .test()
             .assertResult(1);
 
-        verify(circuitBreaker, times(1)).onSuccess(anyLong(), TimeUnit.NANOSECONDS);
-        verify(circuitBreaker, never()).onError(anyLong(), TimeUnit.NANOSECONDS, any(Throwable.class));
+        verify(circuitBreaker, times(1)).onSuccess(anyLong(), any(TimeUnit.class));
+        verify(circuitBreaker, never()).onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
     }
 
     @Test
@@ -44,8 +44,8 @@ public class SingleCircuitBreakerTest extends BaseCircuitBreakerTest {
             .assertResult("Hello World", "Hello World");
 
         then(helloWorldService).should(Mockito.times(2)).returnHelloWorld();
-        verify(circuitBreaker, times(2)).onSuccess(anyLong(), TimeUnit.NANOSECONDS);
-        verify(circuitBreaker, never()).onError(anyLong(), TimeUnit.NANOSECONDS, any(Throwable.class));
+        verify(circuitBreaker, times(2)).onSuccess(anyLong(), any(TimeUnit.class));
+        verify(circuitBreaker, never()).onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
     }
 
     @Test
@@ -61,8 +61,8 @@ public class SingleCircuitBreakerTest extends BaseCircuitBreakerTest {
             .assertNotComplete();
 
         then(helloWorldService).should(never()).returnHelloWorld();
-        verify(circuitBreaker, never()).onSuccess(anyLong(), TimeUnit.NANOSECONDS);
-        verify(circuitBreaker, never()).onError(anyLong(), TimeUnit.NANOSECONDS, any(Throwable.class));
+        verify(circuitBreaker, never()).onSuccess(anyLong(), any(TimeUnit.class));
+        verify(circuitBreaker, never()).onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
     }
 
     @Test
@@ -76,8 +76,8 @@ public class SingleCircuitBreakerTest extends BaseCircuitBreakerTest {
             .assertError(IOException.class)
             .assertNotComplete();
 
-        verify(circuitBreaker, times(1)).onError(anyLong(), TimeUnit.NANOSECONDS, any(IOException.class));
-        verify(circuitBreaker, never()).onSuccess(anyLong(), TimeUnit.NANOSECONDS);
+        verify(circuitBreaker, times(1)).onError(anyLong(), any(TimeUnit.class), any(IOException.class));
+        verify(circuitBreaker, never()).onSuccess(anyLong(), any(TimeUnit.class));
     }
 
     @Test
@@ -91,8 +91,8 @@ public class SingleCircuitBreakerTest extends BaseCircuitBreakerTest {
             .assertError(CallNotPermittedException.class)
             .assertNotComplete();
 
-        verify(circuitBreaker, never()).onSuccess(anyLong(), TimeUnit.NANOSECONDS);
-        verify(circuitBreaker, never()).onError(anyLong(), TimeUnit.NANOSECONDS, any(Throwable.class));
+        verify(circuitBreaker, never()).onSuccess(anyLong(), any(TimeUnit.class));
+        verify(circuitBreaker, never()).onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
     }
 
     @Test
@@ -106,7 +106,7 @@ public class SingleCircuitBreakerTest extends BaseCircuitBreakerTest {
                 .cancel();
 
         verify(circuitBreaker, times(1)).releasePermission();
-        verify(circuitBreaker, never()).onError(anyLong(), TimeUnit.NANOSECONDS, any(Throwable.class));
-        verify(circuitBreaker, never()).onSuccess(anyLong(), TimeUnit.NANOSECONDS);
+        verify(circuitBreaker, never()).onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
+        verify(circuitBreaker, never()).onSuccess(anyLong(), any(TimeUnit.class));
     }
 }

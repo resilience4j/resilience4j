@@ -20,7 +20,6 @@ package io.github.resilience4j.circuitbreaker.internal;
 
 
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
-import io.github.resilience4j.core.lang.Nullable;
 import io.github.resilience4j.core.metrics.SlidingWindowMetrics;
 import io.github.resilience4j.core.metrics.Snapshot;
 
@@ -36,28 +35,9 @@ class CircuitBreakerMetrics implements CircuitBreaker.Metrics {
     private final LongAdder numberOfNotPermittedCalls;
 
     CircuitBreakerMetrics(int ringBufferSize) {
-        this(ringBufferSize, null);
-    }
-
-    CircuitBreakerMetrics(int ringBufferSize, @Nullable SlidingWindowMetrics sourceMetrics) {
         this.ringBufferSize = ringBufferSize;
-        if(sourceMetrics != null) {
-            this.metrics = new SlidingWindowMetrics(this.ringBufferSize, sourceMetrics);
-        }else{
-            this.metrics = new SlidingWindowMetrics(this.ringBufferSize);
-        }
+        this.metrics = new SlidingWindowMetrics(this.ringBufferSize);
         this.numberOfNotPermittedCalls = new LongAdder();
-    }
-
-    /**
-     * Creates a new CircuitBreakerMetrics instance and copies the content of the current sliding window
-     * into the new sliding window.
-     *
-     * @param targetRingBufferSize the ringBufferSize of the new CircuitBreakerMetrics instances
-     * @return a CircuitBreakerMetrics
-     */
-    public CircuitBreakerMetrics copy(int targetRingBufferSize) {
-        return new CircuitBreakerMetrics(targetRingBufferSize, this.metrics);
     }
 
     /**

@@ -47,12 +47,6 @@ public class SlidingWindowMetrics implements Metrics {
      * @param windowSize     the window size
      */
     public SlidingWindowMetrics(int windowSize) {
-        this(windowSize, null);
-
-
-    }
-
-    public SlidingWindowMetrics(int windowSize, SlidingWindowMetrics sourceMetrics) {
         this.windowSize = windowSize;
         this.measurements = new Measurement[this.windowSize];
         this.headIndex = 0;
@@ -60,11 +54,7 @@ public class SlidingWindowMetrics implements Metrics {
         {
             measurements[i] = new Measurement();
         }
-        if(sourceMetrics == null){
-            this.totalAggregation = new TotalAggregation();
-        }else{
-            this.totalAggregation = sourceMetrics.totalAggregation;
-        }
+        this.totalAggregation = new TotalAggregation();
     }
 
     @Override
