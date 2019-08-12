@@ -22,14 +22,12 @@ import java.time.Duration;
 
 public class SnapshotImpl implements Snapshot {
 
-    private long totalDurationInMillis;
-    private int totalNumberOfSlowCalls;
-    private int totalNumberOfFailedCalls;
-    private int totalNumberOfCalls;
-    private final int timeWindowSizeInSeconds;
+    private final long totalDurationInMillis;
+    private final int totalNumberOfSlowCalls;
+    private final int totalNumberOfFailedCalls;
+    private final int totalNumberOfCalls;
 
-    SnapshotImpl(int timeWindowSizeInSeconds, TotalAggregation totalAggregation) {
-        this.timeWindowSizeInSeconds = timeWindowSizeInSeconds;
+    SnapshotImpl(TotalAggregation totalAggregation) {
         this.totalDurationInMillis = totalAggregation.totalDurationInMillis;
         this.totalNumberOfSlowCalls = totalAggregation.numberOfSlowCalls;
         this.totalNumberOfFailedCalls = totalAggregation.numberOfFailedCalls;
@@ -48,7 +46,7 @@ public class SnapshotImpl implements Snapshot {
     }
 
     @Override
-    public float getSlowCallsPercentage() {
+    public float getSlowCallsInPercentage() {
         if(totalNumberOfCalls == 0){
             return 0;
         }
@@ -71,15 +69,7 @@ public class SnapshotImpl implements Snapshot {
     }
 
     @Override
-    public float getAverageNumberOfCallsPerSecond() {
-        if(totalNumberOfCalls == 0){
-            return 0;
-        }
-        return (float) totalNumberOfCalls / timeWindowSizeInSeconds;
-    }
-
-    @Override
-    public float getFailureRatePercentage() {
+    public float getFailureRateInPercentage() {
         if(totalNumberOfCalls == 0){
             return 0;
         }

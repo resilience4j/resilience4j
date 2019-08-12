@@ -81,12 +81,12 @@ public class SlidingTimeWindowMetrics implements Metrics {
     public synchronized Snapshot record(long duration, TimeUnit durationUnit, Outcome outcome) {
         totalAggregation.record(duration, durationUnit, outcome);
         moveWindowToCurrentEpochSecond(getLatestPartialAggregation()).record(duration, durationUnit, outcome);
-        return new SnapshotImpl(timeWindowSizeInSeconds, totalAggregation);
+        return new SnapshotImpl(totalAggregation);
     }
 
     public synchronized Snapshot getSnapshot(){
         moveWindowToCurrentEpochSecond(getLatestPartialAggregation());
-        return new SnapshotImpl(timeWindowSizeInSeconds, totalAggregation);
+        return new SnapshotImpl(totalAggregation);
     }
 
     /**
@@ -120,7 +120,7 @@ public class SlidingTimeWindowMetrics implements Metrics {
      *
      * @return the head partial aggregation of the circular array
      */
-    PartialAggregation getLatestPartialAggregation(){
+    private PartialAggregation getLatestPartialAggregation(){
         return partialAggregations[headIndex];
     }
 

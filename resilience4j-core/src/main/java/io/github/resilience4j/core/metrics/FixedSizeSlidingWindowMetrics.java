@@ -34,7 +34,7 @@ import java.util.concurrent.TimeUnit;
  * The time to retrieve a Snapshot is constant 0(1), since the Snapshot is pre-aggregated and is independent of the time window size.
  * The space requirement (memory consumption) of this implementation should be O(n).
  */
-public class SlidingWindowMetrics implements Metrics {
+public class FixedSizeSlidingWindowMetrics implements Metrics {
 
     private final int windowSize;
     private final TotalAggregation totalAggregation;
@@ -42,11 +42,11 @@ public class SlidingWindowMetrics implements Metrics {
     int headIndex;
 
     /**
-     * Creates a new {@link SlidingWindowMetrics} with the given window size.
+     * Creates a new {@link FixedSizeSlidingWindowMetrics} with the given window size.
      *
      * @param windowSize     the window size
      */
-    public SlidingWindowMetrics(int windowSize) {
+    public FixedSizeSlidingWindowMetrics(int windowSize) {
         this.windowSize = windowSize;
         this.measurements = new Measurement[this.windowSize];
         this.headIndex = 0;
@@ -61,11 +61,11 @@ public class SlidingWindowMetrics implements Metrics {
     public synchronized Snapshot record(long duration, TimeUnit durationUnit, Outcome outcome) {
         totalAggregation.record(duration, durationUnit, outcome);
         moveWindowByOne().record(duration, durationUnit, outcome);
-        return new SnapshotImpl(windowSize, totalAggregation);
+        return new SnapshotImpl(totalAggregation);
     }
 
     public synchronized Snapshot getSnapshot(){
-        return new SnapshotImpl(windowSize, totalAggregation);
+        return new SnapshotImpl(totalAggregation);
     }
 
     private Measurement moveWindowByOne() {
@@ -81,7 +81,7 @@ public class SlidingWindowMetrics implements Metrics {
      *
      * @return the head partial aggregation of the circular array
      */
-    Measurement getLatestMeasurement(){
+    private Measurement getLatestMeasurement(){
         return measurements[headIndex];
     }
 

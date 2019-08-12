@@ -48,7 +48,7 @@ public interface Snapshot {
      *
      * @return the percentage of call which were slower than a certain threshold
      */
-    float getSlowCallsPercentage();
+    float getSlowCallsInPercentage();
 
     /**
      * Returns the total number of successful calls.
@@ -72,16 +72,9 @@ public interface Snapshot {
     int getTotalNumberOfCalls();
 
     /**
-     * Returns the average number of calls per second.
-     *
-     * @return the average number of calls per second
-     */
-    float getAverageNumberOfCallsPerSecond();
-
-    /**
      * Returns the failure rate in percentage.
      *
      * @return the failure rate in percentage
      */
-    float getFailureRatePercentage();
+    float getFailureRateInPercentage();
 }

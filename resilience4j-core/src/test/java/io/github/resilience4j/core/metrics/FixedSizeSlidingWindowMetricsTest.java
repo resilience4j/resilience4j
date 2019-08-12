@@ -24,11 +24,11 @@ import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class SlidingWindowMetricsTest {
+public class FixedSizeSlidingWindowMetricsTest {
 
     @Test
     public void checkInitialBucketCreation(){
-        SlidingWindowMetrics metrics = new SlidingWindowMetrics(5);
+        FixedSizeSlidingWindowMetrics metrics = new FixedSizeSlidingWindowMetrics(5);
 
         Snapshot snapshot = metrics.getSnapshot();
 
@@ -40,7 +40,7 @@ public class SlidingWindowMetricsTest {
 
     @Test
     public void testRecordSuccess(){
-        Metrics metrics = new SlidingWindowMetrics(5);
+        Metrics metrics = new FixedSizeSlidingWindowMetrics(5);
 
         Snapshot snapshot = metrics.record(100, TimeUnit.MILLISECONDS, Metrics.Outcome.SUCCESS);
         assertThat(snapshot.getTotalNumberOfCalls()).isEqualTo(1);
@@ -49,12 +49,12 @@ public class SlidingWindowMetricsTest {
         assertThat(snapshot.getNumberOfSlowCalls()).isEqualTo(0);
         assertThat(snapshot.getTotalDuration().toMillis()).isEqualTo(100);
         assertThat(snapshot.getAverageDuration().toMillis()).isEqualTo(100);
-        assertThat(snapshot.getFailureRatePercentage()).isEqualTo(0);
+        assertThat(snapshot.getFailureRateInPercentage()).isEqualTo(0);
     }
 
     @Test
     public void testRecordError(){
-        Metrics metrics = new SlidingWindowMetrics(5);
+        Metrics metrics = new FixedSizeSlidingWindowMetrics(5);
 
         Snapshot snapshot = metrics.record(100, TimeUnit.MILLISECONDS, Metrics.Outcome.ERROR);
         assertThat(snapshot.getTotalNumberOfCalls()).isEqualTo(1);
@@ -63,12 +63,12 @@ public class SlidingWindowMetricsTest {
         assertThat(snapshot.getNumberOfSlowCalls()).isEqualTo(0);
         assertThat(snapshot.getTotalDuration().toMillis()).isEqualTo(100);
         assertThat(snapshot.getAverageDuration().toMillis()).isEqualTo(100);
-        assertThat(snapshot.getFailureRatePercentage()).isEqualTo(100);
+        assertThat(snapshot.getFailureRateInPercentage()).isEqualTo(100);
     }
 
     @Test
     public void testRecordSlowSuccess(){
-        Metrics metrics = new SlidingWindowMetrics(5);
+        Metrics metrics = new FixedSizeSlidingWindowMetrics(5);
 
         Snapshot snapshot = metrics.record(100, TimeUnit.MILLISECONDS, Metrics.Outcome.SLOW_SUCCESS);
         assertThat(snapshot.getTotalNumberOfCalls()).isEqualTo(1);
@@ -77,12 +77,12 @@ public class SlidingWindowMetricsTest {
         assertThat(snapshot.getNumberOfSlowCalls()).isEqualTo(1);
         assertThat(snapshot.getTotalDuration().toMillis()).isEqualTo(100);
         assertThat(snapshot.getAverageDuration().toMillis()).isEqualTo(100);
-        assertThat(snapshot.getFailureRatePercentage()).isEqualTo(0);
+        assertThat(snapshot.getFailureRateInPercentage()).isEqualTo(0);
     }
 
     @Test
     public void testSlowCallsPercentage(){
-        Metrics metrics = new SlidingWindowMetrics(5);
+        Metrics metrics = new FixedSizeSlidingWindowMetrics(5);
 
         metrics.record(10000, TimeUnit.MILLISECONDS, Metrics.Outcome.SLOW_SUCCESS);
         metrics.record(10000, TimeUnit.MILLISECONDS, Metrics.Outcome.SLOW_ERROR);
@@ -96,12 +96,12 @@ public class SlidingWindowMetricsTest {
         assertThat(snapshot.getNumberOfSlowCalls()).isEqualTo(2);
         assertThat(snapshot.getTotalDuration().toMillis()).isEqualTo(20300);
         assertThat(snapshot.getAverageDuration().toMillis()).isEqualTo(4060);
-        assertThat(snapshot.getSlowCallsPercentage()).isEqualTo(40f);
+        assertThat(snapshot.getSlowCallsInPercentage()).isEqualTo(40f);
     }
 
     @Test
     public void testMoveHeadIndexByOne(){
-        SlidingWindowMetrics metrics = new SlidingWindowMetrics(3);
+        FixedSizeSlidingWindowMetrics metrics = new FixedSizeSlidingWindowMetrics(3);
 
         assertThat(metrics.headIndex).isEqualTo(0);
 
@@ -125,7 +125,7 @@ public class SlidingWindowMetricsTest {
 
     @Test
     public void testSlidingWindowMetrics(){
-        SlidingWindowMetrics metrics = new SlidingWindowMetrics(4);
+        FixedSizeSlidingWindowMetrics metrics = new FixedSizeSlidingWindowMetrics(4);
 
         Snapshot snapshot = metrics.record(100, TimeUnit.MILLISECONDS, Metrics.Outcome.ERROR);
         assertThat(snapshot.getTotalNumberOfCalls()).isEqualTo(1);
@@ -133,7 +133,7 @@ public class SlidingWindowMetricsTest {
         assertThat(snapshot.getNumberOfFailedCalls()).isEqualTo(1);
         assertThat(snapshot.getTotalDuration().toMillis()).isEqualTo(100);
         assertThat(snapshot.getAverageDuration().toMillis()).isEqualTo(100);
-        assertThat(snapshot.getFailureRatePercentage()).isEqualTo(100);
+        assertThat(snapshot.getFailureRateInPercentage()).isEqualTo(100);
 
         snapshot = metrics.record(100, TimeUnit.MILLISECONDS, Metrics.Outcome.SUCCESS);
         assertThat(snapshot.getTotalNumberOfCalls()).isEqualTo(2);
@@ -141,7 +141,7 @@ public class SlidingWindowMetricsTest {
         assertThat(snapshot.getNumberOfFailedCalls()).isEqualTo(1);
         assertThat(snapshot.getTotalDuration().toMillis()).isEqualTo(200);
         assertThat(snapshot.getAverageDuration().toMillis()).isEqualTo(100);
-        assertThat(snapshot.getFailureRatePercentage()).isEqualTo(50);
+        assertThat(snapshot.getFailureRateInPercentage()).isEqualTo(50);
 
         snapshot = metrics.record(100, TimeUnit.MILLISECONDS, Metrics.Outcome.SUCCESS);
         assertThat(snapshot.getTotalNumberOfCalls()).isEqualTo(3);
@@ -149,7 +149,7 @@ public class SlidingWindowMetricsTest {
         assertThat(snapshot.getNumberOfFailedCalls()).isEqualTo(1);
         assertThat(snapshot.getTotalDuration().toMillis()).isEqualTo(300);
         assertThat(snapshot.getAverageDuration().toMillis()).isEqualTo(100);
-        assertThat(snapshot.getFailureRatePercentage()).isEqualTo(33.333332f);
+        assertThat(snapshot.getFailureRateInPercentage()).isEqualTo(33.333332f);
 
         snapshot = metrics.record(100, TimeUnit.MILLISECONDS, Metrics.Outcome.SUCCESS);
 
@@ -158,7 +158,7 @@ public class SlidingWindowMetricsTest {
         assertThat(snapshot.getNumberOfFailedCalls()).isEqualTo(1);
         assertThat(snapshot.getTotalDuration().toMillis()).isEqualTo(400);
         assertThat(snapshot.getAverageDuration().toMillis()).isEqualTo(100);
-        assertThat(snapshot.getFailureRatePercentage()).isEqualTo(25);
+        assertThat(snapshot.getFailureRateInPercentage()).isEqualTo(25);
 
         snapshot = metrics.record(100, TimeUnit.MILLISECONDS, Metrics.Outcome.SUCCESS);
 
@@ -167,6 +167,6 @@ public class SlidingWindowMetricsTest {
         assertThat(snapshot.getNumberOfFailedCalls()).isEqualTo(0);
         assertThat(snapshot.getTotalDuration().toMillis()).isEqualTo(400);
         assertThat(snapshot.getAverageDuration().toMillis()).isEqualTo(100);
-        assertThat(snapshot.getFailureRatePercentage()).isEqualTo(0);
+        assertThat(snapshot.getFailureRateInPercentage()).isEqualTo(0);
     }
 }
