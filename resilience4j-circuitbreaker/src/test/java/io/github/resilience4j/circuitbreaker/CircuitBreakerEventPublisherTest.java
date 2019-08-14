@@ -25,6 +25,7 @@ import org.slf4j.Logger;
 
 import javax.xml.ws.WebServiceException;
 import java.io.IOException;
+import java.util.concurrent.TimeUnit;
 
 import static io.vavr.API.*;
 import static io.vavr.Predicates.instanceOf;
@@ -57,7 +58,7 @@ public class CircuitBreakerEventPublisherTest {
         circuitBreaker.getEventPublisher()
                 .onEvent(this::logEventType);
 
-        circuitBreaker.onSuccess(1000);
+        circuitBreaker.onSuccess(1000, TimeUnit.NANOSECONDS);
 
         then(logger).should(times(1)).info("SUCCESS");
     }
@@ -67,7 +68,7 @@ public class CircuitBreakerEventPublisherTest {
         circuitBreaker.getEventPublisher()
                 .onSuccess(this::logEventType);
 
-        circuitBreaker.onSuccess(1000);
+        circuitBreaker.onSuccess(1000, TimeUnit.NANOSECONDS);
 
         then(logger).should(times(1)).info("SUCCESS");
     }
@@ -77,7 +78,7 @@ public class CircuitBreakerEventPublisherTest {
         circuitBreaker.getEventPublisher()
                 .onError(this::logEventType);
 
-        circuitBreaker.onError(1000, new IOException("BAM!"));
+        circuitBreaker.onError(1000, TimeUnit.NANOSECONDS, new IOException("BAM!"));
 
         then(logger).should(times(1)).info("ERROR");
     }
@@ -100,8 +101,8 @@ public class CircuitBreakerEventPublisherTest {
         circuitBreaker.getEventPublisher()
                 .onStateTransition(this::logEventType);
 
-        circuitBreaker.onError(1000, new IOException("BAM!"));
-        circuitBreaker.onError(1000, new IOException("BAM!"));
+        circuitBreaker.onError(1000, TimeUnit.NANOSECONDS, new IOException("BAM!"));
+        circuitBreaker.onError(1000, TimeUnit.NANOSECONDS, new IOException("BAM!"));
 
         then(logger).should(times(1)).info("STATE_TRANSITION");
     }
@@ -114,8 +115,8 @@ public class CircuitBreakerEventPublisherTest {
         circuitBreaker.getEventPublisher()
                 .onCallNotPermitted(this::logEventType);
 
-        circuitBreaker.onError(1000, new IOException("BAM!"));
-        circuitBreaker.onError(1000, new IOException("BAM!"));
+        circuitBreaker.onError(1000, TimeUnit.NANOSECONDS, new IOException("BAM!"));
+        circuitBreaker.onError(1000, TimeUnit.NANOSECONDS, new IOException("BAM!"));
         circuitBreaker.tryAcquirePermission();
 
         then(logger).should(times(1)).info("NOT_PERMITTED");
@@ -133,11 +134,11 @@ public class CircuitBreakerEventPublisherTest {
         //When we transition to disabled
         circuitBreaker.transitionToDisabledState();
         //And we execute other calls that should generate events
-        circuitBreaker.onError(1000, new IOException("BAM!"));
-        circuitBreaker.onError(1000, new IOException("BAM!"));
+        circuitBreaker.onError(1000, TimeUnit.NANOSECONDS, new IOException("BAM!"));
+        circuitBreaker.onError(1000, TimeUnit.NANOSECONDS, new IOException("BAM!"));
         circuitBreaker.tryAcquirePermission();
-        circuitBreaker.onSuccess(0);
-        circuitBreaker.onError(1000, new IOException("BAM!"));
+        circuitBreaker.onSuccess(0, TimeUnit.NANOSECONDS);
+        circuitBreaker.onError(1000, TimeUnit.NANOSECONDS, new IOException("BAM!"));
 
         //Then we do not produce events
         then(logger).should(times(1)).info("STATE_TRANSITION");
@@ -164,7 +165,7 @@ public class CircuitBreakerEventPublisherTest {
         circuitBreaker.getEventPublisher()
                 .onIgnoredError(this::logEventType);
 
-        circuitBreaker.onError(1000, new IOException("BAM!"));
+        circuitBreaker.onError(10000, TimeUnit.NANOSECONDS, new IOException("BAM!"));
 
         then(logger).should(times(1)).info("IGNORED_ERROR");
     }

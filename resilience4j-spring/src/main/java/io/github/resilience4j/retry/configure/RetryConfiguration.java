@@ -15,16 +15,6 @@
  */
 package io.github.resilience4j.retry.configure;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.stream.Collectors;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Conditional;
-import org.springframework.context.annotation.Configuration;
-
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
 import io.github.resilience4j.fallback.FallbackDecorators;
@@ -32,8 +22,18 @@ import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryConfig;
 import io.github.resilience4j.retry.RetryRegistry;
 import io.github.resilience4j.retry.event.RetryEvent;
+import io.github.resilience4j.utils.AspectJOnClasspathCondition;
 import io.github.resilience4j.utils.ReactorOnClasspathCondition;
 import io.github.resilience4j.utils.RxJava2OnClasspathCondition;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Conditional;
+import org.springframework.context.annotation.Configuration;
+
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * {@link Configuration
@@ -95,6 +95,7 @@ public class RetryConfiguration {
 	 * @return the spring retry AOP aspect
 	 */
 	@Bean
+	@Conditional(value = {AspectJOnClasspathCondition.class})
 	public RetryAspect retryAspect(RetryConfigurationProperties retryConfigurationProperties,
 								   RetryRegistry retryRegistry, @Autowired(required = false) List<RetryAspectExt> retryAspectExtList,
 								   FallbackDecorators fallbackDecorators) {
@@ -102,13 +103,13 @@ public class RetryConfiguration {
 	}
 
 	@Bean
-	@Conditional(value = {RxJava2OnClasspathCondition.class})
+	@Conditional(value = {RxJava2OnClasspathCondition.class, AspectJOnClasspathCondition.class})
 	public RxJava2RetryAspectExt rxJava2RetryAspectExt() {
 		return new RxJava2RetryAspectExt();
 	}
 
 	@Bean
-	@Conditional(value = {ReactorOnClasspathCondition.class})
+	@Conditional(value = {ReactorOnClasspathCondition.class, AspectJOnClasspathCondition.class})
 	public ReactorRetryAspectExt reactorRetryAspectExt() {
 		return new ReactorRetryAspectExt();
 	}

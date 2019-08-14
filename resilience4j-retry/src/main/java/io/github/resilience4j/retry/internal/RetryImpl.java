@@ -123,6 +123,7 @@ public class RetryImpl<T> implements Retry {
 		private ContextImpl() {
 		}
 
+        @Override
 		public void onSuccess() {
 			int currentNumOfAttempts = numOfAttempts.get();
 			if (currentNumOfAttempts > 0) {
@@ -134,6 +135,7 @@ public class RetryImpl<T> implements Retry {
 			}
 		}
 
+        @Override
 		public boolean onResult(T result) {
 			if (null != resultPredicate && resultPredicate.test(result)) {
 				int currentNumOfAttempts = numOfAttempts.incrementAndGet();
@@ -147,6 +149,7 @@ public class RetryImpl<T> implements Retry {
 			return false;
 		}
 
+		@Override
 		public void onError(Exception exception) throws Exception {
 			if (exceptionPredicate.test(exception)) {
 				lastException.set(exception);
@@ -158,6 +161,7 @@ public class RetryImpl<T> implements Retry {
 			}
 		}
 
+        @Override
 		public void onRuntimeError(RuntimeException runtimeException) {
 			if (exceptionPredicate.test(runtimeException)) {
 				lastRuntimeException.set(runtimeException);

@@ -21,6 +21,8 @@ import io.prometheus.client.CollectorRegistry;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.concurrent.TimeUnit;
+
 import static io.github.resilience4j.prometheus.collectors.CircuitBreakerMetricsCollector.MetricNames.*;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -39,8 +41,8 @@ public class CircuitBreakerMetricsCollectorTest {
         CircuitBreakerMetricsCollector.ofCircuitBreakerRegistry(circuitBreakerRegistry).register(registry);
 
         // record some basic stats
-        circuitBreaker.onSuccess(0);
-        circuitBreaker.onError(0, new RuntimeException("oops"));
+        circuitBreaker.onSuccess(0, TimeUnit.NANOSECONDS);
+        circuitBreaker.onError(0, TimeUnit.NANOSECONDS, new RuntimeException("oops"));
         circuitBreaker.transitionToOpenState();
     }
 
@@ -92,17 +94,6 @@ public class CircuitBreakerMetricsCollectorTest {
         );
 
         assertThat(state).isEqualTo(1);
-    }
-
-    @Test
-    public void maxBufferedCallsReportsCorrespondingValue() {
-        double maxBufferedCalls = registry.getSampleValue(
-            DEFAULT_CIRCUIT_BREAKER_MAX_BUFFERED_CALLS,
-            new String[]{"name"},
-            new String[]{circuitBreaker.getName()}
-        );
-
-        assertThat(maxBufferedCalls).isEqualTo(circuitBreaker.getMetrics().getMaxNumberOfBufferedCalls());
     }
 
     @Test
@@ -180,7 +171,6 @@ public class CircuitBreakerMetricsCollectorTest {
             CircuitBreakerMetricsCollector.MetricNames.custom()
                 .callsMetricName("custom_calls")
                 .stateMetricName("custom_state")
-                .maxBufferedCallsMetricName("custom_max_buffered_calls")
                 .bufferedCallsMetricName("custom_buffered_calls")
                 .failureRateMetricName("custom_failure_rate")
                 .build(),
@@ -200,11 +190,6 @@ public class CircuitBreakerMetricsCollectorTest {
             "custom_state",
             new String[]{"name", "state"},
             new String[]{"backendA", "closed"}
-        )).isNotNull();
-        assertThat(registry.getSampleValue(
-            "custom_max_buffered_calls",
-            new String[]{"name"},
-            new String[]{"backendA"}
         )).isNotNull();
     }
 }

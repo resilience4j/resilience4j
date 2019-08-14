@@ -28,6 +28,7 @@ public class CircuitBreakerConfigurationTest {
 		instanceProperties2.setRingBufferSizeInClosedState(1337);
 
 		CircuitBreakerConfigurationProperties circuitBreakerConfigurationProperties = new CircuitBreakerConfigurationProperties();
+		circuitBreakerConfigurationProperties.setCircuitBreakerAspectOrder(400);
 		circuitBreakerConfigurationProperties.getInstances().put("backend1", instanceProperties1);
 		circuitBreakerConfigurationProperties.getInstances().put("backend2", instanceProperties2);
 
@@ -38,14 +39,15 @@ public class CircuitBreakerConfigurationTest {
 		CircuitBreakerRegistry circuitBreakerRegistry = circuitBreakerConfiguration.circuitBreakerRegistry(eventConsumerRegistry);
 
 		//Then
+		assertThat(circuitBreakerConfigurationProperties.getCircuitBreakerAspectOrder()).isEqualTo(400);
 		assertThat(circuitBreakerRegistry.getAllCircuitBreakers().size()).isEqualTo(2);
 		CircuitBreaker circuitBreaker1 = circuitBreakerRegistry.circuitBreaker("backend1");
 		assertThat(circuitBreaker1).isNotNull();
-		assertThat(circuitBreaker1.getCircuitBreakerConfig().getRingBufferSizeInClosedState()).isEqualTo(1000);
+		assertThat(circuitBreaker1.getCircuitBreakerConfig().getSlidingWindowSize()).isEqualTo(1000);
 
 		CircuitBreaker circuitBreaker2 = circuitBreakerRegistry.circuitBreaker("backend2");
 		assertThat(circuitBreaker2).isNotNull();
-		assertThat(circuitBreaker2.getCircuitBreakerConfig().getRingBufferSizeInClosedState()).isEqualTo(1337);
+		assertThat(circuitBreaker2.getCircuitBreakerConfig().getSlidingWindowSize()).isEqualTo(1337);
 
 		assertThat(eventConsumerRegistry.getAllEventConsumer()).hasSize(2);
 	}
@@ -88,19 +90,19 @@ public class CircuitBreakerConfigurationTest {
 		// Should get default config and overwrite setRingBufferSizeInHalfOpenState
 		CircuitBreaker circuitBreaker1 = circuitBreakerRegistry.circuitBreaker("backendWithDefaultConfig");
 		assertThat(circuitBreaker1).isNotNull();
-		assertThat(circuitBreaker1.getCircuitBreakerConfig().getRingBufferSizeInClosedState()).isEqualTo(1000);
-		assertThat(circuitBreaker1.getCircuitBreakerConfig().getRingBufferSizeInHalfOpenState()).isEqualTo(99);
+		assertThat(circuitBreaker1.getCircuitBreakerConfig().getSlidingWindowSize()).isEqualTo(1000);
+		assertThat(circuitBreaker1.getCircuitBreakerConfig().getPermittedNumberOfCallsInHalfOpenState()).isEqualTo(99);
 
 		// Should get shared config and overwrite setRingBufferSizeInHalfOpenState
 		CircuitBreaker circuitBreaker2 = circuitBreakerRegistry.circuitBreaker("backendWithSharedConfig");
 		assertThat(circuitBreaker2).isNotNull();
-		assertThat(circuitBreaker2.getCircuitBreakerConfig().getRingBufferSizeInClosedState()).isEqualTo(1337);
-		assertThat(circuitBreaker2.getCircuitBreakerConfig().getRingBufferSizeInHalfOpenState()).isEqualTo(999);
+		assertThat(circuitBreaker2.getCircuitBreakerConfig().getSlidingWindowSize()).isEqualTo(1337);
+		assertThat(circuitBreaker2.getCircuitBreakerConfig().getPermittedNumberOfCallsInHalfOpenState()).isEqualTo(999);
 
 		// Unknown backend should get default config of Registry
 		CircuitBreaker circuitBreaker3 = circuitBreakerRegistry.circuitBreaker("unknownBackend");
 		assertThat(circuitBreaker3).isNotNull();
-		assertThat(circuitBreaker3.getCircuitBreakerConfig().getRingBufferSizeInClosedState()).isEqualTo(1000);
+		assertThat(circuitBreaker3.getCircuitBreakerConfig().getSlidingWindowSize()).isEqualTo(1000);
 
 		assertThat(eventConsumerRegistry.getAllEventConsumer()).hasSize(3);
 	}

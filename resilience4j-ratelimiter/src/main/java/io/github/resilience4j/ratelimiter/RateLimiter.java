@@ -26,6 +26,8 @@ import io.github.resilience4j.ratelimiter.internal.AtomicRateLimiter;
 import io.vavr.CheckedFunction0;
 import io.vavr.CheckedFunction1;
 import io.vavr.CheckedRunnable;
+import io.vavr.control.Either;
+import io.vavr.control.Try;
 
 import java.time.Duration;
 import java.util.concurrent.Callable;
@@ -38,7 +40,7 @@ import java.util.function.Supplier;
 /**
  * A RateLimiter instance is thread-safe can be used to decorate multiple requests.
  * <p>
- * A RateLimiter distributes permits at a configurable rate. {@link #acquirePermission(Duration)} blocks if necessary
+ * A RateLimiter distributes permits at a configurable rate. {@link #acquirePermission()} blocks if necessary
  * until a permit is available, and then takes it. Once acquired, permits need not be released.
  */
 public interface RateLimiter {
@@ -178,6 +180,44 @@ public interface RateLimiter {
 		};
 	}
 
+	/**
+	 * Creates a supplier which is restricted by a RateLimiter.
+	 *
+	 * @param rateLimiter the RateLimiter
+	 * @param supplier    the original supplier
+	 * @param <T>         the type of results supplied supplier
+	 * @return a supplier which is restricted by a RateLimiter.
+	 */
+	static <T> Supplier<Try<T>> decorateTrySupplier(RateLimiter rateLimiter, Supplier<Try<T>> supplier){
+		return () -> {
+			try{
+				waitForPermission(rateLimiter);
+				return supplier.get();
+			}catch (RequestNotPermitted requestNotPermitted){
+				return Try.failure(requestNotPermitted);
+			}
+		};
+	}
+
+	/**
+	 * Creates a supplier which is restricted by a RateLimiter.
+	 *
+	 * @param rateLimiter the RateLimiter
+	 * @param supplier    the original supplier
+	 * @param <T>         the type of results supplied supplier
+	 * @return a supplier which is restricted by a RateLimiter.
+	 */
+	static <T> Supplier<Either<Exception, T>> decorateEitherSupplier(RateLimiter rateLimiter, Supplier<Either<? extends Exception, T>> supplier){
+		return () -> {
+			try{
+				waitForPermission(rateLimiter);
+				return Either.narrow(supplier.get());
+			}catch (RequestNotPermitted requestNotPermitted){
+				return Either.left(requestNotPermitted);
+			}
+		};
+	}
+
 	static <T> Callable<T> decorateCallable(RateLimiter rateLimiter, Callable<T> callable) {
 		return () -> {
 			waitForPermission(rateLimiter);
@@ -267,20 +307,6 @@ public interface RateLimiter {
 	void changeLimitForPeriod(int limitForPeriod);
 
 	/**
-	 * @deprecated Use {@link RateLimiter#acquirePermission(Duration)} instead.
-	 * @since 0.15.0
-	 */
-	@Deprecated
-	boolean getPermission(Duration timeoutDuration);
-
-	/**
-	 * @deprecated Use {@link RateLimiter#acquirePermission()} instead.
-	 * @since 0.16.0
-	 */
-	@Deprecated
-	boolean acquirePermission(Duration timeoutDuration);
-
-	/**
 	 * Acquires a permission from this rate limiter, blocking until one is available, or the thread is interrupted.
 	 * Maximum wait time is {@link RateLimiterConfig#getTimeoutDuration()}
 	 *
@@ -292,13 +318,6 @@ public interface RateLimiter {
 	 * if waiting timeoutDuration elapsed before a permit was acquired
 	 */
 	boolean acquirePermission();
-
-	/**
-	 * @deprecated Use {@link RateLimiter#reservePermission()} instead.
-	 * @since 0.16.0
-	 */
-	@Deprecated
-	long reservePermission(Duration timeoutDuration);
 
 	/**
 	 * Reserves a permission from this rate limiter and returns nanoseconds you should wait for it.
@@ -346,6 +365,28 @@ public interface RateLimiter {
 	 */
 	default <T> T executeSupplier(Supplier<T> supplier) {
 		return decorateSupplier(this, supplier).get();
+	}
+
+	/**
+	 * Decorates and executes the decorated Supplier.
+	 *
+	 * @param supplier the original Supplier
+	 * @param <T>      the type of results supplied by this supplier
+	 * @return the result of the decorated Supplier.
+	 */
+	default <T> Try<T> executeTrySupplier(Supplier<Try<T>> supplier) {
+		return decorateTrySupplier(this, supplier).get();
+	}
+
+	/**
+	 * Decorates and executes the decorated Supplier.
+	 *
+	 * @param supplier the original Supplier
+	 * @param <T>      the type of results supplied by this supplier
+	 * @return the result of the decorated Supplier.
+	 */
+	default <T> Either<Exception, T> executeEitherSupplier(Supplier<Either<? extends Exception, T>> supplier) {
+		return decorateEitherSupplier(this, supplier).get();
 	}
 
 	/**

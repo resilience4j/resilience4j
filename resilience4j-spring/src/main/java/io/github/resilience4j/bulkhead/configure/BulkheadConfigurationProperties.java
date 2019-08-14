@@ -18,22 +18,12 @@ package io.github.resilience4j.bulkhead.configure;
 import org.springframework.core.Ordered;
 
 public class BulkheadConfigurationProperties extends io.github.resilience4j.common.bulkhead.configuration.BulkheadConfigurationProperties {
-	private int bulkheadAspectOrder = Ordered.LOWEST_PRECEDENCE;
 
 	/**
-	 * @deprecated As of release 0.16.0 as we set an implicit spring aspect order now which is retry then circuit breaker then rate limiter then bulkhead
+	 * As of release 0.16.0 as we set an implicit spring aspect order for bulkhead to cover the async case of threadPool bulkhead
 	 */
-	@Deprecated
 	public int getBulkheadAspectOrder() {
-		return bulkheadAspectOrder;
-	}
-
-	/**
-	 * @deprecated As of release 0.16.0 as we set an implicit spring aspect order now which is retry then circuit breaker then rate limiter then bulkhead
-	 */
-	@Deprecated
-	public void setBulkheadAspectOrder(int bulkheadAspectOrder) {
-		// NO-OP
+		return Ordered.LOWEST_PRECEDENCE;
 	}
 
 }

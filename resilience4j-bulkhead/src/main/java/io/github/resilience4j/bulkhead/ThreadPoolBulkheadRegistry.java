@@ -102,14 +102,4 @@ public interface ThreadPoolBulkheadRegistry  extends Registry<ThreadPoolBulkhead
 	 */
 	ThreadPoolBulkhead bulkhead(String name, String configName);
 
-	/**
-	 * @deprecated Use {@link ThreadPoolBulkheadRegistry#getDefaultConfig()} instead
-	 * @since (0.15.0)
-	 * Returns a default ThreadPoolBulkheadConfig instance this registry is using.
-	 *
-	 * @return ThreadPoolBulkheadConfig instance
-	 */
-	@Deprecated
-	ThreadPoolBulkheadConfig getDefaultBulkheadConfig();
-
 }

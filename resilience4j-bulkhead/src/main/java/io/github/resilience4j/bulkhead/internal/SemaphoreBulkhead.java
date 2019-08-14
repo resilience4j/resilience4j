@@ -101,14 +101,6 @@ public class SemaphoreBulkhead implements Bulkhead {
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean isCallPermitted() {
-        return tryAcquirePermission();
-    }
-
     @Override
     public boolean tryAcquirePermission() {
         boolean callPermitted = tryEnterBulkhead();

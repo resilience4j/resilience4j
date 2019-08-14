@@ -22,12 +22,15 @@ import io.github.resilience4j.circuitbreaker.event.*;
 import io.github.resilience4j.circuitbreaker.internal.CircuitBreakerStateMachine;
 import io.github.resilience4j.core.EventConsumer;
 import io.vavr.*;
+import io.vavr.control.Either;
+import io.vavr.control.Try;
 
 import java.util.Arrays;
 import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -51,16 +54,6 @@ import java.util.stream.Collectors;
 public interface CircuitBreaker {
 
     /**
-     * Attempts to obtain a permission to execute a call.
-     * @deprecated Use {@link CircuitBreaker#tryAcquirePermission()} ()} instead.
-     * @since 0.15.0
-     *
-     * @return true when a call is permitted
-     */
-    @Deprecated
-    boolean isCallPermitted();
-
-    /**
      * Acquires a permission to execute a call, only if one is available at the time of invocation.
      * If a call is not permitted, the number of not permitted calls is increased.
      *
@@ -79,7 +72,7 @@ public interface CircuitBreaker {
      * Releases a permission.
      *
      * Should only be used when a permission was acquired but not used. Otherwise use
-     * {@link CircuitBreaker#onSuccess(long)} or {@link CircuitBreaker#onError(long, Throwable)}
+     * {@link CircuitBreaker#onSuccess(long, TimeUnit)} or {@link CircuitBreaker#onError(long, TimeUnit, Throwable)}
      * to signal a completed or failed call.
      *
      * If the state is HALF_OPEN, the number of allowed test calls is increased by one.
@@ -105,18 +98,20 @@ public interface CircuitBreaker {
      * Records a failed call.
      * This method must be invoked when a call failed.
      *
-     * @param durationInNanos The elapsed time duration of the call
+     * @param duration The elapsed time duration of the call
+     * @param durationUnit The duration unit
      * @param throwable The throwable which must be recorded
      */
-    void onError(long durationInNanos, Throwable throwable);
+    void onError(long duration, TimeUnit durationUnit, Throwable throwable);
 
      /**
       * Records a successful call.
       *
-      * @param durationInNanos The elapsed time duration of the call
+      * @param duration The elapsed time duration of the call
+      * @param durationUnit The duration unit
       * This method must be invoked when a call was successful.
       */
-    void onSuccess(long durationInNanos);
+    void onSuccess(long duration, TimeUnit durationUnit);
 
     /**
      * Returns the circuit breaker to its original closed state, losing statistics.
@@ -218,6 +213,52 @@ public interface CircuitBreaker {
      */
     default <T> Supplier<T> decorateSupplier(Supplier<T> supplier){
         return decorateSupplier(this, supplier);
+    }
+
+    /**
+     * Decorates and executes the decorated Supplier.
+     *
+     * @param supplier the original Supplier
+     * @param <T> the type of results supplied by this supplier
+     * @return the result of the decorated Supplier.
+     */
+    default <T> Either<Exception, T> executeEitherSupplier(Supplier<Either<? extends Exception, T>> supplier){
+        return decorateEitherSupplier(this, supplier).get();
+    }
+
+    /**
+     * Returns a supplier which is decorated by a CircuitBreaker.
+     *
+     * @param supplier the original supplier
+     * @param <T> the type of results supplied by this supplier
+     *
+     * @return a supplier which is decorated by a CircuitBreaker.
+     */
+    default <T> Supplier<Try<T>> decorateTrySupplier(Supplier<Try<T>> supplier){
+        return decorateTrySupplier(this, supplier);
+    }
+
+    /**
+     * Decorates and executes the decorated Supplier.
+     *
+     * @param supplier the original Supplier
+     * @param <T> the type of results supplied by this supplier
+     * @return the result of the decorated Supplier.
+     */
+    default <T> Try<T> executeTrySupplier(Supplier<Try<T>> supplier){
+        return decorateTrySupplier(this, supplier).get();
+    }
+
+    /**
+     * Returns a supplier which is decorated by a CircuitBreaker.
+     *
+     * @param supplier the original supplier
+     * @param <T> the type of results supplied by this supplier
+     *
+     * @return a supplier which is decorated by a CircuitBreaker.
+     */
+    default <T> Supplier<Either<Exception, T>> decorateEitherSupplier(Supplier<Either<? extends Exception, T>> supplier){
+        return decorateEitherSupplier(this, supplier);
     }
 
     /**
@@ -478,12 +519,27 @@ public interface CircuitBreaker {
     interface Metrics {
 
         /**
-         * Returns the failure rate in percentage. If the number of measured calls is below the minimum number of measured calls,
+         * Returns the current failure rate in percentage. If the number of measured calls is below the minimum number of measured calls,
          * it returns -1.
          *
          * @return the failure rate in percentage
          */
         float getFailureRate();
+
+        /**
+         * Returns the current percentage of calls which were slower than a certain threshold. If the number of measured calls is below the minimum number of measured calls,
+         * it returns -1.
+         *
+         * @return the failure rate in percentage
+         */
+        float getSlowCallRate();
+
+        /**
+         * Returns the current total number of calls which were slower than a certain threshold.
+         *
+         * @return the current total number of calls which were slower than a certain threshold
+         */
+        int getNumberOfSlowCalls();
 
         /**
          * Returns the current total number of buffered calls in the ring buffer.
@@ -510,13 +566,6 @@ public interface CircuitBreaker {
         long getNumberOfNotPermittedCalls();
 
         /**
-         * Returns the maximum number of buffered calls in the ring buffer.
-         *
-         * @return the maximum number of buffered calls in the ring buffer
-         */
-        int getMaxNumberOfBufferedCalls();
-
-        /**
          * Returns the current number of successful buffered calls in the ring buffer.
          *
          * @return the current number of successful buffered calls in the ring buffer
@@ -540,12 +589,12 @@ public interface CircuitBreaker {
                 T returnValue = supplier.apply();
 
                 long durationInNanos = System.nanoTime() - start;
-                circuitBreaker.onSuccess(durationInNanos);
+                circuitBreaker.onSuccess(durationInNanos, TimeUnit.NANOSECONDS);
                 return returnValue;
             } catch (Exception exception) {
                 // Do not handle java.lang.Error
                 long durationInNanos = System.nanoTime() - start;
-                circuitBreaker.onError(durationInNanos, exception);
+                circuitBreaker.onError(durationInNanos, TimeUnit.NANOSECONDS, exception);
                 throw exception;
             }
         };
@@ -578,17 +627,17 @@ public interface CircuitBreaker {
                         long durationInNanos = System.nanoTime() - start;
                         if(throwable != null){
                             if(throwable instanceof Exception){
-                                circuitBreaker.onError(durationInNanos, throwable);
+                                circuitBreaker.onError(durationInNanos, TimeUnit.NANOSECONDS, throwable);
                             }
                             promise.completeExceptionally(throwable);
                         }else{
-                            circuitBreaker.onSuccess(durationInNanos);
+                            circuitBreaker.onSuccess(durationInNanos, TimeUnit.NANOSECONDS);
                             promise.complete(result);
                         }
                     });
                 }catch (Exception exception){
                     long durationInNanos = System.nanoTime() - start;
-                    circuitBreaker.onError(durationInNanos, exception);
+                    circuitBreaker.onError(durationInNanos, TimeUnit.NANOSECONDS, exception);
                     promise.completeExceptionally(exception);
                 }
             }
@@ -612,11 +661,11 @@ public interface CircuitBreaker {
             try{
                 runnable.run();
                 long durationInNanos = System.nanoTime() - start;
-                circuitBreaker.onSuccess(durationInNanos);
+                circuitBreaker.onSuccess(durationInNanos, TimeUnit.NANOSECONDS);
             } catch (Exception exception){
                 // Do not handle java.lang.Error
                 long durationInNanos = System.nanoTime() - start;
-                circuitBreaker.onError(durationInNanos, exception);
+                circuitBreaker.onError(durationInNanos, TimeUnit.NANOSECONDS, exception);
                 throw exception;
             }
         };
@@ -638,12 +687,12 @@ public interface CircuitBreaker {
             try {
                 T returnValue = callable.call();
                 long durationInNanos = System.nanoTime() - start;
-                circuitBreaker.onSuccess(durationInNanos);
+                circuitBreaker.onSuccess(durationInNanos, TimeUnit.NANOSECONDS);
                 return returnValue;
             } catch (Exception exception) {
                 // Do not handle java.lang.Error
                 long durationInNanos = System.nanoTime() - start;
-                circuitBreaker.onError(durationInNanos, exception);
+                circuitBreaker.onError(durationInNanos, TimeUnit.NANOSECONDS, exception);
                 throw exception;
             }
         };
@@ -665,13 +714,69 @@ public interface CircuitBreaker {
             try {
                 T returnValue = supplier.get();
                 long durationInNanos = System.nanoTime() - start;
-                circuitBreaker.onSuccess(durationInNanos);
+                circuitBreaker.onSuccess(durationInNanos, TimeUnit.NANOSECONDS);
                 return returnValue;
             } catch (Exception exception) {
                 // Do not handle java.lang.Error
                 long durationInNanos = System.nanoTime() - start;
-                circuitBreaker.onError(durationInNanos, exception);
+                circuitBreaker.onError(durationInNanos, TimeUnit.NANOSECONDS, exception);
                 throw exception;
+            }
+        };
+    }
+
+    /**
+     * Returns a supplier which is decorated by a CircuitBreaker.
+     *
+     * @param circuitBreaker the CircuitBreaker
+     * @param supplier the original supplier
+     * @param <T> the type of results supplied by this supplier
+     *
+     * @return a supplier which is decorated by a CircuitBreaker.
+     */
+    static <T> Supplier<Either<Exception, T>> decorateEitherSupplier(CircuitBreaker circuitBreaker, Supplier<Either<? extends Exception, T>> supplier) {
+        return () -> {
+            if(circuitBreaker.tryAcquirePermission()) {
+                circuitBreaker.acquirePermission();
+                long start = System.nanoTime();
+                Either<? extends Exception, T> result = supplier.get();
+                long durationInNanos = System.nanoTime() - start;
+                if (result.isRight()) {
+                    circuitBreaker.onSuccess(durationInNanos, TimeUnit.NANOSECONDS);
+                } else {
+                    Exception exception = result.getLeft();
+                    circuitBreaker.onError(durationInNanos, TimeUnit.NANOSECONDS, exception);
+                }
+                return Either.narrow(result);
+            }else{
+                return Either.left(new CallNotPermittedException(circuitBreaker));
+            }
+        };
+    }
+
+    /**
+     * Returns a supplier which is decorated by a CircuitBreaker.
+     *
+     * @param circuitBreaker the CircuitBreaker
+     * @param supplier the original function
+     * @param <T>      the type of results supplied by this supplier
+     * @return a retryable function
+     */
+    static <T> Supplier<Try<T>> decorateTrySupplier(CircuitBreaker circuitBreaker, Supplier<Try<T>> supplier) {
+        return () -> {
+            if(circuitBreaker.tryAcquirePermission()){
+                long start = System.nanoTime();
+                Try<T> result = supplier.get();
+                long durationInNanos = System.nanoTime() - start;
+                if(result.isSuccess()){
+                    circuitBreaker.onSuccess(durationInNanos, TimeUnit.NANOSECONDS);
+                    return result;
+                }else{
+                    circuitBreaker.onError(durationInNanos, TimeUnit.NANOSECONDS, result.getCause());
+                    return result;
+                }
+            }else{
+                return Try.failure(new CallNotPermittedException(circuitBreaker));
             }
         };
     }
@@ -692,11 +797,11 @@ public interface CircuitBreaker {
             try {
                 consumer.accept(t);
                 long durationInNanos = System.nanoTime() - start;
-                circuitBreaker.onSuccess(durationInNanos);
+                circuitBreaker.onSuccess(durationInNanos, TimeUnit.NANOSECONDS);
             } catch (Exception exception) {
                 // Do not handle java.lang.Error
                 long durationInNanos = System.nanoTime() - start;
-                circuitBreaker.onError(durationInNanos, exception);
+                circuitBreaker.onError(durationInNanos, TimeUnit.NANOSECONDS, exception);
                 throw exception;
             }
         };
@@ -718,11 +823,11 @@ public interface CircuitBreaker {
             try {
                 consumer.accept(t);
                 long durationInNanos = System.nanoTime() - start;
-                circuitBreaker.onSuccess(durationInNanos);
+                circuitBreaker.onSuccess(durationInNanos, TimeUnit.NANOSECONDS);
             } catch (Exception exception) {
                 // Do not handle java.lang.Error
                 long durationInNanos = System.nanoTime() - start;
-                circuitBreaker.onError(durationInNanos, exception);
+                circuitBreaker.onError(durationInNanos, TimeUnit.NANOSECONDS, exception);
                 throw exception;
             }
         };
@@ -743,11 +848,11 @@ public interface CircuitBreaker {
             try{
                 runnable.run();
                 long durationInNanos = System.nanoTime() - start;
-                circuitBreaker.onSuccess(durationInNanos);
+                circuitBreaker.onSuccess(durationInNanos, TimeUnit.NANOSECONDS);
             } catch (Exception exception){
                 // Do not handle java.lang.Error
                 long durationInNanos = System.nanoTime() - start;
-                circuitBreaker.onError(durationInNanos, exception);
+                circuitBreaker.onError(durationInNanos, TimeUnit.NANOSECONDS, exception);
                 throw exception;
             }
         };
@@ -769,12 +874,12 @@ public interface CircuitBreaker {
             try{
                 R returnValue = function.apply(t);
                 long durationInNanos = System.nanoTime() - start;
-                circuitBreaker.onSuccess(durationInNanos);
+                circuitBreaker.onSuccess(durationInNanos, TimeUnit.NANOSECONDS);
                 return returnValue;
             } catch (Exception exception){
                 // Do not handle java.lang.Error
                 long durationInNanos = System.nanoTime() - start;
-                circuitBreaker.onError(durationInNanos, exception);
+                circuitBreaker.onError(durationInNanos, TimeUnit.NANOSECONDS, exception);
                 throw exception;
             }
         };
@@ -796,12 +901,12 @@ public interface CircuitBreaker {
             try{
                 R returnValue = function.apply(t);
                 long durationInNanos = System.nanoTime() - start;
-                circuitBreaker.onSuccess(durationInNanos);
+                circuitBreaker.onSuccess(durationInNanos, TimeUnit.NANOSECONDS);
                 return returnValue;
             } catch (Exception exception){
                 // Do not handle java.lang.Error
                 long durationInNanos = System.nanoTime() - start;
-                circuitBreaker.onError(durationInNanos, exception);
+                circuitBreaker.onError(durationInNanos, TimeUnit.NANOSECONDS, exception);
                 throw exception;
             }
         };

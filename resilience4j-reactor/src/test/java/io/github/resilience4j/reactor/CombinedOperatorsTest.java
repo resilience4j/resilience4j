@@ -35,7 +35,7 @@ public class CombinedOperatorsTest {
                     .build());
 
     private Bulkhead bulkhead = Bulkhead
-            .of("test", BulkheadConfig.custom().maxConcurrentCalls(1).maxWaitTime(0).build());
+            .of("test", BulkheadConfig.custom().maxConcurrentCalls(1).maxWaitDuration(Duration.ZERO).build());
 
     private final RetryConfig config = io.github.resilience4j.retry.RetryConfig.ofDefaults();
     private final Retry retry = Retry.of("testName", config);

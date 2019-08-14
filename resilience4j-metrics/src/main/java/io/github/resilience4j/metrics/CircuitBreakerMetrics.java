@@ -29,14 +29,7 @@ import io.vavr.collection.Array;
 import java.util.Map;
 
 import static com.codahale.metrics.MetricRegistry.name;
-import static io.github.resilience4j.circuitbreaker.utils.MetricNames.BUFFERED;
-import static io.github.resilience4j.circuitbreaker.utils.MetricNames.BUFFERED_MAX;
-import static io.github.resilience4j.circuitbreaker.utils.MetricNames.DEFAULT_PREFIX;
-import static io.github.resilience4j.circuitbreaker.utils.MetricNames.FAILED;
-import static io.github.resilience4j.circuitbreaker.utils.MetricNames.FAILURE_RATE;
-import static io.github.resilience4j.circuitbreaker.utils.MetricNames.NOT_PERMITTED;
-import static io.github.resilience4j.circuitbreaker.utils.MetricNames.STATE;
-import static io.github.resilience4j.circuitbreaker.utils.MetricNames.SUCCESSFUL;
+import static io.github.resilience4j.circuitbreaker.utils.MetricNames.*;
 import static java.util.Objects.requireNonNull;
 
 /**
@@ -68,8 +61,6 @@ public class CircuitBreakerMetrics implements MetricSet {
                     (Gauge<Long>) () -> circuitBreaker.getMetrics().getNumberOfNotPermittedCalls());
                 metricRegistry.register(name(prefix, name, BUFFERED),
                     (Gauge<Integer>) () -> circuitBreaker.getMetrics().getNumberOfBufferedCalls());
-                metricRegistry.register(name(prefix, name, BUFFERED_MAX),
-                    (Gauge<Integer>) () -> circuitBreaker.getMetrics().getMaxNumberOfBufferedCalls());
                 metricRegistry.register(name(prefix, name, FAILURE_RATE),
                     (Gauge<Float>) () -> circuitBreaker.getMetrics().getFailureRate());
             }

@@ -27,6 +27,7 @@ import reactor.test.StepVerifier;
 import java.io.IOException;
 import java.time.Duration;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.fail;
 import static org.mockito.ArgumentMatchers.any;
@@ -58,8 +59,8 @@ public class MonoCircuitBreakerTest  {
                 .verifyComplete();
 
         then(helloWorldService).should(Mockito.times(1)).returnHelloWorld();
-        verify(circuitBreaker, times(1)).onSuccess(anyLong());
-        verify(circuitBreaker, never()).onError(anyLong(), any(Throwable.class));
+        verify(circuitBreaker, times(1)).onSuccess(anyLong(), any(TimeUnit.class));
+        verify(circuitBreaker, never()).onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
     }
 
     @Test
@@ -74,8 +75,8 @@ public class MonoCircuitBreakerTest  {
                 .verifyComplete();
 
         then(helloWorldService).should(Mockito.times(1)).returnHelloWorld();
-        verify(circuitBreaker, times(1)).onSuccess(anyLong());
-        verify(circuitBreaker, never()).onError(anyLong(), any(Throwable.class));
+        verify(circuitBreaker, times(1)).onSuccess(anyLong(), any(TimeUnit.class));
+        verify(circuitBreaker, never()).onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
     }
 
     @Test
@@ -93,8 +94,8 @@ public class MonoCircuitBreakerTest  {
                 .verifyComplete();
 
         then(helloWorldService).should(Mockito.times(3)).returnHelloWorld();
-        verify(circuitBreaker, times(3)).onSuccess(anyLong());
-        verify(circuitBreaker, never()).onError(anyLong(), any(Throwable.class));
+        verify(circuitBreaker, times(3)).onSuccess(anyLong(), any(TimeUnit.class));
+        verify(circuitBreaker, never()).onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
     }
 
     @Test
@@ -106,8 +107,8 @@ public class MonoCircuitBreakerTest  {
                         .compose(CircuitBreakerOperator.of(circuitBreaker)))
                 .verifyComplete();
 
-        verify(circuitBreaker, times(1)).onSuccess(anyLong());
-        verify(circuitBreaker, never()).onError(anyLong(), any(Throwable.class));
+        verify(circuitBreaker, times(1)).onSuccess(anyLong(), any(TimeUnit.class));
+        verify(circuitBreaker, never()).onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
     }
 
     @Test
@@ -120,8 +121,8 @@ public class MonoCircuitBreakerTest  {
                 .expectError(IOException.class)
                 .verify(Duration.ofSeconds(1));
 
-        verify(circuitBreaker, times(1)).onError(anyLong(), any(IOException.class));
-        verify(circuitBreaker, never()).onSuccess(anyLong());
+        verify(circuitBreaker, times(1)).onError(anyLong(), any(TimeUnit.class), any(IOException.class));
+        verify(circuitBreaker, never()).onSuccess(anyLong(), any(TimeUnit.class));
     }
 
     @Test
@@ -134,8 +135,8 @@ public class MonoCircuitBreakerTest  {
                 .expectError(CallNotPermittedException.class)
                 .verify(Duration.ofSeconds(1));
 
-        verify(circuitBreaker, never()).onError(anyLong(), any(Throwable.class));
-        verify(circuitBreaker, never()).onSuccess(anyLong());
+        verify(circuitBreaker, never()).onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
+        verify(circuitBreaker, never()).onSuccess(anyLong(), any(TimeUnit.class));
     }
 
     @Test
@@ -148,8 +149,8 @@ public class MonoCircuitBreakerTest  {
                 .expectError(CallNotPermittedException.class)
                 .verify(Duration.ofSeconds(1));
 
-        verify(circuitBreaker, never()).onError(anyLong(), any(Throwable.class));
-        verify(circuitBreaker, never()).onSuccess(anyLong());
+        verify(circuitBreaker, never()).onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
+        verify(circuitBreaker, never()).onSuccess(anyLong(), any(TimeUnit.class));
     }
 
     @Test
@@ -165,8 +166,8 @@ public class MonoCircuitBreakerTest  {
                     .verify();
 
         verify(circuitBreaker, times(1)).releasePermission();
-        verify(circuitBreaker, never()).onError(anyLong(), any(Throwable.class));
-        verify(circuitBreaker, never()).onSuccess(anyLong());
+        verify(circuitBreaker, never()).onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
+        verify(circuitBreaker, never()).onSuccess(anyLong(), any(TimeUnit.class));
     }
 
     @Test
@@ -182,8 +183,8 @@ public class MonoCircuitBreakerTest  {
                 .verify();
 
         then(helloWorldService).should(never()).returnHelloWorld();
-        verify(circuitBreaker, never()).onSuccess(anyLong());
-        verify(circuitBreaker, never()).onError(anyLong(), any(Throwable.class));
+        verify(circuitBreaker, never()).onSuccess(anyLong(), any(TimeUnit.class));
+        verify(circuitBreaker, never()).onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
     }
 
     @Test

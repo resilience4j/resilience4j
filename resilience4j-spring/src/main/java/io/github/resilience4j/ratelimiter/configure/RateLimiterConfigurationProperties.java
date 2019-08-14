@@ -19,20 +19,20 @@ import org.springframework.core.Ordered;
 
 public class RateLimiterConfigurationProperties extends io.github.resilience4j.common.ratelimiter.configuration.RateLimiterConfigurationProperties {
 	private int rateLimiterAspectOrder = Ordered.LOWEST_PRECEDENCE - 1;
-
 	/**
-	 * @deprecated As of release 0.16.0 as we set an implicit spring aspect order now which is retry then circuit breaker then rate limiter then bulkhead
+	 * As of release 0.16.0 as we set an implicit spring aspect order now which is retry then circuit breaker then rate limiter then bulkhead but
+	 * user can override it still if he has different use case but bulkhead will be first aspect all the time due to the implicit order we have it for bulkhead
 	 */
-	@Deprecated
 	public int getRateLimiterAspectOrder() {
 		return rateLimiterAspectOrder;
 	}
 
 	/**
-	 * @deprecated As of release 0.16.0 as we set an implicit spring aspect order now which is retry then circuit breaker then rate limiter then bulkhead
+	 * set rate limiter aspect order
+	 *
+	 * @param rateLimiterAspectOrder the aspect order
 	 */
-	@Deprecated
 	public void setRateLimiterAspectOrder(int rateLimiterAspectOrder) {
-		// NO-OP
+		this.rateLimiterAspectOrder = rateLimiterAspectOrder;
 	}
 }

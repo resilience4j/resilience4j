@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright 2016 Robert Winkler
+ *  Copyright 2019 Robert Winkler and Bohdan Storozhuk
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -16,25 +16,31 @@
  *
  *
  */
-package io.github.resilience4j.circuitbreaker.utils;
+package io.github.resilience4j.core.metrics;
 
-import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
-import io.github.resilience4j.circuitbreaker.CircuitBreaker;
+import java.util.concurrent.TimeUnit;
 
-public final class CircuitBreakerUtils {
-
-    private CircuitBreakerUtils(){}
+public interface Metrics {
 
     /**
-     * @deprecated
-     * Use {@link CircuitBreaker#acquirePermission()} instead
+     * Records a call.
      *
-     * @since 0.15.0
+     * @param duration the duration of the call
+     * @param durationUnit the time unit of the duration
+     * @param outcome the outcome of the call
      */
-    @Deprecated
-    public static void isCallPermitted(CircuitBreaker circuitBreaker) {
-        if(!circuitBreaker.tryAcquirePermission()) {
-            throw new CallNotPermittedException(circuitBreaker);
-        }
+    Snapshot record(long duration, TimeUnit durationUnit, Outcome outcome);
+
+    /**
+     * Returns a snapshot.
+     *
+     * @return a snapshot
+     */
+    Snapshot getSnapshot();
+
+    enum Outcome
+    {
+        SUCCESS, ERROR, SLOW_SUCCESS, SLOW_ERROR
     }
+
 }

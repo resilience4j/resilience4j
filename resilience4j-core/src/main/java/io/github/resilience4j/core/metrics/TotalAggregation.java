@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright 2017 Robert Winkler, Lucas Lech
+ *  Copyright 2019 Robert Winkler and Bohdan Storozhuk
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -16,26 +16,14 @@
  *
  *
  */
-package io.github.resilience4j.bulkhead.utils;
+package io.github.resilience4j.core.metrics;
 
-import io.github.resilience4j.bulkhead.Bulkhead;
-import io.github.resilience4j.bulkhead.BulkheadFullException;
+class TotalAggregation extends AbstractAggregation{
 
-
-public final class BulkheadUtils {
-
-    private BulkheadUtils(){}
-
-    /**
-     * @deprecated
-     * Use {@link Bulkhead#acquirePermission()} instead
-     *
-     * @since 0.15.0
-     */
-    @Deprecated
-    public static void isCallPermitted(Bulkhead bulkhead) {
-        if(!bulkhead.tryAcquirePermission()) {
-            throw new BulkheadFullException(bulkhead);
-        }
+    void removeBucket(AbstractAggregation bucket){
+        this.totalDurationInMillis -= bucket.totalDurationInMillis;
+        this.numberOfSlowCalls -= bucket.numberOfSlowCalls;
+        this.numberOfFailedCalls -= bucket.numberOfFailedCalls;
+        this.numberOfCalls -= bucket.numberOfCalls;
     }
 }

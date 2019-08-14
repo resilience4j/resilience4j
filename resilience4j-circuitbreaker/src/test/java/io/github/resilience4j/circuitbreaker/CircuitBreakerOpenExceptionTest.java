@@ -10,13 +10,13 @@ public class CircuitBreakerOpenExceptionTest {
     public void shouldReturnCorrectMessageWhenStateIsOpen(){
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testName");
         circuitBreaker.transitionToOpenState();
-        assertThat(new CircuitBreakerOpenException(circuitBreaker).getMessage()).isEqualTo("CircuitBreaker 'testName' is OPEN and does not permit further calls");
+        assertThat(new CallNotPermittedException(circuitBreaker).getMessage()).isEqualTo("CircuitBreaker 'testName' is OPEN and does not permit further calls");
     }
 
     @Test
     public void shouldReturnCorrectMessageWhenStateIsForcedOpen(){
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testName");
         circuitBreaker.transitionToForcedOpenState();
-        assertThat(new CircuitBreakerOpenException(circuitBreaker).getMessage()).isEqualTo("CircuitBreaker 'testName' is FORCED_OPEN and does not permit further calls");
+        assertThat(new CallNotPermittedException(circuitBreaker).getMessage()).isEqualTo("CircuitBreaker 'testName' is FORCED_OPEN and does not permit further calls");
     }
 }

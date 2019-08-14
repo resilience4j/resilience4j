@@ -3,10 +3,7 @@ package io.github.resilience4j.timelimiter;
 import io.github.resilience4j.timelimiter.internal.TimeLimiterImpl;
 
 import java.time.Duration;
-import java.util.concurrent.Callable;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
+import java.util.concurrent.*;
 import java.util.function.Supplier;
 
 /**
@@ -66,6 +63,15 @@ public interface TimeLimiter {
                     future.cancel(true);
                 }
                 throw e;
+            } catch (ExecutionException e){
+                Throwable t = e.getCause();
+                if (t == null){
+                    throw e;
+                }
+                if (t instanceof Error){
+                    throw (Error) t;
+                }
+                throw (Exception) t;
             }
         };
     }
@@ -88,5 +94,17 @@ public interface TimeLimiter {
      */
     default <T, F extends Future<T>> T executeFutureSupplier(Supplier<F> futureSupplier) throws Exception {
         return decorateFutureSupplier(this, futureSupplier).call();
+    }
+
+    /**
+     * Creates a Callback that is restricted by a TimeLimiter.
+     *
+     * @param futureSupplier the original future supplier
+     * @param <T> the type of results supplied by the supplier
+     * @param <F> the future type supplied
+     * @return a future supplier which is restricted by a {@link TimeLimiter}.
+     */
+    default <T, F extends Future<T>> Callable<T> decorateFutureSupplier(Supplier<F> futureSupplier) {
+        return decorateFutureSupplier(this, futureSupplier);
     }
 }

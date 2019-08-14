@@ -22,6 +22,8 @@ import ratpack.exec.Downstream;
 import ratpack.exec.Upstream;
 import ratpack.func.Function;
 
+import java.util.concurrent.TimeUnit;
+
 public class CircuitBreakerTransformer<T> extends AbstractTransformer<T> {
     private CircuitBreaker circuitBreaker;
 
@@ -64,19 +66,20 @@ public class CircuitBreakerTransformer<T> extends AbstractTransformer<T> {
                     @Override
                     public void success(T value) {
                         long durationInNanos = System.nanoTime() - start;
-                        circuitBreaker.onSuccess(durationInNanos);
+                        circuitBreaker.onSuccess(durationInNanos, TimeUnit.NANOSECONDS);
                         down.success(value);
                     }
 
                     @Override
                     public void error(Throwable throwable) {
                         long durationInNanos = System.nanoTime() - start;
-                        circuitBreaker.onError(durationInNanos, throwable);
+                        circuitBreaker.onError(durationInNanos, TimeUnit.NANOSECONDS, throwable);
                         handleRecovery(down, throwable);
                     }
 
                     @Override
                     public void complete() {
+                        circuitBreaker.releasePermission();
                         down.complete();
                     }
                 });

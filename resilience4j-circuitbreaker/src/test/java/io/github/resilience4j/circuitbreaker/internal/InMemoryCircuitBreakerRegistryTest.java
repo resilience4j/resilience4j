@@ -74,7 +74,7 @@ public class InMemoryCircuitBreakerRegistryTest {
 		final CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("circuitBreaker",
 				"testConfig");
 		assertThat(circuitBreaker).isNotNull();
-		assertThat(circuitBreaker.getCircuitBreakerConfig().getRingBufferSizeInClosedState()).isEqualTo(5);
+		assertThat(circuitBreaker.getCircuitBreakerConfig().getSlidingWindowSize()).isEqualTo(5);
 	}
 
 	@Test

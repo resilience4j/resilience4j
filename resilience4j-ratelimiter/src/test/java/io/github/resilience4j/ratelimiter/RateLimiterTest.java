@@ -21,11 +21,13 @@ package io.github.resilience4j.ratelimiter;
 import io.vavr.CheckedFunction0;
 import io.vavr.CheckedFunction1;
 import io.vavr.CheckedRunnable;
+import io.vavr.control.Either;
 import io.vavr.control.Try;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.BDDMockito;
 
+import javax.xml.ws.WebServiceException;
 import java.time.Duration;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
@@ -298,4 +300,57 @@ public class RateLimiterTest {
         RateLimiter rateLimiter = RateLimiter.of("test", () -> config);
         then(rateLimiter).isNotNull();
     }
+
+    @Test
+    public void decorateTrySupplier() throws Exception {
+        Supplier<Try<String>> supplier = mock(Supplier.class);
+        BDDMockito.given(supplier.get()).willReturn(Try.success("Resource"));
+
+        when(limit.acquirePermission()).thenReturn(true);
+
+        Try<String> result = RateLimiter.decorateTrySupplier(limit, supplier).get();
+
+        then(result.isSuccess()).isTrue();
+        verify(supplier, times(1)).get();
+    }
+
+    @Test
+    public void decorateEitherSupplier() throws Exception {
+        Supplier<Either<WebServiceException, String>> supplier = mock(Supplier.class);
+        BDDMockito.given(supplier.get()).willReturn(Either.right("Resource"));
+
+        when(limit.acquirePermission()).thenReturn(true);
+
+        Either<Exception, String> result = RateLimiter.decorateEitherSupplier(limit, supplier::get).get();
+
+        then(result.isRight()).isTrue();
+        verify(supplier, times(1)).get();
+    }
+
+    @Test
+    public void shouldExecuteTrySupplierAndReturnRequestNotPermitted() throws Exception {
+        Supplier<Try<String>> supplier = mock(Supplier.class);
+
+        when(limit.acquirePermission()).thenReturn(false);
+
+        Try<String> result = RateLimiter.decorateTrySupplier(limit, supplier).get();
+
+        then(result.isFailure()).isTrue();
+        then(result.getCause()).isInstanceOf(RequestNotPermitted.class);
+        verify(supplier, never()).get();
+    }
+
+    @Test
+    public void shouldExecuteEitherSupplierAndReturnRequestNotPermitted() throws Exception {
+        Supplier<Either<WebServiceException, String>> supplier = mock(Supplier.class);
+
+        when(limit.acquirePermission()).thenReturn(false);
+
+        Either<Exception, String> result = RateLimiter.decorateEitherSupplier(limit, supplier::get).get();
+
+        then(result.isLeft()).isTrue();
+        then(result.getLeft()).isInstanceOf(RequestNotPermitted.class);
+        verify(supplier, never()).get();
+    }
+
 }

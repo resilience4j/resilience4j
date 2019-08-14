@@ -15,17 +15,6 @@
  */
 package io.github.resilience4j.bulkhead.configure;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.stream.Collectors;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Conditional;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Import;
-
 import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.bulkhead.BulkheadConfig;
 import io.github.resilience4j.bulkhead.BulkheadRegistry;
@@ -36,8 +25,19 @@ import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
 import io.github.resilience4j.fallback.FallbackDecorators;
 import io.github.resilience4j.fallback.configure.FallbackConfiguration;
+import io.github.resilience4j.utils.AspectJOnClasspathCondition;
 import io.github.resilience4j.utils.ReactorOnClasspathCondition;
 import io.github.resilience4j.utils.RxJava2OnClasspathCondition;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Conditional;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
+
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * {@link Configuration
@@ -94,6 +94,7 @@ public class BulkheadConfiguration {
 	}
 
 	@Bean
+	@Conditional(value = {AspectJOnClasspathCondition.class})
 	public BulkheadAspect bulkheadAspect(BulkheadConfigurationProperties bulkheadConfigurationProperties, ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry,
 	                                     BulkheadRegistry bulkheadRegistry, @Autowired(required = false) List<BulkheadAspectExt> bulkHeadAspectExtList,
 	                                     FallbackDecorators fallbackDecorators) {
@@ -101,13 +102,13 @@ public class BulkheadConfiguration {
 	}
 
 	@Bean
-	@Conditional(value = {RxJava2OnClasspathCondition.class})
+	@Conditional(value = {RxJava2OnClasspathCondition.class, AspectJOnClasspathCondition.class})
 	public RxJava2BulkheadAspectExt rxJava2BulkHeadAspectExt() {
 		return new RxJava2BulkheadAspectExt();
 	}
 
 	@Bean
-	@Conditional(value = {ReactorOnClasspathCondition.class})
+	@Conditional(value = {ReactorOnClasspathCondition.class, AspectJOnClasspathCondition.class})
 	public ReactorBulkheadAspectExt reactorBulkHeadAspectExt() {
 		return new ReactorBulkheadAspectExt();
 	}
