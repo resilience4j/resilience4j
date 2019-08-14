@@ -16,11 +16,11 @@
 package io.github.resilience4j.reactor.circuitbreaker.operator;
 
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
-import io.github.resilience4j.core.StopWatch;
 import io.github.resilience4j.reactor.AbstractSubscriber;
 import org.reactivestreams.Subscriber;
 import reactor.core.CoreSubscriber;
 
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicIntegerFieldUpdater;
 
 import static java.util.Objects.requireNonNull;
@@ -34,7 +34,7 @@ class CircuitBreakerSubscriber<T> extends AbstractSubscriber<T> {
 
     private final CircuitBreaker circuitBreaker;
 
-    private final StopWatch stopWatch;
+    private final long start;
     private final boolean singleProducer;
 
     @SuppressWarnings("PMD")
@@ -48,14 +48,14 @@ class CircuitBreakerSubscriber<T> extends AbstractSubscriber<T> {
         super(downstreamSubscriber);
         this.circuitBreaker = requireNonNull(circuitBreaker);
         this.singleProducer = singleProducer;
-        this.stopWatch = StopWatch.start();
+        this.start = System.nanoTime();
     }
 
     @Override
     protected void hookOnNext(T value) {
         if (!isDisposed()) {
             if (singleProducer && SUCCESS_SIGNALED.compareAndSet(this, 0, 1)) {
-                circuitBreaker.onSuccess(stopWatch.stop().toNanos());
+                circuitBreaker.onSuccess(System.nanoTime() - start, TimeUnit.NANOSECONDS);
             }
 
             downstreamSubscriber.onNext(value);
@@ -65,7 +65,7 @@ class CircuitBreakerSubscriber<T> extends AbstractSubscriber<T> {
     @Override
     protected void hookOnComplete() {
         if (SUCCESS_SIGNALED.compareAndSet(this, 0, 1)) {
-            circuitBreaker.onSuccess(stopWatch.stop().toNanos());
+            circuitBreaker.onSuccess(System.nanoTime() - start, TimeUnit.NANOSECONDS);
         }
 
         downstreamSubscriber.onComplete();
@@ -80,7 +80,7 @@ class CircuitBreakerSubscriber<T> extends AbstractSubscriber<T> {
 
     @Override
     protected void hookOnError(Throwable e) {
-        circuitBreaker.onError(stopWatch.stop().toNanos(), e);
+        circuitBreaker.onError(System.nanoTime() - start, TimeUnit.NANOSECONDS, e);
         downstreamSubscriber.onError(e);
     }
 }

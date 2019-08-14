@@ -30,24 +30,33 @@ import java.util.function.Predicate;
  */
 public class CircuitBreakerConfig {
 
-    public static final int DEFAULT_MAX_FAILURE_THRESHOLD = 50; // Percentage
+    public static final int DEFAULT_FAILURE_RATE_THRESHOLD = 50; // Percentage
+    public static final int DEFAULT_SLOW_CALL_RATE_THRESHOLD = 100; // Percentage
     public static final int DEFAULT_WAIT_DURATION_IN_OPEN_STATE = 60; // Seconds
-    public static final int DEFAULT_RING_BUFFER_SIZE_IN_HALF_OPEN_STATE = 10;
-    public static final int DEFAULT_RING_BUFFER_SIZE_IN_CLOSED_STATE = 100;
+    public static final int DEFAULT_PERMITTED_CALLS_IN_HALF_OPEN_STATE = 10;
+    public static final int DEFAULT_MINIMUM_NUMBER_OF_CALLS = 100;
+    public static final int DEFAULT_SLIDING_WINDOW_SIZE = 100;
+    public static final int DEFAULT_SLOW_CALL_DURATION_THRESHOLD = 60; // Seconds
     private static final Predicate<Throwable> DEFAULT_RECORD_FAILURE_PREDICATE = throwable -> true;
+    public static final SlidingWindow DEFAULT_SLIDING_WINDOW_TYPE = SlidingWindow.COUNT_BASED;
 
     @SuppressWarnings("unchecked")
     private Class<? extends Throwable>[] recordExceptions = new Class[0];
     @SuppressWarnings("unchecked")
     private Class<? extends Throwable>[] ignoreExceptions = new Class[0];
 
-    private float failureRateThreshold = DEFAULT_MAX_FAILURE_THRESHOLD;
-    private int ringBufferSizeInHalfOpenState = DEFAULT_RING_BUFFER_SIZE_IN_HALF_OPEN_STATE;
-    private int ringBufferSizeInClosedState = DEFAULT_RING_BUFFER_SIZE_IN_CLOSED_STATE;
+    private float failureRateThreshold = DEFAULT_FAILURE_RATE_THRESHOLD;
+    private int permittedNumberOfCallsInHalfOpenState = DEFAULT_PERMITTED_CALLS_IN_HALF_OPEN_STATE;
+    private int slidingWindowSize = DEFAULT_SLIDING_WINDOW_SIZE;
+    private SlidingWindow slidingWindowType = DEFAULT_SLIDING_WINDOW_TYPE;
+    private int minimumNumberOfCalls = DEFAULT_MINIMUM_NUMBER_OF_CALLS;
     private Duration waitDurationInOpenState = Duration.ofSeconds(DEFAULT_WAIT_DURATION_IN_OPEN_STATE);
     // The default exception predicate counts all exceptions as failures.
     private Predicate<Throwable> recordFailurePredicate = DEFAULT_RECORD_FAILURE_PREDICATE;
     private boolean automaticTransitionFromOpenToHalfOpenEnabled = false;
+    private float slowCallRateThreshold = DEFAULT_SLOW_CALL_RATE_THRESHOLD;
+    private Duration slowCallDurationThreshold = Duration.ofSeconds(DEFAULT_SLOW_CALL_DURATION_THRESHOLD);
+
 
     private CircuitBreakerConfig() {
     }
@@ -87,12 +96,8 @@ public class CircuitBreakerConfig {
         return waitDurationInOpenState;
     }
 
-    public int getRingBufferSizeInHalfOpenState() {
-        return ringBufferSizeInHalfOpenState;
-    }
-
-    public int getRingBufferSizeInClosedState() {
-        return ringBufferSizeInClosedState;
+    public int getSlidingWindowSize() {
+        return slidingWindowSize;
     }
 
     public Predicate<Throwable> getRecordFailurePredicate() {
@@ -103,28 +108,56 @@ public class CircuitBreakerConfig {
         return automaticTransitionFromOpenToHalfOpenEnabled;
     }
 
+    public int getMinimumNumberOfCalls() {
+        return minimumNumberOfCalls;
+    }
+
+    public int getPermittedNumberOfCallsInHalfOpenState() {
+        return permittedNumberOfCallsInHalfOpenState;
+    }
+
+    public SlidingWindow getSlidingWindowType() {
+        return slidingWindowType;
+    }
+
+    public float getSlowCallRateThreshold() {
+        return slowCallRateThreshold;
+    }
+
+    public Duration getSlowCallDurationThreshold() {
+        return slowCallDurationThreshold;
+    }
+
     public static class Builder {
+
         @Nullable
         private Predicate<Throwable> recordFailurePredicate;
         @SuppressWarnings("unchecked")
         private Class<? extends Throwable>[] recordExceptions = new Class[0];
         @SuppressWarnings("unchecked")
         private Class<? extends Throwable>[] ignoreExceptions = new Class[0];
-        private float failureRateThreshold = DEFAULT_MAX_FAILURE_THRESHOLD;
-        private int ringBufferSizeInHalfOpenState = DEFAULT_RING_BUFFER_SIZE_IN_HALF_OPEN_STATE;
-        private int ringBufferSizeInClosedState = DEFAULT_RING_BUFFER_SIZE_IN_CLOSED_STATE;
-        private Duration waitDurationInOpenState = Duration.ofSeconds(DEFAULT_WAIT_DURATION_IN_OPEN_STATE);
+        private float failureRateThreshold = DEFAULT_FAILURE_RATE_THRESHOLD;
+        private int minimumNumberOfCalls = DEFAULT_MINIMUM_NUMBER_OF_CALLS;
+        private int permittedNumberOfCallsInHalfOpenState = DEFAULT_PERMITTED_CALLS_IN_HALF_OPEN_STATE;
+        private int slidingWindowSize = DEFAULT_SLIDING_WINDOW_SIZE;
+        private Duration waitDurationInOpenState = Duration.ofSeconds(DEFAULT_SLOW_CALL_DURATION_THRESHOLD);
         private boolean automaticTransitionFromOpenToHalfOpenEnabled = false;
+        private SlidingWindow slidingWindowType = DEFAULT_SLIDING_WINDOW_TYPE;
+        private float slowCallRateThreshold = DEFAULT_SLOW_CALL_RATE_THRESHOLD;
+        private Duration slowCallDurationThreshold = Duration.ofSeconds(DEFAULT_SLOW_CALL_DURATION_THRESHOLD);
 
         public Builder(CircuitBreakerConfig baseConfig) {
             this.waitDurationInOpenState = baseConfig.waitDurationInOpenState;
-            this.ringBufferSizeInHalfOpenState = baseConfig.ringBufferSizeInHalfOpenState;
-            this.ringBufferSizeInClosedState = baseConfig.ringBufferSizeInClosedState;
+            this.permittedNumberOfCallsInHalfOpenState = baseConfig.permittedNumberOfCallsInHalfOpenState;
+            this.slidingWindowSize = baseConfig.slidingWindowSize;
             this.failureRateThreshold = baseConfig.failureRateThreshold;
             this.ignoreExceptions = baseConfig.ignoreExceptions;
             this.recordExceptions = baseConfig.recordExceptions;
             this.recordFailurePredicate = baseConfig.recordFailurePredicate;
             this.automaticTransitionFromOpenToHalfOpenEnabled = baseConfig.automaticTransitionFromOpenToHalfOpenEnabled;
+            this.slidingWindowType = baseConfig.slidingWindowType;
+            this.slowCallRateThreshold = baseConfig.slowCallRateThreshold;
+            this.slowCallDurationThreshold = baseConfig.slowCallDurationThreshold;
         }
 
         public Builder() {
@@ -132,7 +165,8 @@ public class CircuitBreakerConfig {
         }
 
         /**
-         * Configures the failure rate threshold in percentage above which the CircuitBreaker should trip open and start short-circuiting calls.
+         * Configures the failure rate threshold in percentage.
+         * If the failure rate is equal or greater than the threshold the CircuitBreaker transitions to open and starts short-circuiting calls.
          * <p>
          * The threshold must be greater than 0 and not greater than 100. Default value is 50 percentage.
          *
@@ -144,6 +178,25 @@ public class CircuitBreakerConfig {
                 throw new IllegalArgumentException("failureRateThreshold must be between 1 and 100");
             }
             this.failureRateThreshold = failureRateThreshold;
+            return this;
+        }
+
+        /**
+         * Configures a threshold in percentage. The CircuitBreaker considers a call as slow when the call duration is greater than {@link #slowCallDurationThreshold(Duration)}.
+         * When the percentage of slow calls is equal or greater the threshold, the CircuitBreaker transitions to open and starts short-circuiting calls.
+         *
+         * <p>
+         * The threshold must be greater than 0 and not greater than 100.
+         * Default value is 100 percentage which means that all recorded calls must be slower than {@link #slowCallDurationThreshold(Duration)}.
+         *
+         * @param slowCallRateThreshold the slow calls threshold in percentage
+         * @return the CircuitBreakerConfig.Builder
+         */
+        public Builder slowCallRateThreshold(float slowCallRateThreshold) {
+            if (slowCallRateThreshold <= 0 || slowCallRateThreshold > 100) {
+                throw new IllegalArgumentException("slowCallRateThreshold must be between 1 and 100");
+            }
+            this.slowCallRateThreshold = slowCallRateThreshold;
             return this;
         }
 
@@ -163,38 +216,92 @@ public class CircuitBreakerConfig {
         }
 
         /**
-         * Configures the size of the ring buffer when the CircuitBreaker is half open. The CircuitBreaker stores the success/failure success / failure status of the latest calls in a ring buffer.
-         * For example, if {@code ringBufferSizeInClosedState} is 10, then at least 10 calls must be evaluated, before the failure rate can be calculated.
-         * If only 9 calls have been evaluated the CircuitBreaker will not trip back to closed or open even if all 9 calls have failed.
+         * Configures the duration threshold above which calls are considered as slow and increase the slow calls percentage.
+         * Default value is 60 seconds.
+         *
+         * @param slowCallDurationThreshold the duration above which calls are considered as slow
+         * @return the CircuitBreakerConfig.Builder
+         */
+        public Builder slowCallDurationThreshold(Duration slowCallDurationThreshold) {
+            if (slowCallDurationThreshold.toNanos() < 1) {
+                throw new IllegalArgumentException("slowCallDurationThreshold must be at least 1[ns]");
+            }
+            this.slowCallDurationThreshold = slowCallDurationThreshold;
+            return this;
+        }
+
+        /**
+         * Configures the number of permitted calls when the CircuitBreaker is half open.
          * <p>
          * The size must be greater than 0. Default size is 10.
          *
-         * @param ringBufferSizeInHalfOpenState the size of the ring buffer when the CircuitBreaker is is half open
+         * @param permittedNumberOfCallsInHalfOpenState the permitted number of calls when the CircuitBreaker is half open
          * @return the CircuitBreakerConfig.Builder
+         */
+        public Builder permittedNumberOfCallsInHalfOpenState(int permittedNumberOfCallsInHalfOpenState) {
+            if (permittedNumberOfCallsInHalfOpenState < 1) {
+                throw new IllegalArgumentException("permittedNumberOfCallsInHalfOpenState must be greater than 0");
+            }
+            this.permittedNumberOfCallsInHalfOpenState = permittedNumberOfCallsInHalfOpenState;
+            return this;
+        }
+
+        /**
+         * @deprecated Use {@link #permittedNumberOfCallsInHalfOpenState(int)} instead.
          */
         public Builder ringBufferSizeInHalfOpenState(int ringBufferSizeInHalfOpenState) {
             if (ringBufferSizeInHalfOpenState < 1) {
                 throw new IllegalArgumentException("ringBufferSizeInHalfOpenState must be greater than 0");
             }
-            this.ringBufferSizeInHalfOpenState = ringBufferSizeInHalfOpenState;
+            this.permittedNumberOfCallsInHalfOpenState = ringBufferSizeInHalfOpenState;
             return this;
         }
 
         /**
-         * Configures the size of the ring buffer when the CircuitBreaker is closed. The CircuitBreaker stores the success/failure success / failure status of the latest calls in a ring buffer.
-         * For example, if {@code ringBufferSizeInClosedState} is 100, then at least 100 calls must be evaluated, before the failure rate can be calculated.
-         * If only 99 calls have been evaluated the CircuitBreaker will not trip open even if all 99 calls have failed.
-         * <p>
-         * The size must be greater than 0. Default size is 100.
-         *
-         * @param ringBufferSizeInClosedState the size of the ring buffer when the CircuitBreaker is closed.
-         * @return the CircuitBreakerConfig.Builder
+         * @deprecated Use {@link #slidingWindowInClosedState(int, int, SlidingWindow)} instead.
          */
         public Builder ringBufferSizeInClosedState(int ringBufferSizeInClosedState) {
             if (ringBufferSizeInClosedState < 1) {
                 throw new IllegalArgumentException("ringBufferSizeInClosedState must be greater than 0");
             }
-            this.ringBufferSizeInClosedState = ringBufferSizeInClosedState;
+            return slidingWindowInClosedState(ringBufferSizeInClosedState, ringBufferSizeInClosedState, SlidingWindow.COUNT_BASED);
+        }
+
+        /**
+         * Configures the sliding window which is used to record the outcome of calls when the CircuitBreaker is closed.
+         * {@code slidingWindowSize} configures the size of the sliding window. Sliding window can either be count-based or time-based.
+         * {@code minimumNumberOfCalls} configures the minimum number of calls which are required (per sliding window period) before the CircuitBreaker can calculate the error rate.
+         * For example, if {@code minimumNumberOfCalls} is 10, then at least 10 calls must be recorded, before the failure rate can be calculated.
+         * If only 9 calls have been recorded the CircuitBreaker will not transition to open even if all 9 calls have failed.
+         *
+         * If {@code slidingWindowSize} is 100 and {@code slidingWindowType} is COUNT_BASED, then the last 100 calls are recorded and aggregated.
+         * If {@code slidingWindowSize} is 10 and {@code slidingWindowType} is TIME_BASED, then the calls of the last 10 seconds are recorded and aggregated.
+         * <p>
+         * The {@code slidingWindowSize} must be greater than 0.
+         * The {@code minimumNumberOfCalls} must be greater than 0.
+         * If the slidingWindowType is COUNT_BASED, the {@code minimumNumberOfCalls} cannot be greater than {@code slidingWindowSize}.
+         * If the slidingWindowType is TIME_BASED, you can pick whatever you want.
+         *
+         * Default slidingWindowSize is 100, minimumNumberOfCalls is 100 and slidingWindowType is COUNT_BASED.
+         *
+         * @param slidingWindowSize the size of the sliding window when the CircuitBreaker is closed.
+         * @param slidingWindowType the type of the sliding window. Either COUNT_BASED or TIME_BASED.
+         * @return the CircuitBreakerConfig.Builder
+         */
+        public Builder slidingWindowInClosedState(int slidingWindowSize, int minimumNumberOfCalls, SlidingWindow slidingWindowType) {
+            if (slidingWindowSize < 1) {
+                throw new IllegalArgumentException("slidingWindowSize must be greater than 0");
+            }
+            if (minimumNumberOfCalls < 1) {
+                throw new IllegalArgumentException("minimumNumberOfCalls must be greater than");
+            }
+            if (slidingWindowType == SlidingWindow.COUNT_BASED) {
+                this.minimumNumberOfCalls = Math.min(minimumNumberOfCalls, slidingWindowSize);
+            }else{
+                this.minimumNumberOfCalls = minimumNumberOfCalls;
+            }
+            this.slidingWindowSize = slidingWindowSize;
+            this.slidingWindowType = slidingWindowType;
             return this;
         }
 
@@ -286,9 +393,13 @@ public class CircuitBreakerConfig {
         public CircuitBreakerConfig build() {
             CircuitBreakerConfig config = new CircuitBreakerConfig();
             config.waitDurationInOpenState = waitDurationInOpenState;
+            config.slidingWindowType = slidingWindowType;
+            config.slowCallDurationThreshold = slowCallDurationThreshold;
+            config.slowCallRateThreshold = slowCallRateThreshold;
             config.failureRateThreshold = failureRateThreshold;
-            config.ringBufferSizeInClosedState = ringBufferSizeInClosedState;
-            config.ringBufferSizeInHalfOpenState = ringBufferSizeInHalfOpenState;
+            config.slidingWindowSize = slidingWindowSize;
+            config.minimumNumberOfCalls = minimumNumberOfCalls;
+            config.permittedNumberOfCallsInHalfOpenState = permittedNumberOfCallsInHalfOpenState;
             config.recordExceptions = recordExceptions;
             config.ignoreExceptions = ignoreExceptions;
             config.automaticTransitionFromOpenToHalfOpenEnabled = automaticTransitionFromOpenToHalfOpenEnabled;
@@ -307,5 +418,11 @@ public class CircuitBreakerConfig {
                     .map(predicate -> recordFailurePredicate != null ? predicate.or(recordFailurePredicate) : predicate)
                     .orElseGet(() -> recordFailurePredicate != null ? recordFailurePredicate : DEFAULT_RECORD_FAILURE_PREDICATE);
         }
+
+
+    }
+
+    public enum SlidingWindow {
+        TIME_BASED, COUNT_BASED
     }
 }

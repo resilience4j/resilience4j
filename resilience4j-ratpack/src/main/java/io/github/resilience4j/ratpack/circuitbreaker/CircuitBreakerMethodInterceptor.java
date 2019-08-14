@@ -33,6 +33,7 @@ import reactor.core.publisher.Mono;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
+import java.util.concurrent.TimeUnit;
 
 /**
  * A {@link MethodInterceptor} to handle all methods annotated with {@link CircuitBreaker}. It will
@@ -114,10 +115,10 @@ public class CircuitBreakerMethodInterceptor extends AbstractMethodInterceptor {
                     result.whenComplete((v, t) -> {
                         long durationInNanos = System.nanoTime() - start;
                         if (t != null) {
-                            breaker.onError(durationInNanos, t);
+                            breaker.onError(durationInNanos, TimeUnit.NANOSECONDS, t);
                             completeFailedFuture(t, fallbackMethod, promise);
                         } else {
-                            breaker.onSuccess(durationInNanos);
+                            breaker.onSuccess(durationInNanos, TimeUnit.NANOSECONDS);
                             promise.complete(v);
                         }
                     });
@@ -141,7 +142,7 @@ public class CircuitBreakerMethodInterceptor extends AbstractMethodInterceptor {
             result = invocation.proceed();
         } catch (Exception e) {
             long durationInNanos = System.nanoTime() - start;
-            breaker.onError(durationInNanos, e);
+            breaker.onError(durationInNanos, TimeUnit.NANOSECONDS, e);
             if (Promise.class.isAssignableFrom(returnType)) {
                 return Promise.error(e);
             } else if (Flux.class.isAssignableFrom(returnType)) {

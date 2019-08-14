@@ -33,7 +33,6 @@ public class CircuitBreakerHealthIndicator implements HealthIndicator {
     private static final String BUFFERED_CALLS = "bufferedCalls";
     private static final String FAILED_CALLS = "failedCalls";
     private static final String NOT_PERMITTED = "notPermittedCalls";
-    private static final String MAX_BUFFERED_CALLS = "maxBufferedCalls";
     private static final String STATE = "state";
     private final CircuitBreaker circuitBreaker;
 
@@ -66,7 +65,6 @@ public class CircuitBreakerHealthIndicator implements HealthIndicator {
         CircuitBreakerConfig config = circuitBreaker.getCircuitBreakerConfig();
         builder.withDetail(FAILURE_RATE, metrics.getFailureRate() + "%")
             .withDetail(FAILURE_RATE_THRESHOLD, config.getFailureRateThreshold() + "%")
-            .withDetail(MAX_BUFFERED_CALLS, metrics.getMaxNumberOfBufferedCalls())
             .withDetail(BUFFERED_CALLS, metrics.getNumberOfBufferedCalls())
             .withDetail(FAILED_CALLS, metrics.getNumberOfFailedCalls())
             .withDetail(NOT_PERMITTED, metrics.getNumberOfNotPermittedCalls())

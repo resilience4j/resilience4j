@@ -88,10 +88,6 @@ public class TaggedCircuitBreakerMetrics extends AbstractMetrics implements Mete
                 .tag(TagNames.NAME, circuitBreaker.getName())
                 .tag(TagNames.KIND, KIND_SUCCESSFUL)
                 .register(registry).getId());
-        idSet.add(Gauge.builder(names.getMaxBufferedCallsMetricName(), circuitBreaker, cb -> cb.getMetrics().getMaxNumberOfBufferedCalls())
-                .description("The maximum number of buffered calls which can be stored in the ring buffer")
-                .tag(TagNames.NAME, circuitBreaker.getName())
-                .register(registry).getId());
         idSet.add(Gauge.builder(names.getFailureRateMetricName(), circuitBreaker, cb -> cb.getMetrics().getFailureRate())
                 .description("The failure rate of the circuit breaker")
                 .tag(TagNames.NAME, circuitBreaker.getName())
@@ -156,7 +152,6 @@ public class TaggedCircuitBreakerMetrics extends AbstractMetrics implements Mete
         public static final String DEFAULT_CIRCUIT_BREAKER_CALLS = DEFAULT_PREFIX + ".calls";
         public static final String DEFAULT_CIRCUIT_BREAKER_STATE = DEFAULT_PREFIX + ".state";
         public static final String DEFAULT_CIRCUIT_BREAKER_BUFFERED_CALLS = DEFAULT_PREFIX + ".buffered.calls";
-        public static final String DEFAULT_CIRCUIT_BREAKER_MAX_BUFFERED_CALLS = DEFAULT_PREFIX + ".max.buffered.calls";
         public static final String DEFAULT_CIRCUIT_BREAKER_FAILURE_RATE = DEFAULT_PREFIX + ".failure.rate";
 
         /**
@@ -178,7 +173,6 @@ public class TaggedCircuitBreakerMetrics extends AbstractMetrics implements Mete
         private String callsMetricName = DEFAULT_CIRCUIT_BREAKER_CALLS;
         private String stateMetricName = DEFAULT_CIRCUIT_BREAKER_STATE;
         private String bufferedCallsMetricName = DEFAULT_CIRCUIT_BREAKER_BUFFERED_CALLS;
-        private String maxBufferedCallsMetricName = DEFAULT_CIRCUIT_BREAKER_MAX_BUFFERED_CALLS;
         private String failureRateMetricName = DEFAULT_CIRCUIT_BREAKER_FAILURE_RATE;
 
         private MetricNames() {}
@@ -195,13 +189,6 @@ public class TaggedCircuitBreakerMetrics extends AbstractMetrics implements Mete
          */
         public String getBufferedCallsMetricName() {
             return bufferedCallsMetricName;
-        }
-
-        /** Returns the metric name for max buffered calls, defaults to {@value DEFAULT_CIRCUIT_BREAKER_MAX_BUFFERED_CALLS}.
-         * @return The max buffered calls metric name.
-         */
-        public String getMaxBufferedCallsMetricName() {
-            return maxBufferedCallsMetricName;
         }
 
         /** Returns the metric name for state, defaults to {@value DEFAULT_CIRCUIT_BREAKER_STATE}.
@@ -245,15 +232,6 @@ public class TaggedCircuitBreakerMetrics extends AbstractMetrics implements Mete
              */
             public Builder bufferedCallsMetricName(String bufferedCallsMetricName) {
                 metricNames.bufferedCallsMetricName = requireNonNull(bufferedCallsMetricName);
-                return this;
-            }
-
-            /** Overrides the default metric name {@value MetricNames#DEFAULT_CIRCUIT_BREAKER_MAX_BUFFERED_CALLS} with a given one.
-             * @param maxBufferedCallsMetricName The max buffered calls metric name.
-             * @return The builder.
-             */
-            public Builder maxBufferedCallsMetricName(String maxBufferedCallsMetricName) {
-                metricNames.maxBufferedCallsMetricName = requireNonNull(maxBufferedCallsMetricName);
                 return this;
             }
 

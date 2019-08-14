@@ -30,6 +30,7 @@ import org.mockito.BDDMockito;
 import org.mockito.Mockito;
 
 import java.time.Duration;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -131,8 +132,8 @@ public class VertxCircuitBreakerTest {
         // Create a CircuitBreakerRegistry with a custom global configuration
         CircuitBreaker circuitBreaker = CircuitBreaker.of("testName", circuitBreakerConfig);
 
-        circuitBreaker.onError(0, new RuntimeException());
-        circuitBreaker.onError(0, new RuntimeException());
+        circuitBreaker.onError(0, TimeUnit.NANOSECONDS, new RuntimeException());
+        circuitBreaker.onError(0, TimeUnit.NANOSECONDS, new RuntimeException());
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.OPEN);
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(2);
