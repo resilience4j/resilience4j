@@ -150,12 +150,13 @@ public class CircuitBreakerConfig {
             this.waitDurationInOpenState = baseConfig.waitDurationInOpenState;
             this.permittedNumberOfCallsInHalfOpenState = baseConfig.permittedNumberOfCallsInHalfOpenState;
             this.slidingWindowSize = baseConfig.slidingWindowSize;
+            this.slidingWindowType = baseConfig.slidingWindowType;
+            this.minimumNumberOfCalls = baseConfig.minimumNumberOfCalls;
             this.failureRateThreshold = baseConfig.failureRateThreshold;
             this.ignoreExceptions = baseConfig.ignoreExceptions;
             this.recordExceptions = baseConfig.recordExceptions;
             this.recordFailurePredicate = baseConfig.recordFailurePredicate;
             this.automaticTransitionFromOpenToHalfOpenEnabled = baseConfig.automaticTransitionFromOpenToHalfOpenEnabled;
-            this.slidingWindowType = baseConfig.slidingWindowType;
             this.slowCallRateThreshold = baseConfig.slowCallRateThreshold;
             this.slowCallDurationThreshold = baseConfig.slowCallDurationThreshold;
         }
@@ -258,13 +259,13 @@ public class CircuitBreakerConfig {
         }
 
         /**
-         * @deprecated Use {@link #slidingWindowInClosedState(int, int, SlidingWindow)} instead.
+         * @deprecated Use {@link #slidingWindow(int, int, SlidingWindow)} instead.
          */
         public Builder ringBufferSizeInClosedState(int ringBufferSizeInClosedState) {
             if (ringBufferSizeInClosedState < 1) {
                 throw new IllegalArgumentException("ringBufferSizeInClosedState must be greater than 0");
             }
-            return slidingWindowInClosedState(ringBufferSizeInClosedState, ringBufferSizeInClosedState, SlidingWindow.COUNT_BASED);
+            return slidingWindow(ringBufferSizeInClosedState, ringBufferSizeInClosedState, SlidingWindow.COUNT_BASED);
         }
 
         /**
@@ -274,8 +275,8 @@ public class CircuitBreakerConfig {
          * For example, if {@code minimumNumberOfCalls} is 10, then at least 10 calls must be recorded, before the failure rate can be calculated.
          * If only 9 calls have been recorded the CircuitBreaker will not transition to open even if all 9 calls have failed.
          *
-         * If {@code slidingWindowSize} is 100 and {@code slidingWindowType} is COUNT_BASED, then the last 100 calls are recorded and aggregated.
-         * If {@code slidingWindowSize} is 10 and {@code slidingWindowType} is TIME_BASED, then the calls of the last 10 seconds are recorded and aggregated.
+         * If {@code slidingWindowSize} is 100 and {@code slidingWindowType} is COUNT_BASED, the last 100 calls are recorded and aggregated.
+         * If {@code slidingWindowSize} is 10 and {@code slidingWindowType} is TIME_BASED, the calls of the last 10 seconds are recorded and aggregated.
          * <p>
          * The {@code slidingWindowSize} must be greater than 0.
          * The {@code minimumNumberOfCalls} must be greater than 0.
@@ -285,15 +286,16 @@ public class CircuitBreakerConfig {
          * Default slidingWindowSize is 100, minimumNumberOfCalls is 100 and slidingWindowType is COUNT_BASED.
          *
          * @param slidingWindowSize the size of the sliding window when the CircuitBreaker is closed.
+         * @param minimumNumberOfCalls the minimum number of calls that must be recorded before the failure rate can be calculated.
          * @param slidingWindowType the type of the sliding window. Either COUNT_BASED or TIME_BASED.
          * @return the CircuitBreakerConfig.Builder
          */
-        public Builder slidingWindowInClosedState(int slidingWindowSize, int minimumNumberOfCalls, SlidingWindow slidingWindowType) {
+        public Builder slidingWindow(int slidingWindowSize, int minimumNumberOfCalls, SlidingWindow slidingWindowType) {
             if (slidingWindowSize < 1) {
                 throw new IllegalArgumentException("slidingWindowSize must be greater than 0");
             }
             if (minimumNumberOfCalls < 1) {
-                throw new IllegalArgumentException("minimumNumberOfCalls must be greater than");
+                throw new IllegalArgumentException("minimumNumberOfCalls must be greater than 0");
             }
             if (slidingWindowType == SlidingWindow.COUNT_BASED) {
                 this.minimumNumberOfCalls = Math.min(minimumNumberOfCalls, slidingWindowSize);
@@ -301,6 +303,66 @@ public class CircuitBreakerConfig {
                 this.minimumNumberOfCalls = minimumNumberOfCalls;
             }
             this.slidingWindowSize = slidingWindowSize;
+            this.slidingWindowType = slidingWindowType;
+            return this;
+        }
+
+        /**
+         * Configures the size of the sliding window which is used to record the outcome of calls when the CircuitBreaker is closed.
+         * {@code slidingWindowSize} configures the size of the sliding window. Sliding window can either be count-based or time-based.
+         *
+         * If {@code slidingWindowType} is COUNT_BASED, the last {@code slidingWindowSize} calls are recorded and aggregated.
+         * If {@code slidingWindowType} is TIME_BASED, the calls of the last {@code slidingWindowSize} seconds are recorded and aggregated.
+         * <p>
+         * The {@code slidingWindowSize} must be greater than 0.
+         * The {@code minimumNumberOfCalls} must be greater than 0.
+         * If the slidingWindowType is COUNT_BASED, the {@code minimumNumberOfCalls} cannot be greater than {@code slidingWindowSize}.
+         * If the slidingWindowType is TIME_BASED, you can pick whatever you want.
+         *
+         * Default slidingWindowSize is 100.
+         *
+         * @param slidingWindowSize the size of the sliding window when the CircuitBreaker is closed.
+         * @return the CircuitBreakerConfig.Builder
+         */
+        public Builder slidingWindowSize(int slidingWindowSize) {
+            if (slidingWindowSize < 1) {
+                throw new IllegalArgumentException("slidingWindowSize must be greater than 0");
+            }
+            this.slidingWindowSize = slidingWindowSize;
+            return this;
+        }
+
+        /**
+         * Configures configures the minimum number of calls which are required (per sliding window period) before the CircuitBreaker can calculate the error rate.
+         * For example, if {@code minimumNumberOfCalls} is 10, then at least 10 calls must be recorded, before the failure rate can be calculated.
+         * If only 9 calls have been recorded the CircuitBreaker will not transition to open even if all 9 calls have failed.
+         *
+         * Default minimumNumberOfCalls is 100
+         *
+         * @param minimumNumberOfCalls the minimum number of calls that must be recorded before the failure rate can be calculated.
+         * @return the CircuitBreakerConfig.Builder
+         */
+        public Builder minimumNumberOfCalls(int minimumNumberOfCalls) {
+            if (minimumNumberOfCalls < 1) {
+                throw new IllegalArgumentException("minimumNumberOfCalls must be greater than 0");
+            }
+            this.minimumNumberOfCalls = minimumNumberOfCalls;
+            return this;
+        }
+
+        /**
+         * Configures the type of the sliding window which is used to record the outcome of calls when the CircuitBreaker is closed.
+         * Sliding window can either be count-based or time-based.
+         *
+         * If {@code slidingWindowType} is COUNT_BASED, the last {@code slidingWindowSize} calls are recorded and aggregated.
+         * If {@code slidingWindowType} is TIME_BASED, the calls of the last {@code slidingWindowSize} seconds are recorded and aggregated.
+         *
+         * Default slidingWindowType is COUNT_BASED.
+         *
+         * @param slidingWindowType the type of the sliding window. Either COUNT_BASED or TIME_BASED.
+         * @return the CircuitBreakerConfig.Builder
+         */
+        public Builder slidingWindowType(SlidingWindow slidingWindowType) {
             this.slidingWindowType = slidingWindowType;
             return this;
         }

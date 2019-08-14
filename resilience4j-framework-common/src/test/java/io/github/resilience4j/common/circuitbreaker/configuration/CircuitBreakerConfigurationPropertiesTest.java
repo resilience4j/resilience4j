@@ -35,11 +35,10 @@ public class CircuitBreakerConfigurationPropertiesTest {
 
 
 		io.github.resilience4j.common.circuitbreaker.configuration.CircuitBreakerConfigurationProperties.InstanceProperties instanceProperties1 = new io.github.resilience4j.common.circuitbreaker.configuration.CircuitBreakerConfigurationProperties.InstanceProperties();
-		instanceProperties1.setRingBufferSizeInClosedState(1000);
 		instanceProperties1.setWaitDurationInOpenState(Duration.ofMillis(100));
 		instanceProperties1.setEventConsumerBufferSize(100);
 		instanceProperties1.setRegisterHealthIndicator(true);
-		instanceProperties1.setRingBufferSizeInClosedState(200);
+		instanceProperties1.setSlidingWindowSize(200);
 		instanceProperties1.setAutomaticTransitionFromOpenToHalfOpenEnabled(false);
 		instanceProperties1.setFailureRateThreshold(10);
 		//noinspection unchecked
@@ -50,7 +49,7 @@ public class CircuitBreakerConfigurationPropertiesTest {
 		instanceProperties1.setRecordFailurePredicate((Class) RecordFailurePredicate.class);
 
 		io.github.resilience4j.common.circuitbreaker.configuration.CircuitBreakerConfigurationProperties.InstanceProperties instanceProperties2 = new io.github.resilience4j.common.circuitbreaker.configuration.CircuitBreakerConfigurationProperties.InstanceProperties();
-		instanceProperties2.setRingBufferSizeInClosedState(1337);
+		instanceProperties2.setSlidingWindowSize(1337);
 
 		CircuitBreakerConfigurationProperties circuitBreakerConfigurationProperties = new CircuitBreakerConfigurationProperties();
 		circuitBreakerConfigurationProperties.getInstances().put("backend1", instanceProperties1);
@@ -76,21 +75,21 @@ public class CircuitBreakerConfigurationPropertiesTest {
 	public void testCreateCircuitBreakerRegistryWithSharedConfigs() {
 		//Given
 		io.github.resilience4j.common.circuitbreaker.configuration.CircuitBreakerConfigurationProperties.InstanceProperties defaultProperties = new io.github.resilience4j.common.circuitbreaker.configuration.CircuitBreakerConfigurationProperties.InstanceProperties();
-		defaultProperties.setRingBufferSizeInClosedState(1000);
-		defaultProperties.setRingBufferSizeInHalfOpenState(100);
+		defaultProperties.setSlidingWindowSize(1000);
+		defaultProperties.setPermittedNumberOfCallsInHalfOpenState(100);
 		defaultProperties.setWaitDurationInOpenState(Duration.ofMillis(100));
 
 		io.github.resilience4j.common.circuitbreaker.configuration.CircuitBreakerConfigurationProperties.InstanceProperties sharedProperties = new io.github.resilience4j.common.circuitbreaker.configuration.CircuitBreakerConfigurationProperties.InstanceProperties();
-		sharedProperties.setRingBufferSizeInClosedState(1337);
-		sharedProperties.setRingBufferSizeInHalfOpenState(1000);
+		sharedProperties.setSlidingWindowSize(1337);
+		sharedProperties.setPermittedNumberOfCallsInHalfOpenState(1000);
 
 		io.github.resilience4j.common.circuitbreaker.configuration.CircuitBreakerConfigurationProperties.InstanceProperties backendWithDefaultConfig = new io.github.resilience4j.common.circuitbreaker.configuration.CircuitBreakerConfigurationProperties.InstanceProperties();
 		backendWithDefaultConfig.setBaseConfig("default");
-		backendWithDefaultConfig.setRingBufferSizeInHalfOpenState(99);
+		backendWithDefaultConfig.setPermittedNumberOfCallsInHalfOpenState(99);
 
 		io.github.resilience4j.common.circuitbreaker.configuration.CircuitBreakerConfigurationProperties.InstanceProperties backendWithSharedConfig = new io.github.resilience4j.common.circuitbreaker.configuration.CircuitBreakerConfigurationProperties.InstanceProperties();
 		backendWithSharedConfig.setBaseConfig("sharedConfig");
-		backendWithSharedConfig.setRingBufferSizeInHalfOpenState(999);
+		backendWithSharedConfig.setPermittedNumberOfCallsInHalfOpenState(999);
 
 		CircuitBreakerConfigurationProperties circuitBreakerConfigurationProperties = new CircuitBreakerConfigurationProperties();
 		circuitBreakerConfigurationProperties.getConfigs().put("default", defaultProperties);
