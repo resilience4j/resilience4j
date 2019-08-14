@@ -97,17 +97,6 @@ public class CircuitBreakerMetricsCollectorTest {
     }
 
     @Test
-    public void maxBufferedCallsReportsCorrespondingValue() {
-        double maxBufferedCalls = registry.getSampleValue(
-            DEFAULT_CIRCUIT_BREAKER_MAX_BUFFERED_CALLS,
-            new String[]{"name"},
-            new String[]{circuitBreaker.getName()}
-        );
-
-        assertThat(maxBufferedCalls).isEqualTo(circuitBreaker.getMetrics().getMaxNumberOfBufferedCalls());
-    }
-
-    @Test
     public void successfulBufferedCallsReportsCorrespondingValue() {
         double successfulCalls = registry.getSampleValue(
             DEFAULT_CIRCUIT_BREAKER_BUFFERED_CALLS,
@@ -182,7 +171,6 @@ public class CircuitBreakerMetricsCollectorTest {
             CircuitBreakerMetricsCollector.MetricNames.custom()
                 .callsMetricName("custom_calls")
                 .stateMetricName("custom_state")
-                .maxBufferedCallsMetricName("custom_max_buffered_calls")
                 .bufferedCallsMetricName("custom_buffered_calls")
                 .failureRateMetricName("custom_failure_rate")
                 .build(),
@@ -202,11 +190,6 @@ public class CircuitBreakerMetricsCollectorTest {
             "custom_state",
             new String[]{"name", "state"},
             new String[]{"backendA", "closed"}
-        )).isNotNull();
-        assertThat(registry.getSampleValue(
-            "custom_max_buffered_calls",
-            new String[]{"name"},
-            new String[]{"backendA"}
         )).isNotNull();
     }
 }

@@ -50,7 +50,8 @@ public class Resilience4jFeignCircuitBreakerTest {
     @Before
     public void setUp() {
         circuitBreaker = CircuitBreaker.of("test", circuitBreakerConfig);
-        final FeignDecorators decorators = FeignDecorators.builder().withCircuitBreaker(circuitBreaker).build();
+        final FeignDecorators decorators = FeignDecorators.builder()
+                .withCircuitBreaker(circuitBreaker).build();
         testService = Resilience4jFeign.builder(decorators).target(TestService.class, "http://localhost:8080/");
     }
 
@@ -94,7 +95,7 @@ public class Resilience4jFeignCircuitBreakerTest {
         boolean exceptionThrown = false;
         final int threshold = circuitBreaker
                 .getCircuitBreakerConfig()
-                .getRingBufferSizeInClosedState() + 1;
+                .getSlidingWindowSize() + 1;
 
         setupStub(400);
 
@@ -122,7 +123,7 @@ public class Resilience4jFeignCircuitBreakerTest {
         boolean exceptionThrown = false;
         final int threshold = circuitBreaker
                 .getCircuitBreakerConfig()
-                .getRingBufferSizeInClosedState() - 1;
+                .getSlidingWindowSize() - 1;
 
         setupStub(400);
 

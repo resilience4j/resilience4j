@@ -23,6 +23,7 @@ import org.junit.Test;
 import java.time.Duration;
 import java.util.function.Predicate;
 
+import static io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.*;
 import static org.assertj.core.api.BDDAssertions.then;
 import static org.assertj.core.api.Java6Assertions.assertThat;
 
@@ -32,77 +33,150 @@ public class CircuitBreakerConfigTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void zeroMaxFailuresShouldFail() {
-        CircuitBreakerConfig.custom().failureRateThreshold(0).build();
+        custom().failureRateThreshold(0).build();
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void zeroWaitIntervalShouldFail() {
-        CircuitBreakerConfig.custom().waitDurationInOpenState(Duration.ofMillis(0)).build();
+        custom().waitDurationInOpenState(Duration.ofMillis(0)).build();
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void zeroSlowCallDurationThresholdShouldFail() {
+        custom().slowCallDurationThreshold(Duration.ofMillis(0)).build();
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void ringBufferSizeInHalfOpenStateBelowOneShouldFail() {
-        CircuitBreakerConfig.custom().ringBufferSizeInHalfOpenState(0).build();
+        custom().ringBufferSizeInHalfOpenState(0).build();
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void ringBufferSizeInClosedStateBelowOneThenShouldFail() {
-        CircuitBreakerConfig.custom().ringBufferSizeInClosedState(0).build();
+    public void zeroPermittedNumberOfCallsInHalfOpenStateShouldFail() {
+        custom().permittedNumberOfCallsInHalfOpenState(0).build();
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void zeroSlidingWindowSizeShouldFail() {
+        custom().slidingWindowInClosedState(0, 0, SlidingWindow.COUNT_BASED).build();
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void zeroMinimumNumberOfCallsShouldFail() {
+        custom().slidingWindowInClosedState(2, 0, SlidingWindow.COUNT_BASED).build();
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void zeroRingBufferSizeInClosedStateShouldFail() {
+        custom().ringBufferSizeInClosedState(0).build();
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void zeroFailureRateThresholdShouldFail() {
-        CircuitBreakerConfig.custom().failureRateThreshold(0).build();
+        custom().failureRateThreshold(0).build();
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void zeroSlowCallRateThresholdShouldFail() {
+        custom().slowCallRateThreshold(0).build();
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void failureRateThresholdAboveHundredShouldFail() {
-        CircuitBreakerConfig.custom().failureRateThreshold(101).build();
+        custom().failureRateThreshold(101).build();
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void slowCallRateThresholdAboveHundredShouldFail() {
+        custom().slowCallRateThreshold(101).build();
     }
 
     @Test
     public void shouldSetDefaultSettings() {
-        CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.ofDefaults();
-        then(circuitBreakerConfig.getFailureRateThreshold()).isEqualTo(CircuitBreakerConfig.DEFAULT_MAX_FAILURE_THRESHOLD);
-        then(circuitBreakerConfig.getRingBufferSizeInHalfOpenState()).isEqualTo(CircuitBreakerConfig.DEFAULT_RING_BUFFER_SIZE_IN_HALF_OPEN_STATE);
-        then(circuitBreakerConfig.getRingBufferSizeInClosedState()).isEqualTo(CircuitBreakerConfig.DEFAULT_RING_BUFFER_SIZE_IN_CLOSED_STATE);
-        then(circuitBreakerConfig.getWaitDurationInOpenState().getSeconds()).isEqualTo(CircuitBreakerConfig.DEFAULT_WAIT_DURATION_IN_OPEN_STATE);
+        CircuitBreakerConfig circuitBreakerConfig = ofDefaults();
+        then(circuitBreakerConfig.getFailureRateThreshold()).isEqualTo(DEFAULT_FAILURE_RATE_THRESHOLD);
+        then(circuitBreakerConfig.getPermittedNumberOfCallsInHalfOpenState()).isEqualTo(DEFAULT_PERMITTED_CALLS_IN_HALF_OPEN_STATE);
+        then(circuitBreakerConfig.getSlidingWindowSize()).isEqualTo(DEFAULT_SLIDING_WINDOW_SIZE);
+        then(circuitBreakerConfig.getSlidingWindowType()).isEqualTo(DEFAULT_SLIDING_WINDOW_TYPE);
+        then(circuitBreakerConfig.getMinimumNumberOfCalls()).isEqualTo(DEFAULT_MINIMUM_NUMBER_OF_CALLS);
+        then(circuitBreakerConfig.getWaitDurationInOpenState().getSeconds()).isEqualTo(DEFAULT_SLOW_CALL_DURATION_THRESHOLD);
         then(circuitBreakerConfig.getRecordFailurePredicate()).isNotNull();
+        then(circuitBreakerConfig.getSlowCallRateThreshold()).isEqualTo(DEFAULT_SLOW_CALL_RATE_THRESHOLD);
+        then(circuitBreakerConfig.getSlowCallDurationThreshold().getSeconds()).isEqualTo(DEFAULT_SLOW_CALL_DURATION_THRESHOLD);
     }
 
     @Test
     public void shouldSetFailureRateThreshold() {
-        CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom().failureRateThreshold(25).build();
+        CircuitBreakerConfig circuitBreakerConfig = custom().failureRateThreshold(25).build();
         then(circuitBreakerConfig.getFailureRateThreshold()).isEqualTo(25);
     }
 
     @Test
+    public void shouldSetSlowCallRateThreshold() {
+        CircuitBreakerConfig circuitBreakerConfig = custom().slowCallRateThreshold(25).build();
+        then(circuitBreakerConfig.getSlowCallRateThreshold()).isEqualTo(25);
+    }
+
+    @Test
+    public void shouldSetSlowCallDurationThreshold() {
+        CircuitBreakerConfig circuitBreakerConfig = custom().slowCallDurationThreshold(Duration.ofSeconds(1)).build();
+        then(circuitBreakerConfig.getSlowCallDurationThreshold().getSeconds()).isEqualTo(1);
+    }
+
+    @Test
     public void shouldSetLowFailureRateThreshold() {
-        CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom().failureRateThreshold(0.001f).build();
+        CircuitBreakerConfig circuitBreakerConfig = custom().failureRateThreshold(0.001f).build();
         then(circuitBreakerConfig.getFailureRateThreshold()).isEqualTo(0.001f);
     }
 
     @Test
     public void shouldSetRingBufferSizeInClosedState() {
-        CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom().ringBufferSizeInClosedState(1000).build();
-        then(circuitBreakerConfig.getRingBufferSizeInClosedState()).isEqualTo(1000);
+        CircuitBreakerConfig circuitBreakerConfig = custom().ringBufferSizeInClosedState(1000).build();
+        then(circuitBreakerConfig.getSlidingWindowSize()).isEqualTo(1000);
     }
 
     @Test
-    public void shouldSetRingBufferSizeInHalfOpenState() {
-        CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom().ringBufferSizeInHalfOpenState(100).build();
-        then(circuitBreakerConfig.getRingBufferSizeInHalfOpenState()).isEqualTo(100);
+    public void shouldSetPermittedNumberOfCallsInHalfOpenState() {
+        CircuitBreakerConfig circuitBreakerConfig = custom().permittedNumberOfCallsInHalfOpenState(100).build();
+        then(circuitBreakerConfig.getPermittedNumberOfCallsInHalfOpenState()).isEqualTo(100);
+    }
+
+    @Test
+    public void shouldReduceMinimumNumberOfCallsToSlidingWindowSize() {
+        CircuitBreakerConfig circuitBreakerConfig = custom()
+            .slidingWindowInClosedState(5, 6, SlidingWindow.COUNT_BASED).build();
+        then(circuitBreakerConfig.getMinimumNumberOfCalls()).isEqualTo(5);
+        then(circuitBreakerConfig.getSlidingWindowSize()).isEqualTo(5);
+        then(circuitBreakerConfig.getSlidingWindowType()).isEqualTo(SlidingWindow.COUNT_BASED);
+    }
+
+    @Test
+    public void shouldSetSlidingWindowToCountBased() {
+        CircuitBreakerConfig circuitBreakerConfig = custom()
+                .slidingWindowInClosedState(5, 3, SlidingWindow.COUNT_BASED).build();
+        then(circuitBreakerConfig.getMinimumNumberOfCalls()).isEqualTo(3);
+        then(circuitBreakerConfig.getSlidingWindowSize()).isEqualTo(5);
+        then(circuitBreakerConfig.getSlidingWindowType()).isEqualTo(SlidingWindow.COUNT_BASED);
+    }
+
+    @Test
+    public void shouldAllowHighMinimumNumberOfCallsWhenSlidingWindowIsTimeBased() {
+        CircuitBreakerConfig circuitBreakerConfig = custom()
+                .slidingWindowInClosedState(10, 100, SlidingWindow.TIME_BASED).build();
+        then(circuitBreakerConfig.getMinimumNumberOfCalls()).isEqualTo(100);
+        then(circuitBreakerConfig.getSlidingWindowSize()).isEqualTo(10);
+        then(circuitBreakerConfig.getSlidingWindowType()).isEqualTo(SlidingWindow.TIME_BASED);
     }
 
     @Test
     public void shouldSetWaitInterval() {
-        CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom().waitDurationInOpenState(Duration.ofSeconds(1)).build();
+        CircuitBreakerConfig circuitBreakerConfig = custom().waitDurationInOpenState(Duration.ofSeconds(1)).build();
         then(circuitBreakerConfig.getWaitDurationInOpenState().getSeconds()).isEqualTo(1);
     }
 
     @Test
     public void shouldUseRecordFailureThrowablePredicate() {
-        CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom()
+        CircuitBreakerConfig circuitBreakerConfig = custom()
                 .recordFailure(TEST_PREDICATE).build();
         then(circuitBreakerConfig.getRecordFailurePredicate().test(new Error("test"))).isEqualTo(true);
         then(circuitBreakerConfig.getRecordFailurePredicate().test(new Error("fail"))).isEqualTo(false);
@@ -122,7 +196,7 @@ public class CircuitBreakerConfigTest {
 
     @Test
     public void shouldUseIgnoreExceptionToBuildPredicate() {
-        CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom()
+        CircuitBreakerConfig circuitBreakerConfig = custom()
                 .ignoreExceptions(RuntimeException.class, ExtendsExtendsException.class).build();
         final Predicate<? super Throwable> failurePredicate = circuitBreakerConfig.getRecordFailurePredicate();
         then(failurePredicate.test(new Exception())).isEqualTo(true); // not explicitly excluded
@@ -136,7 +210,7 @@ public class CircuitBreakerConfigTest {
 
     @Test
     public void shouldUseRecordExceptionToBuildPredicate() {
-        CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom()
+        CircuitBreakerConfig circuitBreakerConfig = custom()
                 .recordExceptions(RuntimeException.class, ExtendsExtendsException.class).build();
         final Predicate<? super Throwable> failurePredicate = circuitBreakerConfig.getRecordFailurePredicate();
         then(failurePredicate.test(new Exception())).isEqualTo(false); // not explicitly included
@@ -150,7 +224,7 @@ public class CircuitBreakerConfigTest {
 
     @Test
     public void shouldUseIgnoreExceptionOverRecordToBuildPredicate() {
-        CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom()
+        CircuitBreakerConfig circuitBreakerConfig = custom()
                 .recordExceptions(RuntimeException.class, ExtendsExtendsException.class)
                 .ignoreExceptions(ExtendsException.class, ExtendsRuntimeException.class)
                 .build();
@@ -166,7 +240,7 @@ public class CircuitBreakerConfigTest {
 
     @Test
     public void shouldUseBothRecordToBuildPredicate() {
-        CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom()
+        CircuitBreakerConfig circuitBreakerConfig = custom()
                 .recordFailure(TEST_PREDICATE) //1
                 .recordExceptions(RuntimeException.class, ExtendsExtendsException.class) //2
                 .ignoreExceptions(ExtendsException.class, ExtendsRuntimeException.class) //3
@@ -185,32 +259,32 @@ public class CircuitBreakerConfigTest {
 
     @Test
     public void shouldBuilderCreateConfigEveryTime() {
-        final CircuitBreakerConfig.Builder builder =  CircuitBreakerConfig.custom();
+        final Builder builder =  custom();
         builder.ringBufferSizeInClosedState(5);
         final CircuitBreakerConfig config1 = builder.build();
         builder.ringBufferSizeInClosedState(3);
         final CircuitBreakerConfig config2 = builder.build();
-        assertThat(config2.getRingBufferSizeInClosedState()).isEqualTo(3);
-        assertThat(config1.getRingBufferSizeInClosedState()).isEqualTo(5);
+        assertThat(config2.getSlidingWindowSize()).isEqualTo(3);
+        assertThat(config1.getSlidingWindowSize()).isEqualTo(5);
     }
 
     @Test
     public void shouldUseBaseConfigAndOverwriteProperties() {
-        CircuitBreakerConfig baseConfig = CircuitBreakerConfig.custom()
+        CircuitBreakerConfig baseConfig = custom()
                 .waitDurationInOpenState(Duration.ofSeconds(100))
                 .ringBufferSizeInClosedState(1000)
-                .ringBufferSizeInHalfOpenState(100)
+                .permittedNumberOfCallsInHalfOpenState(100)
                 .automaticTransitionFromOpenToHalfOpenEnabled(true)
                 .failureRateThreshold(20f).build();
 
-        CircuitBreakerConfig extendedConfig = CircuitBreakerConfig.from(baseConfig)
+        CircuitBreakerConfig extendedConfig = from(baseConfig)
                 .waitDurationInOpenState(Duration.ofSeconds(20))
                 .build();
 
         then(extendedConfig.getFailureRateThreshold()).isEqualTo(20f);
         then(extendedConfig.getWaitDurationInOpenState()).isEqualTo(Duration.ofSeconds(20));
-        then(extendedConfig.getRingBufferSizeInClosedState()).isEqualTo(1000);
-        then(extendedConfig.getRingBufferSizeInHalfOpenState()).isEqualTo(100);
+        then(extendedConfig.getSlidingWindowSize()).isEqualTo(1000);
+        then(extendedConfig.getPermittedNumberOfCallsInHalfOpenState()).isEqualTo(100);
         then(extendedConfig.isAutomaticTransitionFromOpenToHalfOpenEnabled()).isTrue();
     }
 

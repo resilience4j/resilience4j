@@ -32,7 +32,6 @@ public class CircuitBreakerHealthIndicatorTest {
         when(config.getFailureRateThreshold()).thenReturn(0.3f);
 
         when(metrics.getFailureRate()).thenReturn(0.2f);
-        when(metrics.getMaxNumberOfBufferedCalls()).thenReturn(100);
         when(metrics.getNumberOfBufferedCalls()).thenReturn(100);
         when(metrics.getNumberOfFailedCalls()).thenReturn(20);
         when(metrics.getNumberOfNotPermittedCalls()).thenReturn(0L);
@@ -50,8 +49,7 @@ public class CircuitBreakerHealthIndicatorTest {
                         entry("setFailureRateThreshold", "0.3%"),
                         entry("bufferedCalls", 100),
                         entry("failedCalls", 20),
-                        entry("notPermittedCalls", 0L),
-                        entry("maxBufferedCalls", 100)
+                        entry("notPermittedCalls", 0L)
                 );
     }
 

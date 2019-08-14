@@ -23,58 +23,58 @@ import java.time.Duration;
 public interface Snapshot {
 
     /**
-     * Returns the total duration of all calls.
+     * Returns the current total duration of all calls.
      *
-     * @return the total duration of all calls
+     * @return the current total duration of all calls
      */
     Duration getTotalDuration();
 
     /**
-     * Returns the average duration of all calls.
+     * Returns the current average duration of all calls.
      *
-     * @return the average duration of all calls
+     * @return the current average duration of all calls
      */
     Duration getAverageDuration();
 
     /**
-     * Returns the total number of calls which were slower than a certain threshold.
+     * Returns the current number of calls which were slower than a certain threshold.
      *
-     * @return the total number of calls which were slower than a certain threshold
+     * @return the current number of calls which were slower than a certain threshold
      */
     int getNumberOfSlowCalls();
 
     /**
-     * Returns the percentage of calls which were slower than a certain threshold.
+     * Returns the current percentage of calls which were slower than a certain threshold.
      *
-     * @return the percentage of call which were slower than a certain threshold
+     * @return the current percentage of calls which were slower than a certain threshold
      */
-    float getSlowCallsInPercentage();
+    float getSlowCallRate();
 
     /**
-     * Returns the total number of successful calls.
+     * Returns the current number of successful calls.
      *
-     * @return the total number of successful calls
+     * @return the current number of successful calls
      */
     int getNumberOfSuccessfulCalls();
 
     /**
-     * Returns the total number of failed calls.
+     * Returns the current number of failed calls.
      *
-     * @return the total number of failed calls
+     * @return the current number of failed calls
      */
     int getNumberOfFailedCalls();
 
     /**
-     * Returns the total number of all calls.
+     * Returns the current total number of all calls.
      *
-     * @return the total number of all calls
+     * @return the current total number of all calls
      */
     int getTotalNumberOfCalls();
 
     /**
-     * Returns the failure rate in percentage.
+     * Returns the current failure rate in percentage.
      *
-     * @return the failure rate in percentage
+     * @return the current  failure rate in percentage
      */
-    float getFailureRateInPercentage();
+    float getFailureRate();
 }

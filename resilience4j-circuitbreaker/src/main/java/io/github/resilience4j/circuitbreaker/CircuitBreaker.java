@@ -519,12 +519,27 @@ public interface CircuitBreaker {
     interface Metrics {
 
         /**
-         * Returns the failure rate in percentage. If the number of measured calls is below the minimum number of measured calls,
+         * Returns the current failure rate in percentage. If the number of measured calls is below the minimum number of measured calls,
          * it returns -1.
          *
          * @return the failure rate in percentage
          */
         float getFailureRate();
+
+        /**
+         * Returns the current percentage of calls which were slower than a certain threshold. If the number of measured calls is below the minimum number of measured calls,
+         * it returns -1.
+         *
+         * @return the failure rate in percentage
+         */
+        float getSlowCallRate();
+
+        /**
+         * Returns the current total number of calls which were slower than a certain threshold.
+         *
+         * @return the current total number of calls which were slower than a certain threshold
+         */
+        int getNumberOfSlowCalls();
 
         /**
          * Returns the current total number of buffered calls in the ring buffer.
@@ -549,13 +564,6 @@ public interface CircuitBreaker {
          * @return the current number of not permitted calls
          */
         long getNumberOfNotPermittedCalls();
-
-        /**
-         * Returns the maximum number of buffered calls in the ring buffer.
-         *
-         * @return the maximum number of buffered calls in the ring buffer
-         */
-        int getMaxNumberOfBufferedCalls();
 
         /**
          * Returns the current number of successful buffered calls in the ring buffer.

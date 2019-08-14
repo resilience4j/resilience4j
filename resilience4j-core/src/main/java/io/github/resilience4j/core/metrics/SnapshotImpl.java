@@ -46,7 +46,7 @@ public class SnapshotImpl implements Snapshot {
     }
 
     @Override
-    public float getSlowCallsInPercentage() {
+    public float getSlowCallRate() {
         if(totalNumberOfCalls == 0){
             return 0;
         }
@@ -69,7 +69,7 @@ public class SnapshotImpl implements Snapshot {
     }
 
     @Override
-    public float getFailureRateInPercentage() {
+    public float getFailureRate() {
         if(totalNumberOfCalls == 0){
             return 0;
         }
