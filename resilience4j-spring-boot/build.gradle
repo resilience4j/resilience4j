@@ -12,8 +12,8 @@ dependencies {
     compileOnly(libraries.metrics)
     compileOnly(libraries.micrometer_spring_legacy)
     compileOnly(libraries.hibernate_validator)
-    compileOnly(libraries.spring_boot_config_processor)
-    compileOnly(libraries.spring_boot_autoconfigure_processor)
+    annotationProcessor(libraries.spring_boot_config_processor)
+    annotationProcessor(libraries.spring_boot_autoconfigure_processor)
     
     testCompile(libraries.spring_boot_test)
     testCompile(libraries.spring_boot_aop)
