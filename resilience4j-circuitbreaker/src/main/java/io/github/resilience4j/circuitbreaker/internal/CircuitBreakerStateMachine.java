@@ -34,6 +34,7 @@ import java.util.Objects;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Predicate;
@@ -223,10 +224,6 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
         return String.format("CircuitBreaker '%s'", this.name);
     }
 
-    private CircuitBreaker getInstance(){
-        return this;
-    }
-
     @Override
     public void reset() {
         CircuitBreakerState previousState = stateReference.getAndUpdate(currentState -> new ClosedState());
@@ -376,10 +373,12 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
     private class ClosedState implements CircuitBreakerState {
 
         private final CircuitBreakerMetrics circuitBreakerMetrics;
+        private final AtomicBoolean isClosed;
 
         ClosedState() {
             this.circuitBreakerMetrics = new CircuitBreakerMetrics(getCircuitBreakerConfig().getSlidingWindowSize(),
                     getCircuitBreakerConfig());
+            this.isClosed = new AtomicBoolean(true);
         }
 
         /**
@@ -389,7 +388,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
          */
         @Override
         public boolean tryAcquirePermission() {
-            return true;
+            return isClosed.get();
         }
 
         /**
@@ -424,7 +423,9 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
          */
         private void checkIfThresholdsExceeded(Result result) {
             if (result == ABOVE_THRESHOLDS) {
-                transitionToOpenState();
+                if(isClosed.compareAndSet(true, false)){
+                    transitionToOpenState();
+                }
             }
         }
 
@@ -449,6 +450,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
 
         private final Instant retryAfterWaitDuration;
         private final CircuitBreakerMetrics circuitBreakerMetrics;
+        private final AtomicBoolean isOpen;
 
         OpenState(CircuitBreakerMetrics circuitBreakerMetrics) {
             final Duration waitDurationInOpenState = circuitBreakerConfig.getWaitDurationInOpenState();
@@ -459,6 +461,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
                 ScheduledExecutorService scheduledExecutorService = schedulerFactory.getScheduler();
                 scheduledExecutorService.schedule(CircuitBreakerStateMachine.this::transitionToHalfOpenState, waitDurationInOpenState.toMillis(), TimeUnit.MILLISECONDS);
             }
+            isOpen = new AtomicBoolean(true);
         }
 
         /**
@@ -471,7 +474,9 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
         public boolean tryAcquirePermission() {
             // Thread-safe
             if (clock.instant().isAfter(retryAfterWaitDuration)) {
-                transitionToHalfOpenState();
+                if(isOpen.compareAndSet(true, false)){
+                    transitionToHalfOpenState();
+                }
                 return true;
             }
             circuitBreakerMetrics.onCallNotPermitted();
