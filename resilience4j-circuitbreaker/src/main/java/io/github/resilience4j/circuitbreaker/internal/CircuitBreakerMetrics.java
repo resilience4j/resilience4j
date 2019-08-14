@@ -20,59 +20,38 @@ package io.github.resilience4j.circuitbreaker.internal;
 
 
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
-import io.github.resilience4j.core.lang.Nullable;
+import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
+import io.github.resilience4j.core.metrics.FixedSizeSlidingWindowMetrics;
+import io.github.resilience4j.core.metrics.Metrics;
+import io.github.resilience4j.core.metrics.SlidingTimeWindowMetrics;
+import io.github.resilience4j.core.metrics.Snapshot;
 
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.LongAdder;
+
+import static io.github.resilience4j.core.metrics.Metrics.Outcome;
 
 class CircuitBreakerMetrics implements CircuitBreaker.Metrics {
 
-    private final int ringBufferSize;
-    private final RingBitSet ringBitSet;
+    private final Metrics metrics;
+    private final float failureRateThreshold;
+    private final float slowCallRateThreshold;
+    private final long slowCallDurationThresholdInNanos;
+    private int minimumNumberOfCalls;
     private final LongAdder numberOfNotPermittedCalls;
 
-    CircuitBreakerMetrics(int ringBufferSize) {
-        this(ringBufferSize, null);
-    }
-
-    CircuitBreakerMetrics(int ringBufferSize, @Nullable RingBitSet sourceSet) {
-        this.ringBufferSize = ringBufferSize;
-        if(sourceSet != null) {
-            this.ringBitSet = new RingBitSet(this.ringBufferSize, sourceSet);
+    CircuitBreakerMetrics(int slidingWindowSize, CircuitBreakerConfig circuitBreakerConfig) {
+        if(circuitBreakerConfig.getSlidingWindowType() == CircuitBreakerConfig.SlidingWindow.COUNT_BASED){
+            this.metrics = new FixedSizeSlidingWindowMetrics(slidingWindowSize);
+            this.minimumNumberOfCalls = Math.min(circuitBreakerConfig.getMinimumNumberOfCalls(), slidingWindowSize);
         }else{
-            this.ringBitSet = new RingBitSet(this.ringBufferSize);
+            this.metrics = new SlidingTimeWindowMetrics(slidingWindowSize);
+            this.minimumNumberOfCalls = circuitBreakerConfig.getMinimumNumberOfCalls();
         }
+        this.failureRateThreshold = circuitBreakerConfig.getFailureRateThreshold();
+        this.slowCallRateThreshold = circuitBreakerConfig.getSlowCallRateThreshold();
+        this.slowCallDurationThresholdInNanos = circuitBreakerConfig.getSlowCallDurationThreshold().toNanos();
         this.numberOfNotPermittedCalls = new LongAdder();
-    }
-
-    /**
-     * Creates a new CircuitBreakerMetrics instance and copies the content of the current RingBitSet
-     * into the new RingBitSet.
-     *
-     * @param targetRingBufferSize the ringBufferSize of the new CircuitBreakerMetrics instances
-     * @return a CircuitBreakerMetrics
-     */
-    public CircuitBreakerMetrics copy(int targetRingBufferSize) {
-        return new CircuitBreakerMetrics(targetRingBufferSize, this.ringBitSet);
-    }
-
-    /**
-     * Records a failed call and returns the current failure rate in percentage.
-     *
-     * @return the current failure rate  in percentage.
-     */
-    float onError() {
-        int currentNumberOfFailedCalls = ringBitSet.setNextBit(true);
-        return getFailureRate(currentNumberOfFailedCalls);
-    }
-
-    /**
-     * Records a successful call and returns the current failure rate in percentage.
-     *
-     * @return the current failure rate in percentage.
-     */
-    float onSuccess() {
-        int currentNumberOfFailedCalls = ringBitSet.setNextBit(false);
-        return getFailureRate(currentNumberOfFailedCalls);
     }
 
     /**
@@ -83,19 +62,87 @@ class CircuitBreakerMetrics implements CircuitBreaker.Metrics {
     }
 
     /**
-     * {@inheritDoc}
+     * Records a successful call and checks if the thresholds are exceeded.
+     *
+     * @return the result of the check
      */
-    @Override
-    public float getFailureRate() {
-        return getFailureRate(getNumberOfFailedCalls());
+    public Result onSuccess(long duration, TimeUnit durationUnit) {
+        Snapshot snapshot;
+        if(durationUnit.toNanos(duration) > slowCallDurationThresholdInNanos){
+            snapshot = metrics.record(duration, durationUnit, Outcome.SLOW_SUCCESS);
+        }else{
+            snapshot = metrics.record(duration, durationUnit, Outcome.SUCCESS);
+        }
+        return checkIfThresholdsExceeded(snapshot);
+    }
+
+    /**
+     * Records a failed call and checks if the thresholds are exceeded.
+     *
+     * @return the result of the check
+     */
+    public Result onError(long duration, TimeUnit durationUnit) {
+        Snapshot snapshot;
+        if(durationUnit.toNanos(duration) > slowCallDurationThresholdInNanos){
+            snapshot = metrics.record(duration, durationUnit, Outcome.SLOW_ERROR);
+        }else{
+            snapshot = metrics.record(duration, durationUnit, Outcome.ERROR);
+        }
+        return checkIfThresholdsExceeded(snapshot);
+    }
+
+    /**
+     * Checks if the failure rate is above the threshold or
+     * if the slow calls percentage is above the threshold.
+     *
+     * @param snapshot a metrics snapshot
+     * @return false, if the thresholds haven't been exceeded.
+     */
+    private Result checkIfThresholdsExceeded(Snapshot snapshot) {
+        float failureRateInPercentage = getFailureRate(snapshot);
+        if(failureRateInPercentage == -1 ){
+            return Result.BELOW_MINIMUM_CALLS_THRESHOLD;
+        }
+        if(failureRateInPercentage >= failureRateThreshold){
+            return Result.ABOVE_THRESHOLDS;
+        }
+        float slowCallsInPercentage = getSlowCallRate(snapshot);
+        if(slowCallsInPercentage >= slowCallRateThreshold){
+            return Result.ABOVE_THRESHOLDS;
+        }
+        return Result.BELOW_THRESHOLDS;
+    }
+
+    private float getSlowCallRate(Snapshot snapshot){
+        int bufferedCalls = snapshot.getTotalNumberOfCalls();
+        if (bufferedCalls == 0 || bufferedCalls < minimumNumberOfCalls) {
+            return -1.0f;
+        }
+        return snapshot.getSlowCallRate();
+    }
+
+    private float getFailureRate(Snapshot snapshot) {
+        int bufferedCalls = snapshot.getTotalNumberOfCalls();
+        if (bufferedCalls == 0 || bufferedCalls < minimumNumberOfCalls) {
+            return -1.0f;
+        }
+        return snapshot.getFailureRate();
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public int getMaxNumberOfBufferedCalls() {
-        return ringBufferSize;
+    public float getFailureRate() {
+        return getFailureRate(metrics.getSnapshot());
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public float getSlowCallRate() {
+        return getSlowCallRate(metrics.getSnapshot());
     }
 
     /**
@@ -103,7 +150,7 @@ class CircuitBreakerMetrics implements CircuitBreaker.Metrics {
      */
     @Override
     public int getNumberOfSuccessfulCalls() {
-        return getNumberOfBufferedCalls() - getNumberOfFailedCalls();
+        return this.metrics.getSnapshot().getNumberOfSuccessfulCalls();
     }
 
     /**
@@ -111,7 +158,17 @@ class CircuitBreakerMetrics implements CircuitBreaker.Metrics {
      */
     @Override
     public int getNumberOfBufferedCalls() {
-        return this.ringBitSet.length();
+        return this.metrics.getSnapshot().getTotalNumberOfCalls();
+    }
+
+    @Override
+    public int getNumberOfFailedCalls() {
+        return this.metrics.getSnapshot().getNumberOfFailedCalls();
+    }
+
+    @Override
+    public int getNumberOfSlowCalls() {
+        return this.metrics.getSnapshot().getNumberOfSlowCalls();
     }
 
     /**
@@ -122,18 +179,9 @@ class CircuitBreakerMetrics implements CircuitBreaker.Metrics {
         return this.numberOfNotPermittedCalls.sum();
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public int getNumberOfFailedCalls() {
-        return this.ringBitSet.cardinality();
-    }
-
-    private float getFailureRate(int numberOfFailedCalls) {
-        if (getNumberOfBufferedCalls() < ringBufferSize) {
-            return -1.0f;
-        }
-        return numberOfFailedCalls * 100.0f / ringBufferSize;
+    enum Result {
+        BELOW_THRESHOLDS,
+        ABOVE_THRESHOLDS,
+        BELOW_MINIMUM_CALLS_THRESHOLD
     }
 }

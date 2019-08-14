@@ -105,11 +105,6 @@ public class CircuitBreakerMetricsCollector extends Collector {
                 "The number of buffered calls",
                 LabelNames.NAME_AND_KIND
         );
-        GaugeMetricFamily maxBufferedCallsFamily = new GaugeMetricFamily(
-                names.getMaxBufferedCallsMetricName(),
-                "The maximum number of buffered calls",
-                LabelNames.NAME
-        );
 
         GaugeMetricFamily failureRateFamily = new GaugeMetricFamily(
                 names.getFailureRateMetricName(),
@@ -128,10 +123,9 @@ public class CircuitBreakerMetricsCollector extends Collector {
             Metrics metrics = circuitBreaker.getMetrics();
             bufferedCallsFamily.addMetric(asList(circuitBreaker.getName(), KIND_SUCCESSFUL), metrics.getNumberOfSuccessfulCalls());
             bufferedCallsFamily.addMetric(asList(circuitBreaker.getName(), KIND_FAILED), metrics.getNumberOfFailedCalls());
-            maxBufferedCallsFamily.addMetric(nameLabel, metrics.getMaxNumberOfBufferedCalls());
             failureRateFamily.addMetric(nameLabel, metrics.getFailureRate());
         }
-        return asList(stateFamily, bufferedCallsFamily, maxBufferedCallsFamily, failureRateFamily);
+        return asList(stateFamily, bufferedCallsFamily, failureRateFamily);
     }
 
     /** Defines possible configuration for metric names. */
@@ -140,7 +134,6 @@ public class CircuitBreakerMetricsCollector extends Collector {
         public static final String DEFAULT_CIRCUIT_BREAKER_CALLS = "resilience4j_circuitbreaker_calls";
         public static final String DEFAULT_CIRCUIT_BREAKER_STATE = "resilience4j_circuitbreaker_state";
         public static final String DEFAULT_CIRCUIT_BREAKER_BUFFERED_CALLS = "resilience4j_circuitbreaker_buffered_calls";
-        public static final String DEFAULT_CIRCUIT_BREAKER_MAX_BUFFERED_CALLS = "resilience4j_circuitbreaker_max_buffered_calls";
         public static final String DEFAULT_CIRCUIT_BREAKER_FAILURE_RATE = "resilience4j_circuitbreaker_failure_rate";
 
         /**
@@ -159,7 +152,6 @@ public class CircuitBreakerMetricsCollector extends Collector {
         private String callsMetricName = DEFAULT_CIRCUIT_BREAKER_CALLS;
         private String stateMetricName = DEFAULT_CIRCUIT_BREAKER_STATE;
         private String bufferedCallsMetricName = DEFAULT_CIRCUIT_BREAKER_BUFFERED_CALLS;
-        private String maxBufferedCallsMetricName = DEFAULT_CIRCUIT_BREAKER_MAX_BUFFERED_CALLS;
         private String failureRateMetricName = DEFAULT_CIRCUIT_BREAKER_FAILURE_RATE;
 
         private MetricNames() {}
@@ -172,11 +164,6 @@ public class CircuitBreakerMetricsCollector extends Collector {
         /** Returns the metric name for currently buffered calls, defaults to {@value DEFAULT_CIRCUIT_BREAKER_BUFFERED_CALLS}. */
         public String getBufferedCallsMetricName() {
             return bufferedCallsMetricName;
-        }
-
-        /** Returns the metric name for max buffered calls, defaults to {@value DEFAULT_CIRCUIT_BREAKER_MAX_BUFFERED_CALLS}. */
-        public String getMaxBufferedCallsMetricName() {
-            return maxBufferedCallsMetricName;
         }
 
         /** Returns the metric name for failure rate, defaults to {@value DEFAULT_CIRCUIT_BREAKER_FAILURE_RATE}. */
@@ -208,12 +195,6 @@ public class CircuitBreakerMetricsCollector extends Collector {
             /** Overrides the default metric name {@value MetricNames#DEFAULT_CIRCUIT_BREAKER_BUFFERED_CALLS} with a given one. */
             public Builder bufferedCallsMetricName(String bufferedCallsMetricName) {
                 metricNames.bufferedCallsMetricName = requireNonNull(bufferedCallsMetricName);
-                return this;
-            }
-
-            /** Overrides the default metric name {@value MetricNames#DEFAULT_CIRCUIT_BREAKER_MAX_BUFFERED_CALLS} with a given one. */
-            public Builder maxBufferedCallsMetricName(String maxBufferedCallsMetricName) {
-                metricNames.maxBufferedCallsMetricName = requireNonNull(maxBufferedCallsMetricName);
                 return this;
             }
 

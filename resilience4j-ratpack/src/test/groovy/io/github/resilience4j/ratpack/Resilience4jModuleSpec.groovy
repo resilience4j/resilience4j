@@ -83,8 +83,8 @@ class Resilience4jModuleSpec extends Specification {
         def test1 = circuitBreakerRegistry.circuitBreaker('test1')
         test1.name == 'test1'
         test1.circuitBreakerConfig.with {
-            assert ringBufferSizeInClosedState == 100
-            assert ringBufferSizeInHalfOpenState == 10
+            assert slidingWindowSize == 100
+            assert permittedNumberOfCallsInHalfOpenState == 10
             assert waitDurationInOpenState == Duration.ofMinutes(1)
             assert failureRateThreshold == 50
             assert !automaticTransitionFromOpenToHalfOpenEnabled
@@ -93,8 +93,8 @@ class Resilience4jModuleSpec extends Specification {
         def test2 = circuitBreakerRegistry.circuitBreaker('test2')
         test2.name == 'test2'
         test2.circuitBreakerConfig.with {
-            assert ringBufferSizeInClosedState == 200
-            assert ringBufferSizeInHalfOpenState == 20
+            assert slidingWindowSize == 200
+            assert permittedNumberOfCallsInHalfOpenState == 20
             assert waitDurationInOpenState == Duration.ofMillis(5000)
             assert failureRateThreshold == 60
             assert automaticTransitionFromOpenToHalfOpenEnabled
@@ -164,8 +164,8 @@ class Resilience4jModuleSpec extends Specification {
         def test1 = circuitBreakerRegistry.circuitBreaker('test1')
         test1.name == 'test1'
         test1.circuitBreakerConfig.with {
-            assert ringBufferSizeInClosedState == 100
-            assert ringBufferSizeInHalfOpenState == 20
+            assert slidingWindowSize == 100
+            assert permittedNumberOfCallsInHalfOpenState == 20
             assert waitDurationInOpenState == Duration.ofMillis(1000)
             assert failureRateThreshold == 60
             assert automaticTransitionFromOpenToHalfOpenEnabled
@@ -176,8 +176,8 @@ class Resilience4jModuleSpec extends Specification {
         def test2 = circuitBreakerRegistry.circuitBreaker('test2')
         test2.name == 'test2'
         test2.circuitBreakerConfig.with {
-            assert ringBufferSizeInClosedState == 200
-            assert ringBufferSizeInHalfOpenState == 20
+            assert slidingWindowSize == 200
+            assert permittedNumberOfCallsInHalfOpenState == 20
             assert waitDurationInOpenState == Duration.ofMillis(5000)
             assert failureRateThreshold == 60
             assert automaticTransitionFromOpenToHalfOpenEnabled
@@ -190,8 +190,8 @@ class Resilience4jModuleSpec extends Specification {
         circuitBreakerRegistry.allCircuitBreakers.size() == 3
         test3.name == 'test3'
         test3.circuitBreakerConfig.with {
-            assert ringBufferSizeInClosedState == 200
-            assert ringBufferSizeInHalfOpenState == 20
+            assert slidingWindowSize == 200
+            assert permittedNumberOfCallsInHalfOpenState == 20
             assert waitDurationInOpenState == Duration.ofMillis(1000)
             assert failureRateThreshold == 60
             assert automaticTransitionFromOpenToHalfOpenEnabled
@@ -757,10 +757,9 @@ class Resilience4jModuleSpec extends Specification {
         timer.count == 3
 
         and:
-        registry.gauges.size() == 15
+        registry.gauges.size() == 14
         registry.gauges.keySet() == ['resilience4j.circuitbreaker.test.state',
                                      'resilience4j.circuitbreaker.test.buffered',
-                                     'resilience4j.circuitbreaker.test.buffered_max',
                                      'resilience4j.circuitbreaker.test.failed',
                                      'resilience4j.circuitbreaker.test.not_permitted',
                                      'resilience4j.circuitbreaker.test.successful',
@@ -822,7 +821,6 @@ class Resilience4jModuleSpec extends Specification {
         families == ['resilience4j_bulkhead_available_concurrent_calls',
                      'resilience4j_bulkhead_max_allowed_concurrent_calls',
                      'resilience4j_circuitbreaker_buffered_calls',
-                     'resilience4j_circuitbreaker_max_buffered_calls',
                      'resilience4j_circuitbreaker_calls',
                      'resilience4j_circuitbreaker_state',
                      'resilience4j_circuitbreaker_failure_rate',

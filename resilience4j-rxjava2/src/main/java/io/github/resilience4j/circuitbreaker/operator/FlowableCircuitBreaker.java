@@ -18,13 +18,13 @@ package io.github.resilience4j.circuitbreaker.operator;
 import io.github.resilience4j.AbstractSubscriber;
 import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
-import io.github.resilience4j.core.StopWatch;
 import io.reactivex.Flowable;
 import io.reactivex.internal.subscriptions.EmptySubscription;
 import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscriber;
 
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 
 import static java.util.Objects.requireNonNull;
 
@@ -50,21 +50,21 @@ class FlowableCircuitBreaker<T> extends Flowable<T> {
 
     class CircuitBreakerSubscriber extends AbstractSubscriber<T> {
 
-        private final StopWatch stopWatch;
+        private final long start;
 
         CircuitBreakerSubscriber(Subscriber<? super T> downstreamSubscriber) {
             super(downstreamSubscriber);
-            stopWatch = StopWatch.start();
+            this.start = System.nanoTime();
         }
 
         @Override
         public void hookOnError(Throwable t) {
-            circuitBreaker.onError(stopWatch.stop().toNanos(), t);
+            circuitBreaker.onError(System.nanoTime() - start, TimeUnit.NANOSECONDS, t);
         }
 
         @Override
         public void hookOnComplete() {
-            circuitBreaker.onSuccess(stopWatch.stop().toNanos());
+            circuitBreaker.onSuccess(System.nanoTime() - start, TimeUnit.NANOSECONDS);
         }
 
         @Override

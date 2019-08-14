@@ -61,10 +61,7 @@ public class CircuitBreakerBenchmark {
         };
 
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testCircuitBreaker");
-        protectedSupplier = CircuitBreaker.decorateSupplier(circuitBreaker, stringSupplier);
-
-        CircuitBreaker circuitBreakerWithSubscriber = CircuitBreaker.ofDefaults("testCircuitBreakerWithSb");
-        protectedSupplierWithSb = CircuitBreaker.decorateSupplier(circuitBreakerWithSubscriber, stringSupplier);
+        protectedSupplier = circuitBreaker.decorateSupplier(stringSupplier);
     }
 
     @Benchmark
@@ -83,15 +80,6 @@ public class CircuitBreakerBenchmark {
     @Measurement(iterations = ITERATION_COUNT)
     public String protectedSupplier() {
         return protectedSupplier.get();
-    }
-
-    @Benchmark
-    @Fork(value = FORK_COUNT)
-    @Threads(value = THREAD_COUNT)
-    @Warmup(iterations = WARMUP_COUNT)
-    @Measurement(iterations = ITERATION_COUNT)
-    public String protectedSupplierWithSubscriber() {
-        return protectedSupplierWithSb.get();
     }
 
     public static void main(String[] args) throws RunnerException {
