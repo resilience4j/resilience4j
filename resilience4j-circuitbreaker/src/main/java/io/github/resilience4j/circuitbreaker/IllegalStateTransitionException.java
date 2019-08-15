@@ -5,11 +5,13 @@ package io.github.resilience4j.circuitbreaker;
  */
 public class IllegalStateTransitionException extends RuntimeException {
 
-    private CircuitBreaker.State fromState;
-    private CircuitBreaker.State toState;
+    private final String name;
+    private final CircuitBreaker.State fromState;
+    private final CircuitBreaker.State toState;
 
-    IllegalStateTransitionException(CircuitBreaker.State fromState, CircuitBreaker.State toState) {
-        super(String.format("Illegal state transition from %s to %s", fromState.toString(), toState.toString()));
+    IllegalStateTransitionException(String name, CircuitBreaker.State fromState, CircuitBreaker.State toState) {
+        super(String.format("CircuitBreaker '%s' tried an illegal state transition from %s to %s", name, fromState.toString(), toState.toString()));
+        this.name = name;
         this.fromState = fromState;
         this.toState = toState;
     }
@@ -20,5 +22,9 @@ public class IllegalStateTransitionException extends RuntimeException {
 
     public CircuitBreaker.State getToState() {
         return toState;
+    }
+
+    public String getName() {
+        return name;
     }
 }

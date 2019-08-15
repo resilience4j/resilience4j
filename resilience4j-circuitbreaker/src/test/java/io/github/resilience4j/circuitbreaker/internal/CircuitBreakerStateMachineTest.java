@@ -424,14 +424,14 @@ public class CircuitBreakerStateMachineTest {
     @Test
     public void shouldNotAllowTransitionFromClosedToHalfOpen() {
         assertThatThrownBy(() -> circuitBreaker.transitionToHalfOpenState()).isInstanceOf(IllegalStateTransitionException.class)
-                .hasMessage("Illegal state transition from CLOSED to HALF_OPEN");
+                .hasMessage("CircuitBreaker 'testName' tried an illegal state transition from CLOSED to HALF_OPEN");
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
     }
 
     @Test
     public void shouldNotAllowTransitionFromClosedToClosed() {
         assertThatThrownBy(() -> circuitBreaker.transitionToClosedState()).isInstanceOf(IllegalStateTransitionException.class)
-                .hasMessage("Illegal state transition from CLOSED to CLOSED");
+                .hasMessage("CircuitBreaker 'testName' tried an illegal state transition from CLOSED to CLOSED");
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
     }
 

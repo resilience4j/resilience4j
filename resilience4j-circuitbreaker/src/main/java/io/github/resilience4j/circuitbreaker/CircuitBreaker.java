@@ -470,10 +470,10 @@ public interface CircuitBreaker {
         private static final Map<Tuple2<State, State>, StateTransition> STATE_TRANSITION_MAP = Arrays.stream(StateTransition.values())
                         .collect(Collectors.toMap(v -> Tuple.of(v.fromState, v.toState), Function.identity()));
 
-        public static StateTransition transitionBetween(State fromState, State toState){
+        public static StateTransition transitionBetween(String name, State fromState, State toState){
             final StateTransition stateTransition = STATE_TRANSITION_MAP.get(Tuple.of(fromState, toState));
             if(stateTransition == null) {
-                throw new IllegalStateTransitionException(fromState, toState);
+                throw new IllegalStateTransitionException(name, fromState, toState);
             }
             return stateTransition;
         }
