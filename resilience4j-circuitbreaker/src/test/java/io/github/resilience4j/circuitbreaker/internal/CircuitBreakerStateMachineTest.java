@@ -21,6 +21,7 @@ package io.github.resilience4j.circuitbreaker.internal;
 import com.statemachinesystems.mockclock.MockClock;
 import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
+import io.github.resilience4j.circuitbreaker.IllegalStateTransitionException;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -419,6 +420,40 @@ public class CircuitBreakerStateMachineTest {
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
         assertCircuitBreakerMetricsEqualTo(-1f, 0, 0, 0, 0L);
     }
+
+    @Test
+    public void shouldNotAllowTransitionFromClosedToHalfOpen() {
+        assertThatThrownBy(() -> circuitBreaker.transitionToHalfOpenState()).isInstanceOf(IllegalStateTransitionException.class)
+                .hasMessage("CircuitBreaker 'testName' tried an illegal state transition from CLOSED to HALF_OPEN");
+        assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
+    }
+
+    @Test
+    public void shouldNotAllowTransitionFromClosedToClosed() {
+        assertThatThrownBy(() -> circuitBreaker.transitionToClosedState()).isInstanceOf(IllegalStateTransitionException.class)
+                .hasMessage("CircuitBreaker 'testName' tried an illegal state transition from CLOSED to CLOSED");
+        assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
+    }
+
+    @Test
+    public void shouldResetToClosedState() {
+        circuitBreaker.transitionToOpenState();
+        circuitBreaker.reset();
+        assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
+    }
+
+    @Test
+    public void shouldResetClosedState() {
+        circuitBreaker.onSuccess(0, TimeUnit.NANOSECONDS);
+        circuitBreaker.onSuccess(0, TimeUnit.NANOSECONDS);
+        assertThat(circuitBreaker.getMetrics().getNumberOfSuccessfulCalls()).isEqualTo(2);
+
+        circuitBreaker.reset();
+        assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
+        assertThat(circuitBreaker.getMetrics().getNumberOfSuccessfulCalls()).isEqualTo(0);
+    }
+
+
 
     private void assertCircuitBreakerMetricsEqualTo(Float expectedFailureRate, Integer expectedSuccessCalls, Integer expectedBufferedCalls, Integer expectedFailedCalls, Long expectedNotPermittedCalls) {
         final CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
