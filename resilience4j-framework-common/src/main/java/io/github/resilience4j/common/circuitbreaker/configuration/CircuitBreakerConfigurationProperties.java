@@ -33,6 +33,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Predicate;
 
+import static io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.*;
+
 public class CircuitBreakerConfigurationProperties {
 
 	private Map<String, InstanceProperties> instances = new HashMap<>();
@@ -50,13 +52,13 @@ public class CircuitBreakerConfigurationProperties {
 			}
 			return buildConfigFromBaseConfig(instanceProperties, baseProperties);
 		}
-		return buildConfig(CircuitBreakerConfig.custom(), instanceProperties);
+		return buildConfig(custom(), instanceProperties);
 	}
 
 	private CircuitBreakerConfig buildConfigFromBaseConfig(InstanceProperties instanceProperties, InstanceProperties baseProperties) {
 		ConfigUtils.mergePropertiesIfAny(instanceProperties, baseProperties);
-		CircuitBreakerConfig baseConfig = buildConfig(CircuitBreakerConfig.custom(), baseProperties);
-		return buildConfig(CircuitBreakerConfig.from(baseConfig), instanceProperties);
+		CircuitBreakerConfig baseConfig = buildConfig(custom(), baseProperties);
+		return buildConfig(from(baseConfig), instanceProperties);
 	}
 
 	private CircuitBreakerConfig buildConfig(Builder builder, InstanceProperties properties) {
@@ -71,12 +73,36 @@ public class CircuitBreakerConfigurationProperties {
 			builder.failureRateThreshold(properties.getFailureRateThreshold());
 		}
 
+		if (properties.getSlowCallRateThreshold() != null) {
+			builder.slowCallRateThreshold(properties.getSlowCallRateThreshold());
+		}
+
+		if (properties.getSlowCallDurationThreshold() != null) {
+			builder.slowCallDurationThreshold(properties.getSlowCallDurationThreshold());
+		}
+
 		if (properties.getRingBufferSizeInClosedState() != null) {
 			builder.ringBufferSizeInClosedState(properties.getRingBufferSizeInClosedState());
 		}
 
+		if (properties.getSlidingWindowSize() != null) {
+			builder.slidingWindowSize(properties.getSlidingWindowSize());
+		}
+
+		if (properties.getMinimumNumberOfCalls() != null) {
+			builder.minimumNumberOfCalls(properties.getMinimumNumberOfCalls());
+		}
+
+		if (properties.getSlidingWindowType() != null) {
+			builder.slidingWindowType(properties.getSlidingWindowType());
+		}
+
 		if (properties.getRingBufferSizeInHalfOpenState() != null) {
 			builder.ringBufferSizeInHalfOpenState(properties.getRingBufferSizeInHalfOpenState());
+		}
+
+		if (properties.getPermittedNumberOfCallsInHalfOpenState() != null) {
+			builder.permittedNumberOfCallsInHalfOpenState(properties.getPermittedNumberOfCallsInHalfOpenState());
 		}
 
 		if (properties.recordFailurePredicate != null) {
@@ -132,21 +158,47 @@ public class CircuitBreakerConfigurationProperties {
 	 */
 	public static class InstanceProperties {
 
-		@DurationMin(seconds = 1)
+		@DurationMin(millis = 1)
 		@Nullable
 		private Duration waitDurationInOpenState;
+
+		@DurationMin(nanos = 1)
+		@Nullable
+		private Duration slowCallDurationThreshold;
 
 		@Min(1)
 		@Max(100)
 		@Nullable
-		private Integer failureRateThreshold;
+		private Float failureRateThreshold;
+
+		@Min(1)
+		@Max(100)
+		@Nullable
+		private Float slowCallRateThreshold;
 
 		@Min(1)
 		@Nullable
+		@Deprecated
 		private Integer ringBufferSizeInClosedState;
 
+		@Nullable
+		private SlidingWindow slidingWindowType;
+
 		@Min(1)
 		@Nullable
+		private Integer slidingWindowSize;
+
+		@Min(1)
+		@Nullable
+		private Integer minimumNumberOfCalls;
+
+		@Min(1)
+		@Nullable
+		private Integer permittedNumberOfCallsInHalfOpenState;
+
+		@Min(1)
+		@Nullable
+		@Deprecated
 		private Integer ringBufferSizeInHalfOpenState;
 
 		@Nullable
@@ -178,7 +230,7 @@ public class CircuitBreakerConfigurationProperties {
 		 * @return the failure rate threshold
 		 */
 		@Nullable
-		public Integer getFailureRateThreshold() {
+		public Float getFailureRateThreshold() {
 			return failureRateThreshold;
 		}
 
@@ -187,7 +239,7 @@ public class CircuitBreakerConfigurationProperties {
 		 *
 		 * @param failureRateThreshold the failure rate threshold
 		 */
-		public InstanceProperties setFailureRateThreshold(Integer failureRateThreshold) {
+		public InstanceProperties setFailureRateThreshold(Float failureRateThreshold) {
 			this.failureRateThreshold = failureRateThreshold;
 			return this;
 		}
@@ -227,6 +279,7 @@ public class CircuitBreakerConfigurationProperties {
 		 *
 		 * @param ringBufferSizeInClosedState the ring buffer size
 		 */
+		@Deprecated
 		public InstanceProperties setRingBufferSizeInClosedState(Integer ringBufferSizeInClosedState) {
 			this.ringBufferSizeInClosedState = ringBufferSizeInClosedState;
 			return this;
@@ -247,15 +300,16 @@ public class CircuitBreakerConfigurationProperties {
 		 *
 		 * @param ringBufferSizeInHalfOpenState the ring buffer size
 		 */
+		@Deprecated
 		public InstanceProperties setRingBufferSizeInHalfOpenState(Integer ringBufferSizeInHalfOpenState) {
 			this.ringBufferSizeInHalfOpenState = ringBufferSizeInHalfOpenState;
 			return this;
 		}
 
 		/**
-		 * Returns if we should automaticly transition to half open after the timer has run out.
+		 * Returns if we should automatically transition to half open after the timer has run out.
 		 *
-		 * @return setAutomaticTransitionFromOpenToHalfOpenEnabled if we should automaticly go to half open or not
+		 * @return setAutomaticTransitionFromOpenToHalfOpenEnabled if we should automatically go to half open or not
 		 */
 		public Boolean getAutomaticTransitionFromOpenToHalfOpenEnabled() {
 			return this.automaticTransitionFromOpenToHalfOpenEnabled;
@@ -341,6 +395,59 @@ public class CircuitBreakerConfigurationProperties {
 			return this;
 		}
 
+		@Nullable
+		public Integer getPermittedNumberOfCallsInHalfOpenState() {
+			return permittedNumberOfCallsInHalfOpenState;
+		}
+
+		public void setPermittedNumberOfCallsInHalfOpenState(@Nullable Integer permittedNumberOfCallsInHalfOpenState) {
+			this.permittedNumberOfCallsInHalfOpenState = permittedNumberOfCallsInHalfOpenState;
+		}
+
+		@Nullable
+		public Integer getMinimumNumberOfCalls() {
+			return minimumNumberOfCalls;
+		}
+
+		public void setMinimumNumberOfCalls(@Nullable Integer minimumNumberOfCalls) {
+			this.minimumNumberOfCalls = minimumNumberOfCalls;
+		}
+
+		@Nullable
+		public Integer getSlidingWindowSize() {
+			return slidingWindowSize;
+		}
+
+		public void setSlidingWindowSize(@Nullable Integer slidingWindowSize) {
+			this.slidingWindowSize = slidingWindowSize;
+		}
+
+		@Nullable
+		public Float getSlowCallRateThreshold() {
+			return slowCallRateThreshold;
+		}
+
+		public void setSlowCallRateThreshold(@Nullable Float slowCallRateThreshold) {
+			this.slowCallRateThreshold = slowCallRateThreshold;
+		}
+
+		@Nullable
+		public Duration getSlowCallDurationThreshold() {
+			return slowCallDurationThreshold;
+		}
+
+		public void setSlowCallDurationThreshold(@Nullable Duration slowCallDurationThreshold) {
+			this.slowCallDurationThreshold = slowCallDurationThreshold;
+		}
+
+		@Nullable
+		public SlidingWindow getSlidingWindowType() {
+			return slidingWindowType;
+		}
+
+		public void setSlidingWindowType(SlidingWindow slidingWindowType) {
+			this.slidingWindowType = slidingWindowType;
+		}
 	}
 
 }

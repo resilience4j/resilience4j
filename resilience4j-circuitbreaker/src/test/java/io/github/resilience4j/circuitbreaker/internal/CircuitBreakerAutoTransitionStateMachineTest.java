@@ -41,8 +41,8 @@ public class CircuitBreakerAutoTransitionStateMachineTest {
     public void setUp() {
         CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom()
                 .failureRateThreshold(50)
-                .ringBufferSizeInClosedState(5)
-                .ringBufferSizeInHalfOpenState(3)
+                .slidingWindow(5, 5, CircuitBreakerConfig.SlidingWindow.COUNT_BASED)
+                .permittedNumberOfCallsInHalfOpenState(3)
                 .automaticTransitionFromOpenToHalfOpenEnabled(true)
                 .waitDurationInOpenState(Duration.ofSeconds(2))
                 .recordFailure(error -> !(error instanceof NumberFormatException))
