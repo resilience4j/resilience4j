@@ -369,9 +369,10 @@ public class CircuitBreakerConfig {
 
         /**
          * Configures a Predicate which evaluates if an exception should be recorded as a failure and thus increase the failure rate.
-         * The Predicate must return true if the exception should count as a failure, otherwise it must return false.
+         * The Predicate must return true if the exception should count as a failure. The Predicate must return false, if the exception
+         * should neither count as a failure nor success.
          *
-         * @param predicate the Predicate which evaluates if an exception should be recorded as a failure and thus trigger the CircuitBreaker
+         * @param predicate the Predicate which evaluates if an exception should count as a failure
          * @return the CircuitBreakerConfig.Builder
          */
         public Builder recordFailure(Predicate<Throwable> predicate) {
@@ -402,8 +403,8 @@ public class CircuitBreakerConfig {
         }
 
         /**
-         * Configures a list of error classes that are ignored as a failure and thus do not increase the failure rate.
-         * Any exception matching or inheriting from one of the list will not count as a failure, even if marked via
+         * Configures a list of error classes that are ignored and thus neither count as a failure nor success.
+         * Any exception matching or inheriting from one of the list will not count as a failure nor success, even if marked via
          *
          * @param errorClasses the error classes that are ignored
          * @return the CircuitBreakerConfig.Builder
