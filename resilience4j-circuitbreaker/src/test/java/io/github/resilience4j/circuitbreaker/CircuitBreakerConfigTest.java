@@ -291,9 +291,9 @@ public class CircuitBreakerConfigTest {
     @Test
     public void shouldBuilderCreateConfigEveryTime() {
         final Builder builder =  custom();
-        builder.ringBufferSizeInClosedState(5);
+        builder.slidingWindowSize(5);
         final CircuitBreakerConfig config1 = builder.build();
-        builder.ringBufferSizeInClosedState(3);
+        builder.slidingWindowSize(3);
         final CircuitBreakerConfig config2 = builder.build();
         assertThat(config2.getSlidingWindowSize()).isEqualTo(3);
         assertThat(config1.getSlidingWindowSize()).isEqualTo(5);
@@ -303,7 +303,7 @@ public class CircuitBreakerConfigTest {
     public void shouldUseBaseConfigAndOverwriteProperties() {
         CircuitBreakerConfig baseConfig = custom()
                 .waitDurationInOpenState(Duration.ofSeconds(100))
-                .ringBufferSizeInClosedState(1000)
+                .slidingWindowSize(1000)
                 .permittedNumberOfCallsInHalfOpenState(100)
                 .automaticTransitionFromOpenToHalfOpenEnabled(true)
                 .failureRateThreshold(20f).build();
