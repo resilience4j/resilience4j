@@ -29,11 +29,13 @@ public class CircuitBreakerHealthIndicatorTest {
         CircuitBreakerHealthIndicator healthIndicator = new CircuitBreakerHealthIndicator(circuitBreaker);
 
         //when
-        when(config.getFailureRateThreshold()).thenReturn(0.3f);
-
-        when(metrics.getFailureRate()).thenReturn(0.2f);
+        when(config.getFailureRateThreshold()).thenReturn(30f);
+        when(metrics.getFailureRate()).thenReturn(20f);
+        when(metrics.getSlowCallRate()).thenReturn(20f);
+        when(config.getSlowCallRateThreshold()).thenReturn(50f);
         when(metrics.getNumberOfBufferedCalls()).thenReturn(100);
         when(metrics.getNumberOfFailedCalls()).thenReturn(20);
+        when(metrics.getNumberOfSlowCalls()).thenReturn(20);
         when(metrics.getNumberOfNotPermittedCalls()).thenReturn(0L);
 
         when(circuitBreaker.getCircuitBreakerConfig()).thenReturn(config);
@@ -45,9 +47,12 @@ public class CircuitBreakerHealthIndicatorTest {
         then(health.getStatus()).isEqualTo(Status.UP);
         then(health.getDetails())
                 .contains(
-                        entry("failureRate", "0.2%"),
-                        entry("setFailureRateThreshold", "0.3%"),
+                        entry("failureRate", "20.0%"),
+                        entry("slowCallRate", "20.0%"),
+                        entry("slowCallRateThreshold", "50.0%"),
+                        entry("failureRateThreshold", "30.0%"),
                         entry("bufferedCalls", 100),
+                        entry("slowCalls", 20),
                         entry("failedCalls", 20),
                         entry("notPermittedCalls", 0L)
                 );
