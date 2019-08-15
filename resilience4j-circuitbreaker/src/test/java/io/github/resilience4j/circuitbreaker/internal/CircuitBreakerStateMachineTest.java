@@ -435,6 +435,26 @@ public class CircuitBreakerStateMachineTest {
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
     }
 
+    @Test
+    public void shouldResetToClosedState() {
+        circuitBreaker.transitionToOpenState();
+        circuitBreaker.reset();
+        assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
+    }
+
+    @Test
+    public void shouldResetClosedState() {
+        circuitBreaker.onSuccess(0, TimeUnit.NANOSECONDS);
+        circuitBreaker.onSuccess(0, TimeUnit.NANOSECONDS);
+        assertThat(circuitBreaker.getMetrics().getNumberOfSuccessfulCalls()).isEqualTo(2);
+
+        circuitBreaker.reset();
+        assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
+        assertThat(circuitBreaker.getMetrics().getNumberOfSuccessfulCalls()).isEqualTo(0);
+    }
+
+
+
     private void assertCircuitBreakerMetricsEqualTo(Float expectedFailureRate, Integer expectedSuccessCalls, Integer expectedBufferedCalls, Integer expectedFailedCalls, Long expectedNotPermittedCalls) {
         final CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
         assertThat(metrics.getFailureRate()).isEqualTo(expectedFailureRate);
