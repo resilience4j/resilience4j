@@ -450,6 +450,7 @@ public interface CircuitBreaker {
         HALF_OPEN_TO_OPEN(State.HALF_OPEN, State.OPEN),
         HALF_OPEN_TO_DISABLED(State.HALF_OPEN, State.DISABLED),
         HALF_OPEN_TO_FORCED_OPEN(State.HALF_OPEN, State.FORCED_OPEN),
+        OPEN_TO_CLOSED(State.OPEN, State.CLOSED),
         OPEN_TO_HALF_OPEN(State.OPEN, State.HALF_OPEN),
         OPEN_TO_DISABLED(State.OPEN, State.DISABLED),
         OPEN_TO_FORCED_OPEN(State.OPEN, State.FORCED_OPEN),

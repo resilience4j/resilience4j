@@ -435,14 +435,6 @@ public class CircuitBreakerStateMachineTest {
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
     }
 
-    @Test
-    public void shouldNotAllowTransitionFromOpenToClosed() {
-        circuitBreaker.transitionToOpenState();
-        assertThatThrownBy(() -> circuitBreaker.transitionToClosedState()).isInstanceOf(IllegalStateTransitionException.class)
-                .hasMessage("Illegal state transition from OPEN to CLOSED");
-        assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.OPEN);
-    }
-
     private void assertCircuitBreakerMetricsEqualTo(Float expectedFailureRate, Integer expectedSuccessCalls, Integer expectedBufferedCalls, Integer expectedFailedCalls, Long expectedNotPermittedCalls) {
         final CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
         assertThat(metrics.getFailureRate()).isEqualTo(expectedFailureRate);
