@@ -228,21 +228,17 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
     public void reset() {
         CircuitBreakerState previousState = stateReference.getAndUpdate(currentState -> new ClosedState());
         if (previousState.getState() != CLOSED) {
-            publishStateTransitionEvent(StateTransition.transitionBetween(previousState.getState(), CLOSED));
+            publishStateTransitionEvent(StateTransition.transitionBetween(getName(), previousState.getState(), CLOSED));
         }
         publishResetEvent();
     }
 
     private void stateTransition(State newState, UnaryOperator<CircuitBreakerState> newStateGenerator) {
         CircuitBreakerState previousState = stateReference.getAndUpdate(currentState -> {
-            if (currentState.getState() == newState) {
-                return currentState;
-            }
+            StateTransition.transitionBetween(getName(), currentState.getState(), newState);
             return newStateGenerator.apply(currentState);
         });
-        if (previousState.getState() != newState) {
-            publishStateTransitionEvent(StateTransition.transitionBetween(previousState.getState(), newState));
-        }
+        publishStateTransitionEvent(StateTransition.transitionBetween(getName(), previousState.getState(), newState));
     }
 
     @Override
