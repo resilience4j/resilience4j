@@ -32,15 +32,19 @@ public class CircuitBreakerConfigurationPropertiesTest {
 	@Test
 	public void testCreateCircuitBreakerRegistry() {
 		//Given
-
-
 		io.github.resilience4j.common.circuitbreaker.configuration.CircuitBreakerConfigurationProperties.InstanceProperties instanceProperties1 = new io.github.resilience4j.common.circuitbreaker.configuration.CircuitBreakerConfigurationProperties.InstanceProperties();
 		instanceProperties1.setWaitDurationInOpenState(Duration.ofMillis(100));
 		instanceProperties1.setEventConsumerBufferSize(100);
 		instanceProperties1.setRegisterHealthIndicator(true);
+		instanceProperties1.setSlidingWindowType(CircuitBreakerConfig.SlidingWindow.TIME_BASED);
 		instanceProperties1.setSlidingWindowSize(200);
+		instanceProperties1.setMinimumNumberOfCalls(10);
 		instanceProperties1.setAutomaticTransitionFromOpenToHalfOpenEnabled(false);
-		instanceProperties1.setFailureRateThreshold(10);
+		instanceProperties1.setFailureRateThreshold(50f);
+		instanceProperties1.setSlowCallDurationThreshold(Duration.ofSeconds(5));
+		instanceProperties1.setSlowCallRateThreshold(50f);
+		instanceProperties1.setPermittedNumberOfCallsInHalfOpenState(100);
+		instanceProperties1.setAutomaticTransitionFromOpenToHalfOpenEnabled(true);
 		//noinspection unchecked
 		instanceProperties1.setIgnoreExceptions(new Class[]{IllegalStateException.class});
 		//noinspection unchecked
@@ -59,10 +63,19 @@ public class CircuitBreakerConfigurationPropertiesTest {
 		//Then
 		assertThat(circuitBreakerConfigurationProperties.getBackends().size()).isEqualTo(2);
 		assertThat(circuitBreakerConfigurationProperties.getInstances().size()).isEqualTo(2);
+
 		CircuitBreakerConfig circuitBreaker1 = circuitBreakerConfigurationProperties.createCircuitBreakerConfig(instanceProperties1);
 		assertThat(circuitBreaker1).isNotNull();
 		assertThat(circuitBreaker1.getSlidingWindowSize()).isEqualTo(200);
-		assertThat(circuitBreaker1.getWaitDurationInOpenState()).isEqualTo(Duration.ofMillis(100));
+		assertThat(circuitBreaker1.getSlidingWindowType()).isEqualTo(CircuitBreakerConfig.SlidingWindow.TIME_BASED);
+		assertThat(circuitBreaker1.getMinimumNumberOfCalls()).isEqualTo(10);
+		assertThat(circuitBreaker1.getPermittedNumberOfCallsInHalfOpenState()).isEqualTo(100);
+		assertThat(circuitBreaker1.getFailureRateThreshold()).isEqualTo(50f);
+		assertThat(circuitBreaker1.getSlowCallDurationThreshold().getSeconds()).isEqualTo(5);
+		assertThat(circuitBreaker1.getSlowCallRateThreshold()).isEqualTo(50f);
+		assertThat(circuitBreaker1.getWaitDurationInOpenState().toMillis()).isEqualTo(100);
+		assertThat(circuitBreaker1.isAutomaticTransitionFromOpenToHalfOpenEnabled()).isTrue();
+
 		final CircuitBreakerConfigurationProperties.InstanceProperties backend1 = circuitBreakerConfigurationProperties.getBackendProperties("backend1");
 		assertThat(circuitBreakerConfigurationProperties.findCircuitBreakerProperties("backend1")).isNotEmpty();
 		CircuitBreakerConfig circuitBreaker2 = circuitBreakerConfigurationProperties.createCircuitBreakerConfig(instanceProperties2);
@@ -81,6 +94,7 @@ public class CircuitBreakerConfigurationPropertiesTest {
 
 		io.github.resilience4j.common.circuitbreaker.configuration.CircuitBreakerConfigurationProperties.InstanceProperties sharedProperties = new io.github.resilience4j.common.circuitbreaker.configuration.CircuitBreakerConfigurationProperties.InstanceProperties();
 		sharedProperties.setSlidingWindowSize(1337);
+		sharedProperties.setSlidingWindowType(CircuitBreakerConfig.SlidingWindow.TIME_BASED);
 		sharedProperties.setPermittedNumberOfCallsInHalfOpenState(1000);
 
 		io.github.resilience4j.common.circuitbreaker.configuration.CircuitBreakerConfigurationProperties.InstanceProperties backendWithDefaultConfig = new io.github.resilience4j.common.circuitbreaker.configuration.CircuitBreakerConfigurationProperties.InstanceProperties();
@@ -112,6 +126,7 @@ public class CircuitBreakerConfigurationPropertiesTest {
 		CircuitBreakerConfig circuitBreaker2 = circuitBreakerConfigurationProperties.createCircuitBreakerConfig(backendWithSharedConfig);
 		assertThat(circuitBreaker2).isNotNull();
 		assertThat(circuitBreaker2.getSlidingWindowSize()).isEqualTo(1337);
+		assertThat(circuitBreaker2.getSlidingWindowType()).isEqualTo(CircuitBreakerConfig.SlidingWindow.TIME_BASED);
 		assertThat(circuitBreaker2.getPermittedNumberOfCallsInHalfOpenState()).isEqualTo(999);
 
 		// Unknown backend should get default config of Registry

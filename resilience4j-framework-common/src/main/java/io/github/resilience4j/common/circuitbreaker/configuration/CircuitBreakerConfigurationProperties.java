@@ -169,12 +169,12 @@ public class CircuitBreakerConfigurationProperties {
 		@Min(1)
 		@Max(100)
 		@Nullable
-		private Integer failureRateThreshold;
+		private Float failureRateThreshold;
 
 		@Min(1)
 		@Max(100)
 		@Nullable
-		private Integer slowCallRateThreshold;
+		private Float slowCallRateThreshold;
 
 		@Min(1)
 		@Nullable
@@ -230,7 +230,7 @@ public class CircuitBreakerConfigurationProperties {
 		 * @return the failure rate threshold
 		 */
 		@Nullable
-		public Integer getFailureRateThreshold() {
+		public Float getFailureRateThreshold() {
 			return failureRateThreshold;
 		}
 
@@ -239,7 +239,7 @@ public class CircuitBreakerConfigurationProperties {
 		 *
 		 * @param failureRateThreshold the failure rate threshold
 		 */
-		public InstanceProperties setFailureRateThreshold(Integer failureRateThreshold) {
+		public InstanceProperties setFailureRateThreshold(Float failureRateThreshold) {
 			this.failureRateThreshold = failureRateThreshold;
 			return this;
 		}
@@ -423,11 +423,11 @@ public class CircuitBreakerConfigurationProperties {
 		}
 
 		@Nullable
-		public Integer getSlowCallRateThreshold() {
+		public Float getSlowCallRateThreshold() {
 			return slowCallRateThreshold;
 		}
 
-		public void setSlowCallRateThreshold(@Nullable Integer slowCallRateThreshold) {
+		public void setSlowCallRateThreshold(@Nullable Float slowCallRateThreshold) {
 			this.slowCallRateThreshold = slowCallRateThreshold;
 		}
 

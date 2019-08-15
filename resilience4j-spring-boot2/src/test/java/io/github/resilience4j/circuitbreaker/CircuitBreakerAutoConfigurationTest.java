@@ -128,11 +128,14 @@ public class CircuitBreakerAutoConfigurationTest {
 		// expect all shared configs share the same values and are from the application.yml file
 		CircuitBreaker sharedA = circuitBreakerRegistry.circuitBreaker("backendSharedA");
 		CircuitBreaker sharedB = circuitBreakerRegistry.circuitBreaker("backendSharedB");
+		CircuitBreaker backendB = circuitBreakerRegistry.circuitBreaker("backendB");
 
 		Duration defaultWaitDuration = Duration.ofSeconds(10);
 		float defaultFailureRate = 60f;
 		int defaultPermittedNumberOfCallsInHalfOpenState = 10;
 		int defaultRingBufferSizeInClosedState = 100;
+
+		assertThat(backendB.getCircuitBreakerConfig().getSlidingWindowType()).isEqualTo(CircuitBreakerConfig.SlidingWindow.TIME_BASED);
 
 		assertThat(sharedA.getCircuitBreakerConfig().getSlidingWindowSize()).isEqualTo(6);
 		assertThat(sharedA.getCircuitBreakerConfig().getPermittedNumberOfCallsInHalfOpenState()).isEqualTo(defaultPermittedNumberOfCallsInHalfOpenState);
@@ -140,6 +143,7 @@ public class CircuitBreakerAutoConfigurationTest {
 		assertThat(sharedA.getCircuitBreakerConfig().getWaitDurationInOpenState()).isEqualTo(defaultWaitDuration);
 
 		assertThat(sharedB.getCircuitBreakerConfig().getSlidingWindowSize()).isEqualTo(defaultRingBufferSizeInClosedState);
+		assertThat(sharedB.getCircuitBreakerConfig().getSlidingWindowType()).isEqualTo(CircuitBreakerConfig.SlidingWindow.TIME_BASED);
 		assertThat(sharedB.getCircuitBreakerConfig().getPermittedNumberOfCallsInHalfOpenState()).isEqualTo(defaultPermittedNumberOfCallsInHalfOpenState);
 		assertThat(sharedB.getCircuitBreakerConfig().getFailureRateThreshold()).isEqualTo(defaultFailureRate);
 		assertThat(sharedB.getCircuitBreakerConfig().getWaitDurationInOpenState()).isEqualTo(defaultWaitDuration);

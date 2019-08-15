@@ -48,6 +48,7 @@ resilience4j.circuitbreaker:
         - io.github.resilience4j.circuitbreaker.IgnoredException
     backendB:
       slidingWindowSize: 10
+      slidingWindowType: TIME_BASED
       permittedNumberOfCallsInHalfOpenState: 5
       waitDurationInOpenState: 5000
       failureRateThreshold: 50
@@ -58,6 +59,7 @@ resilience4j.circuitbreaker:
       slidingWindowSize: 6
     backendSharedB:
       baseConfig: default
+      slidingWindowType: TIME_BASED
 
 resilience4j.ratelimiter:
   rateLimiterAspectOrder: 401
