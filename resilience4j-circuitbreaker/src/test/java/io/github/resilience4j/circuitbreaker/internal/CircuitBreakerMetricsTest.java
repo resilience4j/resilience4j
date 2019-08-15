@@ -31,7 +31,7 @@ public class CircuitBreakerMetricsTest {
     @Test
     public void testCircuitBreakerMetrics(){
         CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom()
-                .slidingWindowInClosedState(10, 10, CircuitBreakerConfig.SlidingWindow.COUNT_BASED)
+                .slidingWindow(10, 10, CircuitBreakerConfig.SlidingWindow.COUNT_BASED)
                 .build();
 
         CircuitBreakerMetrics circuitBreakerMetrics = new CircuitBreakerMetrics(circuitBreakerConfig.getSlidingWindowSize(),
