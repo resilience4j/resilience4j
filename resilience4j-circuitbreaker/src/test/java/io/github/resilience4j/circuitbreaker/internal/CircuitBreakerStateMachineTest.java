@@ -422,6 +422,56 @@ public class CircuitBreakerStateMachineTest {
     }
 
     @Test
+    public void shouldIgnoreExceptionsAndThenTransitionToClosed() {
+        circuitBreaker.transitionToOpenState();
+        circuitBreaker.transitionToHalfOpenState();
+        assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.HALF_OPEN);
+
+        assertThat(circuitBreaker.tryAcquirePermission()).isEqualTo(true);
+        // Should ignore NumberFormatException and release permission
+        circuitBreaker.onError(0, TimeUnit.NANOSECONDS, new NumberFormatException());
+        assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.HALF_OPEN);
+
+        assertThat(circuitBreaker.tryAcquirePermission()).isEqualTo(true);
+        // Should ignore NumberFormatException and release permission
+        circuitBreaker.onError(0, TimeUnit.NANOSECONDS, new NumberFormatException());
+        assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.HALF_OPEN);
+
+        assertThat(circuitBreaker.tryAcquirePermission()).isEqualTo(true);
+        // Should ignore NumberFormatException and release permission
+        circuitBreaker.onError(0, TimeUnit.NANOSECONDS, new NumberFormatException());
+        assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.HALF_OPEN);
+
+        assertThat(circuitBreaker.tryAcquirePermission()).isEqualTo(true);
+        // Should ignore NumberFormatException and release permission
+        circuitBreaker.onError(0, TimeUnit.NANOSECONDS, new NumberFormatException());
+        assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.HALF_OPEN);
+
+        assertCircuitBreakerMetricsEqualTo(-1f, 0, 0, 0, 0L);
+
+        assertThat(circuitBreaker.tryAcquirePermission()).isEqualTo(true);
+        circuitBreaker.onSuccess(0, TimeUnit.NANOSECONDS); //
+        assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.HALF_OPEN);
+
+        assertThat(circuitBreaker.tryAcquirePermission()).isEqualTo(true);
+        circuitBreaker.onSuccess(0, TimeUnit.NANOSECONDS); //
+        assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.HALF_OPEN);
+
+        assertThat(circuitBreaker.tryAcquirePermission()).isEqualTo(true);
+        circuitBreaker.onSuccess(0, TimeUnit.NANOSECONDS); //
+        assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.HALF_OPEN);
+
+        assertCircuitBreakerMetricsEqualTo(-1f, 3, 3, 0, 0L);
+
+        assertThat(circuitBreaker.tryAcquirePermission()).isEqualTo(true);
+        circuitBreaker.onSuccess(0, TimeUnit.NANOSECONDS); //
+        assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
+
+        assertCircuitBreakerMetricsEqualTo(-1f, 0, 0, 0, 0L);
+    }
+
+
+    @Test
     public void shouldNotAllowTransitionFromClosedToHalfOpen() {
         assertThatThrownBy(() -> circuitBreaker.transitionToHalfOpenState()).isInstanceOf(IllegalStateTransitionException.class)
                 .hasMessage("CircuitBreaker 'testName' tried an illegal state transition from CLOSED to HALF_OPEN");
