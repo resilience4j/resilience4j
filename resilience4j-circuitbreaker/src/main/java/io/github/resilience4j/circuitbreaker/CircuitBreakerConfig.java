@@ -37,8 +37,14 @@ public class CircuitBreakerConfig {
     public static final int DEFAULT_MINIMUM_NUMBER_OF_CALLS = 100;
     public static final int DEFAULT_SLIDING_WINDOW_SIZE = 100;
     public static final int DEFAULT_SLOW_CALL_DURATION_THRESHOLD = 60; // Seconds
-    private static final Predicate<Throwable> DEFAULT_RECORD_FAILURE_PREDICATE = throwable -> true;
+    private static final Predicate<Throwable> DEFAULT_RECORD_EXCEPTION_PREDICATE = throwable -> true;
+    private static final Predicate<Throwable> DEFAULT_IGNORE_EXCEPTION_PREDICATE = throwable -> false;
     public static final SlidingWindow DEFAULT_SLIDING_WINDOW_TYPE = SlidingWindow.COUNT_BASED;
+
+    // The default exception predicate counts all exceptions as failures.
+    private Predicate<Throwable> recordExceptionPredicate = DEFAULT_RECORD_EXCEPTION_PREDICATE;
+    // The default exception predicate ignores no exceptions.
+    private Predicate<Throwable> ignoreExceptionPredicate  = DEFAULT_IGNORE_EXCEPTION_PREDICATE;
 
     @SuppressWarnings("unchecked")
     private Class<? extends Throwable>[] recordExceptions = new Class[0];
@@ -51,8 +57,6 @@ public class CircuitBreakerConfig {
     private SlidingWindow slidingWindowType = DEFAULT_SLIDING_WINDOW_TYPE;
     private int minimumNumberOfCalls = DEFAULT_MINIMUM_NUMBER_OF_CALLS;
     private Duration waitDurationInOpenState = Duration.ofSeconds(DEFAULT_WAIT_DURATION_IN_OPEN_STATE);
-    // The default exception predicate counts all exceptions as failures.
-    private Predicate<Throwable> recordFailurePredicate = DEFAULT_RECORD_FAILURE_PREDICATE;
     private boolean automaticTransitionFromOpenToHalfOpenEnabled = false;
     private float slowCallRateThreshold = DEFAULT_SLOW_CALL_RATE_THRESHOLD;
     private Duration slowCallDurationThreshold = Duration.ofSeconds(DEFAULT_SLOW_CALL_DURATION_THRESHOLD);
@@ -100,8 +104,12 @@ public class CircuitBreakerConfig {
         return slidingWindowSize;
     }
 
-    public Predicate<Throwable> getRecordFailurePredicate() {
-        return recordFailurePredicate;
+    public Predicate<Throwable> getRecordExceptionPredicate() {
+        return recordExceptionPredicate;
+    }
+
+    public Predicate<Throwable> getIgnoreExceptionPredicate() {
+        return ignoreExceptionPredicate;
     }
 
     public boolean isAutomaticTransitionFromOpenToHalfOpenEnabled() {
@@ -128,14 +136,20 @@ public class CircuitBreakerConfig {
         return slowCallDurationThreshold;
     }
 
+
+
     public static class Builder {
 
         @Nullable
-        private Predicate<Throwable> recordFailurePredicate;
+        private Predicate<Throwable> recordExceptionPredicate;
+        @Nullable
+        private Predicate<Throwable> ignoreExceptionPredicate;
+
         @SuppressWarnings("unchecked")
         private Class<? extends Throwable>[] recordExceptions = new Class[0];
         @SuppressWarnings("unchecked")
         private Class<? extends Throwable>[] ignoreExceptions = new Class[0];
+
         private float failureRateThreshold = DEFAULT_FAILURE_RATE_THRESHOLD;
         private int minimumNumberOfCalls = DEFAULT_MINIMUM_NUMBER_OF_CALLS;
         private int permittedNumberOfCallsInHalfOpenState = DEFAULT_PERMITTED_CALLS_IN_HALF_OPEN_STATE;
@@ -155,7 +169,8 @@ public class CircuitBreakerConfig {
             this.failureRateThreshold = baseConfig.failureRateThreshold;
             this.ignoreExceptions = baseConfig.ignoreExceptions;
             this.recordExceptions = baseConfig.recordExceptions;
-            this.recordFailurePredicate = baseConfig.recordFailurePredicate;
+            this.recordExceptionPredicate = baseConfig.recordExceptionPredicate;
+            this.ignoreExceptionPredicate = baseConfig.ignoreExceptionPredicate;
             this.automaticTransitionFromOpenToHalfOpenEnabled = baseConfig.automaticTransitionFromOpenToHalfOpenEnabled;
             this.slowCallRateThreshold = baseConfig.slowCallRateThreshold;
             this.slowCallDurationThreshold = baseConfig.slowCallDurationThreshold;
@@ -368,15 +383,37 @@ public class CircuitBreakerConfig {
         }
 
         /**
+         * @deprecated use {@link #recordException(Predicate)} instead.
+         */
+        @Deprecated
+        public Builder recordFailure(Predicate<Throwable> predicate) {
+            this.recordExceptionPredicate = predicate;
+            return this;
+        }
+
+        /**
          * Configures a Predicate which evaluates if an exception should be recorded as a failure and thus increase the failure rate.
          * The Predicate must return true if the exception should count as a failure. The Predicate must return false, if the exception
-         * should neither count as a failure nor success.
+         * should count as a success, unless the exception is explicitly ignored by {@link #ignoreExceptions(Class[])} or {@link #ignoreException(Predicate)}.
          *
          * @param predicate the Predicate which evaluates if an exception should count as a failure
          * @return the CircuitBreakerConfig.Builder
          */
-        public Builder recordFailure(Predicate<Throwable> predicate) {
-            this.recordFailurePredicate = predicate;
+        public Builder recordException(Predicate<Throwable> predicate) {
+            this.recordExceptionPredicate = predicate;
+            return this;
+        }
+
+        /**
+         * Configures a Predicate which evaluates if an exception should be ignored and neither count as a failure nor success.
+         * The Predicate must return true if the exception should be ignored .
+         * The Predicate must return false, if the exception should count as a failure.
+         *
+         * @param predicate the Predicate which evaluates if an exception should count as a failure
+         * @return the CircuitBreakerConfig.Builder
+         */
+        public Builder ignoreException(Predicate<Throwable> predicate) {
+            this.ignoreExceptionPredicate = predicate;
             return this;
         }
 
@@ -390,10 +427,10 @@ public class CircuitBreakerConfig {
          * <p>
          * Example:
          * recordExceptions(Throwable.class) and ignoreExceptions(RuntimeException.class)
-         * would capture all Errors and checked Exceptions, and ignore unchecked
+         * would capture all Errors and checked Exceptions, and ignore RuntimeExceptions.
          * <p>
          * For a more sophisticated exception management use the
-         * @see #recordFailure(Predicate) method
+         * @see #recordException(Predicate) method
          */
         @SuppressWarnings("unchecked")
         @SafeVarargs
@@ -412,14 +449,14 @@ public class CircuitBreakerConfig {
          * <p>
          * Example:
          * ignoreExceptions(Throwable.class) and recordExceptions(Exception.class)
-         * would capture nothing
+         * would capture nothing.
          * <p>
          * Example:
          * ignoreExceptions(Exception.class) and recordExceptions(Throwable.class)
-         * would capture Errors
+         * would capture Errors.
          * <p>
          * For a more sophisticated exception management use the
-         * @see #recordFailure(Predicate) method
+         * @see #ignoreException(Predicate) method
          */
         @SuppressWarnings("unchecked")
         @SafeVarargs
@@ -466,23 +503,22 @@ public class CircuitBreakerConfig {
             config.recordExceptions = recordExceptions;
             config.ignoreExceptions = ignoreExceptions;
             config.automaticTransitionFromOpenToHalfOpenEnabled = automaticTransitionFromOpenToHalfOpenEnabled;
-            config.recordFailurePredicate = createRecordFailurePredicate();
+            config.recordExceptionPredicate = createRecordExceptionPredicate();
+            config.ignoreExceptionPredicate = createIgnoreFailurePredicate();
             return config;
         }
 
-        private Predicate<Throwable> createRecordFailurePredicate() {
-            return createRecordExceptionPredicate()
-                    .and(PredicateCreator.createIgnoreExceptionsPredicate(ignoreExceptions)
-                            .orElse(DEFAULT_RECORD_FAILURE_PREDICATE));
+        private Predicate<Throwable> createIgnoreFailurePredicate() {
+            return PredicateCreator.createExceptionsPredicate(ignoreExceptions)
+                    .map(predicate -> ignoreExceptionPredicate != null ? predicate.or(ignoreExceptionPredicate) : predicate)
+                    .orElseGet(() -> ignoreExceptionPredicate != null ? ignoreExceptionPredicate : DEFAULT_IGNORE_EXCEPTION_PREDICATE);
         }
 
         private Predicate<Throwable> createRecordExceptionPredicate() {
-            return PredicateCreator.createRecordExceptionsPredicate(recordExceptions)
-                    .map(predicate -> recordFailurePredicate != null ? predicate.or(recordFailurePredicate) : predicate)
-                    .orElseGet(() -> recordFailurePredicate != null ? recordFailurePredicate : DEFAULT_RECORD_FAILURE_PREDICATE);
+            return PredicateCreator.createExceptionsPredicate(recordExceptions)
+                    .map(predicate -> recordExceptionPredicate != null ? predicate.or(recordExceptionPredicate) : predicate)
+                    .orElseGet(() -> recordExceptionPredicate != null ? recordExceptionPredicate : DEFAULT_RECORD_EXCEPTION_PREDICATE);
         }
-
-
     }
 
     public enum SlidingWindow {

@@ -39,8 +39,6 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-import static io.vavr.API.*;
-import static io.vavr.Predicates.instanceOf;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -515,8 +513,8 @@ public class CircuitBreakerTest {
         // Given
         // Create a custom configuration for a CircuitBreaker
         CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom()
-                .ringBufferSizeInClosedState(2)
-                .ringBufferSizeInHalfOpenState(2)
+                .slidingWindowSize(2)
+                .permittedNumberOfCallsInHalfOpenState(2)
                 .failureRateThreshold(50)
                 .waitDurationInOpenState(Duration.ofMillis(1000))
                 .build();
@@ -569,12 +567,10 @@ public class CircuitBreakerTest {
         // tag::shouldNotRecordIOExceptionAsAFailure[]
         // Given
         CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom()
-                .ringBufferSizeInClosedState(2)
-                .ringBufferSizeInHalfOpenState(2)
+                .slidingWindowSize(2)
+                .permittedNumberOfCallsInHalfOpenState(2)
                 .waitDurationInOpenState(Duration.ofMillis(1000))
-                .recordFailure(throwable -> Match(throwable).of(
-                        Case($(instanceOf(WebServiceException.class)), true),
-                        Case($(), false)))
+                .ignoreExceptions(IOException.class)
                 .build();
         CircuitBreaker circuitBreaker = CircuitBreaker.of("testName", circuitBreakerConfig);
 
@@ -646,7 +642,7 @@ public class CircuitBreakerTest {
         // tag::shouldThrowCircuitBreakerOpenException[]
         // Given
         CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom()
-                .ringBufferSizeInClosedState(2)
+                .slidingWindowSize(2)
                 .waitDurationInOpenState(Duration.ofMillis(1000))
                 .build();
         CircuitBreaker circuitBreaker = CircuitBreaker.of("testName", circuitBreakerConfig);

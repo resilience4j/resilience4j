@@ -23,12 +23,9 @@ import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
 
-import javax.xml.ws.WebServiceException;
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
-import static io.vavr.API.*;
-import static io.vavr.Predicates.instanceOf;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.mock;
@@ -96,7 +93,7 @@ public class CircuitBreakerEventPublisherTest {
     @Test
     public void shouldConsumeOnStateTransitionEvent() {
         circuitBreaker = CircuitBreaker.of("test", CircuitBreakerConfig.custom()
-                .ringBufferSizeInClosedState(1).build());
+                .slidingWindowSize(1).build());
 
         circuitBreaker.getEventPublisher()
                 .onStateTransition(this::logEventType);
@@ -110,7 +107,7 @@ public class CircuitBreakerEventPublisherTest {
     @Test
     public void shouldConsumeCallNotPermittedEvent() {
         circuitBreaker = CircuitBreaker.of("test", CircuitBreakerConfig.custom()
-                .ringBufferSizeInClosedState(1).build());
+                .slidingWindowSize(1).build());
 
         circuitBreaker.getEventPublisher()
                 .onCallNotPermitted(this::logEventType);
@@ -126,7 +123,7 @@ public class CircuitBreakerEventPublisherTest {
     public void shouldNotProduceEventsInDisabledState() {
         //Given
         circuitBreaker = CircuitBreaker.of("test", CircuitBreakerConfig.custom()
-                .ringBufferSizeInClosedState(1).build());
+                .slidingWindowSize(1).build());
 
         circuitBreaker.getEventPublisher()
                 .onEvent(this::logEventType);
@@ -155,9 +152,7 @@ public class CircuitBreakerEventPublisherTest {
     @Test
     public void shouldConsumeIgnoredErrorEvent() {
         CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom()
-                .recordFailure(throwable -> Match(throwable).of(
-                        Case($(instanceOf(WebServiceException.class)), true),
-                        Case($(), false)))
+                .ignoreExceptions(IOException.class)
                 .build();
 
         circuitBreaker = CircuitBreaker.of("test", circuitBreakerConfig);
