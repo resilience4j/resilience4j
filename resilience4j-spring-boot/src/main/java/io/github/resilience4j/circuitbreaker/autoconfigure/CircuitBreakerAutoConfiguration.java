@@ -16,6 +16,7 @@
 package io.github.resilience4j.circuitbreaker.autoconfigure;
 
 import org.springframework.boot.actuate.autoconfigure.EndpointAutoConfiguration;
+import org.springframework.boot.actuate.endpoint.Endpoint;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -42,11 +43,13 @@ import io.github.resilience4j.consumer.EventConsumerRegistry;
 public class CircuitBreakerAutoConfiguration {
 
     @Bean
+    @ConditionalOnClass(value = {Endpoint.class})
     public CircuitBreakerEndpoint circuitBreakerEndpoint(CircuitBreakerRegistry circuitBreakerRegistry) {
         return new CircuitBreakerEndpoint(circuitBreakerRegistry);
     }
 
     @Bean
+    @ConditionalOnClass(value = {Endpoint.class})
     public CircuitBreakerEventsEndpoint circuitBreakerEventsEndpoint(EventConsumerRegistry<CircuitBreakerEvent> eventConsumerRegistry) {
         return new CircuitBreakerEventsEndpoint(eventConsumerRegistry);
     }

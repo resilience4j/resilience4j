@@ -15,18 +15,6 @@
  */
 package io.github.resilience4j.ratelimiter.autoconfigure;
 
-import javax.annotation.PostConstruct;
-
-import org.springframework.beans.factory.config.ConfigurableBeanFactory;
-import org.springframework.boot.actuate.autoconfigure.endpoint.EndpointAutoConfiguration;
-import org.springframework.boot.actuate.autoconfigure.endpoint.condition.ConditionalOnEnabledEndpoint;
-import org.springframework.boot.autoconfigure.AutoConfigureBefore;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Import;
-
 import io.github.resilience4j.consumer.EventConsumerRegistry;
 import io.github.resilience4j.fallback.autoconfigure.FallbackConfigurationOnMissingBean;
 import io.github.resilience4j.ratelimiter.RateLimiter;
@@ -35,6 +23,18 @@ import io.github.resilience4j.ratelimiter.event.RateLimiterEvent;
 import io.github.resilience4j.ratelimiter.monitoring.endpoint.RateLimiterEndpoint;
 import io.github.resilience4j.ratelimiter.monitoring.endpoint.RateLimiterEventsEndpoint;
 import io.github.resilience4j.ratelimiter.monitoring.health.RateLimiterHealthIndicator;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.boot.actuate.autoconfigure.endpoint.EndpointAutoConfiguration;
+import org.springframework.boot.actuate.autoconfigure.endpoint.condition.ConditionalOnEnabledEndpoint;
+import org.springframework.boot.actuate.endpoint.annotation.Endpoint;
+import org.springframework.boot.autoconfigure.AutoConfigureBefore;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
+
+import javax.annotation.PostConstruct;
 
 /**
  * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration
@@ -58,12 +58,14 @@ public class RateLimiterAutoConfiguration {
 
     @Bean
     @ConditionalOnEnabledEndpoint
+    @ConditionalOnClass(value = {Endpoint.class})
     public RateLimiterEndpoint rateLimiterEndpoint(RateLimiterRegistry rateLimiterRegistry) {
         return new RateLimiterEndpoint(rateLimiterRegistry);
     }
 
     @Bean
     @ConditionalOnEnabledEndpoint
+    @ConditionalOnClass(value = {Endpoint.class})
     public RateLimiterEventsEndpoint rateLimiterEventsEndpoint(EventConsumerRegistry<RateLimiterEvent> eventConsumerRegistry) {
         return new RateLimiterEventsEndpoint(eventConsumerRegistry);
     }

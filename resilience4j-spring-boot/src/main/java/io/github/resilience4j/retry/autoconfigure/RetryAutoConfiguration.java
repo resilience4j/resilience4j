@@ -16,6 +16,7 @@
 package io.github.resilience4j.retry.autoconfigure;
 
 import org.springframework.boot.actuate.autoconfigure.EndpointAutoConfiguration;
+import org.springframework.boot.actuate.endpoint.Endpoint;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -43,11 +44,13 @@ import io.github.resilience4j.retry.monitoring.endpoint.RetryEventsEndpoint;
 public class RetryAutoConfiguration {
 
 	@Bean
+	@ConditionalOnClass(value = {Endpoint.class})
 	public RetryEndpoint retryEndpoint(RetryRegistry retryRegistry) {
 		return new RetryEndpoint(retryRegistry);
 	}
 
 	@Bean
+	@ConditionalOnClass(value = {Endpoint.class})
 	public RetryEventsEndpoint retryEventsEndpoint(EventConsumerRegistry<RetryEvent> eventConsumerRegistry) {
 		return new RetryEventsEndpoint(eventConsumerRegistry);
 	}
