@@ -34,7 +34,7 @@ import java.util.concurrent.TimeUnit;
  *
  * The sliding window does not store call outcomes (tuples) individually, but incrementally updates partial aggregations (bucket) and a total aggregation.
  * The total total aggregation is updated incrementally when a new call outcome is recorded. When the oldest bucket is evicted, the partial total aggregation of that bucket
- * is subtracted from the total totalAggregation and the bucket is reset. (Subtract-on-Evict)
+ * is subtracted from the total aggregation. (Subtract-on-Evict)
  *
  * The time to retrieve a Snapshot is constant 0(1), since the Snapshot is pre-aggregated and is independent of the time window size.
  * The space requirement (memory consumption) of this implementation should be nearly constant O(n), since the call outcomes (tuples) are not stored individually.

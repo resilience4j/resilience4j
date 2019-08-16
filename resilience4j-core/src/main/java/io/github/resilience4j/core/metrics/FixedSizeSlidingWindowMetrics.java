@@ -28,10 +28,10 @@ import java.util.concurrent.TimeUnit;
  * If the time window size is 10, the circular array has always 10 measurements.
  *
  * The sliding window incrementally updates a total aggregation.
- * The total aggregation is updated incrementally when a new call outcome is recorded. When the oldest bucket is evicted, the partial totalAggregation of that bucket
- * is subtracted from the total totalAggregation and the bucket is reset. (Subtract-on-Evict)
+ * The total aggregation is updated incrementally when a new call outcome is recorded. When the oldest measurement is evicted, the measurement
+ * is subtracted from the total aggregation. (Subtract-on-Evict)
  *
- * The time to retrieve a Snapshot is constant 0(1), since the Snapshot is pre-aggregated and is independent of the time window size.
+ * The time to retrieve a Snapshot is constant 0(1), since the Snapshot is pre-aggregated and is independent of the window size.
  * The space requirement (memory consumption) of this implementation should be O(n).
  */
 public class FixedSizeSlidingWindowMetrics implements Metrics {
