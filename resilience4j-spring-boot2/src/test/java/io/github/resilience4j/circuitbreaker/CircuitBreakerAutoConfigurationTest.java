@@ -75,7 +75,7 @@ public class CircuitBreakerAutoConfigurationTest {
 		try {
 			dummyService.doSomething(true);
 		} catch (IOException ex) {
-			// Do nothing. The IOException is recorded by the CircuitBreaker as part of the setRecordFailurePredicate as a failure.
+			// Do nothing. The IOException is recorded by the CircuitBreaker as part of the recordFailurePredicate as a failure.
 		}
 		// The invocation is recorded by the CircuitBreaker as a success.
 		dummyService.doSomething(false);
@@ -116,12 +116,12 @@ public class CircuitBreakerAutoConfigurationTest {
 		assertThat(healthResponse.getBody().getDetails().get("backendSharedBCircuitBreaker")).isNotNull();
 		assertThat(healthResponse.getBody().getDetails().get("dynamicBackend")).isNull();
 
-		assertThat(circuitBreaker.getCircuitBreakerConfig().getRecordFailurePredicate().test(new RecordedException())).isTrue();
-		assertThat(circuitBreaker.getCircuitBreakerConfig().getRecordFailurePredicate().test(new IgnoredException())).isFalse();
+		assertThat(circuitBreaker.getCircuitBreakerConfig().getRecordExceptionPredicate().test(new RecordedException())).isTrue();
+		assertThat(circuitBreaker.getCircuitBreakerConfig().getIgnoreExceptionPredicate().test(new IgnoredException())).isTrue();
 
 		// Verify that an exception for which setRecordFailurePredicate returns false and it is not included in
 		// setRecordExceptions evaluates to false.
-		assertThat(circuitBreaker.getCircuitBreakerConfig().getRecordFailurePredicate().test(new Exception())).isFalse();
+		assertThat(circuitBreaker.getCircuitBreakerConfig().getRecordExceptionPredicate().test(new Exception())).isFalse();
 
 		assertThat(circuitBreakerAspect.getOrder()).isEqualTo(400);
 

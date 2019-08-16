@@ -103,8 +103,8 @@ public class CircuitBreakerAutoConfigurationTest {
 		ResponseEntity<CircuitBreakerEventsEndpointResponse> circuitBreakerEventList = restTemplate.getForEntity("/circuitbreaker/events", CircuitBreakerEventsEndpointResponse.class);
 		assertThat(circuitBreakerEventList.getBody().getCircuitBreakerEvents()).hasSize(2);
 
-		assertThat(circuitBreaker.getCircuitBreakerConfig().getRecordFailurePredicate().test(new RecordedException())).isTrue();
-		assertThat(circuitBreaker.getCircuitBreakerConfig().getRecordFailurePredicate().test(new IgnoredException())).isFalse();
+		assertThat(circuitBreaker.getCircuitBreakerConfig().getRecordExceptionPredicate().test(new RecordedException())).isTrue();
+		assertThat(circuitBreaker.getCircuitBreakerConfig().getIgnoreExceptionPredicate().test(new IgnoredException())).isTrue();
 
 		// expect no health indicator for backendB, as it is disabled via properties
 		ResponseEntity<String> healthResponse = restTemplate.getForEntity("/health", String.class);
@@ -115,7 +115,7 @@ public class CircuitBreakerAutoConfigurationTest {
 
 		// Verify that an exception for which setRecordFailurePredicate returns false and it is not included in
 		// setRecordExceptions evaluates to false.
-		assertThat(circuitBreaker.getCircuitBreakerConfig().getRecordFailurePredicate().test(new Exception())).isFalse();
+		assertThat(circuitBreaker.getCircuitBreakerConfig().getRecordExceptionPredicate().test(new Exception())).isFalse();
 
 		assertThat(circuitBreakerAspect.getOrder()).isEqualTo(400);
 

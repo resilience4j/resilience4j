@@ -19,12 +19,12 @@
 package io.github.resilience4j.retry;
 
 
+import io.github.resilience4j.core.lang.Nullable;
+import io.github.resilience4j.core.predicate.PredicateCreator;
+
 import java.time.Duration;
 import java.util.function.Function;
 import java.util.function.Predicate;
-
-import io.github.resilience4j.core.lang.Nullable;
-import io.github.resilience4j.core.predicate.PredicateCreator;
 
 public class RetryConfig {
 
@@ -250,12 +250,12 @@ public class RetryConfig {
 
 		private Predicate<Throwable> createExceptionPredicate() {
 			return createRetryOnExceptionPredicate()
-					.and(PredicateCreator.createIgnoreExceptionsPredicate(ignoreExceptions)
+					.and(PredicateCreator.createNegatedExceptionsPredicate(ignoreExceptions)
 							.orElse(DEFAULT_RECORD_FAILURE_PREDICATE));
 		}
 
 		private Predicate<Throwable> createRetryOnExceptionPredicate() {
-			return PredicateCreator.createRecordExceptionsPredicate(retryExceptions)
+			return PredicateCreator.createExceptionsPredicate(retryExceptions)
 					.map(predicate -> retryOnExceptionPredicate != null ? predicate.or(retryOnExceptionPredicate) : predicate)
 					.orElseGet(() -> retryOnExceptionPredicate != null ? retryOnExceptionPredicate : DEFAULT_RECORD_FAILURE_PREDICATE);
 		}
