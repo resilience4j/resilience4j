@@ -820,6 +820,7 @@ class Resilience4jModuleSpec extends Specification {
         then:
         families == ['resilience4j_bulkhead_available_concurrent_calls',
                      'resilience4j_bulkhead_max_allowed_concurrent_calls',
+                     'resilience4j_circuitbreaker_slow_call_rate',
                      'resilience4j_circuitbreaker_buffered_calls',
                      'resilience4j_circuitbreaker_calls',
                      'resilience4j_circuitbreaker_state',
