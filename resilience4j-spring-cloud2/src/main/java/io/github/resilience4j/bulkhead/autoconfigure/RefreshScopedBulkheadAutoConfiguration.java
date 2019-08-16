@@ -1,6 +1,5 @@
 package io.github.resilience4j.bulkhead.autoconfigure;
 
-import io.github.resilience4j.builkhead.autoconfigure.AbstractRefreshScopedBulkheadConfiguration;
 import io.github.resilience4j.bulkhead.Bulkhead;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;

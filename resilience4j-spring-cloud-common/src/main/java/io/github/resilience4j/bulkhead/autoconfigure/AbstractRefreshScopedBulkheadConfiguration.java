@@ -1,4 +1,4 @@
-package io.github.resilience4j.builkhead.autoconfigure;
+package io.github.resilience4j.bulkhead.autoconfigure;
 
 import io.github.resilience4j.bulkhead.BulkheadRegistry;
 import io.github.resilience4j.bulkhead.ThreadPoolBulkheadRegistry;
