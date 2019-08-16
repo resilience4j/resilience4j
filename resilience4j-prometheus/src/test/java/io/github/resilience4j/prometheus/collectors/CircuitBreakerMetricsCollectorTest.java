@@ -41,8 +41,8 @@ public class CircuitBreakerMetricsCollectorTest {
         CircuitBreakerMetricsCollector.ofCircuitBreakerRegistry(circuitBreakerRegistry).register(registry);
 
         // record some basic stats
-        circuitBreaker.onSuccess(0, TimeUnit.NANOSECONDS);
-        circuitBreaker.onError(0, TimeUnit.NANOSECONDS, new RuntimeException("oops"));
+        circuitBreaker.onSuccess(100, TimeUnit.NANOSECONDS);
+        circuitBreaker.onError(100, TimeUnit.NANOSECONDS, new RuntimeException("oops"));
         circuitBreaker.transitionToOpenState();
     }
 
@@ -161,6 +161,17 @@ public class CircuitBreakerMetricsCollectorTest {
         );
 
         assertThat(failureRate.floatValue()).isEqualTo(circuitBreaker.getMetrics().getFailureRate());
+    }
+
+    @Test
+    public void slowCallRateReportsCorrespondingValue() {
+        Double slowCallRate = registry.getSampleValue(
+                DEFAULT_CIRCUIT_BREAKER_SLOW_CALL_RATE,
+                new String[]{"name"},
+                new String[]{circuitBreaker.getName()}
+        );
+
+        assertThat(slowCallRate.floatValue()).isEqualTo(circuitBreaker.getMetrics().getSlowCallRate());
     }
 
     @Test
