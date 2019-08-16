@@ -17,6 +17,7 @@ package io.github.resilience4j.bulkhead.autoconfigure;
 
 import org.springframework.boot.actuate.autoconfigure.endpoint.EndpointAutoConfiguration;
 import org.springframework.boot.actuate.autoconfigure.endpoint.condition.ConditionalOnEnabledEndpoint;
+import org.springframework.boot.actuate.endpoint.annotation.Endpoint;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -43,14 +44,17 @@ import io.github.resilience4j.fallback.autoconfigure.FallbackConfigurationOnMiss
 @Import({BulkheadConfigurationOnMissingBean.class, FallbackConfigurationOnMissingBean.class})
 @AutoConfigureBefore(EndpointAutoConfiguration.class)
 public class BulkheadAutoConfiguration {
+
 	@Bean
 	@ConditionalOnEnabledEndpoint
+	@ConditionalOnClass(value = {Endpoint.class})
 	public BulkheadEndpoint bulkheadEndpoint(BulkheadRegistry bulkheadRegistry, ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry) {
 		return new BulkheadEndpoint(bulkheadRegistry, threadPoolBulkheadRegistry);
 	}
 
 	@Bean
 	@ConditionalOnEnabledEndpoint
+	@ConditionalOnClass(value = {Endpoint.class})
 	public BulkheadEventsEndpoint bulkheadEventsEndpoint(EventConsumerRegistry<BulkheadEvent> eventConsumerRegistry) {
 		return new BulkheadEventsEndpoint(eventConsumerRegistry);
 	}
