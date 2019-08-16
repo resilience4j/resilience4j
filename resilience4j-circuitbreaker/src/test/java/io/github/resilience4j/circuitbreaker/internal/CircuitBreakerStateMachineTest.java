@@ -49,7 +49,7 @@ public class CircuitBreakerStateMachineTest {
                 .slowCallRateThreshold(50)
                 .slidingWindow(5, 5, SlidingWindow.COUNT_BASED)
                 .waitDurationInOpenState(Duration.ofSeconds(5))
-                .recordFailure(error -> !(error instanceof NumberFormatException))
+                .ignoreExceptions(NumberFormatException.class)
                 .build(), mockClock);
     }
 
