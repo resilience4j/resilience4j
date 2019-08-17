@@ -16,6 +16,7 @@
 package io.github.resilience4j.circuitbreaker.configure;
 
 import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
 import java.util.List;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.CompletionStage;
@@ -132,7 +133,21 @@ public class CircuitBreakerAspect implements Ordered {
 		if (logger.isDebugEnabled()) {
 			logger.debug("circuitBreaker parameter is null");
 		}
-		return AnnotationExtractor.extract(proceedingJoinPoint.getTarget().getClass(), CircuitBreaker.class);
+		if (proceedingJoinPoint.getTarget() instanceof Proxy) {
+			logger.debug("The circuit breaker annotation is kept on a interface which is acting as a proxy");
+			return extractCircuitBreakerAnnotationFromProxyClass(proceedingJoinPoint);
+		} else {
+			return AnnotationExtractor.extract(proceedingJoinPoint.getTarget().getClass(), CircuitBreaker.class);
+		}
+	}
+
+	@Nullable
+	private CircuitBreaker extractCircuitBreakerAnnotationFromProxyClass(ProceedingJoinPoint proceedingJoinPoint) {
+		if (proceedingJoinPoint.getTarget().getClass().getInterfaces().length > 0) {
+			return AnnotationExtractor.extract(proceedingJoinPoint.getTarget().getClass().getInterfaces()[0], CircuitBreaker.class);
+		} else {
+			return null;
+		}
 	}
 
 	/**

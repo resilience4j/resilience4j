@@ -60,6 +60,11 @@ resilience4j.circuitbreaker:
     backendSharedB:
       baseConfig: default
       slidingWindowType: TIME_BASED
+    dummyFeignClient:
+      baseConfig: default
+      slidingWindowSize: 18
+      permittedNumberOfCallsInHalfOpenState: 6
+
 
 resilience4j.ratelimiter:
   rateLimiterAspectOrder: 401
