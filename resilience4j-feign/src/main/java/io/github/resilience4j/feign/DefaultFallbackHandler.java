@@ -40,6 +40,7 @@ class DefaultFallbackHandler<T> implements FallbackHandler<T> {
                                                        Predicate<Exception> filter) {
         validateFallback(fallback, method);
         Method fallbackMethod = getFallbackMethod(fallback, method);
+        fallbackMethod.setAccessible(true);
         return args -> {
             try {
                 return invocationCall.apply(args);
