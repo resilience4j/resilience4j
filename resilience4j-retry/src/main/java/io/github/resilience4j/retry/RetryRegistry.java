@@ -18,9 +18,9 @@ package io.github.resilience4j.retry;
 
 import io.github.resilience4j.core.Registry;
 import io.github.resilience4j.retry.internal.InMemoryRetryRegistry;
-import io.vavr.collection.Seq;
 
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Supplier;
 
 /**
@@ -33,7 +33,7 @@ public interface RetryRegistry extends Registry<Retry, RetryConfig> {
 	 *
 	 * @return all managed {@link Retry} instances.
 	 */
-	Seq<Retry> getAllRetries();
+	Set<Retry> getAllRetries();
 
 	/**
 	 * Returns a managed {@link Retry} or creates a new one with the default Retry configuration.

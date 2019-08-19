@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright 2016 Robert Winkler and Bohdan Storozhuk
+ *  Copyright 2019 Robert Winkler and Bohdan Storozhuk
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -21,11 +21,11 @@ package io.github.resilience4j.circularbuffer;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.vavr.collection.List;
 import org.junit.Test;
 
 import java.io.IOException;
 import java.net.UnknownHostException;
+import java.util.List;
 
 public class CircularFifoBufferTest {
 
@@ -70,6 +70,6 @@ public class CircularFifoBufferTest {
         assertThat(exceptionBuffer.take().get()).isInstanceOf(IOException.class);
         assertThat(exceptionBuffer.take().get()).isInstanceOf(IOException.class);
         assertThat(exceptionBuffer.take().get()).isInstanceOf(IOException.class);
-        assertThat(exceptionBuffer.take().isEmpty()).isTrue();
+        assertThat(exceptionBuffer.take().isPresent()).isFalse();
     }
 }

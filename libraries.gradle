@@ -1,7 +1,7 @@
 // Allows centralized definition of the version of artifacts to
 // use.  In that respect it serves a role similar to <dependencyManagement> in Maven
 ext {
-    vavrVersion = '0.10.0'
+    vavrVersion = '0.10.2'
     rxJavaVersion = '2.2.8'
     reactorVersion = '3.2.8.RELEASE'
     junitVersion = '4.12'

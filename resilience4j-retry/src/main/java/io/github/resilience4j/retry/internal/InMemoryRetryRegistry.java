@@ -20,11 +20,11 @@ import io.github.resilience4j.core.ConfigurationNotFoundException;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryConfig;
 import io.github.resilience4j.retry.RetryRegistry;
-import io.vavr.collection.Array;
-import io.vavr.collection.Seq;
 
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.function.Supplier;
 
 /**
@@ -58,8 +58,8 @@ public final class InMemoryRetryRegistry extends AbstractRegistry<Retry, RetryCo
 	 * {@inheritDoc}
 	 */
 	@Override
-	public Seq<Retry> getAllRetries() {
-		return Array.ofAll(entryMap.values());
+	public Set<Retry> getAllRetries() {
+		return new HashSet<>(entryMap.values());
 	}
 
 	/**

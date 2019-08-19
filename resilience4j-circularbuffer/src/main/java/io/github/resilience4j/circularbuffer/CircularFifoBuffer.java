@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright 2016 Robert Winkler and Bohdan Storozhuk
+ *  Copyright 2019 Robert Winkler and Bohdan Storozhuk
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -18,8 +18,8 @@
  */
 package io.github.resilience4j.circularbuffer;
 
-import io.vavr.collection.List;
-import io.vavr.control.Option;
+import java.util.List;
+import java.util.Optional;
 
 /**
  * A {@link CircularFifoBuffer} is a first in first out buffer with a fixed size that replaces its oldest element if full.
@@ -70,5 +70,5 @@ public interface CircularFifoBuffer<T> {
      *
      * @return the head of this queue, or {@link Option.None} if this queue is empty
      */
-    Option<T> take();
+    Optional<T> take();
 }

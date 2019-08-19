@@ -20,14 +20,13 @@ package io.github.resilience4j.retry.internal;
 
 import io.github.resilience4j.core.EventConsumer;
 import io.github.resilience4j.core.EventProcessor;
+import io.github.resilience4j.core.functions.CheckedConsumer;
 import io.github.resilience4j.core.lang.Nullable;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryConfig;
 import io.github.resilience4j.retry.event.*;
-import io.vavr.CheckedConsumer;
-import io.vavr.control.Option;
-import io.vavr.control.Try;
 
+import java.util.Optional;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
@@ -39,7 +38,7 @@ import java.util.function.Supplier;
 public class RetryImpl<T> implements Retry {
 
 
-	/*package*/ static CheckedConsumer<Long> sleepFunction = Thread::sleep;
+	/*package*/ static CheckedConsumer<Long, InterruptedException> sleepFunction = Thread::sleep;
 	private final Metrics metrics;
 	private final RetryEventProcessor eventProcessor;
     @Nullable
@@ -128,7 +127,7 @@ public class RetryImpl<T> implements Retry {
 			int currentNumOfAttempts = numOfAttempts.get();
 			if (currentNumOfAttempts > 0) {
 				succeededAfterRetryCounter.increment();
-				Throwable throwable = Option.of(lastException.get()).getOrElse(lastRuntimeException.get());
+				Throwable throwable = Optional.of(lastException.get()).orElse(lastRuntimeException.get());
 				publishRetryEvent(() -> new RetryOnSuccessEvent(getName(), currentNumOfAttempts, throwable));
 			} else {
 				succeededWithoutRetryCounter.increment();
@@ -201,8 +200,11 @@ public class RetryImpl<T> implements Retry {
 			// wait interval until the next attempt should start
 			long interval = intervalFunction.apply(numOfAttempts.get());
 			publishRetryEvent(() -> new RetryOnRetryEvent(getName(), currentNumOfAttempts, throwable, interval));
-			Try.run(() -> sleepFunction.accept(interval))
-					.getOrElseThrow(ex -> lastRuntimeException.get());
+			try {
+				sleepFunction.accept(interval);
+			} catch (InterruptedException ex) {
+				throw lastRuntimeException.get();
+			}
 		}
 
 	}

@@ -1,9 +1,9 @@
 package io.github.resilience4j.retry;
 
-import io.vavr.collection.Stream;
-
 import java.time.Duration;
 import java.util.function.Function;
+import java.util.function.UnaryOperator;
+import java.util.stream.Stream;
 
 import static io.github.resilience4j.retry.IntervalFunctionCompanion.*;
 import static java.util.Objects.requireNonNull;
@@ -22,14 +22,21 @@ public interface IntervalFunction extends Function<Integer, Long> {
     static IntervalFunction of(long intervalMillis, Function<Long, Long> backoffFunction) {
         checkInterval(intervalMillis);
         requireNonNull(backoffFunction);
-
         return (attempt) -> {
             checkAttempt(attempt);
-            return Stream.iterate(intervalMillis, backoffFunction).get(attempt - 1);
+            if (attempt == 1) {
+                return intervalMillis;
+            } else {
+                long calculatedInterval = intervalMillis;
+                for (int i = 1; i < attempt; i++) {
+                    calculatedInterval = backoffFunction.apply(calculatedInterval);
+                }
+                return calculatedInterval;
+            }
         };
     }
 
-    static IntervalFunction of(Duration interval, Function<Long, Long> backoffFunction) {
+    static IntervalFunction of(Duration interval, UnaryOperator<Long> backoffFunction) {
         return of(interval.toMillis(), backoffFunction);
     }
 
