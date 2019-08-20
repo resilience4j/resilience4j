@@ -1,7 +1,5 @@
 package io.github.resilience4j.retry;
 
-import io.vavr.collection.Stream;
-
 import java.time.Duration;
 import java.util.function.Function;
 
@@ -25,7 +23,15 @@ public interface IntervalFunction extends Function<Integer, Long> {
 
         return (attempt) -> {
             checkAttempt(attempt);
-            return Stream.iterate(intervalMillis, backoffFunction).get(attempt - 1);
+            if (attempt == 1) {
+                return intervalMillis;
+            } else {
+                long calculatedInterval = intervalMillis;
+                for (int i = 1; i < attempt; i++) {
+                    calculatedInterval = backoffFunction.apply(calculatedInterval);
+                }
+                return calculatedInterval;
+            }
         };
     }
 
