@@ -1,0 +1,7 @@
+ext.moduleName='io.github.resilience4j.vavr'
+
+dependencies {
+    compile project(':resilience4j-retry')
+    compile ( libraries.vavr )
+
+}
