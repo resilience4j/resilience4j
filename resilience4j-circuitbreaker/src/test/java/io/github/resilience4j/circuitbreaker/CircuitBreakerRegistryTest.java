@@ -18,7 +18,6 @@
  */
 package io.github.resilience4j.circuitbreaker;
 
-import org.junit.Before;
 import org.junit.Test;
 
 import java.util.HashMap;
@@ -30,15 +29,9 @@ import static org.assertj.core.api.BDDAssertions.assertThat;
 
 public class CircuitBreakerRegistryTest {
 
-    private CircuitBreakerRegistry circuitBreakerRegistry;
-
-    @Before
-    public void setUp(){
-        circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
-    }
-
     @Test
     public void shouldReturnTheCorrectName() {
+        CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
         CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("testName");
         assertThat(circuitBreaker).isNotNull();
         assertThat(circuitBreaker.getName()).isEqualTo("testName");
@@ -46,6 +39,7 @@ public class CircuitBreakerRegistryTest {
 
     @Test
     public void shouldBeTheSameCircuitBreaker() {
+        CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
         CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("testName");
         CircuitBreaker circuitBreaker2 = circuitBreakerRegistry.circuitBreaker("testName");
         assertThat(circuitBreaker).isSameAs(circuitBreaker2);
@@ -54,6 +48,7 @@ public class CircuitBreakerRegistryTest {
 
     @Test
     public void shouldBeNotTheSameCircuitBreaker() {
+        CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
         CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("testName");
         CircuitBreaker circuitBreaker2 = circuitBreakerRegistry.circuitBreaker("otherTestName");
         assertThat(circuitBreaker).isNotSameAs(circuitBreaker2);
@@ -97,6 +92,7 @@ public class CircuitBreakerRegistryTest {
 
     @Test
     public void testAddConfiguration() {
+        CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
         float failureRate = 30f;
         CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom().failureRateThreshold(failureRate).build();
         circuitBreakerRegistry.addConfiguration("someSharedConfig", circuitBreakerConfig);
