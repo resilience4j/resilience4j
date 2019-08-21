@@ -1,11 +1,11 @@
-package io.github.resilience4j.retry;
+package io.github.resilience4j.core;
 
 import io.vavr.collection.Stream;
 
 import java.time.Duration;
 import java.util.function.Function;
 
-import static io.github.resilience4j.retry.IntervalFunctionCompanion.*;
+import static io.github.resilience4j.core.IntervalFunctionCompanion.*;
 import static java.util.Objects.requireNonNull;
 
 @FunctionalInterface
