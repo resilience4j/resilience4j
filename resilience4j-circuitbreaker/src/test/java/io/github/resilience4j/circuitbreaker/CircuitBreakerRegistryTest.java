@@ -20,6 +20,7 @@ package io.github.resilience4j.circuitbreaker;
 
 import org.junit.Test;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -80,14 +81,17 @@ public class CircuitBreakerRegistryTest {
 
     @Test
     public void testCreateWithConfigurationMap() {
+        CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom().failureRateThreshold(30f).build();
+        CircuitBreakerConfig customCircuitBreakerConfig = CircuitBreakerConfig.custom().failureRateThreshold(40f).build();
         Map<String, CircuitBreakerConfig> configs = new HashMap<>();
-        configs.put("default", CircuitBreakerConfig.ofDefaults());
-        configs.put("custom", CircuitBreakerConfig.ofDefaults());
+        configs.put("default", circuitBreakerConfig);
+        configs.put("custom", customCircuitBreakerConfig);
 
         CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.of(configs);
 
         assertThat(circuitBreakerRegistry.getDefaultConfig()).isNotNull();
-        assertThat(circuitBreakerRegistry.getConfiguration("custom")).isNotNull();
+        assertThat(circuitBreakerRegistry.getDefaultConfig().getFailureRateThreshold()).isEqualTo(30f);
+        assertThat(circuitBreakerRegistry.getConfiguration("custom")).isNotEmpty();
     }
 
     @Test
@@ -98,7 +102,8 @@ public class CircuitBreakerRegistryTest {
         circuitBreakerRegistry.addConfiguration("someSharedConfig", circuitBreakerConfig);
 
         assertThat(circuitBreakerRegistry.getDefaultConfig()).isNotNull();
-        assertThat(circuitBreakerRegistry.getConfiguration("someSharedConfig")).isNotNull();
+        assertThat(circuitBreakerRegistry.getDefaultConfig().getFailureRateThreshold()).isEqualTo(50f);
+        assertThat(circuitBreakerRegistry.getConfiguration("someSharedConfig")).isNotEmpty();
 
         CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("name", "someSharedConfig");
         assertThat(circuitBreaker.getCircuitBreakerConfig()).isEqualTo(circuitBreakerConfig);
@@ -109,13 +114,12 @@ public class CircuitBreakerRegistryTest {
     public void testCreateWithConfigurationMapWithoutDefaultConfig() {
         float failureRate = 30f;
         CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom().failureRateThreshold(failureRate).build();
-        Map<String, CircuitBreakerConfig> configs = new HashMap<>();
-        configs.put("someSharedConfig", circuitBreakerConfig);
 
-        CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.of(configs);
+        CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.of(Collections.singletonMap("someSharedConfig", circuitBreakerConfig));
 
         assertThat(circuitBreakerRegistry.getDefaultConfig()).isNotNull();
-        assertThat(circuitBreakerRegistry.getConfiguration("someSharedConfig")).isNotNull();
+        assertThat(circuitBreakerRegistry.getDefaultConfig().getFailureRateThreshold()).isEqualTo(50f);
+        assertThat(circuitBreakerRegistry.getConfiguration("someSharedConfig")).isNotEmpty();
 
         CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("name", "someSharedConfig");
 
