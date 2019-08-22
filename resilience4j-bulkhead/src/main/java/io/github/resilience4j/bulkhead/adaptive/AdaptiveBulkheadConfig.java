@@ -21,7 +21,8 @@ package io.github.resilience4j.bulkhead.adaptive;
 import java.util.function.Predicate;
 
 import io.github.resilience4j.bulkhead.adaptive.internal.AdaptiveLimitBulkhead;
-import io.github.resilience4j.bulkhead.adaptive.internal.config.MovingAverageConfig;
+import io.github.resilience4j.bulkhead.adaptive.internal.config.AIMDConfig;
+import io.github.resilience4j.core.lang.NonNull;
 import io.github.resilience4j.core.lang.Nullable;
 
 /**
@@ -41,7 +42,7 @@ public class AdaptiveBulkheadConfig<T> {
 		return initialConcurrency;
 	}
 
-	@Nullable
+	@NonNull
 	public T getConfiguration() {
 		return config;
 	}
@@ -65,8 +66,8 @@ public class AdaptiveBulkheadConfig<T> {
 	 *
 	 * @return a default Bulkhead configuration.
 	 */
-	public static AdaptiveBulkheadConfig<MovingAverageConfig> ofDefaults() {
-		return AdaptiveBulkheadConfig.<MovingAverageConfig>builder().config(MovingAverageConfig.builder().build()).build();
+	public static AdaptiveBulkheadConfig<AIMDConfig> ofDefaults() {
+		return AdaptiveBulkheadConfig.<AIMDConfig>builder().config(AIMDConfig.builder().build()).build();
 	}
 
 	/**

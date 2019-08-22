@@ -52,40 +52,20 @@ import io.vavr.CheckedRunnable;
  * In order to execute an operation protected by this bulkhead, a permission must be obtained by calling {@link AdaptiveBulkhead#tryAcquirePermission()} ()}
  * If the bulkhead is full, no additional operations will be permitted to execute until space is available.
  * <p>
- * Once the operation is complete, regardless of the result, client needs to call {@link AdaptiveBulkhead#onComplete(Duration)} ()} in order to maintain
+ * Once the operation is complete, regardless of the result, client needs to call {@link AdaptiveBulkhead#onComplete(Duration, boolean)} ()} in order to maintain
  * integrity of internal bulkhead state which is handled as the following :
  * <p>
- * Adaptive capacity management prerequisites
+ * Adaptive capacity management by default use AIMD algorithm for limit control but the user can inject custom limiter implementation by implementing {@link LimitPolicy}
  * <p>
- * You should have a system with relatively stable response latency, because we will use latency measures to adapt concurrency limits.
- * To configure you system properly you should figure out two things:
- * 2.1 Desirable average throughput per second (later X) [Example: 30 req/sec]
- * 2.2 Desirable average request latency in seconds per operation (later R) [Example: 0.1 sec/op]
- * 2.3 Maximum acceptable request latency (later Rmax). This number should be set wisely, because it can eliminate all adaptive capabilities, system will do its best to never reach such latency, so you can set it 20-30 % higher than your usual average latency.
- * <p>
- * Implementation
- * <p>
- * Resilience4j will provide new Bulkhead implementation called AdaptiveBulkhead. It will have following config params:
- * <p>
- * Desirable average throughput = X
- * Desirable request latency = R
- * Maximum acceptable request latency = Rmax (default R * 1.3)
- * Window duration for adaptation = Wa (default 5 sec)
- * Window duration for reconfiguration = Wr (default 900 sec)
- * <p>
- * From this params we will calculate:
- * <p>
- * Initial average number of concurrent requests (later N).
- * Example: N = X * R = 30 * 0.1 = 3 [op]
- * Initial max latency of current window (later cRmax).
- * Example: cRmax = min(R * 1.2, Rmax) = min(0.1 * 1.2, 0.13) = 0.12 [op]
- * Size of adaptation sliding window (later WaN)
- * Example: WaN = Wa * X = 30 * 5 = 150
- * Size of reconfiguration sliding window (later WrN)
- * Example: WrN = Wr / Wa = 900 / 5 = 180
  */
 public interface AdaptiveBulkhead {
 
+
+	void increaseInProcessingRequestsCount();
+
+	void decreaseInProcessingRequestsCount();
+
+	int getCurrentInProcessingRequestsCount();
 
 	/**
 	 * Acquires a permission to execute a call, only if one is available at the time of invocation.
@@ -107,14 +87,14 @@ public interface AdaptiveBulkhead {
 	 * Releases a permission and increases the number of available permits by one.
 	 * <p>
 	 * Should only be used when a permission was acquired but not used. Otherwise use
-	 * {@link AdaptiveBulkhead#onComplete(Duration)} ()} to signal a completed call and release a permission.
+	 * {@link AdaptiveBulkhead#onComplete(Duration, boolean)} ()} to signal a completed call and release a permission.
 	 */
 	void releasePermission();
 
 	/**
 	 * Records a completed call and releases a permission.
 	 */
-	void onComplete(Duration callTime);
+	void onComplete(Duration callTime, boolean isSuccess);
 
 	/**
 	 * Returns the name of this bulkhead.
@@ -221,7 +201,7 @@ public interface AdaptiveBulkhead {
 			} finally {
 				if (start != null) {
 					Instant finish = Instant.now();
-					bulkhead.onComplete(Duration.between(start, finish));
+					bulkhead.onComplete(Duration.between(start, finish), true);
 				}
 			}
 		};
@@ -249,10 +229,11 @@ public interface AdaptiveBulkhead {
 							.whenComplete(
 									(result, throwable) -> {
 										Instant finish = Instant.now();
-										bulkhead.onComplete(Duration.between(start, finish));
 										if (throwable != null) {
+											bulkhead.onComplete(Duration.between(start, finish), false);
 											promise.completeExceptionally(throwable);
 										} else {
+											bulkhead.onComplete(Duration.between(start, finish), true);
 											promise.complete(result);
 										}
 									}
@@ -287,7 +268,7 @@ public interface AdaptiveBulkhead {
 			} finally {
 				if (start != null) {
 					Instant finish = Instant.now();
-					bulkhead.onComplete(Duration.between(start, finish));
+					bulkhead.onComplete(Duration.between(start, finish), true);
 				}
 			}
 		};
@@ -314,7 +295,7 @@ public interface AdaptiveBulkhead {
 			} finally {
 				if (start != null) {
 					Instant finish = Instant.now();
-					bulkhead.onComplete(Duration.between(start, finish));
+					bulkhead.onComplete(Duration.between(start, finish), true);
 				}
 			}
 		};
@@ -341,7 +322,7 @@ public interface AdaptiveBulkhead {
 			} finally {
 				if (start != null) {
 					Instant finish = Instant.now();
-					bulkhead.onComplete(Duration.between(start, finish));
+					bulkhead.onComplete(Duration.between(start, finish), true);
 				}
 			}
 		};
@@ -368,7 +349,7 @@ public interface AdaptiveBulkhead {
 			} finally {
 				if (start != null) {
 					Instant finish = Instant.now();
-					bulkhead.onComplete(Duration.between(start, finish));
+					bulkhead.onComplete(Duration.between(start, finish), true);
 				}
 			}
 		};
@@ -396,7 +377,7 @@ public interface AdaptiveBulkhead {
 			} finally {
 				if (start != null) {
 					Instant finish = Instant.now();
-					bulkhead.onComplete(Duration.between(start, finish));
+					bulkhead.onComplete(Duration.between(start, finish), true);
 				}
 			}
 		};
@@ -422,7 +403,7 @@ public interface AdaptiveBulkhead {
 			} finally {
 				if (start != null) {
 					Instant finish = Instant.now();
-					bulkhead.onComplete(Duration.between(start, finish));
+					bulkhead.onComplete(Duration.between(start, finish), true);
 				}
 			}
 		};
@@ -450,7 +431,7 @@ public interface AdaptiveBulkhead {
 			} finally {
 				if (start != null) {
 					Instant finish = Instant.now();
-					bulkhead.onComplete(Duration.between(start, finish));
+					bulkhead.onComplete(Duration.between(start, finish), true);
 				}
 			}
 		};
@@ -478,7 +459,7 @@ public interface AdaptiveBulkhead {
 			} finally {
 				if (start != null) {
 					Instant finish = Instant.now();
-					bulkhead.onComplete(Duration.between(start, finish));
+					bulkhead.onComplete(Duration.between(start, finish), true);
 				}
 			}
 		};
@@ -489,7 +470,7 @@ public interface AdaptiveBulkhead {
 			//noinspection unchecked
 			if (bulkhead.getBulkheadConfig().getAdaptIfError().test(e) && start != null) {
 				Instant finish = Instant.now();
-				bulkhead.onComplete(Duration.between(start, finish));
+				bulkhead.onComplete(Duration.between(start, finish), false);
 
 			}
 		} else {
@@ -516,8 +497,8 @@ public interface AdaptiveBulkhead {
 	 * @param limitAdapter the custom limit adopter
 	 * @return a Bulkhead instance
 	 */
-	static AdaptiveBulkhead of(String name, AdaptiveBulkheadConfig config, LimitAdapter<Bulkhead> limitAdapter) {
-		return AdaptiveLimitBulkhead.factory().createAdaptiveLimitBulkhead(name, config, limitAdapter, null);
+	static AdaptiveBulkhead of(String name, AdaptiveBulkheadConfig config, LimitPolicy<Bulkhead> limitAdapter) {
+		return AdaptiveLimitBulkhead.factory().createAdaptiveLimitBulkhead(name, config, limitAdapter);
 	}
 
 	/**
@@ -534,18 +515,6 @@ public interface AdaptiveBulkhead {
 	/**
 	 * Creates a bulkhead with a custom configuration
 	 *
-	 * @param name             the name of the bulkhead
-	 * @param config           a custom BulkheadConfig configuration
-	 * @param adaptiveStrategy the adaptive strategy to be used from the default implementation of adaptive concurrency limiters (moving average or percentile)
-	 * @return a Bulkhead instance
-	 */
-	static AdaptiveBulkhead of(String name, AdaptiveBulkheadConfig config, AdaptiveStrategy adaptiveStrategy) {
-		return AdaptiveLimitBulkhead.factory().createAdaptiveLimitBulkhead(name, config, adaptiveStrategy);
-	}
-
-	/**
-	 * Creates a bulkhead with a custom configuration
-	 *
 	 * @param name                   the name of the bulkhead
 	 * @param bulkheadConfigSupplier custom configuration supplier
 	 * @return a Bulkhead instance
@@ -557,14 +526,19 @@ public interface AdaptiveBulkhead {
 	interface AdaptiveBulkheadMetrics extends Bulkhead.Metrics {
 
 		/**
-		 * @return max latency for service calls in millis
-		 */
-		double getMaxLatencyMillis();
-
-		/**
 		 * @return average latency for service calls in millis
 		 */
 		double getAverageLatencyMillis();
+
+		/**
+		 * @return current failure rate for recorded calls if error check is enabled for related exceptions
+		 */
+		double getFailureRate();
+
+		/**
+		 * @return current slow call rate for the recorded calls
+		 */
+		double getSlowCallRate();
 	}
 
 	/**

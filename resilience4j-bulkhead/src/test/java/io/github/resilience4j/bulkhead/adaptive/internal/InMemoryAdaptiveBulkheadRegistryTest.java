@@ -1,37 +1,33 @@
 package io.github.resilience4j.bulkhead.adaptive.internal;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.mock;
 
 import java.util.HashMap;
 import java.util.Map;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.slf4j.Logger;
 
 import io.github.resilience4j.bulkhead.adaptive.AdaptiveBulkhead;
 import io.github.resilience4j.bulkhead.adaptive.AdaptiveBulkheadConfig;
 import io.github.resilience4j.bulkhead.adaptive.AdaptiveBulkheadRegistry;
-import io.github.resilience4j.bulkhead.adaptive.internal.config.MovingAverageConfig;
+import io.github.resilience4j.bulkhead.adaptive.internal.config.AIMDConfig;
 
 /**
  * @author romeh
  */
 public class InMemoryAdaptiveBulkheadRegistryTest {
-	private AdaptiveBulkheadConfig<MovingAverageConfig> config;
+	private AdaptiveBulkheadConfig<AIMDConfig> config;
 	private AdaptiveBulkheadRegistry registry;
-	private Logger LOGGER;
 
 	@Before
 	public void setUp() {
-		LOGGER = mock(Logger.class);
 		// registry with default config
 		registry = AdaptiveBulkheadRegistry.ofDefaults();
 		// registry with custom config
-		config = AdaptiveBulkheadConfig.<MovingAverageConfig>builder().config(MovingAverageConfig.builder()
-				.maxAcceptableRequestLatency(300)
-				.desirableAverageThroughput(1)
+		config = AdaptiveBulkheadConfig.<AIMDConfig>builder().config(AIMDConfig.builder()
+				.maxConcurrentRequestsLimit(300)
+				.desirableOperationLatency(1)
 				.desirableOperationLatency(200)
 				.build()).build();
 	}
@@ -52,8 +48,7 @@ public class InMemoryAdaptiveBulkheadRegistryTest {
 		AdaptiveBulkhead bulkhead = registry.bulkhead("test");
 		assertThat(bulkhead).isNotNull();
 		assertThat(bulkhead.getName()).isEqualTo("test");
-		assertThat(((AdaptiveBulkheadConfig<MovingAverageConfig>) bulkhead.getBulkheadConfig()).getConfiguration().getMaxAcceptableRequestLatency()).isEqualTo(0.13);
-		assertThat(bulkhead.getMetrics().getMaxLatencyMillis()).isEqualTo(120);
+		assertThat(((AdaptiveBulkheadConfig<AIMDConfig>) bulkhead.getBulkheadConfig()).getConfiguration().getMaxLimit()).isEqualTo(200);
 	}
 
 	@Test

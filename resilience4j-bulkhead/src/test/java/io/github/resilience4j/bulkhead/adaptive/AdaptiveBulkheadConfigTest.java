@@ -5,8 +5,9 @@ import static org.assertj.core.api.Java6Assertions.assertThat;
 
 import org.junit.Test;
 
-import io.github.resilience4j.bulkhead.adaptive.internal.config.MovingAverageConfig;
-import io.github.resilience4j.bulkhead.adaptive.internal.config.PercentileConfig;
+import io.github.resilience4j.bulkhead.adaptive.internal.config.AIMDConfig;
+import io.github.resilience4j.bulkhead.adaptive.internal.config.AbstractConfig;
+
 
 /**
  *
@@ -14,114 +15,90 @@ import io.github.resilience4j.bulkhead.adaptive.internal.config.PercentileConfig
 public class AdaptiveBulkheadConfigTest {
 	@Test
 	public void testBuildCustom() {
-		AdaptiveBulkheadConfig<MovingAverageConfig> config = AdaptiveBulkheadConfig.<MovingAverageConfig>builder().config(MovingAverageConfig.builder().concurrencyDropMultiplier(0.3).desirableAverageThroughput(3)
-				.desirableOperationLatency(150).lowLatencyMultiplier(0.4).maxAcceptableRequestLatency(200)
-				.windowForAdaptation(50).windowForReconfiguration(900).build()).build();
+		AdaptiveBulkheadConfig<AIMDConfig> config = AdaptiveBulkheadConfig.<AIMDConfig>builder()
+				.config(AIMDConfig.builder()
+						.concurrencyDropMultiplier(0.3)
+						.minConcurrentRequestsLimit(3)
+						.maxConcurrentRequestsLimit(3)
+						.desirableOperationLatency(150)
+						.slowCallRateThreshold(50)
+						.failureRateThreshold(50)
+						.slidingWindowTime(5)
+						.slidingWindowSize(100)
+						.slidingWindowType(AbstractConfig.SlidingWindow.TIME_BASED)
+						.build()).build();
 
 		assertThat(config).isNotNull();
-		assertThat(config.getConfiguration().getConcurrencyDropMultiplier()).isEqualTo(0.3);
-		assertThat(config.getConfiguration().getDesirableAverageThroughput()).isEqualTo(3);
-		assertThat(config.getConfiguration().getDesirableOperationLatency()).isEqualTo(150);
-		assertThat(config.getConfiguration().getLowLatencyMultiplier()).isEqualTo(0.4);
-		assertThat(config.getConfiguration().getMaxAcceptableRequestLatency()).isEqualTo(200);
-		assertThat(config.getConfiguration().getWindowForAdaptation()).isEqualTo(50);
-		assertThat(config.getConfiguration().getWindowForReconfiguration()).isEqualTo(900);
+		assertThat(config.getConfiguration().getConcurrencyDropMultiplier()).isEqualTo(0.85);
+		assertThat(config.getConfiguration().getMinLimit()).isEqualTo(3);
+		assertThat(config.getConfiguration().getMaxLimit()).isEqualTo(3);
+		assertThat(config.getConfiguration().getDesirableLatency().toMillis()).isEqualTo(150);
+		assertThat(config.getConfiguration().getSlidingWindowSize()).isEqualTo(100);
+		assertThat(config.getConfiguration().getSlidingWindowTime()).isEqualTo(5);
+		assertThat(config.getConfiguration().getSlowCallRateThreshold()).isEqualTo(50);
+		assertThat(config.getConfiguration().getFailureRateThreshold()).isEqualTo(50);
+		assertThat(config.getConfiguration().getSlidingWindowType()).isEqualTo(AbstractConfig.SlidingWindow.TIME_BASED);
 
-	}
-
-	@Test
-	public void testNotSetLowLatencyMultiplierConfig() {
-		assertThatThrownBy(() -> MovingAverageConfig.builder().lowLatencyMultiplier(0).build())
-				.isInstanceOf(IllegalArgumentException.class)
-				.hasMessage("lowLatencyMultiplier must be a positive value greater than zero");
 	}
 
 
 	@Test
-	public void testNotConcurrencyDropMultiplierConfig() {
-		assertThatThrownBy(() -> MovingAverageConfig.builder().concurrencyDropMultiplier(0).build())
-				.isInstanceOf(IllegalArgumentException.class)
-				.hasMessage("concurrencyDropMultiplier must be a positive value greater than zero");
+	public void tesConcurrencyDropMultiplierConfig() {
+		final AIMDConfig build = AIMDConfig.builder().concurrencyDropMultiplier(0.0).build();
+		assertThat(build.getConcurrencyDropMultiplier()).isEqualTo(0.85d);
 	}
 
 	@Test
 	public void testNotSetDesirableOperationLatencyConfig() {
-		assertThatThrownBy(() -> MovingAverageConfig.builder().desirableAverageThroughput(0).maxAcceptableRequestLatency(300).build())
+		assertThatThrownBy(() -> AIMDConfig.builder().desirableOperationLatency(0).build())
 				.isInstanceOf(IllegalArgumentException.class)
-				.hasMessage("desirableAverageThroughput must be a positive value greater than zero");
+				.hasMessage("desirableOperationLatency must be a positive value greater than zero");
 	}
 
 	@Test
 	public void testNotSetMaxAcceptableRequestLatencyConfig() {
-		assertThatThrownBy(() -> MovingAverageConfig.builder().desirableOperationLatency(5).maxAcceptableRequestLatency(0)
+		assertThatThrownBy(() -> AIMDConfig.builder().maxConcurrentRequestsLimit(0)
 				.build())
 				.isInstanceOf(IllegalArgumentException.class)
-				.hasMessage("maxAcceptableRequestLatency must be a positive value greater than zero");
+				.hasMessage("maxConcurrentRequestsLimit must be a positive value greater than zero");
 	}
 
 	@Test
-	public void testNonValidValuesConfig() {
-		assertThatThrownBy(() -> MovingAverageConfig.builder().concurrencyDropMultiplier(0.3).desirableAverageThroughput(3)
-				.desirableOperationLatency(150).lowLatencyMultiplier(0.4).maxAcceptableRequestLatency(200)
-				.windowForAdaptation(50).windowForReconfiguration(50).build())
-				.isInstanceOf(IllegalArgumentException.class).hasMessage("windowForReconfiguration is too small. windowForReconfiguration should be at least 15 times bigger than windowForAdaptation.");
-	}
-
-
-	@Test
-	public void testNotConcurrencyDropMultiplierConfigPercentile() {
-		assertThatThrownBy(() -> PercentileConfig.builder().concurrencyDropMultiplier(0).build())
-				.isInstanceOf(IllegalArgumentException.class)
-				.hasMessage("concurrencyDropMultiplier must be a positive value greater than zero");
-	}
-
-	@Test
-	public void testNotSetDesirableOperationLatencyConfigPercentile() {
-		assertThatThrownBy(() -> PercentileConfig.builder().desirableAverageThroughput(0).maxAcceptableRequestLatency(300).build())
-				.isInstanceOf(IllegalArgumentException.class)
-				.hasMessage("desirableAverageThroughput must be a positive value greater than zero");
-	}
-
-	@Test
-	public void testNotSetMaxAcceptableRequestLatencyConfigPercentile() {
-		assertThatThrownBy(() -> PercentileConfig.builder().desirableOperationLatency(5).maxAcceptableRequestLatency(0)
+	public void testNotSetMinAcceptableRequestLatencyConfig() {
+		assertThatThrownBy(() -> AIMDConfig.builder().minConcurrentRequestsLimit(0)
 				.build())
 				.isInstanceOf(IllegalArgumentException.class)
-				.hasMessage("maxAcceptableRequestLatency must be a positive value greater than zero");
-	}
-
-	@Test
-	public void testNonValidValuesConfigPercentile() {
-		assertThatThrownBy(() -> PercentileConfig.builder().concurrencyDropMultiplier(0.3).desirableAverageThroughput(3)
-				.desirableOperationLatency(150).lowLatencyMultiplier(0.4).maxAcceptableRequestLatency(200)
-				.windowForAdaptation(50).windowForReconfiguration(50).build())
-				.isInstanceOf(IllegalArgumentException.class).hasMessage("windowForReconfiguration is too small. windowForReconfiguration should be at least 15 times bigger than windowForAdaptation.");
+				.hasMessage("minConcurrentRequestsLimit must be a positive value greater than zero");
 	}
 
 
 	@Test
 	public void testEqual() {
-		MovingAverageConfig config = MovingAverageConfig.builder().concurrencyDropMultiplier(0.3).desirableAverageThroughput(3)
-				.desirableOperationLatency(150).lowLatencyMultiplier(0.4).maxAcceptableRequestLatency(200)
-				.windowForAdaptation(50).windowForReconfiguration(900).build();
-		MovingAverageConfig config2 = MovingAverageConfig.builder().concurrencyDropMultiplier(0.3).desirableAverageThroughput(3)
-				.desirableOperationLatency(150).lowLatencyMultiplier(0.4).maxAcceptableRequestLatency(200)
-				.windowForAdaptation(50).windowForReconfiguration(900).build();
+		AIMDConfig config = AIMDConfig.builder()
+				.concurrencyDropMultiplier(0.3)
+				.minConcurrentRequestsLimit(3)
+				.maxConcurrentRequestsLimit(3)
+				.desirableOperationLatency(150)
+				.slowCallRateThreshold(50)
+				.failureRateThreshold(50)
+				.slidingWindowTime(5)
+				.slidingWindowSize(100)
+				.slidingWindowType(AbstractConfig.SlidingWindow.TIME_BASED)
+				.build();
+		AIMDConfig config2 = AIMDConfig.builder()
+				.concurrencyDropMultiplier(0.3)
+				.minConcurrentRequestsLimit(3)
+				.maxConcurrentRequestsLimit(3)
+				.desirableOperationLatency(150)
+				.slowCallRateThreshold(50)
+				.failureRateThreshold(50)
+				.slidingWindowTime(5)
+				.slidingWindowSize(100)
+				.slidingWindowType(AbstractConfig.SlidingWindow.TIME_BASED)
+				.build();
 		assertThat(config.equals(config2)).isTrue();
 		assertThat(config.hashCode() == config2.hashCode()).isTrue();
 	}
 
-
-	@Test
-	public void testEqualPercentile() {
-		PercentileConfig config = PercentileConfig.builder().concurrencyDropMultiplier(0.3).desirableAverageThroughput(3)
-				.desirableOperationLatency(150).lowLatencyMultiplier(0.4).maxAcceptableRequestLatency(200)
-				.windowForAdaptation(50).windowForReconfiguration(900).build();
-		PercentileConfig config2 = PercentileConfig.builder().concurrencyDropMultiplier(0.3).desirableAverageThroughput(3)
-				.desirableOperationLatency(150).lowLatencyMultiplier(0.4).maxAcceptableRequestLatency(200)
-				.windowForAdaptation(50).windowForReconfiguration(900).build();
-		assertThat(config.equals(config2)).isTrue();
-		assertThat(config.hashCode() == config2.hashCode()).isTrue();
-	}
 
 }
