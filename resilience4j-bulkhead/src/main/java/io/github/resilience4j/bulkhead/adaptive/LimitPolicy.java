@@ -25,6 +25,7 @@ import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.bulkhead.BulkheadConfig;
 import io.github.resilience4j.bulkhead.event.BulkheadLimit;
 import io.github.resilience4j.core.lang.NonNull;
+import io.github.resilience4j.core.metrics.Metrics;
 
 
 /**
@@ -32,7 +33,7 @@ import io.github.resilience4j.core.lang.NonNull;
  *
  * @author romeh
  */
-public interface LimitAdapter<T> {
+public interface LimitPolicy<T> {
 
 	/**
 	 * adapt the concurrency limit of the bulkhead based into the implemented logic
@@ -41,20 +42,23 @@ public interface LimitAdapter<T> {
 	 * @param bulkhead the created semaphore bullhead with contains its own configuration via {@link Bulkhead#getBulkheadConfig()}
 	 * @param callTime the protected service by bulkhead call total execution time
 	 */
-	void adaptLimitIfAny(@NonNull T bulkhead, @NonNull Duration callTime);
+	void adaptLimitIfAny(@NonNull T bulkhead, @NonNull Duration callTime, boolean isSuccess, int inFlight);
 
-	/**
-	 * @return max latency time in milliseconds
-	 */
-	double getMaxLatencyMillis();
-
-	/**
-	 * @return current measured latency in milliseconds
-	 */
-	double getMeasuredLatencyMillis();
 
 	/**
 	 * @return the BulkheadLimit consumer
 	 */
 	Consumer<BulkheadLimit> bulkheadLimitConsumer();
+
+
+	/**
+	 * @return the current associated metrics implementation
+	 */
+	Metrics getMetrics();
+
+
+	/**
+	 * @return current calculated active limit
+	 */
+	int getCurrentLimit();
 }

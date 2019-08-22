@@ -18,6 +18,7 @@
  */
 package io.github.resilience4j.bulkhead.adaptive.internal.config;
 
+import java.time.Duration;
 import java.util.Objects;
 
 import io.github.resilience4j.bulkhead.BulkheadConfig;
@@ -27,79 +28,79 @@ import io.github.resilience4j.core.lang.NonNull;
  * abstract common configuration
  */
 public class AbstractConfig {
-	protected double desirableAverageThroughput = 3; // in req/sec
-	protected double desirableOperationLatency = 0.1d; // in sec/op
-	protected double maxAcceptableRequestLatency = desirableOperationLatency * 1.3d; // in sec/op
-	protected int windowForAdaptation = 50;
-	protected int windowForReconfiguration = 900;
-	protected double lowLatencyMultiplier = 0.8d;
-	protected double concurrencyDropMultiplier = 0.85d;
+	private static final SlidingWindow DEFAULT_SLIDING_WINDOW_TYPE = SlidingWindow.COUNT_BASED;
+	private static final double DEFAULT_FAILURE_RATE_THRESHOLD = 50.0; // Percentage
+	private static final double DEFAULT_SLOW_CALL_RATE_THRESHOLD = 50.0; // Percentage
+	private static final int DEFAULT_SLIDING_WINDOW_SIZE = 100;
+	private static final long DEFAULT_SLOW_CALL_DURATION_THRESHOLD = 5; // Seconds
+	private static final int DEFAULT_SLIDING_WIN_TIME = 10; // Seconds
 
+	double failureRateThreshold = DEFAULT_FAILURE_RATE_THRESHOLD;
+	int slidingWindowSize = DEFAULT_SLIDING_WINDOW_SIZE;
+	SlidingWindow slidingWindowType = DEFAULT_SLIDING_WINDOW_TYPE;
+	double slowCallRateThreshold = DEFAULT_SLOW_CALL_RATE_THRESHOLD;
+	Duration desirableLatency = Duration.ofSeconds(DEFAULT_SLOW_CALL_DURATION_THRESHOLD);
+	int slidingWindowTime = DEFAULT_SLIDING_WIN_TIME;
 
-	public double getConcurrencyDropMultiplier() {
-		return concurrencyDropMultiplier;
+	@NonNull
+	public Duration getDesirableLatency() {
+		return desirableLatency;
 	}
-
-	public double getLowLatencyMultiplier() {
-		return lowLatencyMultiplier;
-	}
-
-	public double getDesirableAverageThroughput() {
-		return desirableAverageThroughput;
-	}
-
-	public double getDesirableOperationLatency() {
-		return desirableOperationLatency;
-	}
-
-	public double getMaxAcceptableRequestLatency() {
-		return maxAcceptableRequestLatency;
+	@NonNull
+	public int getSlidingWindowTime() {
+		return slidingWindowTime;
 	}
 
 	@NonNull
-	public int getWindowForAdaptation() {
-		return windowForAdaptation;
+	public double getFailureRateThreshold() {
+		return failureRateThreshold;
 	}
 
 	@NonNull
-	public int getWindowForReconfiguration() {
-		return windowForReconfiguration;
+	public int getSlidingWindowSize() {
+		return slidingWindowSize;
 	}
 
-
-	@Override
-	public String toString() {
-		return "AbstractConfig{" +
-				"desirableAverageThroughput=" + desirableAverageThroughput +
-				", desirableOperationLatency=" + desirableOperationLatency +
-				", maxAcceptableRequestLatency=" + maxAcceptableRequestLatency +
-				", windowForAdaptation=" + windowForAdaptation +
-				", windowForReconfiguration=" + windowForReconfiguration +
-				", lowLatencyMultiplier=" + lowLatencyMultiplier +
-				", concurrencyDropMultiplier=" + concurrencyDropMultiplier +
-				'}';
+	@NonNull
+	public SlidingWindow getSlidingWindowType() {
+		return slidingWindowType;
 	}
+
+	@NonNull
+	public double getSlowCallRateThreshold() {
+		return slowCallRateThreshold;
+	}
+
 
 	@Override
 	public boolean equals(Object o) {
 		if (this == o) return true;
 		if (o == null || getClass() != o.getClass()) return false;
 		AbstractConfig that = (AbstractConfig) o;
-		return Double.compare(that.desirableAverageThroughput, desirableAverageThroughput) == 0 &&
-				Double.compare(that.desirableOperationLatency, desirableOperationLatency) == 0 &&
-				Double.compare(that.maxAcceptableRequestLatency, maxAcceptableRequestLatency) == 0 &&
-				Double.compare(that.lowLatencyMultiplier, lowLatencyMultiplier) == 0 &&
-				Double.compare(that.concurrencyDropMultiplier, concurrencyDropMultiplier) == 0 &&
-				Objects.equals(windowForAdaptation, that.windowForAdaptation) &&
-				Objects.equals(windowForReconfiguration, that.windowForReconfiguration);
-
+		return Double.compare(that.failureRateThreshold, failureRateThreshold) == 0 &&
+				slidingWindowSize == that.slidingWindowSize &&
+				Double.compare(that.slowCallRateThreshold, slowCallRateThreshold) == 0 &&
+				slidingWindowTime == that.slidingWindowTime &&
+				slidingWindowType == that.slidingWindowType &&
+				Objects.equals(desirableLatency, that.desirableLatency);
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(desirableAverageThroughput, desirableOperationLatency, maxAcceptableRequestLatency, windowForAdaptation, windowForReconfiguration, lowLatencyMultiplier, concurrencyDropMultiplier);
+		return Objects.hash(failureRateThreshold, slidingWindowSize, slidingWindowType, slowCallRateThreshold, desirableLatency, slidingWindowTime);
 	}
 
+	@Override
+	public String toString() {
+		return "AbstractConfig{" +
+				"failureRateThreshold=" + failureRateThreshold +
+				", slidingWindowSize=" + slidingWindowSize +
+				", slidingWindowType=" + slidingWindowType +
+				", slowCallRateThreshold=" + slowCallRateThreshold +
+				", desirableLatency=" + desirableLatency +
+				", slidingWindowTime=" + slidingWindowTime +
+				'}';
+	}
 
 	public static class Builder<T extends AbstractConfig> {
 		T config;
@@ -111,24 +112,9 @@ public class AbstractConfig {
 			this.config = bulkheadConfig;
 		}
 
-		/**
-		 * Desirable average throughput in op/second.
-		 * This param will provide us with initial configuration.
-		 * The closer it to the real value - faster we can figure out real concurrency limits.
-		 *
-		 * @param desirableAverageThroughput - in op/sec
-		 * @return a {@link Builder}
-		 */
-		public Builder<T> desirableAverageThroughput(double desirableAverageThroughput) {
-			if (desirableAverageThroughput <= 0.0) {
-				throw new IllegalArgumentException("desirableAverageThroughput must be a positive value greater than zero");
-			}
-			config.desirableAverageThroughput = desirableAverageThroughput;
-			return this;
-		}
 
 		/**
-		 * Desirable operation latency in seconds/operation.
+		 * Desirable operation latency in millis/operation.
 		 * This is our foothold that we will circling around.
 		 * System will constantly measure actual average latency and compare it with "desirableOperationLatency".
 		 * If you actual latency will be lower than "desirableOperationLatency",
@@ -138,84 +124,72 @@ public class AbstractConfig {
 		 * @param desirableOperationLatency - in sec/op
 		 * @return a {@link Builder}
 		 */
-		public Builder<T> desirableOperationLatency(double desirableOperationLatency) {
+		public Builder<T> desirableOperationLatency(long desirableOperationLatency) {
 			if (desirableOperationLatency <= 0.0) {
 				throw new IllegalArgumentException("desirableOperationLatency must be a positive value greater than zero");
 			}
-			config.desirableOperationLatency = desirableOperationLatency;
+			config.desirableLatency = Duration.ofMillis(desirableOperationLatency);
 			return this;
 		}
 
 		/**
-		 * Maximum acceptable operation latency in seconds/operation.
-		 * This number should be set wisely, because it can eliminate all adaptive capabilities,
-		 * system will do its best to never reach such latency,
-		 * so you can set it 20-30 % higher than your usual average latency.
-		 * If you actual latency will be higher than "maxAcceptableRequestLatency" TODO: describe behaviour.
-		 * <p>
-		 * Default value is {@link MovingAverageConfig}.desirableOperationLatency * 1.3
-		 *
-		 * @param maxAcceptableRequestLatency - in sec/op
+		 * @param slidingWindowSize to be defined if u want to use {@link io.github.resilience4j.core.metrics.FixedSizeSlidingWindowMetrics}
 		 * @return a {@link Builder}
 		 */
-		public Builder<T> maxAcceptableRequestLatency(double maxAcceptableRequestLatency) {
-			if (maxAcceptableRequestLatency <= 0.0) {
-				throw new IllegalArgumentException("maxAcceptableRequestLatency must be a positive value greater than zero");
+		public Builder<T> slidingWindowSize(int slidingWindowSize) {
+			if (slidingWindowSize <= 0.0) {
+				throw new IllegalArgumentException("slidingWindowSize must be a positive value greater than zero");
 			}
-			config.maxAcceptableRequestLatency = maxAcceptableRequestLatency;
+			config.slidingWindowSize = slidingWindowSize;
 			return this;
 		}
 
 
 		/**
-		 * @param lowLatencyMultiplier low latency multiplier factor
+		 * @param slidingWindowTime to be defined if u want to use {@link io.github.resilience4j.core.metrics.SlidingTimeWindowMetrics}
 		 * @return a {@link Builder}
 		 */
-		public Builder<T> lowLatencyMultiplier(double lowLatencyMultiplier) {
-			if (lowLatencyMultiplier <= 0.0) {
-				throw new IllegalArgumentException("lowLatencyMultiplier must be a positive value greater than zero");
+		public Builder<T> slidingWindowTime(int slidingWindowTime) {
+			if (slidingWindowTime <= 0.0) {
+				throw new IllegalArgumentException("slidingWindowTime must be a positive value greater than zero");
 			}
-			config.lowLatencyMultiplier = lowLatencyMultiplier;
+			config.slidingWindowTime = slidingWindowTime;
+			config.slidingWindowType = SlidingWindow.TIME_BASED;
 			return this;
 		}
 
 
 		/**
-		 * @param concurrencyDropMultiplier concurrency drop multiplier
+		 * @param failureRateThreshold failure calls rate percentage
 		 * @return a {@link Builder}
 		 */
-		public Builder<T> concurrencyDropMultiplier(double concurrencyDropMultiplier) {
-			if (concurrencyDropMultiplier <= 0.0) {
-				throw new IllegalArgumentException("concurrencyDropMultiplier must be a positive value greater than zero");
+		public Builder<T> failureRateThreshold(double failureRateThreshold) {
+			if (failureRateThreshold <= 0.0 || failureRateThreshold > 100.0) {
+				throw new IllegalArgumentException("failureRateThreshold must be a positive value greater than zero and less than 100");
 			}
-			config.concurrencyDropMultiplier = concurrencyDropMultiplier;
+			config.failureRateThreshold = failureRateThreshold;
 			return this;
 		}
 
 		/**
-		 * Window size for adaptation.
-		 * After each cycle with the size of "windowForAdaptation" will calculate current average latency
-		 * from adaptation window and will try to adapt concurrency level.
-		 *
-		 * @param windowForAdaptation - duration
+		 * @param slowCallRateThreshold slow call rate percentage
 		 * @return a {@link Builder}
 		 */
-		public Builder<T> windowForAdaptation(int windowForAdaptation) {
-			config.windowForAdaptation = windowForAdaptation;
+		public Builder<T> slowCallRateThreshold(double slowCallRateThreshold) {
+			if (slowCallRateThreshold <= 0.0 || slowCallRateThreshold > 100.0) {
+				throw new IllegalArgumentException("slowCallRateThreshold must be a positive value greater than zero and less than 100");
+			}
+			config.slowCallRateThreshold = slowCallRateThreshold;
 			return this;
 		}
 
+
 		/**
-		 * Window size for reconfiguration.
-		 * After each cycle with the size  of "windowForReconfiguration" will calculate standard deviation of latencies
-		 * after different adaptations and will recalculate local "maxAcceptableRequestLatency" for the next cycle.
-		 * This will help us handle daily latency changes gracefully without reaching "maxAcceptableRequestLatency" often.
-		 *
-		 * @param windowForReconfiguration - duration
+		 * @param slidingWindow define the sliding window Type , please check {@link SlidingWindow}
 		 * @return a {@link Builder}
 		 */
-		public Builder<T> windowForReconfiguration(int windowForReconfiguration) {
-			config.windowForReconfiguration = windowForReconfiguration;
+		public Builder<T> slidingWindowType(SlidingWindow slidingWindow) {
+			config.slidingWindowType = slidingWindow;
 			return this;
 		}
 
@@ -225,21 +199,14 @@ public class AbstractConfig {
 		 * @return the AdaptiveBulkheadConfig
 		 */
 		public T build() {
-			if (config.maxAcceptableRequestLatency < config.desirableOperationLatency) {
-				throw new IllegalArgumentException("maxAcceptableRequestLatency can't be less" +
-						" than desirableOperationLatency");
-			}
-			if (config.windowForAdaptation <= (long) (config.desirableAverageThroughput * 15)) {
-				throw new IllegalArgumentException("windowForAdaptation is too small. " +
-						"We wan't be able to make at least 15 measurements during this window.");
-			}
-			if (15 >= (config.windowForReconfiguration / config.windowForAdaptation)) {
-				throw new IllegalArgumentException("windowForReconfiguration is too small. " +
-						"windowForReconfiguration should be at least 15 times bigger than windowForAdaptation.");
-			}
 
 			return config;
 		}
 	}
 
+	public enum SlidingWindow {
+		TIME_BASED, COUNT_BASED
+	}
 }
+
+

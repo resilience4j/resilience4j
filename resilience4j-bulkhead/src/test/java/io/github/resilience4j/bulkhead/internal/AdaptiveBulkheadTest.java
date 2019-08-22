@@ -22,7 +22,7 @@ import org.mockito.Mockito;
 import io.github.resilience4j.bulkhead.BulkheadFullException;
 import io.github.resilience4j.bulkhead.adaptive.AdaptiveBulkhead;
 import io.github.resilience4j.bulkhead.adaptive.AdaptiveBulkheadConfig;
-import io.github.resilience4j.bulkhead.adaptive.internal.config.MovingAverageConfig;
+import io.github.resilience4j.bulkhead.adaptive.internal.config.AIMDConfig;
 import io.github.resilience4j.test.HelloWorldService;
 import io.vavr.CheckedConsumer;
 import io.vavr.CheckedFunction0;
@@ -33,16 +33,16 @@ import io.vavr.control.Try;
 
 public class AdaptiveBulkheadTest {
 	private AdaptiveBulkhead default_bulkhead;
-	private AdaptiveBulkheadConfig<MovingAverageConfig> config;
+	private AdaptiveBulkheadConfig<AIMDConfig> config;
 	private HelloWorldService helloWorldService;
 
 	@Before
 	public void setUp() {
 		helloWorldService = Mockito.mock(HelloWorldService.class);
 
-		config = AdaptiveBulkheadConfig.<MovingAverageConfig>builder().config(MovingAverageConfig.builder().maxAcceptableRequestLatency(0.2)
-				.desirableAverageThroughput(2)
-				.desirableOperationLatency(0.1)
+		config = AdaptiveBulkheadConfig.<AIMDConfig>builder().config(AIMDConfig.builder().maxConcurrentRequestsLimit(2)
+				.minConcurrentRequestsLimit(1)
+				.desirableOperationLatency(100)
 				.build()).build();
 		default_bulkhead = AdaptiveBulkhead.of("test", config);
 	}
@@ -77,7 +77,7 @@ public class AdaptiveBulkheadTest {
 		// then
 		assertThat(bulkhead).isNotNull();
 		assertThat(bulkhead.getBulkheadConfig()).isNotNull();
-		assertThat(((AdaptiveBulkheadConfig<MovingAverageConfig>) bulkhead.getBulkheadConfig()).getConfiguration().getWindowForAdaptation()).isEqualTo(50);
+		assertThat(((AdaptiveBulkheadConfig<AIMDConfig>) bulkhead.getBulkheadConfig()).getConfiguration().getSlidingWindowSize()).isEqualTo(100);
 	}
 
 	@Test
@@ -133,9 +133,7 @@ public class AdaptiveBulkheadTest {
 	@Test
 	public void shouldDecorateSupplierAndReturnWithExceptionAdaptIfError() {
 
-		final AdaptiveBulkheadConfig<MovingAverageConfig> config = AdaptiveBulkheadConfig.<MovingAverageConfig>builder().config(MovingAverageConfig.builder().maxAcceptableRequestLatency(0.2)
-				.desirableAverageThroughput(2)
-				.desirableOperationLatency(0.1)
+		final AdaptiveBulkheadConfig<AIMDConfig> config = AdaptiveBulkheadConfig.<AIMDConfig>builder().config(AIMDConfig.builder().minConcurrentRequestsLimit(2).desirableOperationLatency(200)
 				.build()).adaptIfError(e -> e instanceof RuntimeException).build();
 		// Given
 		AdaptiveBulkhead bulkhead = AdaptiveBulkhead.of("test", config);
@@ -148,7 +146,7 @@ public class AdaptiveBulkheadTest {
 		//Then
 		assertThat(result.isFailure()).isTrue();
 		assertThat(result.failed().get()).isInstanceOf(RuntimeException.class);
-		assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(2);
+		assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(3);
 		BDDMockito.then(helloWorldService).should(times(1)).returnHelloWorld();
 	}
 
@@ -190,9 +188,8 @@ public class AdaptiveBulkheadTest {
 	public void shouldDecorateCheckedSupplierAndReturnWithExceptionAdaptIfError() throws Throwable {
 
 		// Given
-		final AdaptiveBulkheadConfig<MovingAverageConfig> config = AdaptiveBulkheadConfig.<MovingAverageConfig>builder().config(MovingAverageConfig.builder().maxAcceptableRequestLatency(0.2)
-				.desirableAverageThroughput(2)
-				.desirableOperationLatency(0.1)
+		final AdaptiveBulkheadConfig<AIMDConfig> config = AdaptiveBulkheadConfig.<AIMDConfig>builder().config(AIMDConfig.builder().minConcurrentRequestsLimit(2)
+				.desirableOperationLatency(200)
 				.build()).adaptIfError(e -> e instanceof RuntimeException).build();
 		AdaptiveBulkhead bulkhead = AdaptiveBulkhead.of("test", config);
 		BDDMockito.given(helloWorldService.returnHelloWorldWithException()).willThrow(new RuntimeException("BAM!"));
@@ -204,7 +201,7 @@ public class AdaptiveBulkheadTest {
 		// Then
 		assertThat(result.isFailure()).isTrue();
 		assertThat(result.failed().get()).isInstanceOf(RuntimeException.class);
-		assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(2);
+		assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(3);
 		BDDMockito.then(helloWorldService).should(times(1)).returnHelloWorldWithException();
 	}
 
@@ -263,9 +260,8 @@ public class AdaptiveBulkheadTest {
 	public void shouldDecorateCallableAndReturnWithExceptionIfError() throws Throwable {
 
 		// Given
-		final AdaptiveBulkheadConfig<MovingAverageConfig> config = AdaptiveBulkheadConfig.<MovingAverageConfig>builder().config(MovingAverageConfig.builder().maxAcceptableRequestLatency(0.2)
-				.desirableAverageThroughput(2)
-				.desirableOperationLatency(0.1)
+		final AdaptiveBulkheadConfig<AIMDConfig> config = AdaptiveBulkheadConfig.<AIMDConfig>builder().config(AIMDConfig.builder().minConcurrentRequestsLimit(2)
+				.desirableOperationLatency(200)
 				.build()).adaptIfError(e -> e instanceof RuntimeException).build();
 		AdaptiveBulkhead bulkhead = AdaptiveBulkhead.of("test", config);
 		BDDMockito.given(helloWorldService.returnHelloWorldWithException()).willThrow(new RuntimeException("BAM!"));
@@ -277,7 +273,7 @@ public class AdaptiveBulkheadTest {
 		// Then
 		assertThat(result.isFailure()).isTrue();
 		assertThat(result.failed().get()).isInstanceOf(RuntimeException.class);
-		assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(2);
+		assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(3);
 		BDDMockito.then(helloWorldService).should(times(1)).returnHelloWorldWithException();
 	}
 
@@ -318,9 +314,8 @@ public class AdaptiveBulkheadTest {
 	public void shouldDecorateCheckedRunnableAndReturnWithExceptionAdaptIfError() throws Throwable {
 
 		// Given
-		final AdaptiveBulkheadConfig<MovingAverageConfig> config = AdaptiveBulkheadConfig.<MovingAverageConfig>builder().config(MovingAverageConfig.builder().maxAcceptableRequestLatency(0.2)
-				.desirableAverageThroughput(2)
-				.desirableOperationLatency(0.1)
+		final AdaptiveBulkheadConfig<AIMDConfig> config = AdaptiveBulkheadConfig.<AIMDConfig>builder().config(AIMDConfig.builder().minConcurrentRequestsLimit(2)
+				.desirableOperationLatency(200)
 				.build()).adaptIfError(e -> e instanceof RuntimeException).build();
 		AdaptiveBulkhead bulkhead = AdaptiveBulkhead.of("test", config);
 
@@ -333,7 +328,7 @@ public class AdaptiveBulkheadTest {
 		// Then
 		assertThat(result.isFailure()).isTrue();
 		assertThat(result.failed().get()).isInstanceOf(RuntimeException.class);
-		assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(2);
+		assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(3);
 	}
 
 	@Test
@@ -387,9 +382,8 @@ public class AdaptiveBulkheadTest {
 	public void shouldDecorateRunnableAndReturnWithExceptionAdaptIfError() {
 
 		// Given
-		final AdaptiveBulkheadConfig<MovingAverageConfig> config = AdaptiveBulkheadConfig.<MovingAverageConfig>builder().config(MovingAverageConfig.builder().maxAcceptableRequestLatency(0.2)
-				.desirableAverageThroughput(2)
-				.desirableOperationLatency(0.1)
+		final AdaptiveBulkheadConfig<AIMDConfig> config = AdaptiveBulkheadConfig.<AIMDConfig>builder().config(AIMDConfig.builder().minConcurrentRequestsLimit(2)
+				.desirableOperationLatency(200)
 				.build()).adaptIfError(e -> e instanceof RuntimeException).build();
 
 		AdaptiveBulkhead bulkhead = AdaptiveBulkhead.of("test", config);
@@ -403,7 +397,7 @@ public class AdaptiveBulkheadTest {
 		//Then
 		assertThat(result.isFailure()).isTrue();
 		assertThat(result.failed().get()).isInstanceOf(RuntimeException.class);
-		assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(2);
+		assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(3);
 	}
 
 	@Test
@@ -443,9 +437,8 @@ public class AdaptiveBulkheadTest {
 	public void shouldDecorateConsumerAndReturnWithExceptionAdaptIfError() {
 
 		// Given
-		final AdaptiveBulkheadConfig<MovingAverageConfig> config = AdaptiveBulkheadConfig.<MovingAverageConfig>builder().config(MovingAverageConfig.builder().maxAcceptableRequestLatency(0.2)
-				.desirableAverageThroughput(2)
-				.desirableOperationLatency(0.1)
+		final AdaptiveBulkheadConfig<AIMDConfig> config = AdaptiveBulkheadConfig.<AIMDConfig>builder().config(AIMDConfig.builder().minConcurrentRequestsLimit(2)
+				.desirableOperationLatency(100)
 				.build()).adaptIfError(e -> e instanceof RuntimeException).build();
 		AdaptiveBulkhead bulkhead = AdaptiveBulkhead.of("test", config);
 
@@ -458,7 +451,7 @@ public class AdaptiveBulkheadTest {
 		// Then
 		assertThat(result.isFailure()).isTrue();
 		assertThat(result.failed().get()).isInstanceOf(RuntimeException.class);
-		assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(2);
+		assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(3);
 	}
 
 	@Test
@@ -566,10 +559,10 @@ public class AdaptiveBulkheadTest {
 		// tag::bulkheadFullException[]
 		// Given
 
-		AdaptiveBulkheadConfig<MovingAverageConfig> config = AdaptiveBulkheadConfig.<MovingAverageConfig>builder().config(MovingAverageConfig.builder()
-				.maxAcceptableRequestLatency(0.2)
-				.desirableAverageThroughput(2)
-				.desirableOperationLatency(0.1)
+		AdaptiveBulkheadConfig<AIMDConfig> config = AdaptiveBulkheadConfig.<AIMDConfig>builder().config(AIMDConfig.builder()
+				.minConcurrentRequestsLimit(2)
+				.desirableOperationLatency(2)
+
 				.build()).build();
 
 		AdaptiveBulkhead bulkhead = AdaptiveBulkhead.of("test", config);
@@ -592,9 +585,8 @@ public class AdaptiveBulkheadTest {
 	public void shouldReturnFailureWithRuntimeException() {
 
 		// Given
-		AdaptiveBulkheadConfig<MovingAverageConfig> config = AdaptiveBulkheadConfig.<MovingAverageConfig>builder().config(MovingAverageConfig.builder().maxAcceptableRequestLatency(0.2)
-				.desirableAverageThroughput(2)
-				.desirableOperationLatency(0.1)
+		AdaptiveBulkheadConfig<AIMDConfig> config = AdaptiveBulkheadConfig.<AIMDConfig>builder().config(AIMDConfig.builder().minConcurrentRequestsLimit(2)
+				.desirableOperationLatency(2)
 				.build()).build();
 		AdaptiveBulkhead bulkhead = AdaptiveBulkhead.of("test", config);
 		bulkhead.tryAcquirePermission();
@@ -608,7 +600,7 @@ public class AdaptiveBulkheadTest {
 		//Then
 		assertThat(result.isFailure()).isTrue();
 		assertThat(result.failed().get()).isInstanceOf(RuntimeException.class);
-		assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(0);
+		assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(2);
 	}
 
 	@Test
@@ -692,9 +684,8 @@ public class AdaptiveBulkheadTest {
 	public void shouldDecorateCompletionStageAndReturnWithExceptionAtSyncStageAdaptIfError() throws ExecutionException, InterruptedException {
 
 		// Given
-		AdaptiveBulkheadConfig<MovingAverageConfig> config = AdaptiveBulkheadConfig.<MovingAverageConfig>builder().config(MovingAverageConfig.builder().maxAcceptableRequestLatency(0.2)
-				.desirableAverageThroughput(2)
-				.desirableOperationLatency(0.1)
+		AdaptiveBulkheadConfig<AIMDConfig> config = AdaptiveBulkheadConfig.<AIMDConfig>builder().config(AIMDConfig.builder().minConcurrentRequestsLimit(2)
+				.desirableOperationLatency(2)
 				.build()).build();
 		AdaptiveBulkhead bulkhead = AdaptiveBulkhead.of("test", config);
 
@@ -720,7 +711,7 @@ public class AdaptiveBulkheadTest {
 							return null;
 						}
 				);
-		assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
+		assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(2);
 	}
 
 
