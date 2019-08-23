@@ -25,17 +25,6 @@ import java.time.ZonedDateTime;
  */
 public interface TimeLimiterEvent {
 
-    static TimeLimiterEvent of(String name, Type eventType) {
-        switch (eventType) {
-            case SUCCESS:
-                return new TimeLimiterOnSuccessEvent(name);
-            case TIMEOUT:
-                return new TimeLimiterOnTimeoutEvent(name);
-            default:
-                return new TimeLimiterOnFailureEvent(name);
-        }
-    }
-
     String getTimeLimiterName();
 
     Type getEventType();
@@ -45,6 +34,6 @@ public interface TimeLimiterEvent {
     enum Type {
         SUCCESS,
         TIMEOUT,
-        FAILURE
+        ERROR
     }
 }

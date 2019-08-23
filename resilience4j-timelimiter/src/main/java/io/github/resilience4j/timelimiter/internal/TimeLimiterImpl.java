@@ -3,6 +3,11 @@ package io.github.resilience4j.timelimiter.internal;
 import io.github.resilience4j.timelimiter.TimeLimiter;
 import io.github.resilience4j.timelimiter.TimeLimiterConfig;
 import io.github.resilience4j.timelimiter.event.TimeLimiterEvent;
+import io.github.resilience4j.timelimiter.event.TimeLimiterOnErrorEvent;
+import io.github.resilience4j.timelimiter.event.TimeLimiterOnSuccessEvent;
+import io.github.resilience4j.timelimiter.event.TimeLimiterOnTimeoutEvent;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
@@ -12,6 +17,8 @@ import java.util.concurrent.TimeoutException;
 import java.util.function.Supplier;
 
 public class TimeLimiterImpl implements TimeLimiter {
+
+    private static final Logger LOG = LoggerFactory.getLogger(TimeLimiterImpl.class);
 
     private String name;
     private final TimeLimiterConfig timeLimiterConfig;
@@ -38,25 +45,18 @@ public class TimeLimiterImpl implements TimeLimiter {
                 }
                 throw e;
             } catch (ExecutionException e) {
-                onError(e);
                 Throwable t = e.getCause();
                 if (t == null) {
+                    onError(e);
                     throw e;
                 }
+                onError(t);
                 if (t instanceof Error) {
                     throw (Error) t;
                 }
                 throw (Exception) t;
             }
         };
-    }
-
-    private void publishTimeLimiterEvent(TimeLimiterEvent.Type eventType) {
-        if (!eventProcessor.hasConsumers()) {
-            return;
-        }
-        eventProcessor.consumeEvent(TimeLimiterEvent.of(name, eventType));
-
     }
 
     @Override
@@ -71,15 +71,30 @@ public class TimeLimiterImpl implements TimeLimiter {
 
     @Override
     public void onSuccess() {
-        publishTimeLimiterEvent(TimeLimiterEvent.Type.SUCCESS);
+        if (!eventProcessor.hasConsumers()) {
+            return;
+        }
+        publishEvent(new TimeLimiterOnSuccessEvent(name));
     }
 
     @Override
-    public void onError(Exception e) {
-        if (e instanceof TimeoutException) {
-            publishTimeLimiterEvent(TimeLimiterEvent.Type.TIMEOUT);
+    public void onError(Throwable throwable) {
+        if (!eventProcessor.hasConsumers()) {
+            return;
+        }
+        if (throwable instanceof TimeoutException) {
+            publishEvent(new TimeLimiterOnTimeoutEvent(name));
         } else {
-            publishTimeLimiterEvent(TimeLimiterEvent.Type.FAILURE);
+            publishEvent(new TimeLimiterOnErrorEvent(name, throwable));
+        }
+    }
+
+    private void publishEvent(TimeLimiterEvent event) {
+        try{
+            eventProcessor.consumeEvent(event);
+            LOG.debug("Event {} published: {}", event.getEventType(), event);
+        }catch (Throwable t){
+            LOG.warn("Failed to handle event {}", event.getEventType(), t);
         }
     }
 

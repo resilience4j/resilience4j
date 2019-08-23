@@ -2,7 +2,7 @@ package io.github.resilience4j.timelimiter;
 
 import io.github.resilience4j.core.EventConsumer;
 import io.github.resilience4j.timelimiter.event.TimeLimiterEvent;
-import io.github.resilience4j.timelimiter.event.TimeLimiterOnFailureEvent;
+import io.github.resilience4j.timelimiter.event.TimeLimiterOnErrorEvent;
 import io.github.resilience4j.timelimiter.event.TimeLimiterOnSuccessEvent;
 import io.github.resilience4j.timelimiter.event.TimeLimiterOnTimeoutEvent;
 import io.github.resilience4j.timelimiter.internal.TimeLimiterImpl;
@@ -107,9 +107,19 @@ public interface TimeLimiter {
 
     EventPublisher getEventPublisher();
 
+    /**
+     * Records a successful call.
+     *
+     * This method must be invoked when a call was successful.
+     */
     void onSuccess();
 
-    void onError(Exception exception);
+    /**
+     * Records a failed call.
+     * This method must be invoked when a call failed.
+     * @param throwable The throwable which must be recorded
+     */
+    void onError(Throwable throwable);
 
     /**
      * An EventPublisher which can be used to register event consumers.
@@ -118,7 +128,7 @@ public interface TimeLimiter {
 
         EventPublisher onSuccess(EventConsumer<TimeLimiterOnSuccessEvent> eventConsumer);
 
-        EventPublisher onFailure(EventConsumer<TimeLimiterOnFailureEvent> eventConsumer);
+        EventPublisher onError(EventConsumer<TimeLimiterOnErrorEvent> eventConsumer);
 
         EventPublisher onTimeout(EventConsumer<TimeLimiterOnTimeoutEvent> eventConsumer);
 

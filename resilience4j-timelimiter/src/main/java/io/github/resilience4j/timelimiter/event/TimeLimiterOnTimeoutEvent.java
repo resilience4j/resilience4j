@@ -24,4 +24,11 @@ public class TimeLimiterOnTimeoutEvent extends AbstractTimeLimiterEvent {
         super(timeLimiterName, Type.TIMEOUT);
     }
 
+    @Override
+    public String toString() {
+        return String.format("%s: TimeLimiter '%s' recorded a timeout exception.",
+                getCreationTime(),
+                getTimeLimiterName());
+    }
+
 }

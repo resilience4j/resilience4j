@@ -24,4 +24,11 @@ public class TimeLimiterOnSuccessEvent extends AbstractTimeLimiterEvent {
         super(timeLimiterName, Type.SUCCESS);
     }
 
+    @Override
+    public String toString() {
+        return String.format("%s: TimeLimiter '%s' recorded a successful call.",
+                getCreationTime(),
+                getTimeLimiterName());
+    }
+
 }

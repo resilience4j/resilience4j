@@ -19,6 +19,7 @@
 package io.github.resilience4j.timelimiter;
 
 import io.github.resilience4j.timelimiter.event.TimeLimiterEvent;
+import io.github.resilience4j.timelimiter.event.TimeLimiterOnErrorEvent;
 import io.vavr.control.Try;
 
 import java.time.Duration;
@@ -54,7 +55,7 @@ public class TimeLimiterEventPublisherTest {
     public void shouldConsumeOnSuccessEvent() throws Exception {
         TimeLimiter timeLimiter = TimeLimiter.of(NEVER);
         timeLimiter.getEventPublisher()
-                .onSuccess(this::logEventType);
+                .onSuccess(event -> logger.info(event.getEventType().toString()));
         Supplier<CompletableFuture<String>> futureSupplier = () ->
                 CompletableFuture.completedFuture("Hello world");
 
@@ -68,7 +69,7 @@ public class TimeLimiterEventPublisherTest {
     public void shouldConsumeOnTimeoutEvent() {
         TimeLimiter timeLimiter = TimeLimiter.of(NEVER);
         timeLimiter.getEventPublisher()
-                .onTimeout(this::logEventType);
+                .onTimeout(event -> logger.info(event.getEventType().toString()));
         Supplier<CompletableFuture<String>> futureSupplier = () ->
                 CompletableFuture.supplyAsync(this::fail);
 
@@ -78,20 +79,16 @@ public class TimeLimiterEventPublisherTest {
     }
 
     @Test
-    public void shouldConsumeOnFailureEvent() {
+    public void shouldConsumeOnErrorEvent() {
         TimeLimiter timeLimiter = TimeLimiter.of(Duration.ofSeconds(1));
         timeLimiter.getEventPublisher()
-                .onFailure(this::logEventType);
+                .onError(event -> logger.info(event.getEventType().toString() + " " + event.getThrowable().toString()));
         Supplier<CompletableFuture<String>> futureSupplier = () ->
                 CompletableFuture.supplyAsync(this::fail);
 
         Try.ofCallable(timeLimiter.decorateFutureSupplier(futureSupplier));
 
-        then(logger).should(times(1)).info("FAILURE");
-    }
-
-    private void logEventType(TimeLimiterEvent event) {
-        logger.info(event.getEventType().toString());
+        then(logger).should(times(1)).info("ERROR java.lang.RuntimeException");
     }
 
     private String fail() {
