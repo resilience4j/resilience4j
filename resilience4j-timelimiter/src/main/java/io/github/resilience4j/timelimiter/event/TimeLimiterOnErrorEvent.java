@@ -18,10 +18,25 @@
  */
 package io.github.resilience4j.timelimiter.event;
 
-public class TimeLimiterOnFailureEvent extends AbstractTimeLimiterEvent {
+public class TimeLimiterOnErrorEvent extends AbstractTimeLimiterEvent {
 
-    public TimeLimiterOnFailureEvent(String timeLimiterName) {
-        super(timeLimiterName, Type.FAILURE);
+    private final Throwable throwable;
+
+    public TimeLimiterOnErrorEvent(String timeLimiterName, Throwable throwable) {
+        super(timeLimiterName, Type.ERROR);
+        this.throwable = throwable;
+    }
+
+    public Throwable getThrowable() {
+        return throwable;
+    }
+
+    @Override
+    public String toString() {
+        return String.format("%s: TimeLimiter '%s' recorded an error: '%s'",
+                getCreationTime(),
+                getTimeLimiterName(),
+                getThrowable().toString());
     }
 
 }

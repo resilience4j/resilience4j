@@ -152,7 +152,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
 
     @Override
     public void onError(long duration, TimeUnit durationUnit, Throwable throwable) {
-        // Handle the case if the completable future throw CompletionException wrapping the original exception
+        // Handle the case if the completable future throws a CompletionException wrapping the original exception
         // where original exception is the the one to retry not the CompletionException.
         if (throwable instanceof CompletionException) {
             Throwable cause = throwable.getCause();
@@ -278,9 +278,9 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
     private void publishEventIfPossible(CircuitBreakerEvent event) {
         if(shouldPublishEvents(event)) {
             if (eventProcessor.hasConsumers()) {
-                LOG.debug("Event {} published: {}", event.getEventType(), event);
                 try{
                     eventProcessor.consumeEvent(event);
+                    LOG.debug("Event {} published: {}", event.getEventType(), event);
                 }catch (Throwable t){
                     LOG.warn("Failed to handle event {}", event.getEventType(), t);
                 }
