@@ -35,7 +35,6 @@ import org.springframework.util.StringUtils;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.List;
-import java.util.Objects;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.CompletionStage;
 
@@ -135,33 +134,10 @@ public class CircuitBreakerAspect implements Ordered {
 		}
 		if (proceedingJoinPoint.getTarget() instanceof Proxy) {
 			logger.debug("The circuit breaker annotation is kept on a interface which is acting as a proxy");
-			return extractCircuitBreakerAnnotationFromProxyClass(proceedingJoinPoint);
+			return AnnotationExtractor.extractAnnotationFromProxy(proceedingJoinPoint.getTarget(), CircuitBreaker.class);
 		} else {
 			return AnnotationExtractor.extract(proceedingJoinPoint.getTarget().getClass(), CircuitBreaker.class);
 		}
-	}
-
-	@Nullable
-	private CircuitBreaker extractCircuitBreakerAnnotationFromProxyClass(ProceedingJoinPoint proceedingJoinPoint) {
-		if (proceedingJoinPoint.getTarget().getClass().getInterfaces().length == 1) {
-			return AnnotationExtractor.extract(proceedingJoinPoint.getTarget().getClass().getInterfaces()[0], CircuitBreaker.class);
-		} else if (proceedingJoinPoint.getTarget().getClass().getInterfaces().length > 1) {
-			return extractCircuitBreakerFromClosestMatch(proceedingJoinPoint);
-		} else {
-			return null;
-		}
-	}
-
-	@Nullable
-	private CircuitBreaker extractCircuitBreakerFromClosestMatch(ProceedingJoinPoint proceedingJoinPoint) {
-		int numberOfImplementations = proceedingJoinPoint.getTarget().getClass().getInterfaces().length;
-		for (int depth = 0; depth < numberOfImplementations; depth++) {
-			CircuitBreaker annotation = AnnotationExtractor.extract(proceedingJoinPoint.getTarget().getClass().getInterfaces()[depth], CircuitBreaker.class);
-			if (Objects.nonNull(annotation)) {
-				return annotation;
-			}
-		}
-		return null;
 	}
 
 	/**

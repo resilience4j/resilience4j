@@ -68,7 +68,7 @@ public class CircuitBreakerAutoConfigurationTest {
 	private ReactiveDummyService reactiveDummyService;
 
 	@Autowired
-	DummyFeignClient dummyFeignClient;
+	private DummyFeignClient dummyFeignClient;
 
 	@Rule
 	public WireMockRule wireMockRule = new WireMockRule(8090);

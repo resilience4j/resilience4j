@@ -88,7 +88,7 @@ public class RetryAutoConfigurationRxJavaTest {
 
 		// expect retry actuator endpoint contains both retries
 		ResponseEntity<RetryEndpointResponse> retriesList = restTemplate.getForEntity("/actuator/retries", RetryEndpointResponse.class);
-		assertThat(retriesList.getBody().getRetries()).hasSize(3);
+		assertThat(retriesList.getBody().getRetries()).hasSize(4);
 
 		// expect retry-event actuator endpoint recorded both events
 		ResponseEntity<RetryEventsEndpointResponse> retryEventList = restTemplate.getForEntity("/actuator/retryevents", RetryEventsEndpointResponse.class);

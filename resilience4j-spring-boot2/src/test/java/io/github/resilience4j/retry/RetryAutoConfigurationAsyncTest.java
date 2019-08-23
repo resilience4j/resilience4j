@@ -16,6 +16,7 @@
 package io.github.resilience4j.retry;
 
 import static io.github.resilience4j.service.test.retry.ReactiveRetryDummyService.BACKEND_C;
+import static io.github.resilience4j.service.test.retry.RetryDummyFeignClient.RETRY_DUMMY_FEIGN_CLIENT_NAME;
 import static io.github.resilience4j.service.test.retry.RetryDummyService.RETRY_BACKEND_A;
 import static io.github.resilience4j.service.test.retry.RetryDummyService.RETRY_BACKEND_B;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -94,7 +95,7 @@ public class RetryAutoConfigurationAsyncTest {
 
 		// expect retry actuator endpoint contains both retries
 		ResponseEntity<RetryEndpointResponse> retriesList = restTemplate.getForEntity("/actuator/retries", RetryEndpointResponse.class);
-		assertThat(retriesList.getBody().getRetries()).hasSize(3).containsOnly(RETRY_BACKEND_A, RETRY_BACKEND_B, BACKEND_C);
+		assertThat(retriesList.getBody().getRetries()).hasSize(4).containsOnly(RETRY_BACKEND_A, RETRY_BACKEND_B, BACKEND_C, RETRY_DUMMY_FEIGN_CLIENT_NAME);
 
 		// expect retry-event actuator endpoint recorded both events
 		ResponseEntity<RetryEventsEndpointResponse> retryEventList = restTemplate.getForEntity("/actuator/retryevents", RetryEventsEndpointResponse.class);
