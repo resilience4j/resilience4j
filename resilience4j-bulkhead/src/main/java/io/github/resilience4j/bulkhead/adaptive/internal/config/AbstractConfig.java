@@ -119,7 +119,6 @@ public class AbstractConfig {
 		 * System will constantly measure actual average latency and compare it with "desirableOperationLatency".
 		 * If you actual latency will be lower than "desirableOperationLatency",
 		 * will calculate the difference and use it as {@link BulkheadConfig}.maxWaitTime
-		 * If you actual latency will be higher than "desirableOperationLatency" TODO: describe behaviour.
 		 *
 		 * @param desirableOperationLatency - in sec/op
 		 * @return a {@link Builder}
