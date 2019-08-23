@@ -62,25 +62,10 @@ public class AdaptiveLimitBulkhead implements AdaptiveBulkhead {
 	}
 
 	@Override
-	public void increaseInProcessingRequestsCount() {
-		inFlight.incrementAndGet();
-	}
-
-	@Override
-	public void decreaseInProcessingRequestsCount() {
-		inFlight.decrementAndGet();
-	}
-
-	@Override
-	public int getCurrentInProcessingRequestsCount() {
-		return inFlight.get();
-	}
-
-	@Override
 	public boolean tryAcquirePermission() {
 		boolean isAcquire = bulkhead.tryAcquirePermission();
 		if (isAcquire) {
-			increaseInProcessingRequestsCount();
+			inFlight.incrementAndGet();
 		}
 		return isAcquire;
 	}
@@ -88,13 +73,13 @@ public class AdaptiveLimitBulkhead implements AdaptiveBulkhead {
 	@Override
 	public void acquirePermission() {
 		bulkhead.acquirePermission();
-		increaseInProcessingRequestsCount();
+		inFlight.incrementAndGet();
 	}
 
 	@Override
 	public void releasePermission() {
 		bulkhead.releasePermission();
-		decreaseInProcessingRequestsCount();
+		inFlight.decrementAndGet();
 	}
 
 	@Override

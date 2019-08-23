@@ -60,13 +60,6 @@ import io.vavr.CheckedRunnable;
  */
 public interface AdaptiveBulkhead {
 
-
-	void increaseInProcessingRequestsCount();
-
-	void decreaseInProcessingRequestsCount();
-
-	int getCurrentInProcessingRequestsCount();
-
 	/**
 	 * Acquires a permission to execute a call, only if one is available at the time of invocation.
 	 *

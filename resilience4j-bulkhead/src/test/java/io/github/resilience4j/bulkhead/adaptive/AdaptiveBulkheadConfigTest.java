@@ -71,6 +71,14 @@ public class AdaptiveBulkheadConfigTest {
 				.hasMessage("minConcurrentRequestsLimit must be a positive value greater than zero");
 	}
 
+	@Test
+	public void testlimitIncrementInflightFactorConfig() {
+		assertThatThrownBy(() -> AIMDConfig.builder().limitIncrementInflightFactor(0)
+				.build())
+				.isInstanceOf(IllegalArgumentException.class)
+				.hasMessage("limitIncrementInflightFactor must be a positive value greater than zero");
+	}
+
 
 	@Test
 	public void testEqual() {

@@ -29,7 +29,7 @@ import io.github.resilience4j.core.lang.Nullable;
  * A {@link AdaptiveBulkheadConfig} configures a adaptation capabilities of  {@link AdaptiveLimitBulkhead}
  */
 public class AdaptiveBulkheadConfig<T> {
-	@Nullable
+	@NonNull
 	private T config;
 	@Nullable
 	private Predicate<Exception> adaptIfError;
