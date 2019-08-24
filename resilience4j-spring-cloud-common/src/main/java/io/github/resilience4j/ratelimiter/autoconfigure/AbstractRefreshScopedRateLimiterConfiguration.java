@@ -19,6 +19,11 @@ public abstract class AbstractRefreshScopedRateLimiterConfiguration {
         this.rateLimiterConfiguration = new RateLimiterConfiguration();
     }
 
+    /**
+     * @param rateLimiterProperties ratelimiter spring configuration properties
+     * @param rateLimiterEventsConsumerRegistry the ratelimiter event consumer registry
+     * @return the RefreshScoped RateLimiterRegistry
+     */
     @Bean
     @RefreshScope
     @ConditionalOnMissingBean

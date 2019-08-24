@@ -28,6 +28,10 @@ public abstract class AbstractRefreshScopedCircuitBreakerConfiguration {
 
     protected abstract void createHealthIndicatorForCircuitBreaker(CircuitBreaker circuitBreaker, CircuitBreakerConfigurationProperties circuitBreakerProperties);
 
+    /**
+     * @param eventConsumerRegistry the circuit breaker event consumer registry
+     * @return the RefreshScoped CircuitBreakerRegistry
+     */
     @Bean
     @RefreshScope
     @ConditionalOnMissingBean

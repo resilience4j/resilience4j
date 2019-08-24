@@ -24,6 +24,11 @@ public abstract class AbstractRefreshScopedBulkheadConfiguration {
         this.bulkheadConfiguration = new BulkheadConfiguration();
     }
 
+    /**
+     * @param bulkheadConfigurationProperties bulkhead spring configuration properties
+     * @param bulkheadEventConsumerRegistry   the bulkhead event consumer registry
+     * @return the RefreshScoped BulkheadRegistry
+     */
     @Bean
     @RefreshScope
     @ConditionalOnMissingBean
@@ -32,6 +37,11 @@ public abstract class AbstractRefreshScopedBulkheadConfiguration {
         return bulkheadConfiguration.bulkheadRegistry(bulkheadConfigurationProperties, bulkheadEventConsumerRegistry);
     }
 
+    /**
+     * @param threadPoolBulkheadConfigurationProperties thread pool bulkhead spring configuration properties
+     * @param bulkheadEventConsumerRegistry   the bulk head event consumer registry
+     * @return the RefreshScoped ThreadPoolBulkheadRegistry
+     */
     @Bean
     @RefreshScope
     @ConditionalOnMissingBean
