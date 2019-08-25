@@ -111,8 +111,8 @@ public class CircuitBreakerAutoConfigurationTest {
 		// expect no health indicator for backendB, as it is disabled via properties
 		ResponseEntity<CompositeHealthResponse> healthResponse = restTemplate.getForEntity("/actuator/health", CompositeHealthResponse.class);
 		assertThat(healthResponse.getBody().getDetails()).isNotNull();
-		assertThat(healthResponse.getBody().getDetails().get("circuitBreaker")).isNotNull();
-		HealthResponse circuitBreakerHealth = healthResponse.getBody().getDetails().get("circuitBreaker");
+		assertThat(healthResponse.getBody().getDetails().get("circuitBreakers")).isNotNull();
+		HealthResponse circuitBreakerHealth = healthResponse.getBody().getDetails().get("circuitBreakers");
 		assertThat(circuitBreakerHealth.getDetails().get("backendA")).isNotNull();
 		assertThat(circuitBreakerHealth.getDetails().get("backendB")).isNull();
 		assertThat(circuitBreakerHealth.getDetails().get("backendSharedA")).isNotNull();
@@ -198,8 +198,8 @@ public class CircuitBreakerAutoConfigurationTest {
 		// expect no health indicator for backendB, as it is disabled via properties
 		ResponseEntity<CompositeHealthResponse> healthResponse = restTemplate.getForEntity("/actuator/health", CompositeHealthResponse.class);
 		assertThat(healthResponse.getBody().getDetails()).isNotNull();
-		assertThat(healthResponse.getBody().getDetails().get("circuitBreaker")).isNotNull();
-		HealthResponse circuitBreakerHealth = healthResponse.getBody().getDetails().get("circuitBreaker");
+		assertThat(healthResponse.getBody().getDetails().get("circuitBreakers")).isNotNull();
+		HealthResponse circuitBreakerHealth = healthResponse.getBody().getDetails().get("circuitBreakers");
 		assertThat(circuitBreakerHealth.getDetails().get("backendA")).isNotNull();
 		assertThat(circuitBreakerHealth.getDetails().get("backendB")).isNull();
 		assertThat(circuitBreakerHealth.getDetails().get("backendSharedA")).isNotNull();
@@ -250,8 +250,8 @@ public class CircuitBreakerAutoConfigurationTest {
 		// expect no health indicator for backendB, as it is disabled via properties
 		ResponseEntity<CompositeHealthResponse> healthResponse = restTemplate.getForEntity("/actuator/health", CompositeHealthResponse.class);
 		assertThat(healthResponse.getBody().getDetails()).isNotNull();
-		assertThat(healthResponse.getBody().getDetails().get("circuitBreaker")).isNotNull();
-		HealthResponse circuitBreakerHealth = healthResponse.getBody().getDetails().get("circuitBreaker");
+		assertThat(healthResponse.getBody().getDetails().get("circuitBreakers")).isNotNull();
+		HealthResponse circuitBreakerHealth = healthResponse.getBody().getDetails().get("circuitBreakers");
 		assertThat(circuitBreakerHealth.getDetails().get("backendA")).isNotNull();
 		assertThat(circuitBreakerHealth.getDetails().get("backendB")).isNull();
 

@@ -21,10 +21,10 @@ import org.springframework.context.annotation.Configuration;
 public class CircuitBreakersHealthIndicatorAutoConfiguration {
 
     @Bean
-    @ConditionalOnMissingBean(name = "circuitBreakerHealthIndicator")
-    public CircuitBreakersHealthIndicator circuitBreakerHealthIndicator(CircuitBreakerRegistry circuitBreakerRegistry,
-                                                                        CircuitBreakerConfigurationProperties circuitBreakerProperties,
-                                                                        HealthAggregator healthAggregator) {
+    @ConditionalOnMissingBean(name = "circuitBreakersHealthIndicator")
+    public CircuitBreakersHealthIndicator circuitBreakersHealthIndicator(CircuitBreakerRegistry circuitBreakerRegistry,
+                                                                         CircuitBreakerConfigurationProperties circuitBreakerProperties,
+                                                                         HealthAggregator healthAggregator) {
         return new CircuitBreakersHealthIndicator(circuitBreakerRegistry, circuitBreakerProperties, healthAggregator);
     }
 

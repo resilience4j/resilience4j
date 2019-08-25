@@ -21,10 +21,10 @@ import org.springframework.context.annotation.Configuration;
 public class RateLimitersHealthIndicatorAutoConfiguration {
 
     @Bean
-    @ConditionalOnMissingBean(name = "rateLimiterHealthIndicator")
-    public RateLimitersHealthIndicator rateLimiterHealthIndicator(RateLimiterRegistry rateLimiterRegistry,
-                                                                  RateLimiterConfigurationProperties rateLimiterProperties,
-                                                                  HealthAggregator healthAggregator) {
+    @ConditionalOnMissingBean(name = "rateLimitersHealthIndicator")
+    public RateLimitersHealthIndicator rateLimitersHealthIndicator(RateLimiterRegistry rateLimiterRegistry,
+                                                                   RateLimiterConfigurationProperties rateLimiterProperties,
+                                                                   HealthAggregator healthAggregator) {
         return new RateLimitersHealthIndicator(rateLimiterRegistry, rateLimiterProperties, healthAggregator);
     }
 
