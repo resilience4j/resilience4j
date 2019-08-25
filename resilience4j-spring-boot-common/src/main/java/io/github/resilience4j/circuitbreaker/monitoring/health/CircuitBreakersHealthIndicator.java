@@ -18,15 +18,19 @@ package io.github.resilience4j.circuitbreaker.monitoring.health;
 
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
+import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
+import io.github.resilience4j.circuitbreaker.configure.CircuitBreakerConfigurationProperties;
 import org.springframework.boot.actuate.health.Health;
+import org.springframework.boot.actuate.health.HealthAggregator;
 import org.springframework.boot.actuate.health.HealthIndicator;
 
-import java.util.Optional;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * A Spring Boot health indicators which adds the state of a CircuitBreaker and it's metrics to the health endpoints
  */
-public class CircuitBreakerHealthIndicator implements HealthIndicator {
+public class CircuitBreakersHealthIndicator implements HealthIndicator {
 
     private static final String FAILURE_RATE = "failureRate";
     private static final String SLOW_CALL_RATE = "slowCallRate";
@@ -37,20 +41,35 @@ public class CircuitBreakerHealthIndicator implements HealthIndicator {
     private static final String SLOW_CALLS = "slowCalls";
     private static final String NOT_PERMITTED = "notPermittedCalls";
     private static final String STATE = "state";
-    private final CircuitBreaker circuitBreaker;
 
-    public CircuitBreakerHealthIndicator(CircuitBreaker circuitBreaker) {
-        this.circuitBreaker = circuitBreaker;
+    private final CircuitBreakerRegistry circuitBreakerRegistry;
+    private final CircuitBreakerConfigurationProperties circuitBreakerProperties;
+    private final HealthAggregator healthAggregator;
+
+    public CircuitBreakersHealthIndicator(CircuitBreakerRegistry circuitBreakerRegistry,
+                                          CircuitBreakerConfigurationProperties circuitBreakerProperties,
+                                          HealthAggregator healthAggregator) {
+        this.circuitBreakerRegistry = circuitBreakerRegistry;
+        this.circuitBreakerProperties = circuitBreakerProperties;
+        this.healthAggregator = healthAggregator;
     }
 
     @Override
     public Health health() {
-        return Optional.of(circuitBreaker)
-                .map(this::mapBackendMonitorState)
-                .orElse(Health.up().build());
+        Map<String, Health> healths = circuitBreakerRegistry.getAllCircuitBreakers().toJavaStream()
+                .filter(this::isRegisterHealthIndicator)
+                .collect(Collectors.toMap(CircuitBreaker::getName, CircuitBreakersHealthIndicator::mapBackendMonitorState));
+
+        return healthAggregator.aggregate(healths);
     }
 
-    private Health mapBackendMonitorState(CircuitBreaker circuitBreaker) {
+    private boolean isRegisterHealthIndicator(CircuitBreaker circuitBreaker) {
+        return circuitBreakerProperties.findCircuitBreakerProperties(circuitBreaker.getName())
+                .map(io.github.resilience4j.common.circuitbreaker.configuration.CircuitBreakerConfigurationProperties.InstanceProperties::getRegisterHealthIndicator)
+                .orElse(true);
+    }
+
+    private static Health mapBackendMonitorState(CircuitBreaker circuitBreaker) {
         switch (circuitBreaker.getState()) {
             case CLOSED:
                 return addDetails(Health.up(), circuitBreaker).build();
@@ -63,7 +82,7 @@ public class CircuitBreakerHealthIndicator implements HealthIndicator {
         }
     }
 
-    private Health.Builder addDetails(Health.Builder builder, CircuitBreaker circuitBreaker) {
+    private static Health.Builder addDetails(Health.Builder builder, CircuitBreaker circuitBreaker) {
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
         CircuitBreakerConfig config = circuitBreaker.getCircuitBreakerConfig();
         builder.withDetail(FAILURE_RATE, metrics.getFailureRate() + "%")

@@ -71,7 +71,7 @@ public class TimeLimiterEventPublisherTest {
         timeLimiter.getEventPublisher()
                 .onTimeout(event -> logger.info(event.getEventType().toString()));
         Supplier<CompletableFuture<String>> futureSupplier = () ->
-                CompletableFuture.supplyAsync(this::fail);
+                CompletableFuture.supplyAsync(this::timeout);
 
         Try.ofCallable(timeLimiter.decorateFutureSupplier(futureSupplier));
 
@@ -95,4 +95,12 @@ public class TimeLimiterEventPublisherTest {
         throw new RuntimeException();
     }
 
+    private String timeout() {
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            // nothing
+        }
+        return "timeout";
+    }
 }

@@ -42,15 +42,19 @@ import org.springframework.context.annotation.Import;
 @AutoConfigureBefore(EndpointAutoConfiguration.class)
 public class BulkheadAutoConfiguration {
 
-	@Bean
+	@Configuration
 	@ConditionalOnClass(value = {Endpoint.class})
-	public BulkheadEndpoint bulkheadEndpoint(BulkheadRegistry bulkheadRegistry, ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry) {
-		return new BulkheadEndpoint(bulkheadRegistry, threadPoolBulkheadRegistry);
-	}
+	public static class BulkheadEndpointConfiguration {
 
-	@Bean
-	@ConditionalOnClass(value = {Endpoint.class})
-	public BulkheadEventsEndpoint bulkheadEventsEndpoint(EventConsumerRegistry<BulkheadEvent> eventConsumerRegistry) {
-		return new BulkheadEventsEndpoint(eventConsumerRegistry);
+		@Bean
+		public BulkheadEndpoint bulkheadEndpoint(BulkheadRegistry bulkheadRegistry, ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry) {
+			return new BulkheadEndpoint(bulkheadRegistry, threadPoolBulkheadRegistry);
+		}
+
+		@Bean
+		public BulkheadEventsEndpoint bulkheadEventsEndpoint(EventConsumerRegistry<BulkheadEvent> eventConsumerRegistry) {
+			return new BulkheadEventsEndpoint(eventConsumerRegistry);
+		}
+
 	}
 }

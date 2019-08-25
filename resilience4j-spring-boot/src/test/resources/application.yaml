@@ -67,6 +67,7 @@ resilience4j.ratelimiter:
       limitForPeriod: 100
       limitRefreshPeriod: 500ms
       timeoutDuration: 3s
+      registerHealthIndicator: false
 
 resilience4j.bulkhead:
   backends:
