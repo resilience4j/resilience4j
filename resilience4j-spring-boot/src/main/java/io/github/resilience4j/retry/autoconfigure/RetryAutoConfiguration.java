@@ -43,16 +43,19 @@ import io.github.resilience4j.retry.monitoring.endpoint.RetryEventsEndpoint;
 @AutoConfigureBefore(EndpointAutoConfiguration.class)
 public class RetryAutoConfiguration {
 
-	@Bean
+	@Configuration
 	@ConditionalOnClass(value = {Endpoint.class})
-	public RetryEndpoint retryEndpoint(RetryRegistry retryRegistry) {
-		return new RetryEndpoint(retryRegistry);
-	}
+	public static class BulkheadEndpointConfiguration {
 
-	@Bean
-	@ConditionalOnClass(value = {Endpoint.class})
-	public RetryEventsEndpoint retryEventsEndpoint(EventConsumerRegistry<RetryEvent> eventConsumerRegistry) {
-		return new RetryEventsEndpoint(eventConsumerRegistry);
-	}
+		@Bean
+		public RetryEndpoint retryEndpoint(RetryRegistry retryRegistry) {
+			return new RetryEndpoint(retryRegistry);
+		}
 
+		@Bean
+		public RetryEventsEndpoint retryEventsEndpoint(EventConsumerRegistry<RetryEvent> eventConsumerRegistry) {
+			return new RetryEventsEndpoint(eventConsumerRegistry);
+		}
+
+	}
 }

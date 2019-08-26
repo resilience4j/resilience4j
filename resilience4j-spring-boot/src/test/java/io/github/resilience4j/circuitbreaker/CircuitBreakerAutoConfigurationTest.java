@@ -109,9 +109,9 @@ public class CircuitBreakerAutoConfigurationTest {
 		// expect no health indicator for backendB, as it is disabled via properties
 		ResponseEntity<String> healthResponse = restTemplate.getForEntity("/health", String.class);
 		assertThat(healthResponse.getBody()).isNotNull();
-		assertThat(healthResponse.getBody()).contains("backendACircuitBreaker");
-		assertThat(healthResponse.getBody()).doesNotContain("backendBCircuitBreaker");
-		assertThat(healthResponse.getBody()).doesNotContain("dynamicBackend");
+		assertThat(healthResponse.getBody()).contains("backendA");
+		assertThat(healthResponse.getBody()).doesNotContain("backendB");
+		assertThat(healthResponse.getBody()).contains("dynamicBackend");
 
 		// Verify that an exception for which setRecordFailurePredicate returns false and it is not included in
 		// setRecordExceptions evaluates to false.

@@ -42,16 +42,19 @@ import io.github.resilience4j.consumer.EventConsumerRegistry;
 @AutoConfigureBefore(EndpointAutoConfiguration.class)
 public class CircuitBreakerAutoConfiguration {
 
-    @Bean
+    @Configuration
     @ConditionalOnClass(value = {Endpoint.class})
-    public CircuitBreakerEndpoint circuitBreakerEndpoint(CircuitBreakerRegistry circuitBreakerRegistry) {
-        return new CircuitBreakerEndpoint(circuitBreakerRegistry);
-    }
+    public static class CircuitBreakerEndpointConfiguration {
 
-    @Bean
-    @ConditionalOnClass(value = {Endpoint.class})
-    public CircuitBreakerEventsEndpoint circuitBreakerEventsEndpoint(EventConsumerRegistry<CircuitBreakerEvent> eventConsumerRegistry) {
-        return new CircuitBreakerEventsEndpoint(eventConsumerRegistry);
-    }
+        @Bean
+        public CircuitBreakerEndpoint circuitBreakerEndpoint(CircuitBreakerRegistry circuitBreakerRegistry) {
+            return new CircuitBreakerEndpoint(circuitBreakerRegistry);
+        }
 
+        @Bean
+        public CircuitBreakerEventsEndpoint circuitBreakerEventsEndpoint(EventConsumerRegistry<CircuitBreakerEvent> eventConsumerRegistry) {
+            return new CircuitBreakerEventsEndpoint(eventConsumerRegistry);
+        }
+
+    }
 }

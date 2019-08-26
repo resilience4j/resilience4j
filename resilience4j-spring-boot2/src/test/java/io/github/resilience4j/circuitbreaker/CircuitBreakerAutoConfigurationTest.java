@@ -25,6 +25,7 @@ import io.github.resilience4j.service.test.TestApplication;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.ResponseEntity;
@@ -108,13 +109,15 @@ public class CircuitBreakerAutoConfigurationTest {
 		assertThat(circuitBreakerEventList.getBody().getCircuitBreakerEvents()).hasSize(2);
 
 		// expect no health indicator for backendB, as it is disabled via properties
-		ResponseEntity<HealthResponse> healthResponse = restTemplate.getForEntity("/actuator/health", HealthResponse.class);
+		ResponseEntity<CompositeHealthResponse> healthResponse = restTemplate.getForEntity("/actuator/health", CompositeHealthResponse.class);
 		assertThat(healthResponse.getBody().getDetails()).isNotNull();
-		assertThat(healthResponse.getBody().getDetails().get("backendACircuitBreaker")).isNotNull();
-		assertThat(healthResponse.getBody().getDetails().get("backendBCircuitBreaker")).isNull();
-		assertThat(healthResponse.getBody().getDetails().get("backendSharedACircuitBreaker")).isNotNull();
-		assertThat(healthResponse.getBody().getDetails().get("backendSharedBCircuitBreaker")).isNotNull();
-		assertThat(healthResponse.getBody().getDetails().get("dynamicBackend")).isNull();
+		assertThat(healthResponse.getBody().getDetails().get("circuitBreakers")).isNotNull();
+		HealthResponse circuitBreakerHealth = healthResponse.getBody().getDetails().get("circuitBreakers");
+		assertThat(circuitBreakerHealth.getDetails().get("backendA")).isNotNull();
+		assertThat(circuitBreakerHealth.getDetails().get("backendB")).isNull();
+		assertThat(circuitBreakerHealth.getDetails().get("backendSharedA")).isNotNull();
+		assertThat(circuitBreakerHealth.getDetails().get("backendSharedB")).isNotNull();
+		assertThat(circuitBreakerHealth.getDetails().get("dynamicBackend")).isNotNull();
 
 		assertThat(circuitBreaker.getCircuitBreakerConfig().getRecordExceptionPredicate().test(new RecordedException())).isTrue();
 		assertThat(circuitBreaker.getCircuitBreakerConfig().getIgnoreExceptionPredicate().test(new IgnoredException())).isTrue();
@@ -193,12 +196,14 @@ public class CircuitBreakerAutoConfigurationTest {
 		assertThat(circuitBreakerEventList.getBody().getCircuitBreakerEvents()).hasSize(2);
 
 		// expect no health indicator for backendB, as it is disabled via properties
-		ResponseEntity<HealthResponse> healthResponse = restTemplate.getForEntity("/actuator/health", HealthResponse.class);
+		ResponseEntity<CompositeHealthResponse> healthResponse = restTemplate.getForEntity("/actuator/health", CompositeHealthResponse.class);
 		assertThat(healthResponse.getBody().getDetails()).isNotNull();
-		assertThat(healthResponse.getBody().getDetails().get("backendACircuitBreaker")).isNotNull();
-		assertThat(healthResponse.getBody().getDetails().get("backendBCircuitBreaker")).isNull();
-		assertThat(healthResponse.getBody().getDetails().get("backendSharedACircuitBreaker")).isNotNull();
-		assertThat(healthResponse.getBody().getDetails().get("backendSharedBCircuitBreaker")).isNotNull();
+		assertThat(healthResponse.getBody().getDetails().get("circuitBreakers")).isNotNull();
+		HealthResponse circuitBreakerHealth = healthResponse.getBody().getDetails().get("circuitBreakers");
+		assertThat(circuitBreakerHealth.getDetails().get("backendA")).isNotNull();
+		assertThat(circuitBreakerHealth.getDetails().get("backendB")).isNull();
+		assertThat(circuitBreakerHealth.getDetails().get("backendSharedA")).isNotNull();
+		assertThat(circuitBreakerHealth.getDetails().get("backendSharedB")).isNotNull();
 
 
 	}
@@ -243,10 +248,12 @@ public class CircuitBreakerAutoConfigurationTest {
 		assertThat(circuitBreakerEventList.getBody().getCircuitBreakerEvents()).hasSize(2);
 
 		// expect no health indicator for backendB, as it is disabled via properties
-		ResponseEntity<HealthResponse> healthResponse = restTemplate.getForEntity("/actuator/health", HealthResponse.class);
+		ResponseEntity<CompositeHealthResponse> healthResponse = restTemplate.getForEntity("/actuator/health", CompositeHealthResponse.class);
 		assertThat(healthResponse.getBody().getDetails()).isNotNull();
-		assertThat(healthResponse.getBody().getDetails().get("backendACircuitBreaker")).isNotNull();
-		assertThat(healthResponse.getBody().getDetails().get("backendBCircuitBreaker")).isNull();
+		assertThat(healthResponse.getBody().getDetails().get("circuitBreakers")).isNotNull();
+		HealthResponse circuitBreakerHealth = healthResponse.getBody().getDetails().get("circuitBreakers");
+		assertThat(circuitBreakerHealth.getDetails().get("backendA")).isNotNull();
+		assertThat(circuitBreakerHealth.getDetails().get("backendB")).isNull();
 
 		assertThat(circuitBreakerAspect.getOrder()).isEqualTo(400);
 		assertThat(circuitBreaker.getMetrics().getNumberOfBufferedCalls()).isEqualTo(2);
@@ -254,7 +261,19 @@ public class CircuitBreakerAutoConfigurationTest {
 		assertThat(circuitBreaker.getMetrics().getNumberOfFailedCalls()).isEqualTo(1);
 	}
 
-	private final static class HealthResponse {
+	private static final class CompositeHealthResponse {
+		private Map<String, HealthResponse> details;
+
+		public Map<String, HealthResponse> getDetails() {
+			return details;
+		}
+
+		public void setDetails(Map<String, HealthResponse> details) {
+			this.details = details;
+		}
+	}
+
+	private static final class HealthResponse {
 		private Map<String, Object> details;
 
 		public Map<String, Object> getDetails() {
