@@ -7,6 +7,7 @@ resilience4j.retry:
       retryExceptionPredicate: io.github.resilience4j.circuitbreaker.RecordFailurePredicate
       retryExceptions:
         - java.io.IOException
+        - feign.FeignException
       ignoreExceptions:
         - io.github.resilience4j.circuitbreaker.IgnoredException
   backends:
@@ -22,6 +23,8 @@ resilience4j.retry:
         - java.lang.IllegalArgumentException
       ignoreExceptions:
         - io.github.resilience4j.circuitbreaker.IgnoredException
+    retryDummyFeignClient:
+      baseConfig: default
 
 resilience4j.circuitbreaker:
   circuitBreakerAspectOrder: 400
@@ -60,6 +63,11 @@ resilience4j.circuitbreaker:
     backendSharedB:
       baseConfig: default
       slidingWindowType: TIME_BASED
+    dummyFeignClient:
+      baseConfig: default
+      slidingWindowSize: 18
+      permittedNumberOfCallsInHalfOpenState: 6
+
 
 resilience4j.ratelimiter:
   rateLimiterAspectOrder: 401
@@ -77,6 +85,8 @@ resilience4j.ratelimiter:
       limitForPeriod: 100
       limitRefreshPeriod: 500ms
       timeoutDuration: 3s
+    rateLimiterDummyFeignClient:
+      baseConfig: default
 
 resilience4j.bulkhead:
   configs:
@@ -88,6 +98,9 @@ resilience4j.bulkhead:
       maxConcurrentCalls: 1
     backendB:
       baseConfig: default
+    dummyFeignClient:
+      maxWaitDuration: 100
+      maxConcurrentCalls: 3
 
 resilience4j.thread-pool-bulkhead":
   configs:

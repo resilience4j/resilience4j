@@ -16,6 +16,7 @@
 package io.github.resilience4j.ratelimiter.configure;
 
 import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
 import java.util.List;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.CompletionStage;
@@ -139,7 +140,12 @@ public class RateLimiterAspect implements Ordered {
 
 	@Nullable
 	private RateLimiter getRateLimiterAnnotation(ProceedingJoinPoint proceedingJoinPoint) {
-		return AnnotationExtractor.extract(proceedingJoinPoint.getTarget().getClass(), RateLimiter.class);
+		if (proceedingJoinPoint.getTarget() instanceof Proxy) {
+			logger.debug("The rate limiter annotation is kept on a interface which is acting as a proxy");
+			return AnnotationExtractor.extractAnnotationFromProxy(proceedingJoinPoint.getTarget(), RateLimiter.class);
+		} else {
+			return AnnotationExtractor.extract(proceedingJoinPoint.getTarget().getClass(), RateLimiter.class);
+		}
 	}
 
 	private Object handleJoinPoint(ProceedingJoinPoint proceedingJoinPoint,

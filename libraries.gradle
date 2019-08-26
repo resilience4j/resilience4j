@@ -29,6 +29,7 @@ ext {
     wiremockVersion = '2.22.0'
     validationApiVersion = '2.0.1.Final'
     kotlinCoroutinesVersion = '1.2.0'
+    springBootOpenFeignVersion= '2.1.2.RELEASE'
 
     libraries = [
             // compile
@@ -121,7 +122,12 @@ ext {
 
             // Kotlin addon
             kotlin_stdlib: "org.jetbrains.kotlin:kotlin-stdlib-jdk8",
-            kotlin_coroutines: "org.jetbrains.kotlinx:kotlinx-coroutines-core:${kotlinCoroutinesVersion}"
+            kotlin_coroutines: "org.jetbrains.kotlinx:kotlinx-coroutines-core:${kotlinCoroutinesVersion}",
+            
+            // Spring cloud addon
+            spring_cloud_openfeign_core: "org.springframework.cloud:spring-cloud-openfeign-core:${springBootOpenFeignVersion}",
+            spring_cloud_starter_openfeign: "org.springframework.cloud:spring-cloud-starter-openfeign:${springBootOpenFeignVersion}",
+            spring_cloud_context: "org.springframework.cloud:spring-cloud-context:${springBootOpenFeignVersion}"
     ]
 
 }
