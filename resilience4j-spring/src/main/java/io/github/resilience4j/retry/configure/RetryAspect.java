@@ -16,6 +16,7 @@
 package io.github.resilience4j.retry.configure;
 
 import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
 import java.util.List;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.CompletionStage;
@@ -147,7 +148,12 @@ public class RetryAspect implements Ordered {
 	 */
 	@Nullable
 	private Retry getRetryAnnotation(ProceedingJoinPoint proceedingJoinPoint) {
-		return AnnotationExtractor.extract(proceedingJoinPoint.getTarget().getClass(), Retry.class);
+		if (proceedingJoinPoint.getTarget() instanceof Proxy) {
+			logger.debug("The retry annotation is kept on a interface which is acting as a proxy");
+			return AnnotationExtractor.extractAnnotationFromProxy(proceedingJoinPoint.getTarget(), Retry.class);
+		} else {
+			return AnnotationExtractor.extract(proceedingJoinPoint.getTarget().getClass(), Retry.class);
+		}
 	}
 
 	/**
