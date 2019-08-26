@@ -22,14 +22,12 @@ import java.util.function.Predicate;
 
 import io.github.resilience4j.bulkhead.adaptive.internal.AdaptiveLimitBulkhead;
 import io.github.resilience4j.bulkhead.adaptive.internal.config.AIMDConfig;
-import io.github.resilience4j.core.lang.NonNull;
 import io.github.resilience4j.core.lang.Nullable;
 
 /**
  * A {@link AdaptiveBulkheadConfig} configures a adaptation capabilities of  {@link AdaptiveLimitBulkhead}
  */
 public class AdaptiveBulkheadConfig<T> {
-	@NonNull
 	private T config;
 	@Nullable
 	private Predicate<Exception> adaptIfError;
@@ -42,7 +40,7 @@ public class AdaptiveBulkheadConfig<T> {
 		return initialConcurrency;
 	}
 
-	@NonNull
+	@Nullable
 	public T getConfiguration() {
 		return config;
 	}

@@ -49,7 +49,7 @@ import io.github.resilience4j.core.metrics.Snapshot;
  */
 public class AIMDLimiter implements LimitPolicy<Bulkhead> {
 	private static final Logger LOG = LoggerFactory.getLogger(AIMDLimiter.class);
-	private static final double MILLI_SCALE = 1_000_000d;
+	private static final long MILLI_SCALE = 1_000_000L;
 	public static final String DROPPING_THE_LIMIT_WITH_NEW_MAX_CONCURRENT_CALLS = "Dropping the limit with new max concurrent calls {}";
 	private final AtomicInteger currentMaxLimit;
 	private final Consumer<BulkheadLimit> publishEventConsumer;
@@ -125,18 +125,9 @@ public class AIMDLimiter implements LimitPolicy<Bulkhead> {
 		if (failureRateInPercentage == -1 && slowCallRate == -1) {
 			// do nothing
 		} else if (failureRateInPercentage >= amidConfigAdaptiveBulkheadConfig.getConfiguration().getFailureRateThreshold()) {
-			waitTimeMillis = (long) (max(0d, desirableLatency - averageLatencySeconds.toNanos()) * MILLI_SCALE);
-			final int currentMaxLimitUpdated = currentMaxLimit.updateAndGet(limit -> max((int) (limit * amidConfigAdaptiveBulkheadConfig.getConfiguration().getConcurrencyDropMultiplier()), 1));
-			if (LOG.isDebugEnabled()) {
-				LOG.debug(DROPPING_THE_LIMIT_WITH_NEW_MAX_CONCURRENT_CALLS, currentMaxLimitUpdated);
-			}
+			waitTimeMillis = handleDropLimit(averageLatencySeconds);
 		} else if (getSlowCallRate(snapshot) >= amidConfigAdaptiveBulkheadConfig.getConfiguration().getSlowCallRateThreshold()) {
-
-			waitTimeMillis = (long) (max(0d, desirableLatency - averageLatencySeconds.toNanos()) * MILLI_SCALE);
-			final int currentMaxLimitUpdated = currentMaxLimit.updateAndGet(limit -> max((int) (limit * amidConfigAdaptiveBulkheadConfig.getConfiguration().getConcurrencyDropMultiplier()), 1));
-			if (LOG.isDebugEnabled()) {
-				LOG.debug(DROPPING_THE_LIMIT_WITH_NEW_MAX_CONCURRENT_CALLS, currentMaxLimitUpdated);
-			}
+			waitTimeMillis = handleDropLimit(averageLatencySeconds);
 		} else {
 			if (inFlight * amidConfigAdaptiveBulkheadConfig.getConfiguration().getLimitIncrementInflightFactor() >= getCurrentLimit()) {
 				final int limit = currentMaxLimit.incrementAndGet();
@@ -153,6 +144,16 @@ public class AIMDLimiter implements LimitPolicy<Bulkhead> {
 		}
 		final int updatedLimit = currentMaxLimit.updateAndGet(currLimit -> Math.min(amidConfigAdaptiveBulkheadConfig.getConfiguration().getMaxLimit(), max(amidConfigAdaptiveBulkheadConfig.getConfiguration().getMinLimit(), currLimit)));
 		adoptLimit(bulkhead, updatedLimit, waitTimeMillis != null ? waitTimeMillis : 0);
+	}
+
+	private Long handleDropLimit(Duration averageLatencySeconds) {
+		Long waitTimeMillis;
+		waitTimeMillis = (max(0L, desirableLatency - averageLatencySeconds.toNanos()) * MILLI_SCALE);
+		final int currentMaxLimitUpdated = currentMaxLimit.updateAndGet(limit -> max((int) (limit * amidConfigAdaptiveBulkheadConfig.getConfiguration().getConcurrencyDropMultiplier()), 1));
+		if (LOG.isDebugEnabled()) {
+			LOG.debug(DROPPING_THE_LIMIT_WITH_NEW_MAX_CONCURRENT_CALLS, currentMaxLimitUpdated);
+		}
+		return waitTimeMillis;
 	}
 
 	/**
