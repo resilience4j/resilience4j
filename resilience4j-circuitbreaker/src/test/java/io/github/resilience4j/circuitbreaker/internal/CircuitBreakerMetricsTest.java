@@ -18,21 +18,30 @@
  */
 package io.github.resilience4j.circuitbreaker.internal;
 
+import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import org.junit.Test;
 
+import java.util.concurrent.TimeUnit;
+
+import static io.github.resilience4j.circuitbreaker.internal.CircuitBreakerMetrics.Result;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class CircuitBreakerMetricsTest {
 
     @Test
     public void testCircuitBreakerMetrics(){
-        CircuitBreakerMetrics circuitBreakerMetrics = new CircuitBreakerMetrics(10);
-        assertThat(circuitBreakerMetrics.getMaxNumberOfBufferedCalls()).isEqualTo(10);
+        CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom()
+                .slidingWindow(10, 10, CircuitBreakerConfig.SlidingWindow.COUNT_BASED)
+                .build();
 
-        circuitBreakerMetrics.onSuccess();
-        circuitBreakerMetrics.onSuccess();
-        circuitBreakerMetrics.onError();
-        circuitBreakerMetrics.onError();
+        CircuitBreakerMetrics circuitBreakerMetrics = new CircuitBreakerMetrics(circuitBreakerConfig.getSlidingWindowSize(),
+                circuitBreakerConfig);
+
+        circuitBreakerMetrics.onSuccess(0, TimeUnit.NANOSECONDS);
+        circuitBreakerMetrics.onSuccess(0, TimeUnit.NANOSECONDS);
+        circuitBreakerMetrics.onError(0, TimeUnit.NANOSECONDS);
+        Result result = circuitBreakerMetrics.onError(0, TimeUnit.NANOSECONDS);
+
         circuitBreakerMetrics.onCallNotPermitted();
         circuitBreakerMetrics.onCallNotPermitted();
 
@@ -43,44 +52,32 @@ public class CircuitBreakerMetricsTest {
 
         // The failure rate must be -1, because the number of measured calls is below the buffer size of 10
         assertThat(circuitBreakerMetrics.getFailureRate()).isEqualTo(-1);
+        assertThat(result)
+                .isEqualTo(Result.BELOW_MINIMUM_CALLS_THRESHOLD);
 
-        circuitBreakerMetrics.onError();
-        circuitBreakerMetrics.onError();
-        circuitBreakerMetrics.onError();
-        circuitBreakerMetrics.onError();
-        circuitBreakerMetrics.onSuccess();
-        circuitBreakerMetrics.onSuccess();
-        circuitBreakerMetrics.onSuccess();
-        circuitBreakerMetrics.onSuccess();
+        circuitBreakerMetrics.onError(0, TimeUnit.NANOSECONDS);
+        circuitBreakerMetrics.onError(0, TimeUnit.NANOSECONDS);
+        circuitBreakerMetrics.onError(0, TimeUnit.NANOSECONDS);
+        circuitBreakerMetrics.onError(0, TimeUnit.NANOSECONDS);
+        circuitBreakerMetrics.onSuccess(0, TimeUnit.NANOSECONDS);
+        circuitBreakerMetrics.onSuccess(0, TimeUnit.NANOSECONDS);
+        circuitBreakerMetrics.onSuccess(0, TimeUnit.NANOSECONDS);
+        result = circuitBreakerMetrics.onSuccess(0, TimeUnit.NANOSECONDS);
 
-        // 12 calls have been recorded, but only 10 are stored in the RingBitSet. 4 successes and 6 failures.
+        // 12 calls have been recorded, but only 10 are stored in the sliding window. 4 successes and 6 failures.
         // The failure rate must be 60%, because the number of measured calls is above the minimum number of measured calls.
         assertThat(circuitBreakerMetrics.getNumberOfBufferedCalls()).isEqualTo(10);
         assertThat(circuitBreakerMetrics.getNumberOfFailedCalls()).isEqualTo(6);
         assertThat(circuitBreakerMetrics.getNumberOfSuccessfulCalls()).isEqualTo(4);
         assertThat(circuitBreakerMetrics.getFailureRate()).isEqualTo(60);
-    }
+        assertThat(result).isEqualTo(Result.ABOVE_THRESHOLDS);
 
-    @Test
-    public void testCopyCircuitBreakerMetrics(){
-        CircuitBreakerMetrics halfOpenCircuitBreakerMetrics = new CircuitBreakerMetrics(10);
-        assertThat(halfOpenCircuitBreakerMetrics.getMaxNumberOfBufferedCalls()).isEqualTo(10);
-
-        halfOpenCircuitBreakerMetrics.onSuccess();
-        halfOpenCircuitBreakerMetrics.onSuccess();
-        halfOpenCircuitBreakerMetrics.onError();
-        halfOpenCircuitBreakerMetrics.onError();
-
-        assertThat(halfOpenCircuitBreakerMetrics.getNumberOfBufferedCalls()).isEqualTo(4);
-        assertThat(halfOpenCircuitBreakerMetrics.getNumberOfFailedCalls()).isEqualTo(2);
-        assertThat(halfOpenCircuitBreakerMetrics.getNumberOfSuccessfulCalls()).isEqualTo(2);
+        circuitBreakerMetrics.onSuccess(0, TimeUnit.NANOSECONDS);
+        circuitBreakerMetrics.onSuccess(0, TimeUnit.NANOSECONDS);
+        result = circuitBreakerMetrics.onSuccess(0, TimeUnit.NANOSECONDS);
+        assertThat(result).isEqualTo(Result.BELOW_THRESHOLDS);
+        assertThat(circuitBreakerMetrics.getFailureRate()).isEqualTo(30);
 
 
-        CircuitBreakerMetrics closedCircuitBreakerMetrics = halfOpenCircuitBreakerMetrics.copy(20);
-        assertThat(closedCircuitBreakerMetrics.getMaxNumberOfBufferedCalls()).isEqualTo(20);
-        assertThat(closedCircuitBreakerMetrics.getNumberOfBufferedCalls()).isEqualTo(4);
-        assertThat(closedCircuitBreakerMetrics.getNumberOfFailedCalls()).isEqualTo(2);
-        assertThat(closedCircuitBreakerMetrics.getNumberOfSuccessfulCalls()).isEqualTo(2);
-        assertThat(closedCircuitBreakerMetrics.getNumberOfNotPermittedCalls()).isEqualTo(0);
     }
 }

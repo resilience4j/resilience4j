@@ -29,6 +29,7 @@ import spock.lang.AutoCleanup
 import spock.lang.Specification
 
 import java.time.Duration
+import java.util.concurrent.TimeUnit
 
 import static ratpack.groovy.test.embed.GroovyEmbeddedApp.ratpack
 
@@ -72,8 +73,8 @@ class CircuitBreakerChainSpec extends Specification {
         def circuitBreakerRegistry = app.server.registry.get().get(CircuitBreakerRegistry)
         ['test1', 'test2'].each {
             def c = circuitBreakerRegistry.circuitBreaker(it)
-            c.onSuccess(1000)
-            c.onError(1000, new Exception("meh"))
+            c.onSuccess(1000, TimeUnit.NANOSECONDS)
+            c.onError(1000, TimeUnit.NANOSECONDS, new Exception("meh"))
         }
 
         when: "we do a sanity check"
@@ -132,8 +133,8 @@ class CircuitBreakerChainSpec extends Specification {
         def circuitBreakerRegistry = app.server.registry.get().get(CircuitBreakerRegistry)
         ['test1', 'test2'].each {
             def c = circuitBreakerRegistry.circuitBreaker(it)
-            c.onSuccess(1000)
-            c.onError(1000, new Exception("meh"))
+            c.onSuccess(1000, TimeUnit.NANOSECONDS)
+            c.onError(1000, TimeUnit.NANOSECONDS, new Exception("meh"))
         }
 
         when: "we do a sanity check"
@@ -201,8 +202,8 @@ class CircuitBreakerChainSpec extends Specification {
         def circuitBreakerRegistry = app.server.registry.get().get(CircuitBreakerRegistry)
         ['test1', 'test2'].each {
             def c = circuitBreakerRegistry.circuitBreaker(it)
-            c.onSuccess(1000)
-            c.onError(1000, new Exception("meh"))
+            c.onSuccess(1000, TimeUnit.NANOSECONDS)
+            c.onError(1000, TimeUnit.NANOSECONDS, new Exception("meh"))
         }
         def actual = ExecHarness.yieldSingle {
             streamer.requestStream(new URI("http://$app.server.bindHost:$app.server.bindPort/circuitbreaker/stream/events")) {
@@ -271,8 +272,8 @@ class CircuitBreakerChainSpec extends Specification {
         def circuitBreakerRegistry = app.server.registry.get().get(CircuitBreakerRegistry)
         ['test1', 'test2'].each {
             def c = circuitBreakerRegistry.circuitBreaker(it)
-            c.onSuccess(1000)
-            c.onError(1000, new Exception("meh"))
+            c.onSuccess(1000, TimeUnit.NANOSECONDS)
+            c.onError(1000, TimeUnit.NANOSECONDS, new Exception("meh"))
         }
 
         when: "we get all circuit breaker events"

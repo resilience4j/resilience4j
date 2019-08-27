@@ -15,7 +15,27 @@
  */
 package io.github.resilience4j.circuitbreaker;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import com.github.tomakehurst.wiremock.client.WireMock;
+import com.github.tomakehurst.wiremock.junit.WireMockRule;
+import io.github.resilience4j.circuitbreaker.autoconfigure.CircuitBreakerProperties;
+import io.github.resilience4j.circuitbreaker.configure.CircuitBreakerAspect;
+import io.github.resilience4j.common.circuitbreaker.monitoring.endpoint.CircuitBreakerEndpointResponse;
+import io.github.resilience4j.common.circuitbreaker.monitoring.endpoint.CircuitBreakerEventsEndpointResponse;
+import io.github.resilience4j.service.test.DummyFeignClient;
+import io.github.resilience4j.service.test.DummyService;
+import io.github.resilience4j.service.test.ReactiveDummyService;
+import io.github.resilience4j.service.test.TestApplication;
+import org.apache.commons.lang3.StringUtils;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.actuate.health.Health;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.http.ResponseEntity;
+import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import java.io.IOException;
 import java.time.Duration;
@@ -23,22 +43,7 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.web.client.TestRestTemplate;
-import org.springframework.http.ResponseEntity;
-import org.springframework.test.annotation.DirtiesContext;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-
-import io.github.resilience4j.circuitbreaker.autoconfigure.CircuitBreakerProperties;
-import io.github.resilience4j.circuitbreaker.configure.CircuitBreakerAspect;
-import io.github.resilience4j.common.circuitbreaker.monitoring.endpoint.CircuitBreakerEndpointResponse;
-import io.github.resilience4j.common.circuitbreaker.monitoring.endpoint.CircuitBreakerEventsEndpointResponse;
-import io.github.resilience4j.service.test.DummyService;
-import io.github.resilience4j.service.test.ReactiveDummyService;
-import io.github.resilience4j.service.test.TestApplication;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
@@ -63,6 +68,46 @@ public class CircuitBreakerAutoConfigurationTest {
 	@Autowired
 	private ReactiveDummyService reactiveDummyService;
 
+	@Autowired
+	private DummyFeignClient dummyFeignClient;
+
+	@Rule
+	public WireMockRule wireMockRule = new WireMockRule(8090);
+
+
+	/**
+	 * This test verifies that the combination of @FeignClient and @CircuitBreaker annotation works as same as @CircuitBreaker alone works with any normal service class
+	 */
+	@Test
+	@DirtiesContext
+	public void testFeignClient() {
+
+		WireMock.stubFor(WireMock.get(WireMock.urlEqualTo("/sample/"))
+				.willReturn(WireMock.aResponse().withStatus(200).withBody("This is successful call")));
+		WireMock.stubFor(WireMock.get(WireMock.urlMatching("^.*\\/sample\\/error.*$"))
+				.willReturn(WireMock.aResponse().withStatus(400).withBody("This is error")));
+
+		try {
+			dummyFeignClient.doSomething("error");
+		} catch (Exception e) {
+			// Ignore the error, we want to increase the error counts
+		}
+		try {
+			dummyFeignClient.doSomething("errorAgain");
+		} catch (Exception e) {
+			// Ignore the error, we want to increase the error counts
+		}
+		dummyFeignClient.doSomething(StringUtils.EMPTY);
+		dummyFeignClient.doSomething(StringUtils.EMPTY);
+
+		CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("dummyFeignClient");
+		assertThat(circuitBreaker).isNotNull();
+		assertThat(circuitBreaker.getMetrics().getNumberOfBufferedCalls()).isEqualTo(4);
+		assertThat(circuitBreaker.getMetrics().getNumberOfSuccessfulCalls()).isEqualTo(2);
+		assertThat(circuitBreaker.getMetrics().getNumberOfFailedCalls()).isEqualTo(2);
+		assertThat(circuitBreaker.getCircuitBreakerConfig().getSlidingWindowSize()).isEqualTo(18);
+		assertThat(circuitBreaker.getCircuitBreakerConfig().getPermittedNumberOfCallsInHalfOpenState()).isEqualTo(6);
+	}
 	/**
 	 * The test verifies that a CircuitBreaker instance is created and configured properly when the DummyService is invoked and
 	 * that the CircuitBreaker records successful and failed calls.
@@ -76,7 +121,7 @@ public class CircuitBreakerAutoConfigurationTest {
 		try {
 			dummyService.doSomething(true);
 		} catch (IOException ex) {
-			// Do nothing. The IOException is recorded by the CircuitBreaker as part of the setRecordFailurePredicate as a failure.
+			// Do nothing. The IOException is recorded by the CircuitBreaker as part of the recordFailurePredicate as a failure.
 		}
 		// The invocation is recorded by the CircuitBreaker as a success.
 		dummyService.doSomething(false);
@@ -89,8 +134,8 @@ public class CircuitBreakerAutoConfigurationTest {
 		assertThat(circuitBreaker.getMetrics().getNumberOfFailedCalls()).isEqualTo(1);
 
 		// expect circuitbreaker is configured as defined in application.yml
-		assertThat(circuitBreaker.getCircuitBreakerConfig().getRingBufferSizeInClosedState()).isEqualTo(6);
-		assertThat(circuitBreaker.getCircuitBreakerConfig().getRingBufferSizeInHalfOpenState()).isEqualTo(2);
+		assertThat(circuitBreaker.getCircuitBreakerConfig().getSlidingWindowSize()).isEqualTo(6);
+		assertThat(circuitBreaker.getCircuitBreakerConfig().getPermittedNumberOfCallsInHalfOpenState()).isEqualTo(2);
 		assertThat(circuitBreaker.getCircuitBreakerConfig().getFailureRateThreshold()).isEqualTo(70f);
 		assertThat(circuitBreaker.getCircuitBreakerConfig().getWaitDurationInOpenState()).isEqualByComparingTo(Duration.ofSeconds(5L));
 
@@ -99,7 +144,7 @@ public class CircuitBreakerAutoConfigurationTest {
 
 		// expect circuitbreakers actuator endpoint contains all circuitbreakers
 		ResponseEntity<CircuitBreakerEndpointResponse> circuitBreakerList = restTemplate.getForEntity("/actuator/circuitbreakers", CircuitBreakerEndpointResponse.class);
-		assertThat(circuitBreakerList.getBody().getCircuitBreakers()).hasSize(5).containsExactly("backendA", "backendB", "backendSharedA", "backendSharedB", "dynamicBackend");
+		assertThat(circuitBreakerList.getBody().getCircuitBreakers()).hasSize(6).containsExactly("backendA", "backendB", "backendSharedA", "backendSharedB", "dummyFeignClient", "dynamicBackend");
 
 		// expect circuitbreaker-event actuator endpoint recorded all events
 		ResponseEntity<CircuitBreakerEventsEndpointResponse> circuitBreakerEventList = restTemplate.getForEntity("/actuator/circuitbreakerevents", CircuitBreakerEventsEndpointResponse.class);
@@ -109,44 +154,50 @@ public class CircuitBreakerAutoConfigurationTest {
 		assertThat(circuitBreakerEventList.getBody().getCircuitBreakerEvents()).hasSize(2);
 
 		// expect no health indicator for backendB, as it is disabled via properties
-		ResponseEntity<HealthResponse> healthResponse = restTemplate.getForEntity("/actuator/health", HealthResponse.class);
+		ResponseEntity<CompositeHealthResponse> healthResponse = restTemplate.getForEntity("/actuator/health", CompositeHealthResponse.class);
 		assertThat(healthResponse.getBody().getDetails()).isNotNull();
-		assertThat(healthResponse.getBody().getDetails().get("backendACircuitBreaker")).isNotNull();
-		assertThat(healthResponse.getBody().getDetails().get("backendBCircuitBreaker")).isNull();
-		assertThat(healthResponse.getBody().getDetails().get("backendSharedACircuitBreaker")).isNotNull();
-		assertThat(healthResponse.getBody().getDetails().get("backendSharedBCircuitBreaker")).isNotNull();
-		assertThat(healthResponse.getBody().getDetails().get("dynamicBackend")).isNull();
+		assertThat(healthResponse.getBody().getDetails().get("circuitBreakers")).isNotNull();
+		HealthResponse circuitBreakerHealth = healthResponse.getBody().getDetails().get("circuitBreakers");
+		assertThat(circuitBreakerHealth.getDetails().get("backendA")).isNotNull();
+		assertThat(circuitBreakerHealth.getDetails().get("backendB")).isNull();
+		assertThat(circuitBreakerHealth.getDetails().get("backendSharedA")).isNotNull();
+		assertThat(circuitBreakerHealth.getDetails().get("backendSharedB")).isNotNull();
+		assertThat(circuitBreakerHealth.getDetails().get("dynamicBackend")).isNotNull();
 
-		assertThat(circuitBreaker.getCircuitBreakerConfig().getRecordFailurePredicate().test(new RecordedException())).isTrue();
-		assertThat(circuitBreaker.getCircuitBreakerConfig().getRecordFailurePredicate().test(new IgnoredException())).isFalse();
+		assertThat(circuitBreaker.getCircuitBreakerConfig().getRecordExceptionPredicate().test(new RecordedException())).isTrue();
+		assertThat(circuitBreaker.getCircuitBreakerConfig().getIgnoreExceptionPredicate().test(new IgnoredException())).isTrue();
 
 		// Verify that an exception for which setRecordFailurePredicate returns false and it is not included in
 		// setRecordExceptions evaluates to false.
-		assertThat(circuitBreaker.getCircuitBreakerConfig().getRecordFailurePredicate().test(new Exception())).isFalse();
+		assertThat(circuitBreaker.getCircuitBreakerConfig().getRecordExceptionPredicate().test(new Exception())).isFalse();
 
 		assertThat(circuitBreakerAspect.getOrder()).isEqualTo(400);
 
 		// expect all shared configs share the same values and are from the application.yml file
 		CircuitBreaker sharedA = circuitBreakerRegistry.circuitBreaker("backendSharedA");
 		CircuitBreaker sharedB = circuitBreakerRegistry.circuitBreaker("backendSharedB");
+		CircuitBreaker backendB = circuitBreakerRegistry.circuitBreaker("backendB");
 
 		Duration defaultWaitDuration = Duration.ofSeconds(10);
 		float defaultFailureRate = 60f;
-		int defaultRingBufferSizeInHalfOpenState = 10;
+		int defaultPermittedNumberOfCallsInHalfOpenState = 10;
 		int defaultRingBufferSizeInClosedState = 100;
 
-		assertThat(sharedA.getCircuitBreakerConfig().getRingBufferSizeInClosedState()).isEqualTo(6);
-		assertThat(sharedA.getCircuitBreakerConfig().getRingBufferSizeInHalfOpenState()).isEqualTo(defaultRingBufferSizeInHalfOpenState);
+		assertThat(backendB.getCircuitBreakerConfig().getSlidingWindowType()).isEqualTo(CircuitBreakerConfig.SlidingWindow.TIME_BASED);
+
+		assertThat(sharedA.getCircuitBreakerConfig().getSlidingWindowSize()).isEqualTo(6);
+		assertThat(sharedA.getCircuitBreakerConfig().getPermittedNumberOfCallsInHalfOpenState()).isEqualTo(defaultPermittedNumberOfCallsInHalfOpenState);
 		assertThat(sharedA.getCircuitBreakerConfig().getFailureRateThreshold()).isEqualTo(defaultFailureRate);
 		assertThat(sharedA.getCircuitBreakerConfig().getWaitDurationInOpenState()).isEqualTo(defaultWaitDuration);
 
-		assertThat(sharedB.getCircuitBreakerConfig().getRingBufferSizeInClosedState()).isEqualTo(defaultRingBufferSizeInClosedState);
-		assertThat(sharedB.getCircuitBreakerConfig().getRingBufferSizeInHalfOpenState()).isEqualTo(defaultRingBufferSizeInHalfOpenState);
+		assertThat(sharedB.getCircuitBreakerConfig().getSlidingWindowSize()).isEqualTo(defaultRingBufferSizeInClosedState);
+		assertThat(sharedB.getCircuitBreakerConfig().getSlidingWindowType()).isEqualTo(CircuitBreakerConfig.SlidingWindow.TIME_BASED);
+		assertThat(sharedB.getCircuitBreakerConfig().getPermittedNumberOfCallsInHalfOpenState()).isEqualTo(defaultPermittedNumberOfCallsInHalfOpenState);
 		assertThat(sharedB.getCircuitBreakerConfig().getFailureRateThreshold()).isEqualTo(defaultFailureRate);
 		assertThat(sharedB.getCircuitBreakerConfig().getWaitDurationInOpenState()).isEqualTo(defaultWaitDuration);
 
-		assertThat(dynamicCircuitBreaker.getCircuitBreakerConfig().getRingBufferSizeInClosedState()).isEqualTo(defaultRingBufferSizeInClosedState);
-		assertThat(dynamicCircuitBreaker.getCircuitBreakerConfig().getRingBufferSizeInHalfOpenState()).isEqualTo(defaultRingBufferSizeInHalfOpenState);
+		assertThat(dynamicCircuitBreaker.getCircuitBreakerConfig().getSlidingWindowSize()).isEqualTo(defaultRingBufferSizeInClosedState);
+		assertThat(dynamicCircuitBreaker.getCircuitBreakerConfig().getPermittedNumberOfCallsInHalfOpenState()).isEqualTo(defaultPermittedNumberOfCallsInHalfOpenState);
 		assertThat(dynamicCircuitBreaker.getCircuitBreakerConfig().getFailureRateThreshold()).isEqualTo(defaultFailureRate);
 		assertThat(dynamicCircuitBreaker.getCircuitBreakerConfig().getWaitDurationInOpenState()).isEqualTo(defaultWaitDuration);
 	}
@@ -180,7 +231,7 @@ public class CircuitBreakerAutoConfigurationTest {
 
 		// expect circuitbreakers actuator endpoint contains both circuitbreakers
 		ResponseEntity<CircuitBreakerEndpointResponse> circuitBreakerList = restTemplate.getForEntity("/actuator/circuitbreakers", CircuitBreakerEndpointResponse.class);
-		assertThat(circuitBreakerList.getBody().getCircuitBreakers()).hasSize(4).containsExactly("backendA", "backendB", "backendSharedA", "backendSharedB");
+		assertThat(circuitBreakerList.getBody().getCircuitBreakers()).hasSize(5).containsExactly("backendA", "backendB", "backendSharedA", "backendSharedB", "dummyFeignClient");
 
 		// expect circuitbreaker-event actuator endpoint recorded both events
 		ResponseEntity<CircuitBreakerEventsEndpointResponse> circuitBreakerEventList = restTemplate.getForEntity("/actuator/circuitbreakerevents", CircuitBreakerEventsEndpointResponse.class);
@@ -190,12 +241,14 @@ public class CircuitBreakerAutoConfigurationTest {
 		assertThat(circuitBreakerEventList.getBody().getCircuitBreakerEvents()).hasSize(2);
 
 		// expect no health indicator for backendB, as it is disabled via properties
-		ResponseEntity<HealthResponse> healthResponse = restTemplate.getForEntity("/actuator/health", HealthResponse.class);
+		ResponseEntity<CompositeHealthResponse> healthResponse = restTemplate.getForEntity("/actuator/health", CompositeHealthResponse.class);
 		assertThat(healthResponse.getBody().getDetails()).isNotNull();
-		assertThat(healthResponse.getBody().getDetails().get("backendACircuitBreaker")).isNotNull();
-		assertThat(healthResponse.getBody().getDetails().get("backendBCircuitBreaker")).isNull();
-		assertThat(healthResponse.getBody().getDetails().get("backendSharedACircuitBreaker")).isNotNull();
-		assertThat(healthResponse.getBody().getDetails().get("backendSharedBCircuitBreaker")).isNotNull();
+		assertThat(healthResponse.getBody().getDetails().get("circuitBreakers")).isNotNull();
+		HealthResponse circuitBreakerHealth = healthResponse.getBody().getDetails().get("circuitBreakers");
+		assertThat(circuitBreakerHealth.getDetails().get("backendA")).isNotNull();
+		assertThat(circuitBreakerHealth.getDetails().get("backendB")).isNull();
+		assertThat(circuitBreakerHealth.getDetails().get("backendSharedA")).isNotNull();
+		assertThat(circuitBreakerHealth.getDetails().get("backendSharedB")).isNotNull();
 
 
 	}
@@ -223,14 +276,14 @@ public class CircuitBreakerAutoConfigurationTest {
 
 
 		// expect circuitbreaker is configured as defined in application.yml
-		assertThat(circuitBreaker.getCircuitBreakerConfig().getRingBufferSizeInClosedState()).isEqualTo(10);
-		assertThat(circuitBreaker.getCircuitBreakerConfig().getRingBufferSizeInHalfOpenState()).isEqualTo(5);
+		assertThat(circuitBreaker.getCircuitBreakerConfig().getSlidingWindowSize()).isEqualTo(10);
+		assertThat(circuitBreaker.getCircuitBreakerConfig().getPermittedNumberOfCallsInHalfOpenState()).isEqualTo(5);
 		assertThat(circuitBreaker.getCircuitBreakerConfig().getFailureRateThreshold()).isEqualTo(50f);
 		assertThat(circuitBreaker.getCircuitBreakerConfig().getWaitDurationInOpenState()).isEqualByComparingTo(Duration.ofSeconds(5L));
 
 		// expect circuitbreakers actuator endpoint contains all circuitbreakers
 		ResponseEntity<CircuitBreakerEndpointResponse> circuitBreakerList = restTemplate.getForEntity("/actuator/circuitbreakers", CircuitBreakerEndpointResponse.class);
-		assertThat(circuitBreakerList.getBody().getCircuitBreakers()).hasSize(4).containsExactly("backendA", "backendB", "backendSharedA", "backendSharedB");
+		assertThat(circuitBreakerList.getBody().getCircuitBreakers()).hasSize(5).containsExactly("backendA", "backendB", "backendSharedA", "backendSharedB", "dummyFeignClient");
 
 		// expect circuitbreaker-event actuator endpoint recorded both events
 		ResponseEntity<CircuitBreakerEventsEndpointResponse> circuitBreakerEventList = restTemplate.getForEntity("/actuator/circuitbreakerevents", CircuitBreakerEventsEndpointResponse.class);
@@ -240,10 +293,12 @@ public class CircuitBreakerAutoConfigurationTest {
 		assertThat(circuitBreakerEventList.getBody().getCircuitBreakerEvents()).hasSize(2);
 
 		// expect no health indicator for backendB, as it is disabled via properties
-		ResponseEntity<HealthResponse> healthResponse = restTemplate.getForEntity("/actuator/health", HealthResponse.class);
+		ResponseEntity<CompositeHealthResponse> healthResponse = restTemplate.getForEntity("/actuator/health", CompositeHealthResponse.class);
 		assertThat(healthResponse.getBody().getDetails()).isNotNull();
-		assertThat(healthResponse.getBody().getDetails().get("backendACircuitBreaker")).isNotNull();
-		assertThat(healthResponse.getBody().getDetails().get("backendBCircuitBreaker")).isNull();
+		assertThat(healthResponse.getBody().getDetails().get("circuitBreakers")).isNotNull();
+		HealthResponse circuitBreakerHealth = healthResponse.getBody().getDetails().get("circuitBreakers");
+		assertThat(circuitBreakerHealth.getDetails().get("backendA")).isNotNull();
+		assertThat(circuitBreakerHealth.getDetails().get("backendB")).isNull();
 
 		assertThat(circuitBreakerAspect.getOrder()).isEqualTo(400);
 		assertThat(circuitBreaker.getMetrics().getNumberOfBufferedCalls()).isEqualTo(2);
@@ -251,7 +306,19 @@ public class CircuitBreakerAutoConfigurationTest {
 		assertThat(circuitBreaker.getMetrics().getNumberOfFailedCalls()).isEqualTo(1);
 	}
 
-	private final static class HealthResponse {
+	private static final class CompositeHealthResponse {
+		private Map<String, HealthResponse> details;
+
+		public Map<String, HealthResponse> getDetails() {
+			return details;
+		}
+
+		public void setDetails(Map<String, HealthResponse> details) {
+			this.details = details;
+		}
+	}
+
+	private static final class HealthResponse {
 		private Map<String, Object> details;
 
 		public Map<String, Object> getDetails() {

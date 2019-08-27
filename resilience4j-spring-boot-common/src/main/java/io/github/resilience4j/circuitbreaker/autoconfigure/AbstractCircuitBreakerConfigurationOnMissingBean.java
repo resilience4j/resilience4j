@@ -15,7 +15,6 @@
  */
 package io.github.resilience4j.circuitbreaker.autoconfigure;
 
-import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.circuitbreaker.configure.*;
 import io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent;
@@ -54,17 +53,11 @@ public abstract class AbstractCircuitBreakerConfigurationOnMissingBean {
 		// Register the event consumers
 		circuitBreakerConfiguration.registerEventConsumer(circuitBreakerRegistry, eventConsumerRegistry);
 
-		// Register a consumer to hook up any health indicators for circuit breakers after creation. This will catch ones that get
-		// created beyond initially configured backends.
-		circuitBreakerRegistry.getEventPublisher().onEntryAdded(event -> createHealthIndicatorForCircuitBreaker(event.getAddedEntry(), circuitBreakerProperties));
-
 		// Initialize backends that were initially configured.
 		circuitBreakerConfiguration.initCircuitBreakerRegistry(circuitBreakerRegistry);
 
 		return circuitBreakerRegistry;
 	}
-
-	protected abstract void createHealthIndicatorForCircuitBreaker(CircuitBreaker circuitBreaker, CircuitBreakerConfigurationProperties circuitBreakerProperties);
 
 	@Bean
 	@ConditionalOnMissingBean

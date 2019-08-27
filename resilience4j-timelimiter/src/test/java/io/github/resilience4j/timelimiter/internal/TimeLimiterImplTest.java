@@ -24,7 +24,7 @@ public class TimeLimiterImplTest {
         timeLimiterConfig = TimeLimiterConfig.custom()
                 .timeoutDuration(Duration.ZERO)
                 .build();
-        TimeLimiterImpl testTimeout = new TimeLimiterImpl(timeLimiterConfig);
+        TimeLimiterImpl testTimeout = new TimeLimiterImpl("name", timeLimiterConfig);
         timeout = PowerMockito.spy(testTimeout);
     }
 

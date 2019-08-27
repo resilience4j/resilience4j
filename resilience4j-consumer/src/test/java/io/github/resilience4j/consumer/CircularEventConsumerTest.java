@@ -21,16 +21,13 @@ package io.github.resilience4j.consumer;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent;
-import io.vavr.API;
 import org.junit.Test;
 
 import javax.xml.ws.WebServiceException;
 import java.io.IOException;
+import java.util.concurrent.TimeUnit;
 
 import static io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent.Type;
-import static io.vavr.API.$;
-import static io.vavr.API.Case;
-import static io.vavr.Predicates.instanceOf;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class CircularEventConsumerTest {
@@ -49,9 +46,9 @@ public class CircularEventConsumerTest {
         assertThat(ringBuffer.getBufferedEvents()).isEmpty();
 
         //When
-        circuitBreaker.onError(0, new RuntimeException("Bla"));
-        circuitBreaker.onError(0, new RuntimeException("Bla"));
-        circuitBreaker.onError(0, new RuntimeException("Bla"));
+        circuitBreaker.onError(0, TimeUnit.NANOSECONDS, new RuntimeException("Bla"));
+        circuitBreaker.onError(0, TimeUnit.NANOSECONDS, new RuntimeException("Bla"));
+        circuitBreaker.onError(0, TimeUnit.NANOSECONDS, new RuntimeException("Bla"));
 
         //Then
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
@@ -67,10 +64,8 @@ public class CircularEventConsumerTest {
     public void shouldBufferAllEvents() {
         // Given
         CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom()
-                .ringBufferSizeInClosedState(3)
-                .recordFailure(throwable -> API.Match(throwable).of(
-                        Case($(instanceOf(WebServiceException.class)), true),
-                        Case($(), false)))
+                .slidingWindowSize(3)
+                .ignoreExceptions(IOException.class)
                 .build();
         CircuitBreaker circuitBreaker = CircuitBreaker.of("testName", circuitBreakerConfig);
         CircularEventConsumer<CircuitBreakerEvent> ringBuffer = new CircularEventConsumer<>(10);
@@ -79,10 +74,10 @@ public class CircularEventConsumerTest {
         assertThat(ringBuffer.getBufferedEvents()).isEmpty();
 
         //When
-        circuitBreaker.onSuccess(0);
-        circuitBreaker.onError(0, new WebServiceException("Bla"));
-        circuitBreaker.onError(0, new IOException("Bla"));
-        circuitBreaker.onError(0, new WebServiceException("Bla"));
+        circuitBreaker.onSuccess(0, TimeUnit.NANOSECONDS);
+        circuitBreaker.onError(0, TimeUnit.NANOSECONDS, new WebServiceException("Bla"));
+        circuitBreaker.onError(0, TimeUnit.NANOSECONDS, new IOException("Bla"));
+        circuitBreaker.onError(0, TimeUnit.NANOSECONDS, new WebServiceException("Bla"));
 
 
         //Then
@@ -112,9 +107,9 @@ public class CircularEventConsumerTest {
         CircularEventConsumer<CircuitBreakerEvent> ringBuffer = new CircularEventConsumer<>(2);
         assertThat(ringBuffer.getBufferedEvents()).isEmpty();
 
-        circuitBreaker.onError(0, new RuntimeException("Bla"));
-        circuitBreaker.onError(0, new RuntimeException("Bla"));
-        circuitBreaker.onError(0, new RuntimeException("Bla"));
+        circuitBreaker.onError(0, TimeUnit.NANOSECONDS, new RuntimeException("Bla"));
+        circuitBreaker.onError(0, TimeUnit.NANOSECONDS, new RuntimeException("Bla"));
+        circuitBreaker.onError(0, TimeUnit.NANOSECONDS, new RuntimeException("Bla"));
 
         //Subscription is too late
         circuitBreaker.getEventPublisher().onEvent(ringBuffer);

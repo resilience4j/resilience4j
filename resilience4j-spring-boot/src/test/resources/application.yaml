@@ -21,16 +21,17 @@ resilience4j.circuitbreaker:
   circuitBreakerAspectOrder: 400
   configs:
     default:
-      ringBufferSizeInClosedState: 100
-      ringBufferSizeInHalfOpenState: 10
+      slidingWindowSize: 100
+      slidingWindowType: COUNT_BASED
+      permittedNumberOfCallsInHalfOpenState: 10
       waitDurationInOpenState: 10s
       failureRateThreshold: 60
       eventConsumerBufferSize: 10
       registerHealthIndicator: true
   backends:
     backendA:
-      ringBufferSizeInClosedState: 6
-      ringBufferSizeInHalfOpenState: 2
+      slidingWindowSize: 6
+      permittedNumberOfCallsInHalfOpenState: 2
       waitDurationInOpenState: 5s
       failureRateThreshold: 70
       eventConsumerBufferSize: 10
@@ -41,15 +42,15 @@ resilience4j.circuitbreaker:
       ignoreExceptions:
       - io.github.resilience4j.circuitbreaker.IgnoredException
     backendB:
-      ringBufferSizeInClosedState: 10
-      ringBufferSizeInHalfOpenState: 5
+      slidingWindowSize: 10
+      permittedNumberOfCallsInHalfOpenState: 5
       waitDurationInOpenState: 5000
       failureRateThreshold: 50
       eventConsumerBufferSize: 10
       registerHealthIndicator: false
     backendSharedA:
       baseConfig: default
-      ringBufferSizeInClosedState: 6
+      slidingWindowSize: 6
     backendSharedB:
       baseConfig: default
 
@@ -66,6 +67,7 @@ resilience4j.ratelimiter:
       limitForPeriod: 100
       limitRefreshPeriod: 500ms
       timeoutDuration: 3s
+      registerHealthIndicator: false
 
 resilience4j.bulkhead:
   backends:

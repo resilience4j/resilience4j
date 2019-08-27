@@ -16,12 +16,18 @@
 package io.github.resilience4j.retry;
 
 import static io.github.resilience4j.service.test.retry.ReactiveRetryDummyService.BACKEND_C;
+import static io.github.resilience4j.service.test.retry.RetryDummyFeignClient.RETRY_DUMMY_FEIGN_CLIENT_NAME;
 import static io.github.resilience4j.service.test.retry.RetryDummyService.RETRY_BACKEND_A;
 import static io.github.resilience4j.service.test.retry.RetryDummyService.RETRY_BACKEND_B;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.IOException;
 
+import com.github.tomakehurst.wiremock.client.WireMock;
+import com.github.tomakehurst.wiremock.junit.WireMockRule;
+import io.github.resilience4j.service.test.retry.RetryDummyFeignClient;
+import org.apache.commons.lang3.StringUtils;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -59,6 +65,67 @@ public class RetryAutoConfigurationTest {
 	@Autowired
 	private TestRestTemplate restTemplate;
 
+	@Autowired
+	private RetryDummyFeignClient retryDummyFeignClient;
+
+	@Rule
+	public WireMockRule wireMockRule = new WireMockRule(8090);
+
+	/**
+	 * This test verifies that the combination of @FeignClient and @Retry annotation works as same as @Retry alone works with any normal service class
+	 */
+	@Test
+	@DirtiesContext
+	public void testFeignClient() {
+
+		WireMock.stubFor(WireMock
+				.get(WireMock.urlEqualTo("/retry/"))
+				.willReturn(WireMock.aResponse().withStatus(200).withBody("This is successful call"))
+		);
+		WireMock.stubFor(WireMock.get(WireMock.urlMatching("^.*\\/retry\\/error.*$"))
+				.willReturn(WireMock.aResponse().withStatus(400).withBody("This is error")));
+
+
+		assertThat(retryRegistry).isNotNull();
+		assertThat(retryProperties).isNotNull();
+
+		try {
+			retryDummyFeignClient.doSomething("error");
+		} catch (Exception ex) {
+			// Do nothing. The IOException is recorded by the retry as it is one of failure exceptions
+		}
+		// The invocation is recorded by the CircuitBreaker as a success.
+		retryDummyFeignClient.doSomething(StringUtils.EMPTY);
+
+		Retry retry = retryRegistry.retry(RETRY_DUMMY_FEIGN_CLIENT_NAME);
+		assertThat(retry).isNotNull();
+
+		// expect retry is configured as defined in application.yml
+		assertThat(retry.getRetryConfig().getMaxAttempts()).isEqualTo(3);
+		assertThat(retry.getName()).isEqualTo(RETRY_DUMMY_FEIGN_CLIENT_NAME);
+		assertThat(retry.getRetryConfig().getExceptionPredicate().test(new IOException())).isTrue();
+
+		assertThat(retry.getMetrics().getNumberOfFailedCallsWithoutRetryAttempt()).isEqualTo(0);
+		assertThat(retry.getMetrics().getNumberOfFailedCallsWithRetryAttempt()).isEqualTo(1);
+		assertThat(retry.getMetrics().getNumberOfSuccessfulCallsWithoutRetryAttempt()).isEqualTo(1);
+		assertThat(retry.getMetrics().getNumberOfSuccessfulCallsWithRetryAttempt()).isEqualTo(0);
+
+		// expect retry actuator endpoint contains both retries
+		ResponseEntity<RetryEndpointResponse> retriesList = restTemplate.getForEntity("/actuator/retries", RetryEndpointResponse.class);
+		assertThat(retriesList.getBody().getRetries()).hasSize(4).containsOnly(RETRY_BACKEND_A, RETRY_BACKEND_B, BACKEND_C, RETRY_DUMMY_FEIGN_CLIENT_NAME);
+
+		// expect retry-event actuator endpoint recorded both events
+		ResponseEntity<RetryEventsEndpointResponse> retryEventList = restTemplate.getForEntity("/actuator/retryevents", RetryEventsEndpointResponse.class);
+		assertThat(retryEventList.getBody().getRetryEvents()).hasSize(3);
+
+		retryEventList = restTemplate.getForEntity("/actuator/retryevents/" + RETRY_DUMMY_FEIGN_CLIENT_NAME, RetryEventsEndpointResponse.class);
+		assertThat(retryEventList.getBody().getRetryEvents()).hasSize(3);
+
+		assertThat(retry.getRetryConfig().getExceptionPredicate().test(new IOException())).isTrue();
+		assertThat(retry.getRetryConfig().getExceptionPredicate().test(new IgnoredException())).isFalse();
+		assertThat(retryAspect.getOrder()).isEqualTo(399);
+	}
+
 	/**
 	 * The test verifies that a Retry instance is created and configured properly when the RetryDummyService is invoked and
 	 * that the Retry logic is properly handled
@@ -92,7 +159,7 @@ public class RetryAutoConfigurationTest {
 
 		// expect retry actuator endpoint contains both retries
 		ResponseEntity<RetryEndpointResponse> retriesList = restTemplate.getForEntity("/actuator/retries", RetryEndpointResponse.class);
-		assertThat(retriesList.getBody().getRetries()).hasSize(3).containsOnly(RETRY_BACKEND_A, RETRY_BACKEND_B, BACKEND_C);
+		assertThat(retriesList.getBody().getRetries()).hasSize(4).containsOnly(RETRY_BACKEND_A, RETRY_BACKEND_B, BACKEND_C, RETRY_DUMMY_FEIGN_CLIENT_NAME);
 
 		// expect retry-event actuator endpoint recorded both events
 		ResponseEntity<RetryEventsEndpointResponse> retryEventList = restTemplate.getForEntity("/actuator/retryevents", RetryEventsEndpointResponse.class);

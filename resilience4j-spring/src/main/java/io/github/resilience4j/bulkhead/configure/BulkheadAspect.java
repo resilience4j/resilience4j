@@ -36,6 +36,7 @@ import org.springframework.core.Ordered;
 import org.springframework.util.StringUtils;
 
 import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
 import java.util.List;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.CompletionStage;
@@ -162,8 +163,12 @@ public class BulkheadAspect implements Ordered {
 		if (logger.isDebugEnabled()) {
 			logger.debug("bulkhead parameter is null");
 		}
-
-		return AnnotationExtractor.extract(proceedingJoinPoint.getTarget().getClass(), Bulkhead.class);
+		if (proceedingJoinPoint.getTarget() instanceof Proxy) {
+			logger.debug("The bulkhead annotation is kept on a interface which is acting as a proxy");
+			return AnnotationExtractor.extractAnnotationFromProxy(proceedingJoinPoint.getTarget(), Bulkhead.class);
+		} else {
+			return AnnotationExtractor.extract(proceedingJoinPoint.getTarget().getClass(), Bulkhead.class);
+		}
 	}
 
 	/**

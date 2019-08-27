@@ -16,7 +16,6 @@
 package io.github.resilience4j.micrometer.tagged;
 
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
-import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.Gauge;
@@ -27,6 +26,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import static io.github.resilience4j.micrometer.tagged.MetricsTestHelper.findCounterByKindAndNameTags;
@@ -48,8 +48,8 @@ public class TaggedCircuitBreakerMetricsTest {
 
         circuitBreaker = circuitBreakerRegistry.circuitBreaker("backendA");
         // record some basic stats
-        circuitBreaker.onError(0, new RuntimeException("oops"));
-        circuitBreaker.onSuccess(0);
+        circuitBreaker.onError(0, TimeUnit.NANOSECONDS, new RuntimeException("oops"));
+        circuitBreaker.onSuccess(0, TimeUnit.NANOSECONDS);
 
         taggedCircuitBreakerMetrics = TaggedCircuitBreakerMetrics.ofCircuitBreakerRegistry(circuitBreakerRegistry);
         taggedCircuitBreakerMetrics.bindTo(meterRegistry);
@@ -58,7 +58,7 @@ public class TaggedCircuitBreakerMetricsTest {
     @Test
     public void shouldAddMetricsForANewlyCreatedCircuitBreaker() {
         CircuitBreaker newCircuitBreaker = circuitBreakerRegistry.circuitBreaker("backendB");
-        newCircuitBreaker.onSuccess(0);
+        newCircuitBreaker.onSuccess(0, TimeUnit.NANOSECONDS);
 
         assertThat(taggedCircuitBreakerMetrics.meterIdMap).containsKeys("backendA", "backendB");
         assertThat(taggedCircuitBreakerMetrics.meterIdMap.get("backendA")).hasSize(13);
@@ -86,26 +86,6 @@ public class TaggedCircuitBreakerMetricsTest {
 
         meters = meterRegistry.getMeters();
         assertThat(meters).isEmpty();
-    }
-
-    @Test
-    public void shouldReplaceMetrics() {
-        Gauge maxBuffered = meterRegistry.get(DEFAULT_CIRCUIT_BREAKER_MAX_BUFFERED_CALLS).gauge();
-
-        assertThat(maxBuffered).isNotNull();
-        assertThat(maxBuffered.value()).isEqualTo((circuitBreaker.getMetrics().getMaxNumberOfBufferedCalls()));
-        assertThat(maxBuffered.getId().getTag(TagNames.NAME)).isEqualTo(circuitBreaker.getName());
-
-        CircuitBreaker newCircuitBreaker = CircuitBreaker.of(circuitBreaker.getName(), CircuitBreakerConfig.custom()
-                .ringBufferSizeInClosedState(1000).build());
-
-        circuitBreakerRegistry.replace(circuitBreaker.getName(), newCircuitBreaker);
-
-        maxBuffered = meterRegistry.get(DEFAULT_CIRCUIT_BREAKER_MAX_BUFFERED_CALLS).gauge();
-
-        assertThat(maxBuffered).isNotNull();
-        assertThat(maxBuffered.value()).isEqualTo(newCircuitBreaker.getMetrics().getMaxNumberOfBufferedCalls());
-        assertThat(maxBuffered.getId().getTag(TagNames.NAME)).isEqualTo(newCircuitBreaker.getName());
     }
 
     @Test
@@ -139,15 +119,6 @@ public class TaggedCircuitBreakerMetricsTest {
     }
 
     @Test
-    public void maxBufferedCallsGaugeReportsCorrespondingValue() {
-        Gauge maxBuffered = meterRegistry.get(DEFAULT_CIRCUIT_BREAKER_MAX_BUFFERED_CALLS).gauge();
-
-        assertThat(maxBuffered).isNotNull();
-        assertThat(maxBuffered.value()).isEqualTo((circuitBreaker.getMetrics().getMaxNumberOfBufferedCalls()));
-        assertThat(maxBuffered.getId().getTag(TagNames.NAME)).isEqualTo(circuitBreaker.getName());
-    }
-
-    @Test
     public void failureRateGaugeReportsCorrespondingValue() {
         Gauge failureRate = meterRegistry.get(DEFAULT_CIRCUIT_BREAKER_FAILURE_RATE).gauge();
 
@@ -174,8 +145,8 @@ public class TaggedCircuitBreakerMetricsTest {
                         .callsMetricName("custom_calls")
                         .stateMetricName("custom_state")
                         .bufferedCallsMetricName("custom_buffered_calls")
-                        .maxBufferedCallsMetricName("custom_max_buffered_calls")
                         .failureRateMetricName("custom_failure_rate")
+                        .slowCallRateMetricName("custom_slow_call_rate")
                         .build(),
                 circuitBreakerRegistry
         ).bindTo(meterRegistry);
@@ -190,8 +161,8 @@ public class TaggedCircuitBreakerMetricsTest {
                 "custom_calls",
                 "custom_state",
                 "custom_buffered_calls",
-                "custom_max_buffered_calls",
-                "custom_failure_rate"
+                "custom_failure_rate",
+                "custom_slow_call_rate"
         ));
     }
 

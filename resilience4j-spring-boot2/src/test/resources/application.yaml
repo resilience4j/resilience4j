@@ -7,6 +7,7 @@ resilience4j.retry:
       retryExceptionPredicate: io.github.resilience4j.circuitbreaker.RecordFailurePredicate
       retryExceptions:
         - java.io.IOException
+        - feign.FeignException
       ignoreExceptions:
         - io.github.resilience4j.circuitbreaker.IgnoredException
   backends:
@@ -22,21 +23,24 @@ resilience4j.retry:
         - java.lang.IllegalArgumentException
       ignoreExceptions:
         - io.github.resilience4j.circuitbreaker.IgnoredException
+    retryDummyFeignClient:
+      baseConfig: default
 
 resilience4j.circuitbreaker:
   circuitBreakerAspectOrder: 400
   configs:
     default:
-      ringBufferSizeInClosedState: 100
-      ringBufferSizeInHalfOpenState: 10
+      slidingWindowSize: 100
+      slidingWindowType: COUNT_BASED
+      permittedNumberOfCallsInHalfOpenState: 10
       waitDurationInOpenState: 10s
       failureRateThreshold: 60
       eventConsumerBufferSize: 10
       registerHealthIndicator: true
   backends:
     backendA:
-      ringBufferSizeInClosedState: 6
-      ringBufferSizeInHalfOpenState: 2
+      slidingWindowSize: 6
+      permittedNumberOfCallsInHalfOpenState: 2
       waitDurationInOpenState: 5s
       failureRateThreshold: 70
       eventConsumerBufferSize: 20
@@ -46,17 +50,24 @@ resilience4j.circuitbreaker:
       ignoreExceptions:
         - io.github.resilience4j.circuitbreaker.IgnoredException
     backendB:
-      ringBufferSizeInClosedState: 10
-      ringBufferSizeInHalfOpenState: 5
+      slidingWindowSize: 10
+      slidingWindowType: TIME_BASED
+      permittedNumberOfCallsInHalfOpenState: 5
       waitDurationInOpenState: 5000
       failureRateThreshold: 50
       eventConsumerBufferSize: 20
       registerHealthIndicator: false
     backendSharedA:
       baseConfig: default
-      ringBufferSizeInClosedState: 6
+      slidingWindowSize: 6
     backendSharedB:
       baseConfig: default
+      slidingWindowType: TIME_BASED
+    dummyFeignClient:
+      baseConfig: default
+      slidingWindowSize: 18
+      permittedNumberOfCallsInHalfOpenState: 6
+
 
 resilience4j.ratelimiter:
   rateLimiterAspectOrder: 401
@@ -74,6 +85,8 @@ resilience4j.ratelimiter:
       limitForPeriod: 100
       limitRefreshPeriod: 500ms
       timeoutDuration: 3s
+    rateLimiterDummyFeignClient:
+      baseConfig: default
 
 resilience4j.bulkhead:
   configs:
@@ -85,6 +98,9 @@ resilience4j.bulkhead:
       maxConcurrentCalls: 1
     backendB:
       baseConfig: default
+    dummyFeignClient:
+      maxWaitDuration: 100
+      maxConcurrentCalls: 3
 
 resilience4j.thread-pool-bulkhead":
   configs:

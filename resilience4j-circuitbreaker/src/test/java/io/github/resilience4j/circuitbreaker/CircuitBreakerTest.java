@@ -39,8 +39,6 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-import static io.vavr.API.*;
-import static io.vavr.Predicates.instanceOf;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -515,8 +513,8 @@ public class CircuitBreakerTest {
         // Given
         // Create a custom configuration for a CircuitBreaker
         CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom()
-                .ringBufferSizeInClosedState(2)
-                .ringBufferSizeInHalfOpenState(2)
+                .slidingWindowSize(2)
+                .permittedNumberOfCallsInHalfOpenState(2)
                 .failureRateThreshold(50)
                 .waitDurationInOpenState(Duration.ofMillis(1000))
                 .build();
@@ -524,8 +522,8 @@ public class CircuitBreakerTest {
         // Create a CircuitBreakerRegistry with a custom global configuration
         CircuitBreaker circuitBreaker = CircuitBreaker.of("testName", circuitBreakerConfig);
 
-        circuitBreaker.onError(0, new RuntimeException());
-        circuitBreaker.onError(0, new RuntimeException());
+        circuitBreaker.onError(0, TimeUnit.NANOSECONDS, new RuntimeException());
+        circuitBreaker.onError(0, TimeUnit.NANOSECONDS, new RuntimeException());
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.OPEN);
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(2);
@@ -569,17 +567,15 @@ public class CircuitBreakerTest {
         // tag::shouldNotRecordIOExceptionAsAFailure[]
         // Given
         CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom()
-                .ringBufferSizeInClosedState(2)
-                .ringBufferSizeInHalfOpenState(2)
+                .slidingWindowSize(2)
+                .permittedNumberOfCallsInHalfOpenState(2)
                 .waitDurationInOpenState(Duration.ofMillis(1000))
-                .recordFailure(throwable -> Match(throwable).of(
-                        Case($(instanceOf(WebServiceException.class)), true),
-                        Case($(), false)))
+                .ignoreExceptions(IOException.class)
                 .build();
         CircuitBreaker circuitBreaker = CircuitBreaker.of("testName", circuitBreakerConfig);
 
         // Simulate a failure attempt
-        circuitBreaker.onError(0, new WebServiceException());
+        circuitBreaker.onError(0, TimeUnit.NANOSECONDS, new WebServiceException());
         // CircuitBreaker is still CLOSED, because 1 failure is allowed
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
 
@@ -646,17 +642,17 @@ public class CircuitBreakerTest {
         // tag::shouldThrowCircuitBreakerOpenException[]
         // Given
         CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom()
-                .ringBufferSizeInClosedState(2)
+                .slidingWindowSize(2)
                 .waitDurationInOpenState(Duration.ofMillis(1000))
                 .build();
         CircuitBreaker circuitBreaker = CircuitBreaker.of("testName", circuitBreakerConfig);
 
         // Simulate a failure attempt
-        circuitBreaker.onError(0, new RuntimeException());
+        circuitBreaker.onError(0, TimeUnit.NANOSECONDS, new RuntimeException());
         // CircuitBreaker is still CLOSED, because 1 failure is allowed
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
         // Simulate a failure attempt
-        circuitBreaker.onError(0, new RuntimeException());
+        circuitBreaker.onError(0, TimeUnit.NANOSECONDS, new RuntimeException());
         // CircuitBreaker is OPEN, because the failure rate is above 50%
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.OPEN);
 
