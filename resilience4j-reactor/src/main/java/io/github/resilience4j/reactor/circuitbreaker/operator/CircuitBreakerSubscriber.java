@@ -21,6 +21,7 @@ import org.reactivestreams.Subscriber;
 import reactor.core.CoreSubscriber;
 
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicIntegerFieldUpdater;
 
 import static java.util.Objects.requireNonNull;
@@ -37,10 +38,8 @@ class CircuitBreakerSubscriber<T> extends AbstractSubscriber<T> {
     private final long start;
     private final boolean singleProducer;
 
-    @SuppressWarnings("PMD")
-    private volatile int successSignaled = 0;
-    private static final AtomicIntegerFieldUpdater<CircuitBreakerSubscriber> SUCCESS_SIGNALED =
-            AtomicIntegerFieldUpdater.newUpdater(CircuitBreakerSubscriber.class, "successSignaled");
+    private final AtomicBoolean successSignaled = new AtomicBoolean(false);
+    private final AtomicBoolean eventWasEmitted = new AtomicBoolean(false);
 
     protected CircuitBreakerSubscriber(CircuitBreaker circuitBreaker,
                                        CoreSubscriber<? super T> downstreamSubscriber,
@@ -54,9 +53,10 @@ class CircuitBreakerSubscriber<T> extends AbstractSubscriber<T> {
     @Override
     protected void hookOnNext(T value) {
         if (!isDisposed()) {
-            if (singleProducer && SUCCESS_SIGNALED.compareAndSet(this, 0, 1)) {
+            if (singleProducer && successSignaled.compareAndSet( false, true)) {
                 circuitBreaker.onSuccess(System.nanoTime() - start, TimeUnit.NANOSECONDS);
             }
+            eventWasEmitted.set(true);
 
             downstreamSubscriber.onNext(value);
         }
@@ -64,7 +64,7 @@ class CircuitBreakerSubscriber<T> extends AbstractSubscriber<T> {
 
     @Override
     protected void hookOnComplete() {
-        if (SUCCESS_SIGNALED.compareAndSet(this, 0, 1)) {
+        if (successSignaled.compareAndSet( false, true)) {
             circuitBreaker.onSuccess(System.nanoTime() - start, TimeUnit.NANOSECONDS);
         }
 
@@ -73,8 +73,12 @@ class CircuitBreakerSubscriber<T> extends AbstractSubscriber<T> {
 
     @Override
     public void hookOnCancel() {
-        if (successSignaled == 0) {
-            circuitBreaker.releasePermission();
+        if (!successSignaled.get()) {
+            if(eventWasEmitted.get()){
+                circuitBreaker.onSuccess(System.nanoTime() - start, TimeUnit.NANOSECONDS);
+            }else{
+                circuitBreaker.releasePermission();
+            }            
         }
     }
 

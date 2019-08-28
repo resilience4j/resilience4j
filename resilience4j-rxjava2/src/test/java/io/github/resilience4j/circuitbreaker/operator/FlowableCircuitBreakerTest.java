@@ -18,7 +18,7 @@ import static org.mockito.Mockito.*;
 public class FlowableCircuitBreakerTest extends BaseCircuitBreakerTest {
 
     @Test
-    public void shouldSubscribeToFlowableJust() {
+    public void shouldInvokeOnSuccess() {
         given(circuitBreaker.tryAcquirePermission()).willReturn(true);
 
         Flowable.just("Event 1", "Event 2")
@@ -31,7 +31,7 @@ public class FlowableCircuitBreakerTest extends BaseCircuitBreakerTest {
     }
 
     @Test
-    public void shouldPropagateError() {
+    public void shouldInvokeOnError() {
         given(circuitBreaker.tryAcquirePermission()).willReturn(true);
 
         Flowable.error(new IOException("BAM!"))
@@ -61,7 +61,7 @@ public class FlowableCircuitBreakerTest extends BaseCircuitBreakerTest {
     }
 
     @Test
-    public void shouldReleasePermissionOnCancel() {
+    public void shouldInvokeReleasePermissionReleaseOnCancel() {
         given(circuitBreaker.tryAcquirePermission()).willReturn(true);
 
         Flowable.just(1)
@@ -73,5 +73,19 @@ public class FlowableCircuitBreakerTest extends BaseCircuitBreakerTest {
         verify(circuitBreaker, times(1)).releasePermission();
         verify(circuitBreaker, never()).onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
         verify(circuitBreaker, never()).onSuccess(anyLong(), any(TimeUnit.class));
+    }
+
+    @Test
+    public void shouldInvokeOnSuccessOnCancelWhenOneEventWasEmitted() {
+        given(circuitBreaker.tryAcquirePermission()).willReturn(true);
+
+        Flowable.just(1,2,3)
+                .compose(CircuitBreakerOperator.of(circuitBreaker))
+                .test(1)
+                .cancel();
+
+        verify(circuitBreaker, never()).releasePermission();
+        verify(circuitBreaker, never()).onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
+        verify(circuitBreaker, times(1)).onSuccess(anyLong(), any(TimeUnit.class));
     }
 }
