@@ -20,6 +20,8 @@ import io.github.resilience4j.reactor.AbstractSubscriber;
 import org.reactivestreams.Subscriber;
 import reactor.core.CoreSubscriber;
 
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicIntegerFieldUpdater;
 
 import static java.util.Objects.requireNonNull;
@@ -34,10 +36,8 @@ class BulkheadSubscriber<T> extends AbstractSubscriber<T> {
     private final Bulkhead bulkhead;
     private final boolean singleProducer;
 
-    @SuppressWarnings("PMD")
-    private volatile int successSignaled = 0;
-    private static final AtomicIntegerFieldUpdater<BulkheadSubscriber> SUCCESS_SIGNALED =
-            AtomicIntegerFieldUpdater.newUpdater(BulkheadSubscriber.class, "successSignaled");
+    private final AtomicBoolean eventWasEmitted = new AtomicBoolean(false);
+    private final AtomicBoolean successSignaled = new AtomicBoolean(false);
 
     BulkheadSubscriber(Bulkhead bulkhead,
                                  CoreSubscriber<? super T> downstreamSubscriber,
@@ -50,17 +50,22 @@ class BulkheadSubscriber<T> extends AbstractSubscriber<T> {
     @Override
     public void hookOnNext(T t) {
         if (!isDisposed()) {
-            if (singleProducer && SUCCESS_SIGNALED.compareAndSet(this, 0, 1)) {
+            if (singleProducer && successSignaled.compareAndSet( false, true)) {
                 bulkhead.onComplete();
             }
+            eventWasEmitted.set(true);
             downstreamSubscriber.onNext(t);
         }
     }
 
     @Override
     public void hookOnCancel() {
-        if(successSignaled == 0){
-            bulkhead.releasePermission();
+        if(!successSignaled.get()){
+            if(eventWasEmitted.get()){
+                bulkhead.onComplete();
+            }else{
+                bulkhead.releasePermission();
+            }
         }
 
     }
@@ -73,7 +78,7 @@ class BulkheadSubscriber<T> extends AbstractSubscriber<T> {
 
     @Override
     public void hookOnComplete() {
-        if (SUCCESS_SIGNALED.compareAndSet(this, 0, 1)) {
+        if (successSignaled.compareAndSet( false, true)) {
             bulkhead.onComplete();
         }
         downstreamSubscriber.onComplete();
