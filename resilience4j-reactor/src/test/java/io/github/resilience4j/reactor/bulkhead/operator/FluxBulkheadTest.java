@@ -17,6 +17,7 @@ package io.github.resilience4j.reactor.bulkhead.operator;
 
 import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.bulkhead.BulkheadFullException;
+import io.github.resilience4j.reactor.circuitbreaker.operator.CircuitBreakerOperator;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -25,6 +26,7 @@ import reactor.test.StepVerifier;
 
 import java.io.IOException;
 import java.time.Duration;
+import java.util.concurrent.TimeUnit;
 
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
@@ -124,5 +126,21 @@ public class FluxBulkheadTest {
                 .verify();
 
         verify(bulkhead, times(1)).releasePermission();
+    }
+
+    @Test
+    public void shouldInvokeOnCompleteOnCancelWhenEventWasEmitted() {
+        given(bulkhead.tryAcquirePermission()).willReturn(true);
+
+        StepVerifier.create(
+                Flux.just("Event1", "Event2", "Event3")
+                        .compose(BulkheadOperator.of(bulkhead)))
+                .expectSubscription()
+                .thenRequest(1)
+                .thenCancel()
+                .verify();
+
+        verify(bulkhead, never()).releasePermission();
+        verify(bulkhead, times(1)).onComplete();
     }
 }

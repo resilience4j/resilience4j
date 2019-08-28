@@ -64,7 +64,11 @@ class ObserverCircuitBreaker<T> extends Observable<T> {
 
         @Override
         protected void hookOnCancel() {
-            circuitBreaker.releasePermission();
+            if(eventWasEmitted.get()){
+                circuitBreaker.onSuccess(System.nanoTime() - start, TimeUnit.NANOSECONDS);
+            }else{
+                circuitBreaker.releasePermission();
+            }
         }
     }
 
