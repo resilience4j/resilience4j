@@ -1,7 +1,6 @@
 package io.github.resilience4j.circuitbreaker.operator;
 
 import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
-import io.reactivex.Flowable;
 import io.reactivex.Observable;
 import org.junit.Test;
 
