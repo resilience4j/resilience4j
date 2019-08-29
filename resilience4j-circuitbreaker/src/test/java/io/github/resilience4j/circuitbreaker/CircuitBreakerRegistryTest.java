@@ -18,9 +18,9 @@
  */
 package io.github.resilience4j.circuitbreaker;
 
-import org.junit.Before;
 import org.junit.Test;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -30,15 +30,9 @@ import static org.assertj.core.api.BDDAssertions.assertThat;
 
 public class CircuitBreakerRegistryTest {
 
-    private CircuitBreakerRegistry circuitBreakerRegistry;
-
-    @Before
-    public void setUp(){
-        circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
-    }
-
     @Test
     public void shouldReturnTheCorrectName() {
+        CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
         CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("testName");
         assertThat(circuitBreaker).isNotNull();
         assertThat(circuitBreaker.getName()).isEqualTo("testName");
@@ -46,6 +40,7 @@ public class CircuitBreakerRegistryTest {
 
     @Test
     public void shouldBeTheSameCircuitBreaker() {
+        CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
         CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("testName");
         CircuitBreaker circuitBreaker2 = circuitBreakerRegistry.circuitBreaker("testName");
         assertThat(circuitBreaker).isSameAs(circuitBreaker2);
@@ -54,6 +49,7 @@ public class CircuitBreakerRegistryTest {
 
     @Test
     public void shouldBeNotTheSameCircuitBreaker() {
+        CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
         CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("testName");
         CircuitBreaker circuitBreaker2 = circuitBreakerRegistry.circuitBreaker("otherTestName");
         assertThat(circuitBreaker).isNotSameAs(circuitBreaker2);
@@ -73,38 +69,62 @@ public class CircuitBreakerRegistryTest {
     }
 
     @Test
+    public void testCreateWithCustomConfiguration() {
+        float failureRate = 30f;
+        CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom().failureRateThreshold(failureRate).build();
+
+        CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.of(circuitBreakerConfig);
+        CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("testName");
+
+        assertThat(circuitBreaker.getCircuitBreakerConfig().getFailureRateThreshold()).isEqualTo(failureRate);
+    }
+
+    @Test
     public void testCreateWithConfigurationMap() {
+        CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom().failureRateThreshold(30f).build();
+        CircuitBreakerConfig customCircuitBreakerConfig = CircuitBreakerConfig.custom().failureRateThreshold(40f).build();
         Map<String, CircuitBreakerConfig> configs = new HashMap<>();
-        configs.put("default", CircuitBreakerConfig.ofDefaults());
-        configs.put("custom", CircuitBreakerConfig.ofDefaults());
+        configs.put("default", circuitBreakerConfig);
+        configs.put("custom", customCircuitBreakerConfig);
 
         CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.of(configs);
 
         assertThat(circuitBreakerRegistry.getDefaultConfig()).isNotNull();
-        assertThat(circuitBreakerRegistry.getConfiguration("custom")).isNotNull();
+        assertThat(circuitBreakerRegistry.getDefaultConfig().getFailureRateThreshold()).isEqualTo(30f);
+        assertThat(circuitBreakerRegistry.getConfiguration("custom")).isNotEmpty();
     }
 
     @Test
     public void testAddConfiguration() {
-        CircuitBreakerConfig config = CircuitBreakerConfig.ofDefaults();
         CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
-        circuitBreakerRegistry.addConfiguration("someSharedConfig", config);
+        float failureRate = 30f;
+        CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom().failureRateThreshold(failureRate).build();
+        circuitBreakerRegistry.addConfiguration("someSharedConfig", circuitBreakerConfig);
+
+        assertThat(circuitBreakerRegistry.getDefaultConfig()).isNotNull();
+        assertThat(circuitBreakerRegistry.getDefaultConfig().getFailureRateThreshold()).isEqualTo(50f);
+        assertThat(circuitBreakerRegistry.getConfiguration("someSharedConfig")).isNotEmpty();
 
         CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("name", "someSharedConfig");
-
-        assertThat(circuitBreakerRegistry.getConfiguration("someSharedConfig")).isNotNull();
-        assertThat(circuitBreaker.getCircuitBreakerConfig()).isEqualTo(config);
+        assertThat(circuitBreaker.getCircuitBreakerConfig()).isEqualTo(circuitBreakerConfig);
+        assertThat(circuitBreaker.getCircuitBreakerConfig().getFailureRateThreshold()).isEqualTo(failureRate);
     }
 
     @Test
     public void testCreateWithConfigurationMapWithoutDefaultConfig() {
-        Map<String, CircuitBreakerConfig> configs = new HashMap<>();
-        configs.put("custom", CircuitBreakerConfig.ofDefaults());
+        float failureRate = 30f;
+        CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom().failureRateThreshold(failureRate).build();
 
-        CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.of(configs);
+        CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.of(Collections.singletonMap("someSharedConfig", circuitBreakerConfig));
 
         assertThat(circuitBreakerRegistry.getDefaultConfig()).isNotNull();
-        assertThat(circuitBreakerRegistry.getConfiguration("custom")).isNotNull();
+        assertThat(circuitBreakerRegistry.getDefaultConfig().getFailureRateThreshold()).isEqualTo(50f);
+        assertThat(circuitBreakerRegistry.getConfiguration("someSharedConfig")).isNotEmpty();
+
+        CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("name", "someSharedConfig");
+
+        assertThat(circuitBreaker.getCircuitBreakerConfig()).isEqualTo(circuitBreakerConfig);
+        assertThat(circuitBreaker.getCircuitBreakerConfig().getFailureRateThreshold()).isEqualTo(failureRate);
     }
 
     @Test

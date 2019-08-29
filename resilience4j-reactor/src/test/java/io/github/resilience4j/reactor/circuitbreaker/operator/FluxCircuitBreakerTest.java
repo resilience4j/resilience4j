@@ -155,4 +155,21 @@ public class FluxCircuitBreakerTest {
         verify(circuitBreaker, never()).onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
         verify(circuitBreaker, never()).onSuccess(anyLong(), any(TimeUnit.class));
     }
+
+    @Test
+    public void shouldInvokeOnSuccessOnCancelWhenEventWasEmitted() {
+        given(circuitBreaker.tryAcquirePermission()).willReturn(true);
+
+        StepVerifier.create(
+                Flux.just("Event1", "Event2", "Event3")
+                        .compose(CircuitBreakerOperator.of(circuitBreaker)))
+                .expectSubscription()
+                .thenRequest(1)
+                .thenCancel()
+                .verify();
+
+        verify(circuitBreaker, never()).releasePermission();
+        verify(circuitBreaker, never()).onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
+        verify(circuitBreaker, times(1)).onSuccess(anyLong(), any(TimeUnit.class));
+    }
 }

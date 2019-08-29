@@ -1,13 +1,18 @@
 package io.github.resilience4j.ratelimiter.monitoring.health;
 
 import io.github.resilience4j.ratelimiter.RateLimiterConfig;
+import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
+import io.github.resilience4j.ratelimiter.configure.RateLimiterConfigurationProperties;
 import io.github.resilience4j.ratelimiter.internal.AtomicRateLimiter;
+import io.vavr.collection.Array;
 import org.junit.Test;
 import org.springframework.boot.actuate.health.Health;
+import org.springframework.boot.actuate.health.OrderedHealthAggregator;
 import org.springframework.boot.actuate.health.Status;
 
 import java.time.Duration;
 import java.util.AbstractMap.SimpleEntry;
+import java.util.Optional;
 
 import static org.assertj.core.api.BDDAssertions.then;
 import static org.mockito.Mockito.mock;
@@ -16,19 +21,26 @@ import static org.mockito.Mockito.when;
 /**
  * @author bstorozhuk
  */
-public class RateLimiterHealthIndicatorTest {
+public class RateLimitersHealthIndicatorTest {
     @Test
     public void health() throws Exception {
         // given
         RateLimiterConfig config = mock(RateLimiterConfig.class);
         AtomicRateLimiter.AtomicRateLimiterMetrics metrics = mock(AtomicRateLimiter.AtomicRateLimiterMetrics.class);
         AtomicRateLimiter rateLimiter = mock(AtomicRateLimiter.class);
+        RateLimiterRegistry rateLimiterRegistry = mock(RateLimiterRegistry.class);
+        io.github.resilience4j.common.ratelimiter.configuration.RateLimiterConfigurationProperties.InstanceProperties instanceProperties =
+                mock(io.github.resilience4j.common.ratelimiter.configuration.RateLimiterConfigurationProperties.InstanceProperties.class);
+        RateLimiterConfigurationProperties rateLimiterProperties = mock(RateLimiterConfigurationProperties.class);
 
         //when
-
         when(rateLimiter.getRateLimiterConfig()).thenReturn(config);
+        when(rateLimiter.getName()).thenReturn("test");
+        when(rateLimiterProperties.findRateLimiterProperties("test")).thenReturn(Optional.of(instanceProperties));
+        when(instanceProperties.getRegisterHealthIndicator()).thenReturn(true);
         when(rateLimiter.getMetrics()).thenReturn(metrics);
         when(rateLimiter.getDetailedMetrics()).thenReturn(metrics);
+        when(rateLimiterRegistry.getAllRateLimiters()).thenReturn(Array.of(rateLimiter));
 
         when(config.getTimeoutDuration()).thenReturn(Duration.ofNanos(30L));
 
@@ -40,7 +52,9 @@ public class RateLimiterHealthIndicatorTest {
             .thenReturn(20L, 40L);
 
         // then
-        RateLimiterHealthIndicator healthIndicator = new RateLimiterHealthIndicator(rateLimiter);
+        OrderedHealthAggregator healthAggregator = new OrderedHealthAggregator();
+        RateLimitersHealthIndicator healthIndicator =
+                new RateLimitersHealthIndicator(rateLimiterRegistry, rateLimiterProperties, healthAggregator);
 
         Health health = healthIndicator.health();
         then(health.getStatus()).isEqualTo(Status.UP);
@@ -51,7 +65,8 @@ public class RateLimiterHealthIndicatorTest {
         health = healthIndicator.health();
         then(health.getStatus()).isEqualTo(Status.DOWN);
 
-        then(health.getDetails())
+        then(health.getDetails().get("test")).isInstanceOf(Health.class);
+        then(((Health) health.getDetails().get("test")).getDetails())
             .contains(
                 entry("availablePermissions", -2),
                 entry("numberOfWaitingThreads", 2)

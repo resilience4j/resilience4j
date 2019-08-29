@@ -98,7 +98,7 @@ class Resilience4jModuleSpec extends Specification {
             assert waitDurationInOpenState == Duration.ofMillis(5000)
             assert failureRateThreshold == 60
             assert automaticTransitionFromOpenToHalfOpenEnabled
-            assert recordFailurePredicate.test(new Exception())
+            assert recordExceptionPredicate.test(new Exception())
             it
         }
     }
@@ -169,8 +169,8 @@ class Resilience4jModuleSpec extends Specification {
             assert waitDurationInOpenState == Duration.ofMillis(1000)
             assert failureRateThreshold == 60
             assert automaticTransitionFromOpenToHalfOpenEnabled
-            assert recordFailurePredicate.test(new DummyException1("test"))
-            assert recordFailurePredicate.test(new DummyException2("test"))
+            assert recordExceptionPredicate.test(new DummyException1("test"))
+            assert recordExceptionPredicate.test(new DummyException2("test"))
             it
         }
         def test2 = circuitBreakerRegistry.circuitBreaker('test2')
@@ -181,8 +181,8 @@ class Resilience4jModuleSpec extends Specification {
             assert waitDurationInOpenState == Duration.ofMillis(5000)
             assert failureRateThreshold == 60
             assert automaticTransitionFromOpenToHalfOpenEnabled
-            assert recordFailurePredicate.test(new DummyException1("test"))
-            assert !recordFailurePredicate.test(new DummyException2("test"))
+            assert recordExceptionPredicate.test(new DummyException1("test"))
+            assert !recordExceptionPredicate.test(new DummyException2("test"))
             it
         }
         // test default
@@ -195,8 +195,8 @@ class Resilience4jModuleSpec extends Specification {
             assert waitDurationInOpenState == Duration.ofMillis(1000)
             assert failureRateThreshold == 60
             assert automaticTransitionFromOpenToHalfOpenEnabled
-            assert recordFailurePredicate.test(new DummyException1("test"))
-            assert recordFailurePredicate.test(new DummyException2("test"))
+            assert recordExceptionPredicate.test(new DummyException1("test"))
+            assert recordExceptionPredicate.test(new DummyException2("test"))
             it
         }
     }
@@ -820,6 +820,7 @@ class Resilience4jModuleSpec extends Specification {
         then:
         families == ['resilience4j_bulkhead_available_concurrent_calls',
                      'resilience4j_bulkhead_max_allowed_concurrent_calls',
+                     'resilience4j_circuitbreaker_slow_call_rate',
                      'resilience4j_circuitbreaker_buffered_calls',
                      'resilience4j_circuitbreaker_calls',
                      'resilience4j_circuitbreaker_state',

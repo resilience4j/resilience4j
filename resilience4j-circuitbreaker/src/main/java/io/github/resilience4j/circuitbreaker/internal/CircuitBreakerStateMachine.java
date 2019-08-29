@@ -37,7 +37,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.function.UnaryOperator;
 
@@ -153,25 +152,30 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
 
     @Override
     public void onError(long duration, TimeUnit durationUnit, Throwable throwable) {
-        // Handle the case if the completable future throw CompletionException wrapping the original exception
+        // Handle the case if the completable future throws a CompletionException wrapping the original exception
         // where original exception is the the one to retry not the CompletionException.
-        Predicate<Throwable> recordFailurePredicate = circuitBreakerConfig.getRecordFailurePredicate();
         if (throwable instanceof CompletionException) {
             Throwable cause = throwable.getCause();
-            handleThrowable(duration, durationUnit, recordFailurePredicate, cause);
+            handleThrowable(duration, durationUnit, cause);
         }else{
-            handleThrowable(duration, durationUnit, recordFailurePredicate, throwable);
+            handleThrowable(duration, durationUnit, throwable);
         }
     }
 
-    private void handleThrowable(long duration, TimeUnit durationUnit, Predicate<Throwable> recordFailurePredicate, Throwable throwable) {
-        if (recordFailurePredicate.test(throwable)) {
-            LOG.debug("CircuitBreaker '{}' recorded a failure:", name, throwable);
-            publishCircuitErrorEvent(name, duration, durationUnit, throwable);
-            stateReference.get().onError(duration, durationUnit, throwable);
-        } else {
+    private void handleThrowable(long duration, TimeUnit durationUnit, Throwable throwable) {
+        if(circuitBreakerConfig.getIgnoreExceptionPredicate().test(throwable)){
+            LOG.debug("CircuitBreaker '{}' ignored an exception:", name, throwable);
             releasePermission();
             publishCircuitIgnoredErrorEvent(name, duration,durationUnit, throwable);
+        }
+        else if(circuitBreakerConfig.getRecordExceptionPredicate().test(throwable)){
+            LOG.debug("CircuitBreaker '{}' recorded an exception as failure:", name, throwable);
+            publishCircuitErrorEvent(name, duration, durationUnit, throwable);
+            stateReference.get().onError(duration, durationUnit, throwable);
+        }else{
+            LOG.debug("CircuitBreaker '{}' recorded an exception as success:", name, throwable);
+            publishSuccessEvent(duration, durationUnit);
+            stateReference.get().onSuccess(duration, durationUnit);
         }
     }
 
@@ -274,9 +278,9 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
     private void publishEventIfPossible(CircuitBreakerEvent event) {
         if(shouldPublishEvents(event)) {
             if (eventProcessor.hasConsumers()) {
-                LOG.debug("Event {} published: {}", event.getEventType(), event);
                 try{
                     eventProcessor.consumeEvent(event);
+                    LOG.debug("Event {} published: {}", event.getEventType(), event);
                 }catch (Throwable t){
                     LOG.warn("Failed to handle event {}", event.getEventType(), t);
                 }

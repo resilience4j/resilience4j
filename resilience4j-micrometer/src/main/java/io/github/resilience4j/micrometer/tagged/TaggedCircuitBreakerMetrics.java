@@ -93,6 +93,11 @@ public class TaggedCircuitBreakerMetrics extends AbstractMetrics implements Mete
                 .tag(TagNames.NAME, circuitBreaker.getName())
                 .register(registry).getId());
 
+        idSet.add(Gauge.builder(names.getSlowCallRateMetricName(), circuitBreaker, cb -> cb.getMetrics().getSlowCallRate())
+                .description("The slow call of the circuit breaker")
+                .tag(TagNames.NAME, circuitBreaker.getName())
+                .register(registry).getId());
+
         Timer successfulCalls = Timer.builder(names.getCallsMetricName())
                 .description("Total number of successful calls")
                 .tag(TagNames.NAME, circuitBreaker.getName())
@@ -153,6 +158,7 @@ public class TaggedCircuitBreakerMetrics extends AbstractMetrics implements Mete
         public static final String DEFAULT_CIRCUIT_BREAKER_STATE = DEFAULT_PREFIX + ".state";
         public static final String DEFAULT_CIRCUIT_BREAKER_BUFFERED_CALLS = DEFAULT_PREFIX + ".buffered.calls";
         public static final String DEFAULT_CIRCUIT_BREAKER_FAILURE_RATE = DEFAULT_PREFIX + ".failure.rate";
+        public static final String DEFAULT_CIRCUIT_BREAKER_SLOW_CALL_RATE = DEFAULT_PREFIX + ".slow.call.rate";
 
         /**
          * Returns a builder for creating custom metric names.
@@ -174,6 +180,7 @@ public class TaggedCircuitBreakerMetrics extends AbstractMetrics implements Mete
         private String stateMetricName = DEFAULT_CIRCUIT_BREAKER_STATE;
         private String bufferedCallsMetricName = DEFAULT_CIRCUIT_BREAKER_BUFFERED_CALLS;
         private String failureRateMetricName = DEFAULT_CIRCUIT_BREAKER_FAILURE_RATE;
+        private String slowCallRateMetricName = DEFAULT_CIRCUIT_BREAKER_SLOW_CALL_RATE;
 
         private MetricNames() {}
 
@@ -203,6 +210,13 @@ public class TaggedCircuitBreakerMetrics extends AbstractMetrics implements Mete
          */
         public String getFailureRateMetricName() {
             return failureRateMetricName;
+        }
+
+        /** Returns the metric name for slow call rate, defaults to {@value DEFAULT_CIRCUIT_BREAKER_SLOW_CALL_RATE}.
+         * @return The failure rate metric name.
+         */
+        public String getSlowCallRateMetricName() {
+            return slowCallRateMetricName;
         }
 
         /** Helps building custom instance of {@link MetricNames}. */
@@ -241,6 +255,15 @@ public class TaggedCircuitBreakerMetrics extends AbstractMetrics implements Mete
              */
             public Builder failureRateMetricName(String failureRateMetricName) {
                 metricNames.failureRateMetricName = requireNonNull(failureRateMetricName);
+                return this;
+            }
+
+            /** Overrides the default metric name {@value MetricNames#DEFAULT_CIRCUIT_BREAKER_SLOW_CALL_RATE} with a given one.
+             * @param slowCallRateMetricName The slow call rate metric name.
+             * @return The builder.
+             */
+            public Builder slowCallRateMetricName(String slowCallRateMetricName) {
+                metricNames.slowCallRateMetricName = requireNonNull(slowCallRateMetricName);
                 return this;
             }
 

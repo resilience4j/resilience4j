@@ -9,12 +9,12 @@ public class PredicateCreator {
     private PredicateCreator() {}
 
     @SafeVarargs
-    public static Optional<Predicate<Throwable>> createRecordExceptionsPredicate(Class<? extends Throwable> ...recordExceptions) {
+    public static Optional<Predicate<Throwable>> createExceptionsPredicate(Class<? extends Throwable> ...recordExceptions) {
         return exceptionPredicate(recordExceptions);
     }
 
     @SafeVarargs
-    public static Optional<Predicate<Throwable>> createIgnoreExceptionsPredicate(Class<? extends Throwable> ...ignoreExceptions) {
+    public static Optional<Predicate<Throwable>> createNegatedExceptionsPredicate(Class<? extends Throwable> ...ignoreExceptions) {
         return exceptionPredicate(ignoreExceptions)
                 .map(Predicate::negate);
     }

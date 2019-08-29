@@ -25,11 +25,16 @@ import javax.validation.constraints.Min;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 public class RateLimiterConfigurationProperties {
 
 	private Map<String, InstanceProperties> instances = new HashMap<>();
 	private Map<String, InstanceProperties> configs = new HashMap<>();
+
+	public Optional<InstanceProperties> findRateLimiterProperties(String name) {
+		return Optional.ofNullable(instances.get(name));
+	}
 
 	public RateLimiterConfig createRateLimiterConfig(@Nullable InstanceProperties instanceProperties) {
 		if (instanceProperties == null) {

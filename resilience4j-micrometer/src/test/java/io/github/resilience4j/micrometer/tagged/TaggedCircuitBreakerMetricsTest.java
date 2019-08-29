@@ -61,11 +61,11 @@ public class TaggedCircuitBreakerMetricsTest {
         newCircuitBreaker.onSuccess(0, TimeUnit.NANOSECONDS);
 
         assertThat(taggedCircuitBreakerMetrics.meterIdMap).containsKeys("backendA", "backendB");
-        assertThat(taggedCircuitBreakerMetrics.meterIdMap.get("backendA")).hasSize(12);
-        assertThat(taggedCircuitBreakerMetrics.meterIdMap.get("backendB")).hasSize(12);
+        assertThat(taggedCircuitBreakerMetrics.meterIdMap.get("backendA")).hasSize(13);
+        assertThat(taggedCircuitBreakerMetrics.meterIdMap.get("backendB")).hasSize(13);
 
         List<Meter> meters = meterRegistry.getMeters();
-        assertThat(meters).hasSize(24);
+        assertThat(meters).hasSize(26);
 
         Collection<Gauge> gauges = meterRegistry.get(DEFAULT_CIRCUIT_BREAKER_BUFFERED_CALLS).gauges();
 
@@ -77,7 +77,7 @@ public class TaggedCircuitBreakerMetricsTest {
     @Test
     public void shouldRemovedMetricsForRemovedRetry() {
         List<Meter> meters = meterRegistry.getMeters();
-        assertThat(meters).hasSize(12);
+        assertThat(meters).hasSize(13);
 
         assertThat(taggedCircuitBreakerMetrics.meterIdMap).containsKeys("backendA");
         circuitBreakerRegistry.remove("backendA");
@@ -91,7 +91,7 @@ public class TaggedCircuitBreakerMetricsTest {
     @Test
     public void notPermittedCallsCounterReportsCorrespondingValue() {
         List<Meter> meters = meterRegistry.getMeters();
-        assertThat(meters).hasSize(12);
+        assertThat(meters).hasSize(13);
 
         Collection<Counter> counters = meterRegistry.get(DEFAULT_CIRCUIT_BREAKER_CALLS).counters();
 
@@ -146,6 +146,7 @@ public class TaggedCircuitBreakerMetricsTest {
                         .stateMetricName("custom_state")
                         .bufferedCallsMetricName("custom_buffered_calls")
                         .failureRateMetricName("custom_failure_rate")
+                        .slowCallRateMetricName("custom_slow_call_rate")
                         .build(),
                 circuitBreakerRegistry
         ).bindTo(meterRegistry);
@@ -160,7 +161,8 @@ public class TaggedCircuitBreakerMetricsTest {
                 "custom_calls",
                 "custom_state",
                 "custom_buffered_calls",
-                "custom_failure_rate"
+                "custom_failure_rate",
+                "custom_slow_call_rate"
         ));
     }
 

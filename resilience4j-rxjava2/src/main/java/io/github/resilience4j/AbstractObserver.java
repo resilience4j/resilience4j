@@ -2,11 +2,14 @@ package io.github.resilience4j;
 
 import io.reactivex.Observer;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+
 import static java.util.Objects.requireNonNull;
 
 public abstract class AbstractObserver<T> extends AbstractDisposable implements Observer<T> {
 
     private final Observer<? super T> downstreamObserver;
+    protected final AtomicBoolean eventWasEmitted = new AtomicBoolean(false);
 
     public AbstractObserver(Observer<? super T> downstreamObserver) {
         this.downstreamObserver = requireNonNull(downstreamObserver);
@@ -19,7 +22,10 @@ public abstract class AbstractObserver<T> extends AbstractDisposable implements 
 
     @Override
     public void onNext(T item) {
-        whenNotDisposed(() -> downstreamObserver.onNext(item));
+        whenNotDisposed(() -> {
+            eventWasEmitted.set(true);
+            downstreamObserver.onNext(item);
+        });
     }
 
     @Override

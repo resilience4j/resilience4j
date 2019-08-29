@@ -15,6 +15,8 @@
  */
 package io.github.resilience4j.bulkhead;
 
+import com.github.tomakehurst.wiremock.client.WireMock;
+import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import io.github.resilience4j.bulkhead.autoconfigure.BulkheadProperties;
 import io.github.resilience4j.bulkhead.autoconfigure.ThreadPoolBulkheadProperties;
 import io.github.resilience4j.bulkhead.configure.BulkheadAspect;
@@ -22,9 +24,12 @@ import io.github.resilience4j.bulkhead.event.BulkheadEvent;
 import io.github.resilience4j.common.bulkhead.monitoring.endpoint.BulkheadEndpointResponse;
 import io.github.resilience4j.common.bulkhead.monitoring.endpoint.BulkheadEventDTO;
 import io.github.resilience4j.common.bulkhead.monitoring.endpoint.BulkheadEventsEndpointResponse;
+import io.github.resilience4j.service.test.DummyFeignClient;
 import io.github.resilience4j.service.test.TestApplication;
 import io.github.resilience4j.service.test.bulkhead.BulkheadDummyService;
 import io.github.resilience4j.service.test.bulkhead.BulkheadReactiveDummyService;
+import org.apache.commons.lang3.StringUtils;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,6 +41,7 @@ import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -73,6 +79,89 @@ public class BulkheadAutoConfigurationTest {
 	@Autowired
 	private TestRestTemplate restTemplate;
 
+	@Autowired
+	private DummyFeignClient dummyFeignClient;
+
+	@Rule
+	public WireMockRule wireMockRule = new WireMockRule(8090);
+
+
+	/**
+	 * This test verifies that the combination of @FeignClient and @Bulkhead annotation works as same as @Bulkhead alone works with any normal service class
+	 */
+	@Test
+	@DirtiesContext
+	public void testFeignClient() {
+
+		int expectedConcurrentCalls = 3;
+		int expectedRejectedCalls = 2;
+		WireMock.stubFor(WireMock
+				.get(WireMock.urlEqualTo("/sample/"))
+				.willReturn(WireMock.aResponse().withStatus(200).withBody("This is successful call")
+						.withFixedDelay(3000))
+		);
+
+		CompletableFuture<Void> future1 = CompletableFuture.runAsync(this::callService);
+		CompletableFuture<Void> future2 = CompletableFuture.runAsync(this::callService);
+		CompletableFuture<Void> future3 = CompletableFuture.runAsync(this::callService);
+		CompletableFuture<Void> future4 = CompletableFuture.runAsync(this::callService);
+		CompletableFuture<Void> future5 = CompletableFuture.runAsync(this::callService);
+
+		int actualSuccessfulCalls = 0;
+		try {
+			future1.get();
+			actualSuccessfulCalls++;
+		} catch (Exception e) {
+			// Ignore me
+		}
+		try {
+			future2.get();
+			actualSuccessfulCalls++;
+		} catch (Exception e) {
+			// Ignore me
+		}
+
+		try {
+			future3.get();
+			actualSuccessfulCalls++;
+		} catch (Exception e) {
+			// Ignore me
+		}
+
+		try {
+			future4.get();
+			actualSuccessfulCalls++;
+		} catch (Exception e) {
+			// Ignore me
+		}
+
+		try {
+			future5.get();
+			actualSuccessfulCalls++;
+		} catch (Exception e) {
+			// Ignore me
+		}
+		int actualRejectedCalls = 0;
+
+		ResponseEntity<BulkheadEventsEndpointResponse> bulkheadEventList = restTemplate.getForEntity("/actuator/bulkheadevents", BulkheadEventsEndpointResponse.class);
+		List<BulkheadEventDTO> bulkheadEvents = bulkheadEventList.getBody().getBulkheadEvents();
+		for (BulkheadEventDTO eventDTO : bulkheadEvents) {
+			if (eventDTO.getType().equals(BulkheadEvent.Type.CALL_REJECTED)) {
+				actualRejectedCalls++;
+			}
+		}
+		Bulkhead bulkhead = bulkheadRegistry.bulkhead("dummyFeignClient");
+
+		assertThat(bulkhead).isNotNull();
+		assertThat(bulkhead.getMetrics().getMaxAllowedConcurrentCalls()).isEqualTo(3);
+		assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(3);
+		assertThat(actualSuccessfulCalls).isEqualTo(expectedConcurrentCalls);
+		assertThat(actualRejectedCalls).isEqualTo(expectedRejectedCalls);
+	}
+
+	private void callService() {
+		dummyFeignClient.doSomething(StringUtils.EMPTY);
+	}
 
 	/**
 	 * The test verifies that a Bulkhead instance is created and configured properly when the BulkheadDummyService is invoked and
@@ -104,7 +193,7 @@ public class BulkheadAutoConfigurationTest {
 		// Test Actuator endpoints
 
 		ResponseEntity<BulkheadEndpointResponse> bulkheadList = restTemplate.getForEntity("/actuator/bulkheads", BulkheadEndpointResponse.class);
-		assertThat(bulkheadList.getBody().getBulkheads()).hasSize(4).containsExactly("backendA", "backendB", "backendB", "backendC");
+		assertThat(bulkheadList.getBody().getBulkheads()).hasSize(5).containsExactly("backendA", "backendB", "backendB", "backendC", "dummyFeignClient");
 
 		for (int i = 0; i < 5; i++) {
 			es.submit(dummyService::doSomethingAsync);
@@ -157,7 +246,7 @@ public class BulkheadAutoConfigurationTest {
 		// Test Actuator endpoints
 
 		ResponseEntity<BulkheadEndpointResponse> bulkheadList = restTemplate.getForEntity("/actuator/bulkheads", BulkheadEndpointResponse.class);
-		assertThat(bulkheadList.getBody().getBulkheads()).hasSize(4).containsExactly("backendA", "backendB", "backendB", "backendC");
+		assertThat(bulkheadList.getBody().getBulkheads()).hasSize(5).containsExactly("backendA", "backendB", "backendB", "backendC", "dummyFeignClient");
 
 		for (int i = 0; i < 5; i++) {
 			es.submit(dummyService::doSomething);
@@ -276,7 +365,7 @@ public class BulkheadAutoConfigurationTest {
 		// Test Actuator endpoints
 
 		ResponseEntity<BulkheadEndpointResponse> bulkheadList = restTemplate.getForEntity("/actuator/bulkheads", BulkheadEndpointResponse.class);
-		assertThat(bulkheadList.getBody().getBulkheads()).hasSize(4).containsExactly("backendA", "backendB", "backendB", "backendC");
+		assertThat(bulkheadList.getBody().getBulkheads()).hasSize(5).containsExactly("backendA", "backendB", "backendB", "backendC", "dummyFeignClient");
 
 		ResponseEntity<BulkheadEventsEndpointResponse> bulkheadEventList = restTemplate.getForEntity("/actuator/bulkheadevents", BulkheadEventsEndpointResponse.class);
 		List<BulkheadEventDTO> bulkheadEvents = bulkheadEventList.getBody().getBulkheadEvents();

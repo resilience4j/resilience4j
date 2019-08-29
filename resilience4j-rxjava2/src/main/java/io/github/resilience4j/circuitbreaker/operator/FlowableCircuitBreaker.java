@@ -69,7 +69,11 @@ class FlowableCircuitBreaker<T> extends Flowable<T> {
 
         @Override
         public void hookOnCancel() {
-            circuitBreaker.releasePermission();
+            if(eventWasEmitted.get()){
+                circuitBreaker.onSuccess(System.nanoTime() - start, TimeUnit.NANOSECONDS);
+            }else{
+                circuitBreaker.releasePermission();
+            }
         }
     }
 
