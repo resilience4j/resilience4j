@@ -107,14 +107,6 @@ public interface TimeLimiter {
      */
     <T, F extends Future<T>> Callable<T> decorateFutureSupplier(Supplier<F> futureSupplier);
 
-
-    /**
-     * Get the Metrics of this TimeLimiter.
-     *
-     * @return the Metrics of this TimeLimiter
-     */
-    Metrics getMetrics();
-
     /**
      * Returns an EventPublisher which can be used to register event consumers.
      *
@@ -135,25 +127,6 @@ public interface TimeLimiter {
      * @param throwable The throwable which must be recorded
      */
     void onError(Throwable throwable);
-
-
-    interface Metrics {
-
-        /**
-         * @return number of successful calls.
-         */
-        long getNumberOfSuccessfulCalls();
-
-        /**
-         * @return number of failed calls.
-         */
-        long getNumberOfErrorCalls();
-
-        /**
-         * @return number of timed out calls.
-         */
-        long getNumberOfTimedOutCalls();
-    }
 
     /**
      * An EventPublisher which can be used to register event consumers.

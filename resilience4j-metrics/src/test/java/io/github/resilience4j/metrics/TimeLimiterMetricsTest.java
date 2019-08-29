@@ -37,10 +37,11 @@ import static org.assertj.core.api.BDDAssertions.then;
 
 public class TimeLimiterMetricsTest {
 
-    private static final String NUMBER_OF_SUCCESSFUL_CALLS = "number_of_successful_calls";
-    private static final String NUMBER_OF_ERROR_CALLS = "number_of_error_calls";
-    private static final String NUMBER_OF_TIMED_OUT_CALLS = "number_of_timed_out_calls";
     private static final String DEFAULT_PREFIX = "resilience4j.timelimiter.UNDEFINED.";
+    private static final String SUCCESSFUL = "successful";
+    private static final String FAILED = "failed";
+    private static final String TIMEOUT = "timeout";
+
     private MetricRegistry metricRegistry;
 
     @Before
@@ -61,11 +62,11 @@ public class TimeLimiterMetricsTest {
 
         then(result).isEqualTo("Hello world");
         assertThat(metricRegistry).hasMetricsSize(3);
-        assertThat(metricRegistry).gauge(expectedPrefix + NUMBER_OF_SUCCESSFUL_CALLS)
+        assertThat(metricRegistry).counter(expectedPrefix + SUCCESSFUL)
                 .hasValue(1L);
-        assertThat(metricRegistry).gauge(expectedPrefix + NUMBER_OF_ERROR_CALLS)
+        assertThat(metricRegistry).counter(expectedPrefix + FAILED)
                 .hasValue(0L);
-        assertThat(metricRegistry).gauge(expectedPrefix + NUMBER_OF_TIMED_OUT_CALLS)
+        assertThat(metricRegistry).counter(expectedPrefix + TIMEOUT)
                 .hasValue(0L);
     }
 
@@ -82,11 +83,11 @@ public class TimeLimiterMetricsTest {
 
         then(result).isEqualTo("Hello world");
         assertThat(metricRegistry).hasMetricsSize(3);
-        assertThat(metricRegistry).gauge(expectedPrefix + NUMBER_OF_SUCCESSFUL_CALLS)
+        assertThat(metricRegistry).counter(expectedPrefix + SUCCESSFUL)
                 .hasValue(1L);
-        assertThat(metricRegistry).gauge(expectedPrefix + NUMBER_OF_ERROR_CALLS)
+        assertThat(metricRegistry).counter(expectedPrefix + FAILED)
                 .hasValue(0L);
-        assertThat(metricRegistry).gauge(expectedPrefix + NUMBER_OF_TIMED_OUT_CALLS)
+        assertThat(metricRegistry).counter(expectedPrefix + TIMEOUT)
                 .hasValue(0L);
     }
 
@@ -101,11 +102,11 @@ public class TimeLimiterMetricsTest {
         Try.ofCallable(timeLimiter.decorateFutureSupplier(futureSupplier));
 
         assertThat(metricRegistry).hasMetricsSize(3);
-        assertThat(metricRegistry).gauge(DEFAULT_PREFIX + NUMBER_OF_SUCCESSFUL_CALLS)
+        assertThat(metricRegistry).counter(DEFAULT_PREFIX + SUCCESSFUL)
                 .hasValue(2L);
-        assertThat(metricRegistry).gauge(DEFAULT_PREFIX + NUMBER_OF_ERROR_CALLS)
+        assertThat(metricRegistry).counter(DEFAULT_PREFIX + FAILED)
                 .hasValue(0L);
-        assertThat(metricRegistry).gauge(DEFAULT_PREFIX + NUMBER_OF_TIMED_OUT_CALLS)
+        assertThat(metricRegistry).counter(DEFAULT_PREFIX + TIMEOUT)
                 .hasValue(0L);
     }
 
@@ -120,11 +121,11 @@ public class TimeLimiterMetricsTest {
         Try.ofCallable(timeLimiter.decorateFutureSupplier(futureSupplier));
 
         assertThat(metricRegistry).hasMetricsSize(3);
-        assertThat(metricRegistry).gauge(DEFAULT_PREFIX + NUMBER_OF_SUCCESSFUL_CALLS)
+        assertThat(metricRegistry).counter(DEFAULT_PREFIX + SUCCESSFUL)
                 .hasValue(0L);
-        assertThat(metricRegistry).gauge(DEFAULT_PREFIX + NUMBER_OF_ERROR_CALLS)
+        assertThat(metricRegistry).counter(DEFAULT_PREFIX + FAILED)
                 .hasValue(2L);
-        assertThat(metricRegistry).gauge(DEFAULT_PREFIX + NUMBER_OF_TIMED_OUT_CALLS)
+        assertThat(metricRegistry).counter(DEFAULT_PREFIX + TIMEOUT)
                 .hasValue(0L);
     }
 
@@ -141,11 +142,11 @@ public class TimeLimiterMetricsTest {
         Try.ofCallable(timeLimiter.decorateFutureSupplier(futureSupplier));
 
         assertThat(metricRegistry).hasMetricsSize(3);
-        assertThat(metricRegistry).gauge(DEFAULT_PREFIX + NUMBER_OF_SUCCESSFUL_CALLS)
+        assertThat(metricRegistry).counter(DEFAULT_PREFIX + SUCCESSFUL)
                 .hasValue(0L);
-        assertThat(metricRegistry).gauge(DEFAULT_PREFIX + NUMBER_OF_ERROR_CALLS)
+        assertThat(metricRegistry).counter(DEFAULT_PREFIX + FAILED)
                 .hasValue(0L);
-        assertThat(metricRegistry).gauge(DEFAULT_PREFIX + NUMBER_OF_TIMED_OUT_CALLS)
+        assertThat(metricRegistry).counter(DEFAULT_PREFIX + TIMEOUT)
                 .hasValue(2L);
     }
 

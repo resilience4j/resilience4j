@@ -24,20 +24,20 @@ import io.vavr.collection.Array;
 
 import java.util.Map;
 
-import com.codahale.metrics.Gauge;
+import com.codahale.metrics.Counter;
 import com.codahale.metrics.Metric;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.MetricSet;
 
 import static com.codahale.metrics.MetricRegistry.name;
 import static io.github.resilience4j.timelimiter.utils.MetricNames.DEFAULT_PREFIX;
-import static io.github.resilience4j.timelimiter.utils.MetricNames.ERROR_CALLS;
-import static io.github.resilience4j.timelimiter.utils.MetricNames.SUCCESSFUL_CALLS;
-import static io.github.resilience4j.timelimiter.utils.MetricNames.TIMED_OUT_CALLS;
+import static io.github.resilience4j.timelimiter.utils.MetricNames.FAILED;
+import static io.github.resilience4j.timelimiter.utils.MetricNames.SUCCESSFUL;
+import static io.github.resilience4j.timelimiter.utils.MetricNames.TIMEOUT;
 import static java.util.Objects.requireNonNull;
 
 /**
- * An adapter which exports {@link TimeLimiter.Metrics} as Dropwizard Metrics Gauges.
+ * An adapter which exports TimeLimiter's events as Dropwizard Metrics.
  */
 public class TimeLimiterMetrics implements MetricSet {
 
@@ -57,12 +57,12 @@ public class TimeLimiterMetrics implements MetricSet {
         this.metricRegistry = metricRegistry;
         timeLimiters.forEach(timeLimiter -> {
                     String name = timeLimiter.getName();
-                    metricRegistry.register(name(prefix, name, SUCCESSFUL_CALLS),
-                            (Gauge<Long>) timeLimiter.getMetrics()::getNumberOfSuccessfulCalls);
-                    metricRegistry.register(name(prefix, name, ERROR_CALLS),
-                            (Gauge<Long>) timeLimiter.getMetrics()::getNumberOfErrorCalls);
-                    metricRegistry.register(name(prefix, name, TIMED_OUT_CALLS),
-                            (Gauge<Long>) timeLimiter.getMetrics()::getNumberOfTimedOutCalls);
+                    Counter successes = metricRegistry.counter(name(prefix, name, SUCCESSFUL));
+                    Counter failures = metricRegistry.counter(name(prefix, name, FAILED));
+                    Counter timeouts = metricRegistry.counter(name(prefix, name, TIMEOUT));
+                    timeLimiter.getEventPublisher().onSuccess(event -> successes.inc());
+                    timeLimiter.getEventPublisher().onError(event -> failures.inc());
+                    timeLimiter.getEventPublisher().onTimeout(event -> timeouts.inc());
                 }
         );
     }

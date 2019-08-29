@@ -12,7 +12,6 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import java.util.concurrent.atomic.LongAdder;
 import java.util.function.Supplier;
 
 import org.slf4j.Logger;
@@ -24,19 +23,11 @@ public class TimeLimiterImpl implements TimeLimiter {
 
     private String name;
     private final TimeLimiterConfig timeLimiterConfig;
-    private final LongAdder successes;
-    private final LongAdder errors;
-    private final LongAdder timeouts;
-    private final TimeLimiterMetrics metrics;
     private final TimeLimiterEventProcessor eventProcessor;
 
     public TimeLimiterImpl(String name, TimeLimiterConfig timeLimiterConfig) {
         this.name = name;
         this.timeLimiterConfig = timeLimiterConfig;
-        this.successes = new LongAdder();
-        this.errors = new LongAdder();
-        this.timeouts = new LongAdder();
-        this.metrics = new TimeLimiterMetrics();
         this.eventProcessor = new TimeLimiterEventProcessor();
     }
 
@@ -80,18 +71,12 @@ public class TimeLimiterImpl implements TimeLimiter {
     }
 
     @Override
-    public Metrics getMetrics() {
-        return metrics;
-    }
-
-    @Override
     public EventPublisher getEventPublisher() {
         return eventProcessor;
     }
 
     @Override
     public void onSuccess() {
-        successes.increment();
         if (!eventProcessor.hasConsumers()) {
             return;
         }
@@ -108,7 +93,6 @@ public class TimeLimiterImpl implements TimeLimiter {
     }
 
     private void onTimeout() {
-        timeouts.increment();
         if (!eventProcessor.hasConsumers()) {
             return;
         }
@@ -116,7 +100,6 @@ public class TimeLimiterImpl implements TimeLimiter {
     }
 
     private void onFailure(Throwable throwable) {
-        errors.increment();
         if (!eventProcessor.hasConsumers()) {
             return;
         }
@@ -124,29 +107,11 @@ public class TimeLimiterImpl implements TimeLimiter {
     }
 
     private void publishEvent(TimeLimiterEvent event) {
-        try{
+        try {
             eventProcessor.consumeEvent(event);
             LOG.debug("Event {} published: {}", event.getEventType(), event);
         } catch (Throwable t) {
             LOG.warn("Failed to handle event {}", event.getEventType(), t);
-        }
-    }
-
-    public class TimeLimiterMetrics implements Metrics {
-
-        @Override
-        public long getNumberOfSuccessfulCalls() {
-            return successes.longValue();
-        }
-
-        @Override
-        public long getNumberOfErrorCalls() {
-            return errors.longValue();
-        }
-
-        @Override
-        public long getNumberOfTimedOutCalls() {
-            return timeouts.longValue();
         }
     }
 }

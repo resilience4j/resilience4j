@@ -22,9 +22,9 @@ public class MetricRegistryAssert extends AbstractAssert<MetricRegistryAssert, M
         return this;
     }
 
-    public GaugeAssert gauge(String name) {
+    public CounterAssert counter(String name) {
         isNotNull();
-        Assertions.assertThat(actual.getGauges()).containsKey(name);
-        return GaugeAssert.assertThat(actual.getGauges().get(name));
+        Assertions.assertThat(actual.getCounters()).containsKey(name);
+        return CounterAssert.assertThat(actual.getCounters().get(name));
     }
 }

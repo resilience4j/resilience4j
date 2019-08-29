@@ -37,15 +37,6 @@ public class TimeLimiterImplTest {
     }
 
     @Test
-    public void metricsTest() {
-        TimeLimiter.Metrics metrics = timeLimiter.getMetrics();
-
-        then(metrics.getNumberOfSuccessfulCalls()).isEqualTo(0);
-        then(metrics.getNumberOfErrorCalls()).isEqualTo(0);
-        then(metrics.getNumberOfTimedOutCalls()).isEqualTo(0);
-    }
-
-    @Test
     public void namePropagation() {
         then(timeLimiter.getName()).isEqualTo(NAME);
     }
