@@ -41,7 +41,7 @@ class CircuitBreakerMetrics implements CircuitBreaker.Metrics {
     private final LongAdder numberOfNotPermittedCalls;
 
     private CircuitBreakerMetrics(int slidingWindowSize, CircuitBreakerConfig.SlidingWindowType slidingWindowType, CircuitBreakerConfig circuitBreakerConfig) {
-        if(circuitBreakerConfig.getSlidingWindowType() == slidingWindowType){
+        if(slidingWindowType == CircuitBreakerConfig.SlidingWindowType.COUNT_BASED){
             this.metrics = new FixedSizeSlidingWindowMetrics(slidingWindowSize);
             this.minimumNumberOfCalls = Math.min(circuitBreakerConfig.getMinimumNumberOfCalls(), slidingWindowSize);
         }else{
@@ -67,11 +67,11 @@ class CircuitBreakerMetrics implements CircuitBreaker.Metrics {
     }
 
     static CircuitBreakerMetrics forForcedOpen(CircuitBreakerConfig circuitBreakerConfig) {
-        return new CircuitBreakerMetrics(0, circuitBreakerConfig);
+        return new CircuitBreakerMetrics(0, CircuitBreakerConfig.SlidingWindowType.COUNT_BASED, circuitBreakerConfig);
     }
 
     static CircuitBreakerMetrics forDisabled(CircuitBreakerConfig circuitBreakerConfig) {
-        return new CircuitBreakerMetrics(0, circuitBreakerConfig);
+        return new CircuitBreakerMetrics(0, CircuitBreakerConfig.SlidingWindowType.COUNT_BASED, circuitBreakerConfig);
     }
 
     /**
