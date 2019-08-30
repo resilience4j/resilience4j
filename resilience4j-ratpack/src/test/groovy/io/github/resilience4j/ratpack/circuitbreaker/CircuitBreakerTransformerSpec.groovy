@@ -218,9 +218,9 @@ class CircuitBreakerTransformerSpec extends Specification {
         CircuitBreakerConfig config = CircuitBreakerConfig.custom()
                 .failureRateThreshold(50)
                 .waitDurationInOpenState(Duration.ofMillis(1000))
-                .ringBufferSizeInHalfOpenState(2)
-                .ringBufferSizeInClosedState(2)
-                .recordFailure(predicate)
+                .permittedNumberOfCallsInHalfOpenState(2)
+                .slidingWindowSize(2)
+                .recordException(predicate)
                 .build()
         CircuitBreaker.of("test", config)
     }

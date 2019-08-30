@@ -28,8 +28,8 @@ public class StateTransitionMetricsTest {
                 CircuitBreakerConfig.custom()
                         .waitDurationInOpenState(Duration.ofSeconds(1))
                         .failureRateThreshold(50)
-                        .ringBufferSizeInHalfOpenState(3)
-                        .ringBufferSizeInClosedState(10)
+                        .permittedNumberOfCallsInHalfOpenState(3)
+                        .slidingWindowSize(10)
                         .build();
         circuitBreaker = CircuitBreakerRegistry.ofDefaults().circuitBreaker("test", config);
 

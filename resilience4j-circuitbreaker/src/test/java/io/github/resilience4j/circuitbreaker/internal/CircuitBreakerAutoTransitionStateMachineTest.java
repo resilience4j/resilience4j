@@ -45,7 +45,7 @@ public class CircuitBreakerAutoTransitionStateMachineTest {
                 .permittedNumberOfCallsInHalfOpenState(3)
                 .automaticTransitionFromOpenToHalfOpenEnabled(true)
                 .waitDurationInOpenState(Duration.ofSeconds(2))
-                .recordFailure(error -> !(error instanceof NumberFormatException))
+                .recordException(error -> !(error instanceof NumberFormatException))
                 .build();
 
         SchedulerFactory schedulerFactoryMock = mock(SchedulerFactory.class);
