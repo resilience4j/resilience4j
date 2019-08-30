@@ -30,8 +30,8 @@ public class CombinedOperatorsTest {
     private final CircuitBreaker circuitBreaker = CircuitBreaker.of("test",
             CircuitBreakerConfig.custom()
                     .waitDurationInOpenState(Duration.of(10, ChronoUnit.SECONDS))
-                    .ringBufferSizeInClosedState(4)
-                    .ringBufferSizeInHalfOpenState(4)
+                    .slidingWindowSize(4)
+                    .permittedNumberOfCallsInHalfOpenState(4)
                     .build());
 
     private Bulkhead bulkhead = Bulkhead

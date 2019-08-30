@@ -123,8 +123,8 @@ public class VertxCircuitBreakerTest {
         // Given
         // Create a custom configuration for a CircuitBreaker
         CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom()
-                .ringBufferSizeInClosedState(2)
-                .ringBufferSizeInHalfOpenState(2)
+                .slidingWindowSize(2)
+                .permittedNumberOfCallsInHalfOpenState(2)
                 .failureRateThreshold(50)
                 .waitDurationInOpenState(Duration.ofMillis(1000))
                 .build();

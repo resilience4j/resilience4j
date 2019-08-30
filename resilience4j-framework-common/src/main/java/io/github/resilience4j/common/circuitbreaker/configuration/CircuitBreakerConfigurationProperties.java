@@ -128,7 +128,7 @@ public class CircuitBreakerConfigurationProperties {
 		if (properties.getRecordFailurePredicate() != null) {
 			Predicate<Throwable> predicate = ClassUtils.instantiatePredicateClass(properties.getRecordFailurePredicate());
 			if (predicate != null) {
-				builder.recordFailure(predicate);
+				builder.recordException(predicate);
 			}
 		}
 	}
