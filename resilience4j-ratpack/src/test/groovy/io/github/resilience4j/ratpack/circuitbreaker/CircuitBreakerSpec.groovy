@@ -356,8 +356,8 @@ class CircuitBreakerSpec extends Specification {
         CircuitBreakerConfig.custom()
                 .failureRateThreshold(50)
                 .waitDurationInOpenState(Duration.ofMillis(1000))
-                .ringBufferSizeInHalfOpenState(2)
-                .ringBufferSizeInClosedState(2)
+                .permittedNumberOfCallsInHalfOpenState(2)
+                .slidingWindowSize(2)
                 .build()
     }
 

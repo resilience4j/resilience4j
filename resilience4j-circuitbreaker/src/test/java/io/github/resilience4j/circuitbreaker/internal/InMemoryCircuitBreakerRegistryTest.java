@@ -70,7 +70,7 @@ public class InMemoryCircuitBreakerRegistryTest {
 	@Test
 	public void testCreateCircuitBreakerWithConfigName() {
 		CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
-		circuitBreakerRegistry.addConfiguration("testConfig", CircuitBreakerConfig.custom().ringBufferSizeInClosedState(5).build());
+		circuitBreakerRegistry.addConfiguration("testConfig", CircuitBreakerConfig.custom().slidingWindowSize(5).build());
 		final CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("circuitBreaker",
 				"testConfig");
 		assertThat(circuitBreaker).isNotNull();

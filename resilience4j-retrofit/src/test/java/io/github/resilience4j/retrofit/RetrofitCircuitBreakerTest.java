@@ -53,7 +53,7 @@ public class RetrofitCircuitBreakerTest {
     public WireMockRule wireMockRule = new WireMockRule();
 
     private static final CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom()
-            .ringBufferSizeInClosedState(3)
+            .slidingWindowSize(3)
             .waitDurationInOpenState(Duration.ofMillis(1000))
             .build();
 
