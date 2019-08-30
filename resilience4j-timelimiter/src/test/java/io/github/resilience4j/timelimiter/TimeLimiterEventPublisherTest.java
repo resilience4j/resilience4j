@@ -18,8 +18,6 @@
  */
 package io.github.resilience4j.timelimiter;
 
-import io.github.resilience4j.timelimiter.event.TimeLimiterEvent;
-import io.github.resilience4j.timelimiter.event.TimeLimiterOnErrorEvent;
 import io.vavr.control.Try;
 
 import java.time.Duration;
@@ -32,7 +30,6 @@ import org.slf4j.Logger;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
 
 
 public class TimeLimiterEventPublisherTest {
@@ -62,7 +59,7 @@ public class TimeLimiterEventPublisherTest {
         String result = timeLimiter.decorateFutureSupplier(futureSupplier).call();
 
         assertThat(result).isEqualTo("Hello world");
-        then(logger).should(times(1)).info("SUCCESS");
+        then(logger).should().info("SUCCESS");
     }
 
     @Test
@@ -75,7 +72,7 @@ public class TimeLimiterEventPublisherTest {
 
         Try.ofCallable(timeLimiter.decorateFutureSupplier(futureSupplier));
 
-        then(logger).should(times(1)).info("TIMEOUT");
+        then(logger).should().info("TIMEOUT");
     }
 
     @Test
@@ -88,7 +85,7 @@ public class TimeLimiterEventPublisherTest {
 
         Try.ofCallable(timeLimiter.decorateFutureSupplier(futureSupplier));
 
-        then(logger).should(times(1)).info("ERROR java.lang.RuntimeException");
+        then(logger).should().info("ERROR java.lang.RuntimeException");
     }
 
     private String fail() {

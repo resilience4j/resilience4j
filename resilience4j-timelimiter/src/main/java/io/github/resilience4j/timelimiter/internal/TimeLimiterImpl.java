@@ -6,8 +6,6 @@ import io.github.resilience4j.timelimiter.event.TimeLimiterEvent;
 import io.github.resilience4j.timelimiter.event.TimeLimiterOnErrorEvent;
 import io.github.resilience4j.timelimiter.event.TimeLimiterOnSuccessEvent;
 import io.github.resilience4j.timelimiter.event.TimeLimiterOnTimeoutEvent;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
@@ -15,6 +13,9 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Supplier;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class TimeLimiterImpl implements TimeLimiter {
 
@@ -60,6 +61,11 @@ public class TimeLimiterImpl implements TimeLimiter {
     }
 
     @Override
+    public String getName() {
+        return name;
+    }
+
+    @Override
     public TimeLimiterConfig getTimeLimiterConfig() {
         return timeLimiterConfig;
     }
@@ -79,23 +85,33 @@ public class TimeLimiterImpl implements TimeLimiter {
 
     @Override
     public void onError(Throwable throwable) {
+        if (throwable instanceof TimeoutException) {
+            onTimeout();
+        } else {
+            onFailure(throwable);
+        }
+    }
+
+    private void onTimeout() {
         if (!eventProcessor.hasConsumers()) {
             return;
         }
-        if (throwable instanceof TimeoutException) {
-            publishEvent(new TimeLimiterOnTimeoutEvent(name));
-        } else {
-            publishEvent(new TimeLimiterOnErrorEvent(name, throwable));
+        publishEvent(new TimeLimiterOnTimeoutEvent(name));
+    }
+
+    private void onFailure(Throwable throwable) {
+        if (!eventProcessor.hasConsumers()) {
+            return;
         }
+        publishEvent(new TimeLimiterOnErrorEvent(name, throwable));
     }
 
     private void publishEvent(TimeLimiterEvent event) {
-        try{
+        try {
             eventProcessor.consumeEvent(event);
             LOG.debug("Event {} published: {}", event.getEventType(), event);
-        }catch (Throwable t){
+        } catch (Throwable t) {
             LOG.warn("Failed to handle event {}", event.getEventType(), t);
         }
     }
-
 }
