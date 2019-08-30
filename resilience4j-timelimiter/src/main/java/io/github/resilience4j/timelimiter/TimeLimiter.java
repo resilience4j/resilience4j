@@ -75,6 +75,8 @@ public interface TimeLimiter {
         return timeLimiter.decorateFutureSupplier(futureSupplier);
     }
 
+    String getName();
+
     /**
      * Get the TimeLimiterConfig of this TimeLimiter decorator.
      *
@@ -105,6 +107,11 @@ public interface TimeLimiter {
      */
     <T, F extends Future<T>> Callable<T> decorateFutureSupplier(Supplier<F> futureSupplier);
 
+    /**
+     * Returns an EventPublisher which can be used to register event consumers.
+     *
+     * @return an EventPublisher
+     */
     EventPublisher getEventPublisher();
 
     /**
