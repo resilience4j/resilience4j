@@ -46,7 +46,7 @@ public class CircuitBreakerConfigTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void ringBufferSizeInHalfOpenStateBelowOneShouldFail() {
-        custom().permittedNumberOfCallsInHalfOpenState(0).build();
+        custom().ringBufferSizeInHalfOpenState(0).build();
     }
 
     @Test(expected = IllegalArgumentException.class)
