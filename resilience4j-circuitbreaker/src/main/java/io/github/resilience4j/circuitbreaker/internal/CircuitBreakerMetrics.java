@@ -40,8 +40,8 @@ class CircuitBreakerMetrics implements CircuitBreaker.Metrics {
     private int minimumNumberOfCalls;
     private final LongAdder numberOfNotPermittedCalls;
 
-    CircuitBreakerMetrics(int slidingWindowSize, CircuitBreakerConfig circuitBreakerConfig) {
-        if(circuitBreakerConfig.getSlidingWindowType() == CircuitBreakerConfig.SlidingWindow.COUNT_BASED){
+    private CircuitBreakerMetrics(int slidingWindowSize, CircuitBreakerConfig.SlidingWindowType slidingWindowType, CircuitBreakerConfig circuitBreakerConfig) {
+        if(circuitBreakerConfig.getSlidingWindowType() == slidingWindowType){
             this.metrics = new FixedSizeSlidingWindowMetrics(slidingWindowSize);
             this.minimumNumberOfCalls = Math.min(circuitBreakerConfig.getMinimumNumberOfCalls(), slidingWindowSize);
         }else{
@@ -52,6 +52,26 @@ class CircuitBreakerMetrics implements CircuitBreaker.Metrics {
         this.slowCallRateThreshold = circuitBreakerConfig.getSlowCallRateThreshold();
         this.slowCallDurationThresholdInNanos = circuitBreakerConfig.getSlowCallDurationThreshold().toNanos();
         this.numberOfNotPermittedCalls = new LongAdder();
+    }
+
+    private CircuitBreakerMetrics(int slidingWindowSize, CircuitBreakerConfig circuitBreakerConfig) {
+        this(slidingWindowSize, circuitBreakerConfig.getSlidingWindowType(), circuitBreakerConfig);
+    }
+
+    static CircuitBreakerMetrics forCosed(CircuitBreakerConfig circuitBreakerConfig) {
+        return new CircuitBreakerMetrics(circuitBreakerConfig.getSlidingWindowSize(), circuitBreakerConfig);
+    }
+
+    static CircuitBreakerMetrics forHalfOpen(int permittedNumberOfCallsInHalfOpenState,CircuitBreakerConfig circuitBreakerConfig) {
+        return new CircuitBreakerMetrics(permittedNumberOfCallsInHalfOpenState, CircuitBreakerConfig.SlidingWindowType.COUNT_BASED, circuitBreakerConfig);
+    }
+
+    static CircuitBreakerMetrics forForcedOpen(CircuitBreakerConfig circuitBreakerConfig) {
+        return new CircuitBreakerMetrics(0, circuitBreakerConfig);
+    }
+
+    static CircuitBreakerMetrics forDisabled(CircuitBreakerConfig circuitBreakerConfig) {
+        return new CircuitBreakerMetrics(0, circuitBreakerConfig);
     }
 
     /**

@@ -182,7 +182,7 @@ public class CircuitBreakerConfigurationProperties {
 		private Integer ringBufferSizeInClosedState;
 
 		@Nullable
-		private SlidingWindow slidingWindowType;
+		private SlidingWindowType slidingWindowType;
 
 		@Min(1)
 		@Nullable
@@ -441,11 +441,11 @@ public class CircuitBreakerConfigurationProperties {
 		}
 
 		@Nullable
-		public SlidingWindow getSlidingWindowType() {
+		public SlidingWindowType getSlidingWindowType() {
 			return slidingWindowType;
 		}
 
-		public void setSlidingWindowType(SlidingWindow slidingWindowType) {
+		public void setSlidingWindowType(SlidingWindowType slidingWindowType) {
 			this.slidingWindowType = slidingWindowType;
 		}
 	}
