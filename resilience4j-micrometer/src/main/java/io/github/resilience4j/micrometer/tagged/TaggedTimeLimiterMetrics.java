@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Yevhenii Voievodin, Robert Winkler
+ * Copyright 2019 authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,17 +16,16 @@
 package io.github.resilience4j.micrometer.tagged;
 
 import io.github.resilience4j.timelimiter.TimeLimiter;
-import io.github.resilience4j.timelimiter.TimeLimiter.Metrics;
 import io.github.resilience4j.timelimiter.TimeLimiterRegistry;
 import io.micrometer.core.instrument.Counter;
-import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.Meter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.binder.MeterBinder;
 
+import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Objects;
-import java.util.Set;
 
 import static java.util.Objects.requireNonNull;
 
@@ -36,9 +35,9 @@ import static java.util.Objects.requireNonNull;
 public class TaggedTimeLimiterMetrics extends AbstractMetrics implements MeterBinder {
 
     /**
-     * Creates a new binder that uses given {@code registry} as source of retries.
+     * Creates a new binder that uses given {@code registry} as source of time limiters.
      *
-     * @param timeLimiterRegistry the source of retries
+     * @param timeLimiterRegistry the source of time limiters
      * @return The {@link TaggedTimeLimiterMetrics} instance.
      */
     public static TaggedTimeLimiterMetrics ofTimeLimiterRegistry(TimeLimiterRegistry timeLimiterRegistry) {
@@ -46,9 +45,9 @@ public class TaggedTimeLimiterMetrics extends AbstractMetrics implements MeterBi
     }
 
     /**
-     * Creates a new binder that uses given {@code registry} as source of retries.
+     * Creates a new binder that uses given {@code registry} as source of time limiters.
      *
-     * @param names custom metric names
+     * @param names               custom metric names
      * @param timeLimiterRegistry the source of time limiters
      * @return The {@link TaggedTimeLimiterMetrics} instance.
      */
@@ -79,85 +78,131 @@ public class TaggedTimeLimiterMetrics extends AbstractMetrics implements MeterBi
     }
 
     private void addMetrics(MeterRegistry registry, TimeLimiter timeLimiter) {
-        Set<Meter.Id> idSet = new HashSet<>();
-
-        idSet.add(Counter.builder(names.getAvailablePermissionsMetricName(), timeLimiter, rl -> rl.getMetrics().getAvailablePermissions())
-                .description("The number of available permissions")
+        Counter successes = Counter.builder(names.getSuccessfulMetricName())
+                .description("The number of successful calls")
                 .tag(TagNames.NAME, timeLimiter.getName())
-                .register(registry).getId());
-        idSet.add(Gauge.builder(names.getWaitingThreadsMetricName(), timeLimiter, rl -> rl.getMetrics().getNumberOfWaitingThreads())
-                .description("The number of waiting threads")
+                .register(registry);
+        Counter failures = Counter.builder(names.getFailedMetricName())
+                .description("The number of failed calls")
                 .tag(TagNames.NAME, timeLimiter.getName())
-                .register(registry).getId());
+                .register(registry);
+        Counter timeouts = Counter.builder(names.getTimeoutMetricName())
+                .description("The number of timed out calls")
+                .tag(TagNames.NAME, timeLimiter.getName())
+                .register(registry);
 
-        meterIdMap.put(timeLimiter.getName(), idSet);
+        timeLimiter.getEventPublisher()
+                .onSuccess(event -> successes.increment())
+                .onError(event -> failures.increment())
+                .onTimeout(event -> timeouts.increment());
+
+        List<Meter.Id> ids = Arrays.asList(successes.getId(), failures.getId(), timeouts.getId());
+        meterIdMap.put(timeLimiter.getName(), new HashSet<>(ids));
     }
 
-    /** Defines possible configuration for metric names. */
+    /**
+     * Defines possible configuration for metric names.
+     */
     public static class MetricNames {
 
         private static final String DEFAULT_PREFIX = "resilience4j.timelimiter";
-
-        public static final String DEFAULT_AVAILABLE_PERMISSIONS_METRIC_NAME = DEFAULT_PREFIX + ".available.permissions";
-        public static final String DEFAULT_WAITING_THREADS_METRIC_NAME = DEFAULT_PREFIX + ".waiting_threads";
+        public static final String SUCCESSFUL_METRIC_NAME = DEFAULT_PREFIX + ".successful";
+        public static final String FAILED_METRIC_NAME = DEFAULT_PREFIX + ".failed";
+        public static final String TIMEOUT_METRIC_NAME = DEFAULT_PREFIX + ".timeout";
 
         /**
          * Returns a builder for creating custom metric names.
          * Note that names have default values, so only desired metrics can be renamed.
+         *
          * @return The builder.
          */
         public static Builder custom() {
             return new Builder();
         }
 
-        /** Returns default metric names.
+        /**
+         * Returns default metric names.
+         *
          * @return The default {@link MetricNames} instance.
          */
         public static MetricNames ofDefaults() {
             return new MetricNames();
         }
 
-        private String availablePermissionsMetricName = DEFAULT_AVAILABLE_PERMISSIONS_METRIC_NAME;
-        private String waitingThreadsMetricName = DEFAULT_WAITING_THREADS_METRIC_NAME;
+        private String successfulMetricName = SUCCESSFUL_METRIC_NAME;
+        private String failedMetricName = FAILED_METRIC_NAME;
+        private String timeoutMetricName = TIMEOUT_METRIC_NAME;
 
-        /** Returns the metric name for available permissions, defaults to {@value DEFAULT_AVAILABLE_PERMISSIONS_METRIC_NAME}.
-         * @return The available permissions metric name.
+        /**
+         * Returns the metric name for successful calls, defaults to {@value SUCCESSFUL_METRIC_NAME}.
+         *
+         * @return The successful calls metric name.
          */
-        public String getAvailablePermissionsMetricName() {
-            return availablePermissionsMetricName;
+        public String getSuccessfulMetricName() {
+            return successfulMetricName;
         }
 
-        /** Returns the metric name for waiting threads, defaults to {@value DEFAULT_WAITING_THREADS_METRIC_NAME}.
-         * @return The waiting threads metric name.
+        /**
+         * Returns the metric name for failed calls, defaults to {@value FAILED_METRIC_NAME}.
+         *
+         * @return The failed calls metric name.
          */
-        public String getWaitingThreadsMetricName() {
-            return waitingThreadsMetricName;
+        public String getFailedMetricName() {
+            return failedMetricName;
         }
 
-        /** Helps building custom instance of {@link MetricNames}. */
+        /**
+         * Returns the metric name for timed out calls, defaults to {@value TIMEOUT_METRIC_NAME}.
+         *
+         * @return The timed out calls metric name.
+         */
+        public String getTimeoutMetricName() {
+            return timeoutMetricName;
+        }
+
+        /**
+         * Helps building custom instance of {@link MetricNames}.
+         */
         public static class Builder {
 
             private final MetricNames metricNames = new MetricNames();
 
-            /** Overrides the default metric name {@value MetricNames#DEFAULT_AVAILABLE_PERMISSIONS_METRIC_NAME} with a given one.
-             * @param availablePermissionsMetricName The available permissions metric name.
+            /**
+             * Overrides the default metric name {@value MetricNames#SUCCESSFUL_METRIC_NAME} with a given one.
+             *
+             * @param successfulMetricName The successful calls metric name.
              * @return The builder.
              */
-            public Builder availablePermissionsMetricName(String availablePermissionsMetricName) {
-                metricNames.availablePermissionsMetricName = requireNonNull(availablePermissionsMetricName);
+            public Builder successfulMetricName(String successfulMetricName) {
+                metricNames.successfulMetricName = requireNonNull(successfulMetricName);
                 return this;
             }
 
-            /** Overrides the default metric name {@value MetricNames#DEFAULT_WAITING_THREADS_METRIC_NAME} with a given one.
-             * @param waitingThreadsMetricName The waiting threads metric name.
+            /**
+             * Overrides the default metric name {@value MetricNames#FAILED_METRIC_NAME} with a given one.
+             *
+             * @param failedMetricName The failed calls metric name.
              * @return The builder.
              */
-            public Builder waitingThreadsMetricName(String waitingThreadsMetricName) {
-                metricNames.waitingThreadsMetricName = requireNonNull(waitingThreadsMetricName);
+            public Builder failedMetricName(String failedMetricName) {
+                metricNames.failedMetricName = requireNonNull(failedMetricName);
                 return this;
             }
 
-            /** Builds {@link MetricNames} instance.
+            /**
+             * Overrides the default metric name {@value MetricNames#TIMEOUT_METRIC_NAME} with a given one.
+             *
+             * @param timeoutMetricName The timed out calls metric name.
+             * @return The builder.
+             */
+            public Builder timeoutMetricName(String timeoutMetricName) {
+                metricNames.timeoutMetricName = requireNonNull(timeoutMetricName);
+                return this;
+            }
+
+            /**
+             * Builds {@link MetricNames} instance.
+             *
              * @return The built {@link MetricNames} instance.
              */
             public MetricNames build() {

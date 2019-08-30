@@ -35,9 +35,9 @@ import static java.util.Objects.requireNonNull;
 public class TaggedRateLimiterMetrics extends AbstractMetrics implements MeterBinder {
 
     /**
-     * Creates a new binder that uses given {@code registry} as source of retries.
+     * Creates a new binder that uses given {@code registry} as source of rate limiters.
      *
-     * @param rateLimiterRegistry the source of retries
+     * @param rateLimiterRegistry the source of rate limiters
      * @return The {@link TaggedRateLimiterMetrics} instance.
      */
     public static TaggedRateLimiterMetrics ofRateLimiterRegistry(RateLimiterRegistry rateLimiterRegistry) {
@@ -45,7 +45,7 @@ public class TaggedRateLimiterMetrics extends AbstractMetrics implements MeterBi
     }
 
     /**
-     * Creates a new binder that uses given {@code registry} as source of retries.
+     * Creates a new binder that uses given {@code registry} as source of rate limiters.
      *
      * @param names custom metric names
      * @param rateLimiterRegistry the source of rate limiters

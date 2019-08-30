@@ -44,6 +44,12 @@ final class MetricsTestHelper {
                 .findAny();
     }
 
+    static Optional<Counter> findCounterByNamesTag(Collection<Counter> gauges, String name) {
+        return gauges.stream()
+                .filter(g -> name.equals(g.getId().getTag(TagNames.NAME)))
+                .findAny();
+    }
+
     static Optional<Gauge> findGaugeByNamesTag(Collection<Gauge> gauges, String name) {
         return gauges.stream()
                 .filter(g -> name.equals(g.getId().getTag(TagNames.NAME)))
