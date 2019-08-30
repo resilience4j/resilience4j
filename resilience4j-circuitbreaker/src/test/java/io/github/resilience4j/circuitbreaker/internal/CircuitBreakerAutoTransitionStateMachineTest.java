@@ -41,7 +41,7 @@ public class CircuitBreakerAutoTransitionStateMachineTest {
     public void setUp() {
         CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom()
                 .failureRateThreshold(50)
-                .slidingWindow(5, 5, CircuitBreakerConfig.SlidingWindow.COUNT_BASED)
+                .slidingWindow(5, 5, CircuitBreakerConfig.SlidingWindowType.COUNT_BASED)
                 .permittedNumberOfCallsInHalfOpenState(3)
                 .automaticTransitionFromOpenToHalfOpenEnabled(true)
                 .waitDurationInOpenState(Duration.ofSeconds(2))

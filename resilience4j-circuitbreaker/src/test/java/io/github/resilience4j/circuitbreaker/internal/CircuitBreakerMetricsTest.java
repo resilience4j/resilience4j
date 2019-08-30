@@ -31,11 +31,10 @@ public class CircuitBreakerMetricsTest {
     @Test
     public void testCircuitBreakerMetrics(){
         CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom()
-                .slidingWindow(10, 10, CircuitBreakerConfig.SlidingWindow.COUNT_BASED)
+                .slidingWindow(10, 10, CircuitBreakerConfig.SlidingWindowType.COUNT_BASED)
                 .build();
 
-        CircuitBreakerMetrics circuitBreakerMetrics = new CircuitBreakerMetrics(circuitBreakerConfig.getSlidingWindowSize(),
-                circuitBreakerConfig);
+        CircuitBreakerMetrics circuitBreakerMetrics = CircuitBreakerMetrics.forCosed(circuitBreakerConfig);
 
         circuitBreakerMetrics.onSuccess(0, TimeUnit.NANOSECONDS);
         circuitBreakerMetrics.onSuccess(0, TimeUnit.NANOSECONDS);
