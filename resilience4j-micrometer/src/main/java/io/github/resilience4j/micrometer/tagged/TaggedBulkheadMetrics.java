@@ -29,7 +29,7 @@ import java.util.Set;
 import static java.util.Objects.requireNonNull;
 
 /**
- * A micrometer binder that is used to register bulkhead exposed {@link Metrics metrics}.
+ * A micrometer binder that is used to register Bulkhead exposed {@link Metrics metrics}.
  */
 public class TaggedBulkheadMetrics extends AbstractMetrics implements MeterBinder {
 

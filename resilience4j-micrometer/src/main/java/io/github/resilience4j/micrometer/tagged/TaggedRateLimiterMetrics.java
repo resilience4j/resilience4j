@@ -30,7 +30,7 @@ import java.util.Set;
 import static java.util.Objects.requireNonNull;
 
 /**
- * A micrometer binder that is used to register retry exposed {@link Metrics metrics}.
+ * A micrometer binder that is used to register RateLimiter exposed {@link Metrics metrics}.
  */
 public class TaggedRateLimiterMetrics extends AbstractMetrics implements MeterBinder {
 
