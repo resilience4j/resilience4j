@@ -29,7 +29,7 @@ import static io.github.resilience4j.retry.Retry.Metrics;
 import static java.util.Objects.requireNonNull;
 
 /**
- * A micrometer binder that is used to register retry exposed {@link Metrics metrics}.
+ * A micrometer binder that is used to register Retry exposed {@link Metrics metrics}.
  */
 public class TaggedRetryMetrics extends AbstractMetrics implements MeterBinder {
 

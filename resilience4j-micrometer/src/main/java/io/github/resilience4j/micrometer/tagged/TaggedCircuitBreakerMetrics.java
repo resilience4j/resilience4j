@@ -27,7 +27,7 @@ import java.util.Set;
 import static java.util.Objects.requireNonNull;
 
 /**
- * A micrometer binder that is used to register circuit breaker exposed {@link Metrics metrics}.
+ * A micrometer binder that is used to register CircuitBreaker exposed {@link Metrics metrics}.
  */
 public class TaggedCircuitBreakerMetrics extends AbstractMetrics implements MeterBinder {
 
