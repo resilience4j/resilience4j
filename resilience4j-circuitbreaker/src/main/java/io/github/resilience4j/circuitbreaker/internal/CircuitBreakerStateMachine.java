@@ -376,8 +376,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
         private final AtomicBoolean isClosed;
 
         ClosedState() {
-            this.circuitBreakerMetrics = new CircuitBreakerMetrics(getCircuitBreakerConfig().getSlidingWindowSize(),
-                    getCircuitBreakerConfig());
+            this.circuitBreakerMetrics = CircuitBreakerMetrics.forCosed(getCircuitBreakerConfig());
             this.isClosed = new AtomicBoolean(true);
         }
 
@@ -536,7 +535,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
         private final CircuitBreakerMetrics circuitBreakerMetrics;
 
         DisabledState() {
-            this.circuitBreakerMetrics = new CircuitBreakerMetrics(0, getCircuitBreakerConfig());
+            this.circuitBreakerMetrics = CircuitBreakerMetrics.forDisabled(getCircuitBreakerConfig());
         }
 
         /**
@@ -595,7 +594,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
         private final CircuitBreakerMetrics circuitBreakerMetrics;
 
         ForcedOpenState() {
-            this.circuitBreakerMetrics = new CircuitBreakerMetrics(0, circuitBreakerConfig);
+            this.circuitBreakerMetrics = CircuitBreakerMetrics.forForcedOpen(circuitBreakerConfig);
         }
 
         /**
@@ -657,7 +656,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
 
         HalfOpenState() {
             int permittedNumberOfCallsInHalfOpenState = circuitBreakerConfig.getPermittedNumberOfCallsInHalfOpenState();
-            this.circuitBreakerMetrics = new CircuitBreakerMetrics(permittedNumberOfCallsInHalfOpenState, getCircuitBreakerConfig());
+            this.circuitBreakerMetrics = CircuitBreakerMetrics.forHalfOpen(permittedNumberOfCallsInHalfOpenState, getCircuitBreakerConfig());
             this.permittedNumberOfCalls = new AtomicInteger(permittedNumberOfCallsInHalfOpenState);
         }
 

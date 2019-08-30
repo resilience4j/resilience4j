@@ -29,7 +29,7 @@ import java.time.Duration;
 import java.time.ZoneId;
 import java.util.concurrent.TimeUnit;
 
-import static io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.SlidingWindow;
+import static io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.SlidingWindowType;
 import static io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.custom;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.BDDAssertions.assertThat;
@@ -47,7 +47,7 @@ public class CircuitBreakerStateMachineTest {
                 .permittedNumberOfCallsInHalfOpenState(4)
                 .slowCallDurationThreshold(Duration.ofSeconds(4))
                 .slowCallRateThreshold(50)
-                .slidingWindow(5, 5, SlidingWindow.COUNT_BASED)
+                .slidingWindow(5, 5, SlidingWindowType.COUNT_BASED)
                 .waitDurationInOpenState(Duration.ofSeconds(5))
                 .ignoreExceptions(NumberFormatException.class)
                 .build(), mockClock);
