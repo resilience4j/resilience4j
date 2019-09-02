@@ -28,20 +28,19 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
 import org.junit.Before;
 import org.junit.Test;
 
-import static io.github.resilience4j.micrometer.tagged.MetricsTestHelper.findCounterByNamesTag;
+import static io.github.resilience4j.micrometer.tagged.MetricsTestHelper.*;
+import static io.github.resilience4j.micrometer.tagged.TaggedCircuitBreakerMetrics.MetricNames.DEFAULT_CIRCUIT_BREAKER_BUFFERED_CALLS;
+import static io.github.resilience4j.micrometer.tagged.TaggedTimeLimiterMetrics.MetricNames.DEFAULT_TIME_LIMITER_CALLS;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class TaggedTimeLimiterMetricsTest {
-
-    private static final String DEFAULT_PREFIX = "resilience4j.timelimiter";
-    private static final String SUCCESSFUL = DEFAULT_PREFIX + ".successful";
-    private static final String FAILED = DEFAULT_PREFIX + ".failed";
-    private static final String TIMEOUT = DEFAULT_PREFIX + ".timeout";
 
     private MeterRegistry meterRegistry;
     private TimeLimiter timeLimiter;
@@ -61,6 +60,7 @@ public class TaggedTimeLimiterMetricsTest {
     @Test
     public void shouldAddMetricsForANewlyCreatedTimeLimiter() {
         TimeLimiter newTimeLimiter = timeLimiterRegistry.timeLimiter("backendB");
+        newTimeLimiter.onSuccess();
 
         assertThat(taggedTimeLimiterMetrics.meterIdMap).containsKeys("backendA", "backendB");
         assertThat(taggedTimeLimiterMetrics.meterIdMap.get("backendA")).hasSize(3);
@@ -68,10 +68,10 @@ public class TaggedTimeLimiterMetricsTest {
 
         assertThat(meterRegistry.getMeters()).hasSize(6);
 
-        Collection<Counter> counters = meterRegistry.get(SUCCESSFUL).counters();
+        Collection<Counter> counters = meterRegistry.get(DEFAULT_TIME_LIMITER_CALLS).counters();
 
-        Optional<Counter> successful = findCounterByNamesTag(counters, newTimeLimiter.getName());
-        assertThat(successful).map(Counter::count).contains(0d);
+        Optional<Counter> successful = findCounterByKindAndNameTags(counters, "successful", newTimeLimiter.getName());
+        assertThat(successful).map(Counter::count).contains(1d);
     }
 
     @Test
@@ -88,14 +88,14 @@ public class TaggedTimeLimiterMetricsTest {
 
     @Test
     public void shouldReplaceMetrics() {
-        Counter before = meterRegistry.get(SUCCESSFUL).counter();
+        Counter before = meterRegistry.get(DEFAULT_TIME_LIMITER_CALLS).counter();
         assertThat(before).isNotNull();
         assertThat(before.count()).isEqualTo(0);
         assertThat(before.getId().getTag(TagNames.NAME)).isEqualTo(timeLimiter.getName());
 
         timeLimiterRegistry.replace(timeLimiter.getName(), TimeLimiter.ofDefaults());
 
-        Counter after = meterRegistry.get(SUCCESSFUL).counter();
+        Counter after = meterRegistry.get(DEFAULT_TIME_LIMITER_CALLS).counter();
         assertThat(after).isNotNull();
         assertThat(after.count()).isEqualTo(0);
         assertThat(after.getId().getTag(TagNames.NAME)).isEqualTo(TimeLimiter.ofDefaults().getName());
@@ -103,44 +103,30 @@ public class TaggedTimeLimiterMetricsTest {
 
     @Test
     public void successfulCounterIsRegistered() {
-        Counter successful = meterRegistry.get(SUCCESSFUL).counter();
+        Collection<Counter> counters = meterRegistry.get(DEFAULT_TIME_LIMITER_CALLS).counters();
+        timeLimiter.onSuccess();
 
-        assertThat(successful).isNotNull();
-        assertThat(successful.count()).isEqualTo(0);
-        assertThat(successful.getId().getTag(TagNames.NAME)).isEqualTo(timeLimiter.getName());
+        Optional<Counter> successful = findCounterByKindAndNameTags(counters, "successful", timeLimiter.getName());
+        assertThat(successful).map(Counter::count).contains(1d);
     }
 
     @Test
     public void failedCounterIsRegistered() {
-        Counter failed = meterRegistry.get(FAILED).counter();
+        Collection<Counter> counters = meterRegistry.get(DEFAULT_TIME_LIMITER_CALLS).counters();
+        timeLimiter.onError(new RuntimeException());
 
-        assertThat(failed).isNotNull();
-        assertThat(failed.count()).isEqualTo(0);
-        assertThat(failed.getId().getTag(TagNames.NAME)).isEqualTo(timeLimiter.getName());
+        Optional<Counter> failed = findCounterByKindAndNameTags(counters, "failed", timeLimiter.getName());
+        assertThat(failed).map(Counter::count).contains(1d);
     }
 
     @Test
     public void timoutCounterIsRegistered() {
-        Counter timout = meterRegistry.get(TIMEOUT).counter();
+        Collection<Counter> counters = meterRegistry.get(DEFAULT_TIME_LIMITER_CALLS).counters();
+        timeLimiter.onError(new TimeoutException());
 
-        assertThat(timout).isNotNull();
-        assertThat(timout.count()).isEqualTo(0);
-        assertThat(timout.getId().getTag(TagNames.NAME)).isEqualTo(timeLimiter.getName());
+        Optional<Counter> timeout = findCounterByKindAndNameTags(counters, "timeout", timeLimiter.getName());
+        assertThat(timeout).map(Counter::count).contains(1d);
     }
-
-    @Test
-    public void successfulCounterIsIncremented() throws Exception {
-        Callable<String> decoratedSupplier = timeLimiter.decorateFutureSupplier(() ->
-                CompletableFuture.completedFuture("Hello world"));
-
-        decoratedSupplier.call();
-        decoratedSupplier.call();
-
-        assertThat(meterRegistry.get(SUCCESSFUL).counter().count()).isEqualTo(2);
-        assertThat(meterRegistry.get(FAILED).counter().count()).isEqualTo(0);
-        assertThat(meterRegistry.get(TIMEOUT).counter().count()).isEqualTo(0);
-    }
-
     @Test
     public void customMetricNamesGetApplied() {
         MeterRegistry meterRegistry = new SimpleMeterRegistry();
@@ -148,9 +134,7 @@ public class TaggedTimeLimiterMetricsTest {
         timeLimiterRegistry.timeLimiter("backendA");
         TaggedTimeLimiterMetrics.ofTimeLimiterRegistry(
                 TaggedTimeLimiterMetrics.MetricNames.custom()
-                        .successfulMetricName("custom_successful")
-                        .failedMetricName("custom_failed")
-                        .timeoutMetricName("custom_timeout")
+                        .callsMetricName("custom_calls")
                         .build(),
                 timeLimiterRegistry
         ).bindTo(meterRegistry);
@@ -162,9 +146,7 @@ public class TaggedTimeLimiterMetricsTest {
                 .collect(Collectors.toSet());
 
         assertThat(metricNames).hasSameElementsAs(Arrays.asList(
-                "custom_successful",
-                "custom_failed",
-                "custom_timeout"
+                "custom_calls"
         ));
     }
 }
