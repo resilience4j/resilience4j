@@ -30,10 +30,6 @@ import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.MetricSet;
 
 import static com.codahale.metrics.MetricRegistry.name;
-import static io.github.resilience4j.timelimiter.utils.MetricNames.DEFAULT_PREFIX;
-import static io.github.resilience4j.timelimiter.utils.MetricNames.FAILED;
-import static io.github.resilience4j.timelimiter.utils.MetricNames.SUCCESSFUL;
-import static io.github.resilience4j.timelimiter.utils.MetricNames.TIMEOUT;
 import static java.util.Objects.requireNonNull;
 
 /**
@@ -41,6 +37,10 @@ import static java.util.Objects.requireNonNull;
  */
 public class TimeLimiterMetrics implements MetricSet {
 
+    private static final String DEFAULT_PREFIX = "resilience4j.timelimiter";
+    private static final String SUCCESSFUL = "successful";
+    private static final String FAILED = "failed";
+    private static final String TIMEOUT = "timeout";
     private static final String PREFIX_NULL = "Prefix must not be null";
     private static final String ITERABLE_NULL = "TimeLimiters iterable must not be null";
 
