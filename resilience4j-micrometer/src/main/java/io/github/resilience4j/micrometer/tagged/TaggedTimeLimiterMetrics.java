@@ -34,6 +34,10 @@ import static java.util.Objects.requireNonNull;
  */
 public class TaggedTimeLimiterMetrics extends AbstractMetrics implements MeterBinder {
 
+    private static final String KIND_FAILED = "failed";
+    private static final String KIND_SUCCESSFUL = "successful";
+    private static final String KIND_TIMEOUT = "timeout";
+
     /**
      * Creates a new binder that uses given {@code registry} as source of time limiters.
      *
@@ -78,17 +82,20 @@ public class TaggedTimeLimiterMetrics extends AbstractMetrics implements MeterBi
     }
 
     private void addMetrics(MeterRegistry registry, TimeLimiter timeLimiter) {
-        Counter successes = Counter.builder(names.getSuccessfulMetricName())
+        Counter successes = Counter.builder(names.getCallsMetricName())
                 .description("The number of successful calls")
                 .tag(TagNames.NAME, timeLimiter.getName())
+                .tag(TagNames.KIND, KIND_SUCCESSFUL)
                 .register(registry);
-        Counter failures = Counter.builder(names.getFailedMetricName())
+        Counter failures = Counter.builder(names.getCallsMetricName())
                 .description("The number of failed calls")
                 .tag(TagNames.NAME, timeLimiter.getName())
+                .tag(TagNames.KIND, KIND_FAILED)
                 .register(registry);
-        Counter timeouts = Counter.builder(names.getTimeoutMetricName())
+        Counter timeouts = Counter.builder(names.getCallsMetricName())
                 .description("The number of timed out calls")
                 .tag(TagNames.NAME, timeLimiter.getName())
+                .tag(TagNames.KIND, KIND_TIMEOUT)
                 .register(registry);
 
         timeLimiter.getEventPublisher()
@@ -106,9 +113,9 @@ public class TaggedTimeLimiterMetrics extends AbstractMetrics implements MeterBi
     public static class MetricNames {
 
         private static final String DEFAULT_PREFIX = "resilience4j.timelimiter";
-        public static final String SUCCESSFUL_METRIC_NAME = DEFAULT_PREFIX + ".successful";
-        public static final String FAILED_METRIC_NAME = DEFAULT_PREFIX + ".failed";
-        public static final String TIMEOUT_METRIC_NAME = DEFAULT_PREFIX + ".timeout";
+        public static final String DEFAULT_TIME_LIMITER_CALLS = DEFAULT_PREFIX + ".calls";
+
+        private String callsMetricName = DEFAULT_TIME_LIMITER_CALLS;
 
         /**
          * Returns a builder for creating custom metric names.
@@ -129,35 +136,11 @@ public class TaggedTimeLimiterMetrics extends AbstractMetrics implements MeterBi
             return new MetricNames();
         }
 
-        private String successfulMetricName = SUCCESSFUL_METRIC_NAME;
-        private String failedMetricName = FAILED_METRIC_NAME;
-        private String timeoutMetricName = TIMEOUT_METRIC_NAME;
-
-        /**
-         * Returns the metric name for successful calls, defaults to {@value SUCCESSFUL_METRIC_NAME}.
-         *
-         * @return The successful calls metric name.
+        /** Returns the metric name for circuit breaker calls, defaults to {@value DEFAULT_TIME_LIMITER_CALLS}.
+         * @return The circuit breaker calls metric name.
          */
-        public String getSuccessfulMetricName() {
-            return successfulMetricName;
-        }
-
-        /**
-         * Returns the metric name for failed calls, defaults to {@value FAILED_METRIC_NAME}.
-         *
-         * @return The failed calls metric name.
-         */
-        public String getFailedMetricName() {
-            return failedMetricName;
-        }
-
-        /**
-         * Returns the metric name for timed out calls, defaults to {@value TIMEOUT_METRIC_NAME}.
-         *
-         * @return The timed out calls metric name.
-         */
-        public String getTimeoutMetricName() {
-            return timeoutMetricName;
+        public String getCallsMetricName() {
+            return callsMetricName;
         }
 
         /**
@@ -167,36 +150,11 @@ public class TaggedTimeLimiterMetrics extends AbstractMetrics implements MeterBi
 
             private final MetricNames metricNames = new MetricNames();
 
-            /**
-             * Overrides the default metric name {@value MetricNames#SUCCESSFUL_METRIC_NAME} with a given one.
-             *
-             * @param successfulMetricName The successful calls metric name.
-             * @return The builder.
-             */
-            public Builder successfulMetricName(String successfulMetricName) {
-                metricNames.successfulMetricName = requireNonNull(successfulMetricName);
-                return this;
-            }
-
-            /**
-             * Overrides the default metric name {@value MetricNames#FAILED_METRIC_NAME} with a given one.
-             *
-             * @param failedMetricName The failed calls metric name.
-             * @return The builder.
-             */
-            public Builder failedMetricName(String failedMetricName) {
-                metricNames.failedMetricName = requireNonNull(failedMetricName);
-                return this;
-            }
-
-            /**
-             * Overrides the default metric name {@value MetricNames#TIMEOUT_METRIC_NAME} with a given one.
-             *
-             * @param timeoutMetricName The timed out calls metric name.
-             * @return The builder.
-             */
-            public Builder timeoutMetricName(String timeoutMetricName) {
-                metricNames.timeoutMetricName = requireNonNull(timeoutMetricName);
+            /** Overrides the default metric name {@value TaggedTimeLimiterMetrics.MetricNames#DEFAULT_TIME_LIMITER_CALLS} with a given one.
+             * @param callsMetricName The calls metric name.
+             * @return The builder.*/
+            public TaggedTimeLimiterMetrics.MetricNames.Builder callsMetricName(String callsMetricName) {
+                metricNames.callsMetricName = requireNonNull(callsMetricName);
                 return this;
             }
 
