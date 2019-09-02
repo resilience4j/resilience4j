@@ -1,7 +1,7 @@
 dependencies {
     compile project(':resilience4j-spring-cloud-common')
 
-    compileOnly project(':resilience4j-spring-boot')
+    compile project(':resilience4j-spring-boot')
 
     compileOnly(libraries.spring_cloud_context)
     compileOnly(libraries.spring_boot_config_processor)
