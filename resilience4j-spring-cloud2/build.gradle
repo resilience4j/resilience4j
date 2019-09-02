@@ -1,0 +1,20 @@
+dependencies {
+    compile project(':resilience4j-spring-cloud-common')
+    
+    compileOnly project(':resilience4j-spring-boot2')
+    
+    compileOnly(libraries.spring_cloud_context2)
+    compileOnly(libraries.spring_boot2_config_processor)
+    compileOnly(libraries.spring_boot2_autoconfigure_processor)
+    compileOnly(libraries.spring_boot2_actuator)
+
+    testCompile(libraries.spring_boot2_test)
+    testCompile(libraries.spring_boot2_aop)
+    testCompile(libraries.spring_boot2_web)
+    testCompile(libraries.spring_boot2_actuator)
+    testCompile(libraries.spring_cloud_context2)
+    testCompile project(':resilience4j-spring-boot2')
+}
+
+compileJava.dependsOn(processResources)
+ext.moduleName='io.github.resilience4j.springcloud2'
