@@ -15,13 +15,16 @@
  */
 package io.github.resilience4j.bulkhead.autoconfigure;
 
+import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.bulkhead.BulkheadRegistry;
+import io.github.resilience4j.bulkhead.ThreadPoolBulkhead;
 import io.github.resilience4j.bulkhead.ThreadPoolBulkheadRegistry;
 import io.github.resilience4j.bulkhead.configure.*;
 import io.github.resilience4j.bulkhead.configure.threadpool.ThreadPoolBulkheadConfiguration;
 import io.github.resilience4j.bulkhead.event.BulkheadEvent;
 import io.github.resilience4j.common.bulkhead.configuration.ThreadPoolBulkheadConfigurationProperties;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
+import io.github.resilience4j.core.metrics.MetricsPublisher;
 import io.github.resilience4j.fallback.FallbackDecorators;
 import io.github.resilience4j.fallback.autoconfigure.FallbackConfigurationOnMissingBean;
 import io.github.resilience4j.utils.AspectJOnClasspathCondition;
@@ -34,7 +37,9 @@ import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * {@link Configuration
@@ -55,8 +60,9 @@ public abstract class AbstractBulkheadConfigurationOnMissingBean {
 	@Bean
 	@ConditionalOnMissingBean
 	public BulkheadRegistry bulkheadRegistry(BulkheadConfigurationProperties bulkheadConfigurationProperties,
-	                                         EventConsumerRegistry<BulkheadEvent> bulkheadEventConsumerRegistry) {
-		return bulkheadConfiguration.bulkheadRegistry(bulkheadConfigurationProperties, bulkheadEventConsumerRegistry);
+											 EventConsumerRegistry<BulkheadEvent> bulkheadEventConsumerRegistry,
+											 Optional<List<MetricsPublisher<Bulkhead>>> optionalMetricsPublishers) {
+		return bulkheadConfiguration.bulkheadRegistry(bulkheadConfigurationProperties, bulkheadEventConsumerRegistry, optionalMetricsPublishers);
 	}
 
 	@Bean
@@ -86,9 +92,10 @@ public abstract class AbstractBulkheadConfigurationOnMissingBean {
 	@Bean
 	@ConditionalOnMissingBean
 	public ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry(ThreadPoolBulkheadConfigurationProperties threadPoolBulkheadConfigurationProperties,
-																 EventConsumerRegistry<BulkheadEvent> bulkheadEventConsumerRegistry) {
+																 EventConsumerRegistry<BulkheadEvent> bulkheadEventConsumerRegistry,
+																 Optional<List<MetricsPublisher<ThreadPoolBulkhead>>> optionalMetricsPublishers) {
 
-		return threadPoolBulkheadConfiguration.threadPoolBulkheadRegistry(threadPoolBulkheadConfigurationProperties, bulkheadEventConsumerRegistry);
+		return threadPoolBulkheadConfiguration.threadPoolBulkheadRegistry(threadPoolBulkheadConfigurationProperties, bulkheadEventConsumerRegistry, optionalMetricsPublishers);
 	}
 
 }

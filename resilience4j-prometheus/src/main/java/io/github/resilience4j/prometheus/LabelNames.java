@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.resilience4j.prometheus.collectors;
+package io.github.resilience4j.prometheus;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -26,6 +26,5 @@ public final class LabelNames {
 
     public static final List<String> NAME = Collections.singletonList("name");
     public static final List<String> NAME_AND_KIND = Arrays.asList("name", "kind");
-
 
 }

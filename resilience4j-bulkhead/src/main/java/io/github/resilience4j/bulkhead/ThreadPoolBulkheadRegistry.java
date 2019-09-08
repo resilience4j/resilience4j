@@ -21,8 +21,10 @@ package io.github.resilience4j.bulkhead;
 
 import io.github.resilience4j.bulkhead.internal.InMemoryThreadPoolBulkheadRegistry;
 import io.github.resilience4j.core.Registry;
+import io.github.resilience4j.core.metrics.MetricsPublisher;
 import io.vavr.collection.Seq;
 
+import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
 
@@ -39,6 +41,10 @@ public interface ThreadPoolBulkheadRegistry  extends Registry<ThreadPoolBulkhead
 	 */
 	static ThreadPoolBulkheadRegistry of(ThreadPoolBulkheadConfig bulkheadConfig) {
 		return new InMemoryThreadPoolBulkheadRegistry(bulkheadConfig);
+	}
+
+	static ThreadPoolBulkheadRegistry of(ThreadPoolBulkheadConfig bulkheadConfig, List<MetricsPublisher<ThreadPoolBulkhead>> metricsPublishers) {
+		return new InMemoryThreadPoolBulkheadRegistry(bulkheadConfig, metricsPublishers);
 	}
 
 	/**
@@ -58,6 +64,10 @@ public interface ThreadPoolBulkheadRegistry  extends Registry<ThreadPoolBulkhead
 	 */
 	static ThreadPoolBulkheadRegistry of(Map<String, ThreadPoolBulkheadConfig> configs) {
 		return new InMemoryThreadPoolBulkheadRegistry(configs);
+	}
+
+	static ThreadPoolBulkheadRegistry of(Map<String, ThreadPoolBulkheadConfig> configs, List<MetricsPublisher<ThreadPoolBulkhead>> metricsPublishers) {
+		return new InMemoryThreadPoolBulkheadRegistry(configs, metricsPublishers);
 	}
 
 	/**

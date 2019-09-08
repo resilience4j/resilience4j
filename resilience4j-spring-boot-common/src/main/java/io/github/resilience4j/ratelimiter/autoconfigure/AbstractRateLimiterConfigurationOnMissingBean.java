@@ -16,8 +16,10 @@
 package io.github.resilience4j.ratelimiter.autoconfigure;
 
 import io.github.resilience4j.consumer.EventConsumerRegistry;
+import io.github.resilience4j.core.metrics.MetricsPublisher;
 import io.github.resilience4j.fallback.FallbackDecorators;
 import io.github.resilience4j.fallback.autoconfigure.FallbackConfigurationOnMissingBean;
+import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
 import io.github.resilience4j.ratelimiter.configure.*;
 import io.github.resilience4j.ratelimiter.event.RateLimiterEvent;
@@ -31,7 +33,9 @@ import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Configuration
 @Import(FallbackConfigurationOnMissingBean.class)
@@ -45,8 +49,9 @@ public abstract class AbstractRateLimiterConfigurationOnMissingBean {
 	@Bean
 	@ConditionalOnMissingBean
 	public RateLimiterRegistry rateLimiterRegistry(RateLimiterConfigurationProperties rateLimiterProperties,
-	                                               EventConsumerRegistry<RateLimiterEvent> rateLimiterEventsConsumerRegistry) {
-		return rateLimiterConfiguration.rateLimiterRegistry(rateLimiterProperties, rateLimiterEventsConsumerRegistry);
+												   EventConsumerRegistry<RateLimiterEvent> rateLimiterEventsConsumerRegistry,
+												   Optional<List<MetricsPublisher<RateLimiter>>> optionalMetricsPublishers) {
+		return rateLimiterConfiguration.rateLimiterRegistry(rateLimiterProperties, rateLimiterEventsConsumerRegistry, optionalMetricsPublishers);
 	}
 
 	@Bean

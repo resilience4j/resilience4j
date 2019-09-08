@@ -15,10 +15,10 @@
  */
 package io.github.resilience4j;
 
-import io.github.resilience4j.micrometer.tagged.TaggedBulkheadMetrics;
-import io.github.resilience4j.micrometer.tagged.TaggedCircuitBreakerMetrics;
-import io.github.resilience4j.micrometer.tagged.TaggedRateLimiterMetrics;
-import io.github.resilience4j.micrometer.tagged.TaggedRetryMetrics;
+import io.github.resilience4j.micrometer.tagged.TaggedBulkheadMetricsPublisher;
+import io.github.resilience4j.micrometer.tagged.TaggedCircuitBreakerMetricsPublisher;
+import io.github.resilience4j.micrometer.tagged.TaggedRateLimiterMetricsPublisher;
+import io.github.resilience4j.micrometer.tagged.TaggedRetryMetricsPublisher;
 import io.github.resilience4j.service.test.TestApplication;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -33,35 +33,35 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class MetricsAutoConfigurationTest {
 
 	@Autowired(required = false)
-	TaggedCircuitBreakerMetrics taggedCircuitBreakerMetrics;
+	TaggedCircuitBreakerMetricsPublisher taggedCircuitBreakerMetricsPublisher;
 
 	@Autowired(required = false)
-	TaggedBulkheadMetrics taggedBulkheadMetrics;
+	TaggedBulkheadMetricsPublisher taggedBulkheadMetricsPublisher;
 
 	@Autowired(required = false)
-	TaggedRateLimiterMetrics taggedRateLimiterMetrics;
+	TaggedRateLimiterMetricsPublisher taggedRateLimiterMetricsPublisher;
 
 	@Autowired(required = false)
-	TaggedRetryMetrics taggedRetryMetrics;
+	TaggedRetryMetricsPublisher taggedRetryMetricsPublisher;
 
 	@Test
 	public void newCircuitBreakerBinderIsBound() {
-		assertThat(taggedCircuitBreakerMetrics).isNotNull();
+		assertThat(taggedCircuitBreakerMetricsPublisher).isNotNull();
 	}
 
 	@Test
 	public void mewBulkheadBinderIsBound() {
-		assertThat(taggedBulkheadMetrics).isNotNull();
+		assertThat(taggedBulkheadMetricsPublisher).isNotNull();
 	}
 
 	@Test
 	public void newRateLimiterBinderIsBound() {
-		assertThat(taggedBulkheadMetrics).isNotNull();
+		assertThat(taggedRateLimiterMetricsPublisher).isNotNull();
 	}
 
 	@Test
 	public void newRetryBinderIsBound() {
-		assertThat(taggedRetryMetrics).isNotNull();
+		assertThat(taggedRetryMetricsPublisher).isNotNull();
 	}
 
 }

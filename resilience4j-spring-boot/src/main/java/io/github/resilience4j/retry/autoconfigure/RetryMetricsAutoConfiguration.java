@@ -17,6 +17,7 @@ package io.github.resilience4j.retry.autoconfigure;
 
 import com.codahale.metrics.MetricRegistry;
 import io.github.resilience4j.metrics.RetryMetrics;
+import io.github.resilience4j.metrics.publisher.RetryMetricsPublisher;
 import io.github.resilience4j.retry.RetryRegistry;
 import org.springframework.boot.actuate.autoconfigure.MetricRepositoryAutoConfiguration;
 import org.springframework.boot.actuate.autoconfigure.MetricsDropwizardAutoConfiguration;
@@ -41,9 +42,17 @@ import org.springframework.context.annotation.Configuration;
 public class RetryMetricsAutoConfiguration {
 
 	@Bean
+	@ConditionalOnProperty(value = "resilience4j.retry.metrics.legacy.enabled", havingValue = "true")
 	@ConditionalOnMissingBean
 	public RetryMetrics registerRetryMetrics(RetryRegistry retryRegistry, MetricRegistry metricRegistry) {
 		return RetryMetrics.ofRetryRegistry(retryRegistry, metricRegistry);
+	}
+
+	@Bean
+	@ConditionalOnProperty(value = "resilience4j.retry.metrics.legacy.enabled", havingValue = "false", matchIfMissing = true)
+	@ConditionalOnMissingBean
+	public RetryMetricsPublisher retryMetricsPublisher(MetricRegistry metricRegistry) {
+		return new RetryMetricsPublisher(metricRegistry);
 	}
 
 }

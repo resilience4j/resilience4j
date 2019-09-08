@@ -25,7 +25,7 @@ import org.junit.Test;
 
 import java.util.function.Supplier;
 
-import static io.github.resilience4j.prometheus.collectors.RetryMetricsCollector.MetricNames.DEFAULT_RETRY_CALLS;
+import static io.github.resilience4j.prometheus.AbstractRetryMetrics.MetricNames.DEFAULT_RETRY_CALLS;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class RetryMetricsCollectorTest {

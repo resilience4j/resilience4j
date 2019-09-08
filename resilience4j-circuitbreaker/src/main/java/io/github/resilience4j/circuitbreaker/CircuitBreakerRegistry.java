@@ -21,8 +21,10 @@ package io.github.resilience4j.circuitbreaker;
 
 import io.github.resilience4j.circuitbreaker.internal.InMemoryCircuitBreakerRegistry;
 import io.github.resilience4j.core.Registry;
+import io.github.resilience4j.core.metrics.MetricsPublisher;
 import io.vavr.collection.Seq;
 
+import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
 
@@ -83,6 +85,10 @@ public interface CircuitBreakerRegistry extends Registry<CircuitBreaker, Circuit
 		return new InMemoryCircuitBreakerRegistry(circuitBreakerConfig);
 	}
 
+	static CircuitBreakerRegistry of(CircuitBreakerConfig circuitBreakerConfig, List<MetricsPublisher<CircuitBreaker>> metricsPublishers) {
+		return new InMemoryCircuitBreakerRegistry(circuitBreakerConfig, metricsPublishers);
+	}
+
 	/**
 	 * Creates a CircuitBreakerRegistry with a Map of shared CircuitBreaker configurations.
 	 *
@@ -91,6 +97,10 @@ public interface CircuitBreakerRegistry extends Registry<CircuitBreaker, Circuit
 	 */
 	static CircuitBreakerRegistry of(Map<String, CircuitBreakerConfig> configs) {
 		return new InMemoryCircuitBreakerRegistry(configs);
+	}
+
+	static CircuitBreakerRegistry of(Map<String, CircuitBreakerConfig> configs, List<MetricsPublisher<CircuitBreaker>> metricsPublishers) {
+		return new InMemoryCircuitBreakerRegistry(configs, metricsPublishers);
 	}
 
 	/**

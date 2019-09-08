@@ -19,9 +19,11 @@
 package io.github.resilience4j.ratelimiter;
 
 import io.github.resilience4j.core.Registry;
+import io.github.resilience4j.core.metrics.MetricsPublisher;
 import io.github.resilience4j.ratelimiter.internal.InMemoryRateLimiterRegistry;
 import io.vavr.collection.Seq;
 
+import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
 
@@ -82,6 +84,10 @@ public interface RateLimiterRegistry extends Registry<RateLimiter, RateLimiterCo
         return new InMemoryRateLimiterRegistry(defaultRateLimiterConfig);
     }
 
+    static RateLimiterRegistry of(RateLimiterConfig defaultRateLimiterConfig, List<MetricsPublisher<RateLimiter>> metricsPublishers) {
+        return new InMemoryRateLimiterRegistry(defaultRateLimiterConfig, metricsPublishers);
+    }
+
     /**
      * Returns a managed {@link RateLimiterConfig} or creates a new one with a default RateLimiter configuration.
      *
@@ -99,5 +105,9 @@ public interface RateLimiterRegistry extends Registry<RateLimiter, RateLimiterCo
      */
     static RateLimiterRegistry of(Map<String, RateLimiterConfig> configs) {
         return new InMemoryRateLimiterRegistry(configs);
+    }
+
+    static RateLimiterRegistry of(Map<String, RateLimiterConfig> configs, List<MetricsPublisher<RateLimiter>> metricsPublishers) {
+        return new InMemoryRateLimiterRegistry(configs, metricsPublishers);
     }
 }

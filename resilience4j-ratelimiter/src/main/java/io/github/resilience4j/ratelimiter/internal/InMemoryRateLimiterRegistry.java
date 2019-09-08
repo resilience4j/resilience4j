@@ -18,6 +18,7 @@
  */
 package io.github.resilience4j.ratelimiter.internal;
 
+import io.github.resilience4j.core.metrics.MetricsPublisher;
 import io.github.resilience4j.core.registry.AbstractRegistry;
 import io.github.resilience4j.core.ConfigurationNotFoundException;
 import io.github.resilience4j.ratelimiter.RateLimiter;
@@ -26,6 +27,7 @@ import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
 import io.vavr.collection.Array;
 import io.vavr.collection.Seq;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Supplier;
@@ -48,6 +50,11 @@ public class InMemoryRateLimiterRegistry extends AbstractRegistry<RateLimiter, R
 		this.configurations.putAll(configs);
 	}
 
+	public InMemoryRateLimiterRegistry(Map<String, RateLimiterConfig> configs, List<MetricsPublisher<RateLimiter>> metricsPublishers) {
+		this(configs.getOrDefault(DEFAULT_CONFIG, RateLimiterConfig.ofDefaults()), metricsPublishers);
+		this.configurations.putAll(configs);
+	}
+
 	/**
 	 * The constructor with custom default config.
 	 *
@@ -55,6 +62,10 @@ public class InMemoryRateLimiterRegistry extends AbstractRegistry<RateLimiter, R
 	 */
 	public InMemoryRateLimiterRegistry(RateLimiterConfig defaultConfig) {
 		super(defaultConfig);
+	}
+
+	public InMemoryRateLimiterRegistry(RateLimiterConfig defaultConfig, List<MetricsPublisher<RateLimiter>> metricsPublishers) {
+		super(defaultConfig, metricsPublishers);
 	}
 
 	/**

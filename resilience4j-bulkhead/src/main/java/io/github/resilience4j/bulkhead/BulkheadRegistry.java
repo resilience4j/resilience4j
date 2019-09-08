@@ -21,8 +21,10 @@ package io.github.resilience4j.bulkhead;
 
 import io.github.resilience4j.bulkhead.internal.InMemoryBulkheadRegistry;
 import io.github.resilience4j.core.Registry;
+import io.github.resilience4j.core.metrics.MetricsPublisher;
 import io.vavr.collection.Seq;
 
+import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
 
@@ -83,6 +85,10 @@ public interface BulkheadRegistry extends Registry<Bulkhead, BulkheadConfig> {
 		return new InMemoryBulkheadRegistry(bulkheadConfig);
 	}
 
+	static BulkheadRegistry of(BulkheadConfig bulkheadConfig, List<MetricsPublisher<Bulkhead>> metricsPublishers) {
+		return new InMemoryBulkheadRegistry(bulkheadConfig, metricsPublishers);
+	}
+
 	/**
 	 * Creates a BulkheadRegistry with a Map of shared Bulkhead configurations.
 	 *
@@ -91,6 +97,10 @@ public interface BulkheadRegistry extends Registry<Bulkhead, BulkheadConfig> {
 	 */
 	static BulkheadRegistry of(Map<String, BulkheadConfig> configs) {
 		return new InMemoryBulkheadRegistry(configs);
+	}
+
+	static BulkheadRegistry of(Map<String, BulkheadConfig> configs, List<MetricsPublisher<Bulkhead>> metricsPublishers) {
+		return new InMemoryBulkheadRegistry(configs, metricsPublishers);
 	}
 
 	/**

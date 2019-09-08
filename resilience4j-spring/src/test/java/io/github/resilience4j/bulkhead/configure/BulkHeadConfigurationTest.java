@@ -12,6 +12,8 @@ import io.github.resilience4j.core.ConfigurationNotFoundException;
 import org.junit.Test;
 
 import java.time.Duration;
+import java.util.Collections;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -38,7 +40,7 @@ public class BulkHeadConfigurationTest {
 		DefaultEventConsumerRegistry<BulkheadEvent> eventConsumerRegistry = new DefaultEventConsumerRegistry<>();
 
 		//When
-		ThreadPoolBulkheadRegistry bulkheadRegistry = threadPoolBulkheadConfiguration.threadPoolBulkheadRegistry(bulkheadConfigurationProperties, eventConsumerRegistry);
+		ThreadPoolBulkheadRegistry bulkheadRegistry = threadPoolBulkheadConfiguration.threadPoolBulkheadRegistry(bulkheadConfigurationProperties, eventConsumerRegistry, Optional.empty());
 
 		//Then
 		assertThat(bulkheadRegistry.getAllBulkheads().size()).isEqualTo(2);
@@ -86,7 +88,7 @@ public class BulkHeadConfigurationTest {
 
 		//When
 		try {
-			ThreadPoolBulkheadRegistry bulkheadRegistry = threadPoolBulkheadConfiguration.threadPoolBulkheadRegistry(bulkheadConfigurationProperties, eventConsumerRegistry);
+			ThreadPoolBulkheadRegistry bulkheadRegistry = threadPoolBulkheadConfiguration.threadPoolBulkheadRegistry(bulkheadConfigurationProperties, eventConsumerRegistry, Optional.empty());
 			//Then
 			assertThat(bulkheadRegistry.getAllBulkheads().size()).isEqualTo(2);
 			// Should get default config and core number
@@ -129,7 +131,7 @@ public class BulkHeadConfigurationTest {
 		DefaultEventConsumerRegistry<BulkheadEvent> eventConsumerRegistry = new DefaultEventConsumerRegistry<>();
 
 		//When
-		BulkheadRegistry bulkheadRegistry = bulkheadConfiguration.bulkheadRegistry(bulkheadConfigurationProperties, eventConsumerRegistry);
+		BulkheadRegistry bulkheadRegistry = bulkheadConfiguration.bulkheadRegistry(bulkheadConfigurationProperties, eventConsumerRegistry, Optional.empty());
 
 		//Then
 		assertThat(bulkheadRegistry.getAllBulkheads().size()).isEqualTo(2);
@@ -178,7 +180,7 @@ public class BulkHeadConfigurationTest {
 		DefaultEventConsumerRegistry<BulkheadEvent> eventConsumerRegistry = new DefaultEventConsumerRegistry<>();
 
 		//When
-		BulkheadRegistry bulkheadRegistry = bulkheadConfiguration.bulkheadRegistry(bulkheadConfigurationProperties, eventConsumerRegistry);
+		BulkheadRegistry bulkheadRegistry = bulkheadConfiguration.bulkheadRegistry(bulkheadConfigurationProperties, eventConsumerRegistry, Optional.empty());
 
 		//Then
 		assertThat(bulkheadRegistry.getAllBulkheads().size()).isEqualTo(2);
@@ -215,7 +217,7 @@ public class BulkHeadConfigurationTest {
 		DefaultEventConsumerRegistry<BulkheadEvent> eventConsumerRegistry = new DefaultEventConsumerRegistry<>();
 
 		//When
-		assertThatThrownBy(() -> bulkheadConfiguration.bulkheadRegistry(bulkheadConfigurationProperties, eventConsumerRegistry))
+		assertThatThrownBy(() -> bulkheadConfiguration.bulkheadRegistry(bulkheadConfigurationProperties, eventConsumerRegistry, Optional.empty()))
 				.isInstanceOf(ConfigurationNotFoundException.class)
 				.hasMessage("Configuration with name 'unknownConfig' does not exist");
 	}

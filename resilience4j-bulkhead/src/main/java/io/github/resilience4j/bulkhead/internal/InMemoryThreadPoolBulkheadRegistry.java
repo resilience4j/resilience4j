@@ -21,11 +21,13 @@ package io.github.resilience4j.bulkhead.internal;
 import io.github.resilience4j.bulkhead.ThreadPoolBulkhead;
 import io.github.resilience4j.bulkhead.ThreadPoolBulkheadConfig;
 import io.github.resilience4j.bulkhead.ThreadPoolBulkheadRegistry;
+import io.github.resilience4j.core.metrics.MetricsPublisher;
 import io.github.resilience4j.core.registry.AbstractRegistry;
 import io.github.resilience4j.core.ConfigurationNotFoundException;
 import io.vavr.collection.Array;
 import io.vavr.collection.Seq;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Supplier;
@@ -48,6 +50,12 @@ public final class InMemoryThreadPoolBulkheadRegistry extends AbstractRegistry<T
 		this.configurations.putAll(configs);
 	}
 
+	public InMemoryThreadPoolBulkheadRegistry(
+			Map<String, ThreadPoolBulkheadConfig> configs, List<MetricsPublisher<ThreadPoolBulkhead>> metricsPublishers) {
+		this(configs.getOrDefault(DEFAULT_CONFIG, ThreadPoolBulkheadConfig.ofDefaults()), metricsPublishers);
+		this.configurations.putAll(configs);
+	}
+
 	/**
 	 * The constructor with custom default config.
 	 *
@@ -55,6 +63,11 @@ public final class InMemoryThreadPoolBulkheadRegistry extends AbstractRegistry<T
 	 */
 	public InMemoryThreadPoolBulkheadRegistry(ThreadPoolBulkheadConfig defaultConfig) {
 		super(defaultConfig);
+	}
+
+	public InMemoryThreadPoolBulkheadRegistry(
+			ThreadPoolBulkheadConfig defaultConfig, List<MetricsPublisher<ThreadPoolBulkhead>> metricsPublishers) {
+		super(defaultConfig, metricsPublishers);
 	}
 
 	/**

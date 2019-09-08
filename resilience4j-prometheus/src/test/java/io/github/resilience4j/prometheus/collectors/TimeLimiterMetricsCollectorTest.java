@@ -18,19 +18,19 @@ package io.github.resilience4j.prometheus.collectors;
 import io.github.resilience4j.timelimiter.TimeLimiter;
 import io.github.resilience4j.timelimiter.TimeLimiterRegistry;
 import io.prometheus.client.CollectorRegistry;
-
-import java.util.concurrent.TimeoutException;
-
 import org.junit.Before;
 import org.junit.Test;
 
-import static io.github.resilience4j.prometheus.collectors.TimeLimiterMetricsCollector.KIND_FAILED;
-import static io.github.resilience4j.prometheus.collectors.TimeLimiterMetricsCollector.KIND_SUCCESSFUL;
-import static io.github.resilience4j.prometheus.collectors.TimeLimiterMetricsCollector.KIND_TIMEOUT;
-import static io.github.resilience4j.prometheus.collectors.TimeLimiterMetricsCollector.MetricNames.DEFAULT_CALLS_METRIC_NAME;
+import java.util.concurrent.TimeoutException;
+
+import static io.github.resilience4j.prometheus.AbstractTimeLimiterMetrics.MetricNames.DEFAULT_CALLS_METRIC_NAME;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class TimeLimiterMetricsCollectorTest {
+
+    private static final String KIND_SUCCESSFUL = "successful";
+    private static final String KIND_FAILED = "failed";
+    private static final String KIND_TIMEOUT = "timeout";
 
     private CollectorRegistry registry;
     private TimeLimiter timeLimiter;

@@ -1,6 +1,8 @@
 package io.github.resilience4j.retry.autoconfigure;
 
 import io.github.resilience4j.consumer.EventConsumerRegistry;
+import io.github.resilience4j.core.metrics.MetricsPublisher;
+import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryRegistry;
 import io.github.resilience4j.retry.configure.RetryConfiguration;
 import io.github.resilience4j.retry.configure.RetryConfigurationProperties;
@@ -9,6 +11,10 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 
 @Configuration
 public abstract class AbstractRefreshScopedRetryConfiguration {
@@ -28,8 +34,9 @@ public abstract class AbstractRefreshScopedRetryConfiguration {
     @RefreshScope
     @ConditionalOnMissingBean
     public RetryRegistry retryRegistry(RetryConfigurationProperties retryConfigurationProperties,
-                                       EventConsumerRegistry<RetryEvent> retryEventConsumerRegistry) {
-        return retryConfiguration.retryRegistry(retryConfigurationProperties, retryEventConsumerRegistry);
+                                       EventConsumerRegistry<RetryEvent> retryEventConsumerRegistry,
+                                       Optional<List<MetricsPublisher<Retry>>> optionalMetricsPublishers) {
+        return retryConfiguration.retryRegistry(retryConfigurationProperties, retryEventConsumerRegistry, optionalMetricsPublishers);
     }
 
 }

@@ -23,6 +23,7 @@ import io.github.resilience4j.bulkhead.configure.threadpool.ThreadPoolBulkheadCo
 import io.github.resilience4j.bulkhead.event.BulkheadEvent;
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
+import io.github.resilience4j.core.metrics.MetricsPublisher;
 import io.github.resilience4j.fallback.FallbackDecorators;
 import io.github.resilience4j.fallback.configure.FallbackConfiguration;
 import io.github.resilience4j.utils.AspectJOnClasspathCondition;
@@ -34,6 +35,7 @@ import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -54,8 +56,10 @@ public class BulkheadConfiguration {
 	 */
 	@Bean
 	public BulkheadRegistry bulkheadRegistry(BulkheadConfigurationProperties bulkheadConfigurationProperties,
-	                                         EventConsumerRegistry<BulkheadEvent> bulkheadEventConsumerRegistry) {
-		BulkheadRegistry bulkheadRegistry = createBulkheadRegistry(bulkheadConfigurationProperties);
+	                                         EventConsumerRegistry<BulkheadEvent> bulkheadEventConsumerRegistry,
+											 Optional<List<MetricsPublisher<Bulkhead>>> optionalMetricsPublishers) {
+		List<MetricsPublisher<Bulkhead>> metricsPublishers = optionalMetricsPublishers.orElseGet(ArrayList::new);
+		BulkheadRegistry bulkheadRegistry = createBulkheadRegistry(bulkheadConfigurationProperties, metricsPublishers);
 		registerEventConsumer(bulkheadRegistry, bulkheadEventConsumerRegistry, bulkheadConfigurationProperties);
 		bulkheadConfigurationProperties.getInstances().forEach((name, properties) -> bulkheadRegistry.bulkhead(name, bulkheadConfigurationProperties.createBulkheadConfig(properties)));
 		return bulkheadRegistry;
@@ -67,12 +71,13 @@ public class BulkheadConfiguration {
 	 * @param bulkheadConfigurationProperties The bulkhead configuration properties.
 	 * @return a BulkheadRegistry
 	 */
-	private BulkheadRegistry createBulkheadRegistry(BulkheadConfigurationProperties bulkheadConfigurationProperties) {
+	private BulkheadRegistry createBulkheadRegistry(BulkheadConfigurationProperties bulkheadConfigurationProperties,
+													List<MetricsPublisher<Bulkhead>> metricsPublishers) {
 		Map<String, BulkheadConfig> configs = bulkheadConfigurationProperties.getConfigs()
 				.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey,
 						entry -> bulkheadConfigurationProperties.createBulkheadConfig(entry.getValue())));
 
-		return BulkheadRegistry.of(configs);
+		return BulkheadRegistry.of(configs, metricsPublishers);
 	}
 
 	/**

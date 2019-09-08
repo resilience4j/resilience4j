@@ -21,6 +21,7 @@ import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent;
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
+import io.github.resilience4j.core.metrics.MetricsPublisher;
 import io.github.resilience4j.fallback.FallbackDecorators;
 import io.github.resilience4j.utils.AspectJOnClasspathCondition;
 import io.github.resilience4j.utils.ReactorOnClasspathCondition;
@@ -30,8 +31,10 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -48,8 +51,9 @@ public class CircuitBreakerConfiguration {
 	}
 
 	@Bean
-	public CircuitBreakerRegistry circuitBreakerRegistry(EventConsumerRegistry<CircuitBreakerEvent> eventConsumerRegistry) {
-        CircuitBreakerRegistry circuitBreakerRegistry = createCircuitBreakerRegistry(circuitBreakerProperties);
+	public CircuitBreakerRegistry circuitBreakerRegistry(EventConsumerRegistry<CircuitBreakerEvent> eventConsumerRegistry,
+														 Optional<List<MetricsPublisher<CircuitBreaker>>> optionalMetricsPublishers) {
+        CircuitBreakerRegistry circuitBreakerRegistry = createCircuitBreakerRegistry(circuitBreakerProperties, optionalMetricsPublishers);
 		registerEventConsumer(circuitBreakerRegistry, eventConsumerRegistry);
 		initCircuitBreakerRegistry(circuitBreakerRegistry);
 		return circuitBreakerRegistry;
@@ -95,12 +99,15 @@ public class CircuitBreakerConfiguration {
 	 *
 	 * @return a CircuitBreakerRegistry
 	 */
-	public CircuitBreakerRegistry createCircuitBreakerRegistry(CircuitBreakerConfigurationProperties circuitBreakerProperties) {
+	public CircuitBreakerRegistry createCircuitBreakerRegistry(CircuitBreakerConfigurationProperties circuitBreakerProperties,
+															   Optional<List<MetricsPublisher<CircuitBreaker>>> optionalMetricsPublishers) {
+		List<MetricsPublisher<CircuitBreaker>> metricsPublishers = optionalMetricsPublishers.orElseGet(ArrayList::new);
+
 		Map<String, CircuitBreakerConfig> configs = circuitBreakerProperties.getConfigs()
 				.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey,
 						entry -> circuitBreakerProperties.createCircuitBreakerConfig(entry.getValue())));
 
-		return CircuitBreakerRegistry.of(configs);
+		return CircuitBreakerRegistry.of(configs, metricsPublishers);
 	}
 
 	/**

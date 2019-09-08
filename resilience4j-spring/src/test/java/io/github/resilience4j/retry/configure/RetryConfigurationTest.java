@@ -4,6 +4,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.time.Duration;
+import java.util.Collections;
+import java.util.Optional;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -39,7 +41,7 @@ public class RetryConfigurationTest {
 		DefaultEventConsumerRegistry<RetryEvent> eventConsumerRegistry = new DefaultEventConsumerRegistry<>();
 
 		//When
-		RetryRegistry retryRegistry = retryConfiguration.retryRegistry(retryConfigurationProperties, eventConsumerRegistry);
+		RetryRegistry retryRegistry = retryConfiguration.retryRegistry(retryConfigurationProperties, eventConsumerRegistry, Optional.empty());
 
 		//Then
 		assertThat(retryConfigurationProperties.getRetryAspectOrder()).isEqualTo(200);
@@ -85,7 +87,7 @@ public class RetryConfigurationTest {
 		DefaultEventConsumerRegistry<RetryEvent> eventConsumerRegistry = new DefaultEventConsumerRegistry<>();
 
 		//When
-		RetryRegistry retryRegistry = retryConfiguration.retryRegistry(retryConfigurationProperties, eventConsumerRegistry);
+		RetryRegistry retryRegistry = retryConfiguration.retryRegistry(retryConfigurationProperties, eventConsumerRegistry, Optional.empty());
 
 		//Then
 		assertThat(retryRegistry.getAllRetries().size()).isEqualTo(2);
@@ -122,7 +124,7 @@ public class RetryConfigurationTest {
 		DefaultEventConsumerRegistry<RetryEvent> eventConsumerRegistry = new DefaultEventConsumerRegistry<>();
 
 		//When
-		assertThatThrownBy(() -> retryConfiguration.retryRegistry(retryConfigurationProperties, eventConsumerRegistry))
+		assertThatThrownBy(() -> retryConfiguration.retryRegistry(retryConfigurationProperties, eventConsumerRegistry, Optional.empty()))
 				.isInstanceOf(ConfigurationNotFoundException.class)
 				.hasMessage("Configuration with name 'unknownConfig' does not exist");
 	}

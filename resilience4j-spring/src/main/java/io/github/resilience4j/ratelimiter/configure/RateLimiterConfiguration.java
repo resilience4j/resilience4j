@@ -18,6 +18,7 @@ package io.github.resilience4j.ratelimiter.configure;
 
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
+import io.github.resilience4j.core.metrics.MetricsPublisher;
 import io.github.resilience4j.fallback.FallbackDecorators;
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RateLimiterConfig;
@@ -31,8 +32,10 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -44,8 +47,10 @@ public class RateLimiterConfiguration {
 
 	@Bean
 	public RateLimiterRegistry rateLimiterRegistry(RateLimiterConfigurationProperties rateLimiterProperties,
-	                                               EventConsumerRegistry<RateLimiterEvent> rateLimiterEventsConsumerRegistry) {
-		RateLimiterRegistry rateLimiterRegistry = createRateLimiterRegistry(rateLimiterProperties);
+	                                               EventConsumerRegistry<RateLimiterEvent> rateLimiterEventsConsumerRegistry,
+												   Optional<List<MetricsPublisher<RateLimiter>>> optionalMetricsPublishers) {
+		List<MetricsPublisher<RateLimiter>> metricsPublishers = optionalMetricsPublishers.orElseGet(ArrayList::new);
+		RateLimiterRegistry rateLimiterRegistry = createRateLimiterRegistry(rateLimiterProperties, metricsPublishers);
 		registerEventConsumer(rateLimiterRegistry, rateLimiterEventsConsumerRegistry, rateLimiterProperties);
 		rateLimiterProperties.getInstances().forEach(
 				(name, properties) -> rateLimiterRegistry.rateLimiter(name, rateLimiterProperties.createRateLimiterConfig(properties))
@@ -59,12 +64,13 @@ public class RateLimiterConfiguration {
 	 * @param rateLimiterConfigurationProperties The rate limiter configuration properties.
 	 * @return a RateLimiterRegistry
 	 */
-	private RateLimiterRegistry createRateLimiterRegistry(RateLimiterConfigurationProperties rateLimiterConfigurationProperties) {
+	private RateLimiterRegistry createRateLimiterRegistry(RateLimiterConfigurationProperties rateLimiterConfigurationProperties,
+														  List<MetricsPublisher<RateLimiter>> metricsPublishers) {
 		Map<String, RateLimiterConfig> configs = rateLimiterConfigurationProperties.getConfigs()
 				.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey,
 						entry -> rateLimiterConfigurationProperties.createRateLimiterConfig(entry.getValue())));
 
-		return RateLimiterRegistry.of(configs);
+		return RateLimiterRegistry.of(configs, metricsPublishers);
 	}
 
 	/**

@@ -17,9 +17,11 @@ package io.github.resilience4j.retry;
 
 
 import io.github.resilience4j.core.Registry;
+import io.github.resilience4j.core.metrics.MetricsPublisher;
 import io.github.resilience4j.retry.internal.InMemoryRetryRegistry;
 import io.vavr.collection.Seq;
 
+import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
 
@@ -81,6 +83,11 @@ public interface RetryRegistry extends Registry<Retry, RetryConfig> {
 		return new InMemoryRetryRegistry(retryConfig);
 	}
 
+	static RetryRegistry of(RetryConfig retryConfig, List<MetricsPublisher<Retry>> metricsPublishers) {
+		return new InMemoryRetryRegistry(retryConfig, metricsPublishers);
+	}
+
+
 	/**
 	 * Creates a RetryRegistry with a default Retry configuration.
 	 *
@@ -99,4 +106,9 @@ public interface RetryRegistry extends Registry<Retry, RetryConfig> {
 	static RetryRegistry of(Map<String, RetryConfig> configs) {
 		return new InMemoryRetryRegistry(configs);
 	}
+
+	static RetryRegistry of(Map<String, RetryConfig> configs, List<MetricsPublisher<Retry>> metricsPublishers) {
+		return new InMemoryRetryRegistry(configs, metricsPublishers);
+	}
+
 }

@@ -19,9 +19,11 @@
 package io.github.resilience4j.timelimiter;
 
 import io.github.resilience4j.core.Registry;
+import io.github.resilience4j.core.metrics.MetricsPublisher;
 import io.github.resilience4j.timelimiter.internal.InMemoryTimeLimiterRegistry;
 import io.vavr.collection.Seq;
 
+import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
 
@@ -82,6 +84,10 @@ public interface TimeLimiterRegistry extends Registry<TimeLimiter, TimeLimiterCo
         return new InMemoryTimeLimiterRegistry(defaultTimeLimiterConfig);
     }
 
+    static TimeLimiterRegistry of(TimeLimiterConfig defaultTimeLimiterConfig, List<MetricsPublisher<TimeLimiter>> metricsPublishers) {
+        return new InMemoryTimeLimiterRegistry(defaultTimeLimiterConfig, metricsPublishers);
+    }
+
     /**
      * Returns a managed {@link TimeLimiterConfig} or creates a new one with a default TimeLimiter configuration.
      *
@@ -99,5 +105,9 @@ public interface TimeLimiterRegistry extends Registry<TimeLimiter, TimeLimiterCo
      */
     static TimeLimiterRegistry of(Map<String, TimeLimiterConfig> configs) {
         return new InMemoryTimeLimiterRegistry(configs);
+    }
+
+    static TimeLimiterRegistry of(Map<String, TimeLimiterConfig> configs, List<MetricsPublisher<TimeLimiter>> metricsPublishers) {
+        return new InMemoryTimeLimiterRegistry(configs, metricsPublishers);
     }
 }
