@@ -19,11 +19,9 @@
 package io.github.resilience4j.bulkhead.adaptive;
 
 import java.time.Duration;
-import java.util.function.Consumer;
 
 import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.bulkhead.BulkheadConfig;
-import io.github.resilience4j.bulkhead.event.BulkheadLimit;
 import io.github.resilience4j.core.lang.NonNull;
 import io.github.resilience4j.core.metrics.Metrics;
 
@@ -33,22 +31,15 @@ import io.github.resilience4j.core.metrics.Metrics;
  *
  * @author romeh
  */
-public interface LimitPolicy<T> {
+public interface LimitPolicy {
 
 	/**
 	 * adapt the concurrency limit of the bulkhead based into the implemented logic
 	 * by updating the bulkhead concurrent limit through {@link Bulkhead#changeConfig(BulkheadConfig)} ()} if the limiter algorithm trigger a need for an update
 	 *
-	 * @param bulkhead the created semaphore bullhead with contains its own configuration via {@link Bulkhead#getBulkheadConfig()}
 	 * @param callTime the protected service by bulkhead call total execution time
 	 */
-	void adaptLimitIfAny(@NonNull T bulkhead, @NonNull Duration callTime, boolean isSuccess, int inFlight);
-
-
-	/**
-	 * @return the BulkheadLimit consumer
-	 */
-	Consumer<BulkheadLimit> bulkheadLimitConsumer();
+	LimitResult adaptLimitIfAny(@NonNull Duration callTime, boolean isSuccess, int inFlight);
 
 
 	/**
@@ -57,8 +48,4 @@ public interface LimitPolicy<T> {
 	Metrics getMetrics();
 
 
-	/**
-	 * @return current calculated active limit
-	 */
-	int getCurrentLimit();
 }

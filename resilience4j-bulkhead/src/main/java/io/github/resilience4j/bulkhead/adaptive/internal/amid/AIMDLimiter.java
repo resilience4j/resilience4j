@@ -21,23 +21,16 @@ package io.github.resilience4j.bulkhead.adaptive.internal.amid;
 import static java.lang.Math.max;
 
 import java.time.Duration;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Consumer;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import io.github.resilience4j.bulkhead.Bulkhead;
-import io.github.resilience4j.bulkhead.BulkheadConfig;
 import io.github.resilience4j.bulkhead.adaptive.AdaptiveBulkheadConfig;
 import io.github.resilience4j.bulkhead.adaptive.LimitPolicy;
+import io.github.resilience4j.bulkhead.adaptive.LimitResult;
 import io.github.resilience4j.bulkhead.adaptive.internal.config.AIMDConfig;
-import io.github.resilience4j.bulkhead.event.BulkheadLimit;
-import io.github.resilience4j.bulkhead.event.BulkheadOnLimitDecreasedEvent;
-import io.github.resilience4j.bulkhead.event.BulkheadOnLimitIncreasedEvent;
 import io.github.resilience4j.core.lang.NonNull;
 import io.github.resilience4j.core.metrics.FixedSizeSlidingWindowMetrics;
 import io.github.resilience4j.core.metrics.Metrics;
@@ -47,31 +40,29 @@ import io.github.resilience4j.core.metrics.Snapshot;
 /**
  * limit adapter based sliding window metrics and AMID algorithm
  */
-public class AIMDLimiter implements LimitPolicy<Bulkhead> {
+public class AIMDLimiter implements LimitPolicy {
 	private static final Logger LOG = LoggerFactory.getLogger(AIMDLimiter.class);
 	private static final long MILLI_SCALE = 1_000_000L;
 	public static final String DROPPING_THE_LIMIT_WITH_NEW_MAX_CONCURRENT_CALLS = "Dropping the limit with new max concurrent calls {}";
 	private final AtomicInteger currentMaxLimit;
-	private final Consumer<BulkheadLimit> publishEventConsumer;
 	private final Metrics metrics;
 	private final AdaptiveBulkheadConfig<AIMDConfig> amidConfigAdaptiveBulkheadConfig;
 	private final long desirableLatency;
 
 
-	public AIMDLimiter(@NonNull AdaptiveBulkheadConfig<AIMDConfig> config, Consumer<BulkheadLimit> publishEventConsumer) {
+	public AIMDLimiter(@NonNull AdaptiveBulkheadConfig<AIMDConfig> config) {
 		this.amidConfigAdaptiveBulkheadConfig = config;
 		if (amidConfigAdaptiveBulkheadConfig.getConfiguration().getSlidingWindowType() == AIMDConfig.SlidingWindow.COUNT_BASED) {
 			this.metrics = new FixedSizeSlidingWindowMetrics(config.getConfiguration().getSlidingWindowSize());
 		} else {
 			this.metrics = new SlidingTimeWindowMetrics(config.getConfiguration().getSlidingWindowTime());
 		}
-		this.publishEventConsumer = publishEventConsumer;
 		this.currentMaxLimit = new AtomicInteger(amidConfigAdaptiveBulkheadConfig.getConfiguration().getMinLimit());
 		desirableLatency = amidConfigAdaptiveBulkheadConfig.getConfiguration().getDesirableLatency().toNanos();
 	}
 
 	@Override
-	public void adaptLimitIfAny(@NonNull Bulkhead bulkhead, @NonNull Duration callTime, boolean isSuccess, int inFlight) {
+	public LimitResult adaptLimitIfAny(@NonNull Duration callTime, boolean isSuccess, int inFlight) {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("starting the adation of the limit for callTime :{} , isSuccess: {}, inFlight: {}", callTime.toMillis(), isSuccess, inFlight);
 		}
@@ -89,14 +80,9 @@ public class AIMDLimiter implements LimitPolicy<Bulkhead> {
 				snapshot = metrics.record(callTime.toNanos(), TimeUnit.NANOSECONDS, Metrics.Outcome.ERROR);
 			}
 		}
-		checkIfThresholdsExceeded(bulkhead, snapshot, inFlight);
+		return checkIfThresholdsExceeded(snapshot, inFlight);
 	}
 
-	@Override
-	@NonNull
-	public Consumer<BulkheadLimit> bulkheadLimitConsumer() {
-		return publishEventConsumer;
-	}
 
 	@Override
 	@NonNull
@@ -104,8 +90,8 @@ public class AIMDLimiter implements LimitPolicy<Bulkhead> {
 		return metrics;
 	}
 
-	@Override
-	public int getCurrentLimit() {
+
+	private int getCurrentLimit() {
 		return currentMaxLimit.get();
 	}
 
@@ -117,7 +103,7 @@ public class AIMDLimiter implements LimitPolicy<Bulkhead> {
 	 * 3- if slow call rate > the slow threshold ->  drop limit by drop multiplier
 	 * 4- if none , then increase the limit +1 and check at the end if the new limit is > the max limit , divide it by 2 to maintain the limit within min and max limit range
 	 */
-	private void checkIfThresholdsExceeded(Bulkhead bulkhead, Snapshot snapshot, int inFlight) {
+	private LimitResult checkIfThresholdsExceeded(Snapshot snapshot, int inFlight) {
 		float failureRateInPercentage = getFailureRate(snapshot);
 		final Duration averageLatencySeconds = snapshot.getAverageDuration();
 		final float slowCallRate = getSlowCallRate(snapshot);
@@ -143,7 +129,7 @@ public class AIMDLimiter implements LimitPolicy<Bulkhead> {
 			}
 		}
 		final int updatedLimit = currentMaxLimit.updateAndGet(currLimit -> Math.min(amidConfigAdaptiveBulkheadConfig.getConfiguration().getMaxLimit(), max(amidConfigAdaptiveBulkheadConfig.getConfiguration().getMinLimit(), currLimit)));
-		adoptLimit(bulkhead, updatedLimit, waitTimeMillis != null ? waitTimeMillis : 0);
+		return new LimitResult(updatedLimit, waitTimeMillis != null ? waitTimeMillis : 0);
 	}
 
 	private Long handleDropLimit(Duration averageLatencySeconds) {
@@ -154,49 +140,6 @@ public class AIMDLimiter implements LimitPolicy<Bulkhead> {
 			LOG.debug(DROPPING_THE_LIMIT_WITH_NEW_MAX_CONCURRENT_CALLS, currentMaxLimitUpdated);
 		}
 		return waitTimeMillis;
-	}
-
-	/**
-	 * adopt the limit based into the new calculated average
-	 *
-	 * @param bulkhead       the target semaphore bulkhead
-	 * @param updatedLimit   calculated new limit
-	 * @param waitTimeMillis new wait time
-	 */
-	private void adoptLimit(Bulkhead bulkhead, int updatedLimit, long waitTimeMillis) {
-		if (bulkhead.getBulkheadConfig().getMaxConcurrentCalls() < updatedLimit) {
-			if (LOG.isDebugEnabled()) {
-				LOG.debug("increasing bulkhead limit by increasing the max concurrent calls for {}", updatedLimit);
-			}
-			final BulkheadConfig updatedConfig = BulkheadConfig.custom()
-					.maxConcurrentCalls(updatedLimit)
-					.maxWaitDuration(Duration.ofMillis(waitTimeMillis))
-					.build();
-			bulkhead.changeConfig(updatedConfig);
-			bulkheadLimitConsumer().accept(new BulkheadOnLimitIncreasedEvent(bulkhead.getName().substring(0, bulkhead.getName().indexOf('-')),
-					eventData(waitTimeMillis, updatedLimit)));
-		} else if (bulkhead.getBulkheadConfig().getMaxConcurrentCalls() == updatedLimit) {
-			// do nothing
-		} else {
-			if (LOG.isDebugEnabled()) {
-				LOG.debug("Dropping the bulkhead limit with new max concurrent calls {}", updatedLimit);
-			}
-			final BulkheadConfig updatedConfig = BulkheadConfig.custom()
-					.maxConcurrentCalls(updatedLimit)
-					.maxWaitDuration(Duration.ofMillis(waitTimeMillis))
-					.build();
-			bulkhead.changeConfig(updatedConfig);
-			bulkheadLimitConsumer().accept(new BulkheadOnLimitDecreasedEvent(bulkhead.getName().substring(0, bulkhead.getName().indexOf('-')),
-					eventData(waitTimeMillis, updatedLimit)));
-		}
-	}
-
-
-	private Map<String, String> eventData(long waitTimeMillis, int newMaxConcurrentCalls) {
-		Map<String, String> eventData = new HashMap<>();
-		eventData.put("newMaxConcurrentCalls", String.valueOf(newMaxConcurrentCalls));
-		eventData.put("newWaitTimeMillis", String.valueOf(waitTimeMillis));
-		return eventData;
 	}
 
 	private float getSlowCallRate(Snapshot snapshot) {

@@ -22,7 +22,7 @@ import org.knowm.xchart.style.Styler;
 import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.bulkhead.BulkheadConfig;
 import io.github.resilience4j.bulkhead.adaptive.AdaptiveBulkheadConfig;
-import io.github.resilience4j.bulkhead.adaptive.internal.AdaptiveLimitBulkhead;
+import io.github.resilience4j.bulkhead.adaptive.LimitResult;
 import io.github.resilience4j.bulkhead.adaptive.internal.config.AIMDConfig;
 import io.github.resilience4j.bulkhead.internal.SemaphoreBulkhead;
 
@@ -54,7 +54,7 @@ public class AimdLimiterTest {
 
 		bulkhead = new SemaphoreBulkhead("test-internal", currentConfig);
 
-		aimdLimiter = new AIMDLimiter(config, AdaptiveLimitBulkhead::publishBulkheadEvent);
+		aimdLimiter = new AIMDLimiter(config);
 
 	}
 
@@ -69,9 +69,9 @@ public class AimdLimiterTest {
 		Collection<Callable<String>> threads = new ArrayList<>(2000);
 		for (int i = 0; i < 3000; i++) {
 			final Duration duration = Duration.ofMillis(randomLatency(5, 400));
-			aimdLimiter.adaptLimitIfAny(bulkhead, duration, true, randomLInFlight(1, 50));
+			final LimitResult limitResult = aimdLimiter.adaptLimitIfAny(duration, true, randomLInFlight(1, 50));
 			if (drawGraphs) {
-				maxConcurrentCalls.add((double) aimdLimiter.getCurrentLimit());
+				maxConcurrentCalls.add((double) limitResult.getLimit());
 				time.add((double) count.incrementAndGet());
 			}
 		}
