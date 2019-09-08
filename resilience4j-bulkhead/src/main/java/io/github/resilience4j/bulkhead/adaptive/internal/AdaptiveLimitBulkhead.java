@@ -21,13 +21,19 @@ package io.github.resilience4j.bulkhead.adaptive.internal;
 import static java.util.Objects.requireNonNull;
 
 import java.time.Duration;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.bulkhead.BulkheadConfig;
 import io.github.resilience4j.bulkhead.adaptive.AdaptiveBulkhead;
 import io.github.resilience4j.bulkhead.adaptive.AdaptiveBulkheadConfig;
 import io.github.resilience4j.bulkhead.adaptive.LimitPolicy;
+import io.github.resilience4j.bulkhead.adaptive.LimitResult;
 import io.github.resilience4j.bulkhead.adaptive.internal.amid.AIMDLimiter;
 import io.github.resilience4j.bulkhead.adaptive.internal.config.AIMDConfig;
 import io.github.resilience4j.bulkhead.event.BulkheadLimit;
@@ -41,18 +47,19 @@ import io.github.resilience4j.core.lang.NonNull;
 import io.github.resilience4j.core.lang.Nullable;
 
 public class AdaptiveLimitBulkhead implements AdaptiveBulkhead {
+	private static final Logger LOG = LoggerFactory.getLogger(AdaptiveLimitBulkhead.class);
 	private final static AdaptiveBulkheadEventProcessor eventProcessor = new AdaptiveBulkheadEventProcessor();
 	private final String name;
 	private final AdaptiveBulkheadConfig adaptationConfig;
 	private final InternalMetrics metrics;
-	private final SemaphoreBulkhead bulkhead;
+	private final Bulkhead bulkhead;
 	private final AtomicInteger inFlight = new AtomicInteger();
 	// current settings and measurements that you can read concurrently to expose metrics
 	private final BulkheadConfig currentConfig; // immutable object
 	@NonNull
-	private final LimitPolicy<Bulkhead> limitAdapter;
+	private final LimitPolicy limitAdapter;
 
-	private AdaptiveLimitBulkhead(@NonNull String name, @NonNull AdaptiveBulkheadConfig config, @NonNull LimitPolicy<Bulkhead> limitAdapter, BulkheadConfig bulkheadConfig) {
+	private AdaptiveLimitBulkhead(@NonNull String name, @NonNull AdaptiveBulkheadConfig config, @NonNull LimitPolicy limitAdapter, BulkheadConfig bulkheadConfig) {
 		this.name = name;
 		this.limitAdapter = limitAdapter;
 		this.adaptationConfig = config;
@@ -85,7 +92,8 @@ public class AdaptiveLimitBulkhead implements AdaptiveBulkhead {
 	@Override
 	public void onComplete(Duration callTime, boolean isSuccess) {
 		bulkhead.onComplete();
-		limitAdapter.adaptLimitIfAny(bulkhead, callTime, isSuccess, inFlight.getAndDecrement());
+		final LimitResult limitResult = limitAdapter.adaptLimitIfAny(callTime, isSuccess, inFlight.getAndDecrement());
+		adoptLimit(bulkhead, limitResult.getLimit(), limitResult.waitTime());
 	}
 
 	public String getName() {
@@ -182,8 +190,8 @@ public class AdaptiveLimitBulkhead implements AdaptiveBulkhead {
 		}
 
 
-		public AdaptiveLimitBulkhead createAdaptiveLimitBulkhead(@NonNull String name, @NonNull AdaptiveBulkheadConfig config, @Nullable LimitPolicy<Bulkhead> customLimitAdapter) {
-			LimitPolicy<Bulkhead> limitAdapter = null;
+		public AdaptiveLimitBulkhead createAdaptiveLimitBulkhead(@NonNull String name, @NonNull AdaptiveBulkheadConfig config, @Nullable LimitPolicy customLimitAdapter) {
+			LimitPolicy limitAdapter = null;
 			requireNonNull(config, CONFIG_MUST_NOT_BE_NULL);
 			int minLimit = 0;
 			if (customLimitAdapter != null) {
@@ -194,7 +202,7 @@ public class AdaptiveLimitBulkhead implements AdaptiveBulkhead {
 				@SuppressWarnings("unchecked")
 				AdaptiveBulkheadConfig<AIMDConfig> aimdConfig = (AdaptiveBulkheadConfig<AIMDConfig>) config;
 				minLimit = aimdConfig.getConfiguration().getMinLimit();
-				limitAdapter = new AIMDLimiter(aimdConfig, AdaptiveLimitBulkhead::publishBulkheadEvent);
+				limitAdapter = new AIMDLimiter(aimdConfig);
 			}
 
 			int initialConcurrency = calculateConcurrency(minLimit, config);
@@ -217,10 +225,53 @@ public class AdaptiveLimitBulkhead implements AdaptiveBulkhead {
 
 	}
 
-	public static void publishBulkheadEvent(BulkheadLimit eventSupplier) {
+	private void publishBulkheadEvent(BulkheadLimit eventSupplier) {
 		if (eventProcessor.hasConsumers()) {
 			eventProcessor.consumeEvent(eventSupplier);
 		}
+	}
+
+	/**
+	 * adopt the limit based into the new calculated average
+	 *
+	 * @param bulkhead       the target semaphore bulkhead
+	 * @param updatedLimit   calculated new limit
+	 * @param waitTimeMillis new wait time
+	 */
+	private void adoptLimit(Bulkhead bulkhead, int updatedLimit, long waitTimeMillis) {
+		if (bulkhead.getBulkheadConfig().getMaxConcurrentCalls() < updatedLimit) {
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("increasing bulkhead limit by increasing the max concurrent calls for {}", updatedLimit);
+			}
+			final BulkheadConfig updatedConfig = BulkheadConfig.custom()
+					.maxConcurrentCalls(updatedLimit)
+					.maxWaitDuration(Duration.ofMillis(waitTimeMillis))
+					.build();
+			bulkhead.changeConfig(updatedConfig);
+			publishBulkheadEvent(new BulkheadOnLimitIncreasedEvent(bulkhead.getName().substring(0, bulkhead.getName().indexOf('-')),
+					eventData(waitTimeMillis, updatedLimit)));
+		} else if (bulkhead.getBulkheadConfig().getMaxConcurrentCalls() == updatedLimit) {
+			// do nothing
+		} else {
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("Dropping the bulkhead limit with new max concurrent calls {}", updatedLimit);
+			}
+			final BulkheadConfig updatedConfig = BulkheadConfig.custom()
+					.maxConcurrentCalls(updatedLimit)
+					.maxWaitDuration(Duration.ofMillis(waitTimeMillis))
+					.build();
+			bulkhead.changeConfig(updatedConfig);
+			publishBulkheadEvent(new BulkheadOnLimitDecreasedEvent(bulkhead.getName().substring(0, bulkhead.getName().indexOf('-')),
+					eventData(waitTimeMillis, updatedLimit)));
+		}
+
+	}
+
+	private Map<String, String> eventData(long waitTimeMillis, int newMaxConcurrentCalls) {
+		Map<String, String> eventData = new HashMap<>();
+		eventData.put("newMaxConcurrentCalls", String.valueOf(newMaxConcurrentCalls));
+		eventData.put("newWaitTimeMillis", String.valueOf(waitTimeMillis));
+		return eventData;
 	}
 
 }

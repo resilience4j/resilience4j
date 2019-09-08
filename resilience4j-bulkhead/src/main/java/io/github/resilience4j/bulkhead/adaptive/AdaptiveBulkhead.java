@@ -490,7 +490,7 @@ public interface AdaptiveBulkhead {
 	 * @param limitAdapter the custom limit adopter
 	 * @return a Bulkhead instance
 	 */
-	static AdaptiveBulkhead of(String name, AdaptiveBulkheadConfig config, LimitPolicy<Bulkhead> limitAdapter) {
+	static AdaptiveBulkhead of(String name, AdaptiveBulkheadConfig config, LimitPolicy limitAdapter) {
 		return AdaptiveLimitBulkhead.factory().createAdaptiveLimitBulkhead(name, config, limitAdapter);
 	}
 
