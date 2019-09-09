@@ -13,6 +13,18 @@
       "defaultValue": "false"
     },
     {
+      "name": "resilience4j.thread-pool-bulkhead.metrics.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Whether to enable the thread-pool-bulkhead-metrics.",
+      "defaultValue": "true"
+    },
+    {
+      "name": "resilience4j.thread-pool-bulkhead.metrics.legacy.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Whether to enable the legacy-thread-pool-bulkhead-metrics.",
+      "defaultValue": "false"
+    },
+    {
       "name": "resilience4j.circuitbreaker.metrics.enabled",
       "type": "java.lang.Boolean",
       "description": "Whether to enable the circuitbreaker-metrics.",
