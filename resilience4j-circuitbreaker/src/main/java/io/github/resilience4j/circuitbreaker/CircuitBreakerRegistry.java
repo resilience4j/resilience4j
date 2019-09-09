@@ -85,8 +85,8 @@ public interface CircuitBreakerRegistry extends Registry<CircuitBreaker, Circuit
 		return new InMemoryCircuitBreakerRegistry(circuitBreakerConfig);
 	}
 
-	static CircuitBreakerRegistry of(CircuitBreakerConfig circuitBreakerConfig, List<MetricsPublisher<CircuitBreaker>> metricsPublishers) {
-		return new InMemoryCircuitBreakerRegistry(circuitBreakerConfig, metricsPublishers);
+	static CircuitBreakerRegistry of(CircuitBreakerConfig circuitBreakerConfig, MetricsPublisher<CircuitBreaker> metricsPublisher) {
+		return new InMemoryCircuitBreakerRegistry(circuitBreakerConfig, metricsPublisher);
 	}
 
 	/**
@@ -99,8 +99,8 @@ public interface CircuitBreakerRegistry extends Registry<CircuitBreaker, Circuit
 		return new InMemoryCircuitBreakerRegistry(configs);
 	}
 
-	static CircuitBreakerRegistry of(Map<String, CircuitBreakerConfig> configs, List<MetricsPublisher<CircuitBreaker>> metricsPublishers) {
-		return new InMemoryCircuitBreakerRegistry(configs, metricsPublishers);
+	static CircuitBreakerRegistry of(Map<String, CircuitBreakerConfig> configs, MetricsPublisher<CircuitBreaker> metricsPublisher) {
+		return new InMemoryCircuitBreakerRegistry(configs, metricsPublisher);
 	}
 
 	/**

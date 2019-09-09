@@ -28,10 +28,7 @@ import io.github.resilience4j.utils.ReactorOnClasspathCondition;
 import io.github.resilience4j.utils.RxJava2OnClasspathCondition;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Conditional;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Import;
+import org.springframework.context.annotation.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -50,8 +47,14 @@ public abstract class AbstractRateLimiterConfigurationOnMissingBean {
 	@ConditionalOnMissingBean
 	public RateLimiterRegistry rateLimiterRegistry(RateLimiterConfigurationProperties rateLimiterProperties,
 												   EventConsumerRegistry<RateLimiterEvent> rateLimiterEventsConsumerRegistry,
-												   Optional<List<MetricsPublisher<RateLimiter>>> optionalMetricsPublishers) {
-		return rateLimiterConfiguration.rateLimiterRegistry(rateLimiterProperties, rateLimiterEventsConsumerRegistry, optionalMetricsPublishers);
+												   MetricsPublisher<RateLimiter> rateLimiterMetricsPublisher) {
+		return rateLimiterConfiguration.rateLimiterRegistry(rateLimiterProperties, rateLimiterEventsConsumerRegistry, rateLimiterMetricsPublisher);
+	}
+
+	@Bean
+	@Primary
+	public MetricsPublisher<RateLimiter> rateLimiterMetricsPublisher(Optional<List<MetricsPublisher<RateLimiter>>> optionalMetricsPublishers) {
+		return rateLimiterConfiguration.rateLimiterMetricsPublisher(optionalMetricsPublishers);
 	}
 
 	@Bean

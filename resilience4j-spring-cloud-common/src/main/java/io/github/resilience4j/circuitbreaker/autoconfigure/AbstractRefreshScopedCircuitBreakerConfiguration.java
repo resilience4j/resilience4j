@@ -39,9 +39,9 @@ public abstract class AbstractRefreshScopedCircuitBreakerConfiguration {
     @RefreshScope
     @ConditionalOnMissingBean
     public CircuitBreakerRegistry circuitBreakerRegistry(EventConsumerRegistry<CircuitBreakerEvent> eventConsumerRegistry,
-                                                         Optional<List<MetricsPublisher<CircuitBreaker>>> optionalMetricsPublishers) {
+                                                         MetricsPublisher<CircuitBreaker> circuitBreakerMetricsPublisher) {
         CircuitBreakerRegistry circuitBreakerRegistry =
-                circuitBreakerConfiguration.createCircuitBreakerRegistry(circuitBreakerProperties, optionalMetricsPublishers);
+                circuitBreakerConfiguration.createCircuitBreakerRegistry(circuitBreakerProperties, circuitBreakerMetricsPublisher);
 
         // Register the event consumers
         circuitBreakerConfiguration.registerEventConsumer(circuitBreakerRegistry, eventConsumerRegistry);

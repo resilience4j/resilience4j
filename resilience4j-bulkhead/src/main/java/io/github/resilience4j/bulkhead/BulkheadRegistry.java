@@ -24,7 +24,6 @@ import io.github.resilience4j.core.Registry;
 import io.github.resilience4j.core.metrics.MetricsPublisher;
 import io.vavr.collection.Seq;
 
-import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
 
@@ -85,8 +84,8 @@ public interface BulkheadRegistry extends Registry<Bulkhead, BulkheadConfig> {
 		return new InMemoryBulkheadRegistry(bulkheadConfig);
 	}
 
-	static BulkheadRegistry of(BulkheadConfig bulkheadConfig, List<MetricsPublisher<Bulkhead>> metricsPublishers) {
-		return new InMemoryBulkheadRegistry(bulkheadConfig, metricsPublishers);
+	static BulkheadRegistry of(BulkheadConfig bulkheadConfig, MetricsPublisher<Bulkhead> metricsPublisher) {
+		return new InMemoryBulkheadRegistry(bulkheadConfig, metricsPublisher);
 	}
 
 	/**
@@ -99,8 +98,8 @@ public interface BulkheadRegistry extends Registry<Bulkhead, BulkheadConfig> {
 		return new InMemoryBulkheadRegistry(configs);
 	}
 
-	static BulkheadRegistry of(Map<String, BulkheadConfig> configs, List<MetricsPublisher<Bulkhead>> metricsPublishers) {
-		return new InMemoryBulkheadRegistry(configs, metricsPublishers);
+	static BulkheadRegistry of(Map<String, BulkheadConfig> configs, MetricsPublisher<Bulkhead> metricsPublisher) {
+		return new InMemoryBulkheadRegistry(configs, metricsPublisher);
 	}
 
 	/**

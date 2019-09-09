@@ -27,7 +27,6 @@ import io.github.resilience4j.timelimiter.TimeLimiterRegistry;
 import io.vavr.collection.Array;
 import io.vavr.collection.Seq;
 
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Supplier;
@@ -50,8 +49,8 @@ public class InMemoryTimeLimiterRegistry extends AbstractRegistry<TimeLimiter, T
         this.configurations.putAll(configs);
     }
 
-    public InMemoryTimeLimiterRegistry(Map<String, TimeLimiterConfig> configs, List<MetricsPublisher<TimeLimiter>> metricsPublishers) {
-        this(configs.getOrDefault(DEFAULT_CONFIG, TimeLimiterConfig.ofDefaults()), metricsPublishers);
+    public InMemoryTimeLimiterRegistry(Map<String, TimeLimiterConfig> configs, MetricsPublisher<TimeLimiter> metricsPublisher) {
+        this(configs.getOrDefault(DEFAULT_CONFIG, TimeLimiterConfig.ofDefaults()), metricsPublisher);
         this.configurations.putAll(configs);
     }
 
@@ -64,8 +63,8 @@ public class InMemoryTimeLimiterRegistry extends AbstractRegistry<TimeLimiter, T
         super(defaultConfig);
     }
 
-    public InMemoryTimeLimiterRegistry(TimeLimiterConfig defaultConfig, List<MetricsPublisher<TimeLimiter>> metricsPublishers) {
-        super(defaultConfig, metricsPublishers);
+    public InMemoryTimeLimiterRegistry(TimeLimiterConfig defaultConfig, MetricsPublisher<TimeLimiter> metricsPublisher) {
+        super(defaultConfig, metricsPublisher);
     }
 
     /**

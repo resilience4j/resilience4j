@@ -83,8 +83,8 @@ public interface RetryRegistry extends Registry<Retry, RetryConfig> {
 		return new InMemoryRetryRegistry(retryConfig);
 	}
 
-	static RetryRegistry of(RetryConfig retryConfig, List<MetricsPublisher<Retry>> metricsPublishers) {
-		return new InMemoryRetryRegistry(retryConfig, metricsPublishers);
+	static RetryRegistry of(RetryConfig retryConfig, MetricsPublisher<Retry> metricsPublisher) {
+		return new InMemoryRetryRegistry(retryConfig, metricsPublisher);
 	}
 
 
@@ -107,8 +107,8 @@ public interface RetryRegistry extends Registry<Retry, RetryConfig> {
 		return new InMemoryRetryRegistry(configs);
 	}
 
-	static RetryRegistry of(Map<String, RetryConfig> configs, List<MetricsPublisher<Retry>> metricsPublishers) {
-		return new InMemoryRetryRegistry(configs, metricsPublishers);
+	static RetryRegistry of(Map<String, RetryConfig> configs, MetricsPublisher<Retry> metricsPublisher) {
+		return new InMemoryRetryRegistry(configs, metricsPublisher);
 	}
 
 }

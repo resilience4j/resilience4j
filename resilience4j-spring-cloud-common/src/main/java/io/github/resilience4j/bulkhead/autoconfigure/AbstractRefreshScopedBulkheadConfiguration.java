@@ -41,8 +41,8 @@ public abstract class AbstractRefreshScopedBulkheadConfiguration {
     @ConditionalOnMissingBean
     public BulkheadRegistry bulkheadRegistry(BulkheadConfigurationProperties bulkheadConfigurationProperties,
                                              EventConsumerRegistry<BulkheadEvent> bulkheadEventConsumerRegistry,
-                                             Optional<List<MetricsPublisher<Bulkhead>>> optionalMetricsPublishers) {
-        return bulkheadConfiguration.bulkheadRegistry(bulkheadConfigurationProperties, bulkheadEventConsumerRegistry, optionalMetricsPublishers);
+                                             MetricsPublisher<Bulkhead> bulkheadMetricsPublisher) {
+        return bulkheadConfiguration.bulkheadRegistry(bulkheadConfigurationProperties, bulkheadEventConsumerRegistry, bulkheadMetricsPublisher);
     }
 
     /**
@@ -55,10 +55,10 @@ public abstract class AbstractRefreshScopedBulkheadConfiguration {
     @ConditionalOnMissingBean
     public ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry(ThreadPoolBulkheadConfigurationProperties threadPoolBulkheadConfigurationProperties,
                                                                  EventConsumerRegistry<BulkheadEvent> bulkheadEventConsumerRegistry,
-                                                                 Optional<List<MetricsPublisher<ThreadPoolBulkhead>>> optionalMetricsPublishers) {
+                                                                 MetricsPublisher<ThreadPoolBulkhead> threadPoolBulkheadMetricsPublisher) {
 
         return threadPoolBulkheadConfiguration.threadPoolBulkheadRegistry(
-                threadPoolBulkheadConfigurationProperties, bulkheadEventConsumerRegistry, optionalMetricsPublishers);
+                threadPoolBulkheadConfigurationProperties, bulkheadEventConsumerRegistry, threadPoolBulkheadMetricsPublisher);
     }
 
 }

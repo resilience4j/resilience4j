@@ -35,8 +35,8 @@ public abstract class AbstractRefreshScopedRetryConfiguration {
     @ConditionalOnMissingBean
     public RetryRegistry retryRegistry(RetryConfigurationProperties retryConfigurationProperties,
                                        EventConsumerRegistry<RetryEvent> retryEventConsumerRegistry,
-                                       Optional<List<MetricsPublisher<Retry>>> optionalMetricsPublishers) {
-        return retryConfiguration.retryRegistry(retryConfigurationProperties, retryEventConsumerRegistry, optionalMetricsPublishers);
+                                       MetricsPublisher<Retry> retryMetricsPublisher) {
+        return retryConfiguration.retryRegistry(retryConfigurationProperties, retryEventConsumerRegistry, retryMetricsPublisher);
     }
 
 }

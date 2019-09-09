@@ -45,7 +45,7 @@ public class BulkheadPrometheusAutoConfiguration {
     @Bean
     @ConditionalOnProperty(value = "resilience4j.bulkhead.metrics.legacy.enabled", havingValue = "false", matchIfMissing = true)
     @ConditionalOnMissingBean
-    public BulkheadMetricsPublisher bulkheadPrometheusPublisher() {
+    public BulkheadMetricsPublisher bulkheadPrometheusMetricsPublisher() {
         return new BulkheadMetricsPublisher();
     }
 

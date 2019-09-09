@@ -35,9 +35,9 @@ public abstract class AbstractRefreshScopedRateLimiterConfiguration {
     @ConditionalOnMissingBean
     public RateLimiterRegistry rateLimiterRegistry(RateLimiterConfigurationProperties rateLimiterProperties,
                                                    EventConsumerRegistry<RateLimiterEvent> rateLimiterEventsConsumerRegistry,
-                                                   Optional<List<MetricsPublisher<RateLimiter>>> optionalMetricsPublishers) {
+                                                   MetricsPublisher<RateLimiter> rateLimiterMetricsPublisher) {
         return rateLimiterConfiguration.rateLimiterRegistry(
-                rateLimiterProperties, rateLimiterEventsConsumerRegistry, optionalMetricsPublishers);
+                rateLimiterProperties, rateLimiterEventsConsumerRegistry, rateLimiterMetricsPublisher);
     }
 
 }

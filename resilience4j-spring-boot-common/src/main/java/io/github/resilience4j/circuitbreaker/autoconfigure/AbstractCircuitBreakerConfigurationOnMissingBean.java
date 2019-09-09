@@ -28,12 +28,8 @@ import io.github.resilience4j.utils.ReactorOnClasspathCondition;
 import io.github.resilience4j.utils.RxJava2OnClasspathCondition;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Conditional;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Import;
+import org.springframework.context.annotation.*;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -52,9 +48,9 @@ public abstract class AbstractCircuitBreakerConfigurationOnMissingBean {
 	@Bean
 	@ConditionalOnMissingBean
 	public CircuitBreakerRegistry circuitBreakerRegistry(EventConsumerRegistry<CircuitBreakerEvent> eventConsumerRegistry,
-														 Optional<List<MetricsPublisher<CircuitBreaker>>> optionalMetricsPublishers) {
+														 MetricsPublisher<CircuitBreaker> circuitBreakerMetricsPublisher) {
 		CircuitBreakerRegistry circuitBreakerRegistry =
-				circuitBreakerConfiguration.createCircuitBreakerRegistry(circuitBreakerProperties, optionalMetricsPublishers);
+				circuitBreakerConfiguration.createCircuitBreakerRegistry(circuitBreakerProperties, circuitBreakerMetricsPublisher);
 
 		// Register the event consumers
 		circuitBreakerConfiguration.registerEventConsumer(circuitBreakerRegistry, eventConsumerRegistry);
@@ -63,6 +59,12 @@ public abstract class AbstractCircuitBreakerConfigurationOnMissingBean {
 		circuitBreakerConfiguration.initCircuitBreakerRegistry(circuitBreakerRegistry);
 
 		return circuitBreakerRegistry;
+	}
+
+	@Bean
+	@Primary
+	public MetricsPublisher<CircuitBreaker> circuitBreakerMetricsPublisher(Optional<List<MetricsPublisher<CircuitBreaker>>> optionalMetricsPublishers) {
+		return circuitBreakerConfiguration.circuitBreakerMetricsPublisher(optionalMetricsPublishers);
 	}
 
 	@Bean

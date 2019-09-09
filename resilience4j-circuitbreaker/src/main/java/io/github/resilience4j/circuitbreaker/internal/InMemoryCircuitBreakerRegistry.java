@@ -21,13 +21,12 @@ package io.github.resilience4j.circuitbreaker.internal;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
+import io.github.resilience4j.core.ConfigurationNotFoundException;
 import io.github.resilience4j.core.metrics.MetricsPublisher;
 import io.github.resilience4j.core.registry.AbstractRegistry;
-import io.github.resilience4j.core.ConfigurationNotFoundException;
 import io.vavr.collection.Array;
 import io.vavr.collection.Seq;
 
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Supplier;
@@ -50,8 +49,8 @@ public final class InMemoryCircuitBreakerRegistry extends AbstractRegistry<Circu
 		this.configurations.putAll(configs);
 	}
 
-	public InMemoryCircuitBreakerRegistry(Map<String, CircuitBreakerConfig> configs, List<MetricsPublisher<CircuitBreaker>> metricsPublishers) {
-		this(configs.getOrDefault(DEFAULT_CONFIG, CircuitBreakerConfig.ofDefaults()), metricsPublishers);
+	public InMemoryCircuitBreakerRegistry(Map<String, CircuitBreakerConfig> configs, MetricsPublisher<CircuitBreaker> metricsPublisher) {
+		this(configs.getOrDefault(DEFAULT_CONFIG, CircuitBreakerConfig.ofDefaults()), metricsPublisher);
 		this.configurations.putAll(configs);
 	}
 
@@ -64,8 +63,8 @@ public final class InMemoryCircuitBreakerRegistry extends AbstractRegistry<Circu
 		super(defaultConfig);
 	}
 
-	public InMemoryCircuitBreakerRegistry(CircuitBreakerConfig defaultConfig, List<MetricsPublisher<CircuitBreaker>> metricsPublishers) {
-		super(defaultConfig, metricsPublishers);
+	public InMemoryCircuitBreakerRegistry(CircuitBreakerConfig defaultConfig, MetricsPublisher<CircuitBreaker> metricsPublisher) {
+		super(defaultConfig, metricsPublisher);
 	}
 
 	/**

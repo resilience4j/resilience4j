@@ -84,8 +84,8 @@ public interface TimeLimiterRegistry extends Registry<TimeLimiter, TimeLimiterCo
         return new InMemoryTimeLimiterRegistry(defaultTimeLimiterConfig);
     }
 
-    static TimeLimiterRegistry of(TimeLimiterConfig defaultTimeLimiterConfig, List<MetricsPublisher<TimeLimiter>> metricsPublishers) {
-        return new InMemoryTimeLimiterRegistry(defaultTimeLimiterConfig, metricsPublishers);
+    static TimeLimiterRegistry of(TimeLimiterConfig defaultTimeLimiterConfig, MetricsPublisher<TimeLimiter> metricsPublisher) {
+        return new InMemoryTimeLimiterRegistry(defaultTimeLimiterConfig, metricsPublisher);
     }
 
     /**
@@ -107,7 +107,7 @@ public interface TimeLimiterRegistry extends Registry<TimeLimiter, TimeLimiterCo
         return new InMemoryTimeLimiterRegistry(configs);
     }
 
-    static TimeLimiterRegistry of(Map<String, TimeLimiterConfig> configs, List<MetricsPublisher<TimeLimiter>> metricsPublishers) {
-        return new InMemoryTimeLimiterRegistry(configs, metricsPublishers);
+    static TimeLimiterRegistry of(Map<String, TimeLimiterConfig> configs, MetricsPublisher<TimeLimiter> metricsPublisher) {
+        return new InMemoryTimeLimiterRegistry(configs, metricsPublisher);
     }
 }

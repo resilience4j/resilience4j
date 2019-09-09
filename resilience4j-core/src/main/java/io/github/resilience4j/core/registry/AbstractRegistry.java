@@ -21,11 +21,9 @@ package io.github.resilience4j.core.registry;
 import io.github.resilience4j.core.EventConsumer;
 import io.github.resilience4j.core.EventProcessor;
 import io.github.resilience4j.core.Registry;
-import io.github.resilience4j.core.metrics.MetricsPublisher;
 import io.github.resilience4j.core.metrics.CompositeMetricsPublisher;
+import io.github.resilience4j.core.metrics.MetricsPublisher;
 
-import java.util.Collections;
-import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
@@ -46,28 +44,27 @@ public class AbstractRegistry<E, C> implements Registry<E, C> {
 
 	protected final ConcurrentMap<String, C> configurations;
 
-	protected final CompositeMetricsPublisher<E> compositeMetricsPublisher;
+	protected final MetricsPublisher<E> metricsPublisher;
 
 	private final RegistryEventProcessor eventProcessor;
 
 	public AbstractRegistry(C defaultConfig) {
-		this(defaultConfig, Collections.emptyList());
+		this(defaultConfig, new CompositeMetricsPublisher<>());
 	}
 
-	public AbstractRegistry(C defaultConfig, List<MetricsPublisher<E>> metricsPublishers) {
+	public AbstractRegistry(C defaultConfig, MetricsPublisher<E> metricsPublisher) {
 		this.configurations = new ConcurrentHashMap<>();
 		this.entryMap = new ConcurrentHashMap<>();
 		this.eventProcessor = new RegistryEventProcessor();
 		this.configurations.put(DEFAULT_CONFIG, Objects.requireNonNull(defaultConfig, CONFIG_MUST_NOT_BE_NULL));
-		this.compositeMetricsPublisher =
-				new CompositeMetricsPublisher<>(Objects.requireNonNull(metricsPublishers, PUBLISHER_MUST_NOT_BE_NULL));
+		this.metricsPublisher = Objects.requireNonNull(metricsPublisher, PUBLISHER_MUST_NOT_BE_NULL);
 	}
 
 	protected E computeIfAbsent(String name, Supplier<E> supplier){
 		return entryMap.computeIfAbsent(Objects.requireNonNull(name, NAME_MUST_NOT_BE_NULL), k -> {
 			E entry = supplier.get();
 			eventProcessor.processEvent(new EntryAddedEvent<>(entry));
-			compositeMetricsPublisher.publishMetrics(entry);
+			metricsPublisher.publishMetrics(entry);
 			return entry;
 		});
 	}
@@ -82,7 +79,7 @@ public class AbstractRegistry<E, C> implements Registry<E, C> {
 		Optional<E> removedEntry = Optional.ofNullable(entryMap.remove(name));
 		removedEntry.ifPresent(entry -> {
 			eventProcessor.processEvent(new EntryRemovedEvent<>(entry));
-			compositeMetricsPublisher.removeMetrics(entry);
+			metricsPublisher.removeMetrics(entry);
 		});
 
 		return removedEntry;
@@ -93,8 +90,8 @@ public class AbstractRegistry<E, C> implements Registry<E, C> {
 		Optional<E> replacedEntry = Optional.ofNullable(entryMap.replace(name, newEntry));
 		replacedEntry.ifPresent(oldEntry -> {
 			eventProcessor.processEvent(new EntryReplacedEvent<>(oldEntry, newEntry));
-			compositeMetricsPublisher.removeMetrics(oldEntry);
-			compositeMetricsPublisher.publishMetrics(newEntry);
+			metricsPublisher.removeMetrics(oldEntry);
+			metricsPublisher.publishMetrics(newEntry);
 		});
 		return replacedEntry;
 	}

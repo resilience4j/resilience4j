@@ -24,7 +24,6 @@ import io.github.resilience4j.core.Registry;
 import io.github.resilience4j.core.metrics.MetricsPublisher;
 import io.vavr.collection.Seq;
 
-import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
 
@@ -43,8 +42,8 @@ public interface ThreadPoolBulkheadRegistry  extends Registry<ThreadPoolBulkhead
 		return new InMemoryThreadPoolBulkheadRegistry(bulkheadConfig);
 	}
 
-	static ThreadPoolBulkheadRegistry of(ThreadPoolBulkheadConfig bulkheadConfig, List<MetricsPublisher<ThreadPoolBulkhead>> metricsPublishers) {
-		return new InMemoryThreadPoolBulkheadRegistry(bulkheadConfig, metricsPublishers);
+	static ThreadPoolBulkheadRegistry of(ThreadPoolBulkheadConfig bulkheadConfig, MetricsPublisher<ThreadPoolBulkhead> metricsPublisher) {
+		return new InMemoryThreadPoolBulkheadRegistry(bulkheadConfig, metricsPublisher);
 	}
 
 	/**
@@ -66,8 +65,8 @@ public interface ThreadPoolBulkheadRegistry  extends Registry<ThreadPoolBulkhead
 		return new InMemoryThreadPoolBulkheadRegistry(configs);
 	}
 
-	static ThreadPoolBulkheadRegistry of(Map<String, ThreadPoolBulkheadConfig> configs, List<MetricsPublisher<ThreadPoolBulkhead>> metricsPublishers) {
-		return new InMemoryThreadPoolBulkheadRegistry(configs, metricsPublishers);
+	static ThreadPoolBulkheadRegistry of(Map<String, ThreadPoolBulkheadConfig> configs, MetricsPublisher<ThreadPoolBulkhead> metricsPublisher) {
+		return new InMemoryThreadPoolBulkheadRegistry(configs, metricsPublisher);
 	}
 
 	/**

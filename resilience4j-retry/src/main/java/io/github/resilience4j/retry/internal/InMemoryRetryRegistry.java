@@ -15,16 +15,15 @@
  */
 package io.github.resilience4j.retry.internal;
 
+import io.github.resilience4j.core.ConfigurationNotFoundException;
 import io.github.resilience4j.core.metrics.MetricsPublisher;
 import io.github.resilience4j.core.registry.AbstractRegistry;
-import io.github.resilience4j.core.ConfigurationNotFoundException;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryConfig;
 import io.github.resilience4j.retry.RetryRegistry;
 import io.vavr.collection.Array;
 import io.vavr.collection.Seq;
 
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Supplier;
@@ -47,8 +46,8 @@ public final class InMemoryRetryRegistry extends AbstractRegistry<Retry, RetryCo
 		this.configurations.putAll(configs);
 	}
 
-	public InMemoryRetryRegistry(Map<String, RetryConfig> configs, List<MetricsPublisher<Retry>> metricsPublishers) {
-		this(configs.getOrDefault(DEFAULT_CONFIG, RetryConfig.ofDefaults()), metricsPublishers);
+	public InMemoryRetryRegistry(Map<String, RetryConfig> configs, MetricsPublisher<Retry> metricsPublisher) {
+		this(configs.getOrDefault(DEFAULT_CONFIG, RetryConfig.ofDefaults()), metricsPublisher);
 		this.configurations.putAll(configs);
 	}
 
@@ -61,8 +60,8 @@ public final class InMemoryRetryRegistry extends AbstractRegistry<Retry, RetryCo
 		super(defaultConfig);
 	}
 
-	public InMemoryRetryRegistry(RetryConfig defaultConfig, List<MetricsPublisher<Retry>> metricsPublishers) {
-		super(defaultConfig, metricsPublishers);
+	public InMemoryRetryRegistry(RetryConfig defaultConfig, MetricsPublisher<Retry> metricsPublisher) {
+		super(defaultConfig, metricsPublisher);
 	}
 
 	/**

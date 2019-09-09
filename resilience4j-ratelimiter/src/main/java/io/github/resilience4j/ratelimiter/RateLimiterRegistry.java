@@ -84,8 +84,8 @@ public interface RateLimiterRegistry extends Registry<RateLimiter, RateLimiterCo
         return new InMemoryRateLimiterRegistry(defaultRateLimiterConfig);
     }
 
-    static RateLimiterRegistry of(RateLimiterConfig defaultRateLimiterConfig, List<MetricsPublisher<RateLimiter>> metricsPublishers) {
-        return new InMemoryRateLimiterRegistry(defaultRateLimiterConfig, metricsPublishers);
+    static RateLimiterRegistry of(RateLimiterConfig defaultRateLimiterConfig, MetricsPublisher<RateLimiter> metricsPublisher) {
+        return new InMemoryRateLimiterRegistry(defaultRateLimiterConfig, metricsPublisher);
     }
 
     /**
@@ -107,7 +107,7 @@ public interface RateLimiterRegistry extends Registry<RateLimiter, RateLimiterCo
         return new InMemoryRateLimiterRegistry(configs);
     }
 
-    static RateLimiterRegistry of(Map<String, RateLimiterConfig> configs, List<MetricsPublisher<RateLimiter>> metricsPublishers) {
-        return new InMemoryRateLimiterRegistry(configs, metricsPublishers);
+    static RateLimiterRegistry of(Map<String, RateLimiterConfig> configs, MetricsPublisher<RateLimiter> metricsPublisher) {
+        return new InMemoryRateLimiterRegistry(configs, metricsPublisher);
     }
 }

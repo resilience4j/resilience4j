@@ -21,9 +21,11 @@ import io.github.resilience4j.bulkhead.ThreadPoolBulkheadRegistry;
 import io.github.resilience4j.bulkhead.event.BulkheadEvent;
 import io.github.resilience4j.common.bulkhead.configuration.ThreadPoolBulkheadConfigurationProperties;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
+import io.github.resilience4j.core.metrics.CompositeMetricsPublisher;
 import io.github.resilience4j.core.metrics.MetricsPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -46,12 +48,17 @@ public class ThreadPoolBulkheadConfiguration {
 	@Bean
 	public ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry(ThreadPoolBulkheadConfigurationProperties bulkheadConfigurationProperties,
 																 EventConsumerRegistry<BulkheadEvent> bulkheadEventConsumerRegistry,
-																 Optional<List<MetricsPublisher<ThreadPoolBulkhead>>> optionalMetricsPublishers) {
-		List<MetricsPublisher<ThreadPoolBulkhead>> metricsPublishers = optionalMetricsPublishers.orElseGet(ArrayList::new);
-		ThreadPoolBulkheadRegistry bulkheadRegistry = createBulkheadRegistry(bulkheadConfigurationProperties, metricsPublishers);
+																 MetricsPublisher<ThreadPoolBulkhead> threadPoolBulkheadMetricsPublisher) {
+		ThreadPoolBulkheadRegistry bulkheadRegistry = createBulkheadRegistry(bulkheadConfigurationProperties, threadPoolBulkheadMetricsPublisher);
 		registerEventConsumer(bulkheadRegistry, bulkheadEventConsumerRegistry, bulkheadConfigurationProperties);
 		bulkheadConfigurationProperties.getBackends().forEach((name, properties) -> bulkheadRegistry.bulkhead(name, bulkheadConfigurationProperties.createThreadPoolBulkheadConfig(name)));
 		return bulkheadRegistry;
+	}
+
+	@Bean
+	@Primary
+	public MetricsPublisher<ThreadPoolBulkhead> threadPoolBulkheadMetricsPublisher(Optional<List<MetricsPublisher<ThreadPoolBulkhead>>> optionalMetricsPublishers) {
+		return new CompositeMetricsPublisher<>(optionalMetricsPublishers.orElseGet(ArrayList::new));
 	}
 
 	/**
@@ -61,13 +68,13 @@ public class ThreadPoolBulkheadConfiguration {
 	 * @return a ThreadPoolBulkheadRegistry
 	 */
 	private ThreadPoolBulkheadRegistry createBulkheadRegistry(ThreadPoolBulkheadConfigurationProperties bulkheadConfigurationProperties,
-															  List<MetricsPublisher<ThreadPoolBulkhead>> metricsPublishers) {
+															  MetricsPublisher<ThreadPoolBulkhead> threadPoolBulkheadMetricsPublisher) {
 		Map<String, ThreadPoolBulkheadConfig> configs = bulkheadConfigurationProperties.getConfigs()
 				.entrySet()
 				.stream()
 				.collect(Collectors.toMap(Map.Entry::getKey, entry -> bulkheadConfigurationProperties.createThreadPoolBulkheadConfig(entry.getValue())));
 
-		return ThreadPoolBulkheadRegistry.of(configs, metricsPublishers);
+		return ThreadPoolBulkheadRegistry.of(configs, threadPoolBulkheadMetricsPublisher);
 	}
 
 	/**

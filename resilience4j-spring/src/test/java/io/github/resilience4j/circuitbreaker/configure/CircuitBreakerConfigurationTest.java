@@ -5,6 +5,7 @@ import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent;
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.core.ConfigurationNotFoundException;
+import io.github.resilience4j.core.metrics.CompositeMetricsPublisher;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.junit.MockitoJUnitRunner;
@@ -39,7 +40,7 @@ public class CircuitBreakerConfigurationTest {
 		DefaultEventConsumerRegistry<CircuitBreakerEvent> eventConsumerRegistry = new DefaultEventConsumerRegistry<>();
 
 		//When
-		CircuitBreakerRegistry circuitBreakerRegistry = circuitBreakerConfiguration.circuitBreakerRegistry(eventConsumerRegistry, Optional.empty());
+		CircuitBreakerRegistry circuitBreakerRegistry = circuitBreakerConfiguration.circuitBreakerRegistry(eventConsumerRegistry, new CompositeMetricsPublisher<>());
 
 		//Then
 		assertThat(circuitBreakerConfigurationProperties.getCircuitBreakerAspectOrder()).isEqualTo(400);
@@ -85,7 +86,7 @@ public class CircuitBreakerConfigurationTest {
 		DefaultEventConsumerRegistry<CircuitBreakerEvent> eventConsumerRegistry = new DefaultEventConsumerRegistry<>();
 
 		//When
-		CircuitBreakerRegistry circuitBreakerRegistry = circuitBreakerConfiguration.circuitBreakerRegistry(eventConsumerRegistry, Optional.empty());
+		CircuitBreakerRegistry circuitBreakerRegistry = circuitBreakerConfiguration.circuitBreakerRegistry(eventConsumerRegistry, new CompositeMetricsPublisher<>());
 
 		//Then
 		assertThat(circuitBreakerRegistry.getAllCircuitBreakers().size()).isEqualTo(2);
@@ -122,7 +123,7 @@ public class CircuitBreakerConfigurationTest {
 		DefaultEventConsumerRegistry<CircuitBreakerEvent> eventConsumerRegistry = new DefaultEventConsumerRegistry<>();
 
 		//When
-		assertThatThrownBy(() -> circuitBreakerConfiguration.circuitBreakerRegistry(eventConsumerRegistry, Optional.empty()))
+		assertThatThrownBy(() -> circuitBreakerConfiguration.circuitBreakerRegistry(eventConsumerRegistry, new CompositeMetricsPublisher<>()))
 			.isInstanceOf(ConfigurationNotFoundException.class)
 			.hasMessage("Configuration with name 'unknownConfig' does not exist");
 	}
