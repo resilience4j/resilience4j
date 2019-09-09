@@ -15,6 +15,7 @@
  */
 package io.github.resilience4j.circuitbreaker.autoconfigure;
 
+import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.micrometer.tagged.TaggedCircuitBreakerMetrics;
 import io.github.resilience4j.micrometer.tagged.TaggedCircuitBreakerMetricsPublisher;
@@ -32,7 +33,7 @@ import org.springframework.context.annotation.Configuration;
  * Auto-configuration} for resilience4j-metrics.
  */
 @Configuration
-@ConditionalOnClass(MetricsAutoConfiguration.class)
+@ConditionalOnClass({MetricsAutoConfiguration.class, CircuitBreaker.class, TaggedCircuitBreakerMetricsPublisher.class})
 @AutoConfigureAfter(MetricsAutoConfiguration.class)
 @ConditionalOnProperty(value = "resilience4j.circuitbreaker.metrics.enabled", matchIfMissing = true)
 public class CircuitBreakerMicrometerAutoConfiguration {

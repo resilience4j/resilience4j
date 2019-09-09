@@ -17,6 +17,7 @@ package io.github.resilience4j.ratelimiter.autoconfigure;
 
 import io.github.resilience4j.micrometer.tagged.TaggedRateLimiterMetrics;
 import io.github.resilience4j.micrometer.tagged.TaggedRateLimiterMetricsPublisher;
+import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.boot.actuate.autoconfigure.metrics.MetricsAutoConfiguration;
@@ -32,8 +33,8 @@ import org.springframework.context.annotation.Configuration;
  * Auto-configuration} for resilience4j-metrics.
  */
 @Configuration
-@ConditionalOnClass(MetricsAutoConfiguration.class)
-@AutoConfigureAfter(value = {MetricsAutoConfiguration.class})
+@ConditionalOnClass({MeterRegistry.class, RateLimiter.class, TaggedRateLimiterMetricsPublisher.class})
+@AutoConfigureAfter(MetricsAutoConfiguration.class)
 @ConditionalOnProperty(value = "resilience4j.ratelimiter.metrics.enabled", matchIfMissing = true)
 public class RateLimiterMetricsAutoConfiguration {
 

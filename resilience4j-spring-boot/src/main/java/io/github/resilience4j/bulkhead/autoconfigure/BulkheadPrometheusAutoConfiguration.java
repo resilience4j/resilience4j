@@ -15,9 +15,11 @@
  */
 package io.github.resilience4j.bulkhead.autoconfigure;
 
+import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.bulkhead.BulkheadRegistry;
 import io.github.resilience4j.prometheus.collectors.BulkheadMetricsCollector;
 import io.github.resilience4j.prometheus.publisher.BulkheadMetricsPublisher;
+import io.prometheus.client.GaugeMetricFamily;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -29,7 +31,7 @@ import org.springframework.context.annotation.Configuration;
  * Auto-configuration} for resilience4j-metrics.
  */
 @Configuration
-@ConditionalOnClass(BulkheadMetricsCollector.class)
+@ConditionalOnClass({GaugeMetricFamily.class, Bulkhead.class, BulkheadMetricsPublisher.class})
 @ConditionalOnProperty(value = "resilience4j.bulkhead.metrics.enabled", matchIfMissing = true)
 public class BulkheadPrometheusAutoConfiguration {
 

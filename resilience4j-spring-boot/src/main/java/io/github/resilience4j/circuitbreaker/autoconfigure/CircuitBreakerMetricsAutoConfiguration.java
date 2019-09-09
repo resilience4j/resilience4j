@@ -16,6 +16,7 @@
 package io.github.resilience4j.circuitbreaker.autoconfigure;
 
 import com.codahale.metrics.MetricRegistry;
+import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.metrics.CircuitBreakerMetrics;
 import io.github.resilience4j.metrics.publisher.CircuitBreakerMetricsPublisher;
@@ -34,7 +35,7 @@ import org.springframework.context.annotation.Configuration;
  * Auto-configuration} for resilience4j-metrics.
  */
 @Configuration
-@ConditionalOnClass(MetricRegistry.class)
+@ConditionalOnClass({MetricRegistry.class, CircuitBreaker.class, CircuitBreakerMetricsPublisher.class})
 @AutoConfigureAfter(MetricsDropwizardAutoConfiguration.class)
 @AutoConfigureBefore(MetricRepositoryAutoConfiguration.class)
 @ConditionalOnProperty(value = "resilience4j.circuitbreaker.metrics.enabled", matchIfMissing = true)

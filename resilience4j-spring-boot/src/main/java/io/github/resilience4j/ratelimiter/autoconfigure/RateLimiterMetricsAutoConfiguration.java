@@ -18,6 +18,7 @@ package io.github.resilience4j.ratelimiter.autoconfigure;
 import com.codahale.metrics.MetricRegistry;
 import io.github.resilience4j.metrics.RateLimiterMetrics;
 import io.github.resilience4j.metrics.publisher.RateLimiterMetricsPublisher;
+import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
 import org.springframework.boot.actuate.autoconfigure.MetricRepositoryAutoConfiguration;
 import org.springframework.boot.actuate.autoconfigure.MetricsDropwizardAutoConfiguration;
@@ -34,7 +35,7 @@ import org.springframework.context.annotation.Configuration;
  * Auto-configuration} for resilience4j-metrics.
  */
 @Configuration
-@ConditionalOnClass(MetricRegistry.class)
+@ConditionalOnClass({MetricRegistry.class, RateLimiter.class, RateLimiterMetricsPublisher.class})
 @AutoConfigureAfter(MetricsDropwizardAutoConfiguration.class)
 @AutoConfigureBefore(MetricRepositoryAutoConfiguration.class)
 @ConditionalOnProperty(value = "resilience4j.ratelimiter.metrics.enabled", matchIfMissing = true)

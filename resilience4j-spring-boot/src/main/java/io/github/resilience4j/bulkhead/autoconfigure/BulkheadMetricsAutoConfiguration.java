@@ -16,6 +16,7 @@
 package io.github.resilience4j.bulkhead.autoconfigure;
 
 import com.codahale.metrics.MetricRegistry;
+import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.bulkhead.BulkheadRegistry;
 import io.github.resilience4j.metrics.BulkheadMetrics;
 import io.github.resilience4j.metrics.publisher.BulkheadMetricsPublisher;
@@ -34,7 +35,7 @@ import org.springframework.context.annotation.Configuration;
  * Auto-configuration} for resilience4j-metrics.
  */
 @Configuration
-@ConditionalOnClass(MetricRegistry.class)
+@ConditionalOnClass({MetricRegistry.class, Bulkhead.class, BulkheadMetricsPublisher.class})
 @AutoConfigureAfter(MetricsDropwizardAutoConfiguration.class)
 @AutoConfigureBefore(MetricRepositoryAutoConfiguration.class)
 @ConditionalOnProperty(value = "resilience4j.bulkhead.metrics.enabled", matchIfMissing = true)
