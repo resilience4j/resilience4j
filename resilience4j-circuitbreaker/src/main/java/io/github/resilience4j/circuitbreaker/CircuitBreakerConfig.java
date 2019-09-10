@@ -265,6 +265,7 @@ public class CircuitBreakerConfig {
         /**
          * @deprecated Use {@link #permittedNumberOfCallsInHalfOpenState(int)} instead.
          */
+        @Deprecated
         public Builder ringBufferSizeInHalfOpenState(int ringBufferSizeInHalfOpenState) {
             if (ringBufferSizeInHalfOpenState < 1) {
                 throw new IllegalArgumentException("ringBufferSizeInHalfOpenState must be greater than 0");
@@ -276,6 +277,7 @@ public class CircuitBreakerConfig {
         /**
          * @deprecated Use {@link #slidingWindow(int, int, SlidingWindowType)} instead.
          */
+        @Deprecated
         public Builder ringBufferSizeInClosedState(int ringBufferSizeInClosedState) {
             if (ringBufferSizeInClosedState < 1) {
                 throw new IllegalArgumentException("ringBufferSizeInClosedState must be greater than 0");
