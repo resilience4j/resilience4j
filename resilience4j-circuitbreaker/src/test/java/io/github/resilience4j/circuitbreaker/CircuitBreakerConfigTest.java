@@ -45,6 +45,7 @@ public class CircuitBreakerConfigTest {
     }
 
     @Test(expected = IllegalArgumentException.class)
+    @SuppressWarnings("deprecation") // Left this use for testing purposes
     public void ringBufferSizeInHalfOpenStateBelowOneShouldFail() {
         custom().ringBufferSizeInHalfOpenState(0).build();
     }
@@ -75,6 +76,7 @@ public class CircuitBreakerConfigTest {
     }
 
     @Test(expected = IllegalArgumentException.class)
+    @SuppressWarnings("deprecation") // Left this use for testing purposes
     public void zeroRingBufferSizeInClosedStateShouldFail() {
         custom().ringBufferSizeInClosedState(0).build();
     }
@@ -138,6 +140,7 @@ public class CircuitBreakerConfigTest {
     }
 
     @Test
+    @SuppressWarnings("deprecation") // Left this use for testing purposes
     public void shouldSetRingBufferSizeInClosedState() {
         CircuitBreakerConfig circuitBreakerConfig = custom().ringBufferSizeInClosedState(1000).build();
         then(circuitBreakerConfig.getSlidingWindowSize()).isEqualTo(1000);
