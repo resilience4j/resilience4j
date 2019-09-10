@@ -20,5 +20,5 @@ steps:
     publishJUnitResults: true
     testResultsFiles: '**/TEST-*.xml'
     tasks: 'clean check test'
-    env:
-      AZURE: true
+  env:
+    AZURE: true
