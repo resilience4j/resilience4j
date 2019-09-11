@@ -61,6 +61,7 @@ public class CircuitBreakerConfigurationProperties {
 		return buildConfig(from(baseConfig), instanceProperties);
 	}
 
+	@SuppressWarnings("deprecation") // deprecated API use left for backward compatibility
 	private CircuitBreakerConfig buildConfig(Builder builder, InstanceProperties properties) {
 		if (properties == null) {
 			return builder.build();
@@ -179,6 +180,7 @@ public class CircuitBreakerConfigurationProperties {
 		@Min(1)
 		@Nullable
 		@Deprecated
+		@SuppressWarnings("DeprecatedIsStillUsed") // Left for backward compatibility
 		private Integer ringBufferSizeInClosedState;
 
 		@Nullable
@@ -199,6 +201,7 @@ public class CircuitBreakerConfigurationProperties {
 		@Min(1)
 		@Nullable
 		@Deprecated
+		@SuppressWarnings("DeprecatedIsStillUsed") // Left for backward compatibility
 		private Integer ringBufferSizeInHalfOpenState;
 
 		@Nullable
@@ -278,6 +281,7 @@ public class CircuitBreakerConfigurationProperties {
 		 * Sets the ring buffer size for the circuit breaker while in closed state.
 		 *
 		 * @param ringBufferSizeInClosedState the ring buffer size
+		 * @deprecated Use {@link #setSlidingWindowSize(Integer)} instead.
 		 */
 		@Deprecated
 		public InstanceProperties setRingBufferSizeInClosedState(Integer ringBufferSizeInClosedState) {
@@ -299,6 +303,7 @@ public class CircuitBreakerConfigurationProperties {
 		 * Sets the ring buffer size for the circuit breaker while in half open state.
 		 *
 		 * @param ringBufferSizeInHalfOpenState the ring buffer size
+		 * @deprecated Use {@link #setPermittedNumberOfCallsInHalfOpenState(Integer)} instead.
 		 */
 		@Deprecated
 		public InstanceProperties setRingBufferSizeInHalfOpenState(Integer ringBufferSizeInHalfOpenState) {
