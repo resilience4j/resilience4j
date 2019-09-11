@@ -73,7 +73,7 @@ public class CircuitBreakerConfigurationTest {
 		DefaultEventConsumerRegistry<CircuitBreakerEvent> eventConsumerRegistry = new DefaultEventConsumerRegistry<>();
 
 		//When
-		CircuitBreakerRegistry circuitBreakerRegistry = circuitBreakerConfiguration.circuitBreakerRegistry(eventConsumerRegistry);
+		CircuitBreakerRegistry circuitBreakerRegistry = circuitBreakerConfiguration.circuitBreakerRegistry(eventConsumerRegistry, new CompositeRegistryEventConsumer<>(emptyList()));
 
 		//Then
 		assertThat(circuitBreakerConfigurationProperties.getCircuitBreakerAspectOrder()).isEqualTo(400);
@@ -175,7 +175,7 @@ public class CircuitBreakerConfigurationTest {
         DefaultEventConsumerRegistry<CircuitBreakerEvent> eventConsumerRegistry = new DefaultEventConsumerRegistry<>();
 
         //When
-        CircuitBreakerRegistry circuitBreakerRegistry = circuitBreakerConfiguration.circuitBreakerRegistry(eventConsumerRegistry);
+        CircuitBreakerRegistry circuitBreakerRegistry = circuitBreakerConfiguration.circuitBreakerRegistry(eventConsumerRegistry, new CompositeRegistryEventConsumer<>(emptyList()));
 
         //Then
         assertThat(circuitBreakerRegistry.getAllCircuitBreakers().size()).isEqualTo(2);
