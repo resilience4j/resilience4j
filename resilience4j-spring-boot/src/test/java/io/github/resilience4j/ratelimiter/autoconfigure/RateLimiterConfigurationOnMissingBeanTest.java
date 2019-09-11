@@ -79,7 +79,7 @@ public class RateLimiterConfigurationOnMissingBeanTest {
                 assertThat(methodOnMissing.isAnnotationPresent(Bean.class)).isTrue();
 
                 if (!"rateLimiterEventsConsumerRegistry".equals(methodOnMissing.getName()) &&
-                        !"rateLimiterMetricsPublisher".equals(methodOnMissing.getName())) {
+                        !"rateLimiterRegistryEventConsumer".equals(methodOnMissing.getName())) {
                     assertThat(methodOnMissing.isAnnotationPresent(ConditionalOnMissingBean.class)).isTrue();
                 }
             }

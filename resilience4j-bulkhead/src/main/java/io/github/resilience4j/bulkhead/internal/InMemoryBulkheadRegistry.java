@@ -22,11 +22,12 @@ import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.bulkhead.BulkheadConfig;
 import io.github.resilience4j.bulkhead.BulkheadRegistry;
 import io.github.resilience4j.core.ConfigurationNotFoundException;
-import io.github.resilience4j.core.metrics.MetricsPublisher;
 import io.github.resilience4j.core.registry.AbstractRegistry;
+import io.github.resilience4j.core.registry.RegistryEventConsumer;
 import io.vavr.collection.Array;
 import io.vavr.collection.Seq;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Supplier;
@@ -50,8 +51,14 @@ public final class InMemoryBulkheadRegistry extends AbstractRegistry<Bulkhead, B
 	}
 
 	public InMemoryBulkheadRegistry(
-			Map<String, BulkheadConfig> configs, MetricsPublisher<Bulkhead> metricsPublisher) {
-		this(configs.getOrDefault(DEFAULT_CONFIG, BulkheadConfig.ofDefaults()), metricsPublisher);
+			Map<String, BulkheadConfig> configs, RegistryEventConsumer<Bulkhead> registryEventConsumer) {
+		this(configs.getOrDefault(DEFAULT_CONFIG, BulkheadConfig.ofDefaults()), registryEventConsumer);
+		this.configurations.putAll(configs);
+	}
+
+	public InMemoryBulkheadRegistry(
+			Map<String, BulkheadConfig> configs, List<RegistryEventConsumer<Bulkhead>> registryEventConsumers) {
+		this(configs.getOrDefault(DEFAULT_CONFIG, BulkheadConfig.ofDefaults()), registryEventConsumers);
 		this.configurations.putAll(configs);
 	}
 
@@ -64,8 +71,12 @@ public final class InMemoryBulkheadRegistry extends AbstractRegistry<Bulkhead, B
 		super(defaultConfig);
 	}
 
-	public InMemoryBulkheadRegistry(BulkheadConfig defaultConfig, MetricsPublisher<Bulkhead> metricsPublisher) {
-		super(defaultConfig, metricsPublisher);
+	public InMemoryBulkheadRegistry(BulkheadConfig defaultConfig, List<RegistryEventConsumer<Bulkhead>> registryEventConsumers) {
+		super(defaultConfig, registryEventConsumers);
+	}
+
+	public InMemoryBulkheadRegistry(BulkheadConfig defaultConfig, RegistryEventConsumer<Bulkhead> registryEventConsumer) {
+		super(defaultConfig, registryEventConsumer);
 	}
 
 	/**

@@ -22,11 +22,12 @@ import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.core.ConfigurationNotFoundException;
-import io.github.resilience4j.core.metrics.MetricsPublisher;
 import io.github.resilience4j.core.registry.AbstractRegistry;
+import io.github.resilience4j.core.registry.RegistryEventConsumer;
 import io.vavr.collection.Array;
 import io.vavr.collection.Seq;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Supplier;
@@ -49,8 +50,13 @@ public final class InMemoryCircuitBreakerRegistry extends AbstractRegistry<Circu
 		this.configurations.putAll(configs);
 	}
 
-	public InMemoryCircuitBreakerRegistry(Map<String, CircuitBreakerConfig> configs, MetricsPublisher<CircuitBreaker> metricsPublisher) {
-		this(configs.getOrDefault(DEFAULT_CONFIG, CircuitBreakerConfig.ofDefaults()), metricsPublisher);
+	public InMemoryCircuitBreakerRegistry(Map<String, CircuitBreakerConfig> configs, RegistryEventConsumer<CircuitBreaker> registryEventConsumer) {
+		this(configs.getOrDefault(DEFAULT_CONFIG, CircuitBreakerConfig.ofDefaults()), registryEventConsumer);
+		this.configurations.putAll(configs);
+	}
+
+	public InMemoryCircuitBreakerRegistry(Map<String, CircuitBreakerConfig> configs, List<RegistryEventConsumer<CircuitBreaker>> registryEventConsumers) {
+		this(configs.getOrDefault(DEFAULT_CONFIG, CircuitBreakerConfig.ofDefaults()), registryEventConsumers);
 		this.configurations.putAll(configs);
 	}
 
@@ -63,8 +69,12 @@ public final class InMemoryCircuitBreakerRegistry extends AbstractRegistry<Circu
 		super(defaultConfig);
 	}
 
-	public InMemoryCircuitBreakerRegistry(CircuitBreakerConfig defaultConfig, MetricsPublisher<CircuitBreaker> metricsPublisher) {
-		super(defaultConfig, metricsPublisher);
+	public InMemoryCircuitBreakerRegistry(CircuitBreakerConfig defaultConfig, RegistryEventConsumer<CircuitBreaker> registryEventConsumer) {
+		super(defaultConfig, registryEventConsumer);
+	}
+
+	public InMemoryCircuitBreakerRegistry(CircuitBreakerConfig defaultConfig, List<RegistryEventConsumer<CircuitBreaker>> registryEventConsumers) {
+		super(defaultConfig, registryEventConsumers);
 	}
 
 	/**

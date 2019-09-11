@@ -18,6 +18,7 @@ package io.github.resilience4j.retry;
 
 import io.github.resilience4j.core.Registry;
 import io.github.resilience4j.core.metrics.MetricsPublisher;
+import io.github.resilience4j.core.registry.RegistryEventConsumer;
 import io.github.resilience4j.retry.internal.InMemoryRetryRegistry;
 import io.vavr.collection.Seq;
 
@@ -83,10 +84,13 @@ public interface RetryRegistry extends Registry<Retry, RetryConfig> {
 		return new InMemoryRetryRegistry(retryConfig);
 	}
 
-	static RetryRegistry of(RetryConfig retryConfig, MetricsPublisher<Retry> metricsPublisher) {
-		return new InMemoryRetryRegistry(retryConfig, metricsPublisher);
+	static RetryRegistry of(RetryConfig retryConfig, RegistryEventConsumer<Retry> registryEventConsumer) {
+		return new InMemoryRetryRegistry(retryConfig, registryEventConsumer);
 	}
 
+	static RetryRegistry of(RetryConfig retryConfig, List<RegistryEventConsumer<Retry>> registryEventConsumers) {
+		return new InMemoryRetryRegistry(retryConfig, registryEventConsumers);
+	}
 
 	/**
 	 * Creates a RetryRegistry with a default Retry configuration.
@@ -107,8 +111,12 @@ public interface RetryRegistry extends Registry<Retry, RetryConfig> {
 		return new InMemoryRetryRegistry(configs);
 	}
 
-	static RetryRegistry of(Map<String, RetryConfig> configs, MetricsPublisher<Retry> metricsPublisher) {
-		return new InMemoryRetryRegistry(configs, metricsPublisher);
+	static RetryRegistry of(Map<String, RetryConfig> configs, RegistryEventConsumer<Retry> registryEventConsumer) {
+		return new InMemoryRetryRegistry(configs, registryEventConsumer);
+	}
+
+	static RetryRegistry of(Map<String, RetryConfig> configs, List<RegistryEventConsumer<Retry>> registryEventConsumers) {
+		return new InMemoryRetryRegistry(configs, registryEventConsumers);
 	}
 
 }

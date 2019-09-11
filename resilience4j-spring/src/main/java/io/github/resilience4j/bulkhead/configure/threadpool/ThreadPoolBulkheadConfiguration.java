@@ -21,8 +21,8 @@ import io.github.resilience4j.bulkhead.ThreadPoolBulkheadRegistry;
 import io.github.resilience4j.bulkhead.event.BulkheadEvent;
 import io.github.resilience4j.common.bulkhead.configuration.ThreadPoolBulkheadConfigurationProperties;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
-import io.github.resilience4j.core.metrics.CompositeMetricsPublisher;
-import io.github.resilience4j.core.metrics.MetricsPublisher;
+import io.github.resilience4j.core.registry.CompositeRegistryEventConsumer;
+import io.github.resilience4j.core.registry.RegistryEventConsumer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
@@ -48,8 +48,8 @@ public class ThreadPoolBulkheadConfiguration {
 	@Bean
 	public ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry(ThreadPoolBulkheadConfigurationProperties bulkheadConfigurationProperties,
 																 EventConsumerRegistry<BulkheadEvent> bulkheadEventConsumerRegistry,
-																 MetricsPublisher<ThreadPoolBulkhead> threadPoolBulkheadMetricsPublisher) {
-		ThreadPoolBulkheadRegistry bulkheadRegistry = createBulkheadRegistry(bulkheadConfigurationProperties, threadPoolBulkheadMetricsPublisher);
+																 RegistryEventConsumer<ThreadPoolBulkhead> threadPoolBulkheadRegistryEventConsumer) {
+		ThreadPoolBulkheadRegistry bulkheadRegistry = createBulkheadRegistry(bulkheadConfigurationProperties, threadPoolBulkheadRegistryEventConsumer);
 		registerEventConsumer(bulkheadRegistry, bulkheadEventConsumerRegistry, bulkheadConfigurationProperties);
 		bulkheadConfigurationProperties.getBackends().forEach((name, properties) -> bulkheadRegistry.bulkhead(name, bulkheadConfigurationProperties.createThreadPoolBulkheadConfig(name)));
 		return bulkheadRegistry;
@@ -57,8 +57,9 @@ public class ThreadPoolBulkheadConfiguration {
 
 	@Bean
 	@Primary
-	public MetricsPublisher<ThreadPoolBulkhead> threadPoolBulkheadMetricsPublisher(Optional<List<MetricsPublisher<ThreadPoolBulkhead>>> optionalMetricsPublishers) {
-		return new CompositeMetricsPublisher<>(optionalMetricsPublishers.orElseGet(ArrayList::new));
+	public RegistryEventConsumer<ThreadPoolBulkhead> threadPoolBulkheadRegistryEventConsumer(
+			Optional<List<RegistryEventConsumer<ThreadPoolBulkhead>>> optionalRegistryEventConsumers) {
+		return new CompositeRegistryEventConsumer<>(optionalRegistryEventConsumers.orElseGet(ArrayList::new));
 	}
 
 	/**
@@ -68,13 +69,13 @@ public class ThreadPoolBulkheadConfiguration {
 	 * @return a ThreadPoolBulkheadRegistry
 	 */
 	private ThreadPoolBulkheadRegistry createBulkheadRegistry(ThreadPoolBulkheadConfigurationProperties bulkheadConfigurationProperties,
-															  MetricsPublisher<ThreadPoolBulkhead> threadPoolBulkheadMetricsPublisher) {
+															  RegistryEventConsumer<ThreadPoolBulkhead> threadPoolBulkheadRegistryEventConsumer) {
 		Map<String, ThreadPoolBulkheadConfig> configs = bulkheadConfigurationProperties.getConfigs()
 				.entrySet()
 				.stream()
 				.collect(Collectors.toMap(Map.Entry::getKey, entry -> bulkheadConfigurationProperties.createThreadPoolBulkheadConfig(entry.getValue())));
 
-		return ThreadPoolBulkheadRegistry.of(configs, threadPoolBulkheadMetricsPublisher);
+		return ThreadPoolBulkheadRegistry.of(configs, threadPoolBulkheadRegistryEventConsumer);
 	}
 
 	/**

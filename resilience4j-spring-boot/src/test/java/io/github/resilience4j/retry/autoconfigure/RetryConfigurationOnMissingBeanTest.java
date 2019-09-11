@@ -75,7 +75,7 @@ public class RetryConfigurationOnMissingBeanTest {
 				assertThat(methodOnMissing.isAnnotationPresent(Bean.class)).isTrue();
 
 				if (!"retryEventConsumerRegistry".equals(methodOnMissing.getName()) &&
-						!"retryMetricsPublisher".equals(methodOnMissing.getName())) {
+						!"retryRegistryEventConsumer".equals(methodOnMissing.getName())) {
 					assertThat(methodOnMissing.isAnnotationPresent(ConditionalOnMissingBean.class)).isTrue();
 				}
 			}

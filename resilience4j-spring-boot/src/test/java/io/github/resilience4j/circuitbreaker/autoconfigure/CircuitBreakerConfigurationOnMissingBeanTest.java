@@ -76,7 +76,7 @@ public class CircuitBreakerConfigurationOnMissingBeanTest {
                 assertThat(methodOnMissing.isAnnotationPresent(Bean.class)).isTrue();
 
                 if (!"eventConsumerRegistry".equals(methodOnMissing.getName()) &&
-                        !"circuitBreakerMetricsPublisher".equals(methodOnMissing.getName())) {
+                        !"circuitBreakerRegistryEventConsumer".equals(methodOnMissing.getName())) {
                     assertThat(methodOnMissing.isAnnotationPresent(ConditionalOnMissingBean.class)).isTrue();
                 }
             }

@@ -16,14 +16,15 @@
 package io.github.resilience4j.retry.internal;
 
 import io.github.resilience4j.core.ConfigurationNotFoundException;
-import io.github.resilience4j.core.metrics.MetricsPublisher;
 import io.github.resilience4j.core.registry.AbstractRegistry;
+import io.github.resilience4j.core.registry.RegistryEventConsumer;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryConfig;
 import io.github.resilience4j.retry.RetryRegistry;
 import io.vavr.collection.Array;
 import io.vavr.collection.Seq;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Supplier;
@@ -46,8 +47,13 @@ public final class InMemoryRetryRegistry extends AbstractRegistry<Retry, RetryCo
 		this.configurations.putAll(configs);
 	}
 
-	public InMemoryRetryRegistry(Map<String, RetryConfig> configs, MetricsPublisher<Retry> metricsPublisher) {
-		this(configs.getOrDefault(DEFAULT_CONFIG, RetryConfig.ofDefaults()), metricsPublisher);
+	public InMemoryRetryRegistry(Map<String, RetryConfig> configs, RegistryEventConsumer<Retry> registryEventConsumer) {
+		this(configs.getOrDefault(DEFAULT_CONFIG, RetryConfig.ofDefaults()), registryEventConsumer);
+		this.configurations.putAll(configs);
+	}
+
+	public InMemoryRetryRegistry(Map<String, RetryConfig> configs, List<RegistryEventConsumer<Retry>> registryEventConsumers) {
+		this(configs.getOrDefault(DEFAULT_CONFIG, RetryConfig.ofDefaults()), registryEventConsumers);
 		this.configurations.putAll(configs);
 	}
 
@@ -60,8 +66,12 @@ public final class InMemoryRetryRegistry extends AbstractRegistry<Retry, RetryCo
 		super(defaultConfig);
 	}
 
-	public InMemoryRetryRegistry(RetryConfig defaultConfig, MetricsPublisher<Retry> metricsPublisher) {
-		super(defaultConfig, metricsPublisher);
+	public InMemoryRetryRegistry(RetryConfig defaultConfig, RegistryEventConsumer<Retry> registryEventConsumer) {
+		super(defaultConfig, registryEventConsumer);
+	}
+
+	public InMemoryRetryRegistry(RetryConfig defaultConfig, List<RegistryEventConsumer<Retry>> registryEventConsumers) {
+		super(defaultConfig, registryEventConsumers);
 	}
 
 	/**

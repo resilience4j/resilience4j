@@ -21,7 +21,7 @@ package io.github.resilience4j.circuitbreaker;
 
 import io.github.resilience4j.circuitbreaker.internal.InMemoryCircuitBreakerRegistry;
 import io.github.resilience4j.core.Registry;
-import io.github.resilience4j.core.metrics.MetricsPublisher;
+import io.github.resilience4j.core.registry.RegistryEventConsumer;
 import io.vavr.collection.Seq;
 
 import java.util.List;
@@ -85,8 +85,12 @@ public interface CircuitBreakerRegistry extends Registry<CircuitBreaker, Circuit
 		return new InMemoryCircuitBreakerRegistry(circuitBreakerConfig);
 	}
 
-	static CircuitBreakerRegistry of(CircuitBreakerConfig circuitBreakerConfig, MetricsPublisher<CircuitBreaker> metricsPublisher) {
-		return new InMemoryCircuitBreakerRegistry(circuitBreakerConfig, metricsPublisher);
+	static CircuitBreakerRegistry of(CircuitBreakerConfig circuitBreakerConfig, RegistryEventConsumer<CircuitBreaker> registryEventConsumer) {
+		return new InMemoryCircuitBreakerRegistry(circuitBreakerConfig, registryEventConsumer);
+	}
+
+	static CircuitBreakerRegistry of(CircuitBreakerConfig circuitBreakerConfig, List<RegistryEventConsumer<CircuitBreaker>> registryEventConsumers) {
+		return new InMemoryCircuitBreakerRegistry(circuitBreakerConfig, registryEventConsumers);
 	}
 
 	/**
@@ -99,8 +103,12 @@ public interface CircuitBreakerRegistry extends Registry<CircuitBreaker, Circuit
 		return new InMemoryCircuitBreakerRegistry(configs);
 	}
 
-	static CircuitBreakerRegistry of(Map<String, CircuitBreakerConfig> configs, MetricsPublisher<CircuitBreaker> metricsPublisher) {
-		return new InMemoryCircuitBreakerRegistry(configs, metricsPublisher);
+	static CircuitBreakerRegistry of(Map<String, CircuitBreakerConfig> configs, RegistryEventConsumer<CircuitBreaker> registryEventConsumer) {
+		return new InMemoryCircuitBreakerRegistry(configs, registryEventConsumer);
+	}
+
+	static CircuitBreakerRegistry of(Map<String, CircuitBreakerConfig> configs, List<RegistryEventConsumer<CircuitBreaker>> registryEventConsumers) {
+		return new InMemoryCircuitBreakerRegistry(configs, registryEventConsumers);
 	}
 
 	/**

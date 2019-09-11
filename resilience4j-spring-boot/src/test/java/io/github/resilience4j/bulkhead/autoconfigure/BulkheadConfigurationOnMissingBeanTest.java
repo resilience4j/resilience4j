@@ -76,7 +76,7 @@ public class BulkheadConfigurationOnMissingBeanTest {
 				assertThat(methodOnMissing.isAnnotationPresent(Bean.class)).isTrue();
 
 				if (!"bulkheadEventConsumerRegistry".equals(methodOnMissing.getName()) &&
-					!"bulkheadMetricsPublisher".equals(methodOnMissing.getName())) {
+					!"bulkheadRegistryEventConsumer".equals(methodOnMissing.getName())) {
 						assertThat(methodOnMissing.isAnnotationPresent(ConditionalOnMissingBean.class)).isTrue();
 				}
 			}

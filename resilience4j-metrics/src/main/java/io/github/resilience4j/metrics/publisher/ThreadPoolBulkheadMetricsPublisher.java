@@ -46,21 +46,21 @@ public class ThreadPoolBulkheadMetricsPublisher extends AbstractMetricsPublisher
     }
 
     @Override
-    public void publishMetrics(ThreadPoolBulkhead entry) {
-        String name = entry.getName();
+    public void publishMetrics(ThreadPoolBulkhead threadPoolBulkhead) {
+        String name = threadPoolBulkhead.getName();
         //number of available concurrent calls as an integer
         String currentThreadPoolSize = name(prefix, name, CURRENT_THREAD_POOL_SIZE);
         String availableQueueCapacity = name(prefix, name, AVAILABLE_QUEUE_CAPACITY);
 
-        metricRegistry.register(currentThreadPoolSize, (Gauge<Integer>) () -> entry.getMetrics().getThreadPoolSize());
-        metricRegistry.register(availableQueueCapacity, (Gauge<Integer>) () -> entry.getMetrics().getRemainingQueueCapacity());
+        metricRegistry.register(currentThreadPoolSize, (Gauge<Integer>) () -> threadPoolBulkhead.getMetrics().getThreadPoolSize());
+        metricRegistry.register(availableQueueCapacity, (Gauge<Integer>) () -> threadPoolBulkhead.getMetrics().getRemainingQueueCapacity());
 
         List<String> metricNames = Arrays.asList(currentThreadPoolSize, availableQueueCapacity);
         metricsNameMap.put(name, new HashSet<>(metricNames));
     }
 
     @Override
-    public void removeMetrics(ThreadPoolBulkhead entry) {
-        removeMetrics(entry.getName());
+    public void removeMetrics(ThreadPoolBulkhead threadPoolBulkhead) {
+        removeMetrics(threadPoolBulkhead.getName());
     }
 }

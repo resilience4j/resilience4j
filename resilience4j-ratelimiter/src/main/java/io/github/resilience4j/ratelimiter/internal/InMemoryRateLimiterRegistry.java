@@ -19,14 +19,15 @@
 package io.github.resilience4j.ratelimiter.internal;
 
 import io.github.resilience4j.core.ConfigurationNotFoundException;
-import io.github.resilience4j.core.metrics.MetricsPublisher;
 import io.github.resilience4j.core.registry.AbstractRegistry;
+import io.github.resilience4j.core.registry.RegistryEventConsumer;
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RateLimiterConfig;
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
 import io.vavr.collection.Array;
 import io.vavr.collection.Seq;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Supplier;
@@ -49,8 +50,13 @@ public class InMemoryRateLimiterRegistry extends AbstractRegistry<RateLimiter, R
 		this.configurations.putAll(configs);
 	}
 
-	public InMemoryRateLimiterRegistry(Map<String, RateLimiterConfig> configs, MetricsPublisher<RateLimiter> metricsPublisher) {
-		this(configs.getOrDefault(DEFAULT_CONFIG, RateLimiterConfig.ofDefaults()), metricsPublisher);
+	public InMemoryRateLimiterRegistry(Map<String, RateLimiterConfig> configs, RegistryEventConsumer<RateLimiter> registryEventConsumer) {
+		this(configs.getOrDefault(DEFAULT_CONFIG, RateLimiterConfig.ofDefaults()), registryEventConsumer);
+		this.configurations.putAll(configs);
+	}
+
+	public InMemoryRateLimiterRegistry(Map<String, RateLimiterConfig> configs, List<RegistryEventConsumer<RateLimiter>> registryEventConsumers) {
+		this(configs.getOrDefault(DEFAULT_CONFIG, RateLimiterConfig.ofDefaults()), registryEventConsumers);
 		this.configurations.putAll(configs);
 	}
 
@@ -63,8 +69,12 @@ public class InMemoryRateLimiterRegistry extends AbstractRegistry<RateLimiter, R
 		super(defaultConfig);
 	}
 
-	public InMemoryRateLimiterRegistry(RateLimiterConfig defaultConfig, MetricsPublisher<RateLimiter> metricsPublisher) {
-		super(defaultConfig, metricsPublisher);
+	public InMemoryRateLimiterRegistry(RateLimiterConfig defaultConfig, RegistryEventConsumer<RateLimiter> registryEventConsumer) {
+		super(defaultConfig, registryEventConsumer);
+	}
+
+	public InMemoryRateLimiterRegistry(RateLimiterConfig defaultConfig, List<RegistryEventConsumer<RateLimiter>> registryEventConsumers) {
+		super(defaultConfig, registryEventConsumers);
 	}
 
 	/**

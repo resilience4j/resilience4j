@@ -16,9 +16,31 @@
 
 package io.github.resilience4j.core.metrics;
 
-public interface MetricsPublisher<E> {
+import io.github.resilience4j.core.registry.EntryAddedEvent;
+import io.github.resilience4j.core.registry.EntryRemovedEvent;
+import io.github.resilience4j.core.registry.EntryReplacedEvent;
+import io.github.resilience4j.core.registry.RegistryEventConsumer;
+
+public interface MetricsPublisher<E> extends RegistryEventConsumer<E> {
 
     void publishMetrics(E entry);
 
     void removeMetrics(E entry);
+
+    @Override
+    default void onEntryAddedEvent(EntryAddedEvent<E> entryAddedEvent) {
+        publishMetrics(entryAddedEvent.getAddedEntry());
+    }
+
+    @Override
+    default void onEntryRemovedEvent(EntryRemovedEvent<E> entryRemoveEvent) {
+        removeMetrics(entryRemoveEvent.getRemovedEntry());
+    }
+
+    @Override
+    default void onEntryReplacedEvent(EntryReplacedEvent<E> entryReplacedEvent) {
+        removeMetrics(entryReplacedEvent.getOldEntry());
+        publishMetrics(entryReplacedEvent.getNewEntry());
+    }
+
 }

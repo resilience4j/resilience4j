@@ -7,15 +7,12 @@ import io.github.resilience4j.circuitbreaker.configure.CircuitBreakerConfigurati
 import io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
 import io.github.resilience4j.core.metrics.MetricsPublisher;
+import io.github.resilience4j.core.registry.RegistryEventConsumer;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
 
 @Configuration
 public abstract class AbstractRefreshScopedCircuitBreakerConfiguration {
@@ -39,9 +36,9 @@ public abstract class AbstractRefreshScopedCircuitBreakerConfiguration {
     @RefreshScope
     @ConditionalOnMissingBean
     public CircuitBreakerRegistry circuitBreakerRegistry(EventConsumerRegistry<CircuitBreakerEvent> eventConsumerRegistry,
-                                                         MetricsPublisher<CircuitBreaker> circuitBreakerMetricsPublisher) {
+                                                         RegistryEventConsumer<CircuitBreaker> circuitBreakerRegistryEventConsumer) {
         CircuitBreakerRegistry circuitBreakerRegistry =
-                circuitBreakerConfiguration.createCircuitBreakerRegistry(circuitBreakerProperties, circuitBreakerMetricsPublisher);
+                circuitBreakerConfiguration.createCircuitBreakerRegistry(circuitBreakerProperties, circuitBreakerRegistryEventConsumer);
 
         // Register the event consumers
         circuitBreakerConfiguration.registerEventConsumer(circuitBreakerRegistry, eventConsumerRegistry);

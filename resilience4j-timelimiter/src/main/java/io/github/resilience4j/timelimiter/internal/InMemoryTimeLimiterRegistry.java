@@ -19,14 +19,15 @@
 package io.github.resilience4j.timelimiter.internal;
 
 import io.github.resilience4j.core.ConfigurationNotFoundException;
-import io.github.resilience4j.core.metrics.MetricsPublisher;
 import io.github.resilience4j.core.registry.AbstractRegistry;
+import io.github.resilience4j.core.registry.RegistryEventConsumer;
 import io.github.resilience4j.timelimiter.TimeLimiter;
 import io.github.resilience4j.timelimiter.TimeLimiterConfig;
 import io.github.resilience4j.timelimiter.TimeLimiterRegistry;
 import io.vavr.collection.Array;
 import io.vavr.collection.Seq;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Supplier;
@@ -49,8 +50,13 @@ public class InMemoryTimeLimiterRegistry extends AbstractRegistry<TimeLimiter, T
         this.configurations.putAll(configs);
     }
 
-    public InMemoryTimeLimiterRegistry(Map<String, TimeLimiterConfig> configs, MetricsPublisher<TimeLimiter> metricsPublisher) {
-        this(configs.getOrDefault(DEFAULT_CONFIG, TimeLimiterConfig.ofDefaults()), metricsPublisher);
+    public InMemoryTimeLimiterRegistry(Map<String, TimeLimiterConfig> configs, RegistryEventConsumer<TimeLimiter> registryEventConsumer) {
+        this(configs.getOrDefault(DEFAULT_CONFIG, TimeLimiterConfig.ofDefaults()), registryEventConsumer);
+        this.configurations.putAll(configs);
+    }
+
+    public InMemoryTimeLimiterRegistry(Map<String, TimeLimiterConfig> configs, List<RegistryEventConsumer<TimeLimiter>> registryEventConsumers) {
+        this(configs.getOrDefault(DEFAULT_CONFIG, TimeLimiterConfig.ofDefaults()), registryEventConsumers);
         this.configurations.putAll(configs);
     }
 
@@ -63,8 +69,12 @@ public class InMemoryTimeLimiterRegistry extends AbstractRegistry<TimeLimiter, T
         super(defaultConfig);
     }
 
-    public InMemoryTimeLimiterRegistry(TimeLimiterConfig defaultConfig, MetricsPublisher<TimeLimiter> metricsPublisher) {
-        super(defaultConfig, metricsPublisher);
+    public InMemoryTimeLimiterRegistry(TimeLimiterConfig defaultConfig, RegistryEventConsumer<TimeLimiter> registryEventConsumer) {
+        super(defaultConfig, registryEventConsumer);
+    }
+
+    public InMemoryTimeLimiterRegistry(TimeLimiterConfig defaultConfig, List<RegistryEventConsumer<TimeLimiter>> registryEventConsumers) {
+        super(defaultConfig, registryEventConsumers);
     }
 
     /**

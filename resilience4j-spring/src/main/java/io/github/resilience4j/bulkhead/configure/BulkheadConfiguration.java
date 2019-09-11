@@ -23,8 +23,8 @@ import io.github.resilience4j.bulkhead.configure.threadpool.ThreadPoolBulkheadCo
 import io.github.resilience4j.bulkhead.event.BulkheadEvent;
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
-import io.github.resilience4j.core.metrics.CompositeMetricsPublisher;
-import io.github.resilience4j.core.metrics.MetricsPublisher;
+import io.github.resilience4j.core.registry.CompositeRegistryEventConsumer;
+import io.github.resilience4j.core.registry.RegistryEventConsumer;
 import io.github.resilience4j.fallback.FallbackDecorators;
 import io.github.resilience4j.fallback.configure.FallbackConfiguration;
 import io.github.resilience4j.utils.AspectJOnClasspathCondition;
@@ -55,8 +55,8 @@ public class BulkheadConfiguration {
 	@Bean
 	public BulkheadRegistry bulkheadRegistry(BulkheadConfigurationProperties bulkheadConfigurationProperties,
 	                                         EventConsumerRegistry<BulkheadEvent> bulkheadEventConsumerRegistry,
-											 MetricsPublisher<Bulkhead> bulkheadMetricsPublisher) {
-		BulkheadRegistry bulkheadRegistry = createBulkheadRegistry(bulkheadConfigurationProperties, bulkheadMetricsPublisher);
+											 RegistryEventConsumer<Bulkhead> bulkheadRegistryEventConsumer) {
+		BulkheadRegistry bulkheadRegistry = createBulkheadRegistry(bulkheadConfigurationProperties, bulkheadRegistryEventConsumer);
 		registerEventConsumer(bulkheadRegistry, bulkheadEventConsumerRegistry, bulkheadConfigurationProperties);
 		bulkheadConfigurationProperties.getInstances().forEach((name, properties) -> bulkheadRegistry.bulkhead(name, bulkheadConfigurationProperties.createBulkheadConfig(properties)));
 		return bulkheadRegistry;
@@ -64,8 +64,8 @@ public class BulkheadConfiguration {
 
 	@Bean
 	@Primary
-	public MetricsPublisher<Bulkhead> bulkheadMetricsPublisher(Optional<List<MetricsPublisher<Bulkhead>>> optionalMetricsPublishers) {
-		return new CompositeMetricsPublisher<>(optionalMetricsPublishers.orElseGet(ArrayList::new));
+	public RegistryEventConsumer<Bulkhead> bulkheadRegistryEventConsumer(Optional<List<RegistryEventConsumer<Bulkhead>>> optionalRegistryEventConsumers) {
+		return new CompositeRegistryEventConsumer<>(optionalRegistryEventConsumers.orElseGet(ArrayList::new));
 	}
 
 	/**
@@ -75,12 +75,12 @@ public class BulkheadConfiguration {
 	 * @return a BulkheadRegistry
 	 */
 	private BulkheadRegistry createBulkheadRegistry(BulkheadConfigurationProperties bulkheadConfigurationProperties,
-													MetricsPublisher<Bulkhead> bulkheadMetricsPublisher) {
+													RegistryEventConsumer<Bulkhead> bulkheadRegistryEventConsumer) {
 		Map<String, BulkheadConfig> configs = bulkheadConfigurationProperties.getConfigs()
 				.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey,
 						entry -> bulkheadConfigurationProperties.createBulkheadConfig(entry.getValue())));
 
-		return BulkheadRegistry.of(configs, bulkheadMetricsPublisher);
+		return BulkheadRegistry.of(configs, bulkheadRegistryEventConsumer);
 	}
 
 	/**

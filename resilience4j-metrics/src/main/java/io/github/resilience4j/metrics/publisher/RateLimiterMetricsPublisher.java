@@ -46,21 +46,22 @@ public class RateLimiterMetricsPublisher extends AbstractMetricsPublisher<RateLi
     }
 
     @Override
-    public void publishMetrics(RateLimiter entry) {
-        String name = entry.getName();
+    public void publishMetrics(RateLimiter rateLimiter) {
+        String name = rateLimiter.getName();
 
         String waitingThreads = name(prefix, name, WAITING_THREADS);
         String availablePermissions = name(prefix, name, AVAILABLE_PERMISSIONS);
 
-        metricRegistry.register(waitingThreads, (Gauge<Integer>) entry.getMetrics()::getNumberOfWaitingThreads);
-        metricRegistry.register(availablePermissions, (Gauge<Integer>) entry.getMetrics()::getAvailablePermissions);
+        metricRegistry.register(waitingThreads, (Gauge<Integer>) rateLimiter.getMetrics()::getNumberOfWaitingThreads);
+        metricRegistry.register(availablePermissions, (Gauge<Integer>) rateLimiter.getMetrics()::getAvailablePermissions);
 
         List<String> metricNames = Arrays.asList(waitingThreads, availablePermissions);
         metricsNameMap.put(name, new HashSet<>(metricNames));
     }
 
     @Override
-    public void removeMetrics(RateLimiter entry) {
-        removeMetrics(entry.getName());
+    public void removeMetrics(RateLimiter rateLimiter) {
+        removeMetrics(rateLimiter.getName());
     }
+
 }

@@ -17,8 +17,8 @@ package io.github.resilience4j.retry.configure;
 
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
-import io.github.resilience4j.core.metrics.CompositeMetricsPublisher;
-import io.github.resilience4j.core.metrics.MetricsPublisher;
+import io.github.resilience4j.core.registry.CompositeRegistryEventConsumer;
+import io.github.resilience4j.core.registry.RegistryEventConsumer;
 import io.github.resilience4j.fallback.FallbackDecorators;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryConfig;
@@ -54,8 +54,8 @@ public class RetryConfiguration {
 	@Bean
 	public RetryRegistry retryRegistry(RetryConfigurationProperties retryConfigurationProperties,
 									   EventConsumerRegistry<RetryEvent> retryEventConsumerRegistry,
-									   MetricsPublisher<Retry> retryMetricsPublisher) {
-		RetryRegistry retryRegistry = createRetryRegistry(retryConfigurationProperties, retryMetricsPublisher);
+									   RegistryEventConsumer<Retry> retryRegistryEventConsumer) {
+		RetryRegistry retryRegistry = createRetryRegistry(retryConfigurationProperties, retryRegistryEventConsumer);
 		registerEventConsumer(retryRegistry, retryEventConsumerRegistry, retryConfigurationProperties);
 		retryConfigurationProperties.getInstances().forEach((name, properties) -> retryRegistry.retry(name, retryConfigurationProperties.createRetryConfig(name)));
 		return retryRegistry;
@@ -63,8 +63,8 @@ public class RetryConfiguration {
 
 	@Bean
 	@Primary
-	public MetricsPublisher<Retry> retryMetricsPublisher(Optional<List<MetricsPublisher<Retry>>> optionalMetricsPublishers) {
-		return new CompositeMetricsPublisher<>(optionalMetricsPublishers.orElseGet(ArrayList::new));
+	public RegistryEventConsumer<Retry> retryRegistryEventConsumer(Optional<List<RegistryEventConsumer<Retry>>> optionalRegistryEventConsumers) {
+		return new CompositeRegistryEventConsumer<>(optionalRegistryEventConsumers.orElseGet(ArrayList::new));
 	}
 
 	/**
@@ -74,12 +74,12 @@ public class RetryConfiguration {
 	 * @return a RetryRegistry
 	 */
 	private RetryRegistry createRetryRegistry(RetryConfigurationProperties retryConfigurationProperties,
-											  MetricsPublisher<Retry> retryMetricsPublisher) {
+											  RegistryEventConsumer<Retry> retryRegistryEventConsumer) {
 		Map<String, RetryConfig> configs = retryConfigurationProperties.getConfigs()
 				.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey,
 						entry -> retryConfigurationProperties.createRetryConfig(entry.getValue())));
 
-		return RetryRegistry.of(configs, retryMetricsPublisher);
+		return RetryRegistry.of(configs, retryRegistryEventConsumer);
 	}
 
 	/**

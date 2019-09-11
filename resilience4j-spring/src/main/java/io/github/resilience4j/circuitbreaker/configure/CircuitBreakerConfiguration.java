@@ -21,8 +21,8 @@ import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent;
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
-import io.github.resilience4j.core.metrics.CompositeMetricsPublisher;
-import io.github.resilience4j.core.metrics.MetricsPublisher;
+import io.github.resilience4j.core.registry.CompositeRegistryEventConsumer;
+import io.github.resilience4j.core.registry.RegistryEventConsumer;
 import io.github.resilience4j.fallback.FallbackDecorators;
 import io.github.resilience4j.utils.AspectJOnClasspathCondition;
 import io.github.resilience4j.utils.ReactorOnClasspathCondition;
@@ -54,8 +54,8 @@ public class CircuitBreakerConfiguration {
 
 	@Bean
 	public CircuitBreakerRegistry circuitBreakerRegistry(EventConsumerRegistry<CircuitBreakerEvent> eventConsumerRegistry,
-														 MetricsPublisher<CircuitBreaker> circuitBreakerMetricsPublisher) {
-        CircuitBreakerRegistry circuitBreakerRegistry = createCircuitBreakerRegistry(circuitBreakerProperties, circuitBreakerMetricsPublisher);
+														 RegistryEventConsumer<CircuitBreaker> circuitBreakerRegistryEventConsumer) {
+        CircuitBreakerRegistry circuitBreakerRegistry = createCircuitBreakerRegistry(circuitBreakerProperties, circuitBreakerRegistryEventConsumer);
 		registerEventConsumer(circuitBreakerRegistry, eventConsumerRegistry);
 		initCircuitBreakerRegistry(circuitBreakerRegistry);
 		return circuitBreakerRegistry;
@@ -63,8 +63,9 @@ public class CircuitBreakerConfiguration {
 
 	@Bean
 	@Primary
-	public MetricsPublisher<CircuitBreaker> circuitBreakerMetricsPublisher(Optional<List<MetricsPublisher<CircuitBreaker>>> optionalMetricsPublishers) {
-		return new CompositeMetricsPublisher<>(optionalMetricsPublishers.orElseGet(ArrayList::new));
+	public RegistryEventConsumer<CircuitBreaker> circuitBreakerRegistryEventConsumer(
+			Optional<List<RegistryEventConsumer<CircuitBreaker>>> optionalRegistryEventConsumers) {
+		return new CompositeRegistryEventConsumer<>(optionalRegistryEventConsumers.orElseGet(ArrayList::new));
 	}
 
 	@Bean
@@ -108,13 +109,13 @@ public class CircuitBreakerConfiguration {
 	 * @return a CircuitBreakerRegistry
 	 */
 	public CircuitBreakerRegistry createCircuitBreakerRegistry(CircuitBreakerConfigurationProperties circuitBreakerProperties,
-															   MetricsPublisher<CircuitBreaker> circuitBreakerMetricsPublisher) {
+															   RegistryEventConsumer<CircuitBreaker> circuitBreakerRegistryEventConsumer) {
 
 		Map<String, CircuitBreakerConfig> configs = circuitBreakerProperties.getConfigs()
 				.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey,
 						entry -> circuitBreakerProperties.createCircuitBreakerConfig(entry.getValue())));
 
-		return CircuitBreakerRegistry.of(configs, circuitBreakerMetricsPublisher);
+		return CircuitBreakerRegistry.of(configs, circuitBreakerRegistryEventConsumer);
 	}
 
 	/**

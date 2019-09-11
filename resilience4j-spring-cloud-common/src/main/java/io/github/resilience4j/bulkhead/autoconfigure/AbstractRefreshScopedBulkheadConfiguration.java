@@ -10,15 +10,11 @@ import io.github.resilience4j.bulkhead.configure.threadpool.ThreadPoolBulkheadCo
 import io.github.resilience4j.bulkhead.event.BulkheadEvent;
 import io.github.resilience4j.common.bulkhead.configuration.ThreadPoolBulkheadConfigurationProperties;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
-import io.github.resilience4j.core.metrics.MetricsPublisher;
+import io.github.resilience4j.core.registry.RegistryEventConsumer;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
 
 @Configuration
 public abstract class AbstractRefreshScopedBulkheadConfiguration {
@@ -41,8 +37,8 @@ public abstract class AbstractRefreshScopedBulkheadConfiguration {
     @ConditionalOnMissingBean
     public BulkheadRegistry bulkheadRegistry(BulkheadConfigurationProperties bulkheadConfigurationProperties,
                                              EventConsumerRegistry<BulkheadEvent> bulkheadEventConsumerRegistry,
-                                             MetricsPublisher<Bulkhead> bulkheadMetricsPublisher) {
-        return bulkheadConfiguration.bulkheadRegistry(bulkheadConfigurationProperties, bulkheadEventConsumerRegistry, bulkheadMetricsPublisher);
+                                             RegistryEventConsumer<Bulkhead> bulkheadRegistryEventConsumer) {
+        return bulkheadConfiguration.bulkheadRegistry(bulkheadConfigurationProperties, bulkheadEventConsumerRegistry, bulkheadRegistryEventConsumer);
     }
 
     /**
@@ -55,10 +51,10 @@ public abstract class AbstractRefreshScopedBulkheadConfiguration {
     @ConditionalOnMissingBean
     public ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry(ThreadPoolBulkheadConfigurationProperties threadPoolBulkheadConfigurationProperties,
                                                                  EventConsumerRegistry<BulkheadEvent> bulkheadEventConsumerRegistry,
-                                                                 MetricsPublisher<ThreadPoolBulkhead> threadPoolBulkheadMetricsPublisher) {
+                                                                 RegistryEventConsumer<ThreadPoolBulkhead> threadPoolBulkheadRegistryEventConsumer) {
 
         return threadPoolBulkheadConfiguration.threadPoolBulkheadRegistry(
-                threadPoolBulkheadConfigurationProperties, bulkheadEventConsumerRegistry, threadPoolBulkheadMetricsPublisher);
+                threadPoolBulkheadConfigurationProperties, bulkheadEventConsumerRegistry, threadPoolBulkheadRegistryEventConsumer);
     }
 
 }

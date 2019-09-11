@@ -46,8 +46,8 @@ public class CircuitBreakerMetricsPublisher extends AbstractMetricsPublisher<Cir
     }
 
     @Override
-    public void publishMetrics(CircuitBreaker entry) {
-        String name = entry.getName();
+    public void publishMetrics(CircuitBreaker circuitBreaker) {
+        String name = circuitBreaker.getName();
 
         //state as an integer
         String state = name(prefix, name, STATE);
@@ -57,19 +57,19 @@ public class CircuitBreakerMetricsPublisher extends AbstractMetricsPublisher<Cir
         String numberOfBufferedCalls = name(prefix, name, BUFFERED);
         String failureRate = name(prefix, name, FAILURE_RATE);
 
-        metricRegistry.register(state, (Gauge<Integer>)()-> entry.getState().getOrder());
-        metricRegistry.register(successful, (Gauge<Integer>) () -> entry.getMetrics().getNumberOfSuccessfulCalls());
-        metricRegistry.register(failed, (Gauge<Integer>) () -> entry.getMetrics().getNumberOfFailedCalls());
-        metricRegistry.register(notPermitted, (Gauge<Long>) () -> entry.getMetrics().getNumberOfNotPermittedCalls());
-        metricRegistry.register(numberOfBufferedCalls, (Gauge<Integer>) () -> entry.getMetrics().getNumberOfBufferedCalls());
-        metricRegistry.register(failureRate, (Gauge<Float>) () -> entry.getMetrics().getFailureRate());
+        metricRegistry.register(state, (Gauge<Integer>)()-> circuitBreaker.getState().getOrder());
+        metricRegistry.register(successful, (Gauge<Integer>) () -> circuitBreaker.getMetrics().getNumberOfSuccessfulCalls());
+        metricRegistry.register(failed, (Gauge<Integer>) () -> circuitBreaker.getMetrics().getNumberOfFailedCalls());
+        metricRegistry.register(notPermitted, (Gauge<Long>) () -> circuitBreaker.getMetrics().getNumberOfNotPermittedCalls());
+        metricRegistry.register(numberOfBufferedCalls, (Gauge<Integer>) () -> circuitBreaker.getMetrics().getNumberOfBufferedCalls());
+        metricRegistry.register(failureRate, (Gauge<Float>) () -> circuitBreaker.getMetrics().getFailureRate());
 
         List<String> metricNames = Arrays.asList(state, successful, failed, notPermitted, numberOfBufferedCalls, failureRate);
         metricsNameMap.put(name, new HashSet<>(metricNames));
     }
 
     @Override
-    public void removeMetrics(CircuitBreaker entry) {
-        removeMetrics(entry.getName());
+    public void removeMetrics(CircuitBreaker circuitBreaker) {
+        removeMetrics(circuitBreaker.getName());
     }
 }

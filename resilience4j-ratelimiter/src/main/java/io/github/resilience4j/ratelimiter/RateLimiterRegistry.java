@@ -20,6 +20,7 @@ package io.github.resilience4j.ratelimiter;
 
 import io.github.resilience4j.core.Registry;
 import io.github.resilience4j.core.metrics.MetricsPublisher;
+import io.github.resilience4j.core.registry.RegistryEventConsumer;
 import io.github.resilience4j.ratelimiter.internal.InMemoryRateLimiterRegistry;
 import io.vavr.collection.Seq;
 
@@ -84,8 +85,12 @@ public interface RateLimiterRegistry extends Registry<RateLimiter, RateLimiterCo
         return new InMemoryRateLimiterRegistry(defaultRateLimiterConfig);
     }
 
-    static RateLimiterRegistry of(RateLimiterConfig defaultRateLimiterConfig, MetricsPublisher<RateLimiter> metricsPublisher) {
-        return new InMemoryRateLimiterRegistry(defaultRateLimiterConfig, metricsPublisher);
+    static RateLimiterRegistry of(RateLimiterConfig defaultRateLimiterConfig, RegistryEventConsumer<RateLimiter> registryEventConsumer) {
+        return new InMemoryRateLimiterRegistry(defaultRateLimiterConfig, registryEventConsumer);
+    }
+
+    static RateLimiterRegistry of(RateLimiterConfig defaultRateLimiterConfig, List<RegistryEventConsumer<RateLimiter>> registryEventConsumers) {
+        return new InMemoryRateLimiterRegistry(defaultRateLimiterConfig, registryEventConsumers);
     }
 
     /**
@@ -107,7 +112,12 @@ public interface RateLimiterRegistry extends Registry<RateLimiter, RateLimiterCo
         return new InMemoryRateLimiterRegistry(configs);
     }
 
-    static RateLimiterRegistry of(Map<String, RateLimiterConfig> configs, MetricsPublisher<RateLimiter> metricsPublisher) {
-        return new InMemoryRateLimiterRegistry(configs, metricsPublisher);
+    static RateLimiterRegistry of(Map<String, RateLimiterConfig> configs, RegistryEventConsumer<RateLimiter> registryEventConsumer) {
+        return new InMemoryRateLimiterRegistry(configs, registryEventConsumer);
     }
+
+    static RateLimiterRegistry of(Map<String, RateLimiterConfig> configs, List<RegistryEventConsumer<RateLimiter>> registryEventConsumers) {
+        return new InMemoryRateLimiterRegistry(configs, registryEventConsumers);
+    }
+
 }

@@ -16,8 +16,7 @@
 package io.github.resilience4j.retry.autoconfigure;
 
 import io.github.resilience4j.consumer.EventConsumerRegistry;
-import io.github.resilience4j.core.metrics.CompositeMetricsPublisher;
-import io.github.resilience4j.core.metrics.MetricsPublisher;
+import io.github.resilience4j.core.registry.RegistryEventConsumer;
 import io.github.resilience4j.fallback.FallbackDecorators;
 import io.github.resilience4j.fallback.autoconfigure.FallbackConfigurationOnMissingBean;
 import io.github.resilience4j.retry.Retry;
@@ -31,7 +30,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.*;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -58,14 +56,14 @@ public abstract class AbstractRetryConfigurationOnMissingBean {
 	@ConditionalOnMissingBean
 	public RetryRegistry retryRegistry(RetryConfigurationProperties retryConfigurationProperties,
 									   EventConsumerRegistry<RetryEvent> retryEventConsumerRegistry,
-									   MetricsPublisher<Retry> retryMetricsPublisher) {
-		return retryConfiguration.retryRegistry(retryConfigurationProperties, retryEventConsumerRegistry, retryMetricsPublisher);
+									   RegistryEventConsumer<Retry> retryRegistryEventConsumer) {
+		return retryConfiguration.retryRegistry(retryConfigurationProperties, retryEventConsumerRegistry, retryRegistryEventConsumer);
 	}
 
 	@Bean
 	@Primary
-	public MetricsPublisher<Retry> retryMetricsPublisher(Optional<List<MetricsPublisher<Retry>>> optionalMetricsPublishers) {
-		return retryConfiguration.retryMetricsPublisher(optionalMetricsPublishers);
+	public RegistryEventConsumer<Retry> retryRegistryEventConsumer(Optional<List<RegistryEventConsumer<Retry>>> optionalRegistryEventConsumers) {
+		return retryConfiguration.retryRegistryEventConsumer(optionalRegistryEventConsumers);
 	}
 
 	/**

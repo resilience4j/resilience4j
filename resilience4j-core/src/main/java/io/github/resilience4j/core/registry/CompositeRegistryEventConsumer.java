@@ -14,37 +14,34 @@
  * limitations under the License.
  */
 
-package io.github.resilience4j.core.metrics;
+package io.github.resilience4j.core.registry;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import static java.util.Objects.requireNonNull;
 
-public class CompositeMetricsPublisher<E> implements MetricsPublisher<E> {
+public class CompositeRegistryEventConsumer<E> implements RegistryEventConsumer<E> {
 
-    private final List<MetricsPublisher<E>> delegates;
+    private final List<RegistryEventConsumer<E>> delegates;
 
-    public CompositeMetricsPublisher() {
-        this.delegates = new ArrayList<>();
-    }
-
-    public CompositeMetricsPublisher(List<MetricsPublisher<E>> delegates) {
+    public CompositeRegistryEventConsumer(List<RegistryEventConsumer<E>> delegates) {
         this.delegates = new ArrayList<>(requireNonNull(delegates));
     }
 
-    public void addMetricsPublisher(MetricsPublisher<E> metricsPublisher) {
-        delegates.add(requireNonNull(metricsPublisher));
+    @Override
+    public void onEntryAddedEvent(EntryAddedEvent<E> entryAddedEvent) {
+        delegates.forEach(consumer -> consumer.onEntryAddedEvent(entryAddedEvent));
     }
 
     @Override
-    public void publishMetrics(E entry) {
-        delegates.forEach(publisher -> publisher.publishMetrics(entry));
+    public void onEntryRemovedEvent(EntryRemovedEvent<E> entryRemoveEvent) {
+        delegates.forEach(consumer -> consumer.onEntryRemovedEvent(entryRemoveEvent));
     }
 
     @Override
-    public void removeMetrics(E entry) {
-        delegates.forEach(publisher -> publisher.removeMetrics(entry));
+    public void onEntryReplacedEvent(EntryReplacedEvent<E> entryReplacedEvent) {
+        delegates.forEach(consumer -> consumer.onEntryReplacedEvent(entryReplacedEvent));
     }
 
 }

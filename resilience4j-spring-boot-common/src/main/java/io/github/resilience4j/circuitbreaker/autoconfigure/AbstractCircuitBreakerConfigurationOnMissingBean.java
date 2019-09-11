@@ -20,7 +20,7 @@ import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.circuitbreaker.configure.*;
 import io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
-import io.github.resilience4j.core.metrics.MetricsPublisher;
+import io.github.resilience4j.core.registry.RegistryEventConsumer;
 import io.github.resilience4j.fallback.FallbackDecorators;
 import io.github.resilience4j.fallback.autoconfigure.FallbackConfigurationOnMissingBean;
 import io.github.resilience4j.utils.AspectJOnClasspathCondition;
@@ -48,9 +48,9 @@ public abstract class AbstractCircuitBreakerConfigurationOnMissingBean {
 	@Bean
 	@ConditionalOnMissingBean
 	public CircuitBreakerRegistry circuitBreakerRegistry(EventConsumerRegistry<CircuitBreakerEvent> eventConsumerRegistry,
-														 MetricsPublisher<CircuitBreaker> circuitBreakerMetricsPublisher) {
+														 RegistryEventConsumer<CircuitBreaker> circuitBreakerRegistryEventConsumer) {
 		CircuitBreakerRegistry circuitBreakerRegistry =
-				circuitBreakerConfiguration.createCircuitBreakerRegistry(circuitBreakerProperties, circuitBreakerMetricsPublisher);
+				circuitBreakerConfiguration.createCircuitBreakerRegistry(circuitBreakerProperties, circuitBreakerRegistryEventConsumer);
 
 		// Register the event consumers
 		circuitBreakerConfiguration.registerEventConsumer(circuitBreakerRegistry, eventConsumerRegistry);
@@ -63,8 +63,8 @@ public abstract class AbstractCircuitBreakerConfigurationOnMissingBean {
 
 	@Bean
 	@Primary
-	public MetricsPublisher<CircuitBreaker> circuitBreakerMetricsPublisher(Optional<List<MetricsPublisher<CircuitBreaker>>> optionalMetricsPublishers) {
-		return circuitBreakerConfiguration.circuitBreakerMetricsPublisher(optionalMetricsPublishers);
+	public RegistryEventConsumer<CircuitBreaker> circuitBreakerRegistryEventConsumer(Optional<List<RegistryEventConsumer<CircuitBreaker>>> optionalRegistryEventConsumers) {
+		return circuitBreakerConfiguration.circuitBreakerRegistryEventConsumer(optionalRegistryEventConsumers);
 	}
 
 	@Bean

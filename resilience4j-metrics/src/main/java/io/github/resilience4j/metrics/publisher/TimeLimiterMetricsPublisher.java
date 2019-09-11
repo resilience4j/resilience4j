@@ -47,9 +47,9 @@ public class TimeLimiterMetricsPublisher extends AbstractMetricsPublisher<TimeLi
     }
 
     @Override
-    public void publishMetrics(TimeLimiter entry) {
+    public void publishMetrics(TimeLimiter timeLimiter) {
 
-        String name = entry.getName();
+        String name = timeLimiter.getName();
         String successfulName = name(prefix, name, SUCCESSFUL);
         String failedName = name(prefix, name, FAILED);
         String timeoutName = name(prefix, name, TIMEOUT);
@@ -58,16 +58,16 @@ public class TimeLimiterMetricsPublisher extends AbstractMetricsPublisher<TimeLi
         Counter failures = metricRegistry.counter(failedName);
         Counter timeouts = metricRegistry.counter(timeoutName);
 
-        entry.getEventPublisher().onSuccess(event -> successes.inc());
-        entry.getEventPublisher().onError(event -> failures.inc());
-        entry.getEventPublisher().onTimeout(event -> timeouts.inc());
+        timeLimiter.getEventPublisher().onSuccess(event -> successes.inc());
+        timeLimiter.getEventPublisher().onError(event -> failures.inc());
+        timeLimiter.getEventPublisher().onTimeout(event -> timeouts.inc());
 
         List<String> metricNames = Arrays.asList(successfulName, failedName, timeoutName);
         metricsNameMap.put(name, new HashSet<>(metricNames));
     }
 
     @Override
-    public void removeMetrics(TimeLimiter entry) {
-        removeMetrics(entry.getName());
+    public void removeMetrics(TimeLimiter timeLimiter) {
+        removeMetrics(timeLimiter.getName());
     }
 }

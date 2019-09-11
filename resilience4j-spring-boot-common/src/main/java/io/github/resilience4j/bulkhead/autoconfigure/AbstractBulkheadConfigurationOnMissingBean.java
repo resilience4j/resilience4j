@@ -24,7 +24,7 @@ import io.github.resilience4j.bulkhead.configure.threadpool.ThreadPoolBulkheadCo
 import io.github.resilience4j.bulkhead.event.BulkheadEvent;
 import io.github.resilience4j.common.bulkhead.configuration.ThreadPoolBulkheadConfigurationProperties;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
-import io.github.resilience4j.core.metrics.MetricsPublisher;
+import io.github.resilience4j.core.registry.RegistryEventConsumer;
 import io.github.resilience4j.fallback.FallbackDecorators;
 import io.github.resilience4j.fallback.autoconfigure.FallbackConfigurationOnMissingBean;
 import io.github.resilience4j.utils.AspectJOnClasspathCondition;
@@ -57,14 +57,14 @@ public abstract class AbstractBulkheadConfigurationOnMissingBean {
 	@ConditionalOnMissingBean
 	public BulkheadRegistry bulkheadRegistry(BulkheadConfigurationProperties bulkheadConfigurationProperties,
 											 EventConsumerRegistry<BulkheadEvent> bulkheadEventConsumerRegistry,
-											 MetricsPublisher<Bulkhead> bulkheadMetricsPublisher) {
-		return bulkheadConfiguration.bulkheadRegistry(bulkheadConfigurationProperties, bulkheadEventConsumerRegistry, bulkheadMetricsPublisher);
+											 RegistryEventConsumer<Bulkhead> bulkheadRegistryEventConsumer) {
+		return bulkheadConfiguration.bulkheadRegistry(bulkheadConfigurationProperties, bulkheadEventConsumerRegistry, bulkheadRegistryEventConsumer);
 	}
 
 	@Bean
 	@Primary
-	public MetricsPublisher<Bulkhead> bulkheadMetricsPublisher(Optional<List<MetricsPublisher<Bulkhead>>> optionalMetricsPublishers) {
-		return bulkheadConfiguration.bulkheadMetricsPublisher(optionalMetricsPublishers);
+	public RegistryEventConsumer<Bulkhead> bulkheadRegistryEventConsumer(Optional<List<RegistryEventConsumer<Bulkhead>>> optionalRegistryEventConsumers) {
+		return bulkheadConfiguration.bulkheadRegistryEventConsumer(optionalRegistryEventConsumers);
 	}
 
 	@Bean
@@ -95,16 +95,16 @@ public abstract class AbstractBulkheadConfigurationOnMissingBean {
 	@ConditionalOnMissingBean
 	public ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry(ThreadPoolBulkheadConfigurationProperties threadPoolBulkheadConfigurationProperties,
 																 EventConsumerRegistry<BulkheadEvent> bulkheadEventConsumerRegistry,
-																 MetricsPublisher<ThreadPoolBulkhead> threadPoolBulkheadMetricsPublisher) {
+																 RegistryEventConsumer<ThreadPoolBulkhead> threadPoolBulkheadRegistryEventConsumer) {
 
 		return threadPoolBulkheadConfiguration.threadPoolBulkheadRegistry(
-				threadPoolBulkheadConfigurationProperties, bulkheadEventConsumerRegistry, threadPoolBulkheadMetricsPublisher);
+				threadPoolBulkheadConfigurationProperties, bulkheadEventConsumerRegistry, threadPoolBulkheadRegistryEventConsumer);
 	}
 
 	@Bean
 	@Primary
-	public MetricsPublisher<ThreadPoolBulkhead> threadPoolBulkheadMetricsPublisher(Optional<List<MetricsPublisher<ThreadPoolBulkhead>>> optionalMetricsPublishers) {
-		return threadPoolBulkheadConfiguration.threadPoolBulkheadMetricsPublisher(optionalMetricsPublishers);
+	public RegistryEventConsumer<ThreadPoolBulkhead> threadPoolBulkheadRegistryEventConsumer(Optional<List<RegistryEventConsumer<ThreadPoolBulkhead>>> optionalRegistryEventConsumers) {
+		return threadPoolBulkheadConfiguration.threadPoolBulkheadRegistryEventConsumer(optionalRegistryEventConsumers);
 	}
 
 }

@@ -21,11 +21,8 @@ package io.github.resilience4j.core.registry;
 import io.github.resilience4j.core.EventConsumer;
 import io.github.resilience4j.core.EventProcessor;
 import io.github.resilience4j.core.Registry;
-import io.github.resilience4j.core.metrics.CompositeMetricsPublisher;
-import io.github.resilience4j.core.metrics.MetricsPublisher;
 
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.function.Supplier;
@@ -37,34 +34,34 @@ public class AbstractRegistry<E, C> implements Registry<E, C> {
 	protected static final String DEFAULT_CONFIG = "default";
 	private static final String NAME_MUST_NOT_BE_NULL = "Name must not be null";
 	protected static final String CONFIG_MUST_NOT_BE_NULL = "Config must not be null";
-	protected static final String PUBLISHER_MUST_NOT_BE_NULL = "Publisher List must not be null";
+	protected static final String CONSUMER_MUST_NOT_BE_NULL = "EventConsumers must not be null";
 	protected static final String SUPPLIER_MUST_NOT_BE_NULL = "Supplier must not be null";
 
 	protected final ConcurrentMap<String, E> entryMap;
 
 	protected final ConcurrentMap<String, C> configurations;
 
-	protected final MetricsPublisher<E> metricsPublisher;
-
 	private final RegistryEventProcessor eventProcessor;
 
 	public AbstractRegistry(C defaultConfig) {
-		this(defaultConfig, new CompositeMetricsPublisher<>());
+		this(defaultConfig, new ArrayList<>());
 	}
 
-	public AbstractRegistry(C defaultConfig, MetricsPublisher<E> metricsPublisher) {
+	public AbstractRegistry(C defaultConfig, RegistryEventConsumer<E> registryEventConsumer) {
+		this(defaultConfig, Collections.singletonList(Objects.requireNonNull(registryEventConsumer, CONSUMER_MUST_NOT_BE_NULL)));
+	}
+
+	public AbstractRegistry(C defaultConfig, List<RegistryEventConsumer<E>> registryEventConsumers) {
 		this.configurations = new ConcurrentHashMap<>();
 		this.entryMap = new ConcurrentHashMap<>();
-		this.eventProcessor = new RegistryEventProcessor();
+		this.eventProcessor = new RegistryEventProcessor(Objects.requireNonNull(registryEventConsumers, CONSUMER_MUST_NOT_BE_NULL));
 		this.configurations.put(DEFAULT_CONFIG, Objects.requireNonNull(defaultConfig, CONFIG_MUST_NOT_BE_NULL));
-		this.metricsPublisher = Objects.requireNonNull(metricsPublisher, PUBLISHER_MUST_NOT_BE_NULL);
 	}
 
 	protected E computeIfAbsent(String name, Supplier<E> supplier){
 		return entryMap.computeIfAbsent(Objects.requireNonNull(name, NAME_MUST_NOT_BE_NULL), k -> {
 			E entry = supplier.get();
 			eventProcessor.processEvent(new EntryAddedEvent<>(entry));
-			metricsPublisher.publishMetrics(entry);
 			return entry;
 		});
 	}
@@ -77,22 +74,14 @@ public class AbstractRegistry<E, C> implements Registry<E, C> {
 	@Override
 	public Optional<E> remove(String name){
 		Optional<E> removedEntry = Optional.ofNullable(entryMap.remove(name));
-		removedEntry.ifPresent(entry -> {
-			eventProcessor.processEvent(new EntryRemovedEvent<>(entry));
-			metricsPublisher.removeMetrics(entry);
-		});
-
+		removedEntry.ifPresent(entry -> eventProcessor.processEvent(new EntryRemovedEvent<>(entry)));
 		return removedEntry;
 	}
 
 	@Override
 	public Optional<E> replace(String name, E newEntry){
 		Optional<E> replacedEntry = Optional.ofNullable(entryMap.replace(name, newEntry));
-		replacedEntry.ifPresent(oldEntry -> {
-			eventProcessor.processEvent(new EntryReplacedEvent<>(oldEntry, newEntry));
-			metricsPublisher.removeMetrics(oldEntry);
-			metricsPublisher.publishMetrics(newEntry);
-		});
+		replacedEntry.ifPresent(oldEntry -> eventProcessor.processEvent(new EntryReplacedEvent<>(oldEntry, newEntry)));
 		return replacedEntry;
 	}
 
@@ -120,6 +109,16 @@ public class AbstractRegistry<E, C> implements Registry<E, C> {
 	}
 
 	private class RegistryEventProcessor extends EventProcessor<RegistryEvent> implements EventConsumer<RegistryEvent>, EventPublisher<E> {
+
+		private RegistryEventProcessor() { }
+
+		private RegistryEventProcessor(List<RegistryEventConsumer<E>> registryEventConsumers) {
+			registryEventConsumers.forEach(consumer -> {
+				onEntryAdded(consumer::onEntryAddedEvent);
+				onEntryRemoved(consumer::onEntryRemovedEvent);
+				onEntryReplaced(consumer::onEntryReplacedEvent);
+			});
+		}
 
 		@Override
 		public EventPublisher<E> onEntryAdded(EventConsumer<EntryAddedEvent<E>> onSuccessEventConsumer) {

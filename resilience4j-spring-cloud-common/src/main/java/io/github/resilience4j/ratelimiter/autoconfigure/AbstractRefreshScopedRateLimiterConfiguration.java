@@ -1,7 +1,7 @@
 package io.github.resilience4j.ratelimiter.autoconfigure;
 
 import io.github.resilience4j.consumer.EventConsumerRegistry;
-import io.github.resilience4j.core.metrics.MetricsPublisher;
+import io.github.resilience4j.core.registry.RegistryEventConsumer;
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
 import io.github.resilience4j.ratelimiter.configure.RateLimiterConfiguration;
@@ -11,10 +11,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
 
 @Configuration
 public abstract class AbstractRefreshScopedRateLimiterConfiguration {
@@ -35,9 +31,9 @@ public abstract class AbstractRefreshScopedRateLimiterConfiguration {
     @ConditionalOnMissingBean
     public RateLimiterRegistry rateLimiterRegistry(RateLimiterConfigurationProperties rateLimiterProperties,
                                                    EventConsumerRegistry<RateLimiterEvent> rateLimiterEventsConsumerRegistry,
-                                                   MetricsPublisher<RateLimiter> rateLimiterMetricsPublisher) {
+                                                   RegistryEventConsumer<RateLimiter> rateLimiterRegistryEventConsumer) {
         return rateLimiterConfiguration.rateLimiterRegistry(
-                rateLimiterProperties, rateLimiterEventsConsumerRegistry, rateLimiterMetricsPublisher);
+                rateLimiterProperties, rateLimiterEventsConsumerRegistry, rateLimiterRegistryEventConsumer);
     }
 
 }

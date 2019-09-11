@@ -21,9 +21,10 @@ package io.github.resilience4j.bulkhead;
 
 import io.github.resilience4j.bulkhead.internal.InMemoryThreadPoolBulkheadRegistry;
 import io.github.resilience4j.core.Registry;
-import io.github.resilience4j.core.metrics.MetricsPublisher;
+import io.github.resilience4j.core.registry.RegistryEventConsumer;
 import io.vavr.collection.Seq;
 
+import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
 
@@ -42,8 +43,12 @@ public interface ThreadPoolBulkheadRegistry  extends Registry<ThreadPoolBulkhead
 		return new InMemoryThreadPoolBulkheadRegistry(bulkheadConfig);
 	}
 
-	static ThreadPoolBulkheadRegistry of(ThreadPoolBulkheadConfig bulkheadConfig, MetricsPublisher<ThreadPoolBulkhead> metricsPublisher) {
-		return new InMemoryThreadPoolBulkheadRegistry(bulkheadConfig, metricsPublisher);
+	static ThreadPoolBulkheadRegistry of(ThreadPoolBulkheadConfig bulkheadConfig, RegistryEventConsumer<ThreadPoolBulkhead> registryEventConsumer) {
+		return new InMemoryThreadPoolBulkheadRegistry(bulkheadConfig, registryEventConsumer);
+	}
+
+	static ThreadPoolBulkheadRegistry of(ThreadPoolBulkheadConfig bulkheadConfig, List<RegistryEventConsumer<ThreadPoolBulkhead>> registryEventConsumers) {
+		return new InMemoryThreadPoolBulkheadRegistry(bulkheadConfig, registryEventConsumers);
 	}
 
 	/**
@@ -65,8 +70,12 @@ public interface ThreadPoolBulkheadRegistry  extends Registry<ThreadPoolBulkhead
 		return new InMemoryThreadPoolBulkheadRegistry(configs);
 	}
 
-	static ThreadPoolBulkheadRegistry of(Map<String, ThreadPoolBulkheadConfig> configs, MetricsPublisher<ThreadPoolBulkhead> metricsPublisher) {
-		return new InMemoryThreadPoolBulkheadRegistry(configs, metricsPublisher);
+	static ThreadPoolBulkheadRegistry of(Map<String, ThreadPoolBulkheadConfig> configs, RegistryEventConsumer<ThreadPoolBulkhead> registryEventConsumer) {
+		return new InMemoryThreadPoolBulkheadRegistry(configs, registryEventConsumer);
+	}
+
+	static ThreadPoolBulkheadRegistry of(Map<String, ThreadPoolBulkheadConfig> configs, List<RegistryEventConsumer<ThreadPoolBulkhead>> registryEventConsumers) {
+		return new InMemoryThreadPoolBulkheadRegistry(configs, registryEventConsumers);
 	}
 
 	/**

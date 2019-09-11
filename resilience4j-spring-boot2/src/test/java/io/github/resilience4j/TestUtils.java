@@ -18,7 +18,7 @@ public class TestUtils {
 
 				assertThat(methodOnMissing.isAnnotationPresent(Bean.class)).isTrue();
 
-				if (!methodOnMissing.getName().endsWith("MetricsPublisher")) {
+				if (!methodOnMissing.getName().endsWith("RegistryEventConsumer")) {
 					assertThat(methodOnMissing.isAnnotationPresent(ConditionalOnMissingBean.class)).isTrue();
 				}
 

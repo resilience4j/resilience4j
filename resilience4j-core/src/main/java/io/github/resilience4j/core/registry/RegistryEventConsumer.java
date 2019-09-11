@@ -13,9 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-@NonNullApi
-@NonNullFields
-package io.github.resilience4j.circuitbreaker.autoconfigure;
 
-import io.github.resilience4j.core.lang.NonNullApi;
-import io.github.resilience4j.core.lang.NonNullFields;
+package io.github.resilience4j.core.registry;
+
+/**
+ * Registry Event Consumer to be used by AbstractRegistry.RegistryEventProcessor
+ */
+public interface RegistryEventConsumer<E> {
+
+    void onEntryAddedEvent(EntryAddedEvent<E> entryAddedEvent);
+
+    void onEntryRemovedEvent(EntryRemovedEvent<E> entryRemoveEvent);
+
+    void onEntryReplacedEvent(EntryReplacedEvent<E> entryReplacedEvent);
+}

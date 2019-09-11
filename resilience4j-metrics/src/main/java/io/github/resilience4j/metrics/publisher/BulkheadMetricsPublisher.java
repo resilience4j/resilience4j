@@ -46,22 +46,22 @@ public class BulkheadMetricsPublisher extends AbstractMetricsPublisher<Bulkhead>
     }
 
     @Override
-    public void publishMetrics(Bulkhead entry) {
-        String name = entry.getName();
+    public void publishMetrics(Bulkhead bulkhead) {
+        String name = bulkhead.getName();
 
         //number of available concurrent calls as an integer
         String availableConcurrentCalls = name(prefix, name, AVAILABLE_CONCURRENT_CALLS);
         String maxAllowedConcurrentCalls = name(prefix, name, MAX_ALLOWED_CONCURRENT_CALLS);
 
-        metricRegistry.register(availableConcurrentCalls, (Gauge<Integer>) () -> entry.getMetrics().getAvailableConcurrentCalls());
-        metricRegistry.register(maxAllowedConcurrentCalls, (Gauge<Integer>) () -> entry.getMetrics().getMaxAllowedConcurrentCalls());
+        metricRegistry.register(availableConcurrentCalls, (Gauge<Integer>) () -> bulkhead.getMetrics().getAvailableConcurrentCalls());
+        metricRegistry.register(maxAllowedConcurrentCalls, (Gauge<Integer>) () -> bulkhead.getMetrics().getMaxAllowedConcurrentCalls());
 
         List<String> metricNames = Arrays.asList(availableConcurrentCalls, maxAllowedConcurrentCalls);
         metricsNameMap.put(name, new HashSet<>(metricNames));
     }
 
     @Override
-    public void removeMetrics(Bulkhead entry) {
-        removeMetrics(entry.getName());
+    public void removeMetrics(Bulkhead bulkhead) {
+        removeMetrics(bulkhead.getName());
     }
 }
