@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Yevhenii Voievodin
+ * Copyright 2019 Ingyu Hwang
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,19 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.resilience4j.prometheus.collectors;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+package io.github.resilience4j.core.registry;
 
-/** Common constants for metric binder implementations based on tags. */
-public final class LabelNames {
+/**
+ * Registry Event Consumer to be used by AbstractRegistry.RegistryEventProcessor
+ */
+public interface RegistryEventConsumer<E> {
 
-    private LabelNames() {}
+    void onEntryAddedEvent(EntryAddedEvent<E> entryAddedEvent);
 
-    public static final List<String> NAME = Collections.singletonList("name");
-    public static final List<String> NAME_AND_KIND = Arrays.asList("name", "kind");
+    void onEntryRemovedEvent(EntryRemovedEvent<E> entryRemoveEvent);
 
-
+    void onEntryReplacedEvent(EntryReplacedEvent<E> entryReplacedEvent);
 }

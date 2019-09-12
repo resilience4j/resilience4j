@@ -5,10 +5,12 @@ import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent;
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.core.ConfigurationNotFoundException;
+import io.github.resilience4j.core.registry.CompositeRegistryEventConsumer;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.junit.MockitoJUnitRunner;
 
+import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -37,7 +39,7 @@ public class CircuitBreakerConfigurationTest {
 		DefaultEventConsumerRegistry<CircuitBreakerEvent> eventConsumerRegistry = new DefaultEventConsumerRegistry<>();
 
 		//When
-		CircuitBreakerRegistry circuitBreakerRegistry = circuitBreakerConfiguration.circuitBreakerRegistry(eventConsumerRegistry);
+		CircuitBreakerRegistry circuitBreakerRegistry = circuitBreakerConfiguration.circuitBreakerRegistry(eventConsumerRegistry, new CompositeRegistryEventConsumer<>(emptyList()));
 
 		//Then
 		assertThat(circuitBreakerConfigurationProperties.getCircuitBreakerAspectOrder()).isEqualTo(400);
@@ -71,7 +73,7 @@ public class CircuitBreakerConfigurationTest {
 		DefaultEventConsumerRegistry<CircuitBreakerEvent> eventConsumerRegistry = new DefaultEventConsumerRegistry<>();
 
 		//When
-		CircuitBreakerRegistry circuitBreakerRegistry = circuitBreakerConfiguration.circuitBreakerRegistry(eventConsumerRegistry);
+		CircuitBreakerRegistry circuitBreakerRegistry = circuitBreakerConfiguration.circuitBreakerRegistry(eventConsumerRegistry, new CompositeRegistryEventConsumer<>(emptyList()));
 
 		//Then
 		assertThat(circuitBreakerConfigurationProperties.getCircuitBreakerAspectOrder()).isEqualTo(400);
@@ -118,7 +120,7 @@ public class CircuitBreakerConfigurationTest {
 		DefaultEventConsumerRegistry<CircuitBreakerEvent> eventConsumerRegistry = new DefaultEventConsumerRegistry<>();
 
 		//When
-		CircuitBreakerRegistry circuitBreakerRegistry = circuitBreakerConfiguration.circuitBreakerRegistry(eventConsumerRegistry);
+		CircuitBreakerRegistry circuitBreakerRegistry = circuitBreakerConfiguration.circuitBreakerRegistry(eventConsumerRegistry, new CompositeRegistryEventConsumer<>(emptyList()));
 
 		//Then
 		assertThat(circuitBreakerRegistry.getAllCircuitBreakers().size()).isEqualTo(2);
@@ -173,7 +175,7 @@ public class CircuitBreakerConfigurationTest {
         DefaultEventConsumerRegistry<CircuitBreakerEvent> eventConsumerRegistry = new DefaultEventConsumerRegistry<>();
 
         //When
-        CircuitBreakerRegistry circuitBreakerRegistry = circuitBreakerConfiguration.circuitBreakerRegistry(eventConsumerRegistry);
+        CircuitBreakerRegistry circuitBreakerRegistry = circuitBreakerConfiguration.circuitBreakerRegistry(eventConsumerRegistry, new CompositeRegistryEventConsumer<>(emptyList()));
 
         //Then
         assertThat(circuitBreakerRegistry.getAllCircuitBreakers().size()).isEqualTo(2);
@@ -210,7 +212,7 @@ public class CircuitBreakerConfigurationTest {
 		DefaultEventConsumerRegistry<CircuitBreakerEvent> eventConsumerRegistry = new DefaultEventConsumerRegistry<>();
 
 		//When
-		assertThatThrownBy(() -> circuitBreakerConfiguration.circuitBreakerRegistry(eventConsumerRegistry))
+		assertThatThrownBy(() -> circuitBreakerConfiguration.circuitBreakerRegistry(eventConsumerRegistry, new CompositeRegistryEventConsumer<>(emptyList())))
 			.isInstanceOf(ConfigurationNotFoundException.class)
 			.hasMessage("Configuration with name 'unknownConfig' does not exist");
 	}

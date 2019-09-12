@@ -28,9 +28,9 @@ import org.junit.Test;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static io.github.resilience4j.micrometer.tagged.AbstractRateLimiterMetrics.MetricNames.DEFAULT_AVAILABLE_PERMISSIONS_METRIC_NAME;
+import static io.github.resilience4j.micrometer.tagged.AbstractRateLimiterMetrics.MetricNames.DEFAULT_WAITING_THREADS_METRIC_NAME;
 import static io.github.resilience4j.micrometer.tagged.MetricsTestHelper.findGaugeByNamesTag;
-import static io.github.resilience4j.micrometer.tagged.TaggedRateLimiterMetrics.MetricNames.DEFAULT_AVAILABLE_PERMISSIONS_METRIC_NAME;
-import static io.github.resilience4j.micrometer.tagged.TaggedRateLimiterMetrics.MetricNames.DEFAULT_WAITING_THREADS_METRIC_NAME;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class TaggedRateLimiterMetricsTest {

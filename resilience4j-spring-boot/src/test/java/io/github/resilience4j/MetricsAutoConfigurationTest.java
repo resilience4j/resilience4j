@@ -16,8 +16,10 @@
 package io.github.resilience4j;
 
 import io.github.resilience4j.prometheus.collectors.BulkheadMetricsCollector;
-import io.github.resilience4j.prometheus.collectors.CircuitBreakerMetricsCollector;
 import io.github.resilience4j.prometheus.collectors.RateLimiterMetricsCollector;
+import io.github.resilience4j.prometheus.publisher.BulkheadMetricsPublisher;
+import io.github.resilience4j.prometheus.publisher.CircuitBreakerMetricsPublisher;
+import io.github.resilience4j.prometheus.publisher.RateLimiterMetricsPublisher;
 import io.github.resilience4j.service.test.TestApplication;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -32,26 +34,26 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class MetricsAutoConfigurationTest {
 
     @Autowired(required = false)
-    CircuitBreakerMetricsCollector circuitBreakerMetricsCollector;
+    CircuitBreakerMetricsPublisher circuitBreakerPrometheusPublisher;
 
     @Autowired(required = false)
-    BulkheadMetricsCollector bulkheadMetricsCollector;
+    BulkheadMetricsPublisher bulkheadPrometheusPublisher;
 
     @Autowired(required = false)
-    RateLimiterMetricsCollector rateLimiterMetricsCollector;
+    RateLimiterMetricsPublisher rateLimiterPrometheusPublisher;
 
     @Test
     public void newCircuitBreakerCollectorIsBound() {
-        assertThat(circuitBreakerMetricsCollector).isNotNull();
+        assertThat(circuitBreakerPrometheusPublisher).isNotNull();
     }
 
     @Test
     public void newBulkheadCollectorIsBound() {
-        assertThat(bulkheadMetricsCollector).isNotNull();
+        assertThat(bulkheadPrometheusPublisher).isNotNull();
     }
 
     @Test
     public void newRateLimiterCollectorIsBound() {
-        assertThat(rateLimiterMetricsCollector).isNotNull();
+        assertThat(rateLimiterPrometheusPublisher).isNotNull();
     }
 }

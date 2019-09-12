@@ -16,8 +16,10 @@
 package io.github.resilience4j.circuitbreaker.autoconfigure;
 
 import com.codahale.metrics.MetricRegistry;
+import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.metrics.CircuitBreakerMetrics;
+import io.github.resilience4j.metrics.publisher.CircuitBreakerMetricsPublisher;
 import org.springframework.boot.actuate.autoconfigure.MetricRepositoryAutoConfiguration;
 import org.springframework.boot.actuate.autoconfigure.MetricsDropwizardAutoConfiguration;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
@@ -33,14 +35,24 @@ import org.springframework.context.annotation.Configuration;
  * Auto-configuration} for resilience4j-metrics.
  */
 @Configuration
-@ConditionalOnClass(MetricRegistry.class)
-@AutoConfigureAfter(value = {CircuitBreakerAutoConfiguration.class, MetricsDropwizardAutoConfiguration.class})
+@ConditionalOnClass({MetricRegistry.class, CircuitBreaker.class, CircuitBreakerMetricsPublisher.class})
+@AutoConfigureAfter(MetricsDropwizardAutoConfiguration.class)
 @AutoConfigureBefore(MetricRepositoryAutoConfiguration.class)
 @ConditionalOnProperty(value = "resilience4j.circuitbreaker.metrics.enabled", matchIfMissing = true)
 public class CircuitBreakerMetricsAutoConfiguration {
+
 	@Bean
-    @ConditionalOnMissingBean
+	@ConditionalOnProperty(value = "resilience4j.circuitbreaker.metrics.legacy.enabled", havingValue = "true")
+	@ConditionalOnMissingBean
 	public CircuitBreakerMetrics registerCircuitBreakerMetrics(CircuitBreakerRegistry circuitBreakerRegistry, MetricRegistry metricRegistry) {
 		return CircuitBreakerMetrics.ofCircuitBreakerRegistry(circuitBreakerRegistry, metricRegistry);
 	}
+
+	@Bean
+	@ConditionalOnProperty(value = "resilience4j.circuitbreaker.metrics.legacy.enabled", havingValue = "false", matchIfMissing = true)
+	@ConditionalOnMissingBean
+	public CircuitBreakerMetricsPublisher circuitBreakerMetricsPublisher(MetricRegistry metricRegistry) {
+		return new CircuitBreakerMetricsPublisher(metricRegistry);
+	}
+
 }

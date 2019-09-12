@@ -1,6 +1,8 @@
 package io.github.resilience4j.bulkhead.autoconfigure;
 
+import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.bulkhead.BulkheadRegistry;
+import io.github.resilience4j.bulkhead.ThreadPoolBulkhead;
 import io.github.resilience4j.bulkhead.ThreadPoolBulkheadRegistry;
 import io.github.resilience4j.bulkhead.configure.BulkheadConfiguration;
 import io.github.resilience4j.bulkhead.configure.BulkheadConfigurationProperties;
@@ -8,6 +10,7 @@ import io.github.resilience4j.bulkhead.configure.threadpool.ThreadPoolBulkheadCo
 import io.github.resilience4j.bulkhead.event.BulkheadEvent;
 import io.github.resilience4j.common.bulkhead.configuration.ThreadPoolBulkheadConfigurationProperties;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
+import io.github.resilience4j.core.registry.RegistryEventConsumer;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.context.annotation.Bean;
@@ -33,8 +36,9 @@ public abstract class AbstractRefreshScopedBulkheadConfiguration {
     @RefreshScope
     @ConditionalOnMissingBean
     public BulkheadRegistry bulkheadRegistry(BulkheadConfigurationProperties bulkheadConfigurationProperties,
-                                             EventConsumerRegistry<BulkheadEvent> bulkheadEventConsumerRegistry) {
-        return bulkheadConfiguration.bulkheadRegistry(bulkheadConfigurationProperties, bulkheadEventConsumerRegistry);
+                                             EventConsumerRegistry<BulkheadEvent> bulkheadEventConsumerRegistry,
+                                             RegistryEventConsumer<Bulkhead> bulkheadRegistryEventConsumer) {
+        return bulkheadConfiguration.bulkheadRegistry(bulkheadConfigurationProperties, bulkheadEventConsumerRegistry, bulkheadRegistryEventConsumer);
     }
 
     /**
@@ -46,9 +50,11 @@ public abstract class AbstractRefreshScopedBulkheadConfiguration {
     @RefreshScope
     @ConditionalOnMissingBean
     public ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry(ThreadPoolBulkheadConfigurationProperties threadPoolBulkheadConfigurationProperties,
-                                                                 EventConsumerRegistry<BulkheadEvent> bulkheadEventConsumerRegistry) {
+                                                                 EventConsumerRegistry<BulkheadEvent> bulkheadEventConsumerRegistry,
+                                                                 RegistryEventConsumer<ThreadPoolBulkhead> threadPoolBulkheadRegistryEventConsumer) {
 
-        return threadPoolBulkheadConfiguration.threadPoolBulkheadRegistry(threadPoolBulkheadConfigurationProperties, bulkheadEventConsumerRegistry);
+        return threadPoolBulkheadConfiguration.threadPoolBulkheadRegistry(
+                threadPoolBulkheadConfigurationProperties, bulkheadEventConsumerRegistry, threadPoolBulkheadRegistryEventConsumer);
     }
 
 }

@@ -15,31 +15,40 @@
  */
 package io.github.resilience4j.bulkhead.autoconfigure;
 
-import org.springframework.boot.autoconfigure.AutoConfigureAfter;
+import io.github.resilience4j.bulkhead.Bulkhead;
+import io.github.resilience4j.bulkhead.BulkheadRegistry;
+import io.github.resilience4j.prometheus.collectors.BulkheadMetricsCollector;
+import io.github.resilience4j.prometheus.publisher.BulkheadMetricsPublisher;
+import io.prometheus.client.GaugeMetricFamily;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import io.github.resilience4j.bulkhead.BulkheadRegistry;
-import io.github.resilience4j.prometheus.collectors.BulkheadMetricsCollector;
-
 /**
  * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration
  * Auto-configuration} for resilience4j-metrics.
  */
 @Configuration
-@AutoConfigureAfter(value = BulkheadAutoConfiguration.class)
-@ConditionalOnClass(BulkheadMetricsCollector.class)
+@ConditionalOnClass({GaugeMetricFamily.class, Bulkhead.class, BulkheadMetricsPublisher.class})
 @ConditionalOnProperty(value = "resilience4j.bulkhead.metrics.enabled", matchIfMissing = true)
 public class BulkheadPrometheusAutoConfiguration {
 
     @Bean
+    @ConditionalOnProperty(value = "resilience4j.bulkhead.metrics.legacy.enabled", havingValue = "true")
     @ConditionalOnMissingBean
     public BulkheadMetricsCollector bulkheadPrometheusCollector(BulkheadRegistry bulkheadRegistry) {
         BulkheadMetricsCollector collector = BulkheadMetricsCollector.ofBulkheadRegistry(bulkheadRegistry);
         collector.register();
         return collector;
     }
+
+    @Bean
+    @ConditionalOnProperty(value = "resilience4j.bulkhead.metrics.legacy.enabled", havingValue = "false", matchIfMissing = true)
+    @ConditionalOnMissingBean
+    public BulkheadMetricsPublisher bulkheadPrometheusMetricsPublisher() {
+        return new BulkheadMetricsPublisher();
+    }
+
 }

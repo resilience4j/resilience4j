@@ -17,9 +17,11 @@ package io.github.resilience4j.retry;
 
 
 import io.github.resilience4j.core.Registry;
+import io.github.resilience4j.core.registry.RegistryEventConsumer;
 import io.github.resilience4j.retry.internal.InMemoryRetryRegistry;
 import io.vavr.collection.Seq;
 
+import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
 
@@ -72,13 +74,35 @@ public interface RetryRegistry extends Registry<Retry, RetryConfig> {
 
 
 	/**
-	 * Creates a RetryRegistry with a custom Retry configuration.
+	 * Creates a RetryRegistry with a custom default Retry configuration.
 	 *
 	 * @param retryConfig a custom Retry configuration
 	 * @return a RetryRegistry with a custom Retry configuration.
 	 */
 	static RetryRegistry of(RetryConfig retryConfig) {
 		return new InMemoryRetryRegistry(retryConfig);
+	}
+
+	/**
+	 * Creates a RetryRegistry with a custom default Retry configuration and a Retry registry event consumer.
+	 *
+	 * @param retryConfig a custom default Retry configuration.
+	 * @param registryEventConsumer a Retry registry event consumer.
+	 * @return a RetryRegistry with a custom Retry configuration and a Retry registry event consumer.
+	 */
+	static RetryRegistry of(RetryConfig retryConfig, RegistryEventConsumer<Retry> registryEventConsumer) {
+		return new InMemoryRetryRegistry(retryConfig, registryEventConsumer);
+	}
+
+	/**
+	 * Creates a RetryRegistry with a custom default Retry configuration and a list of Retry registry event consumers.
+	 *
+	 * @param retryConfig a custom default Retry configuration.
+	 * @param registryEventConsumers a list of Retry registry event consumers.
+	 * @return a RetryRegistry with a custom Retry configuration and list of Retry registry event consumers.
+	 */
+	static RetryRegistry of(RetryConfig retryConfig, List<RegistryEventConsumer<Retry>> registryEventConsumers) {
+		return new InMemoryRetryRegistry(retryConfig, registryEventConsumers);
 	}
 
 	/**
@@ -99,4 +123,27 @@ public interface RetryRegistry extends Registry<Retry, RetryConfig> {
 	static RetryRegistry of(Map<String, RetryConfig> configs) {
 		return new InMemoryRetryRegistry(configs);
 	}
+
+	/**
+	 * Creates a RetryRegistry with a Map of shared Retry configurations and a Retry registry event consumer.
+	 *
+	 * @param configs a Map of shared Retry configurations.
+	 * @param registryEventConsumer a Retry registry event consumer.
+	 * @return a RetryRegistry with a Map of shared Retry configurations and a Retry registry event consumer.
+	 */
+	static RetryRegistry of(Map<String, RetryConfig> configs, RegistryEventConsumer<Retry> registryEventConsumer) {
+		return new InMemoryRetryRegistry(configs, registryEventConsumer);
+	}
+
+	/**
+	 * Creates a RetryRegistry with a Map of shared Retry configurations and a list of Retry registry event consumers.
+	 *
+	 * @param configs a Map of shared Retry configurations.
+	 * @param registryEventConsumers a list of Retry registry event consumers.
+	 * @return a RetryRegistry with a Map of shared Retry configurations and a list of Retry registry event consumers.
+	 */
+	static RetryRegistry of(Map<String, RetryConfig> configs, List<RegistryEventConsumer<Retry>> registryEventConsumers) {
+		return new InMemoryRetryRegistry(configs, registryEventConsumers);
+	}
+
 }
