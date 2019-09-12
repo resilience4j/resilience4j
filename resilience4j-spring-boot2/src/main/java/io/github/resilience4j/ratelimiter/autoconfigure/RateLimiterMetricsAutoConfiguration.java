@@ -16,7 +16,10 @@
 package io.github.resilience4j.ratelimiter.autoconfigure;
 
 import io.github.resilience4j.micrometer.tagged.TaggedRateLimiterMetrics;
+import io.github.resilience4j.micrometer.tagged.TaggedRateLimiterMetricsPublisher;
+import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
+import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.boot.actuate.autoconfigure.metrics.MetricsAutoConfiguration;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -30,14 +33,23 @@ import org.springframework.context.annotation.Configuration;
  * Auto-configuration} for resilience4j-metrics.
  */
 @Configuration
-@ConditionalOnClass(MetricsAutoConfiguration.class)
-@AutoConfigureAfter(value = {RateLimiterAutoConfiguration.class, MetricsAutoConfiguration.class})
+@ConditionalOnClass({MeterRegistry.class, RateLimiter.class, TaggedRateLimiterMetricsPublisher.class})
+@AutoConfigureAfter(MetricsAutoConfiguration.class)
 @ConditionalOnProperty(value = "resilience4j.ratelimiter.metrics.enabled", matchIfMissing = true)
 public class RateLimiterMetricsAutoConfiguration {
 
     @Bean
+    @ConditionalOnProperty(value = "resilience4j.ratelimiter.metrics.legacy.enabled", havingValue = "true")
     @ConditionalOnMissingBean
     public TaggedRateLimiterMetrics registerRateLimiterMetrics(RateLimiterRegistry rateLimiterRegistry) {
         return TaggedRateLimiterMetrics.ofRateLimiterRegistry(rateLimiterRegistry);
     }
+
+    @Bean
+    @ConditionalOnProperty(value = "resilience4j.ratelimiter.metrics.legacy.enabled", havingValue = "false", matchIfMissing = true)
+    @ConditionalOnMissingBean
+    public TaggedRateLimiterMetricsPublisher taggedRateLimiterMetricsPublisher(MeterRegistry meterRegistry) {
+        return new TaggedRateLimiterMetricsPublisher(meterRegistry);
+    }
+
 }

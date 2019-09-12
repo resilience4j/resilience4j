@@ -21,23 +21,18 @@ import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.Meter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
+import org.junit.Before;
+import org.junit.Test;
 
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.Callable;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
-import org.junit.Before;
-import org.junit.Test;
-
-import static io.github.resilience4j.micrometer.tagged.MetricsTestHelper.*;
-import static io.github.resilience4j.micrometer.tagged.TaggedCircuitBreakerMetrics.MetricNames.DEFAULT_CIRCUIT_BREAKER_BUFFERED_CALLS;
-import static io.github.resilience4j.micrometer.tagged.TaggedTimeLimiterMetrics.MetricNames.DEFAULT_TIME_LIMITER_CALLS;
+import static io.github.resilience4j.micrometer.tagged.AbstractTimeLimiterMetrics.MetricNames.DEFAULT_TIME_LIMITER_CALLS;
+import static io.github.resilience4j.micrometer.tagged.MetricsTestHelper.findCounterByKindAndNameTags;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class TaggedTimeLimiterMetricsTest {

@@ -17,26 +17,15 @@ package io.github.resilience4j.micrometer.tagged;
 
 import io.github.resilience4j.timelimiter.TimeLimiter;
 import io.github.resilience4j.timelimiter.TimeLimiterRegistry;
-import io.micrometer.core.instrument.Counter;
-import io.micrometer.core.instrument.Meter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.binder.MeterBinder;
-
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Objects;
 
 import static java.util.Objects.requireNonNull;
 
 /**
  * A micrometer binder that is used to register TimeLimiter exposed events.
  */
-public class TaggedTimeLimiterMetrics extends AbstractMetrics implements MeterBinder {
-
-    private static final String KIND_FAILED = "failed";
-    private static final String KIND_SUCCESSFUL = "successful";
-    private static final String KIND_TIMEOUT = "timeout";
+public class TaggedTimeLimiterMetrics extends AbstractTimeLimiterMetrics implements MeterBinder {
 
     /**
      * Creates a new binder that uses given {@code registry} as source of time limiters.
@@ -59,13 +48,11 @@ public class TaggedTimeLimiterMetrics extends AbstractMetrics implements MeterBi
         return new TaggedTimeLimiterMetrics(names, timeLimiterRegistry);
     }
 
-    private final MetricNames names;
     private final TimeLimiterRegistry timeLimiterRegistry;
 
     private TaggedTimeLimiterMetrics(MetricNames names, TimeLimiterRegistry timeLimiterRegistry) {
-        super();
-        this.names = Objects.requireNonNull(names);
-        this.timeLimiterRegistry = Objects.requireNonNull(timeLimiterRegistry);
+        super(names);
+        this.timeLimiterRegistry = requireNonNull(timeLimiterRegistry);
     }
 
     @Override
@@ -81,91 +68,4 @@ public class TaggedTimeLimiterMetrics extends AbstractMetrics implements MeterBi
         });
     }
 
-    private void addMetrics(MeterRegistry registry, TimeLimiter timeLimiter) {
-        Counter successes = Counter.builder(names.getCallsMetricName())
-                .description("The number of successful calls")
-                .tag(TagNames.NAME, timeLimiter.getName())
-                .tag(TagNames.KIND, KIND_SUCCESSFUL)
-                .register(registry);
-        Counter failures = Counter.builder(names.getCallsMetricName())
-                .description("The number of failed calls")
-                .tag(TagNames.NAME, timeLimiter.getName())
-                .tag(TagNames.KIND, KIND_FAILED)
-                .register(registry);
-        Counter timeouts = Counter.builder(names.getCallsMetricName())
-                .description("The number of timed out calls")
-                .tag(TagNames.NAME, timeLimiter.getName())
-                .tag(TagNames.KIND, KIND_TIMEOUT)
-                .register(registry);
-
-        timeLimiter.getEventPublisher()
-                .onSuccess(event -> successes.increment())
-                .onError(event -> failures.increment())
-                .onTimeout(event -> timeouts.increment());
-
-        List<Meter.Id> ids = Arrays.asList(successes.getId(), failures.getId(), timeouts.getId());
-        meterIdMap.put(timeLimiter.getName(), new HashSet<>(ids));
-    }
-
-    /**
-     * Defines possible configuration for metric names.
-     */
-    public static class MetricNames {
-
-        private static final String DEFAULT_PREFIX = "resilience4j.timelimiter";
-        public static final String DEFAULT_TIME_LIMITER_CALLS = DEFAULT_PREFIX + ".calls";
-
-        private String callsMetricName = DEFAULT_TIME_LIMITER_CALLS;
-
-        /**
-         * Returns a builder for creating custom metric names.
-         * Note that names have default values, so only desired metrics can be renamed.
-         *
-         * @return The builder.
-         */
-        public static Builder custom() {
-            return new Builder();
-        }
-
-        /**
-         * Returns default metric names.
-         *
-         * @return The default {@link MetricNames} instance.
-         */
-        public static MetricNames ofDefaults() {
-            return new MetricNames();
-        }
-
-        /** Returns the metric name for circuit breaker calls, defaults to {@value DEFAULT_TIME_LIMITER_CALLS}.
-         * @return The circuit breaker calls metric name.
-         */
-        public String getCallsMetricName() {
-            return callsMetricName;
-        }
-
-        /**
-         * Helps building custom instance of {@link MetricNames}.
-         */
-        public static class Builder {
-
-            private final MetricNames metricNames = new MetricNames();
-
-            /** Overrides the default metric name {@value TaggedTimeLimiterMetrics.MetricNames#DEFAULT_TIME_LIMITER_CALLS} with a given one.
-             * @param callsMetricName The calls metric name.
-             * @return The builder.*/
-            public TaggedTimeLimiterMetrics.MetricNames.Builder callsMetricName(String callsMetricName) {
-                metricNames.callsMetricName = requireNonNull(callsMetricName);
-                return this;
-            }
-
-            /**
-             * Builds {@link MetricNames} instance.
-             *
-             * @return The built {@link MetricNames} instance.
-             */
-            public MetricNames build() {
-                return metricNames;
-            }
-        }
-    }
 }

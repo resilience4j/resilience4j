@@ -22,8 +22,7 @@ import io.github.resilience4j.core.EventConsumer;
 import io.github.resilience4j.core.EventProcessor;
 import io.github.resilience4j.core.Registry;
 
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.function.Supplier;
@@ -35,6 +34,7 @@ public class AbstractRegistry<E, C> implements Registry<E, C> {
 	protected static final String DEFAULT_CONFIG = "default";
 	private static final String NAME_MUST_NOT_BE_NULL = "Name must not be null";
 	protected static final String CONFIG_MUST_NOT_BE_NULL = "Config must not be null";
+	protected static final String CONSUMER_MUST_NOT_BE_NULL = "EventConsumers must not be null";
 	protected static final String SUPPLIER_MUST_NOT_BE_NULL = "Supplier must not be null";
 
 	protected final ConcurrentMap<String, E> entryMap;
@@ -44,9 +44,17 @@ public class AbstractRegistry<E, C> implements Registry<E, C> {
 	private final RegistryEventProcessor eventProcessor;
 
 	public AbstractRegistry(C defaultConfig) {
+		this(defaultConfig, new ArrayList<>());
+	}
+
+	public AbstractRegistry(C defaultConfig, RegistryEventConsumer<E> registryEventConsumer) {
+		this(defaultConfig, Collections.singletonList(Objects.requireNonNull(registryEventConsumer, CONSUMER_MUST_NOT_BE_NULL)));
+	}
+
+	public AbstractRegistry(C defaultConfig, List<RegistryEventConsumer<E>> registryEventConsumers) {
 		this.configurations = new ConcurrentHashMap<>();
 		this.entryMap = new ConcurrentHashMap<>();
-		this.eventProcessor = new RegistryEventProcessor();
+		this.eventProcessor = new RegistryEventProcessor(Objects.requireNonNull(registryEventConsumers, CONSUMER_MUST_NOT_BE_NULL));
 		this.configurations.put(DEFAULT_CONFIG, Objects.requireNonNull(defaultConfig, CONFIG_MUST_NOT_BE_NULL));
 	}
 
@@ -101,6 +109,16 @@ public class AbstractRegistry<E, C> implements Registry<E, C> {
 	}
 
 	private class RegistryEventProcessor extends EventProcessor<RegistryEvent> implements EventConsumer<RegistryEvent>, EventPublisher<E> {
+
+		private RegistryEventProcessor() { }
+
+		private RegistryEventProcessor(List<RegistryEventConsumer<E>> registryEventConsumers) {
+			registryEventConsumers.forEach(consumer -> {
+				onEntryAdded(consumer::onEntryAddedEvent);
+				onEntryRemoved(consumer::onEntryRemovedEvent);
+				onEntryReplaced(consumer::onEntryReplacedEvent);
+			});
+		}
 
 		@Override
 		public EventPublisher<E> onEntryAdded(EventConsumer<EntryAddedEvent<E>> onSuccessEventConsumer) {

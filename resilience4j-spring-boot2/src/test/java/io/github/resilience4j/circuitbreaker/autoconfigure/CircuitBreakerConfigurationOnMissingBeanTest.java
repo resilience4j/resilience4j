@@ -50,7 +50,7 @@ public class CircuitBreakerConfigurationOnMissingBeanTest {
     public void testAllBeansFromCircuitBreakerConfigurationHasOnMissingBean() throws NoSuchMethodException {
         final Class<CircuitBreakerConfiguration> originalClass = CircuitBreakerConfiguration.class;
         final Class<CircuitBreakerConfigurationOnMissingBean> onMissingBeanClass = CircuitBreakerConfigurationOnMissingBean.class;
-        TestUtils.assertAnnaations(originalClass, onMissingBeanClass);
+        TestUtils.assertAnnotations(originalClass, onMissingBeanClass);
     }
 
     @Test
