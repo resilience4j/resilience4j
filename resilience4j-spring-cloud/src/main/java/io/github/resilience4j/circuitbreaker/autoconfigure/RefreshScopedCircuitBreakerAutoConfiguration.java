@@ -16,9 +16,8 @@ import org.springframework.context.annotation.Configuration;
 @AutoConfigureBefore(CircuitBreakerAutoConfiguration.class)
 public class RefreshScopedCircuitBreakerAutoConfiguration extends AbstractRefreshScopedCircuitBreakerConfiguration {
 
-    public RefreshScopedCircuitBreakerAutoConfiguration(ConfigurableBeanFactory beanFactory,
-                                                        CircuitBreakerConfigurationProperties circuitBreakerProperties) {
-        super(beanFactory, circuitBreakerProperties);
+    public RefreshScopedCircuitBreakerAutoConfiguration(CircuitBreakerConfigurationProperties circuitBreakerProperties) {
+        super(circuitBreakerProperties);
     }
 
 }

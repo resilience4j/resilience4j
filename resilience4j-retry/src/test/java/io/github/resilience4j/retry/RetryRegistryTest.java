@@ -16,13 +16,18 @@
 package io.github.resilience4j.retry;
 
 import io.github.resilience4j.core.ConfigurationNotFoundException;
+import io.github.resilience4j.core.EventProcessor;
+import io.github.resilience4j.core.Registry;
+import io.github.resilience4j.core.registry.EntryAddedEvent;
+import io.github.resilience4j.core.registry.EntryRemovedEvent;
+import io.github.resilience4j.core.registry.EntryReplacedEvent;
+import io.github.resilience4j.core.registry.RegistryEventConsumer;
 import org.assertj.core.api.Assertions;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.time.Duration;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -115,6 +120,53 @@ public class RetryRegistryTest {
 	}
 
 	@Test
+	public void testCreateWithSingleRegistryEventConsumer() {
+		RetryRegistry retryRegistry = RetryRegistry.of(RetryConfig.ofDefaults(), new NoOpRetryEventConsumer());
+
+		getEventProcessor(retryRegistry.getEventPublisher())
+				.ifPresent(eventProcessor -> assertThat(eventProcessor.hasConsumers()).isTrue());
+	}
+
+	@Test
+	public void testCreateWithMultipleRegistryEventConsumer() {
+		List<RegistryEventConsumer<Retry>> registryEventConsumers = new ArrayList<>();
+		registryEventConsumers.add(new NoOpRetryEventConsumer());
+		registryEventConsumers.add(new NoOpRetryEventConsumer());
+
+		RetryRegistry retryRegistry = RetryRegistry.of(RetryConfig.ofDefaults(), registryEventConsumers);
+
+		getEventProcessor(retryRegistry.getEventPublisher())
+				.ifPresent(eventProcessor -> assertThat(eventProcessor.hasConsumers()).isTrue());
+	}
+
+	@Test
+	public void testCreateWithConfigurationMapWithSingleRegistryEventConsumer() {
+		Map<String, RetryConfig> configs = new HashMap<>();
+		configs.put("custom", RetryConfig.ofDefaults());
+
+		RetryRegistry retryRegistry = RetryRegistry.of(configs, new NoOpRetryEventConsumer());
+
+		getEventProcessor(retryRegistry.getEventPublisher())
+				.ifPresent(eventProcessor -> assertThat(eventProcessor.hasConsumers()).isTrue());
+	}
+
+	@Test
+	public void testCreateWithConfigurationMapWithMultiRegistryEventConsumer() {
+		Map<String, RetryConfig> configs = new HashMap<>();
+		configs.put("custom", RetryConfig.ofDefaults());
+
+		List<RegistryEventConsumer<Retry>> registryEventConsumers = new ArrayList<>();
+		registryEventConsumers.add(new NoOpRetryEventConsumer());
+		registryEventConsumers.add(new NoOpRetryEventConsumer());
+
+		RetryRegistry retryRegistry = RetryRegistry.of(configs, registryEventConsumers);
+
+		getEventProcessor(retryRegistry.getEventPublisher())
+				.ifPresent(eventProcessor -> assertThat(eventProcessor.hasConsumers()).isTrue());
+	}
+
+
+	@Test
 	public void testWithNotExistingConfig() {
 		RetryRegistry retryRegistry = RetryRegistry.ofDefaults();
 
@@ -129,5 +181,24 @@ public class RetryRegistryTest {
 
 		assertThat(retryRegistry.getDefaultConfig()).isNotNull();
 		assertThat(retryRegistry.getConfiguration("custom")).isNotNull();
+	}
+
+	private static Optional<EventProcessor<?>> getEventProcessor(Registry.EventPublisher<Retry> eventPublisher) {
+		if (eventPublisher instanceof EventProcessor<?>) {
+			return Optional.of((EventProcessor<?>) eventPublisher);
+		}
+
+		return Optional.empty();
+	}
+
+	private static class NoOpRetryEventConsumer implements RegistryEventConsumer<Retry> {
+		@Override
+		public void onEntryAddedEvent(EntryAddedEvent<Retry> entryAddedEvent) { }
+
+		@Override
+		public void onEntryRemovedEvent(EntryRemovedEvent<Retry> entryRemoveEvent) { }
+
+		@Override
+		public void onEntryReplacedEvent(EntryReplacedEvent<Retry> entryReplacedEvent) { }
 	}
 }

@@ -16,10 +16,10 @@
 package io.github.resilience4j;
 
 import io.github.resilience4j.prometheus.collectors.BulkheadMetricsCollector;
+import io.github.resilience4j.prometheus.collectors.CircuitBreakerMetricsCollector;
 import io.github.resilience4j.prometheus.collectors.RateLimiterMetricsCollector;
-import io.github.resilience4j.prometheus.publisher.BulkheadMetricsPublisher;
+import io.github.resilience4j.prometheus.collectors.ThreadPoolBulkheadMetricsCollector;
 import io.github.resilience4j.prometheus.publisher.CircuitBreakerMetricsPublisher;
-import io.github.resilience4j.prometheus.publisher.RateLimiterMetricsPublisher;
 import io.github.resilience4j.service.test.TestApplication;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -34,26 +34,34 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class MetricsAutoConfigurationTest {
 
     @Autowired(required = false)
-    CircuitBreakerMetricsPublisher circuitBreakerPrometheusPublisher;
+    BulkheadMetricsCollector bulkheadMetricsCollector;
 
     @Autowired(required = false)
-    BulkheadMetricsPublisher bulkheadPrometheusPublisher;
+    ThreadPoolBulkheadMetricsCollector threadPoolBulkheadMetricsCollector;
 
     @Autowired(required = false)
-    RateLimiterMetricsPublisher rateLimiterPrometheusPublisher;
+    CircuitBreakerMetricsPublisher circuitBreakerMetricsPublisher;
+
+    @Autowired(required = false)
+    RateLimiterMetricsCollector rateLimiterMetricsCollector;
 
     @Test
-    public void newCircuitBreakerCollectorIsBound() {
-        assertThat(circuitBreakerPrometheusPublisher).isNotNull();
+    public void circuitBreakerPublisherIsBound() {
+        assertThat(circuitBreakerMetricsPublisher).isNotNull();
     }
 
     @Test
-    public void newBulkheadCollectorIsBound() {
-        assertThat(bulkheadPrometheusPublisher).isNotNull();
+    public void bulkheadCollectorIsBound() {
+        assertThat(bulkheadMetricsCollector).isNotNull();
     }
 
     @Test
-    public void newRateLimiterCollectorIsBound() {
-        assertThat(rateLimiterPrometheusPublisher).isNotNull();
+    public void threadPoolBulkheadCollectorIsBound() {
+        assertThat(threadPoolBulkheadMetricsCollector).isNotNull();
+    }
+
+    @Test
+    public void rateLimiterCollectorIsBound() {
+        assertThat(rateLimiterMetricsCollector).isNotNull();
     }
 }

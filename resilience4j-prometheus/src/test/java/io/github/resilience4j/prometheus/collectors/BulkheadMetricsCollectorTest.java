@@ -21,8 +21,8 @@ import io.prometheus.client.CollectorRegistry;
 import org.junit.Before;
 import org.junit.Test;
 
-import static io.github.resilience4j.prometheus.AbstractBulkheadMetrics.MetricNames.DEFAULT_BULKHEAD_AVAILABLE_CONCURRENT_CALLS_METRIC_NAME;
-import static io.github.resilience4j.prometheus.AbstractBulkheadMetrics.MetricNames.DEFAULT_BULKHEAD_MAX_ALLOWED_CONCURRENT_CALLS_METRIC_NAME;
+import static io.github.resilience4j.prometheus.collectors.BulkheadMetricsCollector.MetricNames.DEFAULT_BULKHEAD_AVAILABLE_CONCURRENT_CALLS_METRIC_NAME;
+import static io.github.resilience4j.prometheus.collectors.BulkheadMetricsCollector.MetricNames.DEFAULT_BULKHEAD_MAX_ALLOWED_CONCURRENT_CALLS_METRIC_NAME;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class BulkheadMetricsCollectorTest {

@@ -19,14 +19,10 @@ import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker.Metrics;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.prometheus.AbstractCircuitBreakerMetrics;
-import io.github.resilience4j.prometheus.LabelNames;
-import io.prometheus.client.Collector;
-import io.prometheus.client.GaugeMetricFamily;
 
 import java.util.Collections;
 import java.util.List;
 
-import static java.util.Arrays.asList;
 import static java.util.Objects.requireNonNull;
 
 /** Collects circuit breaker exposed {@link Metrics}. */
@@ -64,60 +60,11 @@ public class CircuitBreakerMetricsCollector extends AbstractCircuitBreakerMetric
         circuitBreakerRegistry.getEventPublisher().onEntryAdded(event -> addMetrics(event.getAddedEntry()));
     }
 
-    private void addMetrics(CircuitBreaker circuitBreaker) {
-        circuitBreaker.getEventPublisher()
-                .onCallNotPermitted(event -> callsHistogram.labels(circuitBreaker.getName(), KIND_NOT_PERMITTED).observe(0))
-                .onIgnoredError(event -> callsHistogram.labels(circuitBreaker.getName(), KIND_IGNORED).observe(event.getElapsedDuration().toNanos() / Collector.NANOSECONDS_PER_SECOND))
-                .onSuccess(event -> callsHistogram.labels(circuitBreaker.getName(), KIND_SUCCESSFUL).observe(event.getElapsedDuration().toNanos() / Collector.NANOSECONDS_PER_SECOND))
-                .onError(event -> callsHistogram.labels(circuitBreaker.getName(), KIND_FAILED).observe(event.getElapsedDuration().toNanos() / Collector.NANOSECONDS_PER_SECOND));
-    }
-
     @Override
     public List<MetricFamilySamples> collect() {
         List<MetricFamilySamples> samples = Collections.list(collectorRegistry.metricFamilySamples());
-        samples.addAll(collectGaugeSamples());
+        samples.addAll(collectGaugeSamples(circuitBreakerRegistry.getAllCircuitBreakers().asJava()));
         return samples;
-    }
-
-    private List<MetricFamilySamples> collectGaugeSamples() {
-        GaugeMetricFamily stateFamily = new GaugeMetricFamily(
-                names.getStateMetricName(),
-                "The state of the circuit breaker:",
-                NAME_AND_STATE
-        );
-        GaugeMetricFamily bufferedCallsFamily = new GaugeMetricFamily(
-                names.getBufferedCallsMetricName(),
-                "The number of buffered calls",
-                LabelNames.NAME_AND_KIND
-        );
-
-        GaugeMetricFamily failureRateFamily = new GaugeMetricFamily(
-                names.getFailureRateMetricName(),
-                "The failure rate",
-                LabelNames.NAME
-        );
-
-        GaugeMetricFamily slowCallRateFamily = new GaugeMetricFamily(
-                names.getSlowCallRateMetricName(),
-                "The slow call rate",
-                LabelNames.NAME
-        );
-
-        for (CircuitBreaker circuitBreaker : this.circuitBreakerRegistry.getAllCircuitBreakers()) {
-            final CircuitBreaker.State[] states = CircuitBreaker.State.values();
-            for (CircuitBreaker.State state : states) {
-                stateFamily.addMetric(asList(circuitBreaker.getName(), state.name().toLowerCase()),
-                        circuitBreaker.getState() == state ? 1 : 0);
-            }
-
-            List<String> nameLabel = Collections.singletonList(circuitBreaker.getName());
-            Metrics metrics = circuitBreaker.getMetrics();
-            bufferedCallsFamily.addMetric(asList(circuitBreaker.getName(), KIND_SUCCESSFUL), metrics.getNumberOfSuccessfulCalls());
-            bufferedCallsFamily.addMetric(asList(circuitBreaker.getName(), KIND_FAILED), metrics.getNumberOfFailedCalls());
-            failureRateFamily.addMetric(nameLabel, metrics.getFailureRate());
-            slowCallRateFamily.addMetric(nameLabel, metrics.getSlowCallRate());
-        }
-        return asList(stateFamily, bufferedCallsFamily, failureRateFamily, slowCallRateFamily);
     }
 
 }

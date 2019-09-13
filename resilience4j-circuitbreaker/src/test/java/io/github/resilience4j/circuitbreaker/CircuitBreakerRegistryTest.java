@@ -18,11 +18,15 @@
  */
 package io.github.resilience4j.circuitbreaker;
 
+import io.github.resilience4j.core.EventProcessor;
+import io.github.resilience4j.core.Registry;
+import io.github.resilience4j.core.registry.EntryAddedEvent;
+import io.github.resilience4j.core.registry.EntryRemovedEvent;
+import io.github.resilience4j.core.registry.EntryReplacedEvent;
+import io.github.resilience4j.core.registry.RegistryEventConsumer;
 import org.junit.Test;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.BDDAssertions.assertThat;
@@ -95,6 +99,52 @@ public class CircuitBreakerRegistryTest {
     }
 
     @Test
+    public void testCreateWithSingleRegistryEventConsumer() {
+        CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.of(CircuitBreakerConfig.ofDefaults(), new NoOpCircuitBreakerEventConsumer());
+
+        getEventProcessor(circuitBreakerRegistry.getEventPublisher())
+                .ifPresent(eventProcessor -> assertThat(eventProcessor.hasConsumers()).isTrue());
+    }
+
+    @Test
+    public void testCreateWithMultipleRegistryEventConsumer() {
+        List<RegistryEventConsumer<CircuitBreaker>> registryEventConsumers = new ArrayList<>();
+        registryEventConsumers.add(new NoOpCircuitBreakerEventConsumer());
+        registryEventConsumers.add(new NoOpCircuitBreakerEventConsumer());
+
+        CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.of(CircuitBreakerConfig.ofDefaults(), registryEventConsumers);
+
+        getEventProcessor(circuitBreakerRegistry.getEventPublisher())
+                .ifPresent(eventProcessor -> assertThat(eventProcessor.hasConsumers()).isTrue());
+    }
+
+    @Test
+    public void testCreateWithConfigurationMapWithSingleRegistryEventConsumer() {
+        Map<String, CircuitBreakerConfig> configs = new HashMap<>();
+        configs.put("custom", CircuitBreakerConfig.ofDefaults());
+
+        CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.of(configs, new NoOpCircuitBreakerEventConsumer());
+
+        getEventProcessor(circuitBreakerRegistry.getEventPublisher())
+                .ifPresent(eventProcessor -> assertThat(eventProcessor.hasConsumers()).isTrue());
+    }
+
+    @Test
+    public void testCreateWithConfigurationMapWithMultiRegistryEventConsumer() {
+        Map<String, CircuitBreakerConfig> configs = new HashMap<>();
+        configs.put("custom", CircuitBreakerConfig.ofDefaults());
+
+        List<RegistryEventConsumer<CircuitBreaker>> registryEventConsumers = new ArrayList<>();
+        registryEventConsumers.add(new NoOpCircuitBreakerEventConsumer());
+        registryEventConsumers.add(new NoOpCircuitBreakerEventConsumer());
+
+        CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.of(configs, registryEventConsumers);
+
+        getEventProcessor(circuitBreakerRegistry.getEventPublisher())
+                .ifPresent(eventProcessor -> assertThat(eventProcessor.hasConsumers()).isTrue());
+    }
+
+    @Test
     public void testAddConfiguration() {
         CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
         float failureRate = 30f;
@@ -130,5 +180,24 @@ public class CircuitBreakerRegistryTest {
     @Test
     public void testCreateWithNullConfig() {
         assertThatThrownBy(() -> CircuitBreakerRegistry.of((CircuitBreakerConfig)null)).isInstanceOf(NullPointerException.class).hasMessage("Config must not be null");
+    }
+
+    private static Optional<EventProcessor<?>> getEventProcessor(Registry.EventPublisher<CircuitBreaker> eventPublisher) {
+        if (eventPublisher instanceof EventProcessor<?>) {
+            return Optional.of((EventProcessor<?>) eventPublisher);
+        }
+
+        return Optional.empty();
+    }
+
+    private static class NoOpCircuitBreakerEventConsumer implements RegistryEventConsumer<CircuitBreaker> {
+        @Override
+        public void onEntryAddedEvent(EntryAddedEvent<CircuitBreaker> entryAddedEvent) { }
+
+        @Override
+        public void onEntryRemovedEvent(EntryRemovedEvent<CircuitBreaker> entryRemoveEvent) { }
+
+        @Override
+        public void onEntryReplacedEvent(EntryReplacedEvent<CircuitBreaker> entryReplacedEvent) { }
     }
 }

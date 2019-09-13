@@ -129,4 +129,18 @@ public class RateLimiterConfigurationPropertiesTest {
 				.isInstanceOf(ConfigurationNotFoundException.class)
 				.hasMessage("Configuration with name 'unknownConfig' does not exist");
 	}
+
+	@Test
+	public void testFindRateLimiterProperties() {
+		RateLimiterConfigurationProperties rateLimiterConfigurationProperties = new RateLimiterConfigurationProperties();
+		RateLimiterConfigurationProperties.InstanceProperties instanceProperties = new RateLimiterConfigurationProperties.InstanceProperties();
+		instanceProperties.setLimitForPeriod(3);
+		instanceProperties.setLimitRefreshPeriod(Duration.ofNanos(5000000));
+		instanceProperties.setSubscribeForEvents(true);
+
+		rateLimiterConfigurationProperties.getInstances().put("default", instanceProperties);
+
+		assertThat(rateLimiterConfigurationProperties.findRateLimiterProperties("default").isPresent()).isTrue();
+		assertThat(rateLimiterConfigurationProperties.findRateLimiterProperties("custom").isPresent()).isFalse();
+	}
 }
