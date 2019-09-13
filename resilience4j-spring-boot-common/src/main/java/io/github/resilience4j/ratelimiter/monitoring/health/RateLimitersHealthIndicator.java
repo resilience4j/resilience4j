@@ -52,8 +52,8 @@ public class RateLimitersHealthIndicator implements HealthIndicator {
 
     private boolean isRegisterHealthIndicator(RateLimiter rateLimiter) {
         return rateLimiterProperties.findRateLimiterProperties(rateLimiter.getName())
-                .map(io.github.resilience4j.common.ratelimiter.configuration.RateLimiterConfigurationProperties.InstanceProperties::getRegisterHealthIndicator)
-                .orElse(true);
+                .map(RateLimiterConfigurationProperties.InstanceProperties::getRegisterHealthIndicator)
+                .orElse(false);
     }
 
     private Health mapRateLimiterHealth(RateLimiter rateLimiter) {

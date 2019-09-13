@@ -39,6 +39,7 @@ resilience4j.circuitbreaker:
       registerHealthIndicator: true
   backends:
     backendA:
+      registerHealthIndicator: true
       slidingWindowSize: 6
       permittedNumberOfCallsInHalfOpenState: 2
       waitDurationInOpenState: 5s

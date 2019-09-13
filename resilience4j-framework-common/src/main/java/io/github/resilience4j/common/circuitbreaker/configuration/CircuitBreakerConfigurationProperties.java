@@ -41,7 +41,11 @@ public class CircuitBreakerConfigurationProperties {
 	private Map<String, InstanceProperties> configs = new HashMap<>();
 
 	public Optional<InstanceProperties> findCircuitBreakerProperties(String name) {
-		return Optional.ofNullable(instances.get(name));
+		InstanceProperties instanceProperties = instances.get(name);
+		if(instanceProperties == null){
+			instanceProperties = configs.get("default");
+		}
+		return Optional.ofNullable(instanceProperties);
 	}
 
 	public CircuitBreakerConfig createCircuitBreakerConfig(InstanceProperties instanceProperties) {
