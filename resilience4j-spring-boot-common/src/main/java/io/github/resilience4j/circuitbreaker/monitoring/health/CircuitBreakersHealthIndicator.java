@@ -65,8 +65,8 @@ public class CircuitBreakersHealthIndicator implements HealthIndicator {
 
     private boolean isRegisterHealthIndicator(CircuitBreaker circuitBreaker) {
         return circuitBreakerProperties.findCircuitBreakerProperties(circuitBreaker.getName())
-                .map(io.github.resilience4j.common.circuitbreaker.configuration.CircuitBreakerConfigurationProperties.InstanceProperties::getRegisterHealthIndicator)
-                .orElse(true);
+                .map(CircuitBreakerConfigurationProperties.InstanceProperties::getRegisterHealthIndicator)
+                .orElse(false);
     }
 
     private static Health mapBackendMonitorState(CircuitBreaker circuitBreaker) {
