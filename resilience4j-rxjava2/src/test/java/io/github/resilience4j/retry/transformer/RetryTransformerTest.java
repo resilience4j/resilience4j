@@ -27,6 +27,7 @@ import org.mockito.Mockito;
 
 import javax.xml.ws.WebServiceException;
 import java.io.IOException;
+import java.time.Duration;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
@@ -45,7 +46,7 @@ public class RetryTransformerTest {
     @Test
     public void returnOnCompleteUsingSingle() {
         //Given
-        RetryConfig config = RetryConfig.ofDefaults();
+        RetryConfig config = retryConfig();
         Retry retry = Retry.of("testName", config);
 
         given(helloWorldService.returnHelloWorld())
@@ -83,7 +84,7 @@ public class RetryTransformerTest {
     @Test(expected = StackOverflowError.class)
     public void shouldNotRetryUsingSingleStackOverFlow() {
         //Given
-        RetryConfig config = RetryConfig.ofDefaults();
+        RetryConfig config = retryConfig();
         Retry retry = Retry.of("testName", config);
 
         given(helloWorldService.returnHelloWorld())
@@ -106,7 +107,7 @@ public class RetryTransformerTest {
     @Test
     public void shouldNotRetryWhenItThrowErrorSingle() {
         //Given
-        RetryConfig config = RetryConfig.ofDefaults();
+        RetryConfig config = retryConfig();
         Retry retry = Retry.of("testName", config);
 
         given(helloWorldService.returnHelloWorld())
@@ -131,7 +132,7 @@ public class RetryTransformerTest {
     @Test
     public void returnOnErrorUsingSingle() {
         //Given
-        RetryConfig config = RetryConfig.ofDefaults();
+        RetryConfig config = retryConfig();
         Retry retry = Retry.of("testName", config);
 
         given(helloWorldService.returnHelloWorld())
@@ -164,6 +165,7 @@ public class RetryTransformerTest {
         //Given
         RetryConfig config = RetryConfig.custom()
                 .retryOnException(t -> t instanceof IOException)
+                .waitDuration(Duration.ofMillis(50))
                 .maxAttempts(3).build();
         Retry retry = Retry.of("testName", config);
         given(helloWorldService.returnHelloWorld())
@@ -189,6 +191,7 @@ public class RetryTransformerTest {
         //Given
         RetryConfig config = RetryConfig.<String>custom()
                 .retryOnResult("retry"::equals)
+                .waitDuration(Duration.ofMillis(50))
                 .maxAttempts(3).build();
         Retry retry = Retry.of("testName", config);
         given(helloWorldService.returnHelloWorld())
@@ -216,6 +219,7 @@ public class RetryTransformerTest {
         //Given
         RetryConfig config = RetryConfig.<String>custom()
                 .retryOnResult("retry"::equals)
+                .waitDuration(Duration.ofMillis(50))
                 .maxAttempts(3).build();
         Retry retry = Retry.of("testName", config);
         given(helloWorldService.returnHelloWorld())
@@ -235,7 +239,7 @@ public class RetryTransformerTest {
     @Test
     public void returnOnCompleteUsingMaybe() {
         //Given
-        RetryConfig config = RetryConfig.ofDefaults();
+        RetryConfig config = retryConfig();
         Retry retry = Retry.of("testName", config);
         RetryTransformer<Object> retryTransformer = RetryTransformer.of(retry);
 
@@ -273,7 +277,7 @@ public class RetryTransformerTest {
     @Test
     public void returnOnErrorUsingMaybe() {
         //Given
-        RetryConfig config = RetryConfig.ofDefaults();
+        RetryConfig config = retryConfig();
         Retry retry = Retry.of("testName", config);
 
         given(helloWorldService.returnHelloWorld())
@@ -306,6 +310,7 @@ public class RetryTransformerTest {
         //Given
         RetryConfig config = RetryConfig.custom()
                 .retryOnException(t -> t instanceof IOException)
+                .waitDuration(Duration.ofMillis(50))
                 .maxAttempts(3).build();
         Retry retry = Retry.of("testName", config);
         given(helloWorldService.returnHelloWorld())
@@ -331,6 +336,7 @@ public class RetryTransformerTest {
         //Given
         RetryConfig config = RetryConfig.<String>custom()
                 .retryOnResult("retry"::equals)
+                .waitDuration(Duration.ofMillis(50))
                 .maxAttempts(3).build();
         Retry retry = Retry.of("testName", config);
         given(helloWorldService.returnHelloWorld())
@@ -358,6 +364,7 @@ public class RetryTransformerTest {
         //Given
         RetryConfig config = RetryConfig.<String>custom()
                 .retryOnResult("retry"::equals)
+                .waitDuration(Duration.ofMillis(50))
                 .maxAttempts(3).build();
         Retry retry = Retry.of("testName", config);
         given(helloWorldService.returnHelloWorld())
@@ -378,7 +385,7 @@ public class RetryTransformerTest {
     @Test
     public void returnOnCompleteUsingCompletable() {
         //Given
-        RetryConfig config = RetryConfig.ofDefaults();
+        RetryConfig config = retryConfig();
         Retry retry = Retry.of("testName", config);
         RetryTransformer<Object> retryTransformer = RetryTransformer.of(retry);
         doNothing()
@@ -413,7 +420,7 @@ public class RetryTransformerTest {
     @Test
     public void returnOnErrorUsingCompletable() {
         //Given
-        RetryConfig config = RetryConfig.ofDefaults();
+        RetryConfig config = retryConfig();
         Retry retry = Retry.of("testName", config);
         RetryTransformer<Object> retryTransformer = RetryTransformer.of(retry);
         doThrow(new WebServiceException("BAM!")).when(helloWorldService).sayHelloWorld();
@@ -445,6 +452,7 @@ public class RetryTransformerTest {
         //Given
         RetryConfig config = RetryConfig.custom()
                 .retryOnException(t -> t instanceof IOException)
+                .waitDuration(Duration.ofMillis(50))
                 .maxAttempts(3).build();
         Retry retry = Retry.of("testName", config);
         doThrow(new WebServiceException("BAM!")).when(helloWorldService).sayHelloWorld();
@@ -467,7 +475,7 @@ public class RetryTransformerTest {
     @Test
     public void returnOnCompleteUsingObservable() {
         //Given
-        RetryConfig config = RetryConfig.ofDefaults();
+        RetryConfig config = retryConfig();
         Retry retry = Retry.of("testName", config);
         RetryTransformer<Object> retryTransformer = RetryTransformer.of(retry);
 
@@ -499,7 +507,7 @@ public class RetryTransformerTest {
     @Test
     public void returnOnErrorUsingObservable() {
         //Given
-        RetryConfig config = RetryConfig.ofDefaults();
+        RetryConfig config = retryConfig();
         Retry retry = Retry.of("testName", config);
         RetryTransformer<Object> retryTransformer = RetryTransformer.of(retry);
 
@@ -533,6 +541,7 @@ public class RetryTransformerTest {
         //Given
         RetryConfig config = RetryConfig.custom()
                 .retryOnException(t -> t instanceof IOException)
+                .waitDuration(Duration.ofMillis(50))
                 .maxAttempts(3).build();
         Retry retry = Retry.of("testName", config);
         given(helloWorldService.returnHelloWorld())
@@ -558,6 +567,7 @@ public class RetryTransformerTest {
         //Given
         RetryConfig config = RetryConfig.<String>custom()
                 .retryOnResult("retry"::equals)
+                .waitDuration(Duration.ofMillis(50))
                 .maxAttempts(3).build();
         Retry retry = Retry.of("testName", config);
         given(helloWorldService.returnHelloWorld())
@@ -585,6 +595,7 @@ public class RetryTransformerTest {
         //Given
         RetryConfig config = RetryConfig.<String>custom()
                 .retryOnResult("retry"::equals)
+                .waitDuration(Duration.ofMillis(50))
                 .maxAttempts(3).build();
         Retry retry = Retry.of("testName", config);
         given(helloWorldService.returnHelloWorld())
@@ -605,7 +616,7 @@ public class RetryTransformerTest {
     @Test
     public void returnOnCompleteUsingFlowable() {
         //Given
-        RetryConfig config = RetryConfig.ofDefaults();
+        RetryConfig config = retryConfig();
         Retry retry = Retry.of("testName", config);
         RetryTransformer<Object> retryTransformer = RetryTransformer.of(retry);
 
@@ -637,7 +648,7 @@ public class RetryTransformerTest {
     @Test
     public void returnOnErrorUsingFlowable() {
         //Given
-        RetryConfig config = RetryConfig.ofDefaults();
+        RetryConfig config = retryConfig();
         Retry retry = Retry.of("testName", config);
         RetryTransformer<Object> retryTransformer = RetryTransformer.of(retry);
 
@@ -671,6 +682,7 @@ public class RetryTransformerTest {
         //Given
         RetryConfig config = RetryConfig.custom()
                 .retryOnException(t -> t instanceof IOException)
+                .waitDuration(Duration.ofMillis(50))
                 .maxAttempts(3).build();
         Retry retry = Retry.of("testName", config);
         given(helloWorldService.returnHelloWorld())
@@ -696,6 +708,7 @@ public class RetryTransformerTest {
         //Given
         RetryConfig config = RetryConfig.<String>custom()
                 .retryOnResult("retry"::equals)
+                .waitDuration(Duration.ofMillis(50))
                 .maxAttempts(3).build();
         Retry retry = Retry.of("testName", config);
         given(helloWorldService.returnHelloWorld())
@@ -723,6 +736,7 @@ public class RetryTransformerTest {
         //Given
         RetryConfig config = RetryConfig.<String>custom()
                 .retryOnResult("retry"::equals)
+                .waitDuration(Duration.ofMillis(50))
                 .maxAttempts(3).build();
         Retry retry = Retry.of("testName", config);
         given(helloWorldService.returnHelloWorld())
@@ -738,5 +752,9 @@ public class RetryTransformerTest {
                 .assertSubscribed();
         //Then
         BDDMockito.then(helloWorldService).should(Mockito.times(3)).returnHelloWorld();
+    }
+
+    private RetryConfig retryConfig() {
+        return RetryConfig.custom().waitDuration(Duration.ofMillis(50)).build();
     }
 }
