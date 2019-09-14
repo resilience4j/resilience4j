@@ -2,6 +2,7 @@ package io.github.resilience4j.metrics;
 
 import com.codahale.metrics.MetricRegistry;
 import io.github.resilience4j.retry.Retry;
+import io.github.resilience4j.retry.RetryConfig;
 import io.github.resilience4j.retry.RetryRegistry;
 import io.github.resilience4j.test.HelloWorldService;
 import io.vavr.control.Try;
@@ -10,6 +11,8 @@ import org.junit.Test;
 import org.mockito.BDDMockito;
 
 import javax.xml.ws.WebServiceException;
+
+import java.time.Duration;
 
 import static io.github.resilience4j.retry.utils.MetricNames.*;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -54,7 +57,8 @@ public class RetryMetricsTest {
     @Test
     public void shouldRegisterMetricsWithRetry() throws Throwable {
         //Given
-        RetryRegistry retryRegistry = RetryRegistry.ofDefaults();
+        RetryRegistry retryRegistry =
+                RetryRegistry.of(RetryConfig.custom().waitDuration(Duration.ofMillis(150)).build());
         Retry retry = retryRegistry.retry("testName");
         metricRegistry.registerAll(RetryMetrics.ofRetryRegistry(retryRegistry));
 

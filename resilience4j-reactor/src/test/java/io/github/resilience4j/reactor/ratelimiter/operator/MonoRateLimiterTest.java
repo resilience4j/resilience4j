@@ -62,7 +62,7 @@ public class MonoRateLimiterTest {
 
     @Test
     public void shouldDelaySubscription() {
-        given(rateLimiter.reservePermission()).willReturn(Duration.ofSeconds(2).toNanos());
+        given(rateLimiter.reservePermission()).willReturn(Duration.ofMillis(50).toNanos());
 
         StepVerifier.create(
                 Mono.error(new IOException("BAM!"))
@@ -70,7 +70,7 @@ public class MonoRateLimiterTest {
                         .compose(RateLimiterOperator.of(rateLimiter)))
                 .expectSubscription()
                 .expectError(IOException.class)
-                .verify(Duration.ofSeconds(3));
+                .verify(Duration.ofMillis(150));
     }
 
 
