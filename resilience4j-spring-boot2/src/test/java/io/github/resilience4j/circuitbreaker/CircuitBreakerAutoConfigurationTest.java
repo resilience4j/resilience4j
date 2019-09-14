@@ -293,9 +293,6 @@ public class CircuitBreakerAutoConfigurationTest {
         assertThat(circuitBreakerHealth.getDetails().get("backendB")).isNull();
 
         assertThat(circuitBreakerAspect.getOrder()).isEqualTo(400);
-        assertThat(circuitBreaker.getMetrics().getNumberOfBufferedCalls()).isEqualTo(2);
-        assertThat(circuitBreaker.getMetrics().getNumberOfSuccessfulCalls()).isEqualTo(1);
-        assertThat(circuitBreaker.getMetrics().getNumberOfFailedCalls()).isEqualTo(1);
     }
 
     private CircuitBreakerEventsEndpointResponse circuitBreakerEvents(String s) {

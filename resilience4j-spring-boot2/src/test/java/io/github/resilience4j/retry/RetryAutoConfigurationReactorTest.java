@@ -96,11 +96,6 @@ public class RetryAutoConfigurationReactorTest {
         assertThat(retry.getRetryConfig().getExceptionPredicate().test(new IgnoredException())).isFalse();
 
         assertThat(retryAspect.getOrder()).isEqualTo(399);
-
-        assertThat(retry.getMetrics().getNumberOfFailedCallsWithoutRetryAttempt()).isEqualTo(0);
-        assertThat(retry.getMetrics().getNumberOfFailedCallsWithRetryAttempt()).isEqualTo(1);
-        assertThat(retry.getMetrics().getNumberOfSuccessfulCallsWithoutRetryAttempt()).isEqualTo(1);
-        assertThat(retry.getMetrics().getNumberOfSuccessfulCallsWithRetryAttempt()).isEqualTo(0);
     }
 
     private RetryEventsEndpointResponse retryEventListBody(String url) {

@@ -36,6 +36,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import java.io.IOException;
+import java.util.HashSet;
 
 import static io.github.resilience4j.service.test.retry.ReactiveRetryDummyService.BACKEND_C;
 import static io.github.resilience4j.service.test.retry.RetryDummyFeignClient.RETRY_DUMMY_FEIGN_CLIENT_NAME;
@@ -112,7 +113,8 @@ public class RetryAutoConfigurationTest {
 
         // expect retry actuator endpoint contains both retries
         ResponseEntity<RetryEndpointResponse> retriesList = restTemplate.getForEntity("/actuator/retries", RetryEndpointResponse.class);
-        assertThat(retriesList.getBody().getRetries()).hasSize(4).containsOnly(RETRY_BACKEND_A, RETRY_BACKEND_B, BACKEND_C, RETRY_DUMMY_FEIGN_CLIENT_NAME);
+        assertThat(new HashSet<>(retriesList.getBody().getRetries())).contains(RETRY_BACKEND_A, RETRY_BACKEND_B,
+                BACKEND_C, RETRY_DUMMY_FEIGN_CLIENT_NAME);
 
         // expect retry-event actuator endpoint recorded both events
         RetryEventsEndpointResponse retryEventList = retryEvents("/actuator/retryevents");
@@ -161,7 +163,8 @@ public class RetryAutoConfigurationTest {
 
         // expect retry actuator endpoint contains both retries
         ResponseEntity<RetryEndpointResponse> retriesList = restTemplate.getForEntity("/actuator/retries", RetryEndpointResponse.class);
-        assertThat(retriesList.getBody().getRetries()).hasSize(4).containsOnly(RETRY_BACKEND_A, RETRY_BACKEND_B, BACKEND_C, RETRY_DUMMY_FEIGN_CLIENT_NAME);
+        assertThat(new HashSet<>(retriesList.getBody().getRetries())).contains(RETRY_BACKEND_A, RETRY_BACKEND_B,
+                BACKEND_C, RETRY_DUMMY_FEIGN_CLIENT_NAME);
 
         // expect retry-event actuator endpoint recorded both events
         RetryEventsEndpointResponse retryEventList = retryEvents("/actuator/retryevents");
