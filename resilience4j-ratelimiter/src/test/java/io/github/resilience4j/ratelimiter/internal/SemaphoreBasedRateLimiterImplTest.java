@@ -36,6 +36,7 @@ import java.util.function.Function;
 import static com.jayway.awaitility.Awaitility.await;
 import static io.vavr.control.Try.run;
 import static java.lang.Thread.State.*;
+import static java.time.LocalDateTime.now;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.BDDAssertions.then;
 import static org.hamcrest.CoreMatchers.equalTo;
@@ -46,7 +47,7 @@ import static org.mockito.Mockito.*;
 public class SemaphoreBasedRateLimiterImplTest {
 
     private static final int LIMIT = 2;
-    private static final Duration TIMEOUT = Duration.ofSeconds(5);
+    private static final Duration TIMEOUT = Duration.ofMillis(50);
     private static final Duration REFRESH_PERIOD = Duration.ofMillis(100);
     private static final String CONFIG_MUST_NOT_BE_NULL = "Config must not be null";
     private static final String NAME_MUST_NOT_BE_NULL = "Name must not be null";
@@ -72,9 +73,13 @@ public class SemaphoreBasedRateLimiterImplTest {
 
     @Test
     public void rateLimiterCreationWithProvidedScheduler() throws Exception {
+        System.out.println("1" + now());
         ScheduledExecutorService scheduledExecutorService = mock(ScheduledExecutorService.class);
+        System.out.println("2" + now());
         RateLimiterConfig configSpy = spy(config);
+        System.out.println("3" + now());
         SemaphoreBasedRateLimiter limit = new SemaphoreBasedRateLimiter("test", configSpy, scheduledExecutorService);
+        System.out.println("4" + now());
 
         ArgumentCaptor<Runnable> refreshLimitRunnableCaptor = ArgumentCaptor.forClass(Runnable.class);
         verify(scheduledExecutorService)
@@ -84,6 +89,7 @@ public class SemaphoreBasedRateLimiterImplTest {
                 eq(config.getLimitRefreshPeriod().toNanos()),
                 eq(TimeUnit.NANOSECONDS)
             );
+        System.out.println("5" + now());
 
         Runnable refreshLimitRunnable = refreshLimitRunnableCaptor.getValue();
 
@@ -91,24 +97,38 @@ public class SemaphoreBasedRateLimiterImplTest {
         then(limit.reservePermission()).isNegative();
         then(limit.reservePermission()).isNegative();
 
+        System.out.println("6" + now());
+
         then(limit.acquirePermission()).isTrue();
         then(limit.reservePermission()).isNegative();
         then(limit.reservePermission()).isNegative();
 
+        System.out.println("7" + now());
+
         then(limit.acquirePermission()).isFalse();
         then(limit.reservePermission()).isNegative();
         then(limit.reservePermission()).isNegative();
+
+        System.out.println("8" + now());
 
         Thread.sleep(REFRESH_PERIOD.toMillis() * 2);
         verify(configSpy, times(1)).getLimitForPeriod();
 
+        System.out.println("9" + now());
+
         refreshLimitRunnable.run();
 
+        System.out.println("10" + now());
+
         verify(configSpy, times(2)).getLimitForPeriod();
+
+        System.out.println("11" + now());
 
         then(limit.acquirePermission()).isTrue();
         then(limit.acquirePermission()).isTrue();
         then(limit.acquirePermission()).isFalse();
+
+        System.out.println("12" + now());
     }
 
     @Test
