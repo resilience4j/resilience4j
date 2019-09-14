@@ -113,7 +113,7 @@ class RateLimiterSpec extends Specification {
 
         when:
         def actual = null
-        for (int i = 0; i <= 10; i++) {
+        for (int i = 0; i <= 3; i++) {
             actual = get(path)
         }
 
@@ -172,7 +172,7 @@ class RateLimiterSpec extends Specification {
 
         when:
         def actual = null
-        for (int i = 0; i <= 10; i++) {
+        for (int i = 0; i <= 3; i++) {
             actual = get(path)
         }
 
@@ -227,7 +227,7 @@ class RateLimiterSpec extends Specification {
 
         when:
         def actual = null
-        for (int i = 0; i <= 10; i++) {
+        for (int i = 0; i <= 3; i++) {
             actual = get(path)
         }
 
@@ -279,7 +279,7 @@ class RateLimiterSpec extends Specification {
 
         when:
         def actual = null
-        for (int i = 0; i <= 10; i++) {
+        for (int i = 0; i <= 3; i++) {
             actual = get(path)
         }
 
@@ -299,8 +299,8 @@ class RateLimiterSpec extends Specification {
     def buildConfig() {
         RateLimiterConfig.custom()
                 .limitRefreshPeriod(Duration.ofSeconds(60))
-                .limitForPeriod(10)
-                .timeoutDuration(Duration.ofMillis(100))
+                .limitForPeriod(3)
+                .timeoutDuration(Duration.ofMillis(20))
                 .build()
     }
 
