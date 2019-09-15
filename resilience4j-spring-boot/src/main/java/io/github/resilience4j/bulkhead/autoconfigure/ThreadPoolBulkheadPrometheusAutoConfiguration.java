@@ -19,7 +19,6 @@ package io.github.resilience4j.bulkhead.autoconfigure;
 import io.github.resilience4j.bulkhead.ThreadPoolBulkhead;
 import io.github.resilience4j.bulkhead.ThreadPoolBulkheadRegistry;
 import io.github.resilience4j.prometheus.collectors.ThreadPoolBulkheadMetricsCollector;
-import io.github.resilience4j.prometheus.publisher.ThreadPoolBulkheadMetricsPublisher;
 import io.prometheus.client.GaugeMetricFamily;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -28,24 +27,16 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
-@ConditionalOnClass({GaugeMetricFamily.class, ThreadPoolBulkhead.class, ThreadPoolBulkheadMetricsPublisher.class})
+@ConditionalOnClass({GaugeMetricFamily.class, ThreadPoolBulkhead.class, ThreadPoolBulkheadMetricsCollector.class})
 @ConditionalOnProperty(value = "resilience4j.thread-pool-bulkhead.metrics.enabled", matchIfMissing = true)
 public class ThreadPoolBulkheadPrometheusAutoConfiguration {
 
     @Bean
-    @ConditionalOnProperty(value = "resilience4j.thread-pool-bulkhead.metrics.legacy.enabled", havingValue = "true")
     @ConditionalOnMissingBean
     public ThreadPoolBulkheadMetricsCollector threadPoolBulkheadPrometheusCollector(ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry) {
         ThreadPoolBulkheadMetricsCollector collector = ThreadPoolBulkheadMetricsCollector.ofBulkheadRegistry(threadPoolBulkheadRegistry);
         collector.register();
         return collector;
-    }
-
-    @Bean
-    @ConditionalOnProperty(value = "resilience4j.thread-pool-bulkhead.metrics.legacy.enabled", havingValue = "false", matchIfMissing = true)
-    @ConditionalOnMissingBean
-    public ThreadPoolBulkheadMetricsPublisher threadPoolBulkheadMetricsPublisher() {
-        return new ThreadPoolBulkheadMetricsPublisher();
     }
 
 }

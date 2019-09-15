@@ -16,20 +16,20 @@
 package io.github.resilience4j.prometheus.collectors;
 
 import io.github.resilience4j.bulkhead.Bulkhead.Metrics;
-import io.github.resilience4j.prometheus.AbstractRetryMetrics;
 import io.github.resilience4j.prometheus.LabelNames;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryRegistry;
+import io.prometheus.client.Collector;
 import io.prometheus.client.GaugeMetricFamily;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 
 import static java.util.Arrays.asList;
+import static java.util.Objects.requireNonNull;
 
 /** Collects Retry exposed {@link Metrics}. */
-public class RetryMetricsCollector extends AbstractRetryMetrics {
+public class RetryMetricsCollector extends Collector {
 
     /**
      * Creates a new collector with custom metric names and
@@ -38,7 +38,7 @@ public class RetryMetricsCollector extends AbstractRetryMetrics {
      * @param names    the custom metric names
      * @param retryRegistry the source of retries
      */
-    public static RetryMetricsCollector ofRetryRegistry(RetryMetricsCollector.MetricNames names, RetryRegistry retryRegistry) {
+    public static RetryMetricsCollector ofRetryRegistry(MetricNames names, RetryRegistry retryRegistry) {
         return new RetryMetricsCollector(names, retryRegistry);
     }
 
@@ -48,14 +48,15 @@ public class RetryMetricsCollector extends AbstractRetryMetrics {
      * @param retryRegistry the source of retries
      */
     public static RetryMetricsCollector ofRetryRegistry(RetryRegistry retryRegistry) {
-        return new RetryMetricsCollector(RetryMetricsCollector.MetricNames.ofDefaults(), retryRegistry);
+        return new RetryMetricsCollector(MetricNames.ofDefaults(), retryRegistry);
     }
 
+    private final MetricNames names;
     private final RetryRegistry retryRegistry;
 
     private RetryMetricsCollector(MetricNames names, RetryRegistry retryRegistry) {
-        super(names);
-        this.retryRegistry = Objects.requireNonNull(retryRegistry);
+        this.names = requireNonNull(names);
+        this.retryRegistry = requireNonNull(retryRegistry);
     }
 
     @Override
@@ -77,4 +78,57 @@ public class RetryMetricsCollector extends AbstractRetryMetrics {
         return Collections.singletonList(retryCallsFamily);
     }
 
+    /** Defines possible configuration for metric names. */
+    public static class MetricNames {
+
+        public static final String DEFAULT_RETRY_CALLS = "resilience4j_retry_calls";
+
+        /**
+         * Returns a builder for creating custom metric names.
+         * Note that names have default values, so only desired metrics can be renamed.
+         * @return The builder.
+         */
+        public static Builder custom() {
+            return new Builder();
+        }
+
+        /** Returns default metric names.
+         * @return The default {@link MetricNames} instance.
+         */
+        public static MetricNames ofDefaults() {
+            return new MetricNames();
+        }
+
+        private String callsMetricName = DEFAULT_RETRY_CALLS;
+
+        private MetricNames() {}
+
+        /** Returns the metric name for retry calls, defaults to {@value DEFAULT_RETRY_CALLS}.
+         * @return The metric name for retry calls.
+         */
+        public String getCallsMetricName() {
+            return callsMetricName;
+        }
+
+        /** Helps building custom instance of {@link MetricNames}. */
+        public static class Builder {
+            private final MetricNames metricNames = new MetricNames();
+
+            /** Overrides the default metric name {@value MetricNames#DEFAULT_RETRY_CALLS} with a given one.
+             * @param callsMetricName The metric name for retry calls.
+             * @return The builder.
+             */
+            public Builder callsMetricName(String callsMetricName) {
+                metricNames.callsMetricName = requireNonNull(callsMetricName);
+                return this;
+            }
+
+            /** Builds {@link MetricNames} instance.
+             * @return The built {@link MetricNames} instance.
+             */
+            public MetricNames build() {
+                return metricNames;
+            }
+        }
+    }
 }

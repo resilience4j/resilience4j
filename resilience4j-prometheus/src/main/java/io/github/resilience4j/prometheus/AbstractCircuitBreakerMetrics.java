@@ -16,13 +16,16 @@
 
 package io.github.resilience4j.prometheus;
 
+import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.prometheus.client.Collector;
 import io.prometheus.client.CollectorRegistry;
+import io.prometheus.client.GaugeMetricFamily;
 import io.prometheus.client.Histogram;
 
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
+import static java.util.Arrays.asList;
 import static java.util.Objects.requireNonNull;
 
 public abstract class AbstractCircuitBreakerMetrics extends Collector {
@@ -32,7 +35,7 @@ public abstract class AbstractCircuitBreakerMetrics extends Collector {
     protected static final String KIND_IGNORED = "ignored";
     protected static final String KIND_NOT_PERMITTED = "not_permitted";
 
-    protected static final List<String> NAME_AND_STATE = Arrays.asList("name", "state");
+    protected static final List<String> NAME_AND_STATE = asList("name", "state");
 
     protected final MetricNames names;
     protected final CollectorRegistry collectorRegistry = new CollectorRegistry(true);
@@ -45,6 +48,54 @@ public abstract class AbstractCircuitBreakerMetrics extends Collector {
                 .create().register(collectorRegistry);
     }
 
+    protected void addMetrics(CircuitBreaker circuitBreaker) {
+        circuitBreaker.getEventPublisher()
+                .onCallNotPermitted(event -> callsHistogram.labels(circuitBreaker.getName(), KIND_NOT_PERMITTED).observe(0))
+                .onIgnoredError(event -> callsHistogram.labels(circuitBreaker.getName(), KIND_IGNORED).observe(event.getElapsedDuration().toNanos() / Collector.NANOSECONDS_PER_SECOND))
+                .onSuccess(event -> callsHistogram.labels(circuitBreaker.getName(), KIND_SUCCESSFUL).observe(event.getElapsedDuration().toNanos() / Collector.NANOSECONDS_PER_SECOND))
+                .onError(event -> callsHistogram.labels(circuitBreaker.getName(), KIND_FAILED).observe(event.getElapsedDuration().toNanos() / Collector.NANOSECONDS_PER_SECOND));
+    }
+
+    protected List<MetricFamilySamples> collectGaugeSamples(List<CircuitBreaker> circuitBreakers) {
+        GaugeMetricFamily stateFamily = new GaugeMetricFamily(
+                names.getStateMetricName(),
+                "The state of the circuit breaker:",
+                NAME_AND_STATE
+        );
+        GaugeMetricFamily bufferedCallsFamily = new GaugeMetricFamily(
+                names.getBufferedCallsMetricName(),
+                "The number of buffered calls",
+                LabelNames.NAME_AND_KIND
+        );
+
+        GaugeMetricFamily failureRateFamily = new GaugeMetricFamily(
+                names.getFailureRateMetricName(),
+                "The failure rate",
+                LabelNames.NAME
+        );
+
+        GaugeMetricFamily slowCallRateFamily = new GaugeMetricFamily(
+                names.getSlowCallRateMetricName(),
+                "The slow call rate",
+                LabelNames.NAME
+        );
+
+        for (CircuitBreaker circuitBreaker : circuitBreakers) {
+            final CircuitBreaker.State[] states = CircuitBreaker.State.values();
+            for (CircuitBreaker.State state : states) {
+                stateFamily.addMetric(asList(circuitBreaker.getName(), state.name().toLowerCase()),
+                        circuitBreaker.getState() == state ? 1 : 0);
+            }
+
+            List<String> nameLabel = Collections.singletonList(circuitBreaker.getName());
+            CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
+            bufferedCallsFamily.addMetric(asList(circuitBreaker.getName(), KIND_SUCCESSFUL), metrics.getNumberOfSuccessfulCalls());
+            bufferedCallsFamily.addMetric(asList(circuitBreaker.getName(), KIND_FAILED), metrics.getNumberOfFailedCalls());
+            failureRateFamily.addMetric(nameLabel, metrics.getFailureRate());
+            slowCallRateFamily.addMetric(nameLabel, metrics.getSlowCallRate());
+        }
+        return asList(stateFamily, bufferedCallsFamily, failureRateFamily, slowCallRateFamily);
+    }
 
     /** Defines possible configuration for metric names. */
     public static class MetricNames {
