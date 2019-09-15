@@ -78,6 +78,10 @@ public class CircuitBreakerConfigurationProperties {
 			builder.failureRateThreshold(properties.getFailureRateThreshold());
 		}
 
+		if (properties.getDisableStackTraces() != null) {
+			builder.disableStackTraces(properties.getDisableStackTraces());
+		}
+
 		if (properties.getSlowCallRateThreshold() != null) {
 			builder.slowCallRateThreshold(properties.getSlowCallRateThreshold());
 		}
@@ -211,6 +215,9 @@ public class CircuitBreakerConfigurationProperties {
 		@Nullable
 		private Boolean automaticTransitionFromOpenToHalfOpenEnabled;
 
+		@Nullable
+		private Boolean disableStackTraces;
+
 		@Min(1)
 		@Nullable
 		private Integer eventConsumerBufferSize;
@@ -331,6 +338,25 @@ public class CircuitBreakerConfigurationProperties {
 		 */
 		public InstanceProperties setAutomaticTransitionFromOpenToHalfOpenEnabled(Boolean automaticTransitionFromOpenToHalfOpenEnabled) {
 			this.automaticTransitionFromOpenToHalfOpenEnabled = automaticTransitionFromOpenToHalfOpenEnabled;
+			return this;
+		}
+
+		/**
+		 * Returns if we should disable stack traces or not.
+		 *
+		 * @return disableStackTraces if we should disable stack traces or not.
+		 */
+		public Boolean getDisableStackTraces() {
+			return this.disableStackTraces;
+		}
+
+		/**
+		 * Sets if we should disable stack traces or not.
+		 *
+		 * @param disableStackTraces The flag to disable stack traces.
+		 */
+		public InstanceProperties setDisableStackTraces(Boolean disableStackTraces) {
+			this.disableStackTraces = disableStackTraces;
 			return this;
 		}
 

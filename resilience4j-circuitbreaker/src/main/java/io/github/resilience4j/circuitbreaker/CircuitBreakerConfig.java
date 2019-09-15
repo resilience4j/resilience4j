@@ -40,6 +40,7 @@ public class CircuitBreakerConfig {
     private static final Predicate<Throwable> DEFAULT_RECORD_EXCEPTION_PREDICATE = throwable -> true;
     private static final Predicate<Throwable> DEFAULT_IGNORE_EXCEPTION_PREDICATE = throwable -> false;
     public static final SlidingWindowType DEFAULT_SLIDING_WINDOW_TYPE = SlidingWindowType.COUNT_BASED;
+    public static final boolean DEFAULT_DISABLE_STACK_TRACES = false;
 
     // The default exception predicate counts all exceptions as failures.
     private Predicate<Throwable> recordExceptionPredicate = DEFAULT_RECORD_EXCEPTION_PREDICATE;
@@ -56,6 +57,7 @@ public class CircuitBreakerConfig {
     private int slidingWindowSize = DEFAULT_SLIDING_WINDOW_SIZE;
     private SlidingWindowType slidingWindowType = DEFAULT_SLIDING_WINDOW_TYPE;
     private int minimumNumberOfCalls = DEFAULT_MINIMUM_NUMBER_OF_CALLS;
+    private boolean disableStackTraces = DEFAULT_DISABLE_STACK_TRACES;
     private Duration waitDurationInOpenState = Duration.ofSeconds(DEFAULT_WAIT_DURATION_IN_OPEN_STATE);
     private boolean automaticTransitionFromOpenToHalfOpenEnabled = false;
     private float slowCallRateThreshold = DEFAULT_SLOW_CALL_RATE_THRESHOLD;
@@ -120,6 +122,10 @@ public class CircuitBreakerConfig {
         return minimumNumberOfCalls;
     }
 
+    public boolean isDisableStackTraces() {
+        return disableStackTraces;
+    }
+
     public int getPermittedNumberOfCallsInHalfOpenState() {
         return permittedNumberOfCallsInHalfOpenState;
     }
@@ -152,6 +158,7 @@ public class CircuitBreakerConfig {
 
         private float failureRateThreshold = DEFAULT_FAILURE_RATE_THRESHOLD;
         private int minimumNumberOfCalls = DEFAULT_MINIMUM_NUMBER_OF_CALLS;
+        private boolean disableStackTraces = DEFAULT_DISABLE_STACK_TRACES;
         private int permittedNumberOfCallsInHalfOpenState = DEFAULT_PERMITTED_CALLS_IN_HALF_OPEN_STATE;
         private int slidingWindowSize = DEFAULT_SLIDING_WINDOW_SIZE;
         private Duration waitDurationInOpenState = Duration.ofSeconds(DEFAULT_SLOW_CALL_DURATION_THRESHOLD);
@@ -174,6 +181,7 @@ public class CircuitBreakerConfig {
             this.automaticTransitionFromOpenToHalfOpenEnabled = baseConfig.automaticTransitionFromOpenToHalfOpenEnabled;
             this.slowCallRateThreshold = baseConfig.slowCallRateThreshold;
             this.slowCallDurationThreshold = baseConfig.slowCallDurationThreshold;
+            this.disableStackTraces = baseConfig.disableStackTraces;
         }
 
         public Builder() {
@@ -213,6 +221,17 @@ public class CircuitBreakerConfig {
                 throw new IllegalArgumentException("slowCallRateThreshold must be between 1 and 100");
             }
             this.slowCallRateThreshold = slowCallRateThreshold;
+            return this;
+        }
+
+        /**
+         * Disables writable stack traces. When set to false {@link Exception#getStackTrace()} returns a zero length array.
+         * This may be used to reduce log spam when the circuit breaker is open as the cause of the exceptions is already known (the circuit breaker is short-circuiting calls).
+         *
+         * @return the CircuitBreakerConfig.Builder
+         */
+        public Builder disableStackTraces(boolean disableStackTraces) {
+            this.disableStackTraces = disableStackTraces;
             return this;
         }
 
@@ -505,6 +524,7 @@ public class CircuitBreakerConfig {
             config.recordExceptions = recordExceptions;
             config.ignoreExceptions = ignoreExceptions;
             config.automaticTransitionFromOpenToHalfOpenEnabled = automaticTransitionFromOpenToHalfOpenEnabled;
+            config.disableStackTraces = disableStackTraces;
             config.recordExceptionPredicate = createRecordExceptionPredicate();
             config.ignoreExceptionPredicate = createIgnoreFailurePredicate();
             return config;

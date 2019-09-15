@@ -113,6 +113,7 @@ public class CircuitBreakerConfigTest {
         then(circuitBreakerConfig.getRecordExceptionPredicate()).isNotNull();
         then(circuitBreakerConfig.getSlowCallRateThreshold()).isEqualTo(DEFAULT_SLOW_CALL_RATE_THRESHOLD);
         then(circuitBreakerConfig.getSlowCallDurationThreshold().getSeconds()).isEqualTo(DEFAULT_SLOW_CALL_DURATION_THRESHOLD);
+        then(circuitBreakerConfig.isDisableStackTraces()).isEqualTo(DEFAULT_DISABLE_STACK_TRACES);
     }
 
     @Test
@@ -137,6 +138,12 @@ public class CircuitBreakerConfigTest {
     public void shouldSetLowFailureRateThreshold() {
         CircuitBreakerConfig circuitBreakerConfig = custom().failureRateThreshold(0.001f).build();
         then(circuitBreakerConfig.getFailureRateThreshold()).isEqualTo(0.001f);
+    }
+
+    @Test
+    public void shouldSetDisablingOfStackTraces() {
+        CircuitBreakerConfig circuitBreakerConfig = custom().disableStackTraces(true).build();
+        then(circuitBreakerConfig.isDisableStackTraces()).isEqualTo(true);
     }
 
     @Test
@@ -320,6 +327,7 @@ public class CircuitBreakerConfigTest {
                 .waitDurationInOpenState(Duration.ofSeconds(100))
                 .slidingWindowSize(1000)
                 .permittedNumberOfCallsInHalfOpenState(100)
+                .disableStackTraces(true)
                 .automaticTransitionFromOpenToHalfOpenEnabled(true)
                 .failureRateThreshold(20f).build();
 
@@ -328,6 +336,7 @@ public class CircuitBreakerConfigTest {
                 .build();
 
         then(extendedConfig.getFailureRateThreshold()).isEqualTo(20f);
+        then(extendedConfig.isDisableStackTraces()).isEqualTo(true);
         then(extendedConfig.getWaitDurationInOpenState()).isEqualTo(Duration.ofSeconds(20));
         then(extendedConfig.getSlidingWindowSize()).isEqualTo(1000);
         then(extendedConfig.getPermittedNumberOfCallsInHalfOpenState()).isEqualTo(100);
