@@ -18,77 +18,37 @@
  */
 package io.github.resilience4j.metrics;
 
+import com.codahale.metrics.MetricRegistry;
 import io.github.resilience4j.timelimiter.TimeLimiter;
 import io.github.resilience4j.timelimiter.TimeLimiterConfig;
 import io.github.resilience4j.timelimiter.TimeLimiterRegistry;
 import io.vavr.control.Try;
+import org.junit.Test;
 
 import java.time.Duration;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
 
-import org.junit.Before;
-import org.junit.Test;
-
-import com.codahale.metrics.MetricRegistry;
-
 import static io.github.resilience4j.metrics.assertion.MetricRegistryAssert.assertThat;
-import static org.assertj.core.api.BDDAssertions.then;
 
-public class TimeLimiterMetricsTest {
+public class TimeLimiterMetricsTest extends AbstractTimeLimiterMetricsTest {
 
-    private static final String DEFAULT_PREFIX = "resilience4j.timelimiter.UNDEFINED.";
-    private static final String SUCCESSFUL = "successful";
-    private static final String FAILED = "failed";
-    private static final String TIMEOUT = "timeout";
+    @Override
+    protected TimeLimiter given(String prefix, MetricRegistry metricRegistry) {
+        TimeLimiterRegistry timeLimiterRegistry = TimeLimiterRegistry.ofDefaults();
+        TimeLimiter timeLimiter = timeLimiterRegistry.timeLimiter("testLimit");
+        metricRegistry.registerAll(TimeLimiterMetrics.ofTimeLimiterRegistry(prefix, timeLimiterRegistry));
 
-    private MetricRegistry metricRegistry;
-
-    @Before
-    public void setUp() {
-        metricRegistry = new MetricRegistry();
+        return timeLimiter;
     }
 
-    @Test
-    public void shouldRegisterMetrics() throws Exception {
+    @Override
+    protected TimeLimiter given(MetricRegistry metricRegistry) {
         TimeLimiterRegistry timeLimiterRegistry = TimeLimiterRegistry.ofDefaults();
         TimeLimiter timeLimiter = timeLimiterRegistry.timeLimiter("testLimit");
         metricRegistry.registerAll(TimeLimiterMetrics.ofTimeLimiterRegistry(timeLimiterRegistry));
-        String expectedPrefix = "resilience4j.timelimiter.testLimit.";
-        Supplier<CompletableFuture<String>> futureSupplier = () ->
-                CompletableFuture.completedFuture("Hello world");
 
-        String result = timeLimiter.decorateFutureSupplier(futureSupplier).call();
-
-        then(result).isEqualTo("Hello world");
-        assertThat(metricRegistry).hasMetricsSize(3);
-        assertThat(metricRegistry).counter(expectedPrefix + SUCCESSFUL)
-                .hasValue(1L);
-        assertThat(metricRegistry).counter(expectedPrefix + FAILED)
-                .hasValue(0L);
-        assertThat(metricRegistry).counter(expectedPrefix + TIMEOUT)
-                .hasValue(0L);
-    }
-
-    @Test
-    public void shouldUseCustomPrefix() throws Exception {
-        TimeLimiterRegistry timeLimiterRegistry = TimeLimiterRegistry.ofDefaults();
-        TimeLimiter timeLimiter = timeLimiterRegistry.timeLimiter("testLimit");
-        metricRegistry.registerAll(TimeLimiterMetrics.ofIterable("testPre", timeLimiterRegistry.getAllTimeLimiters()));
-        String expectedPrefix = "testPre.testLimit.";
-        Supplier<CompletableFuture<String>> futureSupplier = () ->
-                CompletableFuture.completedFuture("Hello world");
-
-        String result = timeLimiter.decorateFutureSupplier(futureSupplier).call();
-
-        then(result).isEqualTo("Hello world");
-        assertThat(metricRegistry).hasMetricsSize(3);
-        assertThat(metricRegistry).counter(expectedPrefix + SUCCESSFUL)
-                .hasValue(1L);
-        assertThat(metricRegistry).counter(expectedPrefix + FAILED)
-                .hasValue(0L);
-        assertThat(metricRegistry).counter(expectedPrefix + TIMEOUT)
-                .hasValue(0L);
+        return timeLimiter;
     }
 
     @Test

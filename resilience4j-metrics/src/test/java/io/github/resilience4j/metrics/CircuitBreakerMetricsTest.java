@@ -19,79 +19,27 @@
 package io.github.resilience4j.metrics;
 
 import com.codahale.metrics.MetricRegistry;
-
-import org.junit.Before;
-import org.junit.Test;
-import org.mockito.BDDMockito;
-
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
-import io.github.resilience4j.test.HelloWorldService;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
+public class CircuitBreakerMetricsTest extends AbstractCircuitBreakerMetricsTest {
 
-public class CircuitBreakerMetricsTest {
+    @Override
+    protected CircuitBreaker given(String prefix, MetricRegistry metricRegistry) {
+        CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
+        CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("testName");
+        metricRegistry.registerAll(CircuitBreakerMetrics.ofCircuitBreakerRegistry(prefix, circuitBreakerRegistry));
 
-    private MetricRegistry metricRegistry;
-    private HelloWorldService helloWorldService;
-
-    @Before
-    public void setUp(){
-        metricRegistry = new MetricRegistry();
-        helloWorldService = mock(HelloWorldService.class);
+        return circuitBreaker;
     }
 
-    @Test
-    public void shouldRegisterMetrics() {
-        //Given
+    @Override
+    protected CircuitBreaker given(MetricRegistry metricRegistry) {
         CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
         CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("testName");
         metricRegistry.registerAll(CircuitBreakerMetrics.ofCircuitBreakerRegistry(circuitBreakerRegistry));
 
-        // Given the HelloWorldService returns Hello world
-        BDDMockito.given(helloWorldService.returnHelloWorld()).willReturn("Hello world");
-
-        //When
-        String value = circuitBreaker.executeSupplier(helloWorldService::returnHelloWorld);
-
-        //Then
-        assertThat(value).isEqualTo("Hello world");
-        // Then the helloWorldService should be invoked 1 time
-        BDDMockito.then(helloWorldService).should(times(1)).returnHelloWorld();
-        assertThat(metricRegistry.getMetrics()).hasSize(6);
-        assertThat(metricRegistry.getGauges().get("resilience4j.circuitbreaker.testName.state").getValue()).isEqualTo(0);
-        assertThat(metricRegistry.getGauges().get("resilience4j.circuitbreaker.testName.buffered").getValue()).isEqualTo(1);
-        assertThat(metricRegistry.getGauges().get("resilience4j.circuitbreaker.testName.successful").getValue()).isEqualTo(1);
-        assertThat(metricRegistry.getGauges().get("resilience4j.circuitbreaker.testName.failed").getValue()).isEqualTo(0);
-        assertThat(metricRegistry.getGauges().get("resilience4j.circuitbreaker.testName.not_permitted").getValue()).isEqualTo(0L);
-        assertThat(metricRegistry.getGauges().get("resilience4j.circuitbreaker.testName.failure_rate").getValue()).isEqualTo(-1f);
+        return circuitBreaker;
     }
 
-    @Test
-    public void shouldUseCustomPrefix() throws Throwable {
-        //Given
-        CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
-        CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("testName");
-        metricRegistry.registerAll(CircuitBreakerMetrics.ofCircuitBreakerRegistry("testPrefix", circuitBreakerRegistry));
-
-        // Given the HelloWorldService returns Hello world
-        BDDMockito.given(helloWorldService.returnHelloWorld()).willReturn("Hello world");
-
-        //When
-        String value = circuitBreaker.executeSupplier(helloWorldService::returnHelloWorld);
-
-        //Then
-        assertThat(value).isEqualTo("Hello world");
-        // Then the helloWorldService should be invoked 1 time
-        BDDMockito.then(helloWorldService).should(times(1)).returnHelloWorld();
-        assertThat(metricRegistry.getMetrics()).hasSize(6);
-        assertThat(metricRegistry.getGauges().get("testPrefix.testName.state").getValue()).isEqualTo(0);
-        assertThat(metricRegistry.getGauges().get("testPrefix.testName.buffered").getValue()).isEqualTo(1);
-        assertThat(metricRegistry.getGauges().get("testPrefix.testName.successful").getValue()).isEqualTo(1);
-        assertThat(metricRegistry.getGauges().get("testPrefix.testName.failed").getValue()).isEqualTo(0);
-        assertThat(metricRegistry.getGauges().get("testPrefix.testName.not_permitted").getValue()).isEqualTo(0L);
-        assertThat(metricRegistry.getGauges().get("testPrefix.testName.failure_rate").getValue()).isEqualTo(-1f);
-    }
 }

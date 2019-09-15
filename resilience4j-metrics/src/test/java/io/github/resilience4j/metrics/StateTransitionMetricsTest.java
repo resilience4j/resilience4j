@@ -6,7 +6,7 @@ import com.codahale.metrics.MetricRegistry;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
-import org.junit.Before;
+import io.github.resilience4j.metrics.publisher.CircuitBreakerMetricsPublisher;
 import org.junit.Test;
 
 import java.time.Duration;
@@ -19,11 +19,8 @@ import static org.junit.Assert.assertThat;
 
 public class StateTransitionMetricsTest {
 
-    private MetricRegistry metricRegistry = new MetricRegistry();
-    private CircuitBreaker circuitBreaker;
-
-    @Before
-    public void setUp() throws Exception {
+    @Test
+    public void testWithCircuitBreakerMetrics() throws Exception {
         CircuitBreakerConfig config =
                 CircuitBreakerConfig.custom()
                         .waitDurationInOpenState(Duration.ofSeconds(1))
@@ -31,13 +28,32 @@ public class StateTransitionMetricsTest {
                         .permittedNumberOfCallsInHalfOpenState(3)
                         .slidingWindowSize(10)
                         .build();
-        circuitBreaker = CircuitBreakerRegistry.ofDefaults().circuitBreaker("test", config);
+        CircuitBreaker circuitBreaker = CircuitBreakerRegistry.ofDefaults().circuitBreaker("test", config);
+        MetricRegistry metricRegistry = new MetricRegistry();
 
         metricRegistry.registerAll(CircuitBreakerMetrics.ofCircuitBreaker(circuitBreaker));
+        circuitBreakerMetricsUsesFirstStateObjectInstance(circuitBreaker, metricRegistry);
     }
 
     @Test
-    public void circuitBreakerMetricsUsesFirstStateObjectInstance() throws Exception {
+    public void testWithCircuitBreakerMetricsPublisher() throws Exception {
+        CircuitBreakerConfig config =
+                CircuitBreakerConfig.custom()
+                        .waitDurationInOpenState(Duration.ofSeconds(1))
+                        .failureRateThreshold(50)
+                        .permittedNumberOfCallsInHalfOpenState(3)
+                        .slidingWindowSize(10)
+                        .build();
+        MetricRegistry metricRegistry = new MetricRegistry();
+        CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.of(config, new CircuitBreakerMetricsPublisher(metricRegistry));
+        CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("test", config);
+
+        circuitBreakerMetricsUsesFirstStateObjectInstance(circuitBreaker, metricRegistry);
+    }
+
+
+    private static void circuitBreakerMetricsUsesFirstStateObjectInstance(
+            CircuitBreaker circuitBreaker, MetricRegistry metricRegistry) throws Exception {
         SortedMap<String, Gauge> gauges = metricRegistry.getGauges();
 
         assertThat(circuitBreaker.getState(), equalTo(CircuitBreaker.State.CLOSED));

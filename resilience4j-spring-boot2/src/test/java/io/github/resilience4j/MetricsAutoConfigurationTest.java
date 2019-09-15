@@ -15,10 +15,7 @@
  */
 package io.github.resilience4j;
 
-import io.github.resilience4j.micrometer.tagged.TaggedBulkheadMetricsPublisher;
-import io.github.resilience4j.micrometer.tagged.TaggedCircuitBreakerMetricsPublisher;
-import io.github.resilience4j.micrometer.tagged.TaggedRateLimiterMetricsPublisher;
-import io.github.resilience4j.micrometer.tagged.TaggedRetryMetricsPublisher;
+import io.github.resilience4j.micrometer.tagged.*;
 import io.github.resilience4j.service.test.TestApplication;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -39,28 +36,36 @@ public class MetricsAutoConfigurationTest {
 	TaggedBulkheadMetricsPublisher taggedBulkheadMetricsPublisher;
 
 	@Autowired(required = false)
+	TaggedThreadPoolBulkheadMetricsPublisher taggedThreadPoolBulkheadMetricsPublisher;
+
+	@Autowired(required = false)
 	TaggedRateLimiterMetricsPublisher taggedRateLimiterMetricsPublisher;
 
 	@Autowired(required = false)
 	TaggedRetryMetricsPublisher taggedRetryMetricsPublisher;
 
 	@Test
-	public void newCircuitBreakerBinderIsBound() {
+	public void newCircuitBreakerPublisherIsBound() {
 		assertThat(taggedCircuitBreakerMetricsPublisher).isNotNull();
 	}
 
 	@Test
-	public void mewBulkheadBinderIsBound() {
+	public void newBulkheadPublisherIsBound() {
 		assertThat(taggedBulkheadMetricsPublisher).isNotNull();
 	}
 
 	@Test
-	public void newRateLimiterBinderIsBound() {
+	public void newThreadPoolBulkheadPublisherIsBound() {
+		assertThat(taggedThreadPoolBulkheadMetricsPublisher).isNotNull();
+	}
+
+	@Test
+	public void newRateLimiterPublisherIsBound() {
 		assertThat(taggedRateLimiterMetricsPublisher).isNotNull();
 	}
 
 	@Test
-	public void newRetryBinderIsBound() {
+	public void newRetryPublisherIsBound() {
 		assertThat(taggedRetryMetricsPublisher).isNotNull();
 	}
 
