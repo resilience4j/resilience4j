@@ -37,7 +37,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.core.Ordered;
 import org.springframework.http.ResponseEntity;
-import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import java.util.ArrayList;
@@ -92,8 +91,8 @@ public class BulkheadAutoConfigurationTest {
      * This test verifies that the combination of @FeignClient and @Bulkhead annotation works as same as @Bulkhead alone works with any normal service class
      */
     @Test
-    @DirtiesContext
     public void testFeignClient() throws InterruptedException {
+        BulkheadEventsEndpointResponse eventsBefore = getBulkheadEvents("/actuator/bulkheadevents").getBody();
         int expectedConcurrentCalls = 3;
         int expectedRejectedCalls = 2;
         int responseDelay = 1000;
@@ -114,8 +113,9 @@ public class BulkheadAutoConfigurationTest {
                 (int) futures.stream().filter(f -> f.isDone() && !f.isCompletedExceptionally()).count();
         int actualRejectedCalls = 0;
 
-        ResponseEntity<BulkheadEventsEndpointResponse> bulkheadEventList = restTemplate.getForEntity("/actuator/bulkheadevents", BulkheadEventsEndpointResponse.class);
-        List<BulkheadEventDTO> bulkheadEvents = bulkheadEventList.getBody().getBulkheadEvents();
+
+        List<BulkheadEventDTO> bulkheadEvents = getBulkheadEvents("/actuator/bulkheadevents").getBody().getBulkheadEvents();
+        bulkheadEvents = bulkheadEvents.subList(eventsBefore.getBulkheadEvents().size(), bulkheadEvents.size());
         for (BulkheadEventDTO eventDTO : bulkheadEvents) {
             if (eventDTO.getType().equals(BulkheadEvent.Type.CALL_REJECTED)) {
                 actualRejectedCalls++;
@@ -139,7 +139,6 @@ public class BulkheadAutoConfigurationTest {
      * that the Bulkhead records permitted and rejected calls.
      */
     @Test
-    @DirtiesContext
     public void testBulkheadAutoConfigurationThreadPool() {
         ExecutorService es = Executors.newFixedThreadPool(5);
 
@@ -170,7 +169,7 @@ public class BulkheadAutoConfigurationTest {
             es.submit(dummyService::doSomethingAsync);
         }
 
-        ResponseEntity<BulkheadEventsEndpointResponse> bulkheadEventList = restTemplate.getForEntity("/actuator/bulkheadevents/backendC", BulkheadEventsEndpointResponse.class);
+        ResponseEntity<BulkheadEventsEndpointResponse> bulkheadEventList = getBulkheadEvents("/actuator/bulkheadevents/backendC");
         List<BulkheadEventDTO> bulkheadEventsByBackend = bulkheadEventList.getBody().getBulkheadEvents();
 
         assertThat(bulkheadEventsByBackend.get(bulkheadEventsByBackend.size() - 1).getType()).isEqualTo(BulkheadEvent.Type.CALL_REJECTED);
@@ -190,7 +189,6 @@ public class BulkheadAutoConfigurationTest {
      * that the Bulkhead records permitted and rejected calls.
      */
     @Test
-    @DirtiesContext
     public void testBulkheadAutoConfiguration() {
         ExecutorService es = Executors.newFixedThreadPool(5);
 
@@ -227,18 +225,17 @@ public class BulkheadAutoConfigurationTest {
                 .atMost(1, TimeUnit.SECONDS)
                 .until(() -> bulkhead.getMetrics().getAvailableConcurrentCalls() == 1);
 
-        ResponseEntity<BulkheadEventsEndpointResponse> bulkheadEventList = restTemplate.getForEntity("/actuator/bulkheadevents", BulkheadEventsEndpointResponse.class);
+        ResponseEntity<BulkheadEventsEndpointResponse> bulkheadEventList = getBulkheadEvents("/actuator/bulkheadevents");
         List<BulkheadEventDTO> bulkheadEvents = bulkheadEventList.getBody().getBulkheadEvents();
 
         assertThat(bulkheadEvents).isNotEmpty();
         assertThat(bulkheadEvents.get(bulkheadEvents.size() - 1).getType()).isEqualTo(BulkheadEvent.Type.CALL_FINISHED);
         assertThat(bulkheadEvents.get(bulkheadEvents.size() - 2).getType()).isEqualTo(BulkheadEvent.Type.CALL_REJECTED);
 
-        bulkheadEventList = restTemplate.getForEntity("/actuator/bulkheadevents/backendA", BulkheadEventsEndpointResponse.class);
+        bulkheadEventList = getBulkheadEvents("/actuator/bulkheadevents/backendA");
         List<BulkheadEventDTO> bulkheadEventsByBackend = bulkheadEventList.getBody().getBulkheadEvents();
 
-        assertThat(bulkheadEventsByBackend).hasSameSizeAs(bulkheadEvents);
-        assertThat(bulkheadEventsByBackend.get(bulkheadEvents.size() - 1).getType()).isEqualTo(BulkheadEvent.Type.CALL_FINISHED);
+        assertThat(bulkheadEventsByBackend.get(bulkheadEventsByBackend.size() - 1).getType()).isEqualTo(BulkheadEvent.Type.CALL_FINISHED);
         assertThat(bulkheadEventsByBackend).filteredOn(it -> it.getType() == BulkheadEvent.Type.CALL_REJECTED)
                 .isNotEmpty();
 
@@ -252,7 +249,6 @@ public class BulkheadAutoConfigurationTest {
      * that the Bulkhead records permitted and rejected calls.
      */
     @Test
-    @DirtiesContext
     public void testBulkheadAutoConfigurationRxJava2() {
         ExecutorService es = Executors.newFixedThreadPool(5);
         assertThat(bulkheadRegistry).isNotNull();
@@ -295,7 +291,6 @@ public class BulkheadAutoConfigurationTest {
      * that the Bulkhead records permitted and rejected calls.
      */
     @Test
-    @DirtiesContext
     public void testBulkheadAutoConfigurationReactor() {
         ExecutorService es = Executors.newFixedThreadPool(5);
         assertThat(bulkheadRegistry).isNotNull();
@@ -338,7 +333,7 @@ public class BulkheadAutoConfigurationTest {
         ResponseEntity<BulkheadEndpointResponse> bulkheadList = restTemplate.getForEntity("/actuator/bulkheads", BulkheadEndpointResponse.class);
         assertThat(bulkheadList.getBody().getBulkheads()).hasSize(5).containsExactly("backendA", "backendB", "backendB", "backendC", "dummyFeignClient");
 
-        ResponseEntity<BulkheadEventsEndpointResponse> bulkheadEventList = restTemplate.getForEntity("/actuator/bulkheadevents", BulkheadEventsEndpointResponse.class);
+        ResponseEntity<BulkheadEventsEndpointResponse> bulkheadEventList = getBulkheadEvents("/actuator/bulkheadevents");
         List<BulkheadEventDTO> bulkheadEvents = bulkheadEventList.getBody().getBulkheadEvents();
 
         assertThat(bulkheadEvents).isNotEmpty();
@@ -347,14 +342,17 @@ public class BulkheadAutoConfigurationTest {
         assertThat(bulkheadEvents.get(bulkheadEvents.size() - 3).getType()).isEqualTo(BulkheadEvent.Type.CALL_REJECTED);
         assertThat(bulkheadEvents.get(bulkheadEvents.size() - 4).getType()).isEqualTo(BulkheadEvent.Type.CALL_REJECTED);
 
-        bulkheadEventList = restTemplate.getForEntity("/actuator/bulkheadevents/backendB", BulkheadEventsEndpointResponse.class);
+        bulkheadEventList = getBulkheadEvents("/actuator/bulkheadevents/backendB");
         List<BulkheadEventDTO> bulkheadEventsByBackend = bulkheadEventList.getBody().getBulkheadEvents();
 
-        assertThat(bulkheadEventsByBackend).hasSameSizeAs(bulkheadEvents);
-        assertThat(bulkheadEventsByBackend.get(bulkheadEvents.size() - 1).getType()).isEqualTo(BulkheadEvent.Type.CALL_FINISHED);
+        assertThat(bulkheadEventsByBackend.get(bulkheadEventsByBackend.size() - 1).getType()).isEqualTo(BulkheadEvent.Type.CALL_FINISHED);
         assertThat(bulkheadEventsByBackend).filteredOn(it -> it.getType() == BulkheadEvent.Type.CALL_REJECTED)
                 .isNotEmpty();
 
         assertThat(bulkheadAspect.getOrder()).isEqualTo(Ordered.LOWEST_PRECEDENCE);
+    }
+
+    private ResponseEntity<BulkheadEventsEndpointResponse> getBulkheadEvents(String s) {
+        return restTemplate.getForEntity(s, BulkheadEventsEndpointResponse.class);
     }
 }

@@ -239,7 +239,7 @@ class RetrySpec extends Specification {
     def buildConfig() {
         RetryConfig.custom()
                 .maxAttempts(3)
-                .waitDuration(Duration.ofMillis(500))
+                .waitDuration(Duration.ofMillis(50))
                 .build()
     }
 

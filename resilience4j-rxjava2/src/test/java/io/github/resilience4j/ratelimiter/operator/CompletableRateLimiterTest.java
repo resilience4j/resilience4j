@@ -42,7 +42,7 @@ public class CompletableRateLimiterTest {
         Completable.complete()
                 .compose(RateLimiterOperator.of(rateLimiter))
                 .test()
-                .awaitTerminalEvent(2, TimeUnit.SECONDS);
+                .awaitTerminalEvent(1, TimeUnit.SECONDS);
     }
 
     @Test

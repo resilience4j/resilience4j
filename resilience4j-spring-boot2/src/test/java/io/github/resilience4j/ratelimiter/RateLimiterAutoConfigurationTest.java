@@ -33,7 +33,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.ResponseEntity;
-import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import java.io.IOException;
@@ -48,7 +47,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-    classes = TestApplication.class)
+        classes = TestApplication.class)
 public class RateLimiterAutoConfigurationTest {
 
     @Autowired
@@ -77,7 +76,6 @@ public class RateLimiterAutoConfigurationTest {
      * This test verifies that the combination of @FeignClient and @RateLimiter annotation works as same as @Bulkhead alone works with any normal service class
      */
     @Test
-    @DirtiesContext
     public void testFeignClient() {
         WireMock.stubFor(WireMock
                 .get(WireMock.urlEqualTo("/limit/"))
@@ -154,8 +152,8 @@ public class RateLimiterAutoConfigurationTest {
         assertThat(rateLimiter).isNotNull();
         rateLimiter.acquirePermission();
         await()
-            .atMost(2, TimeUnit.SECONDS)
-            .until(() -> rateLimiter.getMetrics().getAvailablePermissions() == 10);
+                .atMost(2, TimeUnit.SECONDS)
+                .until(() -> rateLimiter.getMetrics().getAvailablePermissions() == 10);
 
         try {
             dummyService.doSomething(true);
@@ -174,7 +172,7 @@ public class RateLimiterAutoConfigurationTest {
         // Test Actuator endpoints
 
         ResponseEntity<RateLimiterEndpointResponse> rateLimiterList = restTemplate
-            .getForEntity("/actuator/ratelimiters", RateLimiterEndpointResponse.class);
+                .getForEntity("/actuator/ratelimiters", RateLimiterEndpointResponse.class);
 
         assertThat(rateLimiterList.getBody().getRateLimiters()).hasSize(3).containsExactly("backendA", "backendB", "rateLimiterDummyFeignClient");
 
@@ -187,7 +185,7 @@ public class RateLimiterAutoConfigurationTest {
         }
 
         ResponseEntity<RateLimiterEventsEndpointResponse> rateLimiterEventList = restTemplate
-            .getForEntity("/actuator/ratelimiterevents", RateLimiterEventsEndpointResponse.class);
+                .getForEntity("/actuator/ratelimiterevents", RateLimiterEventsEndpointResponse.class);
 
         List<RateLimiterEventDTO> eventsList = rateLimiterEventList.getBody().getRateLimiterEvents();
         assertThat(eventsList).isNotEmpty();
@@ -195,8 +193,8 @@ public class RateLimiterAutoConfigurationTest {
         assertThat(lastEvent.getType()).isEqualTo(RateLimiterEvent.Type.FAILED_ACQUIRE);
 
         await()
-            .atMost(2, TimeUnit.SECONDS)
-            .until(() -> rateLimiter.getMetrics().getAvailablePermissions() == 10);
+                .atMost(2, TimeUnit.SECONDS)
+                .until(() -> rateLimiter.getMetrics().getAvailablePermissions() == 10);
 
 
         assertThat(rateLimiterAspect.getOrder()).isEqualTo(401);

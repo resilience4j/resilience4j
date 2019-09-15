@@ -130,7 +130,7 @@ class RateLimiterHandlerSpec extends Specification {
         RateLimiterConfig.custom()
                 .limitRefreshPeriod(Duration.ofSeconds(10))
                 .limitForPeriod(10)
-                .timeoutDuration(Duration.ofMillis(100))
+                .timeoutDuration(Duration.ofMillis(20))
                 .build()
     }
 
