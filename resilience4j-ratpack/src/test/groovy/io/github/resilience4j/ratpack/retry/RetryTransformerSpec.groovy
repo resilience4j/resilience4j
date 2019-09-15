@@ -119,7 +119,7 @@ class RetryTransformerSpec extends Specification {
     def buildRetry() {
         RetryConfig config = RetryConfig.custom()
                 .maxAttempts(3)
-                .waitDuration(Duration.ofMillis(500))
+                .waitDuration(Duration.ofMillis(100))
                 .build()
         Retry.of("test", config)
     }

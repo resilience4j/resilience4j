@@ -23,7 +23,7 @@ public class StateTransitionMetricsTest {
     public void testWithCircuitBreakerMetrics() throws Exception {
         CircuitBreakerConfig config =
                 CircuitBreakerConfig.custom()
-                        .waitDurationInOpenState(Duration.ofSeconds(1))
+                        .waitDurationInOpenState(Duration.ofMillis(150))
                         .failureRateThreshold(50)
                         .permittedNumberOfCallsInHalfOpenState(3)
                         .slidingWindowSize(10)

@@ -40,7 +40,7 @@ public class Resilience4jRateLimiterTest {
 
     private static final RateLimiterConfig config = RateLimiterConfig.custom()
             .timeoutDuration(ofMillis(50))
-            .limitRefreshPeriod(ofSeconds(5))
+            .limitRefreshPeriod(ofSeconds(1))
             .limitForPeriod(1)
             .build();
 
@@ -77,9 +77,7 @@ public class Resilience4jRateLimiterTest {
         setupStub(200);
 
         testService.greeting();
-        Thread.sleep(1_000);
         testService.greeting();
-        Thread.sleep(1_000);
         testService.greeting();
 
         verify(1, getRequestedFor(urlPathEqualTo("/greeting")));

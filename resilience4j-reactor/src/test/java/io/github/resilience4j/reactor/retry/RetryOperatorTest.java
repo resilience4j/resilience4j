@@ -47,7 +47,7 @@ public class RetryOperatorTest {
 	@Test
 	public void returnOnCompleteUsingMono() {
 		//Given
-		RetryConfig config = RetryConfig.ofDefaults();
+		RetryConfig config = retryConfig();
 		Retry retry = Retry.of("testName", config);
 		RetryOperator<String> retryOperator = RetryOperator.of(retry);
 
@@ -74,7 +74,7 @@ public class RetryOperatorTest {
 	@Test(expected = StackOverflowError.class)
 	public void shouldNotRetryUsingMonoStackOverFlow() {
 		//Given
-		RetryConfig config = RetryConfig.ofDefaults();
+		RetryConfig config = retryConfig();
 		Retry retry = Retry.of("testName", config);
 		RetryOperator<String> retryOperator = RetryOperator.of(retry);
 
@@ -85,7 +85,7 @@ public class RetryOperatorTest {
 				.compose(retryOperator))
 				.expectSubscription()
 				.expectError(StackOverflowError.class)
-				.verify(Duration.ofSeconds(1));
+				.verify(Duration.ofMillis(50));
 
 		//Then
 		BDDMockito.then(helloWorldService).should(Mockito.times(1)).returnHelloWorld();
@@ -98,7 +98,7 @@ public class RetryOperatorTest {
 	@Test
 	public void shouldNotRetryWhenItThrowErrorMono() {
 		//Given
-		RetryConfig config = RetryConfig.ofDefaults();
+		RetryConfig config = retryConfig();
 		Retry retry = Retry.of("testName", config);
 		RetryOperator<String> retryOperator = RetryOperator.of(retry);
 
@@ -110,7 +110,7 @@ public class RetryOperatorTest {
 				.compose(retryOperator))
 				.expectSubscription()
 				.expectError(Error.class)
-				.verify(Duration.ofSeconds(1));
+				.verify(Duration.ofMillis(50));
 		//Then
 		BDDMockito.then(helloWorldService).should(Mockito.times(1)).returnHelloWorld();
 		Retry.Metrics metrics = retry.getMetrics();
@@ -123,7 +123,7 @@ public class RetryOperatorTest {
 	@Test
 	public void returnOnErrorUsingMono() {
 		//Given
-		RetryConfig config = RetryConfig.ofDefaults();
+		RetryConfig config = retryConfig();
 		Retry retry = Retry.of("testName", config);
 		RetryOperator<String> retryOperator = RetryOperator.of(retry);
 
@@ -135,13 +135,13 @@ public class RetryOperatorTest {
 				.compose(retryOperator))
 				.expectSubscription()
 				.expectError(RetryExceptionWrapper.class)
-				.verify(Duration.ofSeconds(1));
+				.verify(Duration.ofMillis(50));
 
 		StepVerifier.create(Mono.fromCallable(helloWorldService::returnHelloWorld)
 				.compose(retryOperator))
 				.expectSubscription()
 				.expectError(RetryExceptionWrapper.class)
-				.verify(Duration.ofSeconds(1));
+				.verify(Duration.ofMillis(50));
 
 		//Then
 		BDDMockito.then(helloWorldService).should(Mockito.times(6)).returnHelloWorld();
@@ -156,6 +156,7 @@ public class RetryOperatorTest {
 		//Given
 		RetryConfig config = RetryConfig.custom()
 				.retryOnException(t -> t instanceof IOException)
+				.waitDuration(Duration.ofMillis(50))
 				.maxAttempts(3).build();
 		Retry retry = Retry.of("testName", config);
 		given(helloWorldService.returnHelloWorld())
@@ -166,7 +167,7 @@ public class RetryOperatorTest {
 				.compose(RetryOperator.of(retry)))
 				.expectSubscription()
 				.expectError(RetryExceptionWrapper.class)
-				.verify(Duration.ofSeconds(1));
+				.verify(Duration.ofMillis(50));
 		//Then
 		BDDMockito.then(helloWorldService).should(Mockito.times(1)).returnHelloWorld();
 		Retry.Metrics metrics = retry.getMetrics();
@@ -180,6 +181,7 @@ public class RetryOperatorTest {
 		//Given
 		RetryConfig config = RetryConfig.<String>custom()
 				.retryOnResult("retry"::equals)
+				.waitDuration(Duration.ofMillis(50))
 				.maxAttempts(3).build();
 		Retry retry = Retry.of("testName", config);
 		given(helloWorldService.returnHelloWorld())
@@ -191,7 +193,7 @@ public class RetryOperatorTest {
 				.compose(RetryOperator.of(retry)))
 				.expectSubscription()
 				.expectNext("success")
-				.expectComplete().verify(Duration.ofSeconds(1));
+				.expectComplete().verify(Duration.ofMillis(50));
 		//Then
 		BDDMockito.then(helloWorldService).should(Mockito.times(2)).returnHelloWorld();
 		Retry.Metrics metrics = retry.getMetrics();
@@ -205,6 +207,7 @@ public class RetryOperatorTest {
 		//Given
 		RetryConfig config = RetryConfig.<String>custom()
 				.retryOnResult("retry"::equals)
+				.waitDuration(Duration.ofMillis(50))
 				.maxAttempts(3).build();
 		Retry retry = Retry.of("testName", config);
 		given(helloWorldService.returnHelloWorld())
@@ -215,19 +218,19 @@ public class RetryOperatorTest {
 				.compose(RetryOperator.of(retry)))
 				.expectSubscription()
 				.expectNextCount(1)
-				.expectComplete().verify(Duration.ofSeconds(1));
+				.expectComplete().verify(Duration.ofMillis(50));
 		//Then
 		BDDMockito.then(helloWorldService).should(Mockito.times(3)).returnHelloWorld();
 	}
 
 
-	//Flux test
 
+	//Flux test
 
 	@Test
 	public void shouldFailWithExceptionFlux() {
 		//Given
-		RetryConfig config = RetryConfig.ofDefaults();
+		RetryConfig config = retryConfig();
 		Retry retry = Retry.of("testName", config);
 		RetryOperator<Object> retryOperator = RetryOperator.of(retry);
 
@@ -235,7 +238,7 @@ public class RetryOperatorTest {
 		StepVerifier.create(Flux.error(new WebServiceException("BAM!")).compose(retryOperator))
 				.expectSubscription()
 				.expectError(RetryExceptionWrapper.class)
-				.verify(Duration.ofSeconds(1));
+				.verify(Duration.ofMillis(50));
 		//Then
 
 		Retry.Metrics metrics = retry.getMetrics();
@@ -251,6 +254,7 @@ public class RetryOperatorTest {
 		//Given
 		RetryConfig config = RetryConfig.<String>custom()
 				.retryOnResult("retry"::equals)
+				.waitDuration(Duration.ofMillis(50))
 				.maxAttempts(3).build();
 		Retry retry = Retry.of("testName", config);
 
@@ -260,7 +264,7 @@ public class RetryOperatorTest {
 				.expectSubscription()
 				.expectNext("retry")
 				.expectNext("success")
-				.expectComplete().verify(Duration.ofSeconds(1));
+				.expectComplete().verify(Duration.ofMillis(50));
 		//Then
 
 		Retry.Metrics metrics = retry.getMetrics();
@@ -274,6 +278,7 @@ public class RetryOperatorTest {
 		//Given
 		RetryConfig config = RetryConfig.<String>custom()
 				.retryOnResult("retry"::equals)
+				.waitDuration(Duration.ofMillis(50))
 				.maxAttempts(3).build();
 		Retry retry = Retry.of("testName", config);
 
@@ -282,7 +287,7 @@ public class RetryOperatorTest {
 				.compose(RetryOperator.of(retry)))
 				.expectSubscription()
 				.expectNextCount(1)
-				.expectComplete().verify(Duration.ofSeconds(1));
+				.expectComplete().verify(Duration.ofMillis(50));
 
 
 		Retry.Metrics metrics = retry.getMetrics();
@@ -291,5 +296,7 @@ public class RetryOperatorTest {
 		assertThat(metrics.getNumberOfSuccessfulCallsWithRetryAttempt()).isEqualTo(1);
 	}
 
-
+	private RetryConfig retryConfig() {
+		return RetryConfig.custom().waitDuration(Duration.ofMillis(50)).build();
+	}
 }
