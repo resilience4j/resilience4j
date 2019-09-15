@@ -2,7 +2,10 @@ package io.github.resilience4j.metrics;
 
 import com.codahale.metrics.MetricRegistry;
 import io.github.resilience4j.retry.Retry;
+import io.github.resilience4j.retry.RetryConfig;
 import io.github.resilience4j.retry.RetryRegistry;
+
+import java.time.Duration;
 
 public class RetryMetricsTest extends AbstractRetryMetricsTest{
 
