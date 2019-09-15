@@ -33,8 +33,8 @@ public class CircuitBreakersHealthIndicatorTest {
         CircuitBreakerRegistry registry = mock(CircuitBreakerRegistry.class);
         CircuitBreaker.Metrics metrics = mock(CircuitBreaker.Metrics.class);
         CircuitBreaker circuitBreaker = mock(CircuitBreaker.class);
-        io.github.resilience4j.common.circuitbreaker.configuration.CircuitBreakerConfigurationProperties.InstanceProperties instanceProperties =
-                mock(io.github.resilience4j.common.circuitbreaker.configuration.CircuitBreakerConfigurationProperties.InstanceProperties.class);
+        CircuitBreakerConfigurationProperties.InstanceProperties instanceProperties =
+                mock(CircuitBreakerConfigurationProperties.InstanceProperties.class);
         CircuitBreakerConfigurationProperties circuitBreakerProperties = mock(CircuitBreakerConfigurationProperties.class);
         HealthAggregator healthAggregator = new OrderedHealthAggregator();
         CircuitBreakersHealthIndicator healthIndicator =
@@ -86,8 +86,8 @@ public class CircuitBreakersHealthIndicatorTest {
         expectedStateToCircuitBreaker.put(OPEN, openCircuitBreaker);
         expectedStateToCircuitBreaker.put(HALF_OPEN, halfOpenCircuitBreaker);
         expectedStateToCircuitBreaker.put(CLOSED, closeCircuitBreaker);
-        io.github.resilience4j.common.circuitbreaker.configuration.CircuitBreakerConfigurationProperties.InstanceProperties instanceProperties =
-                mock(io.github.resilience4j.common.circuitbreaker.configuration.CircuitBreakerConfigurationProperties.InstanceProperties.class);
+        CircuitBreakerConfigurationProperties.InstanceProperties instanceProperties =
+                mock(CircuitBreakerConfigurationProperties.InstanceProperties.class);
         CircuitBreakerConfigurationProperties circuitBreakerProperties = mock(CircuitBreakerConfigurationProperties.class);
 
         // given
@@ -126,7 +126,7 @@ public class CircuitBreakersHealthIndicatorTest {
         when(circuitBreaker.getState()).thenReturn(givenState);
         when(circuitBreaker.getCircuitBreakerConfig()).thenReturn(config);
         when(circuitBreaker.getMetrics()).thenReturn(metrics);
-        when(circuitBreakerProperties.findCircuitBreakerProperties("test")).thenReturn(Optional.of(instanceProperties));
+        when(circuitBreakerProperties.findCircuitBreakerProperties(givenState.name())).thenReturn(Optional.of(instanceProperties));
         when(instanceProperties.getRegisterHealthIndicator()).thenReturn(true);
     }
 

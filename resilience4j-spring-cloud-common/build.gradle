@@ -5,6 +5,8 @@ dependencies {
     compileOnly(libraries.spring_cloud_context2)
     compileOnly(libraries.spring_boot2_autoconfigure)
 
+    testCompile(libraries.spring_context)
+    testCompile(libraries.spring_cloud_context2)
 }
 
 compileJava.dependsOn(processResources)

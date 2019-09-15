@@ -33,7 +33,11 @@ public class RateLimiterConfigurationProperties {
 	private Map<String, InstanceProperties> configs = new HashMap<>();
 
 	public Optional<InstanceProperties> findRateLimiterProperties(String name) {
-		return Optional.ofNullable(instances.get(name));
+		InstanceProperties instanceProperties = instances.get(name);
+		if(instanceProperties == null){
+			instanceProperties = configs.get("default");
+		}
+		return Optional.ofNullable(instanceProperties);
 	}
 
 	public RateLimiterConfig createRateLimiterConfig(@Nullable InstanceProperties instanceProperties) {

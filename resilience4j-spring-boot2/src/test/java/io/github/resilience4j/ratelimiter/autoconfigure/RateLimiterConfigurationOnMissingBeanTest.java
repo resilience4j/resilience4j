@@ -52,7 +52,7 @@ public class RateLimiterConfigurationOnMissingBeanTest {
 	public void testAllBeansFromCircuitBreakerConfigurationHasOnMissingBean() throws NoSuchMethodException {
 		final Class<RateLimiterConfiguration> originalClass = RateLimiterConfiguration.class;
 		final Class<RateLimiterConfigurationOnMissingBean> onMissingBeanClass = RateLimiterConfigurationOnMissingBean.class;
-		TestUtils.assertAnnaations(originalClass, onMissingBeanClass);
+		TestUtils.assertAnnotations(originalClass, onMissingBeanClass);
 	}
 
 	@Test

@@ -23,7 +23,7 @@ import org.junit.Test;
 
 import java.util.concurrent.TimeUnit;
 
-import static io.github.resilience4j.prometheus.collectors.CircuitBreakerMetricsCollector.MetricNames.*;
+import static io.github.resilience4j.prometheus.AbstractCircuitBreakerMetrics.MetricNames.*;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class CircuitBreakerMetricsCollectorTest {

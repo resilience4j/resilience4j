@@ -16,8 +16,10 @@
 package io.github.resilience4j.retry.autoconfigure;
 
 import io.github.resilience4j.consumer.EventConsumerRegistry;
+import io.github.resilience4j.core.registry.RegistryEventConsumer;
 import io.github.resilience4j.fallback.FallbackDecorators;
 import io.github.resilience4j.fallback.autoconfigure.FallbackConfigurationOnMissingBean;
+import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryRegistry;
 import io.github.resilience4j.retry.configure.*;
 import io.github.resilience4j.retry.event.RetryEvent;
@@ -26,12 +28,10 @@ import io.github.resilience4j.utils.ReactorOnClasspathCondition;
 import io.github.resilience4j.utils.RxJava2OnClasspathCondition;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Conditional;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Import;
+import org.springframework.context.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * {@link Configuration
@@ -54,8 +54,16 @@ public abstract class AbstractRetryConfigurationOnMissingBean {
 	 */
 	@Bean
 	@ConditionalOnMissingBean
-	public RetryRegistry retryRegistry(RetryConfigurationProperties retryConfigurationProperties, EventConsumerRegistry<RetryEvent> retryEventConsumerRegistry) {
-		return retryConfiguration.retryRegistry(retryConfigurationProperties, retryEventConsumerRegistry);
+	public RetryRegistry retryRegistry(RetryConfigurationProperties retryConfigurationProperties,
+									   EventConsumerRegistry<RetryEvent> retryEventConsumerRegistry,
+									   RegistryEventConsumer<Retry> retryRegistryEventConsumer) {
+		return retryConfiguration.retryRegistry(retryConfigurationProperties, retryEventConsumerRegistry, retryRegistryEventConsumer);
+	}
+
+	@Bean
+	@Primary
+	public RegistryEventConsumer<Retry> retryRegistryEventConsumer(Optional<List<RegistryEventConsumer<Retry>>> optionalRegistryEventConsumers) {
+		return retryConfiguration.retryRegistryEventConsumer(optionalRegistryEventConsumers);
 	}
 
 	/**

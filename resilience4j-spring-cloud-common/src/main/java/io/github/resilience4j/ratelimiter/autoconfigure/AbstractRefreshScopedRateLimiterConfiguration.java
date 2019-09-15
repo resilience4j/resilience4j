@@ -1,6 +1,8 @@
 package io.github.resilience4j.ratelimiter.autoconfigure;
 
 import io.github.resilience4j.consumer.EventConsumerRegistry;
+import io.github.resilience4j.core.registry.RegistryEventConsumer;
+import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
 import io.github.resilience4j.ratelimiter.configure.RateLimiterConfiguration;
 import io.github.resilience4j.ratelimiter.configure.RateLimiterConfigurationProperties;
@@ -28,8 +30,10 @@ public abstract class AbstractRefreshScopedRateLimiterConfiguration {
     @RefreshScope
     @ConditionalOnMissingBean
     public RateLimiterRegistry rateLimiterRegistry(RateLimiterConfigurationProperties rateLimiterProperties,
-                                                   EventConsumerRegistry<RateLimiterEvent> rateLimiterEventsConsumerRegistry) {
-        return rateLimiterConfiguration.rateLimiterRegistry(rateLimiterProperties, rateLimiterEventsConsumerRegistry);
+                                                   EventConsumerRegistry<RateLimiterEvent> rateLimiterEventsConsumerRegistry,
+                                                   RegistryEventConsumer<RateLimiter> rateLimiterRegistryEventConsumer) {
+        return rateLimiterConfiguration.rateLimiterRegistry(
+                rateLimiterProperties, rateLimiterEventsConsumerRegistry, rateLimiterRegistryEventConsumer);
     }
 
 }

@@ -18,11 +18,11 @@ package io.github.resilience4j.prometheus.collectors;
 import io.github.resilience4j.bulkhead.Bulkhead.Metrics;
 import io.github.resilience4j.bulkhead.ThreadPoolBulkhead;
 import io.github.resilience4j.bulkhead.ThreadPoolBulkheadRegistry;
+import io.github.resilience4j.prometheus.LabelNames;
 import io.prometheus.client.Collector;
 import io.prometheus.client.GaugeMetricFamily;
 
 import java.util.List;
-import java.util.Objects;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
@@ -38,7 +38,7 @@ public class ThreadPoolBulkheadMetricsCollector extends Collector {
      * @param names    the custom metric names
      * @param bulkheadRegistry the source of bulkheads
      */
-    public static ThreadPoolBulkheadMetricsCollector ofBulkheadRegistry(ThreadPoolBulkheadMetricsCollector.MetricNames names, ThreadPoolBulkheadRegistry bulkheadRegistry) {
+    public static ThreadPoolBulkheadMetricsCollector ofBulkheadRegistry(MetricNames names, ThreadPoolBulkheadRegistry bulkheadRegistry) {
         return new ThreadPoolBulkheadMetricsCollector(names, bulkheadRegistry);
     }
 
@@ -48,15 +48,15 @@ public class ThreadPoolBulkheadMetricsCollector extends Collector {
      * @param bulkheadRegistry the source of bulkheads
      */
     public static ThreadPoolBulkheadMetricsCollector ofBulkheadRegistry(ThreadPoolBulkheadRegistry bulkheadRegistry) {
-        return new ThreadPoolBulkheadMetricsCollector(ThreadPoolBulkheadMetricsCollector.MetricNames.ofDefaults(), bulkheadRegistry);
+        return new ThreadPoolBulkheadMetricsCollector(MetricNames.ofDefaults(), bulkheadRegistry);
     }
 
     private final MetricNames names;
     private final ThreadPoolBulkheadRegistry bulkheadRegistry;
 
     private ThreadPoolBulkheadMetricsCollector(MetricNames names, ThreadPoolBulkheadRegistry bulkheadRegistry) {
-        this.names = Objects.requireNonNull(names);
-        this.bulkheadRegistry = Objects.requireNonNull(bulkheadRegistry);
+        this.names = requireNonNull(names);
+        this.bulkheadRegistry = requireNonNull(bulkheadRegistry);
     }
 
     @Override

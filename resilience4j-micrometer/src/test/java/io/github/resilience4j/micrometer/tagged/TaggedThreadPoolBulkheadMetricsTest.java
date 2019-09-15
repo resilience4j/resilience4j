@@ -28,8 +28,8 @@ import org.junit.Test;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static io.github.resilience4j.micrometer.tagged.AbstractThreadPoolBulkheadMetrics.MetricNames.*;
 import static io.github.resilience4j.micrometer.tagged.MetricsTestHelper.findGaugeByNamesTag;
-import static io.github.resilience4j.micrometer.tagged.TaggedThreadPoolBulkheadMetrics.MetricNames.*;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class TaggedThreadPoolBulkheadMetricsTest {

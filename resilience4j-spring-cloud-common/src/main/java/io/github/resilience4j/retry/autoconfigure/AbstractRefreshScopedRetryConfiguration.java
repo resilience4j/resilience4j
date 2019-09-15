@@ -1,6 +1,9 @@
 package io.github.resilience4j.retry.autoconfigure;
 
 import io.github.resilience4j.consumer.EventConsumerRegistry;
+import io.github.resilience4j.core.metrics.MetricsPublisher;
+import io.github.resilience4j.core.registry.RegistryEventConsumer;
+import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryRegistry;
 import io.github.resilience4j.retry.configure.RetryConfiguration;
 import io.github.resilience4j.retry.configure.RetryConfigurationProperties;
@@ -28,8 +31,9 @@ public abstract class AbstractRefreshScopedRetryConfiguration {
     @RefreshScope
     @ConditionalOnMissingBean
     public RetryRegistry retryRegistry(RetryConfigurationProperties retryConfigurationProperties,
-                                       EventConsumerRegistry<RetryEvent> retryEventConsumerRegistry) {
-        return retryConfiguration.retryRegistry(retryConfigurationProperties, retryEventConsumerRegistry);
+                                       EventConsumerRegistry<RetryEvent> retryEventConsumerRegistry,
+                                       RegistryEventConsumer<Retry> retryRegistryEventConsumer) {
+        return retryConfiguration.retryRegistry(retryConfigurationProperties, retryEventConsumerRegistry, retryRegistryEventConsumer);
     }
 
 }

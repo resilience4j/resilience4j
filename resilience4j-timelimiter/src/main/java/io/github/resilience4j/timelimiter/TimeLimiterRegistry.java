@@ -19,9 +19,11 @@
 package io.github.resilience4j.timelimiter;
 
 import io.github.resilience4j.core.Registry;
+import io.github.resilience4j.core.registry.RegistryEventConsumer;
 import io.github.resilience4j.timelimiter.internal.InMemoryTimeLimiterRegistry;
 import io.vavr.collection.Seq;
 
+import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
 
@@ -73,13 +75,35 @@ public interface TimeLimiterRegistry extends Registry<TimeLimiter, TimeLimiterCo
     TimeLimiter timeLimiter(String name, String configName);
 
     /**
-     * Creates a TimeLimiterRegistry with a custom TimeLimiter configuration.
+     * Creates a TimeLimiterRegistry with a custom default TimeLimiter configuration.
      *
-     * @param defaultTimeLimiterConfig a custom TimeLimiter configuration
+     * @param defaultTimeLimiterConfig a custom default TimeLimiter configuration
      * @return a TimeLimiterRegistry instance backed by a custom TimeLimiter configuration
      */
     static TimeLimiterRegistry of(TimeLimiterConfig defaultTimeLimiterConfig) {
         return new InMemoryTimeLimiterRegistry(defaultTimeLimiterConfig);
+    }
+
+    /**
+     * Creates a TimeLimiterRegistry with a custom default TimeLimiter configuration and a TimeLimiter registry event consumer.
+     *
+     * @param defaultTimeLimiterConfig a custom default TimeLimiter configuration.
+     * @param registryEventConsumer a TimeLimiter registry event consumer.
+     * @return a TimeLimiterRegistry with a custom TimeLimiter configuration and a TimeLimiter registry event consumer.
+     */
+    static TimeLimiterRegistry of(TimeLimiterConfig defaultTimeLimiterConfig, RegistryEventConsumer<TimeLimiter> registryEventConsumer) {
+        return new InMemoryTimeLimiterRegistry(defaultTimeLimiterConfig, registryEventConsumer);
+    }
+
+    /**
+     * Creates a TimeLimiterRegistry with a custom default TimeLimiter configuration and a list of TimeLimiter registry event consumers.
+     *
+     * @param defaultTimeLimiterConfig a custom default TimeLimiter configuration.
+     * @param registryEventConsumers a list of TimeLimiter registry event consumers.
+     * @return a TimeLimiterRegistry with a custom TimeLimiter configuration and list of TimeLimiter registry event consumers.
+     */
+    static TimeLimiterRegistry of(TimeLimiterConfig defaultTimeLimiterConfig, List<RegistryEventConsumer<TimeLimiter>> registryEventConsumers) {
+        return new InMemoryTimeLimiterRegistry(defaultTimeLimiterConfig, registryEventConsumers);
     }
 
     /**
@@ -92,12 +116,35 @@ public interface TimeLimiterRegistry extends Registry<TimeLimiter, TimeLimiterCo
     }
 
     /**
-     * Creates a ThreadPoolBulkheadRegistry with a Map of shared TimeLimiter configurations.
+     * Creates a TimeLimiterRegistry with a Map of shared TimeLimiter configurations.
      *
      * @param configs a Map of shared TimeLimiter configurations
-     * @return a ThreadPoolBulkheadRegistry with a Map of shared TimeLimiter configurations.
+     * @return a TimeLimiterRegistry with a Map of shared TimeLimiter configurations.
      */
     static TimeLimiterRegistry of(Map<String, TimeLimiterConfig> configs) {
         return new InMemoryTimeLimiterRegistry(configs);
     }
+
+    /**
+     * Creates a TimeLimiterRegistry with a Map of shared TimeLimiter configurations and a TimeLimiter registry event consumer.
+     *
+     * @param configs a Map of shared TimeLimiter configurations.
+     * @param registryEventConsumer a TimeLimiter registry event consumer.
+     * @return a TimeLimiterRegistry with a Map of shared TimeLimiter configurations and a TimeLimiter registry event consumer.
+     */
+    static TimeLimiterRegistry of(Map<String, TimeLimiterConfig> configs, RegistryEventConsumer<TimeLimiter> registryEventConsumer) {
+        return new InMemoryTimeLimiterRegistry(configs, registryEventConsumer);
+    }
+
+    /**
+     * Creates a TimeLimiterRegistry with a Map of shared TimeLimiter configurations and a list of TimeLimiter registry event consumers.
+     *
+     * @param configs a Map of shared TimeLimiter configurations.
+     * @param registryEventConsumers a list of TimeLimiter registry event consumers.
+     * @return a TimeLimiterRegistry with a Map of shared TimeLimiter configurations and a list of TimeLimiter registry event consumers.
+     */
+    static TimeLimiterRegistry of(Map<String, TimeLimiterConfig> configs, List<RegistryEventConsumer<TimeLimiter>> registryEventConsumers) {
+        return new InMemoryTimeLimiterRegistry(configs, registryEventConsumers);
+    }
+
 }
