@@ -73,13 +73,9 @@ public class SemaphoreBasedRateLimiterImplTest {
 
     @Test
     public void rateLimiterCreationWithProvidedScheduler() throws Exception {
-        System.out.println("1" + now());
         ScheduledExecutorService scheduledExecutorService = mock(ScheduledExecutorService.class);
-        System.out.println("2" + now());
         RateLimiterConfig configSpy = spy(config);
-        System.out.println("3" + now());
         SemaphoreBasedRateLimiter limit = new SemaphoreBasedRateLimiter("test", configSpy, scheduledExecutorService);
-        System.out.println("4" + now());
 
         ArgumentCaptor<Runnable> refreshLimitRunnableCaptor = ArgumentCaptor.forClass(Runnable.class);
         verify(scheduledExecutorService)
@@ -89,7 +85,6 @@ public class SemaphoreBasedRateLimiterImplTest {
                 eq(config.getLimitRefreshPeriod().toNanos()),
                 eq(TimeUnit.NANOSECONDS)
             );
-        System.out.println("5" + now());
 
         Runnable refreshLimitRunnable = refreshLimitRunnableCaptor.getValue();
 
@@ -97,38 +92,25 @@ public class SemaphoreBasedRateLimiterImplTest {
         then(limit.reservePermission()).isNegative();
         then(limit.reservePermission()).isNegative();
 
-        System.out.println("6" + now());
-
         then(limit.acquirePermission()).isTrue();
         then(limit.reservePermission()).isNegative();
         then(limit.reservePermission()).isNegative();
 
-        System.out.println("7" + now());
-
         then(limit.acquirePermission()).isFalse();
         then(limit.reservePermission()).isNegative();
         then(limit.reservePermission()).isNegative();
-
-        System.out.println("8" + now());
 
         Thread.sleep(REFRESH_PERIOD.toMillis() * 2);
         verify(configSpy, times(1)).getLimitForPeriod();
 
-        System.out.println("9" + now());
-
         refreshLimitRunnable.run();
 
-        System.out.println("10" + now());
-
         verify(configSpy, times(2)).getLimitForPeriod();
-
-        System.out.println("11" + now());
 
         then(limit.acquirePermission()).isTrue();
         then(limit.acquirePermission()).isTrue();
         then(limit.acquirePermission()).isFalse();
 
-        System.out.println("12" + now());
     }
 
     @Test
