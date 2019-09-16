@@ -30,15 +30,11 @@ public class CallNotPermittedException extends RuntimeException {
      * @param circuitBreaker the CircuitBreaker.
      */
     public static CallNotPermittedException getCallNotPermittedException(CircuitBreaker circuitBreaker) {
-        boolean disableStackTraces = circuitBreaker.getCircuitBreakerConfig().isDisableStackTraces();
+        boolean writableStackTraceEnabled = circuitBreaker.getCircuitBreakerConfig().isWritableStackTraceEnabled();
 
         String message = String.format("CircuitBreaker '%s' is %s and does not permit further calls", circuitBreaker.getName(), circuitBreaker.getState());
 
-        if (disableStackTraces) {
-            return new CallNotPermittedException(message, false);
-        } else {
-            return new CallNotPermittedException(message, true);
-        }
+        return new CallNotPermittedException(message, writableStackTraceEnabled);
     }
 
     private CallNotPermittedException(String message, boolean writableStackTrace) {
