@@ -28,8 +28,8 @@ public class BulkheadConfig {
     public static final int DEFAULT_MAX_CONCURRENT_CALLS = 25;
     public static final Duration DEFAULT_MAX_WAIT_DURATION = Duration.ofSeconds(0);
 
-    private final int maxConcurrentCalls;
-    private final Duration maxWaitDuration;
+    private int maxConcurrentCalls;
+    private Duration maxWaitDuration;
 
     private BulkheadConfig(int maxConcurrentCalls, Duration maxWaitDuration) {
         this.maxConcurrentCalls = maxConcurrentCalls;
