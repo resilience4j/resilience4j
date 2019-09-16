@@ -225,7 +225,7 @@ public class CircuitBreakerConfig {
         }
 
         /**
-         * Disables writable stack traces. When set to false {@link Exception#getStackTrace()} returns a zero length array.
+         * Disables writable stack traces. When set to true, {@link Exception#getStackTrace()} returns a zero length array.
          * This may be used to reduce log spam when the circuit breaker is open as the cause of the exceptions is already known (the circuit breaker is short-circuiting calls).
          *
          * @return the CircuitBreakerConfig.Builder
