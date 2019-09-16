@@ -24,6 +24,8 @@ import io.reactivex.internal.disposables.EmptyDisposable;
 
 import java.util.concurrent.TimeUnit;
 
+import static io.github.resilience4j.circuitbreaker.CallNotPermittedException.getCallNotPermittedException;
+
 class MaybeCircuitBreaker<T> extends Maybe<T> {
 
     private final Maybe<T> upstream;
@@ -40,7 +42,7 @@ class MaybeCircuitBreaker<T> extends Maybe<T> {
             upstream.subscribe(new CircuitBreakerMaybeObserver(downstream));
         }else{
             downstream.onSubscribe(EmptyDisposable.INSTANCE);
-            downstream.onError(new CallNotPermittedException(circuitBreaker));
+            downstream.onError(getCallNotPermittedException(circuitBreaker));
         }
     }
 

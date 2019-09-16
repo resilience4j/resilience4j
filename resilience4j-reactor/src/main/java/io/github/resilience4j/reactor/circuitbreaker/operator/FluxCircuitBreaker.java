@@ -22,6 +22,8 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.FluxOperator;
 import reactor.core.publisher.Operators;
 
+import static io.github.resilience4j.circuitbreaker.CallNotPermittedException.getCallNotPermittedException;
+
 class FluxCircuitBreaker<T> extends FluxOperator<T, T> {
 
     private CircuitBreaker circuitBreaker;
@@ -36,7 +38,7 @@ class FluxCircuitBreaker<T> extends FluxOperator<T, T> {
         if(circuitBreaker.tryAcquirePermission()){
             source.subscribe(new CircuitBreakerSubscriber<>(circuitBreaker, actual, false));
         }else{
-            Operators.error(actual, new CallNotPermittedException(circuitBreaker));
+            Operators.error(actual, getCallNotPermittedException(circuitBreaker));
         }
     }
 

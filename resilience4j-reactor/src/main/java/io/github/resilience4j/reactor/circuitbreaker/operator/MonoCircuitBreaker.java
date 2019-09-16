@@ -22,6 +22,8 @@ import reactor.core.publisher.Mono;
 import reactor.core.publisher.MonoOperator;
 import reactor.core.publisher.Operators;
 
+import static io.github.resilience4j.circuitbreaker.CallNotPermittedException.getCallNotPermittedException;
+
 class MonoCircuitBreaker<T> extends MonoOperator<T, T> {
 
     private CircuitBreaker circuitBreaker;
@@ -36,7 +38,7 @@ class MonoCircuitBreaker<T> extends MonoOperator<T, T> {
         if(circuitBreaker.tryAcquirePermission()){
             source.subscribe(new CircuitBreakerSubscriber<>(circuitBreaker, actual, true));
         }else{
-            Operators.error(actual, new CallNotPermittedException(circuitBreaker));
+            Operators.error(actual, getCallNotPermittedException(circuitBreaker));
         }
     }
 }
