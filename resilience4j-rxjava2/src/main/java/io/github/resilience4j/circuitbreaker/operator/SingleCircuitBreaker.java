@@ -24,6 +24,8 @@ import io.reactivex.internal.disposables.EmptyDisposable;
 
 import java.util.concurrent.TimeUnit;
 
+import static io.github.resilience4j.circuitbreaker.CallNotPermittedException.getCallNotPermittedException;
+
 class SingleCircuitBreaker<T> extends Single<T> {
 
     private final CircuitBreaker circuitBreaker;
@@ -40,7 +42,7 @@ class SingleCircuitBreaker<T> extends Single<T> {
             upstream.subscribe(new CircuitBreakerSingleObserver(downstream));
         }else{
             downstream.onSubscribe(EmptyDisposable.INSTANCE);
-            downstream.onError(new CallNotPermittedException(circuitBreaker));
+            downstream.onError(getCallNotPermittedException(circuitBreaker));
         }
     }
 

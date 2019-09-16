@@ -25,13 +25,19 @@ package io.github.resilience4j.circuitbreaker;
 public class CallNotPermittedException extends RuntimeException {
 
     /**
-     * The constructor with a CircuitBreaker.
+     * Static method to construct a {@link CallNotPermittedException} with a CircuitBreaker.
      *
      * @param circuitBreaker the CircuitBreaker.
      */
-    public CallNotPermittedException(CircuitBreaker circuitBreaker) {
-        super(String.format("CircuitBreaker '%s' is %s and does not permit further calls", circuitBreaker.getName(), circuitBreaker.getState()));
+    public static CallNotPermittedException getCallNotPermittedException(CircuitBreaker circuitBreaker) {
+        boolean writableStackTraceEnabled = circuitBreaker.getCircuitBreakerConfig().isWritableStackTraceEnabled();
+
+        String message = String.format("CircuitBreaker '%s' is %s and does not permit further calls", circuitBreaker.getName(), circuitBreaker.getState());
+
+        return new CallNotPermittedException(message, writableStackTraceEnabled);
+    }
+
+    private CallNotPermittedException(String message, boolean writableStackTrace) {
+        super(message, null, false, writableStackTrace);
     }
 }
-
-

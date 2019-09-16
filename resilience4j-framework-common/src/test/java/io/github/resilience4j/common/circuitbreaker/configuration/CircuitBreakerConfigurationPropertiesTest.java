@@ -45,6 +45,7 @@ public class CircuitBreakerConfigurationPropertiesTest {
 		instanceProperties1.setSlowCallRateThreshold(50f);
 		instanceProperties1.setPermittedNumberOfCallsInHalfOpenState(100);
 		instanceProperties1.setAutomaticTransitionFromOpenToHalfOpenEnabled(true);
+		instanceProperties1.writableStackTraceEnabled(false);
 		//noinspection unchecked
 		instanceProperties1.setIgnoreExceptions(new Class[]{IllegalStateException.class});
 		//noinspection unchecked
@@ -75,6 +76,7 @@ public class CircuitBreakerConfigurationPropertiesTest {
 		assertThat(circuitBreaker1.getSlowCallRateThreshold()).isEqualTo(50f);
 		assertThat(circuitBreaker1.getWaitDurationInOpenState().toMillis()).isEqualTo(100);
 		assertThat(circuitBreaker1.isAutomaticTransitionFromOpenToHalfOpenEnabled()).isTrue();
+		assertThat(circuitBreaker1.isWritableStackTraceEnabled()).isFalse();
 
 		final CircuitBreakerConfigurationProperties.InstanceProperties backend1 = circuitBreakerConfigurationProperties.getBackendProperties("backend1");
 		assertThat(circuitBreakerConfigurationProperties.findCircuitBreakerProperties("backend1")).isNotEmpty();
