@@ -51,6 +51,7 @@ public class SemaphoreBulkhead implements Bulkhead {
     private final Object configChangesLock = new Object();
     // BulkheadConfig objects are immutable and we replace them entirely during
     // config change.
+    @java.lang.SuppressWarnings("squid:S3077")
     private volatile BulkheadConfig config;
 
     /**

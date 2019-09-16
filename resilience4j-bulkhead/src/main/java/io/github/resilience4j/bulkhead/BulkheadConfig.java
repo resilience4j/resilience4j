@@ -18,18 +18,20 @@
  */
 package io.github.resilience4j.bulkhead;
 
+import javax.annotation.concurrent.Immutable;
 import java.time.Duration;
 
 /**
  * A {@link BulkheadConfig} configures a {@link Bulkhead}
  */
+@Immutable
 public class BulkheadConfig {
 
     public static final int DEFAULT_MAX_CONCURRENT_CALLS = 25;
     public static final Duration DEFAULT_MAX_WAIT_DURATION = Duration.ofSeconds(0);
 
-    private int maxConcurrentCalls;
-    private Duration maxWaitDuration;
+    private final int maxConcurrentCalls;
+    private final Duration maxWaitDuration;
 
     private BulkheadConfig(int maxConcurrentCalls, Duration maxWaitDuration) {
         this.maxConcurrentCalls = maxConcurrentCalls;
