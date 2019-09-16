@@ -49,9 +49,7 @@ public class SemaphoreBulkhead implements Bulkhead {
     private final BulkheadEventProcessor eventProcessor;
 
     private final Object configChangesLock = new Object();
-    // BulkheadConfig objects are immutable and we replace them entirely during
-    // config change.
-    @java.lang.SuppressWarnings("squid:S3077")
+    @SuppressWarnings("squid:S3077") // this object is immutable and we replace ref entirely during config change.
     private volatile BulkheadConfig config;
 
     /**
@@ -95,7 +93,7 @@ public class SemaphoreBulkhead implements Bulkhead {
     @Override
     public void changeConfig(final BulkheadConfig newConfig) {
         synchronized (configChangesLock) {
-            int delta =  newConfig.getMaxConcurrentCalls() - config.getMaxConcurrentCalls();
+            int delta = newConfig.getMaxConcurrentCalls() - config.getMaxConcurrentCalls();
             if (delta < 0) {
                 semaphore.acquireUninterruptibly(-delta);
             } else if (delta > 0) {
@@ -105,6 +103,9 @@ public class SemaphoreBulkhead implements Bulkhead {
         }
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public boolean tryAcquirePermission() {
         boolean callPermitted = tryEnterBulkhead();
@@ -117,13 +118,19 @@ public class SemaphoreBulkhead implements Bulkhead {
         return callPermitted;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void acquirePermission() {
-        if(!tryAcquirePermission()) {
+        if (!tryAcquirePermission()) {
             throw new BulkheadFullException(this);
         }
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void releasePermission() {
         semaphore.release();
@@ -201,6 +208,9 @@ public class SemaphoreBulkhead implements Bulkhead {
         return String.format("Bulkhead '%s'", this.name);
     }
 
+    /**
+     * @return true if caller was able to wait for permission without {@link Thread#interrupt}
+     */
     boolean tryEnterBulkhead() {
 
         boolean callPermitted;
@@ -212,6 +222,7 @@ public class SemaphoreBulkhead implements Bulkhead {
             try {
                 callPermitted = semaphore.tryAcquire(timeout, TimeUnit.MILLISECONDS);
             } catch (InterruptedException ex) {
+                Thread.currentThread().interrupt();
                 callPermitted = false;
             }
         }

@@ -64,6 +64,9 @@ public interface Bulkhead {
 
     /**
      * Acquires a permission to execute a call, only if one is available at the time of invocation.
+     * If the current thread is {@linkplain Thread#interrupt interrupted}
+     * while waiting for a permit then it won't throw {@linkplain InterruptedException},
+     * but its interrupt status will be set.
      *
      * @return {@code true} if a permission was acquired and {@code false} otherwise
      */
@@ -71,6 +74,9 @@ public interface Bulkhead {
 
     /**
      * Acquires a permission to execute a call, only if one is available at the time of invocation
+     * If the current thread is {@linkplain Thread#interrupt interrupted}
+     * while waiting for a permit then it won't throw {@linkplain InterruptedException},
+     * but its interrupt status will be set.
      *
      * @throws BulkheadFullException when the Bulkhead is full and no further calls are permitted.
      */

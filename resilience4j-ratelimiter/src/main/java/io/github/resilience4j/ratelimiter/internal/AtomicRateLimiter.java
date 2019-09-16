@@ -94,6 +94,9 @@ public class AtomicRateLimiter implements RateLimiter {
         return nanoTime() - nanoTimeStart;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public boolean acquirePermission() {
         long timeoutInNanos = state.get().config.getTimeoutDuration().toNanos();
@@ -103,6 +106,9 @@ public class AtomicRateLimiter implements RateLimiter {
         return result;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public long reservePermission() {
         long timeoutInNanos = state.get().config.getTimeoutDuration().toNanos();
