@@ -45,10 +45,13 @@ public class SemaphoreBulkhead implements Bulkhead {
 
     private final String name;
     private final Semaphore semaphore;
-    private final Object configChangesLock = new Object();
-    private volatile BulkheadConfig config;
     private final BulkheadMetrics metrics;
     private final BulkheadEventProcessor eventProcessor;
+
+    private final Object configChangesLock = new Object();
+    // BulkheadConfig objects are immutable and we replace them entirely during
+    // config change.
+    private volatile BulkheadConfig config;
 
     /**
      * Creates a bulkhead using a configuration supplied
