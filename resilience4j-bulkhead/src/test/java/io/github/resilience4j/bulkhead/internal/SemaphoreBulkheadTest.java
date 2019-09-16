@@ -32,6 +32,7 @@ import java.util.function.Supplier;
 
 import static com.jayway.awaitility.Awaitility.await;
 import static io.github.resilience4j.bulkhead.BulkheadConfig.DEFAULT_MAX_CONCURRENT_CALLS;
+import static io.github.resilience4j.bulkhead.BulkheadConfig.DEFAULT_WRITABLE_STACK_TRACE_ENABLED;
 import static io.github.resilience4j.bulkhead.event.BulkheadEvent.Type.*;
 import static java.lang.Thread.State.*;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -115,6 +116,7 @@ public class SemaphoreBulkheadTest {
 		assertThat(bulkhead).isNotNull();
 		assertThat(bulkhead.getBulkheadConfig()).isNotNull();
 		assertThat(bulkhead.getBulkheadConfig().getMaxConcurrentCalls()).isEqualTo(DEFAULT_MAX_CONCURRENT_CALLS);
+		assertThat(bulkhead.getBulkheadConfig().isWritableStackTraceEnabled()).isEqualTo(DEFAULT_WRITABLE_STACK_TRACE_ENABLED);
 	}
 
 	@Test

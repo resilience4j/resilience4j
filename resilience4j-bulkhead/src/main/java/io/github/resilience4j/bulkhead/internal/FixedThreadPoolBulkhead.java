@@ -33,6 +33,7 @@ import io.github.resilience4j.core.lang.Nullable;
 import java.util.concurrent.*;
 import java.util.function.Supplier;
 
+import static io.github.resilience4j.bulkhead.BulkheadFullException.getCallNotPermittedException;
 import static java.util.Objects.requireNonNull;
 
 /**
@@ -117,7 +118,7 @@ public class FixedThreadPoolBulkhead implements ThreadPoolBulkhead {
 			});
 		} catch (RejectedExecutionException rejected) {
 			publishBulkheadEvent(() -> new BulkheadOnCallRejectedEvent(name));
-			throw new BulkheadFullException(this);
+			throw getCallNotPermittedException(this);
 		}
 		return promise;
 	}
@@ -138,7 +139,7 @@ public class FixedThreadPoolBulkhead implements ThreadPoolBulkhead {
 			}, executorService).whenComplete((voidResult, throwable) -> publishBulkheadEvent(() -> new BulkheadOnCallFinishedEvent(name)));
 		} catch (RejectedExecutionException rejected) {
 			publishBulkheadEvent(() -> new BulkheadOnCallRejectedEvent(name));
-			throw new BulkheadFullException(this);
+			throw getCallNotPermittedException(this);
 		}
 	}
 

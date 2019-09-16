@@ -33,6 +33,7 @@ public class RateLimiterConfigurationPropertiesTest {
 		//Given
 		io.github.resilience4j.common.ratelimiter.configuration.RateLimiterConfigurationProperties.InstanceProperties instanceProperties1 = new io.github.resilience4j.common.ratelimiter.configuration.RateLimiterConfigurationProperties.InstanceProperties();
 		instanceProperties1.setLimitForPeriod(2);
+		instanceProperties1.setWritableStackTraceEnabled(false);
 		instanceProperties1.setSubscribeForEvents(true);
 		instanceProperties1.setEventConsumerBufferSize(100);
 		instanceProperties1.setLimitRefreshPeriod(Duration.ofMillis(100));
@@ -41,6 +42,7 @@ public class RateLimiterConfigurationPropertiesTest {
 		io.github.resilience4j.common.ratelimiter.configuration.RateLimiterConfigurationProperties.InstanceProperties instanceProperties2 = new io.github.resilience4j.common.ratelimiter.configuration.RateLimiterConfigurationProperties.InstanceProperties();
 		instanceProperties2.setLimitForPeriod(4);
 		instanceProperties2.setSubscribeForEvents(true);
+		instanceProperties2.setWritableStackTraceEnabled(true);
 
 		RateLimiterConfigurationProperties rateLimiterConfigurationProperties = new RateLimiterConfigurationProperties();
 		rateLimiterConfigurationProperties.getInstances().put("backend1", instanceProperties1);
@@ -53,10 +55,12 @@ public class RateLimiterConfigurationPropertiesTest {
 		RateLimiterConfig rateLimiter = rateLimiterConfigurationProperties.createRateLimiterConfig("backend1");
 		assertThat(rateLimiter).isNotNull();
 		assertThat(rateLimiter.getLimitForPeriod()).isEqualTo(2);
+		assertThat(rateLimiter.isWritableStackTraceEnabled()).isFalse();
 
 		RateLimiterConfig rateLimiter2 = rateLimiterConfigurationProperties.createRateLimiterConfig("backend2");
 		assertThat(rateLimiter2).isNotNull();
 		assertThat(rateLimiter2.getLimitForPeriod()).isEqualTo(4);
+		assertThat(rateLimiter2.isWritableStackTraceEnabled()).isTrue();
 
 
 	}
@@ -68,6 +72,7 @@ public class RateLimiterConfigurationPropertiesTest {
 		defaultProperties.setLimitForPeriod(3);
 		defaultProperties.setLimitRefreshPeriod(Duration.ofNanos(5000000));
 		defaultProperties.setSubscribeForEvents(true);
+		defaultProperties.setWritableStackTraceEnabled(false);
 
 		io.github.resilience4j.common.ratelimiter.configuration.RateLimiterConfigurationProperties.InstanceProperties sharedProperties = new io.github.resilience4j.common.ratelimiter.configuration.RateLimiterConfigurationProperties.InstanceProperties();
 		sharedProperties.setLimitForPeriod(2);
@@ -78,11 +83,13 @@ public class RateLimiterConfigurationPropertiesTest {
 		backendWithDefaultConfig.setBaseConfig("default");
 		backendWithDefaultConfig.setLimitForPeriod(200);
 		backendWithDefaultConfig.setSubscribeForEvents(true);
+		backendWithDefaultConfig.setWritableStackTraceEnabled(true);
 
 		io.github.resilience4j.common.ratelimiter.configuration.RateLimiterConfigurationProperties.InstanceProperties backendWithSharedConfig = new io.github.resilience4j.common.ratelimiter.configuration.RateLimiterConfigurationProperties.InstanceProperties();
 		backendWithSharedConfig.setBaseConfig("sharedConfig");
 		backendWithSharedConfig.setLimitForPeriod(300);
 		backendWithSharedConfig.setSubscribeForEvents(true);
+		backendWithSharedConfig.setWritableStackTraceEnabled(true);
 
 		RateLimiterConfigurationProperties rateLimiterConfigurationProperties = new RateLimiterConfigurationProperties();
 		rateLimiterConfigurationProperties.getConfigs().put("default", defaultProperties);
@@ -100,17 +107,20 @@ public class RateLimiterConfigurationPropertiesTest {
 		assertThat(rateLimiter1).isNotNull();
 		assertThat(rateLimiter1.getLimitForPeriod()).isEqualTo(200);
 		assertThat(rateLimiter1.getLimitRefreshPeriod()).isEqualTo(Duration.ofMillis(5));
+		assertThat(rateLimiter1.isWritableStackTraceEnabled()).isTrue();
 
 		// Should get shared config and override LimitForPeriod
 		RateLimiterConfig rateLimiter2 = rateLimiterConfigurationProperties.createRateLimiterConfig("backendWithSharedConfig");
 		assertThat(rateLimiter2).isNotNull();
 		assertThat(rateLimiter2.getLimitForPeriod()).isEqualTo(300);
 		assertThat(rateLimiter2.getLimitRefreshPeriod()).isEqualTo(Duration.ofMillis(6));
+		assertThat(rateLimiter2.isWritableStackTraceEnabled()).isTrue();
 
 		// Unknown backend should get default config of Registry
 		RateLimiterConfig rerateLimiter3 = rateLimiterConfigurationProperties.createRateLimiterConfig("unknownBackend");
 		assertThat(rerateLimiter3).isNotNull();
 		assertThat(rerateLimiter3.getLimitForPeriod()).isEqualTo(50);
+		assertThat(rerateLimiter3.isWritableStackTraceEnabled()).isTrue();
 
 
 	}

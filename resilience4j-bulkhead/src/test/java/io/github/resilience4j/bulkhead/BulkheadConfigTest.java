@@ -47,6 +47,24 @@ public class BulkheadConfigTest {
 	}
 
     @Test
+    public void testBuildCustomWithWritableStackTraceDisabled() {
+
+        // given
+        int maxConcurrent = 66;
+
+        // when
+        BulkheadConfig config = BulkheadConfig.custom()
+                .maxConcurrentCalls(maxConcurrent)
+                .writableStackTraceEnabled(false)
+                .build();
+
+        // then
+        assertThat(config).isNotNull();
+        assertThat(config.getMaxConcurrentCalls()).isEqualTo(maxConcurrent);
+        assertThat(config.isWritableStackTraceEnabled()).isFalse();
+    }
+
+    @Test
     public void testBuildCustom() {
 
         // given
