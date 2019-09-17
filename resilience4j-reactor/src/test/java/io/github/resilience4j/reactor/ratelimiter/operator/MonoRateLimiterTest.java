@@ -27,6 +27,7 @@ import java.io.IOException;
 import java.time.Duration;
 
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
 
 public class MonoRateLimiterTest {
 
@@ -34,7 +35,7 @@ public class MonoRateLimiterTest {
 
     @Before
     public void setUp(){
-        rateLimiter = Mockito.mock(RateLimiter.class);
+        rateLimiter = Mockito.mock(RateLimiter.class, RETURNS_DEEP_STUBS);
     }
 
     @Test

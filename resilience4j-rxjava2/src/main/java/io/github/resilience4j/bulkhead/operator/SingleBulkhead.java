@@ -22,7 +22,7 @@ import io.reactivex.Single;
 import io.reactivex.SingleObserver;
 import io.reactivex.internal.disposables.EmptyDisposable;
 
-import static io.github.resilience4j.bulkhead.BulkheadFullException.getCallNotPermittedException;
+import static io.github.resilience4j.bulkhead.BulkheadFullException.getBulkheadFullException;
 
 class SingleBulkhead<T> extends Single<T> {
 
@@ -40,7 +40,7 @@ class SingleBulkhead<T> extends Single<T> {
             upstream.subscribe(new BulkheadSingleObserver(downstream));
         }else{
             downstream.onSubscribe(EmptyDisposable.INSTANCE);
-            downstream.onError(getCallNotPermittedException(bulkhead));
+            downstream.onError(BulkheadFullException.getBulkheadFullException(bulkhead));
         }
     }
 

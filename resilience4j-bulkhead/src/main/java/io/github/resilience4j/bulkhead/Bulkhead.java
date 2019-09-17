@@ -38,7 +38,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-import static io.github.resilience4j.bulkhead.BulkheadFullException.getCallNotPermittedException;
+import static io.github.resilience4j.bulkhead.BulkheadFullException.getBulkheadFullException;
 
 /**
  *  A Bulkhead instance is thread-safe can be used to decorate multiple requests.
@@ -231,7 +231,7 @@ public interface Bulkhead {
             final CompletableFuture<T> promise = new CompletableFuture<>();
 
             if (!bulkhead.tryAcquirePermission()) {
-                promise.completeExceptionally(getCallNotPermittedException(bulkhead));
+                promise.completeExceptionally(BulkheadFullException.getBulkheadFullException(bulkhead));
             }
             else {
                 try {
@@ -339,7 +339,7 @@ public interface Bulkhead {
                     bulkhead.onComplete();
                 }
             }else{
-                return Try.failure(getCallNotPermittedException(bulkhead));
+                return Try.failure(BulkheadFullException.getBulkheadFullException(bulkhead));
             }
         };
     }
@@ -364,7 +364,7 @@ public interface Bulkhead {
                     bulkhead.onComplete();
                 }
             }else{
-                return Either.left(getCallNotPermittedException(bulkhead));
+                return Either.left(BulkheadFullException.getBulkheadFullException(bulkhead));
             }
         };
     }

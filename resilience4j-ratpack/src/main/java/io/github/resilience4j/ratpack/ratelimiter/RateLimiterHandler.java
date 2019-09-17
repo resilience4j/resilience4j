@@ -22,6 +22,8 @@ import io.github.resilience4j.ratelimiter.RequestNotPermitted;
 import ratpack.handling.Context;
 import ratpack.handling.Handler;
 
+import static io.github.resilience4j.ratelimiter.RequestNotPermitted.getRequestNotPermitted;
+
 public class RateLimiterHandler implements Handler {
 
     private final RateLimiter rateLimiter;
@@ -41,7 +43,7 @@ public class RateLimiterHandler implements Handler {
             throw new IllegalStateException("Thread was interrupted during permission wait");
         }
         if (!permission) {
-            Throwable t = new RequestNotPermitted(rateLimiter);
+            Throwable t = getRequestNotPermitted(rateLimiter);
             ctx.error(t);
         } else {
             ctx.next();

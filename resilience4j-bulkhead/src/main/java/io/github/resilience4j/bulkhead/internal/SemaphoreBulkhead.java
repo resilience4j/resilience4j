@@ -34,7 +34,7 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
-import static io.github.resilience4j.bulkhead.BulkheadFullException.getCallNotPermittedException;
+import static io.github.resilience4j.bulkhead.BulkheadFullException.getBulkheadFullException;
 import static java.util.Objects.requireNonNull;
 
 /**
@@ -117,7 +117,7 @@ public class SemaphoreBulkhead implements Bulkhead {
     @Override
     public void acquirePermission() {
         if(!tryAcquirePermission()) {
-            throw getCallNotPermittedException(this);
+            throw BulkheadFullException.getBulkheadFullException(this);
         }
     }
 

@@ -34,7 +34,7 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 
-import static io.github.resilience4j.bulkhead.BulkheadFullException.getCallNotPermittedException;
+import static io.github.resilience4j.bulkhead.BulkheadFullException.getBulkheadFullException;
 
 /**
  * A {@link MethodInterceptor} to handle all methods annotated with {@link Bulkhead}. It will
@@ -121,7 +121,7 @@ public class BulkheadMethodInterceptor extends AbstractMethodInterceptor {
                     });
                 }
             } else {
-                Throwable t = getCallNotPermittedException(bulkhead);
+                Throwable t = BulkheadFullException.getBulkheadFullException(bulkhead);
                 completeFailedFuture(t, fallbackMethod, promise);
             }
             return promise;
