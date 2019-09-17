@@ -24,32 +24,44 @@ package io.github.resilience4j.bulkhead;
 public class BulkheadFullException extends RuntimeException {
 
     /**
-     * The constructor with a message.
+     * Static method to construct a {@link BulkheadFullException} with a Bulkhead.
      *
      * @param bulkhead the Bulkhead.
      */
-    public BulkheadFullException(Bulkhead bulkhead) {
-        super(String.format("Bulkhead '%s' is full and does not permit further calls", bulkhead.getName()));
+    public static BulkheadFullException getBulkheadFullException(Bulkhead bulkhead) {
+        boolean writableStackTraceEnabled = bulkhead.getBulkheadConfig().isWritableStackTraceEnabled();
+
+        String message = String.format("Bulkhead '%s' is full and does not permit further calls", bulkhead.getName());
+
+        return new BulkheadFullException(message, writableStackTraceEnabled);
     }
 
     /**
-     * The constructor with a message and details.
+     * Static method to construct a {@link BulkheadFullException} with a message and details.
      *
      * @param bulkhead the Bulkhead.
      * @param details additional message.
      */
-    public BulkheadFullException(Bulkhead bulkhead, String details) {
-        super(String.format("Bulkhead '%s' is full and '%s'", bulkhead.getName(), details));
+    public static BulkheadFullException getBulkheadFullExceptionWithDetails(Bulkhead bulkhead, String details) {
+        boolean writableStackTraceEnabled = bulkhead.getBulkheadConfig().isWritableStackTraceEnabled();
+        String message = String.format("Bulkhead '%s' is full and '%s'", bulkhead.getName(), details);
+        return new BulkheadFullException(message, writableStackTraceEnabled);
     }
 
     /**
-     * The constructor with a message.
+     * Static method to construct a {@link BulkheadFullException} with a ThreadPoolBulkhead.
      *
      * @param bulkhead the Bulkhead.
      */
-    public BulkheadFullException(ThreadPoolBulkhead bulkhead) {
-        super(String.format("Bulkhead '%s' is full and does not permit further calls", bulkhead.getName()));
+    public static BulkheadFullException getBulkheadFullException(ThreadPoolBulkhead bulkhead) {
+        boolean writableStackTraceEnabled = bulkhead.getBulkheadConfig().isWritableStackTraceEnabled();
+
+        String message = String.format("Bulkhead '%s' is full and does not permit further calls", bulkhead.getName());
+
+        return new BulkheadFullException(message, writableStackTraceEnabled);
+    }
+
+    private BulkheadFullException(String message, boolean writableStackTrace) {
+        super(message, null, false, writableStackTrace);
     }
 }
-
-

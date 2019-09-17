@@ -43,7 +43,7 @@ public class MonoCircuitBreakerTest  {
 
     @Before
     public void setUp(){
-        circuitBreaker = Mockito.mock(CircuitBreaker.class);
+        circuitBreaker = Mockito.mock(CircuitBreaker.class, RETURNS_DEEP_STUBS);
         helloWorldService = Mockito.mock(HelloWorldService.class);
     }
 

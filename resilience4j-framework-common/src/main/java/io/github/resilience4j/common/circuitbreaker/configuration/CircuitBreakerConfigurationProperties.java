@@ -78,6 +78,10 @@ public class CircuitBreakerConfigurationProperties {
 			builder.failureRateThreshold(properties.getFailureRateThreshold());
 		}
 
+		if (properties.getWritableStackTraceEnabled() != null) {
+			builder.writableStackTraceEnabled(properties.getWritableStackTraceEnabled());
+		}
+
 		if (properties.getSlowCallRateThreshold() != null) {
 			builder.slowCallRateThreshold(properties.getSlowCallRateThreshold());
 		}
@@ -211,6 +215,9 @@ public class CircuitBreakerConfigurationProperties {
 		@Nullable
 		private Boolean automaticTransitionFromOpenToHalfOpenEnabled;
 
+		@Nullable
+		private Boolean writableStackTraceEnabled;
+
 		@Min(1)
 		@Nullable
 		private Integer eventConsumerBufferSize;
@@ -331,6 +338,25 @@ public class CircuitBreakerConfigurationProperties {
 		 */
 		public InstanceProperties setAutomaticTransitionFromOpenToHalfOpenEnabled(Boolean automaticTransitionFromOpenToHalfOpenEnabled) {
 			this.automaticTransitionFromOpenToHalfOpenEnabled = automaticTransitionFromOpenToHalfOpenEnabled;
+			return this;
+		}
+
+		/**
+		 * Returns if we should enable writable stack traces or not.
+		 *
+		 * @return writableStackTraceEnabled if we should enable writable stack traces or not.
+		 */
+		public Boolean getWritableStackTraceEnabled() {
+			return this.writableStackTraceEnabled;
+		}
+
+		/**
+		 * Sets if we should enable writable stack traces or not.
+		 *
+		 * @param writableStackTraceEnabled The flag to enable writable stack traces.
+		 */
+		public InstanceProperties setWritableStackTraceEnabled(Boolean writableStackTraceEnabled) {
+			this.writableStackTraceEnabled = writableStackTraceEnabled;
 			return this;
 		}
 

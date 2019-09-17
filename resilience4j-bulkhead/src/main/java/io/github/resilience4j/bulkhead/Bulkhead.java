@@ -38,6 +38,8 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+import static io.github.resilience4j.bulkhead.BulkheadFullException.getBulkheadFullException;
+
 /**
  *  A Bulkhead instance is thread-safe can be used to decorate multiple requests.
  *
@@ -240,7 +242,7 @@ public interface Bulkhead {
                 if (Thread.currentThread().isInterrupted()) {
                     promise.completeExceptionally(new BulkheadFullException(bulkhead, INTERRUPTED_ON_PERMISSION_WAIT));
                 } else {
-                    promise.completeExceptionally(new BulkheadFullException(bulkhead));
+                    promise.completeExceptionally(BulkheadFullException.getBulkheadFullException(bulkhead));
                 }
             }
             else {
@@ -351,7 +353,7 @@ public interface Bulkhead {
             } else if (Thread.currentThread().isInterrupted()) {
                 return Try.failure(new BulkheadFullException(bulkhead, INTERRUPTED_ON_PERMISSION_WAIT));
             } else {
-                return Try.failure(new BulkheadFullException(bulkhead));
+                return Try.failure(BulkheadFullException.getBulkheadFullException(bulkhead));
             }
         };
     }
@@ -378,7 +380,7 @@ public interface Bulkhead {
             } else if (Thread.currentThread().isInterrupted()){
                 return Either.left(new BulkheadFullException(bulkhead, INTERRUPTED_ON_PERMISSION_WAIT));
             } else {
-                return Either.left(new BulkheadFullException(bulkhead));
+                return Either.left(BulkheadFullException.getBulkheadFullException(bulkhead));
             }
         };
     }

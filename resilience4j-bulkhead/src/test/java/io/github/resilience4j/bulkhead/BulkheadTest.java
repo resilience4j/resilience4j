@@ -41,8 +41,7 @@ import java.util.function.Supplier;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.*;
 
 public class BulkheadTest {
 
@@ -663,7 +662,7 @@ public class BulkheadTest {
     @Test
     public void shouldDecorateTrySupplierAndReturnWithBulkheadFullException() {
         // Given
-        Bulkhead bulkhead = Mockito.mock(Bulkhead.class);
+        Bulkhead bulkhead = Mockito.mock(Bulkhead.class, RETURNS_DEEP_STUBS);
         BDDMockito.given(bulkhead.tryAcquirePermission()).willReturn(false);
 
         // When
@@ -678,7 +677,7 @@ public class BulkheadTest {
     @Test
     public void shouldDecorateEitherSupplierAndReturnWithBulkheadFullException() {
         // Given
-        Bulkhead bulkhead = Mockito.mock(Bulkhead.class);
+        Bulkhead bulkhead = Mockito.mock(Bulkhead.class, RETURNS_DEEP_STUBS);
         BDDMockito.given(bulkhead.tryAcquirePermission()).willReturn(false);
 
         // When

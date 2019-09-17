@@ -25,6 +25,8 @@ import io.reactivex.internal.disposables.EmptyDisposable;
 
 import java.util.concurrent.TimeUnit;
 
+import static io.github.resilience4j.ratelimiter.RequestNotPermitted.getRequestNotPermitted;
+
 class SingleRateLimiter<T> extends Single<T> {
 
     private final RateLimiter rateLimiter;
@@ -47,7 +49,7 @@ class SingleRateLimiter<T> extends Single<T> {
             }
         }else{
             downstream.onSubscribe(EmptyDisposable.INSTANCE);
-            downstream.onError(new RequestNotPermitted(rateLimiter));
+            downstream.onError(getRequestNotPermitted(rateLimiter));
         }
     }
 

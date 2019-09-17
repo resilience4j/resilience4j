@@ -24,6 +24,8 @@ import reactor.core.publisher.Operators;
 
 import java.time.Duration;
 
+import static io.github.resilience4j.ratelimiter.RequestNotPermitted.getRequestNotPermitted;
+
 class MonoRateLimiter<T> extends MonoOperator<T, T> {
     private final RateLimiter rateLimiter;
 
@@ -43,7 +45,7 @@ class MonoRateLimiter<T> extends MonoOperator<T, T> {
                 source.subscribe(new RateLimiterSubscriber<>(actual));
             }
         }else{
-            Operators.error(actual, new RequestNotPermitted(rateLimiter));
+            Operators.error(actual, getRequestNotPermitted(rateLimiter));
         }
     }
 }

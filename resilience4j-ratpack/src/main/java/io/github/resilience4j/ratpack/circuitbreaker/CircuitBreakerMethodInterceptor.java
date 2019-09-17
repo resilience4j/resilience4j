@@ -35,6 +35,8 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.TimeUnit;
 
+import static io.github.resilience4j.circuitbreaker.CallNotPermittedException.getCallNotPermittedException;
+
 /**
  * A {@link MethodInterceptor} to handle all methods annotated with {@link CircuitBreaker}. It will
  * handle methods that return a {@link Promise}, {@link reactor.core.publisher.Flux}, {@link reactor.core.publisher.Mono}, {@link java.util.concurrent.CompletionStage}, or value.
@@ -124,7 +126,7 @@ public class CircuitBreakerMethodInterceptor extends AbstractMethodInterceptor {
                     });
                 }
             } else {
-                Throwable t = new CallNotPermittedException(breaker);
+                Throwable t = getCallNotPermittedException(breaker);
                 completeFailedFuture(t, fallbackMethod, promise);
             }
             return promise;
