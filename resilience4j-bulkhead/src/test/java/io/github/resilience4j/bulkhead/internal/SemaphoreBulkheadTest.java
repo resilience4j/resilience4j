@@ -182,7 +182,9 @@ public class SemaphoreBulkheadTest {
                 .pollInterval(expectedWaitTime.dividedBy(100).toMillis(), MILLISECONDS)
                 .until(() -> subTestRoutine.getState() == Thread.State.TIMED_WAITING);
         subTestRoutine.interrupt();
-        subTestRoutine.join(expectedWaitTime.toMillis());
+        await().atMost(expectedWaitTime.dividedBy(2).toMillis(), MILLISECONDS)
+                .pollInterval(expectedWaitTime.dividedBy(100).toMillis(), MILLISECONDS)
+                .until(() -> subTestRoutine.getState() == Thread.State.TERMINATED);
 
         // then
         assertThat(entered).isTrue();
@@ -227,7 +229,9 @@ public class SemaphoreBulkheadTest {
                 .pollInterval(expectedWaitTime.dividedBy(100).toMillis(), MILLISECONDS)
                 .until(() -> subTestRoutine.getState() == Thread.State.TIMED_WAITING);
         subTestRoutine.interrupt();
-        subTestRoutine.join(expectedWaitTime.toMillis());
+        await().atMost(expectedWaitTime.dividedBy(2).toMillis(), MILLISECONDS)
+                .pollInterval(expectedWaitTime.dividedBy(100).toMillis(), MILLISECONDS)
+                .until(() -> subTestRoutine.getState() == Thread.State.TERMINATED);
 
         // then
         assertThat(entered).isTrue();
