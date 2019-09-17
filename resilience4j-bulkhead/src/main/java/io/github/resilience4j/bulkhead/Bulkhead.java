@@ -55,6 +55,8 @@ import java.util.function.Supplier;
  */
 public interface Bulkhead {
 
+    String INTERRUPTED_ON_PERMISSION_WAIT = "thread was interrupted during permission wait";
+
     /**
      * Dynamic bulkhead configuration change.
      * NOTE! New `maxWaitTime` duration won't affect threads that are currently waiting for permission.
@@ -235,7 +237,11 @@ public interface Bulkhead {
             final CompletableFuture<T> promise = new CompletableFuture<>();
 
             if (!bulkhead.tryAcquirePermission()) {
-                promise.completeExceptionally(new BulkheadFullException(bulkhead));
+                if (Thread.currentThread().isInterrupted()) {
+                    promise.completeExceptionally(new BulkheadFullException(bulkhead, INTERRUPTED_ON_PERMISSION_WAIT));
+                } else {
+                    promise.completeExceptionally(new BulkheadFullException(bulkhead));
+                }
             }
             else {
                 try {
@@ -342,7 +348,9 @@ public interface Bulkhead {
                 finally {
                     bulkhead.onComplete();
                 }
-            }else{
+            } else if (Thread.currentThread().isInterrupted()) {
+                return Try.failure(new BulkheadFullException(bulkhead, INTERRUPTED_ON_PERMISSION_WAIT));
+            } else {
                 return Try.failure(new BulkheadFullException(bulkhead));
             }
         };
@@ -367,7 +375,9 @@ public interface Bulkhead {
                 finally {
                     bulkhead.onComplete();
                 }
-            }else{
+            } else if (Thread.currentThread().isInterrupted()){
+                return Either.left(new BulkheadFullException(bulkhead, INTERRUPTED_ON_PERMISSION_WAIT));
+            } else {
                 return Either.left(new BulkheadFullException(bulkhead));
             }
         };

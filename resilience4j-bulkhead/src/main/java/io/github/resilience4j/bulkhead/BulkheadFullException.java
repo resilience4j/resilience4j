@@ -33,6 +33,16 @@ public class BulkheadFullException extends RuntimeException {
     }
 
     /**
+     * The constructor with a message and details.
+     *
+     * @param bulkhead the Bulkhead.
+     * @param details additional message.
+     */
+    public BulkheadFullException(Bulkhead bulkhead, String details) {
+        super(String.format("Bulkhead '%s' is full and '%s'", bulkhead.getName(), details));
+    }
+
+    /**
      * The constructor with a message.
      *
      * @param bulkhead the Bulkhead.

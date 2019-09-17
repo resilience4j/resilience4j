@@ -281,6 +281,7 @@ public class RateLimiterTest {
             Boolean interrupted = Match(cause).of(
                 Case($(instanceOf(IllegalStateException.class)), true)
             );
+            interrupted = interrupted && Thread.currentThread().isInterrupted();
             wasInterrupted.set(interrupted);
         });
         thread.setDaemon(true);
