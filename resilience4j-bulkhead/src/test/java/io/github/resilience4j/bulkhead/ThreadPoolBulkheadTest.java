@@ -52,7 +52,7 @@ public class ThreadPoolBulkheadTest {
 	}
 
 	@Test
-	public void shouldExecuteSupplierAndFailWithBulkHeadFull() throws InterruptedException {
+	public void shouldExecuteSupplierAndFailWithBulkHeadFull() {
 
 		// Given
 		ThreadPoolBulkhead bulkhead = ThreadPoolBulkhead.of("testSupplier", config);
@@ -92,7 +92,7 @@ public class ThreadPoolBulkheadTest {
 
 
 	@Test
-	public void shouldExecuteCallableAndFailWithBulkHeadFull() throws InterruptedException {
+	public void shouldExecuteCallableAndFailWithBulkHeadFull() {
 
 		// Given
 		ThreadPoolBulkhead bulkhead = ThreadPoolBulkhead.of("test", config);

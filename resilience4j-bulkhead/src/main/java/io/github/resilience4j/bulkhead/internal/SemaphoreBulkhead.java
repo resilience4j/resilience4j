@@ -34,7 +34,6 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
-import static io.github.resilience4j.bulkhead.BulkheadFullException.getBulkheadFullException;
 import static java.util.Objects.requireNonNull;
 
 /**

@@ -26,24 +26,20 @@ import io.github.resilience4j.core.registry.EntryReplacedEvent;
 import io.github.resilience4j.core.registry.RegistryEventConsumer;
 import org.junit.Before;
 import org.junit.Test;
-import org.slf4j.Logger;
 
 import java.time.Duration;
 import java.util.*;
 
 import static org.assertj.core.api.BDDAssertions.assertThat;
-import static org.mockito.Mockito.mock;
 
 
 public class BulkheadRegistryTest {
 
 	private BulkheadConfig config;
 	private BulkheadRegistry registry;
-	private Logger LOGGER;
 
 	@Before
 	public void setUp() {
-		LOGGER = mock(Logger.class);
 		// registry with default config
 		registry = BulkheadRegistry.ofDefaults();
 		// registry with custom config
