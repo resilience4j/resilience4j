@@ -37,6 +37,8 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+import static io.github.resilience4j.ratelimiter.RequestNotPermitted.getRequestNotPermitted;
+
 /**
  * A RateLimiter instance is thread-safe can be used to decorate multiple requests.
  * <p>
@@ -284,7 +286,7 @@ public interface RateLimiter {
 			throw new IllegalStateException("Thread was interrupted during permission wait");
 		}
 		if (!permission) {
-			throw new RequestNotPermitted(rateLimiter);
+			throw getRequestNotPermitted(rateLimiter);
 		}
 	}
 

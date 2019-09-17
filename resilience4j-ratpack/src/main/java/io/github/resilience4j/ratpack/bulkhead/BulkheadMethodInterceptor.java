@@ -34,6 +34,8 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 
+import static io.github.resilience4j.bulkhead.BulkheadFullException.getBulkheadFullException;
+
 /**
  * A {@link MethodInterceptor} to handle all methods annotated with {@link Bulkhead}. It will
  *  handle methods that return a {@link Promise}, {@link reactor.core.publisher.Flux}, {@link reactor.core.publisher.Mono}, {@link java.util.concurrent.CompletionStage}, or value.
@@ -119,7 +121,7 @@ public class BulkheadMethodInterceptor extends AbstractMethodInterceptor {
                     });
                 }
             } else {
-                Throwable t = new BulkheadFullException(bulkhead);
+                Throwable t = BulkheadFullException.getBulkheadFullException(bulkhead);
                 completeFailedFuture(t, fallbackMethod, promise);
             }
             return promise;

@@ -78,8 +78,8 @@ public class CircuitBreakerConfigurationProperties {
 			builder.failureRateThreshold(properties.getFailureRateThreshold());
 		}
 
-		if (properties.writableStackTraceEnabled() != null) {
-			builder.writableStackTraceEnabled(properties.writableStackTraceEnabled());
+		if (properties.getWritableStackTraceEnabled() != null) {
+			builder.writableStackTraceEnabled(properties.getWritableStackTraceEnabled());
 		}
 
 		if (properties.getSlowCallRateThreshold() != null) {
@@ -346,7 +346,7 @@ public class CircuitBreakerConfigurationProperties {
 		 *
 		 * @return writableStackTraceEnabled if we should enable writable stack traces or not.
 		 */
-		public Boolean writableStackTraceEnabled() {
+		public Boolean getWritableStackTraceEnabled() {
 			return this.writableStackTraceEnabled;
 		}
 
@@ -355,7 +355,7 @@ public class CircuitBreakerConfigurationProperties {
 		 *
 		 * @param writableStackTraceEnabled The flag to enable writable stack traces.
 		 */
-		public InstanceProperties writableStackTraceEnabled(Boolean writableStackTraceEnabled) {
+		public InstanceProperties setWritableStackTraceEnabled(Boolean writableStackTraceEnabled) {
 			this.writableStackTraceEnabled = writableStackTraceEnabled;
 			return this;
 		}

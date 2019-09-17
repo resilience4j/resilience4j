@@ -27,9 +27,11 @@ public class BulkheadConfig {
 
 	public static final int DEFAULT_MAX_CONCURRENT_CALLS = 25;
 	public static final Duration DEFAULT_MAX_WAIT_DURATION = Duration.ofSeconds(0);
+	public static final boolean DEFAULT_WRITABLE_STACK_TRACE_ENABLED = true;
 
 	private int maxConcurrentCalls = DEFAULT_MAX_CONCURRENT_CALLS;
 	private Duration maxWaitDuration= DEFAULT_MAX_WAIT_DURATION;
+	private boolean writableStackTraceEnabled = DEFAULT_WRITABLE_STACK_TRACE_ENABLED;
 
 	private BulkheadConfig() {
 	}
@@ -67,6 +69,10 @@ public class BulkheadConfig {
 
 	public Duration getMaxWaitDuration() {
 		return maxWaitDuration;
+	}
+
+	public boolean isWritableStackTraceEnabled() {
+		return writableStackTraceEnabled;
 	}
 
 	public static class Builder {
@@ -109,6 +115,19 @@ public class BulkheadConfig {
 				throw new IllegalArgumentException("maxWaitDuration must be a positive integer value >= 0");
 			}
 			config.maxWaitDuration = maxWaitDuration;
+			return this;
+		}
+
+		/**
+		 * Enables writable stack traces. When set to false, {@link Exception#getStackTrace()} returns a zero length array.
+		 * This may be used to reduce log spam when the circuit breaker is open as the cause of the exceptions is already
+		 * known (the circuit breaker is short-circuiting calls).
+		 *
+		 * @param writableStackTraceEnabled flag to control if stack trace is writable
+		 * @return the BulkheadConfig.Builder
+		 */
+		public Builder writableStackTraceEnabled(boolean writableStackTraceEnabled) {
+			config.writableStackTraceEnabled = writableStackTraceEnabled;
 			return this;
 		}
 

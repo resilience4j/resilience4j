@@ -22,6 +22,8 @@ import io.reactivex.Single;
 import io.reactivex.SingleObserver;
 import io.reactivex.internal.disposables.EmptyDisposable;
 
+import static io.github.resilience4j.bulkhead.BulkheadFullException.getBulkheadFullException;
+
 class SingleBulkhead<T> extends Single<T> {
 
     private final Bulkhead bulkhead;
@@ -38,7 +40,7 @@ class SingleBulkhead<T> extends Single<T> {
             upstream.subscribe(new BulkheadSingleObserver(downstream));
         }else{
             downstream.onSubscribe(EmptyDisposable.INSTANCE);
-            downstream.onError(new BulkheadFullException(bulkhead));
+            downstream.onError(BulkheadFullException.getBulkheadFullException(bulkhead));
         }
     }
 

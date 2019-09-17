@@ -12,6 +12,7 @@ import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
 
 /**
  * Unit test for {@link ObserverRateLimiter}.
@@ -22,7 +23,7 @@ public class ObserverRateLimiterTest {
 
     @Before
     public void setUp(){
-        rateLimiter = Mockito.mock(RateLimiter.class);
+        rateLimiter = Mockito.mock(RateLimiter.class, RETURNS_DEEP_STUBS);
     }
 
     @Test

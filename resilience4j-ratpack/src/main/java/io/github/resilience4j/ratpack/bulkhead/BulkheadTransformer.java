@@ -22,6 +22,8 @@ import ratpack.exec.Downstream;
 import ratpack.exec.Upstream;
 import ratpack.func.Function;
 
+import static io.github.resilience4j.bulkhead.BulkheadFullException.getBulkheadFullException;
+
 
 public class BulkheadTransformer<T> extends AbstractTransformer<T> {
 
@@ -81,7 +83,7 @@ public class BulkheadTransformer<T> extends AbstractTransformer<T> {
                     }
                 });
             } else {
-                Throwable t = new BulkheadFullException(bulkhead);
+                Throwable t = BulkheadFullException.getBulkheadFullException(bulkhead);
                 handleRecovery(down, t);
             }
         };
