@@ -77,6 +77,10 @@ public class RateLimiterConfigurationProperties {
 			builder.timeoutDuration(instanceProperties.getTimeoutDuration());
 		}
 
+		if (instanceProperties.getWritableStackTraceEnabled() != null) {
+			builder.writableStackTraceEnabled(instanceProperties.getWritableStackTraceEnabled());
+		}
+
 		return builder.build();
 	}
 
@@ -123,6 +127,8 @@ public class RateLimiterConfigurationProperties {
 		@Min(1)
 		@Nullable
 		private Integer eventConsumerBufferSize;
+		@Nullable
+		private Boolean writableStackTraceEnabled;
 		@Nullable
 		private String baseConfig;
 
@@ -197,6 +203,25 @@ public class RateLimiterConfigurationProperties {
 		 */
 		public InstanceProperties setTimeoutDuration(Duration timeout) {
 			this.timeoutDuration = timeout;
+			return this;
+		}
+
+		/**
+		 * Returns if we should enable writable stack traces or not.
+		 *
+		 * @return writableStackTraceEnabled if we should enable writable stack traces or not.
+		 */
+		public Boolean getWritableStackTraceEnabled() {
+			return this.writableStackTraceEnabled;
+		}
+
+		/**
+		 * Sets if we should enable writable stack traces or not.
+		 *
+		 * @param writableStackTraceEnabled The flag to enable writable stack traces.
+		 */
+		public InstanceProperties setWritableStackTraceEnabled(Boolean writableStackTraceEnabled) {
+			this.writableStackTraceEnabled = writableStackTraceEnabled;
 			return this;
 		}
 

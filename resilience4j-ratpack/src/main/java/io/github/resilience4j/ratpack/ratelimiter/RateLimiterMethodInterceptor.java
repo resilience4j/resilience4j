@@ -35,6 +35,8 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 
+import static io.github.resilience4j.ratelimiter.RequestNotPermitted.getRequestNotPermitted;
+
 /**
  * A {@link MethodInterceptor} to handle all methods annotated with {@link RateLimiter}. It will
  * handle methods that return a {@link Promise}, {@link reactor.core.publisher.Flux}, {@link reactor.core.publisher.Mono}, {@link java.util.concurrent.CompletionStage}, or value.
@@ -109,7 +111,7 @@ public class RateLimiterMethodInterceptor extends AbstractMethodInterceptor {
                 return proceed(invocation);
             } else {
                 final CompletableFuture promise = new CompletableFuture<>();
-                Throwable t = new RequestNotPermitted(rateLimiter);
+                Throwable t = getRequestNotPermitted(rateLimiter);
                 completeFailedFuture(t, fallbackMethod, promise);
                 return promise;
             }

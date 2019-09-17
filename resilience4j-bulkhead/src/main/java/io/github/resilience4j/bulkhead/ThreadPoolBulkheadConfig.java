@@ -29,11 +29,13 @@ public class ThreadPoolBulkheadConfig {
 	public static final Duration DEFAULT_KEEP_ALIVE_DURATION = Duration.ofMillis(20);
 	public static final int DEFAULT_CORE_THREAD_POOL_SIZE = Runtime.getRuntime().availableProcessors() > 1 ? Runtime.getRuntime().availableProcessors() - 1 : 1;
 	public static final int DEFAULT_MAX_THREAD_POOL_SIZE = Runtime.getRuntime().availableProcessors();
+	public static final boolean DEFAULT_WRITABLE_STACK_TRACE_ENABLED = true;
 
 	private int maxThreadPoolSize = DEFAULT_MAX_THREAD_POOL_SIZE;
 	private int coreThreadPoolSize = DEFAULT_CORE_THREAD_POOL_SIZE;
 	private int queueCapacity = DEFAULT_QUEUE_CAPACITY;
 	private Duration keepAliveDuration = DEFAULT_KEEP_ALIVE_DURATION;
+	private boolean writableStackTraceEnabled = DEFAULT_WRITABLE_STACK_TRACE_ENABLED;
 
 	private ThreadPoolBulkheadConfig() {
 	}
@@ -79,6 +81,10 @@ public class ThreadPoolBulkheadConfig {
 
 	public int getCoreThreadPoolSize() {
 		return coreThreadPoolSize;
+	}
+
+	public boolean isWritableStackTraceEnabled() {
+		return writableStackTraceEnabled;
 	}
 
 	public static class Builder {
@@ -149,6 +155,19 @@ public class ThreadPoolBulkheadConfig {
 				throw new IllegalArgumentException("keepAliveDuration must be a positive integer value >= 0");
 			}
 			config.keepAliveDuration = keepAliveDuration;
+			return this;
+		}
+
+		/**
+		 * Enables writable stack traces. When set to false, {@link Exception#getStackTrace()} returns a zero length array.
+		 * This may be used to reduce log spam when the circuit breaker is open as the cause of the exceptions is already
+		 * known (the circuit breaker is short-circuiting calls).
+		 *
+		 * @param writableStackTraceEnabled flag to control if stack trace is writable
+		 * @return the BulkheadConfig.Builder
+		 */
+		public Builder writableStackTraceEnabled(boolean writableStackTraceEnabled) {
+			config.writableStackTraceEnabled = writableStackTraceEnabled;
 			return this;
 		}
 

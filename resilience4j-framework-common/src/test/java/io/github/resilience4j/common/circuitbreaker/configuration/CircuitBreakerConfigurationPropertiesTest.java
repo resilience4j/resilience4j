@@ -45,7 +45,7 @@ public class CircuitBreakerConfigurationPropertiesTest {
 		instanceProperties1.setSlowCallRateThreshold(50f);
 		instanceProperties1.setPermittedNumberOfCallsInHalfOpenState(100);
 		instanceProperties1.setAutomaticTransitionFromOpenToHalfOpenEnabled(true);
-		instanceProperties1.writableStackTraceEnabled(false);
+		instanceProperties1.setWritableStackTraceEnabled(false);
 		//noinspection unchecked
 		instanceProperties1.setIgnoreExceptions(new Class[]{IllegalStateException.class});
 		//noinspection unchecked

@@ -22,6 +22,8 @@ import ratpack.exec.Downstream;
 import ratpack.exec.Upstream;
 import ratpack.func.Function;
 
+import static io.github.resilience4j.ratelimiter.RequestNotPermitted.getRequestNotPermitted;
+
 public class RateLimiterTransformer<T> extends AbstractTransformer<T> {
 
     private final RateLimiter rateLimiter;
@@ -61,7 +63,7 @@ public class RateLimiterTransformer<T> extends AbstractTransformer<T> {
                 throw new IllegalStateException("Thread was interrupted during permission wait");
             }
             if (!permission) {
-                Throwable t = new RequestNotPermitted(rateLimiter);
+                Throwable t = getRequestNotPermitted(rateLimiter);
                 if (recoverer != null) {
                     down.success(recoverer.apply(t));
                 } else {
