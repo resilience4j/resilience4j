@@ -37,18 +37,6 @@ public class BulkheadFullException extends RuntimeException {
     }
 
     /**
-     * Static method to construct a {@link BulkheadFullException} with a message and details.
-     *
-     * @param bulkhead the Bulkhead.
-     * @param details additional message.
-     */
-    public static BulkheadFullException getBulkheadFullExceptionWithDetails(Bulkhead bulkhead, String details) {
-        boolean writableStackTraceEnabled = bulkhead.getBulkheadConfig().isWritableStackTraceEnabled();
-        String message = String.format("Bulkhead '%s' is full and '%s'", bulkhead.getName(), details);
-        return new BulkheadFullException(message, writableStackTraceEnabled);
-    }
-
-    /**
      * Static method to construct a {@link BulkheadFullException} with a ThreadPoolBulkhead.
      *
      * @param bulkhead the Bulkhead.
@@ -56,7 +44,13 @@ public class BulkheadFullException extends RuntimeException {
     public static BulkheadFullException getBulkheadFullException(ThreadPoolBulkhead bulkhead) {
         boolean writableStackTraceEnabled = bulkhead.getBulkheadConfig().isWritableStackTraceEnabled();
 
-        String message = String.format("Bulkhead '%s' is full and does not permit further calls", bulkhead.getName());
+        String message;
+        if (Thread.currentThread().isInterrupted()) {
+            message = String.format("Bulkhead '%s' is full and thread was interrupted during permission wait",
+                    bulkhead.getName());
+        } else {
+            message = String.format("Bulkhead '%s' is full and does not permit further calls", bulkhead.getName());
+        }
 
         return new BulkheadFullException(message, writableStackTraceEnabled);
     }

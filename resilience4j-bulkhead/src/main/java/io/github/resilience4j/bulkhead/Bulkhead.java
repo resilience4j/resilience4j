@@ -57,8 +57,6 @@ import static io.github.resilience4j.bulkhead.BulkheadFullException.getBulkheadF
  */
 public interface Bulkhead {
 
-    String INTERRUPTED_ON_PERMISSION_WAIT = "thread was interrupted during permission wait";
-
     /**
      * Dynamic bulkhead configuration change.
      * NOTE! New `maxWaitTime` duration won't affect threads that are currently waiting for permission.
@@ -239,11 +237,7 @@ public interface Bulkhead {
             final CompletableFuture<T> promise = new CompletableFuture<>();
 
             if (!bulkhead.tryAcquirePermission()) {
-                if (Thread.currentThread().isInterrupted()) {
-                    promise.completeExceptionally(new BulkheadFullException(bulkhead, INTERRUPTED_ON_PERMISSION_WAIT));
-                } else {
-                    promise.completeExceptionally(BulkheadFullException.getBulkheadFullException(bulkhead));
-                }
+                promise.completeExceptionally(BulkheadFullException.getBulkheadFullException(bulkhead));
             }
             else {
                 try {
@@ -350,8 +344,6 @@ public interface Bulkhead {
                 finally {
                     bulkhead.onComplete();
                 }
-            } else if (Thread.currentThread().isInterrupted()) {
-                return Try.failure(new BulkheadFullException(bulkhead, INTERRUPTED_ON_PERMISSION_WAIT));
             } else {
                 return Try.failure(BulkheadFullException.getBulkheadFullException(bulkhead));
             }
@@ -377,8 +369,6 @@ public interface Bulkhead {
                 finally {
                     bulkhead.onComplete();
                 }
-            } else if (Thread.currentThread().isInterrupted()){
-                return Either.left(new BulkheadFullException(bulkhead, INTERRUPTED_ON_PERMISSION_WAIT));
             } else {
                 return Either.left(BulkheadFullException.getBulkheadFullException(bulkhead));
             }
