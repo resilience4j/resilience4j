@@ -36,7 +36,6 @@ import java.util.function.Function;
 import static com.jayway.awaitility.Awaitility.await;
 import static io.vavr.control.Try.run;
 import static java.lang.Thread.State.*;
-import static java.time.LocalDateTime.now;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.BDDAssertions.then;
 import static org.hamcrest.CoreMatchers.equalTo;
@@ -47,7 +46,7 @@ import static org.mockito.Mockito.*;
 public class SemaphoreBasedRateLimiterImplTest {
 
     private static final int LIMIT = 2;
-    private static final Duration TIMEOUT = Duration.ofMillis(50);
+    private static final Duration TIMEOUT = Duration.ofMillis(100);
     private static final Duration REFRESH_PERIOD = Duration.ofMillis(100);
     private static final String CONFIG_MUST_NOT_BE_NULL = "Config must not be null";
     private static final String NAME_MUST_NOT_BE_NULL = "Name must not be null";
