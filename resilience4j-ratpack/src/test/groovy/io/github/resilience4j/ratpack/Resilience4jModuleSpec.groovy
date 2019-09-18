@@ -757,13 +757,15 @@ class Resilience4jModuleSpec extends Specification {
         timer.count == 3
 
         and:
-        registry.gauges.size() == 14
+        registry.gauges.size() == 16
         registry.gauges.keySet() == ['resilience4j.circuitbreaker.test.state',
                                      'resilience4j.circuitbreaker.test.buffered',
                                      'resilience4j.circuitbreaker.test.failed',
+                                     'resilience4j.circuitbreaker.test.slow',
                                      'resilience4j.circuitbreaker.test.not_permitted',
                                      'resilience4j.circuitbreaker.test.successful',
                                      'resilience4j.circuitbreaker.test.failure_rate',
+                                     'resilience4j.circuitbreaker.test.slow_call_rate',
                                      'resilience4j.ratelimiter.test.available_permissions',
                                      'resilience4j.ratelimiter.test.number_of_waiting_threads',
                                      'resilience4j.retry.test.successful_calls_without_retry',

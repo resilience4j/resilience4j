@@ -51,9 +51,11 @@ For each circuit breaker this registry will export:
 * `state` - instantaneous read of the current state where 0-CLOSED, 1-OPEN, 2-HALF-OPEN `[int]`
 * `successful` - current number of successful calls `[int]`
 * `failed` - current number of failed calls `[int]`
+* `slow` - current number of slow calls `[int]`
 * `buffered` - current number of buffered calls `[int]`
-* `buffered_max` - maximum number of buffered calls `[int]`
 * `not_permitted` - current number of not permitted calls `[int]`
+* `failure_rate` - current failure rate `[float]`
+* `slow_call_rate` - current slow call rate `[float]`
 
 ===== RateLimiter
 
