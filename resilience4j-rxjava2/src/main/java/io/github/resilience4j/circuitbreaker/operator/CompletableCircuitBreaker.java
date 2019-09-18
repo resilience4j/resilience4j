@@ -16,7 +16,6 @@
 package io.github.resilience4j.circuitbreaker.operator;
 
 import io.github.resilience4j.AbstractCompletableObserver;
-import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.reactivex.Completable;
 import io.reactivex.CompletableObserver;
@@ -24,7 +23,7 @@ import io.reactivex.internal.disposables.EmptyDisposable;
 
 import java.util.concurrent.TimeUnit;
 
-import static io.github.resilience4j.circuitbreaker.CallNotPermittedException.getCallNotPermittedException;
+import static io.github.resilience4j.circuitbreaker.CallNotPermittedException.createCallNotPermittedException;
 
 class CompletableCircuitBreaker extends Completable {
 
@@ -42,7 +41,7 @@ class CompletableCircuitBreaker extends Completable {
             upstream.subscribe(new CircuitBreakerCompletableObserver(downstream));
         }else{
             downstream.onSubscribe(EmptyDisposable.INSTANCE);
-            downstream.onError(getCallNotPermittedException(circuitBreaker));
+            downstream.onError(createCallNotPermittedException(circuitBreaker));
         }
     }
 

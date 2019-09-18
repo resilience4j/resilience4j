@@ -36,8 +36,6 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-import static io.github.resilience4j.circuitbreaker.CallNotPermittedException.getCallNotPermittedException;
-
 /**
  * A CircuitBreaker instance is thread-safe can be used to decorate multiple requests.
  *
@@ -618,7 +616,7 @@ public interface CircuitBreaker {
             final CompletableFuture<T> promise = new CompletableFuture<>();
 
             if (!circuitBreaker.tryAcquirePermission()) {
-                promise.completeExceptionally(getCallNotPermittedException(circuitBreaker));
+                promise.completeExceptionally(CallNotPermittedException.createCallNotPermittedException(circuitBreaker));
 
             } else {
                 final long start = System.nanoTime();
@@ -749,7 +747,7 @@ public interface CircuitBreaker {
                 }
                 return Either.narrow(result);
             }else{
-                return Either.left(getCallNotPermittedException(circuitBreaker));
+                return Either.left(CallNotPermittedException.createCallNotPermittedException(circuitBreaker));
             }
         };
     }
@@ -776,7 +774,7 @@ public interface CircuitBreaker {
                     return result;
                 }
             }else{
-                return Try.failure(getCallNotPermittedException(circuitBreaker));
+                return Try.failure(CallNotPermittedException.createCallNotPermittedException(circuitBreaker));
             }
         };
     }

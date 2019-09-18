@@ -23,7 +23,7 @@ import io.vertx.core.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
-import static io.github.resilience4j.circuitbreaker.CallNotPermittedException.getCallNotPermittedException;
+import static io.github.resilience4j.circuitbreaker.CallNotPermittedException.createCallNotPermittedException;
 
 /**
  * CircuitBreaker decorators for Vert.x
@@ -55,7 +55,7 @@ public interface VertxCircuitBreaker {
             final Future<T> future = Future.future();
 
             if (!circuitBreaker.tryAcquirePermission()) {
-                future.fail(getCallNotPermittedException(circuitBreaker));
+                future.fail(createCallNotPermittedException(circuitBreaker));
 
             } else {
                 long start = System.nanoTime();

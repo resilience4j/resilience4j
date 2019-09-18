@@ -36,7 +36,7 @@ public class TimeLimiterMetricsCollector extends AbstractTimeLimiterMetrics {
      * @param names    the custom metric names
      * @param timeLimiterRegistry the source of time limiters
      */
-    public static TimeLimiterMetricsCollector ofTimeLimiterRegistry(TimeLimiterMetricsCollector.MetricNames names, TimeLimiterRegistry timeLimiterRegistry) {
+    public static TimeLimiterMetricsCollector ofTimeLimiterRegistry(MetricNames names, TimeLimiterRegistry timeLimiterRegistry) {
         return new TimeLimiterMetricsCollector(names, timeLimiterRegistry);
     }
 
@@ -46,7 +46,7 @@ public class TimeLimiterMetricsCollector extends AbstractTimeLimiterMetrics {
      * @param timeLimiterRegistry the source of time limiters
      */
     public static TimeLimiterMetricsCollector ofTimeLimiterRegistry(TimeLimiterRegistry timeLimiterRegistry) {
-        return new TimeLimiterMetricsCollector(TimeLimiterMetricsCollector.MetricNames.ofDefaults(), timeLimiterRegistry);
+        return new TimeLimiterMetricsCollector(MetricNames.ofDefaults(), timeLimiterRegistry);
     }
 
     private final TimeLimiterRegistry timeLimiterRegistry;
