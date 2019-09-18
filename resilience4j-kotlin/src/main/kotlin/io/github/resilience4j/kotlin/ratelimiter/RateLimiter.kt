@@ -31,7 +31,7 @@ import java.util.concurrent.TimeUnit
  */
 suspend fun <T> RateLimiter.executeSuspendFunction(block: suspend () -> T): T {
     val waitTimeNs = reservePermission()
-    if (waitTimeNs < 0) throw RequestNotPermitted.getRequestNotPermitted(this)
+    if (waitTimeNs < 0) throw RequestNotPermitted.createRequestNotPermitted(this)
     delay(TimeUnit.NANOSECONDS.toMillis(waitTimeNs))
     return block()
 }

@@ -40,7 +40,6 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 import java.util.function.UnaryOperator;
 
-import static io.github.resilience4j.circuitbreaker.CallNotPermittedException.getCallNotPermittedException;
 import static io.github.resilience4j.circuitbreaker.CircuitBreaker.State.*;
 import static io.github.resilience4j.circuitbreaker.internal.CircuitBreakerMetrics.Result;
 import static io.github.resilience4j.circuitbreaker.internal.CircuitBreakerMetrics.Result.ABOVE_THRESHOLDS;
@@ -486,7 +485,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
         @Override
         public void acquirePermission() {
             if(!tryAcquirePermission()){
-                throw getCallNotPermittedException(CircuitBreakerStateMachine.this);
+                throw CallNotPermittedException.createCallNotPermittedException(CircuitBreakerStateMachine.this);
             }
         }
 
@@ -612,7 +611,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
         @Override
         public void acquirePermission() {
             circuitBreakerMetrics.onCallNotPermitted();
-            throw getCallNotPermittedException(CircuitBreakerStateMachine.this);
+            throw CallNotPermittedException.createCallNotPermittedException(CircuitBreakerStateMachine.this);
         }
 
         @Override
@@ -681,7 +680,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
         @Override
         public void acquirePermission() {
             if(!tryAcquirePermission()){
-                throw getCallNotPermittedException(CircuitBreakerStateMachine.this);
+                throw CallNotPermittedException.createCallNotPermittedException(CircuitBreakerStateMachine.this);
             }
         }
 

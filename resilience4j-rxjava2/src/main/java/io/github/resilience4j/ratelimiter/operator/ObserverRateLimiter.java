@@ -17,7 +17,6 @@ package io.github.resilience4j.ratelimiter.operator;
 
 import io.github.resilience4j.AbstractObserver;
 import io.github.resilience4j.ratelimiter.RateLimiter;
-import io.github.resilience4j.ratelimiter.RequestNotPermitted;
 import io.reactivex.Completable;
 import io.reactivex.Observable;
 import io.reactivex.Observer;
@@ -25,7 +24,7 @@ import io.reactivex.internal.disposables.EmptyDisposable;
 
 import java.util.concurrent.TimeUnit;
 
-import static io.github.resilience4j.ratelimiter.RequestNotPermitted.getRequestNotPermitted;
+import static io.github.resilience4j.ratelimiter.RequestNotPermitted.createRequestNotPermitted;
 
 class ObserverRateLimiter<T> extends Observable<T> {
 
@@ -49,7 +48,7 @@ class ObserverRateLimiter<T> extends Observable<T> {
             }
         }else{
             downstream.onSubscribe(EmptyDisposable.INSTANCE);
-            downstream.onError(getRequestNotPermitted(rateLimiter));
+            downstream.onError(createRequestNotPermitted(rateLimiter));
         }
     }
 

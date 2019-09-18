@@ -19,7 +19,6 @@ package io.github.resilience4j.ratpack.ratelimiter;
 import com.google.inject.Inject;
 import io.github.resilience4j.core.lang.Nullable;
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
-import io.github.resilience4j.ratelimiter.RequestNotPermitted;
 import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
 import io.github.resilience4j.ratpack.internal.AbstractMethodInterceptor;
 import io.github.resilience4j.ratpack.recovery.DefaultRecoveryFunction;
@@ -35,7 +34,7 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 
-import static io.github.resilience4j.ratelimiter.RequestNotPermitted.getRequestNotPermitted;
+import static io.github.resilience4j.ratelimiter.RequestNotPermitted.createRequestNotPermitted;
 
 /**
  * A {@link MethodInterceptor} to handle all methods annotated with {@link RateLimiter}. It will
@@ -111,7 +110,7 @@ public class RateLimiterMethodInterceptor extends AbstractMethodInterceptor {
                 return proceed(invocation);
             } else {
                 final CompletableFuture promise = new CompletableFuture<>();
-                Throwable t = getRequestNotPermitted(rateLimiter);
+                Throwable t = createRequestNotPermitted(rateLimiter);
                 completeFailedFuture(t, fallbackMethod, promise);
                 return promise;
             }

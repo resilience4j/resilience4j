@@ -25,7 +25,7 @@ import org.reactivestreams.Subscriber;
 
 import java.util.Objects;
 
-import static io.github.resilience4j.bulkhead.BulkheadFullException.getBulkheadFullException;
+import static io.github.resilience4j.bulkhead.BulkheadFullException.createBulkheadFullException;
 import static java.util.Objects.requireNonNull;
 
 class FlowableBulkhead<T> extends Flowable<T> {
@@ -44,7 +44,7 @@ class FlowableBulkhead<T> extends Flowable<T> {
             upstream.subscribe(new BulkheadSubscriber(downstream));
         }else{
             downstream.onSubscribe(EmptySubscription.INSTANCE);
-            downstream.onError(BulkheadFullException.getBulkheadFullException(bulkhead));
+            downstream.onError(BulkheadFullException.createBulkheadFullException(bulkhead));
         }
     }
 

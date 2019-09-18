@@ -22,7 +22,7 @@ import reactor.core.publisher.Mono;
 import reactor.core.publisher.MonoOperator;
 import reactor.core.publisher.Operators;
 
-import static io.github.resilience4j.bulkhead.BulkheadFullException.getBulkheadFullException;
+import static io.github.resilience4j.bulkhead.BulkheadFullException.createBulkheadFullException;
 
 class MonoBulkhead<T> extends MonoOperator<T, T> {
     private final Bulkhead bulkhead;
@@ -37,7 +37,7 @@ class MonoBulkhead<T> extends MonoOperator<T, T> {
         if(bulkhead.tryAcquirePermission()){
             source.subscribe(new BulkheadSubscriber<>(bulkhead, actual, true));
         }else{
-            Operators.error(actual, BulkheadFullException.getBulkheadFullException(bulkhead));
+            Operators.error(actual, BulkheadFullException.createBulkheadFullException(bulkhead));
         }
     }
 }

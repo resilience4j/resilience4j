@@ -24,8 +24,6 @@ import ratpack.func.Function;
 
 import java.util.concurrent.TimeUnit;
 
-import static io.github.resilience4j.circuitbreaker.CallNotPermittedException.getCallNotPermittedException;
-
 public class CircuitBreakerTransformer<T> extends AbstractTransformer<T> {
     private CircuitBreaker circuitBreaker;
 
@@ -86,7 +84,7 @@ public class CircuitBreakerTransformer<T> extends AbstractTransformer<T> {
                     }
                 });
             } else {
-                Throwable t = getCallNotPermittedException(circuitBreaker);
+                Throwable t = CallNotPermittedException.createCallNotPermittedException(circuitBreaker);
                 handleRecovery(down, t);
             }
         };
