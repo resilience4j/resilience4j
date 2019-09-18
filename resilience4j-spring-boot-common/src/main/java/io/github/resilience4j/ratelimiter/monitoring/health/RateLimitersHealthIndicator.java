@@ -27,6 +27,8 @@ import org.springframework.boot.actuate.health.Status;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import static io.github.resilience4j.ratelimiter.configure.RateLimiterConfigurationProperties.*;
+
 public class RateLimitersHealthIndicator implements HealthIndicator {
 
     private final RateLimiterRegistry rateLimiterRegistry;
@@ -52,7 +54,7 @@ public class RateLimitersHealthIndicator implements HealthIndicator {
 
     private boolean isRegisterHealthIndicator(RateLimiter rateLimiter) {
         return rateLimiterProperties.findRateLimiterProperties(rateLimiter.getName())
-                .map(RateLimiterConfigurationProperties.InstanceProperties::getRegisterHealthIndicator)
+                .map(InstanceProperties::getRegisterHealthIndicator)
                 .orElse(false);
     }
 

@@ -27,6 +27,8 @@ import org.springframework.boot.actuate.health.HealthIndicator;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import static io.github.resilience4j.circuitbreaker.configure.CircuitBreakerConfigurationProperties.*;
+
 /**
  * A Spring Boot health indicators which adds the state of a CircuitBreaker and it's metrics to the health endpoints
  */
@@ -65,7 +67,7 @@ public class CircuitBreakersHealthIndicator implements HealthIndicator {
 
     private boolean isRegisterHealthIndicator(CircuitBreaker circuitBreaker) {
         return circuitBreakerProperties.findCircuitBreakerProperties(circuitBreaker.getName())
-                .map(CircuitBreakerConfigurationProperties.InstanceProperties::getRegisterHealthIndicator)
+                .map(InstanceProperties::getRegisterHealthIndicator)
                 .orElse(false);
     }
 
