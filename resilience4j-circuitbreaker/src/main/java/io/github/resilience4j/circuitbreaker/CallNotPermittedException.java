@@ -29,7 +29,7 @@ public class CallNotPermittedException extends RuntimeException {
      *
      * @param circuitBreaker the CircuitBreaker.
      */
-    public static CallNotPermittedException getCallNotPermittedException(CircuitBreaker circuitBreaker) {
+    public static CallNotPermittedException createCallNotPermittedException(CircuitBreaker circuitBreaker) {
         boolean writableStackTraceEnabled = circuitBreaker.getCircuitBreakerConfig().isWritableStackTraceEnabled();
 
         String message = String.format("CircuitBreaker '%s' is %s and does not permit further calls", circuitBreaker.getName(), circuitBreaker.getState());
