@@ -22,7 +22,7 @@ import io.reactivex.Completable;
 import io.reactivex.CompletableObserver;
 import io.reactivex.internal.disposables.EmptyDisposable;
 
-import static io.github.resilience4j.bulkhead.BulkheadFullException.getBulkheadFullException;
+import static io.github.resilience4j.bulkhead.BulkheadFullException.createBulkheadFullException;
 
 class CompletableBulkhead extends Completable {
 
@@ -40,7 +40,7 @@ class CompletableBulkhead extends Completable {
             upstream.subscribe(new BulkheadCompletableObserver(downstream));
         }else{
             downstream.onSubscribe(EmptyDisposable.INSTANCE);
-            downstream.onError(BulkheadFullException.getBulkheadFullException(bulkhead));
+            downstream.onError(BulkheadFullException.createBulkheadFullException(bulkhead));
         }
     }
 

@@ -16,7 +16,6 @@
 package io.github.resilience4j.ratpack.circuitbreaker;
 
 import com.google.inject.Inject;
-import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.core.lang.Nullable;
@@ -35,7 +34,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.TimeUnit;
 
-import static io.github.resilience4j.circuitbreaker.CallNotPermittedException.getCallNotPermittedException;
+import static io.github.resilience4j.circuitbreaker.CallNotPermittedException.createCallNotPermittedException;
 
 /**
  * A {@link MethodInterceptor} to handle all methods annotated with {@link CircuitBreaker}. It will
@@ -126,7 +125,7 @@ public class CircuitBreakerMethodInterceptor extends AbstractMethodInterceptor {
                     });
                 }
             } else {
-                Throwable t = getCallNotPermittedException(breaker);
+                Throwable t = createCallNotPermittedException(breaker);
                 completeFailedFuture(t, fallbackMethod, promise);
             }
             return promise;

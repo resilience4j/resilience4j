@@ -15,13 +15,15 @@
  */
 package io.github.resilience4j.reactor.retry;
 
+import io.github.resilience4j.reactor.IllegalPublisherException;
 import io.github.resilience4j.retry.Retry;
-import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.util.function.Consumer;
 import java.util.function.UnaryOperator;
+
+import org.reactivestreams.Publisher;
 
 /**
  * A Reactor Retry operator which wraps a reactive type in a Retry.
@@ -60,9 +62,9 @@ public class RetryOperator<T> implements UnaryOperator<Publisher<T>> {
 			return upstream.doOnNext(context::throwExceptionToForceRetryOnResult)
 					.retryWhen(errors -> errors.doOnNext(throwingConsumerWrapper(context::onError)))
 					.doOnComplete(context::onComplete);
-		}
-		throw new IllegalStateException("Publisher of type <" + publisher.getClass().getSimpleName()
-				+ "> are not supported by this operator");
+        } else {
+            throw new IllegalPublisherException(publisher);
+        }
 	}
 
 

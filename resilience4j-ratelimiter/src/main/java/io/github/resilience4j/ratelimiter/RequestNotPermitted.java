@@ -29,7 +29,7 @@ public class RequestNotPermitted extends RuntimeException {
      *
      * @param rateLimiter the RateLimiter.
      */
-    public static RequestNotPermitted getRequestNotPermitted(RateLimiter rateLimiter) {
+    public static RequestNotPermitted createRequestNotPermitted(RateLimiter rateLimiter) {
         boolean writableStackTraceEnabled = rateLimiter.getRateLimiterConfig().isWritableStackTraceEnabled();
 
         String message = String.format("RateLimiter '%s' does not permit further calls", rateLimiter.getName());

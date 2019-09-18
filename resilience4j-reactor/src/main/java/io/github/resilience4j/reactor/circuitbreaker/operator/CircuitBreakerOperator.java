@@ -17,11 +17,13 @@ package io.github.resilience4j.reactor.circuitbreaker.operator;
 
 import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
-import org.reactivestreams.Publisher;
+import io.github.resilience4j.reactor.IllegalPublisherException;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.util.function.UnaryOperator;
+
+import org.reactivestreams.Publisher;
 
 /**
  * A CircuitBreaker operator which checks if a downstream subscriber/observer can acquire a permission to subscribe to an upstream Publisher.
@@ -54,9 +56,8 @@ public class CircuitBreakerOperator<T> implements UnaryOperator<Publisher<T>> {
             return new MonoCircuitBreaker<>((Mono<? extends T>) publisher, circuitBreaker);
         } else if (publisher instanceof Flux) {
             return new FluxCircuitBreaker<>((Flux<? extends T>) publisher, circuitBreaker);
+        } else {
+            throw new IllegalPublisherException(publisher);
         }
-
-        throw new IllegalStateException("Publisher of type <" + publisher.getClass().getSimpleName()
-                + "> are not supported by this operator");
     }
 }

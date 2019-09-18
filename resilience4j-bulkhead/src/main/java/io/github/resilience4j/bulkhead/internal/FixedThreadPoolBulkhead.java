@@ -19,6 +19,7 @@
 package io.github.resilience4j.bulkhead.internal;
 
 
+import io.github.resilience4j.bulkhead.BulkheadFullException;
 import io.github.resilience4j.bulkhead.ThreadPoolBulkhead;
 import io.github.resilience4j.bulkhead.ThreadPoolBulkheadConfig;
 import io.github.resilience4j.bulkhead.event.BulkheadEvent;
@@ -32,7 +33,6 @@ import io.github.resilience4j.core.lang.Nullable;
 import java.util.concurrent.*;
 import java.util.function.Supplier;
 
-import static io.github.resilience4j.bulkhead.BulkheadFullException.getBulkheadFullException;
 import static java.util.Objects.requireNonNull;
 
 /**
@@ -117,7 +117,7 @@ public class FixedThreadPoolBulkhead implements ThreadPoolBulkhead {
 			});
 		} catch (RejectedExecutionException rejected) {
 			publishBulkheadEvent(() -> new BulkheadOnCallRejectedEvent(name));
-			throw getBulkheadFullException(this);
+			throw BulkheadFullException.createBulkheadFullException(this);
 		}
 		return promise;
 	}
@@ -138,7 +138,7 @@ public class FixedThreadPoolBulkhead implements ThreadPoolBulkhead {
 			}, executorService).whenComplete((voidResult, throwable) -> publishBulkheadEvent(() -> new BulkheadOnCallFinishedEvent(name)));
 		} catch (RejectedExecutionException rejected) {
 			publishBulkheadEvent(() -> new BulkheadOnCallRejectedEvent(name));
-			throw getBulkheadFullException(this);
+			throw BulkheadFullException.createBulkheadFullException(this);
 		}
 	}
 
