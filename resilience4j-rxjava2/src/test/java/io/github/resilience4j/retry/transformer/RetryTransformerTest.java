@@ -18,6 +18,7 @@ package io.github.resilience4j.retry.transformer;
 
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryConfig;
+import io.github.resilience4j.test.HelloWorldException;
 import io.github.resilience4j.test.HelloWorldService;
 import io.reactivex.*;
 import org.junit.Before;
@@ -25,7 +26,6 @@ import org.junit.Test;
 import org.mockito.BDDMockito;
 import org.mockito.Mockito;
 
-import javax.xml.ws.WebServiceException;
 import java.io.IOException;
 import java.time.Duration;
 
@@ -51,8 +51,8 @@ public class RetryTransformerTest {
 
         given(helloWorldService.returnHelloWorld())
                 .willReturn("Hello world")
-                .willThrow(new WebServiceException("BAM!"))
-                .willThrow(new WebServiceException("BAM!"))
+                .willThrow(new HelloWorldException())
+                .willThrow(new HelloWorldException())
                 .willReturn("Hello world");
 
         //When
@@ -136,20 +136,20 @@ public class RetryTransformerTest {
         Retry retry = Retry.of("testName", config);
 
         given(helloWorldService.returnHelloWorld())
-                .willThrow(new WebServiceException("BAM!"));
+                .willThrow(new HelloWorldException());
 
         //When
         Single.fromCallable(helloWorldService::returnHelloWorld)
                 .compose(RetryTransformer.of(retry))
                 .test()
-                .assertError(WebServiceException.class)
+                .assertError(HelloWorldException.class)
                 .assertNotComplete()
                 .assertSubscribed();
 
         Single.fromCallable(helloWorldService::returnHelloWorld)
                 .compose(RetryTransformer.of(retry))
                 .test()
-                .assertError(WebServiceException.class)
+                .assertError(HelloWorldException.class)
                 .assertNotComplete()
                 .assertSubscribed();
         //Then
@@ -169,13 +169,13 @@ public class RetryTransformerTest {
                 .maxAttempts(3).build();
         Retry retry = Retry.of("testName", config);
         given(helloWorldService.returnHelloWorld())
-                .willThrow(new WebServiceException("BAM!"));
+                .willThrow(new HelloWorldException());
 
         //When
         Single.fromCallable(helloWorldService::returnHelloWorld)
                 .compose(RetryTransformer.of(retry))
                 .test()
-                .assertError(WebServiceException.class)
+                .assertError(HelloWorldException.class)
                 .assertNotComplete()
                 .assertSubscribed();
         //Then
@@ -245,8 +245,8 @@ public class RetryTransformerTest {
 
         given(helloWorldService.returnHelloWorld())
                 .willReturn("Hello world")
-                .willThrow(new WebServiceException("BAM!"))
-                .willThrow(new WebServiceException("BAM!"))
+                .willThrow(new HelloWorldException())
+                .willThrow(new HelloWorldException())
                 .willReturn("Hello world");
 
         //When
@@ -281,20 +281,20 @@ public class RetryTransformerTest {
         Retry retry = Retry.of("testName", config);
 
         given(helloWorldService.returnHelloWorld())
-                .willThrow(new WebServiceException("BAM!"));
+                .willThrow(new HelloWorldException());
 
         //When
         Maybe.fromCallable(helloWorldService::returnHelloWorld)
                 .compose(RetryTransformer.of(retry))
                 .test()
-                .assertError(WebServiceException.class)
+                .assertError(HelloWorldException.class)
                 .assertNotComplete()
                 .assertSubscribed();
 
         Maybe.fromCallable(helloWorldService::returnHelloWorld)
                 .compose(RetryTransformer.of(retry))
                 .test()
-                .assertError(WebServiceException.class)
+                .assertError(HelloWorldException.class)
                 .assertNotComplete()
                 .assertSubscribed();
         //Then
@@ -314,13 +314,13 @@ public class RetryTransformerTest {
                 .maxAttempts(3).build();
         Retry retry = Retry.of("testName", config);
         given(helloWorldService.returnHelloWorld())
-                .willThrow(new WebServiceException("BAM!"));
+                .willThrow(new HelloWorldException());
 
         //When
         Maybe.fromCallable(helloWorldService::returnHelloWorld)
                 .compose(RetryTransformer.of(retry))
                 .test()
-                .assertError(WebServiceException.class)
+                .assertError(HelloWorldException.class)
                 .assertNotComplete()
                 .assertSubscribed();
         //Then
@@ -389,8 +389,8 @@ public class RetryTransformerTest {
         Retry retry = Retry.of("testName", config);
         RetryTransformer<Object> retryTransformer = RetryTransformer.of(retry);
         doNothing()
-                .doThrow(new WebServiceException("BAM!"))
-                .doThrow(new WebServiceException("BAM!"))
+                .doThrow(new HelloWorldException())
+                .doThrow(new HelloWorldException())
                 .doNothing()
                 .when(helloWorldService).sayHelloWorld();
 
@@ -423,20 +423,20 @@ public class RetryTransformerTest {
         RetryConfig config = retryConfig();
         Retry retry = Retry.of("testName", config);
         RetryTransformer<Object> retryTransformer = RetryTransformer.of(retry);
-        doThrow(new WebServiceException("BAM!")).when(helloWorldService).sayHelloWorld();
+        doThrow(new HelloWorldException()).when(helloWorldService).sayHelloWorld();
 
         //When
         Completable.fromRunnable(helloWorldService::sayHelloWorld)
                 .compose(retryTransformer)
                 .test()
-                .assertError(WebServiceException.class)
+                .assertError(HelloWorldException.class)
                 .assertNotComplete()
                 .assertSubscribed();
 
         Completable.fromRunnable(helloWorldService::sayHelloWorld)
                 .compose(retryTransformer)
                 .test()
-                .assertError(WebServiceException.class)
+                .assertError(HelloWorldException.class)
                 .assertNotComplete()
                 .assertSubscribed();
         //Then
@@ -455,13 +455,13 @@ public class RetryTransformerTest {
                 .waitDuration(Duration.ofMillis(50))
                 .maxAttempts(3).build();
         Retry retry = Retry.of("testName", config);
-        doThrow(new WebServiceException("BAM!")).when(helloWorldService).sayHelloWorld();
+        doThrow(new HelloWorldException()).when(helloWorldService).sayHelloWorld();
 
         //When
         Completable.fromRunnable(helloWorldService::sayHelloWorld)
                 .compose(RetryTransformer.of(retry))
                 .test()
-                .assertError(WebServiceException.class)
+                .assertError(HelloWorldException.class)
                 .assertNotComplete()
                 .assertSubscribed();
         //Then
@@ -480,20 +480,20 @@ public class RetryTransformerTest {
         RetryTransformer<Object> retryTransformer = RetryTransformer.of(retry);
 
         given(helloWorldService.returnHelloWorld())
-                .willThrow(new WebServiceException("BAM!"));
+                .willThrow(new HelloWorldException());
 
         //When
         Observable.fromCallable(helloWorldService::returnHelloWorld)
                 .compose(retryTransformer)
                 .test()
-                .assertError(WebServiceException.class)
+                .assertError(HelloWorldException.class)
                 .assertNotComplete()
                 .assertSubscribed();
 
         Observable.fromCallable(helloWorldService::returnHelloWorld)
                 .compose(retryTransformer)
                 .test()
-                .assertError(WebServiceException.class)
+                .assertError(HelloWorldException.class)
                 .assertNotComplete()
                 .assertSubscribed();
         //Then
@@ -512,20 +512,20 @@ public class RetryTransformerTest {
         RetryTransformer<Object> retryTransformer = RetryTransformer.of(retry);
 
         given(helloWorldService.returnHelloWorld())
-                .willThrow(new WebServiceException("BAM!"));
+                .willThrow(new HelloWorldException());
 
         //When
         Observable.fromCallable(helloWorldService::returnHelloWorld)
                 .compose(retryTransformer)
                 .test()
-                .assertError(WebServiceException.class)
+                .assertError(HelloWorldException.class)
                 .assertNotComplete()
                 .assertSubscribed();
 
         Observable.fromCallable(helloWorldService::returnHelloWorld)
                 .compose(retryTransformer)
                 .test()
-                .assertError(WebServiceException.class)
+                .assertError(HelloWorldException.class)
                 .assertNotComplete()
                 .assertSubscribed();
         //Then
@@ -545,13 +545,13 @@ public class RetryTransformerTest {
                 .maxAttempts(3).build();
         Retry retry = Retry.of("testName", config);
         given(helloWorldService.returnHelloWorld())
-                .willThrow(new WebServiceException("BAM!"));
+                .willThrow(new HelloWorldException());
 
         //When
         Observable.fromCallable(helloWorldService::returnHelloWorld)
                 .compose(RetryTransformer.of(retry))
                 .test()
-                .assertError(WebServiceException.class)
+                .assertError(HelloWorldException.class)
                 .assertNotComplete()
                 .assertSubscribed();
         //Then
@@ -621,20 +621,20 @@ public class RetryTransformerTest {
         RetryTransformer<Object> retryTransformer = RetryTransformer.of(retry);
 
         given(helloWorldService.returnHelloWorld())
-                .willThrow(new WebServiceException("BAM!"));
+                .willThrow(new HelloWorldException());
 
         //When
         Flowable.fromCallable(helloWorldService::returnHelloWorld)
                 .compose(retryTransformer)
                 .test()
-                .assertError(WebServiceException.class)
+                .assertError(HelloWorldException.class)
                 .assertNotComplete()
                 .assertSubscribed();
 
         Flowable.fromCallable(helloWorldService::returnHelloWorld)
                 .compose(retryTransformer)
                 .test()
-                .assertError(WebServiceException.class)
+                .assertError(HelloWorldException.class)
                 .assertNotComplete()
                 .assertSubscribed();
         //Then
@@ -653,20 +653,20 @@ public class RetryTransformerTest {
         RetryTransformer<Object> retryTransformer = RetryTransformer.of(retry);
 
         given(helloWorldService.returnHelloWorld())
-                .willThrow(new WebServiceException("BAM!"));
+                .willThrow(new HelloWorldException());
 
         //When
         Flowable.fromCallable(helloWorldService::returnHelloWorld)
                 .compose(retryTransformer)
                 .test()
-                .assertError(WebServiceException.class)
+                .assertError(HelloWorldException.class)
                 .assertNotComplete()
                 .assertSubscribed();
 
         Flowable.fromCallable(helloWorldService::returnHelloWorld)
                 .compose(retryTransformer)
                 .test()
-                .assertError(WebServiceException.class)
+                .assertError(HelloWorldException.class)
                 .assertNotComplete()
                 .assertSubscribed();
         //Then
@@ -686,13 +686,13 @@ public class RetryTransformerTest {
                 .maxAttempts(3).build();
         Retry retry = Retry.of("testName", config);
         given(helloWorldService.returnHelloWorld())
-                .willThrow(new WebServiceException("BAM!"));
+                .willThrow(new HelloWorldException());
 
         //When
         Flowable.fromCallable(helloWorldService::returnHelloWorld)
                 .compose(RetryTransformer.of(retry))
                 .test()
-                .assertError(WebServiceException.class)
+                .assertError(HelloWorldException.class)
                 .assertNotComplete()
                 .assertSubscribed();
         //Then

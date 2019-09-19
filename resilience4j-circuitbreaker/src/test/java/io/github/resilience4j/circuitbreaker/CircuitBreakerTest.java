@@ -18,6 +18,7 @@
  */
 package io.github.resilience4j.circuitbreaker;
 
+import io.github.resilience4j.test.HelloWorldException;
 import io.github.resilience4j.test.HelloWorldService;
 import io.vavr.CheckedConsumer;
 import io.vavr.CheckedFunction0;
@@ -30,7 +31,6 @@ import org.junit.Test;
 import org.mockito.BDDMockito;
 import org.mockito.Mockito;
 
-import javax.xml.ws.WebServiceException;
 import java.io.IOException;
 import java.net.SocketTimeoutException;
 import java.time.Duration;
@@ -575,7 +575,7 @@ public class CircuitBreakerTest {
         CircuitBreaker circuitBreaker = CircuitBreaker.of("testName", circuitBreakerConfig);
 
         // Simulate a failure attempt
-        circuitBreaker.onError(0, TimeUnit.NANOSECONDS, new WebServiceException());
+        circuitBreaker.onError(0, TimeUnit.NANOSECONDS, new HelloWorldException());
         // CircuitBreaker is still CLOSED, because 1 failure is allowed
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
 
@@ -816,16 +816,16 @@ public class CircuitBreakerTest {
     }
 
     @Test
-    public void shouldDecorateCompletionStageAndIgnoreWebServiceException() {
+    public void shouldDecorateCompletionStageAndIgnoreHelloWorldException() {
         // Given
         CircuitBreakerConfig config = CircuitBreakerConfig.custom()
-                .ignoreExceptions(WebServiceException.class)
+                .ignoreExceptions(HelloWorldException.class)
                 .build();
 
         CircuitBreaker circuitBreaker = CircuitBreaker.of("backendName", config);
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
         // Given the HelloWorldService throws an exception
-        BDDMockito.given(helloWorldService.returnHelloWorld()).willThrow(new WebServiceException("BAM! At async stage"));
+        BDDMockito.given(helloWorldService.returnHelloWorld()).willThrow(new HelloWorldException());
 
         // When
         Supplier<CompletionStage<String>> completionStageSupplier =
@@ -835,11 +835,11 @@ public class CircuitBreakerTest {
 
         // Then the helloWorldService should be invoked 1 time
         assertThatThrownBy(stringCompletionStage.toCompletableFuture()::get)
-                .isInstanceOf(ExecutionException.class).hasCause(new WebServiceException("BAM! At async stage"));
+                .isInstanceOf(ExecutionException.class).hasCause(new HelloWorldException());
         BDDMockito.then(helloWorldService).should(Mockito.times(1)).returnHelloWorld();
 
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
-        // WebServiceException should be ignored
+        // HelloWorldException should be ignored
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(0);
         assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(0);
     }
@@ -996,7 +996,7 @@ public class CircuitBreakerTest {
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(0);
         // Given the HelloWorldService returns Hello world
-        BDDMockito.given(helloWorldService.returnEither()).willReturn(Either.left(new WebServiceException("BAM!")));
+        BDDMockito.given(helloWorldService.returnEither()).willReturn(Either.left(new HelloWorldException()));
 
         //When
         Either<Exception, String> result = circuitBreaker.executeEitherSupplier(helloWorldService::returnEither);

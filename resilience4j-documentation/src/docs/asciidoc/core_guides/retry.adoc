@@ -19,7 +19,7 @@ RetryConfig config = RetryConfig.custom()
     .maxAttempts(2)
     .waitDuration(Duration.ofMillis(100))
     .retryOnResult(response -> response.getStatus() == 500)
-    .retryOnException(e -> e instanceof WebServiceException)
+    .retryOnException(e -> e instanceof HelloWorldException)
     .retryExceptions(IOException.class, TimeoutException.class)
     .ignoreExceptions(BunsinessException.class, OtherBunsinessException.class)
     .build();
@@ -33,7 +33,7 @@ You can decorate any `Supplier / Runnable / Function` or `CheckedSupplier / Chec
 ----
 // Given I have a HelloWorldService which throws an exception
 HelloWorldService  helloWorldService = mock(HelloWorldService.class);
-given(helloWorldService.sayHelloWorld()).willThrow(new WebServiceException("BAM!"));
+given(helloWorldService.sayHelloWorld()).willThrow(new HelloWorldException());
 
 // Create a Retry with default configuration
 Retry retry = Retry.ofDefaults("id");
