@@ -21,6 +21,7 @@ package io.github.resilience4j.retry.internal;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryConfig;
 import io.github.resilience4j.test.AsyncHelloWorldService;
+import io.github.resilience4j.test.HelloWorldException;
 import io.vavr.control.Try;
 import org.assertj.core.api.Assertions;
 import org.junit.Assert;
@@ -29,7 +30,6 @@ import org.junit.Test;
 import org.mockito.BDDMockito;
 import org.mockito.Mockito;
 
-import javax.xml.ws.WebServiceException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.Executors;
@@ -138,7 +138,7 @@ public class CompletionStageRetryTest {
 	@Test
 	public void shouldRetryInCaseOfAnExceptionAtAsyncStage() {
 		CompletableFuture<String> failedFuture = new CompletableFuture<>();
-		failedFuture.completeExceptionally(new WebServiceException("BAM!"));
+		failedFuture.completeExceptionally(new HelloWorldException());
 
 		// Given the HelloWorldService throws an exception
 		BDDMockito.given(helloWorldService.returnHelloWorld())
@@ -164,7 +164,7 @@ public class CompletionStageRetryTest {
 	private void shouldCompleteFutureAfterAttemptsInCaseOfExceptionAtSyncStage(int noOfAttempts) {
 		// Given the HelloWorldService throws an exception
 		BDDMockito.given(helloWorldService.returnHelloWorld())
-				.willThrow(new WebServiceException("BAM!"));
+				.willThrow(new HelloWorldException());
 
 		// Create a Retry with default configuration
 		Retry retryContext = Retry.of(
@@ -185,7 +185,7 @@ public class CompletionStageRetryTest {
 		// Then the helloWorldService should be invoked n + 1  times
 		BDDMockito.then(helloWorldService).should(Mockito.times(noOfAttempts)).returnHelloWorld();
 		Assertions.assertThat(resultTry.isFailure()).isTrue();
-		Assertions.assertThat(resultTry.getCause().getCause()).isInstanceOf(WebServiceException.class);
+		Assertions.assertThat(resultTry.getCause().getCause()).isInstanceOf(HelloWorldException.class);
 	}
 
 	@Test
@@ -205,7 +205,7 @@ public class CompletionStageRetryTest {
 
 	private void shouldCompleteFutureAfterAttemptsInCaseOfExceptionAtAsyncStage(int noOfAttempts) {
 		CompletableFuture<String> failedFuture = new CompletableFuture<>();
-		failedFuture.completeExceptionally(new WebServiceException("BAM!"));
+		failedFuture.completeExceptionally(new HelloWorldException());
 
 		// Given the HelloWorldService throws an exception
 		BDDMockito.given(helloWorldService.returnHelloWorld())
@@ -230,7 +230,7 @@ public class CompletionStageRetryTest {
 		// Then the helloWorldService should be invoked n + 1 times
 		BDDMockito.then(helloWorldService).should(Mockito.times(noOfAttempts)).returnHelloWorld();
 		Assertions.assertThat(resultTry.isFailure()).isTrue();
-		Assertions.assertThat(resultTry.getCause().getCause()).isInstanceOf(WebServiceException.class);
+		Assertions.assertThat(resultTry.getCause().getCause()).isInstanceOf(HelloWorldException.class);
 	}
 
 	private void shouldCompleteFutureAfterAttemptsInCaseOfRetyOnResultAtAsyncStage(int noOfAttempts,
