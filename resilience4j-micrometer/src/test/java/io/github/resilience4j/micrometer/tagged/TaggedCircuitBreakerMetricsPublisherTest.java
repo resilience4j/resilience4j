@@ -27,6 +27,7 @@ import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -47,12 +48,16 @@ public class TaggedCircuitBreakerMetricsPublisherTest {
     public void setUp() {
         meterRegistry = new SimpleMeterRegistry();
         taggedCircuitBreakerMetricsPublisher = new TaggedCircuitBreakerMetricsPublisher(meterRegistry);
-        circuitBreakerRegistry = CircuitBreakerRegistry.of(CircuitBreakerConfig.ofDefaults(), taggedCircuitBreakerMetricsPublisher);
+        circuitBreakerRegistry =
+                CircuitBreakerRegistry.of(CircuitBreakerConfig.ofDefaults(), taggedCircuitBreakerMetricsPublisher);
 
-        circuitBreaker = circuitBreakerRegistry.circuitBreaker("backendA");
+        CircuitBreakerConfig configWithSlowCallThreshold = CircuitBreakerConfig.custom()
+                .slowCallDurationThreshold(Duration.ofSeconds(1)).build();
+        circuitBreaker = circuitBreakerRegistry.circuitBreaker("backendA", configWithSlowCallThreshold);
         // record some basic stats
         circuitBreaker.onError(0, TimeUnit.NANOSECONDS, new RuntimeException("oops"));
-        circuitBreaker.onSuccess(0, TimeUnit.NANOSECONDS);
+        // SLOW_SUCCESS
+        circuitBreaker.onSuccess(2000, TimeUnit.NANOSECONDS);
 
     }
 
@@ -62,11 +67,11 @@ public class TaggedCircuitBreakerMetricsPublisherTest {
         newCircuitBreaker.onSuccess(0, TimeUnit.NANOSECONDS);
 
         assertThat(taggedCircuitBreakerMetricsPublisher.meterIdMap).containsKeys("backendA", "backendB");
-        assertThat(taggedCircuitBreakerMetricsPublisher.meterIdMap.get("backendA")).hasSize(13);
-        assertThat(taggedCircuitBreakerMetricsPublisher.meterIdMap.get("backendB")).hasSize(13);
+        assertThat(taggedCircuitBreakerMetricsPublisher.meterIdMap.get("backendA")).hasSize(14);
+        assertThat(taggedCircuitBreakerMetricsPublisher.meterIdMap.get("backendB")).hasSize(14);
 
         List<Meter> meters = meterRegistry.getMeters();
-        assertThat(meters).hasSize(26);
+        assertThat(meters).hasSize(28);
 
         Collection<Gauge> gauges = meterRegistry.get(DEFAULT_CIRCUIT_BREAKER_BUFFERED_CALLS).gauges();
 
@@ -78,7 +83,7 @@ public class TaggedCircuitBreakerMetricsPublisherTest {
     @Test
     public void shouldRemovedMetricsForRemovedRetry() {
         List<Meter> meters = meterRegistry.getMeters();
-        assertThat(meters).hasSize(13);
+        assertThat(meters).hasSize(14);
 
         assertThat(taggedCircuitBreakerMetricsPublisher.meterIdMap).containsKeys("backendA");
         circuitBreakerRegistry.remove("backendA");
@@ -92,7 +97,7 @@ public class TaggedCircuitBreakerMetricsPublisherTest {
     @Test
     public void notPermittedCallsCounterReportsCorrespondingValue() {
         List<Meter> meters = meterRegistry.getMeters();
-        assertThat(meters).hasSize(13);
+        assertThat(meters).hasSize(14);
 
         Collection<Counter> counters = meterRegistry.get(DEFAULT_CIRCUIT_BREAKER_CALLS).counters();
 
@@ -107,7 +112,7 @@ public class TaggedCircuitBreakerMetricsPublisherTest {
 
         Optional<Gauge> failed = findGaugeByKindAndNameTags(gauges, "failed", circuitBreaker.getName());
         assertThat(failed).isPresent();
-        assertThat(failed.get().value()).isEqualTo((circuitBreaker.getMetrics().getNumberOfFailedCalls()));
+        assertThat(failed.get().value()).isEqualTo(circuitBreaker.getMetrics().getNumberOfFailedCalls());
     }
 
     @Test
@@ -116,7 +121,16 @@ public class TaggedCircuitBreakerMetricsPublisherTest {
 
         Optional<Gauge> successful = findGaugeByKindAndNameTags(gauges, "successful", circuitBreaker.getName());
         assertThat(successful).isPresent();
-        assertThat(successful.get().value()).isEqualTo((circuitBreaker.getMetrics().getNumberOfSuccessfulCalls()));
+        assertThat(successful.get().value()).isEqualTo(circuitBreaker.getMetrics().getNumberOfSuccessfulCalls());
+    }
+
+    @Test
+    public void slowCallsGaugeReportsCorrespondingValue() {
+        Collection<Gauge> gauges = meterRegistry.get(DEFAULT_CIRCUIT_BREAKER_BUFFERED_CALLS).gauges();
+
+        Optional<Gauge> slow = findGaugeByKindAndNameTags(gauges, "slow", circuitBreaker.getName());
+        assertThat(slow).isPresent();
+        assertThat(slow.get().value()).isEqualTo(circuitBreaker.getMetrics().getNumberOfSlowCalls());
     }
 
     @Test
@@ -124,7 +138,7 @@ public class TaggedCircuitBreakerMetricsPublisherTest {
         Gauge failureRate = meterRegistry.get(DEFAULT_CIRCUIT_BREAKER_FAILURE_RATE).gauge();
 
         assertThat(failureRate).isNotNull();
-        assertThat(failureRate.value()).isEqualTo((circuitBreaker.getMetrics().getFailureRate()));
+        assertThat(failureRate.value()).isEqualTo(circuitBreaker.getMetrics().getFailureRate());
         assertThat(failureRate.getId().getTag(TagNames.NAME)).isEqualTo(circuitBreaker.getName());
     }
 

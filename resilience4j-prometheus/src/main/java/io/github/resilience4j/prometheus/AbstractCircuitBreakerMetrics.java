@@ -32,6 +32,7 @@ public abstract class AbstractCircuitBreakerMetrics extends Collector {
 
     protected static final String KIND_FAILED = "failed";
     protected static final String KIND_SUCCESSFUL = "successful";
+    protected static final String KIND_SLOW = "slow";
     protected static final String KIND_IGNORED = "ignored";
     protected static final String KIND_NOT_PERMITTED = "not_permitted";
 
@@ -91,6 +92,7 @@ public abstract class AbstractCircuitBreakerMetrics extends Collector {
             CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
             bufferedCallsFamily.addMetric(asList(circuitBreaker.getName(), KIND_SUCCESSFUL), metrics.getNumberOfSuccessfulCalls());
             bufferedCallsFamily.addMetric(asList(circuitBreaker.getName(), KIND_FAILED), metrics.getNumberOfFailedCalls());
+            bufferedCallsFamily.addMetric(asList(circuitBreaker.getName(), KIND_SLOW), metrics.getNumberOfSlowCalls());
             failureRateFamily.addMetric(nameLabel, metrics.getFailureRate());
             slowCallRateFamily.addMetric(nameLabel, metrics.getSlowCallRate());
         }

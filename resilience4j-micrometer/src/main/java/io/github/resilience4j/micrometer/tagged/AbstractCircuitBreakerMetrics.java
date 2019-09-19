@@ -29,6 +29,7 @@ abstract class AbstractCircuitBreakerMetrics extends AbstractMetrics {
     private static final String KIND_STATE = "state";
     private static final String KIND_FAILED = "failed";
     private static final String KIND_SUCCESSFUL = "successful";
+    private static final String KIND_SLOW = "slow";
     private static final String KIND_IGNORED = "ignored";
     private static final String KIND_NOT_PERMITTED = "not_permitted";
 
@@ -58,6 +59,11 @@ abstract class AbstractCircuitBreakerMetrics extends AbstractMetrics {
                 .description("The number of buffered successful calls stored in the ring buffer")
                 .tag(TagNames.NAME, circuitBreaker.getName())
                 .tag(TagNames.KIND, KIND_SUCCESSFUL)
+                .register(meterRegistry).getId());
+        idSet.add(Gauge.builder(names.getBufferedCallsMetricName(), circuitBreaker, cb -> cb.getMetrics().getNumberOfSlowCalls())
+                .description("The number of buffered successful calls stored in the ring buffer")
+                .tag(TagNames.NAME, circuitBreaker.getName())
+                .tag(TagNames.KIND, KIND_SLOW)
                 .register(meterRegistry).getId());
         idSet.add(Gauge.builder(names.getFailureRateMetricName(), circuitBreaker, cb -> cb.getMetrics().getFailureRate())
                 .description("The failure rate of the circuit breaker")
