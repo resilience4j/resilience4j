@@ -2,7 +2,6 @@ package io.github.resilience4j.core;
 
 import org.junit.Test;
 
-import javax.xml.ws.WebServiceException;
 import java.util.function.Supplier;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -68,7 +67,7 @@ public class SupplierUtilsTest {
         assertThat(result).isEqualTo("Bla");
     }
 
-    @Test(expected = WebServiceException.class)
+    @Test(expected = RuntimeException.class)
     public void shouldRethrowException() {
 
         Supplier<String> supplier = () -> {
@@ -76,7 +75,7 @@ public class SupplierUtilsTest {
         };
         //When
         Supplier<String> supplierWithRecovery = SupplierUtils.recover(supplier, (ex) -> {
-            throw new WebServiceException();
+            throw new RuntimeException();
         });
 
         supplierWithRecovery.get();
