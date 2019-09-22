@@ -28,13 +28,13 @@ import io.github.resilience4j.bulkhead.event.BulkheadOnCallPermittedEvent;
 import io.github.resilience4j.bulkhead.event.BulkheadOnCallRejectedEvent;
 import io.github.resilience4j.core.EventConsumer;
 import io.github.resilience4j.core.EventProcessor;
+import io.github.resilience4j.core.exception.AcquirePermissionCancelledException;
 import io.github.resilience4j.core.lang.Nullable;
 
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
-import static io.github.resilience4j.bulkhead.BulkheadFullException.createBulkheadFullException;
 import static java.util.Objects.requireNonNull;
 
 /**
@@ -124,9 +124,14 @@ public class SemaphoreBulkhead implements Bulkhead {
      */
     @Override
     public void acquirePermission() {
-        if (!tryAcquirePermission()) {
-            throw BulkheadFullException.createBulkheadFullException(this);
+        boolean permitted = tryAcquirePermission();
+        if (permitted) {
+            return;
         }
+        if (Thread.currentThread().isInterrupted()) {
+            throw new AcquirePermissionCancelledException("Thread was interrupted during permission wait");
+        }
+        throw BulkheadFullException.createBulkheadFullException(this);
     }
 
     /**

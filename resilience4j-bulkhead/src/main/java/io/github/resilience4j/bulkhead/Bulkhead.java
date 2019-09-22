@@ -24,6 +24,7 @@ import io.github.resilience4j.bulkhead.event.BulkheadOnCallPermittedEvent;
 import io.github.resilience4j.bulkhead.event.BulkheadOnCallRejectedEvent;
 import io.github.resilience4j.bulkhead.internal.SemaphoreBulkhead;
 import io.github.resilience4j.core.EventConsumer;
+import io.github.resilience4j.core.exception.AcquirePermissionCancelledException;
 import io.vavr.CheckedConsumer;
 import io.vavr.CheckedFunction0;
 import io.vavr.CheckedFunction1;
@@ -79,6 +80,7 @@ public interface Bulkhead {
      * but its interrupt status will be set.
      *
      * @throws BulkheadFullException when the Bulkhead is full and no further calls are permitted.
+     * @throws AcquirePermissionCancelledException if thread was interrupted during permission wait
      */
     void acquirePermission();
 

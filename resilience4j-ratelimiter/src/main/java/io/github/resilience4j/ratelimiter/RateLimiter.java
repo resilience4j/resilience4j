@@ -22,7 +22,7 @@ import io.github.resilience4j.core.EventConsumer;
 import io.github.resilience4j.ratelimiter.event.RateLimiterEvent;
 import io.github.resilience4j.ratelimiter.event.RateLimiterOnFailureEvent;
 import io.github.resilience4j.ratelimiter.event.RateLimiterOnSuccessEvent;
-import io.github.resilience4j.ratelimiter.internal.AcquirePermissionCancelledException;
+import io.github.resilience4j.core.exception.AcquirePermissionCancelledException;
 import io.github.resilience4j.ratelimiter.internal.AtomicRateLimiter;
 import io.vavr.CheckedFunction0;
 import io.vavr.CheckedFunction1;

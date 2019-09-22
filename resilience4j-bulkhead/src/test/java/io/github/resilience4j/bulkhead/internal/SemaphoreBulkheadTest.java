@@ -23,6 +23,7 @@ import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.bulkhead.BulkheadConfig;
 import io.github.resilience4j.bulkhead.BulkheadFullException;
 import io.github.resilience4j.bulkhead.event.BulkheadEvent;
+import io.github.resilience4j.core.exception.AcquirePermissionCancelledException;
 import io.reactivex.subscribers.TestSubscriber;
 import org.junit.Before;
 import org.junit.Test;
@@ -212,7 +213,7 @@ public class SemaphoreBulkheadTest {
             long start = System.nanoTime();
             try {
                 bulkhead.acquirePermission();
-            } catch (BulkheadFullException bulkheadException) {
+            } catch (AcquirePermissionCancelledException bulkheadException) {
                 assertThat(bulkheadException.getMessage()).contains("interrupted during permission wait");
                 interruptedWithException.set(true);
             } finally {
