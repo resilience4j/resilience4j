@@ -48,6 +48,7 @@ import java.util.concurrent.TimeUnit;
 
 import static com.jayway.awaitility.Awaitility.await;
 import static java.util.concurrent.CompletableFuture.runAsync;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @RunWith(SpringJUnit4ClassRunner.class)
@@ -91,11 +92,12 @@ public class BulkheadAutoConfigurationTest {
      * This test verifies that the combination of @FeignClient and @Bulkhead annotation works as same as @Bulkhead alone works with any normal service class
      */
     @Test
-    public void testFeignClient() throws InterruptedException {
+    public void testFeignClient() {
         BulkheadEventsEndpointResponse eventsBefore = getBulkheadEvents("/actuator/bulkheadevents").getBody();
         int expectedConcurrentCalls = 3;
         int expectedRejectedCalls = 2;
-        int responseDelay = 1000;
+        int responseDelay = 200;
+
         WireMock.stubFor(WireMock
                 .get(WireMock.urlEqualTo("/sample/"))
                 .willReturn(WireMock.aResponse().withStatus(200).withBody("This is successful call")
@@ -107,8 +109,12 @@ public class BulkheadAutoConfigurationTest {
         for (int i = 0; i < 5; i++) {
             futures.add(runAsync(this::callService, es));
         }
-
-        Thread.sleep(responseDelay + 100);
+        futures.forEach(f -> {
+            try {
+                f.get();
+            } catch (Exception e) {
+            }
+        });
         int actualSuccessfulCalls =
                 (int) futures.stream().filter(f -> f.isDone() && !f.isCompletedExceptionally()).count();
         int actualRejectedCalls = 0;
@@ -163,7 +169,7 @@ public class BulkheadAutoConfigurationTest {
         // Test Actuator endpoints
 
         ResponseEntity<BulkheadEndpointResponse> bulkheadList = restTemplate.getForEntity("/actuator/bulkheads", BulkheadEndpointResponse.class);
-        assertThat(bulkheadList.getBody().getBulkheads()).hasSize(5).containsExactly("backendA", "backendB", "backendB", "backendC", "dummyFeignClient");
+        assertThat(bulkheadList.getBody().getBulkheads()).containsExactly("backendA", "backendB", "backendB", "backendC", "dummyFeignClient");
 
         for (int i = 0; i < 5; i++) {
             es.submit(dummyService::doSomethingAsync);
@@ -203,25 +209,27 @@ public class BulkheadAutoConfigurationTest {
         }
 
         await()
+                .pollInterval(10, MILLISECONDS)
                 .atMost(1, TimeUnit.SECONDS)
                 .until(() -> bulkhead.getMetrics().getAvailableConcurrentCalls() == 0);
 
         assertThat(bulkhead.getBulkheadConfig().getMaxWaitDuration().toMillis()).isEqualTo(0);
         assertThat(bulkhead.getBulkheadConfig().getMaxConcurrentCalls()).isEqualTo(1);
-
         await()
+                .pollInterval(10, MILLISECONDS)
                 .atMost(1, TimeUnit.SECONDS)
-                .until(() -> bulkhead.getMetrics().getAvailableConcurrentCalls() == 1);
+                .until(() -> {
+                    return bulkhead.getMetrics().getAvailableConcurrentCalls() == 1;
+                });
         // Test Actuator endpoints
 
         ResponseEntity<BulkheadEndpointResponse> bulkheadList = restTemplate.getForEntity("/actuator/bulkheads", BulkheadEndpointResponse.class);
-        assertThat(bulkheadList.getBody().getBulkheads()).hasSize(5).containsExactly("backendA", "backendB", "backendB", "backendC", "dummyFeignClient");
-
+        assertThat(bulkheadList.getBody().getBulkheads()).containsExactly("backendA", "backendB", "backendB", "backendC", "dummyFeignClient");
         for (int i = 0; i < 5; i++) {
             es.submit(dummyService::doSomething);
         }
-
         await()
+                .pollInterval(10, MILLISECONDS)
                 .atMost(1, TimeUnit.SECONDS)
                 .until(() -> bulkhead.getMetrics().getAvailableConcurrentCalls() == 1);
 
@@ -240,7 +248,6 @@ public class BulkheadAutoConfigurationTest {
                 .isNotEmpty();
 
         assertThat(bulkheadAspect.getOrder()).isEqualTo(Ordered.LOWEST_PRECEDENCE);
-
         es.shutdown();
     }
 
@@ -262,11 +269,13 @@ public class BulkheadAutoConfigurationTest {
                     .subscribe(String::toUpperCase, throwable -> System.out.println("Bulkhead Exception received: " + throwable.getMessage()))));
         }
         await()
-                .atMost(1200, TimeUnit.MILLISECONDS)
+                .pollInterval(10, MILLISECONDS)
+                .atMost(1200, MILLISECONDS)
                 .until(() -> bulkhead.getMetrics().getAvailableConcurrentCalls() == 0);
 
         await()
-                .atMost(1000, TimeUnit.MILLISECONDS)
+                .pollInterval(10, MILLISECONDS)
+                .atMost(1000, MILLISECONDS)
                 .until(() -> bulkhead.getMetrics().getAvailableConcurrentCalls() == 2);
 
         for (int i = 0; i < 5; i++) {
@@ -275,7 +284,8 @@ public class BulkheadAutoConfigurationTest {
         }
 
         await()
-                .atMost(1000, TimeUnit.MILLISECONDS)
+                .pollInterval(10, MILLISECONDS)
+                .atMost(1000, MILLISECONDS)
                 .until(() -> bulkhead.getMetrics().getAvailableConcurrentCalls() == 2);
 
         assertThat(bulkhead.getBulkheadConfig().getMaxWaitDuration().toMillis()).isEqualTo(10);
@@ -304,11 +314,13 @@ public class BulkheadAutoConfigurationTest {
                     .subscribe(String::toUpperCase, throwable -> System.out.println("Bulkhead Exception received: " + throwable.getMessage()))));
         }
         await()
-                .atMost(1200, TimeUnit.MILLISECONDS)
+                .pollInterval(10, MILLISECONDS)
+                .atMost(1200, MILLISECONDS)
                 .until(() -> bulkhead.getMetrics().getAvailableConcurrentCalls() == 0);
 
         await()
-                .atMost(1000, TimeUnit.MILLISECONDS)
+                .pollInterval(10, MILLISECONDS)
+                .atMost(1000, MILLISECONDS)
                 .until(() -> bulkhead.getMetrics().getAvailableConcurrentCalls() == 2);
 
         for (int i = 0; i < 5; i++) {
@@ -317,7 +329,8 @@ public class BulkheadAutoConfigurationTest {
         }
 
         await()
-                .atMost(1000, TimeUnit.MILLISECONDS)
+                .pollInterval(10, MILLISECONDS)
+                .atMost(1000, MILLISECONDS)
                 .until(() -> bulkhead.getMetrics().getAvailableConcurrentCalls() == 2);
 
         commonAssertions();

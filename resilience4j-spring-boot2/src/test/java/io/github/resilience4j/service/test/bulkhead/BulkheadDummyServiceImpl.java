@@ -15,7 +15,7 @@ public class BulkheadDummyServiceImpl implements BulkheadDummyService {
     @Override
     public void doSomething() {
         try {
-            Thread.sleep(500);
+            Thread.sleep(150);
         } catch (InterruptedException e) {
             //do nothing
         }
@@ -25,7 +25,7 @@ public class BulkheadDummyServiceImpl implements BulkheadDummyService {
     @Retry(name = BulkheadDummyService.BACKEND_C)
     @Bulkhead(name = BulkheadDummyService.BACKEND_C, type = Bulkhead.Type.THREADPOOL)
     public CompletableFuture<String> doSomethingAsync() throws InterruptedException {
-        Thread.sleep(500);
+        Thread.sleep(150);
         return CompletableFuture.completedFuture("Test");
     }
 }

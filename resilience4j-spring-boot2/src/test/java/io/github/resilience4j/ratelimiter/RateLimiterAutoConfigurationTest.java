@@ -42,6 +42,8 @@ import java.util.concurrent.TimeUnit;
 
 import static com.jayway.awaitility.Awaitility.await;
 import static io.github.resilience4j.service.test.ratelimiter.RateLimiterDummyFeignClient.RATE_LIMITER_FEIGN_CLIENT_NAME;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -89,9 +91,8 @@ public class RateLimiterAutoConfigurationTest {
 
         RateLimiter rateLimiter = rateLimiterRegistry.rateLimiter(RATE_LIMITER_FEIGN_CLIENT_NAME);
         assertThat(rateLimiter).isNotNull();
-        rateLimiter.acquirePermission();
         await()
-                .atMost(2, TimeUnit.SECONDS)
+                .atMost(2, SECONDS)
                 .until(() -> rateLimiter.getMetrics().getAvailablePermissions() == 10);
 
         try {
@@ -132,7 +133,7 @@ public class RateLimiterAutoConfigurationTest {
         assertThat(lastEvent.getType()).isEqualTo(RateLimiterEvent.Type.FAILED_ACQUIRE);
 
         await()
-                .atMost(2, TimeUnit.SECONDS)
+                .atMost(2, SECONDS)
                 .until(() -> rateLimiter.getMetrics().getAvailablePermissions() == 10);
 
 
@@ -152,7 +153,7 @@ public class RateLimiterAutoConfigurationTest {
         assertThat(rateLimiter).isNotNull();
         rateLimiter.acquirePermission();
         await()
-                .atMost(2, TimeUnit.SECONDS)
+                .atMost(2, SECONDS)
                 .until(() -> rateLimiter.getMetrics().getAvailablePermissions() == 10);
 
         try {
@@ -174,7 +175,7 @@ public class RateLimiterAutoConfigurationTest {
         ResponseEntity<RateLimiterEndpointResponse> rateLimiterList = restTemplate
                 .getForEntity("/actuator/ratelimiters", RateLimiterEndpointResponse.class);
 
-        assertThat(rateLimiterList.getBody().getRateLimiters()).hasSize(3).containsExactly("backendA", "backendB", "rateLimiterDummyFeignClient");
+        assertThat(rateLimiterList.getBody().getRateLimiters()).containsExactly("backendA", "backendB", "rateLimiterDummyFeignClient");
 
         try {
             for (int i = 0; i < 11; i++) {
@@ -195,7 +196,6 @@ public class RateLimiterAutoConfigurationTest {
         await()
                 .atMost(2, TimeUnit.SECONDS)
                 .until(() -> rateLimiter.getMetrics().getAvailablePermissions() == 10);
-
 
         assertThat(rateLimiterAspect.getOrder()).isEqualTo(401);
     }
