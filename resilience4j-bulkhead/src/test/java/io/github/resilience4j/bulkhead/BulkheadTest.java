@@ -18,6 +18,7 @@
  */
 package io.github.resilience4j.bulkhead;
 
+import io.github.resilience4j.test.HelloWorldException;
 import io.github.resilience4j.test.HelloWorldService;
 import io.vavr.CheckedConsumer;
 import io.vavr.CheckedFunction0;
@@ -30,7 +31,6 @@ import org.junit.Test;
 import org.mockito.BDDMockito;
 import org.mockito.Mockito;
 
-import javax.xml.ws.WebServiceException;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
@@ -157,7 +157,7 @@ public class BulkheadTest {
     }
 
     @Test
-    public void shouldExecuteCallableAndReturnWithSuccess() throws Throwable {
+    public void shouldExecuteCallableAndReturnWithSuccess()  throws Throwable {
 
         // Given
         Bulkhead bulkhead = Bulkhead.of("test", config);
@@ -508,14 +508,14 @@ public class BulkheadTest {
     }
 
     @Test
-    public void shouldDecorateCompletionStageAndReturnWithExceptionAtSyncStage() throws ExecutionException, InterruptedException {
+    public void shouldDecorateCompletionStageAndReturnWithExceptionAtSyncStage() {
 
         // Given
         Bulkhead bulkhead = Bulkhead.of("test", config);
 
         // When
         Supplier<CompletionStage<String>> completionStageSupplier = () -> {
-            throw new WebServiceException("BAM! At sync stage");
+            throw new HelloWorldException();
         };
 
         Supplier<CompletionStage<String>> decoratedCompletionStageSupplier =
@@ -528,18 +528,18 @@ public class BulkheadTest {
         BDDMockito.then(helloWorldService).should(times(0)).returnHelloWorld();
         assertThat(result.isSuccess()).isTrue();
         result.get()
-                .exceptionally(
-                        error -> {
-                            // NOTE: Try.of does not detect a completion stage that has been completed with failure !
-                            assertThat(error).isInstanceOf(WebServiceException.class);
-                            return null;
-                        }
-                );
+              .exceptionally(
+                  error -> {
+                      // NOTE: Try.of does not detect a completion stage that has been completed with failure !
+                      assertThat(error).isInstanceOf(HelloWorldException.class);
+                      return null;
+                  }
+              );
         assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
     }
 
     @Test
-    public void shouldDecorateCompletionStageAndReturnWithExceptionAtAsyncStage() throws ExecutionException, InterruptedException {
+    public void shouldDecorateCompletionStageAndReturnWithExceptionAtAsyncStage() {
 
         // Given
         Bulkhead bulkhead = Bulkhead.of("test", config);
@@ -560,7 +560,7 @@ public class BulkheadTest {
     }
 
     @Test
-    public void shouldChainDecoratedFunctions() throws ExecutionException, InterruptedException {
+    public void shouldChainDecoratedFunctions() {
         // tag::shouldChainDecoratedFunctions[]
         // Given
         Bulkhead bulkhead = Bulkhead.of("test", config);
@@ -575,7 +575,7 @@ public class BulkheadTest {
 
         // and I chain a function with map
         Try<String> result = Try.of(decoratedSupplier)
-                .mapTry(decoratedFunction::apply);
+                                .mapTry(decoratedFunction);
 
         // Then
         assertThat(result.isSuccess()).isTrue();
@@ -657,7 +657,7 @@ public class BulkheadTest {
     public void shouldDecorateEitherSupplierAndReturnWithException() {
         // Given
         Bulkhead bulkhead = Bulkhead.of("test", config);
-        BDDMockito.given(helloWorldService.returnEither()).willReturn(Either.left(new WebServiceException("BAM!")));
+        BDDMockito.given(helloWorldService.returnEither()).willReturn(Either.left(new HelloWorldException()));
 
         // When
         Either<Exception, String> result = bulkhead.executeEitherSupplier(helloWorldService::returnEither);

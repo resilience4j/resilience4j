@@ -18,13 +18,12 @@ package io.github.resilience4j.metrics;
 
 import com.codahale.metrics.MetricRegistry;
 import io.github.resilience4j.retry.Retry;
+import io.github.resilience4j.test.HelloWorldException;
 import io.github.resilience4j.test.HelloWorldService;
 import io.vavr.control.Try;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.BDDMockito;
-
-import javax.xml.ws.WebServiceException;
 
 import static io.github.resilience4j.retry.utils.MetricNames.*;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -75,11 +74,11 @@ public abstract class AbstractRetryMetricsTest {
 
         // Given the HelloWorldService returns Hello world
         BDDMockito.given(helloWorldService.returnHelloWorld())
-                .willThrow(new WebServiceException("BAM!"))
+                .willThrow(new HelloWorldException())
                 .willReturn("Hello world")
-                .willThrow(new WebServiceException("BAM!"))
-                .willThrow(new WebServiceException("BAM!"))
-                .willThrow(new WebServiceException("BAM!"));
+                .willThrow(new HelloWorldException())
+                .willThrow(new HelloWorldException())
+                .willThrow(new HelloWorldException());
 
         // Setup circuitbreaker with retry
         String value1 = retry.executeSupplier(helloWorldService::returnHelloWorld);

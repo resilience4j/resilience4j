@@ -21,14 +21,13 @@ package io.github.resilience4j.test;
 import io.vavr.control.Either;
 import io.vavr.control.Try;
 
-import javax.xml.ws.WebServiceException;
 import java.io.IOException;
 
 public interface HelloWorldService {
 
     String returnHelloWorld();
 
-    Either<WebServiceException, String> returnEither();
+    Either<HelloWorldException, String> returnEither();
 
     Try<String> returnTry();
 

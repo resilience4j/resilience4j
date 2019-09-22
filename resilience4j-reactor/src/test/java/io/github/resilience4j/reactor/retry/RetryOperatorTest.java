@@ -18,6 +18,7 @@ package io.github.resilience4j.reactor.retry;
 
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryConfig;
+import io.github.resilience4j.test.HelloWorldException;
 import io.github.resilience4j.test.HelloWorldService;
 import org.junit.Before;
 import org.junit.Test;
@@ -27,7 +28,6 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
-import javax.xml.ws.WebServiceException;
 import java.io.IOException;
 import java.time.Duration;
 
@@ -53,8 +53,8 @@ public class RetryOperatorTest {
 
 		given(helloWorldService.returnHelloWorld())
 				.willReturn("Hello world")
-				.willThrow(new WebServiceException("BAM!"))
-				.willThrow(new WebServiceException("BAM!"))
+				.willThrow(new HelloWorldException())
+				.willThrow(new HelloWorldException())
 				.willReturn("Hello world");
 
 		//When
@@ -128,7 +128,7 @@ public class RetryOperatorTest {
 		RetryOperator<String> retryOperator = RetryOperator.of(retry);
 
 		given(helloWorldService.returnHelloWorld())
-				.willThrow(new WebServiceException("BAM!"));
+				.willThrow(new HelloWorldException());
 
 		//When
 		StepVerifier.create(Mono.fromCallable(helloWorldService::returnHelloWorld)
@@ -160,7 +160,7 @@ public class RetryOperatorTest {
 				.maxAttempts(3).build();
 		Retry retry = Retry.of("testName", config);
 		given(helloWorldService.returnHelloWorld())
-				.willThrow(new WebServiceException("BAM!"));
+				.willThrow(new HelloWorldException());
 
 		//When
 		StepVerifier.create(Mono.fromCallable(helloWorldService::returnHelloWorld)
@@ -235,7 +235,7 @@ public class RetryOperatorTest {
 		RetryOperator<Object> retryOperator = RetryOperator.of(retry);
 
 		//When
-		StepVerifier.create(Flux.error(new WebServiceException("BAM!")).compose(retryOperator))
+		StepVerifier.create(Flux.error(new HelloWorldException()).compose(retryOperator))
 				.expectSubscription()
 				.expectError(RetryExceptionWrapper.class)
 				.verify(Duration.ofMillis(50));

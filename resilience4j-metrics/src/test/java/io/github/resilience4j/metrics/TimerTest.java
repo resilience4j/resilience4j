@@ -19,6 +19,8 @@
 package io.github.resilience4j.metrics;
 
 import com.codahale.metrics.MetricRegistry;
+
+import io.github.resilience4j.test.HelloWorldException;
 import io.github.resilience4j.test.HelloWorldService;
 import io.vavr.CheckedFunction0;
 import io.vavr.CheckedFunction1;
@@ -31,7 +33,6 @@ import org.junit.Test;
 import org.mockito.BDDMockito;
 import org.mockito.Mockito;
 
-import javax.xml.ws.WebServiceException;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
@@ -175,11 +176,11 @@ public class TimerTest {
     public void shouldExecuteCompletionStageAndReturnWithExceptionAtSyncStage() throws Throwable {
 
         Supplier<CompletionStage<String>> completionStageSupplier = () -> {
-            throw new WebServiceException("BAM! At sync stage");
+            throw new HelloWorldException();
         };
 
         Assertions.assertThatThrownBy(() -> timer.executeCompletionStageSupplier(completionStageSupplier))
-                .isInstanceOf(WebServiceException.class);
+                .isInstanceOf(HelloWorldException.class);
 
         assertThat(timer.getMetrics().getNumberOfTotalCalls()).isEqualTo(1);
         assertThat(timer.getMetrics().getNumberOfSuccessfulCalls()).isEqualTo(0);
@@ -190,7 +191,7 @@ public class TimerTest {
     @Test
     public void shouldExecuteCompletionStageAndReturnWithExceptionAtASyncStage() throws Throwable {
         // Given the HelloWorldService returns Hello world
-        BDDMockito.given(helloWorldService.returnHelloWorld()).willThrow(new WebServiceException("BAM!"));
+        BDDMockito.given(helloWorldService.returnHelloWorld()).willThrow(new HelloWorldException());
         // And measure the call with a Timer
         Supplier<CompletionStage<String>> completionStageSupplier =
                 () -> CompletableFuture.supplyAsync(helloWorldService::returnHelloWorld);
@@ -198,7 +199,7 @@ public class TimerTest {
         CompletionStage<String> stringCompletionStage = timer.executeCompletionStageSupplier(completionStageSupplier);
 
         Assertions.assertThatThrownBy(() -> stringCompletionStage.toCompletableFuture().get())
-                .isInstanceOf(ExecutionException.class).hasCause(new WebServiceException("BAM!"));
+                .isInstanceOf(ExecutionException.class).hasCause(new HelloWorldException());
 
         assertThat(timer.getMetrics().getNumberOfTotalCalls()).isEqualTo(1);
         assertThat(timer.getMetrics().getNumberOfSuccessfulCalls()).isEqualTo(0);

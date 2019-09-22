@@ -27,7 +27,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.BDDMockito;
 
-import javax.xml.ws.WebServiceException;
 import java.time.Duration;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
@@ -317,7 +316,7 @@ public class RateLimiterTest {
 
     @Test
     public void decorateEitherSupplier() throws Exception {
-        Supplier<Either<WebServiceException, String>> supplier = mock(Supplier.class);
+        Supplier<Either<RuntimeException, String>> supplier = mock(Supplier.class);
         BDDMockito.given(supplier.get()).willReturn(Either.right("Resource"));
 
         when(limit.acquirePermission()).thenReturn(true);
@@ -343,7 +342,7 @@ public class RateLimiterTest {
 
     @Test
     public void shouldExecuteEitherSupplierAndReturnRequestNotPermitted() throws Exception {
-        Supplier<Either<WebServiceException, String>> supplier = mock(Supplier.class);
+        Supplier<Either<RuntimeException, String>> supplier = mock(Supplier.class);
 
         when(limit.acquirePermission()).thenReturn(false);
 

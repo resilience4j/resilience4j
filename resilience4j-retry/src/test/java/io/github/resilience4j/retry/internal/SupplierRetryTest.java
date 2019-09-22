@@ -22,6 +22,7 @@ import io.github.resilience4j.retry.IntervalFunction;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryConfig;
 import io.github.resilience4j.test.AsyncHelloWorldService;
+import io.github.resilience4j.test.HelloWorldException;
 import io.github.resilience4j.test.HelloWorldService;
 import io.vavr.API;
 import io.vavr.CheckedFunction0;
@@ -34,7 +35,6 @@ import org.junit.Test;
 import org.mockito.BDDMockito;
 import org.mockito.Mockito;
 
-import javax.xml.ws.WebServiceException;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.Executors;
@@ -136,7 +136,7 @@ public class SupplierRetryTest {
 				.maxAttempts(2).build();
 		Retry retry = Retry.of("id", tryAgain);
 		// Decorate the invocation of the HelloWorldService
-		Either<WebServiceException, String> result = retry.executeEitherSupplier(helloWorldService::returnEither);
+		Either<HelloWorldException, String> result = retry.executeEitherSupplier(helloWorldService::returnEither);
 
 		// Then the helloWorldService should be invoked 1 time
 		BDDMockito.then(helloWorldService).should(Mockito.times(1)).returnEither();
@@ -169,7 +169,7 @@ public class SupplierRetryTest {
 				.maxAttempts(2).build();
 		Retry retry = Retry.of("id", tryAgain);
 		// Decorate the invocation of the HelloWorldService
-		Either<WebServiceException, String> result = retry.executeEitherSupplier(helloWorldService::returnEither);
+		Either<HelloWorldException, String> result = retry.executeEitherSupplier(helloWorldService::returnEither);
 
 		BDDMockito.then(helloWorldService).should(Mockito.times(2)).returnEither();
 		assertThat(result.get()).isEqualTo("Hello world");
@@ -178,7 +178,7 @@ public class SupplierRetryTest {
 	@Test
 	public void shouldFailToRetryDecoratedTry() {
 		// Given the HelloWorldService returns Hello world
-		BDDMockito.given(helloWorldService.returnTry()).willReturn(Try.failure(new WebServiceException("BAM!")));
+		BDDMockito.given(helloWorldService.returnTry()).willReturn(Try.failure(new HelloWorldException()));
 		// Create a Retry with default configuration
 		final RetryConfig tryAgain = RetryConfig.<String>custom()
 				.maxAttempts(2).build();
@@ -188,32 +188,32 @@ public class SupplierRetryTest {
 
 		BDDMockito.then(helloWorldService).should(Mockito.times(2)).returnTry();
 		assertThat(result.isFailure()).isTrue();
-		assertThat(result.getCause()).isInstanceOf(WebServiceException.class);
+		assertThat(result.getCause()).isInstanceOf(HelloWorldException.class);
 	}
 
 	@Test
 	public void shouldFailToRetryDecoratedEither() {
 		// Given the HelloWorldService returns Hello world
-		BDDMockito.given(helloWorldService.returnEither()).willReturn(Either.left(new WebServiceException("BAM!")));
+		BDDMockito.given(helloWorldService.returnEither()).willReturn(Either.left(new HelloWorldException()));
 		// Create a Retry with default configuration
 		final RetryConfig tryAgain = RetryConfig.<String>custom()
 				.maxAttempts(2).build();
 		Retry retry = Retry.of("id", tryAgain);
 		// Decorate the invocation of the HelloWorldService
-		Either<WebServiceException, String> result = retry.executeEitherSupplier(helloWorldService::returnEither);
+		Either<HelloWorldException, String> result = retry.executeEitherSupplier(helloWorldService::returnEither);
 
 		BDDMockito.then(helloWorldService).should(Mockito.times(2)).returnEither();
 		assertThat(result.isLeft()).isTrue();
-		assertThat(result.getLeft()).isInstanceOf(WebServiceException.class);
+		assertThat(result.getLeft()).isInstanceOf(HelloWorldException.class);
 	}
 
 	@Test
 	public void shouldIgnoreExceptionOfDecoratedTry() {
 		// Given the HelloWorldService returns Hello world
-		BDDMockito.given(helloWorldService.returnTry()).willReturn(Try.failure(new WebServiceException("BAM!")));
+		BDDMockito.given(helloWorldService.returnTry()).willReturn(Try.failure(new HelloWorldException()));
 		// Create a Retry with default configuration
 		final RetryConfig tryAgain = RetryConfig.<String>custom()
-				.ignoreExceptions(WebServiceException.class)
+				.ignoreExceptions(HelloWorldException.class)
 				.maxAttempts(2).build();
 		Retry retry = Retry.of("id", tryAgain);
 		// Decorate the invocation of the HelloWorldService
@@ -222,31 +222,31 @@ public class SupplierRetryTest {
 		// Then the helloWorldService should be invoked 1 time
 		BDDMockito.then(helloWorldService).should(Mockito.times(1)).returnTry();
 		assertThat(result.isFailure()).isTrue();
-		assertThat(result.getCause()).isInstanceOf(WebServiceException.class);
+		assertThat(result.getCause()).isInstanceOf(HelloWorldException.class);
 	}
 
 	@Test
 	public void shouldIgnoreExceptionOfDecoratedEither() {
 		// Given the HelloWorldService returns Hello world
-		BDDMockito.given(helloWorldService.returnEither()).willReturn(Either.left(new WebServiceException("BAM!")));
+		BDDMockito.given(helloWorldService.returnEither()).willReturn(Either.left(new HelloWorldException()));
 		// Create a Retry with default configuration
 		final RetryConfig tryAgain = RetryConfig.<String>custom()
-				.ignoreExceptions(WebServiceException.class)
+				.ignoreExceptions(HelloWorldException.class)
 				.maxAttempts(2).build();
 		Retry retry = Retry.of("id", tryAgain);
 		// Decorate the invocation of the HelloWorldService
-		Either<WebServiceException, String> result = retry.executeEitherSupplier(helloWorldService::returnEither);
+		Either<HelloWorldException, String> result = retry.executeEitherSupplier(helloWorldService::returnEither);
 
 		// Then the helloWorldService should be invoked 1 time
 		BDDMockito.then(helloWorldService).should(Mockito.times(1)).returnEither();
 		assertThat(result.isLeft()).isTrue();
-		assertThat(result.getLeft()).isInstanceOf(WebServiceException.class);
+		assertThat(result.getLeft()).isInstanceOf(HelloWorldException.class);
 	}
 
 	@Test
 	public void testDecorateSupplier() {
 		// Given the HelloWorldService throws an exception
-		BDDMockito.given(helloWorldService.returnHelloWorld()).willThrow(new WebServiceException("BAM!"))
+		BDDMockito.given(helloWorldService.returnHelloWorld()).willThrow(new HelloWorldException())
 				.willReturn("Hello world");
 
 		// Create a Retry with default configuration
@@ -267,9 +267,9 @@ public class SupplierRetryTest {
 	public void testDecorateSupplierAndInvokeTwice() {
 		// Given the HelloWorldService throws an exception
 		BDDMockito.given(helloWorldService.returnHelloWorld())
-				.willThrow(new WebServiceException("BAM!"))
+				.willThrow(new HelloWorldException())
 				.willReturn("Hello world")
-				.willThrow(new WebServiceException("BAM!"))
+				.willThrow(new HelloWorldException())
 				.willReturn("Hello world");
 
 		// Create a Retry with default configuration
@@ -292,7 +292,7 @@ public class SupplierRetryTest {
 	@Test
 	public void testDecorateCallable() throws Exception {
 		// Given the HelloWorldService throws an exception
-		BDDMockito.given(helloWorldService.returnHelloWorldWithException()).willThrow(new WebServiceException("BAM!"))
+		BDDMockito.given(helloWorldService.returnHelloWorldWithException()).willThrow(new HelloWorldException())
 				.willReturn("Hello world");
 
 		// Create a Retry with default configuration
@@ -312,7 +312,7 @@ public class SupplierRetryTest {
 	@Test
 	public void testDecorateCallableWithRetryResult() throws Exception {
 		// Given the HelloWorldService throws an exception
-		BDDMockito.given(helloWorldService.returnHelloWorldWithException()).willThrow(new WebServiceException("BAM!"))
+		BDDMockito.given(helloWorldService.returnHelloWorldWithException()).willThrow(new HelloWorldException())
 				.willReturn("Hello world");
 
 		// Create a Retry with default configuration
@@ -334,7 +334,7 @@ public class SupplierRetryTest {
 	@Test
 	public void testExecuteCallable() throws Exception {
 		// Given the HelloWorldService throws an exception
-		BDDMockito.given(helloWorldService.returnHelloWorldWithException()).willThrow(new WebServiceException("BAM!"))
+		BDDMockito.given(helloWorldService.returnHelloWorldWithException()).willThrow(new HelloWorldException())
 				.willReturn("Hello world");
 
 		// Create a Retry with default configuration
@@ -353,7 +353,7 @@ public class SupplierRetryTest {
 	@Test
 	public void testExecuteSupplier() {
 		// Given the HelloWorldService throws an exception
-		BDDMockito.given(helloWorldService.returnHelloWorld()).willThrow(new WebServiceException("BAM!"))
+		BDDMockito.given(helloWorldService.returnHelloWorld()).willThrow(new HelloWorldException())
 				.willReturn("Hello world");
 
 		// Create a Retry with default configuration
@@ -371,7 +371,7 @@ public class SupplierRetryTest {
 	@Test
 	public void testExecuteSupplierWithResult() {
 		// Given the HelloWorldService throws an exception
-		BDDMockito.given(helloWorldService.returnHelloWorld()).willThrow(new WebServiceException("BAM!"))
+		BDDMockito.given(helloWorldService.returnHelloWorld()).willThrow(new HelloWorldException())
 				.willReturn("Hello world");
 
 		// Create a Retry with default configuration
@@ -391,7 +391,7 @@ public class SupplierRetryTest {
 	@Test
 	public void shouldReturnSuccessfullyAfterSecondAttempt() {
 		// Given the HelloWorldService throws an exception
-		BDDMockito.given(helloWorldService.returnHelloWorld()).willThrow(new WebServiceException("BAM!"))
+		BDDMockito.given(helloWorldService.returnHelloWorld()).willThrow(new HelloWorldException())
 				.willReturn("Hello world");
 
 		// Create a Retry with default configuration
@@ -412,7 +412,7 @@ public class SupplierRetryTest {
 	@Test
 	public void shouldReturnAfterThreeAttempts() {
 		// Given the HelloWorldService throws an exception
-		BDDMockito.given(helloWorldService.returnHelloWorld()).willThrow(new WebServiceException("BAM!"));
+		BDDMockito.given(helloWorldService.returnHelloWorld()).willThrow(new HelloWorldException());
 
 		// Create a Retry with default configuration
 		Retry retry = Retry.ofDefaults("id");
@@ -428,14 +428,14 @@ public class SupplierRetryTest {
 		// and the result should be a failure
 		assertThat(result.isFailure()).isTrue();
 		// and the returned exception should be of type RuntimeException
-		assertThat(result.failed().get()).isInstanceOf(WebServiceException.class);
+		assertThat(result.failed().get()).isInstanceOf(HelloWorldException.class);
 		assertThat(sleptTime).isEqualTo(RetryConfig.DEFAULT_WAIT_DURATION * 2);
 	}
 
 	@Test
 	public void shouldReturnAfterOneAttempt() {
 		// Given the HelloWorldService throws an exception
-		BDDMockito.given(helloWorldService.returnHelloWorld()).willThrow(new WebServiceException("BAM!"));
+		BDDMockito.given(helloWorldService.returnHelloWorld()).willThrow(new HelloWorldException());
 
 		// Create a Retry with custom configuration
 		RetryConfig config = RetryConfig.custom().maxAttempts(1).build();
@@ -452,19 +452,19 @@ public class SupplierRetryTest {
 		// and the result should be a failure
 		assertThat(result.isFailure()).isTrue();
 		// and the returned exception should be of type RuntimeException
-		assertThat(result.failed().get()).isInstanceOf(WebServiceException.class);
+		assertThat(result.failed().get()).isInstanceOf(HelloWorldException.class);
 		assertThat(sleptTime).isEqualTo(0);
 	}
 
 	@Test
 	public void shouldReturnAfterOneAttemptAndIgnoreException() {
 		// Given the HelloWorldService throws an exception
-		BDDMockito.given(helloWorldService.returnHelloWorld()).willThrow(new WebServiceException("BAM!"));
+		BDDMockito.given(helloWorldService.returnHelloWorld()).willThrow(new HelloWorldException());
 
 		// Create a Retry with default configuration
 		RetryConfig config = RetryConfig.custom()
 				.retryOnException(throwable -> API.Match(throwable).of(
-						API.Case($(Predicates.instanceOf(WebServiceException.class)), false),
+						API.Case($(Predicates.instanceOf(HelloWorldException.class)), false),
 						API.Case($(), true)))
 				.build();
 		Retry retry = Retry.of("id", config);
@@ -480,14 +480,14 @@ public class SupplierRetryTest {
 		// and the result should be a failure
 		assertThat(result.isFailure()).isTrue();
 		// and the returned exception should be of type RuntimeException
-		assertThat(result.failed().get()).isInstanceOf(WebServiceException.class);
+		assertThat(result.failed().get()).isInstanceOf(HelloWorldException.class);
 		assertThat(sleptTime).isEqualTo(0);
 	}
 
 	@Test
 	public void shouldReturnAfterThreeAttemptsAndRecover() {
 		// Given the HelloWorldService throws an exception
-		BDDMockito.given(helloWorldService.returnHelloWorld()).willThrow(new WebServiceException("BAM!"));
+		BDDMockito.given(helloWorldService.returnHelloWorld()).willThrow(new HelloWorldException());
 
 		// Create a Retry with default configuration
 		Retry retry = Retry.ofDefaults("id");
@@ -510,9 +510,9 @@ public class SupplierRetryTest {
 	@Test
 	public void shouldReturnAfterThreeAttemptsAndRecoverWithResult() {
 		// Given the HelloWorldService throws an exception
-		BDDMockito.given(helloWorldService.returnHelloWorld()).willThrow(new WebServiceException("BAM!"))
+		BDDMockito.given(helloWorldService.returnHelloWorld()).willThrow(new HelloWorldException())
 				.willReturn("Hello world")
-				.willThrow(new WebServiceException("BAM!"));
+				.willThrow(new HelloWorldException());
 
 		// Create a Retry with default configuration
 		final RetryConfig tryAgain = RetryConfig.<String>custom().retryOnResult(s -> s.contains("Hello world"))
@@ -536,7 +536,7 @@ public class SupplierRetryTest {
 	@Test
 	public void shouldTakeIntoAccountBackoffFunction() {
 		// Given the HelloWorldService throws an exception
-		BDDMockito.given(helloWorldService.returnHelloWorld()).willThrow(new WebServiceException("BAM!"));
+		BDDMockito.given(helloWorldService.returnHelloWorld()).willThrow(new HelloWorldException());
 
 		// Create a Retry with a backoff function doubling the interval
 		RetryConfig config = RetryConfig.custom().intervalFunction(IntervalFunction.ofExponentialBackoff(500, 2.0))
