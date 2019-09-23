@@ -214,7 +214,7 @@ public class SemaphoreBulkheadTest {
             try {
                 bulkhead.acquirePermission();
             } catch (AcquirePermissionCancelledException bulkheadException) {
-                assertThat(bulkheadException.getMessage()).contains("interrupted during permission wait");
+                assertThat(bulkheadException.getMessage()).contains("interrupted while waiting for a permission");
                 interruptedWithException.set(true);
             } finally {
                 Duration actualWaitTime = Duration.ofNanos(System.nanoTime() - start);

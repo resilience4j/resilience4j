@@ -282,7 +282,7 @@ public interface RateLimiter {
 	static void waitForPermission(final RateLimiter rateLimiter) {
 		boolean permission = rateLimiter.acquirePermission();
 		if (Thread.currentThread().isInterrupted()) {
-			throw new AcquirePermissionCancelledException("Thread was interrupted during permission wait");
+			throw new AcquirePermissionCancelledException();
 		}
 		if (!permission) {
 			throw RequestNotPermitted.createRequestNotPermitted(rateLimiter);

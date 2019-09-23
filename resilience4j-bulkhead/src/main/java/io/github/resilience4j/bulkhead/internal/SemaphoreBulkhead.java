@@ -129,7 +129,7 @@ public class SemaphoreBulkhead implements Bulkhead {
             return;
         }
         if (Thread.currentThread().isInterrupted()) {
-            throw new AcquirePermissionCancelledException("Thread was interrupted during permission wait");
+            throw new AcquirePermissionCancelledException();
         }
         throw BulkheadFullException.createBulkheadFullException(this);
     }
