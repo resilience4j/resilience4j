@@ -89,11 +89,12 @@ public class RateLimiterAutoConfigurationTest {
         assertThat(rateLimiterRegistry).isNotNull();
         assertThat(rateLimiterProperties).isNotNull();
 
+        String targetLimiterName = RATE_LIMITER_FEIGN_CLIENT_NAME;
+        RateLimiterConfig targetLimiterConfig = rateLimiterRegistry.rateLimiter(targetLimiterName).getRateLimiterConfig();
+        rateLimiterRegistry.replace(targetLimiterName, RateLimiter.of(targetLimiterName, targetLimiterConfig));
+
         RateLimiter rateLimiter = rateLimiterRegistry.rateLimiter(RATE_LIMITER_FEIGN_CLIENT_NAME);
         assertThat(rateLimiter).isNotNull();
-        await()
-                .atMost(2, SECONDS)
-                .until(() -> rateLimiter.getMetrics().getAvailablePermissions() == 10);
 
         try {
             rateLimiterDummyFeignClient.doSomething("error");
@@ -114,7 +115,7 @@ public class RateLimiterAutoConfigurationTest {
         ResponseEntity<RateLimiterEndpointResponse> rateLimiterList = restTemplate
                 .getForEntity("/actuator/ratelimiters", RateLimiterEndpointResponse.class);
 
-        assertThat(rateLimiterList.getBody().getRateLimiters()).hasSize(3).containsExactly("backendA", "backendB", "rateLimiterDummyFeignClient");
+        assertThat(rateLimiterList.getBody().getRateLimiters()).containsExactly("backendA", "backendB", "rateLimiterDummyFeignClient");
 
         try {
             for (int i = 0; i < 11; i++) {
@@ -132,11 +133,7 @@ public class RateLimiterAutoConfigurationTest {
         RateLimiterEventDTO lastEvent = eventsList.get(eventsList.size() - 1);
         assertThat(lastEvent.getType()).isEqualTo(RateLimiterEvent.Type.FAILED_ACQUIRE);
 
-        await()
-                .atMost(2, SECONDS)
-                .until(() -> rateLimiter.getMetrics().getAvailablePermissions() == 10);
-
-
+        rateLimiterRegistry.replace(targetLimiterName, RateLimiter.of(targetLimiterName, targetLimiterConfig));
         assertThat(rateLimiterAspect.getOrder()).isEqualTo(401);
     }
 
@@ -149,12 +146,11 @@ public class RateLimiterAutoConfigurationTest {
         assertThat(rateLimiterRegistry).isNotNull();
         assertThat(rateLimiterProperties).isNotNull();
 
+        String targetLimiterName = DummyService.BACKEND;
+        RateLimiterConfig targetLimiterConfig = rateLimiterRegistry.rateLimiter(targetLimiterName).getRateLimiterConfig();
+        rateLimiterRegistry.replace(targetLimiterName, RateLimiter.of(targetLimiterName, targetLimiterConfig));
         RateLimiter rateLimiter = rateLimiterRegistry.rateLimiter(DummyService.BACKEND);
         assertThat(rateLimiter).isNotNull();
-        rateLimiter.acquirePermission();
-        await()
-                .atMost(2, SECONDS)
-                .until(() -> rateLimiter.getMetrics().getAvailablePermissions() == 10);
 
         try {
             dummyService.doSomething(true);
@@ -193,10 +189,7 @@ public class RateLimiterAutoConfigurationTest {
         RateLimiterEventDTO lastEvent = eventsList.get(eventsList.size() - 1);
         assertThat(lastEvent.getType()).isEqualTo(RateLimiterEvent.Type.FAILED_ACQUIRE);
 
-        await()
-                .atMost(2, TimeUnit.SECONDS)
-                .until(() -> rateLimiter.getMetrics().getAvailablePermissions() == 10);
-
+        rateLimiterRegistry.replace(targetLimiterName, RateLimiter.of(targetLimiterName, targetLimiterConfig));
         assertThat(rateLimiterAspect.getOrder()).isEqualTo(401);
     }
 }
