@@ -9,3 +9,4 @@ classes
 .settings
 */bin
 *.orig
+.attach_pid*
