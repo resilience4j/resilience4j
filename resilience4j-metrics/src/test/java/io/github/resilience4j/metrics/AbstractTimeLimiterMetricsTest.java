@@ -33,7 +33,8 @@ public abstract class AbstractTimeLimiterMetricsTest {
     protected static final String FAILED = "failed";
     protected static final String TIMEOUT = "timeout";
 
-    protected MetricRegistry metricRegistry;
+    // fix visibility
+    protected volatile MetricRegistry metricRegistry;
 
     @Before
     public void setUp() {

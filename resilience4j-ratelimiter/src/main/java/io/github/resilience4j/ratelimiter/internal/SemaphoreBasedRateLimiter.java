@@ -127,6 +127,9 @@ public class SemaphoreBasedRateLimiter implements RateLimiter {
         rateLimiterConfig.set(newConfig);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public boolean acquirePermission() {
         try {

@@ -255,3 +255,7 @@ NOTE: Breaking changes:
 * Issue #381: Allow to configure a slow response time threshold. If too many slow calls are recorded the CircuitBreaker opens.
 * Issue #488: Micrometer support for ThreadPoolBulkhead
 * Issue #540: Fixed a bug where IDE did not recognize the auto config properties
+
+== Version 1.1.0
+* Issue #625: Fix reliability and security issues raised by sonar
+* Issue #626: Handle thread interruption consistently in Bulkhead and RateLimiter blocking methods
