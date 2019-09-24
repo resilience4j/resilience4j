@@ -5,6 +5,8 @@ public class MetricNames {
     public static final String SUCCESSFUL = "successful";
     public static final String FAILED = "failed";
     public static final String SLOW = "slow";
+    public static final String SLOW_SUCCESS = "slow_successful";
+    public static final String SLOW_FAILED = "slow_failed";
     public static final String NOT_PERMITTED = "not_permitted";
     public static final String BUFFERED = "buffered";
     public static final String STATE = "state";

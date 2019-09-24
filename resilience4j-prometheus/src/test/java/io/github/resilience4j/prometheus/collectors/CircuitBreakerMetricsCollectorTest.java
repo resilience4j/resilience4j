@@ -114,14 +114,14 @@ public class CircuitBreakerMetricsCollectorTest {
     }
 
     @Test
-    public void slowBufferedCallsReportsCorrespondingValue() {
+    public void slowSuccessfulCallsReportsCorrespondingValue() {
         double slowCalls = registry.getSampleValue(
-                DEFAULT_CIRCUIT_BREAKER_BUFFERED_CALLS,
+                DEFAULT_CIRCUIT_BREAKER_SLOW_CALLS,
                 new String[]{"name", "kind"},
-                new String[]{circuitBreaker.getName(), "slow"}
+                new String[]{circuitBreaker.getName(), "slow_successful"}
         );
 
-        assertThat(slowCalls).isEqualTo(circuitBreaker.getMetrics().getNumberOfSlowCalls());
+        assertThat(slowCalls).isEqualTo(circuitBreaker.getMetrics().getNumberOfSlowSuccessCalls());
     }
 
     @Test
@@ -133,6 +133,17 @@ public class CircuitBreakerMetricsCollectorTest {
         );
 
         assertThat(failedCalls).isEqualTo(circuitBreaker.getMetrics().getNumberOfFailedCalls());
+    }
+
+    @Test
+    public void slowFailedCallsReportsCorrespondingValue() {
+        double slowCalls = registry.getSampleValue(
+                DEFAULT_CIRCUIT_BREAKER_SLOW_CALLS,
+                new String[]{"name", "kind"},
+                new String[]{circuitBreaker.getName(), "slow_failed"}
+        );
+
+        assertThat(slowCalls).isEqualTo(circuitBreaker.getMetrics().getNumberOfSlowFailedCalls());
     }
 
     @Test
@@ -199,7 +210,9 @@ public class CircuitBreakerMetricsCollectorTest {
             custom().callsMetricName("custom_calls")
                     .stateMetricName("custom_state")
                     .bufferedCallsMetricName("custom_buffered_calls")
+                    .slowCallsMetricName("custom_slow_calls")
                     .failureRateMetricName("custom_failure_rate")
+                    .slowCallRateMetricName("custom_slow_rate")
                     .build(),
             circuitBreakerRegistry).register(registry);
 
