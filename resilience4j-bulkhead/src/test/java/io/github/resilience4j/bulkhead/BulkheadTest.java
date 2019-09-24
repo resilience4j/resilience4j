@@ -49,11 +49,11 @@ public class BulkheadTest {
     private BulkheadConfig config;
 
     @Before
-    public void setUp(){
+    public void setUp() {
         helloWorldService = Mockito.mock(HelloWorldService.class);
         config = BulkheadConfig.custom()
-                   .maxConcurrentCalls(1)
-                   .build();
+                .maxConcurrentCalls(1)
+                .build();
     }
 
     @Test
@@ -212,7 +212,9 @@ public class BulkheadTest {
         Bulkhead bulkhead = Bulkhead.of("test", config);
 
         // When
-        CheckedRunnable checkedRunnable = Bulkhead.decorateCheckedRunnable(bulkhead, () -> {throw new RuntimeException("BAM!");});
+        CheckedRunnable checkedRunnable = Bulkhead.decorateCheckedRunnable(bulkhead, () -> {
+            throw new RuntimeException("BAM!");
+        });
         Try<Void> result = Try.run(checkedRunnable);
 
         // Then
@@ -252,12 +254,14 @@ public class BulkheadTest {
 
     @Test
     public void shouldDecorateRunnableAndReturnWithException() throws Throwable {
-      
+
         // Given
         Bulkhead bulkhead = Bulkhead.of("test", config);
 
         // When
-        Runnable runnable = Bulkhead.decorateRunnable(bulkhead, () -> {throw new RuntimeException("BAM!");});
+        Runnable runnable = Bulkhead.decorateRunnable(bulkhead, () -> {
+            throw new RuntimeException("BAM!");
+        });
         Try<Void> result = Try.run(runnable::run);
 
         //Then
@@ -288,7 +292,9 @@ public class BulkheadTest {
         Bulkhead bulkhead = Bulkhead.of("test", config);
 
         // When
-        Consumer<String> consumer = Bulkhead.decorateConsumer(bulkhead, (value) -> {throw new RuntimeException("BAM!");});
+        Consumer<String> consumer = Bulkhead.decorateConsumer(bulkhead, (value) -> {
+            throw new RuntimeException("BAM!");
+        });
         Try<Void> result = Try.run(() -> consumer.accept("Tom"));
 
         // Then
@@ -372,7 +378,7 @@ public class BulkheadTest {
 
         // When
         String result = Bulkhead.decorateCheckedFunction(bulkhead, helloWorldService::returnHelloWorldWithNameWithException)
-                                .apply("Tom");
+                .apply("Tom");
 
         // Then
         assertThat(result).isEqualTo("Hello world Tom");
@@ -388,7 +394,7 @@ public class BulkheadTest {
         BDDMockito.given(helloWorldService.returnHelloWorldWithNameWithException("Tom")).willThrow(new RuntimeException("BAM!"));
 
         // When
-        CheckedFunction1<String, String> function  = Bulkhead.decorateCheckedFunction(bulkhead, helloWorldService::returnHelloWorldWithNameWithException);
+        CheckedFunction1<String, String> function = Bulkhead.decorateCheckedFunction(bulkhead, helloWorldService::returnHelloWorldWithNameWithException);
         Try<String> result = Try.of(() -> function.apply("Tom"));
 
         // Then
@@ -407,7 +413,9 @@ public class BulkheadTest {
         bulkhead.tryAcquirePermission();
 
         // When
-        CheckedRunnable checkedRunnable = Bulkhead.decorateCheckedRunnable(bulkhead, () -> {throw new RuntimeException("BAM!");});
+        CheckedRunnable checkedRunnable = Bulkhead.decorateCheckedRunnable(bulkhead, () -> {
+            throw new RuntimeException("BAM!");
+        });
         Try result = Try.run(checkedRunnable);
 
         //Then
@@ -425,7 +433,9 @@ public class BulkheadTest {
         bulkhead.tryAcquirePermission();
 
         //v When
-        CheckedRunnable checkedRunnable = Bulkhead.decorateCheckedRunnable(bulkhead, () -> {throw new RuntimeException("BAM!");});
+        CheckedRunnable checkedRunnable = Bulkhead.decorateCheckedRunnable(bulkhead, () -> {
+            throw new RuntimeException("BAM!");
+        });
         Try result = Try.run(checkedRunnable);
 
         //Then
@@ -444,7 +454,7 @@ public class BulkheadTest {
         Supplier<String> decoratedSupplier = Bulkhead.decorateSupplier(bulkhead, () -> "This can be any method which returns: 'Hello");
 
         CompletableFuture<String> future = CompletableFuture.supplyAsync(decoratedSupplier)
-                                                            .thenApply(value -> value + " world'");
+                .thenApply(value -> value + " world'");
 
         String result = future.get();
 
@@ -558,10 +568,10 @@ public class BulkheadTest {
 
         // When I create a Supplier and a Function which are decorated by different Bulkheads
         CheckedFunction0<String> decoratedSupplier
-            = Bulkhead.decorateCheckedSupplier(bulkhead, () -> "Hello");
+                = Bulkhead.decorateCheckedSupplier(bulkhead, () -> "Hello");
 
         CheckedFunction1<String, String> decoratedFunction
-            = Bulkhead.decorateCheckedFunction(anotherBulkhead, (input) -> input + " world");
+                = Bulkhead.decorateCheckedFunction(anotherBulkhead, (input) -> input + " world");
 
         // and I chain a function with map
         Try<String> result = Try.of(decoratedSupplier)
@@ -587,7 +597,7 @@ public class BulkheadTest {
 
         // and chain an other function with map
         Try<String> result = Try.of(decoratedSupplier)
-                                .map(value -> value + " world'");
+                .map(value -> value + " world'");
 
         // Then the Try Monad returns a Success<String>, if all functions ran successfully.
         assertThat(result.isSuccess()).isTrue();
@@ -688,6 +698,5 @@ public class BulkheadTest {
         assertThat(result.getLeft()).isInstanceOf(BulkheadFullException.class);
         BDDMockito.then(helloWorldService).should(never()).returnEither();
     }
-
 
 }

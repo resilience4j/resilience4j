@@ -22,6 +22,7 @@ import io.github.resilience4j.core.EventConsumer;
 import io.github.resilience4j.ratelimiter.event.RateLimiterEvent;
 import io.github.resilience4j.ratelimiter.event.RateLimiterOnFailureEvent;
 import io.github.resilience4j.ratelimiter.event.RateLimiterOnSuccessEvent;
+import io.github.resilience4j.core.exception.AcquirePermissionCancelledException;
 import io.github.resilience4j.ratelimiter.internal.AtomicRateLimiter;
 import io.vavr.CheckedFunction0;
 import io.vavr.CheckedFunction1;
@@ -276,12 +277,12 @@ public interface RateLimiter {
 	 *
 	 * @param rateLimiter the RateLimiter to get permission from
 	 * @throws RequestNotPermitted   if waiting time elapsed before a permit was acquired.
-	 * @throws IllegalStateException if thread was interrupted during permission wait
+	 * @throws AcquirePermissionCancelledException if thread was interrupted during permission wait
 	 */
 	static void waitForPermission(final RateLimiter rateLimiter) {
 		boolean permission = rateLimiter.acquirePermission();
-		if (Thread.interrupted()) {
-			throw new IllegalStateException("Thread was interrupted during permission wait");
+		if (Thread.currentThread().isInterrupted()) {
+			throw new AcquirePermissionCancelledException();
 		}
 		if (!permission) {
 			throw RequestNotPermitted.createRequestNotPermitted(rateLimiter);

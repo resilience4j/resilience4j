@@ -31,7 +31,13 @@ public class BulkheadFullException extends RuntimeException {
     public static BulkheadFullException createBulkheadFullException(Bulkhead bulkhead) {
         boolean writableStackTraceEnabled = bulkhead.getBulkheadConfig().isWritableStackTraceEnabled();
 
-        String message = String.format("Bulkhead '%s' is full and does not permit further calls", bulkhead.getName());
+        String message;
+        if (Thread.currentThread().isInterrupted()) {
+            message = String.format("Bulkhead '%s' is full and thread was interrupted during permission wait",
+                    bulkhead.getName());
+        } else {
+            message = String.format("Bulkhead '%s' is full and does not permit further calls", bulkhead.getName());
+        }
 
         return new BulkheadFullException(message, writableStackTraceEnabled);
     }

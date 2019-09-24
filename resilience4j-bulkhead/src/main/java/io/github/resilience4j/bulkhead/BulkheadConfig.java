@@ -18,23 +18,28 @@
  */
 package io.github.resilience4j.bulkhead;
 
+import javax.annotation.concurrent.Immutable;
 import java.time.Duration;
 
 /**
  * A {@link BulkheadConfig} configures a {@link Bulkhead}
  */
+@Immutable
 public class BulkheadConfig {
 
 	public static final int DEFAULT_MAX_CONCURRENT_CALLS = 25;
 	public static final Duration DEFAULT_MAX_WAIT_DURATION = Duration.ofSeconds(0);
 	public static final boolean DEFAULT_WRITABLE_STACK_TRACE_ENABLED = true;
 
-	private int maxConcurrentCalls = DEFAULT_MAX_CONCURRENT_CALLS;
-	private Duration maxWaitDuration= DEFAULT_MAX_WAIT_DURATION;
-	private boolean writableStackTraceEnabled = DEFAULT_WRITABLE_STACK_TRACE_ENABLED;
+	private final int maxConcurrentCalls;
+	private final Duration maxWaitDuration;
+	private final boolean writableStackTraceEnabled;
 
-	private BulkheadConfig() {
-	}
+    private BulkheadConfig(int maxConcurrentCalls, Duration maxWaitDuration, boolean writableStackTraceEnabled) {
+        this.maxConcurrentCalls = maxConcurrentCalls;
+        this.maxWaitDuration = maxWaitDuration;
+        this.writableStackTraceEnabled = writableStackTraceEnabled;
+    }
 
 	/**
 	 * Returns a builder to create a custom BulkheadConfig.
@@ -76,14 +81,20 @@ public class BulkheadConfig {
 	}
 
 	public static class Builder {
-
-		private BulkheadConfig config = new BulkheadConfig();
+        private int maxConcurrentCalls;
+        private Duration maxWaitDuration;
+        private boolean writableStackTraceEnabled;
 
 		public Builder() {
+            this.maxConcurrentCalls = DEFAULT_MAX_CONCURRENT_CALLS;
+            this.maxWaitDuration = DEFAULT_MAX_WAIT_DURATION;
+            this.writableStackTraceEnabled = DEFAULT_WRITABLE_STACK_TRACE_ENABLED;
 		}
 
 		public Builder(BulkheadConfig bulkheadConfig) {
-			this.config = bulkheadConfig;
+            this.maxConcurrentCalls = bulkheadConfig.getMaxConcurrentCalls();
+            this.maxWaitDuration = bulkheadConfig.getMaxWaitDuration();
+            this.writableStackTraceEnabled = bulkheadConfig.isWritableStackTraceEnabled();
 		}
 
 		/**
@@ -96,7 +107,7 @@ public class BulkheadConfig {
 			if (maxConcurrentCalls < 0) {
 				throw new IllegalArgumentException("maxConcurrentCalls must be an integer value >= 0");
 			}
-			config.maxConcurrentCalls = maxConcurrentCalls;
+			this.maxConcurrentCalls = maxConcurrentCalls;
 			return this;
 		}
 
@@ -114,7 +125,7 @@ public class BulkheadConfig {
 			if (maxWaitDuration.toMillis() < 0) {
 				throw new IllegalArgumentException("maxWaitDuration must be a positive integer value >= 0");
 			}
-			config.maxWaitDuration = maxWaitDuration;
+			this.maxWaitDuration = maxWaitDuration;
 			return this;
 		}
 
@@ -127,7 +138,7 @@ public class BulkheadConfig {
 		 * @return the BulkheadConfig.Builder
 		 */
 		public Builder writableStackTraceEnabled(boolean writableStackTraceEnabled) {
-			config.writableStackTraceEnabled = writableStackTraceEnabled;
+			this.writableStackTraceEnabled = writableStackTraceEnabled;
 			return this;
 		}
 
@@ -137,7 +148,7 @@ public class BulkheadConfig {
 		 * @return the BulkheadConfig
 		 */
 		public BulkheadConfig build() {
-			return config;
+			return new BulkheadConfig(maxConcurrentCalls, maxWaitDuration, writableStackTraceEnabled);
 		}
 	}
 }
