@@ -121,7 +121,7 @@ public class CircuitBreakerMetricsCollectorTest {
                 new String[]{circuitBreaker.getName(), "slow_successful"}
         );
 
-        assertThat(slowCalls).isEqualTo(circuitBreaker.getMetrics().getNumberOfSlowSuccessCalls());
+        assertThat(slowCalls).isEqualTo(circuitBreaker.getMetrics().getNumberOfSlowSuccessfulCalls());
     }
 
     @Test

@@ -192,8 +192,8 @@ class CircuitBreakerMetrics implements CircuitBreaker.Metrics {
     }
 
     @Override
-    public int getNumberOfSlowSuccessCalls() {
-        return this.metrics.getSnapshot().getNumberOfSlowSuccessCalls();
+    public int getNumberOfSlowSuccessfulCalls() {
+        return this.metrics.getSnapshot().getNumberOfSlowSuccessfulCalls();
     }
 
     @Override

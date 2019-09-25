@@ -61,7 +61,7 @@ abstract class AbstractCircuitBreakerMetrics extends AbstractMetrics {
                 .tag(TagNames.NAME, circuitBreaker.getName())
                 .tag(TagNames.KIND, KIND_SUCCESSFUL)
                 .register(meterRegistry).getId());
-        idSet.add(Gauge.builder(names.getSlowCallsMetricName(), circuitBreaker, cb -> cb.getMetrics().getNumberOfSlowSuccessCalls())
+        idSet.add(Gauge.builder(names.getSlowCallsMetricName(), circuitBreaker, cb -> cb.getMetrics().getNumberOfSlowSuccessfulCalls())
                 .description("The number of slow successful which were slower than a certain threshold")
                 .tag(TagNames.NAME, circuitBreaker.getName())
                 .tag(TagNames.KIND, KIND_SLOW_SUCCESSFUL)

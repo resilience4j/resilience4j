@@ -47,7 +47,7 @@ public class FixedSizeSlidingWindowMetricsTest {
         assertThat(snapshot.getNumberOfSuccessfulCalls()).isEqualTo(1);
         assertThat(snapshot.getNumberOfFailedCalls()).isEqualTo(0);
         assertThat(snapshot.getTotalNumberOfSlowCalls()).isEqualTo(0);
-        assertThat(snapshot.getNumberOfSlowSuccessCalls()).isEqualTo(0);
+        assertThat(snapshot.getNumberOfSlowSuccessfulCalls()).isEqualTo(0);
         assertThat(snapshot.getNumberOfSlowFailedCalls()).isEqualTo(0);
         assertThat(snapshot.getTotalDuration().toMillis()).isEqualTo(100);
         assertThat(snapshot.getAverageDuration().toMillis()).isEqualTo(100);
@@ -63,7 +63,7 @@ public class FixedSizeSlidingWindowMetricsTest {
         assertThat(snapshot.getNumberOfSuccessfulCalls()).isEqualTo(0);
         assertThat(snapshot.getNumberOfFailedCalls()).isEqualTo(1);
         assertThat(snapshot.getTotalNumberOfSlowCalls()).isEqualTo(0);
-        assertThat(snapshot.getNumberOfSlowSuccessCalls()).isEqualTo(0);
+        assertThat(snapshot.getNumberOfSlowSuccessfulCalls()).isEqualTo(0);
         assertThat(snapshot.getNumberOfSlowFailedCalls()).isEqualTo(0);
         assertThat(snapshot.getTotalDuration().toMillis()).isEqualTo(100);
         assertThat(snapshot.getAverageDuration().toMillis()).isEqualTo(100);
@@ -79,7 +79,7 @@ public class FixedSizeSlidingWindowMetricsTest {
         assertThat(snapshot.getNumberOfSuccessfulCalls()).isEqualTo(1);
         assertThat(snapshot.getNumberOfFailedCalls()).isEqualTo(0);
         assertThat(snapshot.getTotalNumberOfSlowCalls()).isEqualTo(1);
-        assertThat(snapshot.getNumberOfSlowSuccessCalls()).isEqualTo(1);
+        assertThat(snapshot.getNumberOfSlowSuccessfulCalls()).isEqualTo(1);
         assertThat(snapshot.getNumberOfSlowFailedCalls()).isEqualTo(0);
         assertThat(snapshot.getTotalDuration().toMillis()).isEqualTo(100);
         assertThat(snapshot.getAverageDuration().toMillis()).isEqualTo(100);
@@ -100,7 +100,7 @@ public class FixedSizeSlidingWindowMetricsTest {
         assertThat(snapshot.getTotalNumberOfCalls()).isEqualTo(5);
         assertThat(snapshot.getNumberOfSuccessfulCalls()).isEqualTo(4);
         assertThat(snapshot.getTotalNumberOfSlowCalls()).isEqualTo(2);
-        assertThat(snapshot.getNumberOfSlowSuccessCalls()).isEqualTo(1);
+        assertThat(snapshot.getNumberOfSlowSuccessfulCalls()).isEqualTo(1);
         assertThat(snapshot.getNumberOfSlowFailedCalls()).isEqualTo(1);
         assertThat(snapshot.getTotalDuration().toMillis()).isEqualTo(20300);
         assertThat(snapshot.getAverageDuration().toMillis()).isEqualTo(4060);

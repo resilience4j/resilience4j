@@ -48,7 +48,7 @@ public interface Snapshot {
      *
      * @return the current number of successful calls which were slower than a certain threshold
      */
-    int getNumberOfSlowSuccessCalls();
+    int getNumberOfSlowSuccessfulCalls();
 
     /**
      * Returns the current number of failed calls which were slower than a certain threshold.

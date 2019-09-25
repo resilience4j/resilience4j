@@ -132,7 +132,7 @@ public class TaggedCircuitBreakerMetricsPublisherTest {
 
         Optional<Gauge> slow = findGaugeByKindAndNameTags(gauges, "slow_successful", circuitBreaker.getName());
         assertThat(slow).isPresent();
-        assertThat(slow.get().value()).isEqualTo(circuitBreaker.getMetrics().getNumberOfSlowSuccessCalls());
+        assertThat(slow.get().value()).isEqualTo(circuitBreaker.getMetrics().getNumberOfSlowSuccessfulCalls());
     }
 
     @Test

@@ -48,7 +48,7 @@ public class SnapshotImpl implements Snapshot {
     }
 
     @Override
-    public int getNumberOfSlowSuccessCalls() {
+    public int getNumberOfSlowSuccessfulCalls() {
         return totalNumberOfSlowCalls - totalNumberOfSlowFailedCalls;
     }
 

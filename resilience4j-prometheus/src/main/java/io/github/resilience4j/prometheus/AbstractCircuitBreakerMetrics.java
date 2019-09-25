@@ -98,7 +98,7 @@ public abstract class AbstractCircuitBreakerMetrics extends Collector {
             CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
             bufferedCallsFamily.addMetric(asList(circuitBreaker.getName(), KIND_SUCCESSFUL), metrics.getNumberOfSuccessfulCalls());
             bufferedCallsFamily.addMetric(asList(circuitBreaker.getName(), KIND_FAILED), metrics.getNumberOfFailedCalls());
-            slowCallsFamily.addMetric(asList(circuitBreaker.getName(), KIND_SLOW_SUCCESSFUL), metrics.getNumberOfSlowSuccessCalls());
+            slowCallsFamily.addMetric(asList(circuitBreaker.getName(), KIND_SLOW_SUCCESSFUL), metrics.getNumberOfSlowSuccessfulCalls());
             slowCallsFamily.addMetric(asList(circuitBreaker.getName(), KIND_SLOW_FAILED), metrics.getNumberOfSlowFailedCalls());
             failureRateFamily.addMetric(nameLabel, metrics.getFailureRate());
             slowCallRateFamily.addMetric(nameLabel, metrics.getSlowCallRate());
