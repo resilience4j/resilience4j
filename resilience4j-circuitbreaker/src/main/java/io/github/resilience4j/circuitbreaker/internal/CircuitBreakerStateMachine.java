@@ -653,11 +653,13 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
 
         private CircuitBreakerMetrics circuitBreakerMetrics;
         private final AtomicInteger permittedNumberOfCalls;
+        private final AtomicBoolean isHalfOpen;
 
         HalfOpenState() {
             int permittedNumberOfCallsInHalfOpenState = circuitBreakerConfig.getPermittedNumberOfCallsInHalfOpenState();
             this.circuitBreakerMetrics = CircuitBreakerMetrics.forHalfOpen(permittedNumberOfCallsInHalfOpenState, getCircuitBreakerConfig());
             this.permittedNumberOfCalls = new AtomicInteger(permittedNumberOfCallsInHalfOpenState);
+            this.isHalfOpen = new AtomicBoolean(true);
         }
 
         /**
@@ -709,10 +711,14 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
          */
         private void checkIfThresholdsExceeded(Result result) {
             if(result == ABOVE_THRESHOLDS){
-                transitionToOpenState();
+                if(isHalfOpen.compareAndSet(true, false)){
+                    transitionToOpenState();
+                }
             }
             if(result == BELOW_THRESHOLDS){
-                transitionToClosedState();
+                if(isHalfOpen.compareAndSet(true, false)){
+                    transitionToClosedState();
+                }
             }
         }
 
