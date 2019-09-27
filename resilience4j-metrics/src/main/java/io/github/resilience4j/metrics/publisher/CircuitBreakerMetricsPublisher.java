@@ -54,6 +54,8 @@ public class CircuitBreakerMetricsPublisher extends AbstractMetricsPublisher<Cir
         String successful = name(prefix, name, SUCCESSFUL);
         String failed = name(prefix, name, FAILED);
         String slow = name(prefix, name, SLOW);
+        String slowSuccess = name(prefix, name, SLOW_SUCCESS);
+        String slowFailed = name(prefix, name, SLOW_FAILED);
         String notPermitted = name(prefix, name, NOT_PERMITTED);
         String numberOfBufferedCalls = name(prefix, name, BUFFERED);
         String failureRate = name(prefix, name, FAILURE_RATE);
@@ -63,6 +65,8 @@ public class CircuitBreakerMetricsPublisher extends AbstractMetricsPublisher<Cir
         metricRegistry.register(successful, (Gauge<Integer>) () -> circuitBreaker.getMetrics().getNumberOfSuccessfulCalls());
         metricRegistry.register(failed, (Gauge<Integer>) () -> circuitBreaker.getMetrics().getNumberOfFailedCalls());
         metricRegistry.register(slow, (Gauge<Integer>) () -> circuitBreaker.getMetrics().getNumberOfSlowCalls());
+        metricRegistry.register(slowSuccess, (Gauge<Integer>) () -> circuitBreaker.getMetrics().getNumberOfSlowCalls());
+        metricRegistry.register(slowFailed, (Gauge<Integer>) () -> circuitBreaker.getMetrics().getNumberOfSlowFailedCalls());
         metricRegistry.register(notPermitted, (Gauge<Long>) () -> circuitBreaker.getMetrics().getNumberOfNotPermittedCalls());
         metricRegistry.register(numberOfBufferedCalls, (Gauge<Integer>) () -> circuitBreaker.getMetrics().getNumberOfBufferedCalls());
         metricRegistry.register(failureRate, (Gauge<Float>) () -> circuitBreaker.getMetrics().getFailureRate());

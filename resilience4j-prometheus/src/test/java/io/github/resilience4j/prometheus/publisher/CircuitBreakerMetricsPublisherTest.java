@@ -23,6 +23,7 @@ import io.prometheus.client.CollectorRegistry;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 
 import static io.github.resilience4j.prometheus.AbstractCircuitBreakerMetrics.MetricNames.*;
@@ -41,10 +42,14 @@ public class CircuitBreakerMetricsPublisherTest {
         circuitBreakerMetricsPublisher = new CircuitBreakerMetricsPublisher();
         circuitBreakerMetricsPublisher.register(registry);
         circuitBreakerRegistry = CircuitBreakerRegistry.of(CircuitBreakerConfig.ofDefaults(), circuitBreakerMetricsPublisher);
-        circuitBreaker = circuitBreakerRegistry.circuitBreaker("backendA");
+
+        CircuitBreakerConfig configWithSlowCallThreshold = CircuitBreakerConfig.custom()
+                .slowCallDurationThreshold(Duration.ofSeconds(1)).build();
+        circuitBreaker = circuitBreakerRegistry.circuitBreaker("backendA", configWithSlowCallThreshold);
 
         // record some basic stats
-        circuitBreaker.onSuccess(100, TimeUnit.NANOSECONDS);
+        // SLOW_SUCCESS
+        circuitBreaker.onSuccess(2000, TimeUnit.NANOSECONDS);
         circuitBreaker.onError(100, TimeUnit.NANOSECONDS, new RuntimeException("oops"));
         circuitBreaker.transitionToOpenState();
     }
@@ -88,12 +93,12 @@ public class CircuitBreakerMetricsPublisherTest {
                 new String[]{name, circuitBreaker.getState().name().toLowerCase()}
         )).isNull();
 
-        circuitBreakerRegistry.circuitBreaker(name);
+        CircuitBreaker newlyAddedCircuitBreaker = circuitBreakerRegistry.circuitBreaker(name);
 
         double state = registry.getSampleValue(
                 DEFAULT_CIRCUIT_BREAKER_STATE,
                 new String[]{"name", "state"},
-                new String[]{circuitBreaker.getName(), circuitBreaker.getState().name().toLowerCase()}
+                new String[]{name, newlyAddedCircuitBreaker.getState().name().toLowerCase()}
         );
 
         assertThat(state).isEqualTo(1);
@@ -108,6 +113,28 @@ public class CircuitBreakerMetricsPublisherTest {
         );
 
         assertThat(successfulCalls).isEqualTo(circuitBreaker.getMetrics().getNumberOfSuccessfulCalls());
+    }
+
+    @Test
+    public void slowSuccessCallsReportsCorrespondingValue() {
+        double slowCalls = registry.getSampleValue(
+                DEFAULT_CIRCUIT_BREAKER_SLOW_CALLS,
+                new String[]{"name", "kind"},
+                new String[]{circuitBreaker.getName(), "slow_successful"}
+        );
+
+        assertThat(slowCalls).isEqualTo(circuitBreaker.getMetrics().getNumberOfSlowSuccessfulCalls());
+    }
+
+    @Test
+    public void slowFailedCallsReportsCorrespondingValue() {
+        double slowCalls = registry.getSampleValue(
+                DEFAULT_CIRCUIT_BREAKER_SLOW_CALLS,
+                new String[]{"name", "kind"},
+                new String[]{circuitBreaker.getName(), "slow_failed"}
+        );
+
+        assertThat(slowCalls).isEqualTo(circuitBreaker.getMetrics().getNumberOfSlowFailedCalls());
     }
 
     @Test
@@ -181,11 +208,12 @@ public class CircuitBreakerMetricsPublisherTest {
     public void customMetricNamesOverrideDefaultOnes() {
         CollectorRegistry registry = new CollectorRegistry();
         CircuitBreakerMetricsPublisher circuitBreakerMetricsPublisher = new CircuitBreakerMetricsPublisher(
-                CircuitBreakerMetricsPublisher.MetricNames.custom()
-                        .callsMetricName("custom_calls")
+                custom().callsMetricName("custom_calls")
                         .stateMetricName("custom_state")
+                        .slowCallsMetricName("custom_slow_calls")
                         .bufferedCallsMetricName("custom_buffered_calls")
                         .failureRateMetricName("custom_failure_rate")
+                        .slowCallRateMetricName("custom_slow_rate")
                         .build()
         );
         circuitBreakerMetricsPublisher.register(registry);

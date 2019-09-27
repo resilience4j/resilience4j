@@ -24,6 +24,7 @@ class AbstractAggregation {
 
     long totalDurationInMillis = 0;
     int numberOfSlowCalls = 0;
+    int numberOfSlowFailedCalls = 0;
     int numberOfFailedCalls = 0;
     int numberOfCalls = 0;
 
@@ -35,7 +36,7 @@ class AbstractAggregation {
             case SLOW_SUCCESS: numberOfSlowCalls++;
                 break;
 
-            case SLOW_ERROR: numberOfSlowCalls++; numberOfFailedCalls++;
+            case SLOW_ERROR: numberOfSlowCalls++; numberOfFailedCalls++; numberOfSlowFailedCalls++;
                 break;
 
             case ERROR: numberOfFailedCalls++;
