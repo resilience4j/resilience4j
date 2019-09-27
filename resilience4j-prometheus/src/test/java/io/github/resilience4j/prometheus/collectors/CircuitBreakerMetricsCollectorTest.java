@@ -118,7 +118,7 @@ public class CircuitBreakerMetricsCollectorTest {
         double slowCalls = registry.getSampleValue(
                 DEFAULT_CIRCUIT_BREAKER_SLOW_CALLS,
                 new String[]{"name", "kind"},
-                new String[]{circuitBreaker.getName(), "slow_successful"}
+                new String[]{circuitBreaker.getName(), "successful"}
         );
 
         assertThat(slowCalls).isEqualTo(circuitBreaker.getMetrics().getNumberOfSlowSuccessfulCalls());
@@ -140,7 +140,7 @@ public class CircuitBreakerMetricsCollectorTest {
         double slowCalls = registry.getSampleValue(
                 DEFAULT_CIRCUIT_BREAKER_SLOW_CALLS,
                 new String[]{"name", "kind"},
-                new String[]{circuitBreaker.getName(), "slow_failed"}
+                new String[]{circuitBreaker.getName(), "failed"}
         );
 
         assertThat(slowCalls).isEqualTo(circuitBreaker.getMetrics().getNumberOfSlowFailedCalls());

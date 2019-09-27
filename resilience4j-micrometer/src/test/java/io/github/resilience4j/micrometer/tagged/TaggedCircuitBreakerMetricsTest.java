@@ -130,7 +130,7 @@ public class TaggedCircuitBreakerMetricsTest {
     public void slowSuccessfulGaugeReportsCorrespondingValue() {
         Collection<Gauge> gauges = meterRegistry.get(DEFAULT_CIRCUIT_BREAKER_SLOW_CALLS).gauges();
 
-        Optional<Gauge> slow = findGaugeByKindAndNameTags(gauges, "slow_successful", circuitBreaker.getName());
+        Optional<Gauge> slow = findGaugeByKindAndNameTags(gauges, "successful", circuitBreaker.getName());
         assertThat(slow).isPresent();
         assertThat(slow.get().value()).isEqualTo(circuitBreaker.getMetrics().getNumberOfSlowCalls());
 
@@ -140,7 +140,7 @@ public class TaggedCircuitBreakerMetricsTest {
     public void slowFailedCallsGaugeReportsCorrespondingValue() {
         Collection<Gauge> gauges = meterRegistry.get(DEFAULT_CIRCUIT_BREAKER_SLOW_CALLS).gauges();
 
-        Optional<Gauge> slow = findGaugeByKindAndNameTags(gauges, "slow_failed", circuitBreaker.getName());
+        Optional<Gauge> slow = findGaugeByKindAndNameTags(gauges, "failed", circuitBreaker.getName());
         assertThat(slow).isPresent();
         assertThat(slow.get().value()).isEqualTo(circuitBreaker.getMetrics().getNumberOfSlowCalls());
     }
