@@ -2,10 +2,14 @@
 :author: Robert Winkler and Bohdan Storozhuk
 :hardbreaks:
 :icons:
+:toc: macro
+:numbered: 1
 
 image:https://travis-ci.org/resilience4j/resilience4j.svg?branch=master["Build Status", link="https://travis-ci.org/resilience4j/resilience4j"] image:https://dev.azure.com/resilience4j/resilience4j/_apis/build/status/resilience4j.resilience4j?branchName=master["Build Status", link="https://dev.azure.com/resilience4j/resilience4j/_build/latest?definitionId=1&branchName=master"] image:https://api.bintray.com/packages/resilience4j/Maven/resilience4j/images/download.svg[link="https://bintray.com/resilience4j/Maven/resilience4j/_latestVersion"] image:http://img.shields.io/badge/license-ASF2-blue.svg["Apache License 2", link="http://www.apache.org/licenses/LICENSE-2.0.txt"]
 
 image:https://sonarcloud.io/api/project_badges/measure?project=resilience4j_resilience4j&metric=bugs["Bugs", link="https://sonarcloud.io/dashboard?id=resilience4j_resilience4j"] image:https://sonarcloud.io/api/project_badges/measure?project=resilience4j_resilience4j&metric=vulnerabilities["Vulnerabilities", link="https://sonarcloud.io/dashboard?id=resilience4j_resilience4j"] image:https://sonarcloud.io/api/project_badges/measure?project=resilience4j_resilience4j&metric=coverage["Coverage", link="https://sonarcloud.io/dashboard?id=resilience4j_resilience4j"] image:https://sonarcloud.io/api/project_badges/measure?project=resilience4j_resilience4j&metric=sqale_rating["Maintainability", link="https://sonarcloud.io/dashboard?id=resilience4j_resilience4j"] image:https://sonarcloud.io/api/project_badges/measure?project=resilience4j_resilience4j&metric=reliability_rating["Reliability", link="https://sonarcloud.io/dashboard?id=resilience4j_resilience4j"] image:https://sonarcloud.io/api/project_badges/measure?project=resilience4j_resilience4j&metric=security_rating["Security", link="https://sonarcloud.io/dashboard?id=resilience4j_resilience4j"]
+
+toc::[]
 
 == Introduction
 
@@ -46,11 +50,11 @@ Resilience4j provides several core modules and add-on modules:
 * resilience4j-ratelimiter: Rate limiting
 * resilience4j-bulkhead: Bulkheading
 * resilience4j-retry: Automatic retrying (sync and async)
+* resilience4j-timelimiter: Timeout handling
+* resilience4j-cache: Result caching
 
 === Add-on modules
 
-* resilience4j-cache: Result caching
-* resilience4j-timelimiter: Timeout handling
 * resilience4j-retrofit: Retrofit adapter
 * resilience4j-feign: Feign adapter
 * resilience4j-consumer: Circular Buffer Event consumer
@@ -60,6 +64,8 @@ Resilience4j provides several core modules and add-on modules:
 
 * resilience4j-spring-boot: Spring Boot Starter
 * resilience4j-spring-boot2: Spring Boot 2 Starter
+* resilience4j-spring-boot-cloud: Spring Cloud Config Server
+* resilience4j-spring-boot-cloud2: Spring Cloud 2 Config Server
 * resilience4j-ratpack: Ratpack Starter
 * resilience4j-vertx: Vertx Future decorator
 
@@ -78,72 +84,76 @@ Resilience4j provides several core modules and add-on modules:
 
 [options="header"]
 |===
-|Name |Links |Premise |Slogan |How does it mitigate?
+|name |how does it work? | description |slogans |links
 
 |*Retry*
-|<<circuitbreaker,overview>>, https://resilience4j.readme.io/docs/retry[documentation]
+|repeats failed executions
 |Many faults are transient and may self-correct after a short delay.
-|"Maybe it’s just a blip"
-|Allows configuring automatic retries.
+|"Insert coin to try again",
+"Maybe it’s just a blip"
+|<<circuitbreaker-retry-fallback,overview>>,
+https://resilience4j.readme.io/docs/retry[documentation]
 
 |**Circuit Breaker**
-|<<circuitbreaker,overview>>,  https://resilience4j.readme.io/docs/circuitbreaker[documentation]
-|When a system is seriously struggling, failing fast is better than making users/callers wait.
-Protecting a faulting system from overload can help it recover.
+|temporary blocks possible failures
+|When a system is seriously struggling, failing fast is better than making clients wait.
 |"Stop doing it if it hurts",
-"Give that system a break"
-|Breaks the circuit (blocks executions) for a period, when faults exceed some pre-configured threshold.
+"Give that system a break",
+"Baby, don't hurt me, no more"
+|<<circuitbreaker-retry-fallback,overview>>,
+https://resilience4j.readme.io/docs/circuitbreaker[documentation],
+link:resilience4j-feign/README.adoc[Feign],
+link:resilience4j-retrofit/README.adoc[Retrofit]
 
-//|**Rate Limiter**
-//|<<bulkhead,overview>>, https://resilience4j.readme.io/docs/ratelimiter[documentation]
-//|
-//|"Well, it'll work next time"
-//|
+|**Rate Limiter**
+| limits executions/period
+| Prepare for a scale and establish reliability and HA of your service.
+|"That's enough for this minute!",
+"Well, it'll work next time"
+|<<bulkhead,overview>>,
+https://resilience4j.readme.io/docs/ratelimiter[documentation],
+link:resilience4j-feign/README.adoc[Feign],
+link:resilience4j-retrofit/README.adoc[Retrofit]
 
 |**Time Limiter**
-|
+|limits duration of execution
 |Beyond a certain wait, a success result is unlikely.
 |"Don’t wait forever"
-|Guarantees the caller won’t have to wait beyond the timeout.
+|
 
 |**Bulkhead**
-| <<bulkhead,overview>>, https://resilience4j.readme.io/docs/bulkhead[documentation]
-| When a process faults, multiple failing calls backing up can easily swamp resource (eg. threads/CPU) in a host.
-A faulting downstream system can also cause `backed-up' failing calls upstream.
-Both risk a faulting process bringing down a wider system.
-|"One fault shouldn’t sink the whole ship"
-|Constrains the governed actions to a fixed-size resource pool, isolating their potential to affect others.
+|limits concurrent executions
+| Resources are isolated into pools so that if one fails, the others will continue.
+|"One fault shouldn’t sink the whole ship",
+"Please, please, not all at once."
+| <<bulkhead,overview>>,
+https://resilience4j.readme.io/docs/bulkhead[documentation]
 
 |**Cache**
-|
+|memorizes a successful result
 | Some proportion of requests may be similar.
 |"You’ve asked that one before"
-|Provides a response from cache if known.
-Stores responses automatically in cache, when first retrieved.
+|
 
 |**Fallback**
-|<<circuitbreaker,overview>>
+|provides an alternative result for failures
 |Things will still fail - plan what you will do when that happens.
-|"Degrade gracefully"
-|Defines an alternative value to be returned (or action to be executed) on failure.
+|"Degrade gracefully",
+"A bird in the hand is worth two in the bush"
+|<<circuitbreaker-retry-fallback,Try::recover>>,
+link:resilience4j-feign/README.adoc[Feign]
 
 |===
 
-Above table was based on https://github.com/App-vNext/Polly#resilience-policies[Polly: resilience policies].
+Above table is based on https://github.com/App-vNext/Polly#resilience-policies[Polly: resilience policies].
 
-== Spring Boot demo
+== Spring Boot
 
 Setup and usage in Spring Boot 2 is demonstrated https://github.com/resilience4j/resilience4j-spring-boot2-demo[here].
 
 == Usage examples
 
-* <<circuitbreaker>>
-* <<ratelimiter>>
-* <<bulkhead>>
-* <<threadpoolbulkhead>>
-* <<events>>
-
-[[circuitbreaker]]
+[[circuitbreaker-retry-fallback]]
 === CircuitBreaker, Retry and Fallback
 
 The following example shows how to decorate a lambda expression (Supplier) with a CircuitBreaker and how to retry the call at most 3 times when an exception occurs.
@@ -179,7 +189,7 @@ String result = Try.ofSupplier(decoratedSupplier)
 String result = circuitBreaker.executeSupplier(backendService::doSomething);
 ----
 
-=== CircuitBreaker and RxJava2
+==== CircuitBreaker and RxJava2
 
 The following example shows how to decorate an Observable by using the custom RxJava operator.
 
@@ -190,9 +200,9 @@ Observable.fromCallable(backendService::doSomething)
     .compose(CircuitBreakerOperator.of(circuitBreaker))
 ----
 
-NOTE: Resilience4j also provides RxJava operators for `RateLimiter`, `Bulkhead` and `Retry`. Find out more in our *https://resilience4j.readme.io/docs/getting-started-2[User Guide]*
+NOTE: Resilience4j also provides RxJava operators for `RateLimiter`, `Bulkhead`, `TimeLimiter` and `Retry`. Find out more in our *https://resilience4j.readme.io/docs/getting-started-2[User Guide]*
 
-=== CircuitBreaker and Reactor
+==== CircuitBreaker and Spring Reactor
 
 The following example shows how to decorate a Mono by using the custom Reactor operator.
 
@@ -204,7 +214,7 @@ Mono.fromCallable(backendService::doSomething)
 ----
 
 
-NOTE: Resilience4j also provides Reactor operators for `RateLimiter`, `Bulkhead` and `Retry`. Find out more in our *https://resilience4j.readme.io/docs/getting-started-1[User Guide]*
+NOTE: Resilience4j also provides Reactor operators for `RateLimiter`, `Bulkhead`, `TimeLimiter` and `Retry`. Find out more in our *https://resilience4j.readme.io/docs/getting-started-1[User Guide]*
 
 [[ratelimiter]]
 === RateLimiter
@@ -238,6 +248,9 @@ assertThat(secondTry.getCause()).isInstanceOf(RequestNotPermitted.class);
 
 [[bulkhead]]
 === Bulkhead
+There are two isolation strategies and bulkhead implementations.
+
+==== SemaphoreBulkhead
 The following example shows how to decorate a lambda expression with a Bulkhead. A Bulkhead can be used to limit the amount of parallel executions. This bulkhead abstraction should work well across a variety of threading and io models. It is based on a semaphore, and unlike Hystrix, does not provide "shadow" thread pool option.
 
 [source,java]
@@ -255,7 +268,7 @@ Supplier<String> supplier = Bulkhead
 ----
 
 [[threadpoolbulkhead]]
-=== ThreadPoolBulkhead
+==== ThreadPoolBulkhead
 The following example shows how to use a lambda expression with a ThreadPoolBulkhead which uses a bounded queue and a fixed thread pool.
 
 [source,java]
@@ -280,9 +293,9 @@ CompletionStage<String> execution = bulkhead
 [[events]]
 == Consume emitted events
 
-`CircuitBreaker`, `RateLimiter`, `Cache` and `Retry` components emit a stream of events which can be consumed.
+`CircuitBreaker`, `RateLimiter`, `Cache`, `Bulkhead`, `TimeLimiter` and `Retry` components emit a stream of events. It can be consumed for logging, assertions and any other purpose.
 
-`CircuitBreaker` example below:
+=== Examples
 
 A `CircuitBreakerEvent` can be a state transition, a circuit breaker reset, a successful call, a recorded error or an ignored error. All events contains additional information like event creation time and processing duration of the call. If you want to consume events, you have to register an event consumer.
 
@@ -309,9 +322,9 @@ RxJava2Adapter.toFlowable(circuitBreaker.getEventPublisher())
     .subscribe(event -> logger.info(...))
 ----
 
-NOTE: You can also consume events from `RateLimiter`, `Bulkhead`, `Cache` and `Retry`. Find out more in our *https://resilience4j.readme.io/[User Guide]*
+NOTE: You can also consume events from other components. Find out more in our *https://resilience4j.readme.io/[User Guide]*
 
-== Companies who use Resilience4j
+== Companies that use Resilience4j
 
 * Deutsche Telekom (In an application with over 400 million request per day)
 * AOL (In an application with low latency requirements)
