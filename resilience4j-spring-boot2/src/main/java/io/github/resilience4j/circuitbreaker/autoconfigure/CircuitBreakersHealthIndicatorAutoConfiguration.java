@@ -11,6 +11,7 @@ import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -22,6 +23,7 @@ public class CircuitBreakersHealthIndicatorAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean(name = "circuitBreakersHealthIndicator")
+    @ConditionalOnProperty(prefix = "management.health.circuitbreakers", name = "enabled")
     public CircuitBreakersHealthIndicator circuitBreakersHealthIndicator(CircuitBreakerRegistry circuitBreakerRegistry,
                                                                          CircuitBreakerConfigurationProperties circuitBreakerProperties,
                                                                          HealthAggregator healthAggregator) {
