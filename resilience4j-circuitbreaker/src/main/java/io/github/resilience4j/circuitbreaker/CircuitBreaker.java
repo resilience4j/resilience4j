@@ -541,6 +541,20 @@ public interface CircuitBreaker {
         int getNumberOfSlowCalls();
 
         /**
+         * Returns the current number of successful calls which were slower than a certain threshold.
+         *
+         * @return the current number of successful calls which were slower than a certain threshold
+         */
+        int getNumberOfSlowSuccessfulCalls();
+
+        /**
+         * Returns the current number of failed calls which were slower than a certain threshold.
+         *
+         * @return the current number of failed calls which were slower than a certain threshold
+         */
+        int getNumberOfSlowFailedCalls();
+
+        /**
          * Returns the current total number of buffered calls in the ring buffer.
          *
          * @return he current total number of buffered calls in the ring buffer

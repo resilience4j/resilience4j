@@ -32,6 +32,8 @@ public abstract class AbstractCircuitBreakerMetrics extends Collector {
 
     protected static final String KIND_FAILED = "failed";
     protected static final String KIND_SUCCESSFUL = "successful";
+    protected static final String KIND_SLOW_SUCCESSFUL = "slow_successful";
+    protected static final String KIND_SLOW_FAILED = "slow_failed";
     protected static final String KIND_IGNORED = "ignored";
     protected static final String KIND_NOT_PERMITTED = "not_permitted";
 
@@ -67,6 +69,11 @@ public abstract class AbstractCircuitBreakerMetrics extends Collector {
                 "The number of buffered calls",
                 LabelNames.NAME_AND_KIND
         );
+        GaugeMetricFamily slowCallsFamily = new GaugeMetricFamily(
+                names.getSlowCallsMetricName(),
+                "The number of slow calls",
+                LabelNames.NAME_AND_KIND
+        );
 
         GaugeMetricFamily failureRateFamily = new GaugeMetricFamily(
                 names.getFailureRateMetricName(),
@@ -91,10 +98,12 @@ public abstract class AbstractCircuitBreakerMetrics extends Collector {
             CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
             bufferedCallsFamily.addMetric(asList(circuitBreaker.getName(), KIND_SUCCESSFUL), metrics.getNumberOfSuccessfulCalls());
             bufferedCallsFamily.addMetric(asList(circuitBreaker.getName(), KIND_FAILED), metrics.getNumberOfFailedCalls());
+            slowCallsFamily.addMetric(asList(circuitBreaker.getName(), KIND_SLOW_SUCCESSFUL), metrics.getNumberOfSlowSuccessfulCalls());
+            slowCallsFamily.addMetric(asList(circuitBreaker.getName(), KIND_SLOW_FAILED), metrics.getNumberOfSlowFailedCalls());
             failureRateFamily.addMetric(nameLabel, metrics.getFailureRate());
             slowCallRateFamily.addMetric(nameLabel, metrics.getSlowCallRate());
         }
-        return asList(stateFamily, bufferedCallsFamily, failureRateFamily, slowCallRateFamily);
+        return asList(stateFamily, bufferedCallsFamily, slowCallsFamily, failureRateFamily, slowCallRateFamily);
     }
 
     /** Defines possible configuration for metric names. */
@@ -103,6 +112,7 @@ public abstract class AbstractCircuitBreakerMetrics extends Collector {
         public static final String DEFAULT_CIRCUIT_BREAKER_CALLS = "resilience4j_circuitbreaker_calls";
         public static final String DEFAULT_CIRCUIT_BREAKER_STATE = "resilience4j_circuitbreaker_state";
         public static final String DEFAULT_CIRCUIT_BREAKER_BUFFERED_CALLS = "resilience4j_circuitbreaker_buffered_calls";
+        public static final String DEFAULT_CIRCUIT_BREAKER_SLOW_CALLS = "resilience4j_circuitbreaker_slow_calls";
         public static final String DEFAULT_CIRCUIT_BREAKER_FAILURE_RATE = "resilience4j_circuitbreaker_failure_rate";
         public static final String DEFAULT_CIRCUIT_BREAKER_SLOW_CALL_RATE = "resilience4j_circuitbreaker_slow_call_rate";
 
@@ -122,6 +132,7 @@ public abstract class AbstractCircuitBreakerMetrics extends Collector {
         private String callsMetricName = DEFAULT_CIRCUIT_BREAKER_CALLS;
         private String stateMetricName = DEFAULT_CIRCUIT_BREAKER_STATE;
         private String bufferedCallsMetricName = DEFAULT_CIRCUIT_BREAKER_BUFFERED_CALLS;
+        private String slowCallsMetricName = DEFAULT_CIRCUIT_BREAKER_SLOW_CALLS;
         private String failureRateMetricName = DEFAULT_CIRCUIT_BREAKER_FAILURE_RATE;
         private String slowCallRateMetricName = DEFAULT_CIRCUIT_BREAKER_SLOW_CALL_RATE;
 
@@ -135,6 +146,11 @@ public abstract class AbstractCircuitBreakerMetrics extends Collector {
         /** Returns the metric name for currently buffered calls, defaults to {@value DEFAULT_CIRCUIT_BREAKER_BUFFERED_CALLS}. */
         public String getBufferedCallsMetricName() {
             return bufferedCallsMetricName;
+        }
+
+        /** Returns the metric name for currently slow calls, defaults to {@value DEFAULT_CIRCUIT_BREAKER_SLOW_CALLS}. */
+        public String getSlowCallsMetricName() {
+            return slowCallsMetricName;
         }
 
         /** Returns the metric name for failure rate, defaults to {@value DEFAULT_CIRCUIT_BREAKER_FAILURE_RATE}. */
@@ -171,6 +187,12 @@ public abstract class AbstractCircuitBreakerMetrics extends Collector {
             /** Overrides the default metric name {@value MetricNames#DEFAULT_CIRCUIT_BREAKER_BUFFERED_CALLS} with a given one. */
             public Builder bufferedCallsMetricName(String bufferedCallsMetricName) {
                 metricNames.bufferedCallsMetricName = requireNonNull(bufferedCallsMetricName);
+                return this;
+            }
+
+            /** Overrides the default metric name {@value MetricNames#DEFAULT_CIRCUIT_BREAKER_SLOW_CALLS} with a given one. */
+            public Builder slowCallsMetricName(String slowCallsMetricName) {
+                metricNames.slowCallsMetricName = requireNonNull(slowCallsMetricName);
                 return this;
             }
 

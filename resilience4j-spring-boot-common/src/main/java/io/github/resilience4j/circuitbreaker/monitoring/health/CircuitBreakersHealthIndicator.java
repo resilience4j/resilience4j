@@ -41,6 +41,7 @@ public class CircuitBreakersHealthIndicator implements HealthIndicator {
     private static final String BUFFERED_CALLS = "bufferedCalls";
     private static final String FAILED_CALLS = "failedCalls";
     private static final String SLOW_CALLS = "slowCalls";
+    private static final String SLOW_FAILED_CALLS = "slowFailedCalls";
     private static final String NOT_PERMITTED = "notPermittedCalls";
     private static final String STATE = "state";
 
@@ -93,6 +94,7 @@ public class CircuitBreakersHealthIndicator implements HealthIndicator {
             .withDetail(SLOW_CALL_RATE_THRESHOLD, config.getSlowCallRateThreshold() + "%")
             .withDetail(BUFFERED_CALLS, metrics.getNumberOfBufferedCalls())
             .withDetail(SLOW_CALLS, metrics.getNumberOfSlowCalls())
+            .withDetail(SLOW_FAILED_CALLS, metrics.getNumberOfSlowFailedCalls())
             .withDetail(FAILED_CALLS, metrics.getNumberOfFailedCalls())
             .withDetail(NOT_PERMITTED, metrics.getNumberOfNotPermittedCalls())
             .withDetail(STATE, circuitBreaker.getState());
