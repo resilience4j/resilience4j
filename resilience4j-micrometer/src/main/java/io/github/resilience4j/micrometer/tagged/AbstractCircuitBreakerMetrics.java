@@ -29,8 +29,6 @@ abstract class AbstractCircuitBreakerMetrics extends AbstractMetrics {
     private static final String KIND_STATE = "state";
     private static final String KIND_FAILED = "failed";
     private static final String KIND_SUCCESSFUL = "successful";
-    private static final String KIND_SLOW_SUCCESSFUL = "slow_successful";
-    private static final String KIND_SLOW_FAILED = "slow_failed";
     private static final String KIND_IGNORED = "ignored";
     private static final String KIND_NOT_PERMITTED = "not_permitted";
 
@@ -64,12 +62,12 @@ abstract class AbstractCircuitBreakerMetrics extends AbstractMetrics {
         idSet.add(Gauge.builder(names.getSlowCallsMetricName(), circuitBreaker, cb -> cb.getMetrics().getNumberOfSlowSuccessfulCalls())
                 .description("The number of slow successful which were slower than a certain threshold")
                 .tag(TagNames.NAME, circuitBreaker.getName())
-                .tag(TagNames.KIND, KIND_SLOW_SUCCESSFUL)
+                .tag(TagNames.KIND, KIND_SUCCESSFUL)
                 .register(meterRegistry).getId());
         idSet.add(Gauge.builder(names.getSlowCallsMetricName(), circuitBreaker, cb -> cb.getMetrics().getNumberOfSlowFailedCalls())
                 .description("The number of slow failed calls which were slower than a certain threshold")
                 .tag(TagNames.NAME, circuitBreaker.getName())
-                .tag(TagNames.KIND, KIND_SLOW_FAILED)
+                .tag(TagNames.KIND, KIND_FAILED)
                 .register(meterRegistry).getId());
         idSet.add(Gauge.builder(names.getFailureRateMetricName(), circuitBreaker, cb -> cb.getMetrics().getFailureRate())
                 .description("The failure rate of the circuit breaker")
