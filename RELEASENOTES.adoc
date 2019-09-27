@@ -257,5 +257,9 @@ NOTE: Breaking changes:
 * Issue #540: Fixed a bug where IDE did not recognize the auto config properties
 
 == Version 1.1.0
-* Issue #625: Fix reliability and security issues raised by sonar
+* Issue #235: Added a TimeLimiter operator to resilience4j-reactor and resilience4j-rxjava2
+* Issue #625: Fixed reliability and security issues raised by sonar
 * Issue #626: Handle thread interruption consistently in Bulkhead and RateLimiter blocking methods
+* Issue #634: Adapted resilience4j-metrics to latest changes in the CircuitBreaker
+* Issue #646: Fixed CircuitBreaker 'XX' tried an illegal state transition from OPEN to OPEN
+* Issue #607: Added a new config parameter to enable the CircuitBreaker and RateLimiter health indicator. They are disabled by default now.
