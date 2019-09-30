@@ -37,7 +37,7 @@ public class FluxCircuitBreakerTest {
 
     @Before
     public void setUp(){
-        circuitBreaker = Mockito.mock(CircuitBreaker.class);
+        circuitBreaker = Mockito.mock(CircuitBreaker.class, RETURNS_DEEP_STUBS);
     }
 
     @Test

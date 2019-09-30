@@ -17,6 +17,8 @@ package io.github.resilience4j.retry.configure;
 
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
+import io.github.resilience4j.core.registry.CompositeRegistryEventConsumer;
+import io.github.resilience4j.core.registry.RegistryEventConsumer;
 import io.github.resilience4j.fallback.FallbackDecorators;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryConfig;
@@ -29,7 +31,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -48,14 +52,20 @@ public class RetryConfiguration {
 	 * @return the retry definition registry
 	 */
 	@Bean
-	public RetryRegistry retryRegistry(RetryConfigurationProperties retryConfigurationProperties, EventConsumerRegistry<RetryEvent> retryEventConsumerRegistry) {
-
-		RetryRegistry retryRegistry = createRetryRegistry(retryConfigurationProperties);
+	public RetryRegistry retryRegistry(RetryConfigurationProperties retryConfigurationProperties,
+									   EventConsumerRegistry<RetryEvent> retryEventConsumerRegistry,
+									   RegistryEventConsumer<Retry> retryRegistryEventConsumer) {
+		RetryRegistry retryRegistry = createRetryRegistry(retryConfigurationProperties, retryRegistryEventConsumer);
 		registerEventConsumer(retryRegistry, retryEventConsumerRegistry, retryConfigurationProperties);
 		retryConfigurationProperties.getInstances().forEach((name, properties) -> retryRegistry.retry(name, retryConfigurationProperties.createRetryConfig(name)));
 		return retryRegistry;
 	}
 
+	@Bean
+	@Primary
+	public RegistryEventConsumer<Retry> retryRegistryEventConsumer(Optional<List<RegistryEventConsumer<Retry>>> optionalRegistryEventConsumers) {
+		return new CompositeRegistryEventConsumer<>(optionalRegistryEventConsumers.orElseGet(ArrayList::new));
+	}
 
 	/**
 	 * Initializes a retry registry.
@@ -63,12 +73,13 @@ public class RetryConfiguration {
 	 * @param retryConfigurationProperties The retry configuration properties.
 	 * @return a RetryRegistry
 	 */
-	private RetryRegistry createRetryRegistry(RetryConfigurationProperties retryConfigurationProperties) {
+	private RetryRegistry createRetryRegistry(RetryConfigurationProperties retryConfigurationProperties,
+											  RegistryEventConsumer<Retry> retryRegistryEventConsumer) {
 		Map<String, RetryConfig> configs = retryConfigurationProperties.getConfigs()
 				.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey,
 						entry -> retryConfigurationProperties.createRetryConfig(entry.getValue())));
 
-		return RetryRegistry.of(configs);
+		return RetryRegistry.of(configs, retryRegistryEventConsumer);
 	}
 
 	/**

@@ -23,7 +23,6 @@ import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent;
 import org.junit.Test;
 
-import javax.xml.ws.WebServiceException;
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
@@ -75,9 +74,9 @@ public class CircularEventConsumerTest {
 
         //When
         circuitBreaker.onSuccess(0, TimeUnit.NANOSECONDS);
-        circuitBreaker.onError(0, TimeUnit.NANOSECONDS, new WebServiceException("Bla"));
+        circuitBreaker.onError(0, TimeUnit.NANOSECONDS, new RuntimeException("Bla"));
         circuitBreaker.onError(0, TimeUnit.NANOSECONDS, new IOException("Bla"));
-        circuitBreaker.onError(0, TimeUnit.NANOSECONDS, new WebServiceException("Bla"));
+        circuitBreaker.onError(0, TimeUnit.NANOSECONDS, new RuntimeException("Bla"));
 
 
         //Then

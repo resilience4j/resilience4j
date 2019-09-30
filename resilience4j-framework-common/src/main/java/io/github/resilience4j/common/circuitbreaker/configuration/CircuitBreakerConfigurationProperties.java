@@ -41,7 +41,11 @@ public class CircuitBreakerConfigurationProperties {
 	private Map<String, InstanceProperties> configs = new HashMap<>();
 
 	public Optional<InstanceProperties> findCircuitBreakerProperties(String name) {
-		return Optional.ofNullable(instances.get(name));
+		InstanceProperties instanceProperties = instances.get(name);
+		if(instanceProperties == null){
+			instanceProperties = configs.get("default");
+		}
+		return Optional.ofNullable(instanceProperties);
 	}
 
 	public CircuitBreakerConfig createCircuitBreakerConfig(InstanceProperties instanceProperties) {
@@ -61,6 +65,7 @@ public class CircuitBreakerConfigurationProperties {
 		return buildConfig(from(baseConfig), instanceProperties);
 	}
 
+	@SuppressWarnings("deprecation") // deprecated API use left for backward compatibility
 	private CircuitBreakerConfig buildConfig(Builder builder, InstanceProperties properties) {
 		if (properties == null) {
 			return builder.build();
@@ -71,6 +76,10 @@ public class CircuitBreakerConfigurationProperties {
 
 		if (properties.getFailureRateThreshold() != null) {
 			builder.failureRateThreshold(properties.getFailureRateThreshold());
+		}
+
+		if (properties.getWritableStackTraceEnabled() != null) {
+			builder.writableStackTraceEnabled(properties.getWritableStackTraceEnabled());
 		}
 
 		if (properties.getSlowCallRateThreshold() != null) {
@@ -128,7 +137,7 @@ public class CircuitBreakerConfigurationProperties {
 		if (properties.getRecordFailurePredicate() != null) {
 			Predicate<Throwable> predicate = ClassUtils.instantiatePredicateClass(properties.getRecordFailurePredicate());
 			if (predicate != null) {
-				builder.recordFailure(predicate);
+				builder.recordException(predicate);
 			}
 		}
 	}
@@ -179,10 +188,11 @@ public class CircuitBreakerConfigurationProperties {
 		@Min(1)
 		@Nullable
 		@Deprecated
+		@SuppressWarnings("DeprecatedIsStillUsed") // Left for backward compatibility
 		private Integer ringBufferSizeInClosedState;
 
 		@Nullable
-		private SlidingWindow slidingWindowType;
+		private SlidingWindowType slidingWindowType;
 
 		@Min(1)
 		@Nullable
@@ -199,10 +209,14 @@ public class CircuitBreakerConfigurationProperties {
 		@Min(1)
 		@Nullable
 		@Deprecated
+		@SuppressWarnings("DeprecatedIsStillUsed") // Left for backward compatibility
 		private Integer ringBufferSizeInHalfOpenState;
 
 		@Nullable
 		private Boolean automaticTransitionFromOpenToHalfOpenEnabled;
+
+		@Nullable
+		private Boolean writableStackTraceEnabled;
 
 		@Min(1)
 		@Nullable
@@ -278,6 +292,7 @@ public class CircuitBreakerConfigurationProperties {
 		 * Sets the ring buffer size for the circuit breaker while in closed state.
 		 *
 		 * @param ringBufferSizeInClosedState the ring buffer size
+		 * @deprecated Use {@link #setSlidingWindowSize(Integer)} instead.
 		 */
 		@Deprecated
 		public InstanceProperties setRingBufferSizeInClosedState(Integer ringBufferSizeInClosedState) {
@@ -299,6 +314,7 @@ public class CircuitBreakerConfigurationProperties {
 		 * Sets the ring buffer size for the circuit breaker while in half open state.
 		 *
 		 * @param ringBufferSizeInHalfOpenState the ring buffer size
+		 * @deprecated Use {@link #setPermittedNumberOfCallsInHalfOpenState(Integer)} instead.
 		 */
 		@Deprecated
 		public InstanceProperties setRingBufferSizeInHalfOpenState(Integer ringBufferSizeInHalfOpenState) {
@@ -322,6 +338,25 @@ public class CircuitBreakerConfigurationProperties {
 		 */
 		public InstanceProperties setAutomaticTransitionFromOpenToHalfOpenEnabled(Boolean automaticTransitionFromOpenToHalfOpenEnabled) {
 			this.automaticTransitionFromOpenToHalfOpenEnabled = automaticTransitionFromOpenToHalfOpenEnabled;
+			return this;
+		}
+
+		/**
+		 * Returns if we should enable writable stack traces or not.
+		 *
+		 * @return writableStackTraceEnabled if we should enable writable stack traces or not.
+		 */
+		public Boolean getWritableStackTraceEnabled() {
+			return this.writableStackTraceEnabled;
+		}
+
+		/**
+		 * Sets if we should enable writable stack traces or not.
+		 *
+		 * @param writableStackTraceEnabled The flag to enable writable stack traces.
+		 */
+		public InstanceProperties setWritableStackTraceEnabled(Boolean writableStackTraceEnabled) {
+			this.writableStackTraceEnabled = writableStackTraceEnabled;
 			return this;
 		}
 
@@ -441,11 +476,11 @@ public class CircuitBreakerConfigurationProperties {
 		}
 
 		@Nullable
-		public SlidingWindow getSlidingWindowType() {
+		public SlidingWindowType getSlidingWindowType() {
 			return slidingWindowType;
 		}
 
-		public void setSlidingWindowType(SlidingWindow slidingWindowType) {
+		public void setSlidingWindowType(SlidingWindowType slidingWindowType) {
 			this.slidingWindowType = slidingWindowType;
 		}
 	}

@@ -89,6 +89,9 @@ public class ThreadPoolBulkheadConfigurationProperties {
 		if (properties.getKeepAliveDuration() != null) {
 			builder.keepAliveDuration(properties.getKeepAliveDuration());
 		}
+		if (properties.getWritableStackTraceEnabled() != null) {
+			builder.writableStackTraceEnabled(properties.getWritableStackTraceEnabled());
+		}
 
 		return builder.build();
 	}
@@ -105,6 +108,9 @@ public class ThreadPoolBulkheadConfigurationProperties {
 
 		@Nullable
 		private String baseConfig;
+
+		@Nullable
+		private Boolean writableStackTraceEnabled;
 
 		private int maxThreadPoolSize;
 		private int coreThreadPoolSize;
@@ -153,6 +159,15 @@ public class ThreadPoolBulkheadConfigurationProperties {
 		}
 
 		public InstanceProperties setEventConsumerBufferSize(Integer eventConsumerBufferSize) {
+			this.eventConsumerBufferSize = eventConsumerBufferSize;
+			return this;
+		}
+
+		public Boolean getWritableStackTraceEnabled() {
+			return writableStackTraceEnabled;
+		}
+
+		public InstanceProperties setWritableStackTraceEnabled(Integer eventConsumerBufferSize) {
 			this.eventConsumerBufferSize = eventConsumerBufferSize;
 			return this;
 		}

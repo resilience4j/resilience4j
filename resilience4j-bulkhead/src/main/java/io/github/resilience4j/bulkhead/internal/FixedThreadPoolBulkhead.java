@@ -117,7 +117,7 @@ public class FixedThreadPoolBulkhead implements ThreadPoolBulkhead {
 			});
 		} catch (RejectedExecutionException rejected) {
 			publishBulkheadEvent(() -> new BulkheadOnCallRejectedEvent(name));
-			throw new BulkheadFullException(this);
+			throw BulkheadFullException.createBulkheadFullException(this);
 		}
 		return promise;
 	}
@@ -138,7 +138,7 @@ public class FixedThreadPoolBulkhead implements ThreadPoolBulkhead {
 			}, executorService).whenComplete((voidResult, throwable) -> publishBulkheadEvent(() -> new BulkheadOnCallFinishedEvent(name)));
 		} catch (RejectedExecutionException rejected) {
 			publishBulkheadEvent(() -> new BulkheadOnCallRejectedEvent(name));
-			throw new BulkheadFullException(this);
+			throw BulkheadFullException.createBulkheadFullException(this);
 		}
 	}
 

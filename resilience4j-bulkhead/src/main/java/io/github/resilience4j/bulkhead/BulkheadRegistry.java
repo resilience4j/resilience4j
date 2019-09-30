@@ -21,8 +21,10 @@ package io.github.resilience4j.bulkhead;
 
 import io.github.resilience4j.bulkhead.internal.InMemoryBulkheadRegistry;
 import io.github.resilience4j.core.Registry;
+import io.github.resilience4j.core.registry.RegistryEventConsumer;
 import io.vavr.collection.Seq;
 
+import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
 
@@ -84,6 +86,28 @@ public interface BulkheadRegistry extends Registry<Bulkhead, BulkheadConfig> {
 	}
 
 	/**
+	 * Creates a BulkheadRegistry with a custom default Bulkhead configuration and a Bulkhead registry event consumer.
+	 *
+	 * @param bulkheadConfig a custom default Bulkhead configuration.
+	 * @param registryEventConsumer a Bulkhead registry event consumer.
+	 * @return a BulkheadRegistry with a custom Bulkhead configuration and a Bulkhead registry event consumer.
+	 */
+	static BulkheadRegistry of(BulkheadConfig bulkheadConfig, RegistryEventConsumer<Bulkhead> registryEventConsumer) {
+		return new InMemoryBulkheadRegistry(bulkheadConfig, registryEventConsumer);
+	}
+
+	/**
+	 * Creates a BulkheadRegistry with a custom default Bulkhead configuration and a list of Bulkhead registry event consumers.
+	 *
+	 * @param bulkheadConfig a custom default Bulkhead configuration.
+	 * @param registryEventConsumers a list of Bulkhead registry event consumers.
+	 * @return a BulkheadRegistry with a custom Bulkhead configuration and a list of Bulkhead registry event consumers.
+	 */
+	static BulkheadRegistry of(BulkheadConfig bulkheadConfig, List<RegistryEventConsumer<Bulkhead>> registryEventConsumers) {
+		return new InMemoryBulkheadRegistry(bulkheadConfig, registryEventConsumers);
+	}
+
+	/**
 	 * Creates a BulkheadRegistry with a Map of shared Bulkhead configurations.
 	 *
 	 * @param configs a Map of shared Bulkhead configurations
@@ -91,6 +115,28 @@ public interface BulkheadRegistry extends Registry<Bulkhead, BulkheadConfig> {
 	 */
 	static BulkheadRegistry of(Map<String, BulkheadConfig> configs) {
 		return new InMemoryBulkheadRegistry(configs);
+	}
+
+	/**
+	 * Creates a BulkheadRegistry with a Map of shared Bulkhead configurations and a Bulkhead registry event consumer.
+	 *
+	 * @param configs a Map of shared Bulkhead configurations.
+	 * @param registryEventConsumer a Bulkhead registry event consumer.
+	 * @return a BulkheadRegistry with a Map of shared Bulkhead configurations and a Bulkhead registry event consumer.
+	 */
+	static BulkheadRegistry of(Map<String, BulkheadConfig> configs, RegistryEventConsumer<Bulkhead> registryEventConsumer) {
+		return new InMemoryBulkheadRegistry(configs, registryEventConsumer);
+	}
+
+	/**
+	 * Creates a BulkheadRegistry with a Map of shared Bulkhead configurations and a list of Bulkhead registry event consumers.
+	 *
+	 * @param configs a Map of shared Bulkhead configurations.
+	 * @param registryEventConsumers a list of Bulkhead registry event consumers.
+	 * @return a BulkheadRegistry with a Map of shared Bulkhead configurations and a list of Bulkhead registry event consumers.
+	 */
+	static BulkheadRegistry of(Map<String, BulkheadConfig> configs, List<RegistryEventConsumer<Bulkhead>> registryEventConsumers) {
+		return new InMemoryBulkheadRegistry(configs, registryEventConsumers);
 	}
 
 	/**

@@ -21,8 +21,10 @@ package io.github.resilience4j.circuitbreaker;
 
 import io.github.resilience4j.circuitbreaker.internal.InMemoryCircuitBreakerRegistry;
 import io.github.resilience4j.core.Registry;
+import io.github.resilience4j.core.registry.RegistryEventConsumer;
 import io.vavr.collection.Seq;
 
+import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
 
@@ -84,6 +86,28 @@ public interface CircuitBreakerRegistry extends Registry<CircuitBreaker, Circuit
 	}
 
 	/**
+	 * Creates a CircuitBreakerRegistry with a custom default CircuitBreaker configuration and a CircuitBreaker registry event consumer.
+	 *
+	 * @param circuitBreakerConfig a custom default CircuitBreaker configuration.
+	 * @param registryEventConsumer a CircuitBreaker registry event consumer.
+	 * @return a CircuitBreakerRegistry with a custom CircuitBreaker configuration and a CircuitBreaker registry event consumer.
+	 */
+	static CircuitBreakerRegistry of(CircuitBreakerConfig circuitBreakerConfig, RegistryEventConsumer<CircuitBreaker> registryEventConsumer) {
+		return new InMemoryCircuitBreakerRegistry(circuitBreakerConfig, registryEventConsumer);
+	}
+
+	/**
+	 * Creates a CircuitBreakerRegistry with a custom default CircuitBreaker configuration and a list of CircuitBreaker registry event consumers.
+	 *
+	 * @param circuitBreakerConfig a custom default CircuitBreaker configuration.
+	 * @param registryEventConsumers a list of CircuitBreaker registry event consumers.
+	 * @return a CircuitBreakerRegistry with a custom CircuitBreaker configuration and list of CircuitBreaker registry event consumers.
+	 */
+	static CircuitBreakerRegistry of(CircuitBreakerConfig circuitBreakerConfig, List<RegistryEventConsumer<CircuitBreaker>> registryEventConsumers) {
+		return new InMemoryCircuitBreakerRegistry(circuitBreakerConfig, registryEventConsumers);
+	}
+
+	/**
 	 * Creates a CircuitBreakerRegistry with a Map of shared CircuitBreaker configurations.
 	 *
 	 * @param configs a Map of shared CircuitBreaker configurations
@@ -91,6 +115,28 @@ public interface CircuitBreakerRegistry extends Registry<CircuitBreaker, Circuit
 	 */
 	static CircuitBreakerRegistry of(Map<String, CircuitBreakerConfig> configs) {
 		return new InMemoryCircuitBreakerRegistry(configs);
+	}
+
+	/**
+	 * Creates a CircuitBreakerRegistry with a Map of shared CircuitBreaker configurations and a CircuitBreaker registry event consumer.
+	 *
+	 * @param configs a Map of shared CircuitBreaker configurations.
+	 * @param registryEventConsumer a CircuitBreaker registry event consumer.
+	 * @return a CircuitBreakerRegistry with a Map of shared CircuitBreaker configurations and a CircuitBreaker registry event consumer.
+	 */
+	static CircuitBreakerRegistry of(Map<String, CircuitBreakerConfig> configs, RegistryEventConsumer<CircuitBreaker> registryEventConsumer) {
+		return new InMemoryCircuitBreakerRegistry(configs, registryEventConsumer);
+	}
+
+	/**
+	 * Creates a CircuitBreakerRegistry with a Map of shared CircuitBreaker configurations and a list of CircuitBreaker registry event consumers.
+	 *
+	 * @param configs a Map of shared CircuitBreaker configurations.
+	 * @param registryEventConsumers a list of CircuitBreaker registry event consumers.
+	 * @return a CircuitBreakerRegistry with a Map of shared CircuitBreaker configurations and a list of CircuitBreaker registry event consumers.
+	 */
+	static CircuitBreakerRegistry of(Map<String, CircuitBreakerConfig> configs, List<RegistryEventConsumer<CircuitBreaker>> registryEventConsumers) {
+		return new InMemoryCircuitBreakerRegistry(configs, registryEventConsumers);
 	}
 
 	/**

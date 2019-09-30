@@ -47,7 +47,7 @@ class SingleRateLimiter<T> extends Single<T> {
             }
         }else{
             downstream.onSubscribe(EmptyDisposable.INSTANCE);
-            downstream.onError(new RequestNotPermitted(rateLimiter));
+            downstream.onError(RequestNotPermitted.createRequestNotPermitted(rateLimiter));
         }
     }
 

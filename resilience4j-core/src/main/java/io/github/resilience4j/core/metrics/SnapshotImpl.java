@@ -24,12 +24,14 @@ public class SnapshotImpl implements Snapshot {
 
     private final long totalDurationInMillis;
     private final int totalNumberOfSlowCalls;
+    private final int totalNumberOfSlowFailedCalls;
     private final int totalNumberOfFailedCalls;
     private final int totalNumberOfCalls;
 
     SnapshotImpl(TotalAggregation totalAggregation) {
         this.totalDurationInMillis = totalAggregation.totalDurationInMillis;
         this.totalNumberOfSlowCalls = totalAggregation.numberOfSlowCalls;
+        this.totalNumberOfSlowFailedCalls = totalAggregation.numberOfSlowFailedCalls;
         this.totalNumberOfFailedCalls = totalAggregation.numberOfFailedCalls;
         this.totalNumberOfCalls = totalAggregation.numberOfCalls;
 
@@ -41,8 +43,18 @@ public class SnapshotImpl implements Snapshot {
     }
 
     @Override
-    public int getNumberOfSlowCalls() {
+    public int getTotalNumberOfSlowCalls() {
         return totalNumberOfSlowCalls;
+    }
+
+    @Override
+    public int getNumberOfSlowSuccessfulCalls() {
+        return totalNumberOfSlowCalls - totalNumberOfSlowFailedCalls;
+    }
+
+    @Override
+    public int getNumberOfSlowFailedCalls() {
+        return totalNumberOfSlowFailedCalls;
     }
 
     @Override

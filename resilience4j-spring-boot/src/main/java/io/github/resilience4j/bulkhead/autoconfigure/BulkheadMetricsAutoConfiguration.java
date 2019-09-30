@@ -16,8 +16,10 @@
 package io.github.resilience4j.bulkhead.autoconfigure;
 
 import com.codahale.metrics.MetricRegistry;
+import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.bulkhead.BulkheadRegistry;
 import io.github.resilience4j.metrics.BulkheadMetrics;
+import io.github.resilience4j.metrics.publisher.BulkheadMetricsPublisher;
 import org.springframework.boot.actuate.autoconfigure.MetricRepositoryAutoConfiguration;
 import org.springframework.boot.actuate.autoconfigure.MetricsDropwizardAutoConfiguration;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
@@ -33,14 +35,24 @@ import org.springframework.context.annotation.Configuration;
  * Auto-configuration} for resilience4j-metrics.
  */
 @Configuration
-@ConditionalOnClass(MetricRegistry.class)
-@AutoConfigureAfter(value = {MetricsDropwizardAutoConfiguration.class})
+@ConditionalOnClass({MetricRegistry.class, Bulkhead.class, BulkheadMetricsPublisher.class})
+@AutoConfigureAfter(MetricsDropwizardAutoConfiguration.class)
 @AutoConfigureBefore(MetricRepositoryAutoConfiguration.class)
 @ConditionalOnProperty(value = "resilience4j.bulkhead.metrics.enabled", matchIfMissing = true)
 public class BulkheadMetricsAutoConfiguration {
+
 	@Bean
+	@ConditionalOnProperty(value = "resilience4j.bulkhead.metrics.legacy.enabled", havingValue = "true")
 	@ConditionalOnMissingBean
 	public BulkheadMetrics registerBulkheadMetrics(BulkheadRegistry bulkheadRegistry, MetricRegistry metricRegistry) {
 		return BulkheadMetrics.ofBulkheadRegistry(bulkheadRegistry, metricRegistry);
 	}
+
+	@Bean
+	@ConditionalOnProperty(value = "resilience4j.bulkhead.metrics.legacy.enabled", havingValue = "false", matchIfMissing = true)
+	@ConditionalOnMissingBean
+	public BulkheadMetricsPublisher bulkheadDropwizardMetricsPublisher(MetricRegistry metricRegistry) {
+		return new BulkheadMetricsPublisher(metricRegistry);
+	}
+
 }

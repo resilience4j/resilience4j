@@ -79,3 +79,6 @@ resilience4j.bulkhead:
 
 management.security.enabled: false
 management.endpoint.health.show-details: always
+
+management.health.circuitbreakers.enabled: true
+management.health.ratelimiters.enabled: true

@@ -61,7 +61,7 @@ public class RateLimiterTransformer<T> extends AbstractTransformer<T> {
                 throw new IllegalStateException("Thread was interrupted during permission wait");
             }
             if (!permission) {
-                Throwable t = new RequestNotPermitted(rateLimiter);
+                Throwable t = RequestNotPermitted.createRequestNotPermitted(rateLimiter);
                 if (recoverer != null) {
                     down.success(recoverer.apply(t));
                 } else {

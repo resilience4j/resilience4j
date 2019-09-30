@@ -42,7 +42,7 @@ import static org.hamcrest.CoreMatchers.equalTo;
 public class AtomicRateLimiterTest {
 
     private static final String LIMITER_NAME = "test";
-    private static final long CYCLE_IN_NANOS = 500_000_000L;
+    private static final long CYCLE_IN_NANOS = 250_000_000L;
     private static final long POLL_INTERVAL_IN_NANOS = 2_000_000L;
     private static final int PERMISSIONS_RER_CYCLE = 1;
     private AtomicRateLimiter rateLimiter;

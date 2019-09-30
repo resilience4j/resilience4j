@@ -39,7 +39,8 @@ public class CircuitBreakerConfig {
     public static final int DEFAULT_SLOW_CALL_DURATION_THRESHOLD = 60; // Seconds
     private static final Predicate<Throwable> DEFAULT_RECORD_EXCEPTION_PREDICATE = throwable -> true;
     private static final Predicate<Throwable> DEFAULT_IGNORE_EXCEPTION_PREDICATE = throwable -> false;
-    public static final SlidingWindow DEFAULT_SLIDING_WINDOW_TYPE = SlidingWindow.COUNT_BASED;
+    public static final SlidingWindowType DEFAULT_SLIDING_WINDOW_TYPE = SlidingWindowType.COUNT_BASED;
+    public static final boolean DEFAULT_WRITABLE_STACK_TRACE_ENABLED = true;
 
     // The default exception predicate counts all exceptions as failures.
     private Predicate<Throwable> recordExceptionPredicate = DEFAULT_RECORD_EXCEPTION_PREDICATE;
@@ -54,8 +55,9 @@ public class CircuitBreakerConfig {
     private float failureRateThreshold = DEFAULT_FAILURE_RATE_THRESHOLD;
     private int permittedNumberOfCallsInHalfOpenState = DEFAULT_PERMITTED_CALLS_IN_HALF_OPEN_STATE;
     private int slidingWindowSize = DEFAULT_SLIDING_WINDOW_SIZE;
-    private SlidingWindow slidingWindowType = DEFAULT_SLIDING_WINDOW_TYPE;
+    private SlidingWindowType slidingWindowType = DEFAULT_SLIDING_WINDOW_TYPE;
     private int minimumNumberOfCalls = DEFAULT_MINIMUM_NUMBER_OF_CALLS;
+    private boolean writableStackTraceEnabled = DEFAULT_WRITABLE_STACK_TRACE_ENABLED;
     private Duration waitDurationInOpenState = Duration.ofSeconds(DEFAULT_WAIT_DURATION_IN_OPEN_STATE);
     private boolean automaticTransitionFromOpenToHalfOpenEnabled = false;
     private float slowCallRateThreshold = DEFAULT_SLOW_CALL_RATE_THRESHOLD;
@@ -120,11 +122,15 @@ public class CircuitBreakerConfig {
         return minimumNumberOfCalls;
     }
 
+    public boolean isWritableStackTraceEnabled() {
+        return writableStackTraceEnabled;
+    }
+
     public int getPermittedNumberOfCallsInHalfOpenState() {
         return permittedNumberOfCallsInHalfOpenState;
     }
 
-    public SlidingWindow getSlidingWindowType() {
+    public SlidingWindowType getSlidingWindowType() {
         return slidingWindowType;
     }
 
@@ -152,11 +158,12 @@ public class CircuitBreakerConfig {
 
         private float failureRateThreshold = DEFAULT_FAILURE_RATE_THRESHOLD;
         private int minimumNumberOfCalls = DEFAULT_MINIMUM_NUMBER_OF_CALLS;
+        private boolean writableStackTraceEnabled = DEFAULT_WRITABLE_STACK_TRACE_ENABLED;
         private int permittedNumberOfCallsInHalfOpenState = DEFAULT_PERMITTED_CALLS_IN_HALF_OPEN_STATE;
         private int slidingWindowSize = DEFAULT_SLIDING_WINDOW_SIZE;
         private Duration waitDurationInOpenState = Duration.ofSeconds(DEFAULT_SLOW_CALL_DURATION_THRESHOLD);
         private boolean automaticTransitionFromOpenToHalfOpenEnabled = false;
-        private SlidingWindow slidingWindowType = DEFAULT_SLIDING_WINDOW_TYPE;
+        private SlidingWindowType slidingWindowType = DEFAULT_SLIDING_WINDOW_TYPE;
         private float slowCallRateThreshold = DEFAULT_SLOW_CALL_RATE_THRESHOLD;
         private Duration slowCallDurationThreshold = Duration.ofSeconds(DEFAULT_SLOW_CALL_DURATION_THRESHOLD);
 
@@ -174,6 +181,7 @@ public class CircuitBreakerConfig {
             this.automaticTransitionFromOpenToHalfOpenEnabled = baseConfig.automaticTransitionFromOpenToHalfOpenEnabled;
             this.slowCallRateThreshold = baseConfig.slowCallRateThreshold;
             this.slowCallDurationThreshold = baseConfig.slowCallDurationThreshold;
+            this.writableStackTraceEnabled = baseConfig.writableStackTraceEnabled;
         }
 
         public Builder() {
@@ -213,6 +221,17 @@ public class CircuitBreakerConfig {
                 throw new IllegalArgumentException("slowCallRateThreshold must be between 1 and 100");
             }
             this.slowCallRateThreshold = slowCallRateThreshold;
+            return this;
+        }
+
+        /**
+         * Enables writable stack traces. When set to false, {@link Exception#getStackTrace()} returns a zero length array.
+         * This may be used to reduce log spam when the circuit breaker is open as the cause of the exceptions is already known (the circuit breaker is short-circuiting calls).
+         *
+         * @return the CircuitBreakerConfig.Builder
+         */
+        public Builder writableStackTraceEnabled(boolean writableStackTraceEnabled) {
+            this.writableStackTraceEnabled = writableStackTraceEnabled;
             return this;
         }
 
@@ -265,6 +284,7 @@ public class CircuitBreakerConfig {
         /**
          * @deprecated Use {@link #permittedNumberOfCallsInHalfOpenState(int)} instead.
          */
+        @Deprecated
         public Builder ringBufferSizeInHalfOpenState(int ringBufferSizeInHalfOpenState) {
             if (ringBufferSizeInHalfOpenState < 1) {
                 throw new IllegalArgumentException("ringBufferSizeInHalfOpenState must be greater than 0");
@@ -274,13 +294,14 @@ public class CircuitBreakerConfig {
         }
 
         /**
-         * @deprecated Use {@link #slidingWindow(int, int, SlidingWindow)} instead.
+         * @deprecated Use {@link #slidingWindow(int, int, SlidingWindowType)} instead.
          */
+        @Deprecated
         public Builder ringBufferSizeInClosedState(int ringBufferSizeInClosedState) {
             if (ringBufferSizeInClosedState < 1) {
                 throw new IllegalArgumentException("ringBufferSizeInClosedState must be greater than 0");
             }
-            return slidingWindow(ringBufferSizeInClosedState, ringBufferSizeInClosedState, SlidingWindow.COUNT_BASED);
+            return slidingWindow(ringBufferSizeInClosedState, ringBufferSizeInClosedState, SlidingWindowType.COUNT_BASED);
         }
 
         /**
@@ -305,14 +326,14 @@ public class CircuitBreakerConfig {
          * @param slidingWindowType the type of the sliding window. Either COUNT_BASED or TIME_BASED.
          * @return the CircuitBreakerConfig.Builder
          */
-        public Builder slidingWindow(int slidingWindowSize, int minimumNumberOfCalls, SlidingWindow slidingWindowType) {
+        public Builder slidingWindow(int slidingWindowSize, int minimumNumberOfCalls, SlidingWindowType slidingWindowType) {
             if (slidingWindowSize < 1) {
                 throw new IllegalArgumentException("slidingWindowSize must be greater than 0");
             }
             if (minimumNumberOfCalls < 1) {
                 throw new IllegalArgumentException("minimumNumberOfCalls must be greater than 0");
             }
-            if (slidingWindowType == SlidingWindow.COUNT_BASED) {
+            if (slidingWindowType == SlidingWindowType.COUNT_BASED) {
                 this.minimumNumberOfCalls = Math.min(minimumNumberOfCalls, slidingWindowSize);
             }else{
                 this.minimumNumberOfCalls = minimumNumberOfCalls;
@@ -377,7 +398,7 @@ public class CircuitBreakerConfig {
          * @param slidingWindowType the type of the sliding window. Either COUNT_BASED or TIME_BASED.
          * @return the CircuitBreakerConfig.Builder
          */
-        public Builder slidingWindowType(SlidingWindow slidingWindowType) {
+        public Builder slidingWindowType(SlidingWindowType slidingWindowType) {
             this.slidingWindowType = slidingWindowType;
             return this;
         }
@@ -503,6 +524,7 @@ public class CircuitBreakerConfig {
             config.recordExceptions = recordExceptions;
             config.ignoreExceptions = ignoreExceptions;
             config.automaticTransitionFromOpenToHalfOpenEnabled = automaticTransitionFromOpenToHalfOpenEnabled;
+            config.writableStackTraceEnabled = writableStackTraceEnabled;
             config.recordExceptionPredicate = createRecordExceptionPredicate();
             config.ignoreExceptionPredicate = createIgnoreFailurePredicate();
             return config;
@@ -521,7 +543,7 @@ public class CircuitBreakerConfig {
         }
     }
 
-    public enum SlidingWindow {
+    public enum SlidingWindowType {
         TIME_BASED, COUNT_BASED
     }
 }

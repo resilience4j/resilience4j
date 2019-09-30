@@ -53,8 +53,8 @@ public class RetrofitCircuitBreakerTest {
     public WireMockRule wireMockRule = new WireMockRule();
 
     private static final CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom()
-            .ringBufferSizeInClosedState(3)
-            .waitDurationInOpenState(Duration.ofMillis(1000))
+            .slidingWindowSize(3)
+            .waitDurationInOpenState(Duration.ofMillis(150))
             .build();
 
     private CircuitBreaker circuitBreaker;
@@ -65,7 +65,7 @@ public class RetrofitCircuitBreakerTest {
     public void setUp() {
         this.circuitBreaker = CircuitBreaker.of("test", circuitBreakerConfig);
 
-        final long TIMEOUT = 300; // ms
+        final long TIMEOUT = 150; // ms
         this.client = new OkHttpClient.Builder()
                 .connectTimeout(TIMEOUT, TimeUnit.MILLISECONDS)
                 .readTimeout(TIMEOUT, TimeUnit.MILLISECONDS)

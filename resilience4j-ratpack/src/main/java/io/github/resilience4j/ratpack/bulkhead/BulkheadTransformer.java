@@ -81,7 +81,7 @@ public class BulkheadTransformer<T> extends AbstractTransformer<T> {
                     }
                 });
             } else {
-                Throwable t = new BulkheadFullException(bulkhead);
+                Throwable t = BulkheadFullException.createBulkheadFullException(bulkhead);
                 handleRecovery(down, t);
             }
         };

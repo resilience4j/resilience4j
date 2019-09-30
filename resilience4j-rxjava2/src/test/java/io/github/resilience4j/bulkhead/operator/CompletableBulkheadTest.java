@@ -21,7 +21,7 @@ public class CompletableBulkheadTest {
 
     @Before
     public void setUp(){
-        bulkhead = Mockito.mock(Bulkhead.class);
+        bulkhead = Mockito.mock(Bulkhead.class, RETURNS_DEEP_STUBS);
     }
 
     @Test

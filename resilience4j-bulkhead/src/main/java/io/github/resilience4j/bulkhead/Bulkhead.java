@@ -24,6 +24,7 @@ import io.github.resilience4j.bulkhead.event.BulkheadOnCallPermittedEvent;
 import io.github.resilience4j.bulkhead.event.BulkheadOnCallRejectedEvent;
 import io.github.resilience4j.bulkhead.internal.SemaphoreBulkhead;
 import io.github.resilience4j.core.EventConsumer;
+import io.github.resilience4j.core.exception.AcquirePermissionCancelledException;
 import io.vavr.CheckedConsumer;
 import io.vavr.CheckedFunction0;
 import io.vavr.CheckedFunction1;
@@ -64,6 +65,9 @@ public interface Bulkhead {
 
     /**
      * Acquires a permission to execute a call, only if one is available at the time of invocation.
+     * If the current thread is {@linkplain Thread#interrupt interrupted}
+     * while waiting for a permit then it won't throw {@linkplain InterruptedException},
+     * but its interrupt status will be set.
      *
      * @return {@code true} if a permission was acquired and {@code false} otherwise
      */
@@ -71,8 +75,12 @@ public interface Bulkhead {
 
     /**
      * Acquires a permission to execute a call, only if one is available at the time of invocation
+     * If the current thread is {@linkplain Thread#interrupt interrupted}
+     * while waiting for a permit then it won't throw {@linkplain InterruptedException},
+     * but its interrupt status will be set.
      *
      * @throws BulkheadFullException when the Bulkhead is full and no further calls are permitted.
+     * @throws AcquirePermissionCancelledException if thread was interrupted during permission wait
      */
     void acquirePermission();
 
@@ -229,7 +237,7 @@ public interface Bulkhead {
             final CompletableFuture<T> promise = new CompletableFuture<>();
 
             if (!bulkhead.tryAcquirePermission()) {
-                promise.completeExceptionally(new BulkheadFullException(bulkhead));
+                promise.completeExceptionally(BulkheadFullException.createBulkheadFullException(bulkhead));
             }
             else {
                 try {
@@ -336,8 +344,8 @@ public interface Bulkhead {
                 finally {
                     bulkhead.onComplete();
                 }
-            }else{
-                return Try.failure(new BulkheadFullException(bulkhead));
+            } else {
+                return Try.failure(BulkheadFullException.createBulkheadFullException(bulkhead));
             }
         };
     }
@@ -361,8 +369,8 @@ public interface Bulkhead {
                 finally {
                     bulkhead.onComplete();
                 }
-            }else{
-                return Either.left(new BulkheadFullException(bulkhead));
+            } else {
+                return Either.left(BulkheadFullException.createBulkheadFullException(bulkhead));
             }
         };
     }

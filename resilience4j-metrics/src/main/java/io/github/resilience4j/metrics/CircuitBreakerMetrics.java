@@ -63,6 +63,14 @@ public class CircuitBreakerMetrics implements MetricSet {
                     (Gauge<Integer>) () -> circuitBreaker.getMetrics().getNumberOfBufferedCalls());
                 metricRegistry.register(name(prefix, name, FAILURE_RATE),
                     (Gauge<Float>) () -> circuitBreaker.getMetrics().getFailureRate());
+                metricRegistry.register(name(prefix, name, SLOW),
+                    (Gauge<Integer>) () -> circuitBreaker.getMetrics().getNumberOfSlowCalls());
+                metricRegistry.register(name(prefix, name, SLOW_SUCCESS),
+                    (Gauge<Integer>) () -> circuitBreaker.getMetrics().getNumberOfSlowSuccessfulCalls());
+                metricRegistry.register(name(prefix, name, SLOW_FAILED),
+                    (Gauge<Integer>) () -> circuitBreaker.getMetrics().getNumberOfSlowFailedCalls());
+                metricRegistry.register(name(prefix, name, SLOW_CALL_RATE),
+                    (Gauge<Float>) () -> circuitBreaker.getMetrics().getSlowCallRate());
             }
         );
     }

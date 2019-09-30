@@ -541,6 +541,20 @@ public interface CircuitBreaker {
         int getNumberOfSlowCalls();
 
         /**
+         * Returns the current number of successful calls which were slower than a certain threshold.
+         *
+         * @return the current number of successful calls which were slower than a certain threshold
+         */
+        int getNumberOfSlowSuccessfulCalls();
+
+        /**
+         * Returns the current number of failed calls which were slower than a certain threshold.
+         *
+         * @return the current number of failed calls which were slower than a certain threshold
+         */
+        int getNumberOfSlowFailedCalls();
+
+        /**
          * Returns the current total number of buffered calls in the ring buffer.
          *
          * @return he current total number of buffered calls in the ring buffer
@@ -616,8 +630,7 @@ public interface CircuitBreaker {
             final CompletableFuture<T> promise = new CompletableFuture<>();
 
             if (!circuitBreaker.tryAcquirePermission()) {
-                promise.completeExceptionally(
-                        new CallNotPermittedException(circuitBreaker));
+                promise.completeExceptionally(CallNotPermittedException.createCallNotPermittedException(circuitBreaker));
 
             } else {
                 final long start = System.nanoTime();
@@ -748,7 +761,7 @@ public interface CircuitBreaker {
                 }
                 return Either.narrow(result);
             }else{
-                return Either.left(new CallNotPermittedException(circuitBreaker));
+                return Either.left(CallNotPermittedException.createCallNotPermittedException(circuitBreaker));
             }
         };
     }
@@ -775,7 +788,7 @@ public interface CircuitBreaker {
                     return result;
                 }
             }else{
-                return Try.failure(new CallNotPermittedException(circuitBreaker));
+                return Try.failure(CallNotPermittedException.createCallNotPermittedException(circuitBreaker));
             }
         };
     }

@@ -119,7 +119,7 @@ public class BulkheadMethodInterceptor extends AbstractMethodInterceptor {
                     });
                 }
             } else {
-                Throwable t = new BulkheadFullException(bulkhead);
+                Throwable t = BulkheadFullException.createBulkheadFullException(bulkhead);
                 completeFailedFuture(t, fallbackMethod, promise);
             }
             return promise;

@@ -16,7 +16,6 @@
 package io.github.resilience4j.circuitbreaker.operator;
 
 import io.github.resilience4j.AbstractSubscriber;
-import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.reactivex.Flowable;
 import io.reactivex.internal.subscriptions.EmptySubscription;
@@ -26,6 +25,7 @@ import org.reactivestreams.Subscriber;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
+import static io.github.resilience4j.circuitbreaker.CallNotPermittedException.createCallNotPermittedException;
 import static java.util.Objects.requireNonNull;
 
 class FlowableCircuitBreaker<T> extends Flowable<T> {
@@ -44,7 +44,7 @@ class FlowableCircuitBreaker<T> extends Flowable<T> {
             upstream.subscribe(new CircuitBreakerSubscriber(downstream));
         }else{
             downstream.onSubscribe(EmptySubscription.INSTANCE);
-            downstream.onError(new CallNotPermittedException(circuitBreaker));
+            downstream.onError(createCallNotPermittedException(circuitBreaker));
         }
     }
 

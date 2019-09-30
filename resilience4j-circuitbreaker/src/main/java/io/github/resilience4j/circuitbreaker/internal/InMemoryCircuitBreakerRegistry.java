@@ -21,11 +21,13 @@ package io.github.resilience4j.circuitbreaker.internal;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
-import io.github.resilience4j.core.registry.AbstractRegistry;
 import io.github.resilience4j.core.ConfigurationNotFoundException;
+import io.github.resilience4j.core.registry.AbstractRegistry;
+import io.github.resilience4j.core.registry.RegistryEventConsumer;
 import io.vavr.collection.Array;
 import io.vavr.collection.Seq;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Supplier;
@@ -48,6 +50,16 @@ public final class InMemoryCircuitBreakerRegistry extends AbstractRegistry<Circu
 		this.configurations.putAll(configs);
 	}
 
+	public InMemoryCircuitBreakerRegistry(Map<String, CircuitBreakerConfig> configs, RegistryEventConsumer<CircuitBreaker> registryEventConsumer) {
+		this(configs.getOrDefault(DEFAULT_CONFIG, CircuitBreakerConfig.ofDefaults()), registryEventConsumer);
+		this.configurations.putAll(configs);
+	}
+
+	public InMemoryCircuitBreakerRegistry(Map<String, CircuitBreakerConfig> configs, List<RegistryEventConsumer<CircuitBreaker>> registryEventConsumers) {
+		this(configs.getOrDefault(DEFAULT_CONFIG, CircuitBreakerConfig.ofDefaults()), registryEventConsumers);
+		this.configurations.putAll(configs);
+	}
+
 	/**
 	 * The constructor with custom default config.
 	 *
@@ -55,6 +67,14 @@ public final class InMemoryCircuitBreakerRegistry extends AbstractRegistry<Circu
 	 */
 	public InMemoryCircuitBreakerRegistry(CircuitBreakerConfig defaultConfig) {
 		super(defaultConfig);
+	}
+
+	public InMemoryCircuitBreakerRegistry(CircuitBreakerConfig defaultConfig, RegistryEventConsumer<CircuitBreaker> registryEventConsumer) {
+		super(defaultConfig, registryEventConsumer);
+	}
+
+	public InMemoryCircuitBreakerRegistry(CircuitBreakerConfig defaultConfig, List<RegistryEventConsumer<CircuitBreaker>> registryEventConsumers) {
+		super(defaultConfig, registryEventConsumers);
 	}
 
 	/**

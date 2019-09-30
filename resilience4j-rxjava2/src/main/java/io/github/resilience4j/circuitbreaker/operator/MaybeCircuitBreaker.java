@@ -16,13 +16,14 @@
 package io.github.resilience4j.circuitbreaker.operator;
 
 import io.github.resilience4j.AbstractMaybeObserver;
-import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.reactivex.Maybe;
 import io.reactivex.MaybeObserver;
 import io.reactivex.internal.disposables.EmptyDisposable;
 
 import java.util.concurrent.TimeUnit;
+
+import static io.github.resilience4j.circuitbreaker.CallNotPermittedException.createCallNotPermittedException;
 
 class MaybeCircuitBreaker<T> extends Maybe<T> {
 
@@ -40,7 +41,7 @@ class MaybeCircuitBreaker<T> extends Maybe<T> {
             upstream.subscribe(new CircuitBreakerMaybeObserver(downstream));
         }else{
             downstream.onSubscribe(EmptyDisposable.INSTANCE);
-            downstream.onError(new CallNotPermittedException(circuitBreaker));
+            downstream.onError(createCallNotPermittedException(circuitBreaker));
         }
     }
 

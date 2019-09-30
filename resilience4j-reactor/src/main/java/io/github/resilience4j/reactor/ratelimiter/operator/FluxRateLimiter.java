@@ -16,7 +16,6 @@
 package io.github.resilience4j.reactor.ratelimiter.operator;
 
 import io.github.resilience4j.ratelimiter.RateLimiter;
-import io.github.resilience4j.ratelimiter.RequestNotPermitted;
 import reactor.core.CoreSubscriber;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.FluxOperator;
@@ -24,6 +23,8 @@ import reactor.core.publisher.Mono;
 import reactor.core.publisher.Operators;
 
 import java.time.Duration;
+
+import static io.github.resilience4j.ratelimiter.RequestNotPermitted.createRequestNotPermitted;
 
 class FluxRateLimiter<T> extends FluxOperator<T, T> {
 
@@ -45,7 +46,7 @@ class FluxRateLimiter<T> extends FluxOperator<T, T> {
                 source.subscribe(new RateLimiterSubscriber<>(actual));
             }
         }else{
-            Operators.error(actual, new RequestNotPermitted(rateLimiter));
+            Operators.error(actual, createRequestNotPermitted(rateLimiter));
         }
     }
 

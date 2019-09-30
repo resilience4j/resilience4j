@@ -27,6 +27,8 @@ import org.springframework.boot.actuate.health.HealthIndicator;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import static io.github.resilience4j.circuitbreaker.configure.CircuitBreakerConfigurationProperties.*;
+
 /**
  * A Spring Boot health indicators which adds the state of a CircuitBreaker and it's metrics to the health endpoints
  */
@@ -39,6 +41,7 @@ public class CircuitBreakersHealthIndicator implements HealthIndicator {
     private static final String BUFFERED_CALLS = "bufferedCalls";
     private static final String FAILED_CALLS = "failedCalls";
     private static final String SLOW_CALLS = "slowCalls";
+    private static final String SLOW_FAILED_CALLS = "slowFailedCalls";
     private static final String NOT_PERMITTED = "notPermittedCalls";
     private static final String STATE = "state";
 
@@ -65,8 +68,8 @@ public class CircuitBreakersHealthIndicator implements HealthIndicator {
 
     private boolean isRegisterHealthIndicator(CircuitBreaker circuitBreaker) {
         return circuitBreakerProperties.findCircuitBreakerProperties(circuitBreaker.getName())
-                .map(io.github.resilience4j.common.circuitbreaker.configuration.CircuitBreakerConfigurationProperties.InstanceProperties::getRegisterHealthIndicator)
-                .orElse(true);
+                .map(InstanceProperties::getRegisterHealthIndicator)
+                .orElse(false);
     }
 
     private static Health mapBackendMonitorState(CircuitBreaker circuitBreaker) {
@@ -91,6 +94,7 @@ public class CircuitBreakersHealthIndicator implements HealthIndicator {
             .withDetail(SLOW_CALL_RATE_THRESHOLD, config.getSlowCallRateThreshold() + "%")
             .withDetail(BUFFERED_CALLS, metrics.getNumberOfBufferedCalls())
             .withDetail(SLOW_CALLS, metrics.getNumberOfSlowCalls())
+            .withDetail(SLOW_FAILED_CALLS, metrics.getNumberOfSlowFailedCalls())
             .withDetail(FAILED_CALLS, metrics.getNumberOfFailedCalls())
             .withDetail(NOT_PERMITTED, metrics.getNumberOfNotPermittedCalls())
             .withDetail(STATE, circuitBreaker.getState());

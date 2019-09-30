@@ -69,12 +69,10 @@ For example:
     "resilience4j.circuitbreaker.backendA.successful": 2,
     "resilience4j.circuitbreaker.backendA.failed": 3,
     "resilience4j.circuitbreaker.backendA.buffered": 5,
-    "resilience4j.circuitbreaker.backendA.buffered_max": 5,
     "resilience4j.circuitbreaker.backendA.not_permitted": 7,
     "resilience4j.circuitbreaker.backendB.successful": 0,
     "resilience4j.circuitbreaker.backendB.failed": 0,
     "resilience4j.circuitbreaker.backendB.buffered": 0,
-    "resilience4j.circuitbreaker.backendB.buffered_max": 10,
     "resilience4j.circuitbreaker.backendB.not_permitted": 0
 }
 ----
@@ -90,12 +88,10 @@ resilience4j_circuitbreaker_calls{name="backendB",call_result="successful",} 0.0
 resilience4j_circuitbreaker_calls{name="backendB",call_result="failed",} 0.0
 resilience4j_circuitbreaker_calls{name="backendB",call_result="not_permitted",} 0.0
 resilience4j_circuitbreaker_calls{name="backendB",call_result="buffered",} 0.0
-resilience4j_circuitbreaker_calls{name="backendB",call_result="buffered_max",} 10.0
 resilience4j_circuitbreaker_calls{name="backendA",call_result="successful",} 0.0
 resilience4j_circuitbreaker_calls{name="backendA",call_result="failed",} 0.0
 resilience4j_circuitbreaker_calls{name="backendA",call_result="not_permitted",} 0.0
 resilience4j_circuitbreaker_calls{name="backendA",call_result="buffered",} 0.0
-resilience4j_circuitbreaker_calls{name="backendA",call_result="buffered_max",} 5.0
 # HELP resilience4j_circuitbreaker_states Circuit Breaker States
 # TYPE resilience4j_circuitbreaker_states gauge
 resilience4j_circuitbreaker_states{name="backendB",state="closed",} 1.0

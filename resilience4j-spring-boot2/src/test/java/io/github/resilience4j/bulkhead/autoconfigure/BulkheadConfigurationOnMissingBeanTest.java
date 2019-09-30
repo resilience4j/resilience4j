@@ -64,7 +64,7 @@ public class BulkheadConfigurationOnMissingBeanTest {
 	public void testAllBeansFromBulkHeadHasOnMissingBean() throws NoSuchMethodException {
 		final Class<BulkheadConfiguration> originalClass = BulkheadConfiguration.class;
 		final Class<BulkheadConfigurationOnMissingBean> onMissingBeanClass = BulkheadConfigurationOnMissingBean.class;
-		TestUtils.assertAnnaations(originalClass, onMissingBeanClass);
+		TestUtils.assertAnnotations(originalClass, onMissingBeanClass);
 	}
 
 	@Test

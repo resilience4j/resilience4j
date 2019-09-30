@@ -39,6 +39,7 @@ resilience4j.circuitbreaker:
       registerHealthIndicator: true
   backends:
     backendA:
+      registerHealthIndicator: true
       slidingWindowSize: 6
       permittedNumberOfCallsInHalfOpenState: 2
       waitDurationInOpenState: 5s
@@ -121,4 +122,7 @@ resilience4j.thread-pool-bulkhead":
 management.security.enabled: false
 management.endpoints.web.exposure.include: '*'
 management.endpoint.health.show-details: always
+
+management.health.circuitbreakers.enabled: true
+management.health.ratelimiters.enabled: true
 

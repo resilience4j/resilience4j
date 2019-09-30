@@ -134,3 +134,12 @@ Bulkhead.Metrics metrics = bulkhead.getMetrics();
 // Returns the number of parallel executions this bulkhead can support at this point in time.
 in remainingBulkheadDepth = metrics.getAvailableConcurrentCalls()
 ----
+
+===== Thread interruption
+
+You can interrupt threads that are blocked or waiting inside bulkhead.
+Our implementation doesn't throw `InterruptedException`, but set `Thread.isInterrupted` status into true,
+ so you are responsible for handling this state in your client code.
+In the case where we should interrupt the positive flow of code after `Thread.interrupt'ion
+ we throw `BulkheadFullException` with corresponding message to preserve backward compatibility with version 1.0.0 of
+ Resilience4j.

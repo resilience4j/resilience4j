@@ -36,7 +36,7 @@ public class CircuitBreakerConfigurationPropertiesTest {
 		instanceProperties1.setWaitDurationInOpenState(Duration.ofMillis(100));
 		instanceProperties1.setEventConsumerBufferSize(100);
 		instanceProperties1.setRegisterHealthIndicator(true);
-		instanceProperties1.setSlidingWindowType(CircuitBreakerConfig.SlidingWindow.TIME_BASED);
+		instanceProperties1.setSlidingWindowType(CircuitBreakerConfig.SlidingWindowType.TIME_BASED);
 		instanceProperties1.setSlidingWindowSize(200);
 		instanceProperties1.setMinimumNumberOfCalls(10);
 		instanceProperties1.setAutomaticTransitionFromOpenToHalfOpenEnabled(false);
@@ -45,6 +45,7 @@ public class CircuitBreakerConfigurationPropertiesTest {
 		instanceProperties1.setSlowCallRateThreshold(50f);
 		instanceProperties1.setPermittedNumberOfCallsInHalfOpenState(100);
 		instanceProperties1.setAutomaticTransitionFromOpenToHalfOpenEnabled(true);
+		instanceProperties1.setWritableStackTraceEnabled(false);
 		//noinspection unchecked
 		instanceProperties1.setIgnoreExceptions(new Class[]{IllegalStateException.class});
 		//noinspection unchecked
@@ -67,7 +68,7 @@ public class CircuitBreakerConfigurationPropertiesTest {
 		CircuitBreakerConfig circuitBreaker1 = circuitBreakerConfigurationProperties.createCircuitBreakerConfig(instanceProperties1);
 		assertThat(circuitBreaker1).isNotNull();
 		assertThat(circuitBreaker1.getSlidingWindowSize()).isEqualTo(200);
-		assertThat(circuitBreaker1.getSlidingWindowType()).isEqualTo(CircuitBreakerConfig.SlidingWindow.TIME_BASED);
+		assertThat(circuitBreaker1.getSlidingWindowType()).isEqualTo(CircuitBreakerConfig.SlidingWindowType.TIME_BASED);
 		assertThat(circuitBreaker1.getMinimumNumberOfCalls()).isEqualTo(10);
 		assertThat(circuitBreaker1.getPermittedNumberOfCallsInHalfOpenState()).isEqualTo(100);
 		assertThat(circuitBreaker1.getFailureRateThreshold()).isEqualTo(50f);
@@ -75,6 +76,7 @@ public class CircuitBreakerConfigurationPropertiesTest {
 		assertThat(circuitBreaker1.getSlowCallRateThreshold()).isEqualTo(50f);
 		assertThat(circuitBreaker1.getWaitDurationInOpenState().toMillis()).isEqualTo(100);
 		assertThat(circuitBreaker1.isAutomaticTransitionFromOpenToHalfOpenEnabled()).isTrue();
+		assertThat(circuitBreaker1.isWritableStackTraceEnabled()).isFalse();
 
 		final CircuitBreakerConfigurationProperties.InstanceProperties backend1 = circuitBreakerConfigurationProperties.getBackendProperties("backend1");
 		assertThat(circuitBreakerConfigurationProperties.findCircuitBreakerProperties("backend1")).isNotEmpty();
@@ -94,7 +96,7 @@ public class CircuitBreakerConfigurationPropertiesTest {
 
 		io.github.resilience4j.common.circuitbreaker.configuration.CircuitBreakerConfigurationProperties.InstanceProperties sharedProperties = new io.github.resilience4j.common.circuitbreaker.configuration.CircuitBreakerConfigurationProperties.InstanceProperties();
 		sharedProperties.setSlidingWindowSize(1337);
-		sharedProperties.setSlidingWindowType(CircuitBreakerConfig.SlidingWindow.TIME_BASED);
+		sharedProperties.setSlidingWindowType(CircuitBreakerConfig.SlidingWindowType.TIME_BASED);
 		sharedProperties.setPermittedNumberOfCallsInHalfOpenState(1000);
 
 		io.github.resilience4j.common.circuitbreaker.configuration.CircuitBreakerConfigurationProperties.InstanceProperties backendWithDefaultConfig = new io.github.resilience4j.common.circuitbreaker.configuration.CircuitBreakerConfigurationProperties.InstanceProperties();
@@ -126,7 +128,7 @@ public class CircuitBreakerConfigurationPropertiesTest {
 		CircuitBreakerConfig circuitBreaker2 = circuitBreakerConfigurationProperties.createCircuitBreakerConfig(backendWithSharedConfig);
 		assertThat(circuitBreaker2).isNotNull();
 		assertThat(circuitBreaker2.getSlidingWindowSize()).isEqualTo(1337);
-		assertThat(circuitBreaker2.getSlidingWindowType()).isEqualTo(CircuitBreakerConfig.SlidingWindow.TIME_BASED);
+		assertThat(circuitBreaker2.getSlidingWindowType()).isEqualTo(CircuitBreakerConfig.SlidingWindowType.TIME_BASED);
 		assertThat(circuitBreaker2.getPermittedNumberOfCallsInHalfOpenState()).isEqualTo(999);
 
 		// Unknown backend should get default config of Registry

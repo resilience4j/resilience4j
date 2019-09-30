@@ -45,7 +45,7 @@ import java.util.function.Function
 
 import static ratpack.groovy.test.embed.GroovyEmbeddedApp.ratpack
 
-@IgnoreIf({ env.TRAVIS })
+@IgnoreIf({ env.TRAVIS || env.AZURE })
 @Unroll
 class BulkheadSpec extends Specification {
 

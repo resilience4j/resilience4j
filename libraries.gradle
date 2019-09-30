@@ -18,6 +18,8 @@ ext {
     springVersion = '5.1.6.RELEASE'
     springBootVersion = '1.5.20.RELEASE'
     springBoot2Version = '2.1.4.RELEASE'
+    springCloudContextVersion = '1.3.6.RELEASE'
+    springCloudContext2Version = '2.1.2.RELEASE'
     ratpackVersion = '1.6.1'
     spockVersion = '1.3-groovy-2.5'
     retrofitVersion = '2.5.0'
@@ -68,6 +70,7 @@ ext {
             spring_boot_web: "org.springframework.boot:spring-boot-starter-web:${springBootVersion}",
             spring_boot_test:  "org.springframework.boot:spring-boot-starter-test:${springBootVersion}",
             spring_boot_config_processor : "org.springframework.boot:spring-boot-configuration-processor:${springBootVersion}",
+            spring_boot_autoconfigure : "org.springframework.boot:spring-boot-autoconfigure:${springBootVersion}",
             spring_boot_autoconfigure_processor : "org.springframework.boot:spring-boot-autoconfigure-processor:${springBootVersion}",
 
             // Spring Boot2 addon
@@ -76,7 +79,12 @@ ext {
             spring_boot2_web: "org.springframework.boot:spring-boot-starter-web:${springBoot2Version}",
             spring_boot2_test:  "org.springframework.boot:spring-boot-starter-test:${springBoot2Version}",
             spring_boot2_config_processor : "org.springframework.boot:spring-boot-configuration-processor:${springBoot2Version}",
+            spring_boot2_autoconfigure : "org.springframework.boot:spring-boot-autoconfigure:${springBoot2Version}",
             spring_boot2_autoconfigure_processor : "org.springframework.boot:spring-boot-autoconfigure-processor:${springBoot2Version}",
+
+            // Spring Cloud
+            spring_cloud_context: "org.springframework.cloud:spring-cloud-context:${springCloudContextVersion}",
+            spring_cloud_context2: "org.springframework.cloud:spring-cloud-context:${springCloudContext2Version}",
 
             // Hibernate validator addon
             hibernate_validator: "org.hibernate.validator:hibernate-validator:${hibernateValidatorVersion}",

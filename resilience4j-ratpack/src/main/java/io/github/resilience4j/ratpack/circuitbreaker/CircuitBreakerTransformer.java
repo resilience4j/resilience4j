@@ -84,7 +84,7 @@ public class CircuitBreakerTransformer<T> extends AbstractTransformer<T> {
                     }
                 });
             } else {
-                Throwable t = new CallNotPermittedException(circuitBreaker);
+                Throwable t = CallNotPermittedException.createCallNotPermittedException(circuitBreaker);
                 handleRecovery(down, t);
             }
         };

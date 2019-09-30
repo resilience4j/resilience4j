@@ -46,7 +46,7 @@ class CompletableRateLimiter extends Completable {
             }
         }else{
             downstream.onSubscribe(EmptyDisposable.INSTANCE);
-            downstream.onError(new RequestNotPermitted(rateLimiter));
+            downstream.onError(RequestNotPermitted.createRequestNotPermitted(rateLimiter));
         }
     }
 
