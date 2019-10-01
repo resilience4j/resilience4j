@@ -21,27 +21,24 @@ package io.github.resilience4j.bulkhead.adaptive;
 import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.bulkhead.BulkheadConfig;
 import io.github.resilience4j.core.lang.NonNull;
-import io.github.resilience4j.core.metrics.Metrics;
+import io.github.resilience4j.core.metrics.Snapshot;
 
 
 /**
  * Limit adapter interface for adoptive bulkhead {@link AdaptiveBulkhead}
  */
+@FunctionalInterface
 public interface LimitPolicy {
 
 	/**
 	 * adapt the concurrency limit of the bulkhead based into the implemented logic
 	 * by updating the bulkhead concurrent limit through {@link Bulkhead#changeConfig(BulkheadConfig)} ()} if the limiter algorithm trigger a need for an update
 	 *
-	 * @param callTime the protected service by bulkhead call total execution time
+	 * @param snapshot the metrics snapshot
+	 * @param inFlight concurrent in flight calls
+	 * @return @{@link LimitResult}
 	 */
-	LimitResult adaptLimitIfAny(@NonNull long callTime, boolean isSuccess, int inFlight);
-
-
-	/**
-	 * @return the current associated metrics implementation
-	 */
-	Metrics getMetrics();
+	LimitResult adaptLimitIfAny(@NonNull Snapshot snapshot, int inFlight);
 
 
 }

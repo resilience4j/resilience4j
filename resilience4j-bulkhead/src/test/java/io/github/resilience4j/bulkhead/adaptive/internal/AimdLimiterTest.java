@@ -1,13 +1,10 @@
-package io.github.resilience4j.bulkhead.adaptive.internal.amid;
+package io.github.resilience4j.bulkhead.adaptive.internal;
 
 import java.io.IOException;
 import java.time.Duration;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -19,26 +16,26 @@ import org.knowm.xchart.XYChartBuilder;
 import org.knowm.xchart.XYSeries;
 import org.knowm.xchart.style.Styler;
 
-import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.bulkhead.BulkheadConfig;
+import io.github.resilience4j.bulkhead.adaptive.AdaptiveBulkhead;
 import io.github.resilience4j.bulkhead.adaptive.AdaptiveBulkheadConfig;
 import io.github.resilience4j.bulkhead.adaptive.LimitResult;
-import io.github.resilience4j.bulkhead.adaptive.internal.config.AIMDConfig;
-import io.github.resilience4j.bulkhead.internal.SemaphoreBulkhead;
+import io.github.resilience4j.bulkhead.adaptive.internal.amid.AimdLimiter;
+import io.github.resilience4j.bulkhead.adaptive.internal.config.AimdConfig;
 
 /**
  * test the adoptive bulkhead limiter logic
  */
 public class AimdLimiterTest {
-	private Bulkhead bulkhead;
-	private AdaptiveBulkheadConfig<AIMDConfig> config;
-	private AIMDLimiter aimdLimiter;
+	private AdaptiveBulkhead bulkhead;
+	private AdaptiveBulkheadConfig<AimdConfig> config;
+	private AimdLimiter aimdLimiter;
 	// enable if u need to see the graphs of the executions
 	private boolean drawGraphs = false;
 
 	@Before
 	public void setup() {
-		config = AdaptiveBulkheadConfig.<AIMDConfig>builder().config(AIMDConfig.builder().maxConcurrentRequestsLimit(50)
+		config = AdaptiveBulkheadConfig.<AimdConfig>builder().config(AimdConfig.builder().maxConcurrentRequestsLimit(50)
 				.minConcurrentRequestsLimit(5)
 				.slidingWindowSize(5)
 				.slidingWindowTime(2)
@@ -52,9 +49,9 @@ public class AimdLimiterTest {
 				.maxWaitDuration(Duration.ofMillis(0))
 				.build();
 
-		bulkhead = new SemaphoreBulkhead("test-internal", currentConfig);
+		bulkhead = AdaptiveBulkhead.of("test", config);
 
-		aimdLimiter = new AIMDLimiter(config);
+		aimdLimiter = new AimdLimiter(config);
 
 	}
 
@@ -62,14 +59,13 @@ public class AimdLimiterTest {
 	public void testLimiter() throws InterruptedException {
 		List<Double> time = new ArrayList<>();
 		List<Double> maxConcurrentCalls = new ArrayList<>();
-		AtomicInteger inFlightCounter = new AtomicInteger();
 		AtomicInteger count = new AtomicInteger();
-		ExecutorService executorService = Executors.newFixedThreadPool(6);
 		// if u like to get the graphs , increase the number of iterations to have better distribution
-		Collection<Callable<String>> threads = new ArrayList<>(2000);
 		for (int i = 0; i < 3000; i++) {
 			final Duration duration = Duration.ofMillis(randomLatency(5, 400));
-			final LimitResult limitResult = aimdLimiter.adaptLimitIfAny(duration.toMillis(), true, randomLInFlight(1, 50));
+			AdaptiveLimitBulkhead adaptiveLimitBulkhead = (AdaptiveLimitBulkhead) bulkhead;
+			Random random = new Random();
+			final LimitResult limitResult = adaptiveLimitBulkhead.record(duration.toMillis(), random.nextBoolean(), randomLInFlight(1, 50));
 			if (drawGraphs) {
 				maxConcurrentCalls.add((double) limitResult.getLimit());
 				time.add((double) count.incrementAndGet());

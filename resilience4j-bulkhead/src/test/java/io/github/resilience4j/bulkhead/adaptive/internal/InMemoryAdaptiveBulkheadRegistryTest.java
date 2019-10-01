@@ -11,13 +11,13 @@ import org.junit.Test;
 import io.github.resilience4j.bulkhead.adaptive.AdaptiveBulkhead;
 import io.github.resilience4j.bulkhead.adaptive.AdaptiveBulkheadConfig;
 import io.github.resilience4j.bulkhead.adaptive.AdaptiveBulkheadRegistry;
-import io.github.resilience4j.bulkhead.adaptive.internal.config.AIMDConfig;
+import io.github.resilience4j.bulkhead.adaptive.internal.config.AimdConfig;
 
 /**
  * @author romeh
  */
 public class InMemoryAdaptiveBulkheadRegistryTest {
-	private AdaptiveBulkheadConfig<AIMDConfig> config;
+	private AdaptiveBulkheadConfig<AimdConfig> config;
 	private AdaptiveBulkheadRegistry registry;
 
 	@Before
@@ -25,7 +25,7 @@ public class InMemoryAdaptiveBulkheadRegistryTest {
 		// registry with default config
 		registry = AdaptiveBulkheadRegistry.ofDefaults();
 		// registry with custom config
-		config = AdaptiveBulkheadConfig.<AIMDConfig>builder().config(AIMDConfig.builder()
+		config = AdaptiveBulkheadConfig.<AimdConfig>builder().config(AimdConfig.builder()
 				.maxConcurrentRequestsLimit(300)
 				.slowCallDurationThreshold(1)
 				.slowCallDurationThreshold(200)
@@ -48,7 +48,7 @@ public class InMemoryAdaptiveBulkheadRegistryTest {
 		AdaptiveBulkhead bulkhead = registry.bulkhead("test");
 		assertThat(bulkhead).isNotNull();
 		assertThat(bulkhead.getName()).isEqualTo("test");
-		assertThat(((AdaptiveBulkheadConfig<AIMDConfig>) bulkhead.getBulkheadConfig()).getConfiguration().getMaxLimit()).isEqualTo(200);
+		assertThat(((AdaptiveBulkheadConfig<AimdConfig>) bulkhead.getBulkheadConfig()).getConfiguration().getMaxLimit()).isEqualTo(200);
 	}
 
 	@Test

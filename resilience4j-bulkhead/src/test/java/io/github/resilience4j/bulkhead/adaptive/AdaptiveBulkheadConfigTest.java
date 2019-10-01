@@ -5,8 +5,8 @@ import static org.assertj.core.api.Java6Assertions.assertThat;
 
 import org.junit.Test;
 
-import io.github.resilience4j.bulkhead.adaptive.internal.config.AIMDConfig;
 import io.github.resilience4j.bulkhead.adaptive.internal.config.AbstractConfig;
+import io.github.resilience4j.bulkhead.adaptive.internal.config.AimdConfig;
 
 
 /**
@@ -15,8 +15,8 @@ import io.github.resilience4j.bulkhead.adaptive.internal.config.AbstractConfig;
 public class AdaptiveBulkheadConfigTest {
 	@Test
 	public void testBuildCustom() {
-		AdaptiveBulkheadConfig<AIMDConfig> config = AdaptiveBulkheadConfig.<AIMDConfig>builder()
-				.config(AIMDConfig.builder()
+		AdaptiveBulkheadConfig<AimdConfig> config = AdaptiveBulkheadConfig.<AimdConfig>builder()
+				.config(AimdConfig.builder()
 						.concurrencyDropMultiplier(0.3)
 						.minConcurrentRequestsLimit(3)
 						.maxConcurrentRequestsLimit(3)
@@ -44,20 +44,20 @@ public class AdaptiveBulkheadConfigTest {
 
 	@Test
 	public void tesConcurrencyDropMultiplierConfig() {
-		final AIMDConfig build = AIMDConfig.builder().concurrencyDropMultiplier(0.0).build();
+		final AimdConfig build = AimdConfig.builder().concurrencyDropMultiplier(0.0).build();
 		assertThat(build.getConcurrencyDropMultiplier()).isEqualTo(0.85d);
 	}
 
 	@Test
 	public void testNotSetDesirableOperationLatencyConfig() {
-		assertThatThrownBy(() -> AIMDConfig.builder().slowCallDurationThreshold(0).build())
+		assertThatThrownBy(() -> AimdConfig.builder().slowCallDurationThreshold(0).build())
 				.isInstanceOf(IllegalArgumentException.class)
 				.hasMessage("slowCallDurationThreshold must be a positive value greater than zero");
 	}
 
 	@Test
 	public void testNotSetMaxAcceptableRequestLatencyConfig() {
-		assertThatThrownBy(() -> AIMDConfig.builder().maxConcurrentRequestsLimit(0)
+		assertThatThrownBy(() -> AimdConfig.builder().maxConcurrentRequestsLimit(0)
 				.build())
 				.isInstanceOf(IllegalArgumentException.class)
 				.hasMessage("maxConcurrentRequestsLimit must be a positive value greater than zero");
@@ -65,7 +65,7 @@ public class AdaptiveBulkheadConfigTest {
 
 	@Test
 	public void testNotSetMinAcceptableRequestLatencyConfig() {
-		assertThatThrownBy(() -> AIMDConfig.builder().minConcurrentRequestsLimit(0)
+		assertThatThrownBy(() -> AimdConfig.builder().minConcurrentRequestsLimit(0)
 				.build())
 				.isInstanceOf(IllegalArgumentException.class)
 				.hasMessage("minConcurrentRequestsLimit must be a positive value greater than zero");
@@ -73,7 +73,7 @@ public class AdaptiveBulkheadConfigTest {
 
 	@Test
 	public void testlimitIncrementInflightFactorConfig() {
-		assertThatThrownBy(() -> AIMDConfig.builder().limitIncrementInflightFactor(0)
+		assertThatThrownBy(() -> AimdConfig.builder().limitIncrementInflightFactor(0)
 				.build())
 				.isInstanceOf(IllegalArgumentException.class)
 				.hasMessage("limitIncrementInflightFactor must be a positive value greater than zero");
@@ -82,7 +82,7 @@ public class AdaptiveBulkheadConfigTest {
 
 	@Test
 	public void testEqual() {
-		AIMDConfig config = AIMDConfig.builder()
+		AimdConfig config = AimdConfig.builder()
 				.concurrencyDropMultiplier(0.3)
 				.minConcurrentRequestsLimit(3)
 				.maxConcurrentRequestsLimit(3)
@@ -93,7 +93,7 @@ public class AdaptiveBulkheadConfigTest {
 				.slidingWindowSize(100)
 				.slidingWindowType(AbstractConfig.SlidingWindow.TIME_BASED)
 				.build();
-		AIMDConfig config2 = AIMDConfig.builder()
+		AimdConfig config2 = AimdConfig.builder()
 				.concurrencyDropMultiplier(0.3)
 				.minConcurrentRequestsLimit(3)
 				.maxConcurrentRequestsLimit(3)
