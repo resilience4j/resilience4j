@@ -23,6 +23,7 @@ import java.time.Instant;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -52,7 +53,7 @@ import io.vavr.CheckedRunnable;
  * In order to execute an operation protected by this bulkhead, a permission must be obtained by calling {@link AdaptiveBulkhead#tryAcquirePermission()} ()}
  * If the bulkhead is full, no additional operations will be permitted to execute until space is available.
  * <p>
- * Once the operation is complete, regardless of the result, client needs to call {@link AdaptiveBulkhead#onComplete(Duration, boolean)} ()} in order to maintain
+ * Once the operation is complete, regardless of the result, client needs to call {@link AdaptiveBulkhead#onSuccess(long, TimeUnit)}  in order to maintain
  * integrity of internal bulkhead state which is handled as the following :
  * <p>
  * Adaptive capacity management by default use AIMD algorithm for limit control but the user can inject custom limiter implementation by implementing {@link LimitPolicy}
@@ -68,7 +69,6 @@ public interface AdaptiveBulkhead {
 
 	boolean tryAcquirePermission();
 
-
 	/**
 	 * Acquires a permission to execute a call, only if one is available at the time of invocation
 	 *
@@ -80,14 +80,19 @@ public interface AdaptiveBulkhead {
 	 * Releases a permission and increases the number of available permits by one.
 	 * <p>
 	 * Should only be used when a permission was acquired but not used. Otherwise use
-	 * {@link AdaptiveBulkhead#onComplete(Duration, boolean)} ()} to signal a completed call and release a permission.
+	 * {@link AdaptiveBulkhead#onSuccess(long, TimeUnit)} to signal a completed call and release a permission.
 	 */
 	void releasePermission();
 
 	/**
-	 * Records a completed call and releases a permission.
+	 * Records a successful call and releases a permission.
 	 */
-	void onComplete(Duration callTime, boolean isSuccess);
+	void onSuccess(long callTime, TimeUnit durationUnit);
+
+	/**
+	 * Records a failed call and releases a permission.
+	 */
+	void onError(long callTime, TimeUnit durationUnit);
 
 	/**
 	 * Returns the name of this bulkhead.
@@ -194,7 +199,7 @@ public interface AdaptiveBulkhead {
 			} finally {
 				if (start != null) {
 					Instant finish = Instant.now();
-					bulkhead.onComplete(Duration.between(start, finish), true);
+					bulkhead.onSuccess(Duration.between(start, finish).toMillis(), TimeUnit.MILLISECONDS);
 				}
 			}
 		};
@@ -214,7 +219,7 @@ public interface AdaptiveBulkhead {
 			final CompletableFuture<T> promise = new CompletableFuture<>();
 
 			if (!bulkhead.tryAcquirePermission()) {
-				promise.completeExceptionally(new BulkheadFullException(bulkhead));
+				promise.completeExceptionally(BulkheadFullException.createBulkheadFullException(bulkhead));
 			} else {
 				Instant start = Instant.now();
 				try {
@@ -223,10 +228,10 @@ public interface AdaptiveBulkhead {
 									(result, throwable) -> {
 										Instant finish = Instant.now();
 										if (throwable != null) {
-											bulkhead.onComplete(Duration.between(start, finish), false);
+											bulkhead.onError(Duration.between(start, finish).toMillis(), TimeUnit.MILLISECONDS);
 											promise.completeExceptionally(throwable);
 										} else {
-											bulkhead.onComplete(Duration.between(start, finish), true);
+											bulkhead.onSuccess(Duration.between(start, finish).toMillis(), TimeUnit.MILLISECONDS);
 											promise.complete(result);
 										}
 									}
@@ -261,7 +266,7 @@ public interface AdaptiveBulkhead {
 			} finally {
 				if (start != null) {
 					Instant finish = Instant.now();
-					bulkhead.onComplete(Duration.between(start, finish), true);
+					bulkhead.onSuccess(Duration.between(start, finish).toMillis(), TimeUnit.MILLISECONDS);
 				}
 			}
 		};
@@ -288,7 +293,7 @@ public interface AdaptiveBulkhead {
 			} finally {
 				if (start != null) {
 					Instant finish = Instant.now();
-					bulkhead.onComplete(Duration.between(start, finish), true);
+					bulkhead.onSuccess(Duration.between(start, finish).toMillis(), TimeUnit.MILLISECONDS);
 				}
 			}
 		};
@@ -315,7 +320,7 @@ public interface AdaptiveBulkhead {
 			} finally {
 				if (start != null) {
 					Instant finish = Instant.now();
-					bulkhead.onComplete(Duration.between(start, finish), true);
+					bulkhead.onSuccess(Duration.between(start, finish).toMillis(), TimeUnit.MILLISECONDS);
 				}
 			}
 		};
@@ -342,7 +347,7 @@ public interface AdaptiveBulkhead {
 			} finally {
 				if (start != null) {
 					Instant finish = Instant.now();
-					bulkhead.onComplete(Duration.between(start, finish), true);
+					bulkhead.onSuccess(Duration.between(start, finish).toMillis(), TimeUnit.MILLISECONDS);
 				}
 			}
 		};
@@ -370,7 +375,7 @@ public interface AdaptiveBulkhead {
 			} finally {
 				if (start != null) {
 					Instant finish = Instant.now();
-					bulkhead.onComplete(Duration.between(start, finish), true);
+					bulkhead.onSuccess(Duration.between(start, finish).toMillis(), TimeUnit.MILLISECONDS);
 				}
 			}
 		};
@@ -396,7 +401,7 @@ public interface AdaptiveBulkhead {
 			} finally {
 				if (start != null) {
 					Instant finish = Instant.now();
-					bulkhead.onComplete(Duration.between(start, finish), true);
+					bulkhead.onSuccess(Duration.between(start, finish).toMillis(), TimeUnit.MILLISECONDS);
 				}
 			}
 		};
@@ -424,7 +429,7 @@ public interface AdaptiveBulkhead {
 			} finally {
 				if (start != null) {
 					Instant finish = Instant.now();
-					bulkhead.onComplete(Duration.between(start, finish), true);
+					bulkhead.onSuccess(Duration.between(start, finish).toMillis(), TimeUnit.MILLISECONDS);
 				}
 			}
 		};
@@ -452,7 +457,7 @@ public interface AdaptiveBulkhead {
 			} finally {
 				if (start != null) {
 					Instant finish = Instant.now();
-					bulkhead.onComplete(Duration.between(start, finish), true);
+					bulkhead.onSuccess(Duration.between(start, finish).toMillis(), TimeUnit.MILLISECONDS);
 				}
 			}
 		};
@@ -463,7 +468,7 @@ public interface AdaptiveBulkhead {
 			//noinspection unchecked
 			if (bulkhead.getBulkheadConfig().getAdaptIfError().test(e) && start != null) {
 				Instant finish = Instant.now();
-				bulkhead.onComplete(Duration.between(start, finish), false);
+				bulkhead.onError(Duration.between(start, finish).toMillis(), TimeUnit.MILLISECONDS);
 
 			}
 		} else {

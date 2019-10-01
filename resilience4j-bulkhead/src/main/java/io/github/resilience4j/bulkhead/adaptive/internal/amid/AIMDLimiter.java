@@ -62,22 +62,23 @@ public class AIMDLimiter implements LimitPolicy {
 	}
 
 	@Override
-	public LimitResult adaptLimitIfAny(@NonNull Duration callTime, boolean isSuccess, int inFlight) {
+	public LimitResult adaptLimitIfAny(@NonNull long callTime, boolean isSuccess, int inFlight) {
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("starting the adation of the limit for callTime :{} , isSuccess: {}, inFlight: {}", callTime.toMillis(), isSuccess, inFlight);
+			LOG.debug("starting the adation of the limit for callTime :{} , isSuccess: {}, inFlight: {}", callTime, isSuccess, inFlight);
 		}
 		Snapshot snapshot;
+		final long callTimeNanos = TimeUnit.MILLISECONDS.toNanos(callTime);
 		if (isSuccess) {
-			if (callTime.toNanos() > desirableLatency) {
-				snapshot = metrics.record(callTime.toNanos(), TimeUnit.NANOSECONDS, Metrics.Outcome.SLOW_SUCCESS);
+			if (callTimeNanos > desirableLatency) {
+				snapshot = metrics.record(callTimeNanos, TimeUnit.NANOSECONDS, Metrics.Outcome.SLOW_SUCCESS);
 			} else {
-				snapshot = metrics.record(callTime.toNanos(), TimeUnit.NANOSECONDS, Metrics.Outcome.SUCCESS);
+				snapshot = metrics.record(callTimeNanos, TimeUnit.NANOSECONDS, Metrics.Outcome.SUCCESS);
 			}
 		} else {
-			if (callTime.toNanos() > desirableLatency) {
-				snapshot = metrics.record(callTime.toNanos(), TimeUnit.NANOSECONDS, Metrics.Outcome.SLOW_ERROR);
+			if (callTimeNanos > desirableLatency) {
+				snapshot = metrics.record(callTimeNanos, TimeUnit.NANOSECONDS, Metrics.Outcome.SLOW_ERROR);
 			} else {
-				snapshot = metrics.record(callTime.toNanos(), TimeUnit.NANOSECONDS, Metrics.Outcome.ERROR);
+				snapshot = metrics.record(callTimeNanos, TimeUnit.NANOSECONDS, Metrics.Outcome.ERROR);
 			}
 		}
 		return checkIfThresholdsExceeded(snapshot, inFlight);

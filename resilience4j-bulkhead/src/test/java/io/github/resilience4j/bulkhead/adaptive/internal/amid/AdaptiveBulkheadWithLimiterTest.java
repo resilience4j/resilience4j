@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.junit.Before;
@@ -38,7 +39,7 @@ public class AdaptiveBulkheadWithLimiterTest {
 				.slidingWindowTime(2)
 				.failureRateThreshold(50)
 				.slowCallRateThreshold(50)
-				.desirableOperationLatency(200)
+				.slowCallDurationThreshold(200)
 				.build()).build();
 
 		bulkhead = AdaptiveBulkhead.of("test", config);
@@ -67,7 +68,7 @@ public class AdaptiveBulkheadWithLimiterTest {
 				} catch (InterruptedException e) {
 					e.printStackTrace();
 				}
-				bulkhead.onComplete(duration, true);
+				bulkhead.onSuccess(duration.toMillis(), TimeUnit.MILLISECONDS);
 			};
 			executorService.execute(runnable);
 		}

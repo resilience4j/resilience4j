@@ -18,8 +18,6 @@
  */
 package io.github.resilience4j.bulkhead.adaptive;
 
-import java.time.Duration;
-
 import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.bulkhead.BulkheadConfig;
 import io.github.resilience4j.core.lang.NonNull;
@@ -27,9 +25,7 @@ import io.github.resilience4j.core.metrics.Metrics;
 
 
 /**
- * Limit adapter interface for adoptive bullhead {@link AdaptiveBulkhead}
- *
- * @author romeh
+ * Limit adapter interface for adoptive bulkhead {@link AdaptiveBulkhead}
  */
 public interface LimitPolicy {
 
@@ -39,7 +35,7 @@ public interface LimitPolicy {
 	 *
 	 * @param callTime the protected service by bulkhead call total execution time
 	 */
-	LimitResult adaptLimitIfAny(@NonNull Duration callTime, boolean isSuccess, int inFlight);
+	LimitResult adaptLimitIfAny(@NonNull long callTime, boolean isSuccess, int inFlight);
 
 
 	/**

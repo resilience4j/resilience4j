@@ -20,7 +20,7 @@ public class AdaptiveBulkheadConfigTest {
 						.concurrencyDropMultiplier(0.3)
 						.minConcurrentRequestsLimit(3)
 						.maxConcurrentRequestsLimit(3)
-						.desirableOperationLatency(150)
+						.slowCallDurationThreshold(150)
 						.slowCallRateThreshold(50)
 						.failureRateThreshold(50)
 						.slidingWindowTime(5)
@@ -50,9 +50,9 @@ public class AdaptiveBulkheadConfigTest {
 
 	@Test
 	public void testNotSetDesirableOperationLatencyConfig() {
-		assertThatThrownBy(() -> AIMDConfig.builder().desirableOperationLatency(0).build())
+		assertThatThrownBy(() -> AIMDConfig.builder().slowCallDurationThreshold(0).build())
 				.isInstanceOf(IllegalArgumentException.class)
-				.hasMessage("desirableOperationLatency must be a positive value greater than zero");
+				.hasMessage("slowCallDurationThreshold must be a positive value greater than zero");
 	}
 
 	@Test
@@ -86,7 +86,7 @@ public class AdaptiveBulkheadConfigTest {
 				.concurrencyDropMultiplier(0.3)
 				.minConcurrentRequestsLimit(3)
 				.maxConcurrentRequestsLimit(3)
-				.desirableOperationLatency(150)
+				.slowCallDurationThreshold(150)
 				.slowCallRateThreshold(50)
 				.failureRateThreshold(50)
 				.slidingWindowTime(5)
@@ -97,7 +97,7 @@ public class AdaptiveBulkheadConfigTest {
 				.concurrencyDropMultiplier(0.3)
 				.minConcurrentRequestsLimit(3)
 				.maxConcurrentRequestsLimit(3)
-				.desirableOperationLatency(150)
+				.slowCallDurationThreshold(150)
 				.slowCallRateThreshold(50)
 				.failureRateThreshold(50)
 				.slidingWindowTime(5)
