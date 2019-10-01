@@ -113,7 +113,7 @@ public interface AdaptiveBulkhead {
 	 *
 	 * @return the Metrics of this Bulkhead
 	 */
-	AdaptiveBulkheadMetrics getMetrics();
+	Metrics getMetrics();
 
 	/**
 	 * Returns an EventPublisher which subscribes to the reactive stream of BulkheadEvent/BulkheadLimit events and
@@ -521,7 +521,27 @@ public interface AdaptiveBulkhead {
 		return AdaptiveLimitBulkhead.factory().createAdaptiveLimitBulkhead(name, bulkheadConfigSupplier.get());
 	}
 
-	interface AdaptiveBulkheadMetrics extends Bulkhead.Metrics {
+	interface Metrics extends Bulkhead.Metrics {
+		/**
+		 * Returns the current total number of calls which were slower than a certain threshold.
+		 *
+		 * @return the current total number of calls which were slower than a certain threshold
+		 */
+		int getNumberOfSlowCalls();
+
+		/**
+		 * Returns the current number of failed buffered calls in the ring buffer.
+		 *
+		 * @return the current number of failed buffered calls in the ring buffer
+		 */
+		int getNumberOfFailedCalls();
+
+		/**
+		 * Returns the current number of successful buffered calls in the ring buffer.
+		 *
+		 * @return the current number of successful buffered calls in the ring buffer
+		 */
+		int getNumberOfSuccessfulCalls();
 
 		/**
 		 * @return average latency for service calls in millis

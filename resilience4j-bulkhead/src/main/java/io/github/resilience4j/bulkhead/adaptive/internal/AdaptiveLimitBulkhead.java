@@ -115,7 +115,7 @@ public class AdaptiveLimitBulkhead implements AdaptiveBulkhead {
 	}
 
 	@Override
-	public AdaptiveBulkheadMetrics getMetrics() {
+	public Metrics getMetrics() {
 		return metrics;
 	}
 
@@ -125,7 +125,7 @@ public class AdaptiveLimitBulkhead implements AdaptiveBulkhead {
 	}
 
 
-	private final class InternalMetrics implements AdaptiveBulkheadMetrics {
+	private final class InternalMetrics implements Metrics {
 
 		@Override
 		public double getFailureRate() {
@@ -135,6 +135,21 @@ public class AdaptiveLimitBulkhead implements AdaptiveBulkhead {
 		@Override
 		public double getSlowCallRate() {
 			return limitAdapter.getMetrics().getSnapshot().getSlowCallRate();
+		}
+
+		@Override
+		public int getNumberOfSlowCalls() {
+			return limitAdapter.getMetrics().getSnapshot().getTotalNumberOfSlowCalls();
+		}
+
+		@Override
+		public int getNumberOfFailedCalls() {
+			return limitAdapter.getMetrics().getSnapshot().getNumberOfFailedCalls();
+		}
+
+		@Override
+		public int getNumberOfSuccessfulCalls() {
+			return limitAdapter.getMetrics().getSnapshot().getNumberOfSuccessfulCalls();
 		}
 
 		@Override
