@@ -28,6 +28,7 @@ import io.github.resilience4j.bulkhead.event.BulkheadOnCallPermittedEvent;
 import io.github.resilience4j.bulkhead.event.BulkheadOnCallRejectedEvent;
 import io.github.resilience4j.bulkhead.internal.FixedThreadPoolBulkhead;
 import io.github.resilience4j.core.EventConsumer;
+import io.vavr.collection.Map;
 
 /**
  * A Bulkhead instance is thread-safe can be used to decorate multiple requests.
@@ -93,6 +94,17 @@ public interface ThreadPoolBulkhead {
 	/**
 	 * Creates a bulkhead with a custom configuration
 	 *
+	 * @param name   the name of the bulkhead
+	 * @param config a custom BulkheadConfig configuration
+	 * @return a Bulkhead instance
+	 */
+	static ThreadPoolBulkhead of(String name, ThreadPoolBulkheadConfig config, io.vavr.collection.Map<String, String> tags) {
+		return new FixedThreadPoolBulkhead(name, config, tags);
+	}
+
+	/**
+	 * Creates a bulkhead with a custom configuration
+	 *
 	 * @param name                   the name of the bulkhead
 	 * @param bulkheadConfigSupplier custom configuration supplier
 	 * @return a Bulkhead instance
@@ -140,6 +152,13 @@ public interface ThreadPoolBulkhead {
 	 * @return the Metrics of this Bulkhead
 	 */
 	Metrics getMetrics();
+
+	/**
+	 * Returns an unmodifiable map with tags assigned to this Retry.
+	 *
+	 * @return the tags assigned to this Retry in an unmodifiable map
+	 */
+	Map<String, String> getTags();
 
 	/**
 	 * Returns an EventPublisher which subscribes to the reactive stream of BulkheadEvent and

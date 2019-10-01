@@ -25,6 +25,7 @@ import io.github.resilience4j.core.ConfigurationNotFoundException;
 import io.github.resilience4j.core.registry.AbstractRegistry;
 import io.github.resilience4j.core.registry.RegistryEventConsumer;
 import io.vavr.collection.Array;
+import io.vavr.collection.HashMap;
 import io.vavr.collection.Seq;
 
 import java.util.List;
@@ -45,20 +46,38 @@ public final class InMemoryBulkheadRegistry extends AbstractRegistry<Bulkhead, B
 		this(BulkheadConfig.ofDefaults());
 	}
 
+	public InMemoryBulkheadRegistry(io.vavr.collection.Map<String, String> tags) {
+		this(BulkheadConfig.ofDefaults(), tags);
+	}
+
 	public InMemoryBulkheadRegistry(Map<String, BulkheadConfig> configs) {
-		this(configs.getOrDefault(DEFAULT_CONFIG, BulkheadConfig.ofDefaults()));
+		this(configs.getOrDefault(DEFAULT_CONFIG, BulkheadConfig.ofDefaults()), HashMap.empty());
+	}
+
+	public InMemoryBulkheadRegistry(Map<String, BulkheadConfig> configs, io.vavr.collection.Map<String, String> tags) {
+		this(configs.getOrDefault(DEFAULT_CONFIG, BulkheadConfig.ofDefaults()), tags);
 		this.configurations.putAll(configs);
 	}
 
 	public InMemoryBulkheadRegistry(
 			Map<String, BulkheadConfig> configs, RegistryEventConsumer<Bulkhead> registryEventConsumer) {
-		this(configs.getOrDefault(DEFAULT_CONFIG, BulkheadConfig.ofDefaults()), registryEventConsumer);
+		this(configs, registryEventConsumer, HashMap.empty());
+	}
+
+	public InMemoryBulkheadRegistry(
+			Map<String, BulkheadConfig> configs, RegistryEventConsumer<Bulkhead> registryEventConsumer, io.vavr.collection.Map<String, String> tags) {
+		this(configs.getOrDefault(DEFAULT_CONFIG, BulkheadConfig.ofDefaults()), registryEventConsumer, tags);
 		this.configurations.putAll(configs);
 	}
 
 	public InMemoryBulkheadRegistry(
 			Map<String, BulkheadConfig> configs, List<RegistryEventConsumer<Bulkhead>> registryEventConsumers) {
-		this(configs.getOrDefault(DEFAULT_CONFIG, BulkheadConfig.ofDefaults()), registryEventConsumers);
+		this(configs, registryEventConsumers, HashMap.empty());
+	}
+
+	public InMemoryBulkheadRegistry(
+			Map<String, BulkheadConfig> configs, List<RegistryEventConsumer<Bulkhead>> registryEventConsumers, io.vavr.collection.Map<String, String> tags) {
+		this(configs.getOrDefault(DEFAULT_CONFIG, BulkheadConfig.ofDefaults()), registryEventConsumers, tags);
 		this.configurations.putAll(configs);
 	}
 
@@ -71,12 +90,24 @@ public final class InMemoryBulkheadRegistry extends AbstractRegistry<Bulkhead, B
 		super(defaultConfig);
 	}
 
+	public InMemoryBulkheadRegistry(BulkheadConfig defaultConfig, io.vavr.collection.Map<String, String> tags) {
+		super(defaultConfig, tags);
+	}
+
 	public InMemoryBulkheadRegistry(BulkheadConfig defaultConfig, List<RegistryEventConsumer<Bulkhead>> registryEventConsumers) {
 		super(defaultConfig, registryEventConsumers);
 	}
 
+	public InMemoryBulkheadRegistry(BulkheadConfig defaultConfig, List<RegistryEventConsumer<Bulkhead>> registryEventConsumers, io.vavr.collection.Map<String, String> tags) {
+		super(defaultConfig, registryEventConsumers, tags);
+	}
+
 	public InMemoryBulkheadRegistry(BulkheadConfig defaultConfig, RegistryEventConsumer<Bulkhead> registryEventConsumer) {
 		super(defaultConfig, registryEventConsumer);
+	}
+
+	public InMemoryBulkheadRegistry(BulkheadConfig defaultConfig, RegistryEventConsumer<Bulkhead> registryEventConsumer, io.vavr.collection.Map<String, String> tags) {
+		super(defaultConfig, registryEventConsumer, tags);
 	}
 
 	/**
@@ -92,7 +123,15 @@ public final class InMemoryBulkheadRegistry extends AbstractRegistry<Bulkhead, B
 	 */
 	@Override
 	public Bulkhead bulkhead(String name) {
-		return bulkhead(name, getDefaultConfig());
+		return bulkhead(name, HashMap.empty());
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public Bulkhead bulkhead(String name, io.vavr.collection.Map<String, String> tags) {
+		return bulkhead(name, getDefaultConfig(), getAllTags(tags));
 	}
 
 	/**
@@ -100,7 +139,15 @@ public final class InMemoryBulkheadRegistry extends AbstractRegistry<Bulkhead, B
 	 */
 	@Override
 	public Bulkhead bulkhead(String name, BulkheadConfig config) {
-		return computeIfAbsent(name, () -> Bulkhead.of(name, Objects.requireNonNull(config, CONFIG_MUST_NOT_BE_NULL)));
+		return bulkhead(name, config, HashMap.empty());
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public Bulkhead bulkhead(String name, BulkheadConfig config, io.vavr.collection.Map<String, String> tags) {
+		return computeIfAbsent(name, () -> Bulkhead.of(name, Objects.requireNonNull(config, CONFIG_MUST_NOT_BE_NULL), getAllTags(tags)));
 	}
 
 	/**
@@ -108,7 +155,15 @@ public final class InMemoryBulkheadRegistry extends AbstractRegistry<Bulkhead, B
 	 */
 	@Override
 	public Bulkhead bulkhead(String name, Supplier<BulkheadConfig> bulkheadConfigSupplier) {
-		return computeIfAbsent(name, () -> Bulkhead.of(name, Objects.requireNonNull(Objects.requireNonNull(bulkheadConfigSupplier, SUPPLIER_MUST_NOT_BE_NULL).get(), CONFIG_MUST_NOT_BE_NULL)));
+		return bulkhead(name, bulkheadConfigSupplier, HashMap.empty());
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public Bulkhead bulkhead(String name, Supplier<BulkheadConfig> bulkheadConfigSupplier, io.vavr.collection.Map<String, String> tags) {
+		return computeIfAbsent(name, () -> Bulkhead.of(name, Objects.requireNonNull(Objects.requireNonNull(bulkheadConfigSupplier, SUPPLIER_MUST_NOT_BE_NULL).get(), CONFIG_MUST_NOT_BE_NULL), getAllTags(tags)));
 	}
 
 	/**
@@ -116,7 +171,15 @@ public final class InMemoryBulkheadRegistry extends AbstractRegistry<Bulkhead, B
 	 */
 	@Override
 	public Bulkhead bulkhead(String name, String configName) {
+		return bulkhead(name, configName, HashMap.empty());
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public Bulkhead bulkhead(String name, String configName, io.vavr.collection.Map<String, String> tags) {
 		return computeIfAbsent(name, () -> Bulkhead.of(name, getConfiguration(configName)
-				.orElseThrow(() -> new ConfigurationNotFoundException(configName))));
+				.orElseThrow(() -> new ConfigurationNotFoundException(configName)), getAllTags(tags)));
 	}
 }

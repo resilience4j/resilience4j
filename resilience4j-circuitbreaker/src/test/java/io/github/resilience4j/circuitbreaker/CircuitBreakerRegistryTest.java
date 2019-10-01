@@ -61,6 +61,57 @@ public class CircuitBreakerRegistryTest {
         assertThat(circuitBreakerRegistry.getAllCircuitBreakers()).hasSize(2);
     }
 
+    @Test
+    public void noTagsByDefault() {
+        CircuitBreaker circuitBreaker = CircuitBreakerRegistry.ofDefaults().circuitBreaker("testName");
+        assertThat(circuitBreaker.getTags()).hasSize(0);
+    }
+
+    @Test
+    public void tagsOfRegistryAddedToInstance() {
+        CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.ofDefaults();
+        Map<String, CircuitBreakerConfig> circuitBreakerConfigs = Collections.singletonMap("default", circuitBreakerConfig);
+        io.vavr.collection.Map<String, String> circuitBreakerTags = io.vavr.collection.HashMap.of("key1","value1", "key2", "value2");
+        CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.of(circuitBreakerConfigs, circuitBreakerTags);
+        CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("testName");
+
+        assertThat(circuitBreaker.getTags()).containsOnlyElementsOf(circuitBreakerTags);
+    }
+
+    @Test
+    public void tagsAddedToInstance() {
+        CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
+        io.vavr.collection.Map<String, String> retryTags = io.vavr.collection.HashMap.of("key1","value1", "key2", "value2");
+        CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("testName", retryTags);
+
+        assertThat(circuitBreaker.getTags()).containsOnlyElementsOf(retryTags);
+    }
+
+    @Test
+    public void tagsOfRetriesShouldNotBeMixed() {
+        CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
+        CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.ofDefaults();
+        io.vavr.collection.Map<String, String> circuitBreakerTags = io.vavr.collection.HashMap.of("key1","value1", "key2", "value2");
+        CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("testName", circuitBreakerConfig, circuitBreakerTags);
+        io.vavr.collection.Map<String, String> circuitBreakerTags2 = io.vavr.collection.HashMap.of("key3","value3", "key4", "value4");
+        CircuitBreaker circuitBreaker2 = circuitBreakerRegistry.circuitBreaker("otherTestName", circuitBreakerConfig, circuitBreakerTags2);
+
+        assertThat(circuitBreaker.getTags()).containsOnlyElementsOf(circuitBreakerTags);
+        assertThat(circuitBreaker2.getTags()).containsOnlyElementsOf(circuitBreakerTags2);
+    }
+
+    @Test
+    public void tagsOfInstanceTagsShouldOverrideRegistryTags() {
+        CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.ofDefaults();
+        Map<String, CircuitBreakerConfig> circuitBreakerConfigs = Collections.singletonMap("default", circuitBreakerConfig);
+        io.vavr.collection.Map<String, String> circuitBreakerTags = io.vavr.collection.HashMap.of("key1","value1", "key2", "value2");
+        io.vavr.collection.Map<String, String> instanceTags = io.vavr.collection.HashMap.of("key1","value3", "key4", "value4");
+        CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.of(circuitBreakerConfigs, circuitBreakerTags);
+        CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("testName", circuitBreakerConfig, instanceTags);
+
+        io.vavr.collection.Map<String, String> expectedTags = io.vavr.collection.HashMap.of("key1","value3", "key2", "value2", "key4", "value4");
+        assertThat(circuitBreaker.getTags()).containsOnlyElementsOf(expectedTags);
+    }
 
 	@Test
     public void testCreateWithDefaultConfiguration() {

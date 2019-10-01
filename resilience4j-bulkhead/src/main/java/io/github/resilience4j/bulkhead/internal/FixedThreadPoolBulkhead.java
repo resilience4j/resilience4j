@@ -29,6 +29,8 @@ import io.github.resilience4j.bulkhead.event.BulkheadOnCallRejectedEvent;
 import io.github.resilience4j.core.EventConsumer;
 import io.github.resilience4j.core.EventProcessor;
 import io.github.resilience4j.core.lang.Nullable;
+import io.vavr.collection.HashMap;
+import io.vavr.collection.Map;
 
 import java.util.concurrent.*;
 import java.util.function.Supplier;
@@ -45,12 +47,14 @@ import static java.util.Objects.requireNonNull;
 public class FixedThreadPoolBulkhead implements ThreadPoolBulkhead {
 
 	private static final String CONFIG_MUST_NOT_BE_NULL = "Config must not be null";
+	private static final String TAGS_MUST_NOTE_BE_NULL = "Tags must not be null";
 
 	private final String name;
 	private final ThreadPoolExecutor executorService;
 	private final FixedThreadPoolBulkhead.BulkheadMetrics metrics;
 	private final FixedThreadPoolBulkhead.BulkheadEventProcessor eventProcessor;
 	private final ThreadPoolBulkheadConfig config;
+	private final Map<String, String> tags;
 
 	/**
 	 * Creates a bulkhead using a configuration supplied
@@ -59,8 +63,20 @@ public class FixedThreadPoolBulkhead implements ThreadPoolBulkhead {
 	 * @param bulkheadConfig custom bulkhead configuration
 	 */
 	public FixedThreadPoolBulkhead(String name, @Nullable ThreadPoolBulkheadConfig bulkheadConfig) {
+		this(name, bulkheadConfig, HashMap.empty());
+	}
+
+	/**
+	 * Creates a bulkhead using a configuration supplied
+	 *
+	 * @param name           the name of this bulkhead
+	 * @param bulkheadConfig custom bulkhead configuration
+	 * @param tags           tags to add to the Bulkhead
+	 */
+	public FixedThreadPoolBulkhead(String name, @Nullable ThreadPoolBulkheadConfig bulkheadConfig, Map<String, String> tags) {
 		this.name = name;
 		this.config = requireNonNull(bulkheadConfig, CONFIG_MUST_NOT_BE_NULL);
+		this.tags = requireNonNull(tags, TAGS_MUST_NOTE_BE_NULL);
 		// init thread pool executor
 		this.executorService = new ThreadPoolExecutor(config.getCoreThreadPoolSize(), config.getMaxThreadPoolSize(),
 				config.getKeepAliveDuration().toMillis(), TimeUnit.MILLISECONDS,
@@ -78,7 +94,16 @@ public class FixedThreadPoolBulkhead implements ThreadPoolBulkhead {
 	 * @param name the name of this bulkhead
 	 */
 	public FixedThreadPoolBulkhead(String name) {
-		this(name, ThreadPoolBulkheadConfig.ofDefaults());
+		this(name, ThreadPoolBulkheadConfig.ofDefaults(), HashMap.empty());
+	}
+
+	/**
+	 * Creates a bulkhead with a default config.
+	 *
+	 * @param name the name of this bulkhead
+	 */
+	public FixedThreadPoolBulkhead(String name, Map<String, String> tags) {
+		this(name, ThreadPoolBulkheadConfig.ofDefaults(), tags);
 	}
 
 	/**
@@ -88,7 +113,17 @@ public class FixedThreadPoolBulkhead implements ThreadPoolBulkhead {
 	 * @param configSupplier BulkheadConfig supplier
 	 */
 	public FixedThreadPoolBulkhead(String name, Supplier<ThreadPoolBulkheadConfig> configSupplier) {
-		this(name, configSupplier.get());
+		this(name, configSupplier.get(), HashMap.empty());
+	}
+
+	/**
+	 * Create a bulkhead using a configuration supplier
+	 *
+	 * @param name           the name of this bulkhead
+	 * @param configSupplier BulkheadConfig supplier
+	 */
+	public FixedThreadPoolBulkhead(String name, Supplier<ThreadPoolBulkheadConfig> configSupplier, Map<String, String> tags) {
+		this(name, configSupplier.get(), tags);
 	}
 
 	/**
@@ -164,6 +199,14 @@ public class FixedThreadPoolBulkhead implements ThreadPoolBulkhead {
 	@Override
 	public Metrics getMetrics() {
 		return metrics;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public Map<String, String> getTags() {
+		return tags;
 	}
 
 	/**
