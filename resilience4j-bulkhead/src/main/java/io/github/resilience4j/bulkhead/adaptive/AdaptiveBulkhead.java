@@ -66,12 +66,12 @@ public interface AdaptiveBulkhead {
 
     boolean tryAcquirePermission();
 
-    /**
-     * Acquires a permission to execute a call, only if one is available at the time of invocation
-     *
-     * @throws BulkheadFullException when the Bulkhead is full and no further calls are permitted.
-     */
-    void acquirePermission();
+	/**
+	 * Acquires a permission to execute a call, only if one is available at the time of invocation
+	 *
+	 * @throws BulkheadFullException when the Bulkhead is full and no further calls are permitted.
+	 */
+	void acquirePermission();
 
     /**
      * Releases a permission and increases the number of available permits by one.

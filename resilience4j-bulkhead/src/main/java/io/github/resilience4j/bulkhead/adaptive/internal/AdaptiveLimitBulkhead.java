@@ -22,6 +22,7 @@ import static java.lang.Math.round;
 import static java.util.Objects.requireNonNull;
 
 import java.time.Duration;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
 import io.github.resilience4j.bulkhead.BulkheadConfig;
@@ -111,6 +112,7 @@ public class AdaptiveLimitBulkhead implements AdaptiveBulkhead {
 			});
 		}
 	}
+
 
 	public String getName() {
 		return name;

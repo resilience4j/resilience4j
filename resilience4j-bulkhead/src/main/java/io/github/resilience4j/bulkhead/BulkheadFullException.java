@@ -73,4 +73,17 @@ public class BulkheadFullException extends RuntimeException {
 	public BulkheadFullException(AdaptiveBulkhead bulkhead) {
         super(String.format(ERROR_FURTHER_CALLS, bulkhead.getName()));
 	}
+
+    /**
+     * The constructor with a message.
+     *
+     * @param bulkhead the AdaptiveLimitBulkhead.
+     */
+    public static BulkheadFullException createBulkheadFullException(AdaptiveBulkhead bulkhead) {
+        boolean writableStackTraceEnabled = bulkhead.getBulkheadConfig().isWritableStackTraceEnabled();
+
+        String message = String.format("Bulkhead '%s' is full and does not permit further calls", bulkhead.getName());
+
+        return new BulkheadFullException(message, writableStackTraceEnabled);
+    }
 }
