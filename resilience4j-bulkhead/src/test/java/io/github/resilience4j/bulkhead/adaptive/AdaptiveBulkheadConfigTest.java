@@ -71,19 +71,18 @@ public class AdaptiveBulkheadConfigTest {
 				.hasMessage("minConcurrentRequestsLimit must be a positive value greater than zero");
 	}
 
+
 	@Test
-	public void testlimitIncrementInflightFactorConfig() {
-		assertThatThrownBy(() -> AimdConfig.builder().limitIncrementInflightFactor(0)
-				.build())
-				.isInstanceOf(IllegalArgumentException.class)
-				.hasMessage("limitIncrementInflightFactor must be a positive value greater than zero");
+	public void testLimitIncrementInflightFactor() {
+		final AimdConfig build = AimdConfig.builder().limitIncrementInflightFactor(1).build();
+		assertThat(build.getLimitIncrementInflightFactor()).isEqualTo(1);
 	}
 
 
 	@Test
 	public void testEqual() {
 		AimdConfig config = AimdConfig.builder()
-				.concurrencyDropMultiplier(0.3)
+				.concurrencyDropMultiplier(0.6)
 				.minConcurrentRequestsLimit(3)
 				.maxConcurrentRequestsLimit(3)
 				.slowCallDurationThreshold(150)
@@ -94,7 +93,7 @@ public class AdaptiveBulkheadConfigTest {
 				.slidingWindowType(AbstractConfig.SlidingWindow.TIME_BASED)
 				.build();
 		AimdConfig config2 = AimdConfig.builder()
-				.concurrencyDropMultiplier(0.3)
+				.concurrencyDropMultiplier(0.6)
 				.minConcurrentRequestsLimit(3)
 				.maxConcurrentRequestsLimit(3)
 				.slowCallDurationThreshold(150)
@@ -104,6 +103,10 @@ public class AdaptiveBulkheadConfigTest {
 				.slidingWindowSize(100)
 				.slidingWindowType(AbstractConfig.SlidingWindow.TIME_BASED)
 				.build();
+
+		final AimdConfig build = AimdConfig.from(config2).build();
+		assertThat(build.equals(config2));
+		assertThat(AimdConfig.ofDefaults().getMaxLimit()).isEqualTo(200);
 		assertThat(config.equals(config2)).isTrue();
 		assertThat(config.hashCode() == config2.hashCode()).isTrue();
 	}

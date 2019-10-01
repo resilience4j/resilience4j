@@ -162,11 +162,6 @@ public class AimdConfig extends AbstractConfig {
 			super(bulkheadConfig);
 			this.config = bulkheadConfig;
 		}
-
-		@Override
-		public AimdConfig build() {
-			return super.build();
-		}
 	}
 
 

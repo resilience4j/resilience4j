@@ -335,7 +335,7 @@ public interface AdaptiveBulkhead {
 	 * @return a consumer which is decorated by a Bulkhead.
 	 */
 	static <T> Consumer<T> decorateConsumer(AdaptiveBulkhead bulkhead, Consumer<T> consumer) {
-		return (t) -> {
+		return t -> {
 			bulkhead.acquirePermission();
 			Instant start = null;
 			try {
@@ -362,7 +362,7 @@ public interface AdaptiveBulkhead {
 	 * @return a consumer which is decorated by a Bulkhead.
 	 */
 	static <T> CheckedConsumer<T> decorateCheckedConsumer(AdaptiveBulkhead bulkhead, CheckedConsumer<T> consumer) {
-		return (t) -> {
+		return t -> {
 			bulkhead.acquirePermission();
 			Instant start = null;
 			try {

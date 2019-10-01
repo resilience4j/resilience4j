@@ -52,7 +52,7 @@ import io.github.resilience4j.core.metrics.Snapshot;
 
 public class AdaptiveLimitBulkhead implements AdaptiveBulkhead {
 	private static final Logger LOG = LoggerFactory.getLogger(AdaptiveLimitBulkhead.class);
-	private final static AdaptiveBulkheadEventProcessor eventProcessor = new AdaptiveBulkheadEventProcessor();
+	private static final AdaptiveBulkheadEventProcessor eventProcessor = new AdaptiveBulkheadEventProcessor();
 	private final String name;
 	private final AdaptiveBulkheadConfig adaptationConfig;
 	private final InternalMetrics metrics;

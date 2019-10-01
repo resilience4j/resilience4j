@@ -23,18 +23,18 @@ import java.util.function.Predicate;
 import io.github.resilience4j.bulkhead.adaptive.internal.AdaptiveLimitBulkhead;
 import io.github.resilience4j.bulkhead.adaptive.internal.config.AbstractConfig;
 import io.github.resilience4j.bulkhead.adaptive.internal.config.AimdConfig;
-import io.github.resilience4j.core.lang.NonNull;
 import io.github.resilience4j.core.lang.Nullable;
 
 /**
  * A {@link AdaptiveBulkheadConfig} configures a adaptation capabilities of  {@link AdaptiveLimitBulkhead}
  */
 public class AdaptiveBulkheadConfig<T extends AbstractConfig> {
+	@Nullable
 	private T config;
 	@Nullable
 	private Predicate<Exception> adaptIfError;
 	private int initialConcurrency = 1;
-	public static final boolean DEFAULT_WRITABLE_STACK_TRACE_ENABLED = true;
+	private static final boolean DEFAULT_WRITABLE_STACK_TRACE_ENABLED = true;
 	private boolean writableStackTraceEnabled = DEFAULT_WRITABLE_STACK_TRACE_ENABLED;
 
 	private AdaptiveBulkheadConfig() {
@@ -44,12 +44,10 @@ public class AdaptiveBulkheadConfig<T extends AbstractConfig> {
 		return initialConcurrency;
 	}
 
-	@NonNull
 	public T getConfiguration() {
 		return config;
 	}
 
-	@Nullable
 	public Predicate<Exception> getAdaptIfError() {
 		return adaptIfError;
 	}
@@ -129,14 +127,14 @@ public class AdaptiveBulkheadConfig<T extends AbstractConfig> {
 			return this;
 		}
 
-		public Builder<T> config(int initialConcurrency) {
+		public Builder<T> initialConcurrency(int initialConcurrency) {
 			adaptiveBulkheadConfig.initialConcurrency = initialConcurrency;
 			return this;
 		}
 
 		public AdaptiveBulkheadConfig<T> build() {
 
-			if (adaptiveBulkheadConfig.getConfiguration() != null) {
+			if (adaptiveBulkheadConfig.config != null) {
 				return adaptiveBulkheadConfig;
 			} else {
 				throw new IllegalArgumentException("target config object can not be NULL");
