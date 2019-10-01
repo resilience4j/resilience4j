@@ -36,7 +36,7 @@ public interface LimitPolicy {
 	 *
 	 * @param snapshot the metrics snapshot
 	 * @param inFlight concurrent in flight calls
-	 * @return @{@link LimitResult}
+	 * @return the the updated limit result if any @{@link LimitResult}
 	 */
 	LimitResult adaptLimitIfAny(@NonNull Snapshot snapshot, int inFlight);
 
