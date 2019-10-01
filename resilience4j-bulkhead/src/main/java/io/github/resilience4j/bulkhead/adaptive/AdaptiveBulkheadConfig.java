@@ -21,13 +21,15 @@ package io.github.resilience4j.bulkhead.adaptive;
 import java.util.function.Predicate;
 
 import io.github.resilience4j.bulkhead.adaptive.internal.AdaptiveLimitBulkhead;
-import io.github.resilience4j.bulkhead.adaptive.internal.config.AIMDConfig;
+import io.github.resilience4j.bulkhead.adaptive.internal.config.AbstractConfig;
+import io.github.resilience4j.bulkhead.adaptive.internal.config.AimdConfig;
+import io.github.resilience4j.core.lang.NonNull;
 import io.github.resilience4j.core.lang.Nullable;
 
 /**
  * A {@link AdaptiveBulkheadConfig} configures a adaptation capabilities of  {@link AdaptiveLimitBulkhead}
  */
-public class AdaptiveBulkheadConfig<T> {
+public class AdaptiveBulkheadConfig<T extends AbstractConfig> {
 	private T config;
 	@Nullable
 	private Predicate<Exception> adaptIfError;
@@ -42,7 +44,7 @@ public class AdaptiveBulkheadConfig<T> {
 		return initialConcurrency;
 	}
 
-	@Nullable
+	@NonNull
 	public T getConfiguration() {
 		return config;
 	}
@@ -61,7 +63,7 @@ public class AdaptiveBulkheadConfig<T> {
 	 *
 	 * @return a {@link AdaptiveBulkheadConfig.Builder}
 	 */
-	public static <T> Builder<T> from(AdaptiveBulkheadConfig<T> baseConfig) {
+	public static <T extends AbstractConfig> Builder<T> from(AdaptiveBulkheadConfig<T> baseConfig) {
 		return AdaptiveBulkheadConfig.builder(baseConfig);
 	}
 
@@ -70,8 +72,8 @@ public class AdaptiveBulkheadConfig<T> {
 	 *
 	 * @return a default Bulkhead configuration.
 	 */
-	public static AdaptiveBulkheadConfig<AIMDConfig> ofDefaults() {
-		return AdaptiveBulkheadConfig.<AIMDConfig>builder().config(AIMDConfig.builder().build()).build();
+	public static AdaptiveBulkheadConfig<AimdConfig> ofDefaults() {
+		return AdaptiveBulkheadConfig.<AimdConfig>builder().config(AimdConfig.builder().build()).build();
 	}
 
 	/**
@@ -79,7 +81,7 @@ public class AdaptiveBulkheadConfig<T> {
 	 *
 	 * @return a {@link AdaptiveBulkheadConfig.Builder}
 	 */
-	public static <T> Builder<T> builder() {
+	public static <T extends AbstractConfig> Builder<T> builder() {
 		return new Builder<>();
 	}
 
@@ -88,11 +90,11 @@ public class AdaptiveBulkheadConfig<T> {
 	 *
 	 * @return a {@link AdaptiveBulkheadConfig.Builder}
 	 */
-	public static <T> Builder<T> builder(AdaptiveBulkheadConfig<T> bulkheadConfig) {
+	public static <T extends AbstractConfig> Builder<T> builder(AdaptiveBulkheadConfig<T> bulkheadConfig) {
 		return new Builder<>(bulkheadConfig);
 	}
 
-	public static class Builder<T> {
+	public static class Builder<T extends AbstractConfig> {
 		private final AdaptiveBulkheadConfig<T> adaptiveBulkheadConfig;
 
 		private Builder() {
@@ -133,6 +135,7 @@ public class AdaptiveBulkheadConfig<T> {
 		}
 
 		public AdaptiveBulkheadConfig<T> build() {
+
 			if (adaptiveBulkheadConfig.getConfiguration() != null) {
 				return adaptiveBulkheadConfig;
 			} else {

@@ -20,20 +20,20 @@ import org.knowm.xchart.style.Styler;
 
 import io.github.resilience4j.bulkhead.adaptive.AdaptiveBulkhead;
 import io.github.resilience4j.bulkhead.adaptive.AdaptiveBulkheadConfig;
-import io.github.resilience4j.bulkhead.adaptive.internal.config.AIMDConfig;
+import io.github.resilience4j.bulkhead.adaptive.internal.config.AimdConfig;
 
 /**
  * test the adoptive bulkhead limiter logic
  */
 public class AdaptiveBulkheadWithLimiterTest {
 	private AdaptiveBulkhead bulkhead;
-	private AdaptiveBulkheadConfig<AIMDConfig> config;
+	private AdaptiveBulkheadConfig<AimdConfig> config;
 	// enable if u need to see the graphs of the executions
 	private boolean drawGraphs = false;
 
 	@Before
 	public void setup() {
-		config = AdaptiveBulkheadConfig.<AIMDConfig>builder().config(AIMDConfig.builder().maxConcurrentRequestsLimit(50)
+		config = AdaptiveBulkheadConfig.<AimdConfig>builder().config(AimdConfig.builder().maxConcurrentRequestsLimit(50)
 				.minConcurrentRequestsLimit(5)
 				.slidingWindowSize(5)
 				.slidingWindowTime(2)

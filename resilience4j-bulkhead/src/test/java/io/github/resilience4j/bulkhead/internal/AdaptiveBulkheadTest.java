@@ -22,7 +22,7 @@ import org.mockito.Mockito;
 import io.github.resilience4j.bulkhead.BulkheadFullException;
 import io.github.resilience4j.bulkhead.adaptive.AdaptiveBulkhead;
 import io.github.resilience4j.bulkhead.adaptive.AdaptiveBulkheadConfig;
-import io.github.resilience4j.bulkhead.adaptive.internal.config.AIMDConfig;
+import io.github.resilience4j.bulkhead.adaptive.internal.config.AimdConfig;
 import io.github.resilience4j.test.HelloWorldService;
 import io.vavr.CheckedConsumer;
 import io.vavr.CheckedFunction0;
@@ -33,14 +33,14 @@ import io.vavr.control.Try;
 
 public class AdaptiveBulkheadTest {
 	private AdaptiveBulkhead default_bulkhead;
-	private AdaptiveBulkheadConfig<AIMDConfig> config;
+	private AdaptiveBulkheadConfig<AimdConfig> config;
 	private HelloWorldService helloWorldService;
 
 	@Before
 	public void setUp() {
 		helloWorldService = Mockito.mock(HelloWorldService.class);
 
-		config = AdaptiveBulkheadConfig.<AIMDConfig>builder().config(AIMDConfig.builder().maxConcurrentRequestsLimit(2)
+		config = AdaptiveBulkheadConfig.<AimdConfig>builder().config(AimdConfig.builder().maxConcurrentRequestsLimit(2)
 				.minConcurrentRequestsLimit(1)
 				.slowCallDurationThreshold(100)
 				.build()).build();
@@ -77,7 +77,7 @@ public class AdaptiveBulkheadTest {
 		// then
 		assertThat(bulkhead).isNotNull();
 		assertThat(bulkhead.getBulkheadConfig()).isNotNull();
-		assertThat(((AdaptiveBulkheadConfig<AIMDConfig>) bulkhead.getBulkheadConfig()).getConfiguration().getSlidingWindowSize()).isEqualTo(100);
+		assertThat(((AdaptiveBulkheadConfig<AimdConfig>) bulkhead.getBulkheadConfig()).getConfiguration().getSlidingWindowSize()).isEqualTo(100);
 	}
 
 	@Test
@@ -133,7 +133,7 @@ public class AdaptiveBulkheadTest {
 	@Test
 	public void shouldDecorateSupplierAndReturnWithExceptionAdaptIfError() {
 
-		final AdaptiveBulkheadConfig<AIMDConfig> config = AdaptiveBulkheadConfig.<AIMDConfig>builder().config(AIMDConfig.builder().minConcurrentRequestsLimit(2).slowCallDurationThreshold(200)
+		final AdaptiveBulkheadConfig<AimdConfig> config = AdaptiveBulkheadConfig.<AimdConfig>builder().config(AimdConfig.builder().minConcurrentRequestsLimit(2).slowCallDurationThreshold(200)
 				.build()).adaptIfError(e -> e instanceof RuntimeException).build();
 		// Given
 		AdaptiveBulkhead bulkhead = AdaptiveBulkhead.of("test", config);
@@ -188,7 +188,7 @@ public class AdaptiveBulkheadTest {
 	public void shouldDecorateCheckedSupplierAndReturnWithExceptionAdaptIfError() throws Throwable {
 
 		// Given
-		final AdaptiveBulkheadConfig<AIMDConfig> config = AdaptiveBulkheadConfig.<AIMDConfig>builder().config(AIMDConfig.builder().minConcurrentRequestsLimit(2)
+		final AdaptiveBulkheadConfig<AimdConfig> config = AdaptiveBulkheadConfig.<AimdConfig>builder().config(AimdConfig.builder().minConcurrentRequestsLimit(2)
 				.slowCallDurationThreshold(200)
 				.build()).adaptIfError(e -> e instanceof RuntimeException).build();
 		AdaptiveBulkhead bulkhead = AdaptiveBulkhead.of("test", config);
@@ -260,7 +260,7 @@ public class AdaptiveBulkheadTest {
 	public void shouldDecorateCallableAndReturnWithExceptionIfError() throws Throwable {
 
 		// Given
-		final AdaptiveBulkheadConfig<AIMDConfig> config = AdaptiveBulkheadConfig.<AIMDConfig>builder().config(AIMDConfig.builder().minConcurrentRequestsLimit(2)
+		final AdaptiveBulkheadConfig<AimdConfig> config = AdaptiveBulkheadConfig.<AimdConfig>builder().config(AimdConfig.builder().minConcurrentRequestsLimit(2)
 				.slowCallDurationThreshold(200)
 				.build()).adaptIfError(e -> e instanceof RuntimeException).build();
 		AdaptiveBulkhead bulkhead = AdaptiveBulkhead.of("test", config);
@@ -314,7 +314,7 @@ public class AdaptiveBulkheadTest {
 	public void shouldDecorateCheckedRunnableAndReturnWithExceptionAdaptIfError() throws Throwable {
 
 		// Given
-		final AdaptiveBulkheadConfig<AIMDConfig> config = AdaptiveBulkheadConfig.<AIMDConfig>builder().config(AIMDConfig.builder().minConcurrentRequestsLimit(2)
+		final AdaptiveBulkheadConfig<AimdConfig> config = AdaptiveBulkheadConfig.<AimdConfig>builder().config(AimdConfig.builder().minConcurrentRequestsLimit(2)
 				.slowCallDurationThreshold(200)
 				.build()).adaptIfError(e -> e instanceof RuntimeException).build();
 		AdaptiveBulkhead bulkhead = AdaptiveBulkhead.of("test", config);
@@ -382,7 +382,7 @@ public class AdaptiveBulkheadTest {
 	public void shouldDecorateRunnableAndReturnWithExceptionAdaptIfError() {
 
 		// Given
-		final AdaptiveBulkheadConfig<AIMDConfig> config = AdaptiveBulkheadConfig.<AIMDConfig>builder().config(AIMDConfig.builder().minConcurrentRequestsLimit(2)
+		final AdaptiveBulkheadConfig<AimdConfig> config = AdaptiveBulkheadConfig.<AimdConfig>builder().config(AimdConfig.builder().minConcurrentRequestsLimit(2)
 				.slowCallDurationThreshold(200)
 				.build()).adaptIfError(e -> e instanceof RuntimeException).build();
 
@@ -437,7 +437,7 @@ public class AdaptiveBulkheadTest {
 	public void shouldDecorateConsumerAndReturnWithExceptionAdaptIfError() {
 
 		// Given
-		final AdaptiveBulkheadConfig<AIMDConfig> config = AdaptiveBulkheadConfig.<AIMDConfig>builder().config(AIMDConfig.builder().minConcurrentRequestsLimit(2)
+		final AdaptiveBulkheadConfig<AimdConfig> config = AdaptiveBulkheadConfig.<AimdConfig>builder().config(AimdConfig.builder().minConcurrentRequestsLimit(2)
 				.slowCallDurationThreshold(100)
 				.build()).adaptIfError(e -> e instanceof RuntimeException).build();
 		AdaptiveBulkhead bulkhead = AdaptiveBulkhead.of("test", config);
@@ -559,7 +559,7 @@ public class AdaptiveBulkheadTest {
 		// tag::bulkheadFullException[]
 		// Given
 
-		AdaptiveBulkheadConfig<AIMDConfig> config = AdaptiveBulkheadConfig.<AIMDConfig>builder().config(AIMDConfig.builder()
+		AdaptiveBulkheadConfig<AimdConfig> config = AdaptiveBulkheadConfig.<AimdConfig>builder().config(AimdConfig.builder()
 				.minConcurrentRequestsLimit(2)
 				.slowCallDurationThreshold(2)
 
@@ -585,7 +585,7 @@ public class AdaptiveBulkheadTest {
 	public void shouldReturnFailureWithRuntimeException() {
 
 		// Given
-		AdaptiveBulkheadConfig<AIMDConfig> config = AdaptiveBulkheadConfig.<AIMDConfig>builder().config(AIMDConfig.builder().minConcurrentRequestsLimit(2)
+		AdaptiveBulkheadConfig<AimdConfig> config = AdaptiveBulkheadConfig.<AimdConfig>builder().config(AimdConfig.builder().minConcurrentRequestsLimit(2)
 				.slowCallDurationThreshold(2)
 				.build()).build();
 		AdaptiveBulkhead bulkhead = AdaptiveBulkhead.of("test", config);
@@ -684,7 +684,7 @@ public class AdaptiveBulkheadTest {
 	public void shouldDecorateCompletionStageAndReturnWithExceptionAtSyncStageAdaptIfError() throws ExecutionException, InterruptedException {
 
 		// Given
-		AdaptiveBulkheadConfig<AIMDConfig> config = AdaptiveBulkheadConfig.<AIMDConfig>builder().config(AIMDConfig.builder().minConcurrentRequestsLimit(2)
+		AdaptiveBulkheadConfig<AimdConfig> config = AdaptiveBulkheadConfig.<AimdConfig>builder().config(AimdConfig.builder().minConcurrentRequestsLimit(2)
 				.slowCallDurationThreshold(2)
 				.build()).build();
 		AdaptiveBulkhead bulkhead = AdaptiveBulkhead.of("test", config);

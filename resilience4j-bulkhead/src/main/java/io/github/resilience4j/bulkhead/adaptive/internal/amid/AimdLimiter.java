@@ -21,7 +21,6 @@ package io.github.resilience4j.bulkhead.adaptive.internal.amid;
 import static java.lang.Math.max;
 
 import java.time.Duration;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.slf4j.Logger;
@@ -30,72 +29,32 @@ import org.slf4j.LoggerFactory;
 import io.github.resilience4j.bulkhead.adaptive.AdaptiveBulkheadConfig;
 import io.github.resilience4j.bulkhead.adaptive.LimitPolicy;
 import io.github.resilience4j.bulkhead.adaptive.LimitResult;
-import io.github.resilience4j.bulkhead.adaptive.internal.config.AIMDConfig;
+import io.github.resilience4j.bulkhead.adaptive.internal.config.AimdConfig;
 import io.github.resilience4j.core.lang.NonNull;
-import io.github.resilience4j.core.metrics.FixedSizeSlidingWindowMetrics;
-import io.github.resilience4j.core.metrics.Metrics;
-import io.github.resilience4j.core.metrics.SlidingTimeWindowMetrics;
 import io.github.resilience4j.core.metrics.Snapshot;
 
 /**
  * limit adapter based sliding window metrics and AMID algorithm
  */
-public class AIMDLimiter implements LimitPolicy {
-	private static final Logger LOG = LoggerFactory.getLogger(AIMDLimiter.class);
+public class AimdLimiter implements LimitPolicy {
+	private static final Logger LOG = LoggerFactory.getLogger(AimdLimiter.class);
 	private static final long MILLI_SCALE = 1_000_000L;
 	public static final String DROPPING_THE_LIMIT_WITH_NEW_MAX_CONCURRENT_CALLS = "Dropping the limit with new max concurrent calls {}";
 	private final AtomicInteger currentMaxLimit;
-	private final Metrics metrics;
-	private final AdaptiveBulkheadConfig<AIMDConfig> amidConfigAdaptiveBulkheadConfig;
+	private final AdaptiveBulkheadConfig<AimdConfig> amidConfigAdaptiveBulkheadConfig;
 	private final long desirableLatency;
 
 
-	public AIMDLimiter(@NonNull AdaptiveBulkheadConfig<AIMDConfig> config) {
+	public AimdLimiter(@NonNull AdaptiveBulkheadConfig<AimdConfig> config) {
 		this.amidConfigAdaptiveBulkheadConfig = config;
-		if (amidConfigAdaptiveBulkheadConfig.getConfiguration().getSlidingWindowType() == AIMDConfig.SlidingWindow.COUNT_BASED) {
-			this.metrics = new FixedSizeSlidingWindowMetrics(config.getConfiguration().getSlidingWindowSize());
-		} else {
-			this.metrics = new SlidingTimeWindowMetrics(config.getConfiguration().getSlidingWindowTime());
-		}
 		this.currentMaxLimit = new AtomicInteger(amidConfigAdaptiveBulkheadConfig.getConfiguration().getMinLimit());
 		desirableLatency = amidConfigAdaptiveBulkheadConfig.getConfiguration().getDesirableLatency().toNanos();
 	}
 
 	@Override
-	public LimitResult adaptLimitIfAny(@NonNull long callTime, boolean isSuccess, int inFlight) {
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("starting the adation of the limit for callTime :{} , isSuccess: {}, inFlight: {}", callTime, isSuccess, inFlight);
-		}
-		Snapshot snapshot;
-		final long callTimeNanos = TimeUnit.MILLISECONDS.toNanos(callTime);
-		if (isSuccess) {
-			if (callTimeNanos > desirableLatency) {
-				snapshot = metrics.record(callTimeNanos, TimeUnit.NANOSECONDS, Metrics.Outcome.SLOW_SUCCESS);
-			} else {
-				snapshot = metrics.record(callTimeNanos, TimeUnit.NANOSECONDS, Metrics.Outcome.SUCCESS);
-			}
-		} else {
-			if (callTimeNanos > desirableLatency) {
-				snapshot = metrics.record(callTimeNanos, TimeUnit.NANOSECONDS, Metrics.Outcome.SLOW_ERROR);
-			} else {
-				snapshot = metrics.record(callTimeNanos, TimeUnit.NANOSECONDS, Metrics.Outcome.ERROR);
-			}
-		}
+	public LimitResult adaptLimitIfAny(@NonNull Snapshot snapshot, int inFlight) {
 		return checkIfThresholdsExceeded(snapshot, inFlight);
 	}
-
-
-	@Override
-	@NonNull
-	public Metrics getMetrics() {
-		return metrics;
-	}
-
-
-	private int getCurrentLimit() {
-		return currentMaxLimit.get();
-	}
-
 
 	/**
 	 * Checks if the following :
@@ -131,6 +90,10 @@ public class AIMDLimiter implements LimitPolicy {
 		}
 		final int updatedLimit = currentMaxLimit.updateAndGet(currLimit -> Math.min(amidConfigAdaptiveBulkheadConfig.getConfiguration().getMaxLimit(), max(amidConfigAdaptiveBulkheadConfig.getConfiguration().getMinLimit(), currLimit)));
 		return new LimitResult(updatedLimit, waitTimeMillis != null ? waitTimeMillis : 0);
+	}
+
+	private int getCurrentLimit() {
+		return currentMaxLimit.get();
 	}
 
 	private Long handleDropLimit(Duration averageLatencySeconds) {

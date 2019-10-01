@@ -24,16 +24,16 @@ import io.github.resilience4j.bulkhead.adaptive.internal.AdaptiveLimitBulkhead;
 import io.github.resilience4j.core.lang.NonNull;
 
 /**
- * A {@link AIMDConfig} configures a adaptation capabilities of  {@link AdaptiveLimitBulkhead}
+ * A {@link AimdConfig} configures a adaptation capabilities of  {@link AdaptiveLimitBulkhead}
  */
-public class AIMDConfig extends AbstractConfig {
+public class AimdConfig extends AbstractConfig {
 	int minConcurrentRequestLimit = 5;
 	int maxConcurrentRequestLimit = 200;
 	double concurrencyDropMultiplier = 0.87d;
 	// LimitIncrementInflightFactor will increment the limit only if inflight * LimitIncrementInflightFactor > limit
 	int limitIncrementInflightFactor = 2;
 
-	private AIMDConfig() {
+	private AimdConfig() {
 	}
 
 	@NonNull
@@ -60,7 +60,7 @@ public class AIMDConfig extends AbstractConfig {
 		if (this == o) return true;
 		if (o == null || getClass() != o.getClass()) return false;
 		if (!super.equals(o)) return false;
-		AIMDConfig that = (AIMDConfig) o;
+		AimdConfig that = (AimdConfig) o;
 		return minConcurrentRequestLimit == that.minConcurrentRequestLimit && limitIncrementInflightFactor == that.limitIncrementInflightFactor &&
 				maxConcurrentRequestLimit == that.maxConcurrentRequestLimit &&
 				Double.compare(that.concurrencyDropMultiplier, concurrencyDropMultiplier) == 0;
@@ -74,10 +74,10 @@ public class AIMDConfig extends AbstractConfig {
 	/**
 	 * Returns a builder to create a custom AdaptiveBulkheadConfig.
 	 *
-	 * @return a {@link AIMDConfig.Builder}
+	 * @return a {@link AimdConfig.Builder}
 	 */
-	public static Builder from(AIMDConfig baseConfig) {
-		return new AIMDConfig.Builder(baseConfig);
+	public static Builder from(AimdConfig baseConfig) {
+		return new AimdConfig.Builder(baseConfig);
 	}
 
 	/**
@@ -85,25 +85,25 @@ public class AIMDConfig extends AbstractConfig {
 	 *
 	 * @return a default Bulkhead configuration.
 	 */
-	public static AIMDConfig ofDefaults() {
-		return new AIMDConfig.Builder().build();
+	public static AimdConfig ofDefaults() {
+		return new AimdConfig.Builder().build();
 	}
 
 	/**
 	 * Returns a builder to create a custom AdaptiveBulkheadConfig.
 	 *
-	 * @return a {@link AIMDConfig.Builder}
+	 * @return a {@link AimdConfig.Builder}
 	 */
 	public static Builder builder() {
 		return new Builder();
 	}
 
 
-	public static class Builder extends AbstractConfig.Builder<AIMDConfig> {
+	public static class Builder extends AbstractConfig.Builder<AimdConfig> {
 
 		private Builder() {
 			super();
-			config = new AIMDConfig();
+			config = new AimdConfig();
 		}
 
 		/**
@@ -158,13 +158,13 @@ public class AIMDConfig extends AbstractConfig {
 		}
 
 
-		private Builder(AIMDConfig bulkheadConfig) {
+		private Builder(AimdConfig bulkheadConfig) {
 			super(bulkheadConfig);
 			this.config = bulkheadConfig;
 		}
 
 		@Override
-		public AIMDConfig build() {
+		public AimdConfig build() {
 			return super.build();
 		}
 	}
