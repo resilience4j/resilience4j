@@ -32,6 +32,8 @@ public class AdaptiveBulkheadConfig<T> {
 	@Nullable
 	private Predicate<Exception> adaptIfError;
 	private int initialConcurrency = 1;
+	public static final boolean DEFAULT_WRITABLE_STACK_TRACE_ENABLED = true;
+	private boolean writableStackTraceEnabled = DEFAULT_WRITABLE_STACK_TRACE_ENABLED;
 
 	private AdaptiveBulkheadConfig() {
 	}
@@ -48,6 +50,10 @@ public class AdaptiveBulkheadConfig<T> {
 	@Nullable
 	public Predicate<Exception> getAdaptIfError() {
 		return adaptIfError;
+	}
+
+	public boolean isWritableStackTraceEnabled() {
+		return writableStackTraceEnabled;
 	}
 
 	/**
@@ -101,6 +107,20 @@ public class AdaptiveBulkheadConfig<T> {
 			adaptiveBulkheadConfig.adaptIfError = adaptIfError;
 			return this;
 		}
+
+		/**
+		 * Enables writable stack traces. When set to false, {@link Exception#getStackTrace()} returns a zero length array.
+		 * This may be used to reduce log spam when the circuit breaker is open as the cause of the exceptions is already
+		 * known (the circuit breaker is short-circuiting calls).
+		 *
+		 * @param writableStackTraceEnabled flag to control if stack trace is writable
+		 * @return the BulkheadConfig.Builder
+		 */
+		public Builder<T> writableStackTraceEnabled(boolean writableStackTraceEnabled) {
+			adaptiveBulkheadConfig.writableStackTraceEnabled = writableStackTraceEnabled;
+			return this;
+		}
+
 
 		public Builder<T> config(T config) {
 			adaptiveBulkheadConfig.config = config;

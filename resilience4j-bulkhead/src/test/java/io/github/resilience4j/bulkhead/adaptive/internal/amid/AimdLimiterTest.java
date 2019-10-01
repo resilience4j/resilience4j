@@ -44,7 +44,7 @@ public class AimdLimiterTest {
 				.slidingWindowTime(2)
 				.failureRateThreshold(50)
 				.slowCallRateThreshold(50)
-				.desirableOperationLatency(200)
+				.slowCallDurationThreshold(200)
 				.build()).build();
 
 		BulkheadConfig currentConfig = BulkheadConfig.custom()
@@ -69,7 +69,7 @@ public class AimdLimiterTest {
 		Collection<Callable<String>> threads = new ArrayList<>(2000);
 		for (int i = 0; i < 3000; i++) {
 			final Duration duration = Duration.ofMillis(randomLatency(5, 400));
-			final LimitResult limitResult = aimdLimiter.adaptLimitIfAny(duration, true, randomLInFlight(1, 50));
+			final LimitResult limitResult = aimdLimiter.adaptLimitIfAny(duration.toMillis(), true, randomLInFlight(1, 50));
 			if (drawGraphs) {
 				maxConcurrentCalls.add((double) limitResult.getLimit());
 				time.add((double) count.incrementAndGet());

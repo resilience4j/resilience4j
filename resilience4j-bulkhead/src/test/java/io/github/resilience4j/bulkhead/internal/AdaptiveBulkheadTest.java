@@ -42,7 +42,7 @@ public class AdaptiveBulkheadTest {
 
 		config = AdaptiveBulkheadConfig.<AIMDConfig>builder().config(AIMDConfig.builder().maxConcurrentRequestsLimit(2)
 				.minConcurrentRequestsLimit(1)
-				.desirableOperationLatency(100)
+				.slowCallDurationThreshold(100)
 				.build()).build();
 		default_bulkhead = AdaptiveBulkhead.of("test", config);
 	}
@@ -133,7 +133,7 @@ public class AdaptiveBulkheadTest {
 	@Test
 	public void shouldDecorateSupplierAndReturnWithExceptionAdaptIfError() {
 
-		final AdaptiveBulkheadConfig<AIMDConfig> config = AdaptiveBulkheadConfig.<AIMDConfig>builder().config(AIMDConfig.builder().minConcurrentRequestsLimit(2).desirableOperationLatency(200)
+		final AdaptiveBulkheadConfig<AIMDConfig> config = AdaptiveBulkheadConfig.<AIMDConfig>builder().config(AIMDConfig.builder().minConcurrentRequestsLimit(2).slowCallDurationThreshold(200)
 				.build()).adaptIfError(e -> e instanceof RuntimeException).build();
 		// Given
 		AdaptiveBulkhead bulkhead = AdaptiveBulkhead.of("test", config);
@@ -189,7 +189,7 @@ public class AdaptiveBulkheadTest {
 
 		// Given
 		final AdaptiveBulkheadConfig<AIMDConfig> config = AdaptiveBulkheadConfig.<AIMDConfig>builder().config(AIMDConfig.builder().minConcurrentRequestsLimit(2)
-				.desirableOperationLatency(200)
+				.slowCallDurationThreshold(200)
 				.build()).adaptIfError(e -> e instanceof RuntimeException).build();
 		AdaptiveBulkhead bulkhead = AdaptiveBulkhead.of("test", config);
 		BDDMockito.given(helloWorldService.returnHelloWorldWithException()).willThrow(new RuntimeException("BAM!"));
@@ -261,7 +261,7 @@ public class AdaptiveBulkheadTest {
 
 		// Given
 		final AdaptiveBulkheadConfig<AIMDConfig> config = AdaptiveBulkheadConfig.<AIMDConfig>builder().config(AIMDConfig.builder().minConcurrentRequestsLimit(2)
-				.desirableOperationLatency(200)
+				.slowCallDurationThreshold(200)
 				.build()).adaptIfError(e -> e instanceof RuntimeException).build();
 		AdaptiveBulkhead bulkhead = AdaptiveBulkhead.of("test", config);
 		BDDMockito.given(helloWorldService.returnHelloWorldWithException()).willThrow(new RuntimeException("BAM!"));
@@ -315,7 +315,7 @@ public class AdaptiveBulkheadTest {
 
 		// Given
 		final AdaptiveBulkheadConfig<AIMDConfig> config = AdaptiveBulkheadConfig.<AIMDConfig>builder().config(AIMDConfig.builder().minConcurrentRequestsLimit(2)
-				.desirableOperationLatency(200)
+				.slowCallDurationThreshold(200)
 				.build()).adaptIfError(e -> e instanceof RuntimeException).build();
 		AdaptiveBulkhead bulkhead = AdaptiveBulkhead.of("test", config);
 
@@ -383,7 +383,7 @@ public class AdaptiveBulkheadTest {
 
 		// Given
 		final AdaptiveBulkheadConfig<AIMDConfig> config = AdaptiveBulkheadConfig.<AIMDConfig>builder().config(AIMDConfig.builder().minConcurrentRequestsLimit(2)
-				.desirableOperationLatency(200)
+				.slowCallDurationThreshold(200)
 				.build()).adaptIfError(e -> e instanceof RuntimeException).build();
 
 		AdaptiveBulkhead bulkhead = AdaptiveBulkhead.of("test", config);
@@ -438,7 +438,7 @@ public class AdaptiveBulkheadTest {
 
 		// Given
 		final AdaptiveBulkheadConfig<AIMDConfig> config = AdaptiveBulkheadConfig.<AIMDConfig>builder().config(AIMDConfig.builder().minConcurrentRequestsLimit(2)
-				.desirableOperationLatency(100)
+				.slowCallDurationThreshold(100)
 				.build()).adaptIfError(e -> e instanceof RuntimeException).build();
 		AdaptiveBulkhead bulkhead = AdaptiveBulkhead.of("test", config);
 
@@ -561,7 +561,7 @@ public class AdaptiveBulkheadTest {
 
 		AdaptiveBulkheadConfig<AIMDConfig> config = AdaptiveBulkheadConfig.<AIMDConfig>builder().config(AIMDConfig.builder()
 				.minConcurrentRequestsLimit(2)
-				.desirableOperationLatency(2)
+				.slowCallDurationThreshold(2)
 
 				.build()).build();
 
@@ -586,7 +586,7 @@ public class AdaptiveBulkheadTest {
 
 		// Given
 		AdaptiveBulkheadConfig<AIMDConfig> config = AdaptiveBulkheadConfig.<AIMDConfig>builder().config(AIMDConfig.builder().minConcurrentRequestsLimit(2)
-				.desirableOperationLatency(2)
+				.slowCallDurationThreshold(2)
 				.build()).build();
 		AdaptiveBulkhead bulkhead = AdaptiveBulkhead.of("test", config);
 		bulkhead.tryAcquirePermission();
@@ -685,7 +685,7 @@ public class AdaptiveBulkheadTest {
 
 		// Given
 		AdaptiveBulkheadConfig<AIMDConfig> config = AdaptiveBulkheadConfig.<AIMDConfig>builder().config(AIMDConfig.builder().minConcurrentRequestsLimit(2)
-				.desirableOperationLatency(2)
+				.slowCallDurationThreshold(2)
 				.build()).build();
 		AdaptiveBulkhead bulkhead = AdaptiveBulkhead.of("test", config);
 

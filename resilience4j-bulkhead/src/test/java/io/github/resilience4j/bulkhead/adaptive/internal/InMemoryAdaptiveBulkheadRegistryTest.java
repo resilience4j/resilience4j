@@ -27,8 +27,8 @@ public class InMemoryAdaptiveBulkheadRegistryTest {
 		// registry with custom config
 		config = AdaptiveBulkheadConfig.<AIMDConfig>builder().config(AIMDConfig.builder()
 				.maxConcurrentRequestsLimit(300)
-				.desirableOperationLatency(1)
-				.desirableOperationLatency(200)
+				.slowCallDurationThreshold(1)
+				.slowCallDurationThreshold(200)
 				.build()).build();
 	}
 

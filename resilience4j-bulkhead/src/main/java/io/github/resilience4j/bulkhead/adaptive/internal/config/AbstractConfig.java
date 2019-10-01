@@ -29,16 +29,16 @@ import io.github.resilience4j.core.lang.NonNull;
  */
 public class AbstractConfig {
 	private static final SlidingWindow DEFAULT_SLIDING_WINDOW_TYPE = SlidingWindow.COUNT_BASED;
-	private static final double DEFAULT_FAILURE_RATE_THRESHOLD = 50.0; // Percentage
-	private static final double DEFAULT_SLOW_CALL_RATE_THRESHOLD = 50.0; // Percentage
+	private static final float DEFAULT_FAILURE_RATE_THRESHOLD = 50.0f; // Percentage
+	private static final float DEFAULT_SLOW_CALL_RATE_THRESHOLD = 50.0f; // Percentage
 	private static final int DEFAULT_SLIDING_WINDOW_SIZE = 100;
 	private static final long DEFAULT_SLOW_CALL_DURATION_THRESHOLD = 5; // Seconds
 	private static final int DEFAULT_SLIDING_WIN_TIME = 10; // Seconds
 
-	double failureRateThreshold = DEFAULT_FAILURE_RATE_THRESHOLD;
+	float failureRateThreshold = DEFAULT_FAILURE_RATE_THRESHOLD;
 	int slidingWindowSize = DEFAULT_SLIDING_WINDOW_SIZE;
 	SlidingWindow slidingWindowType = DEFAULT_SLIDING_WINDOW_TYPE;
-	double slowCallRateThreshold = DEFAULT_SLOW_CALL_RATE_THRESHOLD;
+	float slowCallRateThreshold = DEFAULT_SLOW_CALL_RATE_THRESHOLD;
 	Duration desirableLatency = Duration.ofSeconds(DEFAULT_SLOW_CALL_DURATION_THRESHOLD);
 	int slidingWindowTime = DEFAULT_SLIDING_WIN_TIME;
 
@@ -46,13 +46,14 @@ public class AbstractConfig {
 	public Duration getDesirableLatency() {
 		return desirableLatency;
 	}
+
 	@NonNull
 	public int getSlidingWindowTime() {
 		return slidingWindowTime;
 	}
 
 	@NonNull
-	public double getFailureRateThreshold() {
+	public float getFailureRateThreshold() {
 		return failureRateThreshold;
 	}
 
@@ -67,7 +68,7 @@ public class AbstractConfig {
 	}
 
 	@NonNull
-	public double getSlowCallRateThreshold() {
+	public float getSlowCallRateThreshold() {
 		return slowCallRateThreshold;
 	}
 
@@ -116,16 +117,16 @@ public class AbstractConfig {
 		/**
 		 * Desirable operation latency in millis/operation.
 		 * This is our foothold that we will circling around.
-		 * System will constantly measure actual average latency and compare it with "desirableOperationLatency".
-		 * If you actual latency will be lower than "desirableOperationLatency",
+		 * System will constantly measure actual average latency and compare it with "slowCallDurationThreshold".
+		 * If you actual latency will be lower than "slowCallDurationThreshold",
 		 * will calculate the difference and use it as {@link BulkheadConfig}.maxWaitTime
 		 *
 		 * @param desirableOperationLatency - in sec/op
 		 * @return a {@link Builder}
 		 */
-		public Builder<T> desirableOperationLatency(long desirableOperationLatency) {
+		public Builder<T> slowCallDurationThreshold(long desirableOperationLatency) {
 			if (desirableOperationLatency <= 0.0) {
-				throw new IllegalArgumentException("desirableOperationLatency must be a positive value greater than zero");
+				throw new IllegalArgumentException("slowCallDurationThreshold must be a positive value greater than zero");
 			}
 			config.desirableLatency = Duration.ofMillis(desirableOperationLatency);
 			return this;
@@ -162,7 +163,7 @@ public class AbstractConfig {
 		 * @param failureRateThreshold failure calls rate percentage
 		 * @return a {@link Builder}
 		 */
-		public Builder<T> failureRateThreshold(double failureRateThreshold) {
+		public Builder<T> failureRateThreshold(float failureRateThreshold) {
 			if (failureRateThreshold <= 0.0 || failureRateThreshold > 100.0) {
 				throw new IllegalArgumentException("failureRateThreshold must be a positive value greater than zero and less than 100");
 			}
@@ -174,7 +175,7 @@ public class AbstractConfig {
 		 * @param slowCallRateThreshold slow call rate percentage
 		 * @return a {@link Builder}
 		 */
-		public Builder<T> slowCallRateThreshold(double slowCallRateThreshold) {
+		public Builder<T> slowCallRateThreshold(float slowCallRateThreshold) {
 			if (slowCallRateThreshold <= 0.0 || slowCallRateThreshold > 100.0) {
 				throw new IllegalArgumentException("slowCallRateThreshold must be a positive value greater than zero and less than 100");
 			}

@@ -23,6 +23,7 @@ import static java.util.Objects.requireNonNull;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.slf4j.Logger;
@@ -90,11 +91,19 @@ public class AdaptiveLimitBulkhead implements AdaptiveBulkhead {
 	}
 
 	@Override
-	public void onComplete(Duration callTime, boolean isSuccess) {
+	public void onSuccess(long callTime, TimeUnit durationUnit) {
 		bulkhead.onComplete();
-		final LimitResult limitResult = limitAdapter.adaptLimitIfAny(callTime, isSuccess, inFlight.getAndDecrement());
+		final LimitResult limitResult = limitAdapter.adaptLimitIfAny(callTime, true, inFlight.getAndDecrement());
 		adoptLimit(bulkhead, limitResult.getLimit(), limitResult.waitTime());
 	}
+
+	@Override
+	public void onError(long callTime, TimeUnit durationUnit) {
+		bulkhead.onComplete();
+		final LimitResult limitResult = limitAdapter.adaptLimitIfAny(callTime, false, inFlight.getAndDecrement());
+		adoptLimit(bulkhead, limitResult.getLimit(), limitResult.waitTime());
+	}
+
 
 	public String getName() {
 		return name;

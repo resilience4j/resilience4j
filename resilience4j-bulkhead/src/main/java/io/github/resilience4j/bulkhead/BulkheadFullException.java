@@ -18,6 +18,8 @@
  */
 package io.github.resilience4j.bulkhead;
 
+import io.github.resilience4j.bulkhead.adaptive.AdaptiveBulkhead;
+
 /**
  * A {@link BulkheadFullException} signals that the bulkhead is full.
  */
@@ -57,5 +59,18 @@ public class BulkheadFullException extends RuntimeException {
 
     private BulkheadFullException(String message, boolean writableStackTrace) {
         super(message, null, false, writableStackTrace);
+    }
+
+    /**
+     * The constructor with a message.
+     *
+     * @param bulkhead the AdaptiveLimitBulkhead.
+     */
+    public static BulkheadFullException createBulkheadFullException(AdaptiveBulkhead bulkhead) {
+        boolean writableStackTraceEnabled = bulkhead.getBulkheadConfig().isWritableStackTraceEnabled();
+
+        String message = String.format("Bulkhead '%s' is full and does not permit further calls", bulkhead.getName());
+
+        return new BulkheadFullException(message, writableStackTraceEnabled);
     }
 }
