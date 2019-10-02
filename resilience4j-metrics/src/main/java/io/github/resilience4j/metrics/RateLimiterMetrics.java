@@ -18,6 +18,12 @@
  */
 package io.github.resilience4j.metrics;
 
+import static com.codahale.metrics.MetricRegistry.name;
+import static io.github.resilience4j.ratelimiter.utils.MetricNames.AVAILABLE_PERMISSIONS;
+import static io.github.resilience4j.ratelimiter.utils.MetricNames.DEFAULT_PREFIX;
+import static io.github.resilience4j.ratelimiter.utils.MetricNames.WAITING_THREADS;
+import static java.util.Objects.requireNonNull;
+
 import com.codahale.metrics.Gauge;
 import com.codahale.metrics.Metric;
 import com.codahale.metrics.MetricRegistry;
@@ -25,14 +31,7 @@ import com.codahale.metrics.MetricSet;
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
 import io.vavr.collection.Array;
-
 import java.util.Map;
-
-import static com.codahale.metrics.MetricRegistry.name;
-import static io.github.resilience4j.ratelimiter.utils.MetricNames.AVAILABLE_PERMISSIONS;
-import static io.github.resilience4j.ratelimiter.utils.MetricNames.DEFAULT_PREFIX;
-import static io.github.resilience4j.ratelimiter.utils.MetricNames.WAITING_THREADS;
-import static java.util.Objects.requireNonNull;
 
 /**
  * An adapter which exports {@link RateLimiter.Metrics} as Dropwizard Metrics Gauges.
@@ -48,68 +47,76 @@ public class RateLimiterMetrics implements MetricSet {
         this(DEFAULT_PREFIX, rateLimiters, new MetricRegistry());
     }
 
-    private RateLimiterMetrics(String prefix, Iterable<RateLimiter> rateLimiters, MetricRegistry metricRegistry) {
+    private RateLimiterMetrics(String prefix, Iterable<RateLimiter> rateLimiters,
+            MetricRegistry metricRegistry) {
         requireNonNull(prefix, PREFIX_NULL);
         requireNonNull(rateLimiters, ITERABLE_NULL);
         requireNonNull(metricRegistry);
         this.metricRegistry = metricRegistry;
         rateLimiters.forEach(rateLimiter -> {
-                String name = rateLimiter.getName();
-                metricRegistry.register(name(prefix, name, WAITING_THREADS),
-                    (Gauge<Integer>) rateLimiter.getMetrics()::getNumberOfWaitingThreads);
-                metricRegistry.register(name(prefix, name, AVAILABLE_PERMISSIONS),
-                    (Gauge<Integer>) rateLimiter.getMetrics()::getAvailablePermissions);
-            }
+                    String name = rateLimiter.getName();
+                    metricRegistry.register(name(prefix, name, WAITING_THREADS),
+                            (Gauge<Integer>) rateLimiter.getMetrics()::getNumberOfWaitingThreads);
+                    metricRegistry.register(name(prefix, name, AVAILABLE_PERMISSIONS),
+                            (Gauge<Integer>) rateLimiter.getMetrics()::getAvailablePermissions);
+                }
         );
     }
 
     /**
-     * Creates a new instance {@link RateLimiterMetrics} with specified metrics names prefix and
-     * a {@link RateLimiterRegistry} as a source.
+     * Creates a new instance {@link RateLimiterMetrics} with specified metrics names prefix and a
+     * {@link RateLimiterRegistry} as a source.
      *
-     * @param prefix              the prefix of metrics names
+     * @param prefix the prefix of metrics names
      * @param rateLimiterRegistry the registry of rate limiters
-     * @param metricRegistry      the metric registry
+     * @param metricRegistry the metric registry
      */
-    public static RateLimiterMetrics ofRateLimiterRegistry(String prefix, RateLimiterRegistry rateLimiterRegistry, MetricRegistry metricRegistry) {
-        return new RateLimiterMetrics(prefix, rateLimiterRegistry.getAllRateLimiters(), metricRegistry);
+    public static RateLimiterMetrics ofRateLimiterRegistry(String prefix,
+            RateLimiterRegistry rateLimiterRegistry, MetricRegistry metricRegistry) {
+        return new RateLimiterMetrics(prefix, rateLimiterRegistry.getAllRateLimiters(),
+                metricRegistry);
     }
 
     /**
-     * Creates a new instance {@link RateLimiterMetrics} with specified metrics names prefix and
-     * a {@link RateLimiterRegistry} as a source.
+     * Creates a new instance {@link RateLimiterMetrics} with specified metrics names prefix and a
+     * {@link RateLimiterRegistry} as a source.
      *
-     * @param prefix              the prefix of metrics names
+     * @param prefix the prefix of metrics names
      * @param rateLimiterRegistry the registry of rate limiters
      */
-    public static RateLimiterMetrics ofRateLimiterRegistry(String prefix, RateLimiterRegistry rateLimiterRegistry) {
-        return new RateLimiterMetrics(prefix, rateLimiterRegistry.getAllRateLimiters(), new MetricRegistry());
+    public static RateLimiterMetrics ofRateLimiterRegistry(String prefix,
+            RateLimiterRegistry rateLimiterRegistry) {
+        return new RateLimiterMetrics(prefix, rateLimiterRegistry.getAllRateLimiters(),
+                new MetricRegistry());
     }
 
     /**
-     * Creates a new instance {@link RateLimiterMetrics} with
-     * a {@link RateLimiterRegistry} as a source.
+     * Creates a new instance {@link RateLimiterMetrics} with a {@link RateLimiterRegistry} as a
+     * source.
      *
      * @param rateLimiterRegistry the registry of rate limiters
-     * @param metricRegistry      the metric registry
+     * @param metricRegistry the metric registry
      */
-    public static RateLimiterMetrics ofRateLimiterRegistry(RateLimiterRegistry rateLimiterRegistry, MetricRegistry metricRegistry) {
-        return new RateLimiterMetrics(DEFAULT_PREFIX, rateLimiterRegistry.getAllRateLimiters(), metricRegistry);
+    public static RateLimiterMetrics ofRateLimiterRegistry(RateLimiterRegistry rateLimiterRegistry,
+            MetricRegistry metricRegistry) {
+        return new RateLimiterMetrics(DEFAULT_PREFIX, rateLimiterRegistry.getAllRateLimiters(),
+                metricRegistry);
     }
 
     /**
-     * Creates a new instance {@link RateLimiterMetrics} with
-     * a {@link RateLimiterRegistry} as a source.
+     * Creates a new instance {@link RateLimiterMetrics} with a {@link RateLimiterRegistry} as a
+     * source.
      *
      * @param rateLimiterRegistry the registry of rate limiters
      */
-    public static RateLimiterMetrics ofRateLimiterRegistry(RateLimiterRegistry rateLimiterRegistry) {
+    public static RateLimiterMetrics ofRateLimiterRegistry(
+            RateLimiterRegistry rateLimiterRegistry) {
         return new RateLimiterMetrics(rateLimiterRegistry.getAllRateLimiters());
     }
 
     /**
-     * Creates a new instance {@link RateLimiterMetrics} with
-     * an {@link Iterable} of rate limiters as a source.
+     * Creates a new instance {@link RateLimiterMetrics} with an {@link Iterable} of rate limiters
+     * as a source.
      *
      * @param rateLimiters the rate limiters
      */
@@ -118,8 +125,8 @@ public class RateLimiterMetrics implements MetricSet {
     }
 
     /**
-     * Creates a new instance {@link RateLimiterMetrics} with
-     * an {@link Iterable} of rate limiters as a source.
+     * Creates a new instance {@link RateLimiterMetrics} with an {@link Iterable} of rate limiters
+     * as a source.
      *
      * @param rateLimiters the rate limiters
      */

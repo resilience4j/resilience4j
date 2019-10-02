@@ -16,17 +16,16 @@
 
 package io.github.resilience4j.prometheus;
 
+import static java.util.Arrays.asList;
+import static java.util.Objects.requireNonNull;
+
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.prometheus.client.Collector;
 import io.prometheus.client.CollectorRegistry;
 import io.prometheus.client.GaugeMetricFamily;
 import io.prometheus.client.Histogram;
-
 import java.util.Collections;
 import java.util.List;
-
-import static java.util.Arrays.asList;
-import static java.util.Objects.requireNonNull;
 
 public abstract class AbstractCircuitBreakerMetrics extends Collector {
 
@@ -43,17 +42,27 @@ public abstract class AbstractCircuitBreakerMetrics extends Collector {
 
     protected AbstractCircuitBreakerMetrics(MetricNames names) {
         this.names = requireNonNull(names);
-        callsHistogram = Histogram.build(names.getCallsMetricName(), "Total number of calls by kind")
+        callsHistogram = Histogram
+                .build(names.getCallsMetricName(), "Total number of calls by kind")
                 .labelNames("name", "kind")
                 .create().register(collectorRegistry);
     }
 
     protected void addMetrics(CircuitBreaker circuitBreaker) {
         circuitBreaker.getEventPublisher()
-                .onCallNotPermitted(event -> callsHistogram.labels(circuitBreaker.getName(), KIND_NOT_PERMITTED).observe(0))
-                .onIgnoredError(event -> callsHistogram.labels(circuitBreaker.getName(), KIND_IGNORED).observe(event.getElapsedDuration().toNanos() / Collector.NANOSECONDS_PER_SECOND))
-                .onSuccess(event -> callsHistogram.labels(circuitBreaker.getName(), KIND_SUCCESSFUL).observe(event.getElapsedDuration().toNanos() / Collector.NANOSECONDS_PER_SECOND))
-                .onError(event -> callsHistogram.labels(circuitBreaker.getName(), KIND_FAILED).observe(event.getElapsedDuration().toNanos() / Collector.NANOSECONDS_PER_SECOND));
+                .onCallNotPermitted(
+                        event -> callsHistogram.labels(circuitBreaker.getName(), KIND_NOT_PERMITTED)
+                                .observe(0))
+                .onIgnoredError(
+                        event -> callsHistogram.labels(circuitBreaker.getName(), KIND_IGNORED)
+                                .observe(event.getElapsedDuration().toNanos()
+                                        / Collector.NANOSECONDS_PER_SECOND))
+                .onSuccess(event -> callsHistogram.labels(circuitBreaker.getName(), KIND_SUCCESSFUL)
+                        .observe(event.getElapsedDuration().toNanos()
+                                / Collector.NANOSECONDS_PER_SECOND))
+                .onError(event -> callsHistogram.labels(circuitBreaker.getName(), KIND_FAILED)
+                        .observe(event.getElapsedDuration().toNanos()
+                                / Collector.NANOSECONDS_PER_SECOND));
     }
 
     protected List<MetricFamilySamples> collectGaugeSamples(List<CircuitBreaker> circuitBreakers) {
@@ -94,17 +103,24 @@ public abstract class AbstractCircuitBreakerMetrics extends Collector {
 
             List<String> nameLabel = Collections.singletonList(circuitBreaker.getName());
             CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
-            bufferedCallsFamily.addMetric(asList(circuitBreaker.getName(), KIND_SUCCESSFUL), metrics.getNumberOfSuccessfulCalls());
-            bufferedCallsFamily.addMetric(asList(circuitBreaker.getName(), KIND_FAILED), metrics.getNumberOfFailedCalls());
-            slowCallsFamily.addMetric(asList(circuitBreaker.getName(), KIND_SUCCESSFUL), metrics.getNumberOfSlowSuccessfulCalls());
-            slowCallsFamily.addMetric(asList(circuitBreaker.getName(), KIND_FAILED), metrics.getNumberOfSlowFailedCalls());
+            bufferedCallsFamily.addMetric(asList(circuitBreaker.getName(), KIND_SUCCESSFUL),
+                    metrics.getNumberOfSuccessfulCalls());
+            bufferedCallsFamily.addMetric(asList(circuitBreaker.getName(), KIND_FAILED),
+                    metrics.getNumberOfFailedCalls());
+            slowCallsFamily.addMetric(asList(circuitBreaker.getName(), KIND_SUCCESSFUL),
+                    metrics.getNumberOfSlowSuccessfulCalls());
+            slowCallsFamily.addMetric(asList(circuitBreaker.getName(), KIND_FAILED),
+                    metrics.getNumberOfSlowFailedCalls());
             failureRateFamily.addMetric(nameLabel, metrics.getFailureRate());
             slowCallRateFamily.addMetric(nameLabel, metrics.getSlowCallRate());
         }
-        return asList(stateFamily, bufferedCallsFamily, slowCallsFamily, failureRateFamily, slowCallRateFamily);
+        return asList(stateFamily, bufferedCallsFamily, slowCallsFamily, failureRateFamily,
+                slowCallRateFamily);
     }
 
-    /** Defines possible configuration for metric names. */
+    /**
+     * Defines possible configuration for metric names.
+     */
     public static class MetricNames {
 
         public static final String DEFAULT_CIRCUIT_BREAKER_CALLS = "resilience4j_circuitbreaker_calls";
@@ -113,100 +129,141 @@ public abstract class AbstractCircuitBreakerMetrics extends Collector {
         public static final String DEFAULT_CIRCUIT_BREAKER_SLOW_CALLS = "resilience4j_circuitbreaker_slow_calls";
         public static final String DEFAULT_CIRCUIT_BREAKER_FAILURE_RATE = "resilience4j_circuitbreaker_failure_rate";
         public static final String DEFAULT_CIRCUIT_BREAKER_SLOW_CALL_RATE = "resilience4j_circuitbreaker_slow_call_rate";
-
-        /**
-         * Returns a builder for creating custom metric names.
-         * Note that names have default values, so only desired metrics can be renamed.
-         */
-        public static Builder custom() {
-            return new Builder();
-        }
-
-        /** Returns default metric names. */
-        public static MetricNames ofDefaults() {
-            return new MetricNames();
-        }
-
         private String callsMetricName = DEFAULT_CIRCUIT_BREAKER_CALLS;
         private String stateMetricName = DEFAULT_CIRCUIT_BREAKER_STATE;
         private String bufferedCallsMetricName = DEFAULT_CIRCUIT_BREAKER_BUFFERED_CALLS;
         private String slowCallsMetricName = DEFAULT_CIRCUIT_BREAKER_SLOW_CALLS;
         private String failureRateMetricName = DEFAULT_CIRCUIT_BREAKER_FAILURE_RATE;
         private String slowCallRateMetricName = DEFAULT_CIRCUIT_BREAKER_SLOW_CALL_RATE;
+        private MetricNames() {
+        }
 
-        private MetricNames() {}
+        /**
+         * Returns a builder for creating custom metric names. Note that names have default values,
+         * so only desired metrics can be renamed.
+         */
+        public static Builder custom() {
+            return new Builder();
+        }
 
-        /** Returns the metric name for circuit breaker calls, defaults to {@value DEFAULT_CIRCUIT_BREAKER_CALLS}. */
+        /**
+         * Returns default metric names.
+         */
+        public static MetricNames ofDefaults() {
+            return new MetricNames();
+        }
+
+        /**
+         * Returns the metric name for circuit breaker calls, defaults to {@value
+         * DEFAULT_CIRCUIT_BREAKER_CALLS}.
+         */
         public String getCallsMetricName() {
             return callsMetricName;
         }
 
-        /** Returns the metric name for currently buffered calls, defaults to {@value DEFAULT_CIRCUIT_BREAKER_BUFFERED_CALLS}. */
+        /**
+         * Returns the metric name for currently buffered calls, defaults to {@value
+         * DEFAULT_CIRCUIT_BREAKER_BUFFERED_CALLS}.
+         */
         public String getBufferedCallsMetricName() {
             return bufferedCallsMetricName;
         }
 
-        /** Returns the metric name for currently slow calls, defaults to {@value DEFAULT_CIRCUIT_BREAKER_SLOW_CALLS}. */
+        /**
+         * Returns the metric name for currently slow calls, defaults to {@value
+         * DEFAULT_CIRCUIT_BREAKER_SLOW_CALLS}.
+         */
         public String getSlowCallsMetricName() {
             return slowCallsMetricName;
         }
 
-        /** Returns the metric name for failure rate, defaults to {@value DEFAULT_CIRCUIT_BREAKER_FAILURE_RATE}. */
+        /**
+         * Returns the metric name for failure rate, defaults to {@value
+         * DEFAULT_CIRCUIT_BREAKER_FAILURE_RATE}.
+         */
         public String getFailureRateMetricName() {
             return failureRateMetricName;
         }
 
-        /** Returns the metric name for slow call rate, defaults to {@value DEFAULT_CIRCUIT_BREAKER_SLOW_CALL_RATE}. */
+        /**
+         * Returns the metric name for slow call rate, defaults to {@value
+         * DEFAULT_CIRCUIT_BREAKER_SLOW_CALL_RATE}.
+         */
         public String getSlowCallRateMetricName() {
             return slowCallRateMetricName;
         }
 
-        /** Returns the metric name for state, defaults to {@value DEFAULT_CIRCUIT_BREAKER_STATE}. */
+        /**
+         * Returns the metric name for state, defaults to {@value DEFAULT_CIRCUIT_BREAKER_STATE}.
+         */
         public String getStateMetricName() {
             return stateMetricName;
         }
 
-        /** Helps building custom instance of {@link MetricNames}. */
+        /**
+         * Helps building custom instance of {@link MetricNames}.
+         */
         public static class Builder {
+
             private final MetricNames metricNames = new MetricNames();
 
-            /** Overrides the default metric name {@value MetricNames#DEFAULT_CIRCUIT_BREAKER_CALLS} with a given one. */
+            /**
+             * Overrides the default metric name {@value MetricNames#DEFAULT_CIRCUIT_BREAKER_CALLS}
+             * with a given one.
+             */
             public Builder callsMetricName(String callsMetricName) {
                 metricNames.callsMetricName = requireNonNull(callsMetricName);
                 return this;
             }
 
-            /** Overrides the default metric name {@value MetricNames#DEFAULT_CIRCUIT_BREAKER_STATE} with a given one. */
+            /**
+             * Overrides the default metric name {@value MetricNames#DEFAULT_CIRCUIT_BREAKER_STATE}
+             * with a given one.
+             */
             public Builder stateMetricName(String stateMetricName) {
                 metricNames.stateMetricName = requireNonNull(stateMetricName);
                 return this;
             }
 
-            /** Overrides the default metric name {@value MetricNames#DEFAULT_CIRCUIT_BREAKER_BUFFERED_CALLS} with a given one. */
+            /**
+             * Overrides the default metric name {@value MetricNames#DEFAULT_CIRCUIT_BREAKER_BUFFERED_CALLS}
+             * with a given one.
+             */
             public Builder bufferedCallsMetricName(String bufferedCallsMetricName) {
                 metricNames.bufferedCallsMetricName = requireNonNull(bufferedCallsMetricName);
                 return this;
             }
 
-            /** Overrides the default metric name {@value MetricNames#DEFAULT_CIRCUIT_BREAKER_SLOW_CALLS} with a given one. */
+            /**
+             * Overrides the default metric name {@value MetricNames#DEFAULT_CIRCUIT_BREAKER_SLOW_CALLS}
+             * with a given one.
+             */
             public Builder slowCallsMetricName(String slowCallsMetricName) {
                 metricNames.slowCallsMetricName = requireNonNull(slowCallsMetricName);
                 return this;
             }
 
-            /** Overrides the default metric name {@value MetricNames#DEFAULT_CIRCUIT_BREAKER_FAILURE_RATE} with a given one. */
+            /**
+             * Overrides the default metric name {@value MetricNames#DEFAULT_CIRCUIT_BREAKER_FAILURE_RATE}
+             * with a given one.
+             */
             public Builder failureRateMetricName(String failureRateMetricName) {
                 metricNames.failureRateMetricName = requireNonNull(failureRateMetricName);
                 return this;
             }
 
-            /** Overrides the default metric name {@value MetricNames#DEFAULT_CIRCUIT_BREAKER_SLOW_CALL_RATE} with a given one. */
+            /**
+             * Overrides the default metric name {@value MetricNames#DEFAULT_CIRCUIT_BREAKER_SLOW_CALL_RATE}
+             * with a given one.
+             */
             public Builder slowCallRateMetricName(String slowCallRateMetricName) {
                 metricNames.slowCallRateMetricName = requireNonNull(slowCallRateMetricName);
                 return this;
             }
 
-            /** Builds {@link MetricNames} instance. */
+            /**
+             * Builds {@link MetricNames} instance.
+             */
             public MetricNames build() {
                 return metricNames;
             }

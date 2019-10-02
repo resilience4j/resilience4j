@@ -19,20 +19,23 @@
 package io.github.resilience4j.retrofit;
 
 import io.github.resilience4j.ratelimiter.RateLimiter;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Type;
 import retrofit2.Call;
 import retrofit2.CallAdapter;
 import retrofit2.Retrofit;
 
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Type;
-
 /**
- * Creates a Retrofit {@link CallAdapter.Factory} that decorates a Call to provide integration with a
- * supplied {@link RateLimiter}
+ * Creates a Retrofit {@link CallAdapter.Factory} that decorates a Call to provide integration with
+ * a supplied {@link RateLimiter}
  */
 public final class RateLimiterCallAdapter extends CallAdapter.Factory {
 
     private final RateLimiter rateLimiter;
+
+    private RateLimiterCallAdapter(final RateLimiter rateLimiter) {
+        this.rateLimiter = rateLimiter;
+    }
 
     /**
      * Create a rate-limiting call adapter factory that decorates retrofit calls
@@ -44,14 +47,11 @@ public final class RateLimiterCallAdapter extends CallAdapter.Factory {
         return new RateLimiterCallAdapter(rateLimiter);
     }
 
-    private RateLimiterCallAdapter(final RateLimiter rateLimiter) {
-        this.rateLimiter = rateLimiter;
-    }
-
     @Override
     public CallAdapter<?, ?> get(Type returnType, Annotation[] annotations, Retrofit retrofit) {
         @SuppressWarnings("unchecked")
-        CallAdapter<Object, Object> nextAdapter = (CallAdapter<Object, Object>) retrofit.nextCallAdapter(this, returnType, annotations);
+        CallAdapter<Object, Object> nextAdapter = (CallAdapter<Object, Object>) retrofit
+                .nextCallAdapter(this, returnType, annotations);
 
         return new CallAdapter<Object, Object>() {
             @Override

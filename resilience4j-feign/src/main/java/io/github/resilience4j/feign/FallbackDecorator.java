@@ -18,12 +18,11 @@ package io.github.resilience4j.feign;
 
 import static java.util.Objects.requireNonNull;
 
-import java.lang.reflect.Method;
-import java.util.function.Predicate;
-
 import feign.InvocationHandlerFactory.MethodHandler;
 import feign.Target;
 import io.vavr.CheckedFunction1;
+import java.lang.reflect.Method;
+import java.util.function.Predicate;
 
 /**
  * Decorator that calls a fallback in the case that an exception is thrown.
@@ -64,7 +63,8 @@ class FallbackDecorator<T> implements FeignDecorator {
      *         fallback method.
      */
     @Override
-    public CheckedFunction1<Object[], Object> decorate(CheckedFunction1<Object[], Object> invocationCall,
+    public CheckedFunction1<Object[], Object> decorate(
+            CheckedFunction1<Object[], Object> invocationCall,
             Method method,
             MethodHandler methodHandler,
             Target<?> target) {

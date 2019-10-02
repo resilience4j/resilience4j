@@ -14,7 +14,7 @@ abstract class BaseCircuitBreakerTest {
     HelloWorldService helloWorldService;
 
     @Before
-    public void setUp(){
+    public void setUp() {
         circuitBreaker = Mockito.mock(CircuitBreaker.class, Mockito.RETURNS_DEEP_STUBS);
         helloWorldService = Mockito.mock(HelloWorldService.class);
     }

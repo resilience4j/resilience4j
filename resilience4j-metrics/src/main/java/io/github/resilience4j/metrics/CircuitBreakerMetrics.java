@@ -18,6 +18,20 @@
  */
 package io.github.resilience4j.metrics;
 
+import static com.codahale.metrics.MetricRegistry.name;
+import static io.github.resilience4j.circuitbreaker.utils.MetricNames.BUFFERED;
+import static io.github.resilience4j.circuitbreaker.utils.MetricNames.DEFAULT_PREFIX;
+import static io.github.resilience4j.circuitbreaker.utils.MetricNames.FAILED;
+import static io.github.resilience4j.circuitbreaker.utils.MetricNames.FAILURE_RATE;
+import static io.github.resilience4j.circuitbreaker.utils.MetricNames.NOT_PERMITTED;
+import static io.github.resilience4j.circuitbreaker.utils.MetricNames.SLOW;
+import static io.github.resilience4j.circuitbreaker.utils.MetricNames.SLOW_CALL_RATE;
+import static io.github.resilience4j.circuitbreaker.utils.MetricNames.SLOW_FAILED;
+import static io.github.resilience4j.circuitbreaker.utils.MetricNames.SLOW_SUCCESS;
+import static io.github.resilience4j.circuitbreaker.utils.MetricNames.STATE;
+import static io.github.resilience4j.circuitbreaker.utils.MetricNames.SUCCESSFUL;
+import static java.util.Objects.requireNonNull;
+
 import com.codahale.metrics.Gauge;
 import com.codahale.metrics.Metric;
 import com.codahale.metrics.MetricRegistry;
@@ -25,12 +39,7 @@ import com.codahale.metrics.MetricSet;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.vavr.collection.Array;
-
 import java.util.Map;
-
-import static com.codahale.metrics.MetricRegistry.name;
-import static io.github.resilience4j.circuitbreaker.utils.MetricNames.*;
-import static java.util.Objects.requireNonNull;
 
 /**
  * An adapter which exports {@link CircuitBreaker.Metrics} as Dropwizard Metrics Gauges.
@@ -43,83 +52,94 @@ public class CircuitBreakerMetrics implements MetricSet {
         this(DEFAULT_PREFIX, circuitBreakers, new MetricRegistry());
     }
 
-    private CircuitBreakerMetrics(String prefix, Iterable<CircuitBreaker> circuitBreakers, MetricRegistry metricRegistry) {
+    private CircuitBreakerMetrics(String prefix, Iterable<CircuitBreaker> circuitBreakers,
+            MetricRegistry metricRegistry) {
         requireNonNull(prefix);
         requireNonNull(circuitBreakers);
         requireNonNull(metricRegistry);
         this.metricRegistry = metricRegistry;
         circuitBreakers.forEach((CircuitBreaker circuitBreaker) -> {
-                String name = circuitBreaker.getName();
-                //state as an integer
-                metricRegistry.register(name(prefix, name, STATE),
-                      (Gauge<Integer>)()-> circuitBreaker.getState().getOrder());
-                metricRegistry.register(name(prefix, name, SUCCESSFUL),
-                    (Gauge<Integer>) () -> circuitBreaker.getMetrics().getNumberOfSuccessfulCalls());
-                metricRegistry.register(name(prefix, name, FAILED),
-                    (Gauge<Integer>) () -> circuitBreaker.getMetrics().getNumberOfFailedCalls());
-                metricRegistry.register(name(prefix, name, NOT_PERMITTED),
-                    (Gauge<Long>) () -> circuitBreaker.getMetrics().getNumberOfNotPermittedCalls());
-                metricRegistry.register(name(prefix, name, BUFFERED),
-                    (Gauge<Integer>) () -> circuitBreaker.getMetrics().getNumberOfBufferedCalls());
-                metricRegistry.register(name(prefix, name, FAILURE_RATE),
-                    (Gauge<Float>) () -> circuitBreaker.getMetrics().getFailureRate());
-                metricRegistry.register(name(prefix, name, SLOW),
-                    (Gauge<Integer>) () -> circuitBreaker.getMetrics().getNumberOfSlowCalls());
-                metricRegistry.register(name(prefix, name, SLOW_SUCCESS),
-                    (Gauge<Integer>) () -> circuitBreaker.getMetrics().getNumberOfSlowSuccessfulCalls());
-                metricRegistry.register(name(prefix, name, SLOW_FAILED),
-                    (Gauge<Integer>) () -> circuitBreaker.getMetrics().getNumberOfSlowFailedCalls());
-                metricRegistry.register(name(prefix, name, SLOW_CALL_RATE),
-                    (Gauge<Float>) () -> circuitBreaker.getMetrics().getSlowCallRate());
-            }
+                    String name = circuitBreaker.getName();
+                    //state as an integer
+                    metricRegistry.register(name(prefix, name, STATE),
+                            (Gauge<Integer>) () -> circuitBreaker.getState().getOrder());
+                    metricRegistry.register(name(prefix, name, SUCCESSFUL),
+                            (Gauge<Integer>) () -> circuitBreaker.getMetrics()
+                                    .getNumberOfSuccessfulCalls());
+                    metricRegistry.register(name(prefix, name, FAILED),
+                            (Gauge<Integer>) () -> circuitBreaker.getMetrics().getNumberOfFailedCalls());
+                    metricRegistry.register(name(prefix, name, NOT_PERMITTED),
+                            (Gauge<Long>) () -> circuitBreaker.getMetrics().getNumberOfNotPermittedCalls());
+                    metricRegistry.register(name(prefix, name, BUFFERED),
+                            (Gauge<Integer>) () -> circuitBreaker.getMetrics().getNumberOfBufferedCalls());
+                    metricRegistry.register(name(prefix, name, FAILURE_RATE),
+                            (Gauge<Float>) () -> circuitBreaker.getMetrics().getFailureRate());
+                    metricRegistry.register(name(prefix, name, SLOW),
+                            (Gauge<Integer>) () -> circuitBreaker.getMetrics().getNumberOfSlowCalls());
+                    metricRegistry.register(name(prefix, name, SLOW_SUCCESS),
+                            (Gauge<Integer>) () -> circuitBreaker.getMetrics()
+                                    .getNumberOfSlowSuccessfulCalls());
+                    metricRegistry.register(name(prefix, name, SLOW_FAILED),
+                            (Gauge<Integer>) () -> circuitBreaker.getMetrics()
+                                    .getNumberOfSlowFailedCalls());
+                    metricRegistry.register(name(prefix, name, SLOW_CALL_RATE),
+                            (Gauge<Float>) () -> circuitBreaker.getMetrics().getSlowCallRate());
+                }
         );
     }
 
     /**
-     * Creates a new instance CircuitBreakerMetrics {@link CircuitBreakerMetrics} with specified metrics names prefix and
-     * a {@link CircuitBreakerRegistry} as a source.
+     * Creates a new instance CircuitBreakerMetrics {@link CircuitBreakerMetrics} with specified
+     * metrics names prefix and a {@link CircuitBreakerRegistry} as a source.
      *
-     * @param prefix                 the prefix of metrics names
+     * @param prefix the prefix of metrics names
      * @param circuitBreakerRegistry the registry of circuit breakers
      */
-    public static CircuitBreakerMetrics ofCircuitBreakerRegistry(String prefix, CircuitBreakerRegistry circuitBreakerRegistry, MetricRegistry metricRegistry) {
-        return new CircuitBreakerMetrics(prefix, circuitBreakerRegistry.getAllCircuitBreakers(), metricRegistry);
+    public static CircuitBreakerMetrics ofCircuitBreakerRegistry(String prefix,
+            CircuitBreakerRegistry circuitBreakerRegistry, MetricRegistry metricRegistry) {
+        return new CircuitBreakerMetrics(prefix, circuitBreakerRegistry.getAllCircuitBreakers(),
+                metricRegistry);
     }
 
     /**
-     * Creates a new instance CircuitBreakerMetrics {@link CircuitBreakerMetrics} with specified metrics names prefix and
-     * a {@link CircuitBreakerRegistry} as a source.
+     * Creates a new instance CircuitBreakerMetrics {@link CircuitBreakerMetrics} with specified
+     * metrics names prefix and a {@link CircuitBreakerRegistry} as a source.
      *
-     * @param prefix                 the prefix of metrics names
+     * @param prefix the prefix of metrics names
      * @param circuitBreakerRegistry the registry of circuit breakers
      */
-    public static CircuitBreakerMetrics ofCircuitBreakerRegistry(String prefix, CircuitBreakerRegistry circuitBreakerRegistry) {
-        return new CircuitBreakerMetrics(prefix, circuitBreakerRegistry.getAllCircuitBreakers(), new MetricRegistry());
+    public static CircuitBreakerMetrics ofCircuitBreakerRegistry(String prefix,
+            CircuitBreakerRegistry circuitBreakerRegistry) {
+        return new CircuitBreakerMetrics(prefix, circuitBreakerRegistry.getAllCircuitBreakers(),
+                new MetricRegistry());
     }
 
     /**
-     * Creates a new instance CircuitBreakerMetrics {@link CircuitBreakerMetrics} with
-     * a {@link CircuitBreakerRegistry} as a source.
+     * Creates a new instance CircuitBreakerMetrics {@link CircuitBreakerMetrics} with a {@link
+     * CircuitBreakerRegistry} as a source.
      *
      * @param circuitBreakerRegistry the registry of circuit breakers
      */
-    public static CircuitBreakerMetrics ofCircuitBreakerRegistry(CircuitBreakerRegistry circuitBreakerRegistry, MetricRegistry metricRegistry) {
-        return new CircuitBreakerMetrics(DEFAULT_PREFIX, circuitBreakerRegistry.getAllCircuitBreakers(), metricRegistry);
+    public static CircuitBreakerMetrics ofCircuitBreakerRegistry(
+            CircuitBreakerRegistry circuitBreakerRegistry, MetricRegistry metricRegistry) {
+        return new CircuitBreakerMetrics(DEFAULT_PREFIX,
+                circuitBreakerRegistry.getAllCircuitBreakers(), metricRegistry);
     }
 
     /**
-     * Creates a new instance CircuitBreakerMetrics {@link CircuitBreakerMetrics} with
-     * a {@link CircuitBreakerRegistry} as a source.
+     * Creates a new instance CircuitBreakerMetrics {@link CircuitBreakerMetrics} with a {@link
+     * CircuitBreakerRegistry} as a source.
      *
      * @param circuitBreakerRegistry the registry of circuit breakers
      */
-    public static CircuitBreakerMetrics ofCircuitBreakerRegistry(CircuitBreakerRegistry circuitBreakerRegistry) {
+    public static CircuitBreakerMetrics ofCircuitBreakerRegistry(
+            CircuitBreakerRegistry circuitBreakerRegistry) {
         return new CircuitBreakerMetrics(circuitBreakerRegistry.getAllCircuitBreakers());
     }
 
     /**
-     * Creates a new instance CircuitBreakerMetrics {@link CircuitBreakerMetrics} with
-     * an {@link Iterable} of circuit breakers as a source.
+     * Creates a new instance CircuitBreakerMetrics {@link CircuitBreakerMetrics} with an {@link
+     * Iterable} of circuit breakers as a source.
      *
      * @param circuitBreakers the circuit breakers
      */
@@ -128,18 +148,20 @@ public class CircuitBreakerMetrics implements MetricSet {
     }
 
     /**
-     * Creates a new instance CircuitBreakerMetrics {@link CircuitBreakerMetrics} with
-     * an {@link Iterable} of circuit breakers as a source.
+     * Creates a new instance CircuitBreakerMetrics {@link CircuitBreakerMetrics} with an {@link
+     * Iterable} of circuit breakers as a source.
      *
      * @param circuitBreakers the circuit breakers
      */
-    public static CircuitBreakerMetrics ofIterable(String prefix, Iterable<CircuitBreaker> circuitBreakers) {
+    public static CircuitBreakerMetrics ofIterable(String prefix,
+            Iterable<CircuitBreaker> circuitBreakers) {
         return new CircuitBreakerMetrics(prefix, circuitBreakers, new MetricRegistry());
     }
 
 
     /**
-     * Creates a new instance of CircuitBreakerMetrics {@link CircuitBreakerMetrics} with a circuit breaker as a source.
+     * Creates a new instance of CircuitBreakerMetrics {@link CircuitBreakerMetrics} with a circuit
+     * breaker as a source.
      *
      * @param circuitBreaker the circuit breaker
      */

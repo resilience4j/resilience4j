@@ -16,17 +16,20 @@
 
 package io.github.resilience4j.metrics.publisher;
 
+import static com.codahale.metrics.MetricRegistry.name;
+import static io.github.resilience4j.retry.utils.MetricNames.DEFAULT_PREFIX;
+import static io.github.resilience4j.retry.utils.MetricNames.FAILED_CALLS_WITHOUT_RETRY;
+import static io.github.resilience4j.retry.utils.MetricNames.FAILED_CALLS_WITH_RETRY;
+import static io.github.resilience4j.retry.utils.MetricNames.SUCCESSFUL_CALLS_WITHOUT_RETRY;
+import static io.github.resilience4j.retry.utils.MetricNames.SUCCESSFUL_CALLS_WITH_RETRY;
+import static java.util.Objects.requireNonNull;
+
 import com.codahale.metrics.Gauge;
 import com.codahale.metrics.MetricRegistry;
 import io.github.resilience4j.retry.Retry;
-
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
-
-import static com.codahale.metrics.MetricRegistry.name;
-import static io.github.resilience4j.retry.utils.MetricNames.*;
-import static java.util.Objects.requireNonNull;
 
 public class RetryMetricsPublisher extends AbstractMetricsPublisher<Retry> {
 
@@ -55,15 +58,19 @@ public class RetryMetricsPublisher extends AbstractMetricsPublisher<Retry> {
         String failedWithRetry = name(prefix, name, FAILED_CALLS_WITH_RETRY);
 
         metricRegistry.register(successfulWithoutRetry,
-                (Gauge<Long>) () -> retry.getMetrics().getNumberOfSuccessfulCallsWithoutRetryAttempt());
+                (Gauge<Long>) () -> retry.getMetrics()
+                        .getNumberOfSuccessfulCallsWithoutRetryAttempt());
         metricRegistry.register(successfulWithRetry,
-                (Gauge<Long>) () -> retry.getMetrics().getNumberOfSuccessfulCallsWithRetryAttempt());
+                (Gauge<Long>) () -> retry.getMetrics()
+                        .getNumberOfSuccessfulCallsWithRetryAttempt());
         metricRegistry.register(failedWithoutRetry,
                 (Gauge<Long>) () -> retry.getMetrics().getNumberOfFailedCallsWithoutRetryAttempt());
         metricRegistry.register(failedWithRetry,
                 (Gauge<Long>) () -> retry.getMetrics().getNumberOfFailedCallsWithRetryAttempt());
 
-        List<String> metricNames = Arrays.asList(successfulWithoutRetry, successfulWithRetry, failedWithoutRetry, failedWithRetry);
+        List<String> metricNames = Arrays
+                .asList(successfulWithoutRetry, successfulWithRetry, failedWithoutRetry,
+                        failedWithRetry);
         metricsNameMap.put(name, new HashSet<>(metricNames));
     }
 

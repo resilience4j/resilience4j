@@ -22,7 +22,6 @@ import io.reactivex.Completable;
 import io.reactivex.Single;
 import io.reactivex.SingleObserver;
 import io.reactivex.internal.disposables.EmptyDisposable;
-
 import java.util.concurrent.TimeUnit;
 
 class SingleRateLimiter<T> extends Single<T> {
@@ -38,14 +37,15 @@ class SingleRateLimiter<T> extends Single<T> {
     @Override
     protected void subscribeActual(SingleObserver<? super T> downstream) {
         long waitDuration = rateLimiter.reservePermission();
-        if(waitDuration >= 0){
-            if(waitDuration > 0){
+        if (waitDuration >= 0) {
+            if (waitDuration > 0) {
                 Completable.timer(waitDuration, TimeUnit.NANOSECONDS)
-                    .subscribe(() -> upstream.subscribe(new RateLimiterSingleObserver(downstream)));
-            }else{
+                        .subscribe(() -> upstream
+                                .subscribe(new RateLimiterSingleObserver(downstream)));
+            } else {
                 upstream.subscribe(new RateLimiterSingleObserver(downstream));
             }
-        }else{
+        } else {
             downstream.onSubscribe(EmptyDisposable.INSTANCE);
             downstream.onError(RequestNotPermitted.createRequestNotPermitted(rateLimiter));
         }

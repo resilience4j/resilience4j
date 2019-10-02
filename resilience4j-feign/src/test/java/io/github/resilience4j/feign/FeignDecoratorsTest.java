@@ -16,12 +16,14 @@
  */
 package io.github.resilience4j.feign;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import org.junit.Test;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.*;
 
 public class FeignDecoratorsTest {
 
@@ -29,7 +31,8 @@ public class FeignDecoratorsTest {
     public void testWithNothing() throws Throwable {
         final FeignDecorators testSubject = FeignDecorators.builder().build();
 
-        final Object result = testSubject.decorate(args -> args[0], null, null, null).apply(new Object[] {"test01"});
+        final Object result = testSubject.decorate(args -> args[0], null, null, null)
+                .apply(new Object[]{"test01"});
 
         assertThat(result)
                 .describedAs("Returned result is correct")
@@ -41,10 +44,11 @@ public class FeignDecoratorsTest {
     public void testWithCircuitBreaker() throws Throwable {
         final CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("test");
         final CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
-        final FeignDecorators testSubject = FeignDecorators.builder().withCircuitBreaker(circuitBreaker).build();
+        final FeignDecorators testSubject = FeignDecorators.builder()
+                .withCircuitBreaker(circuitBreaker).build();
 
-
-        final Object result = testSubject.decorate(args -> args[0], null, null, null).apply(new Object[] {"test01"});
+        final Object result = testSubject.decorate(args -> args[0], null, null, null)
+                .apply(new Object[]{"test01"});
 
         assertThat(result)
                 .describedAs("Returned result is correct")
@@ -58,9 +62,11 @@ public class FeignDecoratorsTest {
     @Test
     public void testWithRateLimiter() throws Throwable {
         final RateLimiter rateLimiter = spy(RateLimiter.ofDefaults("test"));
-        final FeignDecorators testSubject = FeignDecorators.builder().withRateLimiter(rateLimiter).build();
+        final FeignDecorators testSubject = FeignDecorators.builder().withRateLimiter(rateLimiter)
+                .build();
 
-        final Object result = testSubject.decorate(args -> args[0], null, null, null).apply(new Object[] {"test01"});
+        final Object result = testSubject.decorate(args -> args[0], null, null, null)
+                .apply(new Object[]{"test01"});
 
         assertThat(result)
                 .describedAs("Returned result is correct")

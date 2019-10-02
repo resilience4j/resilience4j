@@ -16,6 +16,18 @@
  */
 package io.github.resilience4j.feign;
 
+import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.get;
+import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
+import static com.github.tomakehurst.wiremock.client.WireMock.verify;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import feign.FeignException;
 import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
@@ -23,12 +35,6 @@ import io.github.resilience4j.feign.test.TestService;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-
-import static com.github.tomakehurst.wiremock.client.WireMock.verify;
-import static com.github.tomakehurst.wiremock.client.WireMock.*;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.*;
 
 /**
  * Tests the integration of the {@link Resilience4jFeign} with a fallback.
@@ -68,7 +74,8 @@ public class Resilience4jFeignFallbackTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void testInvalidFallback() throws Throwable {
-        final FeignDecorators decorators = FeignDecorators.builder().withFallback("not a fallback").build();
+        final FeignDecorators decorators = FeignDecorators.builder().withFallback("not a fallback")
+                .build();
         Resilience4jFeign.builder(decorators).target(TestService.class, MOCK_URL);
     }
 

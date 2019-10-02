@@ -18,64 +18,67 @@
  */
 package io.github.resilience4j.bulkhead.internal;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import io.github.resilience4j.bulkhead.ThreadPoolBulkhead;
 import io.github.resilience4j.bulkhead.ThreadPoolBulkheadConfig;
+import java.time.Duration;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.time.Duration;
-
-import static org.assertj.core.api.Assertions.assertThat;
-
 public class FixedThreadPoolBulkheadTest {
 
-	private ThreadPoolBulkhead bulkhead;
+    private ThreadPoolBulkhead bulkhead;
 
-	@Before
-	public void setUp() {
+    @Before
+    public void setUp() {
 
-		ThreadPoolBulkheadConfig config = ThreadPoolBulkheadConfig.custom()
-				.maxThreadPoolSize(2)
-				.coreThreadPoolSize(1)
-				.queueCapacity(10)
-				.keepAliveDuration(Duration.ofMillis(10))
-				.build();
+        ThreadPoolBulkheadConfig config = ThreadPoolBulkheadConfig.custom()
+                .maxThreadPoolSize(2)
+                .coreThreadPoolSize(1)
+                .queueCapacity(10)
+                .keepAliveDuration(Duration.ofMillis(10))
+                .build();
 
-		bulkhead = ThreadPoolBulkhead.of("test", config);
-	}
+        bulkhead = ThreadPoolBulkhead.of("test", config);
+    }
 
-	@Test
-	public void testToString() {
+    @Test
+    public void testToString() {
 
-		// when
-		String result = bulkhead.toString();
+        // when
+        String result = bulkhead.toString();
 
-		// then
-		assertThat(result).isEqualTo("FixedThreadPoolBulkhead 'test'");
-	}
+        // then
+        assertThat(result).isEqualTo("FixedThreadPoolBulkhead 'test'");
+    }
 
-	@Test
-	public void testCustomSettings() {
+    @Test
+    public void testCustomSettings() {
 
-		// then
-		assertThat(bulkhead.getBulkheadConfig().getMaxThreadPoolSize()).isEqualTo(2);
-		assertThat(bulkhead.getBulkheadConfig().getQueueCapacity()).isEqualTo(10);
-		assertThat(bulkhead.getBulkheadConfig().getCoreThreadPoolSize()).isEqualTo(1);
-		assertThat(bulkhead.getBulkheadConfig().getKeepAliveDuration()).isEqualTo(Duration.ofMillis(10));
-	}
+        // then
+        assertThat(bulkhead.getBulkheadConfig().getMaxThreadPoolSize()).isEqualTo(2);
+        assertThat(bulkhead.getBulkheadConfig().getQueueCapacity()).isEqualTo(10);
+        assertThat(bulkhead.getBulkheadConfig().getCoreThreadPoolSize()).isEqualTo(1);
+        assertThat(bulkhead.getBulkheadConfig().getKeepAliveDuration())
+                .isEqualTo(Duration.ofMillis(10));
+    }
 
-	@Test
-	public void testCreateWithDefaults() {
-		// when
-		ThreadPoolBulkhead bulkhead = ThreadPoolBulkhead.ofDefaults("test");
+    @Test
+    public void testCreateWithDefaults() {
+        // when
+        ThreadPoolBulkhead bulkhead = ThreadPoolBulkhead.ofDefaults("test");
 
-		// then
-		assertThat(bulkhead).isNotNull();
-		assertThat(bulkhead.getBulkheadConfig()).isNotNull();
-		assertThat(bulkhead.getBulkheadConfig().getMaxThreadPoolSize()).isEqualTo(ThreadPoolBulkheadConfig.DEFAULT_MAX_THREAD_POOL_SIZE);
-		assertThat(bulkhead.getBulkheadConfig().getCoreThreadPoolSize()).isEqualTo(ThreadPoolBulkheadConfig.DEFAULT_CORE_THREAD_POOL_SIZE);
-		assertThat(bulkhead.getBulkheadConfig().getQueueCapacity()).isEqualTo(ThreadPoolBulkheadConfig.DEFAULT_QUEUE_CAPACITY);
-	}
+        // then
+        assertThat(bulkhead).isNotNull();
+        assertThat(bulkhead.getBulkheadConfig()).isNotNull();
+        assertThat(bulkhead.getBulkheadConfig().getMaxThreadPoolSize())
+                .isEqualTo(ThreadPoolBulkheadConfig.DEFAULT_MAX_THREAD_POOL_SIZE);
+        assertThat(bulkhead.getBulkheadConfig().getCoreThreadPoolSize())
+                .isEqualTo(ThreadPoolBulkheadConfig.DEFAULT_CORE_THREAD_POOL_SIZE);
+        assertThat(bulkhead.getBulkheadConfig().getQueueCapacity())
+                .isEqualTo(ThreadPoolBulkheadConfig.DEFAULT_QUEUE_CAPACITY);
+    }
 
 
 }

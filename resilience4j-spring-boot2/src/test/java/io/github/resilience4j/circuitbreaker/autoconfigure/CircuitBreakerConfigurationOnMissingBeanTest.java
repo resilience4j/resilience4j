@@ -2,18 +2,6 @@ package io.github.resilience4j.circuitbreaker.autoconfigure;
 
 import static org.junit.Assert.assertEquals;
 
-import java.util.List;
-
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.actuate.autoconfigure.health.HealthIndicatorAutoConfiguration;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-
 import io.github.resilience4j.TestUtils;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.circuitbreaker.configure.CircuitBreakerAspect;
@@ -23,6 +11,16 @@ import io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent;
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
 import io.github.resilience4j.fallback.FallbackDecorators;
+import java.util.List;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.actuate.autoconfigure.health.HealthIndicatorAutoConfiguration;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(classes = {
@@ -47,7 +45,8 @@ public class CircuitBreakerConfigurationOnMissingBeanTest {
     private EventConsumerRegistry<CircuitBreakerEvent> circuitEventConsumerBreakerRegistry;
 
     @Test
-    public void testAllBeansFromCircuitBreakerConfigurationHasOnMissingBean() throws NoSuchMethodException {
+    public void testAllBeansFromCircuitBreakerConfigurationHasOnMissingBean()
+            throws NoSuchMethodException {
         final Class<CircuitBreakerConfiguration> originalClass = CircuitBreakerConfiguration.class;
         final Class<CircuitBreakerConfigurationOnMissingBean> onMissingBeanClass = CircuitBreakerConfigurationOnMissingBean.class;
         TestUtils.assertAnnotations(originalClass, onMissingBeanClass);
@@ -57,7 +56,8 @@ public class CircuitBreakerConfigurationOnMissingBeanTest {
     public void testAllCircuitBreakerConfigurationBeansOverridden() {
         assertEquals(circuitBreakerRegistry, configWithOverrides.circuitBreakerRegistry);
         assertEquals(circuitBreakerAspect, configWithOverrides.circuitBreakerAspect);
-        assertEquals(circuitEventConsumerBreakerRegistry, configWithOverrides.circuitEventConsumerBreakerRegistry);
+        assertEquals(circuitEventConsumerBreakerRegistry,
+                configWithOverrides.circuitEventConsumerBreakerRegistry);
     }
 
     @Configuration
@@ -76,10 +76,12 @@ public class CircuitBreakerConfigurationOnMissingBeanTest {
         }
 
         @Bean
-        public CircuitBreakerAspect circuitBreakerAspect(CircuitBreakerRegistry circuitBreakerRegistry,
-                                                         @Autowired(required = false) List<CircuitBreakerAspectExt> circuitBreakerAspectExtList,
-                                                         FallbackDecorators recoveryDecorators) {
-            circuitBreakerAspect = new CircuitBreakerAspect(new CircuitBreakerProperties(), circuitBreakerRegistry, circuitBreakerAspectExtList, recoveryDecorators);
+        public CircuitBreakerAspect circuitBreakerAspect(
+                CircuitBreakerRegistry circuitBreakerRegistry,
+                @Autowired(required = false) List<CircuitBreakerAspectExt> circuitBreakerAspectExtList,
+                FallbackDecorators recoveryDecorators) {
+            circuitBreakerAspect = new CircuitBreakerAspect(new CircuitBreakerProperties(),
+                    circuitBreakerRegistry, circuitBreakerAspectExtList, recoveryDecorators);
             return circuitBreakerAspect;
         }
 

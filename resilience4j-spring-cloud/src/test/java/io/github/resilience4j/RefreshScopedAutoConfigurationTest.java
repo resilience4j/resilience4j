@@ -1,5 +1,7 @@
 package io.github.resilience4j;
 
+import static org.junit.Assert.assertTrue;
+
 import io.github.resilience4j.bulkhead.autoconfigure.BulkheadAutoConfiguration;
 import io.github.resilience4j.bulkhead.autoconfigure.RefreshScopedBulkheadAutoConfiguration;
 import io.github.resilience4j.circuitbreaker.autoconfigure.CircuitBreakerAutoConfiguration;
@@ -14,8 +16,6 @@ import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.core.type.MethodMetadata;
-
-import static org.junit.Assert.assertTrue;
 
 public class RefreshScopedAutoConfigurationTest {
 
@@ -37,7 +37,8 @@ public class RefreshScopedAutoConfigurationTest {
 
     @Test
     public void refreshScopedCircuitBreakerRegistry() {
-        load(RefreshScopedCircuitBreakerAutoConfiguration.class, CircuitBreakerAutoConfiguration.class);
+        load(RefreshScopedCircuitBreakerAutoConfiguration.class,
+                CircuitBreakerAutoConfiguration.class);
         testRefreshScoped("circuitBreakerRegistry");
     }
 

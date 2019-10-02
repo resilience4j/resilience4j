@@ -18,26 +18,26 @@
  */
 package io.github.resilience4j.core;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.slf4j.Logger;
-
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
+
+import org.junit.Before;
+import org.junit.Test;
+import org.slf4j.Logger;
 
 public class EventProcessorTest {
 
     private Logger logger;
 
     @Before
-    public void setUp(){
+    public void setUp() {
         logger = mock(Logger.class);
     }
 
     @Test
-    public void testRegisterOnEventConsumer(){
+    public void testRegisterOnEventConsumer() {
         EventProcessor<Number> eventProcessor = new EventProcessor<>();
         EventConsumer<Number> eventConsumer = event -> logger.info(event.toString());
         eventProcessor.onEvent(eventConsumer);
@@ -109,7 +109,6 @@ public class EventProcessorTest {
 
         assertThat(consumed).isEqualTo(false);
     }
-
 
 
 }

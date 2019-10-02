@@ -27,14 +27,16 @@ public class BulkheadMetricsPublisherTest extends AbstractBulkheadMetricsTest {
     @Override
     protected Bulkhead given(String prefix, MetricRegistry metricRegistry) {
         BulkheadRegistry bulkheadRegistry =
-                BulkheadRegistry.of(BulkheadConfig.ofDefaults(), new BulkheadMetricsPublisher(prefix, metricRegistry));
+                BulkheadRegistry.of(BulkheadConfig.ofDefaults(),
+                        new BulkheadMetricsPublisher(prefix, metricRegistry));
 
         return bulkheadRegistry.bulkhead("testBulkhead");
     }
 
     @Override
     protected Bulkhead given(MetricRegistry metricRegistry) {
-        BulkheadRegistry bulkheadRegistry = BulkheadRegistry.of(BulkheadConfig.ofDefaults(), new BulkheadMetricsPublisher(metricRegistry));
+        BulkheadRegistry bulkheadRegistry = BulkheadRegistry
+                .of(BulkheadConfig.ofDefaults(), new BulkheadMetricsPublisher(metricRegistry));
 
         return bulkheadRegistry.bulkhead("testBulkhead");
     }

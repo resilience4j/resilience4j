@@ -18,6 +18,8 @@
  */
 package io.github.resilience4j.circuitbreaker;
 
+import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.BenchmarkMode;
 import org.openjdk.jmh.annotations.Fork;
@@ -36,9 +38,6 @@ import org.openjdk.jmh.runner.RunnerException;
 import org.openjdk.jmh.runner.options.Options;
 import org.openjdk.jmh.runner.options.OptionsBuilder;
 
-import java.util.concurrent.TimeUnit;
-import java.util.function.Supplier;
-
 @State(Scope.Benchmark)
 @OutputTimeUnit(TimeUnit.MICROSECONDS)
 @BenchmarkMode(Mode.Throughput)
@@ -52,6 +51,13 @@ public class CircuitBreakerBenchmark {
     private Supplier<String> protectedSupplier;
     private Supplier<String> protectedSupplierWithSb;
     private Supplier<String> stringSupplier;
+
+    public static void main(String[] args) throws RunnerException {
+        Options options = new OptionsBuilder()
+                .addProfiler(GCProfiler.class)
+                .build();
+        new Runner(options).run();
+    }
 
     @Setup
     public void setUp() {
@@ -80,12 +86,5 @@ public class CircuitBreakerBenchmark {
     @Measurement(iterations = ITERATION_COUNT)
     public String protectedSupplier() {
         return protectedSupplier.get();
-    }
-
-    public static void main(String[] args) throws RunnerException {
-        Options options = new OptionsBuilder()
-            .addProfiler(GCProfiler.class)
-            .build();
-        new Runner(options).run();
     }
 }

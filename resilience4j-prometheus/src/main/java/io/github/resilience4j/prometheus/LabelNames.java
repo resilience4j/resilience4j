@@ -15,23 +15,23 @@
  */
 package io.github.resilience4j.prometheus;
 
-import java.util.Arrays;
-import java.util.List;
-
 import static java.util.Collections.singletonList;
 import static java.util.Collections.unmodifiableList;
+
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * Common constants for metric binder implementations based on tags.
  */
 public final class LabelNames {
 
-    private LabelNames() {
-    }
-
     @SuppressWarnings("squid:S2386") // list is unmodifiable
     public static final List<String> NAME = unmodifiableList(singletonList("name"));
     // list is unmodifiable("squid:S2386") // list is unmodifiable
-    public static final List<String> NAME_AND_KIND = unmodifiableList(Arrays.asList("name", "kind"));
+    public static final List<String> NAME_AND_KIND = unmodifiableList(
+            Arrays.asList("name", "kind"));
+    private LabelNames() {
+    }
 
 }

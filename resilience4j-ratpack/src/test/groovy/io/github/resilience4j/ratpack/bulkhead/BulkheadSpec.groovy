@@ -32,14 +32,7 @@ import spock.lang.Unroll
 
 import java.lang.reflect.UndeclaredThrowableException
 import java.time.Duration
-import java.util.concurrent.Callable
-import java.util.concurrent.CompletableFuture
-import java.util.concurrent.CompletionStage
-import java.util.concurrent.CountDownLatch
-import java.util.concurrent.ExecutionException
-import java.util.concurrent.ExecutorService
-import java.util.concurrent.Executors
-import java.util.concurrent.TimeUnit
+import java.util.concurrent.*
 import java.util.function.Consumer
 import java.util.function.Function
 
@@ -393,14 +386,14 @@ class BulkheadSpec extends Specification {
 
         @Bulkhead(name = "test")
         Promise<String> simpleBulkheadPromise() {
-            Promise.<String>async {
+            Promise.<String> async {
                 it.success("bulkhead promise")
             }
         }
 
         @Bulkhead(name = "test")
         Promise<String> bulkheadPromise(CountDownLatch latch, CountDownLatch blockLatch) {
-            Promise.<String>async {
+            Promise.<String> async {
                 blockLatch.countDown()
                 assert latch.await(30, TimeUnit.SECONDS): "Timeout - test failure"
                 it.success("bulkhead promise")
@@ -443,7 +436,7 @@ class BulkheadSpec extends Specification {
 
         @Bulkhead(name = "test")
         Promise<String> bulkheadPromiseException(CountDownLatch latch, CountDownLatch blockLatch) {
-            Promise.<String>async {
+            Promise.<String> async {
                 blockLatch.countDown()
                 assert latch.await(30, TimeUnit.SECONDS): "Timeout - test failure"
                 it.error(new Exception("bulkhead promise exception"))
@@ -490,7 +483,7 @@ class BulkheadSpec extends Specification {
 
         @Bulkhead(name = "test", fallbackMethod = "fallback")
         Promise<String> bulkheadPromiseFallbackMethod(CountDownLatch latch, CountDownLatch blockLatch) {
-            Promise.<String>async {
+            Promise.<String> async {
                 blockLatch.countDown()
                 assert latch.await(30, TimeUnit.SECONDS): "Timeout - test failure"
                 it.error(new Exception("bulkhead promise exception"))
@@ -533,7 +526,7 @@ class BulkheadSpec extends Specification {
 
         @Bulkhead(name = "test", fallbackMethod = "fallbackPromise")
         Promise<String> bulkheadPromiseFallbackPromiseMethod(CountDownLatch latch, CountDownLatch blockLatch) {
-            Promise.<String>async {
+            Promise.<String> async {
                 blockLatch.countDown()
                 assert latch.await(30, TimeUnit.SECONDS): "Timeout - test failure"
                 it.error(new Exception("bulkhead promise exception"))

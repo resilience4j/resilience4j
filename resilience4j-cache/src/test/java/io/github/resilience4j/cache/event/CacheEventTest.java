@@ -18,12 +18,11 @@
  */
 package io.github.resilience4j.cache.event;
 
-import org.junit.Test;
+import static io.github.resilience4j.cache.event.CacheEvent.Type;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.IOException;
-
-import static io.github.resilience4j.cache.event.CacheEvent.*;
-import static org.assertj.core.api.Assertions.assertThat;
+import org.junit.Test;
 
 public class CacheEventTest {
 
@@ -34,7 +33,8 @@ public class CacheEventTest {
         assertThat(cacheOnErrorEvent.getCacheName()).isEqualTo("test");
         assertThat(cacheOnErrorEvent.getThrowable()).isInstanceOf(IOException.class);
         assertThat(cacheOnErrorEvent.getEventType()).isEqualTo(Type.ERROR);
-        assertThat(cacheOnErrorEvent.toString()).contains("Cache 'test' recorded an error: 'java.io.IOException'.");
+        assertThat(cacheOnErrorEvent.toString())
+                .contains("Cache 'test' recorded an error: 'java.io.IOException'.");
     }
 
     @Test
@@ -44,7 +44,8 @@ public class CacheEventTest {
         assertThat(cacheOnHitEvent.getCacheName()).isEqualTo("test");
         assertThat(cacheOnHitEvent.getCacheKey()).isEqualTo("testKey");
         assertThat(cacheOnHitEvent.getEventType()).isEqualTo(Type.CACHE_HIT);
-        assertThat(cacheOnHitEvent.toString()).contains("Cache 'test' recorded a cache hit on cache key 'testKey'.");
+        assertThat(cacheOnHitEvent.toString())
+                .contains("Cache 'test' recorded a cache hit on cache key 'testKey'.");
     }
 
     @Test
@@ -54,7 +55,8 @@ public class CacheEventTest {
         assertThat(cacheOnMissEvent.getCacheName()).isEqualTo("test");
         assertThat(cacheOnMissEvent.getCacheKey()).isEqualTo("testKey");
         assertThat(cacheOnMissEvent.getEventType()).isEqualTo(Type.CACHE_MISS);
-        assertThat(cacheOnMissEvent.toString()).contains("Cache 'test' recorded a cache miss on cache key 'testKey'.");
+        assertThat(cacheOnMissEvent.toString())
+                .contains("Cache 'test' recorded a cache miss on cache key 'testKey'.");
     }
 
 }

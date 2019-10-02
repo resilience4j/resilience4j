@@ -19,6 +19,8 @@
 package io.github.resilience4j.bulkhead;
 
 import io.github.resilience4j.adapter.RxJava2Adapter;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.BenchmarkMode;
 import org.openjdk.jmh.annotations.Fork;
@@ -37,9 +39,6 @@ import org.openjdk.jmh.runner.RunnerException;
 import org.openjdk.jmh.runner.options.Options;
 import org.openjdk.jmh.runner.options.OptionsBuilder;
 
-import java.util.concurrent.TimeUnit;
-import java.util.function.Supplier;
-
 @State(Scope.Benchmark)
 @OutputTimeUnit(TimeUnit.MICROSECONDS)
 @BenchmarkMode(Mode.Throughput)
@@ -56,9 +55,9 @@ public class BulkheadBenchmark {
 
     public static void main(String[] args) throws RunnerException {
         Options options = new OptionsBuilder()
-            .threads(2)
-            .addProfiler(GCProfiler.class)
-            .build();
+                .threads(2)
+                .addProfiler(GCProfiler.class)
+                .build();
         new Runner(options).run();
     }
 
@@ -70,8 +69,8 @@ public class BulkheadBenchmark {
         };
 
         BulkheadConfig config = BulkheadConfig.custom()
-            .maxConcurrentCalls(2)
-            .build();
+                .maxConcurrentCalls(2)
+                .build();
 
         Bulkhead bulkhead = Bulkhead.of("test", config);
         protectedSupplier = Bulkhead.decorateSupplier(bulkhead, stringSupplier);

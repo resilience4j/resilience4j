@@ -15,6 +15,8 @@
  */
 package io.github.resilience4j.ratpack.circuitbreaker;
 
+import static io.github.resilience4j.circuitbreaker.CallNotPermittedException.createCallNotPermittedException;
+
 import com.google.inject.Inject;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
@@ -23,24 +25,23 @@ import io.github.resilience4j.ratpack.internal.AbstractMethodInterceptor;
 import io.github.resilience4j.ratpack.recovery.DefaultRecoveryFunction;
 import io.github.resilience4j.ratpack.recovery.RecoveryFunction;
 import io.github.resilience4j.reactor.circuitbreaker.operator.CircuitBreakerOperator;
+import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
+import java.util.concurrent.TimeUnit;
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
 import ratpack.exec.Promise;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionStage;
-import java.util.concurrent.TimeUnit;
-
-import static io.github.resilience4j.circuitbreaker.CallNotPermittedException.createCallNotPermittedException;
-
 /**
  * A {@link MethodInterceptor} to handle all methods annotated with {@link CircuitBreaker}. It will
- * handle methods that return a {@link Promise}, {@link reactor.core.publisher.Flux}, {@link reactor.core.publisher.Mono}, {@link java.util.concurrent.CompletionStage}, or value.
+ * handle methods that return a {@link Promise}, {@link reactor.core.publisher.Flux}, {@link
+ * reactor.core.publisher.Mono}, {@link java.util.concurrent.CompletionStage}, or value.
  *
- * The CircuitBreakerRegistry is used to retrieve an instance of a CircuitBreaker for a specific name.
+ * The CircuitBreakerRegistry is used to retrieve an instance of a CircuitBreaker for a specific
+ * name.
  *
  * Given a method like this:
  * <pre><code>
@@ -49,20 +50,21 @@ import static io.github.resilience4j.circuitbreaker.CallNotPermittedException.cr
  *         return "Sir Captain " + name;
  *     }
  * </code></pre>
- * each time the {@code #fancyName(String)} method is invoked, the method's execution will pass through a
- * a {@link io.github.resilience4j.circuitbreaker.CircuitBreaker} according to the given config.
+ * each time the {@code #fancyName(String)} method is invoked, the method's execution will pass
+ * through a a {@link io.github.resilience4j.circuitbreaker.CircuitBreaker} according to the given
+ * config.
  *
  * The fallbackMethod parameter signature must match either:
  *
- * 1) The method parameter signature on the annotated method or
- * 2) The method parameter signature with a matching exception type as the last parameter on the annotated method
+ * 1) The method parameter signature on the annotated method or 2) The method parameter signature
+ * with a matching exception type as the last parameter on the annotated method
  *
- * The return value can be a {@link Promise}, {@link java.util.concurrent.CompletionStage},
- * {@link reactor.core.publisher.Flux}, {@link reactor.core.publisher.Mono}, or an object value.
- * Other reactive types are not supported.
+ * The return value can be a {@link Promise}, {@link java.util.concurrent.CompletionStage}, {@link
+ * reactor.core.publisher.Flux}, {@link reactor.core.publisher.Mono}, or an object value. Other
+ * reactive types are not supported.
  *
- * If the return value is one of the reactive types listed above, it must match the return value type of the
- * annotated method.
+ * If the return value is one of the reactive types listed above, it must match the return value
+ * type of the annotated method.
  */
 public class CircuitBreakerMethodInterceptor extends AbstractMethodInterceptor {
 
@@ -76,7 +78,8 @@ public class CircuitBreakerMethodInterceptor extends AbstractMethodInterceptor {
     public Object invoke(MethodInvocation invocation) throws Throwable {
         CircuitBreaker annotation = invocation.getMethod().getAnnotation(CircuitBreaker.class);
         if (annotation == null) {
-            annotation = invocation.getMethod().getDeclaringClass().getAnnotation(CircuitBreaker.class);
+            annotation = invocation.getMethod().getDeclaringClass()
+                    .getAnnotation(CircuitBreaker.class);
         }
         final RecoveryFunction<?> fallbackMethod = Optional
                 .ofNullable(createRecoveryFunction(invocation, annotation.fallbackMethod()))
@@ -84,12 +87,14 @@ public class CircuitBreakerMethodInterceptor extends AbstractMethodInterceptor {
         if (registry == null) {
             registry = CircuitBreakerRegistry.ofDefaults();
         }
-        io.github.resilience4j.circuitbreaker.CircuitBreaker breaker = registry.circuitBreaker(annotation.name());
+        io.github.resilience4j.circuitbreaker.CircuitBreaker breaker = registry
+                .circuitBreaker(annotation.name());
         Class<?> returnType = invocation.getMethod().getReturnType();
         if (Promise.class.isAssignableFrom(returnType)) {
             Promise<?> result = (Promise<?>) proceed(invocation, breaker);
             if (result != null) {
-                CircuitBreakerTransformer transformer = CircuitBreakerTransformer.of(breaker).recover(fallbackMethod);
+                CircuitBreakerTransformer transformer = CircuitBreakerTransformer.of(breaker)
+                        .recover(fallbackMethod);
                 result = result.transform(transformer);
             }
             return result;
@@ -135,7 +140,8 @@ public class CircuitBreakerMethodInterceptor extends AbstractMethodInterceptor {
     }
 
     @Nullable
-    private Object proceed(MethodInvocation invocation, io.github.resilience4j.circuitbreaker.CircuitBreaker breaker) throws Throwable {
+    private Object proceed(MethodInvocation invocation,
+            io.github.resilience4j.circuitbreaker.CircuitBreaker breaker) throws Throwable {
         Class<?> returnType = invocation.getMethod().getReturnType();
         Object result;
         long start = System.nanoTime();
@@ -162,9 +168,12 @@ public class CircuitBreakerMethodInterceptor extends AbstractMethodInterceptor {
     }
 
     @Nullable
-    private Object handleProceedWithException(MethodInvocation invocation, io.github.resilience4j.circuitbreaker.CircuitBreaker breaker, RecoveryFunction<?> recoveryFunction) throws Throwable {
+    private Object handleProceedWithException(MethodInvocation invocation,
+            io.github.resilience4j.circuitbreaker.CircuitBreaker breaker,
+            RecoveryFunction<?> recoveryFunction) throws Throwable {
         try {
-            return io.github.resilience4j.circuitbreaker.CircuitBreaker.decorateCheckedSupplier(breaker, invocation::proceed).apply();
+            return io.github.resilience4j.circuitbreaker.CircuitBreaker
+                    .decorateCheckedSupplier(breaker, invocation::proceed).apply();
         } catch (Throwable throwable) {
             return recoveryFunction.apply(throwable);
         }

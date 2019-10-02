@@ -16,15 +16,6 @@
  */
 package io.github.resilience4j.feign;
 
-import io.github.resilience4j.feign.test.Issue560;
-import io.github.resilience4j.feign.test.TestService;
-
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-
-import com.github.tomakehurst.wiremock.junit.WireMockRule;
-
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
@@ -32,6 +23,13 @@ import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.verify;
 import static org.assertj.core.api.Assertions.assertThat;
+
+import com.github.tomakehurst.wiremock.junit.WireMockRule;
+import io.github.resilience4j.feign.test.Issue560;
+import io.github.resilience4j.feign.test.TestService;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
 
 /**
  * Tests the integration of the {@link Resilience4jFeign} with the lambda as a fallback.

@@ -18,24 +18,23 @@
  */
 package io.github.resilience4j.bulkhead;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.times;
+
 import com.jayway.awaitility.Awaitility;
 import com.jayway.awaitility.Duration;
 import io.github.resilience4j.test.HelloWorldService;
 import io.vavr.control.Try;
-import org.junit.Before;
-import org.junit.Test;
-import org.mockito.BDDMockito;
-import org.mockito.Mockito;
-
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Mockito.times;
+import org.junit.Before;
+import org.junit.Test;
+import org.mockito.BDDMockito;
+import org.mockito.Mockito;
 
 public class ThreadPoolBulkheadTest {
 
@@ -66,7 +65,8 @@ public class ThreadPoolBulkheadTest {
             try {
                 final AtomicInteger counter = new AtomicInteger(0);
                 bulkhead.executeRunnable(() -> {
-                    Awaitility.waitAtMost(Duration.TWO_HUNDRED_MILLISECONDS).until(() -> counter.incrementAndGet() > 1);
+                    Awaitility.waitAtMost(Duration.TWO_HUNDRED_MILLISECONDS)
+                            .until(() -> counter.incrementAndGet() > 1);
                 });
             } catch (Exception e) {
                 exception.initCause(e);
@@ -87,9 +87,11 @@ public class ThreadPoolBulkheadTest {
             }
         }).start();
         final AtomicInteger counter = new AtomicInteger(0);
-        Awaitility.waitAtMost(Duration.FIVE_HUNDRED_MILLISECONDS).until(() -> counter.incrementAndGet() >= 2);
+        Awaitility.waitAtMost(Duration.FIVE_HUNDRED_MILLISECONDS)
+                .until(() -> counter.incrementAndGet() >= 2);
         // Then
-        assertThat(exception.getCause().getMessage()).contains("Bulkhead 'testSupplier' is full and does not permit further calls");
+        assertThat(exception.getCause().getMessage())
+                .contains("Bulkhead 'testSupplier' is full and does not permit further calls");
     }
 
 
@@ -142,7 +144,8 @@ public class ThreadPoolBulkheadTest {
 
 
     @Test
-    public void shouldExecuteSupplierAndReturnWithSuccess() throws ExecutionException, InterruptedException {
+    public void shouldExecuteSupplierAndReturnWithSuccess()
+            throws ExecutionException, InterruptedException {
 
         // Given
         ThreadPoolBulkhead bulkhead = ThreadPoolBulkhead.of("test", config);
@@ -150,8 +153,8 @@ public class ThreadPoolBulkheadTest {
         BDDMockito.given(helloWorldService.returnHelloWorld()).willReturn("Hello world");
 
         // When
-        CompletionStage<String> result = bulkhead.executeSupplier(helloWorldService::returnHelloWorld);
-
+        CompletionStage<String> result = bulkhead
+                .executeSupplier(helloWorldService::returnHelloWorld);
 
         // Then
         assertThat(result.toCompletableFuture().get()).isEqualTo("Hello world");
@@ -166,7 +169,8 @@ public class ThreadPoolBulkheadTest {
     }
 
     @Test
-    public void testCreateThreadsUsingNameForPrefix() throws ExecutionException, InterruptedException {
+    public void testCreateThreadsUsingNameForPrefix()
+            throws ExecutionException, InterruptedException {
 
         // Given
         ThreadPoolBulkhead bulkhead = ThreadPoolBulkhead.of("TEST", config);

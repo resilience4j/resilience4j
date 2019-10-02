@@ -22,6 +22,8 @@ import io.github.resilience4j.consumer.CircularEventConsumer;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
 import io.github.resilience4j.ratpack.Resilience4jConfig;
 import io.vavr.collection.Seq;
+import java.util.Comparator;
+import javax.inject.Inject;
 import ratpack.exec.Promise;
 import ratpack.func.Action;
 import ratpack.func.Function;
@@ -29,9 +31,6 @@ import ratpack.handling.Chain;
 import ratpack.jackson.Jackson;
 import ratpack.sse.ServerSentEvents;
 import reactor.core.publisher.Flux;
-
-import javax.inject.Inject;
-import java.util.Comparator;
 
 /**
  * Provides event and stream event endpoints for bulkhead events.
@@ -47,15 +46,19 @@ public class BulkheadChain implements Action<Chain> {
 
     @Override
     public void execute(Chain chain) throws Exception {
-        String prefix = chain.getRegistry().get(Resilience4jConfig.class).getEndpoints().getBulkhead().getPath();
+        String prefix = chain.getRegistry().get(Resilience4jConfig.class).getEndpoints()
+                .getBulkhead().getPath();
         chain.prefix(prefix, chain1 -> {
             chain1.get("events", ctx ->
                     Promise.<BulkheadEventsEndpointResponse>async(d -> {
-                        BulkheadEventsEndpointResponse response = new BulkheadEventsEndpointResponse(eventConsumerRegistry
-                                .getAllEventConsumer()
-                                .flatMap(CircularEventConsumer::getBufferedEvents)
-                                .sorted(Comparator.comparing(BulkheadEvent::getCreationTime))
-                                .map(BulkheadEventDTOFactory::createBulkheadEventDTO).toJavaList());
+                        BulkheadEventsEndpointResponse response = new BulkheadEventsEndpointResponse(
+                                eventConsumerRegistry
+                                        .getAllEventConsumer()
+                                        .flatMap(CircularEventConsumer::getBufferedEvents)
+                                        .sorted(Comparator
+                                                .comparing(BulkheadEvent::getCreationTime))
+                                        .map(BulkheadEventDTOFactory::createBulkheadEventDTO)
+                                        .toJavaList());
                         d.success(response);
                     }).then(r -> ctx.render(Jackson.json(r)))
             );
@@ -69,10 +72,12 @@ public class BulkheadChain implements Action<Chain> {
             chain1.get("events/:name", ctx -> {
                         String bulkheadName = ctx.getPathTokens().get("name");
                         Promise.<BulkheadEventsEndpointResponse>async(d -> {
-                            BulkheadEventsEndpointResponse response = new BulkheadEventsEndpointResponse(eventConsumerRegistry
-                                    .getEventConsumer(bulkheadName)
-                                    .getBufferedEvents()
-                                    .map(BulkheadEventDTOFactory::createBulkheadEventDTO).toJavaList());
+                            BulkheadEventsEndpointResponse response = new BulkheadEventsEndpointResponse(
+                                    eventConsumerRegistry
+                                            .getEventConsumer(bulkheadName)
+                                            .getBufferedEvents()
+                                            .map(BulkheadEventDTOFactory::createBulkheadEventDTO)
+                                            .toJavaList());
                             d.success(response);
                         }).then(r -> ctx.render(Jackson.json(r)));
                     }
@@ -90,11 +95,14 @@ public class BulkheadChain implements Action<Chain> {
                         String bulkheadName = ctx.getPathTokens().get("name");
                         String eventType = ctx.getPathTokens().get("type");
                         Promise.<BulkheadEventsEndpointResponse>async(d -> {
-                            BulkheadEventsEndpointResponse response = new BulkheadEventsEndpointResponse(eventConsumerRegistry
-                                    .getEventConsumer(bulkheadName)
-                                    .getBufferedEvents()
-                                    .filter(event -> event.getEventType() == BulkheadEvent.Type.valueOf(eventType.toUpperCase()))
-                                    .map(BulkheadEventDTOFactory::createBulkheadEventDTO).toJavaList());
+                            BulkheadEventsEndpointResponse response = new BulkheadEventsEndpointResponse(
+                                    eventConsumerRegistry
+                                            .getEventConsumer(bulkheadName)
+                                            .getBufferedEvents()
+                                            .filter(event -> event.getEventType() == BulkheadEvent.Type
+                                                    .valueOf(eventType.toUpperCase()))
+                                            .map(BulkheadEventDTOFactory::createBulkheadEventDTO)
+                                            .toJavaList());
                             d.success(response);
                         }).then(r -> ctx.render(Jackson.json(r)));
                     }
@@ -114,8 +122,10 @@ public class BulkheadChain implements Action<Chain> {
     }
 
     private ServerSentEvents serverSentEvents(Chain chain, Seq<Flux<BulkheadEvent>> eventStreams) {
-        Function<BulkheadEvent, String> data = b -> Jackson.getObjectWriter(chain.getRegistry()).writeValueAsString(BulkheadEventDTOFactory.createBulkheadEventDTO(b));
+        Function<BulkheadEvent, String> data = b -> Jackson.getObjectWriter(chain.getRegistry())
+                .writeValueAsString(BulkheadEventDTOFactory.createBulkheadEventDTO(b));
         return ServerSentEvents.serverSentEvents(Flux.merge(eventStreams),
-                e -> e.id(BulkheadEvent::getBulkheadName).event(c -> c.getEventType().name()).data(data));
+                e -> e.id(BulkheadEvent::getBulkheadName).event(c -> c.getEventType().name())
+                        .data(data));
     }
 }

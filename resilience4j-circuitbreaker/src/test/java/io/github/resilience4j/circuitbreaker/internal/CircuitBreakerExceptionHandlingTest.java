@@ -1,23 +1,15 @@
 package io.github.resilience4j.circuitbreaker.internal;
 
-import io.github.resilience4j.circuitbreaker.CircuitBreaker;
-import org.junit.Test;
-
-import java.io.IOException;
-import java.time.Duration;
-import java.util.concurrent.TimeUnit;
-
 import static io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.custom;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.github.resilience4j.circuitbreaker.CircuitBreaker;
+import java.io.IOException;
+import java.time.Duration;
+import java.util.concurrent.TimeUnit;
+import org.junit.Test;
+
 public class CircuitBreakerExceptionHandlingTest {
-
-    private static class BusinessException extends Exception {
-
-        public BusinessException(String message) {
-            super(message);
-        }
-    }
 
     @Test
     public void shouldRecordRuntimeExceptionAsFailureAndBusinessExceptionAsSuccess() {
@@ -95,5 +87,12 @@ public class CircuitBreakerExceptionHandlingTest {
         assertThat(circuitBreaker.getMetrics().getNumberOfFailedCalls()).isEqualTo(1);
         assertThat(circuitBreaker.getMetrics().getNumberOfSuccessfulCalls()).isEqualTo(0);
         assertThat(circuitBreaker.getMetrics().getNumberOfBufferedCalls()).isEqualTo(1);
+    }
+
+    private static class BusinessException extends Exception {
+
+        public BusinessException(String message) {
+            super(message);
+        }
     }
 }

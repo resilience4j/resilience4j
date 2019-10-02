@@ -15,7 +15,13 @@
  */
 package io.github.resilience4j;
 
-import io.github.resilience4j.micrometer.tagged.*;
+import static org.assertj.core.api.Assertions.assertThat;
+
+import io.github.resilience4j.micrometer.tagged.TaggedBulkheadMetricsPublisher;
+import io.github.resilience4j.micrometer.tagged.TaggedCircuitBreakerMetricsPublisher;
+import io.github.resilience4j.micrometer.tagged.TaggedRateLimiterMetricsPublisher;
+import io.github.resilience4j.micrometer.tagged.TaggedRetryMetricsPublisher;
+import io.github.resilience4j.micrometer.tagged.TaggedThreadPoolBulkheadMetricsPublisher;
 import io.github.resilience4j.service.test.TestApplication;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -23,50 +29,48 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, classes = TestApplication.class)
 public class MetricsAutoConfigurationTest {
 
-	@Autowired(required = false)
-	TaggedCircuitBreakerMetricsPublisher taggedCircuitBreakerMetricsPublisher;
+    @Autowired(required = false)
+    TaggedCircuitBreakerMetricsPublisher taggedCircuitBreakerMetricsPublisher;
 
-	@Autowired(required = false)
-	TaggedBulkheadMetricsPublisher taggedBulkheadMetricsPublisher;
+    @Autowired(required = false)
+    TaggedBulkheadMetricsPublisher taggedBulkheadMetricsPublisher;
 
-	@Autowired(required = false)
-	TaggedThreadPoolBulkheadMetricsPublisher taggedThreadPoolBulkheadMetricsPublisher;
+    @Autowired(required = false)
+    TaggedThreadPoolBulkheadMetricsPublisher taggedThreadPoolBulkheadMetricsPublisher;
 
-	@Autowired(required = false)
-	TaggedRateLimiterMetricsPublisher taggedRateLimiterMetricsPublisher;
+    @Autowired(required = false)
+    TaggedRateLimiterMetricsPublisher taggedRateLimiterMetricsPublisher;
 
-	@Autowired(required = false)
-	TaggedRetryMetricsPublisher taggedRetryMetricsPublisher;
+    @Autowired(required = false)
+    TaggedRetryMetricsPublisher taggedRetryMetricsPublisher;
 
-	@Test
-	public void newCircuitBreakerPublisherIsBound() {
-		assertThat(taggedCircuitBreakerMetricsPublisher).isNotNull();
-	}
+    @Test
+    public void newCircuitBreakerPublisherIsBound() {
+        assertThat(taggedCircuitBreakerMetricsPublisher).isNotNull();
+    }
 
-	@Test
-	public void newBulkheadPublisherIsBound() {
-		assertThat(taggedBulkheadMetricsPublisher).isNotNull();
-	}
+    @Test
+    public void newBulkheadPublisherIsBound() {
+        assertThat(taggedBulkheadMetricsPublisher).isNotNull();
+    }
 
-	@Test
-	public void newThreadPoolBulkheadPublisherIsBound() {
-		assertThat(taggedThreadPoolBulkheadMetricsPublisher).isNotNull();
-	}
+    @Test
+    public void newThreadPoolBulkheadPublisherIsBound() {
+        assertThat(taggedThreadPoolBulkheadMetricsPublisher).isNotNull();
+    }
 
-	@Test
-	public void newRateLimiterPublisherIsBound() {
-		assertThat(taggedRateLimiterMetricsPublisher).isNotNull();
-	}
+    @Test
+    public void newRateLimiterPublisherIsBound() {
+        assertThat(taggedRateLimiterMetricsPublisher).isNotNull();
+    }
 
-	@Test
-	public void newRetryPublisherIsBound() {
-		assertThat(taggedRetryMetricsPublisher).isNotNull();
-	}
+    @Test
+    public void newRetryPublisherIsBound() {
+        assertThat(taggedRetryMetricsPublisher).isNotNull();
+    }
 
 }

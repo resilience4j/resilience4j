@@ -16,11 +16,11 @@
 
 package io.github.resilience4j.micrometer.tagged;
 
+import static java.util.Objects.requireNonNull;
+
 import io.github.resilience4j.bulkhead.ThreadPoolBulkhead;
 import io.github.resilience4j.core.metrics.MetricsPublisher;
 import io.micrometer.core.instrument.MeterRegistry;
-
-import static java.util.Objects.requireNonNull;
 
 public class TaggedThreadPoolBulkheadMetricsPublisher
         extends AbstractThreadPoolBulkheadMetrics implements MetricsPublisher<ThreadPoolBulkhead> {
@@ -32,7 +32,8 @@ public class TaggedThreadPoolBulkheadMetricsPublisher
         this.meterRegistry = requireNonNull(meterRegistry);
     }
 
-    public TaggedThreadPoolBulkheadMetricsPublisher(MetricNames names, MeterRegistry meterRegistry) {
+    public TaggedThreadPoolBulkheadMetricsPublisher(MetricNames names,
+            MeterRegistry meterRegistry) {
         super(names);
         this.meterRegistry = requireNonNull(meterRegistry);
     }

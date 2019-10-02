@@ -1,18 +1,17 @@
 package io.github.resilience4j.ratelimiter.operator;
 
+import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
+
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RequestNotPermitted;
 import io.reactivex.Single;
-import org.junit.Before;
-import org.junit.Test;
-import org.mockito.Mockito;
-
 import java.io.IOException;
 import java.time.Duration;
 import java.util.concurrent.TimeUnit;
-
-import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
+import org.junit.Before;
+import org.junit.Test;
+import org.mockito.Mockito;
 
 /**
  * Unit test for {@link SingleRateLimiter}.
@@ -22,7 +21,7 @@ public class SingleRateLimiterTest {
     private RateLimiter rateLimiter;
 
     @Before
-    public void setUp(){
+    public void setUp() {
         rateLimiter = Mockito.mock(RateLimiter.class, RETURNS_DEEP_STUBS);
     }
 
@@ -31,9 +30,9 @@ public class SingleRateLimiterTest {
         given(rateLimiter.reservePermission()).willReturn(Duration.ofSeconds(0).toNanos());
 
         Single.just(1)
-            .compose(RateLimiterOperator.of(rateLimiter))
-            .test()
-            .assertResult(1);
+                .compose(RateLimiterOperator.of(rateLimiter))
+                .test()
+                .assertResult(1);
     }
 
     @Test
@@ -51,11 +50,11 @@ public class SingleRateLimiterTest {
         given(rateLimiter.reservePermission()).willReturn(Duration.ofSeconds(0).toNanos());
 
         Single.error(new IOException("BAM!"))
-            .compose(RateLimiterOperator.of(rateLimiter))
-            .test()
-            .assertSubscribed()
-            .assertError(IOException.class)
-            .assertNotComplete();
+                .compose(RateLimiterOperator.of(rateLimiter))
+                .test()
+                .assertSubscribed()
+                .assertError(IOException.class)
+                .assertNotComplete();
     }
 
     @Test
@@ -63,11 +62,11 @@ public class SingleRateLimiterTest {
         given(rateLimiter.reservePermission()).willReturn(-1L);
 
         Single.just(1)
-            .compose(RateLimiterOperator.of(rateLimiter))
-            .test()
-            .assertSubscribed()
-            .assertError(RequestNotPermitted.class)
-            .assertNotComplete();
+                .compose(RateLimiterOperator.of(rateLimiter))
+                .test()
+                .assertSubscribed()
+                .assertError(RequestNotPermitted.class)
+                .assertNotComplete();
     }
 
 }

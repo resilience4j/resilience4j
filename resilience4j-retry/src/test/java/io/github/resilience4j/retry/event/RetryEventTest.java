@@ -18,12 +18,11 @@
  */
 package io.github.resilience4j.retry.event;
 
-import org.assertj.core.api.Assertions;
-import org.junit.Test;
+import static io.github.resilience4j.retry.event.RetryEvent.Type;
 
 import java.io.IOException;
-
-import static io.github.resilience4j.retry.event.RetryEvent.Type;
+import org.assertj.core.api.Assertions;
+import org.junit.Test;
 
 public class RetryEventTest {
 
@@ -35,7 +34,8 @@ public class RetryEventTest {
         Assertions.assertThat(retryOnErrorEvent.getNumberOfRetryAttempts()).isEqualTo(2);
         Assertions.assertThat(retryOnErrorEvent.getEventType()).isEqualTo(Type.ERROR);
         Assertions.assertThat(retryOnErrorEvent.getLastThrowable()).isInstanceOf(IOException.class);
-        Assertions.assertThat(retryOnErrorEvent.toString()).contains("Retry 'test' recorded a failed retry attempt. Number of retry attempts: '2', Last exception was: 'java.io.IOException: Bla'.");
+        Assertions.assertThat(retryOnErrorEvent.toString()).contains(
+                "Retry 'test' recorded a failed retry attempt. Number of retry attempts: '2', Last exception was: 'java.io.IOException: Bla'.");
     }
 
     @Test
@@ -45,18 +45,24 @@ public class RetryEventTest {
         Assertions.assertThat(retryOnSuccessEvent.getName()).isEqualTo("test");
         Assertions.assertThat(retryOnSuccessEvent.getNumberOfRetryAttempts()).isEqualTo(2);
         Assertions.assertThat(retryOnSuccessEvent.getEventType()).isEqualTo(Type.SUCCESS);
-        Assertions.assertThat(retryOnSuccessEvent.getLastThrowable()).isInstanceOf(IOException.class);
-        Assertions.assertThat(retryOnSuccessEvent.toString()).contains("Retry 'test' recorded a successful retry attempt. Number of retry attempts: '2', Last exception was: 'java.io.IOException: Bla'.");
+        Assertions.assertThat(retryOnSuccessEvent.getLastThrowable())
+                .isInstanceOf(IOException.class);
+        Assertions.assertThat(retryOnSuccessEvent.toString()).contains(
+                "Retry 'test' recorded a successful retry attempt. Number of retry attempts: '2', Last exception was: 'java.io.IOException: Bla'.");
     }
 
     @Test
     public void testRetryOnIgnoredErrorEvent() {
-        RetryOnIgnoredErrorEvent retryOnIgnoredErrorEvent = new RetryOnIgnoredErrorEvent("test",new IOException("Bla"));
+        RetryOnIgnoredErrorEvent retryOnIgnoredErrorEvent = new RetryOnIgnoredErrorEvent("test",
+                new IOException("Bla"));
         Assertions.assertThat(retryOnIgnoredErrorEvent.getName()).isEqualTo("test");
         Assertions.assertThat(retryOnIgnoredErrorEvent.getNumberOfRetryAttempts()).isEqualTo(0);
-        Assertions.assertThat(retryOnIgnoredErrorEvent.getEventType()).isEqualTo(Type.IGNORED_ERROR);
-        Assertions.assertThat(retryOnIgnoredErrorEvent.getLastThrowable()).isInstanceOf(IOException.class);
-        Assertions.assertThat(retryOnIgnoredErrorEvent.toString()).contains("Retry 'test' recorded an error which has been ignored: 'java.io.IOException: Bla'.");
+        Assertions.assertThat(retryOnIgnoredErrorEvent.getEventType())
+                .isEqualTo(Type.IGNORED_ERROR);
+        Assertions.assertThat(retryOnIgnoredErrorEvent.getLastThrowable())
+                .isInstanceOf(IOException.class);
+        Assertions.assertThat(retryOnIgnoredErrorEvent.toString()).contains(
+                "Retry 'test' recorded an error which has been ignored: 'java.io.IOException: Bla'.");
     }
 
 }

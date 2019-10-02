@@ -27,8 +27,8 @@ import javax.annotation.Nonnull;
 import javax.annotation.meta.TypeQualifierDefault;
 
 /**
- * A common annotation to declare that fields are to be considered as
- * non-nullable by default for a given package.
+ * A common annotation to declare that fields are to be considered as non-nullable by default for a
+ * given package.
  *
  * <p>Leverages JSR-305 meta-annotations to indicate nullability in Java to common
  * tools with JSR-305 support and used by Kotlin to infer nullability of the API.
@@ -46,4 +46,5 @@ import javax.annotation.meta.TypeQualifierDefault;
 @Nonnull
 @TypeQualifierDefault(ElementType.FIELD)
 public @interface NonNullFields {
+
 }

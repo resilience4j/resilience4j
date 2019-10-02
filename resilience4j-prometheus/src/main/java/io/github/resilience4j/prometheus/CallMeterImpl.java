@@ -1,10 +1,10 @@
 package io.github.resilience4j.prometheus;
 
 
+import static java.util.Objects.requireNonNull;
+
 import io.prometheus.client.CollectorRegistry;
 import io.prometheus.client.Histogram;
-
-import static java.util.Objects.requireNonNull;
 
 class CallMeterImpl implements CallMeter {
 

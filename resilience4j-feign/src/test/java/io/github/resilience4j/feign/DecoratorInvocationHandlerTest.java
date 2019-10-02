@@ -23,19 +23,17 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.lang.reflect.Method;
-import java.util.HashMap;
-import java.util.Map;
-
-import org.junit.Before;
-import org.junit.Test;
-
 import feign.InvocationHandlerFactory.MethodHandler;
 import feign.Target;
 import feign.Target.HardCodedTarget;
 import io.github.resilience4j.feign.test.TestFeignDecorator;
 import io.github.resilience4j.feign.test.TestService;
 import io.github.resilience4j.feign.test.TestServiceImpl;
+import java.lang.reflect.Method;
+import java.util.HashMap;
+import java.util.Map;
+import org.junit.Before;
+import org.junit.Test;
 
 public class DecoratorInvocationHandlerTest {
 
@@ -49,7 +47,8 @@ public class DecoratorInvocationHandlerTest {
 
     @Before
     public void setUp() throws Throwable {
-        target = new HardCodedTarget<TestService>(TestService.class, TestService.class.getSimpleName());
+        target = new HardCodedTarget<TestService>(TestService.class,
+                TestService.class.getSimpleName());
         testService = new TestServiceImpl();
         greetingMethod = testService.getClass().getDeclaredMethod("greeting");
         feignDecorator = new TestFeignDecorator();
@@ -111,7 +110,8 @@ public class DecoratorInvocationHandlerTest {
     public void testInvokeEquals() throws Throwable {
         final Method equalsMethod = testService.getClass().getMethod("equals", Object.class);
 
-        final Boolean result = (Boolean) testSubject.invoke(testService, equalsMethod, new Object[] {testSubject});
+        final Boolean result = (Boolean) testSubject
+                .invoke(testService, equalsMethod, new Object[]{testSubject});
 
         verify(methodHandler, times(0)).invoke(any());
         assertThat(feignDecorator.isCalled())
@@ -127,7 +127,8 @@ public class DecoratorInvocationHandlerTest {
     public void testInvokeHashcode() throws Throwable {
         final Method hashCodeMethod = testService.getClass().getMethod("hashCode");
 
-        final Integer result = (Integer) testSubject.invoke(testService, hashCodeMethod, new Object[0]);
+        final Integer result = (Integer) testSubject
+                .invoke(testService, hashCodeMethod, new Object[0]);
 
         verify(methodHandler, times(0)).invoke(any());
         assertThat(feignDecorator.isCalled())

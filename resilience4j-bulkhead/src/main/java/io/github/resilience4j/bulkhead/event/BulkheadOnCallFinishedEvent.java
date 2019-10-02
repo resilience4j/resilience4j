@@ -16,8 +16,8 @@
 package io.github.resilience4j.bulkhead.event;
 
 /**
- * A BulkheadEvent which informs that a call has been finished. The event doesn't
- * provide any information on whether the call's execution was successful or not.
+ * A BulkheadEvent which informs that a call has been finished. The event doesn't provide any
+ * information on whether the call's execution was successful or not.
  */
 public class BulkheadOnCallFinishedEvent extends AbstractBulkheadEvent {
 

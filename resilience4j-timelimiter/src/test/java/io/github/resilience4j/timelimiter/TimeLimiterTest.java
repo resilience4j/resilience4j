@@ -1,15 +1,23 @@
 package io.github.resilience4j.timelimiter;
 
+import static org.assertj.core.api.BDDAssertions.then;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import io.vavr.control.Try;
+import java.time.Duration;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+import java.util.function.Supplier;
 import org.assertj.core.api.Assertions;
 import org.junit.Test;
-
-import java.time.Duration;
-import java.util.concurrent.*;
-import java.util.function.Supplier;
-
-import static org.assertj.core.api.BDDAssertions.then;
-import static org.mockito.Mockito.*;
 
 public class TimeLimiterTest {
 
@@ -22,7 +30,8 @@ public class TimeLimiterTest {
     }
 
     @Test
-    public void shouldThrowTimeoutExceptionAndInvokeCancel() throws InterruptedException, ExecutionException, TimeoutException {
+    public void shouldThrowTimeoutExceptionAndInvokeCancel()
+            throws InterruptedException, ExecutionException, TimeoutException {
         Duration timeoutDuration = Duration.ofSeconds(1);
         TimeLimiter timeLimiter = TimeLimiter.of(timeoutDuration);
 
@@ -30,7 +39,8 @@ public class TimeLimiterTest {
         Future<Integer> mockFuture = (Future<Integer>) mock(Future.class);
 
         Supplier<Future<Integer>> supplier = () -> mockFuture;
-        when(mockFuture.get(timeoutDuration.toMillis(), TimeUnit.MILLISECONDS)).thenThrow(new TimeoutException());
+        when(mockFuture.get(timeoutDuration.toMillis(), TimeUnit.MILLISECONDS))
+                .thenThrow(new TimeoutException());
 
         Callable<Integer> decorated = TimeLimiter.decorateFutureSupplier(timeLimiter, supplier);
         Try<Integer> decoratedResult = Try.ofCallable(decorated);
@@ -42,16 +52,19 @@ public class TimeLimiterTest {
     }
 
     @Test
-    public void shouldThrowTimeoutExceptionAndNotInvokeCancel() throws InterruptedException, ExecutionException, TimeoutException {
+    public void shouldThrowTimeoutExceptionAndNotInvokeCancel()
+            throws InterruptedException, ExecutionException, TimeoutException {
         Duration timeoutDuration = Duration.ofSeconds(1);
-        TimeLimiter timeLimiter = TimeLimiter.of(TimeLimiterConfig.custom().timeoutDuration(timeoutDuration)
-                .cancelRunningFuture(false).build());
+        TimeLimiter timeLimiter = TimeLimiter
+                .of(TimeLimiterConfig.custom().timeoutDuration(timeoutDuration)
+                        .cancelRunningFuture(false).build());
 
         @SuppressWarnings("unchecked")
         Future<Integer> mockFuture = (Future<Integer>) mock(Future.class);
 
         Supplier<Future<Integer>> supplier = () -> mockFuture;
-        when(mockFuture.get(timeoutDuration.toMillis(), TimeUnit.MILLISECONDS)).thenThrow(new TimeoutException());
+        when(mockFuture.get(timeoutDuration.toMillis(), TimeUnit.MILLISECONDS))
+                .thenThrow(new TimeoutException());
 
         Callable<Integer> decorated = TimeLimiter.decorateFutureSupplier(timeLimiter, supplier);
         Try<Integer> decoratedResult = Try.ofCallable(decorated);
@@ -85,7 +98,9 @@ public class TimeLimiterTest {
         TimeLimiter timeLimiter = TimeLimiter.ofDefaults();
         ExecutorService executorService = Executors.newSingleThreadExecutor();
 
-        Supplier<Future<Integer>> supplier = () -> executorService.submit(() -> {throw new RuntimeException();});
+        Supplier<Future<Integer>> supplier = () -> executorService.submit(() -> {
+            throw new RuntimeException();
+        });
         Callable<Integer> decorated = TimeLimiter.decorateFutureSupplier(timeLimiter, supplier);
 
         Try<Integer> decoratedResult = Try.ofCallable(decorated);

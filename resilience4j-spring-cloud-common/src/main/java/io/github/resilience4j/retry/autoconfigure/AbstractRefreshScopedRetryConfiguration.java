@@ -30,9 +30,11 @@ public abstract class AbstractRefreshScopedRetryConfiguration {
     @RefreshScope
     @ConditionalOnMissingBean
     public RetryRegistry retryRegistry(RetryConfigurationProperties retryConfigurationProperties,
-                                       EventConsumerRegistry<RetryEvent> retryEventConsumerRegistry,
-                                       RegistryEventConsumer<Retry> retryRegistryEventConsumer) {
-        return retryConfiguration.retryRegistry(retryConfigurationProperties, retryEventConsumerRegistry, retryRegistryEventConsumer);
+            EventConsumerRegistry<RetryEvent> retryEventConsumerRegistry,
+            RegistryEventConsumer<Retry> retryRegistryEventConsumer) {
+        return retryConfiguration
+                .retryRegistry(retryConfigurationProperties, retryEventConsumerRegistry,
+                        retryRegistryEventConsumer);
     }
 
 }

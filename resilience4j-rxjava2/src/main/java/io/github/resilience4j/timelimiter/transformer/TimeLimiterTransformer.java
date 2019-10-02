@@ -31,12 +31,11 @@ import io.reactivex.ObservableTransformer;
 import io.reactivex.Single;
 import io.reactivex.SingleSource;
 import io.reactivex.SingleTransformer;
-
 import java.util.concurrent.TimeUnit;
-
 import org.reactivestreams.Publisher;
 
-public class TimeLimiterTransformer<T> implements FlowableTransformer<T, T>, ObservableTransformer<T, T>,
+public class TimeLimiterTransformer<T> implements FlowableTransformer<T, T>,
+        ObservableTransformer<T, T>,
         SingleTransformer<T, T>, CompletableTransformer, MaybeTransformer<T, T> {
 
     private final TimeLimiter timeLimiter;
@@ -49,7 +48,7 @@ public class TimeLimiterTransformer<T> implements FlowableTransformer<T, T>, Obs
      * Creates a TimeLimiterTransformer.
      *
      * @param timeLimiter the TimeLimiter
-     * @param <T>         the value type of the upstream and downstream
+     * @param <T> the value type of the upstream and downstream
      * @return a TimeLimiterTransformer
      */
     public static <T> TimeLimiterTransformer<T> of(TimeLimiter timeLimiter) {

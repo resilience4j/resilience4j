@@ -15,6 +15,10 @@
  */
 package io.github.resilience4j.retry;
 
+import static io.github.resilience4j.service.test.RetryDummyService.RETRY_BACKEND_A;
+import static io.github.resilience4j.service.test.RetryDummyService.RETRY_BACKEND_B;
+import static org.assertj.core.api.Assertions.assertThat;
+
 import io.github.resilience4j.circuitbreaker.IgnoredException;
 import io.github.resilience4j.common.retry.monitoring.endpoint.RetryEndpointResponse;
 import io.github.resilience4j.common.retry.monitoring.endpoint.RetryEventsEndpointResponse;
@@ -22,6 +26,7 @@ import io.github.resilience4j.retry.autoconfigure.RetryProperties;
 import io.github.resilience4j.retry.configure.RetryAspect;
 import io.github.resilience4j.service.test.RetryDummyService;
 import io.github.resilience4j.service.test.TestApplication;
+import java.io.IOException;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,12 +34,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-
-import java.io.IOException;
-
-import static io.github.resilience4j.service.test.RetryDummyService.RETRY_BACKEND_A;
-import static io.github.resilience4j.service.test.RetryDummyService.RETRY_BACKEND_B;
-import static org.assertj.core.api.Assertions.assertThat;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
@@ -57,8 +56,8 @@ public class RetryAutoConfigurationTest {
     private TestRestTemplate restTemplate;
 
     /**
-     * The test verifies that a Retry instance is created and configured properly when the RetryDummyService is invoked and
-     * that the Retry logic is properly handled
+     * The test verifies that a Retry instance is created and configured properly when the
+     * RetryDummyService is invoked and that the Retry logic is properly handled
      */
     @Test
     public void testRetryAutoConfiguration() throws IOException {
@@ -86,15 +85,20 @@ public class RetryAutoConfigurationTest {
         assertThat(retry.getMetrics().getNumberOfSuccessfulCallsWithRetryAttempt()).isEqualTo(0);
 
         // expect retry actuator endpoint contains both retries
-        ResponseEntity<RetryEndpointResponse> retriesList = restTemplate.getForEntity("/retries", RetryEndpointResponse.class);
-        assertThat(retriesList.getBody().getRetries()).hasSize(2).containsOnly(RETRY_BACKEND_A, RETRY_BACKEND_B);
+        ResponseEntity<RetryEndpointResponse> retriesList = restTemplate
+                .getForEntity("/retries", RetryEndpointResponse.class);
+        assertThat(retriesList.getBody().getRetries()).hasSize(2)
+                .containsOnly(RETRY_BACKEND_A, RETRY_BACKEND_B);
 
         // expect retry-event actuator endpoint recorded both events
-        ResponseEntity<RetryEventsEndpointResponse> retryEventListA = restTemplate.getForEntity("/retries/events/" + RETRY_BACKEND_A, RetryEventsEndpointResponse.class);
+        ResponseEntity<RetryEventsEndpointResponse> retryEventListA = restTemplate
+                .getForEntity("/retries/events/" + RETRY_BACKEND_A,
+                        RetryEventsEndpointResponse.class);
         assertThat(retryEventListA.getBody().getRetryEvents()).hasSize(3);
 
         assertThat(retry.getRetryConfig().getExceptionPredicate().test(new IOException())).isTrue();
-        assertThat(retry.getRetryConfig().getExceptionPredicate().test(new IgnoredException())).isFalse();
+        assertThat(retry.getRetryConfig().getExceptionPredicate().test(new IgnoredException()))
+                .isFalse();
 
         // expect aspect configured as defined in application.yml
         assertThat(retryAspect.getOrder()).isEqualTo(399);

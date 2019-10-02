@@ -15,11 +15,15 @@
  */
 package io.github.resilience4j.ratelimiter.configure;
 
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
 import io.github.resilience4j.fallback.FallbackDecorators;
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
 import io.github.resilience4j.ratelimiter.event.RateLimiterEvent;
+import java.util.List;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,78 +33,76 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import java.util.List;
-
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(classes = {
-		RateLimiterConfigurationSpringTest.ConfigWithOverrides.class
+        RateLimiterConfigurationSpringTest.ConfigWithOverrides.class
 })
 public class RateLimiterConfigurationSpringTest {
 
-	@Autowired
-	private ConfigWithOverrides configWithOverrides;
+    @Autowired
+    private ConfigWithOverrides configWithOverrides;
 
 
-	@Test
-	public void testAllCircuitBreakerConfigurationBeansOverridden() {
-		assertNotNull(configWithOverrides.rateLimiterRegistry);
-		assertNotNull(configWithOverrides.rateLimiterAspect);
-		assertNotNull(configWithOverrides.rateLimiterEventEventConsumerRegistry);
-		assertNotNull(configWithOverrides.rateLimiterConfigurationProperties);
-		assertTrue(configWithOverrides.rateLimiterConfigurationProperties.getConfigs().size() == 1);
-	}
+    @Test
+    public void testAllCircuitBreakerConfigurationBeansOverridden() {
+        assertNotNull(configWithOverrides.rateLimiterRegistry);
+        assertNotNull(configWithOverrides.rateLimiterAspect);
+        assertNotNull(configWithOverrides.rateLimiterEventEventConsumerRegistry);
+        assertNotNull(configWithOverrides.rateLimiterConfigurationProperties);
+        assertTrue(configWithOverrides.rateLimiterConfigurationProperties.getConfigs().size() == 1);
+    }
 
-	@Configuration
-	@ComponentScan({"io.github.resilience4j.ratelimiter","io.github.resilience4j.fallback"})
-	public static class ConfigWithOverrides {
+    @Configuration
+    @ComponentScan({"io.github.resilience4j.ratelimiter", "io.github.resilience4j.fallback"})
+    public static class ConfigWithOverrides {
 
-		private RateLimiterRegistry rateLimiterRegistry;
+        private RateLimiterRegistry rateLimiterRegistry;
 
-		private RateLimiterAspect rateLimiterAspect;
+        private RateLimiterAspect rateLimiterAspect;
 
-		private EventConsumerRegistry<RateLimiterEvent> rateLimiterEventEventConsumerRegistry;
+        private EventConsumerRegistry<RateLimiterEvent> rateLimiterEventEventConsumerRegistry;
 
-		private RateLimiterConfigurationProperties rateLimiterConfigurationProperties;
+        private RateLimiterConfigurationProperties rateLimiterConfigurationProperties;
 
-		@Bean
-		public RateLimiterRegistry rateLimiterRegistry() {
-			rateLimiterRegistry = RateLimiterRegistry.ofDefaults();
-			return rateLimiterRegistry;
-		}
+        @Bean
+        public RateLimiterRegistry rateLimiterRegistry() {
+            rateLimiterRegistry = RateLimiterRegistry.ofDefaults();
+            return rateLimiterRegistry;
+        }
 
-		@Bean
-		public RateLimiterAspect rateLimiterAspect(RateLimiterRegistry rateLimiterRegistry,
-												   @Autowired(required = false) List<RateLimiterAspectExt> rateLimiterAspectExts,
-												   FallbackDecorators recoveryDecorators) {
-			rateLimiterAspect = new RateLimiterAspect(rateLimiterRegistry, rateLimiterConfigurationProperties(), rateLimiterAspectExts, recoveryDecorators);
-			return rateLimiterAspect;
-		}
+        @Bean
+        public RateLimiterAspect rateLimiterAspect(RateLimiterRegistry rateLimiterRegistry,
+                @Autowired(required = false) List<RateLimiterAspectExt> rateLimiterAspectExts,
+                FallbackDecorators recoveryDecorators) {
+            rateLimiterAspect = new RateLimiterAspect(rateLimiterRegistry,
+                    rateLimiterConfigurationProperties(), rateLimiterAspectExts,
+                    recoveryDecorators);
+            return rateLimiterAspect;
+        }
 
-		@Bean
-		public EventConsumerRegistry<RateLimiterEvent> eventConsumerRegistry() {
-			rateLimiterEventEventConsumerRegistry = new DefaultEventConsumerRegistry<>();
-			return rateLimiterEventEventConsumerRegistry;
-		}
+        @Bean
+        public EventConsumerRegistry<RateLimiterEvent> eventConsumerRegistry() {
+            rateLimiterEventEventConsumerRegistry = new DefaultEventConsumerRegistry<>();
+            return rateLimiterEventEventConsumerRegistry;
+        }
 
-		@Bean
-		public RateLimiterConfigurationProperties rateLimiterConfigurationProperties() {
-			rateLimiterConfigurationProperties = new RateLimiterConfigurationPropertiesTest();
-			return rateLimiterConfigurationProperties;
-		}
+        @Bean
+        public RateLimiterConfigurationProperties rateLimiterConfigurationProperties() {
+            rateLimiterConfigurationProperties = new RateLimiterConfigurationPropertiesTest();
+            return rateLimiterConfigurationProperties;
+        }
 
-		private class RateLimiterConfigurationPropertiesTest extends RateLimiterConfigurationProperties {
+        private class RateLimiterConfigurationPropertiesTest extends
+                RateLimiterConfigurationProperties {
 
-			RateLimiterConfigurationPropertiesTest() {
-				InstanceProperties instanceProperties = new InstanceProperties();
-				instanceProperties.setBaseConfig("sharedConfig");
-				instanceProperties.setLimitForPeriod(3);
-				getConfigs().put("sharedBackend", instanceProperties);
-			}
+            RateLimiterConfigurationPropertiesTest() {
+                InstanceProperties instanceProperties = new InstanceProperties();
+                instanceProperties.setBaseConfig("sharedConfig");
+                instanceProperties.setLimitForPeriod(3);
+                getConfigs().put("sharedBackend", instanceProperties);
+            }
 
-		}
-	}
+        }
+    }
 
 }

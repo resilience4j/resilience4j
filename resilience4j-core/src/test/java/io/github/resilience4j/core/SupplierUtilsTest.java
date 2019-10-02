@@ -1,10 +1,9 @@
 package io.github.resilience4j.core;
 
-import org.junit.Test;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.function.Supplier;
-
-import static org.assertj.core.api.Assertions.assertThat;
+import org.junit.Test;
 
 public class SupplierUtilsTest {
 
@@ -28,7 +27,8 @@ public class SupplierUtilsTest {
             throw new RuntimeException("BAM!");
         };
         //When
-        Supplier<String> supplierWithRecovery = SupplierUtils.andThen(supplier, (result, ex) -> "Bla");
+        Supplier<String> supplierWithRecovery = SupplierUtils
+                .andThen(supplier, (result, ex) -> "Bla");
 
         String result = supplierWithRecovery.get();
 
@@ -43,7 +43,8 @@ public class SupplierUtilsTest {
             throw new RuntimeException("BAM!");
         };
         //When
-        Supplier<String> supplierWithRecovery = SupplierUtils.andThen(supplier, (result) -> result, ex -> "Bla");
+        Supplier<String> supplierWithRecovery = SupplierUtils
+                .andThen(supplier, (result) -> result, ex -> "Bla");
 
         String result = supplierWithRecovery.get();
 

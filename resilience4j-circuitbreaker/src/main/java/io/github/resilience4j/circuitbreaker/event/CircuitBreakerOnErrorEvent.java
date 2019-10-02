@@ -28,7 +28,8 @@ public class CircuitBreakerOnErrorEvent extends AbstractCircuitBreakerEvent {
     private final Throwable throwable;
     private final Duration elapsedDuration;
 
-    public CircuitBreakerOnErrorEvent(String circuitBreakerName, Duration elapsedDuration, Throwable throwable) {
+    public CircuitBreakerOnErrorEvent(String circuitBreakerName, Duration elapsedDuration,
+            Throwable throwable) {
         super(circuitBreakerName);
         this.throwable = throwable;
         this.elapsedDuration = elapsedDuration;
@@ -50,10 +51,10 @@ public class CircuitBreakerOnErrorEvent extends AbstractCircuitBreakerEvent {
     @Override
     public String toString() {
         return String.format("%s: CircuitBreaker '%s' recorded an error: '%s'. Elapsed time: %s ms",
-            getCreationTime(),
-            getCircuitBreakerName(),
-            getThrowable().toString(),
-            getElapsedDuration().toMillis());
+                getCreationTime(),
+                getCircuitBreakerName(),
+                getThrowable().toString(),
+                getElapsedDuration().toMillis());
     }
 
 

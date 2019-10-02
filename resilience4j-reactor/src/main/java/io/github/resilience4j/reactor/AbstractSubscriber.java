@@ -22,8 +22,6 @@ import reactor.util.context.Context;
 
 /**
  * Heavily inspired by {@link reactor.core.publisher.BaseSubscriber}
- *
- * @param <T>
  */
 public abstract class AbstractSubscriber<T> extends BaseSubscriber<T> {
 
@@ -39,7 +37,7 @@ public abstract class AbstractSubscriber<T> extends BaseSubscriber<T> {
      * @param subscription the subscription to optionally process
      */
     @Override
-    protected void hookOnSubscribe(Subscription subscription){
+    protected void hookOnSubscribe(Subscription subscription) {
         downstreamSubscriber.onSubscribe(this);
     }
 

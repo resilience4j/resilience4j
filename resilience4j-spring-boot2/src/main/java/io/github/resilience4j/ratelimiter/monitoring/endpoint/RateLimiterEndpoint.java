@@ -18,10 +18,9 @@ package io.github.resilience4j.ratelimiter.monitoring.endpoint;
 import io.github.resilience4j.common.ratelimiter.monitoring.endpoint.RateLimiterEndpointResponse;
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
+import java.util.List;
 import org.springframework.boot.actuate.endpoint.annotation.Endpoint;
 import org.springframework.boot.actuate.endpoint.annotation.ReadOperation;
-
-import java.util.List;
 
 @Endpoint(id = "ratelimiters")
 public class RateLimiterEndpoint {

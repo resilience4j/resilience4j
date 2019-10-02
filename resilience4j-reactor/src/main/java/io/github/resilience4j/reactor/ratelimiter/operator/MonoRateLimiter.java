@@ -15,17 +15,17 @@
  */
 package io.github.resilience4j.reactor.ratelimiter.operator;
 
+import static io.github.resilience4j.ratelimiter.RequestNotPermitted.createRequestNotPermitted;
+
 import io.github.resilience4j.ratelimiter.RateLimiter;
+import java.time.Duration;
 import reactor.core.CoreSubscriber;
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.MonoOperator;
 import reactor.core.publisher.Operators;
 
-import java.time.Duration;
-
-import static io.github.resilience4j.ratelimiter.RequestNotPermitted.createRequestNotPermitted;
-
 class MonoRateLimiter<T> extends MonoOperator<T, T> {
+
     private final RateLimiter rateLimiter;
 
     MonoRateLimiter(Mono<? extends T> source, RateLimiter rateLimiter) {
@@ -36,14 +36,14 @@ class MonoRateLimiter<T> extends MonoOperator<T, T> {
     @Override
     public void subscribe(CoreSubscriber<? super T> actual) {
         long waitDuration = rateLimiter.reservePermission();
-        if(waitDuration >= 0){
-            if(waitDuration > 0){
+        if (waitDuration >= 0) {
+            if (waitDuration > 0) {
                 Mono.delay(Duration.ofNanos(waitDuration))
                         .subscribe(delay -> source.subscribe(new RateLimiterSubscriber<>(actual)));
-            }else{
+            } else {
                 source.subscribe(new RateLimiterSubscriber<>(actual));
             }
-        }else{
+        } else {
             Operators.error(actual, createRequestNotPermitted(rateLimiter));
         }
     }

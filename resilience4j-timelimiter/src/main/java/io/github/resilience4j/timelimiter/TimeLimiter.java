@@ -6,7 +6,6 @@ import io.github.resilience4j.timelimiter.event.TimeLimiterOnErrorEvent;
 import io.github.resilience4j.timelimiter.event.TimeLimiterOnSuccessEvent;
 import io.github.resilience4j.timelimiter.event.TimeLimiterOnTimeoutEvent;
 import io.github.resilience4j.timelimiter.internal.TimeLimiterImpl;
-
 import java.time.Duration;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
@@ -65,13 +64,14 @@ public interface TimeLimiter {
     /**
      * Creates a Callback that is restricted by a TimeLimiter.
      *
-     * @param timeLimiter        the TimeLimiter
-     * @param futureSupplier     the original future supplier
+     * @param timeLimiter the TimeLimiter
+     * @param futureSupplier the original future supplier
      * @param <T> the type of results supplied by the supplier
      * @param <F> the future type supplied
      * @return a future supplier which is restricted by a {@link TimeLimiter}.
      */
-    static <T, F extends Future<T>> Callable<T> decorateFutureSupplier(TimeLimiter timeLimiter, Supplier<F> futureSupplier) {
+    static <T, F extends Future<T>> Callable<T> decorateFutureSupplier(TimeLimiter timeLimiter,
+            Supplier<F> futureSupplier) {
         return timeLimiter.decorateFutureSupplier(futureSupplier);
     }
 
@@ -93,7 +93,8 @@ public interface TimeLimiter {
      * @return the result of the Future.
      * @throws Exception if unable to compute a result
      */
-    default <T, F extends Future<T>> T executeFutureSupplier(Supplier<F> futureSupplier) throws Exception {
+    default <T, F extends Future<T>> T executeFutureSupplier(Supplier<F> futureSupplier)
+            throws Exception {
         return decorateFutureSupplier(this, futureSupplier).call();
     }
 
@@ -122,8 +123,8 @@ public interface TimeLimiter {
     void onSuccess();
 
     /**
-     * Records a failed call.
-     * This method must be invoked when a call failed.
+     * Records a failed call. This method must be invoked when a call failed.
+     *
      * @param throwable The throwable which must be recorded
      */
     void onError(Throwable throwable);

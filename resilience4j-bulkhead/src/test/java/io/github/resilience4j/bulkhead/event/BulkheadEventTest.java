@@ -18,9 +18,10 @@
  */
 package io.github.resilience4j.bulkhead.event;
 
-import org.junit.Test;
-import io.github.resilience4j.bulkhead.event.BulkheadEvent.Type;
 import static org.assertj.core.api.Assertions.assertThat;
+
+import io.github.resilience4j.bulkhead.event.BulkheadEvent.Type;
+import org.junit.Test;
 
 public class BulkheadEventTest {
 

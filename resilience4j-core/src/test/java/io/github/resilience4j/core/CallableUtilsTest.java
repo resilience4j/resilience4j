@@ -1,11 +1,10 @@
 package io.github.resilience4j.core;
 
-import org.junit.Test;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.IOException;
 import java.util.concurrent.Callable;
-
-import static org.assertj.core.api.Assertions.assertThat;
+import org.junit.Test;
 
 public class CallableUtilsTest {
 
@@ -30,7 +29,8 @@ public class CallableUtilsTest {
             throw new IOException("BAM!");
         };
         //When
-        Callable<String> callableWithRecovery = CallableUtils.andThen(callable, (result, ex) -> "Bla");
+        Callable<String> callableWithRecovery = CallableUtils
+                .andThen(callable, (result, ex) -> "Bla");
 
         String result = callableWithRecovery.call();
 
@@ -45,7 +45,8 @@ public class CallableUtilsTest {
             throw new IOException("BAM!");
         };
         //When
-        Callable<String> callableWithRecovery = CallableUtils.andThen(callable, (result) -> result, ex -> "Bla");
+        Callable<String> callableWithRecovery = CallableUtils
+                .andThen(callable, (result) -> result, ex -> "Bla");
 
         String result = callableWithRecovery.call();
 

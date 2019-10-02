@@ -18,33 +18,32 @@
  */
 package io.github.resilience4j.bulkhead;
 
-import org.junit.Test;
+import static org.assertj.core.api.Java6Assertions.assertThat;
 
 import java.time.Duration;
-
-import static org.assertj.core.api.Java6Assertions.assertThat;
+import org.junit.Test;
 
 public class BulkheadConfigTest {
 
 
-	@Test
-	public void testBuildCustomWithDuration() {
+    @Test
+    public void testBuildCustomWithDuration() {
 
-		// given
-		int maxConcurrent = 66;
-		long maxWait = 555;
+        // given
+        int maxConcurrent = 66;
+        long maxWait = 555;
 
-		// when
-		BulkheadConfig config = BulkheadConfig.custom()
-				.maxConcurrentCalls(maxConcurrent)
-				.maxWaitDuration(Duration.ofMillis(555))
-				.build();
+        // when
+        BulkheadConfig config = BulkheadConfig.custom()
+                .maxConcurrentCalls(maxConcurrent)
+                .maxWaitDuration(Duration.ofMillis(555))
+                .build();
 
-		// then
-		assertThat(config).isNotNull();
-		assertThat(config.getMaxConcurrentCalls()).isEqualTo(maxConcurrent);
-		assertThat(config.getMaxWaitDuration().toMillis()).isEqualTo(maxWait);
-	}
+        // then
+        assertThat(config).isNotNull();
+        assertThat(config.getMaxConcurrentCalls()).isEqualTo(maxConcurrent);
+        assertThat(config.getMaxWaitDuration().toMillis()).isEqualTo(maxWait);
+    }
 
     @Test
     public void testBuildCustomWithWritableStackTraceDisabled() {
@@ -73,9 +72,9 @@ public class BulkheadConfigTest {
 
         // when
         BulkheadConfig config = BulkheadConfig.custom()
-                                              .maxConcurrentCalls(maxConcurrent)
-                                              .maxWaitDuration(Duration.ofMillis(maxWait))
-                                              .build();
+                .maxConcurrentCalls(maxConcurrent)
+                .maxWaitDuration(Duration.ofMillis(maxWait))
+                .build();
 
         // then
         assertThat(config).isNotNull();
@@ -104,8 +103,8 @@ public class BulkheadConfigTest {
 
         // when
         BulkheadConfig.custom()
-                      .maxConcurrentCalls(-1)
-                      .build();
+                .maxConcurrentCalls(-1)
+                .build();
 
     }
 
@@ -114,16 +113,16 @@ public class BulkheadConfigTest {
 
         // when
         BulkheadConfig.custom()
-            .maxWaitDuration(Duration.ofMillis(-1))
-            .build();
+                .maxWaitDuration(Duration.ofMillis(-1))
+                .build();
     }
 
-	@Test(expected = IllegalArgumentException.class)
-	public void testBuildWithIllegalMaxWaitDuration() {
-		// when
-		BulkheadConfig.custom()
-				.maxWaitDuration(Duration.ofSeconds(-1))
-				.build();
-	}
+    @Test(expected = IllegalArgumentException.class)
+    public void testBuildWithIllegalMaxWaitDuration() {
+        // when
+        BulkheadConfig.custom()
+                .maxWaitDuration(Duration.ofSeconds(-1))
+                .build();
+    }
 
 }

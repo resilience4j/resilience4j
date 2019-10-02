@@ -18,16 +18,15 @@
  */
 package io.github.resilience4j.consumer;
 
+import static io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent.Type;
+import static org.assertj.core.api.Assertions.assertThat;
+
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent;
-import org.junit.Test;
-
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
-
-import static io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent.Type;
-import static org.assertj.core.api.Assertions.assertThat;
+import org.junit.Test;
 
 public class CircularEventConsumerTest {
 
@@ -78,7 +77,6 @@ public class CircularEventConsumerTest {
         circuitBreaker.onError(0, TimeUnit.NANOSECONDS, new IOException("Bla"));
         circuitBreaker.onError(0, TimeUnit.NANOSECONDS, new RuntimeException("Bla"));
 
-
         //Then
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(3);
@@ -92,9 +90,9 @@ public class CircularEventConsumerTest {
         //Should store 3 events, because circuit emits 2 error events and one state transition event
         assertThat(ringBuffer.getBufferedEvents()).hasSize(7);
         assertThat(ringBuffer.getBufferedEvents()).extracting("eventType")
-                .containsExactly(Type.SUCCESS, Type.ERROR, Type.IGNORED_ERROR, Type.ERROR, Type.STATE_TRANSITION, Type.STATE_TRANSITION, Type.RESET);
+                .containsExactly(Type.SUCCESS, Type.ERROR, Type.IGNORED_ERROR, Type.ERROR,
+                        Type.STATE_TRANSITION, Type.STATE_TRANSITION, Type.RESET);
         //ringBuffer.getBufferedEvents().forEach(event -> LOG.info(event.toString()));
-
 
     }
 

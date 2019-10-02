@@ -18,19 +18,20 @@
  */
 package io.github.resilience4j.circuitbreaker.internal;
 
+import static io.github.resilience4j.circuitbreaker.CircuitBreaker.State.HALF_OPEN;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
-import org.junit.Before;
-import org.junit.Test;
-import org.mockito.ArgumentCaptor;
-
 import java.time.Duration;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-
-import static io.github.resilience4j.circuitbreaker.CircuitBreaker.State.HALF_OPEN;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.*;
+import org.junit.Before;
+import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 
 public class CircuitBreakerAutoTransitionStateMachineTest {
 
@@ -51,7 +52,8 @@ public class CircuitBreakerAutoTransitionStateMachineTest {
         SchedulerFactory schedulerFactoryMock = mock(SchedulerFactory.class);
         schedulerMock = mock(ScheduledExecutorService.class);
         when(schedulerFactoryMock.getScheduler()).thenReturn(schedulerMock);
-        circuitBreaker = new CircuitBreakerStateMachine("testName", circuitBreakerConfig, schedulerFactoryMock);
+        circuitBreaker = new CircuitBreakerStateMachine("testName", circuitBreakerConfig,
+                schedulerFactoryMock);
     }
 
     @Test
@@ -64,7 +66,9 @@ public class CircuitBreakerAutoTransitionStateMachineTest {
         ArgumentCaptor<TimeUnit> unitArgumentCaptor = ArgumentCaptor.forClass(TimeUnit.class);
 
         // Check that schedule is invoked
-        verify(schedulerMock).schedule(runnableArgumentCaptor.capture(), delayArgumentCaptor.capture(), unitArgumentCaptor.capture());
+        verify(schedulerMock)
+                .schedule(runnableArgumentCaptor.capture(), delayArgumentCaptor.capture(),
+                        unitArgumentCaptor.capture());
 
         assertThat(delayArgumentCaptor.getValue()).isEqualTo(2000L);
         assertThat(unitArgumentCaptor.getValue()).isEqualTo(TimeUnit.MILLISECONDS);

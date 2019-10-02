@@ -16,24 +16,28 @@
 
 package io.github.resilience4j.metrics;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+
 import com.codahale.metrics.MetricRegistry;
 import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.bulkhead.BulkheadConfig;
 import io.github.resilience4j.test.HelloWorldService;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.BDDMockito;
 
-import java.util.concurrent.*;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
-
 public abstract class AbstractBulkheadMetricsTest {
 
-    private static final int DEFAULT_MAX_CONCURRENT_CALLS = BulkheadConfig.ofDefaults().getMaxConcurrentCalls();
+    private static final int DEFAULT_MAX_CONCURRENT_CALLS = BulkheadConfig.ofDefaults()
+            .getMaxConcurrentCalls();
     private MetricRegistry metricRegistry;
     private HelloWorldService helloWorldService;
     private ExecutorService executorService;
@@ -72,13 +76,16 @@ public abstract class AbstractBulkheadMetricsTest {
         });
 
         //When
-        Future<String> future = executorService.submit(() -> bulkhead.executeSupplier(helloWorldService::returnHelloWorld));
+        Future<String> future = executorService
+                .submit(() -> bulkhead.executeSupplier(helloWorldService::returnHelloWorld));
 
         // Then metrics are present and show value
         assertThat(metricRegistry.getMetrics()).hasSize(2);
-        assertThat(metricRegistry.getGauges().get("resilience4j.bulkhead.testBulkhead.available_concurrent_calls").getValue())
+        assertThat(metricRegistry.getGauges()
+                .get("resilience4j.bulkhead.testBulkhead.available_concurrent_calls").getValue())
                 .isIn(DEFAULT_MAX_CONCURRENT_CALLS, DEFAULT_MAX_CONCURRENT_CALLS - 1);
-        assertThat(metricRegistry.getGauges().get("resilience4j.bulkhead.testBulkhead.max_allowed_concurrent_calls").getValue())
+        assertThat(metricRegistry.getGauges()
+                .get("resilience4j.bulkhead.testBulkhead.max_allowed_concurrent_calls").getValue())
                 .isEqualTo(DEFAULT_MAX_CONCURRENT_CALLS);
 
         // Then release latch and verify result
@@ -88,9 +95,11 @@ public abstract class AbstractBulkheadMetricsTest {
 
         // Then check metrics again
         assertThat(metricRegistry.getMetrics()).hasSize(2);
-        assertThat(metricRegistry.getGauges().get("resilience4j.bulkhead.testBulkhead.available_concurrent_calls").getValue())
+        assertThat(metricRegistry.getGauges()
+                .get("resilience4j.bulkhead.testBulkhead.available_concurrent_calls").getValue())
                 .isIn(DEFAULT_MAX_CONCURRENT_CALLS, DEFAULT_MAX_CONCURRENT_CALLS);
-        assertThat(metricRegistry.getGauges().get("resilience4j.bulkhead.testBulkhead.max_allowed_concurrent_calls").getValue())
+        assertThat(metricRegistry.getGauges()
+                .get("resilience4j.bulkhead.testBulkhead.max_allowed_concurrent_calls").getValue())
                 .isEqualTo(DEFAULT_MAX_CONCURRENT_CALLS);
     }
 
@@ -112,13 +121,17 @@ public abstract class AbstractBulkheadMetricsTest {
         });
 
         //When
-        Future<String> future = executorService.submit(() -> bulkhead.executeSupplier(helloWorldService::returnHelloWorld));
+        Future<String> future = executorService
+                .submit(() -> bulkhead.executeSupplier(helloWorldService::returnHelloWorld));
 
         // Then metrics are present and show value
         assertThat(metricRegistry.getMetrics()).hasSize(2);
-        assertThat(metricRegistry.getGauges().get("testPre.testBulkhead.available_concurrent_calls").getValue())
+        assertThat(metricRegistry.getGauges().get("testPre.testBulkhead.available_concurrent_calls")
+                .getValue())
                 .isIn(DEFAULT_MAX_CONCURRENT_CALLS, DEFAULT_MAX_CONCURRENT_CALLS - 1);
-        assertThat(metricRegistry.getGauges().get("testPre.testBulkhead.max_allowed_concurrent_calls").getValue())
+        assertThat(
+                metricRegistry.getGauges().get("testPre.testBulkhead.max_allowed_concurrent_calls")
+                        .getValue())
                 .isEqualTo(DEFAULT_MAX_CONCURRENT_CALLS);
 
         // Then release latch and verify result
@@ -128,9 +141,12 @@ public abstract class AbstractBulkheadMetricsTest {
 
         // Then check metrics again
         assertThat(metricRegistry.getMetrics()).hasSize(2);
-        assertThat(metricRegistry.getGauges().get("testPre.testBulkhead.available_concurrent_calls").getValue())
+        assertThat(metricRegistry.getGauges().get("testPre.testBulkhead.available_concurrent_calls")
+                .getValue())
                 .isIn(DEFAULT_MAX_CONCURRENT_CALLS, DEFAULT_MAX_CONCURRENT_CALLS);
-        assertThat(metricRegistry.getGauges().get("testPre.testBulkhead.max_allowed_concurrent_calls").getValue())
+        assertThat(
+                metricRegistry.getGauges().get("testPre.testBulkhead.max_allowed_concurrent_calls")
+                        .getValue())
                 .isEqualTo(DEFAULT_MAX_CONCURRENT_CALLS);
     }
 
@@ -140,7 +156,9 @@ public abstract class AbstractBulkheadMetricsTest {
         Bulkhead bulkhead = given("testPre", metricRegistry);
 
         // Then make sure that configured value is reported as max allowed concurrent calls
-        assertThat(metricRegistry.getGauges().get("testPre.testBulkhead.max_allowed_concurrent_calls").getValue())
+        assertThat(
+                metricRegistry.getGauges().get("testPre.testBulkhead.max_allowed_concurrent_calls")
+                        .getValue())
                 .isEqualTo(DEFAULT_MAX_CONCURRENT_CALLS);
 
         // And when the config is changed
@@ -150,7 +168,9 @@ public abstract class AbstractBulkheadMetricsTest {
         bulkhead.changeConfig(newConfig);
 
         // Then the new config value gets reported
-        assertThat(metricRegistry.getGauges().get("testPre.testBulkhead.max_allowed_concurrent_calls").getValue())
+        assertThat(
+                metricRegistry.getGauges().get("testPre.testBulkhead.max_allowed_concurrent_calls")
+                        .getValue())
                 .isEqualTo(newConfig.getMaxConcurrentCalls());
     }
 }

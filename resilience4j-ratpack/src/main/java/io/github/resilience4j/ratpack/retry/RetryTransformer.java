@@ -31,8 +31,9 @@ public class RetryTransformer<T> extends AbstractTransformer<T> {
     }
 
     /**
-     * Create a new transformer that can be applied to the {@link ratpack.exec.Promise#transform(Function)} method.
-     * The Promised value will pass through the retry, potentially causing it to retry on error.
+     * Create a new transformer that can be applied to the {@link ratpack.exec.Promise#transform(Function)}
+     * method. The Promised value will pass through the retry, potentially causing it to retry on
+     * error.
      *
      * @param retry the retry to use
      * @param <T> the type of object

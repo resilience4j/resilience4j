@@ -1,10 +1,11 @@
 package io.github.resilience4j;
 
-import io.reactivex.CompletableObserver;
-
 import static java.util.Objects.requireNonNull;
 
-public abstract class AbstractCompletableObserver extends AbstractDisposable implements CompletableObserver {
+import io.reactivex.CompletableObserver;
+
+public abstract class AbstractCompletableObserver extends AbstractDisposable implements
+        CompletableObserver {
 
     private final CompletableObserver downstreamObserver;
 
@@ -37,7 +38,6 @@ public abstract class AbstractCompletableObserver extends AbstractDisposable imp
     }
 
     protected abstract void hookOnError(Throwable e);
-
 
 
 }

@@ -15,6 +15,12 @@
  */
 package io.github.resilience4j.retry;
 
+import static io.github.resilience4j.service.test.retry.ReactiveRetryDummyService.BACKEND_C;
+import static io.github.resilience4j.service.test.retry.RetryDummyFeignClient.RETRY_DUMMY_FEIGN_CLIENT_NAME;
+import static io.github.resilience4j.service.test.retry.RetryDummyService.RETRY_BACKEND_A;
+import static io.github.resilience4j.service.test.retry.RetryDummyService.RETRY_BACKEND_B;
+import static org.assertj.core.api.Assertions.assertThat;
+
 import io.github.resilience4j.circuitbreaker.IgnoredException;
 import io.github.resilience4j.common.retry.monitoring.endpoint.RetryEndpointResponse;
 import io.github.resilience4j.common.retry.monitoring.endpoint.RetryEventsEndpointResponse;
@@ -22,6 +28,12 @@ import io.github.resilience4j.retry.autoconfigure.RetryProperties;
 import io.github.resilience4j.retry.configure.RetryAspect;
 import io.github.resilience4j.service.test.TestApplication;
 import io.github.resilience4j.service.test.retry.RetryDummyService;
+import java.io.IOException;
+import java.util.HashSet;
+import java.util.concurrent.CompletionStage;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,19 +41,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-
-import java.io.IOException;
-import java.util.HashSet;
-import java.util.concurrent.CompletionStage;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
-
-import static io.github.resilience4j.service.test.retry.ReactiveRetryDummyService.BACKEND_C;
-import static io.github.resilience4j.service.test.retry.RetryDummyFeignClient.RETRY_DUMMY_FEIGN_CLIENT_NAME;
-import static io.github.resilience4j.service.test.retry.RetryDummyService.RETRY_BACKEND_A;
-import static io.github.resilience4j.service.test.retry.RetryDummyService.RETRY_BACKEND_B;
-import static org.assertj.core.api.Assertions.assertThat;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
@@ -64,18 +63,20 @@ public class RetryAutoConfigurationAsyncTest {
     private TestRestTemplate restTemplate;
 
     /**
-     * The test verifies that a Async Retry instance is created and configured properly when the RetryDummyService is invoked and
-     * that the Async Retry logic is properly handled
+     * The test verifies that a Async Retry instance is created and configured properly when the
+     * RetryDummyService is invoked and that the Async Retry logic is properly handled
      */
     @Test
     public void testRetryAutoConfigurationAsync() throws Throwable {
         assertThat(retryRegistry).isNotNull();
 
         RetryEventsEndpointResponse retryEventListBefore = retryEvents("/actuator/retryevents");
-        RetryEventsEndpointResponse retryEventListForBBefore = retryEvents("/actuator/retryevents/" + RETRY_BACKEND_B);
+        RetryEventsEndpointResponse retryEventListForBBefore = retryEvents(
+                "/actuator/retryevents/" + RETRY_BACKEND_B);
 
         try {
-            final CompletionStage<String> stringCompletionStage = retryDummyService.doSomethingAsync(true);
+            final CompletionStage<String> stringCompletionStage = retryDummyService
+                    .doSomethingAsync(true);
             String result = awaitResult(stringCompletionStage, 5);
             assertThat(result).isNull();
 
@@ -95,19 +96,24 @@ public class RetryAutoConfigurationAsyncTest {
         assertThat(retry.getRetryConfig().getExceptionPredicate().test(new IOException())).isTrue();
 
         // expect retry actuator endpoint contains both retries
-        ResponseEntity<RetryEndpointResponse> retriesList = restTemplate.getForEntity("/actuator/retries", RetryEndpointResponse.class);
-        assertThat(new HashSet<>(retriesList.getBody().getRetries())).contains(RETRY_BACKEND_A, RETRY_BACKEND_B,
-                BACKEND_C, RETRY_DUMMY_FEIGN_CLIENT_NAME);
+        ResponseEntity<RetryEndpointResponse> retriesList = restTemplate
+                .getForEntity("/actuator/retries", RetryEndpointResponse.class);
+        assertThat(new HashSet<>(retriesList.getBody().getRetries()))
+                .contains(RETRY_BACKEND_A, RETRY_BACKEND_B,
+                        BACKEND_C, RETRY_DUMMY_FEIGN_CLIENT_NAME);
 
         // expect retry-event actuator endpoint recorded both events
         RetryEventsEndpointResponse retryEventList = retryEvents("/actuator/retryevents");
-        assertThat(retryEventList.getRetryEvents()).hasSize(retryEventListBefore.getRetryEvents().size() + 3);
+        assertThat(retryEventList.getRetryEvents())
+                .hasSize(retryEventListBefore.getRetryEvents().size() + 3);
 
         retryEventList = retryEvents("/actuator/retryevents/" + RETRY_BACKEND_B);
-        assertThat(retryEventList.getRetryEvents()).hasSize(retryEventListForBBefore.getRetryEvents().size() + 3);
+        assertThat(retryEventList.getRetryEvents())
+                .hasSize(retryEventListForBBefore.getRetryEvents().size() + 3);
 
         assertThat(retry.getRetryConfig().getExceptionPredicate().test(new IOException())).isTrue();
-        assertThat(retry.getRetryConfig().getExceptionPredicate().test(new IgnoredException())).isFalse();
+        assertThat(retry.getRetryConfig().getExceptionPredicate().test(new IgnoredException()))
+                .isFalse();
         assertThat(retryAspect.getOrder()).isEqualTo(399);
     }
 
@@ -116,7 +122,8 @@ public class RetryAutoConfigurationAsyncTest {
     }
 
 
-    private <T> T awaitResult(CompletionStage<T> completionStage, long timeoutSeconds) throws Throwable {
+    private <T> T awaitResult(CompletionStage<T> completionStage, long timeoutSeconds)
+            throws Throwable {
         try {
             return completionStage.toCompletableFuture().get(timeoutSeconds, TimeUnit.SECONDS);
         } catch (InterruptedException | TimeoutException e) {

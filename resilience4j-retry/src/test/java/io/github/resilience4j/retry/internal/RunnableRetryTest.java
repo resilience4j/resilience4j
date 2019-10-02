@@ -18,6 +18,10 @@
  */
 package io.github.resilience4j.retry.internal;
 
+import static io.vavr.API.$;
+import static io.vavr.API.Case;
+import static io.vavr.API.Match;
+
 import io.github.resilience4j.retry.IntervalFunction;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryConfig;
@@ -26,15 +30,12 @@ import io.github.resilience4j.test.HelloWorldService;
 import io.vavr.CheckedRunnable;
 import io.vavr.Predicates;
 import io.vavr.control.Try;
+import java.time.Duration;
 import org.assertj.core.api.Assertions;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.BDDMockito;
 import org.mockito.Mockito;
-
-import java.time.Duration;
-
-import static io.vavr.API.*;
 
 public class RunnableRetryTest {
 
@@ -42,7 +43,7 @@ public class RunnableRetryTest {
     private long sleptTime = 0L;
 
     @Before
-    public void setUp(){
+    public void setUp() {
         helloWorldService = Mockito.mock(HelloWorldService.class);
         RetryImpl.sleepFunction = sleep -> sleptTime += sleep;
     }
@@ -81,7 +82,7 @@ public class RunnableRetryTest {
         Assertions.assertThat(result.isFailure()).isTrue();
         // and the returned exception should be of type RuntimeException
         Assertions.assertThat(result.failed().get()).isInstanceOf(HelloWorldException.class);
-        Assertions.assertThat(sleptTime).isEqualTo(RetryConfig.DEFAULT_WAIT_DURATION*2);
+        Assertions.assertThat(sleptTime).isEqualTo(RetryConfig.DEFAULT_WAIT_DURATION * 2);
     }
 
     @Test
@@ -104,7 +105,8 @@ public class RunnableRetryTest {
         // Create a Retry with default configuration
         Retry retry = Retry.ofDefaults("id");
         // Decorate the invocation of the HelloWorldService
-        CheckedRunnable retryableRunnable = Retry.decorateCheckedRunnable(retry, helloWorldService::sayHelloWorld);
+        CheckedRunnable retryableRunnable = Retry
+                .decorateCheckedRunnable(retry, helloWorldService::sayHelloWorld);
 
         // When
         Try<Void> result = Try.run(retryableRunnable);
@@ -115,7 +117,7 @@ public class RunnableRetryTest {
         Assertions.assertThat(result.isFailure()).isTrue();
         // and the returned exception should be of type RuntimeException
         Assertions.assertThat(result.failed().get()).isInstanceOf(HelloWorldException.class);
-        Assertions.assertThat(sleptTime).isEqualTo(RetryConfig.DEFAULT_WAIT_DURATION*2);
+        Assertions.assertThat(sleptTime).isEqualTo(RetryConfig.DEFAULT_WAIT_DURATION * 2);
     }
 
     @Test
@@ -127,7 +129,8 @@ public class RunnableRetryTest {
         RetryConfig config = RetryConfig.custom().maxAttempts(1).build();
         Retry retry = Retry.of("id", config);
         // Decorate the invocation of the HelloWorldService
-        CheckedRunnable retryableRunnable = Retry.decorateCheckedRunnable(retry, helloWorldService::sayHelloWorld);
+        CheckedRunnable retryableRunnable = Retry
+                .decorateCheckedRunnable(retry, helloWorldService::sayHelloWorld);
 
         // When
         Try<Void> result = Try.run(retryableRunnable);
@@ -155,7 +158,8 @@ public class RunnableRetryTest {
         Retry retry = Retry.of("id", config);
 
         // Decorate the invocation of the HelloWorldService
-        CheckedRunnable retryableRunnable = Retry.decorateCheckedRunnable(retry, helloWorldService::sayHelloWorld);
+        CheckedRunnable retryableRunnable = Retry
+                .decorateCheckedRunnable(retry, helloWorldService::sayHelloWorld);
 
         // When
         Try<Void> result = Try.run(retryableRunnable);
@@ -182,7 +186,8 @@ public class RunnableRetryTest {
 
         Retry retry = Retry.of("id", config);
         // Decorate the invocation of the HelloWorldService
-        CheckedRunnable retryableRunnable = Retry.decorateCheckedRunnable(retry, helloWorldService::sayHelloWorld);
+        CheckedRunnable retryableRunnable = Retry
+                .decorateCheckedRunnable(retry, helloWorldService::sayHelloWorld);
 
         // When
         Try<Void> result = Try.run(retryableRunnable);
@@ -191,6 +196,6 @@ public class RunnableRetryTest {
         BDDMockito.then(helloWorldService).should(Mockito.times(3)).sayHelloWorld();
         Assertions.assertThat(sleptTime).isEqualTo(
                 RetryConfig.DEFAULT_WAIT_DURATION +
-                        RetryConfig.DEFAULT_WAIT_DURATION*RetryConfig.DEFAULT_WAIT_DURATION);
+                        RetryConfig.DEFAULT_WAIT_DURATION * RetryConfig.DEFAULT_WAIT_DURATION);
     }
 }

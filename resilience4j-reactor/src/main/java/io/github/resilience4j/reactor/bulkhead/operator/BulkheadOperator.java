@@ -18,20 +18,20 @@ package io.github.resilience4j.reactor.bulkhead.operator;
 import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.bulkhead.BulkheadFullException;
 import io.github.resilience4j.reactor.IllegalPublisherException;
+import java.util.function.UnaryOperator;
+import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.util.function.UnaryOperator;
-
-import org.reactivestreams.Publisher;
-
 /**
- * A Bulkhead operator which checks if a subscriber/observer can acquire a permission to subscribe to an upstream Publisher.
- * Otherwise emits a {@link BulkheadFullException}, if the Bulkhead is full.
+ * A Bulkhead operator which checks if a subscriber/observer can acquire a permission to subscribe
+ * to an upstream Publisher. Otherwise emits a {@link BulkheadFullException}, if the Bulkhead is
+ * full.
  *
  * @param <T> the value type
  */
 public class BulkheadOperator<T> implements UnaryOperator<Publisher<T>> {
+
     private final Bulkhead bulkhead;
 
     private BulkheadOperator(Bulkhead bulkhead) {
@@ -41,7 +41,7 @@ public class BulkheadOperator<T> implements UnaryOperator<Publisher<T>> {
     /**
      * Creates a BulkheadOperator.
      *
-     * @param <T>      the value type of the upstream and downstream
+     * @param <T> the value type of the upstream and downstream
      * @param bulkhead the Bulkhead
      * @return a BulkheadOperator
      */

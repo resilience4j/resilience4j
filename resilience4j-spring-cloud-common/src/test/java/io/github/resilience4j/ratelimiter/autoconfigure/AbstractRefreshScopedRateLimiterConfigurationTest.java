@@ -16,18 +16,17 @@
 
 package io.github.resilience4j.ratelimiter.autoconfigure;
 
+import static java.util.Collections.emptyList;
+import static org.assertj.core.api.Assertions.assertThat;
+
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.core.registry.CompositeRegistryEventConsumer;
 import io.github.resilience4j.ratelimiter.configure.RateLimiterConfigurationProperties;
 import io.github.resilience4j.retry.autoconfigure.AbstractRefreshScopedRetryConfiguration;
+import java.util.Arrays;
 import org.junit.Test;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.context.annotation.Bean;
-
-import java.util.Arrays;
-
-import static java.util.Collections.emptyList;
-import static org.assertj.core.api.Assertions.assertThat;
 
 public class AbstractRefreshScopedRateLimiterConfigurationTest {
 
@@ -35,7 +34,8 @@ public class AbstractRefreshScopedRateLimiterConfigurationTest {
     public void testRefreshScopedRetryConfig() {
         Arrays.stream(AbstractRefreshScopedRetryConfiguration.class.getMethods())
                 .filter(method -> method.isAnnotationPresent(Bean.class))
-                .forEach(method -> assertThat(method.isAnnotationPresent(RefreshScope.class)).isTrue());
+                .forEach(method -> assertThat(method.isAnnotationPresent(RefreshScope.class))
+                        .isTrue());
     }
 
     @Test
@@ -47,5 +47,7 @@ public class AbstractRefreshScopedRateLimiterConfigurationTest {
                 new CompositeRegistryEventConsumer<>(emptyList()))).isNotNull();
     }
 
-    static class RateLimiterConfig extends AbstractRefreshScopedRateLimiterConfiguration { }
+    static class RateLimiterConfig extends AbstractRefreshScopedRateLimiterConfiguration {
+
+    }
 }

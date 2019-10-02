@@ -26,6 +26,7 @@ public class RetryOnIgnoredErrorEvent extends AbstractRetryEvent {
     public RetryOnIgnoredErrorEvent(String name, Throwable lastThrowable) {
         super(name, 0, lastThrowable);
     }
+
     @Override
     public Type getEventType() {
         return Type.IGNORED_ERROR;

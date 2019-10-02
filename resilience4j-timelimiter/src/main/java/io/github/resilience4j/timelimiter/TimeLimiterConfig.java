@@ -1,10 +1,11 @@
 package io.github.resilience4j.timelimiter;
 
-import java.time.Duration;
-
 import static java.util.Objects.requireNonNull;
 
+import java.time.Duration;
+
 public class TimeLimiterConfig {
+
     private static final String TIMEOUT_DURATION_MUST_NOT_BE_NULL = "TimeoutDuration must not be null";
 
     private Duration timeoutDuration = Duration.ofSeconds(1);
@@ -29,6 +30,10 @@ public class TimeLimiterConfig {
      */
     public static TimeLimiterConfig ofDefaults() {
         return new Builder().build();
+    }
+
+    private static Duration checkTimeoutDuration(final Duration timeoutDuration) {
+        return requireNonNull(timeoutDuration, TIMEOUT_DURATION_MUST_NOT_BE_NULL);
     }
 
     public Duration getTimeoutDuration() {
@@ -61,8 +66,7 @@ public class TimeLimiterConfig {
         }
 
         /**
-         * Configures the thread execution timeout
-         * Default value is 1 second.
+         * Configures the thread execution timeout Default value is 1 second.
          *
          * @param timeoutDuration the timeout Duration
          * @return the TimeLimiterConfig.Builder
@@ -73,8 +77,7 @@ public class TimeLimiterConfig {
         }
 
         /**
-         * Configures whether cancel is called on the running future
-         * Defaults to TRUE
+         * Configures whether cancel is called on the running future Defaults to TRUE
          *
          * @param cancelRunningFuture to cancel or not
          * @return the TimeLimiterConfig.Builder
@@ -84,9 +87,5 @@ public class TimeLimiterConfig {
             return this;
         }
 
-    }
-
-    private static Duration checkTimeoutDuration(final Duration timeoutDuration) {
-        return requireNonNull(timeoutDuration, TIMEOUT_DURATION_MUST_NOT_BE_NULL);
     }
 }

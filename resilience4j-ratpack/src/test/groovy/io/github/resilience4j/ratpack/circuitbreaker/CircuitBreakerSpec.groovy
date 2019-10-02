@@ -435,7 +435,9 @@ class CircuitBreakerSpec extends Specification {
 
         @CircuitBreaker(name = "test", fallbackMethod = "fallbackParamsFlux")
         Flux<String> breakerFlowFallbackFlow(String s) {
-            Flux.just("breaker flow").map({ throw new Exception("$s bad") } as Function<String, String>)
+            Flux.just("breaker flow").map({
+                throw new Exception("$s bad")
+            } as Function<String, String>)
         }
 
         @CircuitBreaker(name = "test")
@@ -455,7 +457,9 @@ class CircuitBreakerSpec extends Specification {
 
         @CircuitBreaker(name = "test", fallbackMethod = "fallbackParamsMono")
         Mono<String> breakerMonoFallbackMono(String s) {
-            Mono.just("breaker flow").map({ throw new Exception("$s bad") } as Function<String, String>)
+            Mono.just("breaker flow").map({
+                throw new Exception("$s bad")
+            } as Function<String, String>)
         }
 
         @CircuitBreaker(name = "test")

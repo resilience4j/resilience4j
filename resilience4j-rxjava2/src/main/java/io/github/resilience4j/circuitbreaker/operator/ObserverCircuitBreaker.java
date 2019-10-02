@@ -15,15 +15,14 @@
  */
 package io.github.resilience4j.circuitbreaker.operator;
 
+import static io.github.resilience4j.circuitbreaker.CallNotPermittedException.createCallNotPermittedException;
+
 import io.github.resilience4j.AbstractObserver;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.reactivex.Observable;
 import io.reactivex.Observer;
 import io.reactivex.internal.disposables.EmptyDisposable;
-
 import java.util.concurrent.TimeUnit;
-
-import static io.github.resilience4j.circuitbreaker.CallNotPermittedException.createCallNotPermittedException;
 
 class ObserverCircuitBreaker<T> extends Observable<T> {
 
@@ -37,13 +36,14 @@ class ObserverCircuitBreaker<T> extends Observable<T> {
 
     @Override
     protected void subscribeActual(Observer<? super T> downstream) {
-        if(circuitBreaker.tryAcquirePermission()){
+        if (circuitBreaker.tryAcquirePermission()) {
             upstream.subscribe(new CircuitBreakerObserver(downstream));
-        }else{
+        } else {
             downstream.onSubscribe(EmptyDisposable.INSTANCE);
             downstream.onError(createCallNotPermittedException(circuitBreaker));
         }
     }
+
     class CircuitBreakerObserver extends AbstractObserver<T> {
 
         private final long start;
@@ -65,9 +65,9 @@ class ObserverCircuitBreaker<T> extends Observable<T> {
 
         @Override
         protected void hookOnCancel() {
-            if(eventWasEmitted.get()){
+            if (eventWasEmitted.get()) {
                 circuitBreaker.onSuccess(System.nanoTime() - start, TimeUnit.NANOSECONDS);
-            }else{
+            } else {
                 circuitBreaker.releasePermission();
             }
         }

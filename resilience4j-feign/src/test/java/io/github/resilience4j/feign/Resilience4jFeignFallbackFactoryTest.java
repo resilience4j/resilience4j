@@ -16,31 +16,53 @@
  */
 package io.github.resilience4j.feign;
 
-import java.util.function.Function;
+import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.get;
+import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
+import static com.github.tomakehurst.wiremock.client.WireMock.verify;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.catchThrowable;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import com.github.tomakehurst.wiremock.junit.WireMockClassRule;
 import feign.FeignException;
 import io.github.resilience4j.feign.test.TestService;
 import io.github.resilience4j.feign.test.TestServiceFallbackWithException;
+import java.util.function.Function;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
-
-import static com.github.tomakehurst.wiremock.client.WireMock.*;
-import static org.assertj.core.api.Assertions.*;
-import static org.mockito.Mockito.*;
 
 /**
  * Unit tests on fallback factories.
  */
 public class Resilience4jFeignFallbackFactoryTest {
 
-    private static final String MOCK_URL = "http://localhost:8080/";
-
     @ClassRule
     public static final WireMockClassRule WIRE_MOCK_RULE = new WireMockClassRule(8080);
+    private static final String MOCK_URL = "http://localhost:8080/";
     @Rule
     public WireMockClassRule instanceRule = WIRE_MOCK_RULE;
+
+    private static TestService buildTestService(Function<Exception, ?> fallbackSupplier) {
+        FeignDecorators decorators = FeignDecorators.builder()
+                .withFallbackFactory(fallbackSupplier)
+                .build();
+        return Resilience4jFeign.builder(decorators).target(TestService.class, MOCK_URL);
+    }
+
+    private static void setupStub(int responseCode) {
+        stubFor(get(urlPathEqualTo("/greeting"))
+                .willReturn(aResponse()
+                        .withStatus(responseCode)
+                        .withHeader("Content-Type", "text/plain")
+                        .withBody("Hello, world!")));
+    }
 
     @Test
     public void should_successfully_get_a_response() {
@@ -60,7 +82,8 @@ public class Resilience4jFeignFallbackFactoryTest {
         Throwable throwable = catchThrowable(testService::greeting);
 
         assertThat(throwable).isNotNull()
-                .hasMessageContaining("Cannot use the fallback [class java.lang.String] for [interface io.github.resilience4j.feign.test.TestService]");
+                .hasMessageContaining(
+                        "Cannot use the fallback [class java.lang.String] for [interface io.github.resilience4j.feign.test.TestService]");
     }
 
     @Test
@@ -70,7 +93,8 @@ public class Resilience4jFeignFallbackFactoryTest {
 
         String result = testService.greeting();
 
-        assertThat(result).isEqualTo("Message from exception: status 400 reading TestService#greeting()");
+        assertThat(result)
+                .isEqualTo("Message from exception: status 400 reading TestService#greeting()");
         verify(1, getRequestedFor(urlPathEqualTo("/greeting")));
     }
 
@@ -83,11 +107,13 @@ public class Resilience4jFeignFallbackFactoryTest {
                 .withFallbackFactory(TestServiceFallbackWithException::new, FeignException.class)
                 .withFallbackFactory(e -> uselessFallback)
                 .build();
-        TestService testService = Resilience4jFeign.builder(decorators).target(TestService.class, MOCK_URL);
+        TestService testService = Resilience4jFeign.builder(decorators)
+                .target(TestService.class, MOCK_URL);
 
         String result = testService.greeting();
 
-        assertThat(result).isEqualTo("Message from exception: status 400 reading TestService#greeting()");
+        assertThat(result)
+                .isEqualTo("Message from exception: status 400 reading TestService#greeting()");
         verify(uselessFallback, times(0)).greeting();
         verify(1, getRequestedFor(urlPathEqualTo("/greeting")));
     }
@@ -101,11 +127,13 @@ public class Resilience4jFeignFallbackFactoryTest {
                 .withFallbackFactory(e -> uselessFallback, MyException.class)
                 .withFallbackFactory(TestServiceFallbackWithException::new)
                 .build();
-        TestService testService = Resilience4jFeign.builder(decorators).target(TestService.class, MOCK_URL);
+        TestService testService = Resilience4jFeign.builder(decorators)
+                .target(TestService.class, MOCK_URL);
 
         String result = testService.greeting();
 
-        assertThat(result).isEqualTo("Message from exception: status 400 reading TestService#greeting()");
+        assertThat(result)
+                .isEqualTo("Message from exception: status 400 reading TestService#greeting()");
         verify(uselessFallback, times(0)).greeting();
         verify(1, getRequestedFor(urlPathEqualTo("/greeting")));
     }
@@ -116,14 +144,17 @@ public class Resilience4jFeignFallbackFactoryTest {
         TestService uselessFallback = spy(TestService.class);
         when(uselessFallback.greeting()).thenReturn("I should not be called");
         FeignDecorators decorators = FeignDecorators.builder()
-                .withFallbackFactory(TestServiceFallbackWithException::new, FeignException.class::isInstance)
+                .withFallbackFactory(TestServiceFallbackWithException::new,
+                        FeignException.class::isInstance)
                 .withFallbackFactory(e -> uselessFallback)
                 .build();
-        TestService testService = Resilience4jFeign.builder(decorators).target(TestService.class, MOCK_URL);
+        TestService testService = Resilience4jFeign.builder(decorators)
+                .target(TestService.class, MOCK_URL);
 
         String result = testService.greeting();
 
-        assertThat(result).isEqualTo("Message from exception: status 400 reading TestService#greeting()");
+        assertThat(result)
+                .isEqualTo("Message from exception: status 400 reading TestService#greeting()");
         verify(uselessFallback, times(0)).greeting();
         verify(1, getRequestedFor(urlPathEqualTo("/greeting")));
     }
@@ -137,28 +168,15 @@ public class Resilience4jFeignFallbackFactoryTest {
                 .withFallbackFactory(e -> uselessFallback, MyException.class::isInstance)
                 .withFallbackFactory(TestServiceFallbackWithException::new)
                 .build();
-        TestService testService = Resilience4jFeign.builder(decorators).target(TestService.class, MOCK_URL);
+        TestService testService = Resilience4jFeign.builder(decorators)
+                .target(TestService.class, MOCK_URL);
 
         String result = testService.greeting();
 
-        assertThat(result).isEqualTo("Message from exception: status 400 reading TestService#greeting()");
+        assertThat(result)
+                .isEqualTo("Message from exception: status 400 reading TestService#greeting()");
         verify(uselessFallback, times(0)).greeting();
         verify(1, getRequestedFor(urlPathEqualTo("/greeting")));
-    }
-
-    private static TestService buildTestService(Function<Exception, ?> fallbackSupplier) {
-        FeignDecorators decorators = FeignDecorators.builder()
-                .withFallbackFactory(fallbackSupplier)
-                .build();
-        return Resilience4jFeign.builder(decorators).target(TestService.class, MOCK_URL);
-    }
-
-    private static void setupStub(int responseCode) {
-        stubFor(get(urlPathEqualTo("/greeting"))
-                .willReturn(aResponse()
-                        .withStatus(responseCode)
-                        .withHeader("Content-Type", "text/plain")
-                        .withBody("Hello, world!")));
     }
 
     private static class MyException extends Exception {

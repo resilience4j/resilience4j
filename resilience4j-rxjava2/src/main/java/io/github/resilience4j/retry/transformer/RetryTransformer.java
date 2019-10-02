@@ -16,8 +16,6 @@
 
 package io.github.resilience4j.retry.transformer;
 
-import org.reactivestreams.Publisher;
-
 import io.github.resilience4j.retry.Retry;
 import io.reactivex.Completable;
 import io.reactivex.CompletableSource;
@@ -33,9 +31,11 @@ import io.reactivex.ObservableTransformer;
 import io.reactivex.Single;
 import io.reactivex.SingleSource;
 import io.reactivex.SingleTransformer;
+import org.reactivestreams.Publisher;
 
 public class RetryTransformer<T> implements FlowableTransformer<T, T>, ObservableTransformer<T, T>,
         SingleTransformer<T, T>, CompletableTransformer, MaybeTransformer<T, T> {
+
     private final Retry retry;
 
     private RetryTransformer(Retry retry) {
@@ -46,7 +46,7 @@ public class RetryTransformer<T> implements FlowableTransformer<T, T>, Observabl
      * Creates a RetryOperator.
      *
      * @param retry the Retry
-     * @param <T>   the value type of the upstream and downstream
+     * @param <T> the value type of the upstream and downstream
      * @return a RetryOperator
      */
     public static <T> RetryTransformer<T> of(Retry retry) {
@@ -94,6 +94,7 @@ public class RetryTransformer<T> implements FlowableTransformer<T, T>, Observabl
     }
 
     private static class Context<T> {
+
         private final Retry.Context<T> context;
 
         Context(Retry.Context<T> context) {
@@ -105,13 +106,16 @@ public class RetryTransformer<T> implements FlowableTransformer<T, T>, Observabl
         }
 
         void throwExceptionToForceRetryOnResult(T value) {
-            if (context.onResult(value))
+            if (context.onResult(value)) {
                 throw new RetryDueToResultException();
+            }
         }
 
         void onError(Throwable throwable) throws Exception {
-            if (throwable instanceof RetryDueToResultException) return;
-	        // Filter Error to not retry on it
+            if (throwable instanceof RetryDueToResultException) {
+                return;
+            }
+            // Filter Error to not retry on it
             if (throwable instanceof Error) {
                 throw (Error) throwable;
             }
@@ -123,10 +127,12 @@ public class RetryTransformer<T> implements FlowableTransformer<T, T>, Observabl
         }
 
         private Exception castToException(Throwable throwable) {
-            return throwable instanceof Exception ? (Exception) throwable : new Exception(throwable);
+            return throwable instanceof Exception ? (Exception) throwable
+                    : new Exception(throwable);
         }
 
         private static class RetryDueToResultException extends RuntimeException {
+
             RetryDueToResultException() {
                 super("retry due to retryOnResult predicate");
             }

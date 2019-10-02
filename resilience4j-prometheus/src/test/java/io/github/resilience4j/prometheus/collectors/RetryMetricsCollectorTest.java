@@ -16,17 +16,16 @@
 package io.github.resilience4j.prometheus.collectors;
 
 
+import static io.github.resilience4j.prometheus.collectors.RetryMetricsCollector.MetricNames.DEFAULT_RETRY_CALLS;
+import static org.assertj.core.api.Assertions.assertThat;
+
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryRegistry;
 import io.prometheus.client.CollectorRegistry;
 import io.vavr.control.Try;
+import java.util.function.Supplier;
 import org.junit.Before;
 import org.junit.Test;
-
-import java.util.function.Supplier;
-
-import static io.github.resilience4j.prometheus.collectors.RetryMetricsCollector.MetricNames.DEFAULT_RETRY_CALLS;
-import static org.assertj.core.api.Assertions.assertThat;
 
 public class RetryMetricsCollectorTest {
 
@@ -54,12 +53,13 @@ public class RetryMetricsCollectorTest {
     @Test
     public void successfulCallsWithoutRetryReportsCorrespondingValue() {
         double successfulCallsWithoutRetry = registry.getSampleValue(
-            DEFAULT_RETRY_CALLS,
-            new String[]{"name", "kind"},
-            new String[]{retry.getName(), "successful_without_retry"}
+                DEFAULT_RETRY_CALLS,
+                new String[]{"name", "kind"},
+                new String[]{retry.getName(), "successful_without_retry"}
         );
 
-        assertThat(successfulCallsWithoutRetry).isEqualTo(retry.getMetrics().getNumberOfSuccessfulCallsWithoutRetryAttempt());
+        assertThat(successfulCallsWithoutRetry)
+                .isEqualTo(retry.getMetrics().getNumberOfSuccessfulCallsWithoutRetryAttempt());
     }
 
     @Test
@@ -70,7 +70,8 @@ public class RetryMetricsCollectorTest {
                 new String[]{retry.getName(), "failed_with_retry"}
         );
 
-        assertThat(failedCallsWithRetry).isEqualTo(retry.getMetrics().getNumberOfFailedCallsWithRetryAttempt());
+        assertThat(failedCallsWithRetry)
+                .isEqualTo(retry.getMetrics().getNumberOfFailedCallsWithRetryAttempt());
     }
 
     @Test
@@ -78,18 +79,18 @@ public class RetryMetricsCollectorTest {
         CollectorRegistry registry = new CollectorRegistry();
 
         RetryMetricsCollector.ofRetryRegistry(
-            RetryMetricsCollector.MetricNames.custom()
-                .callsMetricName("custom_resilience4j_retry_calls")
-                .build(),
+                RetryMetricsCollector.MetricNames.custom()
+                        .callsMetricName("custom_resilience4j_retry_calls")
+                        .build(),
                 retryRegistry).register(registry);
 
         assertThat(registry.getSampleValue(
-        "custom_resilience4j_retry_calls",
-            new String[]{"name", "kind"},
-            new String[]{"backendA", "successful_without_retry"}
+                "custom_resilience4j_retry_calls",
+                new String[]{"name", "kind"},
+                new String[]{"backendA", "successful_without_retry"}
         )).isNotNull();
         assertThat(registry.getSampleValue(
-            "custom_resilience4j_retry_calls",
+                "custom_resilience4j_retry_calls",
                 new String[]{"name", "kind"},
                 new String[]{"backendA", "failed_with_retry"}
         )).isNotNull();

@@ -16,13 +16,12 @@
 
 package io.github.resilience4j.core.registry;
 
-import org.junit.Test;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-
-import static org.assertj.core.api.Assertions.assertThat;
+import org.junit.Test;
 
 public class CompositeRegistryEventConsumerTest {
 
@@ -34,8 +33,8 @@ public class CompositeRegistryEventConsumerTest {
         consumers.add(registryEventConsumer1);
         consumers.add(registryEventConsumer2);
 
-
-        CompositeRegistryEventConsumer<String> compositeRegistryEventConsumer = new CompositeRegistryEventConsumer<>(consumers);
+        CompositeRegistryEventConsumer<String> compositeRegistryEventConsumer = new CompositeRegistryEventConsumer<>(
+                consumers);
 
         TestRegistry testRegistry = new TestRegistry(compositeRegistryEventConsumer);
 

@@ -19,6 +19,8 @@
 package io.github.resilience4j.bulkhead.internal;
 
 
+import static java.util.Objects.requireNonNull;
+
 import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.bulkhead.BulkheadConfig;
 import io.github.resilience4j.bulkhead.BulkheadFullException;
@@ -30,12 +32,9 @@ import io.github.resilience4j.core.EventConsumer;
 import io.github.resilience4j.core.EventProcessor;
 import io.github.resilience4j.core.exception.AcquirePermissionCancelledException;
 import io.github.resilience4j.core.lang.Nullable;
-
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
-
-import static java.util.Objects.requireNonNull;
 
 /**
  * A Bulkhead implementation based on a semaphore.
@@ -50,13 +49,14 @@ public class SemaphoreBulkhead implements Bulkhead {
     private final BulkheadEventProcessor eventProcessor;
 
     private final Object configChangesLock = new Object();
-    @SuppressWarnings("squid:S3077") // this object is immutable and we replace ref entirely during config change.
+    @SuppressWarnings("squid:S3077")
+    // this object is immutable and we replace ref entirely during config change.
     private volatile BulkheadConfig config;
 
     /**
      * Creates a bulkhead using a configuration supplied
      *
-     * @param name           the name of this bulkhead
+     * @param name the name of this bulkhead
      * @param bulkheadConfig custom bulkhead configuration
      */
     public SemaphoreBulkhead(String name, @Nullable BulkheadConfig bulkheadConfig) {
@@ -81,7 +81,7 @@ public class SemaphoreBulkhead implements Bulkhead {
     /**
      * Create a bulkhead using a configuration supplier
      *
-     * @param name           the name of this bulkhead
+     * @param name the name of this bulkhead
      * @param configSupplier BulkheadConfig supplier
      */
     public SemaphoreBulkhead(String name, Supplier<BulkheadConfig> configSupplier) {
@@ -183,32 +183,6 @@ public class SemaphoreBulkhead implements Bulkhead {
         return eventProcessor;
     }
 
-    private class BulkheadEventProcessor extends EventProcessor<BulkheadEvent> implements EventPublisher, EventConsumer<BulkheadEvent> {
-
-        @Override
-        public EventPublisher onCallPermitted(EventConsumer<BulkheadOnCallPermittedEvent> onCallPermittedEventConsumer) {
-            registerConsumer(BulkheadOnCallPermittedEvent.class.getSimpleName(), onCallPermittedEventConsumer);
-            return this;
-        }
-
-        @Override
-        public EventPublisher onCallRejected(EventConsumer<BulkheadOnCallRejectedEvent> onCallRejectedEventConsumer) {
-            registerConsumer(BulkheadOnCallRejectedEvent.class.getSimpleName(), onCallRejectedEventConsumer);
-            return this;
-        }
-
-        @Override
-        public EventPublisher onCallFinished(EventConsumer<BulkheadOnCallFinishedEvent> onCallFinishedEventConsumer) {
-            registerConsumer(BulkheadOnCallFinishedEvent.class.getSimpleName(), onCallFinishedEventConsumer);
-            return this;
-        }
-
-        @Override
-        public void consumeEvent(BulkheadEvent event) {
-            super.processEvent(event);
-        }
-    }
-
     @Override
     public String toString() {
         return String.format("Bulkhead '%s'", this.name);
@@ -241,7 +215,41 @@ public class SemaphoreBulkhead implements Bulkhead {
         }
     }
 
+    private class BulkheadEventProcessor extends EventProcessor<BulkheadEvent> implements
+            EventPublisher, EventConsumer<BulkheadEvent> {
+
+        @Override
+        public EventPublisher onCallPermitted(
+                EventConsumer<BulkheadOnCallPermittedEvent> onCallPermittedEventConsumer) {
+            registerConsumer(BulkheadOnCallPermittedEvent.class.getSimpleName(),
+                    onCallPermittedEventConsumer);
+            return this;
+        }
+
+        @Override
+        public EventPublisher onCallRejected(
+                EventConsumer<BulkheadOnCallRejectedEvent> onCallRejectedEventConsumer) {
+            registerConsumer(BulkheadOnCallRejectedEvent.class.getSimpleName(),
+                    onCallRejectedEventConsumer);
+            return this;
+        }
+
+        @Override
+        public EventPublisher onCallFinished(
+                EventConsumer<BulkheadOnCallFinishedEvent> onCallFinishedEventConsumer) {
+            registerConsumer(BulkheadOnCallFinishedEvent.class.getSimpleName(),
+                    onCallFinishedEventConsumer);
+            return this;
+        }
+
+        @Override
+        public void consumeEvent(BulkheadEvent event) {
+            super.processEvent(event);
+        }
+    }
+
     private final class BulkheadMetrics implements Metrics {
+
         private BulkheadMetrics() {
         }
 

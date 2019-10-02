@@ -13,19 +13,19 @@ import io.github.resilience4j.reactor.ratelimiter.operator.RateLimiterOperator;
 import io.github.resilience4j.reactor.retry.RetryOperator;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryConfig;
+import java.io.IOException;
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
 import org.junit.Test;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
-import java.io.IOException;
-import java.time.Duration;
-import java.time.temporal.ChronoUnit;
-
 public class CombinedOperatorsTest {
 
     private final RateLimiter rateLimiter = RateLimiter.of("test",
-            RateLimiterConfig.custom().limitForPeriod(5).timeoutDuration(Duration.ZERO).limitRefreshPeriod(Duration.ofSeconds(10)).build());
+            RateLimiterConfig.custom().limitForPeriod(5).timeoutDuration(Duration.ZERO)
+                    .limitRefreshPeriod(Duration.ofSeconds(10)).build());
 
     private final CircuitBreaker circuitBreaker = CircuitBreaker.of("test",
             CircuitBreakerConfig.custom()
@@ -33,13 +33,12 @@ public class CombinedOperatorsTest {
                     .slidingWindowSize(4)
                     .permittedNumberOfCallsInHalfOpenState(4)
                     .build());
-
-    private Bulkhead bulkhead = Bulkhead
-            .of("test", BulkheadConfig.custom().maxConcurrentCalls(1).maxWaitDuration(Duration.ZERO).build());
-
     private final RetryConfig config = io.github.resilience4j.retry.RetryConfig.ofDefaults();
     private final Retry retry = Retry.of("testName", config);
     private final RetryOperator<String> retryOperator = RetryOperator.of(retry);
+    private Bulkhead bulkhead = Bulkhead
+            .of("test", BulkheadConfig.custom().maxConcurrentCalls(1).maxWaitDuration(Duration.ZERO)
+                    .build());
 
     @Test
     public void shouldEmitEvents() {

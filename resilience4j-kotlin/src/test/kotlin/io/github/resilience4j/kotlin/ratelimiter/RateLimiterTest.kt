@@ -25,7 +25,6 @@ import io.github.resilience4j.ratelimiter.RequestNotPermitted
 import kotlinx.coroutines.runBlocking
 import org.assertj.core.api.Assertions
 import org.junit.Test
-import java.lang.IllegalStateException
 import java.time.Duration
 
 class RateLimiterTest {

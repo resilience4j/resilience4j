@@ -18,18 +18,17 @@
  */
 package io.github.resilience4j.circuitbreaker;
 
-import io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent;
-import org.junit.Before;
-import org.junit.Test;
-import org.slf4j.Logger;
-
-import java.io.IOException;
-import java.util.concurrent.TimeUnit;
-
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
+
+import io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent;
+import java.io.IOException;
+import java.util.concurrent.TimeUnit;
+import org.junit.Before;
+import org.junit.Test;
+import org.slf4j.Logger;
 
 public class CircuitBreakerEventPublisherTest {
 
@@ -37,7 +36,7 @@ public class CircuitBreakerEventPublisherTest {
     private CircuitBreaker circuitBreaker;
 
     @Before
-    public void setUp(){
+    public void setUp() {
         logger = mock(Logger.class);
         circuitBreaker = CircuitBreaker.ofDefaults("testName");
     }

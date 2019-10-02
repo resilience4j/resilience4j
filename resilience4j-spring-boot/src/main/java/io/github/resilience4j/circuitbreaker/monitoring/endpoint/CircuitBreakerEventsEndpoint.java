@@ -22,14 +22,13 @@ import io.github.resilience4j.common.circuitbreaker.monitoring.endpoint.CircuitB
 import io.github.resilience4j.consumer.CircularEventConsumer;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
 import io.vavr.collection.List;
+import java.util.Comparator;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
-
-import java.util.Comparator;
 
 
 @Controller
@@ -38,7 +37,8 @@ public class CircuitBreakerEventsEndpoint {
 
     private final EventConsumerRegistry<CircuitBreakerEvent> eventConsumerRegistry;
 
-    public CircuitBreakerEventsEndpoint(EventConsumerRegistry<CircuitBreakerEvent> eventConsumerRegistry) {
+    public CircuitBreakerEventsEndpoint(
+            EventConsumerRegistry<CircuitBreakerEvent> eventConsumerRegistry) {
         this.eventConsumerRegistry = eventConsumerRegistry;
     }
 
@@ -53,7 +53,8 @@ public class CircuitBreakerEventsEndpoint {
 
     @GetMapping(value = "events/{circuitBreakerName}", produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
-    public CircuitBreakerEventsEndpointResponse getEventsFilteredByCircuitBreakerName(@PathVariable("circuitBreakerName") String circuitBreakerName) {
+    public CircuitBreakerEventsEndpointResponse getEventsFilteredByCircuitBreakerName(
+            @PathVariable("circuitBreakerName") String circuitBreakerName) {
         return new CircuitBreakerEventsEndpointResponse(getCircuitBreakerEvents(circuitBreakerName)
                 .filter(event -> event.getCircuitBreakerName().equals(circuitBreakerName))
                 .map(CircuitBreakerEventDTOFactory::createCircuitBreakerEventDTO).toJavaList());
@@ -61,19 +62,22 @@ public class CircuitBreakerEventsEndpoint {
 
     @GetMapping(value = "events/{circuitBreakerName}/{eventType}", produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
-    public CircuitBreakerEventsEndpointResponse getEventsFilteredByCircuitBreakerNameAndEventType(@PathVariable("circuitBreakerName") String circuitBreakerName,
-                                                @PathVariable("eventType") String eventType) {
+    public CircuitBreakerEventsEndpointResponse getEventsFilteredByCircuitBreakerNameAndEventType(
+            @PathVariable("circuitBreakerName") String circuitBreakerName,
+            @PathVariable("eventType") String eventType) {
         return new CircuitBreakerEventsEndpointResponse(getCircuitBreakerEvents(circuitBreakerName)
-                .filter(event -> event.getEventType() == CircuitBreakerEvent.Type.valueOf(eventType.toUpperCase()))
+                .filter(event -> event.getEventType() == CircuitBreakerEvent.Type
+                        .valueOf(eventType.toUpperCase()))
                 .map(CircuitBreakerEventDTOFactory::createCircuitBreakerEventDTO).toJavaList());
     }
 
     private List<CircuitBreakerEvent> getCircuitBreakerEvents(String circuitBreakerName) {
-        CircularEventConsumer<CircuitBreakerEvent> eventConsumer = eventConsumerRegistry.getEventConsumer(circuitBreakerName);
-        if(eventConsumer != null){
+        CircularEventConsumer<CircuitBreakerEvent> eventConsumer = eventConsumerRegistry
+                .getEventConsumer(circuitBreakerName);
+        if (eventConsumer != null) {
             return eventConsumer.getBufferedEvents()
                     .filter(event -> event.getCircuitBreakerName().equals(circuitBreakerName));
-        }else{
+        } else {
             return List.empty();
         }
     }

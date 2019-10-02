@@ -18,32 +18,32 @@
  */
 package io.github.resilience4j.ratelimiter.internal;
 
-import io.github.resilience4j.ratelimiter.RateLimiter;
-import io.github.resilience4j.ratelimiter.RateLimiterConfig;
-import io.github.resilience4j.ratelimiter.event.RateLimiterOnFailureEvent;
-import io.github.resilience4j.ratelimiter.event.RateLimiterOnSuccessEvent;
-
-import java.time.Duration;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.UnaryOperator;
-
 import static java.lang.Long.min;
 import static java.lang.System.nanoTime;
 import static java.lang.Thread.currentThread;
 import static java.util.concurrent.locks.LockSupport.parkNanos;
 
+import io.github.resilience4j.ratelimiter.RateLimiter;
+import io.github.resilience4j.ratelimiter.RateLimiterConfig;
+import io.github.resilience4j.ratelimiter.event.RateLimiterOnFailureEvent;
+import io.github.resilience4j.ratelimiter.event.RateLimiterOnSuccessEvent;
+import java.time.Duration;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.UnaryOperator;
+
 /**
  * {@link AtomicRateLimiter} splits all nanoseconds from the start of epoch into cycles.
  * <p>Each cycle has duration of {@link RateLimiterConfig#limitRefreshPeriod} in nanoseconds.
  * <p>By contract on start of each cycle {@link AtomicRateLimiter} should
- * set {@link State#activePermissions} to {@link RateLimiterConfig#limitForPeriod}.
- * For the {@link AtomicRateLimiter} callers it is really looks so, but under the hood there is
- * some optimisations that will skip this refresh if {@link AtomicRateLimiter} is not used actively.
- * <p>All {@link AtomicRateLimiter} updates are atomic and state is encapsulated in {@link AtomicReference} to
- * {@link AtomicRateLimiter.State}
+ * set {@link State#activePermissions} to {@link RateLimiterConfig#limitForPeriod}. For the {@link
+ * AtomicRateLimiter} callers it is really looks so, but under the hood there is some optimisations
+ * that will skip this refresh if {@link AtomicRateLimiter} is not used actively.
+ * <p>All {@link AtomicRateLimiter} updates are atomic and state is encapsulated in {@link
+ * AtomicReference} to {@link AtomicRateLimiter.State}
  */
 public class AtomicRateLimiter implements RateLimiter {
+
     private static final long nanoTimeStart = nanoTime();
 
     private final String name;
@@ -70,7 +70,8 @@ public class AtomicRateLimiter implements RateLimiter {
                 .timeoutDuration(timeoutDuration)
                 .build();
         state.updateAndGet(currentState -> new State(
-                newConfig, currentState.activeCycle, currentState.activePermissions, currentState.nanosToWait
+                newConfig, currentState.activeCycle, currentState.activePermissions,
+                currentState.nanosToWait
         ));
     }
 
@@ -83,7 +84,8 @@ public class AtomicRateLimiter implements RateLimiter {
                 .limitForPeriod(limitForPeriod)
                 .build();
         state.updateAndGet(currentState -> new State(
-                newConfig, currentState.activeCycle, currentState.activePermissions, currentState.nanosToWait
+                newConfig, currentState.activeCycle, currentState.activePermissions,
+                currentState.nanosToWait
         ));
     }
 
@@ -131,12 +133,11 @@ public class AtomicRateLimiter implements RateLimiter {
     }
 
     /**
-     * Atomically updates the current {@link State} with the results of
-     * applying the {@link AtomicRateLimiter#calculateNextState}, returning the updated {@link State}.
-     * It differs from {@link AtomicReference#updateAndGet(UnaryOperator)} by constant back off.
-     * It means that after one try to {@link AtomicReference#compareAndSet(Object, Object)}
-     * this method will wait for a while before try one more time.
-     * This technique was originally described in this
+     * Atomically updates the current {@link State} with the results of applying the {@link
+     * AtomicRateLimiter#calculateNextState}, returning the updated {@link State}. It differs from
+     * {@link AtomicReference#updateAndGet(UnaryOperator)} by constant back off. It means that after
+     * one try to {@link AtomicReference#compareAndSet(Object, Object)} this method will wait for a
+     * while before try one more time. This technique was originally described in this
      * <a href="https://arxiv.org/abs/1305.5800"> paper</a>
      * and showed great results with {@link AtomicRateLimiter} in benchmark tests.
      *
@@ -154,19 +155,18 @@ public class AtomicRateLimiter implements RateLimiter {
     }
 
     /**
-     * Atomically sets the value to the given updated value
-     * if the current value {@code ==} the expected value.
-     * It differs from {@link AtomicReference#updateAndGet(UnaryOperator)} by constant back off.
-     * It means that after one try to {@link AtomicReference#compareAndSet(Object, Object)}
-     * this method will wait for a while before try one more time.
-     * This technique was originally described in this
+     * Atomically sets the value to the given updated value if the current value {@code ==} the
+     * expected value. It differs from {@link AtomicReference#updateAndGet(UnaryOperator)} by
+     * constant back off. It means that after one try to {@link AtomicReference#compareAndSet(Object,
+     * Object)} this method will wait for a while before try one more time. This technique was
+     * originally described in this
      * <a href="https://arxiv.org/abs/1305.5800"> paper</a>
      * and showed great results with {@link AtomicRateLimiter} in benchmark tests.
      *
      * @param current the expected value
-     * @param next    the new value
-     * @return {@code true} if successful. False return indicates that
-     * the actual value was not equal to the expected value.
+     * @param next the new value
+     * @return {@code true} if successful. False return indicates that the actual value was not
+     *         equal to the expected value.
      */
     private boolean compareAndSet(final State current, final State next) {
         if (state.compareAndSet(current, next)) {
@@ -177,12 +177,12 @@ public class AtomicRateLimiter implements RateLimiter {
     }
 
     /**
-     * A side-effect-free function that can calculate next {@link State} from current.
-     * It determines time duration that you should wait for permission and reserves it for you,
-     * if you'll be able to wait long enough.
+     * A side-effect-free function that can calculate next {@link State} from current. It determines
+     * time duration that you should wait for permission and reserves it for you, if you'll be able
+     * to wait long enough.
      *
      * @param timeoutInNanos max time that caller can wait for permission in nanoseconds
-     * @param activeState    current state of {@link AtomicRateLimiter}
+     * @param activeState current state of {@link AtomicRateLimiter}
      * @return next {@link State}
      */
     private State calculateNextState(final long timeoutInNanos, final State activeState) {
@@ -198,27 +198,32 @@ public class AtomicRateLimiter implements RateLimiter {
             long elapsedCycles = currentCycle - nextCycle;
             long accumulatedPermissions = elapsedCycles * permissionsPerCycle;
             nextCycle = currentCycle;
-            nextPermissions = (int) min(nextPermissions + accumulatedPermissions, permissionsPerCycle);
+            nextPermissions = (int) min(nextPermissions + accumulatedPermissions,
+                    permissionsPerCycle);
         }
         long nextNanosToWait = nanosToWaitForPermission(
                 cyclePeriodInNanos, permissionsPerCycle, nextPermissions, currentNanos, currentCycle
         );
-        State nextState = reservePermissions(activeState.config, timeoutInNanos, nextCycle, nextPermissions, nextNanosToWait);
+        State nextState = reservePermissions(activeState.config, timeoutInNanos, nextCycle,
+                nextPermissions, nextNanosToWait);
         return nextState;
     }
 
     /**
-     * Calculates time to wait for next permission as
-     * [time to the next cycle] + [duration of full cycles until reserved permissions expire]
+     * Calculates time to wait for next permission as [time to the next cycle] + [duration of full
+     * cycles until reserved permissions expire]
      *
-     * @param cyclePeriodInNanos   current configuration values
-     * @param permissionsPerCycle  current configuration values
-     * @param availablePermissions currently available permissions, can be negative if some permissions have been reserved
-     * @param currentNanos         current time in nanoseconds
-     * @param currentCycle         current {@link AtomicRateLimiter} cycle    @return nanoseconds to wait for the next permission
+     * @param cyclePeriodInNanos current configuration values
+     * @param permissionsPerCycle current configuration values
+     * @param availablePermissions currently available permissions, can be negative if some
+     *         permissions have been reserved
+     * @param currentNanos current time in nanoseconds
+     * @param currentCycle current {@link AtomicRateLimiter} cycle    @return nanoseconds to
+     *         wait for the next permission
      */
-    private long nanosToWaitForPermission(final long cyclePeriodInNanos, final int permissionsPerCycle,
-                                          final int availablePermissions, final long currentNanos, final long currentCycle) {
+    private long nanosToWaitForPermission(final long cyclePeriodInNanos,
+            final int permissionsPerCycle,
+            final int availablePermissions, final long currentNanos, final long currentCycle) {
         if (availablePermissions > 0) {
             return 0L;
         }
@@ -229,18 +234,18 @@ public class AtomicRateLimiter implements RateLimiter {
     }
 
     /**
-     * Determines whether caller can acquire permission before timeout or not and then creates corresponding {@link State}.
-     * Reserves permissions only if caller can successfully wait for permission.
+     * Determines whether caller can acquire permission before timeout or not and then creates
+     * corresponding {@link State}. Reserves permissions only if caller can successfully wait for
+     * permission.
      *
-     * @param config
      * @param timeoutInNanos max time that caller can wait for permission in nanoseconds
-     * @param cycle          cycle for new {@link State}
-     * @param permissions    permissions for new {@link State}
-     * @param nanosToWait    nanoseconds to wait for the next permission
+     * @param cycle cycle for new {@link State}
+     * @param permissions permissions for new {@link State}
+     * @param nanosToWait nanoseconds to wait for the next permission
      * @return new {@link State} with possibly reserved permissions and time to wait
      */
     private State reservePermissions(final RateLimiterConfig config, final long timeoutInNanos,
-                                     final long cycle, final int permissions, final long nanosToWait) {
+            final long cycle, final int permissions, final long nanosToWait) {
         boolean canAcquireInTime = timeoutInNanos >= nanosToWait;
         int permissionsWithReservation = permissions;
         if (canAcquireInTime) {
@@ -250,13 +255,16 @@ public class AtomicRateLimiter implements RateLimiter {
     }
 
     /**
-     * If nanosToWait is bigger than 0 it tries to park {@link Thread} for nanosToWait but not longer then timeoutInNanos.
+     * If nanosToWait is bigger than 0 it tries to park {@link Thread} for nanosToWait but not
+     * longer then timeoutInNanos.
      *
      * @param timeoutInNanos max time that caller can wait
-     * @param nanosToWait    nanoseconds caller need to wait
-     * @return true if caller was able to wait for nanosToWait without {@link Thread#interrupt} and not exceed timeout
+     * @param nanosToWait nanoseconds caller need to wait
+     * @return true if caller was able to wait for nanosToWait without {@link Thread#interrupt} and
+     *         not exceed timeout
      */
-    private boolean waitForPermissionIfNecessary(final long timeoutInNanos, final long nanosToWait) {
+    private boolean waitForPermissionIfNecessary(final long timeoutInNanos,
+            final long nanosToWait) {
         boolean canAcquireImmediately = nanosToWait <= 0;
         boolean canAcquireInTime = timeoutInNanos >= nanosToWait;
 
@@ -273,8 +281,8 @@ public class AtomicRateLimiter implements RateLimiter {
     /**
      * Parks {@link Thread} for nanosToWait.
      * <p>If the current thread is {@linkplain Thread#interrupted}
-     * while waiting for a permit then it won't throw {@linkplain InterruptedException},
-     * but its interrupt status will be set.
+     * while waiting for a permit then it won't throw {@linkplain InterruptedException}, but its
+     * interrupt status will be set.
      *
      * @param nanosToWait nanoseconds caller need to wait
      * @return true if caller was not {@link Thread#interrupted} while waiting
@@ -353,7 +361,8 @@ public class AtomicRateLimiter implements RateLimiter {
     }
 
     /**
-     * <p>{@link AtomicRateLimiter.State} represents immutable state of {@link AtomicRateLimiter} where:
+     * <p>{@link AtomicRateLimiter.State} represents immutable state of {@link AtomicRateLimiter}
+     * where:
      * <ul>
      * <li>activeCycle - {@link AtomicRateLimiter} cycle number that was used
      * by the last {@link AtomicRateLimiter#acquirePermission()} call.</li>
@@ -367,6 +376,7 @@ public class AtomicRateLimiter implements RateLimiter {
      * </ul>
      */
     private static class State {
+
         private final RateLimiterConfig config;
 
         private final long activeCycle;
@@ -374,7 +384,7 @@ public class AtomicRateLimiter implements RateLimiter {
         private final long nanosToWait;
 
         private State(RateLimiterConfig config,
-                      final long activeCycle, final int activePermissions, final long nanosToWait) {
+                final long activeCycle, final int activePermissions, final long nanosToWait) {
             this.config = config;
             this.activeCycle = activeCycle;
             this.activePermissions = activePermissions;

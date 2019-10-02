@@ -6,17 +6,17 @@ resilience4j.retry:
       waitDuration: 600ms
       retryExceptionPredicate: io.github.resilience4j.circuitbreaker.RecordFailurePredicate
       retryExceptions:
-      - java.io.IOException
+        - java.io.IOException
       ignoreExceptions:
-      - io.github.resilience4j.circuitbreaker.IgnoredException
+        - io.github.resilience4j.circuitbreaker.IgnoredException
     retryBackendB:
       maxRetryAttempts: 3
       waitDuration: 600ms
       retryExceptionPredicate: io.github.resilience4j.circuitbreaker.RecordFailurePredicate
       retryExceptions:
-      - java.io.IOException
+        - java.io.IOException
       ignoreExceptions:
-      - io.github.resilience4j.circuitbreaker.IgnoredException
+        - io.github.resilience4j.circuitbreaker.IgnoredException
 resilience4j.circuitbreaker:
   circuitBreakerAspectOrder: 400
   configs:
@@ -38,9 +38,9 @@ resilience4j.circuitbreaker:
       registerHealthIndicator: true
       recordFailurePredicate: io.github.resilience4j.circuitbreaker.RecordFailurePredicate
       recordExceptions:
-      - io.github.resilience4j.circuitbreaker.RecordedException
+        - io.github.resilience4j.circuitbreaker.RecordedException
       ignoreExceptions:
-      - io.github.resilience4j.circuitbreaker.IgnoredException
+        - io.github.resilience4j.circuitbreaker.IgnoredException
     backendB:
       slidingWindowSize: 10
       permittedNumberOfCallsInHalfOpenState: 5

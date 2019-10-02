@@ -18,30 +18,29 @@
  */
 package io.github.resilience4j.circuitbreaker;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import io.github.resilience4j.circuitbreaker.test.VertxHelloWorldService;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
+import java.time.Duration;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.BDDMockito;
 import org.mockito.Mockito;
 
-import java.time.Duration;
-import java.util.concurrent.TimeUnit;
-import java.util.function.Supplier;
-
-import static org.assertj.core.api.Assertions.assertThat;
-
 
 @RunWith(VertxUnitRunner.class)
 public class VertxCircuitBreakerTest {
 
+    private static final int DEFAULT_TIMEOUT = 1000;
     private Vertx vertx;
     private VertxHelloWorldService helloWorldService;
-    private static final int DEFAULT_TIMEOUT = 1000;
 
     @Before
     public void setUp() {
@@ -56,10 +55,12 @@ public class VertxCircuitBreakerTest {
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(0);
         // Given the HelloWorldService returns Hello world
-        BDDMockito.given(helloWorldService.returnHelloWorld()).willReturn(Future.succeededFuture("Hello world"));
+        BDDMockito.given(helloWorldService.returnHelloWorld())
+                .willReturn(Future.succeededFuture("Hello world"));
 
         //When
-        Supplier<Future<String>> supplier = VertxCircuitBreaker.decorateFuture(circuitBreaker, helloWorldService::returnHelloWorld);
+        Supplier<Future<String>> supplier = VertxCircuitBreaker
+                .decorateFuture(circuitBreaker, helloWorldService::returnHelloWorld);
 
         // Execute supplier
         Future<String> future = supplier.get();
@@ -81,10 +82,12 @@ public class VertxCircuitBreakerTest {
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(0);
         // Given the HelloWorldService returns Hello world
-        BDDMockito.given(helloWorldService.returnHelloWorld()).willReturn(Future.succeededFuture("Hello world"));
+        BDDMockito.given(helloWorldService.returnHelloWorld())
+                .willReturn(Future.succeededFuture("Hello world"));
 
         //When
-        Future<String> future = VertxCircuitBreaker.executeFuture(circuitBreaker, helloWorldService::returnHelloWorld);
+        Future<String> future = VertxCircuitBreaker
+                .executeFuture(circuitBreaker, helloWorldService::returnHelloWorld);
 
         //Then
         assertThat(future.succeeded()).isTrue();
@@ -103,10 +106,12 @@ public class VertxCircuitBreakerTest {
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(0);
         // Given the HelloWorldService throws an exception
-        BDDMockito.given(helloWorldService.returnHelloWorld()).willReturn(Future.failedFuture(new RuntimeException("BAM!")));
+        BDDMockito.given(helloWorldService.returnHelloWorld())
+                .willReturn(Future.failedFuture(new RuntimeException("BAM!")));
 
         //When
-        Future<String> future =  VertxCircuitBreaker.executeFuture(circuitBreaker, helloWorldService::returnHelloWorld);
+        Future<String> future = VertxCircuitBreaker
+                .executeFuture(circuitBreaker, helloWorldService::returnHelloWorld);
 
         //Then
         assertThat(future.failed()).isTrue();
@@ -141,7 +146,8 @@ public class VertxCircuitBreakerTest {
 
         //When
         //When
-        Future<String> future =  VertxCircuitBreaker.executeFuture(circuitBreaker, helloWorldService::returnHelloWorld);
+        Future<String> future = VertxCircuitBreaker
+                .executeFuture(circuitBreaker, helloWorldService::returnHelloWorld);
 
         //Then
         //Then

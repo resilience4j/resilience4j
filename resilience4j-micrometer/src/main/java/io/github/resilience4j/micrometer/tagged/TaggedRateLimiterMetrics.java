@@ -15,18 +15,25 @@
  */
 package io.github.resilience4j.micrometer.tagged;
 
+import static java.util.Objects.requireNonNull;
+
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RateLimiter.Metrics;
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.binder.MeterBinder;
 
-import static java.util.Objects.requireNonNull;
-
 /**
  * A micrometer binder that is used to register RateLimiter exposed {@link Metrics metrics}.
  */
 public class TaggedRateLimiterMetrics extends AbstractRateLimiterMetrics implements MeterBinder {
+
+    private final RateLimiterRegistry rateLimiterRegistry;
+
+    private TaggedRateLimiterMetrics(MetricNames names, RateLimiterRegistry rateLimiterRegistry) {
+        super(names);
+        this.rateLimiterRegistry = requireNonNull(rateLimiterRegistry);
+    }
 
     /**
      * Creates a new binder that uses given {@code registry} as source of rate limiters.
@@ -34,7 +41,8 @@ public class TaggedRateLimiterMetrics extends AbstractRateLimiterMetrics impleme
      * @param rateLimiterRegistry the source of rate limiters
      * @return The {@link TaggedRateLimiterMetrics} instance.
      */
-    public static TaggedRateLimiterMetrics ofRateLimiterRegistry(RateLimiterRegistry rateLimiterRegistry) {
+    public static TaggedRateLimiterMetrics ofRateLimiterRegistry(
+            RateLimiterRegistry rateLimiterRegistry) {
         return new TaggedRateLimiterMetrics(MetricNames.ofDefaults(), rateLimiterRegistry);
     }
 
@@ -45,15 +53,9 @@ public class TaggedRateLimiterMetrics extends AbstractRateLimiterMetrics impleme
      * @param rateLimiterRegistry the source of rate limiters
      * @return The {@link TaggedRateLimiterMetrics} instance.
      */
-    public static TaggedRateLimiterMetrics ofRateLimiterRegistry(MetricNames names, RateLimiterRegistry rateLimiterRegistry) {
+    public static TaggedRateLimiterMetrics ofRateLimiterRegistry(MetricNames names,
+            RateLimiterRegistry rateLimiterRegistry) {
         return new TaggedRateLimiterMetrics(names, rateLimiterRegistry);
-    }
-
-    private final RateLimiterRegistry rateLimiterRegistry;
-
-    private TaggedRateLimiterMetrics(MetricNames names, RateLimiterRegistry rateLimiterRegistry) {
-        super(names);
-        this.rateLimiterRegistry = requireNonNull(rateLimiterRegistry);
     }
 
     @Override
@@ -61,8 +63,10 @@ public class TaggedRateLimiterMetrics extends AbstractRateLimiterMetrics impleme
         for (RateLimiter rateLimiter : rateLimiterRegistry.getAllRateLimiters()) {
             addMetrics(registry, rateLimiter);
         }
-        rateLimiterRegistry.getEventPublisher().onEntryAdded(event -> addMetrics(registry, event.getAddedEntry()));
-        rateLimiterRegistry.getEventPublisher().onEntryRemoved(event -> removeMetrics(registry, event.getRemovedEntry().getName()));
+        rateLimiterRegistry.getEventPublisher()
+                .onEntryAdded(event -> addMetrics(registry, event.getAddedEntry()));
+        rateLimiterRegistry.getEventPublisher().onEntryRemoved(
+                event -> removeMetrics(registry, event.getRemovedEntry().getName()));
         rateLimiterRegistry.getEventPublisher().onEntryReplaced(event -> {
             removeMetrics(registry, event.getOldEntry().getName());
             addMetrics(registry, event.getNewEntry());

@@ -15,22 +15,41 @@
  */
 package io.github.resilience4j.ratelimiter.operator;
 
-import io.github.resilience4j.ratelimiter.RateLimiter;
-import io.github.resilience4j.ratelimiter.RequestNotPermitted;
-import io.reactivex.*;
-import org.reactivestreams.Publisher;
-
 import static java.util.Objects.requireNonNull;
 
+import io.github.resilience4j.ratelimiter.RateLimiter;
+import io.github.resilience4j.ratelimiter.RequestNotPermitted;
+import io.reactivex.Completable;
+import io.reactivex.CompletableSource;
+import io.reactivex.CompletableTransformer;
+import io.reactivex.Flowable;
+import io.reactivex.FlowableTransformer;
+import io.reactivex.Maybe;
+import io.reactivex.MaybeSource;
+import io.reactivex.MaybeTransformer;
+import io.reactivex.Observable;
+import io.reactivex.ObservableSource;
+import io.reactivex.ObservableTransformer;
+import io.reactivex.Single;
+import io.reactivex.SingleSource;
+import io.reactivex.SingleTransformer;
+import org.reactivestreams.Publisher;
+
 /**
- * A RateLimiter operator which checks if a downstream subscriber/observer can acquire a permission to subscribe to an upstream Publisher.
- * Otherwise emits a {@link RequestNotPermitted} if the rate limit is exceeded.
+ * A RateLimiter operator which checks if a downstream subscriber/observer can acquire a permission
+ * to subscribe to an upstream Publisher. Otherwise emits a {@link RequestNotPermitted} if the rate
+ * limit is exceeded.
  *
  * @param <T> the value type
  */
-public class RateLimiterOperator<T> implements FlowableTransformer<T, T>, SingleTransformer<T, T>, MaybeTransformer<T, T>, CompletableTransformer, ObservableTransformer<T, T>{
+public class RateLimiterOperator<T> implements FlowableTransformer<T, T>, SingleTransformer<T, T>,
+        MaybeTransformer<T, T>, CompletableTransformer, ObservableTransformer<T, T> {
 
     private final RateLimiter rateLimiter;
+
+    private RateLimiterOperator(RateLimiter rateLimiter) {
+        this.rateLimiter = requireNonNull(rateLimiter);
+    }
 
     /**
      * Creates a RateLimiterOperator.
@@ -40,10 +59,6 @@ public class RateLimiterOperator<T> implements FlowableTransformer<T, T>, Single
      */
     public static <T> RateLimiterOperator<T> of(RateLimiter rateLimiter) {
         return new RateLimiterOperator<>(rateLimiter);
-    }
-
-    private RateLimiterOperator(RateLimiter rateLimiter) {
-        this.rateLimiter = requireNonNull(rateLimiter);
     }
 
     @Override

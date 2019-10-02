@@ -16,17 +16,16 @@
 
 package io.github.resilience4j.circuitbreaker.autoconfigure;
 
+import static java.util.Collections.emptyList;
+import static org.assertj.core.api.Assertions.assertThat;
+
 import io.github.resilience4j.circuitbreaker.configure.CircuitBreakerConfigurationProperties;
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.core.registry.CompositeRegistryEventConsumer;
+import java.util.Arrays;
 import org.junit.Test;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.context.annotation.Bean;
-
-import java.util.Arrays;
-
-import static java.util.Collections.emptyList;
-import static org.assertj.core.api.Assertions.assertThat;
 
 public class AbstractRefreshScopedCircuitBreakerConfigurationTest {
 
@@ -34,15 +33,18 @@ public class AbstractRefreshScopedCircuitBreakerConfigurationTest {
     public void testRefreshScopedCircuitBreakerConfig() {
         Arrays.stream(AbstractRefreshScopedCircuitBreakerConfiguration.class.getMethods())
                 .filter(method -> method.isAnnotationPresent(Bean.class))
-                .forEach(method -> assertThat(method.isAnnotationPresent(RefreshScope.class)).isTrue());
+                .forEach(method -> assertThat(method.isAnnotationPresent(RefreshScope.class))
+                        .isTrue());
     }
 
     @Test
     public void testCircuitBreakerCloudCommonConfig() {
-        CircuitBreakerConfig circuitBreakerConfig = new CircuitBreakerConfig(new CircuitBreakerConfigurationProperties());
+        CircuitBreakerConfig circuitBreakerConfig = new CircuitBreakerConfig(
+                new CircuitBreakerConfigurationProperties());
 
         assertThat(circuitBreakerConfig.circuitBreakerRegistry(
-                new DefaultEventConsumerRegistry<>(), new CompositeRegistryEventConsumer<>(emptyList()))).isNotNull();
+                new DefaultEventConsumerRegistry<>(),
+                new CompositeRegistryEventConsumer<>(emptyList()))).isNotNull();
     }
 
     static class CircuitBreakerConfig extends AbstractRefreshScopedCircuitBreakerConfiguration {

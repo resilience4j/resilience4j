@@ -15,26 +15,25 @@
  */
 package io.github.resilience4j.reactor.ratelimiter.operator;
 
+import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
+
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RequestNotPermitted;
+import java.io.IOException;
+import java.time.Duration;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
 import reactor.core.publisher.Flux;
 import reactor.test.StepVerifier;
 
-import java.io.IOException;
-import java.time.Duration;
-
-import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
-
 public class FluxRateLimiterTest {
 
     private RateLimiter rateLimiter;
 
     @Before
-    public void setUp(){
+    public void setUp() {
         rateLimiter = Mockito.mock(RateLimiter.class, RETURNS_DEEP_STUBS);
     }
 

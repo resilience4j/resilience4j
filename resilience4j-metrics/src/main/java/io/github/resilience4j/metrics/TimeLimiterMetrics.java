@@ -18,20 +18,23 @@
  */
 package io.github.resilience4j.metrics;
 
-import io.github.resilience4j.timelimiter.TimeLimiter;
-import io.github.resilience4j.timelimiter.TimeLimiterRegistry;
-import io.vavr.collection.Array;
-
-import java.util.Map;
+import static com.codahale.metrics.MetricRegistry.name;
+import static io.github.resilience4j.timelimiter.utils.MetricNames.DEFAULT_PREFIX;
+import static io.github.resilience4j.timelimiter.utils.MetricNames.FAILED;
+import static io.github.resilience4j.timelimiter.utils.MetricNames.ITERABLE_NULL;
+import static io.github.resilience4j.timelimiter.utils.MetricNames.PREFIX_NULL;
+import static io.github.resilience4j.timelimiter.utils.MetricNames.SUCCESSFUL;
+import static io.github.resilience4j.timelimiter.utils.MetricNames.TIMEOUT;
+import static java.util.Objects.requireNonNull;
 
 import com.codahale.metrics.Counter;
 import com.codahale.metrics.Metric;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.MetricSet;
-
-import static com.codahale.metrics.MetricRegistry.name;
-import static io.github.resilience4j.timelimiter.utils.MetricNames.*;
-import static java.util.Objects.requireNonNull;
+import io.github.resilience4j.timelimiter.TimeLimiter;
+import io.github.resilience4j.timelimiter.TimeLimiterRegistry;
+import io.vavr.collection.Array;
+import java.util.Map;
 
 /**
  * An adapter which exports TimeLimiter's events as Dropwizard Metrics.
@@ -44,7 +47,8 @@ public class TimeLimiterMetrics implements MetricSet {
         this(DEFAULT_PREFIX, timeLimiters, new MetricRegistry());
     }
 
-    private TimeLimiterMetrics(String prefix, Iterable<TimeLimiter> timeLimiters, MetricRegistry metricRegistry) {
+    private TimeLimiterMetrics(String prefix, Iterable<TimeLimiter> timeLimiters,
+            MetricRegistry metricRegistry) {
         requireNonNull(prefix, PREFIX_NULL);
         requireNonNull(timeLimiters, ITERABLE_NULL);
         requireNonNull(metricRegistry);
@@ -62,52 +66,59 @@ public class TimeLimiterMetrics implements MetricSet {
     }
 
     /**
-     * Creates a new instance {@link TimeLimiterMetrics} with specified metrics names prefix and
-     * a {@link TimeLimiterRegistry} as a source.
+     * Creates a new instance {@link TimeLimiterMetrics} with specified metrics names prefix and a
+     * {@link TimeLimiterRegistry} as a source.
      *
-     * @param prefix              the prefix of metrics names
+     * @param prefix the prefix of metrics names
      * @param timeLimiterRegistry the registry of time limiters
-     * @param metricRegistry      the metric registry
+     * @param metricRegistry the metric registry
      */
-    public static TimeLimiterMetrics ofTimeLimiterRegistry(String prefix, TimeLimiterRegistry timeLimiterRegistry, MetricRegistry metricRegistry) {
-        return new TimeLimiterMetrics(prefix, timeLimiterRegistry.getAllTimeLimiters(), metricRegistry);
+    public static TimeLimiterMetrics ofTimeLimiterRegistry(String prefix,
+            TimeLimiterRegistry timeLimiterRegistry, MetricRegistry metricRegistry) {
+        return new TimeLimiterMetrics(prefix, timeLimiterRegistry.getAllTimeLimiters(),
+                metricRegistry);
     }
 
     /**
-     * Creates a new instance {@link TimeLimiterMetrics} with specified metrics names prefix and
-     * a {@link TimeLimiterRegistry} as a source.
+     * Creates a new instance {@link TimeLimiterMetrics} with specified metrics names prefix and a
+     * {@link TimeLimiterRegistry} as a source.
      *
-     * @param prefix              the prefix of metrics names
+     * @param prefix the prefix of metrics names
      * @param timeLimiterRegistry the registry of time limiters
      */
-    public static TimeLimiterMetrics ofTimeLimiterRegistry(String prefix, TimeLimiterRegistry timeLimiterRegistry) {
-        return new TimeLimiterMetrics(prefix, timeLimiterRegistry.getAllTimeLimiters(), new MetricRegistry());
+    public static TimeLimiterMetrics ofTimeLimiterRegistry(String prefix,
+            TimeLimiterRegistry timeLimiterRegistry) {
+        return new TimeLimiterMetrics(prefix, timeLimiterRegistry.getAllTimeLimiters(),
+                new MetricRegistry());
     }
 
     /**
-     * Creates a new instance {@link TimeLimiterMetrics} with
-     * a {@link TimeLimiterRegistry} as a source.
+     * Creates a new instance {@link TimeLimiterMetrics} with a {@link TimeLimiterRegistry} as a
+     * source.
      *
      * @param timeLimiterRegistry the registry of time limiters
-     * @param metricRegistry      the metric registry
+     * @param metricRegistry the metric registry
      */
-    public static TimeLimiterMetrics ofTimeLimiterRegistry(TimeLimiterRegistry timeLimiterRegistry, MetricRegistry metricRegistry) {
-        return new TimeLimiterMetrics(DEFAULT_PREFIX, timeLimiterRegistry.getAllTimeLimiters(), metricRegistry);
+    public static TimeLimiterMetrics ofTimeLimiterRegistry(TimeLimiterRegistry timeLimiterRegistry,
+            MetricRegistry metricRegistry) {
+        return new TimeLimiterMetrics(DEFAULT_PREFIX, timeLimiterRegistry.getAllTimeLimiters(),
+                metricRegistry);
     }
 
     /**
-     * Creates a new instance {@link TimeLimiterMetrics} with
-     * a {@link TimeLimiterRegistry} as a source.
+     * Creates a new instance {@link TimeLimiterMetrics} with a {@link TimeLimiterRegistry} as a
+     * source.
      *
      * @param timeLimiterRegistry the registry of time limiters
      */
-    public static TimeLimiterMetrics ofTimeLimiterRegistry(TimeLimiterRegistry timeLimiterRegistry) {
+    public static TimeLimiterMetrics ofTimeLimiterRegistry(
+            TimeLimiterRegistry timeLimiterRegistry) {
         return new TimeLimiterMetrics(timeLimiterRegistry.getAllTimeLimiters());
     }
 
     /**
-     * Creates a new instance {@link TimeLimiterMetrics} with
-     * an {@link Iterable} of time limiters as a source.
+     * Creates a new instance {@link TimeLimiterMetrics} with an {@link Iterable} of time limiters
+     * as a source.
      *
      * @param timeLimiters the time limiters
      */
@@ -116,8 +127,8 @@ public class TimeLimiterMetrics implements MetricSet {
     }
 
     /**
-     * Creates a new instance {@link TimeLimiterMetrics} with
-     * an {@link Iterable} of time limiters as a source.
+     * Creates a new instance {@link TimeLimiterMetrics} with an {@link Iterable} of time limiters
+     * as a source.
      *
      * @param timeLimiters the time limiters
      */

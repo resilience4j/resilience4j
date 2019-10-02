@@ -19,6 +19,7 @@
 package io.github.resilience4j.circularbuffer.concurrent;
 
 import io.github.resilience4j.circularbuffer.ConcurrentEvictingQueue;
+import java.util.Arrays;
 import org.openjdk.jcstress.annotations.Actor;
 import org.openjdk.jcstress.annotations.Arbiter;
 import org.openjdk.jcstress.annotations.Expect;
@@ -27,12 +28,10 @@ import org.openjdk.jcstress.annotations.Outcome;
 import org.openjdk.jcstress.annotations.State;
 import org.openjdk.jcstress.infra.results.StringResult2;
 
-import java.util.Arrays;
-
 @JCStressTest
 @State
-@Outcome(id="[1, 2], [2]", expect = Expect.ACCEPTABLE)
-@Outcome(id="[2], [2]", expect = Expect.ACCEPTABLE)
+@Outcome(id = "[1, 2], [2]", expect = Expect.ACCEPTABLE)
+@Outcome(id = "[2], [2]", expect = Expect.ACCEPTABLE)
 public class ConcurrentEvictingQueueReadWriteTest {
 
     ConcurrentEvictingQueue<Integer> queue;
@@ -46,7 +45,7 @@ public class ConcurrentEvictingQueueReadWriteTest {
 
     @Actor
     public void firstActor() {
-         queue.poll();
+        queue.poll();
     }
 
     @Actor

@@ -16,7 +16,6 @@
 package io.github.resilience4j.common.ratelimiter.monitoring.endpoint;
 
 import io.github.resilience4j.core.lang.Nullable;
-
 import java.util.List;
 
 public class RateLimiterEventsEndpointResponse {
@@ -27,7 +26,8 @@ public class RateLimiterEventsEndpointResponse {
     public RateLimiterEventsEndpointResponse() {
     }
 
-    public RateLimiterEventsEndpointResponse(@Nullable List<RateLimiterEventDTO> rateLimiterEvents) {
+    public RateLimiterEventsEndpointResponse(
+            @Nullable List<RateLimiterEventDTO> rateLimiterEvents) {
         this.rateLimiterEvents = rateLimiterEvents;
     }
 

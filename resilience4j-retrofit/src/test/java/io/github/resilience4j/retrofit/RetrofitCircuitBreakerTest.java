@@ -18,10 +18,21 @@
  */
 package io.github.resilience4j.retrofit;
 
+import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.get;
+import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
+import static com.github.tomakehurst.wiremock.client.WireMock.verify;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.fail;
+
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
+import java.time.Duration;
+import java.util.concurrent.TimeUnit;
 import okhttp3.Dispatcher;
 import okhttp3.OkHttpClient;
 import org.junit.Before;
@@ -32,31 +43,17 @@ import retrofit2.Retrofit;
 import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory;
 import retrofit2.converter.scalars.ScalarsConverterFactory;
 
-import java.time.Duration;
-import java.util.concurrent.TimeUnit;
-
-import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
-import static com.github.tomakehurst.wiremock.client.WireMock.get;
-import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
-import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
-import static com.github.tomakehurst.wiremock.client.WireMock.verify;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.fail;
-
 /**
  * Tests the integration of the Retrofit HTTP client and {@link CircuitBreaker}
  */
 public class RetrofitCircuitBreakerTest {
 
-    @Rule
-    public WireMockRule wireMockRule = new WireMockRule();
-
     private static final CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom()
             .slidingWindowSize(3)
             .waitDurationInOpenState(Duration.ofMillis(150))
             .build();
-
+    @Rule
+    public WireMockRule wireMockRule = new WireMockRule();
     private CircuitBreaker circuitBreaker;
     private OkHttpClient client;
     private RetrofitService service;
@@ -98,10 +95,10 @@ public class RetrofitCircuitBreakerTest {
     @Test
     public void decorateSuccessfulEnqueuedCall() throws Throwable {
         stubFor(get(urlPathEqualTo("/greeting"))
-                        .willReturn(aResponse()
-                                            .withStatus(200)
-                                            .withHeader("Content-Type", "text/plain")
-                                            .withBody("hello world")));
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "text/plain")
+                        .withBody("hello world")));
 
         EnqueueDecorator.enqueue(service.greeting());
 
@@ -151,11 +148,11 @@ public class RetrofitCircuitBreakerTest {
     @Test
     public void decorateTimingOutEnqueuedCall() throws Exception {
         stubFor(get(urlPathEqualTo("/greeting"))
-                        .willReturn(aResponse()
-                                            .withFixedDelay(500)
-                                            .withStatus(200)
-                                            .withHeader("Content-Type", "text/plain")
-                                            .withBody("hello world")));
+                .willReturn(aResponse()
+                        .withFixedDelay(500)
+                        .withStatus(200)
+                        .withHeader("Content-Type", "text/plain")
+                        .withBody("hello world")));
 
         try {
             EnqueueDecorator.enqueue(service.greeting());
@@ -208,9 +205,9 @@ public class RetrofitCircuitBreakerTest {
     @Test
     public void decorateUnsuccessfulEnqueuedCall() throws Throwable {
         stubFor(get(urlPathEqualTo("/greeting"))
-                        .willReturn(aResponse()
-                                            .withStatus(500)
-                                            .withHeader("Content-Type", "text/plain")));
+                .willReturn(aResponse()
+                        .withStatus(500)
+                        .withHeader("Content-Type", "text/plain")));
 
         final Response<String> response = EnqueueDecorator.enqueue(service.greeting());
 
@@ -259,19 +256,19 @@ public class RetrofitCircuitBreakerTest {
         String body = "this is from rxjava";
 
         stubFor(get(urlPathEqualTo("/delegated"))
-            .willReturn(aResponse()
-                .withStatus(200)
-                .withHeader("Content-Type", "text/plain")
-                .withBody(body)));
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "text/plain")
+                        .withBody(body)));
 
         RetrofitService service = new Retrofit.Builder()
-            .addCallAdapterFactory(CircuitBreakerCallAdapter.of(circuitBreaker))
-            .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
-            .addConverterFactory(ScalarsConverterFactory.create())
-            .baseUrl(wireMockRule.baseUrl())
-            .client(client)
-            .build()
-            .create(RetrofitService.class);
+                .addCallAdapterFactory(CircuitBreakerCallAdapter.of(circuitBreaker))
+                .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
+                .addConverterFactory(ScalarsConverterFactory.create())
+                .baseUrl(wireMockRule.baseUrl())
+                .client(client)
+                .build()
+                .create(RetrofitService.class);
 
         String resultBody = service.delegated().blockingGet();
         assertThat(resultBody).isEqualTo(body);
@@ -286,19 +283,19 @@ public class RetrofitCircuitBreakerTest {
         String body = "this is from rxjava";
 
         stubFor(get(urlPathEqualTo("/delegated"))
-            .willReturn(aResponse()
-                .withStatus(200)
-                .withHeader("Content-Type", "text/plain")
-                .withBody(body)));
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "text/plain")
+                        .withBody(body)));
 
         RetrofitService service = new Retrofit.Builder()
-            .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
-            .addCallAdapterFactory(CircuitBreakerCallAdapter.of(circuitBreaker))
-            .addConverterFactory(ScalarsConverterFactory.create())
-            .baseUrl(wireMockRule.baseUrl())
-            .client(client)
-            .build()
-            .create(RetrofitService.class);
+                .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
+                .addCallAdapterFactory(CircuitBreakerCallAdapter.of(circuitBreaker))
+                .addConverterFactory(ScalarsConverterFactory.create())
+                .baseUrl(wireMockRule.baseUrl())
+                .client(client)
+                .build()
+                .create(RetrofitService.class);
 
         String resultBody = service.delegated().blockingGet();
         assertThat(resultBody).isEqualTo(body);

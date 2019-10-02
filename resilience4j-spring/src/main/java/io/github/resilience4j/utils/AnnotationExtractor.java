@@ -1,13 +1,13 @@
 package io.github.resilience4j.utils;
 
 import io.github.resilience4j.core.lang.Nullable;
+import java.lang.annotation.Annotation;
+import java.util.Objects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.lang.annotation.Annotation;
-import java.util.Objects;
-
 public class AnnotationExtractor {
+
     private static final Logger logger = LoggerFactory.getLogger(AnnotationExtractor.class);
 
     private AnnotationExtractor() {
@@ -16,9 +16,9 @@ public class AnnotationExtractor {
     /**
      * extract annotation from target class
      *
-     * @param targetClass     target class
+     * @param targetClass target class
      * @param annotationClass annotation class
-     * @param <T>             The annotation type.
+     * @param <T> The annotation type.
      * @return annotation
      */
     @Nullable
@@ -30,7 +30,8 @@ public class AnnotationExtractor {
                 logger.debug("TargetClass has no annotation '{}'", annotationClass.getSimpleName());
                 annotation = targetClass.getDeclaredAnnotation(annotationClass);
                 if (annotation == null && logger.isDebugEnabled()) {
-                    logger.debug("TargetClass has no declared annotation '{}'", annotationClass.getSimpleName());
+                    logger.debug("TargetClass has no declared annotation '{}'",
+                            annotationClass.getSimpleName());
                 }
             }
         }
@@ -42,11 +43,10 @@ public class AnnotationExtractor {
      *
      * @param targetProxy The proxy class
      * @param annotationClass The annotation to extract
-     * @param <T>
-     * @return
      */
     @Nullable
-    public static <T extends Annotation> T extractAnnotationFromProxy(Object targetProxy, Class<T> annotationClass) {
+    public static <T extends Annotation> T extractAnnotationFromProxy(Object targetProxy,
+            Class<T> annotationClass) {
         if (targetProxy.getClass().getInterfaces().length == 1) {
             return extract(targetProxy.getClass().getInterfaces()[0], annotationClass);
         } else if (targetProxy.getClass().getInterfaces().length > 1) {
@@ -57,7 +57,8 @@ public class AnnotationExtractor {
     }
 
     @Nullable
-    private static <T extends Annotation> T extractAnnotationFromClosestMatch(Object targetProxy, Class<T> annotationClass) {
+    private static <T extends Annotation> T extractAnnotationFromClosestMatch(Object targetProxy,
+            Class<T> annotationClass) {
         int numberOfImplementations = targetProxy.getClass().getInterfaces().length;
         for (int depth = 0; depth < numberOfImplementations; depth++) {
             T annotation = extract(targetProxy.getClass().getInterfaces()[depth], annotationClass);

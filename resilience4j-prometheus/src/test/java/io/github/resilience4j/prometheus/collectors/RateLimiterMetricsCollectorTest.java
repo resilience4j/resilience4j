@@ -15,15 +15,15 @@
  */
 package io.github.resilience4j.prometheus.collectors;
 
+import static io.github.resilience4j.prometheus.collectors.RateLimiterMetricsCollector.MetricNames.DEFAULT_AVAILABLE_PERMISSIONS_METRIC_NAME;
+import static io.github.resilience4j.prometheus.collectors.RateLimiterMetricsCollector.MetricNames.DEFAULT_WAITING_THREADS_METRIC_NAME;
+import static org.assertj.core.api.Assertions.assertThat;
+
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
 import io.prometheus.client.CollectorRegistry;
 import org.junit.Before;
 import org.junit.Test;
-
-import static io.github.resilience4j.prometheus.collectors.RateLimiterMetricsCollector.MetricNames.DEFAULT_AVAILABLE_PERMISSIONS_METRIC_NAME;
-import static io.github.resilience4j.prometheus.collectors.RateLimiterMetricsCollector.MetricNames.DEFAULT_WAITING_THREADS_METRIC_NAME;
-import static org.assertj.core.api.Assertions.assertThat;
 
 public class RateLimiterMetricsCollectorTest {
 
@@ -43,20 +43,21 @@ public class RateLimiterMetricsCollectorTest {
     @Test
     public void availablePermissionsReportsCorrespondingValue() {
         double availablePermissions = registry.getSampleValue(
-            DEFAULT_AVAILABLE_PERMISSIONS_METRIC_NAME,
-            new String[]{"name"},
-            new String[]{rateLimiter.getName()}
+                DEFAULT_AVAILABLE_PERMISSIONS_METRIC_NAME,
+                new String[]{"name"},
+                new String[]{rateLimiter.getName()}
         );
 
-        assertThat(availablePermissions).isEqualTo(rateLimiter.getMetrics().getAvailablePermissions());
+        assertThat(availablePermissions)
+                .isEqualTo(rateLimiter.getMetrics().getAvailablePermissions());
     }
 
     @Test
     public void waitingThreadsReportsCorrespondingValue() {
         double waitingThreads = registry.getSampleValue(
-            DEFAULT_WAITING_THREADS_METRIC_NAME,
-            new String[]{"name"},
-            new String[]{rateLimiter.getName()}
+                DEFAULT_WAITING_THREADS_METRIC_NAME,
+                new String[]{"name"},
+                new String[]{rateLimiter.getName()}
         );
 
         assertThat(waitingThreads).isEqualTo(rateLimiter.getMetrics().getNumberOfWaitingThreads());
@@ -67,21 +68,21 @@ public class RateLimiterMetricsCollectorTest {
         CollectorRegistry registry = new CollectorRegistry();
 
         RateLimiterMetricsCollector.ofRateLimiterRegistry(
-            RateLimiterMetricsCollector.MetricNames.custom()
-                .availablePermissionsMetricName("custom_available_permissions")
-                .waitingThreadsMetricName("custom_waiting_threads")
-                .build(),
+                RateLimiterMetricsCollector.MetricNames.custom()
+                        .availablePermissionsMetricName("custom_available_permissions")
+                        .waitingThreadsMetricName("custom_waiting_threads")
+                        .build(),
                 rateLimiterRegistry).register(registry);
 
         assertThat(registry.getSampleValue(
-            "custom_available_permissions",
-            new String[]{"name"},
-            new String[]{"backendA"}
+                "custom_available_permissions",
+                new String[]{"name"},
+                new String[]{"backendA"}
         )).isNotNull();
         assertThat(registry.getSampleValue(
-            "custom_waiting_threads",
-            new String[]{"name"},
-            new String[]{"backendA"}
+                "custom_waiting_threads",
+                new String[]{"name"},
+                new String[]{"backendA"}
         )).isNotNull();
     }
 }

@@ -16,25 +16,23 @@
 
 package io.github.resilience4j.timelimiter.transformer;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.then;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+
 import io.github.resilience4j.TestSchedulerRule;
 import io.github.resilience4j.timelimiter.TimeLimiter;
 import io.github.resilience4j.timelimiter.TimeLimiterConfig;
 import io.reactivex.Flowable;
 import io.reactivex.schedulers.TestScheduler;
 import io.reactivex.subscribers.TestSubscriber;
-
 import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-
 import org.junit.Rule;
 import org.junit.Test;
-
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.BDDMockito.then;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
 
 public class TimeLimiterTransformerPublisherTest {
 
@@ -113,7 +111,8 @@ public class TimeLimiterTransformerPublisherTest {
         int periodDelay = 3;
         given(timeLimiter.getTimeLimiterConfig())
                 .willReturn(toConfig(Duration.ofSeconds(timeout)));
-        TestSubscriber<Long> subscriber = Flowable.interval(initialDelay, periodDelay, TimeUnit.SECONDS)
+        TestSubscriber<Long> subscriber = Flowable
+                .interval(initialDelay, periodDelay, TimeUnit.SECONDS)
                 .compose(TimeLimiterTransformer.of(timeLimiter))
                 .test();
 

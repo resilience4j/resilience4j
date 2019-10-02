@@ -23,95 +23,102 @@ import io.github.resilience4j.retry.RetryConfig;
 import io.github.resilience4j.retry.RetryRegistry;
 import io.vavr.collection.Array;
 import io.vavr.collection.Seq;
-
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Supplier;
 
 /**
- * Backend retry manager.
- * Constructs backend retries according to configuration values.
+ * Backend retry manager. Constructs backend retries according to configuration values.
  */
-public final class InMemoryRetryRegistry extends AbstractRegistry<Retry, RetryConfig> implements RetryRegistry {
+public final class InMemoryRetryRegistry extends AbstractRegistry<Retry, RetryConfig> implements
+        RetryRegistry {
 
-	/**
-	 * The constructor with default default.
-	 */
-	public InMemoryRetryRegistry() {
-		this(RetryConfig.ofDefaults());
-	}
+    /**
+     * The constructor with default default.
+     */
+    public InMemoryRetryRegistry() {
+        this(RetryConfig.ofDefaults());
+    }
 
-	public InMemoryRetryRegistry(Map<String, RetryConfig> configs) {
-		this(configs.getOrDefault(DEFAULT_CONFIG, RetryConfig.ofDefaults()));
-		this.configurations.putAll(configs);
-	}
+    public InMemoryRetryRegistry(Map<String, RetryConfig> configs) {
+        this(configs.getOrDefault(DEFAULT_CONFIG, RetryConfig.ofDefaults()));
+        this.configurations.putAll(configs);
+    }
 
-	public InMemoryRetryRegistry(Map<String, RetryConfig> configs, RegistryEventConsumer<Retry> registryEventConsumer) {
-		this(configs.getOrDefault(DEFAULT_CONFIG, RetryConfig.ofDefaults()), registryEventConsumer);
-		this.configurations.putAll(configs);
-	}
+    public InMemoryRetryRegistry(Map<String, RetryConfig> configs,
+            RegistryEventConsumer<Retry> registryEventConsumer) {
+        this(configs.getOrDefault(DEFAULT_CONFIG, RetryConfig.ofDefaults()), registryEventConsumer);
+        this.configurations.putAll(configs);
+    }
 
-	public InMemoryRetryRegistry(Map<String, RetryConfig> configs, List<RegistryEventConsumer<Retry>> registryEventConsumers) {
-		this(configs.getOrDefault(DEFAULT_CONFIG, RetryConfig.ofDefaults()), registryEventConsumers);
-		this.configurations.putAll(configs);
-	}
+    public InMemoryRetryRegistry(Map<String, RetryConfig> configs,
+            List<RegistryEventConsumer<Retry>> registryEventConsumers) {
+        this(configs.getOrDefault(DEFAULT_CONFIG, RetryConfig.ofDefaults()),
+                registryEventConsumers);
+        this.configurations.putAll(configs);
+    }
 
-	/**
-	 * The constructor with custom default config.
-	 *
-	 * @param defaultConfig The default config.
-	 */
-	public InMemoryRetryRegistry(RetryConfig defaultConfig) {
-		super(defaultConfig);
-	}
+    /**
+     * The constructor with custom default config.
+     *
+     * @param defaultConfig The default config.
+     */
+    public InMemoryRetryRegistry(RetryConfig defaultConfig) {
+        super(defaultConfig);
+    }
 
-	public InMemoryRetryRegistry(RetryConfig defaultConfig, RegistryEventConsumer<Retry> registryEventConsumer) {
-		super(defaultConfig, registryEventConsumer);
-	}
+    public InMemoryRetryRegistry(RetryConfig defaultConfig,
+            RegistryEventConsumer<Retry> registryEventConsumer) {
+        super(defaultConfig, registryEventConsumer);
+    }
 
-	public InMemoryRetryRegistry(RetryConfig defaultConfig, List<RegistryEventConsumer<Retry>> registryEventConsumers) {
-		super(defaultConfig, registryEventConsumers);
-	}
+    public InMemoryRetryRegistry(RetryConfig defaultConfig,
+            List<RegistryEventConsumer<Retry>> registryEventConsumers) {
+        super(defaultConfig, registryEventConsumers);
+    }
 
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public Seq<Retry> getAllRetries() {
-		return Array.ofAll(entryMap.values());
-	}
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Seq<Retry> getAllRetries() {
+        return Array.ofAll(entryMap.values());
+    }
 
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public Retry retry(String name) {
-		return retry(name, getDefaultConfig());
-	}
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Retry retry(String name) {
+        return retry(name, getDefaultConfig());
+    }
 
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public Retry retry(String name, RetryConfig config) {
-		return computeIfAbsent(name, () -> Retry.of(name, Objects.requireNonNull(config, CONFIG_MUST_NOT_BE_NULL)));
-	}
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Retry retry(String name, RetryConfig config) {
+        return computeIfAbsent(name,
+                () -> Retry.of(name, Objects.requireNonNull(config, CONFIG_MUST_NOT_BE_NULL)));
+    }
 
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public Retry retry(String name, Supplier<RetryConfig> retryConfigSupplier) {
-		return computeIfAbsent(name, () -> Retry.of(name, Objects.requireNonNull(Objects.requireNonNull(retryConfigSupplier, SUPPLIER_MUST_NOT_BE_NULL).get(), CONFIG_MUST_NOT_BE_NULL)));
-	}
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Retry retry(String name, Supplier<RetryConfig> retryConfigSupplier) {
+        return computeIfAbsent(name, () -> Retry.of(name, Objects.requireNonNull(
+                Objects.requireNonNull(retryConfigSupplier, SUPPLIER_MUST_NOT_BE_NULL).get(),
+                CONFIG_MUST_NOT_BE_NULL)));
+    }
 
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public Retry retry(String name, String configName) {
-		return computeIfAbsent(name, () -> Retry.of(name, getConfiguration(configName)
-				.orElseThrow(() -> new ConfigurationNotFoundException(configName))));
-	}
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Retry retry(String name, String configName) {
+        return computeIfAbsent(name, () -> Retry.of(name, getConfiguration(configName)
+                .orElseThrow(() -> new ConfigurationNotFoundException(configName))));
+    }
 }

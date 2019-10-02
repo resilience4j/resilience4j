@@ -121,7 +121,7 @@ class RateLimiterHandlerSpec extends Specification {
         actual = client.get('a')
 
         then:
-        actual.body.text  == 'success'
+        actual.body.text == 'success'
         actual.statusCode == 200
     }
 

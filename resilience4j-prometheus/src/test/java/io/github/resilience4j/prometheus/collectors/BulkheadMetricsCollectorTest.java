@@ -15,15 +15,15 @@
  */
 package io.github.resilience4j.prometheus.collectors;
 
+import static io.github.resilience4j.prometheus.collectors.BulkheadMetricsCollector.MetricNames.DEFAULT_BULKHEAD_AVAILABLE_CONCURRENT_CALLS_METRIC_NAME;
+import static io.github.resilience4j.prometheus.collectors.BulkheadMetricsCollector.MetricNames.DEFAULT_BULKHEAD_MAX_ALLOWED_CONCURRENT_CALLS_METRIC_NAME;
+import static org.assertj.core.api.Assertions.assertThat;
+
 import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.bulkhead.BulkheadRegistry;
 import io.prometheus.client.CollectorRegistry;
 import org.junit.Before;
 import org.junit.Test;
-
-import static io.github.resilience4j.prometheus.collectors.BulkheadMetricsCollector.MetricNames.DEFAULT_BULKHEAD_AVAILABLE_CONCURRENT_CALLS_METRIC_NAME;
-import static io.github.resilience4j.prometheus.collectors.BulkheadMetricsCollector.MetricNames.DEFAULT_BULKHEAD_MAX_ALLOWED_CONCURRENT_CALLS_METRIC_NAME;
-import static org.assertj.core.api.Assertions.assertThat;
 
 public class BulkheadMetricsCollectorTest {
 
@@ -45,9 +45,9 @@ public class BulkheadMetricsCollectorTest {
     @Test
     public void availableConcurrentCallsReportsCorrespondingValue() {
         double availableCalls = registry.getSampleValue(
-            DEFAULT_BULKHEAD_AVAILABLE_CONCURRENT_CALLS_METRIC_NAME,
-            new String[]{"name"},
-            new String[]{bulkhead.getName()}
+                DEFAULT_BULKHEAD_AVAILABLE_CONCURRENT_CALLS_METRIC_NAME,
+                new String[]{"name"},
+                new String[]{bulkhead.getName()}
         );
 
         assertThat(availableCalls).isEqualTo(bulkhead.getMetrics().getAvailableConcurrentCalls());
@@ -56,9 +56,9 @@ public class BulkheadMetricsCollectorTest {
     @Test
     public void maxAllowedConcurrentCallsReportsCorrespondingValue() {
         double maxAllowed = registry.getSampleValue(
-            DEFAULT_BULKHEAD_MAX_ALLOWED_CONCURRENT_CALLS_METRIC_NAME,
-            new String[]{"name"},
-            new String[]{bulkhead.getName()}
+                DEFAULT_BULKHEAD_MAX_ALLOWED_CONCURRENT_CALLS_METRIC_NAME,
+                new String[]{"name"},
+                new String[]{bulkhead.getName()}
         );
 
         assertThat(maxAllowed).isEqualTo(bulkhead.getMetrics().getMaxAllowedConcurrentCalls());
@@ -69,21 +69,21 @@ public class BulkheadMetricsCollectorTest {
         CollectorRegistry registry = new CollectorRegistry();
 
         BulkheadMetricsCollector.ofBulkheadRegistry(
-            BulkheadMetricsCollector.MetricNames.custom()
-                .availableConcurrentCallsMetricName("custom_available_calls")
-                .maxAllowedConcurrentCallsMetricName("custom_max_allowed_calls")
-                .build(),
-                bulkheadRegistry ).register(registry);
+                BulkheadMetricsCollector.MetricNames.custom()
+                        .availableConcurrentCallsMetricName("custom_available_calls")
+                        .maxAllowedConcurrentCallsMetricName("custom_max_allowed_calls")
+                        .build(),
+                bulkheadRegistry).register(registry);
 
         assertThat(registry.getSampleValue(
-            "custom_available_calls",
-            new String[]{"name"},
-            new String[]{"backendA"}
+                "custom_available_calls",
+                new String[]{"name"},
+                new String[]{"backendA"}
         )).isNotNull();
         assertThat(registry.getSampleValue(
-            "custom_max_allowed_calls",
-            new String[]{"name"},
-            new String[]{"backendA"}
+                "custom_max_allowed_calls",
+                new String[]{"name"},
+                new String[]{"backendA"}
         )).isNotNull();
     }
 }

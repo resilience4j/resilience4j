@@ -1,10 +1,11 @@
 package io.github.resilience4j.prometheus;
 
-import io.prometheus.client.*;
+import io.prometheus.client.CollectorRegistry;
+import io.prometheus.client.Counter;
+import io.prometheus.client.Histogram;
 import io.vavr.CheckedFunction0;
 import io.vavr.CheckedFunction1;
 import io.vavr.CheckedRunnable;
-
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletionStage;
 import java.util.function.Function;
@@ -21,15 +22,14 @@ public interface CallMeter extends CallMeterBase {
      */
     static CallMeter of(String name, String help) {
         return CallMeter
-            .builder()
-            .name(name)
-            .help(help)
-            .build();
+                .builder()
+                .name(name)
+                .help(help)
+                .build();
     }
 
     /**
-     * Creates call meter with the given name and registers it in
-     * the specified collector registry
+     * Creates call meter with the given name and registers it in the specified collector registry
      *
      * @param name - metric name
      * @param help - metric help
@@ -39,25 +39,6 @@ public interface CallMeter extends CallMeterBase {
     static CallMeter ofCollectorRegistry(String name, String help, CollectorRegistry registry) {
         return of(name, help).register(registry);
     }
-
-    /**
-     * Creates a child call meter with the given labels
-     * @param labels
-     * @return child collector
-     */
-    Child labels(String... labels);
-
-    /**
-     * Register this call meter with the default registry.
-     */
-    default CallMeter register() {
-        return register(CollectorRegistry.defaultRegistry);
-    }
-
-    /**
-     * Registers this call meter with the given registry.
-     */
-    CallMeter register(CollectorRegistry registry);
 
     /**
      * Creates a new call meter {@link Builder}
@@ -75,14 +56,15 @@ public interface CallMeter extends CallMeterBase {
      * @param supplier the original supplier
      * @return a timed supplier
      */
-    static <T> CheckedFunction0<T> decorateCheckedSupplier(CallMeterBase meter, CheckedFunction0<T> supplier){
+    static <T> CheckedFunction0<T> decorateCheckedSupplier(CallMeterBase meter,
+            CheckedFunction0<T> supplier) {
         return () -> {
             final Timer timer = meter.startTimer();
             try {
                 final T returnValue = supplier.apply();
                 timer.onSuccess();
                 return returnValue;
-            }catch (Throwable e){
+            } catch (Throwable e) {
                 timer.onError();
                 throw e;
             }
@@ -96,13 +78,13 @@ public interface CallMeter extends CallMeterBase {
      * @param runnable the original runnable
      * @return a timed runnable
      */
-    static CheckedRunnable decorateCheckedRunnable(CallMeterBase meter, CheckedRunnable runnable){
+    static CheckedRunnable decorateCheckedRunnable(CallMeterBase meter, CheckedRunnable runnable) {
         return () -> {
             final Timer timer = meter.startTimer();
             try {
                 runnable.run();
                 timer.onSuccess();
-            }catch (Throwable e){
+            } catch (Throwable e) {
                 timer.onError();
                 throw e;
             }
@@ -116,14 +98,14 @@ public interface CallMeter extends CallMeterBase {
      * @param supplier the original supplier
      * @return a timed supplier
      */
-    static <T> Supplier<T> decorateSupplier(CallMeterBase meter, Supplier<T> supplier){
+    static <T> Supplier<T> decorateSupplier(CallMeterBase meter, Supplier<T> supplier) {
         return () -> {
             final Timer timer = meter.startTimer();
             try {
                 final T returnValue = supplier.get();
                 timer.onSuccess();
                 return returnValue;
-            }catch (Throwable e){
+            } catch (Throwable e) {
                 timer.onError();
                 throw e;
             }
@@ -137,57 +119,34 @@ public interface CallMeter extends CallMeterBase {
      * @param callable the original Callable
      * @return a timed Callable
      */
-    static <T> Callable<T> decorateCallable(CallMeterBase meter, Callable<T> callable){
+    static <T> Callable<T> decorateCallable(CallMeterBase meter, Callable<T> callable) {
         return () -> {
             final Timer timer = meter.startTimer();
             try {
                 final T returnValue = callable.call();
                 timer.onSuccess();
                 return returnValue;
-            }catch (Throwable e){
+            } catch (Throwable e) {
                 timer.onError();
                 throw e;
             }
         };
     }
 
-
     /**
      * Creates a timed runnable.
-
+     *
      * @param meter the call meter to use
      * @param runnable the original runnable
      * @return a timed runnable
      */
-    static Runnable decorateRunnable(CallMeterBase meter, Runnable runnable){
+    static Runnable decorateRunnable(CallMeterBase meter, Runnable runnable) {
         return () -> {
             final Timer timer = meter.startTimer();
             try {
                 runnable.run();
                 timer.onSuccess();
-            }catch (Throwable e){
-                timer.onError();
-                throw e;
-            }
-        };
-    }
-
-
-    /**
-     * Creates a timed function.
-     *
-     * @param meter the call meter to use
-     * @param function the original function
-     * @return a timed function
-     */
-    static <T, R> Function<T, R> decorateFunction(CallMeterBase meter, Function<T, R> function){
-        return (T t) -> {
-            final Timer timer = meter.startTimer();
-            try {
-                R returnValue = function.apply(t);
-                timer.onSuccess();
-                return returnValue;
-            }catch (Throwable e){
+            } catch (Throwable e) {
                 timer.onError();
                 throw e;
             }
@@ -201,14 +160,36 @@ public interface CallMeter extends CallMeterBase {
      * @param function the original function
      * @return a timed function
      */
-    static <T, R> CheckedFunction1<T, R> decorateCheckedFunction(CallMeterBase meter, CheckedFunction1<T, R> function){
+    static <T, R> Function<T, R> decorateFunction(CallMeterBase meter, Function<T, R> function) {
         return (T t) -> {
             final Timer timer = meter.startTimer();
             try {
                 R returnValue = function.apply(t);
                 timer.onSuccess();
                 return returnValue;
-            }catch (Throwable e){
+            } catch (Throwable e) {
+                timer.onError();
+                throw e;
+            }
+        };
+    }
+
+    /**
+     * Creates a timed function.
+     *
+     * @param meter the call meter to use
+     * @param function the original function
+     * @return a timed function
+     */
+    static <T, R> CheckedFunction1<T, R> decorateCheckedFunction(CallMeterBase meter,
+            CheckedFunction1<T, R> function) {
+        return (T t) -> {
+            final Timer timer = meter.startTimer();
+            try {
+                R returnValue = function.apply(t);
+                timer.onSuccess();
+                return returnValue;
+            } catch (Throwable e) {
                 timer.onError();
                 throw e;
             }
@@ -222,7 +203,8 @@ public interface CallMeter extends CallMeterBase {
      * @param stageSupplier the CompletionStage Supplier
      * @return a decorated completion stage
      */
-    static <T> Supplier<CompletionStage<T>> decorateCompletionStageSupplier(CallMeterBase meter, Supplier<CompletionStage<T>> stageSupplier) {
+    static <T> Supplier<CompletionStage<T>> decorateCompletionStageSupplier(CallMeterBase meter,
+            Supplier<CompletionStage<T>> stageSupplier) {
         return () -> {
             final Timer timer = meter.startTimer();
             try {
@@ -244,11 +226,31 @@ public interface CallMeter extends CallMeterBase {
         };
     }
 
+    /**
+     * Creates a child call meter with the given labels
+     *
+     * @return child collector
+     */
+    Child labels(String... labels);
+
+    /**
+     * Register this call meter with the default registry.
+     */
+    default CallMeter register() {
+        return register(CollectorRegistry.defaultRegistry);
+    }
+
+    /**
+     * Registers this call meter with the given registry.
+     */
+    CallMeter register(CollectorRegistry registry);
+
     interface Child extends CallMeterBase {
 
     }
 
     class Builder {
+
         private String namespace = "";
         private String subsystem = "";
         private String name = "";
@@ -262,6 +264,7 @@ public interface CallMeter extends CallMeterBase {
             this.name = name;
             return this;
         }
+
         /**
          * Set the subsystem of the metric. Optional.
          */
@@ -269,6 +272,7 @@ public interface CallMeter extends CallMeterBase {
             this.subsystem = subsystem;
             return this;
         }
+
         /**
          * Set the namespace of the metric. Optional.
          */
@@ -276,6 +280,7 @@ public interface CallMeter extends CallMeterBase {
             this.namespace = namespace;
             return this;
         }
+
         /**
          * Set the help string of the metric. Required.
          */
@@ -283,6 +288,7 @@ public interface CallMeter extends CallMeterBase {
             this.help = help;
             return this;
         }
+
         /**
          * Set the labelNames of the metric. Optional, defaults to no labels.
          */

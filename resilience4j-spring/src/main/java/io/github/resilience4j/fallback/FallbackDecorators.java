@@ -16,13 +16,13 @@
 package io.github.resilience4j.fallback;
 
 import io.vavr.CheckedFunction0;
-
 import java.util.List;
 
 /**
  * {@link FallbackDecorator} resolver
  */
 public class FallbackDecorators {
+
     private final List<FallbackDecorator> recoveryDecorator;
     private final FallbackDecorator defaultRecoveryDecorator = new DefaultFallbackDecorator();
 
@@ -31,13 +31,15 @@ public class FallbackDecorators {
     }
 
     /**
-     * find a {@link FallbackDecorator} by return type of the {@link FallbackMethod} and decorate supplier
+     * find a {@link FallbackDecorator} by return type of the {@link FallbackMethod} and decorate
+     * supplier
      *
      * @param recoveryMethod fallbackMethod method that handles supplier's exception
-     * @param supplier       original function
+     * @param supplier original function
      * @return a function which is decorated by a {@link FallbackMethod}
      */
-    public CheckedFunction0<Object> decorate(FallbackMethod recoveryMethod, CheckedFunction0<Object> supplier) {
+    public CheckedFunction0<Object> decorate(FallbackMethod recoveryMethod,
+            CheckedFunction0<Object> supplier) {
         return get(recoveryMethod.getReturnType())
                 .decorate(recoveryMethod, supplier);
     }

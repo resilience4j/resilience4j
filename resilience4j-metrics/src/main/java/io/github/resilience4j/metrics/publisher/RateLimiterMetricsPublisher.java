@@ -16,17 +16,18 @@
 
 package io.github.resilience4j.metrics.publisher;
 
+import static com.codahale.metrics.MetricRegistry.name;
+import static io.github.resilience4j.ratelimiter.utils.MetricNames.AVAILABLE_PERMISSIONS;
+import static io.github.resilience4j.ratelimiter.utils.MetricNames.DEFAULT_PREFIX;
+import static io.github.resilience4j.ratelimiter.utils.MetricNames.WAITING_THREADS;
+import static java.util.Objects.requireNonNull;
+
 import com.codahale.metrics.Gauge;
 import com.codahale.metrics.MetricRegistry;
 import io.github.resilience4j.ratelimiter.RateLimiter;
-
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
-
-import static com.codahale.metrics.MetricRegistry.name;
-import static io.github.resilience4j.ratelimiter.utils.MetricNames.*;
-import static java.util.Objects.requireNonNull;
 
 public class RateLimiterMetricsPublisher extends AbstractMetricsPublisher<RateLimiter> {
 
@@ -52,8 +53,10 @@ public class RateLimiterMetricsPublisher extends AbstractMetricsPublisher<RateLi
         String waitingThreads = name(prefix, name, WAITING_THREADS);
         String availablePermissions = name(prefix, name, AVAILABLE_PERMISSIONS);
 
-        metricRegistry.register(waitingThreads, (Gauge<Integer>) rateLimiter.getMetrics()::getNumberOfWaitingThreads);
-        metricRegistry.register(availablePermissions, (Gauge<Integer>) rateLimiter.getMetrics()::getAvailablePermissions);
+        metricRegistry.register(waitingThreads,
+                (Gauge<Integer>) rateLimiter.getMetrics()::getNumberOfWaitingThreads);
+        metricRegistry.register(availablePermissions,
+                (Gauge<Integer>) rateLimiter.getMetrics()::getAvailablePermissions);
 
         List<String> metricNames = Arrays.asList(waitingThreads, availablePermissions);
         metricsNameMap.put(name, new HashSet<>(metricNames));

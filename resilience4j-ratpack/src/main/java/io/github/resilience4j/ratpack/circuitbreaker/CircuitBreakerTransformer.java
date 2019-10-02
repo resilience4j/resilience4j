@@ -18,13 +18,13 @@ package io.github.resilience4j.ratpack.circuitbreaker;
 import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.ratpack.internal.AbstractTransformer;
+import java.util.concurrent.TimeUnit;
 import ratpack.exec.Downstream;
 import ratpack.exec.Upstream;
 import ratpack.func.Function;
 
-import java.util.concurrent.TimeUnit;
-
 public class CircuitBreakerTransformer<T> extends AbstractTransformer<T> {
+
     private CircuitBreaker circuitBreaker;
 
     private CircuitBreakerTransformer(CircuitBreaker circuitBreaker) {
@@ -32,12 +32,12 @@ public class CircuitBreakerTransformer<T> extends AbstractTransformer<T> {
     }
 
     /**
-     * Create a new transformer that can be applied to the {@link ratpack.exec.Promise#transform(Function)} method.
-     * The Promised value will pass through the circuitbreaker, potentially causing it to open if the thresholds
-     * for the circuit breaker are exceeded.
+     * Create a new transformer that can be applied to the {@link ratpack.exec.Promise#transform(Function)}
+     * method. The Promised value will pass through the circuitbreaker, potentially causing it to
+     * open if the thresholds for the circuit breaker are exceeded.
      *
      * @param circuitBreaker the circuit breaker to use
-     * @param <T>            the type of object
+     * @param <T> the type of object
      * @return the transformer
      */
     public static <T> CircuitBreakerTransformer<T> of(CircuitBreaker circuitBreaker) {
@@ -84,7 +84,8 @@ public class CircuitBreakerTransformer<T> extends AbstractTransformer<T> {
                     }
                 });
             } else {
-                Throwable t = CallNotPermittedException.createCallNotPermittedException(circuitBreaker);
+                Throwable t = CallNotPermittedException
+                        .createCallNotPermittedException(circuitBreaker);
                 handleRecovery(down, t);
             }
         };

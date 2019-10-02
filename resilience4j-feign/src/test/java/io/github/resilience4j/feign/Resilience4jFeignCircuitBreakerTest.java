@@ -16,34 +16,36 @@
  */
 package io.github.resilience4j.feign;
 
+import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.get;
+import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
+import static com.github.tomakehurst.wiremock.client.WireMock.verify;
+import static org.assertj.core.api.Assertions.assertThat;
+
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import feign.FeignException;
 import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.feign.test.TestService;
+import java.time.Duration;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-
-import java.time.Duration;
-
-import static com.github.tomakehurst.wiremock.client.WireMock.*;
-import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Tests the integration of the {@link Resilience4jFeign} with {@link CircuitBreaker}
  */
 public class Resilience4jFeignCircuitBreakerTest {
 
-    @Rule
-    public WireMockRule wireMockRule = new WireMockRule();
-
     private static final CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom()
             .slidingWindowSize(3)
             .waitDurationInOpenState(Duration.ofMillis(1000))
             .build();
-
+    @Rule
+    public WireMockRule wireMockRule = new WireMockRule();
     private CircuitBreaker circuitBreaker;
     private TestService testService;
 
@@ -52,7 +54,8 @@ public class Resilience4jFeignCircuitBreakerTest {
         circuitBreaker = CircuitBreaker.of("test", circuitBreakerConfig);
         final FeignDecorators decorators = FeignDecorators.builder()
                 .withCircuitBreaker(circuitBreaker).build();
-        testService = Resilience4jFeign.builder(decorators).target(TestService.class, "http://localhost:8080/");
+        testService = Resilience4jFeign.builder(decorators)
+                .target(TestService.class, "http://localhost:8080/");
     }
 
     @Test

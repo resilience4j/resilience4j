@@ -1,5 +1,7 @@
 package io.github.resilience4j;
 
+import static org.junit.Assert.assertTrue;
+
 import io.github.resilience4j.bulkhead.autoconfigure.BulkheadAutoConfiguration;
 import io.github.resilience4j.bulkhead.autoconfigure.RefreshScopedBulkheadAutoConfiguration;
 import io.github.resilience4j.circuitbreaker.autoconfigure.CircuitBreakerAutoConfiguration;
@@ -16,28 +18,35 @@ import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.core.type.MethodMetadata;
 
-import static org.junit.Assert.assertTrue;
-
 public class RefreshScopedAutoConfigurationTest {
 
     private final ApplicationContextRunner contextRunner = new ApplicationContextRunner();
+
+    private static void testRefreshScoped(AssertableApplicationContext context, String beanName) {
+        BeanDefinition beanDefinition = context.getBeanFactory().getBeanDefinition(beanName);
+        MethodMetadata beanMethod = (MethodMetadata) beanDefinition.getSource();
+
+        assertTrue(beanMethod.isAnnotated(RefreshScope.class.getName()));
+    }
 
     @Test
     public void refreshScopedBulkheadRegistry() {
         contextRunner
                 .withConfiguration(AutoConfigurations.of(
-                        RefreshScopedBulkheadAutoConfiguration.class, BulkheadAutoConfiguration.class))
+                        RefreshScopedBulkheadAutoConfiguration.class,
+                        BulkheadAutoConfiguration.class))
                 .run(context -> {
                     testRefreshScoped(context, "bulkheadRegistry");
                     testRefreshScoped(context, "threadPoolBulkheadRegistry");
-        });
+                });
     }
 
     @Test
     public void refreshScopedCircuitBreakerRegistry() {
         contextRunner
                 .withConfiguration(AutoConfigurations.of(
-                        RefreshScopedCircuitBreakerAutoConfiguration.class, CircuitBreakerAutoConfiguration.class))
+                        RefreshScopedCircuitBreakerAutoConfiguration.class,
+                        CircuitBreakerAutoConfiguration.class))
                 .run(context -> testRefreshScoped(context, "circuitBreakerRegistry"));
     }
 
@@ -45,7 +54,8 @@ public class RefreshScopedAutoConfigurationTest {
     public void refreshScopedRateLimiterRegistry() {
         contextRunner
                 .withConfiguration(AutoConfigurations.of(
-                        RefreshScopedRateLimiterAutoConfiguration.class, RateLimiterAutoConfiguration.class))
+                        RefreshScopedRateLimiterAutoConfiguration.class,
+                        RateLimiterAutoConfiguration.class))
                 .run(context -> testRefreshScoped(context, "rateLimiterRegistry"));
     }
 
@@ -55,12 +65,5 @@ public class RefreshScopedAutoConfigurationTest {
                 .withConfiguration(AutoConfigurations.of(
                         RefreshScopedRetryAutoConfiguration.class, RetryAutoConfiguration.class))
                 .run(context -> testRefreshScoped(context, "retryRegistry"));
-    }
-
-    private static void testRefreshScoped(AssertableApplicationContext context, String beanName) {
-        BeanDefinition beanDefinition = context.getBeanFactory().getBeanDefinition(beanName);
-        MethodMetadata beanMethod = (MethodMetadata) beanDefinition.getSource();
-
-        assertTrue(beanMethod.isAnnotated(RefreshScope.class.getName()));
     }
 }

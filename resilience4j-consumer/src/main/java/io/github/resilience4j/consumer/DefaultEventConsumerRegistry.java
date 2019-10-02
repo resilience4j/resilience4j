@@ -17,11 +17,10 @@ package io.github.resilience4j.consumer;
 
 import io.vavr.collection.Array;
 import io.vavr.collection.Seq;
-
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
-public class DefaultEventConsumerRegistry<T> implements EventConsumerRegistry<T>{
+public class DefaultEventConsumerRegistry<T> implements EventConsumerRegistry<T> {
 
     /**
      * The CircularEventConsumers, indexed by name of the backend.
@@ -43,12 +42,12 @@ public class DefaultEventConsumerRegistry<T> implements EventConsumerRegistry<T>
     }
 
     @Override
-    public CircularEventConsumer<T> getEventConsumer(String id){
+    public CircularEventConsumer<T> getEventConsumer(String id) {
         return registry.get(id);
     }
 
     @Override
-    public Seq<CircularEventConsumer<T>> getAllEventConsumer(){
+    public Seq<CircularEventConsumer<T>> getAllEventConsumer() {
         return Array.ofAll(registry.values());
     }
 }

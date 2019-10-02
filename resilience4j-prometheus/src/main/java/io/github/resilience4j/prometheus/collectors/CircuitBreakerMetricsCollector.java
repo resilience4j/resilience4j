@@ -15,27 +15,43 @@
  */
 package io.github.resilience4j.prometheus.collectors;
 
+import static java.util.Objects.requireNonNull;
+
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker.Metrics;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.prometheus.AbstractCircuitBreakerMetrics;
-
 import java.util.Collections;
 import java.util.List;
 
-import static java.util.Objects.requireNonNull;
-
-/** Collects circuit breaker exposed {@link Metrics}. */
+/**
+ * Collects circuit breaker exposed {@link Metrics}.
+ */
 public class CircuitBreakerMetricsCollector extends AbstractCircuitBreakerMetrics {
 
+    private final CircuitBreakerRegistry circuitBreakerRegistry;
+
+    private CircuitBreakerMetricsCollector(MetricNames names,
+            CircuitBreakerRegistry circuitBreakerRegistry) {
+        super(names);
+        this.circuitBreakerRegistry = requireNonNull(circuitBreakerRegistry);
+
+        for (CircuitBreaker circuitBreaker : this.circuitBreakerRegistry.getAllCircuitBreakers()) {
+            addMetrics(circuitBreaker);
+        }
+        circuitBreakerRegistry.getEventPublisher()
+                .onEntryAdded(event -> addMetrics(event.getAddedEntry()));
+    }
+
     /**
-     * Creates a new collector with custom metric names and
-     * using given {@code supplier} as source of circuit breakers.
+     * Creates a new collector with custom metric names and using given {@code supplier} as source
+     * of circuit breakers.
      *
-     * @param names    the custom metric names
+     * @param names the custom metric names
      * @param circuitBreakerRegistry the source of circuit breakers
      */
-    public static CircuitBreakerMetricsCollector ofCircuitBreakerRegistry(MetricNames names, CircuitBreakerRegistry circuitBreakerRegistry) {
+    public static CircuitBreakerMetricsCollector ofCircuitBreakerRegistry(MetricNames names,
+            CircuitBreakerRegistry circuitBreakerRegistry) {
         return new CircuitBreakerMetricsCollector(names, circuitBreakerRegistry);
     }
 
@@ -44,26 +60,17 @@ public class CircuitBreakerMetricsCollector extends AbstractCircuitBreakerMetric
      *
      * @param circuitBreakerRegistry the source of circuit breakers
      */
-    public static CircuitBreakerMetricsCollector ofCircuitBreakerRegistry(CircuitBreakerRegistry circuitBreakerRegistry) {
+    public static CircuitBreakerMetricsCollector ofCircuitBreakerRegistry(
+            CircuitBreakerRegistry circuitBreakerRegistry) {
         return new CircuitBreakerMetricsCollector(MetricNames.ofDefaults(), circuitBreakerRegistry);
-    }
-
-    private final CircuitBreakerRegistry circuitBreakerRegistry;
-
-    private CircuitBreakerMetricsCollector(MetricNames names, CircuitBreakerRegistry circuitBreakerRegistry) {
-        super(names);
-        this.circuitBreakerRegistry = requireNonNull(circuitBreakerRegistry);
-
-        for (CircuitBreaker circuitBreaker : this.circuitBreakerRegistry.getAllCircuitBreakers()) {
-            addMetrics(circuitBreaker);
-        }
-        circuitBreakerRegistry.getEventPublisher().onEntryAdded(event -> addMetrics(event.getAddedEntry()));
     }
 
     @Override
     public List<MetricFamilySamples> collect() {
-        List<MetricFamilySamples> samples = Collections.list(collectorRegistry.metricFamilySamples());
-        samples.addAll(collectGaugeSamples(circuitBreakerRegistry.getAllCircuitBreakers().asJava()));
+        List<MetricFamilySamples> samples = Collections
+                .list(collectorRegistry.metricFamilySamples());
+        samples.addAll(
+                collectGaugeSamples(circuitBreakerRegistry.getAllCircuitBreakers().asJava()));
         return samples;
     }
 

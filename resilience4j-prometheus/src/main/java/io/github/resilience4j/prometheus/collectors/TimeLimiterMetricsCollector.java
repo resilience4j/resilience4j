@@ -15,28 +15,40 @@
  */
 package io.github.resilience4j.prometheus.collectors;
 
+import static java.util.Objects.requireNonNull;
+
 import io.github.resilience4j.prometheus.AbstractTimeLimiterMetrics;
 import io.github.resilience4j.timelimiter.TimeLimiter;
 import io.github.resilience4j.timelimiter.TimeLimiterRegistry;
-
 import java.util.Collections;
 import java.util.List;
-
-import static java.util.Objects.requireNonNull;
 
 /**
  * Collects TimeLimiter exposed events.
  */
 public class TimeLimiterMetricsCollector extends AbstractTimeLimiterMetrics {
 
+    private final TimeLimiterRegistry timeLimiterRegistry;
+
+    private TimeLimiterMetricsCollector(MetricNames names,
+            TimeLimiterRegistry timeLimiterRegistry) {
+        super(names);
+        this.timeLimiterRegistry = requireNonNull(timeLimiterRegistry);
+        this.timeLimiterRegistry.getAllTimeLimiters()
+                .forEach(this::addMetrics);
+        this.timeLimiterRegistry.getEventPublisher()
+                .onEntryAdded(event -> addMetrics(event.getAddedEntry()));
+    }
+
     /**
-     * Creates a new collector with custom metric names and
-     * using given {@code supplier} as source of time limiters.
+     * Creates a new collector with custom metric names and using given {@code supplier} as source
+     * of time limiters.
      *
-     * @param names    the custom metric names
+     * @param names the custom metric names
      * @param timeLimiterRegistry the source of time limiters
      */
-    public static TimeLimiterMetricsCollector ofTimeLimiterRegistry(MetricNames names, TimeLimiterRegistry timeLimiterRegistry) {
+    public static TimeLimiterMetricsCollector ofTimeLimiterRegistry(MetricNames names,
+            TimeLimiterRegistry timeLimiterRegistry) {
         return new TimeLimiterMetricsCollector(names, timeLimiterRegistry);
     }
 
@@ -45,19 +57,9 @@ public class TimeLimiterMetricsCollector extends AbstractTimeLimiterMetrics {
      *
      * @param timeLimiterRegistry the source of time limiters
      */
-    public static TimeLimiterMetricsCollector ofTimeLimiterRegistry(TimeLimiterRegistry timeLimiterRegistry) {
+    public static TimeLimiterMetricsCollector ofTimeLimiterRegistry(
+            TimeLimiterRegistry timeLimiterRegistry) {
         return new TimeLimiterMetricsCollector(MetricNames.ofDefaults(), timeLimiterRegistry);
-    }
-
-    private final TimeLimiterRegistry timeLimiterRegistry;
-
-    private TimeLimiterMetricsCollector(MetricNames names, TimeLimiterRegistry timeLimiterRegistry) {
-        super(names);
-        this.timeLimiterRegistry = requireNonNull(timeLimiterRegistry);
-        this.timeLimiterRegistry.getAllTimeLimiters()
-                .forEach(this::addMetrics);
-        this.timeLimiterRegistry.getEventPublisher()
-                .onEntryAdded(event -> addMetrics(event.getAddedEntry()));
     }
 
     private void addMetrics(TimeLimiter timeLimiter) {

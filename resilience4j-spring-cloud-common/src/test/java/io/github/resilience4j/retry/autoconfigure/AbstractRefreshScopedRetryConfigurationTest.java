@@ -16,18 +16,17 @@
 
 package io.github.resilience4j.retry.autoconfigure;
 
+import static java.util.Collections.emptyList;
+import static org.assertj.core.api.Assertions.assertThat;
+
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.core.registry.CompositeRegistryEventConsumer;
 import io.github.resilience4j.ratelimiter.autoconfigure.AbstractRefreshScopedRateLimiterConfiguration;
 import io.github.resilience4j.retry.configure.RetryConfigurationProperties;
+import java.util.Arrays;
 import org.junit.Test;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.context.annotation.Bean;
-
-import java.util.Arrays;
-
-import static java.util.Collections.emptyList;
-import static org.assertj.core.api.Assertions.assertThat;
 
 public class AbstractRefreshScopedRetryConfigurationTest {
 
@@ -35,7 +34,8 @@ public class AbstractRefreshScopedRetryConfigurationTest {
     public void testRefreshScopedRateLimiterConfig() {
         Arrays.stream(AbstractRefreshScopedRateLimiterConfiguration.class.getMethods())
                 .filter(method -> method.isAnnotationPresent(Bean.class))
-                .forEach(method -> assertThat(method.isAnnotationPresent(RefreshScope.class)).isTrue());
+                .forEach(method -> assertThat(method.isAnnotationPresent(RefreshScope.class))
+                        .isTrue());
     }
 
     @Test
@@ -48,5 +48,7 @@ public class AbstractRefreshScopedRetryConfigurationTest {
     }
 
 
-    static class RetryConfig extends AbstractRefreshScopedRetryConfiguration { }
+    static class RetryConfig extends AbstractRefreshScopedRetryConfiguration {
+
+    }
 }

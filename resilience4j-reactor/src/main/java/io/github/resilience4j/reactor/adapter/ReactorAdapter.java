@@ -22,7 +22,8 @@ import reactor.core.publisher.Flux;
 
 public class ReactorAdapter {
 
-    private ReactorAdapter(){}
+    private ReactorAdapter() {
+    }
 
     /**
      * Converts the EventPublisher into a Flux.

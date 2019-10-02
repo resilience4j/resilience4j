@@ -16,12 +16,12 @@
 
 package io.github.resilience4j.ratpack.ratelimiter;
 
+import static io.github.resilience4j.ratelimiter.RequestNotPermitted.createRequestNotPermitted;
+
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
 import ratpack.handling.Context;
 import ratpack.handling.Handler;
-
-import static io.github.resilience4j.ratelimiter.RequestNotPermitted.createRequestNotPermitted;
 
 public class RateLimiterHandler implements Handler {
 

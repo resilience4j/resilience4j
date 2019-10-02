@@ -19,12 +19,12 @@ package io.github.resilience4j.prometheus.publisher;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.core.metrics.MetricsPublisher;
 import io.github.resilience4j.prometheus.AbstractCircuitBreakerMetrics;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public class CircuitBreakerMetricsPublisher extends AbstractCircuitBreakerMetrics implements MetricsPublisher<CircuitBreaker> {
+public class CircuitBreakerMetricsPublisher extends AbstractCircuitBreakerMetrics implements
+        MetricsPublisher<CircuitBreaker> {
 
     private final List<CircuitBreaker> circuitBreakers = new ArrayList<>();
 
@@ -38,7 +38,8 @@ public class CircuitBreakerMetricsPublisher extends AbstractCircuitBreakerMetric
 
     @Override
     public List<MetricFamilySamples> collect() {
-        List<MetricFamilySamples> samples = Collections.list(collectorRegistry.metricFamilySamples());
+        List<MetricFamilySamples> samples = Collections
+                .list(collectorRegistry.metricFamilySamples());
         samples.addAll(collectGaugeSamples(circuitBreakers));
         return samples;
     }

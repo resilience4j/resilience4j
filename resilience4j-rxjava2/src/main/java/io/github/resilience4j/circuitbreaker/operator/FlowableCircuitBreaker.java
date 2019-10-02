@@ -15,18 +15,17 @@
  */
 package io.github.resilience4j.circuitbreaker.operator;
 
+import static io.github.resilience4j.circuitbreaker.CallNotPermittedException.createCallNotPermittedException;
+import static java.util.Objects.requireNonNull;
+
 import io.github.resilience4j.AbstractSubscriber;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.reactivex.Flowable;
 import io.reactivex.internal.subscriptions.EmptySubscription;
-import org.reactivestreams.Publisher;
-import org.reactivestreams.Subscriber;
-
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
-
-import static io.github.resilience4j.circuitbreaker.CallNotPermittedException.createCallNotPermittedException;
-import static java.util.Objects.requireNonNull;
+import org.reactivestreams.Publisher;
+import org.reactivestreams.Subscriber;
 
 class FlowableCircuitBreaker<T> extends Flowable<T> {
 
@@ -40,9 +39,9 @@ class FlowableCircuitBreaker<T> extends Flowable<T> {
 
     @Override
     protected void subscribeActual(Subscriber<? super T> downstream) {
-        if(circuitBreaker.tryAcquirePermission()){
+        if (circuitBreaker.tryAcquirePermission()) {
             upstream.subscribe(new CircuitBreakerSubscriber(downstream));
-        }else{
+        } else {
             downstream.onSubscribe(EmptySubscription.INSTANCE);
             downstream.onError(createCallNotPermittedException(circuitBreaker));
         }
@@ -69,9 +68,9 @@ class FlowableCircuitBreaker<T> extends Flowable<T> {
 
         @Override
         public void hookOnCancel() {
-            if(eventWasEmitted.get()){
+            if (eventWasEmitted.get()) {
                 circuitBreaker.onSuccess(System.nanoTime() - start, TimeUnit.NANOSECONDS);
-            }else{
+            } else {
                 circuitBreaker.releasePermission();
             }
         }

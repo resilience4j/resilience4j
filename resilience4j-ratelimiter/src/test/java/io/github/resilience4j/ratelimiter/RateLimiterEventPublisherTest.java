@@ -18,17 +18,16 @@
  */
 package io.github.resilience4j.ratelimiter;
 
-import io.vavr.control.Try;
-import org.junit.Before;
-import org.junit.Test;
-import org.slf4j.Logger;
-
-import java.time.Duration;
-
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
+
+import io.vavr.control.Try;
+import java.time.Duration;
+import org.junit.Before;
+import org.junit.Test;
+import org.slf4j.Logger;
 
 
 @SuppressWarnings("unchecked")
@@ -64,9 +63,8 @@ public class RateLimiterEventPublisherTest {
     @Test
     public void shouldConsumeOnSuccessEvent() throws Throwable {
         rateLimiter.getEventPublisher()
-            .onSuccess(event ->
-                logger.info(event.getEventType().toString()));
-
+                .onSuccess(event ->
+                        logger.info(event.getEventType().toString()));
 
         String result = rateLimiter.executeSupplier(() -> "Hello world");
 
@@ -79,7 +77,7 @@ public class RateLimiterEventPublisherTest {
     public void shouldConsumeOnFailureEvent() throws Throwable {
         rateLimiter.getEventPublisher()
                 .onFailure(event ->
-                    logger.info(event.getEventType().toString()));
+                        logger.info(event.getEventType().toString()));
 
         rateLimiter.executeSupplier(() -> "Hello world");
 

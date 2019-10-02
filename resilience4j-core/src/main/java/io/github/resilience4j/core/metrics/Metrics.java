@@ -38,8 +38,7 @@ public interface Metrics {
      */
     Snapshot getSnapshot();
 
-    enum Outcome
-    {
+    enum Outcome {
         SUCCESS, ERROR, SLOW_SUCCESS, SLOW_ERROR
     }
 

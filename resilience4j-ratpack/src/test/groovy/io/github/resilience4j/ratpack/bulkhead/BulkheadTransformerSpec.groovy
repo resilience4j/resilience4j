@@ -27,11 +27,7 @@ import spock.lang.Shared
 import spock.lang.Specification
 
 import java.time.Duration
-import java.util.concurrent.Callable
-import java.util.concurrent.CountDownLatch
-import java.util.concurrent.ExecutorService
-import java.util.concurrent.Executors
-import java.util.concurrent.TimeUnit
+import java.util.concurrent.*
 import java.util.concurrent.atomic.AtomicInteger
 
 class BulkheadTransformerSpec extends Specification {
@@ -156,7 +152,7 @@ class BulkheadTransformerSpec extends Specification {
         and: "setup an event listener to track the number of onCallFinish"
         def bulkheadEvents = bulkhead.getEventPublisher()
         AtomicInteger timesOnCallFinished = new AtomicInteger(0)
-        bulkheadEvents.onCallFinished({ timesOnCallFinished.getAndIncrement()})
+        bulkheadEvents.onCallFinished({ timesOnCallFinished.getAndIncrement() })
 
 
         when: "The upstream has an error, but is swallowed by `onError`"
@@ -249,7 +245,9 @@ class BulkheadTransformerSpec extends Specification {
     def "recovery function is called when execution is blocked"() {
         given:
         def bulkhead = buildBulkhead()
-        BulkheadTransformer<String> transformer = BulkheadTransformer.of(bulkhead).recover { "recover" }
+        BulkheadTransformer<String> transformer = BulkheadTransformer.of(bulkhead).recover {
+            "recover"
+        }
         AtomicInteger times = new AtomicInteger(0)
 
         and:

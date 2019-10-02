@@ -18,13 +18,11 @@ package io.github.resilience4j.ratelimiter.monitoring.endpoint;
 import io.github.resilience4j.common.ratelimiter.monitoring.endpoint.RateLimiterEndpointResponse;
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
-
+import java.util.List;
 import org.springframework.boot.actuate.endpoint.AbstractEndpoint;
 import org.springframework.boot.actuate.endpoint.Endpoint;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.http.ResponseEntity;
-
-import java.util.List;
 
 /**
  * {@link Endpoint} to expose RateLimiter events.
@@ -42,7 +40,7 @@ public class RateLimiterEndpoint extends AbstractEndpoint {
     @Override
     public Object invoke() {
         List<String> names = rateLimiterRegistry.getAllRateLimiters()
-            .map(RateLimiter::getName).sorted().toJavaList();
+                .map(RateLimiter::getName).sorted().toJavaList();
         return ResponseEntity.ok(new RateLimiterEndpointResponse(names));
     }
 }

@@ -16,6 +16,14 @@
 
 package io.github.resilience4j.metrics;
 
+import static io.github.resilience4j.retry.utils.MetricNames.FAILED_CALLS_WITHOUT_RETRY;
+import static io.github.resilience4j.retry.utils.MetricNames.FAILED_CALLS_WITH_RETRY;
+import static io.github.resilience4j.retry.utils.MetricNames.SUCCESSFUL_CALLS_WITHOUT_RETRY;
+import static io.github.resilience4j.retry.utils.MetricNames.SUCCESSFUL_CALLS_WITH_RETRY;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+
 import com.codahale.metrics.MetricRegistry;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.test.HelloWorldException;
@@ -25,18 +33,13 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.BDDMockito;
 
-import static io.github.resilience4j.retry.utils.MetricNames.*;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
-
 public abstract class AbstractRetryMetricsTest {
 
     private MetricRegistry metricRegistry;
     private HelloWorldService helloWorldService;
 
     @Before
-    public void setUp(){
+    public void setUp() {
         metricRegistry = new MetricRegistry();
         helloWorldService = mock(HelloWorldService.class);
     }
@@ -61,10 +64,18 @@ public abstract class AbstractRetryMetricsTest {
         // Then the helloWorldService should be invoked 1 time
         BDDMockito.then(helloWorldService).should(times(1)).returnHelloWorld();
         assertThat(metricRegistry.getMetrics()).hasSize(4);
-        assertThat(metricRegistry.getGauges().get("resilience4j.retry.testName." + SUCCESSFUL_CALLS_WITH_RETRY).getValue()).isEqualTo(0L);
-        assertThat(metricRegistry.getGauges().get("resilience4j.retry.testName." + SUCCESSFUL_CALLS_WITHOUT_RETRY).getValue()).isEqualTo(1L);
-        assertThat(metricRegistry.getGauges().get("resilience4j.retry.testName." + FAILED_CALLS_WITH_RETRY).getValue()).isEqualTo(0L);
-        assertThat(metricRegistry.getGauges().get("resilience4j.retry.testName." + FAILED_CALLS_WITHOUT_RETRY).getValue()).isEqualTo(0L);
+        assertThat(metricRegistry.getGauges()
+                .get("resilience4j.retry.testName." + SUCCESSFUL_CALLS_WITH_RETRY).getValue())
+                .isEqualTo(0L);
+        assertThat(metricRegistry.getGauges()
+                .get("resilience4j.retry.testName." + SUCCESSFUL_CALLS_WITHOUT_RETRY).getValue())
+                .isEqualTo(1L);
+        assertThat(metricRegistry.getGauges()
+                .get("resilience4j.retry.testName." + FAILED_CALLS_WITH_RETRY).getValue())
+                .isEqualTo(0L);
+        assertThat(metricRegistry.getGauges()
+                .get("resilience4j.retry.testName." + FAILED_CALLS_WITHOUT_RETRY).getValue())
+                .isEqualTo(0L);
     }
 
     @Test
@@ -89,10 +100,18 @@ public abstract class AbstractRetryMetricsTest {
         // Then the helloWorldService should be invoked 1 time
         BDDMockito.then(helloWorldService).should(times(5)).returnHelloWorld();
         assertThat(metricRegistry.getMetrics()).hasSize(4);
-        assertThat(metricRegistry.getGauges().get("resilience4j.retry.testName." + SUCCESSFUL_CALLS_WITH_RETRY).getValue()).isEqualTo(1L);
-        assertThat(metricRegistry.getGauges().get("resilience4j.retry.testName." + SUCCESSFUL_CALLS_WITHOUT_RETRY).getValue()).isEqualTo(0L);
-        assertThat(metricRegistry.getGauges().get("resilience4j.retry.testName." + FAILED_CALLS_WITH_RETRY).getValue()).isEqualTo(1L);
-        assertThat(metricRegistry.getGauges().get("resilience4j.retry.testName." + FAILED_CALLS_WITHOUT_RETRY).getValue()).isEqualTo(0L);
+        assertThat(metricRegistry.getGauges()
+                .get("resilience4j.retry.testName." + SUCCESSFUL_CALLS_WITH_RETRY).getValue())
+                .isEqualTo(1L);
+        assertThat(metricRegistry.getGauges()
+                .get("resilience4j.retry.testName." + SUCCESSFUL_CALLS_WITHOUT_RETRY).getValue())
+                .isEqualTo(0L);
+        assertThat(metricRegistry.getGauges()
+                .get("resilience4j.retry.testName." + FAILED_CALLS_WITH_RETRY).getValue())
+                .isEqualTo(1L);
+        assertThat(metricRegistry.getGauges()
+                .get("resilience4j.retry.testName." + FAILED_CALLS_WITHOUT_RETRY).getValue())
+                .isEqualTo(0L);
     }
 
     @Test
@@ -110,9 +129,16 @@ public abstract class AbstractRetryMetricsTest {
         // Then the helloWorldService should be invoked 1 time
         BDDMockito.then(helloWorldService).should(times(1)).returnHelloWorld();
         assertThat(metricRegistry.getMetrics()).hasSize(4);
-        assertThat(metricRegistry.getGauges().get("testPrefix.testName." + SUCCESSFUL_CALLS_WITH_RETRY).getValue()).isEqualTo(0L);
-        assertThat(metricRegistry.getGauges().get("testPrefix.testName." + SUCCESSFUL_CALLS_WITHOUT_RETRY).getValue()).isEqualTo(1L);
-        assertThat(metricRegistry.getGauges().get("testPrefix.testName." + FAILED_CALLS_WITH_RETRY).getValue()).isEqualTo(0L);
-        assertThat(metricRegistry.getGauges().get("testPrefix.testName." + FAILED_CALLS_WITHOUT_RETRY).getValue()).isEqualTo(0L);
+        assertThat(
+                metricRegistry.getGauges().get("testPrefix.testName." + SUCCESSFUL_CALLS_WITH_RETRY)
+                        .getValue()).isEqualTo(0L);
+        assertThat(metricRegistry.getGauges()
+                .get("testPrefix.testName." + SUCCESSFUL_CALLS_WITHOUT_RETRY).getValue())
+                .isEqualTo(1L);
+        assertThat(metricRegistry.getGauges().get("testPrefix.testName." + FAILED_CALLS_WITH_RETRY)
+                .getValue()).isEqualTo(0L);
+        assertThat(
+                metricRegistry.getGauges().get("testPrefix.testName." + FAILED_CALLS_WITHOUT_RETRY)
+                        .getValue()).isEqualTo(0L);
     }
 }

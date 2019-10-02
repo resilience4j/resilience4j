@@ -21,60 +21,80 @@ import io.github.resilience4j.fallback.FallbackDecorators;
 import io.github.resilience4j.fallback.autoconfigure.FallbackConfigurationOnMissingBean;
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
-import io.github.resilience4j.ratelimiter.configure.*;
+import io.github.resilience4j.ratelimiter.configure.RateLimiterAspect;
+import io.github.resilience4j.ratelimiter.configure.RateLimiterAspectExt;
+import io.github.resilience4j.ratelimiter.configure.RateLimiterConfiguration;
+import io.github.resilience4j.ratelimiter.configure.RateLimiterConfigurationProperties;
+import io.github.resilience4j.ratelimiter.configure.ReactorRateLimiterAspectExt;
+import io.github.resilience4j.ratelimiter.configure.RxJava2RateLimiterAspectExt;
 import io.github.resilience4j.ratelimiter.event.RateLimiterEvent;
 import io.github.resilience4j.utils.AspectJOnClasspathCondition;
 import io.github.resilience4j.utils.ReactorOnClasspathCondition;
 import io.github.resilience4j.utils.RxJava2OnClasspathCondition;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.context.annotation.*;
-
 import java.util.List;
 import java.util.Optional;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Conditional;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
+import org.springframework.context.annotation.Primary;
 
 @Configuration
 @Import(FallbackConfigurationOnMissingBean.class)
 public abstract class AbstractRateLimiterConfigurationOnMissingBean {
-	protected final RateLimiterConfiguration rateLimiterConfiguration;
 
-	public AbstractRateLimiterConfigurationOnMissingBean() {
-		this.rateLimiterConfiguration = new RateLimiterConfiguration();
-	}
+    protected final RateLimiterConfiguration rateLimiterConfiguration;
 
-	@Bean
-	@ConditionalOnMissingBean
-	public RateLimiterRegistry rateLimiterRegistry(RateLimiterConfigurationProperties rateLimiterProperties,
-												   EventConsumerRegistry<RateLimiterEvent> rateLimiterEventsConsumerRegistry,
-												   RegistryEventConsumer<RateLimiter> rateLimiterRegistryEventConsumer) {
-		return rateLimiterConfiguration.rateLimiterRegistry(rateLimiterProperties, rateLimiterEventsConsumerRegistry, rateLimiterRegistryEventConsumer);
-	}
+    public AbstractRateLimiterConfigurationOnMissingBean() {
+        this.rateLimiterConfiguration = new RateLimiterConfiguration();
+    }
 
-	@Bean
-	@Primary
-	public RegistryEventConsumer<RateLimiter> rateLimiterRegistryEventConsumer(Optional<List<RegistryEventConsumer<RateLimiter>>> optionalRegistryEventConsumers) {
-		return rateLimiterConfiguration.rateLimiterRegistryEventConsumer(optionalRegistryEventConsumers);
-	}
+    @Bean
+    @ConditionalOnMissingBean
+    public RateLimiterRegistry rateLimiterRegistry(
+            RateLimiterConfigurationProperties rateLimiterProperties,
+            EventConsumerRegistry<RateLimiterEvent> rateLimiterEventsConsumerRegistry,
+            RegistryEventConsumer<RateLimiter> rateLimiterRegistryEventConsumer) {
+        return rateLimiterConfiguration
+                .rateLimiterRegistry(rateLimiterProperties, rateLimiterEventsConsumerRegistry,
+                        rateLimiterRegistryEventConsumer);
+    }
 
-	@Bean
-	@Conditional(value = {AspectJOnClasspathCondition.class})
-	@ConditionalOnMissingBean
-	public RateLimiterAspect rateLimiterAspect(RateLimiterConfigurationProperties rateLimiterProperties, RateLimiterRegistry rateLimiterRegistry, @Autowired(required = false) List<RateLimiterAspectExt> rateLimiterAspectExtList, FallbackDecorators fallbackDecorators) {
-		return rateLimiterConfiguration.rateLimiterAspect(rateLimiterProperties, rateLimiterRegistry, rateLimiterAspectExtList, fallbackDecorators);
-	}
+    @Bean
+    @Primary
+    public RegistryEventConsumer<RateLimiter> rateLimiterRegistryEventConsumer(
+            Optional<List<RegistryEventConsumer<RateLimiter>>> optionalRegistryEventConsumers) {
+        return rateLimiterConfiguration
+                .rateLimiterRegistryEventConsumer(optionalRegistryEventConsumers);
+    }
 
-	@Bean
-	@Conditional(value = {RxJava2OnClasspathCondition.class, AspectJOnClasspathCondition.class})
-	@ConditionalOnMissingBean
-	public RxJava2RateLimiterAspectExt rxJava2RateLimiterAspectExt() {
-		return rateLimiterConfiguration.rxJava2RateLimiterAspectExt();
-	}
+    @Bean
+    @Conditional(value = {AspectJOnClasspathCondition.class})
+    @ConditionalOnMissingBean
+    public RateLimiterAspect rateLimiterAspect(
+            RateLimiterConfigurationProperties rateLimiterProperties,
+            RateLimiterRegistry rateLimiterRegistry,
+            @Autowired(required = false) List<RateLimiterAspectExt> rateLimiterAspectExtList,
+            FallbackDecorators fallbackDecorators) {
+        return rateLimiterConfiguration
+                .rateLimiterAspect(rateLimiterProperties, rateLimiterRegistry,
+                        rateLimiterAspectExtList, fallbackDecorators);
+    }
 
-	@Bean
-	@Conditional(value = {ReactorOnClasspathCondition.class, AspectJOnClasspathCondition.class})
-	@ConditionalOnMissingBean
-	public ReactorRateLimiterAspectExt reactorRateLimiterAspectExt() {
-		return rateLimiterConfiguration.reactorRateLimiterAspectExt();
-	}
+    @Bean
+    @Conditional(value = {RxJava2OnClasspathCondition.class, AspectJOnClasspathCondition.class})
+    @ConditionalOnMissingBean
+    public RxJava2RateLimiterAspectExt rxJava2RateLimiterAspectExt() {
+        return rateLimiterConfiguration.rxJava2RateLimiterAspectExt();
+    }
+
+    @Bean
+    @Conditional(value = {ReactorOnClasspathCondition.class, AspectJOnClasspathCondition.class})
+    @ConditionalOnMissingBean
+    public ReactorRateLimiterAspectExt reactorRateLimiterAspectExt() {
+        return rateLimiterConfiguration.reactorRateLimiterAspectExt();
+    }
 
 }

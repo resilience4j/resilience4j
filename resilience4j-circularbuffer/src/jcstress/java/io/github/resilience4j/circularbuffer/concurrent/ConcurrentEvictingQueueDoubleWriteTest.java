@@ -29,8 +29,8 @@ import org.openjdk.jcstress.infra.results.StringResult1;
 
 @JCStressTest
 @State
-@Outcome(id="[1, 2]", expect = Expect.ACCEPTABLE)
-@Outcome(id="[2, 1]", expect = Expect.ACCEPTABLE)
+@Outcome(id = "[1, 2]", expect = Expect.ACCEPTABLE)
+@Outcome(id = "[2, 1]", expect = Expect.ACCEPTABLE)
 public class ConcurrentEvictingQueueDoubleWriteTest {
 
     ConcurrentEvictingQueue<Integer> queue;
@@ -41,7 +41,7 @@ public class ConcurrentEvictingQueueDoubleWriteTest {
 
     @Actor
     public void firstActor() {
-         queue.offer(1);
+        queue.offer(1);
     }
 
     @Actor

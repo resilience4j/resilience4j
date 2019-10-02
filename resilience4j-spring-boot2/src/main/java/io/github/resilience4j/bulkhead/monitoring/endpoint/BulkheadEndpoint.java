@@ -20,10 +20,9 @@ import io.github.resilience4j.bulkhead.BulkheadRegistry;
 import io.github.resilience4j.bulkhead.ThreadPoolBulkhead;
 import io.github.resilience4j.bulkhead.ThreadPoolBulkheadRegistry;
 import io.github.resilience4j.common.bulkhead.monitoring.endpoint.BulkheadEndpointResponse;
+import java.util.List;
 import org.springframework.boot.actuate.endpoint.annotation.Endpoint;
 import org.springframework.boot.actuate.endpoint.annotation.ReadOperation;
-
-import java.util.List;
 
 
 /**
@@ -35,7 +34,8 @@ public class BulkheadEndpoint {
     private final BulkheadRegistry bulkheadRegistry;
     private final ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry;
 
-    public BulkheadEndpoint(BulkheadRegistry bulkheadRegistry, ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry) {
+    public BulkheadEndpoint(BulkheadRegistry bulkheadRegistry,
+            ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry) {
         this.bulkheadRegistry = bulkheadRegistry;
         this.threadPoolBulkheadRegistry = threadPoolBulkheadRegistry;
     }

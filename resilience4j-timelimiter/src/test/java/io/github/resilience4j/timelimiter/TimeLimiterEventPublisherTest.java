@@ -18,18 +18,16 @@
  */
 package io.github.resilience4j.timelimiter;
 
-import io.vavr.control.Try;
-
-import java.time.Duration;
-import java.util.concurrent.CompletableFuture;
-import java.util.function.Supplier;
-
-import org.junit.Test;
-import org.slf4j.Logger;
-
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.mock;
+
+import io.vavr.control.Try;
+import java.time.Duration;
+import java.util.concurrent.CompletableFuture;
+import java.util.function.Supplier;
+import org.junit.Test;
+import org.slf4j.Logger;
 
 
 public class TimeLimiterEventPublisherTest {
@@ -79,7 +77,9 @@ public class TimeLimiterEventPublisherTest {
     public void shouldConsumeOnErrorEvent() {
         TimeLimiter timeLimiter = TimeLimiter.of(Duration.ofSeconds(1));
         timeLimiter.getEventPublisher()
-                .onError(event -> logger.info(event.getEventType().toString() + " " + event.getThrowable().toString()));
+                .onError(event -> logger
+                        .info(event.getEventType().toString() + " " + event.getThrowable()
+                                .toString()));
         Supplier<CompletableFuture<String>> futureSupplier = () ->
                 CompletableFuture.supplyAsync(this::fail);
 

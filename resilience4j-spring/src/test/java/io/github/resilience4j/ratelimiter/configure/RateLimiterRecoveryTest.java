@@ -15,8 +15,11 @@
  */
 package io.github.resilience4j.ratelimiter.configure;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import io.github.resilience4j.TestApplication;
 import io.github.resilience4j.TestDummyService;
+import java.util.concurrent.TimeUnit;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,13 +27,10 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import java.util.concurrent.TimeUnit;
-
-import static org.assertj.core.api.Assertions.assertThat;
-
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(classes = TestApplication.class)
 public class RateLimiterRecoveryTest {
+
     @Autowired
     @Qualifier("rateLimiterDummyService")
     TestDummyService testDummyService;
@@ -42,7 +42,8 @@ public class RateLimiterRecoveryTest {
 
     @Test
     public void testAsyncRecovery() throws Exception {
-        assertThat(testDummyService.async().toCompletableFuture().get(5, TimeUnit.SECONDS)).isEqualTo("recovered");
+        assertThat(testDummyService.async().toCompletableFuture().get(5, TimeUnit.SECONDS))
+                .isEqualTo("recovered");
     }
 
     @Test

@@ -18,14 +18,16 @@
  */
 package io.github.resilience4j.cache;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.then;
+import static org.mockito.BDDMockito.times;
+import static org.mockito.Mockito.mock;
+
 import io.vavr.CheckedFunction1;
 import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.BDDMockito.*;
-import static org.mockito.Mockito.mock;
 
 public class CacheEventPublisherTest {
 
@@ -34,7 +36,7 @@ public class CacheEventPublisherTest {
 
     @SuppressWarnings("unchecked")
     @Before
-    public void setUp(){
+    public void setUp() {
         cache = mock(javax.cache.Cache.class);
         logger = mock(Logger.class);
     }
@@ -57,7 +59,8 @@ public class CacheEventPublisherTest {
         cacheContext.getEventPublisher().onCacheHit(event ->
                 logger.info(event.getEventType().toString()));
 
-        CheckedFunction1<String, String> cachedFunction = Cache.decorateCheckedSupplier(cacheContext, () -> "Hello world");
+        CheckedFunction1<String, String> cachedFunction = Cache
+                .decorateCheckedSupplier(cacheContext, () -> "Hello world");
         String value = cachedFunction.apply("testKey");
         assertThat(value).isEqualTo("Hello world");
 
@@ -73,7 +76,8 @@ public class CacheEventPublisherTest {
         cacheContext.getEventPublisher().onCacheMiss(event ->
                 logger.info(event.getEventType().toString()));
 
-        CheckedFunction1<String, String> cachedFunction = Cache.decorateCheckedSupplier(cacheContext, () -> "Hello world");
+        CheckedFunction1<String, String> cachedFunction = Cache
+                .decorateCheckedSupplier(cacheContext, () -> "Hello world");
         String value = cachedFunction.apply("testKey");
         assertThat(value).isEqualTo("Hello world");
 
@@ -89,7 +93,8 @@ public class CacheEventPublisherTest {
         cacheContext.getEventPublisher().onError(event ->
                 logger.info(event.getEventType().toString()));
 
-        CheckedFunction1<String, String> cachedFunction = Cache.decorateCheckedSupplier(cacheContext, () -> "Hello world");
+        CheckedFunction1<String, String> cachedFunction = Cache
+                .decorateCheckedSupplier(cacheContext, () -> "Hello world");
         String value = cachedFunction.apply("testKey");
         assertThat(value).isEqualTo("Hello world");
 

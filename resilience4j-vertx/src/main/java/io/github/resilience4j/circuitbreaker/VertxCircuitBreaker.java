@@ -18,12 +18,11 @@
  */
 package io.github.resilience4j.circuitbreaker;
 
-import io.vertx.core.Future;
+import static io.github.resilience4j.circuitbreaker.CallNotPermittedException.createCallNotPermittedException;
 
+import io.vertx.core.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
-
-import static io.github.resilience4j.circuitbreaker.CallNotPermittedException.createCallNotPermittedException;
 
 /**
  * CircuitBreaker decorators for Vert.x
@@ -38,7 +37,8 @@ public interface VertxCircuitBreaker {
      * @param <T> the type of results returned by this Future
      * @return a future which is decorated by a CircuitBreaker.
      */
-    static <T> Future<T> executeFuture(CircuitBreaker circuitBreaker, Supplier<Future<T>> supplier){
+    static <T> Future<T> executeFuture(CircuitBreaker circuitBreaker,
+            Supplier<Future<T>> supplier) {
         return decorateFuture(circuitBreaker, supplier).get();
     }
 
@@ -50,7 +50,8 @@ public interface VertxCircuitBreaker {
      * @param <T> the type of the returned Future's result
      * @return a future which is decorated by a CircuitBreaker.
      */
-    static <T> Supplier<Future<T>> decorateFuture(CircuitBreaker circuitBreaker, Supplier<Future<T>> supplier){
+    static <T> Supplier<Future<T>> decorateFuture(CircuitBreaker circuitBreaker,
+            Supplier<Future<T>> supplier) {
         return () -> {
             final Future<T> future = Future.future();
 
@@ -63,7 +64,8 @@ public interface VertxCircuitBreaker {
                     supplier.get().setHandler(result -> {
                         long durationInNanos = System.nanoTime() - start;
                         if (result.failed()) {
-                            circuitBreaker.onError(durationInNanos, TimeUnit.NANOSECONDS, result.cause());
+                            circuitBreaker
+                                    .onError(durationInNanos, TimeUnit.NANOSECONDS, result.cause());
                             future.fail(result.cause());
                         } else {
                             circuitBreaker.onSuccess(durationInNanos, TimeUnit.NANOSECONDS);

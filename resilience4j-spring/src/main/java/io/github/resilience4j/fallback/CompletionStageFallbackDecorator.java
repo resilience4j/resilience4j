@@ -15,10 +15,9 @@
  */
 package io.github.resilience4j.fallback;
 
+import io.vavr.CheckedFunction0;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
-
-import io.vavr.CheckedFunction0;
 
 /**
  * fallbackMethod decorator for {@link CompletionStage}
@@ -32,7 +31,8 @@ public class CompletionStageFallbackDecorator implements FallbackDecorator {
 
     @SuppressWarnings("unchecked")
     @Override
-    public CheckedFunction0<Object> decorate(FallbackMethod fallbackMethod, CheckedFunction0<Object> supplier) {
+    public CheckedFunction0<Object> decorate(FallbackMethod fallbackMethod,
+            CheckedFunction0<Object> supplier) {
         return supplier.andThen(request -> {
             CompletionStage completionStage = (CompletionStage) request;
 
@@ -44,7 +44,8 @@ public class CompletionStageFallbackDecorator implements FallbackDecorator {
                         ((CompletionStage) fallbackMethod.fallback((Throwable) throwable))
                                 .whenComplete((recoveryResult, recoveryThrowable) -> {
                                     if (recoveryThrowable != null) {
-                                        promise.completeExceptionally((Throwable) recoveryThrowable);
+                                        promise.completeExceptionally(
+                                                (Throwable) recoveryThrowable);
                                     } else {
                                         promise.complete(recoveryResult);
                                     }

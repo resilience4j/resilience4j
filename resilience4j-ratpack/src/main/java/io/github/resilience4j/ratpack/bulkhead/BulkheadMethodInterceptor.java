@@ -24,19 +24,19 @@ import io.github.resilience4j.ratpack.internal.AbstractMethodInterceptor;
 import io.github.resilience4j.ratpack.recovery.DefaultRecoveryFunction;
 import io.github.resilience4j.ratpack.recovery.RecoveryFunction;
 import io.github.resilience4j.reactor.bulkhead.operator.BulkheadOperator;
+import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
 import ratpack.exec.Promise;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionStage;
-
 /**
- * A {@link MethodInterceptor} to handle all methods annotated with {@link Bulkhead}. It will
- *  handle methods that return a {@link Promise}, {@link reactor.core.publisher.Flux}, {@link reactor.core.publisher.Mono}, {@link java.util.concurrent.CompletionStage}, or value.
+ * A {@link MethodInterceptor} to handle all methods annotated with {@link Bulkhead}. It will handle
+ * methods that return a {@link Promise}, {@link reactor.core.publisher.Flux}, {@link
+ * reactor.core.publisher.Mono}, {@link java.util.concurrent.CompletionStage}, or value.
  *
  * Given a method like this:
  * <pre><code>
@@ -45,20 +45,21 @@ import java.util.concurrent.CompletionStage;
  *         return "Sir Captain " + name;
  *     }
  * </code></pre>
- * each time the {@code #fancyName(String)} method is invoked, the method's execution will pass through a
- * a {@link io.github.resilience4j.bulkhead.Bulkhead} (concurrent limiting) according to the given policy.
+ * each time the {@code #fancyName(String)} method is invoked, the method's execution will pass
+ * through a a {@link io.github.resilience4j.bulkhead.Bulkhead} (concurrent limiting) according to
+ * the given policy.
  *
  * The fallbackMethod parameter signature must match either:
  *
- * 1) The method parameter signature on the annotated method or
- * 2) The method parameter signature with a matching exception type as the last parameter on the annotated method
+ * 1) The method parameter signature on the annotated method or 2) The method parameter signature
+ * with a matching exception type as the last parameter on the annotated method
  *
- * The return value can be a {@link Promise}, {@link java.util.concurrent.CompletionStage},
- * {@link reactor.core.publisher.Flux}, {@link reactor.core.publisher.Mono}, or an object value.
- * Other reactive types are not supported.
+ * The return value can be a {@link Promise}, {@link java.util.concurrent.CompletionStage}, {@link
+ * reactor.core.publisher.Flux}, {@link reactor.core.publisher.Mono}, or an object value. Other
+ * reactive types are not supported.
  *
- * If the return value is one of the reactive types listed above, it must match the return value type of the
- * annotated method.
+ * If the return value is one of the reactive types listed above, it must match the return value
+ * type of the annotated method.
  */
 
 public class BulkheadMethodInterceptor extends AbstractMethodInterceptor {
@@ -86,7 +87,8 @@ public class BulkheadMethodInterceptor extends AbstractMethodInterceptor {
         if (Promise.class.isAssignableFrom(returnType)) {
             Promise<?> result = (Promise<?>) proceed(invocation);
             if (result != null) {
-                BulkheadTransformer transformer = BulkheadTransformer.of(bulkhead).recover(fallbackMethod);
+                BulkheadTransformer transformer = BulkheadTransformer.of(bulkhead)
+                        .recover(fallbackMethod);
                 result = result.transform(transformer);
             }
             return result;
@@ -130,9 +132,12 @@ public class BulkheadMethodInterceptor extends AbstractMethodInterceptor {
 
 
     @Nullable
-    private Object handleProceedWithException(MethodInvocation invocation, io.github.resilience4j.bulkhead.Bulkhead bulkhead, RecoveryFunction<?> recoveryFunction) throws Throwable {
+    private Object handleProceedWithException(MethodInvocation invocation,
+            io.github.resilience4j.bulkhead.Bulkhead bulkhead, RecoveryFunction<?> recoveryFunction)
+            throws Throwable {
         try {
-            return io.github.resilience4j.bulkhead.Bulkhead.decorateCheckedSupplier(bulkhead, invocation::proceed).apply();
+            return io.github.resilience4j.bulkhead.Bulkhead
+                    .decorateCheckedSupplier(bulkhead, invocation::proceed).apply();
         } catch (Throwable throwable) {
             return recoveryFunction.apply(throwable);
         }

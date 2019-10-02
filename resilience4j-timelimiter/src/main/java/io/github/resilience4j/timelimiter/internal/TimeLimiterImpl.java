@@ -6,19 +6,21 @@ import io.github.resilience4j.timelimiter.event.TimeLimiterEvent;
 import io.github.resilience4j.timelimiter.event.TimeLimiterOnErrorEvent;
 import io.github.resilience4j.timelimiter.event.TimeLimiterOnSuccessEvent;
 import io.github.resilience4j.timelimiter.event.TimeLimiterOnTimeoutEvent;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+import java.util.function.Supplier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.concurrent.*;
-import java.util.function.Supplier;
 
 public class TimeLimiterImpl implements TimeLimiter {
 
     private static final Logger LOG = LoggerFactory.getLogger(TimeLimiterImpl.class);
-
-    private String name;
     private final TimeLimiterConfig timeLimiterConfig;
     private final TimeLimiterEventProcessor eventProcessor;
+    private String name;
 
     public TimeLimiterImpl(String name, TimeLimiterConfig timeLimiterConfig) {
         this.name = name;
@@ -31,7 +33,8 @@ public class TimeLimiterImpl implements TimeLimiter {
         return () -> {
             Future<T> future = futureSupplier.get();
             try {
-                T result = future.get(getTimeLimiterConfig().getTimeoutDuration().toMillis(), TimeUnit.MILLISECONDS);
+                T result = future.get(getTimeLimiterConfig().getTimeoutDuration().toMillis(),
+                        TimeUnit.MILLISECONDS);
                 onSuccess();
                 return result;
             } catch (TimeoutException e) {

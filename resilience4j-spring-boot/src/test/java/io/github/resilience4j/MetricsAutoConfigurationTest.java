@@ -15,8 +15,9 @@
  */
 package io.github.resilience4j;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import io.github.resilience4j.prometheus.collectors.BulkheadMetricsCollector;
-import io.github.resilience4j.prometheus.collectors.CircuitBreakerMetricsCollector;
 import io.github.resilience4j.prometheus.collectors.RateLimiterMetricsCollector;
 import io.github.resilience4j.prometheus.collectors.ThreadPoolBulkheadMetricsCollector;
 import io.github.resilience4j.prometheus.publisher.CircuitBreakerMetricsPublisher;
@@ -26,8 +27,6 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, classes = TestApplication.class)

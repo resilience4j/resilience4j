@@ -22,27 +22,26 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * This annotation can be applied to a class or a specific method.
- * Applying it on a class is equivalent to applying it on all its public methods.
- * The annotation enables backend retry for all methods where it is applied.
- * Backend retry is performed via a retry
+ * This annotation can be applied to a class or a specific method. Applying it on a class is
+ * equivalent to applying it on all its public methods. The annotation enables backend retry for all
+ * methods where it is applied. Backend retry is performed via a retry
  */
 @Retention(value = RetentionPolicy.RUNTIME)
 @Target(value = {ElementType.METHOD, ElementType.TYPE})
 @Documented
 public @interface Retry {
 
-	/**
-	 * Name of the sync retry.
-	 *
-	 * @return the name of the sync retry.
-	 */
-	String name();
+    /**
+     * Name of the sync retry.
+     *
+     * @return the name of the sync retry.
+     */
+    String name();
 
-	/**
-	 * fallbackMethod method name.
-	 *
-	 * @return fallbackMethod method name.
-	 */
-	String fallbackMethod() default "";
+    /**
+     * fallbackMethod method name.
+     *
+     * @return fallbackMethod method name.
+     */
+    String fallbackMethod() default "";
 }

@@ -19,6 +19,7 @@
 package io.github.resilience4j.circularbuffer;
 
 
+import java.util.concurrent.TimeUnit;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.BenchmarkMode;
 import org.openjdk.jmh.annotations.Fork;
@@ -37,8 +38,6 @@ import org.openjdk.jmh.runner.RunnerException;
 import org.openjdk.jmh.runner.options.Options;
 import org.openjdk.jmh.runner.options.OptionsBuilder;
 
-import java.util.concurrent.TimeUnit;
-
 /**
  * @author bstorozhuk
  */
@@ -46,12 +45,20 @@ import java.util.concurrent.TimeUnit;
 @OutputTimeUnit(TimeUnit.NANOSECONDS)
 @BenchmarkMode(Mode.AverageTime)
 public class ConcurrentEvictingQueueBenchmark {
+
     public static final int FORK_COUNT = 2;
     private static final int WARMUP_COUNT = 10;
     private static final int ITERATION_COUNT = 10;
     private static final int CAPACITY = 10;
     private ConcurrentEvictingQueue<Object> queue;
     private Object event;
+
+    public static void main(String[] args) throws RunnerException {
+        Options options = new OptionsBuilder()
+                .include(".*" + ConcurrentEvictingQueueBenchmark.class.getSimpleName() + ".*")
+                .build();
+        new Runner(options).run();
+    }
 
     @Setup
     public void setUp() {
@@ -100,13 +107,5 @@ public class ConcurrentEvictingQueueBenchmark {
     public void concurrentEvictingQueuePeek(Blackhole bh) {
         Object event = queue.peek();
         bh.consume(event);
-    }
-
-
-    public static void main(String[] args) throws RunnerException {
-        Options options = new OptionsBuilder()
-            .include(".*" + ConcurrentEvictingQueueBenchmark.class.getSimpleName() + ".*")
-            .build();
-        new Runner(options).run();
     }
 }

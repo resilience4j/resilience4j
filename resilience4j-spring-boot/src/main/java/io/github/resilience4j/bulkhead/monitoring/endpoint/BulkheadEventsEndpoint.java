@@ -22,14 +22,13 @@ import io.github.resilience4j.common.bulkhead.monitoring.endpoint.BulkheadEvents
 import io.github.resilience4j.consumer.CircularEventConsumer;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
 import io.vavr.collection.List;
+import java.util.Comparator;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
-
-import java.util.Comparator;
 
 @Controller
 @RequestMapping(value = "bulkhead/")
@@ -55,7 +54,8 @@ public class BulkheadEventsEndpoint {
 
     @GetMapping(value = "events/{bulkheadName}", produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
-    public BulkheadEventsEndpointResponse getEventsFilteredByBulkheadName(@PathVariable("bulkheadName") String bulkheadName) {
+    public BulkheadEventsEndpointResponse getEventsFilteredByBulkheadName(
+            @PathVariable("bulkheadName") String bulkheadName) {
         java.util.List<BulkheadEventDTO> response = getBulkheadEvent(bulkheadName)
                 .map(BulkheadEventDTOFactory::createBulkheadEventDTO)
                 .toJavaList();
@@ -65,10 +65,12 @@ public class BulkheadEventsEndpoint {
 
     @GetMapping(value = "events/{bulkheadName}/{eventType}", produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
-    public BulkheadEventsEndpointResponse getEventsFilteredByBulkheadNameAndEventType(@PathVariable("bulkheadName") String bulkheadName,
-                                                                                            @PathVariable("eventType") String eventType) {
+    public BulkheadEventsEndpointResponse getEventsFilteredByBulkheadNameAndEventType(
+            @PathVariable("bulkheadName") String bulkheadName,
+            @PathVariable("eventType") String eventType) {
         java.util.List<BulkheadEventDTO> response = getBulkheadEvent(bulkheadName)
-                .filter(event -> event.getEventType() == BulkheadEvent.Type.valueOf(eventType.toUpperCase()))
+                .filter(event -> event.getEventType() == BulkheadEvent.Type
+                        .valueOf(eventType.toUpperCase()))
                 .map(BulkheadEventDTOFactory::createBulkheadEventDTO)
                 .toJavaList();
 
@@ -76,11 +78,12 @@ public class BulkheadEventsEndpoint {
     }
 
     private List<BulkheadEvent> getBulkheadEvent(String bulkheadName) {
-        CircularEventConsumer<BulkheadEvent> eventConsumer = eventConsumerRegistry.getEventConsumer(bulkheadName);
-        if(eventConsumer != null){
+        CircularEventConsumer<BulkheadEvent> eventConsumer = eventConsumerRegistry
+                .getEventConsumer(bulkheadName);
+        if (eventConsumer != null) {
             return eventConsumer.getBufferedEvents()
                     .filter(event -> event.getBulkheadName().equals(bulkheadName));
-        }else{
+        } else {
             return List.empty();
         }
     }

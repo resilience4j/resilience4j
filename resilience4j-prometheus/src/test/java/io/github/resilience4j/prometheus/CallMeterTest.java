@@ -1,10 +1,10 @@
 package io.github.resilience4j.prometheus;
 
-import io.prometheus.client.CollectorRegistry;
-import org.junit.Test;
-
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.fail;
+
+import io.prometheus.client.CollectorRegistry;
+import org.junit.Test;
 
 public class CallMeterTest {
 
@@ -30,7 +30,7 @@ public class CallMeterTest {
                 "some_call_total",
                 new String[]{},
                 new String[]{}))
-            .isEqualTo(1.0);
+                .isEqualTo(1.0);
 
         assertThat(registry.getSampleValue(
                 "some_call_failures_total",
@@ -63,7 +63,7 @@ public class CallMeterTest {
                     fail();
                 }
             });
-        } catch (SomeAppException e){
+        } catch (SomeAppException e) {
             assertThat(e.getMessage()).isEqualTo("Test Exception");
             // ignore
         }
@@ -114,20 +114,20 @@ public class CallMeterTest {
         // Then
         assertThat(registry.getSampleValue(
                 "some_call_total",
-                new String[]{ "label_1" },
-                new String[]{ "boo" }))
+                new String[]{"label_1"},
+                new String[]{"boo"}))
                 .isEqualTo(1.0);
 
         assertThat(registry.getSampleValue(
                 "some_call_failures_total",
-                new String[]{ "label_1" },
-                new String[]{ "boo" }))
+                new String[]{"label_1"},
+                new String[]{"boo"}))
                 .isEqualTo(0.0);
 
         assertThat(registry.getSampleValue(
                 "some_call_latency_count",
-                new String[]{ "label_1" },
-                new String[]{ "boo" }))
+                new String[]{"label_1"},
+                new String[]{"boo"}))
                 .isEqualTo(1.0);
     }
 
@@ -155,7 +155,7 @@ public class CallMeterTest {
                     fail();
                 }
             });
-        } catch (SomeAppException e){
+        } catch (SomeAppException e) {
             assertThat(e.getMessage()).isEqualTo("Test Exception");
             // ignore
         }
@@ -163,24 +163,25 @@ public class CallMeterTest {
         // Then
         assertThat(registry.getSampleValue(
                 "some_call_total",
-                new String[]{ "label_1" },
-                new String[]{ "foo" }))
+                new String[]{"label_1"},
+                new String[]{"foo"}))
                 .isEqualTo(1.0);
 
         assertThat(registry.getSampleValue(
                 "some_call_failures_total",
-                new String[]{ "label_1" },
-                new String[]{ "foo" }))
+                new String[]{"label_1"},
+                new String[]{"foo"}))
                 .isEqualTo(1.0);
 
         assertThat(registry.getSampleValue(
                 "some_call_latency_count",
-                new String[]{ "label_1" },
-                new String[]{ "foo" }))
+                new String[]{"label_1"},
+                new String[]{"foo"}))
                 .isEqualTo(0.0);
     }
 
     private static class SomeAppException extends RuntimeException {
+
         SomeAppException(String message) {
             super(message);
         }

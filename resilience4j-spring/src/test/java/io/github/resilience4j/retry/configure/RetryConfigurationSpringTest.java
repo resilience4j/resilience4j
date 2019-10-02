@@ -15,12 +15,16 @@
  */
 package io.github.resilience4j.retry.configure;
 
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
 import io.github.resilience4j.fallback.FallbackDecorators;
 import io.github.resilience4j.fallback.configure.FallbackConfiguration;
 import io.github.resilience4j.retry.RetryRegistry;
 import io.github.resilience4j.retry.event.RetryEvent;
+import java.util.List;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,79 +34,75 @@ import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import java.util.List;
-
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(classes = {
-		RetryConfigurationSpringTest.ConfigWithOverrides.class
+        RetryConfigurationSpringTest.ConfigWithOverrides.class
 })
 public class RetryConfigurationSpringTest {
 
-	@Autowired
-	private ConfigWithOverrides configWithOverrides;
+    @Autowired
+    private ConfigWithOverrides configWithOverrides;
 
 
-	@Test
-	public void testAllCircuitBreakerConfigurationBeansOverridden() {
-		assertNotNull(configWithOverrides.retryRegistry);
-		assertNotNull(configWithOverrides.retryAspect);
-		assertNotNull(configWithOverrides.retryEventEventConsumerRegistry);
-		assertNotNull(configWithOverrides.retryConfigurationProperties);
-		assertTrue(configWithOverrides.retryConfigurationProperties().getConfigs().size() == 1);
-	}
+    @Test
+    public void testAllCircuitBreakerConfigurationBeansOverridden() {
+        assertNotNull(configWithOverrides.retryRegistry);
+        assertNotNull(configWithOverrides.retryAspect);
+        assertNotNull(configWithOverrides.retryEventEventConsumerRegistry);
+        assertNotNull(configWithOverrides.retryConfigurationProperties);
+        assertTrue(configWithOverrides.retryConfigurationProperties().getConfigs().size() == 1);
+    }
 
-	@Configuration
-	@Import(FallbackConfiguration.class)
-	public static class ConfigWithOverrides {
+    @Configuration
+    @Import(FallbackConfiguration.class)
+    public static class ConfigWithOverrides {
 
-		private RetryRegistry retryRegistry;
+        private RetryRegistry retryRegistry;
 
-		private RetryAspect retryAspect;
+        private RetryAspect retryAspect;
 
-		private EventConsumerRegistry<RetryEvent> retryEventEventConsumerRegistry;
+        private EventConsumerRegistry<RetryEvent> retryEventEventConsumerRegistry;
 
-		private RetryConfigurationProperties retryConfigurationProperties;
+        private RetryConfigurationProperties retryConfigurationProperties;
 
-		@Bean
-		public RetryRegistry retryRegistry() {
-			retryRegistry = RetryRegistry.ofDefaults();
-			return retryRegistry;
-		}
+        @Bean
+        public RetryRegistry retryRegistry() {
+            retryRegistry = RetryRegistry.ofDefaults();
+            return retryRegistry;
+        }
 
-		@Bean
-		public RetryAspect retryAspect(RetryRegistry retryRegistry,
-									   @Autowired(required = false) List<RetryAspectExt> retryAspectExts,
-									   FallbackDecorators fallbackDecorators) {
-			retryAspect = new RetryAspect(retryConfigurationProperties(), retryRegistry, retryAspectExts, fallbackDecorators);
-			return retryAspect;
-		}
+        @Bean
+        public RetryAspect retryAspect(RetryRegistry retryRegistry,
+                @Autowired(required = false) List<RetryAspectExt> retryAspectExts,
+                FallbackDecorators fallbackDecorators) {
+            retryAspect = new RetryAspect(retryConfigurationProperties(), retryRegistry,
+                    retryAspectExts, fallbackDecorators);
+            return retryAspect;
+        }
 
-		@Bean
-		public EventConsumerRegistry<RetryEvent> eventConsumerRegistry() {
-			retryEventEventConsumerRegistry = new DefaultEventConsumerRegistry<>();
-			return retryEventEventConsumerRegistry;
-		}
+        @Bean
+        public EventConsumerRegistry<RetryEvent> eventConsumerRegistry() {
+            retryEventEventConsumerRegistry = new DefaultEventConsumerRegistry<>();
+            return retryEventEventConsumerRegistry;
+        }
 
-		@Bean
-		public RetryConfigurationProperties retryConfigurationProperties() {
-			retryConfigurationProperties = new RetryConfigurationPropertiesTest();
-			return retryConfigurationProperties;
-		}
+        @Bean
+        public RetryConfigurationProperties retryConfigurationProperties() {
+            retryConfigurationProperties = new RetryConfigurationPropertiesTest();
+            return retryConfigurationProperties;
+        }
 
-		private class RetryConfigurationPropertiesTest extends RetryConfigurationProperties {
+        private class RetryConfigurationPropertiesTest extends RetryConfigurationProperties {
 
-			RetryConfigurationPropertiesTest() {
-				InstanceProperties instanceProperties = new InstanceProperties();
-				instanceProperties.setBaseConfig("sharedConfig");
-				instanceProperties.setMaxRetryAttempts(3);
-				getConfigs().put("sharedBackend", instanceProperties);
-			}
+            RetryConfigurationPropertiesTest() {
+                InstanceProperties instanceProperties = new InstanceProperties();
+                instanceProperties.setBaseConfig("sharedConfig");
+                instanceProperties.setMaxRetryAttempts(3);
+                getConfigs().put("sharedBackend", instanceProperties);
+            }
 
-		}
-	}
+        }
+    }
 
 
 }

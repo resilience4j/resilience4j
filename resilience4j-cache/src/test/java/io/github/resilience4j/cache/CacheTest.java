@@ -18,18 +18,19 @@
  */
 package io.github.resilience4j.cache;
 
+import static io.github.resilience4j.adapter.RxJava2Adapter.toFlowable;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.then;
+import static org.mockito.BDDMockito.willThrow;
+import static org.mockito.Mockito.mock;
+
 import io.github.resilience4j.cache.event.CacheEvent;
 import io.reactivex.subscribers.TestSubscriber;
 import io.vavr.CheckedFunction1;
+import java.util.function.Function;
 import org.junit.Before;
 import org.junit.Test;
-
-import java.util.function.Function;
-
-import static io.github.resilience4j.adapter.RxJava2Adapter.toFlowable;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.BDDMockito.*;
-import static org.mockito.Mockito.mock;
 
 public class CacheTest {
 
@@ -37,7 +38,7 @@ public class CacheTest {
 
     @SuppressWarnings("unchecked")
     @Before
-    public void setUp(){
+    public void setUp() {
         cache = mock(javax.cache.Cache.class);
     }
 
@@ -47,11 +48,13 @@ public class CacheTest {
         given(cache.get("testKey")).willReturn(null);
 
         Cache<String, String> cacheContext = Cache.of(cache);
-        TestSubscriber<CacheEvent.Type> testSubscriber = toFlowable(cacheContext.getEventPublisher())
+        TestSubscriber<CacheEvent.Type> testSubscriber = toFlowable(
+                cacheContext.getEventPublisher())
                 .map(CacheEvent::getEventType)
                 .test();
 
-        CheckedFunction1<String, String> cachedFunction = Cache.decorateCheckedSupplier(cacheContext, () -> "Hello world");
+        CheckedFunction1<String, String> cachedFunction = Cache
+                .decorateCheckedSupplier(cacheContext, () -> "Hello world");
         String value = cachedFunction.apply("testKey");
         assertThat(value).isEqualTo("Hello world");
 
@@ -70,11 +73,13 @@ public class CacheTest {
         given(cache.get("testKey")).willReturn(null);
 
         Cache<String, String> cacheContext = Cache.of(cache);
-        TestSubscriber<CacheEvent.Type> testSubscriber = toFlowable(cacheContext.getEventPublisher())
+        TestSubscriber<CacheEvent.Type> testSubscriber = toFlowable(
+                cacheContext.getEventPublisher())
                 .map(CacheEvent::getEventType)
                 .test();
 
-        Function<String, String> cachedFunction = Cache.decorateSupplier(cacheContext, () -> "Hello world");
+        Function<String, String> cachedFunction = Cache
+                .decorateSupplier(cacheContext, () -> "Hello world");
         String value = cachedFunction.apply("testKey");
         assertThat(value).isEqualTo("Hello world");
 
@@ -93,11 +98,13 @@ public class CacheTest {
         given(cache.get("testKey")).willReturn(null);
 
         Cache<String, String> cacheContext = Cache.of(cache);
-        TestSubscriber<CacheEvent.Type> testSubscriber = toFlowable(cacheContext.getEventPublisher())
+        TestSubscriber<CacheEvent.Type> testSubscriber = toFlowable(
+                cacheContext.getEventPublisher())
                 .map(CacheEvent::getEventType)
                 .test();
 
-        CheckedFunction1<String, String> cachedFunction = Cache.decorateCallable(cacheContext, () -> "Hello world");
+        CheckedFunction1<String, String> cachedFunction = Cache
+                .decorateCallable(cacheContext, () -> "Hello world");
         String value = cachedFunction.apply("testKey");
         assertThat(value).isEqualTo("Hello world");
 
@@ -133,14 +140,17 @@ public class CacheTest {
     public void shouldReturnValueOfSupplier() throws Throwable {
         // Given the cache does not contain the key
         given(cache.get("testKey")).willReturn(null);
-        willThrow(new RuntimeException("Cache is not available")).given(cache).put("testKey", "Hello world");
+        willThrow(new RuntimeException("Cache is not available")).given(cache)
+                .put("testKey", "Hello world");
 
         Cache<String, String> cacheContext = Cache.of(cache);
-        TestSubscriber<CacheEvent.Type> testSubscriber = toFlowable(cacheContext.getEventPublisher())
+        TestSubscriber<CacheEvent.Type> testSubscriber = toFlowable(
+                cacheContext.getEventPublisher())
                 .map(CacheEvent::getEventType)
                 .test();
 
-        CheckedFunction1<String, String> cachedFunction = Cache.decorateCheckedSupplier(cacheContext, () -> "Hello world");
+        CheckedFunction1<String, String> cachedFunction = Cache
+                .decorateCheckedSupplier(cacheContext, () -> "Hello world");
         String value = cachedFunction.apply("testKey");
         assertThat(value).isEqualTo("Hello world");
 
@@ -158,11 +168,13 @@ public class CacheTest {
         given(cache.get("testKey")).willReturn("Hello from cache");
 
         Cache<String, String> cacheContext = Cache.of(cache);
-        TestSubscriber<CacheEvent.Type> testSubscriber = toFlowable(cacheContext.getEventPublisher())
+        TestSubscriber<CacheEvent.Type> testSubscriber = toFlowable(
+                cacheContext.getEventPublisher())
                 .map(CacheEvent::getEventType)
                 .test();
 
-        CheckedFunction1<String, String> cachedFunction = Cache.decorateCheckedSupplier(cacheContext, () -> "Hello world");
+        CheckedFunction1<String, String> cachedFunction = Cache
+                .decorateCheckedSupplier(cacheContext, () -> "Hello world");
         String value = cachedFunction.apply("testKey");
         assertThat(value).isEqualTo("Hello from cache");
 
@@ -180,11 +192,13 @@ public class CacheTest {
         given(cache.get("testKey")).willThrow(new RuntimeException("Cache is not available"));
 
         Cache<String, String> cacheContext = Cache.of(cache);
-        TestSubscriber<CacheEvent.Type> testSubscriber = toFlowable(cacheContext.getEventPublisher())
+        TestSubscriber<CacheEvent.Type> testSubscriber = toFlowable(
+                cacheContext.getEventPublisher())
                 .map(CacheEvent::getEventType)
                 .test();
 
-        CheckedFunction1<String, String> cachedFunction = Cache.decorateCheckedSupplier(cacheContext, () -> "Hello world");
+        CheckedFunction1<String, String> cachedFunction = Cache
+                .decorateCheckedSupplier(cacheContext, () -> "Hello world");
         String value = cachedFunction.apply("testKey");
         assertThat(value).isEqualTo("Hello world");
 

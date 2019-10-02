@@ -17,13 +17,11 @@ package io.github.resilience4j.reactor.timelimiter;
 
 import io.github.resilience4j.reactor.IllegalPublisherException;
 import io.github.resilience4j.timelimiter.TimeLimiter;
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
-
 import java.time.Duration;
 import java.util.function.UnaryOperator;
-
 import org.reactivestreams.Publisher;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 /**
  * A Reactor TimeLimiter operator which wraps a reactive type in a TimeLimiter.
@@ -41,7 +39,7 @@ public class TimeLimiterOperator<T> implements UnaryOperator<Publisher<T>> {
     /**
      * Creates a timeLimiter.
      *
-     * @param <T>         the value type of the upstream and downstream
+     * @param <T> the value type of the upstream and downstream
      * @param timeLimiter the timeLimiter
      * @return a TimeLimiterOperator
      */

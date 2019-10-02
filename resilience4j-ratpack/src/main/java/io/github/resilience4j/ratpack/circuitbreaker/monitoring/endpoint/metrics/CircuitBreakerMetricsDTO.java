@@ -21,6 +21,7 @@ import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class CircuitBreakerMetricsDTO {
+
     private float failureRate;
     private int numberOfBufferedCalls;
     private int numberOfFailedCalls;

@@ -16,16 +16,15 @@
 
 package io.github.resilience4j.micrometer.tagged;
 
+import static java.util.Objects.requireNonNull;
+
 import io.github.resilience4j.timelimiter.TimeLimiter;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.Meter;
 import io.micrometer.core.instrument.MeterRegistry;
-
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
-
-import static java.util.Objects.requireNonNull;
 
 abstract class AbstractTimeLimiterMetrics extends AbstractMetrics {
 
@@ -73,8 +72,8 @@ abstract class AbstractTimeLimiterMetrics extends AbstractMetrics {
         private String callsMetricName = DEFAULT_TIME_LIMITER_CALLS;
 
         /**
-         * Returns a builder for creating custom metric names.
-         * Note that names have default values, so only desired metrics can be renamed.
+         * Returns a builder for creating custom metric names. Note that names have default values,
+         * so only desired metrics can be renamed.
          *
          * @return The builder.
          */
@@ -91,7 +90,10 @@ abstract class AbstractTimeLimiterMetrics extends AbstractMetrics {
             return new MetricNames();
         }
 
-        /** Returns the metric name for circuit breaker calls, defaults to {@value DEFAULT_TIME_LIMITER_CALLS}.
+        /**
+         * Returns the metric name for circuit breaker calls, defaults to {@value
+         * DEFAULT_TIME_LIMITER_CALLS}.
+         *
          * @return The circuit breaker calls metric name.
          */
         public String getCallsMetricName() {
@@ -105,9 +107,13 @@ abstract class AbstractTimeLimiterMetrics extends AbstractMetrics {
 
             private final MetricNames metricNames = new MetricNames();
 
-            /** Overrides the default metric name {@value MetricNames#DEFAULT_TIME_LIMITER_CALLS} with a given one.
+            /**
+             * Overrides the default metric name {@value MetricNames#DEFAULT_TIME_LIMITER_CALLS}
+             * with a given one.
+             *
              * @param callsMetricName The calls metric name.
-             * @return The builder.*/
+             * @return The builder.
+             */
             public Builder callsMetricName(String callsMetricName) {
                 metricNames.callsMetricName = requireNonNull(callsMetricName);
                 return this;

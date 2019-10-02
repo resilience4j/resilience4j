@@ -18,23 +18,23 @@
  */
 package io.github.resilience4j.circuitbreaker.internal;
 
-import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
-import org.junit.Test;
-
-import java.util.concurrent.TimeUnit;
-
 import static io.github.resilience4j.circuitbreaker.internal.CircuitBreakerMetrics.Result;
 import static org.assertj.core.api.Assertions.assertThat;
+
+import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
+import java.util.concurrent.TimeUnit;
+import org.junit.Test;
 
 public class CircuitBreakerMetricsTest {
 
     @Test
-    public void testCircuitBreakerMetrics(){
+    public void testCircuitBreakerMetrics() {
         CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom()
                 .slidingWindow(10, 10, CircuitBreakerConfig.SlidingWindowType.COUNT_BASED)
                 .build();
 
-        CircuitBreakerMetrics circuitBreakerMetrics = CircuitBreakerMetrics.forCosed(circuitBreakerConfig);
+        CircuitBreakerMetrics circuitBreakerMetrics = CircuitBreakerMetrics
+                .forCosed(circuitBreakerConfig);
 
         circuitBreakerMetrics.onSuccess(0, TimeUnit.NANOSECONDS);
         circuitBreakerMetrics.onSuccess(0, TimeUnit.NANOSECONDS);

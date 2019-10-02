@@ -1,11 +1,9 @@
 package io.github.resilience4j.service.test.bulkhead;
 
-import java.util.concurrent.CompletableFuture;
-
-import org.springframework.stereotype.Component;
-
 import io.github.resilience4j.bulkhead.annotation.Bulkhead;
 import io.github.resilience4j.retry.annotation.Retry;
+import java.util.concurrent.CompletableFuture;
+import org.springframework.stereotype.Component;
 
 
 @Component

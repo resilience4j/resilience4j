@@ -1,18 +1,17 @@
 package io.github.resilience4j.ratelimiter.operator;
 
+import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
+
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RequestNotPermitted;
 import io.reactivex.Completable;
-import org.junit.Before;
-import org.junit.Test;
-import org.mockito.Mockito;
-
 import java.io.IOException;
 import java.time.Duration;
 import java.util.concurrent.TimeUnit;
-
-import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
+import org.junit.Before;
+import org.junit.Test;
+import org.mockito.Mockito;
 
 /**
  * Unit test for {@link CompletableRateLimiter}.
@@ -22,7 +21,7 @@ public class CompletableRateLimiterTest {
     private RateLimiter rateLimiter;
 
     @Before
-    public void setUp(){
+    public void setUp() {
         rateLimiter = Mockito.mock(RateLimiter.class, RETURNS_DEEP_STUBS);
     }
 
@@ -31,9 +30,9 @@ public class CompletableRateLimiterTest {
         given(rateLimiter.reservePermission()).willReturn(Duration.ofSeconds(0).toNanos());
 
         Completable.complete()
-            .compose(RateLimiterOperator.of(rateLimiter))
-            .test()
-            .assertComplete();
+                .compose(RateLimiterOperator.of(rateLimiter))
+                .test()
+                .assertComplete();
     }
 
     @Test
@@ -51,11 +50,11 @@ public class CompletableRateLimiterTest {
         given(rateLimiter.reservePermission()).willReturn(Duration.ofSeconds(0).toNanos());
 
         Completable.error(new IOException("BAM!"))
-            .compose(RateLimiterOperator.of(rateLimiter))
-            .test()
-            .assertSubscribed()
-            .assertError(IOException.class)
-            .assertNotComplete();
+                .compose(RateLimiterOperator.of(rateLimiter))
+                .test()
+                .assertSubscribed()
+                .assertError(IOException.class)
+                .assertNotComplete();
     }
 
     @Test
@@ -63,10 +62,10 @@ public class CompletableRateLimiterTest {
         given(rateLimiter.reservePermission()).willReturn(-1L);
 
         Completable.complete()
-            .compose(RateLimiterOperator.of(rateLimiter))
-            .test()
-            .assertSubscribed()
-            .assertError(RequestNotPermitted.class)
-            .assertNotComplete();
+                .compose(RateLimiterOperator.of(rateLimiter))
+                .test()
+                .assertSubscribed()
+                .assertError(RequestNotPermitted.class)
+                .assertNotComplete();
     }
 }

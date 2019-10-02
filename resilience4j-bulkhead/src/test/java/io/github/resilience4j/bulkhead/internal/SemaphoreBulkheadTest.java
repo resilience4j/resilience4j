@@ -18,29 +18,33 @@
  */
 package io.github.resilience4j.bulkhead.internal;
 
-import io.github.resilience4j.adapter.RxJava2Adapter;
-import io.github.resilience4j.bulkhead.Bulkhead;
-import io.github.resilience4j.bulkhead.BulkheadConfig;
-import io.github.resilience4j.bulkhead.BulkheadFullException;
-import io.github.resilience4j.bulkhead.event.BulkheadEvent;
-import io.github.resilience4j.core.exception.AcquirePermissionCancelledException;
-import io.reactivex.subscribers.TestSubscriber;
-import org.junit.Before;
-import org.junit.Test;
-
-import java.time.Duration;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.Supplier;
-
 import static com.jayway.awaitility.Awaitility.await;
 import static io.github.resilience4j.bulkhead.BulkheadConfig.DEFAULT_MAX_CONCURRENT_CALLS;
 import static io.github.resilience4j.bulkhead.BulkheadConfig.DEFAULT_WRITABLE_STACK_TRACE_ENABLED;
-import static io.github.resilience4j.bulkhead.event.BulkheadEvent.Type.*;
-import static java.lang.Thread.State.*;
+import static io.github.resilience4j.bulkhead.event.BulkheadEvent.Type.CALL_FINISHED;
+import static io.github.resilience4j.bulkhead.event.BulkheadEvent.Type.CALL_PERMITTED;
+import static io.github.resilience4j.bulkhead.event.BulkheadEvent.Type.CALL_REJECTED;
+import static java.lang.Thread.State.BLOCKED;
+import static java.lang.Thread.State.RUNNABLE;
+import static java.lang.Thread.State.TERMINATED;
+import static java.lang.Thread.State.TIMED_WAITING;
+import static java.lang.Thread.State.WAITING;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
+import io.github.resilience4j.adapter.RxJava2Adapter;
+import io.github.resilience4j.bulkhead.Bulkhead;
+import io.github.resilience4j.bulkhead.BulkheadConfig;
+import io.github.resilience4j.bulkhead.event.BulkheadEvent;
+import io.github.resilience4j.core.exception.AcquirePermissionCancelledException;
+import io.reactivex.subscribers.TestSubscriber;
+import java.time.Duration;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Supplier;
+import org.junit.Before;
+import org.junit.Test;
 
 public class SemaphoreBulkheadTest {
 
@@ -86,7 +90,8 @@ public class SemaphoreBulkheadTest {
         bulkhead.tryAcquirePermission();
 
         testSubscriber.assertValueCount(6)
-                .assertValues(CALL_PERMITTED, CALL_PERMITTED, CALL_REJECTED, CALL_FINISHED, CALL_FINISHED, CALL_PERMITTED);
+                .assertValues(CALL_PERMITTED, CALL_PERMITTED, CALL_REJECTED, CALL_FINISHED,
+                        CALL_FINISHED, CALL_PERMITTED);
     }
 
     @Test
@@ -106,7 +111,8 @@ public class SemaphoreBulkheadTest {
         Supplier<BulkheadConfig> configSupplier = () -> null;
 
         // when
-        assertThatThrownBy(() -> Bulkhead.of("test", configSupplier)).isInstanceOf(NullPointerException.class).hasMessage("Config must not be null");
+        assertThatThrownBy(() -> Bulkhead.of("test", configSupplier))
+                .isInstanceOf(NullPointerException.class).hasMessage("Config must not be null");
     }
 
     @Test
@@ -118,8 +124,10 @@ public class SemaphoreBulkheadTest {
         // then
         assertThat(bulkhead).isNotNull();
         assertThat(bulkhead.getBulkheadConfig()).isNotNull();
-        assertThat(bulkhead.getBulkheadConfig().getMaxConcurrentCalls()).isEqualTo(DEFAULT_MAX_CONCURRENT_CALLS);
-        assertThat(bulkhead.getBulkheadConfig().isWritableStackTraceEnabled()).isEqualTo(DEFAULT_WRITABLE_STACK_TRACE_ENABLED);
+        assertThat(bulkhead.getBulkheadConfig().getMaxConcurrentCalls())
+                .isEqualTo(DEFAULT_MAX_CONCURRENT_CALLS);
+        assertThat(bulkhead.getBulkheadConfig().isWritableStackTraceEnabled())
+                .isEqualTo(DEFAULT_WRITABLE_STACK_TRACE_ENABLED);
     }
 
     @Test
@@ -140,7 +148,8 @@ public class SemaphoreBulkheadTest {
             boolean acquired = bulkhead.tryAcquirePermission();
             Duration actualWaitTime = Duration.ofNanos(System.nanoTime() - start);
             assertThat(acquired).isFalse();
-            assertThat(actualWaitTime.toMillis()).isBetween(expectedMillisOfWaitTime, (long) (expectedMillisOfWaitTime * 1.3));
+            assertThat(actualWaitTime.toMillis())
+                    .isBetween(expectedMillisOfWaitTime, (long) (expectedMillisOfWaitTime * 1.3));
         });
         subTestRoutine.setDaemon(true);
         subTestRoutine.start();
@@ -214,7 +223,8 @@ public class SemaphoreBulkheadTest {
             try {
                 bulkhead.acquirePermission();
             } catch (AcquirePermissionCancelledException bulkheadException) {
-                assertThat(bulkheadException.getMessage()).contains("interrupted while waiting for a permission");
+                assertThat(bulkheadException.getMessage())
+                        .contains("interrupted while waiting for a permission");
                 interruptedWithException.set(true);
             } finally {
                 Duration actualWaitTime = Duration.ofNanos(System.nanoTime() - start);
@@ -298,7 +308,6 @@ public class SemaphoreBulkheadTest {
         assertThat(bulkhead.getBulkheadConfig().getMaxConcurrentCalls()).isEqualTo(5);
         assertThat(bulkhead.getBulkheadConfig().getMaxWaitDuration().toMillis()).isEqualTo(5000);
 
-
         newConfig = BulkheadConfig.custom()
                 .maxConcurrentCalls(2)
                 .maxWaitDuration(Duration.ofMillis(5000))
@@ -330,7 +339,6 @@ public class SemaphoreBulkheadTest {
         bulkhead.changeConfig(newConfig);
         assertThat(bulkhead.getBulkheadConfig().getMaxConcurrentCalls()).isEqualTo(3);
         assertThat(bulkhead.getBulkheadConfig().getMaxWaitDuration().toMillis()).isEqualTo(3000);
-
 
         newConfig = BulkheadConfig.custom()
                 .maxConcurrentCalls(3)
@@ -550,6 +558,7 @@ public class SemaphoreBulkheadTest {
                 .until(() -> secondChangerThread.getState().equals(TERMINATED));
 
         assertThat(bulkhead.getBulkheadConfig().getMaxConcurrentCalls()).isEqualTo(4);
-        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(3); // main thread is still holding
+        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls())
+                .isEqualTo(3); // main thread is still holding
     }
 }

@@ -18,17 +18,17 @@
  */
 package io.github.resilience4j.bulkhead;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.BDDMockito.then;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+
 import io.github.resilience4j.test.HelloWorldService;
 import io.vavr.control.Try;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.BDDMockito;
 import org.slf4j.Logger;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.BDDMockito.then;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
 
 public class BulkheadEventPublisherTest {
 
@@ -38,13 +38,13 @@ public class BulkheadEventPublisherTest {
     private Bulkhead bulkhead;
 
     @Before
-    public void setUp(){
+    public void setUp() {
         helloWorldService = mock(HelloWorldService.class);
         config = BulkheadConfig.custom()
-                   .maxConcurrentCalls(1)
-                   .build();
+                .maxConcurrentCalls(1)
+                .build();
 
-        bulkhead= Bulkhead.of("test", config);
+        bulkhead = Bulkhead.of("test", config);
 
         logger = mock(Logger.class);
     }
@@ -65,8 +65,8 @@ public class BulkheadEventPublisherTest {
 
         // When
         bulkhead.getEventPublisher()
-            .onCallPermitted(event ->
-                    logger.info(event.getEventType().toString()));
+                .onCallPermitted(event ->
+                        logger.info(event.getEventType().toString()));
 
         String result = bulkhead.executeSupplier(helloWorldService::returnHelloWorld);
 
@@ -88,7 +88,7 @@ public class BulkheadEventPublisherTest {
 
         bulkhead.tryAcquirePermission();
 
-        Try.ofSupplier(Bulkhead.decorateSupplier(bulkhead,helloWorldService::returnHelloWorld));
+        Try.ofSupplier(Bulkhead.decorateSupplier(bulkhead, helloWorldService::returnHelloWorld));
 
         // Then
         then(logger).should(times(1)).info("CALL_REJECTED");
@@ -104,7 +104,7 @@ public class BulkheadEventPublisherTest {
                 .onCallFinished(event ->
                         logger.info(event.getEventType().toString()));
 
-        Try.ofSupplier(Bulkhead.decorateSupplier(bulkhead,helloWorldService::returnHelloWorld));
+        Try.ofSupplier(Bulkhead.decorateSupplier(bulkhead, helloWorldService::returnHelloWorld));
 
         // Then
         then(logger).should(times(1)).info("CALL_FINISHED");

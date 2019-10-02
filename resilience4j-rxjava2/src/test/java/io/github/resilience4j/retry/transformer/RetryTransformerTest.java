@@ -16,23 +16,26 @@
 
 package io.github.resilience4j.retry.transformer;
 
-import io.github.resilience4j.retry.Retry;
-import io.github.resilience4j.retry.RetryConfig;
-import io.github.resilience4j.test.HelloWorldException;
-import io.github.resilience4j.test.HelloWorldService;
-import io.reactivex.*;
-import org.junit.Before;
-import org.junit.Test;
-import org.mockito.BDDMockito;
-import org.mockito.Mockito;
-
-import java.io.IOException;
-import java.time.Duration;
-
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doThrow;
+
+import io.github.resilience4j.retry.Retry;
+import io.github.resilience4j.retry.RetryConfig;
+import io.github.resilience4j.test.HelloWorldException;
+import io.github.resilience4j.test.HelloWorldService;
+import io.reactivex.Completable;
+import io.reactivex.Flowable;
+import io.reactivex.Maybe;
+import io.reactivex.Observable;
+import io.reactivex.Single;
+import java.io.IOException;
+import java.time.Duration;
+import org.junit.Before;
+import org.junit.Test;
+import org.mockito.BDDMockito;
+import org.mockito.Mockito;
 
 public class RetryTransformerTest {
 
@@ -94,7 +97,6 @@ public class RetryTransformerTest {
         Single.fromCallable(helloWorldService::returnHelloWorld)
                 .compose(RetryTransformer.of(retry))
                 .test();
-
 
         //Then
         BDDMockito.then(helloWorldService).should(Mockito.times(1)).returnHelloWorld();

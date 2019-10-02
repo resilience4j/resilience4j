@@ -3,27 +3,27 @@ description = "resilience4j bom"
 apply plugin: 'maven-publish'
 
 publishing {
-    publications {
-        mavenJava(MavenPublication) {
-            from components.java
-            pom.withXml {
-                asNode().appendNode('packaging', 'pom')
+  publications {
+    mavenJava(MavenPublication) {
+      from components.java
+      pom.withXml {
+        asNode().appendNode('packaging', 'pom')
 
-                def license = asNode().appendNode('licenses').appendNode('license')
-                license.appendNode('name', 'Apache-2.0')
-                license.appendNode('url', 'https://github.com/resilience4j/resilience4j/blob/master/LICENSE.txt')
-                license.appendNode('distribution', 'repo')
+        def license = asNode().appendNode('licenses').appendNode('license')
+        license.appendNode('name', 'Apache-2.0')
+        license.appendNode('url', 'https://github.com/resilience4j/resilience4j/blob/master/LICENSE.txt')
+        license.appendNode('distribution', 'repo')
 
-                asNode().appendNode('scm').appendNode('url', 'https://github.com/resilience4j/resilience4j.git')
+        asNode().appendNode('scm').appendNode('url', 'https://github.com/resilience4j/resilience4j.git')
 
-                Node deps = asNode().appendNode('dependencyManagement').appendNode('dependencies')
-                coreProjects.each {
-                    Node dep = deps.appendNode('dependency')
-                    dep.appendNode('groupId').value = it.group
-                    dep.appendNode('artifactId').value = it.name
-                    dep.appendNode('version').value = it.version
-                }
-            }
+        Node deps = asNode().appendNode('dependencyManagement').appendNode('dependencies')
+        coreProjects.each {
+          Node dep = deps.appendNode('dependency')
+          dep.appendNode('groupId').value = it.group
+          dep.appendNode('artifactId').value = it.name
+          dep.appendNode('version').value = it.version
         }
+      }
     }
+  }
 }

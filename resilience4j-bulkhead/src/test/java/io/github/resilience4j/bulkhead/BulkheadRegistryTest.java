@@ -18,172 +18,183 @@
  */
 package io.github.resilience4j.bulkhead;
 
+import static org.assertj.core.api.BDDAssertions.assertThat;
+
 import io.github.resilience4j.core.EventProcessor;
 import io.github.resilience4j.core.Registry;
 import io.github.resilience4j.core.registry.EntryAddedEvent;
 import io.github.resilience4j.core.registry.EntryRemovedEvent;
 import io.github.resilience4j.core.registry.EntryReplacedEvent;
 import io.github.resilience4j.core.registry.RegistryEventConsumer;
+import java.time.Duration;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import org.junit.Before;
 import org.junit.Test;
-
-import java.time.Duration;
-import java.util.*;
-
-import static org.assertj.core.api.BDDAssertions.assertThat;
 
 
 public class BulkheadRegistryTest {
 
-	private BulkheadConfig config;
-	private BulkheadRegistry registry;
+    private BulkheadConfig config;
+    private BulkheadRegistry registry;
 
-	@Before
-	public void setUp() {
-		// registry with default config
-		registry = BulkheadRegistry.ofDefaults();
-		// registry with custom config
-		config = BulkheadConfig.custom()
-				.maxConcurrentCalls(100)
-				.maxWaitDuration(Duration.ofMillis(50))
-				.build();
-	}
+    private static Optional<EventProcessor<?>> getEventProcessor(
+            Registry.EventPublisher<Bulkhead> eventPublisher) {
+        if (eventPublisher instanceof EventProcessor<?>) {
+            return Optional.of((EventProcessor<?>) eventPublisher);
+        }
 
-	@Test
-	public void shouldReturnCustomConfig() {
-		// give
-		BulkheadRegistry registry = BulkheadRegistry.of(config);
-		// when
-		BulkheadConfig bulkheadConfig = registry.getDefaultConfig();
-		// then
-		assertThat(bulkheadConfig).isSameAs(config);
-	}
+        return Optional.empty();
+    }
 
-	@Test
-	public void shouldReturnTheCorrectName() {
+    @Before
+    public void setUp() {
+        // registry with default config
+        registry = BulkheadRegistry.ofDefaults();
+        // registry with custom config
+        config = BulkheadConfig.custom()
+                .maxConcurrentCalls(100)
+                .maxWaitDuration(Duration.ofMillis(50))
+                .build();
+    }
 
-		Bulkhead bulkhead = registry.bulkhead("test");
+    @Test
+    public void shouldReturnCustomConfig() {
+        // give
+        BulkheadRegistry registry = BulkheadRegistry.of(config);
+        // when
+        BulkheadConfig bulkheadConfig = registry.getDefaultConfig();
+        // then
+        assertThat(bulkheadConfig).isSameAs(config);
+    }
 
-		assertThat(bulkhead).isNotNull();
-		assertThat(bulkhead.getName()).isEqualTo("test");
-		assertThat(bulkhead.getBulkheadConfig().getMaxConcurrentCalls()).isEqualTo(25);
-		assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(25);
-	}
+    @Test
+    public void shouldReturnTheCorrectName() {
 
-	@Test
-	public void shouldBeTheSameInstance() {
+        Bulkhead bulkhead = registry.bulkhead("test");
 
-		Bulkhead bulkhead1 = registry.bulkhead("test", config);
-		Bulkhead bulkhead2 = registry.bulkhead("test", config);
+        assertThat(bulkhead).isNotNull();
+        assertThat(bulkhead.getName()).isEqualTo("test");
+        assertThat(bulkhead.getBulkheadConfig().getMaxConcurrentCalls()).isEqualTo(25);
+        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(25);
+    }
 
-		assertThat(bulkhead1).isSameAs(bulkhead2);
-		assertThat(registry.getAllBulkheads()).hasSize(1);
-	}
+    @Test
+    public void shouldBeTheSameInstance() {
 
-	@Test
-	public void shouldBeNotTheSameInstance() {
+        Bulkhead bulkhead1 = registry.bulkhead("test", config);
+        Bulkhead bulkhead2 = registry.bulkhead("test", config);
 
-		Bulkhead bulkhead1 = registry.bulkhead("test1");
-		Bulkhead bulkhead2 = registry.bulkhead("test2");
+        assertThat(bulkhead1).isSameAs(bulkhead2);
+        assertThat(registry.getAllBulkheads()).hasSize(1);
+    }
 
-		assertThat(bulkhead1).isNotSameAs(bulkhead2);
-		assertThat(registry.getAllBulkheads()).hasSize(2);
-	}
+    @Test
+    public void shouldBeNotTheSameInstance() {
 
-	@Test
-	public void testCreateWithConfigurationMap() {
-		Map<String, BulkheadConfig> configs = new HashMap<>();
-		configs.put("default", BulkheadConfig.ofDefaults());
-		configs.put("custom", BulkheadConfig.ofDefaults());
+        Bulkhead bulkhead1 = registry.bulkhead("test1");
+        Bulkhead bulkhead2 = registry.bulkhead("test2");
 
-		BulkheadRegistry bulkheadRegistry = BulkheadRegistry.of(configs);
+        assertThat(bulkhead1).isNotSameAs(bulkhead2);
+        assertThat(registry.getAllBulkheads()).hasSize(2);
+    }
 
-		assertThat(bulkheadRegistry.getDefaultConfig()).isNotNull();
-		assertThat(bulkheadRegistry.getConfiguration("custom")).isNotNull();
-	}
+    @Test
+    public void testCreateWithConfigurationMap() {
+        Map<String, BulkheadConfig> configs = new HashMap<>();
+        configs.put("default", BulkheadConfig.ofDefaults());
+        configs.put("custom", BulkheadConfig.ofDefaults());
 
-	@Test
-	public void testCreateWithConfigurationMapWithoutDefaultConfig() {
-		Map<String, BulkheadConfig> configs = new HashMap<>();
-		configs.put("custom", BulkheadConfig.ofDefaults());
+        BulkheadRegistry bulkheadRegistry = BulkheadRegistry.of(configs);
 
-		BulkheadRegistry bulkheadRegistry = BulkheadRegistry.of(configs);
+        assertThat(bulkheadRegistry.getDefaultConfig()).isNotNull();
+        assertThat(bulkheadRegistry.getConfiguration("custom")).isNotNull();
+    }
 
-		assertThat(bulkheadRegistry.getDefaultConfig()).isNotNull();
-		assertThat(bulkheadRegistry.getConfiguration("custom")).isNotNull();
-	}
+    @Test
+    public void testCreateWithConfigurationMapWithoutDefaultConfig() {
+        Map<String, BulkheadConfig> configs = new HashMap<>();
+        configs.put("custom", BulkheadConfig.ofDefaults());
 
-	@Test
-	public void testCreateWithSingleRegistryEventConsumer() {
-		BulkheadRegistry bulkheadRegistry = BulkheadRegistry.of(BulkheadConfig.ofDefaults(), new NoOpBulkheadEventConsumer());
+        BulkheadRegistry bulkheadRegistry = BulkheadRegistry.of(configs);
 
-		getEventProcessor(bulkheadRegistry.getEventPublisher())
-				.ifPresent(eventProcessor -> assertThat(eventProcessor.hasConsumers()).isTrue());
-	}
+        assertThat(bulkheadRegistry.getDefaultConfig()).isNotNull();
+        assertThat(bulkheadRegistry.getConfiguration("custom")).isNotNull();
+    }
 
-	@Test
-	public void testCreateWithMultipleRegistryEventConsumer() {
-		List<RegistryEventConsumer<Bulkhead>> registryEventConsumers = new ArrayList<>();
-		registryEventConsumers.add(new NoOpBulkheadEventConsumer());
-		registryEventConsumers.add(new NoOpBulkheadEventConsumer());
+    @Test
+    public void testCreateWithSingleRegistryEventConsumer() {
+        BulkheadRegistry bulkheadRegistry = BulkheadRegistry
+                .of(BulkheadConfig.ofDefaults(), new NoOpBulkheadEventConsumer());
 
-		BulkheadRegistry bulkheadRegistry = BulkheadRegistry.of(BulkheadConfig.ofDefaults(), registryEventConsumers);
+        getEventProcessor(bulkheadRegistry.getEventPublisher())
+                .ifPresent(eventProcessor -> assertThat(eventProcessor.hasConsumers()).isTrue());
+    }
 
-		getEventProcessor(bulkheadRegistry.getEventPublisher())
-				.ifPresent(eventProcessor -> assertThat(eventProcessor.hasConsumers()).isTrue());
-	}
+    @Test
+    public void testCreateWithMultipleRegistryEventConsumer() {
+        List<RegistryEventConsumer<Bulkhead>> registryEventConsumers = new ArrayList<>();
+        registryEventConsumers.add(new NoOpBulkheadEventConsumer());
+        registryEventConsumers.add(new NoOpBulkheadEventConsumer());
 
-	@Test
-	public void testCreateWithConfigurationMapWithSingleRegistryEventConsumer() {
-		Map<String, BulkheadConfig> configs = new HashMap<>();
-		configs.put("custom", BulkheadConfig.ofDefaults());
+        BulkheadRegistry bulkheadRegistry = BulkheadRegistry
+                .of(BulkheadConfig.ofDefaults(), registryEventConsumers);
 
-		BulkheadRegistry bulkheadRegistry = BulkheadRegistry.of(configs, new NoOpBulkheadEventConsumer());
+        getEventProcessor(bulkheadRegistry.getEventPublisher())
+                .ifPresent(eventProcessor -> assertThat(eventProcessor.hasConsumers()).isTrue());
+    }
 
-		getEventProcessor(bulkheadRegistry.getEventPublisher())
-				.ifPresent(eventProcessor -> assertThat(eventProcessor.hasConsumers()).isTrue());
-	}
+    @Test
+    public void testCreateWithConfigurationMapWithSingleRegistryEventConsumer() {
+        Map<String, BulkheadConfig> configs = new HashMap<>();
+        configs.put("custom", BulkheadConfig.ofDefaults());
 
-	@Test
-	public void testCreateWithConfigurationMapWithMultiRegistryEventConsumer() {
-		Map<String, BulkheadConfig> configs = new HashMap<>();
-		configs.put("custom", BulkheadConfig.ofDefaults());
+        BulkheadRegistry bulkheadRegistry = BulkheadRegistry
+                .of(configs, new NoOpBulkheadEventConsumer());
 
-		List<RegistryEventConsumer<Bulkhead>> registryEventConsumers = new ArrayList<>();
-		registryEventConsumers.add(new NoOpBulkheadEventConsumer());
-		registryEventConsumers.add(new NoOpBulkheadEventConsumer());
+        getEventProcessor(bulkheadRegistry.getEventPublisher())
+                .ifPresent(eventProcessor -> assertThat(eventProcessor.hasConsumers()).isTrue());
+    }
 
-		BulkheadRegistry bulkheadRegistry = BulkheadRegistry.of(configs, registryEventConsumers);
+    @Test
+    public void testCreateWithConfigurationMapWithMultiRegistryEventConsumer() {
+        Map<String, BulkheadConfig> configs = new HashMap<>();
+        configs.put("custom", BulkheadConfig.ofDefaults());
 
-		getEventProcessor(bulkheadRegistry.getEventPublisher())
-				.ifPresent(eventProcessor -> assertThat(eventProcessor.hasConsumers()).isTrue());
-	}
+        List<RegistryEventConsumer<Bulkhead>> registryEventConsumers = new ArrayList<>();
+        registryEventConsumers.add(new NoOpBulkheadEventConsumer());
+        registryEventConsumers.add(new NoOpBulkheadEventConsumer());
 
-	@Test
-	public void testAddConfiguration() {
-		BulkheadRegistry bulkheadRegistry = BulkheadRegistry.ofDefaults();
-		bulkheadRegistry.addConfiguration("custom", BulkheadConfig.custom().build());
+        BulkheadRegistry bulkheadRegistry = BulkheadRegistry.of(configs, registryEventConsumers);
 
-		assertThat(bulkheadRegistry.getDefaultConfig()).isNotNull();
-		assertThat(bulkheadRegistry.getConfiguration("custom")).isNotNull();
-	}
+        getEventProcessor(bulkheadRegistry.getEventPublisher())
+                .ifPresent(eventProcessor -> assertThat(eventProcessor.hasConsumers()).isTrue());
+    }
 
-	private static Optional<EventProcessor<?>> getEventProcessor(Registry.EventPublisher<Bulkhead> eventPublisher) {
-		if (eventPublisher instanceof EventProcessor<?>) {
-			return Optional.of((EventProcessor<?>) eventPublisher);
-		}
+    @Test
+    public void testAddConfiguration() {
+        BulkheadRegistry bulkheadRegistry = BulkheadRegistry.ofDefaults();
+        bulkheadRegistry.addConfiguration("custom", BulkheadConfig.custom().build());
 
-		return Optional.empty();
-	}
+        assertThat(bulkheadRegistry.getDefaultConfig()).isNotNull();
+        assertThat(bulkheadRegistry.getConfiguration("custom")).isNotNull();
+    }
 
-	private static class NoOpBulkheadEventConsumer implements RegistryEventConsumer<Bulkhead> {
-		@Override
-		public void onEntryAddedEvent(EntryAddedEvent<Bulkhead> entryAddedEvent) { }
+    private static class NoOpBulkheadEventConsumer implements RegistryEventConsumer<Bulkhead> {
 
-		@Override
-		public void onEntryRemovedEvent(EntryRemovedEvent<Bulkhead> entryRemoveEvent) { }
+        @Override
+        public void onEntryAddedEvent(EntryAddedEvent<Bulkhead> entryAddedEvent) {
+        }
 
-		@Override
-		public void onEntryReplacedEvent(EntryReplacedEvent<Bulkhead> entryReplacedEvent) { }
-	}
+        @Override
+        public void onEntryRemovedEvent(EntryRemovedEvent<Bulkhead> entryRemoveEvent) {
+        }
+
+        @Override
+        public void onEntryReplacedEvent(EntryReplacedEvent<Bulkhead> entryReplacedEvent) {
+        }
+    }
 }

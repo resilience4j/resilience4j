@@ -18,15 +18,27 @@
  */
 package io.github.resilience4j.circuitbreaker.internal;
 
+import static io.github.resilience4j.circuitbreaker.CircuitBreaker.State.CLOSED;
+import static io.github.resilience4j.circuitbreaker.CircuitBreaker.State.DISABLED;
+import static io.github.resilience4j.circuitbreaker.CircuitBreaker.State.FORCED_OPEN;
+import static io.github.resilience4j.circuitbreaker.CircuitBreaker.State.HALF_OPEN;
+import static io.github.resilience4j.circuitbreaker.CircuitBreaker.State.OPEN;
+import static io.github.resilience4j.circuitbreaker.internal.CircuitBreakerMetrics.Result;
+import static io.github.resilience4j.circuitbreaker.internal.CircuitBreakerMetrics.Result.ABOVE_THRESHOLDS;
+import static io.github.resilience4j.circuitbreaker.internal.CircuitBreakerMetrics.Result.BELOW_THRESHOLDS;
+
 import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
-import io.github.resilience4j.circuitbreaker.event.*;
+import io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent;
+import io.github.resilience4j.circuitbreaker.event.CircuitBreakerOnCallNotPermittedEvent;
+import io.github.resilience4j.circuitbreaker.event.CircuitBreakerOnErrorEvent;
+import io.github.resilience4j.circuitbreaker.event.CircuitBreakerOnIgnoredErrorEvent;
+import io.github.resilience4j.circuitbreaker.event.CircuitBreakerOnResetEvent;
+import io.github.resilience4j.circuitbreaker.event.CircuitBreakerOnStateTransitionEvent;
+import io.github.resilience4j.circuitbreaker.event.CircuitBreakerOnSuccessEvent;
 import io.github.resilience4j.core.EventConsumer;
 import io.github.resilience4j.core.EventProcessor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
@@ -39,11 +51,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 import java.util.function.UnaryOperator;
-
-import static io.github.resilience4j.circuitbreaker.CircuitBreaker.State.*;
-import static io.github.resilience4j.circuitbreaker.internal.CircuitBreakerMetrics.Result;
-import static io.github.resilience4j.circuitbreaker.internal.CircuitBreakerMetrics.Result.ABOVE_THRESHOLDS;
-import static io.github.resilience4j.circuitbreaker.internal.CircuitBreakerMetrics.Result.BELOW_THRESHOLDS;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A CircuitBreaker finite state machine.
@@ -62,14 +71,16 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
     /**
      * Creates a circuitBreaker.
      *
-     * @param name                 the name of the CircuitBreaker
+     * @param name the name of the CircuitBreaker
      * @param circuitBreakerConfig The CircuitBreaker configuration.
      * @param clock A Clock which can be mocked in tests.
      * @param schedulerFactory A SchedulerFactory which can be mocked in tests.
      */
-    private CircuitBreakerStateMachine(String name, CircuitBreakerConfig circuitBreakerConfig, Clock clock, SchedulerFactory schedulerFactory) {
+    private CircuitBreakerStateMachine(String name, CircuitBreakerConfig circuitBreakerConfig,
+            Clock clock, SchedulerFactory schedulerFactory) {
         this.name = name;
-        this.circuitBreakerConfig = Objects.requireNonNull(circuitBreakerConfig, "Config must not be null");
+        this.circuitBreakerConfig = Objects
+                .requireNonNull(circuitBreakerConfig, "Config must not be null");
         this.stateReference = new AtomicReference<>(new ClosedState());
         this.eventProcessor = new CircuitBreakerEventProcessor();
         this.clock = clock;
@@ -79,32 +90,34 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
     /**
      * Creates a circuitBreaker.
      *
-     * @param name                 the name of the CircuitBreaker
+     * @param name the name of the CircuitBreaker
      * @param circuitBreakerConfig The CircuitBreaker configuration.
      * @param schedulerFactory A SchedulerFactory which can be mocked in tests.
      */
-    public CircuitBreakerStateMachine(String name, CircuitBreakerConfig circuitBreakerConfig, SchedulerFactory schedulerFactory) {
+    public CircuitBreakerStateMachine(String name, CircuitBreakerConfig circuitBreakerConfig,
+            SchedulerFactory schedulerFactory) {
         this(name, circuitBreakerConfig, Clock.systemUTC(), schedulerFactory);
     }
 
     /**
      * Creates a circuitBreaker.
      *
-     * @param name                 the name of the CircuitBreaker
+     * @param name the name of the CircuitBreaker
      * @param circuitBreakerConfig The CircuitBreaker configuration.
      */
-    public CircuitBreakerStateMachine(String name, CircuitBreakerConfig circuitBreakerConfig, Clock clock) {
+    public CircuitBreakerStateMachine(String name, CircuitBreakerConfig circuitBreakerConfig,
+            Clock clock) {
         this(name, circuitBreakerConfig, clock, SchedulerFactory.getInstance());
     }
 
     /**
      * Creates a circuitBreaker.
      *
-     * @param name                 the name of the CircuitBreaker
+     * @param name the name of the CircuitBreaker
      * @param circuitBreakerConfig The CircuitBreaker configuration.
      */
     public CircuitBreakerStateMachine(String name, CircuitBreakerConfig circuitBreakerConfig) {
-       this(name, circuitBreakerConfig, Clock.systemUTC());
+        this(name, circuitBreakerConfig, Clock.systemUTC());
     }
 
     /**
@@ -119,10 +132,11 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
     /**
      * Creates a circuitBreaker.
      *
-     * @param name                 the name of the CircuitBreaker
+     * @param name the name of the CircuitBreaker
      * @param circuitBreakerConfig The CircuitBreaker configuration supplier.
      */
-    public CircuitBreakerStateMachine(String name, Supplier<CircuitBreakerConfig> circuitBreakerConfig) {
+    public CircuitBreakerStateMachine(String name,
+            Supplier<CircuitBreakerConfig> circuitBreakerConfig) {
         this(name, circuitBreakerConfig.get());
     }
 
@@ -144,7 +158,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
     public void acquirePermission() {
         try {
             stateReference.get().acquirePermission();
-        } catch(Exception e) {
+        } catch (Exception e) {
             publishCallNotPermittedEvent();
             throw e;
         }
@@ -157,22 +171,21 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
         if (throwable instanceof CompletionException) {
             Throwable cause = throwable.getCause();
             handleThrowable(duration, durationUnit, cause);
-        }else{
+        } else {
             handleThrowable(duration, durationUnit, throwable);
         }
     }
 
     private void handleThrowable(long duration, TimeUnit durationUnit, Throwable throwable) {
-        if(circuitBreakerConfig.getIgnoreExceptionPredicate().test(throwable)){
+        if (circuitBreakerConfig.getIgnoreExceptionPredicate().test(throwable)) {
             LOG.debug("CircuitBreaker '{}' ignored an exception:", name, throwable);
             releasePermission();
-            publishCircuitIgnoredErrorEvent(name, duration,durationUnit, throwable);
-        }
-        else if(circuitBreakerConfig.getRecordExceptionPredicate().test(throwable)){
+            publishCircuitIgnoredErrorEvent(name, duration, durationUnit, throwable);
+        } else if (circuitBreakerConfig.getRecordExceptionPredicate().test(throwable)) {
             LOG.debug("CircuitBreaker '{}' recorded an exception as failure:", name, throwable);
             publishCircuitErrorEvent(name, duration, durationUnit, throwable);
             stateReference.get().onError(duration, durationUnit, throwable);
-        }else{
+        } else {
             LOG.debug("CircuitBreaker '{}' recorded an exception as success:", name, throwable);
             publishSuccessEvent(duration, durationUnit);
             stateReference.get().onSuccess(duration, durationUnit);
@@ -230,19 +243,23 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
 
     @Override
     public void reset() {
-        CircuitBreakerState previousState = stateReference.getAndUpdate(currentState -> new ClosedState());
+        CircuitBreakerState previousState = stateReference
+                .getAndUpdate(currentState -> new ClosedState());
         if (previousState.getState() != CLOSED) {
-            publishStateTransitionEvent(StateTransition.transitionBetween(getName(), previousState.getState(), CLOSED));
+            publishStateTransitionEvent(
+                    StateTransition.transitionBetween(getName(), previousState.getState(), CLOSED));
         }
         publishResetEvent();
     }
 
-    private void stateTransition(State newState, UnaryOperator<CircuitBreakerState> newStateGenerator) {
+    private void stateTransition(State newState,
+            UnaryOperator<CircuitBreakerState> newStateGenerator) {
         CircuitBreakerState previousState = stateReference.getAndUpdate(currentState -> {
             StateTransition.transitionBetween(getName(), currentState.getState(), newState);
             return newStateGenerator.apply(currentState);
         });
-        publishStateTransitionEvent(StateTransition.transitionBetween(getName(), previousState.getState(), newState));
+        publishStateTransitionEvent(
+                StateTransition.transitionBetween(getName(), previousState.getState(), newState));
     }
 
     @Override
@@ -276,12 +293,12 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
     }
 
     private void publishEventIfPossible(CircuitBreakerEvent event) {
-        if(shouldPublishEvents(event)) {
+        if (shouldPublishEvents(event)) {
             if (eventProcessor.hasConsumers()) {
-                try{
+                try {
                     eventProcessor.consumeEvent(event);
                     LOG.debug("Event {} published: {}", event.getEventType(), event);
-                }catch (Throwable t){
+                } catch (Throwable t) {
                     LOG.warn("Failed to handle event {}", event.getEventType(), t);
                 }
             } else {
@@ -293,7 +310,8 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
     }
 
     private void publishStateTransitionEvent(final StateTransition stateTransition) {
-        final CircuitBreakerOnStateTransitionEvent event = new CircuitBreakerOnStateTransitionEvent(name, stateTransition);
+        final CircuitBreakerOnStateTransitionEvent event = new CircuitBreakerOnStateTransitionEvent(
+                name, stateTransition);
         publishEventIfPossible(event);
     }
 
@@ -303,22 +321,28 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
     }
 
     private void publishCallNotPermittedEvent() {
-        final CircuitBreakerOnCallNotPermittedEvent event = new CircuitBreakerOnCallNotPermittedEvent(name);
+        final CircuitBreakerOnCallNotPermittedEvent event = new CircuitBreakerOnCallNotPermittedEvent(
+                name);
         publishEventIfPossible(event);
     }
 
     private void publishSuccessEvent(final long duration, TimeUnit durationUnit) {
-        final CircuitBreakerOnSuccessEvent event = new CircuitBreakerOnSuccessEvent(name, Duration.ofNanos(durationUnit.toNanos(duration)));
+        final CircuitBreakerOnSuccessEvent event = new CircuitBreakerOnSuccessEvent(name,
+                Duration.ofNanos(durationUnit.toNanos(duration)));
         publishEventIfPossible(event);
     }
 
-    private void publishCircuitErrorEvent(final String name, final long duration, TimeUnit durationUnit, final Throwable throwable) {
-        final CircuitBreakerOnErrorEvent event = new CircuitBreakerOnErrorEvent(name, Duration.ofNanos(durationUnit.toNanos(duration)), throwable);
+    private void publishCircuitErrorEvent(final String name, final long duration,
+            TimeUnit durationUnit, final Throwable throwable) {
+        final CircuitBreakerOnErrorEvent event = new CircuitBreakerOnErrorEvent(name,
+                Duration.ofNanos(durationUnit.toNanos(duration)), throwable);
         publishEventIfPossible(event);
     }
 
-    private void publishCircuitIgnoredErrorEvent(String name, long duration, TimeUnit durationUnit, Throwable throwable) {
-        final CircuitBreakerOnIgnoredErrorEvent event = new CircuitBreakerOnIgnoredErrorEvent(name, Duration.ofNanos(durationUnit.toNanos(duration)), throwable);
+    private void publishCircuitIgnoredErrorEvent(String name, long duration, TimeUnit durationUnit,
+            Throwable throwable) {
+        final CircuitBreakerOnIgnoredErrorEvent event = new CircuitBreakerOnIgnoredErrorEvent(name,
+                Duration.ofNanos(durationUnit.toNanos(duration)), throwable);
         publishEventIfPossible(event);
     }
 
@@ -327,40 +351,81 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
         return eventProcessor;
     }
 
-    private class CircuitBreakerEventProcessor extends EventProcessor<CircuitBreakerEvent> implements EventConsumer<CircuitBreakerEvent>, EventPublisher {
+    private interface CircuitBreakerState {
+
+        boolean tryAcquirePermission();
+
+        void acquirePermission();
+
+        void releasePermission();
+
+        void onError(long duration, TimeUnit durationUnit, Throwable throwable);
+
+        void onSuccess(long duration, TimeUnit durationUnit);
+
+        CircuitBreaker.State getState();
+
+        CircuitBreakerMetrics getMetrics();
+
+        /**
+         * Should the CircuitBreaker in this state publish events
+         *
+         * @return a boolean signaling if the events should be published
+         */
+        default boolean shouldPublishEvents(CircuitBreakerEvent event) {
+            return event.getEventType().forcePublish || getState().allowPublish;
+        }
+    }
+
+    private class CircuitBreakerEventProcessor extends
+            EventProcessor<CircuitBreakerEvent> implements EventConsumer<CircuitBreakerEvent>,
+            EventPublisher {
+
         @Override
-        public EventPublisher onSuccess(EventConsumer<CircuitBreakerOnSuccessEvent> onSuccessEventConsumer) {
-            registerConsumer(CircuitBreakerOnSuccessEvent.class.getSimpleName(), onSuccessEventConsumer);
+        public EventPublisher onSuccess(
+                EventConsumer<CircuitBreakerOnSuccessEvent> onSuccessEventConsumer) {
+            registerConsumer(CircuitBreakerOnSuccessEvent.class.getSimpleName(),
+                    onSuccessEventConsumer);
             return this;
         }
 
         @Override
-        public EventPublisher onError(EventConsumer<CircuitBreakerOnErrorEvent> onErrorEventConsumer) {
-            registerConsumer(CircuitBreakerOnErrorEvent.class.getSimpleName(), onErrorEventConsumer);
+        public EventPublisher onError(
+                EventConsumer<CircuitBreakerOnErrorEvent> onErrorEventConsumer) {
+            registerConsumer(CircuitBreakerOnErrorEvent.class.getSimpleName(),
+                    onErrorEventConsumer);
             return this;
         }
 
         @Override
-        public EventPublisher onStateTransition(EventConsumer<CircuitBreakerOnStateTransitionEvent> onStateTransitionEventConsumer) {
-            registerConsumer(CircuitBreakerOnStateTransitionEvent.class.getSimpleName(), onStateTransitionEventConsumer);
+        public EventPublisher onStateTransition(
+                EventConsumer<CircuitBreakerOnStateTransitionEvent> onStateTransitionEventConsumer) {
+            registerConsumer(CircuitBreakerOnStateTransitionEvent.class.getSimpleName(),
+                    onStateTransitionEventConsumer);
             return this;
         }
 
         @Override
-        public EventPublisher onReset(EventConsumer<CircuitBreakerOnResetEvent> onResetEventConsumer) {
-            registerConsumer(CircuitBreakerOnResetEvent.class.getSimpleName(), onResetEventConsumer);
+        public EventPublisher onReset(
+                EventConsumer<CircuitBreakerOnResetEvent> onResetEventConsumer) {
+            registerConsumer(CircuitBreakerOnResetEvent.class.getSimpleName(),
+                    onResetEventConsumer);
             return this;
         }
 
         @Override
-        public EventPublisher onIgnoredError(EventConsumer<CircuitBreakerOnIgnoredErrorEvent> onIgnoredErrorEventConsumer) {
-            registerConsumer(CircuitBreakerOnIgnoredErrorEvent.class.getSimpleName(), onIgnoredErrorEventConsumer);
+        public EventPublisher onIgnoredError(
+                EventConsumer<CircuitBreakerOnIgnoredErrorEvent> onIgnoredErrorEventConsumer) {
+            registerConsumer(CircuitBreakerOnIgnoredErrorEvent.class.getSimpleName(),
+                    onIgnoredErrorEventConsumer);
             return this;
         }
 
         @Override
-        public EventPublisher onCallNotPermitted(EventConsumer<CircuitBreakerOnCallNotPermittedEvent> onCallNotPermittedEventConsumer) {
-            registerConsumer(CircuitBreakerOnCallNotPermittedEvent.class.getSimpleName(), onCallNotPermittedEventConsumer);
+        public EventPublisher onCallNotPermitted(
+                EventConsumer<CircuitBreakerOnCallNotPermittedEvent> onCallNotPermittedEventConsumer) {
+            registerConsumer(CircuitBreakerOnCallNotPermittedEvent.class.getSimpleName(),
+                    onCallNotPermittedEventConsumer);
             return this;
         }
 
@@ -422,7 +487,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
          */
         private void checkIfThresholdsExceeded(Result result) {
             if (result == ABOVE_THRESHOLDS) {
-                if(isClosed.compareAndSet(true, false)){
+                if (isClosed.compareAndSet(true, false)) {
                     transitionToOpenState();
                 }
             }
@@ -435,8 +500,8 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
         public CircuitBreaker.State getState() {
             return CircuitBreaker.State.CLOSED;
         }
+
         /**
-         *
          * Get metrics of the CircuitBreaker
          */
         @Override
@@ -452,28 +517,32 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
         private final AtomicBoolean isOpen;
 
         OpenState(CircuitBreakerMetrics circuitBreakerMetrics) {
-            final Duration waitDurationInOpenState = circuitBreakerConfig.getWaitDurationInOpenState();
+            final Duration waitDurationInOpenState = circuitBreakerConfig
+                    .getWaitDurationInOpenState();
             this.retryAfterWaitDuration = clock.instant().plus(waitDurationInOpenState);
             this.circuitBreakerMetrics = circuitBreakerMetrics;
 
             if (circuitBreakerConfig.isAutomaticTransitionFromOpenToHalfOpenEnabled()) {
                 ScheduledExecutorService scheduledExecutorService = schedulerFactory.getScheduler();
-                scheduledExecutorService.schedule(CircuitBreakerStateMachine.this::transitionToHalfOpenState, waitDurationInOpenState.toMillis(), TimeUnit.MILLISECONDS);
+                scheduledExecutorService
+                        .schedule(CircuitBreakerStateMachine.this::transitionToHalfOpenState,
+                                waitDurationInOpenState.toMillis(), TimeUnit.MILLISECONDS);
             }
             isOpen = new AtomicBoolean(true);
         }
 
         /**
-         * Returns false, if the wait duration has not elapsed.
-         * Returns true, if the wait duration has elapsed and transitions the state machine to HALF_OPEN state.
+         * Returns false, if the wait duration has not elapsed. Returns true, if the wait duration
+         * has elapsed and transitions the state machine to HALF_OPEN state.
          *
-         * @return false, if the wait duration has not elapsed. true, if the wait duration has elapsed.
+         * @return false, if the wait duration has not elapsed. true, if the wait duration has
+         *         elapsed.
          */
         @Override
         public boolean tryAcquirePermission() {
             // Thread-safe
             if (clock.instant().isAfter(retryAfterWaitDuration)) {
-                if(isOpen.compareAndSet(true, false)){
+                if (isOpen.compareAndSet(true, false)) {
                     transitionToHalfOpenState();
                 }
                 return true;
@@ -484,8 +553,9 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
 
         @Override
         public void acquirePermission() {
-            if(!tryAcquirePermission()){
-                throw CallNotPermittedException.createCallNotPermittedException(CircuitBreakerStateMachine.this);
+            if (!tryAcquirePermission()) {
+                throw CallNotPermittedException
+                        .createCallNotPermittedException(CircuitBreakerStateMachine.this);
             }
         }
 
@@ -535,7 +605,8 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
         private final CircuitBreakerMetrics circuitBreakerMetrics;
 
         DisabledState() {
-            this.circuitBreakerMetrics = CircuitBreakerMetrics.forDisabled(getCircuitBreakerConfig());
+            this.circuitBreakerMetrics = CircuitBreakerMetrics
+                    .forDisabled(getCircuitBreakerConfig());
         }
 
         /**
@@ -579,8 +650,8 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
         public CircuitBreaker.State getState() {
             return CircuitBreaker.State.DISABLED;
         }
+
         /**
-         *
          * Get metricsof the CircuitBreaker
          */
         @Override
@@ -611,7 +682,8 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
         @Override
         public void acquirePermission() {
             circuitBreakerMetrics.onCallNotPermitted();
-            throw CallNotPermittedException.createCallNotPermittedException(CircuitBreakerStateMachine.this);
+            throw CallNotPermittedException
+                    .createCallNotPermittedException(CircuitBreakerStateMachine.this);
         }
 
         @Override
@@ -651,13 +723,15 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
 
     private class HalfOpenState implements CircuitBreakerState {
 
-        private CircuitBreakerMetrics circuitBreakerMetrics;
         private final AtomicInteger permittedNumberOfCalls;
         private final AtomicBoolean isHalfOpen;
+        private CircuitBreakerMetrics circuitBreakerMetrics;
 
         HalfOpenState() {
-            int permittedNumberOfCallsInHalfOpenState = circuitBreakerConfig.getPermittedNumberOfCallsInHalfOpenState();
-            this.circuitBreakerMetrics = CircuitBreakerMetrics.forHalfOpen(permittedNumberOfCallsInHalfOpenState, getCircuitBreakerConfig());
+            int permittedNumberOfCallsInHalfOpenState = circuitBreakerConfig
+                    .getPermittedNumberOfCallsInHalfOpenState();
+            this.circuitBreakerMetrics = CircuitBreakerMetrics
+                    .forHalfOpen(permittedNumberOfCallsInHalfOpenState, getCircuitBreakerConfig());
             this.permittedNumberOfCalls = new AtomicInteger(permittedNumberOfCallsInHalfOpenState);
             this.isHalfOpen = new AtomicBoolean(true);
         }
@@ -665,14 +739,15 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
         /**
          * Checks if test request is allowed.
          *
-         * Returns true, if test request counter is not zero.
-         * Returns false, if test request counter is zero.
+         * Returns true, if test request counter is not zero. Returns false, if test request counter
+         * is zero.
          *
          * @return true, if test request counter is not zero.
          */
         @Override
         public boolean tryAcquirePermission() {
-            if (permittedNumberOfCalls.getAndUpdate(current -> current == 0 ? current : --current) > 0) {
+            if (permittedNumberOfCalls.getAndUpdate(current -> current == 0 ? current : --current)
+                    > 0) {
                 return true;
             }
             circuitBreakerMetrics.onCallNotPermitted();
@@ -681,8 +756,9 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
 
         @Override
         public void acquirePermission() {
-            if(!tryAcquirePermission()){
-                throw CallNotPermittedException.createCallNotPermittedException(CircuitBreakerStateMachine.this);
+            if (!tryAcquirePermission()) {
+                throw CallNotPermittedException
+                        .createCallNotPermittedException(CircuitBreakerStateMachine.this);
             }
         }
 
@@ -704,19 +780,19 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
         }
 
         /**
-         * Transitions to open state when thresholds have been exceeded.
-         * Transitions to closed state when thresholds have not been exceeded.
+         * Transitions to open state when thresholds have been exceeded. Transitions to closed state
+         * when thresholds have not been exceeded.
          *
          * @param result the result
          */
         private void checkIfThresholdsExceeded(Result result) {
-            if(result == ABOVE_THRESHOLDS){
-                if(isHalfOpen.compareAndSet(true, false)){
+            if (result == ABOVE_THRESHOLDS) {
+                if (isHalfOpen.compareAndSet(true, false)) {
                     transitionToOpenState();
                 }
             }
-            if(result == BELOW_THRESHOLDS){
-                if(isHalfOpen.compareAndSet(true, false)){
+            if (result == BELOW_THRESHOLDS) {
+                if (isHalfOpen.compareAndSet(true, false)) {
                     transitionToClosedState();
                 }
             }
@@ -733,31 +809,6 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
         @Override
         public CircuitBreakerMetrics getMetrics() {
             return circuitBreakerMetrics;
-        }
-    }
-
-    private interface CircuitBreakerState{
-
-        boolean tryAcquirePermission();
-
-        void acquirePermission();
-
-        void releasePermission();
-
-        void onError(long duration, TimeUnit durationUnit, Throwable throwable);
-
-        void onSuccess(long duration, TimeUnit durationUnit);
-
-        CircuitBreaker.State getState();
-
-        CircuitBreakerMetrics getMetrics();
-
-        /**
-         * Should the CircuitBreaker in this state publish events
-         * @return a boolean signaling if the events should be published
-         */
-        default boolean shouldPublishEvents(CircuitBreakerEvent event){
-            return event.getEventType().forcePublish || getState().allowPublish;
         }
     }
 }

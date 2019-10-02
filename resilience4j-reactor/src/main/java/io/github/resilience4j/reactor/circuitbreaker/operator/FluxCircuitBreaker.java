@@ -15,13 +15,13 @@
  */
 package io.github.resilience4j.reactor.circuitbreaker.operator;
 
+import static io.github.resilience4j.circuitbreaker.CallNotPermittedException.createCallNotPermittedException;
+
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import reactor.core.CoreSubscriber;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.FluxOperator;
 import reactor.core.publisher.Operators;
-
-import static io.github.resilience4j.circuitbreaker.CallNotPermittedException.createCallNotPermittedException;
 
 class FluxCircuitBreaker<T> extends FluxOperator<T, T> {
 
@@ -34,9 +34,9 @@ class FluxCircuitBreaker<T> extends FluxOperator<T, T> {
 
     @Override
     public void subscribe(CoreSubscriber<? super T> actual) {
-        if(circuitBreaker.tryAcquirePermission()){
+        if (circuitBreaker.tryAcquirePermission()) {
             source.subscribe(new CircuitBreakerSubscriber<>(circuitBreaker, actual, false));
-        }else{
+        } else {
             Operators.error(actual, createCallNotPermittedException(circuitBreaker));
         }
     }

@@ -23,127 +23,131 @@ import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 
+import com.jayway.awaitility.Awaitility;
+import com.jayway.awaitility.Duration;
+import io.github.resilience4j.test.HelloWorldService;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicInteger;
-
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.BDDMockito;
 import org.slf4j.Logger;
 
-import com.jayway.awaitility.Awaitility;
-import com.jayway.awaitility.Duration;
-
-import io.github.resilience4j.test.HelloWorldService;
-
 public class ThreadPoolBulkheadEventPublisherTest {
 
-	private HelloWorldService helloWorldService;
-	private ThreadPoolBulkheadConfig config;
-	private Logger logger;
-	private ThreadPoolBulkhead bulkhead;
+    private HelloWorldService helloWorldService;
+    private ThreadPoolBulkheadConfig config;
+    private Logger logger;
+    private ThreadPoolBulkhead bulkhead;
 
-	@Before
-	public void setUp() {
-		helloWorldService = mock(HelloWorldService.class);
-		config = ThreadPoolBulkheadConfig.custom()
-				.maxThreadPoolSize(1)
-				.coreThreadPoolSize(1)
-				.build();
+    @Before
+    public void setUp() {
+        helloWorldService = mock(HelloWorldService.class);
+        config = ThreadPoolBulkheadConfig.custom()
+                .maxThreadPoolSize(1)
+                .coreThreadPoolSize(1)
+                .build();
 
-		bulkhead = ThreadPoolBulkhead.of("test", config);
+        bulkhead = ThreadPoolBulkhead.of("test", config);
 
-		logger = mock(Logger.class);
-		Awaitility.reset();
-	}
+        logger = mock(Logger.class);
+        Awaitility.reset();
+    }
 
-	@Test
-	public void shouldReturnTheSameConsumer() {
-		ThreadPoolBulkhead.ThreadPoolBulkheadEventPublisher eventPublisher = bulkhead.getEventPublisher();
-		ThreadPoolBulkhead.ThreadPoolBulkheadEventPublisher eventPublisher2 = bulkhead.getEventPublisher();
+    @Test
+    public void shouldReturnTheSameConsumer() {
+        ThreadPoolBulkhead.ThreadPoolBulkheadEventPublisher eventPublisher = bulkhead
+                .getEventPublisher();
+        ThreadPoolBulkhead.ThreadPoolBulkheadEventPublisher eventPublisher2 = bulkhead
+                .getEventPublisher();
 
-		assertThat(eventPublisher).isEqualTo(eventPublisher2);
-	}
+        assertThat(eventPublisher).isEqualTo(eventPublisher2);
+    }
 
-	@Test
-	public void shouldConsumeOnCallRejectedEvent() throws ExecutionException, InterruptedException {
-		// Given
-		ThreadPoolBulkhead bulkhead = ThreadPoolBulkhead.of("test", ThreadPoolBulkheadConfig.custom()
-				.maxThreadPoolSize(1)
-				.coreThreadPoolSize(1)
-				.queueCapacity(1)
-				.build());
+    @Test
+    public void shouldConsumeOnCallRejectedEvent() throws ExecutionException, InterruptedException {
+        // Given
+        ThreadPoolBulkhead bulkhead = ThreadPoolBulkhead
+                .of("test", ThreadPoolBulkheadConfig.custom()
+                        .maxThreadPoolSize(1)
+                        .coreThreadPoolSize(1)
+                        .queueCapacity(1)
+                        .build());
 
-		BDDMockito.given(helloWorldService.returnHelloWorld()).willReturn("Hello world");
+        BDDMockito.given(helloWorldService.returnHelloWorld()).willReturn("Hello world");
 
-		// When
-		bulkhead.getEventPublisher()
-				.onCallRejected(event ->
-						logger.info(event.getEventType().toString()));
-		final Exception exception = new Exception();
-		// When
-		new Thread(() -> {
-			try {
-				bulkhead.executeRunnable(() -> {
-					final AtomicInteger counter = new AtomicInteger(0);
-					Awaitility.waitAtMost(Duration.TWO_HUNDRED_MILLISECONDS).until(() -> counter.incrementAndGet() >= 2);
-				});
-			} catch (Exception e) {
-				exception.initCause(e);
-			}
+        // When
+        bulkhead.getEventPublisher()
+                .onCallRejected(event ->
+                        logger.info(event.getEventType().toString()));
+        final Exception exception = new Exception();
+        // When
+        new Thread(() -> {
+            try {
+                bulkhead.executeRunnable(() -> {
+                    final AtomicInteger counter = new AtomicInteger(0);
+                    Awaitility.waitAtMost(Duration.TWO_HUNDRED_MILLISECONDS)
+                            .until(() -> counter.incrementAndGet() >= 2);
+                });
+            } catch (Exception e) {
+                exception.initCause(e);
+            }
 
-		}).start();
-		new Thread(() -> {
-			try {
-				bulkhead.executeCallable(helloWorldService::returnHelloWorld);
-			} catch (Exception e) {
-				exception.initCause(e);
-			}
-		}).start();
-		new Thread(() -> {
-			try {
-				bulkhead.executeCallable(helloWorldService::returnHelloWorld);
-			} catch (Exception e) {
-				exception.initCause(e);
-			}
-		}).start();
+        }).start();
+        new Thread(() -> {
+            try {
+                bulkhead.executeCallable(helloWorldService::returnHelloWorld);
+            } catch (Exception e) {
+                exception.initCause(e);
+            }
+        }).start();
+        new Thread(() -> {
+            try {
+                bulkhead.executeCallable(helloWorldService::returnHelloWorld);
+            } catch (Exception e) {
+                exception.initCause(e);
+            }
+        }).start();
 
-		final AtomicInteger counter = new AtomicInteger(0);
-		Awaitility.waitAtMost(Duration.FIVE_HUNDRED_MILLISECONDS).until(() -> counter.incrementAndGet() >= 2);
-		// Then
-		assertThat(exception).hasCauseInstanceOf(BulkheadFullException.class);
-		then(logger).should(times(1)).info("CALL_REJECTED");
-	}
+        final AtomicInteger counter = new AtomicInteger(0);
+        Awaitility.waitAtMost(Duration.FIVE_HUNDRED_MILLISECONDS)
+                .until(() -> counter.incrementAndGet() >= 2);
+        // Then
+        assertThat(exception).hasCauseInstanceOf(BulkheadFullException.class);
+        then(logger).should(times(1)).info("CALL_REJECTED");
+    }
 
-	@Test
-	public void shouldConsumeOnCallPermittedEvent() throws ExecutionException, InterruptedException {
-		// Given
-		ThreadPoolBulkhead bulkhead = ThreadPoolBulkhead.of("test", config);
-		BDDMockito.given(helloWorldService.returnHelloWorld()).willReturn("Hello world");
+    @Test
+    public void shouldConsumeOnCallPermittedEvent()
+            throws ExecutionException, InterruptedException {
+        // Given
+        ThreadPoolBulkhead bulkhead = ThreadPoolBulkhead.of("test", config);
+        BDDMockito.given(helloWorldService.returnHelloWorld()).willReturn("Hello world");
 
-		// When
-		bulkhead.getEventPublisher()
-				.onCallPermitted(event ->
-						logger.info(event.getEventType().toString()));
+        // When
+        bulkhead.getEventPublisher()
+                .onCallPermitted(event ->
+                        logger.info(event.getEventType().toString()));
 
-		String result = bulkhead.executeSupplier(helloWorldService::returnHelloWorld).toCompletableFuture().get();
+        String result = bulkhead.executeSupplier(helloWorldService::returnHelloWorld)
+                .toCompletableFuture().get();
 
-		// Then
-		assertThat(result).isEqualTo("Hello world");
-		then(logger).should(times(1)).info("CALL_PERMITTED");
-	}
+        // Then
+        assertThat(result).isEqualTo("Hello world");
+        then(logger).should(times(1)).info("CALL_PERMITTED");
+    }
 
-	@Test
-	public void shouldConsumeOnCallFinishedEventWhenExecutionIsFinished() throws Exception {
-		// Given
-		ThreadPoolBulkhead bulkhead = ThreadPoolBulkhead.of("test", config);
-		BDDMockito.given(helloWorldService.returnHelloWorld()).willReturn("Hello world");
-		// When
-		bulkhead.getEventPublisher()
-				.onCallFinished(event ->
-						logger.info(event.getEventType().toString()));
-		bulkhead.executeSupplier(helloWorldService::returnHelloWorld).toCompletableFuture().get();
-		// Then
-		then(logger).should(times(1)).info("CALL_FINISHED");
-	}
+    @Test
+    public void shouldConsumeOnCallFinishedEventWhenExecutionIsFinished() throws Exception {
+        // Given
+        ThreadPoolBulkhead bulkhead = ThreadPoolBulkhead.of("test", config);
+        BDDMockito.given(helloWorldService.returnHelloWorld()).willReturn("Hello world");
+        // When
+        bulkhead.getEventPublisher()
+                .onCallFinished(event ->
+                        logger.info(event.getEventType().toString()));
+        bulkhead.executeSupplier(helloWorldService::returnHelloWorld).toCompletableFuture().get();
+        // Then
+        then(logger).should(times(1)).info("CALL_FINISHED");
+    }
 }

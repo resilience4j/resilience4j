@@ -15,11 +15,10 @@
  */
 package io.github.resilience4j.ratpack.recovery;
 
+import java.util.Optional;
 import ratpack.func.Function;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-
-import java.util.Optional;
 
 public interface RecoveryFunction<O> extends Function<Throwable, O> {
 
@@ -30,7 +29,7 @@ public interface RecoveryFunction<O> extends Function<Throwable, O> {
                 Throwable actual = Optional.ofNullable(t.getCause()).orElse(t);
                 fallbackValue = apply(actual);
                 if (fallbackValue instanceof Flux) {
-                    return (Flux)fallbackValue;
+                    return (Flux) fallbackValue;
                 }
             } catch (Exception e) {
                 return Flux.error(e);

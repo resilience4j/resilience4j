@@ -6,13 +6,208 @@ import io.github.resilience4j.metrics.internal.TimerImpl;
 import io.vavr.CheckedFunction0;
 import io.vavr.CheckedFunction1;
 import io.vavr.CheckedRunnable;
-
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletionStage;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
 public interface Timer {
+
+    /**
+     * Creates a timer of a provided MetricRegistry
+     *
+     * @param name the name of the timer
+     * @param metricRegistry the MetricRegistry
+     * @return a Timer instance
+     */
+    static Timer ofMetricRegistry(String name, MetricRegistry metricRegistry) {
+        return new TimerImpl(name, metricRegistry);
+    }
+
+    /**
+     * Creates a timer of a default MetricRegistry
+     *
+     * @param name the name of the timer
+     * @return a Timer instance
+     */
+    static Timer of(String name) {
+        return new TimerImpl(name, new MetricRegistry());
+    }
+
+    /**
+     * Creates a timed checked supplier.
+     *
+     * @param timer the timer to use
+     * @param supplier the original supplier
+     * @return a timed supplier
+     */
+    static <T> CheckedFunction0<T> decorateCheckedSupplier(Timer timer,
+            CheckedFunction0<T> supplier) {
+        return () -> {
+            final Timer.Context context = timer.context();
+            try {
+                T returnValue = supplier.apply();
+                context.onSuccess();
+                return returnValue;
+            } catch (Throwable e) {
+                context.onError();
+                throw e;
+            }
+        };
+    }
+
+    /**
+     * Creates a timed runnable.
+     *
+     * @param timer the timer to use
+     * @param runnable the original runnable
+     * @return a timed runnable
+     */
+    static CheckedRunnable decorateCheckedRunnable(Timer timer, CheckedRunnable runnable) {
+        return () -> {
+            final Timer.Context context = timer.context();
+            try {
+                runnable.run();
+                context.onSuccess();
+            } catch (Throwable e) {
+                context.onError();
+                throw e;
+            }
+        };
+    }
+
+    /**
+     * Creates a timed checked supplier.
+     *
+     * @param timer the timer to use
+     * @param supplier the original supplier
+     * @return a timed supplier
+     */
+    static <T> Supplier<T> decorateSupplier(Timer timer, Supplier<T> supplier) {
+        return () -> {
+            final Timer.Context context = timer.context();
+            try {
+                T returnValue = supplier.get();
+                context.onSuccess();
+                return returnValue;
+            } catch (Throwable e) {
+                context.onError();
+                throw e;
+            }
+        };
+    }
+
+    /**
+     * Creates a timed Callable.
+     *
+     * @param timer the timer to use
+     * @param callable the original Callable
+     * @return a timed Callable
+     */
+    static <T> Callable<T> decorateCallable(Timer timer, Callable<T> callable) {
+        return () -> {
+            final Timer.Context context = timer.context();
+            try {
+                T returnValue = callable.call();
+                context.onSuccess();
+                return returnValue;
+            } catch (Throwable e) {
+                context.onError();
+                throw e;
+            }
+        };
+    }
+
+    /**
+     * Creates a timed runnable.
+     *
+     * @param timer the timer to use
+     * @param runnable the original runnable
+     * @return a timed runnable
+     */
+    static Runnable decorateRunnable(Timer timer, Runnable runnable) {
+        return () -> {
+            final Timer.Context context = timer.context();
+            try {
+                runnable.run();
+                context.onSuccess();
+            } catch (Throwable e) {
+                context.onError();
+                throw e;
+            }
+        };
+    }
+
+    /**
+     * Creates a timed function.
+     *
+     * @param timer the timer to use
+     * @param function the original function
+     * @return a timed function
+     */
+    static <T, R> Function<T, R> decorateFunction(Timer timer, Function<T, R> function) {
+        return (T t) -> {
+            final Timer.Context context = timer.context();
+            try {
+                R returnValue = function.apply(t);
+                context.onSuccess();
+                return returnValue;
+            } catch (Throwable e) {
+                context.onError();
+                throw e;
+            }
+        };
+    }
+
+    /**
+     * Creates a timed function.
+     *
+     * @param timer the timer to use
+     * @param function the original function
+     * @return a timed function
+     */
+    static <T, R> CheckedFunction1<T, R> decorateCheckedFunction(Timer timer,
+            CheckedFunction1<T, R> function) {
+        return (T t) -> {
+            final Timer.Context context = timer.context();
+            try {
+                R returnValue = function.apply(t);
+                context.onSuccess();
+                return returnValue;
+            } catch (Throwable e) {
+                context.onError();
+                throw e;
+            }
+        };
+    }
+
+    /**
+     * @param timer the timer to use
+     * @param stageSupplier the CompletionStage Supplier
+     * @return a decorated completion stage
+     */
+    static <T> Supplier<CompletionStage<T>> decorateCompletionStageSupplier(Timer timer,
+            Supplier<CompletionStage<T>> stageSupplier) {
+        return () -> {
+            final Timer.Context context = timer.context();
+            try {
+                final CompletionStage<T> stage = stageSupplier.get();
+
+                stage.whenComplete((result, throwable) -> {
+                    if (throwable != null) {
+                        context.onError();
+                    } else {
+                        context.onSuccess();
+                    }
+                });
+
+                return stage;
+            } catch (Throwable throwable) {
+                context.onError();
+                throw throwable;
+            }
+        };
+    }
 
     /**
      * Creates a Timer context and starts the timer
@@ -43,28 +238,6 @@ public interface Timer {
     Timer.Metrics getMetrics();
 
     /**
-     * Creates a timer of a provided MetricRegistry
-     *
-     * @param name the name of the timer
-     * @param metricRegistry the MetricRegistry
-     * @return a Timer instance
-     */
-    static Timer ofMetricRegistry(String name, MetricRegistry metricRegistry) {
-        return new TimerImpl(name, metricRegistry);
-    }
-
-    /**
-     * Creates a timer of a default MetricRegistry
-     *
-     * @param name the name of the timer
-     * @return a Timer instance
-     */
-    static Timer of(String name) {
-        return new TimerImpl(name, new MetricRegistry());
-    }
-
-
-    /**
      * Decorates and executes the decorated Runnable.
      *
      * @param runnable the original Callable
@@ -91,7 +264,7 @@ public interface Timer {
      * @param <T> the type of results supplied by this supplier
      * @return the result of the decorated Supplier.
      */
-    default <T> T executeSupplier(Supplier<T> supplier){
+    default <T> T executeSupplier(Supplier<T> supplier) {
         return decorateSupplier(this, supplier).get();
     }
 
@@ -102,191 +275,17 @@ public interface Timer {
      * @param <T> the type of results supplied by this supplier
      * @return the result of the decorated Supplier.
      */
-    default <T> CompletionStage<T> executeCompletionStageSupplier(Supplier<CompletionStage<T>> supplier){
+    default <T> CompletionStage<T> executeCompletionStageSupplier(
+            Supplier<CompletionStage<T>> supplier) {
         return decorateCompletionStageSupplier(this, supplier).get();
-    }
-
-    /**
-     * Creates a timed checked supplier.
-
-     * @param timer the timer to use
-     * @param supplier the original supplier
-     * @return a timed supplier
-     */
-    static <T> CheckedFunction0<T> decorateCheckedSupplier(Timer timer, CheckedFunction0<T> supplier){
-        return () -> {
-            final Timer.Context context = timer.context();
-            try {
-                T returnValue = supplier.apply();
-                context.onSuccess();
-                return returnValue;
-            }catch (Throwable e){
-                context.onError();
-                throw e;
-            }
-        };
-    }
-
-    /**
-     * Creates a timed runnable.
-
-     * @param timer the timer to use
-     * @param runnable the original runnable
-     * @return a timed runnable
-     */
-    static CheckedRunnable decorateCheckedRunnable(Timer timer, CheckedRunnable runnable){
-        return () -> {
-            final Timer.Context context = timer.context();
-            try {
-                runnable.run();
-                context.onSuccess();
-            }catch (Throwable e){
-                context.onError();
-                throw e;
-            }
-        };
-    }
-
-    /**
-     * Creates a timed checked supplier.
-
-     * @param timer the timer to use
-     * @param supplier the original supplier
-     * @return a timed supplier
-     */
-    static <T> Supplier<T> decorateSupplier(Timer timer, Supplier<T> supplier){
-        return () -> {
-            final Timer.Context context = timer.context();
-            try {
-                T returnValue = supplier.get();
-                context.onSuccess();
-                return returnValue;
-            }catch (Throwable e){
-                context.onError();
-                throw e;
-            }
-        };
-    }
-
-    /**
-     * Creates a timed Callable.
-
-     * @param timer the timer to use
-     * @param callable the original Callable
-     * @return a timed Callable
-     */
-    static <T> Callable<T> decorateCallable(Timer timer, Callable<T> callable){
-        return () -> {
-            final Timer.Context context = timer.context();
-            try {
-                T returnValue = callable.call();
-                context.onSuccess();
-                return returnValue;
-            }catch (Throwable e){
-                context.onError();
-                throw e;
-            }
-        };
-    }
-
-
-    /**
-     * Creates a timed runnable.
-
-     * @param timer the timer to use
-     * @param runnable the original runnable
-     * @return a timed runnable
-     */
-    static Runnable decorateRunnable(Timer timer, Runnable runnable){
-        return () -> {
-            final Timer.Context context = timer.context();
-            try {
-                runnable.run();
-                context.onSuccess();
-            }catch (Throwable e){
-                context.onError();
-                throw e;
-            }
-        };
-    }
-
-
-    /**
-     * Creates a timed function.
-
-     * @param timer the timer to use
-     * @param function the original function
-     * @return a timed function
-     */
-    static <T, R> Function<T, R> decorateFunction(Timer timer, Function<T, R> function){
-        return (T t) -> {
-            final Timer.Context context = timer.context();
-            try {
-                R returnValue = function.apply(t);
-                context.onSuccess();
-                return returnValue;
-            }catch (Throwable e){
-                context.onError();
-                throw e;
-            }
-        };
-    }
-
-    /**
-     * Creates a timed function.
-
-     * @param timer the timer to use
-     * @param function the original function
-     * @return a timed function
-     */
-    static <T, R> CheckedFunction1<T, R> decorateCheckedFunction(Timer timer, CheckedFunction1<T, R> function){
-        return (T t) -> {
-            final Timer.Context context = timer.context();
-            try {
-                R returnValue = function.apply(t);
-                context.onSuccess();
-                return returnValue;
-            }catch (Throwable e){
-                context.onError();
-                throw e;
-            }
-        };
-    }
-
-    /**
-     *
-     * @param timer the timer to use
-     * @param stageSupplier the CompletionStage Supplier
-     * @return a decorated completion stage
-     */
-    static <T> Supplier<CompletionStage<T>> decorateCompletionStageSupplier(Timer timer, Supplier<CompletionStage<T>> stageSupplier) {
-        return () -> {
-            final Timer.Context context = timer.context();
-            try {
-                final CompletionStage<T> stage = stageSupplier.get();
-
-                stage.whenComplete((result, throwable) -> {
-                    if (throwable != null) {
-                        context.onError();
-                    } else {
-                        context.onSuccess();
-                    }
-                });
-
-                return stage;
-            } catch (Throwable throwable) {
-                context.onError();
-                throw throwable;
-            }
-        };
     }
 
 
     interface Context {
 
         /**
-         * Stops the Timer and records a failed call.
-         * This method must be invoked when a call failed.
+         * Stops the Timer and records a failed call. This method must be invoked when a call
+         * failed.
          */
         void onError();
 
@@ -321,14 +320,14 @@ public interface Timer {
         long getNumberOfFailedCalls();
 
         /**
-         * Returns the fifteen-minute exponentially-weighted moving average rate at which events have
-         * occurred since the meter was created.
+         * Returns the fifteen-minute exponentially-weighted moving average rate at which events
+         * have occurred since the meter was created.
          *
          * This rate has the same exponential decay factor as the fifteen-minute load average in the
          * {@code top} Unix command.
          *
-         * @return the fifteen-minute exponentially-weighted moving average rate at which events have
-         *         occurred since the meter was created
+         * @return the fifteen-minute exponentially-weighted moving average rate at which events
+         *         have occurred since the meter was created
          */
         double getFifteenMinuteRate();
 
@@ -336,8 +335,8 @@ public interface Timer {
          * Returns the five-minute exponentially-weighted moving average rate at which events have
          * occurred since the meter was created.
          *
-         * This rate has the same exponential decay factor as the five-minute load average in the {@code
-         * top} Unix command.
+         * This rate has the same exponential decay factor as the five-minute load average in the
+         * {@code top} Unix command.
          *
          * @return the five-minute exponentially-weighted moving average rate at which events have
          *         occurred since the meter was created
@@ -355,8 +354,8 @@ public interface Timer {
          * Returns the one-minute exponentially-weighted moving average rate at which events have
          * occurred since the meter was created.
          *
-         * This rate has the same exponential decay factor as the one-minute load average in the {@code
-         * top} Unix command.
+         * This rate has the same exponential decay factor as the one-minute load average in the
+         * {@code top} Unix command.
          *
          * @return the one-minute exponentially-weighted moving average rate at which events have
          *         occurred since the meter was created

@@ -1,5 +1,10 @@
 package io.github.resilience4j.bulkhead.monitoring.endpoint;
 
+import static io.github.resilience4j.bulkhead.event.BulkheadEvent.Type.CALL_FINISHED;
+import static io.github.resilience4j.bulkhead.event.BulkheadEvent.Type.CALL_PERMITTED;
+import static io.github.resilience4j.bulkhead.event.BulkheadEvent.Type.CALL_REJECTED;
+import static org.assertj.core.api.Assertions.assertThat;
+
 import io.github.resilience4j.bulkhead.event.BulkheadOnCallFinishedEvent;
 import io.github.resilience4j.bulkhead.event.BulkheadOnCallPermittedEvent;
 import io.github.resilience4j.bulkhead.event.BulkheadOnCallRejectedEvent;
@@ -7,13 +12,10 @@ import io.github.resilience4j.common.bulkhead.monitoring.endpoint.BulkheadEventD
 import io.github.resilience4j.common.bulkhead.monitoring.endpoint.BulkheadEventDTOFactory;
 import org.junit.Test;
 
-import static io.github.resilience4j.bulkhead.event.BulkheadEvent.Type.*;
-import static org.assertj.core.api.Assertions.assertThat;
-
 public class BulkheadEventDTOFactoryTest {
 
     @Test
-    public void shouldMapBulkheadOnCallFinishedEvent(){
+    public void shouldMapBulkheadOnCallFinishedEvent() {
         BulkheadOnCallFinishedEvent event = new BulkheadOnCallFinishedEvent("name");
 
         BulkheadEventDTO eventDTO = BulkheadEventDTOFactory.createBulkheadEventDTO(event);
@@ -24,7 +26,7 @@ public class BulkheadEventDTOFactoryTest {
     }
 
     @Test
-    public void shouldMapBulkheadOnCallPermittedEvent(){
+    public void shouldMapBulkheadOnCallPermittedEvent() {
         BulkheadOnCallPermittedEvent event = new BulkheadOnCallPermittedEvent("name");
 
         BulkheadEventDTO eventDTO = BulkheadEventDTOFactory.createBulkheadEventDTO(event);
@@ -35,7 +37,7 @@ public class BulkheadEventDTOFactoryTest {
     }
 
     @Test
-    public void shouldMapBulkheadOnCallRejectedEvent(){
+    public void shouldMapBulkheadOnCallRejectedEvent() {
         BulkheadOnCallRejectedEvent event = new BulkheadOnCallRejectedEvent("name");
 
         BulkheadEventDTO eventDTO = BulkheadEventDTOFactory.createBulkheadEventDTO(event);

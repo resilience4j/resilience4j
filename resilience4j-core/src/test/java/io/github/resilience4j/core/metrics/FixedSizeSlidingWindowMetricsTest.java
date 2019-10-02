@@ -18,16 +18,15 @@
  */
 package io.github.resilience4j.core.metrics;
 
-import org.junit.Test;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.concurrent.TimeUnit;
-
-import static org.assertj.core.api.Assertions.assertThat;
+import org.junit.Test;
 
 public class FixedSizeSlidingWindowMetricsTest {
 
     @Test
-    public void checkInitialBucketCreation(){
+    public void checkInitialBucketCreation() {
         FixedSizeSlidingWindowMetrics metrics = new FixedSizeSlidingWindowMetrics(5);
 
         Snapshot snapshot = metrics.getSnapshot();
@@ -39,7 +38,7 @@ public class FixedSizeSlidingWindowMetricsTest {
     }
 
     @Test
-    public void testRecordSuccess(){
+    public void testRecordSuccess() {
         Metrics metrics = new FixedSizeSlidingWindowMetrics(5);
 
         Snapshot snapshot = metrics.record(100, TimeUnit.MILLISECONDS, Metrics.Outcome.SUCCESS);
@@ -55,7 +54,7 @@ public class FixedSizeSlidingWindowMetricsTest {
     }
 
     @Test
-    public void testRecordError(){
+    public void testRecordError() {
         Metrics metrics = new FixedSizeSlidingWindowMetrics(5);
 
         Snapshot snapshot = metrics.record(100, TimeUnit.MILLISECONDS, Metrics.Outcome.ERROR);
@@ -71,10 +70,11 @@ public class FixedSizeSlidingWindowMetricsTest {
     }
 
     @Test
-    public void testRecordSlowSuccess(){
+    public void testRecordSlowSuccess() {
         Metrics metrics = new FixedSizeSlidingWindowMetrics(5);
 
-        Snapshot snapshot = metrics.record(100, TimeUnit.MILLISECONDS, Metrics.Outcome.SLOW_SUCCESS);
+        Snapshot snapshot = metrics
+                .record(100, TimeUnit.MILLISECONDS, Metrics.Outcome.SLOW_SUCCESS);
         assertThat(snapshot.getTotalNumberOfCalls()).isEqualTo(1);
         assertThat(snapshot.getNumberOfSuccessfulCalls()).isEqualTo(1);
         assertThat(snapshot.getNumberOfFailedCalls()).isEqualTo(0);
@@ -87,7 +87,7 @@ public class FixedSizeSlidingWindowMetricsTest {
     }
 
     @Test
-    public void testSlowCallsPercentage(){
+    public void testSlowCallsPercentage() {
         Metrics metrics = new FixedSizeSlidingWindowMetrics(5);
 
         metrics.record(10000, TimeUnit.MILLISECONDS, Metrics.Outcome.SLOW_SUCCESS);
@@ -108,7 +108,7 @@ public class FixedSizeSlidingWindowMetricsTest {
     }
 
     @Test
-    public void testMoveHeadIndexByOne(){
+    public void testMoveHeadIndexByOne() {
         FixedSizeSlidingWindowMetrics metrics = new FixedSizeSlidingWindowMetrics(3);
 
         assertThat(metrics.headIndex).isEqualTo(0);
@@ -132,7 +132,7 @@ public class FixedSizeSlidingWindowMetricsTest {
     }
 
     @Test
-    public void testSlidingWindowMetrics(){
+    public void testSlidingWindowMetrics() {
         FixedSizeSlidingWindowMetrics metrics = new FixedSizeSlidingWindowMetrics(4);
 
         Snapshot snapshot = metrics.record(100, TimeUnit.MILLISECONDS, Metrics.Outcome.ERROR);

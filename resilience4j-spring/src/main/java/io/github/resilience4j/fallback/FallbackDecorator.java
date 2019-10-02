@@ -21,12 +21,14 @@ import io.vavr.CheckedFunction0;
  * interface of FallbackDecorator
  */
 public interface FallbackDecorator {
+
     boolean supports(Class<?> target);
 
     /**
      * @param recoveryMethod fallbackMethod method.
-     * @param supplier       target function should be decorated.
+     * @param supplier target function should be decorated.
      * @return decorated function
      */
-    CheckedFunction0<Object> decorate(FallbackMethod recoveryMethod, CheckedFunction0<Object> supplier);
+    CheckedFunction0<Object> decorate(FallbackMethod recoveryMethod,
+            CheckedFunction0<Object> supplier);
 }

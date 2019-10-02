@@ -16,17 +16,16 @@
 
 package io.github.resilience4j.prometheus.publisher;
 
+import static io.github.resilience4j.prometheus.AbstractTimeLimiterMetrics.MetricNames.DEFAULT_CALLS_METRIC_NAME;
+import static org.assertj.core.api.Assertions.assertThat;
+
 import io.github.resilience4j.timelimiter.TimeLimiter;
 import io.github.resilience4j.timelimiter.TimeLimiterConfig;
 import io.github.resilience4j.timelimiter.TimeLimiterRegistry;
 import io.prometheus.client.CollectorRegistry;
+import java.util.concurrent.TimeoutException;
 import org.junit.Before;
 import org.junit.Test;
-
-import java.util.concurrent.TimeoutException;
-
-import static io.github.resilience4j.prometheus.AbstractTimeLimiterMetrics.MetricNames.DEFAULT_CALLS_METRIC_NAME;
-import static org.assertj.core.api.Assertions.assertThat;
 
 public class TimeLimiterMetricsPublisherTest {
 
@@ -44,7 +43,8 @@ public class TimeLimiterMetricsPublisherTest {
         registry = new CollectorRegistry();
         timeLimiterMetricsPublisher = new TimeLimiterMetricsPublisher();
         timeLimiterMetricsPublisher.register(registry);
-        timeLimiterRegistry = TimeLimiterRegistry.of(TimeLimiterConfig.ofDefaults(), timeLimiterMetricsPublisher);
+        timeLimiterRegistry = TimeLimiterRegistry
+                .of(TimeLimiterConfig.ofDefaults(), timeLimiterMetricsPublisher);
         timeLimiter = timeLimiterRegistry.timeLimiter("backendA");
     }
 
@@ -52,7 +52,8 @@ public class TimeLimiterMetricsPublisherTest {
     public void successfulCallsReportsCorrespondingValue() {
         timeLimiter.onSuccess();
 
-        Double successfulCalls = getSampleValue(registry, DEFAULT_CALLS_METRIC_NAME, KIND_SUCCESSFUL);
+        Double successfulCalls = getSampleValue(registry, DEFAULT_CALLS_METRIC_NAME,
+                KIND_SUCCESSFUL);
 
         assertThat(successfulCalls).isEqualTo(1);
     }
@@ -77,14 +78,17 @@ public class TimeLimiterMetricsPublisherTest {
 
     @Test
     public void customMetricNamesOverrideDefaultOnes() {
-        TimeLimiterMetricsPublisher.MetricNames names = TimeLimiterMetricsPublisher.MetricNames.custom()
+        TimeLimiterMetricsPublisher.MetricNames names = TimeLimiterMetricsPublisher.MetricNames
+                .custom()
                 .callsMetricName("custom_calls")
                 .build();
         CollectorRegistry customRegistry = new CollectorRegistry();
-        TimeLimiterMetricsPublisher timeLimiterMetricsPublisher = new TimeLimiterMetricsPublisher(names);
+        TimeLimiterMetricsPublisher timeLimiterMetricsPublisher = new TimeLimiterMetricsPublisher(
+                names);
         timeLimiterMetricsPublisher.register(customRegistry);
 
-        TimeLimiterRegistry timeLimiterRegistry = TimeLimiterRegistry.of(TimeLimiterConfig.ofDefaults(), timeLimiterMetricsPublisher);
+        TimeLimiterRegistry timeLimiterRegistry = TimeLimiterRegistry
+                .of(TimeLimiterConfig.ofDefaults(), timeLimiterMetricsPublisher);
         TimeLimiter timeLimiter = timeLimiterRegistry.timeLimiter("backendA");
 
         timeLimiter.onSuccess();
@@ -100,7 +104,8 @@ public class TimeLimiterMetricsPublisherTest {
         assertThat(timeoutCalls).isNotNull();
     }
 
-    private Double getSampleValue(CollectorRegistry collectorRegistry, String metricName, String metricKind) {
+    private Double getSampleValue(CollectorRegistry collectorRegistry, String metricName,
+            String metricKind) {
         return collectorRegistry.getSampleValue(
                 metricName,
                 new String[]{"name", "kind"},

@@ -18,29 +18,33 @@
  */
 package io.github.resilience4j.ratelimiter.internal;
 
+import static com.jayway.awaitility.Awaitility.await;
+import static io.vavr.control.Try.run;
+import static java.lang.Thread.State.RUNNABLE;
+import static java.lang.Thread.State.TERMINATED;
+import static java.lang.Thread.State.TIMED_WAITING;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.BDDAssertions.then;
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+
 import com.jayway.awaitility.core.ConditionFactory;
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RateLimiterConfig;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
-import org.mockito.ArgumentCaptor;
-
 import java.time.Duration;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
-
-import static com.jayway.awaitility.Awaitility.await;
-import static io.vavr.control.Try.run;
-import static java.lang.Thread.State.*;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.BDDAssertions.then;
-import static org.hamcrest.CoreMatchers.equalTo;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.*;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.ExpectedException;
+import org.mockito.ArgumentCaptor;
 
 
 public class SemaphoreBasedRateLimiterImplTest {
@@ -57,33 +61,35 @@ public class SemaphoreBasedRateLimiterImplTest {
 
     private static ConditionFactory awaitImpatiently() {
         return await()
-            .pollDelay(1, TimeUnit.MICROSECONDS)
-            .pollInterval(2, TimeUnit.MILLISECONDS);
+                .pollDelay(1, TimeUnit.MICROSECONDS)
+                .pollInterval(2, TimeUnit.MILLISECONDS);
     }
 
     @Before
     public void init() {
         config = RateLimiterConfig.custom()
-            .timeoutDuration(TIMEOUT)
-            .limitRefreshPeriod(REFRESH_PERIOD)
-            .limitForPeriod(LIMIT)
-            .build();
+                .timeoutDuration(TIMEOUT)
+                .limitRefreshPeriod(REFRESH_PERIOD)
+                .limitForPeriod(LIMIT)
+                .build();
     }
 
     @Test
     public void rateLimiterCreationWithProvidedScheduler() throws Exception {
         ScheduledExecutorService scheduledExecutorService = mock(ScheduledExecutorService.class);
         RateLimiterConfig configSpy = spy(config);
-        SemaphoreBasedRateLimiter limit = new SemaphoreBasedRateLimiter("test", configSpy, scheduledExecutorService);
+        SemaphoreBasedRateLimiter limit = new SemaphoreBasedRateLimiter("test", configSpy,
+                scheduledExecutorService);
 
-        ArgumentCaptor<Runnable> refreshLimitRunnableCaptor = ArgumentCaptor.forClass(Runnable.class);
+        ArgumentCaptor<Runnable> refreshLimitRunnableCaptor = ArgumentCaptor
+                .forClass(Runnable.class);
         verify(scheduledExecutorService)
-            .scheduleAtFixedRate(
-                refreshLimitRunnableCaptor.capture(),
-                eq(config.getLimitRefreshPeriod().toNanos()),
-                eq(config.getLimitRefreshPeriod().toNanos()),
-                eq(TimeUnit.NANOSECONDS)
-            );
+                .scheduleAtFixedRate(
+                        refreshLimitRunnableCaptor.capture(),
+                        eq(config.getLimitRefreshPeriod().toNanos()),
+                        eq(config.getLimitRefreshPeriod().toNanos()),
+                        eq(TimeUnit.NANOSECONDS)
+                );
 
         Runnable refreshLimitRunnable = refreshLimitRunnableCaptor.getValue();
 
@@ -117,7 +123,8 @@ public class SemaphoreBasedRateLimiterImplTest {
 
         ScheduledExecutorService scheduledExecutorService = mock(ScheduledExecutorService.class);
         RateLimiterConfig configSpy = spy(config);
-        SemaphoreBasedRateLimiter limit = new SemaphoreBasedRateLimiter("test", configSpy, scheduledExecutorService);
+        SemaphoreBasedRateLimiter limit = new SemaphoreBasedRateLimiter("test", configSpy,
+                scheduledExecutorService);
         RateLimiter.Metrics detailedMetrics = limit.getMetrics();
 
         SynchronousQueue<Object> synchronousQueue = new SynchronousQueue<>();
@@ -141,9 +148,10 @@ public class SemaphoreBasedRateLimiterImplTest {
         then(limit.reservePermission()).isNegative();
 
         awaitImpatiently()
-            .atMost(100, TimeUnit.MILLISECONDS).until(detailedMetrics::getAvailablePermissions, equalTo(0));
+                .atMost(100, TimeUnit.MILLISECONDS)
+                .until(detailedMetrics::getAvailablePermissions, equalTo(0));
         awaitImpatiently()
-            .atMost(2, TimeUnit.SECONDS).until(thread::getState, equalTo(TIMED_WAITING));
+                .atMost(2, TimeUnit.SECONDS).until(thread::getState, equalTo(TIMED_WAITING));
         then(detailedMetrics.getAvailablePermissions()).isEqualTo(0);
 
         then(limit.reservePermission()).isNegative();
@@ -151,9 +159,10 @@ public class SemaphoreBasedRateLimiterImplTest {
 
         limit.refreshLimit();
         awaitImpatiently()
-            .atMost(100, TimeUnit.MILLISECONDS).until(detailedMetrics::getAvailablePermissions, equalTo(1));
+                .atMost(100, TimeUnit.MILLISECONDS)
+                .until(detailedMetrics::getAvailablePermissions, equalTo(1));
         awaitImpatiently()
-            .atMost(2, TimeUnit.SECONDS).until(thread::getState, equalTo(TERMINATED));
+                .atMost(2, TimeUnit.SECONDS).until(thread::getState, equalTo(TERMINATED));
         then(detailedMetrics.getAvailablePermissions()).isEqualTo(1);
 
         limit.changeLimitForPeriod(3);
@@ -166,7 +175,8 @@ public class SemaphoreBasedRateLimiterImplTest {
     @Test
     public void changeDefaultTimeoutDuration() throws Exception {
         ScheduledExecutorService scheduledExecutorService = mock(ScheduledExecutorService.class);
-        RateLimiter rateLimiter = new SemaphoreBasedRateLimiter("some", config, scheduledExecutorService);
+        RateLimiter rateLimiter = new SemaphoreBasedRateLimiter("some", config,
+                scheduledExecutorService);
         RateLimiterConfig rateLimiterConfig = rateLimiter.getRateLimiterConfig();
         then(rateLimiterConfig.getTimeoutDuration()).isEqualTo(TIMEOUT);
         then(rateLimiterConfig.getLimitForPeriod()).isEqualTo(LIMIT);
@@ -183,7 +193,8 @@ public class SemaphoreBasedRateLimiterImplTest {
     @Test
     public void changeLimitForPeriod() throws Exception {
         ScheduledExecutorService scheduledExecutorService = mock(ScheduledExecutorService.class);
-        RateLimiter rateLimiter = new SemaphoreBasedRateLimiter("some", config, scheduledExecutorService);
+        RateLimiter rateLimiter = new SemaphoreBasedRateLimiter("some", config,
+                scheduledExecutorService);
         RateLimiterConfig rateLimiterConfig = rateLimiter.getRateLimiterConfig();
         then(rateLimiterConfig.getTimeoutDuration()).isEqualTo(TIMEOUT);
         then(rateLimiterConfig.getLimitForPeriod()).isEqualTo(LIMIT);
@@ -201,7 +212,8 @@ public class SemaphoreBasedRateLimiterImplTest {
     public void acquirePermissionInterruption() throws Exception {
         ScheduledExecutorService scheduledExecutorService = mock(ScheduledExecutorService.class);
         RateLimiterConfig configSpy = spy(config);
-        SemaphoreBasedRateLimiter limit = new SemaphoreBasedRateLimiter("test", configSpy, scheduledExecutorService);
+        SemaphoreBasedRateLimiter limit = new SemaphoreBasedRateLimiter("test", configSpy,
+                scheduledExecutorService);
         assertThat(limit.getName()).isEqualTo("test");
         limit.acquirePermission();
         limit.acquirePermission();
@@ -216,14 +228,14 @@ public class SemaphoreBasedRateLimiterImplTest {
         thread.start();
 
         awaitImpatiently()
-            .atMost(2, TimeUnit.SECONDS).until(thread::getState, equalTo(TIMED_WAITING));
+                .atMost(2, TimeUnit.SECONDS).until(thread::getState, equalTo(TIMED_WAITING));
 
         thread.interrupt();
 
         awaitImpatiently()
-            .atMost(2, TimeUnit.SECONDS).until(thread::getState, equalTo(RUNNABLE));
+                .atMost(2, TimeUnit.SECONDS).until(thread::getState, equalTo(RUNNABLE));
         awaitImpatiently()
-            .atMost(100, TimeUnit.MILLISECONDS).until(thread::isInterrupted);
+                .atMost(100, TimeUnit.MILLISECONDS).until(thread::isInterrupted);
     }
 
     @Test

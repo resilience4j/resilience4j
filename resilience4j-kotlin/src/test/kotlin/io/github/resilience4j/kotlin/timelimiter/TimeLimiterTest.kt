@@ -25,7 +25,6 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.runBlocking
 import org.assertj.core.api.Assertions
 import org.junit.Test
-import java.lang.IllegalStateException
 import java.time.Duration
 
 class TimeLimiterTest {
