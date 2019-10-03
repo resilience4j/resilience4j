@@ -148,16 +148,6 @@ public class AdaptiveBulkheadConfig<T extends AbstractConfig> {
 			return this;
 		}
 
-
-		/**
-		 * @deprecated use {@link #recordException(Predicate)} instead.
-		 */
-		@Deprecated
-		public final Builder recordFailure(Predicate<Throwable> predicate) {
-			adaptiveBulkheadConfig.recordExceptionPredicate = predicate;
-			return this;
-		}
-
 		/**
 		 * Configures a Predicate which evaluates if an exception should be recorded as a failure and thus increase the failure rate.
 		 * The Predicate must return true if the exception should count as a failure. The Predicate must return false, if the exception
@@ -177,7 +167,7 @@ public class AdaptiveBulkheadConfig<T extends AbstractConfig> {
 		 * The Predicate must return false, if the exception should count as a failure.
 		 *
 		 * @param predicate the Predicate which evaluates if an exception should count as a failure
-		 * @return the CircuitBreakerConfig.Builder
+		 * @return the Builder
 		 */
 		public final Builder ignoreException(Predicate<Throwable> predicate) {
 			this.ignoreExceptionPredicate = predicate;
@@ -194,7 +184,7 @@ public class AdaptiveBulkheadConfig<T extends AbstractConfig> {
 		 * <p>
 		 * Example:
 		 * recordExceptions(Throwable.class) and ignoreExceptions(RuntimeException.class)
-		 * would capture all Errors and checked Exceptions, and ignore RuntimeExceptions.
+		 * would capture all Errors and checked Exceptions plus ignore RuntimeExceptions.
 		 * <p>
 		 * For a more sophisticated exception management use the
 		 * @see #recordException(Predicate) method
@@ -222,8 +212,6 @@ public class AdaptiveBulkheadConfig<T extends AbstractConfig> {
 		 * ignoreExceptions(Exception.class) and recordExceptions(Throwable.class)
 		 * would capture Errors.
 		 * <p>
-		 * For a more sophisticated exception management use the
-		 * @see #ignoreException(Predicate) method
 		 */
 		@SuppressWarnings("unchecked")
 		@SafeVarargs
