@@ -32,7 +32,7 @@ public class CircuitBreakerConfigurationPropertiesTest {
 	@Test
 	public void testCreateCircuitBreakerRegistry() {
 		//Given
-		io.github.resilience4j.common.circuitbreaker.configuration.CircuitBreakerConfigurationProperties.InstanceProperties instanceProperties1 = new io.github.resilience4j.common.circuitbreaker.configuration.CircuitBreakerConfigurationProperties.InstanceProperties();
+		CircuitBreakerConfigurationProperties.InstanceProperties instanceProperties1 = new CircuitBreakerConfigurationProperties.InstanceProperties();
 		instanceProperties1.setWaitDurationInOpenState(Duration.ofMillis(100));
 		instanceProperties1.setEventConsumerBufferSize(100);
 		instanceProperties1.setRegisterHealthIndicator(true);
@@ -53,7 +53,7 @@ public class CircuitBreakerConfigurationPropertiesTest {
 		//noinspection unchecked
 		instanceProperties1.setRecordFailurePredicate((Class) RecordFailurePredicate.class);
 
-		io.github.resilience4j.common.circuitbreaker.configuration.CircuitBreakerConfigurationProperties.InstanceProperties instanceProperties2 = new io.github.resilience4j.common.circuitbreaker.configuration.CircuitBreakerConfigurationProperties.InstanceProperties();
+		CircuitBreakerConfigurationProperties.InstanceProperties instanceProperties2 = new CircuitBreakerConfigurationProperties.InstanceProperties();
 		instanceProperties2.setSlidingWindowSize(1337);
 
 		CircuitBreakerConfigurationProperties circuitBreakerConfigurationProperties = new CircuitBreakerConfigurationProperties();
@@ -89,21 +89,21 @@ public class CircuitBreakerConfigurationPropertiesTest {
 	@Test
 	public void testCreateCircuitBreakerRegistryWithSharedConfigs() {
 		//Given
-		io.github.resilience4j.common.circuitbreaker.configuration.CircuitBreakerConfigurationProperties.InstanceProperties defaultProperties = new io.github.resilience4j.common.circuitbreaker.configuration.CircuitBreakerConfigurationProperties.InstanceProperties();
+		CircuitBreakerConfigurationProperties.InstanceProperties defaultProperties = new CircuitBreakerConfigurationProperties.InstanceProperties();
 		defaultProperties.setSlidingWindowSize(1000);
 		defaultProperties.setPermittedNumberOfCallsInHalfOpenState(100);
 		defaultProperties.setWaitDurationInOpenState(Duration.ofMillis(100));
 
-		io.github.resilience4j.common.circuitbreaker.configuration.CircuitBreakerConfigurationProperties.InstanceProperties sharedProperties = new io.github.resilience4j.common.circuitbreaker.configuration.CircuitBreakerConfigurationProperties.InstanceProperties();
+		CircuitBreakerConfigurationProperties.InstanceProperties sharedProperties = new CircuitBreakerConfigurationProperties.InstanceProperties();
 		sharedProperties.setSlidingWindowSize(1337);
 		sharedProperties.setSlidingWindowType(CircuitBreakerConfig.SlidingWindowType.TIME_BASED);
 		sharedProperties.setPermittedNumberOfCallsInHalfOpenState(1000);
 
-		io.github.resilience4j.common.circuitbreaker.configuration.CircuitBreakerConfigurationProperties.InstanceProperties backendWithDefaultConfig = new io.github.resilience4j.common.circuitbreaker.configuration.CircuitBreakerConfigurationProperties.InstanceProperties();
+		CircuitBreakerConfigurationProperties.InstanceProperties backendWithDefaultConfig = new CircuitBreakerConfigurationProperties.InstanceProperties();
 		backendWithDefaultConfig.setBaseConfig("default");
 		backendWithDefaultConfig.setPermittedNumberOfCallsInHalfOpenState(99);
 
-		io.github.resilience4j.common.circuitbreaker.configuration.CircuitBreakerConfigurationProperties.InstanceProperties backendWithSharedConfig = new io.github.resilience4j.common.circuitbreaker.configuration.CircuitBreakerConfigurationProperties.InstanceProperties();
+		CircuitBreakerConfigurationProperties.InstanceProperties backendWithSharedConfig = new CircuitBreakerConfigurationProperties.InstanceProperties();
 		backendWithSharedConfig.setBaseConfig("sharedConfig");
 		backendWithSharedConfig.setPermittedNumberOfCallsInHalfOpenState(999);
 
@@ -142,7 +142,7 @@ public class CircuitBreakerConfigurationPropertiesTest {
 	public void testCreateCircuitBreakerRegistryWithUnknownConfig() {
 		CircuitBreakerConfigurationProperties circuitBreakerConfigurationProperties = new CircuitBreakerConfigurationProperties();
 
-		io.github.resilience4j.common.circuitbreaker.configuration.CircuitBreakerConfigurationProperties.InstanceProperties instanceProperties = new io.github.resilience4j.common.circuitbreaker.configuration.CircuitBreakerConfigurationProperties.InstanceProperties();
+		CircuitBreakerConfigurationProperties.InstanceProperties instanceProperties = new CircuitBreakerConfigurationProperties.InstanceProperties();
 		instanceProperties.setBaseConfig("unknownConfig");
 		circuitBreakerConfigurationProperties.getInstances().put("backend", instanceProperties);
 
@@ -151,5 +151,68 @@ public class CircuitBreakerConfigurationPropertiesTest {
 		assertThatThrownBy(() -> circuitBreakerConfigurationProperties.createCircuitBreakerConfig(instanceProperties))
 				.isInstanceOf(ConfigurationNotFoundException.class)
 				.hasMessage("Configuration with name 'unknownConfig' does not exist");
+	}
+
+	@Test(expected = IllegalArgumentException.class)
+	public void testIllegalArgumentOnEventConsumerBufferSize() {
+		CircuitBreakerConfigurationProperties.InstanceProperties defaultProperties = new CircuitBreakerConfigurationProperties.InstanceProperties();
+		defaultProperties.setEventConsumerBufferSize(-1);
+	}
+
+	@Test(expected = IllegalArgumentException.class)
+	public void testIllegalArgumentOnFailureRateThreshold() {
+		CircuitBreakerConfigurationProperties.InstanceProperties defaultProperties = new CircuitBreakerConfigurationProperties.InstanceProperties();
+		defaultProperties.setFailureRateThreshold(0f);
+	}
+
+	@Test(expected = IllegalArgumentException.class)
+	public void testIllegalArgumentOnWaitDurationInOpenState() {
+		CircuitBreakerConfigurationProperties.InstanceProperties defaultProperties = new CircuitBreakerConfigurationProperties.InstanceProperties();
+		defaultProperties.setWaitDurationInOpenState(Duration.ZERO);
+	}
+
+	@Test(expected = IllegalArgumentException.class)
+	public void testIllegalArgumentOnRingBufferSizeInClosedState() {
+		CircuitBreakerConfigurationProperties.InstanceProperties defaultProperties = new CircuitBreakerConfigurationProperties.InstanceProperties();
+		defaultProperties.setRingBufferSizeInClosedState(0);
+	}
+
+	@Test(expected = IllegalArgumentException.class)
+	public void testIllegalArgumentOnRingBufferSizeInHalfOpenState() {
+		CircuitBreakerConfigurationProperties.InstanceProperties defaultProperties = new CircuitBreakerConfigurationProperties.InstanceProperties();
+		defaultProperties.setRingBufferSizeInHalfOpenState(0);
+	}
+
+	@Test(expected = IllegalArgumentException.class)
+	public void testIllegalArgumentOnPermittedNumberOfCallsInHalfOpenState() {
+		CircuitBreakerConfigurationProperties.InstanceProperties defaultProperties = new CircuitBreakerConfigurationProperties.InstanceProperties();
+		defaultProperties.setPermittedNumberOfCallsInHalfOpenState(0);
+	}
+
+	@Test(expected = IllegalArgumentException.class)
+	public void testIllegalArgumentOnMinimumNumberOfCalls() {
+		CircuitBreakerConfigurationProperties.InstanceProperties defaultProperties = new CircuitBreakerConfigurationProperties.InstanceProperties();
+		defaultProperties.setMinimumNumberOfCalls(0);
+	}
+
+
+	@Test(expected = IllegalArgumentException.class)
+	public void testIllegalArgumentOnSlidingWindowSize() {
+		CircuitBreakerConfigurationProperties.InstanceProperties defaultProperties = new CircuitBreakerConfigurationProperties.InstanceProperties();
+		defaultProperties.setSlidingWindowSize(0);
+	}
+
+
+	@Test(expected = IllegalArgumentException.class)
+	public void testIllegalArgumentOnSlowCallRateThreshold() {
+		CircuitBreakerConfigurationProperties.InstanceProperties defaultProperties = new CircuitBreakerConfigurationProperties.InstanceProperties();
+		defaultProperties.setSlowCallRateThreshold(0f);
+	}
+
+
+	@Test(expected = IllegalArgumentException.class)
+	public void testIllegalArgumentOnSlowCallDurationThreshold() {
+		CircuitBreakerConfigurationProperties.InstanceProperties defaultProperties = new CircuitBreakerConfigurationProperties.InstanceProperties();
+		defaultProperties.setSlowCallDurationThreshold(Duration.ZERO);
 	}
 }

@@ -21,10 +21,10 @@ import io.github.resilience4j.core.ConfigurationNotFoundException;
 import io.github.resilience4j.core.StringUtils;
 import io.github.resilience4j.core.lang.Nullable;
 
-import javax.validation.constraints.Min;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 public class ThreadPoolBulkheadConfigurationProperties {
 
@@ -102,7 +102,6 @@ public class ThreadPoolBulkheadConfigurationProperties {
 	 */
 	public static class InstanceProperties {
 
-		@Min(1)
 		@Nullable
 		private Integer eventConsumerBufferSize;
 
@@ -159,6 +158,11 @@ public class ThreadPoolBulkheadConfigurationProperties {
 		}
 
 		public InstanceProperties setEventConsumerBufferSize(Integer eventConsumerBufferSize) {
+			Objects.requireNonNull(eventConsumerBufferSize);
+			if (eventConsumerBufferSize < 1) {
+				throw new IllegalArgumentException("eventConsumerBufferSize must be greater than or equal to 1.");
+			}
+
 			this.eventConsumerBufferSize = eventConsumerBufferSize;
 			return this;
 		}
