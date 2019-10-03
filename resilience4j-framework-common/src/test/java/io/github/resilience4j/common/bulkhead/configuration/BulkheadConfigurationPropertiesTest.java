@@ -111,11 +111,11 @@ public class BulkheadConfigurationPropertiesTest {
 	@Test
 	public void testBulkHeadProperties() {
 		//Given
-		io.github.resilience4j.common.bulkhead.configuration.BulkheadConfigurationProperties.InstanceProperties instanceProperties1 = new io.github.resilience4j.common.bulkhead.configuration.BulkheadConfigurationProperties.InstanceProperties();
+		BulkheadConfigurationProperties.InstanceProperties instanceProperties1 = new BulkheadConfigurationProperties.InstanceProperties();
 		instanceProperties1.setMaxConcurrentCalls(3);
 		assertThat(instanceProperties1.getEventConsumerBufferSize()).isNull();
 
-		io.github.resilience4j.common.bulkhead.configuration.BulkheadConfigurationProperties.InstanceProperties instanceProperties2 = new io.github.resilience4j.common.bulkhead.configuration.BulkheadConfigurationProperties.InstanceProperties();
+		BulkheadConfigurationProperties.InstanceProperties instanceProperties2 = new BulkheadConfigurationProperties.InstanceProperties();
 		instanceProperties2.setMaxConcurrentCalls(2);
 		assertThat(instanceProperties2.getEventConsumerBufferSize()).isNull();
 
@@ -140,22 +140,22 @@ public class BulkheadConfigurationPropertiesTest {
 	@Test
 	public void testCreateBulkHeadPropertiesWithSharedConfigs() {
 		//Given
-		io.github.resilience4j.common.bulkhead.configuration.BulkheadConfigurationProperties.InstanceProperties defaultProperties = new io.github.resilience4j.common.bulkhead.configuration.BulkheadConfigurationProperties.InstanceProperties();
+		BulkheadConfigurationProperties.InstanceProperties defaultProperties = new BulkheadConfigurationProperties.InstanceProperties();
 		defaultProperties.setMaxConcurrentCalls(3);
 		defaultProperties.setMaxWaitDuration(Duration.ofMillis(50));
 		assertThat(defaultProperties.getEventConsumerBufferSize()).isNull();
 
-		io.github.resilience4j.common.bulkhead.configuration.BulkheadConfigurationProperties.InstanceProperties sharedProperties = new io.github.resilience4j.common.bulkhead.configuration.BulkheadConfigurationProperties.InstanceProperties();
+		BulkheadConfigurationProperties.InstanceProperties sharedProperties = new BulkheadConfigurationProperties.InstanceProperties();
 		sharedProperties.setMaxConcurrentCalls(2);
 		sharedProperties.setMaxWaitDuration(Duration.ofMillis(100L));
 		assertThat(sharedProperties.getEventConsumerBufferSize()).isNull();
 
-		io.github.resilience4j.common.bulkhead.configuration.BulkheadConfigurationProperties.InstanceProperties backendWithDefaultConfig = new io.github.resilience4j.common.bulkhead.configuration.BulkheadConfigurationProperties.InstanceProperties();
+		BulkheadConfigurationProperties.InstanceProperties backendWithDefaultConfig = new BulkheadConfigurationProperties.InstanceProperties();
 		backendWithDefaultConfig.setBaseConfig("default");
 		backendWithDefaultConfig.setMaxWaitDuration(Duration.ofMillis(200L));
 		assertThat(backendWithDefaultConfig.getEventConsumerBufferSize()).isNull();
 
-		io.github.resilience4j.common.bulkhead.configuration.BulkheadConfigurationProperties.InstanceProperties backendWithSharedConfig = new io.github.resilience4j.common.bulkhead.configuration.BulkheadConfigurationProperties.InstanceProperties();
+		BulkheadConfigurationProperties.InstanceProperties backendWithSharedConfig = new BulkheadConfigurationProperties.InstanceProperties();
 		backendWithSharedConfig.setBaseConfig("sharedConfig");
 		backendWithSharedConfig.setMaxWaitDuration(Duration.ofMillis(300L));
 		assertThat(backendWithSharedConfig.getEventConsumerBufferSize()).isNull();
@@ -194,7 +194,7 @@ public class BulkheadConfigurationPropertiesTest {
 	public void testCreateBulkHeadPropertiesWithUnknownConfig() {
 		BulkheadConfigurationProperties bulkheadConfigurationProperties = new BulkheadConfigurationProperties();
 
-		io.github.resilience4j.common.bulkhead.configuration.BulkheadConfigurationProperties.InstanceProperties instanceProperties = new io.github.resilience4j.common.bulkhead.configuration.BulkheadConfigurationProperties.InstanceProperties();
+		BulkheadConfigurationProperties.InstanceProperties instanceProperties = new BulkheadConfigurationProperties.InstanceProperties();
 		instanceProperties.setBaseConfig("unknownConfig");
 		bulkheadConfigurationProperties.getInstances().put("backend", instanceProperties);
 
@@ -203,4 +203,29 @@ public class BulkheadConfigurationPropertiesTest {
 				.isInstanceOf(ConfigurationNotFoundException.class)
 				.hasMessage("Configuration with name 'unknownConfig' does not exist");
 	}
+
+	@Test(expected = IllegalArgumentException.class)
+	public void testIllegalArgumentOnMaxConcurrentCalls() {
+		BulkheadConfigurationProperties.InstanceProperties defaultProperties = new BulkheadConfigurationProperties.InstanceProperties();
+		defaultProperties.setMaxConcurrentCalls(-100);
+	}
+
+	@Test(expected = IllegalArgumentException.class)
+	public void testIllegalArgumentOnMaxWaitDuration() {
+		BulkheadConfigurationProperties.InstanceProperties defaultProperties = new BulkheadConfigurationProperties.InstanceProperties();
+		defaultProperties.setMaxWaitDuration(Duration.ofMillis(-1000));
+	}
+
+	@Test(expected = IllegalArgumentException.class)
+	public void testBulkheadIllegalArgumentOnEventConsumerBufferSize() {
+		BulkheadConfigurationProperties.InstanceProperties defaultProperties = new BulkheadConfigurationProperties.InstanceProperties();
+		defaultProperties.setEventConsumerBufferSize(-1);
+	}
+
+	@Test(expected = IllegalArgumentException.class)
+	public void testThreadPoolBulkheadIllegalArgumentOnEventConsumerBufferSize() {
+		ThreadPoolBulkheadConfigurationProperties.InstanceProperties defaultProperties = new ThreadPoolBulkheadConfigurationProperties.InstanceProperties();
+		defaultProperties.setEventConsumerBufferSize(-1);
+	}
+
 }

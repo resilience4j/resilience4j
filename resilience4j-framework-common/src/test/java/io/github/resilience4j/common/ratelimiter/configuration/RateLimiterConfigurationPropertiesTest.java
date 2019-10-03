@@ -31,7 +31,7 @@ public class RateLimiterConfigurationPropertiesTest {
 	@Test
 	public void testRateLimiterRegistry() {
 		//Given
-		io.github.resilience4j.common.ratelimiter.configuration.RateLimiterConfigurationProperties.InstanceProperties instanceProperties1 = new io.github.resilience4j.common.ratelimiter.configuration.RateLimiterConfigurationProperties.InstanceProperties();
+		RateLimiterConfigurationProperties.InstanceProperties instanceProperties1 = new RateLimiterConfigurationProperties.InstanceProperties();
 		instanceProperties1.setLimitForPeriod(2);
 		instanceProperties1.setWritableStackTraceEnabled(false);
 		instanceProperties1.setSubscribeForEvents(true);
@@ -39,7 +39,7 @@ public class RateLimiterConfigurationPropertiesTest {
 		instanceProperties1.setLimitRefreshPeriod(Duration.ofMillis(100));
 		instanceProperties1.setTimeoutDuration(Duration.ofMillis(100));
 
-		io.github.resilience4j.common.ratelimiter.configuration.RateLimiterConfigurationProperties.InstanceProperties instanceProperties2 = new io.github.resilience4j.common.ratelimiter.configuration.RateLimiterConfigurationProperties.InstanceProperties();
+		RateLimiterConfigurationProperties.InstanceProperties instanceProperties2 = new RateLimiterConfigurationProperties.InstanceProperties();
 		instanceProperties2.setLimitForPeriod(4);
 		instanceProperties2.setSubscribeForEvents(true);
 		instanceProperties2.setWritableStackTraceEnabled(true);
@@ -68,24 +68,24 @@ public class RateLimiterConfigurationPropertiesTest {
 	@Test
 	public void testCreateRateLimiterRegistryWithSharedConfigs() {
 		//Given
-		io.github.resilience4j.common.ratelimiter.configuration.RateLimiterConfigurationProperties.InstanceProperties defaultProperties = new io.github.resilience4j.common.ratelimiter.configuration.RateLimiterConfigurationProperties.InstanceProperties();
+		RateLimiterConfigurationProperties.InstanceProperties defaultProperties = new RateLimiterConfigurationProperties.InstanceProperties();
 		defaultProperties.setLimitForPeriod(3);
 		defaultProperties.setLimitRefreshPeriod(Duration.ofNanos(5000000));
 		defaultProperties.setSubscribeForEvents(true);
 		defaultProperties.setWritableStackTraceEnabled(false);
 
-		io.github.resilience4j.common.ratelimiter.configuration.RateLimiterConfigurationProperties.InstanceProperties sharedProperties = new io.github.resilience4j.common.ratelimiter.configuration.RateLimiterConfigurationProperties.InstanceProperties();
+		RateLimiterConfigurationProperties.InstanceProperties sharedProperties = new RateLimiterConfigurationProperties.InstanceProperties();
 		sharedProperties.setLimitForPeriod(2);
 		sharedProperties.setLimitRefreshPeriod(Duration.ofNanos(6000000));
 		sharedProperties.setSubscribeForEvents(true);
 
-		io.github.resilience4j.common.ratelimiter.configuration.RateLimiterConfigurationProperties.InstanceProperties backendWithDefaultConfig = new io.github.resilience4j.common.ratelimiter.configuration.RateLimiterConfigurationProperties.InstanceProperties();
+		RateLimiterConfigurationProperties.InstanceProperties backendWithDefaultConfig = new RateLimiterConfigurationProperties.InstanceProperties();
 		backendWithDefaultConfig.setBaseConfig("default");
 		backendWithDefaultConfig.setLimitForPeriod(200);
 		backendWithDefaultConfig.setSubscribeForEvents(true);
 		backendWithDefaultConfig.setWritableStackTraceEnabled(true);
 
-		io.github.resilience4j.common.ratelimiter.configuration.RateLimiterConfigurationProperties.InstanceProperties backendWithSharedConfig = new io.github.resilience4j.common.ratelimiter.configuration.RateLimiterConfigurationProperties.InstanceProperties();
+		RateLimiterConfigurationProperties.InstanceProperties backendWithSharedConfig = new RateLimiterConfigurationProperties.InstanceProperties();
 		backendWithSharedConfig.setBaseConfig("sharedConfig");
 		backendWithSharedConfig.setLimitForPeriod(300);
 		backendWithSharedConfig.setSubscribeForEvents(true);
@@ -129,7 +129,7 @@ public class RateLimiterConfigurationPropertiesTest {
 	public void testCreateRateLimiterRegistryWithUnknownConfig() {
 		RateLimiterConfigurationProperties rateLimiterConfigurationProperties = new RateLimiterConfigurationProperties();
 
-		io.github.resilience4j.common.ratelimiter.configuration.RateLimiterConfigurationProperties.InstanceProperties instanceProperties = new io.github.resilience4j.common.ratelimiter.configuration.RateLimiterConfigurationProperties.InstanceProperties();
+		RateLimiterConfigurationProperties.InstanceProperties instanceProperties = new RateLimiterConfigurationProperties.InstanceProperties();
 		instanceProperties.setBaseConfig("unknownConfig");
 		rateLimiterConfigurationProperties.getInstances().put("backend", instanceProperties);
 
@@ -153,4 +153,12 @@ public class RateLimiterConfigurationPropertiesTest {
 		assertThat(rateLimiterConfigurationProperties.findRateLimiterProperties("default").isPresent()).isTrue();
 		assertThat(rateLimiterConfigurationProperties.findRateLimiterProperties("custom").isPresent()).isFalse();
 	}
+
+
+	@Test(expected = IllegalArgumentException.class)
+	public void testIllegalArgumentOnEventConsumerBufferSize() {
+		RateLimiterConfigurationProperties.InstanceProperties defaultProperties = new RateLimiterConfigurationProperties.InstanceProperties();
+		defaultProperties.setEventConsumerBufferSize(-1);
+	}
+
 }

@@ -62,7 +62,7 @@ public class RetryConfigurationTest {
 		//Given
 		io.github.resilience4j.common.retry.configuration.RetryConfigurationProperties.InstanceProperties defaultProperties = new io.github.resilience4j.common.retry.configuration.RetryConfigurationProperties.InstanceProperties();
 		defaultProperties.setMaxRetryAttempts(3);
-		defaultProperties.setWaitDuration(Duration.ofMillis(50L));
+		defaultProperties.setWaitDuration(Duration.ofMillis(100L));
 
 		io.github.resilience4j.common.retry.configuration.RetryConfigurationProperties.InstanceProperties sharedProperties = new io.github.resilience4j.common.retry.configuration.RetryConfigurationProperties.InstanceProperties();
 		sharedProperties.setMaxRetryAttempts(2);
