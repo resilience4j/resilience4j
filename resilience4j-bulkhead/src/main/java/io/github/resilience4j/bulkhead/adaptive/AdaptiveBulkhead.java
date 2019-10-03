@@ -60,7 +60,6 @@ import io.vavr.CheckedRunnable;
  * <p>
  */
 public interface AdaptiveBulkhead {
-
 	/**
 	 * Acquires a permission to execute a call, only if one is available at the time of invocation.
 	 *
@@ -464,15 +463,18 @@ public interface AdaptiveBulkhead {
 	}
 
 	static void handleError(AdaptiveBulkhead bulkhead, @Nullable Instant start, Exception e) {
-		if (bulkhead.getBulkheadConfig().getAdaptIfError() != null) {
-			//noinspection unchecked
-			if (bulkhead.getBulkheadConfig().getAdaptIfError().test(e) && start != null) {
-				Instant finish = Instant.now();
-				bulkhead.onError(Duration.between(start, finish).toMillis(), TimeUnit.MILLISECONDS);
-
-			}
-		} else {
+		//noinspection unchecked
+		if (bulkhead.getBulkheadConfig().getIgnoreExceptionPredicate().test(e)) {
 			bulkhead.releasePermission();
+		} else if (bulkhead.getBulkheadConfig().getRecordExceptionPredicate().test(e) && start != null) {
+			Instant finish = Instant.now();
+			bulkhead.onError(Duration.between(start, finish).toMillis(), TimeUnit.MILLISECONDS);
+		} else {
+			if (start != null) {
+				Instant finish = Instant.now();
+				bulkhead.onSuccess(Duration.between(start, finish).toMillis(), TimeUnit.MILLISECONDS);
+			}
+
 		}
 	}
 

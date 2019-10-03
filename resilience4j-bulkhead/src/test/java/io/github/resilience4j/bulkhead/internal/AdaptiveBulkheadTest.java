@@ -134,7 +134,7 @@ public class AdaptiveBulkheadTest {
 	public void shouldDecorateSupplierAndReturnWithExceptionAdaptIfError() {
 
 		final AdaptiveBulkheadConfig<AimdConfig> config = AdaptiveBulkheadConfig.<AimdConfig>builder().config(AimdConfig.builder().minConcurrentRequestsLimit(2).slowCallDurationThreshold(200)
-				.build()).adaptIfError(e -> e instanceof RuntimeException).build();
+				.build()).recordExceptions(RuntimeException.class).build();
 		// Given
 		AdaptiveBulkhead bulkhead = AdaptiveBulkhead.of("test", config);
 		BDDMockito.given(helloWorldService.returnHelloWorld()).willThrow(new RuntimeException("BAM!"));
@@ -190,7 +190,7 @@ public class AdaptiveBulkheadTest {
 		// Given
 		final AdaptiveBulkheadConfig<AimdConfig> config = AdaptiveBulkheadConfig.<AimdConfig>builder().config(AimdConfig.builder().minConcurrentRequestsLimit(2)
 				.slowCallDurationThreshold(200)
-				.build()).adaptIfError(e -> e instanceof RuntimeException).build();
+				.build()).recordExceptions(RuntimeException.class).build();
 		AdaptiveBulkhead bulkhead = AdaptiveBulkhead.of("test", config);
 		BDDMockito.given(helloWorldService.returnHelloWorldWithException()).willThrow(new RuntimeException("BAM!"));
 
@@ -262,7 +262,7 @@ public class AdaptiveBulkheadTest {
 		// Given
 		final AdaptiveBulkheadConfig<AimdConfig> config = AdaptiveBulkheadConfig.<AimdConfig>builder().config(AimdConfig.builder().minConcurrentRequestsLimit(2)
 				.slowCallDurationThreshold(200)
-				.build()).adaptIfError(e -> e instanceof RuntimeException).build();
+				.build()).recordExceptions(RuntimeException.class).build();
 		AdaptiveBulkhead bulkhead = AdaptiveBulkhead.of("test", config);
 		BDDMockito.given(helloWorldService.returnHelloWorldWithException()).willThrow(new RuntimeException("BAM!"));
 
@@ -316,7 +316,7 @@ public class AdaptiveBulkheadTest {
 		// Given
 		final AdaptiveBulkheadConfig<AimdConfig> config = AdaptiveBulkheadConfig.<AimdConfig>builder().config(AimdConfig.builder().minConcurrentRequestsLimit(2)
 				.slowCallDurationThreshold(200)
-				.build()).adaptIfError(e -> e instanceof RuntimeException).build();
+				.build()).recordExceptions(RuntimeException.class).build();
 		AdaptiveBulkhead bulkhead = AdaptiveBulkhead.of("test", config);
 
 		// When
@@ -384,7 +384,7 @@ public class AdaptiveBulkheadTest {
 		// Given
 		final AdaptiveBulkheadConfig<AimdConfig> config = AdaptiveBulkheadConfig.<AimdConfig>builder().config(AimdConfig.builder().minConcurrentRequestsLimit(2)
 				.slowCallDurationThreshold(200)
-				.build()).adaptIfError(e -> e instanceof RuntimeException).build();
+				.build()).recordExceptions(RuntimeException.class).build();
 
 		AdaptiveBulkhead bulkhead = AdaptiveBulkhead.of("test", config);
 
@@ -439,7 +439,7 @@ public class AdaptiveBulkheadTest {
 		// Given
 		final AdaptiveBulkheadConfig<AimdConfig> config = AdaptiveBulkheadConfig.<AimdConfig>builder().config(AimdConfig.builder().minConcurrentRequestsLimit(2)
 				.slowCallDurationThreshold(100)
-				.build()).adaptIfError(e -> e instanceof RuntimeException).build();
+				.build()).recordExceptions(RuntimeException.class).build();
 		AdaptiveBulkhead bulkhead = AdaptiveBulkhead.of("test", config);
 
 		// When
