@@ -37,7 +37,7 @@ public class EventProcessor<T> implements EventPublisher<T> {
 
     @SuppressWarnings("unchecked")
     public synchronized void registerConsumer(String className,
-            EventConsumer<? extends T> eventConsumer) {
+        EventConsumer<? extends T> eventConsumer) {
         this.consumerRegistered = true;
         this.eventConsumerMap.compute(className, (k, consumers) -> {
             if (consumers == null) {
@@ -59,7 +59,7 @@ public class EventProcessor<T> implements EventPublisher<T> {
         }
         if (!eventConsumerMap.isEmpty()) {
             List<EventConsumer<T>> eventConsumers = this.eventConsumerMap
-                    .get(event.getClass().getSimpleName());
+                .get(event.getClass().getSimpleName());
             if (eventConsumers != null && !eventConsumers.isEmpty()) {
                 eventConsumers.forEach(consumer -> consumer.consumeEvent(event));
                 consumed = true;

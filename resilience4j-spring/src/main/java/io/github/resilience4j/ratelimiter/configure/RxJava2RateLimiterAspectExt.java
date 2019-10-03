@@ -41,7 +41,7 @@ public class RxJava2RateLimiterAspectExt implements RateLimiterAspectExt {
 
     private static final Logger logger = LoggerFactory.getLogger(RxJava2RateLimiterAspectExt.class);
     private final Set<Class> rxSupportedTypes = newHashSet(ObservableSource.class,
-            SingleSource.class, CompletableSource.class, MaybeSource.class, Flowable.class);
+        SingleSource.class, CompletableSource.class, MaybeSource.class, Flowable.class);
 
     /**
      * @param returnType the AOP method return type class
@@ -51,7 +51,7 @@ public class RxJava2RateLimiterAspectExt implements RateLimiterAspectExt {
     @Override
     public boolean canHandleReturnType(Class returnType) {
         return rxSupportedTypes.stream()
-                .anyMatch(classType -> classType.isAssignableFrom(returnType));
+            .anyMatch(classType -> classType.isAssignableFrom(returnType));
     }
 
     /**
@@ -63,7 +63,7 @@ public class RxJava2RateLimiterAspectExt implements RateLimiterAspectExt {
      */
     @Override
     public Object handle(ProceedingJoinPoint proceedingJoinPoint, RateLimiter rateLimiter,
-            String methodName) throws Throwable {
+        String methodName) throws Throwable {
         RateLimiterOperator<?> rateLimiterOperator = RateLimiterOperator.of(rateLimiter);
         Object returnValue = proceedingJoinPoint.proceed();
         return executeRxJava2Aspect(rateLimiterOperator, returnValue);
@@ -71,7 +71,7 @@ public class RxJava2RateLimiterAspectExt implements RateLimiterAspectExt {
 
     @SuppressWarnings("unchecked")
     private Object executeRxJava2Aspect(RateLimiterOperator rateLimiterOperator,
-            Object returnValue) {
+        Object returnValue) {
         if (returnValue instanceof ObservableSource) {
             Observable<?> observable = (Observable) returnValue;
             return observable.compose(rateLimiterOperator);
@@ -89,10 +89,10 @@ public class RxJava2RateLimiterAspectExt implements RateLimiterAspectExt {
             return flowable.compose(rateLimiterOperator);
         } else {
             logger.error("Unsupported type for Rate limiter RxJava2 {}",
-                    returnValue.getClass().getTypeName());
+                returnValue.getClass().getTypeName());
             throw new IllegalArgumentException(
-                    "Not Supported type for the Rate limiter in RxJava2 :" + returnValue.getClass()
-                            .getName());
+                "Not Supported type for the Rate limiter in RxJava2 :" + returnValue.getClass()
+                    .getName());
         }
     }
 }

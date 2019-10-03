@@ -76,22 +76,22 @@ public class RateLimiterMethodInterceptor extends AbstractMethodInterceptor {
         RateLimiter annotation = invocation.getMethod().getAnnotation(RateLimiter.class);
         if (annotation == null) {
             annotation = invocation.getMethod().getDeclaringClass()
-                    .getAnnotation(RateLimiter.class);
+                .getAnnotation(RateLimiter.class);
         }
         final RecoveryFunction<?> fallbackMethod = Optional
-                .ofNullable(createRecoveryFunction(invocation, annotation.fallbackMethod()))
-                .orElse(new DefaultRecoveryFunction<>());
+            .ofNullable(createRecoveryFunction(invocation, annotation.fallbackMethod()))
+            .orElse(new DefaultRecoveryFunction<>());
         if (registry == null) {
             registry = RateLimiterRegistry.ofDefaults();
         }
         io.github.resilience4j.ratelimiter.RateLimiter rateLimiter = registry
-                .rateLimiter(annotation.name());
+            .rateLimiter(annotation.name());
         Class<?> returnType = invocation.getMethod().getReturnType();
         if (Promise.class.isAssignableFrom(returnType)) {
             Promise<?> result = (Promise<?>) proceed(invocation);
             if (result != null) {
                 RateLimiterTransformer transformer = RateLimiterTransformer.of(rateLimiter)
-                        .recover(fallbackMethod);
+                    .recover(fallbackMethod);
                 result = result.transform(transformer);
             }
             return result;
@@ -125,11 +125,11 @@ public class RateLimiterMethodInterceptor extends AbstractMethodInterceptor {
 
     @Nullable
     private Object handleProceedWithException(MethodInvocation invocation,
-            io.github.resilience4j.ratelimiter.RateLimiter rateLimiter,
-            RecoveryFunction<?> recoveryFunction) throws Throwable {
+        io.github.resilience4j.ratelimiter.RateLimiter rateLimiter,
+        RecoveryFunction<?> recoveryFunction) throws Throwable {
         try {
             return io.github.resilience4j.ratelimiter.RateLimiter
-                    .decorateCheckedSupplier(rateLimiter, invocation::proceed).apply();
+                .decorateCheckedSupplier(rateLimiter, invocation::proceed).apply();
         } catch (Throwable t) {
             return recoveryFunction.apply(t);
         }

@@ -46,11 +46,11 @@ public class Resilience4jFeignFallbackLambdaTest {
     @Before
     public void setUp() {
         final FeignDecorators decorators = FeignDecorators.builder()
-                .withFallback(Issue560.createLambdaFallback())
-                .build();
+            .withFallback(Issue560.createLambdaFallback())
+            .build();
 
         this.testService = Resilience4jFeign.builder(decorators)
-                .target(TestService.class, MOCK_URL);
+            .target(TestService.class, MOCK_URL);
     }
 
     @Test
@@ -65,9 +65,9 @@ public class Resilience4jFeignFallbackLambdaTest {
 
     private void setupStub() {
         stubFor(get(urlPathEqualTo("/greeting"))
-                .willReturn(aResponse()
-                        .withStatus(400)
-                        .withHeader("Content-Type", "text/plain")
-                        .withBody("Hello, world!")));
+            .willReturn(aResponse()
+                .withStatus(400)
+                .withHeader("Content-Type", "text/plain")
+                .withBody("Hello, world!")));
     }
 }

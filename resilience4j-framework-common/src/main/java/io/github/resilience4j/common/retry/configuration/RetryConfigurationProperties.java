@@ -81,7 +81,7 @@ public class RetryConfigurationProperties {
      */
     public RetryConfig createRetryConfig(InstanceProperties instanceProperties) {
         if (instanceProperties != null && StringUtils
-                .isNotEmpty(instanceProperties.getBaseConfig())) {
+            .isNotEmpty(instanceProperties.getBaseConfig())) {
             InstanceProperties baseProperties = configs.get(instanceProperties.getBaseConfig());
             if (baseProperties == null) {
                 throw new ConfigurationNotFoundException(instanceProperties.getBaseConfig());
@@ -92,7 +92,7 @@ public class RetryConfigurationProperties {
     }
 
     private RetryConfig buildConfigFromBaseConfig(InstanceProperties baseProperties,
-            InstanceProperties instanceProperties) {
+        InstanceProperties instanceProperties) {
         RetryConfig baseConfig = buildRetryConfig(RetryConfig.custom(), baseProperties);
         ConfigUtils.mergePropertiesIfAny(baseProperties, instanceProperties);
         return buildRetryConfig(RetryConfig.from(baseConfig), instanceProperties);
@@ -104,15 +104,15 @@ public class RetryConfigurationProperties {
      */
     @SuppressWarnings("unchecked")
     private RetryConfig buildRetryConfig(RetryConfig.Builder builder,
-            InstanceProperties properties) {
+        InstanceProperties properties) {
         if (properties == null) {
             return builder.build();
         }
 
         if (properties.enableExponentialBackoff != null && properties.enableExponentialBackoff
-                && properties.enableRandomizedWait != null && properties.enableRandomizedWait) {
+            && properties.enableRandomizedWait != null && properties.enableRandomizedWait) {
             throw new IllegalStateException(
-                    "you can not enable Exponential backoff policy and randomized delay at the same time , please enable only one of them");
+                "you can not enable Exponential backoff policy and randomized delay at the same time , please enable only one of them");
         }
 
         configureRetryIntervalFunction(properties, builder);
@@ -124,7 +124,7 @@ public class RetryConfigurationProperties {
         if (properties.getRetryExceptionPredicate() != null) {
             if (properties.getRetryExceptionPredicate() != null) {
                 Predicate<Throwable> predicate = ClassUtils
-                        .instantiatePredicateClass(properties.getRetryExceptionPredicate());
+                    .instantiatePredicateClass(properties.getRetryExceptionPredicate());
                 if (predicate != null) {
                     builder.retryOnException(predicate);
                 }
@@ -142,7 +142,7 @@ public class RetryConfigurationProperties {
         if (properties.getResultPredicate() != null) {
             if (properties.getResultPredicate() != null) {
                 Predicate<Object> predicate = ClassUtils
-                        .instantiatePredicateClass(properties.getResultPredicate());
+                    .instantiatePredicateClass(properties.getResultPredicate());
                 if (predicate != null) {
                     builder.retryOnResult(predicate);
                 }
@@ -159,25 +159,25 @@ public class RetryConfigurationProperties {
      * @param builder the retry config builder
      */
     private void configureRetryIntervalFunction(InstanceProperties properties,
-            RetryConfig.Builder<Object> builder) {
+        RetryConfig.Builder<Object> builder) {
         // these take precedence over deprecated properties. Setting one or the other will still work.
         if (properties.getWaitDuration() != null && properties.getWaitDuration().toMillis() > 0) {
             Duration waitDuration = properties.getWaitDuration();
             if (properties.getEnableExponentialBackoff() != null && properties
-                    .getEnableExponentialBackoff()) {
+                .getEnableExponentialBackoff()) {
                 if (properties.getExponentialBackoffMultiplier() != null) {
                     builder.intervalFunction(IntervalFunction
-                            .ofExponentialBackoff(waitDuration.toMillis(),
-                                    properties.getExponentialBackoffMultiplier()));
+                        .ofExponentialBackoff(waitDuration.toMillis(),
+                            properties.getExponentialBackoffMultiplier()));
                 } else {
                     builder.intervalFunction(IntervalFunction
-                            .ofExponentialBackoff(properties.getWaitDuration().toMillis()));
+                        .ofExponentialBackoff(properties.getWaitDuration().toMillis()));
                 }
             } else if (properties.getEnableRandomizedWait() != null && properties
-                    .getEnableRandomizedWait()) {
+                .getEnableRandomizedWait()) {
                 if (properties.getRandomizedWaitFactor() != null) {
                     builder.intervalFunction(IntervalFunction.ofRandomized(waitDuration.toMillis(),
-                            properties.getRandomizedWaitFactor()));
+                        properties.getRandomizedWaitFactor()));
                 } else {
                     builder.intervalFunction(IntervalFunction.ofRandomized(waitDuration));
                 }
@@ -283,7 +283,7 @@ public class RetryConfigurationProperties {
         }
 
         public InstanceProperties setRetryExceptionPredicate(
-                Class<? extends Predicate<Throwable>> retryExceptionPredicate) {
+            Class<? extends Predicate<Throwable>> retryExceptionPredicate) {
             this.retryExceptionPredicate = retryExceptionPredicate;
             return this;
         }
@@ -294,7 +294,7 @@ public class RetryConfigurationProperties {
         }
 
         public InstanceProperties setResultPredicate(
-                Class<? extends Predicate<Object>> resultPredicate) {
+            Class<? extends Predicate<Object>> resultPredicate) {
             this.resultPredicate = resultPredicate;
             return this;
         }
@@ -315,7 +315,7 @@ public class RetryConfigurationProperties {
         }
 
         public InstanceProperties setIgnoreExceptions(
-                Class<? extends Throwable>[] ignoreExceptions) {
+            Class<? extends Throwable>[] ignoreExceptions) {
             this.ignoreExceptions = ignoreExceptions;
             return this;
         }
@@ -344,7 +344,7 @@ public class RetryConfigurationProperties {
         }
 
         public InstanceProperties setExponentialBackoffMultiplier(
-                Double exponentialBackoffMultiplier) {
+            Double exponentialBackoffMultiplier) {
             this.exponentialBackoffMultiplier = exponentialBackoffMultiplier;
             return this;
         }

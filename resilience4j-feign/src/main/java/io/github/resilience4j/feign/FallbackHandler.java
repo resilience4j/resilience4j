@@ -28,13 +28,13 @@ import java.util.function.Predicate;
 interface FallbackHandler<T> {
 
     CheckedFunction1<Object[], Object> decorate(CheckedFunction1<Object[], Object> invocationCall,
-            Method method, Predicate<Exception> filter);
+        Method method, Predicate<Exception> filter);
 
     default void validateFallback(T fallback, Method method) {
         if (fallback.getClass().isAssignableFrom(method.getDeclaringClass())) {
             throw new IllegalArgumentException("Cannot use the fallback ["
-                    + fallback.getClass() + "] for ["
-                    + method.getDeclaringClass() + "]!");
+                + fallback.getClass() + "] for ["
+                + method.getDeclaringClass() + "]!");
         }
     }
 
@@ -42,11 +42,11 @@ interface FallbackHandler<T> {
         Method fallbackMethod;
         try {
             fallbackMethod = fallbackInstance.getClass()
-                    .getMethod(method.getName(), method.getParameterTypes());
+                .getMethod(method.getName(), method.getParameterTypes());
         } catch (NoSuchMethodException | SecurityException e) {
             throw new IllegalArgumentException("Cannot use the fallback ["
-                    + fallbackInstance.getClass() + "] for ["
-                    + method.getDeclaringClass() + "]", e);
+                + fallbackInstance.getClass() + "] for ["
+                + method.getDeclaringClass() + "]", e);
         }
         return fallbackMethod;
     }

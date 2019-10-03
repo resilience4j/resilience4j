@@ -37,15 +37,15 @@ abstract class AbstractBulkheadMetrics extends AbstractMetrics {
         Set<Meter.Id> idSet = new HashSet<>();
 
         idSet.add(Gauge.builder(names.getAvailableConcurrentCallsMetricName(), bulkhead,
-                bh -> bh.getMetrics().getAvailableConcurrentCalls())
-                .description("The number of available permissions")
-                .tag(TagNames.NAME, bulkhead.getName())
-                .register(meterRegistry).getId());
+            bh -> bh.getMetrics().getAvailableConcurrentCalls())
+            .description("The number of available permissions")
+            .tag(TagNames.NAME, bulkhead.getName())
+            .register(meterRegistry).getId());
         idSet.add(Gauge.builder(names.getMaxAllowedConcurrentCallsMetricName(), bulkhead,
-                bh -> bh.getMetrics().getMaxAllowedConcurrentCalls())
-                .description("The maximum number of available permissions")
-                .tag(TagNames.NAME, bulkhead.getName())
-                .register(meterRegistry).getId());
+            bh -> bh.getMetrics().getMaxAllowedConcurrentCalls())
+            .description("The maximum number of available permissions")
+            .tag(TagNames.NAME, bulkhead.getName())
+            .register(meterRegistry).getId());
 
         meterIdMap.put(bulkhead.getName(), idSet);
     }
@@ -59,9 +59,9 @@ abstract class AbstractBulkheadMetrics extends AbstractMetrics {
         private static final String DEFAULT_PREFIX = "resilience4j.bulkhead";
 
         public static final String DEFAULT_BULKHEAD_AVAILABLE_CONCURRENT_CALLS_METRIC_NAME =
-                DEFAULT_PREFIX + ".available.concurrent.calls";
+            DEFAULT_PREFIX + ".available.concurrent.calls";
         public static final String DEFAULT_BULKHEAD_MAX_ALLOWED_CONCURRENT_CALLS_METRIC_NAME =
-                DEFAULT_PREFIX + ".max.allowed.concurrent.calls";
+            DEFAULT_PREFIX + ".max.allowed.concurrent.calls";
         private String availableConcurrentCallsMetricName = DEFAULT_BULKHEAD_AVAILABLE_CONCURRENT_CALLS_METRIC_NAME;
         private String maxAllowedConcurrentCallsMetricName = DEFAULT_BULKHEAD_MAX_ALLOWED_CONCURRENT_CALLS_METRIC_NAME;
 
@@ -118,14 +118,14 @@ abstract class AbstractBulkheadMetrics extends AbstractMetrics {
              * Overrides the default metric name {@value TaggedBulkheadMetrics.MetricNames#DEFAULT_BULKHEAD_AVAILABLE_CONCURRENT_CALLS_METRIC_NAME}
              * with a given one.
              *
-             * @param availableConcurrentCallsMetricName The available concurrent calls
-             *         metric name.
+             * @param availableConcurrentCallsMetricName The available concurrent calls metric
+             *     name.
              * @return The builder.
              */
             public Builder availableConcurrentCallsMetricName(
-                    String availableConcurrentCallsMetricName) {
+                String availableConcurrentCallsMetricName) {
                 metricNames.availableConcurrentCallsMetricName = requireNonNull(
-                        availableConcurrentCallsMetricName);
+                    availableConcurrentCallsMetricName);
                 return this;
             }
 
@@ -134,13 +134,13 @@ abstract class AbstractBulkheadMetrics extends AbstractMetrics {
              * with a given one.
              *
              * @param maxAllowedConcurrentCallsMetricName The max allowed concurrent calls
-             *         metric name.
+             *     metric name.
              * @return The builder.
              */
             public Builder maxAllowedConcurrentCallsMetricName(
-                    String maxAllowedConcurrentCallsMetricName) {
+                String maxAllowedConcurrentCallsMetricName) {
                 metricNames.maxAllowedConcurrentCallsMetricName = requireNonNull(
-                        maxAllowedConcurrentCallsMetricName);
+                    maxAllowedConcurrentCallsMetricName);
                 return this;
             }
 

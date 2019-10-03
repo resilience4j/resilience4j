@@ -30,9 +30,9 @@ public class MaybeRateLimiterTest {
         given(rateLimiter.reservePermission()).willReturn(Duration.ofSeconds(0).toNanos());
 
         Maybe.just(1)
-                .compose(RateLimiterOperator.of(rateLimiter))
-                .test()
-                .assertResult(1);
+            .compose(RateLimiterOperator.of(rateLimiter))
+            .test()
+            .assertResult(1);
     }
 
     @Test
@@ -40,9 +40,9 @@ public class MaybeRateLimiterTest {
         given(rateLimiter.reservePermission()).willReturn(Duration.ofSeconds(1).toNanos());
 
         Maybe.just(1)
-                .compose(RateLimiterOperator.of(rateLimiter))
-                .test()
-                .awaitTerminalEvent(2, TimeUnit.SECONDS);
+            .compose(RateLimiterOperator.of(rateLimiter))
+            .test()
+            .awaitTerminalEvent(2, TimeUnit.SECONDS);
     }
 
     @Test
@@ -50,11 +50,11 @@ public class MaybeRateLimiterTest {
         given(rateLimiter.reservePermission()).willReturn(Duration.ofSeconds(0).toNanos());
 
         Maybe.error(new IOException("BAM!"))
-                .compose(RateLimiterOperator.of(rateLimiter))
-                .test()
-                .assertSubscribed()
-                .assertError(IOException.class)
-                .assertNotComplete();
+            .compose(RateLimiterOperator.of(rateLimiter))
+            .test()
+            .assertSubscribed()
+            .assertError(IOException.class)
+            .assertNotComplete();
     }
 
     @Test
@@ -62,10 +62,10 @@ public class MaybeRateLimiterTest {
         given(rateLimiter.reservePermission()).willReturn(-1L);
 
         Maybe.just(1)
-                .compose(RateLimiterOperator.of(rateLimiter))
-                .test()
-                .assertSubscribed()
-                .assertError(RequestNotPermitted.class)
-                .assertNotComplete();
+            .compose(RateLimiterOperator.of(rateLimiter))
+            .test()
+            .assertSubscribed()
+            .assertError(RequestNotPermitted.class)
+            .assertNotComplete();
     }
 }

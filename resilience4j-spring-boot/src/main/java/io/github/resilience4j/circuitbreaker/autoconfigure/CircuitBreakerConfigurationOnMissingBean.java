@@ -27,10 +27,10 @@ import org.springframework.context.annotation.Import;
 @Configuration
 @Import({IntegerToDurationConverter.class, StringToDurationConverter.class})
 public class CircuitBreakerConfigurationOnMissingBean extends
-        AbstractCircuitBreakerConfigurationOnMissingBean {
+    AbstractCircuitBreakerConfigurationOnMissingBean {
 
     public CircuitBreakerConfigurationOnMissingBean(
-            CircuitBreakerConfigurationProperties circuitBreakerProperties) {
+        CircuitBreakerConfigurationProperties circuitBreakerProperties) {
         super(circuitBreakerProperties);
     }
 

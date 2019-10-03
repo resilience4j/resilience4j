@@ -65,17 +65,17 @@ public abstract class AbstractRetryMetricsTest {
         BDDMockito.then(helloWorldService).should(times(1)).returnHelloWorld();
         assertThat(metricRegistry.getMetrics()).hasSize(4);
         assertThat(metricRegistry.getGauges()
-                .get("resilience4j.retry.testName." + SUCCESSFUL_CALLS_WITH_RETRY).getValue())
-                .isEqualTo(0L);
+            .get("resilience4j.retry.testName." + SUCCESSFUL_CALLS_WITH_RETRY).getValue())
+            .isEqualTo(0L);
         assertThat(metricRegistry.getGauges()
-                .get("resilience4j.retry.testName." + SUCCESSFUL_CALLS_WITHOUT_RETRY).getValue())
-                .isEqualTo(1L);
+            .get("resilience4j.retry.testName." + SUCCESSFUL_CALLS_WITHOUT_RETRY).getValue())
+            .isEqualTo(1L);
         assertThat(metricRegistry.getGauges()
-                .get("resilience4j.retry.testName." + FAILED_CALLS_WITH_RETRY).getValue())
-                .isEqualTo(0L);
+            .get("resilience4j.retry.testName." + FAILED_CALLS_WITH_RETRY).getValue())
+            .isEqualTo(0L);
         assertThat(metricRegistry.getGauges()
-                .get("resilience4j.retry.testName." + FAILED_CALLS_WITHOUT_RETRY).getValue())
-                .isEqualTo(0L);
+            .get("resilience4j.retry.testName." + FAILED_CALLS_WITHOUT_RETRY).getValue())
+            .isEqualTo(0L);
     }
 
     @Test
@@ -85,11 +85,11 @@ public abstract class AbstractRetryMetricsTest {
 
         // Given the HelloWorldService returns Hello world
         BDDMockito.given(helloWorldService.returnHelloWorld())
-                .willThrow(new HelloWorldException())
-                .willReturn("Hello world")
-                .willThrow(new HelloWorldException())
-                .willThrow(new HelloWorldException())
-                .willThrow(new HelloWorldException());
+            .willThrow(new HelloWorldException())
+            .willReturn("Hello world")
+            .willThrow(new HelloWorldException())
+            .willThrow(new HelloWorldException())
+            .willThrow(new HelloWorldException());
 
         // Setup circuitbreaker with retry
         String value1 = retry.executeSupplier(helloWorldService::returnHelloWorld);
@@ -101,17 +101,17 @@ public abstract class AbstractRetryMetricsTest {
         BDDMockito.then(helloWorldService).should(times(5)).returnHelloWorld();
         assertThat(metricRegistry.getMetrics()).hasSize(4);
         assertThat(metricRegistry.getGauges()
-                .get("resilience4j.retry.testName." + SUCCESSFUL_CALLS_WITH_RETRY).getValue())
-                .isEqualTo(1L);
+            .get("resilience4j.retry.testName." + SUCCESSFUL_CALLS_WITH_RETRY).getValue())
+            .isEqualTo(1L);
         assertThat(metricRegistry.getGauges()
-                .get("resilience4j.retry.testName." + SUCCESSFUL_CALLS_WITHOUT_RETRY).getValue())
-                .isEqualTo(0L);
+            .get("resilience4j.retry.testName." + SUCCESSFUL_CALLS_WITHOUT_RETRY).getValue())
+            .isEqualTo(0L);
         assertThat(metricRegistry.getGauges()
-                .get("resilience4j.retry.testName." + FAILED_CALLS_WITH_RETRY).getValue())
-                .isEqualTo(1L);
+            .get("resilience4j.retry.testName." + FAILED_CALLS_WITH_RETRY).getValue())
+            .isEqualTo(1L);
         assertThat(metricRegistry.getGauges()
-                .get("resilience4j.retry.testName." + FAILED_CALLS_WITHOUT_RETRY).getValue())
-                .isEqualTo(0L);
+            .get("resilience4j.retry.testName." + FAILED_CALLS_WITHOUT_RETRY).getValue())
+            .isEqualTo(0L);
     }
 
     @Test
@@ -130,15 +130,15 @@ public abstract class AbstractRetryMetricsTest {
         BDDMockito.then(helloWorldService).should(times(1)).returnHelloWorld();
         assertThat(metricRegistry.getMetrics()).hasSize(4);
         assertThat(
-                metricRegistry.getGauges().get("testPrefix.testName." + SUCCESSFUL_CALLS_WITH_RETRY)
-                        .getValue()).isEqualTo(0L);
-        assertThat(metricRegistry.getGauges()
-                .get("testPrefix.testName." + SUCCESSFUL_CALLS_WITHOUT_RETRY).getValue())
-                .isEqualTo(1L);
-        assertThat(metricRegistry.getGauges().get("testPrefix.testName." + FAILED_CALLS_WITH_RETRY)
+            metricRegistry.getGauges().get("testPrefix.testName." + SUCCESSFUL_CALLS_WITH_RETRY)
                 .getValue()).isEqualTo(0L);
+        assertThat(metricRegistry.getGauges()
+            .get("testPrefix.testName." + SUCCESSFUL_CALLS_WITHOUT_RETRY).getValue())
+            .isEqualTo(1L);
+        assertThat(metricRegistry.getGauges().get("testPrefix.testName." + FAILED_CALLS_WITH_RETRY)
+            .getValue()).isEqualTo(0L);
         assertThat(
-                metricRegistry.getGauges().get("testPrefix.testName." + FAILED_CALLS_WITHOUT_RETRY)
-                        .getValue()).isEqualTo(0L);
+            metricRegistry.getGauges().get("testPrefix.testName." + FAILED_CALLS_WITHOUT_RETRY)
+                .getValue()).isEqualTo(0L);
     }
 }

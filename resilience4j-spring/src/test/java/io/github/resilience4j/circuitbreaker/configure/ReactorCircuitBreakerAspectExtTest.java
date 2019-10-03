@@ -53,11 +53,11 @@ public class ReactorCircuitBreakerAspectExtTest {
 
         when(proceedingJoinPoint.proceed()).thenReturn(Mono.just("Test"));
         assertThat(reactorCircuitBreakerAspectExt
-                .handle(proceedingJoinPoint, circuitBreaker, "testMethod")).isNotNull();
+            .handle(proceedingJoinPoint, circuitBreaker, "testMethod")).isNotNull();
 
         when(proceedingJoinPoint.proceed()).thenReturn(Flux.just("Test"));
         assertThat(reactorCircuitBreakerAspectExt
-                .handle(proceedingJoinPoint, circuitBreaker, "testMethod")).isNotNull();
+            .handle(proceedingJoinPoint, circuitBreaker, "testMethod")).isNotNull();
     }
 
 

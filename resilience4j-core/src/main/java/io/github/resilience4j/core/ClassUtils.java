@@ -15,11 +15,11 @@ public class ClassUtils {
                 return c.newInstance();
             } else {
                 throw new InstantiationException(
-                        "Unable to create instance of class: " + clazz.getName());
+                    "Unable to create instance of class: " + clazz.getName());
             }
         } catch (Exception e) {
             throw new InstantiationException(
-                    "Unable to create instance of class: " + clazz.getName(), e);
+                "Unable to create instance of class: " + clazz.getName(), e);
         }
     }
 }

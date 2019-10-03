@@ -42,9 +42,9 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(classes = {
-        BulkheadConfigurationOnMissingBeanTest.ConfigWithOverrides.class,
-        BulkheadAutoConfiguration.class,
-        BulkheadConfigurationOnMissingBean.class
+    BulkheadConfigurationOnMissingBeanTest.ConfigWithOverrides.class,
+    BulkheadAutoConfiguration.class,
+    BulkheadConfigurationOnMissingBean.class
 })
 @EnableConfigurationProperties(BulkheadProperties.class)
 public class BulkheadConfigurationOnMissingBeanTest {
@@ -69,15 +69,15 @@ public class BulkheadConfigurationOnMissingBeanTest {
         for (Method methodBulkheadConfiguration : originalClass.getMethods()) {
             if (methodBulkheadConfiguration.isAnnotationPresent(Bean.class)) {
                 final Method methodOnMissing = onMissingBeanClass
-                        .getMethod(methodBulkheadConfiguration.getName(),
-                                methodBulkheadConfiguration.getParameterTypes());
+                    .getMethod(methodBulkheadConfiguration.getName(),
+                        methodBulkheadConfiguration.getParameterTypes());
 
                 assertThat(methodOnMissing.isAnnotationPresent(Bean.class)).isTrue();
 
                 if (!"bulkheadEventConsumerRegistry".equals(methodOnMissing.getName()) &&
-                        !"bulkheadRegistryEventConsumer".equals(methodOnMissing.getName())) {
+                    !"bulkheadRegistryEventConsumer".equals(methodOnMissing.getName())) {
                     assertThat(methodOnMissing.isAnnotationPresent(ConditionalOnMissingBean.class))
-                            .isTrue();
+                        .isTrue();
                 }
             }
         }
@@ -88,7 +88,7 @@ public class BulkheadConfigurationOnMissingBeanTest {
         assertEquals(bulkheadRegistry, configWithOverrides.bulkheadRegistry);
         assertEquals(bulkheadAspect, configWithOverrides.bulkheadAspect);
         assertNotEquals(bulkheadEventEventConsumerRegistry,
-                configWithOverrides.bulkheadEventEventConsumerRegistry);
+            configWithOverrides.bulkheadEventEventConsumerRegistry);
     }
 
     @Configuration
@@ -108,12 +108,12 @@ public class BulkheadConfigurationOnMissingBeanTest {
 
         @Bean
         public BulkheadAspect bulkheadAspect(BulkheadRegistry bulkheadRegistry,
-                ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry,
-                @Autowired(required = false) List<BulkheadAspectExt> bulkheadAspectExts,
-                FallbackDecorators fallbackDecorators) {
+            ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry,
+            @Autowired(required = false) List<BulkheadAspectExt> bulkheadAspectExts,
+            FallbackDecorators fallbackDecorators) {
             bulkheadAspect = new BulkheadAspect(new BulkheadProperties(),
-                    threadPoolBulkheadRegistry, bulkheadRegistry, bulkheadAspectExts,
-                    fallbackDecorators);
+                threadPoolBulkheadRegistry, bulkheadRegistry, bulkheadAspectExts,
+                fallbackDecorators);
             return bulkheadAspect;
         }
 

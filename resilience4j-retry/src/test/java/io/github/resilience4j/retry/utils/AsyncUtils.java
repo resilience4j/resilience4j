@@ -45,7 +45,7 @@ public class AsyncUtils {
     }
 
     public static <T> T awaitResult(Supplier<CompletionStage<T>> completionStageSupplier,
-            long timeoutSeconds) {
+        long timeoutSeconds) {
         return awaitResult(completionStageSupplier.get(), timeoutSeconds);
     }
 

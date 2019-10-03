@@ -65,7 +65,7 @@ public interface Bulkhead {
      * @return a supplier which is decorated by a Bulkhead.
      */
     static <T> CheckedFunction0<T> decorateCheckedSupplier(Bulkhead bulkhead,
-            CheckedFunction0<T> supplier) {
+        CheckedFunction0<T> supplier) {
         return () -> {
             bulkhead.acquirePermission();
             try {
@@ -85,27 +85,27 @@ public interface Bulkhead {
      * @return a supplier which is decorated by a Bulkhead.
      */
     static <T> Supplier<CompletionStage<T>> decorateCompletionStage(Bulkhead bulkhead,
-            Supplier<CompletionStage<T>> supplier) {
+        Supplier<CompletionStage<T>> supplier) {
         return () -> {
 
             final CompletableFuture<T> promise = new CompletableFuture<>();
 
             if (!bulkhead.tryAcquirePermission()) {
                 promise.completeExceptionally(
-                        BulkheadFullException.createBulkheadFullException(bulkhead));
+                    BulkheadFullException.createBulkheadFullException(bulkhead));
             } else {
                 try {
                     supplier.get()
-                            .whenComplete(
-                                    (result, throwable) -> {
-                                        bulkhead.onComplete();
-                                        if (throwable != null) {
-                                            promise.completeExceptionally(throwable);
-                                        } else {
-                                            promise.complete(result);
-                                        }
-                                    }
-                            );
+                        .whenComplete(
+                            (result, throwable) -> {
+                                bulkhead.onComplete();
+                                if (throwable != null) {
+                                    promise.completeExceptionally(throwable);
+                                } else {
+                                    promise.complete(result);
+                                }
+                            }
+                        );
                 } catch (Throwable throwable) {
                     bulkhead.onComplete();
                     promise.completeExceptionally(throwable);
@@ -203,7 +203,7 @@ public interface Bulkhead {
      * @return a supplier which is decorated by a Bulkhead.
      */
     static <T> Supplier<Either<Exception, T>> decorateEitherSupplier(Bulkhead bulkhead,
-            Supplier<Either<? extends Exception, T>> supplier) {
+        Supplier<Either<? extends Exception, T>> supplier) {
         return () -> {
             if (bulkhead.tryAcquirePermission()) {
                 try {
@@ -246,7 +246,7 @@ public interface Bulkhead {
      * @return a consumer which is decorated by a Bulkhead.
      */
     static <T> CheckedConsumer<T> decorateCheckedConsumer(Bulkhead bulkhead,
-            CheckedConsumer<T> consumer) {
+        CheckedConsumer<T> consumer) {
         return (t) -> {
             bulkhead.acquirePermission();
             try {
@@ -305,7 +305,7 @@ public interface Bulkhead {
      * @return a function which is decorated by a bulkhead.
      */
     static <T, R> CheckedFunction1<T, R> decorateCheckedFunction(Bulkhead bulkhead,
-            CheckedFunction1<T, R> function) {
+        CheckedFunction1<T, R> function) {
         return (T t) -> {
             bulkhead.acquirePermission();
             try {
@@ -371,9 +371,9 @@ public interface Bulkhead {
      * then it won't throw {@linkplain InterruptedException}, but its interrupt status will be set.
      *
      * @throws BulkheadFullException when the Bulkhead is full and no further calls are
-     *         permitted.
-     * @throws AcquirePermissionCancelledException if thread was interrupted during
-     *         permission wait
+     *     permitted.
+     * @throws AcquirePermissionCancelledException if thread was interrupted during permission
+     *     wait
      */
     void acquirePermission();
 
@@ -449,7 +449,7 @@ public interface Bulkhead {
      * @return the result of the decorated Supplier.
      */
     default <T> Either<Exception, T> executeEitherSupplier(
-            Supplier<Either<? extends Exception, T>> supplier) {
+        Supplier<Either<? extends Exception, T>> supplier) {
         return decorateEitherSupplier(this, supplier).get();
     }
 
@@ -480,8 +480,7 @@ public interface Bulkhead {
      * @param checkedSupplier the original Supplier
      * @param <T> the type of results supplied by this supplier
      * @return the result of the decorated Supplier.
-     * @throws Throwable if something goes wrong applying this function to the given
-     *         arguments
+     * @throws Throwable if something goes wrong applying this function to the given arguments
      */
     default <T> T executeCheckedSupplier(CheckedFunction0<T> checkedSupplier) throws Throwable {
         return decorateCheckedSupplier(this, checkedSupplier).apply();

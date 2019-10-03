@@ -53,7 +53,7 @@ public class TaggedRetryMetrics extends AbstractRetryMetrics implements MeterBin
      * @return The {@link TaggedRetryMetrics} instance.
      */
     public static TaggedRetryMetrics ofRetryRegistry(MetricNames names,
-            RetryRegistry retryRegistry) {
+        RetryRegistry retryRegistry) {
         return new TaggedRetryMetrics(names, retryRegistry);
     }
 
@@ -63,9 +63,9 @@ public class TaggedRetryMetrics extends AbstractRetryMetrics implements MeterBin
             addMetrics(registry, retry);
         }
         retryRegistry.getEventPublisher()
-                .onEntryAdded(event -> addMetrics(registry, event.getAddedEntry()));
+            .onEntryAdded(event -> addMetrics(registry, event.getAddedEntry()));
         retryRegistry.getEventPublisher().onEntryRemoved(
-                event -> removeMetrics(registry, event.getRemovedEntry().getName()));
+            event -> removeMetrics(registry, event.getRemovedEntry().getName()));
         retryRegistry.getEventPublisher().onEntryReplaced(event -> {
             removeMetrics(registry, event.getOldEntry().getName());
             addMetrics(registry, event.getNewEntry());

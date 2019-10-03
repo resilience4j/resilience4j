@@ -49,7 +49,7 @@ public class TaggedRateLimiterMetricsPublisherTest {
         meterRegistry = new SimpleMeterRegistry();
         taggedRateLimiterMetricsPublisher = new TaggedRateLimiterMetricsPublisher(meterRegistry);
         rateLimiterRegistry = RateLimiterRegistry
-                .of(RateLimiterConfig.ofDefaults(), taggedRateLimiterMetricsPublisher);
+            .of(RateLimiterConfig.ofDefaults(), taggedRateLimiterMetricsPublisher);
 
         rateLimiter = rateLimiterRegistry.rateLimiter("backendA");
     }
@@ -59,7 +59,7 @@ public class TaggedRateLimiterMetricsPublisherTest {
         RateLimiter newRateLimiter = rateLimiterRegistry.rateLimiter("backendB");
 
         assertThat(taggedRateLimiterMetricsPublisher.meterIdMap)
-                .containsKeys("backendA", "backendB");
+            .containsKeys("backendA", "backendB");
         assertThat(taggedRateLimiterMetricsPublisher.meterIdMap.get("backendA")).hasSize(2);
         assertThat(taggedRateLimiterMetricsPublisher.meterIdMap.get("backendB")).hasSize(2);
 
@@ -67,12 +67,12 @@ public class TaggedRateLimiterMetricsPublisherTest {
         assertThat(meters).hasSize(4);
 
         Collection<Gauge> gauges = meterRegistry.get(DEFAULT_AVAILABLE_PERMISSIONS_METRIC_NAME)
-                .gauges();
+            .gauges();
 
         Optional<Gauge> successful = findGaugeByNamesTag(gauges, newRateLimiter.getName());
         assertThat(successful).isPresent();
         assertThat(successful.get().value())
-                .isEqualTo(newRateLimiter.getMetrics().getAvailablePermissions());
+            .isEqualTo(newRateLimiter.getMetrics().getAvailablePermissions());
     }
 
     @Test
@@ -92,16 +92,16 @@ public class TaggedRateLimiterMetricsPublisherTest {
     @Test
     public void shouldReplaceMetrics() {
         Gauge availablePermissions = meterRegistry.get(DEFAULT_AVAILABLE_PERMISSIONS_METRIC_NAME)
-                .gauge();
+            .gauge();
 
         assertThat(availablePermissions).isNotNull();
         assertThat(availablePermissions.value())
-                .isEqualTo(rateLimiter.getMetrics().getAvailablePermissions());
+            .isEqualTo(rateLimiter.getMetrics().getAvailablePermissions());
         assertThat(availablePermissions.getId().getTag(TagNames.NAME))
-                .isEqualTo(rateLimiter.getName());
+            .isEqualTo(rateLimiter.getName());
 
         RateLimiter newRateLimiter = RateLimiter
-                .of(rateLimiter.getName(), RateLimiterConfig.custom().limitForPeriod(1000).build());
+            .of(rateLimiter.getName(), RateLimiterConfig.custom().limitForPeriod(1000).build());
 
         rateLimiterRegistry.replace(rateLimiter.getName(), newRateLimiter);
 
@@ -109,21 +109,21 @@ public class TaggedRateLimiterMetricsPublisherTest {
 
         assertThat(availablePermissions).isNotNull();
         assertThat(availablePermissions.value())
-                .isEqualTo(newRateLimiter.getMetrics().getAvailablePermissions());
+            .isEqualTo(newRateLimiter.getMetrics().getAvailablePermissions());
         assertThat(availablePermissions.getId().getTag(TagNames.NAME))
-                .isEqualTo(newRateLimiter.getName());
+            .isEqualTo(newRateLimiter.getName());
     }
 
     @Test
     public void availablePermissionsGaugeIsRegistered() {
         Gauge availablePermissions = meterRegistry.get(DEFAULT_AVAILABLE_PERMISSIONS_METRIC_NAME)
-                .gauge();
+            .gauge();
 
         assertThat(availablePermissions).isNotNull();
         assertThat(availablePermissions.value())
-                .isEqualTo(rateLimiter.getMetrics().getAvailablePermissions());
+            .isEqualTo(rateLimiter.getMetrics().getAvailablePermissions());
         assertThat(availablePermissions.getId().getTag(TagNames.NAME))
-                .isEqualTo(rateLimiter.getName());
+            .isEqualTo(rateLimiter.getName());
     }
 
     @Test
@@ -132,7 +132,7 @@ public class TaggedRateLimiterMetricsPublisherTest {
 
         assertThat(waitingThreads).isNotNull();
         assertThat(waitingThreads.value())
-                .isEqualTo(rateLimiter.getMetrics().getNumberOfWaitingThreads());
+            .isEqualTo(rateLimiter.getMetrics().getNumberOfWaitingThreads());
         assertThat(waitingThreads.getId().getTag(TagNames.NAME)).isEqualTo(rateLimiter.getName());
     }
 
@@ -140,24 +140,24 @@ public class TaggedRateLimiterMetricsPublisherTest {
     public void customMetricNamesGetApplied() {
         MeterRegistry meterRegistry = new SimpleMeterRegistry();
         TaggedRateLimiterMetricsPublisher taggedRateLimiterMetricsPublisher = new TaggedRateLimiterMetricsPublisher(
-                TaggedRateLimiterMetricsPublisher.MetricNames.custom()
-                        .availablePermissionsMetricName("custom_available_permissions")
-                        .waitingThreadsMetricName("custom_waiting_threads")
-                        .build(), meterRegistry);
+            TaggedRateLimiterMetricsPublisher.MetricNames.custom()
+                .availablePermissionsMetricName("custom_available_permissions")
+                .waitingThreadsMetricName("custom_waiting_threads")
+                .build(), meterRegistry);
 
         RateLimiterRegistry rateLimiterRegistry = RateLimiterRegistry
-                .of(RateLimiterConfig.ofDefaults(), taggedRateLimiterMetricsPublisher);
+            .of(RateLimiterConfig.ofDefaults(), taggedRateLimiterMetricsPublisher);
         rateLimiterRegistry.rateLimiter("backendA");
 
         Set<String> metricNames = meterRegistry.getMeters()
-                .stream()
-                .map(Meter::getId)
-                .map(Meter.Id::getName)
-                .collect(Collectors.toSet());
+            .stream()
+            .map(Meter::getId)
+            .map(Meter.Id::getName)
+            .collect(Collectors.toSet());
 
         assertThat(metricNames).hasSameElementsAs(Arrays.asList(
-                "custom_available_permissions",
-                "custom_waiting_threads"
+            "custom_available_permissions",
+            "custom_waiting_threads"
         ));
     }
 }

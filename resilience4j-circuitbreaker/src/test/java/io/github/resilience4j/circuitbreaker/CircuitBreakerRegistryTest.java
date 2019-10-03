@@ -39,7 +39,7 @@ import org.junit.Test;
 public class CircuitBreakerRegistryTest {
 
     private static Optional<EventProcessor<?>> getEventProcessor(
-            Registry.EventPublisher<CircuitBreaker> eventPublisher) {
+        Registry.EventPublisher<CircuitBreaker> eventPublisher) {
         if (eventPublisher instanceof EventProcessor<?>) {
             return Optional.of((EventProcessor<?>) eventPublisher);
         }
@@ -77,7 +77,7 @@ public class CircuitBreakerRegistryTest {
     @Test
     public void testCreateWithDefaultConfiguration() {
         CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry
-                .of(CircuitBreakerConfig.ofDefaults());
+            .of(CircuitBreakerConfig.ofDefaults());
         CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("testName");
         CircuitBreaker circuitBreaker2 = circuitBreakerRegistry.circuitBreaker("otherTestName");
         assertThat(circuitBreaker).isNotSameAs(circuitBreaker2);
@@ -89,22 +89,22 @@ public class CircuitBreakerRegistryTest {
     public void testCreateWithCustomConfiguration() {
         float failureRate = 30f;
         CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom()
-                .failureRateThreshold(failureRate).build();
+            .failureRateThreshold(failureRate).build();
 
         CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry
-                .of(circuitBreakerConfig);
+            .of(circuitBreakerConfig);
         CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("testName");
 
         assertThat(circuitBreaker.getCircuitBreakerConfig().getFailureRateThreshold())
-                .isEqualTo(failureRate);
+            .isEqualTo(failureRate);
     }
 
     @Test
     public void testCreateWithConfigurationMap() {
         CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom()
-                .failureRateThreshold(30f).build();
+            .failureRateThreshold(30f).build();
         CircuitBreakerConfig customCircuitBreakerConfig = CircuitBreakerConfig.custom()
-                .failureRateThreshold(40f).build();
+            .failureRateThreshold(40f).build();
         Map<String, CircuitBreakerConfig> configs = new HashMap<>();
         configs.put("default", circuitBreakerConfig);
         configs.put("custom", customCircuitBreakerConfig);
@@ -113,17 +113,17 @@ public class CircuitBreakerRegistryTest {
 
         assertThat(circuitBreakerRegistry.getDefaultConfig()).isNotNull();
         assertThat(circuitBreakerRegistry.getDefaultConfig().getFailureRateThreshold())
-                .isEqualTo(30f);
+            .isEqualTo(30f);
         assertThat(circuitBreakerRegistry.getConfiguration("custom")).isNotEmpty();
     }
 
     @Test
     public void testCreateWithSingleRegistryEventConsumer() {
         CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry
-                .of(CircuitBreakerConfig.ofDefaults(), new NoOpCircuitBreakerEventConsumer());
+            .of(CircuitBreakerConfig.ofDefaults(), new NoOpCircuitBreakerEventConsumer());
 
         getEventProcessor(circuitBreakerRegistry.getEventPublisher())
-                .ifPresent(eventProcessor -> assertThat(eventProcessor.hasConsumers()).isTrue());
+            .ifPresent(eventProcessor -> assertThat(eventProcessor.hasConsumers()).isTrue());
     }
 
     @Test
@@ -133,10 +133,10 @@ public class CircuitBreakerRegistryTest {
         registryEventConsumers.add(new NoOpCircuitBreakerEventConsumer());
 
         CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry
-                .of(CircuitBreakerConfig.ofDefaults(), registryEventConsumers);
+            .of(CircuitBreakerConfig.ofDefaults(), registryEventConsumers);
 
         getEventProcessor(circuitBreakerRegistry.getEventPublisher())
-                .ifPresent(eventProcessor -> assertThat(eventProcessor.hasConsumers()).isTrue());
+            .ifPresent(eventProcessor -> assertThat(eventProcessor.hasConsumers()).isTrue());
     }
 
     @Test
@@ -145,10 +145,10 @@ public class CircuitBreakerRegistryTest {
         configs.put("custom", CircuitBreakerConfig.ofDefaults());
 
         CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry
-                .of(configs, new NoOpCircuitBreakerEventConsumer());
+            .of(configs, new NoOpCircuitBreakerEventConsumer());
 
         getEventProcessor(circuitBreakerRegistry.getEventPublisher())
-                .ifPresent(eventProcessor -> assertThat(eventProcessor.hasConsumers()).isTrue());
+            .ifPresent(eventProcessor -> assertThat(eventProcessor.hasConsumers()).isTrue());
     }
 
     @Test
@@ -161,10 +161,10 @@ public class CircuitBreakerRegistryTest {
         registryEventConsumers.add(new NoOpCircuitBreakerEventConsumer());
 
         CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry
-                .of(configs, registryEventConsumers);
+            .of(configs, registryEventConsumers);
 
         getEventProcessor(circuitBreakerRegistry.getEventPublisher())
-                .ifPresent(eventProcessor -> assertThat(eventProcessor.hasConsumers()).isTrue());
+            .ifPresent(eventProcessor -> assertThat(eventProcessor.hasConsumers()).isTrue());
     }
 
     @Test
@@ -172,51 +172,51 @@ public class CircuitBreakerRegistryTest {
         CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
         float failureRate = 30f;
         CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom()
-                .failureRateThreshold(failureRate).build();
+            .failureRateThreshold(failureRate).build();
         circuitBreakerRegistry.addConfiguration("someSharedConfig", circuitBreakerConfig);
 
         assertThat(circuitBreakerRegistry.getDefaultConfig()).isNotNull();
         assertThat(circuitBreakerRegistry.getDefaultConfig().getFailureRateThreshold())
-                .isEqualTo(50f);
+            .isEqualTo(50f);
         assertThat(circuitBreakerRegistry.getConfiguration("someSharedConfig")).isNotEmpty();
 
         CircuitBreaker circuitBreaker = circuitBreakerRegistry
-                .circuitBreaker("name", "someSharedConfig");
+            .circuitBreaker("name", "someSharedConfig");
         assertThat(circuitBreaker.getCircuitBreakerConfig()).isEqualTo(circuitBreakerConfig);
         assertThat(circuitBreaker.getCircuitBreakerConfig().getFailureRateThreshold())
-                .isEqualTo(failureRate);
+            .isEqualTo(failureRate);
     }
 
     @Test
     public void testCreateWithConfigurationMapWithoutDefaultConfig() {
         float failureRate = 30f;
         CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom()
-                .failureRateThreshold(failureRate).build();
+            .failureRateThreshold(failureRate).build();
 
         CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry
-                .of(Collections.singletonMap("someSharedConfig", circuitBreakerConfig));
+            .of(Collections.singletonMap("someSharedConfig", circuitBreakerConfig));
 
         assertThat(circuitBreakerRegistry.getDefaultConfig()).isNotNull();
         assertThat(circuitBreakerRegistry.getDefaultConfig().getFailureRateThreshold())
-                .isEqualTo(50f);
+            .isEqualTo(50f);
         assertThat(circuitBreakerRegistry.getConfiguration("someSharedConfig")).isNotEmpty();
 
         CircuitBreaker circuitBreaker = circuitBreakerRegistry
-                .circuitBreaker("name", "someSharedConfig");
+            .circuitBreaker("name", "someSharedConfig");
 
         assertThat(circuitBreaker.getCircuitBreakerConfig()).isEqualTo(circuitBreakerConfig);
         assertThat(circuitBreaker.getCircuitBreakerConfig().getFailureRateThreshold())
-                .isEqualTo(failureRate);
+            .isEqualTo(failureRate);
     }
 
     @Test
     public void testCreateWithNullConfig() {
         assertThatThrownBy(() -> CircuitBreakerRegistry.of((CircuitBreakerConfig) null))
-                .isInstanceOf(NullPointerException.class).hasMessage("Config must not be null");
+            .isInstanceOf(NullPointerException.class).hasMessage("Config must not be null");
     }
 
     private static class NoOpCircuitBreakerEventConsumer implements
-            RegistryEventConsumer<CircuitBreaker> {
+        RegistryEventConsumer<CircuitBreaker> {
 
         @Override
         public void onEntryAddedEvent(EntryAddedEvent<CircuitBreaker> entryAddedEvent) {

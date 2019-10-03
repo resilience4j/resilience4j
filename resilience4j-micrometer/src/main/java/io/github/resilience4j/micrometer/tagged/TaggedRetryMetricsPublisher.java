@@ -23,7 +23,7 @@ import io.github.resilience4j.retry.Retry;
 import io.micrometer.core.instrument.MeterRegistry;
 
 public class TaggedRetryMetricsPublisher
-        extends AbstractRetryMetrics implements MetricsPublisher<Retry> {
+    extends AbstractRetryMetrics implements MetricsPublisher<Retry> {
 
     private final MeterRegistry meterRegistry;
 

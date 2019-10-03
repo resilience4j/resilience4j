@@ -39,17 +39,17 @@ public class StringToDurationConverter implements Converter<String, Duration> {
     private static Duration simpleParse(String rawTime) {
         String time = rawTime.toLowerCase();
         return tryParse(time, "ns", Duration::ofNanos)
-                .orElseGet(() -> tryParse(time, "ms", Duration::ofMillis)
-                        .orElseGet(() -> tryParse(time, "s", Duration::ofSeconds)
-                                .orElseGet(() -> tryParse(time, "m", Duration::ofMinutes)
-                                        .orElseGet(() -> tryParse(time, "h", Duration::ofHours)
-                                                .orElseGet(
-                                                        () -> tryParse(time, "d", Duration::ofDays)
-                                                                .orElse(null))))));
+            .orElseGet(() -> tryParse(time, "ms", Duration::ofMillis)
+                .orElseGet(() -> tryParse(time, "s", Duration::ofSeconds)
+                    .orElseGet(() -> tryParse(time, "m", Duration::ofMinutes)
+                        .orElseGet(() -> tryParse(time, "h", Duration::ofHours)
+                            .orElseGet(
+                                () -> tryParse(time, "d", Duration::ofDays)
+                                    .orElse(null))))));
     }
 
     private static Optional<Duration> tryParse(String time, String unit,
-            LongFunction<Duration> toDuration) {
+        LongFunction<Duration> toDuration) {
         if (time.endsWith(unit)) {
             String trim = time.substring(0, time.lastIndexOf(unit)).trim();
             try {

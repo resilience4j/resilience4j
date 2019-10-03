@@ -53,25 +53,25 @@ public class RetryMetricsCollectorTest {
     @Test
     public void successfulCallsWithoutRetryReportsCorrespondingValue() {
         double successfulCallsWithoutRetry = registry.getSampleValue(
-                DEFAULT_RETRY_CALLS,
-                new String[]{"name", "kind"},
-                new String[]{retry.getName(), "successful_without_retry"}
+            DEFAULT_RETRY_CALLS,
+            new String[]{"name", "kind"},
+            new String[]{retry.getName(), "successful_without_retry"}
         );
 
         assertThat(successfulCallsWithoutRetry)
-                .isEqualTo(retry.getMetrics().getNumberOfSuccessfulCallsWithoutRetryAttempt());
+            .isEqualTo(retry.getMetrics().getNumberOfSuccessfulCallsWithoutRetryAttempt());
     }
 
     @Test
     public void callsReportsCorrespondingValue() {
         double failedCallsWithRetry = registry.getSampleValue(
-                DEFAULT_RETRY_CALLS,
-                new String[]{"name", "kind"},
-                new String[]{retry.getName(), "failed_with_retry"}
+            DEFAULT_RETRY_CALLS,
+            new String[]{"name", "kind"},
+            new String[]{retry.getName(), "failed_with_retry"}
         );
 
         assertThat(failedCallsWithRetry)
-                .isEqualTo(retry.getMetrics().getNumberOfFailedCallsWithRetryAttempt());
+            .isEqualTo(retry.getMetrics().getNumberOfFailedCallsWithRetryAttempt());
     }
 
     @Test
@@ -79,20 +79,20 @@ public class RetryMetricsCollectorTest {
         CollectorRegistry registry = new CollectorRegistry();
 
         RetryMetricsCollector.ofRetryRegistry(
-                RetryMetricsCollector.MetricNames.custom()
-                        .callsMetricName("custom_resilience4j_retry_calls")
-                        .build(),
-                retryRegistry).register(registry);
+            RetryMetricsCollector.MetricNames.custom()
+                .callsMetricName("custom_resilience4j_retry_calls")
+                .build(),
+            retryRegistry).register(registry);
 
         assertThat(registry.getSampleValue(
-                "custom_resilience4j_retry_calls",
-                new String[]{"name", "kind"},
-                new String[]{"backendA", "successful_without_retry"}
+            "custom_resilience4j_retry_calls",
+            new String[]{"name", "kind"},
+            new String[]{"backendA", "successful_without_retry"}
         )).isNotNull();
         assertThat(registry.getSampleValue(
-                "custom_resilience4j_retry_calls",
-                new String[]{"name", "kind"},
-                new String[]{"backendA", "failed_with_retry"}
+            "custom_resilience4j_retry_calls",
+            new String[]{"name", "kind"},
+            new String[]{"backendA", "failed_with_retry"}
         )).isNotNull();
     }
 }

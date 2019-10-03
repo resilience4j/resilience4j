@@ -48,10 +48,10 @@ public interface RateLimiterRegistry extends Registry<RateLimiter, RateLimiterCo
      * @param defaultRateLimiterConfig a custom default RateLimiter configuration.
      * @param registryEventConsumer a RateLimiter registry event consumer.
      * @return a RateLimiterRegistry with a custom RateLimiter configuration and a RateLimiter
-     *         registry event consumer.
+     *     registry event consumer.
      */
     static RateLimiterRegistry of(RateLimiterConfig defaultRateLimiterConfig,
-            RegistryEventConsumer<RateLimiter> registryEventConsumer) {
+        RegistryEventConsumer<RateLimiter> registryEventConsumer) {
         return new InMemoryRateLimiterRegistry(defaultRateLimiterConfig, registryEventConsumer);
     }
 
@@ -62,10 +62,10 @@ public interface RateLimiterRegistry extends Registry<RateLimiter, RateLimiterCo
      * @param defaultRateLimiterConfig a custom default RateLimiter configuration.
      * @param registryEventConsumers a list of RateLimiter registry event consumers.
      * @return a RateLimiterRegistry with a custom RateLimiter configuration and a list of
-     *         RateLimiter registry event consumers.
+     *     RateLimiter registry event consumers.
      */
     static RateLimiterRegistry of(RateLimiterConfig defaultRateLimiterConfig,
-            List<RegistryEventConsumer<RateLimiter>> registryEventConsumers) {
+        List<RegistryEventConsumer<RateLimiter>> registryEventConsumers) {
         return new InMemoryRateLimiterRegistry(defaultRateLimiterConfig, registryEventConsumers);
     }
 
@@ -96,10 +96,10 @@ public interface RateLimiterRegistry extends Registry<RateLimiter, RateLimiterCo
      * @param configs a Map of shared RateLimiter configurations.
      * @param registryEventConsumer a RateLimiter registry event consumer.
      * @return a RateLimiterRegistry with a Map of shared RateLimiter configurations and a
-     *         RateLimiter registry event consumer.
+     *     RateLimiter registry event consumer.
      */
     static RateLimiterRegistry of(Map<String, RateLimiterConfig> configs,
-            RegistryEventConsumer<RateLimiter> registryEventConsumer) {
+        RegistryEventConsumer<RateLimiter> registryEventConsumer) {
         return new InMemoryRateLimiterRegistry(configs, registryEventConsumer);
     }
 
@@ -110,10 +110,10 @@ public interface RateLimiterRegistry extends Registry<RateLimiter, RateLimiterCo
      * @param configs a Map of shared RateLimiter configurations.
      * @param registryEventConsumers a list of RateLimiter registry event consumers.
      * @return a RateLimiterRegistry with a Map of shared RateLimiter configurations and a list of
-     *         RateLimiter registry event consumers.
+     *     RateLimiter registry event consumers.
      */
     static RateLimiterRegistry of(Map<String, RateLimiterConfig> configs,
-            List<RegistryEventConsumer<RateLimiter>> registryEventConsumers) {
+        List<RegistryEventConsumer<RateLimiter>> registryEventConsumers) {
         return new InMemoryRateLimiterRegistry(configs, registryEventConsumers);
     }
 
@@ -148,8 +148,7 @@ public interface RateLimiterRegistry extends Registry<RateLimiter, RateLimiterCo
      * RateLimiterConfig configuration.
      *
      * @param name the name of the RateLimiterConfig
-     * @param rateLimiterConfigSupplier a supplier of a custom RateLimiterConfig
-     *         configuration
+     * @param rateLimiterConfigSupplier a supplier of a custom RateLimiterConfig configuration
      * @return The {@link RateLimiterConfig}
      */
     RateLimiter rateLimiter(String name, Supplier<RateLimiterConfig> rateLimiterConfigSupplier);

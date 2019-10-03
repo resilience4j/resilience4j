@@ -41,7 +41,7 @@ public class RetryRegistryTest {
     private RetryRegistry retryRegistry;
 
     private static Optional<EventProcessor<?>> getEventProcessor(
-            Registry.EventPublisher<Retry> eventPublisher) {
+        Registry.EventPublisher<Retry> eventPublisher) {
         if (eventPublisher instanceof EventProcessor<?>) {
             return Optional.of((EventProcessor<?>) eventPublisher);
         }
@@ -57,7 +57,7 @@ public class RetryRegistryTest {
     @Test
     public void testCreateWithNullConfig() {
         assertThatThrownBy(() -> RetryRegistry.of((RetryConfig) null))
-                .isInstanceOf(NullPointerException.class).hasMessage("Config must not be null");
+            .isInstanceOf(NullPointerException.class).hasMessage("Config must not be null");
     }
 
     @Test
@@ -87,7 +87,7 @@ public class RetryRegistryTest {
     @Test
     public void canBuildRetryFromRegistryWithConfig() {
         RetryConfig config = RetryConfig.custom().maxAttempts(1000)
-                .waitDuration(Duration.ofSeconds(300)).build();
+            .waitDuration(Duration.ofSeconds(300)).build();
         Retry retry = retryRegistry.retry("testName", config);
         Assertions.assertThat(retry).isNotNull();
         Assertions.assertThat(retryRegistry.getAllRetries()).hasSize(1);
@@ -96,7 +96,7 @@ public class RetryRegistryTest {
     @Test
     public void canBuildRetryFromRegistryWithConfigSupplier() {
         RetryConfig config = RetryConfig.custom().maxAttempts(1000)
-                .waitDuration(Duration.ofSeconds(300)).build();
+            .waitDuration(Duration.ofSeconds(300)).build();
         Retry retry = retryRegistry.retry("testName", () -> config);
         Assertions.assertThat(retry).isNotNull();
         Assertions.assertThat(retryRegistry.getAllRetries()).hasSize(1);
@@ -105,7 +105,7 @@ public class RetryRegistryTest {
     @Test
     public void canBuildRetryRegistryWithConfig() {
         RetryConfig config = RetryConfig.custom().maxAttempts(1000)
-                .waitDuration(Duration.ofSeconds(300)).build();
+            .waitDuration(Duration.ofSeconds(300)).build();
         retryRegistry = RetryRegistry.of(config);
         Retry retry = retryRegistry.retry("testName", () -> config);
         Assertions.assertThat(retry).isNotNull();
@@ -138,10 +138,10 @@ public class RetryRegistryTest {
     @Test
     public void testCreateWithSingleRegistryEventConsumer() {
         RetryRegistry retryRegistry = RetryRegistry
-                .of(RetryConfig.ofDefaults(), new NoOpRetryEventConsumer());
+            .of(RetryConfig.ofDefaults(), new NoOpRetryEventConsumer());
 
         getEventProcessor(retryRegistry.getEventPublisher())
-                .ifPresent(eventProcessor -> assertThat(eventProcessor.hasConsumers()).isTrue());
+            .ifPresent(eventProcessor -> assertThat(eventProcessor.hasConsumers()).isTrue());
     }
 
     @Test
@@ -151,10 +151,10 @@ public class RetryRegistryTest {
         registryEventConsumers.add(new NoOpRetryEventConsumer());
 
         RetryRegistry retryRegistry = RetryRegistry
-                .of(RetryConfig.ofDefaults(), registryEventConsumers);
+            .of(RetryConfig.ofDefaults(), registryEventConsumers);
 
         getEventProcessor(retryRegistry.getEventPublisher())
-                .ifPresent(eventProcessor -> assertThat(eventProcessor.hasConsumers()).isTrue());
+            .ifPresent(eventProcessor -> assertThat(eventProcessor.hasConsumers()).isTrue());
     }
 
     @Test
@@ -165,7 +165,7 @@ public class RetryRegistryTest {
         RetryRegistry retryRegistry = RetryRegistry.of(configs, new NoOpRetryEventConsumer());
 
         getEventProcessor(retryRegistry.getEventPublisher())
-                .ifPresent(eventProcessor -> assertThat(eventProcessor.hasConsumers()).isTrue());
+            .ifPresent(eventProcessor -> assertThat(eventProcessor.hasConsumers()).isTrue());
     }
 
     @Test
@@ -180,7 +180,7 @@ public class RetryRegistryTest {
         RetryRegistry retryRegistry = RetryRegistry.of(configs, registryEventConsumers);
 
         getEventProcessor(retryRegistry.getEventPublisher())
-                .ifPresent(eventProcessor -> assertThat(eventProcessor.hasConsumers()).isTrue());
+            .ifPresent(eventProcessor -> assertThat(eventProcessor.hasConsumers()).isTrue());
     }
 
     @Test
@@ -188,7 +188,7 @@ public class RetryRegistryTest {
         RetryRegistry retryRegistry = RetryRegistry.ofDefaults();
 
         assertThatThrownBy(() -> retryRegistry.retry("test", "doesNotExist"))
-                .isInstanceOf(ConfigurationNotFoundException.class);
+            .isInstanceOf(ConfigurationNotFoundException.class);
     }
 
     @Test

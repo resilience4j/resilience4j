@@ -40,7 +40,7 @@ public class RetryEndpoint extends AbstractEndpoint {
     @Override
     public RetryEndpointResponse invoke() {
         List<String> retries = retryRegistry.getAllRetries()
-                .map(Retry::getName).sorted().toJavaList();
+            .map(Retry::getName).sorted().toJavaList();
         return new RetryEndpointResponse(retries);
     }
 }

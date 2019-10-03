@@ -25,11 +25,11 @@ public class CircuitBreakersHealthIndicatorAutoConfiguration {
     @ConditionalOnMissingBean(name = "circuitBreakersHealthIndicator")
     @ConditionalOnProperty(prefix = "management.health.circuitbreakers", name = "enabled")
     public CircuitBreakersHealthIndicator circuitBreakersHealthIndicator(
-            CircuitBreakerRegistry circuitBreakerRegistry,
-            CircuitBreakerConfigurationProperties circuitBreakerProperties,
-            HealthAggregator healthAggregator) {
+        CircuitBreakerRegistry circuitBreakerRegistry,
+        CircuitBreakerConfigurationProperties circuitBreakerProperties,
+        HealthAggregator healthAggregator) {
         return new CircuitBreakersHealthIndicator(circuitBreakerRegistry, circuitBreakerProperties,
-                healthAggregator);
+            healthAggregator);
     }
 
 }

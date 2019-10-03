@@ -43,10 +43,10 @@ public class RateLimiterEventPublisherTest {
     @Before
     public void setUp() {
         RateLimiterConfig config = RateLimiterConfig.custom()
-                .timeoutDuration(TIMEOUT)
-                .limitRefreshPeriod(REFRESH_PERIOD)
-                .limitForPeriod(LIMIT)
-                .build();
+            .timeoutDuration(TIMEOUT)
+            .limitRefreshPeriod(REFRESH_PERIOD)
+            .limitForPeriod(LIMIT)
+            .build();
         rateLimiter = RateLimiter.of("test", config);
         logger = mock(Logger.class);
     }
@@ -63,8 +63,8 @@ public class RateLimiterEventPublisherTest {
     @Test
     public void shouldConsumeOnSuccessEvent() throws Throwable {
         rateLimiter.getEventPublisher()
-                .onSuccess(event ->
-                        logger.info(event.getEventType().toString()));
+            .onSuccess(event ->
+                logger.info(event.getEventType().toString()));
 
         String result = rateLimiter.executeSupplier(() -> "Hello world");
 
@@ -76,8 +76,8 @@ public class RateLimiterEventPublisherTest {
     @Test
     public void shouldConsumeOnFailureEvent() throws Throwable {
         rateLimiter.getEventPublisher()
-                .onFailure(event ->
-                        logger.info(event.getEventType().toString()));
+            .onFailure(event ->
+                logger.info(event.getEventType().toString()));
 
         rateLimiter.executeSupplier(() -> "Hello world");
 

@@ -48,7 +48,7 @@ public class TaggedTimeLimiterMetricsTest {
 
         timeLimiter = timeLimiterRegistry.timeLimiter("backendA");
         taggedTimeLimiterMetrics = TaggedTimeLimiterMetrics
-                .ofTimeLimiterRegistry(timeLimiterRegistry);
+            .ofTimeLimiterRegistry(timeLimiterRegistry);
         taggedTimeLimiterMetrics.bindTo(meterRegistry);
     }
 
@@ -66,7 +66,7 @@ public class TaggedTimeLimiterMetricsTest {
         Collection<Counter> counters = meterRegistry.get(DEFAULT_TIME_LIMITER_CALLS).counters();
 
         Optional<Counter> successful = findCounterByKindAndNameTags(counters, "successful",
-                newTimeLimiter.getName());
+            newTimeLimiter.getName());
         assertThat(successful).map(Counter::count).contains(1d);
     }
 
@@ -95,7 +95,7 @@ public class TaggedTimeLimiterMetricsTest {
         assertThat(after).isNotNull();
         assertThat(after.count()).isEqualTo(0);
         assertThat(after.getId().getTag(TagNames.NAME))
-                .isEqualTo(TimeLimiter.ofDefaults().getName());
+            .isEqualTo(TimeLimiter.ofDefaults().getName());
     }
 
     @Test
@@ -104,7 +104,7 @@ public class TaggedTimeLimiterMetricsTest {
         timeLimiter.onSuccess();
 
         Optional<Counter> successful = findCounterByKindAndNameTags(counters, "successful",
-                timeLimiter.getName());
+            timeLimiter.getName());
         assertThat(successful).map(Counter::count).contains(1d);
     }
 
@@ -114,7 +114,7 @@ public class TaggedTimeLimiterMetricsTest {
         timeLimiter.onError(new RuntimeException());
 
         Optional<Counter> failed = findCounterByKindAndNameTags(counters, "failed",
-                timeLimiter.getName());
+            timeLimiter.getName());
         assertThat(failed).map(Counter::count).contains(1d);
     }
 
@@ -124,7 +124,7 @@ public class TaggedTimeLimiterMetricsTest {
         timeLimiter.onError(new TimeoutException());
 
         Optional<Counter> timeout = findCounterByKindAndNameTags(counters, "timeout",
-                timeLimiter.getName());
+            timeLimiter.getName());
         assertThat(timeout).map(Counter::count).contains(1d);
     }
 
@@ -134,20 +134,20 @@ public class TaggedTimeLimiterMetricsTest {
         TimeLimiterRegistry timeLimiterRegistry = TimeLimiterRegistry.ofDefaults();
         timeLimiterRegistry.timeLimiter("backendA");
         TaggedTimeLimiterMetrics.ofTimeLimiterRegistry(
-                TaggedTimeLimiterMetrics.MetricNames.custom()
-                        .callsMetricName("custom_calls")
-                        .build(),
-                timeLimiterRegistry
+            TaggedTimeLimiterMetrics.MetricNames.custom()
+                .callsMetricName("custom_calls")
+                .build(),
+            timeLimiterRegistry
         ).bindTo(meterRegistry);
 
         Set<String> metricNames = meterRegistry.getMeters()
-                .stream()
-                .map(Meter::getId)
-                .map(Meter.Id::getName)
-                .collect(Collectors.toSet());
+            .stream()
+            .map(Meter::getId)
+            .map(Meter.Id::getName)
+            .collect(Collectors.toSet());
 
         assertThat(metricNames).hasSameElementsAs(Arrays.asList(
-                "custom_calls"
+            "custom_calls"
         ));
     }
 }

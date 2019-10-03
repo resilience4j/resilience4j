@@ -22,7 +22,7 @@ import org.junit.Test;
 public class TimeLimiterRegistryTest {
 
     private static Optional<EventProcessor<?>> getEventProcessor(
-            Registry.EventPublisher<TimeLimiter> eventPublisher) {
+        Registry.EventPublisher<TimeLimiter> eventPublisher) {
         if (eventPublisher instanceof EventProcessor<?>) {
             return Optional.of((EventProcessor<?>) eventPublisher);
         }
@@ -33,9 +33,9 @@ public class TimeLimiterRegistryTest {
     @Test
     public void testCreateWithCustomConfig() {
         TimeLimiterConfig config = TimeLimiterConfig.custom()
-                .cancelRunningFuture(false)
-                .timeoutDuration(Duration.ofMillis(500))
-                .build();
+            .cancelRunningFuture(false)
+            .timeoutDuration(Duration.ofMillis(500))
+            .build();
 
         TimeLimiterRegistry timeLimiterRegistry = TimeLimiterRegistry.of(config);
 
@@ -69,10 +69,10 @@ public class TimeLimiterRegistryTest {
     @Test
     public void testCreateWithSingleRegistryEventConsumer() {
         TimeLimiterRegistry timeLimiterRegistry = TimeLimiterRegistry
-                .of(TimeLimiterConfig.ofDefaults(), new NoOpTimeLimiterEventConsumer());
+            .of(TimeLimiterConfig.ofDefaults(), new NoOpTimeLimiterEventConsumer());
 
         getEventProcessor(timeLimiterRegistry.getEventPublisher())
-                .ifPresent(eventProcessor -> assertThat(eventProcessor.hasConsumers()).isTrue());
+            .ifPresent(eventProcessor -> assertThat(eventProcessor.hasConsumers()).isTrue());
     }
 
     @Test
@@ -82,10 +82,10 @@ public class TimeLimiterRegistryTest {
         registryEventConsumers.add(new NoOpTimeLimiterEventConsumer());
 
         TimeLimiterRegistry timeLimiterRegistry = TimeLimiterRegistry
-                .of(TimeLimiterConfig.ofDefaults(), registryEventConsumers);
+            .of(TimeLimiterConfig.ofDefaults(), registryEventConsumers);
 
         getEventProcessor(timeLimiterRegistry.getEventPublisher())
-                .ifPresent(eventProcessor -> assertThat(eventProcessor.hasConsumers()).isTrue());
+            .ifPresent(eventProcessor -> assertThat(eventProcessor.hasConsumers()).isTrue());
     }
 
     @Test
@@ -94,10 +94,10 @@ public class TimeLimiterRegistryTest {
         configs.put("custom", TimeLimiterConfig.ofDefaults());
 
         TimeLimiterRegistry timeLimiterRegistry = TimeLimiterRegistry
-                .of(configs, new NoOpTimeLimiterEventConsumer());
+            .of(configs, new NoOpTimeLimiterEventConsumer());
 
         getEventProcessor(timeLimiterRegistry.getEventPublisher())
-                .ifPresent(eventProcessor -> assertThat(eventProcessor.hasConsumers()).isTrue());
+            .ifPresent(eventProcessor -> assertThat(eventProcessor.hasConsumers()).isTrue());
     }
 
     @Test
@@ -110,10 +110,10 @@ public class TimeLimiterRegistryTest {
         registryEventConsumers.add(new NoOpTimeLimiterEventConsumer());
 
         TimeLimiterRegistry timeLimiterRegistry = TimeLimiterRegistry
-                .of(configs, registryEventConsumers);
+            .of(configs, registryEventConsumers);
 
         getEventProcessor(timeLimiterRegistry.getEventPublisher())
-                .ifPresent(eventProcessor -> assertThat(eventProcessor.hasConsumers()).isTrue());
+            .ifPresent(eventProcessor -> assertThat(eventProcessor.hasConsumers()).isTrue());
     }
 
     @Test
@@ -130,11 +130,11 @@ public class TimeLimiterRegistryTest {
         TimeLimiterRegistry timeLimiterRegistry = TimeLimiterRegistry.ofDefaults();
 
         assertThatThrownBy(() -> timeLimiterRegistry.timeLimiter("test", "doesNotExist"))
-                .isInstanceOf(ConfigurationNotFoundException.class);
+            .isInstanceOf(ConfigurationNotFoundException.class);
     }
 
     private static class NoOpTimeLimiterEventConsumer implements
-            RegistryEventConsumer<TimeLimiter> {
+        RegistryEventConsumer<TimeLimiter> {
 
         @Override
         public void onEntryAddedEvent(EntryAddedEvent<TimeLimiter> entryAddedEvent) {

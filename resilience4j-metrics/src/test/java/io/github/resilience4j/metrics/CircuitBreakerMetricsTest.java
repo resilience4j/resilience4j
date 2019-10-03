@@ -29,7 +29,7 @@ public class CircuitBreakerMetricsTest extends AbstractCircuitBreakerMetricsTest
         CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
         CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("testName");
         metricRegistry.registerAll(
-                CircuitBreakerMetrics.ofCircuitBreakerRegistry(prefix, circuitBreakerRegistry));
+            CircuitBreakerMetrics.ofCircuitBreakerRegistry(prefix, circuitBreakerRegistry));
 
         return circuitBreaker;
     }
@@ -39,7 +39,7 @@ public class CircuitBreakerMetricsTest extends AbstractCircuitBreakerMetricsTest
         CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
         CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("testName");
         metricRegistry.registerAll(
-                CircuitBreakerMetrics.ofCircuitBreakerRegistry(circuitBreakerRegistry));
+            CircuitBreakerMetrics.ofCircuitBreakerRegistry(circuitBreakerRegistry));
 
         return circuitBreaker;
     }

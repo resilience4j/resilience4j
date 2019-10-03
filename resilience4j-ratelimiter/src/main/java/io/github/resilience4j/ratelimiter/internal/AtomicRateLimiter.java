@@ -56,7 +56,7 @@ public class AtomicRateLimiter implements RateLimiter {
 
         waitingThreads = new AtomicInteger(0);
         state = new AtomicReference<>(new State(
-                rateLimiterConfig, 0, rateLimiterConfig.getLimitForPeriod(), 0
+            rateLimiterConfig, 0, rateLimiterConfig.getLimitForPeriod(), 0
         ));
         eventProcessor = new RateLimiterEventProcessor();
     }
@@ -67,11 +67,11 @@ public class AtomicRateLimiter implements RateLimiter {
     @Override
     public void changeTimeoutDuration(final Duration timeoutDuration) {
         RateLimiterConfig newConfig = RateLimiterConfig.from(state.get().config)
-                .timeoutDuration(timeoutDuration)
-                .build();
+            .timeoutDuration(timeoutDuration)
+            .build();
         state.updateAndGet(currentState -> new State(
-                newConfig, currentState.activeCycle, currentState.activePermissions,
-                currentState.nanosToWait
+            newConfig, currentState.activeCycle, currentState.activePermissions,
+            currentState.nanosToWait
         ));
     }
 
@@ -81,11 +81,11 @@ public class AtomicRateLimiter implements RateLimiter {
     @Override
     public void changeLimitForPeriod(final int limitForPeriod) {
         RateLimiterConfig newConfig = RateLimiterConfig.from(state.get().config)
-                .limitForPeriod(limitForPeriod)
-                .build();
+            .limitForPeriod(limitForPeriod)
+            .build();
         state.updateAndGet(currentState -> new State(
-                newConfig, currentState.activeCycle, currentState.activePermissions,
-                currentState.nanosToWait
+            newConfig, currentState.activeCycle, currentState.activePermissions,
+            currentState.nanosToWait
         ));
     }
 
@@ -166,7 +166,7 @@ public class AtomicRateLimiter implements RateLimiter {
      * @param current the expected value
      * @param next the new value
      * @return {@code true} if successful. False return indicates that the actual value was not
-     *         equal to the expected value.
+     *     equal to the expected value.
      */
     private boolean compareAndSet(final State current, final State next) {
         if (state.compareAndSet(current, next)) {
@@ -199,13 +199,13 @@ public class AtomicRateLimiter implements RateLimiter {
             long accumulatedPermissions = elapsedCycles * permissionsPerCycle;
             nextCycle = currentCycle;
             nextPermissions = (int) min(nextPermissions + accumulatedPermissions,
-                    permissionsPerCycle);
+                permissionsPerCycle);
         }
         long nextNanosToWait = nanosToWaitForPermission(
-                cyclePeriodInNanos, permissionsPerCycle, nextPermissions, currentNanos, currentCycle
+            cyclePeriodInNanos, permissionsPerCycle, nextPermissions, currentNanos, currentCycle
         );
         State nextState = reservePermissions(activeState.config, timeoutInNanos, nextCycle,
-                nextPermissions, nextNanosToWait);
+            nextPermissions, nextNanosToWait);
         return nextState;
     }
 
@@ -216,14 +216,14 @@ public class AtomicRateLimiter implements RateLimiter {
      * @param cyclePeriodInNanos current configuration values
      * @param permissionsPerCycle current configuration values
      * @param availablePermissions currently available permissions, can be negative if some
-     *         permissions have been reserved
+     *     permissions have been reserved
      * @param currentNanos current time in nanoseconds
      * @param currentCycle current {@link AtomicRateLimiter} cycle    @return nanoseconds to
-     *         wait for the next permission
+     *     wait for the next permission
      */
     private long nanosToWaitForPermission(final long cyclePeriodInNanos,
-            final int permissionsPerCycle,
-            final int availablePermissions, final long currentNanos, final long currentCycle) {
+        final int permissionsPerCycle,
+        final int availablePermissions, final long currentNanos, final long currentCycle) {
         if (availablePermissions > 0) {
             return 0L;
         }
@@ -245,7 +245,7 @@ public class AtomicRateLimiter implements RateLimiter {
      * @return new {@link State} with possibly reserved permissions and time to wait
      */
     private State reservePermissions(final RateLimiterConfig config, final long timeoutInNanos,
-            final long cycle, final int permissions, final long nanosToWait) {
+        final long cycle, final int permissions, final long nanosToWait) {
         boolean canAcquireInTime = timeoutInNanos >= nanosToWait;
         int permissionsWithReservation = permissions;
         if (canAcquireInTime) {
@@ -261,10 +261,10 @@ public class AtomicRateLimiter implements RateLimiter {
      * @param timeoutInNanos max time that caller can wait
      * @param nanosToWait nanoseconds caller need to wait
      * @return true if caller was able to wait for nanosToWait without {@link Thread#interrupt} and
-     *         not exceed timeout
+     *     not exceed timeout
      */
     private boolean waitForPermissionIfNecessary(final long timeoutInNanos,
-            final long nanosToWait) {
+        final long nanosToWait) {
         boolean canAcquireImmediately = nanosToWait <= 0;
         boolean canAcquireInTime = timeoutInNanos >= nanosToWait;
 
@@ -335,9 +335,9 @@ public class AtomicRateLimiter implements RateLimiter {
     @Override
     public String toString() {
         return "AtomicRateLimiter{" +
-                "name='" + name + '\'' +
-                ", rateLimiterConfig=" + state.get().config +
-                '}';
+            "name='" + name + '\'' +
+            ", rateLimiterConfig=" + state.get().config +
+            '}';
     }
 
     /**
@@ -384,7 +384,7 @@ public class AtomicRateLimiter implements RateLimiter {
         private final long nanosToWait;
 
         private State(RateLimiterConfig config,
-                final long activeCycle, final int activePermissions, final long nanosToWait) {
+            final long activeCycle, final int activePermissions, final long nanosToWait) {
             this.config = config;
             this.activeCycle = activeCycle;
             this.activePermissions = activePermissions;

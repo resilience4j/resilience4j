@@ -11,10 +11,10 @@ public class IllegalStateTransitionException extends RuntimeException {
     private final CircuitBreaker.State toState;
 
     IllegalStateTransitionException(String name, CircuitBreaker.State fromState,
-            CircuitBreaker.State toState) {
+        CircuitBreaker.State toState) {
         super(String
-                .format("CircuitBreaker '%s' tried an illegal state transition from %s to %s", name,
-                        fromState.toString(), toState.toString()));
+            .format("CircuitBreaker '%s' tried an illegal state transition from %s to %s", name,
+                fromState.toString(), toState.toString()));
         this.name = name;
         this.fromState = fromState;
         this.toState = toState;

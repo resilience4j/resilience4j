@@ -81,7 +81,7 @@ public interface RetrofitRateLimiter {
         @Override
         public Response<T> execute() throws IOException {
             CheckedFunction0<Response<T>> restrictedSupplier = RateLimiter
-                    .decorateCheckedSupplier(rateLimiter, call::execute);
+                .decorateCheckedSupplier(rateLimiter, call::execute);
             final Try<Response<T>> response = Try.of(restrictedSupplier);
             return response.isSuccess() ? response.get() : handleFailure(response);
         }
@@ -100,7 +100,7 @@ public interface RetrofitRateLimiter {
 
         private Response<T> tooManyRequestsError() {
             return Response.error(429, ResponseBody
-                    .create(MediaType.parse("text/plain"), "Too many requests for the client"));
+                .create(MediaType.parse("text/plain"), "Too many requests for the client"));
         }
 
         @Override

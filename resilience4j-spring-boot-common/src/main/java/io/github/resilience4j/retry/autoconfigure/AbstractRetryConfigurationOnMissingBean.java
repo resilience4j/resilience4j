@@ -56,24 +56,24 @@ public abstract class AbstractRetryConfigurationOnMissingBean {
 
     /**
      * @param retryConfigurationProperties retryConfigurationProperties retry configuration
-     *         spring properties
+     *     spring properties
      * @param retryEventConsumerRegistry the event retry registry
      * @return the retry definition registry
      */
     @Bean
     @ConditionalOnMissingBean
     public RetryRegistry retryRegistry(RetryConfigurationProperties retryConfigurationProperties,
-            EventConsumerRegistry<RetryEvent> retryEventConsumerRegistry,
-            RegistryEventConsumer<Retry> retryRegistryEventConsumer) {
+        EventConsumerRegistry<RetryEvent> retryEventConsumerRegistry,
+        RegistryEventConsumer<Retry> retryRegistryEventConsumer) {
         return retryConfiguration
-                .retryRegistry(retryConfigurationProperties, retryEventConsumerRegistry,
-                        retryRegistryEventConsumer);
+            .retryRegistry(retryConfigurationProperties, retryEventConsumerRegistry,
+                retryRegistryEventConsumer);
     }
 
     @Bean
     @Primary
     public RegistryEventConsumer<Retry> retryRegistryEventConsumer(
-            Optional<List<RegistryEventConsumer<Retry>>> optionalRegistryEventConsumers) {
+        Optional<List<RegistryEventConsumer<Retry>>> optionalRegistryEventConsumers) {
         return retryConfiguration.retryRegistryEventConsumer(optionalRegistryEventConsumers);
     }
 
@@ -86,12 +86,12 @@ public abstract class AbstractRetryConfigurationOnMissingBean {
     @Conditional(value = {AspectJOnClasspathCondition.class})
     @ConditionalOnMissingBean
     public RetryAspect retryAspect(RetryConfigurationProperties retryConfigurationProperties,
-            RetryRegistry retryRegistry,
-            @Autowired(required = false) List<RetryAspectExt> retryAspectExtList,
-            FallbackDecorators fallbackDecorators) {
+        RetryRegistry retryRegistry,
+        @Autowired(required = false) List<RetryAspectExt> retryAspectExtList,
+        FallbackDecorators fallbackDecorators) {
         return retryConfiguration
-                .retryAspect(retryConfigurationProperties, retryRegistry, retryAspectExtList,
-                        fallbackDecorators);
+            .retryAspect(retryConfigurationProperties, retryRegistry, retryAspectExtList,
+                fallbackDecorators);
     }
 
     @Bean

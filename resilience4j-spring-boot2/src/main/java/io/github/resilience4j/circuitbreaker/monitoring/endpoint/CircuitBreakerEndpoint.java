@@ -36,7 +36,7 @@ public class CircuitBreakerEndpoint {
     @ReadOperation
     public CircuitBreakerEndpointResponse getAllCircuitBreakers() {
         List<String> circuitBreakers = circuitBreakerRegistry.getAllCircuitBreakers()
-                .map(CircuitBreaker::getName).sorted().toJavaList();
+            .map(CircuitBreaker::getName).sorted().toJavaList();
         return new CircuitBreakerEndpointResponse(circuitBreakers);
     }
 }

@@ -24,10 +24,10 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(classes = {
-        HealthIndicatorAutoConfiguration.class,
-        CircuitBreakerConfigurationOnMissingBeanTest.ConfigWithOverrides.class,
-        CircuitBreakerAutoConfiguration.class,
-        CircuitBreakerConfigurationOnMissingBean.class
+    HealthIndicatorAutoConfiguration.class,
+    CircuitBreakerConfigurationOnMissingBeanTest.ConfigWithOverrides.class,
+    CircuitBreakerAutoConfiguration.class,
+    CircuitBreakerConfigurationOnMissingBean.class
 })
 @EnableConfigurationProperties(CircuitBreakerProperties.class)
 public class CircuitBreakerConfigurationOnMissingBeanTest {
@@ -46,7 +46,7 @@ public class CircuitBreakerConfigurationOnMissingBeanTest {
 
     @Test
     public void testAllBeansFromCircuitBreakerConfigurationHasOnMissingBean()
-            throws NoSuchMethodException {
+        throws NoSuchMethodException {
         final Class<CircuitBreakerConfiguration> originalClass = CircuitBreakerConfiguration.class;
         final Class<CircuitBreakerConfigurationOnMissingBean> onMissingBeanClass = CircuitBreakerConfigurationOnMissingBean.class;
         TestUtils.assertAnnotations(originalClass, onMissingBeanClass);
@@ -57,7 +57,7 @@ public class CircuitBreakerConfigurationOnMissingBeanTest {
         assertEquals(circuitBreakerRegistry, configWithOverrides.circuitBreakerRegistry);
         assertEquals(circuitBreakerAspect, configWithOverrides.circuitBreakerAspect);
         assertEquals(circuitEventConsumerBreakerRegistry,
-                configWithOverrides.circuitEventConsumerBreakerRegistry);
+            configWithOverrides.circuitEventConsumerBreakerRegistry);
     }
 
     @Configuration
@@ -77,11 +77,11 @@ public class CircuitBreakerConfigurationOnMissingBeanTest {
 
         @Bean
         public CircuitBreakerAspect circuitBreakerAspect(
-                CircuitBreakerRegistry circuitBreakerRegistry,
-                @Autowired(required = false) List<CircuitBreakerAspectExt> circuitBreakerAspectExtList,
-                FallbackDecorators recoveryDecorators) {
+            CircuitBreakerRegistry circuitBreakerRegistry,
+            @Autowired(required = false) List<CircuitBreakerAspectExt> circuitBreakerAspectExtList,
+            FallbackDecorators recoveryDecorators) {
             circuitBreakerAspect = new CircuitBreakerAspect(new CircuitBreakerProperties(),
-                    circuitBreakerRegistry, circuitBreakerAspectExtList, recoveryDecorators);
+                circuitBreakerRegistry, circuitBreakerAspectExtList, recoveryDecorators);
             return circuitBreakerAspect;
         }
 

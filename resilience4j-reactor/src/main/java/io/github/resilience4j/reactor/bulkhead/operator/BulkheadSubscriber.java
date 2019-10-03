@@ -37,8 +37,8 @@ class BulkheadSubscriber<T> extends AbstractSubscriber<T> {
     private final AtomicBoolean successSignaled = new AtomicBoolean(false);
 
     BulkheadSubscriber(Bulkhead bulkhead,
-            CoreSubscriber<? super T> downstreamSubscriber,
-            boolean singleProducer) {
+        CoreSubscriber<? super T> downstreamSubscriber,
+        boolean singleProducer) {
         super(downstreamSubscriber);
         this.bulkhead = requireNonNull(bulkhead);
         this.singleProducer = singleProducer;

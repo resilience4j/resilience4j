@@ -47,73 +47,73 @@ abstract class AbstractCircuitBreakerMetrics extends AbstractMetrics {
         final CircuitBreaker.State[] states = CircuitBreaker.State.values();
         for (CircuitBreaker.State state : states) {
             idSet.add(Gauge.builder(names.getStateMetricName(), circuitBreaker,
-                    cb -> cb.getState() == state ? 1 : 0)
-                    .description("The states of the circuit breaker")
-                    .tag(TagNames.NAME, circuitBreaker.getName())
-                    .tag(KIND_STATE, state.name().toLowerCase())
-                    .register(meterRegistry).getId());
+                cb -> cb.getState() == state ? 1 : 0)
+                .description("The states of the circuit breaker")
+                .tag(TagNames.NAME, circuitBreaker.getName())
+                .tag(KIND_STATE, state.name().toLowerCase())
+                .register(meterRegistry).getId());
         }
         idSet.add(Gauge.builder(names.getBufferedCallsMetricName(), circuitBreaker,
-                cb -> cb.getMetrics().getNumberOfFailedCalls())
-                .description("The number of buffered failed calls stored in the ring buffer")
-                .tag(TagNames.NAME, circuitBreaker.getName())
-                .tag(TagNames.KIND, KIND_FAILED)
-                .register(meterRegistry).getId());
+            cb -> cb.getMetrics().getNumberOfFailedCalls())
+            .description("The number of buffered failed calls stored in the ring buffer")
+            .tag(TagNames.NAME, circuitBreaker.getName())
+            .tag(TagNames.KIND, KIND_FAILED)
+            .register(meterRegistry).getId());
         idSet.add(Gauge.builder(names.getBufferedCallsMetricName(), circuitBreaker,
-                cb -> cb.getMetrics().getNumberOfSuccessfulCalls())
-                .description("The number of buffered successful calls stored in the ring buffer")
-                .tag(TagNames.NAME, circuitBreaker.getName())
-                .tag(TagNames.KIND, KIND_SUCCESSFUL)
-                .register(meterRegistry).getId());
+            cb -> cb.getMetrics().getNumberOfSuccessfulCalls())
+            .description("The number of buffered successful calls stored in the ring buffer")
+            .tag(TagNames.NAME, circuitBreaker.getName())
+            .tag(TagNames.KIND, KIND_SUCCESSFUL)
+            .register(meterRegistry).getId());
         idSet.add(Gauge.builder(names.getSlowCallsMetricName(), circuitBreaker,
-                cb -> cb.getMetrics().getNumberOfSlowSuccessfulCalls())
-                .description(
-                        "The number of slow successful which were slower than a certain threshold")
-                .tag(TagNames.NAME, circuitBreaker.getName())
-                .tag(TagNames.KIND, KIND_SUCCESSFUL)
-                .register(meterRegistry).getId());
+            cb -> cb.getMetrics().getNumberOfSlowSuccessfulCalls())
+            .description(
+                "The number of slow successful which were slower than a certain threshold")
+            .tag(TagNames.NAME, circuitBreaker.getName())
+            .tag(TagNames.KIND, KIND_SUCCESSFUL)
+            .register(meterRegistry).getId());
         idSet.add(Gauge.builder(names.getSlowCallsMetricName(), circuitBreaker,
-                cb -> cb.getMetrics().getNumberOfSlowFailedCalls())
-                .description(
-                        "The number of slow failed calls which were slower than a certain threshold")
-                .tag(TagNames.NAME, circuitBreaker.getName())
-                .tag(TagNames.KIND, KIND_FAILED)
-                .register(meterRegistry).getId());
+            cb -> cb.getMetrics().getNumberOfSlowFailedCalls())
+            .description(
+                "The number of slow failed calls which were slower than a certain threshold")
+            .tag(TagNames.NAME, circuitBreaker.getName())
+            .tag(TagNames.KIND, KIND_FAILED)
+            .register(meterRegistry).getId());
         idSet.add(Gauge.builder(names.getFailureRateMetricName(), circuitBreaker,
-                cb -> cb.getMetrics().getFailureRate())
-                .description("The failure rate of the circuit breaker")
-                .tag(TagNames.NAME, circuitBreaker.getName())
-                .register(meterRegistry).getId());
+            cb -> cb.getMetrics().getFailureRate())
+            .description("The failure rate of the circuit breaker")
+            .tag(TagNames.NAME, circuitBreaker.getName())
+            .register(meterRegistry).getId());
 
         idSet.add(Gauge.builder(names.getSlowCallRateMetricName(), circuitBreaker,
-                cb -> cb.getMetrics().getSlowCallRate())
-                .description("The slow call of the circuit breaker")
-                .tag(TagNames.NAME, circuitBreaker.getName())
-                .register(meterRegistry).getId());
+            cb -> cb.getMetrics().getSlowCallRate())
+            .description("The slow call of the circuit breaker")
+            .tag(TagNames.NAME, circuitBreaker.getName())
+            .register(meterRegistry).getId());
 
         Timer successfulCalls = Timer.builder(names.getCallsMetricName())
-                .description("Total number of successful calls")
-                .tag(TagNames.NAME, circuitBreaker.getName())
-                .tag(TagNames.KIND, KIND_SUCCESSFUL)
-                .register(meterRegistry);
+            .description("Total number of successful calls")
+            .tag(TagNames.NAME, circuitBreaker.getName())
+            .tag(TagNames.KIND, KIND_SUCCESSFUL)
+            .register(meterRegistry);
 
         Timer failedCalls = Timer.builder(names.getCallsMetricName())
-                .description("Total number of failed calls")
-                .tag(TagNames.NAME, circuitBreaker.getName())
-                .tag(TagNames.KIND, KIND_FAILED)
-                .register(meterRegistry);
+            .description("Total number of failed calls")
+            .tag(TagNames.NAME, circuitBreaker.getName())
+            .tag(TagNames.KIND, KIND_FAILED)
+            .register(meterRegistry);
 
         Timer ignoredFailedCalls = Timer.builder(names.getCallsMetricName())
-                .description("Total number of calls which failed but the exception was ignored")
-                .tag(TagNames.NAME, circuitBreaker.getName())
-                .tag(TagNames.KIND, KIND_IGNORED)
-                .register(meterRegistry);
+            .description("Total number of calls which failed but the exception was ignored")
+            .tag(TagNames.NAME, circuitBreaker.getName())
+            .tag(TagNames.KIND, KIND_IGNORED)
+            .register(meterRegistry);
 
         Counter notPermittedCalls = Counter.builder(names.getCallsMetricName())
-                .description("Total number of not permitted calls")
-                .tag(TagNames.NAME, circuitBreaker.getName())
-                .tag(TagNames.KIND, KIND_NOT_PERMITTED)
-                .register(meterRegistry);
+            .description("Total number of not permitted calls")
+            .tag(TagNames.NAME, circuitBreaker.getName())
+            .tag(TagNames.KIND, KIND_NOT_PERMITTED)
+            .register(meterRegistry);
 
         idSet.add(successfulCalls.getId());
         idSet.add(failedCalls.getId());
@@ -121,10 +121,10 @@ abstract class AbstractCircuitBreakerMetrics extends AbstractMetrics {
         idSet.add(notPermittedCalls.getId());
 
         circuitBreaker.getEventPublisher()
-                .onIgnoredError(event -> ignoredFailedCalls.record(event.getElapsedDuration()))
-                .onCallNotPermitted(event -> notPermittedCalls.increment())
-                .onSuccess(event -> successfulCalls.record(event.getElapsedDuration()))
-                .onError(event -> failedCalls.record(event.getElapsedDuration()));
+            .onIgnoredError(event -> ignoredFailedCalls.record(event.getElapsedDuration()))
+            .onCallNotPermitted(event -> notPermittedCalls.increment())
+            .onSuccess(event -> successfulCalls.record(event.getElapsedDuration()))
+            .onError(event -> failedCalls.record(event.getElapsedDuration()));
 
         meterIdMap.put(circuitBreaker.getName(), idSet);
     }
@@ -136,19 +136,20 @@ abstract class AbstractCircuitBreakerMetrics extends AbstractMetrics {
         public static final String DEFAULT_CIRCUIT_BREAKER_CALLS = DEFAULT_PREFIX + ".calls";
         public static final String DEFAULT_CIRCUIT_BREAKER_STATE = DEFAULT_PREFIX + ".state";
         public static final String DEFAULT_CIRCUIT_BREAKER_BUFFERED_CALLS =
-                DEFAULT_PREFIX + ".buffered.calls";
+            DEFAULT_PREFIX + ".buffered.calls";
         public static final String DEFAULT_CIRCUIT_BREAKER_SLOW_CALLS =
-                DEFAULT_PREFIX + ".slow.calls";
+            DEFAULT_PREFIX + ".slow.calls";
         public static final String DEFAULT_CIRCUIT_BREAKER_FAILURE_RATE =
-                DEFAULT_PREFIX + ".failure.rate";
+            DEFAULT_PREFIX + ".failure.rate";
         public static final String DEFAULT_CIRCUIT_BREAKER_SLOW_CALL_RATE =
-                DEFAULT_PREFIX + ".slow.call.rate";
+            DEFAULT_PREFIX + ".slow.call.rate";
         private String callsMetricName = DEFAULT_CIRCUIT_BREAKER_CALLS;
         private String stateMetricName = DEFAULT_CIRCUIT_BREAKER_STATE;
         private String bufferedCallsMetricName = DEFAULT_CIRCUIT_BREAKER_BUFFERED_CALLS;
         private String slowCallsMetricName = DEFAULT_CIRCUIT_BREAKER_SLOW_CALLS;
         private String failureRateMetricName = DEFAULT_CIRCUIT_BREAKER_FAILURE_RATE;
         private String slowCallRateMetricName = DEFAULT_CIRCUIT_BREAKER_SLOW_CALL_RATE;
+
         private MetricNames() {
         }
 

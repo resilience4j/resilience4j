@@ -28,7 +28,7 @@ import io.github.resilience4j.timelimiter.event.TimeLimiterOnSuccessEvent;
 import io.github.resilience4j.timelimiter.event.TimeLimiterOnTimeoutEvent;
 
 public class TimeLimiterEventProcessor extends EventProcessor<TimeLimiterEvent> implements
-        EventConsumer<TimeLimiterEvent>, TimeLimiter.EventPublisher {
+    EventConsumer<TimeLimiterEvent>, TimeLimiter.EventPublisher {
 
     @Override
     public void consumeEvent(TimeLimiterEvent event) {
@@ -37,21 +37,21 @@ public class TimeLimiterEventProcessor extends EventProcessor<TimeLimiterEvent> 
 
     @Override
     public TimeLimiter.EventPublisher onSuccess(
-            EventConsumer<TimeLimiterOnSuccessEvent> onSuccessEventConsumer) {
+        EventConsumer<TimeLimiterOnSuccessEvent> onSuccessEventConsumer) {
         registerConsumer(TimeLimiterOnSuccessEvent.class.getSimpleName(), onSuccessEventConsumer);
         return this;
     }
 
     @Override
     public TimeLimiter.EventPublisher onError(
-            EventConsumer<TimeLimiterOnErrorEvent> onOnFailureEventConsumer) {
+        EventConsumer<TimeLimiterOnErrorEvent> onOnFailureEventConsumer) {
         registerConsumer(TimeLimiterOnErrorEvent.class.getSimpleName(), onOnFailureEventConsumer);
         return this;
     }
 
     @Override
     public TimeLimiter.EventPublisher onTimeout(
-            EventConsumer<TimeLimiterOnTimeoutEvent> onOnFailureEventConsumer) {
+        EventConsumer<TimeLimiterOnTimeoutEvent> onOnFailureEventConsumer) {
         registerConsumer(TimeLimiterOnTimeoutEvent.class.getSimpleName(), onOnFailureEventConsumer);
         return this;
     }

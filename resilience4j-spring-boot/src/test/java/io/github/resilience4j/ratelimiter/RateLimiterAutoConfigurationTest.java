@@ -43,7 +43,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-        classes = TestApplication.class)
+    classes = TestApplication.class)
 public class RateLimiterAutoConfigurationTest {
 
     @Autowired
@@ -81,8 +81,8 @@ public class RateLimiterAutoConfigurationTest {
         assertThat(rateLimiter).isNotNull();
         rateLimiter.acquirePermission();
         await()
-                .atMost(2, TimeUnit.SECONDS)
-                .until(() -> rateLimiter.getMetrics().getAvailablePermissions() == 10);
+            .atMost(2, TimeUnit.SECONDS)
+            .until(() -> rateLimiter.getMetrics().getAvailablePermissions() == 10);
 
         try {
             dummyService.doSomething(true);
@@ -96,17 +96,17 @@ public class RateLimiterAutoConfigurationTest {
 
         assertThat(rateLimiter.getRateLimiterConfig().getLimitForPeriod()).isEqualTo(10);
         assertThat(rateLimiter.getRateLimiterConfig().getLimitRefreshPeriod())
-                .isEqualTo(Duration.ofSeconds(1));
+            .isEqualTo(Duration.ofSeconds(1));
         assertThat(rateLimiter.getRateLimiterConfig().getTimeoutDuration())
-                .isEqualTo(Duration.ofSeconds(0));
+            .isEqualTo(Duration.ofSeconds(0));
 
         // Test Actuator endpoints
 
         ResponseEntity<RateLimiterEndpointResponse> rateLimiterList = restTemplate
-                .getForEntity("/ratelimiter", RateLimiterEndpointResponse.class);
+            .getForEntity("/ratelimiter", RateLimiterEndpointResponse.class);
 
         assertThat(rateLimiterList.getBody().getRateLimiters()).hasSize(2)
-                .containsExactly("backendA", "backendB");
+            .containsExactly("backendA", "backendB");
 
         try {
             for (int i = 0; i < 11; i++) {
@@ -117,17 +117,17 @@ public class RateLimiterAutoConfigurationTest {
         }
 
         ResponseEntity<RateLimiterEventsEndpointResponse> rateLimiterEventList = restTemplate
-                .getForEntity("/ratelimiter/events", RateLimiterEventsEndpointResponse.class);
+            .getForEntity("/ratelimiter/events", RateLimiterEventsEndpointResponse.class);
 
         List<RateLimiterEventDTO> eventsList = rateLimiterEventList.getBody()
-                .getRateLimiterEvents();
+            .getRateLimiterEvents();
         assertThat(eventsList).isNotEmpty();
         RateLimiterEventDTO lastEvent = eventsList.get(eventsList.size() - 1);
         assertThat(lastEvent.getType()).isEqualTo(RateLimiterEvent.Type.FAILED_ACQUIRE);
 
         await()
-                .atMost(2, TimeUnit.SECONDS)
-                .until(() -> rateLimiter.getMetrics().getAvailablePermissions() == 10);
+            .atMost(2, TimeUnit.SECONDS)
+            .until(() -> rateLimiter.getMetrics().getAvailablePermissions() == 10);
 
         assertThat(rateLimiterAspect.getOrder()).isEqualTo(401);
     }

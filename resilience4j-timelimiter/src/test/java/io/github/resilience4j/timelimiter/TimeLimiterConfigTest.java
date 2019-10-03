@@ -21,9 +21,9 @@ public class TimeLimiterConfigTest {
     @Test
     public void builderPositive() {
         TimeLimiterConfig config = TimeLimiterConfig.custom()
-                .timeoutDuration(TIMEOUT)
-                .cancelRunningFuture(SHOULD_CANCEL)
-                .build();
+            .timeoutDuration(TIMEOUT)
+            .cancelRunningFuture(SHOULD_CANCEL)
+            .build();
 
         then(config.getTimeoutDuration()).isEqualTo(TIMEOUT);
         then(config.shouldCancelRunningFuture()).isEqualTo(SHOULD_CANCEL);
@@ -42,7 +42,7 @@ public class TimeLimiterConfigTest {
         exception.expectMessage(TIMEOUT_DURATION_MUST_NOT_BE_NULL);
 
         TimeLimiterConfig.custom()
-                .timeoutDuration(null);
+            .timeoutDuration(null);
     }
 
     @Test

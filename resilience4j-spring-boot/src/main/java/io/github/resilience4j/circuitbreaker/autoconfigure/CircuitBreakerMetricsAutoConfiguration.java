@@ -36,7 +36,7 @@ import org.springframework.context.annotation.Configuration;
  */
 @Configuration
 @ConditionalOnClass({MetricRegistry.class, CircuitBreaker.class,
-        CircuitBreakerMetricsPublisher.class})
+    CircuitBreakerMetricsPublisher.class})
 @AutoConfigureAfter(MetricsDropwizardAutoConfiguration.class)
 @AutoConfigureBefore(MetricRepositoryAutoConfiguration.class)
 @ConditionalOnProperty(value = "resilience4j.circuitbreaker.metrics.enabled", matchIfMissing = true)
@@ -46,16 +46,16 @@ public class CircuitBreakerMetricsAutoConfiguration {
     @ConditionalOnProperty(value = "resilience4j.circuitbreaker.metrics.legacy.enabled", havingValue = "true")
     @ConditionalOnMissingBean
     public CircuitBreakerMetrics registerCircuitBreakerMetrics(
-            CircuitBreakerRegistry circuitBreakerRegistry, MetricRegistry metricRegistry) {
+        CircuitBreakerRegistry circuitBreakerRegistry, MetricRegistry metricRegistry) {
         return CircuitBreakerMetrics
-                .ofCircuitBreakerRegistry(circuitBreakerRegistry, metricRegistry);
+            .ofCircuitBreakerRegistry(circuitBreakerRegistry, metricRegistry);
     }
 
     @Bean
     @ConditionalOnProperty(value = "resilience4j.circuitbreaker.metrics.legacy.enabled", havingValue = "false", matchIfMissing = true)
     @ConditionalOnMissingBean
     public CircuitBreakerMetricsPublisher circuitBreakerMetricsPublisher(
-            MetricRegistry metricRegistry) {
+        MetricRegistry metricRegistry) {
         return new CircuitBreakerMetricsPublisher(metricRegistry);
     }
 

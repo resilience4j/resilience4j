@@ -30,7 +30,7 @@ public class CallableUtilsTest {
         };
         //When
         Callable<String> callableWithRecovery = CallableUtils
-                .andThen(callable, (result, ex) -> "Bla");
+            .andThen(callable, (result, ex) -> "Bla");
 
         String result = callableWithRecovery.call();
 
@@ -46,7 +46,7 @@ public class CallableUtilsTest {
         };
         //When
         Callable<String> callableWithRecovery = CallableUtils
-                .andThen(callable, (result) -> result, ex -> "Bla");
+            .andThen(callable, (result) -> result, ex -> "Bla");
 
         String result = callableWithRecovery.call();
 

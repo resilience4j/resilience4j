@@ -48,7 +48,7 @@ public class TaggedTimeLimiterMetricsPublisherTest {
         meterRegistry = new SimpleMeterRegistry();
         taggedTimeLimiterMetricsPublisher = new TaggedTimeLimiterMetricsPublisher(meterRegistry);
         timeLimiterRegistry = TimeLimiterRegistry
-                .of(TimeLimiterConfig.ofDefaults(), taggedTimeLimiterMetricsPublisher);
+            .of(TimeLimiterConfig.ofDefaults(), taggedTimeLimiterMetricsPublisher);
 
         timeLimiter = timeLimiterRegistry.timeLimiter("backendA");
     }
@@ -59,7 +59,7 @@ public class TaggedTimeLimiterMetricsPublisherTest {
         newTimeLimiter.onSuccess();
 
         assertThat(taggedTimeLimiterMetricsPublisher.meterIdMap)
-                .containsKeys("backendA", "backendB");
+            .containsKeys("backendA", "backendB");
         assertThat(taggedTimeLimiterMetricsPublisher.meterIdMap.get("backendA")).hasSize(3);
         assertThat(taggedTimeLimiterMetricsPublisher.meterIdMap.get("backendB")).hasSize(3);
 
@@ -68,7 +68,7 @@ public class TaggedTimeLimiterMetricsPublisherTest {
         Collection<Counter> counters = meterRegistry.get(DEFAULT_TIME_LIMITER_CALLS).counters();
 
         Optional<Counter> successful = findCounterByKindAndNameTags(counters, "successful",
-                newTimeLimiter.getName());
+            newTimeLimiter.getName());
         assertThat(successful).map(Counter::count).contains(1d);
     }
 
@@ -97,7 +97,7 @@ public class TaggedTimeLimiterMetricsPublisherTest {
         assertThat(after).isNotNull();
         assertThat(after.count()).isEqualTo(0);
         assertThat(after.getId().getTag(TagNames.NAME))
-                .isEqualTo(TimeLimiter.ofDefaults().getName());
+            .isEqualTo(TimeLimiter.ofDefaults().getName());
     }
 
     @Test
@@ -106,7 +106,7 @@ public class TaggedTimeLimiterMetricsPublisherTest {
         timeLimiter.onSuccess();
 
         Optional<Counter> successful = findCounterByKindAndNameTags(counters, "successful",
-                timeLimiter.getName());
+            timeLimiter.getName());
         assertThat(successful).map(Counter::count).contains(1d);
     }
 
@@ -116,7 +116,7 @@ public class TaggedTimeLimiterMetricsPublisherTest {
         timeLimiter.onError(new RuntimeException());
 
         Optional<Counter> failed = findCounterByKindAndNameTags(counters, "failed",
-                timeLimiter.getName());
+            timeLimiter.getName());
         assertThat(failed).map(Counter::count).contains(1d);
     }
 
@@ -126,7 +126,7 @@ public class TaggedTimeLimiterMetricsPublisherTest {
         timeLimiter.onError(new TimeoutException());
 
         Optional<Counter> timeout = findCounterByKindAndNameTags(counters, "timeout",
-                timeLimiter.getName());
+            timeLimiter.getName());
         assertThat(timeout).map(Counter::count).contains(1d);
     }
 
@@ -134,22 +134,22 @@ public class TaggedTimeLimiterMetricsPublisherTest {
     public void customMetricNamesGetApplied() {
         MeterRegistry meterRegistry = new SimpleMeterRegistry();
         TaggedTimeLimiterMetricsPublisher taggedTimeLimiterMetricsPublisher = new TaggedTimeLimiterMetricsPublisher(
-                TaggedTimeLimiterMetricsPublisher.MetricNames.custom()
-                        .callsMetricName("custom_calls")
-                        .build(), meterRegistry);
+            TaggedTimeLimiterMetricsPublisher.MetricNames.custom()
+                .callsMetricName("custom_calls")
+                .build(), meterRegistry);
 
         TimeLimiterRegistry timeLimiterRegistry = TimeLimiterRegistry
-                .of(TimeLimiterConfig.ofDefaults(), taggedTimeLimiterMetricsPublisher);
+            .of(TimeLimiterConfig.ofDefaults(), taggedTimeLimiterMetricsPublisher);
         timeLimiterRegistry.timeLimiter("backendA");
 
         Set<String> metricNames = meterRegistry.getMeters()
-                .stream()
-                .map(Meter::getId)
-                .map(Meter.Id::getName)
-                .collect(Collectors.toSet());
+            .stream()
+            .map(Meter::getId)
+            .map(Meter.Id::getName)
+            .collect(Collectors.toSet());
 
         assertThat(metricNames).hasSameElementsAs(Arrays.asList(
-                "custom_calls"
+            "custom_calls"
         ));
     }
 }

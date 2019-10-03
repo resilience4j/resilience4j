@@ -53,11 +53,11 @@ public class ReactorBulkheadAspectExtTest {
 
         when(proceedingJoinPoint.proceed()).thenReturn(Mono.just("Test"));
         assertThat(reactorBulkheadAspectExt.handle(proceedingJoinPoint, bulkhead, "testMethod"))
-                .isNotNull();
+            .isNotNull();
 
         when(proceedingJoinPoint.proceed()).thenReturn(Flux.just("Test"));
         assertThat(reactorBulkheadAspectExt.handle(proceedingJoinPoint, bulkhead, "testMethod"))
-                .isNotNull();
+            .isNotNull();
     }
 
 

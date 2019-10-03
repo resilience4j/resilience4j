@@ -103,33 +103,33 @@ public class Resilience4jModule extends ConfigurableModule<Resilience4jConfig> {
     protected void configure() {
         // interceptors
         bindInterceptor(Matchers.any(), Matchers.annotatedWith(CircuitBreaker.class),
-                injected(new CircuitBreakerMethodInterceptor()));
+            injected(new CircuitBreakerMethodInterceptor()));
         bindInterceptor(Matchers.any(), Matchers.annotatedWith(RateLimiter.class),
-                injected(new RateLimiterMethodInterceptor()));
+            injected(new RateLimiterMethodInterceptor()));
         bindInterceptor(Matchers.any(), Matchers.annotatedWith(Retry.class),
-                injected(new RetryMethodInterceptor()));
+            injected(new RetryMethodInterceptor()));
         bindInterceptor(Matchers.any(), Matchers.annotatedWith(Bulkhead.class),
-                injected(new BulkheadMethodInterceptor()));
+            injected(new BulkheadMethodInterceptor()));
         bindInterceptor(Matchers.annotatedWith(CircuitBreaker.class), Matchers.any(),
-                injected(new CircuitBreakerMethodInterceptor()));
+            injected(new CircuitBreakerMethodInterceptor()));
         bindInterceptor(Matchers.annotatedWith(RateLimiter.class), Matchers.any(),
-                injected(new RateLimiterMethodInterceptor()));
+            injected(new RateLimiterMethodInterceptor()));
         bindInterceptor(Matchers.annotatedWith(Retry.class), Matchers.any(),
-                injected(new RetryMethodInterceptor()));
+            injected(new RetryMethodInterceptor()));
         bindInterceptor(Matchers.annotatedWith(Bulkhead.class), Matchers.any(),
-                injected(new BulkheadMethodInterceptor()));
+            injected(new BulkheadMethodInterceptor()));
 
         // default registries
         OptionalBinder.newOptionalBinder(binder(), CircuitBreakerRegistry.class).setDefault()
-                .toProvider(CircuitBreakerRegistryProvider.class).in(Scopes.SINGLETON);
+            .toProvider(CircuitBreakerRegistryProvider.class).in(Scopes.SINGLETON);
         OptionalBinder.newOptionalBinder(binder(), RateLimiterRegistry.class).setDefault()
-                .toProvider(RateLimiterRegistryProvider.class).in(Scopes.SINGLETON);
+            .toProvider(RateLimiterRegistryProvider.class).in(Scopes.SINGLETON);
         OptionalBinder.newOptionalBinder(binder(), RetryRegistry.class).setDefault()
-                .toProvider(RetryRegistryProvider.class).in(Scopes.SINGLETON);
+            .toProvider(RetryRegistryProvider.class).in(Scopes.SINGLETON);
         OptionalBinder.newOptionalBinder(binder(), BulkheadRegistry.class).setDefault()
-                .toProvider(BulkheadRegistryProvider.class).in(Scopes.SINGLETON);
+            .toProvider(BulkheadRegistryProvider.class).in(Scopes.SINGLETON);
         OptionalBinder.newOptionalBinder(binder(), ThreadPoolBulkheadRegistry.class).setDefault()
-                .toProvider(ThreadPoolBulkheadRegistryProvider.class).in(Scopes.SINGLETON);
+            .toProvider(ThreadPoolBulkheadRegistryProvider.class).in(Scopes.SINGLETON);
 
         // event consumers
         bind(new TypeLiteral<EventConsumerRegistry<CircuitBreakerEvent>>() {
@@ -143,27 +143,27 @@ public class Resilience4jModule extends ConfigurableModule<Resilience4jConfig> {
 
         // event chains
         Multibinder<HandlerDecorator> binder = Multibinder
-                .newSetBinder(binder(), HandlerDecorator.class);
+            .newSetBinder(binder(), HandlerDecorator.class);
         bind(CircuitBreakerChain.class).in(Scopes.SINGLETON);
         bind(RateLimiterChain.class).in(Scopes.SINGLETON);
         bind(RetryChain.class).in(Scopes.SINGLETON);
         bind(BulkheadChain.class).in(Scopes.SINGLETON);
         binder.addBinding().toProvider(() -> (registry, rest) -> {
             if (registry.get(Resilience4jConfig.class).getEndpoints().getCircuitbreaker()
-                    .isEnabled()) {
+                .isEnabled()) {
                 return Handlers
-                        .chain(Handlers.chain(registry, registry.get(CircuitBreakerChain.class)),
-                                rest);
+                    .chain(Handlers.chain(registry, registry.get(CircuitBreakerChain.class)),
+                        rest);
             } else {
                 return rest;
             }
         });
         binder.addBinding().toProvider(() -> (registry, rest) -> {
             if (registry.get(Resilience4jConfig.class).getEndpoints().getRatelimiter()
-                    .isEnabled()) {
+                .isEnabled()) {
                 return Handlers
-                        .chain(Handlers.chain(registry, registry.get(RateLimiterChain.class)),
-                                rest);
+                    .chain(Handlers.chain(registry, registry.get(RateLimiterChain.class)),
+                        rest);
             } else {
                 return rest;
             }
@@ -171,7 +171,7 @@ public class Resilience4jModule extends ConfigurableModule<Resilience4jConfig> {
         binder.addBinding().toProvider(() -> (registry, rest) -> {
             if (registry.get(Resilience4jConfig.class).getEndpoints().getRetry().isEnabled()) {
                 return Handlers
-                        .chain(Handlers.chain(registry, registry.get(RetryChain.class)), rest);
+                    .chain(Handlers.chain(registry, registry.get(RetryChain.class)), rest);
             } else {
                 return rest;
             }
@@ -179,7 +179,7 @@ public class Resilience4jModule extends ConfigurableModule<Resilience4jConfig> {
         binder.addBinding().toProvider(() -> (registry, rest) -> {
             if (registry.get(Resilience4jConfig.class).getEndpoints().getBulkhead().isEnabled()) {
                 return Handlers
-                        .chain(Handlers.chain(registry, registry.get(BulkheadChain.class)), rest);
+                    .chain(Handlers.chain(registry, registry.get(BulkheadChain.class)), rest);
             } else {
                 return rest;
             }
@@ -195,14 +195,14 @@ public class Resilience4jModule extends ConfigurableModule<Resilience4jConfig> {
     }
 
     private static class CircuitBreakerRegistryProvider implements
-            Provider<CircuitBreakerRegistry> {
+        Provider<CircuitBreakerRegistry> {
 
         private Resilience4jConfig resilience4jConfig;
         private EventConsumerRegistry<CircuitBreakerEvent> eventConsumerRegistry;
 
         @Inject
         public CircuitBreakerRegistryProvider(Resilience4jConfig resilience4jConfig,
-                EventConsumerRegistry<CircuitBreakerEvent> eventConsumerRegistry) {
+            EventConsumerRegistry<CircuitBreakerEvent> eventConsumerRegistry) {
             this.resilience4jConfig = resilience4jConfig;
             this.eventConsumerRegistry = eventConsumerRegistry;
         }
@@ -211,25 +211,25 @@ public class Resilience4jModule extends ConfigurableModule<Resilience4jConfig> {
         public CircuitBreakerRegistry get() {
             // build configs
             CircuitBreakerConfigurationProperties circuitBreakerProperties = resilience4jConfig
-                    .getCircuitbreaker();
+                .getCircuitbreaker();
             Map<String, CircuitBreakerConfig> configs = circuitBreakerProperties.getConfigs()
-                    .entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey,
-                            entry -> circuitBreakerProperties
-                                    .createCircuitBreakerConfig(entry.getValue())));
+                .entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey,
+                    entry -> circuitBreakerProperties
+                        .createCircuitBreakerConfig(entry.getValue())));
             CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.of(configs);
 
             // build circuit breakers
             EndpointsConfig endpointsConfig = resilience4jConfig.getEndpoints();
             circuitBreakerProperties.getInstances().forEach((name, circuitBreakerConfig) -> {
                 io.github.resilience4j.circuitbreaker.CircuitBreaker circuitBreaker =
-                        circuitBreakerRegistry.circuitBreaker(name, circuitBreakerProperties
-                                .createCircuitBreakerConfig(circuitBreakerConfig));
+                    circuitBreakerRegistry.circuitBreaker(name, circuitBreakerProperties
+                        .createCircuitBreakerConfig(circuitBreakerConfig));
                 if (endpointsConfig.getCircuitbreaker().isEnabled()) {
                     circuitBreaker.getEventPublisher().onEvent(eventConsumerRegistry
-                            .createEventConsumer(name,
-                                    circuitBreakerConfig.getEventConsumerBufferSize() != null
-                                            ? circuitBreakerConfig.getEventConsumerBufferSize()
-                                            : 100));
+                        .createEventConsumer(name,
+                            circuitBreakerConfig.getEventConsumerBufferSize() != null
+                                ? circuitBreakerConfig.getEventConsumerBufferSize()
+                                : 100));
                 }
             });
 
@@ -244,7 +244,7 @@ public class Resilience4jModule extends ConfigurableModule<Resilience4jConfig> {
 
         @Inject
         public RateLimiterRegistryProvider(Resilience4jConfig resilience4jConfig,
-                EventConsumerRegistry<RateLimiterEvent> eventConsumerRegistry) {
+            EventConsumerRegistry<RateLimiterEvent> eventConsumerRegistry) {
             this.resilience4jConfig = resilience4jConfig;
             this.eventConsumerRegistry = eventConsumerRegistry;
         }
@@ -253,25 +253,25 @@ public class Resilience4jModule extends ConfigurableModule<Resilience4jConfig> {
         public RateLimiterRegistry get() {
             // build configs
             RateLimiterConfigurationProperties rateLimiterProperties = resilience4jConfig
-                    .getRatelimiter();
+                .getRatelimiter();
             Map<String, RateLimiterConfig> configs = rateLimiterProperties.getConfigs()
-                    .entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey,
-                            entry -> rateLimiterProperties
-                                    .createRateLimiterConfig(entry.getValue())));
+                .entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey,
+                    entry -> rateLimiterProperties
+                        .createRateLimiterConfig(entry.getValue())));
             RateLimiterRegistry rateLimiterRegistry = RateLimiterRegistry.of(configs);
 
             // build ratelimiters
             EndpointsConfig endpointsConfig = resilience4jConfig.getEndpoints();
             rateLimiterProperties.getInstances().forEach((name, rateLimiterConfig) -> {
                 io.github.resilience4j.ratelimiter.RateLimiter rateLimiter =
-                        rateLimiterRegistry.rateLimiter(name,
-                                rateLimiterProperties.createRateLimiterConfig(rateLimiterConfig));
+                    rateLimiterRegistry.rateLimiter(name,
+                        rateLimiterProperties.createRateLimiterConfig(rateLimiterConfig));
                 if (endpointsConfig.getRatelimiter().isEnabled()) {
                     rateLimiter.getEventPublisher().onEvent(eventConsumerRegistry
-                            .createEventConsumer(name,
-                                    rateLimiterConfig.getEventConsumerBufferSize() != null
-                                            ? rateLimiterConfig.getEventConsumerBufferSize()
-                                            : 100));
+                        .createEventConsumer(name,
+                            rateLimiterConfig.getEventConsumerBufferSize() != null
+                                ? rateLimiterConfig.getEventConsumerBufferSize()
+                                : 100));
                 }
             });
 
@@ -286,7 +286,7 @@ public class Resilience4jModule extends ConfigurableModule<Resilience4jConfig> {
 
         @Inject
         public RetryRegistryProvider(Resilience4jConfig resilience4jConfig,
-                EventConsumerRegistry<RetryEvent> eventConsumerRegistry) {
+            EventConsumerRegistry<RetryEvent> eventConsumerRegistry) {
             this.resilience4jConfig = resilience4jConfig;
             this.eventConsumerRegistry = eventConsumerRegistry;
         }
@@ -296,20 +296,20 @@ public class Resilience4jModule extends ConfigurableModule<Resilience4jConfig> {
             // build configs
             RetryConfigurationProperties RetryProperties = resilience4jConfig.getRetry();
             Map<String, RetryConfig> configs = RetryProperties.getConfigs()
-                    .entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey,
-                            entry -> RetryProperties.createRetryConfig(entry.getValue())));
+                .entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey,
+                    entry -> RetryProperties.createRetryConfig(entry.getValue())));
             RetryRegistry retryRegistry = RetryRegistry.of(configs);
 
             // build retries
             EndpointsConfig endpointsConfig = resilience4jConfig.getEndpoints();
             RetryProperties.getInstances().forEach((name, retryConfig) -> {
                 io.github.resilience4j.retry.Retry retry =
-                        retryRegistry.retry(name, RetryProperties.createRetryConfig(retryConfig));
+                    retryRegistry.retry(name, RetryProperties.createRetryConfig(retryConfig));
                 if (endpointsConfig.getRetry().isEnabled()) {
                     retry.getEventPublisher().onEvent(eventConsumerRegistry
-                            .createEventConsumer(name,
-                                    retryConfig.getEventConsumerBufferSize() != null ? retryConfig
-                                            .getEventConsumerBufferSize() : 100));
+                        .createEventConsumer(name,
+                            retryConfig.getEventConsumerBufferSize() != null ? retryConfig
+                                .getEventConsumerBufferSize() : 100));
                 }
             });
 
@@ -324,7 +324,7 @@ public class Resilience4jModule extends ConfigurableModule<Resilience4jConfig> {
 
         @Inject
         public BulkheadRegistryProvider(Resilience4jConfig resilience4jConfig,
-                EventConsumerRegistry<BulkheadEvent> eventConsumerRegistry) {
+            EventConsumerRegistry<BulkheadEvent> eventConsumerRegistry) {
             this.resilience4jConfig = resilience4jConfig;
             this.eventConsumerRegistry = eventConsumerRegistry;
         }
@@ -334,21 +334,21 @@ public class Resilience4jModule extends ConfigurableModule<Resilience4jConfig> {
             // build configs
             BulkheadConfigurationProperties bulkheadProperties = resilience4jConfig.getBulkhead();
             Map<String, BulkheadConfig> configs = bulkheadProperties.getConfigs()
-                    .entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey,
-                            entry -> bulkheadProperties.createBulkheadConfig(entry.getValue())));
+                .entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey,
+                    entry -> bulkheadProperties.createBulkheadConfig(entry.getValue())));
             BulkheadRegistry bulkheadRegistry = BulkheadRegistry.of(configs);
 
             // build bulkheads
             EndpointsConfig endpointsConfig = resilience4jConfig.getEndpoints();
             bulkheadProperties.getInstances().forEach((name, bulkheadConfig) -> {
                 io.github.resilience4j.bulkhead.Bulkhead bulkhead =
-                        bulkheadRegistry.bulkhead(name,
-                                bulkheadProperties.createBulkheadConfig(bulkheadConfig));
+                    bulkheadRegistry.bulkhead(name,
+                        bulkheadProperties.createBulkheadConfig(bulkheadConfig));
                 if (endpointsConfig.getBulkhead().isEnabled()) {
                     bulkhead.getEventPublisher().onEvent(eventConsumerRegistry
-                            .createEventConsumer(name,
-                                    bulkheadConfig.getEventConsumerBufferSize() != null
-                                            ? bulkheadConfig.getEventConsumerBufferSize() : 100));
+                        .createEventConsumer(name,
+                            bulkheadConfig.getEventConsumerBufferSize() != null
+                                ? bulkheadConfig.getEventConsumerBufferSize() : 100));
                 }
             });
 
@@ -357,14 +357,14 @@ public class Resilience4jModule extends ConfigurableModule<Resilience4jConfig> {
     }
 
     private static class ThreadPoolBulkheadRegistryProvider implements
-            Provider<ThreadPoolBulkheadRegistry> {
+        Provider<ThreadPoolBulkheadRegistry> {
 
         private Resilience4jConfig resilience4jConfig;
         private EventConsumerRegistry<BulkheadEvent> eventConsumerRegistry;
 
         @Inject
         public ThreadPoolBulkheadRegistryProvider(Resilience4jConfig resilience4jConfig,
-                EventConsumerRegistry<BulkheadEvent> eventConsumerRegistry) {
+            EventConsumerRegistry<BulkheadEvent> eventConsumerRegistry) {
             this.resilience4jConfig = resilience4jConfig;
             this.eventConsumerRegistry = eventConsumerRegistry;
         }
@@ -373,31 +373,31 @@ public class Resilience4jModule extends ConfigurableModule<Resilience4jConfig> {
         public ThreadPoolBulkheadRegistry get() {
             // build configs
             ThreadPoolBulkheadConfigurationProperties threadPoolBulkheadProperties = resilience4jConfig
-                    .getThreadpoolbulkhead();
+                .getThreadpoolbulkhead();
             Map<String, ThreadPoolBulkheadConfig> configs = threadPoolBulkheadProperties
-                    .getConfigs()
-                    .entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey,
-                            entry -> threadPoolBulkheadProperties
-                                    .createThreadPoolBulkheadConfig(entry.getValue())));
+                .getConfigs()
+                .entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey,
+                    entry -> threadPoolBulkheadProperties
+                        .createThreadPoolBulkheadConfig(entry.getValue())));
             ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry = ThreadPoolBulkheadRegistry
-                    .of(configs);
+                .of(configs);
 
             // build threadpool bulkheads
             EndpointsConfig endpointsConfig = resilience4jConfig.getEndpoints();
             threadPoolBulkheadProperties.getInstances()
-                    .forEach((name, threadPoolBulkheadConfig) -> {
-                        io.github.resilience4j.bulkhead.ThreadPoolBulkhead threadPoolBulkhead =
-                                threadPoolBulkheadRegistry.bulkhead(name,
-                                        threadPoolBulkheadProperties.createThreadPoolBulkheadConfig(
-                                                threadPoolBulkheadConfig));
-                        if (endpointsConfig.getThreadpoolbulkhead().isEnabled()) {
-                            threadPoolBulkhead.getEventPublisher().onEvent(eventConsumerRegistry
-                                    .createEventConsumer(name,
-                                            threadPoolBulkheadConfig.getEventConsumerBufferSize()
-                                                    != null ? threadPoolBulkheadConfig
-                                                    .getEventConsumerBufferSize() : 100));
-                        }
-                    });
+                .forEach((name, threadPoolBulkheadConfig) -> {
+                    io.github.resilience4j.bulkhead.ThreadPoolBulkhead threadPoolBulkhead =
+                        threadPoolBulkheadRegistry.bulkhead(name,
+                            threadPoolBulkheadProperties.createThreadPoolBulkheadConfig(
+                                threadPoolBulkheadConfig));
+                    if (endpointsConfig.getThreadpoolbulkhead().isEnabled()) {
+                        threadPoolBulkhead.getEventPublisher().onEvent(eventConsumerRegistry
+                            .createEventConsumer(name,
+                                threadPoolBulkheadConfig.getEventConsumerBufferSize()
+                                    != null ? threadPoolBulkheadConfig
+                                    .getEventConsumerBufferSize() : 100));
+                    }
+                });
 
             return threadPoolBulkheadRegistry;
         }
@@ -410,40 +410,40 @@ public class Resilience4jModule extends ConfigurableModule<Resilience4jConfig> {
             Registry registry = event.getRegistry();
             Resilience4jConfig resilience4jConfig = registry.get(Resilience4jConfig.class);
             CircuitBreakerRegistry circuitBreakerRegistry = registry
-                    .get(CircuitBreakerRegistry.class);
+                .get(CircuitBreakerRegistry.class);
             RateLimiterRegistry rateLimiterRegistry = registry.get(RateLimiterRegistry.class);
             RetryRegistry retryRegistry = registry.get(RetryRegistry.class);
             BulkheadRegistry bulkheadRegistry = registry.get(BulkheadRegistry.class);
             ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry = registry
-                    .get(ThreadPoolBulkheadRegistry.class);
+                .get(ThreadPoolBulkheadRegistry.class);
 
             // dropwizard metrics
             if (resilience4jConfig.isMetrics() && registry.maybeGet(MetricRegistry.class)
-                    .isPresent()) {
+                .isPresent()) {
                 MetricRegistry metricRegistry = registry.get(MetricRegistry.class);
                 CircuitBreakerMetrics
-                        .ofCircuitBreakerRegistry(circuitBreakerRegistry, metricRegistry);
+                    .ofCircuitBreakerRegistry(circuitBreakerRegistry, metricRegistry);
                 RateLimiterMetrics.ofRateLimiterRegistry(rateLimiterRegistry, metricRegistry);
                 RetryMetrics.ofRetryRegistry(retryRegistry, metricRegistry);
                 BulkheadMetrics.ofBulkheadRegistry(bulkheadRegistry, metricRegistry);
                 ThreadPoolBulkheadMetrics
-                        .ofBulkheadRegistry(threadPoolBulkheadRegistry, metricRegistry);
+                    .ofBulkheadRegistry(threadPoolBulkheadRegistry, metricRegistry);
             }
 
             // prometheus
             if (resilience4jConfig.isPrometheus() && registry.maybeGet(CollectorRegistry.class)
-                    .isPresent()) {
+                .isPresent()) {
                 CollectorRegistry collectorRegistry = registry.get(CollectorRegistry.class);
                 CircuitBreakerMetricsCollector circuitBreakerMetricsCollector = CircuitBreakerMetricsCollector
-                        .ofCircuitBreakerRegistry(circuitBreakerRegistry);
+                    .ofCircuitBreakerRegistry(circuitBreakerRegistry);
                 RetryMetricsCollector retryMetricsCollector = RetryMetricsCollector
-                        .ofRetryRegistry(retryRegistry);
+                    .ofRetryRegistry(retryRegistry);
                 RateLimiterMetricsCollector rateLimiterMetricsCollector = RateLimiterMetricsCollector
-                        .ofRateLimiterRegistry(rateLimiterRegistry);
+                    .ofRateLimiterRegistry(rateLimiterRegistry);
                 BulkheadMetricsCollector bulkheadMetricsCollector = BulkheadMetricsCollector
-                        .ofBulkheadRegistry(bulkheadRegistry);
+                    .ofBulkheadRegistry(bulkheadRegistry);
                 ThreadPoolBulkheadMetricsCollector threadPoolBulkheadMetricsCollector = ThreadPoolBulkheadMetricsCollector
-                        .ofBulkheadRegistry(threadPoolBulkheadRegistry);
+                    .ofBulkheadRegistry(threadPoolBulkheadRegistry);
                 circuitBreakerMetricsCollector.register(collectorRegistry);
                 retryMetricsCollector.register(collectorRegistry);
                 rateLimiterMetricsCollector.register(collectorRegistry);

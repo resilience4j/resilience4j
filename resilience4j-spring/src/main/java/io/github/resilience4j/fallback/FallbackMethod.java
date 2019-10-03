@@ -54,12 +54,12 @@ public class FallbackMethod {
      *
      * @param recoveryMethods configured and found recovery methods for this invocation
      * @param originalMethodReturnType the return type of the original source method
-     * @param args arguments those were passed to the original method. They will be passed
-     *         to the fallbackMethod method.
+     * @param args arguments those were passed to the original method. They will be passed to
+     *     the fallbackMethod method.
      * @param target target object the fallbackMethod method will be invoked
      */
     private FallbackMethod(Map<Class<?>, Method> recoveryMethods, Class<?> originalMethodReturnType,
-            Object[] args, Object target) {
+        Object[] args, Object target) {
 
         this.recoveryMethods = recoveryMethods;
         this.args = args;
@@ -75,19 +75,19 @@ public class FallbackMethod {
      * @return FallbackMethod instance
      */
     public static FallbackMethod create(String fallbackMethodName, Method originalMethod,
-            Object[] args, Object target) throws NoSuchMethodException {
+        Object[] args, Object target) throws NoSuchMethodException {
 
         Class<?>[] params = originalMethod.getParameterTypes();
         Class<?> originalReturnType = originalMethod.getReturnType();
 
         Map<Class<?>, Method> methods = extractMethods(fallbackMethodName, params,
-                originalReturnType, target.getClass());
+            originalReturnType, target.getClass());
 
         if (methods.isEmpty()) {
             throw new NoSuchMethodException(
-                    String.format("%s %s.%s(%s,%s)", originalReturnType, target.getClass(),
-                            fallbackMethodName, StringUtils.arrayToDelimitedString(params, ","),
-                            Throwable.class));
+                String.format("%s %s.%s(%s,%s)", originalReturnType, target.getClass(),
+                    fallbackMethodName, StringUtils.arrayToDelimitedString(params, ","),
+                    Throwable.class));
         }
         return new FallbackMethod(methods, originalReturnType, args, target);
 
@@ -99,12 +99,12 @@ public class FallbackMethod {
      * @param originalReturnType original method return type
      * @param targetClass the owner class
      * @return Map<Class < ?>, Method>  map of all configure fallback methods for the original
-     *         method that match the fallback method name
+     *     method that match the fallback method name
      */
     private static Map<Class<?>, Method> extractMethods(String fallbackMethodName,
-            Class<?>[] params, Class<?> originalReturnType, Class<?> targetClass) {
+        Class<?>[] params, Class<?> originalReturnType, Class<?> targetClass) {
         MethodMeta methodMeta = new MethodMeta(fallbackMethodName, params, originalReturnType,
-                targetClass);
+            targetClass);
         Map<Class<?>, Method> cachedMethods = RECOVERY_METHODS_CACHE.get(methodMeta);
 
         if (cachedMethods != null) {
@@ -117,20 +117,20 @@ public class FallbackMethod {
             Class<?>[] recoveryParams = method.getParameterTypes();
             if (methods.get(recoveryParams[recoveryParams.length - 1]) != null) {
                 throw new IllegalStateException(
-                        "You have more that one fallback method that cover the same exception type "
-                                + recoveryParams[recoveryParams.length - 1].getName());
+                    "You have more that one fallback method that cover the same exception type "
+                        + recoveryParams[recoveryParams.length - 1].getName());
             }
             methods.put(recoveryParams[recoveryParams.length - 1], method);
         }, method -> {
             if (method.getParameterCount() == 1) {
                 if (!method.getName().equals(fallbackMethodName) || !originalReturnType
-                        .isAssignableFrom(method.getReturnType())) {
+                    .isAssignableFrom(method.getReturnType())) {
                     return false;
                 }
                 return Throwable.class.isAssignableFrom(method.getParameterTypes()[0]);
             } else {
                 if (!method.getName().equals(fallbackMethodName)
-                        || method.getParameterCount() != params.length + 1) {
+                    || method.getParameterCount() != params.length + 1) {
                     return false;
                 }
                 if (!originalReturnType.isAssignableFrom(method.getReturnType())) {
@@ -173,8 +173,8 @@ public class FallbackMethod {
         Method recovery = null;
 
         for (Class<?> thrownClass = thrown.getClass();
-                recovery == null && thrownClass != Object.class;
-                thrownClass = thrownClass.getSuperclass()) {
+            recovery == null && thrownClass != Object.class;
+            thrownClass = thrownClass.getSuperclass()) {
             recovery = recoveryMethods.get(thrownClass);
         }
 
@@ -202,7 +202,7 @@ public class FallbackMethod {
      * @return the result object if any
      */
     private Object invoke(Method fallback, Throwable throwable)
-            throws IllegalAccessException, InvocationTargetException {
+        throws IllegalAccessException, InvocationTargetException {
         boolean accessible = fallback.isAccessible();
         try {
             if (!accessible) {
@@ -210,7 +210,7 @@ public class FallbackMethod {
             }
             if (args.length != 0) {
                 if (args.length == 1 && Throwable.class
-                        .isAssignableFrom(fallback.getParameterTypes()[0])) {
+                    .isAssignableFrom(fallback.getParameterTypes()[0])) {
                     return fallback.invoke(target, throwable);
                 }
                 Object[] newArgs = Arrays.copyOf(args, args.length + 1);
@@ -239,7 +239,7 @@ public class FallbackMethod {
         final Class<?> targetClass;
 
         MethodMeta(String recoveryMethodName, Class<?>[] params, Class<?> returnType,
-                Class<?> targetClass) {
+            Class<?> targetClass) {
             this.recoveryMethodName = recoveryMethodName;
             this.params = params;
             this.returnType = returnType;
@@ -256,9 +256,9 @@ public class FallbackMethod {
             }
             MethodMeta that = (MethodMeta) o;
             return targetClass.equals(that.targetClass) &&
-                    recoveryMethodName.equals(that.recoveryMethodName) &&
-                    returnType.equals(that.returnType) &&
-                    Arrays.equals(params, that.params);
+                recoveryMethodName.equals(that.recoveryMethodName) &&
+                returnType.equals(that.returnType) &&
+                Arrays.equals(params, that.params);
         }
 
         @Override

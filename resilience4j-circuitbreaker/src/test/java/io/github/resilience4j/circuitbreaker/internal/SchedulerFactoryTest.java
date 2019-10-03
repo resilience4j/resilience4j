@@ -17,9 +17,9 @@ public class SchedulerFactoryTest {
     @Test
     public void shouldBeSameScheduledExecutorServiceInstance() {
         ScheduledExecutorService scheduledExecutorService = SchedulerFactory.getInstance()
-                .getScheduler();
+            .getScheduler();
         ScheduledExecutorService scheduledExecutorService2 = SchedulerFactory.getInstance()
-                .getScheduler();
+            .getScheduler();
         assertThat(scheduledExecutorService).isEqualTo(scheduledExecutorService2);
     }
 }

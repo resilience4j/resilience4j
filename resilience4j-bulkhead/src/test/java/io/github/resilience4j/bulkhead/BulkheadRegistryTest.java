@@ -42,7 +42,7 @@ public class BulkheadRegistryTest {
     private BulkheadRegistry registry;
 
     private static Optional<EventProcessor<?>> getEventProcessor(
-            Registry.EventPublisher<Bulkhead> eventPublisher) {
+        Registry.EventPublisher<Bulkhead> eventPublisher) {
         if (eventPublisher instanceof EventProcessor<?>) {
             return Optional.of((EventProcessor<?>) eventPublisher);
         }
@@ -56,9 +56,9 @@ public class BulkheadRegistryTest {
         registry = BulkheadRegistry.ofDefaults();
         // registry with custom config
         config = BulkheadConfig.custom()
-                .maxConcurrentCalls(100)
-                .maxWaitDuration(Duration.ofMillis(50))
-                .build();
+            .maxConcurrentCalls(100)
+            .maxWaitDuration(Duration.ofMillis(50))
+            .build();
     }
 
     @Test
@@ -128,10 +128,10 @@ public class BulkheadRegistryTest {
     @Test
     public void testCreateWithSingleRegistryEventConsumer() {
         BulkheadRegistry bulkheadRegistry = BulkheadRegistry
-                .of(BulkheadConfig.ofDefaults(), new NoOpBulkheadEventConsumer());
+            .of(BulkheadConfig.ofDefaults(), new NoOpBulkheadEventConsumer());
 
         getEventProcessor(bulkheadRegistry.getEventPublisher())
-                .ifPresent(eventProcessor -> assertThat(eventProcessor.hasConsumers()).isTrue());
+            .ifPresent(eventProcessor -> assertThat(eventProcessor.hasConsumers()).isTrue());
     }
 
     @Test
@@ -141,10 +141,10 @@ public class BulkheadRegistryTest {
         registryEventConsumers.add(new NoOpBulkheadEventConsumer());
 
         BulkheadRegistry bulkheadRegistry = BulkheadRegistry
-                .of(BulkheadConfig.ofDefaults(), registryEventConsumers);
+            .of(BulkheadConfig.ofDefaults(), registryEventConsumers);
 
         getEventProcessor(bulkheadRegistry.getEventPublisher())
-                .ifPresent(eventProcessor -> assertThat(eventProcessor.hasConsumers()).isTrue());
+            .ifPresent(eventProcessor -> assertThat(eventProcessor.hasConsumers()).isTrue());
     }
 
     @Test
@@ -153,10 +153,10 @@ public class BulkheadRegistryTest {
         configs.put("custom", BulkheadConfig.ofDefaults());
 
         BulkheadRegistry bulkheadRegistry = BulkheadRegistry
-                .of(configs, new NoOpBulkheadEventConsumer());
+            .of(configs, new NoOpBulkheadEventConsumer());
 
         getEventProcessor(bulkheadRegistry.getEventPublisher())
-                .ifPresent(eventProcessor -> assertThat(eventProcessor.hasConsumers()).isTrue());
+            .ifPresent(eventProcessor -> assertThat(eventProcessor.hasConsumers()).isTrue());
     }
 
     @Test
@@ -171,7 +171,7 @@ public class BulkheadRegistryTest {
         BulkheadRegistry bulkheadRegistry = BulkheadRegistry.of(configs, registryEventConsumers);
 
         getEventProcessor(bulkheadRegistry.getEventPublisher())
-                .ifPresent(eventProcessor -> assertThat(eventProcessor.hasConsumers()).isTrue());
+            .ifPresent(eventProcessor -> assertThat(eventProcessor.hasConsumers()).isTrue());
     }
 
     @Test

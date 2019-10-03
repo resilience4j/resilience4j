@@ -51,16 +51,16 @@ public class RetryOperatorTest {
         RetryOperator<String> retryOperator = RetryOperator.of(retry);
 
         given(helloWorldService.returnHelloWorld())
-                .willReturn("Hello world")
-                .willThrow(new HelloWorldException())
-                .willThrow(new HelloWorldException())
-                .willReturn("Hello world");
+            .willReturn("Hello world")
+            .willThrow(new HelloWorldException())
+            .willThrow(new HelloWorldException())
+            .willReturn("Hello world");
 
         //When
         Mono.fromCallable(helloWorldService::returnHelloWorld).compose(retryOperator)
-                .block(Duration.ofMillis(100));
+            .block(Duration.ofMillis(100));
         Mono.fromCallable(helloWorldService::returnHelloWorld).compose(retryOperator)
-                .block(Duration.ofMillis(100));
+            .block(Duration.ofMillis(100));
         //Then
         BDDMockito.then(helloWorldService).should(Mockito.times(4)).returnHelloWorld();
         Retry.Metrics metrics = retry.getMetrics();
@@ -80,13 +80,13 @@ public class RetryOperatorTest {
         RetryOperator<String> retryOperator = RetryOperator.of(retry);
 
         given(helloWorldService.returnHelloWorld())
-                .willThrow(new StackOverflowError("BAM!"));
+            .willThrow(new StackOverflowError("BAM!"));
         //When
         StepVerifier.create(Mono.fromCallable(helloWorldService::returnHelloWorld)
-                .compose(retryOperator))
-                .expectSubscription()
-                .expectError(StackOverflowError.class)
-                .verify(Duration.ofMillis(50));
+            .compose(retryOperator))
+            .expectSubscription()
+            .expectError(StackOverflowError.class)
+            .verify(Duration.ofMillis(50));
 
         //Then
         BDDMockito.then(helloWorldService).should(Mockito.times(1)).returnHelloWorld();
@@ -104,14 +104,14 @@ public class RetryOperatorTest {
         RetryOperator<String> retryOperator = RetryOperator.of(retry);
 
         given(helloWorldService.returnHelloWorld())
-                .willThrow(new Error("BAM!"));
+            .willThrow(new Error("BAM!"));
 
         //When
         StepVerifier.create(Mono.fromCallable(helloWorldService::returnHelloWorld)
-                .compose(retryOperator))
-                .expectSubscription()
-                .expectError(Error.class)
-                .verify(Duration.ofMillis(50));
+            .compose(retryOperator))
+            .expectSubscription()
+            .expectError(Error.class)
+            .verify(Duration.ofMillis(50));
         //Then
         BDDMockito.then(helloWorldService).should(Mockito.times(1)).returnHelloWorld();
         Retry.Metrics metrics = retry.getMetrics();
@@ -129,20 +129,20 @@ public class RetryOperatorTest {
         RetryOperator<String> retryOperator = RetryOperator.of(retry);
 
         given(helloWorldService.returnHelloWorld())
-                .willThrow(new HelloWorldException());
+            .willThrow(new HelloWorldException());
 
         //When
         StepVerifier.create(Mono.fromCallable(helloWorldService::returnHelloWorld)
-                .compose(retryOperator))
-                .expectSubscription()
-                .expectError(RetryExceptionWrapper.class)
-                .verify(Duration.ofMillis(50));
+            .compose(retryOperator))
+            .expectSubscription()
+            .expectError(RetryExceptionWrapper.class)
+            .verify(Duration.ofMillis(50));
 
         StepVerifier.create(Mono.fromCallable(helloWorldService::returnHelloWorld)
-                .compose(retryOperator))
-                .expectSubscription()
-                .expectError(RetryExceptionWrapper.class)
-                .verify(Duration.ofMillis(50));
+            .compose(retryOperator))
+            .expectSubscription()
+            .expectError(RetryExceptionWrapper.class)
+            .verify(Duration.ofMillis(50));
 
         //Then
         BDDMockito.then(helloWorldService).should(Mockito.times(6)).returnHelloWorld();
@@ -156,19 +156,19 @@ public class RetryOperatorTest {
     public void doNotRetryFromPredicateUsingMono() {
         //Given
         RetryConfig config = RetryConfig.custom()
-                .retryOnException(t -> t instanceof IOException)
-                .waitDuration(Duration.ofMillis(50))
-                .maxAttempts(3).build();
+            .retryOnException(t -> t instanceof IOException)
+            .waitDuration(Duration.ofMillis(50))
+            .maxAttempts(3).build();
         Retry retry = Retry.of("testName", config);
         given(helloWorldService.returnHelloWorld())
-                .willThrow(new HelloWorldException());
+            .willThrow(new HelloWorldException());
 
         //When
         StepVerifier.create(Mono.fromCallable(helloWorldService::returnHelloWorld)
-                .compose(RetryOperator.of(retry)))
-                .expectSubscription()
-                .expectError(RetryExceptionWrapper.class)
-                .verify(Duration.ofMillis(50));
+            .compose(RetryOperator.of(retry)))
+            .expectSubscription()
+            .expectError(RetryExceptionWrapper.class)
+            .verify(Duration.ofMillis(50));
         //Then
         BDDMockito.then(helloWorldService).should(Mockito.times(1)).returnHelloWorld();
         Retry.Metrics metrics = retry.getMetrics();
@@ -181,20 +181,20 @@ public class RetryOperatorTest {
     public void retryOnResultUsingMono() {
         //Given
         RetryConfig config = RetryConfig.<String>custom()
-                .retryOnResult("retry"::equals)
-                .waitDuration(Duration.ofMillis(50))
-                .maxAttempts(3).build();
+            .retryOnResult("retry"::equals)
+            .waitDuration(Duration.ofMillis(50))
+            .maxAttempts(3).build();
         Retry retry = Retry.of("testName", config);
         given(helloWorldService.returnHelloWorld())
-                .willReturn("retry")
-                .willReturn("success");
+            .willReturn("retry")
+            .willReturn("success");
 
         //When
         StepVerifier.create(Mono.fromCallable(helloWorldService::returnHelloWorld)
-                .compose(RetryOperator.of(retry)))
-                .expectSubscription()
-                .expectNext("success")
-                .expectComplete().verify(Duration.ofMillis(50));
+            .compose(RetryOperator.of(retry)))
+            .expectSubscription()
+            .expectNext("success")
+            .expectComplete().verify(Duration.ofMillis(50));
         //Then
         BDDMockito.then(helloWorldService).should(Mockito.times(2)).returnHelloWorld();
         Retry.Metrics metrics = retry.getMetrics();
@@ -207,19 +207,19 @@ public class RetryOperatorTest {
     public void retryOnResultFailAfterMaxAttemptsUsingMono() {
         //Given
         RetryConfig config = RetryConfig.<String>custom()
-                .retryOnResult("retry"::equals)
-                .waitDuration(Duration.ofMillis(50))
-                .maxAttempts(3).build();
+            .retryOnResult("retry"::equals)
+            .waitDuration(Duration.ofMillis(50))
+            .maxAttempts(3).build();
         Retry retry = Retry.of("testName", config);
         given(helloWorldService.returnHelloWorld())
-                .willReturn("retry");
+            .willReturn("retry");
 
         //When
         StepVerifier.create(Mono.fromCallable(helloWorldService::returnHelloWorld)
-                .compose(RetryOperator.of(retry)))
-                .expectSubscription()
-                .expectNextCount(1)
-                .expectComplete().verify(Duration.ofMillis(50));
+            .compose(RetryOperator.of(retry)))
+            .expectSubscription()
+            .expectNextCount(1)
+            .expectComplete().verify(Duration.ofMillis(50));
         //Then
         BDDMockito.then(helloWorldService).should(Mockito.times(3)).returnHelloWorld();
     }
@@ -235,9 +235,9 @@ public class RetryOperatorTest {
 
         //When
         StepVerifier.create(Flux.error(new HelloWorldException()).compose(retryOperator))
-                .expectSubscription()
-                .expectError(RetryExceptionWrapper.class)
-                .verify(Duration.ofMillis(50));
+            .expectSubscription()
+            .expectError(RetryExceptionWrapper.class)
+            .verify(Duration.ofMillis(50));
         //Then
 
         Retry.Metrics metrics = retry.getMetrics();
@@ -252,18 +252,18 @@ public class RetryOperatorTest {
     public void retryOnResultUsingFlux() {
         //Given
         RetryConfig config = RetryConfig.<String>custom()
-                .retryOnResult("retry"::equals)
-                .waitDuration(Duration.ofMillis(50))
-                .maxAttempts(3).build();
+            .retryOnResult("retry"::equals)
+            .waitDuration(Duration.ofMillis(50))
+            .maxAttempts(3).build();
         Retry retry = Retry.of("testName", config);
 
         //When
         StepVerifier.create(Flux.just("retry", "success")
-                .compose(RetryOperator.of(retry)))
-                .expectSubscription()
-                .expectNext("retry")
-                .expectNext("success")
-                .expectComplete().verify(Duration.ofMillis(50));
+            .compose(RetryOperator.of(retry)))
+            .expectSubscription()
+            .expectNext("retry")
+            .expectNext("success")
+            .expectComplete().verify(Duration.ofMillis(50));
         //Then
 
         Retry.Metrics metrics = retry.getMetrics();
@@ -276,17 +276,17 @@ public class RetryOperatorTest {
     public void retryOnResultFailAfterMaxAttemptsUsingFlux() {
         //Given
         RetryConfig config = RetryConfig.<String>custom()
-                .retryOnResult("retry"::equals)
-                .waitDuration(Duration.ofMillis(50))
-                .maxAttempts(3).build();
+            .retryOnResult("retry"::equals)
+            .waitDuration(Duration.ofMillis(50))
+            .maxAttempts(3).build();
         Retry retry = Retry.of("testName", config);
 
         //When
         StepVerifier.create(Flux.just("retry")
-                .compose(RetryOperator.of(retry)))
-                .expectSubscription()
-                .expectNextCount(1)
-                .expectComplete().verify(Duration.ofMillis(50));
+            .compose(RetryOperator.of(retry)))
+            .expectSubscription()
+            .expectNextCount(1)
+            .expectComplete().verify(Duration.ofMillis(50));
 
         Retry.Metrics metrics = retry.getMetrics();
 

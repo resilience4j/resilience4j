@@ -40,52 +40,52 @@ public class BulkheadEventsEndpoint {
     @ReadOperation
     public BulkheadEventsEndpointResponse getAllBulkheadEvents() {
         java.util.List<BulkheadEventDTO> response = eventConsumerRegistry.getAllEventConsumer()
-                .flatMap(CircularEventConsumer::getBufferedEvents)
-                .sorted(Comparator.comparing(BulkheadEvent::getCreationTime))
-                .map(BulkheadEventDTOFactory::createBulkheadEventDTO)
-                .toJavaList();
+            .flatMap(CircularEventConsumer::getBufferedEvents)
+            .sorted(Comparator.comparing(BulkheadEvent::getCreationTime))
+            .map(BulkheadEventDTOFactory::createBulkheadEventDTO)
+            .toJavaList();
 
         return new BulkheadEventsEndpointResponse(response);
     }
 
     @ReadOperation
     public BulkheadEventsEndpointResponse getEventsFilteredByBulkheadName(
-            @Selector String bulkheadName) {
+        @Selector String bulkheadName) {
         java.util.List<BulkheadEventDTO> response = getBulkheadEvent(bulkheadName)
-                .map(BulkheadEventDTOFactory::createBulkheadEventDTO)
-                .toJavaList();
+            .map(BulkheadEventDTOFactory::createBulkheadEventDTO)
+            .toJavaList();
 
         return new BulkheadEventsEndpointResponse(response);
     }
 
     @ReadOperation
     public BulkheadEventsEndpointResponse getEventsFilteredByBulkheadNameAndEventType(
-            @Selector String bulkheadName, @Selector String eventType) {
+        @Selector String bulkheadName, @Selector String eventType) {
         java.util.List<BulkheadEventDTO> response = getBulkheadEvent(bulkheadName)
-                .filter(event -> event.getEventType() == BulkheadEvent.Type
-                        .valueOf(eventType.toUpperCase()))
-                .map(BulkheadEventDTOFactory::createBulkheadEventDTO)
-                .toJavaList();
+            .filter(event -> event.getEventType() == BulkheadEvent.Type
+                .valueOf(eventType.toUpperCase()))
+            .map(BulkheadEventDTOFactory::createBulkheadEventDTO)
+            .toJavaList();
 
         return new BulkheadEventsEndpointResponse(response);
     }
 
     private List<BulkheadEvent> getBulkheadEvent(String bulkheadName) {
         CircularEventConsumer<BulkheadEvent> eventConsumer = eventConsumerRegistry
-                .getEventConsumer(bulkheadName);
+            .getEventConsumer(bulkheadName);
         if (eventConsumer == null) {
             CircularEventConsumer<BulkheadEvent> threadPoolEventConsumer = eventConsumerRegistry
-                    .getEventConsumer(String.join("-", ThreadPoolBulkhead.class.getSimpleName(),
-                            bulkheadName));
+                .getEventConsumer(String.join("-", ThreadPoolBulkhead.class.getSimpleName(),
+                    bulkheadName));
             if (threadPoolEventConsumer != null) {
                 return threadPoolEventConsumer.getBufferedEvents()
-                        .filter(event -> event.getBulkheadName().equals(bulkheadName));
+                    .filter(event -> event.getBulkheadName().equals(bulkheadName));
             } else {
                 return List.empty();
             }
         } else {
             return eventConsumer.getBufferedEvents()
-                    .filter(event -> event.getBulkheadName().equals(bulkheadName));
+                .filter(event -> event.getBulkheadName().equals(bulkheadName));
         }
     }
 }

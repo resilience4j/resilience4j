@@ -52,7 +52,7 @@ public class RateLimiterAutoConfiguration {
 
         @Bean
         public RateLimiterEventsEndpoint rateLimiterEventsEndpoint(
-                EventConsumerRegistry<RateLimiterEvent> eventsConsumerRegistry) {
+            EventConsumerRegistry<RateLimiterEvent> eventsConsumerRegistry) {
             return new RateLimiterEventsEndpoint(eventsConsumerRegistry);
         }
 

@@ -24,10 +24,10 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class CircuitBreakerConfigurationOnMissingBean extends
-        AbstractCircuitBreakerConfigurationOnMissingBean {
+    AbstractCircuitBreakerConfigurationOnMissingBean {
 
     public CircuitBreakerConfigurationOnMissingBean(
-            CircuitBreakerConfigurationProperties circuitBreakerProperties) {
+        CircuitBreakerConfigurationProperties circuitBreakerProperties) {
         super(circuitBreakerProperties);
     }
 

@@ -41,10 +41,10 @@ import org.junit.Test;
 public class Resilience4jRateLimiterTest {
 
     private static final RateLimiterConfig config = RateLimiterConfig.custom()
-            .timeoutDuration(ofMillis(50))
-            .limitRefreshPeriod(ofSeconds(1))
-            .limitForPeriod(1)
-            .build();
+        .timeoutDuration(ofMillis(50))
+        .limitRefreshPeriod(ofSeconds(1))
+        .limitForPeriod(1)
+        .build();
     @Rule
     public WireMockRule wireMockRule = new WireMockRule();
     private TestService testService;
@@ -53,9 +53,9 @@ public class Resilience4jRateLimiterTest {
     public void setUp() {
         final RateLimiter rateLimiter = RateLimiter.of("backendName", config);
         final FeignDecorators decorators = FeignDecorators.builder().withRateLimiter(rateLimiter)
-                .build();
+            .build();
         testService = Resilience4jFeign.builder(decorators)
-                .target(TestService.class, "http://localhost:8080/");
+            .target(TestService.class, "http://localhost:8080/");
     }
 
     @Test
@@ -98,9 +98,9 @@ public class Resilience4jRateLimiterTest {
 
     private void setupStub(int responseCode) {
         stubFor(get(urlPathEqualTo("/greeting"))
-                .willReturn(aResponse()
-                        .withStatus(responseCode)
-                        .withHeader("Content-Type", "text/plain")
-                        .withBody("hello world")));
+            .willReturn(aResponse()
+                .withStatus(responseCode)
+                .withHeader("Content-Type", "text/plain")
+                .withBody("hello world")));
     }
 }

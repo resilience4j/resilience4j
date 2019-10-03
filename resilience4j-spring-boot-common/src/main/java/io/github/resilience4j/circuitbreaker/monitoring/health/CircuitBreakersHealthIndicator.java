@@ -50,8 +50,8 @@ public class CircuitBreakersHealthIndicator implements HealthIndicator {
     private final HealthAggregator healthAggregator;
 
     public CircuitBreakersHealthIndicator(CircuitBreakerRegistry circuitBreakerRegistry,
-            CircuitBreakerConfigurationProperties circuitBreakerProperties,
-            HealthAggregator healthAggregator) {
+        CircuitBreakerConfigurationProperties circuitBreakerProperties,
+        HealthAggregator healthAggregator) {
         this.circuitBreakerRegistry = circuitBreakerRegistry;
         this.circuitBreakerProperties = circuitBreakerProperties;
         this.healthAggregator = healthAggregator;
@@ -71,35 +71,35 @@ public class CircuitBreakersHealthIndicator implements HealthIndicator {
     }
 
     private static Health.Builder addDetails(Health.Builder builder,
-            CircuitBreaker circuitBreaker) {
+        CircuitBreaker circuitBreaker) {
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
         CircuitBreakerConfig config = circuitBreaker.getCircuitBreakerConfig();
         builder.withDetail(FAILURE_RATE, metrics.getFailureRate() + "%")
-                .withDetail(FAILURE_RATE_THRESHOLD, config.getFailureRateThreshold() + "%")
-                .withDetail(SLOW_CALL_RATE, metrics.getSlowCallRate() + "%")
-                .withDetail(SLOW_CALL_RATE_THRESHOLD, config.getSlowCallRateThreshold() + "%")
-                .withDetail(BUFFERED_CALLS, metrics.getNumberOfBufferedCalls())
-                .withDetail(SLOW_CALLS, metrics.getNumberOfSlowCalls())
-                .withDetail(SLOW_FAILED_CALLS, metrics.getNumberOfSlowFailedCalls())
-                .withDetail(FAILED_CALLS, metrics.getNumberOfFailedCalls())
-                .withDetail(NOT_PERMITTED, metrics.getNumberOfNotPermittedCalls())
-                .withDetail(STATE, circuitBreaker.getState());
+            .withDetail(FAILURE_RATE_THRESHOLD, config.getFailureRateThreshold() + "%")
+            .withDetail(SLOW_CALL_RATE, metrics.getSlowCallRate() + "%")
+            .withDetail(SLOW_CALL_RATE_THRESHOLD, config.getSlowCallRateThreshold() + "%")
+            .withDetail(BUFFERED_CALLS, metrics.getNumberOfBufferedCalls())
+            .withDetail(SLOW_CALLS, metrics.getNumberOfSlowCalls())
+            .withDetail(SLOW_FAILED_CALLS, metrics.getNumberOfSlowFailedCalls())
+            .withDetail(FAILED_CALLS, metrics.getNumberOfFailedCalls())
+            .withDetail(NOT_PERMITTED, metrics.getNumberOfNotPermittedCalls())
+            .withDetail(STATE, circuitBreaker.getState());
         return builder;
     }
 
     @Override
     public Health health() {
         Map<String, Health> healths = circuitBreakerRegistry.getAllCircuitBreakers().toJavaStream()
-                .filter(this::isRegisterHealthIndicator)
-                .collect(Collectors.toMap(CircuitBreaker::getName,
-                        CircuitBreakersHealthIndicator::mapBackendMonitorState));
+            .filter(this::isRegisterHealthIndicator)
+            .collect(Collectors.toMap(CircuitBreaker::getName,
+                CircuitBreakersHealthIndicator::mapBackendMonitorState));
 
         return healthAggregator.aggregate(healths);
     }
 
     private boolean isRegisterHealthIndicator(CircuitBreaker circuitBreaker) {
         return circuitBreakerProperties.findCircuitBreakerProperties(circuitBreaker.getName())
-                .map(InstanceProperties::getRegisterHealthIndicator)
-                .orElse(false);
+            .map(InstanceProperties::getRegisterHealthIndicator)
+            .orElse(false);
     }
 }

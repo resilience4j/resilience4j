@@ -42,7 +42,7 @@ public interface Timer {
      * @return a timed supplier
      */
     static <T> CheckedFunction0<T> decorateCheckedSupplier(Timer timer,
-            CheckedFunction0<T> supplier) {
+        CheckedFunction0<T> supplier) {
         return () -> {
             final Timer.Context context = timer.context();
             try {
@@ -167,7 +167,7 @@ public interface Timer {
      * @return a timed function
      */
     static <T, R> CheckedFunction1<T, R> decorateCheckedFunction(Timer timer,
-            CheckedFunction1<T, R> function) {
+        CheckedFunction1<T, R> function) {
         return (T t) -> {
             final Timer.Context context = timer.context();
             try {
@@ -187,7 +187,7 @@ public interface Timer {
      * @return a decorated completion stage
      */
     static <T> Supplier<CompletionStage<T>> decorateCompletionStageSupplier(Timer timer,
-            Supplier<CompletionStage<T>> stageSupplier) {
+        Supplier<CompletionStage<T>> stageSupplier) {
         return () -> {
             final Timer.Context context = timer.context();
             try {
@@ -276,7 +276,7 @@ public interface Timer {
      * @return the result of the decorated Supplier.
      */
     default <T> CompletionStage<T> executeCompletionStageSupplier(
-            Supplier<CompletionStage<T>> supplier) {
+        Supplier<CompletionStage<T>> supplier) {
         return decorateCompletionStageSupplier(this, supplier).get();
     }
 
@@ -327,7 +327,7 @@ public interface Timer {
          * {@code top} Unix command.
          *
          * @return the fifteen-minute exponentially-weighted moving average rate at which events
-         *         have occurred since the meter was created
+         *     have occurred since the meter was created
          */
         double getFifteenMinuteRate();
 
@@ -339,7 +339,7 @@ public interface Timer {
          * {@code top} Unix command.
          *
          * @return the five-minute exponentially-weighted moving average rate at which events have
-         *         occurred since the meter was created
+         *     occurred since the meter was created
          */
         double getFiveMinuteRate();
 
@@ -358,7 +358,7 @@ public interface Timer {
          * {@code top} Unix command.
          *
          * @return the one-minute exponentially-weighted moving average rate at which events have
-         *         occurred since the meter was created
+         *     occurred since the meter was created
          */
         double getOneMinuteRate();
 

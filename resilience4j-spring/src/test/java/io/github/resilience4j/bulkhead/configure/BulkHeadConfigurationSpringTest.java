@@ -36,7 +36,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(classes = {
-        BulkHeadConfigurationSpringTest.ConfigWithOverrides.class
+    BulkHeadConfigurationSpringTest.ConfigWithOverrides.class
 })
 public class BulkHeadConfigurationSpringTest {
 
@@ -81,12 +81,12 @@ public class BulkHeadConfigurationSpringTest {
 
         @Bean
         public BulkheadAspect bulkheadAspect(BulkheadRegistry bulkheadRegistry,
-                ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry,
-                @Autowired(required = false) List<BulkheadAspectExt> bulkheadAspectExts,
-                FallbackDecorators fallbackDecorators) {
+            ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry,
+            @Autowired(required = false) List<BulkheadAspectExt> bulkheadAspectExts,
+            FallbackDecorators fallbackDecorators) {
             bulkheadAspect = new BulkheadAspect(bulkheadConfigurationProperties(),
-                    threadPoolBulkheadRegistry, bulkheadRegistry, bulkheadAspectExts,
-                    fallbackDecorators);
+                threadPoolBulkheadRegistry, bulkheadRegistry, bulkheadAspectExts,
+                fallbackDecorators);
             return bulkheadAspect;
         }
 

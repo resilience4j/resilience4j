@@ -46,9 +46,9 @@ public class RetryEventsEndpoint {
     @ReadOperation
     public RetryEventsEndpointResponse getAllRetryEvenets() {
         return new RetryEventsEndpointResponse(eventConsumerRegistry.getAllEventConsumer()
-                .flatMap(CircularEventConsumer::getBufferedEvents)
-                .sorted(Comparator.comparing(RetryEvent::getCreationTime))
-                .map(RetryEventDTOFactory::createRetryEventDTO).toJavaList());
+            .flatMap(CircularEventConsumer::getBufferedEvents)
+            .sorted(Comparator.comparing(RetryEvent::getCreationTime))
+            .map(RetryEventDTOFactory::createRetryEventDTO).toJavaList());
     }
 
     /**
@@ -58,7 +58,7 @@ public class RetryEventsEndpoint {
     @ReadOperation
     public RetryEventsEndpointResponse getEventsFilteredByRetryrName(@Selector String name) {
         return new RetryEventsEndpointResponse(getRetryEvents(name)
-                .map(RetryEventDTOFactory::createRetryEventDTO).toJavaList());
+            .map(RetryEventDTOFactory::createRetryEventDTO).toJavaList());
     }
 
     /**
@@ -68,19 +68,19 @@ public class RetryEventsEndpoint {
      */
     @ReadOperation
     public RetryEventsEndpointResponse getEventsFilteredByRetryNameAndEventType(
-            @Selector String name, @Selector String eventType) {
+        @Selector String name, @Selector String eventType) {
         return new RetryEventsEndpointResponse(getRetryEvents(name)
-                .filter(event -> event.getEventType() == RetryEvent.Type
-                        .valueOf(eventType.toUpperCase()))
-                .map(RetryEventDTOFactory::createRetryEventDTO).toJavaList());
+            .filter(event -> event.getEventType() == RetryEvent.Type
+                .valueOf(eventType.toUpperCase()))
+            .map(RetryEventDTOFactory::createRetryEventDTO).toJavaList());
     }
 
     private List<RetryEvent> getRetryEvents(String name) {
         final CircularEventConsumer<RetryEvent> syncEvents = eventConsumerRegistry
-                .getEventConsumer(name);
+            .getEventConsumer(name);
         if (syncEvents != null) {
             return syncEvents.getBufferedEvents()
-                    .filter(event -> event.getName().equals(name));
+                .filter(event -> event.getName().equals(name));
         } else {
             return List.empty();
         }

@@ -23,7 +23,7 @@ import io.github.resilience4j.timelimiter.TimeLimiter;
 import io.micrometer.core.instrument.MeterRegistry;
 
 public class TaggedTimeLimiterMetricsPublisher
-        extends AbstractTimeLimiterMetrics implements MetricsPublisher<TimeLimiter> {
+    extends AbstractTimeLimiterMetrics implements MetricsPublisher<TimeLimiter> {
 
     private final MeterRegistry meterRegistry;
 

@@ -23,13 +23,13 @@ public class FlowableCircuitBreakerTest extends BaseCircuitBreakerTest {
         given(circuitBreaker.tryAcquirePermission()).willReturn(true);
 
         Flowable.just("Event 1", "Event 2")
-                .compose(CircuitBreakerOperator.of(circuitBreaker))
-                .test()
-                .assertResult("Event 1", "Event 2");
+            .compose(CircuitBreakerOperator.of(circuitBreaker))
+            .test()
+            .assertResult("Event 1", "Event 2");
 
         verify(circuitBreaker, times(1)).onSuccess(anyLong(), any(TimeUnit.class));
         verify(circuitBreaker, never())
-                .onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
+            .onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
     }
 
     @Test
@@ -37,14 +37,14 @@ public class FlowableCircuitBreakerTest extends BaseCircuitBreakerTest {
         given(circuitBreaker.tryAcquirePermission()).willReturn(true);
 
         Flowable.error(new IOException("BAM!"))
-                .compose(CircuitBreakerOperator.of(circuitBreaker))
-                .test()
-                .assertSubscribed()
-                .assertError(IOException.class)
-                .assertNotComplete();
+            .compose(CircuitBreakerOperator.of(circuitBreaker))
+            .test()
+            .assertSubscribed()
+            .assertError(IOException.class)
+            .assertNotComplete();
 
         verify(circuitBreaker, times(1))
-                .onError(anyLong(), any(TimeUnit.class), any(IOException.class));
+            .onError(anyLong(), any(TimeUnit.class), any(IOException.class));
         verify(circuitBreaker, never()).onSuccess(anyLong(), any(TimeUnit.class));
     }
 
@@ -53,15 +53,15 @@ public class FlowableCircuitBreakerTest extends BaseCircuitBreakerTest {
         given(circuitBreaker.tryAcquirePermission()).willReturn(false);
 
         Flowable.just("Event 1", "Event 2")
-                .compose(CircuitBreakerOperator.of(circuitBreaker))
-                .test()
-                .assertSubscribed()
-                .assertError(CallNotPermittedException.class)
-                .assertNotComplete();
+            .compose(CircuitBreakerOperator.of(circuitBreaker))
+            .test()
+            .assertSubscribed()
+            .assertError(CallNotPermittedException.class)
+            .assertNotComplete();
 
         verify(circuitBreaker, never()).onSuccess(anyLong(), any(TimeUnit.class));
         verify(circuitBreaker, never())
-                .onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
+            .onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
     }
 
     @Test
@@ -69,14 +69,14 @@ public class FlowableCircuitBreakerTest extends BaseCircuitBreakerTest {
         given(circuitBreaker.tryAcquirePermission()).willReturn(true);
 
         Flowable.just(1)
-                .delay(1, TimeUnit.DAYS)
-                .compose(CircuitBreakerOperator.of(circuitBreaker))
-                .test()
-                .cancel();
+            .delay(1, TimeUnit.DAYS)
+            .compose(CircuitBreakerOperator.of(circuitBreaker))
+            .test()
+            .cancel();
 
         verify(circuitBreaker, times(1)).releasePermission();
         verify(circuitBreaker, never())
-                .onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
+            .onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
         verify(circuitBreaker, never()).onSuccess(anyLong(), any(TimeUnit.class));
     }
 
@@ -85,13 +85,13 @@ public class FlowableCircuitBreakerTest extends BaseCircuitBreakerTest {
         given(circuitBreaker.tryAcquirePermission()).willReturn(true);
 
         Flowable.just(1, 2, 3)
-                .compose(CircuitBreakerOperator.of(circuitBreaker))
-                .test(1)
-                .cancel();
+            .compose(CircuitBreakerOperator.of(circuitBreaker))
+            .test(1)
+            .cancel();
 
         verify(circuitBreaker, never()).releasePermission();
         verify(circuitBreaker, never())
-                .onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
+            .onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
         verify(circuitBreaker, times(1)).onSuccess(anyLong(), any(TimeUnit.class));
     }
 }

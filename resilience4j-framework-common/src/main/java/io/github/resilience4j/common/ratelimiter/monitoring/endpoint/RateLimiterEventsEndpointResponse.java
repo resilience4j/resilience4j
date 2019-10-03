@@ -27,7 +27,7 @@ public class RateLimiterEventsEndpointResponse {
     }
 
     public RateLimiterEventsEndpointResponse(
-            @Nullable List<RateLimiterEventDTO> rateLimiterEvents) {
+        @Nullable List<RateLimiterEventDTO> rateLimiterEvents) {
         this.rateLimiterEvents = rateLimiterEvents;
     }
 

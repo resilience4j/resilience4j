@@ -45,13 +45,13 @@ public interface RetrofitCircuitBreaker {
      *
      * @param circuitBreaker {@link CircuitBreaker} to apply
      * @param call Call to decorate
-     * @param responseSuccess determines whether the response should be considered an
-     *         expected response
+     * @param responseSuccess determines whether the response should be considered an expected
+     *     response
      * @param <T> Response type of call
      * @return Original Call decorated with CircuitBreaker
      */
     static <T> Call<T> decorateCall(final CircuitBreaker circuitBreaker, final Call<T> call,
-            final Predicate<Response> responseSuccess) {
+        final Predicate<Response> responseSuccess) {
         return new CircuitBreakingCall<>(call, circuitBreaker, responseSuccess);
     }
 
@@ -62,7 +62,7 @@ public interface RetrofitCircuitBreaker {
         private final Predicate<Response> responseSuccess;
 
         public CircuitBreakingCall(Call<T> call, CircuitBreaker circuitBreaker,
-                Predicate<Response> responseSuccess) {
+            Predicate<Response> responseSuccess) {
             super(call);
             this.call = call;
             this.circuitBreaker = circuitBreaker;
@@ -86,10 +86,10 @@ public interface RetrofitCircuitBreaker {
                         circuitBreaker.onSuccess(System.nanoTime() - start, TimeUnit.NANOSECONDS);
                     } else {
                         final Throwable throwable = new Throwable(
-                                "Response error: HTTP " + response.code() + " - " + response
-                                        .message());
+                            "Response error: HTTP " + response.code() + " - " + response
+                                .message());
                         circuitBreaker.onError(System.nanoTime() - start, TimeUnit.NANOSECONDS,
-                                throwable);
+                            throwable);
                     }
                     callback.onResponse(call, response);
                 }
@@ -113,9 +113,9 @@ public interface RetrofitCircuitBreaker {
                     circuitBreaker.onSuccess(stopWatch.stop().toNanos(), TimeUnit.NANOSECONDS);
                 } else {
                     final Throwable throwable = new Throwable(
-                            "Response error: HTTP " + response.code() + " - " + response.message());
+                        "Response error: HTTP " + response.code() + " - " + response.message());
                     circuitBreaker
-                            .onError(stopWatch.stop().toNanos(), TimeUnit.NANOSECONDS, throwable);
+                        .onError(stopWatch.stop().toNanos(), TimeUnit.NANOSECONDS, throwable);
                 }
 
                 return response;

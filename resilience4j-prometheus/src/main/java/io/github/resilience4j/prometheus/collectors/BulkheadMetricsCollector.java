@@ -48,7 +48,7 @@ public class BulkheadMetricsCollector extends Collector {
      * @param bulkheadRegistry the source of bulkheads
      */
     public static BulkheadMetricsCollector ofBulkheadRegistry(MetricNames names,
-            BulkheadRegistry bulkheadRegistry) {
+        BulkheadRegistry bulkheadRegistry) {
         return new BulkheadMetricsCollector(names, bulkheadRegistry);
     }
 
@@ -64,22 +64,22 @@ public class BulkheadMetricsCollector extends Collector {
     @Override
     public List<MetricFamilySamples> collect() {
         GaugeMetricFamily availableCallsFamily = new GaugeMetricFamily(
-                names.getAvailableConcurrentCallsMetricName(),
-                "The number of available concurrent calls",
-                LabelNames.NAME
+            names.getAvailableConcurrentCallsMetricName(),
+            "The number of available concurrent calls",
+            LabelNames.NAME
         );
         GaugeMetricFamily maxAllowedCallsFamily = new GaugeMetricFamily(
-                names.getMaxAllowedConcurrentCallsMetricName(),
-                "The maximum number of allowed concurrent calls",
-                LabelNames.NAME
+            names.getMaxAllowedConcurrentCallsMetricName(),
+            "The maximum number of allowed concurrent calls",
+            LabelNames.NAME
         );
 
         for (Bulkhead bulkhead : bulkheadRegistry.getAllBulkheads()) {
             List<String> labelValues = singletonList(bulkhead.getName());
             availableCallsFamily
-                    .addMetric(labelValues, bulkhead.getMetrics().getAvailableConcurrentCalls());
+                .addMetric(labelValues, bulkhead.getMetrics().getAvailableConcurrentCalls());
             maxAllowedCallsFamily
-                    .addMetric(labelValues, bulkhead.getMetrics().getMaxAllowedConcurrentCalls());
+                .addMetric(labelValues, bulkhead.getMetrics().getMaxAllowedConcurrentCalls());
         }
 
         return asList(availableCallsFamily, maxAllowedCallsFamily);
@@ -141,9 +141,9 @@ public class BulkheadMetricsCollector extends Collector {
              * with a given one.
              */
             public Builder availableConcurrentCallsMetricName(
-                    String availableConcurrentCallsMetricNames) {
+                String availableConcurrentCallsMetricNames) {
                 metricNames.availableConcurrentCallsMetricName = requireNonNull(
-                        availableConcurrentCallsMetricNames);
+                    availableConcurrentCallsMetricNames);
                 return this;
             }
 
@@ -152,9 +152,9 @@ public class BulkheadMetricsCollector extends Collector {
              * with a given one.
              */
             public Builder maxAllowedConcurrentCallsMetricName(
-                    String maxAllowedConcurrentCallsMetricName) {
+                String maxAllowedConcurrentCallsMetricName) {
                 metricNames.maxAllowedConcurrentCallsMetricName = requireNonNull(
-                        maxAllowedConcurrentCallsMetricName);
+                    maxAllowedConcurrentCallsMetricName);
                 return this;
             }
 

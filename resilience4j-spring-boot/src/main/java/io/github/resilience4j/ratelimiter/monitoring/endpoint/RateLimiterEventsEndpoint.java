@@ -36,7 +36,7 @@ public class RateLimiterEventsEndpoint {
     private final EventConsumerRegistry<RateLimiterEvent> eventsConsumerRegistry;
 
     public RateLimiterEventsEndpoint(
-            EventConsumerRegistry<RateLimiterEvent> eventsConsumerRegistry) {
+        EventConsumerRegistry<RateLimiterEvent> eventsConsumerRegistry) {
         this.eventsConsumerRegistry = eventsConsumerRegistry;
     }
 
@@ -45,34 +45,34 @@ public class RateLimiterEventsEndpoint {
     @ResponseBody
     public RateLimiterEventsEndpointResponse getAllRateLimiterEvents() {
         List<RateLimiterEventDTO> eventsList = eventsConsumerRegistry.getAllEventConsumer()
-                .flatMap(CircularEventConsumer::getBufferedEvents)
-                .sorted(Comparator.comparing(RateLimiterEvent::getCreationTime))
-                .map(RateLimiterEventDTO::createRateLimiterEventDTO).toJavaList();
+            .flatMap(CircularEventConsumer::getBufferedEvents)
+            .sorted(Comparator.comparing(RateLimiterEvent::getCreationTime))
+            .map(RateLimiterEventDTO::createRateLimiterEventDTO).toJavaList();
         return new RateLimiterEventsEndpointResponse(eventsList);
     }
 
     @GetMapping(value = "events/{rateLimiterName}", produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
     public RateLimiterEventsEndpointResponse getEventsFilteredByRateLimiterName(
-            @PathVariable("rateLimiterName") String rateLimiterName) {
+        @PathVariable("rateLimiterName") String rateLimiterName) {
         List<RateLimiterEventDTO> eventsList = eventsConsumerRegistry
-                .getEventConsumer(rateLimiterName).getBufferedEvents()
-                .filter(event -> event.getRateLimiterName().equals(rateLimiterName))
-                .map(RateLimiterEventDTO::createRateLimiterEventDTO).toJavaList();
+            .getEventConsumer(rateLimiterName).getBufferedEvents()
+            .filter(event -> event.getRateLimiterName().equals(rateLimiterName))
+            .map(RateLimiterEventDTO::createRateLimiterEventDTO).toJavaList();
         return new RateLimiterEventsEndpointResponse(eventsList);
     }
 
     @GetMapping(value = "events/{rateLimiterName}/{eventType}", produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
     public RateLimiterEventsEndpointResponse getEventsFilteredByRateLimiterNameAndEventType(
-            @PathVariable("rateLimiterName") String rateLimiterName,
-            @PathVariable("eventType") String eventType) {
+        @PathVariable("rateLimiterName") String rateLimiterName,
+        @PathVariable("eventType") String eventType) {
         RateLimiterEvent.Type targetType = RateLimiterEvent.Type.valueOf(eventType.toUpperCase());
         List<RateLimiterEventDTO> eventsList = eventsConsumerRegistry
-                .getEventConsumer(rateLimiterName).getBufferedEvents()
-                .filter(event -> event.getRateLimiterName().equals(rateLimiterName))
-                .filter(event -> event.getEventType() == targetType)
-                .map(RateLimiterEventDTO::createRateLimiterEventDTO).toJavaList();
+            .getEventConsumer(rateLimiterName).getBufferedEvents()
+            .filter(event -> event.getRateLimiterName().equals(rateLimiterName))
+            .filter(event -> event.getEventType() == targetType)
+            .map(RateLimiterEventDTO::createRateLimiterEventDTO).toJavaList();
         return new RateLimiterEventsEndpointResponse(eventsList);
     }
 }

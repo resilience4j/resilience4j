@@ -77,8 +77,8 @@ public class BulkheadMethodInterceptor extends AbstractMethodInterceptor {
             annotation = invocation.getMethod().getDeclaringClass().getAnnotation(Bulkhead.class);
         }
         final RecoveryFunction<?> fallbackMethod = Optional
-                .ofNullable(createRecoveryFunction(invocation, annotation.fallbackMethod()))
-                .orElse(new DefaultRecoveryFunction<>());
+            .ofNullable(createRecoveryFunction(invocation, annotation.fallbackMethod()))
+            .orElse(new DefaultRecoveryFunction<>());
         if (registry == null) {
             registry = BulkheadRegistry.ofDefaults();
         }
@@ -88,7 +88,7 @@ public class BulkheadMethodInterceptor extends AbstractMethodInterceptor {
             Promise<?> result = (Promise<?>) proceed(invocation);
             if (result != null) {
                 BulkheadTransformer transformer = BulkheadTransformer.of(bulkhead)
-                        .recover(fallbackMethod);
+                    .recover(fallbackMethod);
                 result = result.transform(transformer);
             }
             return result;
@@ -133,11 +133,11 @@ public class BulkheadMethodInterceptor extends AbstractMethodInterceptor {
 
     @Nullable
     private Object handleProceedWithException(MethodInvocation invocation,
-            io.github.resilience4j.bulkhead.Bulkhead bulkhead, RecoveryFunction<?> recoveryFunction)
-            throws Throwable {
+        io.github.resilience4j.bulkhead.Bulkhead bulkhead, RecoveryFunction<?> recoveryFunction)
+        throws Throwable {
         try {
             return io.github.resilience4j.bulkhead.Bulkhead
-                    .decorateCheckedSupplier(bulkhead, invocation::proceed).apply();
+                .decorateCheckedSupplier(bulkhead, invocation::proceed).apply();
         } catch (Throwable throwable) {
             return recoveryFunction.apply(throwable);
         }

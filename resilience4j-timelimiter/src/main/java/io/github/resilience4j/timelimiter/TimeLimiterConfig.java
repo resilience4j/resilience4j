@@ -47,9 +47,9 @@ public class TimeLimiterConfig {
     @Override
     public String toString() {
         return "TimeLimiterConfig{" +
-                "timeoutDuration=" + timeoutDuration +
-                "cancelRunningFuture=" + cancelRunningFuture +
-                '}';
+            "timeoutDuration=" + timeoutDuration +
+            "cancelRunningFuture=" + cancelRunningFuture +
+            '}';
     }
 
     public static class Builder {

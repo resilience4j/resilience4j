@@ -106,7 +106,7 @@ public class RunnableRetryTest {
         Retry retry = Retry.ofDefaults("id");
         // Decorate the invocation of the HelloWorldService
         CheckedRunnable retryableRunnable = Retry
-                .decorateCheckedRunnable(retry, helloWorldService::sayHelloWorld);
+            .decorateCheckedRunnable(retry, helloWorldService::sayHelloWorld);
 
         // When
         Try<Void> result = Try.run(retryableRunnable);
@@ -130,7 +130,7 @@ public class RunnableRetryTest {
         Retry retry = Retry.of("id", config);
         // Decorate the invocation of the HelloWorldService
         CheckedRunnable retryableRunnable = Retry
-                .decorateCheckedRunnable(retry, helloWorldService::sayHelloWorld);
+            .decorateCheckedRunnable(retry, helloWorldService::sayHelloWorld);
 
         // When
         Try<Void> result = Try.run(retryableRunnable);
@@ -151,15 +151,15 @@ public class RunnableRetryTest {
 
         // Create a Retry with default configuration
         RetryConfig config = RetryConfig.custom()
-                .retryOnException(throwable -> Match(throwable).of(
-                        Case($(Predicates.instanceOf(HelloWorldException.class)), false),
-                        Case($(), true)))
-                .build();
+            .retryOnException(throwable -> Match(throwable).of(
+                Case($(Predicates.instanceOf(HelloWorldException.class)), false),
+                Case($(), true)))
+            .build();
         Retry retry = Retry.of("id", config);
 
         // Decorate the invocation of the HelloWorldService
         CheckedRunnable retryableRunnable = Retry
-                .decorateCheckedRunnable(retry, helloWorldService::sayHelloWorld);
+            .decorateCheckedRunnable(retry, helloWorldService::sayHelloWorld);
 
         // When
         Try<Void> result = Try.run(retryableRunnable);
@@ -180,14 +180,14 @@ public class RunnableRetryTest {
 
         // Create a Retry with a backoff function squaring the interval
         RetryConfig config = RetryConfig
-                .custom()
-                .intervalFunction(IntervalFunction.of(Duration.ofMillis(500), x -> x * x))
-                .build();
+            .custom()
+            .intervalFunction(IntervalFunction.of(Duration.ofMillis(500), x -> x * x))
+            .build();
 
         Retry retry = Retry.of("id", config);
         // Decorate the invocation of the HelloWorldService
         CheckedRunnable retryableRunnable = Retry
-                .decorateCheckedRunnable(retry, helloWorldService::sayHelloWorld);
+            .decorateCheckedRunnable(retry, helloWorldService::sayHelloWorld);
 
         // When
         Try<Void> result = Try.run(retryableRunnable);
@@ -195,7 +195,7 @@ public class RunnableRetryTest {
         // Then the slept time should be according to the backoff function
         BDDMockito.then(helloWorldService).should(Mockito.times(3)).sayHelloWorld();
         Assertions.assertThat(sleptTime).isEqualTo(
-                RetryConfig.DEFAULT_WAIT_DURATION +
-                        RetryConfig.DEFAULT_WAIT_DURATION * RetryConfig.DEFAULT_WAIT_DURATION);
+            RetryConfig.DEFAULT_WAIT_DURATION +
+                RetryConfig.DEFAULT_WAIT_DURATION * RetryConfig.DEFAULT_WAIT_DURATION);
     }
 }

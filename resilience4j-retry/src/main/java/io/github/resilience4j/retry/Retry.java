@@ -85,15 +85,15 @@ public interface Retry {
      * @return decorated supplier
      */
     static <T> Supplier<CompletionStage<T>> decorateCompletionStage(
-            Retry retry,
-            ScheduledExecutorService scheduler,
-            Supplier<CompletionStage<T>> supplier
+        Retry retry,
+        ScheduledExecutorService scheduler,
+        Supplier<CompletionStage<T>> supplier
     ) {
         return () -> {
 
             final CompletableFuture<T> promise = new CompletableFuture<>();
             final Runnable block = new AsyncRetryBlock<>(scheduler, retry.asyncContext(), supplier,
-                    promise);
+                promise);
             block.run();
 
             return promise;
@@ -109,7 +109,7 @@ public interface Retry {
      * @return a retryable function
      */
     static <T> CheckedFunction0<T> decorateCheckedSupplier(Retry retry,
-            CheckedFunction0<T> supplier) {
+        CheckedFunction0<T> supplier) {
         return () -> {
             Retry.Context<T> context = retry.context();
             do {
@@ -159,7 +159,7 @@ public interface Retry {
      * @return a retryable function
      */
     static <T, R> CheckedFunction1<T, R> decorateCheckedFunction(Retry retry,
-            CheckedFunction1<T, R> function) {
+        CheckedFunction1<T, R> function) {
         return (T t) -> {
             Retry.Context<R> context = retry.context();
             do {
@@ -212,7 +212,7 @@ public interface Retry {
      * @return a retryable function
      */
     static <E extends Exception, T> Supplier<Either<E, T>> decorateEitherSupplier(Retry retry,
-            Supplier<Either<E, T>> supplier) {
+        Supplier<Either<E, T>> supplier) {
         return () -> {
             Retry.Context<T> context = retry.context();
             do {
@@ -386,8 +386,7 @@ public interface Retry {
      * @param checkedSupplier the original Supplier
      * @param <T> the type of results supplied by this supplier
      * @return the result of the decorated Supplier.
-     * @throws Throwable if something goes wrong applying this function to the given
-     *         arguments
+     * @throws Throwable if something goes wrong applying this function to the given arguments
      */
     default <T> T executeCheckedSupplier(CheckedFunction0<T> checkedSupplier) throws Throwable {
         return decorateCheckedSupplier(this, checkedSupplier).apply();
@@ -412,7 +411,7 @@ public interface Retry {
      * @return the result of the decorated Supplier.
      */
     default <E extends Exception, T> Either<E, T> executeEitherSupplier(
-            Supplier<Either<E, T>> supplier) {
+        Supplier<Either<E, T>> supplier) {
         return decorateEitherSupplier(this, supplier).get();
     }
 
@@ -457,7 +456,7 @@ public interface Retry {
      * @return the decorated CompletionStage.
      */
     default <T> CompletionStage<T> executeCompletionStage(ScheduledExecutorService scheduler,
-            Supplier<CompletionStage<T>> supplier) {
+        Supplier<CompletionStage<T>> supplier) {
         return decorateCompletionStage(this, scheduler, supplier).get();
     }
 
@@ -583,10 +582,10 @@ public interface Retry {
         private final CompletableFuture<T> promise;
 
         AsyncRetryBlock(
-                ScheduledExecutorService scheduler,
-                Retry.AsyncContext<T> retryContext,
-                Supplier<CompletionStage<T>> supplier,
-                CompletableFuture<T> promise
+            ScheduledExecutorService scheduler,
+            Retry.AsyncContext<T> retryContext,
+            Supplier<CompletionStage<T>> supplier,
+            CompletableFuture<T> promise
         ) {
             this.scheduler = scheduler;
             this.retryContext = retryContext;

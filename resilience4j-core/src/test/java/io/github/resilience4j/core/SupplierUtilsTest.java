@@ -28,7 +28,7 @@ public class SupplierUtilsTest {
         };
         //When
         Supplier<String> supplierWithRecovery = SupplierUtils
-                .andThen(supplier, (result, ex) -> "Bla");
+            .andThen(supplier, (result, ex) -> "Bla");
 
         String result = supplierWithRecovery.get();
 
@@ -44,7 +44,7 @@ public class SupplierUtilsTest {
         };
         //When
         Supplier<String> supplierWithRecovery = SupplierUtils
-                .andThen(supplier, (result) -> result, ex -> "Bla");
+            .andThen(supplier, (result) -> result, ex -> "Bla");
 
         String result = supplierWithRecovery.get();
 

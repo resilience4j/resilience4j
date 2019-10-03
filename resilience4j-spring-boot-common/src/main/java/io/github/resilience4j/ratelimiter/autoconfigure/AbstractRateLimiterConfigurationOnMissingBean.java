@@ -54,33 +54,33 @@ public abstract class AbstractRateLimiterConfigurationOnMissingBean {
     @Bean
     @ConditionalOnMissingBean
     public RateLimiterRegistry rateLimiterRegistry(
-            RateLimiterConfigurationProperties rateLimiterProperties,
-            EventConsumerRegistry<RateLimiterEvent> rateLimiterEventsConsumerRegistry,
-            RegistryEventConsumer<RateLimiter> rateLimiterRegistryEventConsumer) {
+        RateLimiterConfigurationProperties rateLimiterProperties,
+        EventConsumerRegistry<RateLimiterEvent> rateLimiterEventsConsumerRegistry,
+        RegistryEventConsumer<RateLimiter> rateLimiterRegistryEventConsumer) {
         return rateLimiterConfiguration
-                .rateLimiterRegistry(rateLimiterProperties, rateLimiterEventsConsumerRegistry,
-                        rateLimiterRegistryEventConsumer);
+            .rateLimiterRegistry(rateLimiterProperties, rateLimiterEventsConsumerRegistry,
+                rateLimiterRegistryEventConsumer);
     }
 
     @Bean
     @Primary
     public RegistryEventConsumer<RateLimiter> rateLimiterRegistryEventConsumer(
-            Optional<List<RegistryEventConsumer<RateLimiter>>> optionalRegistryEventConsumers) {
+        Optional<List<RegistryEventConsumer<RateLimiter>>> optionalRegistryEventConsumers) {
         return rateLimiterConfiguration
-                .rateLimiterRegistryEventConsumer(optionalRegistryEventConsumers);
+            .rateLimiterRegistryEventConsumer(optionalRegistryEventConsumers);
     }
 
     @Bean
     @Conditional(value = {AspectJOnClasspathCondition.class})
     @ConditionalOnMissingBean
     public RateLimiterAspect rateLimiterAspect(
-            RateLimiterConfigurationProperties rateLimiterProperties,
-            RateLimiterRegistry rateLimiterRegistry,
-            @Autowired(required = false) List<RateLimiterAspectExt> rateLimiterAspectExtList,
-            FallbackDecorators fallbackDecorators) {
+        RateLimiterConfigurationProperties rateLimiterProperties,
+        RateLimiterRegistry rateLimiterRegistry,
+        @Autowired(required = false) List<RateLimiterAspectExt> rateLimiterAspectExtList,
+        FallbackDecorators fallbackDecorators) {
         return rateLimiterConfiguration
-                .rateLimiterAspect(rateLimiterProperties, rateLimiterRegistry,
-                        rateLimiterAspectExtList, fallbackDecorators);
+            .rateLimiterAspect(rateLimiterProperties, rateLimiterRegistry,
+                rateLimiterAspectExtList, fallbackDecorators);
     }
 
     @Bean

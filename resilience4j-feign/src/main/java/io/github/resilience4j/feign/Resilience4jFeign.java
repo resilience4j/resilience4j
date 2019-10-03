@@ -52,15 +52,15 @@ public final class Resilience4jFeign {
          */
         @Override
         public Feign.Builder invocationHandlerFactory(
-                InvocationHandlerFactory invocationHandlerFactory) {
+            InvocationHandlerFactory invocationHandlerFactory) {
             throw new UnsupportedOperationException();
         }
 
         @Override
         public Feign build() {
             super.invocationHandlerFactory(
-                    (target, dispatch) -> new DecoratorInvocationHandler(target, dispatch,
-                            invocationDecorator));
+                (target, dispatch) -> new DecoratorInvocationHandler(target, dispatch,
+                    invocationDecorator));
             return super.build();
         }
 

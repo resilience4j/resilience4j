@@ -38,7 +38,7 @@ public class ReactorRetryAspectExt implements RetryAspectExt {
     @Override
     public boolean canHandleReturnType(Class returnType) {
         return (Flux.class.isAssignableFrom(returnType)) || (Mono.class
-                .isAssignableFrom(returnType));
+            .isAssignableFrom(returnType));
     }
 
     /**
@@ -54,7 +54,7 @@ public class ReactorRetryAspectExt implements RetryAspectExt {
     @SuppressWarnings("unchecked")
     @Override
     public Object handle(ProceedingJoinPoint proceedingJoinPoint,
-            io.github.resilience4j.retry.Retry retry, String methodName) throws Throwable {
+        io.github.resilience4j.retry.Retry retry, String methodName) throws Throwable {
         Object returnValue = proceedingJoinPoint.proceed();
         if (Flux.class.isAssignableFrom(returnValue.getClass())) {
             Flux<?> fluxReturnValue = (Flux<?>) returnValue;
@@ -64,10 +64,10 @@ public class ReactorRetryAspectExt implements RetryAspectExt {
             return monoReturnValue.compose(RetryOperator.of(retry));
         } else {
             logger.error("Unsupported type for Reactor retry {}",
-                    returnValue.getClass().getTypeName());
+                returnValue.getClass().getTypeName());
             throw new IllegalArgumentException(
-                    "Not Supported type for the retry in Reactor :" + returnValue.getClass()
-                            .getName());
+                "Not Supported type for the retry in Reactor :" + returnValue.getClass()
+                    .getName());
 
         }
     }

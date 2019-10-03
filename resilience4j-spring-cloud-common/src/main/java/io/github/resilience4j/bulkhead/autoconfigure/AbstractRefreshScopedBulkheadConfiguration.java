@@ -36,17 +36,17 @@ public abstract class AbstractRefreshScopedBulkheadConfiguration {
     @RefreshScope
     @ConditionalOnMissingBean
     public BulkheadRegistry bulkheadRegistry(
-            BulkheadConfigurationProperties bulkheadConfigurationProperties,
-            EventConsumerRegistry<BulkheadEvent> bulkheadEventConsumerRegistry,
-            RegistryEventConsumer<Bulkhead> bulkheadRegistryEventConsumer) {
+        BulkheadConfigurationProperties bulkheadConfigurationProperties,
+        EventConsumerRegistry<BulkheadEvent> bulkheadEventConsumerRegistry,
+        RegistryEventConsumer<Bulkhead> bulkheadRegistryEventConsumer) {
         return bulkheadConfiguration
-                .bulkheadRegistry(bulkheadConfigurationProperties, bulkheadEventConsumerRegistry,
-                        bulkheadRegistryEventConsumer);
+            .bulkheadRegistry(bulkheadConfigurationProperties, bulkheadEventConsumerRegistry,
+                bulkheadRegistryEventConsumer);
     }
 
     /**
      * @param threadPoolBulkheadConfigurationProperties thread pool bulkhead spring
-     *         configuration properties
+     *     configuration properties
      * @param bulkheadEventConsumerRegistry the bulk head event consumer registry
      * @return the RefreshScoped ThreadPoolBulkheadRegistry
      */
@@ -54,13 +54,13 @@ public abstract class AbstractRefreshScopedBulkheadConfiguration {
     @RefreshScope
     @ConditionalOnMissingBean
     public ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry(
-            ThreadPoolBulkheadConfigurationProperties threadPoolBulkheadConfigurationProperties,
-            EventConsumerRegistry<BulkheadEvent> bulkheadEventConsumerRegistry,
-            RegistryEventConsumer<ThreadPoolBulkhead> threadPoolBulkheadRegistryEventConsumer) {
+        ThreadPoolBulkheadConfigurationProperties threadPoolBulkheadConfigurationProperties,
+        EventConsumerRegistry<BulkheadEvent> bulkheadEventConsumerRegistry,
+        RegistryEventConsumer<ThreadPoolBulkhead> threadPoolBulkheadRegistryEventConsumer) {
 
         return threadPoolBulkheadConfiguration.threadPoolBulkheadRegistry(
-                threadPoolBulkheadConfigurationProperties, bulkheadEventConsumerRegistry,
-                threadPoolBulkheadRegistryEventConsumer);
+            threadPoolBulkheadConfigurationProperties, bulkheadEventConsumerRegistry,
+            threadPoolBulkheadRegistryEventConsumer);
     }
 
 }

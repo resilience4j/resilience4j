@@ -32,11 +32,11 @@ public class FeignDecoratorsTest {
         final FeignDecorators testSubject = FeignDecorators.builder().build();
 
         final Object result = testSubject.decorate(args -> args[0], null, null, null)
-                .apply(new Object[]{"test01"});
+            .apply(new Object[]{"test01"});
 
         assertThat(result)
-                .describedAs("Returned result is correct")
-                .isEqualTo("test01");
+            .describedAs("Returned result is correct")
+            .isEqualTo("test01");
     }
 
 
@@ -45,17 +45,17 @@ public class FeignDecoratorsTest {
         final CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("test");
         final CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
         final FeignDecorators testSubject = FeignDecorators.builder()
-                .withCircuitBreaker(circuitBreaker).build();
+            .withCircuitBreaker(circuitBreaker).build();
 
         final Object result = testSubject.decorate(args -> args[0], null, null, null)
-                .apply(new Object[]{"test01"});
+            .apply(new Object[]{"test01"});
 
         assertThat(result)
-                .describedAs("Returned result is correct")
-                .isEqualTo("test01");
+            .describedAs("Returned result is correct")
+            .isEqualTo("test01");
         assertThat(metrics.getNumberOfSuccessfulCalls())
-                .describedAs("Successful Calls")
-                .isEqualTo(1);
+            .describedAs("Successful Calls")
+            .isEqualTo(1);
     }
 
 
@@ -63,14 +63,14 @@ public class FeignDecoratorsTest {
     public void testWithRateLimiter() throws Throwable {
         final RateLimiter rateLimiter = spy(RateLimiter.ofDefaults("test"));
         final FeignDecorators testSubject = FeignDecorators.builder().withRateLimiter(rateLimiter)
-                .build();
+            .build();
 
         final Object result = testSubject.decorate(args -> args[0], null, null, null)
-                .apply(new Object[]{"test01"});
+            .apply(new Object[]{"test01"});
 
         assertThat(result)
-                .describedAs("Returned result is correct")
-                .isEqualTo("test01");
+            .describedAs("Returned result is correct")
+            .isEqualTo("test01");
         verify(rateLimiter, times(1)).acquirePermission();
     }
 }

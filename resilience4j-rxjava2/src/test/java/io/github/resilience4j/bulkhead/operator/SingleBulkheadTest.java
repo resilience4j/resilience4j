@@ -34,9 +34,9 @@ public class SingleBulkheadTest {
         given(bulkhead.tryAcquirePermission()).willReturn(true);
 
         Single.just(1)
-                .compose(BulkheadOperator.of(bulkhead))
-                .test()
-                .assertResult(1);
+            .compose(BulkheadOperator.of(bulkhead))
+            .test()
+            .assertResult(1);
 
         verify(bulkhead, times(1)).onComplete();
     }
@@ -46,11 +46,11 @@ public class SingleBulkheadTest {
         given(bulkhead.tryAcquirePermission()).willReturn(true);
 
         Single.error(new IOException("BAM!"))
-                .compose(BulkheadOperator.of(bulkhead))
-                .test()
-                .assertSubscribed()
-                .assertError(IOException.class)
-                .assertNotComplete();
+            .compose(BulkheadOperator.of(bulkhead))
+            .test()
+            .assertSubscribed()
+            .assertError(IOException.class)
+            .assertNotComplete();
 
         verify(bulkhead, times(1)).onComplete();
     }
@@ -60,11 +60,11 @@ public class SingleBulkheadTest {
         given(bulkhead.tryAcquirePermission()).willReturn(false);
 
         Single.just(1)
-                .compose(BulkheadOperator.of(bulkhead))
-                .test()
-                .assertSubscribed()
-                .assertError(BulkheadFullException.class)
-                .assertNotComplete();
+            .compose(BulkheadOperator.of(bulkhead))
+            .test()
+            .assertSubscribed()
+            .assertError(BulkheadFullException.class)
+            .assertNotComplete();
 
         verify(bulkhead, never()).onComplete();
     }
@@ -74,11 +74,11 @@ public class SingleBulkheadTest {
         given(bulkhead.tryAcquirePermission()).willReturn(true);
 
         Single.just(Arrays.asList(1, 2, 3))
-                .compose(BulkheadOperator.of(bulkhead))
-                .flatMapObservable(Observable::fromIterable)
-                .take(2) //this with the previous line triggers an extra dispose
-                .test()
-                .assertResult(1, 2);
+            .compose(BulkheadOperator.of(bulkhead))
+            .flatMapObservable(Observable::fromIterable)
+            .take(2) //this with the previous line triggers an extra dispose
+            .test()
+            .assertResult(1, 2);
 
         verify(bulkhead, times(1)).onComplete();
     }
@@ -88,10 +88,10 @@ public class SingleBulkheadTest {
         given(bulkhead.tryAcquirePermission()).willReturn(true);
 
         Single.just(1)
-                .delay(1, TimeUnit.DAYS)
-                .compose(BulkheadOperator.of(bulkhead))
-                .test()
-                .cancel();
+            .delay(1, TimeUnit.DAYS)
+            .compose(BulkheadOperator.of(bulkhead))
+            .test()
+            .cancel();
 
         verify(bulkhead, times(1)).releasePermission();
         verify(bulkhead, never()).onComplete();

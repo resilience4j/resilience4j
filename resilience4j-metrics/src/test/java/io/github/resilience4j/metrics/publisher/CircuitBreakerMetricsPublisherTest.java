@@ -27,8 +27,8 @@ public class CircuitBreakerMetricsPublisherTest extends AbstractCircuitBreakerMe
     @Override
     protected CircuitBreaker given(String prefix, MetricRegistry metricRegistry) {
         CircuitBreakerRegistry circuitBreakerRegistry =
-                CircuitBreakerRegistry.of(CircuitBreakerConfig.ofDefaults(),
-                        new CircuitBreakerMetricsPublisher(prefix, metricRegistry));
+            CircuitBreakerRegistry.of(CircuitBreakerConfig.ofDefaults(),
+                new CircuitBreakerMetricsPublisher(prefix, metricRegistry));
 
         return circuitBreakerRegistry.circuitBreaker("testName");
     }
@@ -36,8 +36,8 @@ public class CircuitBreakerMetricsPublisherTest extends AbstractCircuitBreakerMe
     @Override
     protected CircuitBreaker given(MetricRegistry metricRegistry) {
         CircuitBreakerRegistry circuitBreakerRegistry =
-                CircuitBreakerRegistry.of(CircuitBreakerConfig.ofDefaults(),
-                        new CircuitBreakerMetricsPublisher(metricRegistry));
+            CircuitBreakerRegistry.of(CircuitBreakerConfig.ofDefaults(),
+                new CircuitBreakerMetricsPublisher(metricRegistry));
 
         return circuitBreakerRegistry.circuitBreaker("testName");
     }

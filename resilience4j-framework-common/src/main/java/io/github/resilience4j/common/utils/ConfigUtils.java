@@ -35,18 +35,18 @@ public class ConfigUtils {
      * @param instanceProperties instance properties
      */
     public static void mergePropertiesIfAny(
-            CircuitBreakerConfigurationProperties.InstanceProperties instanceProperties,
-            CircuitBreakerConfigurationProperties.InstanceProperties baseProperties) {
+        CircuitBreakerConfigurationProperties.InstanceProperties instanceProperties,
+        CircuitBreakerConfigurationProperties.InstanceProperties baseProperties) {
         if (instanceProperties.getRegisterHealthIndicator() == null) {
             if (baseProperties.getRegisterHealthIndicator() != null) {
                 instanceProperties
-                        .setRegisterHealthIndicator(baseProperties.getRegisterHealthIndicator());
+                    .setRegisterHealthIndicator(baseProperties.getRegisterHealthIndicator());
             }
         }
         if (instanceProperties.getEventConsumerBufferSize() == null) {
             if (baseProperties.getEventConsumerBufferSize() != null) {
                 instanceProperties
-                        .setEventConsumerBufferSize(baseProperties.getEventConsumerBufferSize());
+                    .setEventConsumerBufferSize(baseProperties.getEventConsumerBufferSize());
             }
         }
     }
@@ -58,12 +58,12 @@ public class ConfigUtils {
      * @param instanceProperties instance properties
      */
     public static void mergePropertiesIfAny(
-            BulkheadConfigurationProperties.InstanceProperties baseProperties,
-            BulkheadConfigurationProperties.InstanceProperties instanceProperties) {
+        BulkheadConfigurationProperties.InstanceProperties baseProperties,
+        BulkheadConfigurationProperties.InstanceProperties instanceProperties) {
         if (instanceProperties.getEventConsumerBufferSize() == null) {
             if (baseProperties.getEventConsumerBufferSize() != null) {
                 instanceProperties
-                        .setEventConsumerBufferSize(baseProperties.getEventConsumerBufferSize());
+                    .setEventConsumerBufferSize(baseProperties.getEventConsumerBufferSize());
             }
         }
     }
@@ -75,12 +75,12 @@ public class ConfigUtils {
      * @param instanceProperties instance properties
      */
     public static void mergePropertiesIfAny(
-            RateLimiterConfigurationProperties.InstanceProperties baseProperties,
-            RateLimiterConfigurationProperties.InstanceProperties instanceProperties) {
+        RateLimiterConfigurationProperties.InstanceProperties baseProperties,
+        RateLimiterConfigurationProperties.InstanceProperties instanceProperties) {
         if (instanceProperties.getRegisterHealthIndicator() == null) {
             if (baseProperties.getRegisterHealthIndicator() != null) {
                 instanceProperties
-                        .setRegisterHealthIndicator(baseProperties.getRegisterHealthIndicator());
+                    .setRegisterHealthIndicator(baseProperties.getRegisterHealthIndicator());
             }
         }
         if (instanceProperties.getSubscribeForEvents() == null) {
@@ -91,7 +91,7 @@ public class ConfigUtils {
         if (instanceProperties.getEventConsumerBufferSize() == null) {
             if (baseProperties.getEventConsumerBufferSize() != null) {
                 instanceProperties
-                        .setEventConsumerBufferSize(baseProperties.getEventConsumerBufferSize());
+                    .setEventConsumerBufferSize(baseProperties.getEventConsumerBufferSize());
             }
         }
     }
@@ -103,24 +103,24 @@ public class ConfigUtils {
      * @param instanceProperties instance properties
      */
     public static void mergePropertiesIfAny(
-            RetryConfigurationProperties.InstanceProperties baseProperties,
-            RetryConfigurationProperties.InstanceProperties instanceProperties) {
+        RetryConfigurationProperties.InstanceProperties baseProperties,
+        RetryConfigurationProperties.InstanceProperties instanceProperties) {
         if (instanceProperties.getEnableExponentialBackoff() == null) {
             if (baseProperties.getEnableExponentialBackoff() != null) {
                 instanceProperties
-                        .setEnableExponentialBackoff(baseProperties.getEnableExponentialBackoff());
+                    .setEnableExponentialBackoff(baseProperties.getEnableExponentialBackoff());
             }
         }
         if (instanceProperties.getEnableRandomizedWait() == null) {
             if (baseProperties.getEnableRandomizedWait() != null) {
                 instanceProperties
-                        .setEnableRandomizedWait(baseProperties.getEnableRandomizedWait());
+                    .setEnableRandomizedWait(baseProperties.getEnableRandomizedWait());
             }
         }
         if (instanceProperties.getExponentialBackoffMultiplier() == null) {
             if (baseProperties.getExponentialBackoffMultiplier() != null) {
                 instanceProperties.setExponentialBackoffMultiplier(
-                        baseProperties.getExponentialBackoffMultiplier());
+                    baseProperties.getExponentialBackoffMultiplier());
             }
         }
     }

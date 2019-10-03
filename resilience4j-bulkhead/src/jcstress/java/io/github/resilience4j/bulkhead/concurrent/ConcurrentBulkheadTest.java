@@ -32,18 +32,18 @@ import org.openjdk.jcstress.infra.results.StringResult1;
 @JCStressTest
 @State
 @Outcome.Outcomes(
-        {
-                @Outcome(
-                        id = "remainingDepth=1" +
-                                " events=\\[\\[CALL_REJECTED\\], \\[\\], \\[\\]\\]",
-                        expect = Expect.ACCEPTABLE
-                ),
-                @Outcome(
-                        id = "remainingDepth=1" +
-                                " events=\\[\\[\\], \\[\\], \\[\\]\\]",
-                        expect = Expect.ACCEPTABLE
-                )
-        }
+    {
+        @Outcome(
+            id = "remainingDepth=1" +
+                " events=\\[\\[CALL_REJECTED\\], \\[\\], \\[\\]\\]",
+            expect = Expect.ACCEPTABLE
+        ),
+        @Outcome(
+            id = "remainingDepth=1" +
+                " events=\\[\\[\\], \\[\\], \\[\\]\\]",
+            expect = Expect.ACCEPTABLE
+        )
+    }
 )
 public class ConcurrentBulkheadTest {
 
@@ -55,9 +55,9 @@ public class ConcurrentBulkheadTest {
         bulkhead = Bulkhead.of("test", BulkheadConfig.custom().maxConcurrentCalls(1).build());
 
         callRejectectedEventSubscriber = RxJava2Adapter.toFlowable(bulkhead.getEventPublisher())
-                .filter(event -> event.getEventType() == Type.CALL_REJECTED)
-                .map(BulkheadEvent::getEventType)
-                .test();
+            .filter(event -> event.getEventType() == Type.CALL_REJECTED)
+            .map(BulkheadEvent::getEventType)
+            .test();
     }
 
     @Actor
@@ -77,9 +77,9 @@ public class ConcurrentBulkheadTest {
     @Arbiter
     public void arbiter(StringResult1 result1) {
         String result = MessageFormat.format(
-                "remainingDepth={0} events={1}",
-                bulkhead.getMetrics().getAvailableConcurrentCalls(),
-                callRejectectedEventSubscriber.getEvents()
+            "remainingDepth={0} events={1}",
+            bulkhead.getMetrics().getAvailableConcurrentCalls(),
+            callRejectectedEventSubscriber.getEvents()
         );
         result1.r1 = result;
     }

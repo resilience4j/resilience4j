@@ -36,7 +36,7 @@ import java.util.function.Supplier;
  * values.
  */
 public final class InMemoryCircuitBreakerRegistry extends
-        AbstractRegistry<CircuitBreaker, CircuitBreakerConfig> implements CircuitBreakerRegistry {
+    AbstractRegistry<CircuitBreaker, CircuitBreakerConfig> implements CircuitBreakerRegistry {
 
     /**
      * The constructor with default default.
@@ -51,16 +51,16 @@ public final class InMemoryCircuitBreakerRegistry extends
     }
 
     public InMemoryCircuitBreakerRegistry(Map<String, CircuitBreakerConfig> configs,
-            RegistryEventConsumer<CircuitBreaker> registryEventConsumer) {
+        RegistryEventConsumer<CircuitBreaker> registryEventConsumer) {
         this(configs.getOrDefault(DEFAULT_CONFIG, CircuitBreakerConfig.ofDefaults()),
-                registryEventConsumer);
+            registryEventConsumer);
         this.configurations.putAll(configs);
     }
 
     public InMemoryCircuitBreakerRegistry(Map<String, CircuitBreakerConfig> configs,
-            List<RegistryEventConsumer<CircuitBreaker>> registryEventConsumers) {
+        List<RegistryEventConsumer<CircuitBreaker>> registryEventConsumers) {
         this(configs.getOrDefault(DEFAULT_CONFIG, CircuitBreakerConfig.ofDefaults()),
-                registryEventConsumers);
+            registryEventConsumers);
         this.configurations.putAll(configs);
     }
 
@@ -74,12 +74,12 @@ public final class InMemoryCircuitBreakerRegistry extends
     }
 
     public InMemoryCircuitBreakerRegistry(CircuitBreakerConfig defaultConfig,
-            RegistryEventConsumer<CircuitBreaker> registryEventConsumer) {
+        RegistryEventConsumer<CircuitBreaker> registryEventConsumer) {
         super(defaultConfig, registryEventConsumer);
     }
 
     public InMemoryCircuitBreakerRegistry(CircuitBreakerConfig defaultConfig,
-            List<RegistryEventConsumer<CircuitBreaker>> registryEventConsumers) {
+        List<RegistryEventConsumer<CircuitBreaker>> registryEventConsumers) {
         super(defaultConfig, registryEventConsumers);
     }
 
@@ -105,7 +105,7 @@ public final class InMemoryCircuitBreakerRegistry extends
     @Override
     public CircuitBreaker circuitBreaker(String name, CircuitBreakerConfig config) {
         return computeIfAbsent(name, () -> CircuitBreaker
-                .of(name, Objects.requireNonNull(config, CONFIG_MUST_NOT_BE_NULL)));
+            .of(name, Objects.requireNonNull(config, CONFIG_MUST_NOT_BE_NULL)));
     }
 
     /**
@@ -114,7 +114,7 @@ public final class InMemoryCircuitBreakerRegistry extends
     @Override
     public CircuitBreaker circuitBreaker(String name, String configName) {
         return computeIfAbsent(name, () -> CircuitBreaker.of(name, getConfiguration(configName)
-                .orElseThrow(() -> new ConfigurationNotFoundException(configName))));
+            .orElseThrow(() -> new ConfigurationNotFoundException(configName))));
     }
 
     /**
@@ -122,10 +122,10 @@ public final class InMemoryCircuitBreakerRegistry extends
      */
     @Override
     public CircuitBreaker circuitBreaker(String name,
-            Supplier<CircuitBreakerConfig> circuitBreakerConfigSupplier) {
+        Supplier<CircuitBreakerConfig> circuitBreakerConfigSupplier) {
         return computeIfAbsent(name, () -> CircuitBreaker.of(name, Objects.requireNonNull(
-                Objects.requireNonNull(circuitBreakerConfigSupplier, SUPPLIER_MUST_NOT_BE_NULL)
-                        .get(), CONFIG_MUST_NOT_BE_NULL)));
+            Objects.requireNonNull(circuitBreakerConfigSupplier, SUPPLIER_MUST_NOT_BE_NULL)
+                .get(), CONFIG_MUST_NOT_BE_NULL)));
     }
 
 

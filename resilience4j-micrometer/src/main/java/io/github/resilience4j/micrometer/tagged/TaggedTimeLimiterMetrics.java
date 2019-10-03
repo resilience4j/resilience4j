@@ -41,7 +41,7 @@ public class TaggedTimeLimiterMetrics extends AbstractTimeLimiterMetrics impleme
      * @return The {@link TaggedTimeLimiterMetrics} instance.
      */
     public static TaggedTimeLimiterMetrics ofTimeLimiterRegistry(
-            TimeLimiterRegistry timeLimiterRegistry) {
+        TimeLimiterRegistry timeLimiterRegistry) {
         return new TaggedTimeLimiterMetrics(MetricNames.ofDefaults(), timeLimiterRegistry);
     }
 
@@ -53,7 +53,7 @@ public class TaggedTimeLimiterMetrics extends AbstractTimeLimiterMetrics impleme
      * @return The {@link TaggedTimeLimiterMetrics} instance.
      */
     public static TaggedTimeLimiterMetrics ofTimeLimiterRegistry(MetricNames names,
-            TimeLimiterRegistry timeLimiterRegistry) {
+        TimeLimiterRegistry timeLimiterRegistry) {
         return new TaggedTimeLimiterMetrics(names, timeLimiterRegistry);
     }
 
@@ -63,9 +63,9 @@ public class TaggedTimeLimiterMetrics extends AbstractTimeLimiterMetrics impleme
             addMetrics(registry, timeLimiter);
         }
         timeLimiterRegistry.getEventPublisher()
-                .onEntryAdded(event -> addMetrics(registry, event.getAddedEntry()));
+            .onEntryAdded(event -> addMetrics(registry, event.getAddedEntry()));
         timeLimiterRegistry.getEventPublisher().onEntryRemoved(
-                event -> removeMetrics(registry, event.getRemovedEntry().getName()));
+            event -> removeMetrics(registry, event.getRemovedEntry().getName()));
         timeLimiterRegistry.getEventPublisher().onEntryReplaced(event -> {
             removeMetrics(registry, event.getOldEntry().getName());
             addMetrics(registry, event.getNewEntry());

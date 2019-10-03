@@ -37,7 +37,7 @@ public class BulkheadEndpoint extends AbstractEndpoint {
     private final ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry;
 
     public BulkheadEndpoint(BulkheadRegistry bulkheadRegistry,
-            ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry) {
+        ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry) {
         super("bulkhead");
         this.bulkheadRegistry = bulkheadRegistry;
         this.threadPoolBulkheadRegistry = threadPoolBulkheadRegistry;
@@ -46,11 +46,11 @@ public class BulkheadEndpoint extends AbstractEndpoint {
     @Override
     public ResponseEntity<BulkheadEndpointResponse> invoke() {
         List<String> bulkheads = bulkheadRegistry.getAllBulkheads()
-                .map(Bulkhead::getName)
-                .appendAll(threadPoolBulkheadRegistry.getAllBulkheads()
-                        .map(ThreadPoolBulkhead::getName))
-                .sorted()
-                .toJavaList();
+            .map(Bulkhead::getName)
+            .appendAll(threadPoolBulkheadRegistry.getAllBulkheads()
+                .map(ThreadPoolBulkhead::getName))
+            .sorted()
+            .toJavaList();
         return ResponseEntity.ok(new BulkheadEndpointResponse(bulkheads));
     }
 }

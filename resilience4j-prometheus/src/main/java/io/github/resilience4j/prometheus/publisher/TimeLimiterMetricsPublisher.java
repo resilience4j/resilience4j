@@ -23,7 +23,7 @@ import java.util.Collections;
 import java.util.List;
 
 public class TimeLimiterMetricsPublisher extends AbstractTimeLimiterMetrics implements
-        MetricsPublisher<TimeLimiter> {
+    MetricsPublisher<TimeLimiter> {
 
     public TimeLimiterMetricsPublisher() {
         this(MetricNames.ofDefaults());
@@ -42,9 +42,9 @@ public class TimeLimiterMetricsPublisher extends AbstractTimeLimiterMetrics impl
     public void publishMetrics(TimeLimiter entry) {
         String name = entry.getName();
         entry.getEventPublisher()
-                .onSuccess(event -> callsCounter.labels(name, KIND_SUCCESSFUL).inc())
-                .onError(event -> callsCounter.labels(name, KIND_FAILED).inc())
-                .onTimeout(event -> callsCounter.labels(name, KIND_TIMEOUT).inc());
+            .onSuccess(event -> callsCounter.labels(name, KIND_SUCCESSFUL).inc())
+            .onError(event -> callsCounter.labels(name, KIND_FAILED).inc())
+            .onTimeout(event -> callsCounter.labels(name, KIND_TIMEOUT).inc());
     }
 
     @Override

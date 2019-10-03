@@ -21,7 +21,7 @@ public class DummyServiceImpl implements DummyService {
 
     @Override
     public CompletableFuture<String> doSomethingAsync(boolean throwBackendTrouble)
-            throws IOException {
+        throws IOException {
         if (throwBackendTrouble) {
             CompletableFuture<String> future = new CompletableFuture<>();
             future.completeExceptionally(new IOException("Test Message"));

@@ -49,7 +49,7 @@ public class BulkheadMetricsAutoConfiguration {
     @ConditionalOnProperty(value = "resilience4j.bulkhead.metrics.legacy.enabled", havingValue = "false", matchIfMissing = true)
     @ConditionalOnMissingBean
     public TaggedBulkheadMetricsPublisher taggedBulkheadMetricsPublisher(
-            MeterRegistry meterRegistry) {
+        MeterRegistry meterRegistry) {
         return new TaggedBulkheadMetricsPublisher(meterRegistry);
     }
 

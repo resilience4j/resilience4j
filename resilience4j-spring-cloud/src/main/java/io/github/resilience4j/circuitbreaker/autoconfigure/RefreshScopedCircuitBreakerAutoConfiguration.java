@@ -14,10 +14,10 @@ import org.springframework.context.annotation.Configuration;
 @AutoConfigureAfter(RefreshAutoConfiguration.class)
 @AutoConfigureBefore(CircuitBreakerAutoConfiguration.class)
 public class RefreshScopedCircuitBreakerAutoConfiguration extends
-        AbstractRefreshScopedCircuitBreakerConfiguration {
+    AbstractRefreshScopedCircuitBreakerConfiguration {
 
     public RefreshScopedCircuitBreakerAutoConfiguration(
-            CircuitBreakerConfigurationProperties circuitBreakerProperties) {
+        CircuitBreakerConfigurationProperties circuitBreakerProperties) {
         super(circuitBreakerProperties);
     }
 

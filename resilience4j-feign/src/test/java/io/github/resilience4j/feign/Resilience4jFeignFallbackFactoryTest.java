@@ -51,17 +51,17 @@ public class Resilience4jFeignFallbackFactoryTest {
 
     private static TestService buildTestService(Function<Exception, ?> fallbackSupplier) {
         FeignDecorators decorators = FeignDecorators.builder()
-                .withFallbackFactory(fallbackSupplier)
-                .build();
+            .withFallbackFactory(fallbackSupplier)
+            .build();
         return Resilience4jFeign.builder(decorators).target(TestService.class, MOCK_URL);
     }
 
     private static void setupStub(int responseCode) {
         stubFor(get(urlPathEqualTo("/greeting"))
-                .willReturn(aResponse()
-                        .withStatus(responseCode)
-                        .withHeader("Content-Type", "text/plain")
-                        .withBody("Hello, world!")));
+            .willReturn(aResponse()
+                .withStatus(responseCode)
+                .withHeader("Content-Type", "text/plain")
+                .withBody("Hello, world!")));
     }
 
     @Test
@@ -82,8 +82,8 @@ public class Resilience4jFeignFallbackFactoryTest {
         Throwable throwable = catchThrowable(testService::greeting);
 
         assertThat(throwable).isNotNull()
-                .hasMessageContaining(
-                        "Cannot use the fallback [class java.lang.String] for [interface io.github.resilience4j.feign.test.TestService]");
+            .hasMessageContaining(
+                "Cannot use the fallback [class java.lang.String] for [interface io.github.resilience4j.feign.test.TestService]");
     }
 
     @Test
@@ -94,7 +94,7 @@ public class Resilience4jFeignFallbackFactoryTest {
         String result = testService.greeting();
 
         assertThat(result)
-                .isEqualTo("Message from exception: status 400 reading TestService#greeting()");
+            .isEqualTo("Message from exception: status 400 reading TestService#greeting()");
         verify(1, getRequestedFor(urlPathEqualTo("/greeting")));
     }
 
@@ -104,16 +104,16 @@ public class Resilience4jFeignFallbackFactoryTest {
         TestService uselessFallback = spy(TestService.class);
         when(uselessFallback.greeting()).thenReturn("I should not be called");
         FeignDecorators decorators = FeignDecorators.builder()
-                .withFallbackFactory(TestServiceFallbackWithException::new, FeignException.class)
-                .withFallbackFactory(e -> uselessFallback)
-                .build();
+            .withFallbackFactory(TestServiceFallbackWithException::new, FeignException.class)
+            .withFallbackFactory(e -> uselessFallback)
+            .build();
         TestService testService = Resilience4jFeign.builder(decorators)
-                .target(TestService.class, MOCK_URL);
+            .target(TestService.class, MOCK_URL);
 
         String result = testService.greeting();
 
         assertThat(result)
-                .isEqualTo("Message from exception: status 400 reading TestService#greeting()");
+            .isEqualTo("Message from exception: status 400 reading TestService#greeting()");
         verify(uselessFallback, times(0)).greeting();
         verify(1, getRequestedFor(urlPathEqualTo("/greeting")));
     }
@@ -124,16 +124,16 @@ public class Resilience4jFeignFallbackFactoryTest {
         TestService uselessFallback = spy(TestService.class);
         when(uselessFallback.greeting()).thenReturn("I should not be called");
         FeignDecorators decorators = FeignDecorators.builder()
-                .withFallbackFactory(e -> uselessFallback, MyException.class)
-                .withFallbackFactory(TestServiceFallbackWithException::new)
-                .build();
+            .withFallbackFactory(e -> uselessFallback, MyException.class)
+            .withFallbackFactory(TestServiceFallbackWithException::new)
+            .build();
         TestService testService = Resilience4jFeign.builder(decorators)
-                .target(TestService.class, MOCK_URL);
+            .target(TestService.class, MOCK_URL);
 
         String result = testService.greeting();
 
         assertThat(result)
-                .isEqualTo("Message from exception: status 400 reading TestService#greeting()");
+            .isEqualTo("Message from exception: status 400 reading TestService#greeting()");
         verify(uselessFallback, times(0)).greeting();
         verify(1, getRequestedFor(urlPathEqualTo("/greeting")));
     }
@@ -144,17 +144,17 @@ public class Resilience4jFeignFallbackFactoryTest {
         TestService uselessFallback = spy(TestService.class);
         when(uselessFallback.greeting()).thenReturn("I should not be called");
         FeignDecorators decorators = FeignDecorators.builder()
-                .withFallbackFactory(TestServiceFallbackWithException::new,
-                        FeignException.class::isInstance)
-                .withFallbackFactory(e -> uselessFallback)
-                .build();
+            .withFallbackFactory(TestServiceFallbackWithException::new,
+                FeignException.class::isInstance)
+            .withFallbackFactory(e -> uselessFallback)
+            .build();
         TestService testService = Resilience4jFeign.builder(decorators)
-                .target(TestService.class, MOCK_URL);
+            .target(TestService.class, MOCK_URL);
 
         String result = testService.greeting();
 
         assertThat(result)
-                .isEqualTo("Message from exception: status 400 reading TestService#greeting()");
+            .isEqualTo("Message from exception: status 400 reading TestService#greeting()");
         verify(uselessFallback, times(0)).greeting();
         verify(1, getRequestedFor(urlPathEqualTo("/greeting")));
     }
@@ -165,16 +165,16 @@ public class Resilience4jFeignFallbackFactoryTest {
         TestService uselessFallback = spy(TestService.class);
         when(uselessFallback.greeting()).thenReturn("I should not be called");
         FeignDecorators decorators = FeignDecorators.builder()
-                .withFallbackFactory(e -> uselessFallback, MyException.class::isInstance)
-                .withFallbackFactory(TestServiceFallbackWithException::new)
-                .build();
+            .withFallbackFactory(e -> uselessFallback, MyException.class::isInstance)
+            .withFallbackFactory(TestServiceFallbackWithException::new)
+            .build();
         TestService testService = Resilience4jFeign.builder(decorators)
-                .target(TestService.class, MOCK_URL);
+            .target(TestService.class, MOCK_URL);
 
         String result = testService.greeting();
 
         assertThat(result)
-                .isEqualTo("Message from exception: status 400 reading TestService#greeting()");
+            .isEqualTo("Message from exception: status 400 reading TestService#greeting()");
         verify(uselessFallback, times(0)).greeting();
         verify(1, getRequestedFor(urlPathEqualTo("/greeting")));
     }

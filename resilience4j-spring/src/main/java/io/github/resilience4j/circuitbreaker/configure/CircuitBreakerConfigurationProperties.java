@@ -19,7 +19,7 @@ package io.github.resilience4j.circuitbreaker.configure;
 import org.springframework.core.Ordered;
 
 public class CircuitBreakerConfigurationProperties extends
-        io.github.resilience4j.common.circuitbreaker.configuration.CircuitBreakerConfigurationProperties {
+    io.github.resilience4j.common.circuitbreaker.configuration.CircuitBreakerConfigurationProperties {
 
     private int circuitBreakerAspectOrder = Ordered.LOWEST_PRECEDENCE - 2;
 

@@ -55,12 +55,12 @@ public class BulkheadMetricsPublisher extends AbstractMetricsPublisher<Bulkhead>
         String maxAllowedConcurrentCalls = name(prefix, name, MAX_ALLOWED_CONCURRENT_CALLS);
 
         metricRegistry.register(availableConcurrentCalls,
-                (Gauge<Integer>) () -> bulkhead.getMetrics().getAvailableConcurrentCalls());
+            (Gauge<Integer>) () -> bulkhead.getMetrics().getAvailableConcurrentCalls());
         metricRegistry.register(maxAllowedConcurrentCalls,
-                (Gauge<Integer>) () -> bulkhead.getMetrics().getMaxAllowedConcurrentCalls());
+            (Gauge<Integer>) () -> bulkhead.getMetrics().getMaxAllowedConcurrentCalls());
 
         List<String> metricNames = Arrays
-                .asList(availableConcurrentCalls, maxAllowedConcurrentCalls);
+            .asList(availableConcurrentCalls, maxAllowedConcurrentCalls);
         metricsNameMap.put(name, new HashSet<>(metricNames));
     }
 

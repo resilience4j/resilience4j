@@ -83,7 +83,7 @@ public class SlidingTimeWindowMetrics implements Metrics {
     public synchronized Snapshot record(long duration, TimeUnit durationUnit, Outcome outcome) {
         totalAggregation.record(duration, durationUnit, outcome);
         moveWindowToCurrentEpochSecond(getLatestPartialAggregation())
-                .record(duration, durationUnit, outcome);
+            .record(duration, durationUnit, outcome);
         return new SnapshotImpl(totalAggregation);
     }
 
@@ -102,7 +102,7 @@ public class SlidingTimeWindowMetrics implements Metrics {
      * @param latestPartialAggregation the latest partial aggregation of the circular array
      */
     private PartialAggregation moveWindowToCurrentEpochSecond(
-            PartialAggregation latestPartialAggregation) {
+        PartialAggregation latestPartialAggregation) {
         long currentEpochSecond = clock.instant().getEpochSecond();
         long differenceInSeconds = currentEpochSecond - latestPartialAggregation.getEpochSecond();
         if (differenceInSeconds == 0) {

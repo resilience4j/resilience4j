@@ -32,7 +32,7 @@ public class CallableUtils {
      * @return a function composed of supplier and handler
      */
     public static <T, R> Callable<R> andThen(Callable<T> callable,
-            BiFunction<T, Exception, R> handler) {
+        BiFunction<T, Exception, R> handler) {
         return () -> {
             try {
                 T result = callable.call();
@@ -54,7 +54,7 @@ public class CallableUtils {
      * @return a function composed of supplier and handler
      */
     public static <T, R> Callable<R> andThen(Callable<T> callable, Function<T, R> resultHandler,
-            Function<Exception, R> exceptionHandler) {
+        Function<Exception, R> exceptionHandler) {
         return () -> {
             try {
                 T result = callable.call();
@@ -74,7 +74,7 @@ public class CallableUtils {
      * @return a function composed of callable and exceptionHandler
      */
     public static <T> Callable<T> recover(Callable<T> callable,
-            Function<Exception, T> exceptionHandler) {
+        Function<Exception, T> exceptionHandler) {
         return () -> {
             try {
                 return callable.call();

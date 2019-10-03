@@ -21,7 +21,7 @@ class NamingThreadFactory implements ThreadFactory {
     private ThreadGroup getThreadGroup() {
         SecurityManager security = System.getSecurityManager();
         return security != null ? security.getThreadGroup()
-                : Thread.currentThread().getThreadGroup();
+            : Thread.currentThread().getThreadGroup();
     }
 
     @Override

@@ -43,7 +43,7 @@ public class CircuitBreakerRecoveryTest {
     @Test
     public void testAsyncRecovery() throws Exception {
         assertThat(testDummyService.async().toCompletableFuture().get(5, TimeUnit.SECONDS))
-                .isEqualTo("recovered");
+            .isEqualTo("recovered");
     }
 
     @Test

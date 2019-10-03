@@ -30,9 +30,9 @@ public class CompletableRateLimiterTest {
         given(rateLimiter.reservePermission()).willReturn(Duration.ofSeconds(0).toNanos());
 
         Completable.complete()
-                .compose(RateLimiterOperator.of(rateLimiter))
-                .test()
-                .assertComplete();
+            .compose(RateLimiterOperator.of(rateLimiter))
+            .test()
+            .assertComplete();
     }
 
     @Test
@@ -40,9 +40,9 @@ public class CompletableRateLimiterTest {
         given(rateLimiter.reservePermission()).willReturn(Duration.ofSeconds(1).toNanos());
 
         Completable.complete()
-                .compose(RateLimiterOperator.of(rateLimiter))
-                .test()
-                .awaitTerminalEvent(1, TimeUnit.SECONDS);
+            .compose(RateLimiterOperator.of(rateLimiter))
+            .test()
+            .awaitTerminalEvent(1, TimeUnit.SECONDS);
     }
 
     @Test
@@ -50,11 +50,11 @@ public class CompletableRateLimiterTest {
         given(rateLimiter.reservePermission()).willReturn(Duration.ofSeconds(0).toNanos());
 
         Completable.error(new IOException("BAM!"))
-                .compose(RateLimiterOperator.of(rateLimiter))
-                .test()
-                .assertSubscribed()
-                .assertError(IOException.class)
-                .assertNotComplete();
+            .compose(RateLimiterOperator.of(rateLimiter))
+            .test()
+            .assertSubscribed()
+            .assertError(IOException.class)
+            .assertNotComplete();
     }
 
     @Test
@@ -62,10 +62,10 @@ public class CompletableRateLimiterTest {
         given(rateLimiter.reservePermission()).willReturn(-1L);
 
         Completable.complete()
-                .compose(RateLimiterOperator.of(rateLimiter))
-                .test()
-                .assertSubscribed()
-                .assertError(RequestNotPermitted.class)
-                .assertNotComplete();
+            .compose(RateLimiterOperator.of(rateLimiter))
+            .test()
+            .assertSubscribed()
+            .assertError(RequestNotPermitted.class)
+            .assertNotComplete();
     }
 }

@@ -40,25 +40,25 @@ abstract class AbstractTimeLimiterMetrics extends AbstractMetrics {
 
     protected void addMetrics(MeterRegistry meterRegistry, TimeLimiter timeLimiter) {
         Counter successes = Counter.builder(names.getCallsMetricName())
-                .description("The number of successful calls")
-                .tag(TagNames.NAME, timeLimiter.getName())
-                .tag(TagNames.KIND, KIND_SUCCESSFUL)
-                .register(meterRegistry);
+            .description("The number of successful calls")
+            .tag(TagNames.NAME, timeLimiter.getName())
+            .tag(TagNames.KIND, KIND_SUCCESSFUL)
+            .register(meterRegistry);
         Counter failures = Counter.builder(names.getCallsMetricName())
-                .description("The number of failed calls")
-                .tag(TagNames.NAME, timeLimiter.getName())
-                .tag(TagNames.KIND, KIND_FAILED)
-                .register(meterRegistry);
+            .description("The number of failed calls")
+            .tag(TagNames.NAME, timeLimiter.getName())
+            .tag(TagNames.KIND, KIND_FAILED)
+            .register(meterRegistry);
         Counter timeouts = Counter.builder(names.getCallsMetricName())
-                .description("The number of timed out calls")
-                .tag(TagNames.NAME, timeLimiter.getName())
-                .tag(TagNames.KIND, KIND_TIMEOUT)
-                .register(meterRegistry);
+            .description("The number of timed out calls")
+            .tag(TagNames.NAME, timeLimiter.getName())
+            .tag(TagNames.KIND, KIND_TIMEOUT)
+            .register(meterRegistry);
 
         timeLimiter.getEventPublisher()
-                .onSuccess(event -> successes.increment())
-                .onError(event -> failures.increment())
-                .onTimeout(event -> timeouts.increment());
+            .onSuccess(event -> successes.increment())
+            .onError(event -> failures.increment())
+            .onTimeout(event -> timeouts.increment());
 
         List<Meter.Id> ids = Arrays.asList(successes.getId(), failures.getId(), timeouts.getId());
         meterIdMap.put(timeLimiter.getName(), new HashSet<>(ids));

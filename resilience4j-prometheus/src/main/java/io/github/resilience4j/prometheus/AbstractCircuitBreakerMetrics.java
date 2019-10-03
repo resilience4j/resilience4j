@@ -43,79 +43,79 @@ public abstract class AbstractCircuitBreakerMetrics extends Collector {
     protected AbstractCircuitBreakerMetrics(MetricNames names) {
         this.names = requireNonNull(names);
         callsHistogram = Histogram
-                .build(names.getCallsMetricName(), "Total number of calls by kind")
-                .labelNames("name", "kind")
-                .create().register(collectorRegistry);
+            .build(names.getCallsMetricName(), "Total number of calls by kind")
+            .labelNames("name", "kind")
+            .create().register(collectorRegistry);
     }
 
     protected void addMetrics(CircuitBreaker circuitBreaker) {
         circuitBreaker.getEventPublisher()
-                .onCallNotPermitted(
-                        event -> callsHistogram.labels(circuitBreaker.getName(), KIND_NOT_PERMITTED)
-                                .observe(0))
-                .onIgnoredError(
-                        event -> callsHistogram.labels(circuitBreaker.getName(), KIND_IGNORED)
-                                .observe(event.getElapsedDuration().toNanos()
-                                        / Collector.NANOSECONDS_PER_SECOND))
-                .onSuccess(event -> callsHistogram.labels(circuitBreaker.getName(), KIND_SUCCESSFUL)
-                        .observe(event.getElapsedDuration().toNanos()
-                                / Collector.NANOSECONDS_PER_SECOND))
-                .onError(event -> callsHistogram.labels(circuitBreaker.getName(), KIND_FAILED)
-                        .observe(event.getElapsedDuration().toNanos()
-                                / Collector.NANOSECONDS_PER_SECOND));
+            .onCallNotPermitted(
+                event -> callsHistogram.labels(circuitBreaker.getName(), KIND_NOT_PERMITTED)
+                    .observe(0))
+            .onIgnoredError(
+                event -> callsHistogram.labels(circuitBreaker.getName(), KIND_IGNORED)
+                    .observe(event.getElapsedDuration().toNanos()
+                        / Collector.NANOSECONDS_PER_SECOND))
+            .onSuccess(event -> callsHistogram.labels(circuitBreaker.getName(), KIND_SUCCESSFUL)
+                .observe(event.getElapsedDuration().toNanos()
+                    / Collector.NANOSECONDS_PER_SECOND))
+            .onError(event -> callsHistogram.labels(circuitBreaker.getName(), KIND_FAILED)
+                .observe(event.getElapsedDuration().toNanos()
+                    / Collector.NANOSECONDS_PER_SECOND));
     }
 
     protected List<MetricFamilySamples> collectGaugeSamples(List<CircuitBreaker> circuitBreakers) {
         GaugeMetricFamily stateFamily = new GaugeMetricFamily(
-                names.getStateMetricName(),
-                "The state of the circuit breaker:",
-                NAME_AND_STATE
+            names.getStateMetricName(),
+            "The state of the circuit breaker:",
+            NAME_AND_STATE
         );
         GaugeMetricFamily bufferedCallsFamily = new GaugeMetricFamily(
-                names.getBufferedCallsMetricName(),
-                "The number of buffered calls",
-                LabelNames.NAME_AND_KIND
+            names.getBufferedCallsMetricName(),
+            "The number of buffered calls",
+            LabelNames.NAME_AND_KIND
         );
         GaugeMetricFamily slowCallsFamily = new GaugeMetricFamily(
-                names.getSlowCallsMetricName(),
-                "The number of slow calls",
-                LabelNames.NAME_AND_KIND
+            names.getSlowCallsMetricName(),
+            "The number of slow calls",
+            LabelNames.NAME_AND_KIND
         );
 
         GaugeMetricFamily failureRateFamily = new GaugeMetricFamily(
-                names.getFailureRateMetricName(),
-                "The failure rate",
-                LabelNames.NAME
+            names.getFailureRateMetricName(),
+            "The failure rate",
+            LabelNames.NAME
         );
 
         GaugeMetricFamily slowCallRateFamily = new GaugeMetricFamily(
-                names.getSlowCallRateMetricName(),
-                "The slow call rate",
-                LabelNames.NAME
+            names.getSlowCallRateMetricName(),
+            "The slow call rate",
+            LabelNames.NAME
         );
 
         for (CircuitBreaker circuitBreaker : circuitBreakers) {
             final CircuitBreaker.State[] states = CircuitBreaker.State.values();
             for (CircuitBreaker.State state : states) {
                 stateFamily.addMetric(asList(circuitBreaker.getName(), state.name().toLowerCase()),
-                        circuitBreaker.getState() == state ? 1 : 0);
+                    circuitBreaker.getState() == state ? 1 : 0);
             }
 
             List<String> nameLabel = Collections.singletonList(circuitBreaker.getName());
             CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
             bufferedCallsFamily.addMetric(asList(circuitBreaker.getName(), KIND_SUCCESSFUL),
-                    metrics.getNumberOfSuccessfulCalls());
+                metrics.getNumberOfSuccessfulCalls());
             bufferedCallsFamily.addMetric(asList(circuitBreaker.getName(), KIND_FAILED),
-                    metrics.getNumberOfFailedCalls());
+                metrics.getNumberOfFailedCalls());
             slowCallsFamily.addMetric(asList(circuitBreaker.getName(), KIND_SUCCESSFUL),
-                    metrics.getNumberOfSlowSuccessfulCalls());
+                metrics.getNumberOfSlowSuccessfulCalls());
             slowCallsFamily.addMetric(asList(circuitBreaker.getName(), KIND_FAILED),
-                    metrics.getNumberOfSlowFailedCalls());
+                metrics.getNumberOfSlowFailedCalls());
             failureRateFamily.addMetric(nameLabel, metrics.getFailureRate());
             slowCallRateFamily.addMetric(nameLabel, metrics.getSlowCallRate());
         }
         return asList(stateFamily, bufferedCallsFamily, slowCallsFamily, failureRateFamily,
-                slowCallRateFamily);
+            slowCallRateFamily);
     }
 
     /**
@@ -135,6 +135,7 @@ public abstract class AbstractCircuitBreakerMetrics extends Collector {
         private String slowCallsMetricName = DEFAULT_CIRCUIT_BREAKER_SLOW_CALLS;
         private String failureRateMetricName = DEFAULT_CIRCUIT_BREAKER_FAILURE_RATE;
         private String slowCallRateMetricName = DEFAULT_CIRCUIT_BREAKER_SLOW_CALL_RATE;
+
         private MetricNames() {
         }
 

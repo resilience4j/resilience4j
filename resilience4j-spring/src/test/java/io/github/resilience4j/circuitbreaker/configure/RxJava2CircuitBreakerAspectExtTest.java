@@ -53,10 +53,10 @@ public class RxJava2CircuitBreakerAspectExtTest {
 
         when(proceedingJoinPoint.proceed()).thenReturn(Single.just("Test"));
         assertThat(rxJava2CircuitBreakerAspectExt
-                .handle(proceedingJoinPoint, circuitBreaker, "testMethod")).isNotNull();
+            .handle(proceedingJoinPoint, circuitBreaker, "testMethod")).isNotNull();
 
         when(proceedingJoinPoint.proceed()).thenReturn(Flowable.just("Test"));
         assertThat(rxJava2CircuitBreakerAspectExt
-                .handle(proceedingJoinPoint, circuitBreaker, "testMethod")).isNotNull();
+            .handle(proceedingJoinPoint, circuitBreaker, "testMethod")).isNotNull();
     }
 }

@@ -49,15 +49,15 @@ public class FluxCircuitBreakerTest {
         given(circuitBreaker.tryAcquirePermission()).willReturn(true);
 
         StepVerifier.create(
-                Flux.just("Event 1", "Event 2")
-                        .compose(CircuitBreakerOperator.of(circuitBreaker)))
-                .expectNext("Event 1")
-                .expectNext("Event 2")
-                .verifyComplete();
+            Flux.just("Event 1", "Event 2")
+                .compose(CircuitBreakerOperator.of(circuitBreaker)))
+            .expectNext("Event 1")
+            .expectNext("Event 2")
+            .verifyComplete();
 
         verify(circuitBreaker, times(1)).onSuccess(anyLong(), any(TimeUnit.class));
         verify(circuitBreaker, never())
-                .onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
+            .onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
     }
 
     @Test
@@ -65,13 +65,13 @@ public class FluxCircuitBreakerTest {
         given(circuitBreaker.tryAcquirePermission()).willReturn(true);
 
         StepVerifier.create(
-                Flux.error(new IOException("BAM!"))
-                        .compose(CircuitBreakerOperator.of(circuitBreaker)))
-                .expectError(IOException.class)
-                .verify(Duration.ofSeconds(1));
+            Flux.error(new IOException("BAM!"))
+                .compose(CircuitBreakerOperator.of(circuitBreaker)))
+            .expectError(IOException.class)
+            .verify(Duration.ofSeconds(1));
 
         verify(circuitBreaker, times(1))
-                .onError(anyLong(), any(TimeUnit.class), any(IOException.class));
+            .onError(anyLong(), any(TimeUnit.class), any(IOException.class));
         verify(circuitBreaker, never()).onSuccess(anyLong(), any(TimeUnit.class));
     }
 
@@ -80,13 +80,13 @@ public class FluxCircuitBreakerTest {
         given(circuitBreaker.tryAcquirePermission()).willReturn(true);
 
         StepVerifier.create(
-                Flux.error(new IOException("BAM!"), true)
-                        .compose(CircuitBreakerOperator.of(circuitBreaker)))
-                .expectError(IOException.class)
-                .verify(Duration.ofSeconds(1));
+            Flux.error(new IOException("BAM!"), true)
+                .compose(CircuitBreakerOperator.of(circuitBreaker)))
+            .expectError(IOException.class)
+            .verify(Duration.ofSeconds(1));
 
         verify(circuitBreaker, times(1))
-                .onError(anyLong(), any(TimeUnit.class), any(IOException.class));
+            .onError(anyLong(), any(TimeUnit.class), any(IOException.class));
         verify(circuitBreaker, never()).onSuccess(anyLong(), any(TimeUnit.class));
     }
 
@@ -95,15 +95,15 @@ public class FluxCircuitBreakerTest {
         given(circuitBreaker.tryAcquirePermission()).willReturn(true);
 
         StepVerifier.create(Flux.just("Event 1", "Event 2")
-                .flatMap(value -> Mono.just("Bla " + value)
-                        .compose(CircuitBreakerOperator.of(circuitBreaker))))
-                .expectNext("Bla Event 1")
-                .expectNext("Bla Event 2")
-                .verifyComplete();
+            .flatMap(value -> Mono.just("Bla " + value)
+                .compose(CircuitBreakerOperator.of(circuitBreaker))))
+            .expectNext("Bla Event 1")
+            .expectNext("Bla Event 2")
+            .verifyComplete();
 
         verify(circuitBreaker, times(2)).onSuccess(anyLong(), any(TimeUnit.class));
         verify(circuitBreaker, never())
-                .onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
+            .onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
     }
 
     @Test
@@ -111,13 +111,13 @@ public class FluxCircuitBreakerTest {
         given(circuitBreaker.tryAcquirePermission()).willReturn(false);
 
         StepVerifier.create(
-                Flux.just("Event 1", "Event 2")
-                        .compose(CircuitBreakerOperator.of(circuitBreaker)))
-                .expectError(CallNotPermittedException.class)
-                .verify(Duration.ofSeconds(1));
+            Flux.just("Event 1", "Event 2")
+                .compose(CircuitBreakerOperator.of(circuitBreaker)))
+            .expectError(CallNotPermittedException.class)
+            .verify(Duration.ofSeconds(1));
 
         verify(circuitBreaker, never())
-                .onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
+            .onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
         verify(circuitBreaker, never()).onSuccess(anyLong(), any(TimeUnit.class));
     }
 
@@ -126,13 +126,13 @@ public class FluxCircuitBreakerTest {
         given(circuitBreaker.tryAcquirePermission()).willReturn(false);
 
         StepVerifier.create(
-                Flux.error(new IOException("BAM!"), true)
-                        .compose(CircuitBreakerOperator.of(circuitBreaker)))
-                .expectError(CallNotPermittedException.class)
-                .verify(Duration.ofSeconds(1));
+            Flux.error(new IOException("BAM!"), true)
+                .compose(CircuitBreakerOperator.of(circuitBreaker)))
+            .expectError(CallNotPermittedException.class)
+            .verify(Duration.ofSeconds(1));
 
         verify(circuitBreaker, never())
-                .onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
+            .onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
         verify(circuitBreaker, never()).onSuccess(anyLong(), any(TimeUnit.class));
     }
 
@@ -141,13 +141,13 @@ public class FluxCircuitBreakerTest {
         given(circuitBreaker.tryAcquirePermission()).willReturn(false);
 
         StepVerifier.create(
-                Flux.error(new IOException("BAM!"))
-                        .compose(CircuitBreakerOperator.of(circuitBreaker)))
-                .expectError(CallNotPermittedException.class)
-                .verify(Duration.ofSeconds(1));
+            Flux.error(new IOException("BAM!"))
+                .compose(CircuitBreakerOperator.of(circuitBreaker)))
+            .expectError(CallNotPermittedException.class)
+            .verify(Duration.ofSeconds(1));
 
         verify(circuitBreaker, never())
-                .onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
+            .onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
         verify(circuitBreaker, never()).onSuccess(anyLong(), any(TimeUnit.class));
     }
 
@@ -156,16 +156,16 @@ public class FluxCircuitBreakerTest {
         given(circuitBreaker.tryAcquirePermission()).willReturn(true);
 
         StepVerifier.create(
-                Flux.just("Event")
-                        .delayElements(Duration.ofDays(1))
-                        .compose(CircuitBreakerOperator.of(circuitBreaker)))
-                .expectSubscription()
-                .thenCancel()
-                .verify();
+            Flux.just("Event")
+                .delayElements(Duration.ofDays(1))
+                .compose(CircuitBreakerOperator.of(circuitBreaker)))
+            .expectSubscription()
+            .thenCancel()
+            .verify();
 
         verify(circuitBreaker, times(1)).releasePermission();
         verify(circuitBreaker, never())
-                .onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
+            .onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
         verify(circuitBreaker, never()).onSuccess(anyLong(), any(TimeUnit.class));
     }
 
@@ -174,16 +174,16 @@ public class FluxCircuitBreakerTest {
         given(circuitBreaker.tryAcquirePermission()).willReturn(true);
 
         StepVerifier.create(
-                Flux.just("Event1", "Event2", "Event3")
-                        .compose(CircuitBreakerOperator.of(circuitBreaker)))
-                .expectSubscription()
-                .thenRequest(1)
-                .thenCancel()
-                .verify();
+            Flux.just("Event1", "Event2", "Event3")
+                .compose(CircuitBreakerOperator.of(circuitBreaker)))
+            .expectSubscription()
+            .thenRequest(1)
+            .thenCancel()
+            .verify();
 
         verify(circuitBreaker, never()).releasePermission();
         verify(circuitBreaker, never())
-                .onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
+            .onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
         verify(circuitBreaker, times(1)).onSuccess(anyLong(), any(TimeUnit.class));
     }
 }

@@ -43,17 +43,17 @@ public class BulkheadRecoveryTest {
     @Test
     public void testAsyncRecovery() throws Exception {
         assertThat(testDummyService.async().toCompletableFuture().get(5, TimeUnit.SECONDS))
-                .isEqualTo("recovered");
+            .isEqualTo("recovered");
     }
 
     @Test
     public void testAsyncThreadPoolRecovery() throws Exception {
         assertThat(
-                testDummyService.asyncThreadPool().toCompletableFuture().get(5, TimeUnit.SECONDS))
-                .isEqualTo("recovered");
+            testDummyService.asyncThreadPool().toCompletableFuture().get(5, TimeUnit.SECONDS))
+            .isEqualTo("recovered");
 
         assertThat(testDummyService.asyncThreadPoolSuccess().toCompletableFuture()
-                .get(5, TimeUnit.SECONDS)).isEqualTo("finished");
+            .get(5, TimeUnit.SECONDS)).isEqualTo("finished");
     }
 
     @Test

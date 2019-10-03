@@ -60,14 +60,14 @@ class FallbackDecorator<T> implements FeignDecorator {
      * Calls the fallback if the invocationCall throws an {@link Exception}.
      *
      * @throws IllegalArgumentException if the fallback object does not have a corresponding
-     *         fallback method.
+     *     fallback method.
      */
     @Override
     public CheckedFunction1<Object[], Object> decorate(
-            CheckedFunction1<Object[], Object> invocationCall,
-            Method method,
-            MethodHandler methodHandler,
-            Target<?> target) {
+        CheckedFunction1<Object[], Object> invocationCall,
+        Method method,
+        MethodHandler methodHandler,
+        Target<?> target) {
         return fallback.decorate(invocationCall, method, filter);
     }
 }

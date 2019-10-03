@@ -56,9 +56,9 @@ public class ThreadPoolBulkheadConfigurationProperties {
     }
 
     public ThreadPoolBulkheadConfig createThreadPoolBulkheadConfig(
-            InstanceProperties instanceProperties) {
+        InstanceProperties instanceProperties) {
         if (instanceProperties != null && StringUtils
-                .isNotEmpty(instanceProperties.getBaseConfig())) {
+            .isNotEmpty(instanceProperties.getBaseConfig())) {
             InstanceProperties baseProperties = configs.get(instanceProperties.getBaseConfig());
             if (baseProperties == null) {
                 throw new ConfigurationNotFoundException(instanceProperties.getBaseConfig());
@@ -69,15 +69,15 @@ public class ThreadPoolBulkheadConfigurationProperties {
     }
 
     private ThreadPoolBulkheadConfig buildThreadPoolConfigFromBaseConfig(
-            InstanceProperties baseProperties, InstanceProperties instanceProperties) {
+        InstanceProperties baseProperties, InstanceProperties instanceProperties) {
         ThreadPoolBulkheadConfig baseConfig = buildThreadPoolBulkheadConfig(
-                ThreadPoolBulkheadConfig.custom(), baseProperties);
+            ThreadPoolBulkheadConfig.custom(), baseProperties);
         return buildThreadPoolBulkheadConfig(ThreadPoolBulkheadConfig.from(baseConfig),
-                instanceProperties);
+            instanceProperties);
     }
 
     public ThreadPoolBulkheadConfig buildThreadPoolBulkheadConfig(
-            ThreadPoolBulkheadConfig.Builder builder, InstanceProperties properties) {
+        ThreadPoolBulkheadConfig.Builder builder, InstanceProperties properties) {
         if (properties == null) {
             return ThreadPoolBulkheadConfig.custom().build();
         }

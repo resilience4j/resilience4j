@@ -12,7 +12,7 @@ public class CircuitBreakerEventsEndpointResponse {
     }
 
     public CircuitBreakerEventsEndpointResponse(
-            @Nullable List<CircuitBreakerEventDTO> circuitBreakerEvents) {
+        @Nullable List<CircuitBreakerEventDTO> circuitBreakerEvents) {
         this.circuitBreakerEvents = circuitBreakerEvents;
     }
 
@@ -22,7 +22,7 @@ public class CircuitBreakerEventsEndpointResponse {
     }
 
     public void setCircuitBreakerEvents(
-            @Nullable List<CircuitBreakerEventDTO> circuitBreakerEvents) {
+        @Nullable List<CircuitBreakerEventDTO> circuitBreakerEvents) {
         this.circuitBreakerEvents = circuitBreakerEvents;
     }
 }

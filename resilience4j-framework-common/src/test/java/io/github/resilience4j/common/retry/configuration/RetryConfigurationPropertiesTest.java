@@ -58,7 +58,7 @@ public class RetryConfigurationPropertiesTest {
         final RetryConfig retry1 = retryConfigurationProperties.createRetryConfig("backend1");
         final RetryConfig retry2 = retryConfigurationProperties.createRetryConfig("backend2");
         RetryConfigurationProperties.InstanceProperties instancePropertiesForRetry1 = retryConfigurationProperties
-                .getInstances().get("backend1");
+            .getInstances().get("backend1");
         assertThat(instancePropertiesForRetry1.getWaitDuration().toMillis()).isEqualTo(1000);
         assertThat(retry1).isNotNull();
         assertThat(retry1.getMaxAttempts()).isEqualTo(3);
@@ -93,21 +93,21 @@ public class RetryConfigurationPropertiesTest {
         retryConfigurationProperties.getConfigs().put("sharedConfig", sharedProperties);
 
         retryConfigurationProperties.getInstances()
-                .put("backendWithDefaultConfig", backendWithDefaultConfig);
+            .put("backendWithDefaultConfig", backendWithDefaultConfig);
         retryConfigurationProperties.getInstances()
-                .put("backendWithSharedConfig", backendWithSharedConfig);
+            .put("backendWithSharedConfig", backendWithSharedConfig);
 
         //Then
         // Should get default config and overwrite max attempt and wait time
         RetryConfig retry1 = retryConfigurationProperties
-                .createRetryConfig("backendWithDefaultConfig");
+            .createRetryConfig("backendWithDefaultConfig");
         assertThat(retry1).isNotNull();
         assertThat(retry1.getMaxAttempts()).isEqualTo(3);
         assertThat(retry1.getIntervalFunction().apply(1)).isEqualTo(200L);
 
         // Should get shared config and overwrite wait time
         RetryConfig retry2 = retryConfigurationProperties
-                .createRetryConfig("backendWithSharedConfig");
+            .createRetryConfig("backendWithSharedConfig");
         assertThat(retry2).isNotNull();
         assertThat(retry2.getMaxAttempts()).isEqualTo(2);
         assertThat(retry2.getIntervalFunction().apply(1)).isEqualTo(300L);
@@ -129,8 +129,8 @@ public class RetryConfigurationPropertiesTest {
 
         //then
         assertThatThrownBy(() -> retryConfigurationProperties.createRetryConfig("backend"))
-                .isInstanceOf(ConfigurationNotFoundException.class)
-                .hasMessage("Configuration with name 'unknownConfig' does not exist");
+            .isInstanceOf(ConfigurationNotFoundException.class)
+            .hasMessage("Configuration with name 'unknownConfig' does not exist");
     }
 
 }

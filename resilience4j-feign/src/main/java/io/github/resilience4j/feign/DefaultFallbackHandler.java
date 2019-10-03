@@ -35,9 +35,9 @@ class DefaultFallbackHandler<T> implements FallbackHandler<T> {
 
     @Override
     public CheckedFunction1<Object[], Object> decorate(
-            CheckedFunction1<Object[], Object> invocationCall,
-            Method method,
-            Predicate<Exception> filter) {
+        CheckedFunction1<Object[], Object> invocationCall,
+        Method method,
+        Predicate<Exception> filter) {
         validateFallback(fallback, method);
         Method fallbackMethod = getFallbackMethod(fallback, method);
         fallbackMethod.setAccessible(true);

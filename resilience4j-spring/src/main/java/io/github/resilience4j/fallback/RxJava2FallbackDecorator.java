@@ -37,7 +37,7 @@ import java.util.function.Function;
 public class RxJava2FallbackDecorator implements FallbackDecorator {
 
     private static final Set<Class<?>> RX_SUPPORTED_TYPES = newHashSet(ObservableSource.class,
-            SingleSource.class, CompletableSource.class, MaybeSource.class, Flowable.class);
+        SingleSource.class, CompletableSource.class, MaybeSource.class, Flowable.class);
 
     @Override
     public boolean supports(Class<?> target) {
@@ -46,28 +46,28 @@ public class RxJava2FallbackDecorator implements FallbackDecorator {
 
     @Override
     public CheckedFunction0<Object> decorate(FallbackMethod fallbackMethod,
-            CheckedFunction0<Object> supplier) {
+        CheckedFunction0<Object> supplier) {
         return supplier.andThen(request -> {
             if (request instanceof ObservableSource) {
                 Observable<?> observable = (Observable<?>) request;
                 return observable.onErrorResumeNext(
-                        rxJava2OnErrorResumeNext(fallbackMethod, Observable::error));
+                    rxJava2OnErrorResumeNext(fallbackMethod, Observable::error));
             } else if (request instanceof SingleSource) {
                 Single<?> single = (Single) request;
                 return single
-                        .onErrorResumeNext(rxJava2OnErrorResumeNext(fallbackMethod, Single::error));
+                    .onErrorResumeNext(rxJava2OnErrorResumeNext(fallbackMethod, Single::error));
             } else if (request instanceof CompletableSource) {
                 Completable completable = (Completable) request;
                 return completable.onErrorResumeNext(
-                        rxJava2OnErrorResumeNext(fallbackMethod, Completable::error));
+                    rxJava2OnErrorResumeNext(fallbackMethod, Completable::error));
             } else if (request instanceof MaybeSource) {
                 Maybe<?> maybe = (Maybe) request;
                 return maybe
-                        .onErrorResumeNext(rxJava2OnErrorResumeNext(fallbackMethod, Maybe::error));
+                    .onErrorResumeNext(rxJava2OnErrorResumeNext(fallbackMethod, Maybe::error));
             } else if (request instanceof Flowable) {
                 Flowable<?> flowable = (Flowable) request;
                 return flowable.onErrorResumeNext(
-                        rxJava2OnErrorResumeNext(fallbackMethod, Flowable::error));
+                    rxJava2OnErrorResumeNext(fallbackMethod, Flowable::error));
             } else {
                 return request;
             }
@@ -76,7 +76,7 @@ public class RxJava2FallbackDecorator implements FallbackDecorator {
 
     @SuppressWarnings("unchecked")
     private <T> io.reactivex.functions.Function<Throwable, T> rxJava2OnErrorResumeNext(
-            FallbackMethod recoveryMethod, Function<? super Throwable, ? extends T> errorFunction) {
+        FallbackMethod recoveryMethod, Function<? super Throwable, ? extends T> errorFunction) {
         return throwable -> {
             try {
                 return (T) recoveryMethod.fallback(throwable);

@@ -34,7 +34,7 @@ import org.springframework.context.annotation.Configuration;
  */
 @Configuration
 @ConditionalOnClass({MetricsAutoConfiguration.class, Bulkhead.class,
-        TaggedBulkheadMetricsPublisher.class})
+    TaggedBulkheadMetricsPublisher.class})
 @AutoConfigureAfter(MetricsAutoConfiguration.class)
 @ConditionalOnProperty(value = "resilience4j.bulkhead.metrics.enabled", matchIfMissing = true)
 public class BulkheadMicrometerAutoConfiguration {
@@ -50,7 +50,7 @@ public class BulkheadMicrometerAutoConfiguration {
     @ConditionalOnProperty(value = "resilience4j.bulkhead.metrics.legacy.enabled", havingValue = "false", matchIfMissing = true)
     @ConditionalOnMissingBean
     public TaggedBulkheadMetricsPublisher taggedBulkheadMetricsPublisher(
-            MeterRegistry meterRegistry) {
+        MeterRegistry meterRegistry) {
         return new TaggedBulkheadMetricsPublisher(meterRegistry);
     }
 

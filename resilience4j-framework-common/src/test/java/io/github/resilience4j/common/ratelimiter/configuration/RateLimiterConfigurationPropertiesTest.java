@@ -52,13 +52,13 @@ public class RateLimiterConfigurationPropertiesTest {
         assertThat(rateLimiterConfigurationProperties.getInstances().size()).isEqualTo(2);
         assertThat(rateLimiterConfigurationProperties.getLimiters().size()).isEqualTo(2);
         RateLimiterConfig rateLimiter = rateLimiterConfigurationProperties
-                .createRateLimiterConfig("backend1");
+            .createRateLimiterConfig("backend1");
         assertThat(rateLimiter).isNotNull();
         assertThat(rateLimiter.getLimitForPeriod()).isEqualTo(2);
         assertThat(rateLimiter.isWritableStackTraceEnabled()).isFalse();
 
         RateLimiterConfig rateLimiter2 = rateLimiterConfigurationProperties
-                .createRateLimiterConfig("backend2");
+            .createRateLimiterConfig("backend2");
         assertThat(rateLimiter2).isNotNull();
         assertThat(rateLimiter2.getLimitForPeriod()).isEqualTo(4);
         assertThat(rateLimiter2.isWritableStackTraceEnabled()).isTrue();
@@ -97,16 +97,16 @@ public class RateLimiterConfigurationPropertiesTest {
         rateLimiterConfigurationProperties.getConfigs().put("sharedConfig", sharedProperties);
 
         rateLimiterConfigurationProperties.getInstances()
-                .put("backendWithDefaultConfig", backendWithDefaultConfig);
+            .put("backendWithDefaultConfig", backendWithDefaultConfig);
         rateLimiterConfigurationProperties.getInstances()
-                .put("backendWithSharedConfig", backendWithSharedConfig);
+            .put("backendWithSharedConfig", backendWithSharedConfig);
 
         //Then
         assertThat(rateLimiterConfigurationProperties.getInstances().size()).isEqualTo(2);
 
         // Should get default config and override LimitForPeriod
         RateLimiterConfig rateLimiter1 = rateLimiterConfigurationProperties
-                .createRateLimiterConfig("backendWithDefaultConfig");
+            .createRateLimiterConfig("backendWithDefaultConfig");
         assertThat(rateLimiter1).isNotNull();
         assertThat(rateLimiter1.getLimitForPeriod()).isEqualTo(200);
         assertThat(rateLimiter1.getLimitRefreshPeriod()).isEqualTo(Duration.ofMillis(5));
@@ -114,7 +114,7 @@ public class RateLimiterConfigurationPropertiesTest {
 
         // Should get shared config and override LimitForPeriod
         RateLimiterConfig rateLimiter2 = rateLimiterConfigurationProperties
-                .createRateLimiterConfig("backendWithSharedConfig");
+            .createRateLimiterConfig("backendWithSharedConfig");
         assertThat(rateLimiter2).isNotNull();
         assertThat(rateLimiter2.getLimitForPeriod()).isEqualTo(300);
         assertThat(rateLimiter2.getLimitRefreshPeriod()).isEqualTo(Duration.ofMillis(6));
@@ -122,7 +122,7 @@ public class RateLimiterConfigurationPropertiesTest {
 
         // Unknown backend should get default config of Registry
         RateLimiterConfig rerateLimiter3 = rateLimiterConfigurationProperties
-                .createRateLimiterConfig("unknownBackend");
+            .createRateLimiterConfig("unknownBackend");
         assertThat(rerateLimiter3).isNotNull();
         assertThat(rerateLimiter3.getLimitForPeriod()).isEqualTo(50);
         assertThat(rerateLimiter3.isWritableStackTraceEnabled()).isTrue();
@@ -140,9 +140,9 @@ public class RateLimiterConfigurationPropertiesTest {
 
         //When
         assertThatThrownBy(
-                () -> rateLimiterConfigurationProperties.createRateLimiterConfig("backend"))
-                .isInstanceOf(ConfigurationNotFoundException.class)
-                .hasMessage("Configuration with name 'unknownConfig' does not exist");
+            () -> rateLimiterConfigurationProperties.createRateLimiterConfig("backend"))
+            .isInstanceOf(ConfigurationNotFoundException.class)
+            .hasMessage("Configuration with name 'unknownConfig' does not exist");
     }
 
     @Test
@@ -156,10 +156,10 @@ public class RateLimiterConfigurationPropertiesTest {
         rateLimiterConfigurationProperties.getInstances().put("default", instanceProperties);
 
         assertThat(
-                rateLimiterConfigurationProperties.findRateLimiterProperties("default").isPresent())
-                .isTrue();
+            rateLimiterConfigurationProperties.findRateLimiterProperties("default").isPresent())
+            .isTrue();
         assertThat(
-                rateLimiterConfigurationProperties.findRateLimiterProperties("custom").isPresent())
-                .isFalse();
+            rateLimiterConfigurationProperties.findRateLimiterProperties("custom").isPresent())
+            .isFalse();
     }
 }

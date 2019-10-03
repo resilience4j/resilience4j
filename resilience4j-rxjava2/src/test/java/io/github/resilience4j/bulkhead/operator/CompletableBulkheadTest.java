@@ -31,10 +31,10 @@ public class CompletableBulkheadTest {
         given(bulkhead.tryAcquirePermission()).willReturn(true);
 
         Completable.complete()
-                .compose(BulkheadOperator.of(bulkhead))
-                .test()
-                .assertSubscribed()
-                .assertComplete();
+            .compose(BulkheadOperator.of(bulkhead))
+            .test()
+            .assertSubscribed()
+            .assertComplete();
 
         verify(bulkhead, times(1)).onComplete();
     }
@@ -44,11 +44,11 @@ public class CompletableBulkheadTest {
         given(bulkhead.tryAcquirePermission()).willReturn(true);
 
         Completable.error(new IOException("BAM!"))
-                .compose(BulkheadOperator.of(bulkhead))
-                .test()
-                .assertSubscribed()
-                .assertError(IOException.class)
-                .assertNotComplete();
+            .compose(BulkheadOperator.of(bulkhead))
+            .test()
+            .assertSubscribed()
+            .assertError(IOException.class)
+            .assertNotComplete();
 
         verify(bulkhead, times(1)).onComplete();
     }
@@ -58,11 +58,11 @@ public class CompletableBulkheadTest {
         given(bulkhead.tryAcquirePermission()).willReturn(false);
 
         Completable.complete()
-                .compose(BulkheadOperator.of(bulkhead))
-                .test()
-                .assertSubscribed()
-                .assertError(BulkheadFullException.class)
-                .assertNotComplete();
+            .compose(BulkheadOperator.of(bulkhead))
+            .test()
+            .assertSubscribed()
+            .assertError(BulkheadFullException.class)
+            .assertNotComplete();
 
         verify(bulkhead, never()).onComplete();
     }

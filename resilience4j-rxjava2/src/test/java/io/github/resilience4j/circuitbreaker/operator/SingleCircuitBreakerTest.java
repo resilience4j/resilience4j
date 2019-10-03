@@ -25,13 +25,13 @@ public class SingleCircuitBreakerTest extends BaseCircuitBreakerTest {
         given(circuitBreaker.tryAcquirePermission()).willReturn(true);
 
         Single.just(1)
-                .compose(CircuitBreakerOperator.of(circuitBreaker))
-                .test()
-                .assertResult(1);
+            .compose(CircuitBreakerOperator.of(circuitBreaker))
+            .test()
+            .assertResult(1);
 
         verify(circuitBreaker, times(1)).onSuccess(anyLong(), any(TimeUnit.class));
         verify(circuitBreaker, never())
-                .onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
+            .onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
     }
 
     @Test
@@ -40,15 +40,15 @@ public class SingleCircuitBreakerTest extends BaseCircuitBreakerTest {
         given(helloWorldService.returnHelloWorld()).willReturn("Hello World");
 
         Single.fromCallable(() -> helloWorldService.returnHelloWorld())
-                .compose(CircuitBreakerOperator.of(circuitBreaker))
-                .repeat(2)
-                .test()
-                .assertResult("Hello World", "Hello World");
+            .compose(CircuitBreakerOperator.of(circuitBreaker))
+            .repeat(2)
+            .test()
+            .assertResult("Hello World", "Hello World");
 
         then(helloWorldService).should(Mockito.times(2)).returnHelloWorld();
         verify(circuitBreaker, times(2)).onSuccess(anyLong(), any(TimeUnit.class));
         verify(circuitBreaker, never())
-                .onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
+            .onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
     }
 
     @Test
@@ -57,16 +57,16 @@ public class SingleCircuitBreakerTest extends BaseCircuitBreakerTest {
         given(helloWorldService.returnHelloWorld()).willReturn("Hello World");
 
         Single.fromCallable(() -> helloWorldService.returnHelloWorld())
-                .compose(CircuitBreakerOperator.of(circuitBreaker))
-                .test()
-                .assertSubscribed()
-                .assertError(CallNotPermittedException.class)
-                .assertNotComplete();
+            .compose(CircuitBreakerOperator.of(circuitBreaker))
+            .test()
+            .assertSubscribed()
+            .assertError(CallNotPermittedException.class)
+            .assertNotComplete();
 
         then(helloWorldService).should(never()).returnHelloWorld();
         verify(circuitBreaker, never()).onSuccess(anyLong(), any(TimeUnit.class));
         verify(circuitBreaker, never())
-                .onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
+            .onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
     }
 
     @Test
@@ -74,14 +74,14 @@ public class SingleCircuitBreakerTest extends BaseCircuitBreakerTest {
         given(circuitBreaker.tryAcquirePermission()).willReturn(true);
 
         Single.error(new IOException("BAM!"))
-                .compose(CircuitBreakerOperator.of(circuitBreaker))
-                .test()
-                .assertSubscribed()
-                .assertError(IOException.class)
-                .assertNotComplete();
+            .compose(CircuitBreakerOperator.of(circuitBreaker))
+            .test()
+            .assertSubscribed()
+            .assertError(IOException.class)
+            .assertNotComplete();
 
         verify(circuitBreaker, times(1))
-                .onError(anyLong(), any(TimeUnit.class), any(IOException.class));
+            .onError(anyLong(), any(TimeUnit.class), any(IOException.class));
         verify(circuitBreaker, never()).onSuccess(anyLong(), any(TimeUnit.class));
     }
 
@@ -90,15 +90,15 @@ public class SingleCircuitBreakerTest extends BaseCircuitBreakerTest {
         given(circuitBreaker.tryAcquirePermission()).willReturn(false);
 
         Single.just(1)
-                .compose(CircuitBreakerOperator.of(circuitBreaker))
-                .test()
-                .assertSubscribed()
-                .assertError(CallNotPermittedException.class)
-                .assertNotComplete();
+            .compose(CircuitBreakerOperator.of(circuitBreaker))
+            .test()
+            .assertSubscribed()
+            .assertError(CallNotPermittedException.class)
+            .assertNotComplete();
 
         verify(circuitBreaker, never()).onSuccess(anyLong(), any(TimeUnit.class));
         verify(circuitBreaker, never())
-                .onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
+            .onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
     }
 
     @Test
@@ -106,14 +106,14 @@ public class SingleCircuitBreakerTest extends BaseCircuitBreakerTest {
         given(circuitBreaker.tryAcquirePermission()).willReturn(true);
 
         Single.just(1)
-                .delay(1, TimeUnit.DAYS)
-                .compose(CircuitBreakerOperator.of(circuitBreaker))
-                .test()
-                .cancel();
+            .delay(1, TimeUnit.DAYS)
+            .compose(CircuitBreakerOperator.of(circuitBreaker))
+            .test()
+            .cancel();
 
         verify(circuitBreaker, times(1)).releasePermission();
         verify(circuitBreaker, never())
-                .onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
+            .onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
         verify(circuitBreaker, never()).onSuccess(anyLong(), any(TimeUnit.class));
     }
 }

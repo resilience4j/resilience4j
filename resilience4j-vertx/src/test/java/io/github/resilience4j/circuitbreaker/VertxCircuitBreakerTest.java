@@ -56,11 +56,11 @@ public class VertxCircuitBreakerTest {
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(0);
         // Given the HelloWorldService returns Hello world
         BDDMockito.given(helloWorldService.returnHelloWorld())
-                .willReturn(Future.succeededFuture("Hello world"));
+            .willReturn(Future.succeededFuture("Hello world"));
 
         //When
         Supplier<Future<String>> supplier = VertxCircuitBreaker
-                .decorateFuture(circuitBreaker, helloWorldService::returnHelloWorld);
+            .decorateFuture(circuitBreaker, helloWorldService::returnHelloWorld);
 
         // Execute supplier
         Future<String> future = supplier.get();
@@ -83,11 +83,11 @@ public class VertxCircuitBreakerTest {
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(0);
         // Given the HelloWorldService returns Hello world
         BDDMockito.given(helloWorldService.returnHelloWorld())
-                .willReturn(Future.succeededFuture("Hello world"));
+            .willReturn(Future.succeededFuture("Hello world"));
 
         //When
         Future<String> future = VertxCircuitBreaker
-                .executeFuture(circuitBreaker, helloWorldService::returnHelloWorld);
+            .executeFuture(circuitBreaker, helloWorldService::returnHelloWorld);
 
         //Then
         assertThat(future.succeeded()).isTrue();
@@ -107,11 +107,11 @@ public class VertxCircuitBreakerTest {
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(0);
         // Given the HelloWorldService throws an exception
         BDDMockito.given(helloWorldService.returnHelloWorld())
-                .willReturn(Future.failedFuture(new RuntimeException("BAM!")));
+            .willReturn(Future.failedFuture(new RuntimeException("BAM!")));
 
         //When
         Future<String> future = VertxCircuitBreaker
-                .executeFuture(circuitBreaker, helloWorldService::returnHelloWorld);
+            .executeFuture(circuitBreaker, helloWorldService::returnHelloWorld);
 
         //Then
         assertThat(future.failed()).isTrue();
@@ -128,11 +128,11 @@ public class VertxCircuitBreakerTest {
         // Given
         // Create a custom configuration for a CircuitBreaker
         CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom()
-                .slidingWindowSize(2)
-                .permittedNumberOfCallsInHalfOpenState(2)
-                .failureRateThreshold(50)
-                .waitDurationInOpenState(Duration.ofMillis(1000))
-                .build();
+            .slidingWindowSize(2)
+            .permittedNumberOfCallsInHalfOpenState(2)
+            .failureRateThreshold(50)
+            .waitDurationInOpenState(Duration.ofMillis(1000))
+            .build();
 
         // Create a CircuitBreakerRegistry with a custom global configuration
         CircuitBreaker circuitBreaker = CircuitBreaker.of("testName", circuitBreakerConfig);
@@ -147,7 +147,7 @@ public class VertxCircuitBreakerTest {
         //When
         //When
         Future<String> future = VertxCircuitBreaker
-                .executeFuture(circuitBreaker, helloWorldService::returnHelloWorld);
+            .executeFuture(circuitBreaker, helloWorldService::returnHelloWorld);
 
         //Then
         //Then

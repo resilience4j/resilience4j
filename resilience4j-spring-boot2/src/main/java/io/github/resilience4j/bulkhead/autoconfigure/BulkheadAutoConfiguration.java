@@ -48,7 +48,7 @@ public class BulkheadAutoConfiguration {
     @ConditionalOnEnabledEndpoint
     @ConditionalOnClass(value = {Endpoint.class})
     public BulkheadEndpoint bulkheadEndpoint(BulkheadRegistry bulkheadRegistry,
-            ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry) {
+        ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry) {
         return new BulkheadEndpoint(bulkheadRegistry, threadPoolBulkheadRegistry);
     }
 
@@ -56,7 +56,7 @@ public class BulkheadAutoConfiguration {
     @ConditionalOnEnabledEndpoint
     @ConditionalOnClass(value = {Endpoint.class})
     public BulkheadEventsEndpoint bulkheadEventsEndpoint(
-            EventConsumerRegistry<BulkheadEvent> eventConsumerRegistry) {
+        EventConsumerRegistry<BulkheadEvent> eventConsumerRegistry) {
         return new BulkheadEventsEndpoint(eventConsumerRegistry);
     }
 }

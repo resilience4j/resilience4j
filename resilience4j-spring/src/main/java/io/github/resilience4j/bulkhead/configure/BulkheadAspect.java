@@ -75,10 +75,10 @@ public class BulkheadAspect implements Ordered {
     private final FallbackDecorators fallbackDecorators;
 
     public BulkheadAspect(BulkheadConfigurationProperties backendMonitorPropertiesRegistry,
-            ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry,
-            BulkheadRegistry bulkheadRegistry,
-            @Autowired(required = false) List<BulkheadAspectExt> bulkheadAspectExts,
-            FallbackDecorators fallbackDecorators) {
+        ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry,
+        BulkheadRegistry bulkheadRegistry,
+        @Autowired(required = false) List<BulkheadAspectExt> bulkheadAspectExts,
+        FallbackDecorators fallbackDecorators) {
         this.bulkheadConfigurationProperties = backendMonitorPropertiesRegistry;
         this.bulkheadRegistry = bulkheadRegistry;
         this.bulkheadAspectExts = bulkheadAspectExts;
@@ -92,7 +92,7 @@ public class BulkheadAspect implements Ordered {
 
     @Around(value = "matchAnnotatedClassOrMethod(bulkheadAnnotation)", argNames = "proceedingJoinPoint, bulkheadAnnotation")
     public Object bulkheadAroundAdvice(ProceedingJoinPoint proceedingJoinPoint,
-            @Nullable Bulkhead bulkheadAnnotation) throws Throwable {
+        @Nullable Bulkhead bulkheadAnnotation) throws Throwable {
         Method method = ((MethodSignature) proceedingJoinPoint.getSignature()).getMethod();
         String methodName = method.getDeclaringClass().getName() + "#" + method.getName();
         if (bulkheadAnnotation == null) {
@@ -106,28 +106,28 @@ public class BulkheadAspect implements Ordered {
         if (bulkheadAnnotation.type() == Bulkhead.Type.THREADPOOL) {
             if (StringUtils.isEmpty(bulkheadAnnotation.fallbackMethod())) {
                 return proceedInThreadPoolBulkhead(proceedingJoinPoint, methodName, returnType,
-                        backend);
+                    backend);
             }
             return executeFallBack(proceedingJoinPoint, bulkheadAnnotation.fallbackMethod(), method,
-                    () -> proceedInThreadPoolBulkhead(proceedingJoinPoint, methodName, returnType,
-                            backend));
+                () -> proceedInThreadPoolBulkhead(proceedingJoinPoint, methodName, returnType,
+                    backend));
         } else {
             io.github.resilience4j.bulkhead.Bulkhead bulkhead = getOrCreateBulkhead(methodName,
-                    backend);
+                backend);
             if (StringUtils.isEmpty(bulkheadAnnotation.fallbackMethod())) {
                 return proceed(proceedingJoinPoint, methodName, bulkhead, returnType);
             }
             return executeFallBack(proceedingJoinPoint, bulkheadAnnotation.fallbackMethod(), method,
-                    () -> proceed(proceedingJoinPoint, methodName, bulkhead, returnType));
+                () -> proceed(proceedingJoinPoint, methodName, bulkhead, returnType));
         }
 
     }
 
     private Object executeFallBack(ProceedingJoinPoint proceedingJoinPoint, String fallBackMethod,
-            Method method, CheckedFunction0<Object> bulkhead) throws Throwable {
+        Method method, CheckedFunction0<Object> bulkhead) throws Throwable {
         FallbackMethod fallbackMethod = FallbackMethod
-                .create(fallBackMethod, method, proceedingJoinPoint.getArgs(),
-                        proceedingJoinPoint.getTarget());
+            .create(fallBackMethod, method, proceedingJoinPoint.getArgs(),
+                proceedingJoinPoint.getTarget());
         return fallbackDecorators.decorate(fallbackMethod, bulkhead).apply();
     }
 
@@ -141,8 +141,8 @@ public class BulkheadAspect implements Ordered {
      * @return the result Object of the method call
      */
     private Object proceed(ProceedingJoinPoint proceedingJoinPoint, String methodName,
-            io.github.resilience4j.bulkhead.Bulkhead bulkhead, Class<?> returnType)
-            throws Throwable {
+        io.github.resilience4j.bulkhead.Bulkhead bulkhead, Class<?> returnType)
+        throws Throwable {
         if (bulkheadAspectExts != null && !bulkheadAspectExts.isEmpty()) {
             for (BulkheadAspectExt bulkHeadAspectExt : bulkheadAspectExts) {
                 if (bulkHeadAspectExt.canHandleReturnType(returnType)) {
@@ -157,14 +157,14 @@ public class BulkheadAspect implements Ordered {
     }
 
     private io.github.resilience4j.bulkhead.Bulkhead getOrCreateBulkhead(String methodName,
-            String backend) {
+        String backend) {
         io.github.resilience4j.bulkhead.Bulkhead bulkhead = bulkheadRegistry.bulkhead(backend);
 
         if (logger.isDebugEnabled()) {
             logger.debug(
-                    "Created or retrieved bulkhead '{}' with max concurrent call '{}' and max wait time '{}ms' for method: '{}'",
-                    backend, bulkhead.getBulkheadConfig().getMaxConcurrentCalls(),
-                    bulkhead.getBulkheadConfig().getMaxWaitDuration().toMillis(), methodName);
+                "Created or retrieved bulkhead '{}' with max concurrent call '{}' and max wait time '{}ms' for method: '{}'",
+                backend, bulkhead.getBulkheadConfig().getMaxConcurrentCalls(),
+                bulkhead.getBulkheadConfig().getMaxWaitDuration().toMillis(), methodName);
         }
 
         return bulkhead;
@@ -181,12 +181,12 @@ public class BulkheadAspect implements Ordered {
         }
         if (proceedingJoinPoint.getTarget() instanceof Proxy) {
             logger.debug(
-                    "The bulkhead annotation is kept on a interface which is acting as a proxy");
+                "The bulkhead annotation is kept on a interface which is acting as a proxy");
             return AnnotationExtractor
-                    .extractAnnotationFromProxy(proceedingJoinPoint.getTarget(), Bulkhead.class);
+                .extractAnnotationFromProxy(proceedingJoinPoint.getTarget(), Bulkhead.class);
         } else {
             return AnnotationExtractor
-                    .extract(proceedingJoinPoint.getTarget().getClass(), Bulkhead.class);
+                .extract(proceedingJoinPoint.getTarget().getClass(), Bulkhead.class);
         }
     }
 
@@ -198,7 +198,7 @@ public class BulkheadAspect implements Ordered {
      * @return the result object
      */
     private Object handleJoinPoint(ProceedingJoinPoint proceedingJoinPoint,
-            io.github.resilience4j.bulkhead.Bulkhead bulkhead) throws Throwable {
+        io.github.resilience4j.bulkhead.Bulkhead bulkhead) throws Throwable {
         return bulkhead.executeCheckedSupplier(proceedingJoinPoint::proceed);
     }
 
@@ -210,7 +210,7 @@ public class BulkheadAspect implements Ordered {
      * @return CompletionStage
      */
     private Object handleJoinPointCompletableFuture(ProceedingJoinPoint proceedingJoinPoint,
-            io.github.resilience4j.bulkhead.Bulkhead bulkhead) {
+        io.github.resilience4j.bulkhead.Bulkhead bulkhead) {
         return bulkhead.executeCompletionStage(() -> {
             try {
                 return (CompletionStage<?>) proceedingJoinPoint.proceed();
@@ -231,24 +231,24 @@ public class BulkheadAspect implements Ordered {
      * @return result Object which will be CompletableFuture instance
      */
     private Object proceedInThreadPoolBulkhead(ProceedingJoinPoint proceedingJoinPoint,
-            String methodName, Class<?> returnType, String backend) throws Throwable {
+        String methodName, Class<?> returnType, String backend) throws Throwable {
         if (logger.isDebugEnabled()) {
             logger.debug("ThreadPool bulkhead invocation for method {} in backend {}", methodName,
-                    backend);
+                backend);
         }
         ThreadPoolBulkhead threadPoolBulkhead = threadPoolBulkheadRegistry.bulkhead(backend);
         if (CompletionStage.class.isAssignableFrom(returnType)) {
             return threadPoolBulkhead.executeSupplier(() -> {
                 try {
                     return ((CompletionStage<?>) proceedingJoinPoint.proceed())
-                            .toCompletableFuture().get();
+                        .toCompletableFuture().get();
                 } catch (Throwable throwable) {
                     throw new CompletionException(throwable);
                 }
             });
         } else {
             throw new IllegalStateException(
-                    "ThreadPool bulkhead is only applicable for completable futures ");
+                "ThreadPool bulkhead is only applicable for completable futures ");
         }
     }
 

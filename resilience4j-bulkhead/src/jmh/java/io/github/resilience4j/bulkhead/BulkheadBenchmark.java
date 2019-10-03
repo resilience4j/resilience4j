@@ -55,9 +55,9 @@ public class BulkheadBenchmark {
 
     public static void main(String[] args) throws RunnerException {
         Options options = new OptionsBuilder()
-                .threads(2)
-                .addProfiler(GCProfiler.class)
-                .build();
+            .threads(2)
+            .addProfiler(GCProfiler.class)
+            .build();
         new Runner(options).run();
     }
 
@@ -69,8 +69,8 @@ public class BulkheadBenchmark {
         };
 
         BulkheadConfig config = BulkheadConfig.custom()
-                .maxConcurrentCalls(2)
-                .build();
+            .maxConcurrentCalls(2)
+            .build();
 
         Bulkhead bulkhead = Bulkhead.of("test", config);
         protectedSupplier = Bulkhead.decorateSupplier(bulkhead, stringSupplier);

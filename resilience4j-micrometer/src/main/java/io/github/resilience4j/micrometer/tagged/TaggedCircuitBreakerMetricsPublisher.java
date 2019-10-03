@@ -23,7 +23,7 @@ import io.github.resilience4j.core.metrics.MetricsPublisher;
 import io.micrometer.core.instrument.MeterRegistry;
 
 public class TaggedCircuitBreakerMetricsPublisher
-        extends AbstractCircuitBreakerMetrics implements MetricsPublisher<CircuitBreaker> {
+    extends AbstractCircuitBreakerMetrics implements MetricsPublisher<CircuitBreaker> {
 
     private final MeterRegistry meterRegistry;
 

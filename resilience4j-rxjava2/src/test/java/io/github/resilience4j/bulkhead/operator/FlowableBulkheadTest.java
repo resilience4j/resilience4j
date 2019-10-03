@@ -31,9 +31,9 @@ public class FlowableBulkheadTest {
         given(bulkhead.tryAcquirePermission()).willReturn(true);
 
         Flowable.fromArray("Event 1", "Event 2")
-                .compose(BulkheadOperator.of(bulkhead))
-                .test()
-                .assertResult("Event 1", "Event 2");
+            .compose(BulkheadOperator.of(bulkhead))
+            .test()
+            .assertResult("Event 1", "Event 2");
 
         verify(bulkhead, times(1)).onComplete();
     }
@@ -43,11 +43,11 @@ public class FlowableBulkheadTest {
         given(bulkhead.tryAcquirePermission()).willReturn(true);
 
         Flowable.error(new IOException("BAM!"))
-                .compose(BulkheadOperator.of(bulkhead))
-                .test()
-                .assertSubscribed()
-                .assertError(IOException.class)
-                .assertNotComplete();
+            .compose(BulkheadOperator.of(bulkhead))
+            .test()
+            .assertSubscribed()
+            .assertError(IOException.class)
+            .assertNotComplete();
 
         verify(bulkhead, times(1)).onComplete();
     }
@@ -57,11 +57,11 @@ public class FlowableBulkheadTest {
         given(bulkhead.tryAcquirePermission()).willReturn(false);
 
         Flowable.fromArray("Event 1", "Event 2")
-                .compose(BulkheadOperator.of(bulkhead))
-                .test()
-                .assertSubscribed()
-                .assertError(BulkheadFullException.class)
-                .assertNotComplete();
+            .compose(BulkheadOperator.of(bulkhead))
+            .test()
+            .assertSubscribed()
+            .assertError(BulkheadFullException.class)
+            .assertNotComplete();
 
         verify(bulkhead, never()).onComplete();
     }

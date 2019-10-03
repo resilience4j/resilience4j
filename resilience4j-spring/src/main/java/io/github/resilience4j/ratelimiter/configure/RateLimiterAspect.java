@@ -74,9 +74,9 @@ public class RateLimiterAspect implements Ordered {
     private final FallbackDecorators fallbackDecorators;
 
     public RateLimiterAspect(RateLimiterRegistry rateLimiterRegistry,
-            RateLimiterConfigurationProperties properties,
-            @Autowired(required = false) List<RateLimiterAspectExt> rateLimiterAspectExtList,
-            FallbackDecorators fallbackDecorators) {
+        RateLimiterConfigurationProperties properties,
+        @Autowired(required = false) List<RateLimiterAspectExt> rateLimiterAspectExtList,
+        FallbackDecorators fallbackDecorators) {
         this.rateLimiterRegistry = rateLimiterRegistry;
         this.properties = properties;
         this.rateLimiterAspectExtList = rateLimiterAspectExtList;
@@ -95,7 +95,7 @@ public class RateLimiterAspect implements Ordered {
 
     @Around(value = "matchAnnotatedClassOrMethod(rateLimiterAnnotation)", argNames = "proceedingJoinPoint, rateLimiterAnnotation")
     public Object rateLimiterAroundAdvice(ProceedingJoinPoint proceedingJoinPoint,
-            @Nullable RateLimiter rateLimiterAnnotation) throws Throwable {
+        @Nullable RateLimiter rateLimiterAnnotation) throws Throwable {
         Method method = ((MethodSignature) proceedingJoinPoint.getSignature()).getMethod();
         String methodName = method.getDeclaringClass().getName() + "#" + method.getName();
         if (rateLimiterAnnotation == null) {
@@ -106,27 +106,27 @@ public class RateLimiterAspect implements Ordered {
         }
         String name = rateLimiterAnnotation.name();
         io.github.resilience4j.ratelimiter.RateLimiter rateLimiter = getOrCreateRateLimiter(
-                methodName, name);
+            methodName, name);
         Class<?> returnType = method.getReturnType();
 
         if (StringUtils.isEmpty(rateLimiterAnnotation.fallbackMethod())) {
             return proceed(proceedingJoinPoint, methodName, returnType, rateLimiter);
         }
         FallbackMethod fallbackMethod = FallbackMethod
-                .create(rateLimiterAnnotation.fallbackMethod(), method,
-                        proceedingJoinPoint.getArgs(), proceedingJoinPoint.getTarget());
+            .create(rateLimiterAnnotation.fallbackMethod(), method,
+                proceedingJoinPoint.getArgs(), proceedingJoinPoint.getTarget());
         return fallbackDecorators.decorate(fallbackMethod,
-                () -> proceed(proceedingJoinPoint, methodName, returnType, rateLimiter)).apply();
+            () -> proceed(proceedingJoinPoint, methodName, returnType, rateLimiter)).apply();
     }
 
     private Object proceed(ProceedingJoinPoint proceedingJoinPoint, String methodName,
-            Class<?> returnType, io.github.resilience4j.ratelimiter.RateLimiter rateLimiter)
-            throws Throwable {
+        Class<?> returnType, io.github.resilience4j.ratelimiter.RateLimiter rateLimiter)
+        throws Throwable {
         if (rateLimiterAspectExtList != null && !rateLimiterAspectExtList.isEmpty()) {
             for (RateLimiterAspectExt rateLimiterAspectExt : rateLimiterAspectExtList) {
                 if (rateLimiterAspectExt.canHandleReturnType(returnType)) {
                     return rateLimiterAspectExt
-                            .handle(proceedingJoinPoint, rateLimiter, methodName);
+                        .handle(proceedingJoinPoint, rateLimiter, methodName);
                 }
             }
         }
@@ -137,17 +137,17 @@ public class RateLimiterAspect implements Ordered {
     }
 
     private io.github.resilience4j.ratelimiter.RateLimiter getOrCreateRateLimiter(String methodName,
-            String name) {
+        String name) {
         io.github.resilience4j.ratelimiter.RateLimiter rateLimiter = rateLimiterRegistry
-                .rateLimiter(name);
+            .rateLimiter(name);
 
         if (logger.isDebugEnabled()) {
             RateLimiterConfig rateLimiterConfig = rateLimiter.getRateLimiterConfig();
             logger.debug(
-                    RATE_LIMITER_RECEIVED,
-                    name, rateLimiterConfig.getLimitRefreshPeriod(),
-                    rateLimiterConfig.getLimitForPeriod(),
-                    rateLimiterConfig.getTimeoutDuration(), methodName
+                RATE_LIMITER_RECEIVED,
+                name, rateLimiterConfig.getLimitRefreshPeriod(),
+                rateLimiterConfig.getLimitForPeriod(),
+                rateLimiterConfig.getTimeoutDuration(), methodName
             );
         }
 
@@ -158,18 +158,18 @@ public class RateLimiterAspect implements Ordered {
     private RateLimiter getRateLimiterAnnotation(ProceedingJoinPoint proceedingJoinPoint) {
         if (proceedingJoinPoint.getTarget() instanceof Proxy) {
             logger.debug(
-                    "The rate limiter annotation is kept on a interface which is acting as a proxy");
+                "The rate limiter annotation is kept on a interface which is acting as a proxy");
             return AnnotationExtractor
-                    .extractAnnotationFromProxy(proceedingJoinPoint.getTarget(), RateLimiter.class);
+                .extractAnnotationFromProxy(proceedingJoinPoint.getTarget(), RateLimiter.class);
         } else {
             return AnnotationExtractor
-                    .extract(proceedingJoinPoint.getTarget().getClass(), RateLimiter.class);
+                .extract(proceedingJoinPoint.getTarget().getClass(), RateLimiter.class);
         }
     }
 
     private Object handleJoinPoint(ProceedingJoinPoint proceedingJoinPoint,
-            io.github.resilience4j.ratelimiter.RateLimiter rateLimiter)
-            throws Throwable {
+        io.github.resilience4j.ratelimiter.RateLimiter rateLimiter)
+        throws Throwable {
         return rateLimiter.executeCheckedSupplier(proceedingJoinPoint::proceed);
     }
 
@@ -181,7 +181,7 @@ public class RateLimiterAspect implements Ordered {
      * @return CompletionStage
      */
     private Object handleJoinPointCompletableFuture(ProceedingJoinPoint proceedingJoinPoint,
-            io.github.resilience4j.ratelimiter.RateLimiter rateLimiter) {
+        io.github.resilience4j.ratelimiter.RateLimiter rateLimiter) {
         return rateLimiter.executeCompletionStage(() -> {
             try {
                 return (CompletionStage<?>) proceedingJoinPoint.proceed();

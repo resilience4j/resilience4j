@@ -132,9 +132,9 @@ public class RetryImpl<T> implements Retry {
             if (currentNumOfAttempts > 0) {
                 succeededAfterRetryCounter.increment();
                 Throwable throwable = Option.of(lastException.get())
-                        .getOrElse(lastRuntimeException.get());
+                    .getOrElse(lastRuntimeException.get());
                 publishRetryEvent(
-                        () -> new RetryOnSuccessEvent(getName(), currentNumOfAttempts, throwable));
+                    () -> new RetryOnSuccessEvent(getName(), currentNumOfAttempts, throwable));
             } else {
                 succeededWithoutRetryCounter.increment();
             }
@@ -184,7 +184,7 @@ public class RetryImpl<T> implements Retry {
             if (currentNumOfAttempts >= maxAttempts) {
                 failedAfterRetryCounter.increment();
                 publishRetryEvent(
-                        () -> new RetryOnErrorEvent(getName(), currentNumOfAttempts, throwable));
+                    () -> new RetryOnErrorEvent(getName(), currentNumOfAttempts, throwable));
                 throw throwable;
             } else {
                 waitIntervalAfterFailure(currentNumOfAttempts, throwable);
@@ -197,7 +197,7 @@ public class RetryImpl<T> implements Retry {
             if (currentNumOfAttempts >= maxAttempts) {
                 failedAfterRetryCounter.increment();
                 publishRetryEvent(
-                        () -> new RetryOnErrorEvent(getName(), currentNumOfAttempts, throwable));
+                    () -> new RetryOnErrorEvent(getName(), currentNumOfAttempts, throwable));
                 throw throwable;
             } else {
                 waitIntervalAfterFailure(currentNumOfAttempts, throwable);
@@ -205,14 +205,14 @@ public class RetryImpl<T> implements Retry {
         }
 
         private void waitIntervalAfterFailure(int currentNumOfAttempts,
-                @Nullable Throwable throwable) {
+            @Nullable Throwable throwable) {
             // wait interval until the next attempt should start
             long interval = intervalFunction.apply(numOfAttempts.get());
             publishRetryEvent(
-                    () -> new RetryOnRetryEvent(getName(), currentNumOfAttempts, throwable,
-                            interval));
+                () -> new RetryOnRetryEvent(getName(), currentNumOfAttempts, throwable,
+                    interval));
             Try.run(() -> sleepFunction.accept(interval))
-                    .getOrElseThrow(ex -> lastRuntimeException.get());
+                .getOrElseThrow(ex -> lastRuntimeException.get());
         }
 
     }
@@ -228,7 +228,7 @@ public class RetryImpl<T> implements Retry {
             if (currentNumOfAttempts > 0) {
                 succeededAfterRetryCounter.increment();
                 publishRetryEvent(() -> new RetryOnSuccessEvent(name, currentNumOfAttempts,
-                        lastException.get()));
+                    lastException.get()));
             } else {
                 succeededWithoutRetryCounter.increment();
             }
@@ -311,7 +311,7 @@ public class RetryImpl<T> implements Retry {
     }
 
     private class RetryEventProcessor extends EventProcessor<RetryEvent> implements
-            EventConsumer<RetryEvent>, EventPublisher {
+        EventConsumer<RetryEvent>, EventPublisher {
 
         @Override
         public void consumeEvent(RetryEvent event) {
@@ -338,9 +338,9 @@ public class RetryImpl<T> implements Retry {
 
         @Override
         public EventPublisher onIgnoredError(
-                EventConsumer<RetryOnIgnoredErrorEvent> onIgnoredErrorEventConsumer) {
+            EventConsumer<RetryOnIgnoredErrorEvent> onIgnoredErrorEventConsumer) {
             registerConsumer(RetryOnIgnoredErrorEvent.class.getSimpleName(),
-                    onIgnoredErrorEventConsumer);
+                onIgnoredErrorEventConsumer);
             return this;
         }
     }

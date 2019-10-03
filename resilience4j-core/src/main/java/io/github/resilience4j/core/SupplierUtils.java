@@ -31,7 +31,7 @@ public class SupplierUtils {
      * @return a function composed of supplier and handler
      */
     public static <T, R> Supplier<R> andThen(Supplier<T> supplier,
-            BiFunction<T, Exception, R> handler) {
+        BiFunction<T, Exception, R> handler) {
         return () -> {
             try {
                 T result = supplier.get();
@@ -51,7 +51,7 @@ public class SupplierUtils {
      * @return a function composed of supplier and exceptionHandler
      */
     public static <T> Supplier<T> recover(Supplier<T> supplier,
-            Function<Exception, T> exceptionHandler) {
+        Function<Exception, T> exceptionHandler) {
         return () -> {
             try {
                 return supplier.get();
@@ -71,7 +71,7 @@ public class SupplierUtils {
      * @return a function composed of supplier and handler
      */
     public static <T, R> Supplier<R> andThen(Supplier<T> supplier, Function<T, R> resultHandler,
-            Function<Exception, R> exceptionHandler) {
+        Function<Exception, R> exceptionHandler) {
         return () -> {
             try {
                 T result = supplier.get();

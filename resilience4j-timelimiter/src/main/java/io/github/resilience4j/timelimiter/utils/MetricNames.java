@@ -24,6 +24,7 @@ public final class MetricNames {
     public static final String TIMEOUT = "timeout";
     public static final String PREFIX_NULL = "Prefix must not be null";
     public static final String ITERABLE_NULL = "TimeLimiters iterable must not be null";
+
     private MetricNames() {
     }
 

@@ -40,8 +40,8 @@ class SingleRateLimiter<T> extends Single<T> {
         if (waitDuration >= 0) {
             if (waitDuration > 0) {
                 Completable.timer(waitDuration, TimeUnit.NANOSECONDS)
-                        .subscribe(() -> upstream
-                                .subscribe(new RateLimiterSingleObserver(downstream)));
+                    .subscribe(() -> upstream
+                        .subscribe(new RateLimiterSingleObserver(downstream)));
             } else {
                 upstream.subscribe(new RateLimiterSingleObserver(downstream));
             }

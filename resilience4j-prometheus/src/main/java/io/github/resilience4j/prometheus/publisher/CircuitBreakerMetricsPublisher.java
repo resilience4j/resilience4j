@@ -24,7 +24,7 @@ import java.util.Collections;
 import java.util.List;
 
 public class CircuitBreakerMetricsPublisher extends AbstractCircuitBreakerMetrics implements
-        MetricsPublisher<CircuitBreaker> {
+    MetricsPublisher<CircuitBreaker> {
 
     private final List<CircuitBreaker> circuitBreakers = new ArrayList<>();
 
@@ -39,7 +39,7 @@ public class CircuitBreakerMetricsPublisher extends AbstractCircuitBreakerMetric
     @Override
     public List<MetricFamilySamples> collect() {
         List<MetricFamilySamples> samples = Collections
-                .list(collectorRegistry.metricFamilySamples());
+            .list(collectorRegistry.metricFamilySamples());
         samples.addAll(collectGaugeSamples(circuitBreakers));
         return samples;
     }

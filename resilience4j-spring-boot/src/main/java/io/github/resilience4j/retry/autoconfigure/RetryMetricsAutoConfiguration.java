@@ -46,7 +46,7 @@ public class RetryMetricsAutoConfiguration {
     @ConditionalOnProperty(value = "resilience4j.retry.metrics.legacy.enabled", havingValue = "true")
     @ConditionalOnMissingBean
     public RetryMetrics registerRetryMetrics(RetryRegistry retryRegistry,
-            MetricRegistry metricRegistry) {
+        MetricRegistry metricRegistry) {
         return RetryMetrics.ofRetryRegistry(retryRegistry, metricRegistry);
     }
 

@@ -57,10 +57,10 @@ public class CacheEventPublisherTest {
 
         Cache<String, String> cacheContext = Cache.of(cache);
         cacheContext.getEventPublisher().onCacheHit(event ->
-                logger.info(event.getEventType().toString()));
+            logger.info(event.getEventType().toString()));
 
         CheckedFunction1<String, String> cachedFunction = Cache
-                .decorateCheckedSupplier(cacheContext, () -> "Hello world");
+            .decorateCheckedSupplier(cacheContext, () -> "Hello world");
         String value = cachedFunction.apply("testKey");
         assertThat(value).isEqualTo("Hello world");
 
@@ -74,10 +74,10 @@ public class CacheEventPublisherTest {
 
         Cache<String, String> cacheContext = Cache.of(cache);
         cacheContext.getEventPublisher().onCacheMiss(event ->
-                logger.info(event.getEventType().toString()));
+            logger.info(event.getEventType().toString()));
 
         CheckedFunction1<String, String> cachedFunction = Cache
-                .decorateCheckedSupplier(cacheContext, () -> "Hello world");
+            .decorateCheckedSupplier(cacheContext, () -> "Hello world");
         String value = cachedFunction.apply("testKey");
         assertThat(value).isEqualTo("Hello world");
 
@@ -91,10 +91,10 @@ public class CacheEventPublisherTest {
 
         Cache<String, String> cacheContext = Cache.of(cache);
         cacheContext.getEventPublisher().onError(event ->
-                logger.info(event.getEventType().toString()));
+            logger.info(event.getEventType().toString()));
 
         CheckedFunction1<String, String> cachedFunction = Cache
-                .decorateCheckedSupplier(cacheContext, () -> "Hello world");
+            .decorateCheckedSupplier(cacheContext, () -> "Hello world");
         String value = cachedFunction.apply("testKey");
         assertThat(value).isEqualTo("Hello world");
 

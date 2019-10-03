@@ -33,41 +33,41 @@ public class CircuitBreakerEventDTOFactory {
             case ERROR:
                 CircuitBreakerOnErrorEvent onErrorEvent = (CircuitBreakerOnErrorEvent) event;
                 return newCircuitBreakerEventDTOBuilder(onErrorEvent)
-                        .setThrowable(onErrorEvent.getThrowable())
-                        .setDuration(onErrorEvent.getElapsedDuration())
-                        .build();
+                    .setThrowable(onErrorEvent.getThrowable())
+                    .setDuration(onErrorEvent.getElapsedDuration())
+                    .build();
             case SUCCESS:
                 CircuitBreakerOnSuccessEvent onSuccessEvent = (CircuitBreakerOnSuccessEvent) event;
                 return newCircuitBreakerEventDTOBuilder(onSuccessEvent)
-                        .setDuration(onSuccessEvent.getElapsedDuration())
-                        .build();
+                    .setDuration(onSuccessEvent.getElapsedDuration())
+                    .build();
             case STATE_TRANSITION:
                 CircuitBreakerOnStateTransitionEvent onStateTransitionEvent = (CircuitBreakerOnStateTransitionEvent) event;
                 return newCircuitBreakerEventDTOBuilder(onStateTransitionEvent)
-                        .setStateTransition(onStateTransitionEvent.getStateTransition())
-                        .build();
+                    .setStateTransition(onStateTransitionEvent.getStateTransition())
+                    .build();
             case RESET:
                 CircuitBreakerOnResetEvent onResetEvent = (CircuitBreakerOnResetEvent) event;
                 return newCircuitBreakerEventDTOBuilder(onResetEvent)
-                        .build();
+                    .build();
             case IGNORED_ERROR:
                 CircuitBreakerOnIgnoredErrorEvent onIgnoredErrorEvent = (CircuitBreakerOnIgnoredErrorEvent) event;
                 return newCircuitBreakerEventDTOBuilder(onIgnoredErrorEvent)
-                        .setThrowable(onIgnoredErrorEvent.getThrowable())
-                        .setDuration(onIgnoredErrorEvent.getElapsedDuration())
-                        .build();
+                    .setThrowable(onIgnoredErrorEvent.getThrowable())
+                    .setDuration(onIgnoredErrorEvent.getElapsedDuration())
+                    .build();
             case NOT_PERMITTED:
                 CircuitBreakerOnCallNotPermittedEvent onCallNotPermittedEvent = (CircuitBreakerOnCallNotPermittedEvent) event;
                 return newCircuitBreakerEventDTOBuilder(onCallNotPermittedEvent)
-                        .build();
+                    .build();
             default:
                 throw new IllegalArgumentException("Invalid event");
         }
     }
 
     private static CircuitBreakerEventDTOBuilder newCircuitBreakerEventDTOBuilder(
-            CircuitBreakerEvent event) {
+        CircuitBreakerEvent event) {
         return new CircuitBreakerEventDTOBuilder(event.getCircuitBreakerName(),
-                event.getEventType(), event.getCreationTime().toString());
+            event.getEventType(), event.getCreationTime().toString());
     }
 }

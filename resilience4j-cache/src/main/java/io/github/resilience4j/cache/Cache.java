@@ -57,7 +57,7 @@ public interface Cache<K, V> {
      * @return a supplier which is secured by a CircuitBreaker.
      */
     static <K, R> CheckedFunction1<K, R> decorateCheckedSupplier(Cache<K, R> cache,
-            CheckedFunction0<R> supplier) {
+        CheckedFunction0<R> supplier) {
         return (K cacheKey) -> cache.computeIfAbsent(cacheKey, supplier);
     }
 

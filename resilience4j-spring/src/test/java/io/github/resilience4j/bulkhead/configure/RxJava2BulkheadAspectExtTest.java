@@ -53,11 +53,11 @@ public class RxJava2BulkheadAspectExtTest {
 
         when(proceedingJoinPoint.proceed()).thenReturn(Single.just("Test"));
         assertThat(rxJava2BulkheadAspectExt.handle(proceedingJoinPoint, bulkhead, "testMethod"))
-                .isNotNull();
+            .isNotNull();
 
         when(proceedingJoinPoint.proceed()).thenReturn(Flowable.just("Test"));
         assertThat(rxJava2BulkheadAspectExt.handle(proceedingJoinPoint, bulkhead, "testMethod"))
-                .isNotNull();
+            .isNotNull();
     }
 
 

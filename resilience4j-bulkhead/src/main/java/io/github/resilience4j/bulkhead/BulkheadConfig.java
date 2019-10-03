@@ -36,7 +36,7 @@ public class BulkheadConfig {
     private final boolean writableStackTraceEnabled;
 
     private BulkheadConfig(int maxConcurrentCalls, Duration maxWaitDuration,
-            boolean writableStackTraceEnabled) {
+        boolean writableStackTraceEnabled) {
         this.maxConcurrentCalls = maxConcurrentCalls;
         this.maxWaitDuration = maxWaitDuration;
         this.writableStackTraceEnabled = writableStackTraceEnabled;
@@ -108,7 +108,7 @@ public class BulkheadConfig {
         public Builder maxConcurrentCalls(int maxConcurrentCalls) {
             if (maxConcurrentCalls < 0) {
                 throw new IllegalArgumentException(
-                        "maxConcurrentCalls must be an integer value >= 0");
+                    "maxConcurrentCalls must be an integer value >= 0");
             }
             this.maxConcurrentCalls = maxConcurrentCalls;
             return this;
@@ -130,7 +130,7 @@ public class BulkheadConfig {
         public Builder maxWaitDuration(Duration maxWaitDuration) {
             if (maxWaitDuration.toMillis() < 0) {
                 throw new IllegalArgumentException(
-                        "maxWaitDuration must be a positive integer value >= 0");
+                    "maxWaitDuration must be a positive integer value >= 0");
             }
             this.maxWaitDuration = maxWaitDuration;
             return this;
@@ -157,7 +157,7 @@ public class BulkheadConfig {
          */
         public BulkheadConfig build() {
             return new BulkheadConfig(maxConcurrentCalls, maxWaitDuration,
-                    writableStackTraceEnabled);
+                writableStackTraceEnabled);
         }
     }
 }

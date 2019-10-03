@@ -11,7 +11,7 @@ public class RetryMetricsTest extends AbstractRetryMetricsTest {
     @Override
     protected Retry given(String prefix, MetricRegistry metricRegistry) {
         RetryRegistry retryRegistry = RetryRegistry
-                .of(RetryConfig.custom().waitDuration(Duration.ofMillis(150)).build());
+            .of(RetryConfig.custom().waitDuration(Duration.ofMillis(150)).build());
         Retry retry = retryRegistry.retry("testName");
         metricRegistry.registerAll(RetryMetrics.ofRetryRegistry(prefix, retryRegistry));
 
@@ -21,7 +21,7 @@ public class RetryMetricsTest extends AbstractRetryMetricsTest {
     @Override
     protected Retry given(MetricRegistry metricRegistry) {
         RetryRegistry retryRegistry = RetryRegistry
-                .of(RetryConfig.custom().waitDuration(Duration.ofMillis(150)).build());
+            .of(RetryConfig.custom().waitDuration(Duration.ofMillis(150)).build());
         Retry retry = retryRegistry.retry("testName");
         metricRegistry.registerAll(RetryMetrics.ofRetryRegistry(retryRegistry));
 

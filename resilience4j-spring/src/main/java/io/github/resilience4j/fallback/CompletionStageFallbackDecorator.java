@@ -32,7 +32,7 @@ public class CompletionStageFallbackDecorator implements FallbackDecorator {
     @SuppressWarnings("unchecked")
     @Override
     public CheckedFunction0<Object> decorate(FallbackMethod fallbackMethod,
-            CheckedFunction0<Object> supplier) {
+        CheckedFunction0<Object> supplier) {
         return supplier.andThen(request -> {
             CompletionStage completionStage = (CompletionStage) request;
 
@@ -42,14 +42,14 @@ public class CompletionStageFallbackDecorator implements FallbackDecorator {
                 if (throwable != null) {
                     try {
                         ((CompletionStage) fallbackMethod.fallback((Throwable) throwable))
-                                .whenComplete((recoveryResult, recoveryThrowable) -> {
-                                    if (recoveryThrowable != null) {
-                                        promise.completeExceptionally(
-                                                (Throwable) recoveryThrowable);
-                                    } else {
-                                        promise.complete(recoveryResult);
-                                    }
-                                });
+                            .whenComplete((recoveryResult, recoveryThrowable) -> {
+                                if (recoveryThrowable != null) {
+                                    promise.completeExceptionally(
+                                        (Throwable) recoveryThrowable);
+                                } else {
+                                    promise.complete(recoveryResult);
+                                }
+                            });
                     } catch (Throwable recoveryThrowable) {
                         promise.completeExceptionally(recoveryThrowable);
                     }

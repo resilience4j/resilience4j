@@ -35,8 +35,8 @@ public class RetryOnIgnoredErrorEvent extends AbstractRetryEvent {
     @Override
     public String toString() {
         return String.format("%s: Retry '%s' recorded an error which has been ignored: '%s'.",
-                getCreationTime(),
-                getName(),
-                getLastThrowable() != null ? getLastThrowable().toString() : "null");
+            getCreationTime(),
+            getName(),
+            getLastThrowable() != null ? getLastThrowable().toString() : "null");
     }
 }

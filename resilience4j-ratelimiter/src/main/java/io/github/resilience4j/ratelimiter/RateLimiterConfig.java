@@ -35,7 +35,7 @@ public class RateLimiterConfig {
     private final boolean writableStackTraceEnabled;
 
     private RateLimiterConfig(Duration timeoutDuration, Duration limitRefreshPeriod,
-            int limitForPeriod, boolean writableStackTraceEnabled) {
+        int limitForPeriod, boolean writableStackTraceEnabled) {
         this.timeoutDuration = timeoutDuration;
         this.limitRefreshPeriod = limitRefreshPeriod;
         this.limitForPeriod = limitForPeriod;
@@ -77,7 +77,7 @@ public class RateLimiterConfig {
     private static Duration checkLimitRefreshPeriod(Duration limitRefreshPeriod) {
         requireNonNull(limitRefreshPeriod, LIMIT_REFRESH_PERIOD_MUST_NOT_BE_NULL);
         boolean refreshPeriodIsTooShort =
-                limitRefreshPeriod.compareTo(ACCEPTABLE_REFRESH_PERIOD) < 0;
+            limitRefreshPeriod.compareTo(ACCEPTABLE_REFRESH_PERIOD) < 0;
         if (refreshPeriodIsTooShort) {
             throw new IllegalArgumentException("LimitRefreshPeriod is too short");
         }
@@ -110,11 +110,11 @@ public class RateLimiterConfig {
     @Override
     public String toString() {
         return "RateLimiterConfig{" +
-                "timeoutDuration=" + timeoutDuration +
-                ", limitRefreshPeriod=" + limitRefreshPeriod +
-                ", limitForPeriod=" + limitForPeriod +
-                ", writableStackTraceEnabled=" + writableStackTraceEnabled +
-                '}';
+            "timeoutDuration=" + timeoutDuration +
+            ", limitRefreshPeriod=" + limitRefreshPeriod +
+            ", limitForPeriod=" + limitForPeriod +
+            ", writableStackTraceEnabled=" + writableStackTraceEnabled +
+            '}';
     }
 
     public static class Builder {
@@ -141,7 +141,7 @@ public class RateLimiterConfig {
          */
         public RateLimiterConfig build() {
             return new RateLimiterConfig(timeoutDuration, limitRefreshPeriod, limitForPeriod,
-                    writableStackTraceEnabled);
+                writableStackTraceEnabled);
         }
 
         /**

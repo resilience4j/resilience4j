@@ -32,7 +32,7 @@ import java.util.function.Supplier;
  * Backend retry manager. Constructs backend retries according to configuration values.
  */
 public final class InMemoryRetryRegistry extends AbstractRegistry<Retry, RetryConfig> implements
-        RetryRegistry {
+    RetryRegistry {
 
     /**
      * The constructor with default default.
@@ -47,15 +47,15 @@ public final class InMemoryRetryRegistry extends AbstractRegistry<Retry, RetryCo
     }
 
     public InMemoryRetryRegistry(Map<String, RetryConfig> configs,
-            RegistryEventConsumer<Retry> registryEventConsumer) {
+        RegistryEventConsumer<Retry> registryEventConsumer) {
         this(configs.getOrDefault(DEFAULT_CONFIG, RetryConfig.ofDefaults()), registryEventConsumer);
         this.configurations.putAll(configs);
     }
 
     public InMemoryRetryRegistry(Map<String, RetryConfig> configs,
-            List<RegistryEventConsumer<Retry>> registryEventConsumers) {
+        List<RegistryEventConsumer<Retry>> registryEventConsumers) {
         this(configs.getOrDefault(DEFAULT_CONFIG, RetryConfig.ofDefaults()),
-                registryEventConsumers);
+            registryEventConsumers);
         this.configurations.putAll(configs);
     }
 
@@ -69,12 +69,12 @@ public final class InMemoryRetryRegistry extends AbstractRegistry<Retry, RetryCo
     }
 
     public InMemoryRetryRegistry(RetryConfig defaultConfig,
-            RegistryEventConsumer<Retry> registryEventConsumer) {
+        RegistryEventConsumer<Retry> registryEventConsumer) {
         super(defaultConfig, registryEventConsumer);
     }
 
     public InMemoryRetryRegistry(RetryConfig defaultConfig,
-            List<RegistryEventConsumer<Retry>> registryEventConsumers) {
+        List<RegistryEventConsumer<Retry>> registryEventConsumers) {
         super(defaultConfig, registryEventConsumers);
     }
 
@@ -100,7 +100,7 @@ public final class InMemoryRetryRegistry extends AbstractRegistry<Retry, RetryCo
     @Override
     public Retry retry(String name, RetryConfig config) {
         return computeIfAbsent(name,
-                () -> Retry.of(name, Objects.requireNonNull(config, CONFIG_MUST_NOT_BE_NULL)));
+            () -> Retry.of(name, Objects.requireNonNull(config, CONFIG_MUST_NOT_BE_NULL)));
     }
 
     /**
@@ -109,8 +109,8 @@ public final class InMemoryRetryRegistry extends AbstractRegistry<Retry, RetryCo
     @Override
     public Retry retry(String name, Supplier<RetryConfig> retryConfigSupplier) {
         return computeIfAbsent(name, () -> Retry.of(name, Objects.requireNonNull(
-                Objects.requireNonNull(retryConfigSupplier, SUPPLIER_MUST_NOT_BE_NULL).get(),
-                CONFIG_MUST_NOT_BE_NULL)));
+            Objects.requireNonNull(retryConfigSupplier, SUPPLIER_MUST_NOT_BE_NULL).get(),
+            CONFIG_MUST_NOT_BE_NULL)));
     }
 
     /**
@@ -119,6 +119,6 @@ public final class InMemoryRetryRegistry extends AbstractRegistry<Retry, RetryCo
     @Override
     public Retry retry(String name, String configName) {
         return computeIfAbsent(name, () -> Retry.of(name, getConfiguration(configName)
-                .orElseThrow(() -> new ConfigurationNotFoundException(configName))));
+            .orElseThrow(() -> new ConfigurationNotFoundException(configName))));
     }
 }

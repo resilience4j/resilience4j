@@ -34,11 +34,11 @@ public class FixedThreadPoolBulkheadTest {
     public void setUp() {
 
         ThreadPoolBulkheadConfig config = ThreadPoolBulkheadConfig.custom()
-                .maxThreadPoolSize(2)
-                .coreThreadPoolSize(1)
-                .queueCapacity(10)
-                .keepAliveDuration(Duration.ofMillis(10))
-                .build();
+            .maxThreadPoolSize(2)
+            .coreThreadPoolSize(1)
+            .queueCapacity(10)
+            .keepAliveDuration(Duration.ofMillis(10))
+            .build();
 
         bulkhead = ThreadPoolBulkhead.of("test", config);
     }
@@ -61,7 +61,7 @@ public class FixedThreadPoolBulkheadTest {
         assertThat(bulkhead.getBulkheadConfig().getQueueCapacity()).isEqualTo(10);
         assertThat(bulkhead.getBulkheadConfig().getCoreThreadPoolSize()).isEqualTo(1);
         assertThat(bulkhead.getBulkheadConfig().getKeepAliveDuration())
-                .isEqualTo(Duration.ofMillis(10));
+            .isEqualTo(Duration.ofMillis(10));
     }
 
     @Test
@@ -73,11 +73,11 @@ public class FixedThreadPoolBulkheadTest {
         assertThat(bulkhead).isNotNull();
         assertThat(bulkhead.getBulkheadConfig()).isNotNull();
         assertThat(bulkhead.getBulkheadConfig().getMaxThreadPoolSize())
-                .isEqualTo(ThreadPoolBulkheadConfig.DEFAULT_MAX_THREAD_POOL_SIZE);
+            .isEqualTo(ThreadPoolBulkheadConfig.DEFAULT_MAX_THREAD_POOL_SIZE);
         assertThat(bulkhead.getBulkheadConfig().getCoreThreadPoolSize())
-                .isEqualTo(ThreadPoolBulkheadConfig.DEFAULT_CORE_THREAD_POOL_SIZE);
+            .isEqualTo(ThreadPoolBulkheadConfig.DEFAULT_CORE_THREAD_POOL_SIZE);
         assertThat(bulkhead.getBulkheadConfig().getQueueCapacity())
-                .isEqualTo(ThreadPoolBulkheadConfig.DEFAULT_QUEUE_CAPACITY);
+            .isEqualTo(ThreadPoolBulkheadConfig.DEFAULT_QUEUE_CAPACITY);
     }
 
 

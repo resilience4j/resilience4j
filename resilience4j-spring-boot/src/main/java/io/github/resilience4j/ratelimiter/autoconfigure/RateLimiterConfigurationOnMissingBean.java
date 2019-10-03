@@ -26,7 +26,7 @@ import org.springframework.context.annotation.Import;
 @Configuration
 @Import({IntegerToDurationConverter.class, StringToDurationConverter.class})
 public class RateLimiterConfigurationOnMissingBean extends
-        AbstractRateLimiterConfigurationOnMissingBean {
+    AbstractRateLimiterConfigurationOnMissingBean {
 
     @Bean
     public EventConsumerRegistry<RateLimiterEvent> rateLimiterEventsConsumerRegistry() {

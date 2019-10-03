@@ -42,7 +42,7 @@ public class BulkheadMetrics implements MetricSet {
     }
 
     private BulkheadMetrics(String prefix, Iterable<Bulkhead> bulkheads,
-            MetricRegistry metricRegistry) {
+        MetricRegistry metricRegistry) {
         requireNonNull(prefix);
         requireNonNull(bulkheads);
         requireNonNull(metricRegistry);
@@ -51,9 +51,9 @@ public class BulkheadMetrics implements MetricSet {
             String name = bulkhead.getName();
             //number of available concurrent calls as an integer
             metricRegistry.register(name(prefix, name, AVAILABLE_CONCURRENT_CALLS),
-                    (Gauge<Integer>) () -> bulkhead.getMetrics().getAvailableConcurrentCalls());
+                (Gauge<Integer>) () -> bulkhead.getMetrics().getAvailableConcurrentCalls());
             metricRegistry.register(name(prefix, name, MAX_ALLOWED_CONCURRENT_CALLS),
-                    (Gauge<Integer>) () -> bulkhead.getMetrics().getMaxAllowedConcurrentCalls());
+                (Gauge<Integer>) () -> bulkhead.getMetrics().getMaxAllowedConcurrentCalls());
         });
     }
 
@@ -66,7 +66,7 @@ public class BulkheadMetrics implements MetricSet {
      * @param metricRegistry the metric registry
      */
     public static BulkheadMetrics ofBulkheadRegistry(String prefix,
-            BulkheadRegistry bulkheadRegistry, MetricRegistry metricRegistry) {
+        BulkheadRegistry bulkheadRegistry, MetricRegistry metricRegistry) {
         return new BulkheadMetrics(prefix, bulkheadRegistry.getAllBulkheads(), metricRegistry);
     }
 
@@ -78,9 +78,9 @@ public class BulkheadMetrics implements MetricSet {
      * @param bulkheadRegistry the registry of bulkheads
      */
     public static BulkheadMetrics ofBulkheadRegistry(String prefix,
-            BulkheadRegistry bulkheadRegistry) {
+        BulkheadRegistry bulkheadRegistry) {
         return new BulkheadMetrics(prefix, bulkheadRegistry.getAllBulkheads(),
-                new MetricRegistry());
+            new MetricRegistry());
     }
 
     /**
@@ -91,9 +91,9 @@ public class BulkheadMetrics implements MetricSet {
      * @param metricRegistry the metric registry
      */
     public static BulkheadMetrics ofBulkheadRegistry(BulkheadRegistry bulkheadRegistry,
-            MetricRegistry metricRegistry) {
+        MetricRegistry metricRegistry) {
         return new BulkheadMetrics(DEFAULT_PREFIX, bulkheadRegistry.getAllBulkheads(),
-                metricRegistry);
+            metricRegistry);
     }
 
     /**

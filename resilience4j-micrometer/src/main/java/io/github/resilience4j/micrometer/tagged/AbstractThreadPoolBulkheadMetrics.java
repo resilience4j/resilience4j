@@ -37,33 +37,33 @@ abstract class AbstractThreadPoolBulkheadMetrics extends AbstractMetrics {
         Set<Meter.Id> idSet = new HashSet<>();
 
         idSet.add(Gauge.builder(names.getQueueDepthMetricName(), bulkhead,
-                bh -> bh.getMetrics().getQueueDepth())
-                .description("The queue depth")
-                .tag(TagNames.NAME, bulkhead.getName())
-                .register(meterRegistry).getId());
+            bh -> bh.getMetrics().getQueueDepth())
+            .description("The queue depth")
+            .tag(TagNames.NAME, bulkhead.getName())
+            .register(meterRegistry).getId());
         idSet.add(Gauge.builder(names.getThreadPoolSizeMetricName(), bulkhead,
-                bh -> bh.getMetrics().getThreadPoolSize())
-                .description("The thread pool size")
-                .tag(TagNames.NAME, bulkhead.getName())
-                .register(meterRegistry).getId());
+            bh -> bh.getMetrics().getThreadPoolSize())
+            .description("The thread pool size")
+            .tag(TagNames.NAME, bulkhead.getName())
+            .register(meterRegistry).getId());
 
         idSet.add(Gauge.builder(names.getQueueCapacityMetricName(), bulkhead,
-                bh -> bh.getMetrics().getQueueCapacity())
-                .description("The queue capacity")
-                .tag(TagNames.NAME, bulkhead.getName())
-                .register(meterRegistry).getId());
+            bh -> bh.getMetrics().getQueueCapacity())
+            .description("The queue capacity")
+            .tag(TagNames.NAME, bulkhead.getName())
+            .register(meterRegistry).getId());
 
         idSet.add(Gauge.builder(names.getMaxThreadPoolSizeMetricName(), bulkhead,
-                bh -> bh.getMetrics().getMaximumThreadPoolSize())
-                .description("The maximum thread pool size")
-                .tag(TagNames.NAME, bulkhead.getName())
-                .register(meterRegistry).getId());
+            bh -> bh.getMetrics().getMaximumThreadPoolSize())
+            .description("The maximum thread pool size")
+            .tag(TagNames.NAME, bulkhead.getName())
+            .register(meterRegistry).getId());
 
         idSet.add(Gauge.builder(names.getCoreThreadPoolSizeMetricName(), bulkhead,
-                bh -> bh.getMetrics().getCoreThreadPoolSize())
-                .description("The core thread pool size")
-                .tag(TagNames.NAME, bulkhead.getName())
-                .register(meterRegistry).getId());
+            bh -> bh.getMetrics().getCoreThreadPoolSize())
+            .description("The core thread pool size")
+            .tag(TagNames.NAME, bulkhead.getName())
+            .register(meterRegistry).getId());
 
         meterIdMap.put(bulkhead.getName(), idSet);
     }
@@ -73,20 +73,21 @@ abstract class AbstractThreadPoolBulkheadMetrics extends AbstractMetrics {
         private static final String DEFAULT_PREFIX = "resilience4j.bulkhead";
 
         public static final String DEFAULT_BULKHEAD_QUEUE_DEPTH_METRIC_NAME =
-                DEFAULT_PREFIX + ".queue.depth";
+            DEFAULT_PREFIX + ".queue.depth";
         public static final String DEFAULT_BULKHEAD_QUEUE_CAPACITY_METRIC_NAME =
-                DEFAULT_PREFIX + ".queue.capacity";
+            DEFAULT_PREFIX + ".queue.capacity";
         public static final String DEFAULT_THREAD_POOL_SIZE_METRIC_NAME =
-                DEFAULT_PREFIX + ".thread.pool.size";
+            DEFAULT_PREFIX + ".thread.pool.size";
         public static final String DEFAULT_MAX_THREAD_POOL_SIZE_METRIC_NAME =
-                DEFAULT_PREFIX + ".max.thread.pool.size";
+            DEFAULT_PREFIX + ".max.thread.pool.size";
         public static final String DEFAULT_CORE_THREAD_POOL_SIZE_METRIC_NAME =
-                DEFAULT_PREFIX + ".core.thread.pool.size";
+            DEFAULT_PREFIX + ".core.thread.pool.size";
         private String queueDepthMetricName = DEFAULT_BULKHEAD_QUEUE_DEPTH_METRIC_NAME;
         private String threadPoolSizeMetricName = DEFAULT_THREAD_POOL_SIZE_METRIC_NAME;
         private String maxThreadPoolSizeMetricName = DEFAULT_MAX_THREAD_POOL_SIZE_METRIC_NAME;
         private String coreThreadPoolSizeMetricName = DEFAULT_CORE_THREAD_POOL_SIZE_METRIC_NAME;
         private String queueCapacityMetricName = DEFAULT_BULKHEAD_QUEUE_CAPACITY_METRIC_NAME;
+
         private MetricNames() {
         }
 
@@ -199,7 +200,7 @@ abstract class AbstractThreadPoolBulkheadMetrics extends AbstractMetrics {
              */
             public Builder maxThreadPoolSizeMetricName(String maxThreadPoolSizeMetricName) {
                 metricNames.maxThreadPoolSizeMetricName = requireNonNull(
-                        maxThreadPoolSizeMetricName);
+                    maxThreadPoolSizeMetricName);
                 return this;
             }
 
@@ -212,7 +213,7 @@ abstract class AbstractThreadPoolBulkheadMetrics extends AbstractMetrics {
              */
             public Builder coreThreadPoolSizeMetricName(String coreThreadPoolSizeMetricName) {
                 metricNames.coreThreadPoolSizeMetricName = requireNonNull(
-                        coreThreadPoolSizeMetricName);
+                    coreThreadPoolSizeMetricName);
                 return this;
             }
 

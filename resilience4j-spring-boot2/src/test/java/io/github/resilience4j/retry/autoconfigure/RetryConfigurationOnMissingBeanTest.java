@@ -38,9 +38,9 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(classes = {
-        RetryConfigurationOnMissingBeanTest.ConfigWithOverrides.class,
-        RetryAutoConfiguration.class,
-        RetryConfigurationOnMissingBean.class
+    RetryConfigurationOnMissingBeanTest.ConfigWithOverrides.class,
+    RetryAutoConfiguration.class,
+    RetryConfigurationOnMissingBean.class
 })
 @EnableConfigurationProperties(RetryProperties.class)
 public class RetryConfigurationOnMissingBeanTest {
@@ -88,10 +88,10 @@ public class RetryConfigurationOnMissingBeanTest {
 
         @Bean
         public RetryAspect retryAspect(RetryRegistry retryRegistry,
-                @Autowired(required = false) List<RetryAspectExt> retryAspectExts,
-                FallbackDecorators fallbackDecorators) {
+            @Autowired(required = false) List<RetryAspectExt> retryAspectExts,
+            FallbackDecorators fallbackDecorators) {
             this.retryAspect = new RetryAspect(new RetryProperties(), retryRegistry,
-                    retryAspectExts, fallbackDecorators);
+                retryAspectExts, fallbackDecorators);
             return retryAspect;
         }
 

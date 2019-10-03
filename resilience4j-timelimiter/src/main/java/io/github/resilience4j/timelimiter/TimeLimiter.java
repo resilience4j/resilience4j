@@ -56,8 +56,8 @@ public interface TimeLimiter {
      */
     static TimeLimiter of(Duration timeoutDuration) {
         TimeLimiterConfig timeLimiterConfig = TimeLimiterConfig.custom()
-                .timeoutDuration(timeoutDuration)
-                .build();
+            .timeoutDuration(timeoutDuration)
+            .build();
         return new TimeLimiterImpl(DEFAULT_NAME, timeLimiterConfig);
     }
 
@@ -71,7 +71,7 @@ public interface TimeLimiter {
      * @return a future supplier which is restricted by a {@link TimeLimiter}.
      */
     static <T, F extends Future<T>> Callable<T> decorateFutureSupplier(TimeLimiter timeLimiter,
-            Supplier<F> futureSupplier) {
+        Supplier<F> futureSupplier) {
         return timeLimiter.decorateFutureSupplier(futureSupplier);
     }
 
@@ -94,7 +94,7 @@ public interface TimeLimiter {
      * @throws Exception if unable to compute a result
      */
     default <T, F extends Future<T>> T executeFutureSupplier(Supplier<F> futureSupplier)
-            throws Exception {
+        throws Exception {
         return decorateFutureSupplier(this, futureSupplier).call();
     }
 

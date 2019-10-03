@@ -50,10 +50,10 @@ public class InMemoryRateLimiterRegistryTest {
     @Before
     public void init() {
         config = RateLimiterConfig.custom()
-                .timeoutDuration(TIMEOUT)
-                .limitRefreshPeriod(REFRESH_PERIOD)
-                .limitForPeriod(LIMIT)
-                .build();
+            .timeoutDuration(TIMEOUT)
+            .limitRefreshPeriod(REFRESH_PERIOD)
+            .limitForPeriod(LIMIT)
+            .build();
     }
 
     @Test
@@ -73,7 +73,7 @@ public class InMemoryRateLimiterRegistryTest {
         RateLimiterRegistry registry = new InMemoryRateLimiterRegistry(config);
         Supplier<RateLimiterConfig> rateLimiterConfigSupplier = mock(Supplier.class);
         when(rateLimiterConfigSupplier.get())
-                .thenReturn(config);
+            .thenReturn(config);
 
         RateLimiter firstRateLimiter = registry.rateLimiter("test", rateLimiterConfigSupplier);
         verify(rateLimiterConfigSupplier, times(1)).get();

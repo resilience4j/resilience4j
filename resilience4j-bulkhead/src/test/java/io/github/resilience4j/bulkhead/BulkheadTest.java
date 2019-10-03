@@ -53,8 +53,8 @@ public class BulkheadTest {
     public void setUp() {
         helloWorldService = Mockito.mock(HelloWorldService.class);
         config = BulkheadConfig.custom()
-                .maxConcurrentCalls(1)
-                .build();
+            .maxConcurrentCalls(1)
+            .build();
     }
 
     @Test
@@ -66,7 +66,7 @@ public class BulkheadTest {
 
         // When
         Supplier<String> supplier = Bulkhead
-                .decorateSupplier(bulkhead, helloWorldService::returnHelloWorld);
+            .decorateSupplier(bulkhead, helloWorldService::returnHelloWorld);
 
         // Then
         assertThat(supplier.get()).isEqualTo("Hello world");
@@ -96,11 +96,11 @@ public class BulkheadTest {
         // Given
         Bulkhead bulkhead = Bulkhead.of("test", config);
         BDDMockito.given(helloWorldService.returnHelloWorld())
-                .willThrow(new RuntimeException("BAM!"));
+            .willThrow(new RuntimeException("BAM!"));
 
         // When
         Supplier<String> supplier = Bulkhead
-                .decorateSupplier(bulkhead, helloWorldService::returnHelloWorld);
+            .decorateSupplier(bulkhead, helloWorldService::returnHelloWorld);
         Try<String> result = Try.of(supplier::get);
 
         //Then
@@ -116,11 +116,11 @@ public class BulkheadTest {
         // Given
         Bulkhead bulkhead = Bulkhead.of("test", config);
         BDDMockito.given(helloWorldService.returnHelloWorldWithException())
-                .willReturn("Hello world");
+            .willReturn("Hello world");
 
         // When
         CheckedFunction0<String> checkedSupplier = Bulkhead.decorateCheckedSupplier(bulkhead,
-                helloWorldService::returnHelloWorldWithException);
+            helloWorldService::returnHelloWorldWithException);
 
         // Then
         assertThat(checkedSupplier.apply()).isEqualTo("Hello world");
@@ -134,11 +134,11 @@ public class BulkheadTest {
         // Given
         Bulkhead bulkhead = Bulkhead.of("test", config);
         BDDMockito.given(helloWorldService.returnHelloWorldWithException())
-                .willThrow(new RuntimeException("BAM!"));
+            .willThrow(new RuntimeException("BAM!"));
 
         // When
         CheckedFunction0<String> checkedSupplier = Bulkhead.decorateCheckedSupplier(bulkhead,
-                helloWorldService::returnHelloWorldWithException);
+            helloWorldService::returnHelloWorldWithException);
         Try<String> result = Try.of(checkedSupplier);
 
         // Then
@@ -154,11 +154,11 @@ public class BulkheadTest {
         // Given
         Bulkhead bulkhead = Bulkhead.of("test", config);
         BDDMockito.given(helloWorldService.returnHelloWorldWithException())
-                .willReturn("Hello world");
+            .willReturn("Hello world");
 
         // When
         Callable<String> callable = Bulkhead
-                .decorateCallable(bulkhead, helloWorldService::returnHelloWorldWithException);
+            .decorateCallable(bulkhead, helloWorldService::returnHelloWorldWithException);
 
         // Then
         assertThat(callable.call()).isEqualTo("Hello world");
@@ -172,7 +172,7 @@ public class BulkheadTest {
         // Given
         Bulkhead bulkhead = Bulkhead.of("test", config);
         BDDMockito.given(helloWorldService.returnHelloWorldWithException())
-                .willReturn("Hello world");
+            .willReturn("Hello world");
 
         // When
         String result = bulkhead.executeCallable(helloWorldService::returnHelloWorldWithException);
@@ -189,11 +189,11 @@ public class BulkheadTest {
         // Given
         Bulkhead bulkhead = Bulkhead.of("test", config);
         BDDMockito.given(helloWorldService.returnHelloWorldWithException())
-                .willThrow(new RuntimeException("BAM!"));
+            .willThrow(new RuntimeException("BAM!"));
 
         // When
         Callable<String> callable = Bulkhead
-                .decorateCallable(bulkhead, helloWorldService::returnHelloWorldWithException);
+            .decorateCallable(bulkhead, helloWorldService::returnHelloWorldWithException);
         Try<String> result = Try.of(callable::call);
 
         // Then
@@ -211,7 +211,7 @@ public class BulkheadTest {
 
         // When
         Bulkhead.decorateCheckedRunnable(bulkhead, helloWorldService::sayHelloWorldWithException)
-                .run();
+            .run();
 
         // Then
         assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
@@ -244,7 +244,7 @@ public class BulkheadTest {
 
         //When
         Bulkhead.decorateRunnable(bulkhead, helloWorldService::sayHelloWorld)
-                .run();
+            .run();
 
         //Then
         assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
@@ -291,7 +291,7 @@ public class BulkheadTest {
 
         // When
         Bulkhead.decorateConsumer(bulkhead, helloWorldService::sayHelloWorldWithName)
-                .accept("Tom");
+            .accept("Tom");
 
         // Then
         assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
@@ -324,13 +324,13 @@ public class BulkheadTest {
 
         // When
         Bulkhead.decorateCheckedConsumer(bulkhead,
-                helloWorldService::sayHelloWorldWithNameWithException)
-                .accept("Tom");
+            helloWorldService::sayHelloWorldWithNameWithException)
+            .accept("Tom");
 
         // Then
         assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
         BDDMockito.then(helloWorldService).should(times(1))
-                .sayHelloWorldWithNameWithException("Tom");
+            .sayHelloWorldWithNameWithException("Tom");
     }
 
     @Test
@@ -341,9 +341,9 @@ public class BulkheadTest {
 
         // When
         CheckedConsumer<String> checkedConsumer = Bulkhead
-                .decorateCheckedConsumer(bulkhead, (value) -> {
-                    throw new RuntimeException("BAM!");
-                });
+            .decorateCheckedConsumer(bulkhead, (value) -> {
+                throw new RuntimeException("BAM!");
+            });
         Try<Void> result = Try.run(() -> checkedConsumer.accept("Tom"));
 
         // Then
@@ -358,11 +358,11 @@ public class BulkheadTest {
         // Given
         Bulkhead bulkhead = Bulkhead.of("test", config);
         BDDMockito.given(helloWorldService.returnHelloWorldWithName("Tom"))
-                .willReturn("Hello world Tom");
+            .willReturn("Hello world Tom");
 
         // When
         Function<String, String> function = Bulkhead
-                .decorateFunction(bulkhead, helloWorldService::returnHelloWorldWithName);
+            .decorateFunction(bulkhead, helloWorldService::returnHelloWorldWithName);
 
         // Then
         assertThat(function.apply("Tom")).isEqualTo("Hello world Tom");
@@ -376,11 +376,11 @@ public class BulkheadTest {
         // Given
         Bulkhead bulkhead = Bulkhead.of("test", config);
         BDDMockito.given(helloWorldService.returnHelloWorldWithName("Tom"))
-                .willThrow(new RuntimeException("BAM!"));
+            .willThrow(new RuntimeException("BAM!"));
 
         // When
         Function<String, String> function = Bulkhead
-                .decorateFunction(bulkhead, helloWorldService::returnHelloWorldWithName);
+            .decorateFunction(bulkhead, helloWorldService::returnHelloWorldWithName);
         Try<String> result = Try.of(() -> function.apply("Tom"));
 
         // Then
@@ -395,18 +395,18 @@ public class BulkheadTest {
         // Given
         Bulkhead bulkhead = Bulkhead.of("test", config);
         BDDMockito.given(helloWorldService.returnHelloWorldWithNameWithException("Tom"))
-                .willReturn("Hello world Tom");
+            .willReturn("Hello world Tom");
 
         // When
         String result = Bulkhead.decorateCheckedFunction(bulkhead,
-                helloWorldService::returnHelloWorldWithNameWithException)
-                .apply("Tom");
+            helloWorldService::returnHelloWorldWithNameWithException)
+            .apply("Tom");
 
         // Then
         assertThat(result).isEqualTo("Hello world Tom");
         assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
         BDDMockito.then(helloWorldService).should(times(1))
-                .returnHelloWorldWithNameWithException("Tom");
+            .returnHelloWorldWithNameWithException("Tom");
     }
 
     @Test
@@ -415,11 +415,11 @@ public class BulkheadTest {
         // Given
         Bulkhead bulkhead = Bulkhead.of("test", config);
         BDDMockito.given(helloWorldService.returnHelloWorldWithNameWithException("Tom"))
-                .willThrow(new RuntimeException("BAM!"));
+            .willThrow(new RuntimeException("BAM!"));
 
         // When
         CheckedFunction1<String, String> function = Bulkhead.decorateCheckedFunction(bulkhead,
-                helloWorldService::returnHelloWorldWithNameWithException);
+            helloWorldService::returnHelloWorldWithNameWithException);
         Try<String> result = Try.of(() -> function.apply("Tom"));
 
         // Then
@@ -477,10 +477,10 @@ public class BulkheadTest {
 
         // When
         Supplier<String> decoratedSupplier = Bulkhead
-                .decorateSupplier(bulkhead, () -> "This can be any method which returns: 'Hello");
+            .decorateSupplier(bulkhead, () -> "This can be any method which returns: 'Hello");
 
         CompletableFuture<String> future = CompletableFuture.supplyAsync(decoratedSupplier)
-                .thenApply(value -> value + " world'");
+            .thenApply(value -> value + " world'");
 
         String result = future.get();
 
@@ -492,7 +492,7 @@ public class BulkheadTest {
 
     @Test
     public void shouldDecorateCompletionStageAndReturnWithSuccess()
-            throws ExecutionException, InterruptedException {
+        throws ExecutionException, InterruptedException {
 
         // Given
         Bulkhead bulkhead = Bulkhead.of("test", config);
@@ -501,14 +501,14 @@ public class BulkheadTest {
         // When
 
         Supplier<CompletionStage<String>> completionStageSupplier =
-                () -> CompletableFuture.supplyAsync(helloWorldService::returnHelloWorld);
+            () -> CompletableFuture.supplyAsync(helloWorldService::returnHelloWorld);
 
         Supplier<CompletionStage<String>> decoratedCompletionStageSupplier =
-                Bulkhead.decorateCompletionStage(bulkhead, completionStageSupplier);
+            Bulkhead.decorateCompletionStage(bulkhead, completionStageSupplier);
 
         CompletionStage<String> decoratedCompletionStage = decoratedCompletionStageSupplier
-                .get()
-                .thenApply(value -> value + " world");
+            .get()
+            .thenApply(value -> value + " world");
 
         // Then
         assertThat(decoratedCompletionStage.toCompletableFuture().get()).isEqualTo("Hello world");
@@ -518,7 +518,7 @@ public class BulkheadTest {
 
     @Test
     public void shouldExecuteCompletionStageAndReturnWithSuccess()
-            throws ExecutionException, InterruptedException {
+        throws ExecutionException, InterruptedException {
 
         // Given
         Bulkhead bulkhead = Bulkhead.of("test", config);
@@ -526,9 +526,9 @@ public class BulkheadTest {
 
         // When
         CompletionStage<String> decoratedCompletionStage = bulkhead
-                .executeCompletionStage(
-                        () -> CompletableFuture.supplyAsync(helloWorldService::returnHelloWorld))
-                .thenApply(value -> value + " world");
+            .executeCompletionStage(
+                () -> CompletableFuture.supplyAsync(helloWorldService::returnHelloWorld))
+            .thenApply(value -> value + " world");
 
         // Then
         assertThat(decoratedCompletionStage.toCompletableFuture().get()).isEqualTo("Hello world");
@@ -548,7 +548,7 @@ public class BulkheadTest {
         };
 
         Supplier<CompletionStage<String>> decoratedCompletionStageSupplier =
-                Bulkhead.decorateCompletionStage(bulkhead, completionStageSupplier);
+            Bulkhead.decorateCompletionStage(bulkhead, completionStageSupplier);
 
         // NOTE: Try.of does not detect a completion stage that has been completed with failure !
         Try<CompletionStage<String>> result = Try.of(decoratedCompletionStageSupplier::get);
@@ -557,13 +557,13 @@ public class BulkheadTest {
         BDDMockito.then(helloWorldService).should(times(0)).returnHelloWorld();
         assertThat(result.isSuccess()).isTrue();
         result.get()
-                .exceptionally(
-                        error -> {
-                            // NOTE: Try.of does not detect a completion stage that has been completed with failure !
-                            assertThat(error).isInstanceOf(HelloWorldException.class);
-                            return null;
-                        }
-                );
+            .exceptionally(
+                error -> {
+                    // NOTE: Try.of does not detect a completion stage that has been completed with failure !
+                    assertThat(error).isInstanceOf(HelloWorldException.class);
+                    return null;
+                }
+            );
         assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
     }
 
@@ -573,19 +573,19 @@ public class BulkheadTest {
         // Given
         Bulkhead bulkhead = Bulkhead.of("test", config);
         BDDMockito.given(helloWorldService.returnHelloWorld())
-                .willThrow(new RuntimeException("BAM! At async stage"));
+            .willThrow(new RuntimeException("BAM! At async stage"));
 
         // When
         Supplier<CompletionStage<String>> completionStageSupplier =
-                () -> CompletableFuture.supplyAsync(helloWorldService::returnHelloWorld);
+            () -> CompletableFuture.supplyAsync(helloWorldService::returnHelloWorld);
         Supplier<CompletionStage<String>> decoratedCompletionStageSupplier =
-                Bulkhead.decorateCompletionStage(bulkhead, completionStageSupplier);
+            Bulkhead.decorateCompletionStage(bulkhead, completionStageSupplier);
         CompletionStage<String> decoratedCompletionStage = decoratedCompletionStageSupplier.get();
 
         // Then the helloWorldService should be invoked 1 time
         assertThatThrownBy(decoratedCompletionStage.toCompletableFuture()::get)
-                .isInstanceOf(ExecutionException.class)
-                .hasCause(new RuntimeException("BAM! At async stage"));
+            .isInstanceOf(ExecutionException.class)
+            .hasCause(new RuntimeException("BAM! At async stage"));
         BDDMockito.then(helloWorldService).should(times(1)).returnHelloWorld();
         assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
     }
@@ -599,14 +599,14 @@ public class BulkheadTest {
 
         // When I create a Supplier and a Function which are decorated by different Bulkheads
         CheckedFunction0<String> decoratedSupplier
-                = Bulkhead.decorateCheckedSupplier(bulkhead, () -> "Hello");
+            = Bulkhead.decorateCheckedSupplier(bulkhead, () -> "Hello");
 
         CheckedFunction1<String, String> decoratedFunction
-                = Bulkhead.decorateCheckedFunction(anotherBulkhead, (input) -> input + " world");
+            = Bulkhead.decorateCheckedFunction(anotherBulkhead, (input) -> input + " world");
 
         // and I chain a function with map
         Try<String> result = Try.of(decoratedSupplier)
-                .mapTry(decoratedFunction);
+            .mapTry(decoratedFunction);
 
         // Then
         assertThat(result.isSuccess()).isTrue();
@@ -625,11 +625,11 @@ public class BulkheadTest {
 
         // When I decorate my function
         CheckedFunction0<String> decoratedSupplier = Bulkhead.decorateCheckedSupplier(bulkhead,
-                () -> "This can be any method which returns: 'Hello");
+            () -> "This can be any method which returns: 'Hello");
 
         // and chain an other function with map
         Try<String> result = Try.of(decoratedSupplier)
-                .map(value -> value + " world'");
+            .map(value -> value + " world'");
 
         // Then the Try Monad returns a Success<String>, if all functions ran successfully.
         assertThat(result.isSuccess()).isTrue();
@@ -658,7 +658,7 @@ public class BulkheadTest {
         // Given
         Bulkhead bulkhead = Bulkhead.of("test", config);
         BDDMockito.given(helloWorldService.returnTry())
-                .willReturn(Try.failure(new RuntimeException("BAM!")));
+            .willReturn(Try.failure(new RuntimeException("BAM!")));
 
         // When
         Try<String> result = bulkhead.executeTrySupplier(helloWorldService::returnTry);
@@ -679,7 +679,7 @@ public class BulkheadTest {
 
         // When
         Either<Exception, String> result = bulkhead
-                .executeEitherSupplier(helloWorldService::returnEither);
+            .executeEitherSupplier(helloWorldService::returnEither);
 
         // Then
         assertThat(result.get()).isEqualTo("Hello world");
@@ -692,11 +692,11 @@ public class BulkheadTest {
         // Given
         Bulkhead bulkhead = Bulkhead.of("test", config);
         BDDMockito.given(helloWorldService.returnEither())
-                .willReturn(Either.left(new HelloWorldException()));
+            .willReturn(Either.left(new HelloWorldException()));
 
         // When
         Either<Exception, String> result = bulkhead
-                .executeEitherSupplier(helloWorldService::returnEither);
+            .executeEitherSupplier(helloWorldService::returnEither);
 
         //Then
         assertThat(result.isLeft()).isTrue();
@@ -713,7 +713,7 @@ public class BulkheadTest {
 
         // When
         Try<String> result = Bulkhead.decorateTrySupplier(bulkhead, helloWorldService::returnTry)
-                .get();
+            .get();
 
         //Then
         assertThat(result.isFailure()).isTrue();
@@ -729,7 +729,7 @@ public class BulkheadTest {
 
         // When
         Either<Exception, String> result = Bulkhead
-                .decorateEitherSupplier(bulkhead, helloWorldService::returnEither).get();
+            .decorateEitherSupplier(bulkhead, helloWorldService::returnEither).get();
 
         //Then
         assertThat(result.isLeft()).isTrue();

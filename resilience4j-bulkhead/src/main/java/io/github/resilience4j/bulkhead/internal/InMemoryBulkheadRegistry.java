@@ -35,7 +35,7 @@ import java.util.function.Supplier;
  * Bulkhead instance manager; Constructs/returns bulkhead instances.
  */
 public final class InMemoryBulkheadRegistry extends
-        AbstractRegistry<Bulkhead, BulkheadConfig> implements BulkheadRegistry {
+    AbstractRegistry<Bulkhead, BulkheadConfig> implements BulkheadRegistry {
 
     /**
      * The constructor with default default.
@@ -50,18 +50,18 @@ public final class InMemoryBulkheadRegistry extends
     }
 
     public InMemoryBulkheadRegistry(
-            Map<String, BulkheadConfig> configs,
-            RegistryEventConsumer<Bulkhead> registryEventConsumer) {
+        Map<String, BulkheadConfig> configs,
+        RegistryEventConsumer<Bulkhead> registryEventConsumer) {
         this(configs.getOrDefault(DEFAULT_CONFIG, BulkheadConfig.ofDefaults()),
-                registryEventConsumer);
+            registryEventConsumer);
         this.configurations.putAll(configs);
     }
 
     public InMemoryBulkheadRegistry(
-            Map<String, BulkheadConfig> configs,
-            List<RegistryEventConsumer<Bulkhead>> registryEventConsumers) {
+        Map<String, BulkheadConfig> configs,
+        List<RegistryEventConsumer<Bulkhead>> registryEventConsumers) {
         this(configs.getOrDefault(DEFAULT_CONFIG, BulkheadConfig.ofDefaults()),
-                registryEventConsumers);
+            registryEventConsumers);
         this.configurations.putAll(configs);
     }
 
@@ -75,12 +75,12 @@ public final class InMemoryBulkheadRegistry extends
     }
 
     public InMemoryBulkheadRegistry(BulkheadConfig defaultConfig,
-            List<RegistryEventConsumer<Bulkhead>> registryEventConsumers) {
+        List<RegistryEventConsumer<Bulkhead>> registryEventConsumers) {
         super(defaultConfig, registryEventConsumers);
     }
 
     public InMemoryBulkheadRegistry(BulkheadConfig defaultConfig,
-            RegistryEventConsumer<Bulkhead> registryEventConsumer) {
+        RegistryEventConsumer<Bulkhead> registryEventConsumer) {
         super(defaultConfig, registryEventConsumer);
     }
 
@@ -106,7 +106,7 @@ public final class InMemoryBulkheadRegistry extends
     @Override
     public Bulkhead bulkhead(String name, BulkheadConfig config) {
         return computeIfAbsent(name,
-                () -> Bulkhead.of(name, Objects.requireNonNull(config, CONFIG_MUST_NOT_BE_NULL)));
+            () -> Bulkhead.of(name, Objects.requireNonNull(config, CONFIG_MUST_NOT_BE_NULL)));
     }
 
     /**
@@ -115,8 +115,8 @@ public final class InMemoryBulkheadRegistry extends
     @Override
     public Bulkhead bulkhead(String name, Supplier<BulkheadConfig> bulkheadConfigSupplier) {
         return computeIfAbsent(name, () -> Bulkhead.of(name, Objects.requireNonNull(
-                Objects.requireNonNull(bulkheadConfigSupplier, SUPPLIER_MUST_NOT_BE_NULL).get(),
-                CONFIG_MUST_NOT_BE_NULL)));
+            Objects.requireNonNull(bulkheadConfigSupplier, SUPPLIER_MUST_NOT_BE_NULL).get(),
+            CONFIG_MUST_NOT_BE_NULL)));
     }
 
     /**
@@ -125,6 +125,6 @@ public final class InMemoryBulkheadRegistry extends
     @Override
     public Bulkhead bulkhead(String name, String configName) {
         return computeIfAbsent(name, () -> Bulkhead.of(name, getConfiguration(configName)
-                .orElseThrow(() -> new ConfigurationNotFoundException(configName))));
+            .orElseThrow(() -> new ConfigurationNotFoundException(configName))));
     }
 }

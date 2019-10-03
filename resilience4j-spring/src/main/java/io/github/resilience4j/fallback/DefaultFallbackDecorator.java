@@ -29,7 +29,7 @@ public class DefaultFallbackDecorator implements FallbackDecorator {
 
     @Override
     public CheckedFunction0<Object> decorate(FallbackMethod recoveryMethod,
-            CheckedFunction0<Object> supplier) {
+        CheckedFunction0<Object> supplier) {
         return () -> {
             try {
                 return supplier.apply();

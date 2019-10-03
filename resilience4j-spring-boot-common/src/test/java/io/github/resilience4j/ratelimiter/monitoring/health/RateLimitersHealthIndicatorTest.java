@@ -27,19 +27,20 @@ public class RateLimitersHealthIndicatorTest {
         // given
         RateLimiterConfig config = mock(RateLimiterConfig.class);
         AtomicRateLimiter.AtomicRateLimiterMetrics metrics = mock(
-                AtomicRateLimiter.AtomicRateLimiterMetrics.class);
+            AtomicRateLimiter.AtomicRateLimiterMetrics.class);
         AtomicRateLimiter rateLimiter = mock(AtomicRateLimiter.class);
         RateLimiterRegistry rateLimiterRegistry = mock(RateLimiterRegistry.class);
         io.github.resilience4j.common.ratelimiter.configuration.RateLimiterConfigurationProperties.InstanceProperties instanceProperties =
-                mock(io.github.resilience4j.common.ratelimiter.configuration.RateLimiterConfigurationProperties.InstanceProperties.class);
+            mock(
+                io.github.resilience4j.common.ratelimiter.configuration.RateLimiterConfigurationProperties.InstanceProperties.class);
         RateLimiterConfigurationProperties rateLimiterProperties = mock(
-                RateLimiterConfigurationProperties.class);
+            RateLimiterConfigurationProperties.class);
 
         //when
         when(rateLimiter.getRateLimiterConfig()).thenReturn(config);
         when(rateLimiter.getName()).thenReturn("test");
         when(rateLimiterProperties.findRateLimiterProperties("test"))
-                .thenReturn(Optional.of(instanceProperties));
+            .thenReturn(Optional.of(instanceProperties));
         when(instanceProperties.getRegisterHealthIndicator()).thenReturn(true);
         when(rateLimiter.getMetrics()).thenReturn(metrics);
         when(rateLimiter.getDetailedMetrics()).thenReturn(metrics);
@@ -48,17 +49,17 @@ public class RateLimitersHealthIndicatorTest {
         when(config.getTimeoutDuration()).thenReturn(Duration.ofNanos(30L));
 
         when(metrics.getAvailablePermissions())
-                .thenReturn(5, -1, -2);
+            .thenReturn(5, -1, -2);
         when(metrics.getNumberOfWaitingThreads())
-                .thenReturn(0, 1, 2);
+            .thenReturn(0, 1, 2);
         when(metrics.getNanosToWait())
-                .thenReturn(20L, 40L);
+            .thenReturn(20L, 40L);
 
         // then
         OrderedHealthAggregator healthAggregator = new OrderedHealthAggregator();
         RateLimitersHealthIndicator healthIndicator =
-                new RateLimitersHealthIndicator(rateLimiterRegistry, rateLimiterProperties,
-                        healthAggregator);
+            new RateLimitersHealthIndicator(rateLimiterRegistry, rateLimiterProperties,
+                healthAggregator);
 
         Health health = healthIndicator.health();
         then(health.getStatus()).isEqualTo(Status.UP);
@@ -71,10 +72,10 @@ public class RateLimitersHealthIndicatorTest {
 
         then(health.getDetails().get("test")).isInstanceOf(Health.class);
         then(((Health) health.getDetails().get("test")).getDetails())
-                .contains(
-                        entry("availablePermissions", -2),
-                        entry("numberOfWaitingThreads", 2)
-                );
+            .contains(
+                entry("availablePermissions", -2),
+                entry("numberOfWaitingThreads", 2)
+            );
 
 
     }

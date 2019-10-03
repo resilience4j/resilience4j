@@ -41,7 +41,7 @@ public class RxJava2RetryAspectExt implements RetryAspectExt {
 
     private static final Logger logger = LoggerFactory.getLogger(RxJava2RetryAspectExt.class);
     private final Set<Class> rxSupportedTypes = newHashSet(ObservableSource.class,
-            SingleSource.class, CompletableSource.class, MaybeSource.class, Flowable.class);
+        SingleSource.class, CompletableSource.class, MaybeSource.class, Flowable.class);
 
     /**
      * @param returnType the AOP method return type class
@@ -51,7 +51,7 @@ public class RxJava2RetryAspectExt implements RetryAspectExt {
     @Override
     public boolean canHandleReturnType(Class returnType) {
         return rxSupportedTypes.stream()
-                .anyMatch(classType -> classType.isAssignableFrom(returnType));
+            .anyMatch(classType -> classType.isAssignableFrom(returnType));
     }
 
     /**
@@ -63,7 +63,7 @@ public class RxJava2RetryAspectExt implements RetryAspectExt {
      */
     @Override
     public Object handle(ProceedingJoinPoint proceedingJoinPoint, Retry retry, String methodName)
-            throws Throwable {
+        throws Throwable {
         RetryTransformer<?> retryTransformer = RetryTransformer.of(retry);
         Object returnValue = proceedingJoinPoint.proceed();
         return executeRxJava2Aspect(retryTransformer, returnValue);
@@ -88,10 +88,10 @@ public class RxJava2RetryAspectExt implements RetryAspectExt {
             return flowable.compose(retryTransformer);
         } else {
             logger.error("Unsupported type for retry RxJava2 {}",
-                    returnValue.getClass().getTypeName());
+                returnValue.getClass().getTypeName());
             throw new IllegalArgumentException(
-                    "Not Supported type for the Retry in RxJava2 :" + returnValue.getClass()
-                            .getName());
+                "Not Supported type for the Retry in RxJava2 :" + returnValue.getClass()
+                    .getName());
         }
     }
 }

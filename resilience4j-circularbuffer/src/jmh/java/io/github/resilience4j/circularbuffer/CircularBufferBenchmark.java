@@ -57,8 +57,8 @@ public class CircularBufferBenchmark {
 
     public static void main(String[] args) throws RunnerException {
         Options options = new OptionsBuilder()
-                .include(".*" + CircularBufferBenchmark.class.getSimpleName() + ".*")
-                .build();
+            .include(".*" + CircularBufferBenchmark.class.getSimpleName() + ".*")
+            .build();
         new Runner(options).run();
     }
 

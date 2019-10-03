@@ -29,9 +29,9 @@ public class TestFeignDecorator implements FeignDecorator {
 
     @Override
     public CheckedFunction1<Object[], Object> decorate(
-            CheckedFunction1<Object[], Object> invocationCall,
-            Method method, MethodHandler methodHandler,
-            Target<?> target) {
+        CheckedFunction1<Object[], Object> invocationCall,
+        Method method, MethodHandler methodHandler,
+        Target<?> target) {
         called = true;
         return alternativeFunction != null ? alternativeFunction : invocationCall;
     }

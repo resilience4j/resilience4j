@@ -42,7 +42,7 @@ public class TaggedRateLimiterMetrics extends AbstractRateLimiterMetrics impleme
      * @return The {@link TaggedRateLimiterMetrics} instance.
      */
     public static TaggedRateLimiterMetrics ofRateLimiterRegistry(
-            RateLimiterRegistry rateLimiterRegistry) {
+        RateLimiterRegistry rateLimiterRegistry) {
         return new TaggedRateLimiterMetrics(MetricNames.ofDefaults(), rateLimiterRegistry);
     }
 
@@ -54,7 +54,7 @@ public class TaggedRateLimiterMetrics extends AbstractRateLimiterMetrics impleme
      * @return The {@link TaggedRateLimiterMetrics} instance.
      */
     public static TaggedRateLimiterMetrics ofRateLimiterRegistry(MetricNames names,
-            RateLimiterRegistry rateLimiterRegistry) {
+        RateLimiterRegistry rateLimiterRegistry) {
         return new TaggedRateLimiterMetrics(names, rateLimiterRegistry);
     }
 
@@ -64,9 +64,9 @@ public class TaggedRateLimiterMetrics extends AbstractRateLimiterMetrics impleme
             addMetrics(registry, rateLimiter);
         }
         rateLimiterRegistry.getEventPublisher()
-                .onEntryAdded(event -> addMetrics(registry, event.getAddedEntry()));
+            .onEntryAdded(event -> addMetrics(registry, event.getAddedEntry()));
         rateLimiterRegistry.getEventPublisher().onEntryRemoved(
-                event -> removeMetrics(registry, event.getRemovedEntry().getName()));
+            event -> removeMetrics(registry, event.getRemovedEntry().getName()));
         rateLimiterRegistry.getEventPublisher().onEntryReplaced(event -> {
             removeMetrics(registry, event.getOldEntry().getName());
             addMetrics(registry, event.getNewEntry());

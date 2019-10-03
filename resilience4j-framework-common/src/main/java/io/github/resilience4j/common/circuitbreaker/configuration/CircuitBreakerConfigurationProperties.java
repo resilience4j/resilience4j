@@ -61,7 +61,7 @@ public class CircuitBreakerConfigurationProperties {
     }
 
     private CircuitBreakerConfig buildConfigFromBaseConfig(InstanceProperties instanceProperties,
-            InstanceProperties baseProperties) {
+        InstanceProperties baseProperties) {
         ConfigUtils.mergePropertiesIfAny(instanceProperties, baseProperties);
         CircuitBreakerConfig baseConfig = buildConfig(custom(), baseProperties);
         return buildConfig(from(baseConfig), instanceProperties);
@@ -114,7 +114,7 @@ public class CircuitBreakerConfigurationProperties {
 
         if (properties.getPermittedNumberOfCallsInHalfOpenState() != null) {
             builder.permittedNumberOfCallsInHalfOpenState(
-                    properties.getPermittedNumberOfCallsInHalfOpenState());
+                properties.getPermittedNumberOfCallsInHalfOpenState());
         }
 
         if (properties.recordFailurePredicate != null) {
@@ -131,7 +131,7 @@ public class CircuitBreakerConfigurationProperties {
 
         if (properties.automaticTransitionFromOpenToHalfOpenEnabled != null) {
             builder.automaticTransitionFromOpenToHalfOpenEnabled(
-                    properties.automaticTransitionFromOpenToHalfOpenEnabled);
+                properties.automaticTransitionFromOpenToHalfOpenEnabled);
         }
 
         return builder.build();
@@ -140,7 +140,7 @@ public class CircuitBreakerConfigurationProperties {
     private void buildRecordFailurePredicate(InstanceProperties properties, Builder builder) {
         if (properties.getRecordFailurePredicate() != null) {
             Predicate<Throwable> predicate = ClassUtils
-                    .instantiatePredicateClass(properties.getRecordFailurePredicate());
+                .instantiatePredicateClass(properties.getRecordFailurePredicate());
             if (predicate != null) {
                 builder.recordException(predicate);
             }
@@ -282,7 +282,7 @@ public class CircuitBreakerConfigurationProperties {
          * @param waitDurationInOpenStateMillis the wait duration
          */
         public InstanceProperties setWaitDurationInOpenState(
-                Duration waitDurationInOpenStateMillis) {
+            Duration waitDurationInOpenStateMillis) {
             this.waitDurationInOpenState = waitDurationInOpenStateMillis;
             return this;
         }
@@ -305,7 +305,7 @@ public class CircuitBreakerConfigurationProperties {
          */
         @Deprecated
         public InstanceProperties setRingBufferSizeInClosedState(
-                Integer ringBufferSizeInClosedState) {
+            Integer ringBufferSizeInClosedState) {
             this.ringBufferSizeInClosedState = ringBufferSizeInClosedState;
             return this;
         }
@@ -328,7 +328,7 @@ public class CircuitBreakerConfigurationProperties {
          */
         @Deprecated
         public InstanceProperties setRingBufferSizeInHalfOpenState(
-                Integer ringBufferSizeInHalfOpenState) {
+            Integer ringBufferSizeInHalfOpenState) {
             this.ringBufferSizeInHalfOpenState = ringBufferSizeInHalfOpenState;
             return this;
         }
@@ -337,7 +337,7 @@ public class CircuitBreakerConfigurationProperties {
          * Returns if we should automatically transition to half open after the timer has run out.
          *
          * @return setAutomaticTransitionFromOpenToHalfOpenEnabled if we should automatically go to
-         *         half open or not
+         *     half open or not
          */
         public Boolean getAutomaticTransitionFromOpenToHalfOpenEnabled() {
             return this.automaticTransitionFromOpenToHalfOpenEnabled;
@@ -346,11 +346,11 @@ public class CircuitBreakerConfigurationProperties {
         /**
          * Sets if we should automatically transition to half open after the timer has run out.
          *
-         * @param automaticTransitionFromOpenToHalfOpenEnabled The flag for automatic
-         *         transition to half open after the timer has run out.
+         * @param automaticTransitionFromOpenToHalfOpenEnabled The flag for automatic transition
+         *     to half open after the timer has run out.
          */
         public InstanceProperties setAutomaticTransitionFromOpenToHalfOpenEnabled(
-                Boolean automaticTransitionFromOpenToHalfOpenEnabled) {
+            Boolean automaticTransitionFromOpenToHalfOpenEnabled) {
             this.automaticTransitionFromOpenToHalfOpenEnabled = automaticTransitionFromOpenToHalfOpenEnabled;
             return this;
         }
@@ -398,7 +398,7 @@ public class CircuitBreakerConfigurationProperties {
         }
 
         public InstanceProperties setRecordFailurePredicate(
-                Class<Predicate<Throwable>> recordFailurePredicate) {
+            Class<Predicate<Throwable>> recordFailurePredicate) {
             this.recordFailurePredicate = recordFailurePredicate;
             return this;
         }
@@ -409,7 +409,7 @@ public class CircuitBreakerConfigurationProperties {
         }
 
         public InstanceProperties setRecordExceptions(
-                Class<? extends Throwable>[] recordExceptions) {
+            Class<? extends Throwable>[] recordExceptions) {
             this.recordExceptions = recordExceptions;
             return this;
         }
@@ -420,7 +420,7 @@ public class CircuitBreakerConfigurationProperties {
         }
 
         public InstanceProperties setIgnoreExceptions(
-                Class<? extends Throwable>[] ignoreExceptions) {
+            Class<? extends Throwable>[] ignoreExceptions) {
             this.ignoreExceptions = ignoreExceptions;
             return this;
         }
@@ -453,7 +453,7 @@ public class CircuitBreakerConfigurationProperties {
         }
 
         public void setPermittedNumberOfCallsInHalfOpenState(
-                @Nullable Integer permittedNumberOfCallsInHalfOpenState) {
+            @Nullable Integer permittedNumberOfCallsInHalfOpenState) {
             this.permittedNumberOfCallsInHalfOpenState = permittedNumberOfCallsInHalfOpenState;
         }
 

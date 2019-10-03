@@ -47,7 +47,7 @@ public class RateLimiterChain implements Action<Chain> {
 
     @Inject
     public RateLimiterChain(EventConsumerRegistry<RateLimiterEvent> eventConsumerRegistry,
-            RateLimiterRegistry rateLimiterRegistry) {
+        RateLimiterRegistry rateLimiterRegistry) {
         this.eventConsumerRegistry = eventConsumerRegistry;
         this.rateLimiterRegistry = rateLimiterRegistry;
     }
@@ -55,93 +55,93 @@ public class RateLimiterChain implements Action<Chain> {
     @Override
     public void execute(Chain chain) throws Exception {
         String prefix = chain.getRegistry().get(Resilience4jConfig.class).getEndpoints()
-                .getRatelimiter().getPath();
+            .getRatelimiter().getPath();
         chain.prefix(prefix, chain1 -> {
             chain1.get("events", ctx ->
-                    Promise.<RateLimiterEventsEndpointResponse>async(d -> {
-                        List<RateLimiterEventDTO> eventsList = eventConsumerRegistry
-                                .getAllEventConsumer()
-                                .flatMap(CircularEventConsumer::getBufferedEvents)
-                                .sorted(Comparator.comparing(RateLimiterEvent::getCreationTime))
-                                .map(RateLimiterEventDTO::createRateLimiterEventDTO).toJavaList();
-                        d.success(new RateLimiterEventsEndpointResponse(eventsList));
-                    }).then(r -> ctx.render(Jackson.json(r)))
+                Promise.<RateLimiterEventsEndpointResponse>async(d -> {
+                    List<RateLimiterEventDTO> eventsList = eventConsumerRegistry
+                        .getAllEventConsumer()
+                        .flatMap(CircularEventConsumer::getBufferedEvents)
+                        .sorted(Comparator.comparing(RateLimiterEvent::getCreationTime))
+                        .map(RateLimiterEventDTO::createRateLimiterEventDTO).toJavaList();
+                    d.success(new RateLimiterEventsEndpointResponse(eventsList));
+                }).then(r -> ctx.render(Jackson.json(r)))
             );
             chain1.get("stream/events", ctx -> {
                 Seq<Flux<RateLimiterEvent>> eventStreams = rateLimiterRegistry.getAllRateLimiters()
-                        .map(rateLimiter -> ReactorAdapter.toFlux(rateLimiter.getEventPublisher()));
+                    .map(rateLimiter -> ReactorAdapter.toFlux(rateLimiter.getEventPublisher()));
                 Function<RateLimiterEvent, String> data = r -> Jackson
-                        .getObjectWriter(chain1.getRegistry())
-                        .writeValueAsString(RateLimiterEventDTO.createRateLimiterEventDTO(r));
+                    .getObjectWriter(chain1.getRegistry())
+                    .writeValueAsString(RateLimiterEventDTO.createRateLimiterEventDTO(r));
                 ServerSentEvents events = ServerSentEvents
-                        .serverSentEvents(Flux.merge(eventStreams),
-                                e -> e.id(RateLimiterEvent::getRateLimiterName)
-                                        .event(c -> c.getEventType().name()).data(data));
+                    .serverSentEvents(Flux.merge(eventStreams),
+                        e -> e.id(RateLimiterEvent::getRateLimiterName)
+                            .event(c -> c.getEventType().name()).data(data));
                 ctx.render(events);
             });
             chain1.get("events/:name", ctx -> {
-                        String rateLimiterName = ctx.getPathTokens().get("name");
-                        Promise.<RateLimiterEventsEndpointResponse>async(d -> {
-                            List<RateLimiterEventDTO> eventsList = eventConsumerRegistry
-                                    .getEventConsumer(rateLimiterName)
-                                    .getBufferedEvents()
-                                    .sorted(Comparator.comparing(RateLimiterEvent::getCreationTime))
-                                    .map(RateLimiterEventDTO::createRateLimiterEventDTO).toJavaList();
-                            d.success(new RateLimiterEventsEndpointResponse(eventsList));
-                        }).then(r -> ctx.render(Jackson.json(r)));
-                    }
+                    String rateLimiterName = ctx.getPathTokens().get("name");
+                    Promise.<RateLimiterEventsEndpointResponse>async(d -> {
+                        List<RateLimiterEventDTO> eventsList = eventConsumerRegistry
+                            .getEventConsumer(rateLimiterName)
+                            .getBufferedEvents()
+                            .sorted(Comparator.comparing(RateLimiterEvent::getCreationTime))
+                            .map(RateLimiterEventDTO::createRateLimiterEventDTO).toJavaList();
+                        d.success(new RateLimiterEventsEndpointResponse(eventsList));
+                    }).then(r -> ctx.render(Jackson.json(r)));
+                }
             );
             chain1.get("stream/events/:name", ctx -> {
                 String rateLimiterName = ctx.getPathTokens().get("name");
                 RateLimiter rateLimiter = rateLimiterRegistry.getAllRateLimiters()
-                        .find(rL -> rL.getName().equals(rateLimiterName))
-                        .getOrElseThrow(() ->
-                                new IllegalArgumentException(
-                                        String.format("rate limiter with name %s not found",
-                                                rateLimiterName)));
+                    .find(rL -> rL.getName().equals(rateLimiterName))
+                    .getOrElseThrow(() ->
+                        new IllegalArgumentException(
+                            String.format("rate limiter with name %s not found",
+                                rateLimiterName)));
                 Function<RateLimiterEvent, String> data = r -> Jackson
-                        .getObjectWriter(chain1.getRegistry())
-                        .writeValueAsString(RateLimiterEventDTO.createRateLimiterEventDTO(r));
+                    .getObjectWriter(chain1.getRegistry())
+                    .writeValueAsString(RateLimiterEventDTO.createRateLimiterEventDTO(r));
                 ServerSentEvents events = ServerSentEvents
-                        .serverSentEvents(ReactorAdapter.toFlux(rateLimiter.getEventPublisher()),
-                                e -> e.id(RateLimiterEvent::getRateLimiterName)
-                                        .event(c -> c.getEventType().name()).data(data));
+                    .serverSentEvents(ReactorAdapter.toFlux(rateLimiter.getEventPublisher()),
+                        e -> e.id(RateLimiterEvent::getRateLimiterName)
+                            .event(c -> c.getEventType().name()).data(data));
                 ctx.render(events);
             });
             chain1.get("events/:name/:type", ctx -> {
-                        String rateLimiterName = ctx.getPathTokens().get("name");
-                        String eventType = ctx.getPathTokens().get("type");
-                        Promise.<RateLimiterEventsEndpointResponse>async(d -> {
-                            List<RateLimiterEventDTO> eventsList = eventConsumerRegistry
-                                    .getEventConsumer(rateLimiterName)
-                                    .getBufferedEvents()
-                                    .sorted(Comparator.comparing(RateLimiterEvent::getCreationTime))
-                                    .filter(event -> event.getEventType() == RateLimiterEvent.Type
-                                            .valueOf(eventType.toUpperCase()))
-                                    .map(RateLimiterEventDTO::createRateLimiterEventDTO).toJavaList();
-                            d.success(new RateLimiterEventsEndpointResponse(eventsList));
-                        }).then(r -> ctx.render(Jackson.json(r)));
-                    }
+                    String rateLimiterName = ctx.getPathTokens().get("name");
+                    String eventType = ctx.getPathTokens().get("type");
+                    Promise.<RateLimiterEventsEndpointResponse>async(d -> {
+                        List<RateLimiterEventDTO> eventsList = eventConsumerRegistry
+                            .getEventConsumer(rateLimiterName)
+                            .getBufferedEvents()
+                            .sorted(Comparator.comparing(RateLimiterEvent::getCreationTime))
+                            .filter(event -> event.getEventType() == RateLimiterEvent.Type
+                                .valueOf(eventType.toUpperCase()))
+                            .map(RateLimiterEventDTO::createRateLimiterEventDTO).toJavaList();
+                        d.success(new RateLimiterEventsEndpointResponse(eventsList));
+                    }).then(r -> ctx.render(Jackson.json(r)));
+                }
             );
             chain1.get("stream/events/:name/:type", ctx -> {
                 String rateLimiterName = ctx.getPathTokens().get("name");
                 String eventType = ctx.getPathTokens().get("type");
                 RateLimiter rateLimiter = rateLimiterRegistry.getAllRateLimiters()
-                        .find(rL -> rL.getName().equals(rateLimiterName))
-                        .getOrElseThrow(() ->
-                                new IllegalArgumentException(
-                                        String.format("rate limiter with name %s not found",
-                                                rateLimiterName)));
+                    .find(rL -> rL.getName().equals(rateLimiterName))
+                    .getOrElseThrow(() ->
+                        new IllegalArgumentException(
+                            String.format("rate limiter with name %s not found",
+                                rateLimiterName)));
                 Flux<RateLimiterEvent> eventStream = ReactorAdapter
-                        .toFlux(rateLimiter.getEventPublisher())
-                        .filter(event -> event.getEventType() == RateLimiterEvent.Type
-                                .valueOf(eventType.toUpperCase()));
+                    .toFlux(rateLimiter.getEventPublisher())
+                    .filter(event -> event.getEventType() == RateLimiterEvent.Type
+                        .valueOf(eventType.toUpperCase()));
                 Function<RateLimiterEvent, String> data = r -> Jackson
-                        .getObjectWriter(chain1.getRegistry())
-                        .writeValueAsString(RateLimiterEventDTO.createRateLimiterEventDTO(r));
+                    .getObjectWriter(chain1.getRegistry())
+                    .writeValueAsString(RateLimiterEventDTO.createRateLimiterEventDTO(r));
                 ServerSentEvents events = ServerSentEvents.serverSentEvents(eventStream,
-                        e -> e.id(RateLimiterEvent::getRateLimiterName)
-                                .event(c -> c.getEventType().name()).data(data));
+                    e -> e.id(RateLimiterEvent::getRateLimiterName)
+                        .event(c -> c.getEventType().name()).data(data));
                 ctx.render(events);
             });
         });

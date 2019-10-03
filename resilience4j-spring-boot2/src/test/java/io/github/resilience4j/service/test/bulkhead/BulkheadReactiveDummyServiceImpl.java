@@ -14,7 +14,7 @@ import reactor.core.publisher.Flux;
 public class BulkheadReactiveDummyServiceImpl implements BulkheadReactiveDummyService {
 
     private static final Logger logger = LoggerFactory
-            .getLogger(BulkheadReactiveDummyServiceImpl.class);
+        .getLogger(BulkheadReactiveDummyServiceImpl.class);
 
     @Override
     public Flux<String> doSomethingFlux() {

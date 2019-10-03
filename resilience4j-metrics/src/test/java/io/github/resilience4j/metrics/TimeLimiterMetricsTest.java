@@ -37,7 +37,7 @@ public class TimeLimiterMetricsTest extends AbstractTimeLimiterMetricsTest {
         TimeLimiterRegistry timeLimiterRegistry = TimeLimiterRegistry.ofDefaults();
         TimeLimiter timeLimiter = timeLimiterRegistry.timeLimiter("testLimit");
         metricRegistry
-                .registerAll(TimeLimiterMetrics.ofTimeLimiterRegistry(prefix, timeLimiterRegistry));
+            .registerAll(TimeLimiterMetrics.ofTimeLimiterRegistry(prefix, timeLimiterRegistry));
 
         return timeLimiter;
     }
@@ -56,18 +56,18 @@ public class TimeLimiterMetricsTest extends AbstractTimeLimiterMetricsTest {
         TimeLimiter timeLimiter = TimeLimiter.of(TimeLimiterConfig.ofDefaults());
         metricRegistry.registerAll(TimeLimiterMetrics.ofTimeLimiter(timeLimiter));
         Supplier<CompletableFuture<String>> futureSupplier = () ->
-                CompletableFuture.completedFuture("Hello world");
+            CompletableFuture.completedFuture("Hello world");
 
         Try.ofCallable(timeLimiter.decorateFutureSupplier(futureSupplier));
         Try.ofCallable(timeLimiter.decorateFutureSupplier(futureSupplier));
 
         assertThat(metricRegistry).hasMetricsSize(3);
         assertThat(metricRegistry).counter(DEFAULT_PREFIX + SUCCESSFUL)
-                .hasValue(2L);
+            .hasValue(2L);
         assertThat(metricRegistry).counter(DEFAULT_PREFIX + FAILED)
-                .hasValue(0L);
+            .hasValue(0L);
         assertThat(metricRegistry).counter(DEFAULT_PREFIX + TIMEOUT)
-                .hasValue(0L);
+            .hasValue(0L);
     }
 
     @Test
@@ -75,39 +75,39 @@ public class TimeLimiterMetricsTest extends AbstractTimeLimiterMetricsTest {
         TimeLimiter timeLimiter = TimeLimiter.of(TimeLimiterConfig.ofDefaults());
         metricRegistry.registerAll(TimeLimiterMetrics.ofTimeLimiter(timeLimiter));
         Supplier<CompletableFuture<String>> futureSupplier = () ->
-                CompletableFuture.supplyAsync(this::fail);
+            CompletableFuture.supplyAsync(this::fail);
 
         Try.ofCallable(timeLimiter.decorateFutureSupplier(futureSupplier));
         Try.ofCallable(timeLimiter.decorateFutureSupplier(futureSupplier));
 
         assertThat(metricRegistry).hasMetricsSize(3);
         assertThat(metricRegistry).counter(DEFAULT_PREFIX + SUCCESSFUL)
-                .hasValue(0L);
+            .hasValue(0L);
         assertThat(metricRegistry).counter(DEFAULT_PREFIX + FAILED)
-                .hasValue(2L);
+            .hasValue(2L);
         assertThat(metricRegistry).counter(DEFAULT_PREFIX + TIMEOUT)
-                .hasValue(0L);
+            .hasValue(0L);
     }
 
     @Test
     public void shouldRecordTimeouts() {
         TimeLimiter timeLimiter = TimeLimiter.of(TimeLimiterConfig.custom()
-                .timeoutDuration(Duration.ZERO)
-                .build());
+            .timeoutDuration(Duration.ZERO)
+            .build());
         metricRegistry.registerAll(TimeLimiterMetrics.ofTimeLimiter(timeLimiter));
         Supplier<CompletableFuture<String>> futureSupplier = () ->
-                CompletableFuture.supplyAsync(this::fail);
+            CompletableFuture.supplyAsync(this::fail);
 
         Try.ofCallable(timeLimiter.decorateFutureSupplier(futureSupplier));
         Try.ofCallable(timeLimiter.decorateFutureSupplier(futureSupplier));
 
         assertThat(metricRegistry).hasMetricsSize(3);
         assertThat(metricRegistry).counter(DEFAULT_PREFIX + SUCCESSFUL)
-                .hasValue(0L);
+            .hasValue(0L);
         assertThat(metricRegistry).counter(DEFAULT_PREFIX + FAILED)
-                .hasValue(0L);
+            .hasValue(0L);
         assertThat(metricRegistry).counter(DEFAULT_PREFIX + TIMEOUT)
-                .hasValue(2L);
+            .hasValue(2L);
     }
 
     private String fail() {

@@ -40,8 +40,8 @@ class MaybeRateLimiter<T> extends Maybe<T> {
         if (waitDuration >= 0) {
             if (waitDuration > 0) {
                 Completable.timer(waitDuration, TimeUnit.NANOSECONDS)
-                        .subscribe(
-                                () -> upstream.subscribe(new RateLimiterMaybeObserver(downstream)));
+                    .subscribe(
+                        () -> upstream.subscribe(new RateLimiterMaybeObserver(downstream)));
             } else {
                 upstream.subscribe(new RateLimiterMaybeObserver(downstream));
             }

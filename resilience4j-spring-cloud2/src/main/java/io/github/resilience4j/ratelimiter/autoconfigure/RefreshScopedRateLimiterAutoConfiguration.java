@@ -13,6 +13,6 @@ import org.springframework.context.annotation.Configuration;
 @AutoConfigureAfter(RefreshAutoConfiguration.class)
 @AutoConfigureBefore(RateLimiterAutoConfiguration.class)
 public class RefreshScopedRateLimiterAutoConfiguration extends
-        AbstractRefreshScopedRateLimiterConfiguration {
+    AbstractRefreshScopedRateLimiterConfiguration {
 
 }

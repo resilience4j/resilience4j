@@ -5,7 +5,7 @@ import static java.util.Objects.requireNonNull;
 import io.reactivex.CompletableObserver;
 
 public abstract class AbstractCompletableObserver extends AbstractDisposable implements
-        CompletableObserver {
+    CompletableObserver {
 
     private final CompletableObserver downstreamObserver;
 

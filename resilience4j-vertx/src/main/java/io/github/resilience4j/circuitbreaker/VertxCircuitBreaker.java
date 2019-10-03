@@ -38,7 +38,7 @@ public interface VertxCircuitBreaker {
      * @return a future which is decorated by a CircuitBreaker.
      */
     static <T> Future<T> executeFuture(CircuitBreaker circuitBreaker,
-            Supplier<Future<T>> supplier) {
+        Supplier<Future<T>> supplier) {
         return decorateFuture(circuitBreaker, supplier).get();
     }
 
@@ -51,7 +51,7 @@ public interface VertxCircuitBreaker {
      * @return a future which is decorated by a CircuitBreaker.
      */
     static <T> Supplier<Future<T>> decorateFuture(CircuitBreaker circuitBreaker,
-            Supplier<Future<T>> supplier) {
+        Supplier<Future<T>> supplier) {
         return () -> {
             final Future<T> future = Future.future();
 
@@ -65,7 +65,7 @@ public interface VertxCircuitBreaker {
                         long durationInNanos = System.nanoTime() - start;
                         if (result.failed()) {
                             circuitBreaker
-                                    .onError(durationInNanos, TimeUnit.NANOSECONDS, result.cause());
+                                .onError(durationInNanos, TimeUnit.NANOSECONDS, result.cause());
                             future.fail(result.cause());
                         } else {
                             circuitBreaker.onSuccess(durationInNanos, TimeUnit.NANOSECONDS);

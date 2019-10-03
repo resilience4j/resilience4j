@@ -36,7 +36,7 @@ public class CircuitBreakerOnCallNotPermittedEvent extends AbstractCircuitBreake
     @Override
     public String toString() {
         return String.format("%s: CircuitBreaker '%s' recorded a call which was not permitted.",
-                getCreationTime(),
-                getCircuitBreakerName());
+            getCreationTime(),
+            getCircuitBreakerName());
     }
 }

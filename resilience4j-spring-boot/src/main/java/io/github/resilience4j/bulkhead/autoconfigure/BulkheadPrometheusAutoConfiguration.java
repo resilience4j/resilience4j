@@ -38,7 +38,7 @@ public class BulkheadPrometheusAutoConfiguration {
     @ConditionalOnMissingBean
     public BulkheadMetricsCollector bulkheadPrometheusCollector(BulkheadRegistry bulkheadRegistry) {
         BulkheadMetricsCollector collector = BulkheadMetricsCollector
-                .ofBulkheadRegistry(bulkheadRegistry);
+            .ofBulkheadRegistry(bulkheadRegistry);
         collector.register();
         return collector;
     }

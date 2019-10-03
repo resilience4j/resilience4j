@@ -62,9 +62,9 @@ public class CircularEventConsumerTest {
     public void shouldBufferAllEvents() {
         // Given
         CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom()
-                .slidingWindowSize(3)
-                .ignoreExceptions(IOException.class)
-                .build();
+            .slidingWindowSize(3)
+            .ignoreExceptions(IOException.class)
+            .build();
         CircuitBreaker circuitBreaker = CircuitBreaker.of("testName", circuitBreakerConfig);
         CircularEventConsumer<CircuitBreakerEvent> ringBuffer = new CircularEventConsumer<>(10);
         circuitBreaker.getEventPublisher().onEvent(ringBuffer);
@@ -90,8 +90,8 @@ public class CircularEventConsumerTest {
         //Should store 3 events, because circuit emits 2 error events and one state transition event
         assertThat(ringBuffer.getBufferedEvents()).hasSize(7);
         assertThat(ringBuffer.getBufferedEvents()).extracting("eventType")
-                .containsExactly(Type.SUCCESS, Type.ERROR, Type.IGNORED_ERROR, Type.ERROR,
-                        Type.STATE_TRANSITION, Type.STATE_TRANSITION, Type.RESET);
+            .containsExactly(Type.SUCCESS, Type.ERROR, Type.IGNORED_ERROR, Type.ERROR,
+                Type.STATE_TRANSITION, Type.STATE_TRANSITION, Type.RESET);
         //ringBuffer.getBufferedEvents().forEach(event -> LOG.info(event.toString()));
 
     }

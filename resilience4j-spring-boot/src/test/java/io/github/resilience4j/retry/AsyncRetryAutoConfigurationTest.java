@@ -40,7 +40,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-        classes = TestApplication.class)
+    classes = TestApplication.class)
 public class AsyncRetryAutoConfigurationTest {
 
     @Autowired
@@ -66,7 +66,7 @@ public class AsyncRetryAutoConfigurationTest {
 
         try {
             final CompletionStage<String> stringCompletionStage = retryDummyService
-                    .doSomethingAsync(true);
+                .doSomethingAsync(true);
             String result = awaitResult(stringCompletionStage, 5);
             assertThat(result).isNull();
 
@@ -93,23 +93,23 @@ public class AsyncRetryAutoConfigurationTest {
 
         // expect retry actuator endpoint contains both retries
         ResponseEntity<RetryEndpointResponse> retriesList = restTemplate
-                .getForEntity("/retries", RetryEndpointResponse.class);
+            .getForEntity("/retries", RetryEndpointResponse.class);
         assertThat(retriesList.getBody().getRetries()).hasSize(2)
-                .containsOnly(RETRY_BACKEND_A, RETRY_BACKEND_B);
+            .containsOnly(RETRY_BACKEND_A, RETRY_BACKEND_B);
 
         // expect retry-event actuator endpoint recorded both events
         ResponseEntity<RetryEventsEndpointResponse> retryBackendEventList = restTemplate
-                .getForEntity("/retries/events/" + RETRY_BACKEND_B,
-                        RetryEventsEndpointResponse.class);
+            .getForEntity("/retries/events/" + RETRY_BACKEND_B,
+                RetryEventsEndpointResponse.class);
         assertThat(retryBackendEventList.getBody().getRetryEvents()).hasSize(3);
 
         assertThat(retry.getRetryConfig().getExceptionPredicate().test(new IOException())).isTrue();
         assertThat(retry.getRetryConfig().getExceptionPredicate().test(new IgnoredException()))
-                .isFalse();
+            .isFalse();
     }
 
     private <T> T awaitResult(CompletionStage<T> completionStage, long timeoutSeconds)
-            throws Throwable {
+        throws Throwable {
         try {
             return completionStage.toCompletableFuture().get(timeoutSeconds, TimeUnit.SECONDS);
         } catch (InterruptedException | TimeoutException e) {

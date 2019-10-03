@@ -53,38 +53,38 @@ public class CircuitBreakerMetrics implements MetricSet {
     }
 
     private CircuitBreakerMetrics(String prefix, Iterable<CircuitBreaker> circuitBreakers,
-            MetricRegistry metricRegistry) {
+        MetricRegistry metricRegistry) {
         requireNonNull(prefix);
         requireNonNull(circuitBreakers);
         requireNonNull(metricRegistry);
         this.metricRegistry = metricRegistry;
         circuitBreakers.forEach((CircuitBreaker circuitBreaker) -> {
-                    String name = circuitBreaker.getName();
-                    //state as an integer
-                    metricRegistry.register(name(prefix, name, STATE),
-                            (Gauge<Integer>) () -> circuitBreaker.getState().getOrder());
-                    metricRegistry.register(name(prefix, name, SUCCESSFUL),
-                            (Gauge<Integer>) () -> circuitBreaker.getMetrics()
-                                    .getNumberOfSuccessfulCalls());
-                    metricRegistry.register(name(prefix, name, FAILED),
-                            (Gauge<Integer>) () -> circuitBreaker.getMetrics().getNumberOfFailedCalls());
-                    metricRegistry.register(name(prefix, name, NOT_PERMITTED),
-                            (Gauge<Long>) () -> circuitBreaker.getMetrics().getNumberOfNotPermittedCalls());
-                    metricRegistry.register(name(prefix, name, BUFFERED),
-                            (Gauge<Integer>) () -> circuitBreaker.getMetrics().getNumberOfBufferedCalls());
-                    metricRegistry.register(name(prefix, name, FAILURE_RATE),
-                            (Gauge<Float>) () -> circuitBreaker.getMetrics().getFailureRate());
-                    metricRegistry.register(name(prefix, name, SLOW),
-                            (Gauge<Integer>) () -> circuitBreaker.getMetrics().getNumberOfSlowCalls());
-                    metricRegistry.register(name(prefix, name, SLOW_SUCCESS),
-                            (Gauge<Integer>) () -> circuitBreaker.getMetrics()
-                                    .getNumberOfSlowSuccessfulCalls());
-                    metricRegistry.register(name(prefix, name, SLOW_FAILED),
-                            (Gauge<Integer>) () -> circuitBreaker.getMetrics()
-                                    .getNumberOfSlowFailedCalls());
-                    metricRegistry.register(name(prefix, name, SLOW_CALL_RATE),
-                            (Gauge<Float>) () -> circuitBreaker.getMetrics().getSlowCallRate());
-                }
+                String name = circuitBreaker.getName();
+                //state as an integer
+                metricRegistry.register(name(prefix, name, STATE),
+                    (Gauge<Integer>) () -> circuitBreaker.getState().getOrder());
+                metricRegistry.register(name(prefix, name, SUCCESSFUL),
+                    (Gauge<Integer>) () -> circuitBreaker.getMetrics()
+                        .getNumberOfSuccessfulCalls());
+                metricRegistry.register(name(prefix, name, FAILED),
+                    (Gauge<Integer>) () -> circuitBreaker.getMetrics().getNumberOfFailedCalls());
+                metricRegistry.register(name(prefix, name, NOT_PERMITTED),
+                    (Gauge<Long>) () -> circuitBreaker.getMetrics().getNumberOfNotPermittedCalls());
+                metricRegistry.register(name(prefix, name, BUFFERED),
+                    (Gauge<Integer>) () -> circuitBreaker.getMetrics().getNumberOfBufferedCalls());
+                metricRegistry.register(name(prefix, name, FAILURE_RATE),
+                    (Gauge<Float>) () -> circuitBreaker.getMetrics().getFailureRate());
+                metricRegistry.register(name(prefix, name, SLOW),
+                    (Gauge<Integer>) () -> circuitBreaker.getMetrics().getNumberOfSlowCalls());
+                metricRegistry.register(name(prefix, name, SLOW_SUCCESS),
+                    (Gauge<Integer>) () -> circuitBreaker.getMetrics()
+                        .getNumberOfSlowSuccessfulCalls());
+                metricRegistry.register(name(prefix, name, SLOW_FAILED),
+                    (Gauge<Integer>) () -> circuitBreaker.getMetrics()
+                        .getNumberOfSlowFailedCalls());
+                metricRegistry.register(name(prefix, name, SLOW_CALL_RATE),
+                    (Gauge<Float>) () -> circuitBreaker.getMetrics().getSlowCallRate());
+            }
         );
     }
 
@@ -96,9 +96,9 @@ public class CircuitBreakerMetrics implements MetricSet {
      * @param circuitBreakerRegistry the registry of circuit breakers
      */
     public static CircuitBreakerMetrics ofCircuitBreakerRegistry(String prefix,
-            CircuitBreakerRegistry circuitBreakerRegistry, MetricRegistry metricRegistry) {
+        CircuitBreakerRegistry circuitBreakerRegistry, MetricRegistry metricRegistry) {
         return new CircuitBreakerMetrics(prefix, circuitBreakerRegistry.getAllCircuitBreakers(),
-                metricRegistry);
+            metricRegistry);
     }
 
     /**
@@ -109,9 +109,9 @@ public class CircuitBreakerMetrics implements MetricSet {
      * @param circuitBreakerRegistry the registry of circuit breakers
      */
     public static CircuitBreakerMetrics ofCircuitBreakerRegistry(String prefix,
-            CircuitBreakerRegistry circuitBreakerRegistry) {
+        CircuitBreakerRegistry circuitBreakerRegistry) {
         return new CircuitBreakerMetrics(prefix, circuitBreakerRegistry.getAllCircuitBreakers(),
-                new MetricRegistry());
+            new MetricRegistry());
     }
 
     /**
@@ -121,9 +121,9 @@ public class CircuitBreakerMetrics implements MetricSet {
      * @param circuitBreakerRegistry the registry of circuit breakers
      */
     public static CircuitBreakerMetrics ofCircuitBreakerRegistry(
-            CircuitBreakerRegistry circuitBreakerRegistry, MetricRegistry metricRegistry) {
+        CircuitBreakerRegistry circuitBreakerRegistry, MetricRegistry metricRegistry) {
         return new CircuitBreakerMetrics(DEFAULT_PREFIX,
-                circuitBreakerRegistry.getAllCircuitBreakers(), metricRegistry);
+            circuitBreakerRegistry.getAllCircuitBreakers(), metricRegistry);
     }
 
     /**
@@ -133,7 +133,7 @@ public class CircuitBreakerMetrics implements MetricSet {
      * @param circuitBreakerRegistry the registry of circuit breakers
      */
     public static CircuitBreakerMetrics ofCircuitBreakerRegistry(
-            CircuitBreakerRegistry circuitBreakerRegistry) {
+        CircuitBreakerRegistry circuitBreakerRegistry) {
         return new CircuitBreakerMetrics(circuitBreakerRegistry.getAllCircuitBreakers());
     }
 
@@ -154,7 +154,7 @@ public class CircuitBreakerMetrics implements MetricSet {
      * @param circuitBreakers the circuit breakers
      */
     public static CircuitBreakerMetrics ofIterable(String prefix,
-            Iterable<CircuitBreaker> circuitBreakers) {
+        Iterable<CircuitBreaker> circuitBreakers) {
         return new CircuitBreakerMetrics(prefix, circuitBreakers, new MetricRegistry());
     }
 

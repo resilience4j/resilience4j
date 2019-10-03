@@ -22,7 +22,7 @@ import org.junit.Test;
 public class RateLimiterRegistryTest {
 
     private static Optional<EventProcessor<?>> getEventProcessor(
-            Registry.EventPublisher<RateLimiter> eventPublisher) {
+        Registry.EventPublisher<RateLimiter> eventPublisher) {
         if (eventPublisher instanceof EventProcessor<?>) {
             return Optional.of((EventProcessor<?>) eventPublisher);
         }
@@ -56,9 +56,9 @@ public class RateLimiterRegistryTest {
     @Test
     public void testCreateWithCustomConfig() {
         RateLimiterConfig config = RateLimiterConfig.custom()
-                .limitForPeriod(10)
-                .timeoutDuration(Duration.ofMillis(50))
-                .build();
+            .limitForPeriod(10)
+            .timeoutDuration(Duration.ofMillis(50))
+            .build();
 
         RateLimiterRegistry rateLimiterRegistry = RateLimiterRegistry.of(config);
 
@@ -69,10 +69,10 @@ public class RateLimiterRegistryTest {
     @Test
     public void testCreateWithSingleRegistryEventConsumer() {
         RateLimiterRegistry rateLimiterRegistry = RateLimiterRegistry
-                .of(RateLimiterConfig.ofDefaults(), new NoOpRateLimiterEventConsumer());
+            .of(RateLimiterConfig.ofDefaults(), new NoOpRateLimiterEventConsumer());
 
         getEventProcessor(rateLimiterRegistry.getEventPublisher())
-                .ifPresent(eventProcessor -> assertThat(eventProcessor.hasConsumers()).isTrue());
+            .ifPresent(eventProcessor -> assertThat(eventProcessor.hasConsumers()).isTrue());
     }
 
     @Test
@@ -82,10 +82,10 @@ public class RateLimiterRegistryTest {
         registryEventConsumers.add(new NoOpRateLimiterEventConsumer());
 
         RateLimiterRegistry rateLimiterRegistry = RateLimiterRegistry
-                .of(RateLimiterConfig.ofDefaults(), registryEventConsumers);
+            .of(RateLimiterConfig.ofDefaults(), registryEventConsumers);
 
         getEventProcessor(rateLimiterRegistry.getEventPublisher())
-                .ifPresent(eventProcessor -> assertThat(eventProcessor.hasConsumers()).isTrue());
+            .ifPresent(eventProcessor -> assertThat(eventProcessor.hasConsumers()).isTrue());
     }
 
     @Test
@@ -94,10 +94,10 @@ public class RateLimiterRegistryTest {
         configs.put("custom", RateLimiterConfig.ofDefaults());
 
         RateLimiterRegistry rateLimiterRegistry = RateLimiterRegistry
-                .of(configs, new NoOpRateLimiterEventConsumer());
+            .of(configs, new NoOpRateLimiterEventConsumer());
 
         getEventProcessor(rateLimiterRegistry.getEventPublisher())
-                .ifPresent(eventProcessor -> assertThat(eventProcessor.hasConsumers()).isTrue());
+            .ifPresent(eventProcessor -> assertThat(eventProcessor.hasConsumers()).isTrue());
     }
 
     @Test
@@ -110,10 +110,10 @@ public class RateLimiterRegistryTest {
         registryEventConsumers.add(new NoOpRateLimiterEventConsumer());
 
         RateLimiterRegistry rateLimiterRegistry = RateLimiterRegistry
-                .of(configs, registryEventConsumers);
+            .of(configs, registryEventConsumers);
 
         getEventProcessor(rateLimiterRegistry.getEventPublisher())
-                .ifPresent(eventProcessor -> assertThat(eventProcessor.hasConsumers()).isTrue());
+            .ifPresent(eventProcessor -> assertThat(eventProcessor.hasConsumers()).isTrue());
     }
 
     @Test
@@ -130,11 +130,11 @@ public class RateLimiterRegistryTest {
         RateLimiterRegistry rateLimiterRegistry = RateLimiterRegistry.ofDefaults();
 
         assertThatThrownBy(() -> rateLimiterRegistry.rateLimiter("test", "doesNotExist"))
-                .isInstanceOf(ConfigurationNotFoundException.class);
+            .isInstanceOf(ConfigurationNotFoundException.class);
     }
 
     private static class NoOpRateLimiterEventConsumer implements
-            RegistryEventConsumer<RateLimiter> {
+        RegistryEventConsumer<RateLimiter> {
 
         @Override
         public void onEntryAddedEvent(EntryAddedEvent<RateLimiter> entryAddedEvent) {

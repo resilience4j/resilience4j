@@ -5,7 +5,7 @@ import static java.util.Objects.requireNonNull;
 import io.reactivex.SingleObserver;
 
 public abstract class AbstractSingleObserver<T> extends AbstractDisposable implements
-        SingleObserver<T> {
+    SingleObserver<T> {
 
     private final SingleObserver<? super T> downstreamObserver;
 

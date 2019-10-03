@@ -74,7 +74,7 @@ public class FixedSizeSlidingWindowMetricsTest {
         Metrics metrics = new FixedSizeSlidingWindowMetrics(5);
 
         Snapshot snapshot = metrics
-                .record(100, TimeUnit.MILLISECONDS, Metrics.Outcome.SLOW_SUCCESS);
+            .record(100, TimeUnit.MILLISECONDS, Metrics.Outcome.SLOW_SUCCESS);
         assertThat(snapshot.getTotalNumberOfCalls()).isEqualTo(1);
         assertThat(snapshot.getNumberOfSuccessfulCalls()).isEqualTo(1);
         assertThat(snapshot.getNumberOfFailedCalls()).isEqualTo(0);

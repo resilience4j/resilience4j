@@ -16,9 +16,9 @@ public class ClassUtilsTest {
     @Test
     public void shouldFailToInstantiatePredicateClass() {
         assertThatThrownBy(
-                () -> ClassUtils.instantiatePredicateClass(NoDefaultConstructorPredicate.class))
-                .isInstanceOf(InstantiationException.class)
-                .hasCauseInstanceOf(NoSuchMethodException.class);
+            () -> ClassUtils.instantiatePredicateClass(NoDefaultConstructorPredicate.class))
+            .isInstanceOf(InstantiationException.class)
+            .hasCauseInstanceOf(NoSuchMethodException.class);
     }
 
 

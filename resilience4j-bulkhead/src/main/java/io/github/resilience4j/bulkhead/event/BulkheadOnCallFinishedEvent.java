@@ -33,9 +33,9 @@ public class BulkheadOnCallFinishedEvent extends AbstractBulkheadEvent {
     @Override
     public String toString() {
         return String.format(
-                "%s: Bulkhead '%s' has finished a call.",
-                getCreationTime(),
-                getBulkheadName()
+            "%s: Bulkhead '%s' has finished a call.",
+            getCreationTime(),
+            getBulkheadName()
         );
     }
 }

@@ -30,7 +30,7 @@ public class EventConsumerRegistryTest {
     public void shouldCreateAnEventConsumer() {
         EventConsumerRegistry<CircuitBreakerEvent> registry = new DefaultEventConsumerRegistry<>();
         EventConsumer<CircuitBreakerEvent> eventEventConsumer = registry
-                .createEventConsumer("testName", 5);
+            .createEventConsumer("testName", 5);
 
         assertThat(eventEventConsumer).isNotNull();
     }
@@ -39,9 +39,9 @@ public class EventConsumerRegistryTest {
     public void shouldReturnTheSameEventConsumer() {
         EventConsumerRegistry<CircuitBreakerEvent> registry = new DefaultEventConsumerRegistry<>();
         EventConsumer<CircuitBreakerEvent> eventEventConsumer1 = registry
-                .createEventConsumer("testName", 5);
+            .createEventConsumer("testName", 5);
         EventConsumer<CircuitBreakerEvent> eventEventConsumer2 = registry
-                .getEventConsumer("testName");
+            .getEventConsumer("testName");
 
         assertThat(eventEventConsumer1).isEqualTo(eventEventConsumer2);
     }

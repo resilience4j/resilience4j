@@ -41,7 +41,7 @@ public class RxJava2BulkheadAspectExt implements BulkheadAspectExt {
 
     private static final Logger logger = LoggerFactory.getLogger(RxJava2BulkheadAspectExt.class);
     private final Set<Class> rxSupportedTypes = newHashSet(ObservableSource.class,
-            SingleSource.class, CompletableSource.class, MaybeSource.class, Flowable.class);
+        SingleSource.class, CompletableSource.class, MaybeSource.class, Flowable.class);
 
     /**
      * @param returnType the AOP method return type class
@@ -51,7 +51,7 @@ public class RxJava2BulkheadAspectExt implements BulkheadAspectExt {
     @Override
     public boolean canHandleReturnType(Class returnType) {
         return rxSupportedTypes.stream()
-                .anyMatch(classType -> classType.isAssignableFrom(returnType));
+            .anyMatch(classType -> classType.isAssignableFrom(returnType));
     }
 
     /**
@@ -63,7 +63,7 @@ public class RxJava2BulkheadAspectExt implements BulkheadAspectExt {
      */
     @Override
     public Object handle(ProceedingJoinPoint proceedingJoinPoint, Bulkhead bulkhead,
-            String methodName) throws Throwable {
+        String methodName) throws Throwable {
         BulkheadOperator<?> bulkheadOperator = BulkheadOperator.of(bulkhead);
         Object returnValue = proceedingJoinPoint.proceed();
         return executeRxJava2Aspect(bulkheadOperator, returnValue);
@@ -88,10 +88,10 @@ public class RxJava2BulkheadAspectExt implements BulkheadAspectExt {
             return flowable.compose(bulkheadOperator);
         } else {
             logger.error("Unsupported type for BulkHead RxJava2 {}",
-                    returnValue.getClass().getTypeName());
+                returnValue.getClass().getTypeName());
             throw new IllegalArgumentException(
-                    "Not Supported type for the BulkHead in RxJava2 :" + returnValue.getClass()
-                            .getName());
+                "Not Supported type for the BulkHead in RxJava2 :" + returnValue.getClass()
+                    .getName());
         }
     }
 }

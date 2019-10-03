@@ -23,7 +23,7 @@ import io.github.resilience4j.core.metrics.MetricsPublisher;
 import io.micrometer.core.instrument.MeterRegistry;
 
 public class TaggedBulkheadMetricsPublisher
-        extends AbstractBulkheadMetrics implements MetricsPublisher<Bulkhead> {
+    extends AbstractBulkheadMetrics implements MetricsPublisher<Bulkhead> {
 
     private final MeterRegistry meterRegistry;
 

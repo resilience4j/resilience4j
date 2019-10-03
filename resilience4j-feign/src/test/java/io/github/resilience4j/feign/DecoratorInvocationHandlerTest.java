@@ -48,7 +48,7 @@ public class DecoratorInvocationHandlerTest {
     @Before
     public void setUp() throws Throwable {
         target = new HardCodedTarget<TestService>(TestService.class,
-                TestService.class.getSimpleName());
+            TestService.class.getSimpleName());
         testService = new TestServiceImpl();
         greetingMethod = testService.getClass().getDeclaredMethod("greeting");
         feignDecorator = new TestFeignDecorator();
@@ -68,11 +68,11 @@ public class DecoratorInvocationHandlerTest {
 
         verify(methodHandler, times(1)).invoke(any());
         assertThat(feignDecorator.isCalled())
-                .describedAs("FeignDecorator is called")
-                .isTrue();
+            .describedAs("FeignDecorator is called")
+            .isTrue();
         assertThat(result)
-                .describedAs("Return of invocation")
-                .isEqualTo(testService.greeting());
+            .describedAs("Return of invocation")
+            .isEqualTo(testService.greeting());
     }
 
     @Test
@@ -84,11 +84,11 @@ public class DecoratorInvocationHandlerTest {
 
         verify(methodHandler, times(0)).invoke(any());
         assertThat(feignDecorator.isCalled())
-                .describedAs("FeignDecorator is called")
-                .isTrue();
+            .describedAs("FeignDecorator is called")
+            .isTrue();
         assertThat(result)
-                .describedAs("Return of invocation")
-                .isEqualTo("AlternativeFunction");
+            .describedAs("Return of invocation")
+            .isEqualTo("AlternativeFunction");
     }
 
     @Test
@@ -99,11 +99,11 @@ public class DecoratorInvocationHandlerTest {
 
         verify(methodHandler, times(0)).invoke(any());
         assertThat(feignDecorator.isCalled())
-                .describedAs("FeignDecorator is called")
-                .isTrue();
+            .describedAs("FeignDecorator is called")
+            .isTrue();
         assertThat(result)
-                .describedAs("Return of invocation")
-                .isEqualTo(target.toString());
+            .describedAs("Return of invocation")
+            .isEqualTo(target.toString());
     }
 
     @Test
@@ -111,15 +111,15 @@ public class DecoratorInvocationHandlerTest {
         final Method equalsMethod = testService.getClass().getMethod("equals", Object.class);
 
         final Boolean result = (Boolean) testSubject
-                .invoke(testService, equalsMethod, new Object[]{testSubject});
+            .invoke(testService, equalsMethod, new Object[]{testSubject});
 
         verify(methodHandler, times(0)).invoke(any());
         assertThat(feignDecorator.isCalled())
-                .describedAs("FeignDecorator is called")
-                .isTrue();
+            .describedAs("FeignDecorator is called")
+            .isTrue();
         assertThat(result)
-                .describedAs("Return of invocation")
-                .isTrue();
+            .describedAs("Return of invocation")
+            .isTrue();
     }
 
 
@@ -128,14 +128,14 @@ public class DecoratorInvocationHandlerTest {
         final Method hashCodeMethod = testService.getClass().getMethod("hashCode");
 
         final Integer result = (Integer) testSubject
-                .invoke(testService, hashCodeMethod, new Object[0]);
+            .invoke(testService, hashCodeMethod, new Object[0]);
 
         verify(methodHandler, times(0)).invoke(any());
         assertThat(feignDecorator.isCalled())
-                .describedAs("FeignDecorator is called")
-                .isTrue();
+            .describedAs("FeignDecorator is called")
+            .isTrue();
         assertThat(result)
-                .describedAs("Return of invocation")
-                .isEqualTo(target.hashCode());
+            .describedAs("Return of invocation")
+            .isEqualTo(target.hashCode());
     }
 }

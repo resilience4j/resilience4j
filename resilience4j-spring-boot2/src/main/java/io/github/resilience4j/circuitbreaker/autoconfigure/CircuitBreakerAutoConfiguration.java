@@ -48,7 +48,7 @@ public class CircuitBreakerAutoConfiguration {
     @ConditionalOnEnabledEndpoint
     @ConditionalOnClass(value = {Endpoint.class})
     public CircuitBreakerEndpoint circuitBreakerEndpoint(
-            CircuitBreakerRegistry circuitBreakerRegistry) {
+        CircuitBreakerRegistry circuitBreakerRegistry) {
         return new CircuitBreakerEndpoint(circuitBreakerRegistry);
     }
 
@@ -56,7 +56,7 @@ public class CircuitBreakerAutoConfiguration {
     @ConditionalOnEnabledEndpoint
     @ConditionalOnClass(value = {Endpoint.class})
     public CircuitBreakerEventsEndpoint circuitBreakerEventsEndpoint(
-            EventConsumerRegistry<CircuitBreakerEvent> eventConsumerRegistry) {
+        EventConsumerRegistry<CircuitBreakerEvent> eventConsumerRegistry) {
         return new CircuitBreakerEventsEndpoint(eventConsumerRegistry);
     }
 

@@ -35,8 +35,8 @@ public class CircuitBreakerOnResetEvent extends AbstractCircuitBreakerEvent {
     @Override
     public String toString() {
         return String.format("%s: CircuitBreaker '%s' reset",
-                getCreationTime(),
-                getCircuitBreakerName());
+            getCreationTime(),
+            getCircuitBreakerName());
 
     }
 }

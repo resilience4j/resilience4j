@@ -44,64 +44,64 @@ public class TimeLimiterTransformerPublisherTest {
     @Test
     public void otherError() {
         given(timeLimiter.getTimeLimiterConfig())
-                .willReturn(toConfig(Duration.ZERO));
+            .willReturn(toConfig(Duration.ZERO));
         TestSubscriber<Object> subscriber = Flowable.error(new RuntimeException())
-                .compose(TimeLimiterTransformer.of(timeLimiter))
-                .test();
+            .compose(TimeLimiterTransformer.of(timeLimiter))
+            .test();
 
         testScheduler.advanceTimeBy(1, TimeUnit.MINUTES);
 
         subscriber.assertError(RuntimeException.class);
         then(timeLimiter).should()
-                .onError(any(RuntimeException.class));
+            .onError(any(RuntimeException.class));
     }
 
     @Test
     public void timeout() {
         given(timeLimiter.getTimeLimiterConfig())
-                .willReturn(toConfig(Duration.ZERO));
+            .willReturn(toConfig(Duration.ZERO));
         TestSubscriber<Long> subscriber = Flowable.interval(1, TimeUnit.MINUTES)
-                .compose(TimeLimiterTransformer.of(timeLimiter))
-                .test();
+            .compose(TimeLimiterTransformer.of(timeLimiter))
+            .test();
 
         testScheduler.advanceTimeBy(1, TimeUnit.MINUTES);
 
         subscriber.assertError(TimeoutException.class);
         then(timeLimiter).should()
-                .onError(any(TimeoutException.class));
+            .onError(any(TimeoutException.class));
     }
 
     @Test
     public void timeoutEmpty() {
         given(timeLimiter.getTimeLimiterConfig())
-                .willReturn(toConfig(Duration.ZERO));
+            .willReturn(toConfig(Duration.ZERO));
         TestSubscriber<Object> subscriber = Flowable.empty()
-                .delay(1, TimeUnit.MINUTES)
-                .compose(TimeLimiterTransformer.of(timeLimiter))
-                .test();
+            .delay(1, TimeUnit.MINUTES)
+            .compose(TimeLimiterTransformer.of(timeLimiter))
+            .test();
 
         testScheduler.advanceTimeBy(1, TimeUnit.MINUTES);
 
         subscriber.assertError(TimeoutException.class);
         then(timeLimiter).should()
-                .onError(any(TimeoutException.class));
+            .onError(any(TimeoutException.class));
     }
 
     @Test
     public void doNotTimeout() {
         given(timeLimiter.getTimeLimiterConfig())
-                .willReturn(toConfig(Duration.ofMinutes(1)));
+            .willReturn(toConfig(Duration.ofMinutes(1)));
         TestSubscriber<Long> subscriber = Flowable.interval(1, TimeUnit.SECONDS)
-                .take(2)
-                .compose(TimeLimiterTransformer.of(timeLimiter))
-                .test();
+            .take(2)
+            .compose(TimeLimiterTransformer.of(timeLimiter))
+            .test();
 
         testScheduler.advanceTimeBy(1, TimeUnit.MINUTES);
 
         subscriber.assertValueCount(2)
-                .assertComplete();
+            .assertComplete();
         then(timeLimiter).should(times(3))
-                .onSuccess();
+            .onSuccess();
     }
 
     @Test
@@ -110,40 +110,40 @@ public class TimeLimiterTransformerPublisherTest {
         int initialDelay = 1;
         int periodDelay = 3;
         given(timeLimiter.getTimeLimiterConfig())
-                .willReturn(toConfig(Duration.ofSeconds(timeout)));
+            .willReturn(toConfig(Duration.ofSeconds(timeout)));
         TestSubscriber<Long> subscriber = Flowable
-                .interval(initialDelay, periodDelay, TimeUnit.SECONDS)
-                .compose(TimeLimiterTransformer.of(timeLimiter))
-                .test();
+            .interval(initialDelay, periodDelay, TimeUnit.SECONDS)
+            .compose(TimeLimiterTransformer.of(timeLimiter))
+            .test();
 
         testScheduler.advanceTimeBy(1, TimeUnit.MINUTES);
 
         subscriber.await()
-                .assertValueCount(1)
-                .assertError(TimeoutException.class);
+            .assertValueCount(1)
+            .assertError(TimeoutException.class);
         then(timeLimiter).should()
-                .onSuccess();
+            .onSuccess();
         then(timeLimiter).should()
-                .onError(any(TimeoutException.class));
+            .onError(any(TimeoutException.class));
     }
 
     @Test
     public void doNotTimeoutEmpty() {
         given(timeLimiter.getTimeLimiterConfig())
-                .willReturn(toConfig(Duration.ofMinutes(1)));
+            .willReturn(toConfig(Duration.ofMinutes(1)));
         TestSubscriber<Object> subscriber = Flowable.empty()
-                .compose(TimeLimiterTransformer.of(timeLimiter))
-                .test();
+            .compose(TimeLimiterTransformer.of(timeLimiter))
+            .test();
 
         subscriber.assertComplete();
         then(timeLimiter).should()
-                .onSuccess();
+            .onSuccess();
     }
 
     private TimeLimiterConfig toConfig(Duration timeout) {
         return TimeLimiterConfig.custom()
-                .timeoutDuration(timeout)
-                .build();
+            .timeoutDuration(timeout)
+            .build();
     }
 
 }

@@ -40,7 +40,7 @@ public class RateLimiterConfigurationProperties {
     }
 
     public RateLimiterConfig createRateLimiterConfig(
-            @Nullable InstanceProperties instanceProperties) {
+        @Nullable InstanceProperties instanceProperties) {
         if (instanceProperties == null) {
             return RateLimiterConfig.ofDefaults();
         }
@@ -55,15 +55,15 @@ public class RateLimiterConfigurationProperties {
     }
 
     private RateLimiterConfig buildConfigFromBaseConfig(InstanceProperties baseProperties,
-            InstanceProperties instanceProperties) {
+        InstanceProperties instanceProperties) {
         ConfigUtils.mergePropertiesIfAny(baseProperties, instanceProperties);
         RateLimiterConfig baseConfig = buildRateLimiterConfig(RateLimiterConfig.custom(),
-                baseProperties);
+            baseProperties);
         return buildRateLimiterConfig(RateLimiterConfig.from(baseConfig), instanceProperties);
     }
 
     private RateLimiterConfig buildRateLimiterConfig(RateLimiterConfig.Builder builder,
-            @Nullable InstanceProperties instanceProperties) {
+        @Nullable InstanceProperties instanceProperties) {
         if (instanceProperties == null) {
             return builder.build();
         }

@@ -40,9 +40,9 @@ import org.slf4j.LoggerFactory;
 public class RxJava2CircuitBreakerAspectExt implements CircuitBreakerAspectExt {
 
     private static final Logger logger = LoggerFactory
-            .getLogger(RxJava2CircuitBreakerAspectExt.class);
+        .getLogger(RxJava2CircuitBreakerAspectExt.class);
     private final Set<Class> rxSupportedTypes = newHashSet(ObservableSource.class,
-            SingleSource.class, CompletableSource.class, MaybeSource.class, Flowable.class);
+        SingleSource.class, CompletableSource.class, MaybeSource.class, Flowable.class);
 
     /**
      * @param returnType the AOP method return type class
@@ -52,7 +52,7 @@ public class RxJava2CircuitBreakerAspectExt implements CircuitBreakerAspectExt {
     @Override
     public boolean canHandleReturnType(Class returnType) {
         return rxSupportedTypes.stream()
-                .anyMatch(classType -> classType.isAssignableFrom(returnType));
+            .anyMatch(classType -> classType.isAssignableFrom(returnType));
     }
 
     /**
@@ -65,7 +65,7 @@ public class RxJava2CircuitBreakerAspectExt implements CircuitBreakerAspectExt {
     @SuppressWarnings("unchecked")
     @Override
     public Object handle(ProceedingJoinPoint proceedingJoinPoint, CircuitBreaker circuitBreaker,
-            String methodName) throws Throwable {
+        String methodName) throws Throwable {
         CircuitBreakerOperator circuitBreakerOperator = CircuitBreakerOperator.of(circuitBreaker);
         Object returnValue = proceedingJoinPoint.proceed();
 
@@ -74,7 +74,7 @@ public class RxJava2CircuitBreakerAspectExt implements CircuitBreakerAspectExt {
 
     @SuppressWarnings("unchecked")
     private Object executeRxJava2Aspect(CircuitBreakerOperator circuitBreakerOperator,
-            Object returnValue, String methodName) {
+        Object returnValue, String methodName) {
         if (returnValue instanceof ObservableSource) {
             Observable<?> observable = (Observable) returnValue;
             return observable.compose(circuitBreakerOperator);
@@ -92,11 +92,11 @@ public class RxJava2CircuitBreakerAspectExt implements CircuitBreakerAspectExt {
             return flowable.compose(circuitBreakerOperator);
         } else {
             logger.error(
-                    "Unsupported type for RxJava2 circuit breaker return type {} for method {}",
-                    returnValue.getClass().getTypeName(), methodName);
+                "Unsupported type for RxJava2 circuit breaker return type {} for method {}",
+                returnValue.getClass().getTypeName(), methodName);
             throw new IllegalArgumentException(
-                    "Not Supported type for the circuit breaker in RxJava2:" + returnValue
-                            .getClass().getName());
+                "Not Supported type for the circuit breaker in RxJava2:" + returnValue
+                    .getClass().getName());
         }
     }
 }

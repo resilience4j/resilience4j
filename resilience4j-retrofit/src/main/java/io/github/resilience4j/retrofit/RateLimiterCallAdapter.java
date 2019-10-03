@@ -51,7 +51,7 @@ public final class RateLimiterCallAdapter extends CallAdapter.Factory {
     public CallAdapter<?, ?> get(Type returnType, Annotation[] annotations, Retrofit retrofit) {
         @SuppressWarnings("unchecked")
         CallAdapter<Object, Object> nextAdapter = (CallAdapter<Object, Object>) retrofit
-                .nextCallAdapter(this, returnType, annotations);
+            .nextCallAdapter(this, returnType, annotations);
 
         return new CallAdapter<Object, Object>() {
             @Override

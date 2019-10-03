@@ -30,11 +30,11 @@ public class CircuitBreakerMetricsTest {
     @Test
     public void testCircuitBreakerMetrics() {
         CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom()
-                .slidingWindow(10, 10, CircuitBreakerConfig.SlidingWindowType.COUNT_BASED)
-                .build();
+            .slidingWindow(10, 10, CircuitBreakerConfig.SlidingWindowType.COUNT_BASED)
+            .build();
 
         CircuitBreakerMetrics circuitBreakerMetrics = CircuitBreakerMetrics
-                .forCosed(circuitBreakerConfig);
+            .forCosed(circuitBreakerConfig);
 
         circuitBreakerMetrics.onSuccess(0, TimeUnit.NANOSECONDS);
         circuitBreakerMetrics.onSuccess(0, TimeUnit.NANOSECONDS);
@@ -52,7 +52,7 @@ public class CircuitBreakerMetricsTest {
         // The failure rate must be -1, because the number of measured calls is below the buffer size of 10
         assertThat(circuitBreakerMetrics.getFailureRate()).isEqualTo(-1);
         assertThat(result)
-                .isEqualTo(Result.BELOW_MINIMUM_CALLS_THRESHOLD);
+            .isEqualTo(Result.BELOW_MINIMUM_CALLS_THRESHOLD);
 
         circuitBreakerMetrics.onError(0, TimeUnit.NANOSECONDS);
         circuitBreakerMetrics.onError(0, TimeUnit.NANOSECONDS);

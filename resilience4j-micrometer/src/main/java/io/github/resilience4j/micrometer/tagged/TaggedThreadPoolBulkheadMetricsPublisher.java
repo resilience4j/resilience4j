@@ -23,7 +23,7 @@ import io.github.resilience4j.core.metrics.MetricsPublisher;
 import io.micrometer.core.instrument.MeterRegistry;
 
 public class TaggedThreadPoolBulkheadMetricsPublisher
-        extends AbstractThreadPoolBulkheadMetrics implements MetricsPublisher<ThreadPoolBulkhead> {
+    extends AbstractThreadPoolBulkheadMetrics implements MetricsPublisher<ThreadPoolBulkhead> {
 
     private final MeterRegistry meterRegistry;
 
@@ -33,7 +33,7 @@ public class TaggedThreadPoolBulkheadMetricsPublisher
     }
 
     public TaggedThreadPoolBulkheadMetricsPublisher(MetricNames names,
-            MeterRegistry meterRegistry) {
+        MeterRegistry meterRegistry) {
         super(names);
         this.meterRegistry = requireNonNull(meterRegistry);
     }

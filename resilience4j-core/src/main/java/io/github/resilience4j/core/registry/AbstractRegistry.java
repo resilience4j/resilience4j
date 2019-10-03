@@ -52,17 +52,17 @@ public class AbstractRegistry<E, C> implements Registry<E, C> {
 
     public AbstractRegistry(C defaultConfig, RegistryEventConsumer<E> registryEventConsumer) {
         this(defaultConfig, Collections.singletonList(
-                Objects.requireNonNull(registryEventConsumer, CONSUMER_MUST_NOT_BE_NULL)));
+            Objects.requireNonNull(registryEventConsumer, CONSUMER_MUST_NOT_BE_NULL)));
     }
 
     public AbstractRegistry(C defaultConfig,
-            List<RegistryEventConsumer<E>> registryEventConsumers) {
+        List<RegistryEventConsumer<E>> registryEventConsumers) {
         this.configurations = new ConcurrentHashMap<>();
         this.entryMap = new ConcurrentHashMap<>();
         this.eventProcessor = new RegistryEventProcessor(
-                Objects.requireNonNull(registryEventConsumers, CONSUMER_MUST_NOT_BE_NULL));
+            Objects.requireNonNull(registryEventConsumers, CONSUMER_MUST_NOT_BE_NULL));
         this.configurations.put(DEFAULT_CONFIG,
-                Objects.requireNonNull(defaultConfig, CONFIG_MUST_NOT_BE_NULL));
+            Objects.requireNonNull(defaultConfig, CONFIG_MUST_NOT_BE_NULL));
     }
 
     protected E computeIfAbsent(String name, Supplier<E> supplier) {
@@ -82,7 +82,7 @@ public class AbstractRegistry<E, C> implements Registry<E, C> {
     public Optional<E> remove(String name) {
         Optional<E> removedEntry = Optional.ofNullable(entryMap.remove(name));
         removedEntry
-                .ifPresent(entry -> eventProcessor.processEvent(new EntryRemovedEvent<>(entry)));
+            .ifPresent(entry -> eventProcessor.processEvent(new EntryRemovedEvent<>(entry)));
         return removedEntry;
     }
 
@@ -90,7 +90,7 @@ public class AbstractRegistry<E, C> implements Registry<E, C> {
     public Optional<E> replace(String name, E newEntry) {
         Optional<E> replacedEntry = Optional.ofNullable(entryMap.replace(name, newEntry));
         replacedEntry.ifPresent(oldEntry -> eventProcessor
-                .processEvent(new EntryReplacedEvent<>(oldEntry, newEntry)));
+            .processEvent(new EntryReplacedEvent<>(oldEntry, newEntry)));
         return replacedEntry;
     }
 
@@ -98,7 +98,7 @@ public class AbstractRegistry<E, C> implements Registry<E, C> {
     public void addConfiguration(String configName, C configuration) {
         if (configName.equals(DEFAULT_CONFIG)) {
             throw new IllegalArgumentException(
-                    "You cannot use 'default' as a configuration name as it is preserved for default configuration");
+                "You cannot use 'default' as a configuration name as it is preserved for default configuration");
         }
         this.configurations.put(configName, configuration);
     }
@@ -119,7 +119,7 @@ public class AbstractRegistry<E, C> implements Registry<E, C> {
     }
 
     private class RegistryEventProcessor extends EventProcessor<RegistryEvent> implements
-            EventConsumer<RegistryEvent>, EventPublisher<E> {
+        EventConsumer<RegistryEvent>, EventPublisher<E> {
 
         private RegistryEventProcessor() {
         }
@@ -134,23 +134,23 @@ public class AbstractRegistry<E, C> implements Registry<E, C> {
 
         @Override
         public EventPublisher<E> onEntryAdded(
-                EventConsumer<EntryAddedEvent<E>> onSuccessEventConsumer) {
+            EventConsumer<EntryAddedEvent<E>> onSuccessEventConsumer) {
             registerConsumer(EntryAddedEvent.class.getSimpleName(), onSuccessEventConsumer);
             return this;
         }
 
         @Override
         public EventPublisher<E> onEntryRemoved(
-                EventConsumer<EntryRemovedEvent<E>> onErrorEventConsumer) {
+            EventConsumer<EntryRemovedEvent<E>> onErrorEventConsumer) {
             registerConsumer(EntryRemovedEvent.class.getSimpleName(), onErrorEventConsumer);
             return this;
         }
 
         @Override
         public EventPublisher<E> onEntryReplaced(
-                EventConsumer<EntryReplacedEvent<E>> onStateTransitionEventConsumer) {
+            EventConsumer<EntryReplacedEvent<E>> onStateTransitionEventConsumer) {
             registerConsumer(EntryReplacedEvent.class.getSimpleName(),
-                    onStateTransitionEventConsumer);
+                onStateTransitionEventConsumer);
             return this;
         }
 

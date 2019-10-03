@@ -32,41 +32,41 @@ public class RateLimiterEventsEndpoint {
     private final EventConsumerRegistry<RateLimiterEvent> eventsConsumerRegistry;
 
     public RateLimiterEventsEndpoint(
-            EventConsumerRegistry<RateLimiterEvent> eventsConsumerRegistry) {
+        EventConsumerRegistry<RateLimiterEvent> eventsConsumerRegistry) {
         this.eventsConsumerRegistry = eventsConsumerRegistry;
     }
 
     @ReadOperation
     public RateLimiterEventsEndpointResponse getAllRateLimiterEvents() {
         return new RateLimiterEventsEndpointResponse(eventsConsumerRegistry.getAllEventConsumer()
-                .flatMap(CircularEventConsumer::getBufferedEvents)
-                .sorted(Comparator.comparing(RateLimiterEvent::getCreationTime))
-                .map(RateLimiterEventDTO::createRateLimiterEventDTO).toJavaList());
+            .flatMap(CircularEventConsumer::getBufferedEvents)
+            .sorted(Comparator.comparing(RateLimiterEvent::getCreationTime))
+            .map(RateLimiterEventDTO::createRateLimiterEventDTO).toJavaList());
     }
 
     @ReadOperation
     public RateLimiterEventsEndpointResponse getEventsFilteredByRateLimiterName(
-            @Selector String name) {
+        @Selector String name) {
         return new RateLimiterEventsEndpointResponse(getRateLimiterEvents(name)
-                .map(RateLimiterEventDTO::createRateLimiterEventDTO).toJavaList());
+            .map(RateLimiterEventDTO::createRateLimiterEventDTO).toJavaList());
     }
 
     @ReadOperation
     public RateLimiterEventsEndpointResponse getEventsFilteredByRateLimiterNameAndEventType(
-            @Selector String name,
-            @Selector String eventType) {
+        @Selector String name,
+        @Selector String eventType) {
         RateLimiterEvent.Type targetType = RateLimiterEvent.Type.valueOf(eventType.toUpperCase());
         return new RateLimiterEventsEndpointResponse(getRateLimiterEvents(name)
-                .filter(event -> event.getEventType() == targetType)
-                .map(RateLimiterEventDTO::createRateLimiterEventDTO).toJavaList());
+            .filter(event -> event.getEventType() == targetType)
+            .map(RateLimiterEventDTO::createRateLimiterEventDTO).toJavaList());
     }
 
     private List<RateLimiterEvent> getRateLimiterEvents(String name) {
         CircularEventConsumer<RateLimiterEvent> eventConsumer = eventsConsumerRegistry
-                .getEventConsumer(name);
+            .getEventConsumer(name);
         if (eventConsumer != null) {
             return eventConsumer.getBufferedEvents()
-                    .filter(event -> event.getRateLimiterName().equals(name));
+                .filter(event -> event.getRateLimiterName().equals(name));
         } else {
             return List.empty();
         }

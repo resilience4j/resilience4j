@@ -19,7 +19,7 @@ import org.junit.Test;
 public class StateTransitionMetricsTest {
 
     private static void circuitBreakerMetricsUsesFirstStateObjectInstance(
-            CircuitBreaker circuitBreaker, MetricRegistry metricRegistry) throws Exception {
+        CircuitBreaker circuitBreaker, MetricRegistry metricRegistry) throws Exception {
         SortedMap<String, Gauge> gauges = metricRegistry.getGauges();
 
         assertThat(circuitBreaker.getState(), equalTo(CircuitBreaker.State.CLOSED));
@@ -30,7 +30,7 @@ public class StateTransitionMetricsTest {
         assertThat(gauges.get("resilience4j.circuitbreaker.test.buffered").getValue(), equalTo(0));
         assertThat(gauges.get("resilience4j.circuitbreaker.test.failed").getValue(), equalTo(0));
         assertThat(gauges.get("resilience4j.circuitbreaker.test.successful").getValue(),
-                equalTo(0));
+            equalTo(0));
 
         circuitBreaker.onError(0, TimeUnit.NANOSECONDS, new RuntimeException());
 
@@ -42,7 +42,7 @@ public class StateTransitionMetricsTest {
         assertThat(gauges.get("resilience4j.circuitbreaker.test.buffered").getValue(), equalTo(1));
         assertThat(gauges.get("resilience4j.circuitbreaker.test.failed").getValue(), equalTo(1));
         assertThat(gauges.get("resilience4j.circuitbreaker.test.successful").getValue(),
-                equalTo(0));
+            equalTo(0));
 
         for (int i = 0; i < 9; i++) {
             circuitBreaker.onError(0, TimeUnit.NANOSECONDS, new RuntimeException());
@@ -56,13 +56,13 @@ public class StateTransitionMetricsTest {
         assertThat(gauges.get("resilience4j.circuitbreaker.test.buffered").getValue(), equalTo(10));
         assertThat(gauges.get("resilience4j.circuitbreaker.test.failed").getValue(), equalTo(10));
         assertThat(gauges.get("resilience4j.circuitbreaker.test.successful").getValue(),
-                equalTo(0));
+            equalTo(0));
 
         await().atMost(1500, TimeUnit.MILLISECONDS)
-                .until(() -> {
-                    circuitBreaker.tryAcquirePermission();
-                    return circuitBreaker.getState().equals(CircuitBreaker.State.HALF_OPEN);
-                });
+            .until(() -> {
+                circuitBreaker.tryAcquirePermission();
+                return circuitBreaker.getState().equals(CircuitBreaker.State.HALF_OPEN);
+            });
 
         circuitBreaker.onSuccess(0, TimeUnit.NANOSECONDS);
         assertThat(circuitBreaker.getState(), equalTo(CircuitBreaker.State.HALF_OPEN));
@@ -74,7 +74,7 @@ public class StateTransitionMetricsTest {
         assertThat(gauges.get("resilience4j.circuitbreaker.test.buffered").getValue(), equalTo(1));
         assertThat(gauges.get("resilience4j.circuitbreaker.test.failed").getValue(), equalTo(0));
         assertThat(gauges.get("resilience4j.circuitbreaker.test.successful").getValue(),
-                equalTo(1));
+            equalTo(1));
         circuitBreaker.onSuccess(0, TimeUnit.NANOSECONDS);
         assertThat(circuitBreaker.getState(), equalTo(CircuitBreaker.State.HALF_OPEN));
         assertThat(circuitBreaker.getMetrics().getNumberOfBufferedCalls(), equalTo(2));
@@ -85,7 +85,7 @@ public class StateTransitionMetricsTest {
         assertThat(gauges.get("resilience4j.circuitbreaker.test.buffered").getValue(), equalTo(2));
         assertThat(gauges.get("resilience4j.circuitbreaker.test.failed").getValue(), equalTo(0));
         assertThat(gauges.get("resilience4j.circuitbreaker.test.successful").getValue(),
-                equalTo(2));
+            equalTo(2));
         circuitBreaker.onSuccess(0, TimeUnit.NANOSECONDS);
         assertThat(circuitBreaker.getState(), equalTo(CircuitBreaker.State.CLOSED));
         assertThat(circuitBreaker.getMetrics().getNumberOfBufferedCalls(), equalTo(0));
@@ -96,20 +96,20 @@ public class StateTransitionMetricsTest {
         assertThat(gauges.get("resilience4j.circuitbreaker.test.buffered").getValue(), equalTo(0));
         assertThat(gauges.get("resilience4j.circuitbreaker.test.failed").getValue(), equalTo(0));
         assertThat(gauges.get("resilience4j.circuitbreaker.test.successful").getValue(),
-                equalTo(0));
+            equalTo(0));
     }
 
     @Test
     public void testWithCircuitBreakerMetrics() throws Exception {
         CircuitBreakerConfig config =
-                CircuitBreakerConfig.custom()
-                        .waitDurationInOpenState(Duration.ofMillis(150))
-                        .failureRateThreshold(50)
-                        .permittedNumberOfCallsInHalfOpenState(3)
-                        .slidingWindowSize(10)
-                        .build();
+            CircuitBreakerConfig.custom()
+                .waitDurationInOpenState(Duration.ofMillis(150))
+                .failureRateThreshold(50)
+                .permittedNumberOfCallsInHalfOpenState(3)
+                .slidingWindowSize(10)
+                .build();
         CircuitBreaker circuitBreaker = CircuitBreakerRegistry.ofDefaults()
-                .circuitBreaker("test", config);
+            .circuitBreaker("test", config);
         MetricRegistry metricRegistry = new MetricRegistry();
 
         metricRegistry.registerAll(CircuitBreakerMetrics.ofCircuitBreaker(circuitBreaker));
@@ -119,15 +119,15 @@ public class StateTransitionMetricsTest {
     @Test
     public void testWithCircuitBreakerMetricsPublisher() throws Exception {
         CircuitBreakerConfig config =
-                CircuitBreakerConfig.custom()
-                        .waitDurationInOpenState(Duration.ofSeconds(1))
-                        .failureRateThreshold(50)
-                        .permittedNumberOfCallsInHalfOpenState(3)
-                        .slidingWindowSize(10)
-                        .build();
+            CircuitBreakerConfig.custom()
+                .waitDurationInOpenState(Duration.ofSeconds(1))
+                .failureRateThreshold(50)
+                .permittedNumberOfCallsInHalfOpenState(3)
+                .slidingWindowSize(10)
+                .build();
         MetricRegistry metricRegistry = new MetricRegistry();
         CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry
-                .of(config, new CircuitBreakerMetricsPublisher(metricRegistry));
+            .of(config, new CircuitBreakerMetricsPublisher(metricRegistry));
         CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("test", config);
 
         circuitBreakerMetricsUsesFirstStateObjectInstance(circuitBreaker, metricRegistry);

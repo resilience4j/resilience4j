@@ -30,7 +30,7 @@ import reactor.core.publisher.Mono;
 public class ReactorFallbackDecorator implements FallbackDecorator {
 
     private static final Set<Class<?>> REACTORS_SUPPORTED_TYPES = newHashSet(Mono.class,
-            Flux.class);
+        Flux.class);
 
     @Override
     public boolean supports(Class<?> target) {
@@ -40,16 +40,16 @@ public class ReactorFallbackDecorator implements FallbackDecorator {
     @SuppressWarnings("unchecked")
     @Override
     public CheckedFunction0<Object> decorate(FallbackMethod fallbackMethod,
-            CheckedFunction0<Object> supplier) {
+        CheckedFunction0<Object> supplier) {
         return supplier.andThen(returnValue -> {
             if (Flux.class.isAssignableFrom(returnValue.getClass())) {
                 Flux fluxReturnValue = (Flux) returnValue;
                 return fluxReturnValue
-                        .onErrorResume(reactorOnErrorResume(fallbackMethod, Flux::error));
+                    .onErrorResume(reactorOnErrorResume(fallbackMethod, Flux::error));
             } else if (Mono.class.isAssignableFrom(returnValue.getClass())) {
                 Mono monoReturnValue = (Mono) returnValue;
                 return monoReturnValue
-                        .onErrorResume(reactorOnErrorResume(fallbackMethod, Mono::error));
+                    .onErrorResume(reactorOnErrorResume(fallbackMethod, Mono::error));
             } else {
                 return returnValue;
             }
@@ -58,8 +58,8 @@ public class ReactorFallbackDecorator implements FallbackDecorator {
 
     @SuppressWarnings("unchecked")
     private <T> Function<? super Throwable, ? extends Publisher<? extends T>> reactorOnErrorResume(
-            FallbackMethod recoveryMethod,
-            Function<? super Throwable, ? extends Publisher<? extends T>> errorFunction) {
+        FallbackMethod recoveryMethod,
+        Function<? super Throwable, ? extends Publisher<? extends T>> errorFunction) {
         return throwable -> {
             try {
                 return (Publisher<? extends T>) recoveryMethod.fallback(throwable);

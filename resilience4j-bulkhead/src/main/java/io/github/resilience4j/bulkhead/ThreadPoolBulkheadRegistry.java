@@ -32,14 +32,14 @@ import java.util.function.Supplier;
  * stores all bulkhead instances in a registry.
  */
 public interface ThreadPoolBulkheadRegistry extends
-        Registry<ThreadPoolBulkhead, ThreadPoolBulkheadConfig> {
+    Registry<ThreadPoolBulkhead, ThreadPoolBulkheadConfig> {
 
     /**
      * Creates a BulkheadRegistry with a custom Bulkhead configuration.
      *
      * @param bulkheadConfig a custom ThreadPoolBulkhead configuration
      * @return a ThreadPoolBulkheadRegistry instance backed by a custom ThreadPoolBulkhead
-     *         configuration
+     *     configuration
      */
     static ThreadPoolBulkheadRegistry of(ThreadPoolBulkheadConfig bulkheadConfig) {
         return new InMemoryThreadPoolBulkheadRegistry(bulkheadConfig);
@@ -52,10 +52,10 @@ public interface ThreadPoolBulkheadRegistry extends
      * @param bulkheadConfig a custom default ThreadPoolBulkhead configuration.
      * @param registryEventConsumer a ThreadPoolBulkhead registry event consumer.
      * @return a ThreadPoolBulkheadRegistry with a custom ThreadPoolBulkhead configuration and a
-     *         ThreadPoolBulkhead registry event consumer.
+     *     ThreadPoolBulkhead registry event consumer.
      */
     static ThreadPoolBulkheadRegistry of(ThreadPoolBulkheadConfig bulkheadConfig,
-            RegistryEventConsumer<ThreadPoolBulkhead> registryEventConsumer) {
+        RegistryEventConsumer<ThreadPoolBulkhead> registryEventConsumer) {
         return new InMemoryThreadPoolBulkheadRegistry(bulkheadConfig, registryEventConsumer);
     }
 
@@ -66,10 +66,10 @@ public interface ThreadPoolBulkheadRegistry extends
      * @param bulkheadConfig a custom default ThreadPoolBulkhead configuration.
      * @param registryEventConsumers a list of ThreadPoolBulkhead registry event consumers.
      * @return a ThreadPoolBulkheadRegistry with a custom ThreadPoolBulkhead configuration and a
-     *         list of ThreadPoolBulkhead registry event consumers.
+     *     list of ThreadPoolBulkhead registry event consumers.
      */
     static ThreadPoolBulkheadRegistry of(ThreadPoolBulkheadConfig bulkheadConfig,
-            List<RegistryEventConsumer<ThreadPoolBulkhead>> registryEventConsumers) {
+        List<RegistryEventConsumer<ThreadPoolBulkhead>> registryEventConsumers) {
         return new InMemoryThreadPoolBulkheadRegistry(bulkheadConfig, registryEventConsumers);
     }
 
@@ -77,7 +77,7 @@ public interface ThreadPoolBulkheadRegistry extends
      * Creates a ThreadPoolBulkheadRegistry with a default ThreadPoolBulkhead configuration
      *
      * @return a ThreadPoolBulkheadRegistry instance backed by a default ThreadPoolBulkhead
-     *         configuration
+     *     configuration
      */
     static ThreadPoolBulkheadRegistry ofDefaults() {
         return new InMemoryThreadPoolBulkheadRegistry(ThreadPoolBulkheadConfig.ofDefaults());
@@ -100,10 +100,10 @@ public interface ThreadPoolBulkheadRegistry extends
      * @param configs a Map of shared ThreadPoolBulkhead configurations.
      * @param registryEventConsumer a ThreadPoolBulkhead registry event consumer.
      * @return a ThreadPoolBulkheadRegistry with a Map of shared ThreadPoolBulkhead configurations
-     *         and a ThreadPoolBulkhead registry event consumer.
+     *     and a ThreadPoolBulkhead registry event consumer.
      */
     static ThreadPoolBulkheadRegistry of(Map<String, ThreadPoolBulkheadConfig> configs,
-            RegistryEventConsumer<ThreadPoolBulkhead> registryEventConsumer) {
+        RegistryEventConsumer<ThreadPoolBulkhead> registryEventConsumer) {
         return new InMemoryThreadPoolBulkheadRegistry(configs, registryEventConsumer);
     }
 
@@ -114,10 +114,10 @@ public interface ThreadPoolBulkheadRegistry extends
      * @param configs a Map of shared ThreadPoolBulkhead configurations.
      * @param registryEventConsumers a list of ThreadPoolBulkhead registry event consumers.
      * @return a ThreadPoolBulkheadRegistry with a Map of shared ThreadPoolBulkhead configurations
-     *         and a list of ThreadPoolBulkhead registry event consumers.
+     *     and a list of ThreadPoolBulkhead registry event consumers.
      */
     static ThreadPoolBulkheadRegistry of(Map<String, ThreadPoolBulkheadConfig> configs,
-            List<RegistryEventConsumer<ThreadPoolBulkhead>> registryEventConsumers) {
+        List<RegistryEventConsumer<ThreadPoolBulkhead>> registryEventConsumers) {
         return new InMemoryThreadPoolBulkheadRegistry(configs, registryEventConsumers);
     }
 
@@ -156,7 +156,7 @@ public interface ThreadPoolBulkheadRegistry extends
      * @return The {@link ThreadPoolBulkhead}
      */
     ThreadPoolBulkhead bulkhead(String name,
-            Supplier<ThreadPoolBulkheadConfig> bulkheadConfigSupplier);
+        Supplier<ThreadPoolBulkheadConfig> bulkheadConfigSupplier);
 
     /**
      * Returns a managed {@link ThreadPoolBulkhead} or creates a new one with a custom

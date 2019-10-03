@@ -134,7 +134,7 @@ public class RetryConfig {
         public Builder<T> maxAttempts(int maxAttempts) {
             if (maxAttempts < 1) {
                 throw new IllegalArgumentException(
-                        "maxAttempts must be greater than or equal to 1");
+                    "maxAttempts must be greater than or equal to 1");
             }
             this.maxAttempts = maxAttempts;
             return this;
@@ -145,7 +145,7 @@ public class RetryConfig {
                 this.intervalFunction = (x) -> waitDuration.toMillis();
             } else {
                 throw new IllegalArgumentException(
-                        "waitDurationInOpenState must be a positive value");
+                    "waitDurationInOpenState must be a positive value");
             }
             return this;
         }
@@ -155,7 +155,7 @@ public class RetryConfig {
          * return true if the result should be retried, otherwise it must return false.
          *
          * @param predicate the Predicate which evaluates if an result should be retried or
-         *         not.
+         *     not.
          * @return the RetryConfig.Builder
          */
         public Builder<T> retryOnResult(Predicate<T> predicate) {
@@ -179,8 +179,8 @@ public class RetryConfig {
          * Configures a Predicate which evaluates if an exception should be retried. The Predicate
          * must return true if the exception should be retried, otherwise it must return false.
          *
-         * @param predicate the Predicate which evaluates if an exception should be retried
-         *         or not.
+         * @param predicate the Predicate which evaluates if an exception should be retried or
+         *     not.
          * @return the RetryConfig.Builder
          */
         public Builder<T> retryOnException(Predicate<Throwable> predicate) {
@@ -196,18 +196,18 @@ public class RetryConfig {
          * @param errorClasses the error classes that are retried
          * @return the RetryConfig.Builder
          * @see #ignoreExceptions(Class[]) ). Ignoring an exception has priority over retrying an
-         *         exception.
-         *         <p>
-         *         Example: retryOnExceptions(Throwable.class) and ignoreExceptions(RuntimeException.class)
-         *         would retry all Errors and checked Exceptions, and ignore unchecked
-         *         <p>
-         *         For a more sophisticated exception management use the
+         *     exception.
+         *     <p>
+         *     Example: retryOnExceptions(Throwable.class) and ignoreExceptions(RuntimeException.class)
+         *     would retry all Errors and checked Exceptions, and ignore unchecked
+         *     <p>
+         *     For a more sophisticated exception management use the
          * @see #retryOnException(Predicate) method
          */
         @SuppressWarnings("unchecked")
         @SafeVarargs
         public final Builder<T> retryExceptions(
-                @Nullable Class<? extends Throwable>... errorClasses) {
+            @Nullable Class<? extends Throwable>... errorClasses) {
             this.retryExceptions = errorClasses != null ? errorClasses : new Class[0];
             return this;
         }
@@ -220,21 +220,21 @@ public class RetryConfig {
          * @param errorClasses the error classes that are retried
          * @return the RetryConfig.Builder
          * @see #retryExceptions(Class[]) . Ignoring an exception has priority over retrying an
-         *         exception.
-         *         <p>
-         *         Example: ignoreExceptions(Throwable.class) and retryOnExceptions(Exception.class)
-         *         would capture nothing
-         *         <p>
-         *         Example: ignoreExceptions(Exception.class) and retryOnExceptions(Throwable.class)
-         *         would capture Errors
-         *         <p>
-         *         For a more sophisticated exception management use the
+         *     exception.
+         *     <p>
+         *     Example: ignoreExceptions(Throwable.class) and retryOnExceptions(Exception.class)
+         *     would capture nothing
+         *     <p>
+         *     Example: ignoreExceptions(Exception.class) and retryOnExceptions(Throwable.class)
+         *     would capture Errors
+         *     <p>
+         *     For a more sophisticated exception management use the
          * @see #retryOnException(Predicate) method
          */
         @SuppressWarnings("unchecked")
         @SafeVarargs
         public final Builder<T> ignoreExceptions(
-                @Nullable Class<? extends Throwable>... errorClasses) {
+            @Nullable Class<? extends Throwable>... errorClasses) {
             this.ignoreExceptions = errorClasses != null ? errorClasses : new Class[0];
             return this;
         }
@@ -253,16 +253,16 @@ public class RetryConfig {
 
         private Predicate<Throwable> createExceptionPredicate() {
             return createRetryOnExceptionPredicate()
-                    .and(PredicateCreator.createNegatedExceptionsPredicate(ignoreExceptions)
-                            .orElse(DEFAULT_RECORD_FAILURE_PREDICATE));
+                .and(PredicateCreator.createNegatedExceptionsPredicate(ignoreExceptions)
+                    .orElse(DEFAULT_RECORD_FAILURE_PREDICATE));
         }
 
         private Predicate<Throwable> createRetryOnExceptionPredicate() {
             return PredicateCreator.createExceptionsPredicate(retryExceptions)
-                    .map(predicate -> retryOnExceptionPredicate != null ? predicate
-                            .or(retryOnExceptionPredicate) : predicate)
-                    .orElseGet(() -> retryOnExceptionPredicate != null ? retryOnExceptionPredicate
-                            : DEFAULT_RECORD_FAILURE_PREDICATE);
+                .map(predicate -> retryOnExceptionPredicate != null ? predicate
+                    .or(retryOnExceptionPredicate) : predicate)
+                .orElseGet(() -> retryOnExceptionPredicate != null ? retryOnExceptionPredicate
+                    : DEFAULT_RECORD_FAILURE_PREDICATE);
         }
     }
 }

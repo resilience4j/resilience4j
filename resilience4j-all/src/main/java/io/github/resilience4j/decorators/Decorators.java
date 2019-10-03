@@ -45,7 +45,7 @@ public interface Decorators {
     }
 
     static <T> DecorateCompletionStage<T> ofCompletionStage(
-            Supplier<CompletionStage<T>> stageSupplier) {
+        Supplier<CompletionStage<T>> stageSupplier) {
         return new DecorateCompletionStage<>(stageSupplier);
     }
 
@@ -299,7 +299,7 @@ public interface Decorators {
         }
 
         public DecorateCompletionStage<T> withRetry(Retry retryContext,
-                ScheduledExecutorService scheduler) {
+            ScheduledExecutorService scheduler) {
             stageSupplier = Retry.decorateCompletionStage(retryContext, scheduler, stageSupplier);
             return this;
         }

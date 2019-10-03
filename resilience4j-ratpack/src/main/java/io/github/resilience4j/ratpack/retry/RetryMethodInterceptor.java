@@ -77,8 +77,8 @@ public class RetryMethodInterceptor extends AbstractMethodInterceptor {
         }
         io.github.resilience4j.retry.Retry retry = registry.retry(annotation.name());
         final RecoveryFunction<?> fallbackMethod = Optional
-                .ofNullable(createRecoveryFunction(invocation, annotation.fallbackMethod()))
-                .orElse(new DefaultRecoveryFunction<>());
+            .ofNullable(createRecoveryFunction(invocation, annotation.fallbackMethod()))
+            .orElse(new DefaultRecoveryFunction<>());
         Class<?> returnType = invocation.getMethod().getReturnType();
         if (Promise.class.isAssignableFrom(returnType)) {
             Promise<?> result = (Promise<?>) proceed(invocation);
@@ -93,13 +93,13 @@ public class RetryMethodInterceptor extends AbstractMethodInterceptor {
                 RetryTransformer transformer = RetryTransformer.of(retry).recover(fallbackMethod);
                 final Flux<?> temp = result;
                 Promise<?> promise = Promise
-                        .async(f -> temp.collectList().subscribe(f::success, f::error))
-                        .transform(transformer);
+                    .async(f -> temp.collectList().subscribe(f::success, f::error))
+                    .transform(transformer);
                 Flux next = Flux.create(subscriber ->
-                        promise.onError(subscriber::error).then(value -> {
-                            subscriber.next(value);
-                            subscriber.complete();
-                        })
+                    promise.onError(subscriber::error).then(value -> {
+                        subscriber.next(value);
+                        subscriber.complete();
+                    })
                 );
                 result = fallbackMethod.onErrorResume(next);
             }
@@ -110,9 +110,9 @@ public class RetryMethodInterceptor extends AbstractMethodInterceptor {
                 RetryTransformer transformer = RetryTransformer.of(retry).recover(fallbackMethod);
                 final Mono<?> temp = result;
                 Promise<?> promise = Promise.async(f -> temp.subscribe(f::success, f::error))
-                        .transform(transformer);
+                    .transform(transformer);
                 Mono next = Mono.create(subscriber ->
-                        promise.onError(subscriber::error).then(subscriber::success)
+                    promise.onError(subscriber::error).then(subscriber::success)
                 );
                 result = fallbackMethod.onErrorResume(next);
             }
@@ -127,8 +127,8 @@ public class RetryMethodInterceptor extends AbstractMethodInterceptor {
 
     @SuppressWarnings("unchecked")
     private CompletionStage<?> executeCompletionStage(MethodInvocation invocation,
-            CompletionStage<?> stage, io.github.resilience4j.retry.Retry.Context context,
-            RecoveryFunction<?> recoveryFunction) {
+        CompletionStage<?> stage, io.github.resilience4j.retry.Retry.Context context,
+        RecoveryFunction<?> recoveryFunction) {
         final CompletableFuture promise = new CompletableFuture();
         stage.whenComplete((v, t) -> {
             if (t != null) {
@@ -136,7 +136,7 @@ public class RetryMethodInterceptor extends AbstractMethodInterceptor {
                     context.onError((Exception) t);
                     CompletionStage next = (CompletionStage) invocation.proceed();
                     CompletableFuture temp = executeCompletionStage(invocation, next, context,
-                            recoveryFunction).toCompletableFuture();
+                        recoveryFunction).toCompletableFuture();
                     promise.complete(temp.join());
                 } catch (Throwable t2) {
                     completeFailedFuture(t2, recoveryFunction, promise);
@@ -151,11 +151,11 @@ public class RetryMethodInterceptor extends AbstractMethodInterceptor {
 
     @Nullable
     private Object handleProceedWithException(MethodInvocation invocation,
-            io.github.resilience4j.retry.Retry retry, RecoveryFunction<?> recoveryFunction)
-            throws Throwable {
+        io.github.resilience4j.retry.Retry retry, RecoveryFunction<?> recoveryFunction)
+        throws Throwable {
         try {
             return io.github.resilience4j.retry.Retry
-                    .decorateCheckedSupplier(retry, invocation::proceed).apply();
+                .decorateCheckedSupplier(retry, invocation::proceed).apply();
         } catch (Throwable t) {
             return recoveryFunction.apply(t);
         }

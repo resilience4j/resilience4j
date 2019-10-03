@@ -43,8 +43,8 @@ import org.reactivestreams.Publisher;
  * @param <T> the value type
  */
 public class CircuitBreakerOperator<T> implements FlowableTransformer<T, T>,
-        SingleTransformer<T, T>, MaybeTransformer<T, T>, CompletableTransformer,
-        ObservableTransformer<T, T> {
+    SingleTransformer<T, T>, MaybeTransformer<T, T>, CompletableTransformer,
+    ObservableTransformer<T, T> {
 
     private final CircuitBreaker circuitBreaker;
 

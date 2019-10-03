@@ -35,8 +35,8 @@ import java.util.function.Supplier;
  * Thread pool Bulkhead instance manager; Constructs/returns thread pool bulkhead instances.
  */
 public final class InMemoryThreadPoolBulkheadRegistry extends
-        AbstractRegistry<ThreadPoolBulkhead, ThreadPoolBulkheadConfig> implements
-        ThreadPoolBulkheadRegistry {
+    AbstractRegistry<ThreadPoolBulkhead, ThreadPoolBulkheadConfig> implements
+    ThreadPoolBulkheadRegistry {
 
     /**
      * The constructor with default default.
@@ -51,18 +51,18 @@ public final class InMemoryThreadPoolBulkheadRegistry extends
     }
 
     public InMemoryThreadPoolBulkheadRegistry(
-            Map<String, ThreadPoolBulkheadConfig> configs,
-            RegistryEventConsumer<ThreadPoolBulkhead> registryEventConsumer) {
+        Map<String, ThreadPoolBulkheadConfig> configs,
+        RegistryEventConsumer<ThreadPoolBulkhead> registryEventConsumer) {
         this(configs.getOrDefault(DEFAULT_CONFIG, ThreadPoolBulkheadConfig.ofDefaults()),
-                registryEventConsumer);
+            registryEventConsumer);
         this.configurations.putAll(configs);
     }
 
     public InMemoryThreadPoolBulkheadRegistry(
-            Map<String, ThreadPoolBulkheadConfig> configs,
-            List<RegistryEventConsumer<ThreadPoolBulkhead>> registryEventConsumers) {
+        Map<String, ThreadPoolBulkheadConfig> configs,
+        List<RegistryEventConsumer<ThreadPoolBulkhead>> registryEventConsumers) {
         this(configs.getOrDefault(DEFAULT_CONFIG, ThreadPoolBulkheadConfig.ofDefaults()),
-                registryEventConsumers);
+            registryEventConsumers);
         this.configurations.putAll(configs);
     }
 
@@ -76,14 +76,14 @@ public final class InMemoryThreadPoolBulkheadRegistry extends
     }
 
     public InMemoryThreadPoolBulkheadRegistry(
-            ThreadPoolBulkheadConfig defaultConfig,
-            RegistryEventConsumer<ThreadPoolBulkhead> registryEventConsumer) {
+        ThreadPoolBulkheadConfig defaultConfig,
+        RegistryEventConsumer<ThreadPoolBulkhead> registryEventConsumer) {
         super(defaultConfig, registryEventConsumer);
     }
 
     public InMemoryThreadPoolBulkheadRegistry(
-            ThreadPoolBulkheadConfig defaultConfig,
-            List<RegistryEventConsumer<ThreadPoolBulkhead>> registryEventConsumers) {
+        ThreadPoolBulkheadConfig defaultConfig,
+        List<RegistryEventConsumer<ThreadPoolBulkhead>> registryEventConsumers) {
         super(defaultConfig, registryEventConsumers);
     }
 
@@ -109,7 +109,7 @@ public final class InMemoryThreadPoolBulkheadRegistry extends
     @Override
     public ThreadPoolBulkhead bulkhead(String name, ThreadPoolBulkheadConfig config) {
         return computeIfAbsent(name, () -> ThreadPoolBulkhead
-                .of(name, Objects.requireNonNull(config, CONFIG_MUST_NOT_BE_NULL)));
+            .of(name, Objects.requireNonNull(config, CONFIG_MUST_NOT_BE_NULL)));
     }
 
     /**
@@ -117,10 +117,10 @@ public final class InMemoryThreadPoolBulkheadRegistry extends
      */
     @Override
     public ThreadPoolBulkhead bulkhead(String name,
-            Supplier<ThreadPoolBulkheadConfig> bulkheadConfigSupplier) {
+        Supplier<ThreadPoolBulkheadConfig> bulkheadConfigSupplier) {
         return computeIfAbsent(name, () -> ThreadPoolBulkhead.of(name, Objects.requireNonNull(
-                Objects.requireNonNull(bulkheadConfigSupplier, SUPPLIER_MUST_NOT_BE_NULL).get(),
-                CONFIG_MUST_NOT_BE_NULL)));
+            Objects.requireNonNull(bulkheadConfigSupplier, SUPPLIER_MUST_NOT_BE_NULL).get(),
+            CONFIG_MUST_NOT_BE_NULL)));
     }
 
     /**
@@ -129,6 +129,6 @@ public final class InMemoryThreadPoolBulkheadRegistry extends
     @Override
     public ThreadPoolBulkhead bulkhead(String name, String configName) {
         return computeIfAbsent(name, () -> ThreadPoolBulkhead.of(name, getConfiguration(configName)
-                .orElseThrow(() -> new ConfigurationNotFoundException(configName))));
+            .orElseThrow(() -> new ConfigurationNotFoundException(configName))));
     }
 }

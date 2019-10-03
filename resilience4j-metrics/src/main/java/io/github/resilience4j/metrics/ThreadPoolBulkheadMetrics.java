@@ -45,7 +45,7 @@ public class ThreadPoolBulkheadMetrics implements MetricSet {
     }
 
     private ThreadPoolBulkheadMetrics(String prefix, Iterable<ThreadPoolBulkhead> bulkheads,
-            MetricRegistry metricRegistry) {
+        MetricRegistry metricRegistry) {
         requireNonNull(prefix);
         requireNonNull(bulkheads);
         requireNonNull(metricRegistry);
@@ -54,9 +54,9 @@ public class ThreadPoolBulkheadMetrics implements MetricSet {
             String name = bulkhead.getName();
             //number of available concurrent calls as an integer
             metricRegistry.register(name(prefix, name, CURRENT_THREAD_POOL_SIZE),
-                    (Gauge<Integer>) () -> bulkhead.getMetrics().getThreadPoolSize());
+                (Gauge<Integer>) () -> bulkhead.getMetrics().getThreadPoolSize());
             metricRegistry.register(name(prefix, name, AVAILABLE_QUEUE_CAPACITY),
-                    (Gauge<Integer>) () -> bulkhead.getMetrics().getRemainingQueueCapacity());
+                (Gauge<Integer>) () -> bulkhead.getMetrics().getRemainingQueueCapacity());
         });
     }
 
@@ -69,9 +69,9 @@ public class ThreadPoolBulkheadMetrics implements MetricSet {
      * @param metricRegistry the metric registry
      */
     public static ThreadPoolBulkheadMetrics ofBulkheadRegistry(String prefix,
-            ThreadPoolBulkheadRegistry bulkheadRegistry, MetricRegistry metricRegistry) {
+        ThreadPoolBulkheadRegistry bulkheadRegistry, MetricRegistry metricRegistry) {
         return new ThreadPoolBulkheadMetrics(prefix, bulkheadRegistry.getAllBulkheads(),
-                metricRegistry);
+            metricRegistry);
     }
 
     /**
@@ -82,9 +82,9 @@ public class ThreadPoolBulkheadMetrics implements MetricSet {
      * @param bulkheadRegistry the registry of bulkheads
      */
     public static ThreadPoolBulkheadMetrics ofBulkheadRegistry(String prefix,
-            ThreadPoolBulkheadRegistry bulkheadRegistry) {
+        ThreadPoolBulkheadRegistry bulkheadRegistry) {
         return new ThreadPoolBulkheadMetrics(prefix, bulkheadRegistry.getAllBulkheads(),
-                new MetricRegistry());
+            new MetricRegistry());
     }
 
     /**
@@ -94,9 +94,9 @@ public class ThreadPoolBulkheadMetrics implements MetricSet {
      * @param bulkheadRegistry the registry of bulkheads
      */
     public static ThreadPoolBulkheadMetrics ofBulkheadRegistry(
-            ThreadPoolBulkheadRegistry bulkheadRegistry, MetricRegistry metricRegistry) {
+        ThreadPoolBulkheadRegistry bulkheadRegistry, MetricRegistry metricRegistry) {
         return new ThreadPoolBulkheadMetrics(DEFAULT_PREFIX, bulkheadRegistry.getAllBulkheads(),
-                metricRegistry);
+            metricRegistry);
     }
 
     /**
@@ -106,7 +106,7 @@ public class ThreadPoolBulkheadMetrics implements MetricSet {
      * @param bulkheadRegistry the registry of bulkheads
      */
     public static ThreadPoolBulkheadMetrics ofBulkheadRegistry(
-            ThreadPoolBulkheadRegistry bulkheadRegistry) {
+        ThreadPoolBulkheadRegistry bulkheadRegistry) {
         return new ThreadPoolBulkheadMetrics(bulkheadRegistry.getAllBulkheads());
     }
 
@@ -127,7 +127,7 @@ public class ThreadPoolBulkheadMetrics implements MetricSet {
      * @param bulkheads the bulkheads
      */
     public static ThreadPoolBulkheadMetrics ofIterable(String prefix,
-            Iterable<ThreadPoolBulkhead> bulkheads) {
+        Iterable<ThreadPoolBulkhead> bulkheads) {
         return new ThreadPoolBulkheadMetrics(prefix, bulkheads, new MetricRegistry());
     }
 

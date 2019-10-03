@@ -14,9 +14,9 @@ public class CircuitBreakerExceptionHandlingTest {
     @Test
     public void shouldRecordRuntimeExceptionAsFailureAndBusinessExceptionAsSuccess() {
         CircuitBreaker circuitBreaker = new CircuitBreakerStateMachine("testName", custom()
-                .slidingWindowSize(5)
-                .recordException(ex -> !(ex instanceof BusinessException))
-                .build());
+            .slidingWindowSize(5)
+            .recordException(ex -> !(ex instanceof BusinessException))
+            .build());
 
         assertThat(circuitBreaker.tryAcquirePermission()).isEqualTo(true);
         circuitBreaker.onError(0, TimeUnit.NANOSECONDS, new RuntimeException());
@@ -33,9 +33,9 @@ public class CircuitBreakerExceptionHandlingTest {
     @Test
     public void shouldRecordIOExceptionAsFailureAndBusinessExceptionAsSuccess() {
         CircuitBreaker circuitBreaker = new CircuitBreakerStateMachine("testName", custom()
-                .slidingWindowSize(5)
-                .recordExceptions(IOException.class)
-                .build());
+            .slidingWindowSize(5)
+            .recordExceptions(IOException.class)
+            .build());
 
         assertThat(circuitBreaker.tryAcquirePermission()).isEqualTo(true);
         circuitBreaker.onError(0, TimeUnit.NANOSECONDS, new IOException());
@@ -52,9 +52,9 @@ public class CircuitBreakerExceptionHandlingTest {
     @Test
     public void shouldRecordBusinessExceptionAsFailure() {
         CircuitBreaker circuitBreaker = new CircuitBreakerStateMachine("testName", custom()
-                .slidingWindowSize(5)
-                .recordException(ex -> "record".equals(ex.getMessage()))
-                .build());
+            .slidingWindowSize(5)
+            .recordException(ex -> "record".equals(ex.getMessage()))
+            .build());
 
         assertThat(circuitBreaker.tryAcquirePermission()).isEqualTo(true);
         circuitBreaker.onError(0, TimeUnit.NANOSECONDS, new BusinessException("record"));
@@ -71,11 +71,11 @@ public class CircuitBreakerExceptionHandlingTest {
     @Test
     public void shouldIgnoreNumberFormatException() {
         CircuitBreaker circuitBreaker = new CircuitBreakerStateMachine("testName", custom()
-                .failureRateThreshold(50)
-                .slidingWindowSize(5)
-                .waitDurationInOpenState(Duration.ofSeconds(5))
-                .ignoreExceptions(NumberFormatException.class)
-                .build());
+            .failureRateThreshold(50)
+            .slidingWindowSize(5)
+            .waitDurationInOpenState(Duration.ofSeconds(5))
+            .ignoreExceptions(NumberFormatException.class)
+            .build());
 
         assertThat(circuitBreaker.tryAcquirePermission()).isEqualTo(true);
         circuitBreaker.onError(0, TimeUnit.NANOSECONDS, new RuntimeException());

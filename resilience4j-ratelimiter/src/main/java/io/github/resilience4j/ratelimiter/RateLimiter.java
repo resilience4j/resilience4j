@@ -61,8 +61,7 @@ public interface RateLimiter {
      * Creates a RateLimiter with a custom RateLimiterConfig configuration.
      *
      * @param name the name of the RateLimiter
-     * @param rateLimiterConfigSupplier a supplier of a custom RateLimiterConfig
-     *         configuration
+     * @param rateLimiterConfigSupplier a supplier of a custom RateLimiterConfig configuration
      * @return The {@link RateLimiter}
      */
     static RateLimiter of(String name, Supplier<RateLimiterConfig> rateLimiterConfigSupplier) {
@@ -88,22 +87,22 @@ public interface RateLimiter {
      * @return a supplier which is decorated by a RateLimiter.
      */
     static <T> Supplier<CompletionStage<T>> decorateCompletionStage(RateLimiter rateLimiter,
-            Supplier<CompletionStage<T>> supplier) {
+        Supplier<CompletionStage<T>> supplier) {
         return () -> {
 
             final CompletableFuture<T> promise = new CompletableFuture<>();
             try {
                 waitForPermission(rateLimiter);
                 supplier.get()
-                        .whenComplete(
-                                (result, throwable) -> {
-                                    if (throwable != null) {
-                                        promise.completeExceptionally(throwable);
-                                    } else {
-                                        promise.complete(result);
-                                    }
-                                }
-                        );
+                    .whenComplete(
+                        (result, throwable) -> {
+                            if (throwable != null) {
+                                promise.completeExceptionally(throwable);
+                            } else {
+                                promise.complete(result);
+                            }
+                        }
+                    );
             } catch (Exception exception) {
                 promise.completeExceptionally(exception);
             }
@@ -120,7 +119,7 @@ public interface RateLimiter {
      * @return a supplier which is restricted by a RateLimiter.
      */
     static <T> CheckedFunction0<T> decorateCheckedSupplier(RateLimiter rateLimiter,
-            CheckedFunction0<T> supplier) {
+        CheckedFunction0<T> supplier) {
         return () -> {
             waitForPermission(rateLimiter);
             return supplier.apply();
@@ -135,7 +134,7 @@ public interface RateLimiter {
      * @return a runnable which is restricted by a RateLimiter.
      */
     static CheckedRunnable decorateCheckedRunnable(RateLimiter rateLimiter,
-            CheckedRunnable runnable) {
+        CheckedRunnable runnable) {
 
         return () -> {
             waitForPermission(rateLimiter);
@@ -153,7 +152,7 @@ public interface RateLimiter {
      * @return a function which is restricted by a RateLimiter.
      */
     static <T, R> CheckedFunction1<T, R> decorateCheckedFunction(RateLimiter rateLimiter,
-            CheckedFunction1<T, R> function) {
+        CheckedFunction1<T, R> function) {
         return (T t) -> {
             waitForPermission(rateLimiter);
             return function.apply(t);
@@ -184,7 +183,7 @@ public interface RateLimiter {
      * @return a supplier which is restricted by a RateLimiter.
      */
     static <T> Supplier<Try<T>> decorateTrySupplier(RateLimiter rateLimiter,
-            Supplier<Try<T>> supplier) {
+        Supplier<Try<T>> supplier) {
         return () -> {
             try {
                 waitForPermission(rateLimiter);
@@ -204,7 +203,7 @@ public interface RateLimiter {
      * @return a supplier which is restricted by a RateLimiter.
      */
     static <T> Supplier<Either<Exception, T>> decorateEitherSupplier(RateLimiter rateLimiter,
-            Supplier<Either<? extends Exception, T>> supplier) {
+        Supplier<Either<? extends Exception, T>> supplier) {
         return () -> {
             try {
                 waitForPermission(rateLimiter);
@@ -261,7 +260,7 @@ public interface RateLimiter {
      * @return a function which is restricted by a RateLimiter.
      */
     static <T, R> Function<T, R> decorateFunction(RateLimiter rateLimiter,
-            Function<T, R> function) {
+        Function<T, R> function) {
         return (T t) -> {
             waitForPermission(rateLimiter);
             return function.apply(t);
@@ -273,8 +272,8 @@ public interface RateLimiter {
      *
      * @param rateLimiter the RateLimiter to get permission from
      * @throws RequestNotPermitted if waiting time elapsed before a permit was acquired.
-     * @throws AcquirePermissionCancelledException if thread was interrupted during
-     *         permission wait
+     * @throws AcquirePermissionCancelledException if thread was interrupted during permission
+     *     wait
      */
     static void waitForPermission(final RateLimiter rateLimiter) {
         boolean permission = rateLimiter.acquirePermission();
@@ -324,7 +323,7 @@ public interface RateLimiter {
      * interrupt status will be set.
      *
      * @return {@code true} if a permit was acquired and {@code false} if waiting timeoutDuration
-     *         elapsed before a permit was acquired
+     *     elapsed before a permit was acquired
      */
     boolean acquirePermission();
 
@@ -334,7 +333,7 @@ public interface RateLimiter {
      * {@link RateLimiterConfig#getTimeoutDuration()} is less then time to wait for permission.
      *
      * @return {@code long} amount of nanoseconds you should wait for reserved permission. if
-     *         negative, it means you failed to reserve.
+     *     negative, it means you failed to reserve.
      */
     long reservePermission();
 
@@ -396,7 +395,7 @@ public interface RateLimiter {
      * @return the result of the decorated Supplier.
      */
     default <T> Either<Exception, T> executeEitherSupplier(
-            Supplier<Either<? extends Exception, T>> supplier) {
+        Supplier<Either<? extends Exception, T>> supplier) {
         return decorateEitherSupplier(this, supplier).get();
     }
 
@@ -427,8 +426,7 @@ public interface RateLimiter {
      * @param checkedSupplier the original Supplier
      * @param <T> the type of results supplied by this supplier
      * @return the result of the decorated Supplier.
-     * @throws Throwable if something goes wrong applying this function to the given
-     *         arguments
+     * @throws Throwable if something goes wrong applying this function to the given arguments
      */
     default <T> T executeCheckedSupplier(CheckedFunction0<T> checkedSupplier) throws Throwable {
         return decorateCheckedSupplier(this, checkedSupplier).apply();

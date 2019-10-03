@@ -34,7 +34,7 @@ public class TimeLimiterImpl implements TimeLimiter {
             Future<T> future = futureSupplier.get();
             try {
                 T result = future.get(getTimeLimiterConfig().getTimeoutDuration().toMillis(),
-                        TimeUnit.MILLISECONDS);
+                    TimeUnit.MILLISECONDS);
                 onSuccess();
                 return result;
             } catch (TimeoutException e) {

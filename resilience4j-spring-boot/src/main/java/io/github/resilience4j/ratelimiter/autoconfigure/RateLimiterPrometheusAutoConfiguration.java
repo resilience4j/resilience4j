@@ -30,16 +30,16 @@ import org.springframework.context.annotation.Configuration;
  */
 @Configuration
 @ConditionalOnClass({RateLimiterMetricsCollector.class, RateLimiter.class,
-        RateLimiterMetricsCollector.class})
+    RateLimiterMetricsCollector.class})
 @ConditionalOnProperty(value = "resilience4j.ratelimiter.metrics.enabled", matchIfMissing = true)
 public class RateLimiterPrometheusAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
     public RateLimiterMetricsCollector rateLimiterPrometheusCollector(
-            RateLimiterRegistry rateLimiterRegistry) {
+        RateLimiterRegistry rateLimiterRegistry) {
         RateLimiterMetricsCollector collector = RateLimiterMetricsCollector
-                .ofRateLimiterRegistry(rateLimiterRegistry);
+            .ofRateLimiterRegistry(rateLimiterRegistry);
         collector.register();
         return collector;
     }

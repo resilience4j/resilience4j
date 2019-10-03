@@ -43,7 +43,7 @@ import org.reactivestreams.Publisher;
  * @param <T> the value type
  */
 public class RateLimiterOperator<T> implements FlowableTransformer<T, T>, SingleTransformer<T, T>,
-        MaybeTransformer<T, T>, CompletableTransformer, ObservableTransformer<T, T> {
+    MaybeTransformer<T, T>, CompletableTransformer, ObservableTransformer<T, T> {
 
     private final RateLimiter rateLimiter;
 

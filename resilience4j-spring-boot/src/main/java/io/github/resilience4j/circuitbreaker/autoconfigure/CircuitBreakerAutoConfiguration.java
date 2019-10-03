@@ -47,13 +47,13 @@ public class CircuitBreakerAutoConfiguration {
 
         @Bean
         public CircuitBreakerEndpoint circuitBreakerEndpoint(
-                CircuitBreakerRegistry circuitBreakerRegistry) {
+            CircuitBreakerRegistry circuitBreakerRegistry) {
             return new CircuitBreakerEndpoint(circuitBreakerRegistry);
         }
 
         @Bean
         public CircuitBreakerEventsEndpoint circuitBreakerEventsEndpoint(
-                EventConsumerRegistry<CircuitBreakerEvent> eventConsumerRegistry) {
+            EventConsumerRegistry<CircuitBreakerEvent> eventConsumerRegistry) {
             return new CircuitBreakerEventsEndpoint(eventConsumerRegistry);
         }
 

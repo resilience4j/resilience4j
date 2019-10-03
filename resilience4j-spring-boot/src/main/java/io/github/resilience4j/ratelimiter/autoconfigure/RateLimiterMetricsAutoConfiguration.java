@@ -45,7 +45,7 @@ public class RateLimiterMetricsAutoConfiguration {
     @ConditionalOnProperty(value = "resilience4j.ratelimiter.metrics.legacy.enabled", havingValue = "true")
     @ConditionalOnMissingBean
     public RateLimiterMetrics registerRateLimiterMetrics(RateLimiterRegistry rateLimiterRegistry,
-            MetricRegistry metricRegistry) {
+        MetricRegistry metricRegistry) {
         return RateLimiterMetrics.ofRateLimiterRegistry(rateLimiterRegistry, metricRegistry);
     }
 

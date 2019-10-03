@@ -9,13 +9,13 @@ public class IllegalStateTransitionExceptionTest {
     @Test
     public void shouldReturnCorrectMessage() {
         IllegalStateTransitionException illegalStateTransitionException = new IllegalStateTransitionException(
-                "testName", CircuitBreaker.State.OPEN,
-                CircuitBreaker.State.CLOSED);
+            "testName", CircuitBreaker.State.OPEN,
+            CircuitBreaker.State.CLOSED);
         assertThat(illegalStateTransitionException.getMessage()).isEqualTo(
-                "CircuitBreaker 'testName' tried an illegal state transition from OPEN to CLOSED");
+            "CircuitBreaker 'testName' tried an illegal state transition from OPEN to CLOSED");
         assertThat(illegalStateTransitionException.getFromState())
-                .isEqualTo(CircuitBreaker.State.OPEN);
+            .isEqualTo(CircuitBreaker.State.OPEN);
         assertThat(illegalStateTransitionException.getToState())
-                .isEqualTo(CircuitBreaker.State.CLOSED);
+            .isEqualTo(CircuitBreaker.State.CLOSED);
     }
 }

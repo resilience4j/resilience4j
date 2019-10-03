@@ -48,18 +48,18 @@ public class RateLimiterMetrics implements MetricSet {
     }
 
     private RateLimiterMetrics(String prefix, Iterable<RateLimiter> rateLimiters,
-            MetricRegistry metricRegistry) {
+        MetricRegistry metricRegistry) {
         requireNonNull(prefix, PREFIX_NULL);
         requireNonNull(rateLimiters, ITERABLE_NULL);
         requireNonNull(metricRegistry);
         this.metricRegistry = metricRegistry;
         rateLimiters.forEach(rateLimiter -> {
-                    String name = rateLimiter.getName();
-                    metricRegistry.register(name(prefix, name, WAITING_THREADS),
-                            (Gauge<Integer>) rateLimiter.getMetrics()::getNumberOfWaitingThreads);
-                    metricRegistry.register(name(prefix, name, AVAILABLE_PERMISSIONS),
-                            (Gauge<Integer>) rateLimiter.getMetrics()::getAvailablePermissions);
-                }
+                String name = rateLimiter.getName();
+                metricRegistry.register(name(prefix, name, WAITING_THREADS),
+                    (Gauge<Integer>) rateLimiter.getMetrics()::getNumberOfWaitingThreads);
+                metricRegistry.register(name(prefix, name, AVAILABLE_PERMISSIONS),
+                    (Gauge<Integer>) rateLimiter.getMetrics()::getAvailablePermissions);
+            }
         );
     }
 
@@ -72,9 +72,9 @@ public class RateLimiterMetrics implements MetricSet {
      * @param metricRegistry the metric registry
      */
     public static RateLimiterMetrics ofRateLimiterRegistry(String prefix,
-            RateLimiterRegistry rateLimiterRegistry, MetricRegistry metricRegistry) {
+        RateLimiterRegistry rateLimiterRegistry, MetricRegistry metricRegistry) {
         return new RateLimiterMetrics(prefix, rateLimiterRegistry.getAllRateLimiters(),
-                metricRegistry);
+            metricRegistry);
     }
 
     /**
@@ -85,9 +85,9 @@ public class RateLimiterMetrics implements MetricSet {
      * @param rateLimiterRegistry the registry of rate limiters
      */
     public static RateLimiterMetrics ofRateLimiterRegistry(String prefix,
-            RateLimiterRegistry rateLimiterRegistry) {
+        RateLimiterRegistry rateLimiterRegistry) {
         return new RateLimiterMetrics(prefix, rateLimiterRegistry.getAllRateLimiters(),
-                new MetricRegistry());
+            new MetricRegistry());
     }
 
     /**
@@ -98,9 +98,9 @@ public class RateLimiterMetrics implements MetricSet {
      * @param metricRegistry the metric registry
      */
     public static RateLimiterMetrics ofRateLimiterRegistry(RateLimiterRegistry rateLimiterRegistry,
-            MetricRegistry metricRegistry) {
+        MetricRegistry metricRegistry) {
         return new RateLimiterMetrics(DEFAULT_PREFIX, rateLimiterRegistry.getAllRateLimiters(),
-                metricRegistry);
+            metricRegistry);
     }
 
     /**
@@ -110,7 +110,7 @@ public class RateLimiterMetrics implements MetricSet {
      * @param rateLimiterRegistry the registry of rate limiters
      */
     public static RateLimiterMetrics ofRateLimiterRegistry(
-            RateLimiterRegistry rateLimiterRegistry) {
+        RateLimiterRegistry rateLimiterRegistry) {
         return new RateLimiterMetrics(rateLimiterRegistry.getAllRateLimiters());
     }
 

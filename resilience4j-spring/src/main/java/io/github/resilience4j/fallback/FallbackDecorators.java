@@ -39,14 +39,14 @@ public class FallbackDecorators {
      * @return a function which is decorated by a {@link FallbackMethod}
      */
     public CheckedFunction0<Object> decorate(FallbackMethod recoveryMethod,
-            CheckedFunction0<Object> supplier) {
+        CheckedFunction0<Object> supplier) {
         return get(recoveryMethod.getReturnType())
-                .decorate(recoveryMethod, supplier);
+            .decorate(recoveryMethod, supplier);
     }
 
     private FallbackDecorator get(Class<?> returnType) {
         return recoveryDecorator.stream().filter(it -> it.supports(returnType))
-                .findFirst()
-                .orElse(defaultRecoveryDecorator);
+            .findFirst()
+            .orElse(defaultRecoveryDecorator);
     }
 }

@@ -41,8 +41,8 @@ public class BulkheadEventPublisherTest {
     public void setUp() {
         helloWorldService = mock(HelloWorldService.class);
         config = BulkheadConfig.custom()
-                .maxConcurrentCalls(1)
-                .build();
+            .maxConcurrentCalls(1)
+            .build();
 
         bulkhead = Bulkhead.of("test", config);
 
@@ -65,8 +65,8 @@ public class BulkheadEventPublisherTest {
 
         // When
         bulkhead.getEventPublisher()
-                .onCallPermitted(event ->
-                        logger.info(event.getEventType().toString()));
+            .onCallPermitted(event ->
+                logger.info(event.getEventType().toString()));
 
         String result = bulkhead.executeSupplier(helloWorldService::returnHelloWorld);
 
@@ -83,8 +83,8 @@ public class BulkheadEventPublisherTest {
 
         // When
         bulkhead.getEventPublisher()
-                .onCallRejected(event ->
-                        logger.info(event.getEventType().toString()));
+            .onCallRejected(event ->
+                logger.info(event.getEventType().toString()));
 
         bulkhead.tryAcquirePermission();
 
@@ -101,8 +101,8 @@ public class BulkheadEventPublisherTest {
 
         // When
         bulkhead.getEventPublisher()
-                .onCallFinished(event ->
-                        logger.info(event.getEventType().toString()));
+            .onCallFinished(event ->
+                logger.info(event.getEventType().toString()));
 
         Try.ofSupplier(Bulkhead.decorateSupplier(bulkhead, helloWorldService::returnHelloWorld));
 
@@ -117,8 +117,8 @@ public class BulkheadEventPublisherTest {
 
         // When
         bulkhead.getEventPublisher()
-                .onCallFinished(event ->
-                        logger.info(event.getEventType().toString()));
+            .onCallFinished(event ->
+                logger.info(event.getEventType().toString()));
 
         bulkhead.onComplete();
 

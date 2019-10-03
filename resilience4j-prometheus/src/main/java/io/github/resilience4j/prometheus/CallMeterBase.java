@@ -47,7 +47,7 @@ public interface CallMeterBase {
      * @return the result of the decorated Supplier.
      */
     default <T> CompletionStage<T> executeCompletionStageSupplier(
-            Supplier<CompletionStage<T>> supplier) {
+        Supplier<CompletionStage<T>> supplier) {
         return CallMeter.decorateCompletionStageSupplier(this, supplier).get();
     }
 

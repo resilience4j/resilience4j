@@ -55,8 +55,8 @@ public class ConcurrentEvictingQueueBenchmark {
 
     public static void main(String[] args) throws RunnerException {
         Options options = new OptionsBuilder()
-                .include(".*" + ConcurrentEvictingQueueBenchmark.class.getSimpleName() + ".*")
-                .build();
+            .include(".*" + ConcurrentEvictingQueueBenchmark.class.getSimpleName() + ".*")
+            .build();
         new Runner(options).run();
     }
 

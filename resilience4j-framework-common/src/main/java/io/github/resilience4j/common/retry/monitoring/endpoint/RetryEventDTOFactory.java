@@ -34,26 +34,26 @@ public class RetryEventDTOFactory {
             case ERROR:
                 RetryOnErrorEvent onErrorEvent = (RetryOnErrorEvent) event;
                 return newRetryEventDTOBuilder(onErrorEvent)
-                        .throwable(onErrorEvent.getLastThrowable())
-                        .numberOfAttempts(onErrorEvent.getNumberOfRetryAttempts())
-                        .build();
+                    .throwable(onErrorEvent.getLastThrowable())
+                    .numberOfAttempts(onErrorEvent.getNumberOfRetryAttempts())
+                    .build();
             case SUCCESS:
                 RetryOnSuccessEvent onSuccessEvent = (RetryOnSuccessEvent) event;
                 return newRetryEventDTOBuilder(onSuccessEvent)
-                        .numberOfAttempts(onSuccessEvent.getNumberOfRetryAttempts())
-                        .throwable(onSuccessEvent.getLastThrowable())
-                        .build();
+                    .numberOfAttempts(onSuccessEvent.getNumberOfRetryAttempts())
+                    .throwable(onSuccessEvent.getLastThrowable())
+                    .build();
             case RETRY:
                 RetryOnRetryEvent onStateTransitionEvent = (RetryOnRetryEvent) event;
                 return newRetryEventDTOBuilder(onStateTransitionEvent)
-                        .throwable(onStateTransitionEvent.getLastThrowable())
-                        .numberOfAttempts(onStateTransitionEvent.getNumberOfRetryAttempts())
-                        .build();
+                    .throwable(onStateTransitionEvent.getLastThrowable())
+                    .numberOfAttempts(onStateTransitionEvent.getNumberOfRetryAttempts())
+                    .build();
             case IGNORED_ERROR:
                 RetryOnIgnoredErrorEvent onIgnoredErrorEvent = (RetryOnIgnoredErrorEvent) event;
                 return newRetryEventDTOBuilder(onIgnoredErrorEvent)
-                        .throwable(onIgnoredErrorEvent.getLastThrowable())
-                        .build();
+                    .throwable(onIgnoredErrorEvent.getLastThrowable())
+                    .build();
             default:
                 throw new IllegalArgumentException("Invalid event");
         }
@@ -61,6 +61,6 @@ public class RetryEventDTOFactory {
 
     private static RetryEventDTOBuilder newRetryEventDTOBuilder(RetryEvent event) {
         return new RetryEventDTOBuilder(event.getName(), event.getEventType(),
-                event.getCreationTime().toString());
+            event.getCreationTime().toString());
     }
 }

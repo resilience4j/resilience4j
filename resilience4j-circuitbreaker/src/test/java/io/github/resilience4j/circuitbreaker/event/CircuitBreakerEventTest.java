@@ -31,41 +31,41 @@ public class CircuitBreakerEventTest {
     @Test
     public void testCircuitBreakerOnErrorEvent() {
         CircuitBreakerOnErrorEvent circuitBreakerEvent = new CircuitBreakerOnErrorEvent("test",
-                Duration.ofSeconds(1), new IOException());
+            Duration.ofSeconds(1), new IOException());
         assertThat(circuitBreakerEvent.getCircuitBreakerName()).isEqualTo("test");
         assertThat(circuitBreakerEvent.getElapsedDuration().getSeconds()).isEqualTo(1);
         assertThat(circuitBreakerEvent.getThrowable()).isInstanceOf(IOException.class);
         assertThat(circuitBreakerEvent.getEventType()).isEqualTo(Type.ERROR);
         assertThat(circuitBreakerEvent.toString())
-                .contains("CircuitBreaker 'test' recorded an error: 'java.io.IOException'.");
+            .contains("CircuitBreaker 'test' recorded an error: 'java.io.IOException'.");
     }
 
     @Test
     public void testCircuitBreakerOnIgnoredErrorEvent() {
         CircuitBreakerOnIgnoredErrorEvent circuitBreakerEvent = new CircuitBreakerOnIgnoredErrorEvent(
-                "test",
-                Duration.ofSeconds(1), new IOException());
+            "test",
+            Duration.ofSeconds(1), new IOException());
 
         assertThat(circuitBreakerEvent.getCircuitBreakerName()).isEqualTo("test");
         assertThat(circuitBreakerEvent.getElapsedDuration().getSeconds()).isEqualTo(1);
         assertThat(circuitBreakerEvent.getThrowable()).isInstanceOf(IOException.class);
         assertThat(circuitBreakerEvent.getEventType()).isEqualTo(Type.IGNORED_ERROR);
         assertThat(circuitBreakerEvent.toString()).contains(
-                "CircuitBreaker 'test' recorded an error which has been ignored: 'java.io.IOException'.");
+            "CircuitBreaker 'test' recorded an error which has been ignored: 'java.io.IOException'.");
     }
 
     @Test
     public void testCircuitBreakerOnStateTransitionEvent() {
         CircuitBreakerOnStateTransitionEvent circuitBreakerEvent = new CircuitBreakerOnStateTransitionEvent(
-                "test",
-                StateTransition.CLOSED_TO_OPEN);
+            "test",
+            StateTransition.CLOSED_TO_OPEN);
 
         assertThat(circuitBreakerEvent.getCircuitBreakerName()).isEqualTo("test");
         assertThat(circuitBreakerEvent.getStateTransition())
-                .isEqualTo(StateTransition.CLOSED_TO_OPEN);
+            .isEqualTo(StateTransition.CLOSED_TO_OPEN);
         assertThat(circuitBreakerEvent.getEventType()).isEqualTo(Type.STATE_TRANSITION);
         assertThat(circuitBreakerEvent.toString())
-                .contains("CircuitBreaker 'test' changed state from CLOSED to OPEN");
+            .contains("CircuitBreaker 'test' changed state from CLOSED to OPEN");
     }
 
     @Test
@@ -80,24 +80,24 @@ public class CircuitBreakerEventTest {
     @Test
     public void testCircuitBreakerOnSuccessEvent() {
         CircuitBreakerOnSuccessEvent circuitBreakerEvent = new CircuitBreakerOnSuccessEvent("test",
-                Duration.ofSeconds(1));
+            Duration.ofSeconds(1));
 
         assertThat(circuitBreakerEvent.getCircuitBreakerName()).isEqualTo("test");
         assertThat(circuitBreakerEvent.getElapsedDuration().getSeconds()).isEqualTo(1);
         assertThat(circuitBreakerEvent.getEventType()).isEqualTo(Type.SUCCESS);
         assertThat(circuitBreakerEvent.toString())
-                .contains("CircuitBreaker 'test' recorded a successful call.");
+            .contains("CircuitBreaker 'test' recorded a successful call.");
     }
 
     @Test
     public void testCircuitBreakerOnCallNotPermittedEvent() {
         CircuitBreakerOnCallNotPermittedEvent circuitBreakerEvent = new CircuitBreakerOnCallNotPermittedEvent(
-                "test");
+            "test");
 
         assertThat(circuitBreakerEvent.getCircuitBreakerName()).isEqualTo("test");
         assertThat(circuitBreakerEvent.getEventType()).isEqualTo(Type.NOT_PERMITTED);
         assertThat(circuitBreakerEvent.toString())
-                .contains("CircuitBreaker 'test' recorded a call which was not permitted.");
+            .contains("CircuitBreaker 'test' recorded a call which was not permitted.");
     }
 
 }

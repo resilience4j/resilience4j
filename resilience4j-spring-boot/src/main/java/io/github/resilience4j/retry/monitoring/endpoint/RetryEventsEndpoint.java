@@ -48,37 +48,37 @@ public class RetryEventsEndpoint {
     @ResponseBody
     public RetryEventsEndpointResponse getAllRetryEvenets() {
         return new RetryEventsEndpointResponse(eventConsumerRegistry.getAllEventConsumer()
-                .flatMap(CircularEventConsumer::getBufferedEvents)
-                .sorted(Comparator.comparing(RetryEvent::getCreationTime))
-                .map(RetryEventDTOFactory::createRetryEventDTO).toJavaList());
+            .flatMap(CircularEventConsumer::getBufferedEvents)
+            .sorted(Comparator.comparing(RetryEvent::getCreationTime))
+            .map(RetryEventDTOFactory::createRetryEventDTO).toJavaList());
     }
 
     @GetMapping(value = "events/{name}", produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
     public RetryEventsEndpointResponse getEventsFilteredByRetryrName(
-            @PathVariable("name") String name) {
+        @PathVariable("name") String name) {
         return new RetryEventsEndpointResponse(getRetryEvents(name)
-                .map(RetryEventDTOFactory::createRetryEventDTO).toJavaList());
+            .map(RetryEventDTOFactory::createRetryEventDTO).toJavaList());
 
     }
 
     @GetMapping(value = "events/{name}/{eventType}", produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
     public RetryEventsEndpointResponse getEventsFilteredByRetryNameAndEventType(
-            @PathVariable("name") String name,
-            @PathVariable("eventType") String eventType) {
+        @PathVariable("name") String name,
+        @PathVariable("eventType") String eventType) {
         return new RetryEventsEndpointResponse(getRetryEvents(name)
-                .filter(event -> event.getEventType() == RetryEvent.Type
-                        .valueOf(eventType.toUpperCase()))
-                .map(RetryEventDTOFactory::createRetryEventDTO).toJavaList());
+            .filter(event -> event.getEventType() == RetryEvent.Type
+                .valueOf(eventType.toUpperCase()))
+            .map(RetryEventDTOFactory::createRetryEventDTO).toJavaList());
     }
 
     private List<RetryEvent> getRetryEvents(String name) {
         final CircularEventConsumer<RetryEvent> syncEvents = eventConsumerRegistry
-                .getEventConsumer(name);
+            .getEventConsumer(name);
         if (syncEvents != null) {
             return syncEvents.getBufferedEvents()
-                    .filter(event -> event.getName().equals(name));
+                .filter(event -> event.getName().equals(name));
         } else {
             return List.empty();
         }

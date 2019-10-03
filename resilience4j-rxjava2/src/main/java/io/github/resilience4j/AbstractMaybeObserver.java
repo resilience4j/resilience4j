@@ -5,7 +5,7 @@ import static java.util.Objects.requireNonNull;
 import io.reactivex.MaybeObserver;
 
 public abstract class AbstractMaybeObserver<T> extends AbstractDisposable implements
-        MaybeObserver<T> {
+    MaybeObserver<T> {
 
     private final MaybeObserver<? super T> downstreamObserver;
 

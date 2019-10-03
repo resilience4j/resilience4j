@@ -38,7 +38,7 @@ public class BulkheadMetricsTest extends AbstractBulkheadMetricsTest {
         BulkheadRegistry bulkheadRegistry = BulkheadRegistry.ofDefaults();
         Bulkhead bulkhead = bulkheadRegistry.bulkhead("testBulkhead");
         metricRegistry.registerAll(
-                BulkheadMetrics.ofIterable(prefix, bulkheadRegistry.getAllBulkheads()));
+            BulkheadMetrics.ofIterable(prefix, bulkheadRegistry.getAllBulkheads()));
 
         return bulkhead;
     }

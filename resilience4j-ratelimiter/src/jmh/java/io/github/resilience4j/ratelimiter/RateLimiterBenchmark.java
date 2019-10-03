@@ -59,20 +59,20 @@ public class RateLimiterBenchmark {
 
     public static void main(String[] args) throws RunnerException {
         Options options = new OptionsBuilder()
-                .addProfiler(GCProfiler.class)
-                .build();
+            .addProfiler(GCProfiler.class)
+            .build();
         new Runner(options).run();
     }
 
     @Setup
     public void setUp() {
         RateLimiterConfig rateLimiterConfig = RateLimiterConfig.custom()
-                .limitForPeriod(Integer.MAX_VALUE)
-                .limitRefreshPeriod(Duration.ofNanos(10))
-                .timeoutDuration(Duration.ofSeconds(5))
-                .build();
+            .limitForPeriod(Integer.MAX_VALUE)
+            .limitRefreshPeriod(Duration.ofNanos(10))
+            .timeoutDuration(Duration.ofSeconds(5))
+            .build();
         semaphoreBasedRateLimiter = new SemaphoreBasedRateLimiter("semaphoreBased",
-                rateLimiterConfig);
+            rateLimiterConfig);
         atomicRateLimiter = new AtomicRateLimiter("atomicBased", rateLimiterConfig);
 
         Supplier<String> stringSupplier = () -> {
@@ -80,7 +80,7 @@ public class RateLimiterBenchmark {
             return "Hello Benchmark";
         };
         semaphoreGuardedSupplier = RateLimiter
-                .decorateSupplier(semaphoreBasedRateLimiter, stringSupplier);
+            .decorateSupplier(semaphoreBasedRateLimiter, stringSupplier);
         atomicGuardedSupplier = RateLimiter.decorateSupplier(atomicRateLimiter, stringSupplier);
     }
 

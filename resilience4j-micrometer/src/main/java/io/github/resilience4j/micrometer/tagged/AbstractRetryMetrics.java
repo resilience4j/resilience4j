@@ -37,29 +37,29 @@ abstract class AbstractRetryMetrics extends AbstractMetrics {
         Set<Meter.Id> idSet = new HashSet<>();
 
         idSet.add(Gauge.builder(names.getCallsMetricName(), retry,
-                rt -> rt.getMetrics().getNumberOfSuccessfulCallsWithoutRetryAttempt())
-                .description("The number of successful calls without a retry attempt")
-                .tag(TagNames.NAME, retry.getName())
-                .tag(TagNames.KIND, "successful_without_retry")
-                .register(meterRegistry).getId());
+            rt -> rt.getMetrics().getNumberOfSuccessfulCallsWithoutRetryAttempt())
+            .description("The number of successful calls without a retry attempt")
+            .tag(TagNames.NAME, retry.getName())
+            .tag(TagNames.KIND, "successful_without_retry")
+            .register(meterRegistry).getId());
         idSet.add(Gauge.builder(names.getCallsMetricName(), retry,
-                rt -> rt.getMetrics().getNumberOfSuccessfulCallsWithRetryAttempt())
-                .description("The number of successful calls after a retry attempt")
-                .tag(TagNames.NAME, retry.getName())
-                .tag(TagNames.KIND, "successful_with_retry")
-                .register(meterRegistry).getId());
+            rt -> rt.getMetrics().getNumberOfSuccessfulCallsWithRetryAttempt())
+            .description("The number of successful calls after a retry attempt")
+            .tag(TagNames.NAME, retry.getName())
+            .tag(TagNames.KIND, "successful_with_retry")
+            .register(meterRegistry).getId());
         idSet.add(Gauge.builder(names.getCallsMetricName(), retry,
-                rt -> rt.getMetrics().getNumberOfFailedCallsWithoutRetryAttempt())
-                .description("The number of failed calls without a retry attempt")
-                .tag(TagNames.NAME, retry.getName())
-                .tag(TagNames.KIND, "failed_without_retry")
-                .register(meterRegistry).getId());
+            rt -> rt.getMetrics().getNumberOfFailedCallsWithoutRetryAttempt())
+            .description("The number of failed calls without a retry attempt")
+            .tag(TagNames.NAME, retry.getName())
+            .tag(TagNames.KIND, "failed_without_retry")
+            .register(meterRegistry).getId());
         idSet.add(Gauge.builder(names.getCallsMetricName(), retry,
-                rt -> rt.getMetrics().getNumberOfFailedCallsWithRetryAttempt())
-                .description("The number of failed calls after a retry attempt")
-                .tag(TagNames.NAME, retry.getName())
-                .tag(TagNames.KIND, "failed_with_retry")
-                .register(meterRegistry).getId());
+            rt -> rt.getMetrics().getNumberOfFailedCallsWithRetryAttempt())
+            .description("The number of failed calls after a retry attempt")
+            .tag(TagNames.NAME, retry.getName())
+            .tag(TagNames.KIND, "failed_with_retry")
+            .register(meterRegistry).getId());
 
         meterIdMap.put(retry.getName(), idSet);
     }

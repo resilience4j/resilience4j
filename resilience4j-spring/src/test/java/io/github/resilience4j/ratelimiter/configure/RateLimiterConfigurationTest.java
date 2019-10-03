@@ -42,8 +42,8 @@ public class RateLimiterConfigurationTest {
 
         //When
         RateLimiterRegistry rateLimiterRegistry = rateLimiterConfiguration
-                .rateLimiterRegistry(rateLimiterConfigurationProperties, eventConsumerRegistry,
-                        new CompositeRegistryEventConsumer<>(emptyList()));
+            .rateLimiterRegistry(rateLimiterConfigurationProperties, eventConsumerRegistry,
+                new CompositeRegistryEventConsumer<>(emptyList()));
 
         //Then
         assertThat(rateLimiterConfigurationProperties.getRateLimiterAspectOrder()).isEqualTo(300);
@@ -87,17 +87,17 @@ public class RateLimiterConfigurationTest {
         rateLimiterConfigurationProperties.getConfigs().put("sharedConfig", sharedProperties);
 
         rateLimiterConfigurationProperties.getInstances()
-                .put("backendWithDefaultConfig", backendWithDefaultConfig);
+            .put("backendWithDefaultConfig", backendWithDefaultConfig);
         rateLimiterConfigurationProperties.getInstances()
-                .put("backendWithSharedConfig", backendWithSharedConfig);
+            .put("backendWithSharedConfig", backendWithSharedConfig);
 
         RateLimiterConfiguration rateLimiterConfiguration = new RateLimiterConfiguration();
         DefaultEventConsumerRegistry<RateLimiterEvent> eventConsumerRegistry = new DefaultEventConsumerRegistry<>();
 
         //When
         RateLimiterRegistry rateLimiterRegistry = rateLimiterConfiguration
-                .rateLimiterRegistry(rateLimiterConfigurationProperties, eventConsumerRegistry,
-                        new CompositeRegistryEventConsumer<>(emptyList()));
+            .rateLimiterRegistry(rateLimiterConfigurationProperties, eventConsumerRegistry,
+                new CompositeRegistryEventConsumer<>(emptyList()));
 
         //Then
         assertThat(rateLimiterRegistry.getAllRateLimiters().size()).isEqualTo(2);
@@ -107,14 +107,14 @@ public class RateLimiterConfigurationTest {
         assertThat(rateLimiter1).isNotNull();
         assertThat(rateLimiter1.getRateLimiterConfig().getLimitForPeriod()).isEqualTo(200);
         assertThat(rateLimiter1.getRateLimiterConfig().getLimitRefreshPeriod())
-                .isEqualTo(Duration.ofMillis(5));
+            .isEqualTo(Duration.ofMillis(5));
 
         // Should get shared config and override LimitForPeriod
         RateLimiter rateLimiter2 = rateLimiterRegistry.rateLimiter("backendWithSharedConfig");
         assertThat(rateLimiter2).isNotNull();
         assertThat(rateLimiter2.getRateLimiterConfig().getLimitForPeriod()).isEqualTo(300);
         assertThat(rateLimiter2.getRateLimiterConfig().getLimitRefreshPeriod())
-                .isEqualTo(Duration.ofMillis(6));
+            .isEqualTo(Duration.ofMillis(6));
 
         // Unknown backend should get default config of Registry
         RateLimiter rerateLimiter3 = rateLimiterRegistry.rateLimiter("unknownBackend");
@@ -137,10 +137,10 @@ public class RateLimiterConfigurationTest {
 
         //When
         assertThatThrownBy(() -> rateLimiterConfiguration
-                .rateLimiterRegistry(rateLimiterConfigurationProperties, eventConsumerRegistry,
-                        new CompositeRegistryEventConsumer<>(emptyList())))
-                .isInstanceOf(ConfigurationNotFoundException.class)
-                .hasMessage("Configuration with name 'unknownConfig' does not exist");
+            .rateLimiterRegistry(rateLimiterConfigurationProperties, eventConsumerRegistry,
+                new CompositeRegistryEventConsumer<>(emptyList())))
+            .isInstanceOf(ConfigurationNotFoundException.class)
+            .hasMessage("Configuration with name 'unknownConfig' does not exist");
     }
 
 }

@@ -53,10 +53,10 @@ public class RxJava2RetryAspectExtTest {
 
         when(proceedingJoinPoint.proceed()).thenReturn(Single.just("Test"));
         assertThat(rxJava2RetryAspectExt.handle(proceedingJoinPoint, retry, "testMethod"))
-                .isNotNull();
+            .isNotNull();
 
         when(proceedingJoinPoint.proceed()).thenReturn(Flowable.just("Test"));
         assertThat(rxJava2RetryAspectExt.handle(proceedingJoinPoint, retry, "testMethod"))
-                .isNotNull();
+            .isNotNull();
     }
 }

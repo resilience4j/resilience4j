@@ -35,10 +35,11 @@ public class RetryOnErrorEvent extends AbstractRetryEvent {
     @Override
     public String toString() {
         return String
-                .format("%s: Retry '%s' recorded a failed retry attempt. Number of retry attempts: '%d', Last exception was: '%s'.",
-                        getCreationTime(),
-                        getName(),
-                        getNumberOfRetryAttempts(),
-                        getLastThrowable() != null ? getLastThrowable().toString() : "null");
+            .format(
+                "%s: Retry '%s' recorded a failed retry attempt. Number of retry attempts: '%d', Last exception was: '%s'.",
+                getCreationTime(),
+                getName(),
+                getNumberOfRetryAttempts(),
+                getLastThrowable() != null ? getLastThrowable().toString() : "null");
     }
 }

@@ -44,9 +44,9 @@ public class CircuitBreakerOnSuccessEvent extends AbstractCircuitBreakerEvent {
     @Override
     public String toString() {
         return String
-                .format("%s: CircuitBreaker '%s' recorded a successful call. Elapsed time: %s ms",
-                        getCreationTime(),
-                        getCircuitBreakerName(),
-                        getElapsedDuration().toMillis());
+            .format("%s: CircuitBreaker '%s' recorded a successful call. Elapsed time: %s ms",
+                getCreationTime(),
+                getCircuitBreakerName(),
+                getElapsedDuration().toMillis());
     }
 }

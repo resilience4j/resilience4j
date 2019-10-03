@@ -35,34 +35,34 @@ public class RateLimitersHealthIndicator implements HealthIndicator {
     private final HealthAggregator healthAggregator;
 
     public RateLimitersHealthIndicator(RateLimiterRegistry rateLimiterRegistry,
-            RateLimiterConfigurationProperties rateLimiterProperties,
-            HealthAggregator healthAggregator) {
+        RateLimiterConfigurationProperties rateLimiterProperties,
+        HealthAggregator healthAggregator) {
         this.rateLimiterRegistry = rateLimiterRegistry;
         this.rateLimiterProperties = rateLimiterProperties;
         this.healthAggregator = healthAggregator;
     }
 
     private static Health rateLimiterHealth(Status status, int availablePermissions,
-            int numberOfWaitingThreads) {
+        int numberOfWaitingThreads) {
         return Health.status(status)
-                .withDetail("availablePermissions", availablePermissions)
-                .withDetail("numberOfWaitingThreads", numberOfWaitingThreads)
-                .build();
+            .withDetail("availablePermissions", availablePermissions)
+            .withDetail("numberOfWaitingThreads", numberOfWaitingThreads)
+            .build();
     }
 
     @Override
     public Health health() {
         Map<String, Health> healths = rateLimiterRegistry.getAllRateLimiters().toJavaStream()
-                .filter(this::isRegisterHealthIndicator)
-                .collect(Collectors.toMap(RateLimiter::getName, this::mapRateLimiterHealth));
+            .filter(this::isRegisterHealthIndicator)
+            .collect(Collectors.toMap(RateLimiter::getName, this::mapRateLimiterHealth));
 
         return healthAggregator.aggregate(healths);
     }
 
     private boolean isRegisterHealthIndicator(RateLimiter rateLimiter) {
         return rateLimiterProperties.findRateLimiterProperties(rateLimiter.getName())
-                .map(InstanceProperties::getRegisterHealthIndicator)
-                .orElse(false);
+            .map(InstanceProperties::getRegisterHealthIndicator)
+            .orElse(false);
     }
 
     private Health mapRateLimiterHealth(RateLimiter rateLimiter) {
@@ -77,7 +77,7 @@ public class RateLimitersHealthIndicator implements HealthIndicator {
         if (rateLimiter instanceof AtomicRateLimiter) {
             AtomicRateLimiter atomicRateLimiter = (AtomicRateLimiter) rateLimiter;
             AtomicRateLimiter.AtomicRateLimiterMetrics detailedMetrics = atomicRateLimiter
-                    .getDetailedMetrics();
+                .getDetailedMetrics();
             if (detailedMetrics.getNanosToWait() > timeoutInNanos) {
                 return rateLimiterHealth(Status.DOWN, availablePermissions, numberOfWaitingThreads);
             }

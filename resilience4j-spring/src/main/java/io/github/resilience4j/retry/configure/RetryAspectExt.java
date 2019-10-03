@@ -26,5 +26,5 @@ public interface RetryAspectExt {
     boolean canHandleReturnType(Class returnType);
 
     Object handle(ProceedingJoinPoint proceedingJoinPoint, Retry retry, String methodName)
-            throws Throwable;
+        throws Throwable;
 }

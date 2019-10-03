@@ -40,7 +40,7 @@ public class RateLimiterEndpoint extends AbstractEndpoint {
     @Override
     public Object invoke() {
         List<String> names = rateLimiterRegistry.getAllRateLimiters()
-                .map(RateLimiter::getName).sorted().toJavaList();
+            .map(RateLimiter::getName).sorted().toJavaList();
         return ResponseEntity.ok(new RateLimiterEndpointResponse(names));
     }
 }

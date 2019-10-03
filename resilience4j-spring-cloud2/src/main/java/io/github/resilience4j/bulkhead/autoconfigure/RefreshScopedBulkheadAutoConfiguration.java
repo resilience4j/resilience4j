@@ -14,6 +14,6 @@ import org.springframework.context.annotation.Configuration;
 @AutoConfigureAfter(RefreshAutoConfiguration.class)
 @AutoConfigureBefore(BulkheadAutoConfiguration.class)
 public class RefreshScopedBulkheadAutoConfiguration extends
-        AbstractRefreshScopedBulkheadConfiguration {
+    AbstractRefreshScopedBulkheadConfiguration {
 
 }

@@ -32,7 +32,7 @@ import org.springframework.context.annotation.Configuration;
  */
 @Configuration
 @ConditionalOnClass({GaugeMetricFamily.class, CircuitBreaker.class,
-        CircuitBreakerMetricsPublisher.class})
+    CircuitBreakerMetricsPublisher.class})
 @ConditionalOnProperty(value = "resilience4j.circuitbreaker.metrics.enabled", matchIfMissing = true)
 public class CircuitBreakerPrometheusAutoConfiguration {
 
@@ -40,9 +40,9 @@ public class CircuitBreakerPrometheusAutoConfiguration {
     @ConditionalOnProperty(value = "resilience4j.circuitbreaker.metrics.legacy.enabled", havingValue = "true")
     @ConditionalOnMissingBean
     public CircuitBreakerMetricsCollector circuitBreakerPrometheusCollector(
-            CircuitBreakerRegistry circuitBreakerRegistry) {
+        CircuitBreakerRegistry circuitBreakerRegistry) {
         CircuitBreakerMetricsCollector collector = CircuitBreakerMetricsCollector
-                .ofCircuitBreakerRegistry(circuitBreakerRegistry);
+            .ofCircuitBreakerRegistry(circuitBreakerRegistry);
         collector.register();
         return collector;
     }

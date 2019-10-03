@@ -17,7 +17,7 @@ public class RetryEventDTOFactoryTest {
     @Test
     public void shouldMapRetryOnSuccessEvent() {
         RetryOnSuccessEvent event = new RetryOnSuccessEvent("name", 1,
-                new IOException("Error Message"));
+            new IOException("Error Message"));
 
         RetryEventDTO retryEventDTO = RetryEventDTOFactory.createRetryEventDTO(event);
 
@@ -31,7 +31,7 @@ public class RetryEventDTOFactoryTest {
     @Test
     public void shouldMapRetryOnErrorEvent() {
         RetryOnErrorEvent event = new RetryOnErrorEvent("name", 1,
-                new IOException("Error Message"));
+            new IOException("Error Message"));
 
         RetryEventDTO retryEventDTO = RetryEventDTOFactory.createRetryEventDTO(event);
 
@@ -45,7 +45,7 @@ public class RetryEventDTOFactoryTest {
     @Test
     public void shouldMapRetryOnIgnoredErrorEvent() {
         RetryOnIgnoredErrorEvent event = new RetryOnIgnoredErrorEvent("name",
-                new IOException("Error Message"));
+            new IOException("Error Message"));
 
         RetryEventDTO retryEventDTO = RetryEventDTOFactory.createRetryEventDTO(event);
 
@@ -59,7 +59,7 @@ public class RetryEventDTOFactoryTest {
     @Test
     public void shouldMapRetryOnRetryEvent() {
         RetryOnRetryEvent event = new RetryOnRetryEvent("name", 1, new IOException("Error Message"),
-                5000);
+            5000);
 
         RetryEventDTO retryEventDTO = RetryEventDTOFactory.createRetryEventDTO(event);
 

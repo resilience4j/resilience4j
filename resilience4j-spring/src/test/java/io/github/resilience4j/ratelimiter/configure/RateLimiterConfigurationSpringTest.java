@@ -35,7 +35,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(classes = {
-        RateLimiterConfigurationSpringTest.ConfigWithOverrides.class
+    RateLimiterConfigurationSpringTest.ConfigWithOverrides.class
 })
 public class RateLimiterConfigurationSpringTest {
 
@@ -72,11 +72,11 @@ public class RateLimiterConfigurationSpringTest {
 
         @Bean
         public RateLimiterAspect rateLimiterAspect(RateLimiterRegistry rateLimiterRegistry,
-                @Autowired(required = false) List<RateLimiterAspectExt> rateLimiterAspectExts,
-                FallbackDecorators recoveryDecorators) {
+            @Autowired(required = false) List<RateLimiterAspectExt> rateLimiterAspectExts,
+            FallbackDecorators recoveryDecorators) {
             rateLimiterAspect = new RateLimiterAspect(rateLimiterRegistry,
-                    rateLimiterConfigurationProperties(), rateLimiterAspectExts,
-                    recoveryDecorators);
+                rateLimiterConfigurationProperties(), rateLimiterAspectExts,
+                recoveryDecorators);
             return rateLimiterAspect;
         }
 
@@ -93,7 +93,7 @@ public class RateLimiterConfigurationSpringTest {
         }
 
         private class RateLimiterConfigurationPropertiesTest extends
-                RateLimiterConfigurationProperties {
+            RateLimiterConfigurationProperties {
 
             RateLimiterConfigurationPropertiesTest() {
                 InstanceProperties instanceProperties = new InstanceProperties();

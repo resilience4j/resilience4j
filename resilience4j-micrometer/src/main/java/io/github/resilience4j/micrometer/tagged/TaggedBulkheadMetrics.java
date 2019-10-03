@@ -54,7 +54,7 @@ public class TaggedBulkheadMetrics extends AbstractBulkheadMetrics implements Me
      * @return The {@link TaggedBulkheadMetrics} instance.
      */
     public static TaggedBulkheadMetrics ofBulkheadRegistry(MetricNames names,
-            BulkheadRegistry bulkheadRegistry) {
+        BulkheadRegistry bulkheadRegistry) {
         return new TaggedBulkheadMetrics(names, bulkheadRegistry);
     }
 
@@ -64,9 +64,9 @@ public class TaggedBulkheadMetrics extends AbstractBulkheadMetrics implements Me
             addMetrics(registry, bulkhead);
         }
         bulkheadRegistry.getEventPublisher()
-                .onEntryAdded(event -> addMetrics(registry, event.getAddedEntry()));
+            .onEntryAdded(event -> addMetrics(registry, event.getAddedEntry()));
         bulkheadRegistry.getEventPublisher().onEntryRemoved(
-                event -> removeMetrics(registry, event.getRemovedEntry().getName()));
+            event -> removeMetrics(registry, event.getRemovedEntry().getName()));
         bulkheadRegistry.getEventPublisher().onEntryReplaced(event -> {
             removeMetrics(registry, event.getOldEntry().getName());
             addMetrics(registry, event.getNewEntry());

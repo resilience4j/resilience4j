@@ -23,7 +23,7 @@ import org.reactivestreams.tck.TestEnvironment;
 import reactor.core.publisher.MonoProcessor;
 
 public class CircuitBreakerSubscriberWhiteboxVerification extends
-        SubscriberWhiteboxVerification<Integer> {
+    SubscriberWhiteboxVerification<Integer> {
 
     public CircuitBreakerSubscriberWhiteboxVerification() {
         super(new TestEnvironment());
@@ -32,7 +32,7 @@ public class CircuitBreakerSubscriberWhiteboxVerification extends
     @Override
     public Subscriber<Integer> createSubscriber(WhiteboxSubscriberProbe<Integer> probe) {
         return new CircuitBreakerSubscriber<Integer>(CircuitBreaker.ofDefaults("verification"),
-                MonoProcessor.create(), false) {
+            MonoProcessor.create(), false) {
 
             @Override
             protected void hookOnSubscribe(Subscription subscription) {

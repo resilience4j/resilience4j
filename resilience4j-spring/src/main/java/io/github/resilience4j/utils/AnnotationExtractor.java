@@ -31,7 +31,7 @@ public class AnnotationExtractor {
                 annotation = targetClass.getDeclaredAnnotation(annotationClass);
                 if (annotation == null && logger.isDebugEnabled()) {
                     logger.debug("TargetClass has no declared annotation '{}'",
-                            annotationClass.getSimpleName());
+                        annotationClass.getSimpleName());
                 }
             }
         }
@@ -46,7 +46,7 @@ public class AnnotationExtractor {
      */
     @Nullable
     public static <T extends Annotation> T extractAnnotationFromProxy(Object targetProxy,
-            Class<T> annotationClass) {
+        Class<T> annotationClass) {
         if (targetProxy.getClass().getInterfaces().length == 1) {
             return extract(targetProxy.getClass().getInterfaces()[0], annotationClass);
         } else if (targetProxy.getClass().getInterfaces().length > 1) {
@@ -58,7 +58,7 @@ public class AnnotationExtractor {
 
     @Nullable
     private static <T extends Annotation> T extractAnnotationFromClosestMatch(Object targetProxy,
-            Class<T> annotationClass) {
+        Class<T> annotationClass) {
         int numberOfImplementations = targetProxy.getClass().getInterfaces().length;
         for (int depth = 0; depth < numberOfImplementations; depth++) {
             T annotation = extract(targetProxy.getClass().getInterfaces()[depth], annotationClass);

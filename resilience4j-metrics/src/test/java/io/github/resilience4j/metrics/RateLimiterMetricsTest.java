@@ -29,7 +29,7 @@ public class RateLimiterMetricsTest extends AbstractRateLimiterMetricsTest {
         RateLimiterRegistry rateLimiterRegistry = RateLimiterRegistry.ofDefaults();
         RateLimiter rateLimiter = rateLimiterRegistry.rateLimiter("testLimit");
         metricRegistry.registerAll(
-                RateLimiterMetrics.ofIterable(prefix, rateLimiterRegistry.getAllRateLimiters()));
+            RateLimiterMetrics.ofIterable(prefix, rateLimiterRegistry.getAllRateLimiters()));
 
         return rateLimiter;
     }

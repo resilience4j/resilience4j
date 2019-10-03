@@ -51,7 +51,7 @@ public class RetryOperator<T> implements UnaryOperator<Publisher<T>> {
      * to handle checked exception handling in reactor Function java 8 doOnNext
      */
     private static <T> Consumer<T> throwingConsumerWrapper(
-            ThrowingConsumer<T, Exception> throwingConsumer) {
+        ThrowingConsumer<T, Exception> throwingConsumer) {
 
         return i -> {
             try {
@@ -68,14 +68,14 @@ public class RetryOperator<T> implements UnaryOperator<Publisher<T>> {
             Context<T> context = new Context<>(retry.context());
             Mono<T> upstream = (Mono<T>) publisher;
             return upstream.doOnNext(context::throwExceptionToForceRetryOnResult)
-                    .retryWhen(errors -> errors.doOnNext(throwingConsumerWrapper(context::onError)))
-                    .doOnSuccess(t -> context.onComplete());
+                .retryWhen(errors -> errors.doOnNext(throwingConsumerWrapper(context::onError)))
+                .doOnSuccess(t -> context.onComplete());
         } else if (publisher instanceof Flux) {
             Context<T> context = new Context<>(retry.context());
             Flux<T> upstream = (Flux<T>) publisher;
             return upstream.doOnNext(context::throwExceptionToForceRetryOnResult)
-                    .retryWhen(errors -> errors.doOnNext(throwingConsumerWrapper(context::onError)))
-                    .doOnComplete(context::onComplete);
+                .retryWhen(errors -> errors.doOnNext(throwingConsumerWrapper(context::onError)))
+                .doOnComplete(context::onComplete);
         } else {
             throw new IllegalPublisherException(publisher);
         }
@@ -131,7 +131,7 @@ public class RetryOperator<T> implements UnaryOperator<Publisher<T>> {
 
         private Exception castToException(Throwable throwable) {
             return throwable instanceof Exception ? (Exception) throwable
-                    : new Exception(throwable);
+                : new Exception(throwable);
         }
 
         private static class RetryDueToResultException extends RuntimeException {

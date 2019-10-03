@@ -32,7 +32,7 @@ public class CircuitBreakerMetricsCollector extends AbstractCircuitBreakerMetric
     private final CircuitBreakerRegistry circuitBreakerRegistry;
 
     private CircuitBreakerMetricsCollector(MetricNames names,
-            CircuitBreakerRegistry circuitBreakerRegistry) {
+        CircuitBreakerRegistry circuitBreakerRegistry) {
         super(names);
         this.circuitBreakerRegistry = requireNonNull(circuitBreakerRegistry);
 
@@ -40,7 +40,7 @@ public class CircuitBreakerMetricsCollector extends AbstractCircuitBreakerMetric
             addMetrics(circuitBreaker);
         }
         circuitBreakerRegistry.getEventPublisher()
-                .onEntryAdded(event -> addMetrics(event.getAddedEntry()));
+            .onEntryAdded(event -> addMetrics(event.getAddedEntry()));
     }
 
     /**
@@ -51,7 +51,7 @@ public class CircuitBreakerMetricsCollector extends AbstractCircuitBreakerMetric
      * @param circuitBreakerRegistry the source of circuit breakers
      */
     public static CircuitBreakerMetricsCollector ofCircuitBreakerRegistry(MetricNames names,
-            CircuitBreakerRegistry circuitBreakerRegistry) {
+        CircuitBreakerRegistry circuitBreakerRegistry) {
         return new CircuitBreakerMetricsCollector(names, circuitBreakerRegistry);
     }
 
@@ -61,16 +61,16 @@ public class CircuitBreakerMetricsCollector extends AbstractCircuitBreakerMetric
      * @param circuitBreakerRegistry the source of circuit breakers
      */
     public static CircuitBreakerMetricsCollector ofCircuitBreakerRegistry(
-            CircuitBreakerRegistry circuitBreakerRegistry) {
+        CircuitBreakerRegistry circuitBreakerRegistry) {
         return new CircuitBreakerMetricsCollector(MetricNames.ofDefaults(), circuitBreakerRegistry);
     }
 
     @Override
     public List<MetricFamilySamples> collect() {
         List<MetricFamilySamples> samples = Collections
-                .list(collectorRegistry.metricFamilySamples());
+            .list(collectorRegistry.metricFamilySamples());
         samples.addAll(
-                collectGaugeSamples(circuitBreakerRegistry.getAllCircuitBreakers().asJava()));
+            collectGaugeSamples(circuitBreakerRegistry.getAllCircuitBreakers().asJava()));
         return samples;
     }
 

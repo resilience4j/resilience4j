@@ -57,11 +57,11 @@ public class CircuitBreakerConfig {
     private int minimumNumberOfCalls = DEFAULT_MINIMUM_NUMBER_OF_CALLS;
     private boolean writableStackTraceEnabled = DEFAULT_WRITABLE_STACK_TRACE_ENABLED;
     private Duration waitDurationInOpenState = Duration
-            .ofSeconds(DEFAULT_WAIT_DURATION_IN_OPEN_STATE);
+        .ofSeconds(DEFAULT_WAIT_DURATION_IN_OPEN_STATE);
     private boolean automaticTransitionFromOpenToHalfOpenEnabled = false;
     private float slowCallRateThreshold = DEFAULT_SLOW_CALL_RATE_THRESHOLD;
     private Duration slowCallDurationThreshold = Duration
-            .ofSeconds(DEFAULT_SLOW_CALL_DURATION_THRESHOLD);
+        .ofSeconds(DEFAULT_SLOW_CALL_DURATION_THRESHOLD);
 
 
     private CircuitBreakerConfig() {
@@ -166,12 +166,12 @@ public class CircuitBreakerConfig {
         private int permittedNumberOfCallsInHalfOpenState = DEFAULT_PERMITTED_CALLS_IN_HALF_OPEN_STATE;
         private int slidingWindowSize = DEFAULT_SLIDING_WINDOW_SIZE;
         private Duration waitDurationInOpenState = Duration
-                .ofSeconds(DEFAULT_SLOW_CALL_DURATION_THRESHOLD);
+            .ofSeconds(DEFAULT_SLOW_CALL_DURATION_THRESHOLD);
         private boolean automaticTransitionFromOpenToHalfOpenEnabled = false;
         private SlidingWindowType slidingWindowType = DEFAULT_SLIDING_WINDOW_TYPE;
         private float slowCallRateThreshold = DEFAULT_SLOW_CALL_RATE_THRESHOLD;
         private Duration slowCallDurationThreshold = Duration
-                .ofSeconds(DEFAULT_SLOW_CALL_DURATION_THRESHOLD);
+            .ofSeconds(DEFAULT_SLOW_CALL_DURATION_THRESHOLD);
 
         public Builder(CircuitBreakerConfig baseConfig) {
             this.waitDurationInOpenState = baseConfig.waitDurationInOpenState;
@@ -208,7 +208,7 @@ public class CircuitBreakerConfig {
         public Builder failureRateThreshold(float failureRateThreshold) {
             if (failureRateThreshold <= 0 || failureRateThreshold > 100) {
                 throw new IllegalArgumentException(
-                        "failureRateThreshold must be between 1 and 100");
+                    "failureRateThreshold must be between 1 and 100");
             }
             this.failureRateThreshold = failureRateThreshold;
             return this;
@@ -231,7 +231,7 @@ public class CircuitBreakerConfig {
         public Builder slowCallRateThreshold(float slowCallRateThreshold) {
             if (slowCallRateThreshold <= 0 || slowCallRateThreshold > 100) {
                 throw new IllegalArgumentException(
-                        "slowCallRateThreshold must be between 1 and 100");
+                    "slowCallRateThreshold must be between 1 and 100");
             }
             this.slowCallRateThreshold = slowCallRateThreshold;
             return this;
@@ -255,13 +255,13 @@ public class CircuitBreakerConfig {
          * open, before it switches to half open. Default value is 60 seconds.
          *
          * @param waitDurationInOpenState the wait duration which specifies how long the
-         *         CircuitBreaker should stay open
+         *     CircuitBreaker should stay open
          * @return the CircuitBreakerConfig.Builder
          */
         public Builder waitDurationInOpenState(Duration waitDurationInOpenState) {
             if (waitDurationInOpenState.toMillis() < 1) {
                 throw new IllegalArgumentException(
-                        "waitDurationInOpenState must be at least 1[ms]");
+                    "waitDurationInOpenState must be at least 1[ms]");
             }
             this.waitDurationInOpenState = waitDurationInOpenState;
             return this;
@@ -272,13 +272,13 @@ public class CircuitBreakerConfig {
          * the slow calls percentage. Default value is 60 seconds.
          *
          * @param slowCallDurationThreshold the duration above which calls are considered as
-         *         slow
+         *     slow
          * @return the CircuitBreakerConfig.Builder
          */
         public Builder slowCallDurationThreshold(Duration slowCallDurationThreshold) {
             if (slowCallDurationThreshold.toNanos() < 1) {
                 throw new IllegalArgumentException(
-                        "slowCallDurationThreshold must be at least 1[ns]");
+                    "slowCallDurationThreshold must be at least 1[ns]");
             }
             this.slowCallDurationThreshold = slowCallDurationThreshold;
             return this;
@@ -289,15 +289,15 @@ public class CircuitBreakerConfig {
          * <p>
          * The size must be greater than 0. Default size is 10.
          *
-         * @param permittedNumberOfCallsInHalfOpenState the permitted number of calls when
-         *         the CircuitBreaker is half open
+         * @param permittedNumberOfCallsInHalfOpenState the permitted number of calls when the
+         *     CircuitBreaker is half open
          * @return the CircuitBreakerConfig.Builder
          */
         public Builder permittedNumberOfCallsInHalfOpenState(
-                int permittedNumberOfCallsInHalfOpenState) {
+            int permittedNumberOfCallsInHalfOpenState) {
             if (permittedNumberOfCallsInHalfOpenState < 1) {
                 throw new IllegalArgumentException(
-                        "permittedNumberOfCallsInHalfOpenState must be greater than 0");
+                    "permittedNumberOfCallsInHalfOpenState must be greater than 0");
             }
             this.permittedNumberOfCallsInHalfOpenState = permittedNumberOfCallsInHalfOpenState;
             return this;
@@ -310,7 +310,7 @@ public class CircuitBreakerConfig {
         public Builder ringBufferSizeInHalfOpenState(int ringBufferSizeInHalfOpenState) {
             if (ringBufferSizeInHalfOpenState < 1) {
                 throw new IllegalArgumentException(
-                        "ringBufferSizeInHalfOpenState must be greater than 0");
+                    "ringBufferSizeInHalfOpenState must be greater than 0");
             }
             this.permittedNumberOfCallsInHalfOpenState = ringBufferSizeInHalfOpenState;
             return this;
@@ -323,10 +323,10 @@ public class CircuitBreakerConfig {
         public Builder ringBufferSizeInClosedState(int ringBufferSizeInClosedState) {
             if (ringBufferSizeInClosedState < 1) {
                 throw new IllegalArgumentException(
-                        "ringBufferSizeInClosedState must be greater than 0");
+                    "ringBufferSizeInClosedState must be greater than 0");
             }
             return slidingWindow(ringBufferSizeInClosedState, ringBufferSizeInClosedState,
-                    SlidingWindowType.COUNT_BASED);
+                SlidingWindowType.COUNT_BASED);
         }
 
         /**
@@ -352,16 +352,16 @@ public class CircuitBreakerConfig {
          * Default slidingWindowSize is 100, minimumNumberOfCalls is 100 and slidingWindowType is
          * COUNT_BASED.
          *
-         * @param slidingWindowSize the size of the sliding window when the CircuitBreaker
-         *         is closed.
-         * @param minimumNumberOfCalls the minimum number of calls that must be recorded
-         *         before the failure rate can be calculated.
+         * @param slidingWindowSize the size of the sliding window when the CircuitBreaker is
+         *     closed.
+         * @param minimumNumberOfCalls the minimum number of calls that must be recorded before
+         *     the failure rate can be calculated.
          * @param slidingWindowType the type of the sliding window. Either COUNT_BASED or
-         *         TIME_BASED.
+         *     TIME_BASED.
          * @return the CircuitBreakerConfig.Builder
          */
         public Builder slidingWindow(int slidingWindowSize, int minimumNumberOfCalls,
-                SlidingWindowType slidingWindowType) {
+            SlidingWindowType slidingWindowType) {
             if (slidingWindowSize < 1) {
                 throw new IllegalArgumentException("slidingWindowSize must be greater than 0");
             }
@@ -394,8 +394,8 @@ public class CircuitBreakerConfig {
          *
          * Default slidingWindowSize is 100.
          *
-         * @param slidingWindowSize the size of the sliding window when the CircuitBreaker
-         *         is closed.
+         * @param slidingWindowSize the size of the sliding window when the CircuitBreaker is
+         *     closed.
          * @return the CircuitBreakerConfig.Builder
          */
         public Builder slidingWindowSize(int slidingWindowSize) {
@@ -415,8 +415,8 @@ public class CircuitBreakerConfig {
          *
          * Default minimumNumberOfCalls is 100
          *
-         * @param minimumNumberOfCalls the minimum number of calls that must be recorded
-         *         before the failure rate can be calculated.
+         * @param minimumNumberOfCalls the minimum number of calls that must be recorded before
+         *     the failure rate can be calculated.
          * @return the CircuitBreakerConfig.Builder
          */
         public Builder minimumNumberOfCalls(int minimumNumberOfCalls) {
@@ -439,7 +439,7 @@ public class CircuitBreakerConfig {
          * Default slidingWindowType is COUNT_BASED.
          *
          * @param slidingWindowType the type of the sliding window. Either COUNT_BASED or
-         *         TIME_BASED.
+         *     TIME_BASED.
          * @return the CircuitBreakerConfig.Builder
          */
         public Builder slidingWindowType(SlidingWindowType slidingWindowType) {
@@ -464,7 +464,7 @@ public class CircuitBreakerConfig {
          * #ignoreExceptions(Class[])} or {@link #ignoreException(Predicate)}.
          *
          * @param predicate the Predicate which evaluates if an exception should count as a
-         *         failure
+         *     failure
          * @return the CircuitBreakerConfig.Builder
          */
         public Builder recordException(Predicate<Throwable> predicate) {
@@ -478,7 +478,7 @@ public class CircuitBreakerConfig {
          * ignored . The Predicate must return false, if the exception should count as a failure.
          *
          * @param predicate the Predicate which evaluates if an exception should count as a
-         *         failure
+         *     failure
          * @return the CircuitBreakerConfig.Builder
          */
         public Builder ignoreException(Predicate<Throwable> predicate) {
@@ -493,19 +493,19 @@ public class CircuitBreakerConfig {
          *
          * @param errorClasses the error classes that are recorded
          * @return the CircuitBreakerConfig.Builder
-         * @see #ignoreExceptions(Class[]) ). Ignoring an exception has priority over recording
-         *         an exception.
-         *         <p>
-         *         Example: recordExceptions(Throwable.class) and ignoreExceptions(RuntimeException.class)
-         *         would capture all Errors and checked Exceptions, and ignore RuntimeExceptions.
-         *         <p>
-         *         For a more sophisticated exception management use the
+         * @see #ignoreExceptions(Class[]) ). Ignoring an exception has priority over recording an
+         *     exception.
+         *     <p>
+         *     Example: recordExceptions(Throwable.class) and ignoreExceptions(RuntimeException.class)
+         *     would capture all Errors and checked Exceptions, and ignore RuntimeExceptions.
+         *     <p>
+         *     For a more sophisticated exception management use the
          * @see #recordException(Predicate) method
          */
         @SuppressWarnings("unchecked")
         @SafeVarargs
         public final Builder recordExceptions(
-                @Nullable Class<? extends Throwable>... errorClasses) {
+            @Nullable Class<? extends Throwable>... errorClasses) {
             this.recordExceptions = errorClasses != null ? errorClasses : new Class[0];
             return this;
         }
@@ -518,21 +518,21 @@ public class CircuitBreakerConfig {
          * @param errorClasses the error classes that are ignored
          * @return the CircuitBreakerConfig.Builder
          * @see #recordExceptions(Class[]) . Ignoring an exception has priority over recording an
-         *         exception.
-         *         <p>
-         *         Example: ignoreExceptions(Throwable.class) and recordExceptions(Exception.class)
-         *         would capture nothing.
-         *         <p>
-         *         Example: ignoreExceptions(Exception.class) and recordExceptions(Throwable.class)
-         *         would capture Errors.
-         *         <p>
-         *         For a more sophisticated exception management use the
+         *     exception.
+         *     <p>
+         *     Example: ignoreExceptions(Throwable.class) and recordExceptions(Exception.class)
+         *     would capture nothing.
+         *     <p>
+         *     Example: ignoreExceptions(Exception.class) and recordExceptions(Throwable.class)
+         *     would capture Errors.
+         *     <p>
+         *     For a more sophisticated exception management use the
          * @see #ignoreException(Predicate) method
          */
         @SuppressWarnings("unchecked")
         @SafeVarargs
         public final Builder ignoreExceptions(
-                @Nullable Class<? extends Throwable>... errorClasses) {
+            @Nullable Class<? extends Throwable>... errorClasses) {
             this.ignoreExceptions = errorClasses != null ? errorClasses : new Class[0];
             return this;
         }
@@ -555,7 +555,7 @@ public class CircuitBreakerConfig {
          * @return the CircuitBreakerConfig.Builder
          */
         public Builder automaticTransitionFromOpenToHalfOpenEnabled(
-                boolean enableAutomaticTransitionFromOpenToHalfOpen) {
+            boolean enableAutomaticTransitionFromOpenToHalfOpen) {
             this.automaticTransitionFromOpenToHalfOpenEnabled = enableAutomaticTransitionFromOpenToHalfOpen;
             return this;
         }
@@ -586,18 +586,18 @@ public class CircuitBreakerConfig {
 
         private Predicate<Throwable> createIgnoreFailurePredicate() {
             return PredicateCreator.createExceptionsPredicate(ignoreExceptions)
-                    .map(predicate -> ignoreExceptionPredicate != null ? predicate
-                            .or(ignoreExceptionPredicate) : predicate)
-                    .orElseGet(() -> ignoreExceptionPredicate != null ? ignoreExceptionPredicate
-                            : DEFAULT_IGNORE_EXCEPTION_PREDICATE);
+                .map(predicate -> ignoreExceptionPredicate != null ? predicate
+                    .or(ignoreExceptionPredicate) : predicate)
+                .orElseGet(() -> ignoreExceptionPredicate != null ? ignoreExceptionPredicate
+                    : DEFAULT_IGNORE_EXCEPTION_PREDICATE);
         }
 
         private Predicate<Throwable> createRecordExceptionPredicate() {
             return PredicateCreator.createExceptionsPredicate(recordExceptions)
-                    .map(predicate -> recordExceptionPredicate != null ? predicate
-                            .or(recordExceptionPredicate) : predicate)
-                    .orElseGet(() -> recordExceptionPredicate != null ? recordExceptionPredicate
-                            : DEFAULT_RECORD_EXCEPTION_PREDICATE);
+                .map(predicate -> recordExceptionPredicate != null ? predicate
+                    .or(recordExceptionPredicate) : predicate)
+                .orElseGet(() -> recordExceptionPredicate != null ? recordExceptionPredicate
+                    : DEFAULT_RECORD_EXCEPTION_PREDICATE);
         }
     }
 }

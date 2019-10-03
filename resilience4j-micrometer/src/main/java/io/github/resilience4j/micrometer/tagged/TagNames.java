@@ -22,6 +22,7 @@ public final class TagNames {
 
     public static final String NAME = "name";
     public static final String KIND = "kind";
+
     private TagNames() {
     }
 }

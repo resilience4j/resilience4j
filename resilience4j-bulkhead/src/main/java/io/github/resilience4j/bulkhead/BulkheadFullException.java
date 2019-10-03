@@ -34,16 +34,16 @@ public class BulkheadFullException extends RuntimeException {
      */
     public static BulkheadFullException createBulkheadFullException(Bulkhead bulkhead) {
         boolean writableStackTraceEnabled = bulkhead.getBulkheadConfig()
-                .isWritableStackTraceEnabled();
+            .isWritableStackTraceEnabled();
 
         String message;
         if (Thread.currentThread().isInterrupted()) {
             message = String
-                    .format("Bulkhead '%s' is full and thread was interrupted during permission wait",
-                            bulkhead.getName());
+                .format("Bulkhead '%s' is full and thread was interrupted during permission wait",
+                    bulkhead.getName());
         } else {
             message = String.format("Bulkhead '%s' is full and does not permit further calls",
-                    bulkhead.getName());
+                bulkhead.getName());
         }
 
         return new BulkheadFullException(message, writableStackTraceEnabled);
@@ -56,10 +56,10 @@ public class BulkheadFullException extends RuntimeException {
      */
     public static BulkheadFullException createBulkheadFullException(ThreadPoolBulkhead bulkhead) {
         boolean writableStackTraceEnabled = bulkhead.getBulkheadConfig()
-                .isWritableStackTraceEnabled();
+            .isWritableStackTraceEnabled();
 
         String message = String.format("Bulkhead '%s' is full and does not permit further calls",
-                bulkhead.getName());
+            bulkhead.getName());
 
         return new BulkheadFullException(message, writableStackTraceEnabled);
     }

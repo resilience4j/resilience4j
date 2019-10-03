@@ -45,7 +45,7 @@ public class BulkheadMetricsAutoConfiguration {
     @ConditionalOnProperty(value = "resilience4j.bulkhead.metrics.legacy.enabled", havingValue = "true")
     @ConditionalOnMissingBean
     public BulkheadMetrics registerBulkheadMetrics(BulkheadRegistry bulkheadRegistry,
-            MetricRegistry metricRegistry) {
+        MetricRegistry metricRegistry) {
         return BulkheadMetrics.ofBulkheadRegistry(bulkheadRegistry, metricRegistry);
     }
 
@@ -53,7 +53,7 @@ public class BulkheadMetricsAutoConfiguration {
     @ConditionalOnProperty(value = "resilience4j.bulkhead.metrics.legacy.enabled", havingValue = "false", matchIfMissing = true)
     @ConditionalOnMissingBean
     public BulkheadMetricsPublisher bulkheadDropwizardMetricsPublisher(
-            MetricRegistry metricRegistry) {
+        MetricRegistry metricRegistry) {
         return new BulkheadMetricsPublisher(metricRegistry);
     }
 

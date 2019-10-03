@@ -76,7 +76,7 @@ public interface CircuitBreaker {
      * @return a supplier which is decorated by a CircuitBreaker.
      */
     static <T> CheckedFunction0<T> decorateCheckedSupplier(CircuitBreaker circuitBreaker,
-            CheckedFunction0<T> supplier) {
+        CheckedFunction0<T> supplier) {
         return () -> {
             circuitBreaker.acquirePermission();
             long start = System.nanoTime();
@@ -104,8 +104,8 @@ public interface CircuitBreaker {
      * @return a supplier which is decorated by a CircuitBreaker.
      */
     static <T> Supplier<CompletionStage<T>> decorateCompletionStage(
-            CircuitBreaker circuitBreaker,
-            Supplier<CompletionStage<T>> supplier
+        CircuitBreaker circuitBreaker,
+        Supplier<CompletionStage<T>> supplier
     ) {
         return () -> {
 
@@ -113,7 +113,7 @@ public interface CircuitBreaker {
 
             if (!circuitBreaker.tryAcquirePermission()) {
                 promise.completeExceptionally(
-                        CallNotPermittedException.createCallNotPermittedException(circuitBreaker));
+                    CallNotPermittedException.createCallNotPermittedException(circuitBreaker));
 
             } else {
                 final long start = System.nanoTime();
@@ -123,7 +123,7 @@ public interface CircuitBreaker {
                         if (throwable != null) {
                             if (throwable instanceof Exception) {
                                 circuitBreaker
-                                        .onError(durationInNanos, TimeUnit.NANOSECONDS, throwable);
+                                    .onError(durationInNanos, TimeUnit.NANOSECONDS, throwable);
                             }
                             promise.completeExceptionally(throwable);
                         } else {
@@ -150,7 +150,7 @@ public interface CircuitBreaker {
      * @return a runnable which is decorated by a CircuitBreaker.
      */
     static CheckedRunnable decorateCheckedRunnable(CircuitBreaker circuitBreaker,
-            CheckedRunnable runnable) {
+        CheckedRunnable runnable) {
         return () -> {
             circuitBreaker.acquirePermission();
             long start = System.nanoTime();
@@ -228,7 +228,7 @@ public interface CircuitBreaker {
      * @return a supplier which is decorated by a CircuitBreaker.
      */
     static <T> Supplier<Either<Exception, T>> decorateEitherSupplier(CircuitBreaker circuitBreaker,
-            Supplier<Either<? extends Exception, T>> supplier) {
+        Supplier<Either<? extends Exception, T>> supplier) {
         return () -> {
             if (circuitBreaker.tryAcquirePermission()) {
                 circuitBreaker.acquirePermission();
@@ -244,7 +244,7 @@ public interface CircuitBreaker {
                 return Either.narrow(result);
             } else {
                 return Either.left(CallNotPermittedException
-                        .createCallNotPermittedException(circuitBreaker));
+                    .createCallNotPermittedException(circuitBreaker));
             }
         };
     }
@@ -258,7 +258,7 @@ public interface CircuitBreaker {
      * @return a retryable function
      */
     static <T> Supplier<Try<T>> decorateTrySupplier(CircuitBreaker circuitBreaker,
-            Supplier<Try<T>> supplier) {
+        Supplier<Try<T>> supplier) {
         return () -> {
             if (circuitBreaker.tryAcquirePermission()) {
                 long start = System.nanoTime();
@@ -269,12 +269,12 @@ public interface CircuitBreaker {
                     return result;
                 } else {
                     circuitBreaker
-                            .onError(durationInNanos, TimeUnit.NANOSECONDS, result.getCause());
+                        .onError(durationInNanos, TimeUnit.NANOSECONDS, result.getCause());
                     return result;
                 }
             } else {
                 return Try.failure(
-                        CallNotPermittedException.createCallNotPermittedException(circuitBreaker));
+                    CallNotPermittedException.createCallNotPermittedException(circuitBreaker));
             }
         };
     }
@@ -313,7 +313,7 @@ public interface CircuitBreaker {
      * @return a consumer which is decorated by a CircuitBreaker.
      */
     static <T> CheckedConsumer<T> decorateCheckedConsumer(CircuitBreaker circuitBreaker,
-            CheckedConsumer<T> consumer) {
+        CheckedConsumer<T> consumer) {
         return (t) -> {
             circuitBreaker.acquirePermission();
             long start = System.nanoTime();
@@ -364,7 +364,7 @@ public interface CircuitBreaker {
      * @return a function which is decorated by a CircuitBreaker.
      */
     static <T, R> Function<T, R> decorateFunction(CircuitBreaker circuitBreaker,
-            Function<T, R> function) {
+        Function<T, R> function) {
         return (T t) -> {
             circuitBreaker.acquirePermission();
             long start = System.nanoTime();
@@ -392,7 +392,7 @@ public interface CircuitBreaker {
      * @return a function which is decorated by a CircuitBreaker.
      */
     static <T, R> CheckedFunction1<T, R> decorateCheckedFunction(CircuitBreaker circuitBreaker,
-            CheckedFunction1<T, R> function) {
+        CheckedFunction1<T, R> function) {
         return (T t) -> {
             circuitBreaker.acquirePermission();
             long start = System.nanoTime();
@@ -435,12 +435,11 @@ public interface CircuitBreaker {
      * Creates a CircuitBreaker with a custom CircuitBreaker configuration.
      *
      * @param name the name of the CircuitBreaker
-     * @param circuitBreakerConfigSupplier a supplier of a custom CircuitBreaker
-     *         configuration
+     * @param circuitBreakerConfigSupplier a supplier of a custom CircuitBreaker configuration
      * @return a CircuitBreaker with a custom CircuitBreaker configuration.
      */
     static CircuitBreaker of(String name,
-            Supplier<CircuitBreakerConfig> circuitBreakerConfigSupplier) {
+        Supplier<CircuitBreakerConfig> circuitBreakerConfigSupplier) {
         return new CircuitBreakerStateMachine(name, circuitBreakerConfigSupplier);
     }
 
@@ -481,8 +480,8 @@ public interface CircuitBreaker {
      * decreased. Important: Make sure to call onSuccess or onError after the call is finished. If
      * the call is cancelled before it is invoked, you have to release the permission again.
      *
-     * @throws CallNotPermittedException when CircuitBreaker is OPEN or HALF_OPEN and no
-     *         further test calls are permitted.
+     * @throws CallNotPermittedException when CircuitBreaker is OPEN or HALF_OPEN and no further
+     *     test calls are permitted.
      */
     void acquirePermission();
 
@@ -500,7 +499,7 @@ public interface CircuitBreaker {
      *
      * @param duration The elapsed time duration of the call
      * @param durationUnit The duration unit This method must be invoked when a call was
-     *         successful.
+     *     successful.
      */
     void onSuccess(long duration, TimeUnit durationUnit);
 
@@ -619,7 +618,7 @@ public interface CircuitBreaker {
      * @return the result of the decorated Supplier.
      */
     default <T> Either<Exception, T> executeEitherSupplier(
-            Supplier<Either<? extends Exception, T>> supplier) {
+        Supplier<Either<? extends Exception, T>> supplier) {
         return decorateEitherSupplier(this, supplier).get();
     }
 
@@ -653,7 +652,7 @@ public interface CircuitBreaker {
      * @return a supplier which is decorated by a CircuitBreaker.
      */
     default <T> Supplier<Either<Exception, T>> decorateEitherSupplier(
-            Supplier<Either<? extends Exception, T>> supplier) {
+        Supplier<Either<? extends Exception, T>> supplier) {
         return decorateEitherSupplier(this, supplier);
     }
 
@@ -718,7 +717,7 @@ public interface CircuitBreaker {
      * @return a supplier which is decorated by a CircuitBreaker.
      */
     default <T> Supplier<CompletionStage<T>> decorateCompletionStage(
-            Supplier<CompletionStage<T>> supplier) {
+        Supplier<CompletionStage<T>> supplier) {
         return decorateCompletionStage(this, supplier);
     }
 
@@ -728,8 +727,7 @@ public interface CircuitBreaker {
      * @param checkedSupplier the original Supplier
      * @param <T> the type of results supplied by this supplier
      * @return the result of the decorated Supplier.
-     * @throws Throwable if something goes wrong applying this function to the given
-     *         arguments
+     * @throws Throwable if something goes wrong applying this function to the given arguments
      */
     default <T> T executeCheckedSupplier(CheckedFunction0<T> checkedSupplier) throws Throwable {
         return decorateCheckedSupplier(this, checkedSupplier).apply();
@@ -860,9 +858,9 @@ public interface CircuitBreaker {
         DISABLED_TO_HALF_OPEN(State.DISABLED, State.HALF_OPEN);
 
         private static final Map<Tuple2<State, State>, StateTransition> STATE_TRANSITION_MAP = Arrays
-                .stream(StateTransition.values())
-                .collect(Collectors
-                        .toMap(v -> Tuple.of(v.fromState, v.toState), Function.identity()));
+            .stream(StateTransition.values())
+            .collect(Collectors
+                .toMap(v -> Tuple.of(v.fromState, v.toState), Function.identity()));
         private final State fromState;
         private final State toState;
 
@@ -872,9 +870,9 @@ public interface CircuitBreaker {
         }
 
         public static StateTransition transitionBetween(String name, State fromState,
-                State toState) {
+            State toState) {
             final StateTransition stateTransition = STATE_TRANSITION_MAP
-                    .get(Tuple.of(fromState, toState));
+                .get(Tuple.of(fromState, toState));
             if (stateTransition == null) {
                 throw new IllegalStateTransitionException(name, fromState, toState);
             }
@@ -899,22 +897,22 @@ public interface CircuitBreaker {
      * An EventPublisher can be used to register event consumers.
      */
     interface EventPublisher extends
-            io.github.resilience4j.core.EventPublisher<CircuitBreakerEvent> {
+        io.github.resilience4j.core.EventPublisher<CircuitBreakerEvent> {
 
         EventPublisher onSuccess(EventConsumer<CircuitBreakerOnSuccessEvent> eventConsumer);
 
         EventPublisher onError(EventConsumer<CircuitBreakerOnErrorEvent> eventConsumer);
 
         EventPublisher onStateTransition(
-                EventConsumer<CircuitBreakerOnStateTransitionEvent> eventConsumer);
+            EventConsumer<CircuitBreakerOnStateTransitionEvent> eventConsumer);
 
         EventPublisher onReset(EventConsumer<CircuitBreakerOnResetEvent> eventConsumer);
 
         EventPublisher onIgnoredError(
-                EventConsumer<CircuitBreakerOnIgnoredErrorEvent> eventConsumer);
+            EventConsumer<CircuitBreakerOnIgnoredErrorEvent> eventConsumer);
 
         EventPublisher onCallNotPermitted(
-                EventConsumer<CircuitBreakerOnCallNotPermittedEvent> eventConsumer);
+            EventConsumer<CircuitBreakerOnCallNotPermittedEvent> eventConsumer);
     }
 
     interface Metrics {
@@ -947,8 +945,7 @@ public interface CircuitBreaker {
          * Returns the current number of successful calls which were slower than a certain
          * threshold.
          *
-         * @return the current number of successful calls which were slower than a certain
-         *         threshold
+         * @return the current number of successful calls which were slower than a certain threshold
          */
         int getNumberOfSlowSuccessfulCalls();
 

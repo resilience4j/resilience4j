@@ -10,7 +10,7 @@ public class AnnotationExtractorTest {
     @Test
     public void testExtract() {
         CircuitBreaker circuitBreaker = AnnotationExtractor
-                .extract(AnnotatedClass.class, CircuitBreaker.class);
+            .extract(AnnotatedClass.class, CircuitBreaker.class);
 
         assertThat(circuitBreaker).isNotNull();
         assertThat(circuitBreaker.name()).isEqualTo("test");
@@ -19,7 +19,7 @@ public class AnnotationExtractorTest {
     @Test
     public void testExtract2() {
         CircuitBreaker circuitBreaker = AnnotationExtractor
-                .extract(NotAnnotatedClass.class, CircuitBreaker.class);
+            .extract(NotAnnotatedClass.class, CircuitBreaker.class);
 
         assertThat(circuitBreaker).isNull();
     }

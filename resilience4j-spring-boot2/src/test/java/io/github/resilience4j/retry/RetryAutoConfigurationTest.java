@@ -45,7 +45,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-        classes = TestApplication.class)
+    classes = TestApplication.class)
 public class RetryAutoConfigurationTest {
 
     @Rule
@@ -71,19 +71,19 @@ public class RetryAutoConfigurationTest {
     public void testFeignClient() {
 
         WireMock.stubFor(WireMock
-                .get(WireMock.urlEqualTo("/retry/"))
-                .willReturn(
-                        WireMock.aResponse().withStatus(200).withBody("This is successful call"))
+            .get(WireMock.urlEqualTo("/retry/"))
+            .willReturn(
+                WireMock.aResponse().withStatus(200).withBody("This is successful call"))
         );
         WireMock.stubFor(WireMock.get(WireMock.urlMatching("^.*\\/retry\\/error.*$"))
-                .willReturn(WireMock.aResponse().withStatus(400).withBody("This is error")));
+            .willReturn(WireMock.aResponse().withStatus(400).withBody("This is error")));
 
         assertThat(retryRegistry).isNotNull();
         assertThat(retryProperties).isNotNull();
 
         RetryEventsEndpointResponse retryEventListBefore = retryEvents("/actuator/retryevents");
         RetryEventsEndpointResponse retryEventsEndpointFeignListBefore = retryEvents(
-                "/actuator/retryevents/" + RETRY_DUMMY_FEIGN_CLIENT_NAME);
+            "/actuator/retryevents/" + RETRY_DUMMY_FEIGN_CLIENT_NAME);
 
         try {
             retryDummyFeignClient.doSomething("error");
@@ -108,23 +108,23 @@ public class RetryAutoConfigurationTest {
 
         // expect retry actuator endpoint contains both retries
         ResponseEntity<RetryEndpointResponse> retriesList = restTemplate
-                .getForEntity("/actuator/retries", RetryEndpointResponse.class);
+            .getForEntity("/actuator/retries", RetryEndpointResponse.class);
         assertThat(new HashSet<>(retriesList.getBody().getRetries()))
-                .contains(RETRY_BACKEND_A, RETRY_BACKEND_B,
-                        BACKEND_C, RETRY_DUMMY_FEIGN_CLIENT_NAME);
+            .contains(RETRY_BACKEND_A, RETRY_BACKEND_B,
+                BACKEND_C, RETRY_DUMMY_FEIGN_CLIENT_NAME);
 
         // expect retry-event actuator endpoint recorded both events
         RetryEventsEndpointResponse retryEventList = retryEvents("/actuator/retryevents");
         assertThat(retryEventList.getRetryEvents())
-                .hasSize(retryEventListBefore.getRetryEvents().size() + 3);
+            .hasSize(retryEventListBefore.getRetryEvents().size() + 3);
 
         retryEventList = retryEvents("/actuator/retryevents/" + RETRY_DUMMY_FEIGN_CLIENT_NAME);
         assertThat(retryEventList.getRetryEvents())
-                .hasSize(retryEventsEndpointFeignListBefore.getRetryEvents().size() + 3);
+            .hasSize(retryEventsEndpointFeignListBefore.getRetryEvents().size() + 3);
 
         assertThat(retry.getRetryConfig().getExceptionPredicate().test(new IOException())).isTrue();
         assertThat(retry.getRetryConfig().getExceptionPredicate().test(new IgnoredException()))
-                .isFalse();
+            .isFalse();
         assertThat(retryAspect.getOrder()).isEqualTo(399);
     }
 
@@ -139,7 +139,7 @@ public class RetryAutoConfigurationTest {
 
         RetryEventsEndpointResponse retryEventListBefore = retryEvents("/actuator/retryevents");
         RetryEventsEndpointResponse retryEventsAListBefore = retryEvents(
-                "/actuator/retryevents/" + RETRY_BACKEND_A);
+            "/actuator/retryevents/" + RETRY_BACKEND_A);
 
         try {
             retryDummyService.doSomething(true);
@@ -164,23 +164,23 @@ public class RetryAutoConfigurationTest {
 
         // expect retry actuator endpoint contains both retries
         ResponseEntity<RetryEndpointResponse> retriesList = restTemplate
-                .getForEntity("/actuator/retries", RetryEndpointResponse.class);
+            .getForEntity("/actuator/retries", RetryEndpointResponse.class);
         assertThat(new HashSet<>(retriesList.getBody().getRetries()))
-                .contains(RETRY_BACKEND_A, RETRY_BACKEND_B,
-                        BACKEND_C, RETRY_DUMMY_FEIGN_CLIENT_NAME);
+            .contains(RETRY_BACKEND_A, RETRY_BACKEND_B,
+                BACKEND_C, RETRY_DUMMY_FEIGN_CLIENT_NAME);
 
         // expect retry-event actuator endpoint recorded both events
         RetryEventsEndpointResponse retryEventList = retryEvents("/actuator/retryevents");
         assertThat(retryEventList.getRetryEvents())
-                .hasSize(retryEventListBefore.getRetryEvents().size() + 3);
+            .hasSize(retryEventListBefore.getRetryEvents().size() + 3);
 
         retryEventList = retryEvents("/actuator/retryevents/" + RETRY_BACKEND_A);
         assertThat(retryEventList.getRetryEvents())
-                .hasSize(retryEventsAListBefore.getRetryEvents().size() + 3);
+            .hasSize(retryEventsAListBefore.getRetryEvents().size() + 3);
 
         assertThat(retry.getRetryConfig().getExceptionPredicate().test(new IOException())).isTrue();
         assertThat(retry.getRetryConfig().getExceptionPredicate().test(new IgnoredException()))
-                .isFalse();
+            .isFalse();
         assertThat(retryAspect.getOrder()).isEqualTo(399);
     }
 

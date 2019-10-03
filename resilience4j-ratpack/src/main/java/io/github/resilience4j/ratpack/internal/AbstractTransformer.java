@@ -23,7 +23,7 @@ import ratpack.exec.Upstream;
 import ratpack.func.Function;
 
 public abstract class AbstractTransformer<T> implements
-        Function<Upstream<? extends T>, Upstream<T>> {
+    Function<Upstream<? extends T>, Upstream<T>> {
 
     @Nullable
     protected Function<Throwable, ? extends T> recoverer;
@@ -34,8 +34,8 @@ public abstract class AbstractTransformer<T> implements
                 T result = recoverer.apply(throwable);
                 if (result instanceof Promise) {
                     ((Promise) result)
-                            .onError((t) -> down.error((Throwable) t))
-                            .then((r) -> down.success((T) r));
+                        .onError((t) -> down.error((Throwable) t))
+                        .then((r) -> down.success((T) r));
                 } else {
                     down.success(result);
                 }

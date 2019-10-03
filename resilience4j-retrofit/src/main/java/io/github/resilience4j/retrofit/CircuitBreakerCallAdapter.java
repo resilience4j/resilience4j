@@ -37,7 +37,7 @@ public final class CircuitBreakerCallAdapter extends CallAdapter.Factory {
     private final Predicate<Response> successResponse;
 
     private CircuitBreakerCallAdapter(final CircuitBreaker circuitBreaker,
-            final Predicate<Response> successResponse) {
+        final Predicate<Response> successResponse) {
         this.circuitBreaker = circuitBreaker;
         this.successResponse = successResponse;
     }
@@ -56,12 +56,12 @@ public final class CircuitBreakerCallAdapter extends CallAdapter.Factory {
      * Create a circuit-breaking call adapter that decorates retrofit calls
      *
      * @param circuitBreaker circuit breaker to use
-     * @param successResponse {@link Predicate} that determines whether the {@link Call}
-     *         {@link Response} should be considered successful
+     * @param successResponse {@link Predicate} that determines whether the {@link Call} {@link
+     *     Response} should be considered successful
      * @return a {@link CallAdapter.Factory} that can be passed into the {@link Retrofit.Builder}
      */
     public static CircuitBreakerCallAdapter of(final CircuitBreaker circuitBreaker,
-            final Predicate<Response> successResponse) {
+        final Predicate<Response> successResponse) {
         return new CircuitBreakerCallAdapter(circuitBreaker, successResponse);
     }
 
@@ -69,7 +69,7 @@ public final class CircuitBreakerCallAdapter extends CallAdapter.Factory {
     public CallAdapter<?, ?> get(Type returnType, Annotation[] annotations, Retrofit retrofit) {
         @SuppressWarnings("unchecked")
         CallAdapter<Object, Object> nextAdapter = (CallAdapter<Object, Object>) retrofit
-                .nextCallAdapter(this, returnType, annotations);
+            .nextCallAdapter(this, returnType, annotations);
 
         return new CallAdapter<Object, Object>() {
             @Override
@@ -80,7 +80,7 @@ public final class CircuitBreakerCallAdapter extends CallAdapter.Factory {
             @Override
             public Object adapt(Call<Object> call) {
                 return nextAdapter.adapt(RetrofitCircuitBreaker
-                        .decorateCall(circuitBreaker, call, successResponse));
+                    .decorateCall(circuitBreaker, call, successResponse));
             }
         };
     }

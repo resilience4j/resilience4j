@@ -48,20 +48,20 @@ public class TimeLimiterMetrics implements MetricSet {
     }
 
     private TimeLimiterMetrics(String prefix, Iterable<TimeLimiter> timeLimiters,
-            MetricRegistry metricRegistry) {
+        MetricRegistry metricRegistry) {
         requireNonNull(prefix, PREFIX_NULL);
         requireNonNull(timeLimiters, ITERABLE_NULL);
         requireNonNull(metricRegistry);
         this.metricRegistry = metricRegistry;
         timeLimiters.forEach(timeLimiter -> {
-                    String name = timeLimiter.getName();
-                    Counter successes = metricRegistry.counter(name(prefix, name, SUCCESSFUL));
-                    Counter failures = metricRegistry.counter(name(prefix, name, FAILED));
-                    Counter timeouts = metricRegistry.counter(name(prefix, name, TIMEOUT));
-                    timeLimiter.getEventPublisher().onSuccess(event -> successes.inc());
-                    timeLimiter.getEventPublisher().onError(event -> failures.inc());
-                    timeLimiter.getEventPublisher().onTimeout(event -> timeouts.inc());
-                }
+                String name = timeLimiter.getName();
+                Counter successes = metricRegistry.counter(name(prefix, name, SUCCESSFUL));
+                Counter failures = metricRegistry.counter(name(prefix, name, FAILED));
+                Counter timeouts = metricRegistry.counter(name(prefix, name, TIMEOUT));
+                timeLimiter.getEventPublisher().onSuccess(event -> successes.inc());
+                timeLimiter.getEventPublisher().onError(event -> failures.inc());
+                timeLimiter.getEventPublisher().onTimeout(event -> timeouts.inc());
+            }
         );
     }
 
@@ -74,9 +74,9 @@ public class TimeLimiterMetrics implements MetricSet {
      * @param metricRegistry the metric registry
      */
     public static TimeLimiterMetrics ofTimeLimiterRegistry(String prefix,
-            TimeLimiterRegistry timeLimiterRegistry, MetricRegistry metricRegistry) {
+        TimeLimiterRegistry timeLimiterRegistry, MetricRegistry metricRegistry) {
         return new TimeLimiterMetrics(prefix, timeLimiterRegistry.getAllTimeLimiters(),
-                metricRegistry);
+            metricRegistry);
     }
 
     /**
@@ -87,9 +87,9 @@ public class TimeLimiterMetrics implements MetricSet {
      * @param timeLimiterRegistry the registry of time limiters
      */
     public static TimeLimiterMetrics ofTimeLimiterRegistry(String prefix,
-            TimeLimiterRegistry timeLimiterRegistry) {
+        TimeLimiterRegistry timeLimiterRegistry) {
         return new TimeLimiterMetrics(prefix, timeLimiterRegistry.getAllTimeLimiters(),
-                new MetricRegistry());
+            new MetricRegistry());
     }
 
     /**
@@ -100,9 +100,9 @@ public class TimeLimiterMetrics implements MetricSet {
      * @param metricRegistry the metric registry
      */
     public static TimeLimiterMetrics ofTimeLimiterRegistry(TimeLimiterRegistry timeLimiterRegistry,
-            MetricRegistry metricRegistry) {
+        MetricRegistry metricRegistry) {
         return new TimeLimiterMetrics(DEFAULT_PREFIX, timeLimiterRegistry.getAllTimeLimiters(),
-                metricRegistry);
+            metricRegistry);
     }
 
     /**
@@ -112,7 +112,7 @@ public class TimeLimiterMetrics implements MetricSet {
      * @param timeLimiterRegistry the registry of time limiters
      */
     public static TimeLimiterMetrics ofTimeLimiterRegistry(
-            TimeLimiterRegistry timeLimiterRegistry) {
+        TimeLimiterRegistry timeLimiterRegistry) {
         return new TimeLimiterMetrics(timeLimiterRegistry.getAllTimeLimiters());
     }
 

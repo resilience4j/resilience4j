@@ -27,22 +27,22 @@ public class CallMeterTest {
 
         // Then
         assertThat(registry.getSampleValue(
-                "some_call_total",
-                new String[]{},
-                new String[]{}))
-                .isEqualTo(1.0);
+            "some_call_total",
+            new String[]{},
+            new String[]{}))
+            .isEqualTo(1.0);
 
         assertThat(registry.getSampleValue(
-                "some_call_failures_total",
-                new String[]{},
-                new String[]{}))
-                .isEqualTo(0.0);
+            "some_call_failures_total",
+            new String[]{},
+            new String[]{}))
+            .isEqualTo(0.0);
 
         assertThat(registry.getSampleValue(
-                "some_call_latency_count",
-                new String[]{},
-                new String[]{}))
-                .isEqualTo(1.0);
+            "some_call_latency_count",
+            new String[]{},
+            new String[]{}))
+            .isEqualTo(1.0);
     }
 
     @Test
@@ -70,22 +70,22 @@ public class CallMeterTest {
 
         // Then
         assertThat(registry.getSampleValue(
-                "some_call_total",
-                new String[]{},
-                new String[]{}))
-                .isEqualTo(1.0);
+            "some_call_total",
+            new String[]{},
+            new String[]{}))
+            .isEqualTo(1.0);
 
         assertThat(registry.getSampleValue(
-                "some_call_failures_total",
-                new String[]{},
-                new String[]{}))
-                .isEqualTo(1.0);
+            "some_call_failures_total",
+            new String[]{},
+            new String[]{}))
+            .isEqualTo(1.0);
 
         assertThat(registry.getSampleValue(
-                "some_call_latency_count",
-                new String[]{},
-                new String[]{}))
-                .isEqualTo(0.0);
+            "some_call_latency_count",
+            new String[]{},
+            new String[]{}))
+            .isEqualTo(0.0);
     }
 
     @Test
@@ -95,12 +95,12 @@ public class CallMeterTest {
         final CollectorRegistry registry = new CollectorRegistry();
 
         final CallMeter timer = CallMeter
-                .builder()
-                .name("some_call")
-                .help("Some call help")
-                .labelNames("label_1")
-                .build()
-                .register(registry);
+            .builder()
+            .name("some_call")
+            .help("Some call help")
+            .labelNames("label_1")
+            .build()
+            .register(registry);
 
         // When
         timer.labels("boo").executeRunnable(() -> {
@@ -113,22 +113,22 @@ public class CallMeterTest {
 
         // Then
         assertThat(registry.getSampleValue(
-                "some_call_total",
-                new String[]{"label_1"},
-                new String[]{"boo"}))
-                .isEqualTo(1.0);
+            "some_call_total",
+            new String[]{"label_1"},
+            new String[]{"boo"}))
+            .isEqualTo(1.0);
 
         assertThat(registry.getSampleValue(
-                "some_call_failures_total",
-                new String[]{"label_1"},
-                new String[]{"boo"}))
-                .isEqualTo(0.0);
+            "some_call_failures_total",
+            new String[]{"label_1"},
+            new String[]{"boo"}))
+            .isEqualTo(0.0);
 
         assertThat(registry.getSampleValue(
-                "some_call_latency_count",
-                new String[]{"label_1"},
-                new String[]{"boo"}))
-                .isEqualTo(1.0);
+            "some_call_latency_count",
+            new String[]{"label_1"},
+            new String[]{"boo"}))
+            .isEqualTo(1.0);
     }
 
     @Test
@@ -138,12 +138,12 @@ public class CallMeterTest {
         final CollectorRegistry registry = new CollectorRegistry();
 
         final CallMeter timer = CallMeter
-                .builder()
-                .name("some_call")
-                .help("Some test help")
-                .labelNames("label_1")
-                .build()
-                .register(registry);
+            .builder()
+            .name("some_call")
+            .help("Some test help")
+            .labelNames("label_1")
+            .build()
+            .register(registry);
 
         try {
             // When
@@ -162,22 +162,22 @@ public class CallMeterTest {
 
         // Then
         assertThat(registry.getSampleValue(
-                "some_call_total",
-                new String[]{"label_1"},
-                new String[]{"foo"}))
-                .isEqualTo(1.0);
+            "some_call_total",
+            new String[]{"label_1"},
+            new String[]{"foo"}))
+            .isEqualTo(1.0);
 
         assertThat(registry.getSampleValue(
-                "some_call_failures_total",
-                new String[]{"label_1"},
-                new String[]{"foo"}))
-                .isEqualTo(1.0);
+            "some_call_failures_total",
+            new String[]{"label_1"},
+            new String[]{"foo"}))
+            .isEqualTo(1.0);
 
         assertThat(registry.getSampleValue(
-                "some_call_latency_count",
-                new String[]{"label_1"},
-                new String[]{"foo"}))
-                .isEqualTo(0.0);
+            "some_call_latency_count",
+            new String[]{"label_1"},
+            new String[]{"foo"}))
+            .isEqualTo(0.0);
     }
 
     private static class SomeAppException extends RuntimeException {

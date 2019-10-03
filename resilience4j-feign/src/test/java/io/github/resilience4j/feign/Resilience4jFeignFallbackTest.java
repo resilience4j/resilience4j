@@ -55,8 +55,8 @@ public class Resilience4jFeignFallbackTest {
         when(testServiceFallback.greeting()).thenReturn("fallback");
 
         final FeignDecorators decorators = FeignDecorators.builder()
-                .withFallback(testServiceFallback)
-                .build();
+            .withFallback(testServiceFallback)
+            .build();
 
         testService = Resilience4jFeign.builder(decorators).target(TestService.class, MOCK_URL);
     }
@@ -75,7 +75,7 @@ public class Resilience4jFeignFallbackTest {
     @Test(expected = IllegalArgumentException.class)
     public void testInvalidFallback() throws Throwable {
         final FeignDecorators decorators = FeignDecorators.builder().withFallback("not a fallback")
-                .build();
+            .build();
         Resilience4jFeign.builder(decorators).target(TestService.class, MOCK_URL);
     }
 
@@ -98,9 +98,9 @@ public class Resilience4jFeignFallbackTest {
         when(testServiceExceptionFallback.greeting()).thenReturn("exception fallback");
 
         final FeignDecorators decorators = FeignDecorators.builder()
-                .withFallback(testServiceExceptionFallback, FeignException.class)
-                .withFallback(testServiceFallback)
-                .build();
+            .withFallback(testServiceExceptionFallback, FeignException.class)
+            .withFallback(testServiceFallback)
+            .build();
 
         testService = Resilience4jFeign.builder(decorators).target(TestService.class, MOCK_URL);
         setupStub(400);
@@ -120,9 +120,9 @@ public class Resilience4jFeignFallbackTest {
         when(testServiceExceptionFallback.greeting()).thenReturn("exception fallback");
 
         final FeignDecorators decorators = FeignDecorators.builder()
-                .withFallback(testServiceExceptionFallback, CallNotPermittedException.class)
-                .withFallback(testServiceFallback)
-                .build();
+            .withFallback(testServiceExceptionFallback, CallNotPermittedException.class)
+            .withFallback(testServiceFallback)
+            .build();
 
         testService = Resilience4jFeign.builder(decorators).target(TestService.class, MOCK_URL);
         setupStub(400);
@@ -142,9 +142,9 @@ public class Resilience4jFeignFallbackTest {
         when(testServiceFilterFallback.greeting()).thenReturn("filter fallback");
 
         final FeignDecorators decorators = FeignDecorators.builder()
-                .withFallback(testServiceFilterFallback, ex -> true)
-                .withFallback(testServiceFallback)
-                .build();
+            .withFallback(testServiceFilterFallback, ex -> true)
+            .withFallback(testServiceFallback)
+            .build();
 
         testService = Resilience4jFeign.builder(decorators).target(TestService.class, MOCK_URL);
         setupStub(400);
@@ -164,9 +164,9 @@ public class Resilience4jFeignFallbackTest {
         when(testServiceFilterFallback.greeting()).thenReturn("filter fallback");
 
         final FeignDecorators decorators = FeignDecorators.builder()
-                .withFallback(testServiceFilterFallback, ex -> false)
-                .withFallback(testServiceFallback)
-                .build();
+            .withFallback(testServiceFilterFallback, ex -> false)
+            .withFallback(testServiceFallback)
+            .build();
 
         testService = Resilience4jFeign.builder(decorators).target(TestService.class, MOCK_URL);
         setupStub(400);
@@ -196,9 +196,9 @@ public class Resilience4jFeignFallbackTest {
 
     private void setupStub(int responseCode) {
         stubFor(get(urlPathEqualTo("/greeting"))
-                .willReturn(aResponse()
-                        .withStatus(responseCode)
-                        .withHeader("Content-Type", "text/plain")
-                        .withBody("Hello, world!")));
+            .willReturn(aResponse()
+                .withStatus(responseCode)
+                .withHeader("Content-Type", "text/plain")
+                .withBody("Hello, world!")));
     }
 }

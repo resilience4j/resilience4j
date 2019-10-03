@@ -43,7 +43,7 @@ public class ThreadPoolBulkheadRegistryTest {
     private ThreadPoolBulkheadRegistry registry;
 
     private static Optional<EventProcessor<?>> getEventProcessor(
-            Registry.EventPublisher<ThreadPoolBulkhead> eventPublisher) {
+        Registry.EventPublisher<ThreadPoolBulkhead> eventPublisher) {
         if (eventPublisher instanceof EventProcessor<?>) {
             return Optional.of((EventProcessor<?>) eventPublisher);
         }
@@ -59,8 +59,8 @@ public class ThreadPoolBulkheadRegistryTest {
 
         // registry with custom config
         config = ThreadPoolBulkheadConfig.custom()
-                .maxThreadPoolSize(100)
-                .build();
+            .maxThreadPoolSize(100)
+            .build();
     }
 
     @Test
@@ -84,7 +84,7 @@ public class ThreadPoolBulkheadRegistryTest {
         assertThat(bulkhead).isNotNull();
         assertThat(bulkhead.getName()).isEqualTo("test");
         assertThat(bulkhead.getBulkheadConfig().getMaxThreadPoolSize())
-                .isEqualTo(Runtime.getRuntime().availableProcessors());
+            .isEqualTo(Runtime.getRuntime().availableProcessors());
     }
 
     @Test
@@ -114,7 +114,7 @@ public class ThreadPoolBulkheadRegistryTest {
         configs.put("custom", ThreadPoolBulkheadConfig.ofDefaults());
 
         ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry = ThreadPoolBulkheadRegistry
-                .of(configs);
+            .of(configs);
 
         assertThat(threadPoolBulkheadRegistry.getDefaultConfig()).isNotNull();
         assertThat(threadPoolBulkheadRegistry.getConfiguration("custom")).isNotNull();
@@ -126,7 +126,7 @@ public class ThreadPoolBulkheadRegistryTest {
         configs.put("custom", ThreadPoolBulkheadConfig.ofDefaults());
 
         ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry = ThreadPoolBulkheadRegistry
-                .of(configs);
+            .of(configs);
 
         assertThat(threadPoolBulkheadRegistry.getDefaultConfig()).isNotNull();
         assertThat(threadPoolBulkheadRegistry.getConfiguration("custom")).isNotNull();
@@ -135,11 +135,11 @@ public class ThreadPoolBulkheadRegistryTest {
     @Test
     public void testCreateWithSingleRegistryEventConsumer() {
         ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry =
-                ThreadPoolBulkheadRegistry.of(ThreadPoolBulkheadConfig.ofDefaults(),
-                        new NoOpThreadPoolBulkheadEventConsumer());
+            ThreadPoolBulkheadRegistry.of(ThreadPoolBulkheadConfig.ofDefaults(),
+                new NoOpThreadPoolBulkheadEventConsumer());
 
         getEventProcessor(threadPoolBulkheadRegistry.getEventPublisher())
-                .ifPresent(eventProcessor -> assertThat(eventProcessor.hasConsumers()).isTrue());
+            .ifPresent(eventProcessor -> assertThat(eventProcessor.hasConsumers()).isTrue());
     }
 
     @Test
@@ -149,11 +149,11 @@ public class ThreadPoolBulkheadRegistryTest {
         registryEventConsumers.add(new NoOpThreadPoolBulkheadEventConsumer());
 
         ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry =
-                ThreadPoolBulkheadRegistry
-                        .of(ThreadPoolBulkheadConfig.ofDefaults(), registryEventConsumers);
+            ThreadPoolBulkheadRegistry
+                .of(ThreadPoolBulkheadConfig.ofDefaults(), registryEventConsumers);
 
         getEventProcessor(threadPoolBulkheadRegistry.getEventPublisher())
-                .ifPresent(eventProcessor -> assertThat(eventProcessor.hasConsumers()).isTrue());
+            .ifPresent(eventProcessor -> assertThat(eventProcessor.hasConsumers()).isTrue());
     }
 
     @Test
@@ -162,10 +162,10 @@ public class ThreadPoolBulkheadRegistryTest {
         configs.put("custom", ThreadPoolBulkheadConfig.ofDefaults());
 
         ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry =
-                ThreadPoolBulkheadRegistry.of(configs, new NoOpThreadPoolBulkheadEventConsumer());
+            ThreadPoolBulkheadRegistry.of(configs, new NoOpThreadPoolBulkheadEventConsumer());
 
         getEventProcessor(threadPoolBulkheadRegistry.getEventPublisher())
-                .ifPresent(eventProcessor -> assertThat(eventProcessor.hasConsumers()).isTrue());
+            .ifPresent(eventProcessor -> assertThat(eventProcessor.hasConsumers()).isTrue());
     }
 
     @Test
@@ -178,34 +178,34 @@ public class ThreadPoolBulkheadRegistryTest {
         registryEventConsumers.add(new NoOpThreadPoolBulkheadEventConsumer());
 
         ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry =
-                ThreadPoolBulkheadRegistry.of(configs, registryEventConsumers);
+            ThreadPoolBulkheadRegistry.of(configs, registryEventConsumers);
 
         getEventProcessor(threadPoolBulkheadRegistry.getEventPublisher())
-                .ifPresent(eventProcessor -> assertThat(eventProcessor.hasConsumers()).isTrue());
+            .ifPresent(eventProcessor -> assertThat(eventProcessor.hasConsumers()).isTrue());
     }
 
     @Test
     public void testWithNotExistingConfig() {
         ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry = ThreadPoolBulkheadRegistry
-                .ofDefaults();
+            .ofDefaults();
 
         assertThatThrownBy(() -> threadPoolBulkheadRegistry.bulkhead("test", "doesNotExist"))
-                .isInstanceOf(ConfigurationNotFoundException.class);
+            .isInstanceOf(ConfigurationNotFoundException.class);
     }
 
     @Test
     public void testAddConfiguration() {
         ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry = ThreadPoolBulkheadRegistry
-                .ofDefaults();
+            .ofDefaults();
         threadPoolBulkheadRegistry
-                .addConfiguration("custom", ThreadPoolBulkheadConfig.custom().build());
+            .addConfiguration("custom", ThreadPoolBulkheadConfig.custom().build());
 
         assertThat(threadPoolBulkheadRegistry.getDefaultConfig()).isNotNull();
         assertThat(threadPoolBulkheadRegistry.getConfiguration("custom")).isNotNull();
     }
 
     private static class NoOpThreadPoolBulkheadEventConsumer implements
-            RegistryEventConsumer<ThreadPoolBulkhead> {
+        RegistryEventConsumer<ThreadPoolBulkhead> {
 
         @Override
         public void onEntryAddedEvent(EntryAddedEvent<ThreadPoolBulkhead> entryAddedEvent) {
@@ -217,7 +217,7 @@ public class ThreadPoolBulkheadRegistryTest {
 
         @Override
         public void onEntryReplacedEvent(
-                EntryReplacedEvent<ThreadPoolBulkhead> entryReplacedEvent) {
+            EntryReplacedEvent<ThreadPoolBulkhead> entryReplacedEvent) {
         }
     }
 

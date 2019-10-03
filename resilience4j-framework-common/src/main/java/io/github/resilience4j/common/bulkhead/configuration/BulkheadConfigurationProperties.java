@@ -31,7 +31,7 @@ public class BulkheadConfigurationProperties {
     private Map<String, InstanceProperties> configs = new HashMap<>();
 
     public io.github.resilience4j.bulkhead.BulkheadConfig createBulkheadConfig(
-            InstanceProperties instanceProperties) {
+        InstanceProperties instanceProperties) {
         if (StringUtils.isNotEmpty(instanceProperties.getBaseConfig())) {
             InstanceProperties baseProperties = configs.get(instanceProperties.getBaseConfig());
             if (baseProperties == null) {
@@ -40,21 +40,21 @@ public class BulkheadConfigurationProperties {
             return buildConfigFromBaseConfig(baseProperties, instanceProperties);
         }
         return buildBulkheadConfig(io.github.resilience4j.bulkhead.BulkheadConfig.custom(),
-                instanceProperties);
+            instanceProperties);
     }
 
     private io.github.resilience4j.bulkhead.BulkheadConfig buildConfigFromBaseConfig(
-            InstanceProperties baseProperties, InstanceProperties instanceProperties) {
+        InstanceProperties baseProperties, InstanceProperties instanceProperties) {
         ConfigUtils.mergePropertiesIfAny(baseProperties, instanceProperties);
         io.github.resilience4j.bulkhead.BulkheadConfig baseConfig = buildBulkheadConfig(
-                io.github.resilience4j.bulkhead.BulkheadConfig.custom(), baseProperties);
+            io.github.resilience4j.bulkhead.BulkheadConfig.custom(), baseProperties);
         return buildBulkheadConfig(io.github.resilience4j.bulkhead.BulkheadConfig.from(baseConfig),
-                instanceProperties);
+            instanceProperties);
     }
 
     private io.github.resilience4j.bulkhead.BulkheadConfig buildBulkheadConfig(
-            io.github.resilience4j.bulkhead.BulkheadConfig.Builder builder,
-            InstanceProperties instanceProperties) {
+        io.github.resilience4j.bulkhead.BulkheadConfig.Builder builder,
+        InstanceProperties instanceProperties) {
         if (instanceProperties.getMaxConcurrentCalls() != null) {
             builder.maxConcurrentCalls(instanceProperties.getMaxConcurrentCalls());
         }

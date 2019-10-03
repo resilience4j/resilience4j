@@ -32,10 +32,10 @@ public class RetryEventDTO {
     }
 
     RetryEventDTO(String retryName,
-            RetryEvent.Type type,
-            String creationTime,
-            String errorMessage,
-            int numberOfAttempts) {
+        RetryEvent.Type type,
+        String creationTime,
+        String errorMessage,
+        int numberOfAttempts) {
         this.retryName = retryName;
         this.type = type;
         this.creationTime = creationTime;

@@ -31,7 +31,7 @@ import org.mockito.BDDMockito;
 public abstract class AbstractRateLimiterMetricsTest {
 
     private static final int DEFAULT_LIMIT_FOR_PERIOD = RateLimiterConfig.ofDefaults()
-            .getLimitForPeriod();
+        .getLimitForPeriod();
     private MetricRegistry metricRegistry;
     private HelloWorldService helloWorldService;
 
@@ -62,11 +62,11 @@ public abstract class AbstractRateLimiterMetricsTest {
         BDDMockito.then(helloWorldService).should(times(1)).returnHelloWorld();
         assertThat(metricRegistry.getMetrics()).hasSize(2);
         assertThat(metricRegistry.getGauges()
-                .get("resilience4j.ratelimiter.testLimit.number_of_waiting_threads")
-                .getValue()).isEqualTo(0);
+            .get("resilience4j.ratelimiter.testLimit.number_of_waiting_threads")
+            .getValue()).isEqualTo(0);
         assertThat(metricRegistry.getGauges()
-                .get("resilience4j.ratelimiter.testLimit.available_permissions").getValue())
-                .isIn(DEFAULT_LIMIT_FOR_PERIOD, DEFAULT_LIMIT_FOR_PERIOD - 1);
+            .get("resilience4j.ratelimiter.testLimit.available_permissions").getValue())
+            .isIn(DEFAULT_LIMIT_FOR_PERIOD, DEFAULT_LIMIT_FOR_PERIOD - 1);
     }
 
     @Test
@@ -86,9 +86,9 @@ public abstract class AbstractRateLimiterMetricsTest {
         BDDMockito.then(helloWorldService).should(times(1)).returnHelloWorld();
         assertThat(metricRegistry.getMetrics()).hasSize(2);
         assertThat(metricRegistry.getGauges().get("testPre.testLimit.number_of_waiting_threads")
-                .getValue()).isEqualTo(0);
+            .getValue()).isEqualTo(0);
         assertThat(metricRegistry.getGauges().get("testPre.testLimit.available_permissions")
-                .getValue())
-                .isIn(DEFAULT_LIMIT_FOR_PERIOD, DEFAULT_LIMIT_FOR_PERIOD - 1);
+            .getValue())
+            .isIn(DEFAULT_LIMIT_FOR_PERIOD, DEFAULT_LIMIT_FOR_PERIOD - 1);
     }
 }

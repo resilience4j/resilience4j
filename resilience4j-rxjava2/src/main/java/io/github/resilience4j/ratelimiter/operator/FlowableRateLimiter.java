@@ -44,7 +44,7 @@ class FlowableRateLimiter<T> extends Flowable<T> {
         if (waitDuration >= 0) {
             if (waitDuration > 0) {
                 Completable.timer(waitDuration, TimeUnit.NANOSECONDS)
-                        .subscribe(() -> upstream.subscribe(new RateLimiterSubscriber(downstream)));
+                    .subscribe(() -> upstream.subscribe(new RateLimiterSubscriber(downstream)));
             } else {
                 upstream.subscribe(new RateLimiterSubscriber(downstream));
             }

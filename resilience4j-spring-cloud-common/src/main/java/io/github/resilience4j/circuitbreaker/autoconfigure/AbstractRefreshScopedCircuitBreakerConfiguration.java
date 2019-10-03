@@ -19,10 +19,10 @@ public abstract class AbstractRefreshScopedCircuitBreakerConfiguration {
     protected final CircuitBreakerConfigurationProperties circuitBreakerProperties;
 
     protected AbstractRefreshScopedCircuitBreakerConfiguration(
-            CircuitBreakerConfigurationProperties circuitBreakerProperties) {
+        CircuitBreakerConfigurationProperties circuitBreakerProperties) {
         this.circuitBreakerProperties = circuitBreakerProperties;
         this.circuitBreakerConfiguration = new CircuitBreakerConfiguration(
-                circuitBreakerProperties);
+            circuitBreakerProperties);
     }
 
     /**
@@ -33,15 +33,15 @@ public abstract class AbstractRefreshScopedCircuitBreakerConfiguration {
     @RefreshScope
     @ConditionalOnMissingBean
     public CircuitBreakerRegistry circuitBreakerRegistry(
-            EventConsumerRegistry<CircuitBreakerEvent> eventConsumerRegistry,
-            RegistryEventConsumer<CircuitBreaker> circuitBreakerRegistryEventConsumer) {
+        EventConsumerRegistry<CircuitBreakerEvent> eventConsumerRegistry,
+        RegistryEventConsumer<CircuitBreaker> circuitBreakerRegistryEventConsumer) {
         CircuitBreakerRegistry circuitBreakerRegistry =
-                circuitBreakerConfiguration.createCircuitBreakerRegistry(circuitBreakerProperties,
-                        circuitBreakerRegistryEventConsumer);
+            circuitBreakerConfiguration.createCircuitBreakerRegistry(circuitBreakerProperties,
+                circuitBreakerRegistryEventConsumer);
 
         // Register the event consumers
         circuitBreakerConfiguration
-                .registerEventConsumer(circuitBreakerRegistry, eventConsumerRegistry);
+            .registerEventConsumer(circuitBreakerRegistry, eventConsumerRegistry);
 
         // Initialize backends that were initially configured.
         circuitBreakerConfiguration.initCircuitBreakerRegistry(circuitBreakerRegistry);

@@ -49,9 +49,9 @@ import retrofit2.converter.scalars.ScalarsConverterFactory;
 public class RetrofitCircuitBreakerTest {
 
     private static final CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom()
-            .slidingWindowSize(3)
-            .waitDurationInOpenState(Duration.ofMillis(150))
-            .build();
+        .slidingWindowSize(3)
+        .waitDurationInOpenState(Duration.ofMillis(150))
+        .build();
     @Rule
     public WireMockRule wireMockRule = new WireMockRule();
     private CircuitBreaker circuitBreaker;
@@ -64,28 +64,28 @@ public class RetrofitCircuitBreakerTest {
 
         final long TIMEOUT = 150; // ms
         this.client = new OkHttpClient.Builder()
-                .connectTimeout(TIMEOUT, TimeUnit.MILLISECONDS)
-                .readTimeout(TIMEOUT, TimeUnit.MILLISECONDS)
-                .writeTimeout(TIMEOUT, TimeUnit.MILLISECONDS)
-                .build();
+            .connectTimeout(TIMEOUT, TimeUnit.MILLISECONDS)
+            .readTimeout(TIMEOUT, TimeUnit.MILLISECONDS)
+            .writeTimeout(TIMEOUT, TimeUnit.MILLISECONDS)
+            .build();
 
         this.service = new Retrofit.Builder()
-                .addCallAdapterFactory(CircuitBreakerCallAdapter.of(circuitBreaker))
-                .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
-                .addConverterFactory(ScalarsConverterFactory.create())
-                .baseUrl(wireMockRule.baseUrl())
-                .client(client)
-                .build()
-                .create(RetrofitService.class);
+            .addCallAdapterFactory(CircuitBreakerCallAdapter.of(circuitBreaker))
+            .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
+            .addConverterFactory(ScalarsConverterFactory.create())
+            .baseUrl(wireMockRule.baseUrl())
+            .client(client)
+            .build()
+            .create(RetrofitService.class);
     }
 
     @Test
     public void decorateSuccessfulCall() throws Exception {
         stubFor(get(urlPathEqualTo("/greeting"))
-                .willReturn(aResponse()
-                        .withStatus(200)
-                        .withHeader("Content-Type", "text/plain")
-                        .withBody("hello world")));
+            .willReturn(aResponse()
+                .withStatus(200)
+                .withHeader("Content-Type", "text/plain")
+                .withBody("hello world")));
 
         service.greeting().execute();
 
@@ -95,10 +95,10 @@ public class RetrofitCircuitBreakerTest {
     @Test
     public void decorateSuccessfulEnqueuedCall() throws Throwable {
         stubFor(get(urlPathEqualTo("/greeting"))
-                .willReturn(aResponse()
-                        .withStatus(200)
-                        .withHeader("Content-Type", "text/plain")
-                        .withBody("hello world")));
+            .willReturn(aResponse()
+                .withStatus(200)
+                .withHeader("Content-Type", "text/plain")
+                .withBody("hello world")));
 
         EnqueueDecorator.enqueue(service.greeting());
 
@@ -108,11 +108,11 @@ public class RetrofitCircuitBreakerTest {
     @Test
     public void decorateTimingOutCall() throws Exception {
         stubFor(get(urlPathEqualTo("/greeting"))
-                .willReturn(aResponse()
-                        .withFixedDelay(500)
-                        .withStatus(200)
-                        .withHeader("Content-Type", "text/plain")
-                        .withBody("hello world")));
+            .willReturn(aResponse()
+                .withFixedDelay(500)
+                .withStatus(200)
+                .withHeader("Content-Type", "text/plain")
+                .withBody("hello world")));
 
         try {
             service.greeting().execute();
@@ -121,12 +121,12 @@ public class RetrofitCircuitBreakerTest {
 
         final CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
         assertThat(metrics.getNumberOfFailedCalls())
-                .describedAs("Failed calls")
-                .isEqualTo(1);
+            .describedAs("Failed calls")
+            .isEqualTo(1);
 
         // Circuit breaker should still be closed, not hit open threshold
         assertThat(circuitBreaker.getState())
-                .isEqualTo(CircuitBreaker.State.CLOSED);
+            .isEqualTo(CircuitBreaker.State.CLOSED);
 
         try {
             service.greeting().execute();
@@ -139,20 +139,20 @@ public class RetrofitCircuitBreakerTest {
         }
 
         assertThat(metrics.getNumberOfFailedCalls())
-                .isEqualTo(3);
+            .isEqualTo(3);
         // Circuit breaker should be OPEN, threshold met
         assertThat(circuitBreaker.getState())
-                .isEqualTo(CircuitBreaker.State.OPEN);
+            .isEqualTo(CircuitBreaker.State.OPEN);
     }
 
     @Test
     public void decorateTimingOutEnqueuedCall() throws Exception {
         stubFor(get(urlPathEqualTo("/greeting"))
-                .willReturn(aResponse()
-                        .withFixedDelay(500)
-                        .withStatus(200)
-                        .withHeader("Content-Type", "text/plain")
-                        .withBody("hello world")));
+            .willReturn(aResponse()
+                .withFixedDelay(500)
+                .withStatus(200)
+                .withHeader("Content-Type", "text/plain")
+                .withBody("hello world")));
 
         try {
             EnqueueDecorator.enqueue(service.greeting());
@@ -161,12 +161,12 @@ public class RetrofitCircuitBreakerTest {
 
         final CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
         assertThat(metrics.getNumberOfFailedCalls())
-                .describedAs("Failed calls")
-                .isEqualTo(1);
+            .describedAs("Failed calls")
+            .isEqualTo(1);
 
         // Circuit breaker should still be closed, not hit open threshold
         assertThat(circuitBreaker.getState())
-                .isEqualTo(CircuitBreaker.State.CLOSED);
+            .isEqualTo(CircuitBreaker.State.CLOSED);
 
         try {
             EnqueueDecorator.enqueue(service.greeting());
@@ -179,24 +179,24 @@ public class RetrofitCircuitBreakerTest {
         }
 
         assertThat(metrics.getNumberOfFailedCalls())
-                .isEqualTo(3);
+            .isEqualTo(3);
         // Circuit breaker should be OPEN, threshold met
         assertThat(circuitBreaker.getState())
-                .isEqualTo(CircuitBreaker.State.OPEN);
+            .isEqualTo(CircuitBreaker.State.OPEN);
     }
 
     @Test
     public void decorateUnsuccessfulCall() throws Exception {
         stubFor(get(urlPathEqualTo("/greeting"))
-                .willReturn(aResponse()
-                        .withStatus(500)
-                        .withHeader("Content-Type", "text/plain")));
+            .willReturn(aResponse()
+                .withStatus(500)
+                .withHeader("Content-Type", "text/plain")));
 
         final Response<String> response = service.greeting().execute();
 
         assertThat(response.code())
-                .describedAs("Response code")
-                .isEqualTo(500);
+            .describedAs("Response code")
+            .isEqualTo(500);
 
         final CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
         assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(1);
@@ -205,15 +205,15 @@ public class RetrofitCircuitBreakerTest {
     @Test
     public void decorateUnsuccessfulEnqueuedCall() throws Throwable {
         stubFor(get(urlPathEqualTo("/greeting"))
-                .willReturn(aResponse()
-                        .withStatus(500)
-                        .withHeader("Content-Type", "text/plain")));
+            .willReturn(aResponse()
+                .withStatus(500)
+                .withHeader("Content-Type", "text/plain")));
 
         final Response<String> response = EnqueueDecorator.enqueue(service.greeting());
 
         assertThat(response.code())
-                .describedAs("Response code")
-                .isEqualTo(500);
+            .describedAs("Response code")
+            .isEqualTo(500);
 
         final CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
         assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(1);
@@ -222,10 +222,10 @@ public class RetrofitCircuitBreakerTest {
     @Test
     public void shouldNotCallServiceOnEnqueueWhenOpen() throws Throwable {
         stubFor(get(urlPathEqualTo("/greeting"))
-                .willReturn(aResponse()
-                        .withStatus(200)
-                        .withHeader("Content-Type", "text/plain")
-                        .withBody("hello world")));
+            .willReturn(aResponse()
+                .withStatus(200)
+                .withHeader("Content-Type", "text/plain")
+                .withBody("hello world")));
 
         circuitBreaker.transitionToOpenState();
 
@@ -243,10 +243,10 @@ public class RetrofitCircuitBreakerTest {
     @Test(expected = IllegalArgumentException.class)
     public void shouldThrowOnBadService() {
         BadRetrofitService badService = new Retrofit.Builder()
-                .addCallAdapterFactory(CircuitBreakerCallAdapter.of(circuitBreaker))
-                .baseUrl(wireMockRule.baseUrl())
-                .build()
-                .create(BadRetrofitService.class);
+            .addCallAdapterFactory(CircuitBreakerCallAdapter.of(circuitBreaker))
+            .baseUrl(wireMockRule.baseUrl())
+            .build()
+            .create(BadRetrofitService.class);
 
         badService.greeting();
     }
@@ -256,19 +256,19 @@ public class RetrofitCircuitBreakerTest {
         String body = "this is from rxjava";
 
         stubFor(get(urlPathEqualTo("/delegated"))
-                .willReturn(aResponse()
-                        .withStatus(200)
-                        .withHeader("Content-Type", "text/plain")
-                        .withBody(body)));
+            .willReturn(aResponse()
+                .withStatus(200)
+                .withHeader("Content-Type", "text/plain")
+                .withBody(body)));
 
         RetrofitService service = new Retrofit.Builder()
-                .addCallAdapterFactory(CircuitBreakerCallAdapter.of(circuitBreaker))
-                .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
-                .addConverterFactory(ScalarsConverterFactory.create())
-                .baseUrl(wireMockRule.baseUrl())
-                .client(client)
-                .build()
-                .create(RetrofitService.class);
+            .addCallAdapterFactory(CircuitBreakerCallAdapter.of(circuitBreaker))
+            .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
+            .addConverterFactory(ScalarsConverterFactory.create())
+            .baseUrl(wireMockRule.baseUrl())
+            .client(client)
+            .build()
+            .create(RetrofitService.class);
 
         String resultBody = service.delegated().blockingGet();
         assertThat(resultBody).isEqualTo(body);
@@ -283,19 +283,19 @@ public class RetrofitCircuitBreakerTest {
         String body = "this is from rxjava";
 
         stubFor(get(urlPathEqualTo("/delegated"))
-                .willReturn(aResponse()
-                        .withStatus(200)
-                        .withHeader("Content-Type", "text/plain")
-                        .withBody(body)));
+            .willReturn(aResponse()
+                .withStatus(200)
+                .withHeader("Content-Type", "text/plain")
+                .withBody(body)));
 
         RetrofitService service = new Retrofit.Builder()
-                .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
-                .addCallAdapterFactory(CircuitBreakerCallAdapter.of(circuitBreaker))
-                .addConverterFactory(ScalarsConverterFactory.create())
-                .baseUrl(wireMockRule.baseUrl())
-                .client(client)
-                .build()
-                .create(RetrofitService.class);
+            .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
+            .addCallAdapterFactory(CircuitBreakerCallAdapter.of(circuitBreaker))
+            .addConverterFactory(ScalarsConverterFactory.create())
+            .baseUrl(wireMockRule.baseUrl())
+            .client(client)
+            .build()
+            .create(RetrofitService.class);
 
         String resultBody = service.delegated().blockingGet();
         assertThat(resultBody).isEqualTo(body);

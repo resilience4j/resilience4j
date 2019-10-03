@@ -53,7 +53,7 @@ public class RetryAutoConfiguration {
 
         @Bean
         public RetryEventsEndpoint retryEventsEndpoint(
-                EventConsumerRegistry<RetryEvent> eventConsumerRegistry) {
+            EventConsumerRegistry<RetryEvent> eventConsumerRegistry) {
             return new RetryEventsEndpoint(eventConsumerRegistry);
         }
 

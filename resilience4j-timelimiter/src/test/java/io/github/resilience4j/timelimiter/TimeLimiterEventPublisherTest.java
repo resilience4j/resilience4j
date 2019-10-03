@@ -50,9 +50,9 @@ public class TimeLimiterEventPublisherTest {
     public void shouldConsumeOnSuccessEvent() throws Exception {
         TimeLimiter timeLimiter = TimeLimiter.of(NEVER);
         timeLimiter.getEventPublisher()
-                .onSuccess(event -> logger.info(event.getEventType().toString()));
+            .onSuccess(event -> logger.info(event.getEventType().toString()));
         Supplier<CompletableFuture<String>> futureSupplier = () ->
-                CompletableFuture.completedFuture("Hello world");
+            CompletableFuture.completedFuture("Hello world");
 
         String result = timeLimiter.decorateFutureSupplier(futureSupplier).call();
 
@@ -64,9 +64,9 @@ public class TimeLimiterEventPublisherTest {
     public void shouldConsumeOnTimeoutEvent() {
         TimeLimiter timeLimiter = TimeLimiter.of(NEVER);
         timeLimiter.getEventPublisher()
-                .onTimeout(event -> logger.info(event.getEventType().toString()));
+            .onTimeout(event -> logger.info(event.getEventType().toString()));
         Supplier<CompletableFuture<String>> futureSupplier = () ->
-                CompletableFuture.supplyAsync(this::timeout);
+            CompletableFuture.supplyAsync(this::timeout);
 
         Try.ofCallable(timeLimiter.decorateFutureSupplier(futureSupplier));
 
@@ -77,11 +77,11 @@ public class TimeLimiterEventPublisherTest {
     public void shouldConsumeOnErrorEvent() {
         TimeLimiter timeLimiter = TimeLimiter.of(Duration.ofSeconds(1));
         timeLimiter.getEventPublisher()
-                .onError(event -> logger
-                        .info(event.getEventType().toString() + " " + event.getThrowable()
-                                .toString()));
+            .onError(event -> logger
+                .info(event.getEventType().toString() + " " + event.getThrowable()
+                    .toString()));
         Supplier<CompletableFuture<String>> futureSupplier = () ->
-                CompletableFuture.supplyAsync(this::fail);
+            CompletableFuture.supplyAsync(this::fail);
 
         Try.ofCallable(timeLimiter.decorateFutureSupplier(futureSupplier));
 

@@ -38,7 +38,7 @@ public class ReactorBulkheadAspectExt implements BulkheadAspectExt {
     @Override
     public boolean canHandleReturnType(Class returnType) {
         return (Flux.class.isAssignableFrom(returnType)) || (Mono.class
-                .isAssignableFrom(returnType));
+            .isAssignableFrom(returnType));
     }
 
     /**
@@ -53,7 +53,7 @@ public class ReactorBulkheadAspectExt implements BulkheadAspectExt {
      */
     @Override
     public Object handle(ProceedingJoinPoint proceedingJoinPoint, Bulkhead bulkhead,
-            String methodName) throws Throwable {
+        String methodName) throws Throwable {
         Object returnValue = proceedingJoinPoint.proceed();
         if (Flux.class.isAssignableFrom(returnValue.getClass())) {
             Flux<?> fluxReturnValue = (Flux<?>) returnValue;
@@ -63,10 +63,10 @@ public class ReactorBulkheadAspectExt implements BulkheadAspectExt {
             return monoReturnValue.compose(BulkheadOperator.of(bulkhead));
         } else {
             logger.error("Unsupported type for Reactor BulkHead {}",
-                    returnValue.getClass().getTypeName());
+                returnValue.getClass().getTypeName());
             throw new IllegalArgumentException(
-                    "Not Supported type for the BulkHead in Reactor :" + returnValue.getClass()
-                            .getName());
+                "Not Supported type for the BulkHead in Reactor :" + returnValue.getClass()
+                    .getName());
 
         }
     }

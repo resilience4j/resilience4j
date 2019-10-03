@@ -30,5 +30,5 @@ public interface FallbackDecorator {
      * @return decorated function
      */
     CheckedFunction0<Object> decorate(FallbackMethod recoveryMethod,
-            CheckedFunction0<Object> supplier);
+        CheckedFunction0<Object> supplier);
 }

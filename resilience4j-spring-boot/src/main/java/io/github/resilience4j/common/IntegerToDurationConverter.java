@@ -38,7 +38,7 @@ public class IntegerToDurationConverter implements Converter<Integer, Duration> 
                 return Duration.ofMillis(source);
             } catch (DateTimeParseException e) {
                 throw new IllegalArgumentException("Cannot convert '" + source + "' to Duration",
-                        e);
+                    e);
             }
         } else {
             return null;

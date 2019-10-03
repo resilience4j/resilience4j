@@ -36,7 +36,7 @@ public class RateLimiterMetricsCollector extends Collector {
     private final RateLimiterRegistry rateLimiterRegistry;
 
     private RateLimiterMetricsCollector(MetricNames names,
-            RateLimiterRegistry rateLimiterRegistry) {
+        RateLimiterRegistry rateLimiterRegistry) {
         this.names = requireNonNull(names);
         this.rateLimiterRegistry = requireNonNull(rateLimiterRegistry);
     }
@@ -49,7 +49,7 @@ public class RateLimiterMetricsCollector extends Collector {
      * @param rateLimiterRegistry the source of rate limiters
      */
     public static RateLimiterMetricsCollector ofRateLimiterRegistry(MetricNames names,
-            RateLimiterRegistry rateLimiterRegistry) {
+        RateLimiterRegistry rateLimiterRegistry) {
         return new RateLimiterMetricsCollector(names, rateLimiterRegistry);
     }
 
@@ -59,29 +59,29 @@ public class RateLimiterMetricsCollector extends Collector {
      * @param rateLimiterRegistry the source of rate limiters
      */
     public static RateLimiterMetricsCollector ofRateLimiterRegistry(
-            RateLimiterRegistry rateLimiterRegistry) {
+        RateLimiterRegistry rateLimiterRegistry) {
         return new RateLimiterMetricsCollector(MetricNames.ofDefaults(), rateLimiterRegistry);
     }
 
     @Override
     public List<MetricFamilySamples> collect() {
         GaugeMetricFamily availablePermissionsFamily = new GaugeMetricFamily(
-                names.getAvailablePermissionsMetricName(),
-                "The number of available permissions",
-                LabelNames.NAME
+            names.getAvailablePermissionsMetricName(),
+            "The number of available permissions",
+            LabelNames.NAME
         );
         GaugeMetricFamily waitingThreadsFamily = new GaugeMetricFamily(
-                names.getWaitingThreadsMetricName(),
-                "The number of waiting threads",
-                LabelNames.NAME
+            names.getWaitingThreadsMetricName(),
+            "The number of waiting threads",
+            LabelNames.NAME
         );
 
         for (RateLimiter rateLimiter : rateLimiterRegistry.getAllRateLimiters()) {
             List<String> nameLabel = singletonList(rateLimiter.getName());
             availablePermissionsFamily
-                    .addMetric(nameLabel, rateLimiter.getMetrics().getAvailablePermissions());
+                .addMetric(nameLabel, rateLimiter.getMetrics().getAvailablePermissions());
             waitingThreadsFamily
-                    .addMetric(nameLabel, rateLimiter.getMetrics().getNumberOfWaitingThreads());
+                .addMetric(nameLabel, rateLimiter.getMetrics().getNumberOfWaitingThreads());
         }
 
         return asList(availablePermissionsFamily, waitingThreadsFamily);
@@ -141,7 +141,7 @@ public class RateLimiterMetricsCollector extends Collector {
              */
             public Builder availablePermissionsMetricName(String availablePermissionsMetricName) {
                 metricNames.availablePermissionsMetricName = requireNonNull(
-                        availablePermissionsMetricName);
+                    availablePermissionsMetricName);
                 return this;
             }
 

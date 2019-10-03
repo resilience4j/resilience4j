@@ -60,13 +60,13 @@ public class CacheImpl<K, V> implements Cache<K, V> {
     @Override
     public V computeIfAbsent(K cacheKey, CheckedFunction0<V> supplier) {
         return getValueFromCache(cacheKey)
-                .getOrElse(() -> computeAndPut(cacheKey, supplier));
+            .getOrElse(() -> computeAndPut(cacheKey, supplier));
     }
 
     private V computeAndPut(K cacheKey, CheckedFunction0<V> supplier) {
         return Try.of(supplier)
-                .andThen(value -> putValueIntoCache(cacheKey, value))
-                .get();
+            .andThen(value -> putValueIntoCache(cacheKey, value))
+            .get();
     }
 
     private Option<V> getValueFromCache(K cacheKey) {
@@ -123,7 +123,7 @@ public class CacheImpl<K, V> implements Cache<K, V> {
     }
 
     private class CacheEventProcessor extends EventProcessor<CacheEvent> implements
-            EventConsumer<CacheEvent>, EventPublisher {
+        EventConsumer<CacheEvent>, EventPublisher {
 
         @Override
         public EventPublisher onCacheHit(EventConsumer<CacheOnHitEvent> eventConsumer) {

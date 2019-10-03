@@ -27,12 +27,12 @@ import io.micrometer.core.instrument.binder.MeterBinder;
  * A micrometer binder that is used to register CircuitBreaker exposed {@link Metrics metrics}.
  */
 public class TaggedCircuitBreakerMetrics extends AbstractCircuitBreakerMetrics implements
-        MeterBinder {
+    MeterBinder {
 
     private final CircuitBreakerRegistry circuitBreakerRegistry;
 
     private TaggedCircuitBreakerMetrics(MetricNames names,
-            CircuitBreakerRegistry circuitBreakerRegistry) {
+        CircuitBreakerRegistry circuitBreakerRegistry) {
         super(names);
         this.circuitBreakerRegistry = requireNonNull(circuitBreakerRegistry);
     }
@@ -44,7 +44,7 @@ public class TaggedCircuitBreakerMetrics extends AbstractCircuitBreakerMetrics i
      * @return The {@link TaggedCircuitBreakerMetrics} instance.
      */
     public static TaggedCircuitBreakerMetrics ofCircuitBreakerRegistry(
-            CircuitBreakerRegistry circuitBreakerRegistry) {
+        CircuitBreakerRegistry circuitBreakerRegistry) {
         return new TaggedCircuitBreakerMetrics(MetricNames.ofDefaults(), circuitBreakerRegistry);
     }
 
@@ -56,7 +56,7 @@ public class TaggedCircuitBreakerMetrics extends AbstractCircuitBreakerMetrics i
      * @return The {@link TaggedCircuitBreakerMetrics} instance.
      */
     public static TaggedCircuitBreakerMetrics ofCircuitBreakerRegistry(MetricNames metricNames,
-            CircuitBreakerRegistry circuitBreakerRegistry) {
+        CircuitBreakerRegistry circuitBreakerRegistry) {
         return new TaggedCircuitBreakerMetrics(metricNames, circuitBreakerRegistry);
     }
 
@@ -66,9 +66,9 @@ public class TaggedCircuitBreakerMetrics extends AbstractCircuitBreakerMetrics i
             addMetrics(registry, circuitBreaker);
         }
         circuitBreakerRegistry.getEventPublisher()
-                .onEntryAdded(event -> addMetrics(registry, event.getAddedEntry()));
+            .onEntryAdded(event -> addMetrics(registry, event.getAddedEntry()));
         circuitBreakerRegistry.getEventPublisher().onEntryRemoved(
-                event -> removeMetrics(registry, event.getRemovedEntry().getName()));
+            event -> removeMetrics(registry, event.getRemovedEntry().getName()));
         circuitBreakerRegistry.getEventPublisher().onEntryReplaced(event -> {
             removeMetrics(registry, event.getOldEntry().getName());
             addMetrics(registry, event.getNewEntry());

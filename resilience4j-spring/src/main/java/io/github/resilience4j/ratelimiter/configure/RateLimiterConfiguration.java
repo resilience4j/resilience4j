@@ -48,16 +48,16 @@ public class RateLimiterConfiguration {
 
     @Bean
     public RateLimiterRegistry rateLimiterRegistry(
-            RateLimiterConfigurationProperties rateLimiterProperties,
-            EventConsumerRegistry<RateLimiterEvent> rateLimiterEventsConsumerRegistry,
-            RegistryEventConsumer<RateLimiter> rateLimiterRegistryEventConsumer) {
+        RateLimiterConfigurationProperties rateLimiterProperties,
+        EventConsumerRegistry<RateLimiterEvent> rateLimiterEventsConsumerRegistry,
+        RegistryEventConsumer<RateLimiter> rateLimiterRegistryEventConsumer) {
         RateLimiterRegistry rateLimiterRegistry = createRateLimiterRegistry(rateLimiterProperties,
-                rateLimiterRegistryEventConsumer);
+            rateLimiterRegistryEventConsumer);
         registerEventConsumer(rateLimiterRegistry, rateLimiterEventsConsumerRegistry,
-                rateLimiterProperties);
+            rateLimiterProperties);
         rateLimiterProperties.getInstances().forEach(
-                (name, properties) -> rateLimiterRegistry.rateLimiter(name,
-                        rateLimiterProperties.createRateLimiterConfig(properties))
+            (name, properties) -> rateLimiterRegistry.rateLimiter(name,
+                rateLimiterProperties.createRateLimiterConfig(properties))
         );
         return rateLimiterRegistry;
     }
@@ -65,9 +65,9 @@ public class RateLimiterConfiguration {
     @Bean
     @Primary
     public RegistryEventConsumer<RateLimiter> rateLimiterRegistryEventConsumer(
-            Optional<List<RegistryEventConsumer<RateLimiter>>> optionalRegistryEventConsumers) {
+        Optional<List<RegistryEventConsumer<RateLimiter>>> optionalRegistryEventConsumers) {
         return new CompositeRegistryEventConsumer<>(
-                optionalRegistryEventConsumers.orElseGet(ArrayList::new));
+            optionalRegistryEventConsumers.orElseGet(ArrayList::new));
     }
 
     /**
@@ -77,12 +77,12 @@ public class RateLimiterConfiguration {
      * @return a RateLimiterRegistry
      */
     private RateLimiterRegistry createRateLimiterRegistry(
-            RateLimiterConfigurationProperties rateLimiterConfigurationProperties,
-            RegistryEventConsumer<RateLimiter> rateLimiterRegistryEventConsumer) {
+        RateLimiterConfigurationProperties rateLimiterConfigurationProperties,
+        RegistryEventConsumer<RateLimiter> rateLimiterRegistryEventConsumer) {
         Map<String, RateLimiterConfig> configs = rateLimiterConfigurationProperties.getConfigs()
-                .entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey,
-                        entry -> rateLimiterConfigurationProperties
-                                .createRateLimiterConfig(entry.getValue())));
+            .entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey,
+                entry -> rateLimiterConfigurationProperties
+                    .createRateLimiterConfig(entry.getValue())));
 
         return RateLimiterRegistry.of(configs, rateLimiterRegistryEventConsumer);
     }
@@ -95,37 +95,37 @@ public class RateLimiterConfiguration {
      * @param eventConsumerRegistry The event consumer registry.
      */
     private void registerEventConsumer(RateLimiterRegistry rateLimiterRegistry,
-            EventConsumerRegistry<RateLimiterEvent> eventConsumerRegistry,
-            RateLimiterConfigurationProperties rateLimiterConfigurationProperties) {
+        EventConsumerRegistry<RateLimiterEvent> eventConsumerRegistry,
+        RateLimiterConfigurationProperties rateLimiterConfigurationProperties) {
         rateLimiterRegistry.getEventPublisher().onEntryAdded(
-                event -> registerEventConsumer(eventConsumerRegistry, event.getAddedEntry(),
-                        rateLimiterConfigurationProperties));
+            event -> registerEventConsumer(eventConsumerRegistry, event.getAddedEntry(),
+                rateLimiterConfigurationProperties));
     }
 
     private void registerEventConsumer(
-            EventConsumerRegistry<RateLimiterEvent> eventConsumerRegistry, RateLimiter rateLimiter,
-            RateLimiterConfigurationProperties rateLimiterConfigurationProperties) {
+        EventConsumerRegistry<RateLimiterEvent> eventConsumerRegistry, RateLimiter rateLimiter,
+        RateLimiterConfigurationProperties rateLimiterConfigurationProperties) {
         final io.github.resilience4j.common.ratelimiter.configuration.RateLimiterConfigurationProperties.InstanceProperties limiterProperties = rateLimiterConfigurationProperties
-                .getInstances().get(rateLimiter.getName());
+            .getInstances().get(rateLimiter.getName());
         if (limiterProperties != null && limiterProperties.getSubscribeForEvents() != null
-                && limiterProperties.getSubscribeForEvents()) {
+            && limiterProperties.getSubscribeForEvents()) {
             rateLimiter.getEventPublisher().onEvent(eventConsumerRegistry
-                    .createEventConsumer(rateLimiter.getName(),
-                            limiterProperties.getEventConsumerBufferSize() != null
-                                    && limiterProperties.getEventConsumerBufferSize() != 0
-                                    ? limiterProperties.getEventConsumerBufferSize() : 100));
+                .createEventConsumer(rateLimiter.getName(),
+                    limiterProperties.getEventConsumerBufferSize() != null
+                        && limiterProperties.getEventConsumerBufferSize() != 0
+                        ? limiterProperties.getEventConsumerBufferSize() : 100));
         }
     }
 
     @Bean
     @Conditional(value = {AspectJOnClasspathCondition.class})
     public RateLimiterAspect rateLimiterAspect(
-            RateLimiterConfigurationProperties rateLimiterProperties,
-            RateLimiterRegistry rateLimiterRegistry,
-            @Autowired(required = false) List<RateLimiterAspectExt> rateLimiterAspectExtList,
-            FallbackDecorators fallbackDecorators) {
+        RateLimiterConfigurationProperties rateLimiterProperties,
+        RateLimiterRegistry rateLimiterRegistry,
+        @Autowired(required = false) List<RateLimiterAspectExt> rateLimiterAspectExtList,
+        FallbackDecorators fallbackDecorators) {
         return new RateLimiterAspect(rateLimiterRegistry, rateLimiterProperties,
-                rateLimiterAspectExtList, fallbackDecorators);
+            rateLimiterAspectExtList, fallbackDecorators);
     }
 
     @Bean

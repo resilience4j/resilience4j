@@ -67,10 +67,10 @@ public class FixedThreadPoolBulkhead implements ThreadPoolBulkhead {
         this.config = requireNonNull(bulkheadConfig, CONFIG_MUST_NOT_BE_NULL);
         // init thread pool executor
         this.executorService = new ThreadPoolExecutor(config.getCoreThreadPoolSize(),
-                config.getMaxThreadPoolSize(),
-                config.getKeepAliveDuration().toMillis(), TimeUnit.MILLISECONDS,
-                new ArrayBlockingQueue<>(config.getQueueCapacity()),
-                new NamingThreadFactory(name));
+            config.getMaxThreadPoolSize(),
+            config.getKeepAliveDuration().toMillis(), TimeUnit.MILLISECONDS,
+            new ArrayBlockingQueue<>(config.getQueueCapacity()),
+            new NamingThreadFactory(name));
         // adding prover jvm executor shutdown
         cleanup();
         this.metrics = new FixedThreadPoolBulkhead.BulkheadMetrics();
@@ -141,7 +141,7 @@ public class FixedThreadPoolBulkhead implements ThreadPoolBulkhead {
                     throw new CompletionException(e);
                 }
             }, executorService).whenComplete((voidResult, throwable) -> publishBulkheadEvent(
-                    () -> new BulkheadOnCallFinishedEvent(name)));
+                () -> new BulkheadOnCallFinishedEvent(name)));
         } catch (RejectedExecutionException rejected) {
             publishBulkheadEvent(() -> new BulkheadOnCallRejectedEvent(name));
             throw BulkheadFullException.createBulkheadFullException(this);
@@ -208,29 +208,29 @@ public class FixedThreadPoolBulkhead implements ThreadPoolBulkhead {
     }
 
     private class BulkheadEventProcessor extends EventProcessor<BulkheadEvent> implements
-            ThreadPoolBulkheadEventPublisher, EventConsumer<BulkheadEvent> {
+        ThreadPoolBulkheadEventPublisher, EventConsumer<BulkheadEvent> {
 
         @Override
         public ThreadPoolBulkheadEventPublisher onCallPermitted(
-                EventConsumer<BulkheadOnCallPermittedEvent> onCallPermittedEventConsumer) {
+            EventConsumer<BulkheadOnCallPermittedEvent> onCallPermittedEventConsumer) {
             registerConsumer(BulkheadOnCallPermittedEvent.class.getSimpleName(),
-                    onCallPermittedEventConsumer);
+                onCallPermittedEventConsumer);
             return this;
         }
 
         @Override
         public ThreadPoolBulkheadEventPublisher onCallRejected(
-                EventConsumer<BulkheadOnCallRejectedEvent> onCallRejectedEventConsumer) {
+            EventConsumer<BulkheadOnCallRejectedEvent> onCallRejectedEventConsumer) {
             registerConsumer(BulkheadOnCallRejectedEvent.class.getSimpleName(),
-                    onCallRejectedEventConsumer);
+                onCallRejectedEventConsumer);
             return this;
         }
 
         @Override
         public ThreadPoolBulkheadEventPublisher onCallFinished(
-                EventConsumer<BulkheadOnCallFinishedEvent> onCallFinishedEventConsumer) {
+            EventConsumer<BulkheadOnCallFinishedEvent> onCallFinishedEventConsumer) {
             registerConsumer(BulkheadOnCallFinishedEvent.class.getSimpleName(),
-                    onCallFinishedEventConsumer);
+                onCallFinishedEventConsumer);
             return this;
         }
 

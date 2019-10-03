@@ -30,9 +30,9 @@ public class FlowableRateLimiterTest {
         given(rateLimiter.reservePermission()).willReturn(Duration.ofSeconds(0).toNanos());
 
         Flowable.just(1)
-                .compose(RateLimiterOperator.of(rateLimiter))
-                .test()
-                .assertResult(1);
+            .compose(RateLimiterOperator.of(rateLimiter))
+            .test()
+            .assertResult(1);
     }
 
     @Test
@@ -40,9 +40,9 @@ public class FlowableRateLimiterTest {
         given(rateLimiter.reservePermission()).willReturn(Duration.ofSeconds(1).toNanos());
 
         Flowable.just(1)
-                .compose(RateLimiterOperator.of(rateLimiter))
-                .test()
-                .awaitTerminalEvent(2, TimeUnit.SECONDS);
+            .compose(RateLimiterOperator.of(rateLimiter))
+            .test()
+            .awaitTerminalEvent(2, TimeUnit.SECONDS);
     }
 
     @Test
@@ -50,9 +50,9 @@ public class FlowableRateLimiterTest {
         given(rateLimiter.reservePermission()).willReturn(Duration.ofSeconds(0).toNanos());
 
         Flowable.fromArray(1, 2)
-                .compose(RateLimiterOperator.of(rateLimiter))
-                .test()
-                .assertResult(1, 2);
+            .compose(RateLimiterOperator.of(rateLimiter))
+            .test()
+            .assertResult(1, 2);
     }
 
     @Test
@@ -60,11 +60,11 @@ public class FlowableRateLimiterTest {
         given(rateLimiter.reservePermission()).willReturn(Duration.ofSeconds(0).toNanos());
 
         Flowable.error(new IOException("BAM!"))
-                .compose(RateLimiterOperator.of(rateLimiter))
-                .test()
-                .assertSubscribed()
-                .assertError(IOException.class)
-                .assertNotComplete();
+            .compose(RateLimiterOperator.of(rateLimiter))
+            .test()
+            .assertSubscribed()
+            .assertError(IOException.class)
+            .assertNotComplete();
     }
 
     @Test
@@ -72,10 +72,10 @@ public class FlowableRateLimiterTest {
         given(rateLimiter.reservePermission()).willReturn(-1L);
 
         Flowable.just(1)
-                .compose(RateLimiterOperator.of(rateLimiter))
-                .test()
-                .assertSubscribed()
-                .assertError(RequestNotPermitted.class)
-                .assertNotComplete();
+            .compose(RateLimiterOperator.of(rateLimiter))
+            .test()
+            .assertSubscribed()
+            .assertError(RequestNotPermitted.class)
+            .assertNotComplete();
     }
 }

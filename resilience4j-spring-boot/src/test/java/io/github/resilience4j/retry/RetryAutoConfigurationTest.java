@@ -37,7 +37,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-        classes = TestApplication.class)
+    classes = TestApplication.class)
 public class RetryAutoConfigurationTest {
 
     @Autowired
@@ -86,19 +86,19 @@ public class RetryAutoConfigurationTest {
 
         // expect retry actuator endpoint contains both retries
         ResponseEntity<RetryEndpointResponse> retriesList = restTemplate
-                .getForEntity("/retries", RetryEndpointResponse.class);
+            .getForEntity("/retries", RetryEndpointResponse.class);
         assertThat(retriesList.getBody().getRetries()).hasSize(2)
-                .containsOnly(RETRY_BACKEND_A, RETRY_BACKEND_B);
+            .containsOnly(RETRY_BACKEND_A, RETRY_BACKEND_B);
 
         // expect retry-event actuator endpoint recorded both events
         ResponseEntity<RetryEventsEndpointResponse> retryEventListA = restTemplate
-                .getForEntity("/retries/events/" + RETRY_BACKEND_A,
-                        RetryEventsEndpointResponse.class);
+            .getForEntity("/retries/events/" + RETRY_BACKEND_A,
+                RetryEventsEndpointResponse.class);
         assertThat(retryEventListA.getBody().getRetryEvents()).hasSize(3);
 
         assertThat(retry.getRetryConfig().getExceptionPredicate().test(new IOException())).isTrue();
         assertThat(retry.getRetryConfig().getExceptionPredicate().test(new IgnoredException()))
-                .isFalse();
+            .isFalse();
 
         // expect aspect configured as defined in application.yml
         assertThat(retryAspect.getOrder()).isEqualTo(399);

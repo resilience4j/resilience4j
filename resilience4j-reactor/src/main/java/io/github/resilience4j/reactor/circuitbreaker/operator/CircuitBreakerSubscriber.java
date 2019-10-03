@@ -40,8 +40,8 @@ class CircuitBreakerSubscriber<T> extends AbstractSubscriber<T> {
     private final AtomicBoolean eventWasEmitted = new AtomicBoolean(false);
 
     protected CircuitBreakerSubscriber(CircuitBreaker circuitBreaker,
-            CoreSubscriber<? super T> downstreamSubscriber,
-            boolean singleProducer) {
+        CoreSubscriber<? super T> downstreamSubscriber,
+        boolean singleProducer) {
         super(downstreamSubscriber);
         this.circuitBreaker = requireNonNull(circuitBreaker);
         this.singleProducer = singleProducer;

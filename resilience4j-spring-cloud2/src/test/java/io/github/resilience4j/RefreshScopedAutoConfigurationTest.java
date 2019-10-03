@@ -32,38 +32,38 @@ public class RefreshScopedAutoConfigurationTest {
     @Test
     public void refreshScopedBulkheadRegistry() {
         contextRunner
-                .withConfiguration(AutoConfigurations.of(
-                        RefreshScopedBulkheadAutoConfiguration.class,
-                        BulkheadAutoConfiguration.class))
-                .run(context -> {
-                    testRefreshScoped(context, "bulkheadRegistry");
-                    testRefreshScoped(context, "threadPoolBulkheadRegistry");
-                });
+            .withConfiguration(AutoConfigurations.of(
+                RefreshScopedBulkheadAutoConfiguration.class,
+                BulkheadAutoConfiguration.class))
+            .run(context -> {
+                testRefreshScoped(context, "bulkheadRegistry");
+                testRefreshScoped(context, "threadPoolBulkheadRegistry");
+            });
     }
 
     @Test
     public void refreshScopedCircuitBreakerRegistry() {
         contextRunner
-                .withConfiguration(AutoConfigurations.of(
-                        RefreshScopedCircuitBreakerAutoConfiguration.class,
-                        CircuitBreakerAutoConfiguration.class))
-                .run(context -> testRefreshScoped(context, "circuitBreakerRegistry"));
+            .withConfiguration(AutoConfigurations.of(
+                RefreshScopedCircuitBreakerAutoConfiguration.class,
+                CircuitBreakerAutoConfiguration.class))
+            .run(context -> testRefreshScoped(context, "circuitBreakerRegistry"));
     }
 
     @Test
     public void refreshScopedRateLimiterRegistry() {
         contextRunner
-                .withConfiguration(AutoConfigurations.of(
-                        RefreshScopedRateLimiterAutoConfiguration.class,
-                        RateLimiterAutoConfiguration.class))
-                .run(context -> testRefreshScoped(context, "rateLimiterRegistry"));
+            .withConfiguration(AutoConfigurations.of(
+                RefreshScopedRateLimiterAutoConfiguration.class,
+                RateLimiterAutoConfiguration.class))
+            .run(context -> testRefreshScoped(context, "rateLimiterRegistry"));
     }
 
     @Test
     public void refreshScopedRetryRegistry() {
         contextRunner
-                .withConfiguration(AutoConfigurations.of(
-                        RefreshScopedRetryAutoConfiguration.class, RetryAutoConfiguration.class))
-                .run(context -> testRefreshScoped(context, "retryRegistry"));
+            .withConfiguration(AutoConfigurations.of(
+                RefreshScopedRetryAutoConfiguration.class, RetryAutoConfiguration.class))
+            .run(context -> testRefreshScoped(context, "retryRegistry"));
     }
 }

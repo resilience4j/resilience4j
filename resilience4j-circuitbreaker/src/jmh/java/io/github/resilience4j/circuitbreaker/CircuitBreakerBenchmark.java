@@ -54,8 +54,8 @@ public class CircuitBreakerBenchmark {
 
     public static void main(String[] args) throws RunnerException {
         Options options = new OptionsBuilder()
-                .addProfiler(GCProfiler.class)
-                .build();
+            .addProfiler(GCProfiler.class)
+            .build();
         new Runner(options).run();
     }
 

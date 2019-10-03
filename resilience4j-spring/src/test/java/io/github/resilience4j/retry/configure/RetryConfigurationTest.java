@@ -40,8 +40,8 @@ public class RetryConfigurationTest {
 
         //When
         RetryRegistry retryRegistry = retryConfiguration
-                .retryRegistry(retryConfigurationProperties, eventConsumerRegistry,
-                        new CompositeRegistryEventConsumer<>(emptyList()));
+            .retryRegistry(retryConfigurationProperties, eventConsumerRegistry,
+                new CompositeRegistryEventConsumer<>(emptyList()));
 
         //Then
         assertThat(retryConfigurationProperties.getRetryAspectOrder()).isEqualTo(200);
@@ -81,17 +81,17 @@ public class RetryConfigurationTest {
         retryConfigurationProperties.getConfigs().put("sharedConfig", sharedProperties);
 
         retryConfigurationProperties.getInstances()
-                .put("backendWithDefaultConfig", backendWithDefaultConfig);
+            .put("backendWithDefaultConfig", backendWithDefaultConfig);
         retryConfigurationProperties.getInstances()
-                .put("backendWithSharedConfig", backendWithSharedConfig);
+            .put("backendWithSharedConfig", backendWithSharedConfig);
 
         RetryConfiguration retryConfiguration = new RetryConfiguration();
         DefaultEventConsumerRegistry<RetryEvent> eventConsumerRegistry = new DefaultEventConsumerRegistry<>();
 
         //When
         RetryRegistry retryRegistry = retryConfiguration
-                .retryRegistry(retryConfigurationProperties, eventConsumerRegistry,
-                        new CompositeRegistryEventConsumer<>(emptyList()));
+            .retryRegistry(retryConfigurationProperties, eventConsumerRegistry,
+                new CompositeRegistryEventConsumer<>(emptyList()));
 
         //Then
         assertThat(retryRegistry.getAllRetries().size()).isEqualTo(2);
@@ -129,10 +129,10 @@ public class RetryConfigurationTest {
 
         //When
         assertThatThrownBy(() -> retryConfiguration
-                .retryRegistry(retryConfigurationProperties, eventConsumerRegistry,
-                        new CompositeRegistryEventConsumer<>(emptyList())))
-                .isInstanceOf(ConfigurationNotFoundException.class)
-                .hasMessage("Configuration with name 'unknownConfig' does not exist");
+            .retryRegistry(retryConfigurationProperties, eventConsumerRegistry,
+                new CompositeRegistryEventConsumer<>(emptyList())))
+            .isInstanceOf(ConfigurationNotFoundException.class)
+            .hasMessage("Configuration with name 'unknownConfig' does not exist");
     }
 
 }

@@ -35,9 +35,9 @@ public abstract class AbstractTimeLimiterMetrics extends Collector {
     protected AbstractTimeLimiterMetrics(MetricNames names) {
         this.names = requireNonNull(names);
         callsCounter = Counter.build(names.getCallsMetricName(),
-                "Total number of calls by kind")
-                .labelNames("name", "kind")
-                .create().register(collectorRegistry);
+            "Total number of calls by kind")
+            .labelNames("name", "kind")
+            .create().register(collectorRegistry);
     }
 
     /**

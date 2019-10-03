@@ -37,10 +37,10 @@ public class AspectUtil {
      * @return true or false if the class is found or not
      */
     static boolean checkClassIfFound(ConditionContext context, String classToCheck,
-            Consumer<Exception> exceptionConsumer) {
+        Consumer<Exception> exceptionConsumer) {
         try {
             final Class<?> aClass = requireNonNull(context.getClassLoader(),
-                    "context must not be null").loadClass(classToCheck);
+                "context must not be null").loadClass(classToCheck);
             return aClass != null;
         } catch (ClassNotFoundException e) {
             exceptionConsumer.accept(e);

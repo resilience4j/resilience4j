@@ -30,7 +30,7 @@ import java.util.HashSet;
 import java.util.List;
 
 public class ThreadPoolBulkheadMetricsPublisher extends
-        AbstractMetricsPublisher<ThreadPoolBulkhead> {
+    AbstractMetricsPublisher<ThreadPoolBulkhead> {
 
     private final String prefix;
 
@@ -55,9 +55,9 @@ public class ThreadPoolBulkheadMetricsPublisher extends
         String availableQueueCapacity = name(prefix, name, AVAILABLE_QUEUE_CAPACITY);
 
         metricRegistry.register(currentThreadPoolSize,
-                (Gauge<Integer>) () -> threadPoolBulkhead.getMetrics().getThreadPoolSize());
+            (Gauge<Integer>) () -> threadPoolBulkhead.getMetrics().getThreadPoolSize());
         metricRegistry.register(availableQueueCapacity,
-                (Gauge<Integer>) () -> threadPoolBulkhead.getMetrics().getRemainingQueueCapacity());
+            (Gauge<Integer>) () -> threadPoolBulkhead.getMetrics().getRemainingQueueCapacity());
 
         List<String> metricNames = Arrays.asList(currentThreadPoolSize, availableQueueCapacity);
         metricsNameMap.put(name, new HashSet<>(metricNames));

@@ -48,13 +48,13 @@ public class BulkheadAutoConfiguration {
 
         @Bean
         public BulkheadEndpoint bulkheadEndpoint(BulkheadRegistry bulkheadRegistry,
-                ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry) {
+            ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry) {
             return new BulkheadEndpoint(bulkheadRegistry, threadPoolBulkheadRegistry);
         }
 
         @Bean
         public BulkheadEventsEndpoint bulkheadEventsEndpoint(
-                EventConsumerRegistry<BulkheadEvent> eventConsumerRegistry) {
+            EventConsumerRegistry<BulkheadEvent> eventConsumerRegistry) {
             return new BulkheadEventsEndpoint(eventConsumerRegistry);
         }
 

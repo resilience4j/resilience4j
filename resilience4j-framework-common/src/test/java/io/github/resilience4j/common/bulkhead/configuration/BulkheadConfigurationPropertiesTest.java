@@ -46,12 +46,12 @@ public class BulkheadConfigurationPropertiesTest {
         assertThat(bulkheadConfigurationProperties.getBackends().size()).isEqualTo(2);
         assertThat(bulkheadConfigurationProperties.getInstances().size()).isEqualTo(2);
         ThreadPoolBulkheadConfig bulkhead1 = bulkheadConfigurationProperties
-                .createThreadPoolBulkheadConfig("backend1");
+            .createThreadPoolBulkheadConfig("backend1");
         assertThat(bulkhead1).isNotNull();
         assertThat(bulkhead1.getCoreThreadPoolSize()).isEqualTo(1);
 
         ThreadPoolBulkheadConfig bulkhead2 = bulkheadConfigurationProperties
-                .createThreadPoolBulkheadConfig("backend2");
+            .createThreadPoolBulkheadConfig("backend2");
         assertThat(bulkhead2).isNotNull();
         assertThat(bulkhead2.getCoreThreadPoolSize()).isEqualTo(2);
 
@@ -83,9 +83,9 @@ public class BulkheadConfigurationPropertiesTest {
         bulkheadConfigurationProperties.getConfigs().put("sharedConfig", sharedProperties);
 
         bulkheadConfigurationProperties.getBackends()
-                .put("backendWithDefaultConfig", backendWithDefaultConfig);
+            .put("backendWithDefaultConfig", backendWithDefaultConfig);
         bulkheadConfigurationProperties.getBackends()
-                .put("backendWithSharedConfig", backendWithSharedConfig);
+            .put("backendWithSharedConfig", backendWithSharedConfig);
 
         //When
         //Then
@@ -93,25 +93,25 @@ public class BulkheadConfigurationPropertiesTest {
             assertThat(bulkheadConfigurationProperties.getBackends().size()).isEqualTo(2);
             // Should get default config and core number
             ThreadPoolBulkheadConfig bulkhead1 = bulkheadConfigurationProperties
-                    .createThreadPoolBulkheadConfig("backendWithDefaultConfig");
+                .createThreadPoolBulkheadConfig("backendWithDefaultConfig");
             assertThat(bulkhead1).isNotNull();
             assertThat(bulkhead1.getCoreThreadPoolSize()).isEqualTo(3);
             assertThat(bulkhead1.getQueueCapacity()).isEqualTo(1);
             // Should get shared config and overwrite core number
             ThreadPoolBulkheadConfig bulkhead2 = bulkheadConfigurationProperties
-                    .createThreadPoolBulkheadConfig("backendWithSharedConfig");
+                .createThreadPoolBulkheadConfig("backendWithSharedConfig");
             assertThat(bulkhead2).isNotNull();
             assertThat(bulkhead2.getCoreThreadPoolSize()).isEqualTo(4);
             assertThat(bulkhead2.getQueueCapacity()).isEqualTo(2);
             // Unknown backend should get default config of Registry
             ThreadPoolBulkheadConfig bulkhead3 = bulkheadConfigurationProperties
-                    .createThreadPoolBulkheadConfig("unknownBackend");
+                .createThreadPoolBulkheadConfig("unknownBackend");
             assertThat(bulkhead3).isNotNull();
             assertThat(bulkhead3.getCoreThreadPoolSize())
-                    .isEqualTo(ThreadPoolBulkheadConfig.DEFAULT_CORE_THREAD_POOL_SIZE);
+                .isEqualTo(ThreadPoolBulkheadConfig.DEFAULT_CORE_THREAD_POOL_SIZE);
         } catch (Exception e) {
             System.out.println(
-                    "exception in testCreateThreadPoolBulkHeadRegistryWithSharedConfigs():" + e);
+                "exception in testCreateThreadPoolBulkHeadRegistryWithSharedConfigs():" + e);
         }
 
     }
@@ -135,12 +135,12 @@ public class BulkheadConfigurationPropertiesTest {
         //Then
         assertThat(bulkheadConfigurationProperties.getInstances().size()).isEqualTo(2);
         BulkheadConfig bulkhead1 = bulkheadConfigurationProperties
-                .createBulkheadConfig(instanceProperties1);
+            .createBulkheadConfig(instanceProperties1);
         assertThat(bulkhead1).isNotNull();
         assertThat(bulkhead1.getMaxConcurrentCalls()).isEqualTo(3);
 
         BulkheadConfig bulkhead2 = bulkheadConfigurationProperties
-                .createBulkheadConfig(instanceProperties2);
+            .createBulkheadConfig(instanceProperties2);
         assertThat(bulkhead2).isNotNull();
         assertThat(bulkhead2.getMaxConcurrentCalls()).isEqualTo(2);
 
@@ -175,30 +175,30 @@ public class BulkheadConfigurationPropertiesTest {
         bulkheadConfigurationProperties.getConfigs().put("sharedConfig", sharedProperties);
 
         bulkheadConfigurationProperties.getInstances()
-                .put("backendWithDefaultConfig", backendWithDefaultConfig);
+            .put("backendWithDefaultConfig", backendWithDefaultConfig);
         bulkheadConfigurationProperties.getInstances()
-                .put("backendWithSharedConfig", backendWithSharedConfig);
+            .put("backendWithSharedConfig", backendWithSharedConfig);
 
         //Then
         assertThat(bulkheadConfigurationProperties.getInstances().size()).isEqualTo(2);
 
         // Should get default config and overwrite max calls and wait time
         BulkheadConfig bulkhead1 = bulkheadConfigurationProperties
-                .createBulkheadConfig(backendWithDefaultConfig);
+            .createBulkheadConfig(backendWithDefaultConfig);
         assertThat(bulkhead1).isNotNull();
         assertThat(bulkhead1.getMaxConcurrentCalls()).isEqualTo(3);
         assertThat(bulkhead1.getMaxWaitDuration().toMillis()).isEqualTo(200L);
 
         // Should get shared config and overwrite wait time
         BulkheadConfig bulkhead2 = bulkheadConfigurationProperties
-                .createBulkheadConfig(backendWithSharedConfig);
+            .createBulkheadConfig(backendWithSharedConfig);
         assertThat(bulkhead2).isNotNull();
         assertThat(bulkhead2.getMaxConcurrentCalls()).isEqualTo(2);
         assertThat(bulkhead2.getMaxWaitDuration().toMillis()).isEqualTo(300L);
 
         // Unknown backend should get default config of Registry
         BulkheadConfig bulkhead3 = bulkheadConfigurationProperties
-                .createBulkheadConfig(new BulkheadConfigurationProperties.InstanceProperties());
+            .createBulkheadConfig(new BulkheadConfigurationProperties.InstanceProperties());
         assertThat(bulkhead3).isNotNull();
         assertThat(bulkhead3.getMaxWaitDuration().toMillis()).isEqualTo(0L);
 
@@ -214,8 +214,8 @@ public class BulkheadConfigurationPropertiesTest {
 
         //When
         assertThatThrownBy(
-                () -> bulkheadConfigurationProperties.createBulkheadConfig(instanceProperties))
-                .isInstanceOf(ConfigurationNotFoundException.class)
-                .hasMessage("Configuration with name 'unknownConfig' does not exist");
+            () -> bulkheadConfigurationProperties.createBulkheadConfig(instanceProperties))
+            .isInstanceOf(ConfigurationNotFoundException.class)
+            .hasMessage("Configuration with name 'unknownConfig' does not exist");
     }
 }

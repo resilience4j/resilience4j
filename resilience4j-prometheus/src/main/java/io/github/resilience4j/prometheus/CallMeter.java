@@ -22,10 +22,10 @@ public interface CallMeter extends CallMeterBase {
      */
     static CallMeter of(String name, String help) {
         return CallMeter
-                .builder()
-                .name(name)
-                .help(help)
-                .build();
+            .builder()
+            .name(name)
+            .help(help)
+            .build();
     }
 
     /**
@@ -57,7 +57,7 @@ public interface CallMeter extends CallMeterBase {
      * @return a timed supplier
      */
     static <T> CheckedFunction0<T> decorateCheckedSupplier(CallMeterBase meter,
-            CheckedFunction0<T> supplier) {
+        CheckedFunction0<T> supplier) {
         return () -> {
             final Timer timer = meter.startTimer();
             try {
@@ -182,7 +182,7 @@ public interface CallMeter extends CallMeterBase {
      * @return a timed function
      */
     static <T, R> CheckedFunction1<T, R> decorateCheckedFunction(CallMeterBase meter,
-            CheckedFunction1<T, R> function) {
+        CheckedFunction1<T, R> function) {
         return (T t) -> {
             final Timer timer = meter.startTimer();
             try {
@@ -204,7 +204,7 @@ public interface CallMeter extends CallMeterBase {
      * @return a decorated completion stage
      */
     static <T> Supplier<CompletionStage<T>> decorateCompletionStageSupplier(CallMeterBase meter,
-            Supplier<CompletionStage<T>> stageSupplier) {
+        Supplier<CompletionStage<T>> stageSupplier) {
         return () -> {
             final Timer timer = meter.startTimer();
             try {
@@ -306,31 +306,31 @@ public interface CallMeter extends CallMeterBase {
 
         private CallCollectors createMetrics() {
             final Counter totalCounter = Counter
-                    .build()
-                    .namespace(namespace)
-                    .subsystem(subsystem)
-                    .name(name + "_total")
-                    .help(help + " total")
-                    .labelNames(labelNames)
-                    .create();
+                .build()
+                .namespace(namespace)
+                .subsystem(subsystem)
+                .name(name + "_total")
+                .help(help + " total")
+                .labelNames(labelNames)
+                .create();
 
             final Counter errorCounter = Counter
-                    .build()
-                    .namespace(namespace)
-                    .subsystem(subsystem)
-                    .name(name + "_failures_total")
-                    .help(help + " failures total")
-                    .labelNames(labelNames)
-                    .create();
+                .build()
+                .namespace(namespace)
+                .subsystem(subsystem)
+                .name(name + "_failures_total")
+                .help(help + " failures total")
+                .labelNames(labelNames)
+                .create();
 
             final Histogram histogram = Histogram
-                    .build()
-                    .namespace(namespace)
-                    .subsystem(subsystem)
-                    .name(name + "_latency")
-                    .help(help + " latency")
-                    .labelNames(labelNames)
-                    .create();
+                .build()
+                .namespace(namespace)
+                .subsystem(subsystem)
+                .name(name + "_latency")
+                .help(help + " latency")
+                .labelNames(labelNames)
+                .create();
 
             return new CallCollectors(histogram, totalCounter, errorCounter);
         }

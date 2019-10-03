@@ -12,7 +12,7 @@ public class CallNotPermittedExceptionTest {
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testName");
         circuitBreaker.transitionToOpenState();
         assertThat(createCallNotPermittedException(circuitBreaker).getMessage())
-                .isEqualTo("CircuitBreaker 'testName' is OPEN and does not permit further calls");
+            .isEqualTo("CircuitBreaker 'testName' is OPEN and does not permit further calls");
     }
 
     @Test
@@ -20,6 +20,6 @@ public class CallNotPermittedExceptionTest {
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testName");
         circuitBreaker.transitionToForcedOpenState();
         assertThat(createCallNotPermittedException(circuitBreaker).getMessage()).isEqualTo(
-                "CircuitBreaker 'testName' is FORCED_OPEN and does not permit further calls");
+            "CircuitBreaker 'testName' is FORCED_OPEN and does not permit further calls");
     }
 }

@@ -28,7 +28,7 @@ public class BulkheadEventDTOFactory {
             case CALL_REJECTED:
             case CALL_FINISHED:
                 return new BulkheadEventDTO(event.getBulkheadName(), event.getEventType(),
-                        event.getCreationTime().toString());
+                    event.getCreationTime().toString());
             default:
                 throw new IllegalArgumentException("Invalid event");
         }

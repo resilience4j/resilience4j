@@ -73,9 +73,9 @@ public class CircuitBreakerAspect implements Ordered {
     private final FallbackDecorators fallbackDecorators;
 
     public CircuitBreakerAspect(CircuitBreakerConfigurationProperties circuitBreakerProperties,
-            CircuitBreakerRegistry circuitBreakerRegistry,
-            @Autowired(required = false) List<CircuitBreakerAspectExt> circuitBreakerAspectExtList,
-            FallbackDecorators fallbackDecorators) {
+        CircuitBreakerRegistry circuitBreakerRegistry,
+        @Autowired(required = false) List<CircuitBreakerAspectExt> circuitBreakerAspectExtList,
+        FallbackDecorators fallbackDecorators) {
         this.circuitBreakerProperties = circuitBreakerProperties;
         this.circuitBreakerRegistry = circuitBreakerRegistry;
         this.circuitBreakerAspectExtList = circuitBreakerAspectExtList;
@@ -88,7 +88,7 @@ public class CircuitBreakerAspect implements Ordered {
 
     @Around(value = "matchAnnotatedClassOrMethod(circuitBreakerAnnotation)", argNames = "proceedingJoinPoint, circuitBreakerAnnotation")
     public Object circuitBreakerAroundAdvice(ProceedingJoinPoint proceedingJoinPoint,
-            @Nullable CircuitBreaker circuitBreakerAnnotation) throws Throwable {
+        @Nullable CircuitBreaker circuitBreakerAnnotation) throws Throwable {
         Method method = ((MethodSignature) proceedingJoinPoint.getSignature()).getMethod();
         String methodName = method.getDeclaringClass().getName() + "#" + method.getName();
         if (circuitBreakerAnnotation == null) {
@@ -99,27 +99,27 @@ public class CircuitBreakerAspect implements Ordered {
         }
         String backend = circuitBreakerAnnotation.name();
         io.github.resilience4j.circuitbreaker.CircuitBreaker circuitBreaker = getOrCreateCircuitBreaker(
-                methodName, backend);
+            methodName, backend);
         Class<?> returnType = method.getReturnType();
 
         if (StringUtils.isEmpty(circuitBreakerAnnotation.fallbackMethod())) {
             return proceed(proceedingJoinPoint, methodName, circuitBreaker, returnType);
         }
         FallbackMethod fallbackMethod = FallbackMethod
-                .create(circuitBreakerAnnotation.fallbackMethod(), method,
-                        proceedingJoinPoint.getArgs(), proceedingJoinPoint.getTarget());
+            .create(circuitBreakerAnnotation.fallbackMethod(), method,
+                proceedingJoinPoint.getArgs(), proceedingJoinPoint.getTarget());
         return fallbackDecorators.decorate(fallbackMethod,
-                () -> proceed(proceedingJoinPoint, methodName, circuitBreaker, returnType)).apply();
+            () -> proceed(proceedingJoinPoint, methodName, circuitBreaker, returnType)).apply();
     }
 
     private Object proceed(ProceedingJoinPoint proceedingJoinPoint, String methodName,
-            io.github.resilience4j.circuitbreaker.CircuitBreaker circuitBreaker,
-            Class<?> returnType) throws Throwable {
+        io.github.resilience4j.circuitbreaker.CircuitBreaker circuitBreaker,
+        Class<?> returnType) throws Throwable {
         if (circuitBreakerAspectExtList != null && !circuitBreakerAspectExtList.isEmpty()) {
             for (CircuitBreakerAspectExt circuitBreakerAspectExt : circuitBreakerAspectExtList) {
                 if (circuitBreakerAspectExt.canHandleReturnType(returnType)) {
                     return circuitBreakerAspectExt
-                            .handle(proceedingJoinPoint, circuitBreaker, methodName);
+                        .handle(proceedingJoinPoint, circuitBreaker, methodName);
                 }
             }
         }
@@ -130,16 +130,16 @@ public class CircuitBreakerAspect implements Ordered {
     }
 
     private io.github.resilience4j.circuitbreaker.CircuitBreaker getOrCreateCircuitBreaker(
-            String methodName, String backend) {
+        String methodName, String backend) {
         io.github.resilience4j.circuitbreaker.CircuitBreaker circuitBreaker = circuitBreakerRegistry
-                .circuitBreaker(backend);
+            .circuitBreaker(backend);
 
         if (logger.isDebugEnabled()) {
             logger.debug(
-                    "Created or retrieved circuit breaker '{}' with failure rate '{}' and wait interval '{}' for method: '{}'",
-                    backend, circuitBreaker.getCircuitBreakerConfig().getFailureRateThreshold(),
-                    circuitBreaker.getCircuitBreakerConfig().getWaitDurationInOpenState(),
-                    methodName);
+                "Created or retrieved circuit breaker '{}' with failure rate '{}' and wait interval '{}' for method: '{}'",
+                backend, circuitBreaker.getCircuitBreakerConfig().getFailureRateThreshold(),
+                circuitBreaker.getCircuitBreakerConfig().getWaitDurationInOpenState(),
+                methodName);
         }
 
         return circuitBreaker;
@@ -152,12 +152,12 @@ public class CircuitBreakerAspect implements Ordered {
         }
         if (proceedingJoinPoint.getTarget() instanceof Proxy) {
             logger.debug(
-                    "The circuit breaker annotation is kept on a interface which is acting as a proxy");
+                "The circuit breaker annotation is kept on a interface which is acting as a proxy");
             return AnnotationExtractor.extractAnnotationFromProxy(proceedingJoinPoint.getTarget(),
-                    CircuitBreaker.class);
+                CircuitBreaker.class);
         } else {
             return AnnotationExtractor
-                    .extract(proceedingJoinPoint.getTarget().getClass(), CircuitBreaker.class);
+                .extract(proceedingJoinPoint.getTarget().getClass(), CircuitBreaker.class);
         }
     }
 
@@ -165,7 +165,7 @@ public class CircuitBreakerAspect implements Ordered {
      * handle the CompletionStage return types AOP based into configured circuit-breaker
      */
     private Object handleJoinPointCompletableFuture(ProceedingJoinPoint proceedingJoinPoint,
-            io.github.resilience4j.circuitbreaker.CircuitBreaker circuitBreaker) {
+        io.github.resilience4j.circuitbreaker.CircuitBreaker circuitBreaker) {
         return circuitBreaker.executeCompletionStage(() -> {
             try {
                 return (CompletionStage<?>) proceedingJoinPoint.proceed();
@@ -179,7 +179,7 @@ public class CircuitBreakerAspect implements Ordered {
      * the default Java types handling for the circuit breaker AOP
      */
     private Object defaultHandling(ProceedingJoinPoint proceedingJoinPoint,
-            io.github.resilience4j.circuitbreaker.CircuitBreaker circuitBreaker) throws Throwable {
+        io.github.resilience4j.circuitbreaker.CircuitBreaker circuitBreaker) throws Throwable {
         return circuitBreaker.executeCheckedSupplier(proceedingJoinPoint::proceed);
     }
 

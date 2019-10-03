@@ -52,7 +52,7 @@ public class CircuitBreakerEventPublisherTest {
     @Test
     public void shouldConsumeOnEvent() {
         circuitBreaker.getEventPublisher()
-                .onEvent(this::logEventType);
+            .onEvent(this::logEventType);
 
         circuitBreaker.onSuccess(1000, TimeUnit.NANOSECONDS);
 
@@ -62,7 +62,7 @@ public class CircuitBreakerEventPublisherTest {
     @Test
     public void shouldConsumeOnSuccessEvent() {
         circuitBreaker.getEventPublisher()
-                .onSuccess(this::logEventType);
+            .onSuccess(this::logEventType);
 
         circuitBreaker.onSuccess(1000, TimeUnit.NANOSECONDS);
 
@@ -72,7 +72,7 @@ public class CircuitBreakerEventPublisherTest {
     @Test
     public void shouldConsumeOnErrorEvent() {
         circuitBreaker.getEventPublisher()
-                .onError(this::logEventType);
+            .onError(this::logEventType);
 
         circuitBreaker.onError(1000, TimeUnit.NANOSECONDS, new IOException("BAM!"));
 
@@ -82,7 +82,7 @@ public class CircuitBreakerEventPublisherTest {
     @Test
     public void shouldConsumeOnResetEvent() {
         circuitBreaker.getEventPublisher()
-                .onReset(this::logEventType);
+            .onReset(this::logEventType);
 
         circuitBreaker.reset();
 
@@ -92,10 +92,10 @@ public class CircuitBreakerEventPublisherTest {
     @Test
     public void shouldConsumeOnStateTransitionEvent() {
         circuitBreaker = CircuitBreaker.of("test", CircuitBreakerConfig.custom()
-                .slidingWindowSize(1).build());
+            .slidingWindowSize(1).build());
 
         circuitBreaker.getEventPublisher()
-                .onStateTransition(this::logEventType);
+            .onStateTransition(this::logEventType);
 
         circuitBreaker.onError(1000, TimeUnit.NANOSECONDS, new IOException("BAM!"));
         circuitBreaker.onError(1000, TimeUnit.NANOSECONDS, new IOException("BAM!"));
@@ -106,10 +106,10 @@ public class CircuitBreakerEventPublisherTest {
     @Test
     public void shouldConsumeCallNotPermittedEvent() {
         circuitBreaker = CircuitBreaker.of("test", CircuitBreakerConfig.custom()
-                .slidingWindowSize(1).build());
+            .slidingWindowSize(1).build());
 
         circuitBreaker.getEventPublisher()
-                .onCallNotPermitted(this::logEventType);
+            .onCallNotPermitted(this::logEventType);
 
         circuitBreaker.onError(1000, TimeUnit.NANOSECONDS, new IOException("BAM!"));
         circuitBreaker.onError(1000, TimeUnit.NANOSECONDS, new IOException("BAM!"));
@@ -122,10 +122,10 @@ public class CircuitBreakerEventPublisherTest {
     public void shouldNotProduceEventsInDisabledState() {
         //Given
         circuitBreaker = CircuitBreaker.of("test", CircuitBreakerConfig.custom()
-                .slidingWindowSize(1).build());
+            .slidingWindowSize(1).build());
 
         circuitBreaker.getEventPublisher()
-                .onEvent(this::logEventType);
+            .onEvent(this::logEventType);
 
         //When we transition to disabled
         circuitBreaker.transitionToDisabledState();
@@ -151,13 +151,13 @@ public class CircuitBreakerEventPublisherTest {
     @Test
     public void shouldConsumeIgnoredErrorEvent() {
         CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom()
-                .ignoreExceptions(IOException.class)
-                .build();
+            .ignoreExceptions(IOException.class)
+            .build();
 
         circuitBreaker = CircuitBreaker.of("test", circuitBreakerConfig);
 
         circuitBreaker.getEventPublisher()
-                .onIgnoredError(this::logEventType);
+            .onIgnoredError(this::logEventType);
 
         circuitBreaker.onError(10000, TimeUnit.NANOSECONDS, new IOException("BAM!"));
 

@@ -31,13 +31,13 @@ public class TimeLimiterMetricsCollector extends AbstractTimeLimiterMetrics {
     private final TimeLimiterRegistry timeLimiterRegistry;
 
     private TimeLimiterMetricsCollector(MetricNames names,
-            TimeLimiterRegistry timeLimiterRegistry) {
+        TimeLimiterRegistry timeLimiterRegistry) {
         super(names);
         this.timeLimiterRegistry = requireNonNull(timeLimiterRegistry);
         this.timeLimiterRegistry.getAllTimeLimiters()
-                .forEach(this::addMetrics);
+            .forEach(this::addMetrics);
         this.timeLimiterRegistry.getEventPublisher()
-                .onEntryAdded(event -> addMetrics(event.getAddedEntry()));
+            .onEntryAdded(event -> addMetrics(event.getAddedEntry()));
     }
 
     /**
@@ -48,7 +48,7 @@ public class TimeLimiterMetricsCollector extends AbstractTimeLimiterMetrics {
      * @param timeLimiterRegistry the source of time limiters
      */
     public static TimeLimiterMetricsCollector ofTimeLimiterRegistry(MetricNames names,
-            TimeLimiterRegistry timeLimiterRegistry) {
+        TimeLimiterRegistry timeLimiterRegistry) {
         return new TimeLimiterMetricsCollector(names, timeLimiterRegistry);
     }
 
@@ -58,16 +58,16 @@ public class TimeLimiterMetricsCollector extends AbstractTimeLimiterMetrics {
      * @param timeLimiterRegistry the source of time limiters
      */
     public static TimeLimiterMetricsCollector ofTimeLimiterRegistry(
-            TimeLimiterRegistry timeLimiterRegistry) {
+        TimeLimiterRegistry timeLimiterRegistry) {
         return new TimeLimiterMetricsCollector(MetricNames.ofDefaults(), timeLimiterRegistry);
     }
 
     private void addMetrics(TimeLimiter timeLimiter) {
         String name = timeLimiter.getName();
         timeLimiter.getEventPublisher()
-                .onSuccess(event -> callsCounter.labels(name, KIND_SUCCESSFUL).inc())
-                .onError(event -> callsCounter.labels(name, KIND_FAILED).inc())
-                .onTimeout(event -> callsCounter.labels(name, KIND_TIMEOUT).inc());
+            .onSuccess(event -> callsCounter.labels(name, KIND_SUCCESSFUL).inc())
+            .onError(event -> callsCounter.labels(name, KIND_FAILED).inc())
+            .onTimeout(event -> callsCounter.labels(name, KIND_TIMEOUT).inc());
     }
 
     @Override

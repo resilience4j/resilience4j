@@ -41,7 +41,7 @@ class ObserverRateLimiter<T> extends Observable<T> {
         if (waitDuration >= 0) {
             if (waitDuration > 0) {
                 Completable.timer(waitDuration, TimeUnit.NANOSECONDS)
-                        .subscribe(() -> upstream.subscribe(new RateLimiterObserver(downstream)));
+                    .subscribe(() -> upstream.subscribe(new RateLimiterObserver(downstream)));
             } else {
                 upstream.subscribe(new RateLimiterObserver(downstream));
             }

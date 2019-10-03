@@ -30,7 +30,8 @@ public final class LabelNames {
     public static final List<String> NAME = unmodifiableList(singletonList("name"));
     // list is unmodifiable("squid:S2386") // list is unmodifiable
     public static final List<String> NAME_AND_KIND = unmodifiableList(
-            Arrays.asList("name", "kind"));
+        Arrays.asList("name", "kind"));
+
     private LabelNames() {
     }
 

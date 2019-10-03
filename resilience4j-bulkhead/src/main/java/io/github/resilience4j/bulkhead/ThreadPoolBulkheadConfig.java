@@ -28,10 +28,10 @@ public class ThreadPoolBulkheadConfig {
     public static final int DEFAULT_QUEUE_CAPACITY = 100;
     public static final Duration DEFAULT_KEEP_ALIVE_DURATION = Duration.ofMillis(20);
     public static final int DEFAULT_CORE_THREAD_POOL_SIZE =
-            Runtime.getRuntime().availableProcessors() > 1 ?
-                    Runtime.getRuntime().availableProcessors() - 1 : 1;
+        Runtime.getRuntime().availableProcessors() > 1 ?
+            Runtime.getRuntime().availableProcessors() - 1 : 1;
     public static final int DEFAULT_MAX_THREAD_POOL_SIZE = Runtime.getRuntime()
-            .availableProcessors();
+        .availableProcessors();
     public static final boolean DEFAULT_WRITABLE_STACK_TRACE_ENABLED = true;
 
     private int maxThreadPoolSize = DEFAULT_MAX_THREAD_POOL_SIZE;
@@ -112,7 +112,7 @@ public class ThreadPoolBulkheadConfig {
         public Builder maxThreadPoolSize(int maxThreadPoolSize) {
             if (maxThreadPoolSize < 1) {
                 throw new IllegalArgumentException(
-                        "maxThreadPoolSize must be a positive integer value >= 1");
+                    "maxThreadPoolSize must be a positive integer value >= 1");
             }
             config.maxThreadPoolSize = maxThreadPoolSize;
             return this;
@@ -127,7 +127,7 @@ public class ThreadPoolBulkheadConfig {
         public Builder coreThreadPoolSize(int coreThreadPoolSize) {
             if (coreThreadPoolSize < 1) {
                 throw new IllegalArgumentException(
-                        "coreThreadPoolSize must be a positive integer value >= 1");
+                    "coreThreadPoolSize must be a positive integer value >= 1");
             }
             config.coreThreadPoolSize = coreThreadPoolSize;
             return this;
@@ -142,7 +142,7 @@ public class ThreadPoolBulkheadConfig {
         public Builder queueCapacity(int queueCapacity) {
             if (queueCapacity < 1) {
                 throw new IllegalArgumentException(
-                        "queueCapacity must be a positive integer value >= 1");
+                    "queueCapacity must be a positive integer value >= 1");
             }
             config.queueCapacity = queueCapacity;
             return this;
@@ -152,14 +152,13 @@ public class ThreadPoolBulkheadConfig {
          * When the number of threads is greater than the core, this is the maximum time duration
          * that excess idle threads will wait for new tasks before terminating.
          *
-         * @param keepAliveDuration maximum wait duration for bulkhead thread pool idle
-         *         thread
+         * @param keepAliveDuration maximum wait duration for bulkhead thread pool idle thread
          * @return the BulkheadConfig.Builder
          */
         public Builder keepAliveDuration(Duration keepAliveDuration) {
             if (keepAliveDuration.toMillis() < 0) {
                 throw new IllegalArgumentException(
-                        "keepAliveDuration must be a positive integer value >= 0");
+                    "keepAliveDuration must be a positive integer value >= 0");
             }
             config.keepAliveDuration = keepAliveDuration;
             return this;
@@ -187,7 +186,7 @@ public class ThreadPoolBulkheadConfig {
         public ThreadPoolBulkheadConfig build() {
             if (config.maxThreadPoolSize < config.coreThreadPoolSize) {
                 throw new IllegalArgumentException(
-                        "maxThreadPoolSize must be a greater than or equals to coreThreadPoolSize");
+                    "maxThreadPoolSize must be a greater than or equals to coreThreadPoolSize");
             }
             return config;
         }

@@ -79,22 +79,22 @@ public class CircuitBreakerMethodInterceptor extends AbstractMethodInterceptor {
         CircuitBreaker annotation = invocation.getMethod().getAnnotation(CircuitBreaker.class);
         if (annotation == null) {
             annotation = invocation.getMethod().getDeclaringClass()
-                    .getAnnotation(CircuitBreaker.class);
+                .getAnnotation(CircuitBreaker.class);
         }
         final RecoveryFunction<?> fallbackMethod = Optional
-                .ofNullable(createRecoveryFunction(invocation, annotation.fallbackMethod()))
-                .orElse(new DefaultRecoveryFunction<>());
+            .ofNullable(createRecoveryFunction(invocation, annotation.fallbackMethod()))
+            .orElse(new DefaultRecoveryFunction<>());
         if (registry == null) {
             registry = CircuitBreakerRegistry.ofDefaults();
         }
         io.github.resilience4j.circuitbreaker.CircuitBreaker breaker = registry
-                .circuitBreaker(annotation.name());
+            .circuitBreaker(annotation.name());
         Class<?> returnType = invocation.getMethod().getReturnType();
         if (Promise.class.isAssignableFrom(returnType)) {
             Promise<?> result = (Promise<?>) proceed(invocation, breaker);
             if (result != null) {
                 CircuitBreakerTransformer transformer = CircuitBreakerTransformer.of(breaker)
-                        .recover(fallbackMethod);
+                    .recover(fallbackMethod);
                 result = result.transform(transformer);
             }
             return result;
@@ -141,7 +141,7 @@ public class CircuitBreakerMethodInterceptor extends AbstractMethodInterceptor {
 
     @Nullable
     private Object proceed(MethodInvocation invocation,
-            io.github.resilience4j.circuitbreaker.CircuitBreaker breaker) throws Throwable {
+        io.github.resilience4j.circuitbreaker.CircuitBreaker breaker) throws Throwable {
         Class<?> returnType = invocation.getMethod().getReturnType();
         Object result;
         long start = System.nanoTime();
@@ -169,11 +169,11 @@ public class CircuitBreakerMethodInterceptor extends AbstractMethodInterceptor {
 
     @Nullable
     private Object handleProceedWithException(MethodInvocation invocation,
-            io.github.resilience4j.circuitbreaker.CircuitBreaker breaker,
-            RecoveryFunction<?> recoveryFunction) throws Throwable {
+        io.github.resilience4j.circuitbreaker.CircuitBreaker breaker,
+        RecoveryFunction<?> recoveryFunction) throws Throwable {
         try {
             return io.github.resilience4j.circuitbreaker.CircuitBreaker
-                    .decorateCheckedSupplier(breaker, invocation::proceed).apply();
+                .decorateCheckedSupplier(breaker, invocation::proceed).apply();
         } catch (Throwable throwable) {
             return recoveryFunction.apply(throwable);
         }

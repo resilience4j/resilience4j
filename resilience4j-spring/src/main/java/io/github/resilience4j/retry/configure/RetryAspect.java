@@ -67,7 +67,7 @@ public class RetryAspect implements Ordered {
 
     private static final Logger logger = LoggerFactory.getLogger(RetryAspect.class);
     private final static ScheduledExecutorService retryExecutorService = Executors
-            .newScheduledThreadPool(Runtime.getRuntime().availableProcessors());
+        .newScheduledThreadPool(Runtime.getRuntime().availableProcessors());
     private final RetryConfigurationProperties retryConfigurationProperties;
     private final RetryRegistry retryRegistry;
     private final @Nullable
@@ -81,9 +81,9 @@ public class RetryAspect implements Ordered {
      * @param fallbackDecorators the fallback decorators
      */
     public RetryAspect(RetryConfigurationProperties retryConfigurationProperties,
-            RetryRegistry retryRegistry,
-            @Autowired(required = false) List<RetryAspectExt> retryAspectExtList,
-            FallbackDecorators fallbackDecorators) {
+        RetryRegistry retryRegistry,
+        @Autowired(required = false) List<RetryAspectExt> retryAspectExtList,
+        FallbackDecorators fallbackDecorators) {
         this.retryConfigurationProperties = retryConfigurationProperties;
         this.retryRegistry = retryRegistry;
         this.retryAspectExtList = retryAspectExtList;
@@ -98,7 +98,7 @@ public class RetryAspect implements Ordered {
 
     @Around(value = "matchAnnotatedClassOrMethod(retryAnnotation)", argNames = "proceedingJoinPoint, retryAnnotation")
     public Object retryAroundAdvice(ProceedingJoinPoint proceedingJoinPoint,
-            @Nullable Retry retryAnnotation) throws Throwable {
+        @Nullable Retry retryAnnotation) throws Throwable {
         Method method = ((MethodSignature) proceedingJoinPoint.getSignature()).getMethod();
         String methodName = method.getDeclaringClass().getName() + "#" + method.getName();
         if (retryAnnotation == null) {
@@ -115,14 +115,14 @@ public class RetryAspect implements Ordered {
             return proceed(proceedingJoinPoint, methodName, retry, returnType);
         }
         FallbackMethod fallbackMethod = FallbackMethod
-                .create(retryAnnotation.fallbackMethod(), method, proceedingJoinPoint.getArgs(),
-                        proceedingJoinPoint.getTarget());
+            .create(retryAnnotation.fallbackMethod(), method, proceedingJoinPoint.getArgs(),
+                proceedingJoinPoint.getTarget());
         return fallbackDecorators.decorate(fallbackMethod,
-                () -> proceed(proceedingJoinPoint, methodName, retry, returnType)).apply();
+            () -> proceed(proceedingJoinPoint, methodName, retry, returnType)).apply();
     }
 
     private Object proceed(ProceedingJoinPoint proceedingJoinPoint, String methodName,
-            io.github.resilience4j.retry.Retry retry, Class<?> returnType) throws Throwable {
+        io.github.resilience4j.retry.Retry retry, Class<?> returnType) throws Throwable {
         if (CompletionStage.class.isAssignableFrom(returnType)) {
             return handleJoinPointCompletableFuture(proceedingJoinPoint, retry);
         }
@@ -146,8 +146,8 @@ public class RetryAspect implements Ordered {
 
         if (logger.isDebugEnabled()) {
             logger.debug(
-                    "Created or retrieved retry '{}' with max attempts rate '{}'  for method: '{}'",
-                    backend, retry.getRetryConfig().getResultPredicate(), methodName);
+                "Created or retrieved retry '{}' with max attempts rate '{}'  for method: '{}'",
+                backend, retry.getRetryConfig().getResultPredicate(), methodName);
         }
         return retry;
     }
@@ -161,10 +161,10 @@ public class RetryAspect implements Ordered {
         if (proceedingJoinPoint.getTarget() instanceof Proxy) {
             logger.debug("The retry annotation is kept on a interface which is acting as a proxy");
             return AnnotationExtractor
-                    .extractAnnotationFromProxy(proceedingJoinPoint.getTarget(), Retry.class);
+                .extractAnnotationFromProxy(proceedingJoinPoint.getTarget(), Retry.class);
         } else {
             return AnnotationExtractor
-                    .extract(proceedingJoinPoint.getTarget().getClass(), Retry.class);
+                .extract(proceedingJoinPoint.getTarget().getClass(), Retry.class);
         }
     }
 
@@ -174,7 +174,7 @@ public class RetryAspect implements Ordered {
      * @return the result object if any
      */
     private Object handleDefaultJoinPoint(ProceedingJoinPoint proceedingJoinPoint,
-            io.github.resilience4j.retry.Retry retry) throws Throwable {
+        io.github.resilience4j.retry.Retry retry) throws Throwable {
         return retry.executeCheckedSupplier(proceedingJoinPoint::proceed);
     }
 
@@ -185,7 +185,7 @@ public class RetryAspect implements Ordered {
      */
     @SuppressWarnings("unchecked")
     private Object handleJoinPointCompletableFuture(ProceedingJoinPoint proceedingJoinPoint,
-            io.github.resilience4j.retry.Retry retry) {
+        io.github.resilience4j.retry.Retry retry) {
         return retry.executeCompletionStage(retryExecutorService, () -> {
             try {
                 return (CompletionStage<Object>) proceedingJoinPoint.proceed();

@@ -23,7 +23,7 @@ import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.micrometer.core.instrument.MeterRegistry;
 
 public class TaggedRateLimiterMetricsPublisher
-        extends AbstractRateLimiterMetrics implements MetricsPublisher<RateLimiter> {
+    extends AbstractRateLimiterMetrics implements MetricsPublisher<RateLimiter> {
 
     private final MeterRegistry meterRegistry;
 

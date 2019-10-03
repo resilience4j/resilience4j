@@ -54,7 +54,7 @@ public class RateLimiterAutoConfiguration {
     @ConditionalOnEnabledEndpoint
     @ConditionalOnClass(value = {Endpoint.class})
     public RateLimiterEventsEndpoint rateLimiterEventsEndpoint(
-            EventConsumerRegistry<RateLimiterEvent> eventConsumerRegistry) {
+        EventConsumerRegistry<RateLimiterEvent> eventConsumerRegistry) {
         return new RateLimiterEventsEndpoint(eventConsumerRegistry);
     }
 

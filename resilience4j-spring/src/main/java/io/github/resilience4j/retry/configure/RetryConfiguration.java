@@ -46,29 +46,29 @@ public class RetryConfiguration {
 
     /**
      * @param retryConfigurationProperties retryConfigurationProperties retry configuration
-     *         spring properties
+     *     spring properties
      * @param retryEventConsumerRegistry the event retry registry
      * @return the retry definition registry
      */
     @Bean
     public RetryRegistry retryRegistry(RetryConfigurationProperties retryConfigurationProperties,
-            EventConsumerRegistry<RetryEvent> retryEventConsumerRegistry,
-            RegistryEventConsumer<Retry> retryRegistryEventConsumer) {
+        EventConsumerRegistry<RetryEvent> retryEventConsumerRegistry,
+        RegistryEventConsumer<Retry> retryRegistryEventConsumer) {
         RetryRegistry retryRegistry = createRetryRegistry(retryConfigurationProperties,
-                retryRegistryEventConsumer);
+            retryRegistryEventConsumer);
         registerEventConsumer(retryRegistry, retryEventConsumerRegistry,
-                retryConfigurationProperties);
+            retryConfigurationProperties);
         retryConfigurationProperties.getInstances().forEach((name, properties) -> retryRegistry
-                .retry(name, retryConfigurationProperties.createRetryConfig(name)));
+            .retry(name, retryConfigurationProperties.createRetryConfig(name)));
         return retryRegistry;
     }
 
     @Bean
     @Primary
     public RegistryEventConsumer<Retry> retryRegistryEventConsumer(
-            Optional<List<RegistryEventConsumer<Retry>>> optionalRegistryEventConsumers) {
+        Optional<List<RegistryEventConsumer<Retry>>> optionalRegistryEventConsumers) {
         return new CompositeRegistryEventConsumer<>(
-                optionalRegistryEventConsumers.orElseGet(ArrayList::new));
+            optionalRegistryEventConsumers.orElseGet(ArrayList::new));
     }
 
     /**
@@ -78,11 +78,11 @@ public class RetryConfiguration {
      * @return a RetryRegistry
      */
     private RetryRegistry createRetryRegistry(
-            RetryConfigurationProperties retryConfigurationProperties,
-            RegistryEventConsumer<Retry> retryRegistryEventConsumer) {
+        RetryConfigurationProperties retryConfigurationProperties,
+        RegistryEventConsumer<Retry> retryRegistryEventConsumer) {
         Map<String, RetryConfig> configs = retryConfigurationProperties.getConfigs()
-                .entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey,
-                        entry -> retryConfigurationProperties.createRetryConfig(entry.getValue())));
+            .entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey,
+                entry -> retryConfigurationProperties.createRetryConfig(entry.getValue())));
 
         return RetryRegistry.of(configs, retryRegistryEventConsumer);
     }
@@ -95,21 +95,22 @@ public class RetryConfiguration {
      * @param eventConsumerRegistry The event consumer registry.
      */
     private void registerEventConsumer(RetryRegistry retryRegistry,
-            EventConsumerRegistry<RetryEvent> eventConsumerRegistry,
-            RetryConfigurationProperties retryConfigurationProperties) {
+        EventConsumerRegistry<RetryEvent> eventConsumerRegistry,
+        RetryConfigurationProperties retryConfigurationProperties) {
         retryRegistry.getEventPublisher().onEntryAdded(
-                event -> registerEventConsumer(eventConsumerRegistry, event.getAddedEntry(),
-                        retryConfigurationProperties));
+            event -> registerEventConsumer(eventConsumerRegistry, event.getAddedEntry(),
+                retryConfigurationProperties));
     }
 
     private void registerEventConsumer(EventConsumerRegistry<RetryEvent> eventConsumerRegistry,
-            Retry retry, RetryConfigurationProperties retryConfigurationProperties) {
+        Retry retry, RetryConfigurationProperties retryConfigurationProperties) {
         int eventConsumerBufferSize = Optional
-                .ofNullable(retryConfigurationProperties.getBackendProperties(retry.getName()))
-                .map(io.github.resilience4j.common.retry.configuration.RetryConfigurationProperties.InstanceProperties::getEventConsumerBufferSize)
-                .orElse(100);
+            .ofNullable(retryConfigurationProperties.getBackendProperties(retry.getName()))
+            .map(
+                io.github.resilience4j.common.retry.configuration.RetryConfigurationProperties.InstanceProperties::getEventConsumerBufferSize)
+            .orElse(100);
         retry.getEventPublisher().onEvent(eventConsumerRegistry
-                .createEventConsumer(retry.getName(), eventConsumerBufferSize));
+            .createEventConsumer(retry.getName(), eventConsumerBufferSize));
     }
 
     /**
@@ -120,11 +121,11 @@ public class RetryConfiguration {
     @Bean
     @Conditional(value = {AspectJOnClasspathCondition.class})
     public RetryAspect retryAspect(RetryConfigurationProperties retryConfigurationProperties,
-            RetryRegistry retryRegistry,
-            @Autowired(required = false) List<RetryAspectExt> retryAspectExtList,
-            FallbackDecorators fallbackDecorators) {
+        RetryRegistry retryRegistry,
+        @Autowired(required = false) List<RetryAspectExt> retryAspectExtList,
+        FallbackDecorators fallbackDecorators) {
         return new RetryAspect(retryConfigurationProperties, retryRegistry, retryAspectExtList,
-                fallbackDecorators);
+            fallbackDecorators);
     }
 
     @Bean

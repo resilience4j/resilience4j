@@ -25,7 +25,7 @@ public class AbstractRegistryTest {
         TestRegistry testRegistry = new TestRegistry();
 
         assertThatThrownBy(() -> testRegistry.addConfiguration("default", "test"))
-                .isInstanceOf(IllegalArgumentException.class);
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
@@ -59,19 +59,19 @@ public class AbstractRegistryTest {
         assertThat(replacedEvents).hasSize(1);
 
         assertThat(consumedEvents).extracting("eventType")
-                .containsExactly(Type.ADDED, Type.ADDED, Type.REMOVED, Type.REPLACED);
+            .containsExactly(Type.ADDED, Type.ADDED, Type.REMOVED, Type.REPLACED);
 
         assertThat(addedEvents).extracting("addedEntry")
-                .containsExactly("entry1", "entry2");
+            .containsExactly("entry1", "entry2");
 
         assertThat(removedEvents).extracting("removedEntry")
-                .containsExactly("entry1");
+            .containsExactly("entry1");
 
         assertThat(replacedEvents).extracting("oldEntry")
-                .containsExactly("entry2");
+            .containsExactly("entry2");
 
         assertThat(replacedEvents).extracting("newEntry")
-                .containsExactly("entry3");
+            .containsExactly("entry3");
 
     }
 
@@ -117,16 +117,16 @@ public class AbstractRegistryTest {
         assertThat(replacedEvents).hasSize(1);
 
         assertThat(addedEvents).extracting("addedEntry")
-                .containsExactly("entry1", "entry2");
+            .containsExactly("entry1", "entry2");
 
         assertThat(removedEvents).extracting("removedEntry")
-                .containsExactly("entry1");
+            .containsExactly("entry1");
 
         assertThat(replacedEvents).extracting("oldEntry")
-                .containsExactly("entry2");
+            .containsExactly("entry2");
 
         assertThat(replacedEvents).extracting("newEntry")
-                .containsExactly("entry3");
+            .containsExactly("entry3");
     }
 
     @Test

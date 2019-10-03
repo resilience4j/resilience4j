@@ -41,10 +41,10 @@ public class RateLimiterConfigTest {
     @Test
     public void builderPositive() throws Exception {
         RateLimiterConfig config = RateLimiterConfig.custom()
-                .timeoutDuration(TIMEOUT)
-                .limitRefreshPeriod(REFRESH_PERIOD)
-                .limitForPeriod(LIMIT)
-                .build();
+            .timeoutDuration(TIMEOUT)
+            .limitRefreshPeriod(REFRESH_PERIOD)
+            .limitForPeriod(LIMIT)
+            .build();
 
         then(config.getLimitForPeriod()).isEqualTo(LIMIT);
         then(config.getLimitRefreshPeriod()).isEqualTo(REFRESH_PERIOD);
@@ -56,7 +56,7 @@ public class RateLimiterConfigTest {
         exception.expect(NullPointerException.class);
         exception.expectMessage(TIMEOUT_DURATION_MUST_NOT_BE_NULL);
         RateLimiterConfig.custom()
-                .timeoutDuration(null);
+            .timeoutDuration(null);
     }
 
     @Test
@@ -64,7 +64,7 @@ public class RateLimiterConfigTest {
         exception.expect(NullPointerException.class);
         exception.expectMessage(REFRESH_PERIOD_MUST_NOT_BE_NULL);
         RateLimiterConfig.custom()
-                .limitRefreshPeriod(null);
+            .limitRefreshPeriod(null);
     }
 
     @Test
@@ -72,10 +72,10 @@ public class RateLimiterConfigTest {
         exception.expect(IllegalArgumentException.class);
         exception.expectMessage("RefreshPeriod is too short");
         RateLimiterConfig.custom()
-                .timeoutDuration(TIMEOUT)
-                .limitRefreshPeriod(Duration.ZERO)
-                .limitForPeriod(LIMIT)
-                .build();
+            .timeoutDuration(TIMEOUT)
+            .limitRefreshPeriod(Duration.ZERO)
+            .limitForPeriod(LIMIT)
+            .build();
     }
 
     @Test
@@ -83,6 +83,6 @@ public class RateLimiterConfigTest {
         exception.expect(IllegalArgumentException.class);
         exception.expectMessage("LimitForPeriod should be greater than 0");
         RateLimiterConfig.custom()
-                .limitForPeriod(0);
+            .limitForPeriod(0);
     }
 }

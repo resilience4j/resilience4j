@@ -28,7 +28,7 @@ public class CircuitBreakerOnStateTransitionEvent extends AbstractCircuitBreaker
     private CircuitBreaker.StateTransition stateTransition;
 
     public CircuitBreakerOnStateTransitionEvent(String circuitBreakerName,
-            CircuitBreaker.StateTransition stateTransition) {
+        CircuitBreaker.StateTransition stateTransition) {
         super(circuitBreakerName);
         this.stateTransition = stateTransition;
     }
@@ -45,10 +45,10 @@ public class CircuitBreakerOnStateTransitionEvent extends AbstractCircuitBreaker
     @Override
     public String toString() {
         return String.format("%s: CircuitBreaker '%s' changed state from %s to %s",
-                getCreationTime(),
-                getCircuitBreakerName(),
-                getStateTransition().getFromState(),
-                getStateTransition().getToState());
+            getCreationTime(),
+            getCircuitBreakerName(),
+            getStateTransition().getFromState(),
+            getStateTransition().getToState());
 
     }
 }

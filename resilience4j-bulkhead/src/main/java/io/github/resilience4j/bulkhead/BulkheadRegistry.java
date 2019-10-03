@@ -50,10 +50,10 @@ public interface BulkheadRegistry extends Registry<Bulkhead, BulkheadConfig> {
      * @param bulkheadConfig a custom default Bulkhead configuration.
      * @param registryEventConsumer a Bulkhead registry event consumer.
      * @return a BulkheadRegistry with a custom Bulkhead configuration and a Bulkhead registry event
-     *         consumer.
+     *     consumer.
      */
     static BulkheadRegistry of(BulkheadConfig bulkheadConfig,
-            RegistryEventConsumer<Bulkhead> registryEventConsumer) {
+        RegistryEventConsumer<Bulkhead> registryEventConsumer) {
         return new InMemoryBulkheadRegistry(bulkheadConfig, registryEventConsumer);
     }
 
@@ -64,10 +64,10 @@ public interface BulkheadRegistry extends Registry<Bulkhead, BulkheadConfig> {
      * @param bulkheadConfig a custom default Bulkhead configuration.
      * @param registryEventConsumers a list of Bulkhead registry event consumers.
      * @return a BulkheadRegistry with a custom Bulkhead configuration and a list of Bulkhead
-     *         registry event consumers.
+     *     registry event consumers.
      */
     static BulkheadRegistry of(BulkheadConfig bulkheadConfig,
-            List<RegistryEventConsumer<Bulkhead>> registryEventConsumers) {
+        List<RegistryEventConsumer<Bulkhead>> registryEventConsumers) {
         return new InMemoryBulkheadRegistry(bulkheadConfig, registryEventConsumers);
     }
 
@@ -88,10 +88,10 @@ public interface BulkheadRegistry extends Registry<Bulkhead, BulkheadConfig> {
      * @param configs a Map of shared Bulkhead configurations.
      * @param registryEventConsumer a Bulkhead registry event consumer.
      * @return a BulkheadRegistry with a Map of shared Bulkhead configurations and a Bulkhead
-     *         registry event consumer.
+     *     registry event consumer.
      */
     static BulkheadRegistry of(Map<String, BulkheadConfig> configs,
-            RegistryEventConsumer<Bulkhead> registryEventConsumer) {
+        RegistryEventConsumer<Bulkhead> registryEventConsumer) {
         return new InMemoryBulkheadRegistry(configs, registryEventConsumer);
     }
 
@@ -102,10 +102,10 @@ public interface BulkheadRegistry extends Registry<Bulkhead, BulkheadConfig> {
      * @param configs a Map of shared Bulkhead configurations.
      * @param registryEventConsumers a list of Bulkhead registry event consumers.
      * @return a BulkheadRegistry with a Map of shared Bulkhead configurations and a list of
-     *         Bulkhead registry event consumers.
+     *     Bulkhead registry event consumers.
      */
     static BulkheadRegistry of(Map<String, BulkheadConfig> configs,
-            List<RegistryEventConsumer<Bulkhead>> registryEventConsumers) {
+        List<RegistryEventConsumer<Bulkhead>> registryEventConsumers) {
         return new InMemoryBulkheadRegistry(configs, registryEventConsumers);
     }
 

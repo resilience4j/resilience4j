@@ -44,7 +44,7 @@ public class TimeLimiterMetricsPublisherTest {
         timeLimiterMetricsPublisher = new TimeLimiterMetricsPublisher();
         timeLimiterMetricsPublisher.register(registry);
         timeLimiterRegistry = TimeLimiterRegistry
-                .of(TimeLimiterConfig.ofDefaults(), timeLimiterMetricsPublisher);
+            .of(TimeLimiterConfig.ofDefaults(), timeLimiterMetricsPublisher);
         timeLimiter = timeLimiterRegistry.timeLimiter("backendA");
     }
 
@@ -53,7 +53,7 @@ public class TimeLimiterMetricsPublisherTest {
         timeLimiter.onSuccess();
 
         Double successfulCalls = getSampleValue(registry, DEFAULT_CALLS_METRIC_NAME,
-                KIND_SUCCESSFUL);
+            KIND_SUCCESSFUL);
 
         assertThat(successfulCalls).isEqualTo(1);
     }
@@ -79,16 +79,16 @@ public class TimeLimiterMetricsPublisherTest {
     @Test
     public void customMetricNamesOverrideDefaultOnes() {
         TimeLimiterMetricsPublisher.MetricNames names = TimeLimiterMetricsPublisher.MetricNames
-                .custom()
-                .callsMetricName("custom_calls")
-                .build();
+            .custom()
+            .callsMetricName("custom_calls")
+            .build();
         CollectorRegistry customRegistry = new CollectorRegistry();
         TimeLimiterMetricsPublisher timeLimiterMetricsPublisher = new TimeLimiterMetricsPublisher(
-                names);
+            names);
         timeLimiterMetricsPublisher.register(customRegistry);
 
         TimeLimiterRegistry timeLimiterRegistry = TimeLimiterRegistry
-                .of(TimeLimiterConfig.ofDefaults(), timeLimiterMetricsPublisher);
+            .of(TimeLimiterConfig.ofDefaults(), timeLimiterMetricsPublisher);
         TimeLimiter timeLimiter = timeLimiterRegistry.timeLimiter("backendA");
 
         timeLimiter.onSuccess();
@@ -105,11 +105,11 @@ public class TimeLimiterMetricsPublisherTest {
     }
 
     private Double getSampleValue(CollectorRegistry collectorRegistry, String metricName,
-            String metricKind) {
+        String metricKind) {
         return collectorRegistry.getSampleValue(
-                metricName,
-                new String[]{"name", "kind"},
-                new String[]{timeLimiter.getName(), metricKind}
+            metricName,
+            new String[]{"name", "kind"},
+            new String[]{timeLimiter.getName(), metricKind}
         );
     }
 }

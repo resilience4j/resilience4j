@@ -36,7 +36,7 @@ public class ThreadPoolBulkheadMetricsCollector extends Collector {
     private final ThreadPoolBulkheadRegistry bulkheadRegistry;
 
     private ThreadPoolBulkheadMetricsCollector(MetricNames names,
-            ThreadPoolBulkheadRegistry bulkheadRegistry) {
+        ThreadPoolBulkheadRegistry bulkheadRegistry) {
         this.names = requireNonNull(names);
         this.bulkheadRegistry = requireNonNull(bulkheadRegistry);
     }
@@ -49,7 +49,7 @@ public class ThreadPoolBulkheadMetricsCollector extends Collector {
      * @param bulkheadRegistry the source of bulkheads
      */
     public static ThreadPoolBulkheadMetricsCollector ofBulkheadRegistry(MetricNames names,
-            ThreadPoolBulkheadRegistry bulkheadRegistry) {
+        ThreadPoolBulkheadRegistry bulkheadRegistry) {
         return new ThreadPoolBulkheadMetricsCollector(names, bulkheadRegistry);
     }
 
@@ -59,28 +59,28 @@ public class ThreadPoolBulkheadMetricsCollector extends Collector {
      * @param bulkheadRegistry the source of bulkheads
      */
     public static ThreadPoolBulkheadMetricsCollector ofBulkheadRegistry(
-            ThreadPoolBulkheadRegistry bulkheadRegistry) {
+        ThreadPoolBulkheadRegistry bulkheadRegistry) {
         return new ThreadPoolBulkheadMetricsCollector(MetricNames.ofDefaults(), bulkheadRegistry);
     }
 
     @Override
     public List<MetricFamilySamples> collect() {
         GaugeMetricFamily availableCallsFamily = new GaugeMetricFamily(
-                names.getCurrentThreadPoolSizeName(),
-                "The number of currently used bulkhead threads",
-                LabelNames.NAME
+            names.getCurrentThreadPoolSizeName(),
+            "The number of currently used bulkhead threads",
+            LabelNames.NAME
         );
         GaugeMetricFamily maxAllowedCallsFamily = new GaugeMetricFamily(
-                names.getAvailableQueueCapacityName(),
-                "The number of available bulkhead queue slots",
-                LabelNames.NAME
+            names.getAvailableQueueCapacityName(),
+            "The number of available bulkhead queue slots",
+            LabelNames.NAME
         );
 
         for (ThreadPoolBulkhead bulkhead : bulkheadRegistry.getAllBulkheads()) {
             List<String> labelValues = singletonList(bulkhead.getName());
             availableCallsFamily.addMetric(labelValues, bulkhead.getMetrics().getThreadPoolSize());
             maxAllowedCallsFamily
-                    .addMetric(labelValues, bulkhead.getMetrics().getRemainingQueueCapacity());
+                .addMetric(labelValues, bulkhead.getMetrics().getRemainingQueueCapacity());
         }
 
         return asList(availableCallsFamily, maxAllowedCallsFamily);

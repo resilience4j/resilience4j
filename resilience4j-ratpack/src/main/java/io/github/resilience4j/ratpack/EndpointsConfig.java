@@ -34,7 +34,7 @@ public class EndpointsConfig {
     }
 
     public EndpointsConfig circuitBreakers(
-            Function<? super EndpointConfig, ? extends EndpointConfig> configure) {
+        Function<? super EndpointConfig, ? extends EndpointConfig> configure) {
         try {
             circuitbreaker = configure.apply(new EndpointConfig("circuitbreaker"));
             return this;
@@ -48,7 +48,7 @@ public class EndpointsConfig {
     }
 
     public EndpointsConfig rateLimiters(
-            Function<? super EndpointConfig, ? extends EndpointConfig> configure) {
+        Function<? super EndpointConfig, ? extends EndpointConfig> configure) {
         try {
             ratelimiter = configure.apply(new EndpointConfig("ratelimiter"));
             return this;
@@ -62,7 +62,7 @@ public class EndpointsConfig {
     }
 
     public EndpointsConfig retries(
-            Function<? super EndpointConfig, ? extends EndpointConfig> configure) {
+        Function<? super EndpointConfig, ? extends EndpointConfig> configure) {
         try {
             retry = configure.apply(new EndpointConfig("retry"));
             return this;
@@ -76,7 +76,7 @@ public class EndpointsConfig {
     }
 
     public EndpointsConfig bulkheads(
-            Function<? super EndpointConfig, ? extends EndpointConfig> configure) {
+        Function<? super EndpointConfig, ? extends EndpointConfig> configure) {
         try {
             bulkhead = configure.apply(new EndpointConfig("bulkhead"));
             return this;
@@ -90,7 +90,7 @@ public class EndpointsConfig {
     }
 
     public EndpointsConfig threadPoolBulkheads(
-            Function<? super EndpointConfig, ? extends EndpointConfig> configure) {
+        Function<? super EndpointConfig, ? extends EndpointConfig> configure) {
         try {
             threadpoolbulkhead = configure.apply(new EndpointConfig("threadpoolpulkhead"));
             return this;

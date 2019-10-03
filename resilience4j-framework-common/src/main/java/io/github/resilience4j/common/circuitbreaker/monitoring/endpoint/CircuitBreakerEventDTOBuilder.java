@@ -33,7 +33,7 @@ class CircuitBreakerEventDTOBuilder {
     private CircuitBreaker.StateTransition stateTransition = null;
 
     CircuitBreakerEventDTOBuilder(String circuitBreakerName, CircuitBreakerEvent.Type type,
-            String creationTime) {
+        String creationTime) {
         this.circuitBreakerName = circuitBreakerName;
         this.type = type;
         this.creationTime = creationTime;
@@ -50,13 +50,13 @@ class CircuitBreakerEventDTOBuilder {
     }
 
     CircuitBreakerEventDTOBuilder setStateTransition(
-            CircuitBreaker.StateTransition stateTransition) {
+        CircuitBreaker.StateTransition stateTransition) {
         this.stateTransition = stateTransition;
         return this;
     }
 
     CircuitBreakerEventDTO build() {
         return new CircuitBreakerEventDTO(circuitBreakerName, type, creationTime, throwable,
-                duration, stateTransition);
+            duration, stateTransition);
     }
 }

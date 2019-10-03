@@ -30,12 +30,12 @@ public abstract class AbstractRefreshScopedRateLimiterConfiguration {
     @RefreshScope
     @ConditionalOnMissingBean
     public RateLimiterRegistry rateLimiterRegistry(
-            RateLimiterConfigurationProperties rateLimiterProperties,
-            EventConsumerRegistry<RateLimiterEvent> rateLimiterEventsConsumerRegistry,
-            RegistryEventConsumer<RateLimiter> rateLimiterRegistryEventConsumer) {
+        RateLimiterConfigurationProperties rateLimiterProperties,
+        EventConsumerRegistry<RateLimiterEvent> rateLimiterEventsConsumerRegistry,
+        RegistryEventConsumer<RateLimiter> rateLimiterRegistryEventConsumer) {
         return rateLimiterConfiguration.rateLimiterRegistry(
-                rateLimiterProperties, rateLimiterEventsConsumerRegistry,
-                rateLimiterRegistryEventConsumer);
+            rateLimiterProperties, rateLimiterEventsConsumerRegistry,
+            rateLimiterRegistryEventConsumer);
     }
 
 }

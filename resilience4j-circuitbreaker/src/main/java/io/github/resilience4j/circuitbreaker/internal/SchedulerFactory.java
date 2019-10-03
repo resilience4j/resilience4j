@@ -8,11 +8,11 @@ public class SchedulerFactory {
 
     private static Lazy<SchedulerFactory> lazyInstance = Lazy.of(SchedulerFactory::new);
     private Lazy<ScheduledExecutorService> lazyScheduler = Lazy
-            .of(() -> Executors.newSingleThreadScheduledExecutor(threadTask -> {
-                Thread thread = new Thread(threadTask, "CircuitBreakerAutoTransitionThread");
-                thread.setDaemon(true);
-                return thread;
-            }));
+        .of(() -> Executors.newSingleThreadScheduledExecutor(threadTask -> {
+            Thread thread = new Thread(threadTask, "CircuitBreakerAutoTransitionThread");
+            thread.setDaemon(true);
+            return thread;
+        }));
 
     private SchedulerFactory() {
     }

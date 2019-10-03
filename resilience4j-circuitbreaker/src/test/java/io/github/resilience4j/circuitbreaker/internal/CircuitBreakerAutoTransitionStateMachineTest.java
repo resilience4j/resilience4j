@@ -41,19 +41,19 @@ public class CircuitBreakerAutoTransitionStateMachineTest {
     @Before
     public void setUp() {
         CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom()
-                .failureRateThreshold(50)
-                .slidingWindow(5, 5, CircuitBreakerConfig.SlidingWindowType.COUNT_BASED)
-                .permittedNumberOfCallsInHalfOpenState(3)
-                .automaticTransitionFromOpenToHalfOpenEnabled(true)
-                .waitDurationInOpenState(Duration.ofSeconds(2))
-                .recordException(error -> !(error instanceof NumberFormatException))
-                .build();
+            .failureRateThreshold(50)
+            .slidingWindow(5, 5, CircuitBreakerConfig.SlidingWindowType.COUNT_BASED)
+            .permittedNumberOfCallsInHalfOpenState(3)
+            .automaticTransitionFromOpenToHalfOpenEnabled(true)
+            .waitDurationInOpenState(Duration.ofSeconds(2))
+            .recordException(error -> !(error instanceof NumberFormatException))
+            .build();
 
         SchedulerFactory schedulerFactoryMock = mock(SchedulerFactory.class);
         schedulerMock = mock(ScheduledExecutorService.class);
         when(schedulerFactoryMock.getScheduler()).thenReturn(schedulerMock);
         circuitBreaker = new CircuitBreakerStateMachine("testName", circuitBreakerConfig,
-                schedulerFactoryMock);
+            schedulerFactoryMock);
     }
 
     @Test
@@ -67,8 +67,8 @@ public class CircuitBreakerAutoTransitionStateMachineTest {
 
         // Check that schedule is invoked
         verify(schedulerMock)
-                .schedule(runnableArgumentCaptor.capture(), delayArgumentCaptor.capture(),
-                        unitArgumentCaptor.capture());
+            .schedule(runnableArgumentCaptor.capture(), delayArgumentCaptor.capture(),
+                unitArgumentCaptor.capture());
 
         assertThat(delayArgumentCaptor.getValue()).isEqualTo(2000L);
         assertThat(unitArgumentCaptor.getValue()).isEqualTo(TimeUnit.MILLISECONDS);

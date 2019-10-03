@@ -112,8 +112,8 @@ public class SemaphoreBulkhead implements Bulkhead {
         boolean callPermitted = tryEnterBulkhead();
 
         publishBulkheadEvent(
-                () -> callPermitted ? new BulkheadOnCallPermittedEvent(name)
-                        : new BulkheadOnCallRejectedEvent(name)
+            () -> callPermitted ? new BulkheadOnCallPermittedEvent(name)
+                : new BulkheadOnCallRejectedEvent(name)
         );
 
         return callPermitted;
@@ -216,29 +216,29 @@ public class SemaphoreBulkhead implements Bulkhead {
     }
 
     private class BulkheadEventProcessor extends EventProcessor<BulkheadEvent> implements
-            EventPublisher, EventConsumer<BulkheadEvent> {
+        EventPublisher, EventConsumer<BulkheadEvent> {
 
         @Override
         public EventPublisher onCallPermitted(
-                EventConsumer<BulkheadOnCallPermittedEvent> onCallPermittedEventConsumer) {
+            EventConsumer<BulkheadOnCallPermittedEvent> onCallPermittedEventConsumer) {
             registerConsumer(BulkheadOnCallPermittedEvent.class.getSimpleName(),
-                    onCallPermittedEventConsumer);
+                onCallPermittedEventConsumer);
             return this;
         }
 
         @Override
         public EventPublisher onCallRejected(
-                EventConsumer<BulkheadOnCallRejectedEvent> onCallRejectedEventConsumer) {
+            EventConsumer<BulkheadOnCallRejectedEvent> onCallRejectedEventConsumer) {
             registerConsumer(BulkheadOnCallRejectedEvent.class.getSimpleName(),
-                    onCallRejectedEventConsumer);
+                onCallRejectedEventConsumer);
             return this;
         }
 
         @Override
         public EventPublisher onCallFinished(
-                EventConsumer<BulkheadOnCallFinishedEvent> onCallFinishedEventConsumer) {
+            EventConsumer<BulkheadOnCallFinishedEvent> onCallFinishedEventConsumer) {
             registerConsumer(BulkheadOnCallFinishedEvent.class.getSimpleName(),
-                    onCallFinishedEventConsumer);
+                onCallFinishedEventConsumer);
             return this;
         }
 

@@ -53,13 +53,13 @@ public class ReactorRateLimiterAspectExtTest {
 
         when(proceedingJoinPoint.proceed()).thenReturn(Mono.just("Test"));
         assertThat(
-                reactorRateLimiterAspectExt.handle(proceedingJoinPoint, rateLimiter, "testMethod"))
-                .isNotNull();
+            reactorRateLimiterAspectExt.handle(proceedingJoinPoint, rateLimiter, "testMethod"))
+            .isNotNull();
 
         when(proceedingJoinPoint.proceed()).thenReturn(Flux.just("Test"));
         assertThat(
-                reactorRateLimiterAspectExt.handle(proceedingJoinPoint, rateLimiter, "testMethod"))
-                .isNotNull();
+            reactorRateLimiterAspectExt.handle(proceedingJoinPoint, rateLimiter, "testMethod"))
+            .isNotNull();
     }
 
 

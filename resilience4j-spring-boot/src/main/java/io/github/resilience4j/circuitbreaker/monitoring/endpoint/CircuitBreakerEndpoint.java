@@ -41,7 +41,7 @@ public class CircuitBreakerEndpoint extends AbstractEndpoint {
     @Override
     public ResponseEntity<CircuitBreakerEndpointResponse> invoke() {
         List<String> circuitBreakers = circuitBreakerRegistry.getAllCircuitBreakers()
-                .map(CircuitBreaker::getName).sorted().toJavaList();
+            .map(CircuitBreaker::getName).sorted().toJavaList();
         return ResponseEntity.ok(new CircuitBreakerEndpointResponse(circuitBreakers));
     }
 }

@@ -39,8 +39,8 @@ class CompletableRateLimiter extends Completable {
         if (waitDuration >= 0) {
             if (waitDuration > 0) {
                 Completable.timer(waitDuration, TimeUnit.NANOSECONDS)
-                        .subscribe(() -> upstream
-                                .subscribe(new RateLimiterCompletableObserver(downstream)));
+                    .subscribe(() -> upstream
+                        .subscribe(new RateLimiterCompletableObserver(downstream)));
             } else {
                 upstream.subscribe(new RateLimiterCompletableObserver(downstream));
             }

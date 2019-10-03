@@ -50,18 +50,18 @@ public abstract class AbstractTimeLimiterMetricsTest {
         TimeLimiter timeLimiter = given(metricRegistry);
         String expectedPrefix = "resilience4j.timelimiter.testLimit.";
         Supplier<CompletableFuture<String>> futureSupplier = () ->
-                CompletableFuture.completedFuture("Hello world");
+            CompletableFuture.completedFuture("Hello world");
 
         String result = timeLimiter.decorateFutureSupplier(futureSupplier).call();
 
         then(result).isEqualTo("Hello world");
         assertThat(metricRegistry).hasMetricsSize(3);
         assertThat(metricRegistry).counter(expectedPrefix + SUCCESSFUL)
-                .hasValue(1L);
+            .hasValue(1L);
         assertThat(metricRegistry).counter(expectedPrefix + FAILED)
-                .hasValue(0L);
+            .hasValue(0L);
         assertThat(metricRegistry).counter(expectedPrefix + TIMEOUT)
-                .hasValue(0L);
+            .hasValue(0L);
     }
 
     @Test
@@ -69,18 +69,18 @@ public abstract class AbstractTimeLimiterMetricsTest {
         TimeLimiter timeLimiter = given("testPre", metricRegistry);
         String expectedPrefix = "testPre.testLimit.";
         Supplier<CompletableFuture<String>> futureSupplier = () ->
-                CompletableFuture.completedFuture("Hello world");
+            CompletableFuture.completedFuture("Hello world");
 
         String result = timeLimiter.decorateFutureSupplier(futureSupplier).call();
 
         then(result).isEqualTo("Hello world");
         assertThat(metricRegistry).hasMetricsSize(3);
         assertThat(metricRegistry).counter(expectedPrefix + SUCCESSFUL)
-                .hasValue(1L);
+            .hasValue(1L);
         assertThat(metricRegistry).counter(expectedPrefix + FAILED)
-                .hasValue(0L);
+            .hasValue(0L);
         assertThat(metricRegistry).counter(expectedPrefix + TIMEOUT)
-                .hasValue(0L);
+            .hasValue(0L);
     }
 
 }

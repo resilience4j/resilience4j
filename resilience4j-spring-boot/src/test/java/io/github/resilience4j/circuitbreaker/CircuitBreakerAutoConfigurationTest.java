@@ -38,7 +38,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-        classes = TestApplication.class)
+    classes = TestApplication.class)
 public class CircuitBreakerAutoConfigurationTest {
 
     @Autowired
@@ -89,31 +89,31 @@ public class CircuitBreakerAutoConfigurationTest {
 
         assertThat(circuitBreaker.getCircuitBreakerConfig().getSlidingWindowSize()).isEqualTo(6);
         assertThat(
-                circuitBreaker.getCircuitBreakerConfig().getPermittedNumberOfCallsInHalfOpenState())
-                .isEqualTo(2);
+            circuitBreaker.getCircuitBreakerConfig().getPermittedNumberOfCallsInHalfOpenState())
+            .isEqualTo(2);
         assertThat(circuitBreaker.getCircuitBreakerConfig().getFailureRateThreshold())
-                .isEqualTo(70f);
+            .isEqualTo(70f);
 
         // Create CircuitBreaker dynamically with default config
         CircuitBreaker dynamicCircuitBreaker = circuitBreakerRegistry
-                .circuitBreaker("dynamicBackend");
+            .circuitBreaker("dynamicBackend");
 
         // Test Actuator endpoints
 
         ResponseEntity<CircuitBreakerEndpointResponse> circuitBreakerList = restTemplate
-                .getForEntity("/circuitbreaker", CircuitBreakerEndpointResponse.class);
+            .getForEntity("/circuitbreaker", CircuitBreakerEndpointResponse.class);
         assertThat(circuitBreakerList.getBody().getCircuitBreakers()).hasSize(5)
-                .containsExactly("backendA", "backendB", "backendSharedA", "backendSharedB",
-                        "dynamicBackend");
+            .containsExactly("backendA", "backendB", "backendSharedA", "backendSharedB",
+                "dynamicBackend");
 
         ResponseEntity<CircuitBreakerEventsEndpointResponse> circuitBreakerEventList = restTemplate
-                .getForEntity("/circuitbreaker/events", CircuitBreakerEventsEndpointResponse.class);
+            .getForEntity("/circuitbreaker/events", CircuitBreakerEventsEndpointResponse.class);
         assertThat(circuitBreakerEventList.getBody().getCircuitBreakerEvents()).hasSize(2);
 
         assertThat(circuitBreaker.getCircuitBreakerConfig().getRecordExceptionPredicate()
-                .test(new RecordedException())).isTrue();
+            .test(new RecordedException())).isTrue();
         assertThat(circuitBreaker.getCircuitBreakerConfig().getIgnoreExceptionPredicate()
-                .test(new IgnoredException())).isTrue();
+            .test(new IgnoredException())).isTrue();
 
         // expect no health indicator for backendB, as it is disabled via properties
         ResponseEntity<String> healthResponse = restTemplate.getForEntity("/health", String.class);
@@ -125,7 +125,7 @@ public class CircuitBreakerAutoConfigurationTest {
         // Verify that an exception for which setRecordFailurePredicate returns false and it is not included in
         // setRecordExceptions evaluates to false.
         assertThat(circuitBreaker.getCircuitBreakerConfig().getRecordExceptionPredicate()
-                .test(new Exception())).isFalse();
+            .test(new Exception())).isFalse();
 
         assertThat(circuitBreakerAspect.getOrder()).isEqualTo(400);
 
@@ -140,29 +140,29 @@ public class CircuitBreakerAutoConfigurationTest {
 
         assertThat(sharedA.getCircuitBreakerConfig().getSlidingWindowSize()).isEqualTo(6);
         assertThat(sharedA.getCircuitBreakerConfig().getPermittedNumberOfCallsInHalfOpenState())
-                .isEqualTo(defaultPermittedNumberOfCallsInHalfOpenState);
+            .isEqualTo(defaultPermittedNumberOfCallsInHalfOpenState);
         assertThat(sharedA.getCircuitBreakerConfig().getFailureRateThreshold())
-                .isEqualTo(defaultFailureRate);
+            .isEqualTo(defaultFailureRate);
         assertThat(sharedA.getCircuitBreakerConfig().getWaitDurationInOpenState())
-                .isEqualTo(defaultWaitDuration);
+            .isEqualTo(defaultWaitDuration);
 
         assertThat(sharedB.getCircuitBreakerConfig().getSlidingWindowSize())
-                .isEqualTo(defaultRingBufferSizeInClosedState);
+            .isEqualTo(defaultRingBufferSizeInClosedState);
         assertThat(sharedB.getCircuitBreakerConfig().getPermittedNumberOfCallsInHalfOpenState())
-                .isEqualTo(defaultPermittedNumberOfCallsInHalfOpenState);
+            .isEqualTo(defaultPermittedNumberOfCallsInHalfOpenState);
         assertThat(sharedB.getCircuitBreakerConfig().getFailureRateThreshold())
-                .isEqualTo(defaultFailureRate);
+            .isEqualTo(defaultFailureRate);
         assertThat(sharedB.getCircuitBreakerConfig().getWaitDurationInOpenState())
-                .isEqualTo(defaultWaitDuration);
+            .isEqualTo(defaultWaitDuration);
 
         assertThat(dynamicCircuitBreaker.getCircuitBreakerConfig().getSlidingWindowSize())
-                .isEqualTo(defaultRingBufferSizeInClosedState);
+            .isEqualTo(defaultRingBufferSizeInClosedState);
         assertThat(dynamicCircuitBreaker.getCircuitBreakerConfig()
-                .getPermittedNumberOfCallsInHalfOpenState())
-                .isEqualTo(defaultPermittedNumberOfCallsInHalfOpenState);
+            .getPermittedNumberOfCallsInHalfOpenState())
+            .isEqualTo(defaultPermittedNumberOfCallsInHalfOpenState);
         assertThat(dynamicCircuitBreaker.getCircuitBreakerConfig().getFailureRateThreshold())
-                .isEqualTo(defaultFailureRate);
+            .isEqualTo(defaultFailureRate);
         assertThat(dynamicCircuitBreaker.getCircuitBreakerConfig().getWaitDurationInOpenState())
-                .isEqualTo(defaultWaitDuration);
+            .isEqualTo(defaultWaitDuration);
     }
 }

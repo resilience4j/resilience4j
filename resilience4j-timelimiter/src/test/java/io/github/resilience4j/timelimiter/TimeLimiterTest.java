@@ -31,7 +31,7 @@ public class TimeLimiterTest {
 
     @Test
     public void shouldThrowTimeoutExceptionAndInvokeCancel()
-            throws InterruptedException, ExecutionException, TimeoutException {
+        throws InterruptedException, ExecutionException, TimeoutException {
         Duration timeoutDuration = Duration.ofSeconds(1);
         TimeLimiter timeLimiter = TimeLimiter.of(timeoutDuration);
 
@@ -40,7 +40,7 @@ public class TimeLimiterTest {
 
         Supplier<Future<Integer>> supplier = () -> mockFuture;
         when(mockFuture.get(timeoutDuration.toMillis(), TimeUnit.MILLISECONDS))
-                .thenThrow(new TimeoutException());
+            .thenThrow(new TimeoutException());
 
         Callable<Integer> decorated = TimeLimiter.decorateFutureSupplier(timeLimiter, supplier);
         Try<Integer> decoratedResult = Try.ofCallable(decorated);
@@ -53,18 +53,18 @@ public class TimeLimiterTest {
 
     @Test
     public void shouldThrowTimeoutExceptionAndNotInvokeCancel()
-            throws InterruptedException, ExecutionException, TimeoutException {
+        throws InterruptedException, ExecutionException, TimeoutException {
         Duration timeoutDuration = Duration.ofSeconds(1);
         TimeLimiter timeLimiter = TimeLimiter
-                .of(TimeLimiterConfig.custom().timeoutDuration(timeoutDuration)
-                        .cancelRunningFuture(false).build());
+            .of(TimeLimiterConfig.custom().timeoutDuration(timeoutDuration)
+                .cancelRunningFuture(false).build());
 
         @SuppressWarnings("unchecked")
         Future<Integer> mockFuture = (Future<Integer>) mock(Future.class);
 
         Supplier<Future<Integer>> supplier = () -> mockFuture;
         when(mockFuture.get(timeoutDuration.toMillis(), TimeUnit.MILLISECONDS))
-                .thenThrow(new TimeoutException());
+            .thenThrow(new TimeoutException());
 
         Callable<Integer> decorated = TimeLimiter.decorateFutureSupplier(timeLimiter, supplier);
         Try<Integer> decoratedResult = Try.ofCallable(decorated);

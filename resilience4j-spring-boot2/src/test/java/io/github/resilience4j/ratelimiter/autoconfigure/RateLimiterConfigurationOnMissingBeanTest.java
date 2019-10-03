@@ -26,10 +26,10 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(classes = {
-        HealthIndicatorAutoConfiguration.class,
-        RateLimiterConfigurationOnMissingBeanTest.ConfigWithOverrides.class,
-        RateLimiterAutoConfiguration.class,
-        RateLimiterConfigurationOnMissingBean.class
+    HealthIndicatorAutoConfiguration.class,
+    RateLimiterConfigurationOnMissingBeanTest.ConfigWithOverrides.class,
+    RateLimiterAutoConfiguration.class,
+    RateLimiterConfigurationOnMissingBean.class
 })
 @EnableConfigurationProperties(RateLimiterProperties.class)
 public class RateLimiterConfigurationOnMissingBeanTest {
@@ -48,7 +48,7 @@ public class RateLimiterConfigurationOnMissingBeanTest {
 
     @Test
     public void testAllBeansFromCircuitBreakerConfigurationHasOnMissingBean()
-            throws NoSuchMethodException {
+        throws NoSuchMethodException {
         final Class<RateLimiterConfiguration> originalClass = RateLimiterConfiguration.class;
         final Class<RateLimiterConfigurationOnMissingBean> onMissingBeanClass = RateLimiterConfigurationOnMissingBean.class;
         TestUtils.assertAnnotations(originalClass, onMissingBeanClass);
@@ -59,7 +59,7 @@ public class RateLimiterConfigurationOnMissingBeanTest {
         assertEquals(rateLimiterRegistry, configWithOverrides.rateLimiterRegistry);
         assertEquals(rateLimiterAspect, configWithOverrides.rateLimiterAspect);
         assertEquals(rateLimiterEventsConsumerRegistry,
-                configWithOverrides.rateLimiterEventsConsumerRegistry);
+            configWithOverrides.rateLimiterEventsConsumerRegistry);
     }
 
     @Configuration
@@ -79,11 +79,11 @@ public class RateLimiterConfigurationOnMissingBeanTest {
 
         @Bean
         public RateLimiterAspect rateLimiterAspect(RateLimiterRegistry rateLimiterRegistry,
-                @Autowired(required = false) List<RateLimiterAspectExt> rateLimiterAspectExtList,
-                FallbackDecorators fallbackDecorators) {
+            @Autowired(required = false) List<RateLimiterAspectExt> rateLimiterAspectExtList,
+            FallbackDecorators fallbackDecorators) {
             rateLimiterAspect = new RateLimiterAspect(rateLimiterRegistry,
-                    new RateLimiterConfigurationProperties(), rateLimiterAspectExtList,
-                    fallbackDecorators);
+                new RateLimiterConfigurationProperties(), rateLimiterAspectExtList,
+                fallbackDecorators);
             return rateLimiterAspect;
         }
 

@@ -42,7 +42,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-        classes = TestApplication.class)
+    classes = TestApplication.class)
 public class BulkheadAutoConfigurationTest {
 
     @Autowired
@@ -80,41 +80,41 @@ public class BulkheadAutoConfigurationTest {
         es.submit(dummyService::doSomething);
 
         await()
-                .atMost(1, TimeUnit.SECONDS)
-                .until(() -> bulkhead.getMetrics().getAvailableConcurrentCalls() == 0);
+            .atMost(1, TimeUnit.SECONDS)
+            .until(() -> bulkhead.getMetrics().getAvailableConcurrentCalls() == 0);
 
         assertThat(bulkhead.getBulkheadConfig().getMaxWaitDuration().toMillis()).isEqualTo(0);
         assertThat(bulkhead.getBulkheadConfig().getMaxConcurrentCalls()).isEqualTo(1);
 
         Callable<Boolean> booleanCallable = () ->
-                bulkhead.getMetrics().getAvailableConcurrentCalls() == 1;
+            bulkhead.getMetrics().getAvailableConcurrentCalls() == 1;
         await()
-                .atMost(2, TimeUnit.SECONDS)
-                .until(booleanCallable);
+            .atMost(2, TimeUnit.SECONDS)
+            .until(booleanCallable);
         // Test Actuator endpoints
 
         ResponseEntity<BulkheadEndpointResponse> bulkheadList = restTemplate
-                .getForEntity("/bulkhead", BulkheadEndpointResponse.class);
+            .getForEntity("/bulkhead", BulkheadEndpointResponse.class);
         assertThat(bulkheadList.getBody().getBulkheads()).hasSize(2)
-                .containsExactly("backendA", "backendB");
+            .containsExactly("backendA", "backendB");
 
         for (int i = 0; i < 5; i++) {
             es.submit(dummyService::doSomething);
         }
 
         await()
-                .atMost(2, TimeUnit.SECONDS)
-                .until(booleanCallable);
+            .atMost(2, TimeUnit.SECONDS)
+            .until(booleanCallable);
 
         ResponseEntity<BulkheadEventsEndpointResponse> bulkheadEventList = restTemplate
-                .getForEntity("/bulkhead/events", BulkheadEventsEndpointResponse.class);
+            .getForEntity("/bulkhead/events", BulkheadEventsEndpointResponse.class);
         List<BulkheadEventDTO> bulkheadEvents = bulkheadEventList.getBody().getBulkheadEvents();
         assertThat(bulkheadEvents).isNotEmpty();
         assertThat(bulkheadEvents.get(bulkheadEvents.size() - 1).getType())
-                .isEqualTo(BulkheadEvent.Type.CALL_FINISHED);
+            .isEqualTo(BulkheadEvent.Type.CALL_FINISHED);
         assertThat(bulkheadEvents)
-                .filteredOn(it -> it.getType() == BulkheadEvent.Type.CALL_REJECTED)
-                .isNotEmpty();
+            .filteredOn(it -> it.getType() == BulkheadEvent.Type.CALL_REJECTED)
+            .isNotEmpty();
 
         assertThat(bulkheadAspect.getOrder()).isEqualTo(Ordered.LOWEST_PRECEDENCE);
 

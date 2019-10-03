@@ -44,7 +44,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-        classes = TestApplication.class)
+    classes = TestApplication.class)
 public class RetryAutoConfigurationAsyncTest {
 
     @Autowired
@@ -72,11 +72,11 @@ public class RetryAutoConfigurationAsyncTest {
 
         RetryEventsEndpointResponse retryEventListBefore = retryEvents("/actuator/retryevents");
         RetryEventsEndpointResponse retryEventListForBBefore = retryEvents(
-                "/actuator/retryevents/" + RETRY_BACKEND_B);
+            "/actuator/retryevents/" + RETRY_BACKEND_B);
 
         try {
             final CompletionStage<String> stringCompletionStage = retryDummyService
-                    .doSomethingAsync(true);
+                .doSomethingAsync(true);
             String result = awaitResult(stringCompletionStage, 5);
             assertThat(result).isNull();
 
@@ -97,23 +97,23 @@ public class RetryAutoConfigurationAsyncTest {
 
         // expect retry actuator endpoint contains both retries
         ResponseEntity<RetryEndpointResponse> retriesList = restTemplate
-                .getForEntity("/actuator/retries", RetryEndpointResponse.class);
+            .getForEntity("/actuator/retries", RetryEndpointResponse.class);
         assertThat(new HashSet<>(retriesList.getBody().getRetries()))
-                .contains(RETRY_BACKEND_A, RETRY_BACKEND_B,
-                        BACKEND_C, RETRY_DUMMY_FEIGN_CLIENT_NAME);
+            .contains(RETRY_BACKEND_A, RETRY_BACKEND_B,
+                BACKEND_C, RETRY_DUMMY_FEIGN_CLIENT_NAME);
 
         // expect retry-event actuator endpoint recorded both events
         RetryEventsEndpointResponse retryEventList = retryEvents("/actuator/retryevents");
         assertThat(retryEventList.getRetryEvents())
-                .hasSize(retryEventListBefore.getRetryEvents().size() + 3);
+            .hasSize(retryEventListBefore.getRetryEvents().size() + 3);
 
         retryEventList = retryEvents("/actuator/retryevents/" + RETRY_BACKEND_B);
         assertThat(retryEventList.getRetryEvents())
-                .hasSize(retryEventListForBBefore.getRetryEvents().size() + 3);
+            .hasSize(retryEventListForBBefore.getRetryEvents().size() + 3);
 
         assertThat(retry.getRetryConfig().getExceptionPredicate().test(new IOException())).isTrue();
         assertThat(retry.getRetryConfig().getExceptionPredicate().test(new IgnoredException()))
-                .isFalse();
+            .isFalse();
         assertThat(retryAspect.getOrder()).isEqualTo(399);
     }
 
@@ -123,7 +123,7 @@ public class RetryAutoConfigurationAsyncTest {
 
 
     private <T> T awaitResult(CompletionStage<T> completionStage, long timeoutSeconds)
-            throws Throwable {
+        throws Throwable {
         try {
             return completionStage.toCompletableFuture().get(timeoutSeconds, TimeUnit.SECONDS);
         } catch (InterruptedException | TimeoutException e) {

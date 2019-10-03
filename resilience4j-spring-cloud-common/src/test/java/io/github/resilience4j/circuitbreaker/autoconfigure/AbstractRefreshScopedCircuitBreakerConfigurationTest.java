@@ -32,19 +32,19 @@ public class AbstractRefreshScopedCircuitBreakerConfigurationTest {
     @Test
     public void testRefreshScopedCircuitBreakerConfig() {
         Arrays.stream(AbstractRefreshScopedCircuitBreakerConfiguration.class.getMethods())
-                .filter(method -> method.isAnnotationPresent(Bean.class))
-                .forEach(method -> assertThat(method.isAnnotationPresent(RefreshScope.class))
-                        .isTrue());
+            .filter(method -> method.isAnnotationPresent(Bean.class))
+            .forEach(method -> assertThat(method.isAnnotationPresent(RefreshScope.class))
+                .isTrue());
     }
 
     @Test
     public void testCircuitBreakerCloudCommonConfig() {
         CircuitBreakerConfig circuitBreakerConfig = new CircuitBreakerConfig(
-                new CircuitBreakerConfigurationProperties());
+            new CircuitBreakerConfigurationProperties());
 
         assertThat(circuitBreakerConfig.circuitBreakerRegistry(
-                new DefaultEventConsumerRegistry<>(),
-                new CompositeRegistryEventConsumer<>(emptyList()))).isNotNull();
+            new DefaultEventConsumerRegistry<>(),
+            new CompositeRegistryEventConsumer<>(emptyList()))).isNotNull();
     }
 
     static class CircuitBreakerConfig extends AbstractRefreshScopedCircuitBreakerConfiguration {

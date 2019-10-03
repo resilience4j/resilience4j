@@ -37,15 +37,15 @@ abstract class AbstractRateLimiterMetrics extends AbstractMetrics {
         Set<Meter.Id> idSet = new HashSet<>();
 
         idSet.add(Gauge.builder(names.getAvailablePermissionsMetricName(), rateLimiter,
-                rl -> rl.getMetrics().getAvailablePermissions())
-                .description("The number of available permissions")
-                .tag(TagNames.NAME, rateLimiter.getName())
-                .register(meterRegistry).getId());
+            rl -> rl.getMetrics().getAvailablePermissions())
+            .description("The number of available permissions")
+            .tag(TagNames.NAME, rateLimiter.getName())
+            .register(meterRegistry).getId());
         idSet.add(Gauge.builder(names.getWaitingThreadsMetricName(), rateLimiter,
-                rl -> rl.getMetrics().getNumberOfWaitingThreads())
-                .description("The number of waiting threads")
-                .tag(TagNames.NAME, rateLimiter.getName())
-                .register(meterRegistry).getId());
+            rl -> rl.getMetrics().getNumberOfWaitingThreads())
+            .description("The number of waiting threads")
+            .tag(TagNames.NAME, rateLimiter.getName())
+            .register(meterRegistry).getId());
 
         meterIdMap.put(rateLimiter.getName(), idSet);
     }
@@ -55,9 +55,9 @@ abstract class AbstractRateLimiterMetrics extends AbstractMetrics {
         private static final String DEFAULT_PREFIX = "resilience4j.ratelimiter";
 
         public static final String DEFAULT_AVAILABLE_PERMISSIONS_METRIC_NAME =
-                DEFAULT_PREFIX + ".available.permissions";
+            DEFAULT_PREFIX + ".available.permissions";
         public static final String DEFAULT_WAITING_THREADS_METRIC_NAME =
-                DEFAULT_PREFIX + ".waiting_threads";
+            DEFAULT_PREFIX + ".waiting_threads";
         private String availablePermissionsMetricName = DEFAULT_AVAILABLE_PERMISSIONS_METRIC_NAME;
         private String waitingThreadsMetricName = DEFAULT_WAITING_THREADS_METRIC_NAME;
 
@@ -116,7 +116,7 @@ abstract class AbstractRateLimiterMetrics extends AbstractMetrics {
              */
             public Builder availablePermissionsMetricName(String availablePermissionsMetricName) {
                 metricNames.availablePermissionsMetricName = requireNonNull(
-                        availablePermissionsMetricName);
+                    availablePermissionsMetricName);
                 return this;
             }
 

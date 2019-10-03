@@ -42,7 +42,7 @@ public interface ThreadPoolBulkhead {
      * @return a supplier which is decorated by a Bulkhead.
      */
     static <T> Callable<CompletionStage<T>> decorateCallable(ThreadPoolBulkhead bulkhead,
-            Callable<T> callable) {
+        Callable<T> callable) {
         return () -> bulkhead.submit(callable);
     }
 
@@ -55,7 +55,7 @@ public interface ThreadPoolBulkhead {
      * @return a supplier which is decorated by a Bulkhead.
      */
     static <T> Supplier<CompletionStage<T>> decorateSupplier(ThreadPoolBulkhead bulkhead,
-            Supplier<T> supplier) {
+        Supplier<T> supplier) {
         return () -> bulkhead.submit(supplier::get);
     }
 
@@ -99,7 +99,7 @@ public interface ThreadPoolBulkhead {
      * @return a Bulkhead instance
      */
     static ThreadPoolBulkhead of(String name,
-            Supplier<ThreadPoolBulkheadConfig> bulkheadConfigSupplier) {
+        Supplier<ThreadPoolBulkheadConfig> bulkheadConfigSupplier) {
         return new FixedThreadPoolBulkhead(name, bulkheadConfigSupplier);
     }
 
@@ -233,15 +233,15 @@ public interface ThreadPoolBulkhead {
      * An EventPublisher which can be used to register event consumers.
      */
     interface ThreadPoolBulkheadEventPublisher extends
-            io.github.resilience4j.core.EventPublisher<BulkheadEvent> {
+        io.github.resilience4j.core.EventPublisher<BulkheadEvent> {
 
         ThreadPoolBulkheadEventPublisher onCallRejected(
-                EventConsumer<BulkheadOnCallRejectedEvent> eventConsumer);
+            EventConsumer<BulkheadOnCallRejectedEvent> eventConsumer);
 
         ThreadPoolBulkheadEventPublisher onCallPermitted(
-                EventConsumer<BulkheadOnCallPermittedEvent> eventConsumer);
+            EventConsumer<BulkheadOnCallPermittedEvent> eventConsumer);
 
         ThreadPoolBulkheadEventPublisher onCallFinished(
-                EventConsumer<BulkheadOnCallFinishedEvent> eventConsumer);
+            EventConsumer<BulkheadOnCallFinishedEvent> eventConsumer);
     }
 }

@@ -23,7 +23,7 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class RateLimiterConfigurationOnMissingBean extends
-        AbstractRateLimiterConfigurationOnMissingBean {
+    AbstractRateLimiterConfigurationOnMissingBean {
 
     @Bean
     @ConditionalOnMissingBean(value = RateLimiterEvent.class, parameterizedContainer = EventConsumerRegistry.class)

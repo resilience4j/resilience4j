@@ -40,8 +40,8 @@ public class BulkHeadConfigurationTest {
 
         //When
         ThreadPoolBulkheadRegistry bulkheadRegistry = threadPoolBulkheadConfiguration
-                .threadPoolBulkheadRegistry(bulkheadConfigurationProperties, eventConsumerRegistry,
-                        new CompositeRegistryEventConsumer<>(emptyList()));
+            .threadPoolBulkheadRegistry(bulkheadConfigurationProperties, eventConsumerRegistry,
+                new CompositeRegistryEventConsumer<>(emptyList()));
 
         //Then
         assertThat(bulkheadRegistry.getAllBulkheads().size()).isEqualTo(2);
@@ -82,9 +82,9 @@ public class BulkHeadConfigurationTest {
         bulkheadConfigurationProperties.getConfigs().put("sharedConfig", sharedProperties);
 
         bulkheadConfigurationProperties.getBackends()
-                .put("backendWithDefaultConfig", backendWithDefaultConfig);
+            .put("backendWithDefaultConfig", backendWithDefaultConfig);
         bulkheadConfigurationProperties.getBackends()
-                .put("backendWithSharedConfig", backendWithSharedConfig);
+            .put("backendWithSharedConfig", backendWithSharedConfig);
 
         ThreadPoolBulkheadConfiguration threadPoolBulkheadConfiguration = new ThreadPoolBulkheadConfiguration();
         DefaultEventConsumerRegistry<BulkheadEvent> eventConsumerRegistry = new DefaultEventConsumerRegistry<>();
@@ -92,9 +92,9 @@ public class BulkHeadConfigurationTest {
         //When
         try {
             ThreadPoolBulkheadRegistry bulkheadRegistry = threadPoolBulkheadConfiguration
-                    .threadPoolBulkheadRegistry(bulkheadConfigurationProperties,
-                            eventConsumerRegistry,
-                            new CompositeRegistryEventConsumer<>(emptyList()));
+                .threadPoolBulkheadRegistry(bulkheadConfigurationProperties,
+                    eventConsumerRegistry,
+                    new CompositeRegistryEventConsumer<>(emptyList()));
             //Then
             assertThat(bulkheadRegistry.getAllBulkheads().size()).isEqualTo(2);
             // Should get default config and core number
@@ -114,7 +114,7 @@ public class BulkHeadConfigurationTest {
             assertThat(eventConsumerRegistry.getAllEventConsumer()).hasSize(3);
         } catch (Exception e) {
             System.out.println(
-                    "exception in testCreateThreadPoolBulkHeadRegistryWithSharedConfigs():" + e);
+                "exception in testCreateThreadPoolBulkHeadRegistryWithSharedConfigs():" + e);
         }
     }
 
@@ -139,8 +139,8 @@ public class BulkHeadConfigurationTest {
 
         //When
         BulkheadRegistry bulkheadRegistry = bulkheadConfiguration
-                .bulkheadRegistry(bulkheadConfigurationProperties, eventConsumerRegistry,
-                        new CompositeRegistryEventConsumer<>(emptyList()));
+            .bulkheadRegistry(bulkheadConfigurationProperties, eventConsumerRegistry,
+                new CompositeRegistryEventConsumer<>(emptyList()));
 
         //Then
         assertThat(bulkheadRegistry.getAllBulkheads().size()).isEqualTo(2);
@@ -183,17 +183,17 @@ public class BulkHeadConfigurationTest {
         bulkheadConfigurationProperties.getConfigs().put("sharedConfig", sharedProperties);
 
         bulkheadConfigurationProperties.getInstances()
-                .put("backendWithDefaultConfig", backendWithDefaultConfig);
+            .put("backendWithDefaultConfig", backendWithDefaultConfig);
         bulkheadConfigurationProperties.getInstances()
-                .put("backendWithSharedConfig", backendWithSharedConfig);
+            .put("backendWithSharedConfig", backendWithSharedConfig);
 
         BulkheadConfiguration bulkheadConfiguration = new BulkheadConfiguration();
         DefaultEventConsumerRegistry<BulkheadEvent> eventConsumerRegistry = new DefaultEventConsumerRegistry<>();
 
         //When
         BulkheadRegistry bulkheadRegistry = bulkheadConfiguration
-                .bulkheadRegistry(bulkheadConfigurationProperties, eventConsumerRegistry,
-                        new CompositeRegistryEventConsumer<>(emptyList()));
+            .bulkheadRegistry(bulkheadConfigurationProperties, eventConsumerRegistry,
+                new CompositeRegistryEventConsumer<>(emptyList()));
 
         //Then
         assertThat(bulkheadRegistry.getAllBulkheads().size()).isEqualTo(2);
@@ -231,10 +231,10 @@ public class BulkHeadConfigurationTest {
 
         //When
         assertThatThrownBy(() -> bulkheadConfiguration
-                .bulkheadRegistry(bulkheadConfigurationProperties, eventConsumerRegistry,
-                        new CompositeRegistryEventConsumer<>(emptyList())))
-                .isInstanceOf(ConfigurationNotFoundException.class)
-                .hasMessage("Configuration with name 'unknownConfig' does not exist");
+            .bulkheadRegistry(bulkheadConfigurationProperties, eventConsumerRegistry,
+                new CompositeRegistryEventConsumer<>(emptyList())))
+            .isInstanceOf(ConfigurationNotFoundException.class)
+            .hasMessage("Configuration with name 'unknownConfig' does not exist");
     }
 
 }

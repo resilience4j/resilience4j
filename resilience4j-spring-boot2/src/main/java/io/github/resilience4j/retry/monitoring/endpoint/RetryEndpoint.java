@@ -39,7 +39,7 @@ public class RetryEndpoint {
     @ReadOperation
     public RetryEndpointResponse getAllRetries() {
         List<String> retries = retryRegistry.getAllRetries()
-                .map(Retry::getName).sorted().toJavaList();
+            .map(Retry::getName).sorted().toJavaList();
         return new RetryEndpointResponse(retries);
     }
 }

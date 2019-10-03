@@ -48,7 +48,7 @@ public class RetryMetricsCollector extends Collector {
      * @param retryRegistry the source of retries
      */
     public static RetryMetricsCollector ofRetryRegistry(MetricNames names,
-            RetryRegistry retryRegistry) {
+        RetryRegistry retryRegistry) {
         return new RetryMetricsCollector(names, retryRegistry);
     }
 
@@ -64,20 +64,20 @@ public class RetryMetricsCollector extends Collector {
     @Override
     public List<MetricFamilySamples> collect() {
         GaugeMetricFamily retryCallsFamily = new GaugeMetricFamily(
-                names.getCallsMetricName(),
-                "The number of calls",
-                LabelNames.NAME_AND_KIND
+            names.getCallsMetricName(),
+            "The number of calls",
+            LabelNames.NAME_AND_KIND
         );
 
         for (Retry retry : retryRegistry.getAllRetries()) {
             retryCallsFamily.addMetric(asList(retry.getName(), "successful_without_retry"),
-                    retry.getMetrics().getNumberOfSuccessfulCallsWithoutRetryAttempt());
+                retry.getMetrics().getNumberOfSuccessfulCallsWithoutRetryAttempt());
             retryCallsFamily.addMetric(asList(retry.getName(), "successful_with_retry"),
-                    retry.getMetrics().getNumberOfSuccessfulCallsWithRetryAttempt());
+                retry.getMetrics().getNumberOfSuccessfulCallsWithRetryAttempt());
             retryCallsFamily.addMetric(asList(retry.getName(), "failed_without_retry"),
-                    retry.getMetrics().getNumberOfFailedCallsWithoutRetryAttempt());
+                retry.getMetrics().getNumberOfFailedCallsWithoutRetryAttempt());
             retryCallsFamily.addMetric(asList(retry.getName(), "failed_with_retry"),
-                    retry.getMetrics().getNumberOfFailedCallsWithRetryAttempt());
+                retry.getMetrics().getNumberOfFailedCallsWithRetryAttempt());
 
         }
 

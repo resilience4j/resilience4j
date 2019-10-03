@@ -34,7 +34,7 @@ public class InMemoryCircuitBreakerRegistryTest {
     @Test
     public void testGetNotFoundCircuitBreakerRegistry() {
         InMemoryCircuitBreakerRegistry circuitBreakerRegistry = (InMemoryCircuitBreakerRegistry) CircuitBreakerRegistry
-                .ofDefaults();
+            .ofDefaults();
         assertThat(circuitBreakerRegistry.getConfiguration("testNotFound")).isEmpty();
     }
 
@@ -42,8 +42,8 @@ public class InMemoryCircuitBreakerRegistryTest {
     public void testUpdateDefaultCircuitBreakerRegistry() {
         CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
         Assertions.assertThatThrownBy(() -> circuitBreakerRegistry
-                .addConfiguration("default", CircuitBreakerConfig.custom().build()))
-                .isExactlyInstanceOf(IllegalArgumentException.class);
+            .addConfiguration("default", CircuitBreakerConfig.custom().build()))
+            .isExactlyInstanceOf(IllegalArgumentException.class);
 
     }
 
@@ -52,8 +52,8 @@ public class InMemoryCircuitBreakerRegistryTest {
         CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
         circuitBreakerRegistry.addConfiguration("testConfig", CircuitBreakerConfig.ofDefaults());
         final CircuitBreaker circuitBreaker = circuitBreakerRegistry
-                .circuitBreaker("circuitBreaker",
-                        circuitBreakerRegistry.getConfiguration("testConfig").get());
+            .circuitBreaker("circuitBreaker",
+                circuitBreakerRegistry.getConfiguration("testConfig").get());
         assertThat(circuitBreaker).isNotNull();
     }
 
@@ -65,8 +65,8 @@ public class InMemoryCircuitBreakerRegistryTest {
         CircuitBreakerRegistry circuitBreakerRegistry = new InMemoryCircuitBreakerRegistry(map);
         circuitBreakerRegistry.addConfiguration("testConfig", CircuitBreakerConfig.ofDefaults());
         final CircuitBreaker circuitBreaker = circuitBreakerRegistry
-                .circuitBreaker("circuitBreaker",
-                        circuitBreakerRegistry.getConfiguration("testConfig").get());
+            .circuitBreaker("circuitBreaker",
+                circuitBreakerRegistry.getConfiguration("testConfig").get());
         assertThat(circuitBreaker).isNotNull();
     }
 
@@ -74,10 +74,10 @@ public class InMemoryCircuitBreakerRegistryTest {
     public void testCreateCircuitBreakerWithConfigName() {
         CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
         circuitBreakerRegistry.addConfiguration("testConfig",
-                CircuitBreakerConfig.custom().slidingWindowSize(5).build());
+            CircuitBreakerConfig.custom().slidingWindowSize(5).build());
         final CircuitBreaker circuitBreaker = circuitBreakerRegistry
-                .circuitBreaker("circuitBreaker",
-                        "testConfig");
+            .circuitBreaker("circuitBreaker",
+                "testConfig");
         assertThat(circuitBreaker).isNotNull();
         assertThat(circuitBreaker.getCircuitBreakerConfig().getSlidingWindowSize()).isEqualTo(5);
     }
@@ -86,7 +86,7 @@ public class InMemoryCircuitBreakerRegistryTest {
     public void testCreateCircuitBreakerWithConfigNameNotFound() {
         CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
         Assertions.assertThatThrownBy(() -> circuitBreakerRegistry.circuitBreaker("circuitBreaker",
-                "testConfig")).isInstanceOf(ConfigurationNotFoundException.class);
+            "testConfig")).isInstanceOf(ConfigurationNotFoundException.class);
 
     }
 

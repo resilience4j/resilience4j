@@ -56,28 +56,28 @@ public class RxJava2RateLimiterAspectExtTest {
 
         when(proceedingJoinPoint.proceed()).thenReturn(Single.just("Test"));
         assertThat(
-                rxJava2RateLimiterAspectExt.handle(proceedingJoinPoint, rateLimiter, "testMethod"))
-                .isNotNull();
+            rxJava2RateLimiterAspectExt.handle(proceedingJoinPoint, rateLimiter, "testMethod"))
+            .isNotNull();
 
         when(proceedingJoinPoint.proceed()).thenReturn(Flowable.just("Test"));
         assertThat(
-                rxJava2RateLimiterAspectExt.handle(proceedingJoinPoint, rateLimiter, "testMethod"))
-                .isNotNull();
+            rxJava2RateLimiterAspectExt.handle(proceedingJoinPoint, rateLimiter, "testMethod"))
+            .isNotNull();
 
         when(proceedingJoinPoint.proceed()).thenReturn(Completable.complete());
         assertThat(
-                rxJava2RateLimiterAspectExt.handle(proceedingJoinPoint, rateLimiter, "testMethod"))
-                .isNotNull();
+            rxJava2RateLimiterAspectExt.handle(proceedingJoinPoint, rateLimiter, "testMethod"))
+            .isNotNull();
 
         when(proceedingJoinPoint.proceed()).thenReturn(Maybe.just("Test"));
         assertThat(
-                rxJava2RateLimiterAspectExt.handle(proceedingJoinPoint, rateLimiter, "testMethod"))
-                .isNotNull();
+            rxJava2RateLimiterAspectExt.handle(proceedingJoinPoint, rateLimiter, "testMethod"))
+            .isNotNull();
 
         when(proceedingJoinPoint.proceed()).thenReturn(Observable.just("Test"));
         assertThat(
-                rxJava2RateLimiterAspectExt.handle(proceedingJoinPoint, rateLimiter, "testMethod"))
-                .isNotNull();
+            rxJava2RateLimiterAspectExt.handle(proceedingJoinPoint, rateLimiter, "testMethod"))
+            .isNotNull();
 
 
     }

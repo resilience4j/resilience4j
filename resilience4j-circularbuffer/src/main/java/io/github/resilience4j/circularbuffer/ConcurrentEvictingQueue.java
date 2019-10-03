@@ -225,12 +225,12 @@ public class ConcurrentEvictingQueue<E> extends AbstractQueue<E> {
      *
      * Note that {@code toArray(new Object[0])} is identical in function to {@code toArray()}.
      *
-     * @param destination the array into which the elements of the queue are to be stored,
-     *         if it is big enough; otherwise, a new array of the same runtime type is allocated for
-     *         this purpose
+     * @param destination the array into which the elements of the queue are to be stored, if it
+     *     is big enough; otherwise, a new array of the same runtime type is allocated for this
+     *     purpose
      * @return an array containing all of the elements in this queue
-     * @throws ArrayStoreException if the runtime type of the specified array is not a
-     *         supertype of the runtime type of every element in this queue
+     * @throws ArrayStoreException if the runtime type of the specified array is not a supertype
+     *     of the runtime type of every element in this queue
      * @throws NullPointerException if the specified array is null
      */
     @Override
