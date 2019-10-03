@@ -23,21 +23,37 @@ import java.util.function.Predicate;
 import io.github.resilience4j.bulkhead.adaptive.internal.AdaptiveLimitBulkhead;
 import io.github.resilience4j.bulkhead.adaptive.internal.config.AbstractConfig;
 import io.github.resilience4j.bulkhead.adaptive.internal.config.AimdConfig;
+import io.github.resilience4j.core.lang.NonNull;
 import io.github.resilience4j.core.lang.Nullable;
+import io.github.resilience4j.core.predicate.PredicateCreator;
 
 /**
  * A {@link AdaptiveBulkheadConfig} configures a adaptation capabilities of  {@link AdaptiveLimitBulkhead}
  */
 public class AdaptiveBulkheadConfig<T extends AbstractConfig> {
+	private static final Predicate<Throwable> DEFAULT_RECORD_EXCEPTION_PREDICATE = throwable -> true;
+	private static final Predicate<Throwable> DEFAULT_IGNORE_EXCEPTION_PREDICATE = throwable -> false;
+	// The default exception predicate counts all exceptions as failures.
+	@NonNull
+	private Predicate<Throwable> recordExceptionPredicate = DEFAULT_RECORD_EXCEPTION_PREDICATE;
+	// The default exception predicate ignores no exceptions.
+	@NonNull
+	private Predicate<Throwable> ignoreExceptionPredicate = DEFAULT_IGNORE_EXCEPTION_PREDICATE;
 	@Nullable
 	private T config;
-	@Nullable
-	private Predicate<Exception> adaptIfError;
 	private int initialConcurrency = 1;
 	private static final boolean DEFAULT_WRITABLE_STACK_TRACE_ENABLED = true;
 	private boolean writableStackTraceEnabled = DEFAULT_WRITABLE_STACK_TRACE_ENABLED;
 
 	private AdaptiveBulkheadConfig() {
+	}
+
+	public Predicate<Throwable> getRecordExceptionPredicate() {
+		return recordExceptionPredicate;
+	}
+
+	public Predicate<Throwable> getIgnoreExceptionPredicate() {
+		return ignoreExceptionPredicate;
 	}
 
 	public int getInitialConcurrency() {
@@ -46,10 +62,6 @@ public class AdaptiveBulkheadConfig<T extends AbstractConfig> {
 
 	public T getConfiguration() {
 		return config;
-	}
-
-	public Predicate<Exception> getAdaptIfError() {
-		return adaptIfError;
 	}
 
 	public boolean isWritableStackTraceEnabled() {
@@ -94,6 +106,15 @@ public class AdaptiveBulkheadConfig<T extends AbstractConfig> {
 
 	public static class Builder<T extends AbstractConfig> {
 		private final AdaptiveBulkheadConfig<T> adaptiveBulkheadConfig;
+		@Nullable
+		private Predicate<Throwable> recordExceptionPredicate;
+		@Nullable
+		private Predicate<Throwable> ignoreExceptionPredicate;
+
+		@SuppressWarnings("unchecked")
+		private Class<? extends Throwable>[] recordExceptions = new Class[0];
+		@SuppressWarnings("unchecked")
+		private Class<? extends Throwable>[] ignoreExceptions = new Class[0];
 
 		private Builder() {
 			adaptiveBulkheadConfig = new AdaptiveBulkheadConfig<>();
@@ -101,11 +122,6 @@ public class AdaptiveBulkheadConfig<T extends AbstractConfig> {
 
 		private Builder(AdaptiveBulkheadConfig<T> adaptiveBulkheadConfig) {
 			this.adaptiveBulkheadConfig = adaptiveBulkheadConfig;
-		}
-
-		public Builder<T> adaptIfError(Predicate<Exception> adaptIfError) {
-			adaptiveBulkheadConfig.adaptIfError = adaptIfError;
-			return this;
 		}
 
 		/**
@@ -116,24 +132,109 @@ public class AdaptiveBulkheadConfig<T extends AbstractConfig> {
 		 * @param writableStackTraceEnabled flag to control if stack trace is writable
 		 * @return the BulkheadConfig.Builder
 		 */
-		public Builder<T> writableStackTraceEnabled(boolean writableStackTraceEnabled) {
+		public final Builder<T> writableStackTraceEnabled(boolean writableStackTraceEnabled) {
 			adaptiveBulkheadConfig.writableStackTraceEnabled = writableStackTraceEnabled;
 			return this;
 		}
 
 
-		public Builder<T> config(T config) {
+		public final Builder<T> config(T config) {
 			adaptiveBulkheadConfig.config = config;
 			return this;
 		}
 
-		public Builder<T> initialConcurrency(int initialConcurrency) {
+		public final Builder<T> initialConcurrency(int initialConcurrency) {
 			adaptiveBulkheadConfig.initialConcurrency = initialConcurrency;
 			return this;
 		}
 
-		public AdaptiveBulkheadConfig<T> build() {
 
+		/**
+		 * @deprecated use {@link #recordException(Predicate)} instead.
+		 */
+		@Deprecated
+		public final Builder recordFailure(Predicate<Throwable> predicate) {
+			adaptiveBulkheadConfig.recordExceptionPredicate = predicate;
+			return this;
+		}
+
+		/**
+		 * Configures a Predicate which evaluates if an exception should be recorded as a failure and thus increase the failure rate.
+		 * The Predicate must return true if the exception should count as a failure. The Predicate must return false, if the exception
+		 * should count as a success, unless the exception is explicitly ignored by {@link #ignoreExceptions(Class[])} or {@link #ignoreException(Predicate)}.
+		 *
+		 * @param predicate the Predicate which evaluates if an exception should count as a failure
+		 * @return the Builder
+		 */
+		public final Builder recordException(Predicate<Throwable> predicate) {
+			this.recordExceptionPredicate = predicate;
+			return this;
+		}
+
+		/**
+		 * Configures a Predicate which evaluates if an exception should be ignored and neither count as a failure nor success.
+		 * The Predicate must return true if the exception should be ignored .
+		 * The Predicate must return false, if the exception should count as a failure.
+		 *
+		 * @param predicate the Predicate which evaluates if an exception should count as a failure
+		 * @return the CircuitBreakerConfig.Builder
+		 */
+		public final Builder ignoreException(Predicate<Throwable> predicate) {
+			this.ignoreExceptionPredicate = predicate;
+			return this;
+		}
+
+		/**
+		 * Configures a list of error classes that are recorded as a failure and thus increase the failure rate.
+		 * Any exception matching or inheriting from one of the list should count as a failure, unless ignored via
+		 *
+		 * @param errorClasses the error classes that are recorded
+		 * @return the Builder
+		 * @see #ignoreExceptions(Class[]) ). Ignoring an exception has priority over recording an exception.
+		 * <p>
+		 * Example:
+		 * recordExceptions(Throwable.class) and ignoreExceptions(RuntimeException.class)
+		 * would capture all Errors and checked Exceptions, and ignore RuntimeExceptions.
+		 * <p>
+		 * For a more sophisticated exception management use the
+		 * @see #recordException(Predicate) method
+		 */
+		@SuppressWarnings("unchecked")
+		@SafeVarargs
+		public final Builder recordExceptions(@Nullable Class<? extends Throwable>... errorClasses) {
+			this.recordExceptions = errorClasses != null ? errorClasses : new Class[0];
+			return this;
+		}
+
+		/**
+		 * Configures a list of error classes that are ignored and thus neither count as a failure nor success.
+		 * Any exception matching or inheriting from one of the list will not count as a failure nor success, even if marked via
+		 *
+		 * @param errorClasses the error classes that are ignored
+		 * @return the Builder
+		 * @see #recordExceptions(Class[]) . Ignoring an exception has priority over recording an exception.
+		 * <p>
+		 * Example:
+		 * ignoreExceptions(Throwable.class) and recordExceptions(Exception.class)
+		 * would capture nothing.
+		 * <p>
+		 * Example:
+		 * ignoreExceptions(Exception.class) and recordExceptions(Throwable.class)
+		 * would capture Errors.
+		 * <p>
+		 * For a more sophisticated exception management use the
+		 * @see #ignoreException(Predicate) method
+		 */
+		@SuppressWarnings("unchecked")
+		@SafeVarargs
+		public final Builder ignoreExceptions(@Nullable Class<? extends Throwable>... errorClasses) {
+			this.ignoreExceptions = errorClasses != null ? errorClasses : new Class[0];
+			return this;
+		}
+
+		public AdaptiveBulkheadConfig<T> build() {
+			adaptiveBulkheadConfig.recordExceptionPredicate = createRecordExceptionPredicate();
+			adaptiveBulkheadConfig.ignoreExceptionPredicate = createIgnoreFailurePredicate();
 			if (adaptiveBulkheadConfig.config != null) {
 				return adaptiveBulkheadConfig;
 			} else {
@@ -142,6 +243,18 @@ public class AdaptiveBulkheadConfig<T extends AbstractConfig> {
 
 		}
 
+
+		private Predicate<Throwable> createIgnoreFailurePredicate() {
+			return PredicateCreator.createExceptionsPredicate(ignoreExceptions)
+					.map(predicate -> ignoreExceptionPredicate != null ? predicate.or(ignoreExceptionPredicate) : predicate)
+					.orElseGet(() -> ignoreExceptionPredicate != null ? ignoreExceptionPredicate : DEFAULT_IGNORE_EXCEPTION_PREDICATE);
+		}
+
+		private Predicate<Throwable> createRecordExceptionPredicate() {
+			return PredicateCreator.createExceptionsPredicate(recordExceptions)
+					.map(predicate -> recordExceptionPredicate != null ? predicate.or(recordExceptionPredicate) : predicate)
+					.orElseGet(() -> recordExceptionPredicate != null ? recordExceptionPredicate : DEFAULT_RECORD_EXCEPTION_PREDICATE);
+		}
 
 	}
 
