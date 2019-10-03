@@ -6,23 +6,23 @@ sonarqube.skipProject = true
 asciidoctor.dependsOn test
 
 asciidoctor {
-  sources {
-    include 'index.adoc'
-  }
-  backends = ['html5']
-  attributes = [
-      doctype          : 'book',
-      toc              : 'left',
-      toclevels        : '3',
-      numbered         : '',
-      sectlinks        : '',
-      sectanchors      : '',
-      hardbreaks       : '',
-      'release-version': project.releaseVersion
-  ]
-  resources {
-    from(sourceDir) {
-      include 'images/**'
+    sources {
+        include 'index.adoc'
     }
-  }
+    backends = ['html5']
+    attributes = [
+        doctype          : 'book',
+        toc              : 'left',
+        toclevels        : '3',
+        numbered         : '',
+        sectlinks        : '',
+        sectanchors      : '',
+        hardbreaks       : '',
+        'release-version': project.releaseVersion
+    ]
+    resources {
+        from(sourceDir) {
+            include 'images/**'
+        }
+    }
 }

@@ -31,111 +31,111 @@ ext {
     wiremockVersion = '2.22.0'
     validationApiVersion = '2.0.1.Final'
     kotlinCoroutinesVersion = '1.2.0'
-    springBootOpenFeignVersion= '2.1.2.RELEASE'
+    springBootOpenFeignVersion = '2.1.2.RELEASE'
 
     libraries = [
-            // compile
-            vavr:  "io.vavr:vavr:${vavrVersion}",
-            slf4j: "org.slf4j:slf4j-api:${slf4jVersion}",
-            rxjava2: "io.reactivex.rxjava2:rxjava:${rxJavaVersion}",
-            jcache: "javax.cache:cache-api:${jcacheVersion}",
-            reactor: "io.projectreactor:reactor-core:${reactorVersion}",
+        // compile
+        vavr                                : "io.vavr:vavr:${vavrVersion}",
+        slf4j                               : "org.slf4j:slf4j-api:${slf4jVersion}",
+        rxjava2                             : "io.reactivex.rxjava2:rxjava:${rxJavaVersion}",
+        jcache                              : "javax.cache:cache-api:${jcacheVersion}",
+        reactor                             : "io.projectreactor:reactor-core:${reactorVersion}",
 
-            // testCompile
-            junit: "junit:junit:${junitVersion}",
-            assertj: "org.assertj:assertj-core:${assertjVersion}",
-            logback: "ch.qos.logback:logback-classic:${logbackVersion}",
-            mockito: "org.mockito:mockito-core:${mockitoVersion}",
-            powermock: "org.powermock:powermock-core:${powermockVersion}",
-            powermock_api_mockito: "org.powermock:powermock-api-mockito2:${powermockVersion}",
-            powermock_module_junit4: "org.powermock:powermock-module-junit4:${powermockVersion}",
-            awaitility: "com.jayway.awaitility:awaitility:${awaitilityVersion}",
-            reactor_test: "io.projectreactor:reactor-test:${reactorVersion}",
-            reactive_streams_tck: "org.reactivestreams:reactive-streams-tck:${reactiveStreamsVersion}",
-            mock_clock: "com.statemachinesystems:mock-clock:1.0",
+        // testCompile
+        junit                               : "junit:junit:${junitVersion}",
+        assertj                             : "org.assertj:assertj-core:${assertjVersion}",
+        logback                             : "ch.qos.logback:logback-classic:${logbackVersion}",
+        mockito                             : "org.mockito:mockito-core:${mockitoVersion}",
+        powermock                           : "org.powermock:powermock-core:${powermockVersion}",
+        powermock_api_mockito               : "org.powermock:powermock-api-mockito2:${powermockVersion}",
+        powermock_module_junit4             : "org.powermock:powermock-module-junit4:${powermockVersion}",
+        awaitility                          : "com.jayway.awaitility:awaitility:${awaitilityVersion}",
+        reactor_test                        : "io.projectreactor:reactor-test:${reactorVersion}",
+        reactive_streams_tck                : "org.reactivestreams:reactive-streams-tck:${reactiveStreamsVersion}",
+        mock_clock                          : "com.statemachinesystems:mock-clock:1.0",
 
-            // Vert.x addon
-            vertx: "io.vertx:vertx-core:${vertxVersion}",
-            vertx_unit: "io.vertx:vertx-unit:${vertxVersion}",
+        // Vert.x addon
+        vertx                               : "io.vertx:vertx-core:${vertxVersion}",
+        vertx_unit                          : "io.vertx:vertx-unit:${vertxVersion}",
 
-            // Aspectj for Spring addon
-            aspectj: "org.aspectj:aspectjrt:${aspectjVersion}",
-            // spring test
-            spring_test:  "org.springframework:spring-test:${springVersion}",
-            // Spring Boot addon
-            spring_core: "org.springframework:spring-core:${springVersion}",
-            spring_context: "org.springframework:spring-context:${springVersion}",
-            spring_boot_aop: "org.springframework.boot:spring-boot-starter-aop:${springBootVersion}",
-            spring_boot_actuator: "org.springframework.boot:spring-boot-starter-actuator:${springBootVersion}",
-            spring_boot_web: "org.springframework.boot:spring-boot-starter-web:${springBootVersion}",
-            spring_boot_test:  "org.springframework.boot:spring-boot-starter-test:${springBootVersion}",
-            spring_boot_config_processor : "org.springframework.boot:spring-boot-configuration-processor:${springBootVersion}",
-            spring_boot_autoconfigure : "org.springframework.boot:spring-boot-autoconfigure:${springBootVersion}",
-            spring_boot_autoconfigure_processor : "org.springframework.boot:spring-boot-autoconfigure-processor:${springBootVersion}",
+        // Aspectj for Spring addon
+        aspectj                             : "org.aspectj:aspectjrt:${aspectjVersion}",
+        // spring test
+        spring_test                         : "org.springframework:spring-test:${springVersion}",
+        // Spring Boot addon
+        spring_core                         : "org.springframework:spring-core:${springVersion}",
+        spring_context                      : "org.springframework:spring-context:${springVersion}",
+        spring_boot_aop                     : "org.springframework.boot:spring-boot-starter-aop:${springBootVersion}",
+        spring_boot_actuator                : "org.springframework.boot:spring-boot-starter-actuator:${springBootVersion}",
+        spring_boot_web                     : "org.springframework.boot:spring-boot-starter-web:${springBootVersion}",
+        spring_boot_test                    : "org.springframework.boot:spring-boot-starter-test:${springBootVersion}",
+        spring_boot_config_processor        : "org.springframework.boot:spring-boot-configuration-processor:${springBootVersion}",
+        spring_boot_autoconfigure           : "org.springframework.boot:spring-boot-autoconfigure:${springBootVersion}",
+        spring_boot_autoconfigure_processor : "org.springframework.boot:spring-boot-autoconfigure-processor:${springBootVersion}",
 
-            // Spring Boot2 addon
-            spring_boot2_aop: "org.springframework.boot:spring-boot-starter-aop:${springBoot2Version}",
-            spring_boot2_actuator: "org.springframework.boot:spring-boot-starter-actuator:${springBoot2Version}",
-            spring_boot2_web: "org.springframework.boot:spring-boot-starter-web:${springBoot2Version}",
-            spring_boot2_test:  "org.springframework.boot:spring-boot-starter-test:${springBoot2Version}",
-            spring_boot2_config_processor : "org.springframework.boot:spring-boot-configuration-processor:${springBoot2Version}",
-            spring_boot2_autoconfigure : "org.springframework.boot:spring-boot-autoconfigure:${springBoot2Version}",
-            spring_boot2_autoconfigure_processor : "org.springframework.boot:spring-boot-autoconfigure-processor:${springBoot2Version}",
+        // Spring Boot2 addon
+        spring_boot2_aop                    : "org.springframework.boot:spring-boot-starter-aop:${springBoot2Version}",
+        spring_boot2_actuator               : "org.springframework.boot:spring-boot-starter-actuator:${springBoot2Version}",
+        spring_boot2_web                    : "org.springframework.boot:spring-boot-starter-web:${springBoot2Version}",
+        spring_boot2_test                   : "org.springframework.boot:spring-boot-starter-test:${springBoot2Version}",
+        spring_boot2_config_processor       : "org.springframework.boot:spring-boot-configuration-processor:${springBoot2Version}",
+        spring_boot2_autoconfigure          : "org.springframework.boot:spring-boot-autoconfigure:${springBoot2Version}",
+        spring_boot2_autoconfigure_processor: "org.springframework.boot:spring-boot-autoconfigure-processor:${springBoot2Version}",
 
-            // Spring Cloud
-            spring_cloud_context: "org.springframework.cloud:spring-cloud-context:${springCloudContextVersion}",
-            spring_cloud_context2: "org.springframework.cloud:spring-cloud-context:${springCloudContext2Version}",
+        // Spring Cloud
+        spring_cloud_context                : "org.springframework.cloud:spring-cloud-context:${springCloudContextVersion}",
+        spring_cloud_context2               : "org.springframework.cloud:spring-cloud-context:${springCloudContext2Version}",
 
-            // Hibernate validator addon
-            hibernate_validator: "org.hibernate.validator:hibernate-validator:${hibernateValidatorVersion}",
+        // Hibernate validator addon
+        hibernate_validator                 : "org.hibernate.validator:hibernate-validator:${hibernateValidatorVersion}",
 
-            // ratpack addon
-            ratpack: "io.ratpack:ratpack-guice:${ratpackVersion}",
-            ratpack_metrics: "io.ratpack:ratpack-dropwizard-metrics:${ratpackVersion}",
-            ratpack_test: "io.ratpack:ratpack-groovy-test:${ratpackVersion}",
-            spock: "org.spockframework:spock-core:${spockVersion}",
+        // ratpack addon
+        ratpack                             : "io.ratpack:ratpack-guice:${ratpackVersion}",
+        ratpack_metrics                     : "io.ratpack:ratpack-dropwizard-metrics:${ratpackVersion}",
+        ratpack_test                        : "io.ratpack:ratpack-groovy-test:${ratpackVersion}",
+        spock                               : "org.spockframework:spock-core:${spockVersion}",
 
-            // Retrofit addon
-            retrofit: "com.squareup.retrofit2:retrofit:${retrofitVersion}",
-            retrofit_test: "com.squareup.retrofit2:converter-scalars:${retrofitVersion}",
-            retrofit_wiremock: "com.github.tomakehurst:wiremock:${wiremockVersion}",
-            retrofit_rxjava: "com.squareup.retrofit2:adapter-rxjava2:2.3.0",
+        // Retrofit addon
+        retrofit                            : "com.squareup.retrofit2:retrofit:${retrofitVersion}",
+        retrofit_test                       : "com.squareup.retrofit2:converter-scalars:${retrofitVersion}",
+        retrofit_wiremock                   : "com.github.tomakehurst:wiremock:${wiremockVersion}",
+        retrofit_rxjava                     : "com.squareup.retrofit2:adapter-rxjava2:2.3.0",
 
-            // Feign addon
-            feign: "io.github.openfeign:feign-core:${feignVersion}",
-            feign_wiremock: "com.github.tomakehurst:wiremock:${wiremockVersion}",
+        // Feign addon
+        feign                               : "io.github.openfeign:feign-core:${feignVersion}",
+        feign_wiremock                      : "com.github.tomakehurst:wiremock:${wiremockVersion}",
 
-            // Metrics addon
-            metrics: "io.dropwizard.metrics:metrics-core:${metricsVersion}",
+        // Metrics addon
+        metrics                             : "io.dropwizard.metrics:metrics-core:${metricsVersion}",
 
-            // Micrometers addon
-            micrometer: "io.micrometer:micrometer-core:${micrometerVersion}",
-            micrometer_prometheus: "io.micrometer:micrometer-registry-prometheus:${micrometerVersion}",
-            micrometer_spring_legacy: "io.micrometer:micrometer-spring-legacy:${micrometerVersion}",
+        // Micrometers addon
+        micrometer                          : "io.micrometer:micrometer-core:${micrometerVersion}",
+        micrometer_prometheus               : "io.micrometer:micrometer-registry-prometheus:${micrometerVersion}",
+        micrometer_spring_legacy            : "io.micrometer:micrometer-spring-legacy:${micrometerVersion}",
 
-            // CircuitBreaker documentation
-            metrics_healthcheck: "io.dropwizard.metrics:metrics-healthchecks:${metricsVersion}",
+        // CircuitBreaker documentation
+        metrics_healthcheck                 : "io.dropwizard.metrics:metrics-healthchecks:${metricsVersion}",
 
-            // Prometheus addon
-            prometheus_simpleclient: "io.prometheus:simpleclient_common:${prometheusSimpleClientVersion}",
-            prometheus_spring_boot: "io.prometheus:simpleclient_spring_boot:${prometheusSimpleClientVersion}",
+        // Prometheus addon
+        prometheus_simpleclient             : "io.prometheus:simpleclient_common:${prometheusSimpleClientVersion}",
+        prometheus_spring_boot              : "io.prometheus:simpleclient_spring_boot:${prometheusSimpleClientVersion}",
 
-            jaxws: "com.sun.xml.ws:jaxws-ri:2.3.2",
+        jaxws                               : "com.sun.xml.ws:jaxws-ri:2.3.2",
 
-            // Groovy
-            groovy: "org.codehaus.groovy:groovy-all:2.5.6",
-            
-            // validation
-            validationApi: "javax.validation:validation-api:${validationApiVersion}",
+        // Groovy
+        groovy                              : "org.codehaus.groovy:groovy-all:2.5.6",
 
-            // Kotlin addon
-            kotlin_stdlib: "org.jetbrains.kotlin:kotlin-stdlib-jdk8",
-            kotlin_coroutines: "org.jetbrains.kotlinx:kotlinx-coroutines-core:${kotlinCoroutinesVersion}",
-            
-            // Spring cloud addon
-            spring_cloud_openfeign_core: "org.springframework.cloud:spring-cloud-openfeign-core:${springBootOpenFeignVersion}",
-            spring_cloud_starter_openfeign: "org.springframework.cloud:spring-cloud-starter-openfeign:${springBootOpenFeignVersion}",
-            spring_cloud_context: "org.springframework.cloud:spring-cloud-context:${springBootOpenFeignVersion}"
+        // validation
+        validationApi                       : "javax.validation:validation-api:${validationApiVersion}",
+
+        // Kotlin addon
+        kotlin_stdlib                       : "org.jetbrains.kotlin:kotlin-stdlib-jdk8",
+        kotlin_coroutines                   : "org.jetbrains.kotlinx:kotlinx-coroutines-core:${kotlinCoroutinesVersion}",
+
+        // Spring cloud addon
+        spring_cloud_openfeign_core         : "org.springframework.cloud:spring-cloud-openfeign-core:${springBootOpenFeignVersion}",
+        spring_cloud_starter_openfeign      : "org.springframework.cloud:spring-cloud-starter-openfeign:${springBootOpenFeignVersion}",
+        spring_cloud_context                : "org.springframework.cloud:spring-cloud-context:${springBootOpenFeignVersion}"
     ]
 
 }

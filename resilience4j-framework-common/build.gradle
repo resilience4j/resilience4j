@@ -1,12 +1,12 @@
 dependencies {
-  compile project(':resilience4j-core')
-  compile project(':resilience4j-circuitbreaker')
-  compile project(':resilience4j-ratelimiter')
-  compile project(':resilience4j-retry')
-  compile project(':resilience4j-bulkhead')
+    compile project(':resilience4j-core')
+    compile project(':resilience4j-circuitbreaker')
+    compile project(':resilience4j-ratelimiter')
+    compile project(':resilience4j-retry')
+    compile project(':resilience4j-bulkhead')
 
-  compile libraries.validationApi
-  compile libraries.hibernate_validator
+    compile libraries.validationApi
+    compile libraries.hibernate_validator
 }
 
 ext.moduleName = 'io.github.resilience4j.framework-common'

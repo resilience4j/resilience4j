@@ -12,14 +12,14 @@ def url = "https://github.com/resilience4j/resilience4j"
 jar {
     manifest {
         attributes(
-                'Built-By': 'Robert Winkler',
-                'Created-By': System.properties['java.version'] + " (" + System.properties['java.vendor'] + " " + System.properties['java.vm.version'] + ")",
-                'Build-Date': project.buildDate,
-                'Build-Time': project.buildTime,
-                'Specification-Title': projectArtifactId,
-                'Specification-Version': project.version,
-                'Implementation-Title': projectArtifactId,
-                'Implementation-Version': project.version
+            'Built-By': 'Robert Winkler',
+            'Created-By': System.properties['java.version'] + " (" + System.properties['java.vendor'] + " " + System.properties['java.vm.version'] + ")",
+            'Build-Date': project.buildDate,
+            'Build-Time': project.buildTime,
+            'Specification-Title': projectArtifactId,
+            'Specification-Version': project.version,
+            'Implementation-Title': projectArtifactId,
+            'Implementation-Version': project.version
         )
         instruction 'Export-Package', '!io.github.resilience4j.*.internal,*'
         instruction 'Import-Package', "!${project.osgiManifest().symbolicName}.*,*"
@@ -56,7 +56,7 @@ bintray {
         websiteUrl = "${url}"
         issueTrackerUrl = 'https://github.com/resilience4j/resilience4j/issues'
         vcsUrl = 'https://github.com/resilience4j/resilience4j.git'
-        desc =  project.description
+        desc = project.description
         licenses = ['Apache-2.0']
         version {
             name = project.version
@@ -67,9 +67,12 @@ bintray {
                 passphrase = project.hasProperty('gpgPassphrase') ? project.property('gpgPassphrase') : ''
             }
             mavenCentralSync {
-                sync = true //Optional (true by default). Determines whether to sync the version to Maven Central.
-                user = project.hasProperty('ossUser') ? project.property('ossUser') : '' //OSS user token
-                password = project.hasProperty('ossPassword') ? project.property('ossPassword') : '' //OSS user password
+                sync = true
+                //Optional (true by default). Determines whether to sync the version to Maven Central.
+                user = project.hasProperty('ossUser') ? project.property('ossUser') : ''
+                //OSS user token
+                password = project.hasProperty('ossPassword') ? project.property('ossPassword') : ''
+                //OSS user password
             }
         }
     }
@@ -80,10 +83,10 @@ publishing {
         mavenJava(MavenPublication) {
             from components.java
             pom.withXml {
-                def devs = ['RobWin': 'Robert Winkler',
+                def devs = ['RobWin'     : 'Robert Winkler',
                             'storozhukBM': 'Bogdan Storozhuk',
-                            'drmaas': 'Dan Maas',
-                            'Romeh': 'Mahmoud Romeh']
+                            'drmaas'     : 'Dan Maas',
+                            'Romeh'      : 'Mahmoud Romeh']
                 def root = asNode()
 
                 root.dependencies.'*'.findAll() {
